@@ -181,11 +181,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					xmlAttr(sldMaster['p:cSld'] as XmlObject | undefined, 'name') ?? ''
 				).trim();
 
-				// Background
-				const bg = (sldMaster['p:cSld'] as XmlObject | undefined)?.['p:bg'] as
-					| XmlObject
-					| undefined;
-				const backgroundColor = this.parseBackgroundColor(bg);
+				// The background (`backgroundColor`) is resolved later, by
+				// `enrichSlideMasterElements`: a `p:bgRef` on `bg1` means whatever
+				// this master's `p:clrMap` routes it to, which needs the master's
+				// colour state active, and no master state is active yet here.
 
 				// Placeholders
 				const spTree = (sldMaster['p:cSld'] as XmlObject | undefined)?.['p:spTree'] as
@@ -255,7 +254,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				results.push({
 					path,
 					name: masterCSldName.length > 0 ? masterCSldName : undefined,
-					backgroundColor,
 					themePath,
 					layoutPaths: layoutPaths.length > 0 ? layoutPaths : undefined,
 					layouts: layouts.length > 0 ? layouts : undefined,
@@ -440,12 +438,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				}
 			}
 
-			// Background
-			const bg = xmlPath(sldLayout, 'p:cSld', 'p:bg');
-			const bgColor = this.parseBackgroundColor(bg);
-			if (bgColor) {
-				layout.backgroundColor = bgColor;
-			}
+			// The layout's own background is resolved with its master's, in
+			// `enrichSlideMasterElements`, through the master's colour map.
 
 			// Placeholders
 			const spTree = xmlPath(sldLayout, 'p:cSld', 'p:spTree');

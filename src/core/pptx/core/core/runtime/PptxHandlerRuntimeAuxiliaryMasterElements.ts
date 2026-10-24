@@ -41,8 +41,9 @@ export interface MasterPartElementHost {
 	backgroundImage?: string;
 	backgroundImageProperties?: PptxImageProperties;
 	/**
-	 * Already resolved by the master/layout parser. Read here only so the save
-	 * side can tell a chosen colour from a flattened `p:bgRef`.
+	 * Already resolved (for a slide master or layout, by
+	 * {@link PptxHandlerRuntime.enrichSlideMasterElements}). Read here only so
+	 * the save side can tell a chosen colour from a flattened `p:bgRef`.
 	 */
 	backgroundColor?: string;
 }
@@ -127,18 +128,33 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Populate `elements` on every slide master and on each of its layouts.
+	 * Resolve the background of every slide master and of each of its layouts,
+	 * and populate their `elements`.
 	 *
-	 * Scheme colours on a master's own shapes must resolve through that
-	 * master's colour map and theme, so the active master state is switched
-	 * per part and reset to the deck-wide snapshot afterwards.
+	 * Scheme colours on a master, its own `p:bgRef` included, must resolve
+	 * through that master's colour map and theme, so the active master state is
+	 * switched per part and reset to the deck-wide snapshot afterwards.
 	 */
 	protected async enrichSlideMasterElements(masters: PptxSlideMaster[]): Promise<void> {
 		for (const master of masters) {
 			try {
 				this.applyMasterThemeState(master.path);
+				master.backgroundColor = this.extractTemplateBackgroundColor(
+					this.masterXmlMap.get(master.path),
+					'p:sldMaster',
+					null,
+				);
 				await this.enrichMasterPartElements(master, 'p:sldMaster');
 				for (const layout of master.layouts ?? []) {
+					const layoutXml = this.layoutXmlMap.get(layout.path);
+					const backgroundColor = this.extractTemplateBackgroundColor(
+						layoutXml,
+						'p:sldLayout',
+						layoutXml ? this.parseLayoutClrMapOverride(layoutXml) : null,
+					);
+					if (backgroundColor) {
+						layout.backgroundColor = backgroundColor;
+					}
 					await this.enrichMasterPartElements(layout, 'p:sldLayout');
 				}
 			} catch (e) {

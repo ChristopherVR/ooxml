@@ -185,6 +185,35 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
+	 * Run `work` with one master's theme state active and no slide colour-map override, then
+	 * put back whatever state was active before, so a part parsed on request (a layout preview)
+	 * resolves through its own master without disturbing the caller's.
+	 */
+	protected async withMasterThemeState<T>(
+		masterPath: string | undefined,
+		work: () => Promise<T>,
+	): Promise<T> {
+		const saved = {
+			colors: this.themeColorMap,
+			fonts: this.themeFontMap,
+			format: this.themeFormatScheme,
+			clrMap: this.currentMasterClrMap,
+			slideClrMap: this.currentSlideClrMapOverride,
+		};
+		this.applyMasterThemeState(masterPath);
+		this.currentSlideClrMapOverride = null;
+		try {
+			return await work();
+		} finally {
+			this.themeColorMap = saved.colors;
+			this.themeFontMap = saved.fonts;
+			this.themeFormatScheme = saved.format;
+			this.currentMasterClrMap = saved.clrMap;
+			this.currentSlideClrMapOverride = saved.slideClrMap;
+		}
+	}
+
+	/**
 	 * Extract the `p:bg/@showAnimation` flag from a slide's XML.
 	 * Returns `true` when the background should animate, `false` when
 	 * explicitly disabled, or `undefined` when the attribute is absent
