@@ -1,3 +1,4 @@
+import { frameSlideSvg } from 'ooxml-ui/pptx';
 import { SvgExporter } from 'pptx-viewer-core';
 import type { PptxData, PptxSlide, SvgExportOptions } from 'pptx-viewer-core';
 
@@ -28,10 +29,12 @@ export function exportAllSlidesToSvg(data: PptxData, options?: SvgExportOptions)
 	return SvgExporter.exportAll(data, options);
 }
 
-/** Add the print dialog's optional slide frame without rasterising the SVG. */
+/**
+ * Add the print dialog's optional slide frame without rasterising the SVG
+ * (the shared `frameSlideSvg`, which the print job's vector document uses).
+ */
 export function addSvgSlideFrame(svg: string, width: number, height: number): string {
-	const frame = `<rect x="1" y="1" width="${Math.max(0, width - 2)}" height="${Math.max(0, height - 2)}" fill="none" stroke="#000" stroke-width="2" />`;
-	return svg.replace('</svg>', `${frame}</svg>`);
+	return frameSlideSvg(svg, width, height);
 }
 
 export type { SvgExportOptions } from 'pptx-viewer-core';
