@@ -13,7 +13,7 @@ import {
 } from './fixtures/generate-master-views-fixture';
 import { LAYOUT_SHAPE_TEXT, MASTER_SHAPE_TEXT } from './fixtures/generate-template-editing-fixture';
 import { GROUP_CHILD_NAMES } from './fixtures/generate-template-group-fixture';
-import { resetTabSession } from './support/deck';
+import { resetTabSession, slideStage } from './support/deck';
 import { readFixtureLayout } from './support/fixture-layout';
 
 const fixturePath = resolve(
@@ -492,6 +492,48 @@ test.describe('slide master tab parity', () => {
 		await openFixture(page, savedPath);
 		await enterMasterView(page);
 		await expect(slidesBackgroundInput(page)).toHaveValue(UPDATED_MASTER_BACKGROUND);
+	});
+
+	/**
+	 * A master's `<p:bgRef idx="1001"><a:schemeClr val="bg1"/>` means whatever its own
+	 * `p:clrMap` routes `bg1` to, so a deck saved with a dark background style for all slides
+	 * has a dark master. The loader resolved that reference with no colour map active, so the
+	 * reopened deck showed its master, and every layout in the gallery, white under black slides.
+	 */
+	test('reopens a master saved with a dark background style dark', async ({ page }, testInfo) => {
+		const stageBackground = (): Promise<string> =>
+			slideStage(page).evaluate((node) => getComputedStyle(node).backgroundColor);
+		await openFixture(page);
+		await ribbonTab(page, 'Design').click();
+		const styles = page.locator('[data-ribbon-control="design.variants.backgroundStyles"]');
+		await styles.locator('[data-ribbon-gallery]').first().click();
+		await styles.locator('[data-gallery-item="4"]').click();
+		await expect.poll(stageBackground).toBe('rgb(0, 0, 0)');
+		const savedPath = await saveDeck(page, `${testInfo.project.name}-dark-master`);
+
+		await openFixture(page, savedPath);
+		await expect.poll(stageBackground).toBe('rgb(0, 0, 0)');
+		await enterMasterView(page);
+		await expect(slidesBackgroundInput(page)).toHaveValue('#000000');
+		await closeMasterView(page);
+
+		// Home > Layout draws each layout's preview on its resolved background. Angular's menu
+		// opens on hover and the others on click, so hover first, then click.
+		await ribbonTab(page, 'Home').click();
+		const trigger = page.getByRole('button', { name: /^layout$/iu }).first();
+		await trigger.hover();
+		await trigger.click().catch(() => undefined);
+		const tile = page.locator('[data-testid="layout-gallery-menu"]:visible button').first();
+		await expect(tile).toBeVisible();
+		await expect
+			.poll(() =>
+				tile.evaluate((node) =>
+					[...node.querySelectorAll<HTMLElement>('[style*="background"]')].map(
+						(painted) => getComputedStyle(painted).backgroundColor,
+					),
+				),
+			)
+			.toContain('rgb(0, 0, 0)');
 	});
 });
 
