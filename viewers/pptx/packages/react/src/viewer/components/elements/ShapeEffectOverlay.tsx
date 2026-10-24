@@ -251,7 +251,7 @@ export function ShapeEffectOverlay({
 					{strokeOutline.strands.map((strand, idx) => (
 						<path
 							key={idx}
-							d={strokeOutline.d}
+							d={strand.d ?? strokeOutline.d}
 							markerStart={idx === 0 ? strokeOutline.markers?.start : undefined}
 							markerEnd={idx === 0 ? strokeOutline.markers?.end : undefined}
 							fill='none'

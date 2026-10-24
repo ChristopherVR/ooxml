@@ -37,7 +37,7 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
-import { screenStrokeWidth } from './device-pixel-stroke';
+import { DEVICE_PX_VAR, screenStrokeWidth } from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
@@ -47,6 +47,7 @@ import {
 	getResolvedShapeClipPathFor,
 	isIdentityRectClip,
 } from './shape-geometry';
+import { outerStrokeEdgePath } from './stroke-clip-edge';
 import type { StrokeClipJoin } from './stroke-clip-outset';
 import { strokeOnlyPresetPathData } from './stroke-only-preset';
 import { strokeMiterLimit } from './stroke-style';
@@ -82,6 +83,11 @@ export interface StrokeOutlineStrand {
 	 */
 	cssStrokeWidth: string;
 	offset: number;
+	/**
+	 * Path data for this strand when it is not the outline's own `d`: the
+	 * edge bleed (see {@link buildStrokeOutline}) traces the widened clip's edge.
+	 */
+	d?: string;
 }
 
 /** Everything needed to stroke one shape's outline as an SVG overlay. */
@@ -298,6 +304,50 @@ function needsCenteredStrokeOverlay(
 }
 
 /**
+ * A thin strand along the outer edge of the shape's widened clip, so the
+ * outline, not the fill, owns every pixel that clip cuts through (see
+ * `stroke-clip-edge`). Two device pixels wide, centred on that edge: the clip
+ * trims its outer half and its inner half lies on the outline it matches.
+ * None for a translucent line, where a second pass would darken that edge, or
+ * when the geometry cascade does not widen the clip at all.
+ */
+function clipEdgeBleed(
+	element: PptxElement,
+	d: string,
+	style: ShapeStyle | undefined,
+): StrokeOutlineStrand | undefined {
+	// A picture's outline already sits outside its clipped surface (`picture-frame`).
+	if (
+		(style?.strokeOpacity ?? 1) < 1 ||
+		element.type === 'picture' ||
+		element.type === 'image' ||
+		isArrowedCustomPath(element)
+	) {
+		return undefined;
+	}
+	const width = straddlingStrokeWidth(element);
+	const shapeType = getShapeType((element as { shapeType?: string }).shapeType);
+	if (
+		width <= 0 ||
+		shapeType === 'roundRect' ||
+		shapeType === 'ellipse' ||
+		isIdentityRectClip(element) ||
+		getResolvedShapeClipPath(element) === undefined
+	) {
+		return undefined;
+	}
+	const edge = outerStrokeEdgePath(d, width, outlineStrokeJoin(element));
+	return edge
+		? {
+				d: edge,
+				strokeWidth: 1,
+				cssStrokeWidth: `max(1px, calc(2 * var(${DEVICE_PX_VAR}, 0px)))`,
+				offset: 0,
+			}
+		: undefined;
+}
+
+/**
  * Whether a closed shape's line is inset (`a:ln/@algn="in"`) on a shape whose
  * box is clipped to its geometry (anything but a rectangle, a rounded
  * rectangle or an ellipse, which keep their box and a CSS border).
@@ -412,13 +462,15 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 	const stroke = paint
 		? svgGradientFillRef(paint)
 		: colorWithOpacity(style?.strokeColor ?? DEFAULT_STROKE_COLOR, style?.strokeOpacity);
+	const strands = outlineStrands(style?.compoundLine, strokeWidth);
+	const bleed = !openPresetD ? clipEdgeBleed(element, d, style) : undefined;
 	return {
 		markers: buildCustomPathMarkers(element, stroke),
 		d,
 		paint,
 		stroke,
 		strokeWidth,
-		strands: outlineStrands(style?.compoundLine, strokeWidth),
+		strands: bleed ? [...strands, bleed] : strands,
 		dashArray: getSvgStrokeDasharray(
 			normalizeStrokeDashType(style?.strokeDash),
 			Math.max(lineWidth, 1),

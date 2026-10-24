@@ -18,7 +18,7 @@
  */
 import { outlinePathData } from './stroke-outline';
 
-type Point = readonly [number, number];
+export type Point = readonly [number, number];
 
 /** How the outline joins its segments: SVG `stroke-linejoin` and `stroke-miterlimit`. */
 export interface StrokeClipJoin {
@@ -102,7 +102,7 @@ function flattenArc(
 }
 
 /** Flatten absolute `M L H V C Q A Z` path data into polylines, or `undefined` for anything else. */
-function flattenPath(d: string): Point[][] | undefined {
+export function flattenPath(d: string): Point[][] | undefined {
 	const tokens = d.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/giu);
 	if (!tokens) {
 		return undefined;

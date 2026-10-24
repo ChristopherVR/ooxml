@@ -82,7 +82,7 @@ import type { StrokeOutline } from 'ooxml-ui/pptx';
 		}
 		@for (strand of o.strands; track $index) {
 			<svg:path
-				[attr.d]="o.d"
+				[attr.d]="strand.d ?? o.d"
 				[attr.marker-start]="$index === 0 ? o.markers?.start : null"
 				[attr.marker-end]="$index === 0 ? o.markers?.end : null"
 				fill="none"

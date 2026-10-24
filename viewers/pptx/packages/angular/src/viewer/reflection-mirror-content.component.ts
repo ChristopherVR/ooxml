@@ -183,7 +183,7 @@ import { SlideTextBlockComponent } from './slide-text-block.component';
 					>
 						@for (strand of so.strands; track $index) {
 							<path
-								[attr.d]="so.d"
+								[attr.d]="strand.d ?? so.d"
 								fill="none"
 								[attr.stroke]="so.stroke"
 								[attr.stroke-width]="strand.strokeWidth"

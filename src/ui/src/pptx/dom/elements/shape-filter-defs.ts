@@ -231,7 +231,7 @@ export function renderStrokeOutline(doc: Document, element: PptxElement): SVGSVG
 	}
 	for (const strand of outline.strands) {
 		const path = createSvgEl(doc, 'path', {
-			d: outline.d,
+			d: strand.d ?? outline.d,
 			fill: 'none',
 			stroke: outline.stroke,
 			'stroke-width': strand.strokeWidth,
