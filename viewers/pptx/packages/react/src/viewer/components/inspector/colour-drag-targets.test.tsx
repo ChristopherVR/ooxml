@@ -11,28 +11,26 @@
  *   its own (no line, an inherited text colour) exactly as it was.
  *
  * The real `ShapeTextPanels` over the real `useEditorHistory` and
- * `useElementOperations`, with the live edit context `ViewerInspector` provides.
+ * `useElementOperations`, with the live edit context `ViewerInspector` provides
+ * (`colour-drag.test-support.tsx`).
  */
-import type { PptxElement, PptxSlide, ShapeStyle, TextStyle } from 'pptx-viewer-core';
-import React, { act, useCallback, useMemo, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PptxElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
+import { act } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
-import { useEditorHistory } from '../../hooks/useEditorHistory';
-import { useElementOperations } from '../../hooks/useElementOperations';
-import type { CanvasSize, ElementContextMenuState } from '../../types';
-import { LiveEditProvider } from './LiveEditContext';
-import { RecentColorsProvider } from './RecentColorsContext';
-import { ShapeTextPanels } from './ShapeTextPanels';
+import {
+	api,
+	colorInput,
+	fire,
+	renderHarness as render,
+	setUpColourDragHarness,
+} from './colour-drag.test-support';
 
 vi.mock(import('../../i18n/use-translation'), () => ({
 	useTranslation: () => ({
 		t: (key: string, fallback?: unknown) => (typeof fallback === 'string' ? fallback : key),
 	}),
 }));
-
-type Styled = PptxElement & { shapeStyle: ShapeStyle; textStyle?: TextStyle };
 
 const A_STYLE: ShapeStyle = {
 	fillMode: 'solid',
@@ -60,197 +58,11 @@ function shape(id: string, shapeStyle: ShapeStyle, textStyle?: TextStyle): PptxE
 	} as unknown as PptxElement;
 }
 
-interface HarnessApi {
-	element(id: string): Styled;
-	select(id: string): void;
-	edit(id: string, patch: Partial<ShapeStyle>): void;
-	editText(id: string, patch: Partial<TextStyle>): void;
-	canUndo(): boolean;
-	recent(): string[];
-}
+setUpColourDragHarness();
 
-let api: HarnessApi | null = null;
-
-function noop<T>(): React.Dispatch<React.SetStateAction<T>> {
-	return () => {};
-}
-
-function Harness({ elements }: { elements: PptxElement[] }): React.ReactElement {
-	const [slides, setSlides] = useState<PptxSlide[]>(() => [
-		{ id: 's1', rId: 'rId1', slideNumber: 1, elements } as unknown as PptxSlide,
-	]);
-	const [canvasSize, setCanvasSize] = useState<CanvasSize>({ width: 960, height: 540 });
-	const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-	const [templateElementsBySlideId, setTemplateElementsBySlideId] = useState<
-		Record<string, PptxElement[]>
-	>({});
-	const [selectedElementId, setSelectedElementId] = useState<string | null>('a');
-	const [selectedElementIds, setSelectedElementIds] = useState<string[]>(['a']);
-	const [recent, setRecent] = useState<string[]>([]);
-
-	const history = useEditorHistory({
-		slides,
-		canvasSize,
-		activeSlideIndex,
-		templateElementsBySlideId,
-		selectedElementId,
-		selectedElementIds,
-		editTemplateMode: false,
-		headerFooter: {} as never,
-		loading: false,
-		error: null,
-		hasActivePointerInteraction: useCallback(() => false, []),
-		pointerCommitNonce: 0,
-		setSlides,
-		setCanvasSize,
-		setActiveSlideIndex,
-		setTemplateElementsBySlideId,
-		setSelectedElementId,
-		setSelectedElementIds,
-		setEditTemplateMode: noop<boolean>(),
-		setHeaderFooter: noop<never>(),
-	});
-	const activeSlide = slides[activeSlideIndex];
-	const selectedElement = useMemo(
-		() => activeSlide?.elements.find((el) => el.id === selectedElementId) ?? null,
-		[activeSlide, selectedElementId],
-	);
-	const ops = useElementOperations({
-		slides,
-		activeSlide,
-		activeSlideIndex,
-		selectedElement,
-		selectedElementId,
-		editTemplateMode: false,
-		templateElements: [],
-		history,
-		setSlides,
-		setTemplateElementsBySlideId,
-		setSelectedElementId,
-		setSelectedElementIds,
-		setInlineEditingElementId: noop<string | null>(),
-		setContextMenuState: noop<ElementContextMenuState | null>(),
-		inlineEditingElementId: null,
-		inlineEditingText: '',
-	});
-
-	const latest = useRef({ slides, history, recent });
-	latest.current = { slides, history, recent };
-	api = {
-		element: (id) => latest.current.slides[0]!.elements.find((el) => el.id === id) as Styled,
-		select: (id) => {
-			setSelectedElementId(id);
-			setSelectedElementIds([id]);
-		},
-		// Another hand (a collaborator) edits the shape: no undo step of this user's.
-		edit: (id, patch) =>
-			setSlides((prev) =>
-				prev.map((slide) => ({
-					...slide,
-					elements: slide.elements.map((el) =>
-						el.id === id
-							? ({ ...el, shapeStyle: { ...(el as Styled).shapeStyle, ...patch } } as PptxElement)
-							: el,
-					),
-				})),
-			),
-		editText: (id, patch) =>
-			setSlides((prev) =>
-				prev.map((slide) => ({
-					...slide,
-					elements: slide.elements.map((el) =>
-						el.id === id
-							? ({ ...el, textStyle: { ...(el as Styled).textStyle, ...patch } } as PptxElement)
-							: el,
-					),
-				})),
-			),
-		canUndo: () => latest.current.history.canUndo,
-		recent: () => latest.current.recent,
-	};
-	const pushColor = useCallback(
-		(hex: string) => setRecent((list) => [hex, ...list.filter((c) => c !== hex)]),
-		[],
-	);
-	const recentValue = useMemo(() => ({ recentColors: recent, pushColor }), [recent, pushColor]);
-	const liveEdit = useMemo(
-		() => ({
-			element: selectedElement,
-			previewElement: (id: string, patch: Partial<PptxElement>) =>
-				history.withoutUndoStep(() => ops.updateElementById(id, patch)),
-			elementById: (id: string) => activeSlide?.elements.find((el) => el.id === id),
-		}),
-		[history, ops, selectedElement, activeSlide],
-	);
-
-	return (
-		<LiveEditProvider value={liveEdit}>
-			<RecentColorsProvider value={recentValue}>
-				{selectedElement && (
-					<ShapeTextPanels
-						selectedElement={selectedElement}
-						canEdit
-						onUpdateElement={ops.updateSelectedElement}
-						onUpdateElementStyle={ops.updateSelectedShapeStyle}
-						onUpdateTextStyle={ops.updateSelectedTextStyle}
-					/>
-				)}
-			</RecentColorsProvider>
-		</LiveEditProvider>
-	);
-}
-
-let container: HTMLDivElement;
-let root: Root;
-
-function render(elements: PptxElement[]): void {
-	act(() => root.render(<Harness elements={elements} />));
-}
-
-beforeEach(() => {
-	vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-	container = document.createElement('div');
-	document.body.appendChild(container);
-	root = createRoot(container);
-});
-
-afterEach(() => {
-	act(() => root.unmount());
-	container.remove();
-	api = null;
-	vi.unstubAllGlobals();
-});
-
-/** The colour input under the label whose caption reads `caption`. */
-function inputUnder(caption: string): HTMLInputElement {
-	const label = [...container.querySelectorAll('label')].find(
-		(candidate) => candidate.querySelector('span')?.textContent?.trim() === caption,
-	);
-	const input = label?.querySelector<HTMLInputElement>('input[type="color"]');
-	if (!input) {
-		throw new Error(`no colour input under ${caption}`);
-	}
-	return input;
-}
-
-const fill = () => inputUnder('pptx.fill.fill');
-const line = () => inputUnder('pptx.inspector.stroke');
-const text = () =>
-	container.querySelector<HTMLInputElement>('[data-pptx-text-card] input[type="color"]')!;
-
-function fire(input: HTMLInputElement, type: 'input' | 'change' | 'blur', hex: string): void {
-	act(() => {
-		Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, hex);
-		input.dispatchEvent(
-			type === 'blur'
-				? new FocusEvent('focusout', { bubbles: true })
-				: new Event(type, { bubbles: true }),
-		);
-		if (type === 'blur') {
-			input.dispatchEvent(new FocusEvent('blur'));
-		}
-	});
-}
+const fill = () => colorInput('fill');
+const line = () => colorInput('line');
+const text = () => colorInput('text');
 
 describe('a fill drag the selection leaves', () => {
 	it('puts the first shape back and does not land the pick on the second', () => {
@@ -285,7 +97,7 @@ describe('a fill drag the selection leaves', () => {
 	it('does not write the first shape’s effects onto the second', () => {
 		const b = { ...A_STYLE, glowRadius: 3, glowOpacity: 0.9 } as ShapeStyle;
 		render([shape('a', A_STYLE), shape('b', b)]);
-		const glow = () => container.querySelector<HTMLInputElement>('[data-testid="fx-glow-color"]')!;
+		const glow = () => colorInput('glow');
 		fire(glow(), 'input', '#00ff00');
 		fire(glow(), 'input', '#ff0000');
 		act(() => api!.select('b'));
@@ -297,7 +109,7 @@ describe('a fill drag the selection leaves', () => {
 	it('puts the first shape’s effect colour back on it as it is now, keeping an edit made there since', () => {
 		const b = { ...A_STYLE, glowRadius: 3, glowOpacity: 0.9 } as ShapeStyle;
 		render([shape('a', A_STYLE), shape('b', b)]);
-		const glow = () => container.querySelector<HTMLInputElement>('[data-testid="fx-glow-color"]')!;
+		const glow = () => colorInput('glow');
 		fire(glow(), 'input', '#00ff00');
 		act(() => api!.edit('a', { glowRadius: 12 }));
 		act(() => api!.select('b'));
