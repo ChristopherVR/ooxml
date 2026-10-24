@@ -34,7 +34,8 @@ export function runQuickAccessCommand(id: string, deps: QuickAccessCommandDeps):
 		},
 		print: () => void exportingApi.print(),
 		exportPdf: () => void exportingApi.exportPdf(),
-		newSlide: () => deck.addSlide(),
+		// After the slide on screen, as the ribbon's New Slide (the API's default is the end).
+		newSlide: () => deck.addSlide(deck.getActiveSlideIndex()),
 		spellCheck: () => {
 			parityUi.preferences.spellCheck = !parityUi.preferences.spellCheck;
 		},
