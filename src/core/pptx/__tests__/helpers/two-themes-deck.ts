@@ -9,6 +9,9 @@
  *   every master has a thin `accent1` bar ({@link TWO_THEMES.masterBarName}) the slides inherit.
  * - Every scheme slot differs between the two themes except `dk1` and `lt1`, and no slot repeats a
  *   value within a theme, so a colour re-resolved from one theme to the other is unambiguous.
+ * - With `scriptFaces`, each part's heading font also names a per-script face the other part lacks
+ *   ({@link TWO_THEMES.scriptFaces}), so the deck's theme (which merges every part's script faces)
+ *   matches neither part's own font scheme.
  *
  * One definition for the core tests, the binding tests and the browser fixture
  * (`e2e/pptx/fixtures/generate-two-themes-fixture.ts`), so the three cannot drift apart.
@@ -92,6 +95,11 @@ export const TWO_THEMES = {
 	shapeName: 'AccentShape',
 	/** The `accent1` bar on every master, inherited by its slides. */
 	masterBarName: 'MasterBar',
+	/** The per-script heading faces each part names with `scriptFaces`, by theme part. */
+	scriptFaces: {
+		[TIDE.path]: { Jpan: 'Yu Mincho' },
+		[EMBER.path]: { Hang: 'Batang' },
+	} as Readonly<Record<string, Readonly<Record<string, string>>>>,
 	/** Slide index (0-based) to layout: slides 1 and 2 on master 1, slide 3 on master 2. */
 	slideLayouts: [
 		'ppt/slideLayouts/slideLayout1.xml',
@@ -119,7 +127,10 @@ function rels(...entries: readonly (readonly [string, string, string])[]): strin
 	return `${PROLOG}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${body}</Relationships>`;
 }
 
-function themeXml(theme: DeckTheme): string {
+function themeXml(theme: DeckTheme, scriptFaces: boolean): string {
+	const scripts = Object.entries(scriptFaces ? (TWO_THEMES.scriptFaces[theme.path] ?? {}) : {})
+		.map(([script, typeface]) => `<a:font script="${script}" typeface="${typeface}"/>`)
+		.join('');
 	const slots = SCHEME_KEYS.map(
 		(key) => `<a:${key}><a:srgbClr val="${theme.colors[key]}"/></a:${key}>`,
 	);
@@ -130,7 +141,7 @@ function themeXml(theme: DeckTheme): string {
 		`${PROLOG}<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="${theme.name}">` +
 		`<a:themeElements><a:clrScheme name="${theme.name}">${slots.join('')}</a:clrScheme>` +
 		`<a:fontScheme name="${theme.name}">` +
-		`<a:majorFont><a:latin typeface="${theme.major}"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>` +
+		`<a:majorFont><a:latin typeface="${theme.major}"/><a:ea typeface=""/><a:cs typeface=""/>${scripts}</a:majorFont>` +
 		`<a:minorFont><a:latin typeface="${theme.minor}"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>` +
 		`</a:fontScheme><a:fmtScheme name="${theme.name}">` +
 		`<a:fillStyleLst>${fill}${fill}${fill}</a:fillStyleLst>` +
@@ -195,8 +206,16 @@ function slideXml(title: string): string {
 	);
 }
 
+export interface TwoThemesDeckOptions {
+	/** Give each part's heading font a per-script face the other part lacks. */
+	readonly scriptFaces?: boolean;
+}
+
 /** Every part of the deck, by path. */
-export function twoThemesDeckParts(): Record<string, string> {
+export function twoThemesDeckParts({ scriptFaces = false }: TwoThemesDeckOptions = {}): Record<
+	string,
+	string
+> {
 	const override = (part: string, type: string) =>
 		`<Override PartName="/${part}" ContentType="${CT_NS}.${type}+xml"/>`;
 	const slides = TWO_THEMES.slideLayouts.map((_, index) => `ppt/slides/slide${index + 1}.xml`);
@@ -230,8 +249,8 @@ export function twoThemesDeckParts(): Record<string, string> {
 			),
 			[`rId${3 + slides.length}`, 'theme', 'theme/theme1.xml'],
 		),
-		[TIDE.path]: themeXml(TIDE),
-		[EMBER.path]: themeXml(EMBER),
+		[TIDE.path]: themeXml(TIDE, scriptFaces),
+		[EMBER.path]: themeXml(EMBER, scriptFaces),
 		[TWO_THEMES.master1]: masterXml('Tide Master', 2147483649),
 		[TWO_THEMES.master2]: masterXml('Ember Master', 2147483651),
 		'ppt/slideMasters/_rels/slideMaster1.xml.rels': rels(
@@ -267,10 +286,26 @@ export function twoThemesDeckParts(): Record<string, string> {
 }
 
 /** The deck as `.pptx` bytes. */
-export async function buildTwoThemesDeck(): Promise<Uint8Array> {
+export async function buildTwoThemesDeck(options: TwoThemesDeckOptions = {}): Promise<Uint8Array> {
 	const zip = new JSZip();
-	for (const [path, xml] of Object.entries(twoThemesDeckParts())) {
+	for (const [path, xml] of Object.entries(twoThemesDeckParts(options))) {
 		zip.file(path, xml);
 	}
 	return zip.generateAsync({ type: 'uint8array' });
+}
+
+/**
+ * Each theme part's heading face (the major latin typeface) in saved `.pptx` bytes, by part path:
+ * what a reload draws the headings of that part's masters with.
+ */
+export async function themePartHeadingFaces(
+	bytes: Uint8Array,
+): Promise<Record<string, string | undefined>> {
+	const zip = await JSZip.loadAsync(bytes);
+	const faces: Record<string, string | undefined> = {};
+	for (const { path } of [TIDE, EMBER]) {
+		const xml = (await zip.file(path)?.async('string')) ?? '';
+		faces[path] = /<a:majorFont>\s*<a:latin typeface="([^"]*)"/u.exec(xml)?.[1];
+	}
+	return faces;
 }
