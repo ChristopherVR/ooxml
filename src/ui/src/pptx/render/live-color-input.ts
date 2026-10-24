@@ -172,7 +172,7 @@ export function createLiveColorInput<T, P extends object>(
 		input(hex) {
 			const source = options.read();
 			let current = source ? carriedOn(source) : undefined;
-			if (!source || !current) {
+			if (!current) {
 				leave(source);
 			}
 			if (!source) {
