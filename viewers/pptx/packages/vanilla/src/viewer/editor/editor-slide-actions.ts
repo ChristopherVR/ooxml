@@ -62,9 +62,16 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 	/**
 	 * Walk the layout XML for `index` and merge the handler's result back into
 	 * the slide, but only while it still carries the id we started from (guards
-	 * against a concurrent edit having moved/replaced it). History-integrated.
+	 * against a concurrent edit having moved/replaced it). A layout change is its
+	 * own undo step (`record`); a new slide's layout completes the insertion,
+	 * which recorded the step already.
 	 */
-	function resolveLayout(index: number, layoutPath: string, expectedId: string): void {
+	function resolveLayout(
+		index: number,
+		layoutPath: string,
+		expectedId: string,
+		record: boolean,
+	): void {
 		const handler = deps.getHandler();
 		if (!handler) {
 			return;
@@ -76,7 +83,9 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 					const templateElements = await handler.getTemplateElementsForSlide(updated.id);
 					const current = store.get();
 					if (current.slides[index]?.id === expectedId) {
-						ops.pushHistory();
+						if (record) {
+							ops.pushHistory();
+						}
 						const slides = [...current.slides];
 						slides[index] = updated;
 						store.set({
@@ -194,7 +203,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 				selectedElementIds: [],
 			});
 			ops.commitChange();
-			resolveLayout(insertAt, layoutPath, draft.id);
+			resolveLayout(insertAt, layoutPath, draft.id, false);
 		},
 
 		insertSlideFromTemplate(templateId) {
@@ -233,7 +242,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			if (!state.editable || !target || !layoutPath) {
 				return;
 			}
-			resolveLayout(state.currentSlide, layoutPath, target.id);
+			resolveLayout(state.currentSlide, layoutPath, target.id, true);
 		},
 
 		resetSlide() {
@@ -247,7 +256,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			if (!state.editable || !target || !path) {
 				return;
 			}
-			resolveLayout(state.currentSlide, path, target.id);
+			resolveLayout(state.currentSlide, path, target.id, true);
 		},
 	};
 }
