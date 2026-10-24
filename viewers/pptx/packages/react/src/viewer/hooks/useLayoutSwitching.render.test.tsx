@@ -77,6 +77,42 @@ describe('useLayoutSwitching.applyLayout', () => {
 		expect(markDirty).toHaveBeenCalledOnce();
 	});
 
+	it('leaves the slides state it was given as it is (the core replaces the slide in its array)', async () => {
+		const slide = makeSlide('ppt/slides/slide1.xml');
+		const given = [slide];
+		const handler = {
+			applyLayoutToSlide: vi.fn(async (index: number, layoutPath: string, slides: PptxSlide[]) => {
+				const updated = { ...slides[index]!, layoutPath };
+				slides[index] = updated;
+				return updated;
+			}),
+			getTemplateElementsForSlide: vi.fn().mockResolvedValue([]),
+		} as unknown as PptxHandler;
+		const updateSlides = vi.fn();
+
+		let applyLayout: ((path: string) => Promise<void>) | undefined;
+		function Harness(): null {
+			applyLayout = useLayoutSwitching({
+				handler,
+				slides: given,
+				activeSlideIndex: 0,
+				ops: { updateSlides } as unknown as ElementOperations,
+				history: { markDirty: vi.fn() } as unknown as EditorHistoryResult,
+			}).applyLayout;
+			return null;
+		}
+		act(() => root.render(<Harness />));
+
+		await act(async () => {
+			await applyLayout!('ppt/slideLayouts/slideLayout3.xml');
+		});
+
+		expect(given).toStrictEqual([slide]);
+		expect(given[0]).toBe(slide);
+		const updater = updateSlides.mock.calls[0]?.[0] as (prev: PptxSlide[]) => PptxSlide[];
+		expect(updater(given)[0]?.layoutPath).toBe('ppt/slideLayouts/slideLayout3.xml');
+	});
+
 	it('does nothing without a loaded handler', async () => {
 		const markDirty = vi.fn();
 		let applyLayout: ((path: string) => Promise<void>) | undefined;
