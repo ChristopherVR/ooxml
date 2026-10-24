@@ -193,8 +193,6 @@ export const translations = {
 	'pptx.review.translate': 'Übersetzen',
 	'pptx.review.translateTooltip': 'Ausgewählten Text übersetzen',
 	'pptx.shortcuts.action.cancelTextEdit': 'Inline-Textbearbeitung abbrechen / Menüs schließen',
-	'pptx.shortcuts.action.clearSelection':
-		'Auswahl aufheben / Menüs schließen / Bearbeitung abbrechen',
 	'pptx.shortcuts.action.commitTextEdit': 'Inline-Textbearbeitung bestätigen',
 	'pptx.shortcuts.action.copyElement': 'Ausgewähltes Element kopieren',
 	'pptx.shortcuts.action.cutElement': 'Ausgewähltes Element ausschneiden',
@@ -205,7 +203,6 @@ export const translations = {
 	'pptx.shortcuts.action.nudgeElementLarge': 'Ausgewähltes Element weit verschieben',
 	'pptx.shortcuts.action.pasteElement': 'Element einfügen',
 	'pptx.shortcuts.action.prevSlide': 'Vorherige Folie (ohne Auswahl)',
-	'pptx.shortcuts.action.redoAlternate': 'Wiederholen (alternativ)',
 	'pptx.shortcuts.action.selectAll': 'Alle Elemente auswählen',
 	'pptx.shortcuts.action.zoomCanvas': 'Arbeitsbereich zoomen',
 	'pptx.shortcuts.close': 'Schließen',

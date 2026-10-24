@@ -195,8 +195,6 @@ export const translations = {
 	'pptx.review.translate': 'Traduire',
 	'pptx.review.translateTooltip': 'Traduire le texte sélectionné',
 	'pptx.shortcuts.action.cancelTextEdit': "Annuler l'édition de texte en ligne / fermer les menus",
-	'pptx.shortcuts.action.clearSelection':
-		"Effacer la sélection / fermer les menus / annuler l'édition",
 	'pptx.shortcuts.action.commitTextEdit': "Valider l'édition de texte en ligne",
 	'pptx.shortcuts.action.copyElement': "Copier l'élément sélectionné",
 	'pptx.shortcuts.action.cutElement': "Couper l'élément sélectionné",
@@ -207,7 +205,6 @@ export const translations = {
 	'pptx.shortcuts.action.nudgeElementLarge': "Déplacer largement l'élément sélectionné",
 	'pptx.shortcuts.action.pasteElement': "Coller l'élément",
 	'pptx.shortcuts.action.prevSlide': 'Diapositive précédente (sans sélection)',
-	'pptx.shortcuts.action.redoAlternate': 'Rétablir (alternative)',
 	'pptx.shortcuts.action.selectAll': 'Sélectionner tous les éléments',
 	'pptx.shortcuts.action.zoomCanvas': 'Zoomer sur le plan de travail',
 	'pptx.shortcuts.close': 'Fermer',

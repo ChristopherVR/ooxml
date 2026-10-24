@@ -121,11 +121,8 @@ export const translationsFr: Partial<Record<TranslationKey, string>> = {
 	'pptx.shortcuts.action.zoomCanvas': 'Zoomer sur le plan de travail',
 	'pptx.shortcuts.action.commitTextEdit': "Valider l'édition de texte en ligne",
 	'pptx.shortcuts.action.cancelTextEdit': "Annuler l'édition de texte en ligne / fermer les menus",
-	'pptx.shortcuts.action.clearSelection':
-		"Effacer la sélection / fermer les menus / annuler l'édition",
 	'pptx.shortcuts.action.nextSlide': 'Diapositive suivante (sans sélection)',
 	'pptx.shortcuts.action.prevSlide': 'Diapositive précédente (sans sélection)',
-	'pptx.shortcuts.action.redoAlternate': 'Rétablir (alternative)',
 	'pptx.shortcuts.action.selectAll': 'Sélectionner tous les éléments',
 	'pptx.shortcuts.group.editing': 'Édition',
 	'pptx.shortcuts.group.navigation': 'Navigation',
