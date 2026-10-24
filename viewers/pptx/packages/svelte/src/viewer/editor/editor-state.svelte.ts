@@ -35,6 +35,7 @@ import type {
 	PptxSlideMaster,
 	PptxSlideSize,
 	PptxTheme,
+	PptxThemeOption,
 	PptxViewProperties,
 	PptxPresentationProperties,
 	PptxCustomShow,
@@ -114,6 +115,16 @@ export interface EditorStateDeps {
 	 */
 	setHandler?: (handler: PptxHandler, keepPrevious?: boolean, data?: PptxData) => void;
 	onChange?: () => void;
+	/**
+	 * The loaded deck's theme parts; an undo back to the loaded theme restores
+	 * the primary part's name. Optional for out-of-tree mounts and the unit tests.
+	 */
+	getThemeOptions?: () => readonly PptxThemeOption[];
+	/**
+	 * An undo or redo put a recorded theme back in {@link EditorState.theme};
+	 * the viewer publishes it as it does a gallery pick's theme.
+	 */
+	onThemeRestored?: (theme: PptxTheme) => void;
 	/** The host's `onpropertieschange`: the core fields a user edit changed. */
 	onCorePropertiesChange?: (updates: Partial<PptxCoreProperties>) => void;
 }
@@ -147,9 +158,10 @@ export class EditorState {
 	tagCollections = $state.raw<PptxTagCollection[]>([]);
 	/**
 	 * The deck's active theme, kept here so the Home tab's font dropdown can
-	 * lead with the theme fonts. Set by the viewer once a deck is loaded;
-	 * deliberately outside {@link EditorSnapshot} because it is not content the
-	 * undo stack owns.
+	 * lead with the theme fonts and the Design galleries mark the applied one.
+	 * Set by the viewer once a deck is loaded. Its colour scheme, font scheme
+	 * and name are recorded in every {@link EditorSnapshot}, so Undo takes a
+	 * theme pick back with the slides.
 	 */
 	theme = $state.raw<PptxTheme | undefined>(undefined);
 	/**
@@ -376,6 +388,16 @@ export class EditorState {
 	 *  Slides group for layout switching (`applyLayoutToSlide`). */
 	getHandler(): PptxHandler | null {
 		return this.#deps.getHandler();
+	}
+
+	/** The loaded deck's theme parts (see `EditorStateDeps.getThemeOptions`). */
+	themeOptions(): readonly PptxThemeOption[] {
+		return this.#deps.getThemeOptions?.() ?? [];
+	}
+
+	/** Publish a theme an undo or redo put back (see `EditorStateDeps.onThemeRestored`). */
+	onThemeRestored(theme: PptxTheme): void {
+		this.#deps.onThemeRestored?.(theme);
 	}
 
 	/** Hand a rebuilt handler to the loader (see `EditorStateDeps.setHandler`). */

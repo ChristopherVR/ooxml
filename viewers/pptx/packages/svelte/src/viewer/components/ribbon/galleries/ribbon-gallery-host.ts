@@ -1,4 +1,9 @@
-import { applyRibbonGalleryItem, buildRibbonGallery, galleryDeckView } from 'ooxml-ui/pptx';
+import {
+	applyRibbonGalleryItem,
+	buildRibbonGallery,
+	commitsThroughDeckStyle,
+	galleryDeckView,
+} from 'ooxml-ui/pptx';
 import type {
 	DeckStyleHost,
 	RibbonGalleryApplyResult,
@@ -11,8 +16,9 @@ import type {
  * `RibbonGalleryContext` from the editor's live selection and deck, asks
  * shared for descriptors, and dispatches a pick's `RibbonGalleryApplyResult`
  * onto this binding's existing update paths (the undoable element patch the
- * inspector uses, and the theme editor's scheme path). Design > Browse Themes
- * and Edit Theme reach the presentation theme through the same host. Every decision about
+ * inspector uses, and the shared Design gallery commit for every theme, scheme,
+ * effect and background pick). Design > Browse Themes and Edit Theme reach the
+ * presentation theme through the same host. Every decision about
  * WHAT a gallery offers lives in `pptx-viewer-shared`.
  *
  * Published to the ribbon subtree through Svelte context so every tab (Home,
@@ -20,16 +26,11 @@ import type {
  * threading.
  */
 import type { PptxTheme, PptxThemePreset, XmlObject } from 'pptx-viewer-core';
-import { THEME_PRESETS } from 'pptx-viewer-core';
 import { getContext, setContext } from 'svelte';
 
 import { createEditorDeckStyleHost } from '../../../editor/editor-deck-style';
 import type { EditorState } from '../../../editor/editor-state.svelte';
-import {
-	applyThemeColorScheme,
-	applyThemeFontScheme,
-	applyThemePreset,
-} from '../../../editor/editor-theme-scheme';
+import { applyThemePreset } from '../../../editor/editor-theme-scheme';
 
 export interface RibbonGalleryHost {
 	/** The context shared galleries read; reading it inside `$derived` tracks the editor. */
@@ -89,44 +90,17 @@ export function createRibbonGalleryHost(
 	};
 
 	async function dispatch(result: RibbonGalleryApplyResult): Promise<void> {
-		if (
-			result.kind === 'themeEffects' ||
-			result.kind === 'backgroundStyle' ||
-			result.kind === 'sequence'
-		) {
-			// Settles the hover preview itself, so the commit starts from the real slides.
+		if (commitsThroughDeckStyle(result)) {
+			// Settles the hover preview itself, so the commit starts from the real slides. A Themes,
+			// Colors or Fonts pick re-resolves the slides, writes only what it changes into the theme
+			// part and records one undo step; the host publishes its theme (`onthemechange`).
 			await deckStyle.commit(result);
 			return;
 		}
 		deckStyle.endPreview();
-		if (result.kind === 'command') {
-			return;
-		}
 		if (result.kind === 'element') {
 			editor.applyElementPatch(result.elementId, result.patch);
-			return;
 		}
-		const handler = editor.getHandler();
-		if (!handler || !editor.editable) {
-			return;
-		}
-		const current: PptxTheme = editor.theme ?? {
-			name: 'Custom Theme',
-			colorScheme: THEME_PRESETS[0].colorScheme,
-			fontScheme: THEME_PRESETS[0].fontScheme,
-		};
-		const next =
-			result.kind === 'theme'
-				? await applyThemePreset(editor, handler, current, {
-						id: 'gallery',
-						name: result.name,
-						colorScheme: result.colorScheme,
-						fontScheme: result.fontScheme,
-					})
-				: result.kind === 'themeColorScheme'
-					? await applyThemeColorScheme(editor, handler, current, result.colorScheme)
-					: await applyThemeFontScheme(handler, current, result.fontScheme);
-		publishTheme(next);
 	}
 
 	function publishTheme(next: PptxTheme): void {

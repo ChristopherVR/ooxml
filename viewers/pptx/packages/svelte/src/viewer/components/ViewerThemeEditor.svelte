@@ -9,6 +9,6 @@
 
 {#if handler}
   <DeckThemeEditor {editor} {handler} theme={editor.theme} inline={false}
-    onthemechange={(next) => { editor.theme = next; onthemechange(next); }}
+    {onthemechange}
     onclose={() => (editor.themeEditorOpen = false)} />
 {/if}
