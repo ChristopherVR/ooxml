@@ -4,7 +4,14 @@
  * Options: print what (slides/handouts/notes/outline), slides per page,
  * orientation, colour mode, frame slides, slide range.
  */
-import { getDensePanelTouchTargetPx, resolveDefaultPrintSettings } from 'ooxml-ui/pptx';
+import {
+	computeSlideCount,
+	computeSlideIndices,
+	effectiveOrientation as resolveOrientation,
+	estimatePageCount,
+	getDensePanelTouchTargetPx,
+	resolveDefaultPrintSettings,
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useState } from 'react';
 import { LuPrinter, LuX } from 'react-icons/lu';
 
@@ -72,52 +79,27 @@ export function PrintDialog({
 	const [customTo, setCustomTo] = useState(slides.length);
 
 	// ── Derived ─────────────────────────────────────────────────────────
-	const effectiveOrientation = useMemo<PrintOrientation>(() => {
-		if (printWhat === 'notes' || printWhat === 'outline') {
-			return 'portrait';
-		}
-		if (printWhat === 'handouts') {
-			return 'portrait';
-		}
-		return orientation;
-	}, [printWhat, orientation]);
+	// The shared print helpers every binding's dialog uses (the same ones the
+	// print job plan validates against).
+	const effectiveOrientation = useMemo<PrintOrientation>(
+		() => resolveOrientation(printWhat, orientation),
+		[printWhat, orientation],
+	);
 
-	const slideCount = useMemo(() => {
-		if (slideRange === 'all') {
-			return slides.length;
-		}
-		if (slideRange === 'current') {
-			return 1;
-		}
-		const from = Math.max(1, Math.min(customFrom, slides.length));
-		const to = Math.max(from, Math.min(customTo, slides.length));
-		return to - from + 1;
-	}, [slideRange, slides.length, customFrom, customTo]);
+	const slideCount = useMemo(
+		() => computeSlideCount(slideRange, slides.length, customFrom, customTo),
+		[slideRange, slides.length, customFrom, customTo],
+	);
 
-	const pageCount = useMemo(() => {
-		if (printWhat === 'slides') {
-			return slideCount;
-		}
-		if (printWhat === 'notes') {
-			return slideCount;
-		}
-		if (printWhat === 'outline') {
-			return 1;
-		}
-		return Math.ceil(slideCount / slidesPerPage);
-	}, [printWhat, slideCount, slidesPerPage]);
+	const pageCount = useMemo(
+		() => estimatePageCount(printWhat, slideCount, slidesPerPage),
+		[printWhat, slideCount, slidesPerPage],
+	);
 
-	const previewSlideIndices = useMemo<number[]>(() => {
-		if (slideRange === 'current') {
-			return [activeSlideIndex];
-		}
-		if (slideRange === 'custom') {
-			const from = Math.max(0, customFrom - 1);
-			const to = Math.min(slides.length - 1, customTo - 1);
-			return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
-		}
-		return Array.from({ length: slides.length }, (_, i) => i);
-	}, [slideRange, activeSlideIndex, customFrom, customTo, slides.length]);
+	const previewSlideIndices = useMemo<number[]>(
+		() => computeSlideIndices(slideRange, activeSlideIndex, slides.length, customFrom, customTo),
+		[slideRange, activeSlideIndex, customFrom, customTo, slides.length],
+	);
 
 	// ── Handlers ────────────────────────────────────────────────────────
 	const handlePrint = useCallback(() => {
