@@ -7,12 +7,17 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	applyMasterViewCrudAction,
-	historyStepUsesParts,
+	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
-import type { PptxData, PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
+import type {
+	PptxData,
+	PptxHandler,
+	PptxLayoutOption,
+	PptxSlide,
+	PptxSlideMaster,
+} from 'pptx-viewer-core';
 import { useCallback, useMemo } from 'react';
 
 import { useTranslation } from '../i18n/use-translation';
@@ -38,7 +43,7 @@ export interface UseMasterViewCrudInput {
 	target: MasterViewTarget | null;
 	setSlideMasters: React.Dispatch<React.SetStateAction<PptxSlideMaster[]>>;
 	/** The Home > Layout list, which this binding keeps apart from the masters it comes from. */
-	setLayoutOptions: (layoutOptions: NonNullable<PptxData['layoutOptions']>) => void;
+	setLayoutOptions: (layoutOptions: PptxLayoutOption[]) => void;
 	setActiveMasterIndex: React.Dispatch<React.SetStateAction<number>>;
 	setActiveLayoutIndex: React.Dispatch<React.SetStateAction<number | null>>;
 	markDirty: () => void;
@@ -125,19 +130,17 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 
 			// Adopt the helper's fresh handler and masters (it does not mutate the
 			// ones it was given), and the layout list built from them, or Home >
-			// Layout keeps offering a deleted layout and misses an inserted one. The slides stay as they are: the reloaded ones
-			// carry no loaded pictures (each shows as a placeholder), and they hold
-			// nothing the command changed. The previous handler stays alive: the
-			// slides on screen and the undo stack still show its pictures.
+			// Layout keeps offering a deleted layout and misses an inserted one.
+			// The slides stay as they are: the reloaded ones carry no loaded
+			// pictures (each shows as a placeholder), and they hold nothing the
+			// command changed. The previous handler stays alive: the slides on
+			// screen and the undo stack still show its pictures.
 			handlerRef.current = result.handler;
 			setSlideMasters(result.data.slideMasters ?? []);
 			setLayoutOptions(result.data.layoutOptions ?? []);
 			setActiveMasterIndex(result.target.masterIndex);
 			setActiveLayoutIndex(result.target.layoutIndex);
-			const removed = removedSlideMasterParts(data, result.data);
-			if (removed.length > 0) {
-				forgetHistory((step) => historyStepUsesParts(step, removed));
-			}
+			forgetStepsUsingRemovedParts(forgetHistory, data, result.data);
 			markDirty();
 		},
 		[

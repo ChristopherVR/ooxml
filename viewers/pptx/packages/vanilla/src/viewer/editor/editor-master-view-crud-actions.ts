@@ -2,10 +2,9 @@ import {
 	applyImagePathPatches,
 	applyMasterViewCrudAction,
 	collectImagePaths,
-	historyStepUsesParts,
+	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
 import type { MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
 /**
@@ -201,12 +200,8 @@ export function createMasterViewCrudActions(
 				selectedElementId: null,
 				selectedElementIds: [],
 			});
-			// A step restores the masters too, so every step taken before a delete still holds what it
-			// removed, and goes.
-			const removed = removedSlideMasterParts(data, result.data);
-			if (removed.length > 0) {
-				ops.history.forget((step) => historyStepUsesParts(step, removed));
-			}
+			// A step restores the masters too, so a delete leaves no undo step here.
+			forgetStepsUsingRemovedParts((reaches) => ops.history.forget(reaches), data, result.data);
 			ops.commitChange();
 		},
 	};

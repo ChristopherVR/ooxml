@@ -1,9 +1,8 @@
 import {
 	applyMasterViewCrudAction,
-	historyStepUsesParts,
+	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
 import type {
 	MasterViewCrudAction,
@@ -113,10 +112,7 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		input.slideMasters.value = result.data.slideMasters ?? [];
 		// Or Home > Layout keeps offering a deleted layout and misses an inserted one.
 		input.layoutOptions.value = result.data.layoutOptions ?? [];
-		const removed = removedSlideMasterParts(deck, result.data);
-		if (removed.length > 0) {
-			input.forgetHistory((step) => historyStepUsesParts(step, removed));
-		}
+		forgetStepsUsingRemovedParts(input.forgetHistory, deck, result.data);
 		if (result.target.layoutIndex === null) {
 			input.onSelectMaster(result.target.masterIndex);
 		} else {
