@@ -140,6 +140,13 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 				tableStylesToDelete: loader.tableStylesToDelete,
 			}),
 		onCorePropertiesChange: (updates) => options.onpropertieschange?.(updates),
+		// Undo and Redo of a theme pick: the primary theme part's loaded name, and the theme put back
+		// published to the loader the way a gallery pick's theme is (`onthemechange`).
+		getThemeOptions: () => loader.themeOptions,
+		onThemeRestored: (theme) => {
+			loader.presentationTheme = theme;
+			loader.colorScheme = theme.colorScheme;
+		},
 		onChange: () => {
 			viewer.setSlideCount(editor.slides.length);
 			options.onchange?.();

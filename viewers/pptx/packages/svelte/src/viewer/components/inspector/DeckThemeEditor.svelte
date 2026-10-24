@@ -16,7 +16,10 @@
 		}
 		busy = true;
 		try {
-			onthemechange(await applyThemePreset(editor, handler, theme, { id: 'custom', ...edit }));
+			const next = await applyThemePreset(editor, handler, theme, { id: 'custom', ...edit });
+			// The editor's theme is what its undo steps record; the host publishes it too.
+			editor.theme = next;
+			onthemechange(next);
 			onclose?.();
 		} finally {
 			busy = false;
