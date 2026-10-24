@@ -63,14 +63,10 @@ function liveController(latest: { current: Latest }): LiveColorController {
 
 /**
  * A native `<input type="color">` that previews while the user drags through
- * the picker and commits once when the pick settles (shared
- * `createLiveColorInput`): every shade shows on the slide with no undo step or
- * recent colour, the settled pick (native `change`, or `blur` for a drag no
- * change ended) is ONE undo step and one Recent Colors entry, and a drag that
- * settles where it started is no undo step (its `change` still counts as a
- * recent colour). Putting a drag back writes the element's own leaves, so an
- * element with no colour of its own keeps none. The drag belongs to the
- * element it started on: a new selection never receives its pick.
+ * the picker and commits once when the pick settles (the shared
+ * `createLiveColorInput` rule). The shades, and a drag put back, are silent
+ * writes of the element's own leaves (`LiveEditContext`), so an element with
+ * no colour of its own keeps none; the settled pick goes through `onApply`.
  *
  * React's `onChange` runs for every native `input`, and React does not expose
  * the native `change` on its own, so that one is listened for directly, the
