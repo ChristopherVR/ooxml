@@ -45,7 +45,7 @@ export interface EditorSnapshot {
 	customProperties: PptxCustomProperty[];
 	/** `ppt/tags/*.xml` name/value metadata, editable in the inspector. */
 	tagCollections: PptxTagCollection[];
-	/** The theme's colour scheme, font scheme and name, so Undo takes a theme pick back too. */
+	/** The theme's schemes, name and masters' theme parts, so Undo takes a theme change back too. */
 	theme?: HistoryTheme | undefined;
 }
 
@@ -64,7 +64,8 @@ export function createEditorSnapshot(snapshot: EditorSnapshot): EditorSnapshot {
 		appProperties: structuredClone(snapshot.appProperties),
 		customProperties: structuredClone(snapshot.customProperties),
 		tagCollections: structuredClone(snapshot.tagCollections),
-		theme: historyTheme(snapshot.theme),
+		// With each master's theme part, so Undo of a theme applied by path points them back.
+		theme: historyTheme(snapshot.theme, snapshot.slideMasters),
 	};
 }
 

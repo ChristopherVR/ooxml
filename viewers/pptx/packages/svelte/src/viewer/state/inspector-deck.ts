@@ -2,10 +2,10 @@ import type { CanvasSize, SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pp
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
+	applyThemeByPath as applyThemePart,
 	resolveSlideSizeSelection,
 	scaleSlidesForSizeChange,
 	slideSizeToCanvasPx,
-	tableStyleSaveOptions,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -17,7 +17,6 @@ import type {
 } from 'pptx-viewer-core';
 import { getContext, setContext } from 'svelte';
 
-import { createEditorSnapshot, saveEditorDocument } from '../editor/editor-document-state';
 import type { EditorState } from '../editor/editor-state.svelte';
 import type { PresentationLoader } from './presentation-loader.svelte';
 
@@ -43,8 +42,11 @@ export interface InspectorDeckActions {
 	readonly slideSize: SlideSizeEmu | undefined;
 	/** Whether any slide has at least one element; gates the Maximize/Ensure Fit rescale prompt. */
 	readonly hasContent: boolean;
-	/** Apply a packaged theme part by archive path (React's `handleApplyTheme`). */
-	applyThemeByPath(themePath: string, applyToAllMasters: boolean): void;
+	/**
+	 * Point the first master, or every one, at a packaged theme part by archive path (React's
+	 * `handleApplyTheme`), in place, as one undo step. Resolves once applied.
+	 */
+	applyThemeByPath(themePath: string, applyToAllMasters: boolean): Promise<void>;
 	/** Resize the slide canvas (inspector SLIDE SIZE card's raw W/H inputs). */
 	updateCanvasSize(size: CanvasSize): void;
 	/**
@@ -96,40 +98,6 @@ export interface InspectorDeckDeps {
 export function createInspectorDeckActions(deps: InspectorDeckDeps): InspectorDeckActions {
 	const { loader, editor } = deps;
 
-	/**
-	 * Mirror React's `refreshContentAfterThemeChange` / Vue's `refreshContent`:
-	 * re-serialise the deck and run it back through the load pipeline so slide
-	 * colours re-resolve against the newly-applied theme. Serialises via
-	 * `saveEditorDocument` directly (not `editor.save()`) so the dirty flag is
-	 * not cleared by the refresh itself.
-	 */
-	async function refreshContent(): Promise<void> {
-		const handler = loader.handler;
-		if (!handler) {
-			return;
-		}
-		const bytes = await saveEditorDocument(
-			handler,
-			{ ...createEditorSnapshot(editor), slides: editor.renderedSlides },
-			'pptx',
-			undefined,
-			editor.embedFonts,
-			// Without this the theme round-trip would reload the deck at its
-			// load-time `p:sldSz` and silently undo a slide-size pick.
-			resolveSlideSizeSelection({ current: loader.slideSize, canvas: loader.canvasSize }).size,
-			undefined,
-			// Without this the theme round-trip would reload the deck at its
-			// load-time `ppt/tableStyles.xml` and silently undo a pending
-			// table-style edit/delete.
-			tableStyleSaveOptions({
-				tableStyleMap: loader.tableStyleMap,
-				tableStylesDefaultId: loader.tableStylesDefaultId,
-				tableStylesToDelete: loader.tableStylesToDelete,
-			}),
-		);
-		await loader.load(bytes);
-	}
-
 	return {
 		get themeOptions(): PptxThemeOption[] {
 			return loader.themeOptions;
@@ -146,19 +114,34 @@ export function createInspectorDeckActions(deps: InspectorDeckDeps): InspectorDe
 		get hasContent(): boolean {
 			return editor.slides.some((slide) => slide.elements.length > 0);
 		},
-		applyThemeByPath(themePath: string, applyToAllMasters: boolean): void {
-			const handler = loader.handler;
-			if (!handler) {
+		// The shared step re-points the masters and re-themes the slides on them; no reload, so the
+		// slide on screen, the selection and Undo stay. The snapshot records the masters' parts.
+		async applyThemeByPath(themePath: string, applyToAllMasters: boolean): Promise<void> {
+			if (!editor.editable) {
 				return;
 			}
-			void (async () => {
-				await handler.setPresentationTheme(themePath, applyToAllMasters);
-				editor.slideMasters = editor.slideMasters.map((master, index) =>
-					applyToAllMasters || index === 0 ? { ...master, themePath } : master,
-				);
-				editor.commitChange();
-				await refreshContent();
-			})().catch(() => undefined);
+			const change = await applyThemePart(loader.handler, {
+				themePath,
+				applyToAllMasters,
+				slides: editor.slides,
+				slideMasters: editor.slideMasters,
+				theme: editor.theme,
+				templateElementsBySlideId: editor.templateElementsBySlideId,
+			});
+			if (!change) {
+				return;
+			}
+			editor.pushHistory();
+			editor.slides = change.slides;
+			editor.templateElementsBySlideId = change.templateElementsBySlideId;
+			editor.slideMasters = change.slideMasters;
+			if (change.deckTheme) {
+				const { theme } = change.deckTheme;
+				editor.theme = theme;
+				loader.presentationTheme = theme;
+				loader.colorScheme = theme.colorScheme;
+			}
+			editor.commitChange();
 		},
 		updateCanvasSize(size: CanvasSize): void {
 			const width = Math.round(size.width);

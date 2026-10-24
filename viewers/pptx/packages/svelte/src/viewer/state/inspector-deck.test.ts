@@ -7,7 +7,7 @@ import { PresentationLoader } from './presentation-loader.svelte';
 
 /**
  * Unit tests for the inspector deck-action facade (the Svelte port of Vue's
- * `useInspectorDeckActions`): theme apply routing through the handler +
+ * `useInspectorDeckActions`): theme apply re-pointing the masters in place +
  * master `themePath` update, canvas-size clamping, and the merge semantics of
  * the presentation- / document-property patches.
  */
@@ -26,15 +26,17 @@ function makeEditor(handler: PptxHandler | null = null): EditorState {
 }
 
 interface FakeHandlerCalls {
-	setTheme: Array<[string, boolean]>;
+	retarget: Array<[string, string]>;
 	saves: number;
 }
 
 function makeFakeHandler(): { handler: PptxHandler; calls: FakeHandlerCalls } {
-	const calls: FakeHandlerCalls = { setTheme: [], saves: 0 };
+	const calls: FakeHandlerCalls = { retarget: [], saves: 0 };
 	const fake = {
-		setPresentationTheme: (themePath: string, applyToAllMasters = true): Promise<void> => {
-			calls.setTheme.push([themePath, applyToAllMasters]);
+		getThemePartSchemes: (path: string) =>
+			Promise.resolve({ path, name: path, colorScheme: {}, fontScheme: {} }),
+		setSlideMasterTheme: (masterPath: string, themePath: string): Promise<void> => {
+			calls.retarget.push([masterPath, themePath]);
 			return Promise.resolve();
 		},
 		save: (): Promise<Uint8Array> => {
@@ -46,47 +48,48 @@ function makeFakeHandler(): { handler: PptxHandler; calls: FakeHandlerCalls } {
 }
 
 describe('createInspectorDeckActions', () => {
-	it('applyThemeByPath routes through the handler and retags only the first master', async () => {
+	it('applyThemeByPath re-points only the first master, in place, as one undo step', async () => {
 		const { handler, calls } = makeFakeHandler();
 		const editor = makeEditor(handler);
 		const loader = new PresentationLoader();
 		loader.handler = handler;
 		const deck = createInspectorDeckActions({ loader, editor });
 
-		deck.applyThemeByPath('ppt/theme/theme2.xml', false);
-		await vi.waitFor(() => {
-			expect(editor.slideMasters[0]?.themePath).toBe('ppt/theme/theme2.xml');
-		});
+		await deck.applyThemeByPath('ppt/theme/theme2.xml', false);
 
-		expect(calls.setTheme).toStrictEqual([['ppt/theme/theme2.xml', false]]);
+		expect(calls.retarget).toStrictEqual([
+			['ppt/slideMasters/slideMaster1.xml', 'ppt/theme/theme2.xml'],
+		]);
+		expect(editor.slideMasters[0]?.themePath).toBe('ppt/theme/theme2.xml');
 		expect(editor.slideMasters[1]?.themePath).toBe('ppt/theme/theme1.xml');
 		expect(editor.dirty).toBeTruthy();
-		// The content refresh re-serialised the deck through the handler.
-		await vi.waitFor(() => {
-			expect(calls.saves).toBe(1);
-		});
+		expect(editor.canUndo).toBeTruthy();
+		// Applied in place: the deck is not re-serialised and reloaded.
+		expect(calls.saves).toBe(0);
 	});
 
-	it('applyThemeByPath retags every master when applying to all', async () => {
-		const { handler } = makeFakeHandler();
+	it('applyThemeByPath re-points every master when applying to all', async () => {
+		const { handler, calls } = makeFakeHandler();
 		const editor = makeEditor(handler);
 		const loader = new PresentationLoader();
 		loader.handler = handler;
 		const deck = createInspectorDeckActions({ loader, editor });
 
-		deck.applyThemeByPath('ppt/theme/theme2.xml', true);
-		await vi.waitFor(() => {
-			expect(editor.slideMasters[1]?.themePath).toBe('ppt/theme/theme2.xml');
-		});
-		expect(editor.slideMasters[0]?.themePath).toBe('ppt/theme/theme2.xml');
+		await deck.applyThemeByPath('ppt/theme/theme2.xml', true);
+
+		expect(calls.retarget).toHaveLength(2);
+		expect(editor.slideMasters.map((master) => master.themePath)).toStrictEqual([
+			'ppt/theme/theme2.xml',
+			'ppt/theme/theme2.xml',
+		]);
 	});
 
-	it('applyThemeByPath is a no-op without a loaded handler', () => {
+	it('applyThemeByPath is a no-op without a loaded handler', async () => {
 		const editor = makeEditor();
 		const loader = new PresentationLoader();
 		const deck = createInspectorDeckActions({ loader, editor });
 
-		deck.applyThemeByPath('ppt/theme/theme2.xml', true);
+		await deck.applyThemeByPath('ppt/theme/theme2.xml', true);
 
 		expect(editor.slideMasters[0]?.themePath).toBe('ppt/theme/theme1.xml');
 		expect(editor.dirty).toBeFalsy();

@@ -163,7 +163,7 @@ export function restoreEditorSnapshot(
 	if (!snapshot) {
 		return;
 	}
-	restoreEditorTheme(state, historyTheme(state.theme), snapshot.theme);
+	restoreEditorTheme(state, historyTheme(state.theme, state.slideMasters), snapshot.theme);
 	const restored = createEditorSnapshot(snapshot);
 	state.slides = restored.slides;
 	state.templateElementsBySlideId = restored.templateElementsBySlideId;
