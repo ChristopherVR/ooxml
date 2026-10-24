@@ -41,7 +41,8 @@ function Harness({
 	onReady: (handle: HarnessHandle) => void;
 }): React.ReactElement {
 	const handlerRef = useRef(handler);
-	const [slides, setSlides] = useState(initialData.slides);
+	// A command leaves the slides alone (nothing sets them), so they are the props' own array.
+	const slides = initialData.slides;
 	const [slideMasters, setSlideMasters] = useState(initialData.slideMasters);
 	const [, setActiveMasterIndex] = useState(target.masterIndex);
 	const [, setActiveLayoutIndex] = useState(target.layoutIndex);
@@ -53,7 +54,6 @@ function Harness({
 		slides,
 		slideMasters,
 		target,
-		setSlides,
 		setSlideMasters,
 		setActiveMasterIndex,
 		setActiveLayoutIndex,

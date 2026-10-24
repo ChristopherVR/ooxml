@@ -1197,7 +1197,6 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				masterIndex: state.activeMasterIndex,
 				layoutIndex: state.activeLayoutIndex,
 			},
-			setSlides: state.setSlides,
 			setSlideMasters: state.setSlideMasters,
 			setActiveMasterIndex: state.setActiveMasterIndex,
 			setActiveLayoutIndex: state.setActiveLayoutIndex,
