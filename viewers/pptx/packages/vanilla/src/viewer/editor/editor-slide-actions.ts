@@ -1,11 +1,12 @@
 import {
 	buildSlideTemplateSlide,
 	createBlankSlide,
+	insertedLayoutCompletion,
 	makeSlideId,
 	resetSlideLayoutPath,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
-import type { SlideTemplateId } from 'ooxml-ui/pptx';
+import type { InsertedLayoutCompletion, SlideTemplateId } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per action, each computed from the
    previous statement's result); merging them isn't a style choice here. */
@@ -63,14 +64,15 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 	 * Walk the layout XML for `index` and merge the handler's result back into
 	 * the slide, but only while it still carries the id we started from (guards
 	 * against a concurrent edit having moved/replaced it). A layout change is its
-	 * own undo step (`record`); a new slide's layout completes the insertion,
-	 * which recorded the step already.
+	 * own undo step; a new slide's layout (`placed`, the draft as the store holds
+	 * it) completes the insertion, which recorded the step already, and leaves an
+	 * edit made to the draft meanwhile in place, taking only the artwork.
 	 */
 	function resolveLayout(
 		index: number,
 		layoutPath: string,
 		expectedId: string,
-		record: boolean,
+		placed?: PptxSlide,
 	): void {
 		const handler = deps.getHandler();
 		if (!handler) {
@@ -82,21 +84,30 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 				async (updated) => {
 					const templateElements = await handler.getTemplateElementsForSlide(updated.id);
 					const current = store.get();
-					if (current.slides[index]?.id === expectedId) {
-						if (record) {
-							ops.pushHistory();
-						}
-						const slides = [...current.slides];
-						slides[index] = updated;
-						store.set({
-							slides,
-							templateElementsBySlideId: {
-								...current.templateElementsBySlideId,
-								[updated.id]: templateElements,
-							},
-						});
-						ops.commitChange();
+					let completion: InsertedLayoutCompletion = 'none';
+					if (placed) {
+						completion = insertedLayoutCompletion(current.slides[index], placed);
+					} else if (current.slides[index]?.id === expectedId) {
+						completion = 'replace';
 					}
+					if (completion === 'none') {
+						return undefined;
+					}
+					if (!placed) {
+						ops.pushHistory();
+					}
+					const slides = [...current.slides];
+					if (completion === 'replace') {
+						slides[index] = updated;
+					}
+					store.set({
+						slides,
+						templateElementsBySlideId: {
+							...current.templateElementsBySlideId,
+							[updated.id]: templateElements,
+						},
+					});
+					ops.commitChange();
 					return undefined;
 				},
 				() => {
@@ -203,7 +214,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 				selectedElementIds: [],
 			});
 			ops.commitChange();
-			resolveLayout(insertAt, layoutPath, draft.id, false);
+			resolveLayout(insertAt, layoutPath, draft.id, store.get().slides[insertAt]);
 		},
 
 		insertSlideFromTemplate(templateId) {
@@ -242,7 +253,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			if (!state.editable || !target || !layoutPath) {
 				return;
 			}
-			resolveLayout(state.currentSlide, layoutPath, target.id, true);
+			resolveLayout(state.currentSlide, layoutPath, target.id);
 		},
 
 		resetSlide() {
@@ -256,7 +267,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			if (!state.editable || !target || !path) {
 				return;
 			}
-			resolveLayout(state.currentSlide, path, target.id, true);
+			resolveLayout(state.currentSlide, path, target.id);
 		},
 	};
 }
