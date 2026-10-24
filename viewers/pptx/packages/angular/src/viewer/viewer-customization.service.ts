@@ -89,6 +89,20 @@ export class ViewerCustomizationService {
 		});
 	}
 
+	/**
+	 * Follow the host's `allowExternalContent` input: a boolean locks the Trust
+	 * Center "Allow external content" setting to it, `undefined` leaves it to
+	 * the user. Applied once synchronously, so the first load already sees the
+	 * lock, then on every change. Must be called from an injection context.
+	 */
+	bindAllowExternalContent(source: () => boolean | undefined): EffectRef {
+		this.controller.setAllowExternalContent(untracked(source));
+		return effect(() => {
+			const allow = source();
+			untracked(() => this.controller.setAllowExternalContent(allow));
+		});
+	}
+
 	/** The legacy `hiddenActions` list unioned with the customisation. */
 	effectiveHiddenActions(legacy: readonly ToolbarActionId[]): ToolbarActionId[] {
 		return resolveEffectiveHiddenActions(this.resolved(), legacy) ?? [];

@@ -47,6 +47,7 @@ import {
 	withSaveFailureToast,
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
+	resolveAllowExternalContent,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveHistoryDepth,
@@ -253,6 +254,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			customization,
 			initialSlide,
 			googleFonts,
+			allowExternalContent,
 		} = props;
 		// `readOnly` takes editing away from a host that also allows it.
 		const hostCanEdit = canEditProp && !readOnly;
@@ -369,7 +371,12 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// `canEdit` before `useViewerState` and the autosave activation read it.
 		const { optionsStore, options: viewerOptions } = useViewerOptions();
 		// Host UI customisation (the `customization` prop + handle helpers).
-		const custom = useViewerCustomization(customization, legacyHiddenActions, optionsStore);
+		const custom = useViewerCustomization(
+			customization,
+			legacyHiddenActions,
+			optionsStore,
+			allowExternalContent,
+		);
 		const { resolved: customizationResolved, hiddenActions } = custom;
 		const aiEnabled = Boolean(ai) && isFeatureEnabled(customizationResolved, 'ai');
 		const optionsAvailable = isDialogAvailable(customizationResolved, 'options');
@@ -990,7 +997,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// Trust Center > "Allow external content": core defaults this to false
 			// (SSRF/privacy-safe), so only an explicit `true` here lets remote
 			// http(s) image sources actually load.
-			allowExternalImages: viewerOptions.trust.allowExternalContent,
+			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 			initialSlide,
 			googleFonts,
 			setReadOnlyRecommendation: readOnlyRec.setRecommendation,
@@ -1052,7 +1059,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 							handler: handlerRef.current,
 							slides: state.slides,
 							templateElementsBySlideId: state.templateElementsBySlideId,
-							allowExternalImages: viewerOptions.trust.allowExternalContent,
+							allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 							editable: canEdit,
 						}
 					: null,

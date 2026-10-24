@@ -682,6 +682,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	/** Initial inspector visibility; omitted preserves the desktop/mobile default. */
 	inspectorInitiallyOpen?: boolean;
 	customization?: ViewerCustomization;
+
+	/**
+	 * Host switch for linked external images and media (http(s) relationship
+	 * targets). `false` blocks every automatic fetch to other servers, `true`
+	 * allows it; either value locks File > Options > Trust Center > "Allow
+	 * external content" to match. Unset keeps the user's choice there.
+	 */
+	allowExternalContent?: boolean;
 }
 
 export interface PowerPointViewerHandle

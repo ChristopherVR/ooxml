@@ -135,6 +135,13 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * invalid `baseUrl` disables the fallback (with a console warning).
 	 */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * Host switch for linked external images and media (http(s) relationship
+	 * targets). `false` blocks every automatic fetch to other servers, `true`
+	 * allows it; either value locks File > Options > Trust Center > "Allow
+	 * external content" to match. Unset keeps the user's choice there.
+	 */
+	allowExternalContent?: boolean;
 	/** Show the thumbnail sidebar. Default true. */
 	showThumbnails?: boolean;
 	/** Show the navigation/zoom toolbar. Default true. */

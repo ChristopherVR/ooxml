@@ -90,6 +90,8 @@ export function createViewerCustomizationLifecycle(
 	options: PptxViewerOptions,
 ): ViewerCustomizationLifecycle {
 	const controller = createCustomizationController(options.customization);
+	// The host `allowExternalContent` option locks the Trust Center setting.
+	controller.setAllowExternalContent(options.allowExternalContent);
 	let cachedFor: ResolvedCustomization | null = null;
 	let cachedOptions: PptxViewerOptions = options;
 	let unsubscribe: (() => void) | null = null;

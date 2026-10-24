@@ -205,6 +205,14 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 */
 	googleFonts?: GoogleFontsOption;
 	/**
+	 * Host switch for linked external images and media (http(s) relationship
+	 * targets). `false` blocks every automatic fetch to other servers, `true`
+	 * allows it; either value locks File > Options > Trust Center > "Allow
+	 * external content" to match. Unset keeps the user's choice there. Read
+	 * once, when the viewer is created.
+	 */
+	allowExternalContent?: boolean;
+	/**
 	 * Enable editing (default `false`): click to select, drag/resize/rotate,
 	 * inline text editing, keyboard shortcuts, undo/redo, and the toolbar
 	 * Save button. Toggle later via `setEditable`.

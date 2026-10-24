@@ -36,8 +36,14 @@ function Probe(props: {
 	customization?: ViewerCustomization;
 	hiddenActions?: ToolbarActionId[];
 	store: ViewerOptionsStore;
+	allowExternalContent?: boolean;
 }): null {
-	latest = useViewerCustomization(props.customization, props.hiddenActions, props.store);
+	latest = useViewerCustomization(
+		props.customization,
+		props.hiddenActions,
+		props.store,
+		props.allowExternalContent,
+	);
 	return null;
 }
 
@@ -111,5 +117,49 @@ describe('useViewerCustomization', () => {
 		});
 		expect(current().resolved.hiddenActions.has('insert')).toBeFalsy();
 		expect(current().resolved.hiddenActions.has('view')).toBeTruthy();
+	});
+});
+
+describe('useViewerCustomization allowExternalContent host switch', () => {
+	it('locks the Trust Center setting off on the first render', () => {
+		const store = createViewerOptionsStore({ persist: false });
+		act(() => {
+			root.render(<Probe store={store} allowExternalContent={false} />);
+		});
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
+		store.setValue('trust', 'allowExternalContent', true);
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+	});
+
+	it('locks it on for true, and lifts the lock when the prop is unset', () => {
+		const store = createViewerOptionsStore({ persist: false });
+		act(() => {
+			root.render(<Probe store={store} allowExternalContent />);
+		});
+		expect(store.getOptions().trust.allowExternalContent).toBe(true);
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
+		act(() => {
+			root.render(<Probe store={store} />);
+		});
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(false);
+	});
+
+	it('keeps the lock when a new customization object replaces the old one', () => {
+		const store = createViewerOptionsStore({ persist: false });
+		act(() => {
+			root.render(<Probe store={store} allowExternalContent={false} customization={{}} />);
+		});
+		act(() => {
+			root.render(
+				<Probe
+					store={store}
+					allowExternalContent={false}
+					customization={{ ribbon: { hiddenTabs: ['draw'] } }}
+				/>,
+			);
+		});
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
 	});
 });

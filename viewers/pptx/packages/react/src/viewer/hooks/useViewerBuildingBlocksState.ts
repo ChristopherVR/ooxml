@@ -11,6 +11,7 @@ import type { GoogleFontsOption } from 'ooxml-ui/pptx';
  * effect, `useEditorOperations`, and `useViewerIntegration` (export/print/
  * property handlers, mode switching, and the imperative handle).
  */
+import { resolveAllowExternalContent } from 'ooxml-ui/pptx';
 
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
@@ -44,6 +45,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	initialSlide?: number;
 	/** Host `googleFonts`: the Google Fonts fallback policy; forwarded to `useViewerIntegration`. */
 	googleFonts?: GoogleFontsOption;
+	/** Host `allowExternalContent`: overrides the Trust Center setting for every load when set. */
+	allowExternalContent?: boolean;
 	autosaveEnabled: boolean;
 	userName?: string;
 	handle?: React.ForwardedRef<PowerPointViewerHandle>;
@@ -85,7 +88,7 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
-	const { initialSlide, googleFonts } = input;
+	const { initialSlide, googleFonts, allowExternalContent } = input;
 	const {
 		onContentChange,
 		onDirtyChange,
@@ -209,7 +212,7 @@ export function useViewerBuildingBlocksState(
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images
 		// under the same default-off, core-side SSRF/privacy guard.
-		allowExternalImages: viewerOptions.trust.allowExternalContent,
+		allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
 		canInsertElement: !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView,

@@ -50,6 +50,7 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	loadedThemeName,
+	resolveAllowExternalContent,
 	resolveAutosaveIntervalSeconds,
 	saveFailureMessage,
 	SAVE_FAILED_TOAST,
@@ -227,6 +228,9 @@ const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	// Left undefined on purpose too: an omitted `googleFonts` keeps the Google Fonts fallback, but
 	// Vue would cast the absent prop (its type includes `false`) to `false` and turn it off.
 	googleFonts: undefined,
+	// Left undefined on purpose too: an omitted `allowExternalContent` keeps the user's Trust
+	// Center choice, but Vue would cast the absent Boolean prop to `false` and block it.
+	allowExternalContent: undefined,
 	smartArt3D: false,
 	surfaceChart3D: false,
 	barChart3D: false,
@@ -341,7 +345,8 @@ const deck = useLoadContent(() => activeContent.value, {
 	// Off (the option's non-default) makes core drop any http(s) image URL
 	// instead of fetching it (SSRF/privacy gate); every binding used to skip
 	// this entirely, so the toggle changed nothing regardless of its value.
-	getAllowExternalImages: () => viewerOptions.value.trust.allowExternalContent,
+	getAllowExternalImages: () =>
+		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
 	// File > Fonts. `fontEmbedding` is declared further down (it needs the
 	// loaded deck's embedded fonts), so this getter reads it lazily at save
 	// time, exactly like `getSaveIntent` reads the password.
@@ -1344,7 +1349,10 @@ async function compareWithPresentation(): Promise<void> {
 		return;
 	}
 	const incoming = await new PptxHandler().load(picked.buffer, {
-		allowExternalImages: viewerOptions.value.trust.allowExternalContent,
+		allowExternalImages: resolveAllowExternalContent(
+			props.allowExternalContent,
+			viewerOptions.value,
+		),
 	});
 	if (incoming) {
 		versionHistoryWiring.compareWithSlides(incoming.slides);
@@ -1951,7 +1959,10 @@ const slidePackageClipboard = createSlidePackageClipboard({
 					handler: handler.value,
 					slides: slides.value,
 					templateElementsBySlideId: templateElementsBySlideId.value,
-					allowExternalImages: viewerOptions.value.trust.allowExternalContent,
+					allowExternalImages: resolveAllowExternalContent(
+						props.allowExternalContent,
+						viewerOptions.value,
+					),
 					editable: canEditEffective.value,
 				}
 			: null,

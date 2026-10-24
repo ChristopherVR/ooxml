@@ -5,6 +5,7 @@ import {
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
 	resolve3DRenderingFlags,
+	resolveAllowExternalContent,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
 	SAVE_FAILED_TOAST,
@@ -221,7 +222,10 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	// snapshotted once, so a user who flips the option keeps it in effect for
 	// the very next file they open.
 	loader.getLoadOptions = () => ({
-		allowExternalImages: editorUi.optionsState.options.trust.allowExternalContent,
+		allowExternalImages: resolveAllowExternalContent(
+			options.getAllowExternalContent?.(),
+			editorUi.optionsState.options,
+		),
 	});
 
 	// Each 3D opt-in flag ANDs the host's own prop with Options > Advanced >

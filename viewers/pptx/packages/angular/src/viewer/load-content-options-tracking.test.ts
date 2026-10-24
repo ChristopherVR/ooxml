@@ -105,3 +105,21 @@ describe('load() inside the viewer load effect', () => {
 		expect(load).toHaveBeenCalledTimes(2);
 	});
 });
+
+describe('load() and the host allowExternalContent input', () => {
+	it('passes the host value to the parser over the Trust Center option, and the option when unset', async () => {
+		const { loader, options } = harness();
+		const parse = vi.spyOn(PptxHandler.prototype, 'load');
+		options.setValue('trust', 'allowExternalContent', true);
+		let host: boolean | undefined = false;
+		loader.bindHostAllowExternalContent(() => host);
+
+		await loader.load(await blankDeck());
+		expect(parse.mock.calls.at(-1)?.[1]).toMatchObject({ allowExternalImages: false });
+
+		host = undefined;
+		await loader.load(await blankDeck());
+		expect(parse.mock.calls.at(-1)?.[1]).toMatchObject({ allowExternalImages: true });
+		parse.mockRestore();
+	});
+});

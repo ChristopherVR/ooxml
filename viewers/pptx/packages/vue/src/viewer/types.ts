@@ -248,6 +248,13 @@ export interface PowerPointViewerProps {
 	 */
 	googleFonts?: GoogleFontsOption;
 	/**
+	 * Host switch for linked external images and media (http(s) relationship
+	 * targets). `false` blocks every automatic fetch to other servers, `true`
+	 * allows it; either value locks File > Options > Trust Center > "Allow
+	 * external content" to match. Unset keeps the user's choice there.
+	 */
+	allowExternalContent?: boolean;
+	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
 	 * and read-only banners, the mobile toolbar and the status bar. Default
 	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).

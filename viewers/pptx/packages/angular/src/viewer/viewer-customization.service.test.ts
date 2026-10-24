@@ -320,3 +320,26 @@ describe('print dialog gate', () => {
 		expect(print.isDialogOpen()).toBeTruthy();
 	});
 });
+
+describe('viewerCustomizationService allowExternalContent host input', () => {
+	it('locks the Trust Center setting synchronously and follows the input', () => {
+		const injector = makeInjector();
+		const service = injector.get(ViewerCustomizationService);
+		const options = injector.get(ViewerOptionsService);
+		const allow = signal<boolean | undefined>(false);
+		construct(injector, () => service.bindAllowExternalContent(allow));
+		// Seeded before any effect runs, so the first load already sees the lock.
+		expect(options.options().trust.allowExternalContent).toBe(false);
+		expect(options.store.isLocked('trust', 'allowExternalContent')).toBe(true);
+		options.setValue('trust', 'allowExternalContent', true);
+		expect(options.options().trust.allowExternalContent).toBe(false);
+
+		allow.set(true);
+		TestBed.tick();
+		expect(options.options().trust.allowExternalContent).toBe(true);
+
+		allow.set(undefined);
+		TestBed.tick();
+		expect(options.store.isLocked('trust', 'allowExternalContent')).toBe(false);
+	});
+});
