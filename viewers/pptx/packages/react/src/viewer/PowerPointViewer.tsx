@@ -1059,11 +1059,12 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 						}
 					: null,
 			commit: (result: import('ooxml-ui/pptx').SlidePackageClipboardPaste) => {
-				history.commitSlides(result.slides);
+				const pastedMasters = result.data.slideMasters ?? [];
+				history.commitSlides(result.slides, undefined, undefined, pastedMasters);
 				handlerRef.current = result.handler;
 				actionSoundHandlerRef.current = result.handler;
 				state.setTemplateElementsBySlideId(result.templateElementsBySlideId);
-				state.setSlideMasters(result.data.slideMasters ?? []);
+				state.setSlideMasters(pastedMasters);
 				state.setLayoutOptions(result.data.layoutOptions ?? []);
 				state.setThemeOptions(result.data.themeOptions ?? []);
 				for (const [path, url] of result.mediaUrls) {

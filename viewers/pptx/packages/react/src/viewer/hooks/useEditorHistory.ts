@@ -81,7 +81,17 @@ export interface EditorHistoryInput {
 }
 
 export interface EditorHistoryResult {
-	commitSlides: (slides: PptxSlide[], label?: string, beforeSlides?: PptxSlide[]) => void;
+	/**
+	 * Commit `slides` as one undo step. Pass `nextSlideMasters` when the same commit replaces the
+	 * slide masters (a slide paste brings its own): the step's after state records their theme
+	 * parts, so the masters arriving a render later are not read as a second step.
+	 */
+	commitSlides: (
+		slides: PptxSlide[],
+		label?: string,
+		beforeSlides?: PptxSlide[],
+		nextSlideMasters?: readonly PptxSlideMaster[],
+	) => void;
 	canUndo: boolean;
 	canRedo: boolean;
 	undoLabel: string | undefined;
@@ -448,9 +458,20 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	// -- Public API ---------------------------------------------------------
 
-	const commitSlides = (nextSlides: PptxSlide[], label?: string, beforeSlides = slides): void => {
+	const commitSlides = (
+		nextSlides: PptxSlide[],
+		label?: string,
+		beforeSlides = slides,
+		nextSlideMasters?: readonly PptxSlideMaster[],
+	): void => {
 		const before = { ...buildHistorySnapshot(), slides: beforeSlides.map(cloneSlide) };
-		const after = { ...before, slides: nextSlides.map(cloneSlide) };
+		const { theme: beforeTheme, ...unthemed } = before;
+		const afterTheme = nextSlideMasters ? historyTheme(theme, nextSlideMasters) : beforeTheme;
+		const after: EditorHistorySnapshot = {
+			...unthemed,
+			slides: nextSlides.map(cloneSlide),
+			...(afterTheme ? { theme: afterTheme } : {}),
+		};
 		recordExplicitSlideUpdate(history, lastHistorySnapshotRef.current, before, label);
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(after);
 		lastHistorySerializedRef.current = serializeDocument(after);
