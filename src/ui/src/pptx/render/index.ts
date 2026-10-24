@@ -1630,6 +1630,8 @@ export * from './deck-style';
 // A theme change as an undo step: what each snapshot records, what an undo writes back into the
 // handler's theme parts, and the write queue every save waits for.
 export * from './theme-history';
+// Presentation properties > Theme: masters pointed at another theme part, in place, as one undo step.
+export * from './theme-by-path';
 // Host ribbon tabs (`ribbonAddIns`): which show, which is active and how a command runs.
 export * from './ribbon-add-ins';
 

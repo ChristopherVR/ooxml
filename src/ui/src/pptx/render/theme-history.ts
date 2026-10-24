@@ -8,6 +8,11 @@
  * {@link crossedHistoryTheme crosses} a theme change puts the binding's theme back and writes only
  * the parts that differ into the handler ({@link restoreCrossedTheme}).
  *
+ * A theme applied by path (`render/theme-by-path`) points slide masters at another theme part, so the
+ * record also holds each master's theme part ({@link historyTheme} with the masters), and a restore
+ * that crosses such a switch points the masters back before it writes anything: Undo returns to
+ * the old part instead of writing the old schemes into the new one.
+ *
  * Each theme part write reads, edits and writes the part back, so the writes on one handler run one
  * after another ({@link queueThemeWrite}), and every save waits for the ones queued before it
  * ({@link settleThemeWrites}, which `saveDeckWithPassword` calls).
@@ -15,6 +20,10 @@
  * @module render/theme-history
  */
 import type { PptxThemeColorScheme, PptxThemeFontScheme, PptxThemeOption } from 'ooxml-core/pptx';
+
+import { queueThemeWrite } from './theme-write-queue';
+
+export { queueThemeWrite, settleThemeWrites } from './theme-write-queue';
 
 /**
  * The part of a theme an undo step records: the colour scheme, the font scheme and the name, which
@@ -24,6 +33,14 @@ export interface HistoryTheme {
 	colorScheme?: PptxThemeColorScheme;
 	fontScheme?: PptxThemeFontScheme;
 	name?: string;
+	/** Each slide master's theme part, by master path, in master order (the first is the deck's). */
+	masterThemePaths?: Readonly<Record<string, string>>;
+}
+
+/** A slide master as a binding keeps it: its path and the theme part it uses. */
+export interface HistoryMaster {
+	readonly path: string;
+	readonly themePath?: string | undefined;
 }
 
 /** Any theme-shaped value: a binding's `PptxTheme`, or the looser record some bindings keep. */
@@ -45,21 +62,43 @@ function sameJson(a: unknown, b: unknown): boolean {
 	return JSON.stringify(a) === JSON.stringify(b);
 }
 
+/** Each master's theme part, in master order, or `undefined` when no master names one. */
+function masterThemePathsOf(
+	slideMasters: readonly HistoryMaster[] | undefined,
+): Record<string, string> | undefined {
+	const entries = (slideMasters ?? []).flatMap((master) =>
+		master.themePath ? [[master.path, master.themePath] as const] : [],
+	);
+	return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
+
 /**
- * The part of `theme` an undo step records, as a copy. Built in a fixed key order, so two records
- * of the same theme serialise to the same JSON.
+ * The part of `theme` an undo step records, as a copy, and with `slideMasters` the theme part each
+ * master uses. Built in a fixed key order, so two records of the same theme serialise to the same
+ * JSON.
  */
-export function historyTheme(theme: ThemeLike): HistoryTheme;
-export function historyTheme(theme: ThemeLike | null | undefined): HistoryTheme | undefined;
-export function historyTheme(theme: ThemeLike | null | undefined): HistoryTheme | undefined {
-	if (!theme) {
+export function historyTheme(
+	theme: ThemeLike,
+	slideMasters?: readonly HistoryMaster[] | undefined,
+): HistoryTheme;
+export function historyTheme(
+	theme: ThemeLike | null | undefined,
+	slideMasters?: readonly HistoryMaster[] | undefined,
+): HistoryTheme | undefined;
+export function historyTheme(
+	theme: ThemeLike | null | undefined,
+	slideMasters?: readonly HistoryMaster[] | undefined,
+): HistoryTheme | undefined {
+	const masterThemePaths = masterThemePathsOf(slideMasters);
+	if (!theme && !masterThemePaths) {
 		return undefined;
 	}
-	const { colorScheme, fontScheme, name } = theme as HistoryTheme;
+	const { colorScheme, fontScheme, name } = (theme ?? {}) as HistoryTheme;
 	return {
 		...(colorScheme ? { colorScheme: plain(colorScheme) } : {}),
 		...(fontScheme ? { fontScheme: plain(fontScheme) } : {}),
 		...(name ? { name } : {}),
+		...(masterThemePaths ? { masterThemePaths } : {}),
 	};
 }
 
@@ -83,7 +122,8 @@ export function withHistoryTheme<T extends ThemeLike>(
 	theme: T | null | undefined,
 	target: HistoryTheme,
 ): T {
-	const next: Record<string, unknown> = { ...theme, ...plain(target) };
+	const { masterThemePaths: _masters, ...parts } = target;
+	const next: Record<string, unknown> = { ...theme, ...plain(parts) };
 	for (const key of RECORDED_KEYS) {
 		if (target[key] === undefined) {
 			delete next[key];
@@ -92,11 +132,45 @@ export function withHistoryTheme<T extends ThemeLike>(
 	return next as T;
 }
 
-/** The handler operations that write the recorded parts (the `PptxHandler` has all three). */
+/**
+ * `slideMasters` with each master the record names back on its recorded theme part: the same array
+ * when none differs (a step that crosses no theme by path switch).
+ */
+export function withHistoryMasterThemes<M extends HistoryMaster>(
+	slideMasters: readonly M[],
+	target: HistoryTheme | undefined,
+): readonly M[] {
+	const recorded = target?.masterThemePaths;
+	if (!recorded || slideMasters.every((master) => !differs(recorded, master))) {
+		return slideMasters;
+	}
+	return slideMasters.map((master) =>
+		differs(recorded, master) ? { ...master, themePath: recorded[master.path] } : master,
+	);
+}
+
+function differs(recorded: Readonly<Record<string, string>>, master: HistoryMaster): boolean {
+	const path = recorded[master.path];
+	return path !== undefined && path !== master.themePath;
+}
+
+/** One theme part's schemes and name, as the handler reads them (`getThemePartSchemes`). */
+export interface ThemePartSchemes {
+	readonly path: string;
+	readonly name?: string | undefined;
+	readonly colorScheme: PptxThemeColorScheme;
+	readonly fontScheme: PptxThemeFontScheme;
+}
+
+/** The handler operations that write the recorded parts (the `PptxHandler` has them all). */
 export interface ThemePartWriter {
 	updateThemeColorScheme(colorScheme: PptxThemeColorScheme): Promise<void>;
 	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;
 	updateThemeName(name: string): Promise<void>;
+	/** Point one slide master at a theme part (undo and redo of a theme by path switch). */
+	setSlideMasterTheme(masterPath: string, themePath: string): Promise<void>;
+	/** One theme part's schemes and name as the part holds them now. */
+	getThemePartSchemes(themePath: string): Promise<ThemePartSchemes | undefined>;
 }
 
 /** One theme part write. */
@@ -143,68 +217,64 @@ export function loadedThemeName(
 	return (options.find((option) => option.path === primary) ?? options[0])?.name;
 }
 
-/** Per handler, the end of its queue: settles once the last queued write has landed or failed. */
-const pendingWrites = new WeakMap<object, Promise<void>>();
-
-function startWrite<T>(write: () => Promise<T>): Promise<T> {
-	try {
-		return write();
-	} catch (error) {
-		return Promise.reject(error);
+async function applyWrites(handler: ThemePartWriter, writes: readonly ThemePartWrite[]) {
+	for (const write of writes) {
+		if (write.part === 'colorScheme') {
+			await handler.updateThemeColorScheme(write.colorScheme);
+		} else if (write.part === 'fontScheme') {
+			await handler.updateThemeFontScheme(write.fontScheme);
+		} else {
+			await handler.updateThemeName(write.name);
+		}
 	}
 }
 
-/**
- * Run `write` on `handler`'s theme parts after every write queued on it before. An undo landing
- * while a pick is still writing (or two undos in a row) waits for it instead of interleaving.
- * With nothing queued the write starts at once, exactly as an unqueued one would.
- */
-export function queueThemeWrite<T>(handler: object, write: () => Promise<T>): Promise<T> {
-	const previous = pendingWrites.get(handler);
-	const run = previous ? previous.then(write) : startWrite(write);
-	const settled: Promise<void> = run.then(
-		() => undefined,
-		() => undefined,
+/** The masters `to` puts on another theme part than `from` has them on, with that part. */
+function masterThemeMoves(from: HistoryTheme | undefined, to: HistoryTheme): [string, string][] {
+	return Object.entries(to.masterThemePaths ?? {}).filter(
+		([master, path]) => from?.masterThemePaths?.[master] !== path,
 	);
-	const end = settled.then(() => {
-		if (pendingWrites.get(handler) === end) {
-			pendingWrites.delete(handler);
-		}
-	});
-	pendingWrites.set(handler, end);
-	return run;
 }
 
 /**
- * Resolves once every theme part write queued on `handler` so far has landed (or failed). A save
- * waits for this, or it writes a theme an undo or a pick is still replacing.
+ * Write {@link themePartWrites} into `handler`, after every write queued on it before. When `to`
+ * has masters on other theme parts (a step across a theme by path switch) they are pointed back
+ * first, and only what then still differs from the deck's part (the first master's) is written:
+ * Undo returns to the old part rather than writing the old schemes into the new one.
  */
-export function settleThemeWrites(handler: object | null | undefined): Promise<void> {
-	return (handler && pendingWrites.get(handler)) || Promise.resolve();
-}
-
-/** Write {@link themePartWrites} into `handler`, after every write queued on it before. */
 export function writeThemeParts(
 	handler: ThemePartWriter | null | undefined,
 	from: HistoryTheme | undefined,
 	to: HistoryTheme,
 	loadedName?: string,
 ): Promise<void> {
+	const moves = masterThemeMoves(from, to);
+	if (moves.length > 0) {
+		return handler
+			? queueThemeWrite(handler, () => repointAndWrite(handler, moves, to))
+			: Promise.resolve();
+	}
 	const writes = themePartWrites(from, to, loadedName);
 	if (!handler || writes.length === 0) {
 		return Promise.resolve();
 	}
-	return queueThemeWrite(handler, async () => {
-		for (const write of writes) {
-			if (write.part === 'colorScheme') {
-				await handler.updateThemeColorScheme(write.colorScheme);
-			} else if (write.part === 'fontScheme') {
-				await handler.updateThemeFontScheme(write.fontScheme);
-			} else {
-				await handler.updateThemeName(write.name);
-			}
-		}
-	});
+	return queueThemeWrite(handler, () => applyWrites(handler, writes));
+}
+
+async function repointAndWrite(
+	handler: ThemePartWriter,
+	moves: readonly [string, string][],
+	to: HistoryTheme,
+): Promise<void> {
+	for (const [master, path] of moves) {
+		await handler.setSlideMasterTheme(master, path);
+	}
+	const deckPart = Object.values(to.masterThemePaths ?? {})[0];
+	const now = deckPart ? await handler.getThemePartSchemes(deckPart) : undefined;
+	if (now) {
+		// The part's own name stands for a record that carries none (the loaded theme).
+		await applyWrites(handler, themePartWrites(historyTheme(now), to, now.name));
+	}
 }
 
 /**

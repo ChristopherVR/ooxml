@@ -11,8 +11,10 @@ import {
 	settleThemeWrites,
 	themePartWrites,
 	withHistoryTheme,
+	withHistoryMasterThemes,
 	writeThemeParts,
 } from './theme-history';
+import type { ThemePartSchemes } from './theme-history';
 
 const OFFICE: PptxThemeColorScheme = {
 	dk1: '#000000',
@@ -32,7 +34,8 @@ const FACET: PptxThemeColorScheme = { ...OFFICE, accent1: '#90C226' };
 const CALIBRI = { majorFont: { latin: 'Calibri Light' }, minorFont: { latin: 'Calibri' } };
 const ARIAL = { majorFont: { latin: 'Arial' }, minorFont: { latin: 'Arial' } };
 
-function writer() {
+/** A handler that logs its writes; `parts` are the theme parts it reads (`getThemePartSchemes`). */
+function writer(parts: Record<string, ThemePartSchemes> = {}) {
 	const writes: string[] = [];
 	return {
 		writes,
@@ -45,6 +48,10 @@ function writer() {
 		updateThemeName: vi.fn(async (name: string) => {
 			writes.push(`name:${name}`);
 		}),
+		setSlideMasterTheme: vi.fn(async (master: string, path: string) => {
+			writes.push(`${master}->${path}`);
+		}),
+		getThemePartSchemes: vi.fn(async (path: string) => parts[path]),
 	};
 }
 
@@ -203,5 +210,87 @@ describe('the theme part write queue', () => {
 		});
 		await saveDeckWithPassword(serializer as never, [], undefined, null);
 		expect(order).toStrictEqual(['theme written', 'save']);
+	});
+});
+
+describe('a step across a theme applied by path', () => {
+	const T1 = 'ppt/theme/theme1.xml';
+	const T2 = 'ppt/theme/theme2.xml';
+	const masters = [
+		{ path: 'm1', themePath: T1, name: 'First' },
+		{ path: 'm2', themePath: T2 },
+	];
+	const switched = masters.map((master) => ({ ...master, themePath: T2 }));
+	const part = (path: string, colorScheme: PptxThemeColorScheme, name: string) => ({
+		path,
+		name,
+		colorScheme,
+		fontScheme: CALIBRI,
+	});
+
+	it("records each master's theme part in master order, and keeps it off the theme", () => {
+		const recorded = historyTheme({ colorScheme: OFFICE, fontScheme: CALIBRI }, masters);
+		expect(Object.keys(recorded)).toStrictEqual(['colorScheme', 'fontScheme', 'masterThemePaths']);
+		expect(recorded.masterThemePaths).toStrictEqual({ m1: T1, m2: T2 });
+		expect(Object.keys(recorded.masterThemePaths ?? {})).toStrictEqual(['m1', 'm2']);
+		expect(historyTheme(undefined, [{ path: 'm1' }])).toBeUndefined();
+		expect(withHistoryTheme({ name: 'Tide' }, recorded)).toStrictEqual({
+			colorScheme: OFFICE,
+			fontScheme: CALIBRI,
+		});
+		expect(
+			crossedHistoryTheme(
+				historyTheme({ colorScheme: OFFICE }, switched),
+				historyTheme({ colorScheme: OFFICE }, masters),
+			),
+		).toBeDefined();
+	});
+
+	it('puts each recorded master back on its part, and keeps the array when none moved', () => {
+		const target = historyTheme({ colorScheme: OFFICE }, masters);
+		expect(withHistoryMasterThemes(switched, target)).toStrictEqual(masters);
+		expect(withHistoryMasterThemes(masters, target)).toBe(masters);
+		expect(withHistoryMasterThemes(switched, historyTheme({ colorScheme: OFFICE }))).toBe(switched);
+	});
+
+	it('Undo points the masters back and writes nothing into the parts', async () => {
+		const handler = writer({ [T1]: part(T1, OFFICE, 'Tide'), [T2]: part(T2, FACET, 'Ember') });
+		const before = historyTheme({ colorScheme: OFFICE, fontScheme: CALIBRI }, masters);
+		const after = historyTheme(
+			{ colorScheme: FACET, fontScheme: CALIBRI, name: 'Ember' },
+			switched,
+		);
+		const restored = restoreCrossedTheme(
+			{ colorScheme: FACET, fontScheme: CALIBRI, name: 'Ember', formatScheme: 'kept' },
+			after,
+			before,
+			handler,
+		);
+		expect(restored).toStrictEqual({
+			colorScheme: OFFICE,
+			fontScheme: CALIBRI,
+			formatScheme: 'kept',
+		});
+		await settleThemeWrites(handler);
+		expect(handler.writes).toStrictEqual([`m1->${T1}`]);
+
+		restoreCrossedTheme(restored, before, after, handler);
+		await settleThemeWrites(handler);
+		expect(handler.writes).toStrictEqual([`m1->${T1}`, `m1->${T2}`]);
+	});
+
+	it('writes what the part it goes back to no longer holds', async () => {
+		// The old part was edited after the switch was recorded: Undo writes the recorded colours.
+		const handler = writer({ [T1]: part(T1, FACET, 'Tide') });
+		const before = historyTheme(
+			{ colorScheme: OFFICE, fontScheme: CALIBRI, name: 'Renamed' },
+			masters,
+		);
+		const after = historyTheme(
+			{ colorScheme: FACET, fontScheme: CALIBRI, name: 'Ember' },
+			switched,
+		);
+		await writeThemeParts(handler, after, before, 'Ember');
+		expect(handler.writes).toStrictEqual([`m1->${T1}`, 'colors', 'name:Renamed']);
 	});
 });
