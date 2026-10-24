@@ -27,7 +27,7 @@ import type {
  * result actually changed, and move the sidebar selection to the returned
  * target.
  */
-import type { PptxData, PptxHandler, PptxSlideMaster } from 'pptx-viewer-core';
+import type { PptxData, PptxHandler, PptxLayoutOption, PptxSlideMaster } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -35,6 +35,8 @@ import { useI18n } from 'vue-i18n';
 export interface UseMasterViewCrudInput {
 	handler: ShallowRef<PptxHandler | null>;
 	slideMasters: ShallowRef<PptxSlideMaster[]>;
+	/** The Home > Layout list, which this binding keeps apart from the masters it comes from. */
+	layoutOptions: ShallowRef<PptxLayoutOption[]>;
 	/** Snapshot the presentation-level `PptxData` the CRUD action reads/validates against. */
 	deckData: () => PptxData;
 	/** The sidebar's current selection, as the shared rule sees it. */
@@ -109,6 +111,8 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 
 		input.handler.value = result.handler;
 		input.slideMasters.value = result.data.slideMasters ?? [];
+		// Or Home > Layout keeps offering a deleted layout and misses an inserted one.
+		input.layoutOptions.value = result.data.layoutOptions ?? [];
 		const removed = removedSlideMasterParts(deck, result.data);
 		if (removed.length > 0) {
 			input.forgetHistory((step) => historyStepUsesParts(step, removed));

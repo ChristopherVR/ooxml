@@ -1298,6 +1298,7 @@ const masterView = useMasterViewWiring({
 const masterViewCrud = useMasterViewCrud({
 	handler,
 	slideMasters,
+	layoutOptions: deck.layoutOptions,
 	deckData: () => readDeckData(deck),
 	target: () => ({
 		tab: masterView.masterViewTab.value,
