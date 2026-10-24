@@ -42,6 +42,16 @@ describe('undo of Home > Layout and of New Slide from a layout', () => {
 	const L2 = 'ppt/slideLayouts/slideLayout2.xml';
 	const L3 = 'ppt/slideLayouts/slideLayout3.xml';
 
+	/** The loader signals every undo snapshot reads (the theme and each master's theme part). */
+	function themeSignals() {
+		return {
+			theme: signal(undefined),
+			themeColorMap: signal(undefined),
+			slideMasters: signal([]),
+			themeOptions: signal([]),
+		};
+	}
+
 	/** The core contract: the slide at `index` is replaced in the array it is given, and returned. */
 	function inPlaceService() {
 		const svc = new EditorStateService();
@@ -55,7 +65,7 @@ describe('undo of Home > Layout and of New Slide from a layout', () => {
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue([]),
 		};
 		const headerFooter = signal({});
-		Object.assign(svc, { loader: { getHandler: () => handler, headerFooter } });
+		Object.assign(svc, { loader: { getHandler: () => handler, headerFooter, ...themeSignals() } });
 		return svc;
 	}
 
@@ -83,7 +93,9 @@ describe('undo of Home > Layout and of New Slide from a layout', () => {
 			}),
 			getTemplateElementsForSlide: vi.fn().mockResolvedValue([element('layout-art')]),
 		};
-		Object.assign(svc, { loader: { getHandler: () => handler, headerFooter: signal({}) } });
+		Object.assign(svc, {
+			loader: { getHandler: () => handler, headerFooter: signal({}), ...themeSignals() },
+		});
 
 		svc.addSlide(0, L2);
 		await vi.waitFor(() => expect(handler.applyLayoutToSlide).toHaveBeenCalledOnce());
