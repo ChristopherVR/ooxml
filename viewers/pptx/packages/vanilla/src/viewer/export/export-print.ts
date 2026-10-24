@@ -1,34 +1,30 @@
-import type { PrintSettings } from 'ooxml-ui/pptx';
+import type { CanvasSize, PrintJobCapture, PrintJobPlan, PrintSettings } from 'ooxml-ui/pptx';
 import {
-	buildHandoutsHtml,
-	buildNotesHtml,
-	buildOutlineHtml,
-	buildPrintDocument,
-	buildPrintHtmlDocument,
-	computeColorFilter,
-	computeSlideIndices,
+	buildOutlinePrintJobDocument,
+	buildRasterPrintJobDocument,
+	buildSaveSlides,
+	buildVectorPrintJobDocument,
 	exportAbortError,
-	filterHiddenSlideIndices,
 	finishPrintWindow as finishPendingWindow,
 	openPendingPrintWindow as openPendingWindow,
 	openPrintWindow as defaultOpenPrintWindow,
-	validatePrintSettings,
+	planPrintJob,
+	printJobRasterFallback,
 } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
 
 import { createTranslator } from '../i18n';
 import { exportSlideToSvg } from './export-svg';
 import type { ExportCaptureDeps, ExportProgress } from './export-types';
 
 /**
- * Print for the vanilla binding, assembled entirely from the shared print
- * module (`pptx-viewer-shared` `print-document` + `print-window`):
- * `validatePrintSettings`, `computeSlideIndices` / `computeColorFilter`, the
- * `build*Html` body markup builders, the DOMPurify-hardened
- * `buildPrintHtmlDocument` assembler, and the popup-blocking-safe
- * open/finish window lifecycle. Only the drivers live here: rasterising the
- * selected slides to data URLs and deciding which path each print mode
- * takes. Vanilla port of Vue's `usePrint` raster path (slides / notes /
- * handouts / outline).
+ * Print for the vanilla binding. The shared `planPrintJob` decides what prints
+ * (range, current slide, hidden slides), through which path and under which
+ * window title, the shared `build*PrintJobDocument` functions assemble the
+ * DOMPurify-hardened document, and the shared print-window helpers keep the
+ * window clear of popup blocking. Only the capture and the opener live here:
+ * full-page slides go through the core SVG exporter (captured instead when it
+ * throws), notes pages and handouts are rasterised slide by slide.
  */
 
 /**
@@ -67,60 +63,40 @@ export async function runPrint(
 	deps: ExportCaptureDeps,
 	options: PrintOptions = {},
 ): Promise<boolean> {
-	const { onProgress, signal, openPrintWindow, ...partialSettings } = options;
+	const { onProgress, signal, openPrintWindow, ...settings } = options;
 	const openWindow = openPrintWindow ?? defaultOpenPrintWindow;
 	const state = deps.store.get();
-	const slides = state.slides;
-	const settings = validatePrintSettings(partialSettings, slides.length);
-	const colorFilter = computeColorFilter(settings.colorMode);
-	const slideIndices = filterHiddenSlideIndices(
-		computeSlideIndices(
-			settings.slideRange,
-			state.currentSlide,
-			slides.length,
-			settings.customRangeFrom,
-			settings.customRangeTo,
-		),
+	// The store keeps layout and master elements apart from each slide; the
+	// vector export and the outline need the complete slides.
+	const slides = buildSaveSlides(state.slides, state.templateElementsBySlideId);
+	const plan = planPrintJob(settings, {
 		slides,
-		deps.getIncludeHiddenSlides?.() ?? false,
-	);
-
-	// Outline is text-only: no rasterisation needed.
-	if (settings.printWhat === 'outline') {
-		const bodyHtml = `<div class="outline-page">${buildOutlineHtml(slideIndices, slides)}</div>`;
-		return openWindow(buildDocument('Outline', bodyHtml, settings, colorFilter));
-	}
-
-	if (slideIndices.length === 0) {
+		activeSlideIndex: state.currentSlide,
+		includeHiddenSlides: deps.getIncludeHiddenSlides?.() ?? false,
+	});
+	if (!plan.ok) {
 		return false;
 	}
+	const t = deps.getTranslator?.() ?? createTranslator();
+	const title = (job: PrintJobPlan): string => t(job.title.key, job.title.params);
 
-	if (settings.printWhat === 'slides') {
-		const { width, height } = state.canvasSize;
-		const svgs: string[] = [];
-		for (let i = 0; i < slideIndices.length; i++) {
-			if (signal?.aborted) {
-				throw exportAbortError();
-			}
-			onProgress?.(i, slideIndices.length);
-			svgs.push(exportSlideToSvg(slides[slideIndices[i]], width, height));
+	// Outline is text-only: no rasterisation needed.
+	if (plan.output === 'outline') {
+		return openWindow(buildOutlinePrintJobDocument(plan, title(plan), slides));
+	}
+
+	if (plan.output === 'vector') {
+		const html = vectorDocument(plan, title(plan), slides, state.canvasSize, options);
+		if (html !== undefined) {
+			return openWindow(html);
 		}
-		onProgress?.(slideIndices.length, slideIndices.length);
-		return openWindow(
-			buildPrintDocument(svgs, width, height, {
-				title: 'Slides (Vector)',
-				orientation: settings.orientation,
-				colorFilter,
-				scaleToFit: settings.scaleToFit,
-			}),
-		);
 	}
 
 	// Rasterising each slide below `await`s, so the default opener must grab
 	// the window NOW, before that first await, or it gets popup-blocked. A
 	// custom `openPrintWindow` owns its own timing and gets the finished
 	// document in a single call, as documented.
-	const t = deps.getTranslator?.() ?? createTranslator();
+	const job = printJobRasterFallback(plan);
 	const pendingWindow = openPrintWindow
 		? undefined
 		: openPendingWindow(t('pptx.print.preparingToPrint'));
@@ -128,61 +104,59 @@ export async function runPrint(
 		return false;
 	}
 
-	// Options > Advanced > "High quality" raster scale for this notes/handouts
-	// fallback path, composed on top of the host's own baseline (2x * Options >
-	// Advanced > Image Size/Quality) scale.
+	// Options > Advanced > "High quality" raster scale for the capture path,
+	// composed on top of the host's own baseline (2x * Options > Advanced >
+	// Image Size/Quality) scale.
 	const printScaleMultiplier = deps.getPrintHighQuality?.() ? 2 : 1;
-	const images: string[] = [];
-	for (let i = 0; i < slideIndices.length; i++) {
+	const total = job.slideIndices.length;
+	const captures: PrintJobCapture[] = [];
+	for (const [position, slideIndex] of job.slideIndices.entries()) {
 		if (signal?.aborted) {
 			pendingWindow?.close();
 			throw exportAbortError();
 		}
-		onProgress?.(i, slideIndices.length);
-		const canvas = await deps.rasterizeSlide(slideIndices[i], printScaleMultiplier);
-		images.push(canvas.toDataURL('image/png'));
+		onProgress?.(position, total);
+		const canvas = await deps.rasterizeSlide(slideIndex, printScaleMultiplier);
+		captures.push({ slideIndex, dataUrl: canvas.toDataURL('image/png') });
 	}
-	onProgress?.(slideIndices.length, slideIndices.length);
+	onProgress?.(total, total);
 
-	const commit = (html: string): boolean => {
-		if (pendingWindow) {
-			finishPendingWindow(pendingWindow, html);
-			return true;
-		}
-		return openWindow(html);
-	};
-
-	if (settings.printWhat === 'notes') {
-		const bodyHtml = buildNotesHtml(images, slideIndices, slides);
-		return commit(buildDocument('Notes Pages', bodyHtml, settings, colorFilter));
+	const html = buildRasterPrintJobDocument(job, title(job), captures, slides, state.handoutMaster);
+	if (pendingWindow) {
+		finishPendingWindow(pendingWindow, html);
+		return true;
 	}
-	const bodyHtml = buildHandoutsHtml(
-		images,
-		slideIndices,
-		settings.slidesPerPage,
-		state.handoutMaster,
-	);
-	const title = `Handout ${settings.slidesPerPage} per page`;
-	return commit(buildDocument(title, bodyHtml, settings, colorFilter));
+	return openWindow(html);
 }
 
 /**
- * Wrap the body in the shared full-document assembler. `settings` comes from
- * `validatePrintSettings`, which already forces portrait orientation for the
- * non-`slides` modes.
+ * The vector document of a `vector` plan, or `undefined` when the SVG export
+ * threw. Reports progress per exported slide and honours an abort between them.
  */
-function buildDocument(
+function vectorDocument(
+	plan: PrintJobPlan,
 	title: string,
-	bodyHtml: string,
-	settings: PrintSettings,
-	colorFilter: string,
-): string {
-	return buildPrintHtmlDocument({
-		title,
-		bodyHtml,
-		orientation: settings.orientation,
-		colorFilter,
-		frameSlides: settings.frameSlides,
-		scaleToFit: settings.scaleToFit,
-	});
+	slides: PptxSlide[],
+	size: CanvasSize,
+	{ onProgress, signal }: Pick<PrintOptions, 'onProgress' | 'signal'>,
+): string | undefined {
+	const total = plan.slideIndices.length;
+	const svgs: string[] = [];
+	try {
+		for (const [position, slideIndex] of plan.slideIndices.entries()) {
+			if (signal?.aborted) {
+				throw exportAbortError();
+			}
+			onProgress?.(position, total);
+			svgs.push(exportSlideToSvg(slides[slideIndex], size.width, size.height));
+		}
+	} catch (err) {
+		if (signal?.aborted) {
+			throw err;
+		}
+		console.warn('[PowerPointViewer] SVG print failed, falling back to raster:', err);
+		return undefined;
+	}
+	onProgress?.(total, total);
+	return buildVectorPrintJobDocument(plan, title, svgs, size);
 }
