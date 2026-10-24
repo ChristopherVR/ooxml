@@ -1,12 +1,10 @@
 import {
-	crossedHistoryTheme,
 	historyTheme,
 	loadedThemeName,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	partitionTemplateElements,
-	withHistoryTheme,
-	writeThemeParts,
+	restoreCrossedTheme,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
@@ -192,19 +190,17 @@ function restoreEditorTheme(
 	current: EditorSnapshot['theme'],
 	target: EditorSnapshot['theme'],
 ): void {
-	const crossed = crossedHistoryTheme(current, target);
-	if (!crossed) {
-		return;
-	}
-	const theme = withHistoryTheme(state.theme, crossed);
-	state.theme = theme;
-	state.onThemeRestored(theme);
-	void writeThemeParts(
-		state.getHandler(),
+	const theme = restoreCrossedTheme(
+		state.theme,
 		current,
-		crossed,
-		loadedThemeName(state.themeOptions(), state.slideMasters[0]?.themePath),
+		target,
+		state.getHandler(),
+		loadedThemeName(state.themeOptions(), state.slideMasters),
 	);
+	if (theme) {
+		state.theme = theme;
+		state.onThemeRestored(theme);
+	}
 }
 
 /** Replace the document properties (File > Info) as one undoable edit. */
