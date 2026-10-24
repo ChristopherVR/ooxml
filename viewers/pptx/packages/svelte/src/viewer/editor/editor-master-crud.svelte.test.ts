@@ -1,5 +1,5 @@
 import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
-import type { PptxHandler, PptxSlideMaster } from 'pptx-viewer-core';
+import type { PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MasterViewCrudPrompts } from './editor-master-crud';
@@ -162,5 +162,61 @@ describe('svelte master-view CRUD wiring', () => {
 		expect(setHandler).not.toHaveBeenCalled();
 		expect(editor.slideMasters).toBe(before);
 		expect(editor.dirty).toBeFalsy();
+	});
+
+	it('leaves no undo or redo step that brings a deleted layout back', async () => {
+		const { run, editor } = harness();
+		const home = 'layout-1';
+		const spare = 'layout-2';
+		editor.slideMasters = [
+			{
+				...MASTER,
+				layouts: [...(MASTER.layouts ?? []), { path: spare, name: 'Blank', elements: [] }],
+			},
+		];
+		editor.slides = [
+			{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [], layoutPath: home } as PptxSlide,
+		];
+		const edit = (label: string, patch: Partial<PptxSlide>) => {
+			editor.pushHistory(label);
+			editor.slides = [{ ...editor.slides[0]!, ...patch }];
+			editor.commitChange();
+		};
+		const reachesSpare = () =>
+			editor.slides.some((slide) => slide.layoutPath === spare) ||
+			editor.slideMasters.some((master) =>
+				(master.layouts ?? []).some((layout) => layout.path === spare),
+			);
+		// The spare layout is in an undo step (before 'two') and, once 'four' is undone, in the
+		// redo step, but no slide uses it now.
+		edit('one', { layoutPath: spare });
+		edit('two', { layoutPath: home });
+		edit('three', { backgroundColor: '#FF0000' });
+		edit('four', { layoutPath: spare });
+		editor.undo();
+		expect(editor.slides[0]?.layoutPath).toBe(home);
+		stubActionList('deleteLayout');
+		applyMasterViewCrudAction.mockResolvedValue({
+			ok: true,
+			handler: { getImageData: vi.fn() } as unknown as PptxHandler,
+			data: { slides: [], slideMasters: [MASTER] },
+			target: { tab: 'slides', masterIndex: 0, layoutIndex: null },
+		});
+
+		await expect(run('deleteLayout')).resolves.toBeTruthy();
+
+		expect(reachesSpare()).toBeFalsy();
+		const reached: boolean[] = [];
+		for (let step = 0; step < 6; step++) {
+			editor.undo();
+			reached.push(reachesSpare());
+		}
+		for (let step = 0; step < 6; step++) {
+			editor.redo();
+			reached.push(reachesSpare());
+		}
+		expect(reached).not.toContain(true);
+		// Every step here also restores the masters, and they all still hold the spare layout.
+		expect([editor.canUndo, editor.canRedo]).toStrictEqual([false, false]);
 	});
 });
