@@ -27,7 +27,12 @@ export async function applyThemePartInPlace(
 		applyToAllMasters,
 		slides: state.slides,
 		slideMasters: state.slideMasters,
-		theme: { colorScheme: state.colorScheme, fontScheme: state.fontScheme, name: state.themeName },
+		theme: {
+			colorScheme: state.colorScheme,
+			fontScheme: state.fontScheme,
+			formatScheme: state.formatScheme,
+			name: state.themeName,
+		},
 		templateElementsBySlideId: state.templateElementsBySlideId,
 	});
 	if (!change) {
@@ -40,7 +45,12 @@ export async function applyThemePartInPlace(
 		templateElementsBySlideId: change.templateElementsBySlideId,
 		slideMasters: change.slideMasters,
 		...(theme
-			? { colorScheme: theme.colorScheme, fontScheme: theme.fontScheme, themeName: theme.name }
+			? {
+					colorScheme: theme.colorScheme,
+					fontScheme: theme.fontScheme,
+					formatScheme: theme.formatScheme,
+					themeName: theme.name,
+				}
 			: {}),
 	});
 	ops.commitChange();
