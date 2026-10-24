@@ -22,7 +22,7 @@ export function restoreHistoryTheme(
 ): Promise<void> {
 	const masters = input.slideMasters as unknown as HistoryMaster[];
 	const current = historyTheme(input.theme, masters);
-	input.setTheme((prev) => withHistoryTheme(prev, target));
+	input.setTheme((prev) => withHistoryTheme(prev, target, current));
 	if (target.masterThemePaths) {
 		input.setSlideMasters(
 			(prev) =>
