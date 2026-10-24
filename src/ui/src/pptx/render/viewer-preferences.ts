@@ -114,14 +114,13 @@ export const VIEWER_SHORTCUT_REFERENCE: readonly ShortcutReferenceItem[] = [
 ];
 
 /** The heading of each shortcut group, in the order the help lists them. */
-export const SHORTCUT_REFERENCE_GROUP_LABEL_KEYS: Readonly<Record<ShortcutReferenceGroup, string>> =
-	{
-		history: 'pptx.editorToolbar.history',
-		clipboard: 'pptx.ribbon.clipboard',
-		editing: 'pptx.shortcuts.group.editing',
-		navigation: 'pptx.shortcuts.group.navigation',
-		general: 'pptx.settings.general',
-	};
+const SHORTCUT_REFERENCE_GROUP_LABEL_KEYS: Readonly<Record<ShortcutReferenceGroup, string>> = {
+	history: 'pptx.editorToolbar.history',
+	clipboard: 'pptx.ribbon.clipboard',
+	editing: 'pptx.shortcuts.group.editing',
+	navigation: 'pptx.shortcuts.group.navigation',
+	general: 'pptx.settings.general',
+};
 
 /** One heading of the shortcut help and the shortcuts under it. */
 export interface ShortcutReferenceBucket {
