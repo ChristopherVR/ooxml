@@ -176,6 +176,10 @@ export function renderDiagramDrawing(
 		svg.append(group);
 	}
 	svg.setAttribute('viewBox', `0 0 ${Math.max(right, 1)} ${Math.max(bottom, 1)}`);
+	// The viewBox is the shapes' frames, and a centred outline straddles them: a
+	// node on the drawing's edge lost the outer half of its line to the
+	// viewport clip an inline <svg> applies by default.
+	svg.setAttribute('overflow', 'visible');
 	return { svg, report };
 }
 

@@ -155,6 +155,8 @@ describe('office-ui-smartart', () => {
 		expect(svg.getAttribute('role')).toBe('img');
 		expect(svg.getAttribute('aria-label')).toBe('Process');
 		expect(svg.getAttribute('viewBox')).toBe('0 0 170 50');
+		// Outlines on the drawing's edge straddle the viewBox; the root must not clip them.
+		expect(svg.getAttribute('overflow')).toBe('visible');
 		expect(svg.querySelectorAll('g[data-model-id]')).toHaveLength(2);
 		expect(svg.querySelector('rect')!.getAttribute('fill')).toBe('#4472C4');
 		expect(svg.querySelector('ellipse')).not.toBeNull();

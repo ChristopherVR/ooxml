@@ -108,7 +108,7 @@ export const GRID_CSS = `
 @media(pointer:coarse){.xg-grip::before{content:'';position:absolute;inset:-${(MIN_TOUCH_TARGET_PX - 8) / 2}px;touch-action:none}}
 .xg-obj-unsupported{background:repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 6px,#ececec 6px,#ececec 12px);border:1px dashed #aaa;
 	font-size:11px;color:#555;display:flex;align-items:center;justify-content:center;text-align:center}
-.xg-obj.xg-smartart{overflow:hidden}
+.xg-obj.xg-smartart{overflow:visible}
 .xg-obj.xg-smartart office-ui-smartart{display:block;pointer-events:none}
 .xg-smartart-placeholder{background:#fafafa;border:1px dashed #aaa;font-size:11px;color:#333;padding:4px;overflow:auto}
 .xg-smartart-nodes{margin:0;padding-left:16px}
