@@ -1201,6 +1201,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setActiveMasterIndex: state.setActiveMasterIndex,
 			setActiveLayoutIndex: state.setActiveLayoutIndex,
 			markDirty: history.markDirty,
+			forgetHistory: history.forgetHistory,
 			pushToast: (toast) => compatToastsState.setToasts((prev) => [...prev, toast]),
 		});
 

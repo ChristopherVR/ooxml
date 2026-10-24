@@ -101,6 +101,11 @@ export interface EditorHistoryResult {
 	handleRedo: () => void;
 	resetHistory: () => void;
 	/**
+	 * Drop the undo and redo steps that would bring back a state `reaches` matches, with the steps
+	 * behind them: a Slide Master view command removed a layout the package cannot get back.
+	 */
+	forgetHistory: (reaches: (snapshot: EditorHistorySnapshot) => boolean) => void;
+	/**
 	 * Pause (`true`) and resume (`false`) change tracking. A gallery hover preview swaps the
 	 * slides in for a moment; while tracking is held that is neither an undo step nor an edit, and
 	 * when the original is back the tracker sees no change.
@@ -497,6 +502,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		handleUndo,
 		handleRedo,
 		resetHistory,
+		forgetHistory: history.forget,
 		markDirty,
 		buildHistorySnapshot,
 	};

@@ -3,11 +3,14 @@ import type {
 	MasterViewCrudAction,
 	MasterViewCrudActionId,
 	MasterViewTarget,
+	SlideMasterHistoryStep,
 } from 'ooxml-ui/pptx';
 import {
 	applyMasterViewCrudAction,
+	historyStepUsesParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxHandler, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import { useCallback, useMemo } from 'react';
@@ -37,6 +40,8 @@ export interface UseMasterViewCrudInput {
 	setActiveMasterIndex: React.Dispatch<React.SetStateAction<number>>;
 	setActiveLayoutIndex: React.Dispatch<React.SetStateAction<number | null>>;
 	markDirty: () => void;
+	/** Drops the undo and redo steps that would bring back a part a command removed. */
+	forgetHistory: (reaches: (step: SlideMasterHistoryStep) => boolean) => void;
 	/** Surfaces a failure reason through the existing compat-toast stack. */
 	pushToast: (toast: CompatibilityWarningToast) => void;
 }
@@ -58,6 +63,7 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		setActiveMasterIndex,
 		setActiveLayoutIndex,
 		markDirty,
+		forgetHistory,
 		pushToast,
 	} = input;
 	const { t } = useTranslation();
@@ -123,6 +129,10 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 			setSlideMasters(result.data.slideMasters ?? []);
 			setActiveMasterIndex(result.target.masterIndex);
 			setActiveLayoutIndex(result.target.layoutIndex);
+			const removed = removedSlideMasterParts(data, result.data);
+			if (removed.length > 0) {
+				forgetHistory((step) => historyStepUsesParts(step, removed));
+			}
 			markDirty();
 		},
 		[
@@ -136,6 +146,7 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 			setSlideMasters,
 			setActiveMasterIndex,
 			setActiveLayoutIndex,
+			forgetHistory,
 			markDirty,
 		],
 	);
