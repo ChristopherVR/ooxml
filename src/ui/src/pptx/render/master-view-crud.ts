@@ -199,6 +199,15 @@ function targetForMaster(data: PptxData, masterPath: string | undefined): Master
  * `options.name` is required for `renameLayout` / `renameMaster`;
  * `options.layoutDefinition` is optional for `addLayout` (a default
  * title-only layout is generated when omitted, see `insertLayout` in core).
+ *
+ * The command saves `data.slides` and reloads the edited package through a
+ * FRESH handler, so a binding hands it the slides as they are now (not the
+ * deck as it was loaded) and adopts only `result.handler` and the masters
+ * from `result.data`. It keeps its own slides: the reloaded ones carry no
+ * loaded pictures, and nothing the command changes lives on them. And it
+ * keeps the previous handler undisposed, since the slides on screen and the
+ * undo stack still show that handler's pictures (disposing it revokes their
+ * Blob URLs).
  */
 export async function applyMasterViewCrudAction(
 	handler: PptxHandler,
