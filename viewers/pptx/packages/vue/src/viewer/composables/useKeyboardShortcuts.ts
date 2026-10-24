@@ -4,10 +4,10 @@
  *
  * This is the Vue port of the React `useKeyboardShortcuts` hook
  * (`packages/react/src/viewer/hooks/useKeyboardShortcuts.ts`). Where the React
- * hook hard-codes a `switch` over key combos, the Vue version is built around a
- * **typed shortcut catalog**: a list of `{ id, combo, when, run, description,
- * group }` entries, so the same data drives both dispatch (`handleKeyDown`) and
- * the help overlay (`ShortcutPanel.vue`).
+ * hook hard-codes a `switch` over key combos, the Vue version resolves every key
+ * against the shared keymap (`mapCustomizedEditorKey`) and dispatches the
+ * matched action (`handleKeyDown`); the help overlay (`ShortcutPanel.vue`) lists
+ * the shared `VIEWER_SHORTCUT_REFERENCE`.
  *
  * Design goals:
  *  - **DOM-free-testable.** The composable takes a plain options object (action

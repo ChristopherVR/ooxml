@@ -8,7 +8,7 @@
  *     nudge, and slide-nav branch.
  *  2. `useKeyboardShortcuts`: the composable wiring: `matchShortcut` over real
  *     `KeyboardEvent`s, `handleKeyDown` dispatch + `preventDefault`, reactive
- *     guard flags, the catalog grouping, and `attach`/`autoAttach`.
+ *     guard flags, and `attach`/`autoAttach`.
  */
 import { describe, expect, it, vi } from 'vitest';
 import { effectScope, ref } from 'vue';
