@@ -219,13 +219,15 @@ export async function commitGalleryResult(
 			await queueThemeWrite(handler, () => handler.updateThemeFontScheme(result.fontScheme));
 			return previewGalleryResult(result, base, handler, target);
 		case 'themeEffects': {
-			const scheme = await queueThemeWrite(handler, async () =>
-				result.schemeId
-					? handler.applyThemeEffectScheme(result.schemeId)
-					: result.fmtSchemeXml
-						? handler.applyThemeFormatSchemeXml(result.fmtSchemeXml)
-						: undefined,
-			);
+			const scheme = await queueThemeWrite(handler, async () => {
+				if (result.schemeId) {
+					return handler.applyThemeEffectScheme(result.schemeId);
+				}
+				if (result.fmtSchemeXml) {
+					return handler.applyThemeFormatSchemeXml(result.fmtSchemeXml);
+				}
+				return undefined;
+			});
 			if (!scheme) {
 				return undefined;
 			}

@@ -7,7 +7,7 @@ import {
 	historyTheme,
 	loadedThemeName,
 	queueThemeWrite,
-	sameHistoryTheme,
+	restoreCrossedTheme,
 	settleThemeWrites,
 	themePartWrites,
 	withHistoryTheme,
@@ -67,8 +67,8 @@ describe('history theme records', () => {
 		const loaded = historyTheme({ colorScheme: OFFICE, fontScheme: CALIBRI });
 		const picked = historyTheme({ colorScheme: FACET, fontScheme: ARIAL, name: 'Facet' });
 		expect(
-			sameHistoryTheme(loaded, historyTheme({ fontScheme: CALIBRI, colorScheme: OFFICE })),
-		).toBe(true);
+			crossedHistoryTheme(loaded, historyTheme({ fontScheme: CALIBRI, colorScheme: OFFICE })),
+		).toBeUndefined();
 		expect(crossedHistoryTheme(picked, loaded)).toStrictEqual(loaded);
 		expect(crossedHistoryTheme(loaded, loaded)).toBeUndefined();
 		// A snapshot from before themes were recorded has nothing to restore.
@@ -85,6 +85,28 @@ describe('history theme records', () => {
 			fontScheme: CALIBRI,
 			formatScheme: 'kept',
 		});
+	});
+
+	it('puts a crossed theme back and queues only the parts that differ', async () => {
+		const handler = writer();
+		const loaded = historyTheme({ colorScheme: OFFICE, fontScheme: CALIBRI });
+		const picked = historyTheme({ colorScheme: OFFICE, fontScheme: ARIAL, name: 'Arial' });
+		const restored = restoreCrossedTheme(
+			{ colorScheme: OFFICE, fontScheme: ARIAL, name: 'Arial', formatScheme: 'kept' },
+			picked,
+			loaded,
+			handler,
+			'Office Theme',
+		);
+		expect(restored).toStrictEqual({
+			colorScheme: OFFICE,
+			fontScheme: CALIBRI,
+			formatScheme: 'kept',
+		});
+		await settleThemeWrites(handler);
+		expect(handler.writes).toStrictEqual(['fonts', 'name:Office Theme']);
+		expect(restoreCrossedTheme({ name: 'x' }, loaded, loaded, handler)).toBeUndefined();
+		expect(handler.writes).toHaveLength(2);
 	});
 });
 
@@ -116,9 +138,11 @@ describe('themePartWrites', () => {
 			{ path: 'ppt/theme/theme2.xml', name: 'Other' },
 			{ path: 'ppt/theme/theme1.xml', name: 'Office Theme' },
 		];
-		expect(loadedThemeName(options, 'ppt/theme/theme1.xml')).toBe('Office Theme');
+		const masters = [{ themePath: 'ppt/theme/theme1.xml' }, { themePath: 'ppt/theme/theme2.xml' }];
+		expect(loadedThemeName(options, masters)).toBe('Office Theme');
+		expect(loadedThemeName(options, [])).toBe('Other');
 		expect(loadedThemeName(options, undefined)).toBe('Other');
-		expect(loadedThemeName(undefined, 'ppt/theme/theme1.xml')).toBeUndefined();
+		expect(loadedThemeName(undefined, masters)).toBeUndefined();
 	});
 });
 
