@@ -294,9 +294,16 @@ export interface IPptxHandlerRuntime {
 	setSlideMasterTheme(masterPath: string, themePath: string): Promise<void>;
 	getThemePartSchemes(themePath: string): Promise<PptxThemePartSchemes | undefined>;
 	getTemplateBackgroundColor(path: string): string | undefined;
-	updateThemeColorScheme(colorScheme: PptxThemeColorScheme): Promise<void>;
-	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;
-	updateThemeName(name: string): Promise<void>;
+	/** Scheme edits write every part a slide master uses, or only `themePaths`. */
+	updateThemeColorScheme(
+		colorScheme: PptxThemeColorScheme,
+		themePaths?: readonly string[],
+	): Promise<void>;
+	updateThemeFontScheme(
+		fontScheme: PptxThemeFontScheme,
+		themePaths?: readonly string[],
+	): Promise<void>;
+	updateThemeName(name: string, themePaths?: readonly string[]): Promise<void>;
 	/** Resolve a `<p:style>` node against the loaded theme (see PptxHandlerRuntimeStyleMatrixResolve). */
 	resolveStyleMatrixReferences(styleXml: XmlObject, effectSchemeId?: string): ResolvedStyleMatrix;
 	/** Write a built-in effect scheme (`a:fmtScheme`) into the theme parts. */

@@ -280,6 +280,8 @@ export class PptxHandlerCore {
 	 * Modify the theme’s colour scheme (accent colours, background, text, etc.).
 	 *
 	 * @param colorScheme - A {@link PptxThemeColorScheme} with hex colour values.
+	 * @param themePaths - Only these theme parts (e.g. `ppt/theme/theme2.xml`); every part a slide
+	 *   master uses when omitted.
 	 *
 	 * @example
 	 * ```ts
@@ -292,14 +294,19 @@ export class PptxHandlerCore {
 	 * // => void — colour scheme updated in the in-memory theme XML
 	 * ```
 	 */
-	public async updateThemeColorScheme(colorScheme: PptxThemeColorScheme): Promise<void> {
-		await this.runtime.updateThemeColorScheme(colorScheme);
+	public async updateThemeColorScheme(
+		colorScheme: PptxThemeColorScheme,
+		themePaths?: readonly string[],
+	): Promise<void> {
+		await this.runtime.updateThemeColorScheme(colorScheme, themePaths);
 	}
 
 	/**
 	 * Update the theme’s font scheme (heading + body typefaces).
 	 *
 	 * @param fontScheme - A {@link PptxThemeFontScheme} with font family names.
+	 * @param themePaths - Only these theme parts (e.g. `ppt/theme/theme2.xml`); every part a slide
+	 *   master uses when omitted.
 	 *
 	 * @example
 	 * ```ts
@@ -310,17 +317,22 @@ export class PptxHandlerCore {
 	 * // => void — font scheme updated in the in-memory theme XML
 	 * ```
 	 */
-	public async updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void> {
-		await this.runtime.updateThemeFontScheme(fontScheme);
+	public async updateThemeFontScheme(
+		fontScheme: PptxThemeFontScheme,
+		themePaths?: readonly string[],
+	): Promise<void> {
+		await this.runtime.updateThemeFontScheme(fontScheme, themePaths);
 	}
 
 	/**
 	 * Rename the presentation theme.
 	 *
 	 * @param name - New display name for the theme.
+	 * @param themePaths - Only these theme parts (e.g. `ppt/theme/theme2.xml`); every part a slide
+	 *   master uses when omitted.
 	 */
-	public async updateThemeName(name: string): Promise<void> {
-		await this.runtime.updateThemeName(name);
+	public async updateThemeName(name: string, themePaths?: readonly string[]): Promise<void> {
+		await this.runtime.updateThemeName(name, themePaths);
 	}
 
 	/**

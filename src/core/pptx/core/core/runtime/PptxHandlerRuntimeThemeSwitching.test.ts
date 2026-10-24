@@ -147,3 +147,23 @@ describe('setSlideMasterTheme', () => {
 		]);
 	});
 });
+
+describe('scheme edits that name their theme parts', () => {
+	it('write only those parts, through the handler', async () => {
+		const { handler, data } = await open();
+		await handler.updateThemeColorScheme(scheme(theme1, '#654321'), [theme1.path]);
+		await handler.updateThemeFontScheme({ majorFont: { latin: 'Verdana' } }, [theme1.path]);
+		await handler.updateThemeName('Renamed', [theme1.path]);
+		const parts = await savedParts(handler, data);
+		expect(parts.theme1).toStrictEqual({ name: 'Renamed', accent1: '654321', major: 'Verdana' });
+		expect(parts.theme2).toStrictEqual(original(theme2));
+		const reopened = await open(await handler.save(data.slides));
+		const heading = (index: number) => {
+			const element = reopened.data.slides[index]?.elements.find((e) => e.name === 'Heading');
+			return element && 'textSegments' in element
+				? element.textSegments?.[0]?.style?.fontFamily
+				: undefined;
+		};
+		expect([heading(0), heading(2)]).toStrictEqual(['Verdana', theme2.major]);
+	});
+});
