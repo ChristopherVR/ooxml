@@ -24,7 +24,6 @@ import type {
 	TextStyle,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import { useMemo } from 'react';
 
 import type { UseCommentsResult } from '../hooks/useComments-helpers';
 import { useTranslation } from '../i18n/use-translation';
@@ -176,17 +175,13 @@ export function ViewerInspector({
 }: ViewerInspectorProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const regionRenderer = useRegionRenderer('inspector');
-	const liveEdit = useMemo(
-		() =>
-			onPreviewElement
-				? {
-						element: selectedElement,
-						previewElement: onPreviewElement,
-						elementById: elementById ?? (() => undefined),
-					}
-				: null,
-		[onPreviewElement, selectedElement, elementById],
-	);
+	const liveEdit = onPreviewElement
+		? {
+				element: selectedElement,
+				previewElement: onPreviewElement,
+				elementById: elementById ?? (() => undefined),
+			}
+		: null;
 
 	if (!isOpen) {
 		return null;
