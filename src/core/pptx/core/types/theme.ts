@@ -311,6 +311,19 @@ export interface PptxTheme {
 }
 
 /**
+ * The colour scheme, font scheme and name one theme part of the package carries, read without
+ * changing the loaded theme (`PptxHandler.getThemePartSchemes`).
+ */
+export interface PptxThemePartSchemes {
+	/** The theme part's path in the package (e.g. `ppt/theme/theme2.xml`). */
+	path: string;
+	/** Theme name from `a:theme @name`, when present. */
+	name?: string;
+	colorScheme: PptxThemeColorScheme;
+	fontScheme: PptxThemeFontScheme;
+}
+
+/**
  * Snapshot of `<a:objectDefaults>` (ECMA-376 §20.1.6.7). Each child
  * (`spDef`, `lnDef`, `txDef`) carries `<a:spPr>`, `<a:bodyPr>`,
  * `<a:lstStyle>`, `<a:style>`. We capture them as raw parser objects so

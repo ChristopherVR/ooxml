@@ -32,6 +32,7 @@ import type {
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 	PptxThemeFormatScheme,
+	PptxThemePartSchemes,
 	PptxThemeVariant,
 	PptxViewProperties,
 	ParsedTableStyleMap,
@@ -290,6 +291,8 @@ export interface IPptxHandlerRuntime {
 	Builder(data: PptxData): PptxXmlBuilder;
 	setTemplateBackground(path: string, backgroundColor: string | undefined): void;
 	setPresentationTheme(themePath: string, applyToAllMasters?: boolean): Promise<void>;
+	setSlideMasterTheme(masterPath: string, themePath: string): Promise<void>;
+	getThemePartSchemes(themePath: string): Promise<PptxThemePartSchemes | undefined>;
 	getTemplateBackgroundColor(path: string): string | undefined;
 	updateThemeColorScheme(colorScheme: PptxThemeColorScheme): Promise<void>;
 	updateThemeFontScheme(fontScheme: PptxThemeFontScheme): Promise<void>;

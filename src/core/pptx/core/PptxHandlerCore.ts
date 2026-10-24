@@ -23,6 +23,7 @@ import type {
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 	PptxThemeFormatScheme,
+	PptxThemePartSchemes,
 	PptxThemePreset,
 	PptxThemeVariant,
 	ResolvedStyleMatrix,
@@ -251,6 +252,28 @@ export class PptxHandlerCore {
 	 */
 	public async setPresentationTheme(themePath: string, applyToAllMasters = true): Promise<void> {
 		await this.runtime.setPresentationTheme(themePath, applyToAllMasters);
+	}
+
+	/**
+	 * Point one slide master at a theme part already in the package; scheme edits and saves follow
+	 * it. Does nothing when the package has no such master or part.
+	 *
+	 * @param masterPath - The master's part path (e.g. `ppt/slideMasters/slideMaster2.xml`).
+	 * @param themePath - The theme part's path (e.g. `ppt/theme/theme1.xml`).
+	 */
+	public async setSlideMasterTheme(masterPath: string, themePath: string): Promise<void> {
+		await this.runtime.setSlideMasterTheme(masterPath, themePath);
+	}
+
+	/**
+	 * Read one theme part's colour scheme, font scheme and name without changing the loaded theme,
+	 * for example to show what switching to it would apply.
+	 *
+	 * @param themePath - The theme part's path (e.g. `ppt/theme/theme2.xml`).
+	 * @returns The part's schemes, or `undefined` when the package has no such part.
+	 */
+	public async getThemePartSchemes(themePath: string): Promise<PptxThemePartSchemes | undefined> {
+		return this.runtime.getThemePartSchemes(themePath);
 	}
 
 	/**

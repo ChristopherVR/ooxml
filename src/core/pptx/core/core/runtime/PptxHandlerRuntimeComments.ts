@@ -7,7 +7,7 @@ import {
 	parseModernCommentPart,
 } from '../../utils/modern-comment-xml';
 import { xmlChild } from '../../utils/xml-access';
-import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeProcessing';
+import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeSwitching';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
