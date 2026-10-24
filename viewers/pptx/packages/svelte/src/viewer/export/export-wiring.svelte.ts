@@ -103,6 +103,7 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 		getFileName: () => deps.getFileName?.(),
 		getIncludeHiddenSlides: () => deps.getIncludeHiddenSlides?.() ?? false,
 		getPrintHighQuality: () => deps.getPrintHighQuality?.() ?? false,
+		getTranslator: deps.getTranslator,
 	});
 
 	return {

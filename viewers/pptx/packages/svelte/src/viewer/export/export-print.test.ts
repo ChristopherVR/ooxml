@@ -1,8 +1,15 @@
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
+import { translationsDe } from '../../../../locales/src';
+import { interpolate } from '../../i18n/translator';
+import type { Translator } from '../../i18n/translator';
 import type { PrintDeps } from './export-print';
 import { printSlides } from './export-print';
+
+/** A German viewer's translator, without registering the locale globally. */
+const germanTranslator: Translator = (key, params) =>
+	interpolate(translationsDe[key] ?? key, params);
 
 /**
  * Unit tests for the print flow. The rasteriser and the print-surface opener
@@ -181,5 +188,48 @@ describe('printSlides', () => {
 		await expect(printSlides(harness.deps)).resolves.toBeFalsy();
 		expect(harness.openPrintWindow).not.toHaveBeenCalled();
 		expect(harness.rasterizeSlide).not.toHaveBeenCalled();
+	});
+
+	it('titles the print window in the viewer language', async () => {
+		const titles: string[] = [];
+		for (const options of [
+			{},
+			{ printWhat: 'outline' as const },
+			{ printWhat: 'notes' as const },
+			{ printWhat: 'handouts' as const, slidesPerPage: 4 as const },
+		]) {
+			const harness = make({ getTranslator: () => germanTranslator });
+			await printSlides(harness.deps, options);
+			titles.push(/<title>(?<title>[^<]*)<\/title>/u.exec(harness.html())?.groups?.title ?? '');
+		}
+		expect(titles).toStrictEqual([
+			'Folien',
+			'Gliederung',
+			'Notizseiten',
+			'4 Folien pro Handzettel',
+		]);
+	});
+
+	it('captures the slides when the SVG export throws', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const broken = { ...makeChartSlide(), elements: undefined } as unknown as PptxSlide;
+		const harness = make({ getSlides: () => [broken] });
+
+		await expect(printSlides(harness.deps)).resolves.toBeTruthy();
+
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringContaining('falling back to raster'),
+			expect.anything(),
+		);
+		expect(harness.rasterizeSlide).toHaveBeenCalledExactlyOnceWith(0, 1);
+		expect(harness.html()).toContain('data:image/png;base64,AAAA');
+		warn.mockRestore();
+	});
+
+	it('opens nothing for an outline of hidden slides only', async () => {
+		const hidden = SLIDES.map((slide) => ({ ...slide, hidden: true }));
+		const harness = make({ getSlides: () => hidden });
+		await expect(printSlides(harness.deps, { printWhat: 'outline' })).resolves.toBeFalsy();
+		expect(harness.openPrintWindow).not.toHaveBeenCalled();
 	});
 });
