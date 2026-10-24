@@ -1,26 +1,18 @@
-// oxlint-disable react-hooks/rules-of-hooks -- Vue composables, not React hooks
 /**
  * A drag through one of the inspector's native colour pickers (fill, line,
  * text, or an effects colour field) previews every shade and is ONE undo step
  * and ONE recent colour (shared `createLiveColorInput`). Each `input` used to
  * emit an `update` that the viewer recorded, so a drag through twenty shades
  * took twenty presses of Undo (and the settling `change` one more). Wired as
- * `PowerPointViewer` wires it: the real history, editor operations and
- * inspector wiring, with the preview channel and recent colours provided.
+ * `PowerPointViewer` wires it (`colour-drag.test-support.ts`).
  */
-import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
-import type { PptxElement, PptxSlide, ShapeStyle, TextStyle } from 'pptx-viewer-core';
+import { disableAutoUnmount, enableAutoUnmount } from '@vue/test-utils';
+import type { PptxElement, ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
-import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue';
+import { nextTick } from 'vue';
 
-import { InspectorPreviewKey } from '../../composables/inspector-preview-context';
-import { RecentColorsKey } from '../../composables/recent-colors-context';
-import type { TemplateElementMap } from '../../composables/template-editing';
-import { useEditorHistory } from '../../composables/useEditorHistory';
-import { useEditorOperations } from '../../composables/useEditorOperations';
-import { useInspectorWiring } from '../../composables/useInspectorWiring';
-import { useSelectionModel } from '../../composables/useSelectionModel';
+import { mountColourPanel } from './colour-drag.test-support';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
 import StrokePanel from './StrokePanel.vue';
@@ -68,70 +60,22 @@ const PANELS: Record<Control, { panel: Component; selector: string }> = {
 };
 
 function harness(control: Control) {
-	const slides = shallowRef<PptxSlide[]>([
-		{ id: 's', rId: 'rId1', slideNumber: 1, elements: [shape()] } as PptxSlide,
-	]);
-	const templateElementsBySlideId = shallowRef<TemplateElementMap>({});
-	const activeSlideIndex = ref(0);
-	const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
-	const selection = useSelectionModel({ slides, templateElementsBySlideId, activeSlide });
-	selection.selectElement('a', false);
-	const recent = ref<string[]>([]);
-	const history = useEditorHistory(slides, templateElementsBySlideId);
-	const Host = defineComponent({
-		setup() {
-			const ops = useEditorOperations({
-				slides,
-				activeSlideIndex,
-				pushHistory: history.pushHistory,
-				selectedElementIds: selection.selectedElementIds,
-				templateElementsBySlideId,
-			});
-			const inspector = useInspectorWiring({
-				slides,
-				activeSlide,
-				activeSlideIndex,
-				selectedElements: selection.selectedElements,
-				pushHistory: history.pushHistory,
-				updateElement: (id, patch) => ops.updateElement(id, patch),
-				previewElement: (id, patch) => ops.previewElement(id, patch),
-				findActiveElement: selection.findActiveElement,
-			});
-			provide(InspectorPreviewKey, inspector.inspectorPreview);
-			provide(RecentColorsKey, {
-				recent,
-				push: (hex: string) => {
-					recent.value = [hex, ...recent.value.filter((c) => c !== hex)];
-				},
-			} as never);
-			return () =>
-				h(PANELS[control].panel, {
-					element: inspector.inspectorElementForPanels.value,
-					onUpdate: inspector.onInspectorUpdate,
-				});
-		},
-	});
-	const wrapper = mount(Host);
-	const fire = async (type: 'input' | 'change' | 'blur', hex: string): Promise<void> => {
-		const input = wrapper.find(PANELS[control].selector);
-		(input.element as HTMLInputElement).value = hex;
-		await input.trigger(type);
-		await nextTick();
-	};
+	const { panel, selector } = PANELS[control];
+	const view = mountColourPanel(panel, selector, { elements: [shape()] });
 	/** Set the value and fire `input` then `change` in one turn, with no re-render between. */
 	const pick = async (hex: string): Promise<void> => {
-		const input = wrapper.find(PANELS[control].selector);
+		const input = view.input();
 		(input.element as HTMLInputElement).value = hex;
 		input.element.dispatchEvent(new Event('input', { bubbles: true }));
 		input.element.dispatchEvent(new Event('change', { bubbles: true }));
 		await nextTick();
 	};
 	return {
-		history,
-		fire,
+		history: view.history,
+		fire: view.fire,
 		pick,
-		recent,
-		current: () => slides.value[0]!.elements[0] as Styled,
+		recent: view.recent,
+		current: () => view.slides.value[0]!.elements[0] as Styled,
 	};
 }
 

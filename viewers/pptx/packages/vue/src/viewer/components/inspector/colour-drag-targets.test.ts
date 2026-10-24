@@ -1,4 +1,3 @@
-// oxlint-disable react-hooks/rules-of-hooks -- Vue composables, not React hooks
 /**
  * A live colour drag in the Vue inspector stays on the element it started on
  * and never overwrites another edit (shared `createLiveColorInput`): the
@@ -7,21 +6,16 @@
  * commit and its undo step, an effects colour field tells a new target from a
  * re-render of its own drag, and a drag on a group member or a template
  * element is put back once the selection has left it. Wired as
- * `PowerPointViewer` wires it.
+ * `PowerPointViewer` wires it (`colour-drag.test-support.ts`).
  */
-import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
-import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
+import { disableAutoUnmount, enableAutoUnmount } from '@vue/test-utils';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import type { Component } from 'vue';
-import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from 'vue';
+import { nextTick } from 'vue';
 
-import { InspectorPreviewKey } from '../../composables/inspector-preview-context';
-import { RecentColorsKey } from '../../composables/recent-colors-context';
-import type { TemplateElementMap } from '../../composables/template-editing';
-import { useEditorHistory } from '../../composables/useEditorHistory';
-import { useEditorOperations } from '../../composables/useEditorOperations';
-import { useInspectorWiring } from '../../composables/useInspectorWiring';
-import { useSelectionModel } from '../../composables/useSelectionModel';
+import type { Deck } from './colour-drag.test-support';
+import { mountColourPanel } from './colour-drag.test-support';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
 
@@ -86,82 +80,20 @@ function findIn(elements: readonly PptxElement[], id: string): PptxElement | und
 	return undefined;
 }
 
-interface Deck {
-	/** The slide's elements (shapes `a` and `b` when omitted). */
-	elements?: PptxElement[];
-	/** The slide's template (layout and master) elements. */
-	templates?: PptxElement[];
-	/** The element selected first (`a` when omitted). */
-	selected?: string;
-}
-
-function harness(panel: Component, selector: string, deck: Deck = {}) {
-	const slides = shallowRef<PptxSlide[]>([
-		{
-			id: 's',
-			rId: 'rId1',
-			slideNumber: 1,
-			elements: deck.elements ?? [shape('a', A_STYLE), shape('b', B_STYLE)],
-		} as PptxSlide,
-	]);
-	const templateElementsBySlideId = shallowRef<TemplateElementMap>({ s: deck.templates ?? [] });
-	const activeSlideIndex = ref(0);
-	const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
-	const selection = useSelectionModel({ slides, templateElementsBySlideId, activeSlide });
-	selection.selectElement(deck.selected ?? 'a', false);
-	const recent = ref<string[]>([]);
-	const history = useEditorHistory(slides, templateElementsBySlideId);
-	const Host = defineComponent({
-		setup() {
-			const ops = useEditorOperations({
-				slides,
-				activeSlideIndex,
-				pushHistory: history.pushHistory,
-				selectedElementIds: selection.selectedElementIds,
-				templateElementsBySlideId,
-			});
-			const inspector = useInspectorWiring({
-				slides,
-				activeSlide,
-				activeSlideIndex,
-				selectedElements: selection.selectedElements,
-				pushHistory: history.pushHistory,
-				updateElement: (id, patch) => ops.updateElement(id, patch),
-				previewElement: (id, patch) => ops.previewElement(id, patch),
-				findActiveElement: selection.findActiveElement,
-			});
-			provide(InspectorPreviewKey, inspector.inspectorPreview);
-			provide(RecentColorsKey, {
-				recent,
-				push: (hex: string) => {
-					recent.value = [hex, ...recent.value.filter((c) => c !== hex)];
-				},
-			} as never);
-			return () =>
-				h(panel, {
-					element: inspector.inspectorElementForPanels.value,
-					onUpdate: inspector.onInspectorUpdate,
-				});
-		},
+/** `panel` over shapes `a` and `b` (or `deck`), with `a` selected unless `deck` says otherwise. */
+function harness(panel: Component, selector: string, deck: Partial<Deck> = {}) {
+	const view = mountColourPanel(panel, selector, {
+		...deck,
+		elements: deck.elements ?? [shape('a', A_STYLE), shape('b', B_STYLE)],
 	});
-	const wrapper = mount(Host);
-	const fire = async (type: 'input' | 'change' | 'blur', hex: string): Promise<void> => {
-		const input = wrapper.find(selector);
-		(input.element as HTMLInputElement).value = hex;
-		await input.trigger(type);
-		await nextTick();
-	};
 	const style = (id: string): ShapeStyle =>
 		(
-			findIn([...slides.value[0]!.elements, ...(templateElementsBySlideId.value.s ?? [])], id) as {
-				shapeStyle: ShapeStyle;
-			}
+			findIn(
+				[...view.slides.value[0]!.elements, ...(view.templateElementsBySlideId.value.s ?? [])],
+				id,
+			) as { shapeStyle: ShapeStyle }
 		).shapeStyle;
-	const select = async (id: string): Promise<void> => {
-		selection.selectElement(id, false);
-		await nextTick();
-	};
-	return { slides, history, recent, fire, style, select };
+	return { ...view, style };
 }
 
 describe('a fill drag the selection leaves', () => {
