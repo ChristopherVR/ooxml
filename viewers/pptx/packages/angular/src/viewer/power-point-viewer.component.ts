@@ -22,7 +22,6 @@ import {
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
 	attachViewerHyperlinks,
-	applyMasterViewCrudAction,
 	applyPreferenceToOptions,
 	buildRasterPictureElement,
 	createBackstagePresentation,
@@ -153,6 +152,7 @@ import { LoadNoticesService } from './load-notices.service';
 import { createLoadNotifier } from './load-notifier';
 import type { ViewerLoadDetail } from './load-notifier';
 import { MasterViewCanvasComponent } from './master-view-canvas.component';
+import { runMasterViewCrud } from './master-view-crud-session';
 import { MasterViewSidebarComponent } from './master-view-sidebar.component';
 import { applyMobileBarSheetTap } from './mobile-bar-sheet-tap';
 import { MobileBottomBarComponent } from './mobile-bottom-bar.component';
@@ -3327,18 +3327,15 @@ export class PowerPointViewerComponent
 	 *
 	 * rename* prompts for a name first (`window.prompt`, matching the pattern
 	 * `SlidesPanelComponent`'s section-rename already uses); every command then
-	 * runs through `applyMasterViewCrudAction` and, on success, adopts the
-	 * returned handler + data through `LoadContentService.adoptMasterViewData`
-	 * (that helper reloads through a FRESH `PptxHandler`, so it cannot be
-	 * applied as a plain signal patch) and moves the sidebar selection to the
-	 * returned target. A failure is surfaced with `window.alert`: Angular has
+	 * runs through `runMasterViewCrud` (`master-view-crud-session.ts`, which
+	 * adopts the rebuilt deck) and, on success, moves the sidebar selection to
+	 * the returned target. A failure is surfaced with `window.alert`: Angular has
 	 * no generic toast/notice channel for an arbitrary action failure (the
 	 * compat-toast stack is load-diagnostics only).
 	 */
 	protected async onMasterViewCrudAction(id: MasterViewCrudActionId): Promise<void> {
-		const handler = this.loader.getHandler();
 		const data = this.loader.parsedData();
-		if (!handler || !data) {
+		if (!this.loader.getHandler() || !data) {
 			return;
 		}
 		const target = this.masterViewTarget();
@@ -3362,13 +3359,18 @@ export class PowerPointViewerComponent
 			}
 			name = typed.trim();
 		}
-		const result = await applyMasterViewCrudAction(handler, data, id, target, { name });
+		const result = await runMasterViewCrud(this.loader, this.editor, {
+			id,
+			target,
+			options: { name },
+		});
+		if (!result) {
+			return;
+		}
 		if (!result.ok) {
 			window.alert(this.translateService.instant(masterViewCrudFailureKey(id, result.reason)));
 			return;
 		}
-		this.loader.adoptMasterViewData(result.handler, result.data);
-		this.editor.dirty.set(true);
 		this.activeMasterIndex.set(result.target.masterIndex);
 		this.activeLayoutIndex.set(result.target.layoutIndex);
 	}
