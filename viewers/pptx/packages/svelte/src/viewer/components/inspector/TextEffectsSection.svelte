@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { applyTextStyleUpdate, buildTextWarpGallery, textWarpStyle } from 'ooxml-ui/pptx';
+	import {
+		applyTextStyleUpdate,
+		buildTextWarpGallery,
+		inspectorTogglePatch,
+		TEXT_EFFECT_SECTIONS,
+		textWarpStyle,
+	} from 'ooxml-ui/pptx';
 	import type { RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 	import type { PptxElement, Text3DStyle, TextStyle } from 'pptx-viewer-core';
 	import { hasTextProperties } from 'pptx-viewer-core';
@@ -39,6 +45,13 @@
 	function patchRuns(next: Partial<TextStyle>): void {
 		editor.patchSelected(applyTextStyleUpdate(el, next, null).patch);
 	}
+	/** Tick or untick one effect with the shared section's defaults (what every binding writes). */
+	function toggleEffect(id: 'shadow' | 'glow' | 'reflection', on: boolean): void {
+		const next = inspectorTogglePatch(TEXT_EFFECT_SECTIONS, id, style, on);
+		if (next) {
+			patchRuns(next);
+		}
+	}
 
 	/** A Text Warp pick sets its preset on the text style; No Transform clears it. */
 	function pickWarp(event: Event): void {
@@ -58,11 +71,11 @@
 
 <details>
 	<summary>{t('pptx.textEffects.title')}</summary>
-	<label class="check"><pptx-ui-checkbox checked={Boolean(style.textShadowColor)} onchange={(event) => patchRuns(event.currentTarget.checked ? { textShadowColor: '#000000', textShadowBlur: 4, textShadowOffsetX: 2, textShadowOffsetY: 2, textShadowOpacity: 0.5 } : { textShadowColor: undefined, textShadowBlur: undefined, textShadowOffsetX: undefined, textShadowOffsetY: undefined, textShadowOpacity: undefined })} ></pptx-ui-checkbox>{t('pptx.textEffects.shadow')}</label>
+	<label class="check"><pptx-ui-checkbox checked={Boolean(style.textShadowColor)} onchange={(event) => toggleEffect('shadow', event.currentTarget.checked)} ></pptx-ui-checkbox>{t('pptx.textEffects.shadow')}</label>
 	{#if style.textShadowColor}<div class="grid"><label>{t('pptx.textEffects.color')}<input type="color" value={style.textShadowColor} onchange={(event) => { patchRuns({ textShadowColor: event.currentTarget.value }); pushColor(event.currentTarget.value); }} /></label><label>{t('pptx.textEffects.opacity')}<input type="number" min="0" max="1" step="0.05" value={style.textShadowOpacity ?? 0.5} onchange={(event) => patchRuns({ textShadowOpacity: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.blur')}<input type="number" min="0" max="50" value={style.textShadowBlur ?? 4} onchange={(event) => patchRuns({ textShadowBlur: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.offsetX')}<input type="number" min="-50" max="50" value={style.textShadowOffsetX ?? 2} onchange={(event) => patchRuns({ textShadowOffsetX: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.offsetY')}<input type="number" min="-50" max="50" value={style.textShadowOffsetY ?? 2} onchange={(event) => patchRuns({ textShadowOffsetY: Number(event.currentTarget.value) })} /></label></div>{/if}
-	<label class="check"><pptx-ui-checkbox checked={Boolean(style.textGlowColor)} onchange={(event) => patchRuns(event.currentTarget.checked ? { textGlowColor: '#ffff00', textGlowRadius: 6, textGlowOpacity: 0.6 } : { textGlowColor: undefined, textGlowRadius: undefined, textGlowOpacity: undefined })} ></pptx-ui-checkbox>{t('pptx.textEffects.glow')}</label>
+	<label class="check"><pptx-ui-checkbox checked={Boolean(style.textGlowColor)} onchange={(event) => toggleEffect('glow', event.currentTarget.checked)} ></pptx-ui-checkbox>{t('pptx.textEffects.glow')}</label>
 	{#if style.textGlowColor}<div class="grid"><label>{t('pptx.textEffects.color')}<input type="color" value={style.textGlowColor} onchange={(event) => { patchRuns({ textGlowColor: event.currentTarget.value }); pushColor(event.currentTarget.value); }} /></label><label>{t('pptx.textEffects.opacity')}<input type="number" min="0" max="1" step="0.05" value={style.textGlowOpacity ?? 0.6} onchange={(event) => patchRuns({ textGlowOpacity: Number(event.currentTarget.value) })} /></label><label>{t('pptx.effects.radius')}<input type="number" min="1" max="50" value={style.textGlowRadius ?? 6} onchange={(event) => patchRuns({ textGlowRadius: Number(event.currentTarget.value) })} /></label></div>{/if}
-	<label class="check"><pptx-ui-checkbox checked={style.textReflection ?? false} onchange={(event) => patchRuns(event.currentTarget.checked ? { textReflection: true, textReflectionBlur: 1, textReflectionOffset: 3, textReflectionStartOpacity: 0.5, textReflectionEndOpacity: 0 } : { textReflection: undefined, textReflectionBlur: undefined, textReflectionOffset: undefined, textReflectionStartOpacity: undefined, textReflectionEndOpacity: undefined })} ></pptx-ui-checkbox>{t('pptx.textEffects.reflection')}</label>
+	<label class="check"><pptx-ui-checkbox checked={style.textReflection ?? false} onchange={(event) => toggleEffect('reflection', event.currentTarget.checked)} ></pptx-ui-checkbox>{t('pptx.textEffects.reflection')}</label>
 	{#if style.textReflection}<div class="grid"><label>{t('pptx.textEffects.blur')}<input type="number" min="0" max="20" value={style.textReflectionBlur ?? 1} onchange={(event) => patchRuns({ textReflectionBlur: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.offset')}<input type="number" min="0" max="20" value={style.textReflectionOffset ?? 3} onchange={(event) => patchRuns({ textReflectionOffset: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.startOpacity')}<input type="number" min="0" max="1" step="0.05" value={style.textReflectionStartOpacity ?? 0.5} onchange={(event) => patchRuns({ textReflectionStartOpacity: Number(event.currentTarget.value) })} /></label><label>{t('pptx.textEffects.endOpacity')}<input type="number" min="0" max="1" step="0.05" value={style.textReflectionEndOpacity ?? 0} onchange={(event) => patchRuns({ textReflectionEndOpacity: Number(event.currentTarget.value) })} /></label></div>{/if}
 	<!-- Not a <label>: a click on its caption would press the first tile (No Transform). -->
 	<div class="warp"><span>{t('pptx.textEffects.transform')}</span><pptx-ui-ribbon-gallery mode="panel" compact descriptor={warpGallery} {translateLabel} disabled={!editor.editable} ongallery-pick={pickWarp}></pptx-ui-ribbon-gallery></div>
