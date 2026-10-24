@@ -1,6 +1,6 @@
 import { createLiveColorInput } from 'ooxml-ui/pptx';
 import type { LiveColorInput as LiveColorController } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxThemeColorRef } from 'pptx-viewer-core';
+import type { PptxElement } from 'pptx-viewer-core';
 import React, { useCallback, useRef } from 'react';
 
 import type { LiveEditContextValue } from './LiveEditContext';
@@ -17,7 +17,7 @@ function settleOnChange(event: Event): void {
 }
 
 /** The patch a colour pick makes on an element. */
-export type LiveColorPatch = (el: PptxElement, hex: string) => Partial<PptxElement> | undefined;
+type LiveColorPatch = (el: PptxElement, hex: string) => Partial<PptxElement> | undefined;
 
 export interface LiveColorInputProps extends Omit<
 	React.InputHTMLAttributes<HTMLInputElement>,
@@ -26,7 +26,7 @@ export interface LiveColorInputProps extends Omit<
 	/** The colour the control shows now. */
 	value: string;
 	/** Commit a pick through the control's normal edit path (one undo step). */
-	onApply: (hex: string, ref?: PptxThemeColorRef) => void;
+	onApply: (hex: string) => void;
 	/**
 	 * The patch the same pick makes on the inspector's element, which the drag's
 	 * shades are written with (silently) and put back from, leaf by leaf. Without

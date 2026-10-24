@@ -1,4 +1,4 @@
-import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from 'ooxml-ui/pptx';
+import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel, shapeQuickStylePatch } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import React from 'react';
@@ -177,11 +177,9 @@ function shapeStyleChangePatch(
 	hex: string,
 	change: (hex: string, style: ShapeStyle) => Partial<ShapeStyle>,
 ): Partial<PptxElement> | undefined {
-	if (!hasShapeProperties(el)) {
-		return undefined;
-	}
-	const style = el.shapeStyle ?? {};
-	return { shapeStyle: { ...style, ...change(hex, style) } } as Partial<PptxElement>;
+	return hasShapeProperties(el)
+		? shapeQuickStylePatch(el, change(hex, el.shapeStyle ?? {}))
+		: undefined;
 }
 
 // ---------------------------------------------------------------------------
