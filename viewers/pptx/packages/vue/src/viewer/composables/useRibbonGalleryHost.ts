@@ -1,4 +1,4 @@
-import { galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
+import { commitsThroughDeckStyle, galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
 import type {
 	DeckStyleHost,
 	RibbonGalleryApplyResult,
@@ -54,13 +54,11 @@ export function dispatchRibbonGalleryResult(
 	result: RibbonGalleryApplyResult,
 	sinks: RibbonGallerySinks,
 ): void {
-	if (
-		result.kind === 'themeEffects' ||
-		result.kind === 'backgroundStyle' ||
-		result.kind === 'sequence'
-	) {
-		// Settles the hover preview itself, so the commit starts from the real slides.
-		void sinks.deckStyle?.commit(result);
+	if (sinks.deckStyle && commitsThroughDeckStyle(result)) {
+		// Settles the hover preview itself, so the commit starts from the real slides, writes only
+		// what the pick changes into the theme part and records one undo step (a Fonts pick keeps
+		// the colours and the theme's name).
+		void sinks.deckStyle.commit(result);
 		return;
 	}
 	sinks.deckStyle?.endPreview();

@@ -49,6 +49,7 @@ import {
 	overlayInlineTextSnapshot,
 	resolve3DRenderingFlags,
 	isEditingAllowed,
+	loadedThemeName,
 	resolveAutosaveIntervalSeconds,
 	saveFailureMessage,
 	SAVE_FAILED_TOAST,
@@ -533,10 +534,15 @@ const {
 	mergedSlides,
 	clearSelection,
 } = selection;
+// The primary theme part's loaded name (the parsed theme carries none), for an undo back to it.
+const deckThemeName = (): string | undefined =>
+	loadedThemeName(deck.themeOptions.value, slideMasters.value[0]?.themePath);
 const history = useEditorHistory(slides, templateElementsBySlideId, {
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
 	activeSlideIndex,
 	onChange: () => emit('change'),
+	// Undo and Redo of a theme pick put the theme back in the viewer and in the theme part.
+	theme: { theme: pptxTheme, themeColorMap, handler, loadedThemeName: deckThemeName },
 });
 // File > Options > Advanced > "Maximum number of undos", re-applied whenever
 // it changes mid-session (not just at construction).
@@ -1658,6 +1664,7 @@ const themeEditing = useThemeEditing({
 	themeGalleryOpen,
 	themeEditorOpen,
 	templateElementsBySlideId,
+	loadedThemeName: deckThemeName,
 });
 
 // -- AI assistant ------------------------------------------------------
@@ -1668,16 +1675,7 @@ const themeEditing = useThemeEditing({
 // Ctrl+Z. The panel (and its `@ai-sdk/vue` peer) loads lazily on first open.
 /** Map a partial AI theme update onto the deck-wide theme editor (mirrors React's applyAiTheme). */
 function applyAiTheme(updates: Partial<PptxTheme>): void {
-	const current = pptxTheme.value;
-	const colorScheme = updates.colorScheme ?? current?.colorScheme;
-	if (!colorScheme) {
-		return;
-	}
-	themeEditing.applyTheme(
-		colorScheme,
-		updates.fontScheme ?? current?.fontScheme,
-		updates.name ?? current?.name ?? 'Theme',
-	);
+	void themeEditing.applyThemeUpdates(updates);
 }
 // Ribbon style galleries: context from the deck, picks through the same
 // history-tracked element update / theme paths the inspector uses.

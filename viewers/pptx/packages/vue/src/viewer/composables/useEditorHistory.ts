@@ -1,6 +1,13 @@
-import { createEditorHistoryController } from 'ooxml-ui/pptx';
+import {
+	createEditorHistoryController,
+	crossedHistoryTheme,
+	historyTheme,
+	withHistoryTheme,
+	writeThemeParts,
+} from 'ooxml-ui/pptx';
+import type { HistoryTheme } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { computed, nextTick } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
@@ -80,6 +87,22 @@ export interface EditorHistoryResult {
 interface HistorySnapshot {
 	slides: PptxSlide[];
 	template: TemplateElementMap;
+	/** The theme's colour scheme, font scheme and name, and the colour map built from them. */
+	theme?: HistoryTheme;
+	themeColorMap?: Record<string, string>;
+}
+
+/**
+ * The deck theme an undo step carries along with the slides (`render/theme-history`). An undo or
+ * redo that crosses a theme change puts the recorded theme and colour map back, and writes the
+ * parts that differ into the handler's theme parts, so a save after it writes the theme it shows.
+ */
+export interface EditorHistoryThemeSource {
+	theme: Ref<PptxTheme | undefined>;
+	themeColorMap: Ref<Record<string, string> | undefined>;
+	handler: Ref<PptxHandler | null | undefined>;
+	/** The primary theme part's loaded name; the parsed theme carries none. */
+	loadedThemeName?: () => string | undefined;
 }
 
 /** Optional tuning knobs for the history stack. */
@@ -102,6 +125,8 @@ export interface UseEditorHistoryOptions {
 	 * event. Deferred a tick so a listener reads the committed deck, not the one before it.
 	 */
 	onChange?: () => void;
+	/** The deck theme, recorded with every snapshot so a theme pick undoes like any other edit. */
+	theme?: EditorHistoryThemeSource;
 }
 
 /**
@@ -133,10 +158,33 @@ export function useEditorHistory(
 		return next;
 	};
 
-	const snapshot = (): HistorySnapshot => ({
-		slides: slides.value.map(cloneSlide),
-		template: cloneTemplateMap(templateElementsBySlideId?.value ?? {}),
-	});
+	const themeSource = options?.theme;
+	const snapshot = (): HistorySnapshot => {
+		const theme = historyTheme(themeSource?.theme.value);
+		const themeColorMap = themeSource?.themeColorMap.value;
+		return {
+			slides: slides.value.map(cloneSlide),
+			template: cloneTemplateMap(templateElementsBySlideId?.value ?? {}),
+			...(theme ? { theme } : {}),
+			...(themeColorMap ? { themeColorMap: { ...themeColorMap } } : {}),
+		};
+	};
+
+	/** Moving from `current` to `snap` crosses a theme change: put the recorded theme back. */
+	const restoreTheme = (current: HistorySnapshot, snap: HistorySnapshot): void => {
+		const crossed = themeSource && crossedHistoryTheme(current.theme, snap.theme);
+		if (!themeSource || !crossed) {
+			return;
+		}
+		themeSource.theme.value = withHistoryTheme(themeSource.theme.value, crossed);
+		themeSource.themeColorMap.value = snap.themeColorMap ? { ...snap.themeColorMap } : undefined;
+		void writeThemeParts(
+			themeSource.handler.value,
+			current.theme,
+			crossed,
+			themeSource.loadedThemeName?.(),
+		);
+	};
 
 	const restore = (snap: HistorySnapshot): void => {
 		slides.value = snap.slides.map(cloneSlide);
@@ -175,20 +223,24 @@ export function useEditorHistory(
 	};
 
 	const undo = (): void => {
-		const result = stack.undo(snapshot());
+		const current = snapshot();
+		const result = stack.undo(current);
 		if (!result) {
 			return;
 		}
 		restore(result.snapshot);
+		restoreTheme(current, result.snapshot);
 		notifyChange();
 	};
 
 	const redo = (): void => {
-		const result = stack.redo(snapshot());
+		const current = snapshot();
+		const result = stack.redo(current);
 		if (!result) {
 			return;
 		}
 		restore(result.snapshot);
+		restoreTheme(current, result.snapshot);
 		notifyChange();
 	};
 
