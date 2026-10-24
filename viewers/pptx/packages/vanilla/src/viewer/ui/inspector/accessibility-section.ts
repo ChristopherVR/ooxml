@@ -43,7 +43,7 @@ export function createAccessibilitySection(
 	altLabel.append(altCaption, alt);
 	el.appendChild(altLabel);
 
-	const titleLabel = createEl(doc, 'label', 'pptxv-field pptxv-accessibility-title');
+	const titleLabel = createEl(doc, 'label', 'pptxv-field pptxv-accessibility-title-field');
 	const titleCaption = createEl(doc, 'span', 'pptxv-field-label');
 	titleCaption.textContent = t('pptx.elementAccessibility.title');
 	const title = doc.createElement('input');
