@@ -43,22 +43,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.eagerDecodeImages = true;
 		}
 
-		let elements;
+		// Scheme colours, the background's included, resolve through this
+		// layout's own master, not whichever master a slide parse left active.
+		const masterPath = this.resolveMasterPathForLayout(layoutPath);
+		let parsed;
 		try {
-			elements = await this.getLayoutElementsByPath(layoutPath);
+			parsed = await this.withMasterThemeState(masterPath, async () => ({
+				elements: await this.getLayoutElementsByPath(layoutPath),
+				background: this.resolveLayoutPreviewBackground(layoutXml, masterPath),
+			}));
 		} finally {
 			this.eagerDecodeImages = previousEagerDecode;
 		}
 
 		const cSld = xmlPath(layoutXml, 'p:sldLayout', 'p:cSld');
-		const background = this.resolveLayoutPreviewBackground(layoutPath, cSld);
 
 		const preview: PptxLayoutPreview = {
 			path: layoutPath,
 			width: this.rawSlideWidthEmu / EMU_PER_PX,
 			height: this.rawSlideHeightEmu / EMU_PER_PX,
-			...background,
-			elements,
+			...parsed.background,
+			elements: parsed.elements,
 			placeholders: this.extractPlaceholderList(xmlChild(cSld, 'p:spTree')),
 		};
 
@@ -100,22 +105,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/**
 	 * Resolve the background a layout thumbnail should paint, falling back to
-	 * the layout's master when the layout itself declares none.
+	 * the layout's master when the layout itself declares none. Runs with the
+	 * master active; the layout's own colour map override applies to an
+	 * inherited background too, as a slide's does.
 	 */
 	private resolveLayoutPreviewBackground(
-		layoutPath: string,
-		cSld: XmlObject | undefined,
+		layoutXml: XmlObject,
+		masterPath: string | undefined,
 	): Pick<PptxLayoutPreview, 'backgroundColor' | 'backgroundImage'> {
-		const ownBackground = this.parseBackgroundColor(xmlChild(cSld, 'p:bg'));
-		if (ownBackground) {
-			return { backgroundColor: ownBackground };
-		}
-
-		const masterPath = this.resolveMasterPathForLayout(layoutPath);
-		const masterXml = masterPath ? this.masterXmlMap.get(masterPath) : undefined;
-		const masterBackground = this.parseBackgroundColor(
-			xmlChild(xmlPath(masterXml, 'p:sldMaster', 'p:cSld'), 'p:bg'),
-		);
-		return masterBackground ? { backgroundColor: masterBackground } : {};
+		const clrMapOverride = this.parseLayoutClrMapOverride(layoutXml);
+		const backgroundColor =
+			this.extractTemplateBackgroundColor(layoutXml, 'p:sldLayout', clrMapOverride) ??
+			this.extractTemplateBackgroundColor(
+				masterPath ? this.masterXmlMap.get(masterPath) : undefined,
+				'p:sldMaster',
+				clrMapOverride,
+			);
+		return backgroundColor ? { backgroundColor } : {};
 	}
 }
