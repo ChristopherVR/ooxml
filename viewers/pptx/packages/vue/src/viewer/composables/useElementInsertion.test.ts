@@ -321,6 +321,92 @@ describe('useElementInsertion.applyLayoutToActiveSlide', () => {
 	});
 });
 
+describe('useElementInsertion: Home > Layout and Undo', () => {
+	const L1 = 'ppt/slideLayouts/slideLayout1.xml';
+	const L2 = 'ppt/slideLayouts/slideLayout2.xml';
+	const L3 = 'ppt/slideLayouts/slideLayout3.xml';
+
+	/** The core contract: the slide at `index` is replaced in the array it is given, and returned. */
+	const inPlaceHandler = () => ({
+		applyLayoutToSlide: vi.fn(async (index: number, layoutPath: string, current: PptxSlide[]) => {
+			const updated = { ...current[index]!, layoutPath, layoutName: 'Remapped' };
+			current[index] = updated;
+			return updated;
+		}),
+		getTemplateElementsForSlide: vi.fn().mockResolvedValue([]),
+	});
+
+	it('one Undo takes back one layout pick', async () => {
+		const scope = effectScope();
+		onTestFinished(() => scope.stop());
+		const slides = ref([
+			{ id: 'slide-1', elements: [], layoutPath: L1 } as unknown as PptxSlide,
+			{ id: 'slide-2', elements: [], layoutPath: L1 } as unknown as PptxSlide,
+		]);
+		const templateElementsBySlideId = ref<Record<string, PptxElement[]>>({});
+		const { history, insertion } = scope.run(() => {
+			const editorHistory = useEditorHistory(slides, templateElementsBySlideId);
+			const layoutInsertion = useElementInsertion({
+				canvasSize: ref({ width: 960, height: 540 }),
+				ops: { addElement: vi.fn() } as unknown as EditorOperations,
+				selectedElementIds: ref<string[]>([]),
+				slides,
+				activeSlideIndex: ref(1),
+				pushHistory: editorHistory.pushHistory,
+				handler: shallowRef(inPlaceHandler() as never),
+				templateElementsBySlideId,
+			});
+			return { history: editorHistory, insertion: layoutInsertion };
+		})!;
+		const layoutOfSlide2 = () => slides.value[1]?.layoutPath;
+
+		await insertion.applyLayoutToActiveSlide(L2);
+		await insertion.applyLayoutToActiveSlide(L3);
+		expect(layoutOfSlide2()).toBe(L3);
+		history.undo();
+		expect(layoutOfSlide2()).toBe(L2);
+		history.undo();
+		expect(layoutOfSlide2()).toBe(L1);
+		expect(history.canUndo.value).toBeFalsy();
+		history.redo();
+		expect(layoutOfSlide2()).toBe(L2);
+	});
+
+	it('a new slide from a layout takes the layout together with its artwork', async () => {
+		const slides = ref([{ id: 'slide-1', elements: [], layoutPath: L1 } as unknown as PptxSlide]);
+		const templateElementsBySlideId = ref<Record<string, PptxElement[]>>({});
+		let artworkArrives: (elements: PptxElement[]) => void = () => {};
+		const handler = {
+			...inPlaceHandler(),
+			getTemplateElementsForSlide: vi.fn(
+				() =>
+					new Promise<PptxElement[]>((resolve) => {
+						artworkArrives = resolve;
+					}),
+			),
+		};
+		const insertion = useElementInsertion({
+			canvasSize: ref({ width: 960, height: 540 }),
+			ops: { addElement: vi.fn() } as unknown as EditorOperations,
+			selectedElementIds: ref<string[]>([]),
+			slides,
+			activeSlideIndex: ref(0),
+			pushHistory: vi.fn(),
+			handler: shallowRef(handler as never),
+			templateElementsBySlideId,
+		});
+
+		const inserting = insertion.insertSlideFromLayout(L2);
+		await vi.waitFor(() => expect(handler.getTemplateElementsForSlide).toHaveBeenCalledOnce());
+		// The core has re-mapped the slide, its artwork has not arrived: the draft is still shown.
+		expect(slides.value[1]?.layoutName).toBeUndefined();
+		artworkArrives([{ id: 'layout-art', type: 'shape' } as PptxElement]);
+		await inserting;
+		expect(slides.value[1]?.layoutName).toBe('Remapped');
+		expect(templateElementsBySlideId.value[slides.value[1]!.id]).toHaveLength(1);
+	});
+});
+
 describe('useElementInsertion.insertSlideFromLayout', () => {
 	it('stores inherited artwork fetched for the new slide', async () => {
 		const slides = ref([
