@@ -337,6 +337,30 @@ test.describe('editor keyboard shortcuts', () => {
 		await pressShortcut(page, 'Escape', 600);
 		await expect(shortcutReference(page), 'Escape must close it again').toBeHidden();
 	});
+
+	test('the shortcut reference lists every chord the shared keymap handles', async ({ page }) => {
+		// The panel is the keymap's documentation, so it lists the shared reference rows in every
+		// binding. Vue's read a list of its own that had drifted: it named neither Ctrl/Cmd+Enter
+		// nor Ctrl/Cmd+wheel zoom, Page Up/Down, Backspace or Ctrl/Cmd+/ (the chord for this panel).
+		// Vue writes the command key for the platform (⌘ on macOS, Ctrl elsewhere), so the chords
+		// are matched without it.
+		await loadDeck(page, TWO_SHAPES);
+		await pressShortcut(page, '?', 700);
+		const reference = shortcutReference(page);
+		await expect(reference, '"?" must open the shortcut reference').toBeVisible();
+		for (const entry of [
+			'Commit inline text edit',
+			'Zoom canvas',
+			'Page Up',
+			'Page Down',
+			'Backspace',
+			/(?:Ctrl(?:\/Cmd)?|⌘)\+\//u,
+		]) {
+			await expect(reference, `the shortcut reference must list ${String(entry)}`).toContainText(
+				entry,
+			);
+		}
+	});
 });
 
 /**
