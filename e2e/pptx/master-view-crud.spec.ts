@@ -284,6 +284,10 @@ test.describe('slide master view CRUD', () => {
 		await crudButton(page, 'deleteLayout').click();
 		await expect(railEntries(page)).toHaveCount(before - 1);
 		await closeMasterView(page);
+		// Home > Layout follows the masters: the deleted layout is no longer offered.
+		const offered = await openLayoutMenu(page);
+		await expect(offered.filter({ has: page.getByText(spare, { exact: true }) })).toHaveCount(0);
+		await closeLayoutMenu(page);
 
 		// How many steps are left differs by binding (some also restore the masters, so a delete
 		// leaves none); none of them may reach the deleted layout.
