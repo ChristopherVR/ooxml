@@ -1,11 +1,10 @@
-import { PRESET_THEMES } from 'ooxml-ui/pptx';
+import { PRESET_THEMES, settleThemeWrites } from 'ooxml-ui/pptx';
 import type { PptxHandler } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditorHistorySnapshot } from '../types';
 import { serializeHistoryDocument } from './explicit-slide-history';
-import { historyTheme, withHistoryTheme } from './history-theme';
-import { queueThemeWrite, restoreHistoryTheme, settleThemeWrites } from './theme-history-restore';
+import { restoreHistoryTheme } from './theme-history-restore';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
 const office = PRESET_THEMES[0];
@@ -41,14 +40,8 @@ function harness(theme: UseThemeHandlersInput['theme']) {
 	return { input, handler, writes, state: () => state };
 }
 
-describe('history theme records', () => {
-	it('records the schemes and the name in one order, and the change gate sees them', () => {
-		const recorded = historyTheme({
-			name: 'Facet',
-			fontScheme: arial,
-			colorScheme: office.colorScheme,
-		});
-		expect(Object.keys(recorded ?? {})).toStrictEqual(['colorScheme', 'fontScheme', 'name']);
+describe('the change gate', () => {
+	it('sees a theme change, so a pick that leaves the slides alone is still an undo step', () => {
 		const snapshot = {
 			width: 1,
 			height: 1,
@@ -62,18 +55,6 @@ describe('history theme records', () => {
 		expect(serializeHistoryDocument(snapshot)).toBe(
 			serializeHistoryDocument({ ...snapshot, theme: undefined }),
 		);
-	});
-
-	it('restores exactly the recorded parts and keeps the rest of the theme', () => {
-		const restored = withHistoryTheme(
-			{ name: 'Facet', fontScheme: arial, colorScheme: office.colorScheme, formatScheme: 'kept' },
-			{ colorScheme: office.colorScheme, fontScheme: calibri },
-		);
-		expect(restored).toStrictEqual({
-			colorScheme: office.colorScheme,
-			fontScheme: calibri,
-			formatScheme: 'kept',
-		});
 	});
 });
 
@@ -104,45 +85,19 @@ describe('restoreHistoryTheme', () => {
 		expect(state()).not.toHaveProperty('name');
 	});
 
-	it('runs theme part writes one after another', async () => {
-		const { handler } = harness(undefined);
-		const order: string[] = [];
-		let release: () => void = () => {};
-		const slow = new Promise<void>((done) => {
-			release = done;
+	it('writes on the shared theme write queue, which every save waits for', async () => {
+		const { input, handler, writes } = harness({
+			colorScheme: office.colorScheme,
+			fontScheme: arial,
 		});
-		const first = queueThemeWrite(handler as unknown as PptxHandler, async () => {
-			await slow;
-			order.push('first');
-		});
-		const second = queueThemeWrite(handler as unknown as PptxHandler, async () => {
-			order.push('second');
-		});
-		release();
-		await Promise.all([first, second]);
-		expect(order).toStrictEqual(['first', 'second']);
-	});
-
-	it('settles once every write queued so far has landed, even a failed one', async () => {
-		const { handler } = harness(undefined);
-		const target = handler as unknown as PptxHandler;
-		await expect(settleThemeWrites(target)).resolves.toBeUndefined();
-		const landed: string[] = [];
-		const failing = queueThemeWrite(target, async () => {
+		handler.updateThemeFontScheme.mockImplementation(async () => {
 			await new Promise<void>((done) => {
 				setTimeout(done, 20);
 			});
-			throw new Error('write failed');
+			writes.push('fonts');
 		});
-		const outcome = failing.then(
-			() => 'landed',
-			(error: Error) => error.message,
-		);
-		void queueThemeWrite(target, async () => {
-			landed.push('after the failure');
-		});
-		await settleThemeWrites(target);
-		expect(landed).toStrictEqual(['after the failure']);
-		await expect(outcome).resolves.toBe('write failed');
+		void restoreHistoryTheme(input, { colorScheme: office.colorScheme, fontScheme: calibri });
+		await settleThemeWrites(input.handlerRef.current);
+		expect(writes).toStrictEqual(['fonts']);
 	});
 });

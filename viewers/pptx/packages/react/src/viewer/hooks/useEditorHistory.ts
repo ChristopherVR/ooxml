@@ -1,4 +1,4 @@
-import { createEditorHistoryController } from 'ooxml-ui/pptx';
+import { createEditorHistoryController, crossedHistoryTheme, historyTheme } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHeaderFooter, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
@@ -8,7 +8,6 @@ import {
 	recordExplicitSlideUpdate,
 	serializeHistoryDocument as serializeDocument,
 } from './explicit-slide-history';
-import { historyTheme, sameHistoryTheme } from './history-theme';
 import { useController } from './useController';
 import { usePointerReleaseWakeup } from './usePointerReleaseWakeup';
 
@@ -180,7 +179,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 				activeSlideIndex,
 				slides: slides.map(cloneSlide),
 				templateElementsBySlideId: cloneTemplateElementsBySlideId(templateElementsBySlideId),
-				...(recordedTheme ? { theme: structuredClone(recordedTheme) } : {}),
+				...(recordedTheme ? { theme: recordedTheme } : {}),
 				...(actionLabel ? { actionLabel } : {}),
 			};
 		},
@@ -243,8 +242,9 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 	/** Moving from `current` to `target` crosses a theme change: put the target's theme back. */
 	const restoreTheme = useCallback(
 		(current: EditorHistorySnapshot, target: EditorHistorySnapshot) => {
-			if (target.theme && !sameHistoryTheme(current.theme, target.theme)) {
-				onRestoreThemeRef.current?.(target.theme);
+			const crossed = crossedHistoryTheme(current.theme, target.theme);
+			if (crossed) {
+				onRestoreThemeRef.current?.(crossed);
 			}
 		},
 		[],

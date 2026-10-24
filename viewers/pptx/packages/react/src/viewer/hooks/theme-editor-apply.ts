@@ -1,3 +1,4 @@
+import { queueThemeWrite } from 'ooxml-ui/pptx';
 import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 import {
 	applyThemeToData,
@@ -7,7 +8,6 @@ import {
 } from 'pptx-viewer-core';
 import type { PptxData } from 'pptx-viewer-core';
 
-import { queueThemeWrite } from './theme-history-restore';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
 /**

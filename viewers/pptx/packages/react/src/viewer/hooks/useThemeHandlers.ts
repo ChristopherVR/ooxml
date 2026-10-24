@@ -1,3 +1,4 @@
+import { queueThemeWrite } from 'ooxml-ui/pptx';
 import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 import {
 	buildThemeColorMap,
@@ -23,7 +24,7 @@ import type { RefObject } from 'react';
 
 import type { EditorHistoryTheme } from '../types';
 import { applyThemeEditorEdit } from './theme-editor-apply';
-import { queueThemeWrite, restoreHistoryTheme } from './theme-history-restore';
+import { restoreHistoryTheme } from './theme-history-restore';
 import type { EditorHistoryResult } from './useEditorHistory';
 
 export interface UseThemeHandlersInput {

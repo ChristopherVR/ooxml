@@ -7,13 +7,8 @@
  * clipboard operations, undo/redo history, geometry, and shape quick styles.
  */
 
-import type {
-	PptxElement,
-	PptxSlide,
-	PptxThemeColorScheme,
-	PptxThemeFontScheme,
-	ShapeStyle,
-} from 'pptx-viewer-core';
+import type { HistoryTheme } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
 
 // ---------------------------------------------------------------------------
 // Viewer mode
@@ -200,13 +195,10 @@ export interface EditorHistorySnapshot {
 
 /**
  * The part of the theme an undo step carries: the colour scheme, the font scheme and the name,
- * which are what the theme editor, the Design galleries and the assistant change.
+ * which are what the theme editor, the Design galleries and the assistant change. The shared
+ * record every binding keeps (`HistoryTheme` in `ooxml-ui/pptx`).
  */
-export interface EditorHistoryTheme {
-	colorScheme?: PptxThemeColorScheme;
-	fontScheme?: PptxThemeFontScheme;
-	name?: string;
-}
+export type EditorHistoryTheme = HistoryTheme;
 
 // ---------------------------------------------------------------------------
 // Geometry
