@@ -139,15 +139,21 @@ export const INSPECTOR_EXTRAS_CSS = `
 }
 .pptxv-inspector-pattern[hidden],
 .pptxv-inspector-pattern:empty { display: none; }
-.pptxv-accessibility-alt {
+/*
+ * Alt text and title stack their caption over a full-width field, as React's section does. Side by
+ * side in the inline .pptxv-field box, the title's caption and a text input of the browser's default
+ * width ran 10 px past the inspector, which then scrolled sideways.
+ */
+.pptxv-accessibility-alt,
+.pptxv-accessibility-title-field {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
 	gap: 4px;
-	margin-bottom: 8px;
 }
-.pptxv-accessibility-alt-input { width: 100%; }
-.pptxv-accessibility-title-input { flex: 1 1 auto; min-width: 0; }
+.pptxv-accessibility-alt { margin-bottom: 8px; }
+.pptxv-accessibility-alt-input,
+.pptxv-accessibility-title-input { width: 100%; }
 .pptxv-tags-toggle-label {
 	color: var(--pptx-foreground);
 	font-size: 11px;
