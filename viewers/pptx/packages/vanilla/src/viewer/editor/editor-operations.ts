@@ -160,10 +160,6 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 
 	const select = (id: string | null, ids = id ? [id] : []): void =>
 		store.set(selectionState(id, ids));
-	const recordedTheme = (): Pick<EditorSnapshot, 'theme'> => {
-		const theme = storeHistoryTheme(store.get());
-		return theme ? { theme } : {};
-	};
 	const snapshot = (): EditorSnapshot => ({
 		slides: cloneSlides(store.get().slides),
 		sections: structuredClone(store.get().sections),
@@ -180,7 +176,7 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		presentationProperties: structuredClone(store.get().presentationProperties),
 		headerFooter: structuredClone(store.get().headerFooter),
 		customShows: structuredClone(store.get().customShows),
-		...recordedTheme(),
+		theme: storeHistoryTheme(store.get()),
 	});
 
 	const pushHistory = (label = ''): void => {
