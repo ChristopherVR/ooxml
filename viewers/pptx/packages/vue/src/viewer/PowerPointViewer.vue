@@ -536,7 +536,7 @@ const {
 } = selection;
 // The primary theme part's loaded name (the parsed theme carries none), for an undo back to it.
 const deckThemeName = (): string | undefined =>
-	loadedThemeName(deck.themeOptions.value, slideMasters.value[0]?.themePath);
+	loadedThemeName(deck.themeOptions.value, slideMasters.value);
 const history = useEditorHistory(slides, templateElementsBySlideId, {
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
 	activeSlideIndex,

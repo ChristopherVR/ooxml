@@ -1,10 +1,4 @@
-import {
-	createEditorHistoryController,
-	crossedHistoryTheme,
-	historyTheme,
-	withHistoryTheme,
-	writeThemeParts,
-} from 'ooxml-ui/pptx';
+import { createEditorHistoryController, historyTheme, restoreCrossedTheme } from 'ooxml-ui/pptx';
 import type { HistoryTheme } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
 import type { PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
@@ -172,18 +166,20 @@ export function useEditorHistory(
 
 	/** Moving from `current` to `snap` crosses a theme change: put the recorded theme back. */
 	const restoreTheme = (current: HistorySnapshot, snap: HistorySnapshot): void => {
-		const crossed = themeSource && crossedHistoryTheme(current.theme, snap.theme);
-		if (!themeSource || !crossed) {
+		if (!themeSource) {
 			return;
 		}
-		themeSource.theme.value = withHistoryTheme(themeSource.theme.value, crossed);
-		themeSource.themeColorMap.value = snap.themeColorMap ? { ...snap.themeColorMap } : undefined;
-		void writeThemeParts(
-			themeSource.handler.value,
+		const theme = restoreCrossedTheme(
+			themeSource.theme.value,
 			current.theme,
-			crossed,
+			snap.theme,
+			themeSource.handler.value,
 			themeSource.loadedThemeName?.(),
 		);
+		if (theme) {
+			themeSource.theme.value = theme;
+			themeSource.themeColorMap.value = snap.themeColorMap ? { ...snap.themeColorMap } : undefined;
+		}
 	};
 
 	const restore = (snap: HistorySnapshot): void => {
