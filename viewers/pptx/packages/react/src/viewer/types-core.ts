@@ -189,16 +189,9 @@ export interface EditorHistorySnapshot {
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	/** The theme at that point, so undoing a theme pick puts the theme back with the slides. */
-	theme?: EditorHistoryTheme;
+	theme?: HistoryTheme;
 	actionLabel?: string;
 }
-
-/**
- * The part of the theme an undo step carries: the colour scheme, the font scheme and the name,
- * which are what the theme editor, the Design galleries and the assistant change. The shared
- * record every binding keeps (`HistoryTheme` in `ooxml-ui/pptx`).
- */
-export type EditorHistoryTheme = HistoryTheme;
 
 // ---------------------------------------------------------------------------
 // Geometry

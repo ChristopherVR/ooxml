@@ -62,7 +62,7 @@ import {
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
-import type { DocumentSaveReason } from 'ooxml-ui/pptx';
+import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -156,7 +156,7 @@ import { useViewPreferencesSync } from './hooks/useViewPreferencesSync';
 import { useZoomViewport } from './hooks/useZoomViewport';
 import { ViewerI18nRoot, useViewerLocaleControls } from './i18n/root';
 import { useTranslation } from './i18n/use-translation';
-import type { EditorHistoryTheme, PowerPointViewerProps, PowerPointViewerHandle } from './types';
+import type { PowerPointViewerProps, PowerPointViewerHandle } from './types';
 import { cn } from './utils';
 import { withDisplayName } from './utils/display-name';
 
@@ -700,9 +700,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 
 		// Undo and redo of a theme step put the theme part back through the theme handlers, which
 		// are built further down (`useViewerIntegration`).
-		const restoreHistoryThemeRef = useRef<((theme: EditorHistoryTheme) => void) | undefined>(
-			undefined,
-		);
+		const restoreHistoryThemeRef = useRef<((theme: HistoryTheme) => void) | undefined>(undefined);
 		const history = useEditorHistory({
 			slides,
 			canvasSize,

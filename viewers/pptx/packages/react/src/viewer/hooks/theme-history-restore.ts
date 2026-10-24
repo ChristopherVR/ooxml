@@ -1,6 +1,6 @@
 import { historyTheme, loadedThemeName, withHistoryTheme, writeThemeParts } from 'ooxml-ui/pptx';
+import type { HistoryTheme } from 'ooxml-ui/pptx';
 
-import type { EditorHistoryTheme } from '../types';
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 
 /**
@@ -11,15 +11,14 @@ import type { UseThemeHandlersInput } from './useThemeHandlers';
  */
 export function restoreHistoryTheme(
 	input: UseThemeHandlersInput,
-	target: EditorHistoryTheme,
+	target: HistoryTheme,
 ): Promise<void> {
 	const current = historyTheme(input.theme);
 	input.setTheme((prev) => withHistoryTheme(prev, target));
-	const primary = (input.slideMasters[0] as { themePath?: string } | undefined)?.themePath;
 	return writeThemeParts(
 		input.handlerRef.current,
 		current,
 		target,
-		loadedThemeName(input.themeOptions, primary),
+		loadedThemeName(input.themeOptions, input.slideMasters),
 	);
 }

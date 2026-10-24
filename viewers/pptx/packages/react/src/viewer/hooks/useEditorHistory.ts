@@ -1,8 +1,9 @@
 import { createEditorHistoryController, crossedHistoryTheme, historyTheme } from 'ooxml-ui/pptx';
+import type { HistoryTheme } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHeaderFooter, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
-import type { CanvasSize, EditorHistorySnapshot, EditorHistoryTheme } from '../types';
+import type { CanvasSize, EditorHistorySnapshot } from '../types';
 import { cloneHistorySnapshot, cloneSlide, cloneTemplateElementsBySlideId } from '../utils/clone';
 import {
 	recordExplicitSlideUpdate,
@@ -56,7 +57,7 @@ export interface EditorHistoryInput {
 	 * with the snapshot; the theme has to be written to the handler's theme part too, which this
 	 * hook cannot reach, so the theme handlers do it.
 	 */
-	onRestoreTheme?: (theme: EditorHistoryTheme) => void;
+	onRestoreTheme?: (theme: HistoryTheme) => void;
 	// Setters for applying snapshots
 	setSlides: (slides: PptxSlide[]) => void;
 	setCanvasSize: (size: CanvasSize) => void;
