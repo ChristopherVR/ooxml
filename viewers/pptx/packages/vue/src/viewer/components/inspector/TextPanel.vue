@@ -44,7 +44,7 @@ type AlignValue = NonNullable<TextStyle['align']>;
 const props = withDefaults(
 	defineProps<{
 		element: PptxElement;
-		/** Read-only decks keep the Text Warp tiles visible but unpickable. */
+		/** Read-only decks keep the Text Warp, Text Effects and 3-D controls visible but inert. */
 		canEdit?: boolean;
 	}>(),
 	{ canEdit: true },
