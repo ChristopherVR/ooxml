@@ -12,6 +12,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import type { CanvasSize, EditorHistorySnapshot } from '../types';
 import { cloneHistorySnapshot, cloneSlide, cloneTemplateElementsBySlideId } from '../utils/clone';
 import {
+	differsOnlyInMasterSet,
 	recordExplicitSlideUpdate,
 	serializeHistoryDocument as serializeDocument,
 } from './explicit-slide-history';
@@ -423,7 +424,9 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 		const previousSnapshot = lastHistorySnapshotRef.current;
 		// Both snapshots are already isolated from live state; transfer ownership.
-		if (!previousSnapshot) {
+		// A master added or removed with nothing else changed is no undo step either: the
+		// snapshot only records which masters exist because each one's theme part is recorded.
+		if (!previousSnapshot || differsOnlyInMasterSet(previousSnapshot, snapshot)) {
 			lastHistorySnapshotRef.current = snapshot;
 			lastHistorySerializedRef.current = serialized;
 			lastCheapHashRef.current = cheapHash;

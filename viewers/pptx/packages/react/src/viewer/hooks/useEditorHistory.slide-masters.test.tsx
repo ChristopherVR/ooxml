@@ -2,7 +2,8 @@
 /**
  * A slide paste commits its slides and, in the same commit, the slide masters the pasted deck
  * brings. The snapshots record each master's theme part, so the masters arriving a render after the
- * slides must not read as a second undo step: one Undo takes the whole paste back.
+ * slides must not read as a second undo step: one Undo takes the whole paste back. A master added
+ * or deleted in Master view is no step either, as before the theme parts were recorded.
  */
 import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
 import React, { act, useCallback, useRef, useState } from 'react';
@@ -31,6 +32,7 @@ interface HarnessApi {
 	slideCount: () => number;
 	canUndo: () => boolean;
 	paste: (passMasters: boolean) => void;
+	setMasters: (masters: PptxSlideMaster[]) => void;
 	undo: () => void;
 }
 
@@ -88,6 +90,11 @@ function Harness(): React.ReactElement {
 			setSlideMasters(PASTED_MASTERS);
 			historyRef.current.markDirty();
 		},
+		setMasters: (masters) => {
+			setSlideMasters(masters);
+			setSlides((previous) => [...previous]);
+			historyRef.current.markDirty();
+		},
 		undo: () => historyRef.current.handleUndo(),
 	};
 	return <div />;
@@ -127,5 +134,29 @@ describe('useEditorHistory slide paste with its own masters', () => {
 		await act(async () => harness.undo());
 		expect(harness.slideCount()).toBe(2);
 		expect(harness.canUndo()).toBe(false);
+	});
+
+	it('takes the pasted slides back in one Undo when the masters land unannounced', async () => {
+		const harness = await mount();
+		await act(async () => harness.paste(false));
+		await act(async () => harness.undo());
+		expect(harness.slideCount()).toBe(2);
+		expect(harness.canUndo()).toBe(false);
+	});
+
+	it('records no step for a master added or deleted in Master view', async () => {
+		const harness = await mount();
+		await act(async () => harness.setMasters(PASTED_MASTERS));
+		expect(harness.canUndo()).toBe(false);
+		await act(async () => harness.setMasters(MASTERS));
+		expect(harness.canUndo()).toBe(false);
+	});
+
+	it('still records a master moved onto another theme part', async () => {
+		const harness = await mount();
+		await act(async () =>
+			harness.setMasters([master('ppt/slideMasters/slideMaster1.xml', 'ppt/theme/theme2.xml')]),
+		);
+		expect(harness.canUndo()).toBe(true);
 	});
 });
