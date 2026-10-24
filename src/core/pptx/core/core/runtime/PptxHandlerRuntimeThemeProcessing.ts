@@ -63,19 +63,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Parse, edit, and write back every target theme part. Parts the edit
-	 * cannot apply to (no `a:themeElements`) are left untouched.
+	 * Parse, edit, and write back every target theme part (`edit` gets the
+	 * part's path too). Parts the edit cannot apply to (no `a:themeElements`)
+	 * are left untouched.
 	 *
 	 * @returns the paths that were rewritten
 	 */
 	protected async rewriteThemeParts(
 		themePaths: readonly string[] | undefined,
-		edit: (data: XmlObject) => boolean,
+		edit: (data: XmlObject, themePath: string) => boolean,
 	): Promise<string[]> {
 		const written: string[] = [];
 		for (const path of await this.resolveThemeEditTargets(themePaths)) {
 			const data = await this.readThemePart(path);
-			if (!data || !edit(data)) {
+			if (!data || !edit(data, path)) {
 				continue;
 			}
 			this.zip.file(path, this.builder.build(data));

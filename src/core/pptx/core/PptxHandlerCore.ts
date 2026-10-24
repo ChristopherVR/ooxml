@@ -364,6 +364,18 @@ export class PptxHandlerCore {
 		return this.runtime.applyThemeFormatSchemeXml(fmtSchemeXml);
 	}
 
+	/**
+	 * Put a format scheme a theme part held before back into the theme parts (or only `themePaths`),
+	 * as the part held it: Undo and Redo of an Effects pick. Only a scheme this handler wrote into a
+	 * part or over one can come back; for any other it writes nothing and returns `undefined`.
+	 */
+	public async restoreThemeFormatScheme(
+		scheme: PptxThemeFormatScheme,
+		themePaths?: readonly string[],
+	): Promise<PptxThemeFormatScheme | undefined> {
+		return this.runtime.restoreThemeFormatScheme(scheme, themePaths);
+	}
+
 	/** The real theme variants the loaded package carries (`themeVariants/` parts), or none. */
 	public getThemeVariants(): PptxThemeVariant[] {
 		return this.runtime.getThemeVariants();

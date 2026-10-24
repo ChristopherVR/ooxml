@@ -562,6 +562,7 @@ export {
 	THEME_EFFECT_SCHEMES,
 	findThemeEffectScheme,
 	findThemeEffectSchemeByName,
+	formatSchemeKey,
 	type PptxThemeEffectScheme,
 } from './theme-effect-schemes';
 

@@ -309,6 +309,11 @@ export interface IPptxHandlerRuntime {
 	/** Write a built-in effect scheme (`a:fmtScheme`) into the theme parts. */
 	applyThemeEffectScheme(id: string): Promise<PptxThemeFormatScheme | undefined>;
 	applyThemeFormatSchemeXml(fmtSchemeXml: string): Promise<PptxThemeFormatScheme | undefined>;
+	/** Put back a format scheme a theme part held before (Undo of an Effects pick). */
+	restoreThemeFormatScheme(
+		scheme: PptxThemeFormatScheme,
+		themePaths?: readonly string[],
+	): Promise<PptxThemeFormatScheme | undefined>;
 	getThemeFormatScheme(): PptxThemeFormatScheme | undefined;
 	getThemeVariants(): PptxThemeVariant[];
 	reResolveThemeStyleReferences(

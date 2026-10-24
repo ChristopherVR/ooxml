@@ -6,7 +6,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../core/PptxHandler';
 import type { PptxData, PptxElement, PptxSlide, ShapeStyle } from '../../core/types';
-import { THEME_EFFECT_SCHEMES } from '../../core/utils/theme-effect-schemes';
+import { formatSchemeKey, THEME_EFFECT_SCHEMES } from '../../core/utils/theme-effect-schemes';
+import { buildTwoThemesDeck, TWO_THEMES } from '../helpers/two-themes-deck';
 import { requireFixture } from '../require-fixture';
 
 /**
@@ -144,6 +145,191 @@ describe('theme effect schemes', () => {
 		const slideXml = await zip.file('ppt/slides/slide1.xml')!.async('string');
 		expect(slideXml).toMatch(/<a:fillRef idx="3">/);
 		expect(slideXml).not.toContain('<a:gradFill');
+	});
+
+	it('puts a scheme a part held back as the part held it, for Undo and Redo of a pick', async () => {
+		// The element as XML: a theme part edit writes an empty element as an open and close pair.
+		const fmtScheme = (xml: string) =>
+			/<a:fmtScheme\b[\s\S]*?<\/a:fmtScheme>/u
+				.exec(xml)?.[0]
+				.replace(/<([\w:]+)([^<>]*)><\/\1>/gu, '<$1$2/>');
+		const savedFmtScheme = async () =>
+			fmtScheme(
+				await (
+					await JSZip.loadAsync(await handler.save(data.slides))
+				)
+					.file('ppt/theme/theme1.xml')!
+					.async('string'),
+			);
+		const loadedPart = fmtScheme(
+			await (
+				await JSZip.loadAsync(fs.readFileSync(FIXTURE))
+			)
+				.file('ppt/theme/theme1.xml')!
+				.async('string'),
+		);
+		const loaded = handler.getThemeFormatScheme()!;
+		const loadedFill = styleOf(withFillRef(data.slides[0]!, 3)).fillGradient;
+		const glossy = (await handler.applyThemeEffectScheme('glossy'))!;
+		const glossyPart = await savedFmtScheme();
+		expect(glossyPart).toContain('name="Glossy"');
+
+		// The scheme a binding recorded comes back from a plain copy.
+		const undone = await handler.restoreThemeFormatScheme(JSON.parse(JSON.stringify(loaded)));
+		expect(undone?.name).toBe(loaded.name);
+		expect(handler.getThemeFormatScheme()).toBe(undone);
+		await expect(savedFmtScheme()).resolves.toBe(loadedPart);
+		const redrawn = handler.reResolveThemeStyleReferences(data.slides, {});
+		expect(styleOf(withFillRef(redrawn.slides[0]!, 3)).fillGradient).toBe(loadedFill);
+
+		const redone = await handler.restoreThemeFormatScheme(JSON.parse(JSON.stringify(glossy)));
+		expect(redone).toStrictEqual(glossy);
+		await expect(savedFmtScheme()).resolves.toBe(glossyPart);
+	});
+
+	it('keys a scheme by its XML, not by the colours its placeholder styles resolved to', async () => {
+		const loaded = handler.getThemeFormatScheme()!;
+		const reread = (await handler.getThemePartSchemes('ppt/theme/theme1.xml'))!.formatScheme!;
+		// Read at load before the theme colours were in, and again after: the same element.
+		expect(reread).not.toStrictEqual(loaded);
+		expect(formatSchemeKey(reread)).toBe(formatSchemeKey(loaded));
+		expect(formatSchemeKey(JSON.parse(JSON.stringify(loaded)))).toBe(formatSchemeKey(loaded));
+		const glossy = (await handler.applyThemeEffectScheme('glossy'))!;
+		expect(formatSchemeKey(glossy)).not.toBe(formatSchemeKey(loaded));
+		expect(formatSchemeKey({ ...loaded, name: 'Renamed' })).not.toBe(formatSchemeKey(loaded));
+	});
+
+	it('writes nothing for a scheme no part held', async () => {
+		const loaded = handler.getThemeFormatScheme()!;
+		const before = await (
+			await JSZip.loadAsync(await handler.save(data.slides))
+		)
+			.file('ppt/theme/theme1.xml')!
+			.async('string');
+		await expect(
+			handler.restoreThemeFormatScheme({ ...loaded, name: 'Never held' }),
+		).resolves.toBeUndefined();
+		expect(handler.getThemeFormatScheme()).toBe(loaded);
+		const after = await (
+			await JSZip.loadAsync(await handler.save(data.slides))
+		)
+			.file('ppt/theme/theme1.xml')!
+			.async('string');
+		expect(after).toBe(before);
+	});
+});
+
+describe('theme effect schemes on a deck whose masters use two theme parts', () => {
+	const { theme1, theme2, styledShapeName } = TWO_THEMES;
+	const plain = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+	const partSchemes = async (two: PptxHandler) => [
+		(await two.getThemePartSchemes(theme1.path))?.formatScheme?.name,
+		(await two.getThemePartSchemes(theme2.path))?.formatScheme?.name,
+	];
+	/** The shadow blur of the shape drawn through style references on each slide. */
+	const styledShadows = (two: PptxHandler, slides: readonly PptxSlide[]) =>
+		two
+			.reResolveThemeStyleReferences(slides, {})
+			.slides.map(
+				(slide) =>
+					styleOf(slide.elements.find((element) => element.name === styledShapeName)!).shadowBlur ??
+					0,
+			);
+
+	it("Undo puts each part's own scheme back, and Redo the pick into both", async () => {
+		const bytes = await buildTwoThemesDeck({ formatSchemes: true });
+		const two = new PptxHandler();
+		const deck = await two.load(
+			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+		);
+		const loaded = two.getThemeFormatScheme()!;
+		const loadedShadows = styledShadows(two, deck.slides);
+		expect(loadedShadows[2]).toBeGreaterThan(0);
+		const glossy = (await two.applyThemeEffectScheme('glossy'))!;
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Glossy', 'Glossy']);
+
+		// The undo record holds the deck's scheme (the first master's part) only.
+		await two.restoreThemeFormatScheme(plain(loaded));
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Tide', 'Ember']);
+		expect(two.getThemeFormatScheme()?.name).toBe('Tide');
+		// Slide 3, on master 2, takes theme 2's own shadow again.
+		expect(styledShadows(two, deck.slides)).toStrictEqual(loadedShadows);
+
+		await two.restoreThemeFormatScheme(plain(glossy));
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Glossy', 'Glossy']);
+	});
+
+	it('Redo after a switch and back puts the pick into every part the masters use then', async () => {
+		const bytes = await buildTwoThemesDeck({ formatSchemes: true });
+		const two = new PptxHandler();
+		await two.load(
+			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+		);
+		const scheme = () => plain(two.getThemeFormatScheme()!);
+		const { master1 } = TWO_THEMES;
+		// Master 1 onto theme 2, Glossy (theme 2 only), master 1 back on theme 1, Glossy (both).
+		await two.setSlideMasterTheme(master1, theme2.path);
+		const ember = scheme();
+		await two.applyThemeEffectScheme('glossy');
+		const glossy = scheme();
+		await two.setSlideMasterTheme(master1, theme1.path);
+		const tide = scheme();
+		await two.applyThemeEffectScheme('glossy');
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Glossy', 'Glossy']);
+		// Undo three times, then Redo three times, as the undo steps write them.
+		await two.restoreThemeFormatScheme(tide);
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Tide', 'Glossy']);
+		await two.setSlideMasterTheme(master1, theme2.path);
+		await two.restoreThemeFormatScheme(ember);
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Tide', 'Ember']);
+		await two.restoreThemeFormatScheme(glossy);
+		await two.setSlideMasterTheme(master1, theme1.path);
+		await two.restoreThemeFormatScheme(glossy);
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Glossy', 'Glossy']);
+	});
+
+	it('a scoped restore writes only the parts it names', async () => {
+		const bytes = await buildTwoThemesDeck({ formatSchemes: true });
+		const two = new PptxHandler();
+		await two.load(
+			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+		);
+		const loaded = two.getThemeFormatScheme()!;
+		await two.applyThemeEffectScheme('glossy');
+		await two.restoreThemeFormatScheme(plain(loaded), [theme1.path]);
+		await expect(partSchemes(two)).resolves.toStrictEqual(['Tide', 'Glossy']);
+	});
+});
+
+describe('format scheme keys', () => {
+	const scheme = (rawNode: Record<string, unknown>) => ({
+		name: 'Same',
+		fillStyles: [{ kind: 'solid' as const, rawNode }],
+		lineStyles: [],
+		effectStyles: [],
+		backgroundFillStyles: [],
+	});
+
+	it('keep the order of child elements and ignore the order of attributes', () => {
+		const lumModFirst = scheme({
+			'a:schemeClr': {
+				'@_val': 'phClr',
+				'a:lumMod': { '@_val': '75000' },
+				'a:lumOff': { '@_val': '25000' },
+			},
+		});
+		const lumOffFirst = scheme({
+			'a:schemeClr': {
+				'@_val': 'phClr',
+				'a:lumOff': { '@_val': '25000' },
+				'a:lumMod': { '@_val': '75000' },
+			},
+		});
+		// Colour transforms apply in order, so these are two different schemes.
+		expect(formatSchemeKey(lumModFirst)).not.toBe(formatSchemeKey(lumOffFirst));
+		expect(
+			formatSchemeKey(scheme({ 'a:gradFill': { '@_rotWithShape': '1', '@_flip': 'none' } })),
+		).toBe(formatSchemeKey(scheme({ 'a:gradFill': { '@_flip': 'none', '@_rotWithShape': '1' } })));
 	});
 });
 
