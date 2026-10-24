@@ -581,6 +581,17 @@ describe('editorStateService', () => {
 		expect(svc.slides()).toHaveLength(2);
 	});
 
+	it('shows the slide it adds through the viewer navigation, wherever New Slide came from', () => {
+		const svc = deck();
+		const shown: number[] = [];
+		svc.bindSlideNavigation((index) => shown.push(index));
+		svc.addSlide(0);
+		svc.addSlide(2);
+		svc.addSlide(9);
+		expect(shown).toStrictEqual([1, 3, 4]);
+		expect(svc.slides()).toHaveLength(5);
+	});
+
 	it('inserts a template slide after the given index with elements and undo support', () => {
 		const svc = deck();
 		svc.insertSlideFromTemplate(0, 'title');

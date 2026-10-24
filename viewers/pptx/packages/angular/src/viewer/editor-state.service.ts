@@ -119,6 +119,18 @@ export class EditorStateService {
 	 */
 	readonly editRevision = computed(() => this.historyState().revision);
 
+	/** Shows a slide on the stage: the viewer's navigation, once it {@link bindSlideNavigation binds} it. */
+	private showSlide: (index: number) => void = () => undefined;
+
+	/**
+	 * Wire the viewer's slide navigation (called once from its constructor), so a command that adds
+	 * a slide shows it wherever it was started: the ribbon, the slide panel, the keyboard or the
+	 * quick access toolbar.
+	 */
+	bindSlideNavigation(goTo: (index: number) => void): void {
+		this.showSlide = goTo;
+	}
+
 	/**
 	 * Apply File > Options > Advanced > "Maximum number of undos" at runtime.
 	 * Trims the past stack immediately if the new limit is smaller.
@@ -892,7 +904,7 @@ export class EditorStateService {
 	}
 
 	/**
-	 * Insert a blank slide after `afterIndex` (records history).
+	 * Insert a blank slide after `afterIndex` and show it, as PowerPoint does (records history).
 	 *
 	 * @param layoutPath - Package path of the slide layout the new slide should
 	 *   inherit from, as offered by the Home tab's "New Slide" split button.
@@ -909,17 +921,15 @@ export class EditorStateService {
 			elements: [],
 			...(layoutPath ? { layoutPath } : {}),
 		} as PptxSlide;
+		const index = Math.min(afterIndex + 1, slides.length);
 		const next = [...slides];
-		next.splice(Math.min(afterIndex + 1, next.length), 0, blank);
+		next.splice(index, 0, blank);
 		this.slides.set(this.renumber(next));
 		this.selectedIds.set([]);
 		this.dirty.set(true);
+		this.showSlide(index);
 		if (layoutPath) {
-			void this.hydrateInsertedSlideLayout(
-				Math.min(afterIndex + 1, next.length - 1),
-				id,
-				layoutPath,
-			);
+			void this.hydrateInsertedSlideLayout(index, id, layoutPath);
 		}
 	}
 
