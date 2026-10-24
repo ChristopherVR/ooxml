@@ -37,6 +37,8 @@ export interface UseMasterViewCrudInput {
 	slideMasters: PptxSlideMaster[];
 	target: MasterViewTarget | null;
 	setSlideMasters: React.Dispatch<React.SetStateAction<PptxSlideMaster[]>>;
+	/** The Home > Layout list, which this binding keeps apart from the masters it comes from. */
+	setLayoutOptions: (layoutOptions: NonNullable<PptxData['layoutOptions']>) => void;
 	setActiveMasterIndex: React.Dispatch<React.SetStateAction<number>>;
 	setActiveLayoutIndex: React.Dispatch<React.SetStateAction<number | null>>;
 	markDirty: () => void;
@@ -60,6 +62,7 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		slideMasters,
 		target,
 		setSlideMasters,
+		setLayoutOptions,
 		setActiveMasterIndex,
 		setActiveLayoutIndex,
 		markDirty,
@@ -121,12 +124,14 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 			}
 
 			// Adopt the helper's fresh handler and masters (it does not mutate the
-			// ones it was given). The slides stay as they are: the reloaded ones
+			// ones it was given), and the layout list built from them, or Home >
+			// Layout keeps offering a deleted layout and misses an inserted one. The slides stay as they are: the reloaded ones
 			// carry no loaded pictures (each shows as a placeholder), and they hold
 			// nothing the command changed. The previous handler stays alive: the
 			// slides on screen and the undo stack still show its pictures.
 			handlerRef.current = result.handler;
 			setSlideMasters(result.data.slideMasters ?? []);
+			setLayoutOptions(result.data.layoutOptions ?? []);
 			setActiveMasterIndex(result.target.masterIndex);
 			setActiveLayoutIndex(result.target.layoutIndex);
 			const removed = removedSlideMasterParts(data, result.data);
@@ -144,6 +149,7 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 			data,
 			pushToast,
 			setSlideMasters,
+			setLayoutOptions,
 			setActiveMasterIndex,
 			setActiveLayoutIndex,
 			forgetHistory,

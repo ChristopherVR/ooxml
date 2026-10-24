@@ -31,6 +31,7 @@ interface HarnessHandle {
 	handleCrudAction: (id: 'addLayout' | 'deleteLayout') => Promise<void>;
 	getCrudActions: () => ReturnType<typeof useMasterViewCrud>['crudActions'];
 	getSlideMasters: () => PptxSlideMaster[];
+	getLayoutOptions: () => readonly { path: string }[];
 }
 
 function Harness({
@@ -40,7 +41,11 @@ function Harness({
 	onReady,
 }: {
 	handler: PptxHandler;
-	initialData: { slides: PptxSlide[]; slideMasters: PptxSlideMaster[] };
+	initialData: {
+		slides: PptxSlide[];
+		slideMasters: PptxSlideMaster[];
+		layoutOptions?: { path: string; name: string }[];
+	};
 	target: MasterViewTarget;
 	onReady: (handle: HarnessHandle) => void;
 }): React.ReactElement {
@@ -48,6 +53,7 @@ function Harness({
 	// A command leaves the slides alone (nothing sets them), so they are the props' own array.
 	const slides = initialData.slides;
 	const [slideMasters, setSlideMasters] = useState(initialData.slideMasters);
+	const [layoutOptions, setLayoutOptions] = useState(initialData.layoutOptions ?? []);
 	const [, setActiveMasterIndex] = useState(target.masterIndex);
 	const [, setActiveLayoutIndex] = useState(target.layoutIndex);
 	const markDirty = vi.fn();
@@ -59,6 +65,7 @@ function Harness({
 		slideMasters,
 		target,
 		setSlideMasters,
+		setLayoutOptions,
 		setActiveMasterIndex,
 		setActiveLayoutIndex,
 		markDirty,
@@ -70,6 +77,7 @@ function Harness({
 		handleCrudAction: result.handleCrudAction,
 		getCrudActions: () => result.crudActions,
 		getSlideMasters: () => slideMasters,
+		getLayoutOptions: () => layoutOptions,
 	});
 
 	return <div />;
@@ -136,6 +144,7 @@ function HistoryHarness({
 		slideMasters,
 		target,
 		setSlideMasters,
+		setLayoutOptions: noop<{ path: string; name: string }[]>(),
 		setActiveMasterIndex: noop<number>(),
 		setActiveLayoutIndex: noop<number | null>(),
 		markDirty: history.markDirty,
@@ -205,6 +214,44 @@ describe('useMasterViewCrud', () => {
 			});
 
 			expect(handle!.getSlideMasters()[0].layouts).toHaveLength(before + 1);
+		} finally {
+			handler.dispose();
+		}
+	});
+
+	it('adopts the layout list a command returns, so Home > Layout offers what the deck has', async () => {
+		const { handler, data } = await PptxHandlerCtor.create({ initialSlideCount: 1 });
+		try {
+			const target: MasterViewTarget = { tab: 'slides', masterIndex: 0, layoutIndex: null };
+			const loaded = data.layoutOptions ?? [];
+
+			let handle: HarnessHandle | null = null;
+			act(() => {
+				root.render(
+					<Harness
+						handler={handler}
+						initialData={{
+							slides: data.slides,
+							slideMasters: data.slideMasters!,
+							layoutOptions: loaded,
+						}}
+						target={target}
+						onReady={(h) => {
+							handle = h;
+						}}
+					/>,
+				);
+			});
+
+			await act(async () => {
+				await handle!.handleCrudAction('addLayout');
+			});
+
+			const layoutPaths = handle!
+				.getSlideMasters()
+				.flatMap((master) => (master.layouts ?? []).map((layout) => layout.path));
+			expect(handle!.getLayoutOptions().map((option) => option.path)).toStrictEqual(layoutPaths);
+			expect(handle!.getLayoutOptions()).toHaveLength(loaded.length + 1);
 		} finally {
 			handler.dispose();
 		}
