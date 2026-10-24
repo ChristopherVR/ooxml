@@ -16,9 +16,11 @@ import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from
 
 import { InspectorPreviewKey } from '../../composables/inspector-preview-context';
 import { RecentColorsKey } from '../../composables/recent-colors-context';
+import type { TemplateElementMap } from '../../composables/template-editing';
 import { useEditorHistory } from '../../composables/useEditorHistory';
 import { useEditorOperations } from '../../composables/useEditorOperations';
 import { useInspectorWiring } from '../../composables/useInspectorWiring';
+import { useSelectionModel } from '../../composables/useSelectionModel';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
 import StrokePanel from './StrokePanel.vue';
@@ -69,32 +71,31 @@ function harness(control: Control) {
 	const slides = shallowRef<PptxSlide[]>([
 		{ id: 's', rId: 'rId1', slideNumber: 1, elements: [shape()] } as PptxSlide,
 	]);
+	const templateElementsBySlideId = shallowRef<TemplateElementMap>({});
 	const activeSlideIndex = ref(0);
-	const selectedElementIds = ref<string[]>(['a']);
+	const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
+	const selection = useSelectionModel({ slides, templateElementsBySlideId, activeSlide });
+	selection.selectElement('a', false);
 	const recent = ref<string[]>([]);
-	const history = useEditorHistory(slides);
+	const history = useEditorHistory(slides, templateElementsBySlideId);
 	const Host = defineComponent({
 		setup() {
 			const ops = useEditorOperations({
 				slides,
 				activeSlideIndex,
 				pushHistory: history.pushHistory,
-				selectedElementIds,
+				selectedElementIds: selection.selectedElementIds,
+				templateElementsBySlideId,
 			});
-			const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
-			const selectedElements = computed(() =>
-				(activeSlide.value?.elements ?? []).filter((el) =>
-					selectedElementIds.value.includes(el.id),
-				),
-			);
 			const inspector = useInspectorWiring({
 				slides,
 				activeSlide,
 				activeSlideIndex,
-				selectedElements,
+				selectedElements: selection.selectedElements,
 				pushHistory: history.pushHistory,
 				updateElement: (id, patch) => ops.updateElement(id, patch),
 				previewElement: (id, patch) => ops.previewElement(id, patch),
+				findActiveElement: selection.findActiveElement,
 			});
 			provide(InspectorPreviewKey, inspector.inspectorPreview);
 			provide(RecentColorsKey, {

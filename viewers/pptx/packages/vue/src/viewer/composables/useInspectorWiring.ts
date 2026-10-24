@@ -27,7 +27,12 @@ export interface UseInspectorWiringOptions {
 	pushHistory: () => void;
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
 	/** {@link updateElement} without an undo step (a colour drag's live shade). */
-	previewElement?: (id: string, patch: Partial<PptxElement>) => void;
+	previewElement: (id: string, patch: Partial<PptxElement>) => void;
+	/**
+	 * Element `id` on the active slide as the deck holds it now, group members
+	 * and template elements included (the selection model's lookup).
+	 */
+	findActiveElement: (id: string) => PptxElement | undefined;
 }
 
 export interface UseInspectorWiringResult {
@@ -105,10 +110,8 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 	}
 
 	const inspectorPreview: InspectorPreview = {
-		preview: (patch, id) => options.previewElement?.(id, patch),
-		element: (id) =>
-			selectedElements.value.find((el) => el.id === id) ??
-			activeSlide.value?.elements.find((el) => el.id === id),
+		preview: (patch, id) => options.previewElement(id, patch),
+		element: (id) => options.findActiveElement(id),
 	};
 
 	const selectedMotionPath = computed(() => {

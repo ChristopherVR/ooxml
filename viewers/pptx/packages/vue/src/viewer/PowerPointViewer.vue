@@ -755,6 +755,7 @@ const inspector = useInspectorWiring({
 	pushHistory: history.pushHistory,
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 	previewElement: (id, patch) => ops.previewElement(id, patch),
+	findActiveElement,
 });
 // A colour picker drag's live shades reach the slide without an undo step.
 provide(InspectorPreviewKey, inspector.inspectorPreview);

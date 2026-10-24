@@ -4,8 +4,10 @@
  * and never overwrites another edit (shared `createLiveColorInput`): the
  * selection moving mid-drag puts the first shape back without landing the pick
  * on the second, an edit to another field of the dragged shape survives the
- * commit and its undo step, and an effects colour field tells a new target
- * from a re-render of its own drag. Wired as `PowerPointViewer` wires it.
+ * commit and its undo step, an effects colour field tells a new target from a
+ * re-render of its own drag, and a drag on a group member or a template
+ * element is put back once the selection has left it. Wired as
+ * `PowerPointViewer` wires it.
  */
 import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
@@ -15,9 +17,11 @@ import { computed, defineComponent, h, nextTick, provide, ref, shallowRef } from
 
 import { InspectorPreviewKey } from '../../composables/inspector-preview-context';
 import { RecentColorsKey } from '../../composables/recent-colors-context';
+import type { TemplateElementMap } from '../../composables/template-editing';
 import { useEditorHistory } from '../../composables/useEditorHistory';
 import { useEditorOperations } from '../../composables/useEditorOperations';
 import { useInspectorWiring } from '../../composables/useInspectorWiring';
+import { useSelectionModel } from '../../composables/useSelectionModel';
 import EffectsPanel from './EffectsPanel.vue';
 import FillPanel from './FillPanel.vue';
 
@@ -59,41 +63,72 @@ function shape(id: string, shapeStyle: ShapeStyle): PptxElement {
 	} as unknown as PptxElement;
 }
 
-function harness(panel: Component, selector: string) {
+function group(id: string, children: PptxElement[]): PptxElement {
+	return {
+		type: 'group',
+		id,
+		x: 200,
+		y: 100,
+		width: 100,
+		height: 50,
+		children,
+	} as unknown as PptxElement;
+}
+
+/** The element `id` anywhere in `elements`, group members included. */
+function findIn(elements: readonly PptxElement[], id: string): PptxElement | undefined {
+	for (const el of elements) {
+		const hit = el.id === id ? el : findIn((el as { children?: PptxElement[] }).children ?? [], id);
+		if (hit) {
+			return hit;
+		}
+	}
+	return undefined;
+}
+
+interface Deck {
+	/** The slide's elements (shapes `a` and `b` when omitted). */
+	elements?: PptxElement[];
+	/** The slide's template (layout and master) elements. */
+	templates?: PptxElement[];
+	/** The element selected first (`a` when omitted). */
+	selected?: string;
+}
+
+function harness(panel: Component, selector: string, deck: Deck = {}) {
 	const slides = shallowRef<PptxSlide[]>([
 		{
 			id: 's',
 			rId: 'rId1',
 			slideNumber: 1,
-			elements: [shape('a', A_STYLE), shape('b', B_STYLE)],
+			elements: deck.elements ?? [shape('a', A_STYLE), shape('b', B_STYLE)],
 		} as PptxSlide,
 	]);
+	const templateElementsBySlideId = shallowRef<TemplateElementMap>({ s: deck.templates ?? [] });
 	const activeSlideIndex = ref(0);
-	const selectedElementIds = ref<string[]>(['a']);
+	const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
+	const selection = useSelectionModel({ slides, templateElementsBySlideId, activeSlide });
+	selection.selectElement(deck.selected ?? 'a', false);
 	const recent = ref<string[]>([]);
-	const history = useEditorHistory(slides);
+	const history = useEditorHistory(slides, templateElementsBySlideId);
 	const Host = defineComponent({
 		setup() {
 			const ops = useEditorOperations({
 				slides,
 				activeSlideIndex,
 				pushHistory: history.pushHistory,
-				selectedElementIds,
+				selectedElementIds: selection.selectedElementIds,
+				templateElementsBySlideId,
 			});
-			const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
-			const selectedElements = computed(() =>
-				(activeSlide.value?.elements ?? []).filter((el) =>
-					selectedElementIds.value.includes(el.id),
-				),
-			);
 			const inspector = useInspectorWiring({
 				slides,
 				activeSlide,
 				activeSlideIndex,
-				selectedElements,
+				selectedElements: selection.selectedElements,
 				pushHistory: history.pushHistory,
 				updateElement: (id, patch) => ops.updateElement(id, patch),
 				previewElement: (id, patch) => ops.previewElement(id, patch),
+				findActiveElement: selection.findActiveElement,
 			});
 			provide(InspectorPreviewKey, inspector.inspectorPreview);
 			provide(RecentColorsKey, {
@@ -117,9 +152,13 @@ function harness(panel: Component, selector: string) {
 		await nextTick();
 	};
 	const style = (id: string): ShapeStyle =>
-		(slides.value[0]!.elements.find((el) => el.id === id) as { shapeStyle: ShapeStyle }).shapeStyle;
+		(
+			findIn([...slides.value[0]!.elements, ...(templateElementsBySlideId.value.s ?? [])], id) as {
+				shapeStyle: ShapeStyle;
+			}
+		).shapeStyle;
 	const select = async (id: string): Promise<void> => {
-		selectedElementIds.value = [id];
+		selection.selectElement(id, false);
 		await nextTick();
 	};
 	return { slides, history, recent, fire, style, select };
@@ -216,5 +255,40 @@ describe('an effects colour field whose target changes mid-drag', () => {
 
 		expect(view.style('a')).toStrictEqual({ ...A_STYLE, glowRadius: 12 });
 		expect(view.style('b')).toStrictEqual(B_STYLE);
+	});
+});
+
+describe('a fill drag the selection leaves on a group member', () => {
+	it('puts the member back, with no undo step', async () => {
+		const view = harness(FillPanel, 'input.pptx-vue-fill-color', {
+			elements: [group('g', [shape('m', A_STYLE)]), shape('b', B_STYLE)],
+			selected: 'm',
+		});
+		await view.fire('input', '#330000');
+		expect(view.style('m').fillColor).toBe('#330000');
+		await view.select('b');
+		await view.fire('change', '#330000');
+
+		expect(view.style('m')).toStrictEqual(A_STYLE);
+		expect(view.style('b')).toStrictEqual(B_STYLE);
+		expect(view.history.canUndo.value).toBeFalsy();
+	});
+});
+
+describe('a fill drag the selection leaves on a template element', () => {
+	it('puts the template element back, with no undo step', async () => {
+		const view = harness(FillPanel, 'input.pptx-vue-fill-color', {
+			elements: [shape('b', B_STYLE)],
+			templates: [shape('layout-t', A_STYLE)],
+			selected: 'layout-t',
+		});
+		await view.fire('input', '#330000');
+		expect(view.style('layout-t').fillColor).toBe('#330000');
+		await view.select('b');
+		await view.fire('change', '#330000');
+
+		expect(view.style('layout-t')).toStrictEqual(A_STYLE);
+		expect(view.style('b')).toStrictEqual(B_STYLE);
+		expect(view.history.canUndo.value).toBeFalsy();
 	});
 });
