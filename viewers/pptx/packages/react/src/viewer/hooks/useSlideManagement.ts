@@ -1,6 +1,7 @@
 import {
 	buildSlideTemplateSlide,
 	createBlankSlide,
+	insertedLayoutCompletion,
 	makeSlideId,
 	insertSlidePaste,
 	applySlidePasteTemplates,
@@ -208,7 +209,9 @@ export function useSlideManagement(input: UseSlideManagementInput): SlideManagem
 						.getTemplateElementsForSlide(updated.id)
 						.catch(() => []);
 					ops.updateSlides((prev) => {
-						if (prev[insertAt]?.id !== draft.id) {
+						// An edit made to the new slide while its layout loaded stays; the artwork
+						// below still arrives.
+						if (insertedLayoutCompletion(prev[insertAt], draft) !== 'replace') {
 							return prev;
 						}
 						const next = [...prev];
