@@ -58,6 +58,9 @@ const REFLECTION_ON = {
 	textReflectionOffset: 3,
 } satisfies Partial<TextStyle>;
 
+/** What a field shows while its key is unset: the value ticking its effect on writes. */
+const ON_DEFAULTS = { ...SHADOW_ON, ...GLOW_ON, ...REFLECTION_ON };
+
 /** The same keys, all cleared: unticking drops the whole effect, never a stray field. */
 function cleared<K extends keyof TextStyle>(on: Pick<TextStyle, K>): Partial<TextStyle> {
 	return Object.fromEntries(Object.keys(on).map((key) => [key, undefined])) as Partial<TextStyle>;
@@ -66,17 +69,13 @@ function cleared<K extends keyof TextStyle>(on: Pick<TextStyle, K>): Partial<Tex
 const num = (v: InspectorFieldValue): number => Number(v);
 const fxId = (section: string, field: string): string => `text-fx-${section}-${field}`;
 
-function colorField(
-	section: string,
-	key: 'textShadowColor' | 'textGlowColor',
-	fallback: string,
-): TextEffectField {
+function colorField(section: string, key: 'textShadowColor' | 'textGlowColor'): TextEffectField {
 	return {
 		id: 'color',
 		kind: 'color',
 		labelKey: 'pptx.textEffects.color',
 		testId: fxId(section, 'color'),
-		read: (ts) => normalizeHexColor(ts?.[key], fallback),
+		read: (ts) => normalizeHexColor(ts?.[key], ON_DEFAULTS[key]),
 		write: (_ts, v) => ({ [key]: String(v) }),
 	};
 }
@@ -91,7 +90,6 @@ function opacityField(
 		| 'textGlowOpacity'
 		| 'textReflectionStartOpacity'
 		| 'textReflectionEndOpacity',
-	fallback: number,
 ): TextEffectField {
 	return {
 		id,
@@ -101,7 +99,7 @@ function opacityField(
 		max: 1,
 		step: 0.05,
 		testId: fxId(section, id),
-		read: (ts) => ts?.[key] ?? fallback,
+		read: (ts) => ts?.[key] ?? ON_DEFAULTS[key],
 		write: (_ts, v) => ({ [key]: num(v) }),
 	};
 }
@@ -117,7 +115,7 @@ function pxField(
 		| 'textShadowOffsetY'
 		| 'textGlowRadius'
 		| 'textReflectionOffset',
-	[min, max, fallback]: readonly [number, number, number],
+	[min, max]: readonly [number, number],
 ): TextEffectField {
 	return {
 		id,
@@ -128,12 +126,12 @@ function pxField(
 		step: 1,
 		decimals: 0,
 		testId: fxId(section, id),
-		read: (ts) => ts?.[key] ?? fallback,
+		read: (ts) => ts?.[key] ?? ON_DEFAULTS[key],
 		write: (_ts, v) => ({ [key]: num(v) }),
 	};
 }
 
-export const TEXT_SHADOW_SECTION: TextEffectSection = {
+const TEXT_SHADOW_SECTION: TextEffectSection = {
 	id: 'shadow',
 	labelKey: 'pptx.textEffects.shadow',
 	toggle: {
@@ -145,15 +143,15 @@ export const TEXT_SHADOW_SECTION: TextEffectSection = {
 		disable: () => cleared(SHADOW_ON),
 	},
 	fields: [
-		colorField('shadow', 'textShadowColor', SHADOW_ON.textShadowColor),
-		opacityField('shadow', 'opacity', 'pptx.textEffects.opacity', 'textShadowOpacity', 0.5),
-		pxField('shadow', 'blur', 'pptx.textEffects.blur', 'textShadowBlur', [0, 50, 4]),
-		pxField('shadow', 'offsetX', 'pptx.textEffects.offsetX', 'textShadowOffsetX', [-50, 50, 2]),
-		pxField('shadow', 'offsetY', 'pptx.textEffects.offsetY', 'textShadowOffsetY', [-50, 50, 2]),
+		colorField('shadow', 'textShadowColor'),
+		opacityField('shadow', 'opacity', 'pptx.textEffects.opacity', 'textShadowOpacity'),
+		pxField('shadow', 'blur', 'pptx.textEffects.blur', 'textShadowBlur', [0, 50]),
+		pxField('shadow', 'offsetX', 'pptx.textEffects.offsetX', 'textShadowOffsetX', [-50, 50]),
+		pxField('shadow', 'offsetY', 'pptx.textEffects.offsetY', 'textShadowOffsetY', [-50, 50]),
 	],
 };
 
-export const TEXT_GLOW_SECTION: TextEffectSection = {
+const TEXT_GLOW_SECTION: TextEffectSection = {
 	id: 'glow',
 	labelKey: 'pptx.textEffects.glow',
 	toggle: {
@@ -165,13 +163,13 @@ export const TEXT_GLOW_SECTION: TextEffectSection = {
 		disable: () => cleared(GLOW_ON),
 	},
 	fields: [
-		colorField('glow', 'textGlowColor', GLOW_ON.textGlowColor),
-		opacityField('glow', 'opacity', 'pptx.textEffects.opacity', 'textGlowOpacity', 0.6),
-		pxField('glow', 'size', 'pptx.textEffects.size', 'textGlowRadius', [1, 50, 6]),
+		colorField('glow', 'textGlowColor'),
+		opacityField('glow', 'opacity', 'pptx.textEffects.opacity', 'textGlowOpacity'),
+		pxField('glow', 'size', 'pptx.textEffects.size', 'textGlowRadius', [1, 50]),
 	],
 };
 
-export const TEXT_REFLECTION_SECTION: TextEffectSection = {
+const TEXT_REFLECTION_SECTION: TextEffectSection = {
 	id: 'reflection',
 	labelKey: 'pptx.textEffects.reflection',
 	toggle: {
@@ -190,23 +188,21 @@ export const TEXT_REFLECTION_SECTION: TextEffectSection = {
 			step: 0.5,
 			decimals: 1,
 			testId: fxId('reflection', 'blur'),
-			read: (ts) => ts?.textReflectionBlur ?? 1,
+			read: (ts) => ts?.textReflectionBlur ?? ON_DEFAULTS.textReflectionBlur,
 			write: (_ts, v) => ({ textReflectionBlur: num(v) }),
 		},
-		pxField('reflection', 'offset', 'pptx.textEffects.offset', 'textReflectionOffset', [0, 20, 3]),
+		pxField('reflection', 'offset', 'pptx.textEffects.offset', 'textReflectionOffset', [0, 20]),
 		opacityField(
 			'reflection',
 			'startOpacity',
 			'pptx.textEffects.startOpacity',
 			'textReflectionStartOpacity',
-			0.5,
 		),
 		opacityField(
 			'reflection',
 			'endOpacity',
 			'pptx.textEffects.endOpacity',
 			'textReflectionEndOpacity',
-			0,
 		),
 	],
 };

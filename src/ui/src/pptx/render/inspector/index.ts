@@ -42,10 +42,5 @@ export type {
 } from './element-geometry-fields';
 export { TEXT_BOX_SECTION, TEXT_BOX_SECTIONS } from './text-box-fields';
 export type { TextBoxSection, TextBoxTarget } from './text-box-fields';
-export {
-	TEXT_EFFECT_SECTIONS,
-	TEXT_GLOW_SECTION,
-	TEXT_REFLECTION_SECTION,
-	TEXT_SHADOW_SECTION,
-} from './text-effect-fields';
+export { TEXT_EFFECT_SECTIONS } from './text-effect-fields';
 export type { TextEffectSection, TextEffectTarget } from './text-effect-fields';
