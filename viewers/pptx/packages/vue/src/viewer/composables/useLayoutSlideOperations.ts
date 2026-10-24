@@ -1,3 +1,4 @@
+import { insertedLayoutCompletion } from 'ooxml-ui/pptx';
 import { createEditorId } from 'pptx-viewer-core';
 import type { PptxHandler, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
 import type { Ref, ShallowRef } from 'vue';
@@ -67,6 +68,7 @@ export function useLayoutSlideOperations(input: Input) {
 		next.splice(insertAt, 0, draft);
 		slides.value = next;
 		activeSlideIndex.value = insertAt;
+		const placed = slides.value[insertAt] ?? draft;
 		const h = handler.value;
 		if (!h) {
 			return;
@@ -80,12 +82,16 @@ export function useLayoutSlideOperations(input: Input) {
 		const elements = templateElementsBySlideId
 			? await h.getTemplateElementsForSlide(updated.id).catch(() => [])
 			: undefined;
-		if (slides.value[insertAt]?.id !== draft.id) {
+		// An edit made to the new slide while its layout loaded stays; it takes only the artwork.
+		const completion = insertedLayoutCompletion(slides.value[insertAt], placed);
+		if (completion === 'none') {
 			return;
 		}
-		const merged = slides.value.slice();
-		merged[insertAt] = updated;
-		slides.value = merged;
+		if (completion === 'replace') {
+			const merged = slides.value.slice();
+			merged[insertAt] = updated;
+			slides.value = merged;
+		}
 		if (templateElementsBySlideId) {
 			templateElementsBySlideId.value = {
 				...templateElementsBySlideId.value,
