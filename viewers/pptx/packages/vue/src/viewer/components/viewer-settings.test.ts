@@ -30,6 +30,7 @@ describe('viewer-settings', () => {
 		expect(SHORTCUT_REFERENCE_ITEMS[0]).toStrictEqual({
 			actionKey: 'pptx.toolbar.undo',
 			shortcut: 'Ctrl/Cmd+Z',
+			group: 'history',
 		});
 	});
 });

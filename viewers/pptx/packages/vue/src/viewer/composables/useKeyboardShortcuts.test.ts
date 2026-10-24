@@ -16,8 +16,6 @@ import { effectScope, ref } from 'vue';
 import {
 	NUDGE_LARGE,
 	NUDGE_SMALL,
-	SHORTCUT_CATALOG,
-	groupShortcutCatalog,
 	resolveShortcutAction,
 	useKeyboardShortcuts,
 } from './useKeyboardShortcuts';
@@ -255,33 +253,6 @@ describe('resolveShortcutAction - pure dispatch logic', () => {
 					.action,
 			).toBe('nextSlide');
 		});
-	});
-});
-
-// ---------------------------------------------------------------------------
-// Catalog grouping
-// ---------------------------------------------------------------------------
-
-describe('shortcut catalog', () => {
-	it('groups the catalog, preserving label order and dropping empty groups', () => {
-		const grouped = groupShortcutCatalog();
-		expect(grouped.map((bucket) => bucket.group)).toStrictEqual([
-			'history',
-			'clipboard',
-			'editing',
-			'navigation',
-			'general',
-		]);
-		const total = grouped.reduce((sum, bucket) => sum + bucket.shortcuts.length, 0);
-		expect(total).toBe(SHORTCUT_CATALOG.length);
-	});
-
-	it('filters out groups with no matching shortcuts', () => {
-		const grouped = groupShortcutCatalog(
-			SHORTCUT_CATALOG.filter((entry) => entry.group === 'history'),
-		);
-		expect(grouped).toHaveLength(1);
-		expect(grouped[0].group).toBe('history');
 	});
 });
 

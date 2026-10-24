@@ -1,7 +1,8 @@
 import { mount } from '@vue/test-utils';
+import { VIEWER_SHORTCUT_REFERENCE } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { SHORTCUT_CATALOG } from '../composables/useKeyboardShortcuts';
+import { translationsEn } from '../../i18n';
 import ShortcutPanel from './ShortcutPanel.vue';
 
 // ShortcutPanel teleports its body to <body> via ModalDialog, so query the
@@ -35,10 +36,10 @@ describe('shortcutPanel', () => {
 		expect(document.querySelector('[data-pptx-shortcuts-panel]')).toBeNull();
 	});
 
-	it('renders every catalog shortcut grouped by group', () => {
+	it('renders every shortcut under its heading', () => {
 		mountPanel(true);
 		const rows = document.querySelectorAll('.pptx-vue-shortcuts-row');
-		expect(rows).toHaveLength(SHORTCUT_CATALOG.length);
+		expect(rows).toHaveLength(VIEWER_SHORTCUT_REFERENCE.length);
 		// Group headings are present.
 		const titles = Array.from(document.querySelectorAll('.pptx-vue-shortcuts-group-title')).map(
 			(el) => el.textContent,
@@ -48,6 +49,23 @@ describe('shortcutPanel', () => {
 		expect(titles).toContain('Editing');
 		expect(titles).toContain('Navigation');
 		expect(titles).toContain('General');
+	});
+
+	it('lists every row of the shared shortcut reference, the keymap the other panels show', () => {
+		mountPanel(true);
+		const rows = Array.from(document.querySelectorAll('.pptx-vue-shortcuts-row')).map((row) => ({
+			description: row.querySelector('.pptx-vue-shortcuts-desc')?.textContent?.trim() ?? '',
+			combo: row.querySelector('.pptx-vue-shortcuts-combo')?.textContent?.trim() ?? '',
+		}));
+		expect(rows).toHaveLength(VIEWER_SHORTCUT_REFERENCE.length);
+		expect(new Set(rows.map((row) => row.description))).toStrictEqual(
+			new Set(VIEWER_SHORTCUT_REFERENCE.map((item) => translationsEn[item.actionKey])),
+		);
+		// Ctrl/Cmd+Enter commits a text edit; Vue's own catalog never listed it.
+		expect(rows).toContainEqual({
+			description: translationsEn['pptx.shortcuts.action.commitTextEdit'],
+			combo: 'Ctrl+Enter',
+		});
 	});
 
 	it('renders a platform-aware combo glyph (Ctrl on non-mac)', () => {
@@ -63,10 +81,9 @@ describe('shortcutPanel', () => {
 		const wrapper = mountPanel(true);
 		await typeSearch(wrapper, 'undo');
 		const rows = document.querySelectorAll('.pptx-vue-shortcuts-row');
-		// "Undo" + "Redo (alternate)" descriptions both contain "undo"? Only "Undo"
-		// matches; assert at least one and fewer than the full catalog.
+		// Only "Undo" matches; assert at least one and fewer than the full reference.
 		expect(rows.length).toBeGreaterThanOrEqual(1);
-		expect(rows.length).toBeLessThan(SHORTCUT_CATALOG.length);
+		expect(rows.length).toBeLessThan(VIEWER_SHORTCUT_REFERENCE.length);
 		const desc = document.querySelector('.pptx-vue-shortcuts-desc')?.textContent ?? '';
 		expect(desc.toLowerCase()).toContain('undo');
 	});

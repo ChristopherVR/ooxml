@@ -43,12 +43,6 @@ import type { MaybeRefOrGetter } from 'vue';
 
 import type { MatchedShortcut, ShortcutActions } from './shortcut-actions';
 
-export {
-	groupShortcutCatalog,
-	SHORTCUT_CATALOG,
-	SHORTCUT_GROUP_LABEL_KEYS,
-} from './shortcut-catalog';
-export type { ShortcutCatalogGroup, ShortcutDefinition, ShortcutGroup } from './shortcut-catalog';
 export type { MatchedShortcut, ShortcutActionName, ShortcutActions } from './shortcut-actions';
 
 /* ------------------------------------------------------------------ */
