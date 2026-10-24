@@ -7,8 +7,9 @@
  * old theme's colours and fonts until the file was reopened. {@link applyThemeByPath} reads the
  * target part, re-points the masters, and re-resolves the colours and fonts of exactly the slides
  * (and their template-element layer) whose layout belongs to a re-targeted master, each against
- * its own master's old part. The binding commits the returned {@link ThemeByPathChange} as ONE
- * undo step; the step records the masters' theme parts (`historyTheme`), so Undo points them back.
+ * its own master's old part, and the style references of their shapes against the new part's
+ * format scheme. The binding commits the returned {@link ThemeByPathChange} as ONE undo step; the
+ * step records the masters' theme parts (`historyTheme`), so Undo points them back.
  *
  * @module render/theme-by-path
  */
@@ -21,14 +22,16 @@ import {
 } from 'ooxml-core/pptx';
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
+import type { DeckStyleHandler } from './deck-style';
 import type { ThemePartSchemes, ThemePartWriter } from './theme-history';
 import { queueThemeWrite } from './theme-write-queue';
 
-/** The handler operations the switch needs (the `PptxHandler` has both). */
+/** The handler operations the switch needs (the `PptxHandler` has them all). */
 export type ThemeByPathHandler = Pick<
 	ThemePartWriter,
 	'getThemePartSchemes' | 'setSlideMasterTheme'
->;
+> &
+	Pick<DeckStyleHandler, 'reResolveThemeStyleReferences'>;
 
 /** A slide master as a binding keeps it (`PptxSlideMaster` fits). */
 export interface ThemeByPathMaster {
@@ -42,6 +45,7 @@ export interface ThemeByPathMaster {
 interface ThemeLike {
 	colorScheme?: unknown;
 	fontScheme?: unknown;
+	formatScheme?: unknown;
 	name?: unknown;
 }
 
@@ -68,8 +72,9 @@ export interface ThemeByPathChange<M extends ThemeByPathMaster, T extends ThemeL
 	/** The masters, re-targeted ones on the new part. */
 	readonly slideMasters: M[];
 	/**
-	 * When the first master was re-targeted, the deck theme carrying the new part's schemes and name,
-	 * and the colour map built from it. Absent when the deck theme is unchanged.
+	 * When the first master was re-targeted, the deck theme carrying the new part's colour, font and
+	 * format schemes and name, and the colour map built from it. Absent when the deck theme is
+	 * unchanged.
 	 */
 	readonly deckTheme?: { readonly theme: T; readonly themeColorMap: Record<string, string> };
 }
@@ -79,7 +84,7 @@ function layoutsOf(master: ThemeByPathMaster): readonly string[] {
 	return master.layoutPaths ?? master.layouts?.map((layout) => layout.path) ?? [];
 }
 
-/** `theme` carrying the schemes and name of `part` (no name when the part has none). */
+/** `theme` carrying the schemes and name of `part` (none of what the part does not have). */
 function withPartTheme<T extends ThemeLike>(
 	theme: T | null | undefined,
 	part: ThemePartSchemes,
@@ -89,10 +94,12 @@ function withPartTheme<T extends ThemeLike>(
 		colorScheme: part.colorScheme,
 		fontScheme: part.fontScheme,
 	};
-	if (part.name) {
-		next.name = part.name;
-	} else {
-		delete next.name;
+	for (const key of ['formatScheme', 'name'] as const) {
+		if (part[key]) {
+			next[key] = part[key];
+		} else {
+			delete next[key];
+		}
 	}
 	return next as T;
 }
@@ -165,18 +172,30 @@ export function applyThemeByPath<M extends ThemeByPathMaster, T extends ThemeLik
 			return masterPath ? previous.get(masterPath) : undefined;
 		};
 		const templates = input.templateElementsBySlideId ?? {};
-		const templateElementsBySlideId: Record<string, PptxElement[]> = { ...templates };
-		const slides = input.slides.map((slide) => {
+		const moved: PptxSlide[] = [];
+		const movedTemplates: Record<string, PptxElement[]> = {};
+		const recoloured = input.slides.map((slide) => {
 			const from = fromOf(slide);
 			if (!from) {
 				return slide;
 			}
 			const layer = templates[slide.id];
 			if (layer) {
-				templateElementsBySlideId[slide.id] = reResolveElements(layer, from, next);
+				movedTemplates[slide.id] = reResolveElements(layer, from, next);
 			}
-			return reResolveSlide(slide, from, next);
+			const themed = reResolveSlide(slide, from, next);
+			moved.push(themed);
+			return themed;
 		});
+		// Shapes drawn through style references (`p:style`) take the new part's line, fill and effect
+		// styles: the handler resolves them against each slide's master, now on the new part.
+		const styled = handler.reResolveThemeStyleReferences(moved, movedTemplates);
+		const styledById = new Map(styled.slides.map((slide) => [slide.id, slide]));
+		const slides = recoloured.map((slide) => styledById.get(slide.id) ?? slide);
+		const templateElementsBySlideId: Record<string, PptxElement[]> = {
+			...templates,
+			...styled.templateElementsBySlideId,
+		};
 		const first = slideMasters[0];
 		const change: ThemeByPathChange<M, T> = {
 			slides,
@@ -188,7 +207,10 @@ export function applyThemeByPath<M extends ThemeByPathMaster, T extends ThemeLik
 		if (!first || !previous.has(first.path)) {
 			return change;
 		}
-		const theme = withPartTheme(input.theme, next);
+		// Read again now the deck is on the part: its format scheme resolves against the part's own
+		// colours, as the loaded deck theme's does.
+		const adopted = (await handler.getThemePartSchemes(themePath)) ?? next;
+		const theme = withPartTheme(input.theme, adopted);
 		return { ...change, deckTheme: { theme, themeColorMap: buildThemeColorMap(next.colorScheme) } };
 	});
 }

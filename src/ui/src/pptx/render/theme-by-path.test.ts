@@ -96,6 +96,27 @@ describe('applyThemeByPath', () => {
 		]);
 	});
 
+	it("draws the moved master's style references with the new part's format scheme", async () => {
+		const deck = await open({ formatSchemes: true });
+		const styled = (slide: PptxSlide | undefined) =>
+			named(slide?.elements, TWO_THEMES.styledShapeName)?.shapeStyle;
+		expect(styled(deck.slides[0])?.shadowColor).toBeUndefined();
+		expect(styled(deck.slides[2])?.shadowColor).toBeDefined();
+		const change = await applyThemeByPath(deck.handler, {
+			themePath: theme2.path,
+			applyToAllMasters: false,
+			...deck,
+		});
+		// Theme 2's first line style is 3 pt (4 px) and its first effect style an outer shadow.
+		for (const index of [0, 1]) {
+			expect(styled(change!.slides[index])?.strokeWidth).toBe(styled(deck.slides[2])?.strokeWidth);
+			expect(styled(change!.slides[index])?.shadowColor).toBe(styled(deck.slides[2])?.shadowColor);
+			expect(hex(styled(change!.slides[index])?.fillColor)).toBe(theme2.colors.accent1);
+		}
+		expect(change!.slides[2]).toBe(deck.slides[2]);
+		expect(change!.deckTheme?.theme.formatScheme?.name).toBe('Ember');
+	});
+
 	it("every master, to the first master's part: only the second master's slide changes", async () => {
 		const deck = await open();
 		const change = await applyThemeByPath(deck.handler, {
@@ -150,6 +171,10 @@ describe('applyThemeByPath', () => {
 			setSlideMasterTheme: async (master, path) => {
 				log.push(`${master} -> ${path}`);
 			},
+			reResolveThemeStyleReferences: (slides, templateElementsBySlideId) => ({
+				slides: [...slides],
+				templateElementsBySlideId: { ...templateElementsBySlideId },
+			}),
 		};
 		void queueThemeWrite(handler, async () => {
 			await new Promise((done) => setTimeout(done, 20));
@@ -168,6 +193,8 @@ describe('applyThemeByPath', () => {
 			'read ppt/theme/theme2.xml',
 			'read ppt/theme/theme1.xml',
 			'm1 -> ppt/theme/theme2.xml',
+			// The deck theme is read from the part once the deck is on it.
+			'read ppt/theme/theme2.xml',
 		]);
 		const change = await switched;
 		expect(change?.slideMasters).toStrictEqual([
@@ -228,15 +255,21 @@ describe('applyThemeByPath', () => {
 				...deck,
 			});
 			const after = historyTheme(change!.deckTheme!.theme, change!.slideMasters);
-			const held = await deck.handler.getThemePartSchemes(theme2.path);
-			expect(hex(held?.colorScheme.accent1)).toBe('123456');
+			// The part's own schemes: a format scheme read resolves its placeholder colour against
+			// whichever theme is active.
+			const schemesOf = async (path: string) => {
+				const part = await deck.handler.getThemePartSchemes(path);
+				return { name: part?.name, colorScheme: part?.colorScheme, fontScheme: part?.fontScheme };
+			};
+			const held = await schemesOf(theme2.path);
+			expect(hex(held.colorScheme?.accent1)).toBe('123456');
 			// A step from after the switch back to before the edit.
 			await writeThemeParts(deck.handler, after, before);
 			await settleThemeWrites(deck.handler);
 			const first = await deck.handler.getThemePartSchemes(theme1.path);
 			expect(hex(first?.colorScheme.accent1)).toBe(theme1.colors.accent1);
 			// The record describes the deck's part, not the part master 2 kept.
-			await expect(deck.handler.getThemePartSchemes(theme2.path)).resolves.toStrictEqual(held);
+			await expect(schemesOf(theme2.path)).resolves.toStrictEqual(held);
 		});
 	});
 });

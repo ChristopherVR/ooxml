@@ -1,4 +1,4 @@
-import type { PptxHandler } from 'pptx-viewer-core';
+import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { EditorState } from '../editor/editor-state.svelte';
@@ -39,6 +39,11 @@ function makeFakeHandler(): { handler: PptxHandler; calls: FakeHandlerCalls } {
 			calls.retarget.push([masterPath, themePath]);
 			return Promise.resolve();
 		},
+		// The switch resolves the moved slides' style references; these slides have none.
+		reResolveThemeStyleReferences: (
+			slides: readonly PptxSlide[],
+			templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		) => ({ slides: [...slides], templateElementsBySlideId: { ...templateElementsBySlideId } }),
 		save: (): Promise<Uint8Array> => {
 			calls.saves += 1;
 			return Promise.resolve(new Uint8Array([1, 2, 3]));

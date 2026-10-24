@@ -102,7 +102,16 @@ describe('editor deck actions (no-selection inspector)', () => {
 		};
 		const getThemePartSchemes = vi.fn().mockResolvedValue(schemes);
 		const setSlideMasterTheme = vi.fn().mockResolvedValue(undefined);
-		const handler = { getThemePartSchemes, setSlideMasterTheme } as unknown as PptxHandler;
+		// The switch resolves the moved slides' style references; these slides have none.
+		const reResolveThemeStyleReferences = (
+			slides: readonly PptxSlide[],
+			templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+		) => ({ slides: [...slides], templateElementsBySlideId: { ...templateElementsBySlideId } });
+		const handler = {
+			getThemePartSchemes,
+			setSlideMasterTheme,
+			reResolveThemeStyleReferences,
+		} as unknown as PptxHandler;
 		return { handler, setSlideMasterTheme };
 	}
 

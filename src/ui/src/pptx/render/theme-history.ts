@@ -20,7 +20,12 @@
  *
  * @module render/theme-history
  */
-import type { PptxThemeColorScheme, PptxThemeFontScheme, PptxThemeOption } from 'ooxml-core/pptx';
+import type {
+	PptxThemeColorScheme,
+	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
+	PptxThemeOption,
+} from 'ooxml-core/pptx';
 
 import { queueThemeWrite } from './theme-write-queue';
 
@@ -28,11 +33,17 @@ export { queueThemeWrite, settleThemeWrites } from './theme-write-queue';
 
 /**
  * The part of a theme an undo step records: the colour scheme, the font scheme and the name, which
- * are what the Design galleries, the theme editor and the assistant change.
+ * are what the Design galleries, the theme editor and the assistant change, and the format scheme.
  */
 export interface HistoryTheme {
 	colorScheme?: PptxThemeColorScheme;
 	fontScheme?: PptxThemeFontScheme;
+	/**
+	 * The deck's format scheme. A step carries it back, but it never makes a step cross a theme change
+	 * by itself ({@link crossedHistoryTheme}): no theme part write restores it, only pointing a master
+	 * back at its own part does.
+	 */
+	formatScheme?: PptxThemeFormatScheme;
 	name?: string;
 	/** Each slide master's theme part, by master path, in master order (the first is the deck's). */
 	masterThemePaths?: Readonly<Record<string, string>>;
@@ -48,6 +59,7 @@ export interface HistoryMaster {
 interface ThemeLike {
 	colorScheme?: unknown;
 	fontScheme?: unknown;
+	formatScheme?: unknown;
 	name?: unknown;
 }
 
@@ -94,41 +106,64 @@ export function historyTheme(
 	if (!theme && !masterThemePaths) {
 		return undefined;
 	}
-	const { colorScheme, fontScheme, name } = (theme ?? {}) as HistoryTheme;
+	const { colorScheme, fontScheme, formatScheme, name } = (theme ?? {}) as HistoryTheme;
 	return {
 		...(colorScheme ? { colorScheme: plain(colorScheme) } : {}),
 		...(fontScheme ? { fontScheme: plain(fontScheme) } : {}),
+		...(formatScheme ? { formatScheme: plain(formatScheme) } : {}),
 		...(name ? { name } : {}),
 		...(masterThemePaths ? { masterThemePaths } : {}),
 	};
 }
 
+/** `theme` without its format scheme, which alone never makes a step cross a theme change. */
+function withoutFormatScheme(theme: HistoryTheme | undefined): HistoryTheme | null {
+	if (!theme) {
+		return null;
+	}
+	const { formatScheme: _format, ...rest } = theme;
+	return rest;
+}
+
 /**
  * The theme an undo or redo from `current` to `target` has to put back, or `undefined` when the
- * step crosses no theme change (or `target` recorded none).
+ * step crosses no theme change (or `target` recorded none). A step whose records differ only in the
+ * format scheme (an Effects pick) crosses none.
  */
 export function crossedHistoryTheme(
 	current: HistoryTheme | undefined,
 	target: HistoryTheme | undefined,
 ): HistoryTheme | undefined {
-	return target && !sameJson(current ?? null, target) ? target : undefined;
+	return target && !sameJson(withoutFormatScheme(current), withoutFormatScheme(target))
+		? target
+		: undefined;
+}
+
+/** The theme part the deck's theme comes from (the first master's), as `theme` records it. */
+function deckPartOf(theme: HistoryTheme | undefined): string | undefined {
+	return Object.values(theme?.masterThemePaths ?? {})[0];
 }
 
 /**
  * `theme` carrying exactly the recorded parts of `target`: a part `target` does not have is
  * removed, so the restored theme records the same as the snapshot it came from. Everything else on
- * the theme (the effect scheme, for one) is kept.
+ * the theme is kept, the format scheme too unless the step from `from` puts the deck back on
+ * another theme part (a theme applied by path), whose own format scheme comes back with it.
  */
 export function withHistoryTheme<T extends ThemeLike>(
 	theme: T | null | undefined,
 	target: HistoryTheme,
+	from?: HistoryTheme,
 ): T {
-	const { masterThemePaths: _masters, ...parts } = target;
+	const { masterThemePaths: _masters, formatScheme, ...parts } = target;
 	const next: Record<string, unknown> = { ...theme, ...plain(parts) };
 	for (const key of RECORDED_KEYS) {
 		if (target[key] === undefined) {
 			delete next[key];
 		}
+	}
+	if (formatScheme && deckPartOf(from) !== deckPartOf(target)) {
+		next.formatScheme = plain(formatScheme);
 	}
 	return next as T;
 }
@@ -161,6 +196,7 @@ export interface ThemePartSchemes {
 	readonly name?: string | undefined;
 	readonly colorScheme: PptxThemeColorScheme;
 	readonly fontScheme: PptxThemeFontScheme;
+	readonly formatScheme?: PptxThemeFormatScheme | undefined;
 }
 
 /**
@@ -329,5 +365,5 @@ export function restoreCrossedTheme<T extends ThemeLike>(
 		return undefined;
 	}
 	void writeThemeParts(handler, current, crossed, loadedName);
-	return withHistoryTheme(theme, crossed);
+	return withHistoryTheme(theme, crossed, current);
 }

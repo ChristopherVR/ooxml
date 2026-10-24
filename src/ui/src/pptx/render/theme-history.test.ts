@@ -69,7 +69,12 @@ describe('history theme records', () => {
 	it('records the schemes and the name in one order, as a copy', () => {
 		const theme = { name: 'Facet', fontScheme: ARIAL, colorScheme: FACET, formatScheme: 'x' };
 		const recorded = historyTheme(theme);
-		expect(Object.keys(recorded ?? {})).toStrictEqual(['colorScheme', 'fontScheme', 'name']);
+		expect(Object.keys(recorded ?? {})).toStrictEqual([
+			'colorScheme',
+			'fontScheme',
+			'formatScheme',
+			'name',
+		]);
 		expect(recorded?.colorScheme).not.toBe(FACET);
 		expect(historyTheme(undefined)).toBeUndefined();
 		expect(historyTheme({ name: '' })).toStrictEqual({});
@@ -249,6 +254,34 @@ describe('a step across a theme applied by path', () => {
 				historyTheme({ colorScheme: OFFICE }, masters),
 			),
 		).toBeDefined();
+	});
+
+	it('carries the format scheme with a crossing, which alone crosses nothing', () => {
+		const tide = {
+			name: 'Tide',
+			fillStyles: [],
+			lineStyles: [],
+			effectStyles: [],
+			backgroundFillStyles: [],
+		};
+		const ember = { ...tide, name: 'Ember' };
+		const before = historyTheme({ colorScheme: OFFICE, formatScheme: tide }, masters);
+		const after = historyTheme({ colorScheme: FACET, formatScheme: ember }, switched);
+		expect(before.formatScheme).toStrictEqual(tide);
+		// An Effects pick changes only the format scheme: no theme part write follows from it.
+		expect(
+			crossedHistoryTheme(
+				before,
+				historyTheme({ colorScheme: OFFICE, formatScheme: ember }, masters),
+			),
+		).toBeUndefined();
+		const restored = restoreCrossedTheme(
+			{ colorScheme: FACET, formatScheme: ember },
+			after,
+			before,
+			null,
+		);
+		expect(restored).toStrictEqual({ colorScheme: OFFICE, formatScheme: tide });
 	});
 
 	it('puts each recorded master back on its part, and keeps the array when none moved', () => {
