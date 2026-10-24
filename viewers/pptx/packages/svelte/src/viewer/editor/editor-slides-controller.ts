@@ -1,4 +1,9 @@
-import { resetSlideLayoutPath, insertSlidePaste, applySlidePasteTemplates } from 'ooxml-ui/pptx';
+import {
+	applySlidePasteTemplates,
+	insertedLayoutCompletion,
+	insertSlidePaste,
+	resetSlideLayoutPath,
+} from 'ooxml-ui/pptx';
 import type { SlidePasteRequest, SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per action, several separated by
@@ -250,16 +255,21 @@ export class EditorSlidesController {
 				.applyLayoutToSlide(newIndex, layoutPath, [...this.#editor.slides])
 				.then(async (updated) => {
 					const templateElements = await handler.getTemplateElementsForSlide(updated.id);
-					if (this.#editor.slides[newIndex]?.id === draft.id) {
+					// An edit made to the new slide while its layout loaded stays; it takes the artwork.
+					const completion = insertedLayoutCompletion(this.#editor.slides[newIndex], draft);
+					if (completion === 'none') {
+						return undefined;
+					}
+					if (completion === 'replace') {
 						this.#editor.slides = this.#editor.slides.map((slide, i) =>
 							i === newIndex ? updated : slide,
 						);
-						this.#editor.templateElementsBySlideId = {
-							...this.#editor.templateElementsBySlideId,
-							[updated.id]: templateElements,
-						};
-						this.#editor.commitChange();
 					}
+					this.#editor.templateElementsBySlideId = {
+						...this.#editor.templateElementsBySlideId,
+						[updated.id]: templateElements,
+					};
+					this.#editor.commitChange();
 					return undefined;
 				})
 				.catch(() => undefined);
