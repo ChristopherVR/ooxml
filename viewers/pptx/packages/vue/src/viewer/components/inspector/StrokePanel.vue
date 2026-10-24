@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import { SHAPE_LINE_SECTIONS, shapeOutlineChange, strokeColorOf } from 'ooxml-ui/pptx';
+import { SHAPE_LINE_SECTIONS, strokeColorOf, strokeColorPatch } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -52,22 +52,17 @@ function patchShapeStyle(next: Partial<ShapeStyle>): void {
 const strokeColorEvents = useLiveElementColor({
 	element: () => props.element,
 	colorOf: strokeColorOf,
-	patch: (el, hex) => {
-		const style = hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
-		return {
-			shapeStyle: { ...style, ...shapeOutlineChange(hex, undefined, style) },
-		} as Partial<PptxElement>;
-	},
+	patch: (el, hex) => strokeColorPatch(el, hex),
 	commit: (patch) => emit('update', patch),
 });
 
 function onColorPick(hex: string): void {
-	patchShapeStyle(shapeOutlineChange(hex, undefined, shapeStyle.value ?? {}));
+	emit('update', strokeColorPatch(props.element, hex));
 	recentColors?.push(hex);
 }
 
 function onThemeColor(commit: ThemeColorPickerCommit): void {
-	patchShapeStyle(shapeOutlineChange(commit.hex, commit.ref, shapeStyle.value ?? {}));
+	emit('update', strokeColorPatch(props.element, commit.hex, commit.ref));
 	recentColors?.push(commit.hex);
 }
 </script>
