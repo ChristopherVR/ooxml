@@ -70,6 +70,35 @@ describe('undo of Home > Layout and of New Slide from a layout', () => {
 		expect(svc.canUndo()).toBeFalsy();
 	});
 
+	it('keeps an edit made to the new slide while its layout loads', async () => {
+		const svc = new EditorStateService();
+		svc.setSlides([{ ...slide('s1', []), layoutPath: L1 }]);
+		let layoutArrives: () => void = () => {};
+		const handler = {
+			applyLayoutToSlide: vi.fn(async (index: number, layoutPath: string, slides: PptxSlide[]) => {
+				await new Promise<void>((resolve) => {
+					layoutArrives = resolve;
+				});
+				return { ...slides[index]!, layoutPath, layoutName: 'Remapped' };
+			}),
+			getTemplateElementsForSlide: vi.fn().mockResolvedValue([element('layout-art')]),
+		};
+		Object.assign(svc, { loader: { getHandler: () => handler, headerFooter: signal({}) } });
+
+		svc.addSlide(0, L2);
+		await vi.waitFor(() => expect(handler.applyLayoutToSlide).toHaveBeenCalledOnce());
+		svc.slides.set(
+			svc
+				.slides()
+				.map((each, index) => (index === 1 ? { ...each, elements: [element('typed')] } : each)),
+		);
+		layoutArrives();
+		const inserted = () => svc.slides()[1]!;
+		await vi.waitFor(() => expect(svc.templateElementsBySlideId()[inserted().id]).toHaveLength(1));
+		expect(inserted().elements.map((item) => item.id)).toStrictEqual(['typed']);
+		expect(inserted().layoutName).toBeUndefined();
+	});
+
 	it('one Undo takes back a new slide from a layout', async () => {
 		const svc = inPlaceService();
 		svc.addSlide(0, L2);

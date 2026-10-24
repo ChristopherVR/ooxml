@@ -24,6 +24,7 @@ import {
 	cloneElementForPaste,
 	createEditorHistoryController,
 	groupSlidesBySection,
+	insertedLayoutCompletion,
 	isTemplateElement,
 	isTemplateElementId,
 	makeCloneId,
@@ -219,7 +220,8 @@ export class EditorStateService {
 
 	private async hydrateInsertedSlideLayout(index: number, id: string, path: string): Promise<void> {
 		const handler = this.loader?.getHandler();
-		if (!handler) {
+		const placed = this.slides()[index];
+		if (!handler || placed?.id !== id) {
 			return;
 		}
 		const updated = await handler
@@ -229,10 +231,14 @@ export class EditorStateService {
 			return;
 		}
 		const artwork = await handler.getTemplateElementsForSlide(id).catch(() => []);
-		if (this.slides()[index]?.id !== id) {
+		// An edit made to the new slide while its layout loaded stays; it takes only the artwork.
+		const completion = insertedLayoutCompletion(this.slides()[index], placed);
+		if (completion === 'none') {
 			return;
 		}
-		this.slides.set(this.slides().map((slide, i) => (i === index ? updated : slide)));
+		if (completion === 'replace') {
+			this.slides.set(this.slides().map((slide, i) => (i === index ? updated : slide)));
+		}
 		this.templateElementsBySlideId.set({ ...this.templateElementsBySlideId(), [id]: artwork });
 	}
 
