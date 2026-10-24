@@ -727,7 +727,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (ctx.connectorShapeIds) {
 			applyConnectorShapeIds(shape, el, ctx.connectorShapeIds);
 		}
-		this.serializeElementActions(shape, el, ctx.resolveHyperlinkRelationshipId);
+		this.serializeElementActions(shape, el, ctx);
 		this.serializeShapeLocks(shape, el);
 
 		// Selection Pane visibility and name. Applied before the template branch

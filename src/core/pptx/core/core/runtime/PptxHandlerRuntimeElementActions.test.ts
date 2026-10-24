@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { XmlObject, PptxAction, PptxElement } from '../../types';
+import type { ActionRelationshipContext } from './PptxHandlerRuntimeElementActions';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
 
 interface RuntimeWithProtected {
@@ -22,15 +23,24 @@ interface RuntimeWithProtected {
 	serializeElementActions(
 		shape: XmlObject,
 		el: PptxElement,
-		resolveHyperlinkRelationshipId: (target: string, forceExternal?: boolean) => string | undefined,
+		links: ActionRelationshipContext,
 	): void;
 	serializeSingleAction(
 		cNvPr: XmlObject,
 		nodeName: string,
 		action: PptxAction | undefined,
-		resolveHyperlinkRelationshipId: (target: string, forceExternal?: boolean) => string | undefined,
+		links: ActionRelationshipContext,
 	): void;
 }
+
+/** A part with the given relationships, resolving new targets through `resolve`. */
+const links = (
+	resolve: (target: string, forceExternal?: boolean) => string | undefined,
+	relationships: Record<string, string> = {},
+): ActionRelationshipContext => ({
+	resolveHyperlinkRelationshipId: resolve,
+	getSlideRelationshipMap: () => new Map(Object.entries(relationships)),
+});
 
 const runtime = new PptxHandlerRuntime() as unknown as RuntimeWithProtected;
 
@@ -41,8 +51,9 @@ const serializeSingleAction = (
 	cNvPr: XmlObject,
 	nodeName: string,
 	action: PptxAction | undefined,
-	resolve: (target: string) => string | undefined,
-) => runtime.serializeSingleAction(cNvPr, nodeName, action, resolve);
+	resolve: (target: string, forceExternal?: boolean) => string | undefined,
+	relationships?: Record<string, string>,
+) => runtime.serializeSingleAction(cNvPr, nodeName, action, links(resolve, relationships));
 
 /** A minimal element carrying only what the lock writer reads. */
 function elementWithLocks(type: PptxElement['type'], locks: PptxElement['locks']): PptxElement {
@@ -195,7 +206,11 @@ describe('getCnvPrNode', () => {
 			height: 10,
 			actionClick: { url: 'https://example.com' },
 		} as unknown as PptxElement;
-		runtime.serializeElementActions(shape, media, () => 'rId9');
+		runtime.serializeElementActions(
+			shape,
+			media,
+			links(() => 'rId9'),
+		);
 		expect(cNvPr['a:hlinkClick']).toStrictEqual({ '@_r:id': 'rId9' });
 	});
 });
@@ -379,6 +394,29 @@ describe('serializeSingleAction', () => {
 		expect(node['@_r:id']).toBe('rId10');
 	});
 
+	it('resolves the url again when the kept rId names another target on this part', () => {
+		const cNvPr: XmlObject = {};
+		const resolver = (target: string) =>
+			target === 'https://example.org/new' ? 'rId7' : undefined;
+		const relationships = { rId2: 'https://example.com/old' };
+		serializeSingleAction(
+			cNvPr,
+			'a:hlinkClick',
+			{ rId: 'rId2', url: 'https://example.org/new' },
+			resolver,
+			relationships,
+		);
+		expect((cNvPr['a:hlinkClick'] as XmlObject)['@_r:id']).toBe('rId7');
+		serializeSingleAction(
+			cNvPr,
+			'a:hlinkClick',
+			{ rId: 'rId2', url: 'https://example.com/old' },
+			resolver,
+			relationships,
+		);
+		expect((cNvPr['a:hlinkClick'] as XmlObject)['@_r:id']).toBe('rId2');
+	});
+
 	it('writes an empty @_r:id when both rId is undefined and resolver returns undefined', () => {
 		// Real PowerPoint always writes `r:id` on `a:hlinkClick`, even as an
 		// empty string, when the action has no backing relationship
@@ -555,7 +593,11 @@ describe('serializeElementActions - decorative extension (issue G16)', () => {
 			height: 10,
 			isDecorative: true,
 		} as unknown as PptxElement;
-		runtime.serializeElementActions(shape, el, () => undefined);
+		runtime.serializeElementActions(
+			shape,
+			el,
+			links(() => undefined),
+		);
 		const extLst = cNvPr['a:extLst'] as XmlObject;
 		const ext = extLst['a:ext'] as XmlObject;
 		expect(ext['@_uri']).toBe('{C183D7F6-B498-43B3-948B-1728B52AA6E4}');
@@ -574,7 +616,11 @@ describe('serializeElementActions - decorative extension (issue G16)', () => {
 			width: 10,
 			height: 10,
 		} as unknown as PptxElement;
-		runtime.serializeElementActions(shape, el, () => undefined);
+		runtime.serializeElementActions(
+			shape,
+			el,
+			links(() => undefined),
+		);
 		expect(cNvPr['a:extLst']).toStrictEqual(existingExtLst);
 	});
 });

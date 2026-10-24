@@ -11,6 +11,7 @@ import { PptxSlideRelationshipRegistry, PptxShapeIdValidator } from '../builders
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { PptxSaveConstants } from '../factories';
 import { slideBackgroundOrigin } from './authored-slide-background';
+import { relativePartTarget } from './chart-part-registration';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveElementWriter';
 import type { SlideShapeCollectors, SaveSlideContext } from './PptxHandlerRuntimeSaveElementWriter';
 import { applyShapeIdMapToSlide } from './save-structural-id-gate';
@@ -176,6 +177,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		slide: PptxSlide,
 		saveSession: PptxSaveState,
 		constants: PptxSaveConstants,
+		slidePaths: readonly string[] = [],
 	): Promise<void> {
 		// Skip re-serialization of unmodified slides to prevent spurious diffs
 		if (this.canSkipSlideSave(slide)) {
@@ -431,6 +433,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			resolveHyperlinkRelationshipId: (target: string, forceExternal?: boolean) =>
 				slideRelationshipRegistry.resolveHyperlinkRelationshipId(target, forceExternal),
 			getSlideRelationshipMap: () => slideRelationshipRegistry.toRelationshipMap(),
+			slideTargetAt: (index: number) => {
+				const target = slidePaths[index];
+				return target ? relativePartTarget(slide.id, target) : undefined;
+			},
 			resolvedMediaBytes,
 			saveSession,
 			slideImageRelationshipType: constants.slideImageRelationshipType,

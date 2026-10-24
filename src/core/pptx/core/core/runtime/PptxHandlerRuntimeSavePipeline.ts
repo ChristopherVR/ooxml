@@ -114,8 +114,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Process each slide (this may embed new media files that register
 		// extensions in usedMediaPaths, so content-types must be updated after).
 		this.templateElementBaselines.beginSave();
+		// Every slide has its part by now (new ones were given theirs above): a slide jump made in
+		// the editor resolves its target slide's part from its index.
+		const slidePaths = slides.map((slide) => slide.id);
 		for (const slide of slides) {
-			await this.processSlideForSave(slide, saveSession, saveConstants);
+			await this.processSlideForSave(slide, saveSession, saveConstants, slidePaths);
 		}
 		// The layout/master parts patched above are flushed further down; from
 		// here on the copies written this save are what those parts hold.
