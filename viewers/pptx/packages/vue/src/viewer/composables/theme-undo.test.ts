@@ -39,7 +39,7 @@ async function open() {
 	const pptxTheme = ref<PptxTheme | undefined>(data.theme);
 	const themeColorMap = ref<Record<string, string> | undefined>(data.themeColorMap);
 	const handlerRef = shallowRef<PptxHandler | null>(handler);
-	const loadedName = () => loadedThemeName(data.themeOptions, data.slideMasters?.[0]?.themePath);
+	const loadedName = () => loadedThemeName(data.themeOptions, data.slideMasters);
 	const parts = scope.run(() => {
 		const history = useEditorHistory(slides, templateElementsBySlideId, {
 			theme: { theme: pptxTheme, themeColorMap, handler: handlerRef, loadedThemeName: loadedName },
