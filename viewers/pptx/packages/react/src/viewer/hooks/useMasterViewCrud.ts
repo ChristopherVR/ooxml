@@ -33,7 +33,6 @@ export interface UseMasterViewCrudInput {
 	slides: PptxSlide[];
 	slideMasters: PptxSlideMaster[];
 	target: MasterViewTarget | null;
-	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 	setSlideMasters: React.Dispatch<React.SetStateAction<PptxSlideMaster[]>>;
 	setActiveMasterIndex: React.Dispatch<React.SetStateAction<number>>;
 	setActiveLayoutIndex: React.Dispatch<React.SetStateAction<number | null>>;
@@ -55,7 +54,6 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		slides,
 		slideMasters,
 		target,
-		setSlides,
 		setSlideMasters,
 		setActiveMasterIndex,
 		setActiveLayoutIndex,
@@ -116,10 +114,12 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 				return;
 			}
 
-			// Adopt the helper's fresh handler/data wholesale (it does not mutate
-			// the ones it was given) through React's normal per-field state slots.
+			// Adopt the helper's fresh handler and masters (it does not mutate the
+			// ones it was given). The slides stay as they are: the reloaded ones
+			// carry no loaded pictures (each shows as a placeholder), and they hold
+			// nothing the command changed. The previous handler stays alive: the
+			// slides on screen and the undo stack still show its pictures.
 			handlerRef.current = result.handler;
-			setSlides(result.data.slides);
 			setSlideMasters(result.data.slideMasters ?? []);
 			setActiveMasterIndex(result.target.masterIndex);
 			setActiveLayoutIndex(result.target.layoutIndex);
@@ -133,7 +133,6 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 			t,
 			data,
 			pushToast,
-			setSlides,
 			setSlideMasters,
 			setActiveMasterIndex,
 			setActiveLayoutIndex,
