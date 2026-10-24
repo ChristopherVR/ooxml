@@ -1,9 +1,16 @@
 import {
 	applyMasterViewCrudAction,
+	historyStepUsesParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	removedSlideMasterParts,
 } from 'ooxml-ui/pptx';
-import type { MasterViewCrudAction, MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
+import type {
+	MasterViewCrudAction,
+	MasterViewCrudActionId,
+	MasterViewTarget,
+	SlideMasterHistoryStep,
+} from 'ooxml-ui/pptx';
 /**
  * useMasterViewCrud: the Slide Master view sidebar's
  * Insert/Duplicate/Delete/Rename Layout and Slide Master commands.
@@ -37,6 +44,8 @@ export interface UseMasterViewCrudInput {
 	markDirty: () => void;
 	/** Snapshot `slides` onto the undo stack before adopting the CRUD result. */
 	pushHistory: () => void;
+	/** Drop the undo and redo steps that would bring back a part a command removed. */
+	forgetHistory: (reaches: (step: SlideMasterHistoryStep) => boolean) => void;
 }
 
 export interface UseMasterViewCrudResult {
@@ -85,9 +94,10 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		}
 
 		input.pushHistory();
+		const deck = input.deckData();
 		const result = await applyMasterViewCrudAction(
 			handler,
-			input.deckData(),
+			deck,
 			id,
 			input.target(),
 			name === undefined ? undefined : { name },
@@ -99,6 +109,10 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 
 		input.handler.value = result.handler;
 		input.slideMasters.value = result.data.slideMasters ?? [];
+		const removed = removedSlideMasterParts(deck, result.data);
+		if (removed.length > 0) {
+			input.forgetHistory((step) => historyStepUsesParts(step, removed));
+		}
 		if (result.target.layoutIndex === null) {
 			input.onSelectMaster(result.target.masterIndex);
 		} else {

@@ -68,6 +68,11 @@ export interface EditorHistoryResult {
 	/** Drop all undo/redo history (e.g. when new content is loaded). */
 	clearHistory: () => void;
 	/**
+	 * Drop the undo and redo steps that would bring back a state `reaches` matches, with the steps
+	 * behind them: a Slide Master view command removed a layout the package cannot get back.
+	 */
+	forgetHistory: (reaches: (snapshot: HistorySnapshot) => boolean) => void;
+	/**
 	 * Apply a new File > Options > Advanced > "Maximum number of undos" value
 	 * at runtime (`resolveHistoryDepth`). Trims the past stack immediately if
 	 * the new limit is smaller.
@@ -83,7 +88,7 @@ export interface EditorHistoryResult {
  * One undoable snapshot: the slide array plus (optionally) the separate template
  * (master/layout) element store, so edits in `editTemplateMode` undo/redo too.
  */
-interface HistorySnapshot {
+export interface HistorySnapshot {
 	slides: PptxSlide[];
 	template: TemplateElementMap;
 	/** The theme's colour scheme, font scheme and name, and the colour map built from them. */
@@ -259,6 +264,10 @@ export function useEditorHistory(
 		stack.clear();
 	};
 
+	const forgetHistory = (reaches: (snapshot: HistorySnapshot) => boolean): void => {
+		stack.forget(reaches);
+	};
+
 	const setMaxDepth = (depth: number): void => {
 		stack.setMaxDepth(depth);
 	};
@@ -272,6 +281,7 @@ export function useEditorHistory(
 		undo,
 		redo,
 		clearHistory,
+		forgetHistory,
 		setMaxDepth,
 	};
 }

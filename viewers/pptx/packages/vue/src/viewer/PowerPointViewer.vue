@@ -1310,6 +1310,7 @@ const masterViewCrud = useMasterViewCrud({
 		autosave.isDirty.value = true;
 	},
 	pushHistory: history.pushHistory,
+	forgetHistory: history.forgetHistory,
 });
 
 // -- Sections (group the slide rail) -----------------------------------
