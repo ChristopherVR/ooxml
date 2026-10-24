@@ -269,4 +269,18 @@ describe('svelte theme by path', () => {
 		});
 		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 	});
+
+	it("the moved master's style references take theme 2's format scheme, and Undo takes it back", async () => {
+		const deck = await openTwoThemes({ formatSchemes: true });
+		const shadow = () =>
+			deck.editor.slides[0]?.elements.find((element) => element.name === TWO_THEMES.styledShapeName)
+				?.shapeStyle?.shadowColor;
+		expect(shadow()).toBeUndefined();
+		await deck.actions.applyThemeByPath(theme2.path, false);
+		expect(shadow()).toBe('#000000');
+		expect(deck.editor.theme?.formatScheme?.name).toBe('Ember');
+		deck.editor.undo();
+		expect(shadow()).toBeUndefined();
+		expect(deck.editor.theme?.formatScheme?.name).toBe('Tide');
+	});
 });

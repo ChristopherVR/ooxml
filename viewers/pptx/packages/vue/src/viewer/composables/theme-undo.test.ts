@@ -353,4 +353,19 @@ describe('vue theme by path', () => {
 		await expect(deck.saved()).resolves.toStrictEqual(LOADED);
 		deck.scope.stop();
 	});
+
+	it("the moved master's style references take theme 2's format scheme, and Undo takes it back", async () => {
+		const deck = await openTwoThemes({ formatSchemes: true });
+		const shadow = () =>
+			deck.slides.value[0]?.elements.find((element) => element.name === TWO_THEMES.styledShapeName)
+				?.shapeStyle?.shadowColor;
+		expect(shadow()).toBeUndefined();
+		await deck.actions.applyThemeByPath(theme2.path, false);
+		expect(shadow()).toBe('#000000');
+		expect(deck.pptxTheme.value?.formatScheme?.name).toBe('Ember');
+		deck.history.undo();
+		expect(shadow()).toBeUndefined();
+		expect(deck.pptxTheme.value?.formatScheme?.name).toBe('Tide');
+		deck.scope.stop();
+	});
 });

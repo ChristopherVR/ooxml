@@ -155,6 +155,7 @@ interface TwoThemesDeck {
 	theme1: { path: string; colors: { accent1: string }; major: string };
 	theme2: { path: string; colors: { accent1: string }; major: string };
 	shapeName: string;
+	styledShapeName: string;
 }
 
 /**
@@ -171,9 +172,12 @@ const TWO_THEMES_HELPER = resolve(
  * Presentation properties > Theme on the two-themes deck (slides 1 and 2 on master 1, "Tide", accent
  * 1 blue; slide 3 on master 2, "Ember", accent 1 red), through the inspector's deck action.
  */
-async function openTwoThemes(options?: { scriptFaces?: boolean }) {
+async function openTwoThemes(options?: { scriptFaces?: boolean; formatSchemes?: boolean }) {
 	const helper = (await import(/* @vite-ignore */ TWO_THEMES_HELPER)) as {
-		buildTwoThemesDeck(options?: { scriptFaces?: boolean }): Promise<Uint8Array>;
+		buildTwoThemesDeck(options?: {
+			scriptFaces?: boolean;
+			formatSchemes?: boolean;
+		}): Promise<Uint8Array>;
 		themePartHeadingFaces(bytes: Uint8Array): Promise<Record<string, string | undefined>>;
 		TWO_THEMES: TwoThemesDeck;
 	};
@@ -291,5 +295,24 @@ describe('vanilla theme by path', () => {
 			masters: ['theme1.xml', 'theme2.xml'],
 			accents: [theme1.colors.accent1, theme2.colors.accent1],
 		});
+	});
+
+	it("the moved master's style references take theme 2's format scheme, and Undo takes it back", async () => {
+		const deck = await openTwoThemes({ formatSchemes: true });
+		const shadow = () => {
+			const shape = deck.store
+				.get()
+				.slides[0]?.elements.find((element) => element.name === deck.styledShapeName) as
+				| { shapeStyle?: { shadowColor?: string } }
+				| undefined;
+			return shape?.shapeStyle?.shadowColor;
+		};
+		expect(shadow()).toBeUndefined();
+		await deck.deck.applyThemeByPath(deck.theme2.path, false);
+		expect(shadow()).toBe('#000000');
+		expect(deck.store.get().formatScheme?.name).toBe('Ember');
+		deck.ops.undo();
+		expect(shadow()).toBeUndefined();
+		expect(deck.store.get().formatScheme?.name).toBe('Tide');
 	});
 });

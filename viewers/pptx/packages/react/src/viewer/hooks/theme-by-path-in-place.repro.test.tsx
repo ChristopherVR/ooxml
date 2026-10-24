@@ -170,4 +170,26 @@ describe('react theme by path', () => {
 			await expect(saved()).resolves.toStrictEqual(LOADED);
 		});
 	});
+
+	it("the moved master's style references take theme 2's format scheme, and Undo takes it back", async () => {
+		await withHarness(await buildTwoThemesDeck({ formatSchemes: true }), async () => {
+			await openOnSlideTwo();
+			const shadow = () =>
+				live().slides[0]?.elements.find((element) => element.name === TWO_THEMES.styledShapeName)
+					?.shapeStyle?.shadowColor;
+			expect(shadow()).toBeUndefined();
+			await act(async () => {
+				await live().themeHandlers.handleApplyTheme(theme2.path, false);
+			});
+			await flush();
+			expect(shadow()).toBe('#000000');
+			expect(live().theme?.formatScheme?.name).toBe('Ember');
+			await act(async () => {
+				live().history.handleUndo();
+			});
+			await flush();
+			expect(shadow()).toBeUndefined();
+			expect(live().theme?.formatScheme?.name).toBe('Tide');
+		});
+	});
 });
