@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.26.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.2) - 2026-10-24
+
+### Bug Fixes
+
+- **pptx:** Fill the outer corners of a widened outline clip ([3775336](https://github.com/ChristopherVR/ooxml/commit/377533638d18237cd19b45620e9f2e2cd9317844))
+- **pptx:** Match morph text the way powerpoint carries it ([76a2b88](https://github.com/ChristopherVR/ooxml/commit/76a2b8894e82a88e627e90c81003af9709927270))
+- **pptx:** Keep outlines whole through morphs and on inset lines ([1440535](https://github.com/ChristopherVR/ooxml/commit/1440535af878fec7512ed72dfc386a49f2c798ee))
+- **docx:** Paint page-view shapes without the chart frame's clip ([a07593b](https://github.com/ChristopherVR/ooxml/commit/a07593b5148ba870babdccd493dd8be826cd887a))
+- **ui:** Let smartart outlines paint past the drawing's edge ([81f76ce](https://github.com/ChristopherVR/ooxml/commit/81f76ce3832197fa5686a5617dd37a6d09a3b123))
+- **pptx:** Stop the fill showing along a widened outline's edge ([52251e3](https://github.com/ChristopherVR/ooxml/commit/52251e39b5e74b0674e19380eee93c963c983a54))
+
 ## [1.26.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.1) - 2026-10-23
 
 ### Bug Fixes

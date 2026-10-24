@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.50.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.50.2) - 2026-10-24
+
+### Bug Fixes
+
+- **pptx:** Stack the vanilla morph overlay runs in the plan's order ([91776a4](https://github.com/ChristopherVR/ooxml/commit/91776a4199f8e4a1ebf1fd8b13c5dd12b8a31ca1))
+
 ## [3.50.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.50.1) - 2026-10-23
 
 ### Bug Fixes

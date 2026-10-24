@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.25.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.25.2) - 2026-10-24
+
+### Bug Fixes
+
+- **docx:** Paint page-view shapes without the chart frame's clip ([a07593b](https://github.com/ChristopherVR/ooxml/commit/a07593b5148ba870babdccd493dd8be826cd887a))
+
 ## [1.25.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.25.1) - 2026-10-23
 
 ### Bug Fixes

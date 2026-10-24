@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.51.1) - 2026-10-24
+
+### Bug Fixes
+
+- **pptx:** Stop the fill showing along a widened outline's edge ([52251e3](https://github.com/ChristopherVR/ooxml/commit/52251e39b5e74b0674e19380eee93c963c983a54))
+
 ## [4.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.51.0) - 2026-10-23
 
 ### Features
