@@ -7,7 +7,11 @@
  * deck is the deck as loaded), and `loader.slides` is left alone because the viewer re-seeds
  * itself from it (undo history cleared, the deck marked saved, back to the first slide).
  */
-import { applyMasterViewCrudAction } from 'ooxml-ui/pptx';
+import {
+	applyMasterViewCrudAction,
+	historyStepUsesParts,
+	removedSlideMasterParts,
+} from 'ooxml-ui/pptx';
 import type {
 	MasterViewCrudActionId,
 	MasterViewCrudActionOptions,
@@ -54,15 +58,20 @@ export async function runMasterViewCrud(
 	if (!handler || !loader.parsedData()) {
 		return undefined;
 	}
+	const deck = masterViewDeck(loader, request.slides);
 	const result = await applyMasterViewCrudAction(
 		handler,
-		masterViewDeck(loader, request.slides),
+		deck,
 		request.id,
 		request.target,
 		request.options,
 	);
 	if (result.ok) {
 		loader.adoptMasterViewData(result.handler, result.data, true);
+		const removed = removedSlideMasterParts(deck, result.data);
+		if (removed.length > 0) {
+			editor.forgetHistory((step) => historyStepUsesParts(step, removed));
+		}
 		editor.dirty.set(true);
 	}
 	return result;
