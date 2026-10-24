@@ -1,10 +1,4 @@
-import {
-	crossedHistoryTheme,
-	historyTheme,
-	loadedThemeName,
-	withHistoryTheme,
-	writeThemeParts,
-} from 'ooxml-ui/pptx';
+import { historyTheme, loadedThemeName, restoreCrossedTheme } from 'ooxml-ui/pptx';
 import type { HistoryTheme } from 'ooxml-ui/pptx';
 import type { PptxHandler } from 'pptx-viewer-core';
 
@@ -22,7 +16,7 @@ function storeTheme(state: ViewerState) {
 }
 
 /** What an undo step records of the store's theme. */
-export function storeHistoryTheme(state: ViewerState): HistoryTheme | undefined {
+export function storeHistoryTheme(state: ViewerState): HistoryTheme {
 	return historyTheme(storeTheme(state));
 }
 
@@ -33,17 +27,15 @@ export function restoreStoreTheme(
 	current: HistoryTheme | undefined,
 	target: HistoryTheme | undefined,
 ): void {
-	const crossed = crossedHistoryTheme(current, target);
-	if (!crossed) {
-		return;
-	}
 	const state = store.get();
-	const next = withHistoryTheme(storeTheme(state), crossed);
-	store.set({ colorScheme: next.colorScheme, fontScheme: next.fontScheme, themeName: next.name });
-	void writeThemeParts(
-		handler,
+	const next = restoreCrossedTheme(
+		storeTheme(state),
 		current,
-		crossed,
-		loadedThemeName(state.themeOptions, state.slideMasters[0]?.themePath),
+		target,
+		handler,
+		loadedThemeName(state.themeOptions, state.slideMasters),
 	);
+	if (next) {
+		store.set({ colorScheme: next.colorScheme, fontScheme: next.fontScheme, themeName: next.name });
+	}
 }
