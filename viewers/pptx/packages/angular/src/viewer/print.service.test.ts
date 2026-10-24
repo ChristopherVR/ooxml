@@ -3,8 +3,18 @@ import { TranslateService } from '@ngx-translate/core';
 import type { ChartPptxElement, PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { translationsDe } from '../../../locales/src';
 import { DEFAULT_PRINT_SETTINGS } from './print-helpers';
 import { PrintService } from './print.service';
+
+/** ngx-translate's `instant` over the German dictionary (`{{name}}` interpolation). */
+function germanInstant(key: string, params?: Record<string, unknown>): string {
+	let message: string = translationsDe[key] ?? key;
+	for (const [name, value] of Object.entries(params ?? {})) {
+		message = message.replaceAll(`{{${name}}}`, String(value));
+	}
+	return message;
+}
 
 function chartSlide(): PptxSlide {
 	const chart: ChartPptxElement = {
@@ -44,14 +54,11 @@ describe('printService SVG slides', () => {
 		vi.restoreAllMocks();
 	});
 
-	function service(): PrintService {
+	function service(
+		instant: (key: string, params?: Record<string, unknown>) => string = (key) => key,
+	): PrintService {
 		const injector = Injector.create({
-			providers: [
-				{
-					provide: TranslateService,
-					useValue: { instant: (key: string) => key },
-				},
-			],
+			providers: [{ provide: TranslateService, useValue: { instant } }],
 		});
 		return runInInjectionContext(injector, () => new PrintService());
 	}
@@ -126,5 +133,62 @@ describe('printService SVG slides', () => {
 		);
 
 		expect(String(write.mock.calls.at(-1)?.[0])).toContain('Confidential - Acme Corp');
+	});
+
+	it('captures the slides when the SVG export throws', async () => {
+		const captureSlide = vi.fn(async () => 'data:image/png;base64,raster');
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const broken = { ...chartSlide(), elements: undefined } as unknown as PptxSlide;
+
+		const opened = await service().print(
+			{ ...DEFAULT_PRINT_SETTINGS, printWhat: 'slides' },
+			[broken],
+			0,
+			captureSlide,
+		);
+
+		expect(opened).toBeTruthy();
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringContaining('falling back to raster'),
+			expect.anything(),
+		);
+		expect(captureSlide).toHaveBeenCalledExactlyOnceWith(0);
+		expect(String(write.mock.calls.at(-1)?.[0])).toContain('data:image/png;base64,raster');
+	});
+
+	it('titles the print window in the viewer language', async () => {
+		const captureSlide = vi.fn(async () => 'data:image/png;base64,raster');
+		const titles: string[] = [];
+		for (const printWhat of ['slides', 'outline', 'notes', 'handouts'] as const) {
+			await service(germanInstant).print(
+				{ ...DEFAULT_PRINT_SETTINGS, printWhat, slidesPerPage: 4 },
+				[chartSlide()],
+				0,
+				captureSlide,
+			);
+			const html = String(write.mock.calls.at(-1)?.[0]);
+			titles.push(/<title>(?<title>[^<]*)<\/title>/u.exec(html)?.groups?.title ?? '');
+		}
+		expect(titles).toStrictEqual([
+			'Folien',
+			'Gliederung',
+			'Notizseiten',
+			'4 Folien pro Handzettel',
+		]);
+	});
+
+	it('opens nothing when the range selects only hidden slides', async () => {
+		const captureSlide = vi.fn(async () => 'data:image/png;base64,raster');
+		const hidden = { ...chartSlide(), hidden: true };
+
+		const opened = await service().print(
+			{ ...DEFAULT_PRINT_SETTINGS, printWhat: 'outline' },
+			[hidden],
+			0,
+			captureSlide,
+		);
+
+		expect(opened).toBeFalsy();
+		expect(window.open).not.toHaveBeenCalled();
 	});
 });
