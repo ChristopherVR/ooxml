@@ -126,8 +126,6 @@ export const translations = {
 	'pptx.ribbon.alignTop': '顶部对齐',
 	'pptx.ribbon.alignMiddle': '垂直居中',
 	'pptx.ribbon.alignBottom': '底端对齐',
-	'pptx.ribbon.distributeHorizontally': '水平分布',
-	'pptx.ribbon.distributeVertically': '垂直分布',
 	'pptx.ribbon.group': '组合',
 	'pptx.ribbon.ungroup': '取消组合',
 	'pptx.ribbon.setUpShow': '设置放映',

@@ -126,8 +126,6 @@ export const translations = {
 	'pptx.ribbon.alignTop': 'Aligner en haut',
 	'pptx.ribbon.alignMiddle': 'Aligner au milieu',
 	'pptx.ribbon.alignBottom': 'Aligner en bas',
-	'pptx.ribbon.distributeHorizontally': 'Répartir horizontalement',
-	'pptx.ribbon.distributeVertically': 'Distribuer verticalement',
 	'pptx.ribbon.group': 'Groupe',
 	'pptx.ribbon.ungroup': 'Dissocier',
 	'pptx.ribbon.setUpShow': 'Configurer le diaporama',

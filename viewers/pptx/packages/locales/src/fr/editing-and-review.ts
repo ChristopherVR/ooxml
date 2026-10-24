@@ -150,7 +150,6 @@ export const translations = {
 	'pptx.hyperlinkDialog.apply': 'Appliquer',
 	'pptx.linkTooltip.followLink': 'Ctrl+Cliquez pour suivre le lien',
 	'pptx.linkTooltip.presentationMode': 'Actif en mode présentation',
-	'pptx.properties.title': 'Propriétés du document',
 	'pptx.properties.titleLabel': 'Titre',
 	'pptx.properties.author': 'Auteur',
 	'pptx.properties.subject': 'Sujet',

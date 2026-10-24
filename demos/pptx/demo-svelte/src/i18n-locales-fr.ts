@@ -205,9 +205,7 @@ export const translationsFr: Partial<Record<TranslationKey, string>> = {
 	// Comments
 	'pptx.comments.addComment': 'Ajouter un commentaire',
 	'pptx.comments.noComments': 'Aucun commentaire',
-	'pptx.comments.author': 'Auteur',
 	'pptx.comments.resolved': 'Résolu',
-	'pptx.comments.clickToSelect': "Cliquer pour sélectionner l'élément",
 	'pptx.comments.deletedElement': 'Élément supprimé',
 	'pptx.comments.save': 'Enregistrer',
 	'pptx.comments.cancel': 'Annuler',
@@ -217,7 +215,6 @@ export const translationsFr: Partial<Record<TranslationKey, string>> = {
 	'pptx.comments.unresolve': 'Rouvrir',
 	'pptx.comments.delete': 'Supprimer',
 	'pptx.comments.commentingOn': 'Commentaire sur :',
-	'pptx.comments.commentOnElement': 'Commenter {{element}}...',
 	'pptx.comments.addCommentPlaceholder': 'Ajouter un commentaire...',
 
 	// Header & Footer
