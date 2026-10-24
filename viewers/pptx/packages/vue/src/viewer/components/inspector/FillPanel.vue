@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { fillColorOf } from 'ooxml-ui/pptx';
+import { fillColorOf, shapeStylePatch } from 'ooxml-ui/pptx';
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
@@ -77,14 +77,7 @@ function onColor(value: string): void {
 const fillColorEvents = useLiveElementColor({
 	element: () => props.element,
 	colorOf: fillColorOf,
-	patch: (el, hex) =>
-		({
-			shapeStyle: {
-				...(hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {}),
-				fillColor: hex,
-				fillColorRef: undefined,
-			},
-		}) as Partial<PptxElement>,
+	patch: (el, hex) => shapeStylePatch(el, { fillColor: hex, fillColorRef: undefined }),
 	commit: (patch) => emit('update', patch),
 });
 
