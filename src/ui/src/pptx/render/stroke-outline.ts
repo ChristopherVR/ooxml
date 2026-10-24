@@ -43,7 +43,9 @@ import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
 import { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from './shape-geometry';
+import type { StrokeClipJoin } from './stroke-clip-outset';
 import { strokeOnlyPresetPathData } from './stroke-only-preset';
+import { strokeMiterLimit } from './stroke-style';
 import { hasStrokePaint } from './stroke-paint';
 import {
 	buildSvgStrokeGradientDef,
@@ -311,6 +313,19 @@ export function straddlingStrokeWidth(element: PptxElement): number {
 }
 
 /**
+ * How the outline overlay joins its segments: the shape's `a:ln` join (round
+ * when it declares none) and the miter limit the overlay inherits from its
+ * wrapper (`a:miter/@lim`, else SVG's default of 4). The geometry cascade
+ * shapes the corners of a widened clip to match.
+ */
+export function outlineStrokeJoin(element: PptxElement): StrokeClipJoin {
+	const style = hasShapeProperties(element) ? element.shapeStyle : undefined;
+	const join =
+		style?.lineJoin === 'bevel' ? 'bevel' : style?.lineJoin === 'miter' ? 'miter' : 'round';
+	return { join, miterLimit: strokeMiterLimit(style) ?? 4 };
+}
+
+/**
  * Resolve the SVG overlay that paints an element's outline, or `undefined` when
  * the binding's CSS border is correct and cheaper (a closed shape whose line is
  * explicitly inset, `a:ln/@algn="in"`).
@@ -369,8 +384,7 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 			style?.customDashSegments,
 		),
 		lineCap: svgLineCap(style?.lineCap),
-		lineJoin:
-			style?.lineJoin === 'bevel' ? 'bevel' : style?.lineJoin === 'miter' ? 'miter' : 'round',
+		lineJoin: outlineStrokeJoin(element).join,
 	};
 }
 

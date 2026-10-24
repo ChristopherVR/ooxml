@@ -26,7 +26,7 @@ import { getRoundRectRadiusPx, getShapeType, hasShapeProperties } from 'ooxml-co
 
 import { getResolvedShapeClipPath, isIdentityRectClip } from './shape-geometry';
 import { outsetClipPathForStroke } from './stroke-clip-outset';
-import { straddlingStrokeWidth } from './stroke-outline';
+import { outlineStrokeJoin, straddlingStrokeWidth } from './stroke-outline';
 import { isStrokeOnlyPresetElement } from './stroke-only-preset';
 import { isArrowedCustomPath } from './custom-path-markers';
 
@@ -106,7 +106,13 @@ export function resolveShapeGeometry(element: PptxElement): ShapeGeometryDecisio
 			kind: 'clipPath',
 			clipPath:
 				stroke > 0
-					? outsetClipPathForStroke(clipPath, stroke, element.width, element.height)
+					? outsetClipPathForStroke(
+							clipPath,
+							stroke,
+							element.width,
+							element.height,
+							outlineStrokeJoin(element),
+						)
 					: clipPath,
 		};
 	}

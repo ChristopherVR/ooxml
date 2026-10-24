@@ -8,8 +8,10 @@
  * removed its outer half and a 1pt line on a pin or a chevron drew at 0.5pt.
  *
  * The widened clip is the original path plus one thin quad per outline
- * segment, all wound the same way so the non-zero fill rule takes their union.
- * Curves are flattened first. Fill only reaches the extra band where the
+ * segment and one join piece per vertex (mitred, bevelled or round, as the
+ * outline itself is drawn, so a corner is neither notched nor overshot), all
+ * wound the same way so the non-zero fill rule takes their union. Curves are
+ * flattened first. Fill only reaches the extra band where the
  * outline is solid and covers it, so callers use this for flat, solid lines.
  *
  * @module render/stroke-clip-outset
@@ -17,6 +19,19 @@
 import { outlinePathData } from './stroke-outline';
 
 type Point = readonly [number, number];
+
+/** How the outline joins its segments: SVG `stroke-linejoin` and `stroke-miterlimit`. */
+export interface StrokeClipJoin {
+	readonly join: 'miter' | 'round' | 'bevel';
+	/** Longest miter, as a multiple of the line width, before it is bevelled. */
+	readonly miterLimit: number;
+}
+
+/** SVG's own defaults, which is what the outline paints when nothing is declared. */
+const SVG_DEFAULT_JOIN: StrokeClipJoin = { join: 'miter', miterLimit: 4 };
+
+/** Sides of the polygon that stands in for a round join. */
+const ROUND_JOIN_STEPS = 16;
 
 /** Segments a curve is flattened into; the band only needs to hug the edge. */
 const CURVE_STEPS = 16;
@@ -198,6 +213,7 @@ const fmt = (n: number): string => String(Math.round(n * 1000) / 1000);
  * @param strokeWidth Outline width in element pixels.
  * @param width       Element width in pixels.
  * @param height      Element height in pixels.
+ * @param join        How the outline joins its segments; the corner pieces match it.
  * @returns A `path('...')` value, or the input unchanged when it cannot be widened.
  */
 export function outsetClipPathForStroke(
@@ -205,6 +221,7 @@ export function outsetClipPathForStroke(
 	strokeWidth: number,
 	width: number,
 	height: number,
+	join: StrokeClipJoin = SVG_DEFAULT_JOIN,
 ): string {
 	if (!(strokeWidth > 0)) {
 		return clipPath;
@@ -228,28 +245,65 @@ export function outsetClipPathForStroke(
 	};
 	const reference = Math.sign(signedArea(subpaths[0] as Point[])) || 1;
 	const quads: string[] = [];
+	const push = (poly: Point[]): void => {
+		const wound = Math.sign(signedArea(poly)) === reference ? poly : [...poly].reverse();
+		quads.push(`M ${wound.map(([x, y]) => `${fmt(x)} ${fmt(y)}`).join(' L ')} Z`);
+	};
 	for (const sub of subpaths) {
-		const closed = [...sub, sub[0] as Point];
-		for (let k = 0; k < closed.length - 1; k++) {
-			const a = closed[k] as Point;
-			const b = closed[k + 1] as Point;
+		// Drop zero-length segments so every vertex has a real incoming and outgoing direction.
+		const pts = sub.filter((p, k) => {
+			const next = sub[(k + 1) % sub.length] as Point;
+			return Math.hypot(next[0] - p[0], next[1] - p[1]) >= 1e-6;
+		});
+		const normals: Point[] = pts.map((a, k) => {
+			const b = pts[(k + 1) % pts.length] as Point;
 			const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-			if (len < 1e-6) {
-				continue;
+			return [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+		});
+		for (let k = 0; k < pts.length; k++) {
+			const a = pts[k] as Point;
+			const b = pts[(k + 1) % pts.length] as Point;
+			const [nx, ny] = normals[k] as Point;
+			push([
+				[a[0] + nx * half, a[1] + ny * half],
+				[b[0] + nx * half, b[1] + ny * half],
+				[b[0] - nx * half, b[1] - ny * half],
+				[a[0] - nx * half, a[1] - ny * half],
+			]);
+			const piece = joinPiece(b, normals[k] as Point, normals[(k + 1) % pts.length] as Point);
+			if (piece) {
+				push(piece);
 			}
-			const nx = (-(b[1] - a[1]) / len) * half;
-			const ny = ((b[0] - a[0]) / len) * half;
-			let quad: Point[] = [
-				[a[0] + nx, a[1] + ny],
-				[b[0] + nx, b[1] + ny],
-				[b[0] - nx, b[1] - ny],
-				[a[0] - nx, a[1] - ny],
-			];
-			if (Math.sign(signedArea(quad)) !== reference) {
-				quad = quad.reverse();
-			}
-			quads.push(`M ${quad.map(([x, y]) => `${fmt(x)} ${fmt(y)}`).join(' L ')} Z`);
 		}
+	}
+	/** The corner a join adds outside the two segment bands meeting at `v`. */
+	function joinPiece(v: Point, n1: Point, n2: Point): Point[] | undefined {
+		if (join.join === 'round') {
+			// Circumscribed, so the painted arc never reaches outside the polygon.
+			const r = half / Math.cos(Math.PI / ROUND_JOIN_STEPS);
+			return Array.from({ length: ROUND_JOIN_STEPS }, (_, i): Point => {
+				const t = (2 * Math.PI * i) / ROUND_JOIN_STEPS;
+				return [v[0] + r * Math.cos(t), v[1] + r * Math.sin(t)];
+			});
+		}
+		// The cross product of the normals is that of the directions of travel.
+		const turn = n1[0] * n2[1] - n1[1] * n2[0];
+		if (Math.abs(turn) < 1e-9) {
+			return undefined;
+		}
+		// The bands leave a gap on the outside of the turn only.
+		const side = turn > 0 ? -1 : 1;
+		const p1: Point = [v[0] + side * n1[0] * half, v[1] + side * n1[1] * half];
+		const p2: Point = [v[0] + side * n2[0] * half, v[1] + side * n2[1] * half];
+		const cosHalf = Math.sqrt(Math.max(0, (1 + n1[0] * n2[0] + n1[1] * n2[1]) / 2));
+		if (join.join === 'miter' && cosHalf > 0 && 1 / cosHalf <= join.miterLimit) {
+			const bx = n1[0] + n2[0];
+			const by = n1[1] + n2[1];
+			const blen = Math.hypot(bx, by);
+			const reach = half / cosHalf / blen;
+			return [v, p1, [v[0] + side * bx * reach, v[1] + side * by * reach], p2];
+		}
+		return [v, p1, p2];
 	}
 	return `path('${d} ${quads.join(' ')}')`;
 }

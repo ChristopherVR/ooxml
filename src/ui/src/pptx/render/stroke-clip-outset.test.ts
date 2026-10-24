@@ -44,6 +44,50 @@ describe('outsetClipPathForStroke', () => {
 		expect(nonZeroContains(widened, 10, -3)).toBe(false);
 	});
 
+	describe('corners', () => {
+		const square = "path('M 0 0 L 10 0 L 10 10 L 0 10 Z')";
+		const miter = { join: 'miter', miterLimit: 4 } as const;
+
+		it('fills the outer corner of a mitred outline (issue #144)', () => {
+			const widened = outsetClipPathForStroke(square, 4, 10, 10, miter);
+			// Outside both segment bands, inside the mitre: the notch the bands alone left.
+			for (const [x, y] of [
+				[10.5, -0.5],
+				[11.9, -1.9],
+				[-1.9, 11.9],
+				[-1.5, -1.5],
+			] as const) {
+				expect(nonZeroContains(widened, x, y)).toBe(true);
+			}
+			expect(nonZeroContains(widened, 12.1, -2.1)).toBe(false);
+		});
+
+		it('bevels a corner the mitre limit cuts, and a bevel join', () => {
+			for (const join of [
+				{ join: 'bevel', miterLimit: 4 },
+				{ join: 'miter', miterLimit: 1 },
+			] as const) {
+				const widened = outsetClipPathForStroke(square, 4, 10, 10, join);
+				expect(nonZeroContains(widened, -0.9, -0.9)).toBe(true);
+				expect(nonZeroContains(widened, -1.5, -1.5)).toBe(false);
+			}
+		});
+
+		it('rounds the corner of a round join', () => {
+			const widened = outsetClipPathForStroke(square, 4, 10, 10, { join: 'round', miterLimit: 4 });
+			expect(nonZeroContains(widened, -1.3, -1.3)).toBe(true);
+			expect(nonZeroContains(widened, -1.6, -1.6)).toBe(false);
+		});
+
+		it('adds nothing past the bands on the inside of a turn', () => {
+			// A concave notch: the inner corner at (5, 5) must not grow a mitre into the gap.
+			const notch = "path('M 0 0 L 5 0 L 5 5 L 10 5 L 10 10 L 0 10 Z')";
+			const widened = outsetClipPathForStroke(notch, 2, 10, 10, miter);
+			expect(nonZeroContains(widened, 7, 2)).toBe(false);
+			expect(nonZeroContains(widened, 5.5, 4.5)).toBe(true);
+		});
+	});
+
 	it('returns the clip unchanged for no stroke or unsupported data', () => {
 		expect(outsetClipPathForStroke(triangle, 0, 20, 20)).toBe(triangle);
 		expect(outsetClipPathForStroke("path('M 0 0 l 5 5')", 2, 20, 20)).toBe("path('M 0 0 l 5 5')");
