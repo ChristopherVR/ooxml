@@ -12,6 +12,9 @@
  * - With `scriptFaces`, each part's heading font also names a per-script face the other part lacks
  *   ({@link TWO_THEMES.scriptFaces}), so the deck's theme (which merges every part's script faces)
  *   matches neither part's own font scheme.
+ * - With `formatSchemes`, theme 2's first line and effect styles differ from theme 1's (a 3 pt line
+ *   and an outer shadow, against 0.5 pt and none), and every slide carries a shape drawn only
+ *   through style references ({@link TWO_THEMES.styledShapeName}).
  *
  * One definition for the core tests, the binding tests and the browser fixture
  * (`e2e/pptx/fixtures/generate-two-themes-fixture.ts`), so the three cannot drift apart.
@@ -95,6 +98,8 @@ export const TWO_THEMES = {
 	shapeName: 'AccentShape',
 	/** The `accent1` bar on every master, inherited by its slides. */
 	masterBarName: 'MasterBar',
+	/** With `formatSchemes`, the shape on every slide drawn only through `p:style` references. */
+	styledShapeName: 'StyledShape',
 	/** The per-script heading faces each part names with `scriptFaces`, by theme part. */
 	scriptFaces: {
 		[TIDE.path]: { Jpan: 'Yu Mincho' },
@@ -127,16 +132,29 @@ function rels(...entries: readonly (readonly [string, string, string])[]): strin
 	return `${PROLOG}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${body}</Relationships>`;
 }
 
-function themeXml(theme: DeckTheme, scriptFaces: boolean): string {
+/** Theme 2's first line and effect styles with `formatSchemes`: a 3 pt line, an outer shadow. */
+const EMBER_LINE_WIDTH = 38100;
+const EMBER_EFFECT =
+	'<a:effectStyle><a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" algn="tl" ' +
+	'rotWithShape="0"><a:srgbClr val="000000"><a:alpha val="40000"/></a:srgbClr></a:outerShdw>' +
+	'</a:effectLst></a:effectStyle>';
+
+function themeXml(
+	theme: DeckTheme,
+	{ scriptFaces, formatSchemes }: Required<TwoThemesDeckOptions>,
+): string {
 	const scripts = Object.entries(scriptFaces ? (TWO_THEMES.scriptFaces[theme.path] ?? {}) : {})
 		.map(([script, typeface]) => `<a:font script="${script}" typeface="${typeface}"/>`)
 		.join('');
+	const ember = formatSchemes && theme === EMBER;
 	const slots = SCHEME_KEYS.map(
 		(key) => `<a:${key}><a:srgbClr val="${theme.colors[key]}"/></a:${key}>`,
 	);
 	const fill = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>';
 	const line = (w: number) => `<a:ln w="${w}">${fill}</a:ln>`;
 	const effect = '<a:effectStyle><a:effectLst/></a:effectStyle>';
+	const firstLine = line(ember ? EMBER_LINE_WIDTH : 6350);
+	const firstEffect = ember ? EMBER_EFFECT : effect;
 	return (
 		`${PROLOG}<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="${theme.name}">` +
 		`<a:themeElements><a:clrScheme name="${theme.name}">${slots.join('')}</a:clrScheme>` +
@@ -145,8 +163,8 @@ function themeXml(theme: DeckTheme, scriptFaces: boolean): string {
 		`<a:minorFont><a:latin typeface="${theme.minor}"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>` +
 		`</a:fontScheme><a:fmtScheme name="${theme.name}">` +
 		`<a:fillStyleLst>${fill}${fill}${fill}</a:fillStyleLst>` +
-		`<a:lnStyleLst>${line(6350)}${line(12700)}${line(19050)}</a:lnStyleLst>` +
-		`<a:effectStyleLst>${effect}${effect}${effect}</a:effectStyleLst>` +
+		`<a:lnStyleLst>${firstLine}${line(12700)}${line(19050)}</a:lnStyleLst>` +
+		`<a:effectStyleLst>${firstEffect}${effect}${effect}</a:effectStyleLst>` +
 		`<a:bgFillStyleLst>${fill}${fill}${fill}</a:bgFillStyleLst>` +
 		`</a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>`
 	);
@@ -159,6 +177,20 @@ function rect(id: number, name: string, x: number, y: number, w: number, h: numb
 		`<a:ext cx="${w * EMU_PER_PX}" cy="${h * EMU_PER_PX}"/></a:xfrm>` +
 		`<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
 		`<a:solidFill><a:schemeClr val="accent1"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr></p:sp>`
+	);
+}
+
+/** A rectangle with no fill, line or effect of its own: all three come from the theme's styles. */
+function styledRect(id: number): string {
+	const ref = (tag: string, idx: number) =>
+		`<a:${tag} idx="${idx}"><a:schemeClr val="accent1"/></a:${tag}>`;
+	return (
+		`<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${TWO_THEMES.styledShapeName}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>` +
+		`<p:spPr><a:xfrm><a:off x="${80 * EMU_PER_PX}" y="${250 * EMU_PER_PX}"/>` +
+		`<a:ext cx="${240 * EMU_PER_PX}" cy="${160 * EMU_PER_PX}"/></a:xfrm>` +
+		`<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>` +
+		`<p:style>${ref('lnRef', 1)}${ref('fillRef', 1)}${ref('effectRef', 1)}` +
+		`<a:fontRef idx="minor"><a:schemeClr val="lt1"/></a:fontRef></p:style></p:sp>`
 	);
 }
 
@@ -198,10 +230,11 @@ function layoutXml(name: string): string {
 	);
 }
 
-function slideXml(title: string): string {
+function slideXml(title: string, formatSchemes: boolean): string {
 	return (
 		`${PROLOG}<p:sld ${NS}><p:cSld><p:spTree>${TREE_ROOT}${heading(2, title)}` +
-		`${rect(3, TWO_THEMES.shapeName, 400, 250, 480, 270)}</p:spTree></p:cSld>` +
+		`${rect(3, TWO_THEMES.shapeName, 400, 250, 480, 270)}` +
+		`${formatSchemes ? styledRect(4) : ''}</p:spTree></p:cSld>` +
 		`<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`
 	);
 }
@@ -209,13 +242,16 @@ function slideXml(title: string): string {
 export interface TwoThemesDeckOptions {
 	/** Give each part's heading font a per-script face the other part lacks. */
 	readonly scriptFaces?: boolean;
+	/** Give theme 2 its own first line and effect styles, and every slide a shape that uses them. */
+	readonly formatSchemes?: boolean;
 }
 
 /** Every part of the deck, by path. */
-export function twoThemesDeckParts({ scriptFaces = false }: TwoThemesDeckOptions = {}): Record<
-	string,
-	string
-> {
+export function twoThemesDeckParts({
+	scriptFaces = false,
+	formatSchemes = false,
+}: TwoThemesDeckOptions = {}): Record<string, string> {
+	const options = { scriptFaces, formatSchemes };
 	const override = (part: string, type: string) =>
 		`<Override PartName="/${part}" ContentType="${CT_NS}.${type}+xml"/>`;
 	const slides = TWO_THEMES.slideLayouts.map((_, index) => `ppt/slides/slide${index + 1}.xml`);
@@ -249,8 +285,8 @@ export function twoThemesDeckParts({ scriptFaces = false }: TwoThemesDeckOptions
 			),
 			[`rId${3 + slides.length}`, 'theme', 'theme/theme1.xml'],
 		),
-		[TIDE.path]: themeXml(TIDE, scriptFaces),
-		[EMBER.path]: themeXml(EMBER, scriptFaces),
+		[TIDE.path]: themeXml(TIDE, options),
+		[EMBER.path]: themeXml(EMBER, options),
 		[TWO_THEMES.master1]: masterXml('Tide Master', 2147483649),
 		[TWO_THEMES.master2]: masterXml('Ember Master', 2147483651),
 		'ppt/slideMasters/_rels/slideMaster1.xml.rels': rels(
@@ -275,7 +311,7 @@ export function twoThemesDeckParts({ scriptFaces = false }: TwoThemesDeckOptions
 		]),
 	};
 	TWO_THEMES.slideLayouts.forEach((layout, index) => {
-		parts[slides[index]!] = slideXml(`Slide ${index + 1}`);
+		parts[slides[index]!] = slideXml(`Slide ${index + 1}`, formatSchemes);
 		parts[`ppt/slides/_rels/slide${index + 1}.xml.rels`] = rels([
 			'rId1',
 			'slideLayout',
