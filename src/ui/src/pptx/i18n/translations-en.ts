@@ -912,15 +912,10 @@ export const translationsEn: Record<string, string> = {
 		'Enter adds an item, Backspace removes an empty one, Tab demotes, Shift+Tab promotes.',
 
 	// 3D text / text effects / text panel / text warp
-	'pptx.text3d.type': 'Type',
-	'pptx.text3d.width': 'Width',
-	'pptx.text3d.height': 'Height',
 	'pptx.text3d.title': '3D Text',
 	'pptx.text3d.extrusion': '3D Extrusion',
 	'pptx.text3d.depth': 'Depth (pt)',
-	'pptx.text3d.color': 'Color',
 	'pptx.text3d.topBevel': 'Top Bevel',
-	'pptx.text3d.bottomBevel': 'Bottom Bevel',
 	'pptx.text3d.material': 'Material',
 	'pptx.textEffects.title': 'Text Effects',
 	'pptx.textEffects.shadow': 'Text Shadow',
@@ -3716,10 +3711,8 @@ export const translationsEn: Record<string, string> = {
 
 	// Text and shape effects
 	'pptx.textEffects.adjustment': 'Adjustment',
-	'pptx.textEffects.glowColor': 'Glow Color',
 	'pptx.textEffects.outline': 'Text Outline',
 	'pptx.textEffects.outlineWidth': 'Outline Width',
-	'pptx.textEffects.shadowColor': 'Shadow Color',
 	'pptx.textEffects.transform': 'Transform',
 	'pptx.textFormatting.columns': 'Columns',
 	'pptx.textFormatting.columnSpacing': 'Column Spacing',
