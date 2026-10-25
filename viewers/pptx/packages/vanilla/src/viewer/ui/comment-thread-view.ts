@@ -1,3 +1,4 @@
+import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
@@ -129,8 +130,10 @@ export function createCommentThreadView(
 		const actions = createEl(doc, 'div', 'pptxv-inspector-comment-actions');
 		actions.append(
 			actionBtn(t('pptx.comments.addReply'), () => {
-				if (replyDraft.trim()) {
-					handlers.addCommentReply(comment.id, replyDraft.trim(), replyMentions);
+				// The mentions index the draft as typed: they move with its trim.
+				const { text, mentions } = trimCommentMentions(replyDraft, replyMentions);
+				if (text) {
+					handlers.addCommentReply(comment.id, text, mentions);
 				}
 				mentionTypeahead.destroy();
 				replyingId = null;
