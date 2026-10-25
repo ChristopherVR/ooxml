@@ -1,9 +1,7 @@
 export const translations = {
 	'pptx.comments.addComment': '添加批注',
 	'pptx.comments.noComments': '暂无批注',
-	'pptx.comments.author': '作者',
 	'pptx.comments.resolved': '已解决',
-	'pptx.comments.clickToSelect': '单击以选择元素',
 	'pptx.comments.deletedElement': '已删除的元素',
 	'pptx.comments.save': '保存',
 	'pptx.comments.cancel': '取消',
@@ -13,7 +11,6 @@ export const translations = {
 	'pptx.comments.unresolve': '标记为未解决',
 	'pptx.comments.delete': '删除',
 	'pptx.comments.commentingOn': '批注对象：',
-	'pptx.comments.commentOnElement': '批注 {{element}}...',
 	'pptx.comments.addCommentPlaceholder': '添加批注...',
 	'pptx.collaboration.status.connected': '已连接',
 	'pptx.collaboration.status.connecting': '正在连接...',
@@ -134,7 +131,6 @@ export const translations = {
 	'pptx.share.copyLinkButton': '复制链接',
 	'pptx.broadcast.presenterPlaceholder': '演讲者',
 	'pptx.comments.defaultAuthorName': '你',
-	'pptx.comments.selectSlidePrompt': '选择一张幻灯片以查看批注。',
 	'pptx.comments.mentionPlaceholder': '输入 @ 提及他人',
 	'pptx.comments.mentionSuggestions': '人员',
 } as const;

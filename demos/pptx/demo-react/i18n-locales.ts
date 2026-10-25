@@ -213,9 +213,7 @@ export const translationsFr: Record<TranslationKey, string> = {
 	// Comments
 	'pptx.comments.addComment': 'Ajouter un commentaire',
 	'pptx.comments.noComments': 'Aucun commentaire',
-	'pptx.comments.author': 'Auteur',
 	'pptx.comments.resolved': 'Résolu',
-	'pptx.comments.clickToSelect': "Cliquer pour sélectionner l'élément",
 	'pptx.comments.deletedElement': 'Élément supprimé',
 	'pptx.comments.save': 'Enregistrer',
 	'pptx.comments.cancel': 'Annuler',
@@ -225,7 +223,6 @@ export const translationsFr: Record<TranslationKey, string> = {
 	'pptx.comments.unresolve': 'Rouvrir',
 	'pptx.comments.delete': 'Supprimer',
 	'pptx.comments.commentingOn': 'Commentaire sur :',
-	'pptx.comments.commentOnElement': 'Commenter {{element}}...',
 	'pptx.comments.addCommentPlaceholder': 'Ajouter un commentaire...',
 
 	// Header & Footer
@@ -617,9 +614,7 @@ export const translationsEs: Record<TranslationKey, string> = {
 	// Comments
 	'pptx.comments.addComment': 'Añadir comentario',
 	'pptx.comments.noComments': 'Sin comentarios',
-	'pptx.comments.author': 'Autor',
 	'pptx.comments.resolved': 'Resuelto',
-	'pptx.comments.clickToSelect': 'Haga clic para seleccionar el elemento',
 	'pptx.comments.deletedElement': 'Elemento eliminado',
 	'pptx.comments.save': 'Guardar',
 	'pptx.comments.cancel': 'Cancelar',
@@ -629,7 +624,6 @@ export const translationsEs: Record<TranslationKey, string> = {
 	'pptx.comments.unresolve': 'Reabrir',
 	'pptx.comments.delete': 'Eliminar',
 	'pptx.comments.commentingOn': 'Comentando en:',
-	'pptx.comments.commentOnElement': 'Comentar sobre {{element}}...',
 	'pptx.comments.addCommentPlaceholder': 'Añadir un comentario...',
 
 	// Header & Footer
@@ -1020,9 +1014,7 @@ export const translationsDe: Record<TranslationKey, string> = {
 	// Comments
 	'pptx.comments.addComment': 'Kommentar hinzufugen',
 	'pptx.comments.noComments': 'Keine Kommentare',
-	'pptx.comments.author': 'Autor',
 	'pptx.comments.resolved': 'Erledigt',
-	'pptx.comments.clickToSelect': 'Klicken, um Element auszuwahlen',
 	'pptx.comments.deletedElement': 'Element geloscht',
 	'pptx.comments.save': 'Speichern',
 	'pptx.comments.cancel': 'Abbrechen',
@@ -1032,7 +1024,6 @@ export const translationsDe: Record<TranslationKey, string> = {
 	'pptx.comments.unresolve': 'Wieder offnen',
 	'pptx.comments.delete': 'Loschen',
 	'pptx.comments.commentingOn': 'Kommentar zu:',
-	'pptx.comments.commentOnElement': '{{element}} kommentieren...',
 	'pptx.comments.addCommentPlaceholder': 'Kommentar hinzufugen...',
 
 	// Header & Footer

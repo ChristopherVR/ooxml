@@ -1,9 +1,7 @@
 export const translations = {
 	'pptx.comments.addComment': 'Añadir comentario',
 	'pptx.comments.noComments': 'Sin comentarios',
-	'pptx.comments.author': 'Autor',
 	'pptx.comments.resolved': 'Resuelto',
-	'pptx.comments.clickToSelect': 'Haga clic para seleccionar el elemento',
 	'pptx.comments.deletedElement': 'Elemento eliminado',
 	'pptx.comments.save': 'Guardar',
 	'pptx.comments.cancel': 'Cancelar',
@@ -13,7 +11,6 @@ export const translations = {
 	'pptx.comments.unresolve': 'Reabrir',
 	'pptx.comments.delete': 'Eliminar',
 	'pptx.comments.commentingOn': 'Comentando en:',
-	'pptx.comments.commentOnElement': 'Comentar sobre {{element}}...',
 	'pptx.comments.addCommentPlaceholder': 'Añadir un comentario...',
 	'pptx.collaboration.status.connected': 'Conectado',
 	'pptx.collaboration.status.connecting': 'Conectando...',
@@ -141,5 +138,4 @@ export const translations = {
 	'pptx.share.copyLinkButton': 'Copiar enlace',
 	'pptx.broadcast.presenterPlaceholder': 'Presentador',
 	'pptx.comments.defaultAuthorName': 'Tú',
-	'pptx.comments.selectSlidePrompt': 'Seleccione una diapositiva para ver los comentarios.',
 } as const;

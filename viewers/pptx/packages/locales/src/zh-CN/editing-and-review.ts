@@ -149,7 +149,6 @@ export const translations = {
 	'pptx.hyperlinkDialog.apply': '应用',
 	'pptx.linkTooltip.followLink': '按住 Ctrl 并单击以打开链接',
 	'pptx.linkTooltip.presentationMode': '在演示模式下激活',
-	'pptx.properties.title': '文档属性',
 	'pptx.properties.titleLabel': '标题',
 	'pptx.properties.author': '作者',
 	'pptx.properties.subject': '主题',

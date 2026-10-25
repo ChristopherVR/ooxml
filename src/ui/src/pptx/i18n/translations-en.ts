@@ -277,9 +277,7 @@ export const translationsEn: Record<string, string> = {
 	// Comments
 	'pptx.comments.addComment': 'Add Comment',
 	'pptx.comments.noComments': 'No comments',
-	'pptx.comments.author': 'Author',
 	'pptx.comments.resolved': 'Resolved',
-	'pptx.comments.clickToSelect': 'Click to select element',
 	'pptx.comments.deletedElement': 'Deleted element',
 	'pptx.comments.save': 'Save',
 	'pptx.comments.cancel': 'Cancel',
@@ -289,7 +287,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.comments.unresolve': 'Unresolve',
 	'pptx.comments.delete': 'Delete',
 	'pptx.comments.commentingOn': 'Commenting on:',
-	'pptx.comments.commentOnElement': 'Comment on {{element}}...',
 	'pptx.comments.addCommentPlaceholder': 'Add a comment...',
 
 	// Header & Footer
@@ -1964,7 +1961,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.print.rangeCustom': 'Custom range',
 
 	// Document properties (Vue's variant, alongside pptx.documentProperties.*)
-	'pptx.properties.title': 'Document properties',
 	'pptx.properties.titleLabel': 'Title',
 	'pptx.properties.author': 'Author',
 	'pptx.properties.subject': 'Subject',
@@ -2181,8 +2177,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.alignTop': 'Align top',
 	'pptx.ribbon.alignMiddle': 'Align middle',
 	'pptx.ribbon.alignBottom': 'Align bottom',
-	'pptx.ribbon.distributeHorizontally': 'Distribute horizontally',
-	'pptx.ribbon.distributeVertically': 'Distribute vertically',
 	'pptx.ribbon.group': 'Group',
 	'pptx.ribbon.ungroup': 'Ungroup',
 	'pptx.ribbon.setUpShow': 'Set Up Show',
@@ -2507,7 +2501,6 @@ export const translationsEn: Record<string, string> = {
 	// truth reference these were derived from). Appended flat rather than
 	// interleaved into their semantic sections above, to keep this batch
 	// change safe/reviewable as one block.
-	'pptx.align.toolbarLabel': 'Align and distribute',
 	'pptx.arrange.deleteSelection': 'Delete selection',
 	'pptx.arrange.duplicateSelection': 'Duplicate selection',
 	'pptx.arrange.groupLabel': 'Arrange',
@@ -2836,12 +2829,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.accessibility.typeLowContrast': 'Low contrast',
 	'pptx.accessibility.typeMissingAltText': 'Missing alt text',
 	'pptx.accessibility.typeMissingSlideTitle': 'Missing slide title',
-	'pptx.align.bottom': 'Align bottom',
-	'pptx.align.centerH': 'Align center',
-	'pptx.align.left': 'Align left',
-	'pptx.align.middle': 'Align middle',
-	'pptx.align.right': 'Align right',
-	'pptx.align.top': 'Align top',
 	'pptx.documentProperties.custom.typeDate': 'Date',
 	'pptx.documentProperties.custom.typeNumber': 'Number',
 	'pptx.documentProperties.custom.typeText': 'Text',
@@ -2979,7 +2966,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.chart.rowLabelsAria': 'Row labels',
 	'pptx.chart.seriesDefaultName': 'Series {{number}}',
 	'pptx.comments.defaultAuthorName': 'You',
-	'pptx.comments.selectSlidePrompt': 'Select a slide to view comments.',
 	'pptx.connectorOptions.bent': 'Bent',
 	'pptx.connectorOptions.curved': 'Curved',
 	'pptx.connectorOptions.curved4': 'Curved 4',
