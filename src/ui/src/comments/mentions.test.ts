@@ -82,6 +82,21 @@ describe('insertMention', () => {
 			[19, 6],
 		]);
 	});
+
+	it('ends the replaced token at the caret, even when lower-casing changes its length', () => {
+		const ipek: OfficeMentionCandidate = { id: 'p9', name: 'İpek' };
+		expect('İ'.toLowerCase()).toHaveLength(2);
+		expect(insertMention('@İ\nKeep this', [], 2, ipek).text).toBe('@İpek \nKeep this');
+	});
+
+	it('drops a span the replaced token overlaps, so a pick inside a mention replaces it', () => {
+		const grace: OfficeCommentMention = { start: 0, length: 13, id: 'p2', name: 'Grace Hopper' };
+		const result = insertMention('@Grace Hopper hi', [grace], 3, ALAN);
+		expect(result.text).toBe('@Alan Turing ace Hopper hi');
+		expect(result.mentions).toStrictEqual([
+			{ start: 0, length: 12, id: 'p3', name: 'Alan Turing' },
+		]);
+	});
 });
 
 describe('followTextEdit', () => {

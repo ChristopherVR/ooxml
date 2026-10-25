@@ -127,7 +127,8 @@ export interface OfficeMentionInsertion {
 
 /**
  * The `@` token at `caret` (or the caret itself) replaced by `@<name>` and a space, with the new span
- * (the `@` included, as Office records it) and the spans after it shifted.
+ * (the `@` included, as Office records it) and the spans after it shifted. A span the token overlaps
+ * (a pick made inside an existing mention) is dropped, so the text is never claimed twice.
  */
 export function insertMention(
 	text: string,
@@ -136,12 +137,16 @@ export function insertMention(
 	candidate: OfficeMentionCandidate,
 ): OfficeMentionInsertion {
 	const body = String(text ?? '');
-	const active = mentionQueryAt(body, caret);
-	const start = active ? active.start : Math.max(0, Math.min(caret, body.length));
-	const end = active ? active.start + 1 + active.query.length : start;
+	const at = Math.max(0, Math.min(caret, body.length));
+	const active = mentionQueryAt(body, at);
+	// The token runs from its @ to the caret; the lower-cased query can be longer (İ is i and a dot).
+	const start = active ? active.start : at;
+	const end = at;
 	const label = `@${candidate.name}`;
 	const delta = label.length + 1 - (end - start);
-	const next = (mentions ?? []).map((m) => (m.start >= end ? { ...m, start: m.start + delta } : m));
+	const next = (mentions ?? [])
+		.filter((m) => m.start >= end || m.start + m.length <= start)
+		.map((m) => (m.start >= end ? { ...m, start: m.start + delta } : m));
 	next.push({ start, length: label.length, id: candidate.id, name: candidate.name });
 	next.sort((a, b) => a.start - b.start);
 	return {
