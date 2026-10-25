@@ -261,7 +261,13 @@ const buildComment = (
 	// `startIndex`/`length` index the flattened body text, so an edit that
 	// shifted characters must move every mention that survived it.
 	const originalText = originalBody ? flattenBodyText(originalBody).join('\n') : comment.text;
-	const mentions = rebaseCommentMentions(comment.mentions, originalText, comment.text);
+	const loadedMentions = raw ? readCommentMentions(raw, () => undefined) : undefined;
+	const mentions = rebaseCommentMentions(
+		comment.mentions,
+		originalText,
+		comment.text,
+		loadedMentions ?? [],
+	);
 	const extension = applyCommentMentions(node, mentions, child(raw, 'extLst'), ownsMentions);
 	if (extension) {
 		node['p188:extLst'] = extension;
