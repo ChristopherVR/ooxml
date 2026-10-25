@@ -40,6 +40,8 @@ export interface SaveSlideContext {
 		forceExternal?: boolean,
 	) => string | undefined;
 	readonly getSlideRelationshipMap: () => Map<string, string>;
+	/** The `Target`, from this part, of the deck's slide at `index`; slides only (a slide jump). */
+	readonly slideTargetAt?: ((index: number) => string | undefined) | undefined;
 	readonly resolvedMediaBytes: Map<string, { bytes: Uint8Array; extension: string }>;
 	readonly saveSession: PptxSaveState;
 	readonly slideImageRelationshipType: string;
