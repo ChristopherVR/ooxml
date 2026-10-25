@@ -1,7 +1,7 @@
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (each spec sets up a couple of independent `const`s); merging them isn't a
    style choice here. */
-import type { PptxSlide, PptxComment } from 'pptx-viewer-core';
+import type { PptxSlide, PptxComment, PptxCommentMention } from 'pptx-viewer-core';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -306,6 +306,39 @@ describe('addReplyToSlide', () => {
 		const slides = [makeSlide('s1', [makeComment('c1', 'Parent')])];
 		expect(addReplyToSlide(slides, 0, 'c1', '   ', 'Test User').didAdd).toBeFalsy();
 		expect(addReplyToSlide(slides, 0, 'missing', 'hi', 'Test User').didAdd).toBeFalsy();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// @-mentions
+// ---------------------------------------------------------------------------
+
+describe('comment @-mentions', () => {
+	const grace = (startIndex: number): PptxCommentMention => ({
+		id: '{M1}',
+		personId: '{P2}',
+		authorName: 'Grace',
+		startIndex,
+		length: 6,
+	});
+	const covered = (comment: PptxComment | undefined) =>
+		comment?.mentions?.map((m) => comment.text.slice(m.startIndex, m.startIndex + m.length));
+
+	it('stores a new comment and a reply with their mentions on the trimmed text', () => {
+		const added = addCommentToSlide([makeSlide('s1')], 0, ' @Grace hi', 'A', undefined, [grace(1)]);
+		const comment = added.slides[0].comments![0];
+		expect(comment.text).toBe('@Grace hi');
+		expect(covered(comment)).toStrictEqual(['@Grace']);
+		const replied = addReplyToSlide(added.slides, 0, comment.id, '  Ask @Grace', 'B', [grace(6)]);
+		expect(covered(replied.slides[0].comments![0].replies![0])).toStrictEqual(['@Grace']);
+	});
+
+	it('keeps an edited comment mentions on their text', () => {
+		const slides = [
+			makeSlide('s1', [{ ...makeComment('c1', 'Ask @Grace today'), mentions: [grace(4)] }]),
+		];
+		const edited = editCommentInSlide(slides, 0, 'c1', 'Please ask @Grace today');
+		expect(covered(edited.slides[0].comments![0])).toStrictEqual(['@Grace']);
 	});
 });
 

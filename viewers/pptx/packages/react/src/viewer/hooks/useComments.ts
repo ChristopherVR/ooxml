@@ -86,8 +86,9 @@ export function useComments({
 				return;
 			}
 
-			const draft = String(commentDraftBySlideId[slide.id] || '').trim();
-			if (draft.length === 0) {
+			// Untrimmed: the mentions index the draft as typed, and the shared add trims both.
+			const draft = String(commentDraftBySlideId[slide.id] || '');
+			if (draft.trim().length === 0) {
 				return;
 			}
 
