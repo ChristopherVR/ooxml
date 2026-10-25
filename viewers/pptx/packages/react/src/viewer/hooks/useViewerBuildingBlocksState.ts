@@ -1,3 +1,4 @@
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 /**
  * useViewerBuildingBlocksState: The dialogs / editor-operations /
  * integration half of `useViewerBuildingBlocks`'s hook wiring, split out
@@ -41,6 +42,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	filePath?: string;
 	/** Host `initialSlide`: the slide shown after each load; forwarded to `useViewerIntegration`. */
 	initialSlide?: number;
+	/** Host `googleFonts`: the Google Fonts fallback policy; forwarded to `useViewerIntegration`. */
+	googleFonts?: GoogleFontsOption;
 	autosaveEnabled: boolean;
 	userName?: string;
 	handle?: React.ForwardedRef<PowerPointViewerHandle>;
@@ -82,7 +85,7 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
-	const { initialSlide } = input;
+	const { initialSlide, googleFonts } = input;
 	const {
 		onContentChange,
 		onDirtyChange,
@@ -207,6 +210,7 @@ export function useViewerBuildingBlocksState(
 		filePath,
 		autosaveEnabled,
 		initialSlide,
+		googleFonts,
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images
 		// under the same default-off, core-side SSRF/privacy guard.

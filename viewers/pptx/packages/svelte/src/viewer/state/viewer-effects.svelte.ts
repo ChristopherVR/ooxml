@@ -4,6 +4,7 @@ import {
 	selectGoogleWebfontFamilies,
 	selectTrustedEmbeddedFonts,
 } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 import type { Translator } from '../../i18n/translator';
@@ -25,6 +26,8 @@ export interface ViewerEffectsDeps {
 	/** Commit already-accepted inline input before disabling local editing. */
 	commitPendingText?(): void;
 	getInitialSlide(): number;
+	/** Host `googleFonts` policy: unset loads from Google, `false` disables, `{ baseUrl }` mirrors. */
+	getGoogleFonts?(): GoogleFontsOption | undefined;
 	getTranslator(): Translator;
 	loader: PresentationLoader;
 	viewer: ViewerState;
@@ -178,7 +181,11 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 	if (typeof document !== 'undefined') {
 		$effect(() => {
 			let cancelled = false;
-			void resolveWebfontHref(deps.loader.slides, deps.loader.embeddedFonts).then((href) => {
+			void resolveWebfontHref(
+				deps.loader.slides,
+				deps.loader.embeddedFonts,
+				deps.getGoogleFonts?.(),
+			).then((href) => {
 				if (cancelled) {
 					return null;
 				}
@@ -212,7 +219,7 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 			if (candidates.length === 0) {
 				return;
 			}
-			void resolveWebfontHref(slides, embeddedFonts).then(async (href) => {
+			void resolveWebfontHref(slides, embeddedFonts, deps.getGoogleFonts?.()).then(async (href) => {
 				if (cancelled || !href) {
 					return;
 				}

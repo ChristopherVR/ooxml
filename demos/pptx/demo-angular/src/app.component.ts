@@ -99,6 +99,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 					[showThumbnails]="rootOptions.showThumbnails"
 					[initialSlide]="rootOptions.initialSlide"
 					[fitPadding]="rootOptions.fitPadding"
+					[googleFonts]="rootOptions.googleFonts"
 					[inspectorInitiallyOpen]="rootOptions.inspectorInitiallyOpen"
 					[smartArt3D]="smartArt3D"
 					[surfaceChart3D]="surfaceChart3D"

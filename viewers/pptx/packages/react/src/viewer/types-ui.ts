@@ -1,5 +1,5 @@
 import type { CollaborationState } from 'ooxml-core/collab';
-import type { DocumentStorage } from 'ooxml-ui/pptx';
+import type { DocumentStorage, GoogleFontsOption } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
@@ -586,6 +586,17 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * the next load.
 	 */
 	initialSlide?: number;
+
+	/**
+	 * Google Fonts fallback for deck fonts that are neither installed nor
+	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * `false`: no request goes to Google (`fonts.googleapis.com` or
+	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
+	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts
+	 * CSS2 API instead, so the user's browser never contacts Google. An
+	 * invalid `baseUrl` disables the fallback (with a console warning).
+	 */
+	googleFonts?: GoogleFontsOption;
 
 	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view

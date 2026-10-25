@@ -1,6 +1,7 @@
 import type {
 	CompatibilityWarningToast,
 	DocumentStorage,
+	GoogleFontsOption,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxModifyVerifier, PptxSlide } from 'pptx-viewer-core';
@@ -63,6 +64,8 @@ export interface UseContentLifecycleInput {
 	allowExternalImages?: boolean;
 	/** Forwarded to {@link useLoadContent}: the host `initialSlide` prop. */
 	initialSlide?: number;
+	/** Forwarded to {@link useFontInjection}: the host `googleFonts` prop. */
+	googleFonts?: GoogleFontsOption;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
 	setReadOnlyRecommendation: React.Dispatch<React.SetStateAction<ReadOnlyRecommendation>>;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
@@ -113,6 +116,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		onContentApplied,
 		allowExternalImages,
 		initialSlide,
+		googleFonts,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,
@@ -176,7 +180,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		// oxlint-disable-next-line react/exhaustive-effect-dependencies -- see comment above
 	}, [handlerRef, actionSoundHandlerRef, state.loading]);
 
-	useFontInjection({ embeddedFonts: state.embeddedFonts, slides });
+	useFontInjection({ embeddedFonts: state.embeddedFonts, slides, googleFonts });
 
 	const serializeInput = {
 		slides,

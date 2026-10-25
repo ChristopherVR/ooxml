@@ -1,4 +1,4 @@
-import type { DocumentStorage } from 'ooxml-ui/pptx';
+import type { DocumentStorage, GoogleFontsOption } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	CompatibilityWarningToast,
@@ -93,6 +93,8 @@ export interface UseViewerIntegrationInput {
 	allowExternalImages?: boolean;
 	/** Host `initialSlide` prop: the slide shown after each load; forwarded to `useContentLifecycle`. */
 	initialSlide?: number;
+	/** Host `googleFonts` prop: the Google Fonts fallback policy; forwarded to `useFontInjection`. */
+	googleFonts?: GoogleFontsOption;
 	/** Forwarded to `useContentLifecycle` -> `useLoadContent`: see `useReadOnlyRecommendationState`. */
 	setReadOnlyRecommendation: Dispatch<SetStateAction<ReadOnlyRecommendation>>;
 	/** Forwarded to `useContentLifecycle` -> `useLoadContent`: see `useReadOnlyRecommendationState`. */
@@ -210,6 +212,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		autosaveIntervalMs,
 		allowExternalImages,
 		initialSlide,
+		googleFonts,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,
@@ -298,6 +301,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		onContentApplied: () => setLoadVersion((v) => v + 1),
 		allowExternalImages,
 		initialSlide,
+		googleFonts,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,

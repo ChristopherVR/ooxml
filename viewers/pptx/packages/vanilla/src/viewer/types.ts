@@ -21,6 +21,7 @@ import type {
 	ViewportFitOptions,
 	RibbonAddInTab,
 } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxCoreProperties, PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
@@ -192,6 +193,17 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	accountAuth?: AccountAuthConfig;
 	/** Zero-based slide to show after load (default 0). */
 	initialSlide?: number;
+	/**
+	 * Google Fonts fallback for deck fonts that are neither installed nor
+	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * `false`: no request goes to Google (`fonts.googleapis.com` or
+	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
+	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts
+	 * CSS2 API instead, so the user's browser never contacts Google. An
+	 * invalid `baseUrl` disables the fallback (with a console warning). Read
+	 * once, when the viewer is created.
+	 */
+	googleFonts?: GoogleFontsOption;
 	/**
 	 * Enable editing (default `false`): click to select, drag/resize/rotate,
 	 * inline text editing, keyboard shortcuts, undo/redo, and the toolbar

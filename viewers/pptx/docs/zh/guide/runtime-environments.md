@@ -23,6 +23,16 @@ description: 了解 pptx-viewer 在浏览器、Node.js 和 Web Worker 中的支�
 
 浏览器无法像桌面应用一样直接使用完整的系统字体目录，因此 `pptx-viewer` 按三个步骤解析演示文稿中的字体：优先使用阅读者设备上已安装的原字体；否则在排版前从 Google Fonts 加载经过验证、字形度量兼容的替代字体（Calibri -> Carlito、Cambria -> Caladea、Arial -> Arimo、Times New Roman -> Tinos、Courier New -> Cousine、Georgia -> Gelasio），使换行和文本尺寸尽量保持与 PowerPoint 一致；两者均不可用时，才通过 PANOSE 分类回退到同类通用字体，此时字形度量可能发生变化。
 
+### 字体与隐私 {#fonts-and-privacy}
+
+从 Google Fonts 获取替代字体时，读者的浏览器会访问 `fonts.googleapis.com` 和 `fonts.gstatic.com`，从而向 Google 暴露读者的 IP 地址。不允许这样做的宿主可以设置 `googleFonts` 选项，所有绑定均支持：
+
+- 未设置（默认）：按上文所述从 Google Fonts 加载替代字体；
+- `googleFonts: false`：不向 Google 发送任何请求；文字使用已安装字体、演示文稿中嵌入的字体或 PANOSE 回退字体，因此换行可能与 PowerPoint 不同；
+- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`：改为向自托管镜像发送相同的 CSS2 请求。镜像必须按 Google Fonts CSS2 查询格式（`?family=...&display=swap`）返回兼容的 `@font-face` CSS，字体文件也应自托管，才能确保没有请求到达 Google。若 `baseUrl` 不是绝对的 `http(s)` URL，则关闭回退并输出警告。
+
+WordArt 字形轮廓的获取以及幻灯片图片导出时内联的网络字体也遵循该选项，因为两者都复用查看器解析出的样式表 URL。两者都通过 `fetch()` 读取 CSS 和字体文件，因此镜像必须像 Google 自己的服务器一样发送 CORS 响应头（`Access-Control-Allow-Origin`）。
+
 ### 运行程序动作（`ppaction://program`） {#run-program-actions-ppaction-program}
 
 PowerPoint 的“运行程序”动作设置可以解析，并在加载和保存过程中完整保留原始程序路径或命令。编辑时，也可以像其他动作一样在“动作设置”对话框中查看和修改。浏览器无法执行的是桌面 PowerPoint 在放映时所做的事：启动本地可执行程序。Web 平台出于安全设计，没有提供让网页启动任意本地程序的 API。

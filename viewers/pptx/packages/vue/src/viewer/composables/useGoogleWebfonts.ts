@@ -1,11 +1,13 @@
 import {
 	collectReferencedFontFamilies,
 	fetchGoogleWebfontOutlineBytes,
+	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
 	selectTrustedEmbeddedFonts,
 	syncGoogleWebfontStylesheet,
 } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
 import { onScopeDispose, toValue, watchEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
@@ -29,10 +31,14 @@ import { glyphOutlineFontCache, glyphOutlineFontsTick } from '../utils/glyph-out
  * @param slides - Reactive source of the loaded deck's slides.
  * @param embeddedFonts - Reactive source of the parsed embedded fonts (which
  *   satisfy their families without any network fetch).
+ * @param googleFonts - Reactive source of the host `googleFonts` policy:
+ *   unset loads from Google, `false` disables the fallback, `{ baseUrl }`
+ *   sends every request to a self-hosted CSS2 mirror.
  */
 export function useGoogleWebfonts(
 	slides: MaybeRefOrGetter<readonly PptxSlide[]>,
 	embeddedFonts: MaybeRefOrGetter<readonly PptxEmbeddedFont[]>,
+	googleFonts: MaybeRefOrGetter<GoogleFontsOption | undefined> = undefined,
 ): void {
 	const LINK_ELEMENT_ID = 'pptx-vue-google-fonts';
 
@@ -44,15 +50,18 @@ export function useGoogleWebfonts(
 		onCleanup(() => {
 			cancelled = true;
 		});
-		void resolveGoogleWebfontHref(toValue(slides) ?? [], toValue(embeddedFonts) ?? []).then(
-			(href) => {
-				if (cancelled) {
-					return null;
-				}
-				syncGoogleWebfontStylesheet(document, LINK_ELEMENT_ID, href);
-				return href;
-			},
-		);
+		void resolveGoogleWebfontHref(
+			toValue(slides) ?? [],
+			toValue(embeddedFonts) ?? [],
+			undefined,
+			resolveGoogleFontsCss2Base(toValue(googleFonts)),
+		).then((href) => {
+			if (cancelled) {
+				return null;
+			}
+			syncGoogleWebfontStylesheet(document, LINK_ELEMENT_ID, href);
+			return href;
+		});
 	});
 
 	onScopeDispose(() => {
@@ -74,6 +83,7 @@ export function useGoogleWebfonts(
 		});
 		const slidesValue = toValue(slides) ?? [];
 		const embeddedFontsValue = toValue(embeddedFonts) ?? [];
+		const googleFontsBase = resolveGoogleFontsCss2Base(toValue(googleFonts));
 		const referenced = collectReferencedFontFamilies(slidesValue);
 		const candidates = selectGoogleWebfontFamilies(
 			referenced,
@@ -82,39 +92,41 @@ export function useGoogleWebfonts(
 		if (candidates.length === 0) {
 			return;
 		}
-		void resolveGoogleWebfontHref(slidesValue, embeddedFontsValue).then(async (href) => {
-			if (cancelled || !href) {
-				return;
-			}
-			const variants: Array<{ bold: boolean; italic: boolean }> = [
-				{ bold: false, italic: false },
-				{ bold: true, italic: false },
-			];
-			let registeredAny = false;
-			for (const family of candidates) {
-				for (const variant of variants) {
-					if (cancelled) {
-						return;
-					}
-					const bytes = await fetchGoogleWebfontOutlineBytes(
-						href,
-						family,
-						variant.bold,
-						variant.italic,
-						fetch,
-					);
-					if (
-						bytes &&
-						glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
-					) {
-						registeredAny = true;
+		void resolveGoogleWebfontHref(slidesValue, embeddedFontsValue, undefined, googleFontsBase).then(
+			async (href) => {
+				if (cancelled || !href) {
+					return;
+				}
+				const variants: Array<{ bold: boolean; italic: boolean }> = [
+					{ bold: false, italic: false },
+					{ bold: true, italic: false },
+				];
+				let registeredAny = false;
+				for (const family of candidates) {
+					for (const variant of variants) {
+						if (cancelled) {
+							return;
+						}
+						const bytes = await fetchGoogleWebfontOutlineBytes(
+							href,
+							family,
+							variant.bold,
+							variant.italic,
+							fetch,
+						);
+						if (
+							bytes &&
+							glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
+						) {
+							registeredAny = true;
+						}
 					}
 				}
-			}
-			if (registeredAny && !cancelled) {
-				glyphOutlineFontsTick.value += 1;
-			}
-			return undefined;
-		});
+				if (registeredAny && !cancelled) {
+					glyphOutlineFontsTick.value += 1;
+				}
+				return undefined;
+			},
+		);
 	});
 }

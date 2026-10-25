@@ -83,6 +83,7 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'areaChart3D' },
 	{ id: 'pieChart3D' },
 	{ id: 'initialSlide' },
+	{ id: 'googleFonts' },
 	{ id: 'showToolbar' },
 	{ id: 'showThumbnails' },
 	{ id: 'showCompatibilityToasts' },

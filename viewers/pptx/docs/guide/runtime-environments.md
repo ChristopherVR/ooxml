@@ -23,6 +23,16 @@ These are not gaps to be closed: they follow directly from running inside a brow
 
 A browser has no font catalogue of its own to draw on the way the desktop app does, so `pptx-viewer` resolves each deck font in three steps: use it as-is when the reader's machine has it installed, otherwise fetch its verified metric-compatible clone from Google Fonts before layout (Calibri -> Carlito, Cambria -> Caladea, Arial -> Arimo, Times New Roman -> Tinos, Courier New -> Cousine, Georgia -> Gelasio, so line breaks and text extents still match PowerPoint), and only when neither exists fall back through PANOSE classification to a same-class generic font, which can shift metrics.
 
+### Fonts and privacy {#fonts-and-privacy}
+
+Fetching a clone from Google Fonts means the reader's browser contacts `fonts.googleapis.com` and `fonts.gstatic.com`, which reveals the reader's IP address to Google. Hosts that must not do that set the `googleFonts` option, available on every binding:
+
+- unset (the default): clones are loaded from Google Fonts as described above;
+- `googleFonts: false`: no request goes to Google; text uses installed fonts, fonts embedded in the deck, or the PANOSE fallback, so line breaks can differ from PowerPoint;
+- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`: the same CSS2 request goes to a self-hosted mirror instead. The mirror must answer the Google Fonts CSS2 query format (`?family=...&display=swap`) with compatible `@font-face` CSS, and its font files should be self-hosted too so no request reaches Google. A `baseUrl` that is not an absolute `http(s)` URL turns the fallback off and logs a warning.
+
+The option also governs the WordArt glyph-outline fetch and the webfonts inlined into slide image exports, since both reuse the stylesheet URL the viewer resolved. Both read the CSS and font files with `fetch()`, so a mirror must send CORS headers (`Access-Control-Allow-Origin`) for them to work, as Google's own servers do.
+
 ### Run program actions (`ppaction://program`)
 
 PowerPoint's "Run program" action setting is parsed and round-tripped losslessly (the authored program path/command survives load and save unchanged), and the Action Settings dialog lets you view and edit it like any other action while editing. What a browser cannot do is what PowerPoint itself does when the action fires during a show: launch a local executable. No web platform API exists for that, by design (a page that could launch arbitrary local programs would be a critical security hole).

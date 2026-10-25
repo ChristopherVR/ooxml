@@ -223,6 +223,9 @@ const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	// vetoes it), but Vue would cast the absent boolean to `false` and veto it for every host that
 	// said nothing.
 	autosave: undefined,
+	// Left undefined on purpose too: an omitted `googleFonts` keeps the Google Fonts fallback, but
+	// Vue would cast the absent prop (its type includes `false`) to `false` and turn it off.
+	googleFonts: undefined,
 	smartArt3D: false,
 	surfaceChart3D: false,
 	barChart3D: false,
@@ -479,7 +482,7 @@ useEmbeddedFonts(deck.embeddedFonts);
 // Fetch Google-hosted webfonts for referenced families that are neither
 // installed nor embedded (Microsoft 365 "cloud fonts" have no browser
 // equivalent); auto-cleaned on unmount.
-useGoogleWebfonts(slides, deck.embeddedFonts);
+useGoogleWebfonts(slides, deck.embeddedFonts, () => props.googleFonts);
 watchEffect((onCleanup) => {
 	const css = buildUserFontFaceStyles(props.fonts ?? []);
 	if (!css || typeof document === 'undefined') {

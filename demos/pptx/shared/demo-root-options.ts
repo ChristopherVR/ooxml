@@ -10,7 +10,9 @@
  * - `?initialSlide=<n>` opens the deck on zero-based slide `n` (any finite
  *   number; the viewer clamps it into the deck),
  * - `?fitPadding=<px>` sets the per-side fit padding (any finite number of at
- *   least 0), so a spec can fit the slide flush against the viewport.
+ *   least 0), so a spec can fit the slide flush against the viewport,
+ * - `?googleFonts=0` turns the Google Fonts fallback off, and
+ *   `?googleFontsBaseUrl=<url>` points it at a self-hosted CSS2 mirror.
  *
  * Only the options present in the query string are returned, so a demo opened
  * without them keeps the binding's own defaults. Kept binding-agnostic on
@@ -25,6 +27,7 @@ export interface DemoRootOptions {
 	showThumbnails?: boolean;
 	initialSlide?: number;
 	fitPadding?: number;
+	googleFonts?: false | { baseUrl: string };
 }
 
 function parseFlag(raw: string | null): boolean | undefined {
@@ -61,6 +64,12 @@ export function parseDemoRootOptions(search: string): DemoRootOptions {
 		rawPadding === null || rawPadding.trim() === '' ? Number.NaN : Number(rawPadding);
 	if (Number.isFinite(fitPadding) && fitPadding >= 0) {
 		options.fitPadding = fitPadding;
+	}
+	const googleFontsBaseUrl = params.get('googleFontsBaseUrl');
+	if (googleFontsBaseUrl) {
+		options.googleFonts = { baseUrl: googleFontsBaseUrl };
+	} else if (parseFlag(params.get('googleFonts')) === false) {
+		options.googleFonts = false;
 	}
 	return options;
 }

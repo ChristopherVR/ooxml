@@ -34,19 +34,20 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 
 ## 界面与初始状态 {#chrome-initial-state}
 
-| 选项                      | 类型                | 默认值     | 说明                                                                                                                                                           |
-| ------------------------- | ------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`            | `number`            | `0`        | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                                                                      |
-| `showToolbar`             | `boolean`           | `true`     | 显示导航、缩放和全屏工具栏。                                                                                                                                   |
-| `showThumbnails`          | `boolean`           | `true`     | 显示缩略图侧边栏。                                                                                                                                             |
-| `showCompatibilityToasts` | `boolean`           | `true`     | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                    |
-| `showFormatToolbar`       | `boolean`           | `true`     | 构建编辑格式工具栏行，包括粗体、填充、插入和层叠顺序。该行仅在启用编辑时*可见*。                                                                               |
-| `showInspector`           | `boolean`           | `true`     | 构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                         |
-| `hiddenActions`           | `ToolbarActionId[]` | -          | 单独隐藏工具栏按钮或功能区选项卡，见下文。                                                                                                                     |
-| `editable`                | `boolean`           | `false`    | 启用编辑，包括点击选择、拖动、缩放、旋转、内联文本编辑、键盘快捷键、撤销和重做，以及工具栏保存按钮。稍后可通过 [`setEditable`](/zh/vanilla/api#editing) 切换。 |
-| `readOnly`                | `boolean`           | -          | 已由 `editable` 替代的旧标记，保留它是为了让已有选项对象继续通过类型检查，不再产生效果。                                                                       |
-| `inspectorInitiallyOpen`  | `boolean`           | -          | 检查器的初始可见性；省略时保持桌面端或移动端的默认值。                                                                                                         |
-| `rulerUnit`               | `RulerUnit`         | `'inches'` | “视图 > 标尺”刻度标签的单位制（`'centimetres'` 在各绑定中标签一致）。                                                                                          |
+| 选项                      | 类型                           | 默认值     | 说明                                                                                                                                                                                                                                                                       |
+| ------------------------- | ------------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`                       | `0`        | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                                                                                                                                                                                  |
+| `googleFonts`             | `false \| { baseUrl: string }` | 未设置     | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时从 `fonts.googleapis.com` 加载；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体）；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
+| `showToolbar`             | `boolean`                      | `true`     | 显示导航、缩放和全屏工具栏。                                                                                                                                                                                                                                               |
+| `showThumbnails`          | `boolean`                      | `true`     | 显示缩略图侧边栏。                                                                                                                                                                                                                                                         |
+| `showCompatibilityToasts` | `boolean`                      | `true`     | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                |
+| `showFormatToolbar`       | `boolean`                      | `true`     | 构建编辑格式工具栏行，包括粗体、填充、插入和层叠顺序。该行仅在启用编辑时*可见*。                                                                                                                                                                                           |
+| `showInspector`           | `boolean`                      | `true`     | 构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                                                                                                                                     |
+| `hiddenActions`           | `ToolbarActionId[]`            | -          | 单独隐藏工具栏按钮或功能区选项卡，见下文。                                                                                                                                                                                                                                 |
+| `editable`                | `boolean`                      | `false`    | 启用编辑，包括点击选择、拖动、缩放、旋转、内联文本编辑、键盘快捷键、撤销和重做，以及工具栏保存按钮。稍后可通过 [`setEditable`](/zh/vanilla/api#editing) 切换。                                                                                                             |
+| `readOnly`                | `boolean`                      | -          | 已由 `editable` 替代的旧标记，保留它是为了让已有选项对象继续通过类型检查，不再产生效果。                                                                                                                                                                                   |
+| `inspectorInitiallyOpen`  | `boolean`                      | -          | 检查器的初始可见性；省略时保持桌面端或移动端的默认值。                                                                                                                                                                                                                     |
+| `rulerUnit`               | `RulerUnit`                    | `'inches'` | “视图 > 标尺”刻度标签的单位制（`'centimetres'` 在各绑定中标签一致）。                                                                                                                                                                                                      |
 
 ### `hiddenActions` {#hiddenactions}
 
@@ -240,6 +241,7 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	onLocaleChange?: (code: string) => void;
 	accountAuth?: AccountAuthConfig;
 	initialSlide?: number;
+	googleFonts?: false | { baseUrl: string };
 	editable?: boolean;
 	readOnly?: boolean;
 	showToolbar?: boolean;

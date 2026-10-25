@@ -8,6 +8,7 @@ import type {
 	DocumentStorage,
 	ConnectionStatus,
 	FieldSubstitutionContext,
+	GoogleFontsOption,
 	MobileSheetKey,
 	ResolvedCustomization,
 	ViewerAutosaveStatus,
@@ -71,6 +72,8 @@ export interface CreateViewerStateOptions {
 	/** Host `authorName` prop: comment/reply author and the broadcast presenter name. */
 	getAuthorName?: () => string | undefined;
 	getInitialSlide: () => number;
+	/** Host `googleFonts` prop: the Google Fonts fallback policy. */
+	getGoogleFonts?: () => GoogleFontsOption | undefined;
 	/** Already locale-bound translator; propagated to descendants via context. */
 	t: Translator;
 	getSmartArt3D: () => boolean;
