@@ -7,6 +7,59 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.51.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let theme scheme edits name the parts they write ([51b741e](https://github.com/ChristopherVR/ooxml/commit/51b741e66bd0684edd5c44df9a5755a2885368ac))
+- **pptx:** Read a theme part's format scheme with its other schemes ([868cb75](https://github.com/ChristopherVR/ooxml/commit/868cb758e84577dac0641f46eff3dad00203baa8))
+- **pptx:** Put back a format scheme a theme part held ([6bcd4bb](https://github.com/ChristopherVR/ooxml/commit/6bcd4bba33314cbd9626c727df9a1b932d282230))
+- **pptx:** Let the editor history forget steps it cannot restore ([a2d0a9c](https://github.com/ChristopherVR/ooxml/commit/a2d0a9ccf257647bc03bcf14f1981c78a49a5381))
+- **pptx:** Let hosts disable or self-host the Google Fonts fallback ([#200](https://github.com/ChristopherVR/ooxml/issues/200)) ([e5de994](https://github.com/ChristopherVR/ooxml/commit/e5de994b1d976c64f727dbefd35ae640a4563ebf))
+
+### Bug Fixes
+
+- **pptx:** Run the saves of one handler one at a time ([#184](https://github.com/ChristopherVR/ooxml/issues/184)) ([4e9353f](https://github.com/ChristopherVR/ooxml/commit/4e9353fc82d3d3ae8fd1865bc40e157465d850f5))
+- **pptx:** Resolve master and layout backgrounds through their master ([c6da218](https://github.com/ChristopherVR/ooxml/commit/c6da218afe8f162ffb361d14b7dea7502c95a19e))
+- **vanilla:** Take back a new slide from a layout in one Undo ([18f85a0](https://github.com/ChristopherVR/ooxml/commit/18f85a0b93cba47cd1306d3755a9dee03d496e12))
+- **vanilla:** Keep an edit made to a new slide while its layout loads ([fc769ae](https://github.com/ChristopherVR/ooxml/commit/fc769ae029325dd070dc3d91d4cc643d86884ba5))
+- **vanilla:** Undo design theme picks in the theme part as well ([60e8656](https://github.com/ChristopherVR/ooxml/commit/60e8656eac6ea33901d29838fc877650ed5b6917))
+- **pptx:** Keep theme state on the part a switched master uses ([c806787](https://github.com/ChristopherVR/ooxml/commit/c8067874618784de1908cd81c3b5e8affda800cf))
+- **vanilla:** Apply a theme part by path in place as one undo step ([1511e92](https://github.com/ChristopherVR/ooxml/commit/1511e92c8ae5d2bdb974d1ecb1908395df4a93b5))
+- **ui:** Draw a switched master's style references with its new part ([915a3e1](https://github.com/ChristopherVR/ooxml/commit/915a3e1034cc4608f68d315a2e4c89056548b94f))
+- **vanilla:** Carry the format scheme through a theme switch and undo ([ddd5d7b](https://github.com/ChristopherVR/ooxml/commit/ddd5d7b61630f88a0895e07012b5a7bdeb4af5d5))
+- **vanilla:** Keep slide pictures loading after a master view command ([09311c0](https://github.com/ChristopherVR/ooxml/commit/09311c0155f207c94c2ec7a51889df717d164b91))
+- **vanilla:** Forget the undo steps that reach a deleted layout ([0ec48c1](https://github.com/ChristopherVR/ooxml/commit/0ec48c1c0a2acf7f1534fd513bac92298cf8e5a8))
+- **vanilla:** Draw the inspector text effects from the shared fields ([bdbb929](https://github.com/ChristopherVR/ooxml/commit/bdbb9299fe22ca321255eb045c3663eb9eed3496))
+- **vanilla:** Apply a whole-text inspector edit to every run ([9ddfef4](https://github.com/ChristopherVR/ooxml/commit/9ddfef4dba93be3b727f1ce3e1485c31869419d9))
+- **vanilla:** Stack the accessibility title field like alt text ([83ef182](https://github.com/ChristopherVR/ooxml/commit/83ef1828f8cd6e472d961eb3bcdb15687460472e))
+- **vanilla:** Print through the shared job plan with translated titles ([0c0a6f8](https://github.com/ChristopherVR/ooxml/commit/0c0a6f8ccb2a46c067b6db39e92df81156defc87))
+
+### Performance
+
+- **xml:** Read a fragment's child elements one at a time ([9ce77d4](https://github.com/ChristopherVR/ooxml/commit/9ce77d47f951b9e2b1183df0dac82675b6dd843c))
+
+### Refactor
+
+- **vanilla:** Restore theme undo through the shared restore call ([0ec4a7d](https://github.com/ChristopherVR/ooxml/commit/0ec4a7d6ea87166a18a29a1e3c012241353bbe72))
+- **opc:** Read a guarded zip entry as a stream of chunks ([472fa92](https://github.com/ChristopherVR/ooxml/commit/472fa927be4d4dafb2b625834b30109af8c28a4a))
+- **xlsx:** Share the number format view of the automation reads ([c3811da](https://github.com/ChristopherVR/ooxml/commit/c3811daeda4a9d280a47a9873fb9cd1a77fb32e2))
+- **pptx:** Forget a deleted part's undo steps in one shared call ([1b5ddc4](https://github.com/ChristopherVR/ooxml/commit/1b5ddc4517a7b54ecf97baa56cb55f2e574eb802))
+- **pptx:** Remove react and vue modules nothing imports ([#199](https://github.com/ChristopherVR/ooxml/issues/199)) ([54359ae](https://github.com/ChristopherVR/ooxml/commit/54359ae107d7782c0df857ec31993f089b3775a6))
+
+### Testing
+
+- **pptx:** Give the two-themes deck parts with their own script faces ([7fe8fc7](https://github.com/ChristopherVR/ooxml/commit/7fe8fc705d55efa439df9fe61334c9c31737c9ae))
+- **pptx:** Undo a theme switch on parts with their own script faces ([f8aa949](https://github.com/ChristopherVR/ooxml/commit/f8aa949a91562e6b0fc6c045d02f38877cfc8361))
+- **pptx:** Give the two-themes deck its own line and effect styles ([c42c3d5](https://github.com/ChristopherVR/ooxml/commit/c42c3d5d56cf4cb4fd3317ca369d0972f4298c63))
+- **pptx:** Undo a theme switch's style references in every binding ([e8c55b0](https://github.com/ChristopherVR/ooxml/commit/e8c55b0fee7a74a87fe3fd91ee9c29969b551095))
+- **pptx:** Undo an Effects pick in every binding ([a0c10ed](https://github.com/ChristopherVR/ooxml/commit/a0c10ed4ebdc5f1006e41e46c158b041bbc3c265))
+
+### Chores
+
+- **pptx:** Drop the text effect strings nothing reads anymore ([5d28074](https://github.com/ChristopherVR/ooxml/commit/5d2807489dc5b463f38c40dc25ea3b5a8cac0a42))
+- **pptx:** Drop two shortcut strings only Vue's old catalog read ([860622c](https://github.com/ChristopherVR/ooxml/commit/860622c74e0d2471a8c019c1c68d10b983e9278d))
+
 ## [3.50.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.50.2) - 2026-10-24
 
 ### Bug Fixes

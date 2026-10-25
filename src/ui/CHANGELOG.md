@@ -7,6 +7,46 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.27.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.27.0) - 2026-10-25
+
+### Features
+
+- **ui:** Describe the pptx text effects as shared field descriptors ([371ce97](https://github.com/ChristopherVR/ooxml/commit/371ce972368f74d2645500c41ba4ee581777fd55))
+- **ui:** Share one print job plan across the powerpoint bindings ([e9e05ba](https://github.com/ChristopherVR/ooxml/commit/e9e05baf890a3dccbbd6df555e35944d7544430a))
+- **ui:** Group the shared keyboard shortcut reference ([ab6c1fd](https://github.com/ChristopherVR/ooxml/commit/ab6c1fda0068e213b6753363fb26ed353d713c13))
+- **pptx:** Let hosts disable or self-host the Google Fonts fallback ([#200](https://github.com/ChristopherVR/ooxml/issues/200)) ([e5de994](https://github.com/ChristopherVR/ooxml/commit/e5de994b1d976c64f727dbefd35ae640a4563ebf))
+
+### Bug Fixes
+
+- **ui:** Decide what a new slide takes once its layout arrives ([ce051bd](https://github.com/ChristopherVR/ooxml/commit/ce051bd9101627277eaa8602d911aa2b89ec2a30))
+- **ui:** Share theme undo records and queue every theme part write ([981d069](https://github.com/ChristopherVR/ooxml/commit/981d069b2421e8d984a051225f532f8d06d55d48))
+- **ui:** Share an in-place theme by path switch and its undo ([bcaaa76](https://github.com/ChristopherVR/ooxml/commit/bcaaa7635069c05a7b160a2f85fc90635a97f358))
+- **ui:** Undo a theme switch without writing other masters' parts ([5fdf793](https://github.com/ChristopherVR/ooxml/commit/5fdf793d0625b064a289e05df285b8ee2f520058))
+- **ui:** Draw a switched master's style references with its new part ([915a3e1](https://github.com/ChristopherVR/ooxml/commit/915a3e1034cc4608f68d315a2e4c89056548b94f))
+- **ui:** Undo an Effects pick in the viewer and the saved theme ([b43768c](https://github.com/ChristopherVR/ooxml/commit/b43768ccfb742e6daa1fe143d825cb404f73cd20))
+- **ui:** Name what a master command removed and the steps that reach it ([3fb7709](https://github.com/ChristopherVR/ooxml/commit/3fb77093c1285f41f26d844fc9057c1f64fc8af5))
+
+### Refactor
+
+- **ui:** Restore a crossed history theme in one shared call ([9fac9fd](https://github.com/ChristopherVR/ooxml/commit/9fac9fd48b58434883305d08d566ea1c26172d5c))
+- **pptx:** Forget a deleted part's undo steps in one shared call ([1b5ddc4](https://github.com/ChristopherVR/ooxml/commit/1b5ddc4517a7b54ecf97baa56cb55f2e574eb802))
+- **ui:** Take the text effect field fallbacks from the toggles ([49973d5](https://github.com/ChristopherVR/ooxml/commit/49973d55d48b08ab153c714a7077fef5f0a1f119))
+- **ui:** Keep the shortcut group label map private ([1b669d9](https://github.com/ChristopherVR/ooxml/commit/1b669d90c9c7edc9b9dc3079ccdf459983190015))
+- **pptx:** Remove react and vue modules nothing imports ([#199](https://github.com/ChristopherVR/ooxml/issues/199)) ([54359ae](https://github.com/ChristopherVR/ooxml/commit/54359ae107d7782c0df857ec31993f089b3775a6))
+
+### Documentation
+
+- **ui:** Say how a binding adopts a slide master view command ([6acbbf5](https://github.com/ChristopherVR/ooxml/commit/6acbbf58e540ab597ab07815a2855e6b2020b34e))
+
+### Testing
+
+- **pptx:** Pin a design fonts pick to the font scheme part ([5555df9](https://github.com/ChristopherVR/ooxml/commit/5555df91ffae18c8025c183d9f98aeefcc4093a2))
+
+### Chores
+
+- **pptx:** Drop the text effect strings nothing reads anymore ([5d28074](https://github.com/ChristopherVR/ooxml/commit/5d2807489dc5b463f38c40dc25ea3b5a8cac0a42))
+- **pptx:** Drop two shortcut strings only Vue's old catalog read ([860622c](https://github.com/ChristopherVR/ooxml/commit/860622c74e0d2471a8c019c1c68d10b983e9278d))
+
 ## [1.26.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.26.2) - 2026-10-24
 
 ### Bug Fixes

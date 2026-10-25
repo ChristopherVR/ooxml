@@ -7,6 +7,69 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.52.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.52.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let theme scheme edits name the parts they write ([51b741e](https://github.com/ChristopherVR/ooxml/commit/51b741e66bd0684edd5c44df9a5755a2885368ac))
+- **pptx:** Read a theme part's format scheme with its other schemes ([868cb75](https://github.com/ChristopherVR/ooxml/commit/868cb758e84577dac0641f46eff3dad00203baa8))
+- **pptx:** Put back a format scheme a theme part held ([6bcd4bb](https://github.com/ChristopherVR/ooxml/commit/6bcd4bba33314cbd9626c727df9a1b932d282230))
+- **pptx:** Let the editor history forget steps it cannot restore ([a2d0a9c](https://github.com/ChristopherVR/ooxml/commit/a2d0a9ccf257647bc03bcf14f1981c78a49a5381))
+- **pptx:** Let hosts disable or self-host the Google Fonts fallback ([#200](https://github.com/ChristopherVR/ooxml/issues/200)) ([e5de994](https://github.com/ChristopherVR/ooxml/commit/e5de994b1d976c64f727dbefd35ae640a4563ebf))
+
+### Bug Fixes
+
+- **pptx:** Run the saves of one handler one at a time ([#184](https://github.com/ChristopherVR/ooxml/issues/184)) ([4e9353f](https://github.com/ChristopherVR/ooxml/commit/4e9353fc82d3d3ae8fd1865bc40e157465d850f5))
+- **pptx:** Resolve master and layout backgrounds through their master ([c6da218](https://github.com/ChristopherVR/ooxml/commit/c6da218afe8f162ffb361d14b7dea7502c95a19e))
+- **react:** Keep the slides state as it is while a layout applies ([dd4e993](https://github.com/ChristopherVR/ooxml/commit/dd4e993da3e61734302a9f4df025067c413254de))
+- **react:** Keep an edit made to a new slide while its layout loads ([8c73289](https://github.com/ChristopherVR/ooxml/commit/8c7328981b23f7bcd92b264a0473058b7211f87f))
+- **react:** Undo and redo a theme pick in the theme part too ([af45148](https://github.com/ChristopherVR/ooxml/commit/af45148b18087db083286e2afa6ad9204dfb885d))
+- **react:** Wait for an undone theme part before saving ([4105d37](https://github.com/ChristopherVR/ooxml/commit/4105d37189e3ecfda11e656e2125abebe295293b))
+- **react:** Commit a design theme pick from the slides it previewed ([4f324a9](https://github.com/ChristopherVR/ooxml/commit/4f324a9c6e25c1c6271e693ab2f3badad62662eb))
+- **ui:** Share theme undo records and queue every theme part write ([981d069](https://github.com/ChristopherVR/ooxml/commit/981d069b2421e8d984a051225f532f8d06d55d48))
+- **pptx:** Keep theme state on the part a switched master uses ([c806787](https://github.com/ChristopherVR/ooxml/commit/c8067874618784de1908cd81c3b5e8affda800cf))
+- **react:** Apply a theme part by path in place as one undo step ([96e75ac](https://github.com/ChristopherVR/ooxml/commit/96e75ac176eb9f0ff19cf1237aaad64751530a1e))
+- **react:** Put a switched deck's format scheme back on undo ([34a3807](https://github.com/ChristopherVR/ooxml/commit/34a3807f217a1ddc09c8a7e77674024e37142e9c))
+- **react:** Keep a slide paste with its own masters to one undo step ([f04fa2c](https://github.com/ChristopherVR/ooxml/commit/f04fa2c3cfd0d07fd90e348d8b3f54e1161f18a6))
+- **react:** Record no undo step for a master added or deleted ([6943036](https://github.com/ChristopherVR/ooxml/commit/69430366cb9e45dd62fd3639fc080da5b6478084))
+- **ui:** Undo an Effects pick in the viewer and the saved theme ([b43768c](https://github.com/ChristopherVR/ooxml/commit/b43768ccfb742e6daa1fe143d825cb404f73cd20))
+- **react:** Keep the slides and their pictures through a master command ([8a8b9f5](https://github.com/ChristopherVR/ooxml/commit/8a8b9f51eafea72ff673b2d807c4c71bf16996f7))
+- **react:** Forget the undo steps that reach a deleted layout ([3faabb5](https://github.com/ChristopherVR/ooxml/commit/3faabb57c37fed3354f1d75bbdbcf4236a3776ea))
+- **react:** Adopt the layout list a master view command returns ([12ac250](https://github.com/ChristopherVR/ooxml/commit/12ac250f230782d2a9714c1a6feb77b7ec6e1c86))
+- **react:** Stop the duotone pickers applying a colour on blur ([#193](https://github.com/ChristopherVR/ooxml/issues/193)) ([82b0468](https://github.com/ChristopherVR/ooxml/commit/82b0468f6331116ad65b15d2885145bd5f2a8a8d))
+- **react:** Print through the shared job plan and its vector path ([f52d2e5](https://github.com/ChristopherVR/ooxml/commit/f52d2e5f422a94965b1c21f8d7b37384d015bbc2))
+
+### Performance
+
+- **xml:** Read a fragment's child elements one at a time ([9ce77d4](https://github.com/ChristopherVR/ooxml/commit/9ce77d47f951b9e2b1183df0dac82675b6dd843c))
+
+### Refactor
+
+- **react:** Keep theme undo on the shared theme history ([b22d7d0](https://github.com/ChristopherVR/ooxml/commit/b22d7d0c479a548f06e6ac5db9aa95296091fad6))
+- **react:** Use the shared history theme type directly ([ab74da9](https://github.com/ChristopherVR/ooxml/commit/ab74da95a1c23aa33755530c219b35b2c75abe9e))
+- **opc:** Read a guarded zip entry as a stream of chunks ([472fa92](https://github.com/ChristopherVR/ooxml/commit/472fa927be4d4dafb2b625834b30109af8c28a4a))
+- **xlsx:** Share the number format view of the automation reads ([c3811da](https://github.com/ChristopherVR/ooxml/commit/c3811daeda4a9d280a47a9873fb9cd1a77fb32e2))
+- **pptx:** Forget a deleted part's undo steps in one shared call ([1b5ddc4](https://github.com/ChristopherVR/ooxml/commit/1b5ddc4517a7b54ecf97baa56cb55f2e574eb802))
+- **pptx:** Remove react and vue modules nothing imports ([#199](https://github.com/ChristopherVR/ooxml/issues/199)) ([54359ae](https://github.com/ChristopherVR/ooxml/commit/54359ae107d7782c0df857ec31993f089b3775a6))
+
+### Documentation
+
+- **react:** Correct the text advanced sections header ([91b1f1b](https://github.com/ChristopherVR/ooxml/commit/91b1f1b9c7ae4125583c2cd9179099ebbae97272))
+
+### Testing
+
+- **pptx:** Pin a design fonts pick to the font scheme part ([5555df9](https://github.com/ChristopherVR/ooxml/commit/5555df91ffae18c8025c183d9f98aeefcc4093a2))
+- **pptx:** Give the two-themes deck parts with their own script faces ([7fe8fc7](https://github.com/ChristopherVR/ooxml/commit/7fe8fc705d55efa439df9fe61334c9c31737c9ae))
+- **pptx:** Undo a theme switch on parts with their own script faces ([f8aa949](https://github.com/ChristopherVR/ooxml/commit/f8aa949a91562e6b0fc6c045d02f38877cfc8361))
+- **pptx:** Give the two-themes deck its own line and effect styles ([c42c3d5](https://github.com/ChristopherVR/ooxml/commit/c42c3d5d56cf4cb4fd3317ca369d0972f4298c63))
+- **pptx:** Undo a theme switch's style references in every binding ([e8c55b0](https://github.com/ChristopherVR/ooxml/commit/e8c55b0fee7a74a87fe3fd91ee9c29969b551095))
+- **pptx:** Undo an Effects pick in every binding ([a0c10ed](https://github.com/ChristopherVR/ooxml/commit/a0c10ed4ebdc5f1006e41e46c158b041bbc3c265))
+
+### Chores
+
+- **pptx:** Drop the text effect strings nothing reads anymore ([5d28074](https://github.com/ChristopherVR/ooxml/commit/5d2807489dc5b463f38c40dc25ea3b5a8cac0a42))
+- **pptx:** Drop two shortcut strings only Vue's old catalog read ([860622c](https://github.com/ChristopherVR/ooxml/commit/860622c74e0d2471a8c019c1c68d10b983e9278d))
+
 ## [4.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.51.1) - 2026-10-24
 
 ### Bug Fixes

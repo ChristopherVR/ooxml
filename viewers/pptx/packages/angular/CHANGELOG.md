@@ -7,6 +7,58 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.51.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let theme scheme edits name the parts they write ([51b741e](https://github.com/ChristopherVR/ooxml/commit/51b741e66bd0684edd5c44df9a5755a2885368ac))
+- **pptx:** Read a theme part's format scheme with its other schemes ([868cb75](https://github.com/ChristopherVR/ooxml/commit/868cb758e84577dac0641f46eff3dad00203baa8))
+- **pptx:** Put back a format scheme a theme part held ([6bcd4bb](https://github.com/ChristopherVR/ooxml/commit/6bcd4bba33314cbd9626c727df9a1b932d282230))
+- **pptx:** Let the editor history forget steps it cannot restore ([a2d0a9c](https://github.com/ChristopherVR/ooxml/commit/a2d0a9ccf257647bc03bcf14f1981c78a49a5381))
+- **angular:** Add text shadow, glow and reflection to the inspector ([15921c9](https://github.com/ChristopherVR/ooxml/commit/15921c98e1e29e4f0580c91eed6c27df6e9abd05))
+- **pptx:** Let hosts disable or self-host the Google Fonts fallback ([#200](https://github.com/ChristopherVR/ooxml/issues/200)) ([e5de994](https://github.com/ChristopherVR/ooxml/commit/e5de994b1d976c64f727dbefd35ae640a4563ebf))
+
+### Bug Fixes
+
+- **pptx:** Run the saves of one handler one at a time ([#184](https://github.com/ChristopherVR/ooxml/issues/184)) ([4e9353f](https://github.com/ChristopherVR/ooxml/commit/4e9353fc82d3d3ae8fd1865bc40e157465d850f5))
+- **pptx:** Resolve master and layout backgrounds through their master ([c6da218](https://github.com/ChristopherVR/ooxml/commit/c6da218afe8f162ffb361d14b7dea7502c95a19e))
+- **angular:** Keep an edit made to a new slide while its layout loads ([a832d18](https://github.com/ChristopherVR/ooxml/commit/a832d184b4ca055517910387c4b1c7ddcd7bdf3c))
+- **angular:** Write and undo design theme picks in the theme part ([3b519c8](https://github.com/ChristopherVR/ooxml/commit/3b519c83e2ea9add6b19e2db5f74458e2890116e))
+- **pptx:** Keep theme state on the part a switched master uses ([c806787](https://github.com/ChristopherVR/ooxml/commit/c8067874618784de1908cd81c3b5e8affda800cf))
+- **angular:** Apply a theme part by path in place as one undo step ([ce00626](https://github.com/ChristopherVR/ooxml/commit/ce00626c0892448682a0e277ec5d33771f2471a5))
+- **angular:** Run slide master view commands on the deck as it is now ([63fd9f4](https://github.com/ChristopherVR/ooxml/commit/63fd9f45a6eb945d89b0f5775a0bd52d281229db))
+- **angular:** Forget the undo steps that reach a deleted layout ([50f862d](https://github.com/ChristopherVR/ooxml/commit/50f862d7222a4492dca34aa28e104e39166c3f84))
+- **angular:** Show the slide New Slide adds ([2a436ac](https://github.com/ChristopherVR/ooxml/commit/2a436ac35b89d20c6f78523c85e5abb303a01918))
+- **angular:** Fall back to captured slides when the svg print fails ([0467d90](https://github.com/ChristopherVR/ooxml/commit/0467d90827c93bbea26f1437adcdafd459acf5e4))
+
+### Performance
+
+- **xml:** Read a fragment's child elements one at a time ([9ce77d4](https://github.com/ChristopherVR/ooxml/commit/9ce77d47f951b9e2b1183df0dac82675b6dd843c))
+
+### Refactor
+
+- **angular:** Restore theme undo through the shared restore call ([6c526a2](https://github.com/ChristopherVR/ooxml/commit/6c526a24e0ff73279632bda0202f741794e27015))
+- **opc:** Read a guarded zip entry as a stream of chunks ([472fa92](https://github.com/ChristopherVR/ooxml/commit/472fa927be4d4dafb2b625834b30109af8c28a4a))
+- **xlsx:** Share the number format view of the automation reads ([c3811da](https://github.com/ChristopherVR/ooxml/commit/c3811daeda4a9d280a47a9873fb9cd1a77fb32e2))
+- **angular:** Move the slide master view commands into a module ([f527472](https://github.com/ChristopherVR/ooxml/commit/f52747261d8bd2d676b96cad8d28efdf956f1439))
+- **pptx:** Forget a deleted part's undo steps in one shared call ([1b5ddc4](https://github.com/ChristopherVR/ooxml/commit/1b5ddc4517a7b54ecf97baa56cb55f2e574eb802))
+- **pptx:** Remove react and vue modules nothing imports ([#199](https://github.com/ChristopherVR/ooxml/issues/199)) ([54359ae](https://github.com/ChristopherVR/ooxml/commit/54359ae107d7782c0df857ec31993f089b3775a6))
+
+### Testing
+
+- **angular:** Pin one Undo per layout pick and new slide from a layout ([34c8b84](https://github.com/ChristopherVR/ooxml/commit/34c8b8484a90809eec58bff169e3208802ab3aac))
+- **pptx:** Give the two-themes deck parts with their own script faces ([7fe8fc7](https://github.com/ChristopherVR/ooxml/commit/7fe8fc705d55efa439df9fe61334c9c31737c9ae))
+- **pptx:** Undo a theme switch on parts with their own script faces ([f8aa949](https://github.com/ChristopherVR/ooxml/commit/f8aa949a91562e6b0fc6c045d02f38877cfc8361))
+- **pptx:** Give the two-themes deck its own line and effect styles ([c42c3d5](https://github.com/ChristopherVR/ooxml/commit/c42c3d5d56cf4cb4fd3317ca369d0972f4298c63))
+- **pptx:** Undo a theme switch's style references in every binding ([e8c55b0](https://github.com/ChristopherVR/ooxml/commit/e8c55b0fee7a74a87fe3fd91ee9c29969b551095))
+- **pptx:** Undo an Effects pick in every binding ([a0c10ed](https://github.com/ChristopherVR/ooxml/commit/a0c10ed4ebdc5f1006e41e46c158b041bbc3c265))
+- **angular:** Give the layout undo tests' loader its theme signals ([57549bb](https://github.com/ChristopherVR/ooxml/commit/57549bb0d6293eb59731262a016de6474a834b69))
+
+### Chores
+
+- **pptx:** Drop the text effect strings nothing reads anymore ([5d28074](https://github.com/ChristopherVR/ooxml/commit/5d2807489dc5b463f38c40dc25ea3b5a8cac0a42))
+- **pptx:** Drop two shortcut strings only Vue's old catalog read ([860622c](https://github.com/ChristopherVR/ooxml/commit/860622c74e0d2471a8c019c1c68d10b983e9278d))
+
 ## [4.50.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.50.2) - 2026-10-24
 
 ### Bug Fixes

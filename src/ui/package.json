@@ -1,6 +1,6 @@
 {
 	"name": "ooxml-ui",
-	"version": "1.26.2",
+	"version": "1.27.0",
 	"description": "Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, Excel)",
 	"keywords": [
 		"custom-elements",

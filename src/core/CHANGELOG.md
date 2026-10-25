@@ -7,6 +7,38 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.26.0) - 2026-10-25
+
+### Features
+
+- **xlsx:** Read a worksheet's rows without loading the workbook ([45eabde](https://github.com/ChristopherVR/ooxml/commit/45eabdebdd9e9b674007c83a9a67762d01ad672c))
+- **pptx:** Let theme scheme edits name the parts they write ([51b741e](https://github.com/ChristopherVR/ooxml/commit/51b741e66bd0684edd5c44df9a5755a2885368ac))
+- **pptx:** Read a theme part's format scheme with its other schemes ([868cb75](https://github.com/ChristopherVR/ooxml/commit/868cb758e84577dac0641f46eff3dad00203baa8))
+- **pptx:** Put back a format scheme a theme part held ([6bcd4bb](https://github.com/ChristopherVR/ooxml/commit/6bcd4bba33314cbd9626c727df9a1b932d282230))
+- **pptx:** Let the editor history forget steps it cannot restore ([a2d0a9c](https://github.com/ChristopherVR/ooxml/commit/a2d0a9ccf257647bc03bcf14f1981c78a49a5381))
+
+### Bug Fixes
+
+- **pptx:** Run the saves of one handler one at a time ([#184](https://github.com/ChristopherVR/ooxml/issues/184)) ([4e9353f](https://github.com/ChristopherVR/ooxml/commit/4e9353fc82d3d3ae8fd1865bc40e157465d850f5))
+- **pptx:** Resolve master and layout backgrounds through their master ([c6da218](https://github.com/ChristopherVR/ooxml/commit/c6da218afe8f162ffb361d14b7dea7502c95a19e))
+- **pptx:** Keep theme state on the part a switched master uses ([c806787](https://github.com/ChristopherVR/ooxml/commit/c8067874618784de1908cd81c3b5e8affda800cf))
+
+### Performance
+
+- **xml:** Read a fragment's child elements one at a time ([9ce77d4](https://github.com/ChristopherVR/ooxml/commit/9ce77d47f951b9e2b1183df0dac82675b6dd843c))
+- **xlsx:** Read a worksheet's cell data one row at a time ([eab7423](https://github.com/ChristopherVR/ooxml/commit/eab7423eb5fba0031f1b1524d58a1a6f2a507c43))
+- **xlsx:** Read shared strings without building a dom ([7cb2ec6](https://github.com/ChristopherVR/ooxml/commit/7cb2ec6fb3fa673d8f83433868f1f12afb48e4a4))
+
+### Refactor
+
+- **opc:** Read a guarded zip entry as a stream of chunks ([472fa92](https://github.com/ChristopherVR/ooxml/commit/472fa927be4d4dafb2b625834b30109af8c28a4a))
+- **xlsx:** Share the number format view of the automation reads ([c3811da](https://github.com/ChristopherVR/ooxml/commit/c3811daeda4a9d280a47a9873fb9cd1a77fb32e2))
+
+### Testing
+
+- **pptx:** Give the two-themes deck parts with their own script faces ([7fe8fc7](https://github.com/ChristopherVR/ooxml/commit/7fe8fc705d55efa439df9fe61334c9c31737c9ae))
+- **pptx:** Give the two-themes deck its own line and effect styles ([c42c3d5](https://github.com/ChristopherVR/ooxml/commit/c42c3d5d56cf4cb4fd3317ca369d0972f4298c63))
+
 ## [1.25.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.25.2) - 2026-10-24
 
 ### Bug Fixes
