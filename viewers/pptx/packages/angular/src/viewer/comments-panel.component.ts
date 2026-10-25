@@ -34,6 +34,7 @@ import {
 	signal,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
 
@@ -111,11 +112,12 @@ export class CommentsPanelComponent {
 
 	submit(event: Event): void {
 		event.preventDefault();
-		const text = this.draft().trim();
-		if (text.length === 0) {
+		// The mentions index the draft as typed: they move with its trim.
+		const submission = trimCommentMentions(this.draft(), this.draftMentions());
+		if (submission.text.length === 0) {
 			return;
 		}
-		this.add.emit({ text, mentions: this.draftMentions() });
+		this.add.emit(submission);
 		this.draft.set('');
 		this.draftMentions.set([]);
 	}
@@ -141,11 +143,11 @@ export class CommentsPanelComponent {
 	}
 
 	submitReply(parentId: string): void {
-		const text = this.replyDraft().trim();
-		if (text.length === 0) {
+		const submission = trimCommentMentions(this.replyDraft(), this.replyMentions());
+		if (submission.text.length === 0) {
 			return;
 		}
-		this.reply.emit({ parentId, text, mentions: this.replyMentions() });
+		this.reply.emit({ parentId, ...submission });
 		this.cancelReply();
 	}
 

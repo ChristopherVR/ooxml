@@ -128,7 +128,6 @@ import {
 	replyToCommentInList,
 	toggleCommentResolvedInList,
 } from './comments-helpers';
-import { withMentionsOnLast, withMentionsOnLastReply } from './comments-mentions-patch';
 import type { CommentSubmission } from './comments-panel.component';
 import { CommentsPanelComponent } from './comments-panel.component';
 import { CompatToastsComponent } from './compat-toasts.component';
@@ -4207,19 +4206,19 @@ export class PowerPointViewerComponent
 		return this.authorName() || this.viewerOpts.options().general.userName || 'You';
 	}
 
-	/**
-	 * Append a comment to the active slide (one history entry).
-	 *
-	 * `addCommentToList` (shared) has no `mentions` parameter, so the `@`-mention
-	 * spans the typeahead recorded are patched onto the newly-appended comment
-	 * (the array's last element) here, rather than in the shared helper.
-	 */
+	/** Append a comment, with its `@`-mention spans, to the active slide (one history entry). */
 	onCommentAdd(submission: CommentSubmission): void {
-		const next = addCommentToList(this.activeComments(), submission.text, this.commentAuthorName());
+		const next = addCommentToList(
+			this.activeComments(),
+			submission.text,
+			this.commentAuthorName(),
+			undefined,
+			undefined,
+			undefined,
+			submission.mentions,
+		);
 		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), {
-				comments: withMentionsOnLast(next, submission.mentions),
-			});
+			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
 		}
 	}
 
@@ -4239,22 +4238,17 @@ export class PowerPointViewerComponent
 		}
 	}
 
-	/**
-	 * Append a threaded reply under a top-level comment on the active slide.
-	 * See {@link onCommentAdd}: `mentions` is patched on afterwards, since
-	 * `replyToCommentInList` (shared) has no `mentions` parameter.
-	 */
+	/** Append a threaded reply, with its `@`-mention spans, under a top-level comment. */
 	onCommentReply(event: { parentId: string } & CommentSubmission): void {
 		const next = replyToCommentInList(
 			this.activeComments(),
 			event.parentId,
 			event.text,
 			this.commentAuthorName(),
+			event.mentions,
 		);
 		if (next) {
-			this.editor.updateSlide(this.activeSlideIndex(), {
-				comments: withMentionsOnLastReply(next, event.parentId, event.mentions),
-			});
+			this.editor.updateSlide(this.activeSlideIndex(), { comments: next });
 		}
 	}
 
