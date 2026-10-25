@@ -1121,14 +1121,21 @@ const noopClose = (): void => undefined;
 
 			@if (findReplace.showFindReplace() && customizationService.panelVisible('findReplace')) {
 				<pptx-find-replace-bar
+					[query]="findReplace.session().query"
+					[replacement]="findReplace.session().replacement"
+					[matchCase]="findReplace.session().options.matchCase"
+					[includeNotes]="findReplace.session().options.includeNotes"
+					[includeChartTitles]="findReplace.session().options.includeChartTitles"
+					[includeChartData]="findReplace.session().options.includeChartData"
 					[matchCount]="findReplace.results().length"
 					[matchIndex]="findReplace.activeIndex()"
 					[matches]="findReplace.results()"
 					(find)="findReplace.onFind($event)"
+					(replacementChange)="findReplace.onReplacementChange($event)"
 					(navigate)="findReplace.onNavigate($event)"
 					(replaceOne)="findReplace.onReplaceOne($event)"
 					(replaceAll)="findReplace.onReplaceAll($event)"
-					(close)="findReplace.showFindReplace.set(false)"
+					(close)="findReplace.closeFindReplace()"
 				/>
 			}
 
@@ -3922,7 +3929,7 @@ export class PowerPointViewerComponent
 	/** Toggle the Find & Replace panel from the title-bar search button. */
 	protected toggleFindReplace(): void {
 		if (this.findReplace.showFindReplace()) {
-			this.findReplace.showFindReplace.set(false);
+			this.findReplace.closeFindReplace();
 			return;
 		}
 		this.findReplace.openFindReplace();

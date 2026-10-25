@@ -1,21 +1,25 @@
 import {
-	applyFindReplacements,
-	findInSlides,
+	findReplaceSessionActions,
+	INITIAL_FIND_REPLACE_SESSION,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
 } from 'ooxml-ui/pptx';
-import type { FindResult, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
+import type { FindReplaceSession, FindResult, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-// The match descriptor and the search / replace implementations are shared with
-// the other bindings; this hook is the React state around them.
+// The match descriptor, the search / replace implementations and the session around them
+// (`find-replace-session`) are shared with the other bindings; this hook keeps the session in
+// React state.
 export type { FindResult } from 'ooxml-ui/pptx';
 interface UseFindReplaceInput {
 	slides: PptxSlide[];
 	mode: string;
-	onSetActiveSlideIndex: (index: number) => void;
-	onSetSelectedElementId: (id: string | null) => void;
+	/**
+	 * Go to a match's slide and select its element there (null for a speaker-notes match), in one
+	 * step: the viewer's `showSlideSelection`, which keeps the selection across the slide change.
+	 */
+	onShowMatch: (slideIndex: number, elementId: string | null) => void;
 	onUpdateSlides: (updater: (slides: PptxSlide[]) => PptxSlide[]) => void;
 	onMarkDirty: () => void;
 	/** Host keyboard customisation (disabled / remapped Find shortcuts). */
@@ -37,7 +41,7 @@ interface UseFindReplaceResult {
 	setFindIncludeChartData: (value: boolean) => void;
 	setFindIncludeNotes: (value: boolean) => void;
 	setFindMatchCase: (matchCase: boolean) => void;
-	findResults: FindResult[];
+	findResults: readonly FindResult[];
 	findResultIndex: number;
 	performFind: () => void;
 	navigateFindResult: (direction: 1 | -1) => void;
@@ -45,149 +49,83 @@ interface UseFindReplaceResult {
 	handleReplaceAll: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Pure helper functions (exported for testing)
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
 export function useFindReplace({
 	slides,
 	mode,
-	onSetActiveSlideIndex,
-	onSetSelectedElementId,
+	onShowMatch,
 	onUpdateSlides,
 	onMarkDirty,
 	keyboard,
 }: UseFindReplaceInput): UseFindReplaceResult {
 	const [findReplaceOpen, setFindReplaceOpen] = useState(false);
-	const [findQuery, setFindQuery] = useState('');
-	const [replaceQuery, setReplaceQuery] = useState('');
-	const [findMatchCase, setFindMatchCase] = useState(false);
-	const [findIncludeNotes, setFindIncludeNotes] = useState(false);
-	const [findIncludeChartTitles, setFindIncludeChartTitles] = useState(true);
-	const [findIncludeChartData, setFindIncludeChartData] = useState(false);
-	const [findResults, setFindResults] = useState<FindResult[]>([]);
-	const [findResultIndex, setFindResultIndex] = useState(-1);
-	/** Set by a replace so the search re-runs once the replaced slides land. */
-	const pendingRefindRef = useRef(false);
+	const [session, setSession] = useState<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
+	// The actions run long after the render that made them, so they read the latest slides and
+	// callbacks, and the store reads a ref rather than this render's `session`.
+	const latest = useRef({ slides, onShowMatch, onUpdateSlides, onMarkDirty });
+	latest.current = { slides, onShowMatch, onUpdateSlides, onMarkDirty };
+	const latestSession = useRef(session);
+	// One set of actions for the hook's lifetime (they read everything through the refs).
+	const [actions] = useState(() =>
+		findReplaceSessionActions(
+			{
+				get: () => latestSession.current,
+				set: (next) => {
+					latestSession.current = next;
+					setSession(next);
+				},
+			},
+			{
+				slides: () => latest.current.slides,
+				commit: (next) => {
+					latest.current.onUpdateSlides(() => next as PptxSlide[]);
+					latest.current.onMarkDirty();
+				},
+				navigate: ({ slideIndex, elementId }) => latest.current.onShowMatch(slideIndex, elementId),
+			},
+		),
+	);
 
 	// Closing the bar drops the matches. They also drive the canvas highlight
 	// overlay, which is not gated on `findReplaceOpen`, so leaving them set
 	// kept the match boxes painted on the slide after the bar was gone.
 	useEffect(() => {
-		if (findReplaceOpen) {
-			return;
+		if (!findReplaceOpen) {
+			actions.close();
 		}
-		setFindResults([]);
-		setFindResultIndex(-1);
-		pendingRefindRef.current = false;
-	}, [findReplaceOpen]);
+	}, [findReplaceOpen, actions]);
 
-	// ── Search ────────────────────────────────────────────────────────────
-	const performFind = useCallback(() => {
-		const results = findInSlides(slides, findQuery, {
-			matchCase: findMatchCase,
-			includeNotes: findIncludeNotes,
-			includeChartTitles: findIncludeChartTitles,
-			includeChartData: findIncludeChartData,
-		});
-
-		if (!findQuery) {
-			setFindResults([]);
-			setFindResultIndex(-1);
-			return;
-		}
-
-		setFindResults(results);
-		setFindResultIndex(results.length > 0 ? 0 : -1);
-
-		// Navigate to first match
-		if (results.length > 0) {
-			onSetActiveSlideIndex(results[0].slideIndex);
-			onSetSelectedElementId(results[0].elementId);
-		}
-	}, [
-		slides,
-		findQuery,
-		findMatchCase,
-		findIncludeNotes,
-		findIncludeChartTitles,
-		findIncludeChartData,
-		onSetActiveSlideIndex,
-		onSetSelectedElementId,
-	]);
-
-	// ── Navigate results ──────────────────────────────────────────────────
-	const navigateFindResult = useCallback(
-		(direction: 1 | -1) => {
-			if (findResults.length === 0) {
-				return;
-			}
-			const nextIdx = (findResultIndex + direction + findResults.length) % findResults.length;
-			setFindResultIndex(nextIdx);
-			const match = findResults[nextIdx];
-			if (match) {
-				onSetActiveSlideIndex(match.slideIndex);
-				onSetSelectedElementId(match.elementId);
-			}
-		},
-		[findResults, findResultIndex, onSetActiveSlideIndex, onSetSelectedElementId],
-	);
-
-	// ── Replace helpers ───────────────────────────────────────────────────
-	const applyReplacements = useCallback(
-		(toReplace: FindResult[]) => {
-			if (toReplace.length === 0) {
-				return;
-			}
-			if (toReplace.some((match) => match.readOnly)) {
-				return;
-			}
-
-			onUpdateSlides(
-				(prevSlides) =>
-					applyFindReplacements(prevSlides, toReplace, replaceQuery).slides as PptxSlide[],
-			);
-
-			onMarkDirty();
-		},
-		[replaceQuery, onUpdateSlides, onMarkDirty],
-	);
-
-	// ── Replace current match ─────────────────────────────────────────────
-	const handleReplace = useCallback(() => {
-		if (findResults.length === 0 || findResultIndex < 0) {
-			return;
-		}
-		applyReplacements([findResults[findResultIndex]]);
-		pendingRefindRef.current = true;
-	}, [findResults, findResultIndex, applyReplacements]);
-
-	// ── Replace all ───────────────────────────────────────────────────────
-	const handleReplaceAll = useCallback(() => {
-		if (findResults.length === 0) {
-			return;
-		}
-		applyReplacements(findResults);
-		pendingRefindRef.current = true;
-	}, [findResults, applyReplacements]);
-
-	// Re-run the search once the replaced slides have actually landed in state.
-	// A `setTimeout(performFind, 0)` in the replace handlers called the
-	// `performFind` of the render that scheduled it, whose closure still held
-	// the pre-replace `slides`, so it re-counted the old text and the "n of m"
-	// counter never moved after Replace / Replace All. Gated on the pending
-	// flag so ordinary edits with the bar open do not re-navigate to match 1.
+	// React's slides land a render after a replace commits them, so the session
+	// searches again here, once they have. It does nothing after an ordinary
+	// edit, so editing with the bar open does not jump back to a match.
 	useEffect(() => {
-		if (!pendingRefindRef.current) {
-			return;
-		}
-		pendingRefindRef.current = false;
-		performFind();
-	}, [performFind]);
+		actions.slidesChanged();
+		// `slides` is the trigger (the actions read the latest slides themselves); `actions`
+		// never changes.
+		// oxlint-disable-next-line react/exhaustive-effect-dependencies -- see comment above
+	}, [slides, actions]);
+
+	const handlers = useMemo(
+		() => ({
+			setFindQuery: (query: string) => actions.search({ query }),
+			setReplaceQuery: actions.setReplacement,
+			setFindMatchCase: (matchCase: boolean) => actions.search({ options: { matchCase } }),
+			setFindIncludeNotes: (includeNotes: boolean) => actions.search({ options: { includeNotes } }),
+			setFindIncludeChartTitles: (includeChartTitles: boolean) =>
+				actions.search({ options: { includeChartTitles } }),
+			setFindIncludeChartData: (includeChartData: boolean) =>
+				actions.search({ options: { includeChartData } }),
+			performFind: () => actions.search(),
+			navigateFindResult: (direction: 1 | -1) =>
+				direction > 0 ? actions.next() : actions.previous(),
+			handleReplace: () => {
+				actions.replaceCurrent();
+			},
+			handleReplaceAll: () => {
+				actions.replaceAll();
+			},
+		}),
+		[actions],
+	);
 
 	// ── Keyboard shortcut: Ctrl/Cmd+F or Ctrl/Cmd+H toggles the find bar ──
 	// The chord itself is decided by the shared editor keymap, not here. This
@@ -220,23 +158,14 @@ export function useFindReplace({
 	return {
 		findReplaceOpen,
 		setFindReplaceOpen,
-		findQuery,
-		setFindQuery,
-		replaceQuery,
-		setReplaceQuery,
-		findMatchCase,
-		setFindMatchCase,
-		findIncludeNotes,
-		setFindIncludeNotes,
-		findIncludeChartTitles,
-		findIncludeChartData,
-		setFindIncludeChartTitles,
-		setFindIncludeChartData,
-		findResults,
-		findResultIndex,
-		performFind,
-		navigateFindResult,
-		handleReplace,
-		handleReplaceAll,
+		findQuery: session.query,
+		replaceQuery: session.replacement,
+		findMatchCase: session.options.matchCase,
+		findIncludeNotes: session.options.includeNotes,
+		findIncludeChartTitles: session.options.includeChartTitles,
+		findIncludeChartData: session.options.includeChartData,
+		findResults: session.matches,
+		findResultIndex: session.current,
+		...handlers,
 	};
 }

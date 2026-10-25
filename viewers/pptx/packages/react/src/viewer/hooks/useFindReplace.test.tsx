@@ -13,7 +13,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
 import React, { act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useFindReplace } from './useFindReplace';
 
@@ -55,17 +55,19 @@ afterEach(() => {
 
 type Api = ReturnType<typeof useFindReplace>;
 
-function mount(initial: PptxSlide[]): { api: () => Api; slides: () => PptxSlide[] } {
+function mount(initial: PptxSlide[]) {
 	let api!: Api;
 	let current = initial;
+	let replaceSlides!: (next: PptxSlide[]) => void;
+	const onShowMatch = vi.fn<(slideIndex: number, elementId: string | null) => void>();
 	function Harness() {
 		const [slides, setSlides] = useState(initial);
 		current = slides;
+		replaceSlides = setSlides;
 		api = useFindReplace({
 			slides,
 			mode: 'edit',
-			onSetActiveSlideIndex: () => {},
-			onSetSelectedElementId: () => {},
+			onShowMatch,
 			onUpdateSlides: (updater) => setSlides((prev) => updater(prev)),
 			onMarkDirty: () => {},
 		});
@@ -74,7 +76,27 @@ function mount(initial: PptxSlide[]): { api: () => Api; slides: () => PptxSlide[
 	act(() => {
 		root.render(<Harness />);
 	});
-	return { api: () => api, slides: () => current };
+	return {
+		api: () => api,
+		slides: () => current,
+		/** An ordinary edit, made outside the find bar. */
+		edit: (next: PptxSlide[]) => act(() => replaceSlides(next)),
+		onShowMatch,
+	};
+}
+
+const texts = (slides: PptxSlide[]) => slides.map((s) => (s.elements[0] as { text?: string }).text);
+
+/** Open the bar and search for `query`, as typing in it does. */
+function search(api: () => Api, query: string, replacement = '') {
+	act(() => {
+		api().setFindReplaceOpen(true);
+		api().setFindQuery(query);
+		api().setReplaceQuery(replacement);
+	});
+	act(() => {
+		api().performFind();
+	});
 }
 
 describe('useFindReplace', () => {
@@ -115,5 +137,43 @@ describe('useFindReplace', () => {
 		});
 		expect(api().findResults).toHaveLength(0);
 		expect(api().findResultIndex).toBe(-1);
+	});
+
+	it('replace changes the current match and moves on to the next one', () => {
+		const h = mount([textSlide('a', 'foo bar'), textSlide('b', 'foo foo')]);
+		search(h.api, 'foo', 'qux');
+		act(() => {
+			h.api().navigateFindResult(1);
+		});
+		expect(h.api().findResultIndex).toBe(1);
+		act(() => {
+			h.api().handleReplace();
+		});
+		expect(texts(h.slides())).toStrictEqual(['foo bar', 'qux foo']);
+		// "2 of 2": the match after the replaced one, not back to the first.
+		expect(h.api().findResults).toHaveLength(2);
+		expect(h.api().findResultIndex).toBe(1);
+		expect(h.onShowMatch).toHaveBeenLastCalledWith(1, 'b-t');
+	});
+
+	it('replace refuses a match the deck no longer has where the search found it', () => {
+		const h = mount([textSlide('a', 'foo bar')]);
+		search(h.api, 'foo', 'qux');
+		h.edit([textSlide('a', 'xx foo bar')]);
+		act(() => {
+			h.api().handleReplace();
+		});
+		expect(texts(h.slides())).toStrictEqual(['xx foo bar']);
+	});
+
+	it('a speaker-notes match goes to its slide and selects no element', () => {
+		const notes = { ...textSlide('a', 'nothing'), notes: 'speaker foo' } as PptxSlide;
+		const h = mount([textSlide('z', 'none'), notes]);
+		act(() => {
+			h.api().setFindIncludeNotes(true);
+		});
+		search(h.api, 'foo');
+		expect(h.api().findResults).toHaveLength(1);
+		expect(h.onShowMatch).toHaveBeenLastCalledWith(1, null);
 	});
 });

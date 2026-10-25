@@ -13,11 +13,11 @@ export interface FindReplacePanel {
 }
 
 /**
- * A simple docked Find & Replace panel (query + replacement + match-case
- * toggle + Find/Replace/Replace All), backed by the shared `find-replace.ts`
- * helpers via {@link FindReplaceActions}. No in-canvas match highlighting or
- * next/previous cursor (see that module's docs); status text reports the
- * match count / replacement count instead.
+ * A docked Find & Replace panel (query + Previous / Next + replacement + the
+ * four scopes + Find/Replace/Replace All), backed by the shared Find and
+ * Replace session through {@link FindReplaceActions}. The status line reads
+ * "n of N" for the current match; Replace acts on that match. There is no
+ * in-canvas match highlighting (React's alone).
  */
 export function createFindReplacePanel(
 	doc: Document,
@@ -65,24 +65,28 @@ export function createFindReplacePanel(
 	const hint = createEl(doc, 'p');
 	hint.setAttribute('role', 'status');
 	let canEdit = true;
+	let open = false;
+	/** The last search's count, for a host whose actions have no `status`. */
+	let lastCount = 0;
 
-	const runFind = (): void => {
-		const count = actions.search(
-			queryInput.value,
-			matchCaseInput.checked,
-			notesInput.checked,
-			chartsInput.checked,
-			dataInput.checked,
-		);
+	/** Paint the status line and the buttons from the session; never searches. */
+	const render = (): void => {
+		const query = queryInput.value;
+		const matchStatus = actions.status?.() ?? {
+			current: lastCount > 0 ? 1 : 0,
+			total: lastCount,
+		};
 		const availability = actions.replacementAvailability?.(
-			queryInput.value,
+			query,
 			matchCaseInput.checked,
 			notesInput.checked,
 			chartsInput.checked,
 			dataInput.checked,
 		);
-		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? count > 0));
-		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? count > 0));
+		prevBtn.setDisabled(matchStatus.total === 0);
+		nextBtn.setDisabled(matchStatus.total === 0);
+		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? matchStatus.total > 0));
+		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? matchStatus.total > 0));
 		hint.textContent = availability?.hasReadOnly
 			? t(
 					dataInput.checked
@@ -90,12 +94,46 @@ export function createFindReplacePanel(
 						: 'pptx.findReplace.readOnlyChartTitle',
 				)
 			: '';
-		status.textContent =
-			count > 0
-				? t('pptx.findReplace.matchCount', { current: 1, total: count })
-				: t('pptx.findReplace.noMatches');
+		if (!open) {
+			status.textContent = '';
+		} else if (matchStatus.total > 0) {
+			status.textContent = t('pptx.findReplace.matchCount', { ...matchStatus });
+		} else {
+			status.textContent = query ? t('pptx.findReplace.noMatches') : '';
+		}
 	};
 
+	const runFind = (): void => {
+		lastCount = actions.search(
+			queryInput.value,
+			matchCaseInput.checked,
+			notesInput.checked,
+			chartsInput.checked,
+			dataInput.checked,
+		);
+		render();
+	};
+	/** After a replace the session has searched again; a host without one is searched here. */
+	const afterReplace = (): void => (actions.status ? render() : runFind());
+	const step = (direction: 1 | -1): void => {
+		if (direction > 0) {
+			actions.next?.();
+		} else {
+			actions.previous?.();
+		}
+		render();
+	};
+
+	const prevBtn = makeButton(doc, {
+		label: t('pptx.findReplace.previousMatch'),
+		icon: 'chevron-up',
+		onClick: () => step(-1),
+	});
+	const nextBtn = makeButton(doc, {
+		label: t('pptx.findReplace.nextMatch'),
+		icon: 'chevron-down',
+		onClick: () => step(1),
+	});
 	const findBtn = makeButton(doc, {
 		label: t('pptx.findReplace.searchText'),
 		text: t('pptx.findReplace.title'),
@@ -113,7 +151,7 @@ export function createFindReplacePanel(
 				chartsInput.checked,
 				dataInput.checked,
 			);
-			runFind();
+			afterReplace();
 		},
 	});
 	const replaceAllBtn = makeButton(doc, {
@@ -128,7 +166,7 @@ export function createFindReplacePanel(
 				chartsInput.checked,
 				dataInput.checked,
 			);
-			runFind();
+			afterReplace();
 		},
 	});
 	const closeBtn = makeButton(doc, {
@@ -138,6 +176,7 @@ export function createFindReplacePanel(
 	});
 
 	queryInput.addEventListener('input', runFind);
+	matchCaseInput.addEventListener('change', runFind);
 	notesInput.addEventListener('change', runFind);
 	dataInput.addEventListener('change', runFind);
 	chartsInput.addEventListener('change', runFind);
@@ -150,12 +189,18 @@ export function createFindReplacePanel(
 		if (event.key === 'Escape') {
 			event.stopPropagation();
 			setOpen(false);
+		} else if (event.key === 'Enter') {
+			event.preventDefault();
+			event.stopPropagation();
+			step(event.shiftKey ? -1 : 1);
 		}
 	});
 
 	const row = createEl(doc, 'div', 'pptxv-findreplace-row');
 	row.append(
 		queryInput,
+		prevBtn.btn,
+		nextBtn.btn,
 		replaceInput,
 		matchCaseLabel,
 		notesLabel,
@@ -168,12 +213,26 @@ export function createFindReplacePanel(
 	);
 	el.append(row, status, hint);
 
-	let open = false;
 	const setOpen = (next: boolean): void => {
+		if (next === open) {
+			if (open) {
+				queryInput.focus();
+			}
+			return;
+		}
 		open = next;
 		el.hidden = !open;
-		if (open) {
-			queryInput.focus();
+		if (!open) {
+			// Closing drops the matches; the fields stay for the next open.
+			actions.close?.();
+			render();
+			return;
+		}
+		queryInput.focus();
+		if (queryInput.value) {
+			runFind();
+		} else {
+			render();
 		}
 	};
 
@@ -185,11 +244,8 @@ export function createFindReplacePanel(
 		setEditable(editable) {
 			canEdit = editable;
 			replaceInput.disabled = !editable;
-			replaceBtn.setDisabled(!editable);
-			replaceAllBtn.setDisabled(!editable);
-			if (open && queryInput.value) {
-				runFind();
-			}
+			// Runs on every store change, so it repaints the buttons and never searches again.
+			render();
 		},
 	};
 }

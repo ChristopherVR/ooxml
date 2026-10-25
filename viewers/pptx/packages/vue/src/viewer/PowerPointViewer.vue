@@ -191,6 +191,7 @@ import { useSectionOperations } from './composables/useSectionOperations';
 import { useSelectionModel } from './composables/useSelectionModel';
 import { useSelectionPaneWiring } from './composables/useSelectionPaneWiring';
 import { useSignatureWorkflow } from './composables/useSignatureWorkflow';
+import { useSlideChangeSelection } from './composables/useSlideChangeSelection';
 import { useSlideMutations } from './composables/useSlideMutations';
 import { useSlideNavigation } from './composables/useSlideNavigation';
 import { useSlideOperations } from './composables/useSlideOperations';
@@ -514,9 +515,10 @@ watch(activeContent, () => {
 	readOnlyRec.reset();
 	compatToasts.reset();
 });
+// The slide change itself also drops the selection, unless it was made for that slide (Find's):
+// see `slideSelection` below.
 watch(activeSlideIndex, (index) => {
 	emit('active-slide-change', index);
-	selection.selectedElementIds.value = [];
 });
 
 // On touch devices a horizontal swipe across the slide area changes slides
@@ -528,6 +530,11 @@ const swipe = useSwipeNavigation({ canEdit: () => canEditEffective.value, goPrev
 // `props.canEdit` is true. `slides` is the writable `ShallowRef` from
 // `useLoadContent`, and `getContent` serialises it, so edits flow to export.
 const selection = useSelectionModel({ slides, templateElementsBySlideId, activeSlide });
+const slideSelection = useSlideChangeSelection({
+	activeSlideIndex,
+	goTo,
+	selectedElementIds: selection.selectedElementIds,
+});
 const {
 	selectedElementIds,
 	editTemplateMode,
@@ -834,7 +841,12 @@ function updateSelectedShapeStyle(updates: Partial<ShapeStyle>): void {
 
 // -- Find & replace ----------------------------------------------------
 const findOpen = ref(false);
-const find = useFindReplace({ slides, activeSlideIndex, pushHistory: history.pushHistory });
+const find = useFindReplace({
+	slides,
+	showMatch: slideSelection.showSlideSelection,
+	pushHistory: history.pushHistory,
+	open: findOpen,
+});
 
 // -- Export (PNG / PDF) + print ----------------------------------------
 const exporter = useExportWiring({

@@ -1,158 +1,104 @@
-import { applyFindReplacements, findInSlides, replaceMatch } from 'ooxml-ui/pptx';
-import type { FindResult } from 'ooxml-ui/pptx';
+import { findReplaceSessionActions, INITIAL_FIND_REPLACE_SESSION } from 'ooxml-ui/pptx';
+import type { FindReplaceOptions, FindReplaceSession, FindResult } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { ComputedRef, Ref } from 'vue';
-import { computed, ref } from 'vue';
+import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 
-// The match descriptor and the search / replace implementations are shared with
-// the other bindings; this composable is the Vue reactive state around them.
+// The match descriptor, the search / replace implementations and the session around them
+// (`find-replace-session`) are shared with the other bindings; this composable keeps the
+// session in a ref.
 export type { FindResult } from 'ooxml-ui/pptx';
 
 export interface UseFindReplaceInput {
 	/** Reactive list of slides being edited. */
 	slides: Ref<PptxSlide[]>;
-	/** The currently active slide index (mutated when navigating matches). */
-	activeSlideIndex: Ref<number>;
+	/**
+	 * Show a match: go to its slide and select its element there (an empty list for a
+	 * speaker-notes match) in one step, the viewer's `showSlideSelection`, which keeps that
+	 * selection across the slide change.
+	 */
+	showMatch: (slideIndex: number, ids: string[]) => void;
 	/** Snapshot the current document onto the undo/redo history stack. */
 	pushHistory: () => void;
+	/** Whether the bar is open: closing it drops the matches, opening it searches again. */
+	open?: Ref<boolean>;
 }
 
 export interface UseFindReplaceResult {
-	query: Ref<string>;
-	replacement: Ref<string>;
-	matchCase: Ref<boolean>;
-	includeNotes: Ref<boolean>;
-	includeChartTitles: Ref<boolean>;
-	includeChartData: Ref<boolean>;
-	matches: ComputedRef<FindResult[]>;
+	query: WritableComputedRef<string>;
+	replacement: WritableComputedRef<string>;
+	matchCase: WritableComputedRef<boolean>;
+	includeNotes: WritableComputedRef<boolean>;
+	includeChartTitles: WritableComputedRef<boolean>;
+	includeChartData: WritableComputedRef<boolean>;
+	matches: ComputedRef<readonly FindResult[]>;
 	matchCount: ComputedRef<number>;
-	currentMatch: Ref<number>;
+	/** Zero-based current match; -1 when there is none. */
+	currentMatch: ComputedRef<number>;
 	next: () => void;
 	prev: () => void;
 	replaceCurrent: () => void;
 	replaceAll: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
-
 /**
- * Find-and-replace logic for the Vue editor.
- *
- * Mirrors the React `useFindReplace` hook: the match descriptor and the
- * search/replace algorithms live in `pptx-viewer-shared` (`findInSlides`,
- * `applyFindReplacements`, `replaceMatch`), at segment-level, per-occurrence
- * precision, so the "N of M" match count and Replace All result count agree
- * with every other binding on the same document. This composable is only the
- * Vue idiom around that shared engine: state is exposed as refs (so the bar
- * can `v-model` them) and the match list is a `computed` over the live
- * slides. Replacements snapshot history first, then reassign `slides.value`
- * to the shared engine's immutable result.
+ * Find-and-replace state for the Vue editor: the shared `find-replace-session` in a ref, exposed
+ * as refs the bar can `v-model`. Setting the query or a scope searches at once; a replace
+ * snapshots history first, reassigns `slides.value` to the core's immutable result and searches
+ * again, and an ordinary edit leaves the matches alone.
  */
 export function useFindReplace({
 	slides,
-	activeSlideIndex,
+	showMatch,
 	pushHistory,
+	open,
 }: UseFindReplaceInput): UseFindReplaceResult {
-	const query = ref(''),
-		replacement = ref(''),
-		matchCase = ref(false),
-		includeNotes = ref(false),
-		includeChartTitles = ref(true),
-		includeChartData = ref(false),
-		currentMatch = ref(0),
-		matches = computed<FindResult[]>(() =>
-			findInSlides(slides.value, query.value, {
-				matchCase: matchCase.value,
-				includeNotes: includeNotes.value,
-				includeChartTitles: includeChartTitles.value,
-				includeChartData: includeChartData.value,
-			}),
-		),
-		matchCount = computed(() => matches.value.length);
+	const session = shallowRef<FindReplaceSession>(INITIAL_FIND_REPLACE_SESSION);
+	const actions = findReplaceSessionActions(
+		{ get: () => session.value, set: (next) => (session.value = next) },
+		{
+			slides: () => slides.value,
+			commit: (next) => {
+				pushHistory();
+				slides.value = next as PptxSlide[];
+			},
+			navigate: ({ slideIndex, elementId }) => showMatch(slideIndex, elementId ? [elementId] : []),
+		},
+	);
 
-	function clampCurrent(): void {
-		if (matchCount.value === 0) {
-			currentMatch.value = 0;
-			return;
-		}
-		if (currentMatch.value >= matchCount.value) {
-			currentMatch.value = matchCount.value - 1;
-		}
-		if (currentMatch.value < 0) {
-			currentMatch.value = 0;
-		}
-	}
+	const option = (key: keyof FindReplaceOptions): WritableComputedRef<boolean> =>
+		computed({
+			get: () => session.value.options[key],
+			set: (value) => actions.search({ options: { [key]: value } }),
+		});
 
-	function focusCurrent(): void {
-		const match = matches.value[currentMatch.value];
-		if (match) {
-			activeSlideIndex.value = match.slideIndex;
-		}
-	}
-
-	function next(): void {
-		if (matchCount.value === 0) {
-			return;
-		}
-		currentMatch.value = (currentMatch.value + 1) % matchCount.value;
-		focusCurrent();
-	}
-
-	function prev(): void {
-		if (matchCount.value === 0) {
-			return;
-		}
-		currentMatch.value = (currentMatch.value - 1 + matchCount.value) % matchCount.value;
-		focusCurrent();
-	}
-
-	function replaceCurrent(): void {
-		clampCurrent();
-		if (matches.value[currentMatch.value]?.readOnly) {
-			return;
-		}
-		if (matches.value.length === 0 || query.value.length === 0) {
-			return;
-		}
-		pushHistory();
-		const result = replaceMatch(slides.value, matches.value, currentMatch.value, replacement.value);
-		if (result.replacements > 0) {
-			slides.value = result.slides as PptxSlide[];
-		}
-		clampCurrent();
-		focusCurrent();
-	}
-
-	function replaceAll(): void {
-		if (matches.value.some((match) => match.readOnly)) {
-			return;
-		}
-		if (matches.value.length === 0 || query.value.length === 0) {
-			return;
-		}
-		pushHistory();
-		const result = applyFindReplacements(slides.value, matches.value, replacement.value);
-		if (result.replacements > 0) {
-			slides.value = result.slides as PptxSlide[];
-		}
-		clampCurrent();
+	if (open) {
+		watch(open, (isOpen) => (isOpen ? actions.search() : actions.close()));
 	}
 
 	return {
-		query,
-		replacement,
-		matchCase,
-		includeNotes,
-		includeChartTitles,
-		includeChartData,
-		matches,
-		matchCount,
-		currentMatch,
-		next,
-		prev,
-		replaceCurrent,
-		replaceAll,
+		query: computed({
+			get: () => session.value.query,
+			set: (query) => actions.search({ query }),
+		}),
+		replacement: computed({
+			get: () => session.value.replacement,
+			set: actions.setReplacement,
+		}),
+		matchCase: option('matchCase'),
+		includeNotes: option('includeNotes'),
+		includeChartTitles: option('includeChartTitles'),
+		includeChartData: option('includeChartData'),
+		matches: computed(() => session.value.matches),
+		matchCount: computed(() => session.value.matches.length),
+		currentMatch: computed(() => session.value.current),
+		next: actions.next,
+		prev: actions.previous,
+		replaceCurrent: () => {
+			actions.replaceCurrent();
+		},
+		replaceAll: () => {
+			actions.replaceAll();
+		},
 	};
 }

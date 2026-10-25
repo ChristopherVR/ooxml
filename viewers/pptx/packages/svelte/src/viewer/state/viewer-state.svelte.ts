@@ -24,6 +24,11 @@ export class ViewerState {
 	readonly #zoomSelection = viewerStoreSelection(this.#zoom, (state) => state);
 	/** True while the viewer root is the fullscreen element. */
 	isFullscreen = $state(false);
+	/**
+	 * The slide a selection is made for in the same step as going to it (Find shows a match on
+	 * another slide that way). Not reactive: the slide-change effect reads it once and drops it.
+	 */
+	#selectionSlide: number | null = null;
 
 	/** Manual zoom percent, or `null` for fit-to-viewport. */
 	get zoomPercent(): number | null {
@@ -54,6 +59,25 @@ export class ViewerState {
 
 	goTo(index: number): void {
 		this.current = clampSlideIndex(index, this.slideCount);
+	}
+
+	/**
+	 * Go to `index` for a selection the caller makes there straight away: the slide-change effect
+	 * keeps that selection instead of dropping it.
+	 */
+	goToWithSelection(index: number): void {
+		this.goTo(index);
+		this.#selectionSlide = this.current;
+	}
+
+	/**
+	 * Whether the slide change that landed on `index` came with its own selection (see
+	 * {@link goToWithSelection}). Asking drops the note, so it holds for one slide change only.
+	 */
+	takeSelectionSlide(index: number): boolean {
+		const kept = this.#selectionSlide === index;
+		this.#selectionSlide = null;
+		return kept;
 	}
 
 	next(): void {

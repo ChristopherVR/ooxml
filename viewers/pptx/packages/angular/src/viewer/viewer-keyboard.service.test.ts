@@ -112,6 +112,7 @@ function harness(
 		showFind.set(false);
 		showFindReplace.set(true);
 	});
+	const closeFindReplace = vi.fn(() => showFindReplace.set(false));
 	const goPrev = vi.fn();
 	const goNext = vi.fn();
 	const presentFromBeginning = vi.fn();
@@ -139,6 +140,7 @@ function harness(
 					showFind,
 					showFindReplace,
 					openFindReplace,
+					closeFindReplace,
 				} as unknown as ViewerFindReplaceService,
 			},
 			{

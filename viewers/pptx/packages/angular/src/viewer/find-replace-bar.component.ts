@@ -5,25 +5,30 @@
  *
  * Ported from:
  *   packages/react/src/viewer/components/FindReplacePanel.tsx
- *   packages/react/src/viewer/hooks/useFindReplace.ts
  *
- * This component is **purely presentational**: it holds no slide data and
- * performs no text mutation itself.  The parent component is responsible for:
+ * This component is **purely presentational**: it holds no slide data, no
+ * search state and performs no text mutation itself. Its query, replacement
+ * and scopes are inputs from the viewer's Find and Replace session (so a
+ * reopened bar shows what the session kept); the bar shows the user's own
+ * edit at once, before the session hands it back, and every edit goes out:
  *
- *   - Feeding the current `matchCount` and `matchIndex` computed from slides.
- *   - Listening to `find`, `navigate`, `replaceOne`, `replaceAll`, and `close`
- *     outputs and delegating to `EditorStateService` / `findInSlides`.
+ *   - `find` when the query or a scope changes, `replacementChange` when the
+ *     replacement does.
+ *   - `navigate`, `replaceOne`, `replaceAll` and `close` for the buttons.
  *
  * Usage:
  * ```html
  * <pptx-find-replace-bar
+ *   [query]="session().query"
+ *   [replacement]="session().replacement"
  *   [matchCount]="totalMatches()"
  *   [matchIndex]="activeResultIndex()"
  *   (find)="onFind($event)"
+ *   (replacementChange)="onReplacementChange($event)"
  *   (navigate)="onNavigate($event)"
  *   (replaceOne)="onReplaceOne($event)"
  *   (replaceAll)="onReplaceAll($event)"
- *   (close)="showFindReplace.set(false)"
+ *   (close)="closeFindReplace()"
  * />
  * ```
  */
@@ -36,10 +41,11 @@ import {
 	HostListener,
 	computed,
 	input,
+	linkedSignal,
 	output,
-	signal,
 	viewChild,
 } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { findReplacementAvailability } from 'ooxml-ui/pptx';
 import type { FindResult } from 'ooxml-ui/pptx';
@@ -88,7 +94,7 @@ export interface ReplaceEvent {
 				<label
 					><pptx-ui-checkbox
 						[attr.aria-label]="'pptx.findReplace.includeChartTitles' | translate"
-						[checked]="includeChartTitles()"
+						[checked]="shown.includeChartTitles()"
 						(change)="toggleIncludeChartTitles()"
 					></pptx-ui-checkbox
 					>{{ 'pptx.findReplace.includeChartTitles' | translate }}</label
@@ -96,7 +102,7 @@ export interface ReplaceEvent {
 				<label
 					><pptx-ui-checkbox
 						[attr.aria-label]="'pptx.findReplace.includeChartData' | translate"
-						[checked]="includeChartData()"
+						[checked]="shown.includeChartData()"
 						(change)="toggleIncludeChartData()"
 					></pptx-ui-checkbox
 					>{{ 'pptx.findReplace.includeChartData' | translate }}</label
@@ -104,7 +110,7 @@ export interface ReplaceEvent {
 				<label
 					><pptx-ui-checkbox
 						[attr.aria-label]="'pptx.findReplace.includeNotes' | translate"
-						[checked]="includeNotes()"
+						[checked]="shown.includeNotes()"
 						(change)="toggleIncludeNotes()"
 					></pptx-ui-checkbox
 					>{{ 'pptx.findReplace.includeNotes' | translate }}</label
@@ -115,7 +121,7 @@ export interface ReplaceEvent {
 					type="search"
 					[placeholder]="'pptx.findReplace.findPlaceholder' | translate"
 					[attr.aria-label]="'pptx.findReplace.searchText' | translate"
-					[value]="query()"
+					[value]="shown.query()"
 					(input)="onQueryInput($event)"
 					(keydown.enter)="navigate.emit(1)"
 				/>
@@ -124,9 +130,9 @@ export interface ReplaceEvent {
 				<button
 					type="button"
 					class="pptx-frb__btn"
-					[class.pptx-frb__btn--active]="matchCase()"
+					[class.pptx-frb__btn--active]="shown.matchCase()"
 					[attr.aria-label]="'pptx.findReplace.matchCase' | translate"
-					[attr.aria-pressed]="matchCase()"
+					[attr.aria-pressed]="shown.matchCase()"
 					(click)="toggleCase()"
 					[title]="'pptx.findReplace.matchCase' | translate"
 				>
@@ -135,7 +141,7 @@ export interface ReplaceEvent {
 
 				<!-- Match counter -->
 				<span class="pptx-frb__count" aria-live="polite" aria-atomic="true">
-					@if (query().trim()) {
+					@if (shown.query().trim()) {
 						@if (matchCount() === 0) {
 							{{ 'pptx.findReplace.noMatches' | translate }}
 						} @else {
@@ -184,7 +190,7 @@ export interface ReplaceEvent {
 					type="text"
 					[placeholder]="'pptx.findReplace.replacePlaceholder' | translate"
 					[attr.aria-label]="'pptx.findReplace.replacementText' | translate"
-					[value]="replacement()"
+					[value]="shown.replacement()"
 					(input)="onReplacementInput($event)"
 					(keydown.enter)="emitReplaceOne()"
 				/>
@@ -212,7 +218,7 @@ export interface ReplaceEvent {
 			@if (availability().hasReadOnly) {
 				<p role="status">
 					{{
-						(includeChartData()
+						(shown.includeChartData()
 							? 'pptx.findReplace.readOnlyChartText'
 							: 'pptx.findReplace.readOnlyChartTitle'
 						) | translate
@@ -376,10 +382,13 @@ export class FindReplaceBarComponent {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Emitted whenever the find query or the case-sensitive toggle changes.
-	 * The parent should run `findInSlides` and update `matchCount`/`matchIndex`.
+	 * Emitted whenever the find query or a scope toggle changes.
+	 * The parent searches again and updates the inputs.
 	 */
 	readonly find = output<FindEvent>();
+
+	/** Emitted as the replacement text is typed. */
+	readonly replacementChange = output<string>();
 
 	/**
 	 * Emitted when the user clicks ↑ / ↓ or presses Enter in the find input.
@@ -410,20 +419,35 @@ export class FindReplaceBarComponent {
 	private readonly findInputRef = viewChild<ElementRef<HTMLInputElement>>('findInput');
 
 	// -------------------------------------------------------------------------
-	// Internal state
+	// The session's fields (inputs; edits go out through `find` and `replacementChange`)
 	// -------------------------------------------------------------------------
 
 	/** Current text in the find input. */
-	readonly query = signal('');
+	readonly query = input('');
 
 	/** Current text in the replacement input. */
-	readonly replacement = signal('');
+	readonly replacement = input('');
 
 	/** Whether the search should be case-sensitive. */
-	readonly matchCase = signal(false);
-	readonly includeNotes = signal(false);
-	readonly includeChartTitles = signal(true);
-	readonly includeChartData = signal(false);
+	readonly matchCase = input(false);
+	readonly includeNotes = input(false);
+	readonly includeChartTitles = input(true);
+	readonly includeChartData = input(false);
+
+	/**
+	 * The fields as the bar shows and sends them: each follows its input, and the user's own edit
+	 * applies at once. Zoneless change detection hands the bar the session's values on its next
+	 * pass, so an edit composed from the inputs alone could undo the edit just before it (a scope
+	 * ticked, then a query typed before that pass).
+	 */
+	protected readonly shown = {
+		query: linkedSignal(() => this.query()),
+		replacement: linkedSignal(() => this.replacement()),
+		matchCase: linkedSignal(() => this.matchCase()),
+		includeNotes: linkedSignal(() => this.includeNotes()),
+		includeChartTitles: linkedSignal(() => this.includeChartTitles()),
+		includeChartData: linkedSignal(() => this.includeChartData()),
+	};
 
 	// -------------------------------------------------------------------------
 	// Derived
@@ -459,91 +483,60 @@ export class FindReplaceBarComponent {
 	// Event handlers
 	// -------------------------------------------------------------------------
 
+	/** The query and scopes as the bar shows them. */
+	private findEvent(): FindEvent {
+		const shown = this.shown;
+		return {
+			query: shown.query(),
+			matchCase: shown.matchCase(),
+			includeNotes: shown.includeNotes(),
+			includeChartTitles: shown.includeChartTitles(),
+			includeChartData: shown.includeChartData(),
+		};
+	}
+
+	/** Flip a scope where the bar shows it, then search with it. */
+	private toggle(scope: WritableSignal<boolean>): void {
+		scope.update((on) => !on);
+		this.find.emit(this.findEvent());
+	}
+
 	onQueryInput(event: Event): void {
-		const target = event.target as HTMLInputElement;
-		this.query.set(target.value);
-		this.find.emit({
-			query: target.value,
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.shown.query.set((event.target as HTMLInputElement).value);
+		this.find.emit(this.findEvent());
 	}
 
 	onReplacementInput(event: Event): void {
-		const target = event.target as HTMLInputElement;
-		this.replacement.set(target.value);
+		const replacement = (event.target as HTMLInputElement).value;
+		this.shown.replacement.set(replacement);
+		this.replacementChange.emit(replacement);
 	}
 
 	toggleCase(): void {
-		const next = !this.matchCase();
-		this.matchCase.set(next);
-		this.find.emit({
-			query: this.query(),
-			matchCase: next,
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.toggle(this.shown.matchCase);
 	}
 
 	toggleIncludeNotes(): void {
-		this.includeNotes.update((value) => !value);
-		this.find.emit({
-			query: this.query(),
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.toggle(this.shown.includeNotes);
 	}
 	toggleIncludeChartTitles(): void {
-		this.includeChartTitles.update((value) => !value);
-		this.find.emit({
-			query: this.query(),
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.toggle(this.shown.includeChartTitles);
 	}
 	toggleIncludeChartData(): void {
-		this.includeChartData.update((value) => !value);
-		this.find.emit({
-			query: this.query(),
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.toggle(this.shown.includeChartData);
 	}
 	emitReplaceOne(): void {
 		if (!this.availability().current) {
 			return;
 		}
-		this.replaceOne.emit({
-			query: this.query(),
-			replacement: this.replacement(),
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.replaceOne.emit({ ...this.findEvent(), replacement: this.shown.replacement() });
 	}
 
 	emitReplaceAll(): void {
 		if (!this.availability().all) {
 			return;
 		}
-		this.replaceAll.emit({
-			query: this.query(),
-			replacement: this.replacement(),
-			matchCase: this.matchCase(),
-			includeNotes: this.includeNotes(),
-			includeChartTitles: this.includeChartTitles(),
-			includeChartData: this.includeChartData(),
-		});
+		this.replaceAll.emit({ ...this.findEvent(), replacement: this.shown.replacement() });
 	}
 
 	/** Focus the find input (called by the parent after toggling the bar open). */

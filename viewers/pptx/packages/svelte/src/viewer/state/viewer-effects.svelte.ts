@@ -87,7 +87,10 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 			lastSyncedSlide = index;
 			untrack(() => {
 				deps.controller.closeInline();
-				deps.editor.select(null);
+				// A selection made for this slide in the same step (Find's) stays.
+				if (!deps.viewer.takeSelectionSlide(index)) {
+					deps.editor.select(null);
+				}
 			});
 		}
 	});

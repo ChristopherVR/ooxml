@@ -139,7 +139,7 @@ export interface SlideCanvasProps {
 	/** Called when a table row is resized. */
 	onResizeTableRow?: (elementId: string, rowIndex: number, newHeight: number) => void;
 	/** Find & Replace results (all matches across all slides). */
-	findResults?: Array<{
+	findResults?: ReadonlyArray<{
 		slideIndex: number;
 		elementId: string;
 		segmentIndex: number;

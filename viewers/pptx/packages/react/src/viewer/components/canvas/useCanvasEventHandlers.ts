@@ -99,7 +99,7 @@ export function useCanvasEventHandlers({
 	onCanvasMouseDown?: (e: React.MouseEvent) => void;
 	/** Right-click on empty canvas (no element hit); opens the canvas context menu. */
 	onCanvasContextMenu?: (e: React.MouseEvent) => void;
-	findResults?: FindResult[];
+	findResults?: readonly FindResult[];
 	findResultIndex?: number;
 	activeSlideIndex?: number;
 	selectedElement: PptxElement | null;
