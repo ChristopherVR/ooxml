@@ -89,6 +89,19 @@ export class LoadContentService {
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
 		this.hostAllowExternalContentReader = reader;
 	}
+
+	/**
+	 * Whether the next deck this viewer loads may reference linked http(s)
+	 * content: the host `allowExternalContent` input when set, otherwise the
+	 * Trust Center option. Read untracked, so calling it never subscribes.
+	 */
+	resolveAllowExternalImages(): boolean {
+		return untracked(() => {
+			const host = this.hostAllowExternalContentReader?.();
+			const options = this.optionsService?.options();
+			return options ? resolveAllowExternalContent(host, options) : host === true;
+		});
+	}
 	/** Viewer-scoped current list session. Saving never commits or blurs it. */
 	bindPendingInlineEdit(reader: () => PendingInlineTextEdit | undefined): void {
 		this.pendingInlineEditReader = reader;
@@ -414,11 +427,7 @@ export class LoadContentService {
 			// editor and threw away unsaved edits and the undo history. The option
 			// is a load-time input, exactly as in React (`[content]` deps only).
 			// The host `allowExternalContent` input wins over the option when set.
-			const allowExternalImages = untracked(() => {
-				const host = this.hostAllowExternalContentReader?.();
-				const options = this.optionsService?.options();
-				return options ? resolveAllowExternalContent(host, options) : (host ?? false);
-			});
+			const allowExternalImages = this.resolveAllowExternalImages();
 			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages });
 			if (token !== this.renderToken) {
 				return;

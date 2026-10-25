@@ -96,7 +96,7 @@
 	// Host-removed dialogs never open, whatever path set their flag.
 	const customization = useViewerCustomization();
 	const slidePackageClipboard = createSlidePackageClipboard({
-		getSnapshot: () => { const handler = editor.getHandler(); return handler ? { handler, slides: editor.slides, templateElementsBySlideId: editor.templateElementsBySlideId, editable: editor.editable, allowExternalImages: optionsState.options.trust.allowExternalContent } : null; },
+		getSnapshot: () => { const handler = editor.getHandler(); return handler ? { handler, slides: editor.slides, templateElementsBySlideId: editor.templateElementsBySlideId, editable: editor.editable, allowExternalImages: ui.allowExternalImages() } : null; },
 		commit: result => {
 			editor.commitSlides(result.slides, 'Paste slides');
 			editor.adoptHandler(result.handler, true, result.data);

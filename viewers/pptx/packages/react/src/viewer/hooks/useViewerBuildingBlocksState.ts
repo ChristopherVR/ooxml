@@ -11,7 +11,8 @@ import type { GoogleFontsOption } from 'ooxml-ui/pptx';
  * effect, `useEditorOperations`, and `useViewerIntegration` (export/print/
  * property handlers, mode switching, and the imperative handle).
  */
-import { resolveAllowExternalContent } from 'ooxml-ui/pptx';
+import { lockExternalContentSetting, resolveAllowExternalContent } from 'ooxml-ui/pptx';
+import { useLayoutEffect, useRef } from 'react';
 
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
@@ -89,6 +90,22 @@ export function useViewerBuildingBlocksState(
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
 	const { initialSlide, googleFonts, allowExternalContent } = input;
+
+	// The headless API has no customization controller, so the host switch
+	// locks the options store directly, as `useViewerCustomization` does for
+	// `PowerPointViewer`. Skipped until the host first sets it, so an unset
+	// switch never touches the store.
+	const externalContentLockedRef = useRef(false);
+	const { optionsStore } = core;
+	useLayoutEffect(() => {
+		if (allowExternalContent === undefined && !externalContentLockedRef.current) {
+			return;
+		}
+		externalContentLockedRef.current = allowExternalContent !== undefined;
+		optionsStore.setConstraints({
+			locked: lockExternalContentSetting({}, allowExternalContent),
+		});
+	}, [optionsStore, allowExternalContent]);
 	const {
 		onContentChange,
 		onDirtyChange,

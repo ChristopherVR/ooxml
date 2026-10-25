@@ -50,6 +50,8 @@ export interface UseIOHandlersInput {
 	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
 	/** The host's `onNotesUpdate` (speaker-notes edits). */
 	onNotesUpdate?: ((notes: string) => void) | undefined;
+	/** The resolved external-content switch, for decks opened for Compare. */
+	allowExternalImages?: boolean;
 	/** File > Options > Advanced > "Image Size and Quality" raster-scale multiplier. */
 	imageExportScale?: number;
 	/**
@@ -92,6 +94,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		setContent,
 		onPropertiesChange,
 		onNotesUpdate,
+		allowExternalImages,
 		imageExportScale,
 		imageResolutionScale,
 	} = input;
@@ -172,6 +175,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		history,
 		onPropertiesChange,
 		onNotesUpdate,
+		allowExternalImages,
 	});
 
 	return { exportHandlers, printHandlers, themeHandlers, propertyHandlers };

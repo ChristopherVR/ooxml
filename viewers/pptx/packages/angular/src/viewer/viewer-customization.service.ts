@@ -92,11 +92,12 @@ export class ViewerCustomizationService {
 	/**
 	 * Follow the host's `allowExternalContent` input: a boolean locks the Trust
 	 * Center "Allow external content" setting to it, `undefined` leaves it to
-	 * the user. Applied once synchronously, so the first load already sees the
-	 * lock, then on every change. Must be called from an injection context.
+	 * the user. Applied by an effect, so a component input set after the field
+	 * initializer runs is picked up; loads do not wait for it, because they
+	 * read the host value directly (see `LoadContentService`). Must be called
+	 * from an injection context.
 	 */
 	bindAllowExternalContent(source: () => boolean | undefined): EffectRef {
-		this.controller.setAllowExternalContent(untracked(source));
 		return effect(() => {
 			const allow = source();
 			untracked(() => this.controller.setAllowExternalContent(allow));

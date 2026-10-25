@@ -581,6 +581,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			editor: this.editor,
 			optionsStore: this.optionsController.optionsStore,
+			allowExternalContent: this.options.allowExternalContent,
 			clearOptionsCache: () => this.clearOptionsCache(),
 			registerCustomFont: (family) => {
 				const current = this.store.get().customFontFamilies;

@@ -17,6 +17,7 @@ import {
 	isDialogAvailable,
 	isPanelVisible,
 	openPptxFile,
+	resolveAllowExternalContent,
 	resolveAuthoredCustomShowId,
 	resolveDefaultPrintSettings,
 } from 'ooxml-ui/pptx';
@@ -53,6 +54,8 @@ export interface ParityWorkflowHost {
 	editor: EditorController;
 	/** The File > Options store the Options dialog reads and writes. */
 	optionsStore: ViewerOptionsStore;
+	/** The host `allowExternalContent` option: overrides the Trust Center setting when set. */
+	allowExternalContent?: boolean;
 	/** Options > Save > "Delete cached files". */
 	clearOptionsCache(): void;
 	/**
@@ -327,7 +330,10 @@ async function comparePresentation(host: ParityWorkflowHost): Promise<void> {
 		return;
 	}
 	const incoming = await loadPresentation(picked.buffer, {
-		allowExternalImages: host.optionsStore.getOptions().trust.allowExternalContent,
+		allowExternalImages: resolveAllowExternalContent(
+			host.allowExternalContent,
+			host.optionsStore.getOptions(),
+		),
 	});
 	try {
 		const result = compareSlides(host.store.get().slides, incoming.slides);

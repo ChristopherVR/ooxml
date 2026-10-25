@@ -1,4 +1,4 @@
-import type { ViewerOptions, ViewportFitOptions } from 'ooxml-ui/pptx';
+import type { ViewerOptions, ViewerOptionsStore, ViewportFitOptions } from 'ooxml-ui/pptx';
 import { resolveHistoryDepth, resolveImageResolutionScale } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 /**
@@ -65,6 +65,8 @@ export interface ViewerBuildingBlocksCore {
 	imageResolutionScale: number;
 	/** Full File > Options snapshot, for Trust Center gates in the canvas mapping. */
 	viewerOptions: ViewerOptions;
+	/** The File > Options store behind `viewerOptions`, for host locks. */
+	optionsStore: ViewerOptionsStore;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,7 +131,7 @@ export function useViewerBuildingBlocksCore(
 	// presentation setup. Moved above `history`'s construction (originally
 	// declared just before `usePresentationSetup`) so both consumers share
 	// this one `useViewerOptions()` call/store instance.
-	const { options: viewerOptions } = useViewerOptions();
+	const { options: viewerOptions, optionsStore } = useViewerOptions();
 	const { setIsDirty } = state;
 	const markDocumentDirty = useCallback(() => {
 		setIsDirty(true);
@@ -233,5 +235,6 @@ export function useViewerBuildingBlocksCore(
 		imageExportScale: 2 * resolveImageResolutionScale(viewerOptions),
 		imageResolutionScale: resolveImageResolutionScale(viewerOptions),
 		viewerOptions,
+		optionsStore,
 	};
 }

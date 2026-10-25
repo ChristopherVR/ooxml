@@ -1,6 +1,7 @@
 import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
+	resolveAllowExternalContent,
 	resolveAuthoredCustomShowId,
 	seedRecentColors,
 	viewerPreferencesFromViewProperties,
@@ -92,7 +93,11 @@ export interface EditorUiCluster {
 export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 	const { loader, editor, viewer, collab, options } = deps;
 
-	const parityUi = new ViewerParityUiState(editor);
+	const optionsState = new ViewerOptionsState();
+	provideViewerOptions(optionsState);
+	const parityUi = new ViewerParityUiState(editor, () =>
+		resolveAllowExternalContent(options.getAllowExternalContent?.(), optionsState.options),
+	);
 	// Wave 4 #2: the deck's own `p:modifyVerifier` / "Mark as Final" read-only
 	// recommendation. `locked` is ANDed into the editable gate below, mirroring
 	// (not duplicating) the existing Protected View mechanism.
@@ -107,8 +112,6 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 	// Full PowerPoint File > Options model (persisted); provided to chrome
 	// components (quick access, ribbon) and the Options dialog. The wiring below
 	// keeps it in sync with the six legacy preference toggles both ways.
-	const optionsState = new ViewerOptionsState();
-	provideViewerOptions(optionsState);
 	const chromeUi = new ChromeUiState(options.inspectorInitiallyOpen);
 	provideZoomNavigation({
 		// A zoom tile is only clickable while presenting (`ZoomView.svelte`'s

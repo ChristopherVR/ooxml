@@ -324,6 +324,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		setContent,
 		onPropertiesChange,
 		onNotesUpdate,
+		allowExternalImages,
 		imageExportScale,
 		imageResolutionScale,
 	});
