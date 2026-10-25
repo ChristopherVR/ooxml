@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.51.1) - 2026-10-25
+
+### Bug Fixes
+
+- **pptx:** Preview colour drags as one undo step ([#203](https://github.com/ChristopherVR/ooxml/issues/203)) ([27cc512](https://github.com/ChristopherVR/ooxml/commit/27cc5126cee1c351069e8eb7c2dafe4a0d7806a1))
+- **pptx:** Save hyperlinks to their current targets ([#204](https://github.com/ChristopherVR/ooxml/issues/204)) ([371fe79](https://github.com/ChristopherVR/ooxml/commit/371fe799d88e4158fb7ed895a1e32b0c9b67682e))
+
+### Refactor
+
+- **ui:** Run pptx find and replace on one shared session ([#202](https://github.com/ChristopherVR/ooxml/issues/202)) ([61ff51e](https://github.com/ChristopherVR/ooxml/commit/61ff51e2710edad14212132b475652b27bb05d43))
+
 ## [4.51.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.51.0) - 2026-10-25
 
 ### Features

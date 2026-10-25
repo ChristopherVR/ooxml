@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.26.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.26.1) - 2026-10-25
+
+### Bug Fixes
+
+- **pptx:** Save hyperlinks to their current targets ([#204](https://github.com/ChristopherVR/ooxml/issues/204)) ([371fe79](https://github.com/ChristopherVR/ooxml/commit/371fe799d88e4158fb7ed895a1e32b0c9b67682e))
+
 ## [1.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.26.0) - 2026-10-25
 
 ### Features
