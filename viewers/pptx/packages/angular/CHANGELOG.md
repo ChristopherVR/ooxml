@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.52.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.52.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let hosts block external content with allowExternalContent ([#201](https://github.com/ChristopherVR/ooxml/issues/201)) ([903c8e2](https://github.com/ChristopherVR/ooxml/commit/903c8e201dbd36252a5e82a388dcb59e30f3afc4))
+
 ## [4.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.51.1) - 2026-10-25
 
 ### Bug Fixes

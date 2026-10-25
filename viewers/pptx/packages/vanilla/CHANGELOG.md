@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.52.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.52.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let hosts block external content with allowExternalContent ([#201](https://github.com/ChristopherVR/ooxml/issues/201)) ([903c8e2](https://github.com/ChristopherVR/ooxml/commit/903c8e201dbd36252a5e82a388dcb59e30f3afc4))
+
+### Bug Fixes
+
+- **svelte:** Leave the keys typed into a text field to the field ([#205](https://github.com/ChristopherVR/ooxml/issues/205)) ([00870cc](https://github.com/ChristopherVR/ooxml/commit/00870ccabfa5ff3d638a838c7657743b3322cfd5))
+
 ## [3.51.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.51.1) - 2026-10-25
 
 ### Bug Fixes

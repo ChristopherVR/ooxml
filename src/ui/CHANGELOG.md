@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.28.0) - 2026-10-25
+
+### Features
+
+- **pptx:** Let hosts block external content with allowExternalContent ([#201](https://github.com/ChristopherVR/ooxml/issues/201)) ([903c8e2](https://github.com/ChristopherVR/ooxml/commit/903c8e201dbd36252a5e82a388dcb59e30f3afc4))
+
 ## [1.27.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.27.1) - 2026-10-25
 
 ### Bug Fixes
