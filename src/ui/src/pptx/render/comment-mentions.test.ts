@@ -6,8 +6,10 @@ import {
 	commentMentionQuery,
 	commentTextSegments,
 	hasCommentMentions,
+	followCommentEdit,
 	insertCommentMention,
 	matchCommentMentionAuthors,
+	trimCommentMentions,
 } from './comment-mentions';
 
 const BOB = '{2CB2E9D0-D392-EB21-5D46-FBA34C1295E6}';
@@ -156,5 +158,24 @@ describe('insertCommentMention', () => {
 		const result = insertCommentMention('Hi ', undefined, 3, bob, () => '{ID}');
 		expect(result.text).toBe('Hi @Bob Example ');
 		expect(result.mentions[0].startIndex).toBe(3);
+	});
+});
+
+describe('trimCommentMentions and followCommentEdit', () => {
+	it('move the mention records with a trim or an edit, keeping every other field', () => {
+		const record = mention(3, 4, { id: '{OLD}', containerUri: '{EXT}' });
+		expect(trimCommentMentions('  Hi @Bob ', [{ ...record, startIndex: 5 }])).toStrictEqual({
+			text: 'Hi @Bob',
+			mentions: [record],
+		});
+		expect(trimCommentMentions(' hi', undefined)).toStrictEqual({ text: 'hi', mentions: [] });
+		expect(followCommentEdit('Hi @Bob', 'Oh hi @Bob', [record])).toStrictEqual([
+			{ ...record, startIndex: 6 },
+		]);
+		expect(followCommentEdit('Hi @Bob', 'Hi @Bb', [record])).toStrictEqual([]);
+		// Text changed on both sides of the mention: it is found again on its own text.
+		expect(followCommentEdit('Hi @Bob there', 'Oh hi @Bob here', [record])).toStrictEqual([
+			{ ...record, startIndex: 6 },
+		]);
 	});
 });

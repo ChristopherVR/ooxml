@@ -6,6 +6,7 @@ import {
 	insertMention,
 	matchMentionCandidates,
 	mentionQueryAt,
+	trimMentionText,
 	type OfficeCommentMention,
 	type OfficeMentionCandidate,
 } from './mentions';
@@ -116,5 +117,18 @@ describe('followTextEdit', () => {
 			{ start: 8, length: 4, id: 'p2' },
 		]);
 		expect(followTextEdit('@Ada and @Bob', '@Ada and @Bob', spans)).toBe(spans);
+	});
+});
+
+describe('trimMentionText', () => {
+	it('trims the text and moves the spans with it', () => {
+		const spans: OfficeCommentMention[] = [{ start: 3, length: 4, id: 'p1' }];
+		expect(trimMentionText('  Hi@Ada  ', [{ start: 4, length: 4, id: 'p1' }])).toStrictEqual({
+			text: 'Hi@Ada',
+			mentions: [{ start: 2, length: 4, id: 'p1' }],
+		});
+		expect(trimMentionText('Hi @Ada', spans)).toStrictEqual({ text: 'Hi @Ada', mentions: spans });
+		expect(trimMentionText('   ', spans)).toStrictEqual({ text: '', mentions: [] });
+		expect(trimMentionText('Hi', undefined)).toStrictEqual({ text: 'Hi', mentions: [] });
 	});
 });

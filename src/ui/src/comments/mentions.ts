@@ -156,6 +156,22 @@ export function insertMention(
 	};
 }
 
+/** What a box posts: its text without the surrounding whitespace, and the spans moved with it. */
+export function trimMentionText(
+	text: string,
+	mentions: readonly OfficeCommentMention[] | undefined,
+): { text: string; mentions: OfficeCommentMention[] } {
+	const body = String(text ?? '');
+	const trimmed = body.trim();
+	const lead = trimmed ? body.length - body.trimStart().length : 0;
+	return {
+		text: trimmed,
+		mentions: usable(body, mentions)
+			.filter((m) => m.start >= lead && m.start + m.length <= lead + trimmed.length)
+			.map((m) => ({ ...m, start: m.start - lead })),
+	};
+}
+
 /**
  * The spans after the text changed from `before` to `after` by one edit (typing, deleting or a
  * paste): spans before the changed part stay, spans after it move by the length change, and a span

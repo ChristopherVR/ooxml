@@ -1,7 +1,7 @@
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (each spec sets up a couple of independent `const`s); merging them isn't a
    style choice here. */
-import type { PptxComment } from 'ooxml-core/pptx';
+import type { PptxComment, PptxCommentMention } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -116,5 +116,59 @@ describe('nested-reply tree traversal (removeCommentFromList / toggleCommentReso
 		expect(input[0].replies).toHaveLength(2);
 		expect(input[0].replies?.[0].text).toBe('Reply one');
 		expect(input[0].replies?.[0].resolved).toBeFalsy();
+	});
+});
+
+describe('mentions on new, replied and edited comments', () => {
+	const GRACE = '{2CB2E9D0-D392-EB21-5D46-FBA34C1295E6}';
+	const grace = (
+		startIndex: number,
+		extra: Partial<PptxCommentMention> = {},
+	): PptxCommentMention => ({
+		id: '{M1}',
+		personId: GRACE,
+		authorName: 'Grace',
+		startIndex,
+		length: 6,
+		...extra,
+	});
+	const span = (comment: PptxComment | undefined) =>
+		comment?.mentions?.map((m) => comment.text.slice(m.startIndex, m.startIndex + m.length));
+
+	it('stores the spans of a new comment, moved with the trimmed text', () => {
+		const next = addCommentToList([], '  @Grace hi ', 'Alice', undefined, undefined, undefined, [
+			grace(2),
+		]);
+		expect(next![0]).toMatchObject({ text: '@Grace hi', mentions: [grace(0)] });
+		expect(span(next![0])).toStrictEqual(['@Grace']);
+		expect(
+			addCommentToList([], 'Plain', 'Alice', undefined, undefined, undefined, [])![0],
+		).not.toHaveProperty('mentions');
+	});
+
+	it('stores the spans of a reply, moved with the trimmed text', () => {
+		const next = replyToCommentInList([parent()], 'parent-1', ' Ask @Grace', 'Bob', [grace(5)]);
+		const reply = next![0].replies![0];
+		expect(reply.mentions).toStrictEqual([grace(4)]);
+		expect(span(reply)).toStrictEqual(['@Grace']);
+	});
+
+	it('keeps an edited comment spans on their text, or takes the ones given', () => {
+		const comments = [parent({ text: 'Ask @Grace today', mentions: [grace(4)] })];
+		const edited = editCommentInList(comments, 'parent-1', 'Please ask @Grace today');
+		expect(edited![0].mentions).toStrictEqual([grace(11)]);
+		expect(span(edited![0])).toStrictEqual(['@Grace']);
+		// Edits on both sides of a mention keep it on its text.
+		const around = editCommentInList(comments, 'parent-1', 'Please ask @Grace tomorrow');
+		expect(span(around![0])).toStrictEqual(['@Grace']);
+		// An edit inside the mention drops it, and the field goes with the last one.
+		expect(editCommentInList(comments, 'parent-1', 'Ask @Grce today')![0]).not.toHaveProperty(
+			'mentions',
+		);
+		const given = editCommentInList(comments, 'parent-1', ' @Grace, ask @Grace', [
+			grace(1),
+			grace(13, { id: '{M2}' }),
+		]);
+		expect(given![0].mentions).toStrictEqual([grace(0), grace(12, { id: '{M2}' })]);
 	});
 });

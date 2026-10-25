@@ -15,6 +15,7 @@
  * this module maps PowerPoint's mention records onto it. No framework imports.
  */
 
+import { rebaseCommentMentions } from 'ooxml-core/pptx';
 import type { PptxCommentMention, PptxModernCommentAuthor } from 'ooxml-core/pptx';
 
 import {
@@ -22,6 +23,7 @@ import {
 	insertMention,
 	matchMentionCandidates,
 	mentionQueryAt,
+	trimMentionText,
 	type OfficeCommentMention,
 } from '../../comments/mentions';
 
@@ -99,6 +101,49 @@ export function matchCommentMentionAuthors(
 	return matchMentionCandidates(authors, query, limit);
 }
 
+/** Each record as a span tagged with its index, so a moved span finds its record again. */
+function tagged(mentions: readonly PptxCommentMention[]): OfficeCommentMention[] {
+	return mentions.map((mention, index) => ({
+		start: mention.startIndex,
+		length: mention.length,
+		id: String(index),
+	}));
+}
+
+/** The records behind tagged spans, moved to where the spans are now. */
+function untagged(
+	spans: readonly OfficeCommentMention[],
+	records: readonly PptxCommentMention[],
+): PptxCommentMention[] {
+	return spans.map((span) => ({ ...records[Number(span.id)]!, startIndex: span.start }));
+}
+
+/**
+ * A comment body trimmed as it is stored, with its mention records moved by the whitespace taken off
+ * the front (and any outside the trimmed text dropped). Every other field of a record is kept.
+ */
+export function trimCommentMentions(
+	text: string,
+	mentions: readonly PptxCommentMention[] | undefined,
+): { text: string; mentions: PptxCommentMention[] } {
+	const records = mentions ?? [];
+	const result = trimMentionText(text, tagged(records));
+	return { text: result.text, mentions: untagged(result.mentions, records) };
+}
+
+/**
+ * The mention records after a comment body changed from `before` to `after` (any number of edits,
+ * as a save sees them): each moves to where its own text is now, and one whose text is gone is
+ * dropped. The same rule the save applies to a loaded comment (`rebaseCommentMentions`).
+ */
+export function followCommentEdit(
+	before: string,
+	after: string,
+	mentions: readonly PptxCommentMention[] | undefined,
+): PptxCommentMention[] {
+	return rebaseCommentMentions(mentions ? [...mentions] : undefined, before, after) ?? [];
+}
+
 /** Result of accepting an author from the mention typeahead. */
 export interface CommentMentionInsertion {
 	text: string;
@@ -136,13 +181,7 @@ export function insertCommentMention(
 	generateId: () => string = defaultMentionId,
 ): CommentMentionInsertion {
 	const existing = mentions ?? [];
-	// Each existing record is tagged with its index, so the shifted span finds its record again.
-	const tagged = existing.map((mention, index) => ({
-		start: mention.startIndex,
-		length: mention.length,
-		id: String(index),
-	}));
-	const result = insertMention(text, tagged, caret, { id: author.id, name: author.name });
+	const result = insertMention(text, tagged(existing), caret, { id: author.id, name: author.name });
 	return {
 		text: result.text,
 		caret: result.caret,
