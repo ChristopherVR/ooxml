@@ -112,6 +112,15 @@ export interface EditorHistoryResult {
 	 */
 	holdTracking: (held: boolean) => void;
 	markDirty: () => void;
+	/**
+	 * Run `apply` without arming the undo tracker: the edits it makes show at
+	 * once but are no undo step and leave the dirty flag alone, and the next
+	 * committed edit records the state from before them. A colour picker drag
+	 * applies its shades this way (shared `createLiveColorInput`), so the drag
+	 * is one undo step when it settles. Synchronous: only edits made inside
+	 * `apply` are exempt.
+	 */
+	withoutUndoStep: (apply: () => void) => void;
 	buildHistorySnapshot: (actionLabel?: string) => EditorHistorySnapshot;
 }
 
@@ -259,7 +268,13 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		onDirtyRef.current = onDirty;
 	}, [onDirty]);
 
+	/** Depth of {@link withoutUndoStep} calls in progress; `markDirty` is a no-op inside one. */
+	const untrackedDepthRef = useRef(0);
+
 	const markDirty = useCallback(() => {
+		if (untrackedDepthRef.current > 0) {
+			return;
+		}
 		setEditCommitNonce((previous) => previous + 1);
 		onDirtyRef.current?.();
 	}, []);
@@ -278,6 +293,15 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		},
 		[],
 	);
+
+	const withoutUndoStep = useCallback((apply: () => void) => {
+		untrackedDepthRef.current += 1;
+		try {
+			apply();
+		} finally {
+			untrackedDepthRef.current -= 1;
+		}
+	}, []);
 
 	// -- Stack navigation ---------------------------------------------------
 
@@ -504,6 +528,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		resetHistory,
 		forgetHistory: history.forget,
 		markDirty,
+		withoutUndoStep,
 		buildHistorySnapshot,
 	};
 }

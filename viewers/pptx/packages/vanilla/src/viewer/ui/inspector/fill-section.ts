@@ -46,27 +46,21 @@ export function createFillSection(
 	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'fill-stroke');
 
-	// A drag through the OS picker fires `input` on every shade it passes: those
-	// apply live without recording, and only the settled colour (`change`) goes
-	// into the deck's recent colours.
-	const fill = makeColorControl(
-		doc,
-		{
-			label: t('pptx.inspector.fill'),
-			onInput: (hex) => handlers.setShapeFill(hex, undefined, false),
-			onCommit: handlers.pushRecentColor,
-		},
-		'#4f86ff',
-	);
-	const stroke = makeColorControl(
-		doc,
-		{
-			label: t('pptx.inspector.line'),
-			onInput: (hex) => handlers.setShapeStroke(hex, undefined, false),
-			onCommit: handlers.pushRecentColor,
-		},
-		'#1e3a8a',
-	);
+	// The native pickers report every `input`, `change` and `blur` to the live
+	// colour actions (`editor-live-colors.ts`).
+	const liveColor = (target: 'fill' | 'line', label: string, fallback: string) =>
+		makeColorControl(
+			doc,
+			{
+				label,
+				onInput: (hex) => handlers.liveColor(target, 'input', hex),
+				onCommit: (hex) => handlers.liveColor(target, 'change', hex),
+				onBlur: (hex) => handlers.liveColor(target, 'blur', hex),
+			},
+			fallback,
+		);
+	const fill = liveColor('fill', t('pptx.inspector.fill'), '#4f86ff');
+	const stroke = liveColor('line', t('pptx.inspector.line'), '#1e3a8a');
 
 	// W3-G2: the deck's real "Theme Colors" grid, above the recent-colours
 	// row. Clicking a theme swatch commits BOTH the resolved hex and the ref

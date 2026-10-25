@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { fillColorOf, shapeStylePatch } from 'ooxml-ui/pptx';
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
@@ -6,6 +7,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
+import { useLiveElementColor } from '../../composables/useLiveElementColor';
 import RecentColorsRow from '../RecentColorsRow.vue';
 import FillGradientControls from './FillGradientControls.vue';
 import FillPatternControls from './FillPatternControls.vue';
@@ -71,6 +73,14 @@ function onColor(value: string): void {
 	patchStyle({ fillColor: value, fillColorRef: undefined });
 }
 
+/** The native picker: live while dragging, one `update` and one recent colour per pick. */
+const fillColorEvents = useLiveElementColor({
+	element: () => props.element,
+	colorOf: fillColorOf,
+	patch: (el, hex) => shapeStylePatch(el, { fillColor: hex, fillColorRef: undefined }),
+	commit: (patch) => emit('update', patch),
+});
+
 function onThemeColor(commit: ThemeColorPickerCommit): void {
 	patchStyle({ fillColor: commit.hex, fillColorRef: commit.ref });
 	recentColors?.push(commit.hex);
@@ -117,8 +127,7 @@ function onOpacity(value: string): void {
 						type="color"
 						class="pptx-vue-fill-color w-full h-8 p-0 bg-muted border border-border rounded"
 						:value="fillColor"
-						@input="onColor(($event.target as HTMLInputElement).value)"
-						@change="recentColors?.push(($event.target as HTMLInputElement).value)"
+						v-on="fillColorEvents"
 					/>
 				</label>
 				<ThemeColorSwatchGrid

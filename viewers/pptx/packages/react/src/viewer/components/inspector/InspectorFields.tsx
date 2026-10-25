@@ -4,12 +4,13 @@ import type {
 	InspectorFieldView,
 	InspectorSectionDescriptor,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { COL2, LBL, NUM, RNG, SEL } from './FillStrokeHelpers';
-import { useRecentColorCommit } from './useRecentColorCommit';
+import { LiveColorInput } from './LiveColorInput';
 
 export interface InspectorFieldsProps<T, P> {
 	/** The section descriptors to draw (from `ooxml-ui/pptx`). */
@@ -19,6 +20,14 @@ export interface InspectorFieldsProps<T, P> {
 	/** Receives the patch a control change produces. */
 	onPatch: (patch: P) => void;
 	disabled?: boolean;
+	/**
+	 * For the colour fields: the value the descriptors read on any element, and
+	 * how a field patch lands on it. With both, a drag through a colour picker
+	 * previews and is put back leaf by leaf on the element it started on
+	 * ({@link LiveColorInput}); without them every shade goes through `onPatch`.
+	 */
+	liveTarget?: (el: PptxElement) => T;
+	livePatch?: (el: PptxElement, patch: P) => Partial<PptxElement>;
 }
 
 /**
@@ -26,17 +35,18 @@ export interface InspectorFieldsProps<T, P> {
  * inspector section descriptors (a toggle per section, then its fields) as
  * cells of the surrounding two-column grid. Values, bounds, labels and the
  * patches all come from the descriptors; this component only maps them onto
- * JSX. A colour pick is added to the "Recent colours" list once it settles
- * (`useRecentColorCommit`), not on every shade a drag passes.
+ * JSX. A colour field shows every shade of a drag live but is one undo step
+ * and one "Recent colours" entry when the pick settles ({@link LiveColorInput}).
  */
 export function InspectorFields<T, P>({
 	sections,
 	target,
 	onPatch,
 	disabled = false,
+	liveTarget,
+	livePatch,
 }: InspectorFieldsProps<T, P>): React.ReactElement {
 	const { t } = useTranslation();
-	const commitRecentColor = useRecentColorCommit();
 	const views = resolveInspectorSections(sections, target);
 
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void => {
@@ -89,14 +99,26 @@ export function InspectorFields<T, P>({
 			return (
 				<label key={key} className={cls}>
 					<span className={LBL}>{label}</span>
-					<input
-						type='color'
+					<LiveColorInput
 						data-testid={field.testId}
 						aria-label={label}
 						value={String(field.value)}
 						disabled={disabled}
-						ref={commitRecentColor}
-						onChange={(e) => change(sectionId, field.id, e.target.value)}
+						onApply={(hex) => change(sectionId, field.id, hex)}
+						patch={
+							liveTarget && livePatch
+								? (el, hex) => {
+										const fieldPatch = inspectorFieldPatch(
+											sections,
+											sectionId,
+											field.id,
+											liveTarget(el),
+											hex,
+										);
+										return fieldPatch === undefined ? undefined : livePatch(el, fieldPatch);
+									}
+								: undefined
+						}
 						className={`h-8 ${SEL} px-1`}
 					/>
 				</label>

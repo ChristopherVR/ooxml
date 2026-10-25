@@ -522,6 +522,13 @@ export class EditorState {
 	patchGeometry = (id: string, box: ElementBoxPatch): void =>
 		this.elementOps.patchGeometry(id, box);
 
+	/** Merge a live frame into an element without history (a colour picker drag's shade). */
+	previewElement = (id: string, patch: Partial<PptxElement>): void => {
+		if (this.editable) {
+			this.elementOps.previewElement(id, patch);
+		}
+	};
+
 	replaceActiveElements(elements: PptxElement[]): void {
 		this.templateOps.replace(elements);
 	}

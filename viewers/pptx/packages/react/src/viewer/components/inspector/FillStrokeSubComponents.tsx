@@ -1,5 +1,6 @@
-import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef } from 'pptx-viewer-core';
+import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel, shapeQuickStylePatch } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 import React from 'react';
 import { LuPipette } from 'react-icons/lu';
 
@@ -8,6 +9,7 @@ import { normalizeHexColor, openNativeEyeDropper } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { SEL, RNG, SWATCH, DIS, LBL, COL2 } from './FillStrokeHelpers';
 import type { GradientStop } from './FillStrokeHelpers';
+import { LiveColorInput } from './LiveColorInput';
 import { useRecentColors } from './RecentColorsContext';
 import { RecentColorsRow } from './RecentColorsRow';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
@@ -64,8 +66,8 @@ export function SelectRow({
  * colour's own row) simply never did, so its row silently rendered nothing.
  * Every commit here (native picker, theme swatch, standard swatch, recent
  * swatch, eyedropper) also pushes the resolved hex back into that same shared
- * list; a drag through the native picker applies live but adds only the
- * colour it settles on.
+ * list; a drag through the native picker shows every shade live but is one
+ * undo step and adds only the colour it settles on ({@link LiveColorInput}).
  *
  * Clicking a {@link ThemeColorSwatchGrid} swatch commits BOTH the resolved
  * hex and its `PptxThemeColorRef`, so the colour keeps following the theme
@@ -80,6 +82,7 @@ export function ColorPickerRow({
 	disabled,
 	prefix,
 	onChange,
+	styleChange,
 }: {
 	label: string;
 	value: string;
@@ -88,10 +91,15 @@ export function ColorPickerRow({
 	disabled?: boolean;
 	prefix: string;
 	onChange: (c: string, ref?: PptxThemeColorRef) => void;
+	/**
+	 * The shape-style change a native pick of `hex` makes (what `onChange` commits
+	 * for it), so a drag through the picker previews and is put back leaf by leaf
+	 * ({@link LiveColorInput}). Without it the native picker applies every shade.
+	 */
+	styleChange?: (hex: string, style: ShapeStyle) => Partial<ShapeStyle>;
 }): React.ReactElement {
 	const { t } = useTranslation();
 	const { pushColor } = useRecentColors();
-	const commitRecentColor = useRecentColorCommit();
 	const commit = (color: string, ref?: PptxThemeColorRef): void => {
 		onChange(color, ref);
 		pushColor(color);
@@ -107,12 +115,11 @@ export function ColorPickerRow({
 		<label className='flex flex-col gap-1'>
 			<span className={LBL}>{label}</span>
 			<div className='flex items-center gap-1'>
-				<input
-					type='color'
+				<LiveColorInput
 					value={value}
 					disabled={disabled}
-					ref={commitRecentColor}
-					onChange={(e) => onChange(e.target.value)}
+					onApply={onChange}
+					patch={styleChange && ((el, hex) => shapeStyleChangePatch(el, hex, styleChange))}
 					className={`h-8 flex-1 ${SEL} px-1 ${DIS}`}
 				/>
 				<button
@@ -162,6 +169,17 @@ export function ColorPickerRow({
 			<RecentColorsRow disabled={disabled} onCommit={commit} />
 		</label>
 	);
+}
+
+/** The element patch a {@link ColorPickerRow} style change makes for `hex`. */
+function shapeStyleChangePatch(
+	el: PptxElement,
+	hex: string,
+	change: (hex: string, style: ShapeStyle) => Partial<ShapeStyle>,
+): Partial<PptxElement> | undefined {
+	return hasShapeProperties(el)
+		? shapeQuickStylePatch(el, change(hex, el.shapeStyle ?? {}))
+		: undefined;
 }
 
 // ---------------------------------------------------------------------------

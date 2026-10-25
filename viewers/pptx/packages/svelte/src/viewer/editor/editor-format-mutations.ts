@@ -1,8 +1,8 @@
 import {
 	fontSizeOf,
 	shapeFillChange,
-	shapeOutlineChange,
 	shapeStylePatch,
+	strokeColorPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textStylePatch,
@@ -98,14 +98,13 @@ export function setSolidFillPatch(
 	return shapeStylePatch(el, shapeFillChange(color, ref));
 }
 
-/** Set the shape stroke (outline) colour, via the shared decision function. Same `ref` contract as {@link setSolidFillPatch}. */
+/** Set the shape stroke (outline) colour, via the shared `strokeColorPatch`. Same `ref` contract as {@link setSolidFillPatch}. */
 export function setStrokeColorPatch(
 	el: PptxElement,
 	color: string,
 	ref?: PptxThemeColorRef,
 ): Partial<PptxElement> {
-	const current = hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
-	return shapeStylePatch(el, shapeOutlineChange(color, ref, current));
+	return strokeColorPatch(el, color, ref);
 }
 
 /** Read the shape stroke width (defaults to 1 when unset). */

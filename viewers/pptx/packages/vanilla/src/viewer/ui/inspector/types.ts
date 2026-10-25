@@ -41,6 +41,7 @@ import type {
 
 import type { AnimationTimingPatch } from '../../editor/editor-animation-actions';
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
+import type { LiveColorEventType, LiveColorTarget } from '../../editor/editor-live-colors';
 import type { TableCellPosition, TableStructureAction } from '../../editor/table-editor-mutations';
 import type { RegionSet } from '../region-set';
 
@@ -147,6 +148,19 @@ export interface InspectorHandlers {
 	setShapeStroke(color: string, ref?: PptxThemeColorRef, committed?: boolean): void;
 	setShapeStrokeWidth(width: number): void;
 	setShapeStyle(patch: Partial<ShapeStyle>): void;
+	/**
+	 * One `input`, `change` or `blur` of the native fill, line or text colour
+	 * picker: a drag previews every shade and settles as ONE undo step and one
+	 * recent colour (see `LiveColorActions`).
+	 */
+	liveColor(target: LiveColorTarget, type: LiveColorEventType, hex: string): void;
+	/**
+	 * Show an effects colour drag's shape-style frame without an undo step, on the
+	 * element `target` (the selection when omitted, or one the drag has left).
+	 */
+	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
+	/** The shape style of element `id` now (what an effects drag the selection left goes back on). */
+	shapeStyleOf(id: string): ShapeStyle | undefined;
 	setShapeType(shapeType: string): void;
 	/**
 	 * B6: fold a colour into the deck's "Recent colours" (`p:clrMru`) MRU list,
@@ -248,6 +262,8 @@ export interface InspectorHandlers {
 /** Selection-derived state the inspector reflects, computed by `buildInspectorState`. */
 export interface InspectorState {
 	hasSelection: boolean;
+	/** The selected element's id: what a live colour drag in the inspector belongs to. */
+	elementId?: string;
 	isLocked: boolean;
 	/** `a:picLocks/@noCrop`: may the selected picture's crop be adjusted? */
 	croppable: boolean;

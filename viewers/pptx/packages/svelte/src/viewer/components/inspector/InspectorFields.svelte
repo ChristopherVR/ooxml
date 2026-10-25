@@ -4,25 +4,47 @@
 	 * any list of shared inspector section descriptors (a toggle per section,
 	 * then a two-column grid of its fields); values, bounds, labels and patches
 	 * all come from the descriptors, so this component only maps them onto
-	 * markup. A colour commit is reported through `oncolorcommit` for the
-	 * "Recent colours" list.
+	 * markup. A colour field previews while its native picker is dragged
+	 * (`onpreview`, no undo step) and commits once when the pick settles
+	 * (`onpatch`, then `oncolorcommit` for the "Recent colours" list), through
+	 * the shared `createInspectorColorFields`. `targetKey` names the element the target
+	 * belongs to, so a field tells a new selection from a re-render of its drag, and
+	 * `lookup` reads any element's target now, which a drag it left is put back on.
 	 */
-	import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
+	import {
+		createInspectorColorFields,
+		inspectorFieldPatch,
+		inspectorTogglePatch,
+		resolveInspectorSections,
+	} from 'ooxml-ui/pptx';
 	import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
+	import { liveColorEvents } from './live-color';
 
 	const {
 		sections,
 		target,
 		onpatch,
+		onpreview,
 		oncolorcommit,
+		targetKey = '',
+		lookup = () => undefined,
 		disabled = false,
 	}: {
 		sections: readonly InspectorSectionDescriptor<T, P>[];
 		target: T;
 		onpatch: (patch: P) => void;
+		/**
+		 * A colour drag's live patch for the element `target` names (the selection, or one
+		 * the drag has left): apply it without an undo step.
+		 */
+		onpreview?: (patch: P, target: string) => void;
 		oncolorcommit?: (hex: string) => void;
+		/** The identity of the element `target` belongs to (its id), for the colour fields. */
+		targetKey?: string;
+		/** What the descriptors read on element `key` now (none: a drag left is not put back). */
+		lookup?: (key: string) => T | undefined;
 		disabled?: boolean;
 	} = $props();
 	const t = useTranslator();
@@ -35,6 +57,17 @@
 			onpatch(patch);
 		}
 	}
+
+	/** One live colour controller per colour field (shared `createInspectorColorFields`). */
+	const colorInput = createInspectorColorFields<T, P>({
+		sections: () => sections,
+		target: () => target,
+		targetKey: () => targetKey,
+		lookup: (key) => lookup(key),
+		preview: (patch, owner) => onpreview?.(patch, owner),
+		commit: (patch) => onpatch(patch),
+		remember: (hex) => oncolorcommit?.(hex),
+	});
 
 	function onToggle(sectionId: string, on: boolean): void {
 		const patch = inspectorTogglePatch(sections, sectionId, target, on);
@@ -97,10 +130,7 @@
 									aria-label={t(field.labelKey)}
 									value={String(field.value)}
 									{disabled}
-									onchange={(e) => {
-										onField(section.id, field.id, e.currentTarget.value);
-										oncolorcommit?.(e.currentTarget.value);
-									}}
+									use:liveColorEvents={colorInput(section.id, field.id)}
 								/>
 							{:else if field.control === 'range'}
 								<input

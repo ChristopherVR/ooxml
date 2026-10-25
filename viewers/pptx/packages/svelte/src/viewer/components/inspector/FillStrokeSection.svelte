@@ -11,7 +11,8 @@
 	 * {@link PatternFillPanel} renders the 56-preset swatch grid built on
 	 * shared `fill-pattern-label-keys.ts` / `fill-style.ts`, matching the
 	 * vanilla binding's scope. Shown only for elements that pass
-	 * `hasShapeProperties`.
+	 * `hasShapeProperties`. The fill and line colour pickers preview every
+	 * shade of a drag and commit it as one undo step (`live-color.ts`).
 	 */
 	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
@@ -36,6 +37,7 @@
 	} from '../../editor';
 	import GradientPanel from './GradientPanel.svelte';
 	import InspectorFields from './InspectorFields.svelte';
+	import { liveColorEvents, liveElementColor } from './live-color';
 	import PatternFillPanel from './PatternFillPanel.svelte';
 	import RecentColorsRow from './RecentColorsRow.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
@@ -63,6 +65,19 @@
 			editor.patchSelected(setSolidFillPatch(el, fill));
 		}
 	}
+
+	const fillInput = liveElementColor(
+		() => editor,
+		() => el,
+		fillColorOf,
+		(cur, hex) => setSolidFillPatch(cur, hex, undefined),
+	);
+	const strokeInput = liveElementColor(
+		() => editor,
+		() => el,
+		strokeColorOf,
+		(cur, hex) => setStrokeColorPatch(cur, hex, undefined),
+	);
 
 	function commitFill(hex: string): void {
 		editor.patchSelected(setSolidFillPatch(el, hex, undefined));
@@ -117,7 +132,7 @@
 		<input
 			type="color"
 			value={/^#/.test(fill) ? fill : '#ffffff'}
-			onchange={(e) => commitFill(e.currentTarget.value)}
+			use:liveColorEvents={fillInput}
 		/>
 		<ThemeColorSwatchGrid
 			themeColorMap={editor.themeColorMap}
@@ -132,7 +147,7 @@
 		<input
 			type="color"
 			value={/^#/.test(stroke) ? stroke : '#000000'}
-			onchange={(e) => commitStroke(e.currentTarget.value)}
+			use:liveColorEvents={strokeInput}
 		/>
 		<ThemeColorSwatchGrid
 			themeColorMap={editor.themeColorMap}

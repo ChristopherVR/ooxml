@@ -6,7 +6,8 @@
 	 * elements carrying text properties. Paragraph alignment (left/center/right/
 	 * justify) is already covered by the Home tab's Paragraph group
 	 * (`ParagraphGroup.svelte`), so it is intentionally not duplicated here.
-	 *
+	 * The text colour picker previews every shade of a drag and commits it as
+	 * one undo step (`live-color.ts`).
 	 */
 	import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
 	import { TEXT_BOX_SECTIONS, textColorOf, textStylePatch } from 'ooxml-ui/pptx';
@@ -16,6 +17,7 @@
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import { setTextColorPatch } from '../../editor';
 	import InspectorFields from './InspectorFields.svelte';
+	import { liveColorEvents, liveElementColor } from './live-color';
 	import RecentColorsRow from './RecentColorsRow.svelte';
 	import TextEffectsSection from './TextEffectsSection.svelte';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';
@@ -28,6 +30,14 @@
 	const textStyle = $derived('textStyle' in el ? (el.textStyle ?? {}) : {});
 
 	/** Native colour input: always clears `colorRef` (theme-grid pick keeps it). */
+	const textColorInput = liveElementColor(
+		() => editor,
+		() => el,
+		textColorOf,
+		(cur, hex) => setTextColorPatch(cur, hex, undefined),
+	);
+
+	/** A swatch or recent-colour pick: one committed edit. */
 	function commitTextColor(hex: string, ref?: PptxThemeColorRef): void {
 		editor.patchSelected(setTextColorPatch(el, hex, ref));
 		editor.recordRecentColor(hex);
@@ -48,7 +58,7 @@
 		type="color"
 		class="pptx-svelte-text-color"
 		value={/^#/.test(textColor) ? textColor : '#000000'}
-		onchange={(e) => commitTextColor(e.currentTarget.value)}
+		use:liveColorEvents={textColorInput}
 	/>
 </label>
 <ThemeColorSwatchGrid

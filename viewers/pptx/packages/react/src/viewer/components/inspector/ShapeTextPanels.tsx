@@ -1,6 +1,7 @@
 import {
-	shapeOutlineChange,
+	applyTextStyleUpdate,
 	shouldShowAccessibilitySection,
+	strokeColorChange,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
 } from 'ooxml-ui/pptx';
@@ -13,9 +14,9 @@ import { useTranslation } from '../../i18n/use-translation';
 import { cn, normalizeHexColor, sanitizeGradientStops } from '../../utils';
 import { WebSelect } from '../WebControls';
 import { AccessibilityTextSection } from './AccessibilityTextSection';
-import { DebouncedColorInput } from './DebouncedColorInput';
 import { FillStrokeProperties } from './FillStrokeProperties';
 import { CARD, HEADING, INPUT } from './inspector-pane-constants';
+import { LiveColorInput } from './LiveColorInput';
 import { RecentColorsRow } from './RecentColorsRow';
 import { TextAdvancedSections } from './TextAdvancedSections';
 import { ThemeColorSwatchGrid } from './ThemeColorSwatchGrid';
@@ -30,6 +31,17 @@ interface ShapeTextPanelsProps {
 	onUpdateElement: (updates: Partial<PptxElement>) => void;
 	onUpdateElementStyle: (patch: Partial<ShapeStyle>) => void;
 	onUpdateTextStyle: (patch: Partial<TextStyle>) => void;
+}
+
+/**
+ * The patch a native text colour pick makes on an element: the same style update
+ * `onUpdateTextStyle` commits outside inline editing (body and runs), so the
+ * drag's shades look like its pick.
+ */
+function textColorPatch(el: PptxElement, hex: string): Partial<PptxElement> | undefined {
+	return hasTextProperties(el)
+		? applyTextStyleUpdate(el, { color: hex, colorRef: undefined }, null).patch
+		: undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,7 +103,7 @@ export function ShapeTextPanels({
 							onUpdateElementStyle({ fillColor: hex, fillMode: 'solid', fillColorRef: ref })
 						}
 						onSetStrokeColor={(hex, ref) =>
-							onUpdateElementStyle(shapeOutlineChange(hex, ref, selectedElement.shapeStyle ?? {}))
+							onUpdateElementStyle(strokeColorChange(selectedElement, hex, ref))
 						}
 					/>
 				</div>
@@ -123,12 +135,13 @@ export function ShapeTextPanels({
 						</label>
 						<label className='flex flex-col gap-1'>
 							<span className='text-muted-foreground'>Color</span>
-							<DebouncedColorInput
+							<LiveColorInput
 								disabled={!canEdit}
-								ariaLabel='Text Color'
+								aria-label='Text Color'
 								value={normalizeHexColor(selectedElement.textStyle?.color, '#000000')}
 								className='w-full h-7 rounded border border-border bg-transparent cursor-pointer'
-								onCommit={(hex) => onUpdateTextStyle({ color: hex, colorRef: undefined })}
+								onApply={(hex) => onUpdateTextStyle({ color: hex, colorRef: undefined })}
+								patch={textColorPatch}
 							/>
 						</label>
 						<div className='col-span-2'>

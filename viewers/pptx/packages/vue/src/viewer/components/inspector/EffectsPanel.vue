@@ -5,6 +5,7 @@ import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { injectInspectorPreview } from '../../composables/inspector-preview-context';
 import InspectorFields from './InspectorFields.vue';
 import QuickStylesGallery from './QuickStylesGallery.vue';
 
@@ -44,6 +45,25 @@ const shapeStyle = computed(() =>
 /** Merge an effect field's shape-style patch into the element. */
 function onEffectPatch(patch: Partial<ShapeStyle>): void {
 	emit('update', shapeQuickStylePatch(props.element, patch));
+}
+
+const preview = injectInspectorPreview();
+
+/** The shape style of element `id` now: what a drag the selection left is put back on. */
+function styleOf(id: string): ShapeStyle | undefined {
+	const owner = preview?.element(id);
+	return owner && hasShapeProperties(owner) ? owner.shapeStyle : undefined;
+}
+
+/**
+ * An effect colour drag's live shade, merged into the style of the element it is
+ * for (the current one, or one the drag has left): on the slide at once, no undo step.
+ */
+function onEffectPreview(patch: Partial<ShapeStyle>, target: string): void {
+	const owner = preview?.element(target);
+	if (owner) {
+		preview?.preview(shapeQuickStylePatch(owner, patch), target);
+	}
 }
 
 /**
@@ -91,7 +111,10 @@ function onOpacity(value: string): void {
 			<InspectorFields
 				:sections="SHAPE_EFFECT_SECTIONS"
 				:target="shapeStyle"
+				:target-key="props.element.id"
+				:lookup="styleOf"
 				@patch="onEffectPatch"
+				@preview="onEffectPreview"
 			/>
 		</template>
 

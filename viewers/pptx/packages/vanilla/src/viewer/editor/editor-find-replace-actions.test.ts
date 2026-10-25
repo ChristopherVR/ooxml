@@ -47,6 +47,7 @@ function fakeOps(): EditorOps {
 		pushHistory: vi.fn(),
 		commitChange: vi.fn(),
 		patchGeometry: vi.fn(),
+		previewElement: vi.fn(),
 		deleteSelected: vi.fn(),
 		duplicateSelected: () => null,
 		nudgeSelected: vi.fn(),

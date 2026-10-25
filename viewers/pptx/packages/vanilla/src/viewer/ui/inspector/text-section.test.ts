@@ -38,6 +38,7 @@ function mount() {
 		setTextAdvanced: vi.fn(),
 		setTextStyle: vi.fn(),
 		pushRecentColor: vi.fn(),
+		liveColor: vi.fn(),
 	} as unknown as InspectorHandlers;
 	const section = createTextSection(
 		document,
@@ -62,18 +63,24 @@ describe('createTextSection text colour', () => {
 		expect(colorInput.value).toBe('#123456');
 	});
 
-	it('commits a typed colour through setTextStyle live, and pushes it on commit', () => {
+	it("hands the native picker's drag, settle and blur to the live text colour", () => {
+		// The live action previews the drag and makes the settled pick one undo step and one
+		// recent colour (`colour-drag-undo.test.ts` covers it end to end), so the section no
+		// longer applies each shade through the recorded `setTextStyle` itself.
 		const { section, handlers } = mount();
 		section.update(baseState());
 
 		const colorInput = section.el.querySelector<HTMLInputElement>('input[type="color"]')!;
 		colorInput.value = '#00ff00';
 		colorInput.dispatchEvent(new Event('input'));
-		expect(handlers.setTextStyle).toHaveBeenCalledWith({ color: '#00ff00' });
-		expect(handlers.pushRecentColor).not.toHaveBeenCalled();
+		expect(handlers.liveColor).toHaveBeenLastCalledWith('text', 'input', '#00ff00');
 
 		colorInput.dispatchEvent(new Event('change'));
-		expect(handlers.pushRecentColor).toHaveBeenCalledExactlyOnceWith('#00ff00');
+		expect(handlers.liveColor).toHaveBeenLastCalledWith('text', 'change', '#00ff00');
+		colorInput.dispatchEvent(new Event('blur'));
+		expect(handlers.liveColor).toHaveBeenLastCalledWith('text', 'blur', '#00ff00');
+		expect(handlers.setTextStyle).not.toHaveBeenCalled();
+		expect(handlers.pushRecentColor).not.toHaveBeenCalled();
 	});
 
 	it('is hidden until there are recent colours, then renders and commits from a swatch', () => {
@@ -153,17 +160,17 @@ describe('createTextSection text colour theme grid', () => {
 		expect(swatch.getAttribute('aria-checked')).toBe('true');
 	});
 
-	it('the native colour input clears colorRef', () => {
+	it('the native colour input never commits the theme ref (the live action clears it)', () => {
+		// `colour-drag-undo.test.ts` asserts the committed native pick has no `colorRef`.
 		const { section, handlers } = mount();
 		section.update(baseState());
 
 		const colorInput = section.el.querySelector<HTMLInputElement>('input[type="color"]')!;
 		colorInput.value = '#00ff00';
 		colorInput.dispatchEvent(new Event('input'));
-		expect(handlers.setTextStyle).toHaveBeenCalledExactlyOnceWith({
-			color: '#00ff00',
-			colorRef: undefined,
-		});
+		colorInput.dispatchEvent(new Event('change'));
+		expect(handlers.liveColor).toHaveBeenCalledTimes(2);
+		expect(handlers.setTextStyle).not.toHaveBeenCalled();
 	});
 
 	it('disables the theme grid when text cannot be formatted', () => {

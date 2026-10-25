@@ -1,5 +1,11 @@
 <script setup lang="ts" generic="T, P">
-import { inspectorFieldPatch, inspectorTogglePatch, resolveInspectorSections } from 'ooxml-ui/pptx';
+import {
+	createInspectorColorFields,
+	handleLiveColorEvent,
+	inspectorFieldPatch,
+	inspectorTogglePatch,
+	resolveInspectorSections,
+} from 'ooxml-ui/pptx';
 import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -11,19 +17,33 @@ import { injectRecentColors } from '../../composables/recent-colors-context';
  * list of shared inspector section descriptors (a toggle per section, then a
  * two-column grid of its fields); values, bounds, labels and patches all come
  * from the descriptors, so this SFC only maps them onto the template. A colour
- * commit also pushes into the "Recent colours" list.
+ * field previews while its native picker is dragged (`preview`, no undo step)
+ * and commits once when the pick settles (`patch`, plus the "Recent colours"
+ * list), through the shared `createInspectorColorFields`. `targetKey` names the
+ * element `target` belongs to, so a field tells a new selection from a
+ * re-render of its own drag, and `lookup` reads any element's target now, which
+ * a drag the selection left is put back on.
  */
 const props = withDefaults(
 	defineProps<{
 		sections: readonly InspectorSectionDescriptor<T, P>[];
 		target: T;
+		/** The identity of the element `target` belongs to (its id), for the colour fields. */
+		targetKey?: string;
+		/** What the descriptors read on element `key` now (none: a drag left is not put back). */
+		lookup?: (key: string) => T | undefined;
 		disabled?: boolean;
 	}>(),
-	{ disabled: false },
+	{ disabled: false, targetKey: '', lookup: () => undefined },
 );
 
 const emit = defineEmits<{
 	patch: [patch: P];
+	/**
+	 * A colour drag's live patch for the element `target` names (the current one,
+	 * or one the drag has left): apply it without an undo step.
+	 */
+	preview: [patch: P, target: string];
 }>();
 
 const { t } = useI18n();
@@ -43,6 +63,21 @@ function onToggle(sectionId: string, on: boolean): void {
 	if (patch !== undefined) {
 		emit('patch', patch);
 	}
+}
+
+/** One live colour controller per colour field (shared `createInspectorColorFields`). */
+const colorField = createInspectorColorFields<T, P>({
+	sections: () => props.sections,
+	target: () => props.target,
+	targetKey: () => props.targetKey,
+	lookup: (key) => props.lookup(key),
+	preview: (patch, target) => emit('preview', patch, target),
+	commit: (patch) => emit('patch', patch),
+	remember: (hex) => recentColors?.push(hex),
+});
+
+function onColor(sectionId: string, fieldId: string, event: Event): void {
+	handleLiveColorEvent(colorField(sectionId, fieldId), event);
 }
 
 const valueOf = (event: Event): string => (event.target as HTMLInputElement).value;
@@ -112,8 +147,9 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 						:aria-label="t(field.labelKey)"
 						:value="String(field.value)"
 						:disabled="props.disabled"
-						@input="onField(section.id, field.id, valueOf($event))"
-						@change="recentColors?.push(valueOf($event))"
+						@input="onColor(section.id, field.id, $event)"
+						@change="onColor(section.id, field.id, $event)"
+						@blur="onColor(section.id, field.id, $event)"
 					/>
 					<input
 						v-else

@@ -17,6 +17,7 @@ import type { ComputedRef, ShallowRef, Ref } from 'vue';
 import { computed } from 'vue';
 
 import { mergeElementAnimations, replaceSlideAnimations } from './animation-persistence';
+import type { InspectorPreview } from './inspector-preview-context';
 
 export interface UseInspectorWiringOptions {
 	slides: ShallowRef<PptxSlide[]>;
@@ -25,6 +26,13 @@ export interface UseInspectorWiringOptions {
 	selectedElements: ComputedRef<PptxElement[]>;
 	pushHistory: () => void;
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
+	/** {@link updateElement} without an undo step (a colour drag's live shade). */
+	previewElement: (id: string, patch: Partial<PptxElement>) => void;
+	/**
+	 * Element `id` on the active slide as the deck holds it now, group members
+	 * and template elements included (the selection model's lookup).
+	 */
+	findActiveElement: (id: string) => PptxElement | undefined;
 }
 
 export interface UseInspectorWiringResult {
@@ -33,6 +41,11 @@ export interface UseInspectorWiringResult {
 	/** `inspectorElement` augmented with this element's slide-level animations. */
 	inspectorElementForPanels: ComputedRef<PptxElement | undefined>;
 	onInspectorUpdate: (patch: Partial<PptxElement>) => void;
+	/**
+	 * The panels' live preview channel (`InspectorPreviewKey`): a frame on an
+	 * element without an undo step, and the element as the deck holds it now.
+	 */
+	inspectorPreview: InspectorPreview;
 	writeSlideAnimations: (animations: PptxSlide['animations']) => void;
 	/** The selected element's motion path, when it has one. */
 	selectedMotionPath: ComputedRef<string | undefined>;
@@ -96,6 +109,11 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		options.updateElement(el.id, patch);
 	}
 
+	const inspectorPreview: InspectorPreview = {
+		preview: (patch, id) => options.previewElement(id, patch),
+		element: (id) => options.findActiveElement(id),
+	};
+
 	const selectedMotionPath = computed(() => {
 		const el = inspectorElement.value;
 		return el ? motionPathFor(activeSlide.value?.animations ?? [], el.id) : undefined;
@@ -113,6 +131,7 @@ export function useInspectorWiring(options: UseInspectorWiringOptions): UseInspe
 		inspectorElement,
 		inspectorElementForPanels,
 		onInspectorUpdate,
+		inspectorPreview,
 		writeSlideAnimations,
 		selectedMotionPath,
 		onMotionPathChange,

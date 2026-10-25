@@ -29,6 +29,18 @@ export interface FillAdvancedControlsProps {
 	onSetFillColor: (color: string) => void;
 }
 
+/** The style a pattern foreground colour pick commits. */
+const patternForeground = (color: string): Partial<ShapeStyle> => ({
+	fillMode: 'pattern',
+	fillColor: color,
+});
+
+/** The style a pattern background colour pick commits. */
+const patternBackground = (color: string): Partial<ShapeStyle> => ({
+	fillMode: 'pattern',
+	fillPatternBackgroundColor: color,
+});
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -163,19 +175,16 @@ export function FillAdvancedControls({
 						prefix='pattern-fg'
 						value={normalizeHexColor(style?.fillColor, DEFAULT_FILL_COLOR)}
 						disabled={isLine}
-						onChange={(color) => onUpdateShapeStyle({ fillMode: 'pattern', fillColor: color })}
+						onChange={(color) => onUpdateShapeStyle(patternForeground(color))}
+						styleChange={patternForeground}
 					/>
 					<ColorPickerRow
 						label={t('pptx.fillAdvanced.backgroundColor')}
 						prefix='pattern-bg'
 						value={normalizeHexColor(style?.fillPatternBackgroundColor, '#ffffff')}
 						disabled={isLine}
-						onChange={(color) =>
-							onUpdateShapeStyle({
-								fillMode: 'pattern',
-								fillPatternBackgroundColor: color,
-							})
-						}
+						onChange={(color) => onUpdateShapeStyle(patternBackground(color))}
+						styleChange={patternBackground}
 					/>
 				</>
 			)}

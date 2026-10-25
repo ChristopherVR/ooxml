@@ -53,6 +53,11 @@ function inputEvent(type: string, value: string): Event {
 	return { target: input } as unknown as Event;
 }
 
+/** The `change` a native colour picker fires once a pick settles (its drag `input`s only preview). */
+function colorChange(value: string): Event {
+	return { ...inputEvent('color', value), type: 'change' } as unknown as Event;
+}
+
 function checkboxEvent(checked: boolean): Event {
 	const box = document.createElement('pptx-ui-checkbox') as HTMLElement & { checked: boolean };
 	box.checked = checked;
@@ -90,14 +95,14 @@ describe('inspectorFieldsComponent (effects)', () => {
 		const pushed: string[] = [];
 		const fields = createFields({ shadowColor: '#000000' }, { push: (hex) => pushed.push(hex) });
 		captured(fields);
-		fields['onColor']('outerShadow', 'color', inputEvent('color', '#ff00ff'));
+		fields['onColor']('outerShadow', 'color', colorChange('#ff00ff'));
 		expect(pushed).toStrictEqual(['#ff00ff']);
 	});
 
 	it('does not throw when RecentColorsService is unavailable (standalone unit test)', () => {
 		const fields = createFields({});
 		captured(fields);
-		expect(() => fields['onColor']('glow', 'color', inputEvent('color', '#123456'))).not.toThrow();
+		expect(() => fields['onColor']('glow', 'color', colorChange('#123456'))).not.toThrow();
 	});
 });
 

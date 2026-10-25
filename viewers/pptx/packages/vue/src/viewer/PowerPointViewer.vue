@@ -120,6 +120,7 @@ import { useChartCanvasEditContext } from './composables/chart-part-selection';
 import { useCustomizedRibbonProps } from './composables/customization-ribbon-gates';
 import { readDeckData } from './composables/deck-data';
 import { FieldContextKey } from './composables/field-context';
+import { InspectorPreviewKey } from './composables/inspector-preview-context';
 import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
 import { Rendering3DFlagsKey } from './composables/rendering-3d-flags';
@@ -753,7 +754,11 @@ const inspector = useInspectorWiring({
 	selectedElements,
 	pushHistory: history.pushHistory,
 	updateElement: (id, patch) => ops.updateElement(id, patch),
+	previewElement: (id, patch) => ops.previewElement(id, patch),
+	findActiveElement,
 });
+// A colour picker drag's live shades reach the slide without an undo step.
+provide(InspectorPreviewKey, inspector.inspectorPreview);
 
 // -- Slide operations (add / duplicate / delete / reorder) -------------
 const slideOps = useSlideOperations({

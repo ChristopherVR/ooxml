@@ -88,6 +88,7 @@ export function buildInspectorState(
 
 	return {
 		hasSelection: el !== undefined,
+		...(el ? { elementId: el.id } : {}),
 		isLocked: isElementLocked(el),
 		// G7: a:picLocks/@noCrop. G9: arrowheadsChangeable already existed on
 		// element-locks.ts but nothing consulted it in the vanilla inspector.

@@ -67,7 +67,11 @@ describe('strokePanel', () => {
 		});
 		const color = wrapper.find('input[type="color"]');
 		(color.element as HTMLInputElement).value = '#00ff00';
+		// A drag shade only previews (through the viewer's preview channel); the
+		// settled pick is the one `update`.
 		await color.trigger('input');
+		expect(wrapper.emitted('update')).toBeFalsy();
+		await color.trigger('change');
 
 		const events = wrapper.emitted('update');
 		expect(events).toBeTruthy();

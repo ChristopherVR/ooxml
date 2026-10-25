@@ -1,0 +1,100 @@
+import {
+	createLiveColorInput,
+	fillColorOf,
+	shapeFillChange,
+	strokeColorChange,
+	strokeColorOf,
+	textColorOf,
+	textStylePatch,
+} from 'ooxml-ui/pptx';
+import type { LiveColorInput } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
+
+import type { Store, ViewerState } from '../state';
+import { findActiveElement } from './editor-active-elements';
+import type { ApplyToSelected } from './editor-apply-to-selected';
+import { patchShapeStyle } from './editor-format-mutations';
+import type { EditorOps } from './editor-operations';
+import { recordRecentColor } from './editor-recent-colors';
+
+/** Which of the inspector's native colour pickers an event comes from. */
+export type LiveColorTarget = 'fill' | 'line' | 'text';
+
+/** The native colour input events a live picker reports. */
+export type LiveColorEventType = keyof LiveColorInput;
+
+/**
+ * The inspector's native colour pickers, live while the user drags (the
+ * shared `createLiveColorInput` rule): the shades, and a drag put back, go
+ * through `EditorOps.previewElement`, and the settled pick commits through
+ * `applyToSelected`.
+ */
+export interface LiveColorActions {
+	/** One `input`, `change` or `blur` of the fill, line or text colour picker. */
+	liveColor(target: LiveColorTarget, type: LiveColorEventType, hex: string): void;
+	/**
+	 * Show an effects colour drag's shape-style frame without an undo step, on the
+	 * element `target` (the selection when omitted, or one the drag has left).
+	 */
+	previewShapeStyle(patch: Partial<ShapeStyle>, target?: string): void;
+	/** The shape style of element `id` now (what an effects drag the selection left goes back on). */
+	shapeStyleOf(id: string): ShapeStyle | undefined;
+}
+
+export function createLiveColorActions(deps: {
+	store: Store<ViewerState>;
+	ops: EditorOps;
+	applyToSelected: ApplyToSelected;
+}): LiveColorActions {
+	const { store, ops, applyToSelected } = deps;
+	const editable = (): PptxElement | undefined =>
+		store.get().editable ? ops.selectedElement() : undefined;
+
+	const liveInput = (
+		colorOf: (el: PptxElement) => string,
+		patch: (el: PptxElement, hex: string) => Partial<PptxElement>,
+	): LiveColorInput =>
+		createLiveColorInput<PptxElement, Partial<PptxElement>>({
+			read: () => {
+				const el = editable();
+				return el && { key: el.id, color: colorOf(el), value: el };
+			},
+			patch,
+			lookup: (key) => findActiveElement(store.get(), key),
+			preview: (next, key) => {
+				if (store.get().editable) {
+					ops.previewElement(key, next);
+				}
+			},
+			commit: (next) => applyToSelected(() => next),
+			remember: (hex) => recordRecentColor(store, hex),
+		});
+
+	// A native pick is a custom colour: it clears any theme ref, like every
+	// commit path that does not come from a theme swatch.
+	const inputs: Record<LiveColorTarget, LiveColorInput> = {
+		fill: liveInput(fillColorOf, (el, hex) => patchShapeStyle(el, shapeFillChange(hex, undefined))),
+		line: liveInput(strokeColorOf, (el, hex) => patchShapeStyle(el, strokeColorChange(el, hex))),
+		text: liveInput(textColorOf, (el, hex) =>
+			'textStyle' in el ? textStylePatch(el, { color: hex, colorRef: undefined }) : {},
+		),
+	};
+
+	return {
+		liveColor(target, type, hex) {
+			inputs[target][type](hex);
+		},
+		previewShapeStyle(patch, target) {
+			const state = store.get();
+			const el = target ? findActiveElement(state, target) : editable();
+			if (state.editable && el) {
+				ops.previewElement(el.id, patchShapeStyle(el, patch));
+			}
+		},
+		shapeStyleOf(id) {
+			const el = findActiveElement(store.get(), id);
+			return el && hasShapeProperties(el) ? el.shapeStyle : undefined;
+		},
+	};
+}

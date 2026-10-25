@@ -5,6 +5,8 @@ import { applyStyleToSelectedSegments } from './inline-selection-utils';
 import {
 	fontSizeOf,
 	shapeStylePatch,
+	strokeColorChange,
+	strokeColorPatch,
 	textFontSizePatch,
 	textStylePatch,
 } from './inspector-helpers';
@@ -164,6 +166,65 @@ describe('shapeStylePatch / textStylePatch theme colour refs (W3-G2)', () => {
 		const element = textElement(16);
 		const patch = textStylePatch(element, { color: '#ed7d31', colorRef: { scheme: 'accent2' } });
 		expect(patch.textStyle).toMatchObject({ color: '#ed7d31', colorRef: { scheme: 'accent2' } });
+	});
+});
+
+describe('strokeColorPatch / strokeColorChange', () => {
+	const shapeWith = (shapeStyle: Record<string, unknown>): PptxElement =>
+		({ ...shapeElement(), shapeStyle }) as PptxElement;
+
+	it('sets the line colour and keeps the rest of the shape style', () => {
+		const patch = strokeColorPatch(
+			shapeWith({ fillColor: '#ffffff', strokeColor: '#000000', strokeWidth: 3 }),
+			'#654321',
+		);
+		expect(patch.shapeStyle).toStrictEqual({
+			fillColor: '#ffffff',
+			strokeColor: '#654321',
+			strokeColorRef: undefined,
+			strokeWidth: 3,
+		});
+	});
+
+	it('turns on a line that does not show', () => {
+		expect(
+			strokeColorPatch(shapeWith({ strokeColor: 'transparent', strokeWidth: 0 }), '#654321')
+				.shapeStyle,
+		).toMatchObject({ strokeColor: '#654321', strokeWidth: 1, strokeFillMode: 'solid' });
+		expect(strokeColorChange(shapeElement(), '#654321')).toStrictEqual({
+			strokeColor: '#654321',
+			strokeColorRef: undefined,
+			strokeWidth: 1,
+			strokeFillMode: 'solid',
+		});
+	});
+
+	it('carries a theme ref, and clears a stored one without', () => {
+		const ref = { scheme: 'accent1' } as const;
+		expect(
+			strokeColorPatch(shapeWith({ strokeWidth: 2 }), '#4472c4', ref).shapeStyle,
+		).toMatchObject({ strokeColor: '#4472c4', strokeColorRef: ref });
+		expect(
+			strokeColorChange(shapeWith({ strokeWidth: 2, strokeColorRef: ref }), '#ff0000'),
+		).toStrictEqual({ strokeColor: '#ff0000', strokeColorRef: undefined });
+	});
+
+	it('reads no style on an element without shape properties', () => {
+		const chart = {
+			type: 'chart',
+			id: 'c1',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			shapeStyle: { strokeWidth: 3 },
+		} as unknown as PptxElement;
+		expect(strokeColorPatch(chart, '#654321').shapeStyle).toStrictEqual({
+			strokeColor: '#654321',
+			strokeColorRef: undefined,
+			strokeWidth: 1,
+			strokeFillMode: 'solid',
+		});
 	});
 });
 
