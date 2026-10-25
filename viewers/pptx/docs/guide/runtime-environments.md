@@ -35,13 +35,15 @@ The option also governs the WordArt glyph-outline fetch and the webfonts inlined
 
 ### External content and privacy {#external-content-and-privacy}
 
-A deck can link pictures, videos, audio and poster frames to other servers (`TargetMode="External"` relationships) instead of embedding them. Opening such a deck makes the reader's browser fetch them, which tells whoever runs that server the reader's IP address and that the deck was opened. By default the Trust Center option "Allow external content" decides, and it is on. A host can decide instead with the `allowExternalContent` option, available on every binding:
+A deck can link pictures (including picture fills and picture bullets), videos, audio and poster frames to other servers (`TargetMode="External"` relationships) instead of embedding them. Opening such a deck makes the reader's browser fetch them, which tells whoever runs that server the reader's IP address and that the deck was opened. By default the Trust Center option "Allow external content" decides, and it is on. A host can decide instead with the `allowExternalContent` option, available on every binding:
 
 - unset (the default): the Trust Center option decides;
 - `allowExternalContent: false`: no linked content is fetched, so slides show embedded content only, and the Trust Center option is shown off and read-only;
 - `allowExternalContent: true`: linked content is fetched, and the option is shown on and read-only.
 
-With `false`, no deck the viewer opens fetches linked content, including decks opened for Compare and slides reused from another file. Hyperlinks are not affected: they open only when the reader follows them.
+The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies from the next load. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
+
+In a collaboration session, slides arrive from peers already parsed, and the switch is not applied to them again: a peer whose viewer allows external content can share a slide that references a linked URL. Use the same `allowExternalContent` value for every participant when this matters.
 
 ### Run program actions (`ppaction://program`)
 
