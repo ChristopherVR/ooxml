@@ -84,6 +84,7 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'pieChart3D' },
 	{ id: 'initialSlide' },
 	{ id: 'googleFonts' },
+	{ id: 'allowExternalContent' },
 	{ id: 'showToolbar' },
 	{ id: 'showThumbnails' },
 	{ id: 'showCompatibilityToasts' },

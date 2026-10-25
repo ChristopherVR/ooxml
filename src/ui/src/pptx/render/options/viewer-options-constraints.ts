@@ -10,7 +10,12 @@
  * @module render/options/viewer-options-constraints
  */
 import type { OptionsSettingValues } from '../customization/customization-types';
-import type { ViewerOptionPrimitive, ViewerOptions, ViewerOptionsGroupId } from './viewer-options';
+import type {
+	StoredViewerOptions,
+	ViewerOptionPrimitive,
+	ViewerOptions,
+	ViewerOptionsGroupId,
+} from './viewer-options';
 import { DEFAULT_VIEWER_OPTIONS, cloneViewerOptions } from './viewer-options';
 
 /** Locks and host defaults, both keyed `<group>.<key>`. */
@@ -140,6 +145,74 @@ export function rebaseOptions(
 				target[key] = after[key];
 			}
 		}
+	}
+	return next;
+}
+
+/** The value `stored` holds for `<group>.<key>`, when it has one of the setting's own type. */
+function storedValueOf(
+	stored: StoredViewerOptions | undefined,
+	group: ViewerOptionsGroupId,
+	key: string,
+): ViewerOptionPrimitive | undefined {
+	const record = (stored as Record<string, unknown> | undefined)?.[group];
+	if (!record || typeof record !== 'object' || !Object.hasOwn(record, key)) {
+		return undefined;
+	}
+	const value = (record as Record<string, unknown>)[key];
+	const fallback = (DEFAULT_VIEWER_OPTIONS[group] as unknown as Record<string, unknown>)[key];
+	return typeof value === typeof fallback ? (value as ViewerOptionPrimitive) : undefined;
+}
+
+/**
+ * Add back the user's stored value for every locked setting. A host lock
+ * forces a value for this session only: persisting while it holds must not
+ * delete the choice the user saved, or another viewer on the same origin
+ * without the lock would lose it.
+ */
+export function keepStoredLockedValues(
+	diff: Partial<Record<ViewerOptionsGroupId, Record<string, unknown>>>,
+	stored: StoredViewerOptions | undefined,
+	locked: OptionsSettingValues | undefined,
+): Partial<Record<ViewerOptionsGroupId, Record<string, unknown>>> {
+	for (const [id] of entriesOf(locked)) {
+		const parsed = parseOptionsSettingId(id);
+		const value = parsed ? storedValueOf(stored, parsed.group, parsed.key) : undefined;
+		if (parsed && value !== undefined) {
+			(diff[parsed.group] ??= {})[parsed.key] = value;
+		}
+	}
+	return diff;
+}
+
+/**
+ * Give every setting that was locked and no longer is its user's value back:
+ * the stored choice when there is one, otherwise the value it held when the
+ * lock was applied (`ownValues`), otherwise the old baseline (which
+ * `rebaseOptions` then moves to the new one).
+ */
+export function restoreUnlockedOptions(
+	options: ViewerOptions,
+	previousLocked: OptionsSettingValues | undefined,
+	nextLocked: OptionsSettingValues | undefined,
+	ownValues: ReadonlyMap<string, ViewerOptionPrimitive>,
+	stored: StoredViewerOptions | undefined,
+	previousBaseline: ViewerOptions,
+): ViewerOptions {
+	const lifted = entriesOf(previousLocked).filter(([id]) => !Object.hasOwn(nextLocked ?? {}, id));
+	if (lifted.length === 0) {
+		return options;
+	}
+	const next = cloneViewerOptions(options);
+	for (const [id] of lifted) {
+		const parsed = parseOptionsSettingId(id);
+		if (!parsed) {
+			continue;
+		}
+		const target = next[parsed.group] as unknown as Record<string, unknown>;
+		const base = previousBaseline[parsed.group] as unknown as Record<string, unknown>;
+		target[parsed.key] =
+			storedValueOf(stored, parsed.group, parsed.key) ?? ownValues.get(id) ?? base[parsed.key];
 	}
 	return next;
 }

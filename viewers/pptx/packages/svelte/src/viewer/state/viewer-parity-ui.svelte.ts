@@ -72,8 +72,16 @@ export class ViewerParityUiState {
 	 */
 	preferences = $state<DeckViewPreferences>({ ...DEFAULT_VIEWER_PREFERENCES });
 
-	constructor(editor: EditorState) {
-		this.compare = new CompareController(editor);
+	/**
+	 * Whether a deck this viewer opens besides the main one (Compare, Reuse
+	 * Slides) may reference linked http(s) content: the resolved host
+	 * `allowExternalContent` switch or Trust Center option, read on each use.
+	 */
+	readonly allowExternalImages: () => boolean;
+
+	constructor(editor: EditorState, allowExternalImages: () => boolean = () => false) {
+		this.allowExternalImages = allowExternalImages;
+		this.compare = new CompareController(editor, allowExternalImages);
 	}
 
 	syncAutosave(enabled: boolean): void {

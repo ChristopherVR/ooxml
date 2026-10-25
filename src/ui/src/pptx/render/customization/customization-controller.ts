@@ -16,6 +16,7 @@ import type { BackstageCardId } from '../backstage-cards';
 import type { CanvasContextMenuCommandId } from '../canvas-context-menu-commands';
 import type { ContextMenuCommandId } from '../context-menu-commands';
 import type { EditorKeyActionName } from '../editor-keymap';
+import { lockExternalContentSetting } from '../options/external-content-policy';
 import type { ViewerOptionPrimitive } from '../options/viewer-options';
 import type { RibbonContextualTabId, ToolbarButtonId, ToolbarTabId } from '../toolbar-actions';
 import { createViewerStore } from '../viewer-store';
@@ -107,24 +108,51 @@ export interface ViewerCustomizationController {
 	getResolved(): ResolvedCustomization;
 	/** Subscribe to every change; returns the unsubscribe function. */
 	subscribe(listener: () => void): () => void;
+	/**
+	 * Apply the host `allowExternalContent` switch: a boolean locks the Trust
+	 * Center setting `trust.allowExternalContent` to it, `undefined` leaves the
+	 * setting to the user (and to `customization.options.locked`). Kept beside
+	 * the customisation, so `setCustomization` and `resetCustomization` never
+	 * drop it.
+	 */
+	setAllowExternalContent(allow: boolean | undefined): void;
 }
 
 interface State {
 	customization: ViewerCustomization;
+	allowExternalContent: boolean | undefined;
 	resolved: ResolvedCustomization;
 }
 
-function stateOf(customization: ViewerCustomization): State {
-	return { customization, resolved: resolveCustomization(customization) };
+function stateOf(
+	customization: ViewerCustomization,
+	allowExternalContent: boolean | undefined,
+): State {
+	const resolved = resolveCustomization(customization);
+	return {
+		customization,
+		allowExternalContent,
+		resolved:
+			allowExternalContent === undefined
+				? resolved
+				: {
+						...resolved,
+						lockedSettings: lockExternalContentSetting(
+							resolved.lockedSettings,
+							allowExternalContent,
+						),
+					},
+	};
 }
 
 /** Create the store for one viewer instance, seeded with `initial`. */
 export function createCustomizationController(
 	initial?: ViewerCustomization,
 ): ViewerCustomizationController {
-	const store = createViewerStore<State>(stateOf({ ...initial }));
+	const store = createViewerStore<State>(stateOf({ ...initial }, undefined));
 	const current = (): ViewerCustomization => store.getState().customization;
-	const set = (next: ViewerCustomization): void => store.setState(stateOf(next));
+	const set = (next: ViewerCustomization): void =>
+		store.setState(stateOf(next, store.getState().allowExternalContent));
 	const update = (patch: ViewerCustomization): void => set(mergeCustomization(current(), patch));
 
 	const ribbon = (edit: (r: NonNullable<ViewerCustomization['ribbon']>) => void): void => {
@@ -239,5 +267,11 @@ export function createCustomizationController(
 		api,
 		getResolved: () => store.getState().resolved,
 		subscribe: (listener) => store.subscribe(listener),
+		setAllowExternalContent: (allow) => {
+			const next = typeof allow === 'boolean' ? allow : undefined;
+			if (next !== store.getState().allowExternalContent) {
+				store.setState(stateOf(current(), next));
+			}
+		},
 	};
 }

@@ -559,6 +559,7 @@ function onZoneClick(e: MouseEvent): void {
 			:initial-slide="rootOptions.initialSlide"
 			:fit-padding="rootOptions.fitPadding"
 			:google-fonts="rootOptions.googleFonts"
+			:allow-external-content="rootOptions.allowExternalContent"
 			:inspector-initially-open="rootOptions.inspectorInitiallyOpen"
 			:ai="aiConfig"
 			:author-name="collaborationConfig?.userName ?? autoName"

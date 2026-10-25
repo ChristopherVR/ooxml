@@ -154,11 +154,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const target = slideRels?.get(relId);
 
 				if (target) {
-					if (
-						target.startsWith('http://') ||
-						target.startsWith('https://') ||
-						target.startsWith('data:')
-					) {
+					if (target.startsWith('http://') || target.startsWith('https://')) {
+						// A linked (TargetMode="External") picture fill is only referenced when
+						// the host allows remote content, like every other blip.
+						if (this.allowExternalImages === true) {
+							imagePath = target;
+							imageData = target;
+						}
+					} else if (target.startsWith('data:')) {
 						imagePath = target;
 						imageData = target;
 					} else {

@@ -33,10 +33,22 @@ export function useViewerCustomization(
 	customization: ViewerCustomization | undefined,
 	legacyHiddenActions: ToolbarActionId[] | undefined,
 	optionsStore: ViewerOptionsStore,
+	allowExternalContent?: boolean,
 ): ViewerCustomizationResult {
 	const controllerRef = useRef<ViewerCustomizationController | null>(null);
-	controllerRef.current ??= createCustomizationController(customization);
+	if (!controllerRef.current) {
+		controllerRef.current = createCustomizationController(customization);
+		// Seeded before the first render reads the resolved view, so the very
+		// first load already sees the host switch.
+		controllerRef.current.setAllowExternalContent(allowExternalContent);
+	}
 	const controller = controllerRef.current;
+
+	// The host `allowExternalContent` switch locks the Trust Center setting;
+	// a no-op when the value did not change.
+	useLayoutEffect(() => {
+		controller.setAllowExternalContent(allowExternalContent);
+	}, [controller, allowExternalContent]);
 
 	// A new `customization` object replaces the whole customisation. Compared
 	// by identity so the seed passed to the controller above is not re-applied

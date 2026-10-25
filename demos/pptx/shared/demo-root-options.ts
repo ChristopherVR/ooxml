@@ -12,7 +12,9 @@
  * - `?fitPadding=<px>` sets the per-side fit padding (any finite number of at
  *   least 0), so a spec can fit the slide flush against the viewport,
  * - `?googleFonts=0` turns the Google Fonts fallback off, and
- *   `?googleFontsBaseUrl=<url>` points it at a self-hosted CSS2 mirror.
+ *   `?googleFontsBaseUrl=<url>` points it at a self-hosted CSS2 mirror,
+ * - `?allowExternalContent=0` / `?allowExternalContent=1` set the host
+ *   external-content switch (absent leaves it to the Trust Center option).
  *
  * Only the options present in the query string are returned, so a demo opened
  * without them keeps the binding's own defaults. Kept binding-agnostic on
@@ -28,6 +30,7 @@ export interface DemoRootOptions {
 	initialSlide?: number;
 	fitPadding?: number;
 	googleFonts?: false | { baseUrl: string };
+	allowExternalContent?: boolean;
 }
 
 function parseFlag(raw: string | null): boolean | undefined {
@@ -70,6 +73,10 @@ export function parseDemoRootOptions(search: string): DemoRootOptions {
 		options.googleFonts = { baseUrl: googleFontsBaseUrl };
 	} else if (parseFlag(params.get('googleFonts')) === false) {
 		options.googleFonts = false;
+	}
+	const allowExternalContent = parseFlag(params.get('allowExternalContent'));
+	if (allowExternalContent !== undefined) {
+		options.allowExternalContent = allowExternalContent;
 	}
 	return options;
 }

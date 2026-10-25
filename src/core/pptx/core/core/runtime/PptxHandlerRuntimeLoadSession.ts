@@ -412,6 +412,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<void> {
 		await enrichBulletPictureImages(elements, slidePath, {
 			slideRelsMap: this.slideRelsMap,
+			allowExternalImages: this.allowExternalImages === true,
 			resolveImagePath: (path, target) => this.resolveImagePath(path, target),
 			getImageData: (imagePath) => this.getImageData(imagePath),
 		});

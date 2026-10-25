@@ -202,3 +202,28 @@ describe('canvas context menu customisation', () => {
 		expect(document.querySelector('[data-pptx-context-menu]')).toBeNull();
 	});
 });
+
+describe('allowExternalContent host option', () => {
+	afterEach(() => localStorage.clear());
+
+	it('locks the Trust Center setting off for false', () => {
+		const { viewer } = mount({ allowExternalContent: false });
+		const store = optionsStoreOf(viewer);
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
+		store.setValue('trust', 'allowExternalContent', true);
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+	});
+
+	it('locks it on for true', () => {
+		const { viewer } = mount({ allowExternalContent: true });
+		const store = optionsStoreOf(viewer);
+		expect(store.getOptions().trust.allowExternalContent).toBe(true);
+		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
+	});
+
+	it('leaves the setting to the user when the option is omitted', () => {
+		const { viewer } = mount();
+		expect(optionsStoreOf(viewer).isLocked('trust', 'allowExternalContent')).toBe(false);
+	});
+});

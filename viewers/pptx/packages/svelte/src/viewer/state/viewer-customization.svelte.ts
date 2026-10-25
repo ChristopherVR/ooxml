@@ -152,9 +152,11 @@ export function customizationContext(reader: ViewerCustomizationReader): Map<sym
  */
 export function useViewerCustomizationRoot(
 	getCustomization: () => ViewerCustomization | undefined,
+	getAllowExternalContent: () => boolean | undefined = () => undefined,
 ): ViewerCustomizationState {
 	const initial = untrack(getCustomization);
 	const state = new ViewerCustomizationState(initial);
+	followAllowExternalContent(state, getAllowExternalContent);
 	provideViewerCustomization(state);
 	let last = initial;
 	$effect.pre(() => {
@@ -167,6 +169,24 @@ export function useViewerCustomizationRoot(
 	});
 	onDestroy(() => state.destroy());
 	return state;
+}
+
+/**
+ * Follow the host `allowExternalContent` switch, which locks the Trust Center
+ * "Allow external content" setting: applied once synchronously (so the
+ * constraints applied next, and the first load, already see the lock), then
+ * on every change (a no-op when the value did not change). Must run inside a
+ * component script or an effect root.
+ */
+export function followAllowExternalContent(
+	state: ViewerCustomizationState,
+	getAllowExternalContent: () => boolean | undefined,
+): void {
+	state.controller.setAllowExternalContent(untrack(getAllowExternalContent));
+	$effect.pre(() => {
+		const allow = getAllowExternalContent();
+		untrack(() => state.controller.setAllowExternalContent(allow));
+	});
 }
 
 /** The options store surface `useCustomizationConstraints` drives. */

@@ -13,6 +13,7 @@ import {
 	describeFontEmbedding,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
+	resolveAllowExternalContent,
 	resolveMediaElementSource,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
@@ -83,6 +84,24 @@ import { ViewerOptionsService } from './viewer-options.service';
 @Injectable()
 export class LoadContentService {
 	private pendingInlineEditReader?: () => PendingInlineTextEdit | undefined;
+	private hostAllowExternalContentReader?: () => boolean | undefined;
+	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
+	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
+		this.hostAllowExternalContentReader = reader;
+	}
+
+	/**
+	 * Whether the next deck this viewer loads may reference linked http(s)
+	 * content: the host `allowExternalContent` input when set, otherwise the
+	 * Trust Center option. Read untracked, so calling it never subscribes.
+	 */
+	resolveAllowExternalImages(): boolean {
+		return untracked(() => {
+			const host = this.hostAllowExternalContentReader?.();
+			const options = this.optionsService?.options();
+			return options ? resolveAllowExternalContent(host, options) : host === true;
+		});
+	}
 	/** Viewer-scoped current list session. Saving never commits or blurs it. */
 	bindPendingInlineEdit(reader: () => PendingInlineTextEdit | undefined): void {
 		this.pendingInlineEditReader = reader;
@@ -407,9 +426,8 @@ export class LoadContentService {
 			// re-parsed the deck from its original bytes, which re-seeded the
 			// editor and threw away unsaved edits and the undo history. The option
 			// is a load-time input, exactly as in React (`[content]` deps only).
-			const allowExternalImages = untracked(
-				() => this.optionsService?.options().trust.allowExternalContent ?? false,
-			);
+			// The host `allowExternalContent` input wins over the option when set.
+			const allowExternalImages = this.resolveAllowExternalImages();
 			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages });
 			if (token !== this.renderToken) {
 				return;

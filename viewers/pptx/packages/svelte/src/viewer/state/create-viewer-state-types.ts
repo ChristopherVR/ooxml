@@ -74,6 +74,8 @@ export interface CreateViewerStateOptions {
 	getInitialSlide: () => number;
 	/** Host `googleFonts` prop: the Google Fonts fallback policy. */
 	getGoogleFonts?: () => GoogleFontsOption | undefined;
+	/** Host `allowExternalContent` prop: overrides the Trust Center setting for every load when set. */
+	getAllowExternalContent?: () => boolean | undefined;
 	/** Already locale-bound translator; propagated to descendants via context. */
 	t: Translator;
 	getSmartArt3D: () => boolean;

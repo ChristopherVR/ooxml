@@ -10,11 +10,12 @@
 
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { compareSlides } from 'ooxml-ui/pptx';
+import { compareSlides, resolveAllowExternalContent } from 'ooxml-ui/pptx';
 import type { SlideDiff } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
+import { LoadContentService } from './load-content.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { applyAcceptedDiff } from './viewer-extra-dialogs-helpers';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -25,6 +26,7 @@ export class ViewerCompareService {
 	private readonly editor = inject(EditorStateService);
 	private readonly translate = inject(TranslateService);
 	private readonly optionsService = inject(ViewerOptionsService);
+	private readonly loader = inject(LoadContentService, { optional: true });
 
 	/**
 	 * Open a `.pptx` picker and diff it against the current deck, opening the
@@ -52,7 +54,10 @@ export class ViewerCompareService {
 		try {
 			const buffer = await file.arrayBuffer();
 			const handler = new PptxHandler();
-			const allowExternalImages = this.optionsService.options().trust.allowExternalContent;
+			// The same rule as the main load, so the host switch decides here too.
+			const allowExternalImages =
+				this.loader?.resolveAllowExternalImages() ??
+				resolveAllowExternalContent(undefined, this.optionsService.options());
 			const parsed = await handler.load(buffer, { allowExternalImages });
 			const result = compareSlides([...this.editor.slides()], [...parsed.slides]);
 			this.svc.compareResult.set(result);

@@ -100,7 +100,10 @@
 	let viewportHeight = $state(0);
 
 	// Host UI customisation (`customization` prop + the imperative API below).
-	const customization = useViewerCustomizationRoot(() => props.customization);
+	const customization = useViewerCustomizationRoot(
+		() => props.customization,
+		() => props.allowExternalContent,
+	);
 	provideRibbonAddIns(() => props.ribbonAddIns);
 	const ribbonScope = nextRibbonScopeToken();
 	const vm = createViewerState(

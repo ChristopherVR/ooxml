@@ -14,7 +14,10 @@ import {
 	buildOptionsBaseline,
 	diffOptionsAgainstBaseline,
 	isOptionLocked,
+	keepStoredLockedValues,
+	parseOptionsSettingId,
 	rebaseOptions,
+	restoreUnlockedOptions,
 } from './viewer-options-constraints';
 
 /**
@@ -97,15 +100,23 @@ export function createViewerOptionsStore(init?: ViewerOptionsStoreInit): ViewerO
 	const options = (): ViewerOptions => store.getState();
 	let constraints: ViewerOptionsConstraints = {};
 	let baseline = buildOptionsBaseline(undefined);
+	// Each locked setting's value from just before its lock, so lifting the
+	// lock gives the user their own value back when storage holds none.
+	const ownValues = new Map<string, ViewerOptionPrimitive>();
 
 	function commit(raw: ViewerOptions): void {
 		const next = applyLockedOptions(raw, constraints.locked);
 		// Persist before notifying, so a subscriber that reads storage during its
 		// callback sees the value it was just told about. Neither a host default
-		// nor a host lock is persisted as the user's own choice.
+		// nor a host lock is persisted as the user's own choice, and a locked
+		// setting keeps the value the user saved before the lock.
 		if (persist) {
 			writeStoredViewerPrefs({
-				options: diffOptionsAgainstBaseline(next, baseline, constraints.locked),
+				options: keepStoredLockedValues(
+					diffOptionsAgainstBaseline(next, baseline, constraints.locked),
+					readStoredViewerPrefs().options,
+					constraints.locked,
+				),
 			});
 		}
 		store.setState(next);
@@ -171,9 +182,36 @@ export function createViewerOptionsStore(init?: ViewerOptionsStoreInit): ViewerO
 		batch: (write) => store.batch(write),
 		setConstraints: (next) => {
 			const previousBaseline = baseline;
+			const previousLocked = constraints.locked;
+			for (const id of Object.keys(next.locked ?? {})) {
+				const parsed = parseOptionsSettingId(id);
+				if (parsed && !isOptionLocked(previousLocked, parsed.group, parsed.key)) {
+					const value = (options()[parsed.group] as unknown as Record<string, unknown>)[parsed.key];
+					if (
+						typeof value === 'boolean' ||
+						typeof value === 'number' ||
+						typeof value === 'string'
+					) {
+						ownValues.set(id, value);
+					}
+				}
+			}
 			constraints = { locked: { ...next.locked }, defaults: { ...next.defaults } };
 			baseline = buildOptionsBaseline(constraints.defaults);
-			commit(rebaseOptions(options(), previousBaseline, baseline, userSaved));
+			const restored = restoreUnlockedOptions(
+				options(),
+				previousLocked,
+				constraints.locked,
+				ownValues,
+				persist ? readStoredViewerPrefs().options : undefined,
+				previousBaseline,
+			);
+			for (const id of Object.keys(previousLocked ?? {})) {
+				if (!Object.hasOwn(constraints.locked ?? {}, id)) {
+					ownValues.delete(id);
+				}
+			}
+			commit(rebaseOptions(restored, previousBaseline, baseline, userSaved));
 		},
 		isLocked: (group, key) => isOptionLocked(constraints.locked, group, key),
 	};

@@ -51,6 +51,8 @@ export interface UseViewerCustomizationInput {
 		readonly customization?: ViewerCustomization;
 		readonly hiddenActions?: readonly ToolbarActionId[];
 		readonly ai?: PptxAiConfig;
+		/** Host switch that locks the Trust Center "Allow external content" setting. */
+		readonly allowExternalContent?: boolean;
 	};
 	/** The viewer's File > Options store; receives the locks and host defaults. */
 	optionsStore: ViewerOptionsStore;
@@ -82,6 +84,8 @@ export function useViewerCustomization(
 ): UseViewerCustomizationResult {
 	const { props } = input;
 	const controller = createCustomizationController(props.customization);
+	// Seeded before the first constraints are applied, so the first load already sees the lock.
+	controller.setAllowExternalContent(props.allowExternalContent);
 	const resolved = shallowRef(controller.getResolved());
 	applyConstraints(input.optionsStore, resolved.value);
 
@@ -99,6 +103,10 @@ export function useViewerCustomization(
 	watch(
 		() => props.customization,
 		(next) => controller.api.setCustomization(next ?? {}),
+	);
+	watch(
+		() => props.allowExternalContent,
+		(next) => controller.setAllowExternalContent(next),
 	);
 
 	provide(ViewerCustomizationKey, resolved);

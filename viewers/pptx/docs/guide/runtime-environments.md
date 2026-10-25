@@ -33,6 +33,18 @@ Fetching a clone from Google Fonts means the reader's browser contacts `fonts.go
 
 The option also governs the WordArt glyph-outline fetch and the webfonts inlined into slide image exports, since both reuse the stylesheet URL the viewer resolved. Both read the CSS and font files with `fetch()`, so a mirror must send CORS headers (`Access-Control-Allow-Origin`) for them to work, as Google's own servers do.
 
+### External content and privacy {#external-content-and-privacy}
+
+A deck can link pictures (including picture fills and picture bullets), videos, audio and poster frames to other servers (`TargetMode="External"` relationships) instead of embedding them. Opening such a deck makes the reader's browser fetch them, which tells whoever runs that server the reader's IP address and that the deck was opened. By default the Trust Center option "Allow external content" decides, and it is on. A host can decide instead with the `allowExternalContent` option, available on every binding:
+
+- unset (the default): the Trust Center option decides;
+- `allowExternalContent: false`: no linked content is fetched, so slides show embedded content only, and the Trust Center option is shown off and read-only;
+- `allowExternalContent: true`: linked content is fetched, and the option is shown on and read-only.
+
+The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies from the next load. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
+
+In a collaboration session, slides arrive from peers already parsed, and the switch is not applied to them again: a peer whose viewer allows external content can share a slide that references a linked URL. Use the same `allowExternalContent` value for every participant when this matters.
+
 ### Run program actions (`ppaction://program`)
 
 PowerPoint's "Run program" action setting is parsed and round-tripped losslessly (the authored program path/command survives load and save unchanged), and the Action Settings dialog lets you view and edit it like any other action while editing. What a browser cannot do is what PowerPoint itself does when the action fires during a show: launch a local executable. No web platform API exists for that, by design (a page that could launch arbitrary local programs would be a critical security hole).

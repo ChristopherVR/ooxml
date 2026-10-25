@@ -41,6 +41,8 @@ export interface UsePropertyHandlersInput {
 	onPropertiesChange?: ((updates: Partial<PptxCoreProperties>) => void) | undefined;
 	/** The host's `onNotesUpdate`: the new speaker-notes text of the active slide. */
 	onNotesUpdate?: ((notes: string) => void) | undefined;
+	/** Whether a deck opened for Compare may reference linked http(s) content (default off). */
+	allowExternalImages?: boolean;
 }
 
 export interface PropertyHandlersResult {
@@ -65,6 +67,7 @@ export interface PropertyHandlersResult {
 
 export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHandlersResult {
 	const {
+		allowExternalImages,
 		slides,
 		activeSlideIndex,
 		canvasSize,
@@ -148,7 +151,7 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 			try {
 				const ab = await file.arrayBuffer();
 				const h = new PptxHandler();
-				const other = await h.load(ab);
+				const other = await h.load(ab, { allowExternalImages: allowExternalImages === true });
 				if (!other) {
 					return;
 				}
@@ -164,7 +167,7 @@ export function usePropertyHandlers(input: UsePropertyHandlersInput): PropertyHa
 			}
 		};
 		fileInput.click();
-	}, [slides, canvasSize.width, canvasSize.height]);
+	}, [slides, canvasSize.width, canvasSize.height, allowExternalImages]);
 
 	const handleAcceptSlide = useCallback(
 		(di: number) => {

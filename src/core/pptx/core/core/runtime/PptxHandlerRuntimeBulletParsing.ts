@@ -225,11 +225,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const target = slideRels?.get(imageRelId);
 				let imageDataUrl: string | undefined;
 				if (target) {
-					if (
-						target.startsWith('http://') ||
-						target.startsWith('https://') ||
-						target.startsWith('data:')
-					) {
+					if (target.startsWith('http://') || target.startsWith('https://')) {
+						// A linked picture bullet keeps its dot fallback unless remote content is allowed.
+						imageDataUrl = this.allowExternalImages === true ? target : undefined;
+					} else if (target.startsWith('data:')) {
 						imageDataUrl = target;
 					} else {
 						const imagePath = this.resolveImagePath(slidePath, target);

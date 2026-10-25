@@ -34,6 +34,12 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	initialSlide?: number;
 	/** As `PowerPointViewer`'s `googleFonts`: the Google Fonts fallback policy (off, or a self-hosted mirror). */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * As `PowerPointViewer`'s `allowExternalContent`: `false` fetches no linked
+	 * http(s) content, `true` allows it, either value locks the Trust Center
+	 * setting; unset keeps the user's choice. A change applies from the next load.
+	 */
+	allowExternalContent?: boolean;
 	/** Whether the built-in autosave-to-localStorage recovery timer is active. Defaults to true. */
 	autosaveEnabled?: boolean;
 	/** Display name used as the author for comments. */

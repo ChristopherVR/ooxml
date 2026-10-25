@@ -40,6 +40,7 @@ import {
 	findCanvasElementNode,
 	recoverySnapshotIntent,
 	resolve3DRenderingFlags,
+	resolveAllowExternalContent,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveAuthoredSlideRange,
@@ -1707,6 +1708,16 @@ export class PowerPointViewerComponent
 	 */
 	readonly googleFonts = input<GoogleFontsOption | undefined>(undefined);
 	/**
+	 * Host switch for content a deck links from another server (http(s)
+	 * relationship targets): pictures, picture fills and bullets, video, audio
+	 * and poster frames. `false`: none of it is fetched. `true`: it is allowed.
+	 * Either value locks File > Options > Trust Center > "Allow external
+	 * content" to match; unset keeps the user's choice there. Google Fonts
+	 * requests are separate (see `googleFonts`).
+	 * A change applies from the next load.
+	 */
+	readonly allowExternalContent = input<boolean | undefined>(undefined);
+	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
 	 * and read-only banners, the mobile toolbar and the status bar. Default
 	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
@@ -1733,6 +1744,9 @@ export class PowerPointViewerComponent
 	);
 	protected readonly customizationService = inject(ViewerCustomizationService);
 	private readonly customizationInputSync = this.customizationService.bindInput(this.customization);
+	private readonly allowExternalContentSync = this.customizationService.bindAllowExternalContent(
+		this.allowExternalContent,
+	);
 	/** Host region renderers and the context they receive (see {@link ViewerRegionService}). */
 	protected readonly regions = inject(ViewerRegionService);
 	/** Closes the inspector, for the `inspector` region context. */
@@ -1839,7 +1853,10 @@ export class PowerPointViewerComponent
 						handler,
 						slides: this.editor.slides(),
 						templateElementsBySlideId: this.editor.templateElementsBySlideId(),
-						allowExternalImages: this.viewerOpts.options().trust.allowExternalContent,
+						allowExternalImages: resolveAllowExternalContent(
+							this.allowExternalContent(),
+							this.viewerOpts.options(),
+						),
 						editable: this.canEdit(),
 					}
 				: null;
@@ -3052,6 +3069,7 @@ export class PowerPointViewerComponent
 				}
 			},
 		});
+		this.loader.bindHostAllowExternalContent(() => this.allowExternalContent());
 		this.loader.bindPendingInlineEdit(() => {
 			if (!this.canEdit()) {
 				return undefined;

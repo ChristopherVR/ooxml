@@ -11,6 +11,8 @@ import type { GoogleFontsOption } from 'ooxml-ui/pptx';
  * effect, `useEditorOperations`, and `useViewerIntegration` (export/print/
  * property handlers, mode switching, and the imperative handle).
  */
+import { lockExternalContentSetting, resolveAllowExternalContent } from 'ooxml-ui/pptx';
+import { useLayoutEffect, useRef } from 'react';
 
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
@@ -44,6 +46,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	initialSlide?: number;
 	/** Host `googleFonts`: the Google Fonts fallback policy; forwarded to `useViewerIntegration`. */
 	googleFonts?: GoogleFontsOption;
+	/** Host `allowExternalContent`: overrides the Trust Center setting for every load when set. */
+	allowExternalContent?: boolean;
 	autosaveEnabled: boolean;
 	userName?: string;
 	handle?: React.ForwardedRef<PowerPointViewerHandle>;
@@ -85,7 +89,23 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
-	const { initialSlide, googleFonts } = input;
+	const { initialSlide, googleFonts, allowExternalContent } = input;
+
+	// The headless API has no customization controller, so the host switch
+	// locks the options store directly, as `useViewerCustomization` does for
+	// `PowerPointViewer`. Skipped until the host first sets it, so an unset
+	// switch never touches the store.
+	const externalContentLockedRef = useRef(false);
+	const { optionsStore } = core;
+	useLayoutEffect(() => {
+		if (allowExternalContent === undefined && !externalContentLockedRef.current) {
+			return;
+		}
+		externalContentLockedRef.current = allowExternalContent !== undefined;
+		optionsStore.setConstraints({
+			locked: lockExternalContentSetting({}, allowExternalContent),
+		});
+	}, [optionsStore, allowExternalContent]);
 	const {
 		onContentChange,
 		onDirtyChange,
@@ -209,7 +229,7 @@ export function useViewerBuildingBlocksState(
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images
 		// under the same default-off, core-side SSRF/privacy guard.
-		allowExternalImages: viewerOptions.trust.allowExternalContent,
+		allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
 		canInsertElement: !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView,

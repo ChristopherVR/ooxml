@@ -10,9 +10,16 @@ export class CompareController {
 	accepted = $state.raw<Set<number>>(new Set());
 	rejected = $state.raw<Set<number>>(new Set());
 	readonly #editor: EditorState;
+	readonly #allowExternalImages: () => boolean;
 
-	constructor(editor: EditorState) {
+	/**
+	 * @param allowExternalImages Read on each Compare: whether the incoming deck
+	 *   may reference linked http(s) content (the resolved host switch or Trust
+	 *   Center option). Off when omitted.
+	 */
+	constructor(editor: EditorState, allowExternalImages: () => boolean = () => false) {
 		this.#editor = editor;
+		this.#allowExternalImages = allowExternalImages;
 	}
 
 	async chooseFile(): Promise<void> {
@@ -26,7 +33,9 @@ export class CompareController {
 			}
 			const handler = new PptxHandler();
 			try {
-				const incoming = await handler.load(await file.arrayBuffer());
+				const incoming = await handler.load(await file.arrayBuffer(), {
+					allowExternalImages: this.#allowExternalImages(),
+				});
 				this.result = compareSlides(this.#editor.renderedSlides, incoming.slides);
 				this.accepted = new Set();
 				this.rejected = new Set();

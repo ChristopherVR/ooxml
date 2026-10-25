@@ -205,6 +205,16 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 */
 	googleFonts?: GoogleFontsOption;
 	/**
+	 * Host switch for content a deck links from another server (http(s)
+	 * relationship targets): pictures, picture fills and bullets, video, audio
+	 * and poster frames. `false`: none of it is fetched. `true`: it is allowed.
+	 * Either value locks File > Options > Trust Center > "Allow external
+	 * content" to match; unset keeps the user's choice there. Google Fonts
+	 * requests are separate (see `googleFonts`).
+	 * Read once, when the viewer is created.
+	 */
+	allowExternalContent?: boolean;
+	/**
 	 * Enable editing (default `false`): click to select, drag/resize/rotate,
 	 * inline text editing, keyboard shortcuts, undo/redo, and the toolbar
 	 * Save button. Toggle later via `setEditable`.

@@ -275,11 +275,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (posterRId && relsMap) {
 					const posterTarget = relsMap.get(posterRId);
 					if (posterTarget) {
-						if (
-							posterTarget.startsWith('http://') ||
-							posterTarget.startsWith('https://') ||
-							posterTarget.startsWith('data:')
-						) {
+						if (posterTarget.startsWith('http://') || posterTarget.startsWith('https://')) {
+							// A linked poster is only referenced when the host allows remote content.
+							if (this.allowExternalImages === true) {
+								posterImage = posterTarget;
+								imagePath = posterTarget;
+								imageData = posterTarget;
+							}
+						} else if (posterTarget.startsWith('data:')) {
 							posterImage = posterTarget;
 							imagePath = posterTarget;
 							imageData = posterTarget;

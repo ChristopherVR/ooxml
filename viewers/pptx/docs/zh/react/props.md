@@ -44,15 +44,16 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 显示 {#display}
 
-这四个属性与 Svelte 和原生绑定一致，默认值和范围限制由共享代码统一处理。
+这些属性与 Svelte 和原生绑定一致，默认值和范围限制由共享代码统一处理。
 
-| 属性                      | 类型                           | 默认值 | 说明                                                                                                                                                                                                                                                                       |
-| ------------------------- | ------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`            | `number`                       | `0`    | 每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。之后修改只对下一次加载生效。                                                                                                                                                                                  |
-| `googleFonts`             | `false \| { baseUrl: string }` | 未设置 | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时从 `fonts.googleapis.com` 加载；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体）；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
-| `showToolbar`             | `boolean`                      | `true` | 显示编辑器外框：标题栏、功能区和工具栏、受保护视图与只读横幅、移动端工具栏和状态栏。为 `false` 时只保留画布（以及显示中的缩略图窗格）。                                                                                                                                    |
-| `showThumbnails`          | `boolean`                      | `true` | 显示幻灯片缩略图窗格。仍受用户自己的折叠开关和 `slidesPane` 自定义面板控制。                                                                                                                                                                                               |
-| `showCompatibilityToasts` | `boolean`                      | `true` | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                |
+| 属性                      | 类型                           | 默认值 | 说明                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------- | ------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`                       | `0`    | 每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。之后修改只对下一次加载生效。                                                                                                                                                                                                                                                                                                                     |
+| `googleFonts`             | `false \| { baseUrl: string }` | 未设置 | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时从 `fonts.googleapis.com` 加载；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体）；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。                                                                                                                                    |
+| `allowExternalContent`    | `boolean`                      | 未设置 | 演示文稿从其他服务器链接的内容（http(s) 目标）的宿主开关：图片、图片填充和项目符号、视频、音频和海报帧。`false` 不获取任何此类内容，`true` 允许获取；两者都会将 文件 > 选项 > 信任中心 >“允许外部内容”锁定为对应值。未设置时由用户在该处的选择决定。更改从下一次加载起生效。Google Fonts 请求由 `googleFonts` 单独控制。参见[外部内容与隐私](../guide/runtime-environments.md#external-content-and-privacy)。 | 未安装也未嵌入的字体的 Google Fonts 回退。未设置时从 `fonts.googleapis.com` 加载；`false` 不向 Google 发送任何请求（文字使用已安装、嵌入或回退字体）；`{ baseUrl }` 改为向自托管镜像发送 CSS2 请求。参见[字体与隐私](../guide/runtime-environments.md#fonts-and-privacy)。 |
+| `showToolbar`             | `boolean`                      | `true` | 显示编辑器外框：标题栏、功能区和工具栏、受保护视图与只读横幅、移动端工具栏和状态栏。为 `false` 时只保留画布（以及显示中的缩略图窗格）。                                                                                                                                                                                                                                                                       |
+| `showThumbnails`          | `boolean`                      | `true` | 显示幻灯片缩略图窗格。仍受用户自己的折叠开关和 `slidesPane` 自定义面板控制。                                                                                                                                                                                                                                                                                                                                  |
+| `showCompatibilityToasts` | `boolean`                      | `true` | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                                                                                                                                                                                                                                                                   |
 
 ```tsx
 <PowerPointViewer content={bytes} initialSlide={2} showToolbar={false} showThumbnails={false} />
@@ -178,6 +179,7 @@ interface PowerPointViewerProps {
 	canEdit?: boolean;
 	initialSlide?: number;
 	googleFonts?: false | { baseUrl: string };
+	allowExternalContent?: boolean;
 	showToolbar?: boolean;
 	showThumbnails?: boolean;
 	showCompatibilityToasts?: boolean;

@@ -40,6 +40,7 @@ import {
 	reflowSmartArtData,
 	resolve3DRenderingFlags,
 	resolveAudienceScreenPlacement,
+	resolveAllowExternalContent,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
 	resolveGoogleFontsCss2Base,
@@ -306,9 +307,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			},
 			// Trust Center > "Allow external content"; the options controller is
 			// constructed after this one, hence the lazy read (see its own comment).
+			// The host `allowExternalContent` option wins when set.
 			getAllowExternalContent: () =>
-				this.optionsController?.getOptions().trust.allowExternalContent ??
-				DEFAULT_VIEWER_OPTIONS.trust.allowExternalContent,
+				resolveAllowExternalContent(
+					this.options.allowExternalContent,
+					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+				),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
 			setEditableForLoad: (editable) => this.setEditable(editable),
 		});
@@ -547,7 +551,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 							slides: state.slides,
 							templateElementsBySlideId: state.templateElementsBySlideId,
 							editable: state.editable,
-							allowExternalImages: this.optionsController.getOptions().trust.allowExternalContent,
+							allowExternalImages: resolveAllowExternalContent(
+								this.options.allowExternalContent,
+								this.optionsController.getOptions(),
+							),
 						}
 					: null;
 			},
@@ -574,6 +581,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			editor: this.editor,
 			optionsStore: this.optionsController.optionsStore,
+			allowExternalContent: this.options.allowExternalContent,
 			clearOptionsCache: () => this.clearOptionsCache(),
 			registerCustomFont: (family) => {
 				const current = this.store.get().customFontFamilies;

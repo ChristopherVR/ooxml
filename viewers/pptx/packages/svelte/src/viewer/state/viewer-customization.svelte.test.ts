@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	ViewerCustomizationState,
 	effectiveHiddenActions,
+	followAllowExternalContent,
 	useCustomizationConstraints,
 } from './viewer-customization.svelte';
 import { ViewerOptionsState } from './viewer-options.svelte';
@@ -56,6 +57,35 @@ describe('viewerCustomizationState', () => {
 		expect(options.isLocked('general', 'userName')).toBeFalsy();
 		expect(options.isLocked('advanced', 'showGrid')).toBeTruthy();
 		expect(options.options.advanced.showGrid).toBeTruthy();
+		cleanupRoot();
+		customization.destroy();
+		options.dispose();
+	});
+});
+
+describe('followAllowExternalContent', () => {
+	it('locks the Trust Center setting to the host value and follows changes', () => {
+		const customization = new ViewerCustomizationState();
+		const options = new ViewerOptionsState({ persist: false });
+		let allow = $state<boolean | undefined>(false);
+		const cleanupRoot = $effect.root(() => {
+			followAllowExternalContent(customization, () => allow);
+			useCustomizationConstraints(customization, options);
+		});
+		// Applied synchronously, before any effect flush, so the first load sees it.
+		expect(options.options.trust.allowExternalContent).toBe(false);
+		expect(options.isLocked('trust', 'allowExternalContent')).toBe(true);
+		options.setValue('trust', 'allowExternalContent', true);
+		expect(options.options.trust.allowExternalContent).toBe(false);
+
+		allow = true;
+		flushSync();
+		expect(options.options.trust.allowExternalContent).toBe(true);
+		expect(options.isLocked('trust', 'allowExternalContent')).toBe(true);
+
+		allow = undefined;
+		flushSync();
+		expect(options.isLocked('trust', 'allowExternalContent')).toBe(false);
 		cleanupRoot();
 		customization.destroy();
 		options.dispose();
