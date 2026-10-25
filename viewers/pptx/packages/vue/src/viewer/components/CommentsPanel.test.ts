@@ -109,6 +109,28 @@ describe('commentsPanel', () => {
 		expect(added.mentions?.[0]?.authorName).toBe('Alice');
 	});
 
+	it('moves a mention with the trimmed text it emits', async () => {
+		const wrapper = mount(CommentsPanel, {
+			props: { comments: [], authorName: 'You', modernCommentAuthors: AUTHORS },
+		});
+		const textarea = wrapper.find('textarea').element as HTMLTextAreaElement;
+		textarea.value = '  hey @al';
+		textarea.setSelectionRange(9, 9);
+		await wrapper.find('textarea').trigger('input');
+		await wrapper.find('[data-testid="pptx-comment-mention-option"]').trigger('mousedown');
+		await wrapper.find('form').trigger('submit.prevent');
+
+		const added = wrapper.emitted('add')?.[0]?.[0] as {
+			text: string;
+			mentions: { startIndex: number; length: number }[];
+		};
+		expect(added.text).toBe('hey @Alice');
+		const [mention] = added.mentions;
+		expect(added.text.slice(mention!.startIndex, mention!.startIndex + mention!.length)).toBe(
+			'@Alice',
+		);
+	});
+
 	it('threads a mention through a reply composer', async () => {
 		const wrapper = mount(CommentsPanel, {
 			props: { comments: [comment()], authorName: 'You', modernCommentAuthors: AUTHORS },

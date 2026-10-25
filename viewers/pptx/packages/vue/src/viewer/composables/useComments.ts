@@ -56,11 +56,8 @@ export interface UseCommentsResult {
 	slideComments: ComputedRef<PptxComment[]>;
 	/**
 	 * Append a new comment to the active slide. `mentions` (from the `@`-mention
-	 * typeahead; `insertCommentMention`, `pptx-viewer-shared`) is stitched onto
-	 * the created comment locally: `addCommentToList` (shared) has no `mentions`
-	 * parameter, so this patches the comment it appends (always the last array
-	 * entry - see `addCommentToList`) after the fact rather than duplicating its
-	 * id-generation and array-shape logic here.
+	 * typeahead; `insertCommentMention`, `ooxml-ui/pptx`) are offsets into `text`
+	 * as typed; the shared `addCommentToList` stores them moved with the trim.
 	 * @returns the NEW full comment array for the active slide, or `null` when
 	 *   `text` is blank.
 	 */
@@ -84,7 +81,7 @@ export interface UseCommentsResult {
 	 * Append a threaded reply to the comment `parentId` on the active slide. The
 	 * reply is nested inside the parent's `replies` array and stamped with
 	 * `threadId = parentId` (mirroring React's `handleSubmitReply`). `mentions`
-	 * is stitched onto the created reply the same way {@link addComment} does.
+	 * are stored the same way {@link addComment} stores them.
 	 * @returns the NEW full comment array, or `null` when the text is blank or
 	 *   the parent is not found.
 	 */
@@ -93,43 +90,6 @@ export interface UseCommentsResult {
 		text: string,
 		mentions?: PptxCommentMention[],
 	) => PptxComment[] | null;
-}
-
-/** Patch `mentions` onto the last entry of `comments` (where `addCommentToList` appends). */
-function withMentionsOnLast(
-	comments: PptxComment[],
-	mentions: PptxCommentMention[] | undefined,
-): PptxComment[] {
-	if (!mentions || mentions.length === 0) {
-		return comments;
-	}
-	const lastIndex = comments.length - 1;
-	return comments.map((comment, index) =>
-		index === lastIndex ? { ...comment, mentions } : comment,
-	);
-}
-
-/** Patch `mentions` onto the last reply of the comment `parentId` (where `replyToCommentInList` appends). */
-function withMentionsOnLastReply(
-	comments: PptxComment[],
-	parentId: string,
-	mentions: PptxCommentMention[] | undefined,
-): PptxComment[] {
-	if (!mentions || mentions.length === 0) {
-		return comments;
-	}
-	return comments.map((comment) => {
-		if (comment.id !== parentId || !comment.replies || comment.replies.length === 0) {
-			return comment;
-		}
-		const lastIndex = comment.replies.length - 1;
-		return {
-			...comment,
-			replies: comment.replies.map((reply, index) =>
-				index === lastIndex ? { ...reply, mentions } : reply,
-			),
-		};
-	});
 }
 
 export function useComments(options: UseCommentsOptions): UseCommentsResult {
@@ -141,8 +101,15 @@ export function useComments(options: UseCommentsOptions): UseCommentsResult {
 		y?: number,
 		mentions?: PptxCommentMention[],
 	): PptxComment[] | null => {
-		const next = addCommentToList(slideComments.value, text, toValue(options.authorName), x, y);
-		return next ? withMentionsOnLast(next, mentions) : null;
+		return addCommentToList(
+			slideComments.value,
+			text,
+			toValue(options.authorName),
+			x,
+			y,
+			undefined,
+			mentions,
+		);
 	};
 
 	const removeComment = (id: string): PptxComment[] | null =>
@@ -156,13 +123,13 @@ export function useComments(options: UseCommentsOptions): UseCommentsResult {
 		text: string,
 		mentions?: PptxCommentMention[],
 	): PptxComment[] | null => {
-		const next = replyToCommentInList(
+		return replyToCommentInList(
 			slideComments.value,
 			parentId,
 			text,
 			toValue(options.authorName),
+			mentions,
 		);
-		return next ? withMentionsOnLastReply(next, parentId, mentions) : null;
 	};
 
 	return { slideComments, addComment, removeComment, resolveComment, replyToComment };

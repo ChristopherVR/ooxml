@@ -22,9 +22,12 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { PptxHandler } from 'pptx-viewer-core';
 
-import { commentTextVisible, openCommentsThread } from './support/comments';
+import { savePptxViaBackstage } from './save-pptx';
+import { COMPOSE_BOX_SELECTOR, commentTextVisible, openCommentsThread } from './support/comments';
 import { resetTabSession } from './support/deck';
+import { downloadBytes } from './support/exports';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -72,5 +75,36 @@ test.describe('modern comment mentions', () => {
 		// binding's markup instead of the behaviour. What must hold everywhere
 		// is that segmenting the body did not LOSE any of it.
 		await expect.poll(() => commentTextVisible(page, COMMENT_TEXT)).toBe(true);
+	});
+
+	test('a new comment keeps its mention on the name through the trim and the save', async ({
+		page,
+	}) => {
+		await openDeck(page);
+		await openCommentsThread(page, COMMENT_TEXT);
+		// Leading spaces are trimmed off when the comment is stored; the mention must move with them.
+		const compose = page.locator(COMPOSE_BOX_SELECTOR).first();
+		await compose.click();
+		await compose.pressSequentially('  Ask @bo');
+		await page.locator('[data-testid="pptx-comment-mention-option"]:visible').first().click();
+		await expect(compose).toHaveValue(`  Ask ${MENTION_TEXT} `);
+		await compose.pressSequentially('now');
+		await page.locator('button:visible:text-is("Add Comment")').last().click();
+
+		const added = `Ask ${MENTION_TEXT} now`;
+		await expect.poll(() => commentTextVisible(page, added)).toBe(true);
+		const mentions = page.locator('[data-pptx-comment-mention]');
+		await expect(mentions).toHaveCount(2);
+		await expect(mentions).toHaveText([MENTION_TEXT, MENTION_TEXT]);
+
+		const saved = await new PptxHandler().load(
+			(await downloadBytes(await savePptxViaBackstage(page))).slice().buffer,
+		);
+		const comment = saved.slides
+			.flatMap((slide) => slide.comments ?? [])
+			.find((entry) => entry.text === added);
+		expect(
+			comment?.mentions?.map((m) => comment.text.slice(m.startIndex, m.startIndex + m.length)),
+		).toStrictEqual([MENTION_TEXT]);
 	});
 });

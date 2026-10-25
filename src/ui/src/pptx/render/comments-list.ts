@@ -12,7 +12,9 @@
  * No framework imports.
  */
 
-import type { PptxComment } from 'ooxml-core/pptx';
+import type { PptxComment, PptxCommentMention } from 'ooxml-core/pptx';
+
+import { followCommentEdit, trimCommentMentions } from './comment-mentions';
 
 /** Generate a stable, collision-resistant comment id. */
 export function generateCommentId(): string {
@@ -24,8 +26,18 @@ export function generateCommentId(): string {
 	return `comment-${Date.now().toString(36)}-${rand}`;
 }
 
+/** The stored text of a new body and its `mentions` field (omitted when there are none). */
+function bodyWithMentions(
+	text: string,
+	mentions: readonly PptxCommentMention[] | undefined,
+): { text: string; mentions?: PptxCommentMention[] } {
+	const body = trimCommentMentions(text, mentions);
+	return body.mentions.length > 0 ? body : { text: body.text };
+}
+
 /**
- * Append a new comment to a comment list.
+ * Append a new comment to a comment list. `mentions` are offsets into `text` as typed; they move
+ * with the trim.
  * @returns the NEW full comment array, or `null` when `text` is blank.
  */
 export function addCommentToList(
@@ -35,15 +47,16 @@ export function addCommentToList(
 	x?: number,
 	y?: number,
 	elementId?: string,
+	mentions?: readonly PptxCommentMention[],
 ): PptxComment[] | null {
-	const trimmed = text.trim();
-	if (trimmed.length === 0) {
+	const body = bodyWithMentions(text, mentions);
+	if (body.text.length === 0) {
 		return null;
 	}
 
 	const comment: PptxComment = {
 		id: generateCommentId(),
-		text: trimmed,
+		...body,
 		author: authorName,
 		createdAt: new Date().toISOString(),
 		resolved: false,
@@ -121,7 +134,9 @@ export function removeCommentFromList(comments: PptxComment[], id: string): Pptx
 
 /**
  * Update the text of a comment (by id) anywhere in the tree (top-level rows
- * and nested `replies`, at any depth).
+ * and nested `replies`, at any depth). Given `mentions` (offsets into `text`
+ * as typed) replace the comment's; without them, its own mentions follow the
+ * edit, and one the edit touches is dropped.
  * @returns the NEW full comment array, or `null` when `text` is blank or the
  *   comment is not found.
  */
@@ -129,15 +144,20 @@ export function editCommentInList(
 	comments: PptxComment[],
 	id: string,
 	text: string,
+	mentions?: readonly PptxCommentMention[],
 ): PptxComment[] | null {
-	const trimmed = text.trim();
+	const given = mentions ? bodyWithMentions(text, mentions) : null;
+	const trimmed = given ? given.text : text.trim();
 	if (trimmed.length === 0) {
 		return null;
 	}
-	const [next, changed] = mapCommentTree(comments, id, (comment) => ({
-		...comment,
-		text: trimmed,
-	}));
+	const [next, changed] = mapCommentTree(comments, id, (comment) => {
+		const { mentions: previous, ...rest } = comment;
+		const kept = given
+			? (given.mentions ?? [])
+			: followCommentEdit(comment.text, trimmed, previous);
+		return { ...rest, text: trimmed, ...(kept.length > 0 ? { mentions: kept } : {}) };
+	});
 	return changed ? next : null;
 }
 
@@ -146,7 +166,8 @@ export function editCommentInList(
  *
  * The reply is nested inside the parent's `replies` array and stamped with
  * `threadId`/`parentId` (mirroring React's `handleSubmitReply`), inheriting
- * the parent's `elementId` anchor when it has one.
+ * the parent's `elementId` anchor when it has one. `mentions` are offsets
+ * into `text` as typed; they move with the trim.
  * @returns the NEW full comment array, or `null` when `text` is blank or the
  *   parent is not found.
  */
@@ -155,9 +176,10 @@ export function replyToCommentInList(
 	parentId: string,
 	text: string,
 	authorName: string,
+	mentions?: readonly PptxCommentMention[],
 ): PptxComment[] | null {
-	const trimmed = text.trim();
-	if (trimmed.length === 0) {
+	const body = bodyWithMentions(text, mentions);
+	if (body.text.length === 0) {
 		return null;
 	}
 	const parent = comments.find((comment) => comment.id === parentId);
@@ -166,7 +188,7 @@ export function replyToCommentInList(
 	}
 	const reply: PptxComment = {
 		id: generateCommentId(),
-		text: trimmed,
+		...body,
 		author: authorName,
 		createdAt: new Date().toISOString(),
 		threadId: parentId,

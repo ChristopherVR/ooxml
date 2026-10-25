@@ -122,19 +122,12 @@ export function addCommentToSlide(
 		undefined,
 		undefined,
 		elementId,
+		mentions,
 	);
 	if (!next) {
 		return { slides, didAdd: false };
 	}
-	// `addCommentToList` appends the new comment last; shared has no `mentions`
-	// parameter of its own, so it is folded on here (React-only wrapper).
-	const withMentions =
-		mentions && mentions.length > 0
-			? next.map((comment, index) =>
-					index === next.length - 1 ? { ...comment, mentions } : comment,
-				)
-			: next;
-	return { slides: replaceCommentsOnSlide(slides, slideIndex, withMentions), didAdd: true };
+	return { slides: replaceCommentsOnSlide(slides, slideIndex, next), didAdd: true };
 }
 
 /**
@@ -214,26 +207,11 @@ export function addReplyToSlide(
 	if (!slide) {
 		return { slides, didAdd: false };
 	}
-	const next = replyToCommentInList(slide.comments || [], parentId, text, authorName);
+	const next = replyToCommentInList(slide.comments || [], parentId, text, authorName, mentions);
 	if (!next) {
 		return { slides, didAdd: false };
 	}
-	// `replyToCommentInList` appends the new reply last under its parent;
-	// shared has no `mentions` parameter of its own, so it is folded on here.
-	const withMentions =
-		mentions && mentions.length > 0
-			? next.map((comment) =>
-					comment.id === parentId && comment.replies && comment.replies.length > 0
-						? {
-								...comment,
-								replies: comment.replies.map((reply, index) =>
-									index === comment.replies!.length - 1 ? { ...reply, mentions } : reply,
-								),
-							}
-						: comment,
-				)
-			: next;
-	return { slides: replaceCommentsOnSlide(slides, slideIndex, withMentions), didAdd: true };
+	return { slides: replaceCommentsOnSlide(slides, slideIndex, next), didAdd: true };
 }
 
 /**

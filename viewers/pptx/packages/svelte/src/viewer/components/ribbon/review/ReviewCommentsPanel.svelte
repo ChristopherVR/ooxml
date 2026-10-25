@@ -9,11 +9,8 @@
 	 * and replies render recursively ({@link CommentReplyThread}) so a legacy
 	 * `p:cmLst` reply nested more than one level deep is no longer dropped.
 	 *
-	 * `addCommentToList` / `replyToCommentInList` (shared) build the new
-	 * comment/reply but do not accept a `mentions` array, so `addComment` /
-	 * `submitReply` fold the accepted mentions onto the newly-appended row
-	 * afterwards: both helpers append at a known position (the list's last
-	 * item, and the parent's last reply respectively).
+	 * The accepted mentions index the draft as typed; `addCommentToList` /
+	 * `replyToCommentInList` (shared) store them moved with the draft's trim.
 	 */
 	import type { PptxComment, PptxModernCommentAuthor, PptxSlide } from 'pptx-viewer-core';
 	import {
@@ -84,15 +81,19 @@
 	}
 
 	function addComment(): void {
-		const next = addCommentToList(comments, compose.text, authorName);
+		const next = addCommentToList(
+			comments,
+			compose.text,
+			authorName,
+			undefined,
+			undefined,
+			undefined,
+			compose.mentions,
+		);
 		if (!next) {
 			return;
 		}
-		replaceComments(
-			compose.mentions.length > 0
-				? next.map((c, i) => (i === next.length - 1 ? { ...c, mentions: compose.mentions } : c))
-				: next,
-		);
+		replaceComments(next);
 		compose.reset();
 	}
 
@@ -121,24 +122,11 @@
 	}
 
 	function submitReply(id: string): void {
-		const next = replyToCommentInList(comments, id, reply.text, authorName);
+		const next = replyToCommentInList(comments, id, reply.text, authorName, reply.mentions);
 		if (!next) {
 			return;
 		}
-		replaceComments(
-			reply.mentions.length > 0
-				? next.map((c) => {
-						const parentReplies = c.replies;
-						if (c.id !== id || !parentReplies || parentReplies.length === 0) {
-							return c;
-						}
-						const replies = parentReplies.map((r, i) =>
-							i === parentReplies.length - 1 ? { ...r, mentions: reply.mentions } : r,
-						);
-						return { ...c, replies };
-					})
-				: next,
-		);
+		replaceComments(next);
 		cancelReply();
 	}
 

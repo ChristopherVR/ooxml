@@ -123,6 +123,35 @@ describe('reviewCommentsPanel', () => {
 		expect(saved?.mentions?.[0]).toMatchObject({ personId: 'a1', authorName: 'Alice' });
 	});
 
+	it('keeps a mention on its text when the comment is trimmed', () => {
+		const target = document.createElement('div');
+		const editor = createEditor();
+		editor.modernCommentAuthors = [{ id: 'a1', name: 'Alice', userId: 'u1', providerId: 'p1' }];
+		const instance = mount(ReviewCommentsPanel, { target, props: { editor } });
+		cleanup = () => unmount(instance);
+
+		const textarea = target.querySelector('textarea') as HTMLTextAreaElement;
+		textarea.value = '  hey @al';
+		textarea.selectionStart = 9;
+		textarea.selectionEnd = 9;
+		textarea.dispatchEvent(new Event('input', { bubbles: true }));
+		flushSync();
+		const option = target.querySelector(
+			'[data-testid="pptx-comment-mention-option"]',
+		) as HTMLButtonElement;
+		option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+		flushSync();
+		(target.querySelector('.pptx-svelte-comments-compose button') as HTMLButtonElement).click();
+		flushSync();
+
+		const saved = editor.slides[0]?.comments?.[0];
+		const mention = saved?.mentions?.[0];
+		expect(saved?.text).toBe('hey @Alice');
+		expect(saved?.text.slice(mention!.startIndex, mention!.startIndex + mention!.length)).toBe(
+			'@Alice',
+		);
+	});
+
 	it('authors comments as the host authorName prop', () => {
 		const target = document.createElement('div');
 		const editor = new EditorState({

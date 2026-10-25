@@ -126,9 +126,8 @@ describe('createCommentActions replies and edit-in-place', () => {
 		expect(id).toMatch(/^comment-/);
 	});
 
-	// B5: `addCommentToList` / `replyToCommentInList` (shared) have no `mentions`
-	// parameter, so the typeahead's picks are stitched onto the just-added
-	// comment/reply here, in the SAME history entry as the add.
+	// B5: the typeahead's picks reach the just-added comment/reply in the SAME
+	// history entry as the add.
 	it('addComment carries the mention list onto the new comment', () => {
 		const { store, actions } = makeActions([]);
 		const mentions = [{ personId: 'a1', authorName: 'Alice', startIndex: 0, length: 6 }];
@@ -145,6 +144,20 @@ describe('createCommentActions replies and edit-in-place', () => {
 		const id = actions.addCommentReply('c1', '@Alice thoughts?', mentions);
 
 		expect(store.get().slides[0].comments?.[0].replies?.[0]).toMatchObject({ id, mentions });
+	});
+
+	it('moves the mention list with the trimmed text of a new comment or reply', () => {
+		const { store, actions } = makeActions([{ id: 'c1', text: 'Parent' }]);
+		const alice = { personId: 'a1', authorName: 'Alice', startIndex: 2, length: 6 };
+		const covered = (comment: PptxComment | undefined) =>
+			comment?.mentions?.map((m) => comment.text.slice(m.startIndex, m.startIndex + m.length));
+
+		actions.addComment('  @Alice look', undefined, [alice]);
+		actions.addCommentReply('c1', ' ok @Alice', [{ ...alice, startIndex: 4 }]);
+
+		const [parent, added] = store.get().slides[0].comments ?? [];
+		expect(covered(added)).toStrictEqual(['@Alice']);
+		expect(covered(parent?.replies?.[0])).toStrictEqual(['@Alice']);
 	});
 
 	it('editComment, deleteComment, and toggleCommentResolved are no-ops for an unknown id: no history, no dirty flag', () => {

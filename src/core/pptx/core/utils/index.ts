@@ -737,3 +737,6 @@ export {
 
 export * from './chart-grid-operations';
 export * from './chart-data-sheet';
+
+/** Moves a comment's @-mention records onto its edited text (the save uses it too). */
+export { rebaseCommentMentions } from './modern-comment-mentions';

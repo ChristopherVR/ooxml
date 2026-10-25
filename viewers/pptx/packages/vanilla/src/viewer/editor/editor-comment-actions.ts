@@ -44,45 +44,6 @@ export function updateSlideComments(
 	);
 }
 
-/**
- * Patch the mention list onto the LAST (just-appended) top-level comment.
- *
- * `addCommentToList` (shared, used by every binding) has no `mentions`
- * parameter, so the `@`-mention typeahead's picks are stitched on here, in the
- * SAME history entry as the add, rather than as a second undo step.
- */
-function withMentionsOnLast(
-	comments: PptxComment[],
-	mentions: PptxCommentMention[],
-): PptxComment[] {
-	const last = comments.at(-1);
-	if (!last) {
-		return comments;
-	}
-	return comments.map((comment) => (comment.id === last.id ? { ...comment, mentions } : comment));
-}
-
-/** Same as {@link withMentionsOnLast}, for the reply just appended under `parentId`. */
-function withMentionsOnLastReply(
-	comments: PptxComment[],
-	parentId: string,
-	mentions: PptxCommentMention[],
-): PptxComment[] {
-	return comments.map((comment) => {
-		if (comment.id !== parentId) {
-			return comment;
-		}
-		const reply = comment.replies?.at(-1);
-		if (!reply) {
-			return comment;
-		}
-		return {
-			...comment,
-			replies: comment.replies?.map((r) => (r.id === reply.id ? { ...r, mentions } : r)),
-		};
-	});
-}
-
 export function createCommentActions(deps: {
 	store: Store<ViewerState>;
 	ops: EditorOps;
@@ -117,25 +78,22 @@ export function createCommentActions(deps: {
 	return {
 		addComment(text, elementId, mentions) {
 			const next = applyToActiveComments((comments) => {
-				const added = addCommentToList(
+				return addCommentToList(
 					comments,
 					text,
 					authorName(),
 					undefined,
 					undefined,
 					elementId,
+					mentions,
 				);
-				return added && mentions?.length ? withMentionsOnLast(added, mentions) : added;
 			});
 			return next ? (next[next.length - 1]?.id ?? null) : null;
 		},
 		addCommentReply(parentId, text, mentions) {
-			const next = applyToActiveComments((comments) => {
-				const replied = replyToCommentInList(comments, parentId, text, authorName());
-				return replied && mentions?.length
-					? withMentionsOnLastReply(replied, parentId, mentions)
-					: replied;
-			});
+			const next = applyToActiveComments((comments) =>
+				replyToCommentInList(comments, parentId, text, authorName(), mentions),
+			);
 			if (!next) {
 				return null;
 			}

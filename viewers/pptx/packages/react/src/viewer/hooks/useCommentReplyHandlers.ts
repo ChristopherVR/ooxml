@@ -81,8 +81,9 @@ export function useCommentReplyHandlers(
 				return;
 			}
 
-			const replyText = String(replyDraftByCommentId[commentId] || '').trim();
-			if (replyText.length === 0) {
+			// Untrimmed: the mentions index the draft as typed, and the shared reply trims both.
+			const replyText = String(replyDraftByCommentId[commentId] || '');
+			if (replyText.trim().length === 0) {
 				return;
 			}
 

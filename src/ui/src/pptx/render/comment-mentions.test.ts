@@ -6,8 +6,10 @@ import {
 	commentMentionQuery,
 	commentTextSegments,
 	hasCommentMentions,
+	followCommentEdit,
 	insertCommentMention,
 	matchCommentMentionAuthors,
+	trimCommentMentions,
 } from './comment-mentions';
 
 const BOB = '{2CB2E9D0-D392-EB21-5D46-FBA34C1295E6}';
@@ -132,9 +134,48 @@ describe('insertCommentMention', () => {
 		expect(result.text.slice(ann.startIndex, ann.startIndex + ann.length)).toBe('@Ann');
 	});
 
+	it('replaces a mention the caret is inside instead of keeping both records', () => {
+		const existing = [
+			mention(3, 4, { personId: ANN, authorName: 'Ann', id: '{OLD}' }),
+			mention(12, 4, { id: '{LATER}' }),
+		];
+		const result = insertCommentMention('Hi @Ann and @Bob', existing, 5, bob, () => '{ID}');
+		expect(result.text).toBe('Hi @Bob Example nn and @Bob');
+		expect(result.mentions).toStrictEqual([
+			{ id: '{ID}', personId: BOB, authorName: 'Bob Example', startIndex: 3, length: 12 },
+			{ ...existing[1], startIndex: 23 },
+		]);
+	});
+
+	it('keeps the text after the caret when lower-casing lengthens the query', () => {
+		const ipek = author(ANN, 'İpek', 'İ');
+		const result = insertCommentMention('@İ\nKeep', undefined, 2, ipek, () => '{ID}');
+		expect(result.text).toBe('@İpek \nKeep');
+		expect(result.caret).toBe(6);
+	});
+
 	it('inserts at the caret when no @-token is open', () => {
 		const result = insertCommentMention('Hi ', undefined, 3, bob, () => '{ID}');
 		expect(result.text).toBe('Hi @Bob Example ');
 		expect(result.mentions[0].startIndex).toBe(3);
+	});
+});
+
+describe('trimCommentMentions and followCommentEdit', () => {
+	it('move the mention records with a trim or an edit, keeping every other field', () => {
+		const record = mention(3, 4, { id: '{OLD}', containerUri: '{EXT}' });
+		expect(trimCommentMentions('  Hi @Bob ', [{ ...record, startIndex: 5 }])).toStrictEqual({
+			text: 'Hi @Bob',
+			mentions: [record],
+		});
+		expect(trimCommentMentions(' hi', undefined)).toStrictEqual({ text: 'hi', mentions: [] });
+		expect(followCommentEdit('Hi @Bob', 'Oh hi @Bob', [record])).toStrictEqual([
+			{ ...record, startIndex: 6 },
+		]);
+		expect(followCommentEdit('Hi @Bob', 'Hi @Bb', [record])).toStrictEqual([]);
+		// Text changed on both sides of the mention: it is found again on its own text.
+		expect(followCommentEdit('Hi @Bob there', 'Oh hi @Bob here', [record])).toStrictEqual([
+			{ ...record, startIndex: 6 },
+		]);
 	});
 });

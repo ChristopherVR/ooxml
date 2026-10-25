@@ -124,6 +124,30 @@ describe('modern comment mentions', () => {
 		expect(mentionsOf(rebuild(edited))[0]['@_startIndex']).toBe('2');
 	});
 
+	it('keeps mentions an editor already moved with the edit, and new ones as they are', () => {
+		// "Hi Bob Example ..." -> "Hi there Bob Example ...", the editor having moved the span itself.
+		const comment = parseFixture();
+		const moved: PptxComment = {
+			...comment,
+			text: 'Hi there Bob Example can you check this',
+			mentions: [{ ...comment.mentions![0]!, startIndex: 9 }],
+		};
+		expect(mentionsOf(rebuild(moved)).map((m) => m['@_startIndex'])).toStrictEqual(['9']);
+		// A mention added while editing (not in the file) already indexes the new text.
+		const added: PptxComment = {
+			...moved,
+			text: `${moved.text}, @Alice`,
+			mentions: [...moved.mentions!, { id: '{NEW}', personId: ALICE, startIndex: 41, length: 6 }],
+		};
+		expect(added.text.slice(41)).toBe('@Alice');
+		expect(mentionsOf(rebuild(added)).map((m) => [m['@_startIndex'], m['@_length']])).toStrictEqual(
+			[
+				['9', '11'],
+				['41', '6'],
+			],
+		);
+	});
+
 	it('drops a mention whose span was deleted', () => {
 		const edited: PptxComment = { ...parseFixture(), text: 'Hi can you check this' };
 		expect(mentionsOf(rebuild(edited))).toHaveLength(0);

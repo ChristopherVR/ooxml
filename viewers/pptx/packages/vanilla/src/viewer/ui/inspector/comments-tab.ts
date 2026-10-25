@@ -1,3 +1,4 @@
+import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxCommentMention } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
@@ -60,9 +61,10 @@ export function createCommentsTab(
 	addBtn.type = 'button';
 	addBtn.textContent = t('pptx.comments.addComment');
 	addBtn.addEventListener('click', () => {
-		const text = input.value.trim();
+		// The mentions index the draft as typed: they move with its trim.
+		const { text, mentions } = trimCommentMentions(input.value, draftMentions);
 		if (text) {
-			handlers.addComment(text, draftMentions);
+			handlers.addComment(text, mentions);
 			input.value = '';
 			draftMentions = [];
 		}

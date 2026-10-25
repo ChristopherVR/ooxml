@@ -11,10 +11,21 @@
  *   -> `insertCommentMention` returns the new text, the new mention list, and
  *   where the caret should land.
  *
- * No framework imports.
+ * The logic is the format-neutral one in `comments/mentions` (which the shared comments pane uses);
+ * this module maps PowerPoint's mention records onto it. No framework imports.
  */
 
+import { rebaseCommentMentions } from 'ooxml-core/pptx';
 import type { PptxCommentMention, PptxModernCommentAuthor } from 'ooxml-core/pptx';
+
+import {
+	commentSegments,
+	insertMention,
+	matchMentionCandidates,
+	mentionQueryAt,
+	trimMentionText,
+	type OfficeCommentMention,
+} from '../../comments/mentions';
 
 /** DOM attribute every binding stamps on a rendered mention, for e2e. */
 export const COMMENT_MENTION_ATTRIBUTE = 'data-pptx-comment-mention';
@@ -32,17 +43,12 @@ export interface CommentTextSegment {
 	personId?: string;
 }
 
-const usableMentions = (body: string, mentions?: PptxCommentMention[]): PptxCommentMention[] =>
-	(mentions ?? [])
-		.filter(
-			(mention) =>
-				Number.isFinite(mention.startIndex) &&
-				Number.isFinite(mention.length) &&
-				mention.length > 0 &&
-				mention.startIndex >= 0 &&
-				mention.startIndex + mention.length <= body.length,
-		)
-		.sort((a, b) => a.startIndex - b.startIndex);
+const toSpan = (mention: PptxCommentMention): OfficeCommentMention => ({
+	start: mention.startIndex,
+	length: mention.length,
+	...(mention.personId !== undefined ? { id: mention.personId } : {}),
+	...(mention.authorName !== undefined ? { name: mention.authorName } : {}),
+});
 
 /**
  * Split a comment body into plain-text and mention segments.
@@ -55,31 +61,12 @@ export function commentTextSegments(
 	text: string,
 	mentions?: PptxCommentMention[],
 ): CommentTextSegment[] {
-	const body = String(text ?? '');
-	if (body.length === 0) {
-		return [];
-	}
-	const segments: CommentTextSegment[] = [];
-	let cursor = 0;
-	for (const mention of usableMentions(body, mentions)) {
-		if (mention.startIndex < cursor) {
-			continue; // Overlaps the previous mention; the first one wins.
-		}
-		if (mention.startIndex > cursor) {
-			segments.push({ kind: 'text', text: body.slice(cursor, mention.startIndex) });
-		}
-		segments.push({
-			kind: 'mention',
-			text: body.slice(mention.startIndex, mention.startIndex + mention.length),
-			authorName: mention.authorName,
-			personId: mention.personId,
-		});
-		cursor = mention.startIndex + mention.length;
-	}
-	if (cursor < body.length) {
-		segments.push({ kind: 'text', text: body.slice(cursor) });
-	}
-	return segments;
+	return commentSegments(text, mentions?.map(toSpan)).map((segment) => ({
+		kind: segment.kind,
+		text: segment.text,
+		...(segment.name !== undefined ? { authorName: segment.name } : {}),
+		...(segment.id !== undefined ? { personId: segment.id } : {}),
+	}));
 }
 
 /** Whether this body has at least one renderable mention. */
@@ -102,36 +89,8 @@ export interface CommentMentionQuery {
  * contain whitespace, so an email address does not open the picker.
  */
 export function commentMentionQuery(text: string, caret: number): CommentMentionQuery | null {
-	const body = String(text ?? '');
-	const position = Math.max(0, Math.min(caret, body.length));
-	for (let index = position - 1; index >= 0; index -= 1) {
-		const character = body[index];
-		if (character === '@') {
-			if (index > 0 && !/\s/u.test(body[index - 1])) {
-				return null;
-			}
-			return { query: body.slice(index + 1, position).toLowerCase(), start: index };
-		}
-		if (/\s/u.test(character)) {
-			return null;
-		}
-	}
-	return null;
+	return mentionQueryAt(text, caret);
 }
-
-const mentionMatchScore = (author: PptxModernCommentAuthor, needle: string): number => {
-	if (needle.length === 0) {
-		return 1;
-	}
-	const name = author.name.toLowerCase();
-	if (name.startsWith(needle)) {
-		return 0;
-	}
-	if (name.includes(needle) || (author.initials || '').toLowerCase().startsWith(needle)) {
-		return 2;
-	}
-	return -1;
-};
 
 /** Authors whose name or initials match a typeahead query, best-first. */
 export function matchCommentMentionAuthors(
@@ -139,15 +98,50 @@ export function matchCommentMentionAuthors(
 	query: string,
 	limit = 6,
 ): PptxModernCommentAuthor[] {
-	const needle = String(query ?? '')
-		.trim()
-		.toLowerCase();
-	const scored = authors
-		.filter((author) => author.id && author.name)
-		.map((author) => ({ author, score: mentionMatchScore(author, needle) }))
-		.filter((entry) => entry.score >= 0);
-	scored.sort((a, b) => a.score - b.score || a.author.name.localeCompare(b.author.name));
-	return scored.slice(0, limit).map((entry) => entry.author);
+	return matchMentionCandidates(authors, query, limit);
+}
+
+/** Each record as a span tagged with its index, so a moved span finds its record again. */
+function tagged(mentions: readonly PptxCommentMention[]): OfficeCommentMention[] {
+	return mentions.map((mention, index) => ({
+		start: mention.startIndex,
+		length: mention.length,
+		id: String(index),
+	}));
+}
+
+/** The records behind tagged spans, moved to where the spans are now. */
+function untagged(
+	spans: readonly OfficeCommentMention[],
+	records: readonly PptxCommentMention[],
+): PptxCommentMention[] {
+	return spans.map((span) => ({ ...records[Number(span.id)]!, startIndex: span.start }));
+}
+
+/**
+ * A comment body trimmed as it is stored, with its mention records moved by the whitespace taken off
+ * the front (and any outside the trimmed text dropped). Every other field of a record is kept.
+ */
+export function trimCommentMentions(
+	text: string,
+	mentions: readonly PptxCommentMention[] | undefined,
+): { text: string; mentions: PptxCommentMention[] } {
+	const records = mentions ?? [];
+	const result = trimMentionText(text, tagged(records));
+	return { text: result.text, mentions: untagged(result.mentions, records) };
+}
+
+/**
+ * The mention records after a comment body changed from `before` to `after` (any number of edits,
+ * as a save sees them): each moves to where its own text is now, and one whose text is gone is
+ * dropped. The same rule the save applies to a loaded comment (`rebaseCommentMentions`).
+ */
+export function followCommentEdit(
+	before: string,
+	after: string,
+	mentions: readonly PptxCommentMention[] | undefined,
+): PptxCommentMention[] {
+	return rebaseCommentMentions(mentions ? [...mentions] : undefined, before, after) ?? [];
 }
 
 /** Result of accepting an author from the mention typeahead. */
@@ -186,24 +180,21 @@ export function insertCommentMention(
 	author: PptxModernCommentAuthor,
 	generateId: () => string = defaultMentionId,
 ): CommentMentionInsertion {
-	const body = String(text ?? '');
-	const active = commentMentionQuery(body, caret);
-	const start = active ? active.start : Math.max(0, Math.min(caret, body.length));
-	const end = active ? active.start + 1 + active.query.length : start;
-	const label = `@${author.name}`;
-	const nextText = `${body.slice(0, start)}${label} ${body.slice(end)}`;
-	const delta = label.length + 1 - (end - start);
-
-	const shifted = (mentions ?? []).map((mention) =>
-		mention.startIndex >= end ? { ...mention, startIndex: mention.startIndex + delta } : mention,
-	);
-	shifted.push({
-		id: generateId(),
-		personId: author.id,
-		authorName: author.name,
-		startIndex: start,
-		length: label.length,
-	});
-	shifted.sort((a, b) => a.startIndex - b.startIndex);
-	return { text: nextText, mentions: shifted, caret: start + label.length + 1 };
+	const existing = mentions ?? [];
+	const result = insertMention(text, tagged(existing), caret, { id: author.id, name: author.name });
+	return {
+		text: result.text,
+		caret: result.caret,
+		mentions: result.mentions.map((span) =>
+			span.name === undefined
+				? { ...existing[Number(span.id)]!, startIndex: span.start }
+				: {
+						id: generateId(),
+						personId: author.id,
+						authorName: author.name,
+						startIndex: span.start,
+						length: span.length,
+					},
+		),
+	};
 }

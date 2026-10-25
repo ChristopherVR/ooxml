@@ -12,6 +12,10 @@
  * (common prefix/suffix), shifts the spans that survive, relocates a span the
  * shift missed, and DROPS a mention whose text no longer exists. An
  * equal-length edit is NOT assumed safe: the span's characters are verified.
+ * An editor may also move the spans with the text itself; given the mentions
+ * the file had, a span that already covers its loaded text in the new body is
+ * kept, and one the file did not have (added since the load) indexes the new
+ * body already.
  *
  * ## Re-emitting
  *
@@ -64,16 +68,43 @@ const nearestOccurrence = (text: string, span: string, hint: number): number => 
 };
 
 /**
+ * The texts the file's records of `mention` covered in `oldText`: its own (by
+ * `mentionId`), or for a mention without one, the same person's of the same
+ * length. `undefined` when the file had none: a mention added since the load.
+ */
+const loadedCoverage = (
+	mention: PptxCommentMention,
+	loaded: readonly PptxCommentMention[],
+	oldText: string,
+): string[] | undefined => {
+	const records = loaded.filter((record) =>
+		mention.id
+			? record.id === mention.id
+			: !record.id && record.personId === mention.personId && record.length === mention.length,
+	);
+	if (records.length === 0) {
+		return undefined;
+	}
+	return records.map((record) =>
+		oldText.slice(record.startIndex, record.startIndex + record.length),
+	);
+};
+
+/**
  * Move every mention's `startIndex` from `oldText` onto `newText`.
  *
  * A mention entirely before the edit keeps its offset; one entirely after it
  * shifts by the length delta; one the edit overlapped is relocated by looking
- * its own text up again, and dropped when that text is gone.
+ * its own text up again, and dropped when that text is gone. With `loaded`
+ * (the mentions the file had), a mention that already covers its loaded text
+ * in `newText` was moved by the editor and is kept, and one the file did not
+ * have is kept where it is (it indexes `newText`) when it fits.
  */
 export function rebaseCommentMentions(
 	mentions: PptxCommentMention[] | undefined,
 	oldText: string,
 	newText: string,
+	loaded?: readonly PptxCommentMention[],
 ): PptxCommentMention[] | undefined {
 	if (!mentions || mentions.length === 0) {
 		return undefined;
@@ -94,6 +125,13 @@ export function rebaseCommentMentions(
 	for (const mention of mentions) {
 		const start = mention.startIndex;
 		const end = start + mention.length;
+		const coverage = loaded ? loadedCoverage(mention, loaded, oldText) : [];
+		if (coverage === undefined || coverage.includes(newText.slice(start, end))) {
+			if (start >= 0 && mention.length > 0 && end <= newText.length) {
+				result.push(mention);
+			}
+			continue;
+		}
 		const span = oldText.slice(start, end);
 		if (span.length !== mention.length) {
 			// The recorded span ran past the old text: it was already stale.

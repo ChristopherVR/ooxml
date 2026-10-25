@@ -29,7 +29,47 @@ function findAction(scope: Element, label: string): HTMLButtonElement {
 	return btn!;
 }
 
+const ALICE = { id: 'a1', name: 'Alice', userId: '', providerId: '' };
+
+/** Type `value` into `field` with the caret at its end, then pick the first suggestion. */
+function typeAndPickMention(scope: Element, field: HTMLTextAreaElement, value: string): void {
+	field.value = value;
+	field.selectionStart = value.length;
+	field.selectionEnd = value.length;
+	field.dispatchEvent(new Event('input'));
+	scope
+		.querySelector<HTMLButtonElement>('[data-testid="pptx-comment-mention-option"]')!
+		.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+}
+
+const covered = (text: string, mentions: { startIndex: number; length: number }[] = []) =>
+	mentions.map((m) => text.slice(m.startIndex, m.startIndex + m.length));
+
 describe('inspector comments tab', () => {
+	it('hands a new comment and a reply over with their mentions on the trimmed text', () => {
+		const handlers = makeHandlers();
+		const tab = createCommentsTab(document, t, handlers);
+		tab.update({
+			...makeState([{ id: 'c1', text: 'Parent', author: 'Ada' }]),
+			commentMentionAuthors: [ALICE],
+		} as InspectorDeckState);
+
+		const input = tab.el.querySelector<HTMLTextAreaElement>('.pptxv-inspector-comment-input')!;
+		typeAndPickMention(tab.el, input, '  hi @al');
+		tab.el.querySelector<HTMLButtonElement>('.pptxv-inspector-deck-btn')!.click();
+		const [text, mentions] = handlers.addComment.mock.calls[0]!;
+		expect(text).toBe('hi @Alice');
+		expect(covered(text, mentions)).toStrictEqual(['@Alice']);
+
+		findAction(tab.el, t('pptx.comments.reply')).click();
+		const form = tab.el.querySelector<HTMLElement>('.pptxv-inspector-comment-reply-form')!;
+		typeAndPickMention(form, form.querySelector('textarea')!, ' ok @al');
+		findAction(form, t('pptx.comments.addReply')).click();
+		const [, replyText, replyMentions] = handlers.addCommentReply.mock.calls[0]!;
+		expect(replyText).toBe('ok @Alice');
+		expect(covered(replyText, replyMentions)).toStrictEqual(['@Alice']);
+	});
+
 	it('renders nested replies with a count toggle', () => {
 		const tab = createCommentsTab(document, t, makeHandlers());
 		tab.update(
