@@ -5,6 +5,8 @@ import { hasTextProperties } from '../../types';
 export interface BulletPictureImageResolver {
 	/** Relationship map for one slide (rId -> target), keyed by slide path. */
 	slideRelsMap: Map<string, Map<string, string>>;
+	/** The `allowExternalImages` load option: whether an http(s) target may be used as-is. */
+	allowExternalImages: boolean;
 	/** Resolve a relationship target to a zip-relative image path (`''` on failure). */
 	resolveImagePath(slidePath: string, target: string): string;
 	/** Load (and cache) image bytes as a `<img src>`-ready URL. */
@@ -78,7 +80,10 @@ async function resolveBulletImage(
 	if (!target) {
 		return undefined;
 	}
-	if (target.startsWith('http://') || target.startsWith('https://') || target.startsWith('data:')) {
+	if (target.startsWith('http://') || target.startsWith('https://')) {
+		return resolver.allowExternalImages ? target : undefined;
+	}
+	if (target.startsWith('data:')) {
 		return target;
 	}
 	const imagePath = resolver.resolveImagePath(slidePath, target);

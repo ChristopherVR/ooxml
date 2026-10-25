@@ -49,6 +49,7 @@ function fakeResolver(
 ): BulletPictureImageResolver {
 	return {
 		slideRelsMap: new Map([[SLIDE_PATH, new Map(Object.entries(rels))]]),
+		allowExternalImages: false,
 		resolveImagePath: (slidePath, target) => `${slidePath.replace(/[^/]*$/u, '')}${target}`,
 		getImageData: vi.fn(async (imagePath: string) => `data:image/png;base64,${imagePath}`),
 		...overrides,
@@ -113,9 +114,12 @@ describe('enrichBulletPictureImages', () => {
 		expect(segment.bulletInfo?.imageDataUrl).toBeUndefined();
 	});
 
-	it('passes through an already-absolute (http/https/data) relationship target verbatim', async () => {
+	it('passes an allowed http(s) relationship target through verbatim', async () => {
 		const getImageData = vi.fn(async () => 'unused');
-		const resolver = fakeResolver({ rId9: 'https://example.com/icon.png' }, { getImageData });
+		const resolver = fakeResolver(
+			{ rId9: 'https://example.com/icon.png' },
+			{ getImageData, allowExternalImages: true },
+		);
 		const segment = segmentWithBulletImage('Item', 'rId9');
 
 		await enrichBulletPictureImages([textElement('t1', [segment])], SLIDE_PATH, resolver);
@@ -139,5 +143,24 @@ describe('enrichBulletPictureImages', () => {
 			enrichBulletPictureImages([textElement('t1', [segment])], SLIDE_PATH, resolver),
 		).resolves.toBeUndefined();
 		expect(segment.bulletInfo?.imageDataUrl).toBeUndefined();
+	});
+
+	it('leaves a linked http(s) bullet unresolved unless allowExternalImages is set', async () => {
+		const linked = 'https://linked-content.test/bullet.png';
+		const blocked = segmentWithBulletImage('blocked', 'rId1');
+		await enrichBulletPictureImages(
+			[textElement('blocked', [blocked])],
+			SLIDE_PATH,
+			fakeResolver({ rId1: linked }),
+		);
+		expect(blocked.bulletInfo?.imageDataUrl).toBeUndefined();
+
+		const allowed = segmentWithBulletImage('allowed', 'rId1');
+		await enrichBulletPictureImages(
+			[textElement('allowed', [allowed])],
+			SLIDE_PATH,
+			fakeResolver({ rId1: linked }, { allowExternalImages: true }),
+		);
+		expect(allowed.bulletInfo?.imageDataUrl).toBe(linked);
 	});
 });
