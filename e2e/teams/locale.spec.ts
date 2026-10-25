@@ -45,9 +45,12 @@ test('a translated dialog and a recurrence label come from the dictionary', asyn
 	await expect(dialog).toBeVisible();
 	await expect(dialog.getByLabel('Wiederholen')).toBeVisible();
 	await expect(dialog.getByRole('option', { name: 'Wiederholt sich nicht' })).toBeAttached();
+	// A date in the last week offers both "am vierten ..." and "am letzten ...": either will do.
 	await expect(
-		dialog.getByRole('option', {
-			name: /^Jeden Monat am .* (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)$/u,
-		}),
+		dialog
+			.getByRole('option', {
+				name: /^Jeden Monat am .* (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)$/u,
+			})
+			.first(),
 	).toBeAttached();
 });
