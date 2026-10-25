@@ -166,3 +166,54 @@ describe('slide-show chrome shortcuts', () => {
 		}
 	});
 });
+
+/**
+ * Keys typed into a field belong to it. The guard matched only `INPUT`, `TEXTAREA` and `SELECT`
+ * by tag, so the rich speaker-notes editor (an editable region) sent Space, the arrows, Home, End
+ * and the Page keys on to slide navigation instead of its caret.
+ */
+describe('keys typed into a text field', () => {
+	const KEYS = [' ', 'ArrowDown', 'ArrowUp', 'Home', 'End', 'PageDown'];
+
+	/** Press `key` on `target`; true when something prevented its default. */
+	function pressOn(target: HTMLElement, key: string): boolean {
+		const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+		target.dispatchEvent(event);
+		return event.defaultPrevented;
+	}
+
+	it('leaves them to a textarea, an input and an editable region', () => {
+		const { root, handlers, detach } = harness({ isPresenting: () => false });
+		const editable = document.createElement('div');
+		editable.contentEditable = 'true';
+		const fields = [document.createElement('textarea'), document.createElement('input'), editable];
+		root.append(...fields);
+		try {
+			for (const field of fields) {
+				for (const key of KEYS) {
+					expect(pressOn(field, key), `${field.tagName} ${JSON.stringify(key)}`).toBeFalsy();
+				}
+			}
+			expect(handlers.next).not.toHaveBeenCalled();
+			expect(handlers.prev).not.toHaveBeenCalled();
+			expect(handlers.first).not.toHaveBeenCalled();
+			expect(handlers.last).not.toHaveBeenCalled();
+		} finally {
+			detach();
+			root.remove();
+		}
+	});
+
+	it('still pages the slides from anywhere else', () => {
+		const { root, handlers, detach } = harness({ isPresenting: () => false });
+		const pane = document.createElement('div');
+		root.append(pane);
+		try {
+			expect(pressOn(pane, ' ')).toBeTruthy();
+			expect(handlers.next).toHaveBeenCalledOnce();
+		} finally {
+			detach();
+			root.remove();
+		}
+	});
+});

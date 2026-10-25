@@ -3,6 +3,7 @@ import {
 	acceptsPresentationInput,
 	createPresentationKeyBuffer,
 	createWheelStepBuffer,
+	isEditorTextInputTarget,
 	mapPresentationKey,
 	mapPresentationWheel,
 	mapSlideShowStartKey,
@@ -51,7 +52,7 @@ export interface KeyboardHandlers {
  * End and Escape navigate: PowerPoint's bare-letter commands (N, P, B, W, E)
  * belong to the show, and binding them in the editor would hijack typing.
  *
- * Returns a detach function. Keys originating from form fields are ignored.
+ * Returns a detach function. Keys typed into a field (an input, a textarea, a select or an editable region) are left to it.
  */
 export function attachKeyboardNavigation(
 	root: HTMLElement,
@@ -80,8 +81,8 @@ export function attachKeyboardNavigation(
 			return;
 		}
 
-		const target = event.target as HTMLElement | null;
-		if (target && /^(?:INPUT|TEXTAREA|SELECT)$/u.test(target.tagName)) {
+		// A field owns what is typed into it, the rich speaker-notes editor included.
+		if (isEditorTextInputTarget(event.target)) {
 			return;
 		}
 
