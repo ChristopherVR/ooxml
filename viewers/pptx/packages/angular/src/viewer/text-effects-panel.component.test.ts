@@ -53,6 +53,14 @@ function inputEvent(type: string, value: string): Event {
 	return { target: input } as unknown as Event;
 }
 
+/** A colour input's `input` (a shade of a drag) or `change` (the settled pick). */
+function colorEvent(type: 'input' | 'change', value: string): Event {
+	const input = document.createElement('input');
+	input.type = 'color';
+	input.value = value;
+	return { type, target: input } as unknown as Event;
+}
+
 function checkboxEvent(checked: boolean): Event {
 	const box = document.createElement('pptx-ui-checkbox') as HTMLElement & { checked: boolean };
 	box.checked = checked;
@@ -111,7 +119,12 @@ describe('inspectorFieldsComponent (text effects)', () => {
 		const pushed: string[] = [];
 		const fields = createFields({ textGlowColor: '#ff0000' }, { push: (hex) => pushed.push(hex) });
 		const out = captured<Partial<TextStyle>>(fields.patch);
-		fields['onColor']('glow', 'color', inputEvent('color', '#00ff00'));
+		const previews = captured<{ patch: Partial<TextStyle>; target: string }>(fields.preview);
+		// A shade of a drag (`input`) previews only; the settled pick (`change`) commits once.
+		fields['onColor']('glow', 'color', colorEvent('input', '#00ee00'));
+		expect(previews.map(({ patch }) => patch)).toStrictEqual([{ textGlowColor: '#00ee00' }]);
+		expect([out, pushed]).toStrictEqual([[], []]);
+		fields['onColor']('glow', 'color', colorEvent('change', '#00ff00'));
 		expect(out).toStrictEqual([{ textGlowColor: '#00ff00' }]);
 		expect(pushed).toStrictEqual(['#00ff00']);
 	});
