@@ -4,6 +4,7 @@ import {
 	createPresentationKeyBuffer,
 	createWheelStepBuffer,
 	isEditorControlTarget,
+	isEditorTextInputTarget,
 	mapPresentationKey,
 	mapPresentationWheel,
 	mapSlideShowStartKey,
@@ -234,6 +235,11 @@ export function createViewportHandlers(deps: ViewportHandlersDeps): ViewportHand
 			// the arrows/paging keys navigate: the bare-letter commands (N, P, B, W,
 			// E) belong to the show and would hijack typing in the editor.
 			if (deps.viewer.isFullscreen && handleShowKey(event, deps)) {
+				return;
+			}
+			// A field owns what is typed into it: Space is a space there, and the arrows, Home, End
+			// and the Page keys move its caret (the editor keymap above leaves them alone already).
+			if (isEditorTextInputTarget(event.target)) {
 				return;
 			}
 			// A focused control owns Space (it toggles a checkbox in File > Options); the paging
