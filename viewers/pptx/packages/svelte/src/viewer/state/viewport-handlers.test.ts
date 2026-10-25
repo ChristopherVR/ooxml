@@ -224,3 +224,86 @@ describe('onFullscreenToggle: presentation entry slide', () => {
 		expect(goTo).not.toHaveBeenCalled();
 	});
 });
+
+/**
+ * Keys typed into a field belong to it. The root handler sent Space, the arrows, Home, End and
+ * the Page keys on to slide navigation (and `preventDefault()`ed them) from ANY descendant, so a
+ * comment box, an alt-text box or the notes field never received a space, and ArrowDown in one
+ * changed the slide. Vanilla ignores form-field keys and the other three bindings gate them in the
+ * shared keymap; Svelte's navigation fall-through had no such guard.
+ */
+describe('keys typed into a text field', () => {
+	function fieldHarness(editingActive: boolean) {
+		const handleNavigationKey = vi.fn(() => true);
+		const onKeyDown = vi.fn();
+		const handlers = createViewportHandlers({
+			getRootEl: () => undefined,
+			viewer: { isFullscreen: false, slideCount: 3, goTo: vi.fn(), handleNavigationKey },
+			controller: { onKeyDown, capturesKeyboard: () => false },
+			getEditingActive: () => editingActive,
+			presentation: { advance: vi.fn(), retreat: () => false, previousSlide: vi.fn() },
+		} as unknown as ViewportHandlersDeps);
+		const root = document.createElement('div');
+		root.addEventListener('keydown', (event) => handlers.onKeydown(event));
+		document.body.append(root);
+		return { root, handleNavigationKey, onKeyDown };
+	}
+
+	/** Press `key` on `target` inside the root; true when something prevented its default. */
+	function pressOn(target: HTMLElement, key: string): boolean {
+		const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+		target.dispatchEvent(event);
+		return event.defaultPrevented;
+	}
+
+	const KEYS = [' ', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageDown'];
+
+	for (const editingActive of [true, false]) {
+		it(`leaves them to a textarea, an input and an editable region (editing ${editingActive})`, () => {
+			const { root, handleNavigationKey } = fieldHarness(editingActive);
+			const editable = document.createElement('div');
+			editable.contentEditable = 'true';
+			const fields = [
+				document.createElement('textarea'),
+				document.createElement('input'),
+				editable,
+			];
+			root.append(...fields);
+			try {
+				for (const field of fields) {
+					for (const key of KEYS) {
+						expect(pressOn(field, key), `${field.tagName} ${JSON.stringify(key)}`).toBeFalsy();
+					}
+				}
+				expect(handleNavigationKey).not.toHaveBeenCalled();
+			} finally {
+				root.remove();
+			}
+		});
+	}
+
+	it('still pages the slides from anywhere else in the viewer', () => {
+		const { root, handleNavigationKey } = fieldHarness(true);
+		const pane = document.createElement('div');
+		root.append(pane);
+		try {
+			expect(pressOn(pane, 'ArrowDown')).toBeTruthy();
+			expect(pressOn(pane, ' ')).toBeTruthy();
+			expect(handleNavigationKey.mock.calls).toStrictEqual([['ArrowDown'], [' ']]);
+		} finally {
+			root.remove();
+		}
+	});
+
+	it("still offers the field's keys to the editor keymap, which leaves typing alone itself", () => {
+		const { root, onKeyDown } = fieldHarness(true);
+		const field = document.createElement('textarea');
+		root.append(field);
+		try {
+			pressOn(field, 'f');
+			expect(onKeyDown).toHaveBeenCalledOnce();
+		} finally {
+			root.remove();
+		}
+	});
+});
