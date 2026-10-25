@@ -171,6 +171,23 @@ describe('useComments', () => {
 		expect(next?.[0]).not.toHaveProperty('mentions');
 	});
 
+	it('addComment and replyToComment move mentions with the trimmed text', () => {
+		const comments = ref<PptxComment[]>([comment()]);
+		const { addComment, replyToComment } = useComments({
+			comments,
+			activeSlideIndex: ref(0),
+			authorName: ref('Carol'),
+		});
+		const alice = { id: '{M}', personId: '{A}', authorName: 'Alice', startIndex: 2, length: 6 };
+		expect(addComment('  @Alice hi', undefined, undefined, [alice])?.[1]?.mentions).toStrictEqual([
+			{ ...alice, startIndex: 0 },
+		]);
+		expect(
+			replyToComment('c1', ' ok @Alice', [{ ...alice, startIndex: 4 }])?.[0]?.replies?.[0]
+				?.mentions,
+		).toStrictEqual([{ ...alice, startIndex: 3 }]);
+	});
+
 	it('addComment omits mentions when none are passed', () => {
 		const comments = ref<PptxComment[]>([]);
 		const { addComment } = useComments({

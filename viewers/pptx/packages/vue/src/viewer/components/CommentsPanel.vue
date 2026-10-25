@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trimCommentMentions } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
@@ -61,11 +62,15 @@ function startReply(id: string): void {
 }
 
 function submitReply(id: string): void {
-	const text = (replyDrafts.value[id] ?? '').trim();
+	// The mentions index the draft as typed: they move with its trim.
+	const { text, mentions } = trimCommentMentions(
+		replyDrafts.value[id] ?? '',
+		replyMentions.value[id],
+	);
 	if (text.length === 0) {
 		return;
 	}
-	emit('reply', { parentId: id, text, mentions: replyMentions.value[id] });
+	emit('reply', { parentId: id, text, mentions });
 	const nextDrafts = { ...replyDrafts.value };
 	delete nextDrafts[id];
 	replyDrafts.value = nextDrafts;
@@ -78,11 +83,11 @@ function submitReply(id: string): void {
 const canAdd = computed<boolean>(() => draft.value.trim().length > 0);
 
 const submit = (): void => {
-	const text = draft.value.trim();
+	const { text, mentions } = trimCommentMentions(draft.value, draftMentions.value);
 	if (text.length === 0) {
 		return;
 	}
-	emit('add', { text, mentions: draftMentions.value });
+	emit('add', { text, mentions });
 	draft.value = '';
 	draftMentions.value = [];
 };
