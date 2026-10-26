@@ -43,6 +43,23 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('saves series label defaults without overwriting point overrides', () => {
+		const saved = save((chart) => {
+			chart.series[0]!.dataLabelOptions = {
+				showSeriesName: true,
+				showValue: false,
+				txPr: { fontSize: 16 },
+				labelShape: { fillColor: '#FFFF00' },
+				showLeaderLines: true,
+			};
+		});
+		expect(saved).toBeDefined();
+		const labels = parseChartSpace(saved!.xml).chartSpace.plotArea.groups[0]!.series[0]!
+			.dataLabels!;
+		expect(labels).toMatchObject({ showSeriesName: true, showValue: false, showLeaderLines: true });
+		expect(labels.spPr!.fill).toMatchObject({ kind: 'solid', color: { value: 'FFFF00' } });
+		expect(saved!.xml).toContain('sz="1600"');
+	});
 	it('saves chrome, protection and data table edits through the neutral model', () => {
 		const saved = save((chart) => {
 			chart.chartChrome = { dispBlanksAs: 'span', dispNaAsBlank: true };

@@ -435,6 +435,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							chartXmlStr,
 							JSON.parse(baseline) as PptxChartData,
 							chartData,
+							{ retryWorkbook: this.chartWorkbookDataBaselines.get(chartPartPath)?.pending },
 						)
 					: undefined;
 				if (neutralSave) {

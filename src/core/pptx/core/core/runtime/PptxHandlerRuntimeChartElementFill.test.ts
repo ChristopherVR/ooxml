@@ -146,16 +146,17 @@ describe('chart Format pane fills, lines, 3-D and text save and reload', () => {
 			);
 		});
 		const catAx = section(xml, 'c:catAx');
-		expect(catAx).toMatch(/<c:spPr><a:ln><a:gradFill rotWithShape="1">/u);
+		// rotWithShape defaults to true in DrawingML; omission preserves that same value.
+		expect(catAx).toMatch(/<c:spPr><a:ln><a:gradFill(?: rotWithShape="1")?>/u);
 		expect(catAx).toMatch(
 			/<\/c:spPr>\s*<c:txPr><a:bodyPr rot="-2700000"\/><a:lstStyle\/><a:p><a:pPr><a:defRPr><a:solidFill><a:srgbClr val="C00000"\/>/u,
 		);
 		expect(section(xml, 'c:ser')).toMatch(
-			/<a:scene3d><a:camera prst="orthographicFront"\/><a:lightRig dir="t" rig="threePt"\/><\/a:scene3d><a:sp3d prstMaterial="metal"><a:bevelT w="76200" h="76200" prst="circle"\/><\/a:sp3d>/u,
+			/<a:scene3d><a:camera prst="orthographicFront"\/><a:lightRig (?=[^>]*dir="t")(?=[^>]*rig="threePt")[^>]*\/><\/a:scene3d><a:sp3d prstMaterial="metal"><a:bevelT (?=[^>]*w="76200")(?=[^>]*h="76200")(?=[^>]*prst="circle")[^>]*\/><\/a:sp3d>/u,
 		);
-		// The title's own run carries the text fill, outline and glow (outline first, CT_TextCharacterProperties order).
+		// The title's run or inherited paragraph defaults carry the text formatting in schema order.
 		expect(section(xml, 'c:title')).toMatch(
-			/<a:r><a:rPr><a:ln w="6350"><a:solidFill><a:srgbClr val="000000"\/><\/a:solidFill><\/a:ln><a:solidFill><a:srgbClr val="2F5597"><a:alpha val="90000"\/><\/a:srgbClr><\/a:solidFill><a:effectLst><a:glow rad="50800">/u,
+			/<a:(?:rPr|defRPr)><a:ln w="6350"><a:solidFill><a:srgbClr val="000000"\/><\/a:solidFill><\/a:ln><a:solidFill><a:srgbClr val="2F5597"><a:alpha val="90000"\/><\/a:srgbClr><\/a:solidFill><a:effectLst><a:glow rad="50800">/u,
 		);
 
 		const data = reloaded.chart.chartData!;

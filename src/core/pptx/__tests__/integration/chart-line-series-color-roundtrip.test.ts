@@ -92,7 +92,7 @@ describe('line chart series colour round-trip (a:ln/a:solidFill)', () => {
 
 		// The new colour lives under a:ln/a:solidFill for this series.
 		expect(savedXml).toMatch(
-			/<c:lineChart>[\s\S]*?<a:ln>\s*<a:solidFill>\s*<a:srgbClr val="123456"[^>]*>[\s\S]*?<\/a:srgbClr>\s*<\/a:solidFill>\s*<\/a:ln>/u,
+			/<c:lineChart>[\s\S]*?<a:ln>\s*<a:solidFill>\s*<a:srgbClr val="123456"(?:\s*\/|[^>]*>[\s\S]*?<\/a:srgbClr)>\s*<\/a:solidFill>\s*<\/a:ln>/u,
 		);
 
 		// No duplicate/sibling a:solidFill was inserted directly under this

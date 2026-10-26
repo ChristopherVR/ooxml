@@ -179,17 +179,7 @@ const CASES: Case[] = [
 		neutral: (space) => neutral.setChartType(space, { kind: 'line' }),
 		pptx: (element) => pptx.setChartType(element, 'line'),
 		check: (chart) => expect(chart.chartType).toBe('line'),
-		// A bar series turned into a line series: the neutral op gives the new series line Excel's
-		// 2.25 pt width and round cap; PowerPoint writes the colour only and leaves the width to its
-		// renderer's default.
-		expected: (before) =>
-			before.chartType === 'line'
-				? []
-				: before.series.flatMap((_, i) => [
-						`.series.${i}.lineWidth: neutral 2.25, pptx undefined`,
-						`.elementFormats.series:${i}.line.width: neutral 2.25, pptx undefined`,
-						`.elementFormats.series:${i}.line.cap: neutral "rnd", pptx undefined`,
-					]),
+		// Both paths now use the shared type operation, including its authored line width/cap.
 	},
 ];
 

@@ -21,12 +21,22 @@ export function planNeutralChartLabels(
 	before: PptxChartData,
 	probe: PptxChartData,
 	edits: NeutralChartEdit[],
+	seriesIndex?: number,
 ): void {
-	const was = before.style ?? {};
-	const now = probe.style;
+	const was =
+		seriesIndex === undefined
+			? (before.style ?? {})
+			: { dataLabels: before.series[seriesIndex]?.dataLabelOptions };
+	const now =
+		seriesIndex === undefined
+			? probe.style
+			: { dataLabels: probe.series[seriesIndex]?.dataLabelOptions };
+	const target = seriesIndex === undefined ? {} : { series: seriesIndex };
 	if (!now) return;
 	if (now.hasDataLabels === false && was.hasDataLabels !== false) {
-		edits.push((space) => setChartDataLabels(space, { show: false, preserveHiddenContent: true }));
+		edits.push((space) =>
+			setChartDataLabels(space, { show: false, preserveHiddenContent: true }, target),
+		);
 		if (was.hasDataLabels === undefined) delete now.hasDataLabels;
 		else now.hasDataLabels = was.hasDataLabels;
 		return;
@@ -41,7 +51,7 @@ export function planNeutralChartLabels(
 	) {
 		const range = labels.dataLabelsRange;
 		const shown = labels.showDataLabelsRange !== false;
-		edits.push((space) => setChartDataLabelsRange(space, range ?? null, shown));
+		edits.push((space) => setChartDataLabelsRange(space, range ?? null, shown, target));
 		for (const key of ['dataLabelsRange', 'showDataLabelsRange'] as const) {
 			if (previous[key] === undefined) delete labels[key];
 			else Object.assign(labels, { [key]: previous[key] });
@@ -64,11 +74,12 @@ export function planNeutralChartLabels(
 		if (previous[key] === undefined) delete labels[key];
 		else Object.assign(labels, { [key]: previous[key] });
 	}
-	if (Object.keys(edit).length) edits.push((space) => setChartDataLabels(space, edit));
+	if (Object.keys(edit).length) edits.push((space) => setChartDataLabels(space, edit, target));
 	if (was.hasDataLabels === undefined) delete now.hasDataLabels;
 	else now.hasDataLabels = was.hasDataLabels;
 	if (was.dataLabels === undefined && !Object.keys(labels).length) delete now.dataLabels;
 	else now.dataLabels = labels;
+	if (seriesIndex !== undefined) probe.series[seriesIndex]!.dataLabelOptions = now.dataLabels;
 }
 
 /** Solid colour edits share the neutral family's line/fill and transparency policy. */

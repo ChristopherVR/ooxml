@@ -50,5 +50,6 @@ export * from './legend-entries';
 export * from './shape-properties';
 export * from './point-label';
 export * from './chrome';
+export * from './label-format';
 export * from './series-options';
 export * from './series-axis';

@@ -71,6 +71,7 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
+	options: { retryWorkbook?: boolean } = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
@@ -87,7 +88,7 @@ export function saveChartPartThroughNeutral(
 	}
 	return {
 		xml: writeChartSpaceOverSource(xml, space),
-		workbookWrites: plan.seriesData ? workbookWrites(space, after) : [],
+		workbookWrites: plan.seriesData || options.retryWorkbook ? workbookWrites(space, after) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }

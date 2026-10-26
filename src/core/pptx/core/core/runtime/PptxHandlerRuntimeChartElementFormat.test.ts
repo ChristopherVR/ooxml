@@ -90,7 +90,7 @@ describe('chart Format pane edits save and reload', () => {
 			/<c:tickLblPos val="nextTo"\/>\s*<c:spPr><a:ln w="25400"><a:solidFill><a:srgbClr val="7F7F7F"\/><\/a:solidFill><a:tailEnd type="triangle"\/><\/a:ln><\/c:spPr>\s*<c:crossAx/u,
 		);
 		expect(section(xml, 'c:valAx')).toMatch(
-			/<c:majorGridlines><c:spPr><a:ln cmpd="dbl" cap="rnd"><a:solidFill><a:srgbClr val="D9D9D9"\/><\/a:solidFill><a:round\/>/u,
+			/<c:majorGridlines><c:spPr><a:ln (?=[^>]*cmpd="dbl")(?=[^>]*cap="rnd")[^>]*><a:solidFill><a:srgbClr val="D9D9D9"\/><\/a:solidFill><a:round\/>/u,
 		);
 		expect(section(xml, 'c:title')).toMatch(/<c:spPr>.*<a:ln w="9525">/u);
 

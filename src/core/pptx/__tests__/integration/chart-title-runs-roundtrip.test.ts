@@ -161,7 +161,7 @@ describe('chart title rich text (titleRuns): load -> edit -> save -> re-parse', 
 
 		const saved = await handler.save(data.slides);
 		const xml = await readChartXml(saved);
-		expect(xml).toContain('<a:t>Annual Summary</a:t>');
+		expect(xml).toMatch(/<a:t(?: xml:space="preserve")?>Annual Summary<\/a:t>/u);
 		expect(xml).not.toContain('Sales ');
 		expect(xml).not.toContain('Overview');
 
