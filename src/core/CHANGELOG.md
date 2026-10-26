@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.28.0) - 2026-10-26
+
+### Features
+
+- **pptx:** Let hosts bound deck loads with limits ([#216](https://github.com/ChristopherVR/ooxml/issues/216)) ([58a5540](https://github.com/ChristopherVR/ooxml/commit/58a5540075982935d91cbc9c97a5c5d66359a180))
+- **pptx:** Decode embedded fonts on first use ([#209](https://github.com/ChristopherVR/ooxml/issues/209)) ([a1c313a](https://github.com/ChristopherVR/ooxml/commit/a1c313ab23421786f632f95927735a7c2e89bbb1))
+
+### Dependencies
+
+- **deps:** Bump production minor and patch dependencies ([#213](https://github.com/ChristopherVR/ooxml/issues/213)) ([3cfdd01](https://github.com/ChristopherVR/ooxml/commit/3cfdd016aa61cacb0540491c5ab13974e32f8e1e))
+
+### Chores
+
+- **deps-dev:** Bump development minor and patch dependencies ([#215](https://github.com/ChristopherVR/ooxml/issues/215)) ([a445b3e](https://github.com/ChristopherVR/ooxml/commit/a445b3e3cc2191341063c799768c5aad13981751))
+
 ## [1.27.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.27.2) - 2026-10-26
 
 ### Performance

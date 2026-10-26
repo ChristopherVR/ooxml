@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vanilla-viewer@1.1.2) - 2026-10-26
+
+### Dependencies
+
+- **deps:** Bump production minor and patch dependencies ([#213](https://github.com/ChristopherVR/ooxml/issues/213)) ([3cfdd01](https://github.com/ChristopherVR/ooxml/commit/3cfdd016aa61cacb0540491c5ab13974e32f8e1e))
+
 ## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vanilla-viewer@1.1.1) - 2026-10-23
 
 ### Other

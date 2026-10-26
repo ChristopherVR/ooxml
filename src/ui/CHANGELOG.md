@@ -7,6 +7,26 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.29.0) - 2026-10-26
+
+### Features
+
+- **ui:** Add a lightweight pptx AI host entry ([#210](https://github.com/ChristopherVR/ooxml/issues/210)) ([d47a350](https://github.com/ChristopherVR/ooxml/commit/d47a350083895e3c07294eb2b6e8819102ee8599))
+- **pptx:** Let hosts bound deck loads with limits ([#216](https://github.com/ChristopherVR/ooxml/issues/216)) ([58a5540](https://github.com/ChristopherVR/ooxml/commit/58a5540075982935d91cbc9c97a5c5d66359a180))
+- **pptx:** Decode embedded fonts on first use ([#209](https://github.com/ChristopherVR/ooxml/issues/209)) ([a1c313a](https://github.com/ChristopherVR/ooxml/commit/a1c313ab23421786f632f95927735a7c2e89bbb1))
+
+### Performance
+
+- **pptx:** Load the outline font parser on demand ([#208](https://github.com/ChristopherVR/ooxml/issues/208)) ([7b930b3](https://github.com/ChristopherVR/ooxml/commit/7b930b3fc57bcb2ff1047bed1c6a25bb6484127c))
+
+### Dependencies
+
+- **deps:** Bump production minor and patch dependencies ([#213](https://github.com/ChristopherVR/ooxml/issues/213)) ([3cfdd01](https://github.com/ChristopherVR/ooxml/commit/3cfdd016aa61cacb0540491c5ab13974e32f8e1e))
+
+### Chores
+
+- **deps-dev:** Bump development minor and patch dependencies ([#215](https://github.com/ChristopherVR/ooxml/issues/215)) ([a445b3e](https://github.com/ChristopherVR/ooxml/commit/a445b3e3cc2191341063c799768c5aad13981751))
+
 ## [1.28.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.28.1) - 2026-10-26
 
 ### Bug Fixes
