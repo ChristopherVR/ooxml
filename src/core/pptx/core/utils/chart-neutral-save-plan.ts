@@ -39,6 +39,8 @@ import { planNeutralChartChrome } from './chart-neutral-save-chrome';
 import { planNeutralChartAnalysis } from './chart-neutral-save-analysis';
 import { planNeutralLabelFormatting } from './chart-neutral-save-label-format';
 import { planNeutralChartDecorations } from './chart-neutral-save-decorations';
+import { planNeutralTitleRuns } from './chart-neutral-save-title-runs';
+import { planNeutralDataVectors } from './chart-neutral-save-data-vectors';
 import {
 	planNeutralChartLabels,
 	planNeutralChartSeriesColors,
@@ -149,12 +151,14 @@ export function planNeutralChartSave(
 	const original = before;
 	before = planNeutralSeriesStructure(before, after, edits);
 	planNeutralChartType(before, probe, edits);
+	planNeutralTitleRuns(before, probe, edits);
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
 	planNeutralGroupOptions(before, probe, edits);
 	planNeutralChartAnalysis(before, probe, edits);
-	const seriesData = planSeriesData(before, probe, edits) || before !== original;
+	const vectors = planNeutralDataVectors(before, probe, edits);
+	const seriesData = planSeriesData(before, probe, edits) || before !== original || vectors.changed;
 	planNeutralChartLabels(before, probe, edits);
 	planNeutralLabelFormatting(before, probe, edits);
 	planNeutralChartFormats(before, probe, edits);
@@ -167,6 +171,10 @@ export function planNeutralChartSave(
 	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
 	return same(probe, before)
-		? { edits, seriesData, ...(before !== original ? { rebuildWorkbook: true } : {}) }
+		? {
+				edits,
+				seriesData,
+				...(before !== original || vectors.rebuildWorkbook ? { rebuildWorkbook: true } : {}),
+			}
 		: undefined;
 }

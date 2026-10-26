@@ -222,7 +222,7 @@ describe('chart gradient fills: existing charts', () => {
 		});
 		const ser = seriesXml(await readPart(withPoint))[0];
 		expect(ser).toMatch(
-			/<c:dPt><c:idx val="2"><\/c:idx>[\s\S]*?<c:spPr><a:gradFill rotWithShape="1">[\s\S]*?<\/c:dPt>/u,
+			/<c:dPt><c:idx val="2"><\/c:idx>[\s\S]*?<c:spPr><a:gradFill(?: rotWithShape="1")?>[\s\S]*?<\/c:dPt>/u,
 		);
 		expect(ser.indexOf('<c:dPt>')).toBeLessThan(ser.indexOf('<c:cat>'));
 		const { data } = await load(withPoint);

@@ -1,6 +1,6 @@
-import { NS, first, parseXml } from '../xml';
+import { NS, buildXml, first, parseXml } from '../xml';
 import { cBool, type ChartParseContext } from './parse-util';
-import { CHART_ROOT_BINDINGS, innerXml } from './xml-fragment';
+import { CHART_ROOT_BINDINGS } from './xml-fragment';
 import type { XmlElement } from '../xml';
 import { raw, type ChartWriteContext } from './write-util';
 
@@ -20,7 +20,7 @@ export function parseChartProtection(
 	node: XmlElement | undefined,
 ): ChartProtection | undefined {
 	if (!node) return undefined;
-	const protection: ChartProtection = { sourceXml: innerXml(node) };
+	const protection: ChartProtection = { sourceXml: buildXml(node) };
 	for (const key of CHART_PROTECTION_FIELDS) {
 		const value = cBool(context, node, key);
 		if (value !== undefined) protection[key] = value;
@@ -34,9 +34,7 @@ export function chartProtectionXml(
 ): string {
 	if (!protection) return '';
 	const declarations = [...CHART_ROOT_BINDINGS].map(([p, uri]) => ` xmlns:${p}="${uri}"`).join('');
-	const root = parseXml(
-		`<c:protection${declarations}>${protection.sourceXml ?? ''}</c:protection>`,
-	).documentElement;
+	const root = parseXml(protection.sourceXml ?? `<c:protection${declarations}/>`).documentElement;
 	for (const key of CHART_PROTECTION_FIELDS) {
 		const old = first(root, key, NS.c);
 		const value = protection[key];
@@ -55,5 +53,5 @@ export function chartProtectionXml(
 			root.insertBefore(node, later ?? null);
 		}
 	}
-	return `<c:protection>${raw(context, innerXml(root))}</c:protection>`;
+	return raw(context, buildXml(root));
 }

@@ -95,7 +95,7 @@ describe('embedded chart source preservation', () => {
 		);
 		const found = (await readEmbeddedChartSpace(bytes))!;
 		expect(found.editable).toBe(true);
-		expect(found.issues.length).toBeGreaterThan(0);
+		expect(found.issues).toEqual([]); // Protection is now modelled with its source XML.
 		expect(await writeEmbeddedChartSpace(bytes, found.space)).toEqual(bytes);
 		const out = await writeEmbeddedChartSpace(bytes, setChartTitle(found.space, 'Safe'));
 		expect(await (await JSZip.loadAsync(out)).file(part)!.async('string')).toContain(

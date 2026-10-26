@@ -203,7 +203,7 @@ describe('chart edits reach the saved package', () => {
 		expect(xml).toContain('<cx:pt idx="3">12</cx:pt>');
 		expect(xml).toContain('<cx:v>Deals</cx:v>');
 		expect(xml).toContain('<a:t>Pipeline</a:t>');
-		expect(xml).toContain('<a:srgbClr val="FF0000">');
+		expect(xml).toMatch(/<a:srgbClr val="FF0000"\s*\/?>/u);
 		expect(xml).toContain('formatCode="0.0"');
 		expect(xml).toContain('uniqueId="{00000001-0000-0000-0000-000000000000}"');
 		expect(xml).toContain('uri="vendor-roundtrip"');

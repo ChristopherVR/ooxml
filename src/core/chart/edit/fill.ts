@@ -9,6 +9,8 @@ import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import { assignOrDelete, chartSeriesEntryAt, editChartSpace } from './draft';
 import { editChartGradientFill, type ChartGradientFillEdit } from './gradient';
 import { withAlphaOf, withDrawingColorTransparency } from './paint';
+import { shapePropertiesInnerXml } from '../write-shape';
+import { CHART_ROOT_BINDINGS } from '../xml-fragment';
 
 /** Chart elements with their own shape properties. */
 export const CHART_ELEMENT_PARTS = [
@@ -79,6 +81,18 @@ export function setChartElementLine(
 	return editChartSpace(space, (draft) =>
 		assignOrDelete(elementShape(draft, part)!, 'line', structuredClone(line)),
 	);
+}
+
+/** Return area paint to Automatic, retaining authored geometry and effects. */
+export function clearChartAreaPaint(space: ChartSpace, part: 'chartArea' | 'plotArea'): ChartSpace {
+	return editChartSpace(space, (draft) => {
+		const holder = part === 'chartArea' ? draft : draft.plotArea;
+		if (!holder.spPr) return;
+		delete holder.spPr.fill;
+		delete holder.spPr.line;
+		if (!shapePropertiesInnerXml({ bindings: new Map(CHART_ROOT_BINDINGS) }, holder.spPr).trim())
+			delete holder.spPr;
+	});
 }
 
 /** Whether a group's series are coloured by their line (line, stock, scatter, unfilled radar). */

@@ -12,7 +12,7 @@
  */
 
 import {
-	chartSeriesEntries,
+	chartSpaceWorkbookWrites,
 	chartIssuesLostOnWrite,
 	parseChartSpace,
 	writeChartSpaceOverSource,
@@ -28,39 +28,6 @@ export interface NeutralChartSave {
 	workbookModel?: ChartSpace;
 	/** The embedded-workbook writes of every series, as the object-tree save collects them. */
 	workbookWrites: PptxChartWorkbookWrite[];
-}
-
-/**
- * The workbook writes that keep "Edit Data in Excel" in step with the saved caches: each
- * referenced series name, text category range and value range gets the model's values (the same
- * writes, and the same value text, as the object-tree save loop pushes).
- */
-function workbookWrites(space: ChartSpace, chart: PptxChartData): PptxChartWorkbookWrite[] {
-	const writes: PptxChartWorkbookWrite[] = [];
-	const dateValues = chart.dateCategories?.values.map(String);
-	chartSeriesEntries(space).forEach(({ series }, i) => {
-		const data = chart.series[i];
-		if (!data) return;
-		const name = series.tx?.reference;
-		if (name?.kind === 'strRef' && name.formula)
-			writes.push({ formula: name.formula, isNumeric: false, values: [data.name] });
-		const categories = series.categories ?? series.xValues;
-		const categoryKind = dateValues ? 'numRef' : 'strRef';
-		if (categories?.kind === categoryKind && categories.formula)
-			writes.push({
-				formula: categories.formula,
-				isNumeric: Boolean(dateValues),
-				values: dateValues ?? chart.categories,
-			});
-		const values = series.values ?? series.yValues;
-		if (values?.kind === 'numRef' && values.formula)
-			writes.push({
-				formula: values.formula,
-				isNumeric: true,
-				values: data.values.map((value, index) => (data.blanks?.[index] ? '' : String(value))),
-			});
-	});
-	return writes;
 }
 
 /**
@@ -88,7 +55,7 @@ export function saveChartPartThroughNeutral(
 	}
 	return {
 		xml: writeChartSpaceOverSource(xml, space),
-		workbookWrites: plan.seriesData || options.retryWorkbook ? workbookWrites(space, after) : [],
+		workbookWrites: plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }

@@ -16,8 +16,10 @@ export function planNeutralDataVectors(
 	edits: NeutralChartEdit[],
 ): { changed: boolean; rebuildWorkbook: boolean } {
 	let changed = false;
-	const claim = () => {
+	let rebuildWorkbook = false;
+	const claim = (rebuild = true) => {
 		changed = true;
+		rebuildWorkbook ||= rebuild;
 	};
 	if (
 		!same(before.dateCategories, probe.dateCategories) &&
@@ -41,9 +43,13 @@ export function planNeutralDataVectors(
 		claim();
 	} else if (!same(before.categories, probe.categories) && !probe.dateCategories) {
 		const values = [...probe.categories];
+		const rebuild =
+			Boolean(before.categoryLevels) ||
+			values.length !== before.categories.length ||
+			['scatter', 'bubble'].includes(before.chartType);
 		edits.push((space) => setChartTypedCategories(space, values));
 		probe.categories = before.categories;
-		claim();
+		claim(rebuild);
 	}
 	for (const [index, series] of probe.series.entries()) {
 		const old = before.series[index];
@@ -60,5 +66,5 @@ export function planNeutralDataVectors(
 			claim();
 		}
 	}
-	return { changed, rebuildWorkbook: changed };
+	return { changed, rebuildWorkbook };
 }

@@ -1,5 +1,6 @@
 import {
 	applyChartAppearance,
+	clearChartAreaPaint,
 	type ChartAppearance,
 	type ChartFillAppearance,
 } from '../../../chart';
@@ -41,7 +42,13 @@ export function planNeutralFlatPaint(
 				was.line = fill(old[border]) as ChartAppearance['line'];
 				next.line = fill(now[border]) as ChartAppearance['line'];
 			}
-			edits.push((space) => applyChartAppearance(space, { kind: part }, was, next));
+			const automatic =
+				now[color] === undefined && now[gradient] === undefined && now[border] === undefined;
+			edits.push((space) =>
+				automatic
+					? clearChartAreaPaint(space, part)
+					: applyChartAppearance(space, { kind: part }, was, next),
+			);
 			for (const key of [color, gradient, border]) {
 				if (old[key] === undefined) delete now[key];
 				else Object.assign(now, { [key]: old[key] });

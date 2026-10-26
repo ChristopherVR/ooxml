@@ -196,7 +196,7 @@ describe('planNeutralChartSave', () => {
 			),
 		).toBeUndefined();
 		const runs = edited((c) => (c.titleRuns = [{ text: 'Sales', italic: true }]));
-		expect(planNeutralChartSave(before(), runs)).toBeUndefined();
+		expect(planNeutralChartSave(before(), runs)).toBeDefined();
 		const entries = edited((c) => (c.style!.legendEntries = [{ index: 0, deleted: true }]));
 		expect(planNeutralChartSave(before(), entries)).toBeDefined();
 	});
@@ -360,7 +360,7 @@ describe('saveChartPartThroughNeutral: series data', () => {
 		expect(save((c) => (c.title = 'Revenue'))!.workbookWrites).toEqual([]);
 	});
 
-	it('adds a series through core while leaving unclaimed multi-level category edits alone', () => {
+	it('adds a series and admits shared leaf-level category edits', () => {
 		const added = edited((c) => c.series.push({ name: 'New', values: [1, 2] }));
 		const saved = saveChartPartThroughNeutral(PART, before(), added)!;
 		expect(series(saved.xml).values?.cache?.points[0]!.value).toBe('4.4000000000000004');
@@ -377,7 +377,9 @@ describe('saveChartPartThroughNeutral: series data', () => {
 			},
 		});
 		const levels = { ...before(), categoryLevels: [['A', 'B']] };
-		expect(planNeutralChartSave(levels, { ...levels, categories: ['X', 'Y'] })).toBeUndefined();
+		expect(
+			planNeutralChartSave(levels, { ...levels, categories: ['X', 'Y'] })?.rebuildWorkbook,
+		).toBe(true);
 	});
 
 	it('removes a series by identity while keeping the surviving source and index', () => {
