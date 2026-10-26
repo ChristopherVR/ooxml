@@ -948,10 +948,17 @@ the shared chart edit operations, rewrites the data block at A1 of the chart's
 sheet when the data changed (series references follow it; formatting-only edits
 leave the cells alone), and replaces the object's workbook and EMF preview as one
 undoable edit. Unlike double-click Edit Chart, formatting already in the part is
-kept. Effects, 3-D, text formatting, pattern and picture fills are not editable
-there, and a chart whose data lived elsewhere in its workbook has that data
-replaced by the block. Evidence: `viewer-chart-editor.ts` and its test,
+kept. Updated 2026-10-26: supported effects, shape 3D, text, pattern fills, markers,
+trendlines/error bars and axis titles now use shared controls. Picture media allocation and
+unsupported combo/source cases remain limited. A chart whose data lived elsewhere in its
+workbook still has that data replaced by the standard block for this workflow. Evidence: `viewer-chart-editor.ts` and its test,
 `core/xlsx/embedded-chart-space.ts` and its test, `e2e/visio/chart-object.spec.ts`.
+
+Native validation on 2026-10-26 reopened and resaved an eligible embedded chart workbook in
+Visio 16, retaining an edited title and carried colour mapping. The advanced Format Chart browser
+workflow also verifies persistence of trendlines and error bars. These checks do not establish OLE
+activation or native preview pixel fidelity. Parts with unpreservable content are read-only, with
+a localized reason. Shared diagram primitives do not add native Visio SmartArt support.
 
 ## Text dialog, Text Block, Symbol, Field and proofing, 2026-10-09
 

@@ -165,9 +165,12 @@ would keep two XML models alive.
    The text model (`drawingml/text-model.ts`, with its reader and writer, 2026-10-23) is pinned equal to
    the pptx parsers by `pptx/__tests__/integration/smartart-text-neutral-parity.test.ts`.
 
-   **Remains:** the `Line`/`Effect` models (`a:ln` beyond width, fill, dash and cap, `a:effectLst`,
-   effect DAG), the theme format scheme (`a:fmtScheme`) and `phClr` substitution; pptx
-   (`PptxHandlerRuntimeTheme*`, `types/theme.ts`, the colour, gradient and effect codecs) stays on its
+   Shared outlines now cover compound/alignment, joins, custom dashes and arrow ends; typed effect
+   lists, source-preserving pattern/picture fill codecs, theme format schemes and `phClr` style
+   resolution are implemented (2026-10-26). Chart and diagram consumers use them, with real
+   Word/Excel/PowerPoint producer fixtures and strict parser/writer/resolver tests.
+   **Remains:** effect DAG interpretation, broader effect rendering and the remaining pptx codecs
+   (`PptxHandlerRuntimeTheme*`, `types/theme.ts`, colour, gradient and effect adapters) stay on their
    object tree until step 6 or a parity-tested shim; the pptx text parsers still read through their own
    object tree (the neutral model is pinned, not yet used by pptx); the xlsx theme writer still patches
    the part itself (a neutral writer exists as `drawingml/write-theme.ts`; whether xlsx should adopt it is
@@ -410,8 +413,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   bubble sizes' references (the DOM path moved the first group's), and a point colour its marker already shows is not
   written again as a fill. `src/core/scripts/xlsx-excel-acceptance.ps1` opens formatted and retyped copies of every chart fixture
   in Excel without repair (`xlsx-acceptance-charts.ts`).
-  **Remains:** the pane has no effects, 3-D, text, pattern or picture fill, secondary axis, trendline, error bar, marker
-  or axis title controls (no shared intents); a kept part with content the model lacks below the top level (inside the
+  Advanced effects, shape 3D, text, pattern, secondary-axis, analysis, marker and axis-title controls
+  now use shared intents within U2's admission limits. Picture relationship allocation remains
+  host-owned. A kept part with content the model lacks below the top level (inside the
   plot area, a series or an axis) or a value the parser could not read is not editable: the reader reports it as a
   workbook warning, `updateChart` and `editChart` refuse to change it, the chart commands are disabled, and the part is
   saved from its source bytes with only moved references patched in (`chart/keep-source.ts`,
@@ -420,99 +424,46 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   so none of the 182 distinct classic chart parts of the xlsx fixtures, the Excel evidence files and the pptx and docx
   decks is blocked (three were before: two surface charts and a picture-filled 3-D bar). An edited surface chart keeps
   its band formats and opens in Excel without repair (acceptance script). A combination chart becomes one group on a
-  type change (the operations' rule). Extended (`cx:`) charts stay read-only.
-- **C3, pptx saves through `writeChartSpace`, one family at a time (started).** Harness first:
-  `pptx/__tests__/integration/chart-save-parity.test.ts` edits every classic chart part of every committed deck (75
-  parts in 23 decks) thirteen ways (no edit, title text, title hidden, legend position, legend hidden, value axis scaling,
-  visibility and number format, series values, categories, series name, data labels, series colour), saves each through
-  `PptxHandler.save` and through the neutral reference (`parseChartSpace`, the `chart/edit` operation,
-  `writeChartSpace`), and compares canonical XML (namespace-resolved names, sorted attributes, empty-element form ignored)
-  and the reloaded `PptxChartData` (embedded workbook contents excluded); the recorded totals pin the result. On the
-  object-tree path far fewer parts matched (14 of 75 for the title text edit, 31 of 75 for the legend position, 12 of 51
-  for the axis number format), and most differences were not the edit but what the PowerPoint writers do to the rest of an
-  edited part: they renumber series `c:idx` from 0 (2 parts), drop an all-default group `c:dLbls` with `showVal` on (16
-  pie parts, the labels disappear), pin resolved theme fonts (`+mn-lt` to `Aptos`, 21 parts) and resolved title run, line
-  and colour values (`a:schemeClr` to `a:srgbClr`; a 3-D line series' `a:ln/a:noFill` became a solid line), rewrite every
-  cache from JavaScript numbers (`4.4000000000000004` to `4.4`), normalise manual-layout numbers, write a blank point as `0`
-  and drop a category point.
-  Edits planned by `pptx/core/utils/chart-neutral-save-plan.ts` go through the shared core instead
-  (`chart-neutral-save.ts`, wired in `processPendingChartUpdates`): the part as stored is parsed, the planned operations
-  applied and the result written, so everything else stays as written. Families claimed so far: title text and visibility
-  (single-run titles), legend visibility, position and overlay, axis bounds, units, visibility, unlinked number format,
-  direction and tick label position (by axis id), series names (keeping the referenced cell,
-  `renameChartSeries(..., { keepReference: true })`), values (blanks as missing points) and text categories, with the
-  embedded-workbook writes built from the edited model's formulas. With them the title, legend, axis and series edits match
-  the neutral reference on every part but the three whose unmodelled elements keep them on the object-tree path (series
-  `c:pictureOptions` in a 3-D bar part, surface `c:bandFmts` in two parts; recorded when the harness was written; the model has since kept band formats and picture options verbatim, see C2, so
-  these may now match, but they were not re-measured) and one multi-run title. Any edit that changes a field no family claims, and any part the neutral parser reports an
-  issue in, is saved by the object-tree writers exactly as before, so no pptx serializer is deleted yet. ChartEx parts
-  (C5), colour and style parts, user shapes and the embedded workbook stay on their own paths.
-  **Remains (C3):** families not claimed, with what each needs: data labels (PowerPoint hides labels with a group
-  `c:delete` and keeps series labels, while the shared op switches every flag off and clears series labels; the rebuild
-  of group flags differs too, so the semantics must be settled first); series and point fills and lines (PowerPoint
-  writes resolved hex colours, per point on vary-colour charts, and on the outline of line families; needs the
-  theme-resolved colour model and a decision on point overrides); multi-run title text and title run styles (the run
-  realignment of `chart-title-run-alignment.ts` and bold, italic, size and colour per run need neutral rich-run
-  operations); legend entries and their text styles; axis gridline toggles and styles; axis titles and fonts; display
-  units and date units; linked number formats; added and removed series (PowerPoint clones the last series as a
-  template); the chart type switch and combination charts; trendlines; error bars; markers; data points; point labels;
-  picture fills; layouts; view3D; chrome flags; data tables; up/down bars; drop and high-low lines; pivot and print
-  settings; protection; `clrMapOvr`; and `c15` filtered series. When every family is claimed, the object-tree save loop
-  and the `utils/chart-*-serializer.ts` writers go (the title and legend serializers stay for ChartEx titles until
-  ChartEx is read through the neutral model). The harness takes about three minutes; it stays in the integration suite
-  while families move.
-- **C4, `PptxChartData` becomes an adapter over `ChartSpace` (not started).** pptx still edits `PptxChartData` and
-  `types/chart.ts` is not aliased to the neutral model; the pptx chart writers still edit the object tree. The adapter
-  (`chart-from-neutral*.ts`) is already the read side for classic charts (step 5).
-  The next work is the write side of C3 and the chart types that have no neutral alias yet. Its remaining items are the
-  C3 families above and the style fields below, which wait for the `drawingml` colour, line and text models with theme
-  resolution (step 3).
-- **C5, ChartEx model, writer, edits, and pptx saves (done for the families listed; reading remains).**
-  `src/core/chart/ex/` holds a neutral model of Office 2016 extended chart parts (`cx:chartSpace`: waterfall, histogram,
-  pareto, box and whisker, treemap, sunburst, funnel, region map) with a DOM parser (`parseChartExSpace`) and writer
-  (`writeChartExSpace`), strict: chart data (data sets with numeric and text dimensions, formulas, cached levels with every
-  point index), chart title, legend, plot surface, series with their layout id and attributes, name, `spPr`/`txPr` through
-  the `drawingml` models, data points, data labels (group and per point, hidden labels, separators), family options
-  (`cx:layoutPr`: subtotals, connector and box-and-whisker visibility, binning, aggregation, statistics, parent and region
-  label layouts, geography with its cache kept raw), axes (scaling, title, units, gridlines, tick marks, tick labels,
-  number format). Colour-by-value scales, format overrides, print settings, `clrMapOvr` and extension lists stay raw XML;
-  anything else is reported (`CHART_ELEMENT_NOT_MODELLED`) and not written. Every committed chartex part (7 in the
-  PowerPoint gallery, 4 Word, 4 Excel) and a synthetic part using every modelled element round-trip byte for byte
-  (`chart/ex/fixtures.test.ts`, `parse-write.test.ts`; the writer reproduces the declaration order and the `<x />` form of
-  the Word and Excel producers). `chartExSummary` (the painter's summary, and through it the xlsx chartex reader and
-  Word's chartex frames) reads the neutral model; outputs unchanged. `chart/edit/chartex*.ts` edit the model the way
-  PowerPoint saves ChartEx (`runtime/chart-cx-update*.ts`): title, legend, data labels on every series, series names
-  (keeping the cell reference), fills, values and categories (fresh cached levels, formulas and format codes kept),
-  waterfall totals and connectors, histogram binning, treemap parent labels, box-and-whisker options.
-  pptx saves ChartEx edits through `writeChartExSpace`: harness first, `pptx/__tests__/integration/chart-ex-save-parity.test.ts`
-  saves nine edits (no edit, title text, title hidden, legend position, legend hidden, series name, series values,
-  categories, data labels) on the 15 committed chartex parts through `PptxHandler.save` and through the neutral reference,
-  and compares canonical XML and the reloaded `PptxChartData`. On the object-tree update (`chart-cx-update.ts`) no part's
-  XML matched for the title, legend-hidden, series-name and data-label edits: every save wrote `formatCode="General"` on
-  every numeric level, turned a cell-linked `cx:txData` title into rich text and gave a chart without categories an empty
-  category dimension. `pptx/core/utils/chart-ex-neutral-save.ts` (wired in `saveChartAcrossFamilies`) now plans those
-  families (title text and removal, legend visibility and position, data labels on and off, series names, values and
-  non-hierarchical categories) onto the chartex operations and writes the part with `writeChartExSpace`; every edit
-  matches on every part but the region map's categories, which stay on the object-tree update. Any other change (series
-  colours, added or removed series, family options, hierarchy and region-map categories, a layout switch) and any part
-  with an unmodelled element is saved by the object-tree update as before.
-  ChartEx parity: `pptx/__tests__/integration/chart-ex-neutral-parity.test.ts` reads every committed chartex part and the
-  synthetic part through `PptxHandler` (Word and Excel parts swapped into the gallery deck) and through `parseChartExSpace`,
-  and compares the shared fields (type, title, legend, categories and levels, series names, values, srgb colours, data
-  labels, family options, region-map geography, axes). It found six pptx bugs, all fixed: a bare `<cx:tickLabels />` (how
-  Word and Excel write it) read as absent, hiding the tick labels of every Word and Excel chartex axis; a bare
-  `<cx:catScaling/>` read the axis as a value axis; a bare `<cx:aggregation/>` and a bare `<cx:legend/>` were missed (the
-  `fast-xml-parser` empty-string blind spot, now `hasLocalName`); `cx:units/@unit` was parsed as a number although
-  `ST_AxisUnit` is a name (`thousands`...), so ChartEx display units were never read (numbers are still accepted); and a
-  point label's own `cx:visibility` was ignored in favour of the group's.
-  **Remains (C5):** pptx still parses ChartEx with `utils/chart-cx-parser.ts` on the object tree (the parity harness pins
-  it against the neutral model; moving it onto `ChartExSpace` needs the theme-resolved colours and fonts of step 3 for
-  series, labels and axes); the object-tree update and `chart-cx-generator.ts` still save colours, added and removed
-  series, family options, hierarchical and region-map categories, and generate new and type-switched ChartEx parts; the
-  chartex operations have no add or remove series, layout switch, axis or per-point label edits; the neutral model keeps
-  `cx:valueColors` and `cx:valueColorPositions` raw (pptx reads the positions as `pos` children, which no committed part
-  has, so whether that matches Office is unverified); xlsx and Word read ChartEx for painting only (no chartex edits are
-  saved there yet); docx and xlsx have no ChartEx data-sheet editing.
+  whole-chart type change (the operations' rule). Extended (`cx:`) chart editing is now admitted
+  through the separate neutral ChartEx operations and source policy described in C5.
+- **C3, pptx saves through the shared writer, one family at a time (in progress).**
+  `chart-neutral-save-plan.ts` plans sparse edits over the stored `ChartSpace`, and
+  `writeChartSpaceOverSource` preserves unchanged children and source bytes. Implemented families
+  include title text with rich-run preservation, legend and axis fonts/layout, data-label flags,
+  value-from-cells ranges and per-point labels, series/point fill and line formatting, gradients,
+  appearance/effects/text/3D properties, number/date/display units, series data and structure,
+  trendlines, error bars and markers. Formatting-only edits leave embedded workbook cells alone;
+  structural data edits allocate fresh workbook ranges. Existing coherent axis-pair reassignment
+  and vertical 2D category-axis combination edits preserve document-order selection indices.
+  Chrome, protection, stock helpers and wider source adapters are being integrated and classified.
+  Unclaimed or rejected edits retain an explicit compatibility path. Unsafe group splits,
+  unsupported picture relationship changes and wider 3D/XY combinations are not silently admitted.
+  The saved-part corpus compares canonical XML and reloaded models; it is implementation parity,
+  not a native rendering oracle. Final exhaustive family/corpus review and native reopen checks
+  remain open. See [the delivery ledger](office-shared-parity-delivery.md) for checkpoint evidence;
+  no claim is made that every object-tree serializer can already be deleted.
+- **C4, `PptxChartData` as a compatibility adapter (in progress).** Classic chart facts already
+  come from `ChartSpace` through `chart-from-neutral*.ts`. Remaining work removes redundant
+  object-tree projections and refreshes compatibility views after neutral saves while retaining
+  authored theme tokens and unmodeled XML. The public PowerPoint model is not yet a neutral alias,
+  and the PowerPoint DOM chart painter remains separate from `chart/render`.
+- **C5, ChartEx model, writer, edits and consumers (implemented families, migration in progress).**
+  `chart/ex` reads/writes the neutral `ChartExSpace` model and carries unsupported source children
+  explicitly. Shared operations cover titles/legend/labels, values/categories/names, common fills
+  and outlines, series structure, layout/family options and safe local-workbook growth. Word and
+  Excel mount the shared ChartEx data sheet and family/axis/point-label controls, with history,
+  safe-source admission and save/reopen tests across all six bindings. External data and ambiguous
+  hierarchy mappings are refused. ChartEx common formatting uses its own capability source;
+  unsupported classic advanced controls are hidden or refused.
+  PowerPoint now projects neutral ChartEx facts through a host colour/font bridge, and shared
+  creation/save increments cover six authored families and admitted family switches. Neutral
+  chart-part grafts reopen with the expected native PowerPoint types in valid gallery decks;
+  this does not certify fresh SDK presentation templates. A new six-slide SDK deck failed native
+  opening with both the old and new generators, a known template limitation.
+  **Remains:** finish the broader PowerPoint family/admission review, typed axis/style/point-label
+  operations and raw geography/Pareto creation, then remove superseded compatibility paths only
+  after regression and native checks. The complete Office ChartEx authoring surface is not claimed.
+
 - **C6, Word and Visio chart editing (done for Word and for inserted charts in Visio).** `chart/workbook/` holds the
   embedded-workbook writer moved from pptx (`chart-xlsx-writer`, its cell and validation helpers and the save policy of
   `chart-external-workbook-save`), ported to the shared DOM; pptx forwards to it. Beside it: the standard data layout
@@ -523,9 +474,11 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   its charts can be resized with the shared drawing handle. Desktop Word checks the results in the acceptance script. Visio
   edits the data and format of an inserted chart object (`src/ui/src/visio/viewer-chart-editor.ts`) through the embedded
   chart reader and writer of `ooxml-core/xlsx` (`embedded-chart-space.ts`), which apply the `chart/edit` operations.
-  **Remains:** Word does not edit chartex parts or write chart style and colour parts; a workbook range outside the
-  standard layout takes value edits only; Visio edits inserted charts only (its embedded charts are read for painting),
-  and it does not mount the shared Format pane.
+  **Current limits:** Word/Excel ChartEx editing is admitted as described in C5. Native chart style
+  and colour-part authoring remains incomplete; curated style presets do not replace it. Visio's
+  chart workflow edits eligible embedded Excel chart objects through the shared data sheet and
+  Format pane, regenerating the object's preview. Unsupported source parts are read-only. Arbitrary
+  OLE activation, external workbooks and native preview pixel fidelity are not established.
 
 ### 3.6 Chart UI steps U1 to U5
 
@@ -535,14 +488,19 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   draws PowerPoint's Format pane from a neutral model over a `ChartFormatSource`. `chartSpaceFormatSource` reads a
   `ChartSpace`, and each field is emitted as a typed `ChartEditIntent` (`chart/edit/intent.ts`, with the new target paint
   and group options operations).
-- **U2, products mount the pane (done for PowerPoint, Excel, Word and Visio).** PowerPoint subclasses it
-  (`pptx-ui-chart-format-pane`) with a `PptxChartData` source and one adapter (`chart-format-pane-edit.ts`) onto its own
-  operations; effects, 3-D, Text Options, pattern and picture fills and the secondary axis remain PowerPoint extensions.
-  Excel replaced its Format Chart Area and Format Data Series panes with it (`xlsx/chart-format-source.ts`, intents applied
-  through `editChart`), keeping its richer fill controls in a slot. Word mounts it since Wave 6 (`src/ui/src/docx/chart-format-pane.ts`), and Visio for an
-  inserted chart object (Format Chart, `src/ui/src/visio/viewer-chart-editor.ts`).
-  **Remains:** the pane has no effects, 3-D, text, pattern or picture fill, secondary axis, trendline, error bar, marker or axis
-  title controls (no shared intents); Visio does not mount it.
+- **U2, products mount the pane (implemented with capabilities and limits).** PowerPoint,
+  Excel, Word and embedded Visio charts use `office-ui-chart-format-pane`. Core owns the neutral
+  operations and resolved appearance conversion; products supply source/relationship/history
+  adapters. Shared controls cover effects, shape 3D, text, pattern fills, outline joins/ends,
+  markers, trendlines/error bars, axis titles and admitted secondary-axis moves. Excel keeps its
+  richer gradient editor in a slot and uses the shared pattern editor. Picture media allocation
+  remains host-owned. Secondary authoring retains the first series as the primary render anchor;
+  horizontal combinations, stacked multi-series and unknown-extension splits are refused. The
+  pane edits one trendline and preserves custom error ranges without a range editor. ChartEx
+  exposes only its supported controls. Browser cases verify Word/Excel controls, history and
+  save/reopen across six bindings and the embedded Visio workflow; native Word/Excel checks cover
+  admitted ChartEx saves. Exact text, effects and 3D rendering still need broader native evidence.
+
 - **U3, shared chart data sheet (`office-ui-chart-data-sheet`, `src/ui/src/chart/data-sheet.ts`).** One element for the
   PowerPoint bindings, Word and Visio. Excel edits its cells directly. The tokens for its lengths are the `--office-*` tokens.
 - **U4, one insert-chart picker (`office-ui-chart-picker`, `src/ui/src/dialog/chart-picker.ts`).** Used by PowerPoint's insert
@@ -676,9 +634,11 @@ workbooks passed.
   `tint`, `shade`, `satMod`) and reports the rest as unresolved rather than guessing.
 - **Layout engine size.** About 60 engine files and about 150 interpreter files share the types barrel; moving them piecemeal created
   circular imports. Types moved first, then the engine, then the interpreters, one PR each.
-- **Word and Excel have no regeneration path.** The cached `dsp:drawing` is optional (Word may omit it, and files from other producers
-  do). Until the layout engine is neutral, a SmartArt without a cached drawing can only be preserved and shown as a placeholder, which the
-  model reports honestly; an edited one drops its drawing (section 3.7).
+- **SmartArt regeneration has explicit limits.** Word and Excel use the shared neutral layout
+  interpreter for uncached and edited diagrams, with an approximate fallback for unsupported or
+  partial layouts. Admitted 2D results gain generated source caches; complex text, folding and
+  spatial 3D decline cache generation. Native Office can regenerate its own cache, but that does
+  not establish that the viewer's geometry, typography or effects match Office (section 3.7).
 - **Strictness gap.** `pptx` compiles with relaxed flags; code moved into a neutral area must compile strict (`exactOptionalPropertyTypes`,
   `noUncheckedIndexedAccess`). Budget for bounds-checked access as in the `geometry` move.
 - **Bundles.** The pptx bundle inlines shared areas; check bundle size and that `diagram` and `chart` stay tree-shakeable.

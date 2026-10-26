@@ -9,6 +9,10 @@ VSDX semantics in `src/core/visio`, browser rendering and controls in
 `src/ui/src/visio`, and six bindings, demos and browser tests in the viewer areas.
 The capability ledger remains `viewers/visio/docs/parity.md`.
 
+The chart capability summary was reconciled 2026-10-26 with the
+[shared delivery ledger](office-shared-parity-delivery.md). These are embedded Excel chart
+objects; shared diagram primitives do not constitute native Visio SmartArt support.
+
 ## Findings
 
 The viewer is a substantial beta, with local VSDX loading, master/style inheritance,
@@ -18,9 +22,9 @@ These are implemented subsets. The Home tab's clipboard, font, paragraph, Shape 
 Change Shape, Arrange and connector commands are enabled (`src/ui/src/visio/ribbon-home.ts`,
 ledger in `viewers/visio/docs/parity.md`). Insert > Chart (`viewer-insert-chart.ts`,
 `core/visio/edit-chart-object.ts`), with Edit Data and Format Chart on a chart object's shortcut
-menu (`viewer-chart-editor.ts`: the shared chart data sheet and Format pane over the embedded
-workbook's chart part, re-embedded with a fresh metafile preview; effects, 3-D and text formatting
-are not editable there), and the data-link and data-source dialogs
+menu (`viewer-chart-editor.ts`: the shared chart data sheet and Format pane over an eligible embedded
+workbook chart, re-embedded with a fresh metafile preview; shared effects, shape 3D, text,
+pattern fills, analysis and marker controls are admitted by chart capability), and the data-link and data-source dialogs
 (`viewer-data-links.ts`, `viewer-data-sources.ts`) are implemented; the commands that stay
 disabled (for example the 3-D effects in Shape Styles) carry their reason in the tooltip, and the
 ledger lists which ones. Six bindings share one controller and renderer.

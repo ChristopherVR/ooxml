@@ -5,6 +5,10 @@ description: Was die Core-Engine und die Viewer-Bindings nicht unterstützen - v
 
 # Einschränkungen
 
+::: info 2026-10-26
+Aktualisierung vom 26.10.2026: Die gemeinsame Diagramm-Engine unterstützt weitere Formatierungs-, Analyse- und ChartEx-Bearbeitungen. Die Diagrammabschnitte dieser Übersetzung beschreiben einen früheren Stand. Aktuelle Grenzen stehen auf der [englischen Seite](../../guide/limitations.md) und im [Belegregister](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md).
+:::
+
 ::: warning Vor der Einführung lesen
 `pptx-viewer` deckt einen großen Teil der OpenXML-Spezifikation ab, manches wird aber angenähert, ist schreibgeschützt oder durch die Browser-Plattform begrenzt. Diese Seite dokumentiert bekannte Einschränkungen; sie ist keine erschöpfende Kompatibilitätsgarantie für jede Office-Funktion oder jede Erweiterung von Drittanbietern. Prüfen Sie `data.warnings` nach dem Laden einer Präsentation und lesen Sie [OpenXML-Konformität](/architecture/openxml-conformance) für das formale Abdeckungsmanifest.
 :::

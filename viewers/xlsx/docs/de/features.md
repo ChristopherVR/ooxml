@@ -1,5 +1,9 @@
 # Funktionen und Einschränkungen
 
+::: info 2026-10-26
+Aktualisierung vom 26.10.2026: Die gemeinsame Diagramm-Formatleiste, ChartEx-Bearbeitung sowie SmartArt-Stile, Farben und interpretierte Vorschauen sind inzwischen implementiert. Die folgenden übersetzten Abschnitte enthalten noch ältere Einschränkungen. Den aktuellen Umfang und die verbleibenden Grenzen beschreibt die [englische Funktionsseite](../features.md); die [Belegliste](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md) trennt Implementierung und native Prüfung.
+:::
+
 Dies ist eine frühe Implementierung. Sie ist **kein Microsoft-Excel-Ersatz mit voller Funktionsgleichheit**, und das Speichern ist für Funktionen, die das Modell nicht abdeckt, nicht verlustfrei. Diese Seite listet auf, was der Editor verarbeiten kann und was nicht; enthält eine Arbeitsmappe etwas Nicht-Unterstütztes, meldet der Editor es (`workbook-warning`), statt es zu verbergen.
 
 Der [aktuelle Stand der Funktionsgleichheit samt Belegen](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)

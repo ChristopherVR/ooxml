@@ -5,6 +5,11 @@ This page records an audit of the Home, Insert, Draw and Design tabs against Mic
 pixel parity: icons, tooltips and several galleries still differ, and the gap table says which.
 It is a point-in-time audit (October 2026): the "Not fixed" rows are findings from then, not a live status.
 
+Reconciled 2026-10-26: current chart/SmartArt controls and implementation evidence are tracked in
+the [shared delivery ledger](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md).
+Missing dedicated ribbon placement must be distinguished from commands already available through
+the shared Format pane, inspector or SmartArt text pane.
+
 Evidence lives in `/assets/ribbon-parity/<tab>/`:
 
 - `powerpoint.png`: PowerPoint, captured from a throwaway presentation (nothing saved).

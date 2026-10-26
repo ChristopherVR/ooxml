@@ -5,6 +5,10 @@ description: 了解核心引擎和各框架组件尚不支持或需要近似处�
 
 # 功能限制 {#limitations}
 
+::: info 2026-10-26
+2026-10-26 更新：共享图表引擎现已支持更多格式、分析和 ChartEx 编辑。此译文中的图表说明仍描述较早状态。当前限制请参阅[英文页面](../../guide/limitations.md)和[交付证据](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md)。
+:::
+
 ::: warning 使用前请阅读
 `pptx-viewer` 覆盖了 OpenXML 规范的较大范围，但部分功能采用近似实现、仅支持读取，或受浏览器平台限制。本页记录已知限制，不代表对所有 Office 功能和第三方扩展的完整兼容性保证。加载演示文稿后请检查 `data.warnings`；正式的覆盖清单见 [OpenXML 支持情况](/zh/architecture/openxml-conformance)。
 :::

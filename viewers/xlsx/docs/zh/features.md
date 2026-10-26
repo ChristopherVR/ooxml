@@ -1,5 +1,9 @@
 # 功能与限制
 
+::: info 2026-10-26
+2026-10-26 更新：共享图表高级格式控件、ChartEx 编辑以及 SmartArt 样式、颜色和解释式预览已经实现。下方译文仍保留部分较早的限制说明。当前范围与剩余限制请参阅[英文功能页](../features.md)；[交付证据](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md)区分实现情况与原生 Office 验证。
+:::
+
 这是一个早期实现。它**不等同于 Microsoft Excel**，对于模型未覆盖的功能，保存也不是无损的。本页列出编辑器能够处理和无法处理的内容；当工作簿包含不受支持的内容时，编辑器会报告出来（`workbook-warning`），而不是隐藏。
 
 [当前的对等状态与证据](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)总结了已实现的工作、与原生 Excel 的对比以及剩余的差距。

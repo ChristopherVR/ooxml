@@ -18,6 +18,21 @@ landed (see the parity pages). `niceScale` is still in `chart/render/chart-scale
 `chart/axis-nice.ts`, pinned equal by `xlsx/layout/chart-scale-vs-axis-nice.test.ts`. Wave 5 below is
 the open list.
 
+## Current shared Office status (2026-10-26)
+
+The [delivery ledger](office-shared-parity-delivery.md) is the active checklist. Shared DrawingML
+outlines/effect lists/format schemes and pattern/picture codecs are implemented. Word and Excel
+use the neutral SmartArt interpreter, richer painter, shared style/colour galleries and conservatively
+admitted generated drawing caches. They also edit supported ChartEx data and family options.
+PowerPoint, Word, Excel and embedded Visio charts mount the shared advanced Format pane.
+
+PowerPoint classic saves now have neutral label/paint/text/axis/structure/analysis/point families;
+the broader C3 to C5 adapter migration, exhaustive corpus classification and native acceptance
+remain in progress. The remaining architecture work is consumer adaptation and removal of covered
+legacy paths, rather than reimplementing these shared codecs or controls. Picture media allocation,
+unsafe combo splits, effect DAG interpretation, broader native typography/3D fidelity and the complete
+Office style catalogue remain explicit limits. Sections and wave notes below are dated snapshots.
+
 ## 1. State
 
 Health at the snapshot: `bun run typecheck` passed (strict and pptx projects) and the core vitest
@@ -359,7 +374,7 @@ Implementation:
 
 Landed since the plan was written: the shared backstage, find bar and print preview
 (`src/ui/src/chrome`), editable Word Print Layout, Excel pivot authoring and Page Layout, Excel and
-Visio collaboration. Still open:
+Visio collaboration. Still open at that historical checkpoint (see the current ledger above):
 
 - pptx binding factory; per-binding contract parity tests for all products;
   the pptx comments panels on the shared pane; the pptx tab row on
@@ -377,9 +392,11 @@ Visio collaboration. Still open:
 ## 5. Framework layers and shared chart and SmartArt editing (2026-10-23)
 
 A survey on 2026-10-23 (`origin/main` 3b2ecd9a6) found that the largest remaining duplication is not
-Office logic but the framework layer, and that chart and SmartArt editing exists only in PowerPoint.
+Office logic but the framework layer. At that survey's start, chart and SmartArt editing was
+concentrated in PowerPoint. Wave 6 and the 2026-10-26 delivery changed that; the observations in
+section 5.1 are historical and the current shared status is recorded above.
 
-### 5.1 State
+### 5.1 Historical survey state
 
 Tracked, non-test source lines:
 
@@ -400,12 +417,12 @@ Tracked, non-test source lines:
   (each has its own data editor, insert SmartArt dialog and text pane).
 - **docx, xlsx, visio and teams each wrote their own binding kit** (prop tracker, change-only
   forwarding, deferred handle, contract mapping, near-identical Vue, React and Solid adapters).
-- **Chart and SmartArt editing is pptx-only.** Reading goes through `chart` and `diagram` for every
-  product, and docx, xlsx and visio draw charts through `chart/render`, but pptx edits
+- **Chart and SmartArt editing was concentrated in pptx at the survey's start.** Reading went through `chart` and `diagram` for every
+  product, and docx, xlsx and visio drew charts through `chart/render`, but pptx edited
   `PptxChartData` through `builders/sdk/chart-*` and saves through about 127 object-tree writers;
-  Excel edits through its own `ChartPatch`; Word and Visio cannot edit charts. SmartArt node
-  operations, reflow, text projection and part writers live in `src/core/pptx`; Word and Excel show
-  the cached drawing only.
+  Excel used its own `ChartPatch`; Word and Visio did not yet edit charts. SmartArt node
+  operations, reflow, text projection and part writers lived in `src/core/pptx`; Word and Excel showed
+  the cached drawing only. Wave 6 and the later shared delivery superseded these findings.
 
 ### 5.2 Target layers
 
@@ -472,7 +489,9 @@ data writers in `diagram`, built-in definitions in `diagram/builtin`, and one pi
 design command list. Word and Excel insert and edit SmartArt; desktop Word and Excel rebuild the
 layout from the data part, so an edit drops the cached drawing.
 
-Next: the presentation controller (timers, annotations, presenter window); the Fill inspector
-section; pptx chart data labels and fills on the neutral writer, then `PptxChartData` as an adapter
-and pptx ChartEx parsing on the neutral model; Word and Excel ChartEx editing; SmartArt styles and
-colours and the cached drawing writer; the pptx tab row on `office-ui-ribbon`.
+The Wave 6 next list was a historical checkpoint. Labels/paint saves, Word/Excel ChartEx editing,
+SmartArt styles/colours/generated caches and shared advanced chart controls have since landed.
+Current work finishes the PowerPoint compatibility-adapter migration and its exhaustive admission,
+corpus and native checks. Remaining independent framework work includes the presentation controller
+(timers, annotations, presenter window), Fill inspector section and pptx ribbon tab-row migration.
+See the active delivery ledger and agnostic plan for implemented coverage and residual limits.

@@ -55,7 +55,7 @@ Pictures and charts are selected by clicking them: they move and resize with the
 
 Common chart families (column, bar, line, area, pie, doughnut, scatter, bubble, stock
 (high-low-close and open-high-low-close) and radar), bar/line combinations with a secondary
-axis, and waterfall, histogram, treemap and sunburst charts (read-only, from their ChartEx parts)
+axis, and waterfall, histogram, treemap and sunburst charts (from their ChartEx parts)
 render as SVG from live values. Volume-stock combinations and surface charts show a labelled frame.
 
 **Insert > Chart** opens the shared chart picker, the same one Word and PowerPoint use. Every chart
@@ -66,34 +66,40 @@ is edited over its parsed chart model (`ChartSpace`, the shared model in `ooxml-
   Delete. The galleries are the shared ones, so they look the same in every product.
 - **Format pane:** a docked panel with the shared chart Format pane. It edits the border and
   outline of the chart, axes (bounds, units, scale, crossing, tick marks, labels, number format),
-  gridlines, data labels, the legend and series options. Series fills and the chart area fill
-  open the same panel from their Series Options commands.
+  gridlines, data labels, the legend and series options. Supported controls also cover effects,
+  shape 3D, text, pattern fills, markers, trendlines/error bars, axis titles and admitted secondary
+  axes. Series and chart-area fills open the same panel from their Series Options commands.
 - A type change keeps the formatting: titles, legend, axes and fills carry over to the new type.
 - A chart part whose content the model cannot carry (for example detail below the top level, such
-  as a surface chart's band formats) is never rewritten from the model. Its chart commands and
+  as an unknown nested series extension) is never rewritten from the model. Its chart commands and
   Format pane are disabled, a workbook warning reports it, and it is saved from its source bytes,
   with only moved references patched in.
 
-Not offered: effects, 3-D format, text options, pattern and picture fills, trendlines, error bars,
-markers and axis titles in the Format pane (no shared intent writes them yet); chart styles are
-curated recolour presets, so style definitions (`styleN.xml`) cannot be authored; surface charts are
-not drawn. Imported chart styles, supported shadows and gradients, axis visibility, inherited fonts,
-mixed-format title runs, automatic title wrapping and title paragraph spacing have rendering and
-preservation support. Imported manual title positions and overlays render, and title, plot and
-legend layout XML is kept through chart type changes. Exact chart text measurement, wrapping,
-placement and raster fidelity remain incomplete, as do many axis, label and effect controls.
-Native Excel checks cover specific edit and export paths (`src/core/scripts/xlsx-excel-acceptance.ps1`
-opens the saved workbooks in desktop Excel); they are not a claim of native layout parity.
+Picture media allocation remains host-owned. Secondary-axis authoring keeps the first series as
+its primary rendering anchor; horizontal combinations, stacked multi-series splits and unknown
+extension splits are refused. Multiple trendlines are preserved but not offered by the one-line
+editor, and custom error ranges have no range editor. Chart styles are curated recolour presets,
+so native style definitions (`styleN.xml`) cannot be authored. Surface charts are not drawn.
+Imported supported shadows/gradients, axis visibility, inherited fonts, rich title runs and manual
+layouts have rendering/preservation support. Exact text measurement, placement, effects and raster
+fidelity remain incomplete.
 
-**Insert > SmartArt** opens the shared layout picker (35 layouts). Selecting a diagram shows the
-SmartArt Design tab (Add Shape after, before, above and below, Promote, Demote, Move Up, Move Down,
-Text Pane and Change Layout, the same command list as Word). The text pane opens beside the grid,
-and double-clicking a diagram opens it too. Each node edit, and each keystroke in the text pane, is
-one undoable step. A diagram that is inserted, edited or saved without a cached drawing is drawn
-with an approximate layout, badged as not Excel-identical; Excel lays it out again when it opens the
-file, and saved files open in desktop Excel without repair
-(`src/core/scripts/xlsx/smartart-excel-acceptance.ps1`). SmartArt Styles, Change Colors,
-per-shape formatting and rich text in the text pane are not implemented.
+ChartEx has shared data-sheet, family-option, axis and point-label controls for admitted local
+workbooks, including structural edits and safe workbook growth. Unsupported external data and
+ambiguous hierarchy sources are refused; classic-only advanced controls are hidden. Twelve
+Word/Excel browser cases cover six bindings, and native Office 16 checks cover selected ChartData
+and save/reopen paths. These are bounded acceptance checks, not native layout parity; see the
+[delivery ledger](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md).
+
+**Insert > SmartArt** opens the shared layout picker (35 layouts). The SmartArt Design tab and text
+pane support node/text/layout editing, history, Styles and Change Colors. The shared catalogue has
+three style intensities and five theme-accent colour schemes. Word and Excel use the neutral layout
+interpreter and richer painter for uncached, inserted and edited diagrams, with explicit partial or
+approximate fallback. Admitted interpreted 2D layouts gain generated drawing caches on save;
+complex 3D, folding and unsupported text remain uncached. Node overrides, rich text and unknown
+XML are preserved. The wider native style catalogue, dedicated per-node formatting and rich text
+authoring in Excel's text pane remain incomplete. Native Word/Excel style/colour checks verify
+semantic text, ids and nonempty node shapes, not pixel-identical Office layout.
 
 ## Sparklines
 
@@ -127,7 +133,7 @@ treated as empty.
 | Slicers, timelines                  | Table and PivotTable slicers are drawn (caption header, Multi-Select and Clear Filter buttons, item buttons in columns with selected, unselected and no-data states, the 14 built-in styles) and filter the table or PivotTable on click, Ctrl, Shift and Multi-Select. Insert > Slicer and Insert > Timeline add them; the Slicer and Timeline tabs set caption, style, columns, size, sort order and time level. Timelines on a PivotTable date field show years, quarters, months or days and filter by click, Shift+click or drag. Slicers on OLAP or other unsupported sources, and slicers connected to several PivotTables, are kept on save but drawn as placeholders. Style colours follow Excel's styles but are not measured from a native render. |
 | Sparkline authoring                 | Creation, group settings and clearing are supported (see above); style galleries and grouping/ungrouping are not implemented.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Advanced charts and chart options   | Common families and supported formatting are described above. Advanced families, complete axes/labels/effects authoring and exact native layout remain incomplete.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Shapes, SmartArt, form controls     | Pictures display. SmartArt is drawn from its cached drawing (or an approximate layout) and its nodes, text and layout can be edited; no SmartArt Styles or Change Colors. Other drawings show as placeholders.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Shapes, SmartArt, form controls     | Pictures display. SmartArt uses cached or interpreted drawing with an explicit fallback; nodes, text, layout, shared Styles and Change Colors are editable. Admitted 2D caches are generated; wider native styles, rich-text authoring and complex 3D remain limited. Other drawings show as placeholders.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | External links and data connections | Kept; values are the cached ones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Real-time collaboration             | Cell values, formulas, formats, sheets, row and column sizes, merges and names are shared over `ooxml-core/collab` (File > Share or the `collaboration` property); remote selections show in the grid and undo is per person. Charts, drawings, comments, conditional formats, validation, tables and page setup stay local; the host owns the server and saving. See [collaboration](/collaboration).                                                                                                                                                                                                                                                                                                                                                        |

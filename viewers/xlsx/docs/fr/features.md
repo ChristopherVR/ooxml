@@ -1,5 +1,9 @@
 # Fonctionnalités et limites
 
+::: info 2026-10-26
+Mise à jour du 26/10/2026 : les contrôles partagés de format des graphiques, l’édition ChartEx et les styles, couleurs et aperçus interprétés SmartArt sont désormais implémentés. Les sections traduites ci-dessous conservent certaines anciennes limites. Consultez la [page anglaise](../features.md) pour le périmètre actuel et le [registre des preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md), qui distingue implémentation et validation native.
+:::
+
 Il s’agit d’une implémentation précoce. Elle n’atteint **pas la parité avec Microsoft Excel** et l’enregistrement n’est pas sans perte pour les fonctionnalités que le modèle ne couvre pas. Cette page énumère ce que l’éditeur est conçu pour gérer et ce qu’il ne gère pas ; quand un classeur contient un élément non pris en charge, l’éditeur le signale (`workbook-warning`) au lieu de le masquer.
 
 L’[état actuel de la parité et ses preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)

@@ -403,14 +403,17 @@ Still not at parity:
   its apply-to/list-style options. (Add tab stop at: a level's `w:tab w:val="num"` is read, written and
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
-- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, SmartArt Styles and Change Colors, SmartArt pictures and per-shape formatting, and SmartArt in headers, footers and notes (body SmartArt can be inserted and its nodes, text and layout edited; an edited diagram is drawn with an approximate layout, not Word's, until Word lays it out again),
-  most of chart editing (Insert > Chart adds an inline chart of eight families with Office's sample data, and Chart Design offers
-  Legend, Edit Data, Change Chart Type and Format Selection, saved to the chart part and its embedded workbook; the docked Format pane
-  writes fills, outlines, transparency and legend, axis, label and series options, and the corner handle resizes a chart on the
-  editing surface; chart styles and colours, Quick Layout, Add Chart Element, Switch Row/Column, Select Data, the Format pane's
-  pattern, picture, 3-D, effects and text sections and editing extended (chartex) charts are missing; surface,
-  volume-stock and other chartex families show a labelled frame, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,
-  Signature Line, Object.
+- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, SmartArt pictures,
+  dedicated per-shape formatting and SmartArt in headers/footers/notes. Body SmartArt already has
+  node/text/layout editing, shared Styles/Change Colors, interpreted previews and admitted generated
+  2D caches. Wider native styles, complex text/3D and pixel fidelity remain limited. Classic charts
+  and admitted ChartEx charts already support shared editing, history and save/reopen; the Format
+  pane includes supported effects, shape 3D, text, pattern, analysis, markers and axis titles.
+  Remaining chart work includes host picture media allocation, richer source selection, wider
+  combo/family admission, native style-part authoring and exact native typography/layout. Surface
+  and unsupported families retain labelled frames; floating charts are not placed in Print Layout.
+  Screenshot, floating/formatted Text Boxes, WordArt, equation styles and Equation Tools,
+  Signature Line and Object remain incomplete. The shared capability update is dated 2026-10-26.
 - **Layout and References:** Manual Hyphenation and its options, Position
   and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption

@@ -1,6 +1,6 @@
 # Office suite parity review
 
-Last reviewed 2026-10-22: the headline table below was re-checked against the later rounds in this file and
+Last reconciled 2026-10-26 for shared charts, SmartArt and DrawingML; other headline areas reviewed 2026-10-22: the headline table below was re-checked against the later rounds in this file and
 the code; the per-batch sections are dated by the work they describe (through round 6, 2026-10-16),
 and their test counts are snapshots. Per-product trackers: [xlsx-parity-status.md](xlsx-parity-status.md),
 [word-parity-review.md](word-parity-review.md), [visio-parity-review.md](visio-parity-review.md).
@@ -9,11 +9,15 @@ a claim of Microsoft Office equivalence. The consolidated repository contains
 all engines and product editors (Word, PowerPoint, Excel, Visio and Teams), with framework bindings
 under `viewers/`.
 
+The [shared Office delivery ledger](office-shared-parity-delivery.md) records current chart,
+SmartArt and DrawingML implementation, browser/native evidence and remaining migration limits.
+Dated batches below retain their original scope and counts.
+
 ## Current state
 
 | Product    | Working foundation                                                                                                                                                                                                                                               | Largest remaining workflow gaps                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, editable Print Layout for body text, authority-based and Yjs collaboration                                                   | Dedicated page-story (header/footer and note) editing in Print Layout, vertically justified sections, editable charts and text-box pagination, complex-table structural editing                                                     |
+| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, editable Print Layout, shared chart/ChartEx and SmartArt editing, authority-based and Yjs collaboration                      | Dedicated page-story (header/footer and note) editing in Print Layout, vertically justified sections, text-box pagination, broader drawing/layout fidelity and complex-table structural editing                                     |
 | PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, selected-slide transport between decks through the system clipboard, multiple framework bindings, import/export and conversion                                                        | Full text layout in raster export, clipboard interoperability with desktop Office beyond slide packages, inherited master-text search, remaining animation target modes and broader native render comparisons                       |
 | Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, bounded PivotTables with slicers, timelines and number/date groups, sparkline authoring, Page Layout and Page Break Preview, shared editor and bindings | PivotTable label and value filters, shared caches, XLSB and ODS imports, FORECAST.ETS, sparkline style galleries and grouping, remaining header formatting and drawing fidelity; see [xlsx-parity-status.md](xlsx-parity-status.md) |
 | Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings                                                                                   | Full ShapeSheet behavior, complete native geometry/text fidelity, unmeasured routing profiles, parts of data graphics and accessibility/proofing workflows                                                                          |

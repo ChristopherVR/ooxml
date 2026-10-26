@@ -46,6 +46,13 @@ Every changed PowerPoint control must reach all five bindings.
 
 ## 4. Neutral PowerPoint chart saving and adapters
 
+In progress. Shared save families now cover labels and value-from-cells ranges, paint and point
+formatting, rich text/fonts/layout, axis formats, series structure, analysis, markers and existing
+axis-pair reassignment. Chrome/protection and broader ChartEx factory/save/read work have landed in
+increments. The checkboxes below stay open until final integration, exhaustive admission review,
+corpus classification and native acceptance establish each family's actual boundary. An unclaimed
+edit still follows an explicit compatibility path; no blanket neutral-only save claim is made.
+
 - [ ] Data-label visibility/content, per-series and per-point overrides, value-from-cells labels.
 - [ ] Series/point fills, lines, gradients and transparency, preserving unrelated theme tokens.
 - [ ] Rich title runs, legend entries, axis titles/fonts, gridlines and number/date/display units.
@@ -59,25 +66,32 @@ Every changed PowerPoint control must reach all five bindings.
 
 ## 5. Shared SmartArt style and colour authoring
 
-- [ ] Neutral style/colour operations and definition writers preserve unknown XML.
-- [ ] Share cached-drawing generation independently of native Office cache regeneration.
-- [ ] Word and Excel mount shared Styles and Change Colors galleries with history and persistence.
-- [ ] Cover per-node overrides, rich text, host theme changes and save/reopen.
-- [ ] Keep Visio diagram conversion a separate host feature with explicit native-shape or embedded
+- [x] Neutral style/colour operations and definition writers preserve unknown XML.
+- [x] Share cached-drawing generation independently of native Office cache regeneration.
+- [x] Word and Excel mount shared Styles and Change Colors galleries with history and persistence.
+- [x] Cover per-node overrides, rich text, host theme changes and save/reopen.
+- [x] Keep Visio diagram conversion a separate host feature with explicit native-shape or embedded
       semantics; sharing diagram primitives is not native Visio SmartArt support.
 
 ## 6. Shared chart controls and ChartEx consumers
 
-- [ ] Complete shared formatting intents and controls for effects, 3D, text, richer fills,
-      secondary axes, trendlines, error bars, markers and axis titles.
-- [ ] Wire the supported controls in PowerPoint, Word, Excel and embedded Visio charts.
-- [ ] Enable Word/Excel ChartEx data-sheet editing, family options and structural edits.
-- [ ] Synchronize workbook references/caches with safe external-source and hierarchy policies.
-- [ ] Verify all applicable framework bindings, keyboard/history behavior and native save/reopen.
+- [x] Add shared formatting intents and controls for effects, 3D, text, pattern fills,
+      admitted secondary axes, trendlines, error bars, markers and axis titles.
+- [x] Wire the supported controls in PowerPoint, Word, Excel and embedded Visio charts.
+- [x] Enable admitted Word/Excel ChartEx data-sheet, family-option and structural edits.
+- [x] Synchronize workbook references/caches with safe external-source and hierarchy policies.
+- [x] Verify applicable bindings, history and save/reopen, including native Word/Excel ChartEx cases.
+
+These checks cover the admitted controls, not every Office formatting option. Picture media
+relationships remain host-owned. Secondary-axis authoring keeps the first flattened series as
+the primary rendering anchor; horizontal combinations, stacked multi-series splits and unknown
+group-extension splits are refused. The pane edits the first trendline, disables ambiguous multiple
+trendlines, and preserves custom error sources without offering a range editor. ChartEx exposes its
+own supported controls and refuses classic-only advanced requests.
 
 ## Integration and evidence
 
-- [ ] Reconcile `roadmap.md`, `agnostic-core-plan.md`, `structure-plan.md`, product capability
+- [x] Reconcile `roadmap.md`, `agnostic-core-plan.md`, `structure-plan.md`, product capability
       pages and PowerPoint ribbon reviews with the delivered implementation.
 - [ ] Run the repository CI planner's verification from the isolated integration worktree and
       affected browser suites; retain native version/font/capture details where fidelity is claimed.
@@ -123,8 +137,8 @@ Validation passed 923 core and 46 UI tests, both core/UI compiler projects and b
 10 and Excel's 6 browser cases across six frameworks. Unsupported connector routing, presentation
 variables, typography, effects, picture/pattern rendering and flat 3D remain reported limitations.
 
-The integrated foundations plus ChartEx storage passed 1,085 tests across 145 files and both core
-compiler projects. ChartEx UI integration and native acceptance are still in progress.
+At this foundation checkpoint, the integrated code plus ChartEx storage passed 1,085 tests across
+145 files and both core compiler projects. The later ChartEx UI/native evidence is recorded below.
 
 ### Further neutral chart saves, 2026-10-26
 
@@ -134,3 +148,63 @@ to the neutral schema-validated operation. Formatting-only changes leave embedde
 alone; data edits retain blank cells. The title/axis increment passed the 300-case saved-part corpus
 plus 41 focused tests. Label-range and group edits have focused preservation regressions; expanded
 corpus and native acceptance remain required before closing priority 4.
+
+### SmartArt styles and generated caches, 2026-10-26
+
+Original implementation commits: `a58e44d20` (interpreter/painter/theme), `2056cc734` (partial-layout
+diagnostics), `26af3ba4c` (shared style/colour controls and writers), `4a3c51714` (host cache wiring).
+Word and Excel share three style intensities and five theme-accent colour schemes. Edits preserve
+per-node fill/line/rich-text overrides and unknown definition XML. Generated drawing caches use
+semantic node associations, host relationships/content types and an integrity marker. Cache
+generation admits interpreted layouts with no reported issues; spatial 3D, folding, unsupported
+text and partial geometry remain explicit uncached/fallback cases.
+
+The final SmartArt increment passed 908 core tests across 120 files and 50 UI tests across 11 files,
+both core/UI compiler projects and builds. Browser validation covered Word's eight and Excel's
+seven cases across six bindings. Native Word 16 and Excel 16 reopened six style/colour variants
+with the expected semantic text and style/colour ids and nonempty node shapes; Excel reported no
+repair. These are semantic/package checks, not native pixel comparisons or the complete Office
+style catalogue.
+
+### Advanced chart controls and ChartEx hosts, 2026-10-26
+
+Original commits `580d123fb`, `abfa28fb3`, `8d4ac7a86`, `fcfa5dbf9` and `4ae7858f3` introduced
+shared advanced operations, resolved appearance conversion, gradient geometry preservation, rich
+text formatting and the shared controls. `4864c8622` expanded secondary-axis splits with stable
+selection indices and corrected column clustering. The final focused control checks passed 60 UI
+and host tests; advanced control/save browser cases passed across all six Word and Excel bindings
+and the targeted Visio chart workflow. Later secondary-axis checks passed 90 core and 40 UI cases.
+
+ChartEx original commits `725de251`, `4f84b46a`, `1f90137d`, `14bf8847` and `3af9f25c8` add shared
+data-sheet/action contracts, safe local workbook mapping/growth, Word/Excel history and save, family
+options, axis controls, point value labels and common formatting. Twelve Word/Excel browser cases
+passed across six bindings. Native Office 16 checks verified Word ChartData values, workbook
+growth and a two-series box chart; five Excel variants reopened without repair with expected
+chart counts/types and series. External data and ambiguous hierarchy sources are refused.
+
+### PowerPoint chart migration checkpoints, 2026-10-26
+
+Original `4ccd7e9fc` adds sparse analysis/marker/series/point save planning and existing-axis-pair
+reassignment. `d78fb64f5` adds category-axis combo type edits while preserving document-order
+targets. The latter checkpoint passed 130 focused tests and both core compiler projects. Unsupported
+3D/XY combo switches and unsafe splits remain compatibility cases. Root integration and broader
+corpus results are required before closing priority 4.
+
+ChartEx read facts (`02c04bf5`) and shared creation/save increments (`a63107c6b`, `1689fbc6e`) cover
+six authored families with source/workbook synchronization. PowerPoint 16 reopened a valid
+20-slide gallery after a waterfall-to-funnel edit; six generated neutral chart parts grafted into
+valid gallery hosts had the expected native chart types. A fresh six-slide SDK deck failed native
+opening with `0x80070570` using both the baseline and new generators. This is a known new-deck
+template limitation, not evidence that complete new-deck generation has native parity. Raw
+geographic/Pareto creation, wider ChartEx styling/labels/axes and remaining compatibility adapters
+still need explicit coverage. These checkpoints do not establish Office equivalence or lossless
+export for arbitrary documents.
+
+### Documentation reconciliation, 2026-10-27
+
+Active roadmap, architecture plans, product capability pages and ribbon reviews now distinguish
+implemented shared controls from unfinished PowerPoint adapter coverage. Historical audits and
+older translations are identified explicitly. Word, Excel and PowerPoint documentation sites
+built successfully; Visio's documentation build/link/theme suite passed 76 tests. Added relative
+links, formatting and whitespace checks passed. Final integrated runtime verification remains the
+separate unchecked acceptance step above.

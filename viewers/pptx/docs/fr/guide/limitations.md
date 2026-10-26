@@ -5,6 +5,10 @@ description: Ce que le moteur principal et les liaisons de visionneuse ne prenne
 
 # Limitations
 
+::: info 2026-10-26
+Mise à jour du 26/10/2026 : le moteur partagé prend en charge davantage de modifications de format, d’analyse et de ChartEx. Les sections graphiques de cette traduction décrivent un état antérieur. Les limites actuelles figurent sur la [page anglaise](../../guide/limitations.md) et dans le [registre des preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md).
+:::
+
 ::: warning À lire avant d'adopter la bibliothèque
 `pptx-viewer` couvre une large part de la spécification OpenXML, mais certains éléments sont approximés, en lecture seule ou limités par la plateforme du navigateur. Cette page recense les limitations connues ; elle ne constitue pas une garantie exhaustive de compatibilité avec chaque fonctionnalité d'Office ou extension tierce. Vérifiez `data.warnings` après avoir chargé une présentation et consultez [Conformité OpenXML](/architecture/openxml-conformance) pour le manifeste de couverture formel.
 :::
