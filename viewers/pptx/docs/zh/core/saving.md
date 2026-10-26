@@ -91,6 +91,7 @@ Open Packaging Conventions 命名空间（ISO/IEC 29500-2 的内容类型、关�
 | `tableStyles`                                           | `ParsedTableStyleMap`                      | 修改 `ppt/tableStyles.xml`，保留未建模 XML。                           |
 | `embeddedFonts` / `embeddedFontList`                    | `PptxEmbeddedFont[]` / `... \| null`       | 覆盖或移除嵌入字体，默认重新嵌入原始数据。                             |
 | `outputFormat`                                          | `'pptx' \| 'ppsx' \| 'pptm' \| 'ppt'`      | 标准、放映、启用宏或旧版二进制格式。                                   |
+| `rasterizeSvg`                                          | `PptxSvgRasterizer`                        | 将 SVG 转为 PNG 以供旧版 PPT 输出使用；OpenXML 格式忽略。              |
 | `pptPassword`                                           | `string`                                   | `outputFormat: 'ppt'` 的 RC4 CryptoAPI 密码，OpenXML 格式忽略。        |
 | `conformance`                                           | `'strict' \| 'transitional' \| 'preserve'` | 输出一致性类别，默认 `'preserve'`。                                    |
 
@@ -113,12 +114,23 @@ const bytes = await handler.save(data.slides, {
 | `'pptm'`     | `.pptm` | 启用宏的文稿，需要加载文件中的 VBA 数据。                                         |
 | `'ppt'`      | `.ppt`  | PowerPoint 97-2003 二进制文件，不支持的元素降级为预览或占位符，并产生兼容性警告。 |
 
-旧版输出使用 `outputFormat: 'ppt'`，`pptPassword` 为其二进制流应用 RC4 CryptoAPI 保护。这条路径不使用 OpenXML ZIP 保存阶段或 `saveEncrypted()`。旧版写入器只读取保存选项中的 `pptPassword`。
+旧版输出使用 `outputFormat: 'ppt'`，`pptPassword` 为其二进制流应用 RC4 CryptoAPI 保护。这条路径不使用 OpenXML ZIP 保存阶段或 `saveEncrypted()`。`pptPassword` 和 `rasterizeSvg` 是旧版保存专用的选项。
 
 ```ts
 const bytes = await handler.save(data.slides, {
 	outputFormat: 'ppt',
 	pptPassword: 'legacy-password',
+});
+```
+
+`.ppt` 不支持 SVG 图片，没有栅格回退图的 SVG 会按原尺寸两倍转为 PNG。浏览器使用 DOM 的 SVG 渲染器；Node.js 可从仅供 Node 使用的 `ooxml-core/pptx/node` 导入 `rasterizeSvgInNode`（需要可选 peer 依赖 `@napi-rs/canvas`），或提供自己的 `rasterizeSvg`。没有栅格化器时将写入占位符并报告 `ppt-image-format-unsupported` 警告。
+
+```ts
+import { rasterizeSvgInNode } from 'ooxml-core/pptx/node';
+
+const bytes = await handler.save(data.slides, {
+	outputFormat: 'ppt',
+	rasterizeSvg: rasterizeSvgInNode,
 });
 ```
 

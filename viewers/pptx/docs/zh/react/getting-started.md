@@ -142,7 +142,19 @@ import { PowerPointViewer } from 'pptx-react-viewer';
 import 'pptx-react-viewer/styles'; // or 'pptx-react-viewer/styles.css'
 ```
 
+样式表的基础重置（Tailwind preflight）仅作用于查看器根元素、画布视口及带有 `data-pptx-scope` 的元素。查看器会为根元素外的对话框和菜单添加该属性，因此宿主页面的标题、列表、边距和图片保持原样。单独渲染导出的组件时，请将其放在带有该属性的普通元素（如 `div`）中，不要将属性放在 `pptx-ui-*` 控件上：最外层作用域从页面基础文本样式开始，会覆盖控件自身的文本样式。
+
 三种样式接入方式及颜色自定义见[主题配置](/zh/react/theming)。
+
+### 仅画布样式表 {#canvas-only-stylesheet}
+
+只渲染只读画布的宿主（例如通过 `useViewerBuildingBlocks` 的 `canvasProps` 渲染 `SlideCanvas`）可使用较小的样式表。它包含相同的主题令牌和作用域重置，以及 `SlideCanvas` 及其导入文件使用的工具样式，覆盖所有元素类型，但不包含功能区、面板、对话框或后台视图。
+
+```tsx
+import 'pptx-react-viewer/canvas.css'; // 替代 pptx-react-viewer/styles
+```
+
+它根据 `SlideCanvas` 和 `useViewerBuildingBlocks` 的导入图构建，约 46 KB（gzip 后 8 KB），完整 `styles.css` 约 112 KB（gzip 后 16 KB）。`<PowerPointViewer>` 和 `<Toolbar>` 需要完整样式表。
 
 ## 下一步 {#next-steps}
 

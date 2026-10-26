@@ -91,13 +91,14 @@ const data = await handler.load(buffer, {
 });
 ```
 
-| 选项                   | 默认值    | 用途                                                                                                          |
-| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------- |
-| `password`             | -         | 解析前解密加密文件。                                                                                          |
-| `allowExternalImages`  | `false`   | 默认从渲染幻灯片中移除解析到 `http://` 或 `https://` 的关系目标，以降低 SSRF 和隐私风险。设为 `true` 才允许。 |
-| `limits`               | -         | 宿主对加载工作量的限制（`maxInputBytes`、`maxSlides` 等五项），见[加载限制](#load-limits)。                   |
-| `maxUncompressedBytes` | `500 MiB` | 总解压预算，超出该值或 65,536 个条目时抛出 `ZipBombError`。                                                   |
-| `eagerDecodeImages`    | `false`   | 加载时立即解码嵌入图片，而非延迟解码。                                                                        |
+| 选项                       | 默认值    | 用途                                                                                                          |
+| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------- |
+| `password`                 | -         | 解析前解密加密文件。                                                                                          |
+| `allowExternalImages`      | `false`   | 默认从渲染幻灯片中移除解析到 `http://` 或 `https://` 的关系目标，以降低 SSRF 和隐私风险。设为 `true` 才允许。 |
+| `limits`                   | -         | 宿主对加载工作量的限制（`maxInputBytes`、`maxSlides` 等五项），见[加载限制](#load-limits)。                   |
+| `maxUncompressedBytes`     | `500 MiB` | 总解压预算，超出该值或 65,536 个条目时抛出 `ZipBombError`。                                                   |
+| `eagerDecodeEmbeddedFonts` | `false`   | 加载时解码所有嵌入字体变体并省略解码失败的变体，而非首次访问时解码。                                          |
+| `eagerDecodeImages`        | `false`   | 加载时立即解码嵌入图片，而非延迟解码。                                                                        |
 
 ### 加载限制 {#load-limits}
 
@@ -121,6 +122,19 @@ try {
 ```
 
 不是正有限数的值，或大于 65,536 的 `maxEntries`，会在任何工作开始前抛出 `RangeError`。幻灯片或形状限制使加载停止时，处理器会释放已解析的内容，之后仍可释放或加载其他演示文稿。
+
+## 嵌入字体 {#embedded-fonts}
+
+`data.embeddedFonts` 按字体族和样式变体列出 `PptxEmbeddedFont`。默认情况下，加载读取字体部件，但直到首次读取 `dataUrl`、`format` 或 `rawFontData` 才解压或去混淆；读取名称、样式和原始部件等元数据不会触发解码。
+
+```ts
+const data = await handler.load(buffer);
+const font = data.embeddedFonts?.find((f) => f.name === 'Lato' && !f.bold && !f.italic);
+const decoded = font?.load ? await font.load() : font; // 无法解码时为 null
+console.log(decoded?.dataUrl.slice(0, 32), font?.isLoaded);
+```
+
+`load()` 缓存结果，并发调用共享同一个 Promise；解码仍在调用线程执行。`load` 和 `isLoaded` 不可枚举，展开、`structuredClone` 和 `JSON.stringify` 仍看到原有字段（读取字段会触发解码）。字体描述符拥有自己的字节，在处理器释放或加载其他文件后仍可使用。未解码的字体保存时使用原始部件字节，编辑过的 `rawFontData` 仍会重新嵌入。损坏的 EOT 变体会保留在列表中，`dataUrl` 为空且没有 `rawFontData`；传入 `eagerDecodeEmbeddedFonts: true` 可提前解码并丢弃失败的变体。
 
 ## 访问幻灯片、主题和元数据 {#accessing-slides-theme-and-metadata}
 

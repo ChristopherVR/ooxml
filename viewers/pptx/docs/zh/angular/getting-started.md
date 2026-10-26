@@ -143,6 +143,8 @@ export class EditorComponent {
 import 'pptx-angular-viewer/styles'; // or 'pptx-angular-viewer/styles.css'
 ```
 
+样式表的基础重置（Tailwind preflight）仅作用于查看器根元素、画布视口及带有 `data-pptx-scope` 的元素。查看器会为根元素外的对话框和菜单添加该属性，因此宿主页面的标题、列表、边距和图片保持原样。单独渲染导出的组件时，请将其放在带有该属性的普通元素（如 `div`）中，不要将属性放在 `pptx-ui-*` 控件上：最外层作用域从页面基础文本样式开始，会覆盖控件自身的文本样式。
+
 在基础样式表之上定制颜色的方法请参见[主题](/zh/angular/theming)。
 
 ## 下一步 {#next-steps}
