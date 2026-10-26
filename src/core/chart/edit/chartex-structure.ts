@@ -106,6 +106,7 @@ export function setChartExLayout(space: ChartExSpace, layout: ChartExLayout): Ch
 			if (value) value.type = chartExValueType(layout);
 			series.layoutId = layout;
 			delete series.layoutProperties;
+			if (layout === 'clusteredColumn') series.layoutProperties = { binning: {} };
 		}
 		if (['waterfall', 'clusteredColumn', 'boxWhisker'].includes(layout)) {
 			draft.plotArea.axes = draft.plotArea.axes.length

@@ -5,6 +5,7 @@ import { writeChartExSpace } from './write';
 import { chartExSpaceDataSheet } from '../edit/chartex-sheet';
 import { setChartExBinning } from '../edit/chartex';
 import { setChartExSeriesValues } from '../edit/chartex-data';
+import { setChartExLayout } from '../edit/chartex-structure';
 const data = {
 	categories: ['A', 'B'],
 	categoryLevels: [
@@ -49,4 +50,9 @@ it('keeps additional numeric dimensions when editing the displayed value level',
 	expect(changed.chartData.data[0]!.dimensions.find((d) => d.kind === 'numDim')!.levels[1]).toEqual(
 		dimension.levels[1],
 	);
+});
+it('switches to a histogram with numeric binning rather than an extended column chart', () => {
+	const space = setChartExLayout(createChartExSpace(data, 'waterfall'), 'clusteredColumn');
+	expect(space.plotArea.series[0]!.layoutProperties).toEqual({ binning: {} });
+	expect(writeChartExSpace(space)).toContain('<cx:binning');
 });
