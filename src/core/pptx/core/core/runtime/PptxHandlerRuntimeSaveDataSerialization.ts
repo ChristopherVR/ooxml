@@ -149,6 +149,15 @@ import { writeTablePropertiesOwnFillAndEffects } from './table-tblpr-save';
 const CHART_DATA_DISPLAY_OPTIONS_EXT_URI = '{56B9EC1D-385E-4148-901F-78D8002777C0}';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
+	/** Forward declaration: the chart parsing mixin supplies the saved-part projection. */
+	protected refreshClassicChartFromPart(
+		_xml: string,
+		_previous: PptxChartData,
+		_slidePath?: string,
+	): Promise<PptxChartData | undefined> {
+		throw new Error('refreshClassicChartFromPart not yet initialised');
+	}
+
 	/**
 	 * Serialise modified `PptxTableData` back into the graphic frame's
 	 * raw XML so that the round-tripped file preserves edits.
