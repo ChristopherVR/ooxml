@@ -115,6 +115,16 @@ export const translations = {
 	'pptx.viewer.encrypted':
 		'Cette présentation est protégée par mot de passe et ne peut pas être ouverte.',
 	'pptx.viewer.loadError': 'Échec du chargement de la présentation.',
+	'pptx.viewer.loadLimit.maxInputBytes':
+		'Ce fichier fait {{actual}}, plus que les {{maximum}} acceptés par cette visionneuse.',
+	'pptx.viewer.loadLimit.maxUncompressedBytes':
+		'Une fois décompressée, cette présentation fait au moins {{actual}}, plus que les {{maximum}} acceptés par cette visionneuse.',
+	'pptx.viewer.loadLimit.maxEntries':
+		'Cette présentation contient {{actual}} parties, plus que les {{maximum}} acceptées par cette visionneuse.',
+	'pptx.viewer.loadLimit.maxSlides':
+		'Cette présentation contient {{actual}} diapositives, plus que les {{maximum}} acceptées par cette visionneuse.',
+	'pptx.viewer.loadLimit.maxShapes':
+		'Cette présentation contient au moins {{actual}} formes, plus que les {{maximum}} acceptées par cette visionneuse.',
 	'pptx.viewer.slide': 'Diapositive',
 	'pptx.viewer.background': 'Arrière-plan',
 	'pptx.viewer.speakerNotesPlaceholder': 'Cliquez pour ajouter des notes de conférencier',

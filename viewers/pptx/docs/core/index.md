@@ -131,10 +131,10 @@ const bytes = await handler.save(data.slides);
 
 :::
 
-`PptxHandler.create(options)` and its alias `PptxHandler.createBlank(options)` both accept a `PresentationOptions` object (`width`/`height` in EMU, `theme`, `title`, `creator`, `initialSlideCount`) and return `{ handler, data, createSlide }`. See [/core/builder](/core/builder) for the fluent API and [/core/loading](/core/loading) for the load pipeline and its options (`password`, `eagerDecodeImages`, `maxUncompressedBytes`, `allowExternalImages`).
+`PptxHandler.create(options)` and its alias `PptxHandler.createBlank(options)` both accept a `PresentationOptions` object (`width`/`height` in EMU, `theme`, `title`, `creator`, `initialSlideCount`) and return `{ handler, data, createSlide }`. See [/core/builder](/core/builder) for the fluent API and [/core/loading](/core/loading) for the load pipeline and its options (`password`, `eagerDecodeImages`, `maxUncompressedBytes`, `allowExternalImages`, `limits`).
 
 ::: warning Hardened loading
-`load()` enforces a zip-bomb budget (500 MiB uncompressed by default, 65,536 entry cap; violation throws `ZipBombError`) and drops external `http(s)` image references unless you opt in with `allowExternalImages: true`.
+`load()` enforces a zip-bomb budget (500 MiB uncompressed by default, 65,536 entry cap; violation throws `ZipBombError`) and drops external `http(s)` image references unless you opt in with `allowExternalImages: true`. Hosts that open untrusted decks can also cap input size, slides and shapes with `limits` (see [Load limits](/core/loading#load-limits)).
 :::
 
 ## Main public exports

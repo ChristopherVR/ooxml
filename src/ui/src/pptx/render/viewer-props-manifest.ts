@@ -85,6 +85,8 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'initialSlide' },
 	{ id: 'googleFonts' },
 	{ id: 'allowExternalContent' },
+	// Host load limits (`PptxLoadLimits`), passed to `PptxHandler.load` for the deck the viewer opens.
+	{ id: 'limits' },
 	{ id: 'showToolbar' },
 	{ id: 'showThumbnails' },
 	{ id: 'showCompatibilityToasts' },

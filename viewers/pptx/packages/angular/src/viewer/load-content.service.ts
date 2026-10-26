@@ -1,4 +1,5 @@
 import { DestroyRef, Injectable, computed, inject, signal, untracked } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
 import {
@@ -13,6 +14,7 @@ import {
 	describeFontEmbedding,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
+	pptxLoadErrorMessage,
 	resolveAllowExternalContent,
 	resolveMediaElementSource,
 	resolveSlideSizeSelection,
@@ -27,6 +29,7 @@ import type {
 	DeckSaveIntent,
 	DeckSaveState,
 	PendingInlineTextEdit,
+	PptxLoadLimits,
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
 import type {
@@ -85,6 +88,11 @@ import { ViewerOptionsService } from './viewer-options.service';
 export class LoadContentService {
 	private pendingInlineEditReader?: () => PendingInlineTextEdit | undefined;
 	private hostAllowExternalContentReader?: () => boolean | undefined;
+	private hostLimitsReader?: () => PptxLoadLimits | undefined;
+	/** The host `limits` input, read (untracked) at the start of each load. */
+	bindHostLimits(reader: () => PptxLoadLimits | undefined): void {
+		this.hostLimitsReader = reader;
+	}
 	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
 		this.hostAllowExternalContentReader = reader;
@@ -262,6 +270,18 @@ export class LoadContentService {
 		}
 	})();
 
+	/**
+	 * Optional, for the same reason as {@link optionsService}: localizes the
+	 * load-error text for a deck over a load limit when present.
+	 */
+	private readonly translate: TranslateService | null = (() => {
+		try {
+			return inject(TranslateService);
+		} catch {
+			return null;
+		}
+	})();
+
 	constructor() {
 		inject(DestroyRef).onDestroy(() => {
 			this.renderToken++;
@@ -428,7 +448,9 @@ export class LoadContentService {
 			// is a load-time input, exactly as in React (`[content]` deps only).
 			// The host `allowExternalContent` input wins over the option when set.
 			const allowExternalImages = this.resolveAllowExternalImages();
-			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages });
+			// The host `limits` input, read untracked for the same reason.
+			const limits = untracked(() => this.hostLimitsReader?.());
+			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages, limits });
 			if (token !== this.renderToken) {
 				return;
 			}
@@ -612,7 +634,14 @@ export class LoadContentService {
 				if (err instanceof EncryptedFileError) {
 					this.isEncrypted.set(true);
 				} else {
-					this.error.set(err instanceof Error ? err.message : String(err));
+					const translate = this.translate;
+					this.error.set(
+						translate
+							? pptxLoadErrorMessage(err, (key, params) => translate.instant(key, params))
+							: err instanceof Error
+								? err.message
+								: String(err),
+					);
 				}
 			}
 		} finally {

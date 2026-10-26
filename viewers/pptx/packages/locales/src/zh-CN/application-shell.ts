@@ -108,6 +108,16 @@ export const translations = {
 	'pptx.viewer.loading': '正在加载演示文稿...',
 	'pptx.viewer.encrypted': '该演示文稿受密码保护，无法打开。',
 	'pptx.viewer.loadError': '无法加载演示文稿。',
+	'pptx.viewer.loadLimit.maxInputBytes':
+		'此文件大小为 {{actual}}，超过此查看器允许的 {{maximum}}。',
+	'pptx.viewer.loadLimit.maxUncompressedBytes':
+		'此演示文稿解压后至少为 {{actual}}，超过此查看器允许的 {{maximum}}。',
+	'pptx.viewer.loadLimit.maxEntries':
+		'此演示文稿包含 {{actual}} 个部件，超过此查看器允许的 {{maximum}} 个。',
+	'pptx.viewer.loadLimit.maxSlides':
+		'此演示文稿有 {{actual}} 张幻灯片，超过此查看器允许的 {{maximum}} 张。',
+	'pptx.viewer.loadLimit.maxShapes':
+		'此演示文稿至少有 {{actual}} 个形状，超过此查看器允许的 {{maximum}} 个。',
 	'pptx.viewer.slide': '幻灯片',
 	'pptx.viewer.background': '背景',
 	'pptx.viewer.speakerNotesPlaceholder': '单击添加演讲者备注',

@@ -87,6 +87,7 @@ const data = await handler.load(buffer, {
 	password: 'secret', // decrypt an encrypted file (see below)
 	allowExternalImages: false, // default false - http(s) image URLs are dropped
 	maxUncompressedBytes: 500 * 1024 * 1024, // zip-bomb guard, 500 MiB default
+	limits: { maxSlides: 500, maxShapes: 50_000 }, // optional host limits, see below
 });
 ```
 
@@ -94,8 +95,32 @@ const data = await handler.load(buffer, {
 | ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------- |
 | `password`             | -         | 解析前解密加密文件。                                                                                          |
 | `allowExternalImages`  | `false`   | 默认从渲染幻灯片中移除解析到 `http://` 或 `https://` 的关系目标，以降低 SSRF 和隐私风险。设为 `true` 才允许。 |
+| `limits`               | -         | 宿主对加载工作量的限制（`maxInputBytes`、`maxSlides` 等五项），见[加载限制](#load-limits)。                   |
 | `maxUncompressedBytes` | `500 MiB` | 总解压预算，超出该值或 65,536 个条目时抛出 `ZipBombError`。                                                   |
 | `eagerDecodeImages`    | `false`   | 加载时立即解码嵌入图片，而非延迟解码。                                                                        |
+
+### 加载限制 {#load-limits}
+
+`limits` 为打开不受信任演示文稿的宿主限制单次加载的工作量。省略的字段保留默认值，因此不传 `limits` 时行为不变：解压后 500 MiB、65,536 个 ZIP 条目，输入大小、幻灯片和形状不限。每项检查都在其限制的工作之前进行：`maxInputBytes` 在识别、解密或解压输入之前，`maxEntries` 和 `maxUncompressedBytes` 在解压任何部件之前（读取部件时再次检查），`maxSlides` 在解析 `ppt/presentation.xml` 之后立即检查，`maxShapes` 在解析每张幻灯片的形状时计数（不计版式和母版上的形状）。
+
+`pptx-viewer-json` 文档无论通过 `load()` 还是 `handler.loadFromJson(text, { limits })` 加载，都适用相同的限制。对于 `loadFromJson`，`maxInputBytes` 指文本的 UTF-8 字节数，在解析之前检查。`maxSlides` 和 `maxShapes` 在使用文档内容之前按文档中的幻灯片检查，计数方式与 `.pptx` 包相同：计入每个元素（包括任意深度的组内成员），但不计已加载演示文稿所带的版式和母版元素（id 以 `layout-` 或 `master-` 开头）。因此，在某个限制下可以加载的演示文稿，经 JSON 往返后在同一限制下仍可加载。
+
+`maxInputBytes`、`maxSlides` 和 `maxShapes` 超出时抛出 `PptxLoadLimitError`（代码 `PPTX_LOAD_LIMIT`，带有 `limit`、`maximum` 和 `actual`）。`maxUncompressedBytes` 和 `maxEntries` 仍抛出 `ZipBombError`（代码 `ZIP_BOMB`），现在也带有 `loadLimit` 和 `actual`。`getPptxLoadLimitViolation` 可读取两者：
+
+```ts
+import { getPptxLoadLimitViolation, PptxHandler } from 'pptx-viewer-core';
+
+try {
+	await new PptxHandler().load(buffer, { limits: { maxSlides: 100 } });
+} catch (error) {
+	const violation = getPptxLoadLimitViolation(error);
+	if (violation) {
+		console.warn(`${violation.limit}: ${violation.actual} > ${violation.maximum}`);
+	}
+}
+```
+
+不是正有限数的值，或大于 65,536 的 `maxEntries`，会在任何工作开始前抛出 `RangeError`。幻灯片或形状限制使加载停止时，处理器会释放已解析的内容，之后仍可释放或加载其他演示文稿。
 
 ## 访问幻灯片、主题和元数据 {#accessing-slides-theme-and-metadata}
 

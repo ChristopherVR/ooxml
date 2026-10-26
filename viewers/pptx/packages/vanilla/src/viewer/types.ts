@@ -21,7 +21,7 @@ import type {
 	ViewportFitOptions,
 	RibbonAddInTab,
 } from 'ooxml-ui/pptx';
-import type { GoogleFontsOption } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxCoreProperties, PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
@@ -214,6 +214,15 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * Read once, when the viewer is created.
 	 */
 	allowExternalContent?: boolean;
+	/**
+	 * Bounds on the work loading a deck may do, for hosts that show untrusted
+	 * decks: `maxInputBytes`, `maxUncompressedBytes`, `maxEntries`, `maxSlides`
+	 * and `maxShapes` (see `PptxLoadLimits`). Unset keeps the core defaults
+	 * (500 MiB inflated, 65,536 ZIP entries, no other limit). A deck over a
+	 * limit shows the error overlay with the limit and the deck's value, and
+	 * `onError` receives the same message. Applies to every `load()`.
+	 */
+	limits?: PptxLoadLimits;
 	/**
 	 * Enable editing (default `false`): click to select, drag/resize/rotate,
 	 * inline text editing, keyboard shortcuts, undo/redo, and the toolbar

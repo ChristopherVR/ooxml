@@ -4,7 +4,9 @@ import type {
 	DeckSaveIntent,
 	DeckSavePurpose,
 	InlineTextDraft,
+	LoadLimitTranslate,
 	PendingInlineTextEdit,
+	PptxLoadLimits,
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
 import {
@@ -14,6 +16,7 @@ import {
 	buildDeckSaveOptions,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
+	pptxLoadErrorMessage,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -309,6 +312,16 @@ export interface UseLoadContentOptions {
 	 * {@link getSaveIntent} and {@link getEmbedFonts}.
 	 */
 	getAllowExternalImages?: () => boolean;
+	/**
+	 * The host `limits` prop, read at load time and passed to
+	 * `PptxHandler.load`; omitted or `undefined` keeps the core defaults.
+	 */
+	getLimits?: () => PptxLoadLimits | undefined;
+	/**
+	 * Translates the load-error text for a deck over a load limit (the
+	 * viewer's `t`). Omitted, the error keeps the core's English message.
+	 */
+	translate?: LoadLimitTranslate;
 }
 
 export function useLoadContent(
@@ -406,6 +419,7 @@ export function useLoadContent(
 
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
 				allowExternalImages: options?.getAllowExternalImages?.(),
+				limits: options?.getLimits?.(),
 			});
 			if (token !== renderToken) {
 				return;
@@ -578,7 +592,12 @@ export function useLoadContent(
 				if (err instanceof EncryptedFileError) {
 					isEncrypted.value = true;
 				} else {
-					error.value = err instanceof Error ? err.message : String(err);
+					const translate = options?.translate;
+					error.value = translate
+						? pptxLoadErrorMessage(err, translate)
+						: err instanceof Error
+							? err.message
+							: String(err);
 				}
 			}
 		} finally {

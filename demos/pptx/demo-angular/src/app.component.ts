@@ -101,6 +101,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 					[fitPadding]="rootOptions.fitPadding"
 					[googleFonts]="rootOptions.googleFonts"
 					[allowExternalContent]="rootOptions.allowExternalContent"
+					[limits]="rootOptions.limits"
 					[inspectorInitiallyOpen]="rootOptions.inspectorInitiallyOpen"
 					[smartArt3D]="smartArt3D"
 					[surfaceChart3D]="surfaceChart3D"

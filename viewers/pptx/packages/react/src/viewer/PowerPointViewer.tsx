@@ -255,6 +255,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			initialSlide,
 			googleFonts,
 			allowExternalContent,
+			limits,
 		} = props;
 		// `readOnly` takes editing away from a host that also allows it.
 		const hostCanEdit = canEditProp && !readOnly;
@@ -1000,6 +1001,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 			initialSlide,
 			googleFonts,
+			limits,
 			setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 			setModifyVerifier: readOnlyRec.setModifyVerifier,
 			setCompatToasts: compatToastsState.setToasts,

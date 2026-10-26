@@ -1,4 +1,4 @@
-import type { GoogleFontsOption } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
 /**
  * useViewerBuildingBlocksState: The dialogs / editor-operations /
  * integration half of `useViewerBuildingBlocks`'s hook wiring, split out
@@ -48,6 +48,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	googleFonts?: GoogleFontsOption;
 	/** Host `allowExternalContent`: overrides the Trust Center setting for every load when set. */
 	allowExternalContent?: boolean;
+	/** Host `limits`: the load limits; forwarded to `useViewerIntegration`. */
+	limits?: PptxLoadLimits;
 	autosaveEnabled: boolean;
 	userName?: string;
 	handle?: React.ForwardedRef<PowerPointViewerHandle>;
@@ -89,7 +91,7 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
-	const { initialSlide, googleFonts, allowExternalContent } = input;
+	const { initialSlide, googleFonts, allowExternalContent, limits } = input;
 
 	// The headless API has no customization controller, so the host switch
 	// locks the options store directly, as `useViewerCustomization` does for
@@ -226,6 +228,7 @@ export function useViewerBuildingBlocksState(
 		autosaveEnabled,
 		initialSlide,
 		googleFonts,
+		limits,
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images
 		// under the same default-off, core-side SSRF/privacy guard.

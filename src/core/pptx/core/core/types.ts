@@ -45,6 +45,7 @@ import type {
 	BackgroundStyleScope,
 } from './runtime/PptxHandlerRuntimeBackgroundStyles';
 import type { StyleReferenceReResolution } from './runtime/PptxHandlerRuntimeThemeEffects';
+import type { PptxLoadLimits } from './load-limits';
 
 export interface PptxHandlerLoadOptions {
 	eagerDecodeImages?: boolean;
@@ -54,9 +55,25 @@ export interface PptxHandlerLoadOptions {
 	 * Defaults to 500 MiB. When the sum of `_data.uncompressedSize` across
 	 * all archive entries exceeds this cap, `load()` rejects with a
 	 * {@link ZipBombError}. A hard cap of 65 536 archive entries also
-	 * applies.
+	 * applies. `limits.maxUncompressedBytes` takes precedence when set.
 	 */
 	maxUncompressedBytes?: number;
+	/**
+	 * Bounds on the work this load may do, for hosts that open untrusted
+	 * decks. Every field left out keeps its default, so omitting `limits`
+	 * changes nothing: 500 MiB inflated, 65,536 ZIP entries, and no limit on
+	 * input size, slides or shapes. Each limit is checked before the work it
+	 * bounds (the input size before the archive is opened, the slide count
+	 * before any slide is parsed, the shape count as each slide is parsed).
+	 * `maxInputBytes`, `maxSlides` and `maxShapes` reject with
+	 * `PptxLoadLimitError` (code `PPTX_LOAD_LIMIT`); `maxUncompressedBytes`
+	 * and `maxEntries` reject with {@link ZipBombError} as before.
+	 * `getPptxLoadLimitViolation` reads the limit and observed value from
+	 * either. An invalid value (not a positive finite number, or `maxEntries`
+	 * above 65,536) throws `RangeError` before any work. `PptxHandler.loadFromJson`
+	 * applies the same limits, `maxInputBytes` to the UTF-8 size of its text.
+	 */
+	limits?: PptxLoadLimits;
 	/**
 	 * When `false` (default), relationship targets that resolve to
 	 * `http://` or `https://` URLs are dropped from rendered slides
@@ -87,21 +104,41 @@ export const MAX_ZIP_ENTRY_COUNT = 65536;
 export class ZipBombError extends Error {
 	public readonly code = 'ZIP_BOMB';
 
+	/** Inflated bytes declared or read when a size limit failed (a lower bound while streaming). */
 	public readonly uncompressedBytes: number | undefined;
 
+	/** The value of the limit that failed. */
 	public readonly limit: number;
 
+	/** Number of archive entries, when the entry-count limit failed. */
 	public readonly entryCount: number | undefined;
+
+	/**
+	 * The `PptxLoadLimits` field behind this error (`maxUncompressedBytes` or
+	 * `maxEntries`); `undefined` for a forged size or an unsafe part name.
+	 */
+	public readonly loadLimit: 'maxUncompressedBytes' | 'maxEntries' | undefined;
+
+	/** The observed value for {@link loadLimit}, when known. */
+	public readonly actual: number | undefined;
 
 	constructor(
 		message: string,
-		details: { uncompressedBytes?: number; limit: number; entryCount?: number },
+		details: {
+			uncompressedBytes?: number;
+			limit: number;
+			entryCount?: number;
+			loadLimit?: 'maxUncompressedBytes' | 'maxEntries';
+			actual?: number;
+		},
 	) {
 		super(message);
 		this.name = 'ZipBombError';
 		this.uncompressedBytes = details.uncompressedBytes;
 		this.limit = details.limit;
 		this.entryCount = details.entryCount;
+		this.loadLimit = details.loadLimit;
+		this.actual = details.actual;
 	}
 }
 

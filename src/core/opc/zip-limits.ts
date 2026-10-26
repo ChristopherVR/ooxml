@@ -32,8 +32,14 @@ export interface ZipLimits {
 	maxTotalBytes?: number;
 	/** Format name used in error messages, such as `DOCX`. */
 	label?: string;
-	/** Builds the error thrown on a violation; defaults to {@link ZipLimitError}. */
-	createError?: (message: string, details: { limit: number; kind: ZipLimitKind }) => Error;
+	/**
+	 * Builds the error thrown on a violation; defaults to {@link ZipLimitError}. `actual` is the
+	 * observed value when there is one (a lower bound for a size found while inflating).
+	 */
+	createError?: (
+		message: string,
+		details: { limit: number; kind: ZipLimitKind; actual?: number | undefined },
+	) => Error;
 }
 
 /** Thrown when a package breaks a size, entry-count or part-name limit. */
@@ -42,11 +48,17 @@ export class ZipLimitError extends Error {
 	readonly limit: number;
 	/** The check that failed (absent when the error was built without one). */
 	readonly kind: ZipLimitKind | undefined;
-	constructor(message: string, details: { limit: number; kind?: ZipLimitKind }) {
+	/** The observed value, when known (a lower bound for a size found while inflating). */
+	readonly actual: number | undefined;
+	constructor(
+		message: string,
+		details: { limit: number; kind?: ZipLimitKind; actual?: number | undefined },
+	) {
 		super(message);
 		this.name = 'ZipLimitError';
 		this.limit = details.limit;
 		this.kind = details.kind;
+		this.actual = details.actual;
 	}
 }
 
@@ -77,7 +89,7 @@ interface Resolved {
 	maxEntryBytes: number;
 	maxTotalBytes: number;
 	label: string;
-	fail: (message: string, limit: number, kind: ZipLimitKind) => Error;
+	fail: (message: string, limit: number, kind: ZipLimitKind, actual?: number) => Error;
 }
 
 function resolveLimits(limits: ZipLimits): Resolved {
@@ -87,8 +99,10 @@ function resolveLimits(limits: ZipLimits): Resolved {
 		maxEntryBytes: limits.maxEntryBytes ?? DEFAULT_ZIP_LIMITS.maxEntryBytes,
 		maxTotalBytes: limits.maxTotalBytes ?? DEFAULT_ZIP_LIMITS.maxTotalBytes,
 		label: limits.label ?? 'ZIP',
-		fail: (message, limit, kind) =>
-			create ? create(message, { limit, kind }) : new ZipLimitError(message, { limit, kind }),
+		fail: (message, limit, kind, actual) =>
+			create
+				? create(message, { limit, kind, actual })
+				: new ZipLimitError(message, { limit, kind, actual }),
 	};
 }
 
@@ -169,6 +183,7 @@ export async function* streamEntryGuarded(
 					`${r.label} part ${entry.name} inflates past its declared size`,
 					r.maxEntryBytes,
 					size > declared ? 'declaredSize' : 'maxEntryBytes',
+					size,
 				),
 			);
 		if (alreadyRead + size > r.maxTotalBytes)
@@ -177,6 +192,7 @@ export async function* streamEntryGuarded(
 					`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
 					r.maxTotalBytes,
 					'maxTotalBytes',
+					alreadyRead + size,
 				),
 			);
 		queue.push(chunk);
@@ -231,6 +247,7 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 			`${r.label} package exceeds the ${r.maxEntries.toLocaleString('en-US')} part limit`,
 			r.maxEntries,
 			'maxEntries',
+			entries.length,
 		);
 	let declared = 0;
 	for (const entry of entries) {
@@ -244,6 +261,7 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 				`${r.label} part ${entry.name} exceeds the uncompressed part size limit`,
 				r.maxEntryBytes,
 				'maxEntryBytes',
+				size,
 			);
 		declared += size;
 	}
@@ -252,6 +270,7 @@ export function guardZip(zip: JSZip, limits: ZipLimits = {}): JSZip {
 			`${r.label} package exceeds the ${mib(r.maxTotalBytes)} MiB uncompressed content limit`,
 			r.maxTotalBytes,
 			'maxTotalBytes',
+			declared,
 		);
 	const produced = new Map<string, number>();
 	let total = 0;
@@ -299,6 +318,7 @@ export async function openZip(
 			`${r.label} package exceeds the ${mib(maxInput)} MiB compressed input limit`,
 			maxInput,
 			'maxInputBytes',
+			bytes.byteLength,
 		);
 	return guardZip(await JSZip.loadAsync(bytes), limits);
 }

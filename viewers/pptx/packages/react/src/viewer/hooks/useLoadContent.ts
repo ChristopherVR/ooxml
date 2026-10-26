@@ -1,5 +1,6 @@
 import type {
 	CompatibilityWarningToast,
+	PptxLoadLimits,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
@@ -7,6 +8,7 @@ import {
 	applyImagePathPatches,
 	compatibilityWarningToasts,
 	createPresentationLoadResources,
+	pptxLoadErrorMessage,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
 	resolveInitialSlideIndex,
@@ -48,6 +50,7 @@ import { PptxHandler, EncryptedFileError } from 'pptx-viewer-core';
 import { useEffect, useRef } from 'react';
 
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from '../constants';
+import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { glyphOutlineFontCache } from '../utils/glyph-outline-cache';
 import { partitionTemplateElements } from '../utils/template-editing';
@@ -143,6 +146,12 @@ export interface UseLoadContentInput {
 	 * changing it never reloads the deck; it applies on the next load.
 	 */
 	initialSlide?: number;
+	/**
+	 * Host `limits` prop, passed to `PptxHandler.load`; unset keeps the core
+	 * defaults. Read through a ref like `initialSlide`, so a new object never
+	 * reloads the deck; it applies on the next load.
+	 */
+	limits?: PptxLoadLimits;
 }
 
 export interface UseLoadContentResult {
@@ -201,10 +210,17 @@ export function useLoadContent({
 	onContentApplied,
 	allowExternalImages,
 	initialSlide,
+	limits,
 }: UseLoadContentInput): UseLoadContentResult {
 	const handlerRef = useRef<PptxHandler | null>(null);
 	const initialSlideRef = useRef(initialSlide);
 	initialSlideRef.current = initialSlide;
+	const limitsRef = useRef(limits);
+	limitsRef.current = limits;
+	// The load-error text for a deck over a load limit is localized.
+	const { t } = useTranslation();
+	const translateRef = useRef(t);
+	translateRef.current = t;
 	const originalBufferRef = useRef<ArrayBuffer | null>(null);
 	const renderTokenRef = useRef(0);
 
@@ -249,7 +265,10 @@ export function useLoadContent({
 				// Trust Center > "Allow external content" (default off, matching
 				// core's own SSRF/privacy-safe default): only pass `true` through
 				// when the option is explicitly on.
-				const parsed = await handler.load(buffer as ArrayBuffer, { allowExternalImages });
+				const parsed = await handler.load(buffer as ArrayBuffer, {
+					allowExternalImages,
+					limits: limitsRef.current,
+				});
 				if (cancelled || token !== renderTokenRef.current) {
 					return;
 				}
@@ -454,7 +473,7 @@ export function useLoadContent({
 						// swallow here has previously masked real bugs (e.g. a caller
 						// missing a newly-required setter) as inexplicable hangs.
 						console.error('[pptx] Failed to load presentation content:', err);
-						setError(err instanceof Error ? err.message : String(err));
+						setError(pptxLoadErrorMessage(err, translateRef.current));
 					}
 				}
 			} finally {
