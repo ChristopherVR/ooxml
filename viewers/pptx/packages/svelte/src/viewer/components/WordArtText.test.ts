@@ -107,8 +107,15 @@ describe('wordArtText (Svelte)', () => {
 	});
 
 	it('renders nothing for a non-warped preset', () => {
-		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textPlain' } }));
+		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textNoShape' } }));
 		expect(svg).toBeNull();
+	});
+
+	it('renders textPlain through the glyph envelope, one glyph per character', () => {
+		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textPlain' } }));
+		expect(svg?.querySelector('textPath')).toBeNull();
+		const glyphTexts = (svg ? logicalGlyphElements(svg) : []).map(representativeTextEl);
+		expect(glyphTexts.map((t) => t.textContent).join('')).toBe('Hello');
 	});
 
 	it('renders one <text> per glyph (true two-curve envelope) for textInflate, not a shared textPath', () => {

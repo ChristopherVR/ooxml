@@ -129,11 +129,23 @@ describe('wordArtText', () => {
 	it('renders nothing for a non-warped preset', () => {
 		const wrapper = mount(WordArtText, {
 			props: {
-				element: warpedText({ textStyle: { textWarpPreset: 'textPlain' } }),
+				element: warpedText({ textStyle: { textWarpPreset: 'textNoShape' } }),
 				zIndex: 0,
 			},
 		});
 		expect(wrapper.find('svg').exists()).toBeFalsy();
+	});
+
+	it('renders textPlain through the glyph envelope, one glyph per character', () => {
+		const wrapper = mount(WordArtText, {
+			props: {
+				element: warpedText({ textStyle: { textWarpPreset: 'textPlain' } }),
+				zIndex: 0,
+			},
+		});
+		expect(wrapper.find('textPath').exists()).toBeFalsy();
+		const glyphTexts = logicalGlyphElements(wrapper.element).map(representativeTextEl);
+		expect(glyphTexts.map((t) => t.textContent).join('')).toBe('Hello');
 	});
 
 	it('renders nothing when no warp preset is set', () => {

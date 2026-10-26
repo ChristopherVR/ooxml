@@ -35,10 +35,13 @@
  * chevron/fade/slant/cascade/...) is rendered with a single shared-baseline
  * curve, a further simplification left alone here.
  */
-import { sampleWarpPresetCurve } from './text-warp-preset-sampler';
+import { sampleWarpPresetCurve, sampleWarpPresetXExtent } from './text-warp-preset-sampler';
+import type { SampledWarpXExtent } from './text-warp-preset-sampler';
 
 /** Presets that carry an independent top/bottom envelope curve. */
 export const GLYPH_ENVELOPE_PRESETS: ReadonlySet<string> = new Set([
+	// "Plain": straight top and bottom edges, so the block fills the shape.
+	'textPlain',
 	'textInflate',
 	'textDeflate',
 	'textInflateBottom',
@@ -194,6 +197,25 @@ function clampBand(top: number, bottom: number): EnvelopeCurveFractions {
 		clampedBottom = mid + MIN_BAND / 2;
 	}
 	return { top: clampedTop, bottom: clampedBottom };
+}
+
+/**
+ * Where the top and bottom envelope curves start and end horizontally, each a
+ * `[start, end]` fraction of box width. The full width for every preset
+ * except `textPlain` away from its default `adj`, and for a preset outside
+ * {@link GLYPH_ENVELOPE_PRESETS}.
+ */
+export function envelopeCurveXExtent(
+	preset: string,
+	adj?: number,
+	adj2?: number,
+): SampledWarpXExtent {
+	return (
+		(hasGlyphEnvelope(preset) ? sampleWarpPresetXExtent(preset, adj, adj2) : undefined) ?? {
+			top: [0, 1],
+			bottom: [0, 1],
+		}
+	);
 }
 
 /** The undeformed band, exported so layout code can compute a stable scale=1 baseline. */

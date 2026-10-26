@@ -20,9 +20,12 @@ describe('shouldUseSvgWarp', () => {
 		expect(shouldUseSvgWarp(undefined)).toBeFalsy();
 	});
 
-	it('returns false for textNoShape and textPlain', () => {
+	it('returns false for textNoShape', () => {
 		expect(shouldUseSvgWarp('textNoShape')).toBeFalsy();
-		expect(shouldUseSvgWarp('textPlain')).toBeFalsy();
+	});
+
+	it('returns true for textPlain', () => {
+		expect(shouldUseSvgWarp('textPlain')).toBeTruthy();
 	});
 
 	it('returns true for all SVG_WARP_PRESETS members', () => {

@@ -27,7 +27,7 @@ export function renderWarpedText(
 	}
 	const style = element.textStyle;
 	const preset = style?.textWarpPreset;
-	if (!preset || preset === 'textNoShape' || preset === 'textPlain') {
+	if (!preset || preset === 'textNoShape') {
 		return null;
 	}
 	const paragraphs = groupIntoParagraphs(element);

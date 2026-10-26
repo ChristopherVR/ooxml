@@ -20,7 +20,7 @@ import type {
  *
  * `getTextWarp(element)` resolves an element's OOXML `prstTxWarp` preset into a
  * `TextWarpDef` that the Angular template can consume without any React/HTML
- * string injection. Every classified preset (`textNoShape`/`textPlain`/unknown
+ * string injection. Every classified preset (`textNoShape`/unknown
  * excluded) now resolves to `strategy: 'path'`: SVG `<textPath>` along a
  * curved/arc/circle/bent baseline. The `pathLines` array contains one entry
  * per paragraph with a pre-computed SVG `d` attribute; the template renders an
@@ -38,7 +38,7 @@ import type {
  * `'css'` stay in the `TextWarpDef` union for API stability; nothing produces
  * one any more.
  *
- * Presets classified as `'none'` (textNoShape, textPlain, unknown) return
+ * Presets classified as `'none'` (textNoShape, unknown) return
  * `undefined` so callers can skip extra rendering without an allowlist check.
  */
 import type { PptxElement, PptxTextWarpPreset, TextSegment } from 'pptx-viewer-core';
@@ -175,7 +175,7 @@ const DEFAULT_COLOR = '#000000';
 /**
  * Resolve a `PptxElement`'s text warp preset into a `TextWarpDef` descriptor,
  * or `undefined` when the element carries no warp (or the preset is `textNoShape` /
- * `textPlain` / unknown).
+ * unknown).
  *
  * @param element  Any `PptxElement`.  Elements without text properties always
  *                 return `undefined`.
@@ -184,7 +184,7 @@ const DEFAULT_COLOR = '#000000';
  *                 paragraphs are resolved to their display text, mirroring
  *                 React's warp-text-renderer.
  * @returns  A `TextWarpDef` with `strategy: 'path'` for a classified preset,
- *           or `undefined` for `textNoShape`/`textPlain`/an unknown preset.
+ *           or `undefined` for `textNoShape`/an unknown preset.
  */
 export function getTextWarp(
 	element: PptxElement,
@@ -197,7 +197,7 @@ export function getTextWarp(
 	const ts = element.textStyle;
 	const preset = ts?.textWarpPreset;
 
-	if (!preset || preset === 'textNoShape' || preset === 'textPlain') {
+	if (!preset || preset === 'textNoShape') {
 		return undefined;
 	}
 

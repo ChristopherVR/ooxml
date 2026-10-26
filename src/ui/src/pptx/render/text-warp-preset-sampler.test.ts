@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { WARP_PRESET_DEFINITIONS } from './text-warp-preset-definitions';
-import { hasWarpPresetDefinition, sampleWarpPresetCurve } from './text-warp-preset-sampler';
+import {
+	hasWarpPresetDefinition,
+	sampleWarpPresetCurve,
+	sampleWarpPresetXExtent,
+} from './text-warp-preset-sampler';
 
 const ALL_PRESETS = Object.keys(WARP_PRESET_DEFINITIONS);
 
@@ -108,5 +112,56 @@ describe('sampleWarpPresetCurve', () => {
 		const withoutAdj = sampleWarpPresetCurve('textCanDown', 0.5, undefined, undefined)!;
 		const withExplicitDefault = sampleWarpPresetCurve('textCanDown', 0.5, 14286, undefined)!;
 		expect(withoutAdj).toStrictEqual(withExplicitDefault);
+	});
+});
+
+describe('textPlain', () => {
+	it('runs both paths along the box edges, so the block fills the shape', () => {
+		for (const u of [0, 0.3, 0.5, 1]) {
+			expect(sampleWarpPresetCurve('textPlain', u, undefined, undefined)).toStrictEqual({
+				top: 0,
+				bottom: 1,
+			});
+		}
+	});
+
+	it('spans the full width at the default adj', () => {
+		expect(sampleWarpPresetXExtent('textPlain', undefined, undefined)).toStrictEqual({
+			top: [0, 1],
+			bottom: [0, 1],
+		});
+		expect(sampleWarpPresetXExtent('textPlain', 50000, undefined)).toStrictEqual({
+			top: [0, 1],
+			bottom: [0, 1],
+		});
+	});
+
+	it('shortens the top and bottom paths at opposite ends away from the default adj', () => {
+		const left = sampleWarpPresetXExtent('textPlain', 30000, undefined)!;
+		expect(left.top[0]).toBeCloseTo(0.4, 6);
+		expect(left.top[1]).toBeCloseTo(1, 6);
+		expect(left.bottom[0]).toBeCloseTo(0, 6);
+		expect(left.bottom[1]).toBeCloseTo(0.6, 6);
+		const right = sampleWarpPresetXExtent('textPlain', 70000, undefined)!;
+		expect(right.top[0]).toBeCloseTo(0, 6);
+		expect(right.top[1]).toBeCloseTo(0.6, 6);
+		expect(right.bottom[0]).toBeCloseTo(0.4, 6);
+		expect(right.bottom[1]).toBeCloseTo(1, 6);
+	});
+
+	it('pins adj to its 30000..70000 range', () => {
+		expect(sampleWarpPresetXExtent('textPlain', 0, undefined)).toStrictEqual(
+			sampleWarpPresetXExtent('textPlain', 30000, undefined),
+		);
+	});
+
+	it('gives every other preset the full width', () => {
+		for (const preset of ALL_PRESETS.filter((p) => p !== 'textPlain')) {
+			expect(sampleWarpPresetXExtent(preset, undefined, undefined)).toStrictEqual({
+				top: [0, 1],
+				bottom: [0, 1],
+			});
+		}
+		expect(sampleWarpPresetXExtent('textArchUp', undefined, undefined)).toBeUndefined();
 	});
 });

@@ -1,7 +1,7 @@
 /**
  * Generates `text-warp-fidelity.pptx`: WordArt (`a:prstTxWarp`) text boxes
- * covering the "envelope" (inflate/deflate/can) and former "simple"
- * (slant/fade/cascade) preset families, plus an arch control and a
+ * covering the "envelope" (plain/inflate/deflate/can) and former "simple"
+ * (slant/fade/cascade) preset families, plus arch and no-warp controls and a
  * multi-paragraph envelope case.
  *
  * Every single-paragraph shape here exercises the common WordArt authoring
@@ -103,8 +103,9 @@ const WARPS: WarpSpec[] = [
 	{ name: 'cascade-down', prst: 'textCascadeDown', x: 500, y: 120 },
 	// Control: a `path`-family preset, unaffected by either bug.
 	{ name: 'arch-control', prst: 'textArchUp', x: 20, y: 220 },
-	// Control: no warp at all (flat text).
-	{ name: 'plain-control', prst: 'textPlain', x: 260, y: 220 },
+	// Control: no warp at all (flat text). `textNoShape` is "No Transform";
+	// `textPlain` is a real warp (see the `plain` shape below).
+	{ name: 'plain-control', prst: 'textNoShape', x: 260, y: 220 },
 	// Multi-paragraph envelope residual: every binding used to gate the true
 	// per-glyph two-curve envelope on a single paragraph and fall back to a
 	// shared-baseline `<textPath>` per line for anything else. Both paragraphs
@@ -135,6 +136,21 @@ const WARPS: WarpSpec[] = [
 		// See `WarpSpec.fontFamily`'s doc comment: must have no catalogue match
 		// so this shape deterministically exercises the traced-outline path.
 		fontFamily: 'PptxE2EWideGlyphNoOutlineMatch',
+	},
+	// `textPlain` ("Square" in PowerPoint's Transform gallery): its top and
+	// bottom paths are the box's own edges, so the word is stretched (here,
+	// squeezed) to fill the shape on one line. The word is far wider than this
+	// small square box; it used to render unwarped, wrapping a letter or two
+	// per line.
+	{
+		name: 'plain',
+		prst: 'textPlain',
+		x: 260,
+		y: 300,
+		widthPt: 40,
+		heightPt: 40,
+		fontSizePt: 14,
+		paragraphs: ['schedule'],
 	},
 ];
 

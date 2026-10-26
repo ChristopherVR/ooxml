@@ -175,9 +175,12 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 		expect(new Set(scales.map((s) => s.toFixed(4))).size).toBeGreaterThan(1);
 	});
 
-	it('renders nothing for textPlain', () => {
+	it('renders textPlain as one glyph per character, never a <textPath>', () => {
 		const el = renderWarped('textPlain');
-		expect(el.querySelector('svg')).toBeNull();
+		expect(el.querySelector('svg')).not.toBeNull();
+		expect(el.querySelector('textPath')).toBeNull();
+		const glyphs = logicalGlyphNodes(el).map(representativeText);
+		expect(glyphs.map((t) => t.textContent).join('')).toBe('Hello');
 	});
 
 	it('a multi-paragraph inflate element still uses the per-glyph envelope for every line', () => {

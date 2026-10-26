@@ -111,3 +111,39 @@ describe('createEnvelopeWarp', () => {
 		}
 	});
 });
+
+describe('createEnvelopeWarp for textPlain', () => {
+	it('stretches the block box onto the whole shape box', () => {
+		// A wide, short block (a word) into a small square: squeezed across,
+		// stretched down.
+		const block = { left: 5, top: -20, right: 205, bottom: 0 };
+		const warp = createEnvelopeWarp('textPlain', 40, 40, undefined, undefined, block)!;
+		const corners = [
+			[5, -20, 0, 0],
+			[205, -20, 40, 0],
+			[5, 0, 0, 40],
+			[205, 0, 40, 40],
+			[105, -10, 20, 20],
+		] as const;
+		for (const [x, y, ex, ey] of corners) {
+			const p = warp.map(x, y);
+			expect(p.x).toBeCloseTo(ex, 6);
+			expect(p.y).toBeCloseTo(ey, 6);
+		}
+	});
+
+	it('slants the block into the shortened paths away from the default adj', () => {
+		const warp = createEnvelopeWarp('textPlain', 100, 50, 30000, undefined, BLOCK)!;
+		expect(warp.map(0, 0).x).toBeCloseTo(40, 6);
+		expect(warp.map(1, 0).x).toBeCloseTo(100, 6);
+		expect(warp.map(0, 1).x).toBeCloseTo(0, 6);
+		expect(warp.map(1, 1).x).toBeCloseTo(60, 6);
+		expect(warp.map(0.5, 1).y).toBeCloseTo(50, 6);
+	});
+
+	it('leaves the other presets on full-width curves', () => {
+		const warp = createEnvelopeWarp('textInflate', 600, 200, 0, undefined, BLOCK)!;
+		expect(warp.map(0, 0).x).toBeCloseTo(0, 6);
+		expect(warp.map(1, 1).x).toBeCloseTo(600, 6);
+	});
+});

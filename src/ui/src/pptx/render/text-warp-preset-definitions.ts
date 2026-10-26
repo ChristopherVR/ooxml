@@ -69,12 +69,26 @@ export type WarpCurveSegment =
 			readonly swAng: string;
 	  };
 
+/** Guide names for where a path starts and ends horizontally. */
+export interface WarpCurveXExtent {
+	readonly startX: string;
+	readonly endX: string;
+}
+
 /** One preset's transcribed guide list plus its top/bottom curve segments. */
 export interface WarpPresetDefinition {
 	readonly defaultAdj: number;
 	readonly gdLst: readonly GeometryGuide[];
 	readonly top: WarpCurveSegment;
 	readonly bottom: WarpCurveSegment;
+	/**
+	 * Horizontal extent of the top path, for a preset whose path does not run
+	 * from `l` to `r` (`textPlain` away from its default `adj`). Omitted means
+	 * the full width.
+	 */
+	readonly topX?: WarpCurveXExtent;
+	/** Horizontal extent of the bottom path; see {@link topX}. */
+	readonly bottomX?: WarpCurveXExtent;
 }
 
 function line(startY: string, endY: string): WarpCurveSegment {
@@ -233,5 +247,32 @@ export const WARP_PRESET_DEFINITIONS: Readonly<Record<string, WarpPresetDefiniti
 		],
 		top: quad('ty', 't', 'ty'),
 		bottom: line('b', 'b'),
+	},
+	// "Plain": both paths are straight lines along the box's top and bottom
+	// edges, so the text block is stretched to fill the shape. At the default
+	// adj (50000) both span `l..r`; moving adj off centre shortens the top path
+	// at one end and the bottom path at the other, slanting the block.
+	textPlain: {
+		defaultAdj: 50000,
+		gdLst: [
+			{ name: 'a', formula: 'pin 30000 adj 70000' },
+			{ name: 'mid', formula: '*/ a w 100000' },
+			{ name: 'midDir', formula: '+- mid 0 hc' },
+			{ name: 'dl', formula: '+- mid 0 l' },
+			{ name: 'dr', formula: '+- r 0 mid' },
+			{ name: 'dl2', formula: '*/ dl 2 1' },
+			{ name: 'dr2', formula: '*/ dr 2 1' },
+			{ name: 'dx', formula: '?: midDir dr2 dl2' },
+			{ name: 'xr', formula: '+- l dx 0' },
+			{ name: 'xl', formula: '+- r 0 dx' },
+			{ name: 'tlx', formula: '?: midDir l xl' },
+			{ name: 'trx', formula: '?: midDir xr r' },
+			{ name: 'blx', formula: '?: midDir xl l' },
+			{ name: 'brx', formula: '?: midDir r xr' },
+		],
+		top: line('t', 't'),
+		bottom: line('b', 'b'),
+		topX: { startX: 'tlx', endX: 'trx' },
+		bottomX: { startX: 'blx', endX: 'brx' },
 	},
 };

@@ -150,8 +150,15 @@ describe('renderWarpedText: envelope/former-simple presets render as true SVG te
 		expect(new Set(scales.map((s) => s.toFixed(4))).size).toBeGreaterThan(1);
 	});
 
-	it('renders nothing for textPlain', () => {
-		expect(renderWarpedText(warpedElement('textPlain'), buildContext())).toBeNull();
+	it('renders nothing for textNoShape', () => {
+		expect(renderWarpedText(warpedElement('textNoShape'), buildContext())).toBeNull();
+	});
+
+	it('renders textPlain through the glyph envelope, never a <textPath>', () => {
+		const node = renderWarpedText(warpedElement('textPlain'), buildContext());
+		expect(node?.tagName.toLowerCase()).toBe('svg');
+		expect(node?.querySelector('textPath')).toBeNull();
+		expect(node?.querySelectorAll('text, path').length).toBeGreaterThan(0);
 	});
 
 	it('a short caption of very wide glyphs on a steep can-up curve renders sliced glyphs, clipped and seamed', () => {

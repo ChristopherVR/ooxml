@@ -22,12 +22,13 @@ import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
  * Rendering-strategy category for a warp preset.
  *  - `path`:     renders along an SVG `<textPath>` (arcs, waves, circles,
  *                slant/fade/cascade, …)
- *  - `envelope`: non-uniform vertical stretch (inflate/deflate/can). Also
+ *  - `envelope`: the text block stretched between a top and a bottom curve
+ *                (plain/inflate/deflate/can). Also
  *                renders along an SVG `<textPath>`; kept as its own category
  *                for documentation/grouping only (see {@link ENVELOPE_PRESETS}).
  *  - `simple`:   unused (kept for API stability; no preset classifies here
  *                any more, see {@link SIMPLE_PRESETS}).
- *  - `none`:     no warp (`textNoShape`, `textPlain`, unknown)
+ *  - `none`:     no warp (`textNoShape`, unknown)
  *
  * Every classified preset (`path` and `envelope` alike) should be routed to
  * SVG `<textPath>` rendering via {@link shouldUseSvgWarp}; a binding that
@@ -37,7 +38,7 @@ import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
  */
 export type WarpCategory = 'path' | 'envelope' | 'simple' | 'none';
 
-const NONE_PRESETS: ReadonlySet<string> = new Set(['textNoShape', 'textPlain']);
+const NONE_PRESETS: ReadonlySet<string> = new Set(['textNoShape']);
 
 /** Presets that render best with SVG textPath along curved/circular paths. */
 const PATH_PRESETS: ReadonlySet<string> = new Set([
@@ -76,7 +77,9 @@ const PATH_PRESETS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Presets that stretch text non-uniformly per line (inflate/deflate/can).
+ * Presets that stretch the text block between a top and a bottom curve
+ * (plain/inflate/deflate/can). `textPlain`'s curves are the box's straight
+ * top and bottom edges, so it stretches the block to fill the shape.
  *
  * Historically these were CSS-transform-approximated (see
  * {@link getEnvelopeCssTransform}), but every one of them already has a
@@ -87,6 +90,7 @@ const PATH_PRESETS: ReadonlySet<string> = new Set([
  * {@link shouldUseSvgWarp}, which is `true` for all of them.
  */
 const ENVELOPE_PRESETS: ReadonlySet<string> = new Set([
+	'textPlain',
 	'textInflate',
 	'textDeflate',
 	'textInflateBottom',
@@ -271,6 +275,7 @@ export const SVG_WARP_PRESETS: ReadonlySet<string> = new Set([
 	'textButtonPour',
 	'textDeflateInflate',
 	'textDeflateInflateDeflate',
+	'textPlain',
 ]);
 
 const clamp4 = (n: number): number => Math.max(0, Math.min(n, 4));
@@ -726,6 +731,15 @@ function deflateInflateDeflatePath(w: number, h: number, t: number, adj?: number
 	);
 }
 
+/**
+ * Plain: a straight baseline. Only a fallback; every binding renders
+ * `textPlain` through the glyph envelope, which stretches the block to the box.
+ */
+function plainPath(w: number, h: number, t: number): string {
+	const y = h * (0.2 + t * 0.6);
+	return `M 0,${y} L ${w},${y}`;
+}
+
 // ── Generator look-up table ─────────────────────────────────────────────
 
 export const WARP_PATH_GENERATORS: Readonly<Record<string, WarpPathGenerator>> = {
@@ -768,13 +782,14 @@ export const WARP_PATH_GENERATORS: Readonly<Record<string, WarpPathGenerator>> =
 	textButtonPour: buttonPourPath,
 	textDeflateInflate: deflateInflatePath,
 	textDeflateInflateDeflate: deflateInflateDeflatePath,
+	textPlain: plainPath,
 };
 
 // ── Public API ──────────────────────────────────────────────────────────
 
 /** Returns `true` when the preset should use SVG `<textPath>` rendering. */
 export function shouldUseSvgWarp(preset: PptxTextWarpPreset | undefined): boolean {
-	if (!preset || preset === 'textNoShape' || preset === 'textPlain') {
+	if (!preset || preset === 'textNoShape') {
 		return false;
 	}
 	return SVG_WARP_PRESETS.has(preset);

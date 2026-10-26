@@ -128,9 +128,12 @@ describe('getWarpCategory', () => {
 		expect(getWarpCategory(undefined)).toBe('none');
 	});
 
-	it('returns "none" for textNoShape and textPlain', () => {
+	it('returns "none" for textNoShape', () => {
 		expect(getWarpCategory('textNoShape')).toBe('none');
-		expect(getWarpCategory('textPlain')).toBe('none');
+	});
+
+	it('returns "envelope" for textPlain (the block stretched to the box)', () => {
+		expect(getWarpCategory('textPlain')).toBe('envelope');
 	});
 
 	it('returns "none" for unknown preset', () => {
@@ -227,8 +230,9 @@ describe('getTextWarp - no warp', () => {
 		expect(getTextWarp(makeTextElement('textNoShape', { text: 'hi' }))).toBeUndefined();
 	});
 
-	it('returns undefined for textPlain', () => {
-		expect(getTextWarp(makeTextElement('textPlain', { text: 'hi' }))).toBeUndefined();
+	it('resolves textPlain to the glyph envelope', () => {
+		const def = getTextWarp(makeTextElement('textPlain', { text: 'hi' }));
+		expect(def?.strategy).toBe('glyph');
 	});
 
 	it('returns undefined for unknown preset', () => {
