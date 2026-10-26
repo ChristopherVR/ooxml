@@ -10,7 +10,7 @@
  */
 import { Injectable, signal } from '@angular/core';
 import type { OnDestroy } from '@angular/core';
-import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai';
+import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai/host';
 import type {
 	AiChatHistoryController,
 	PptxAiChatStore,

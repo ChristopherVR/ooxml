@@ -10,10 +10,14 @@ import {
 	collectStoredChats,
 	createChatHistoryStore,
 	exportAiChatLogs as exportAiChatLogsPure,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 import type { ExportAiChatLogsMeta, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 
-export { buildChatLogExport, buildChatLogMarkdown, collectStoredChats } from 'ooxml-ui/pptx/ai';
+export {
+	buildChatLogExport,
+	buildChatLogMarkdown,
+	collectStoredChats,
+} from 'ooxml-ui/pptx/ai/host';
 export type {
 	AiLogChat,
 	AiLogExport,

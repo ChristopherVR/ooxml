@@ -23,7 +23,7 @@ import {
 	createPptxAiPanelController,
 	isAiFocusPinned,
 	resolveAiEffectiveTargets,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 import type {
 	AiCanvasHighlight,
 	AiChangeAnimationConfig,

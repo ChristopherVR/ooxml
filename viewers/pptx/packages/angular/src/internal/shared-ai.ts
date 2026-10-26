@@ -1,2 +1,2 @@
-// Compatibility export: the shared implementation is published by ooxml-ui.
-export * from 'ooxml-ui/pptx/ai';
+// Lightweight compatibility helpers; the chat runtime loads in AiChatService.init.
+export * from 'ooxml-ui/pptx/ai/host';

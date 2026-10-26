@@ -16,6 +16,11 @@ The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; **[PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme)** &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
+The optional AI assistant loads its chat engine, tool catalogue and schemas only
+when the assistant panel starts. The main entry uses the lightweight
+`ooxml-ui/pptx/ai/host` helpers, so those runtime modules and `zod` stay out of a
+code-split host application's initial chunks. Existing public imports remain supported.
+
 ## Features
 
 - **Standalone component**: `<pptx-viewer>`, no NgModule needed.

@@ -27,7 +27,7 @@ import {
 	LucideWrench,
 } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
+import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai/host';
 import type { RenderableToolPart } from 'ooxml-ui/pptx/ai';
 
 @Component({

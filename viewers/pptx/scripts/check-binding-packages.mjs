@@ -35,10 +35,9 @@ const packages = [
 const bindings = [...packages.slice(1)];
 // Bindings whose main entry loads the AI panel lazily, so their initial chunks must take the
 // SDK-free helpers from ooxml-ui/pptx/ai/host, never the full ooxml-ui/pptx/ai barrel (zod, the
-// automation catalogue, a dynamic import of the ai SDK). Not Angular: ng-packagr emits the
-// package as one flat module that also holds the chat service, so it has no lazy chunk to
-// keep the barrel in.
-const aiHostBindings = new Set(['react', 'vue', 'vanilla', 'svelte']);
+// automation catalogue, a dynamic import of the ai SDK). Angular defers the external runtime
+// import from its flat FESM until the chat service starts.
+const aiHostBindings = new Set(['react', 'vue', 'vanilla', 'svelte', 'angular']);
 
 function run(command, args, cwd, capture = false) {
 	const result = spawnSync(command, args, {
@@ -250,7 +249,13 @@ ${sharedContextCheck('CommonJS')}`,
 			followDynamic: false,
 		});
 		const eager = bare
-			.filter(({ specifier }) => specifier === 'ooxml-ui/pptx/ai' || specifier === 'ai')
+			.filter(
+				({ specifier, kind }) =>
+					kind !== 'dynamic-import' &&
+					/^(?:ooxml-ui\/pptx\/ai|ai|@ai-sdk\/.+|zod(?:\/.+)?|ooxml-core\/pptx\/automation(?:\/.+)?)$/.test(
+						specifier,
+					),
+			)
 			.map(({ specifier, kind, importer }) => `${kind} of ${specifier} in ${importer}`);
 		assert.deepEqual(eager, [], `${name} ${file} loads the AI runtime in its initial chunks`);
 		console.log(

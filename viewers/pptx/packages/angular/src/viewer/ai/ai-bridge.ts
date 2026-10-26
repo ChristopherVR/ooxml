@@ -1,4 +1,4 @@
-import { createPptxAiBridge } from 'ooxml-ui/pptx/ai';
+import { createPptxAiBridge } from 'ooxml-ui/pptx/ai/host';
 import type {
 	PptxAiBridge,
 	PptxAiBridgePort,

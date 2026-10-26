@@ -14,12 +14,6 @@
  * loaded `ai` SDK behind it) is scoped to the open assistant.
  */
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import {
-	createVanillaChat,
-	isAiAvailable,
-	toolCanvasTarget,
-	toRenderableParts,
-} from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiConfig,
@@ -29,6 +23,7 @@ import type {
 	VanillaChatController,
 	VanillaChatSnapshot,
 } from 'ooxml-ui/pptx/ai';
+import { toolCanvasTarget, toRenderableParts } from 'ooxml-ui/pptx/ai/host';
 
 /** Lifecycle of the AI session bootstrap. */
 export type AiChatInitState = 'checking' | 'unavailable' | 'ready' | 'error';
@@ -83,11 +78,24 @@ export class AiChatService {
 		this.state.set('checking');
 		void (async () => {
 			try {
-				if (!(await isAiAvailable())) {
+				// ng-packagr flattens local modules, so keep this boundary external.
+				const { createVanillaChat, isAiAvailable } = await import('ooxml-ui/pptx/ai');
+				if (this.destroyRef.destroyed) {
+					return;
+				}
+				const available = await isAiAvailable();
+				if (this.destroyRef.destroyed) {
+					return;
+				}
+				if (!available) {
 					this.state.set('unavailable');
 					return;
 				}
 				const controller = await createVanillaChat({ bridge, config });
+				if (this.destroyRef.destroyed) {
+					void controller.stop();
+					return;
+				}
 				this.controller = controller;
 				this.unsubscribe = controller.subscribe((snapshot) => this.applySnapshot(snapshot));
 				this.applySnapshot(controller.getSnapshot());
