@@ -10,6 +10,12 @@ import {
 import type { PresentationBuilderResult } from './builders/sdk/PresentationBuilder';
 import type { PresentationOptions } from './builders/sdk/types';
 import type { PptxHandlerLoadOptions } from './core';
+import {
+	assertPptxInputWithinLimits,
+	assertPptxSlideCountWithinLimits,
+	countPptxShapesWithinLimits,
+	resolvePptxLoadLimits,
+} from './core/load-limits';
 import { PptxHandlerCore } from './PptxHandlerCore';
 import type { PptxData } from './types';
 
@@ -98,6 +104,8 @@ export class PptxHandler extends PptxHandlerCore {
 		data: ArrayBuffer,
 		options: PptxHandlerLoadOptions = {},
 	): Promise<PptxData> {
+		// Before the JSON sniff too, so `maxInputBytes` also bounds a JSON input.
+		assertPptxInputWithinLimits(data.byteLength, resolvePptxLoadLimits(options));
 		const jsonText = decodePptxJsonText(data);
 		if (jsonText !== null) {
 			return this.loadFromJson(jsonText, options);
@@ -114,7 +122,15 @@ export class PptxHandler extends PptxHandlerCore {
 	 * presentation fields win, and the slide array is replaced wholesale.
 	 */
 	public async loadFromJson(text: string, options: PptxHandlerLoadOptions = {}): Promise<PptxData> {
+		const limits = resolvePptxLoadLimits(options);
 		const imported = deserializePptxFromJson(text);
+		// The imported slides never pass through the package loader, so the
+		// slide and shape limits are applied to them here, before they are used.
+		assertPptxSlideCountWithinLimits(imported.slides.length, limits);
+		let shapes = 0;
+		for (const slide of imported.slides) {
+			shapes = countPptxShapesWithinLimits(shapes, slide.elements ?? [], limits);
+		}
 		const blankBytes = await buildBlankPresentationArchive({
 			width: imported.widthEmu,
 			height: imported.heightEmu,
@@ -122,7 +138,9 @@ export class PptxHandler extends PptxHandlerCore {
 			// the overlaid model, so the archive must carry the value itself.
 			firstSlideNumber: imported.firstSlideNumber,
 		});
-		const base = await super.load(blankBytes, options);
+		// The limits were applied to the imported model above; the generated
+		// blank package is not the host's input, so it loads with the defaults.
+		const base = await super.load(blankBytes, { ...options, limits: undefined });
 		return applyImportedPptxData(base, imported);
 	}
 }

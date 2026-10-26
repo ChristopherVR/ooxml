@@ -9,6 +9,7 @@ import type {
 	PptxHandlerLoadOptions,
 	PptxHandlerSaveOptions,
 } from './core';
+import { assertPptxInputWithinLimits, resolvePptxLoadLimits } from './core/load-limits';
 import { convertPptToPptx, isEncryptedLegacyPpt, isLegacyPpt } from './ppt';
 import type {
 	PptxChartData,
@@ -540,6 +541,9 @@ export class PptxHandlerCore {
 	 * ```
 	 */
 	public async load(data: ArrayBuffer, options: PptxHandlerLoadOptions = {}): Promise<PptxData> {
+		// `limits.maxInputBytes` (and the validity of every limit) is checked
+		// before the input is sniffed, decrypted, converted or unzipped.
+		assertPptxInputWithinLimits(data.byteLength, resolvePptxLoadLimits(options));
 		const detection = detectFileFormat(data);
 
 		if (detection.format === 'ole') {

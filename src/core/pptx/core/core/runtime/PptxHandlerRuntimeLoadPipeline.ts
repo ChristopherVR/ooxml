@@ -18,6 +18,7 @@ import { loadThemeVariants } from '../../utils/theme-variants';
 import { parsePresentationSmartTags } from '../../utils/smart-tags-parser';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { PptxLoadDataBuilder } from '../builders';
+import { PptxLoadLimitError } from '../load-limits';
 import type { PptxHandlerLoadOptions } from '../types';
 import {
 	rememberSlideBackgroundOrigin,
@@ -311,24 +312,38 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		try {
 			await this.initializeLoadSession(data, options);
 			reader = this.beginPartReads();
-			await this.detectAndPreserveVbaProject();
-			this.detectDigitalSignatureParts();
-			await this.parseCustomXmlParts();
-			const presentationState = await this.loadPresentationState();
-			const slideMasters = await this.parseSlideMasters();
-			await this.enrichSlideMastersWithTxStyles(slideMasters);
-			const slides = await this.loadSlidesForPresentation(presentationState.sectionBySlideId);
-			const slidesWithWarnings = this.attachSlideWarnings(slides);
-			this.resetElementIdCounter(slides);
-			// Baseline for the save pipeline's "this slide still matches the bytes
-			// in the archive" check. Taken from the slides the CALLER receives, not
-			// the pre-warning ones, so handing them straight back to `save()`
-			// fingerprints identically.
-			recordSlideFingerprints(this.savedSlideFingerprints, slidesWithWarnings);
-			return await this.buildLoadData(presentationState, slidesWithWarnings, slideMasters);
+			try {
+				return await this.loadInitializedSession();
+			} catch (error) {
+				// A slide or shape limit stops the load after the session replaced the
+				// archive: release what was parsed so far (Blob URLs, caches, the
+				// archive) instead of leaving a half-loaded deck behind.
+				if (error instanceof PptxLoadLimitError) {
+					this.dispose();
+				}
+				throw error;
+			}
 		} finally {
 			this.endPartReads(reader);
 		}
+	}
+
+	private async loadInitializedSession(): Promise<PptxData> {
+		await this.detectAndPreserveVbaProject();
+		this.detectDigitalSignatureParts();
+		await this.parseCustomXmlParts();
+		const presentationState = await this.loadPresentationState();
+		const slideMasters = await this.parseSlideMasters();
+		await this.enrichSlideMastersWithTxStyles(slideMasters);
+		const slides = await this.loadSlidesForPresentation(presentationState.sectionBySlideId);
+		const slidesWithWarnings = this.attachSlideWarnings(slides);
+		this.resetElementIdCounter(slides);
+		// Baseline for the save pipeline's "this slide still matches the bytes
+		// in the archive" check. Taken from the slides the CALLER receives, not
+		// the pre-warning ones, so handing them straight back to `save()`
+		// fingerprints identically.
+		recordSlideFingerprints(this.savedSlideFingerprints, slidesWithWarnings);
+		return this.buildLoadData(presentationState, slidesWithWarnings, slideMasters);
 	}
 
 	/**

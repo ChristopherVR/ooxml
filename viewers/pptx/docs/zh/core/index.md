@@ -131,10 +131,10 @@ const bytes = await handler.save(data.slides);
 
 :::
 
-`PptxHandler.create(options)` 及其别名 `PptxHandler.createBlank(options)` 均接收 `PresentationOptions`，包括以 EMU 表示的 `width`/`height`、`theme`、`title`、`creator` 和 `initialSlideCount`，返回 `{ handler, data, createSlide }`。链式接口见[构建器](/zh/core/builder)，加载流程及 `password`、`eagerDecodeImages`、`maxUncompressedBytes`、`allowExternalImages` 选项见[加载与解析](/zh/core/loading)。
+`PptxHandler.create(options)` 及其别名 `PptxHandler.createBlank(options)` 均接收 `PresentationOptions`，包括以 EMU 表示的 `width`/`height`、`theme`、`title`、`creator` 和 `initialSlideCount`，返回 `{ handler, data, createSlide }`。链式接口见[构建器](/zh/core/builder)，加载流程及 `password`、`eagerDecodeImages`、`maxUncompressedBytes`、`allowExternalImages`、`limits` 选项见[加载与解析](/zh/core/loading)。
 
 ::: warning 加载保护
-`load()` 限制 ZIP 解压预算，默认总量 500 MiB、最多 65,536 个条目，超出时抛出 `ZipBombError`。外部 `http(s)` 图片引用默认丢弃，只有显式设置 `allowExternalImages: true` 才允许。
+`load()` 限制 ZIP 解压预算，默认总量 500 MiB、最多 65,536 个条目，超出时抛出 `ZipBombError`。外部 `http(s)` 图片引用默认丢弃，只有显式设置 `allowExternalImages: true` 才允许。打开不受信任演示文稿的宿主还可以用 `limits` 限制输入大小、幻灯片和形状数量（参见[加载限制](/zh/core/loading#load-limits)）。
 :::
 
 ## 主要公共导出 {#main-public-exports}

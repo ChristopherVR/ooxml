@@ -28,6 +28,12 @@ export type {
 } from './runtime/PptxHandlerRuntimeBackgroundStyles';
 export type { StyleReferenceReResolution } from './runtime/PptxHandlerRuntimeThemeEffects';
 export { DEFAULT_MAX_UNCOMPRESSED_BYTES, MAX_ZIP_ENTRY_COUNT, ZipBombError } from './types';
+export {
+	DEFAULT_PPTX_LOAD_LIMITS,
+	PptxLoadLimitError,
+	getPptxLoadLimitViolation,
+} from './load-limits';
+export type { PptxLoadLimitName, PptxLoadLimits, PptxLoadLimitViolation } from './load-limits';
 
 // Framework-agnostic table XML builders and raw-XML mutation operations,
 // consumed by the viewer bindings (insert tables, edit cell text/style,

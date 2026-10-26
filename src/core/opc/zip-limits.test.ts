@@ -71,6 +71,27 @@ describe('limit kinds', () => {
 			details: { limit: 500, kind: 'maxEntryBytes' },
 		});
 	});
+	it('reports the observed value of each size check', async () => {
+		const bytes = await zipOf({ 'a.xml': 'x'.repeat(600), 'b.xml': 'y'.repeat(600) });
+		const fails = (input: Uint8Array, limits: Parameters<typeof openZip>[1], actual: number) =>
+			expect(openZip(input, limits)).rejects.toMatchObject({ actual });
+		await fails(new Uint8Array(10), { maxInputBytes: 5 }, 10);
+		await fails(bytes, { maxEntries: 1 }, 2);
+		await fails(bytes, { maxEntryBytes: 500 }, 600);
+		await fails(bytes, { maxTotalBytes: 1000 }, 1200);
+		await expect(openZip(await zipOf({ '../evil.xml': '<a/>' }))).rejects.toMatchObject({
+			kind: 'partName',
+			actual: undefined,
+		});
+		const entry = { name: 'a.xml', data: await deflateZeros(1 << 16), declared: 100 };
+		const forged = await openZip(lyingZipOf([entry]));
+		const error = await forged
+			.file('a.xml')!
+			.async('string')
+			.catch((caught: unknown) => caught);
+		// The size read so far when the entry passed the size its header declares.
+		expect((error as ZipLimitError).actual).toBeGreaterThan(100);
+	});
 });
 
 describe('forged headers in each loader', () => {
