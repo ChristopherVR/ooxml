@@ -6,9 +6,10 @@
  * revoking object URLs) stay in each binding; everything here is pure. The
  * managed `<style>` element id is binding-specific and stays in each binding.
  *
- * The core load pipeline (`PptxHandlerRuntimeEmbeddedFonts`) already
- * de-obfuscates the OOXML XOR layer and produces a ready-to-use `dataUrl` for
- * each style variant, so one {@link PptxEmbeddedFont} corresponds to a single
+ * The core load pipeline (`PptxHandlerRuntimeEmbeddedFonts`) de-obfuscates
+ * the OOXML XOR layer (or decompresses an EOT part) and produces a
+ * ready-to-use `dataUrl` for each style variant, on the first read of that
+ * variant's data, so one {@link PptxEmbeddedFont} corresponds to a single
  * style variant (regular / bold / italic / boldItalic), distinguished by its
  * `bold` and `italic` flags. As a defence-in-depth fallback, an entry without a
  * usable `dataUrl` but carrying obfuscated `originalPartBytes` + `fontGuid`

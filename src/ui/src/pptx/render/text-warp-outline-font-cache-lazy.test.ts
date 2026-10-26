@@ -1,4 +1,5 @@
 import { Font, Glyph, Path, parse as parseFont } from 'opentype.js';
+import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { GlyphOutlineFontCache } from './text-warp-outline-font-cache';
@@ -363,5 +364,72 @@ describe('GlyphOutlineFontCache keeps the eager precedence between candidates', 
 		expect(resolvedGlyph(cache, brand)).toBe('A');
 		expect(cache.registerFontBytes(brand, false, false, fontB)).toBe(true);
 		expect(resolvedGlyph(cache, brand)).toBe('B');
+	});
+});
+
+describe('GlyphOutlineFontCache decodes deferred embedded fonts only when looked up', () => {
+	const brand = 'BrandOutline';
+
+	/** An embedded variant whose data reads are counted, like a deferred core descriptor. */
+	function counted(reads: string[], bytes: Uint8Array, bold = false): PptxEmbeddedFont {
+		const tag = `${brand}:${bold ? 'bold' : 'regular'}`;
+		return {
+			name: brand,
+			bold,
+			get dataUrl() {
+				reads.push(tag);
+				return '';
+			},
+			get rawFontData() {
+				reads.push(tag);
+				return bytes;
+			},
+		};
+	}
+
+	it('decodes only the variant a lookup asked for when that lookup loads the parser', async () => {
+		const { cache, lookup, parse, release } = await freshCache();
+		const reads: string[] = [];
+		const listener = vi.fn();
+		cache.subscribe(listener);
+		cache.registerEmbeddedFonts([counted(reads, fontA), counted(reads, fontB, true)]);
+		expect(lookup('A', { fontFamily: brand, fontSizePx: 1000 }, 0, 0)).toBeUndefined();
+		expect(reads).toStrictEqual([]);
+		release();
+		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+		expect(new Set(reads)).toStrictEqual(new Set([`${brand}:regular`]));
+		expect(parse).toHaveBeenCalledOnce();
+		expect(resolvedGlyph(cache, brand)).toBe('A');
+		expect(cache.get(brand, true, false)?.hasChar('B')).toBe(true);
+		expect(reads).toContain(`${brand}:bold`);
+	});
+
+	it('never decodes an embedded font that a waiting webfont replaces', async () => {
+		const { cache, lookup, release } = await freshCache();
+		const reads: string[] = [];
+		const listener = vi.fn();
+		cache.subscribe(listener);
+		cache.registerEmbeddedFonts([counted(reads, fontA)]);
+		expect(cache.registerFontBytes(brand, false, false, fontB)).toBe(false);
+		expect(lookup('B', { fontFamily: brand, fontSizePx: 1000 }, 0, 0)).toBeUndefined();
+		release();
+		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+		expect(resolvedGlyph(cache, brand)).toBe('B');
+		expect(reads).toStrictEqual([]);
+	});
+
+	it('decodes the embedded font once a failing webfont leaves it as the answer', async () => {
+		const { cache, lookup, release } = await freshCache();
+		const reads: string[] = [];
+		const listener = vi.fn();
+		cache.subscribe(listener);
+		cache.registerEmbeddedFonts([counted(reads, fontA)]);
+		expect(cache.registerFontBytes(brand, false, false, woff2)).toBe(false);
+		expect(lookup('A', { fontFamily: brand, fontSizePx: 1000 }, 0, 0)).toBeUndefined();
+		expect(reads).toStrictEqual([]);
+		release();
+		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+		expect(resolvedGlyph(cache, brand)).toBe('A');
+		expect(reads.length).toBeGreaterThan(0);
 	});
 });

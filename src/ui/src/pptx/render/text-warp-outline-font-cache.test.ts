@@ -136,6 +136,61 @@ describe('the GlyphOutlineFontCache class', () => {
 		expect(cache.get('WarpOutlineTestFont, sans-serif', false, false)).toBeDefined();
 	});
 
+	it('decodes and parses an embedded font only when its variant is looked up', () => {
+		const cache = new GlyphOutlineFontCache();
+		const reads: string[] = [];
+		/** A font whose data reads are counted, like a deferred core descriptor. */
+		const counted = (bold: boolean): PptxEmbeddedFont => ({
+			name: 'WarpOutlineTestFont',
+			bold,
+			get dataUrl() {
+				reads.push(`dataUrl:${bold}`);
+				return '';
+			},
+			get rawFontData() {
+				reads.push(`rawFontData:${bold}`);
+				return testFontBytes();
+			},
+		});
+		cache.registerEmbeddedFonts([counted(false), counted(true)]);
+		expect(reads).toStrictEqual([]);
+		expect(cache.get('WarpOutlineTestFont', false, false)).toBeDefined();
+		expect(new Set(reads)).toStrictEqual(new Set(['dataUrl:false', 'rawFontData:false']));
+		const afterFirst = reads.length;
+		cache.get('WarpOutlineTestFont', false, false);
+		expect(reads).toHaveLength(afterFirst);
+		expect(cache.get('WarpOutlineTestFont', true, false)).toBeDefined();
+		expect(reads.slice(afterFirst).every((read) => read.endsWith(':true'))).toBe(true);
+	});
+
+	it('keeps the first registered face for a variant, as eager registration did', () => {
+		const cache = new GlyphOutlineFontCache();
+		const first: PptxEmbeddedFont = {
+			name: 'WarpOutlineTestFont',
+			dataUrl: '',
+			rawFontData: testFontBytes(),
+		};
+		const second: PptxEmbeddedFont = {
+			name: 'WarpOutlineTestFont',
+			dataUrl: '',
+			rawFontData: new Uint8Array([1, 2, 3, 4, 5]),
+		};
+		cache.registerEmbeddedFonts([first]);
+		cache.registerEmbeddedFonts([second]);
+		expect(cache.get('WarpOutlineTestFont', false, false)).toBeDefined();
+	});
+
+	it('keeps a registered embedded face when later webfont bytes do not parse', () => {
+		const cache = new GlyphOutlineFontCache();
+		cache.registerEmbeddedFonts([
+			{ name: 'WarpOutlineTestFont', dataUrl: '', rawFontData: testFontBytes() },
+		]);
+		expect(cache.registerFontBytes('WarpOutlineTestFont', false, false, new Uint8Array(8))).toBe(
+			false,
+		);
+		expect(cache.get('WarpOutlineTestFont', false, false)).toBeDefined();
+	});
+
 	it('registerFontBytes parses and caches directly (the webfont-fetch path)', () => {
 		const cache = new GlyphOutlineFontCache();
 		const ok = cache.registerFontBytes('WarpOutlineTestFont', false, false, testFontBytes());

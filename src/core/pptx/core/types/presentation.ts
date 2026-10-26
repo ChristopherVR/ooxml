@@ -850,7 +850,27 @@ export interface PptxCustomXmlPart {
 
 export interface PptxEmbeddedFont {
 	name: string;
+	/**
+	 * `data:` URL of the clear-text font. On a font returned by
+	 * `PptxHandler.load()` this is decoded on first read (see {@link load});
+	 * it is an empty string when the part cannot be decoded.
+	 */
 	dataUrl: string;
+	/**
+	 * Decode this variant, if it has not been decoded yet, and resolve to the
+	 * same descriptor, or to `null` when its part cannot be decoded. Repeated
+	 * calls share one promise. Present on fonts returned by
+	 * `PptxHandler.load()` without `eagerDecodeEmbeddedFonts`; absent on
+	 * eagerly decoded and host-supplied fonts. Not enumerable, so it is not
+	 * part of spread, cloned or serialised font data. Decoding runs on the
+	 * calling thread.
+	 */
+	load?: () => Promise<PptxEmbeddedFont | null>;
+	/**
+	 * Whether a deferred variant has been decoded (successfully or not).
+	 * `undefined` on fonts that are not deferred. Not enumerable.
+	 */
+	readonly isLoaded?: boolean;
 	bold?: boolean;
 	italic?: boolean;
 	/** CSS font format hint (e.g. "truetype", "opentype"). */
@@ -859,6 +879,8 @@ export interface PptxEmbeddedFont {
 	 * Deobfuscated (clear-text) font binary data preserved from load
 	 * for round-trip re-embedding on save. When present, the save
 	 * pipeline will re-obfuscate and write this data back into the ZIP.
+	 * Decoded on first read for deferred fonts, like {@link dataUrl}; saving
+	 * a deferred font that was never decoded writes its original part bytes.
 	 */
 	rawFontData?: Uint8Array;
 	/**

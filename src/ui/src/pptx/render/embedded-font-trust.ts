@@ -97,6 +97,61 @@ export function readFontFileStyle(bytes: Uint8Array): FontFileStyle | undefined 
 /** Per-list memo: bindings call this from several effects for the same deck. */
 const trustedByList = new WeakMap<readonly PptxEmbeddedFont[], PptxEmbeddedFont[]>();
 
+/** Per-list, per-typeface memo of {@link isEmbeddedTypefaceTrusted}. */
+const typefaceTrustByList = new WeakMap<readonly PptxEmbeddedFont[], Map<string, boolean>>();
+
+function trimmedName(font: PptxEmbeddedFont): string {
+	return typeof font.name === 'string' ? font.name.trim() : '';
+}
+
+/**
+ * Whether the embedded files of `typeface` in `fonts` may be registered (see
+ * the module comment). Reads only that typeface's files, so a caller that
+ * needs one family does not decode the others; the answer is the same as
+ * membership in {@link selectTrustedEmbeddedFonts}.
+ */
+export function isEmbeddedTypefaceTrusted(
+	fonts: readonly PptxEmbeddedFont[],
+	typeface: string,
+): boolean {
+	const name = typeface.trim();
+	let memo = typefaceTrustByList.get(fonts);
+	const known = memo?.get(name);
+	if (known !== undefined) {
+		return known;
+	}
+	let trusted = true;
+	if (name && resolveGoogleFontsFace(name)) {
+		for (const font of fonts) {
+			if (trimmedName(font) !== name) {
+				continue;
+			}
+			const bytes = resolveEmbeddedFontClearBytes(font);
+			const actual = bytes ? readFontFileStyle(bytes) : undefined;
+			if (!actual) {
+				continue;
+			}
+			// A style variant named as its own family ("Lato Light Italic") holds an
+			// italic file in its regular slot.
+			const expectedWeight = resolveFontWeight(name, Boolean(font.bold));
+			const expectedItalic = resolveFontItalic(name, font.italic);
+			if (
+				Math.abs(actual.weight - expectedWeight) >= WEIGHT_TOLERANCE ||
+				actual.italic !== expectedItalic
+			) {
+				trusted = false;
+				break;
+			}
+		}
+	}
+	if (!memo) {
+		memo = new Map();
+		typefaceTrustByList.set(fonts, memo);
+	}
+	memo.set(name, trusted);
+	return trusted;
+}
+
 /**
  * The embedded fonts that may be registered as `@font-face` rules, and that
  * count as covering their family when deciding what to request from Google
@@ -112,34 +167,7 @@ export function selectTrustedEmbeddedFonts(
 	if (memo) {
 		return memo;
 	}
-	const rejected = new Set<string>();
-	for (const font of fonts) {
-		const name = typeof font.name === 'string' ? font.name.trim() : '';
-		if (!name || rejected.has(name) || !resolveGoogleFontsFace(name)) {
-			continue;
-		}
-		const bytes = resolveEmbeddedFontClearBytes(font);
-		const actual = bytes ? readFontFileStyle(bytes) : undefined;
-		if (!actual) {
-			continue;
-		}
-		// A style variant named as its own family ("Lato Light Italic") holds an
-		// italic file in its regular slot.
-		const expectedWeight = resolveFontWeight(name, Boolean(font.bold));
-		const expectedItalic = resolveFontItalic(name, font.italic);
-		if (
-			Math.abs(actual.weight - expectedWeight) >= WEIGHT_TOLERANCE ||
-			actual.italic !== expectedItalic
-		) {
-			rejected.add(name);
-		}
-	}
-	const trusted =
-		rejected.size === 0
-			? [...fonts]
-			: fonts.filter(
-					(font) => !rejected.has(typeof font.name === 'string' ? font.name.trim() : ''),
-				);
+	const trusted = fonts.filter((font) => isEmbeddedTypefaceTrusted(fonts, trimmedName(font)));
 	trustedByList.set(fonts, trusted);
 	return trusted;
 }
