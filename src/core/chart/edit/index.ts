@@ -6,6 +6,7 @@ export * from './paint';
 export * from './gradient';
 export * from './title';
 export * from './legend-labels';
+export * from './label-range';
 export * from './axes';
 export * from './series';
 export * from './series-data';

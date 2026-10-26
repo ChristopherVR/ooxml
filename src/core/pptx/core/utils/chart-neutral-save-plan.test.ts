@@ -42,6 +42,16 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('edits and clears group geometry through the neutral schema policy', () => {
+		const original = { ...before(), barGapWidth: 150 };
+		const changed = { ...original, barGapWidth: 42 };
+		const saved = saveChartPartThroughNeutral(PART, original, changed)!;
+		expect(saved.xml).toContain('<c:gapWidth val="42"/>');
+		expect(saved.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		const cleared = { ...original };
+		delete cleared.barGapWidth;
+		expect(saveChartPartThroughNeutral(PART, original, cleared)!.xml).not.toContain('gapWidth');
+	});
 	it('plans nothing for an unchanged chart, and an empty style is no change', () => {
 		expect(planNeutralChartSave(before(), before())).toEqual({ edits: [], seriesData: false });
 		const withoutStyle = { ...before(), style: undefined };
@@ -123,9 +133,9 @@ describe('saveChartPartThroughNeutral: title and legend', () => {
 		).toBeUndefined();
 	});
 
-	it('hands back the workbook writes of every referenced range', () => {
-		expect(save((c) => (c.title = 'Revenue'))!.workbookWrites).toEqual([
-			{ formula: 'Sheet1!$B$1', isNumeric: false, values: ['North'] },
+	it('hands back workbook writes when the chart data changed', () => {
+		expect(save((c) => (c.series[0]!.name = 'Revenue'))!.workbookWrites).toEqual([
+			{ formula: 'Sheet1!$B$1', isNumeric: false, values: ['Revenue'] },
 			{ formula: 'Sheet1!$A$2:$A$3', isNumeric: false, values: ['Q1', 'Q2'] },
 			{ formula: 'Sheet1!$B$2:$B$3', isNumeric: true, values: ['4.4', '2'] },
 		]);
@@ -208,6 +218,7 @@ describe('saveChartPartThroughNeutral: series data', () => {
 			c.categories = ['H1', 'H2'];
 		})!;
 		const written = series(saved.xml);
+		expect(saved.workbookWrites.find((item) => item.isNumeric)?.values).toEqual(['7', '']);
 		expect(written.values?.cache).toMatchObject({
 			pointCount: 2,
 			points: [{ index: 0, value: '7' }],
@@ -216,6 +227,7 @@ describe('saveChartPartThroughNeutral: series data', () => {
 		expect(written.categories?.cache?.points.map((p) => p.value)).toEqual(['H1', 'H2']);
 		// Untouched series and caches keep the text Office wrote ("4.4000000000000004").
 		expect(save((c) => (c.title = 'Revenue'))!.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		expect(save((c) => (c.title = 'Revenue'))!.workbookWrites).toEqual([]);
 	});
 
 	it('leaves added series and multi-level or date categories to the object-tree writers', () => {
@@ -266,7 +278,7 @@ describe('saveChartPartThroughNeutral: labels and series paint', () => {
 		});
 	});
 
-	it('does not claim a value-from-cells label edit or a hidden-label policy change', () => {
+	it('writes value-from-cells labels and hides labels without destroying their settings', () => {
 		const range = edited((chart) => {
 			chart.style!.hasDataLabels = true;
 			chart.style!.dataLabels = {
@@ -274,14 +286,13 @@ describe('saveChartPartThroughNeutral: labels and series paint', () => {
 				dataLabelsRange: { formula: 'Sheet1!$C$2:$C$3', cache: ['A', 'B'] },
 			};
 		});
-		expect(planNeutralChartSave(before(), range)).toBeUndefined();
-		expect(
-			planNeutralChartSave(
-				before(),
-				edited((chart) => {
-					chart.style!.hasDataLabels = false;
-				}),
-			),
-		).toBeUndefined();
+		const ranged = saveChartPartThroughNeutral(PART, before(), range)!;
+		expect(ranged.xml).toContain('datalabelsRange');
+		expect(ranged.xml).toContain('Sheet1!$C$2:$C$3');
+		expect(ranged.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		const hidden = save((chart) => {
+			chart.style!.hasDataLabels = false;
+		})!;
+		expect(hidden.xml).toContain('<c:dLbls><c:delete val="1"/></c:dLbls>');
 	});
 });

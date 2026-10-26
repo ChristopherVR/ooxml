@@ -1,5 +1,6 @@
 import {
 	setChartDataLabels,
+	setChartDataLabelsRange,
 	setChartSeriesColor,
 	type ChartDataLabelsEdit,
 } from '../../../chart/index';
@@ -23,11 +24,29 @@ export function planNeutralChartLabels(
 ): void {
 	const was = before.style ?? {};
 	const now = probe.style;
-	if (!now || now.hasDataLabels === false) return;
+	if (!now) return;
+	if (now.hasDataLabels === false && was.hasDataLabels !== false) {
+		edits.push((space) => setChartDataLabels(space, { show: false, preserveHiddenContent: true }));
+		if (was.hasDataLabels === undefined) delete now.hasDataLabels;
+		else now.hasDataLabels = was.hasDataLabels;
+		return;
+	}
 	const edit: ChartDataLabelsEdit = {};
 	if (now.hasDataLabels === true && was.hasDataLabels !== true) edit.show = true;
 	const previous = was.dataLabels ?? {};
 	const labels = { ...now.dataLabels };
+	if (
+		JSON.stringify(labels.dataLabelsRange) !== JSON.stringify(previous.dataLabelsRange) ||
+		labels.showDataLabelsRange !== previous.showDataLabelsRange
+	) {
+		const range = labels.dataLabelsRange;
+		const shown = labels.showDataLabelsRange !== false;
+		edits.push((space) => setChartDataLabelsRange(space, range ?? null, shown));
+		for (const key of ['dataLabelsRange', 'showDataLabelsRange'] as const) {
+			if (previous[key] === undefined) delete labels[key];
+			else Object.assign(labels, { [key]: previous[key] });
+		}
+	}
 	for (const [source, target] of Object.entries(FLAGS) as [
 		keyof typeof FLAGS,
 		(typeof FLAGS)[keyof typeof FLAGS],
@@ -45,8 +64,7 @@ export function planNeutralChartLabels(
 		if (previous[key] === undefined) delete labels[key];
 		else Object.assign(labels, { [key]: previous[key] });
 	}
-	if (!Object.keys(edit).length) return;
-	edits.push((space) => setChartDataLabels(space, edit));
+	if (Object.keys(edit).length) edits.push((space) => setChartDataLabels(space, edit));
 	if (was.hasDataLabels === undefined) delete now.hasDataLabels;
 	else now.hasDataLabels = was.hasDataLabels;
 	if (was.dataLabels === undefined && !Object.keys(labels).length) delete now.dataLabels;

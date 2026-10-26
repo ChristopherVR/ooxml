@@ -27,22 +27,22 @@ Every changed PowerPoint control must reach all five bindings.
 
 ## 2. SmartArt layout and rendering in Word and Excel
 
-- [ ] Retain full layout definitions and context in neutral diagram host models.
-- [ ] Use the shared layout interpreter for inserted, edited and uncached diagrams; diagnose
+- [x] Retain full layout definitions and context in neutral diagram host models.
+- [x] Use the shared layout interpreter for inserted, edited and uncached diagrams; diagnose
       unsupported layouts and retain an explicit approximate fallback.
-- [ ] Reuse preset and custom geometry, including arcs, in the shared SmartArt painter.
-- [ ] Render gradients, transparency, rich text and supported shadows through shared primitives.
-- [ ] Corpus tests compare cached/uncached/inserted/edited geometry; product browser tests cover
+- [x] Reuse preset and custom geometry, including arcs, in the shared SmartArt painter.
+- [x] Render gradients, transparency, rich text and supported shadows through shared primitives.
+- [x] Corpus tests compare cached/uncached/inserted/edited geometry; product browser tests cover
       insertion, text edits, layout changes, history, resize and save/reopen.
-- [ ] Record remaining 3D, typography, effect and layout limits explicitly.
+- [x] Record remaining 3D, typography, effect and layout limits explicitly.
 
 ## 3. Shared DrawingML formatting
 
-- [ ] Complete line semantics beyond width/fill/dash/cap with preservation-aware readers/writers.
-- [ ] Share typed effect parsing, writing and resolution, preserving unknown effect children.
-- [ ] Parse and write theme format schemes, style references and placeholder-colour substitution.
-- [ ] Adopt the APIs in actual consumers; preserve authored theme tokens through unrelated edits.
-- [ ] Strict typechecks and parser/writer/resolver parity tests cover real producer fixtures.
+- [x] Complete line semantics beyond width/fill/dash/cap with preservation-aware readers/writers.
+- [x] Share typed effect parsing, writing and resolution, preserving unknown effect children.
+- [x] Parse and write theme format schemes, style references and placeholder-colour substitution.
+- [x] Adopt the APIs in actual consumers; preserve authored theme tokens through unrelated edits.
+- [x] Strict typechecks and parser/writer/resolver parity tests cover real producer fixtures.
 
 ## 4. Neutral PowerPoint chart saving and adapters
 
@@ -108,3 +108,29 @@ even when existing series already show labels. The committed corpus compares 72/
 75/75 series colour edits identically in canonical XML and reloaded models. The three focused SDK,
 save-plan and corpus files passed 479 tests. These are implementation comparisons; hidden-label
 policy, value-from-cells edits and the remaining chart families are still tracked above.
+
+### DrawingML and SmartArt foundations, 2026-10-26
+
+Integrated shared outlines, effects, theme format schemes and source-preserving pattern/picture fill
+writers, with real Word/Excel/PowerPoint producer fixtures. DrawingML's broad affected suite passed
+13,355 tests (16 expected failures); final focused checks passed 84 DrawingML and 109 fingerprint
+compatibility cases. Both compiler projects passed. These are codec/preservation checks, not native
+rendering-fidelity claims.
+
+Word and Excel now retain SmartArt layout/style context and use the shared interpreter and richer
+SVG painter. The built-in corpus interprets 174/176 definitions and explicitly falls back for two.
+Validation passed 923 core and 46 UI tests, both core/UI compiler projects and builds, plus Word's
+10 and Excel's 6 browser cases across six frameworks. Unsupported connector routing, presentation
+variables, typography, effects, picture/pattern rendering and flat 3D remain reported limitations.
+
+The integrated foundations plus ChartEx storage passed 1,085 tests across 145 files and both core
+compiler projects. ChartEx UI integration and native acceptance are still in progress.
+
+### Further neutral chart saves, 2026-10-26
+
+Shared operations now preserve styled title runs, axis source-linked formats and date/label/display
+units, hidden-label content and value-from-cells extension siblings. PowerPoint group spacing maps
+to the neutral schema-validated operation. Formatting-only changes leave embedded workbook cells
+alone; data edits retain blank cells. The title/axis increment passed the 300-case saved-part corpus
+plus 41 focused tests. Label-range and group edits have focused preservation regressions; expanded
+corpus and native acceptance remain required before closing priority 4.

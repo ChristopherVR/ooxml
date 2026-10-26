@@ -2638,3 +2638,12 @@ Source: ChristopherVR/ooxml at `3b2ecd9a6` (in-repo moves out of the Word SmartA
 - Changes: remove PowerPoint title types, accept generic styled text runs, compile strict, retain
   compatibility exports at the old path, and use the shared policy from neutral chart-title edits.
   An empty run list returns an empty result instead of inventing a styled run.
+
+## Shared value-from-cells labels (2026-10-26)
+
+Source: `ChristopherVR/ooxml`, commit `27cc953db6d5e919c1a413d5fdcfb39a82b566eb`,
+`src/core/pptx/core/utils/chart-data-labels-range.ts`. The neutral
+`src/core/chart/edit/label-range.ts` applies the existing chart15 range/visibility semantics through
+shared XML nodes, preserving sibling extensions. It adds strict types, bounded sparse-cache reads,
+immutable chart operations and targeted-series selection. PowerPoint maps its existing fields onto
+this implementation. Regression tests live beside the neutral operation.

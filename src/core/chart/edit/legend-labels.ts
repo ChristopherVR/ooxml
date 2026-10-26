@@ -32,6 +32,8 @@ export function setChartLegend(space: ChartSpace, edit: ChartLegendEdit): ChartS
 
 export interface ChartDataLabelsEdit {
 	show?: boolean;
+	/** Hide with c:delete while retaining authored switches and series overrides. */
+	preserveHiddenContent?: boolean;
 	showValue?: boolean;
 	showCategoryName?: boolean;
 	showSeriesName?: boolean;
@@ -73,6 +75,7 @@ function applyLabels(current: ChartDataLabels | undefined, edit: ChartDataLabels
 		edit.separator !== undefined ||
 		edit.numberFormat !== undefined;
 	if (edit.show === false) {
+		if (edit.preserveHiddenContent) return { ...(current ?? { labels: [] }), deleted: true };
 		if (!current) return newLabels();
 		for (const key of SWITCHES) current[key] = false;
 		delete current.deleted;
@@ -115,9 +118,10 @@ export function setChartDataLabels(
 		}
 		for (const group of draft.plotArea.groups) {
 			if (group.kind === 'surface') continue;
-			if (edit.show === false && !group.dataLabels) continue;
+			if (edit.show === false && !edit.preserveHiddenContent && !group.dataLabels) continue;
 			assignOrDelete(group, 'dataLabels', applyLabels(group.dataLabels, edit));
 		}
-		if (edit.show === false) for (const series of chartSpaceSeries(draft)) delete series.dataLabels;
+		if (edit.show === false && !edit.preserveHiddenContent)
+			for (const series of chartSpaceSeries(draft)) delete series.dataLabels;
 	});
 }

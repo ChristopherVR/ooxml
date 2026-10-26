@@ -14,18 +14,19 @@
 
 import {
 	renameChartSeries,
-	setChartAxis,
 	setChartCategories,
 	setChartLegend,
 	setChartSeriesValues,
 	setChartTitle,
 	setChartTitleVisible,
-	type ChartAxisEdit,
 	type ChartLegendEdit,
 	type ChartLegendPosition,
 	type ChartSpace,
 } from '../../../chart/index';
-import type { PptxChartAxisFormatting, PptxChartData, PptxChartStyle } from '../types';
+import type { PptxChartData } from '../types';
+import { same, revertStyle } from './chart-neutral-save-common';
+import { planAxes } from './chart-neutral-save-axes';
+import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import {
 	planNeutralChartLabels,
 	planNeutralChartSeriesColors,
@@ -37,37 +38,6 @@ export interface NeutralChartSavePlan {
 	edits: NeutralChartEdit[];
 	/** Whether series names, values or categories changed (the embedded workbook follows them). */
 	seriesData: boolean;
-}
-
-/** JSON of a value with sorted keys, `undefined` members and empty objects left out. */
-function canonical(value: unknown): unknown {
-	if (Array.isArray(value)) return value.map((item) => canonical(item) ?? null);
-	if (value && typeof value === 'object') {
-		const entries = Object.keys(value)
-			.sort()
-			.flatMap((key) => {
-				const item = canonical((value as Record<string, unknown>)[key]);
-				return item === undefined ? [] : [[key, item] as const];
-			});
-		return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-	}
-	return value;
-}
-
-const same = (a: unknown, b: unknown): boolean =>
-	JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
-
-type StyleKey = keyof PptxChartStyle;
-
-/** Copies `keys` of `before.style` onto `probe.style` (the fields a family has claimed). */
-function revertStyle(probe: PptxChartData, before: PptxChartData, keys: readonly StyleKey[]): void {
-	const style: Record<string, unknown> = { ...probe.style };
-	for (const key of keys) {
-		const value = before.style?.[key];
-		if (value === undefined) delete style[key];
-		else style[key] = value;
-	}
-	probe.style = style as PptxChartStyle;
 }
 
 /** Title text and visibility (`applyChartTitleToXml`'s flat-text cases). */
@@ -111,99 +81,6 @@ function planLegend(before: PptxChartData, probe: PptxChartData, edits: NeutralC
 	// Without `hasLegend` the PowerPoint writer leaves the legend alone, and so does this plan.
 	if (Object.keys(edit).length > 0) edits.push((space) => setChartLegend(space, edit));
 	revertStyle(probe, before, keys);
-}
-
-/** The axis fields the shared `setChartAxis` writes as the PowerPoint axis writers do. */
-function axisEdit(
-	was: PptxChartAxisFormatting,
-	now: PptxChartAxisFormatting,
-): { edit: ChartAxisEdit; claimed: (keyof PptxChartAxisFormatting)[] } {
-	const edit: ChartAxisEdit = {};
-	const claimed: (keyof PptxChartAxisFormatting)[] = [];
-	for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) {
-		if (was[key] === now[key]) continue;
-		edit[key] = now[key] ?? null;
-		claimed.push(key);
-	}
-	if (Boolean(was.deleted) !== Boolean(now.deleted)) {
-		edit.visible = !now.deleted;
-		claimed.push('deleted');
-	}
-	if (!same(was.numFmt, now.numFmt) && now.numFmt) {
-		edit.numberFormat = now.numFmt.formatCode;
-		edit.numberFormatSourceLinked = now.numFmt.sourceLinked ?? false;
-		claimed.push('numFmt');
-	}
-	if (was.titleText !== now.titleText) {
-		edit.title = now.titleText ?? null;
-		claimed.push('titleText');
-	}
-	for (const key of ['majorGridlines', 'minorGridlines', 'auto', 'noMultiLevelLabels'] as const) {
-		if (was[key] === now[key] || now[key] === undefined) continue;
-		edit[key] = now[key];
-		claimed.push(key);
-	}
-	for (const key of ['majorTickMark', 'minorTickMark'] as const) {
-		if (was[key] === now[key] || now[key] === undefined) continue;
-		edit[key] = now[key];
-		claimed.push(key);
-	}
-	for (const key of ['majorTimeUnit', 'minorTimeUnit', 'baseTimeUnit'] as const) {
-		if (was[key] === now[key]) continue;
-		edit[key] = now[key] ?? null;
-		claimed.push(key);
-	}
-	for (const key of ['labelOffset', 'tickLabelSkip', 'tickMarkSkip'] as const) {
-		if (was[key] === now[key]) continue;
-		edit[key] = now[key] ?? null;
-		claimed.push(key);
-	}
-	if (was.labelAlignment !== now.labelAlignment) {
-		edit.labelAlign = now.labelAlignment ?? null;
-		claimed.push('labelAlignment');
-	}
-	if (was.logScale !== now.logScale || was.logBase !== now.logBase) {
-		edit.logBase =
-			now.logScale === false || (now.logScale !== true && now.logBase === undefined)
-				? null
-				: (now.logBase ?? 10);
-		claimed.push('logScale', 'logBase');
-	}
-	if (was.displayUnits !== now.displayUnits || was.displayUnitsValue !== now.displayUnitsValue) {
-		edit.displayUnits =
-			now.displayUnits === 'custom' ? now.displayUnitsValue : (now.displayUnits ?? null);
-		if (edit.displayUnits !== undefined) claimed.push('displayUnits', 'displayUnitsValue');
-	}
-	if (was.orientation !== now.orientation && now.orientation !== undefined) {
-		edit.reverse = now.orientation === 'maxMin';
-		claimed.push('orientation');
-	}
-	if (was.tickLblPos !== now.tickLblPos && now.tickLblPos !== undefined) {
-		edit.tickLabelPosition = now.tickLblPos;
-		claimed.push('tickLblPos');
-	}
-	return { edit, claimed };
-}
-
-/** Value and category axis scaling, visibility, number format, direction and labels. */
-function planAxes(before: PptxChartData, probe: PptxChartData, edits: NeutralChartEdit[]): void {
-	const was = before.axes ?? [];
-	const now = probe.axes ?? [];
-	if (was.length !== now.length) return;
-	now.forEach((axis, i) => {
-		const previous = was[i]!;
-		const id = previous.axisId;
-		if (id === undefined || axis.axisId !== id || axis.axisType !== previous.axisType) return;
-		const { edit, claimed } = axisEdit(previous, axis);
-		if (claimed.length === 0) return;
-		edits.push((space) => setChartAxis(space, { id }, edit));
-		const reverted: Record<string, unknown> = { ...axis };
-		for (const key of claimed) {
-			if (previous[key] === undefined) delete reverted[key];
-			else reverted[key] = previous[key];
-		}
-		now[i] = reverted as unknown as PptxChartAxisFormatting;
-	});
 }
 
 /** Series names, values and text categories (the cache writes of the save loop). */
@@ -258,6 +135,7 @@ export function planNeutralChartSave(
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
+	planNeutralGroupOptions(before, probe, edits);
 	const seriesData = planSeriesData(before, probe, edits);
 	planNeutralChartLabels(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);

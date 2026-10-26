@@ -13,8 +13,9 @@
 
 import {
 	chartSeriesEntries,
+	chartIssuesLostOnWrite,
 	parseChartSpace,
-	writeChartSpace,
+	writeChartSpaceOverSource,
 	type ChartSpace,
 } from '../../../chart/index';
 import type { PptxChartData } from '../types';
@@ -51,7 +52,11 @@ function workbookWrites(space: ChartSpace, chart: PptxChartData): PptxChartWorkb
 			});
 		const values = series.values ?? series.yValues;
 		if (values?.kind === 'numRef' && values.formula)
-			writes.push({ formula: values.formula, isNumeric: true, values: data.values.map(String) });
+			writes.push({
+				formula: values.formula,
+				isNumeric: true,
+				values: data.values.map((value, index) => (data.blanks?.[index] ? '' : String(value))),
+			});
 	});
 	return writes;
 }
@@ -70,7 +75,7 @@ export function saveChartPartThroughNeutral(
 	let space: ChartSpace;
 	try {
 		const parsed = parseChartSpace(xml);
-		if (parsed.issues.length > 0) return undefined;
+		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
 		space = parsed.chartSpace;
 		for (const edit of plan.edits) space = edit(space);
 	} catch {
@@ -78,5 +83,8 @@ export function saveChartPartThroughNeutral(
 		// left to the object-tree writers, which report or ignore it as they always have.
 		return undefined;
 	}
-	return { xml: writeChartSpace(space), workbookWrites: workbookWrites(space, after) };
+	return {
+		xml: writeChartSpaceOverSource(xml, space),
+		workbookWrites: plan.seriesData ? workbookWrites(space, after) : [],
+	};
 }
