@@ -4,6 +4,7 @@ import { loadXlsx } from '../../xlsx/read';
 import { getCell } from '../../xlsx/cells';
 import { appendChartWorkbookSheet } from './append-sheet';
 import { createChartWorkbook } from './create';
+import { NS, children, first, parseXml } from '../../xml';
 const source = () =>
 	createChartWorkbook(
 		{ categories: ['A', 'B'], series: [{ name: 'Original', values: [2, 3] }] },
@@ -39,6 +40,33 @@ describe('fresh chart workbook sheet allocation', () => {
 		expect(book.sheets.map((sheet) => sheet.name)).toEqual(['ChartData1', 'ChartData2']);
 		expect(getCell(book.sheets[1]!, 1, 1)?.value).toBe(42);
 		expect(getCell(book.sheets[0]!, 1, 1)?.value).toBe(2);
+		const workbook = parseXml(await zip.file('xl/workbook.xml')!.async('string')).documentElement;
+		expect(
+			first(first(workbook, 'bookViews', NS.x)!, 'workbookView', NS.x)?.getAttribute('activeTab'),
+		).toBe('1');
+	});
+	it('selects each newly allocated data sheet in every existing workbook view', async () => {
+		const zip = await JSZip.loadAsync(await source());
+		const path = 'xl/workbook.xml';
+		zip.file(
+			path,
+			(await zip.file(path)!.async('string'))
+				.replace(/<bookViews>[\s\S]*?<\/bookViews>/u, '')
+				.replace(
+					'<sheets>',
+					'<bookViews><workbookView activeTab="0" xWindow="42"/><workbookView activeTab="0"/></bookViews><sheets>',
+				),
+		);
+		const firstAppend = await appendChartWorkbookSheet(
+			await zip.generateAsync({ type: 'uint8array' }),
+			() => [[1]],
+		);
+		const secondAppend = await appendChartWorkbookSheet(firstAppend.bytes, () => [[2]]);
+		const result = await JSZip.loadAsync(secondAppend.bytes);
+		const workbook = parseXml(await result.file(path)!.async('string')).documentElement;
+		const views = children(first(workbook, 'bookViews', NS.x)!, 'workbookView', NS.x);
+		expect(views.map((view) => view.getAttribute('activeTab'))).toEqual(['2', '2']);
+		expect(views[0]!.getAttribute('xWindow')).toBe('42');
 	});
 	it('refuses protected structure and invalid numeric data without modifying the source', async () => {
 		const bytes = await source();

@@ -80,6 +80,19 @@ export async function appendChartWorkbookSheet(
 	sheet.setAttribute('sheetId', String(Math.max(0, ...sheetIds) + 1));
 	sheet.setAttributeNS(NS.r, 'r:id', id);
 	sheets.appendChild(sheet);
+	// Edit Data must open the newly referenced sheet, while old worksheet parts stay intact.
+	let views = first(workbook, 'bookViews', NS.x);
+	if (!views) {
+		views = element(workbook, 'bookViews');
+		workbook.insertBefore(views, sheets);
+	}
+	let workbookViews = children(views, 'workbookView', NS.x);
+	if (workbookViews.length === 0) {
+		const view = element(views, 'workbookView');
+		views.appendChild(view);
+		workbookViews = [view];
+	}
+	for (const view of workbookViews) view.setAttribute('activeTab', String(entries.length));
 	const relationship = element(rels, 'Relationship');
 	relationship.setAttribute('Id', id);
 	relationship.setAttribute('Type', `${NS.r}/worksheet`);
