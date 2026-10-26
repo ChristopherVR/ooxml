@@ -479,6 +479,25 @@ describe('GlyphOutlineFontCache releases waiting embedded fonts with their docum
 		expect(resolvedGlyph(cache, brand)).toBe('B');
 	});
 
+	it('keeps a document shared by two viewers until both release it', async () => {
+		const { cache, lookup, release } = await freshCache();
+		const reads: string[] = [];
+		const listener = vi.fn();
+		cache.subscribe(listener);
+		const shared = documentFonts(reads, 'shared', fontA);
+		const first = createEmbeddedOutlineFontsSlot(cache);
+		const second = createEmbeddedOutlineFontsSlot(cache);
+		first.set(shared);
+		second.set(shared);
+		expect(cache.registerFontBytes(brand, false, false, woff2)).toBe(false);
+		first.release();
+		expect(lookup('A', { fontFamily: brand, fontSizePx: 1000 }, 0, 0)).toBeUndefined();
+		release();
+		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+		expect(resolvedGlyph(cache, brand)).toBe('A');
+		second.release();
+	});
+
 	it('drops a closed document that was never looked up, keeping only the failed webfont', async () => {
 		const { cache, parse, release } = await freshCache();
 		const reads: string[] = [];

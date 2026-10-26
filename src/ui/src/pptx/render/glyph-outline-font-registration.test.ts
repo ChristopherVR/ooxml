@@ -100,19 +100,25 @@ describe('embedded fonts registered with the glyph-outline cache', () => {
 		const list = deck('Lato', 1024, { count: 0 });
 		const first = cache.registerEmbeddedFonts(list);
 		const second = cache.registerEmbeddedFonts(list);
-		cache.registerEmbeddedFonts(list);
+		const third = cache.registerEmbeddedFonts(list);
 		expect(retained(cache)).toStrictEqual({ candidates: 1, lists: 1, bytes: 1024 });
 
-		// Every handle of the live registration releases it, once.
+		// Each registration is an owner: the records stay until the last one releases,
+		// and releasing the same handle twice counts once.
 		second();
+		second();
+		first();
+		expect(retained(cache)).toStrictEqual({ candidates: 1, lists: 1, bytes: 1024 });
+		third();
 		expect(retained(cache).candidates).toBe(0);
-		first();
 
-		// A handle from before a release does not undo a later registration.
-		cache.registerEmbeddedFonts(list);
+		// A handle from before the list was fully released does not undo a later registration.
+		const later = cache.registerEmbeddedFonts(list);
 		first();
-		second();
+		third();
 		expect(retained(cache)).toStrictEqual({ candidates: 1, lists: 1, bytes: 1024 });
+		later();
+		expect(retained(cache).candidates).toBe(0);
 	});
 
 	it('keep the first trusted candidate first, among the documents still open', () => {
@@ -203,5 +209,40 @@ describe('createEmbeddedOutlineFontsSlot', () => {
 		two.set(deck('Lato', 20, { count: 0 }));
 		one.release();
 		expect(retained(cache)).toStrictEqual({ candidates: 1, lists: 1, bytes: 20 });
+	});
+
+	it('keeps a font list shared by two viewers until both release it', () => {
+		const cache = new GlyphOutlineFontCache();
+		const shared: PptxEmbeddedFont[] = [
+			{ name: 'RegistrationTest', dataUrl: '', rawFontData: fontBytes('A') },
+		];
+		const one = createEmbeddedOutlineFontsSlot(cache);
+		const two = createEmbeddedOutlineFontsSlot(cache);
+		one.set(shared);
+		two.set(shared);
+		expect(retained(cache).candidates).toBe(1);
+
+		// The first viewer closes; the second still shows the same list and needs its outline.
+		one.release();
+		expect(retained(cache).candidates).toBe(1);
+		two.set(shared);
+		expect(cache.get('RegistrationTest', false, false)?.hasChar('A')).toBe(true);
+		two.release();
+		expect(retained(cache).candidates).toBe(0);
+	});
+
+	it('releases a shared list once its last viewer moves to another deck', () => {
+		const cache = new GlyphOutlineFontCache();
+		const shared = deck('Lato', 10, { count: 0 });
+		const one = createEmbeddedOutlineFontsSlot(cache);
+		const two = createEmbeddedOutlineFontsSlot(cache);
+		one.set(shared);
+		two.set(shared);
+		one.set(deck('Lato', 20, { count: 0 }));
+		expect(retained(cache)).toStrictEqual({ candidates: 2, lists: 2, bytes: 30 });
+		two.release();
+		expect(retained(cache)).toStrictEqual({ candidates: 1, lists: 1, bytes: 20 });
+		one.release();
+		expect(retained(cache).candidates).toBe(0);
 	});
 });

@@ -10,8 +10,9 @@
  * one module-wide cache). This module holds those records per document:
  *
  *  - {@link EmbeddedFontCandidates} keeps the records per key, in registration
- *    order, and removes one document's records when it is released.
- *    Registering a list that is already registered changes nothing.
+ *    order, and removes one document's records when its last owner releases
+ *    it. Registering a list that is already registered adds an owner but no
+ *    records, so two viewers showing the same list share them.
  *  - {@link createEmbeddedOutlineFontsSlot} is what a viewer holds: it tracks
  *    the deck it currently shows, releases the previous deck when another
  *    one is set, and releases the current one when the viewer goes away.
@@ -32,9 +33,10 @@ export interface EmbeddedFontCandidate {
 /** Releases one document's embedded fonts from the cache it was registered with. */
 export type ReleaseEmbeddedFonts = () => void;
 
-/** One live registration of a list: the keys it added candidates under. */
+/** One live registration of a list: the keys it added candidates under, and how many owners hold it. */
 interface Registration {
 	keys: Set<string>;
+	owners: number;
 }
 
 /**
@@ -50,10 +52,11 @@ export class EmbeddedFontCandidates {
 	 * Record each font of `list` under `keyOf(font)`, after the candidates
 	 * already recorded for that key. `keyOf` returns `undefined` for a font
 	 * that needs no record. A list that is already registered is left as it is,
-	 * so its fonts keep their place. Returns the release for this registration:
-	 * it removes every candidate `list` still has here, and does nothing once
-	 * the list has been released (also when the list was registered again
-	 * since then, which only that later registration's release undoes).
+	 * so its fonts keep their place, and gains one more owner. Returns this
+	 * owner's release: the candidates `list` has here are removed once every
+	 * owner has released. Calling a release again does nothing, and a release
+	 * from before the list was fully released never touches a later
+	 * registration of the same list.
 	 */
 	add(
 		list: readonly PptxEmbeddedFont[],
@@ -61,7 +64,7 @@ export class EmbeddedFontCandidates {
 	): ReleaseEmbeddedFonts {
 		let registration = this.registrations.get(list);
 		if (!registration) {
-			registration = { keys: new Set() };
+			registration = { keys: new Set(), owners: 0 };
 			this.registrations.set(list, registration);
 			for (const font of list) {
 				const key = keyOf(font);
@@ -77,8 +80,14 @@ export class EmbeddedFontCandidates {
 				}
 			}
 		}
+		registration.owners += 1;
 		const owned = registration;
+		let released = false;
 		return () => {
+			if (released) {
+				return;
+			}
+			released = true;
 			this.release(list, owned);
 		};
 	}
@@ -109,6 +118,10 @@ export class EmbeddedFontCandidates {
 
 	private release(list: readonly PptxEmbeddedFont[], registration: Registration): void {
 		if (this.registrations.get(list) !== registration) {
+			return;
+		}
+		registration.owners -= 1;
+		if (registration.owners > 0) {
 			return;
 		}
 		this.registrations.delete(list);
