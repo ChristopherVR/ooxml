@@ -42,6 +42,12 @@ for (const framework of FRAMEWORKS)
 		await cell.fill('77');
 		await cell.press('Enter');
 		await sheet.getByRole('button', { name: 'Add category', exact: true }).click();
+		const pane = host.locator('office-ui-chart-format-pane');
+		await pane.locator('[data-chart-format-target]').selectOption('series:0');
+		await pane.getByRole('radio', { name: 'Pattern fill', exact: true }).click();
+		await pane
+			.locator('[data-chart-format-field="fill.patternPreset"] select')
+			.selectOption('cross');
 		const bytes = Uint8Array.from(
 			await host.evaluate(async (element) =>
 				Array.from(await (element as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
@@ -53,6 +59,10 @@ for (const framework of FRAMEWORKS)
 		expect(data.series[0]!.values[0]).toBe(77);
 		expect(data.categories).toHaveLength(7);
 		expect(book.sheets[0]!.drawings[0]!.kind === 'unsupported').toBe(true);
+		const drawing = book.sheets[0]!.drawings[0]!;
+		expect(
+			drawing.kind === 'unsupported' && drawing.chartExSpace!.plotArea.series[0]!.spPr!.fill,
+		).toMatchObject({ kind: 'pattern', preset: 'cross' });
 		await openLanding(page, framework);
 		await page.locator('#landing-file').setInputFiles({
 			name: 'chartex-saved.xlsx',

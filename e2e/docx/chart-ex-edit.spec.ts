@@ -31,6 +31,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const typeDialog = dialogByHeading(editor, 'Change Chart Type');
 		await expect(typeDialog.locator('office-ui-chart-ex-options')).toBeVisible();
 		await typeDialog.getByRole('button', { name: 'OK', exact: true }).click();
+		await editor.getByRole('button', { name: 'Format Selection', exact: true }).click();
+		const pane = editor.locator('office-ui-chart-format-pane');
+		await pane.locator('[data-chart-format-target]').selectOption('series:0');
+		await pane.getByRole('radio', { name: 'Pattern fill', exact: true }).click();
+		await pane
+			.locator('[data-chart-format-field="fill.patternPreset"] select')
+			.selectOption('cross');
+		await pane.locator('[data-chart-format-close]').click();
 		const bytes = Uint8Array.from(
 			await editor.evaluate(async (element) =>
 				Array.from(await (element as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
@@ -40,6 +48,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const xml = await zip.file('word/charts/chartEx1.xml')!.async('string');
 		expect(xml).toContain('Browser ChartEx');
 		expect(xml).toContain('connectorLines="0"');
+		expect(xml).toContain('prst="cross"');
 		await reopenDocument(page, 'chartex-saved.docx', bytes);
 		await expect(
 			editor
