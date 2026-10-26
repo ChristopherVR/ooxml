@@ -46,23 +46,26 @@ Every changed PowerPoint control must reach all five bindings.
 
 ## 4. Neutral PowerPoint chart saving and adapters
 
-In progress. Shared save families now cover labels and value-from-cells ranges, paint and point
-formatting, rich text/fonts/layout, axis formats, series structure, analysis, markers and existing
-axis-pair reassignment. Chrome/protection and broader ChartEx factory/save/read work have landed in
-increments. The checkboxes below stay open until final integration, exhaustive admission review,
-corpus classification and native acceptance establish each family's actual boundary. An unclaimed
-edit still follows an explicit compatibility path; no blanket neutral-only save claim is made.
+Implemented for the admitted families below. Shared operations own chart semantics; PowerPoint
+projects the neutral models into its public compatibility model and supplies package relationships,
+theme context and media allocation. An unclaimed edit still follows an explicit compatibility path;
+the remaining source adapters and unsupported families are follow-up work, not a neutral-only or
+complete Office-parity claim.
 
-- [ ] Data-label visibility/content, per-series and per-point overrides, value-from-cells labels.
-- [ ] Series/point fills, lines, gradients and transparency, preserving unrelated theme tokens.
-- [ ] Rich title runs, legend entries, axis titles/fonts, gridlines and number/date/display units.
-- [ ] Series structure, type switches and combinations, trendlines, error bars and markers.
-- [ ] Layouts, 3D/chrome, data tables, stock lines/bars, protection and supported extensions.
-- [ ] Neutral ChartEx reading, editing, generation and family switching.
-- [ ] Make the PowerPoint model a compatibility adapter over the neutral models; remove superseded
-      writer paths only after their admitted cases have regression coverage.
-- [ ] Run the XML/model corpus harness with every difference classified, then native reopen and
+- [x] Data-label visibility/content, per-series and per-point overrides, value-from-cells labels.
+- [x] Series/point fills, lines, gradients and transparency, preserving unrelated theme tokens.
+- [x] Rich title runs, legend entries, axis titles/fonts, gridlines and number/date/display units.
+- [x] Series structure, admitted type switches/combinations, trendlines, error bars and markers.
+- [x] Layouts, 3D/chrome, data tables, stock lines/bars, protection and supported extensions.
+- [x] Neutral ChartEx reading, editing, chart-part generation and admitted family switching.
+- [x] Project neutral chart facts and formatting through the PowerPoint compatibility adapter,
+      refreshing that adapter after saves. Retain source paths for explicitly unsupported cases.
+- [x] Run the XML/model corpus harness with every difference classified, then native reopen and
       embedded-workbook refresh checks. Do not normalize away authored semantics to match a baseline.
+
+These checks cover supported source semantics and operations, not native pixel fidelity. Wider
+3D/XY combination switches, raw geographic/Pareto creation, arbitrary ChartEx custom label text or
+manual layout, and full removal of the PowerPoint source-tree model remain outside this delivery.
 
 ## 5. Shared SmartArt style and colour authoring
 
@@ -208,3 +211,27 @@ older translations are identified explicitly. Word, Excel and PowerPoint documen
 built successfully; Visio's documentation build/link/theme suite passed 76 tests. Added relative
 links, formatting and whitespace checks passed. Final integrated runtime verification remains the
 separate unchecked acceptance step above.
+
+### Final chart integration and native acceptance, 2026-10-27
+
+Classic saves now include typed numeric/date/hierarchy vectors, blank points, rich runs, source-backed
+protection and stock decorations. Structural workbook edits allocate new sheets without rewriting
+existing worksheet parts. The package adapter refreshes its chart model after saving, so repeated
+type and data edits use current series identities and axes. Numeric categories can become text
+without losing source formulas or authored series ids. The 300-test classic corpus passes with
+the unchanged category total of 71/71 for both canonical XML and reloaded models.
+
+Independent review added regressions for theme-preserving text outline/gradient/effect edits,
+rich-label fonts, numeric point format codes, mutually exclusive dash choices and foreign layout
+attributes. ChartEx now shares DrawingML style operations and typed axis/group/point-label edits;
+unsupported axis and custom-label requests are refused explicitly. Native PowerPoint 16 reopened
+the extended-chart example with the requested pattern, hidden point, title font, axis title/bounds
+and serialized tick units. This is semantic evidence, not a pixel comparison.
+
+The committed `src/core/scripts/pptx-classic-chart-acceptance-build.ts` and
+`pptx-classic-chart-acceptance.ps1` exercise five sequential edits in a real producer deck: growth,
+pie, line3D, a repeated line save, and shrink to bar. PowerPoint 16 passed all five chart-type,
+series, category, value and referenced workbook-cell checks. With `-RequireActiveDataSheet`, the
+active sheets were `ChartData1`, `ChartData2`, `ChartData3`, `ChartData3`, `ChartData4`, matching the
+actual chart references. All 100 chart-rendering browser cases passed across the five PowerPoint
+bindings. Word/Excel/Visio native and browser evidence remains recorded in the sections above.

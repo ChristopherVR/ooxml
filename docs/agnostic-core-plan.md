@@ -426,7 +426,7 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   its band formats and opens in Excel without repair (acceptance script). A combination chart becomes one group on a
   whole-chart type change (the operations' rule). Extended (`cx:`) chart editing is now admitted
   through the separate neutral ChartEx operations and source policy described in C5.
-- **C3, pptx saves through the shared writer, one family at a time (in progress).**
+- **C3, pptx saves through the shared writer (admitted families implemented).**
   `chart-neutral-save-plan.ts` plans sparse edits over the stored `ChartSpace`, and
   `writeChartSpaceOverSource` preserves unchanged children and source bytes. Implemented families
   include title text with rich-run preservation, legend and axis fonts/layout, data-label flags,
@@ -435,17 +435,18 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   trendlines, error bars and markers. Formatting-only edits leave embedded workbook cells alone;
   structural data edits allocate fresh workbook ranges. Existing coherent axis-pair reassignment
   and vertical 2D category-axis combination edits preserve document-order selection indices.
-  Chrome, protection, stock helpers and wider source adapters are being integrated and classified.
+  Chrome, protection and stock helpers also use shared source-preserving operations.
   Unclaimed or rejected edits retain an explicit compatibility path. Unsafe group splits,
   unsupported picture relationship changes and wider 3D/XY combinations are not silently admitted.
   The saved-part corpus compares canonical XML and reloaded models; it is implementation parity,
-  not a native rendering oracle. Final exhaustive family/corpus review and native reopen checks
-  remain open. See [the delivery ledger](office-shared-parity-delivery.md) for checkpoint evidence;
+  not a native rendering oracle. The 300-test classic corpus and five sequential native PowerPoint
+  edit/reopen/workbook checks pass. See [the delivery ledger](office-shared-parity-delivery.md) for evidence;
   no claim is made that every object-tree serializer can already be deleted.
-- **C4, `PptxChartData` as a compatibility adapter (in progress).** Classic chart facts already
-  come from `ChartSpace` through `chart-from-neutral*.ts`. Remaining work removes redundant
-  object-tree projections and refreshes compatibility views after neutral saves while retaining
-  authored theme tokens and unmodeled XML. The public PowerPoint model is not yet a neutral alias,
+- **C4, `PptxChartData` as a compatibility adapter (shared projections implemented).** Classic
+  facts and supported formatting come from `ChartSpace` through `chart-from-neutral*.ts`; saved
+  parts refresh compatibility views with scoped host theme and relationship context. Remaining
+  source projections retain unsupported text/spatial details and unmodeled XML. The public model
+  remains a compatibility API rather than a neutral alias,
   and the PowerPoint DOM chart painter remains separate from `chart/render`.
 - **C5, ChartEx model, writer, edits and consumers (implemented families, migration in progress).**
   `chart/ex` reads/writes the neutral `ChartExSpace` model and carries unsupported source children
@@ -460,8 +461,10 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   chart-part grafts reopen with the expected native PowerPoint types in valid gallery decks;
   this does not certify fresh SDK presentation templates. A new six-slide SDK deck failed native
   opening with both the old and new generators, a known template limitation.
-  **Remains:** finish the broader PowerPoint family/admission review, typed axis/style/point-label
-  operations and raw geography/Pareto creation, then remove superseded compatibility paths only
+  Typed axis/style/point-label operations now serve PowerPoint as well as Word and Excel. The
+  style bridge reuses shared DrawingML edits while keeping ChartEx data and layout semantics native
+  to its model. **Remains:** raw geography/Pareto creation, wider axis/custom-label authoring and
+  removal of the remaining compatibility paths only
   after regression and native checks. The complete Office ChartEx authoring surface is not claimed.
 
 - **C6, Word and Visio chart editing (done for Word and for inserted charts in Visio).** `chart/workbook/` holds the
