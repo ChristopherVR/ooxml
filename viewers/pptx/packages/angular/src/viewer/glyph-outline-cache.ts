@@ -12,7 +12,9 @@
  * pass that would render them). `GoogleWebfontsService` registers catalogue
  * webfont bytes once fetched and bumps its own signal, which recomputes
  * `glyphWarp` (both already read shared/component signals, so a change
- * triggers Angular's normal change detection).
+ * triggers Angular's normal change detection). The cache loads its font
+ * parser on the first envelope glyph that needs it and notifies its
+ * subscribers when that fills in outlines, which bumps the same signal.
  */
 import { signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
@@ -28,6 +30,9 @@ export const glyphOutlineFontCache = new GlyphOutlineFontCache();
  * signal recomputes and picks up newly-available outlines automatically.
  */
 export const glyphOutlineFontsTick: WritableSignal<number> = signal(0);
+glyphOutlineFontCache.subscribe(() => {
+	glyphOutlineFontsTick.update((tick) => tick + 1);
+});
 
 /** The `getGlyphOutline` callback `buildGlyphEnvelope` accepts, backed by the module singleton. */
 export const getGlyphOutline = createGlyphOutlineLookup(glyphOutlineFontCache);

@@ -217,13 +217,14 @@ describe('renderWarpedText: envelope/former-simple presets render as true SVG te
 		expect(node ? logicalGlyphElements(node) : []).toHaveLength(9);
 	});
 
-	it('renders warped <path> outlines (not <text>) once the font is registered in the outline cache', () => {
+	it('renders warped <path> outlines (not <text>) once the font is registered in the outline cache', async () => {
 		const embedded: PptxEmbeddedFont = {
 			name: 'WarpOutlineVanillaTestFont',
 			dataUrl: '',
 			rawFontData: buildTestFont(),
 		};
 		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
+		await glyphOutlineFontCache.preload();
 		const element: PptxElement = {
 			type: 'text',
 			id: 'wa-outline',

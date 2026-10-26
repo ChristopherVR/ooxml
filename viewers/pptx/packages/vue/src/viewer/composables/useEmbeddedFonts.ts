@@ -257,7 +257,9 @@ export function useEmbeddedFonts(
 	// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
 	// `immediate: true` runs this synchronously at composable setup, before
 	// the first render that would use them - registerEmbeddedFonts is
-	// idempotent, so re-running on every source change is cheap.
+	// idempotent, so re-running on every source change is cheap. The font
+	// parser loads on demand; the cache subscription in glyph-outline-cache.ts
+	// repaints once it has.
 	const stopOutlineWatch = watch(
 		() => toValue(fonts) ?? [],
 		(source) => glyphOutlineFontCache.registerEmbeddedFonts(source),

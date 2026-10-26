@@ -95,6 +95,7 @@ export class EmbeddedFontsService {
 		// Register this deck's embedded fonts' real outlines (see
 		// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
 		// Synchronous and idempotent, so it is safe to re-run on every call.
+		// The font parser loads on demand; glyph-outline-cache.ts repaints then.
 		glyphOutlineFontCache.registerEmbeddedFonts(fonts ?? []);
 		const previousUrls = this.liveObjectUrls;
 		const { fontFaceCss, fontFamilies, objectUrls } = buildEmbeddedFontStyles(

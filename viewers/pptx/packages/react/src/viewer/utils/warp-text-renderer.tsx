@@ -18,11 +18,11 @@ import { hasTextProperties, getSubstituteFontFamily } from 'pptx-viewer-core';
  * preset's top and bottom curves the way PowerPoint's own text warp does;
  * `<textPath>` can only bend a shared baseline, never per-glyph height.
  */
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 
 import { DEFAULT_TEXT_FONT_SIZE, DEFAULT_FONT_FAMILY, HYPERLINK_COLOR } from '../constants';
 import { normalizeHexColor } from './color';
-import { getGlyphOutline } from './glyph-outline-cache';
+import { getGlyphOutline, glyphOutlineFontCache } from './glyph-outline-cache';
 import type { FieldSubstitutionContext } from './text-field-substitution';
 import { substituteFieldText } from './text-field-substitution';
 import type { ElementFindHighlights } from './text-segment-helpers';
@@ -251,6 +251,12 @@ export function WarpedText({
 	fallbackColor,
 	fieldContext,
 }: WarpedTextProps): React.ReactElement | null {
+	// Repaint envelope glyphs when the outline cache fills in an outline they missed.
+	useSyncExternalStore(
+		glyphOutlineFontCache.subscribe,
+		glyphOutlineFontCache.getSnapshot,
+		glyphOutlineFontCache.getSnapshot,
+	);
 	if (!hasTextProperties(element)) {
 		return null;
 	}

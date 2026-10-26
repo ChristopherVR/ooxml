@@ -9,6 +9,7 @@ const engine = vi.hoisted(() => ({
 	disposeStage: vi.fn(),
 	revoke: vi.fn(),
 	fieldContext: vi.fn(() => ({})),
+	outlineListeners: new Set<() => void>(),
 }));
 vi.mock('ooxml-ui/pptx/dom', () => ({
 	loadPresentation: engine.load,
@@ -18,7 +19,13 @@ vi.mock('ooxml-ui/pptx/dom', () => ({
 	createTranslator: () => (key: string) => key,
 	buildFieldSubstitutionContext: engine.fieldContext,
 	buildEmbeddedFontStyles: () => ({ fontFaceCss: '', objectUrls: [] }),
-	glyphOutlineFontCache: { registerEmbeddedFonts: vi.fn() },
+	glyphOutlineFontCache: {
+		registerEmbeddedFonts: vi.fn(),
+		subscribe: (listener: () => void) => {
+			engine.outlineListeners.add(listener);
+			return () => engine.outlineListeners.delete(listener);
+		},
+	},
 	renderSlideStage: ({ slide }: { slide: { id: string } }) => {
 		const node = document.createElement('div');
 		node.setAttribute('role', 'region');
@@ -115,6 +122,21 @@ describe('presentation reading preview', () => {
 		preview.remove();
 		expect(engine.dispose).toHaveBeenCalledTimes(1);
 		expect(engine.revoke).toHaveBeenCalledWith(['blob:one']);
+	});
+	it('repaints the slide when deferred glyph outlines arrive, until it closes', async () => {
+		engine.load.mockResolvedValue(deck());
+		const preview = await mount();
+		await preview.load(new Uint8Array([1]));
+		const first = preview.shadowRoot!.querySelector('[role=region]')!;
+		expect(engine.outlineListeners.size).toBe(1);
+		for (const listener of engine.outlineListeners) listener();
+		await preview.updateComplete;
+		const repainted = preview.shadowRoot!.querySelector('[role=region]')!;
+		expect(repainted).not.toBe(first);
+		expect(repainted.getAttribute('aria-label')).toBe('Slide 1');
+		expect(engine.disposeStage).toHaveBeenCalledWith(first);
+		preview.remove();
+		expect(engine.outlineListeners.size).toBe(0);
 	});
 	it('passes the deck start slide number to the field context', async () => {
 		engine.load.mockResolvedValue({ ...deck(), firstSlideNumber: 45 });

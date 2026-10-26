@@ -220,6 +220,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private userFontsStyle: HTMLStyleElement | null = null;
 	private signatureWarningAcknowledged = false;
 	private detachSignatureWarning: (() => void) | null = null;
+	/** Stops repainting when the outline cache fills in deferred glyph outlines. */
+	private detachOutlineFonts: (() => void) | null = null;
 	/** Tags in-flight webfont resolutions; only the newest deck may apply its result. */
 	private webfontsToken = 0;
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
@@ -693,6 +695,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				);
 			}
 		});
+		this.detachOutlineFonts = glyphOutlineFontCache.subscribe(() => {
+			this.store.set({ outlineFontsTick: this.store.get().outlineFontsTick + 1 });
+		});
 		// Fetch Google-served webfonts for referenced families that are neither
 		// installed nor embedded (Microsoft 365 "cloud fonts" have no browser
 		// equivalent); re-evaluated only when the inputs actually change, since
@@ -706,8 +711,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// Register this deck's embedded fonts' real outlines (see
 			// glyph-outline-cache.ts) for WordArt envelope glyph-outline
 			// warping. Synchronous and idempotent, before the async webfont
-			// work below, so an embedded font is outline-warpable in the very
-			// first repaint this state change causes.
+			// work below, so an embedded font is outline-warpable as soon as
+			// the font parser, loaded on the first envelope glyph that needs
+			// it, is ready (the cache subscription above repaints then).
 			glyphOutlineFontCache.registerEmbeddedFonts(state.embeddedFonts);
 			const token = ++this.webfontsToken;
 			void resolveGoogleWebfontHref(
@@ -2228,6 +2234,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.sessions.destroy();
 		this.optionsController.dispose();
 		this.detachSignatureWarning?.();
+		this.detachOutlineFonts?.();
 		this.loading.invalidate();
 		this.editor.destroy();
 		this.annotations.dispose();

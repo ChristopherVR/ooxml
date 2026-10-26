@@ -1,7 +1,8 @@
 import { Font, Glyph, Path } from 'opentype.js';
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
+import { preloadOpenTypeFontParser } from './text-warp-opentype-parser';
 import {
 	createGlyphOutlineLookup,
 	extractGlyphOutlineCommands,
@@ -40,6 +41,10 @@ function buildTestFont(): Font {
 function testFontBytes(): Uint8Array {
 	return new Uint8Array(buildTestFont().toArrayBuffer());
 }
+
+// These cases cover parsing itself; text-warp-outline-font-cache-lazy.test.ts
+// covers what happens before the parser has loaded.
+beforeAll(() => preloadOpenTypeFontParser());
 
 describe('extractGlyphOutlineCommands', () => {
 	const font = buildTestFont();

@@ -231,8 +231,8 @@ export class PresentationLoader {
 			this.embeddedFonts = parsed.embeddedFonts ?? [];
 			// Synchronous, not an effect: registers this deck's embedded fonts'
 			// real outlines (see glyph-outline-cache.svelte.ts) BEFORE the first
-			// render that uses them, so WordArt envelope glyphs get outline
-			// warping on the very first paint.
+			// render that uses them. The font parser loads on the first envelope
+			// glyph that needs it; the cache subscription repaints then.
 			glyphOutlineFontCache.registerEmbeddedFonts(parsed.embeddedFonts ?? []);
 			this.hasDigitalSignatures = parsed.hasDigitalSignatures ?? false;
 			this.digitalSignatureCount = parsed.digitalSignatureCount ?? 0;
