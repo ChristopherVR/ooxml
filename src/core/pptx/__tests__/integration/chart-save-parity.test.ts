@@ -43,8 +43,8 @@ const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = 
 	'series values': { parts: 75, xml: 75, model: 75 },
 	categories: { parts: 71, xml: 71, model: 71 },
 	'series name': { parts: 75, xml: 75, model: 75 },
-	'data labels': { parts: 72, xml: 29, model: 51 },
-	'series colour': { parts: 75, xml: 20, model: 40 },
+	'data labels': { parts: 72, xml: 72, model: 72 },
+	'series colour': { parts: 75, xml: 75, model: 75 },
 };
 
 /** An XML difference line reduced to its category: sign, the last three path steps, attribute names. */

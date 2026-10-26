@@ -208,3 +208,63 @@ describe('saveChartPartThroughNeutral: series data', () => {
 		expect(planNeutralChartSave(levels, { ...levels, categories: ['X', 'Y'] })).toBeUndefined();
 	});
 });
+
+describe('saveChartPartThroughNeutral: labels and series paint', () => {
+	it('shows labels without rewriting a series cache or its theme colour', () => {
+		const source = PART.replace(
+			'<c:cat>',
+			'<c:spPr><a:solidFill><a:schemeClr val="accent2"/></a:solidFill></c:spPr><c:cat>',
+		);
+		const next = edited((chart) => {
+			chart.style!.hasDataLabels = true;
+			chart.style!.dataLabels = { showValue: true, position: 'outEnd' };
+		});
+		const saved = saveChartPartThroughNeutral(source, before(), next)!;
+		expect(saved).toBeDefined();
+		expect(saved.xml).toContain('<a:schemeClr val="accent2"/>');
+		expect(saved.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		expect(parseChartSpace(saved.xml).chartSpace.plotArea.groups[0]!.dataLabels).toMatchObject({
+			showValue: true,
+			position: 'outEnd',
+		});
+	});
+
+	it('recolours a series while retaining its transparency and unrelated title runs', () => {
+		const source = PART.replace(
+			'<c:cat>',
+			'<c:spPr><a:solidFill><a:schemeClr val="accent2"><a:alpha val="60000"/></a:schemeClr></a:solidFill></c:spPr><c:cat>',
+		);
+		const next = edited((chart) => {
+			chart.series[0]!.color = '#FF0000';
+		});
+		const saved = saveChartPartThroughNeutral(source, before(), next)!;
+		expect(saved).toBeDefined();
+		expect(saved.xml).toContain('<a:rPr lang="en-US" b="1"/>');
+		expect(saved.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		expect(
+			parseChartSpace(saved.xml).chartSpace.plotArea.groups[0]!.series[0]!.spPr?.fill,
+		).toMatchObject({
+			kind: 'solid',
+			color: { kind: 'srgb', value: 'FF0000', transforms: [{ name: 'alpha', value: '60000' }] },
+		});
+	});
+
+	it('does not claim a value-from-cells label edit or a hidden-label policy change', () => {
+		const range = edited((chart) => {
+			chart.style!.hasDataLabels = true;
+			chart.style!.dataLabels = {
+				showValue: true,
+				dataLabelsRange: { formula: 'Sheet1!$C$2:$C$3', cache: ['A', 'B'] },
+			};
+		});
+		expect(planNeutralChartSave(before(), range)).toBeUndefined();
+		expect(
+			planNeutralChartSave(
+				before(),
+				edited((chart) => {
+					chart.style!.hasDataLabels = false;
+				}),
+			),
+		).toBeUndefined();
+	});
+});

@@ -26,6 +26,10 @@ import {
 	type ChartSpace,
 } from '../../../chart/index';
 import type { PptxChartAxisFormatting, PptxChartData, PptxChartStyle } from '../types';
+import {
+	planNeutralChartLabels,
+	planNeutralChartSeriesColors,
+} from './chart-neutral-save-paint-labels';
 
 export type NeutralChartEdit = (space: ChartSpace) => ChartSpace;
 
@@ -216,5 +220,7 @@ export function planNeutralChartSave(
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
 	const seriesData = planSeriesData(before, probe, edits);
+	planNeutralChartLabels(before, probe, edits);
+	planNeutralChartSeriesColors(before, probe, edits);
 	return same(probe, before) ? { edits, seriesData } : undefined;
 }

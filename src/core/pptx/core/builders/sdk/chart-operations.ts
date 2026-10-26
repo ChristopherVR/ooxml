@@ -265,8 +265,8 @@ export function setChartDataLabels(
 			labels?.showSeriesName === true ||
 			labels?.showPercent === true ||
 			labels?.showBubbleSize === true;
-		if (edit.show && labels !== undefined && !anyContent && edit.showValue === undefined) {
-			labels.showValue = true;
+		if (edit.show && !anyContent && edit.showValue === undefined) {
+			(style.dataLabels ??= {}).showValue = true;
 		}
 	}
 	const contentKeys = [

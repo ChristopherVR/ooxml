@@ -971,6 +971,13 @@ describe('setChartDataLabels', () => {
 		expect(el.chartData?.style?.hasDataLabels).toBeTruthy();
 	});
 
+	it('requests chart-level values even when existing series already show labels', () => {
+		const el = makeTestChart();
+		el.chartData!.style = { hasDataLabels: true };
+		setChartDataLabels(el, { show: true });
+		expect(el.chartData!.style.dataLabels).toEqual({ showValue: true });
+	});
+
 	it('hides data labels', () => {
 		const el = makeTestChart();
 		setChartDataLabels(el, { show: false });
