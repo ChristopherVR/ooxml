@@ -1130,6 +1130,8 @@ export * from './embedded-fonts';
 // injection stay per-binding).
 export * from './google-webfonts';
 export * from './google-webfonts-link';
+// The host `limits` option: the localized load-error text for a deck over a load limit.
+export * from './load-limits';
 // Weight variants named as their own family ("DM Sans Light"): the Google
 // Fonts face that serves them and the CSS weight their text renders at.
 export * from './font-weight-names';

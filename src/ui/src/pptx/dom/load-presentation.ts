@@ -10,6 +10,7 @@ import type {
 	PptxEmbeddedFont,
 	PptxHandoutMaster,
 	PptxHeaderFooter,
+	PptxLoadLimits,
 	PptxModernCommentAuthor,
 	PptxModifyVerifier,
 	PptxNotesMaster,
@@ -128,6 +129,12 @@ export interface LoadPresentationOptions {
 	/** Bound the expanded archive for embedded viewers. */
 	maxUncompressedBytes?: number;
 	/**
+	 * The host `limits` option, passed to `PptxHandler.load` as is: unset keeps
+	 * the core defaults. A deck over a limit rejects with a load-limit error
+	 * (see `pptxLoadErrorMessage`).
+	 */
+	limits?: PptxLoadLimits;
+	/**
 	 * Trust Center > "Allow external content" (default false, matching core's
 	 * own SSRF/privacy-safe default). When false, `PptxHandler.getImageData`
 	 * silently drops `http(s)://` image references instead of fetching them.
@@ -145,6 +152,7 @@ export async function loadPresentation(
 		const parsed = await handler.load(buffer, {
 			allowExternalImages: options?.allowExternalImages,
 			maxUncompressedBytes: options?.maxUncompressedBytes,
+			limits: options?.limits,
 		});
 
 		const getImageData = (path: string): Promise<string | undefined> => handler.getImageData(path);

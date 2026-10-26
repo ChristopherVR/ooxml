@@ -2027,6 +2027,16 @@ export const translationsEn: Record<string, string> = {
 	'pptx.viewer.loading': 'Loading presentation…',
 	'pptx.viewer.encrypted': 'This presentation is password-protected and cannot be opened.',
 	'pptx.viewer.loadError': 'Failed to load presentation.',
+	'pptx.viewer.loadLimit.maxInputBytes':
+		'This file is {{actual}}, larger than the {{maximum}} this viewer accepts.',
+	'pptx.viewer.loadLimit.maxUncompressedBytes':
+		'This presentation unpacks to at least {{actual}}, more than the {{maximum}} this viewer accepts.',
+	'pptx.viewer.loadLimit.maxEntries':
+		'This presentation contains {{actual}} parts, more than the {{maximum}} this viewer accepts.',
+	'pptx.viewer.loadLimit.maxSlides':
+		'This presentation has {{actual}} slides, more than the {{maximum}} this viewer accepts.',
+	'pptx.viewer.loadLimit.maxShapes':
+		'This presentation has at least {{actual}} shapes, more than the {{maximum}} this viewer accepts.',
 	'pptx.viewer.slide': 'Slide',
 	'pptx.viewer.background': 'Background',
 	'pptx.viewer.speakerNotesPlaceholder': 'Click to add speaker notes',
