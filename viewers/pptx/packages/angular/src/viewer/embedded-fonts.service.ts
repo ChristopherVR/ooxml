@@ -19,6 +19,7 @@
  */
 
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { createEmbeddedOutlineFontsSlot } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 
 import {
@@ -63,6 +64,8 @@ export class EmbeddedFontsService {
 	private userCss = '';
 	/** Object URLs minted on the most recent `setFonts`; revoked when superseded. */
 	private liveObjectUrls: string[] = [];
+	/** The current deck's fonts in the module-wide glyph-outline cache. */
+	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 
 	/** Mints a Blob object URL for de-obfuscated font bytes (impure side effect). */
 	private readonly mintObjectUrl: ObjectUrlFactory = (bytes, mime) => {
@@ -94,9 +97,10 @@ export class EmbeddedFontsService {
 	setFonts(fonts: readonly PptxEmbeddedFont[] | null | undefined): void {
 		// Register this deck's embedded fonts' real outlines (see
 		// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
-		// Synchronous and idempotent, so it is safe to re-run on every call.
-		// The font parser loads on demand; glyph-outline-cache.ts repaints then.
-		glyphOutlineFontCache.registerEmbeddedFonts(fonts ?? []);
+		// Synchronous; the same list again changes nothing, another list
+		// releases the previous deck's fonts. The font parser loads on demand;
+		// glyph-outline-cache.ts repaints then.
+		this.outlineFonts.set(fonts);
 		const previousUrls = this.liveObjectUrls;
 		const { fontFaceCss, fontFamilies, objectUrls } = buildEmbeddedFontStyles(
 			fonts,
@@ -122,6 +126,7 @@ export class EmbeddedFontsService {
 	 * reset the signals. Called automatically on destroy; safe to call manually.
 	 */
 	dispose(): void {
+		this.outlineFonts.release();
 		this.removeStyleElement();
 		this.revokeObjectUrls(this.liveObjectUrls);
 		this.liveObjectUrls = [];

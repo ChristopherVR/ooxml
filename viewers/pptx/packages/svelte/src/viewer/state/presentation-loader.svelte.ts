@@ -2,6 +2,7 @@ import type { CanvasSize, CollabLoadOrigin, LoadLimitTranslate, SlideSizeEmu } f
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
+	createEmbeddedOutlineFontsSlot,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
 } from 'ooxml-ui/pptx';
@@ -142,6 +143,8 @@ export class PresentationLoader {
 	loadCount = $state(0);
 
 	#renderToken = 0;
+	/** This viewer's deck in the module-wide glyph-outline cache, released with the deck. */
+	#outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	#activeBlobUrls: string[] = [];
 
 	/**
@@ -240,8 +243,9 @@ export class PresentationLoader {
 			// Synchronous, not an effect: registers this deck's embedded fonts'
 			// real outlines (see glyph-outline-cache.svelte.ts) BEFORE the first
 			// render that uses them. The font parser loads on the first envelope
-			// glyph that needs it; the cache subscription repaints then.
-			glyphOutlineFontCache.registerEmbeddedFonts(parsed.embeddedFonts ?? []);
+			// glyph that needs it; the cache subscription repaints then. Releases
+			// the previous deck's fonts.
+			this.#outlineFonts.set(parsed.embeddedFonts ?? []);
 			this.hasDigitalSignatures = parsed.hasDigitalSignatures ?? false;
 			this.digitalSignatureCount = parsed.digitalSignatureCount ?? 0;
 			this.isPasswordProtected = parsed.isPasswordProtected ?? false;
@@ -326,5 +330,6 @@ export class PresentationLoader {
 		revokeBlobUrls(this.mediaDataUrls.values());
 		this.handler?.dispose();
 		this.handler = null;
+		this.#outlineFonts.release();
 	}
 }

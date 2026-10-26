@@ -2,8 +2,13 @@
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 import { obfuscateFont } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
-import { effectScope, nextTick, ref } from 'vue';
+import { effectScope, nextTick, ref, shallowRef } from 'vue';
 
+import {
+	embeddedFontList,
+	retainedFontLists,
+} from '../../../../shared/test-utils/outline-fonts.mjs';
+import { glyphOutlineFontCache } from '../utils/glyph-outline-cache';
 import { useEmbeddedFonts } from './useEmbeddedFonts';
 
 /** Minimal valid TrueType sfnt header (0x00010000) so `detectFontFormat` is happy. */
@@ -182,5 +187,24 @@ describe('useEmbeddedFonts', () => {
 		const weights = [...result.fontFaceCss.value.matchAll(/font-weight: (\d+)/gu)].map((m) => m[1]);
 		expect(weights).toStrictEqual(['300', '700']);
 		stop();
+	});
+
+	it('releases a replaced deck and the last deck from the glyph-outline cache', async () => {
+		const first = embeddedFontList();
+		const second = embeddedFontList();
+		const source = shallowRef<PptxEmbeddedFont[]>(first);
+		const { stop } = withScope(() => useEmbeddedFonts(source));
+		expect(retainedFontLists(glyphOutlineFontCache).has(first)).toBeTruthy();
+
+		source.value = second;
+		await nextTick();
+		let retained = retainedFontLists(glyphOutlineFontCache);
+		expect(retained.has(first)).toBeFalsy();
+		expect(retained.has(second)).toBeTruthy();
+
+		stop();
+		retained = retainedFontLists(glyphOutlineFontCache);
+		expect(retained.has(first)).toBeFalsy();
+		expect(retained.has(second)).toBeFalsy();
 	});
 });

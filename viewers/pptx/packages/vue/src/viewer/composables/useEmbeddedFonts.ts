@@ -1,4 +1,9 @@
-import { resolveFontItalic, resolveFontWeight, selectTrustedEmbeddedFonts } from 'ooxml-ui/pptx';
+import {
+	createEmbeddedOutlineFontsSlot,
+	resolveFontItalic,
+	resolveFontWeight,
+	selectTrustedEmbeddedFonts,
+} from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 import { deobfuscateFont, detectFontFormat, getSubstituteFontFamily } from 'pptx-viewer-core';
 import { computed, onScopeDispose, toValue, watch } from 'vue';
@@ -256,13 +261,14 @@ export function useEmbeddedFonts(
 	// Register this deck's embedded fonts' real outlines (see
 	// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
 	// `immediate: true` runs this synchronously at composable setup, before
-	// the first render that would use them - registerEmbeddedFonts is
-	// idempotent, so re-running on every source change is cheap. The font
-	// parser loads on demand; the cache subscription in glyph-outline-cache.ts
-	// repaints once it has.
+	// the first render that would use them. A new source releases the
+	// previous deck's fonts; the scope's disposal releases the last one. The
+	// font parser loads on demand; the cache subscription in
+	// glyph-outline-cache.ts repaints once it has.
+	const outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	const stopOutlineWatch = watch(
 		() => toValue(fonts) ?? [],
-		(source) => glyphOutlineFontCache.registerEmbeddedFonts(source),
+		(source) => outlineFonts.set(source),
 		{ immediate: true },
 	);
 
@@ -277,6 +283,7 @@ export function useEmbeddedFonts(
 	onScopeDispose(() => {
 		stopWatch();
 		stopOutlineWatch();
+		outlineFonts.release();
 		if (styleEl && styleEl.parentNode) {
 			styleEl.parentNode.removeChild(styleEl);
 		}

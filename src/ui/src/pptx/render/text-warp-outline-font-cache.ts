@@ -39,6 +39,10 @@ import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 import { resolveEmbeddedFontClearBytes } from './embedded-font-bytes';
 import { isEmbeddedTypefaceTrusted } from './embedded-font-trust';
 import {
+	EmbeddedFontCandidates,
+	type ReleaseEmbeddedFonts,
+} from './glyph-outline-font-registration';
+import {
 	isOpenTypeFontParserReady,
 	parseOpenTypeFont,
 	preloadOpenTypeFontParser,
@@ -91,12 +95,6 @@ function cacheKey(family: string, bold: boolean, italic: boolean): string {
 	return `${primaryFontFamily(family).toLowerCase()}|${bold ? 1 : 0}|${italic ? 1 : 0}`;
 }
 
-/** An embedded variant registered for a key, with the list it came from. */
-interface PendingEmbeddedFont {
-	font: PptxEmbeddedFont;
-	list: readonly PptxEmbeddedFont[];
-}
-
 /**
  * Caches parsed `opentype.js` fonts by `(family, bold, italic)`.
  *
@@ -115,18 +113,21 @@ interface PendingEmbeddedFont {
  * Either way, lookups answer exactly as if every registered font had been
  * parsed on arrival. Listeners fire (once per microtask) when a font is
  * parsed for a family a lookup already missed, so a glyph drawn by the
- * fallback gets its outline.
+ * fallback gets its outline. Until they are looked up the embedded fonts
+ * belong to their deck: the release {@link registerEmbeddedFonts} returns
+ * drops the ones never looked up (see `glyph-outline-font-registration.ts`).
  */
 export class GlyphOutlineFontCache {
 	private readonly fonts = new Map<string, Font>();
 	private readonly attempted = new Set<string>();
 	/**
-	 * Registered embedded candidates per key, in registration order, with
-	 * nothing read from them yet. A key's embedded candidates are always older
-	 * than its {@link pendingBytes}: an embedded font is not recorded for a key
-	 * that already has bytes, as it would not have been parsed on arrival.
+	 * Registered embedded candidates per key, in registration order and grouped
+	 * by deck, with nothing read from them yet. A key's embedded candidates are
+	 * always older than its {@link pendingBytes}: an embedded font is not
+	 * recorded for a key that already has bytes, as it would not have been
+	 * parsed on arrival.
 	 */
-	private readonly pendingEmbedded = new Map<string, PendingEmbeddedFont[]>();
+	private readonly pendingEmbedded = new EmbeddedFontCandidates();
 	/**
 	 * Webfont bytes registered before the parser loaded, oldest first. Every
 	 * candidate is kept until one parses: a later registration only replaces an
@@ -218,33 +219,34 @@ export class GlyphOutlineFontCache {
 	/**
 	 * Record every embedded font for outline lookups, no network involved and
 	 * nothing decoded yet. Safe to call repeatedly (e.g. once per render) with
-	 * the same list: already-resolved and already-failed entries are skipped.
-	 * Typefaces whose files do not match them are skipped too (see
+	 * the same list: a list already registered is not recorded again, and
+	 * already-resolved or already-failed entries are skipped. Typefaces whose
+	 * files do not match them are skipped too (see
 	 * `isEmbeddedTypefaceTrusted`), exactly as for `@font-face`. A font for a
 	 * key a lookup already missed is parsed now if the parser is loaded, and
 	 * otherwise starts loading it.
+	 *
+	 * Returns the release for this deck: call it when the deck is closed or
+	 * replaced to drop its fonts that were never looked up, so the cache stops
+	 * holding them. Fonts already parsed stay cached, as before.
 	 */
-	registerEmbeddedFonts(fonts: readonly PptxEmbeddedFont[]): void {
+	registerEmbeddedFonts(fonts: readonly PptxEmbeddedFont[]): ReleaseEmbeddedFonts {
 		let needed = false;
-		for (const font of fonts) {
+		const release = this.pendingEmbedded.add(fonts, (font) => {
 			if (!font.name) {
-				continue;
+				return undefined;
 			}
 			const key = cacheKey(font.name, Boolean(font.bold), Boolean(font.italic));
 			if (this.fonts.has(key) || this.attempted.has(key) || this.pendingBytes.has(key)) {
-				continue;
-			}
-			const candidates = this.pendingEmbedded.get(key);
-			if (candidates) {
-				candidates.push({ font, list: fonts });
-			} else {
-				this.pendingEmbedded.set(key, [{ font, list: fonts }]);
+				return undefined;
 			}
 			needed ||= this.missed.has(key);
-		}
+			return key;
+		});
 		if (needed) {
 			this.resolveMissedOrLoad();
 		}
+		return release;
 	}
 
 	/**
@@ -314,7 +316,7 @@ export class GlyphOutlineFontCache {
 
 	private dropPending(key: string): void {
 		this.pendingBytes.delete(key);
-		this.pendingEmbedded.delete(key);
+		this.pendingEmbedded.take(key);
 	}
 
 	/**
@@ -326,8 +328,8 @@ export class GlyphOutlineFontCache {
 	 */
 	private resolvePending(key: string): void {
 		const bytes = this.pendingBytes.get(key);
-		const embedded = this.pendingEmbedded.get(key);
-		this.dropPending(key);
+		this.pendingBytes.delete(key);
+		const embedded = this.pendingEmbedded.take(key);
 		if (bytes) {
 			for (let i = bytes.length - 1; i >= 0; i -= 1) {
 				if (this.parseInto(key, bytes[i]!)) {

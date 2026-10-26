@@ -236,6 +236,8 @@ export function useLoadContent({
 		const handler = new PptxHandler();
 		const resources = createPresentationLoadResources(handler);
 		const loadBlobUrls = resources.blobUrls;
+		// Releases this deck's embedded fonts from the glyph-outline cache.
+		let releaseOutlineFonts: (() => void) | undefined;
 
 		(async () => {
 			try {
@@ -435,8 +437,11 @@ export function useLoadContent({
 				// Synchronous, not an effect: registers this deck's embedded fonts'
 				// real outlines (see glyph-outline-cache.ts) BEFORE the first render
 				// that uses them. The font parser itself loads on the first envelope
-				// glyph that needs it; `WarpedText` repaints when it has.
-				glyphOutlineFontCache.registerEmbeddedFonts(parsed.embeddedFonts ?? []);
+				// glyph that needs it; `WarpedText` repaints when it has. Released
+				// with the deck, in the cleanup below.
+				releaseOutlineFonts = glyphOutlineFontCache.registerEmbeddedFonts(
+					parsed.embeddedFonts ?? [],
+				);
 				setHasMacros(parsed.hasMacros === true);
 				setHasDigitalSignatures(parsed.hasDigitalSignatures === true);
 				setDigitalSignatureCount(parsed.digitalSignatureCount ?? 0);
@@ -490,6 +495,8 @@ export function useLoadContent({
 			for (const url of loadBlobUrls) {
 				URL.revokeObjectURL(url);
 			}
+			// The cache is module-wide: drop the fonts this deck never looked up.
+			releaseOutlineFonts?.();
 			// Dispose handler to free core-side Blob URLs and ZIP memory
 			if (handlerRef.current) {
 				handlerRef.current.dispose();

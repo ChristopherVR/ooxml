@@ -2,6 +2,7 @@ import { Font, Glyph, Path, parse as parseFont } from 'opentype.js';
 import type { PptxEmbeddedFont } from 'ooxml-core/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createEmbeddedOutlineFontsSlot } from './glyph-outline-font-registration';
 import type { GlyphOutlineFontCache } from './text-warp-outline-font-cache';
 
 const path = new Path();
@@ -431,5 +432,69 @@ describe('GlyphOutlineFontCache decodes deferred embedded fonts only when looked
 		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
 		expect(resolvedGlyph(cache, brand)).toBe('A');
 		expect(reads.length).toBeGreaterThan(0);
+	});
+});
+
+describe('GlyphOutlineFontCache releases waiting embedded fonts with their document', () => {
+	const brand = 'BrandOutline';
+
+	/** One document's embedded variant of `brand`, counting reads of its data. */
+	function documentFonts(reads: string[], tag: string, bytes: Uint8Array): PptxEmbeddedFont[] {
+		return [
+			{
+				name: brand,
+				get dataUrl() {
+					reads.push(tag);
+					return '';
+				},
+				get rawFontData() {
+					reads.push(tag);
+					return bytes;
+				},
+			},
+		];
+	}
+
+	it('answers with the next open document when a failing webfont waits and the first document closes', async () => {
+		const { cache, lookup, parse, release } = await freshCache();
+		const reads: string[] = [];
+		const listener = vi.fn();
+		cache.subscribe(listener);
+		const first = createEmbeddedOutlineFontsSlot(cache);
+		const second = createEmbeddedOutlineFontsSlot(cache);
+		first.set(documentFonts(reads, 'first', fontA));
+		second.set(documentFonts(reads, 'second', fontB));
+		expect(cache.registerFontBytes(brand, false, false, woff2)).toBe(false);
+		expect(lookup('B', { fontFamily: brand, fontSizePx: 1000 }, 0, 0)).toBeUndefined();
+		// The first document closes while the parser is still loading.
+		first.release();
+		release();
+		await vi.waitFor(() => expect(listener).toHaveBeenCalledOnce());
+		// The failed WOFF2 replacement left the open document's face in place,
+		// and the closed document's face was never decoded or parsed.
+		expect(resolvedGlyph(cache, brand)).toBe('B');
+		expect(new Set(reads)).toStrictEqual(new Set(['second']));
+		expect(parse).toHaveBeenCalledTimes(2);
+		second.release();
+		expect(resolvedGlyph(cache, brand)).toBe('B');
+	});
+
+	it('drops a closed document that was never looked up, keeping only the failed webfont', async () => {
+		const { cache, parse, release } = await freshCache();
+		const reads: string[] = [];
+		const only = createEmbeddedOutlineFontsSlot(cache);
+		only.set(documentFonts(reads, 'only', fontA));
+		expect(cache.registerFontBytes(brand, false, false, woff2)).toBe(false);
+		only.release();
+		release();
+		await cache.preload();
+		expect(resolvedGlyph(cache, brand)).toBeUndefined();
+		expect(reads).toStrictEqual([]);
+		expect(parse).toHaveBeenCalledOnce();
+		// The webfont was registered first, so a deck opened now does not take the
+		// key, exactly as when every font is parsed on arrival.
+		only.set(documentFonts(reads, 'later', fontB));
+		expect(resolvedGlyph(cache, brand)).toBeUndefined();
+		expect(reads).toStrictEqual([]);
 	});
 });

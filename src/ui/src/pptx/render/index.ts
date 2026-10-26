@@ -101,6 +101,12 @@ export * from './text-warp-glyph-outline';
 export * from './text-warp-glyph-slicing';
 export * from './text-warp-glyph-trace';
 export * from './text-warp-outline-font-cache';
+export {
+	createEmbeddedOutlineFontsSlot,
+	type EmbeddedOutlineFontsRegistrar,
+	type EmbeddedOutlineFontsSlot,
+	type ReleaseEmbeddedFonts,
+} from './glyph-outline-font-registration';
 export * from './text-warp-outline-webfont-fetch';
 export * from './text-warp-preset-definitions';
 export * from './text-warp-preset-sampler';
