@@ -647,12 +647,11 @@ export class PptxHandlerRuntime {
 	 */
 	protected async loadPartRelationships(partPath: string, relsPath?: string): Promise<void> {
 		const path = relsPath ?? partRelsPath(partPath);
-		const relsXml = await this.readPartText(path);
-		if (!relsXml) {
+		const relsData = await this.readPartXml(path);
+		if (!relsData) {
 			return;
 		}
 
-		const relsData = await this.readPartXml(path);
 		const relationships = relsData?.['Relationships'] as XmlObject | undefined;
 		const raw = relationships?.['Relationship'];
 		const entries = (Array.isArray(raw) ? raw : raw ? [raw] : []) as XmlObject[];
