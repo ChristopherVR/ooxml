@@ -22,6 +22,7 @@ import {
 	XLSX_CHART_FILL_SLOT,
 } from './chart-format-source';
 import { createSeriesFill } from './chart-series-fill';
+import { activeChartEx } from './chart-ex-pane';
 
 export function chartAreaCommand(): Command {
 	return editing({
@@ -31,9 +32,10 @@ export function chartAreaCommand(): Command {
 		lock: 'objects',
 		enabled: (ctx) => {
 			const chart = activeChart(ctx)?.chart;
-			return !!chart && !chart.editBlocked;
+			return (!!chart && !chart.editBlocked) || !!activeChartEx(ctx);
 		},
-		run: (ctx, arg) => void ctx.dialogs.open('format-chart-area', arg),
+		run: (ctx, arg) =>
+			void ctx.dialogs.open(activeChartEx(ctx) ? 'chart-ex' : 'format-chart-area', arg),
 	});
 }
 

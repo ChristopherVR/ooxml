@@ -68,8 +68,13 @@ export function syncChartDesign(toolbar: HTMLElement, state: EditorState, editab
 	))
 		control.disabled = !active;
 	if (!chart) return;
+
 	const legend = panel.querySelector<HTMLSelectElement>(
 		'[data-localearialabel="Legend"], [aria-label="Legend"]',
 	);
-	if (legend) legend.value = chart.chart.chartSpace?.legend?.position ?? 'none';
+	if (legend)
+		legend.value =
+			chart.chart.chartSpace?.legend?.position ??
+			chart.chart.chartExSpace?.legend?.position ??
+			'none';
 }

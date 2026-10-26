@@ -104,6 +104,12 @@ export class DrawingLayer {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
 						const frame = view.sheet()?.drawings[index];
+						if (frame?.kind === 'unsupported' && frame.chartExSpace) {
+							event.stopPropagation();
+							view.ctx.selection.set({ drawing: index });
+							void view.ctx.commands.run('chart.format-area');
+							return;
+						}
 						if (frame?.kind === 'smartArt') {
 							// Excel opens the text pane on a double-click into a SmartArt graphic.
 							event.stopPropagation();

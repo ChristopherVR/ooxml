@@ -6,14 +6,20 @@
 // the existing chart save path. Fields no neutral intent writes stay hidden (the source does not
 // offer them) or are ignored.
 import type { EditorView } from 'prosemirror-view';
-import { applyChartEditIntent } from 'ooxml-core/chart';
-import { diagramColorTheme, editDocxChart, type ThemeCatalog } from 'ooxml-core/docx';
+import { applyChartExEditIntent, applyChartEditIntent } from 'ooxml-core/chart';
+import {
+	diagramColorTheme,
+	editDocxChartEx,
+	editDocxChart,
+	type ThemeCatalog,
+} from 'ooxml-core/docx';
 import { selectedChart } from 'ooxml-core/docx/ui';
 import {
 	defineChartFormatPane,
 	type ChartFormatEditEvent,
 	type OfficeUiChartFormatPane,
 } from '../chart/format-pane';
+import { chartExSpaceFormatSource } from '../chart/format-pane-chartex';
 import { editSelectedChart } from './chart-commands';
 import { focusView } from './focus-view';
 import type { EditorLocale } from './localization';
@@ -58,7 +64,7 @@ export function createChartFormatPane(host: ChartFormatPaneHost): DocxChartForma
 		const view = host.view();
 		const selected = view && selectedChart(view.state);
 		const chartSpace = selected?.chart.chartSpace;
-		if (!view || !selected || !chartSpace) {
+		if (!view || !selected || (!chartSpace && !selected.chart.chartExSpace)) {
 			close();
 			return;
 		}
@@ -76,7 +82,12 @@ export function createChartFormatPane(host: ChartFormatPaneHost): DocxChartForma
 		// A new model (an edit, undo or another chart) replaces the source; the target is kept.
 		if (selected.node !== shown) {
 			shown = selected.node;
-			element.chartSpace = chartSpace;
+			if (selected.chart.chartExSpace)
+				element.source = chartExSpaceFormatSource(
+					selected.chart.chartExSpace,
+					diagramColorTheme(nextTheme),
+				);
+			else element.chartSpace = chartSpace;
 		}
 		element.disabled = !selected.editable || !view.editable || !host.canEdit();
 	};
@@ -87,7 +98,9 @@ export function createChartFormatPane(host: ChartFormatPaneHost): DocxChartForma
 		if (intent && view && host.canEdit())
 			try {
 				editSelectedChart(view, (chart) =>
-					editDocxChart(chart, (current) => applyChartEditIntent(current, intent)),
+					chart.chartExSpace
+						? editDocxChartEx(chart, (current) => applyChartExEditIntent(current, intent))
+						: editDocxChart(chart, (current) => applyChartEditIntent(current, intent)),
 				);
 			} catch {
 				// An edit the chart cannot take (a family without that element) leaves it as it was.

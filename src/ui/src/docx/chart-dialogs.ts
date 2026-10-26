@@ -3,18 +3,29 @@
 // model and its edits are the shared core's; every change is one step of the editor's undo
 // history and repaints the chart through the shared painter.
 import type { EditorView } from 'prosemirror-view';
-import { setChartLegend, setChartType, type ChartDataSheetEdit } from 'ooxml-core/chart';
+import {
+	applyChartExEditAction,
+	setChartLegend,
+	setChartType,
+	type ChartDataSheetEdit,
+} from 'ooxml-core/chart';
 import {
 	applyDocxChartDataSheetEdits,
 	docxChartDataSheet,
 	docxChartPaint,
 	editDocxChart,
+	editDocxChartEx,
 	newChartImage,
 	newDocxChart,
 	type DocxChart,
 	type ThemeCatalog,
 } from 'ooxml-core/docx';
 import { insertChartImage, selectedChart } from 'ooxml-core/docx/ui';
+import {
+	defineChartExOptions,
+	type OfficeUiChartExOptions,
+	type ChartExEditEvent,
+} from '../chart/chartex-options';
 import { defineChartDataSheet, type OfficeChartDataSheetLabels } from '../chart/data-sheet';
 import {
 	defineChartPicker,
@@ -31,6 +42,7 @@ import {
 	editSelectedChart,
 	setSelectedChartType,
 } from './chart-commands';
+import { sheetLabels } from './chart-sheet-labels';
 import { dialogButton } from './dialog-fields';
 import {
 	createDialogShell,
@@ -58,6 +70,7 @@ type Sheet = HTMLElement & {
 	data: ReturnType<typeof docxChartDataSheet>;
 	labels: Partial<OfficeChartDataSheetLabels>;
 	locale: string;
+	disabled: boolean;
 };
 
 export interface ChartDialogsHost {
@@ -99,30 +112,13 @@ function pickerLabels(locale: EditorLocale): Partial<OfficeChartPickerLabels> {
 	};
 }
 
-function sheetLabels(locale: EditorLocale): OfficeChartDataSheetLabels {
-	const t = (key: keyof OfficeChartDataSheetLabels) =>
-		translate(locale, `chart.sheet.${key}` as Parameters<typeof translate>[1]);
-	return {
-		heading: t('heading'),
-		addCategory: t('addCategory'),
-		addSeries: t('addSeries'),
-		addCategoryShort: t('addCategoryShort'),
-		addSeriesShort: t('addSeriesShort'),
-		removeCategory: t('removeCategory'),
-		removeSeries: t('removeSeries'),
-		categories: t('categories'),
-		seriesName: t('seriesName'),
-		categoryLabel: t('categoryLabel'),
-		valueCell: t('valueCell'),
-		summary: t('summary'),
-		invalidNumber: t('invalidNumber'),
-	};
-}
-
 /** Insert Chart (`change` false) or Change Chart Type (`change` true). */
 export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): FormatDialog {
 	const title = change ? 'Change Chart Type' : 'Insert Chart';
 	const element = createDialogShell(title, 'dve-format-dialog dve-chart-dialog');
+	defineChartExOptions();
+	const extended = document.createElement('office-ui-chart-ex-options') as OfficeUiChartExOptions;
+	const extendedClose = dialogButton('OK', true);
 	defineChartPicker();
 	const picker = document.createElement('office-ui-chart-picker') as Picker;
 	picker.changeOnly = change;
@@ -138,6 +134,22 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 		current = undefined;
 		focusView(host.view());
 	};
+	extendedClose.addEventListener('click', hide);
+	extended.addEventListener('office-chart-ex-edit', (event) => {
+		const view = host.view();
+		if (!view) return;
+		try {
+			editSelectedChart(view, (chart) =>
+				editDocxChartEx(chart, (space) =>
+					applyChartExEditAction(space, (event as ChartExEditEvent).detail.action),
+				),
+			);
+			message.textContent = '';
+		} catch {
+			message.textContent = translate(locale, 'chart.readOnly');
+		}
+		extended.space = selectedChart(view.state)?.chart.chartExSpace;
+	});
 	cancel.addEventListener('click', hide);
 	onDialogDismiss(element, hide);
 	ok.addEventListener('click', () => {
@@ -177,6 +189,16 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 			const view = host.view();
 			if (!view?.editable) return;
 			const selected = change ? selectedChart(view.state) : undefined;
+			if (change && selected?.editable && selected.chart.chartExSpace) {
+				extended.space = selected.chart.chartExSpace;
+				extended.locale = locale;
+				message.textContent = '';
+				element.replaceChildren(extended, message, dialogActions(extendedClose));
+				localizeDialog(element, locale);
+				setDialogOpen(element, true);
+				extendedClose.focus();
+				return;
+			}
 			if (change && !selected?.editable) {
 				message.textContent = translate(locale, 'chart.readOnly');
 				element.replaceChildren(message, dialogActions(cancel));
@@ -208,6 +230,8 @@ export function createChartTypeDialog(host: ChartDialogsHost, change: boolean): 
 export function createChartDataDialog(host: ChartDialogsHost): FormatDialog {
 	const element = createDialogShell('Edit Data', 'dve-format-dialog dve-chart-data-dialog');
 	defineChartDataSheet();
+	defineChartExOptions();
+	const extended = document.createElement('office-ui-chart-ex-options') as OfficeUiChartExOptions;
 	const sheet = document.createElement('office-ui-chart-data-sheet') as Sheet;
 	const message = document.createElement('p');
 	message.setAttribute('role', 'status');
@@ -224,9 +248,32 @@ export function createChartDataDialog(host: ChartDialogsHost): FormatDialog {
 		const view = host.view();
 		const { edits } = (event as CustomEvent<{ edits: ChartDataSheetEdit[] }>).detail;
 		if (!view) return;
-		editSelectedChart(view, (chart) => applyDocxChartDataSheetEdits(chart, edits));
+		try {
+			editSelectedChart(view, (chart) => applyDocxChartDataSheetEdits(chart, edits));
+			message.textContent = '';
+		} catch {
+			message.textContent = translate(locale, 'chart.readOnly');
+		}
+		extended.space = selectedChart(view.state)?.chart.chartExSpace;
 		const chart = selectedChart(view.state)?.chart;
 		const data = docxChartDataSheet(chart);
+		if (data) sheet.data = data;
+	});
+	extended.addEventListener('office-chart-ex-edit', (event) => {
+		const view = host.view();
+		if (!view) return;
+		try {
+			editSelectedChart(view, (chart) =>
+				editDocxChartEx(chart, (space) =>
+					applyChartExEditAction(space, (event as ChartExEditEvent).detail.action),
+				),
+			);
+			message.textContent = '';
+		} catch {
+			message.textContent = translate(locale, 'chart.readOnly');
+		}
+		extended.space = selectedChart(view.state)?.chart.chartExSpace;
+		const data = docxChartDataSheet(selectedChart(view.state)?.chart);
 		if (data) sheet.data = data;
 	});
 	return {
@@ -249,7 +296,18 @@ export function createChartDataDialog(host: ChartDialogsHost): FormatDialog {
 				sheet.labels = sheetLabels(locale);
 				sheet.locale = locale;
 				sheet.data = data;
-				element.replaceChildren(sheet, dialogActions(close));
+				const selected = selectedChart(view.state)?.chart;
+				extended.space = selected?.chartExSpace;
+				extended.locale = locale;
+				sheet.disabled =
+					!!selected?.chartExSpace?.chartData.externalData && !selected.workbookPartName;
+				message.textContent = sheet.disabled ? translate(locale, 'chart.readOnly') : '';
+				element.replaceChildren(
+					...(selected?.chartExSpace ? [extended] : []),
+					sheet,
+					message,
+					dialogActions(close),
+				);
 			}
 			localizeDialog(element, locale);
 			localizeElement(message, locale);

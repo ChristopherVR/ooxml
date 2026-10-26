@@ -3,8 +3,13 @@
 // (`ooxml-core/chart`, `ooxml-core/docx`); this module maps picker choices onto them and
 // dispatches the result as one undo step (`replaceSelectedChart`).
 import type { EditorView } from 'prosemirror-view';
-import { setChartLegend, setChartType, type ChartTypeTarget } from 'ooxml-core/chart';
-import { editDocxChart, type DocxChart } from 'ooxml-core/docx';
+import {
+	setChartExLegend,
+	setChartLegend,
+	setChartType,
+	type ChartTypeTarget,
+} from 'ooxml-core/chart';
+import { editDocxChartEx, editDocxChart, type DocxChart } from 'ooxml-core/docx';
 import { replaceSelectedChart, selectedChart } from 'ooxml-core/docx/ui';
 import type { LocalizationKey } from './localization';
 
@@ -79,10 +84,14 @@ export function setSelectedChartType(view: EditorView, type: string, grouping: s
 /** Chart Design > Legend: `none`, or a position (`r`, `t`, `l`, `b`). */
 export function setSelectedChartLegend(view: EditorView, value: string): boolean {
 	return editSelectedChart(view, (chart) =>
-		editDocxChart(chart, (space) =>
-			value === 'none'
-				? setChartLegend(space, { visible: false })
-				: setChartLegend(space, { position: value as 'r' | 't' | 'l' | 'b' }),
-		),
+		chart.chartExSpace
+			? editDocxChartEx(chart, (space) =>
+					setChartExLegend(space, { visible: value !== 'none', position: value }),
+				)
+			: editDocxChart(chart, (space) =>
+					value === 'none'
+						? setChartLegend(space, { visible: false })
+						: setChartLegend(space, { position: value as 'r' | 't' | 'l' | 'b' }),
+				),
 	);
 }

@@ -94,12 +94,25 @@ export function chartExSpaceWorkbookWrites(
 
 /** Whether an edit changes source data rather than chart-only presentation. */
 export function chartExDataChanged(before: ChartExSpace, after: ChartExSpace): boolean {
+	const data = (data: ChartExSpace['chartData']['data'][number]) => ({
+		id: data.id,
+		dimensions: data.dimensions.map((dimension) => ({
+			kind: dimension.kind,
+			formula: dimension.formula,
+			nameFormula: dimension.nameFormula,
+			levels: dimension.levels.map((level) => ({
+				pointCount: level.pointCount,
+				points: level.points,
+				name: level.name,
+			})),
+		})),
+	});
 	const shape = (space: ChartExSpace) =>
 		JSON.stringify({
-			data: space.chartData,
+			data: space.chartData.data.map(data),
 			series: space.plotArea.series.map((series) => ({
 				tx: series.tx,
-				data: series.data,
+				data: series.data ? data(series.data) : undefined,
 				dataId: series.dataId,
 			})),
 		});

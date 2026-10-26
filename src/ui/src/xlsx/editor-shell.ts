@@ -32,6 +32,7 @@ import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
 import { createChartFormatPane } from './chart-format-pane';
+import { createChartExPane } from './chart-ex-pane';
 import { createSmartArtController } from './smartart-controller';
 
 /** Element properties the shell's options and customize pages change. */
@@ -198,6 +199,7 @@ export function buildShell(core: EditorCore): Shell {
 
 	const workspace = el(doc, 'div', 'xve-workspace');
 	const chartFormatPane = createChartFormatPane(ctx);
+	const chartExPane = createChartExPane(ctx);
 	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
@@ -207,7 +209,7 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, chartFormatPane.element, smartArt.element);
+	canvasRow.append(workspace, chartFormatPane.element, chartExPane.element, smartArt.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -241,6 +243,7 @@ export function buildShell(core: EditorCore): Shell {
 			gridHost,
 			tabsRow,
 			chartFormatPane.element,
+			chartExPane.element,
 			smartArt.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
@@ -287,6 +290,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.refresh();
 			pageViews?.refresh();
 			chartFormatPane.refresh();
+			chartExPane.refresh();
 			smartArt.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
@@ -304,6 +308,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.relocalize();
 			backstage.relocalize();
 			chartFormatPane.relocalize();
+			chartExPane.relocalize();
 			smartArt.relocalize();
 			core.requestRender();
 		},
