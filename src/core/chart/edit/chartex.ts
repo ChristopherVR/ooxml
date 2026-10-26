@@ -180,6 +180,21 @@ export function setChartExBinning(
 	index: number,
 	binning: ChartExBinning | 'category',
 ): ChartExSpace {
+	if (binning !== 'category') {
+		if (
+			binning.binSize !== undefined &&
+			(!Number.isFinite(binning.binSize) || binning.binSize <= 0)
+		)
+			throw new RangeError('Bin size must be a positive finite number.');
+		if (
+			binning.binCount !== undefined &&
+			(!Number.isSafeInteger(binning.binCount) || binning.binCount <= 0)
+		)
+			throw new RangeError('Bin count must be a positive integer.');
+		for (const limit of [binning.underflow, binning.overflow])
+			if (limit !== undefined && limit !== 'auto' && !Number.isFinite(limit))
+				throw new RangeError('Bin limits must be finite numbers or auto.');
+	}
 	return editLayout(space, index, (layout) => {
 		if (binning === 'category') {
 			delete layout.binning;

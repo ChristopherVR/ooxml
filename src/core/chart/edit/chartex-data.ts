@@ -75,7 +75,10 @@ export function setChartExSeriesValues(
 	return editChartExSpace(space, (draft) => {
 		const layoutId = chartExSeriesAt(draft, index).layoutId;
 		const dimension = dimensionOf(dataOf(draft, index), 'numDim', chartExValueType(layoutId));
-		dimension.levels = [freshLevel(values, dimension.levels[0], true)];
+		dimension.levels = [
+			freshLevel(values, dimension.levels[0], true),
+			...dimension.levels.slice(1),
+		];
 	});
 }
 

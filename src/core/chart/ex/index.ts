@@ -13,3 +13,4 @@ export * from './keep-source';
 export * from './hydrate';
 export * from './data-layout';
 export * from './workbook';
+export * from './create';
