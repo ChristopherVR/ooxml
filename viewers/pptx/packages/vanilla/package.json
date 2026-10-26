@@ -106,7 +106,7 @@
 		"html2canvas-pro": "^2.5.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"lucide": "^1.57.0",
+		"lucide": "^1.61.0",
 		"ooxml-core": "^1.27.2",
 		"ooxml-ui": "^1.28.1",
 		"opentype.js": "^2.0.0"

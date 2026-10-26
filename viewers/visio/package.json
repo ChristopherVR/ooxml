@@ -44,7 +44,7 @@
 		"test:browser:building-blocks": "playwright test --config native-blocks.playwright.config.ts"
 	},
 	"dependencies": {
-		"emf-converter": "4.21.0",
+		"emf-converter": "4.23.1",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
@@ -57,7 +57,7 @@
 		"oxlint": "^1.88.0",
 		"postcss": "^8.5.30",
 		"typescript": "~6.0.3",
-		"vite": "^8.3.4",
+		"vite": "^8.3.5",
 		"vitest": "^5.0.5"
 	},
 	"engines": {

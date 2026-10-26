@@ -9,6 +9,6 @@
 		"@types/node": "^26.6.5",
 		"jszip": "^3.10.2",
 		"prosemirror-state": "^1.4.4",
-		"prosemirror-view": "^1.42.6"
+		"prosemirror-view": "^1.42.7"
 	}
 }
