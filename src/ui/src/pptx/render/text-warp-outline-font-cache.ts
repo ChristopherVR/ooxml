@@ -70,6 +70,21 @@ function primaryFontFamily(family: string): string {
 	return first.trim().replace(/^['"]|['"]$/gu, '');
 }
 
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+	if (a === b) {
+		return true;
+	}
+	if (a.length !== b.length) {
+		return false;
+	}
+	for (let i = 0; i < a.length; i += 1) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 function cacheKey(family: string, bold: boolean, italic: boolean): string {
 	return `${primaryFontFamily(family).toLowerCase()}|${bold ? 1 : 0}|${italic ? 1 : 0}`;
 }
@@ -90,8 +105,12 @@ function cacheKey(family: string, bold: boolean, italic: boolean): string {
 export class GlyphOutlineFontCache {
 	private readonly fonts = new Map<string, Font>();
 	private readonly attempted = new Set<string>();
-	/** Registered bytes waiting for the parser to load. */
-	private readonly pending = new Map<string, Uint8Array>();
+	/**
+	 * Registered bytes waiting for the parser to load, oldest first. Every
+	 * candidate is kept until one parses: a later registration only replaces an
+	 * earlier one if it parses, exactly as when each is parsed on arrival.
+	 */
+	private readonly pending = new Map<string, Uint8Array[]>();
 	/** Keys a lookup missed: parsing one later changes what a repaint draws. */
 	private readonly missed = new Set<string>();
 	private readonly listeners = new Set<() => void>();
@@ -155,14 +174,13 @@ export class GlyphOutlineFontCache {
 		if (font) {
 			return font;
 		}
-		const bytes = this.pending.get(key);
-		if (bytes && isOpenTypeFontParserReady()) {
-			this.pending.delete(key);
-			this.parseInto(key, bytes);
+		const waiting = this.pending.has(key);
+		if (waiting && isOpenTypeFontParserReady()) {
+			this.parsePendingFor(key);
 			return this.fonts.get(key);
 		}
 		this.missed.add(key);
-		if (bytes) {
+		if (waiting) {
 			this.requestParser();
 		}
 		return undefined;
@@ -202,7 +220,7 @@ export class GlyphOutlineFontCache {
 				// not support) stay unset so the traced fallback applies.
 				this.parseInto(key, bytes);
 			} else {
-				this.pending.set(key, bytes);
+				this.addPending(key, bytes);
 				needed ||= this.missed.has(key);
 			}
 		}
@@ -217,7 +235,9 @@ export class GlyphOutlineFontCache {
 	 * succeeded; a caller that owns re-rendering can use this to know whether
 	 * a re-render is worth triggering. Before the parser is loaded the bytes
 	 * are kept and `false` is returned; {@link subscribe} listeners are told
-	 * if they later fill in an outline that a lookup already asked for.
+	 * if they later fill in an outline that a lookup already asked for. Either
+	 * way, bytes that do not parse leave the font already registered for this
+	 * key (or still waiting for the parser) in place.
 	 */
 	registerFontBytes(family: string, bold: boolean, italic: boolean, bytes: Uint8Array): boolean {
 		const key = cacheKey(family, bold, italic);
@@ -226,16 +246,20 @@ export class GlyphOutlineFontCache {
 			return false;
 		}
 		if (!isOpenTypeFontParserReady()) {
-			this.pending.set(key, bytes);
+			this.addPending(key, bytes);
 			if (this.missed.has(key)) {
 				this.requestParser();
 			}
 			return false;
 		}
-		this.pending.delete(key);
+		// Another cache may have loaded the parser while this one still holds
+		// waiting candidates for the key: settle those first, so these bytes
+		// replace them only if they parse.
+		this.parsePendingFor(key);
 		return this.parseInto(key, bytes);
 	}
 
+	/** Parse `bytes` for `key`; on failure the font already set for `key` stays. */
 	private parseInto(key: string, bytes: Uint8Array): boolean {
 		this.attempted.add(key);
 		try {
@@ -249,11 +273,39 @@ export class GlyphOutlineFontCache {
 		return true;
 	}
 
+	private addPending(key: string, bytes: Uint8Array): void {
+		const waiting = this.pending.get(key) ?? [];
+		// The same file registered again (e.g. on every deck load) parses the same
+		// way, so only its latest position counts.
+		const index = waiting.findIndex((candidate) => sameBytes(candidate, bytes));
+		if (index >= 0) {
+			waiting.splice(index, 1);
+		}
+		waiting.push(bytes);
+		this.pending.set(key, waiting);
+	}
+
+	/**
+	 * Resolve the candidates waiting for `key` as if each had been parsed on
+	 * arrival: the newest one that parses wins, and none parsing leaves `key`
+	 * unset. Older candidates are only parsed when every newer one fails.
+	 */
+	private parsePendingFor(key: string): void {
+		const waiting = this.pending.get(key);
+		if (!waiting) {
+			return;
+		}
+		this.pending.delete(key);
+		for (let i = waiting.length - 1; i >= 0; i -= 1) {
+			if (this.parseInto(key, waiting[i]!)) {
+				return;
+			}
+		}
+	}
+
 	private parsePending(): void {
-		const waiting = [...this.pending];
-		this.pending.clear();
-		for (const [key, bytes] of waiting) {
-			this.parseInto(key, bytes);
+		for (const key of [...this.pending.keys()]) {
+			this.parsePendingFor(key);
 		}
 	}
 
