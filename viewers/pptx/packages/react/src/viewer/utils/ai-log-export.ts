@@ -8,16 +8,16 @@
  * only supplies the store lookup default and the `Blob` + anchor-click download,
  * matching the shared module's DOM-free `SaveChatLogFile` callback contract.
  */
-import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai/host';
 import {
 	collectStoredChats,
 	createChatHistoryStore,
 	exportAiChatLogs as exportChatLogs,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 
 import { downloadBlob } from './dom-helpers';
 
-export type { AiLogFormat } from 'ooxml-ui/pptx/ai';
+export type { AiLogFormat } from 'ooxml-ui/pptx/ai/host';
 
 /** Options for {@link exportAiChatLogs}. */
 export interface ExportAiChatLogsOptions {

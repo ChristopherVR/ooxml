@@ -1,5 +1,5 @@
-import type { AiChangeBatch, PptxAiFocusedTarget, ToolCanvasTarget } from 'ooxml-ui/pptx/ai';
-import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai';
+import type { AiChangeBatch, PptxAiFocusedTarget, ToolCanvasTarget } from 'ooxml-ui/pptx/ai/host';
+import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai/host';
 /**
  * useAiPanelController: owns the AI panel's open state and its "scope" (the
  * focused targets + a prefilled composer directive) so PowerPointViewer can

@@ -5,6 +5,8 @@ import * as ts from '@typescript/typescript6';
 import { rollup } from 'rollup';
 import { describe, expect, it } from 'vitest';
 
+import { walkModuleGraph } from '../../../../../../../../scripts/module-graph.mjs';
+
 /**
  * Regression for issue #143 (and its sibling in `pptx-viewer`): `@ai-sdk/react`
  * is an optional peer (`peerDependenciesMeta['@ai-sdk/react'].optional ===
@@ -138,5 +140,66 @@ describe('the @ai-sdk/react peer is never statically imported', () => {
 				await bundle.close();
 			}
 		}).rejects.toThrow(/isToolUIPart.*not exported/iu);
+	});
+});
+
+/**
+ * The full `ooxml-ui/pptx/ai` barrel bundles the chat session, the tool registry, `zod`, the
+ * automation catalogue and a dynamic `import('ai')`. The main entries use only the SDK-free
+ * helpers, from `ooxml-ui/pptx/ai/host`; the barrel belongs to the lazily loaded panel chunk
+ * (`AiChatPanel` and what it imports), so a host that never opens the assistant never loads
+ * or bundles it eagerly.
+ */
+describe('the main entries load AI helpers from ooxml-ui/pptx/ai/host only', () => {
+	const packageRoot = join(import.meta.dirname, '../../../..');
+	const staticGraph = (file: string) =>
+		walkModuleGraph(join(packageRoot, file), { followDynamic: false });
+	const relativeName = (file: string) => file.slice(packageRoot.length + 1);
+	const ENTRIES = ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts'];
+
+	it('lists every built entry', () => {
+		const tsup = readFileSync(join(packageRoot, 'tsup.config.ts'), 'utf-8');
+		const entries = /entry:\s*\[([^\]]*)\]/u.exec(tsup)?.[1] ?? '';
+		expect([...entries.matchAll(/'([^']+)'/gu)].map((match) => match[1])).toStrictEqual(ENTRIES);
+	});
+
+	for (const entry of ENTRIES) {
+		it(`${entry} has no runtime import of the ai barrel or the ai SDK outside the panel chunk`, async () => {
+			const { bare } = await staticGraph(entry);
+			const offenders = bare
+				.filter(({ specifier, kind }) =>
+					specifier === '@ai-sdk/react'
+						? kind !== 'dynamic-import'
+						: specifier === 'ai' || specifier === 'ooxml-ui/pptx/ai',
+				)
+				.map(
+					({ specifier, kind, importer }) => `${kind} of ${specifier} in ${relativeName(importer)}`,
+				);
+			expect(offenders).toStrictEqual([]);
+		});
+	}
+
+	it('reaches the AI panel only through its lazy boundary', async () => {
+		const { files, lazy, bare } = await staticGraph('src/index.ts');
+		const panel = join(import.meta.dirname, 'AiChatPanel.tsx');
+		expect(files).not.toContain(panel);
+		expect(lazy).toContain(panel);
+		// The overlays, the bridge and the Options tab stay eager, on the SDK-free leaf.
+		const hostImporters = bare
+			.filter(({ specifier }) => specifier === 'ooxml-ui/pptx/ai/host')
+			.map(({ importer }) => relativeName(importer))
+			.sort();
+		expect(hostImporters).toStrictEqual([
+			'src/viewer/components/SettingsAiTab.tsx',
+			'src/viewer/components/ai/AiChangeOverlay.tsx',
+			'src/viewer/hooks/ai/useAiBridge.ts',
+			'src/viewer/hooks/ai/useAiPanelController.ts',
+			'src/viewer/utils/ai-log-export.ts',
+		]);
+		// The panel chunk is where the full barrel is used, so the walk does see it there.
+		const panelImports = (await staticGraph('src/viewer/components/ai/AiChatPanel.tsx')).bare.map(
+			({ specifier }) => specifier,
+		);
+		expect(panelImports).toContain('ooxml-ui/pptx/ai');
 	});
 });

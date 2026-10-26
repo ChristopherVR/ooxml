@@ -1,9 +1,9 @@
-import type { PptxAiBridge, PptxAiFocusedTarget, PptxAiNotifyLevel } from 'ooxml-ui/pptx/ai';
+import type { PptxAiBridge, PptxAiFocusedTarget, PptxAiNotifyLevel } from 'ooxml-ui/pptx/ai/host';
 import {
 	computeFocusTargets,
 	createPptxAiBridge,
 	resolveAiEffectiveTargets,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 /**
  * useAiBridge: builds a stable {@link PptxAiBridge} that lets the
  * framework-agnostic AI core (`pptx-viewer-shared/ai`) read the open deck,
