@@ -1,5 +1,28 @@
 # Provenance
 
+## Shared DrawingML outlines, effects and format schemes (2026-10-26)
+
+Source: ChristopherVR/ooxml at `27cc953db`. New strict DOM codecs, with the existing
+PowerPoint implementations used as the semantic checklist; no source module was moved.
+
+- `src/core/drawingml/drawing-fill.ts` and `write-line.ts` extend the existing neutral
+  outline codec with the authored compound/alignment, joins, arrow ends and custom dash
+  fields handled by `src/core/pptx/core/utils/drawing-line-dash.ts` and
+  `src/core/pptx/core/types/theme.ts`. Custom dash integer bounds follow the former;
+  malformed stops, unknown attributes and namespaced extensions remain source data.
+- New `effect-model.ts` and `drawing-effects.ts` model the ordinary effect-list choices
+  described by PowerPoint's theme effects, retaining raw unsupported choices. The existing
+  `drawing-shadow.ts` SVG projection now reads this model instead of parsing a second shadow
+  representation; its pixel conversion and affine-shadow refusal remain unchanged.
+- New `format-scheme.ts` reads and writes the authored style matrix represented by
+  PowerPoint's `PptxThemeFormatScheme` without its resolved-colour fields. It composes
+  placeholder-colour transforms without flattening theme tokens. The existing neutral
+  theme reader/writer now consume it, and `patch-color.ts` retains transform extension XML
+  while editing existing outline, effect and matrix colours.
+- New regression tests compare style matrices in committed Word, Excel and PowerPoint
+  fixtures and cover source-preserving edits. These are XML/model comparisons, not native
+  rendering or new Office application acceptance measurements.
+
 ## Shared move, resize and touch interaction
 
 Source: ChristopherVR/ooxml, commit `3874d8d63`, `src/ui/src/pptx/render/element-interaction.ts` and its tests. Move/resize transforms, local-axis projection, handle metadata and box centres move to `src/core/geometry/element-transform.ts`, with their behavior tests. The PowerPoint path remains a compatibility export; the 12-unit default remains unchanged and Excel passes its existing 8-unit minimum explicitly. Core no longer imports a PowerPoint constant for these calculations.

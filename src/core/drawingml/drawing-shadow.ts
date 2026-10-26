@@ -1,6 +1,8 @@
 import { EMU_PER_PIXEL } from '../units/constants';
-import { NS, first, parseXml, type XmlElement } from '../xml/index';
-import { parseDrawingColorIn, resolveDrawingColor, type DrawingColorTheme } from './drawing-color';
+import { parseXml, type XmlElement } from '../xml/index';
+import { resolveDrawingColor, type DrawingColorTheme } from './drawing-color';
+import { parseDrawingEffects } from './drawing-effects';
+import type { DrawingOuterShadow } from './effect-model';
 
 /** Resolved pixel geometry shared by SVG effect painters. */
 export interface DrawingSvgShadow {
@@ -16,21 +18,37 @@ export function resolveDrawingShadow(
 	effects: XmlElement | undefined,
 	theme: DrawingColorTheme,
 ): DrawingSvgShadow | undefined {
-	const node = first(effects, 'outerShdw', NS.a);
-	if (!node) return undefined;
-	const value = (key: string, fallback: number) => Number(node.getAttribute(key) ?? fallback);
+	const effect = parseDrawingEffects(effects)?.effects.find(
+		(entry) => entry.kind === 'outerShadow',
+	);
+	return effect?.kind === 'outerShadow' ? resolveDrawingOuterShadow(effect, theme) : undefined;
+}
+
+/** Projects the shared authored shadow model into the existing SVG painter contract. */
+export function resolveDrawingOuterShadow(
+	effect: DrawingOuterShadow,
+	theme: DrawingColorTheme,
+): DrawingSvgShadow | undefined {
+	// Explicit malformed source geometry must not turn into a default zero shadow.
+	if (effect.sourceXml) {
+		const source = parseXml(effect.sourceXml).documentElement;
+		for (const attribute of ['blurRad', 'dist', 'dir', 'sx', 'sy', 'kx', 'ky']) {
+			const value = source.getAttribute(attribute);
+			if (value !== null && !Number.isFinite(Number(value))) return undefined;
+		}
+	}
 	if (
-		value('sx', 100000) !== 100000 ||
-		value('sy', 100000) !== 100000 ||
-		value('kx', 0) !== 0 ||
-		value('ky', 0) !== 0
+		(effect.scaleX ?? 100000) !== 100000 ||
+		(effect.scaleY ?? 100000) !== 100000 ||
+		(effect.skewXAngle ?? 0) !== 0 ||
+		(effect.skewYAngle ?? 0) !== 0
 	)
 		return undefined;
-	const color = parseDrawingColorIn(node);
+	const color = effect.color;
 	const resolved = color && resolveDrawingColor(color, theme, { transformOrder: 'document' });
-	const blur = value('blurRad', 0) / EMU_PER_PIXEL;
-	const distance = value('dist', 0) / EMU_PER_PIXEL;
-	const angle = ((value('dir', 0) / 60000) * Math.PI) / 180;
+	const blur = (effect.blurRadiusEmu ?? 0) / EMU_PER_PIXEL;
+	const distance = (effect.distanceEmu ?? 0) / EMU_PER_PIXEL;
+	const angle = (((effect.directionAngle ?? 0) / 60000) * Math.PI) / 180;
 	if (!resolved || ![blur, distance, angle].every(Number.isFinite) || blur < 0 || distance < 0)
 		return undefined;
 	return {

@@ -98,7 +98,7 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 /** Reads `a:ln`: width in EMU, fill, dash and cap. */
 export function parseDrawingLine(ln: XmlElement | undefined): DrawingLine | undefined {
 	if (!ln) return undefined;
-	const line: DrawingLine = {};
+	const line: DrawingLine = { sourceXml: buildXml(ln) };
 	const width = Number.parseInt(ln.getAttribute('w') ?? '', 10);
 	if (Number.isFinite(width)) line.widthEmu = width;
 	const fill = parseDrawingFill(ln);
@@ -107,5 +107,46 @@ export function parseDrawingLine(ln: XmlElement | undefined): DrawingLine | unde
 	if (dash) line.dash = dash;
 	const cap = ln.getAttribute('cap');
 	if (cap) line.cap = cap;
+	const compound = ln.getAttribute('cmpd');
+	if (compound !== null) line.compound = compound;
+	const alignment = ln.getAttribute('algn');
+	if (alignment !== null) line.alignment = alignment;
+	const custom = first(ln, 'custDash', NS.a);
+	if (custom && !dash) {
+		line.customDash = children(custom, 'ds', NS.a).flatMap((node) => {
+			const dash = drawingDashLength(node.getAttribute('d'));
+			const space = drawingDashLength(node.getAttribute('sp'));
+			return dash !== undefined && space !== undefined
+				? [{ dash, space, sourceXml: buildXml(node) }]
+				: [];
+		});
+	}
+	for (const kind of ['round', 'bevel', 'miter'] as const) {
+		const join = first(ln, kind, NS.a);
+		if (!join) continue;
+		const limit = Number(join.getAttribute('lim'));
+		line.join = { kind, ...(join.hasAttribute('lim') && Number.isFinite(limit) ? { limit } : {}) };
+		break;
+	}
+	for (const end of ['headEnd', 'tailEnd'] as const) {
+		const node = first(ln, end, NS.a);
+		if (!node) continue;
+		line[end] = {};
+		for (const [attribute, key] of [
+			['type', 'type'],
+			['w', 'width'],
+			['len', 'length'],
+		] as const) {
+			const value = node.getAttribute(attribute);
+			if (value !== null) line[end][key] = value;
+		}
+	}
 	return line;
+}
+
+/** ST_PositivePercentage custom-dash bounds, matching the PowerPoint object-tree reader. */
+export function drawingDashLength(value: string | null): number | undefined {
+	if (!/^\d+$/u.test(value ?? '')) return undefined;
+	const number = Number(value);
+	return Number.isSafeInteger(number) && number <= 2147483647 ? number : undefined;
 }

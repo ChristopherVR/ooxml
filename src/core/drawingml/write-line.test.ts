@@ -16,7 +16,7 @@ describe('drawingLineXml', () => {
 		expect(xml).toBe(
 			`<a:ln xmlns:a="${NS.a}" w="12700" cap="rnd"><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill><a:prstDash val="dash"/></a:ln>`,
 		);
-		expect(parseDrawingLine(parseXml(xml).documentElement)).toEqual(line);
+		expect(parseDrawingLine(parseXml(xml).documentElement)).toEqual({ ...line, sourceXml: xml });
 	});
 });
 

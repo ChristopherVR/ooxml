@@ -2,6 +2,7 @@
 // scheme and the colour map that ties the logical bg/tx names to scheme slots. Every Office format
 // carries the same `a:theme` part (`word/theme`, `xl/theme`, `ppt/theme`, Visio's theme).
 import type { DrawingColor } from './types';
+import type { ThemeFormatScheme } from './format-scheme';
 
 /** The twelve `a:clrScheme` slots, in schema order. */
 export type ThemeColorSlot =
@@ -81,4 +82,6 @@ export interface DrawingTheme {
 	name?: string;
 	colorScheme: ThemeColorScheme;
 	fontScheme: ThemeFontScheme;
+	/** Authored style matrices, absent in overrides that do not supply one. */
+	formatScheme?: ThemeFormatScheme;
 }

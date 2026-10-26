@@ -3,11 +3,12 @@
 // supplied as DrawingML fragments. Visio adds its `vt:` extensions this way.
 import { NS, buildXml, elements, parseXml, type XmlElement } from '../xml/index';
 import { drawingColorXml } from './write-color';
+import { drawingThemeFormatSchemeXml } from './format-scheme';
 import { THEME_COLOR_SLOTS, type DrawingTheme, type ThemeFontCollection } from './theme-model';
 
 export interface DrawingThemeXmlParts {
 	/** The `a:fmtScheme` element (required by the schema), as one `a:` fragment. */
-	formatScheme: string;
+	formatScheme?: string;
 	/** Children of an `a:ext` appended to `a:clrScheme`, keyed by extension URI. */
 	colorSchemeExtensions?: Readonly<Record<string, string>>;
 	/** Children of an `a:ext` appended to `a:themeElements`, keyed by extension URI. */
@@ -73,7 +74,7 @@ function fontCollection(parent: XmlElement, name: string, fonts: ThemeFontCollec
  * A complete `a:theme` part. Every one of the twelve colour slots must be present in the model;
  * the format scheme and extensions are product data and are copied as given.
  */
-export function drawingThemeXml(theme: DrawingTheme, parts: DrawingThemeXmlParts): string {
+export function drawingThemeXml(theme: DrawingTheme, parts: DrawingThemeXmlParts = {}): string {
 	const namespaces = parts.namespaces ?? {};
 	const doc = parseXml(
 		`<a:theme xmlns:a="${NS.a}"${Object.entries(namespaces)
@@ -100,7 +101,10 @@ export function drawingThemeXml(theme: DrawingTheme, parts: DrawingThemeXmlParts
 	fontCollection(fonts, 'majorFont', theme.fontScheme.major);
 	fontCollection(fonts, 'minorFont', theme.fontScheme.minor);
 	elementsNode.appendChild(fonts);
-	const format = fragment(elementsNode, parts.formatScheme, namespaces);
+	const formatXml =
+		parts.formatScheme ?? (theme.formatScheme && drawingThemeFormatSchemeXml(theme.formatScheme));
+	if (!formatXml) throw new Error('The theme has no format scheme.');
+	const format = fragment(elementsNode, formatXml, namespaces);
 	if (
 		format.length !== 1 ||
 		format[0]!.localName !== 'fmtScheme' ||

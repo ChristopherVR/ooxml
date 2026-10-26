@@ -2,6 +2,7 @@
 // for colour maps (`p:clrMap`, `a:overrideClrMapping`).
 import { NS, elements, first, parseXml, type XmlDocument, type XmlElement } from '../xml/index';
 import { parseDrawingColorIn } from './drawing-color';
+import { parseThemeFormatScheme } from './format-scheme';
 import {
 	THEME_COLOR_SLOTS,
 	type DrawingTheme,
@@ -98,6 +99,8 @@ export function parseTheme(source: XmlDocument | XmlElement): DrawingTheme {
 		fontScheme: parseThemeFontScheme(first(holder, 'fontScheme', NS.a)),
 	};
 	const name = nonEmpty(root.getAttribute('name'));
+	const formatScheme = parseThemeFormatScheme(first(holder, 'fmtScheme', NS.a));
+	if (formatScheme) theme.formatScheme = formatScheme;
 	if (name) theme.name = name;
 	return theme;
 }
