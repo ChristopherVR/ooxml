@@ -75,6 +75,15 @@ export function chartTargetDraftShapes(
 			return [(axis[major ? 'majorGridlinesSpPr' : 'minorGridlinesSpPr'] ??= {})];
 		}
 		case 'dataLabels': {
+			if (target.seriesIndex === undefined) {
+				for (const group of draft.plotArea.groups)
+					if (group.kind !== 'surface') group.dataLabels ??= { labels: [] };
+			} else {
+				const entry = chartSeriesEntryAt(draft, target.seriesIndex);
+				if (entry.group.kind === 'surface')
+					throw new RangeError('Surface charts have no data labels');
+				entry.series.dataLabels ??= { labels: [] };
+			}
 			const labels =
 				target.seriesIndex === undefined
 					? draft.plotArea.groups.flatMap((group) => (group.dataLabels ? [group.dataLabels] : []))
@@ -96,12 +105,29 @@ export function setChartTargetFill(
 	target: ChartFormatTarget,
 	fill: DrawingFill | undefined,
 ): ChartSpace {
-	if (isElement(target)) return setChartElementFill(space, target.kind, fill);
-	if (target.kind === 'series') return setChartSeriesFill(space, target.seriesIndex, fill);
+	if (target.kind === 'dataLabels' && fill === undefined) {
+		const labels =
+			target.seriesIndex === undefined
+				? space.plotArea.groups.some((group) => group.dataLabels)
+				: chartSeriesEntryAt(space, target.seriesIndex).series.dataLabels;
+		if (!labels) throw new RangeError('The chart shows no data labels there');
+	}
+	const current = chartTargetShape(space, target)?.fill;
+	const next =
+		fill &&
+		current?.kind === fill.kind &&
+		'sourceXml' in current &&
+		current.sourceXml &&
+		(fill.kind === 'pattern' || fill.kind === 'picture' || fill.kind === 'gradient') &&
+		!fill.sourceXml
+			? { ...fill, sourceXml: current.sourceXml }
+			: fill;
+	if (isElement(target)) return setChartElementFill(space, target.kind, next);
+	if (target.kind === 'series') return setChartSeriesFill(space, target.seriesIndex, next);
 	if (target.kind !== 'dataLabels') throw new RangeError(`A chart ${target.kind} has no fill`);
 	return editChartSpace(space, (draft) => {
 		for (const shape of chartTargetDraftShapes(draft, target))
-			assignOrDelete(shape, 'fill', structuredClone(fill));
+			assignOrDelete(shape, 'fill', structuredClone(next));
 	});
 }
 

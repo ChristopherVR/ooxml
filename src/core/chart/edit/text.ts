@@ -18,12 +18,15 @@ import { CHART_ROOT_BINDINGS, innerXml } from '../xml-fragment';
 import { chartAxisAt } from './axes';
 import { chartSeriesEntryAt, editChartSpace } from './draft';
 import { editChartEffectList, type ChartEffectEdit } from './effects';
+import { withDrawingColorTransparency } from './paint';
 import type { ChartFormatTarget } from './target';
 
 export interface ChartTextEdit {
 	/** Null restores inherited paint. */
 	fill?: DrawingFill | null;
+	fillTransparency?: number;
 	line?: DrawingLine | null;
+	lineTransparency?: number;
 	effect?: ChartEffectEdit;
 	rotation?: number | null;
 	direction?: string | null;
@@ -84,7 +87,7 @@ export function chartTargetHasText(target: ChartFormatTarget): boolean {
 }
 
 type Holder = { txPr?: ChartTextBody; tx?: { rich?: ChartTextBody } };
-function holders(draft: ChartSpace, target: ChartFormatTarget): Holder[] {
+function holders(draft: ChartSpace, target: ChartFormatTarget, create = false): Holder[] {
 	switch (target.kind) {
 		case 'chartArea':
 			return [draft];
@@ -97,13 +100,24 @@ function holders(draft: ChartSpace, target: ChartFormatTarget): Holder[] {
 		case 'axis':
 			return [chartAxisAt(draft, { index: target.axisIndex })];
 		case 'dataLabels': {
+			if (create) {
+				if (target.seriesIndex === undefined) {
+					for (const group of draft.plotArea.groups)
+						if (group.kind !== 'surface') group.dataLabels ??= { labels: [] };
+				} else {
+					const entry = chartSeriesEntryAt(draft, target.seriesIndex);
+					if (entry.group.kind === 'surface')
+						throw new RangeError('Surface charts have no data labels');
+					entry.series.dataLabels ??= { labels: [] };
+				}
+			}
 			const labels =
 				target.seriesIndex === undefined
 					? draft.plotArea.groups.flatMap((group) => (group.dataLabels ? [group.dataLabels] : []))
 					: [chartSeriesEntryAt(draft, target.seriesIndex).series.dataLabels].filter(
 							(item) => item !== undefined,
 						);
-			if (!labels.length) throw new RangeError('The chart shows no data labels there');
+			if (!labels.length && create) throw new RangeError('The chart shows no data labels there');
 			return labels.flatMap((label) => [label, ...label.labels]);
 		}
 		default:
@@ -129,6 +143,28 @@ export function chartTextBodyElement(body: ChartTextBody | undefined): XmlElemen
 }
 
 function patchRun(node: XmlElement, edit: ChartTextEdit): void {
+	if (edit.fillTransparency !== undefined) {
+		const fill = parseDrawingFill(node);
+		if (fill?.kind === 'solid') {
+			const xml = drawingFillXml({
+				...fill,
+				color: withDrawingColorTransparency(fill.color, edit.fillTransparency),
+			});
+			if (xml) setDrawingFillXml(node, xml);
+		}
+	}
+	if (edit.lineTransparency !== undefined) {
+		const old = first(node, 'ln', NS.a);
+		const line = parseDrawingLine(old);
+		if (old && line?.fill?.kind === 'solid')
+			patchDrawingLine(old, {
+				...line,
+				fill: {
+					...line.fill,
+					color: withDrawingColorTransparency(line.fill.color, edit.lineTransparency),
+				},
+			});
+	}
 	if (edit.fill !== undefined) {
 		if (edit.fill === null) {
 			for (const old of elements(node))
@@ -281,7 +317,7 @@ export function setChartTargetText(
 	)
 		throw new RangeError('Invalid chart text direction');
 	return editChartSpace(space, (draft) => {
-		for (const holder of holders(draft, target)) {
+		for (const holder of holders(draft, target, true)) {
 			holder.txPr = apply(holder.txPr, edit);
 			if (holder.tx?.rich) holder.tx.rich = apply(holder.tx.rich, edit);
 		}

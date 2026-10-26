@@ -5,9 +5,13 @@ import type { ChartSpace } from '../model';
 import { editChartSpace } from './draft';
 import type { ChartFormatTarget } from './target';
 import { chartTargetDraftShapes, chartTargetShape } from './target-paint';
+import { withDrawingColorTransparency } from './paint';
 
 type KnownEffect = Exclude<DrawingEffect, { kind: 'unsupported' }>;
-export type ChartEffectEdit = KnownEffect | { kind: KnownEffect['kind']; remove: true };
+export type ChartEffectEdit =
+	| KnownEffect
+	| { kind: KnownEffect['kind']; remove: true }
+	| { kind: 'outerShadow' | 'innerShadow' | 'presetShadow' | 'glow'; transparency: number };
 const ORDER: readonly KnownEffect['kind'][] = [
 	'blur',
 	'fillOverlay',
@@ -38,6 +42,13 @@ export function editChartEffectList(
 	);
 	if (matches.length > 1) throw new RangeError('Ambiguous duplicate chart effect');
 	const index = matches[0];
+	if ('transparency' in edit) {
+		const effect = index === undefined ? undefined : next.effects[index];
+		if (!effect || !('color' in effect) || !effect.color)
+			throw new RangeError('Effect transparency needs an authored colour');
+		effect.color = withDrawingColorTransparency(effect.color, edit.transparency);
+		return next;
+	}
 	if ('remove' in edit) {
 		if (index !== undefined) next.effects.splice(index, 1);
 		return next;

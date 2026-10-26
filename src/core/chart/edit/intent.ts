@@ -14,6 +14,7 @@ import {
 } from './analysis';
 import { setChartMarker } from './marker';
 import { setChartTargetLineOptions, type ChartLineEdit } from './line-options';
+import { setChartTargetPattern, type ChartPatternEdit } from './pattern';
 import { setChartTargetEffect, type ChartEffectEdit } from './effects';
 import { setChartTargetText, type ChartTextEdit } from './text';
 import { setChartTargetThreeD, setChartView3D, type ChartThreeDEdit } from './three-d';
@@ -33,6 +34,7 @@ import type { ChartFormatTarget } from './target';
 import { setChartTargetFill, setChartTargetLine, setChartTargetTransparency } from './target-paint';
 
 export type ChartEditIntent =
+	| { op: 'pattern'; target: ChartFormatTarget; edit: ChartPatternEdit }
 	| { op: 'lineOptions'; target: ChartFormatTarget; edit: ChartLineEdit }
 	| { op: 'type'; type: ChartTypeTarget }
 	| { op: 'marker'; seriesIndex: number; edit: Partial<ChartMarker> | null }
@@ -73,6 +75,8 @@ export type ChartEditIntent =
 /** Applies `intent`, returning a new model; throws like the operation it names. */
 export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent): ChartSpace {
 	switch (intent.op) {
+		case 'pattern':
+			return setChartTargetPattern(space, intent.target, intent.edit);
 		case 'lineOptions':
 			return setChartTargetLineOptions(space, intent.target, intent.edit);
 		case 'type':

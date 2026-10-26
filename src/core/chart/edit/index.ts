@@ -39,3 +39,6 @@ export * from './text';
 export * from './three-d';
 export * from './secondary-axis';
 export * from './line-options';
+export * from './pattern';
+export * from './appearance-types';
+export * from './format-values';
