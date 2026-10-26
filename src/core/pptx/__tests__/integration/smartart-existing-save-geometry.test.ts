@@ -79,6 +79,9 @@ describe('existing PowerPoint SmartArt geometry save', () => {
 			width: element.width,
 			height: element.height,
 		});
+		for (const shape of switched.drawingShapes ?? []) {
+			expect([shape.x, shape.y, shape.width, shape.height].every(Number.isFinite)).toBe(true);
+		}
 		element.smartArtData = switched;
 
 		const saved = await handler.save(slides);
@@ -91,6 +94,18 @@ describe('existing PowerPoint SmartArt geometry save', () => {
 		expect(layout).toContain('<dgm:title val="Cycle"/>');
 		expect(data).toContain('loTypeId="urn:pptx-viewer/layout/cycle"');
 		expect(drawing.match(/prst="ellipse"/gu)?.length).toBeGreaterThan(0);
+		expect(drawing).not.toMatch(/NaN|Infinity/u);
+		const reloaded = await new PptxHandler().load(saved);
+		const cycle = reloaded.slides
+			.flatMap((slide) => slide.elements)
+			.find(
+				(candidate): candidate is SmartArtPptxElement =>
+					candidate.type === 'smartArt' &&
+					candidate.smartArtData?.layoutDefinition?.uniqueId === 'urn:pptx-viewer/layout/cycle',
+			);
+		expect(cycle?.smartArtData?.drawingShapes?.some((shape) => shape.shapeType === 'ellipse')).toBe(
+			true,
+		);
 	});
 
 	it('round-trips edited DiagramML layout metadata without replacing layout behavior', async () => {

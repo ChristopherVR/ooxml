@@ -29,13 +29,19 @@ export interface ReflowedNodePosition {
 
 /**
  * Recalculate positions for all SmartArt nodes for the current layout type;
- * `undefined` when the diagram has no content nodes.
+ * `undefined` when the diagram has no content nodes. Omitted coordinates use
+ * the local diagram origin, as when a host supplies only the frame's size.
  */
 export function reflowSmartArtLayout(
 	data: PptxSmartArtData,
-	bounds: DiagramReflowBounds,
+	bounds: Pick<DiagramReflowBounds, 'width' | 'height'> &
+		Partial<Pick<DiagramReflowBounds, 'x' | 'y'>>,
 ): PptxSmartArtDrawingShape[] | undefined {
-	return reflowDiagramLayout(data, bounds);
+	return reflowDiagramLayout(data, {
+		...bounds,
+		x: bounds.x ?? 0,
+		y: bounds.y ?? 0,
+	});
 }
 
 /** Resolve a raw layout type string to a layout family by keyword (`list` by default). */
