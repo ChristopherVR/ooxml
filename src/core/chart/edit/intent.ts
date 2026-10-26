@@ -4,7 +4,21 @@
 // `PptxChartData`, Excel's `ChartObject` summary) maps the variants it supports onto its own edit
 // path instead, so every product reads the same request.
 import type { DrawingFill, DrawingLine } from '../../drawingml/types';
-import type { ChartSpace } from '../model';
+import type { ChartSpace, ChartView3D, ChartMarker } from '../model';
+import type { ChartErrorBarDirection } from '../model-analysis';
+import {
+	setChartTrendline,
+	setChartErrorBars,
+	type ChartTrendlineEdit,
+	type ChartErrorBarsEdit,
+} from './analysis';
+import { setChartMarker } from './marker';
+import { setChartTargetLineOptions, type ChartLineEdit } from './line-options';
+import { setChartTargetEffect, type ChartEffectEdit } from './effects';
+import { setChartTargetText, type ChartTextEdit } from './text';
+import { setChartTargetThreeD, setChartView3D, type ChartThreeDEdit } from './three-d';
+import { setChartSeriesSecondaryAxis } from './secondary-axis';
+import { setChartType, type ChartTypeTarget } from './type';
 import { setChartAxis, type ChartAxisEdit } from './axes';
 import { setChartGroupOptions, type ChartGroupOptionsEdit } from './group-options';
 import {
@@ -19,6 +33,21 @@ import type { ChartFormatTarget } from './target';
 import { setChartTargetFill, setChartTargetLine, setChartTargetTransparency } from './target-paint';
 
 export type ChartEditIntent =
+	| { op: 'lineOptions'; target: ChartFormatTarget; edit: ChartLineEdit }
+	| { op: 'type'; type: ChartTypeTarget }
+	| { op: 'marker'; seriesIndex: number; edit: Partial<ChartMarker> | null }
+	| { op: 'trendline'; seriesIndex: number; index: number; edit: ChartTrendlineEdit | null }
+	| {
+			op: 'errorBars';
+			seriesIndex: number;
+			direction: ChartErrorBarDirection;
+			edit: ChartErrorBarsEdit | null;
+	  }
+	| { op: 'secondaryAxis'; seriesIndex: number; secondary: boolean }
+	| { op: 'effect'; target: ChartFormatTarget; edit: ChartEffectEdit }
+	| { op: 'text'; target: ChartFormatTarget; edit: ChartTextEdit }
+	| { op: 'threeD'; target: ChartFormatTarget; edit: ChartThreeDEdit }
+	| { op: 'view3D'; edit: Partial<ChartView3D> }
 	/** Replace a target's fill; `undefined` returns it to the chart style ("Automatic"). */
 	| { op: 'fill'; target: ChartFormatTarget; fill: DrawingFill | undefined }
 	/** Replace a target's outline, or with `merge` change only the given outline settings. */
@@ -44,6 +73,26 @@ export type ChartEditIntent =
 /** Applies `intent`, returning a new model; throws like the operation it names. */
 export function applyChartEditIntent(space: ChartSpace, intent: ChartEditIntent): ChartSpace {
 	switch (intent.op) {
+		case 'lineOptions':
+			return setChartTargetLineOptions(space, intent.target, intent.edit);
+		case 'type':
+			return setChartType(space, intent.type);
+		case 'marker':
+			return setChartMarker(space, intent.seriesIndex, intent.edit);
+		case 'trendline':
+			return setChartTrendline(space, intent.seriesIndex, intent.index, intent.edit);
+		case 'errorBars':
+			return setChartErrorBars(space, intent.seriesIndex, intent.direction, intent.edit);
+		case 'secondaryAxis':
+			return setChartSeriesSecondaryAxis(space, intent.seriesIndex, intent.secondary);
+		case 'effect':
+			return setChartTargetEffect(space, intent.target, intent.edit);
+		case 'text':
+			return setChartTargetText(space, intent.target, intent.edit);
+		case 'threeD':
+			return setChartTargetThreeD(space, intent.target, intent.edit);
+		case 'view3D':
+			return setChartView3D(space, intent.edit);
 		case 'fill':
 			return setChartTargetFill(space, intent.target, intent.fill);
 		case 'line':

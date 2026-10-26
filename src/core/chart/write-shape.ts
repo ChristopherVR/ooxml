@@ -6,7 +6,6 @@ import { NS, elements, first, parseXml, type XmlElement } from '../xml/index';
 import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { fillElementOf } from '../drawingml/drawing-fill';
 import { drawingFillXml, setDrawingFillXml } from '../drawingml/write-fill';
-import { drawingColorXml } from '../drawingml/write-color';
 import { drawingLineXml, patchDrawingLine } from '../drawingml/write-line';
 import type { DrawingFill } from '../drawingml/types';
 import type {
@@ -36,14 +35,9 @@ const wrap = (local: string, xml: string): XmlElement =>
 	parseXml(`<c:${local}${ROOT_DECLARATIONS}>${xml}</c:${local}>`, { label: 'Chart' })
 		.documentElement;
 
-/** A fill as XML: the shared writer, plus pattern fills it does not cover. */
+/** Every authored fill goes through the shared source-preserving DrawingML writer. */
 export function chartFillXml(fill: DrawingFill): string | undefined {
-	if (fill.kind !== 'pattern') return drawingFillXml(fill);
-	const color = (local: string, value: DrawingFill & { kind: 'pattern' }) => {
-		const choice = local === 'fgClr' ? value.foreground : value.background;
-		return choice ? `<a:${local}>${drawingColorXml(choice)}</a:${local}>` : '';
-	};
-	return `<a:pattFill prst="${escapeAttribute(fill.preset)}">${color('fgClr', fill)}${color('bgClr', fill)}</a:pattFill>`;
+	return drawingFillXml(fill);
 }
 
 const AFTER_LINE = ['effectLst', 'effectDag', 'scene3d', 'sp3d', 'extLst'];

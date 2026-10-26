@@ -48,7 +48,10 @@ export function chartTargetShape(
 }
 
 /** Every shape a target writes on the draft, created when missing; throws for a missing element. */
-function draftShapes(draft: ChartSpace, target: ChartFormatTarget): ChartShapeProperties[] {
+export function chartTargetDraftShapes(
+	draft: ChartSpace,
+	target: ChartFormatTarget,
+): ChartShapeProperties[] {
 	switch (target.kind) {
 		case 'chartArea':
 			return [(draft.spPr ??= {})];
@@ -97,7 +100,7 @@ export function setChartTargetFill(
 	if (target.kind === 'series') return setChartSeriesFill(space, target.seriesIndex, fill);
 	if (target.kind !== 'dataLabels') throw new RangeError(`A chart ${target.kind} has no fill`);
 	return editChartSpace(space, (draft) => {
-		for (const shape of draftShapes(draft, target))
+		for (const shape of chartTargetDraftShapes(draft, target))
 			assignOrDelete(shape, 'fill', structuredClone(fill));
 	});
 }
@@ -113,7 +116,7 @@ export function setChartTargetLine(
 	merge = false,
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
-		for (const shape of draftShapes(draft, target)) {
+		for (const shape of chartTargetDraftShapes(draft, target)) {
 			const next =
 				merge && line ? { ...shape.line, ...structuredClone(line) } : structuredClone(line);
 			assignOrDelete(shape, 'line', next);
@@ -132,7 +135,7 @@ export function setChartTargetTransparency(
 	percent: number,
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
-		for (const shape of draftShapes(draft, target)) {
+		for (const shape of chartTargetDraftShapes(draft, target)) {
 			const holder = which === 'fill' ? shape : shape.line;
 			if (holder?.fill?.kind !== 'solid') continue;
 			holder.fill = {
