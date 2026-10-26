@@ -23,6 +23,10 @@ export default defineConfig({
 				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/i18n/index.ts'),
 			},
 			{
+				find: 'ooxml-ui/pptx/ai/host',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/host.ts'),
+			},
+			{
 				find: 'ooxml-ui/pptx/ai',
 				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			},

@@ -14,8 +14,8 @@ import type {
 	PptxAiBridgePort,
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
-} from 'ooxml-ui/pptx/ai';
-import { createPptxAiBridge } from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
+import { createPptxAiBridge } from 'ooxml-ui/pptx/ai/host';
 import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,

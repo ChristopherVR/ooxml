@@ -5,8 +5,8 @@
  * log for debugging. Rendered only when the host enables the `ai` prop.
  */
 import { Bug, Download } from 'lucide-vue-next';
-import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
-import { createChatHistoryStore } from 'ooxml-ui/pptx/ai';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai/host';
+import { createChatHistoryStore } from 'ooxml-ui/pptx/ai/host';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

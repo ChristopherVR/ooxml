@@ -1,5 +1,9 @@
-import type { AiCanvasHighlight, PptxAiFocusedTarget, ToolCanvasTarget } from 'ooxml-ui/pptx/ai';
-import { createPptxAiPanelController, isAiFocusPinned } from 'ooxml-ui/pptx/ai';
+import type {
+	AiCanvasHighlight,
+	PptxAiFocusedTarget,
+	ToolCanvasTarget,
+} from 'ooxml-ui/pptx/ai/host';
+import { createPptxAiPanelController, isAiFocusPinned } from 'ooxml-ui/pptx/ai/host';
 /**
  * The vanilla AI panel controller: the shared `createPptxAiPanelController`
  * plus a re-emit on selection changes, behind the vanilla accessor API. It owns the assistant's "scope" (focused targets +
