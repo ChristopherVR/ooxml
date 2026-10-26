@@ -43,6 +43,36 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('saves stock-style decorations and display-unit labels without dropping axes', () => {
+		const saved = save((chart) => {
+			chart.chartType = 'line';
+			chart.dropLines = { color: '#333333', width: 1 };
+			chart.upDownBars = { gapWidth: 100, upBars: { fillColor: '#008800' } };
+			chart.axes![1]!.displayUnits = 'thousands';
+			chart.axes![1]!.displayUnitsLabel = {
+				text: 'Thousands',
+				layout: { x: 0.2 },
+				spPr: { strokeWidth: 1 },
+			};
+			chart.axes![1]!.axPos = 'r';
+		});
+		expect(saved).toBeDefined();
+		const model = parseChartSpace(saved!.xml).chartSpace;
+		expect(model.plotArea.groups[0]).toMatchObject({
+			kind: 'line',
+			dropLines: true,
+			upDownBars: true,
+			upDownBarsGapWidth: 100,
+		});
+		expect(model.plotArea.axes[1]).toMatchObject({
+			position: 'r',
+			displayUnits: {
+				builtInUnit: 'thousands',
+				label: { tx: { text: 'Thousands' }, layout: { x: 0.2 } },
+			},
+		});
+		expect(saved!.xml).toContain('<c:downBars/>');
+	});
 	it('saves series label defaults without overwriting point overrides', () => {
 		const saved = save((chart) => {
 			chart.series[0]!.dataLabelOptions = {

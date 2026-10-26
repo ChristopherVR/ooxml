@@ -15,6 +15,9 @@ import { chartTitleWithText } from './title';
 export type ChartAxisTarget = ChartAxisKind | { id: number } | { index: number };
 
 export interface ChartAxisEdit {
+	position?: 'b' | 'l' | 'r' | 't' | null;
+	crossBetween?: 'between' | 'midCat' | null;
+	crossAxisId?: number;
 	/** `c:delete` is the inverse. */
 	visible?: boolean;
 	/** Axis title text; `null` or `''` removes the title. */
@@ -77,6 +80,10 @@ function setNumber(
 }
 
 function applyAxis(axis: ChartAxis, edit: ChartAxisEdit): void {
+	if (edit.position !== undefined) assignOrDelete(axis, 'position', edit.position ?? undefined);
+	if (edit.crossBetween !== undefined)
+		assignOrDelete(axis, 'crossBetween', edit.crossBetween ?? undefined);
+	if (edit.crossAxisId !== undefined) axis.crossAxisId = edit.crossAxisId;
 	if (edit.visible !== undefined) axis.deleted = !edit.visible;
 	if (edit.title !== undefined)
 		assignOrDelete(
@@ -178,6 +185,11 @@ export function setChartAxis(
 	target: ChartAxisTarget,
 	edit: ChartAxisEdit,
 ): ChartSpace {
+	if (
+		edit.crossAxisId !== undefined &&
+		!space.plotArea.axes.some((axis) => axis.id === edit.crossAxisId)
+	)
+		throw new RangeError('The crossing axis does not exist');
 	return editChartSpace(space, (draft) => applyAxis(chartAxisAt(draft, target), edit));
 }
 

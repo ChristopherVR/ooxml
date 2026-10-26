@@ -10,6 +10,25 @@ function axisEdit(
 ): { edit: ChartAxisEdit; claimed: (keyof PptxChartAxisFormatting)[] } {
 	const edit: ChartAxisEdit = {};
 	const claimed: (keyof PptxChartAxisFormatting)[] = [];
+	for (const [source, target] of [
+		['axPos', 'position'],
+		['crossBetween', 'crossBetween'],
+	] as const)
+		if (was[source] !== now[source]) {
+			Object.assign(edit, { [target]: now[source] ?? null });
+			claimed.push(source);
+		}
+	if (was.crossAxisId !== now.crossAxisId && now.crossAxisId !== undefined) {
+		edit.crossAxisId = now.crossAxisId;
+		claimed.push('crossAxisId');
+	}
+	if (
+		(was.crosses !== now.crosses || was.crossesAt !== now.crossesAt) &&
+		(now.crossesAt !== undefined || now.crosses !== undefined)
+	) {
+		edit.crosses = now.crossesAt ?? now.crosses;
+		claimed.push('crosses', 'crossesAt');
+	}
 	for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) {
 		if (was[key] === now[key]) continue;
 		edit[key] = now[key] ?? null;

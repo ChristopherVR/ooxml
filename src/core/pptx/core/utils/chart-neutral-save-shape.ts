@@ -5,6 +5,7 @@ import {
 	chartTargetDraftShapes,
 	type ChartShapeEdit,
 	type ChartFormatTarget,
+	setChartDisplayUnitsLabel,
 } from '../../../chart';
 import type { PptxChartData, PptxChartShapeProps } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
@@ -68,6 +69,35 @@ export function planNeutralChartShapes(
 	for (const [index, axis] of (probe.axes ?? []).entries()) {
 		const old = before.axes?.[index];
 		if (!old || old.axisId !== axis.axisId) continue;
+		if (!same(old.displayUnitsLabel, axis.displayUnitsLabel)) {
+			const was =
+				typeof old.displayUnitsLabel === 'string'
+					? { text: old.displayUnitsLabel }
+					: old.displayUnitsLabel;
+			const now =
+				typeof axis.displayUnitsLabel === 'string'
+					? { text: axis.displayUnitsLabel }
+					: axis.displayUnitsLabel;
+			if (
+				same(was?.layout?.ext, now?.layout?.ext) &&
+				(['fontFamily', 'fontSize', 'fontBold', 'fontColor'] as const).every((key) =>
+					same(was?.[key], now?.[key]),
+				)
+			) {
+				const { ext: _ext, ...layout } = now?.layout ?? {};
+				const edit = now
+					? {
+							...(was?.text !== now.text ? { text: now.text ?? null } : {}),
+							...(!same(was?.layout, now.layout) ? { layout: now.layout ? layout : null } : {}),
+							...(!same(was?.spPr, now.spPr)
+								? { shape: now.spPr === null ? null : neutralShapeEdit(was?.spPr ?? {}, now.spPr) }
+								: {}),
+						}
+					: null;
+				edits.push((space) => setChartDisplayUnitsLabel(space, { index }, edit));
+				axis.displayUnitsLabel = old.displayUnitsLabel;
+			}
+		}
 		for (const [key, kind] of [
 			['spPr', 'axis'],
 			['majorGridlinesSpPr', 'majorGridlines'],

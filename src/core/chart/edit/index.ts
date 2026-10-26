@@ -54,3 +54,5 @@ export * from './label-format';
 export * from './series-options';
 export * from './series-axis';
 export * from './series-type';
+export * from './group-decorations';
+export * from './axis-label';

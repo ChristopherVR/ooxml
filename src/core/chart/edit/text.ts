@@ -15,7 +15,7 @@ import type { ChartTextBody } from '../model-series';
 import { chartTextBodyFromXml } from '../write-shape';
 import { writeTextBody } from '../write-text-body';
 import { CHART_ROOT_BINDINGS, innerXml } from '../xml-fragment';
-import { chartAxisAt } from './axes';
+import { chartAxisAt, type ChartAxisTarget } from './axes';
 import { chartSeriesEntryAt, editChartSpace } from './draft';
 import { editChartEffectList, type ChartEffectEdit } from './effects';
 import { withDrawingColorTransparency } from './paint';
@@ -303,5 +303,20 @@ export function setChartTargetText(
 			holder.txPr = editChartTextBody(holder.txPr, edit);
 			if (holder.tx?.rich) holder.tx.rich = editChartTextBody(holder.tx.rich, edit);
 		}
+	});
+}
+
+/** Style an existing axis title without manufacturing a title on an untitled axis. */
+export function setChartAxisTitleText(
+	space: ChartSpace,
+	target: ChartAxisTarget,
+	edit: ChartTextEdit,
+): ChartSpace {
+	validateChartTextEdit(edit);
+	return editChartSpace(space, (draft) => {
+		const title = chartAxisAt(draft, target).title;
+		if (!title) return;
+		title.txPr = editChartTextBody(title.txPr, edit);
+		if (title.tx?.rich) title.tx.rich = editChartTextBody(title.tx.rich, edit);
 	});
 }

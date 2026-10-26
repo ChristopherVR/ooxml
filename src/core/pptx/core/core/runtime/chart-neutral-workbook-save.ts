@@ -11,7 +11,7 @@ import type { PptxChartData } from '../../types';
 import type { NeutralChartSave } from '../../utils/chart-neutral-save';
 
 /** Stage both parts before changing the package. Unsupported workbook sources fail atomically. */
-export async function prepareNeutralChartWorkbook(
+async function prepareWorkbook(
 	zip: JSZip,
 	chart: PptxChartData,
 	saved: NeutralChartSave,
@@ -43,4 +43,16 @@ export async function prepareNeutralChartWorkbook(
 	zip.file(path, allocated.bytes);
 	syncIds();
 	return { xml, workbookWrites: [] };
+}
+
+export class NeutralChartSaveRefusedError extends Error {}
+
+export async function prepareNeutralChartWorkbook(
+	...args: Parameters<typeof prepareWorkbook>
+): Promise<NeutralChartSave> {
+	try {
+		return await prepareWorkbook(...args);
+	} catch (error) {
+		throw new NeutralChartSaveRefusedError(error instanceof Error ? error.message : String(error));
+	}
 }

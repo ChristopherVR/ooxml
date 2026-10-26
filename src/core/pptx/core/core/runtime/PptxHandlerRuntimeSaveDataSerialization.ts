@@ -112,7 +112,10 @@ import {
 	saveChartExPackageThroughNeutral,
 } from '../../utils/chart-ex-neutral-package-save';
 import { saveChartPartThroughNeutral } from '../../utils/chart-neutral-save';
-import { prepareNeutralChartWorkbook } from './chart-neutral-workbook-save';
+import {
+	prepareNeutralChartWorkbook,
+	NeutralChartSaveRefusedError,
+} from './chart-neutral-workbook-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
 import { saveChartExternalWorkbookUpdates } from './chart-external-workbook-save';
@@ -1298,7 +1301,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					this.builder.build(chartXmlData),
 				);
 			} catch (e) {
-				if (chartData.dataLabelTextOnly || e instanceof ChartExSaveRefusedError) {
+				if (
+					chartData.dataLabelTextOnly ||
+					e instanceof ChartExSaveRefusedError ||
+					e instanceof NeutralChartSaveRefusedError
+				) {
 					throw e;
 				}
 				console.warn(`[pptx-save] Failed to serialize chart data for ${chartPartPath}:`, e);

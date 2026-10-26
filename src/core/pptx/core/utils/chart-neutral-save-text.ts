@@ -2,6 +2,7 @@ import {
 	chartDrawingColorFromHex,
 	setChartTargetText,
 	setChartLegendEntries,
+	setChartAxisTitleText,
 	type ChartTextEdit,
 } from '../../../chart';
 import type { PptxChartData, PptxChartLegendTextStyle } from '../types';
@@ -87,6 +88,7 @@ export function planNeutralChartText(
 		});
 		const edit = neutralTextEdit(style(old), style(axis));
 		edits.push((space) => setChartTargetText(space, { kind: 'axis', axisIndex: index }, edit));
+		edits.push((space) => setChartAxisTitleText(space, { index }, edit));
 		for (const key of keys)
 			if (old[key] === undefined) delete axis[key];
 			else Object.assign(axis, { [key]: old[key] });
