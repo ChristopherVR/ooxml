@@ -31,13 +31,11 @@ for (const framework of FRAMEWORKS)
 			},
 			series: [{ name: 'Sales', categories: ['A', 'B', 'C'], values: [10, 20, 15] }],
 		});
-		await page
-			.locator('#landing-file')
-			.setInputFiles({
-				name: 'advanced.xlsx',
-				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				buffer: Buffer.from(await saveXlsx(book)),
-			});
+		await page.locator('#landing-file').setInputFiles({
+			name: 'advanced.xlsx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			buffer: Buffer.from(await saveXlsx(book)),
+		});
 		const host = editor(page);
 		const pane = host.locator('office-ui-chart-format-pane');
 		const open = async () => {
@@ -89,13 +87,11 @@ for (const framework of FRAMEWORKS)
 		expect(result.space.spPr?.effectsXml).toContain('blurRad="76200"');
 		expect(result.space.plotArea.axes[1]?.title?.text).toBe('Revenue');
 		await openLanding(page, framework);
-		await page
-			.locator('#landing-file')
-			.setInputFiles({
-				name: 'reopened.xlsx',
-				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				buffer: Buffer.from(result.bytes),
-			});
+		await page.locator('#landing-file').setInputFiles({
+			name: 'reopened.xlsx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			buffer: Buffer.from(result.bytes),
+		});
 		await open();
 		await pane.locator('[data-chart-format-target]').selectOption('series:0');
 		await expect(pane.locator('[data-chart-format-field="trendline.type"] select')).toHaveValue(

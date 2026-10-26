@@ -26,7 +26,7 @@ it('reads the same typed layout values through object-tree and DOM adapters', ()
 	expect(
 		readChartManualLayoutValues(
 			(name) =>
-				(({ x: ' ', y: 'Infinity', w: true, h: 'no', xMode: 'bogus' }) as Record<string, unknown>)[
+				({ x: ' ', y: 'Infinity', w: true, h: 'no', xMode: 'bogus' } as Record<string, unknown>)[
 					name
 				],
 		),
