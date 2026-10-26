@@ -66,12 +66,21 @@ function graft(from: XmlElement, to: XmlElement, order: string[], kinds: Readonl
  * `written` (a part `writeChartSpace` wrote for an edited model of `source`) with the source's
  * unmodelled `c:chartSpace` and `c:chart` children restored; `written` itself when there are none.
  */
-export function withUnmodelledChartChildren(source: string, written: string): string {
+export function withUnmodelledChartChildren(
+	source: string,
+	written: string,
+	omitProtection = false,
+): string {
 	if (!/<(?:\w+:)?(?:clrMapOvr|pivotSource|protection|pivotFmts)\b/.test(source)) return written;
 	const from = parseXml(source, { label: 'Chart part' }).documentElement;
 	const doc = parseXml(written, { label: 'Chart part' });
 	const to = doc.documentElement;
-	let changed = graft(from, to, SPACE_ORDER, UNMODELLED.space);
+	let changed = graft(
+		from,
+		to,
+		SPACE_ORDER,
+		omitProtection ? new Set(['clrMapOvr', 'pivotSource']) : UNMODELLED.space,
+	);
 	const fromChart = first(from, 'chart', NS.c);
 	const toChart = first(to, 'chart', NS.c);
 	if (fromChart && toChart)

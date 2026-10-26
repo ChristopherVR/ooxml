@@ -43,6 +43,19 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('saves chrome, protection and data table edits through the neutral model', () => {
+		const saved = save((chart) => {
+			chart.chartChrome = { dispBlanksAs: 'span', dispNaAsBlank: true };
+			chart.protection = { formatting: true };
+			chart.dataTable = { showKeys: true, txPr: { fontSize: 12 } };
+		});
+		expect(saved).toBeDefined();
+		const model = parseChartSpace(saved!.xml).chartSpace;
+		expect(model.protection?.formatting).toBe(true);
+		expect(model.displayBlanksAs).toBe('span');
+		expect(model.plotArea.dataTable?.showKeys).toBe(true);
+		expect(saved!.workbookWrites).toEqual([]);
+	});
 	it('saves point labels and axis/label shapes without rebuilding cached data', () => {
 		const saved = save((chart) => {
 			chart.series[0]!.dataLabels = [

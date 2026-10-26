@@ -49,3 +49,4 @@ export * from './layout';
 export * from './legend-entries';
 export * from './shape-properties';
 export * from './point-label';
+export * from './chrome';

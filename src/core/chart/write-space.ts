@@ -7,6 +7,7 @@
 import { NS } from '../xml/index';
 import type { ChartLegend, ChartSpace, ChartView3D } from './model';
 import { surfaceXml } from './write-chrome';
+import { chartProtectionXml } from './protection';
 import { plotAreaXml } from './write-plot';
 import { layoutXml, shapePropertiesXml, textBodyXml } from './write-shape';
 import { titleXml } from './write-text';
@@ -108,6 +109,7 @@ export function writeChartSpace(space: ChartSpace, options: WriteChartSpaceOptio
 		valXml('lang', space.language) +
 		valXml('roundedCorners', space.roundedCorners) +
 		styleXml(context, space) +
+		chartProtectionXml(context, space.protection) +
 		chart +
 		shapePropertiesXml(context, space.spPr) +
 		textBodyXml(context, space.txPr) +

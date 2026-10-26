@@ -35,6 +35,7 @@ import { planNeutralChartText } from './chart-neutral-save-text';
 import { planNeutralChartLayout } from './chart-neutral-save-layout';
 import { planNeutralChartShapes } from './chart-neutral-save-shape';
 import { planNeutralPointLabels } from './chart-neutral-save-point-label';
+import { planNeutralChartChrome } from './chart-neutral-save-chrome';
 import {
 	planNeutralChartLabels,
 	planNeutralChartSeriesColors,
@@ -156,6 +157,7 @@ export function planNeutralChartSave(
 	planNeutralChartLayout(before, probe, edits);
 	planNeutralChartShapes(before, probe, edits);
 	planNeutralPointLabels(before, probe, edits);
+	planNeutralChartChrome(before, probe, edits);
 	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
 	return same(probe, before)

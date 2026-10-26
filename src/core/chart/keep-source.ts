@@ -139,5 +139,9 @@ export function writeChartSpaceOverSource(
 	if (same(parsed.chartSpace, space)) return source;
 	if (chartIssuesLostOnWrite(parsed.issues).length)
 		throw new Error('This chart has content that cannot be preserved through an edit.');
-	return withUnmodelledChartChildren(source, writeChartSpace(space, options));
+	return withUnmodelledChartChildren(
+		source,
+		writeChartSpace(space, options),
+		space.protection === null,
+	);
 }

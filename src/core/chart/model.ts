@@ -195,6 +195,8 @@ export interface ChartView3D {
 
 /** A chart part (`c:chartSpace`). */
 export interface ChartSpace {
+	/** Null explicitly removes source protection; undefined leaves legacy passthrough behavior. */
+	protection?: import('./protection').ChartProtection | null;
 	date1904?: boolean;
 	language?: string;
 	roundedCorners?: boolean;

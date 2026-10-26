@@ -175,7 +175,12 @@ export function setChartTargetThreeD(
 }
 
 /** The chart's 3-D viewing camera. Two-dimensional families cannot author a 3-D view. */
-export function setChartView3D(space: ChartSpace, edit: Partial<ChartView3D>): ChartSpace {
+export type ChartView3DEdit = { [K in keyof ChartView3D]?: ChartView3D[K] | null };
+export function setChartView3D(space: ChartSpace, edit: ChartView3DEdit | null): ChartSpace {
+	if (edit === null)
+		return editChartSpace(space, (draft) => {
+			delete draft.view3D;
+		});
 	if (!space.plotArea.groups.some((group) => group.is3D))
 		throw new RangeError('The chart has no 3D plot group');
 	const bounds: Record<string, readonly [number, number]> = {
@@ -189,11 +194,16 @@ export function setChartView3D(space: ChartSpace, edit: Partial<ChartView3D>): C
 		const range = bounds[key];
 		if (
 			range &&
+			value !== null &&
 			(typeof value !== 'number' || !Number.isFinite(value) || value < range[0] || value > range[1])
 		)
 			throw new RangeError(`Invalid chart 3D ${key}`);
 	}
 	return editChartSpace(space, (draft) => {
-		draft.view3D = { ...draft.view3D, ...edit };
+		draft.view3D ??= {};
+		for (const key of Object.keys(edit) as (keyof ChartView3D)[]) {
+			if (edit[key] === null) delete draft.view3D[key];
+			else if (edit[key] !== undefined) Object.assign(draft.view3D, { [key]: edit[key] });
+		}
 	});
 }

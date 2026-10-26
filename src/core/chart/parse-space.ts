@@ -3,6 +3,7 @@
 import { NS, buildXml, children, first, parseXml, relAttr, type XmlElement } from '../xml/index';
 import type { ChartLegend, ChartSpace, ChartSpaceParseResult, ChartView3D } from './model';
 import { parseSurface } from './parse-chrome';
+import { parseChartProtection } from './protection';
 import { parsePlotArea } from './parse-plot';
 import { parseTitle } from './parse-text';
 import { CHART_ROOT_BINDINGS } from './xml-fragment';
@@ -111,6 +112,7 @@ const CHART = new Set([
 	'extLst',
 ]);
 const SPACE = new Set([
+	'protection',
 	'date1904',
 	'lang',
 	'roundedCorners',
@@ -153,6 +155,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 		{ plotArea: parsePlotArea(context, cChild(chart, 'plotArea')) },
 		{
 			date1904: cBool(context, root, 'date1904'),
+			protection: parseChartProtection(context, cChild(root, 'protection')),
 			language: cVal(root, 'lang'),
 			roundedCorners: cBool(context, root, 'roundedCorners'),
 			style: chartStyle(context, root),
