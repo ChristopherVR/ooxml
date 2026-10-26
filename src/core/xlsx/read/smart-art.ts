@@ -100,6 +100,7 @@ async function resolveOne(object: SmartArtObject, info: Pending, source: SourceI
 		},
 	});
 	object.issues.push(...loaded.issues);
+	if (loaded.layoutSource) object.layoutSource = loaded.layoutSource;
 	const paths = loaded.paths;
 	object.parts = {
 		...(paths.data ? { data: paths.data } : {}),

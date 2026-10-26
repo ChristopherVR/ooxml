@@ -57,7 +57,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(diagrams(editor)).toHaveCount(1);
 		const diagram = diagrams(editor).first();
 		await expect(diagram).toHaveClass(/dve-smartart-selected/);
-		await expect(diagram).toHaveAttribute('data-rendering', 'approximate');
+		await expect(diagram).toHaveAttribute('data-rendering', 'interpreted');
 		await expect(editor.getByRole('tab', { name: 'SmartArt Design', exact: true })).toBeVisible();
 		const shapes = () =>
 			diagram.locator('office-ui-smartart').evaluate((element) => {
@@ -152,7 +152,7 @@ test('editing a Word SmartArt rewrites its data, drops the stale drawing and und
 	await expect
 		.poll(() => texts(editor))
 		.toEqual(['Alpha', 'Beta', '', 'Gamma', 'Delta', 'Epsilon']);
-	await expect(diagram).toHaveAttribute('data-rendering', 'approximate');
+	await expect(diagram).toHaveAttribute('data-rendering', 'interpreted');
 	await lines(editor).nth(2).fill('Child');
 	await lines(editor).nth(3).fill('');
 	await lines(editor).nth(3).press('Backspace');

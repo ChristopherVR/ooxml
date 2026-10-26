@@ -1,5 +1,6 @@
 import { diagramColorTheme, resolveDiagramColor, type DocxDiagram } from '../index';
 import type { ThemeCatalog } from '../index';
+import { resolveDiagramDrawingStyles } from '../../diagram/drawing-theme';
 
 type Drawing = NonNullable<DocxDiagram['drawing']>;
 
@@ -29,7 +30,7 @@ export interface ThemedDrawing {
 	schemeColors: Record<string, string>;
 	/** Colours whose transforms (lumMod, shade...) the resolver could not apply, by name. */
 	unappliedTransforms: string[];
-	/** The renderer draws opaque colours: some resolved colours carry transparency. */
+	/** Compatibility report: alpha is now retained for the shared SVG painter. */
 	alphaDropped: boolean;
 }
 
@@ -48,7 +49,7 @@ const isColor = (value: unknown): value is { kind: string; value: string; transf
  */
 export function themeDrawing(drawing: Drawing, theme: ThemeCatalog | undefined): ThemedDrawing {
 	const unapplied = new Set<string>();
-	let alphaDropped = false;
+	const alphaDropped = false;
 	const walk = (value: unknown): unknown => {
 		if (Array.isArray(value)) return value.map(walk);
 		if (typeof value !== 'object' || value === null) return value;
@@ -56,8 +57,14 @@ export function themeDrawing(drawing: Drawing, theme: ThemeCatalog | undefined):
 			const resolved = resolveDiagramColor(value as never, theme);
 			if (resolved) {
 				for (const name of resolved.unapplied) unapplied.add(name);
-				if (resolved.alpha < 1) alphaDropped = true;
-				return { kind: 'srgb', value: resolved.hex.replace(/^#/u, ''), transforms: [] };
+				return {
+					kind: 'srgb',
+					value: resolved.hex.replace(/^#/u, ''),
+					transforms:
+						resolved.alpha < 1
+							? [{ name: 'alpha', value: String(Math.round(resolved.alpha * 100000)) }]
+							: [],
+				};
 			}
 		}
 		return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, walk(entry)]));
@@ -69,7 +76,7 @@ export function themeDrawing(drawing: Drawing, theme: ThemeCatalog | undefined):
 		if (hex) schemeColors[name] = hex;
 	}
 	return {
-		drawing: walk(drawing) as Drawing,
+		drawing: walk(resolveDiagramDrawingStyles(drawing, theme?.formatScheme)) as Drawing,
 		schemeColors,
 		unappliedTransforms: [...unapplied],
 		alphaDropped,

@@ -1,5 +1,7 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
 import type { DiagramDrawing, DiagramIssue, DiagramLayoutType } from '../diagram/types';
+import type { DiagramLayoutSource } from '../diagram/layout-preview';
+import type { ThemeFormatScheme } from '../drawingml/format-scheme';
 import type { DiagramHostNode } from '../diagram/edit/node-edit';
 import type { CellAddress, CellRange } from './address';
 import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
@@ -622,6 +624,7 @@ export interface SmartArtDefinitions {
  * are written.
  */
 export interface SmartArtObject {
+	layoutSource?: DiagramLayoutSource;
 	kind: 'smartArt';
 	anchor: DrawingAnchor;
 	name?: string;
@@ -818,7 +821,9 @@ export interface DefinedName {
 }
 
 /** The workbook theme's colour palette and fonts, resolved for rendering. */
-export type ThemePalette = ChartThemePalette;
+export interface ThemePalette extends ChartThemePalette {
+	formatScheme?: ThemeFormatScheme;
+}
 
 /**
  * Document properties: every core (`docProps/core.xml`) and extended (`docProps/app.xml`) field

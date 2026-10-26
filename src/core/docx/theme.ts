@@ -29,7 +29,12 @@ export function parseTheme(xml: string): ThemeCatalog {
 		if (value) colors[slot] = value;
 	}
 	const { major, minor } = theme.fontScheme;
-	return { colors, colorMapping: {}, fonts: { major: fontSetOf(major), minor: fontSetOf(minor) } };
+	return {
+		colors,
+		colorMapping: {},
+		fonts: { major: fontSetOf(major), minor: fontSetOf(minor) },
+		...(theme.formatScheme ? { formatScheme: theme.formatScheme } : {}),
+	};
 }
 
 const MAPPING_KEYS = ['bg1', 'tx1', 'bg2', 'tx2'] as const;

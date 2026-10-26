@@ -9,6 +9,7 @@ import { parseDrawingGeometry, parseFrame, parseTransform } from '../drawingml/d
 import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { parseDrawingColorIn } from '../drawingml/drawing-color';
 import { parseDrawingRichTextBody } from '../drawingml/read-text-body';
+import { parseDrawingEffects } from '../drawingml/drawing-effects';
 import { NS, first, stringAttribute, type XmlElement } from './dom';
 import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types';
 
@@ -103,6 +104,8 @@ function parseShape(
 	if (style) shape.style = parseStyleReferences(style);
 	const shadow = parseDrawingColorIn(first(first(spPr, 'effectLst', NS.a), 'outerShdw', NS.a));
 	if (shadow) shape.shadowColor = shadow;
+	const effects = parseDrawingEffects(first(spPr, 'effectLst', NS.a));
+	if (effects) shape.effects = effects;
 	const txBody = first(sp, 'txBody', NS.dsp);
 	const text = parseDrawingTextBody(txBody);
 	if (text) shape.text = text;

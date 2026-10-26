@@ -7,6 +7,7 @@ import { diagramNodeOutline } from 'ooxml-core/diagram';
 import { createTestContext } from './commands/test-support';
 import { commandTabs } from './commands/index';
 import { createSmartArtController, smartArtCommands } from './smartart-controller';
+import { paintSmartArt } from './grid/smartart';
 
 afterEach(() => {
 	document.body.innerHTML = '';
@@ -44,6 +45,11 @@ it('runs SmartArt Design commands and the text pane on the selected diagram, wit
 	await ctx.commands.run('smartart.demote');
 	expect(smartArt(ctx).nodes[3]!.parentId).toBe(smartArt(ctx).nodes[2]!.id);
 	expect(smartArt(ctx).diagram).toBeUndefined();
+	expect(smartArt(ctx).layoutSource?.layoutXml).toContain('layoutDef');
+	const canvas = document.createElement('div');
+	paintSmartArt(ctx, canvas, smartArt(ctx), ctx.workbook()!.theme);
+	expect(canvas.dataset.rendering).toBe('interpreted');
+	expect(canvas.querySelector('office-ui-smartart')).not.toBeNull();
 
 	const bytes = await saveXlsx(ctx.workbook()!);
 	const back = (await loadXlsx(bytes)).sheets[0]!.drawings[0] as SmartArtObject;

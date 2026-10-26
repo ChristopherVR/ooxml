@@ -3,7 +3,7 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { NodeView } from 'prosemirror-view';
 import { defineSmartArt } from '../smartart';
 import { placementClass } from 'ooxml-core/docx/ui';
-import { approximateDiagramDrawing, themeDrawing } from 'ooxml-core/docx/ui';
+import { previewDocxDiagram, themeDrawing } from 'ooxml-core/docx/ui';
 import { translate, type EditorLocale } from './localization';
 
 const EMU_PER_PX = 9525;
@@ -18,6 +18,7 @@ interface RenderReport {
 type SmartArtElement = HTMLElement & {
 	drawing: unknown;
 	schemeColors: Record<string, string>;
+	schemeFonts: { major?: string; minor?: string };
 };
 
 /** Registers `<office-ui-smartart>` once; a no-op without a DOM (server rendering). */
@@ -152,12 +153,13 @@ export function smartArtNodeView(
 		diagram.rendering === 'cached-drawing' && (diagram.drawing?.shapes.length ?? 0) > 0
 			? diagram.drawing
 			: undefined;
-	const drawing = cached ?? approximateDiagramDrawing(diagram);
+	const preview = cached ? undefined : previewDocxDiagram(diagram, theme);
+	const drawing = cached ?? preview?.drawing;
 	const approximate = cached
 		? undefined
 		: translate(locale, 'Drawn with an approximate layout computed here; not Word-identical.');
 	if (drawing) {
-		dom.dataset.rendering = cached ? 'cached-drawing' : 'approximate';
+		dom.dataset.rendering = cached ? 'cached-drawing' : (preview?.mode ?? 'placeholder');
 		themed = themeDrawing(drawing, theme);
 		const element = document.createElement('office-ui-smartart') as SmartArtElement;
 		element.className = 'dve-smartart-drawing';
@@ -176,6 +178,10 @@ export function smartArtNodeView(
 		});
 		writeNotes();
 		element.schemeColors = themed.schemeColors;
+		element.schemeFonts = {
+			...(theme?.fonts.major.latin ? { major: theme.fonts.major.latin } : {}),
+			...(theme?.fonts.minor.latin ? { minor: theme.fonts.minor.latin } : {}),
+		};
 		element.drawing = themed.drawing;
 		dom.append(element);
 	} else {

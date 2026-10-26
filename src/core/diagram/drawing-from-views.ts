@@ -34,6 +34,8 @@ export function diagramDrawingFromViews(
 		const fill: DrawingColor = view.fillColor
 			? srgb(view.fillColor)
 			: scheme(accents[filled++ % accents.length] as string);
+		if (view.fillOpacity !== undefined && view.fillOpacity < 1)
+			fill.transforms.push({ name: 'alpha', value: String(Math.round(view.fillOpacity * 100000)) });
 		const text = view.text?.trim() ? view.text : '';
 		const textColor = view.fontColor ? srgb(view.fontColor) : scheme(themed ? 'lt1' : 'tx1');
 		return {
@@ -46,10 +48,14 @@ export function diagramDrawingFromViews(
 			},
 			...(view.rotation ? { rotation: view.rotation } : {}),
 			geometry: view.shapeType ?? 'rect',
+			...(view.shapeAdjustments ? { adjustments: view.shapeAdjustments } : {}),
 			fill: view.fillNone ? { kind: 'none' } : { kind: 'solid', color: fill },
 			line: {
-				widthEmu: 12700,
-				fill: { kind: 'solid', color: view.strokeColor ? srgb(view.strokeColor) : scheme('lt1') },
+				widthEmu: view.strokeWidth === undefined ? 12700 : view.strokeWidth * 12700,
+				fill:
+					view.strokeColor === 'none'
+						? { kind: 'none' }
+						: { kind: 'solid', color: view.strokeColor ? srgb(view.strokeColor) : scheme('lt1') },
 			},
 			...(text
 				? {

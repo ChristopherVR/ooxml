@@ -10,6 +10,7 @@ import {
 	parseDiagramDataModel,
 	parseRelationshipIdAttributes,
 	type DiagramDrawing,
+	type DiagramLayoutSource,
 	type DiagramIssue,
 	type DiagramHostNode,
 	type DiagramLayoutType,
@@ -53,6 +54,7 @@ export type DocxDiagramRendering = 'cached-drawing' | 'placeholder';
  * drawing dropped, and an inserted one gets new parts (`diagram-save.ts`).
  */
 export interface DocxDiagram {
+	layoutSource?: DiagramLayoutSource;
 	/** `inline` (`wp:inline`) or `anchor` (`wp:anchor`, floating). */
 	placement: 'inline' | 'anchor';
 	/** `wp:extent` in EMU: the frame the cached drawing's coordinates are relative to. */
@@ -238,6 +240,7 @@ export async function resolveDiagramParts(
 			!known.has(`${issue.code}|${issue.message}`),
 	);
 	diagram.issues.push(...fresh);
+	if (loaded.layoutSource) diagram.layoutSource = loaded.layoutSource;
 	if (loaded.paths.drawing && loaded.drawingRelId)
 		diagram.parts.drawing = { relId: loaded.drawingRelId, partName: loaded.paths.drawing };
 	if (loaded.layout) {

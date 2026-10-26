@@ -158,7 +158,8 @@ describe('office-ui-smartart', () => {
 		// Outlines on the drawing's edge straddle the viewBox; the root must not clip them.
 		expect(svg.getAttribute('overflow')).toBe('visible');
 		expect(svg.querySelectorAll('g[data-model-id]')).toHaveLength(2);
-		expect(svg.querySelector('rect')!.getAttribute('fill')).toBe('#4472C4');
+		expect(svg.querySelector('g[data-model-id="m1"] > g')!.getAttribute('fill')).toBe('#4472C4');
+		expect(svg.querySelector('g[data-model-id="m1"] path')).not.toBeNull();
 		expect(svg.querySelector('ellipse')).not.toBeNull();
 		expect(svg.querySelector('text')!.textContent).toBe('Plan');
 		expect(el.report?.shapeCount).toBe(2);
@@ -184,11 +185,12 @@ describe('office-ui-smartart', () => {
 		};
 		expect(events).toHaveLength(1);
 		expect(events[0]).toMatchObject({
-			approximatedGeometries: ['chevron'],
+			approximatedGeometries: [],
 			flattened3d: 1,
-			approximatedFills: ['gradient'],
+			approximatedFills: [],
 		});
-		expect(el.shadowRoot!.querySelector('[data-approximated="chevron"]')).not.toBeNull();
+		expect(el.shadowRoot!.querySelector('[data-approximated="chevron"]')).toBeNull();
+		expect(el.shadowRoot!.querySelector('linearGradient')).not.toBeNull();
 		expect(el.shadowRoot!.querySelector('[data-flattened-3d]')).not.toBeNull();
 	});
 
@@ -211,7 +213,7 @@ describe('office-ui-smartart', () => {
 				}),
 			],
 		};
-		expect(el.shadowRoot!.querySelector('path')!.getAttribute('d')).toBe('M0 0L100 50Z');
+		expect(el.shadowRoot!.querySelector('path')!.getAttribute('d')).toBe('M0 0 L100 50 Z');
 		expect(el.shadowRoot!.querySelector('g > g')!.getAttribute('fill')).toBe('#112233');
 	});
 

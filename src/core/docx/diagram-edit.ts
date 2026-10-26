@@ -11,6 +11,7 @@ import {
 	type DiagramEditOptions,
 	type DiagramLayoutType,
 	type DiagramNodeEdit,
+	type DiagramLayoutSource,
 } from '../diagram/index';
 import { diagramNotice, type DocxDiagram, type DocxDiagramNode } from './diagram';
 import { treeOrderDiagramNodes } from './diagram-nodes';
@@ -69,16 +70,20 @@ export function changeDocxDiagramLayout(
 	diagram: DocxDiagram,
 	layoutId: string,
 	family?: DiagramLayoutType,
+	layoutXml?: string,
 ): DocxDiagram {
 	if (diagram.layout?.uniqueId === layoutId) return diagram;
+	const { layoutXml: _oldLayout, ...layoutSource } = diagram.layoutSource ?? {};
 	return {
 		...withDiagramNodes(diagram, diagram.nodes),
 		layout: { uniqueId: layoutId, ...(family ? { family } : {}) },
+		layoutSource: { ...layoutSource, ...(layoutXml ? { layoutXml } : {}) },
 	};
 }
 
 /** What Insert SmartArt needs to create a diagram. */
 export interface DocxDiagramCreation {
+	layoutSource?: DiagramLayoutSource;
 	/** `uniqueId` of the layout definition supplied as the layout part. */
 	layoutId: string;
 	/** Category of the layout (`list`, `process`...), for the approximate drawing. */
@@ -120,6 +125,7 @@ export function createDocxDiagram(creation: DocxDiagramCreation): DocxDiagram {
 	const part = (partName: string) => ({ relId: '', partName });
 	return {
 		placement: 'inline',
+		...(creation.layoutSource ? { layoutSource: creation.layoutSource } : {}),
 		extentEmu: {
 			width: Math.round(creation.widthPx * EMU_PER_PX),
 			height: Math.round(creation.heightPx * EMU_PER_PX),

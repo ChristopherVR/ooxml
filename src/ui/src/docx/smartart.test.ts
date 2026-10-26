@@ -85,7 +85,7 @@ describe('SmartArt node view', () => {
 		const element = dom.querySelector('office-ui-smartart')!;
 		const svg = element.shadowRoot!.querySelector('svg')!;
 		expect(svg.getAttribute('role')).toBe('img');
-		expect(svg.children.length).toBe(diagram.drawing!.shapes.length);
+		expect(svg.querySelectorAll('g[data-model-id]').length).toBe(diagram.drawing!.shapes.length);
 		expect(svg.textContent).toMatch(/\S/);
 		// The frame, not the shapes' bounding box, sets the scale.
 		expect(svg.getAttribute('viewBox')).toBe(
@@ -105,10 +105,15 @@ describe('SmartArt node view', () => {
 			image: { ...runs[0]!.image!, diagram },
 		})[0]!;
 		const dom = smartArtNodeView(node, diagram, undefined, 'fr').dom as HTMLElement;
-		expect(dom.dataset.rendering).toBe('approximate');
+		expect(dom.dataset.rendering).toBe('interpreted');
 		const svg = dom.querySelector('office-ui-smartart')!.shadowRoot!.querySelector('svg')!;
 		const texts = [...svg.querySelectorAll('text')].map((text) => text.textContent);
-		expect(texts).toEqual(diagram.nodes.filter((entry) => entry.text).map((entry) => entry.text));
+		expect(texts.sort()).toEqual(
+			diagram.nodes
+				.filter((entry) => entry.text)
+				.map((entry) => entry.text)
+				.sort(),
+		);
 		expect(dom.querySelector('.dve-smartart-notes')!.textContent).toContain(
 			'disposition approximative',
 		);

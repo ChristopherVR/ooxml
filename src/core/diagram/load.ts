@@ -8,6 +8,7 @@ import {
 import { parseDiagramDataModel } from './data-model';
 import { parseDiagramDrawing } from './drawing';
 import { resolveDiagramDrawingPart, type DiagramPartHost } from './relationships';
+import type { DiagramLayoutSource } from './layout-preview';
 import type {
 	DiagramColorsDefinition,
 	DiagramDataModel,
@@ -35,6 +36,8 @@ export interface DiagramPartPaths {
 
 /** Every part of a diagram, parsed, with the problems met on the way. */
 export interface LoadedDiagram {
+	/** Original definitions and source metadata for an uncached preview. */
+	layoutSource?: DiagramLayoutSource;
 	relationshipIds: DiagramRelationshipIds;
 	paths: DiagramPartPaths;
 	/** Relationship id (in the host part) of the cached drawing, when one was found. */
@@ -86,6 +89,7 @@ export async function loadDiagram(
 		else paths[name] = host.resolvePath(hostPart, target);
 	}
 
+	const layoutSource: DiagramLayoutSource = {};
 	const read = async <T>(
 		name: keyof DiagramPartPaths,
 		parse: (xml: string, part: string) => T,
@@ -102,6 +106,10 @@ export async function loadDiagram(
 				});
 				return undefined;
 			}
+			if (name === 'layout') layoutSource.layoutXml = xml;
+			if (name === 'data') layoutSource.dataXml = xml;
+			if (name === 'colors') layoutSource.colorsXml = xml;
+			if (name === 'quickStyle') layoutSource.quickStyleXml = xml;
 			return parse(xml, part);
 		} catch (error) {
 			issues.push({
@@ -146,6 +154,7 @@ export async function loadDiagram(
 		});
 
 	return {
+		layoutSource,
 		relationshipIds,
 		paths,
 		...(drawingResolution ? { drawingRelId: drawingResolution.relId } : {}),

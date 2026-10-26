@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { ThemeColorSlot } from '../drawingml/theme-model';
 import type { StThemeColor } from './generated/wml-simple-types';
+import type { ThemeFormatScheme } from '../drawingml/format-scheme';
 /** Theme color scheme slots (`a:clrScheme` children): the neutral DrawingML slots. */
 export type { ThemeColorSlot };
 /** WordprocessingML `ST_ThemeColor` tokens (generated from the schema) referenced from `w:themeColor`/`w:themeFill`. */
@@ -12,6 +13,7 @@ export interface ThemeFontSet {
 }
 /** Parsed word/theme/theme1.xml plus word/settings.xml clrSchemeMapping; never flattened onto runs. */
 export interface ThemeCatalog {
+	formatScheme?: ThemeFormatScheme;
 	colors: Partial<Record<ThemeColorSlot, string>>;
 	colorMapping: Partial<Record<'bg1' | 'tx1' | 'bg2' | 'tx2', ThemeColorSlot>>;
 	fonts: { major: ThemeFontSet; minor: ThemeFontSet };

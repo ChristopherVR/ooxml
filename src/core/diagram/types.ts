@@ -14,6 +14,7 @@ import type {
 	DrawingTextSpacing,
 } from '../drawingml/types';
 import type { DrawingRichTextBody } from '../drawingml/text-model';
+import type { DrawingEffectList } from '../drawingml/effect-model';
 
 export type { AttributeReader } from '../drawingml/types';
 import type { DiagramNeutralTextParagraph } from './text/node-text-neutral';
@@ -246,6 +247,7 @@ export interface DiagramDrawingShape {
 	line?: DiagramLine;
 	/** Colour of the first outer shadow (`a:effectLst/a:outerShdw`), unresolved. */
 	shadowColor?: DiagramColor;
+	effects?: DrawingEffectList;
 	style?: DiagramStyleReference;
 	/** Flattened text summary (runs per paragraph), as charts read it. */
 	text?: DiagramTextBody;

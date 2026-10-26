@@ -40,8 +40,30 @@ export function ooxmlArcToSvg(
 	penY: number,
 ): ArcToResult | null {
 	// Degenerate arcs: zero radius or zero sweep produce no visible arc
-	if (wR <= 0 || hR <= 0 || swAng === 0) {
+	if (
+		![wR, hR, stAng, swAng, penX, penY].every(Number.isFinite) ||
+		wR <= 0 ||
+		hR <= 0 ||
+		swAng === 0
+	) {
 		return null;
+	}
+	// SVG omits an arc whose endpoints coincide. A full DrawingML turn needs two arcs.
+	if (Math.abs(swAng) >= 21600000) {
+		const sweep = Math.sign(swAng) * (21600000 + (Math.abs(swAng) % 21600000));
+		const pieces = Math.ceil(Math.abs(sweep) / 10800000);
+		let x = penX;
+		let y = penY;
+		let angle = stAng;
+		const commands: string[] = [];
+		for (let index = 0; index < pieces; index++) {
+			const part = ooxmlArcToSvg(wR, hR, angle, sweep / pieces, x, y)!;
+			commands.push(part.svg);
+			x = part.endX;
+			y = part.endY;
+			angle += sweep / pieces;
+		}
+		return { svg: commands.join(' '), endX: x, endY: y };
 	}
 
 	// Convert OOXML angles (60,000ths of a degree) to radians

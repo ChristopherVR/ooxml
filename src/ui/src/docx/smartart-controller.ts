@@ -134,6 +134,11 @@ export class SmartArtController {
 			const partSuffix = `-dve-${Date.now().toString(36)}-${++serial}`;
 			const diagram = createDocxDiagram({
 				layoutId,
+				layoutSource: {
+					layoutXml: builtin.loadBuiltinSmartArtLayoutXml(layoutId),
+					colorsXml: builtin.BUILTIN_SMARTART_COLORS_XML,
+					quickStyleXml: builtin.BUILTIN_SMARTART_QUICK_STYLE_XML,
+				},
 				family: preset.family,
 				colorsId: builtin.BUILTIN_SMARTART_COLORS_ID,
 				quickStyleId: builtin.BUILTIN_SMARTART_QUICK_STYLE_ID,
@@ -173,7 +178,12 @@ export class SmartArtController {
 			const layoutId = builtin.builtinLayoutIdForPreset(preset.layout);
 			if (!layoutId)
 				throw new Error(translate(this.locale, 'The SmartArt layouts could not be loaded.'));
-			const next = changeDocxDiagramLayout(selected.diagram, layoutId, preset.family);
+			const next = changeDocxDiagramLayout(
+				selected.diagram,
+				layoutId,
+				preset.family,
+				builtin.loadBuiltinSmartArtLayoutXml(layoutId),
+			);
 			if (next === selected.diagram) return;
 			this.host.stage(layoutPart, xmlPart(builtin.loadBuiltinSmartArtLayoutXml(layoutId)));
 			replaceDiagram(view, selected.pos, next);

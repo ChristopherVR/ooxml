@@ -4,7 +4,7 @@
 // with the shared approximate layout (`approximateDiagramDrawingFromNodes`, as Word does), never
 // Excel's own layout, which the badge and the object's notice say. Editing goes through the
 // SmartArt Design tab and the text pane (../smartart-controller.ts).
-import { approximateDiagramDrawingFromNodes } from 'ooxml-core/diagram';
+import { previewDiagramLayout, resolveDiagramDrawingStyles } from 'ooxml-core/diagram';
 import { THEME_SLOTS, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
 import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../index';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
@@ -53,16 +53,28 @@ export function paintSmartArt(
 	const notice = ctx.t(obj.notice);
 	node.title = notice;
 	const cached = obj.diagram?.shapes.length ? obj.diagram : undefined;
-	const diagram =
-		cached ??
-		approximateDiagramDrawingFromNodes({
-			extentEmu: { width: Math.round(size.w * 9525), height: Math.round(size.h * 9525) },
-			nodes: obj.nodes,
-			layoutId: obj.layoutId,
-			family: obj.layoutFamily,
-			colorsId: obj.colorsId,
-		});
-	node.dataset.rendering = cached ? 'cached-drawing' : diagram ? 'approximate' : 'placeholder';
+	const preview = !cached
+		? previewDiagramLayout({
+				extentEmu: { width: Math.round(size.w * 9525), height: Math.round(size.h * 9525) },
+				nodes: obj.nodes,
+				layoutId: obj.layoutId,
+				family: obj.layoutFamily,
+				colorsId: obj.colorsId,
+				source: {
+					...obj.layoutSource,
+					...(obj.definitions?.layout ? { layoutXml: obj.definitions.layout } : {}),
+					...(obj.definitions?.colors ? { colorsXml: obj.definitions.colors } : {}),
+					...(obj.definitions?.quickStyle ? { quickStyleXml: obj.definitions.quickStyle } : {}),
+				},
+				scheme: smartArtSchemeColors(theme),
+				minorFont: theme?.minorFont,
+			})
+		: undefined;
+	const rawDrawing = cached ?? preview?.drawing;
+	const diagram = rawDrawing
+		? resolveDiagramDrawingStyles(rawDrawing, theme?.formatScheme)
+		: undefined;
+	node.dataset.rendering = cached ? 'cached-drawing' : (preview?.mode ?? 'placeholder');
 	if (diagram && diagram.shapes.length) {
 		defineSmartArt(doc.defaultView?.customElements);
 		const art = doc.createElement('office-ui-smartart') as HTMLElement & {

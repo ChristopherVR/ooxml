@@ -41,5 +41,6 @@ export function parseTheme(xml: string | undefined): ThemePalette {
 	);
 	palette.majorFont = theme.fontScheme.major.latin ?? palette.majorFont;
 	palette.minorFont = theme.fontScheme.minor.latin ?? palette.minorFont;
+	if (theme.formatScheme) palette.formatScheme = theme.formatScheme;
 	return palette;
 }

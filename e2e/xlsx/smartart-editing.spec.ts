@@ -98,7 +98,7 @@ for (const framework of FRAMEWORKS)
 		}, bytes);
 		await expect.poll(() => outline(page)).toEqual(edited);
 		const drawn = editor(page).locator('.xg-smartart').first();
-		await expect(drawn).toHaveAttribute('data-rendering', 'approximate');
+		await expect(drawn).toHaveAttribute('data-rendering', 'interpreted');
 		await expect(drawn.locator('office-ui-smartart')).toContainText('Gamma');
 		expect(errors).toEqual([]);
 	});
