@@ -77,3 +77,15 @@ export async function createChartWorkbook(
 	zip.file('xl/styles.xml', STYLES);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
+
+/** A literal worksheet block, using the same cell serializer as newly authored chart workbooks. */
+export function chartWorkbookRowsXml(
+	rows: readonly (readonly (string | number | null)[])[],
+): string {
+	const count = Math.max(1, ...rows.map((row) => row.length));
+	const body = rows
+		.map((row, r) => `<row r="${r + 1}">${row.map((value, c) => cell(c, r, value)).join('')}</row>`)
+		.join('');
+	const last = formatCellAddress({ col: count - 1, row: Math.max(0, rows.length - 1) });
+	return `${DECLARATION}<worksheet xmlns="${MAIN}" xmlns:r="${REL}"><dimension ref="A1:${last}"/><sheetData>${body}</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`;
+}
