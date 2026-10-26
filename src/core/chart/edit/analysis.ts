@@ -6,6 +6,7 @@ import type {
 	ChartErrorBarDirection,
 	ChartTrendline,
 	ChartTrendlineType,
+	ChartTrendlineLabel,
 } from '../model-analysis';
 import type { ChartDataSource, ChartShapeProperties } from '../model-series';
 import { assignOrDelete, chartSeriesEntryAt, editChartSpace } from './draft';
@@ -18,8 +19,9 @@ export interface ChartTrendlineEdit {
 	forward?: number | null;
 	backward?: number | null;
 	intercept?: number | null;
-	displayEquation?: boolean;
-	displayRSquared?: boolean;
+	displayEquation?: boolean | null;
+	displayRSquared?: boolean | null;
+	label?: ChartTrendlineLabel | null;
 	spPr?: ChartShapeProperties | null;
 }
 
@@ -91,8 +93,10 @@ export function setChartTrendline(
 		if (edit.name !== undefined) assignOrDelete(next, 'name', edit.name ?? undefined);
 		if (edit.spPr !== undefined)
 			assignOrDelete(next, 'spPr', structuredClone(edit.spPr ?? undefined));
+		if (edit.label !== undefined)
+			assignOrDelete(next, 'label', structuredClone(edit.label ?? undefined));
 		for (const key of ['displayEquation', 'displayRSquared'] as const)
-			if (edit[key] !== undefined) next[key] = edit[key];
+			if (edit[key] !== undefined) assignOrDelete(next, key, edit[key] ?? undefined);
 		list[index] = next;
 	});
 }
@@ -100,7 +104,7 @@ export function setChartTrendline(
 export interface ChartErrorBarsEdit {
 	barType?: 'both' | 'minus' | 'plus';
 	valueType?: 'cust' | 'fixedVal' | 'percentage' | 'stdDev' | 'stdErr';
-	noEndCap?: boolean;
+	noEndCap?: boolean | null;
 	value?: number | null;
 	plus?: ChartDataSource | null;
 	minus?: ChartDataSource | null;
@@ -174,7 +178,7 @@ export function setChartErrorBars(
 		for (const key of ['plus', 'minus', 'spPr'] as const)
 			if (edit[key] !== undefined)
 				assignOrDelete(next, key, structuredClone(edit[key] ?? undefined));
-		if (edit.noEndCap !== undefined) next.noEndCap = edit.noEndCap;
+		if (edit.noEndCap !== undefined) assignOrDelete(next, 'noEndCap', edit.noEndCap ?? undefined);
 		if (next.valueType === 'cust') {
 			if (
 				(next.barType !== 'minus' && !numericSource(next.plus)) ||
