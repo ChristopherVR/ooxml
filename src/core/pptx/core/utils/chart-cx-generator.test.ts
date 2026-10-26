@@ -81,6 +81,6 @@ describe('buildChartExSpaceXml: histogramOptions.aggregateByCategory', () => {
 		};
 		const [series] =
 			xml['cx:chartSpace']['cx:chart']['cx:plotArea']['cx:plotAreaRegion']['cx:series'];
-		expect(series['cx:layoutPr']).toStrictEqual({ 'cx:aggregation': {} });
+		expect(series['cx:layoutPr']).toStrictEqual({ 'cx:aggregation': '' });
 	});
 });

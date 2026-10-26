@@ -46,7 +46,13 @@ export async function chartExDecks(): Promise<ChartExDeck[]> {
 			batch.forEach((xml, slot) => zip.file(slots[slot]!, xml));
 			const parts: ChartExPart[] = [];
 			for (const part of slots.slice(0, batch.length || slots.length)) {
-				const xml = await zip.file(part)!.async('string');
+				// This codec harness swaps parts across unrelated packages. Their original workbook
+				// links are unavailable here; literal caches isolate parser/writer parity. Package
+				// synchronization and refusal are covered by chart-ex-neutral-save.test.ts.
+				const xml = (await zip.file(part)!.async('string'))
+					.replace(/<cx:f\b[^>]*>[\s\S]*?<\/cx:f>/gu, '')
+					.replace(/<cx:externalData\b[^>]*(?:\/>|>[\s\S]*?<\/cx:externalData>)/gu, '');
+				zip.file(part, xml);
 				parts.push({ part, space: neutral.parseChartExSpace(xml).chartExSpace });
 			}
 			return {

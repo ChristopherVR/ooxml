@@ -3,6 +3,7 @@
 import type { PptxChartData, PptxChartSeries, XmlObject } from '../types';
 import { buildChartExLegend } from './chart-cx-legend';
 import { isXmlNode } from './xml-access';
+import { createChartExThroughNeutral } from './chart-ex-neutral-create';
 
 // Re-exported (not just imported above) so `chart-cx-update.ts`'s existing
 // `from './chart-cx-generator'` import keeps working after this module split
@@ -259,6 +260,8 @@ export function buildChartExSpaceXml(chartData: PptxChartData): XmlObject {
 	if (!canGenerateChartEx(chartData)) {
 		throw new Error(`ChartEx generation is not implemented for ${chartData.chartType}`);
 	}
+	const neutral = createChartExThroughNeutral(chartData);
+	if (neutral) return neutral;
 	const chart: XmlObject = {};
 	if (chartData.title) {
 		chart['cx:title'] = {

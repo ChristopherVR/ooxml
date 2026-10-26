@@ -5,12 +5,10 @@
  * (`before`) and as edited (`after`) becomes `chart/edit` chartex operations,
  * applied to the part as stored (`parseChartExSpace`) and written with
  * `writeChartExSpace`, so everything the edit does not touch stays as written.
- * Families claimed: title text and removal, legend visibility and position,
- * data labels on and off, series names, values and (non-hierarchical)
- * categories. Any other change, or a part the neutral parser reports anything
- * unmodelled in, returns `undefined` and the part is saved by the object-tree
- * update (`runtime/chart-cx-update.ts`) as before. Proven by
- * `__tests__/integration/chart-ex-save-parity.test.ts`.
+ * Claims title, legend, labels, series colors/data, family options and supported layout changes.
+ * Hierarchical category edits retain parent levels. Histogram and box-whisker series can grow.
+ * Unmapped view changes retain the compatibility update; the package adapter separately refuses
+ * unsupported sources and unsafe workbook writes before publishing either changed part.
  *
  * @module utils/chart-ex-neutral-save
  */
@@ -28,8 +26,12 @@ import {
 	type ChartExSpace,
 } from '../../../chart/index';
 import type { PptxChartData, PptxChartStyle } from '../types';
+import {
+	planChartExFamilyEdits,
+	planChartExSeriesStructure,
+} from './chart-ex-neutral-save-families';
 
-type ChartExEdit = (space: ChartExSpace) => ChartExSpace;
+export type ChartExEdit = (space: ChartExSpace) => ChartExSpace;
 
 /** JSON with sorted keys and `undefined` members left out. */
 function canonical(value: unknown): unknown {
@@ -101,9 +103,10 @@ function planLabels(before: PptxChartData, probe: PptxChartData, edits: ChartExE
 const HIERARCHY = new Set(['treemap', 'sunburst', 'regionMap']);
 
 function planSeries(before: PptxChartData, probe: PptxChartData, edits: ChartExEdit[]): void {
-	if (before.series.length !== probe.series.length) return;
+	if (!planChartExSeriesStructure(before, probe, edits)) return;
 	probe.series.forEach((series, i) => {
-		const previous = before.series[i]!;
+		const previous = before.series[i];
+		if (!previous) return;
 		if (series.name !== previous.name) {
 			const name = series.name;
 			edits.push((space) => renameChartExSeries(space, i, name));
@@ -117,11 +120,24 @@ function planSeries(before: PptxChartData, probe: PptxChartData, edits: ChartExE
 			else series.blanks = previous.blanks;
 		}
 	});
-	if (!same(before.categories, probe.categories) && !HIERARCHY.has(before.chartType)) {
-		const categories = [...probe.categories];
+	if (
+		(!same(before.categories, probe.categories) ||
+			!same(before.categoryLevels, probe.categoryLevels)) &&
+		before.chartType !== 'regionMap'
+	) {
+		const categories = HIERARCHY.has(probe.chartType)
+			? same(before.categoryLevels, probe.categoryLevels)
+				? [probe.categories, ...(probe.categoryLevels?.slice(1) ?? [])]
+				: (probe.categoryLevels ?? [probe.categories])
+			: [...probe.categories];
 		edits.push((space) => setChartExCategories(space, categories));
 		probe.categories = before.categories;
+		probe.categoryLevels = before.categoryLevels;
 	}
+	probe.series = [
+		...probe.series.slice(0, before.series.length),
+		...before.series.slice(probe.series.length),
+	];
 }
 
 /** The chartex edits that turn the part saved as `before` into `after`, or `undefined`. */
@@ -134,6 +150,7 @@ export function planChartExNeutralSave(
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planLabels(before, probe, edits);
+	planChartExFamilyEdits(before, probe, edits);
 	planSeries(before, probe, edits);
 	return same(probe, before) ? edits : undefined;
 }

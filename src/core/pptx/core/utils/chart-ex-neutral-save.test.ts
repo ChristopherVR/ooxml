@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import JSZip from 'jszip';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { PptxHandler } from '../PptxHandler';
+import type { ChartPptxElement } from '../types';
 
+import { createChartWorkbook, parseChartExSpace, chartExSpaceDataSheet } from '../../../chart';
+import { loadXlsx } from '../../../xlsx';
+import { saveChartExPackageThroughNeutral } from './chart-ex-neutral-package-save';
 import type { PptxChartData } from '../types';
 import { planChartExNeutralSave, saveChartExPartThroughNeutral } from './chart-ex-neutral-save';
 
@@ -20,6 +28,85 @@ const edited = (recipe: (chart: PptxChartData) => void): PptxChartData => {
 	recipe(chart);
 	return chart;
 };
+
+async function packageFixture() {
+	const zip = new JSZip();
+	const book = await createChartWorkbook({
+		categories: ['A', 'B'],
+		series: [{ name: 'Sales', values: [1, 2] }],
+	});
+	zip.file('ppt/embeddings/data.xlsx', book);
+	zip.file(
+		'ppt/charts/_rels/chartEx1.xml.rels',
+		'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/data.xlsx"/></Relationships>',
+	);
+	const xml = PART.replace('<cx:chartData>', '<cx:chartData><cx:externalData r:id="rId1"/>')
+		.replace('<cx:f>Sheet1!$B$1</cx:f><cx:v>Old</cx:v>', '<cx:v>Old</cx:v>')
+		.replace('layoutId="funnel"', 'layoutId="boxWhisker"');
+	const before = { ...structuredClone(BEFORE), chartType: 'boxWhisker' as const };
+	return { zip, book, xml, before, part: 'ppt/charts/chartEx1.xml' };
+}
+
+it('synchronizes cache values and structural growth with the embedded workbook', async () => {
+	const { zip, book, xml, before, part } = await packageFixture();
+	const after = structuredClone(before);
+	after.series.push({ name: 'Second', values: [7, 8] });
+	const expanded = await saveChartExPackageThroughNeutral(zip, part, xml, before, after);
+	const bytes = await zip.file('ppt/embeddings/data.xlsx')!.async('uint8array');
+	const original = await JSZip.loadAsync(book),
+		result = await JSZip.loadAsync(bytes);
+	expect(await result.file('xl/worksheets/sheet1.xml')!.async('string')).toBe(
+		await original.file('xl/worksheets/sheet1.xml')!.async('string'),
+	);
+	expect((await loadXlsx(bytes)).sheets).toHaveLength(2);
+	expect(
+		chartExSpaceDataSheet(parseChartExSpace(expanded!).chartExSpace).series[1]!.values,
+	).toEqual([7, 8]);
+	expect(expanded).toContain('ChartExData');
+});
+
+it('refuses external data edits atomically while allowing a layout-only change', async () => {
+	const { zip, xml, before, part, book } = await packageFixture();
+	const rels = 'ppt/charts/_rels/chartEx1.xml.rels';
+	zip.file(
+		rels,
+		(await zip.file(rels)!.async('string')).replace(
+			'Target="../embeddings/data.xlsx"',
+			'TargetMode="External" Target="https://example.test/data.xlsx"',
+		),
+	);
+	const after = structuredClone(before);
+	after.series[0]!.values[0] = 4;
+	await expect(saveChartExPackageThroughNeutral(zip, part, xml, before, after)).rejects.toThrow(
+		'local embedded',
+	);
+	expect(await zip.file('ppt/embeddings/data.xlsx')!.async('uint8array')).toEqual(book);
+	const layout = { ...structuredClone(before), chartType: 'treemap' as const };
+	expect(await saveChartExPackageThroughNeutral(zip, part, xml, before, layout)).toContain(
+		'layoutId="treemap"',
+	);
+});
+
+it('reports original gallery orphan sources to the PowerPoint caller', async () => {
+	const handler = new PptxHandler();
+	const bytes = readFileSync(
+		path.join(import.meta.dirname, '../../__tests__/fixtures/e2e/chart-gallery.pptx'),
+	);
+	const data = await handler.load(
+		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+	);
+	const slide = data.slides.find((slide) =>
+		slide.elements.some(
+			(element) => (element as ChartPptxElement).chartData?.chartType === 'waterfall',
+		),
+	)!;
+	const element = slide.elements.find(
+		(element) => (element as ChartPptxElement).chartData?.chartType === 'waterfall',
+	) as ChartPptxElement;
+	element.chartData!.series[0]!.values[0] = 123;
+	slide.isDirty = true;
+	await expect(handler.save(data.slides)).rejects.toThrow('no embedded workbook');
+});
 
 describe('saveChartExPartThroughNeutral', () => {
 	it('saves claimed edits and keeps every other byte (formulas, ids, empty-element form)', () => {
@@ -64,8 +151,8 @@ describe('saveChartExPartThroughNeutral', () => {
 		const coloured = edited((chart) => {
 			chart.series[0]!.color = '#FF0000';
 		});
-		expect(planChartExNeutralSave(BEFORE, coloured)).toBeUndefined();
-		expect(saveChartExPartThroughNeutral(PART, BEFORE, coloured)).toBeUndefined();
+		expect(planChartExNeutralSave(BEFORE, coloured)).toBeDefined();
+		expect(saveChartExPartThroughNeutral(PART, BEFORE, coloured)).toContain('FF0000');
 		const added = edited((chart) => {
 			chart.series.push({ name: 'More', values: [1] });
 		});
@@ -81,5 +168,55 @@ describe('saveChartExPartThroughNeutral', () => {
 			),
 		).toBeUndefined();
 		expect(planChartExNeutralSave(BEFORE, structuredClone(BEFORE))).toEqual([]);
+	});
+	it('switches supported families without regenerating producer metadata or hierarchy', () => {
+		const xml = PART.replace('layoutId="funnel"', 'layoutId="treemap"')
+			.replace('type="val"', 'type="size"')
+			.replace(
+				'</cx:strDim>',
+				'<cx:lvl ptCount="2"><cx:pt idx="0">Parent</cx:pt><cx:pt idx="1">Parent</cx:pt></cx:lvl></cx:strDim>',
+			);
+		const before = {
+			...structuredClone(BEFORE),
+			chartType: 'treemap' as const,
+			categoryLevels: [
+				['A', 'B'],
+				['Parent', 'Parent'],
+			],
+		};
+		const after = {
+			...structuredClone(before),
+			chartType: 'sunburst' as const,
+			categories: ['Leaf', 'B'],
+		};
+		const written = saveChartExPartThroughNeutral(xml, before, after)!;
+		expect(written).toContain('uniqueId="{U}"');
+		const space = parseChartExSpace(written).chartExSpace;
+		expect(space.plotArea.series[0]!.layoutId).toBe('sunburst');
+		expect(space.chartData.data[0]!.dimensions[0]!.levels[1]!.points[0]!.value).toBe('Parent');
+		expect(space.chartData.data[0]!.dimensions[0]!.levels[0]!.points[0]!.value).toBe('Leaf');
+	});
+	it('adds independent box-whisker series and applies family options through shared operations', () => {
+		const before = { ...structuredClone(BEFORE), chartType: 'boxWhisker' as const };
+		const after = structuredClone(before);
+		after.series[0]!.boxWhiskerOptions = { showMeanLine: true, quartileMethod: 'inclusive' };
+		after.series.push({ name: 'New', values: [7, 8], color: '#123456' });
+		const xml = saveChartExPartThroughNeutral(
+			PART.replace('layoutId="funnel"', 'layoutId="boxWhisker"'),
+			before,
+			after,
+		)!;
+		const space = parseChartExSpace(xml).chartExSpace;
+		expect(space.plotArea.series).toHaveLength(2);
+		expect(space.chartData.data).toHaveLength(2);
+		expect(space.plotArea.series[0]!.layoutProperties!.visibility!.meanLine).toBe(true);
+		expect(space.chartData.data[1]!.dimensions[1]!.levels[0]!.points.map((p) => p.value)).toEqual([
+			'7',
+			'8',
+		]);
+		expect(space.plotArea.series[1]!.spPr!.fill).toMatchObject({
+			kind: 'solid',
+			color: { value: '123456' },
+		});
 	});
 });
