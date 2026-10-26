@@ -11,6 +11,7 @@ import type {
 	GoogleFontsOption,
 	ConnectionStatus,
 	PowerPointViewerAPI,
+	PptxLoadLimits,
 	ThemeCatalogEntry,
 	RibbonAddInTab,
 	ToolbarActionId,
@@ -145,6 +146,15 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * A change applies from the next load.
 	 */
 	allowExternalContent?: boolean;
+	/**
+	 * Bounds on the work loading a deck may do, for hosts that show untrusted
+	 * decks: `maxInputBytes`, `maxUncompressedBytes`, `maxEntries`, `maxSlides`
+	 * and `maxShapes` (see `PptxLoadLimits`). Unset keeps the core defaults
+	 * (500 MiB inflated, 65,536 ZIP entries, no other limit). A deck over a
+	 * limit shows the load-error screen with the limit and the deck's value.
+	 * A change applies from the next load.
+	 */
+	limits?: PptxLoadLimits;
 	/** Show the thumbnail sidebar. Default true. */
 	showThumbnails?: boolean;
 	/** Show the navigation/zoom toolbar. Default true. */

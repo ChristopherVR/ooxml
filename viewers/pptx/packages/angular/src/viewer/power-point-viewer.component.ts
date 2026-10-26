@@ -62,7 +62,7 @@ import {
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
-import type { GoogleFontsOption } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	InlineTextDraft,
@@ -1717,6 +1717,15 @@ export class PowerPointViewerComponent
 	 */
 	readonly allowExternalContent = input<boolean | undefined>(undefined);
 	/**
+	 * Bounds on the work loading a deck may do, for hosts that show untrusted
+	 * decks: `maxInputBytes`, `maxUncompressedBytes`, `maxEntries`, `maxSlides`
+	 * and `maxShapes` (see `PptxLoadLimits`). Unset keeps the core defaults
+	 * (500 MiB inflated, 65,536 ZIP entries, no other limit). A deck over a
+	 * limit shows the load-error screen with the limit and the deck's value.
+	 * A change applies from the next load.
+	 */
+	readonly limits = input<PptxLoadLimits | undefined>(undefined);
+	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
 	 * and read-only banners, the mobile toolbar and the status bar. Default
 	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
@@ -3069,6 +3078,7 @@ export class PowerPointViewerComponent
 			},
 		});
 		this.loader.bindHostAllowExternalContent(() => this.allowExternalContent());
+		this.loader.bindHostLimits(() => this.limits());
 		this.loader.bindPendingInlineEdit(() => {
 			if (!this.canEdit()) {
 				return undefined;

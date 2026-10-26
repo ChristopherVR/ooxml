@@ -57,6 +57,7 @@ export function toViewerStateOptions(
 		getInitialSlide: () => resolveViewerRootOptions(getProps()).initialSlide,
 		getGoogleFonts: () => getProps().googleFonts,
 		getAllowExternalContent: () => getProps().allowExternalContent,
+		getLimits: () => getProps().limits,
 		getSmartArt3D: () => getProps().smartArt3D ?? false,
 		getSurfaceChart3D: () => getProps().surfaceChart3D ?? false,
 		getBarChart3D: () => getProps().barChart3D ?? false,

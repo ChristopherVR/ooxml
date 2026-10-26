@@ -2,6 +2,7 @@ import {
 	compatibilityWarningToasts,
 	describeFontEmbedding,
 	partitionTemplateElements,
+	pptxLoadErrorMessage,
 	readOnlyRecommendation,
 	reduceReadOnlySession,
 	resolveAuthoredCustomShowId,
@@ -122,6 +123,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			const buffer = await resolveSourceToBuffer(source);
 			const loaded = await loadPresentation(buffer, {
 				allowExternalImages: deps.getAllowExternalContent?.(),
+				limits: options.limits,
 			});
 			if (token !== loadToken) {
 				revokeBlobUrls(loaded.blobUrls);
@@ -239,9 +241,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			const message =
 				error instanceof EncryptedFileError
 					? t('pptx.security.currentlyProtected')
-					: error instanceof Error
-						? error.message
-						: String(error);
+					: pptxLoadErrorMessage(error, t);
 			store.set({ loading: false, error: message });
 			options.onError?.(message, error);
 		}

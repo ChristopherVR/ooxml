@@ -14,10 +14,13 @@
 		CollaborationConfig,
 		DocumentStorage,
 		ConnectionStatus,
+		PptxLoadLimits,
 		ViewerAutosaveStatus,
 		ViewportFitOptions,
 	} from 'ooxml-ui/pptx';
 	import type { PptxCoreProperties } from 'pptx-viewer-core';
+
+	import type { Translator } from '../../i18n/translator';
 
 	import { createViewerState } from './create-viewer-state.svelte';
 	import type { ViewerStateBag } from './create-viewer-state-types';
@@ -42,6 +45,8 @@
 		getCollaboration,
 		getEditable,
 		getSource,
+		limits,
+		t = (key: string) => key,
 	}: {
 		onready: (state: ViewerStateBag) => void;
 		/** Optional deck bytes, so a test can exercise the real load pipeline. */
@@ -67,6 +72,10 @@
 		getCollaboration?: () => CollaborationConfig | undefined;
 		getEditable?: () => boolean;
 		getSource?: () => Uint8Array | undefined;
+		/** The host `limits` prop, passed through verbatim. */
+		limits?: PptxLoadLimits;
+		/** The locale-bound translator (defaults to echoing the key). */
+		t?: Translator;
 	} = $props();
 
 	const state = createViewerState({
@@ -77,7 +86,10 @@
 		getStorage: () => storage,
 		getAuthorName: () => authorName,
 		getInitialSlide: () => 0,
-		t: (key: string) => key,
+		getLimits: () => limits,
+		get t() {
+			return t;
+		},
 		getSmartArt3D: () => false,
 		getSurfaceChart3D: () => false,
 		getBarChart3D: () => false,

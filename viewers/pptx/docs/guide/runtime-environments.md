@@ -45,6 +45,20 @@ The value applies to every deck the viewer opens, including decks opened for Com
 
 In a collaboration session, slides arrive from peers already parsed, and the switch is not applied to them again: a peer whose viewer allows external content can share a slide that references a linked URL. Use the same `allowExternalContent` value for every participant when this matters.
 
+### Load limits {#load-limits}
+
+A host that opens decks it does not trust (uploads from the public, attachments) can bound the work one deck may cause with the `limits` option, available on every binding and passed straight to `PptxHandler.load`:
+
+| Field                  | Default  | Bounds                                                                                         |
+| ---------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `maxInputBytes`        | no limit | The file as given to the viewer, checked before it is opened.                                  |
+| `maxUncompressedBytes` | 500 MiB  | The archive once inflated, checked from the declared sizes and again while each part is read.  |
+| `maxEntries`           | 65,536   | The parts (ZIP entries) in the archive; 65,536 is also the highest value accepted.             |
+| `maxSlides`            | no limit | The slides listed in `ppt/presentation.xml`, checked before any slide is parsed.               |
+| `maxShapes`            | no limit | The elements authored on the slides (group members included), counted as each slide is parsed. |
+
+Unset, or a field left out, keeps the default, so a viewer without `limits` behaves as before. A deck over a limit stops loading at that check and the viewer shows its load-error screen with a localized message that names the limit and the deck's value, for example "This presentation has 120 slides, more than the 100 this viewer accepts." A value that is not a positive finite number is rejected as an error rather than ignored. The limits apply to the deck the viewer opens (the `content` / `source` deck and File > Open), not to a file the user picks for Compare or Reuse Slides; a change applies from the next load. Without the viewer, pass the same object as `handler.load(buffer, { limits })` (see [Load options](../core/loading.md#load-options)).
+
 ### Run program actions (`ppaction://program`)
 
 PowerPoint's "Run program" action setting is parsed and round-tripped losslessly (the authored program path/command survives load and save unchanged), and the Action Settings dialog lets you view and edit it like any other action while editing. What a browser cannot do is what PowerPoint itself does when the action fires during a show: launch a local executable. No web platform API exists for that, by design (a page that could launch arbitrary local programs would be a critical security hole).

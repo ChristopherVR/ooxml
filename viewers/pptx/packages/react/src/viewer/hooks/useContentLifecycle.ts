@@ -2,6 +2,7 @@ import type {
 	CompatibilityWarningToast,
 	DocumentStorage,
 	GoogleFontsOption,
+	PptxLoadLimits,
 	ReadOnlyRecommendation,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxModifyVerifier, PptxSlide } from 'pptx-viewer-core';
@@ -66,6 +67,8 @@ export interface UseContentLifecycleInput {
 	initialSlide?: number;
 	/** Forwarded to {@link useFontInjection}: the host `googleFonts` prop. */
 	googleFonts?: GoogleFontsOption;
+	/** Forwarded to {@link useLoadContent}: the host `limits` prop. */
+	limits?: PptxLoadLimits;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
 	setReadOnlyRecommendation: React.Dispatch<React.SetStateAction<ReadOnlyRecommendation>>;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
@@ -117,6 +120,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		allowExternalImages,
 		initialSlide,
 		googleFonts,
+		limits,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,
@@ -170,6 +174,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		onContentApplied,
 		allowExternalImages,
 		initialSlide,
+		limits,
 	});
 
 	// Sync the shared handler ref for action sounds. `state.loading` is not read

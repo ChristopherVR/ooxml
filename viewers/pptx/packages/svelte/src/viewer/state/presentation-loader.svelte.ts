@@ -1,8 +1,9 @@
-import type { CanvasSize, CollabLoadOrigin, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { CanvasSize, CollabLoadOrigin, LoadLimitTranslate, SlideSizeEmu } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	createPresentationLoadResources,
+	pptxLoadErrorMessage,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -151,16 +152,23 @@ export class PresentationLoader {
 	loadOrigin: CollabLoadOrigin = $state('user');
 
 	/**
-	 * Options-derived load flags for `PptxHandler.load` (currently just Trust
-	 * Center > "Allow external content", which core reads as
-	 * `allowExternalImages`). The composition root overwrites this once
+	 * Options-derived load flags for `PptxHandler.load`: Trust Center > "Allow
+	 * external content", which core reads as `allowExternalImages`, and the
+	 * host `limits` prop. The composition root overwrites this once
 	 * `ViewerOptionsState` exists, so every load call site (open file, restore
 	 * version, collaboration bootstrap, ...) picks up the live Trust Center
 	 * value without threading options through each of them individually. Left
 	 * as its safe default (external images blocked) for callers that never set
 	 * it, e.g. this class used stand-alone in a test.
 	 */
-	getLoadOptions: () => Pick<PptxHandlerLoadOptions, 'allowExternalImages'> = () => ({});
+	getLoadOptions: () => Pick<PptxHandlerLoadOptions, 'allowExternalImages' | 'limits'> = () => ({});
+
+	/**
+	 * Translates the load-error text for a deck over a load limit (host
+	 * `limits` prop). Set by the composition root; left unset, the error keeps
+	 * the core's English message.
+	 */
+	translate: LoadLimitTranslate | undefined = undefined;
 
 	/** Parse a `.pptx` buffer into reactive viewer state. */
 	async load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
@@ -276,7 +284,11 @@ export class PresentationLoader {
 				if (err instanceof EncryptedFileError) {
 					this.isEncrypted = true;
 				} else {
-					this.error = err instanceof Error ? err.message : String(err);
+					this.error = this.translate
+						? pptxLoadErrorMessage(err, this.translate)
+						: err instanceof Error
+							? err.message
+							: String(err);
 				}
 			}
 		} finally {

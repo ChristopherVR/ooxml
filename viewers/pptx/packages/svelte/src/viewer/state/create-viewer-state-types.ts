@@ -10,6 +10,7 @@ import type {
 	FieldSubstitutionContext,
 	GoogleFontsOption,
 	MobileSheetKey,
+	PptxLoadLimits,
 	ResolvedCustomization,
 	ViewerAutosaveStatus,
 	ViewerMode,
@@ -76,6 +77,8 @@ export interface CreateViewerStateOptions {
 	getGoogleFonts?: () => GoogleFontsOption | undefined;
 	/** Host `allowExternalContent` prop: overrides the Trust Center setting for every load when set. */
 	getAllowExternalContent?: () => boolean | undefined;
+	/** Host `limits` prop: the load limits passed to every load (unset keeps the core defaults). */
+	getLimits?: () => PptxLoadLimits | undefined;
 	/** Already locale-bound translator; propagated to descendants via context. */
 	t: Translator;
 	getSmartArt3D: () => boolean;

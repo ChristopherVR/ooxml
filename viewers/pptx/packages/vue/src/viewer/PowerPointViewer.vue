@@ -348,6 +348,9 @@ const deck = useLoadContent(() => activeContent.value, {
 	// this entirely, so the toggle changed nothing regardless of its value.
 	getAllowExternalImages: () =>
 		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
+	// Host load limits: read per load, so changing the prop never reloads the deck.
+	getLimits: () => props.limits,
+	translate: (key, params) => t(key, params),
 	// File > Fonts. `fontEmbedding` is declared further down (it needs the
 	// loaded deck's embedded fonts), so this getter reads it lazily at save
 	// time, exactly like `getSaveIntent` reads the password.

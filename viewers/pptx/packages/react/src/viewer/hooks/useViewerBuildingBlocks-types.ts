@@ -2,6 +2,7 @@ import type {
 	CollaborationInput,
 	CollaborationShellState,
 	GoogleFontsOption,
+	PptxLoadLimits,
 	ToolbarActionId,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
@@ -40,6 +41,12 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	 * setting; unset keeps the user's choice. A change applies from the next load.
 	 */
 	allowExternalContent?: boolean;
+	/**
+	 * As `PowerPointViewer`'s `limits`: bounds on loading a deck (input and
+	 * inflated size, ZIP entries, slides, shapes); unset keeps the core
+	 * defaults. A change applies from the next load.
+	 */
+	limits?: PptxLoadLimits;
 	/** Whether the built-in autosave-to-localStorage recovery timer is active. Defaults to true. */
 	autosaveEnabled?: boolean;
 	/** Display name used as the author for comments. */

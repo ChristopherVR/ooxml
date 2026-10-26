@@ -1,5 +1,5 @@
 import type { CollaborationState } from 'ooxml-core/collab';
-import type { DocumentStorage, GoogleFontsOption } from 'ooxml-ui/pptx';
+import type { DocumentStorage, GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
@@ -257,6 +257,15 @@ export interface PowerPointViewerProps {
 	 * A change applies from the next load.
 	 */
 	allowExternalContent?: boolean;
+	/**
+	 * Bounds on the work loading a deck may do, for hosts that show untrusted
+	 * decks: `maxInputBytes`, `maxUncompressedBytes`, `maxEntries`, `maxSlides`
+	 * and `maxShapes` (see `PptxLoadLimits`). Unset keeps the core defaults
+	 * (500 MiB inflated, 65,536 ZIP entries, no other limit). A deck over a
+	 * limit shows the load-error screen with the limit and the deck's value.
+	 * A change applies from the next load.
+	 */
+	limits?: PptxLoadLimits;
 	/**
 	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
 	 * and read-only banners, the mobile toolbar and the status bar. Default
