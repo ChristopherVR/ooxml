@@ -6,6 +6,10 @@ import { parseChartExSpace } from '../ex/parse';
 import { applyChartExEditIntent } from './chartex-intent';
 import { editChartExAxis } from './chartex-axis';
 import { editChartExPointLabel } from './chartex-point-label';
+import { editChartExStyle } from './chartex-style';
+import { editChartSpace } from './draft';
+import { editChartTextBody } from './text';
+import { chartTextBodyFromXml } from '../write-shape';
 const source = () =>
 	createChartExSpace(
 		{ categories: ['A', 'B'], series: [{ name: 'Sales', values: [1, 2] }] },
@@ -70,4 +74,26 @@ it('patches axis semantics and point defaults/hidden state without replacing sib
 	expect(() => editChartExAxis(axis, 1, { max: -1 })).toThrow('maximum');
 	expect(() => editChartExAxis(axis, 1, { majorUnit: 0 })).toThrow();
 	expect(() => editChartExAxis(axis, 0, { min: 0 })).toThrow('value axis');
+});
+it('projects and copies rich axis title fonts while retaining authored text and theme metadata', () => {
+	const space = source();
+	const rich = chartTextBodyFromXml(
+		'<a:bodyPr/><a:p><a:r><a:rPr sz="1200" b="0"><a:solidFill><a:schemeClr val="accent1"/></a:solidFill><a:latin typeface="Producer"/></a:rPr><a:t>Authored axis</a:t></a:r></a:p>',
+	);
+	space.plotArea.axes[1]!.title = { tx: { rich } };
+	const edited = editChartExStyle(space, (snapshot) =>
+		editChartSpace(snapshot, (draft) => {
+			const title = draft.plotArea.axes[1]!.title!;
+			title.tx!.rich = editChartTextBody(title.tx!.rich, { sizePt: 24, bold: true });
+			title.txPr = editChartTextBody(title.txPr, { sizePt: 24, bold: true });
+		}),
+	);
+	const title = edited.plotArea.axes[1]!.title!;
+	expect(title.tx!.rich!.text).toBe('Authored axis');
+	expect(title.tx!.rich!.sourceXml).toContain('sz="2400"');
+	expect(title.tx!.rich!.sourceXml).toContain('b="1"');
+	expect(title.tx!.rich!.sourceXml).toContain('typeface="Producer"');
+	expect(title.tx!.rich!.sourceXml).toContain('schemeClr val="accent1"');
+	expect(title.txPr!.sourceXml).toContain('sz="2400"');
+	expect(chartExDataChanged(space, edited)).toBe(false);
 });

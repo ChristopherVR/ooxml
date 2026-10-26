@@ -60,6 +60,16 @@ export function chartExStyleSpace(space: ChartExSpace): ChartSpace {
 				kind: axis.scaling?.kind ?? 'val',
 				scaling: {},
 				...styles(axis),
+				...(axis.title
+					? {
+							title: {
+								...styles(axis.title),
+								...(axis.title.tx?.rich
+									? { tx: { rich: axis.title.tx.rich, text: axis.title.tx.rich.text } }
+									: {}),
+							},
+						}
+					: {}),
 				...(axis.id === undefined ? {} : { id: axis.id }),
 				majorGridlines: !!axis.majorGridlines,
 				minorGridlines: !!axis.minorGridlines,
@@ -109,6 +119,10 @@ export function editChartExStyle(
 			const edited = after.plotArea.axes[index];
 			if (!edited) return;
 			copyStyle(axis, edited);
+			if (axis.title && edited.title) {
+				copyStyle(axis.title, edited.title);
+				if (edited.title.tx?.rich) axis.title.tx = { ...axis.title.tx, rich: edited.title.tx.rich };
+			}
 			for (const key of ['majorGridlines', 'minorGridlines'] as const) {
 				const shape =
 					edited[key === 'majorGridlines' ? 'majorGridlinesSpPr' : 'minorGridlinesSpPr'];
