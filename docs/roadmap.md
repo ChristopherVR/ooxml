@@ -2,6 +2,10 @@
 
 Where the project stands and what comes next. The repository layout and the way of working are described in the [repository README](../.github/README.md) and in [AGENTS.md](../AGENTS.md).
 
+The active implementation order and acceptance criteria for shared chart, SmartArt and DrawingML
+parity are tracked in [Shared Office parity delivery](office-shared-parity-delivery.md). It separates
+extraction from consumer integration, rendering fidelity and native Office validation.
+
 ## Done
 
 - **Shared areas:** `xml`, `opc`, `units`, `color`, `geometry`, `drawingml`, `diagram` (SmartArt), `chart` (model, parser, writer and SVG painter), `digest`, `crypto` (package encryption), `math`, `text`, `i18n`, `ribbon`, `collab` (Yjs real-time collaboration), `teams` and `automation`. `AGENTS.md` has the authoritative list.
