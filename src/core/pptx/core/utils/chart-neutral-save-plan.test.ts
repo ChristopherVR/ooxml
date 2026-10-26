@@ -230,11 +230,40 @@ describe('saveChartPartThroughNeutral: series data', () => {
 		expect(save((c) => (c.title = 'Revenue'))!.workbookWrites).toEqual([]);
 	});
 
-	it('leaves added series and multi-level or date categories to the object-tree writers', () => {
+	it('adds a series through core while leaving unclaimed multi-level category edits alone', () => {
 		const added = edited((c) => c.series.push({ name: 'New', values: [1, 2] }));
-		expect(planNeutralChartSave(before(), added)).toBeUndefined();
+		const saved = saveChartPartThroughNeutral(PART, before(), added)!;
+		expect(series(saved.xml).values?.cache?.points[0]!.value).toBe('4.4000000000000004');
+		expect(parseChartSpace(saved.xml).chartSpace.plotArea.groups[0]!.series[1]).toMatchObject({
+			index: 4,
+			tx: { text: 'New' },
+			values: {
+				cache: {
+					points: [
+						{ index: 0, value: '1' },
+						{ index: 1, value: '2' },
+					],
+				},
+			},
+		});
 		const levels = { ...before(), categoryLevels: [['A', 'B']] };
 		expect(planNeutralChartSave(levels, { ...levels, categories: ['X', 'Y'] })).toBeUndefined();
+	});
+
+	it('removes a series by identity while keeping the surviving source and index', () => {
+		const original = before();
+		original.series.push({ name: 'Other', idx: 9, values: [7, 8] });
+		const model = parseChartSpace(PART).chartSpace;
+		const other = structuredClone(model.plotArea.groups[0]!.series[0]!);
+		other.index = 9;
+		other.order = 9;
+		model.plotArea.groups[0]!.series.push(other);
+		const next = { ...original, series: [original.series[1]!] };
+		const saved = saveChartPartThroughNeutral(writeChartSpace(model), original, next)!;
+		const remaining = parseChartSpace(saved.xml).chartSpace.plotArea.groups[0]!.series;
+		expect(remaining).toHaveLength(1);
+		expect(remaining[0]!.index).toBe(9);
+		expect(remaining[0]!.values!.cache!.points[0]!.value).toBe('4.4000000000000004');
 	});
 });
 

@@ -36,7 +36,8 @@ const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = 
 	'title text': { parts: 75, xml: 75, model: 75 },
 	'title hidden': { parts: 75, xml: 75, model: 75 },
 	'legend position': { parts: 75, xml: 75, model: 75 },
-	'legend hidden': { parts: 75, xml: 75, model: 75 },
+	// Hiding an already absent legend is a no-op: keep the authored bar3D c:shape ordering.
+	'legend hidden': { parts: 75, xml: 74, model: 75 },
 	'value axis scaling': { parts: 51, xml: 51, model: 51 },
 	'value axis hidden': { parts: 51, xml: 51, model: 51 },
 	'value axis number format': { parts: 51, xml: 51, model: 51 },

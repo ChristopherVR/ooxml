@@ -109,6 +109,7 @@ import type { PptxChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import { collectChartWorkbookWrite } from '../../utils/chart-xlsx-writer';
 import { saveChartExPartThroughNeutral } from '../../utils/chart-ex-neutral-save';
 import { saveChartPartThroughNeutral } from '../../utils/chart-neutral-save';
+import { prepareNeutralChartWorkbook } from './chart-neutral-workbook-save';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
 import { saveChartExternalWorkbookUpdates } from './chart-external-workbook-save';
@@ -434,12 +435,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						)
 					: undefined;
 				if (neutralSave) {
+					const prepared = await prepareNeutralChartWorkbook(
+						this.zip,
+						chartData,
+						neutralSave,
+						(base, target) => this.resolveImagePath(base, target),
+					);
 					await this.commitChartPart(
 						chartPartPath,
 						slidePath,
 						chartData,
-						neutralSave.workbookWrites,
-						neutralSave.xml,
+						prepared.workbookWrites,
+						prepared.xml,
 					);
 					continue;
 				}

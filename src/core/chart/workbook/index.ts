@@ -12,3 +12,4 @@ export { sharedStringTexts, syncWorksheetTables } from './tables';
 export { validateAtomicChartWorkbookWrites } from './validation';
 
 export * from './append-sheet';
+export * from './rebase-data';

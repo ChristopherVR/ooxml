@@ -3,8 +3,8 @@
  * (docs/agnostic-core-plan.md, chart step C3): the part as stored is read by
  * `parseChartSpace`, the edits planned by `planNeutralChartSave` are applied
  * with the `chart/edit` operations and the result is written by
- * `writeChartSpace`, which round-trips everything the model holds byte for
- * byte. A part the neutral parser reports anything unmodelled in, or an edit
+ * the shared source-backed writer, retaining no-op bytes and carried top-level children.
+ * A part the neutral parser reports content it cannot preserve in, or an edit
  * no family claims yet, returns `undefined` so the caller keeps the
  * object-tree writers for it.
  *
@@ -24,6 +24,8 @@ import type { PptxChartWorkbookWrite } from './chart-xlsx-writer';
 
 export interface NeutralChartSave {
 	xml: string;
+	/** Rebase these caches atomically with a new embedded worksheet before committing the part. */
+	workbookModel?: ChartSpace;
 	/** The embedded-workbook writes of every series, as the object-tree save collects them. */
 	workbookWrites: PptxChartWorkbookWrite[];
 }
@@ -86,5 +88,6 @@ export function saveChartPartThroughNeutral(
 	return {
 		xml: writeChartSpaceOverSource(xml, space),
 		workbookWrites: plan.seriesData ? workbookWrites(space, after) : [],
+		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }
