@@ -221,7 +221,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				continue;
 			}
 
-			const data = await file.async('string');
+			const data = (await this.readPartText(entry)) ?? '';
 
 			// Try to read associated itemProps file
 			const propsPath = `customXml/itemProps${itemId}.xml`;
@@ -230,7 +230,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			let schemaUri: string | undefined;
 
 			if (propsFile) {
-				properties = await propsFile.async('string');
+				properties = (await this.readPartText(propsPath)) ?? '';
 				// Extract schema URI from ds:schemaRef if present
 				try {
 					const propsData = this.parser.parse(properties) as XmlObject;
@@ -258,7 +258,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const relsFile = this.zip.file(relsPath);
 			let rels: string | undefined;
 			if (relsFile) {
-				rels = await relsFile.async('string');
+				rels = await this.readPartText(relsPath);
 			}
 
 			parts.push({ id: itemId, data, schemaUri, properties, rels });
@@ -275,7 +275,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		sectionBySlideId: Map<string, { sectionId: string; sectionName: string }>;
 		orderedSections: PptxSection[];
 	}> {
-		const presentationXml = await this.zip.file('ppt/presentation.xml')?.async('string');
+		const presentationXml = await this.readPartText('ppt/presentation.xml');
 		if (!presentationXml) {
 			throw new Error('Invalid PPTX: presentation.xml not found');
 		}

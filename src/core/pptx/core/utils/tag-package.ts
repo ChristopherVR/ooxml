@@ -1,5 +1,6 @@
 import type JSZip from 'jszip';
 
+import { readPartText, readPartXml } from '../core/runtime/load-part-reader';
 import type { PptxTagCollection, XmlObject } from '../types';
 import { safeResolveZipPath } from './safe-path';
 import { removeTagsOwningElement, upsertTagsOwningElement } from './tag-package-owning-element';
@@ -24,8 +25,8 @@ export async function discoverTagCollections(
 		if (!sourcePartPath) {
 			continue;
 		}
-		const data = codec.parse(await relFile.async('string'));
-		const root = data['Relationships'] as XmlObject | undefined;
+		const data = await readPartXml(zip, codec, relFile.name);
+		const root = data?.['Relationships'] as XmlObject | undefined;
 		for (const relationship of ensureArray(root?.['Relationship'])) {
 			if (String(relationship['@_Type'] ?? '') !== TAG_RELATIONSHIP_TYPE) {
 				continue;
@@ -165,7 +166,7 @@ async function readTagCollection(
 	codec: Pick<XmlCodec, 'parse'>,
 	path: string,
 ): Promise<PptxTagCollection | undefined> {
-	const xml = await zip.file(path)?.async('string');
+	const xml = await readPartText(zip, path);
 	if (!xml) {
 		return undefined;
 	}

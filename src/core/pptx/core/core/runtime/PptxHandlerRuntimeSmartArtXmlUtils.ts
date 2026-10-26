@@ -34,7 +34,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		const partPath = this.resolveImagePath(slidePath, target);
-		const xmlString = await this.zip.file(partPath)?.async('string');
+		const xmlString = await this.readPartText(partPath);
 		if (!xmlString) {
 			return undefined;
 		}

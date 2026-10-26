@@ -14,6 +14,7 @@
 import type { XMLParser } from 'fast-xml-parser';
 import type JSZip from 'jszip';
 
+import { readPartText, readPartXml } from '../core/runtime/load-part-reader';
 import type { PptxElement, XmlObject } from '../types';
 import { safeResolveZipPath } from './safe-path';
 import { parseVmlElements } from './vml-parser';
@@ -44,12 +45,10 @@ export async function loadLegacyVmlDrawings(
 	relsPath: string,
 ): Promise<PptxElement[]> {
 	try {
-		const relsXml = await zip.file(relsPath)?.async('string');
-		if (!relsXml) {
+		const relsData = await readPartXml(zip, parser, relsPath);
+		if (!relsData) {
 			return [];
 		}
-
-		const relsData = parser.parse(relsXml) as XmlObject;
 		const relationships = ensureArray(
 			(relsData['Relationships'] as XmlObject | undefined)?.['Relationship'],
 		);
@@ -77,7 +76,7 @@ export async function loadLegacyVmlDrawings(
 				continue;
 			}
 
-			const vmlXml = await zip.file(resolved)?.async('string');
+			const vmlXml = await readPartText(zip, resolved);
 			if (!vmlXml) {
 				continue;
 			}

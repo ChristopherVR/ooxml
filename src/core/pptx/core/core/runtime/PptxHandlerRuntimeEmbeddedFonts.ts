@@ -74,12 +74,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	private async loadPresentationFontRels(): Promise<Map<string, string>> {
 		const map = new Map<string, string>();
 		try {
-			const relsXml = await this.zip.file('ppt/_rels/presentation.xml.rels')?.async('string');
-			if (!relsXml) {
+			const relsData = await this.readPartXml('ppt/_rels/presentation.xml.rels');
+			if (!relsData) {
 				return map;
 			}
-
-			const relsData = this.parser.parse(relsXml) as XmlObject;
 			const rels = this.ensureArray(
 				xmlChild(relsData, 'Relationships')?.Relationship,
 			) as XmlObject[];

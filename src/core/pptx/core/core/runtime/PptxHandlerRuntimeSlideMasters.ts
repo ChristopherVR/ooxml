@@ -158,7 +158,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			for (const file of masterFiles) {
 				const path = file.name;
-				const xml = await file.async('string');
+				const xml = (await this.readPartText(path)) ?? '';
 				const data = this.parser.parse(xml) as XmlObject;
 				const sldMaster = data?.['p:sldMaster'] as XmlObject | undefined;
 				if (!sldMaster) {
@@ -210,8 +210,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				);
 				const relsFile = this.zip.file(relsPath);
 				if (relsFile) {
-					const relsXml = await relsFile.async('string');
-					const relsData = this.parser.parse(relsXml) as XmlObject;
+					const relsData = await this.readPartXml(relsPath);
 					const rels = this.ensureArray(
 						xmlChild(relsData, 'Relationships')?.['Relationship'],
 					) as XmlObject[];
@@ -227,8 +226,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Layouts associated with this master
 				const layoutPaths: string[] = [];
 				if (relsFile) {
-					const relsXml = await relsFile.async('string');
-					const relsData = this.parser.parse(relsXml) as XmlObject;
+					const relsData = await this.readPartXml(relsPath);
 					const rels = this.ensureArray(
 						xmlChild(relsData, 'Relationships')?.['Relationship'],
 					) as XmlObject[];
@@ -278,7 +276,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 
 			const path = files[0].name;
-			const xml = await files[0].async('string');
+			const xml = (await this.readPartText(path)) ?? '';
 			const data = this.parser.parse(xml) as XmlObject;
 			const master = data?.['p:handoutMaster'] as XmlObject | undefined;
 			if (!master) {
@@ -315,7 +313,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 
 			const path = files[0].name;
-			const xml = await files[0].async('string');
+			const xml = (await this.readPartText(path)) ?? '';
 			const data = this.parser.parse(xml) as XmlObject;
 			const master = data?.['p:notesMaster'] as XmlObject | undefined;
 			if (!master) {
@@ -352,7 +350,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!layoutFile) {
 				return undefined;
 			}
-			const xml = await layoutFile.async('string');
+			const xml = (await this.readPartText(layoutPath)) ?? '';
 			const data = this.parser.parse(xml) as XmlObject;
 			const sldLayout = data?.['p:sldLayout'] as XmlObject | undefined;
 			if (!sldLayout) {

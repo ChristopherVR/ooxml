@@ -121,7 +121,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		let rawXmlStr: string | undefined;
 		try {
-			rawXmlStr = (await this.zip.file(slidePath)?.async('string')) ?? undefined;
+			rawXmlStr = await this.readPartText(slidePath);
 		} catch {
 			// Non-critical — will fall back to type-grouped order
 		}

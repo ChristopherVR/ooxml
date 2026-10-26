@@ -67,9 +67,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const chartDir = chartPartPath.substring(0, chartPartPath.lastIndexOf('/') + 1);
 			const chartFileName = chartPartPath.substring(chartPartPath.lastIndexOf('/') + 1);
 			const chartRelsPath = `${chartDir}_rels/${chartFileName}.rels`;
-			const chartRelsXml = await this.zip.file(chartRelsPath)?.async('string');
-			if (chartRelsXml) {
-				const chartRelsData = this.parser.parse(chartRelsXml) as XmlObject;
+			const chartRelsData = await this.readPartXml(chartRelsPath);
+			if (chartRelsData) {
 				const relsContainer = chartRelsData?.Relationships as XmlObject | undefined;
 				if (relsContainer?.Relationship) {
 					const rels = (
@@ -172,7 +171,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (drawingPath.length === 0) {
 				return undefined;
 			}
-			const drawingXml = await this.zip.file(drawingPath)?.async('string');
+			const drawingXml = await this.readPartText(drawingPath);
 			if (!drawingXml) {
 				return undefined;
 			}
@@ -196,12 +195,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const chartDir = chartPartPath.substring(0, chartPartPath.lastIndexOf('/') + 1);
 			const chartFileName = chartPartPath.substring(chartPartPath.lastIndexOf('/') + 1);
 			const chartRelsPath = `${chartDir}_rels/${chartFileName}.rels`;
-			const chartRelsXml = await this.zip.file(chartRelsPath)?.async('string');
-			if (!chartRelsXml) {
+			const chartRelsData = await this.readPartXml(chartRelsPath);
+			if (!chartRelsData) {
 				return [];
 			}
-
-			const chartRelsData = this.parser.parse(chartRelsXml) as XmlObject;
 			const relsContainer = chartRelsData?.Relationships as XmlObject | undefined;
 			if (!relsContainer?.Relationship) {
 				return [];

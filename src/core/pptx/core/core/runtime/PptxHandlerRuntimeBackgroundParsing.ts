@@ -478,7 +478,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (cached) {
 			return cached;
 		}
-		const xml = await this.zip.file(layoutPath)?.async('string');
+		const xml = await this.readPartText(layoutPath);
 		if (!xml) {
 			return undefined;
 		}
@@ -493,7 +493,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (cached) {
 			return cached;
 		}
-		const xml = await this.zip.file(masterPath)?.async('string');
+		const xml = await this.readPartText(masterPath);
 		if (!xml) {
 			return undefined;
 		}

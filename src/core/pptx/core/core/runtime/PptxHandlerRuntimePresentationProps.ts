@@ -37,13 +37,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected async parsePresentationProperties(): Promise<PptxPresentationProperties | undefined> {
 		try {
 			// First find presentationPr relationship
-			const relsXml = await this.zip.file('ppt/_rels/presentation.xml.rels')?.async('string');
-			if (!relsXml) {
+			const relsData = await this.readPartXml('ppt/_rels/presentation.xml.rels');
+			if (!relsData) {
 				return undefined;
 			}
-
-			const relsData = this.parser.parse(relsXml);
-			const rels = this.ensureArray(relsData?.Relationships?.Relationship);
+			const rels = this.ensureArray(
+				(relsData.Relationships as XmlObject | undefined)?.Relationship,
+			);
 			const prRel = rels.find(
 				(r: XmlObject) =>
 					String(r?.['@_Type'] || '').includes('presProps') ||
@@ -53,7 +53,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const prTarget = prRel ? String(prRel['@_Target'] || '') : 'presProps.xml';
 			const prPath = prTarget.startsWith('/') ? prTarget.substring(1) : `ppt/${prTarget}`;
 
-			const prXmlStr = await this.zip.file(prPath)?.async('string');
+			const prXmlStr = await this.readPartText(prPath);
 			if (!prXmlStr) {
 				return undefined;
 			}
@@ -118,7 +118,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 */
 	protected async parseViewProperties(): Promise<PptxViewProperties | undefined> {
 		try {
-			const viewPropsXml = await this.zip.file('ppt/viewProps.xml')?.async('string');
+			const viewPropsXml = await this.readPartText('ppt/viewProps.xml');
 			if (!viewPropsXml) {
 				return undefined;
 			}

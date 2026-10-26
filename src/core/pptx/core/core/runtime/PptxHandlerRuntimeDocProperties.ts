@@ -73,11 +73,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return true;
 	}
 
-	/** The text of a package part, or `undefined` when the package has no such part. */
-	private async readPartText(path: string): Promise<string | undefined> {
-		return this.zip.file(path)?.async('string');
-	}
-
 	/**
 	 * Parse extended (application) properties from `docProps/app.xml`.
 	 */
@@ -149,8 +144,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return [];
 		}
 
-		const relsXml = await relsFile.async('string');
-		const relsData = this.parser.parse(relsXml) as XmlObject;
+		const relsData = await this.readPartXml(relsPath);
+		if (!relsData) {
+			return [];
+		}
 		const relRoot = (relsData['Relationships'] || {}) as XmlObject;
 		const relationships = this.ensureArray(relRoot['Relationship']) as XmlObject[];
 
@@ -186,7 +183,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			try {
 				const file = this.zip.file(resolvedPath);
 				if (file) {
-					data = await file.async('string');
+					data = await this.readPartText(resolvedPath);
 				}
 			} catch {
 				// Non-critical — data may not be resolvable
@@ -278,9 +275,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 */
 	protected async parseTags(): Promise<PptxTagCollection[]> {
 		try {
-			return await discoverTagCollections(this.zip, {
-				parse: (xml) => this.parser.parse(xml) as XmlObject,
-			});
+			return await discoverTagCollections(this.zip, this.parser);
 		} catch (e) {
 			console.warn('Failed to parse tags:', e);
 			return [];

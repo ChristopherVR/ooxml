@@ -58,7 +58,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (existingRel?.target) {
 			drawingPath = this.resolveImagePath(chartPartPath, existingRel.target);
 			try {
-				const xml = await this.zip.file(drawingPath)?.async('string');
+				const xml = await this.readPartText(drawingPath);
 				if (xml) {
 					const root = this.parser.parse(xml) as XmlObject;
 					onDisk =
@@ -121,11 +121,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const slash = chartPartPath.lastIndexOf('/');
 		const relsPath = `${chartPartPath.slice(0, slash + 1)}_rels/${chartPartPath.slice(slash + 1)}.rels`;
 		try {
-			const xml = await this.zip.file(relsPath)?.async('string');
-			if (!xml) {
+			const tree = await this.readPartXml(relsPath);
+			if (!tree) {
 				return undefined;
 			}
-			const tree = this.parser.parse(xml) as XmlObject;
 			const root = tree['Relationships'] as XmlObject | undefined;
 			const rels = root?.['Relationship'];
 			const list: XmlObject[] =

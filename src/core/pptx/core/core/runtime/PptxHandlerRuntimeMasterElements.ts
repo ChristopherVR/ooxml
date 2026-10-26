@@ -107,7 +107,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			try {
 				let masterXmlObj = this.masterXmlMap.get(master.path);
 				if (!masterXmlObj) {
-					const xmlStr = await this.zip.file(master.path)?.async('string');
+					const xmlStr = await this.readPartText(master.path);
 					if (!xmlStr) {
 						continue;
 					}
@@ -206,7 +206,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				?.replace(/\.xml$/u, '') ?? masterPath;
 
 		try {
-			const masterXmlStr = await this.zip.file(masterPath)?.async('string');
+			const masterXmlStr = await this.readPartText(masterPath);
 			if (!masterXmlStr) {
 				return [];
 			}
