@@ -4,6 +4,7 @@ import { parseChartSpace, writeChartSpace } from '../../../chart/index';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
 import { saveChartPartThroughNeutral } from './chart-neutral-save';
+import { withChartElementFormat } from '../builders/sdk/chart-element-format-operations';
 
 const PART =
 	'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' +
@@ -42,6 +43,32 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('saves a real Format pane edit including its mirrored preview fields', () => {
+		const next = withChartElementFormat(
+			before(),
+			{ kind: 'chartArea' },
+			{
+				fill: { kind: 'solid', color: '#FF0000', transparency: 25 },
+				line: { kind: 'none' },
+				effects: { softEdge: 2 },
+			},
+		);
+		const saved = saveChartPartThroughNeutral(PART, before(), next)!;
+		expect(saved).toBeDefined();
+		expect(saved.xml).toContain('<a:alpha val="75000"/>');
+		expect(saved.xml).toContain('<a:softEdge rad="25400"/>');
+		expect(saved.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		expect(saved.workbookWrites).toEqual([]);
+	});
+	it('changes a chart family with its shared schema and axis conversion', () => {
+		const saved = save((chart) => {
+			chart.chartType = 'line3D';
+		})!;
+		const space = parseChartSpace(saved.xml).chartSpace;
+		expect(space.plotArea.groups[0]!.element).toBe('line3DChart');
+		expect(space.plotArea.axes.map((axis) => axis.kind)).toEqual(['cat', 'val', 'ser']);
+		expect(space.plotArea.groups[0]!.axisIds).toHaveLength(3);
+	});
 	it('edits and clears group geometry through the neutral schema policy', () => {
 		const original = { ...before(), barGapWidth: 150 };
 		const changed = { ...original, barGapWidth: 42 };
@@ -62,7 +89,7 @@ describe('planNeutralChartSave', () => {
 		expect(
 			planNeutralChartSave(
 				before(),
-				edited((c) => (c.chartType = 'line')),
+				edited((c) => (c.chartType = 'combo')),
 			),
 		).toBeUndefined();
 		const runs = edited((c) => (c.titleRuns = [{ text: 'Sales', italic: true }]));

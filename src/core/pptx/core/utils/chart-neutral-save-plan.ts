@@ -28,6 +28,9 @@ import { same, revertStyle } from './chart-neutral-save-common';
 import { planAxes } from './chart-neutral-save-axes';
 import { planNeutralGroupOptions } from './chart-neutral-save-groups';
 import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
+import { planNeutralChartType } from './chart-neutral-save-type';
+import { planNeutralChartFormats } from './chart-neutral-save-format';
+import { planNeutralFlatPaint } from './chart-neutral-save-flat-paint';
 import {
 	planNeutralChartLabels,
 	planNeutralChartSeriesColors,
@@ -137,12 +140,15 @@ export function planNeutralChartSave(
 	const edits: NeutralChartEdit[] = [];
 	const original = before;
 	before = planNeutralSeriesStructure(before, after, edits);
+	planNeutralChartType(before, probe, edits);
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planAxes(before, probe, edits);
 	planNeutralGroupOptions(before, probe, edits);
 	const seriesData = planSeriesData(before, probe, edits) || before !== original;
 	planNeutralChartLabels(before, probe, edits);
+	planNeutralChartFormats(before, probe, edits);
+	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
 	return same(probe, before)
 		? { edits, seriesData, ...(before !== original ? { rebuildWorkbook: true } : {}) }

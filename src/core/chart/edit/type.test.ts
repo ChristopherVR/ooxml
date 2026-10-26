@@ -97,6 +97,15 @@ describe('setChartType', () => {
 
 	it('rejects families it cannot build', () => {
 		expect(() => setChartType(columnChart(), { kind: 'stock' })).toThrow(RangeError);
-		expect(() => setChartType(columnChart(), { kind: 'line', is3D: true })).toThrow(RangeError);
+		const line = setChartType(columnChart(), { kind: 'line', is3D: true });
+		expect(line.plotArea.axes.map((axis) => axis.kind)).toEqual(['cat', 'val', 'ser']);
+		expect(roundTrip(line).plotArea.groups[0]!.element).toBe('line3DChart');
+		const surface = setChartType(setChartType(columnChart(), { kind: 'pie' }), {
+			kind: 'surface',
+			is3D: true,
+		});
+		expect(surface.plotArea.axes.map((axis) => axis.kind)).toEqual(['cat', 'val', 'ser']);
+		expect(new Set(surface.plotArea.axes.map((axis) => axis.id)).size).toBe(3);
+		roundTrip(surface);
 	});
 });

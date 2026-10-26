@@ -42,6 +42,8 @@ const SWITCHABLE: Readonly<Partial<Record<ChartGroupKind, boolean>>> = {
 	scatter: false,
 	radar: false,
 	bubble: false,
+	stock: false,
+	surface: true,
 };
 
 function elementFor(kind: ChartGroupKind, is3D: boolean): string {
@@ -92,6 +94,33 @@ function newGroup(base: ChartPlotGroup, target: ChartTypeTarget, series: ChartSp
 }
 
 /** The axes of the new group: the old group's primary pair, converted, or Excel's defaults. */
+function withSeriesAxis(space: ChartSpace, group: ChartPlotGroup, axes: ChartAxis[]): ChartAxis[] {
+	if (
+		(group.element === 'line3DChart' || group.kind === 'surface') &&
+		!axes.some((axis) => axis.kind === 'ser')
+	) {
+		const id =
+			Math.max(
+				0,
+				...[...space.plotArea.axes, ...axes].flatMap((axis) =>
+					axis.id === undefined ? [] : [axis.id],
+				),
+			) + 1;
+		axes.push({
+			kind: 'ser',
+			id,
+			crossAxisId: axes[1]!.id!,
+			position: 'b',
+			scaling: { orientation: 'minMax' },
+			majorGridlines: false,
+			minorGridlines: false,
+			tickLabelPosition: 'nextTo',
+			crosses: 'autoZero',
+		});
+	}
+	return axes;
+}
+
 function groupAxes(space: ChartSpace, base: ChartPlotGroup, group: ChartPlotGroup): ChartAxis[] {
 	if (!groupHasAxes(group.element)) return [];
 	const xy = isXYChartKind(group.kind);
@@ -104,7 +133,7 @@ function groupAxes(space: ChartSpace, base: ChartPlotGroup, group: ChartPlotGrou
 		const free = DEFAULT_CHART_AXIS_IDS.every((id) => !taken.has(id));
 		const top = Math.max(0, ...taken);
 		const ids: [number, number] = free ? [...DEFAULT_CHART_AXIS_IDS] : [top + 1, top + 2];
-		return defaultChartAxes(horizontalBars(group), xy, ids);
+		return withSeriesAxis(space, group, defaultChartAxes(horizontalBars(group), xy, ids));
 	}
 	const rotate = horizontalBars(base) !== horizontalBars(group);
 	const axes = old
@@ -117,9 +146,7 @@ function groupAxes(space: ChartSpace, base: ChartPlotGroup, group: ChartPlotGrou
 				next.crossBetween = xy ? 'midCat' : 'between';
 			return next;
 		});
-	if (group.element === 'line3DChart' && axes.length < 3)
-		throw new RangeError('A 3-D line chart needs a series axis the chart does not have');
-	return axes;
+	return withSeriesAxis(space, group, axes);
 }
 
 /** Changes the type of the whole chart; series keep their data, names and formatting. */
@@ -128,6 +155,8 @@ export function setChartType(space: ChartSpace, target: ChartTypeTarget): ChartS
 		throw new RangeError(`Switching a chart to ${target.kind} is not supported`);
 	return editChartSpace(space, (draft) => {
 		const base = firstChartGroup(draft);
+		if (target.kind === 'stock' && ![3, 4].includes(chartSpaceSeries(draft).length))
+			throw new RangeError('A stock chart requires three or four price series');
 		const series = chartSpaceSeries(draft).map((item) =>
 			stripSeriesForKind(item, base.kind, target.kind),
 		);
