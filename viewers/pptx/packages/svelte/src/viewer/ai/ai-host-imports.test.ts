@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { parse } from 'svelte/compiler';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -41,8 +42,19 @@ describe('the eager Svelte AI modules import ooxml-ui/pptx/ai/host, not the barr
  */
 describe('AiDock loads the panel from its script block', () => {
 	const source = readFileSync(join(import.meta.dirname, '../components/ai/AiDock.svelte'), 'utf-8');
-	const script = /<script\b[^>]*>([\s\S]*?)<\/script>/u.exec(source)?.[1] ?? '';
-	const markup = source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gu, '');
+	// Split with the compiler rather than a pattern, so the ranges match what Svelte compiles.
+	const ast = parse(source, { modern: true });
+	const blocks = [ast.module, ast.instance]
+		// An absent block is `undefined` at runtime even though the type says `null`.
+		.filter((block): block is NonNullable<typeof block> => block !== null && block !== undefined)
+		.toSorted((left, right) => left.start - right.start);
+	const script = blocks
+		.map((block) => source.slice(block.content.start, block.content.end))
+		.join('\n');
+	const markup = blocks.reduceRight(
+		(rest, block) => rest.slice(0, block.start) + rest.slice(block.end),
+		source,
+	);
 
 	it('imports AiChatPanel.svelte in the script block', () => {
 		expect(script).toMatch(/\bimport\(\s*['"]\.\/AiChatPanel\.svelte['"]\s*\)/u);
