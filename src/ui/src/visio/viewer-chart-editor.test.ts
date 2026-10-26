@@ -132,6 +132,9 @@ describe('chart object Edit Data and Format Chart', () => {
 it('shows unsupported chart content as read-only and allows a later supported chart', async () => {
 	const submit = vi.fn<Submit>(async () => {});
 	const { editor, press } = setup(submit);
+	const ribbon = document.createElement('office-ui-ribbon');
+	ribbon.dataset.visioLocale = 'fr';
+	(editor.dialog.parentNode as ShadowRoot).append(ribbon);
 	const workbook = (await gridChartWorkbook(ROWS, 'column'))!;
 	const zip = await JSZip.loadAsync(workbook);
 	const part = Object.keys(zip.files).find((name) => /^xl\/charts\/chart\d+\.xml$/.test(name))!;
@@ -142,7 +145,7 @@ it('shows unsupported chart content as read-only and allows a later supported ch
 	const unsupported = await zip.generateAsync({ type: 'uint8array' });
 	expect(await editor.open('format', TARGET, unsupported)).toBe(false);
 	expect(editor.dialog.open).toBe(true);
-	expect(editor.error.textContent).toContain('read-only');
+	expect(editor.error.textContent).toContain('lecture seule');
 	expect(editor.sheet.hidden).toBe(true);
 	expect(editor.pane.hidden).toBe(true);
 	expect(editor.space).toBeUndefined();

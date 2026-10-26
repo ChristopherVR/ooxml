@@ -1,4 +1,3 @@
-import { chartIssuesLostOnWrite } from '../chart/keep-source';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Editing a Word chart: the shared chart edit operations (`chart/edit`) and data sheet applied to
 // the `DocxChart` a drawing carries, and a new chart for Insert > Chart. Each edit returns a new
@@ -7,6 +6,7 @@ import { chartIssuesLostOnWrite } from '../chart/keep-source';
 // Extended charts (`cx:chartSpace`: waterfall, histogram...) and charts whose part did not load
 // stay read-only.
 import {
+	chartIssuesLostOnWrite,
 	applyChartSpaceDataSheetEdits,
 	chartSpaceDataSheet,
 	newChartSpace,

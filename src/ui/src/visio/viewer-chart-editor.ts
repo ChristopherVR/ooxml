@@ -1,3 +1,4 @@
+import { normalizeVisioLocale, translateRibbonText } from './ribbon-locale';
 import {
 	applyChartSpaceDataSheetEdits,
 	applyChartEditIntent,
@@ -66,6 +67,8 @@ export class ChartObjectEditor {
 		root: ShadowRoot,
 		submit: (data: ChartObjectData, target: ChartTarget) => Promise<void>,
 		rasterize: RasterizeSvg = rasterizeSvg,
+		private readonly locale: () => string | undefined = () =>
+			root.querySelector<HTMLElement>('office-ui-ribbon')?.dataset.visioLocale,
 	) {
 		this.#submit = submit;
 		this.#rasterize = rasterize;
@@ -150,8 +153,10 @@ export class ChartObjectEditor {
 			this.#space = undefined;
 			this.sheet.hidden = true;
 			this.pane.hidden = true;
-			this.error.textContent =
-				'This chart contains unsupported content and is read-only. Its original workbook is preserved.';
+			this.error.textContent = translateRibbonText(
+				normalizeVisioLocale(this.locale()),
+				'This chart contains unsupported content and is read-only. Its original workbook is preserved.',
+			);
 		}
 		this.dialog.show();
 		return found.editable;

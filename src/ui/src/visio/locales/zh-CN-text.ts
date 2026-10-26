@@ -1,5 +1,7 @@
 /** Visio ribbon strings for the zh-CN locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const zhCNText: Readonly<Record<string, string>> = {
+	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
+		'此图表包含不受支持的内容，只能以只读方式查看。其原始工作簿将予以保留。',
 	'Diagram controls': '图表控件',
 	'Home commands': '“开始”选项卡命令',
 	'Insert commands': '“插入”选项卡命令',

@@ -1,5 +1,7 @@
 /** Visio ribbon strings for the es locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const esText: Readonly<Record<string, string>> = {
+	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
+		'Este gráfico contiene contenido no compatible y es de solo lectura. Se conserva su libro original.',
 	'Diagram controls': 'Controles del diagrama',
 	'Home commands': 'Comandos de Inicio',
 	'Insert commands': 'Comandos de Insertar',

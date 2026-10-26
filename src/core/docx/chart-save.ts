@@ -1,4 +1,3 @@
-import { writeChartSpaceOverSource } from '../chart/keep-source';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Saving Word charts. An edited chart (its `chartSpace` differs from the loaded one) is written
 // back to its own part with the shared chart writer, and the embedded workbook its
@@ -10,6 +9,7 @@ import { writeChartSpaceOverSource } from '../chart/keep-source';
 // never touched, so their parts stay byte for byte.
 import type JSZip from 'jszip';
 import {
+	writeChartSpaceOverSource,
 	chartSpaceDataSheet,
 	chartSpaceWorkbookWrites,
 	createChartWorkbook,

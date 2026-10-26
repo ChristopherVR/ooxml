@@ -1,5 +1,7 @@
 /** Visio ribbon strings for the de locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const deText: Readonly<Record<string, string>> = {
+	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
+		'Dieses Diagramm enthält nicht unterstützte Inhalte und ist schreibgeschützt. Die ursprüngliche Arbeitsmappe bleibt erhalten.',
 	'Diagram controls': 'Diagrammsteuerelemente',
 	'Home commands': 'Befehle der Registerkarte Start',
 	'Insert commands': 'Befehle der Registerkarte Einfügen',
