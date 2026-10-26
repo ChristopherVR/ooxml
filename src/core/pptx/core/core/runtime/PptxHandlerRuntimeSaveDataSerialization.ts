@@ -1412,23 +1412,36 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (existingFamily !== 'chartEx' || !chartData.chartPartPath) {
 			return false;
 		}
+		const chartPartPath = chartData.chartPartPath;
+		const embeddedFormats = await embedChartElementPictures(
+			chartData.elementFormats,
+			chartPartPath,
+			{
+				zip: this.zip,
+				parse: (xml) => this.parser.parse(xml) as XmlObject,
+				build: (tree) => this.builder.build(tree),
+				parseDataUrl: (url) => this.parseDataUrlToBytes(url),
+			},
+		);
+		if (embeddedFormats !== chartData.elementFormats)
+			chartData = { ...chartData, elementFormats: embeddedFormats };
 
 		// An edit the shared chart core can express is saved through it (`writeChartExSpace` keeps
 		// everything else as written); anything else falls through to the object-tree update.
-		const baseline = this.chartDataBaselines.get(chartData.chartPartPath);
+		const baseline = this.chartDataBaselines.get(chartPartPath);
 		const neutralXml =
 			baseline && chartXmlStr !== undefined
 				? await saveChartExPackageThroughNeutral(
 						this.zip,
-						chartData.chartPartPath,
+						chartPartPath,
 						chartXmlStr,
 						JSON.parse(baseline) as PptxChartData,
 						chartData,
 					)
 				: undefined;
 		if (neutralXml !== undefined) {
-			this.zip.file(chartData.chartPartPath, neutralXml);
-			this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
+			this.zip.file(chartPartPath, neutralXml);
+			this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 			return true;
 		}
 		if (
@@ -1441,9 +1454,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const regenerated = buildChartExSpaceXml(chartData);
 			const regeneratedSpace = regenerated['cx:chartSpace'] as XmlObject | undefined;
 			if (regeneratedSpace) {
-				await this.syncChartUserShapesToXml(regeneratedSpace, chartData, chartData.chartPartPath);
+				await this.syncChartUserShapesToXml(regeneratedSpace, chartData, chartPartPath);
 			}
-			this.zip.file(chartData.chartPartPath, this.builder.build(regenerated));
+			this.zip.file(chartPartPath, this.builder.build(regenerated));
 			return true;
 		}
 		if (applyChartExUpdate(chartSpace, chartData, getLocalName)) {
@@ -1451,8 +1464,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// classic charts use, referenced the same way (`c:userShapes/@_r:id`
 			// on the chart space); this in-place update path mutates the existing
 			// `chartSpace` object, so the same sync used by classic charts works.
-			await this.syncChartUserShapesToXml(chartSpace, chartData, chartData.chartPartPath);
-			this.zip.file(chartData.chartPartPath, this.builder.build(chartXmlData));
+			await this.syncChartUserShapesToXml(chartSpace, chartData, chartPartPath);
+			this.zip.file(chartPartPath, this.builder.build(chartXmlData));
 		}
 		return true;
 	}

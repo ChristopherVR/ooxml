@@ -32,13 +32,14 @@ export function createChartExSpace(
 	if (layout === 'clusteredColumn')
 		for (let index = 0; index < data.series.length; index++)
 			space = setChartExBinning(space, index, {});
-	data.series.forEach((series, index) => {
-		space = setChartExSeriesValues(space, index, series.values);
-	});
 	space = setChartExCategories(
 		space,
 		'categoryLevels' in data && data.categoryLevels.length ? data.categoryLevels : data.categories,
 	);
+	data.series.forEach((series, index) => {
+		space = setChartExSeriesValues(space, index, series.values);
+	});
+
 	if (options.title !== undefined) space = setChartExTitle(space, options.title);
 	if (options.legend) space = setChartExLegend(space, options.legend);
 	return space;

@@ -1,7 +1,8 @@
 // Map the shared Format pane's supported requests onto ChartEx without rewriting its data model.
 import type { ChartExSpace } from '../ex/model';
 import type { ChartShapeProperties } from '../model-series';
-import type { ChartEditIntent } from './intent';
+import { applyChartEditIntent, type ChartEditIntent } from './intent';
+import { editChartExStyle } from './chartex-style';
 import type { ChartFormatTarget } from './target';
 import { chartExSeriesAt, editChartExSpace, setChartExLegend } from './chartex';
 import { withDrawingColorTransparency } from './paint';
@@ -42,6 +43,8 @@ function shapes(space: ChartExSpace, target: ChartFormatTarget): ChartShapePrope
 }
 
 export function applyChartExEditIntent(space: ChartExSpace, intent: ChartEditIntent): ChartExSpace {
+	if (['pattern', 'lineOptions', 'effect', 'text', 'threeD'].includes(intent.op))
+		return editChartExStyle(space, (snapshot) => applyChartEditIntent(snapshot, intent));
 	if (intent.op === 'legend') {
 		let next = setChartExLegend(space, {
 			visible: intent.edit.visible ?? true,

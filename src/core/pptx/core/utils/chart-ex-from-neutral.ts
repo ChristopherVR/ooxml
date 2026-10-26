@@ -2,6 +2,7 @@
 // supplied separately so PowerPoint retains its theme and raw geography-cache compatibility.
 import type {
 	ChartExData,
+	ChartExDataLabel,
 	ChartExDimension,
 	ChartExLabelVisibility,
 	ChartExSpace,
@@ -102,6 +103,12 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 			delete result.dataLabelOptions;
 		} else {
 			const options: PptxChartDataLabelOptions = { ...result.dataLabelOptions };
+			for (const [key, target] of [
+				['value', 'showValue'],
+				['categoryName', 'showCategory'],
+				['seriesName', 'showSeriesName'],
+			] as const)
+				if (group.visibility?.[key] !== undefined) options[target] = group.visibility[key];
 			delete options.position;
 			delete options.numberFormat;
 			const pos = position(group.position),
@@ -110,14 +117,20 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 			if (format) options.numberFormat = format;
 			if (Object.keys(options).length) result.dataLabelOptions = options;
 			else delete result.dataLabelOptions;
-			if (group.labels.length)
-				result.dataLabels = group.labels.map((label, i) => {
-					const styled = result.dataLabels?.[i];
+			if (group.labels.length || group.hidden.length)
+				result.dataLabels = [
+					...group.labels,
+					...group.hidden
+						.filter((index) => !group.labels.some((label) => label.index === index))
+						.map((index): ChartExDataLabel => ({ index })),
+				].map((label) => {
+					const styled = result.dataLabels?.find((item) => item.idx === label.index);
 					const out = {
 						...styled,
 						idx: label.index ?? 0,
 						...flags(label.visibility ?? group.visibility),
 					};
+					if (group.hidden.includes(label.index ?? 0)) out.deleted = true;
 					delete out.position;
 					delete out.numberFormat;
 					const pos = position(label.position),
@@ -149,6 +162,11 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 		] as const)
 			delete out[key];
 		if (source.id !== undefined) out.axisId = source.id;
+		for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) {
+			delete out[key];
+			if (source.scaling?.kind === 'val' && typeof source.scaling[key] === 'number')
+				out[key] = source.scaling[key];
+		}
 		if (source.hidden) out.deleted = true;
 		const title = chartExText(source.title?.tx);
 		if (title) out.titleText = title;

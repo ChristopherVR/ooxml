@@ -35,8 +35,49 @@ function compare(xml: string) {
 }
 describe('ChartEx neutral read adapter', () => {
 	it('retains the complete PowerPoint view and host-resolved styles on every committed part', () => {
-		for (const [name, xml] of parts) expect(compare(xml).neutral, name).toEqual(compare(xml).old);
+		for (const [name, xml] of parts) {
+			const { neutral, old } = compare(xml);
+			// The old reader omitted group content switches and numeric axis scaling. They are tested
+			// against authored neutral facts below; every previously exposed field still compares here.
+			for (const series of neutral.series)
+				if (series.dataLabelOptions) {
+					for (const key of ['showValue', 'showCategory', 'showSeriesName'] as const)
+						delete series.dataLabelOptions[key];
+					if (!Object.keys(series.dataLabelOptions).length) delete series.dataLabelOptions;
+				}
+			for (const axis of neutral.chartData?.axes ?? [])
+				for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) delete axis[key];
+			for (const [index, series] of neutral.series.entries()) {
+				series.dataLabels = series.dataLabels?.filter(
+					(label) =>
+						!label.deleted || old.series[index]?.dataLabels?.some((item) => item.idx === label.idx),
+				);
+				for (const label of series.dataLabels ?? []) delete label.deleted;
+				if (!series.dataLabels?.length) delete series.dataLabels;
+			}
+			expect(neutral, name).toEqual(old);
+		}
 		expect(parts).toHaveLength(16);
+	});
+	it('reads group label switches, point hiding and numeric axis bounds omitted by the legacy reader', () => {
+		const model = parseChartExSpace(FULL).chartExSpace;
+		const axis = model.plotArea.axes.find((axis) => axis.scaling?.kind === 'val')!;
+		axis.scaling = { kind: 'val', min: -2, max: 40, majorUnit: 5 };
+		const group = model.plotArea.series[0]!.dataLabels!;
+		group.visibility = { value: false, categoryName: true };
+		group.labels = [{ index: 0, visibility: { value: true } }];
+		group.hidden = [0];
+		const result = chartExFromNeutral(model, { categories: [], series: [] });
+		expect(result.series[0]!.dataLabelOptions).toMatchObject({
+			showValue: false,
+			showCategory: true,
+		});
+		expect(result.series[0]!.dataLabels![0]!.deleted).toBe(true);
+		expect(result.chartData!.axes!.find((item) => item.axisType === 'valAx')).toMatchObject({
+			min: -2,
+			max: 40,
+			majorUnit: 5,
+		});
 	});
 	it('preserves host font and colour resolution while neutral facts supply the data', () => {
 		const { neutral, fonts } = compare(

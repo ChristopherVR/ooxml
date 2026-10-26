@@ -15,7 +15,6 @@
 
 import {
 	chartExWriteOptionsOf,
-	applyChartExEditIntent,
 	parseChartExSpace,
 	renameChartExSeries,
 	setChartExCategories,
@@ -27,6 +26,10 @@ import {
 	type ChartExSpace,
 } from '../../../chart/index';
 import type { PptxChartData, PptxChartStyle } from '../types';
+import { planChartExStyles } from './chart-ex-neutral-save-styles';
+import { planChartExAxes } from './chart-ex-neutral-save-axes';
+import { planChartExPointLabels } from './chart-ex-neutral-save-point-labels';
+import { planChartExLabelOptions } from './chart-ex-neutral-save-label-options';
 import {
 	planChartExFamilyEdits,
 	planChartExSeriesStructure,
@@ -100,39 +103,6 @@ function planLabels(before: PptxChartData, probe: PptxChartData, edits: ChartExE
 		if (shown !== undefined) edits.push((space) => setChartExDataLabelsVisible(space, shown));
 		revertStyle(probe, before, ['hasDataLabels']);
 	}
-	const old = before.style?.dataLabels,
-		now = probe.style?.dataLabels;
-	if (
-		!same(old, now) &&
-		now &&
-		Object.keys(now).every((key) =>
-			[
-				'showValue',
-				'showCategory',
-				'showSeriesName',
-				'showPercent',
-				'showLegendKey',
-				'showBubbleSize',
-				'separator',
-				'position',
-				'numberFormat',
-			].includes(key),
-		)
-	) {
-		const edit = {
-			showValue: now.showValue,
-			showCategoryName: now.showCategory,
-			showSeriesName: now.showSeriesName,
-			showPercent: now.showPercent,
-			showLegendKey: now.showLegendKey,
-			showBubbleSize: now.showBubbleSize,
-			separator: now.separator,
-			position: now.position,
-			numberFormat: now.numberFormat,
-		};
-		edits.push((space) => applyChartExEditIntent(space, { op: 'dataLabels', edit }));
-		revertStyle(probe, before, ['dataLabels']);
-	}
 }
 
 const HIERARCHY = new Set(['treemap', 'sunburst', 'regionMap']);
@@ -185,6 +155,10 @@ export function planChartExNeutralSave(
 	planTitle(before, probe, edits);
 	planLegend(before, probe, edits);
 	planLabels(before, probe, edits);
+	planChartExStyles(before, probe, edits);
+	planChartExLabelOptions(before, probe, edits);
+	planChartExAxes(before, probe, edits);
+	planChartExPointLabels(before, probe, edits);
 	planChartExFamilyEdits(before, probe, edits);
 	planSeries(before, probe, edits);
 	return same(probe, before) ? edits : undefined;
