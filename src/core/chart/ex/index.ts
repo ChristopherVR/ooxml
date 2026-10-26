@@ -7,3 +7,6 @@ export {
 	writeChartExSpace,
 	type WriteChartExSpaceOptions,
 } from './write';
+
+export * from './workbook-writes';
+export * from './keep-source';

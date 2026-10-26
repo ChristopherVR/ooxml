@@ -27,3 +27,6 @@ export * from './data-sheet';
 export * from './new-chart';
 export * from './chartex';
 export * from './chartex-data';
+
+export * from './chartex-structure';
+export * from './chartex-sheet';
