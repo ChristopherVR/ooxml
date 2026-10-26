@@ -1,7 +1,11 @@
-import type { Font } from 'opentype.js';
+import { Font, Glyph, Path } from 'opentype.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import { parseOpenTypeFont } from './text-warp-opentype-parser';
+import {
+	isOpenTypeFontParserReady,
+	parseOpenTypeFont,
+	preloadOpenTypeFontParser,
+} from './text-warp-opentype-parser';
 
 describe('parseOpenTypeFont module interop', () => {
 	it('uses the ESM named parser when available', () => {
@@ -22,5 +26,23 @@ describe('parseOpenTypeFont module interop', () => {
 		expect(() => parseOpenTypeFont(new ArrayBuffer(0), {})).toThrow(
 			'opentype.js does not expose a font parser',
 		);
+	});
+});
+
+describe('preloadOpenTypeFontParser', () => {
+	it('shares one import, after which parseOpenTypeFont needs no explicit module', async () => {
+		const first = preloadOpenTypeFontParser();
+		expect(preloadOpenTypeFontParser()).toBe(first);
+		await first;
+		expect(isOpenTypeFontParserReady()).toBe(true);
+		const font = new Font({
+			familyName: 'ParserReady',
+			styleName: 'Regular',
+			unitsPerEm: 1000,
+			ascender: 800,
+			descender: -200,
+			glyphs: [new Glyph({ name: '.notdef', unicode: 0, advanceWidth: 650, path: new Path() })],
+		});
+		expect(parseOpenTypeFont(font.toArrayBuffer()).unitsPerEm).toBe(1000);
 	});
 });

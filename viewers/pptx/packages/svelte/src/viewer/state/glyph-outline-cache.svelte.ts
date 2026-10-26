@@ -13,7 +13,9 @@ import { createGlyphOutlineLookup, GlyphOutlineFontCache } from 'ooxml-ui/pptx';
  * registers catalogue webfont bytes once fetched and bumps
  * {@link glyphOutlineFontsTick}'s `value` so `WordArtText.svelte`'s `$derived`
  * glyph layout (which reads it) recomputes and picks them up from this same
- * cache.
+ * cache. The cache loads its font parser on the first envelope glyph that
+ * needs it and notifies its subscribers when that fills in outlines, which
+ * bumps the same tick.
  */
 export const glyphOutlineFontCache = new GlyphOutlineFontCache();
 
@@ -24,6 +26,9 @@ class GlyphOutlineFontsTick {
 
 /** Bumped whenever a webfont's outline bytes are newly registered; read (not written) by `WordArtText.svelte`. */
 export const glyphOutlineFontsTick = new GlyphOutlineFontsTick();
+glyphOutlineFontCache.subscribe(() => {
+	glyphOutlineFontsTick.value += 1;
+});
 
 /** The `getGlyphOutline` callback `buildGlyphEnvelope` accepts, backed by the module singleton. */
 export const getGlyphOutline = createGlyphOutlineLookup(glyphOutlineFontCache);

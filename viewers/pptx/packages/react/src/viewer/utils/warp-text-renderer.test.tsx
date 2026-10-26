@@ -233,13 +233,12 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 		expect(bareGlyphs.length + glyphGroups.length).toBe('MMM'.length);
 	});
 
-	it('renders warped <path> outlines (not <text>) once the font is registered in the outline cache', () => {
+	it('repaints mounted glyphs as warped <path> outlines once the outline font is ready', async () => {
 		const embedded: PptxEmbeddedFont = {
 			name: 'WarpOutlineReactTestFont',
 			dataUrl: '',
 			rawFontData: buildTestFont(),
 		};
-		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
 		const el = renderWarpedElement({
 			type: 'text',
 			id: 'wa-outline',
@@ -254,6 +253,13 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 				color: '#123456',
 			},
 		} as PptxElement);
+		// The font arrives after the glyphs mounted (a deferred parser load or a
+		// webfont fetch): the cache notification alone must repaint them.
+		await act(async () => {
+			glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
+			await glyphOutlineFontCache.preload();
+			await Promise.resolve();
+		});
 		const paths = el.querySelectorAll('svg > path');
 		expect(paths).toHaveLength('Hello'.length);
 		expect(el.querySelector('svg > text')).toBeNull();

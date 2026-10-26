@@ -12,7 +12,9 @@
  * render that uses them). `useGoogleWebfonts` registers catalogue webfont
  * bytes once fetched and bumps {@link glyphOutlineFontsTick} so
  * `useTextWarpEnvelope`'s computed glyph layout (which reads the tick)
- * recomputes and picks them up from this same cache.
+ * recomputes and picks them up from this same cache. The cache loads its font
+ * parser on the first envelope glyph that needs it and notifies its
+ * subscribers when that fills in outlines, which bumps the same tick.
  */
 import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
@@ -22,6 +24,9 @@ export const glyphOutlineFontCache = new GlyphOutlineFontCache();
 
 /** Bumped whenever a webfont's outline bytes are newly registered; read (not written) by `useTextWarpEnvelope`. */
 export const glyphOutlineFontsTick: Ref<number> = ref(0);
+glyphOutlineFontCache.subscribe(() => {
+	glyphOutlineFontsTick.value += 1;
+});
 
 /** The `getGlyphOutline` callback `buildGlyphEnvelope` accepts, backed by the module singleton. */
 export const getGlyphOutline = createGlyphOutlineLookup(glyphOutlineFontCache);

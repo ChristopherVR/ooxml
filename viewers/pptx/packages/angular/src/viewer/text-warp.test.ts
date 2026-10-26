@@ -1,3 +1,4 @@
+import { computed } from '@angular/core';
 import { hasGlyphEnvelope } from 'ooxml-ui/pptx';
 /**
  * Unit tests for the Angular text-warp descriptor resolver.
@@ -442,18 +443,25 @@ describe('getTextWarp - envelope presets (inflate/deflate/can) render as a glyph
 		}
 	});
 
-	it('sets outlinePath (not slices) once the font is registered in the outline cache', () => {
+	it('recomputes a glyph layout with outlinePath (not slices) once the outline font is ready', async () => {
 		const embedded: PptxEmbeddedFont = {
 			name: 'WarpOutlineAngularTestFont',
 			dataUrl: '',
 			rawFontData: buildTestFont(),
 		};
-		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
 		const el = makeTextElement('textInflate', {
 			text: 'Hello',
 			fontFamily: 'WarpOutlineAngularTestFont',
 		});
-		const def = getTextWarp(el) as TextWarpGlyphDef;
+		const layout = computed(() => getTextWarp(el) as TextWarpGlyphDef);
+		const before = layout();
+		// The font arrives after the layout was computed (a deferred parser load
+		// or a webfont fetch): the cache notification alone must invalidate it.
+		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
+		await glyphOutlineFontCache.preload();
+		await Promise.resolve();
+		const def = layout();
+		expect(def).not.toBe(before);
 		expect(def.strategy).toBe('glyph');
 		expect(def.glyphs).toHaveLength('Hello'.length);
 		for (const g of def.glyphs) {

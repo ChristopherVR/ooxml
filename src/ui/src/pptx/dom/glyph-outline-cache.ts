@@ -10,7 +10,9 @@
  * before the state-sync repaint it triggers runs) and registers catalogue
  * webfont bytes once fetched, bumping `viewer-state.ts`'s `outlineFontsTick`
  * so `state-sync.ts` repaints and the renderer picks them up from this same
- * cache.
+ * cache. The cache loads its font parser on the first envelope glyph that
+ * needs it; `PptxViewer` subscribes to it and bumps the same tick when that
+ * fills in outlines.
  */
 import { createGlyphOutlineLookup, GlyphOutlineFontCache } from '../index';
 

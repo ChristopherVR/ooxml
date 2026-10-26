@@ -415,8 +415,8 @@ export function useLoadContent({
 				setEmbeddedFonts(parsed.embeddedFonts ?? []);
 				// Synchronous, not an effect: registers this deck's embedded fonts'
 				// real outlines (see glyph-outline-cache.ts) BEFORE the first render
-				// that uses them, so WordArt envelope glyphs get outline warping on
-				// the very first paint instead of needing a follow-up re-render.
+				// that uses them. The font parser itself loads on the first envelope
+				// glyph that needs it; `WarpedText` repaints when it has.
 				glyphOutlineFontCache.registerEmbeddedFonts(parsed.embeddedFonts ?? []);
 				setHasMacros(parsed.hasMacros === true);
 				setHasDigitalSignatures(parsed.hasDigitalSignatures === true);

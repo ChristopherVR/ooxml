@@ -192,13 +192,12 @@ describe('wordArtText (Svelte)', () => {
 		expect(svg?.querySelector('textPath')).not.toBeNull();
 	});
 
-	it('renders warped <path> outlines (not <text>) once the font is registered in the outline cache', () => {
+	it('repaints mounted glyphs as warped <path> outlines once the outline font is ready', async () => {
 		const embedded: PptxEmbeddedFont = {
 			name: 'WarpOutlineSvelteTestFont',
 			dataUrl: '',
 			rawFontData: buildTestFont(),
 		};
-		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
 		const svg = mountWarped(
 			warpedText({
 				textStyle: {
@@ -208,6 +207,12 @@ describe('wordArtText (Svelte)', () => {
 				},
 			}),
 		);
+		// The font arrives after the glyphs mounted (a deferred parser load or a
+		// webfont fetch): the cache notification alone must repaint them.
+		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
+		await glyphOutlineFontCache.preload();
+		await Promise.resolve();
+		flushSync();
 		const paths = svg?.querySelectorAll('path') ?? [];
 		expect(paths).toHaveLength('Hello'.length);
 		expect(svg?.querySelector('text')).toBeNull();

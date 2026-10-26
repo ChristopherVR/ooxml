@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils';
 import { Font, Glyph, Path } from 'opentype.js';
 import type { PptxElement, PptxEmbeddedFont } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
+import { nextTick } from 'vue';
 
 import { glyphOutlineFontCache } from '../utils/glyph-outline-cache';
 import WordArtText from './WordArtText.vue';
@@ -329,13 +330,12 @@ describe('wordArtText', () => {
 		expect(wrapper.find('.pptx-vue-wordart-css').exists()).toBeFalsy();
 	});
 
-	it('renders warped <path> outlines (not <text>) once the font is registered in the outline cache', () => {
+	it('repaints mounted glyphs as warped <path> outlines once the outline font is ready', async () => {
 		const embedded: PptxEmbeddedFont = {
 			name: 'WarpOutlineVueTestFont',
 			dataUrl: '',
 			rawFontData: buildTestFont(),
 		};
-		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
 		const wrapper = mount(WordArtText, {
 			props: {
 				element: warpedText({
@@ -348,6 +348,12 @@ describe('wordArtText', () => {
 				zIndex: 0,
 			},
 		});
+		// The font arrives after the glyphs mounted (a deferred parser load or a
+		// webfont fetch): the cache notification alone must repaint them.
+		glyphOutlineFontCache.registerEmbeddedFonts([embedded]);
+		await glyphOutlineFontCache.preload();
+		await Promise.resolve();
+		await nextTick();
 		const paths = wrapper.findAll('svg > path');
 		expect(paths).toHaveLength('Hello'.length);
 		expect(wrapper.find('svg > text').exists()).toBeFalsy();
