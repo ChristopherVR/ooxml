@@ -96,7 +96,7 @@ own supported controls and refuses classic-only advanced requests.
 
 - [x] Reconcile `roadmap.md`, `agnostic-core-plan.md`, `structure-plan.md`, product capability
       pages and PowerPoint ribbon reviews with the delivered implementation.
-- [ ] Run the repository CI planner's verification from the isolated integration worktree and
+- [x] Run the repository CI planner's verification from the isolated integration worktree and
       affected browser suites; retain native version/font/capture details where fidelity is claimed.
 
 Implementation and validation evidence is recorded below as each increment is integrated. No
@@ -209,8 +209,8 @@ Active roadmap, architecture plans, product capability pages and ribbon reviews 
 implemented shared controls from unfinished PowerPoint adapter coverage. Historical audits and
 older translations are identified explicitly. Word, Excel and PowerPoint documentation sites
 built successfully; Visio's documentation build/link/theme suite passed 76 tests. Added relative
-links, formatting and whitespace checks passed. Final integrated runtime verification remains the
-separate unchecked acceptance step above.
+links, formatting and whitespace checks passed. Integrated runtime verification was still pending
+at that checkpoint; its completed result is recorded in the final verification section below.
 
 ### Final chart integration and native acceptance, 2026-10-27
 
@@ -240,3 +240,20 @@ The final Word/Excel ChartEx controls use the same style projection for pattern 
 text, shape 3D and outlines; native ChartEx axis/family controls remain separate. Twelve browser
 cases passed across all six bindings for both products, including pattern edits, data growth and
 save/reopen. Secondary-axis authoring remains disabled for ChartEx.
+
+### Final repository verification, 2026-10-27
+
+At `7776ac5d5`, `bun run verify --jobs 4` passed all 46 CI-planned steps from the isolated integration
+worktree after integrating current `origin/main`. The affected core suite passed 20,940 tests
+(16 existing expected failures and 423 skips); the affected UI suite passed 11,020 tests
+(11 skips). Product and PowerPoint framework typechecks/tests, locale checks, public-prop checks,
+tree-shaking limits, builds, lint and changed-file formatting all passed.
+
+The clean-install package smoke test imported every entry point and checked 130 browser entries
+for Node-only dependencies. The integrated Office suite also built successfully. Browser and native
+acceptance were run separately as detailed above; the default `verify` command does not run them.
+
+The broad run exposed and fixed an omitted-origin PowerPoint SmartArt reflow case: all 14 reflow
+families now produce finite coordinates for size-only bounds, while invalid-geometry rejection
+remains strict. The ChartEx corpus now compares hidden-only labels and numeric scaling explicitly,
+with authored-source assertions. No corpus totals were lowered to complete this delivery.
