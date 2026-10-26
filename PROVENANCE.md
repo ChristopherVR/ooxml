@@ -2600,3 +2600,12 @@ Source: ChristopherVR/ooxml at `3b2ecd9a6` (in-repo moves out of the Word SmartA
 - `src/core/diagram/write/inserted.ts` (`writeInsertedDiagramData`) is the body of `insertedDiagramDataXml` in `src/core/docx/diagram-save.ts`, which now calls it.
 - `src/core/diagram/approximate.ts` (`approximateDiagramDrawingFromNodes`) is `src/core/docx/ui/smartart-approximate.ts` over a neutral input; the docx module wraps it.
 - New code: `src/core/diagram/edit/design-commands.ts` (the SmartArt Design command list Word and Excel build their tabs from), the Excel SmartArt editing and save path (`src/core/xlsx/edit/smart-art.ts`, `src/core/xlsx/write/smart-art.ts`) and the Excel probe and acceptance scripts under `src/core/scripts/xlsx/`.
+
+## Shared chart title run alignment (2026-10-26)
+
+- Source repository: `ChristopherVR/ooxml`, commit `27cc953db6d5e919c1a413d5fdcfb39a82b566eb`.
+- Source module: `src/core/pptx/core/utils/chart-title-run-alignment.ts` and its colocated tests.
+- Destination: `src/core/text/realign-runs.ts` and `realign-runs.test.ts`.
+- Changes: remove PowerPoint title types, accept generic styled text runs, compile strict, retain
+  compatibility exports at the old path, and use the shared policy from neutral chart-title edits.
+  An empty run list returns an empty result instead of inventing a styled run.

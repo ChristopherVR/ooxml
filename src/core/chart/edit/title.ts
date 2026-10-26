@@ -10,6 +10,12 @@ import { chartTextBodyFromXml } from '../write-shape';
 import { escapeText } from '../write-util';
 import { innerXml } from '../xml-fragment';
 import { editChartSpace } from './draft';
+import { realignChartTitleBody } from './title-realign';
+
+export interface ChartTitleTextOptions {
+	/** Preserve unaffected rich runs for a local edit; a full rewrite keeps the first run's style. */
+	preserveRuns?: boolean;
+}
 
 /** The children of `c:rich` for a new one-run title (`<a:bodyPr/>`, `<a:lstStyle/>`, one `a:p`). */
 export const chartTitleRichXml = (text: string): string =>
@@ -51,10 +57,17 @@ export function retextChartTextBody(body: ChartTextBody, text: string): ChartTex
 }
 
 /** `title` (or a new title) reading `text`, keeping layout, overlay, shape and text properties. */
-export function chartTitleWithText(title: ChartTitle | undefined, text: string): ChartTitle {
+export function chartTitleWithText(
+	title: ChartTitle | undefined,
+	text: string,
+	options: ChartTitleTextOptions = {},
+): ChartTitle {
 	if (!title) return newChartTitle(text);
 	const rich = title.tx?.reference ? undefined : title.tx?.rich;
-	const body = rich ? retextChartTextBody(rich, text) : undefined;
+	const body = rich
+		? ((options.preserveRuns ? realignChartTitleBody(rich, text) : undefined) ??
+			retextChartTextBody(rich, text))
+		: undefined;
 	const fresh = newChartTitle(text);
 	const next: ChartTitle = {
 		...structuredClone(title),
@@ -68,14 +81,18 @@ export function chartTitleWithText(title: ChartTitle | undefined, text: string):
  * Sets the chart title text, or removes the title (`undefined`), as Excel's chart title box does.
  * Semantics: Excel (an empty string is a title with empty text, not a removal).
  */
-export function setChartTitle(space: ChartSpace, text: string | undefined): ChartSpace {
+export function setChartTitle(
+	space: ChartSpace,
+	text: string | undefined,
+	options: ChartTitleTextOptions = {},
+): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		if (text === undefined) {
 			delete draft.title;
 			draft.autoTitleDeleted = true;
 			return;
 		}
-		draft.title = chartTitleWithText(draft.title, text);
+		draft.title = chartTitleWithText(draft.title, text, options);
 		draft.autoTitleDeleted = false;
 	});
 }

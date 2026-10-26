@@ -17,13 +17,13 @@ Every changed PowerPoint control must reach all five bindings.
 
 ## 1. Safe chart editing and preservation
 
-- [ ] One shared source-backed chart writer and edit-eligibility policy.
-- [ ] Word preserves carried chart children and refuses edits the model cannot preserve.
-- [ ] Embedded workbook charts, including Visio consumers, follow the same policy.
-- [ ] Excel consumes the shared policy without losing formula-only source patching.
-- [ ] Tests cover carried children, unknown nested content, unreadable values, no-op bytes and
+- [x] One shared source-backed chart writer and edit-eligibility policy.
+- [x] Word preserves carried chart children and refuses edits the model cannot preserve.
+- [x] Embedded workbook charts, including Visio consumers, follow the same policy.
+- [x] Excel consumes the shared policy without losing formula-only source patching.
+- [x] Tests cover carried children, unknown nested content, unreadable values, no-op bytes and
       supported title/data/format edits. The UI explains read-only admission.
-- [ ] Native acceptance verifies supported edited documents and embedded objects.
+- [x] Native acceptance verifies supported edited documents and embedded objects.
 
 ## 2. SmartArt layout and rendering in Word and Excel
 
@@ -84,3 +84,27 @@ Every changed PowerPoint control must reach all five bindings.
 
 Implementation and validation evidence is recorded below as each increment is integrated. No
 milestone is complete merely because its foundations or first supported cases have landed.
+
+### Chart preservation, 2026-10-26
+
+Integrated shared `writeChartSpaceOverSource`, Word edit/save guards, embedded workbook admission
+and the Visio read-only dialog. Unsupported nested elements and unreadable values cannot be lost
+through an edit; supported top-level passthrough nodes survive, and unchanged parts retain bytes.
+The Visio diagnostic is localized in all five locales.
+
+Validation: 21 focused core tests, the Visio UI cases and locale checks, strict core/full UI
+typechecks and a core build passed. Native Word and Excel acceptance scripts reopened a title edit
+with a retained `c:clrMapOvr` without repair; Word's chart values and embedded workbook cells agreed,
+and only the chart part changed. Visio 16 reopened and resaved the embedded workbook object while
+retaining that mapping and the edited title. OLE activation and visual preview fidelity were not
+measured by this check. A synthetic protection probe was inaccessible in Word before core loading,
+so it is unit preservation evidence only, not native acceptance evidence.
+
+### First neutral chart save families, 2026-10-26
+
+PowerPoint now maps supported data-label show/content/position/format edits and solid series colour
+changes to shared operations. The explicit Show Labels command now requests group-level values
+even when existing series already show labels. The committed corpus compares 72/72 label edits and
+75/75 series colour edits identically in canonical XML and reloaded models. The three focused SDK,
+save-plan and corpus files passed 479 tests. These are implementation comparisons; hidden-label
+policy, value-from-cells edits and the remaining chart families are still tracked above.

@@ -61,9 +61,9 @@ describe('planNeutralChartSave', () => {
 		expect(planNeutralChartSave(before(), entries)).toBeUndefined();
 	});
 
-	it('keeps a multi-run title on the PowerPoint writer, which realigns the runs', () => {
+	it('plans multi-run title text through the shared run-preserving policy', () => {
 		const multi = { ...before(), titleRuns: [{ text: 'Sa' }, { text: 'les', bold: true }] };
-		expect(planNeutralChartSave(multi, { ...multi, title: 'Revenue' })).toBeUndefined();
+		expect(planNeutralChartSave(multi, { ...multi, title: 'Revenue' })?.edits).toHaveLength(1);
 	});
 });
 
@@ -157,14 +157,31 @@ describe('saveChartPartThroughNeutral: axes', () => {
 	});
 
 	it('leaves axis edits the shared operation does not make to the object-tree writers', () => {
-		const linked = edited((c) => (c.axes![1]!.numFmt = { formatCode: '0', sourceLinked: true }));
-		expect(planNeutralChartSave(before(), linked)).toBeUndefined();
-		const gridlines = edited((c) => (c.axes![1]!.majorGridlines = true));
-		expect(planNeutralChartSave(before(), gridlines)).toBeUndefined();
 		const added = edited((c) => c.axes!.push({ axisType: 'valAx', axisId: 9 }));
 		expect(planNeutralChartSave(before(), added)).toBeUndefined();
 		// A minimum past the maximum is rejected by the shared operation.
 		expect(save((c) => Object.assign(c.axes![1]!, { min: 9, max: 1 }))).toBeUndefined();
+	});
+
+	it('saves linked formats, gridlines, log scale and axis titles through the neutral model', () => {
+		const result = save((chart) =>
+			Object.assign(chart.axes![1]!, {
+				numFmt: { formatCode: '0.00', sourceLinked: true },
+				majorGridlines: true,
+				titleText: 'Revenue',
+				logScale: true,
+				logBase: 2,
+				displayUnits: 'millions',
+			}),
+		)!;
+		expect(valueAxis(result.xml)).toMatchObject({
+			numberFormat: { formatCode: '0.00', sourceLinked: true },
+			majorGridlines: true,
+			title: { text: 'Revenue' },
+			scaling: { logBase: 2 },
+			displayUnits: { builtInUnit: 'millions' },
+		});
+		expect(result.xml).toContain('<c:v>4.4000000000000004</c:v>');
 	});
 });
 

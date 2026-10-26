@@ -32,6 +32,25 @@ describe('title edits', () => {
 		const fresh = setChartTitle(next, 'New & bold');
 		expect(written(fresh)).toContain('<a:t>New &amp; bold</a:t>');
 	});
+
+	it('preserves the second rich run and authored formatting for an appended title', () => {
+		const source = columnChart();
+		const original = source.title!.text!;
+		const next = setChartTitle(source, `${original} report`, { preserveRuns: true });
+		const oldRuns = source.title!.tx!.rich!.paragraphs[0]!.runs;
+		const newRuns = next.title!.tx!.rich!.paragraphs[0]!.runs;
+		expect(newRuns).toHaveLength(oldRuns.length);
+		expect(newRuns[0]).toEqual(oldRuns[0]);
+		expect(newRuns.at(-1)).toEqual({ ...oldRuns.at(-1), text: `${oldRuns.at(-1)!.text} report` });
+		expect(next.title!.text).toBe(`${original} report`);
+		expect(written(next)).toContain(' 2026 report');
+	});
+
+	it('collapses an unrelated title rewrite while preserving the first rich run formatting', () => {
+		const next = setChartTitle(columnChart(), 'A completely new title', { preserveRuns: true });
+		expect(next.title!.tx!.rich!.paragraphs[0]!.runs).toHaveLength(1);
+		expect(written(next)).toContain('<a:rPr lang="en-US" sz="1400" b="1"/>');
+	});
 });
 
 describe('legend and data label edits', () => {
@@ -66,6 +85,46 @@ describe('legend and data label edits', () => {
 });
 
 describe('axis edits', () => {
+	it('keeps display-unit labels and source linking across unit edits', () => {
+		const source = columnChart();
+		source.plotArea.axes[1]!.displayUnits = {
+			builtInUnit: 'thousands',
+			label: { tx: { value: 'Hundreds' } },
+		};
+		const next = setChartAxis(source, 'val', {
+			displayUnits: 100,
+			numberFormat: '0.00',
+			numberFormatSourceLinked: true,
+		});
+		expect(next.plotArea.axes[1]!.displayUnits).toEqual({
+			customUnit: 100,
+			label: { tx: { value: 'Hundreds' } },
+		});
+		expect(next.plotArea.axes[1]!.numberFormat?.sourceLinked).toBe(true);
+		expect(source.plotArea.axes[1]!.displayUnits?.builtInUnit).toBe('thousands');
+		const parsed = parseChartSpace(written(next)).chartSpace;
+		expect(parsed?.plotArea.axes[1]!.displayUnits?.customUnit).toBe(100);
+		expect(() => setChartAxis(source, 'val', { displayUnits: Infinity })).toThrow(RangeError);
+	});
+
+	it('writes category label spacing and validates its OOXML bounds', () => {
+		const next = setChartAxis(columnChart(), 'cat', {
+			labelAlign: 'l',
+			labelOffset: 0,
+			tickLabelSkip: 2,
+			tickMarkSkip: 3,
+			auto: false,
+			noMultiLevelLabels: true,
+		});
+		const xml = written(next);
+		expect(xml).toContain('<c:lblOffset val="0"/>');
+		expect(xml).toContain('<c:tickLblSkip val="2"/>');
+		expect(() => setChartAxis(next, 'cat', { tickLabelSkip: 0 })).toThrow(RangeError);
+		expect(() => setChartAxis(next, 'cat', { labelOffset: 1001 })).toThrow(RangeError);
+		expect(
+			setChartAxis(next, 'cat', { tickLabelSkip: null }).plotArea.axes[0]!.tickLabelSkip,
+		).toBeUndefined();
+	});
 	it('sets scaling, format, title and visibility', () => {
 		const next = setChartAxis(columnChart(), 'val', {
 			min: 0,

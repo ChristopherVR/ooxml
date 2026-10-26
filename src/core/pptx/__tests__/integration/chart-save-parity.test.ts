@@ -33,7 +33,7 @@ const DECKS = await classicChartDecks();
  */
 const EXPECTED: Record<string, { parts: number; xml: number; model: number }> = {
 	'no edit (slide dirty)': { parts: 75, xml: 74, model: 75 },
-	'title text': { parts: 75, xml: 74, model: 75 },
+	'title text': { parts: 75, xml: 75, model: 75 },
 	'title hidden': { parts: 75, xml: 75, model: 75 },
 	'legend position': { parts: 75, xml: 75, model: 75 },
 	'legend hidden': { parts: 75, xml: 75, model: 75 },

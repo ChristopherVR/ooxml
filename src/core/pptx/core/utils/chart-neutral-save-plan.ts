@@ -79,9 +79,7 @@ function planTitle(before: PptxChartData, probe: PptxChartData, edits: NeutralCh
 	if (hasTitle === false || (title === '' && hasTitle !== true)) {
 		edits.push((space) => setChartTitle(space, undefined));
 	} else if (title !== undefined && title !== before.title) {
-		// A multi-run title is realigned run by run by the PowerPoint writer; not claimed yet.
-		if ((before.titleRuns?.length ?? 0) > 1) return;
-		edits.push((space) => setChartTitle(space, title));
+		edits.push((space) => setChartTitle(space, title, { preserveRuns: true }));
 	} else if (hasTitle === true) {
 		edits.push((space) => setChartTitleVisible(space, true));
 	}
@@ -131,9 +129,50 @@ function axisEdit(
 		edit.visible = !now.deleted;
 		claimed.push('deleted');
 	}
-	if (!same(was.numFmt, now.numFmt) && now.numFmt && !now.numFmt.sourceLinked) {
+	if (!same(was.numFmt, now.numFmt) && now.numFmt) {
 		edit.numberFormat = now.numFmt.formatCode;
+		edit.numberFormatSourceLinked = now.numFmt.sourceLinked ?? false;
 		claimed.push('numFmt');
+	}
+	if (was.titleText !== now.titleText) {
+		edit.title = now.titleText ?? null;
+		claimed.push('titleText');
+	}
+	for (const key of ['majorGridlines', 'minorGridlines', 'auto', 'noMultiLevelLabels'] as const) {
+		if (was[key] === now[key] || now[key] === undefined) continue;
+		edit[key] = now[key];
+		claimed.push(key);
+	}
+	for (const key of ['majorTickMark', 'minorTickMark'] as const) {
+		if (was[key] === now[key] || now[key] === undefined) continue;
+		edit[key] = now[key];
+		claimed.push(key);
+	}
+	for (const key of ['majorTimeUnit', 'minorTimeUnit', 'baseTimeUnit'] as const) {
+		if (was[key] === now[key]) continue;
+		edit[key] = now[key] ?? null;
+		claimed.push(key);
+	}
+	for (const key of ['labelOffset', 'tickLabelSkip', 'tickMarkSkip'] as const) {
+		if (was[key] === now[key]) continue;
+		edit[key] = now[key] ?? null;
+		claimed.push(key);
+	}
+	if (was.labelAlignment !== now.labelAlignment) {
+		edit.labelAlign = now.labelAlignment ?? null;
+		claimed.push('labelAlignment');
+	}
+	if (was.logScale !== now.logScale || was.logBase !== now.logBase) {
+		edit.logBase =
+			now.logScale === false || (now.logScale !== true && now.logBase === undefined)
+				? null
+				: (now.logBase ?? 10);
+		claimed.push('logScale', 'logBase');
+	}
+	if (was.displayUnits !== now.displayUnits || was.displayUnitsValue !== now.displayUnitsValue) {
+		edit.displayUnits =
+			now.displayUnits === 'custom' ? now.displayUnitsValue : (now.displayUnits ?? null);
+		if (edit.displayUnits !== undefined) claimed.push('displayUnits', 'displayUnitsValue');
 	}
 	if (was.orientation !== now.orientation && now.orientation !== undefined) {
 		edit.reverse = now.orientation === 'maxMin';

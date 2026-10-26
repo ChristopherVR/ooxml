@@ -26,12 +26,15 @@ export interface ChartAxisEdit {
 	/** Date axis: the unit of the major and minor units (`days`, `months`, `years`). */
 	majorTimeUnit?: string | null;
 	minorTimeUnit?: string | null;
+	baseTimeUnit?: string | null;
 	/** Logarithmic scale base (2..1000); `null` returns to a linear scale. */
 	logBase?: number | null;
 	/** Categories or values in reverse order (`c:orientation val="maxMin"`). */
 	reverse?: boolean;
 	/** A format code not linked to the source; `''` removes `c:numFmt` (the axis follows its data). */
 	numberFormat?: string;
+	/** Keep or change source linking independently of the format code. */
+	numberFormatSourceLinked?: boolean;
 	majorTickMark?: 'cross' | 'in' | 'out' | 'none';
 	minorTickMark?: 'cross' | 'in' | 'out' | 'none';
 	tickLabelPosition?: 'high' | 'low' | 'nextTo' | 'none';
@@ -39,6 +42,12 @@ export interface ChartAxisEdit {
 	crosses?: 'autoZero' | 'min' | 'max' | number;
 	majorGridlines?: boolean;
 	minorGridlines?: boolean;
+	auto?: boolean;
+	labelAlign?: 'ctr' | 'l' | 'r' | null;
+	labelOffset?: number | null;
+	tickLabelSkip?: number | null;
+	tickMarkSkip?: number | null;
+	noMultiLevelLabels?: boolean;
 	/** Value axis: a built-in unit (`thousands`, `millions`...) or a custom divisor; `null` clears. */
 	displayUnits?: string | number | null;
 }
@@ -91,6 +100,8 @@ function applyAxis(axis: ChartAxis, edit: ChartAxisEdit): void {
 		assignOrDelete(axis, 'majorTimeUnit', edit.majorTimeUnit ?? undefined);
 	if (edit.minorTimeUnit !== undefined)
 		assignOrDelete(axis, 'minorTimeUnit', edit.minorTimeUnit ?? undefined);
+	if (edit.baseTimeUnit !== undefined)
+		assignOrDelete(axis, 'baseTimeUnit', edit.baseTimeUnit ?? undefined);
 	if (edit.logBase !== undefined) {
 		if (edit.logBase !== null && !(edit.logBase >= 2 && edit.logBase <= 1000))
 			throw new RangeError('Chart axis log base must be from 2 to 1000');
@@ -101,8 +112,28 @@ function applyAxis(axis: ChartAxis, edit: ChartAxisEdit): void {
 		assignOrDelete(
 			axis,
 			'numberFormat',
-			edit.numberFormat ? { formatCode: edit.numberFormat, sourceLinked: false } : undefined,
+			edit.numberFormat
+				? { formatCode: edit.numberFormat, sourceLinked: edit.numberFormatSourceLinked ?? false }
+				: undefined,
 		);
+	else if (edit.numberFormatSourceLinked !== undefined && axis.numberFormat)
+		axis.numberFormat.sourceLinked = edit.numberFormatSourceLinked;
+	for (const key of ['auto', 'noMultiLevelLabels'] as const)
+		if (edit[key] !== undefined) axis[key] = edit[key];
+	if (edit.labelAlign !== undefined)
+		assignOrDelete(axis, 'labelAlign', edit.labelAlign ?? undefined);
+	for (const key of ['labelOffset', 'tickLabelSkip', 'tickMarkSkip'] as const) {
+		const value = edit[key];
+		if (value === undefined) continue;
+		if (
+			value !== null &&
+			(!Number.isInteger(value) ||
+				value < (key === 'labelOffset' ? 0 : 1) ||
+				value > (key === 'labelOffset' ? 1000 : 2147483647))
+		)
+			throw new RangeError(`Invalid chart axis ${key}`);
+		assignOrDelete(axis, key, value ?? undefined);
+	}
 	if (edit.majorTickMark !== undefined) axis.majorTickMark = edit.majorTickMark;
 	if (edit.minorTickMark !== undefined) axis.minorTickMark = edit.minorTickMark;
 	if (edit.tickLabelPosition !== undefined) axis.tickLabelPosition = edit.tickLabelPosition;
@@ -126,14 +157,17 @@ function applyAxis(axis: ChartAxis, edit: ChartAxisEdit): void {
 	if (edit.displayUnits !== undefined) {
 		if (axis.kind !== 'val') throw new RangeError('Only a value axis has display units');
 		const units = edit.displayUnits;
+		if (typeof units === 'number' && (!Number.isFinite(units) || units <= 0))
+			throw new RangeError('Custom chart display units must be a positive finite number');
+		const { builtInUnit: _builtIn, customUnit: _custom, ...kept } = axis.displayUnits ?? {};
 		assignOrDelete(
 			axis,
 			'displayUnits',
 			units === null
 				? undefined
 				: typeof units === 'number'
-					? { customUnit: units }
-					: { builtInUnit: units },
+					? { ...kept, customUnit: units }
+					: { ...kept, builtInUnit: units },
 		);
 	}
 }

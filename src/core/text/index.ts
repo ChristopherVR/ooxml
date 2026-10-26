@@ -14,3 +14,4 @@ export * from './change-case';
 export * from './font-metrics/advance-width';
 export { parseTsv, toTsv } from './tsv';
 export * from './locale-number';
+export * from './realign-runs';
