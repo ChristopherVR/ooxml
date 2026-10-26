@@ -1363,6 +1363,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			});
 		}
 		this.zip.file(chartPartPath, xml);
+		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.pending) {
+			const refreshed = await this.refreshClassicChartFromPart(xml, chartData, slidePath);
+			if (refreshed) {
+				for (const key of Object.keys(chartData))
+					delete (chartData as unknown as Record<string, unknown>)[key];
+				Object.assign(chartData, refreshed);
+				this.chartWorkbookDataBaselines.set(chartPartPath, {
+					signature: chartWorkbookDataSignature(chartData),
+					pending: false,
+				});
+			}
+		}
 		// Subsequent saves compare against the model now stored in this mutable ZIP.
 		this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 	}
