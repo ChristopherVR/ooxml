@@ -98,7 +98,7 @@ export function chartFillFromAppearance(value: ChartFillAppearance): DrawingFill
 		}
 		case 'picture': {
 			const picture = value.picture;
-			if (!picture || picture.src || (!picture.relId && !picture.linkRelId))
+			if (!picture || (!picture.relId && !picture.linkRelId))
 				throw new RangeError('Picture data and relationships must be allocated by the host');
 			const fill: Extract<DrawingFill, { kind: 'picture' }> = {
 				kind: 'picture',

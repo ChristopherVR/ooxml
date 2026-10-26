@@ -94,6 +94,12 @@ describe('resolved Office appearance to shared authored values', () => {
 		expect(() =>
 			chartFillFromAppearance({ kind: 'picture', picture: { src: 'data:image/png;base64,AA==' } }),
 		).toThrow('host');
+		expect(
+			chartFillFromAppearance({
+				kind: 'picture',
+				picture: { relId: 'rIdAllocated', src: 'data:image/png;base64,AA==' },
+			}),
+		).toEqual({ kind: 'picture', relId: 'rIdAllocated' });
 	});
 	it('shares effect conversion with host adapters and retains unrelated effect source', () => {
 		let source = columnChart();
