@@ -2701,3 +2701,15 @@ Source: ChristopherVR/ooxml at `6c87cb6f2`,
   line models. Source relationship and extension readers remain in PowerPoint.
 - New code: the saved-part refresh method on the classic chart parsing runtime, and axis
   identity matching that preserves resolved style context without mutating old snapshots.
+
+## Shared ChartEx formatting projection (2026-10-27)
+
+Source: ChristopherVR/ooxml at `a2605bfef`,
+`src/ui/src/chart/format-pane-chartex.ts` and the existing shared chart appearance operations.
+
+- The UI's style-source adaptation now delegates to `src/core/chart/edit/chartex-style.ts`.
+  This is a new strict, style-only projection onto the existing `ChartSpace` edit engine, with
+  changes copied back into ChartEx style holders. Data, axis semantics and family layouts stay
+  in the ChartEx model. The UI retains only its capability filtering and theme adapter.
+- New neutral axis/group/point-label operations and PowerPoint save planners reuse this bridge.
+  No second DrawingML formatting implementation or product storage model was introduced.

@@ -85,8 +85,9 @@ layouts have rendering/preservation support. Exact text measurement, placement, 
 fidelity remain incomplete.
 
 ChartEx has shared data-sheet, family-option, axis and point-label controls for admitted local
-workbooks, including structural edits and safe workbook growth. Unsupported external data and
-ambiguous hierarchy sources are refused; classic-only advanced controls are hidden. Twelve
+workbooks, including structural edits and safe workbook growth. Its shared Format pane supports
+pattern fills, effects, text and shape 3D formatting. Unsupported external data and ambiguous
+hierarchy sources are refused; classic-only series and secondary-axis controls are hidden. Twelve
 Word/Excel browser cases cover six bindings, and native Office 16 checks cover selected ChartData
 and save/reopen paths. These are bounded acceptance checks, not native layout parity; see the
 [delivery ledger](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md).

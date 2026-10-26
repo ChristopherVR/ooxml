@@ -235,3 +235,8 @@ series, category, value and referenced workbook-cell checks. With `-RequireActiv
 active sheets were `ChartData1`, `ChartData2`, `ChartData3`, `ChartData3`, `ChartData4`, matching the
 actual chart references. All 100 chart-rendering browser cases passed across the five PowerPoint
 bindings. Word/Excel/Visio native and browser evidence remains recorded in the sections above.
+
+The final Word/Excel ChartEx controls use the same style projection for pattern fills, effects,
+text, shape 3D and outlines; native ChartEx axis/family controls remain separate. Twelve browser
+cases passed across all six bindings for both products, including pattern edits, data growth and
+save/reopen. Secondary-axis authoring remains disabled for ChartEx.

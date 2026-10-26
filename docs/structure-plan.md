@@ -18,17 +18,19 @@ landed (see the parity pages). `niceScale` is still in `chart/render/chart-scale
 `chart/axis-nice.ts`, pinned equal by `xlsx/layout/chart-scale-vs-axis-nice.test.ts`. Wave 5 below is
 the open list.
 
-## Current shared Office status (2026-10-26)
+## Current shared Office status (2026-10-27)
 
 The [delivery ledger](office-shared-parity-delivery.md) is the active checklist. Shared DrawingML
 outlines/effect lists/format schemes and pattern/picture codecs are implemented. Word and Excel
 use the neutral SmartArt interpreter, richer painter, shared style/colour galleries and conservatively
-admitted generated drawing caches. They also edit supported ChartEx data and family options.
+admitted generated drawing caches. They also edit supported ChartEx data, family options and
+shared advanced DrawingML formatting.
 PowerPoint, Word, Excel and embedded Visio charts mount the shared advanced Format pane.
 
-PowerPoint classic saves now have neutral label/paint/text/axis/structure/analysis/point families;
-the broader C3 to C5 adapter migration, exhaustive corpus classification and native acceptance
-remain in progress. The remaining architecture work is consumer adaptation and removal of covered
+PowerPoint classic saves now have neutral label/paint/text/axis/structure/analysis/point families,
+with passing corpus, browser and native edit/reopen checks. ChartEx has shared factory, save,
+style/axis/label operations and compatibility projections. The remaining architecture work is
+adaptation of unsupported source details and removal of covered
 legacy paths, rather than reimplementing these shared codecs or controls. Picture media allocation,
 unsafe combo splits, effect DAG interpretation, broader native typography/3D fidelity and the complete
 Office style catalogue remain explicit limits. Sections and wave notes below are dated snapshots.
