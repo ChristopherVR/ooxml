@@ -221,7 +221,16 @@ export function chartTextEditsFromAppearance(value: ChartTextAppearance): ChartT
 	const edit: ChartTextEdit = {};
 	if (value.fill) edit.fill = chartFillFromAppearance(value.fill) ?? null;
 	if (value.outline) edit.line = chartLineFromAppearance(value.outline) ?? null;
-	for (const key of ['rotation', 'direction', 'anchor'] as const)
+	for (const key of [
+		'rotation',
+		'direction',
+		'anchor',
+		'typeface',
+		'eastAsiaTypeface',
+		'sizePt',
+		'bold',
+		'italic',
+	] as const)
 		if (value[key] !== undefined) Object.assign(edit, { [key]: value[key] });
 	return [
 		edit,

@@ -8,6 +8,7 @@ import { setChartTrendline, setChartErrorBars } from './analysis';
 import { setChartMarker } from './marker';
 import { setChartTargetEffect } from './effects';
 import { chartTargetTextFormatting, setChartTargetText } from './text';
+import { editChartTextBody } from './text';
 import { chartTargetThreeD, setChartTargetThreeD, setChartView3D } from './three-d';
 import { setChartSeriesSecondaryAxis } from './secondary-axis';
 import { setChartType } from './type';
@@ -28,6 +29,24 @@ const reopen = (space: ReturnType<typeof columnChart>) => {
 };
 
 describe('shared advanced classic chart operations', () => {
+	it('edits standalone and East Asian text through the same validated source-preserving helper', () => {
+		const source = columnChart().title!.tx!.rich!;
+		const before = structuredClone(source);
+		const body = editChartTextBody(source, { eastAsiaTypeface: 'Yu Gothic', sizePt: 20 });
+		expect(body.sourceXml).toContain('<a:ea typeface="Yu Gothic"');
+		expect(body.text).toBe(source.text);
+		expect(source).toEqual(before);
+		expect(editChartTextBody(body, { eastAsiaTypeface: null }).sourceXml).not.toContain('<a:ea');
+		expect(() => editChartTextBody(body, { sizePt: -1 })).toThrow('text size');
+		const updated = setChartTargetText(
+			columnChart(),
+			{ kind: 'title' },
+			{ eastAsiaTypeface: 'Yu Gothic' },
+		);
+		expect(chartTargetTextFormatting(updated, { kind: 'title' }).eastAsiaTypeface).toBe(
+			'Yu Gothic',
+		);
+	});
 	it('clears an outline width and edits arrow kind without losing arrow dimensions or fill', () => {
 		const source = columnChart();
 		source.spPr = {

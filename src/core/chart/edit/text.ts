@@ -20,6 +20,7 @@ import { chartSeriesEntryAt, editChartSpace } from './draft';
 import { editChartEffectList, type ChartEffectEdit } from './effects';
 import { withDrawingColorTransparency } from './paint';
 import type { ChartFormatTarget } from './target';
+import { validateChartTextEdit } from './text-validation';
 
 export interface ChartTextEdit {
 	/** Null restores inherited paint. */
@@ -33,6 +34,7 @@ export interface ChartTextEdit {
 	anchor?: string | null;
 	sizePt?: number | null;
 	typeface?: string | null;
+	eastAsiaTypeface?: string | null;
 	bold?: boolean;
 	italic?: boolean;
 }
@@ -63,6 +65,9 @@ export function chartTargetTextFormatting(
 		const face = first(node, 'latin', NS.a)?.getAttribute('typeface');
 		if (result.typeface === undefined && face !== undefined && face !== null)
 			result.typeface = face;
+		const eastAsia = first(node, 'ea', NS.a)?.getAttribute('typeface');
+		if (result.eastAsiaTypeface === undefined && eastAsia !== undefined && eastAsia !== null)
+			result.eastAsiaTypeface = eastAsia;
 		for (const [key, attr] of [
 			['bold', 'b'],
 			['italic', 'i'],
@@ -218,16 +223,20 @@ function patchRun(node: XmlElement, edit: ChartTextEdit): void {
 				typeof value === 'boolean' ? (value ? '1' : '0') : String(Math.round(value * 100)),
 			);
 	}
-	if (edit.typeface !== undefined) {
-		const old = first(node, 'latin', NS.a);
-		if (edit.typeface === null) {
-			if (old) node.removeChild(old);
-		} else {
-			const latin = old ?? node.ownerDocument.createElementNS(NS.a, 'a:latin');
-			latin.setAttribute('typeface', edit.typeface);
-			if (!old) node.appendChild(latin);
+	for (const [key, tag] of [
+		['typeface', 'latin'],
+		['eastAsiaTypeface', 'ea'],
+	] as const)
+		if (edit[key] !== undefined) {
+			const old = first(node, tag, NS.a);
+			if (edit[key] === null) {
+				if (old) node.removeChild(old);
+			} else {
+				const latin = old ?? node.ownerDocument.createElementNS(NS.a, `a:${tag}`);
+				latin.setAttribute('typeface', edit[key]);
+				if (!old) node.appendChild(latin);
+			}
 		}
-	}
 	appendInSchemaOrder(
 		node,
 		RUN_PROPERTIES_ORDER,
@@ -238,7 +247,11 @@ function patchRun(node: XmlElement, edit: ChartTextEdit): void {
 	);
 }
 
-function apply(body: ChartTextBody | undefined, edit: ChartTextEdit): ChartTextBody {
+export function editChartTextBody(
+	body: ChartTextBody | undefined,
+	edit: ChartTextEdit,
+): ChartTextBody {
+	validateChartTextEdit(edit);
 	const root = chartTextBodyElement(body);
 	let bodyPr = first(root, 'bodyPr', NS.a);
 	if (!bodyPr) {
@@ -284,42 +297,11 @@ export function setChartTargetText(
 	target: ChartFormatTarget,
 	edit: ChartTextEdit,
 ): ChartSpace {
-	if (
-		edit.rotation !== undefined &&
-		edit.rotation !== null &&
-		(!Number.isFinite(edit.rotation) || Math.abs(edit.rotation) > 360)
-	)
-		throw new RangeError('Invalid chart text rotation');
-	if (
-		edit.sizePt !== undefined &&
-		edit.sizePt !== null &&
-		(!Number.isFinite(edit.sizePt) || edit.sizePt <= 0 || edit.sizePt > 4000)
-	)
-		throw new RangeError('Invalid chart text size');
-	if (
-		edit.anchor !== undefined &&
-		edit.anchor !== null &&
-		!['t', 'ctr', 'b', 'just', 'dist'].includes(edit.anchor)
-	)
-		throw new RangeError('Invalid chart text anchor');
-	if (
-		edit.direction !== undefined &&
-		edit.direction !== null &&
-		![
-			'horz',
-			'vert',
-			'vert270',
-			'wordArtVert',
-			'eaVert',
-			'mongolianVert',
-			'wordArtVertRtl',
-		].includes(edit.direction)
-	)
-		throw new RangeError('Invalid chart text direction');
+	validateChartTextEdit(edit);
 	return editChartSpace(space, (draft) => {
 		for (const holder of holders(draft, target, true)) {
-			holder.txPr = apply(holder.txPr, edit);
-			if (holder.tx?.rich) holder.tx.rich = apply(holder.tx.rich, edit);
+			holder.txPr = editChartTextBody(holder.txPr, edit);
+			if (holder.tx?.rich) holder.tx.rich = editChartTextBody(holder.tx.rich, edit);
 		}
 	});
 }

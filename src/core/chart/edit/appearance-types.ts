@@ -56,6 +56,11 @@ export interface ChartLineAppearance {
 	endArrow?: string;
 }
 export interface ChartTextAppearance {
+	typeface?: string | null;
+	eastAsiaTypeface?: string | null;
+	sizePt?: number | null;
+	bold?: boolean;
+	italic?: boolean;
 	fill?: Pick<ChartFillAppearance, 'kind' | 'color' | 'transparency' | 'gradient'>;
 	outline?: Pick<ChartLineAppearance, 'kind' | 'color' | 'transparency' | 'width' | 'dash'>;
 	effects?: Pick<ChartEffectsAppearance, 'shadow' | 'glow'>;

@@ -43,3 +43,4 @@ export * from './pattern';
 export * from './appearance-types';
 export * from './format-values';
 export * from './chartex-action';
+export * from './text-validation';
