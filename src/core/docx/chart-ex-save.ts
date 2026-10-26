@@ -1,6 +1,7 @@
 // Reconcile edited ChartEx caches with the embedded workbook atomically before publishing its part.
 import type JSZip from 'jszip';
 import {
+	appendChartExWorkbookData,
 	chartExSpaceWorkbookWrites,
 	chartExDataChanged,
 	parseChartExSpace,
@@ -28,28 +29,38 @@ export async function applyChartExPartEdits(
 		if (original === undefined || original === JSON.stringify(chart.chartExSpace)) continue;
 		const source = await zip.file(chart.partName)?.async('string');
 		if (!source) throw new Error('The source chart part is missing.');
-		const written = writeChartExSpaceOverSource(source, chart.chartExSpace);
+		let written = writeChartExSpaceOverSource(source, chart.chartExSpace);
 		const before = parseChartExSpace(source).chartExSpace;
 		if (chartExDataChanged(before, chart.chartExSpace)) {
 			if (chart.chartExSpace.chartData.externalData && !chart.workbookPartName)
 				throw new Error('Extended chart data cannot update an external or missing workbook.');
-			const writes = chartExSpaceWorkbookWrites(chart.chartExSpace);
-			await saveChartWorkbookUpdates(
-				{
-					read: async (part) => zip.file(part)?.async('uint8array'),
-					write: (part, bytes) => {
-						zip.file(part, bytes);
+			if (chart.chartExRebaseData) {
+				const bytes = chart.workbookPartName
+					? await zip.file(chart.workbookPartName)?.async('uint8array')
+					: undefined;
+				if (!bytes || !chart.workbookPartName) throw new Error('The embedded workbook is missing.');
+				const rebased = await appendChartExWorkbookData(bytes, before, chart.chartExSpace);
+				zip.file(chart.workbookPartName, rebased.bytes);
+				written = writeChartExSpaceOverSource(source, rebased.space);
+			} else {
+				const writes = chartExSpaceWorkbookWrites(chart.chartExSpace);
+				await saveChartWorkbookUpdates(
+					{
+						read: async (part) => zip.file(part)?.async('uint8array'),
+						write: (part, bytes) => {
+							zip.file(part, bytes);
+						},
 					},
-				},
-				chart.partName,
-				chart.chartExSpace.chartData.externalData
-					? chart.workbookPartName
-						? { partName: chart.workbookPartName }
-						: { external: true }
-					: undefined,
-				writes,
-				{ atomic: true },
-			);
+					chart.partName,
+					chart.chartExSpace.chartData.externalData
+						? chart.workbookPartName
+							? { partName: chart.workbookPartName }
+							: { external: true }
+						: undefined,
+					writes,
+					{ atomic: true },
+				);
+			}
 		}
 		zip.file(chart.partName, written);
 		saved.add(chart.partName);

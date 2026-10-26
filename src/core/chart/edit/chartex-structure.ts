@@ -92,6 +92,7 @@ export function setChartExLayout(space: ChartExSpace, layout: ChartExLayout): Ch
 	)
 		throw new RangeError('A region map requires authored geography metadata.');
 	const base = space.plotArea.series.filter((series) => series.ownerIndex === undefined);
+	if (base.length && base.every((series) => series.layoutId === layout)) return space;
 	if (base.length !== 1 && !['boxWhisker', 'clusteredColumn'].includes(layout))
 		throw new RangeError('The target layout requires a single data series.');
 	return editChartExSpace(space, (draft) => {

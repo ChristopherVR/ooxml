@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
+import { loadXlsx } from '../xlsx/read';
 import { describe, expect, it } from 'vitest';
 import {
 	applyChartExSpaceDataSheetEdits,
@@ -16,6 +17,13 @@ const fixture = () =>
 
 async function embeddedFixture() {
 	const zip = await JSZip.loadAsync(fixture());
+	zip.file(
+		'[Content_Types].xml',
+		(await zip.file('[Content_Types].xml')!.async('string')).replace(
+			/<Types([^>]*)>/,
+			'<Types$1><Default Extension="xlsx" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>',
+		),
+	);
 	const chart = 'word/charts/chartEx1.xml';
 	zip.file(
 		chart,
@@ -108,4 +116,41 @@ describe('Word ChartEx edits', () => {
 		);
 		await expect(saveDocx(loaded.model)).resolves.toBeInstanceOf(Uint8Array);
 	});
+});
+
+it('grows an embedded chart on a fresh worksheet while preserving its original source cells', async () => {
+	const bytes = await embeddedFixture();
+	const loaded = await loadDocx(bytes);
+	const chart = chartsIn(documentDrawingBlocks(loaded.model)).find(
+		(c) => c.layoutId === 'waterfall',
+	)!;
+	const originalZip = await JSZip.loadAsync(bytes);
+	const originalBook = await JSZip.loadAsync(
+		await originalZip.file(chart.workbookPartName!)!.async('uint8array'),
+	);
+	for (const edits of [
+		[{ kind: 'add-category' }],
+		[{ kind: 'add-category' }, { kind: 'value', series: 0, category: 7, value: 91 }],
+	] as const)
+		Object.assign(
+			chart,
+			editDocxChartEx(chart, (space) => applyChartExSpaceDataSheetEdits(space, edits)),
+		);
+	expect(chart.chartExRebaseData).toBe(true);
+	const output = await saveDocx(loaded.model);
+	const back = chartsIn(documentDrawingBlocks((await loadDocx(output)).model)).find(
+		(c) => c.layoutId === 'waterfall',
+	)!;
+	const data = chartExSpaceDataSheet(back.chartExSpace!);
+	expect(data.categories).toHaveLength(8);
+	expect(data.series[0]!.values[7]).toBe(91);
+	const zip = await JSZip.loadAsync(output);
+	const book = await JSZip.loadAsync(await zip.file(back.workbookPartName!)!.async('uint8array'));
+	expect(
+		(await loadXlsx(await book.generateAsync({ type: 'uint8array' }))).sheets[0]!.rows,
+	).toEqual(
+		(await loadXlsx(await originalBook.generateAsync({ type: 'uint8array' }))).sheets[0]!.rows,
+	);
+	expect(await book.file('xl/workbook.xml')!.async('string')).toContain('ChartExData1');
+	expect(await book.file('xl/worksheets/sheet2.xml')!.async('string')).toContain('<v>91</v>');
 });

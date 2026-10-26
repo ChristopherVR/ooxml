@@ -24,24 +24,33 @@ export function editDocxChartEx(
 ): DocxChart {
 	if (!isDocxChartExEditable(chart)) throw new Error('This extended chart cannot be edited.');
 	const space = operation(chart.chartExSpace);
+	let rebase = chart.chartExRebaseData ?? false;
 	if (space === chart.chartExSpace) return chart;
 	if (chartExDataChanged(chart.chartExSpace, space)) {
 		if (space.chartData.externalData && !chart.workbookPartName)
 			throw new Error('Extended chart data cannot update an external or missing workbook.');
-		const writes = chartExSpaceWorkbookWrites(space);
-		if (writes.length && !chart.workbookPartName)
-			throw new Error('Extended chart data has no embedded workbook.');
-		if (
-			space.chartData.externalData &&
-			space.plotArea.series.some(
-				(series) =>
-					!series.tx?.formula ||
-					(
-						series.data ?? space.chartData.data.find((data) => data.id === series.dataId)
-					)?.dimensions.some((d) => !d.formula),
-			)
-		)
-			throw new Error('New series require a mapped workbook range.');
+		if (!rebase) {
+			try {
+				const writes = chartExSpaceWorkbookWrites(space);
+				if (writes.length && !chart.workbookPartName)
+					throw new Error('Extended chart data has no embedded workbook.');
+				if (
+					space.plotArea.series.some(
+						(series) =>
+							!series.tx?.formula ||
+							(
+								series.data ?? space.chartData.data.find((data) => data.id === series.dataId)
+							)?.dimensions.some((d) => !d.formula),
+					)
+				)
+					rebase = true;
+			} catch (error) {
+				// Only a local embedded source may grow into a dedicated new worksheet.
+				chartExSpaceWorkbookWrites(chart.chartExSpace);
+				if (!chart.workbookPartName) throw error;
+				rebase = true;
+			}
+		}
 	}
 	const { chartEx: _summary, title: _title, ...rest } = chart;
 	const summary = chartExSummaryFromModel(space);
@@ -49,6 +58,7 @@ export function editDocxChartEx(
 	return {
 		...rest,
 		chartExSpace: space,
+		...(rebase ? { chartExRebaseData: true } : {}),
 		layoutId: summary.layoutId,
 		...(summary.summary ? { chartEx: summary.summary } : {}),
 		...(title ? { title } : {}),

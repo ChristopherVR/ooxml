@@ -49,6 +49,8 @@ export interface DocxChart {
 	chartSpace?: ChartSpace;
 	/** Editable neutral model of an Office 2016 extended chart part. */
 	chartExSpace?: ChartExSpace;
+	/** Structural data edits are allocated to a fresh embedded worksheet on save. */
+	chartExRebaseData?: boolean;
 	/**
 	 * An extended chart (`cx:chartSpace`): `layoutId` names its family and `chartEx` is the summary
 	 * of the families the painter draws (waterfall, histogram, treemap, sunburst). `chartSpace` is absent for these.

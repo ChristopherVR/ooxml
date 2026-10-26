@@ -90,3 +90,32 @@ describe('Excel ChartEx operations', () => {
 		expect(source.value).not.toBe(99);
 	});
 });
+
+it('adds a series on a dedicated sheet with atomic undo and save/reopen', async () => {
+	const book = await loadXlsx(fixture());
+	const { s, i } = find(book, 'clusteredColumn');
+	const before = xlsxChartExDataSheet(book, s, i);
+	const count = book.sheets.length;
+	const source = book.sheets.find((ws) => ws.name === 'Data')!;
+	const original = getCell(source, 1, 7)?.value;
+	const session = createEditSession(book);
+	session.editChartEx(s, i, (space) =>
+		applyChartExSpaceDataSheetEdits(space, [
+			{ kind: 'add-series' },
+			{ kind: 'value', series: 1, category: 0, value: 64 },
+		]),
+	);
+	expect(book.sheets).toHaveLength(count + 1);
+	expect(getCell(source, 1, 7)?.value).toBe(original);
+	expect(xlsxChartExDataSheet(book, s, i).series[1]!.values[0]).toBe(64);
+	session.undo();
+	expect(book.sheets).toHaveLength(count);
+	expect(xlsxChartExDataSheet(book, s, i)).toEqual(before);
+	session.redo();
+	expect(book.sheets).toHaveLength(count + 1);
+	const output = await saveXlsx(book);
+	const reloaded = await loadXlsx(output);
+	const found = find(reloaded, 'clusteredColumn');
+	expect(xlsxChartExDataSheet(reloaded, found.s, found.i).series).toHaveLength(2);
+	expect(xlsxChartExDataSheet(reloaded, found.s, found.i).series[1]!.values[0]).toBe(64);
+});

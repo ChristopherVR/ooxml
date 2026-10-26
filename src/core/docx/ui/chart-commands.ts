@@ -6,6 +6,7 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { NodeSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import type { DocxChart } from '../chart';
 import { isDocxChartEditable } from '../chart-edit';
+import { isDocxChartExEditable } from '../chart-ex-edit';
 import type { InlineImage } from '../inline-model';
 import { nodeChart } from './chart-spec';
 
@@ -25,7 +26,12 @@ export function selectedChart(state: EditorState): SelectedChart | undefined {
 		return undefined;
 	const chart = nodeChart(selection.node);
 	if (!chart) return undefined;
-	return { pos: selection.from, node: selection.node, chart, editable: isDocxChartEditable(chart) };
+	return {
+		pos: selection.from,
+		node: selection.node,
+		chart,
+		editable: isDocxChartEditable(chart) || isDocxChartExEditable(chart),
+	};
 }
 
 /** Replaces the selected chart's model with `chart`, keeping the chart selected; one undo step. */

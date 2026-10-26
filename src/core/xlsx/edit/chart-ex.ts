@@ -1,6 +1,7 @@
 // ChartEx uses the existing workbook edit transaction and cell writer, including undo and redo.
 import {
 	chartExDataChanged,
+	chartExDataLayout,
 	chartExSpaceDataSheet,
 	chartExSpaceWorkbookWrites,
 	chartExLocalRange,
@@ -12,6 +13,7 @@ import { formatCellAddress } from '../../chart/workbook/cellref';
 import { getCell } from '../cells';
 import type { UnsupportedDrawingObject, Workbook } from '../model';
 import { ensureCell, sheetDrawingAt, type EditContext } from './context';
+import { createWorksheet, nextSheetId, nextSheetName } from '../workbook';
 import { syncTableHeader, writeValue } from './cell-values';
 
 function at(
@@ -83,20 +85,40 @@ export function editChartEx(
 	} catch {
 		/* Presentation-only edits can keep unavailable source data untouched. */
 	}
-	const next = operation(before);
+	let next = operation(before);
 	const changed = chartExDataChanged(before, next);
-	const writes = changed ? chartExSpaceWorkbookWrites(next, host.resolve) : [];
-	if (changed && next.chartData.externalData)
-		throw new Error('A worksheet chart cannot edit an external workbook source.');
-	if (
-		changed &&
-		next.plotArea.series.some((series) =>
-			(
-				series.data ?? next.chartData.data.find((data) => data.id === series.dataId)
-			)?.dimensions.some((d) => !d.formula),
-		)
-	)
-		throw new Error('New series require a mapped workbook range.');
+	let writes: ReturnType<typeof chartExSpaceWorkbookWrites> = [];
+	let layout: ReturnType<typeof chartExDataLayout> | undefined;
+	let newSheetName: string | undefined;
+	if (changed) {
+		if (next.chartData.externalData)
+			throw new Error('A worksheet chart cannot edit an external workbook source.');
+		let rebase = false;
+		try {
+			writes = chartExSpaceWorkbookWrites(next, host.resolve);
+			if (
+				next.plotArea.series.some(
+					(series) =>
+						!series.tx?.formula ||
+						(
+							series.data ?? next.chartData.data.find((data) => data.id === series.dataId)
+						)?.dimensions.some((d) => !d.formula),
+				)
+			)
+				rebase = true;
+		} catch {
+			chartExSpaceWorkbookWrites(before, host.resolve);
+			rebase = true;
+		}
+		if (rebase) {
+			if (ctx.workbook.structureLocked) throw new Error('The workbook structure is protected.');
+			newSheetName = nextSheetName(ctx.workbook, 'ChartExData');
+			layout = chartExDataLayout(next, newSheetName);
+			next = layout.space;
+			writes = chartExSpaceWorkbookWrites(before, host.resolve);
+		}
+	}
+
 	const cells = new Map<
 		string,
 		{ sheet: number; row: number; col: number; value: string | number | null }
@@ -132,6 +154,11 @@ export function editChartEx(
 				ensureCell(sheet, cell.row, cell.col);
 				writeValue(sheet, cell.row, cell.col, cell.value);
 				syncTableHeader(ctx, sheet, cell.row, cell.col);
+			}
+			if (layout && newSheetName) {
+				const sheet = createWorksheet(newSheetName, nextSheetId(ctx.workbook));
+				ctx.workbook.sheets.push(sheet);
+				layout.rows.forEach((row, r) => row.forEach((value, c) => writeValue(sheet, r, c, value)));
 			}
 			chart.chartExSpace = next;
 			const summary = chartExSummaryFromModel(next);

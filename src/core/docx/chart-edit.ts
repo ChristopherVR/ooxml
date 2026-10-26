@@ -21,6 +21,7 @@ import {
 import { parseXml } from '../xml/index';
 import { CHART_NOTICE, type DocxChart } from './chart';
 import type { InlineImage } from './inline-model';
+import { applyDocxChartExDataSheetEdits, docxChartExDataSheet } from './chart-ex-edit';
 
 /** Whether `chart` can be edited: a classic chart part that loaded. */
 export function isDocxChartEditable(chart: DocxChart | undefined): chart is DocxChart & {
@@ -63,7 +64,9 @@ export function editDocxChart(
 
 /** The data sheet Edit Data shows for the chart, or `undefined` when it is not editable. */
 export function docxChartDataSheet(chart: DocxChart | undefined): ChartDataSheet | undefined {
-	return isDocxChartEditable(chart) ? chartSpaceDataSheet(chart.chartSpace) : undefined;
+	return isDocxChartEditable(chart)
+		? chartSpaceDataSheet(chart.chartSpace)
+		: docxChartExDataSheet(chart);
 }
 
 /** Applies Edit Data edits; the chart itself when none applied. */
@@ -71,7 +74,9 @@ export function applyDocxChartDataSheetEdits(
 	chart: DocxChart,
 	edits: readonly ChartDataSheetEdit[],
 ): DocxChart {
-	return editDocxChart(chart, (space) => applyChartSpaceDataSheetEdits(space, edits));
+	return chart.chartExSpace
+		? applyDocxChartExDataSheetEdits(chart, edits)
+		: editDocxChart(chart, (space) => applyChartSpaceDataSheetEdits(space, edits));
 }
 
 /**
