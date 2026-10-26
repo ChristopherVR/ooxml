@@ -154,6 +154,35 @@ test.describe('host-owned collaboration', () => {
 		}
 	});
 
+	test('two create clients opening one empty room at once share a single deck', async ({
+		browser,
+		baseURL,
+	}, info) => {
+		test.skip(Boolean(info.project.metadata.headless), 'Counts the full viewer slide rail.');
+		const thumbnails = (page: Page) => page.getByRole('button', { name: /^Go to slide \d+$/u });
+		// The race needs both clients to find the room empty, so it does not happen on
+		// every attempt; without the fix about three in four attempts doubled the deck.
+		for (let attempt = 0; attempt < 3; attempt++) {
+			const room = `external-seed-race-${info.project.name}-${Date.now()}-${attempt}`;
+			const contexts = await Promise.all(
+				[0, 1].map(() => browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } })),
+			);
+			try {
+				const pages = await Promise.all(contexts.map((context) => context.newPage()));
+				await Promise.all(
+					pages.map((page, index) => open(page, room, { sample: '1', name: `Editor ${index}` })),
+				);
+				for (const page of pages) {
+					// The sample deck has 7 slides; a doubled room shows 14.
+					await expect(thumbnails(page)).toHaveCount(7);
+				}
+				await expect(elements(pages[0])).toHaveCount(await elements(pages[1]).count());
+			} finally {
+				await Promise.all(contexts.map((context) => context.close()));
+			}
+		}
+	});
+
 	test('waits beyond the built-in grace period for host readiness', async ({ page }, info) => {
 		await open(page, `external-wait-${info.project.name}-${Date.now()}`, {
 			sample: '1',

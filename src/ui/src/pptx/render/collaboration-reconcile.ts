@@ -5,4 +5,5 @@ export {
 	reconcileElementYMap,
 	reconcileSlideYMap,
 	reconcileSlidesInYDoc,
+	removeDuplicateSlidesInYDoc,
 } from 'ooxml-core/pptx/editor/render/collaboration-reconcile';

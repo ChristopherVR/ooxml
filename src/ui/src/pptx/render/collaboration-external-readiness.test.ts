@@ -372,4 +372,52 @@ describe('observeExternalCollaborationReadiness', () => {
 		patcher.dispose();
 		doc.destroy();
 	});
+
+	it('two create clients seeding one empty room at once converge on a single deck', async () => {
+		const deck = () =>
+			['s1', 's2', 's3'].map((id, index) => ({
+				id,
+				rId: `r${index}`,
+				slideNumber: index + 1,
+				elements: [
+					{ id: `${id}-text`, type: 'text' as const, x: 0, y: 0, width: 200, height: 60, text: id },
+				],
+			}));
+		const peers = [new Y.Doc(), new Y.Doc()].map((doc) => {
+			// The binding's model: its own deck, replaced by whatever it adopts.
+			const peer = { doc, model: deck() as { id: string }[], dispose: () => {} };
+			const adoptSlides = (slides: { id: string }[]) => {
+				peer.model = slides;
+			};
+			peer.dispose = observeExternalCollaborationReadiness(
+				createSession({ status: 'connected', synced: true }, doc).session,
+				{
+					gate: createSyncGate(() => {}),
+					factories,
+					sessionIntent: 'create',
+					onStatus: vi.fn(),
+					adoptSlides,
+					// What every binding does on ready: publish its local deck.
+					onReady: () => reconcileSlidesInYDoc(deck(), doc, factories),
+				},
+			);
+			return peer;
+		});
+		const [a, b] = peers;
+		// Both saw the empty room and seeded it before hearing from the other.
+		Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc, Y.encodeStateVector(b.doc)));
+		Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc, Y.encodeStateVector(a.doc)));
+		for (const peer of peers) {
+			expect(peer.model.map((slide) => slide.id)).toStrictEqual(['s1', 's2', 's3']);
+		}
+		// The observers remove the second copy, and the removals merge cleanly.
+		await Promise.resolve();
+		Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc, Y.encodeStateVector(b.doc)));
+		Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc, Y.encodeStateVector(a.doc)));
+		for (const peer of peers) {
+			expect(peer.doc.getArray('pptx:slides').length).toBe(3);
+			expect(readSlidesFromYDoc(peer.doc)).toHaveLength(3);
+			peer.dispose();
+		}
+	});
 });

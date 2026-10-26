@@ -470,12 +470,26 @@ export function writeSlidesToYDoc(
 	}, origin);
 }
 
+/**
+ * Read the deck from the document. A slide id that appears more than once (two
+ * peers seeded the same empty room concurrently) is read once, from its first
+ * copy, which is also the copy `reconcileSlidesInYDoc` keeps.
+ */
 export function readSlidesFromYDoc(ydoc: YDocLike): PptxSlide[] {
 	const assets = getAssetsMap(ydoc);
 	const arr = ydoc.getArray(YDOC_SLIDES_KEY);
 	const slides: PptxSlide[] = [];
+	const seen = new Set<string>();
 	for (let i = 0; i < arr.length; i++) {
-		slides.push(readSlideFromYMap(arr.get(i) as YMapLike, assets));
+		const map = arr.get(i) as YMapLike;
+		const id = typeof map?.get === 'function' ? map.get('id') : undefined;
+		if (typeof id === 'string') {
+			if (seen.has(id)) {
+				continue;
+			}
+			seen.add(id);
+		}
+		slides.push(readSlideFromYMap(map, assets));
 	}
 	return slides;
 }

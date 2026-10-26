@@ -3,7 +3,11 @@ import { describe, expect, it, test, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { getAssetsMap } from './collaboration-assets';
-import { LOCAL_SYNC_ORIGIN, reconcileSlidesInYDoc } from './collaboration-reconcile';
+import {
+	LOCAL_SYNC_ORIGIN,
+	reconcileSlidesInYDoc,
+	removeDuplicateSlidesInYDoc,
+} from './collaboration-reconcile';
 import type { YDocLike, YjsFactories, YMapLike } from './collaboration-sync';
 import {
 	observeYDocSlides,
@@ -445,4 +449,87 @@ test('y.Map satisfies YMapLike', () => {
 	expect(map.get('k')).toBe(1);
 	map.delete('k');
 	expect(map.get('k')).toBeUndefined();
+});
+
+describe('reconcileSlidesInYDoc: concurrent seeding of an empty room', () => {
+	const deck = (): PptxSlide[] => [
+		makeSlide('s1', [makeElement('e1', 'One')]),
+		makeSlide('s2', [makeElement('e2', 'Two')]),
+		makeSlide('s3', [makeElement('e3', 'Three')]),
+	];
+	const ids = (doc: Y.Doc): string[] =>
+		doc
+			.getArray<Y.Map<unknown>>(YDOC_SLIDES_KEY)
+			.toArray()
+			.map((slide) => slide.get('id') as string);
+
+	/** Two create clients each see a synced, empty room and seed it before hearing the other. */
+	function racedRoom(): [Y.Doc, Y.Doc] {
+		const docA = new Y.Doc();
+		const docB = new Y.Doc();
+		reconcileSlidesInYDoc(deck(), asDoc(docA), factories);
+		reconcileSlidesInYDoc(deck(), asDoc(docB), factories);
+		syncDocs(docA, docB);
+		return [docA, docB];
+	}
+
+	it('reads one slide per id after both seeds merge', () => {
+		const [docA, docB] = racedRoom();
+		// Both seeds are in the merged document...
+		expect(ids(docA)).toHaveLength(6);
+		// ...but every reader sees the deck once, the same copy on both peers.
+		for (const doc of [docA, docB]) {
+			expect(readSlidesFromYDoc(asDoc(doc)).map((slide) => slide.id)).toStrictEqual([
+				's1',
+				's2',
+				's3',
+			]);
+		}
+		expect(JSON.stringify(readSlidesFromYDoc(asDoc(docA)))).toBe(
+			JSON.stringify(readSlidesFromYDoc(asDoc(docB))),
+		);
+	});
+
+	it('republishing the adopted deck removes the duplicate copies on every peer', () => {
+		const [docA, docB] = racedRoom();
+		reconcileSlidesInYDoc(readSlidesFromYDoc(asDoc(docA)), asDoc(docA), factories);
+		reconcileSlidesInYDoc(readSlidesFromYDoc(asDoc(docB)), asDoc(docB), factories);
+		syncDocs(docA, docB);
+		expect(ids(docA)).toStrictEqual(['s1', 's2', 's3']);
+		expect(ids(docB)).toStrictEqual(['s1', 's2', 's3']);
+	});
+
+	it('keeps an edit made on the surviving copy while the duplicates are removed', () => {
+		const [docA, docB] = racedRoom();
+		const slidesA = readSlidesFromYDoc(asDoc(docA));
+		(slidesA[1].elements[0] as unknown as { textSegments: unknown }).textSegments = [
+			{ text: 'Two edited', style: {} },
+		];
+		reconcileSlidesInYDoc(slidesA, asDoc(docA), factories);
+		reconcileSlidesInYDoc(readSlidesFromYDoc(asDoc(docB)), asDoc(docB), factories);
+		syncDocs(docA, docB);
+		for (const doc of [docA, docB]) {
+			const read = readSlidesFromYDoc(asDoc(doc));
+			expect(read).toHaveLength(3);
+			expect(
+				(read[1].elements[0] as unknown as { textSegments: { text: string }[] }).textSegments[0]
+					.text,
+			).toBe('Two edited');
+		}
+		expect(ids(docA)).toStrictEqual(['s1', 's2', 's3']);
+	});
+
+	it('never writes a slide id twice, even from a model that repeats one', () => {
+		const doc = new Y.Doc();
+		const [s1, s2, s3] = deck();
+		reconcileSlidesInYDoc([s1, s2, s3, s1, s2, s3], asDoc(doc), factories);
+		expect(ids(doc)).toStrictEqual(['s1', 's2', 's3']);
+	});
+
+	it('removeDuplicateSlidesInYDoc drops later copies and reports whether it changed anything', () => {
+		const [docA] = racedRoom();
+		expect(removeDuplicateSlidesInYDoc(asDoc(docA))).toBe(true);
+		expect(ids(docA)).toStrictEqual(['s1', 's2', 's3']);
+		expect(removeDuplicateSlidesInYDoc(asDoc(docA))).toBe(false);
+	});
 });
