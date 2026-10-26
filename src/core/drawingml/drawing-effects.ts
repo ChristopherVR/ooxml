@@ -142,6 +142,7 @@ export function drawingEffectXml(effect: DrawingEffect): string {
 	}
 	if (effect.kind === 'fillOverlay' && changed('fill')) {
 		const xml = effect.fill && drawingFillXml(effect.fill);
+		if (effect.fill && !xml) throw new Error('Cannot author this DrawingML effect fill');
 		if (xml || !effect.fill) {
 			const fill = fillElementOf(root);
 			if (fill) root.removeChild(fill);

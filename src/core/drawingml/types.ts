@@ -35,8 +35,14 @@ export type DrawingFill =
 			/** Gradient tile insets; corner directions can extend beyond the shape box. */
 			tileRect?: { l: number; t: number; r: number; b: number };
 	  }
-	| { kind: 'pattern'; preset: string; foreground?: DrawingColor; background?: DrawingColor }
-	| { kind: 'picture'; relId?: string }
+	| {
+			kind: 'pattern';
+			preset: string;
+			foreground?: DrawingColor;
+			background?: DrawingColor;
+			sourceXml?: string;
+	  }
+	| { kind: 'picture'; relId?: string; linkRelId?: string; sourceXml?: string }
 	| { kind: 'unsupported'; element: string };
 
 /** A DrawingML outline (`a:ln`). */

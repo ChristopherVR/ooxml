@@ -2,6 +2,7 @@ import { NS, buildXml, children, elements, first, parseXml, type XmlElement } fr
 import { drawingColorXml } from './write-color';
 import { parseDrawingColorIn } from './drawing-color';
 import type { DrawingFill } from './types';
+import { drawingPatternPictureXml } from './write-pattern-picture';
 
 /** Replace only the DrawingML fill, retaining geometry, outlines, effects and extensions. */
 export function setDrawingFillXml(properties: XmlElement, xml: string): void {
@@ -37,6 +38,7 @@ export function setDrawingFillXml(properties: XmlElement, xml: string): void {
 export function drawingFillXml(fill: DrawingFill): string | undefined {
 	if (fill.kind === 'none') return '<a:noFill/>';
 	if (fill.kind === 'solid') return `<a:solidFill>${drawingColorXml(fill.color)}</a:solidFill>`;
+	if (fill.kind === 'pattern' || fill.kind === 'picture') return drawingPatternPictureXml(fill);
 	if (fill.kind !== 'gradient') return undefined;
 	const doc = parseXml(fill.sourceXml ?? `<a:gradFill xmlns:a="${NS.a}"/>`);
 	const root = doc.documentElement;

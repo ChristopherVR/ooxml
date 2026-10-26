@@ -79,6 +79,7 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 			const background = parseDrawingColorIn(first(fill, 'bgClr', NS.a));
 			return {
 				kind: 'pattern',
+				sourceXml: buildXml(fill),
 				preset: fill.getAttribute('prst') ?? '',
 				...(foreground ? { foreground } : {}),
 				...(background ? { background } : {}),
@@ -88,7 +89,13 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 			const blip = first(fill, 'blip', NS.a);
 			const relId =
 				blip?.getAttributeNS(NS.r, 'embed') || blip?.getAttribute('r:embed') || undefined;
-			return { kind: 'picture', ...(relId ? { relId } : {}) };
+			const linkRelId = blip?.getAttributeNS(NS.r, 'link') || undefined;
+			return {
+				kind: 'picture',
+				sourceXml: buildXml(fill),
+				...(relId ? { relId } : {}),
+				...(linkRelId ? { linkRelId } : {}),
+			};
 		}
 		default:
 			return { kind: 'unsupported', element: fill.localName };

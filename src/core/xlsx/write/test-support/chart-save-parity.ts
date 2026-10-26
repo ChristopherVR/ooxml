@@ -18,7 +18,27 @@ import { PARITY_EDITS, parityCharts, runParityEdit, type ParityChart } from './c
 const FIXTURE = path.join(import.meta.dirname, '../../__fixtures__/chart-save-parity.json');
 
 const stripped = (space: ChartSpace): unknown =>
-	JSON.parse(JSON.stringify(space, (key, value) => (key === 'sourceXml' ? undefined : value)));
+	JSON.parse(
+		JSON.stringify(space, (key, value) => {
+			if (key === 'sourceXml') return undefined;
+			// The frozen DOM-path hashes predate these authored outline fields. Keep their
+			// original comparison scope; DrawingML's real-fixture round trips separately
+			// verify the new fields and their preservation through chart edit/save.
+			if (key === 'line' && value && typeof value === 'object') {
+				const {
+					compound: _compound,
+					alignment: _alignment,
+					customDash: _dash,
+					join: _join,
+					headEnd: _head,
+					tailEnd: _tail,
+					...legacy
+				} = value;
+				return legacy;
+			}
+			return value;
+		}),
+	);
 
 /** The hash of a part's model without its `sourceXml` copies. */
 function modelHash(xml: string): string {

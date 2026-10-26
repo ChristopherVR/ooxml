@@ -22,6 +22,12 @@ PowerPoint implementations used as the semantic checklist; no source module was 
 - New regression tests compare style matrices in committed Word, Excel and PowerPoint
   fixtures and cover source-preserving edits. These are XML/model comparisons, not native
   rendering or new Office application acceptance measurements.
+- New `write-pattern-picture.ts` authors pattern colours and host-owned picture relationship
+  references; source-backed edits preserve crop, tiling, blip effects and extensions.
+  Picture data and package relationships stay with the host. Outlines refuse picture fills.
+  The historical Excel chart fingerprint helper projects the older outline fields so its
+  frozen hashes keep their original meaning; independent real-chart save tests compare every
+  native outline and an injected custom outline, including all newly modelled properties.
 
 ## Shared move, resize and touch interaction
 

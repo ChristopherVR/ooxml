@@ -47,7 +47,8 @@ export type DrawingEffect =
 	| DrawingOuterShadow
 	| DrawingReflection
 	| (EffectSource & DrawingShadowGeometry & { kind: 'innerShadow' })
-	| (EffectSource & DrawingShadowGeometry & { kind: 'presetShadow'; preset?: string })
+	| (EffectSource &
+			Omit<DrawingShadowGeometry, 'blurRadiusEmu'> & { kind: 'presetShadow'; preset?: string })
 	| (EffectSource & { kind: 'glow'; radiusEmu?: number; color?: DrawingColor })
 	| (EffectSource & { kind: 'softEdge'; radiusEmu?: number })
 	| (EffectSource & { kind: 'blur'; radiusEmu?: number; grow?: boolean })

@@ -148,4 +148,13 @@ describe('shared effect list', () => {
 			resolveDrawingOuterShadow({ ...effect, scaleX: 90000 }, { scheme: () => '#123456' }),
 		).toBeUndefined();
 	});
+	it('refuses unsupported new overlay fills instead of emitting an incomplete effect', () => {
+		expect(() =>
+			drawingEffectXml({
+				kind: 'fillOverlay',
+				blend: 'mult',
+				fill: { kind: 'unsupported', element: 'grpFill' },
+			}),
+		).toThrow('effect fill');
+	});
 });

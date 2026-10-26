@@ -64,6 +64,8 @@ export function patchDrawingLine(ln: XmlElement, line: DrawingLine): void {
 		else ln.setAttribute(attribute, String(typeof value === 'number' ? Math.round(value) : value));
 	}
 	if (changed('fill')) {
+		if (line.fill?.kind === 'picture')
+			throw new Error('Picture fills are not supported on DrawingML outlines');
 		const solid = first(ln, 'solidFill', NS.a);
 		if (solid && line.fill?.kind === 'solid') patchDrawingColorIn(solid, line.fill.color);
 		else {
