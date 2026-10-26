@@ -1,3 +1,4 @@
+import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { NS, buildXml, first, parseXml } from '../../xml/index';
 import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../model';
@@ -211,6 +212,12 @@ export function writeDrawing(
 			);
 			body += anchorXml(object.anchor, frame);
 			continue;
+		}
+		if (object.kind === 'unsupported' && object.chartExSpace && object.chartExPartName) {
+			const original = source?.text(object.chartExPartName);
+			if (!original) throw new Error('The source extended chart part is missing.');
+			const written = writeChartExSpaceOverSource(original, object.chartExSpace);
+			if (written !== original) writer.add(object.chartExPartName, written);
 		}
 		if (object.kind === 'smartArt' && object.edited && sourceDrawing)
 			writeEditedSmartArt(writer, object);

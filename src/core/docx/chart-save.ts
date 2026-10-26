@@ -8,6 +8,7 @@
 // chart style and colour parts, which Word does not require). Charts that were not edited are
 // never touched, so their parts stay byte for byte.
 import type JSZip from 'jszip';
+import { applyChartExPartEdits } from './chart-ex-save';
 import {
 	writeChartSpaceOverSource,
 	chartSpaceDataSheet,
@@ -110,6 +111,7 @@ export async function applyChartPartEdits(
 	base: DocumentModel | undefined,
 ): Promise<ChartWorkbookIssue[]> {
 	const issues: ChartWorkbookIssue[] = [];
+	await applyChartExPartEdits(zip, model, base);
 	if (!base) return issues;
 	const loaded = new Map<string, string>();
 	for (const chart of chartsIn(documentDrawingBlocks(base)))

@@ -155,3 +155,5 @@ export { parseContentControl } from './content-control';
 export * from './shape-model';
 export * from './shape-palette';
 export { shapeSvg, shapeAppearance, shapeColorCss, shapeTextColor } from './shape-svg';
+
+export * from './chart-ex-edit';

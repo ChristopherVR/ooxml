@@ -30,3 +30,4 @@ export * from './chartex-data';
 
 export * from './chartex-structure';
 export * from './chartex-sheet';
+export * from './chartex-intent';

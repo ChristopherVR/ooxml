@@ -12,6 +12,8 @@ import type {
 	ChartThemePalette,
 } from '../chart/render/summary';
 import type { ChartSpace } from '../chart/model';
+import type { ChartExSpace } from '../chart/ex/model';
+import type { ChartParseIssue } from '../chart/model-series';
 
 /** Excel error values. */
 export const ERROR_CODES = [
@@ -585,6 +587,10 @@ export interface UnsupportedDrawingObject {
 	 * display only. The frame is still saved from `sourceXml`.
 	 */
 	chartEx?: ChartObject;
+	/** Editable neutral ChartEx part; the original drawing anchor remains verbatim. */
+	chartExSpace?: ChartExSpace;
+	chartExPartName?: string;
+	chartExIssues?: ChartParseIssue[];
 }
 
 /**

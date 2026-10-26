@@ -91,3 +91,17 @@ export function chartExSpaceWorkbookWrites(
 		}
 	return writes;
 }
+
+/** Whether an edit changes source data rather than chart-only presentation. */
+export function chartExDataChanged(before: ChartExSpace, after: ChartExSpace): boolean {
+	const shape = (space: ChartExSpace) =>
+		JSON.stringify({
+			data: space.chartData,
+			series: space.plotArea.series.map((series) => ({
+				tx: series.tx,
+				data: series.data,
+				dataId: series.dataId,
+			})),
+		});
+	return shape(before) !== shape(after);
+}

@@ -10,3 +10,4 @@ export {
 
 export * from './workbook-writes';
 export * from './keep-source';
+export * from './hydrate';

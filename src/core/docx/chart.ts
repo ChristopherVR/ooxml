@@ -8,6 +8,8 @@
 import {
 	chartColorStyleId,
 	chartExSummary,
+	parseChartExSpace,
+	type ChartExSpace,
 	parseChartSpace,
 	readChartFormatting,
 	type ChartParseIssue,
@@ -45,6 +47,8 @@ export interface DocxChart {
 	partName?: string;
 	/** The parsed chart part (`c:chartSpace`); absent when the part could not be read. */
 	chartSpace?: ChartSpace;
+	/** Editable neutral model of an Office 2016 extended chart part. */
+	chartExSpace?: ChartExSpace;
 	/**
 	 * An extended chart (`cx:chartSpace`): `layoutId` names its family and `chartEx` is the summary
 	 * of the families the painter draws (waterfall, histogram, treemap, sunburst). `chartSpace` is absent for these.
@@ -132,6 +136,14 @@ export async function resolveChartPart(
 		const root = parseXml(xml, { label: 'Chart part' }).documentElement;
 		const extended = chartExSummary(root);
 		if (extended) {
+			const parsed = parseChartExSpace(root);
+			chart.chartExSpace = parsed.chartExSpace;
+			chart.issues.push(...parsed.issues);
+			const rels = parseRelationships(await readText(relationshipsPartFor(chart.partName)));
+			const id = parsed.chartExSpace.chartData.externalData?.relId;
+			const rel = id ? rels.get(id) : undefined;
+			if (rel && rel.mode !== 'External' && rel.type === PACKAGE_RELATIONSHIP_TYPE)
+				chart.workbookPartName = resolvePartPath(chart.partName, rel.target);
 			chart.layoutId = extended.layoutId;
 			if (extended.summary) {
 				chart.chartEx = extended.summary;

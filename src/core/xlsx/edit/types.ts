@@ -1,3 +1,4 @@
+import type { ChartExSpace } from '../../chart/ex/model';
 import type { DocumentPropertiesPatch } from './doc-properties';
 import type { DataTableRequest } from './data-table';
 import type { GoalSeekRequest, GoalSeekResult } from './goal-seek';
@@ -266,6 +267,8 @@ export interface EditSession {
 	updateChart(sheet: number, index: number, patch: ChartPatch): void;
 	/** Applies a `chart/edit` intent (a Format pane edit) to the chart at `index`. */
 	editChart(sheet: number, index: number, intent: ChartEditIntent): void;
+	/** Extended chart operation with atomic source-cell synchronization and history. */
+	editChartEx(sheet: number, index: number, operation: (space: ChartExSpace) => ChartExSpace): void;
 	/** Inserts a picture (bytes stored as a new media part) and returns it. */
 	addImage(
 		sheet: number,

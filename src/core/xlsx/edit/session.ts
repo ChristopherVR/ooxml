@@ -36,6 +36,7 @@ import { rangesIntersect } from '../address';
 import * as cellStyle from './cell-style';
 import * as cfEdits from './conditional-formats';
 import * as charts from './charts';
+import * as chartEx from './chart-ex';
 import * as smartArt from './smart-art';
 import * as tableEdits from './table-edits';
 import * as duplicates from './duplicates';
@@ -299,6 +300,7 @@ export function createEditSession(
 		addChart: (s, chart) => charts.addChart(ctx, s, chart),
 		updateChart: (s, index, patch) => charts.updateChart(ctx, s, index, patch),
 		editChart: (s, index, intent) => charts.editChart(ctx, s, index, intent),
+		editChartEx: (s, index, operation) => chartEx.editChartEx(ctx, s, index, operation),
 		addImage: (s, bytes, type, anchor, name) => charts.addImage(ctx, s, bytes, type, anchor, name),
 		replaceConditionalFormat: (s, index, cf) => cfEdits.replaceConditionalFormat(ctx, s, index, cf),
 		removeConditionalFormat: (s, index) => cfEdits.removeConditionalFormat(ctx, s, index),

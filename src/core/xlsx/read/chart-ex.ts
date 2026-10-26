@@ -3,6 +3,7 @@
 // `_xlchart.v1.N` defined names. The frame stays an unsupported drawing object (its anchor XML is
 // kept verbatim on save); the families the chart painter draws also carry their summary, so the
 // grid can paint them from live cells.
+import { parseChartExSpace } from '../../chart/ex/parse';
 import { chartExSummary } from '../../chart/render/summary-from-chartex';
 import { NS, children, first, relAttr, type XmlElement } from '../../xml/index';
 import type { DrawingAnchor, UnsupportedDrawingObject } from '../model';
@@ -44,6 +45,10 @@ export function readChartExFrame(
 	};
 	if (!xml) return object;
 	try {
+		const parsed = parseChartExSpace(xml);
+		object.chartExSpace = parsed.chartExSpace;
+		object.chartExIssues = parsed.issues;
+		if (target) object.chartExPartName = target;
 		const extended = chartExSummary(xml);
 		if (extended?.layoutId) object.description = `chart (${extended.layoutId})`;
 		if (extended?.summary) {
