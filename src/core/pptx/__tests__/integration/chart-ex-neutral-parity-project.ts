@@ -6,6 +6,7 @@
 import type {
 	ChartExAutoNumber,
 	ChartExData,
+	ChartExDataLabel,
 	ChartExDimension,
 	ChartExSeries,
 	ChartExSpace,
@@ -57,10 +58,14 @@ export function projectPptxChartEx(chart: PptxChartData): ChartExShape {
 				? nonEmpty({
 						position: series.dataLabelOptions.position,
 						numberFormat: series.dataLabelOptions.numberFormat,
+						showValue: series.dataLabelOptions.showValue,
+						showCategoryName: series.dataLabelOptions.showCategory,
+						showSeriesName: series.dataLabelOptions.showSeriesName,
 					})
 				: undefined,
 			labels: series.dataLabels?.map((label) => ({
 				index: label.idx,
+				deleted: label.deleted === true ? true : undefined,
 				position: label.position,
 				numberFormat: label.numberFormat,
 				showValue: label.showVal,
@@ -100,6 +105,10 @@ export function projectPptxChartEx(chart: PptxChartData): ChartExShape {
 			majorGridlines: axis.majorGridlines === true,
 			minorGridlines: axis.minorGridlines === true,
 			tickLabels: axis.tickLblPos !== 'none',
+			min: axis.min,
+			max: axis.max,
+			majorUnit: axis.majorUnit,
+			minorUnit: axis.minorUnit,
 		})),
 	});
 }
@@ -240,11 +249,20 @@ function labels(series: ChartExSeries) {
 		labelOptions: nonEmpty({
 			position: labelPosition(group.position),
 			numberFormat: group.numberFormat?.formatCode.trim() || undefined,
+			showValue: visibility?.value,
+			showCategoryName: visibility?.categoryName,
+			showSeriesName: visibility?.seriesName,
 		}),
-		labels: group.labels.map((label) => {
+		labels: [
+			...group.labels,
+			...group.hidden
+				.filter((index) => !group.labels.some((label) => label.index === index))
+				.map((index): ChartExDataLabel => ({ index })),
+		].map((label) => {
 			const own = label.visibility ?? visibility;
 			return {
 				index: label.index ?? 0,
+				deleted: group.hidden.includes(label.index ?? 0) ? true : undefined,
 				position: labelPosition(label.position),
 				numberFormat: label.numberFormat?.formatCode.trim() || undefined,
 				showValue: own ? own.value === true : undefined,
@@ -319,6 +337,22 @@ export function projectNeutralChartEx(space: ChartExSpace): ChartExShape {
 			majorGridlines: axis.majorGridlines !== undefined,
 			minorGridlines: axis.minorGridlines !== undefined,
 			tickLabels: axis.tickLabels !== undefined,
+			min:
+				axis.scaling?.kind === 'val' && typeof axis.scaling.min === 'number'
+					? axis.scaling.min
+					: undefined,
+			max:
+				axis.scaling?.kind === 'val' && typeof axis.scaling.max === 'number'
+					? axis.scaling.max
+					: undefined,
+			majorUnit:
+				axis.scaling?.kind === 'val' && typeof axis.scaling.majorUnit === 'number'
+					? axis.scaling.majorUnit
+					: undefined,
+			minorUnit:
+				axis.scaling?.kind === 'val' && typeof axis.scaling.minorUnit === 'number'
+					? axis.scaling.minorUnit
+					: undefined,
 		})),
 	});
 }

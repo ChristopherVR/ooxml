@@ -14,8 +14,8 @@ import { projectNeutralChartEx, projectPptxChartEx } from './chart-ex-neutral-pa
 /**
  * ChartEx parity harness (docs/agnostic-core-plan.md, chart step C5): every committed chartex part
  * (the PowerPoint chart gallery, the Word and Excel chart-family samples) and a synthetic part using
- * every modelled element is read by BOTH parsers - through `PptxHandler` (the `fast-xml-parser`
- * object tree, `parseCxChartSeries`, `PptxChartData`) and through `parseChartExSpace` (the shared
+ * every modelled element is read through BOTH public models: `PptxHandler` (the host styles and
+ * shared ChartEx read adapter, `PptxChartData`) and `parseChartExSpace` (the shared
  * DOM, `ChartExSpace`) - and both are projected onto one comparison shape
  * (`chart-ex-neutral-parity-project.ts`) that must be equal. Parts from Word and Excel are swapped
  * into the gallery deck's chartex parts so the handler reads them in place.
@@ -68,7 +68,7 @@ const SLOTS = (await chartExParts('../../pptx/__tests__/fixtures/e2e/chart-galle
 const BATCHES: string[][] = [];
 for (let i = 0; i < PARTS.length; i += SLOTS.length) BATCHES.push(PARTS.slice(i, i + SLOTS.length));
 
-describe('chartex parity: pptx object-tree parser vs neutral parseChartExSpace', () => {
+describe('chartex parity: PowerPoint consumer vs neutral parseChartExSpace', () => {
 	it.each(BATCHES.map((batch, index) => [index, batch] as const))(
 		'batch %i projects every part identically',
 		async (_index, batch) => {
@@ -84,6 +84,37 @@ describe('chartex parity: pptx object-tree parser vs neutral parseChartExSpace',
 			});
 		},
 	);
+
+	it('retains authored hidden-only labels, content switches and numeric scaling in both public models', async () => {
+		const byPart = await chartsByPart(await deckWith([FULL], SLOTS));
+		const host = projectPptxChartEx(byPart.get(SLOTS[0]!)!);
+		const neutral = projectNeutralChartEx(parseChartExSpace(FULL).chartExSpace);
+		for (const chart of [host, neutral]) {
+			const series = chart.series[0]!;
+			expect(series['labelOptions']).toMatchObject({
+				showValue: true,
+				showCategoryName: true,
+				showSeriesName: false,
+			});
+			const labels = series['labels'] as Record<string, unknown>[];
+			expect(labels.find((label) => label['index'] === 0)).toMatchObject({
+				deleted: true,
+				showValue: true,
+				showCategoryName: true,
+				showSeriesName: false,
+			});
+			expect(labels.find((label) => label['index'] === 2)).toMatchObject({
+				showValue: false,
+				showCategoryName: false,
+				showSeriesName: true,
+			});
+			expect(labels.find((label) => label['index'] === 2)?.['deleted']).toBeUndefined();
+			const axis = chart.axes.find((axis) => axis['id'] === 1)!;
+			expect(axis).toMatchObject({ max: 100, majorUnit: 20 });
+			expect(axis['min']).toBeUndefined();
+			expect(axis['minorUnit']).toBeUndefined();
+		}
+	});
 
 	it('covers every committed and synthetic part', () => {
 		expect(PARTS).toHaveLength(15 + 1 + EDGE.length);
