@@ -5,3 +5,4 @@ export * from './data-edit';
 export * from './inserted';
 export * from './fabricated-styles';
 export * from './drawing';
+export * from './cache';

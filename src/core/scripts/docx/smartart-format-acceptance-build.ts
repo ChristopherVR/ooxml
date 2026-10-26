@@ -1,7 +1,7 @@
 // Creates native Word and Excel acceptance inputs from the committed producer fixtures.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadDocx, formatDocxDiagram } from '../../docx/index';
+import { loadDocx, formatDocxDiagram, diagramsIn } from '../../docx/index';
 import { loadXlsx } from '../../xlsx/read/index';
 import { saveXlsx } from '../../xlsx/write/index';
 import { createEditSession } from '../../xlsx/edit/index';
@@ -26,7 +26,10 @@ for (const [index, style] of (['flat', 'moderate', 'intense'] as const).entries(
 	diagram = formatDocxDiagram(diagram, { kind: 'style', value: style });
 	run.image!.diagram = diagram;
 	const wordName = `word-${style}.docx`;
-	writeFileSync(join(output, wordName), await loaded.save(model));
+	const wordBytes = await loaded.save(model);
+	if (diagramsIn((await loadDocx(wordBytes)).model.blocks)[0]?.rendering !== 'generated-drawing')
+		throw new Error('The Word fixture has no verified generated cache.');
+	writeFileSync(join(output, wordName), wordBytes);
 	manifest[wordName] = {
 		texts: diagram.nodes.map((node) => node.text),
 		colors: diagram.colorsId!,
@@ -43,7 +46,14 @@ for (const [index, style] of (['flat', 'moderate', 'intense'] as const).entries(
 	session.formatSmartArt(0, indexInSheet, { kind: 'style', value: style });
 	const art = workbook.sheets[0]!.drawings[indexInSheet] as SmartArtObject;
 	const excelName = `excel-${style}.xlsx`;
-	writeFileSync(join(output, excelName), await saveXlsx(workbook));
+	const excelBytes = await saveXlsx(workbook);
+	if (
+		!(await loadXlsx(excelBytes)).sheets[0]!.drawings.some(
+			(shape) => shape.kind === 'smartArt' && shape.cacheGenerated,
+		)
+	)
+		throw new Error('The Excel fixture has no verified generated cache.');
+	writeFileSync(join(output, excelName), excelBytes);
 	manifest[excelName] = {
 		texts: art.nodes.map((node) => node.text),
 		colors: art.colorsId!,

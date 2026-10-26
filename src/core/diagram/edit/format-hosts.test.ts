@@ -34,6 +34,8 @@ it('saves Word styles and colors with original text/parts intact and a fresh unc
 	expect(formatDocxDiagram(next, { kind: 'style', value: 'moderate' })).toBe(next);
 	const bytes = await loaded.save(edited);
 	const reopened = diagramsIn((await loadDocx(bytes)).model.blocks)[0]!;
+	expect(reopened.rendering).toBe('generated-drawing');
+	expect(reopened.drawing?.shapes.length).toBeGreaterThan(0);
 	expect(reopened).toMatchObject({
 		colorsId: 'urn:ooxml-core/colors/monochromatic2',
 		quickStyleId: 'urn:ooxml-core/style/moderate',
@@ -73,7 +75,8 @@ it('makes Excel style/color choices undoable and saves their own definitions aft
 	});
 	expect(object.nodes).toEqual(original.nodes);
 	expect(object.layoutSource?.quickStyleXml).toContain('urn:ooxml-core/style/intense');
-	expect(object.diagram).toBeUndefined();
+	expect(object.diagram?.shapes.length).toBeGreaterThan(0);
+	expect(object.cacheGenerated).toBe(true);
 });
 
 it('keeps an explicit node fill above a changed global palette in the interpreted preview', () => {

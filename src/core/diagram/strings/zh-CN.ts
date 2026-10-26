@@ -2,6 +2,8 @@
 import type { DiagramUiStrings } from './en';
 
 export const zhCN: DiagramUiStrings = {
+	'Generated SmartArt preview; not native Office layout.':
+		'生成的 SmartArt 预览；并非 Office 原生布局。',
 	'Change Colors': '更改颜色',
 	'SmartArt Styles': 'SmartArt 样式',
 	'Best Match for Document': '文档的最佳匹配',

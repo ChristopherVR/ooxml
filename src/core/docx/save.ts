@@ -23,6 +23,7 @@ import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 import { refreshStyleRefFields } from './style-ref-fields';
 import { applyDiagramEdits } from './diagram-save';
+import { applyGeneratedDiagramCaches } from './diagram-cache';
 import { applyChartPartEdits } from './chart-save';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
@@ -142,6 +143,7 @@ export async function saveDocx(
 	zip.file('word/document.xml', buildXml(document));
 	await writeNewRelationships(zip, 'word/document.xml', newRelationships, pendingMedia);
 	if (binding) await applyDiagramEdits(zip, model.blocks, binding.base.blocks, pendingMedia);
+	await applyGeneratedDiagramCaches(zip, model.blocks, binding?.base.blocks ?? [], model.theme);
 	await applyHeaderFooterEdits(
 		zip,
 		model,

@@ -117,9 +117,10 @@ describe('editing SmartArt in a workbook', () => {
 		expect(await text(zip, 'xl/diagrams/layout1.xml')).toContain(`uniqueId="${next.layoutId}"`);
 		const data = await text(zip, 'xl/diagrams/data1.xml');
 		expect(data).toContain(`loTypeId="${next.layoutId}"`);
-		expect(data).not.toContain('type="pres"');
+		expect(data).toContain('generatedCache');
 		const back = smartArt(await loadXlsx(await zip.generateAsync({ type: 'uint8array' })));
 		expect(back.layoutId).toBe(next.layoutId);
+		expect(back.cacheGenerated).toBe(true);
 		expect(outline(back)).toEqual(['Plan', 'Build', 'Ship']);
 	});
 });

@@ -1,10 +1,11 @@
+import { DEFAULT_GENERATED_DIAGRAM_SCHEME } from 'ooxml-core/diagram';
 import type { DocxDiagram, ThemeCatalog } from 'ooxml-core/docx';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { NodeView } from 'prosemirror-view';
 import { defineSmartArt } from '../smartart';
 import { placementClass } from 'ooxml-core/docx/ui';
 import { previewDocxDiagram, themeDrawing } from 'ooxml-core/docx/ui';
-import { translate, type EditorLocale } from './localization';
+import { translate, type EditorLocale, type LocalizationKey } from './localization';
 
 const EMU_PER_PX = 9525;
 
@@ -145,7 +146,7 @@ export function smartArtNodeView(
 			...(preview?.issues.map((issue) => `${issue.code}: ${issue.message}`) ?? []),
 		]) {
 			const item = document.createElement('li');
-			item.textContent = note;
+			item.textContent = translate(locale, note as LocalizationKey);
 			list.append(item);
 		}
 		panel.replaceChildren(list);
@@ -153,7 +154,8 @@ export function smartArtNodeView(
 	};
 
 	const cached =
-		diagram.rendering === 'cached-drawing' && (diagram.drawing?.shapes.length ?? 0) > 0
+		(diagram.rendering === 'cached-drawing' || diagram.rendering === 'generated-drawing') &&
+		(diagram.drawing?.shapes.length ?? 0) > 0
 			? diagram.drawing
 			: undefined;
 	const preview = cached ? undefined : previewDocxDiagram(diagram, theme);
@@ -162,7 +164,7 @@ export function smartArtNodeView(
 		? undefined
 		: translate(locale, 'Drawn with an approximate layout computed here; not Word-identical.');
 	if (drawing) {
-		dom.dataset.rendering = cached ? 'cached-drawing' : (preview?.mode ?? 'placeholder');
+		dom.dataset.rendering = cached ? diagram.rendering : (preview?.mode ?? 'placeholder');
 		themed = themeDrawing(drawing, theme);
 		const element = document.createElement('office-ui-smartart') as SmartArtElement;
 		element.className = 'dve-smartart-drawing';
@@ -180,7 +182,10 @@ export function smartArtNodeView(
 			writeNotes((event as CustomEvent<RenderReport>).detail);
 		});
 		writeNotes();
-		element.schemeColors = themed.schemeColors;
+		element.schemeColors =
+			diagram.rendering === 'generated-drawing'
+				? { ...DEFAULT_GENERATED_DIAGRAM_SCHEME, ...themed.schemeColors }
+				: themed.schemeColors;
 		element.schemeFonts = {
 			...(theme?.fonts.major.latin ? { major: theme.fonts.major.latin } : {}),
 			...(theme?.fonts.minor.latin ? { minor: theme.fonts.minor.latin } : {}),

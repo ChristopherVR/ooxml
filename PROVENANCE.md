@@ -2677,3 +2677,14 @@ Source: ChristopherVR/ooxml at `27cc953db`,
   drawing writer in `diagram/write/drawing.ts`, and the Word/Excel format commands and save adapters.
   Ordinary PowerPoint 2D preset shape properties use the shared drawing writer; its legacy custom
   geometry, presentation-point association and 3D adapters remain in PowerPoint.
+
+## Shared workbook drawing theme colours (2026-10-26)
+
+Source: ChristopherVR/ooxml at `26af3ba4c`,
+`src/ui/src/xlsx/grid/smartart.ts`, `smartArtSchemeColors` and its alias map.
+
+- Moved the palette-to-DrawingML slot mapping to `src/core/xlsx/drawing-theme.ts` as
+  `drawingSchemeColors`, using the existing `PALETTE_SLOTS` ordering. The UI retains
+  `smartArtSchemeColors` as a compatibility alias. Generated cache saving uses the same mapping.
+- New host cache generation and association code lives in `diagram/write/cache.ts`,
+  `docx/diagram-cache.ts` and `xlsx/write/smart-art-cache.ts`; no source caches are claimed lossless.

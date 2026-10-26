@@ -190,3 +190,25 @@ test('editing a Word SmartArt rewrites its data, drops the stale drawing and und
 			await before.file(`word/diagrams/${stem}1.xml`)!.async('string'),
 		);
 });
+
+test('Word saves a generated 2D cache and identifies it after reload', async ({ page }) => {
+	await page.setViewportSize({ width: 1700, height: 950 });
+	await page.goto('/?framework=vanilla');
+	await open(page, await readFile(WORD_FIXTURE), 'smartart-word.docx');
+	const host = page.locator('docx-editor');
+	await diagrams(host)
+		.first()
+		.click({ position: { x: 4, y: 4 } });
+	await openTextPane(host);
+	await lines(host).first().fill('Generated cache');
+	const { bytes } = await savedDocument(page, 'generated-smartart.docx');
+	await reopenDocument(page, 'generated-smartart.docx', bytes);
+	await expect(diagrams(host).first()).toHaveAttribute('data-rendering', 'generated-drawing');
+	await expect(diagrams(host).first().locator('office-ui-smartart')).toContainText(
+		'Generated cache',
+	);
+	await expect(diagrams(host).first()).toHaveAttribute(
+		'title',
+		'Generated SmartArt preview; not native Office layout.',
+	);
+});

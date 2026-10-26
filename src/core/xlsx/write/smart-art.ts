@@ -12,10 +12,13 @@ import {
 	writeEditedDiagramData,
 	writeInsertedDiagramData,
 } from '../../diagram/index';
-import { NS } from '../../xml/index';
+import { NS, buildXml, elements, parseXml } from '../../xml/index';
+import { relationshipsPartFor } from '../../opc/index';
+import { CONTENT_TYPES } from '../read/package';
 import type { DrawingObject, SmartArtObject } from '../model';
 import type { PackageWriter, RelationshipSet } from './package-writer';
 import { escapeAttr } from './xml-out';
+import { writeSmartArtCache, type SmartArtCacheContext } from './smart-art-cache';
 
 type PartKey = 'data' | 'layout' | 'quickStyle' | 'colors';
 const PART_KEYS: readonly PartKey[] = ['data', 'layout', 'quickStyle', 'colors'];
@@ -49,7 +52,13 @@ export function droppedSmartArtDrawings(objects: readonly DrawingObject[]): Set<
 }
 
 /** Rewrites the data part (and the layout part after Change Layout) of an edited diagram. */
-export function writeEditedSmartArt(writer: PackageWriter, object: SmartArtObject): void {
+export function writeEditedSmartArt(
+	writer: PackageWriter,
+	object: SmartArtObject,
+	rels?: RelationshipSet,
+	relativeTarget?: (part: string) => string,
+	context: SmartArtCacheContext = {},
+): void {
 	const dataPart = object.parts?.data;
 	const xml = dataPart ? writer.source?.text(dataPart) : undefined;
 	if (!dataPart || xml === undefined) return;
@@ -69,6 +78,18 @@ export function writeEditedSmartArt(writer: PackageWriter, object: SmartArtObjec
 		}
 	}
 	writer.carry(dataPart);
+	const dataRelsPath = relationshipsPartFor(dataPart);
+	const dataRelsXml = writer.source?.text(dataRelsPath);
+	if (dataRelsXml) {
+		const document = parseXml(dataRelsXml);
+		const drawingLinks = elements(document.documentElement).filter(
+			(entry) =>
+				entry.namespaceURI === NS.rels &&
+				entry.getAttribute('Type') === DIAGRAM_RELATIONSHIP_TYPES.drawing,
+		);
+		for (const entry of drawingLinks) document.documentElement.removeChild(entry);
+		if (drawingLinks.length) writer.add(dataRelsPath, buildXml(document), CONTENT_TYPES.rels);
+	}
 	writer.add(
 		dataPart,
 		writeEditedDiagramData(xml, nodesOf(object), {
@@ -80,6 +101,15 @@ export function writeEditedSmartArt(writer: PackageWriter, object: SmartArtObjec
 				: {}),
 		}),
 	);
+	if (rels && relativeTarget)
+		writeSmartArtCache(
+			writer,
+			object,
+			{ ...object.parts, data: dataPart },
+			rels,
+			relativeTarget,
+			context,
+		);
 }
 
 /** The first `n` for which none of the four part names is taken. */
@@ -103,6 +133,7 @@ export function writeInsertedSmartArt(
 	rels: RelationshipSet,
 	relativeTarget: (toPart: string) => string,
 	id: number,
+	context: SmartArtCacheContext = {},
 ): string {
 	const names = insertedPartNames(writer);
 	const definitions = object.definitions ?? {};
@@ -125,6 +156,7 @@ export function writeInsertedSmartArt(
 		writer.add(names[key], withDiagramXmlProlog(xml), DIAGRAM_CONTENT_TYPES[key]);
 		relIds[key] = rels.add(DIAGRAM_RELATIONSHIP_TYPES[key], relativeTarget(names[key]));
 	}
+	writeSmartArtCache(writer, object, names, rels, relativeTarget, context);
 	const name = escapeAttr(object.name ?? `Diagram ${id}`);
 	return (
 		`<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${id}" name="${name}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>` +

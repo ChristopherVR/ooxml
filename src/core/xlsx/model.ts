@@ -630,6 +630,7 @@ export interface SmartArtDefinitions {
  * are written.
  */
 export interface SmartArtObject {
+	cacheGenerated?: true;
 	layoutSource?: DiagramLayoutSource;
 	kind: 'smartArt';
 	anchor: DrawingAnchor;

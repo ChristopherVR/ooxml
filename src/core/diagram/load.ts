@@ -9,6 +9,7 @@ import { parseDiagramDataModel } from './data-model';
 import { parseDiagramDrawing } from './drawing';
 import { resolveDiagramDrawingPart, type DiagramPartHost } from './relationships';
 import type { DiagramLayoutSource } from './layout-preview';
+import { generatedDrawingDigest } from './cache-metadata';
 import type {
 	DiagramColorsDefinition,
 	DiagramDataModel,
@@ -36,12 +37,15 @@ export interface DiagramPartPaths {
 
 /** Every part of a diagram, parsed, with the problems met on the way. */
 export interface LoadedDiagram {
+	/** Verified against the exact drawing bytes; a native application's rewrite clears this status. */
+	generatedCache?: true;
 	/** Original definitions and source metadata for an uncached preview. */
 	layoutSource?: DiagramLayoutSource;
 	relationshipIds: DiagramRelationshipIds;
 	paths: DiagramPartPaths;
 	/** Relationship id (in the host part) of the cached drawing, when one was found. */
 	drawingRelId?: string;
+	drawingOwnerPart?: string;
 	data?: DiagramDataModel;
 	layout?: DiagramLayoutSummary;
 	colors?: DiagramColorsDefinition;
@@ -127,7 +131,7 @@ export async function loadDiagram(
 	const colors = await read('colors', (xml) => parseDiagramColors(xml));
 	const quickStyle = await read('quickStyle', (xml) => parseDiagramQuickStyle(xml));
 
-	let drawingResolution: { relId: string; path: string } | undefined;
+	let drawingResolution: { relId: string; path: string; ownerPart?: string } | undefined;
 	try {
 		drawingResolution = await resolveDiagramDrawingPart(
 			hostPart,
@@ -142,9 +146,15 @@ export async function loadDiagram(
 		});
 	}
 	let drawing: DiagramDrawing | undefined;
+	let generatedCache = false;
 	if (drawingResolution) {
 		paths.drawing = drawingResolution.path;
-		drawing = await read('drawing', (xml, part) => parseDiagramDrawing(xml, part));
+		drawing = await read('drawing', (xml, part) => {
+			generatedCache = Boolean(
+				data?.generatedCacheDigest && data.generatedCacheDigest === generatedDrawingDigest(xml),
+			);
+			return parseDiagramDrawing(xml, part);
+		});
 		if (drawing) issues.push(...drawing.issues);
 	} else if (data)
 		issues.push({
@@ -155,9 +165,11 @@ export async function loadDiagram(
 
 	return {
 		layoutSource,
+		...(generatedCache ? { generatedCache: true as const } : {}),
 		relationshipIds,
 		paths,
 		...(drawingResolution ? { drawingRelId: drawingResolution.relId } : {}),
+		...(drawingResolution?.ownerPart ? { drawingOwnerPart: drawingResolution.ownerPart } : {}),
 		...(data ? { data } : {}),
 		...(layout ? { layout } : {}),
 		...(colors ? { colors } : {}),

@@ -9,6 +9,7 @@ import {
 	loadDiagram,
 	parseDiagramDataModel,
 	parseRelationshipIdAttributes,
+	GENERATED_DIAGRAM_CACHE_NOTICE,
 	type DiagramDrawing,
 	type DiagramLayoutSource,
 	type DiagramIssue,
@@ -27,6 +28,8 @@ const DGM_NS = DIAGRAM_GRAPHIC_URI;
 
 /** A package part a diagram refers to. */
 export interface DocxDiagramPart {
+	/** Set when the cached drawing relationship belongs to the data part, not the document. */
+	ownerPart?: string;
 	/** Relationship id in the part that holds the drawing (`word/document.xml`, a header...). */
 	relId: string;
 	/** Package part name, e.g. `word/diagrams/data1.xml`. */
@@ -46,7 +49,7 @@ export type DocxDiagramNode = DiagramHostNode;
  * `placeholder`: no usable cached drawing; only a labelled placeholder (with the node text) can be
  * shown, because no SmartArt layout is computed.
  */
-export type DocxDiagramRendering = 'cached-drawing' | 'placeholder';
+export type DocxDiagramRendering = 'cached-drawing' | 'generated-drawing' | 'placeholder';
 
 /**
  * A SmartArt graphic in a Word document. An unedited diagram keeps its markup and parts byte for
@@ -118,7 +121,11 @@ const isDrawingRelationship = (diagram: DocxDiagram, relId: string): boolean =>
 
 /** The notice that goes with a rendering. */
 export const diagramNotice = (rendering: DocxDiagramRendering): string =>
-	rendering === 'cached-drawing' ? NOTICES.cached : NOTICES.placeholder;
+	rendering === 'generated-drawing'
+		? GENERATED_DIAGRAM_CACHE_NOTICE
+		: rendering === 'cached-drawing'
+			? NOTICES.cached
+			: NOTICES.placeholder;
 
 /**
  * Reads the host side of a SmartArt graphic. Synchronous: resolves the relationships through the
@@ -242,7 +249,11 @@ export async function resolveDiagramParts(
 	diagram.issues.push(...fresh);
 	if (loaded.layoutSource) diagram.layoutSource = loaded.layoutSource;
 	if (loaded.paths.drawing && loaded.drawingRelId)
-		diagram.parts.drawing = { relId: loaded.drawingRelId, partName: loaded.paths.drawing };
+		diagram.parts.drawing = {
+			relId: loaded.drawingRelId,
+			partName: loaded.paths.drawing,
+			...(loaded.drawingOwnerPart ? { ownerPart: loaded.drawingOwnerPart } : {}),
+		};
 	if (loaded.layout) {
 		diagram.layout = {
 			uniqueId: loaded.layout.uniqueId,
@@ -255,7 +266,7 @@ export async function resolveDiagramParts(
 	if (loaded.data) diagram.nodes = diagramNodesInTreeOrder(loaded.data);
 	if (loaded.drawing && loaded.drawing.shapes.length > 0) {
 		diagram.drawing = loaded.drawing;
-		diagram.rendering = 'cached-drawing';
+		diagram.rendering = loaded.generatedCache ? 'generated-drawing' : 'cached-drawing';
 	} else {
 		delete diagram.drawing;
 		diagram.rendering = 'placeholder';

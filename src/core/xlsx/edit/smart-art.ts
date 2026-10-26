@@ -51,6 +51,7 @@ function smartArtAt(ctx: EditContext, s: number, index: number): SmartArtObject 
 /** Marks a diagram edited: its cached drawing is stale, so it is dropped (and on save). */
 function markEdited(object: SmartArtObject): void {
 	delete object.diagram;
+	delete object.cacheGenerated;
 	if (!object.inserted) object.edited = true;
 	object.notice = SMART_ART_NOTICES.edited;
 	object.issues = object.issues.filter((issue) => !issue.code.startsWith('DIAGRAM_DRAWING'));

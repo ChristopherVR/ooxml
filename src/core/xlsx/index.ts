@@ -2,6 +2,7 @@
 // number formats, editing commands and the DOM-free grid layout the Excel viewer paints.
 // Legacy .xls and CSV loading live in the `xlsx/load` subpath so this entry never pulls in ole2.
 export * from './model';
+export { drawingSchemeColors } from './drawing-theme';
 export * from './address';
 export * from './address-r1c1';
 export * from './cells';

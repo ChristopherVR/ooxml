@@ -7,13 +7,19 @@ $word = $null
 $excel = $null
 function Assert-Art($art, $expected) {
 	$texts = @()
-	for ($i = 1; $i -le $art.AllNodes.Count; $i++) { $texts += [string]$art.AllNodes.Item($i).TextFrame2.TextRange.Text }
+	$shapeCounts = @()
+	for ($i = 1; $i -le $art.AllNodes.Count; $i++) {
+		$node = $art.AllNodes.Item($i)
+		$texts += [string]$node.TextFrame2.TextRange.Text
+		$shapeCounts += [int]$node.Shapes.Count
+		if ($node.Shapes.Count -lt 1) { throw 'A native semantic node has no associated drawing shape.' }
+	}
 	if (($texts -join '|') -ne ($expected.texts -join '|')) { throw "Native node text mismatch: $($texts -join '|')" }
 	$color = [string]$art.Color.Id
 	$style = [string]$art.QuickStyle.Id
 	if ($color -ne $expected.colors) { throw "Native color mismatch: $color" }
 	if ($style -ne $expected.style) { throw "Native style mismatch: $style" }
-	return @{ texts = $texts; colors = $color; style = $style }
+	return @{ texts = $texts; colors = $color; style = $style; associatedShapes = $shapeCounts }
 }
 try {
 	$word = New-Object -ComObject Word.Application

@@ -7,11 +7,13 @@
 import type JSZip from 'jszip';
 import { writeEditedDiagramData, writeInsertedDiagramData } from '../diagram/index';
 import { createOfficeGuid } from '../crypto/uuid';
-import { removeContentTypeOverride } from '../opc/index';
+import { removeContentTypeOverride, resolvePartPath } from '../opc/index';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
 import type { Block, PendingMediaPart } from './model';
-import { buildRelationshipsXml, parseRelationships } from './package-parts';
+import { parseRelationships } from './package-parts';
+import { NS, buildXml, elements, parseXml } from '../xml/index';
+import { DIAGRAM_RELATIONSHIP_TYPES } from '../diagram/relationships';
 import { relationshipsPartFor } from './part-relationships';
 
 const HOST_PART = 'word/document.xml';
@@ -37,13 +39,38 @@ export function insertedDiagramDataXml(
 }
 
 /** Removes a relationship from the document's `.rels` and the part it targets. */
-async function dropDrawingPart(zip: JSZip, relId: string, partName: string): Promise<void> {
-	const relsPath = relationshipsPartFor(HOST_PART);
-	const rels = parseRelationships(await zip.file(relsPath)?.async('string'));
-	if (rels.delete(relId)) zip.file(relsPath, buildRelationshipsXml(rels));
+async function dropDrawingPart(
+	zip: JSZip,
+	relId: string,
+	partName: string,
+	ownerPart = HOST_PART,
+): Promise<void> {
+	const relsPath = relationshipsPartFor(ownerPart);
+	const xml = await zip.file(relsPath)?.async('string');
+	if (xml) {
+		const document = parseXml(xml);
+		const entry = elements(document.documentElement).find(
+			(node) =>
+				node.namespaceURI === NS.rels &&
+				node.getAttribute('Id') === relId &&
+				node.getAttribute('Type') === DIAGRAM_RELATIONSHIP_TYPES.drawing,
+		);
+		if (entry) {
+			document.documentElement.removeChild(entry);
+			zip.file(relsPath, buildXml(document));
+		}
+	}
 	// Another relationship (from any part) may still use the drawing: then keep it.
-	for (const rel of rels.values())
-		if (rel.target.replace(/^\.?\//, '') === partName.replace(/^word\//, '')) return;
+	for (const file of zip.file(/\.rels$/)) {
+		const sourcePart =
+			file.name === '_rels/.rels' ? '' : file.name.replace(/(^|\/)_rels\/([^/]+)\.rels$/, '$1$2');
+		try {
+			for (const rel of parseRelationships(await file.async('string')).values())
+				if (rel.mode !== 'External' && resolvePartPath(sourcePart, rel.target) === partName) return;
+		} catch {
+			return;
+		}
+	}
 	zip.remove(partName);
 	await removeContentTypeOverride(zip, partName);
 }
@@ -106,6 +133,6 @@ export async function applyDiagramEdits(
 					: {}),
 			}),
 		);
-		if (drawing) await dropDrawingPart(zip, drawing.relId, drawing.partName);
+		if (drawing) await dropDrawingPart(zip, drawing.relId, drawing.partName, drawing.ownerPart);
 	}
 }

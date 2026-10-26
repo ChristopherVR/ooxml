@@ -1,7 +1,16 @@
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { NS, buildXml, first, parseXml } from '../../xml/index';
-import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../model';
+import type {
+	ChartObject,
+	DrawingAnchor,
+	DrawingObject,
+	ImageObject,
+	ThemePalette,
+	Worksheet,
+} from '../model';
+import { anchorToPixelBox } from '../layout/anchors';
+import { createGridMetrics } from '../layout/metrics';
 import { CONTENT_TYPES } from '../read/package';
 import { chartXml } from './chart';
 import { writeChartColorStyle } from './chart-colors';
@@ -175,6 +184,7 @@ export function writeDrawing(
 	partName: string,
 	objects: readonly DrawingObject[],
 	sourceDrawing: string | undefined,
+	context?: { theme: ThemePalette; sheet: Worksheet },
 ): boolean {
 	const rels = new RelationshipSet();
 	const source = writer.source;
@@ -202,6 +212,24 @@ export function writeDrawing(
 		) + 1;
 	let body = '';
 	for (const object of objects) {
+		const cacheContext =
+			object.kind === 'smartArt'
+				? {
+						...(context ? { theme: context.theme } : {}),
+						...(context
+							? {
+									extentEmu: (() => {
+										const box = anchorToPixelBox(
+											context.sheet,
+											object.anchor,
+											createGridMetrics(context.sheet, { zoom: 100 }),
+										);
+										return { width: Math.round(box.w * 9525), height: Math.round(box.h * 9525) };
+									})(),
+								}
+							: {}),
+					}
+				: {};
 		if (object.kind === 'smartArt' && object.inserted) {
 			const frame = writeInsertedSmartArt(
 				writer,
@@ -209,6 +237,7 @@ export function writeDrawing(
 				rels,
 				(part) => relativeTarget(partName, part),
 				nextId++,
+				cacheContext,
 			);
 			body += anchorXml(object.anchor, frame);
 			continue;
@@ -220,7 +249,13 @@ export function writeDrawing(
 			if (written !== original) writer.add(object.chartExPartName, written);
 		}
 		if (object.kind === 'smartArt' && object.edited && sourceDrawing)
-			writeEditedSmartArt(writer, object);
+			writeEditedSmartArt(
+				writer,
+				object,
+				rels,
+				(part) => relativeTarget(partName, part),
+				cacheContext,
+			);
 		if (
 			object.kind === 'unsupported' ||
 			object.kind === 'smartArt' ||

@@ -237,8 +237,11 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 				const label = quickStyle?.labels.find((entry) => entry.name === node.styleLabel);
 				if (label) {
 					shape.style = label;
-					shape.has3d = label.hasScene3d || label.hasShape3d;
+					shape.has3d = label.requires3d ?? label.hasShape3d;
 				}
+				if (node.nodeId) shape.sourceNodeId = node.nodeId;
+				if (node.styleLabel) shape.sourceStyleLabel = node.styleLabel;
+				if (node.foldedNodeIds?.length) shape.foldedNodeIds = node.foldedNodeIds;
 				const sourceNode = data.nodes.find((entry) => entry.id === node.nodeId);
 				if (
 					input.formatScheme &&

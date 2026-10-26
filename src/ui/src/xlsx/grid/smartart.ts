@@ -5,31 +5,15 @@
 // Excel's own layout, which the badge and the object's notice say. Editing goes through the
 // SmartArt Design tab and the text pane (../smartart-controller.ts).
 import { previewDiagramLayout, resolveDiagramDrawingStyles } from 'ooxml-core/diagram';
-import { THEME_SLOTS, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
+import { drawingSchemeColors, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
 import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../index';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from './dom';
 
-const ALIASES: Readonly<Record<string, string>> = {
-	bg1: 'lt1',
-	tx1: 'dk1',
-	bg2: 'lt2',
-	tx2: 'dk2',
-};
-
-/** The workbook theme as the scheme colours the SmartArt drawing refers to (`#rrggbb`). */
-export function smartArtSchemeColors(theme: ThemePalette | undefined): SchemeColors {
-	const colors: Record<string, string> = {};
-	THEME_SLOTS.forEach((slot, index) => {
-		const value = theme?.colors[index];
-		if (value && /^[0-9a-f]{6}$/i.test(value)) colors[slot] = `#${value.toLowerCase()}`;
-	});
-	for (const [alias, slot] of Object.entries(ALIASES)) {
-		const value = colors[slot];
-		if (value) colors[alias] = value;
-	}
-	return colors;
-}
+/** Compatibility alias for the shared workbook DrawingML theme mapping. */
+export const smartArtSchemeColors = drawingSchemeColors;
+const objectCacheStatus = (object: SmartArtObject) =>
+	object.cacheGenerated ? 'generated-drawing' : 'cached-drawing';
 
 /**
  * Paints a SmartArt frame into `node`. The shared SVG scales to the positioned frame,
@@ -75,7 +59,7 @@ export function paintSmartArt(
 	const diagram = rawDrawing
 		? resolveDiagramDrawingStyles(rawDrawing, theme?.formatScheme)
 		: undefined;
-	node.dataset.rendering = cached ? 'cached-drawing' : (preview?.mode ?? 'placeholder');
+	node.dataset.rendering = cached ? objectCacheStatus(obj) : (preview?.mode ?? 'placeholder');
 	if (preview?.issues.length)
 		node.title = [notice, ...preview.issues.map((issue) => `${issue.code}: ${issue.message}`)].join(
 			'\n',

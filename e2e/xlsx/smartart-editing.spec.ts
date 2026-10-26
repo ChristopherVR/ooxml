@@ -119,3 +119,32 @@ for (const framework of FRAMEWORKS)
 		});
 		expect(errors).toEqual([]);
 	});
+
+test('Excel saves a generated 2D cache and identifies it after reload', async ({ page }) => {
+	await newWorkbook(page, 'vanilla');
+	await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
+	await editor(page).getByRole('button', { name: 'SmartArt', exact: true }).first().click();
+	await editor(page)
+		.locator('[data-dialog="insert-smartart"]')
+		.getByRole('button', { name: 'OK', exact: true })
+		.click();
+	await lines(page).first().fill('Generated cache');
+	const bytes = await editor(page).evaluate(async (node) => [
+		...new Uint8Array(
+			await (await (node as unknown as { save(): Promise<Blob> }).save()).arrayBuffer(),
+		),
+	]);
+	await editor(page).evaluate(async (node, data) => {
+		await (node as unknown as { load(bytes: Uint8Array, name: string): Promise<void> }).load(
+			new Uint8Array(data),
+			'generated-smartart.xlsx',
+		);
+	}, bytes);
+	const drawn = editor(page).locator('.xg-smartart').first();
+	await expect(drawn).toHaveAttribute('data-rendering', 'generated-drawing');
+	await expect(drawn.locator('office-ui-smartart')).toContainText('Generated cache');
+	await expect(drawn).toHaveAttribute(
+		'title',
+		/Generated SmartArt preview; not native Office layout/,
+	);
+});

@@ -46,7 +46,7 @@ export interface DocxDiagramEditResult {
 export function withDiagramNodes(diagram: DocxDiagram, nodes: DocxDiagramNode[]): DocxDiagram {
 	const { drawing: _drawing, ...rest } = diagram;
 	const parts = { ...diagram.parts };
-	const drawingRelId = parts.drawing?.relId;
+	const drawingRelId = parts.drawing?.ownerPart ? undefined : parts.drawing?.relId;
 	delete parts.drawing;
 	const hostRelationships = { ...diagram.hostRelationships };
 	if (drawingRelId) delete hostRelationships[drawingRelId];

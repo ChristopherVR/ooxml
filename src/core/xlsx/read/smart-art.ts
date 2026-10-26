@@ -8,6 +8,7 @@ import {
 	loadDiagram,
 	parseDiagramDataModel,
 	parseRelationshipIdAttributes,
+	GENERATED_DIAGRAM_CACHE_NOTICE,
 	type DiagramRelationshipIds,
 } from '../../diagram/index';
 import { parseRelationships, resolvePartPath } from '../../opc/index';
@@ -116,7 +117,8 @@ async function resolveOne(object: SmartArtObject, info: Pending, source: SourceI
 	if (loaded.data) object.nodes = diagramNodesInTreeOrder(loaded.data);
 	if (loaded.drawing && loaded.drawing.shapes.length > 0) {
 		object.diagram = loaded.drawing;
-		object.notice = NOTICES.cached;
+		object.notice = loaded.generatedCache ? GENERATED_DIAGRAM_CACHE_NOTICE : NOTICES.cached;
+		if (loaded.generatedCache) object.cacheGenerated = true;
 	}
 }
 

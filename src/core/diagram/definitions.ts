@@ -98,6 +98,17 @@ export function parseStyleReferences(
 const hasContent = (element: XmlElement | undefined): boolean =>
 	Boolean(element && (element.attributes.length > 0 || elements(element).length > 0));
 
+function spatialScene(scene: XmlElement | undefined): boolean {
+	const camera = first(scene, 'camera', NS.a);
+	if (camera && camera.getAttribute('prst') !== 'orthographicFront') return true;
+	const rotation = first(camera, 'rot', NS.a);
+	return Boolean(
+		first(scene, 'backdrop', NS.a) ||
+		(rotation &&
+			['lat', 'lon', 'rev'].some((key) => Number(rotation.getAttribute(key) ?? 0) !== 0)),
+	);
+}
+
 /** Parses a quick style definition part. */
 export function parseDiagramQuickStyle(source: string | XmlDocument): DiagramQuickStyleDefinition {
 	const root = rootOf(source);
@@ -106,6 +117,11 @@ export function parseDiagramQuickStyle(source: string | XmlDocument): DiagramQui
 		...parseStyleReferences(first(label, 'style', NS.dgm)),
 		hasScene3d: Boolean(first(label, 'scene3d', NS.dgm)),
 		hasShape3d: hasContent(first(label, 'sp3d', NS.dgm)),
+		requires3d:
+			hasContent(first(label, 'sp3d', NS.dgm)) ||
+			spatialScene(first(label, 'scene3d', NS.dgm)) ||
+			spatialScene(first(root, 'scene3d', NS.dgm)) ||
+			hasContent(first(first(label, 'txPr', NS.dgm), 'sp3d', NS.a)),
 	}));
 	return {
 		...parseDefinitionHeader(root),

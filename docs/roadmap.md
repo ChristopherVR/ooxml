@@ -23,7 +23,7 @@ extraction from consumer integration, rendering fidelity and native Office valid
 - **Chart and SmartArt editing, the remaining families:**
   - pptx chart data labels and fills saved through the neutral writer, then `PptxChartData` as an adapter over the neutral model, then pptx ChartEx parsing on the neutral model (agnostic plan C3 to C5);
   - Word and Excel ChartEx editing (C5);
-  - SmartArt's wider native style catalogue and full source-cache writer (S4, S5). Word and Excel now share the three style intensities and five colour schemes, with source-preserving edits and native reopen checks; generated 2D cache serialization is neutral, while native cache linking and 3D remain separate work;
+  - SmartArt's wider native style catalogue and full source-cache/3D writer (S4, S5). Word and Excel share three style intensities and five colour schemes, with source-preserving edits and native reopen checks; admitted generated 2D caches are now linked into their saved packages and identified explicitly as approximations;
   - the shared Format pane's remaining controls (effects, 3-D, text, trendlines, error bars, markers, axis titles) (U2).
     The steps are defined in [agnostic-core-plan.md](agnostic-core-plan.md) sections 3.5 to 3.7 and the order is in [structure-plan.md](structure-plan.md) section 5.3.
 - **Less logic in the UI packages:** the Word editor and PowerPoint renderer code now live in `src/ui/src/docx` and `src/ui/src/pptx`; DOM-free pieces of them still move into `src/core` areas over time.

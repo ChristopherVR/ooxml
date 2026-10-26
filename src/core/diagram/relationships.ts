@@ -37,7 +37,7 @@ export async function resolveDiagramDrawingPart(
 	dataRelId: string,
 	drawingExtensionRelId: string,
 	host: DiagramPartHost,
-): Promise<{ relId: string; path: string } | undefined> {
+): Promise<{ relId: string; path: string; ownerPart?: string } | undefined> {
 	if (dataRelId.length === 0) return undefined;
 	const hostRels = host.hostRelationships(hostPart);
 	const declared = drawingExtensionRelId ? hostRels?.get(drawingExtensionRelId) : undefined;
@@ -62,7 +62,7 @@ export async function resolveDiagramDrawingPart(
 	const id = drawing?.id.trim() ?? '';
 	const target = drawing?.target.trim() ?? '';
 	if (id.length === 0 || target.length === 0) return undefined;
-	return { relId: id, path: host.resolvePath(dataPath, target) };
+	return { relId: id, path: host.resolvePath(dataPath, target), ownerPart: dataPath };
 }
 
 /** Relationship types of the five diagram parts, in `dgm:relIds` order plus the cached drawing. */

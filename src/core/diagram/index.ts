@@ -28,6 +28,7 @@ export * from './drawing-view';
 export * from './drawing-from-views';
 export * from './approximate';
 export * from './layout-preview';
+export * from './cache-metadata';
 export * from './drawing-resolve';
 export * from './drawing-theme';
 export * from './load';

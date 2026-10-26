@@ -15,6 +15,7 @@ import {
 import type { DiagramConnection, DiagramDataModel, DiagramIssue, DiagramPoint } from './types';
 import { readDiagramNodeParagraphs } from './text/node-text-neutral';
 import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
+import { GENERATED_DIAGRAM_CACHE_NS } from './cache-metadata';
 
 /** `parTrans` and `sibTrans` points carry the text drawn on an org-chart relationship line. */
 const TRANSITION_TYPES: ReadonlySet<string> = new Set(['parTrans', 'sibTrans']);
@@ -164,8 +165,18 @@ export function parseDiagramDataModel(
 
 	const ext = descendants(root, 'dataModelExt')[0];
 	const drawingRelId = stringAttribute(ext, 'relId');
+	const generated = descendants(root, 'generatedCache').find(
+		(node) => node.namespaceURI === GENERATED_DIAGRAM_CACHE_NS,
+	);
+	const generatedCacheDigest = generated?.getAttribute('drawingSha256');
 	return {
 		points,
+		...(descendants(root, 'generatedCache').some(
+			(node) => node.namespaceURI === GENERATED_DIAGRAM_CACHE_NS,
+		)
+			? { generatedCache: true as const }
+			: {}),
+		...(generatedCacheDigest ? { generatedCacheDigest } : {}),
 		connections,
 		nodes: points.filter((point) => !STRUCTURAL_TYPES.has(point.type)),
 		parentById,

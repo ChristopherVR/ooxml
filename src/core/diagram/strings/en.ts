@@ -1,5 +1,7 @@
 // The SmartArt UI strings in en (see ./index.ts).
 export const en = {
+	'Generated SmartArt preview; not native Office layout.':
+		'Generated SmartArt preview; not native Office layout.',
 	'Change Colors': 'Change Colors',
 	'SmartArt Styles': 'SmartArt Styles',
 	'Best Match for Document': 'Best Match for Document',

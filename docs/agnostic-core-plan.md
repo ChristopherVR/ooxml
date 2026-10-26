@@ -568,8 +568,11 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   source-backed formatter patches definition fields while preserving unknown XML. `writeGeneratedDiagramDrawing`
   serializes generated 2D drawings and returns presentation GUIDs a host can associate with its data model; PowerPoint's
   ordinary 2D preset shape properties use the same serializer. It refuses 3D input rather than flattening it silently.
-  Word and Excel still drop stale cached drawing parts on edit and let native Office regenerate them; generating and
-  linking a replacement cache into those packages is a separate capability from having a neutral drawing serializer.
+  Word and Excel drop stale cached drawing parts on edit and now attach a generated replacement when the ordered
+  interpreter and 2D painter admit the diagram. The shared writer adds presentation GUID associations; each host adds
+  the drawing relationship and content type. A private extension records the generated approximation and a SHA-256 of
+  its drawing bytes. Loaders label matching caches `generated-drawing`; a native rewrite invalidates that status.
+  Unsupported, partial and spatial/3D interpretations stay uncached and retain the explicit fallback.
 - **S5, Word and Excel SmartArt editing (done, with the shared UI).** Word edits and inserts SmartArt (`docx/diagram-edit.ts`,
   `docx/diagram-save.ts`); Excel does the same through `xlsx/edit/smart-art.ts` and `xlsx/write/smart-art.ts`. Both use the
   shared `office-ui-smartart-picker` (`src/ui/src/smartart/smartart-picker.ts`) and `office-ui-smartart-text-pane`
@@ -586,7 +589,8 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   Acceptance on 2026-10-26: the shared formatting builder and
   `scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop
   Word 16 and Excel 16. Native node texts, colour ids and quick-style ids matched; Excel produced no repair log. These
-  checks establish supported edit/save/reopen behavior, not pixel-identical effect or layout rendering. Unit tests cover
+  checks also verify native semantic-node drawing associations. Both host loaders independently verify the generated
+  caches before native opening. These checks establish supported edit/save/reopen behavior, not pixel-identical effect or layout rendering. Unit tests cover
   retained extension XML, theme references, direct node fills, rich text, undo/redo, and neutral generated cache round trips.
 
 Wave 6 did not change the Office evidence below; it is kept because the save decisions depend on it.

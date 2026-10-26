@@ -230,6 +230,7 @@ export function writeSheetDrawing(
 				? chartWithCurrentCaches(ctx.workbook, sheet, object)
 				: object,
 		);
-	if (!writeDrawing(writer, target, drawings, sourceDrawing)) return '';
+	if (!writeDrawing(writer, target, drawings, sourceDrawing, { theme: ctx.workbook.theme, sheet }))
+		return '';
 	return `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`;
 }

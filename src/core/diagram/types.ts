@@ -148,6 +148,8 @@ export interface DiagramPoint {
 
 /** A parsed `dgm:dataModel`. */
 export interface DiagramDataModel {
+	generatedCache?: true;
+	generatedCacheDigest?: string;
 	points: DiagramPoint[];
 	connections: DiagramConnection[];
 	/** Content points (not `doc`, `pres`, `parTrans`, `sibTrans`) in document order. */
@@ -199,6 +201,7 @@ export interface DiagramStyleRef {
 }
 
 export interface DiagramStyleLabel {
+	requires3d?: boolean;
 	name: string;
 	line?: DiagramStyleRef;
 	fill?: DiagramStyleRef;
@@ -234,6 +237,10 @@ export interface DiagramStyleReference {
 
 /** A shape of the cached `dsp:drawing`, renderer-neutral. Geometry in EMU, angles in degrees. */
 export interface DiagramDrawingShape {
+	/** Semantic association carried only by a generated layout, not by source cached parts. */
+	sourceNodeId?: string;
+	sourceStyleLabel?: string;
+	foldedNodeIds?: string[];
 	/** `dsp:sp/@modelId`: the presentation point this shape was laid out from. */
 	modelId: string;
 	frame: DiagramFrame;

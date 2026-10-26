@@ -343,7 +343,11 @@ describe('resolveDiagramDrawingPart', () => {
 				'',
 				hostFor({ rId2: '../diagrams/data1.xml' }, 'drawing1.xml'),
 			),
-		).toEqual({ relId: 'rId9', path: 'ppt/diagrams/drawing1.xml' });
+		).toEqual({
+			relId: 'rId9',
+			path: 'ppt/diagrams/drawing1.xml',
+			ownerPart: 'ppt/diagrams/data1.xml',
+		});
 		expect(
 			await resolveDiagramDrawingPart(
 				'ppt/slides/slide1.xml',

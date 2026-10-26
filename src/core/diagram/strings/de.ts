@@ -2,6 +2,8 @@
 import type { DiagramUiStrings } from './en';
 
 export const de: DiagramUiStrings = {
+	'Generated SmartArt preview; not native Office layout.':
+		'Generierte SmartArt-Vorschau; kein natives Office-Layout.',
 	'Change Colors': 'Farben ändern',
 	'SmartArt Styles': 'SmartArt-Formatvorlagen',
 	'Best Match for Document': 'Beste Entsprechung für Dokument',
