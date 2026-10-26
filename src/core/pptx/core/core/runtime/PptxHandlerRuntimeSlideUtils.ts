@@ -364,7 +364,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return {};
 		}
 
-		const notesXml = await this.zip.file(notesPath)?.async('string');
+		const notesXml = await this.readPartText(notesPath);
 		if (!notesXml) {
 			return {};
 		}

@@ -25,6 +25,7 @@ import {
 	slideBackgroundOrigin,
 } from './authored-slide-background';
 import { enrichEmptyPlaceholderPrompts } from './layout-switch-placeholder-prompts';
+import type { LoadPartReader } from './load-part-reader';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLoadSession';
 import { recordSlideFingerprints } from './slide-fingerprint';
 
@@ -266,6 +267,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * or resolve images.  Create a new `PptxHandler` instance instead.
 	 */
 	dispose(): void {
+		this.endPartReads();
 		this.revokeBlobUrls();
 		this.imageDataCache.clear();
 		this.slideMap.clear();
@@ -303,22 +305,30 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	async load(data: ArrayBuffer, options: PptxHandlerLoadOptions = {}): Promise<PptxData> {
-		await this.initializeLoadSession(data, options);
-		await this.detectAndPreserveVbaProject();
-		this.detectDigitalSignatureParts();
-		await this.parseCustomXmlParts();
-		const presentationState = await this.loadPresentationState();
-		const slideMasters = await this.parseSlideMasters();
-		await this.enrichSlideMastersWithTxStyles(slideMasters);
-		const slides = await this.loadSlidesForPresentation(presentationState.sectionBySlideId);
-		const slidesWithWarnings = this.attachSlideWarnings(slides);
-		this.resetElementIdCounter(slides);
-		// Baseline for the save pipeline's "this slide still matches the bytes
-		// in the archive" check. Taken from the slides the CALLER receives, not
-		// the pre-warning ones, so handing them straight back to `save()`
-		// fingerprints identically.
-		recordSlideFingerprints(this.savedSlideFingerprints, slidesWithWarnings);
-		return this.buildLoadData(presentationState, slidesWithWarnings, slideMasters);
+		// Each load owns its reader, so a load that settles late never closes the
+		// reader of a newer load.
+		let reader: LoadPartReader | undefined;
+		try {
+			await this.initializeLoadSession(data, options);
+			reader = this.beginPartReads();
+			await this.detectAndPreserveVbaProject();
+			this.detectDigitalSignatureParts();
+			await this.parseCustomXmlParts();
+			const presentationState = await this.loadPresentationState();
+			const slideMasters = await this.parseSlideMasters();
+			await this.enrichSlideMastersWithTxStyles(slideMasters);
+			const slides = await this.loadSlidesForPresentation(presentationState.sectionBySlideId);
+			const slidesWithWarnings = this.attachSlideWarnings(slides);
+			this.resetElementIdCounter(slides);
+			// Baseline for the save pipeline's "this slide still matches the bytes
+			// in the archive" check. Taken from the slides the CALLER receives, not
+			// the pre-warning ones, so handing them straight back to `save()`
+			// fingerprints identically.
+			recordSlideFingerprints(this.savedSlideFingerprints, slidesWithWarnings);
+			return await this.buildLoadData(presentationState, slidesWithWarnings, slideMasters);
+		} finally {
+			this.endPartReads(reader);
+		}
 	}
 
 	/**
@@ -491,7 +501,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			} else {
 				// Layout not yet in cache -- try to load from ZIP
 				try {
-					const layoutXmlStr = await this.zip.file(lp)?.async('string');
+					const layoutXmlStr = await this.readPartText(lp);
 					if (layoutXmlStr) {
 						const layoutXmlObj = this.parser.parse(layoutXmlStr) as XmlObject;
 						this.layoutXmlMap.set(lp, layoutXmlObj);
@@ -543,7 +553,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Verify the target layout exists
 		let layoutXml = this.layoutXmlMap.get(layoutPath);
 		if (!layoutXml) {
-			const layoutXmlStr = await this.zip.file(layoutPath)?.async('string');
+			const layoutXmlStr = await this.readPartText(layoutPath);
 			if (!layoutXmlStr) {
 				throw new Error(`Layout not found: ${layoutPath}`);
 			}

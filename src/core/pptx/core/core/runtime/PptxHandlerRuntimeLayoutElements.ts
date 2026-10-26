@@ -64,7 +64,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				?.replace(/\.xml$/u, '') ?? layoutPath;
 
 		try {
-			const layoutXmlStr = await this.zip.file(layoutPath)?.async('string');
+			const layoutXmlStr = await this.readPartText(layoutPath);
 			if (!layoutXmlStr) {
 				return [];
 			}

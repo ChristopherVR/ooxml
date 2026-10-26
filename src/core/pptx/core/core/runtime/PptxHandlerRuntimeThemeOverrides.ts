@@ -205,7 +205,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		try {
-			const overrideXml = await this.zip.file(overridePath)?.async('string');
+			const overrideXml = await this.readPartText(overridePath);
 			if (!overrideXml) {
 				return null;
 			}

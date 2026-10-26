@@ -1,3 +1,4 @@
+import { readPartText, readPartXml } from '../core/runtime/load-part-reader';
 import type { PptxSlide, PptxSlideSyncProperties, XmlObject } from '../types';
 
 export const SLIDE_SYNC_CONTENT_TYPE =
@@ -23,11 +24,10 @@ export async function loadSlideSynchronization(input: {
 	slidePath: string;
 	relsPath: string;
 }): Promise<PptxSlideSyncProperties | undefined> {
-	const relsXml = await input.zip.file(input.relsPath)?.async('string');
-	if (!relsXml) {
+	const relsData = await readPartXml(input.zip, input.parser, input.relsPath);
+	if (!relsData) {
 		return undefined;
 	}
-	const relsData = input.parser.parse(relsXml) as XmlObject;
 	const relationship = findSlideSyncRelationship(relsData);
 	if (!relationship) {
 		return undefined;
@@ -37,7 +37,7 @@ export async function loadSlideSynchronization(input: {
 		return undefined;
 	}
 	const partPath = resolvePartPath(input.slidePath, target);
-	const partXml = await input.zip.file(partPath)?.async('string');
+	const partXml = await readPartText(input.zip, partPath);
 	if (!partXml) {
 		return undefined;
 	}

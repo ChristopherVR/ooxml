@@ -63,7 +63,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// is not mistaken for a colour the user picked. See
 		// {@link module:master-part-background-cache}.
 		rememberMasterPartBackground(this, partPath, part.backgroundColor);
-		const xml = await this.zip.file(partPath)?.async('string');
+		const xml = await this.readPartText(partPath);
 		if (!xml) {
 			return;
 		}

@@ -8,6 +8,7 @@
  * @module PptxSlideLoaderService
  */
 import { applyBackgroundFillToShapes } from '../core/builders/background-fill-shapes';
+import { readPartText, readPartXml } from '../core/runtime/load-part-reader';
 import { applyHiddenFlagFromRawXml } from '../core/builders/element-hidden-flag';
 import type { PptxSlide, XmlObject } from '../types';
 import { slideBackgroundStyleRefFromNode } from '../utils/background-style-ref';
@@ -101,12 +102,14 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 	private async loadPresentationSlideRels(
 		params: PptxSlideLoaderParams,
 	): Promise<Map<string, string>> {
-		const relsXml = await params.zip.file('ppt/_rels/presentation.xml.rels')?.async('string');
-		if (!relsXml) {
+		const relsData = await readPartXml(
+			params.zip,
+			params.parser,
+			'ppt/_rels/presentation.xml.rels',
+		);
+		if (!relsData) {
 			return new Map<string, string>();
 		}
-
-		const relsData = params.parser.parse(relsXml) as XmlObject;
 		const relationships = (relsData['Relationships'] as XmlObject | undefined)?.['Relationship'];
 		const relNodes = this.toXmlObjectArray(relationships);
 
@@ -157,7 +160,7 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 			path = `ppt/${target}`;
 		}
 
-		const slideXmlStr = await params.zip.file(path)?.async('string');
+		const slideXmlStr = await readPartText(params.zip, path);
 		if (!slideXmlStr) {
 			return undefined;
 		}

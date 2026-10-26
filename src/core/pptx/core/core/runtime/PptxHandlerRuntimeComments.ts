@@ -21,12 +21,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected async extractModernSlideComments(slidePath: string): Promise<PptxComment[]> {
 		try {
 			const relsPath = `${slidePath.replace('slides/', 'slides/_rels/')}.rels`;
-			const relsXml = await this.zip.file(relsPath)?.async('string');
-			if (!relsXml) {
+			const relsData = await this.readPartXml(relsPath);
+			if (!relsData) {
 				return [];
 			}
-
-			const relsData = this.parser.parse(relsXml) as XmlObject;
 			const rels = this.ensureArray(
 				xmlChild(relsData, 'Relationships')?.Relationship,
 			) as XmlObject[];
@@ -45,7 +43,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					continue;
 				}
 				const filePath = this.resolvePath(slidePath, target);
-				const xml = await this.zip.file(filePath)?.async('string');
+				const xml = await this.readPartText(filePath);
 				if (!xml) {
 					continue;
 				}
@@ -70,11 +68,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	protected async loadModernCommentAuthors(): Promise<void> {
-		const relsXml = await this.zip.file('ppt/_rels/presentation.xml.rels')?.async('string');
-		if (!relsXml) {
+		const relsData = await this.readPartXml('ppt/_rels/presentation.xml.rels');
+		if (!relsData) {
 			return;
 		}
-		const relsData = this.parser.parse(relsXml) as XmlObject;
 		const relationships = this.ensureArray(
 			xmlChild(relsData, 'Relationships')?.Relationship,
 		) as XmlObject[];
@@ -86,7 +83,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 		const partPath = this.resolvePath('ppt/presentation.xml', target);
-		const xml = await this.zip.file(partPath)?.async('string');
+		const xml = await this.readPartText(partPath);
 		if (!xml) {
 			return;
 		}
@@ -115,13 +112,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		// Some decks use non-standard comment part naming. Fall back to relationship type detection.
 		const relsPath = `${slidePath.replace('slides/', 'slides/_rels/')}.rels`;
-		const relsXml = await this.zip.file(relsPath)?.async('string');
+		const relsXml = await this.readPartText(relsPath);
 		if (!relsXml) {
 			return undefined;
 		}
 
 		try {
-			const relsData = this.parser.parse(relsXml) as XmlObject;
+			const relsData = await this.readPartXml(relsPath);
 			const rels = this.ensureArray(
 				xmlChild(relsData, 'Relationships')?.Relationship,
 			) as XmlObject[];
@@ -174,7 +171,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		const commentsPath = this.resolveImagePath(slidePath, commentTarget);
-		const commentsXml = await this.zip.file(commentsPath)?.async('string');
+		const commentsXml = await this.readPartText(commentsPath);
 		if (!commentsXml) {
 			return [];
 		}
@@ -226,7 +223,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	protected async loadCommentAuthors(): Promise<void> {
-		const commentAuthorsXml = await this.zip.file('ppt/commentAuthors.xml')?.async('string');
+		const commentAuthorsXml = await this.readPartText('ppt/commentAuthors.xml');
 		if (!commentAuthorsXml) {
 			return;
 		}

@@ -66,6 +66,7 @@ import type {
 	IPptxTableDataParser,
 } from '../builders';
 import type { IPptxRuntimeDependencyFactory } from '../factories';
+import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
 import { TemplateElementBaselineTracker } from './template-element-baselines';
 
 /**
@@ -82,6 +83,35 @@ import { TemplateElementBaselineTracker } from './template-element-baselines';
 export class PptxHandlerRuntime {
 	/** The in-memory ZIP archive representing the OPC (.pptx) package. */
 	protected zip!: JSZip;
+
+	/** Shares part reads within the load in progress; see {@link LoadPartReader}. */
+	protected loadPartReader: LoadPartReader | undefined;
+
+	/** Opens a part reader for the current package, closing any earlier one. */
+	protected beginPartReads(): LoadPartReader {
+		this.endPartReads();
+		const reader = new LoadPartReader(this.zip);
+		this.loadPartReader = reader;
+		return reader;
+	}
+
+	/** Closes `reader` (by default the open one) and releases its cached reads. */
+	protected endPartReads(reader: LoadPartReader | undefined = this.loadPartReader): void {
+		reader?.close();
+		if (reader && this.loadPartReader === reader) {
+			this.loadPartReader = undefined;
+		}
+	}
+
+	/** The text of a package part, shared within a load. */
+	protected readPartText(path: string): Promise<string | undefined> {
+		return readPartText(this.zip, path);
+	}
+
+	/** A parsed package part; relationship parts are parsed once per load. */
+	protected readPartXml(path: string): Promise<XmlObject | undefined> {
+		return readPartXml(this.zip, this.parser, path);
+	}
 
 	/** fast-xml-parser instance used to parse XML strings into JS objects. */
 	protected parser!: XMLParser;
@@ -616,12 +646,13 @@ export class PptxHandlerRuntime {
 	 * @param relsPath - Path of the `.rels` part; derived from `partPath` when omitted.
 	 */
 	protected async loadPartRelationships(partPath: string, relsPath?: string): Promise<void> {
-		const relsXml = await this.zip.file(relsPath ?? partRelsPath(partPath))?.async('string');
+		const path = relsPath ?? partRelsPath(partPath);
+		const relsXml = await this.readPartText(path);
 		if (!relsXml) {
 			return;
 		}
 
-		const relsData = this.parser.parse(relsXml) as XmlObject | undefined;
+		const relsData = await this.readPartXml(path);
 		const relationships = relsData?.['Relationships'] as XmlObject | undefined;
 		const raw = relationships?.['Relationship'];
 		const entries = (Array.isArray(raw) ? raw : raw ? [raw] : []) as XmlObject[];

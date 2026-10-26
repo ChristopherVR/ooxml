@@ -22,10 +22,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!relsXml) {
 			return undefined;
 		}
-		const relsData = this.parser.parse(
-			// eslint-disable-next-line no-await-in-loop
-			await relsXml.async('string'),
-		) as XmlObject;
+		const relsData = await this.readPartXml(relsPath);
 		const relNodes = this.ensureArray(
 			(relsData?.Relationships as XmlObject | undefined)?.Relationship,
 		) as XmlObject[];
@@ -56,7 +53,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const options: PptxThemeOption[] = [];
 		for (const file of themeFiles) {
 			try {
-				const xml = await file.async('string');
+				const xml = (await this.readPartText(file.name)) ?? '';
 				const data = this.parser.parse(xml) as XmlObject;
 				const root = data['a:theme'] as XmlObject | undefined;
 				const name = String(root?.['@_name'] || '').trim();
@@ -149,7 +146,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		for (const file of masterFiles) {
 			try {
 				// eslint-disable-next-line no-await-in-loop
-				const masterXml = await file.async('string');
+				const masterXml = (await this.readPartText(file.name)) ?? '';
 				const masterData = this.parser.parse(masterXml) as XmlObject;
 				const clrMap = (masterData?.['p:sldMaster'] as XmlObject | undefined)?.['p:clrMap'] as
 					| XmlObject
@@ -192,7 +189,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!themeFile) {
 			return null;
 		}
-		const themeXml = await themeFile.async('string');
+		const themeXml = (await this.readPartText(themePath)) ?? '';
 		const model = this.parseThemePartXml(themeXml);
 		this.cacheThemePartModel(themePath, themeXml, model);
 		return { colorMap: model.colorMap, fontMap: model.fontMap, formatScheme: model.formatScheme };
@@ -231,7 +228,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!relsXml) {
 			return undefined;
 		}
-		const relsData = this.parser.parse(await relsXml.async('string')) as XmlObject;
+		const relsData = await this.readPartXml(relsPath);
 		const relNodes = this.ensureArray(
 			(relsData?.Relationships as XmlObject | undefined)?.Relationship,
 		) as XmlObject[];
