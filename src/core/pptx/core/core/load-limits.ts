@@ -9,13 +9,16 @@
  */
 import type { ZipLimitKind } from '../../../opc/zip-limits';
 import type { PptxElement } from '../types';
-import { flattenElementsDeep } from '../utils/flatten-elements';
+import { isTemplateElementId } from '../utils/group-ops';
 import { DEFAULT_MAX_UNCOMPRESSED_BYTES, MAX_ZIP_ENTRY_COUNT, ZipBombError } from './types';
 import type { PptxHandlerLoadOptions } from './types';
 
 /** Limits on one presentation load; each field left out keeps its default. */
 export interface PptxLoadLimits {
-	/** Largest accepted input, in bytes, as passed to `load()` (default: no limit). */
+	/**
+	 * Largest accepted input, in bytes, as passed to `load()`; for
+	 * `loadFromJson()`, the UTF-8 size of the text (default: no limit).
+	 */
 	maxInputBytes?: number;
 	/** Largest total inflated size of the package, in bytes (default 500 MiB). */
 	maxUncompressedBytes?: number;
@@ -26,7 +29,9 @@ export interface PptxLoadLimits {
 	/**
 	 * Largest number of elements authored on the slides, summed over the deck
 	 * (shapes, pictures, connectors, tables, charts, groups and every element
-	 * inside a group). Layout and master elements are not counted (default: no limit).
+	 * inside a group, at any depth). Elements inherited from the layout or
+	 * master (ids prefixed `layout-` or `master-`) are not counted, in a
+	 * `.pptx` package or a `pptx-viewer-json` document alike (default: no limit).
 	 */
 	maxShapes?: number;
 }
@@ -62,8 +67,9 @@ export class PptxLoadLimitError extends Error {
 	public readonly maximum: number;
 
 	/**
-	 * The observed value: exact for `maxInputBytes` and `maxSlides`; for
-	 * `maxShapes`, the count when the load stopped (the deck has at least this many).
+	 * The observed value: exact for `maxSlides` and for `maxInputBytes` on
+	 * `load()`; for `maxShapes`, and for `maxInputBytes` on `loadFromJson()`
+	 * (which stops counting once past the limit), a lower bound.
 	 */
 	public readonly actual: number;
 
@@ -203,6 +209,57 @@ export function assertPptxInputWithinLimits(
 	}
 }
 
+/**
+ * Fails when `text` (given to `loadFromJson()`) takes more than
+ * `maxInputBytes` bytes as UTF-8, the size the same document has as bytes
+ * for `load()`. The size is counted from the UTF-16 code units without
+ * encoding or copying the text, and the count stops once past the limit, so
+ * the work is bounded by the limit rather than by the text. `actual` is then
+ * a lower bound.
+ */
+export function assertPptxTextWithinLimits(text: string, limits: Required<PptxLoadLimits>): void {
+	const maximum = limits.maxInputBytes;
+	// A code unit takes 1 to 3 bytes (a surrogate pair, two units, takes 4).
+	if (text.length * 3 <= maximum) {
+		return;
+	}
+	const bytes = text.length > maximum ? text.length : utf8ByteLengthPast(text, maximum);
+	if (bytes > maximum) {
+		throw new PptxLoadLimitError(
+			`PPTX input is at least ${count(bytes)} bytes, more than the maxInputBytes limit of ${count(maximum)}`,
+			'maxInputBytes',
+			maximum,
+			bytes,
+		);
+	}
+}
+
+/**
+ * The UTF-8 size of `text` (as `TextEncoder` writes it: a lone surrogate
+ * becomes the 3-byte U+FFFD), or the first running total past `maximum`.
+ */
+function utf8ByteLengthPast(text: string, maximum: number): number {
+	let bytes = 0;
+	for (let index = 0; index < text.length && bytes <= maximum; index++) {
+		const unit = text.charCodeAt(index);
+		if (unit < 0x80) {
+			bytes += 1;
+		} else if (unit < 0x800) {
+			bytes += 2;
+		} else if (unit >= 0xd800 && unit <= 0xdbff && isLowSurrogate(text.charCodeAt(index + 1))) {
+			bytes += 4;
+			index++;
+		} else {
+			bytes += 3;
+		}
+	}
+	return bytes;
+}
+
+function isLowSurrogate(unit: number): boolean {
+	return unit >= 0xdc00 && unit <= 0xdfff;
+}
+
 /** Fails when the deck lists more than `maxSlides` slides. */
 export function assertPptxSlideCountWithinLimits(
 	slideCount: number,
@@ -219,25 +276,72 @@ export function assertPptxSlideCountWithinLimits(
 }
 
 /**
- * Adds one slide's parsed elements (group children included) to `counted` and
- * fails as soon as the total passes `maxShapes`. Returns the new total.
+ * Adds the elements one slide authored to `counted` and fails as soon as the
+ * total passes `maxShapes`. Returns the new total.
+ *
+ * The one counting rule for both load paths (a slide's own parse in a
+ * `.pptx` package, a slide's `elements` in a `pptx-viewer-json` document):
+ * every element counts, group children included at any depth, except an
+ * element inherited from the layout or master and everything inside it. The
+ * package loader marks those with a `layout-` / `master-` id prefix, and the
+ * JSON document keeps the ids, so the same deck counts the same either way.
+ *
+ * The walk is iterative with no depth cap, so it visits each element of the
+ * slide once whatever the nesting: its work and memory are bounded by the
+ * elements in the input. Entries that are not objects (possible in a JSON
+ * document) are skipped.
  */
 export function countPptxShapesWithinLimits(
 	counted: number,
-	elements: readonly PptxElement[],
+	elements: readonly PptxElement[] | readonly unknown[],
 	limits: Required<PptxLoadLimits>,
 ): number {
-	if (limits.maxShapes === Number.POSITIVE_INFINITY) {
+	const maximum = limits.maxShapes;
+	if (maximum === Number.POSITIVE_INFINITY) {
 		return counted;
 	}
-	const total = counted + flattenElementsDeep(elements).length;
-	if (total > limits.maxShapes) {
+	const total = counted + countAuthoredElements(elements);
+	if (total > maximum) {
 		throw new PptxLoadLimitError(
-			`PPTX presentation has at least ${count(total)} shapes, more than the maxShapes limit of ${count(limits.maxShapes)}`,
+			`PPTX presentation has at least ${count(total)} shapes, more than the maxShapes limit of ${count(maximum)}`,
 			'maxShapes',
-			limits.maxShapes,
+			maximum,
 			total,
 		);
+	}
+	return total;
+}
+
+/** The elements of one slide's tree that {@link countPptxShapesWithinLimits} counts. */
+function countAuthoredElements(elements: readonly unknown[]): number {
+	let total = 0;
+	// One list and the next index in it per open group: no recursion, and the
+	// stack only holds groups that were counted.
+	const lists: (readonly unknown[])[] = [elements];
+	const positions: number[] = [0];
+	while (lists.length > 0) {
+		const top = lists.length - 1;
+		const list = lists[top]!;
+		const position = positions[top]!;
+		if (position >= list.length) {
+			lists.pop();
+			positions.pop();
+			continue;
+		}
+		positions[top] = position + 1;
+		const element = list[position];
+		if (typeof element !== 'object' || element === null) {
+			continue;
+		}
+		const { id, type, children } = element as { id?: unknown; type?: unknown; children?: unknown };
+		if (typeof id === 'string' && isTemplateElementId(id)) {
+			continue;
+		}
+		total++;
+		if (type === 'group' && Array.isArray(children) && children.length > 0) {
+			lists.push(children);
+			positions.push(0);
+		}
 	}
 	return total;
 }

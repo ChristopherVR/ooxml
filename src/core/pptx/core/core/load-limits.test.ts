@@ -8,6 +8,8 @@ import { PptxHandler } from '../PptxHandler';
 import type { PptxElement } from '../types';
 import { flattenElementsDeep } from '../utils/flatten-elements';
 import {
+	assertPptxTextWithinLimits,
+	countPptxShapesWithinLimits,
 	DEFAULT_PPTX_LOAD_LIMITS,
 	getPptxLoadLimitViolation,
 	PptxLoadLimitError,
@@ -333,5 +335,197 @@ describe('PptxHandler.load limits', () => {
 		await expect(
 			new PptxHandler().load(json.slice(0), { limits: { maxInputBytes: json.byteLength - 1 } }),
 		).rejects.toMatchObject({ limit: 'maxInputBytes', actual: json.byteLength });
+	});
+});
+
+/** A one-slide deck: one authored text box, plus one text shape drawn on the slide master. */
+async function buildDeckWithMasterShape(): Promise<ArrayBuffer> {
+	const { handler, data, createSlide } = await PptxHandler.createBlank({ initialSlideCount: 0 });
+	data.slides.push(
+		createSlide('Blank').addText('Authored', { x: 40, y: 40, width: 400, height: 40 }).build(),
+	);
+	const saved = await handler.save(data.slides);
+	handler.dispose();
+	const zip = await JSZip.loadAsync(saved);
+	const masterPath = 'ppt/slideMasters/slideMaster1.xml';
+	const masterXml = await zip.file(masterPath)!.async('string');
+	const masterShape =
+		'<p:sp><p:nvSpPr><p:cNvPr id="900" name="Master note"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>' +
+		'<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="457200"/></a:xfrm>' +
+		'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>' +
+		'<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>Master</a:t></a:r></a:p></p:txBody></p:sp>';
+	expect(masterXml).toContain('</p:spTree>');
+	zip.file(masterPath, masterXml.replace('</p:spTree>', `${masterShape}</p:spTree>`));
+	const bytes = await zip.generateAsync({ type: 'uint8array' });
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+/** `depth` groups nested in each other, the innermost holding `leaves` shapes. */
+function nestedGroups(depth: number, leaves: number): PptxElement {
+	let node: PptxElement[] = Array.from({ length: leaves }, (_, index) =>
+		createShapeElement('rect', { x: index, y: 0, width: 10, height: 10 }),
+	);
+	for (let level = depth; level >= 1; level--) {
+		node = [
+			{
+				id: `nested-group-${level}`,
+				type: 'group',
+				x: 0,
+				y: 0,
+				width: 100,
+				height: 100,
+				children: node,
+			},
+		];
+	}
+	return node[0]!;
+}
+
+/** The fixture deck as `pptx-viewer-json`, with its first slide's elements replaced. */
+async function jsonDeckWith(elements: PptxElement[]): Promise<string> {
+	const { bytes } = await facts;
+	const handler = new PptxHandler();
+	const data = await handler.load(bytes.slice(0));
+	handler.dispose();
+	data.slides = [{ ...data.slides[0]!, elements }];
+	return serializePptxToJson(data);
+}
+
+describe('pptx-viewer-json limits match the package path', () => {
+	it('maxShapes counts every element of groups nested past 32 levels', async () => {
+		// 34 groups and 100 leaves: 134 authored elements.
+		const json = await jsonDeckWith([nestedGroups(34, 100)]);
+		const loaded = await new PptxHandler().loadFromJson(json, { limits: { maxShapes: 134 } });
+		expect(loaded.slides).toHaveLength(1);
+		await expect(
+			new PptxHandler().loadFromJson(json, { limits: { maxShapes: 133 } }),
+		).rejects.toMatchObject({ limit: 'maxShapes', maximum: 133, actual: 134 });
+		await expect(
+			new PptxHandler().loadFromJson(json, { limits: { maxShapes: 33 } }),
+		).rejects.toMatchObject({ limit: 'maxShapes', maximum: 33 });
+		await expect(
+			new PptxHandler().load(new TextEncoder().encode(json).buffer as ArrayBuffer, {
+				limits: { maxShapes: 33 },
+			}),
+		).rejects.toMatchObject({ limit: 'maxShapes', maximum: 33 });
+	});
+
+	it('maxShapes leaves out inherited layout and master elements on a pptx-to-json round trip', async () => {
+		const bytes = await buildDeckWithMasterShape();
+		const handler = new PptxHandler();
+		const data = await handler.load(bytes.slice(0), { limits: { maxShapes: 1 } });
+		handler.dispose();
+		// The slide shows the master shape behind its own text box.
+		const ids = data.slides[0]!.elements.map((element) => element.id);
+		expect(ids.filter((id) => id.startsWith('master-'))).toHaveLength(1);
+		expect(ids).toHaveLength(2);
+		await expect(
+			new PptxHandler().load(bytes.slice(0), { limits: { maxShapes: 1 } }),
+		).resolves.toBeDefined();
+
+		const json = serializePptxToJson(data);
+		const reloaded = await new PptxHandler().loadFromJson(json, { limits: { maxShapes: 1 } });
+		expect(reloaded.slides[0]!.elements).toHaveLength(2);
+		await expect(
+			new PptxHandler().load(new TextEncoder().encode(json).buffer as ArrayBuffer, {
+				limits: { maxShapes: 1 },
+			}),
+		).resolves.toBeDefined();
+		// The authored shape still counts.
+		const doubled = JSON.parse(json) as { slides: Array<{ elements: Array<{ id: string }> }> };
+		const own = doubled.slides[0]!.elements.find((element) => !element.id.startsWith('master-'))!;
+		doubled.slides[0]!.elements.push({ ...own, id: `${own.id}-copy` });
+		await expect(
+			new PptxHandler().loadFromJson(JSON.stringify(doubled), { limits: { maxShapes: 1 } }),
+		).rejects.toMatchObject({ limit: 'maxShapes', maximum: 1, actual: 2 });
+	});
+
+	it('loadFromJson applies maxInputBytes to the UTF-8 size of the text', async () => {
+		const json = await jsonDeckWith([
+			createTextElement('caf\u00e9 \u6f22\u5b57 \u{1f600}', { x: 0, y: 0, width: 100, height: 30 }),
+		]);
+		const size = new TextEncoder().encode(json).byteLength;
+		expect(size).toBeGreaterThan(json.length);
+		await expect(
+			new PptxHandler().loadFromJson(json, { limits: { maxInputBytes: size } }),
+		).resolves.toHaveProperty('slides.length', 1);
+		await expect(
+			new PptxHandler().loadFromJson(json, { limits: { maxInputBytes: size - 1 } }),
+		).rejects.toMatchObject({ limit: 'maxInputBytes', maximum: size - 1 });
+		await expect(
+			new PptxHandler().loadFromJson(json, { limits: { maxInputBytes: 1 } }),
+		).rejects.toMatchObject({ limit: 'maxInputBytes', maximum: 1 });
+		// The same document as bytes is checked on its exact size.
+		await expect(
+			new PptxHandler().load(new TextEncoder().encode(json).buffer as ArrayBuffer, {
+				limits: { maxInputBytes: size - 1 },
+			}),
+		).rejects.toMatchObject({ limit: 'maxInputBytes', maximum: size - 1, actual: size });
+	});
+});
+
+describe('countPptxShapesWithinLimits', () => {
+	const limits = (maxShapes: number) => resolvePptxLoadLimits({ limits: { maxShapes } });
+
+	it('counts any nesting depth without recursion', () => {
+		// Far deeper than a recursive walk could go.
+		const deep = nestedGroups(20_000, 3);
+		expect(countPptxShapesWithinLimits(0, [deep], limits(20_003))).toBe(20_003);
+		expect(() => countPptxShapesWithinLimits(0, [deep], limits(20_002))).toThrow(
+			PptxLoadLimitError,
+		);
+	});
+
+	it('leaves out inherited elements with everything inside them, and non-objects', () => {
+		const inherited = { ...nestedGroups(3, 5), id: 'layout-group-1' };
+		const elements = [
+			inherited,
+			{ id: 'master-shape-1', type: 'shape' },
+			{ id: 'shape-1', type: 'shape' },
+			null,
+			'stray',
+			{ id: 'group-1', type: 'group', children: [{ id: 'shape-2', type: 'shape' }, 7] },
+		];
+		expect(countPptxShapesWithinLimits(10, elements, limits(100))).toBe(13);
+	});
+});
+
+describe('assertPptxTextWithinLimits', () => {
+	const check = (text: string, maxInputBytes: number) =>
+		assertPptxTextWithinLimits(text, resolvePptxLoadLimits({ limits: { maxInputBytes } }));
+
+	it.each([
+		['ascii', 'plain text'],
+		['two-byte', 'caf\u00e9 \u00fc'],
+		['three-byte', '\u6f22\u5b57\u20ac'],
+		['surrogate pair', 'a\u{1f600}b\u{10ffff}'],
+		['lone surrogates', '\ud800x\udc00\ud83d'],
+	])('accepts the exact UTF-8 size of %s text and rejects one byte less', (_, text) => {
+		const size = new TextEncoder().encode(text).byteLength;
+		expect(() => check(text, size)).not.toThrow();
+		let error: unknown;
+		try {
+			check(text, size - 1);
+		} catch (caught) {
+			error = caught;
+		}
+		expect(error).toBeInstanceOf(PptxLoadLimitError);
+		expect(error).toMatchObject({ limit: 'maxInputBytes', maximum: size - 1 });
+		expect((error as PptxLoadLimitError).actual).toBeGreaterThan(size - 1);
+		expect((error as PptxLoadLimitError).actual).toBeLessThanOrEqual(size);
+	});
+
+	it('does no work without a limit or for text far below it', () => {
+		const charCodeAt = vi.spyOn(String.prototype, 'charCodeAt');
+		try {
+			assertPptxTextWithinLimits('\u6f22'.repeat(1000), DEFAULT_PPTX_LOAD_LIMITS);
+			check('\u6f22'.repeat(1000), 3000);
+			expect(charCodeAt).not.toHaveBeenCalled();
+			// Text with more code units than the limit fails without being read.
+			expect(() => check('x'.repeat(1000), 999)).toThrow(PptxLoadLimitError);
+			expect(charCodeAt).not.toHaveBeenCalled();
+		} finally {
+			charCodeAt.mockRestore();
+		}
 	});
 });

@@ -1,7 +1,8 @@
 import {
 	applyImportedPptxData,
 	decodePptxJsonText,
-	deserializePptxFromJson,
+	parsePptxJson,
+	pptxDataFromJsonDocument,
 } from '../converter/json';
 import {
 	PresentationBuilder,
@@ -13,9 +14,11 @@ import type { PptxHandlerLoadOptions } from './core';
 import {
 	assertPptxInputWithinLimits,
 	assertPptxSlideCountWithinLimits,
+	assertPptxTextWithinLimits,
 	countPptxShapesWithinLimits,
 	resolvePptxLoadLimits,
 } from './core/load-limits';
+import type { PptxLoadLimits } from './core/load-limits';
 import { PptxHandlerCore } from './PptxHandlerCore';
 import type { PptxData } from './types';
 
@@ -97,18 +100,21 @@ export class PptxHandler extends PptxHandlerCore {
 	 * archives and portable `pptx-viewer-json` documents.
 	 *
 	 * The buffer is sniffed first: JSON documents (leading `{` plus the
-	 * `"pptx-viewer-json"` format marker) are routed to {@link loadFromJson};
-	 * everything else goes through the regular ZIP/OLE2 pipeline.
+	 * `"pptx-viewer-json"` format marker) are imported as {@link loadFromJson}
+	 * does; everything else goes through the regular ZIP/OLE2 pipeline.
 	 */
 	public override async load(
 		data: ArrayBuffer,
 		options: PptxHandlerLoadOptions = {},
 	): Promise<PptxData> {
+		const limits = resolvePptxLoadLimits(options);
 		// Before the JSON sniff too, so `maxInputBytes` also bounds a JSON input.
-		assertPptxInputWithinLimits(data.byteLength, resolvePptxLoadLimits(options));
+		assertPptxInputWithinLimits(data.byteLength, limits);
 		const jsonText = decodePptxJsonText(data);
 		if (jsonText !== null) {
-			return this.loadFromJson(jsonText, options);
+			// The input size was checked on the bytes, so it is not checked again
+			// on the decoded text.
+			return this.importJson(jsonText, options, limits);
 		}
 		return super.load(data, options);
 	}
@@ -120,17 +126,34 @@ export class PptxHandler extends PptxHandlerCore {
 	 * handler keeps a valid in-memory archive (editing and {@link save} keep
 	 * working), then the imported model is overlaid on top: imported
 	 * presentation fields win, and the slide array is replaced wholesale.
+	 *
+	 * `options.limits` applies as it does for {@link load}: `maxInputBytes` to
+	 * the UTF-8 size of `text` (checked before it is parsed), and `maxSlides`
+	 * and `maxShapes` to the document's slides with the same counting rule as
+	 * a `.pptx` package (layout and master elements are not counted).
 	 */
 	public async loadFromJson(text: string, options: PptxHandlerLoadOptions = {}): Promise<PptxData> {
 		const limits = resolvePptxLoadLimits(options);
-		const imported = deserializePptxFromJson(text);
+		assertPptxTextWithinLimits(text, limits);
+		return this.importJson(text, options, limits);
+	}
+
+	private async importJson(
+		text: string,
+		options: PptxHandlerLoadOptions,
+		limits: Required<PptxLoadLimits>,
+	): Promise<PptxData> {
+		const document = parsePptxJson(text);
 		// The imported slides never pass through the package loader, so the
-		// slide and shape limits are applied to them here, before they are used.
-		assertPptxSlideCountWithinLimits(imported.slides.length, limits);
+		// slide and shape limits are applied to them here, before their binary
+		// assets are decoded or the model is used.
+		assertPptxSlideCountWithinLimits(document.slides.length, limits);
 		let shapes = 0;
-		for (const slide of imported.slides) {
-			shapes = countPptxShapesWithinLimits(shapes, slide.elements ?? [], limits);
+		for (const slide of document.slides) {
+			const elements = Array.isArray(slide.elements) ? slide.elements : [];
+			shapes = countPptxShapesWithinLimits(shapes, elements, limits);
 		}
+		const imported = pptxDataFromJsonDocument(document);
 		const blankBytes = await buildBlankPresentationArchive({
 			width: imported.widthEmu,
 			height: imported.heightEmu,

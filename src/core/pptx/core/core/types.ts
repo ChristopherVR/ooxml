@@ -70,7 +70,8 @@ export interface PptxHandlerLoadOptions {
 	 * and `maxEntries` reject with {@link ZipBombError} as before.
 	 * `getPptxLoadLimitViolation` reads the limit and observed value from
 	 * either. An invalid value (not a positive finite number, or `maxEntries`
-	 * above 65,536) throws `RangeError` before any work.
+	 * above 65,536) throws `RangeError` before any work. `PptxHandler.loadFromJson`
+	 * applies the same limits, `maxInputBytes` to the UTF-8 size of its text.
 	 */
 	limits?: PptxLoadLimits;
 	/**

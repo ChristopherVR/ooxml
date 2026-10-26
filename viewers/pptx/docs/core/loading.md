@@ -103,6 +103,8 @@ const data = await handler.load(buffer, {
 
 `limits` bounds one load for hosts that open untrusted decks. Each field left out keeps its default, so omitting `limits` changes nothing: 500 MiB inflated, 65,536 ZIP entries, and no limit on input size, slides or shapes. Each check runs before the work it bounds: `maxInputBytes` before the input is sniffed, decrypted or unzipped, `maxEntries` and `maxUncompressedBytes` before any part is inflated (and again while parts are read), `maxSlides` right after `ppt/presentation.xml` is parsed, and `maxShapes` as each slide's shapes are parsed (layout and master shapes are not counted).
 
+A `pptx-viewer-json` document gets the same limits, whether it comes through `load()` or `handler.loadFromJson(text, { limits })`. For `loadFromJson`, `maxInputBytes` is the UTF-8 size of the text, checked before it is parsed. `maxSlides` and `maxShapes` are checked on the document's slides before any of it is used, with the same count as a `.pptx` package: every element, group members included at any depth, except the layout and master elements a loaded deck carries (ids starting `layout-` or `master-`). A deck loaded under a limit therefore loads under the same limit after a round trip through JSON.
+
 `maxInputBytes`, `maxSlides` and `maxShapes` reject with `PptxLoadLimitError` (code `PPTX_LOAD_LIMIT`, with `limit`, `maximum` and `actual`). `maxUncompressedBytes` and `maxEntries` keep rejecting with `ZipBombError` (code `ZIP_BOMB`), which now also carries `loadLimit` and `actual`. `getPptxLoadLimitViolation` reads either:
 
 ```ts
