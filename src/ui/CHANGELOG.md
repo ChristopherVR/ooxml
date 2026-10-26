@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.29.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.29.1) - 2026-10-26
+
+### Bug Fixes
+
+- **angular:** Load the assistant runtime on demand ([ededbfe](https://github.com/ChristopherVR/ooxml/commit/ededbfe953532628ace701c2be19310212509d1d))
+
 ## [1.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.29.0) - 2026-10-26
 
 ### Features
