@@ -6,6 +6,8 @@
 import {
 	applyDiagramNodeEdit,
 	createDiagramNodes,
+	formatDiagramSource,
+	type DiagramFormatChange,
 	type DiagramEditOptions,
 	type DiagramLayoutType,
 	type DiagramNodeEdit,
@@ -52,6 +54,48 @@ function markEdited(object: SmartArtObject): void {
 	if (!object.inserted) object.edited = true;
 	object.notice = SMART_ART_NOTICES.edited;
 	object.issues = object.issues.filter((issue) => !issue.code.startsWith('DIAGRAM_DRAWING'));
+}
+
+export function formatSmartArt(
+	ctx: EditContext,
+	s: number,
+	index: number,
+	change: DiagramFormatChange,
+): boolean {
+	const object = smartArtAt(ctx, s, index);
+	if (
+		(change.kind === 'colors' ? object.colorsId : object.quickStyleId) ===
+		`urn:ooxml-core/${change.kind}/${change.value}`
+	)
+		return false;
+	const next = formatDiagramSource(
+		{
+			...object.layoutSource,
+			...(object.definitions?.colors ? { colorsXml: object.definitions.colors } : {}),
+			...(object.definitions?.quickStyle ? { quickStyleXml: object.definitions.quickStyle } : {}),
+		},
+		change,
+	);
+	ctx.run(
+		'Format SmartArt',
+		'annotations',
+		[{ kind: 'parts', sheet: s, parts: ['drawings'] }],
+		() => {
+			const live = smartArtAt(ctx, s, index);
+			live.layoutSource = next.source;
+			live.definitions = {
+				...live.definitions,
+				...(change.kind === 'colors'
+					? { colors: next.source.colorsXml! }
+					: { quickStyle: next.source.quickStyleXml! }),
+			};
+			if (next.colorsId) live.colorsId = next.colorsId;
+			if (next.quickStyleId) live.quickStyleId = next.quickStyleId;
+			markEdited(live);
+		},
+		{ sheet: s },
+	);
+	return true;
 }
 
 /** Applies one SmartArt Design or text pane command (one undo step when it changes anything). */

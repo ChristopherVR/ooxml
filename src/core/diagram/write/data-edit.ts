@@ -44,6 +44,8 @@ export interface DiagramDataEditNode {
 }
 
 export interface DiagramDataEditOptions {
+	colorsId?: string;
+	quickStyleId?: string;
 	/** Mints the model ids of new points and connections; a braced upper-case GUID by default. */
 	createModelId?: () => string;
 	/** Remove the `dsp:dataModelExt` link to the cached drawing. */
@@ -319,6 +321,15 @@ export function writeEditedDiagramData(
 		cxnLst.appendChild(edge);
 	}
 	if (options.layout) switchLayout(ptLst, cxnLst, docPoint as XmlElement, options.layout);
+	if (options.colorsId || options.quickStyleId) {
+		let prSet = child(docPoint as XmlElement, 'prSet');
+		if (!prSet) {
+			prSet = element(doc, DGM, 'dgm:prSet');
+			docPoint?.appendChild(prSet);
+		}
+		if (options.colorsId) prSet.setAttribute('csTypeId', options.colorsId);
+		if (options.quickStyleId) prSet.setAttribute('qsTypeId', options.quickStyleId);
+	}
 	if (options.dropDrawingLink) dropDrawingExtension(model);
 	return buildXml(doc);
 }

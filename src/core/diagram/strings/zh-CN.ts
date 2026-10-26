@@ -2,6 +2,20 @@
 import type { DiagramUiStrings } from './en';
 
 export const zhCN: DiagramUiStrings = {
+	'Change Colors': '更改颜色',
+	'SmartArt Styles': 'SmartArt 样式',
+	'Best Match for Document': '文档的最佳匹配',
+	Colorful: '彩色',
+	'Accent 1': '强调文字颜色 1',
+	'Accent 2': '强调文字颜色 2',
+	'Colorful - Accent Colors': '彩色 - 强调文字颜色',
+	'Colorful Range - Accent Colors 2 to 3': '彩色范围 - 强调文字颜色 2 至 3',
+	'Colorful Range - Accent Colors 3 to 4': '彩色范围 - 强调文字颜色 3 至 4',
+	'Colored Fill - Accent 1': '彩色填充 - 强调文字颜色 1',
+	'Colored Fill - Accent 2': '彩色填充 - 强调文字颜色 2',
+	'Simple Fill': '简单填充',
+	'Moderate Effect': '中等效果',
+	'Intense Effect': '强烈效果',
 	'tab.smartart-design': 'SmartArt 设计',
 	SmartArt: 'SmartArt',
 	'Insert SmartArt': '插入 SmartArt',

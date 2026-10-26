@@ -2647,3 +2647,16 @@ Source: `ChristopherVR/ooxml`, commit `27cc953db6d5e919c1a413d5fdcfb39a82b566eb`
 shared XML nodes, preserving sibling extensions. It adds strict types, bounded sparse-cache reads,
 immutable chart operations and targeted-series selection. PowerPoint maps its existing fields onto
 this implementation. Regression tests live beside the neutral operation.
+## Shared SmartArt formatting definitions (2026-10-26)
+
+Source: ChristopherVR/ooxml at `27cc953db`,
+`src/core/pptx/core/core/runtime/smartart-fabrication-styles.ts`.
+
+- Moved the complete quick-style and colour definition fabrication to
+  `src/core/diagram/write/fabricated-styles.ts`. Only imports changed: neutral diagram types and
+  the existing shared data writer's XML constants replace PowerPoint aliases. The original module
+  is a compatibility facade, retaining its exports and historical unique identifiers.
+- New code: the source-backed formatting patcher in `diagram/edit/format.ts`, the generated 2D
+  drawing writer in `diagram/write/drawing.ts`, and the Word/Excel format commands and save adapters.
+  Ordinary PowerPoint 2D preset shape properties use the shared drawing writer; its legacy custom
+  geometry, presentation-point association and 3D adapters remain in PowerPoint.

@@ -8,6 +8,7 @@ import type { DiagramInsertPreset } from 'ooxml-core/diagram';
 import {
 	changeDocxDiagramLayout,
 	createDocxDiagram,
+	formatDocxDiagram,
 	insertedDiagramPartNames,
 	type PendingMediaPart,
 } from 'ooxml-core/docx';
@@ -89,6 +90,15 @@ export class SmartArtController {
 
 	/** Handles the SmartArt actions; returns false for everything else. */
 	handle(action: RibbonAction): boolean {
+		if (action.type === 'smartArtFormat') {
+			const view = this.host.view();
+			const selected = view && selectedDiagram(view.state);
+			if (view?.editable && selected) {
+				const next = formatDocxDiagram(selected.diagram, action.change);
+				if (next !== selected.diagram) replaceDiagram(view, selected.pos, next);
+			}
+			return true;
+		}
 		if (action.type === 'insertSmartArt') {
 			if (this.host.view()?.editable) this.dialog.open((preset) => void this.insert(preset));
 			return true;

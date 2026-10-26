@@ -1,8 +1,7 @@
 // The SmartArt Design tab: Word's contextual tab for a selected SmartArt graphic. Add Shape (after,
 // before, above, below), Promote, Demote, Move Up, Move Down and the Text Pane toggle edit the
 // nodes through the shared core operations; Change Layout opens the shared picker. Word's
-// SmartArt Styles and Change Colors galleries are not offered: only one colour and one style
-// definition ship with the core, so there is nothing yet to switch between.
+// SmartArt Styles and Change Colors mount the shared galleries and source-backed format commands.
 import type { EditorState } from 'prosemirror-state';
 import {
 	DIAGRAM_ADD_SHAPE_COMMANDS,
@@ -14,6 +13,7 @@ import {
 import { group, menuSelect, stack, tool } from './ribbon-parts';
 import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
 import { selectedDiagram } from './smartart-commands';
+import { smartArtFormatGallery, syncSmartArtFormatGalleries } from './smartart-format-galleries';
 
 // The commands and labels are the shared SmartArt Design list (`ooxml-core/diagram`), which
 // Excel's tab is built from too.
@@ -62,6 +62,7 @@ export function buildSmartArtDesignPanel(panel: HTMLElement): void {
 				{ large: true },
 			),
 		),
+		group('SmartArt Styles', smartArtFormatGallery('style'), smartArtFormatGallery('colors')),
 	);
 }
 
@@ -78,6 +79,13 @@ export function syncSmartArtDesign(
 	const panel = panelOf(toolbar, 'smartart-design');
 	if (!panel) return;
 	const selected = Boolean(selectedDiagram(state));
+	const diagram = selectedDiagram(state)?.diagram;
+	syncSmartArtFormatGalleries(
+		toolbar,
+		!selected || !editable,
+		diagram?.colorsId,
+		diagram?.quickStyleId,
+	);
 	const entering = isTabHidden(panel) && selected;
 	setTabHidden(toolbar, 'smartart-design', 'contextual', !selected);
 	if (entering) selectTab(toolbar, 'smartart-design');

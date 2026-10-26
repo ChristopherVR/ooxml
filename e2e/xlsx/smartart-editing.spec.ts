@@ -3,7 +3,12 @@ import { FRAMEWORKS, editor, editorProperty, newWorkbook, pageErrors } from './h
 
 type Book = {
 	sheets: {
-		drawings: { kind: string; nodes?: { id: string; text: string; parentId?: string }[] }[];
+		drawings: {
+			kind: string;
+			colorsId?: string;
+			quickStyleId?: string;
+			nodes?: { id: string; text: string; parentId?: string }[];
+		}[];
 	}[];
 };
 
@@ -84,6 +89,13 @@ for (const framework of FRAMEWORKS)
 		await expect.poll(() => outline(page)).not.toEqual(edited);
 		await editor(page).evaluate((node) => (node as unknown as { redo(): void }).redo());
 		await expect.poll(() => outline(page)).toEqual(edited);
+		await editor(page).getByRole('tab', { name: 'SmartArt Design', exact: true }).click();
+		await editor(page).getByRole('button', { name: 'SmartArt Styles', exact: true }).click();
+		await editor(page).getByRole('button', { name: 'Moderate Effect', exact: true }).click();
+		await editor(page).getByRole('button', { name: 'Change Colors', exact: true }).click();
+		await editor(page)
+			.getByRole('button', { name: 'Colored Fill - Accent 2', exact: true })
+			.click();
 
 		const bytes = await editor(page).evaluate(async (node) => [
 			...new Uint8Array(
@@ -100,5 +112,10 @@ for (const framework of FRAMEWORKS)
 		const drawn = editor(page).locator('.xg-smartart').first();
 		await expect(drawn).toHaveAttribute('data-rendering', 'interpreted');
 		await expect(drawn.locator('office-ui-smartart')).toContainText('Gamma');
+		const back = await editorProperty<Book>(page, 'workbook');
+		expect(back.sheets[0]!.drawings.find((shape) => shape.kind === 'smartArt')).toMatchObject({
+			colorsId: 'urn:ooxml-core/colors/monochromatic2',
+			quickStyleId: 'urn:ooxml-core/style/moderate',
+		});
 		expect(errors).toEqual([]);
 	});

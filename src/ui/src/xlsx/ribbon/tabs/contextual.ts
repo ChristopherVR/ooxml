@@ -14,6 +14,10 @@ import {
 	DIAGRAM_DESIGN_GROUPS,
 } from 'ooxml-core/diagram';
 import { smartArtCommandId } from '../../smartart-controller';
+import { smartArtColorsGalleryState, smartArtStylesGalleryState } from '../../../smartart';
+import type { DiagramColorScheme, DiagramStyleIntensity } from 'ooxml-core/diagram';
+import { smartArtSchemeColors } from '../../grid/smartart';
+import { gallerySections } from '../shared-gallery';
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
 import { CHART_TYPES } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
@@ -236,6 +240,42 @@ export function smartArtDesignTab(): RibbonTab {
 				id: 'layouts',
 				label: DIAGRAM_DESIGN_GROUPS.layouts,
 				controls: [{ kind: 'button', command: smartArtCommandId('changeLayout'), size: 'large' }],
+			},
+			{
+				id: 'smartart-format',
+				label: 'SmartArt Styles',
+				controls: [
+					{
+						kind: 'gallery',
+						command: 'smartart.style',
+						items: () => [],
+						sections: (ctx) =>
+							gallerySections(
+								smartArtStylesGalleryState(
+									smartArtSchemeColors(ctx.workbook()?.theme).accent1,
+									activeSmartArt(ctx)?.smartArt.quickStyleId?.split('/').at(-1) as
+										| DiagramStyleIntensity
+										| undefined,
+									(key) => ctx.t(key),
+								).sections,
+							),
+					},
+					{
+						kind: 'gallery',
+						command: 'smartart.colors',
+						items: () => [],
+						sections: (ctx) =>
+							gallerySections(
+								smartArtColorsGalleryState(
+									smartArtSchemeColors(ctx.workbook()?.theme),
+									activeSmartArt(ctx)?.smartArt.colorsId?.split('/').at(-1) as
+										| DiagramColorScheme
+										| undefined,
+									(key) => ctx.t(key),
+								).sections,
+							),
+					},
+				],
 			},
 		],
 	};

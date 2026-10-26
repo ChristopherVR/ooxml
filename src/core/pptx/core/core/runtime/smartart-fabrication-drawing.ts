@@ -1,4 +1,7 @@
 import { XMLBuilder } from 'fast-xml-parser';
+import { diagramShapePropertiesXml } from '../../../../diagram/write/drawing';
+import { normalizeStShapeType } from '../../../../geometry/preset-geometry-names';
+import type { DrawingColor } from '../../../../drawingml/types';
 
 /**
  * Fabricate the cached diagram DRAWING part (`ppt/diagrams/drawingN.xml`) for
@@ -128,6 +131,51 @@ function styleXml(index: number): string {
 }
 
 function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
+	if (
+		!shape.customGeometryPaths?.length &&
+		!shape.scene3d &&
+		!shape.shape3d &&
+		shape.skewX === undefined &&
+		shape.skewY === undefined &&
+		normalizeStShapeType(shape.shapeType ?? 'rect')
+	) {
+		const fillHex = normalizeHex(shape.fillColor);
+		const strokeHex = normalizeHex(shape.strokeColor);
+		const color = (value: string, opacity = 1): DrawingColor => ({
+			kind: 'srgb',
+			value,
+			transforms:
+				opacity < 1
+					? [{ name: 'alpha', value: String(Math.round(Math.max(0, opacity) * 100000)) }]
+					: [],
+		});
+		return diagramShapePropertiesXml({
+			modelId: shape.id,
+			has3d: false,
+			geometry: shape.shapeType ?? 'rect',
+			frame: {
+				x: toEmu(shape.x),
+				y: toEmu(shape.y),
+				width: toEmu(Math.max(shape.width, 1)),
+				height: toEmu(Math.max(shape.height, 1)),
+			},
+			...(shape.rotation ? { rotation: shape.rotation } : {}),
+			...(shape.shapeAdjustments ? { adjustments: shape.shapeAdjustments } : {}),
+			...(fillHex
+				? { fill: { kind: 'solid', color: color(fillHex, shape.fillOpacity) } as const }
+				: {}),
+			...(strokeHex
+				? {
+						line: {
+							...(shape.strokeWidth && shape.strokeWidth > 0
+								? { widthEmu: Math.round(shape.strokeWidth * 12700) }
+								: {}),
+							fill: { kind: 'solid', color: color(strokeHex) },
+						} as const,
+					}
+				: {}),
+		});
+	}
 	const rot = shape.rotation ? ` rot="${Math.round(shape.rotation * 60000)}"` : '';
 	const skewX = shape.skewX !== undefined ? ` skewX="${Math.round(shape.skewX * 60000)}"` : '';
 	const skewY = shape.skewY !== undefined ? ` skewY="${Math.round(shape.skewY * 60000)}"` : '';

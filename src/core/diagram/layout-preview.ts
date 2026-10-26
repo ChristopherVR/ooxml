@@ -2,6 +2,7 @@
 // the per-point engine reads their ordered constraints and conditional layout statements.
 import { parseXml } from '../xml/index';
 import { resolveDrawingColor } from '../drawingml/drawing-color';
+import { resolveThemeFillStyle, type ThemeFormatScheme } from '../drawingml/format-scheme';
 import { descendants, first, NS } from './dom';
 import { parseDiagramDataModel } from './data-model';
 import { parseDiagramColors, parseDiagramQuickStyle } from './definitions';
@@ -23,6 +24,7 @@ export interface DiagramLayoutSource {
 }
 
 export interface DiagramPreviewInput extends ApproximateDiagramInput {
+	formatScheme?: ThemeFormatScheme | undefined;
 	nodes: readonly DiagramHostNode[];
 	source?: DiagramLayoutSource | undefined;
 	scheme?: Readonly<Record<string, string>> | undefined;
@@ -45,6 +47,15 @@ export function diagramLayoutData(input: DiagramPreviewInput): DiagramData {
 		);
 		const customLayout = point?.customLayout ?? presentation?.customLayout;
 		const styleRole = point?.presStyleLabel ?? presentation?.presStyleLabel;
+		const fillColor =
+			point?.fill?.kind === 'solid'
+				? resolveDrawingColor(point.fill.color, { scheme: (name) => input.scheme?.[name] })?.hex
+				: undefined;
+		const strokeColor =
+			point?.line?.fill?.kind === 'solid'
+				? resolveDrawingColor(point.line.fill.color, { scheme: (name) => input.scheme?.[name] })
+						?.hex
+				: undefined;
 		return {
 			id: node.id,
 			text: node.text,
@@ -53,6 +64,11 @@ export function diagramLayoutData(input: DiagramPreviewInput): DiagramData {
 			...(node.paragraphs ? { textParagraphs: node.paragraphs } : {}),
 			...(customLayout ? { customLayout } : {}),
 			...(styleRole ? { styleRole } : {}),
+			...(fillColor || strokeColor
+				? {
+						style: { ...(fillColor ? { fillColor } : {}), ...(strokeColor ? { strokeColor } : {}) },
+					}
+				: {}),
 		};
 	});
 	// Source connections retain transition labels, while current host order and parents win.
@@ -137,7 +153,15 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 			(name) => input.scheme?.[name] ?? '#4472c4',
 		);
 		const box = { width: input.extentEmu.width / 9525, height: input.extentEmu.height / 9525 };
-		const computed = runEngineLayout(data, box, data.nodes, palette, 'flat');
+		const styleId = input.source?.quickStyleXml
+			? parseDiagramQuickStyle(input.source.quickStyleXml).uniqueId
+			: '';
+		const intensity = styleId.endsWith('/intense')
+			? 'intense'
+			: styleId.endsWith('/moderate')
+				? 'moderate'
+				: 'flat';
+		const computed = runEngineLayout(data, box, data.nodes, palette, intensity);
 		if (computed) {
 			const result = applyCustomLayoutOverrides(computed, data.nodes, box);
 			const declaresConnectors =
@@ -204,6 +228,9 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 			const quickStyle = input.source?.quickStyleXml
 				? parseDiagramQuickStyle(input.source.quickStyleXml)
 				: undefined;
+			const originalModel = input.source?.dataXml
+				? parseDiagramDataModel(input.source.dataXml)
+				: undefined;
 			result.nodes.forEach((node, index) => {
 				const shape = drawing.shapes[index];
 				if (!shape || node.kind !== 'rect' || node.literalText !== undefined) return;
@@ -212,6 +239,23 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					shape.style = label;
 					shape.has3d = label.hasScene3d || label.hasShape3d;
 				}
+				const sourceNode = data.nodes.find((entry) => entry.id === node.nodeId);
+				if (
+					input.formatScheme &&
+					label?.fill?.index &&
+					!sourceNode?.style?.fillColor &&
+					shape.fill?.kind === 'solid'
+				) {
+					const fill = resolveThemeFillStyle(
+						input.formatScheme,
+						label.fill.index,
+						shape.fill.color,
+					);
+					if (fill) shape.fill = fill;
+				}
+				const direct = originalModel?.nodes.find((entry) => entry.modelId === node.nodeId);
+				if (direct?.fill) shape.fill = direct.fill;
+				if (direct?.line) shape.line = { ...shape.line, ...direct.line };
 				const sourceIds = [node.nodeId, ...(node.foldedNodeIds ?? [])];
 				const textNodes = sourceIds.flatMap((id) => {
 					const source = input.nodes.find((entry) => entry.id === id);

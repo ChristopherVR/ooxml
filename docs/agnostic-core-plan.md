@@ -562,9 +562,14 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   `diagram/edit` (node commands, tree order, outline levels, reflow, inserts). The insert picker and the SmartArt Design command
   list are shared (`design-commands.ts`).
 - **S4, part writers (done for data parts).** `diagram/write`: `data.ts` (a SmartArt created in memory), `data-edit.ts`
-  (`writeEditedDiagramData`, an existing data part) and `inserted.ts` (an inserted diagram's data part). **Remains:** the cached
-  drawing writer, and the layout, colour and quick-style fabrication and the merge into existing parts, stay in pptx (step 4).
-  Word and Excel drop the cached drawing on edit (see the evidence below), so they do not need one.
+  (`writeEditedDiagramData`, an existing data part) and `inserted.ts` (an inserted diagram's data part). **Remains:** the
+  full source-cache round-trip writer and layout fabrication stay in pptx (step 4). Colour and quick-style fabrication
+  now live in `diagram/write/fabricated-styles.ts`, with the PowerPoint path as a compatibility facade. The neutral
+  source-backed formatter patches definition fields while preserving unknown XML. `writeGeneratedDiagramDrawing`
+  serializes generated 2D drawings and returns presentation GUIDs a host can associate with its data model; PowerPoint's
+  ordinary 2D preset shape properties use the same serializer. It refuses 3D input rather than flattening it silently.
+  Word and Excel still drop stale cached drawing parts on edit and let native Office regenerate them; generating and
+  linking a replacement cache into those packages is a separate capability from having a neutral drawing serializer.
 - **S5, Word and Excel SmartArt editing (done, with the shared UI).** Word edits and inserts SmartArt (`docx/diagram-edit.ts`,
   `docx/diagram-save.ts`); Excel does the same through `xlsx/edit/smart-art.ts` and `xlsx/write/smart-art.ts`. Both use the
   shared `office-ui-smartart-picker` (`src/ui/src/smartart/smartart-picker.ts`) and `office-ui-smartart-text-pane`
@@ -572,8 +577,17 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   pane through the `pptx-ui-smartart-text-pane` alias (`src/ui/src/pptx/web-components/smartart-text-pane.ts`), which adds
   PowerPoint's inspector tools (append, move, sub-item, remove, per-node style) and applies every request through
   `render/smartart-text-pane-model.ts` and the pptx SmartArt facades.
-  **Remains:** SmartArt Styles and Change Colors are not offered in Word or Excel, because only Word's default colour and
-  quick-style definitions ship in `diagram/builtin`; rich text in the text pane is not offered in Excel.
+  Word and Excel now mount the same SmartArt Styles and Change Colors galleries as PowerPoint, over the shared catalogue:
+  three style intensities and five theme-accent colour schemes. `formatDocxDiagram` and `EditSession.formatSmartArt` update
+  source definitions, keep node overrides and unchanged rich text, invalidate stale drawings, and save the selected
+  definition ids. History retains the matching definitions, including after formatting an inserted diagram.
+  **Remains:** rich text authoring in Excel's text pane, the wider native Office style catalogue, and 3D formatting controls.
+
+  Acceptance on 2026-10-26: the shared formatting builder and
+  `scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop
+  Word 16 and Excel 16. Native node texts, colour ids and quick-style ids matched; Excel produced no repair log. These
+  checks establish supported edit/save/reopen behavior, not pixel-identical effect or layout rendering. Unit tests cover
+  retained extension XML, theme references, direct node fills, rich text, undo/redo, and neutral generated cache round trips.
 
 Wave 6 did not change the Office evidence below; it is kept because the save decisions depend on it.
 

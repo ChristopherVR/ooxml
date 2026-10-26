@@ -8,6 +8,8 @@
 import {
 	applyDiagramNodeEdit,
 	createDiagramNodes,
+	formatDiagramSource,
+	type DiagramFormatChange,
 	type DiagramEditOptions,
 	type DiagramLayoutType,
 	type DiagramNodeEdit,
@@ -18,6 +20,19 @@ import { treeOrderDiagramNodes } from './diagram-nodes';
 
 /** One SmartArt Design or text pane command (the shared `DiagramNodeEdit`). */
 export type DocxDiagramEdit = DiagramNodeEdit;
+
+/** One undoable global formatting change; node markup and direct overrides are preserved. */
+export function formatDocxDiagram(diagram: DocxDiagram, change: DiagramFormatChange): DocxDiagram {
+	const current = change.kind === 'colors' ? diagram.colorsId : diagram.quickStyleId;
+	if (current === `urn:ooxml-core/${change.kind}/${change.value}`) return diagram;
+	const next = formatDiagramSource(diagram.layoutSource, change);
+	return {
+		...withDiagramNodes(diagram, diagram.nodes),
+		layoutSource: next.source,
+		...(next.colorsId ? { colorsId: next.colorsId } : {}),
+		...(next.quickStyleId ? { quickStyleId: next.quickStyleId } : {}),
+	};
+}
 
 export interface DocxDiagramEditResult {
 	diagram: DocxDiagram;

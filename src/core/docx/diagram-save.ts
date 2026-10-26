@@ -69,7 +69,14 @@ export async function applyDiagramEdits(
 		if (!partName || !original || diagram.inserted || done.has(partName)) continue;
 		const layoutId = diagram.layout?.uniqueId;
 		const relaid = Boolean(layoutId) && layoutId !== original.layout?.uniqueId;
-		if (!relaid && JSON.stringify(nodesOf(diagram)) === JSON.stringify(nodesOf(original))) continue;
+		const reformatted =
+			diagram.colorsId !== original.colorsId || diagram.quickStyleId !== original.quickStyleId;
+		if (
+			!relaid &&
+			!reformatted &&
+			JSON.stringify(nodesOf(diagram)) === JSON.stringify(nodesOf(original))
+		)
+			continue;
 		done.add(partName);
 		const xml = await zip.file(partName)?.async('string');
 		if (xml === undefined) continue;
@@ -81,10 +88,19 @@ export async function applyDiagramEdits(
 				'The new SmartArt layout definition is missing; the layout cannot be changed.',
 			);
 		if (relaid && layoutPart && definition) zip.file(layoutPart, definition.bytes);
+		for (const [key, xml] of [
+			['colors', diagram.layoutSource?.colorsXml],
+			['quickStyle', diagram.layoutSource?.quickStyleXml],
+		] as const) {
+			const name = diagram.parts[key]?.partName;
+			if (reformatted && name && xml) zip.file(name, xml);
+		}
 		zip.file(
 			partName,
 			writeEditedDiagramData(xml, nodesOf(diagram), {
 				dropDrawingLink: true,
+				...(diagram.colorsId ? { colorsId: diagram.colorsId } : {}),
+				...(diagram.quickStyleId ? { quickStyleId: diagram.quickStyleId } : {}),
 				...(relaid && layoutId
 					? { layout: { uniqueId: layoutId, category: diagram.layout?.family } }
 					: {}),

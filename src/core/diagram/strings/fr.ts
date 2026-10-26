@@ -2,6 +2,20 @@
 import type { DiagramUiStrings } from './en';
 
 export const fr: DiagramUiStrings = {
+	'Change Colors': 'Modifier les couleurs',
+	'SmartArt Styles': 'Styles SmartArt',
+	'Best Match for Document': 'Meilleure correspondance pour le document',
+	Colorful: 'Couleur',
+	'Accent 1': 'Accentuation 1',
+	'Accent 2': 'Accentuation 2',
+	'Colorful - Accent Colors': 'Couleur - Couleurs d’accentuation',
+	'Colorful Range - Accent Colors 2 to 3': 'Plage de couleurs - Accentuation 2 à 3',
+	'Colorful Range - Accent Colors 3 to 4': 'Plage de couleurs - Accentuation 3 à 4',
+	'Colored Fill - Accent 1': 'Remplissage coloré - Accentuation 1',
+	'Colored Fill - Accent 2': 'Remplissage coloré - Accentuation 2',
+	'Simple Fill': 'Remplissage simple',
+	'Moderate Effect': 'Effet modéré',
+	'Intense Effect': 'Effet intense',
 	'tab.smartart-design': 'Création SmartArt',
 	SmartArt: 'SmartArt',
 	'Insert SmartArt': 'Insérer un graphique SmartArt',

@@ -102,11 +102,19 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await editor.getByRole('tab', { name: 'SmartArt Design', exact: true }).click();
 		await (await designButton(editor, 'Demote')).click();
 		await expect.poll(() => texts(editor)).toEqual(['Plan', 'Design', 'Build']);
+		await editor.getByRole('button', { name: 'SmartArt Styles', exact: true }).click();
+		await editor.getByRole('button', { name: 'Moderate Effect', exact: true }).click();
+		await editor.getByRole('button', { name: 'Change Colors', exact: true }).click();
+		await editor.getByRole('button', { name: 'Colored Fill - Accent 2', exact: true }).click();
 
 		const { bytes } = await savedDocument(page, `ui-smartart-${framework}.docx`);
 		const zip = await JSZip.loadAsync(bytes);
 		const data = Object.keys(zip.files).find((name) => /word\/diagrams\/data.*\.xml$/.test(name));
 		expect(data).toBeTruthy();
+		expect(await zip.file(data!)!.async('string')).toContain(
+			'urn:ooxml-core/colors/monochromatic2',
+		);
+		expect(await zip.file(data!)!.async('string')).toContain('urn:ooxml-core/style/moderate');
 		const layout = Object.keys(zip.files).find((name) =>
 			/word\/diagrams\/layout.*\.xml$/.test(name),
 		);

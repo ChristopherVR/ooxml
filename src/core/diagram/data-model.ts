@@ -14,6 +14,7 @@ import {
 } from './dom';
 import type { DiagramConnection, DiagramDataModel, DiagramIssue, DiagramPoint } from './types';
 import { readDiagramNodeParagraphs } from './text/node-text-neutral';
+import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
 
 /** `parTrans` and `sibTrans` points carry the text drawn on an org-chart relationship line. */
 const TRANSITION_TYPES: ReadonlySet<string> = new Set(['parTrans', 'sibTrans']);
@@ -79,6 +80,11 @@ function parsePoint(element: XmlElement): DiagramPoint | undefined {
 		text: paragraphs.join('\n'),
 		...(textParagraphs ? { textParagraphs } : {}),
 	};
+	const properties = first(element, 'spPr', NS.dgm);
+	const fill = parseDrawingFill(properties);
+	const line = parseDrawingLine(first(properties, 'ln', NS.a));
+	if (fill) point.fill = fill;
+	if (line) point.line = line;
 	const optional: [keyof DiagramPoint, string | number | undefined][] = [
 		['connectionId', stringAttribute(element, 'cxnId')],
 		['presAssocId', stringAttribute(prSet, 'presAssocID')],

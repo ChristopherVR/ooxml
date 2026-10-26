@@ -14,6 +14,7 @@ export function previewDocxDiagram(diagram: DocxDiagram, theme?: ThemeCatalog) {
 		source: diagram.layoutSource,
 		scheme: themeDrawing({ shapes: [], issues: [] }, theme).schemeColors,
 		minorFont: theme?.fonts.minor.latin,
+		formatScheme: theme?.formatScheme,
 	});
 }
 

@@ -15,3 +15,4 @@ export * from './reflow-stacked';
 export * from './node-edit';
 export * from './node-tree';
 export * from './design-commands';
+export * from './format';

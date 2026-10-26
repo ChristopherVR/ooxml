@@ -48,8 +48,8 @@ describe('buildFabricatedDrawingXml', () => {
 			GUIDS,
 		)!;
 		expect(xml).toContain('<a:avLst><a:gd name="adj" fmla="val 95238"/></a:avLst>');
-		expect(xml).toContain(
-			'<a:solidFill><a:srgbClr val="156082"><a:alpha val="50000"/></a:srgbClr></a:solidFill>',
+		expect(xml).toMatch(
+			/<a:solidFill><a:srgbClr[^>]*val="156082"[^>]*><a:alpha val="50000"\/><\/a:srgbClr><\/a:solidFill>/,
 		);
 	});
 

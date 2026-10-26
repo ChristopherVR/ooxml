@@ -287,6 +287,7 @@ export function createEditSession(
 		deleteTimeline: (name) => timelines.deleteTimeline(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
 		editSmartArt: (s, index, edit) => smartArt.editSmartArt(ctx, s, index, edit),
+		formatSmartArt: (s, index, change) => smartArt.formatSmartArt(ctx, s, index, change),
 		changeSmartArtLayout: (s, index, change) =>
 			smartArt.changeSmartArtLayout(ctx, s, index, change),
 		insertSmartArt: (s, insertion) => smartArt.insertSmartArt(ctx, s, insertion),

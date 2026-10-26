@@ -6,6 +6,8 @@
 // SmartArt Design list of `ooxml-core/diagram`, which Word's tab is built from too.
 import {
 	DIAGRAM_DESIGN_COMMANDS,
+	DIAGRAM_COLOR_ENTRIES,
+	DIAGRAM_STYLE_ENTRIES,
 	type DiagramDesignCommandKey,
 	type DiagramInsertPreset,
 } from 'ooxml-core/diagram';
@@ -167,6 +169,27 @@ export function smartArtCommands(): Command[] {
 	);
 	return [
 		...design,
+		...(['colors', 'style'] as const).map((kind) =>
+			editing({
+				id: `smartart.${kind}`,
+				label: kind === 'colors' ? 'Change Colors' : 'SmartArt Styles',
+				icon: icon('smartArt'),
+				lock: 'objects',
+				enabled: (ctx) => !!activeSmartArt(ctx),
+				run: (ctx, arg) => {
+					const found = activeSmartArt(ctx);
+					const t = target(ctx);
+					if (!found || !t) return;
+					if (kind === 'colors') {
+						const choice = DIAGRAM_COLOR_ENTRIES.find((entry) => entry.id === arg);
+						if (choice) t.session.formatSmartArt(t.sheet, found.index, { kind, value: choice.id });
+					} else {
+						const choice = DIAGRAM_STYLE_ENTRIES.find((entry) => entry.id === arg);
+						if (choice) t.session.formatSmartArt(t.sheet, found.index, { kind, value: choice.id });
+					}
+				},
+			}),
+		),
 		editing({
 			id: 'insert.smartart',
 			label: 'SmartArt',

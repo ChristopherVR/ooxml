@@ -64,4 +64,10 @@ it('runs SmartArt Design commands and the text pane on the selected diagram, wit
 	ctx.session()!.undo();
 	expect(smartArt(ctx).nodes.map((n) => n.text)).toEqual(['Plan', 'Build', 'Ship']);
 	expect(smartArt(ctx).diagram).toBeDefined();
+	await ctx.commands.run('smartart.colors', 'monochromatic2');
+	expect(smartArt(ctx).colorsId).toBe('urn:ooxml-core/colors/monochromatic2');
+	await ctx.commands.run('smartart.style', 'moderate');
+	expect(smartArt(ctx).quickStyleId).toBe('urn:ooxml-core/style/moderate');
+	ctx.session()!.undo();
+	expect(smartArt(ctx).quickStyleId).not.toBe('urn:ooxml-core/style/moderate');
 });

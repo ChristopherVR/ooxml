@@ -161,6 +161,19 @@ describe('SmartArt editing in the Word editor', () => {
 		expect(texts(view)).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', '']);
 		controller.handle({ type: 'smartArt', key: 'moveUp' });
 		expect(texts(view)).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta', '', 'Epsilon']);
+		controller.handle({
+			type: 'smartArtFormat',
+			change: { kind: 'colors', value: 'monochromatic2' },
+		});
+		expect(selectedDiagram(view.state)!.diagram.colorsId).toBe(
+			'urn:ooxml-core/colors/monochromatic2',
+		);
+		controller.handle({ type: 'smartArtFormat', change: { kind: 'style', value: 'moderate' } });
+		expect(selectedDiagram(view.state)!.diagram.quickStyleId).toBe('urn:ooxml-core/style/moderate');
+		undo(view.state, view.dispatch);
+		expect(selectedDiagram(view.state)!.diagram.quickStyleId).not.toBe(
+			'urn:ooxml-core/style/moderate',
+		);
 		const paragraph = docToModel(view.state.doc, loaded.model).blocks.find(
 			(block) => block.type === 'paragraph' && block.runs.some((run) => run.image?.diagram),
 		) as Paragraph;

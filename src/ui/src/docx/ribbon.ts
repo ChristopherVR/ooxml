@@ -17,6 +17,7 @@ import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
 import { buildShapeFormatPanel } from './shape-format-ribbon';
 import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
+import { syncSmartArtFormatGalleries } from './smartart-format-galleries';
 import { buildChartDesignPanel } from './chart-design-ribbon';
 import { panelsOf, setTabHidden } from './ribbon-tab-api';
 
@@ -118,6 +119,7 @@ export function setRibbonLocale(root: HTMLElement, value: string): void {
 	const locale = normalizeEditorLocale(value);
 	root.dataset.editorLocale = locale;
 	localizeElement(root, locale);
+	syncSmartArtFormatGalleries(root);
 	// The tab row is drawn by the shared ribbon from the panels' labels, so translate those.
 	// A host's add-in tab keeps the label the host gave it.
 	for (const panel of panelsOf(root))

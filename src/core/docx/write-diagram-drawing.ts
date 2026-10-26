@@ -49,9 +49,9 @@ export function buildInsertedDiagramDrawing(
 		});
 	};
 	const dm = part('data', insertedDiagramDataXml(diagram));
-	const lo = part('layout');
-	const qs = part('quickStyle');
-	const cs = part('colors');
+	const lo = part('layout', diagram.layoutSource?.layoutXml);
+	const qs = part('quickStyle', diagram.layoutSource?.quickStyleXml);
+	const cs = part('colors', diagram.layoutSource?.colorsXml);
 	const id = allocator.docPrIds.next();
 	const cx = String(Math.max(1, Math.round(widthPx * EMU_PER_PIXEL)));
 	const cy = String(Math.max(1, Math.round(heightPx * EMU_PER_PIXEL)));

@@ -68,6 +68,7 @@ export function paintSmartArt(
 				},
 				scheme: smartArtSchemeColors(theme),
 				minorFont: theme?.minorFont,
+				formatScheme: theme?.formatScheme,
 			})
 		: undefined;
 	const rawDrawing = cached ?? preview?.drawing;

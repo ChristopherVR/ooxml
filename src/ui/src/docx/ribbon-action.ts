@@ -1,9 +1,11 @@
 import type { TableCommand } from './table-commands';
 import type { MultilingualAction } from './multilingual-ribbon';
 import type { ReviewDisplayMode } from './review-display';
+import type { DiagramFormatChange } from 'ooxml-core/diagram';
 
 /** Every command the ribbon can raise, dispatched as a `ribbon-action` event. */
 export type RibbonAction =
+	| { type: 'smartArtFormat'; change: DiagramFormatChange }
 	| { type: 'help' }
 	| {
 			type: 'format';

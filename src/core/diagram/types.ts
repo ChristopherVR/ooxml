@@ -117,6 +117,8 @@ export interface DiagramIssue {
 
 /** A `dgm:pt` of the data model. */
 export interface DiagramPoint {
+	fill?: DrawingFill;
+	line?: DrawingLine;
 	modelId: string;
 	/** `node` (the schema default), `doc`, `asst`, `pres`, `parTrans`, `sibTrans`. */
 	type: string;

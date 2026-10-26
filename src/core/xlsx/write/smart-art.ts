@@ -60,11 +60,21 @@ export function writeEditedSmartArt(writer: PackageWriter, object: SmartArtObjec
 		writer.carry(layoutPart);
 		writer.add(layoutPart, withDiagramXmlProlog(layoutXml));
 	}
+	for (const key of ['colors', 'quickStyle'] as const) {
+		const name = object.parts?.[key];
+		const definition = object.definitions?.[key];
+		if (name && definition) {
+			writer.carry(name);
+			writer.add(name, withDiagramXmlProlog(definition));
+		}
+	}
 	writer.carry(dataPart);
 	writer.add(
 		dataPart,
 		writeEditedDiagramData(xml, nodesOf(object), {
 			dropDrawingLink: true,
+			...(object.colorsId ? { colorsId: object.colorsId } : {}),
+			...(object.quickStyleId ? { quickStyleId: object.quickStyleId } : {}),
 			...(relaid && object.layoutId
 				? { layout: { uniqueId: object.layoutId, category: object.layoutFamily } }
 				: {}),
