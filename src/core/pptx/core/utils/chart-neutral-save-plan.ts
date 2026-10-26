@@ -31,6 +31,10 @@ import { planNeutralSeriesStructure } from './chart-neutral-save-structure';
 import { planNeutralChartType } from './chart-neutral-save-type';
 import { planNeutralChartFormats } from './chart-neutral-save-format';
 import { planNeutralFlatPaint } from './chart-neutral-save-flat-paint';
+import { planNeutralChartText } from './chart-neutral-save-text';
+import { planNeutralChartLayout } from './chart-neutral-save-layout';
+import { planNeutralChartShapes } from './chart-neutral-save-shape';
+import { planNeutralPointLabels } from './chart-neutral-save-point-label';
 import {
 	planNeutralChartLabels,
 	planNeutralChartSeriesColors,
@@ -148,6 +152,10 @@ export function planNeutralChartSave(
 	const seriesData = planSeriesData(before, probe, edits) || before !== original;
 	planNeutralChartLabels(before, probe, edits);
 	planNeutralChartFormats(before, probe, edits);
+	planNeutralChartText(before, probe, edits);
+	planNeutralChartLayout(before, probe, edits);
+	planNeutralChartShapes(before, probe, edits);
+	planNeutralPointLabels(before, probe, edits);
 	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
 	return same(probe, before)

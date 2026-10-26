@@ -22,11 +22,7 @@ const KEYS = new Set([
 const ARROWS = ['none', 'triangle', 'stealth', 'diamond', 'oval', 'arrow'];
 
 /** Null clears one property to Automatic without removing the rest of the authored outline. */
-export function setChartTargetLineOptions(
-	space: ChartSpace,
-	target: ChartFormatTarget,
-	edit: ChartLineEdit,
-): ChartSpace {
+export function editChartLine(current: DrawingLine | undefined, edit: ChartLineEdit): DrawingLine {
 	for (const key of Object.keys(edit))
 		if (!KEYS.has(key)) throw new RangeError('Unknown chart outline setting');
 	if (
@@ -49,17 +45,24 @@ export function setChartTargetLineOptions(
 				(end.length && !['sm', 'med', 'lg'].includes(end.length)))
 		)
 			throw new RangeError('Invalid chart arrow end');
+	const line = structuredClone(current ?? {});
+	for (const key of Object.keys(edit) as Array<keyof ChartLineEdit>) {
+		const value = edit[key];
+		if (value === null) delete line[key];
+		else if (value !== undefined) Object.assign(line, { [key]: structuredClone(value) });
+	}
+	if (edit.headEnd) line.headEnd = { ...current?.headEnd, ...edit.headEnd };
+	if (edit.tailEnd) line.tailEnd = { ...current?.tailEnd, ...edit.tailEnd };
+	return line;
+}
+
+export function setChartTargetLineOptions(
+	space: ChartSpace,
+	target: ChartFormatTarget,
+	edit: ChartLineEdit,
+): ChartSpace {
 	return editChartSpace(space, (draft) => {
-		for (const shape of chartTargetDraftShapes(draft, target)) {
-			const line = structuredClone(shape.line ?? {});
-			for (const key of Object.keys(edit) as Array<keyof ChartLineEdit>) {
-				const value = edit[key];
-				if (value === null) delete line[key];
-				else if (value !== undefined) Object.assign(line, { [key]: structuredClone(value) });
-			}
-			if (edit.headEnd) line.headEnd = { ...shape.line?.headEnd, ...edit.headEnd };
-			if (edit.tailEnd) line.tailEnd = { ...shape.line?.tailEnd, ...edit.tailEnd };
-			shape.line = line;
-		}
+		for (const shape of chartTargetDraftShapes(draft, target))
+			shape.line = editChartLine(shape.line, edit);
 	});
 }

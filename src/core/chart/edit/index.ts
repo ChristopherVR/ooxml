@@ -45,3 +45,7 @@ export * from './format-values';
 export * from './chartex-action';
 export * from './text-validation';
 export * from './apply-appearance';
+export * from './layout';
+export * from './legend-entries';
+export * from './shape-properties';
+export * from './point-label';

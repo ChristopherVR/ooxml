@@ -43,6 +43,49 @@ const save = (edit: (chart: PptxChartData) => void) =>
 	saveChartPartThroughNeutral(PART, before(), edited(edit));
 
 describe('planNeutralChartSave', () => {
+	it('saves point labels and axis/label shapes without rebuilding cached data', () => {
+		const saved = save((chart) => {
+			chart.series[0]!.dataLabels = [
+				{
+					idx: 1,
+					text: 'Actual',
+					showVal: false,
+					txPr: { fontSize: 14 },
+					spPr: { fillColor: '#FFFF00', strokeWidth: 2 },
+					layout: { x: 0.3 },
+				},
+			];
+			chart.axes![1]!.majorGridlinesSpPr = { strokeColor: '#444444', strokeWidth: 1 };
+		});
+		expect(saved).toBeDefined();
+		const model = parseChartSpace(saved!.xml).chartSpace;
+		const label = model.plotArea.groups[0]!.series[0]!.dataLabels!.labels[0]!;
+		expect(label).toMatchObject({
+			index: 1,
+			tx: { text: 'Actual' },
+			showValue: false,
+			layout: { x: 0.3 },
+		});
+		expect(label.spPr!.line!.widthEmu).toBe(25400);
+		expect(saved!.xml).toContain('<c:v>4.4000000000000004</c:v>');
+		expect(saved!.workbookWrites).toEqual([]);
+	});
+	it('saves title, legend entry, axis fonts and manual layout through shared operations', () => {
+		const saved = save((chart) => {
+			chart.style!.titleFontSize = 24;
+			chart.style!.titleEastAsiaFontFamily = 'Yu Gothic';
+			chart.style!.legendEntries = [{ index: 3, textStyle: { bold: true } }];
+			chart.axes![0]!.fontSize = 12;
+			chart.layouts = { plotArea: { x: 0.2, width: 0.6, widthMode: 'factor' } };
+		});
+		expect(saved).toBeDefined();
+		expect(saved!.xml).toContain('sz="2400"');
+		expect(saved!.xml).toContain('<a:ea typeface="Yu Gothic"/>');
+		const model = parseChartSpace(saved!.xml).chartSpace;
+		expect(model.legend!.entries[0]!.index).toBe(3);
+		expect(model.plotArea.layout).toMatchObject({ x: 0.2, width: 0.6 });
+		expect(saved!.workbookWrites).toEqual([]);
+	});
 	it('saves a real Format pane edit including its mirrored preview fields', () => {
 		const next = withChartElementFormat(
 			before(),
@@ -95,7 +138,7 @@ describe('planNeutralChartSave', () => {
 		const runs = edited((c) => (c.titleRuns = [{ text: 'Sales', italic: true }]));
 		expect(planNeutralChartSave(before(), runs)).toBeUndefined();
 		const entries = edited((c) => (c.style!.legendEntries = [{ index: 0, deleted: true }]));
-		expect(planNeutralChartSave(before(), entries)).toBeUndefined();
+		expect(planNeutralChartSave(before(), entries)).toBeDefined();
 	});
 
 	it('plans multi-run title text through the shared run-preserving policy', () => {
