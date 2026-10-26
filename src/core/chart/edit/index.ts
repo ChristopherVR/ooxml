@@ -5,11 +5,13 @@ export * from './draft';
 export * from './paint';
 export * from './gradient';
 export * from './title';
+export * from './title-runs';
 export * from './legend-labels';
 export * from './label-range';
 export * from './axes';
 export * from './series';
 export * from './series-data';
+export * from './series-vectors';
 export * from './type';
 export * from './type-axes';
 export {

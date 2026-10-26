@@ -247,6 +247,12 @@ function patchRun(node: XmlElement, edit: ChartTextEdit): void {
 	);
 }
 
+/** Patch one authored run, preserving unrelated font, hyperlink and producer properties. */
+export function editChartTextRunProperties(node: XmlElement, edit: ChartTextEdit): void {
+	validateChartTextEdit(edit);
+	patchRun(node, edit);
+}
+
 export function editChartTextBody(
 	body: ChartTextBody | undefined,
 	edit: ChartTextEdit,
