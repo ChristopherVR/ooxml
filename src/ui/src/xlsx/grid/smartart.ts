@@ -75,6 +75,10 @@ export function paintSmartArt(
 		? resolveDiagramDrawingStyles(rawDrawing, theme?.formatScheme)
 		: undefined;
 	node.dataset.rendering = cached ? 'cached-drawing' : (preview?.mode ?? 'placeholder');
+	if (preview?.issues.length)
+		node.title = [notice, ...preview.issues.map((issue) => `${issue.code}: ${issue.message}`)].join(
+			'\n',
+		);
 	if (diagram && diagram.shapes.length) {
 		defineSmartArt(doc.defaultView?.customElements);
 		const art = doc.createElement('office-ui-smartart') as HTMLElement & {

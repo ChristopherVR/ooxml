@@ -140,6 +140,35 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 		const computed = runEngineLayout(data, box, data.nodes, palette, 'flat');
 		if (computed) {
 			const result = applyCustomLayoutOverrides(computed, data.nodes, box);
+			const declaresConnectors =
+				input.source?.layoutXml &&
+				descendants(parseXml(input.source.layoutXml).documentElement, 'alg').some(
+					(algorithm) => algorithm.getAttribute('type') === 'conn',
+				);
+			if (
+				declaresConnectors &&
+				data.nodes.some((node) => node.parentId) &&
+				!result.nodes.some((node) => /connector|^line(?:Inv)?$/i.test(node.presetOverride ?? ''))
+			)
+				issues.push({
+					code: 'DIAGRAM_CONNECTORS_PARTIAL',
+					message:
+						"This interpreted preview does not reconstruct the layout's bent or unsupported hierarchy connectors.",
+				});
+			const vars = data.presLayoutVars;
+			if (
+				vars &&
+				(vars.orgChart ||
+					vars.bulletEnabled ||
+					(vars.childMax ?? -1) > 0 ||
+					(vars.childPreferred ?? -1) > 0 ||
+					(vars.hierarchyBranch && !['std', 'init'].includes(vars.hierarchyBranch)))
+			)
+				issues.push({
+					code: 'DIAGRAM_LAYOUT_VARIABLES_PARTIAL',
+					message:
+						'The original presentation layout variables are retained; this engine applies only the supported subset.',
+				});
 			const views = result.nodes.flatMap((node) => {
 				if (node.kind !== 'rect') return [];
 				return [

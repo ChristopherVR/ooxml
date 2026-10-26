@@ -50,7 +50,7 @@ describe('uncached diagram previews', () => {
 		const dataXml = `<dgm:dataModel xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram"><dgm:ptLst><dgm:pt modelId="a"><dgm:prSet><dgm:presLayoutVars><dgm:dir val="rev"/><dgm:hierBranch val="hang"/><dgm:orgChart val="1"/><dgm:chMax val="4"/></dgm:presLayoutVars></dgm:prSet></dgm:pt></dgm:ptLst><dgm:cxnLst><dgm:cxn modelId="old" type="parOf" srcId="doc" destId="a" srcOrd="99" parTransId="t"/></dgm:cxnLst></dgm:dataModel>`;
 		const source = {
 			dataXml,
-			layoutXml: '<original ordered constraints/>',
+			layoutXml: loadBuiltinSmartArtLayoutXml(builtinLayoutIdForPreset('basicBlockList')!),
 			quickStyleXml: '<style/>',
 		};
 		const data = diagramLayoutData({ ...input, nodes: [{ id: 'a', text: 'Edited' }], source });
@@ -64,6 +64,9 @@ describe('uncached diagram previews', () => {
 		expect(data.nodes[0]?.text).toBe('Edited');
 		expect(data.connections?.[0]).toMatchObject({ srcOrd: 0, parentTransitionId: 't' });
 		expect(JSON.parse(JSON.stringify(source))).toEqual(source);
+		expect(previewDiagramLayout({ ...input, source }).issues.map((issue) => issue.code)).toContain(
+			'DIAGRAM_LAYOUT_VARIABLES_PARTIAL',
+		);
 	});
 
 	it('reports fallback for missing, invalid and unsupported definitions', () => {

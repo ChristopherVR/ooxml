@@ -140,7 +140,10 @@ export function smartArtNodeView(
 	let themed: ReturnType<typeof themeDrawing> | undefined;
 	const writeNotes = (report?: RenderReport) => {
 		const list = document.createElement('ul');
-		for (const note of diagramNotes(diagram, report, themed, approximate)) {
+		for (const note of [
+			...diagramNotes(diagram, report, themed, approximate),
+			...(preview?.issues.map((issue) => `${issue.code}: ${issue.message}`) ?? []),
+		]) {
 			const item = document.createElement('li');
 			item.textContent = note;
 			list.append(item);
