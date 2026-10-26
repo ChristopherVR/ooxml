@@ -9,10 +9,10 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.70",
-		"@ai-sdk/vue": "^4.0.142",
-		"ai": "^7.0.142",
-		"emf-converter": "4.21.0",
+		"@ai-sdk/openai-compatible": "^3.0.77",
+		"@ai-sdk/vue": "^4.0.150",
+		"ai": "^7.0.150",
+		"emf-converter": "4.23.1",
 		"fast-xml-parser": "^5.11.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
@@ -28,7 +28,7 @@
 		"@vitejs/plugin-vue": "^6.0.10",
 		"tailwindcss": "^4.3.3",
 		"typescript": "6.0.3",
-		"vite": "^8.3.4",
+		"vite": "^8.3.5",
 		"vue-tsc": "^3.3.13"
 	}
 }
