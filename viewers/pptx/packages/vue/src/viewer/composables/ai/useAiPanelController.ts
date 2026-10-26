@@ -4,8 +4,8 @@ import type {
 	FocusSelectionInput,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
-} from 'ooxml-ui/pptx/ai';
-import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
+import { computeFocusTargets, createPptxAiPanelController } from 'ooxml-ui/pptx/ai/host';
 /**
  * useAiPanelController: owns the AI panel's "scope" (the focused targets + a
  * prefilled composer directive) plus the two on-canvas highlight sources that
@@ -27,7 +27,7 @@ import type { ComputedRef, Ref } from 'vue';
 
 import { useController } from '../useController';
 
-export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai';
+export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai/host';
 
 /** Live reactive inputs the controller derives its focus from. */
 export interface UseAiPanelControllerInput {

@@ -9,14 +9,14 @@
  * matching the shared module's DOM-free `SaveChatLogFile` callback contract.
  */
 import { downloadBlob } from 'ooxml-ui/pptx';
-import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai/host';
 import {
 	collectStoredChats,
 	createChatHistoryStore,
 	exportAiChatLogs as exportChatLogs,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 
-export type { AiLogFormat } from 'ooxml-ui/pptx/ai';
+export type { AiLogFormat } from 'ooxml-ui/pptx/ai/host';
 
 /** Options for {@link exportAiChatLogs}. */
 export interface ExportAiChatLogsOptions {

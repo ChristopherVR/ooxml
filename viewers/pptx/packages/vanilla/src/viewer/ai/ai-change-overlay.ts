@@ -18,8 +18,8 @@ import type {
 	AiChangeBatch,
 	AiElementChange,
 	ResolvedAiChangeAnimationConfig,
-} from 'ooxml-ui/pptx/ai';
-import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
+import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai/host';
 
 import { createEl } from '../render';
 import type { Store, ViewerState } from '../state';

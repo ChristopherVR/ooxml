@@ -11,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
+import { walkModuleGraph } from '../../../scripts/module-graph.mjs';
 
 const uiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const coreRoot = path.resolve(uiRoot, '..', 'core');
@@ -142,6 +143,20 @@ console.log('dom registration ok: ' + ui.OFFICE_UI_TAGS.length + ' tags');
 	);
 	console.log(run('node', ['ssr.mjs'], work).trim());
 	console.log(run('node', ['dom.mjs'], work).trim());
+
+	// The viewers' main entries import ooxml-ui/pptx/ai/host; neither its ESM nor its CJS build
+	// may reach the ai SDK (not even through a dynamic import), zod or the automation catalogue.
+	assert(specifiers.includes(`${manifest.name}/pptx/ai/host`), 'pptx/ai/host is not exported');
+	for (const format of ['mjs', 'cjs']) {
+		const entry = path.join(work, 'node_modules', manifest.name, 'dist/pptx/ai', `host.${format}`);
+		const reached = (await walkModuleGraph(entry)).bare
+			.filter(({ specifier }) =>
+				/^(?:ai|@ai-sdk\/.+|zod(?:\/.+)?|ooxml-core\/pptx\/automation(?:\/.+)?)$/.test(specifier),
+			)
+			.map(({ specifier, kind, importer }) => `${kind} of ${specifier} in ${importer}`);
+		assert.deepEqual(reached, [], `dist/pptx/ai/host.${format} reaches the assistant runtime`);
+	}
+	console.log('pptx/ai/host reaches no ai, zod or automation module');
 
 	// A web host bundles both packages for the browser, with no Node fallbacks.
 	const coreName = JSON.parse(await readFile(path.join(coreRoot, 'package.json'), 'utf8')).name;

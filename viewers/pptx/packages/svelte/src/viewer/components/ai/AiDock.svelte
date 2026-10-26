@@ -3,7 +3,11 @@
 	 * AiDock: the panel's placement inside the viewer root, and the lazy boundary
 	 * that keeps `@ai-sdk/svelte` + the optional `ai` SDK out of the main bundle.
 	 * The dynamic `import()` below is the ONLY reference to `AiChatPanel`, so the
-	 * assistant's dependencies load the first time a user opens it.
+	 * assistant's dependencies load the first time a user opens it. It sits in this
+	 * script block, not in the template: Vite's dependency scan reads only script
+	 * blocks, so a template-level `import()` hides the panel's dependencies (the
+	 * `ooxml-ui/pptx/ai` barrel and `zod`) until the panel first opens, and the dev
+	 * server then re-optimizes and reloads the page, dropping that first click.
 	 *
 	 * Split out of `PowerPointViewer.svelte` (with its own placement styles) to
 	 * keep that file within the repo's file-size budget.
@@ -23,10 +27,12 @@
 		aiPanel: AiPanelController;
 		onclose: () => void;
 	} = $props();
+
+	const panel = import('./AiChatPanel.svelte');
 </script>
 
 <div class="pptx-svelte-ai-dock">
-	{#await import('./AiChatPanel.svelte') then { default: AiChatPanel }}
+	{#await panel then { default: AiChatPanel }}
 		<AiChatPanel {bridge} {config} {aiPanel} {onclose} />
 	{/await}
 </div>

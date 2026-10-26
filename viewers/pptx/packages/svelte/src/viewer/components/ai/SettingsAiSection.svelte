@@ -7,8 +7,8 @@
 	import Bug from '@lucide/svelte/icons/bug';
 	import Download from '@lucide/svelte/icons/download';
 	import { downloadBlob } from 'ooxml-ui/pptx';
-	import { collectStoredChats, createChatHistoryStore, exportAiChatLogs } from 'ooxml-ui/pptx/ai';
-	import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+	import { collectStoredChats, createChatHistoryStore, exportAiChatLogs } from 'ooxml-ui/pptx/ai/host';
+	import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai/host';
 	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

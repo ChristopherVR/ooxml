@@ -22,6 +22,8 @@ export default defineConfig({
 			'pptx-viewer-core': path.resolve(__dirname, '../core/src/index.ts'),
 			'pptx-viewer-locales': path.resolve(__dirname, '../locales/src/index.ts'),
 			'ooxml-ui/pptx/i18n': path.resolve(__dirname, '../../../../src/ui/src/pptx/i18n/index.ts'),
+			// Keys match as prefixes in order, so the leaf entry comes before the barrel.
+			'ooxml-ui/pptx/ai/host': path.resolve(__dirname, '../../../../src/ui/src/pptx/ai/host.ts'),
 			'ooxml-ui/pptx/ai': path.resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			'ooxml-ui/pptx': path.resolve(__dirname, '../../../../src/ui/src/pptx/index.ts'),
 		},

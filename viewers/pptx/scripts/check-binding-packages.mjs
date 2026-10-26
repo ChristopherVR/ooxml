@@ -12,6 +12,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
+import { walkModuleGraph } from '../../../scripts/module-graph.mjs';
 import { toPublishManifest, readWorkspacePackages } from './publish-manifest.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -32,6 +33,12 @@ const packages = [
 	{ key: 'svelte', name: 'pptx-svelte-viewer', entry: 'PowerPointViewer' },
 ];
 const bindings = [...packages.slice(1)];
+// Bindings whose main entry loads the AI panel lazily, so their initial chunks must take the
+// SDK-free helpers from ooxml-ui/pptx/ai/host, never the full ooxml-ui/pptx/ai barrel (zod, the
+// automation catalogue, a dynamic import of the ai SDK). Not Angular: ng-packagr emits the
+// package as one flat module that also holds the chat service, so it has no lazy chunk to
+// keep the barrel in.
+const aiHostBindings = new Set(['react', 'vue', 'vanilla', 'svelte']);
 
 function run(command, args, cwd, capture = false) {
 	const result = spawnSync(command, args, {
@@ -76,6 +83,7 @@ console.log('pptx-react-viewer: provider and viewer from either entry share one 
 try {
 	const tarballs = [];
 	const cjsBindings = [];
+	const rootEntries = [];
 	// The bindings consume the core and UI built by this checkout. Registry
 	// versions can lack exports introduced by an unreleased migration.
 	const localDependencies = [
@@ -106,6 +114,11 @@ try {
 			rootExport?.import ?? rootExport?.default ?? shippedManifest.module ?? shippedManifest.main;
 		if (bindings.includes(target) && typeof rootExport?.require === 'string') {
 			cjsBindings.push({ name: target.name, entry: target.entry });
+		}
+		if (aiHostBindings.has(target.key)) {
+			// The ESM entry is what a web host bundles. A CJS build loads its lazy chunks with
+			// `require()` inside a promise, which a module walk cannot tell from an eager require.
+			rootEntries.push({ name: target.name, file: entryFile });
 		}
 		assert.ok(entryFile, `${target.name} has no declared root runtime entry`);
 		assert.ok(
@@ -231,6 +244,19 @@ const viewer = require('pptx-react-viewer/viewer');
 ${sharedContextCheck('CommonJS')}`,
 	);
 	run(process.execPath, ['react-i18n-context.cjs'], consumer);
+
+	for (const { name, file } of rootEntries) {
+		const { files, bare } = await walkModuleGraph(join(consumer, 'node_modules', name, file), {
+			followDynamic: false,
+		});
+		const eager = bare
+			.filter(({ specifier }) => specifier === 'ooxml-ui/pptx/ai' || specifier === 'ai')
+			.map(({ specifier, kind, importer }) => `${kind} of ${specifier} in ${importer}`);
+		assert.deepEqual(eager, [], `${name} ${file} loads the AI runtime in its initial chunks`);
+		console.log(
+			`[binding-pack] ${name} ${file}: ${files.length} initial modules, no ooxml-ui/pptx/ai or ai`,
+		);
+	}
 
 	// A web host bundles the same packages for the browser, with no Node fallbacks. The core and
 	// UI packages get the same check in their own package smoke tests.

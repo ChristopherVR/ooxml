@@ -6,13 +6,13 @@ import type {
 	PptxAiPanelController,
 	PptxAiPanelState,
 	ToolCanvasTarget,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 import {
 	computeFocusTargets,
 	createPptxAiPanelController,
 	isAiFocusPinned,
 	resolveAiEffectiveTargets,
-} from 'ooxml-ui/pptx/ai';
+} from 'ooxml-ui/pptx/ai/host';
 /**
  * `AiPanelController` - the shared `createPptxAiPanelController` read through
  * the Svelte controller adapter, behind the runes-style accessor API. It keeps `PowerPointViewer`
@@ -36,7 +36,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { controllerState } from '../state/controller-state';
 import type { ControllerState } from '../state/controller-state';
 
-export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai';
+export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai/host';
 
 /** Live viewer accessors + the panel-open hook the controller closes over. */
 export interface AiPanelControllerDeps {
