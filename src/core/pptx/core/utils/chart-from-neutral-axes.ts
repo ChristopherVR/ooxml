@@ -136,6 +136,11 @@ export function axesFromNeutral(axes: ChartAxis[], styled: Axis[]): Axis[] {
 		const sameType = styled.filter((axis) => axis.axisType === type);
 		return axes
 			.filter((axis) => axis.kind === kind)
-			.map((axis, at) => axisFromNeutral(axis, sameType[at] ?? { axisType: type }));
+			.map((axis, at) =>
+				axisFromNeutral(axis, {
+					...(sameType.find((styledAxis) => styledAxis.axisId === axis.id) ??
+						sameType[at] ?? { axisType: type }),
+				}),
+			);
 	});
 }

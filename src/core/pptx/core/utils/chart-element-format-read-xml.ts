@@ -24,6 +24,8 @@ import type {
 	XmlObject,
 } from '../types';
 import { readChartThreeD } from './chart-element-format-3d-xml';
+import type { ChartShapeProperties } from '../../../chart/index';
+import { chartFormatFromNeutral } from './chart-from-neutral-format';
 import { findChartAxisNode } from './chart-element-format-targets';
 import { readChartTextFormat } from './chart-element-format-text-xml';
 
@@ -37,6 +39,8 @@ export type ParseChartElementGradient = (parent: XmlObject) => PptxChartGradient
 export interface ChartElementFormatReaders {
 	resolve: ResolveFillColor;
 	parseGradient?: ParseChartElementGradient;
+	/** Supplied by the classic neutral adapter; absent on legacy save compatibility paths. */
+	neutralShape?: (source: XmlObject) => ChartShapeProperties | undefined;
 }
 
 const EMU_PER_POINT = 12700;
@@ -224,6 +228,17 @@ export function readChartElementFormatFromSpPr(
 		return undefined;
 	}
 	const r = typeof readers === 'function' ? { resolve: readers } : readers;
+	const neutral = r.neutralShape?.(spPr);
+	if (neutral) {
+		const format = chartFormatFromNeutral(
+			neutral,
+			(node) => (node ? r.resolve(node) : undefined),
+			neutral.fill?.kind === 'picture' ? paint(spPr, localName, r) : undefined,
+		);
+		const threeD = readChartThreeD(spPr, localName, r.resolve);
+		if (threeD) format.threeD = threeD;
+		return Object.keys(format).length ? format : undefined;
+	}
 	const format: PptxChartElementFormat = {};
 	const fill = paint(spPr, localName, r);
 	if (fill) format.fill = fill;

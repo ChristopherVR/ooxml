@@ -397,3 +397,48 @@ describe('series line width and dash (c:ser/c:spPr/a:ln)', () => {
 		expect(plain.lineDashStyle).toBeUndefined();
 	});
 });
+
+it('refreshes saved classic topology and indices without losing host relationships or theme styles', async () => {
+	const { parseChartSpace, setChartType, writeChartSpace } =
+		await import('../../../../chart/index');
+	const handler = new PptxHandler();
+	const data = await handler.load(await buildDeck());
+	const previous = (
+		data.slides[0].elements.find((entry) => entry.type === 'chart') as ChartPptxElement
+	).chartData!;
+	const runtime = (
+		handler as unknown as {
+			runtime: {
+				refreshClassicChartFromPart(
+					xml: string,
+					previous: typeof previous,
+					slidePath?: string,
+				): Promise<typeof previous>;
+			};
+		}
+	).runtime;
+	const neutral = parseChartSpace(CHART_XML).chartSpace;
+	neutral.plotArea.groups[0].series[0].index = 17;
+	const pie = await runtime.refreshClassicChartFromPart(
+		writeChartSpace(setChartType(neutral, { kind: 'pie' })),
+		previous,
+		'ppt/slides/slide1.xml',
+	);
+	expect(pie.chartType).toBe('pie');
+	expect(pie.axes).toBeUndefined();
+	expect(pie.series[0].idx).toBe(17);
+	expect(pie.chartPartPath).toBe(previous.chartPartPath);
+	expect(pie.chartRelationshipId).toBe(previous.chartRelationshipId);
+	expect(pie.chartStyleDefinition).toEqual(previous.chartStyleDefinition);
+	expect(pie.themeAccentColors).toEqual(previous.themeAccentColors);
+	const line = await runtime.refreshClassicChartFromPart(
+		writeChartSpace(setChartType(neutral, { kind: 'line', is3D: true })),
+		pie,
+		'ppt/slides/slide1.xml',
+	);
+	expect(line.chartType).toBe('line3D');
+	expect(line.axes?.some((axis) => axis.axisType === 'serAx')).toBe(true);
+	expect(line.series[0].idx).toBe(17);
+	expect(previous.chartType).toBe('bar');
+	expect(previous.axes).toHaveLength(2);
+});

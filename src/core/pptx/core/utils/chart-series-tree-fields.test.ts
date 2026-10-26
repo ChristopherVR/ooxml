@@ -1,3 +1,7 @@
+import { PptxRuntimeDependencyFactory } from '../core/factories/PptxRuntimeDependencyFactory';
+import { parseXml } from '../../../xml/index';
+import { shapeProperties } from '../../../chart/parse-util';
+import type { PptxChartType } from '../types';
 /**
  * Series colour extraction for area-fill vs line-drawn chart families (moved from
  * `PptxHandlerRuntimeChartSeriesColor.test.ts` with the reader it pins).
@@ -12,7 +16,10 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { XmlObject } from '../types';
-import { readSeriesTreeFields, type ChartTreeReader } from './chart-series-tree-fields';
+import {
+	readSeriesTreeFields as readFields,
+	type ChartTreeReader,
+} from './chart-series-tree-fields';
 
 /** Minimal `parseColor`: resolve a solidFill node's `a:srgbClr/@val`. */
 function parseColorStub(node: XmlObject | undefined): string | undefined {
@@ -27,6 +34,16 @@ const STUB_READER: ChartTreeReader = {
 	resolveTypeface: (raw) => raw,
 	localName: (key) => key.slice(key.lastIndexOf(':') + 1),
 };
+
+function readSeriesTreeFields(node: XmlObject, type: PptxChartType, reader: ChartTreeReader) {
+	const body = new PptxRuntimeDependencyFactory().createBuilder().build(node);
+	const root = parseXml(
+		'<c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+			body +
+			'</c:ser>',
+	).documentElement;
+	return readFields(node, type, reader, { spPr: shapeProperties(root), dataPoints: [] });
+}
 
 describe('readSeriesTreeFields colour extraction', () => {
 	it('reads the direct spPr solidFill (bar/area style)', () => {
@@ -96,7 +113,22 @@ describe('readSeriesTreeFields colour extraction', () => {
 			extractGradientFocalPoint: () => undefined,
 		};
 		const fields = readSeriesTreeFields(
-			{ 'c:spPr': { 'a:ln': { '@_w': '76200', 'a:gradFill': {} } } },
+			{
+				'c:spPr': {
+					'a:ln': {
+						'@_w': '76200',
+						'a:gradFill': {
+							'a:gsLst': {
+								'a:gs': [
+									{ '@_pos': '0', 'a:srgbClr': { '@_val': 'C08FBF' } },
+									{ '@_pos': '100000', 'a:srgbClr': { '@_val': '800F85' } },
+								],
+							},
+							'a:lin': { '@_ang': '0' },
+						},
+					},
+				},
+			},
 			'line',
 			{ ...STUB_READER, colorStyleCodec: codec },
 		);
@@ -111,4 +143,61 @@ describe('readSeriesTreeFields colour extraction', () => {
 		expect(fields.gradientFill).toBeUndefined();
 		expect(fields.lineWidth).toBe(6);
 	});
+});
+
+it('uses neutral paint values even when a compatibility source tree contains stale values', () => {
+	const fields = readFields(
+		{
+			'c:spPr': {
+				'a:solidFill': { 'a:srgbClr': { '@_val': 'FF0000' } },
+				'a:ln': { '@_w': '12700' },
+			},
+		},
+		'line',
+		{
+			...STUB_READER,
+			parseColor: (node) =>
+				(node?.['a:schemeClr'] as XmlObject | undefined)?.['@_val'] === 'accent1'
+					? '#204060'
+					: undefined,
+		},
+		{
+			spPr: {
+				fill: { kind: 'solid', color: { kind: 'scheme', value: 'accent1', transforms: [] } },
+				line: { widthEmu: 38100, dash: 'dash', fill: { kind: 'none' } },
+			},
+			dataPoints: [],
+		},
+	);
+	expect(fields).toMatchObject({
+		color: '#204060',
+		lineWidth: 3,
+		lineDashStyle: 'dash',
+		lineNoFill: true,
+	});
+});
+
+it('projects neutral marker and point overrides while retaining only picture and identity source facts', () => {
+	const fields = readFields({}, 'bar', STUB_READER, {
+		marker: { symbol: 'diamond', size: 8, spPr: { line: { fill: { kind: 'none' } } } },
+		dataPoints: [
+			{
+				index: 3,
+				explosion: 12,
+				bubble3D: false,
+				spPr: { fill: { kind: 'solid', color: { kind: 'srgb', value: '123456', transforms: [] } } },
+				marker: { symbol: 'circle', size: 4 },
+			},
+		],
+	});
+	expect(fields.marker).toEqual({ symbol: 'diamond', size: 8, spPr: { lineNoFill: true } });
+	expect(fields.dataPoints).toEqual([
+		{
+			idx: 3,
+			spPr: { fillColor: '#123456' },
+			explosion: 12,
+			marker: { symbol: 'circle', size: 4 },
+			bubble3D: false,
+		},
+	]);
 });

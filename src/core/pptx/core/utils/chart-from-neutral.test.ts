@@ -189,3 +189,19 @@ describe('neutralCategories', () => {
 		).toEqual({ categories: ['7'] });
 	});
 });
+
+it('matches reordered axis styles by identity without mutating the retained compatibility snapshot', () => {
+	const { chartSpace } = parseChartSpace(
+		part(
+			'<c:catAx><c:axId val="2"/><c:scaling/><c:crossAx val="3"/></c:catAx><c:catAx><c:axId val="1"/><c:scaling/><c:crossAx val="3"/></c:catAx>',
+		),
+	);
+	const styled = [
+		{ axisType: 'catAx' as const, axisId: 1, titleText: 'Old one', color: '#111111' },
+		{ axisType: 'catAx' as const, axisId: 2, titleText: 'Old two', color: '#222222' },
+	];
+	const axes = axesFromNeutral(chartSpace.plotArea.axes, styled);
+	expect(axes.map((axis) => axis.color)).toEqual(['#222222', '#111111']);
+	expect(axes.map((axis) => axis.titleText)).toEqual([undefined, undefined]);
+	expect(styled.map((axis) => axis.titleText)).toEqual(['Old one', 'Old two']);
+});

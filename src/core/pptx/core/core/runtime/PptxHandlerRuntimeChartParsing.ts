@@ -1,3 +1,4 @@
+import { neutralChartShapeMap } from '../../utils/chart-from-neutral-format-map';
 import { readChartElementFormatsFromXml } from '../../utils/chart-element-format-read-xml';
 import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
 import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
@@ -7,8 +8,7 @@ import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
  * A classic chart part (`c:chartSpace`) is read by the neutral parser (`chart/parseChartSpace`),
  * and `PptxChartData` is built from that model through the adapter in
  * `utils/chart-from-neutral*.ts` (docs/agnostic-core-plan.md, steps 5 and 6). What the neutral
- * model does not carry (resolved colours and fonts, gradients, the line styles of trendlines and
- * error bars, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
+ * model does not carry (resolved colours and fonts, complex text and effects, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
  * parts, `c:clrMapOvr`, pivot source and formats, print settings, protection) is still read from
  * the part's `fast-xml-parser` tree by the existing object-tree readers. ChartEx parts stay on the
  * object tree entirely (`PptxHandlerRuntimeChartExParsing`).
@@ -20,8 +20,8 @@ import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 import type { ChartSpace } from '../../../../chart/index';
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
-import { parseLineStyle } from '../../utils/chart-advanced-parser';
-import { parseChartAxes, parseChart3DSurfaces } from '../../utils/chart-axis-parser';
+import { chartLineFromNeutral, chartShapeFromNeutral } from '../../utils/chart-from-neutral-paint';
+import { parseChartAxes } from '../../utils/chart-axis-parser';
 import { parseChartBandFmts } from '../../utils/chart-band-fmts';
 import { parseBubbleChartOptions } from '../../utils/chart-bubble-options';
 import { chartContainerAllows } from '../../utils/chart-container-content-model';
@@ -46,7 +46,7 @@ import {
 } from '../../utils/chart-from-neutral';
 import { readChartPartModel } from '../../utils/chart-part-repair';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
-import { parseChartUpDownBars } from '../../utils/chart-up-down-bars';
+
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { resolveChartElementPictures } from './chart-element-pictures';
 import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
@@ -141,6 +141,57 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
+	/** Re-read a saved classic part before recording its next edit baseline. */
+	protected async refreshClassicChartFromPart(
+		xml: string,
+		previous: PptxChartData,
+		slidePath?: string,
+	): Promise<PptxChartData | undefined> {
+		if (!previous.chartPartPath || !previous.chartRelationshipId) return undefined;
+		const { chartSpace: neutral } = readChartPartModel(xml);
+		if (!neutral?.plotArea.groups.length) return undefined;
+		const root = this.parser.parse(xml) as XmlObject;
+		const chartSpace = this.xmlLookupService.getChildByLocalName(root, 'chartSpace');
+		const chartRoot = this.xmlLookupService.getChildByLocalName(chartSpace, 'chart');
+		const plotArea = this.xmlLookupService.getChildByLocalName(chartRoot, 'plotArea');
+		if (!plotArea) return undefined;
+		const clrMapOvr = this.parseClrMapOvr(chartSpace);
+		const saved = {
+			colors: this.themeColorMap,
+			fonts: this.themeFontMap,
+			format: this.themeFormatScheme,
+			master: this.currentMasterClrMap,
+			override: this.currentSlideClrMapOverride,
+		};
+		try {
+			if (slidePath) {
+				await this.setActiveMasterForSlide(slidePath);
+				const slideXml = await this.zip.file(slidePath)?.async('string');
+				this.currentSlideClrMapOverride = slideXml
+					? this.parseSlideClrMapOverride(this.parser.parse(slideXml) as XmlObject)
+					: null;
+				for (const part of [this.findLayoutPathForSlide(slidePath), slidePath]) {
+					if (!part) continue;
+					const override = await this.loadThemeOverride(part);
+					if (override) this.applyThemeOverrideState(override);
+				}
+			}
+			if (clrMapOvr) this.currentSlideClrMapOverride = clrMapOvr;
+			const chart = await this.buildClassicChart(
+				neutral,
+				{ chartSpace, chartRoot, plotArea },
+				previous.chartPartPath,
+				previous.chartRelationshipId,
+			);
+			return chart && (clrMapOvr ? { ...chart, clrMapOvr } : chart);
+		} finally {
+			this.themeColorMap = saved.colors;
+			this.themeFontMap = saved.fonts;
+			this.themeFormatScheme = saved.format;
+			this.currentMasterClrMap = saved.master;
+			this.currentSlideClrMapOverride = saved.override;
+		}
+	}
 	/** The runtime services the object-tree half of the adapter reads with. */
 	private chartTreeReader(): ChartTreeReader {
 		return {
@@ -219,23 +270,46 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		reader: ChartTreeReader,
 	) {
 		const colorAdapter = { parseColor: reader.parseColor };
-		const container = (child: string): XmlObject | undefined =>
-			(groups.find(({ group }) => chartContainerAllows(group.element, child)) ?? groups[0])?.node;
-		const dropLines = parseLineStyle(container('dropLines'), 'dropLines', reader.xml, colorAdapter);
-		const hiLowLines = parseLineStyle(
-			container('hiLowLines'),
-			'hiLowLines',
-			reader.xml,
-			colorAdapter,
-		);
-		const upDownBars = parseChartUpDownBars(container('upDownBars'), reader.xml, colorAdapter);
+		const neutralContainer = (child: string) =>
+			(groups.find(({ group }) => chartContainerAllows(group.element, child)) ?? groups[0])?.group;
+		const drop = neutralContainer('dropLines');
+		const highLow = neutralContainer('hiLowLines');
+		const dropLines = drop?.dropLines
+			? chartLineFromNeutral(drop.dropLinesSpPr?.line, reader)
+			: undefined;
+		const hiLowLines = highLow?.hiLowLines
+			? chartLineFromNeutral(highLow.hiLowLinesSpPr?.line, reader)
+			: undefined;
+		const bars = neutralContainer('upDownBars');
+		const upDownBars = bars?.upDownBars
+			? {
+					...(bars.upDownBarsGapWidth !== undefined &&
+					bars.upDownBarsGapWidth >= 0 &&
+					bars.upDownBarsGapWidth <= 500
+						? { gapWidth: bars.upDownBarsGapWidth }
+						: {}),
+					...(chartShapeFromNeutral(bars.upBars?.spPr, reader)
+						? { upBars: chartShapeFromNeutral(bars.upBars?.spPr, reader) }
+						: {}),
+					...(chartShapeFromNeutral(bars.downBars?.spPr, reader)
+						? { downBars: chartShapeFromNeutral(bars.downBars?.spPr, reader) }
+						: {}),
+				}
+			: undefined;
 		const dataTable = neutral.plotArea.dataTable
 			? parseDataTable(tree.plotArea, reader.xml, colorAdapter, reader.resolveTypeface)
 			: undefined;
-		const surfaces =
-			tree.chartRoot && (neutral.floor || neutral.sideWall || neutral.backWall)
-				? parseChart3DSurfaces(tree.chartRoot, reader.xml, colorAdapter)
-				: {};
+		const surfaces: Pick<PptxChartData, 'floor' | 'sideWall' | 'backWall'> = {};
+		for (const key of ['floor', 'sideWall', 'backWall'] as const) {
+			const surface = neutral[key];
+			if (!surface) continue;
+			const spPr = chartShapeFromNeutral(surface.spPr, reader);
+			if (surface.thickness !== undefined || spPr)
+				surfaces[key] = {
+					...(surface.thickness !== undefined ? { thickness: surface.thickness } : {}),
+					...(spPr ? { spPr } : {}),
+				};
+		}
 		return {
 			...(dataTable ? { dataTable } : {}),
 			...(dropLines ? { dropLines } : {}),
@@ -361,6 +435,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			{ axes },
 			reader.localName,
 			{
+				neutralShape: neutralChartShapeMap(neutral, chartSpace, reader),
 				resolve: (node) => reader.parseColor(node),
 				...(this.colorStyleCodec
 					? {

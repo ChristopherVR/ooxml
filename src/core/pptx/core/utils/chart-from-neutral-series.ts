@@ -49,7 +49,7 @@ export function seriesFromNeutral(
 	reader: ChartTreeReader,
 ): PptxChartSeries {
 	const { series, index, categories, seriesChartType, containerChartType, axisId } = place;
-	const tree = readSeriesTreeFields(place.node, containerChartType, reader);
+	const tree = readSeriesTreeFields(place.node, containerChartType, reader, series);
 	const source = valueSource(series);
 	const expanded = neutralNumbersWithBlanks(source);
 	const hasBlanks = expanded.some((value) => value === null);

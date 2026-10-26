@@ -2664,6 +2664,7 @@ Source: `ChristopherVR/ooxml`, commit `27cc953db6d5e919c1a413d5fdcfb39a82b566eb`
 shared XML nodes, preserving sibling extensions. It adds strict types, bounded sparse-cache reads,
 immutable chart operations and targeted-series selection. PowerPoint maps its existing fields onto
 this implementation. Regression tests live beside the neutral operation.
+
 ## Shared SmartArt formatting definitions (2026-10-26)
 
 Source: ChristopherVR/ooxml at `27cc953db`,
@@ -2688,3 +2689,15 @@ Source: ChristopherVR/ooxml at `26af3ba4c`,
   `smartArtSchemeColors` as a compatibility alias. Generated cache saving uses the same mapping.
 - New host cache generation and association code lives in `diagram/write/cache.ts`,
   `docx/diagram-cache.ts` and `xlsx/write/smart-art-cache.ts`; no source caches are claimed lossless.
+
+## Classic chart neutral paint projection (2026-10-26)
+
+Source: ChristopherVR/ooxml at `6c87cb6f2`,
+`src/core/pptx/core/utils/chart-from-neutral-analysis.ts` (`treeLine`) and
+`src/core/pptx/core/utils/chart-series-tree-fields.ts` (series paint and line reads).
+
+- Replaced object-tree line and series paint reads with the new compatibility projection in
+  `chart-from-neutral-paint.ts`, using the existing neutral DrawingML color resolver, fill and
+  line models. Source relationship and extension readers remain in PowerPoint.
+- New code: the saved-part refresh method on the classic chart parsing runtime, and axis
+  identity matching that preserves resolved style context without mutating old snapshots.

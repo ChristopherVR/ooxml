@@ -3,9 +3,8 @@
  * (`ChartSpaceSeries.trendlines`, `.errorBars`, parsed by `chart/parse-analysis.ts`). The
  * structural fields (type, name, order, period, extensions, intercept, display switches, label
  * number format, direction, bar and value type, end cap, value and custom amounts) come from the
- * neutral model; the line colour (resolved through the deck theme), width and dash and the label's
- * manual layout are read from the matching object-tree node, paired by position, until the
- * `drawingml` line model resolves theme colours (docs/agnostic-core-plan.md, step 5).
+ * neutral model. Line paint, width and dash use neutral DrawingML fields and the shared color
+ * resolver. Only opaque manual-layout extensions still come from the matching source node.
  *
  * @module chart-from-neutral-analysis
  */
@@ -21,24 +20,9 @@ import type {
 	PptxChartTrendlineLabel,
 	XmlObject,
 } from '../types';
+import { chartLineFromNeutral } from './chart-from-neutral-paint';
 import { parseChartManualLayout } from './chart-layout';
 import type { ChartTreeReader } from './chart-series-tree-fields';
-
-/** The line colour, width (points) and dash of an element's `c:spPr/a:ln`. */
-function treeLine(
-	node: XmlObject | undefined,
-	reader: ChartTreeReader,
-): { color?: string; width?: number; dash?: string } {
-	const ln = reader.xml.getChildByLocalName(reader.xml.getChildByLocalName(node, 'spPr'), 'ln');
-	const out: { color?: string; width?: number; dash?: string } = {};
-	const color = reader.parseColor(reader.xml.getChildByLocalName(ln, 'solidFill'));
-	if (color) out.color = color;
-	const widthEmu = parseInt(String(ln?.['@_w']), 10);
-	if (Number.isFinite(widthEmu)) out.width = widthEmu / 12700;
-	const dash = reader.xml.getChildByLocalName(ln, 'prstDash')?.['@_val'];
-	if (dash) out.dash = String(dash);
-	return out;
-}
 
 function labelFromNeutral(
 	label: ChartTrendline['label'],
@@ -47,11 +31,13 @@ function labelFromNeutral(
 ): PptxChartTrendlineLabel | undefined {
 	if (!label) return undefined;
 	const result: PptxChartTrendlineLabel = {};
-	const layout = parseChartManualLayout(
+	const { sourceXml: _source, ...values } = label.layout ?? {};
+	const extension = parseChartManualLayout(
 		reader.xml.getChildByLocalName(node, 'trendlineLbl'),
 		reader.localName,
-	);
-	if (layout) result.layout = layout;
+	)?.ext;
+	const layout = { ...values, ...(extension ? { ext: extension } : {}) };
+	if (layout && Object.keys(layout).length) result.layout = { ...layout };
 	if (label.numberFormat) result.numberFormatCode = label.numberFormat.formatCode;
 	if (label.numberFormat?.sourceLinked !== undefined)
 		result.sourceLinked = label.numberFormat.sourceLinked;
@@ -77,10 +63,10 @@ function trendlineFromNeutral(
 	if (trendline.intercept !== undefined) result.intercept = trendline.intercept;
 	if (trendline.displayRSquared !== undefined) result.displayRSq = trendline.displayRSquared;
 	if (trendline.displayEquation !== undefined) result.displayEq = trendline.displayEquation;
-	const line = treeLine(node, reader);
+	const line = chartLineFromNeutral(trendline.spPr?.line, reader);
 	if (line.color) result.color = line.color;
 	if (line.width !== undefined) result.lineWidth = line.width;
-	if (line.dash) result.lineDashStyle = line.dash;
+	if (line.dashStyle) result.lineDashStyle = line.dashStyle;
 	const label = labelFromNeutral(trendline.label, node, reader);
 	if (label) result.label = label;
 	return result;
@@ -132,10 +118,10 @@ function errBarsFromNeutralOne(
 		const minus = customAmounts(bars.minus);
 		if (minus.length > 0) result.customMinus = minus;
 	}
-	const line = treeLine(node, reader);
+	const line = chartLineFromNeutral(bars.spPr?.line, reader);
 	if (line.color) result.color = line.color;
 	if (line.width !== undefined) result.width = line.width;
-	if (line.dash) result.dashStyle = line.dash;
+	if (line.dashStyle) result.dashStyle = line.dashStyle;
 	return result;
 }
 

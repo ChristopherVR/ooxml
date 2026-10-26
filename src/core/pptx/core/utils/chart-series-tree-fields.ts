@@ -1,14 +1,6 @@
-/**
- * The fields of a pptx chart series that the neutral chart model does not carry, read from the
- * series' `fast-xml-parser` node (`c:ser`): colours resolved through the deck theme and the
- * chart's `c:clrMapOvr`, gradients, line width and dash, picture fills, the c16 identity, and the
- * styled halves of markers, data points and data labels (docs/agnostic-core-plan.md, step 5,
- * model gap table). `chart-from-neutral-series.ts` fills the
- * structural fields of the same objects from the neutral model.
- *
- * @module chart-series-tree-fields
- */
 import { EMU_PER_POINT } from '../../../units/index';
+import type { ChartSpaceSeries } from '../../../chart/index';
+import { chartColorFromNeutral, chartGradientFromNeutral } from './chart-from-neutral-paint';
 import type { IPptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { PptxChartSeries, PptxChartType, XmlObject } from '../types';
 import { isLineDrawnChartType } from './chart-container-type-map';
@@ -17,12 +9,16 @@ import {
 	parseChartDataPointPicture,
 	parseImplicitBlipPictureFill,
 } from './chart-datapoint-picture';
-import {
-	parseChartGradientFill,
-	seriesGradientFill,
-	type ChartGradientCodec,
-} from './chart-gradient-fill';
-import { parseMarker, parseSeriesDataPoints } from './chart-series-detail-parser';
+import type { ChartGradientCodec } from './chart-gradient-fill';
+/**
+ * Compatibility styling for a neutral chart series. Its solid and gradient paint, line width,
+ * dash and no-fill fields come from neutral DrawingML. Source-tree readers remain for picture
+ * relationships, c16 identity and the styled text of labels.
+ *
+ * @module chart-series-tree-fields
+ */
+
+import { neutralChartMarker, neutralChartPoints } from './chart-from-neutral-points';
 import { parseChartUniqueId } from './chart-series-identity';
 
 /** What the object-tree half of the chart adapter reads with: the runtime's services. */
@@ -62,24 +58,20 @@ export function readSeriesTreeFields(
 	seriesNode: XmlObject,
 	containerChartType: PptxChartType | undefined,
 	reader: ChartTreeReader,
+	neutral: Pick<ChartSpaceSeries, 'spPr' | 'marker' | 'dataPoints'>,
 ): SeriesTreeFields {
 	const { xml } = reader;
+	const neutralShape = neutral.spPr ?? {};
 	const colorAdapter = { parseColor: reader.parseColor };
-	const spPr = xml.getChildByLocalName(seriesNode, 'spPr');
-	const line = xml.getChildByLocalName(spPr, 'ln');
 	const color =
-		reader.parseColor(xml.getChildByLocalName(spPr, 'solidFill')) ??
-		(isLineDrawnChartType(containerChartType)
-			? reader.parseColor(xml.getChildByLocalName(line, 'solidFill'))
+		(neutralShape.fill?.kind === 'solid'
+			? chartColorFromNeutral(neutralShape.fill.color, reader)
+			: undefined) ??
+		(isLineDrawnChartType(containerChartType) && neutralShape.line?.fill?.kind === 'solid'
+			? chartColorFromNeutral(neutralShape.line.fill.color, reader)
 			: undefined);
-	const codec = reader.colorStyleCodec;
-	const dataPoints = parseSeriesDataPoints(
-		seriesNode,
-		xml,
-		colorAdapter,
-		codec ? (node) => parseChartGradientFill(node, xml, codec) : undefined,
-	);
-	const marker = parseMarker(xml.getChildByLocalName(seriesNode, 'marker'), xml, colorAdapter);
+	const dataPoints = neutralChartPoints(neutral, seriesNode, reader);
+	const marker = neutralChartMarker(neutral.marker, reader);
 	const dataLabels = parseSeriesDataLabels(seriesNode, xml, colorAdapter, reader.resolveTypeface);
 	const labelGroup = xml.getChildByLocalName(seriesNode, 'dLbls');
 	const dataLabelOptions = labelGroup
@@ -87,21 +79,21 @@ export function readSeriesTreeFields(
 		: undefined;
 	const picture = parseChartDataPointPicture(seriesNode, xml);
 	const impliedPicture = picture ? undefined : parseImplicitBlipPictureFill(seriesNode, xml);
-	const lineNoFill = line
-		? Object.keys(line).some((key) => reader.localName(key) === 'noFill')
-		: false;
-	const lineWidthEmu = Number(line?.['@_w']);
+	const lineNoFill = neutralShape.line?.fill?.kind === 'none';
+	const lineWidthEmu = neutralShape.line?.widthEmu;
 	const lineWidth =
-		Number.isFinite(lineWidthEmu) && lineWidthEmu > 0 ? lineWidthEmu / EMU_PER_POINT : undefined;
-	const dash = xml.getChildByLocalName(line, 'prstDash')?.['@_val'];
-	const uniqueId = parseChartUniqueId(seriesNode, reader.localName);
-	const lineGradientFill =
-		codec && isLineDrawnChartType(containerChartType)
-			? parseChartGradientFill(line, xml, codec)
+		lineWidthEmu !== undefined && Number.isFinite(lineWidthEmu) && lineWidthEmu > 0
+			? lineWidthEmu / EMU_PER_POINT
 			: undefined;
+	const dash = neutralShape.line?.dash;
+	const uniqueId = parseChartUniqueId(seriesNode, reader.localName);
+	const gradientFill = chartGradientFromNeutral(neutralShape.fill, reader);
+	const lineGradientFill = isLineDrawnChartType(containerChartType)
+		? chartGradientFromNeutral(neutralShape.line?.fill, reader)
+		: undefined;
 	return {
 		color,
-		...(codec ? seriesGradientFill(spPr, xml, codec) : {}),
+		...(gradientFill ? { gradientFill } : {}),
 		...(lineGradientFill ? { lineGradientFill } : {}),
 		...(dataPoints.length > 0 ? { dataPoints } : {}),
 		...(marker ? { marker } : {}),

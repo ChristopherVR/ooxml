@@ -706,3 +706,21 @@ current layout and [ooxml-ui-plan.md](ooxml-ui-plan.md) for the UI package's his
 
 See `PROVENANCE.md` ("diagram area"): `src/core/diagram` and `src/core/docx/diagram*.ts`. Everything in steps 2 to 6 above has since moved
 or is listed under its "Remains" entry.
+
+### Classic chart read adapter follow-up (2026-10-26)
+
+PowerPoint series solid fills, fill and outline gradients, line widths, preset dashes and no-fill
+switches now project from neutral DrawingML fields. Chart/plot/title/legend/axis/gridline/series format-pane fills, outlines and ordinary outer-shadow/glow/soft-edge effects also project from the neutral models; spatial and text-specific source details retain their compatibility adapters. Trendline and error-bar lines, trendline label
+layout values, marker and point shape overrides, floor/wall formatting, up/down bars, and drop/high-low lines use the same neutral projection. Theme aliases resolve through
+the deck's existing color-map context; authored tokens remain in `ChartSpace` for saving.
+
+`refreshClassicChartFromPart` rebuilds compatibility data from a saved classic part with the current
+theme and host relationship context. It refreshes chart groups, axis topology and series identities,
+instead of layering a new topology over stale resolved snapshots. Reordered axes retain styling by
+axis identity and the retained snapshot is not mutated by the projection.
+
+Remaining source-tree compatibility reads include resolved label/axis text styles,
+complex text effects and spatial properties, picture details/relationships, extension payloads, filtered
+series, external style/workbook/user-shape parts and unsupported layouts. This checkpoint does not
+claim that every classic chart read is DOM-only. The 81-frame chart projection corpus and focused
+adapter regressions remain the gate for deleting each compatibility reader.
