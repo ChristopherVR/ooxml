@@ -109,6 +109,16 @@ it('reports original gallery orphan sources to the PowerPoint caller', async () 
 });
 
 describe('saveChartExPartThroughNeutral', () => {
+	it('claims explicit label content accompanying a show-labels action', () => {
+		const after = edited((chart) => {
+			chart.style!.hasDataLabels = true;
+			chart.style!.dataLabels = { showValue: true, showCategory: false };
+		});
+		const xml = saveChartExPartThroughNeutral(PART, BEFORE, after)!;
+		const labels = parseChartExSpace(xml).chartExSpace.plotArea.series[0]!.dataLabels!;
+		expect(labels.visibility).toMatchObject({ value: true, categoryName: false });
+		expect(xml).not.toContain('formatCode="General"');
+	});
 	it('saves claimed edits and keeps every other byte (formulas, ids, empty-element form)', () => {
 		const after = edited((chart) => {
 			chart.series[0]!.name = 'Revenue';

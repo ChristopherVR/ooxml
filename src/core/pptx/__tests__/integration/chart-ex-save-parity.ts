@@ -132,7 +132,11 @@ export const CHART_EX_SAVE_EDITS: ChartExSaveEdit[] = [
 	{
 		name: 'data labels',
 		pptx: (element) => pptx.setChartDataLabels(element, { show: true }),
-		neutral: (space) => neutral.setChartExDataLabelsVisible(space, true),
+		neutral: (space) =>
+			neutral.applyChartExEditIntent(neutral.setChartExDataLabelsVisible(space, true), {
+				op: 'dataLabels',
+				edit: { showValue: true },
+			}),
 	},
 ];
 

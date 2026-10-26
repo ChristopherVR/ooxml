@@ -15,6 +15,7 @@
 
 import {
 	chartExWriteOptionsOf,
+	applyChartExEditIntent,
 	parseChartExSpace,
 	renameChartExSeries,
 	setChartExCategories,
@@ -95,9 +96,43 @@ function planLegend(before: PptxChartData, probe: PptxChartData, edits: ChartExE
 
 function planLabels(before: PptxChartData, probe: PptxChartData, edits: ChartExEdit[]): void {
 	const shown = probe.style?.hasDataLabels;
-	if (shown === before.style?.hasDataLabels) return;
-	if (shown !== undefined) edits.push((space) => setChartExDataLabelsVisible(space, shown));
-	revertStyle(probe, before, ['hasDataLabels']);
+	if (shown !== before.style?.hasDataLabels) {
+		if (shown !== undefined) edits.push((space) => setChartExDataLabelsVisible(space, shown));
+		revertStyle(probe, before, ['hasDataLabels']);
+	}
+	const old = before.style?.dataLabels,
+		now = probe.style?.dataLabels;
+	if (
+		!same(old, now) &&
+		now &&
+		Object.keys(now).every((key) =>
+			[
+				'showValue',
+				'showCategory',
+				'showSeriesName',
+				'showPercent',
+				'showLegendKey',
+				'showBubbleSize',
+				'separator',
+				'position',
+				'numberFormat',
+			].includes(key),
+		)
+	) {
+		const edit = {
+			showValue: now.showValue,
+			showCategoryName: now.showCategory,
+			showSeriesName: now.showSeriesName,
+			showPercent: now.showPercent,
+			showLegendKey: now.showLegendKey,
+			showBubbleSize: now.showBubbleSize,
+			separator: now.separator,
+			position: now.position,
+			numberFormat: now.numberFormat,
+		};
+		edits.push((space) => applyChartExEditIntent(space, { op: 'dataLabels', edit }));
+		revertStyle(probe, before, ['dataLabels']);
+	}
 }
 
 const HIERARCHY = new Set(['treemap', 'sunburst', 'regionMap']);
