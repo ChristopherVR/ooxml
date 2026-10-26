@@ -1446,7 +1446,7 @@
         "emf-converter": "4.21.0",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.0",
+        "visio-core": "^1.0.1",
       },
       "devDependencies": {
         "@types/react": "^19.3.0",
@@ -1614,7 +1614,7 @@
       "name": "@christophervr/xlsx-react-viewer",
       "version": "1.2.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.3.0",
+        "@christophervr/xlsx-core": "^0.3.1",
         "ooxml-core": "*",
         "ooxml-ui": "*",
       },
