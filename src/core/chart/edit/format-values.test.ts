@@ -50,6 +50,36 @@ describe('resolved Office appearance to shared authored values', () => {
 		).toBeNull();
 		expect(() => chartLineFromAppearance({ kind: 'solid', color: '#123456', width: -1 })).toThrow();
 	});
+	it('retains radial rectangles and focal points, and preserves linear scaling with bounded angles', () => {
+		const stops = [
+			{ position: 0, color: '#FFFFFF' },
+			{ position: 100, color: '#000000' },
+		];
+		expect(
+			chartDrawingGradientFrom({
+				type: 'radial',
+				path: 'rect',
+				stops,
+				fillToRect: { l: 0.2, t: 0.3, r: 0.4, b: 0.1 },
+				focalPoint: { x: 0.9, y: 0.9 },
+			}),
+		).toMatchObject({ path: 'rect', fillToRect: { l: 0.2, t: 0.3, r: 0.4, b: 0.1 } });
+		expect(
+			chartDrawingGradientFrom({
+				type: 'radial',
+				path: 'shape',
+				stops,
+				focalPoint: { x: 0.25, y: 0.75 },
+			}),
+		).toMatchObject({ path: 'shape', fillToRect: { l: 0.25, t: 0.75, r: 0.75, b: 0.25 } });
+		expect(
+			chartDrawingGradientFrom({ type: 'linear', stops, angle: 360, scaled: true }),
+		).toMatchObject({ angle: 0, scaled: true });
+		expect(chartDrawingGradientFrom({ type: 'linear', stops, angle: 361 })).toBeNull();
+		expect(
+			chartDrawingGradientFrom({ type: 'radial', stops, focalPoint: { x: NaN, y: 0.5 } }),
+		).toBeNull();
+	});
 	it('converts host-allocated picture fills, preserving requested tiles and opacity', () => {
 		const fill = chartFillFromAppearance({
 			kind: 'picture',

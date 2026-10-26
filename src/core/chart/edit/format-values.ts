@@ -48,9 +48,30 @@ export function chartDrawingGradientFrom(value: ChartGradientFill): DrawingFill 
 			return null;
 		stops.push({ position: stop.position, color: shade });
 	}
-	if (value.type === 'radial') return { kind: 'gradient', stops, path: value.path ?? 'circle' };
-	if (!Number.isFinite(value.angle ?? 0)) return null;
-	return { kind: 'gradient', stops, angle: value.angle ?? 0, scaled: value.scaled ?? false };
+	if (value.type === 'radial') {
+		let focus = value.fillToRect;
+		if (focus && !Object.values(focus).every(Number.isFinite)) return null;
+		if (!focus && value.focalPoint) {
+			const { x, y } = value.focalPoint;
+			if (![x, y].every((channel) => Number.isFinite(channel) && channel >= 0 && channel <= 1))
+				return null;
+			focus = { l: x, t: y, r: 1 - x, b: 1 - y };
+		}
+		return {
+			kind: 'gradient',
+			stops,
+			path: value.path ?? 'circle',
+			...(focus ? { fillToRect: { ...focus } } : {}),
+		};
+	}
+	if (!Number.isFinite(value.angle ?? 0) || (value.angle ?? 0) < 0 || (value.angle ?? 0) > 360)
+		return null;
+	return {
+		kind: 'gradient',
+		stops,
+		angle: (value.angle ?? 0) % 360,
+		scaled: value.scaled ?? false,
+	};
 }
 
 export function chartFillFromAppearance(value: ChartFillAppearance): DrawingFill | undefined {
