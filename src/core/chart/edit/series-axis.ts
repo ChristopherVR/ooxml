@@ -33,6 +33,8 @@ export function setChartSeriesAxis(
 		return structuredClone(space);
 	if (group.series.length > 1 && group.extLst)
 		throw new RangeError('Cannot split an unknown group extension');
+	if (group.series.length > 1 && ['stacked', 'percentStacked'].includes(group.grouping ?? ''))
+		throw new RangeError('Cannot split a stacked group across axes');
 	return editChartSpace(space, (draft) => {
 		const { group: current, groupIndex, position } = chartSeriesEntryAt(draft, seriesIndex);
 		const selected = {

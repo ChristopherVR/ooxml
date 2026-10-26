@@ -1,4 +1,9 @@
-import { setChartGrouping, setChartType, type ChartTypeTarget } from '../../../chart';
+import {
+	setChartGrouping,
+	setChartType,
+	setChartSeriesType,
+	type ChartTypeTarget,
+} from '../../../chart';
 import type { PptxChartData } from '../types';
 import type { NeutralChartEdit } from './chart-neutral-save-plan';
 
@@ -25,6 +30,8 @@ export function planNeutralChartType(
 	probe: PptxChartData,
 	edits: NeutralChartEdit[],
 ): void {
+	const defaultType = probe.chartType;
+	const wholeChanged = probe.chartType !== before.chartType;
 	if (probe.chartType !== before.chartType) {
 		const target = TYPES[probe.chartType];
 		if (!target) return;
@@ -37,6 +44,26 @@ export function planNeutralChartType(
 		edits.push((space) => setChartType(space, to));
 		probe.chartType = before.chartType;
 	}
+	if (probe.series.length === before.series.length)
+		probe.series.forEach((series, index) => {
+			const old = before.series[index]!;
+			if (
+				series.seriesChartType === old.seriesChartType &&
+				!(wholeChanged && series.seriesChartType !== undefined)
+			)
+				return;
+			const target = TYPES[series.seriesChartType ?? defaultType];
+			if (!target) return;
+			const to = {
+				...target,
+				...(target.kind === 'bar' && probe.barDirection
+					? { barDirection: probe.barDirection }
+					: {}),
+			};
+			edits.push((space) => setChartSeriesType(space, index, to));
+			if (old.seriesChartType === undefined) delete series.seriesChartType;
+			else series.seriesChartType = old.seriesChartType;
+		});
 	if (probe.grouping !== before.grouping && probe.grouping !== undefined) {
 		const grouping = probe.grouping;
 		edits.push((space) => setChartGrouping(space, grouping));

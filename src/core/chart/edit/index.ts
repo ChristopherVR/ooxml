@@ -53,3 +53,4 @@ export * from './chrome';
 export * from './label-format';
 export * from './series-options';
 export * from './series-axis';
+export * from './series-type';
