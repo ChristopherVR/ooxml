@@ -9,6 +9,7 @@ import {
 	commitElementUpdateBatch,
 	createBackstagePresentation,
 	createBlankSlide,
+	createEmbeddedOutlineFontsSlot,
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
 	createPresenterShowGuard,
@@ -224,6 +225,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private detachOutlineFonts: (() => void) | null = null;
 	/** Tags in-flight webfont resolutions; only the newest deck may apply its result. */
 	private webfontsToken = 0;
+	/** The current deck's fonts in the module-wide glyph-outline cache; released on destroy. */
+	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
 	private requestedEditable = false;
 	private requestedReadOnly = false;
@@ -710,11 +713,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			}
 			// Register this deck's embedded fonts' real outlines (see
 			// glyph-outline-cache.ts) for WordArt envelope glyph-outline
-			// warping. Synchronous and idempotent, before the async webfont
-			// work below, so an embedded font is outline-warpable as soon as
-			// the font parser, loaded on the first envelope glyph that needs
-			// it, is ready (the cache subscription above repaints then).
-			glyphOutlineFontCache.registerEmbeddedFonts(state.embeddedFonts);
+			// warping. Synchronous, before the async webfont work below, so an
+			// embedded font is outline-warpable as soon as the font parser,
+			// loaded on the first envelope glyph that needs it, is ready (the
+			// cache subscription above repaints then). A new list releases the
+			// previous deck's fonts.
+			this.outlineFonts.set(state.embeddedFonts);
 			const token = ++this.webfontsToken;
 			void resolveGoogleWebfontHref(
 				state.slides,
@@ -2241,6 +2245,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.exporter.destroy();
 		this.userFontsStyle?.remove();
 		this.webfontsToken++;
+		this.outlineFonts.release();
 		removeGoogleWebfontsLink(this.doc);
 		unmountChrome(this.lifecycle, () => this.editor?.detachChrome());
 		this.chromeRegions?.destroy();

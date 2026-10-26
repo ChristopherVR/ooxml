@@ -1,7 +1,11 @@
 import type { PptxEmbeddedFont, PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { readFontFileStyle, selectTrustedEmbeddedFonts } from './embedded-font-trust';
+import {
+	isEmbeddedTypefaceTrusted,
+	readFontFileStyle,
+	selectTrustedEmbeddedFonts,
+} from './embedded-font-trust';
 import { buildEmbeddedFontStyles } from './embedded-fonts';
 import { resetGoogleWebfontSessionCache, resolveGoogleWebfontHref } from './google-webfonts';
 import { GlyphOutlineFontCache } from './text-warp-outline-font-cache';
@@ -167,6 +171,26 @@ describe('selectTrustedEmbeddedFonts', () => {
 		const good = family('Roboto Mono', 400);
 		const trusted = selectTrustedEmbeddedFonts([...family('DM Sans', 600), ...good]);
 		expect(trusted).toEqual(good);
+	});
+
+	it('judges one typeface without reading the files of the others', () => {
+		const reads: string[] = [];
+		const counted = (font: PptxEmbeddedFont): PptxEmbeddedFont => ({
+			...font,
+			get dataUrl() {
+				reads.push(font.name);
+				return font.dataUrl;
+			},
+		});
+		const fonts = [...family('DM Sans', 600), ...family('Roboto Mono', 400)].map(counted);
+		expect(isEmbeddedTypefaceTrusted(fonts, 'Roboto Mono')).toBe(true);
+		expect(new Set(reads)).toStrictEqual(new Set(['Roboto Mono']));
+		expect(isEmbeddedTypefaceTrusted(fonts, 'DM Sans')).toBe(false);
+		const before = reads.length;
+		expect(selectTrustedEmbeddedFonts(fonts).map((font) => font.name)).toStrictEqual(
+			Array(4).fill('Roboto Mono'),
+		);
+		expect(reads).toHaveLength(before);
 	});
 
 	it('returns the same answer for the same list without re-reading it', () => {

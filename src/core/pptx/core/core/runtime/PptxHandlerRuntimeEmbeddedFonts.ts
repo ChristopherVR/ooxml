@@ -1,11 +1,11 @@
 import { XmlObject, PptxLayoutOption } from '../../types';
 import type { PptxEmbeddedFont, PptxEmbeddedFontList } from '../../types';
-import { isEotFormat, extractFontFromEot, parseEotHeader } from '../../utils/eot-parser';
 import {
-	deobfuscateFont,
-	detectFontFormat,
-	extractGuidFromPartName,
-} from '../../utils/font-deobfuscation';
+	createDeferredEmbeddedFont,
+	decodeEmbeddedFontPart,
+	isEmbeddedFontPartPlausible,
+	type EmbeddedFontPartSource,
+} from '../../utils/deferred-embedded-font';
 import { resolveLayoutDisplayName } from '../../utils/layout-display-name';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { xmlAttr, xmlChild } from '../../utils/xml-access';
@@ -98,7 +98,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return map;
 	}
 
-	/** Extract, de-obfuscate, and encode a single font variant. */
+	/**
+	 * Read one variant's part. By default the result is a deferred descriptor
+	 * that decodes on first use (see `createDeferredEmbeddedFont`); parts that
+	 * fail the checks possible without decoding are skipped, as before. With
+	 * `eagerDecodeEmbeddedFonts` the variant is decoded now and skipped when
+	 * decoding fails.
+	 */
 	private async extractEmbeddedFontVariant(
 		typeface: string,
 		rId: string,
@@ -117,112 +123,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!fontBinary || fontBinary.length === 0) {
 				return null;
 			}
-
-			// Preserve the raw original bytes so the save pipeline can write
-			// them back verbatim when we can't re-obfuscate (e.g. EOT path).
-			const originalPartBytes = new Uint8Array(fontBinary);
-
-			let fontData: Uint8Array;
-			let resolvedGuid: string | undefined;
-
-			// ── Strategy 1: EOT (Embedded OpenType) container ──────────
-			// Some PPTX producers (e.g. Google Slides) embed fonts in EOT
-			// format rather than using simple OOXML XOR obfuscation.
-			if (isEotFormat(fontBinary)) {
-				const extracted = extractFontFromEot(fontBinary);
-				if (extracted) {
-					fontData = extracted.fontData;
-				} else {
-					// EOT extraction/decompression failed — fall back to web fonts.
-					const header = parseEotHeader(fontBinary);
-					console.info(
-						`[pptx-viewer] Embedded font "${typeface}" uses EOT format${header?.isCompressed ? ' with MTX compression' : ''} — extraction failed, will use web font fallback`,
-					);
-					return null;
-				}
-			} else {
-				// ── Strategy 2: OOXML XOR obfuscation (ECMA-376 Part 2 §14.2.1) ──
-				const guidFromKey = fontKey
-					? (extractGuidFromPartName(fontKey) ?? fontKey.replace(/[{}]/g, '').trim())
-					: null;
-				const guidFromPath = extractGuidFromPartName(fontPath);
-				const guid = guidFromKey || guidFromPath;
-
-				if (guid) {
-					fontData = deobfuscateFont(fontBinary, guid);
-					resolvedGuid = guid;
-				} else {
-					// No GUID available — can't deobfuscate
-					console.warn(
-						`[pptx-viewer] Embedded font "${typeface}" at "${fontPath}" has no fontKey attribute and no GUID in filename — skipping`,
-					);
-					return null;
-				}
-			}
-
-			// ── Validate sfnt header ──────────────────────────────────────
-			if (fontData.length < 4) {
-				return null;
-			}
-			const v0 = fontData[0],
-				v1 = fontData[1],
-				v2 = fontData[2],
-				v3 = fontData[3];
-			const isTrueType = v0 === 0x00 && v1 === 0x01 && v2 === 0x00 && v3 === 0x00;
-			const isOTTO = v0 === 0x4f && v1 === 0x54 && v2 === 0x54 && v3 === 0x4f;
-			const isTTC = v0 === 0x74 && v1 === 0x74 && v2 === 0x63 && v3 === 0x66;
-			const isWOFF = v0 === 0x77 && v1 === 0x4f && v2 === 0x46 && (v3 === 0x46 || v3 === 0x32);
-			if (!(isTrueType || isOTTO || isTTC || isWOFF)) {
-				console.warn(
-					`[pptx-viewer] Embedded font "${typeface}" has invalid sfnt header ` +
-						`[${v0.toString(16)},${v1.toString(16)},${v2.toString(16)},${v3.toString(16)}] ` +
-						`after processing — skipping (web font fallback will be used)`,
-				);
-				return null;
-			}
-
-			// ── Build data URL ────────────────────────────────────────────
-			const format = detectFontFormat(fontData);
-			const mimeType =
-				format === 'woff2'
-					? 'font/woff2'
-					: format === 'woff'
-						? 'font/woff'
-						: format === 'opentype'
-							? 'font/otf'
-							: 'font/ttf';
-
-			const base64 = this.uint8ArrayToBase64(fontData);
-			const dataUrl = `data:${mimeType};base64,${base64}`;
-
-			return {
+			const source: EmbeddedFontPartSource = {
 				name: typeface,
-				dataUrl,
 				bold,
 				italic,
-				format,
-				rawFontData: fontData,
-				partPath: fontPath,
-				fontGuid: resolvedGuid,
 				originalRId: rId,
-				originalPartBytes,
+				partPath: fontPath,
+				// The descriptor owns a copy, so it outlives this handler's ZIP and
+				// the save pipeline can write it back verbatim.
+				originalPartBytes: new Uint8Array(fontBinary),
+				fontKey,
 			};
+			if (this.eagerDecodeEmbeddedFonts) {
+				return decodeEmbeddedFontPart(source);
+			}
+			return isEmbeddedFontPartPlausible(source) ? createDeferredEmbeddedFont(source) : null;
 		} catch {
 			return null;
 		}
-	}
-
-	/** Convert Uint8Array to base64 string. */
-	private uint8ArrayToBase64(bytes: Uint8Array): string {
-		let binary = '';
-		const chunkSize = 8192;
-		for (let i = 0; i < bytes.length; i += chunkSize) {
-			const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-			for (let j = 0; j < chunk.length; j++) {
-				binary += String.fromCharCode(chunk[j]);
-			}
-		}
-		return btoa(binary);
 	}
 
 	public getLayoutOptions(): PptxLayoutOption[] {

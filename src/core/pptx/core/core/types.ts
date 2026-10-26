@@ -49,6 +49,14 @@ import type { PptxLoadLimits } from './load-limits';
 
 export interface PptxHandlerLoadOptions {
 	eagerDecodeImages?: boolean;
+	/**
+	 * When `false` (default), embedded font variants are returned without
+	 * decompressing or de-obfuscating their parts: each variant's `dataUrl`,
+	 * `format` and `rawFontData` are decoded on first read or on
+	 * `PptxEmbeddedFont.load()`. Set to `true` to decode every variant during
+	 * `load()` and omit the ones that fail to decode.
+	 */
+	eagerDecodeEmbeddedFonts?: boolean;
 	password?: string;
 	/**
 	 * Maximum total uncompressed bytes accepted from the input ZIP archive.

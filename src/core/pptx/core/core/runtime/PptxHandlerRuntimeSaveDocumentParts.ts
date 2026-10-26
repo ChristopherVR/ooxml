@@ -17,6 +17,7 @@ import {
 } from '../../utils';
 import { writeCustomerDataScopes } from '../../utils/customer-data-package';
 import type { CustomerDataScope } from '../../utils/customer-data-package';
+import { shouldSaveEmbeddedFontVerbatim } from '../../utils/deferred-embedded-font';
 import { serializeEmbeddedFontList, setEmbeddedFontList } from '../../utils/embedded-font-list';
 import { obfuscateFont, generateFontGuid } from '../../utils/font-deobfuscation';
 import { safeResolveZipPath } from '../../utils/safe-path';
@@ -619,7 +620,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// - explicit list from save options takes priority
 		// - fallback: fonts loaded from the original PPTX
 		const fonts = explicitFonts ?? this.loadedEmbeddedFonts;
-		const fontsWithData = fonts.filter((f) => f.rawFontData && f.rawFontData.length > 0);
+		const fontsWithData = fonts.filter(
+			(f) => shouldSaveEmbeddedFontVerbatim(f) || (f.rawFontData && f.rawFontData.length > 0),
+		);
 		if (fontsWithData.length === 0) {
 			const metadata = explicitFontList ?? this.loadedEmbeddedFontList;
 			if (metadata && this.presentationData) {
@@ -675,7 +678,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			};
 
 			for (const variant of variants) {
-				const fontData = variant.rawFontData!;
+				// A deferred variant that was never decoded keeps its part bytes.
+				const verbatim = shouldSaveEmbeddedFontVerbatim(variant);
+				const fontData = verbatim ? undefined : variant.rawFontData!;
 
 				// Determine what we can reuse from the load side. A variant
 				// was loaded from an existing part when it has `originalRId`
@@ -684,9 +689,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// loader couldn't resolve a GUID (e.g. EOT extraction path),
 				// we preserve the original bytes verbatim.
 				const hasOriginal = Boolean(variant.originalRId && variant.partPath);
-				const reuseObfuscation = hasOriginal && Boolean(variant.fontGuid);
+				const reuseObfuscation = hasOriginal && !verbatim && Boolean(variant.fontGuid);
 				const reuseVerbatim =
-					hasOriginal && !variant.fontGuid && Boolean(variant.originalPartBytes);
+					hasOriginal && (verbatim || !variant.fontGuid) && Boolean(variant.originalPartBytes);
 
 				let guid: string;
 				let fontPartPath: string;
@@ -701,7 +706,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						? fontPartPath.substring(4)
 						: fontPartPath;
 					rId = variant.originalRId!;
-					bytesToWrite = obfuscateFont(fontData, guid);
+					bytesToWrite = obfuscateFont(fontData!, guid);
 				} else if (reuseVerbatim) {
 					// No usable GUID: preserve original bytes + rel unchanged.
 					guid = '';
@@ -720,7 +725,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					const fileName = `{${guid}}.fntdata`;
 					fontPartPath = `ppt/fonts/${fileName}`;
 					relativeTarget = `fonts/${fileName}`;
-					bytesToWrite = obfuscateFont(fontData, guid);
+					bytesToWrite = obfuscateFont(fontData!, guid);
 
 					// Reuse an existing rel pointing at the same target,
 					// otherwise allocate a new rId.

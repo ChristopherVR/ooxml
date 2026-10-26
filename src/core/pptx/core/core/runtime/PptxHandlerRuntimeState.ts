@@ -437,6 +437,9 @@ export class PptxHandlerRuntime {
 	/** Embedded fonts extracted during load, preserved for automatic re-embedding on save. */
 	protected loadedEmbeddedFonts: PptxEmbeddedFont[] = [];
 
+	/** Decode every embedded font variant during load (see `PptxHandlerLoadOptions`). */
+	protected eagerDecodeEmbeddedFonts = false;
+
 	/** Typed source metadata for lossless embedded-font list round trips. */
 	protected loadedEmbeddedFontList: import('../../types').PptxEmbeddedFontList | undefined;
 

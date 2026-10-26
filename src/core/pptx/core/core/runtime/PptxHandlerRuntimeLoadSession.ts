@@ -56,6 +56,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Resolved first: an invalid limit throws before this handler changes.
 		const limits = resolvePptxLoadLimits(options);
 		this.eagerDecodeImages = options.eagerDecodeImages ?? false;
+		this.eagerDecodeEmbeddedFonts = options.eagerDecodeEmbeddedFonts === true;
 		this.allowExternalImages = options.allowExternalImages === true;
 		if (data.byteLength < 4) {
 			throw new Error('Invalid PPTX binary: file is empty or truncated.');
