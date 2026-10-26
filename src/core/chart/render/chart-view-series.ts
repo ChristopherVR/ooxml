@@ -119,7 +119,12 @@ export function seriesView<S extends ChartSummarySeries>(
 				ctx.seriesColor?.(s as S, index) ??
 				paletteColor ??
 				autoSeriesColor(theme, index));
-	const view: ChartSeriesView = { name: seriesName(s, index, evaluateRef), values, color };
+	const view: ChartSeriesView = {
+		name: seriesName(s, index, evaluateRef),
+		values,
+		color,
+		sourceIndex: index,
+	};
 	const shadow = resolveDrawingShadowXml(s.effectsXml, { scheme: (name) => scheme[name] });
 	if (shadow) view.shadow = shadow;
 	const resolvedGradient = ctx.gradient(s.fill);

@@ -110,7 +110,7 @@ function seriesAnalysis(
 	const points = plottedPoints(series, xOf);
 	const xs = points.map((p) => p.x);
 	const ys = points.map((p) => p.y);
-	trendlines(series, si, xs, ys, plane, out);
+	trendlines(series, series.sourceIndex ?? si, xs, ys, plane, out);
 	for (const bars of series.errorBars ?? []) {
 		// A category chart has no x error: its x axis is not a value axis.
 		if (categoryAxis && bars.direction === 'x') continue;

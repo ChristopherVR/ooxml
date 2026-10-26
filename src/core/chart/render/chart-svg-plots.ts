@@ -30,6 +30,28 @@ function paint(layer: Layer, out: string[]): void {
 	else if (model.type === 'bar' || model.type === 'column' || model.type === 'histogram')
 		bars(model, frame, out, plotted(model));
 	else linesAndAreas(model, frame, out);
+	categoryAnalysis(model, frame, out);
+}
+
+/** A split group still clusters columns on the same scale together, retaining series indices. */
+function clusterLayers(layers: Layer[]): Layer[] {
+	const out: Layer[] = [];
+	for (const layer of layers) {
+		const match =
+			layer.model.type === 'column' && layer.model.grouping === 'clustered'
+				? out.find(
+						(other) =>
+							other.model.type === 'column' &&
+							other.model.grouping === 'clustered' &&
+							other.frame.value === layer.frame.value &&
+							other.model.barGapWidth === layer.model.barGapWidth &&
+							other.model.barOverlap === layer.model.barOverlap,
+					)
+				: undefined;
+		if (match) match.model.series = [...match.model.series, ...layer.model.series];
+		else out.push({ ...layer, model: { ...layer.model, series: [...layer.model.series] } });
+	}
+	return out;
 }
 
 /** Paints the plot types that share cartesian axes into `area`. */
@@ -67,13 +89,12 @@ export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 		const value = group.secondary && frame.secondary ? frame.secondary : frame.value;
 		layers.push({ model: grouped, frame: { ...frame, value } });
 	}
-	layers
+	clusterLayers(layers)
 		.map((layer, order) => ({ layer, order }))
 		.sort(
 			(a, b) =>
 				(RANK[a.layer.model.type] ?? 1) - (RANK[b.layer.model.type] ?? 1) || a.order - b.order,
 		)
 		.forEach(({ layer }) => paint(layer, out));
-	categoryAnalysis(model, frame, out);
 	return out.join('');
 }

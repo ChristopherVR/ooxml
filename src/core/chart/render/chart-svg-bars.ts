@@ -64,7 +64,7 @@ export function bars(
 					color = `url(#${id})`;
 				}
 			}
-			out.push(`<g data-chart-series="${si}" data-chart-point="${i}">`);
+			out.push(`<g data-chart-series="${s.sourceIndex ?? si}" data-chart-point="${i}">`);
 			const box = model.horizontal
 				? { x: Math.min(a, b), y: center + offset, w: Math.abs(b - a), h: barSize }
 				: { x: center + offset, y: Math.min(a, b), w: barSize, h: Math.abs(b - a) };

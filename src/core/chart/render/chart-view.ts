@@ -43,6 +43,8 @@ export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-
 export type { WaterfallView } from './chart-view-ex';
 
 export interface ChartSeriesView extends ChartMarkerSeriesView {
+	/** Document-order position, retained when combination groups are painted together. */
+	sourceIndex?: number;
 	shadow?: DrawingSvgShadow;
 	shadowFilter?: string;
 	gradient?: ChartGradientFill;
