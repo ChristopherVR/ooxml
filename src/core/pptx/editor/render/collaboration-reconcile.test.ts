@@ -532,4 +532,23 @@ describe('reconcileSlidesInYDoc: concurrent seeding of an empty room', () => {
 		expect(ids(docA)).toStrictEqual(['s1', 's2', 's3']);
 		expect(removeDuplicateSlidesInYDoc(asDoc(docA))).toBe(false);
 	});
+
+	it('removeDuplicateSlidesInYDoc finds the copies after a host changes the deck at transaction start', () => {
+		const doc = new Y.Doc();
+		const [s1, s2, s3] = deck();
+		writeSlidesToYDoc([s1, s2, s1], asDoc(doc), factories);
+		// A host-supplied document may run code as each transaction starts. Here it
+		// prepends a slide, so positions found before the transaction are one off.
+		let prepend = true;
+		doc.on('beforeTransaction', () => {
+			if (prepend) {
+				prepend = false;
+				const map = new Y.Map<unknown>();
+				map.set('id', s3.id);
+				doc.getArray(YDOC_SLIDES_KEY).insert(0, [map]);
+			}
+		});
+		expect(removeDuplicateSlidesInYDoc(asDoc(doc))).toBe(true);
+		expect(ids(doc)).toStrictEqual(['s3', 's1', 's2']);
+	});
 });

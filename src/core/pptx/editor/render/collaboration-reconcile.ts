@@ -299,16 +299,22 @@ export function removeDuplicateSlidesInYDoc(
 	origin: unknown = LOCAL_SYNC_ORIGIN,
 ): boolean {
 	const arr = ydoc.getArray(YDOC_SLIDES_KEY);
-	const duplicates = laterDuplicateIndices(arr);
-	if (duplicates.length === 0) {
+	// Read-only check first, so a document without copies gets no transaction.
+	if (laterDuplicateIndices(arr).length === 0) {
 		return false;
 	}
+	let removed = false;
 	ydoc.transact(() => {
+		// Locate the copies only now: a host's beforeTransaction listener may have
+		// changed the array as the transaction started, which would make positions
+		// found before it point at the wrong slides.
+		const duplicates = laterDuplicateIndices(arr);
 		for (let i = duplicates.length - 1; i >= 0; i--) {
 			arr.delete(duplicates[i], 1);
 		}
+		removed = duplicates.length > 0;
 	}, origin);
-	return true;
+	return removed;
 }
 
 /**
