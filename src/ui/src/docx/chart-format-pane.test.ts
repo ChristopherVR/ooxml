@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { history, undo } from 'prosemirror-history';
+import { history, undo, redo } from 'prosemirror-history';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { ChartEditIntent } from 'ooxml-core/chart';
@@ -70,6 +70,51 @@ const RED: ChartEditIntent = {
 };
 
 describe('Word chart Format pane', () => {
+	it('saves advanced shared intents and undoes the last analysis edit independently', async () => {
+		const { view, model } = editorWithChart();
+		const pane = paneFor(view);
+		pane.open('series:0');
+		try {
+			edit(
+				pane,
+				{ op: 'trendline', seriesIndex: 0, index: 0, edit: { type: 'poly', order: 3 } },
+				'trendline.type',
+			);
+			edit(
+				pane,
+				{
+					op: 'errorBars',
+					seriesIndex: 0,
+					direction: 'y',
+					edit: { valueType: 'fixedVal', value: 2 },
+				},
+				'errorBars.type',
+			);
+			undo(view.state, view.dispatch);
+			expect(
+				selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]!.series[0]!.errorBars
+					?.length ?? 0,
+			).toBe(0);
+			expect(
+				selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]!.series[0]!.trendlines?.[0]
+					?.order,
+			).toBe(3);
+			redo(view.state, view.dispatch);
+			const bytes = await saveDocx(docToModel(view.state.doc, model));
+			const xml = await (
+				await JSZip.loadAsync(bytes)
+			)
+				.file('word/charts/chart1.xml')!
+				.async('string');
+			expect(xml).toContain('<c:trendlineType val="poly"/>');
+			expect(xml).toContain('<c:order val="3"/>');
+			expect(xml).toContain('<c:errBars>');
+			const reloaded = await loadDocx(bytes);
+			expect(chartsIn(reloaded.model.blocks)).toHaveLength(1);
+		} finally {
+			view.destroy();
+		}
+	});
 	it('opens for the selected chart and applies each intent as one undo step', async () => {
 		const { view, model } = editorWithChart();
 		const pane = paneFor(view);

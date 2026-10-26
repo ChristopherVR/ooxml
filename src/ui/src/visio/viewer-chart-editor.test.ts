@@ -41,6 +41,31 @@ const isEmf = (bytes: Uint8Array) =>
 	new DataView(bytes.buffer, bytes.byteOffset).getUint32(40, true) === 0x464d4520;
 
 describe('chart object Edit Data and Format Chart', () => {
+	it('saves advanced shared chart settings without changing the embedded data', async () => {
+		const submit = vi.fn<Submit>(async () => {});
+		const { editor, press } = setup(submit);
+		await editor.open('format', TARGET, (await gridChartWorkbook(ROWS, 'column'))!);
+		for (const intent of [
+			{ op: 'trendline', seriesIndex: 0, index: 0, edit: { type: 'linear' } },
+			{
+				op: 'errorBars',
+				seriesIndex: 0,
+				direction: 'y',
+				edit: { valueType: 'fixedVal', value: 2 },
+			},
+		] satisfies import('ooxml-core/chart').ChartEditIntent[])
+			editor.pane.dispatchEvent(
+				new CustomEvent('office-chart-format-edit', {
+					detail: { target: 'series:0', field: 'trendline.type', value: '', intent },
+				}),
+			);
+		press('OK');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalled());
+		const back = (await readEmbeddedChartSpace(submit.mock.calls[0]![0].workbook))!;
+		expect(back.space.plotArea.groups[0]!.series[0]!.trendlines?.[0]?.trendlineType).toBe('linear');
+		expect(back.space.plotArea.groups[0]!.series[0]!.errorBars?.[0]?.value).toBe(2);
+		expect(chartSpaceDataSheet(back.space).series[0]?.values).toEqual([4, 3]);
+	});
 	it('edits the data in the shared data sheet and re-embeds the workbook', async () => {
 		const submit = vi.fn<Submit>(async () => {});
 		const { editor, press } = setup(submit);

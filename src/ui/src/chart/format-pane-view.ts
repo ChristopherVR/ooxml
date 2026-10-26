@@ -11,6 +11,7 @@
  * @module chart/format-pane-view
  */
 import type { ChartFormatTarget, ChartGradientFill } from 'ooxml-core/chart';
+import type { ChartTrendline, ChartErrorBars } from 'ooxml-core/chart';
 
 import type {
 	ChartFormatChoice,
@@ -32,6 +33,7 @@ export interface ChartFormatSupport {
 	lineDetails?: boolean;
 	/** The Effects tab; absent means supported. */
 	effects?: boolean;
+	secondaryAxis?: boolean;
 }
 
 export type ChartFormatFillKind =
@@ -131,6 +133,7 @@ export interface ChartFormatElementView {
 	effects?: ChartFormatEffectsView;
 	threeD?: ChartFormatThreeDView;
 	text?: ChartFormatTextView;
+	series?: ChartFormatSeriesOptionsView;
 }
 
 /**
@@ -151,9 +154,22 @@ export interface ChartFormatSeriesOptionsView {
 	holeSize?: number;
 	/** Draw sliders beside the spacing boxes. */
 	sliders?: boolean;
+	marker?: { symbol?: string; size?: number };
+	analysis?: {
+		trendline?: ChartTrendline;
+		errorBars?: ChartErrorBars;
+		multipleTrendlines: boolean;
+		multipleErrorBars: boolean;
+	};
 }
 
 export interface ChartFormatAxisView {
+	title?: string;
+	baseTimeUnit?: string;
+	majorTimeUnit?: string;
+	minorTimeUnit?: string;
+	timeUnitsEditable?: boolean;
+	numberFormatSourceLinked?: boolean;
 	kind: 'cat' | 'val' | 'date' | 'ser';
 	min?: number;
 	max?: number;

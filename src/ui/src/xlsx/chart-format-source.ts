@@ -60,7 +60,9 @@ export function xlsxChartFormatSource(
 				sliders: true,
 			};
 		},
-		...(target && xlsxFillsTarget(target) ? { slots: { fill: XLSX_CHART_FILL_SLOT } } : {}),
+		...(target && xlsxFillsTarget(target) && source.element(target).fill.kind !== 'pattern'
+			? { slots: { fill: XLSX_CHART_FILL_SLOT } }
+			: {}),
 		flat: true,
 		picker: { key: 'chartFormat.chartElement', fallback: 'Chart element' },
 	};

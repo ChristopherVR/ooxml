@@ -1,5 +1,22 @@
 # Provenance
 
+## Shared chart appearance conversions (2026-10-26)
+
+Source: ChristopherVR/ooxml at `b0f3279ac`, `src/ui/src/chart/format-pane-intent.ts`.
+
+- `chartDrawingColorFromHex` and `chartDrawingGradientFrom` in
+  `src/core/chart/edit/format-values.ts` derive from the pane's `drawingColorFromHex`
+  and `drawingGradientFrom`; the UI names now delegate to core. Changes: invalid
+  transparency, stops and angles are refused, authored radial rectangles/focal points
+  and linear scaling are retained, and the same conversions serve product save adapters.
+- The new resolved appearance contracts and line, effect, 3-D and text conversion
+  helpers are new strict code using the existing PowerPoint Format pane contracts
+  as the field/unit checklist. They do not import UI or allocate image bytes.
+- Shared pane source/intent adapters reuse the existing effect, text, 3-D and line
+  descriptors across Word, Excel and Visio. The ordinary shared DOM controls remain
+  unchanged; Excel retains its native gradient controls and switches pattern edits
+  onto the shared pane instead of maintaining another pattern editor.
+
 ## Shared DrawingML outlines, effects and format schemes (2026-10-26)
 
 Source: ChristopherVR/ooxml at `27cc953db`. New strict DOM codecs, with the existing

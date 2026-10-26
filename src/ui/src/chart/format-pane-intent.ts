@@ -3,9 +3,9 @@
  * intent (`ChartEditIntent` of `ooxml-core/chart`), the request every product
  * understands: `applyChartEditIntent` runs it over a `ChartSpace`, other
  * products map it onto their own edit path. Returns `null` for a value that is
- * not usable (an empty or out-of-range number) and for a field no neutral
- * operation covers yet (pattern and picture fills, effects, 3-D, text, the
- * secondary axis): those stay with the product that offers them.
+ * not usable (an empty or out-of-range number), a target does not support it,
+ * or the field requires host-owned media allocation. Advanced properties use
+ * the same strict core operations as the product save adapters.
  *
  * @module chart/format-pane-intent
  */
@@ -19,6 +19,8 @@ import type { DrawingColor, DrawingFill } from 'ooxml-core/drawingml';
 
 import type { ChartFormatFieldValue } from './format-pane-types';
 import type { ChartFormatElementView } from './format-pane-view';
+import { chartAdvancedFieldIntent } from './format-pane-advanced-intent';
+import { chartDrawingColorFromHex, chartDrawingGradientFrom } from 'ooxml-core/chart';
 
 const number = (value: ChartFormatFieldValue): number | null => {
 	if (value === '' || typeof value === 'boolean') return null;
@@ -28,26 +30,12 @@ const number = (value: ChartFormatFieldValue): number | null => {
 
 /** `#RRGGBB` as a DrawingML colour, with the transparency (0..100) as `alpha`. */
 export function drawingColorFromHex(hex: string, transparency = 0): DrawingColor | null {
-	const value = /^#?([0-9a-f]{6})$/iu.exec(hex)?.[1];
-	if (!value) return null;
-	const alpha = Math.round((100 - Math.min(100, Math.max(0, transparency))) * 1000);
-	return {
-		kind: 'srgb',
-		value: value.toUpperCase(),
-		transforms: alpha < 100000 ? [{ name: 'alpha', value: String(alpha) }] : [],
-	};
+	return chartDrawingColorFromHex(hex, transparency);
 }
 
 /** A pane gradient (hex stops, percent positions) as a DrawingML gradient fill. */
 export function drawingGradientFrom(gradient: ChartGradientFill): DrawingFill | null {
-	const stops = gradient.stops.flatMap((stop) => {
-		const color = drawingColorFromHex(stop.color, 100 - (stop.opacity ?? 1) * 100);
-		return color ? [{ position: stop.position, color }] : [];
-	});
-	if (stops.length < 2) return null;
-	return gradient.type === 'radial'
-		? { kind: 'gradient', stops, path: gradient.path ?? 'circle' }
-		: { kind: 'gradient', stops, angle: gradient.angle ?? 0, scaled: gradient.scaled ?? false };
+	return chartDrawingGradientFrom(gradient);
 }
 
 /** Office's two-stop gradient from `color` towards white, what picking Gradient fill starts with. */
@@ -64,7 +52,7 @@ export function defaultPaneGradient(color = '#4472C4'): ChartGradientFill {
 
 const GRADIENT = /^(fill|line)\.gradient(Type|Start|End|Angle)$/u;
 
-function gradientEdit(
+export function gradientEdit(
 	current: ChartGradientFill,
 	part: string,
 	value: ChartFormatFieldValue,
@@ -197,6 +185,20 @@ function axisEdit(field: string, value: ChartFormatFieldValue): ChartAxisEdit | 
 	const n = number(value);
 	const text = String(value);
 	switch (field) {
+		case 'axis.title':
+			return { title: text };
+		case 'axis.numberFormatSourceLinked':
+			return { numberFormatSourceLinked: Boolean(value) };
+		case 'axis.baseTimeUnit':
+		case 'axis.majorTimeUnit':
+		case 'axis.minorTimeUnit': {
+			const key = field.slice(5) as 'baseTimeUnit' | 'majorTimeUnit' | 'minorTimeUnit';
+			return text === ''
+				? { [key]: null }
+				: ['days', 'months', 'years'].includes(text)
+					? { [key]: text }
+					: null;
+		}
 		case 'axis.min':
 		case 'axis.max': {
 			const key = field === 'axis.min' ? 'min' : 'max';
@@ -274,6 +276,8 @@ export function chartFormatFieldIntent(
 	field: string,
 	value: ChartFormatFieldValue,
 ): ChartEditIntent | null {
+	const advanced = chartAdvancedFieldIntent(view, target, field, value);
+	if (advanced !== undefined) return advanced;
 	if (field.startsWith('fill.') || field.startsWith('line.'))
 		return paintIntent(view, target, field, value);
 	if (field.startsWith('axis.')) {

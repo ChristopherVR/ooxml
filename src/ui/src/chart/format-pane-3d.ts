@@ -52,13 +52,11 @@ const LIGHTING: Array<[string, string]> = [
 	['brightRoom', 'Bright Room'],
 ];
 
-const label = (key: string, fallback: string) => ({ key, fallback });
-
 const bevelChoices = (): ChartFormatChoice[] => [
-	{ value: 'none', label: label('pptx.bevelTypes.none', 'None') },
+	{ value: 'none', label: t('marker.none', 'None') },
 	...CHART_BEVEL_TYPES.map((type) => ({
 		value: type,
-		label: label(`pptx.bevelTypes.${type}`, type),
+		label: t(`bevel.${type}`, type),
 	})),
 ];
 
@@ -124,7 +122,7 @@ export function threeDSection(threeD: ChartFormatThreeDView): ChartFormatSection
 				value: threeD.material ?? 'warmMatte',
 				choices: MATERIALS.map((material) => ({
 					value: material,
-					label: label(`pptx.material.${material}`, material),
+					label: t(`material.${material}`, material),
 				})),
 			},
 			{
@@ -139,8 +137,8 @@ export function threeDSection(threeD: ChartFormatThreeDView): ChartFormatSection
 			},
 		],
 		note: t(
-			'threeDNote',
-			'Bevels and material are drawn as shading on the slide; depth, contour and lighting are saved for PowerPoint and drawn approximately.',
+			'threeDSaveNote',
+			'3-D settings are saved for Office; this preview does not reproduce every 3-D effect.',
 		),
 	};
 }

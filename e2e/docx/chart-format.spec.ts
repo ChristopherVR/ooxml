@@ -43,6 +43,14 @@ for (const framework of FRAMEWORKS) {
 			'fill',
 			/#FF0000/i,
 		);
+		await pane.locator('[data-chart-format-tab="options"]').click();
+		await pane.locator('[data-chart-format-field="trendline.type"] select').selectOption('linear');
+		await pane
+			.locator('[data-chart-format-field="errorBars.type"] select')
+			.selectOption('fixedVal');
+		const errorValue = pane.locator('[data-chart-format-field="errorBars.value"] input');
+		await errorValue.fill('2');
+		await errorValue.dispatchEvent('change');
 
 		// Legend: moved to the top from Legend Options.
 		await pane.locator('[data-chart-format-target]').selectOption('legend');
@@ -71,6 +79,8 @@ for (const framework of FRAMEWORKS) {
 		const part = await zip.file('word/charts/chart1.xml')!.async('string');
 		expect(part).toContain('<a:srgbClr val="FF0000"/>');
 		expect(part).toContain('<c:legendPos val="t"/>');
+		expect(part).toContain('<c:trendlineType val="linear"/>');
+		expect(part).toContain('<c:errBars>');
 		const documentXml = await zip.file('word/document.xml')!.async('string');
 		expect(documentXml).toContain(`<wp:extent cx="${resized * 9525}"`);
 

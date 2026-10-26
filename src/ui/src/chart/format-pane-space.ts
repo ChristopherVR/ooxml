@@ -1,27 +1,27 @@
 /**
  * A chart Format pane source over a `ChartSpace` (`ooxml-core/chart`): the
  * neutral view every product can give the pane once its chart model is a
- * `ChartSpace`. It offers what the neutral edit operations write (fill, line,
- * series, axis, legend and label options) and leaves out effects, 3-D, text,
- * pattern and picture fills and the secondary axis, which have no neutral
- * operation yet. Colours resolve through `theme` when given; a theme colour
- * without one shows as unset.
+ * `ChartSpace`. It offers shared fill, outline, effects, text, 3-D, series
+ * analysis, axis, legend and label edits. Each series' capabilities decide
+ * which analysis and secondary-axis controls appear. Picture allocation stays
+ * with the host. Colours resolve through `theme` when given.
  *
  * @module chart/format-pane-space
  */
-import type {
-	ChartAxis,
-	ChartFormatTarget,
-	ChartPlotGroup,
-	ChartSpace,
-	ChartSpaceSeries,
-} from 'ooxml-core/chart';
+import type { ChartAxis, ChartFormatTarget, ChartSpace, ChartSpaceSeries } from 'ooxml-core/chart';
 import {
 	chartGroupPaintsLine,
 	chartSeriesEntries,
 	chartTargetShape,
 	resolveChartGradient,
+	chartTargetHasText,
+	chartSeriesSecondaryAxisSupported,
 } from 'ooxml-core/chart';
+import {
+	chartAdvancedElementView,
+	chartSeriesOptionsView,
+	chartGroupFormatType as chartTypeOf,
+} from './format-pane-advanced-space';
 import type {
 	DrawingColor,
 	DrawingColorTheme,
@@ -44,6 +44,8 @@ import type {
 export interface ChartSpaceFormatSourceOptions {
 	/** Resolves scheme colours (`accent1`, `dk1`...) to hex. */
 	theme?: DrawingColorTheme;
+	/** Hosts with a narrower edit contract (for example ChartEx) can retain the basic pane. */
+	advanced?: boolean;
 }
 
 type Resolve = (color: DrawingColor) => { hex: string; alpha: number } | undefined;
@@ -63,7 +65,14 @@ function fillView(fill: DrawingFill | undefined, resolve: Resolve): ChartFormatF
 		case 'gradient':
 			return { kind: 'gradient', gradient: resolveChartGradient(fill, resolve) };
 		case 'pattern':
-			return { kind: 'pattern' };
+			return {
+				kind: 'pattern',
+				pattern: {
+					preset: fill.preset,
+					foreground: fill.foreground ? (resolve(fill.foreground)?.hex ?? '#000000') : '#000000',
+					background: fill.background ? (resolve(fill.background)?.hex ?? '#FFFFFF') : '#FFFFFF',
+				},
+			};
 		case 'picture':
 			return { kind: 'picture' };
 		default:
@@ -84,11 +93,12 @@ function lineView(line: DrawingLine | undefined, resolve: Resolve): ChartFormatL
 			: { width: Math.round((line.widthEmu / 12700) * 100) / 100 }),
 		...(line?.dash === undefined ? {} : { dash: line.dash }),
 		...(line?.cap === undefined ? {} : { cap: line.cap }),
+		...(line?.compound === undefined ? {} : { compound: line.compound }),
+		...(line?.join === undefined ? {} : { join: line.join.kind }),
+		...(line?.headEnd?.type === undefined ? {} : { beginArrow: line.headEnd.type }),
+		...(line?.tailEnd?.type === undefined ? {} : { endArrow: line.tailEnd.type }),
 	};
 }
-
-/** PowerPoint's name of a group's chart type (`barChart` is `bar`, `pie3DChart` is `pie3D`). */
-const chartTypeOf = (group: ChartPlotGroup): string => group.element.replace(/Chart$/u, '');
 
 const vertical = (axis: ChartAxis, space: ChartSpace): boolean => {
 	if (axis.position) return axis.position === 'l' || axis.position === 'r';
@@ -99,7 +109,7 @@ const vertical = (axis: ChartAxis, space: ChartSpace): boolean => {
 const seriesName = (series: ChartSpaceSeries | undefined, index: number) =>
 	series?.tx?.text || series?.tx?.value || `Series ${index + 1}`;
 
-function axisView(axis: ChartAxis): ChartFormatAxisView {
+function axisView(axis: ChartAxis, advanced = false): ChartFormatAxisView {
 	const view: ChartFormatAxisView = {
 		kind: axis.kind,
 		reverse: axis.scaling.orientation === 'maxMin',
@@ -124,6 +134,16 @@ function axisView(axis: ChartAxis): ChartFormatAxisView {
 	copy('majorTickMark', axis.majorTickMark);
 	copy('minorTickMark', axis.minorTickMark);
 	copy('tickLabelPosition', axis.tickLabelPosition);
+	if (advanced) {
+		view.title = axis.title?.text ?? '';
+		if (axis.numberFormat) view.numberFormatSourceLinked = axis.numberFormat.sourceLinked ?? true;
+		if (axis.kind === 'date') {
+			view.timeUnitsEditable = true;
+			copy('baseTimeUnit', axis.baseTimeUnit);
+			copy('majorTimeUnit', axis.majorTimeUnit);
+			copy('minorTimeUnit', axis.minorTimeUnit);
+		}
+	}
 	return view;
 }
 
@@ -157,6 +177,9 @@ export function chartSpaceFormatSource(
 		return resolved && { hex: resolved.hex, alpha: resolved.alpha };
 	};
 	const entries = chartSeriesEntries(space);
+	const advanced = options.advanced !== false;
+	const seriesOptions = (seriesIndex: number): ChartFormatSeriesOptionsView | undefined =>
+		chartSeriesOptionsView(space, entries[seriesIndex], seriesIndex, advanced);
 	const describe: ChartFormatDescribe = {
 		axis: (axisIndex) => {
 			const axis = space.plotArea.axes[axisIndex];
@@ -183,15 +206,32 @@ export function chartSpaceFormatSource(
 			shape = undefined;
 		}
 		return {
+			...(target.kind === 'series' && seriesOptions(target.seriesIndex)
+				? { series: seriesOptions(target.seriesIndex)! }
+				: {}),
+			...(advanced
+				? chartAdvancedElementView(
+						space,
+						target,
+						resolve,
+						(fill) => fillView(fill, resolve),
+						(line) => lineView(line, resolve),
+						!lineTarget,
+					)
+				: {}),
 			support: {
 				fill: !lineTarget,
 				gradient: true,
-				pattern: false,
+				pattern: advanced && !lineTarget,
 				picture: false,
-				threeD: false,
-				text: false,
-				lineDetails: false,
-				effects: false,
+				threeD: advanced && !lineTarget,
+				text: advanced && chartTargetHasText(target),
+				lineDetails: advanced,
+				effects: advanced,
+				secondaryAxis:
+					target.kind === 'series' &&
+					advanced &&
+					chartSeriesSecondaryAxisSupported(space, target.seriesIndex),
 			},
 			fill: fillView(shape?.fill, resolve),
 			line: lineView(shape?.line, resolve),
@@ -222,21 +262,26 @@ export function chartSpaceFormatSource(
 	};
 	return {
 		targets: chartFormatTargetOptions(targetsOf(space), describe),
-		textOptions: false,
+		textOptions: advanced,
+		patternPresets: [
+			'pct5',
+			'pct10',
+			'pct25',
+			'pct50',
+			'horz',
+			'vert',
+			'ltHorz',
+			'cross',
+			'diagCross',
+		].map((preset) => ({
+			value: preset,
+			label: { key: `chartFormat.pattern.${preset}`, fallback: preset },
+		})),
 		element,
-		seriesOptions: (seriesIndex) => {
-			const group = entries[seriesIndex]?.group;
-			if (!group) return undefined;
-			const view: ChartFormatSeriesOptionsView = { chartType: chartTypeOf(group) };
-			if (group.overlap !== undefined) view.overlap = group.overlap;
-			if (group.gapWidth !== undefined) view.gapWidth = group.gapWidth;
-			if (group.firstSliceAngle !== undefined) view.firstSliceAngle = group.firstSliceAngle;
-			if (group.holeSize !== undefined) view.holeSize = group.holeSize;
-			return view;
-		},
+		seriesOptions,
 		axisOptions: (axisIndex) => {
 			const axis = space.plotArea.axes[axisIndex];
-			return axis && axisView(axis);
+			return axis && axisView(axis, advanced);
 		},
 		legendOptions: () =>
 			space.legend && {

@@ -1,7 +1,7 @@
 /**
  * The Effects tab of a chart Format pane: Shadow, Glow, Soft Edges and, for
- * elements that have one, the 3-D Format section. An extension section: only
- * a source that reads effects (PowerPoint today) offers it.
+ * elements that have one, the 3-D Format section. A source offers these
+ * controls only when its shared edit path supports them.
  *
  * @module chart/format-pane-effects
  */

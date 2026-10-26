@@ -61,6 +61,12 @@ test('Insert > Chart, then Edit Data and Format Chart re-embed the chart workboo
 	await pane.locator('[data-chart-format-target]').selectOption('series:0');
 	await pane.getByRole('radio', { name: 'Solid fill', exact: true }).click();
 	await pane.locator('[data-chart-format-field="fill.color"] input').fill('#ff0000');
+	await pane.locator('[data-chart-format-tab="options"]').click();
+	await pane.locator('[data-chart-format-field="trendline.type"] select').selectOption('linear');
+	await pane.locator('[data-chart-format-field="errorBars.type"] select').selectOption('fixedVal');
+	const errorValue = pane.locator('[data-chart-format-field="errorBars.value"] input');
+	await errorValue.fill('2');
+	await errorValue.dispatchEvent('change');
 	await dialog.locator('[command="chart-edit-ok"] button').click();
 	// The status still reads "Updated the chart." from Edit Data: wait for the new workbook.
 	await expect(dialog).toBeHidden();
@@ -77,5 +83,7 @@ test('Insert > Chart, then Edit Data and Format Chart re-embed the chart workboo
 		color: { value: 'FF0000' },
 	});
 	expect(chartSpaceDataSheet(found.space).series[0]?.values[0]).toBe(9);
+	expect(found.space.plotArea.groups[0]?.series[0]?.trendlines?.[0]?.trendlineType).toBe('linear');
+	expect(found.space.plotArea.groups[0]?.series[0]?.errorBars?.[0]?.value).toBe(2);
 	expect(errors).toEqual([]);
 });

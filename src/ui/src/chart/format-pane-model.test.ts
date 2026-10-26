@@ -42,9 +42,9 @@ describe('chartSpaceFormatSource', () => {
 		const source = chartSpaceFormatSource(columnSpace());
 		const tabs = (key: string) =>
 			chartFormatSourceTabs(source, buildChartFormatModel(source, key).target).map((t) => t.id);
-		expect(tabs('chartArea')).toEqual(['fillLine']);
-		expect(tabs('series:0')).toEqual(['fillLine', 'options']);
-		expect(tabs('axis:1')).toEqual(['fillLine', 'options']);
+		expect(tabs('chartArea')).toEqual(['fillLine', 'effects']);
+		expect(tabs('series:0')).toEqual(['fillLine', 'effects', 'options']);
+		expect(tabs('axis:1')).toEqual(['fillLine', 'effects', 'options']);
 		const model = buildChartFormatModel(source, 'series:0');
 		const fill = model.sections.find((section) => section.id === 'fill')!;
 		const kinds = fill.fields[0]!;
@@ -52,11 +52,12 @@ describe('chartSpaceFormatSource', () => {
 			'none',
 			'solid',
 			'gradient',
+			'pattern',
 			'automatic',
 		]);
 		expect(fill.fields.find((f) => f.id === 'fill.color')).toMatchObject({ value: '#4472C4' });
 		const line = model.sections.find((section) => section.id === 'line')!;
-		expect(line.fields.map((f) => f.id)).not.toContain('line.compound');
+		expect(line.fields.map((f) => f.id)).toContain('line.compound');
 		const options = buildChartFormatModel(source, 'series:0', 'options');
 		expect(options.sections[0]!.fields.map((f) => [f.id, f.kind === 'number' && f.value])).toEqual([
 			['series.overlap', -27],
@@ -66,7 +67,7 @@ describe('chartSpaceFormatSource', () => {
 
 	it('falls back to the chart area and puts every section on one page for a flat source', () => {
 		const source = {
-			...chartSpaceFormatSource(columnSpace()),
+			...chartSpaceFormatSource(columnSpace(), { advanced: false }),
 			flat: true,
 			slots: { fill: 'fill' },
 		};
@@ -131,8 +132,8 @@ describe('chartFormatFieldIntent', () => {
 		const series = { kind: 'series', seriesIndex: 0 } as const;
 		expect(chartFormatFieldIntent(view, series, 'series.gapWidth', 900)).toBeNull();
 		expect(chartFormatFieldIntent(view, series, 'fill.transparency', '')).toBeNull();
-		expect(chartFormatFieldIntent(view, series, 'fill.kind', 'pattern')).toBeNull();
-		expect(chartFormatFieldIntent(view, series, 'shadow.enabled', true)).toBeNull();
+		expect(chartFormatFieldIntent(view, series, 'fill.kind', 'picture')).toBeNull();
+		expect(chartFormatFieldIntent(view, series, 'shadow.blur', -1)).toBeNull();
 		expect(chartFormatFieldIntent(view, series, 'series.axis', 'secondary')).toBeNull();
 	});
 });

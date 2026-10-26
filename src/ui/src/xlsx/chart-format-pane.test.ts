@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { chartElementFill, chartElementTransparency, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
+import {
+	chartElementFill,
+	chartElementTransparency,
+	loadXlsx,
+	saveXlsx,
+	chartSpaceOf,
+} from 'ooxml-core/xlsx';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from './commands/test-support';
 import { chartAreaCommand, chartSeriesCommand, createChartFormatPane } from './chart-format-pane';
@@ -49,6 +55,51 @@ function columnChart() {
 }
 
 describe('Excel chart Format pane', () => {
+	it('applies advanced shared controls as workbook history entries and saves their chart XML', async () => {
+		const { ctx, pane } = columnChart();
+		await ctx.commands.run('chart.format-series');
+		const change = (intent: import('ooxml-core/chart').ChartEditIntent, field: string) =>
+			pane.element.dispatchEvent(
+				new CustomEvent('office-chart-format-edit', {
+					detail: { target: 'series:0', field, value: '', intent },
+				}),
+			);
+		const space = () => {
+			const book = ctx.workbook()!;
+			const chart = book.sheets[0]!.drawings[0]!;
+			if (chart.kind !== 'chart') throw new Error('Missing chart');
+			return chartSpaceOf(book, chart);
+		};
+		change(
+			{
+				op: 'trendline',
+				seriesIndex: 0,
+				index: 0,
+				edit: { type: 'linear', displayEquation: true },
+			},
+			'trendline.type',
+		);
+		change(
+			{
+				op: 'errorBars',
+				seriesIndex: 0,
+				direction: 'y',
+				edit: { valueType: 'percentage', value: 5 },
+			},
+			'errorBars.type',
+		);
+		expect(space().plotArea.groups[0]!.series[0]!.errorBars?.[0]?.value).toBe(5);
+		ctx.session()!.undo();
+		expect(space().plotArea.groups[0]!.series[0]!.errorBars?.length ?? 0).toBe(0);
+		ctx.session()!.redo();
+		const bytes = await saveXlsx(ctx.workbook()!);
+		const reloaded = await loadXlsx(bytes);
+		const chart = reloaded.sheets[0]!.drawings[0]!;
+		if (chart.kind !== 'chart') throw new Error('Missing exported chart');
+		const result = chartSpaceOf(reloaded, chart).plotArea.groups[0]!.series[0]!;
+		expect(result.trendlines?.[0]?.displayEquation).toBe(true);
+		expect(result.errorBars?.[0]?.value).toBe(5);
+	});
 	it('offers present titles and legends and falls back when the target disappears', async () => {
 		const ctx = createTestContext();
 		const index = ctx.session()!.addChart(0, {

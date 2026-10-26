@@ -7,6 +7,7 @@
 import type { ChartFormatTarget } from 'ooxml-core/chart';
 
 import { axisOptions } from './format-pane-axis';
+import { chartAnalysisSections } from './format-pane-analysis';
 import { choice, t } from './format-pane-common';
 import type { ChartFormatField, ChartFormatSection, ChartFormatText } from './format-pane-types';
 import type {
@@ -235,7 +236,7 @@ export function optionsSections(
 	switch (target.kind) {
 		case 'series': {
 			const view = source.seriesOptions?.(target.seriesIndex);
-			return view && seriesOptions(view);
+			return view && [...seriesOptions(view), ...chartAnalysisSections(view)];
 		}
 		case 'axis': {
 			const view = source.axisOptions?.(target.axisIndex);

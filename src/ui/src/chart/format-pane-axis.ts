@@ -36,6 +36,31 @@ const tickChoices = () => TICKS.map(([value, label]) => choice(value, `tick.${va
 export function axisOptions(axis: ChartFormatAxisView): ChartFormatSection[] {
 	const value = axis.kind === 'val' || axis.kind === 'date';
 	const fields: ChartFormatField[] = [];
+	if (axis.title !== undefined)
+		fields.push({
+			id: 'axis.title',
+			kind: 'text',
+			label: t('axis.title', 'Axis title'),
+			value: axis.title,
+		});
+	if (axis.timeUnitsEditable)
+		for (const [key, fallback] of [
+			['baseTimeUnit', 'Base unit'],
+			['majorTimeUnit', 'Major time unit'],
+			['minorTimeUnit', 'Minor time unit'],
+		] as const)
+			fields.push({
+				id: `axis.${key}`,
+				kind: 'select',
+				label: t(`axis.${key}`, fallback),
+				value: axis[key] ?? '',
+				choices: [
+					choice('', 'automatic', 'Auto'),
+					choice('days', 'axis.days', 'Days'),
+					choice('months', 'axis.months', 'Months'),
+					choice('years', 'axis.years', 'Years'),
+				],
+			});
 	if (value) {
 		fields.push(
 			auto('axis.min', 'minimum', 'Minimum', axis.min),
@@ -164,6 +189,16 @@ export function axisOptions(axis: ChartFormatAxisView): ChartFormatSection[] {
 					label: t('formatCode', 'Format Code'),
 					value: axis.numberFormat ?? '',
 				},
+				...(axis.numberFormatSourceLinked === undefined
+					? []
+					: [
+							{
+								id: 'axis.numberFormatSourceLinked',
+								kind: 'checkbox' as const,
+								label: t('axis.linkedFormat', 'Linked to source'),
+								value: axis.numberFormatSourceLinked,
+							},
+						]),
 			],
 		},
 	];

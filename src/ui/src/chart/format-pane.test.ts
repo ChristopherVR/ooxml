@@ -30,8 +30,10 @@ describe('office-ui-chart-format-pane', () => {
 		expect([...picker.options].map((o) => o.textContent)).toContain('Series "West"');
 		expect(
 			[...node.shadowRoot!.querySelectorAll('[data-chart-format-tab]')].map((b) => b.textContent),
-		).toEqual(['Fill & Line', 'Series Options']);
-		expect(node.shadowRoot!.querySelector('[data-chart-format-text-options]')).toBeNull();
+		).toEqual(['Fill & Line', 'Effects', 'Series Options']);
+		expect(
+			node.shadowRoot!.querySelector('[data-chart-format-text-options]')?.hasAttribute('disabled'),
+		).toBe(true);
 	});
 
 	it('fires the edit with its intent and repaints from the model the host sets back', () => {

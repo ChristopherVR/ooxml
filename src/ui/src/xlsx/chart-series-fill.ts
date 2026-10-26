@@ -5,6 +5,7 @@ import { el, field, select } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 import { createSeriesTransparency } from './chart-series-transparency';
 import { createSeriesGradient } from './chart-series-gradient';
+import { chartFormatTranslator } from '../chart/format-pane-translate';
 
 /** Primary series fill controls reuse the ribbon's themed color picker and core paint edits. */
 export function createSeriesFill(
@@ -32,7 +33,17 @@ export function createSeriesFill(
 	};
 	kind.addEventListener('change', () => {
 		if (kind.value === 'none') apply(null);
-		else if (kind.value === 'gradient') gradient.create();
+		else if (kind.value === 'pattern') {
+			if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
+			const found = activeChart(ctx);
+			if (!found || found.chart !== current) return;
+			const key = binding.key();
+			ctx.session()?.editChart(ctx.activeSheet(), found.index, {
+				op: 'pattern',
+				target: typeof key === 'number' ? { kind: 'series', seriesIndex: key } : { kind: key },
+				edit: {},
+			});
+		} else if (kind.value === 'gradient') gradient.create();
 		else if (kind.value === 'solid') {
 			if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
 			const found = activeChart(ctx);
@@ -72,13 +83,17 @@ export function createSeriesFill(
 			['none', 'No fill'],
 			['solid', 'Solid fill'],
 			['gradient', 'Gradient fill'],
+			['pattern', 'Pattern fill'],
 		];
 		if (value === 'imported') entries.push(['imported', 'Imported fill']);
 		kind.replaceChildren(
 			...entries.map(([key, label]) => {
 				const option = el(ctx, 'option');
 				option.value = key!;
-				option.textContent = ctx.t(label!);
+				option.textContent =
+					key === 'pattern'
+						? chartFormatTranslator(ctx.locale())('chartFormat.fill.pattern')
+						: ctx.t(label!);
 				option.disabled = key === 'imported';
 				return option;
 			}),

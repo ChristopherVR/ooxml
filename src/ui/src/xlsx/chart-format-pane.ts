@@ -116,7 +116,10 @@ export function createChartFormatPane(ctx: EditorContext) {
 		const selected = parsed();
 		seriesIndex = selected?.kind === 'series' ? selected.seriesIndex : 0;
 		part = BACKGROUNDS.includes(target) ? (target as ChartFillPart) : 'chartArea';
-		const slotted = selected !== undefined && xlsxFillsTarget(selected);
+		const slotted =
+			selected !== undefined &&
+			xlsxFillsTarget(selected) &&
+			listed.element(selected).fill.kind !== 'pattern';
 		const [active, idle] = isSeries() ? [seriesFill, backgroundFill] : [backgroundFill, seriesFill];
 		idle.refresh(undefined, undefined);
 		idle.element.remove();
