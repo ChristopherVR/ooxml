@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { applyChartSpaceDataSheetEdits, chartSpaceDataSheet } from '../chart/edit/data-sheet';
 import { applyChartEditIntent } from '../chart/edit/intent';
+import { setChartTitle } from '../chart';
 import type { ChartObject } from './model';
 import { readEmbeddedChartSpace, writeEmbeddedChartSpace } from './embedded-chart-space';
 import { getCell } from './cells';
@@ -76,5 +77,47 @@ describe('embedded chart as a ChartSpace', () => {
 		expect(fill).toMatchObject({ kind: 'solid', color: { value: 'FF0000' } });
 		expect(back.space.legend?.position).toBe('t');
 		expect(getCell((await loadXlsx(out)).sheets[0]!, 1, 1)?.value).toBe(4);
+	});
+});
+
+async function injectedChart(transform: (xml: string) => string) {
+	const zip = await JSZip.loadAsync((await gridChartWorkbook(ROWS, 'column'))!);
+	const part = Object.keys(zip.files).find((name) => /^xl\/charts\/chart\d+\.xml$/.test(name))!;
+	const source = transform(await zip.file(part)!.async('string'));
+	zip.file(part, source);
+	return { bytes: await zip.generateAsync({ type: 'uint8array' }), part, source };
+}
+
+describe('embedded chart source preservation', () => {
+	it('keeps carried protection and unedited workbook bytes', async () => {
+		const { bytes, part } = await injectedChart((xml) =>
+			xml.replace('<c:chart>', '<c:protection><c:data val="1"/></c:protection><c:chart>'),
+		);
+		const found = (await readEmbeddedChartSpace(bytes))!;
+		expect(found.editable).toBe(true);
+		expect(found.issues.length).toBeGreaterThan(0);
+		expect(await writeEmbeddedChartSpace(bytes, found.space)).toEqual(bytes);
+		const out = await writeEmbeddedChartSpace(bytes, setChartTitle(found.space, 'Safe'));
+		expect(await (await JSZip.loadAsync(out)).file(part)!.async('string')).toContain(
+			'<c:protection>',
+		);
+		expect((await readEmbeddedChartSpace(out))!.space.title?.text).toBe('Safe');
+	});
+	it.each([
+		['unknown series child', (xml: string) => xml.replace('</c:ser>', '<c:unknown/></c:ser>')],
+		[
+			'invalid number',
+			(xml: string) =>
+				xml.replace('<c:plotArea>', '<c:view3D><c:rotX val="bad"/></c:view3D><c:plotArea>'),
+		],
+	] as const)('blocks %s without changing original bytes', async (_, transform) => {
+		const { bytes, source } = await injectedChart(transform);
+		const found = (await readEmbeddedChartSpace(bytes))!;
+		expect(found.sourceXml).toBe(source);
+		expect(found.editable).toBe(false);
+		expect(await writeEmbeddedChartSpace(bytes, found.space)).toEqual(bytes);
+		await expect(
+			writeEmbeddedChartSpace(bytes, setChartTitle(found.space, 'Unsafe')),
+		).rejects.toThrow('cannot be preserved');
 	});
 });

@@ -6,8 +6,11 @@ import { chartXml } from './chart';
 import { writeChartColorStyle } from './chart-colors';
 import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
-import { withUnmodelledChartChildren } from '../../chart/keep-unmodelled';
-import { chartIssuesLostOnWrite, patchChartFormulas } from '../../chart/keep-source';
+import {
+	chartIssuesLostOnWrite,
+	patchChartFormulas,
+	writeChartSpaceOverSource,
+} from '../../chart/keep-source';
 import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 import { XML_HEADER, escapeAttr } from './xml-out';
@@ -115,10 +118,7 @@ export function editedChartPart(source: string, chart: ChartObject): string | un
 		| ''
 		| '\n'
 		| '\r\n';
-	return withUnmodelledChartChildren(
-		source,
-		writeChartSpace(chart.chartSpace, { declarationBreak }),
-	);
+	return writeChartSpaceOverSource(source, chart.chartSpace, { declarationBreak });
 }
 
 /** Writes (or keeps) the chart part behind a chart object and returns its part name. */

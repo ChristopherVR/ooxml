@@ -1,3 +1,4 @@
+import { chartIssuesLostOnWrite } from '../chart/keep-source';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Editing a Word chart: the shared chart edit operations (`chart/edit`) and data sheet applied to
 // the `DocxChart` a drawing carries, and a new chart for Insert > Chart. Each edit returns a new
@@ -25,7 +26,12 @@ import type { InlineImage } from './inline-model';
 export function isDocxChartEditable(chart: DocxChart | undefined): chart is DocxChart & {
 	chartSpace: ChartSpace;
 } {
-	return Boolean(chart?.chartSpace) && !chart?.layoutId && !chart?.chartEx;
+	return (
+		Boolean(chart?.chartSpace) &&
+		!chart?.layoutId &&
+		!chart?.chartEx &&
+		chartIssuesLostOnWrite(chart?.issues ?? []).length === 0
+	);
 }
 
 /** `chart` showing `space`: title and direct formatting re-read from the part `space` writes. */

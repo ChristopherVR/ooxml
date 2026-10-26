@@ -1,3 +1,4 @@
+import { writeChartSpaceOverSource } from '../chart/keep-source';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Saving Word charts. An edited chart (its `chartSpace` differs from the loaded one) is written
 // back to its own part with the shared chart writer, and the embedded workbook its
@@ -78,7 +79,9 @@ async function saveEditedChart(
 	chart: DocxChart & { partName: string; chartSpace: ChartSpace },
 	report: (issue: ChartWorkbookIssue) => void,
 ): Promise<void> {
-	zip.file(chart.partName, writeChartSpace(chart.chartSpace));
+	const source = await zip.file(chart.partName)?.async('string');
+	if (!source) throw new Error('The source chart part is missing.');
+	zip.file(chart.partName, writeChartSpaceOverSource(source, chart.chartSpace));
 	await saveChartWorkbookUpdates(
 		{
 			read: async (partName) => zip.file(partName)?.async('uint8array'),

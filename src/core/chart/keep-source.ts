@@ -7,6 +7,9 @@
 // caller.
 import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
 import type { ChartSpace } from './model';
+import { parseChartSpace } from './parse-space';
+import { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
+import { withUnmodelledChartChildren } from './keep-unmodelled';
 import type { ChartDataSource, ChartParseIssue } from './model-series';
 
 /** The unmodelled elements `withUnmodelledChartChildren` carries into an edited part. */
@@ -121,3 +124,20 @@ export function patchChartFormulas(
 
 const elementsNamed = (parent: XmlElement, local: string) =>
 	elements(parent).filter((node) => node.namespaceURI === NS.c && node.localName === local);
+
+/**
+ * Writes an edited source-backed chart only when the parser can preserve every reported
+ * element. Unchanged models return the original XML, including its lexical formatting.
+ * Carried top-level children are restored at their schema positions.
+ */
+export function writeChartSpaceOverSource(
+	source: string,
+	space: ChartSpace,
+	options?: WriteChartSpaceOptions,
+): string {
+	const parsed = parseChartSpace(source);
+	if (same(parsed.chartSpace, space)) return source;
+	if (chartIssuesLostOnWrite(parsed.issues).length)
+		throw new Error('This chart has content that cannot be preserved through an edit.');
+	return withUnmodelledChartChildren(source, writeChartSpace(space, options));
+}

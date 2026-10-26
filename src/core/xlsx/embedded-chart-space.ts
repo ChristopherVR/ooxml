@@ -16,7 +16,8 @@ import type { ChartDataSheet } from '../chart/data-sheet';
 import { chartColorScheme } from '../chart/render/chart-colors';
 import type { ChartSpace } from '../chart/model';
 import { parseChartSpace } from '../chart/parse-space';
-import { writeChartSpace } from '../chart/write-space';
+import { chartIssuesLostOnWrite, writeChartSpaceOverSource } from '../chart/keep-source';
+import type { ChartParseIssue } from '../chart/model-series';
 import { columnLabel, quoteSheetName } from './address';
 import { createEditSession } from './edit/session';
 import type { CellValue, Workbook } from './model';
@@ -29,6 +30,10 @@ export interface EmbeddedChartSpace {
 	/** Index of the sheet whose drawing holds the chart. */
 	sheet: number;
 	space: ChartSpace;
+	/** Original chart XML and parser issues, retained for safe source-backed editing. */
+	sourceXml: string;
+	issues: ChartParseIssue[];
+	editable: boolean;
 	/** The workbook theme's colours (`accent1`, `dk1`, ... as `#RRGGBB`), to resolve scheme colours. */
 	scheme: ChartColorScheme;
 }
@@ -41,12 +46,16 @@ function locate(workbook: Workbook): EmbeddedChartSpace | undefined {
 			if (drawing.kind !== 'chart' || !drawing.partName) continue;
 			const bytes = workbook.source?.parts.get(drawing.partName);
 			if (!bytes) continue;
-			const { chartSpace } = parseChartSpace(decoder.decode(bytes));
+			const sourceXml = decoder.decode(bytes);
+			const { chartSpace, issues } = parseChartSpace(sourceXml);
 			if (chartSpace.plotArea.groups.length)
 				return {
 					partName: drawing.partName,
 					sheet,
 					space: chartSpace,
+					sourceXml,
+					issues,
+					editable: chartIssuesLostOnWrite(issues).length === 0,
 					scheme: chartColorScheme(workbook.theme),
 				};
 		}
@@ -124,13 +133,20 @@ export async function writeEmbeddedChartSpace(
 	const workbook = await loadXlsx(bytes);
 	const found = locate(workbook);
 	if (!found) throw new Error('The embedded workbook has no chart.');
+	// Validate before changing workbook cells, including callers bypassing the UI.
+	const written = writeChartSpaceOverSource(found.sourceXml, space, { declarationBreak: '\n' });
+	if (written === found.sourceXml) return bytes;
 	const previous = chartSpaceDataSheet(found.space);
 	const dataChanged = !sameSheet(previous, chartSpaceDataSheet(space));
 	const next = dataChanged ? writeDataBlock(workbook, found.sheet, space, previous) : space;
 	const zip = await JSZip.loadAsync(dataChanged ? await saveXlsx(workbook) : bytes);
 	// No folder entries: an Open XML package lists parts only.
-	zip.file(found.partName, writeChartSpace(next, { declarationBreak: '\n' }), {
-		createFolders: false,
-	});
+	zip.file(
+		found.partName,
+		writeChartSpaceOverSource(found.sourceXml, next, { declarationBreak: '\n' }),
+		{
+			createFolders: false,
+		},
+	);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

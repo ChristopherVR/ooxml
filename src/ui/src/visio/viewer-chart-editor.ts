@@ -144,9 +144,17 @@ export class ChartObjectEditor {
 		this.dialog.dataset.mode = mode;
 		this.dialog.setAttribute('heading', HEADINGS[mode]);
 		this.error.textContent = '';
+		this.#buttons.get('OK')!.disabled = !found.editable;
 		this.#update(found.space);
+		if (!found.editable) {
+			this.#space = undefined;
+			this.sheet.hidden = true;
+			this.pane.hidden = true;
+			this.error.textContent =
+				'This chart contains unsupported content and is read-only. Its original workbook is preserved.';
+		}
 		this.dialog.show();
-		return true;
+		return found.editable;
 	}
 	close(): void {
 		this.dialog.close();

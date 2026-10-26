@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { chartSpaceDataSheet } from 'ooxml-core/chart';
 import { readEmbeddedChartSpace } from 'ooxml-core/xlsx';
@@ -126,4 +127,30 @@ describe('chart object Edit Data and Format Chart', () => {
 		press('Cancel');
 		expect(editor.dialog.open).toBe(false);
 	});
+});
+
+it('shows unsupported chart content as read-only and allows a later supported chart', async () => {
+	const submit = vi.fn<Submit>(async () => {});
+	const { editor, press } = setup(submit);
+	const workbook = (await gridChartWorkbook(ROWS, 'column'))!;
+	const zip = await JSZip.loadAsync(workbook);
+	const part = Object.keys(zip.files).find((name) => /^xl\/charts\/chart\d+\.xml$/.test(name))!;
+	zip.file(
+		part,
+		(await zip.file(part)!.async('string')).replace('</c:ser>', '<c:unknown/></c:ser>'),
+	);
+	const unsupported = await zip.generateAsync({ type: 'uint8array' });
+	expect(await editor.open('format', TARGET, unsupported)).toBe(false);
+	expect(editor.dialog.open).toBe(true);
+	expect(editor.error.textContent).toContain('read-only');
+	expect(editor.sheet.hidden).toBe(true);
+	expect(editor.pane.hidden).toBe(true);
+	expect(editor.space).toBeUndefined();
+	press('OK');
+	expect(submit).not.toHaveBeenCalled();
+	press('Cancel');
+	expect(await editor.open('format', TARGET, workbook)).toBe(true);
+	expect(editor.error.textContent).toBe('');
+	press('OK');
+	await vi.waitFor(() => expect(submit).toHaveBeenCalledOnce());
 });
