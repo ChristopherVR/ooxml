@@ -21,6 +21,8 @@ import { editChartEffectList, type ChartEffectEdit } from './effects';
 import { withDrawingColorTransparency } from './paint';
 import type { ChartFormatTarget } from './target';
 import { validateChartTextEdit } from './text-validation';
+import { resolveChartTextPaintEdit } from './text-appearance';
+import type { ChartFillAppearance, ChartLineAppearance } from './appearance-types';
 
 export interface ChartTextEdit {
 	/** Null restores inherited paint. */
@@ -28,6 +30,9 @@ export interface ChartTextEdit {
 	fillTransparency?: number;
 	line?: DrawingLine | null;
 	lineTransparency?: number;
+	/** Resolved host differences applied against each run's authored paint. */
+	fillAppearance?: { before?: ChartFillAppearance; after: ChartFillAppearance };
+	lineAppearance?: { before?: ChartLineAppearance; after: ChartLineAppearance };
 	effect?: ChartEffectEdit;
 	rotation?: number | null;
 	direction?: string | null;
@@ -148,6 +153,7 @@ export function chartTextBodyElement(body: ChartTextBody | undefined): XmlElemen
 }
 
 function patchRun(node: XmlElement, edit: ChartTextEdit): void {
+	edit = resolveChartTextPaintEdit(node, edit);
 	if (edit.fillTransparency !== undefined) {
 		const fill = parseDrawingFill(node);
 		if (fill?.kind === 'solid') {

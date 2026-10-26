@@ -101,11 +101,24 @@ export function applyChartAppearance(
 		for (const key of Object.keys(after.text) as (keyof ChartTextAppearance)[])
 			if (!sameAppearance(before?.text?.[key], after.text[key]))
 				Object.assign(patch, { [key]: after.text[key] });
-		const edits = chartTextEditsFromAppearance(patch);
+		const { effects: textEffects, ...textPatch } = patch;
+		const edits = chartTextEditsFromAppearance(textPatch);
+		if (textEffects)
+			edits.push(...effects(before?.text?.effects, textEffects).map((effect) => ({ effect })));
 		for (const edit of edits) {
-			if (edit.fill?.kind === 'solid' && before?.text?.fill?.color === after.text.fill?.color) {
+			if (edit.fill !== undefined && after.text.fill) {
 				delete edit.fill;
-				edit.fillTransparency = after.text.fill?.transparency ?? 0;
+				edit.fillAppearance = {
+					...(before?.text?.fill ? { before: before.text.fill } : {}),
+					after: after.text.fill,
+				};
+			}
+			if (edit.line !== undefined && after.text.outline) {
+				delete edit.line;
+				edit.lineAppearance = {
+					...(before?.text?.outline ? { before: before.text.outline } : {}),
+					after: after.text.outline,
+				};
 			}
 			next = setChartTargetText(next, target, edit);
 		}

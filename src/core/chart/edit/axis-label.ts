@@ -40,6 +40,9 @@ export function setChartDisplayUnitsLabel(
 		if (edit.layout !== undefined) label.layout = editChartLayout(label.layout, edit.layout);
 		if (edit.shape === null) delete label.spPr;
 		else if (edit.shape) label.spPr = editChartShapeProperties(label.spPr, edit.shape);
-		if (edit.font) label.txPr = editChartTextBody(label.txPr, edit.font);
+		if (edit.font) {
+			label.txPr = editChartTextBody(label.txPr, edit.font);
+			if (label.tx?.rich) label.tx.rich = editChartTextBody(label.tx.rich, edit.font);
+		}
 	});
 }

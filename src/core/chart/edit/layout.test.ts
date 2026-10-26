@@ -3,11 +3,37 @@ import { parseChartSpace, writeChartSpace } from '../index';
 import { setChartLayout } from './layout';
 import { setChartLegendEntries } from './legend-entries';
 import { setChartPointLabel } from './point-label';
+import { editChartLine } from './line-options';
+import { drawingLineXml } from '../../drawingml/write-line';
 
 const source =
 	'<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><c:chart><c:plotArea><c:layout><c:manualLayout><c:x val="0.1"/><c:extLst><c:ext uri="manual"/></c:extLst></c:manualLayout><c:extLst><c:ext uri="outer"/></c:extLst></c:layout></c:plotArea><c:legend><c:legendEntry><c:idx val="4"/><c:txPr><a:bodyPr/><a:p><a:pPr><a:defRPr lang="ja-JP"><a:solidFill><a:schemeClr val="accent1"/></a:solidFill></a:defRPr></a:pPr></a:p></c:txPr></c:legendEntry></c:legend></c:chart></c:chartSpace>';
 
 describe('shared layout and legend entry edits', () => {
+	it('preserves producer attributes while editing an existing manual coordinate', () => {
+		const xml = source.replace(
+			'<c:x val="0.1"/>',
+			'<c:x xmlns:x="urn:producer" val="0.1" x:keep="original"/>',
+		);
+		const saved = writeChartSpace(
+			setChartLayout(parseChartSpace(xml).chartSpace, 'plotArea', { x: 0.5 }),
+		);
+		expect(saved).toContain('val="0.5"');
+		expect(saved).toContain('x:keep="original"');
+		expect(saved).toContain('urn:producer');
+	});
+	it('switches exclusive dash choices without resurrecting the old choice on Automatic reset', () => {
+		const preset = { dash: 'dash', widthEmu: 12700 };
+		const custom = editChartLine(preset, { customDash: [{ dash: 200000, space: 100000 }] });
+		expect(drawingLineXml(custom)).toContain('<a:custDash>');
+		expect(drawingLineXml(custom)).not.toContain('prstDash');
+		const next = editChartLine(custom, { dash: 'dot' });
+		expect(drawingLineXml(next)).toContain('val="dot"');
+		expect(drawingLineXml(next)).not.toContain('custDash');
+		const reset = editChartLine(next, { dash: null });
+		expect(drawingLineXml(reset)).not.toMatch(/custDash|prstDash/);
+		expect(() => editChartLine(preset, { dash: 'dot', customDash: [] })).toThrow('either');
+	});
 	it('preserves point-label source extensions and language while editing its text and outline', () => {
 		const input = parseChartSpace(
 			source.replace(

@@ -48,7 +48,10 @@ export function setChartTypedCategories(space: ChartSpace, values: readonly stri
 				first.points = values.flatMap((value, index) => (value === '' ? [] : [{ index, value }]));
 			} else if (source?.cache?.type === 'number' || key === 'xValues') {
 				const numbers = values.map((value) => (value.trim() === '' ? null : Number(value)));
-				series[key] = numberSource(numbers, source, source?.formula);
+				series[key] =
+					key === 'xValues' || numbers.every((value) => value === null || Number.isFinite(value))
+						? numberSource(numbers, source, source?.formula)
+						: categorySource(values, source);
 			} else series[key] = categorySource(values, source);
 		}
 	});

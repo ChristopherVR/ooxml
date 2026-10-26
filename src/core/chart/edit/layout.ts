@@ -36,6 +36,7 @@ export function editChartLayout(
 		root.insertBefore(manual, root.firstChild);
 	}
 	if (manual) {
+		const previous = new Map(FIELDS.map(([, tag]) => [tag, first(manual, tag, NS.c)]));
 		for (const [, tag] of FIELDS) {
 			const old = first(manual, tag, NS.c);
 			if (old) manual.removeChild(old);
@@ -43,7 +44,7 @@ export function editChartLayout(
 		const before = manual.firstChild;
 		for (const [key, tag] of FIELDS) {
 			if (value?.[key] === undefined) continue;
-			const node = root.ownerDocument.createElementNS(NS.c, `c:${tag}`);
+			const node = previous.get(tag) ?? root.ownerDocument.createElementNS(NS.c, `c:${tag}`);
 			node.setAttribute('val', String(value[key]));
 			manual.insertBefore(node, before);
 		}

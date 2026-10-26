@@ -23,6 +23,8 @@ const ARROWS = ['none', 'triangle', 'stealth', 'diamond', 'oval', 'arrow'];
 
 /** Null clears one property to Automatic without removing the rest of the authored outline. */
 export function editChartLine(current: DrawingLine | undefined, edit: ChartLineEdit): DrawingLine {
+	if (edit.dash != null && edit.customDash != null)
+		throw new RangeError('Choose either a preset or custom chart dash');
 	for (const key of Object.keys(edit))
 		if (!KEYS.has(key)) throw new RangeError('Unknown chart outline setting');
 	if (
@@ -51,6 +53,8 @@ export function editChartLine(current: DrawingLine | undefined, edit: ChartLineE
 		if (value === null) delete line[key];
 		else if (value !== undefined) Object.assign(line, { [key]: structuredClone(value) });
 	}
+	if (edit.dash !== undefined && edit.customDash === undefined) delete line.customDash;
+	if (edit.customDash !== undefined && edit.dash === undefined) delete line.dash;
 	if (edit.headEnd) line.headEnd = { ...current?.headEnd, ...edit.headEnd };
 	if (edit.tailEnd) line.tailEnd = { ...current?.tailEnd, ...edit.tailEnd };
 	return line;

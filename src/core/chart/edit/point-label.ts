@@ -54,7 +54,10 @@ export function setChartPointLabel(
 				assignOrDelete(label, 'tx', title.tx);
 			}
 		}
-		if (font) label.txPr = editChartTextBody(label.txPr, font);
+		if (font) {
+			label.txPr = editChartTextBody(label.txPr, font);
+			if (label.tx?.rich) label.tx.rich = editChartTextBody(label.tx.rich, font);
+		}
 		if (shape === null) delete label.spPr;
 		else if (shape) label.spPr = editChartShapeProperties(label.spPr, shape);
 		if (layout !== undefined) label.layout = editChartLayout(label.layout, layout);

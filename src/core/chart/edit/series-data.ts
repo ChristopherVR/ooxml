@@ -3,14 +3,24 @@
 // blanks (`null`, written as a missing point, as Office writes an empty cell); categories are text,
 // or numbers when every category is a number.
 import type { ChartSeriesValue } from '../data-sheet';
-import type { ChartDataSource } from '../model-series';
+import type { ChartDataSource, ChartDataCache } from '../model-series';
 
 export type ChartCategoryValue = string | number | null;
 
-function points(values: readonly (string | number | null)[]) {
-	return values.flatMap((value, index) =>
-		value === null || value === '' ? [] : [{ index, value: String(value) }],
+function points(values: readonly (string | number | null)[], previous?: ChartDataCache) {
+	const formats = new Map(
+		previous?.points.flatMap((point) =>
+			point.index !== undefined && point.formatCode !== undefined
+				? [[point.index, point.formatCode] as const]
+				: [],
+		),
 	);
+	return values.flatMap((value, index) => {
+		const formatCode = formats.get(index);
+		return value === null || value === ''
+			? []
+			: [{ index, value: String(value), ...(formatCode === undefined ? {} : { formatCode }) }];
+	});
 }
 
 /** A number source holding `values`, keeping the reference and format code of `previous`. */
@@ -30,7 +40,7 @@ export function numberSource(
 			type: 'number',
 			formatCode: previous?.cache?.formatCode ?? 'General',
 			pointCount: values.length,
-			points: points(values),
+			points: points(values, previous?.cache),
 		},
 	};
 }
@@ -63,7 +73,7 @@ export function categorySource(
 			type: numeric ? 'number' : 'string',
 			...(numeric ? { formatCode: previous?.cache?.formatCode ?? 'General' } : {}),
 			pointCount: values.length,
-			points: points(values),
+			points: points(values, numeric ? previous?.cache : undefined),
 		},
 	};
 }
