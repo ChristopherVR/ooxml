@@ -126,6 +126,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartRoot,
 					chartPart.partPath,
 					chartRelationshipId,
+					chartPart.text,
 				);
 			}
 			const chart = await this.buildClassicChart(

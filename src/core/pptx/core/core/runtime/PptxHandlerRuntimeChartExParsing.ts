@@ -2,8 +2,8 @@
  * @fileoverview ChartEx (`cx:chartSpace`) parsing and the chart-part facts both chart families
  * read the same way: the external workbook and its embedded rows, pivot source and formats, the
  * Office 2013+ colour-style and chart-style parts, layouts, user shapes, print settings and
- * protection. ChartEx parts are not modelled by the neutral `chart` area, so they stay on the
- * `fast-xml-parser` object tree (`parseCxChartSeries`).
+ * protection. ChartEx facts come from the neutral `ChartExSpace`; the host resolves paint/fonts
+ * through a compatibility style bridge. Malformed or unmodelled parts retain the tolerant reader.
  *
  * Mixin chain position:
  *   `PptxHandlerRuntimeChartColorStyle` -> **this** -> `PptxHandlerRuntimeChartParsing`
@@ -11,6 +11,9 @@
 
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
+import { parseChartExSpace } from '../../../../chart';
+import { chartExFromNeutral, chartExTypeFromNeutral } from '../../utils/chart-ex-from-neutral';
+import { readChartExStyleBridge } from '../../utils/chart-ex-style-bridge';
 import { parseCxChartSeries } from '../../utils/chart-cx-parser';
 import { parseChartLayouts } from '../../utils/chart-layout';
 import { parseChartPivotFormats } from '../../utils/chart-pivot-formats';
@@ -122,15 +125,35 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartRoot: XmlObject | undefined,
 		chartPartPath: string,
 		chartRelationshipId: string,
+		sourceXml?: string,
 	): Promise<PptxChartData | undefined> {
-		const result = parseCxChartSeries(
-			plotArea,
-			this.xmlLookupService,
-			chartSpace,
-			chartRoot,
-			{ parseColor: (node, placeholder) => this.parseColor(node, placeholder) },
-			(raw) => this.resolveThemeTypeface(raw) ?? raw,
-		);
+		let model;
+		try {
+			const parsed = sourceXml ? parseChartExSpace(sourceXml) : undefined;
+			if (parsed && !parsed.issues.length && parsed.chartExSpace.plotArea.series.length)
+				model = parsed.chartExSpace;
+		} catch {
+			/* Keep the tolerant compatibility path for malformed legacy parts. */
+		}
+		const result = model
+			? chartExFromNeutral(
+					model,
+					readChartExStyleBridge(
+						plotArea,
+						this.xmlLookupService,
+						chartSpace,
+						{ parseColor: (node, placeholder) => this.parseColor(node, placeholder) },
+						(raw) => this.resolveThemeTypeface(raw) ?? raw,
+					),
+				)
+			: parseCxChartSeries(
+					plotArea,
+					this.xmlLookupService,
+					chartSpace,
+					chartRoot,
+					{ parseColor: (node, placeholder) => this.parseColor(node, placeholder) },
+					(raw) => this.resolveThemeTypeface(raw) ?? raw,
+				);
 		if (!result) {
 			return undefined;
 		}
@@ -160,7 +183,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const clrMapOvr = this.parseClrMapOvr(chartSpace);
 
 		return {
-			chartType,
+			chartType: model ? chartExTypeFromNeutral(model) : chartType,
 			categories: result.categories,
 			...(result.categoryLevels ? { categoryLevels: result.categoryLevels } : {}),
 			series: result.series,
