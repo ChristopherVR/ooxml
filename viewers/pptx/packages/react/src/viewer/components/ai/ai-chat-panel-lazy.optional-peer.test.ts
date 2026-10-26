@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 import * as ts from '@typescript/typescript6';
 import { rollup } from 'rollup';
@@ -154,7 +154,8 @@ describe('the main entries load AI helpers from ooxml-ui/pptx/ai/host only', () 
 	const packageRoot = join(import.meta.dirname, '../../../..');
 	const staticGraph = (file: string) =>
 		walkModuleGraph(join(packageRoot, file), { followDynamic: false });
-	const relativeName = (file: string) => file.slice(packageRoot.length + 1);
+	// Forward slashes on every platform, to match the expectations below.
+	const relativeName = (file: string) => relative(packageRoot, file).split(sep).join('/');
 	const ENTRIES = ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts'];
 
 	it('lists every built entry', () => {

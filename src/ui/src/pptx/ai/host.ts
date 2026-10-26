@@ -1,5 +1,5 @@
 /**
- * `ooxml-ui/pptx/ai/host`: the SDK-free part of the AI assistant core.
+ * `ooxml-ui/pptx/ai/host`: the part of the AI assistant core with no SDK runtime imports.
  *
  * A viewer needs these helpers even when the host never opens the chat: the deck bridge
  * (`createPptxAiBridge`, focus targets, the deck-data change check, element updates), the
@@ -9,6 +9,10 @@
  * automation schemas. Nothing reachable from this entry imports any of those at runtime
  * (`host.test.ts` checks it), so a binding's main entry can use it without pulling the
  * assistant runtime into the host's initial bundle.
+ *
+ * This is about runtime imports only. The type declarations still reference SDK types (the
+ * stored chat history and log export name the `ai` package's `UIMessage`), so type checking a
+ * consumer resolves `ai` types the same way the full barrel does.
  *
  * Every export here is also exported, unchanged, from `ooxml-ui/pptx/ai`.
  */

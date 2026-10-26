@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
@@ -16,7 +16,8 @@ describe('the vanilla entries load AI helpers from ooxml-ui/pptx/ai/host only', 
 	const packageRoot = join(import.meta.dirname, '../../..');
 	const staticGraph = (file: string) =>
 		walkModuleGraph(join(packageRoot, file), { followDynamic: false });
-	const relativeName = (file: string) => file.slice(packageRoot.length + 1);
+	// Forward slashes on every platform, to match the expectations below.
+	const relativeName = (file: string) => relative(packageRoot, file).split(sep).join('/');
 	const ENTRIES = ['src/index.ts', 'src/internals.ts'];
 
 	it('lists every built entry', () => {
