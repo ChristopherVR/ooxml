@@ -1,6 +1,7 @@
 import type { ShapeStyle, XmlObject } from '../../types';
 import { serializeColorChoiceWithRef } from '../../utils/color-xml-preservation';
 import { applyDrawingLineDash } from '../../utils/drawing-line-dash';
+import { LN_CHILD_ORDER, reorderObjectKeysByLocalName } from '../../utils/xml-reorder';
 import { mergeDrawingFillXml } from '../builders/drawing-fill-xml';
 import type { ShapeStyleGate } from './authored-shape-style';
 import { createLineStyleGate, fillIsPurelyStyleMatrix } from './authored-shape-style';
@@ -377,6 +378,14 @@ export function writeShapeStroke(
 	// Line-level effects (a:ln/a:effectLst)
 	if (ctx.lineEffectListXml && spPr['a:ln']) {
 		(spPr['a:ln'] as XmlObject)['a:effectLst'] = ctx.lineEffectListXml;
+	}
+
+	// The writers above add children in the order they run (ends before the
+	// join, the tail before the head), and fast-xml-parser emits keys in
+	// insertion order, so put `a:ln` in CT_LineProperties order once here.
+	const lineNode = spPr['a:ln'];
+	if (lineNode && typeof lineNode === 'object' && !Array.isArray(lineNode)) {
+		spPr['a:ln'] = reorderObjectKeysByLocalName(lineNode as XmlObject, LN_CHILD_ORDER);
 	}
 }
 

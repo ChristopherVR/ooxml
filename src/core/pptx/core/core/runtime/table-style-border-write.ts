@@ -11,7 +11,7 @@ import type {
 	PptxTableCell3D,
 	XmlObject,
 } from '../../types';
-import { reorderObjectKeys } from '../../utils/xml-reorder';
+import { LN_CHILD_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { colorChoiceXml, ensureChild, facetEquals } from './table-style-xml-helpers';
 
 /** EMU per CSS pixel (96 DPI). Matches the border/cell3D parse side. */
@@ -27,22 +27,6 @@ const BORDER_SIDE_ORDER: readonly string[] = [
 	'a:insideV',
 	'a:tl2br',
 	'a:tr2bl',
-];
-
-/** `CT_LineProperties` child order (§20.1.2.2.24): fill choice, dash, join, head/tail ends. */
-const LN_CHILD_ORDER: readonly string[] = [
-	'a:noFill',
-	'a:solidFill',
-	'a:gradFill',
-	'a:pattFill',
-	'a:prstDash',
-	'a:custDash',
-	'a:round',
-	'a:bevel',
-	'a:miter',
-	'a:headEnd',
-	'a:tailEnd',
-	'a:extLst',
 ];
 
 const LN_FILL_KEYS: readonly string[] = ['a:noFill', 'a:solidFill', 'a:gradFill', 'a:pattFill'];

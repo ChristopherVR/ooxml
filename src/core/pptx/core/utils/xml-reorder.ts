@@ -87,6 +87,22 @@ export function reorderObjectKeysByLocalName(
 	return result;
 }
 
+/** `CT_LineProperties` child order (§20.1.2.2.24): fill choice, dash, join, head/tail ends. */
+export const LN_CHILD_ORDER: readonly string[] = [
+	'a:noFill',
+	'a:solidFill',
+	'a:gradFill',
+	'a:pattFill',
+	'a:prstDash',
+	'a:custDash',
+	'a:round',
+	'a:bevel',
+	'a:miter',
+	'a:headEnd',
+	'a:tailEnd',
+	'a:extLst',
+];
+
 /** Child order for `a:effectLst` (CT_EffectList §20.1.8.20) — alphabetical. */
 export const EFFECT_LST_ORDER: readonly string[] = [
 	'a:blur',
