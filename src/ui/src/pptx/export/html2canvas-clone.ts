@@ -29,8 +29,9 @@ import { preprocessCssForCapture } from './css-preprocessing';
  * `original` is the live element handed to html2canvas; `doc` and `clonedEl`
  * are what its `onclone` callback receives. Order matters:
  *
- * 0. The cloned element keeps the live element's layout width (see
- *    `html2canvasCaptureScope`).
+ * 0. The clone's linked style sheets finish loading (see
+ *    `clonedStyleSheetsLoaded`), and the cloned element keeps the live
+ *    element's layout width (see `html2canvasCaptureScope`).
  * 1. 3D views settle on the live tree, then each cloned view is replaced by an
  *    `<img>` of its canvas plus its DOM overlay. This runs first, while the
  *    live and cloned trees still pair up in document order.
@@ -44,12 +45,63 @@ export async function prepareHtml2CanvasClone(
 	doc: Document,
 	clonedEl: HTMLElement,
 ): Promise<void> {
+	await clonedStyleSheetsLoaded(original.ownerDocument, doc);
 	await settleThreeViews(original);
 	pinCapturedSize(original, clonedEl);
 	snapshotThreeViewsIntoClone(original, clonedEl);
 	prepareExportClone(clonedEl);
 	await normalizeColorsForCapture(doc, clonedEl);
 	preprocessCssForCapture(clonedEl);
+}
+
+/** How long a capture waits for the clone's style sheets before it paints with what it has. */
+export const CLONE_STYLE_SHEET_TIMEOUT_MS = 5_000;
+
+const LINKED_STYLE_SHEETS = 'link[rel~="stylesheet"]';
+
+/**
+ * Wait until the clone's linked style sheets apply, then for the fonts they declare.
+ *
+ * html2canvas-pro copies a `<style>` by its rules but a `<link rel="stylesheet">` as the bare
+ * element, so its iframe fetches and parses the sheet again, and it calls `onclone` once the
+ * document is complete without waiting for that. A capture could then lay the clone out before
+ * the host page's sheets applied (usually the first capture of a page; later ones reuse the cached
+ * sheet in time), and anything styled by them painted differently in that export alone. Only
+ * sheets that loaded in the live page are awaited, so one that failed there costs nothing, and
+ * the wait is bounded.
+ */
+export async function clonedStyleSheetsLoaded(
+	liveDocument: Document,
+	cloneDocument: Document,
+	timeoutMs = CLONE_STYLE_SHEET_TIMEOUT_MS,
+): Promise<void> {
+	const loaded = new Set(
+		[...liveDocument.querySelectorAll<HTMLLinkElement>(LINKED_STYLE_SHEETS)]
+			.filter((link) => link.sheet)
+			.map((link) => link.href),
+	);
+	const pending = [...cloneDocument.querySelectorAll<HTMLLinkElement>(LINKED_STYLE_SHEETS)].filter(
+		(link) => !link.sheet && !link.disabled && loaded.has(link.href),
+	);
+	if (pending.length === 0) return;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<void>((resolve) => {
+		timer = setTimeout(resolve, timeoutMs);
+	});
+	const settled = Promise.all(
+		pending.map(
+			(link) =>
+				new Promise<void>((resolve) => {
+					link.addEventListener('load', () => resolve(), { once: true });
+					link.addEventListener('error', () => resolve(), { once: true });
+				}),
+		),
+	);
+	try {
+		await Promise.race([settled.then(() => cloneDocument.fonts?.ready), timeout]);
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 /** One step up the flattened tree html2canvas clones: a slotted node's slot, a parent, or a host. */

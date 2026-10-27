@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { THREE_VIEW_MARKER_ATTR } from '../three-view/element';
 import { THREE_VIEW_SNAPSHOT_ATTR } from '../three-view/export-snapshot';
 import {
+	clonedStyleSheetsLoaded,
 	html2canvasCaptureScope,
 	pinCapturedSize,
 	prepareHtml2CanvasClone,
@@ -107,6 +108,87 @@ describe('prepareHtml2CanvasClone', () => {
 
 		expect(clonedEl.querySelector(`img[${THREE_VIEW_SNAPSHOT_ATTR}]`)).toBeNull();
 		expect(clonedEl.querySelector('.fallback-2d')).not.toBeNull();
+		live.remove();
+	});
+});
+
+/** A `<link rel="stylesheet">` whose `sheet` is set, as once it has loaded, or `null`. */
+function styleLink(doc: Document, href: string, loaded: boolean): HTMLLinkElement {
+	const link = doc.createElement('link');
+	link.rel = 'stylesheet';
+	link.href = href;
+	Object.defineProperty(link, 'sheet', { configurable: true, value: loaded ? {} : null });
+	doc.head.append(link);
+	return link;
+}
+
+/** Whether `promise` has settled once the pending tasks have run. */
+async function settles(promise: Promise<unknown>): Promise<boolean> {
+	let done = false;
+	void promise.then(() => {
+		done = true;
+	});
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	return done;
+}
+
+// html2canvas-pro reloads a linked sheet in its iframe and calls `onclone` without waiting for it:
+// the cold first capture of a page laid out without the host page's CSS.
+describe('clonedStyleSheetsLoaded', () => {
+	const APP_CSS = 'https://viewer.example/assets/app.css';
+
+	it('waits until the clone has reloaded a sheet the live page uses', async () => {
+		styleLink(document, APP_CSS, true);
+		const clone = document.implementation.createHTMLDocument('capture');
+		const reloading = styleLink(clone, APP_CSS, false);
+
+		const wait = clonedStyleSheetsLoaded(document, clone);
+		expect(await settles(wait)).toBe(false);
+		reloading.dispatchEvent(new Event('load'));
+		expect(await settles(wait)).toBe(true);
+	});
+
+	it('also settles when the reload fails', async () => {
+		styleLink(document, APP_CSS, true);
+		const clone = document.implementation.createHTMLDocument('capture');
+		const reloading = styleLink(clone, APP_CSS, false);
+
+		const wait = clonedStyleSheetsLoaded(document, clone);
+		reloading.dispatchEvent(new Event('error'));
+		expect(await settles(wait)).toBe(true);
+	});
+
+	it('skips sheets the clone already has and sheets the live page never loaded', async () => {
+		styleLink(document, APP_CSS, true);
+		styleLink(document, 'https://viewer.example/missing.css', false);
+		const clone = document.implementation.createHTMLDocument('capture');
+		styleLink(clone, APP_CSS, true);
+		styleLink(clone, 'https://viewer.example/missing.css', false);
+
+		expect(await settles(clonedStyleSheetsLoaded(document, clone))).toBe(true);
+	});
+
+	it('gives up after the timeout instead of holding the capture', async () => {
+		styleLink(document, APP_CSS, true);
+		const clone = document.implementation.createHTMLDocument('capture');
+		styleLink(clone, APP_CSS, false);
+
+		const wait = clonedStyleSheetsLoaded(document, clone, 5);
+		expect(await settles(wait)).toBe(true);
+	});
+
+	it('runs before the clone is prepared', async () => {
+		const live = liveSlide();
+		styleLink(document, APP_CSS, true);
+		const { doc, clonedEl } = html2canvasClone(live);
+		const reloading = styleLink(doc, APP_CSS, false);
+
+		const prepared = prepareHtml2CanvasClone(live, doc, clonedEl);
+		expect(await settles(prepared)).toBe(false);
+		expect(clonedEl.querySelector('[data-export-ignore="true"]')).not.toBeNull();
+		reloading.dispatchEvent(new Event('load'));
+		await prepared;
+		expect(clonedEl.querySelector('[data-export-ignore="true"]')).toBeNull();
 		live.remove();
 	});
 });

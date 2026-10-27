@@ -87,6 +87,32 @@ describe('renderTextShapeElement placeholder prompt', () => {
 	});
 });
 
+describe('renderTextShapeElement text body box', () => {
+	// The vanilla export stage renders outside the `.pptxv` root and its
+	// `box-sizing` reset, so the body must not take its box model from page CSS:
+	// as `content-box`, its 100% width plus the inset padding overflowed the
+	// shape and every centred label was exported shifted to the right.
+	it('declares a border-box body inline, so the insets stay inside the shape', () => {
+		const element = {
+			type: 'shape',
+			id: 'box-a',
+			x: 0,
+			y: 0,
+			width: 186,
+			height: 93,
+			shapeType: 'rect',
+			text: 'Box A',
+			textSegments: [{ text: 'Box A', style: {} }],
+			textStyle: { align: 'center', bodyInsetLeft: 9.6, bodyInsetRight: 9.6 },
+		} as unknown as PptxElement;
+		const node = renderTextShapeElement(element, 0, makeContext()) as HTMLElement;
+		const body = node.querySelector<HTMLElement>('.pptxv-text');
+		expect(body?.style.boxSizing).toBe('border-box');
+		expect(body?.style.width).toBe('100%');
+		expect(body?.style.paddingLeft).toBe('9.6px');
+	});
+});
+
 describe('renderTextShapeElement degenerate (issue #285)', () => {
 	/** A 1-pt horizontal rule: ~1.25px tall, solid-filled as a plain rect. */
 	function thinRule(): PptxElement {
