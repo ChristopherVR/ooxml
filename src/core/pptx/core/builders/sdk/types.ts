@@ -24,8 +24,22 @@ import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
 import type { ChartAreaFormatInput } from './chart-layout-input';
 import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
+import type {
+	GlowInput,
+	InnerShadowInput,
+	LineEndInput,
+	ReflectionInput,
+	RelativeRectInput,
+} from './shape-style-input-types';
 
 export type { ChartGradientInput, ChartGradientStopInput } from './chart-gradient-input';
+export type {
+	GlowInput,
+	InnerShadowInput,
+	LineEndInput,
+	ReflectionInput,
+	RelativeRectInput,
+} from './shape-style-input-types';
 
 // ---------------------------------------------------------------------------
 // Position & layout
@@ -91,19 +105,55 @@ export type FillInput =
 			 */
 			angle?: number;
 			gradientType?: 'linear' | 'radial';
+			/**
+			 * A path gradient (`a:path/@path`) instead of a linear one. Setting it
+			 * makes the gradient radial; `'circle'` is what `gradientType: 'radial'`
+			 * alone gives.
+			 */
+			path?: 'circle' | 'rect' | 'shape';
+			/** Where a path gradient reaches its last stop (`a:fillToRect`). */
+			focus?: RelativeRectInput;
+			/** The rectangle one gradient tile occupies (`a:tileRect`). */
+			tile?: RelativeRectInput;
+			/** Whether a linear gradient scales with the shape (`a:lin/@scaled`). */
+			scaled?: boolean;
+			/** Whether the gradient rotates with the shape (`@rotWithShape`). */
+			rotWithShape?: boolean;
 			stops: Array<{ color: string; position: number; opacity?: number }>;
 	  }
-	| { type: 'pattern'; preset: string; foreground?: string; background?: string }
+	| {
+			type: 'pattern';
+			preset: string;
+			/** Pattern colour (`a:fgClr`). */
+			foreground?: string;
+			/** Colour behind the pattern (`a:bgClr`). */
+			background?: string;
+	  }
 	| { type: 'image'; url: string; mode?: 'stretch' | 'tile' }
 	| { type: 'none' };
 
 export interface StrokeInput {
 	color?: string;
 	width?: number;
-	dash?: StrokeDashType;
+	/**
+	 * A preset dash, or an exact pattern of dash and gap lengths in px
+	 * (`[dash, gap, dash, gap, ...]`, repeated once when odd, as in SVG's
+	 * `stroke-dasharray`), written as `a:custDash` relative to `width`.
+	 */
+	dash?: StrokeDashType | number[];
 	opacity?: number;
 	join?: 'round' | 'bevel' | 'miter';
+	/** Miter limit as a ratio of the line width (e.g. 8); implies `join: 'miter'`. */
+	miterLimit?: number;
 	cap?: 'flat' | 'rnd' | 'sq';
+	/** Compound line type (`a:ln/@cmpd`). */
+	compound?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri';
+	/** Pen alignment (`a:ln/@algn`): centred on the outline or inside it. */
+	align?: 'ctr' | 'in';
+	/** Decoration on the start of the outline (`a:headEnd`). */
+	headEnd?: LineEndInput;
+	/** Decoration on the end of the outline (`a:tailEnd`). */
+	tailEnd?: LineEndInput;
 	/** A theme colour for the outline; see {@link FillInput}'s `themeColorRef`. */
 	themeColorRef?: PptxThemeColorRef;
 }
@@ -156,6 +206,11 @@ export interface TextOptions extends Partial<ElementPosition> {
 	fill?: FillInput;
 	stroke?: StrokeInput;
 	shadow?: ShadowInput;
+	innerShadow?: InnerShadowInput;
+	glow?: GlowInput;
+	/** Soft-edge radius in px (`a:softEdge`). */
+	softEdge?: number;
+	reflection?: ReflectionInput;
 	opacity?: number;
 }
 
@@ -170,6 +225,11 @@ export interface ShapeOptions extends Partial<ElementPosition> {
 	textStyle?: Partial<TextStyleInput>;
 	adjustments?: Record<string, number>;
 	shadow?: ShadowInput;
+	innerShadow?: InnerShadowInput;
+	glow?: GlowInput;
+	/** Soft-edge radius in px (`a:softEdge`). */
+	softEdge?: number;
+	reflection?: ReflectionInput;
 	opacity?: number;
 }
 

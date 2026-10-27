@@ -19,7 +19,16 @@
 
 import type { TextPptxElement } from '../../types/elements';
 import { createTextElement } from './ElementFactory';
-import type { TextOptions, TextSegmentInput, FillInput, StrokeInput, ShadowInput } from './types';
+import type {
+	TextOptions,
+	TextSegmentInput,
+	FillInput,
+	StrokeInput,
+	ShadowInput,
+	InnerShadowInput,
+	GlowInput,
+	ReflectionInput,
+} from './types';
 
 /**
  * Fluent builder for {@link TextPptxElement} instances.
@@ -252,6 +261,46 @@ export class TextBuilder {
 	 */
 	shadow(input: ShadowInput): this {
 		this._options.shadow = input;
+		return this;
+	}
+
+	/**
+	 * Add an inner shadow to the text box.
+	 *
+	 * @param input - An {@link InnerShadowInput} descriptor.
+	 */
+	innerShadow(input: InnerShadowInput): this {
+		this._options.innerShadow = input;
+		return this;
+	}
+
+	/**
+	 * Add a glow around the text box.
+	 *
+	 * @param input - A {@link GlowInput} descriptor.
+	 */
+	glow(input: GlowInput): this {
+		this._options.glow = input;
+		return this;
+	}
+
+	/**
+	 * Soften the text box's edges.
+	 *
+	 * @param radius - Soft-edge radius in px.
+	 */
+	softEdge(radius: number): this {
+		this._options.softEdge = radius;
+		return this;
+	}
+
+	/**
+	 * Add a reflection below the text box.
+	 *
+	 * @param input - A {@link ReflectionInput} descriptor.
+	 */
+	reflection(input: ReflectionInput): this {
+		this._options.reflection = input;
 		return this;
 	}
 
