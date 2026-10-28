@@ -275,6 +275,73 @@ custom shell with text and shape editing, save, zoom, and both presence overlays
 The [host-owned collaboration contract](/guide/host-owned-collaboration) and its
 same-textbox concurrency limitations apply equally to custom and full-viewer UI.
 
+### Slide thumbnail rail
+
+`SlidesPanelComponent` (`<pptx-slides-panel>`) is the rail of slide thumbnails that
+`PowerPointViewerComponent` shows beside the canvas, and a custom shell can place it beside its
+own canvas. It lists every slide (grouped by section when the deck has sections) and highlights
+the active one; clicking a thumbnail emits `select` and edits nothing, so the deck stays clean.
+With `[canEdit]`, it also adds, duplicates, deletes, hides, reorders and groups slides.
+
+Setting `[slides]` makes the rail host-driven: it renders only its inputs and emits every command
+as an output. `createSlidesPanelEditorCommands(editor, canEdit)` applies those outputs through the
+shell's `EditorStateService`, so they share the canvas's undo history and collaboration sync; the
+multi-selection commands duplicate each slide right after itself.
+
+```ts
+import {
+	createSlidesPanelEditorCommands,
+	SlidesPanelComponent,
+	ViewerCollaborationShellService,
+} from 'pptx-angular-viewer';
+
+@Component({
+	// ...providers and canvas as in the example above
+	imports: [SlideCanvasComponent, SlidesPanelComponent],
+	template: `
+		<div style="display: flex; height: 600px">
+			<pptx-slides-panel
+				[slides]="shell.editor.slides()"
+				[templateElementsBySlideId]="shell.editor.templateElementsBySlideId()"
+				[sections]="shell.editor.sections()"
+				[canvasSize]="shell.loader.canvasSize()"
+				[mediaDataUrls]="shell.loader.mediaDataUrls()"
+				[activeIndex]="shell.activeSlideIndex()"
+				[canEdit]="shell.canEdit()"
+				[firstSlideNumber]="shell.loader.firstSlideNumber()"
+				(select)="shell.activeSlideIndex.set($event)"
+				(addSlide)="rail.addSlideAfter($event)"
+				(moveSlide)="rail.moveSlide($event)"
+				(duplicateSlides)="rail.duplicateSlides($event)"
+				(deleteSlides)="rail.deleteSlides($event)"
+				(toggleHideSlides)="rail.toggleHideSlides($event)"
+				(openLayoutGallery)="openLayouts($event)"
+			/>
+			<pptx-slide-canvas style="flex: 1; min-width: 0" ... />
+		</div>
+	`,
+})
+export class CustomSlidesComponent {
+	readonly shell = inject(ViewerCollaborationShellService);
+	readonly rail = createSlidesPanelEditorCommands(this.shell.editor, () => this.shell.canEdit());
+}
+```
+
+The section outputs (`addSectionAt`, `renameSection`, `deleteSection`, `moveSectionUp`,
+`moveSectionDown`, `toggleSectionCollapse`) and `addSlideAfter` (the menu's New Slide and Enter)
+map onto the commands of the same name. The thumbnails draw what the canvas draws: their field
+context (slide numbers, including a deck whose numbering starts at `firstSlideNum`, header/footer
+text, document properties) and table styles come from `[headerFooter]`, `[customProperties]`,
+`[firstSlideNumber]`, `[locale]`, `[theme]` and `[tableStyleMap]`, each falling back to the
+enclosing `LoadContentService` when unset. The "Layout" entry of a slide's context menu emits
+`select` for that slide, then `openLayoutGallery({ slideIndex, x, y })`, since a custom shell
+renders its own Layout gallery. Read-only (`[canEdit]="false"`) shows no footer and no menus. The
+rail has no collapse control; show or hide it with `@if`. Without `[slides]` the rail reads and
+edits the enclosing `EditorStateService` itself, as it does inside `PowerPointViewerComponent`.
+
+The rail's layout is in its own component styles; import `pptx-angular-viewer/styles` once (as for
+any building block) for the theme tokens and the scoped reset its thumbnails use.
+
 The collaboration service and components are exported from the package root (there is no separate
 subpath the way `pptx-react-viewer/viewer` has one) if you want to drive sync or render your own
 presence UI:

@@ -7,18 +7,24 @@ import {
 	RemoteSelectionOverlay,
 	SelectionOverlay,
 	SlideCanvas,
+	SlidesPane,
 	useCollaboration,
 	useEditorHistory,
 	useEditorOperations,
 	useElementDrag,
 	useInlineEditing,
 	useLoadContent,
+	useSectionOperations,
+	useSlideOperations,
 } from 'pptx-vue-viewer/viewer';
 import type { UseCollaborationResult, UseInlineEditingResult } from 'pptx-vue-viewer/viewer';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import type { HostOwnedDemo } from '../../shared/host-owned-collaboration';
+
+// The slide rail's chrome classes and tokens come from the full stylesheet.
+import 'pptx-vue-viewer/styles';
 
 const props = defineProps<{ host: HostOwnedDemo }>();
 const root = ref<HTMLElement>();
@@ -50,6 +56,20 @@ const ops = useEditorOperations({
 	activeSlideIndex: current,
 	pushHistory: history.pushHistory,
 	templateElementsBySlideId,
+});
+// The rail's commands: plain edits of `slides`, which the collaboration
+// session below publishes to peers like any other edit.
+const slideOps = useSlideOperations({
+	slides,
+	activeSlideIndex: current,
+	pushHistory: history.pushHistory,
+	templateElementsBySlideId,
+});
+const sectionOps = useSectionOperations({
+	sections: content.sections,
+	slides,
+	activeSlideIndex: current,
+	pushHistory: history.pushHistory,
 });
 const collaboration: UseCollaborationResult = useCollaboration({
 	slides,
@@ -153,6 +173,34 @@ function navigate(index: number): void {
 	edit.commitInlineEdit();
 	if (!edit.isInlineInputPending()) current.value = index;
 }
+/** Runs a rail command once any open text edit is committed, and only while editing is allowed. */
+function railEdit<A extends unknown[]>(run: (...args: A) => void): (...args: A) => void {
+	return (...args) => {
+		if (!shellState.value.canEdit) return;
+		edit.commitInlineEdit();
+		if (!edit.isInlineInputPending()) run(...args);
+	};
+}
+const rail = {
+	moveSlide: railEdit(slideOps.moveSlide),
+	addSlide: railEdit(() => slideOps.addSlide()),
+	addSlideAfter: railEdit((index: number) => slideOps.addSlide(index)),
+	duplicateSlide: railEdit(slideOps.duplicateSlide),
+	deleteSlide: railEdit(slideOps.deleteSlide),
+	toggleSlideHidden: railEdit((index: number) => {
+		const target = slides.value[index];
+		if (!target) return;
+		history.pushHistory();
+		slides.value = slides.value.map((slide, i) =>
+			i === index ? { ...slide, hidden: !slide.hidden } : slide,
+		);
+	}),
+	addSection: railEdit(sectionOps.addSection),
+	renameSection: railEdit(sectionOps.renameSection),
+	deleteSection: railEdit(sectionOps.deleteSection),
+	moveSectionUp: railEdit(sectionOps.moveSectionUp),
+	moveSectionDown: railEdit(sectionOps.moveSectionDown),
+};
 function moveCursor(event: PointerEvent): void {
 	const stage = canvas.value?.getStageElement();
 	if (!stage) {
@@ -193,56 +241,87 @@ defineExpose({
 
 <template>
 	<div ref="root" data-host-custom-shell="vue" class="shell" tabindex="0" @keydown="onKeydown">
-		<nav aria-label="Custom slide navigation">
+		<nav class="custom-nav" aria-label="Custom slide navigation">
 			<button v-for="(_, index) in slides" :key="index" @click="navigate(index)">
 				Slide {{ index + 1 }}
 			</button>
 			<output :aria-label="t('pptx.collaboration.shellStatusLabel')">{{ statusText }}</output>
 		</nav>
 		<p v-if="content.error.value" role="alert">{{ content.error.value }}</p>
-		<SlideCanvas
-			ref="canvas"
-			:slide="activeSlide"
-			:canvas-size="canvasSize"
-			:media-data-urls="mediaDataUrls"
-			:zoom="scale"
-			:template-elements="activeSlide ? templateElementsBySlideId[activeSlide.id] : []"
-			:inline-editing-element-id="inlineEditingElementId"
-			@pointerdown="select"
-			@pointermove="moveCursor"
-			@dblclick="openText"
-		>
-			<SelectionOverlay
-				v-if="shellState.canEdit && !inlineEditingElement"
-				:elements="activeSlide?.elements ?? []"
-				:selected-ids="ops.selectedElementIds.value"
-				:zoom="scale"
-				@transform-start="drag.onTransformStart"
-				@transform="drag.onTransform"
-				@transform-end="drag.onTransformEnd"
-				@adjust-start="drag.onAdjustStart"
-				@adjust="drag.onAdjust"
-				@adjust-end="drag.onAdjustEnd"
-				@request-edit="({ id }) => enterText(id)"
-			/>
-			<InlineTextEditor
-				v-if="shellState.canEdit && inlineEditingElement"
-				:key="inlineEditingElement.id"
-				:element="inlineEditingElement"
-				:live-patcher="collaboration.livePatcher"
-				:slide-id="activeSlide?.id"
-				@change="edit.updateInlineText"
-				@commit="edit.commitInlineEdit"
-				@cancel="edit.cancelInlineEdit"
-				@list-session="edit.onListSession"
-			/>
-			<RemoteSelectionOverlay
-				:presences="remotePresences"
-				:elements="activeSlide?.elements ?? []"
+		<div class="workspace">
+			<SlidesPane
+				:slides="slides"
+				:template-elements-by-slide-id="templateElementsBySlideId"
 				:active-slide-index="current"
+				:canvas-size="canvasSize"
+				:media-data-urls="mediaDataUrls"
+				:section-groups="sectionOps.slidesBySection.value"
+				:can-edit="shellState.canEdit"
+				:header-footer="content.headerFooter.value"
+				:custom-properties="content.customProperties.value"
+				:first-slide-number="content.firstSlideNumber.value"
+				:theme="content.theme.value"
+				:table-style-map="content.tableStyleMap.value"
+				@select="navigate"
+				@move-slide="rail.moveSlide"
+				@add-slide="rail.addSlide"
+				@add-slide-after="rail.addSlideAfter"
+				@duplicate-slide="rail.duplicateSlide"
+				@delete-slide="rail.deleteSlide"
+				@toggle-slide-hidden="rail.toggleSlideHidden"
+				@add-section="rail.addSection"
+				@rename-section="rail.renameSection"
+				@delete-section="rail.deleteSection"
+				@move-section-up="rail.moveSectionUp"
+				@move-section-down="rail.moveSectionDown"
+				@toggle-section-collapse="sectionOps.toggleSectionCollapse"
 			/>
-			<CollaborationCursors :cursors="cursors" />
-		</SlideCanvas>
+			<div class="stage">
+				<SlideCanvas
+					ref="canvas"
+					:slide="activeSlide"
+					:canvas-size="canvasSize"
+					:media-data-urls="mediaDataUrls"
+					:zoom="scale"
+					:template-elements="activeSlide ? templateElementsBySlideId[activeSlide.id] : []"
+					:inline-editing-element-id="inlineEditingElementId"
+					@pointerdown="select"
+					@pointermove="moveCursor"
+					@dblclick="openText"
+				>
+					<SelectionOverlay
+						v-if="shellState.canEdit && !inlineEditingElement"
+						:elements="activeSlide?.elements ?? []"
+						:selected-ids="ops.selectedElementIds.value"
+						:zoom="scale"
+						@transform-start="drag.onTransformStart"
+						@transform="drag.onTransform"
+						@transform-end="drag.onTransformEnd"
+						@adjust-start="drag.onAdjustStart"
+						@adjust="drag.onAdjust"
+						@adjust-end="drag.onAdjustEnd"
+						@request-edit="({ id }) => enterText(id)"
+					/>
+					<InlineTextEditor
+						v-if="shellState.canEdit && inlineEditingElement"
+						:key="inlineEditingElement.id"
+						:element="inlineEditingElement"
+						:live-patcher="collaboration.livePatcher"
+						:slide-id="activeSlide?.id"
+						@change="edit.updateInlineText"
+						@commit="edit.commitInlineEdit"
+						@cancel="edit.cancelInlineEdit"
+						@list-session="edit.onListSession"
+					/>
+					<RemoteSelectionOverlay
+						:presences="remotePresences"
+						:elements="activeSlide?.elements ?? []"
+						:active-slide-index="current"
+					/>
+					<CollaborationCursors :cursors="cursors" />
+				</SlideCanvas>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -254,9 +333,23 @@ defineExpose({
 	background: #e2e8f0;
 	color: #0f172a;
 }
-nav {
+/* A class, not `nav`: scoped styles also reach the root of the rail. */
+.custom-nav {
 	display: flex;
 	gap: 8px;
 	padding: 8px;
+}
+.workspace {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}
+.stage {
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
 }
 </style>

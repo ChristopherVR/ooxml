@@ -59,7 +59,7 @@ That shape only makes sense inside the component's composition; for standalone u
 
 The following hooks are exported from `pptx-react-viewer/viewer` and are opt-in and
 tree-shakeable. `useViewerBuildingBlocks` is also exported from the package root,
-alongside the standalone `Toolbar` and `SlideCanvas` components.
+alongside the standalone `Toolbar`, `SlideCanvas` and `SlidesPane` components.
 
 ```tsx
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
@@ -96,6 +96,38 @@ configured. Without it, the hook preserves existing host authorization, includin
 the host's edit permission and readiness; a connected transport alone does not grant
 permission to edit. `CollaborationContextValue` is available from the package root
 when the host needs to name the returned state type.
+
+### Slide thumbnail rail
+
+`slidesPaneProps` drives `SlidesPane`, the rail of slide thumbnails that `PowerPointViewer`
+shows beside the canvas. It lists every slide (grouped by section when the deck has sections)
+and highlights the active one; clicking a thumbnail moves the canvas there without marking the
+deck dirty. With `canEdit`, it also adds, duplicates, deletes, hides, reorders and groups slides
+through the same operations, undo history and collaboration sync as the full editor.
+
+```tsx
+import { SlideCanvas, SlidesPane, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';
+
+function Editor({ content }) {
+	const blocks = useViewerBuildingBlocks({ content, canEdit: true });
+	return (
+		<>
+			<Toolbar {...blocks.toolbarProps} />
+			<div style={{ display: 'flex', height: 600 }}>
+				<SlidesPane {...blocks.slidesPaneProps} />
+				<div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+					<SlideCanvas {...blocks.canvasProps} />
+				</div>
+			</div>
+		</>
+	);
+}
+```
+
+The rail's open state is the toolbar's sidebar toggle: collapsing either hides the rail. The
+"Layout" entry of a slide's context menu makes that slide active and calls the optional
+`onOpenLayoutGallery({ slideIndex, x, y })`, since these building blocks do not render the Layout
+gallery. `SlidesPane` needs the full `styles.css`, not `canvas.css`.
 
 ### Opening on a slide
 

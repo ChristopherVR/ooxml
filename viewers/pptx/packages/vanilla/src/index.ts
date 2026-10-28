@@ -105,6 +105,14 @@ export {
 	renderSlideStage,
 } from './viewer';
 
+// ── Slide thumbnail rail (place it beside your own `renderSlideStage` canvas) ─
+export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './viewer';
+export { createSlidesPane } from './viewer';
+// Lifts single-slide operations to the rail's multi-selection commands
+// (`onDuplicateSlides` / `onDeleteSlides` / `onHideSlides`).
+export { createSlidesPaneBulkSlideOps } from 'ooxml-ui/pptx';
+export type { SlidesPaneBulkSlideOps, SlidesPaneSingleSlideOps } from 'ooxml-ui/pptx';
+
 // ── Ribbon / chrome builder (buildable standalone against your own store) ─
 export type { Ribbon } from './viewer';
 export { createRibbon } from './viewer';

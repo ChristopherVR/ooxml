@@ -9,11 +9,13 @@ import type {
 import type React from 'react';
 
 import type { SlideCanvasProps } from '../components/canvas/canvas-types';
+import type { SlidesPaneSidebarProps } from '../components/slides-pane/types';
 import type { ToolbarProps } from '../components/toolbar/toolbar-types';
 import type { PowerPointViewerHandle } from '../types';
 import type { ViewerMode } from '../types-core';
 import type { CollaborationContextValue } from './collaboration/types';
 import type { AutosaveStatus } from './useAutosave';
+import type { SlidesPaneLayoutGalleryRequest } from './useViewerBuildingBlocks-slides-pane-props';
 
 export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	/** Optional collaboration, including a host-owned document and presence session. */
@@ -68,6 +70,12 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	onOpenHeaderFooter?: () => void;
 	/** Fired by the toolbar's "Share" button; the host owns rendering that dialog. */
 	onOpenShareDialog?: () => void;
+	/**
+	 * Fired by the "Layout" entry of a slide's context menu in `<SlidesPane>`,
+	 * after that slide is made active; the host owns rendering the Layout
+	 * gallery (for example anchored at the click point).
+	 */
+	onOpenLayoutGallery?: (request: SlidesPaneLayoutGalleryRequest) => void;
 }
 
 export interface ViewerBuildingBlocksResult {
@@ -84,6 +92,12 @@ export interface ViewerBuildingBlocksResult {
 	toolbarProps: ToolbarProps;
 	/** Flat, self-contained props for the standalone `<SlideCanvas>` component. */
 	canvasProps: SlideCanvasProps;
+	/**
+	 * Flat, self-contained props for the standalone `<SlidesPane>` component:
+	 * the slide thumbnail rail `PowerPointViewer` shows beside the canvas.
+	 * Its open state is the toolbar's sidebar toggle.
+	 */
+	slidesPaneProps: SlidesPaneSidebarProps;
 	/** Current viewer mode (edit, view, present, master). */
 	mode: ViewerMode;
 	/** True while the initial parse of `content` is in progress. */

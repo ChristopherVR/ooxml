@@ -94,12 +94,14 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 ## 表格内部接口 {#table-internals}
 
-| 导出项                            | 职责                                                     |
-| --------------------------------- | -------------------------------------------------------- |
-| `table-cell-style` 的导出         | 表格单元格样式解析。                                     |
-| `table-data-helpers` 的导出       | 表格行、列和单元格数据编辑辅助函数。                     |
-| `table-properties-helpers` 的导出 | 为 `TablePropertiesComponent` 提供支持的辅助函数。       |
-| `table-renderer-helpers` 的导出   | 为精选组件 `TableRendererComponent` 提供支持的辅助函数。 |
+| 导出项                            | 职责                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| `table-cell-style` 的导出         | 表格单元格样式解析。                                         |
+| `table-data-helpers` 的导出       | 表格行、列和单元格数据编辑辅助函数。                         |
+| `table-properties-helpers` 的导出 | 为 `TablePropertiesComponent` 提供支持的辅助函数。           |
+| `table-renderer-helpers` 的导出   | 为精选组件 `TableRendererComponent` 提供支持的辅助函数。     |
+| `table-style-context` 的导出      | `TABLE_STYLE_CONTEXT_OVERRIDE`，即某个子树的表格样式上下文。 |
+| `slides-panel-contexts` 的导出    | 缩略图栏的字段上下文和表格上下文。                           |
 
 ## 功能区（工具栏子分区） {#ribbon-toolbar-sub-sections}
 

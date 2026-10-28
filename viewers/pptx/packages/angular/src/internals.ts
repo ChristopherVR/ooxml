@@ -97,6 +97,8 @@ export * from './viewer/table-cell-style';
 export * from './viewer/table-data-helpers';
 export * from './viewer/table-properties-helpers';
 export * from './viewer/table-renderer-helpers';
+export * from './viewer/table-style-context';
+export * from './viewer/slides-panel-contexts';
 
 // ── Ribbon (toolbar sub-sections composed by RibbonComponent) ──
 // `RibbonComponent` itself is a curated export (see `viewer/index.ts` /

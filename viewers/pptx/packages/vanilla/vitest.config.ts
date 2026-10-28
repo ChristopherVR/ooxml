@@ -77,6 +77,7 @@ export default defineConfig({
 		testTimeout: 30_000,
 		projects: isolationProjects('vanilla', __dirname, 'happy-dom', [
 			'../../../../demos/pptx/demo-vanilla/src/host-owned-inline-editor.test.ts',
+			'../../../../demos/pptx/demo-vanilla/src/host-owned-slides-pane.test.ts',
 		]),
 		setupFiles: ['./src/web-controls.test-setup.ts'],
 	},

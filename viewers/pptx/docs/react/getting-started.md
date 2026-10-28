@@ -175,8 +175,8 @@ import 'pptx-react-viewer/canvas.css'; // instead of 'pptx-react-viewer/styles'
 ```
 
 It is built from the import graph of `SlideCanvas` and `useViewerBuildingBlocks`, so it is about
-46 KB (8 KB gzipped) against about 112 KB (16 KB gzipped) for `styles.css`. `<PowerPointViewer>`
-and `<Toolbar>` need the full `styles.css`.
+46 KB (8 KB gzipped) against about 112 KB (16 KB gzipped) for `styles.css`. `<PowerPointViewer>`,
+`<Toolbar>` and `<SlidesPane>` need the full `styles.css`.
 
 ## Next steps
 

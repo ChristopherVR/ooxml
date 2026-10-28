@@ -85,6 +85,7 @@ working. The tradeoffs are listed in [Limitations](/guide/limitations).
 | `PptxViewerSource`                                               | type     | `ArrayBuffer \| Uint8Array \| Blob \| string` (URL).                                       |
 | `ElementRenderer`, `ElementRendererRegistry`                     | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
 | `createDefaultRegistry`                                          | function | The default renderer registry (all built-in renderers pre-registered).                     |
+| `createSlidesPane`                                               | function | Slide thumbnail rail for a custom shell. See [API](/vanilla/api#slide-thumbnail-rail).     |
 | `getViewerCss`                                                   | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
 | `ViewerTheme`, `ViewerThemeColors`                               | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
 | `vermilionLightTheme`, `vermilionDarkTheme`                      | const    | Built-in vermilion light/dark presets.                                                     |

@@ -129,6 +129,84 @@ history.undo(); // reverts both, most recent first
 `pushHistory()` 保存的是**当前**状态，因此必须在提交修改之前运行。`useEditorOperations` 返回的操作会自动处理此顺序；只有自行修改 `slides` 时才需要手动调用 `pushHistory`。
 :::
 
+### 幻灯片缩略图栏 {#slide-thumbnail-rail}
+
+`SlidesPane`（从包根入口和 `pptx-vue-viewer/viewer` 导出）是 `PowerPointViewer` 在画布旁显示的幻灯片缩略图栏。它列出所有幻灯片（演示文稿包含节时归在节标题下）并突出显示当前幻灯片。它本身从不修改演示文稿：点击缩略图会发出 `select`；启用 `canEdit` 后，页脚、右键菜单、Enter 键和拖动重排会发出命令，由你映射到 `useSlideOperations` 和 `useSectionOperations`（同样从 `/viewer` 导出），因此它们共享你的撤销历史和协作同步。请传入 `useLoadContent` 提供的演示文稿属性，使缩略图像画布一样解析幻灯片编号、页眉页脚字段和表格样式。
+
+```vue
+<script setup lang="ts">
+import {
+	SlideCanvas,
+	SlidesPane,
+	useEditorHistory,
+	useLoadContent,
+	useSectionOperations,
+	useSlideOperations,
+} from 'pptx-vue-viewer/viewer';
+import { ref } from 'vue';
+import 'pptx-vue-viewer/styles';
+
+const props = defineProps<{ bytes: ArrayBuffer | null }>();
+const deck = useLoadContent(() => props.bytes);
+const { slides, templateElementsBySlideId } = deck;
+const active = ref(0);
+const history = useEditorHistory(slides);
+const slideOps = useSlideOperations({
+	slides,
+	activeSlideIndex: active,
+	pushHistory: history.pushHistory,
+	templateElementsBySlideId,
+});
+const sectionOps = useSectionOperations({
+	sections: deck.sections,
+	slides,
+	activeSlideIndex: active,
+	pushHistory: history.pushHistory,
+});
+</script>
+
+<template>
+	<div style="display: flex; height: 600px">
+		<SlidesPane
+			:slides="slides"
+			:template-elements-by-slide-id="templateElementsBySlideId"
+			:active-slide-index="active"
+			:canvas-size="deck.canvasSize.value"
+			:media-data-urls="deck.mediaDataUrls.value"
+			:section-groups="sectionOps.slidesBySection.value"
+			:header-footer="deck.headerFooter.value"
+			:custom-properties="deck.customProperties.value"
+			:first-slide-number="deck.firstSlideNumber.value"
+			:theme="deck.theme.value"
+			:table-style-map="deck.tableStyleMap.value"
+			can-edit
+			@select="active = $event"
+			@add-slide="slideOps.addSlide()"
+			@add-slide-after="slideOps.addSlide"
+			@move-slide="slideOps.moveSlide"
+			@duplicate-slide="slideOps.duplicateSlide"
+			@delete-slide="slideOps.deleteSlide"
+			@add-section="sectionOps.addSection"
+			@rename-section="sectionOps.renameSection"
+			@delete-section="sectionOps.deleteSection"
+			@move-section-up="sectionOps.moveSectionUp"
+			@move-section-down="sectionOps.moveSectionDown"
+			@toggle-section-collapse="sectionOps.toggleSectionCollapse"
+		/>
+		<div style="flex: 1; min-width: 0; position: relative">
+			<SlideCanvas
+				:slide="slides[active]"
+				:canvas-size="deck.canvasSize.value"
+				:media-data-urls="deck.mediaDataUrls.value"
+				:template-elements="templateElementsBySlideId[slides[active]?.id ?? '']"
+			/>
+		</div>
+	</div>
+</template>
+```
+
+多张幻灯片的命令会为每张选中的幻灯片各发出一个 `duplicate-slide`、`delete-slide` 或 `toggle-slide-hidden` 事件，按索引从高到低的顺序，因此每个副本都会紧跟在其源幻灯片之后。幻灯片右键菜单中的“版式”项会先为该幻灯片发出 `select`，再携带 `{ slideIndex, x, y }`（点击位置）发出 `open-layout-gallery`，供你渲染自己的版式库。未启用 `canEdit` 时，缩略图栏只用于导航，不显示“添加幻灯片”页脚。`SlidesPane` 需要完整的 `pptx-vue-viewer/styles` 样式表。
+
 ### `useCollaboration` {#usecollaboration}
 
 `useCollaboration` 可以在不使用查看器组件的情况下管理 Yjs 会话、在线状态、光标和选定写入者同步。完整说明请参见[实时协作](/zh/vue/collaboration)。

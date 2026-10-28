@@ -1,6 +1,7 @@
 import {
 	describeCollaborationShellState,
 	SlideCanvas,
+	SlidesPane,
 	Toolbar,
 	useViewerBuildingBlocks,
 } from 'pptx-react-viewer';
@@ -51,16 +52,20 @@ export const HostOwnedHeadlessEditor = forwardRef<
 				</output>
 				<Toolbar {...blocks.toolbarProps} />
 				{blocks.error && <p role='alert'>{blocks.error}</p>}
-				<div
-					style={{
-						flex: 1,
-						minHeight: 0,
-						position: 'relative',
-						display: 'flex',
-						flexDirection: 'column',
-					}}
-				>
-					<SlideCanvas {...blocks.canvasProps} />
+				<div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+					<SlidesPane {...blocks.slidesPaneProps} />
+					<div
+						style={{
+							flex: 1,
+							minWidth: 0,
+							minHeight: 0,
+							position: 'relative',
+							display: 'flex',
+							flexDirection: 'column',
+						}}
+					>
+						<SlideCanvas {...blocks.canvasProps} />
+					</div>
 				</div>
 			</section>
 		);

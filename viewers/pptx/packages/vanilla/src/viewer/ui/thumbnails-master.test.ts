@@ -57,7 +57,7 @@ describe('master thumbnail rail', () => {
 
 		rail.setActive(80);
 		expect(rail.el.querySelector('[data-slide-index="80"]')?.getAttribute('aria-current')).toBe(
-			'page',
+			'true',
 		);
 	});
 

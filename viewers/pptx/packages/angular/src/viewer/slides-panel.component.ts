@@ -19,45 +19,94 @@ import {
 	EDITOR_THUMBNAIL_WIDTH,
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
+	groupSlidesBySection,
 	HIDDEN_SLIDE_DIM_OPACITY,
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
+	openSlidesPaneLayoutGallery,
 	sectionAddAfterSlideIndex,
 	SLIDE_VIRTUALIZATION_THRESHOLD,
 } from 'ooxml-ui/pptx';
-import type { CanvasSize, HiddenSlideCue, SectionContextMenuCommandId } from 'ooxml-ui/pptx';
+import type {
+	CanvasSize,
+	HiddenSlideCue,
+	SectionContextMenuCommandId,
+	SlidesPaneLayoutGalleryRequest,
+} from 'ooxml-ui/pptx';
+import type {
+	ParsedTableStyleMap,
+	PptxCustomProperty,
+	PptxHeaderFooter,
+	PptxSection,
+	PptxSlide,
+	PptxTheme,
+} from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
+import { FieldContextService } from './field-context.service';
+import { LoadContentService } from './load-content.service';
 import { SectionContextMenuComponent } from './section-context-menu.component';
 import { SlideCanvasComponent } from './slide-canvas.component';
 import { SlidePaneContextMenuComponent } from './slide-pane-context-menu.component';
 import { SlidePaneRailSelection } from './slide-pane-rail-selection';
 import { thumbnailHeight, thumbnailZoom } from './slide-sorter-overlay-helpers';
+import { createSlidesPanelContexts } from './slides-panel-contexts';
+import { TABLE_STYLE_CONTEXT_OVERRIDE } from './table-style-context';
+import type { TemplateElementsBySlideId } from './template-mode';
 
 /** Pixel width of each thumbnail clipping box inside the panel. Slightly
  *  narrower than the panel so the slide-number column fits to its left
  *  (React SlideItem lays the number beside, not below, the preview). */
 const THUMB_W = EDITOR_THUMBNAIL_WIDTH;
 
+/** A slide reorder from the rail's drag and drop. */
+export interface SlidesPanelMoveSlide {
+	fromIndex: number;
+	toIndex: number;
+}
+
+/** A section rename committed in the rail's section header. */
+export interface SlidesPanelRenameSection {
+	sectionId: string;
+	name: string;
+}
+
 /**
- * SlidesPanelComponent: vertical slide-strip for the editor sidebar.
+ * SlidesPanelComponent: the slide thumbnail rail (vertical slide strip).
  *
- * Renders the live editable deck (from {@link EditorStateService}) as a
- * scrollable vertical list of numbered thumbnail cards. Clicking a card emits
- * `select(index)`; the active card is highlighted. Slide commands live on the
- * shared thumbnail right-click menu and cards reorder by drag and drop; section
- * commands live on the shared section-header menu. A footer "＋ Add slide"
- * button, the rail's one persistent action, appends a blank slide after the
- * current `activeIndex`.
+ * Lists every slide as a numbered thumbnail (grouped by section when the deck
+ * has sections) and highlights the active one. Clicking a card emits
+ * `select(index)`. Slide commands live on the shared thumbnail right-click
+ * menu, cards reorder by drag and drop, section commands live on the shared
+ * section-header menu, and a footer "Add Slide" button adds a slide after the
+ * active one. Thumbnails render through `SlideCanvasComponent` with the same
+ * field and table style contexts as the canvas, so slide numbers (including
+ * `p:presentation/@firstSlideNum`), header/footer text and table colours match.
  *
- * Usage:
+ * It runs in one of two modes:
+ *
+ * - **Host-driven** (a custom shell; set `[slides]`): the rail renders only its
+ *   inputs and never edits state itself. Every command is an output, so the host
+ *   applies it through its own operations (for the viewer services, see
+ *   `createSlidesPanelEditorCommands`). The context menu's Layout entry makes
+ *   the slide active (`select`) and emits `openLayoutGallery`.
+ * - **Editor-bound** (inside `PowerPointViewerComponent`; `[slides]` unset): the
+ *   rail reads the enclosing `EditorStateService` and applies reorder, the footer
+ *   add and section commands to it directly, as it always has.
+ *
+ * Host-driven usage beside a canvas (both under `POWER_POINT_VIEWER_PROVIDERS`):
  * ```html
  * <pptx-slides-panel
- *   [canvasSize]="loader.canvasSize()"
- *   [mediaDataUrls]="loader.mediaDataUrls()"
- *   [activeIndex]="activeSlideIndex()"
- *   (select)="goTo($event)"
+ *   [slides]="shell.editor.slides()"
+ *   [templateElementsBySlideId]="shell.editor.templateElementsBySlideId()"
+ *   [sections]="shell.editor.sections()"
+ *   [canvasSize]="shell.loader.canvasSize()"
+ *   [mediaDataUrls]="shell.loader.mediaDataUrls()"
+ *   [activeIndex]="shell.activeSlideIndex()"
+ *   [canEdit]="shell.canEdit()"
+ *   (select)="shell.activeSlideIndex.set($event)"
+ *   (addSlide)="commands.addSlideAfter($event)"
  * />
  * ```
  */
@@ -73,38 +122,149 @@ const THUMB_W = EDITOR_THUMBNAIL_WIDTH;
 		TranslatePipe,
 		LucidePlus,
 	],
+	// The thumbnails resolve fields and table styles from the rail's own
+	// contexts (host inputs, else the deck loader), never from the active slide.
+	viewProviders: [
+		{
+			provide: FieldContextService,
+			useFactory: () => inject(SlidesPanelComponent).thumbnailContexts.fields,
+		},
+		{
+			provide: TABLE_STYLE_CONTEXT_OVERRIDE,
+			useFactory: () => inject(SlidesPanelComponent).thumbnailContexts.tableStyle,
+		},
+	],
 	templateUrl: './slides-panel.component.html',
 	styleUrl: './slides-panel.component.css',
 })
 export class SlidesPanelComponent {
 	readonly railWidth = EDITOR_SLIDE_RAIL_WIDTH;
-	/** Natural (100 %) canvas dimensions, forwarded to each SlideCanvasComponent. */
+
+	// ── Deck inputs ───────────────────────────────────────────────────────────
+
+	/**
+	 * The slides to list, in deck order, without their inherited layout and
+	 * master elements (pass those through {@link templateElementsBySlideId}).
+	 * Setting this makes the rail host-driven: it renders these inputs and emits
+	 * every command instead of editing the enclosing `EditorStateService`.
+	 */
+	readonly slides = input<readonly PptxSlide[] | undefined>(undefined);
+	/**
+	 * Inherited layout and master elements keyed by slide id, drawn behind each
+	 * thumbnail's own elements exactly as the canvas draws them. Falls back to the
+	 * enclosing `EditorStateService` when unset.
+	 */
+	readonly templateElementsBySlideId = input<TemplateElementsBySlideId | undefined>(undefined);
+	/**
+	 * The deck's sections. When any exist the rail groups the thumbnails under
+	 * collapsible section headers. Host-driven rails default to none; editor-bound
+	 * rails read the enclosing `EditorStateService`.
+	 */
+	readonly sections = input<readonly PptxSection[] | undefined>(undefined);
+	/** Natural (100 %) canvas dimensions, forwarded to each thumbnail canvas. */
 	readonly canvasSize = input.required<CanvasSize>();
-
-	/** Media asset lookup table, forwarded to each SlideCanvasComponent. */
+	/** Media asset lookup table (package path to data URL), forwarded to each thumbnail. */
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
-
-	/** Zero-based index of the currently active slide (highlighted in blue). */
+	/** Zero-based index of the currently active slide (highlighted, `aria-current`). */
 	readonly activeIndex = input<number>(0);
+	/**
+	 * Whether the deck can be edited. When false the rail only navigates: no
+	 * footer, context menus, drag reorder, Enter-to-add or section rename.
+	 */
+	readonly canEdit = input<boolean>(true);
 
-	/** Emits the zero-based index of the card the user clicked. */
+	// ── Thumbnail contexts (each falls back to the enclosing deck loader) ────
+
+	/** Deck header/footer settings for date, footer and header fields. */
+	readonly headerFooter = input<PptxHeaderFooter | undefined>(undefined);
+	/** Custom document properties for `docproperty` fields. */
+	readonly customProperties = input<readonly PptxCustomProperty[] | undefined>(undefined);
+	/** `p:presentation/@firstSlideNum`: the number slide 1 shows (1 when unset). */
+	readonly firstSlideNumber = input<number | undefined>(undefined);
+	/** Locale for date and time fields (the browser default when unset). */
+	readonly locale = input<string | undefined>(undefined);
+	/** Deck theme, for table style colours and fonts. */
+	readonly theme = input<PptxTheme | undefined>(undefined);
+	/** Parsed `ppt/tableStyles.xml`, for table banding. */
+	readonly tableStyleMap = input<ParsedTableStyleMap | undefined>(undefined);
+
+	// ── Outputs ───────────────────────────────────────────────────────────────
+
+	/** Emits the zero-based index of the card the user clicked (navigation only; no edit). */
 	readonly select = output<number>();
 	/** Insert a new slide after `index` (thumbnail menu's New Slide, and Enter on the panel). */
 	readonly addSlideAfter = output<number>();
+	/** Duplicate every listed slide (the rail's whole multi-selection). */
 	readonly duplicateSlides = output<number[]>();
+	/** Delete every listed slide (the rail's whole multi-selection). */
 	readonly deleteSlides = output<number[]>();
+	/** Toggle the hidden flag of every listed slide. */
 	readonly toggleHideSlides = output<number[]>();
-	/** Makes `index` active, then opens the Layout gallery anchored at (x, y). */
-	readonly openLayoutForSlide = output<{ index: number; x: number; y: number }>();
+	/** Add a section starting after slide `index`. */
 	readonly addSectionAt = output<number>();
+	/**
+	 * Editor-bound rails only: makes `index` active, then opens the Layout
+	 * gallery at (x, y). Host-driven rails emit `select` and
+	 * {@link openLayoutGallery} instead.
+	 */
+	readonly openLayoutForSlide = output<{ index: number; x: number; y: number }>();
+	/**
+	 * Host-driven rails: the context menu's Layout entry. The rail first emits
+	 * `select(slideIndex)`, then this request so the host can open its own Layout
+	 * gallery anchored at the click point.
+	 */
+	readonly openLayoutGallery = output<SlidesPaneLayoutGalleryRequest>();
+	/** Host-driven rails: the footer's Add Slide button; carries the active index to add after. */
+	readonly addSlide = output<number>();
+	/** Host-driven rails: a drag-and-drop reorder. */
+	readonly moveSlide = output<SlidesPanelMoveSlide>();
+	/** Host-driven rails: a section rename committed in its header. */
+	readonly renameSection = output<SlidesPanelRenameSection>();
+	/** Host-driven rails: delete the section with this id (its slides stay). */
+	readonly deleteSection = output<string>();
+	/** Host-driven rails: move the section with this id up one place. */
+	readonly moveSectionUp = output<string>();
+	/** Host-driven rails: move the section with this id down one place. */
+	readonly moveSectionDown = output<string>();
+	/** Host-driven rails: collapse or expand the section with this id. */
+	readonly toggleSectionCollapse = output<string>();
 
 	/** Ctrl/Shift multi-select + the thumbnail context menu's open state. */
 	protected readonly rail = new SlidePaneRailSelection();
 
-	protected readonly editor = inject(EditorStateService);
+	/** The viewer's editor state; required only by an editor-bound rail. */
+	protected readonly editor = inject(EditorStateService, { optional: true });
+	private readonly loader = inject(LoadContentService, { optional: true });
+	/** Field and table style contexts the thumbnails are rendered with. */
+	readonly thumbnailContexts = createSlidesPanelContexts(
+		{
+			headerFooter: this.headerFooter,
+			customProperties: this.customProperties,
+			firstSlideNumber: this.firstSlideNumber,
+			locale: this.locale,
+			theme: this.theme,
+			tableStyleMap: this.tableStyleMap,
+		},
+		this.loader,
+	);
 	private readonly scrollViewport = viewChild<ElementRef<HTMLElement>>('scrollViewport');
 	private readonly scrollTop = signal(0);
 	private readonly viewportHeight = signal(600);
+
+	// ── Resolved deck (inputs, else the enclosing editor) ────────────────────
+
+	/** True when the host drives the rail through `[slides]`. */
+	readonly hostDriven = computed(() => this.slides() !== undefined);
+	readonly deck = computed<readonly PptxSlide[]>(
+		() => this.slides() ?? this.editor?.slides() ?? [],
+	);
+	readonly templateMap = computed<TemplateElementsBySlideId>(
+		() => this.templateElementsBySlideId() ?? this.editor?.templateElementsBySlideId() ?? {},
+	);
+	readonly sectionList = computed<readonly PptxSection[]>(
+		() => this.sections() ?? (this.hostDriven() ? [] : this.editor?.sections()) ?? [],
+	);
+	readonly sectionGroups = computed(() => groupSlidesBySection(this.sectionList(), this.deck()));
 
 	// ── Derived thumbnail dimensions ──────────────────────────────────────────
 
@@ -126,22 +286,20 @@ export class SlidesPanelComponent {
 		editorThumbnailStep(this.canvasSize().width, this.canvasSize().height),
 	);
 	readonly shouldVirtualize = computed(
-		() =>
-			this.editor.sections().length === 0 &&
-			this.editor.slides().length >= SLIDE_VIRTUALIZATION_THRESHOLD,
+		() => this.sectionList().length === 0 && this.deck().length >= SLIDE_VIRTUALIZATION_THRESHOLD,
 	);
 	readonly virtualRange = computed(() =>
 		computeVirtualRange(
-			this.editor.slides().length,
+			this.deck().length,
 			this.itemHeight(),
 			this.scrollTop(),
 			this.viewportHeight(),
 		),
 	);
 	readonly renderedSlides = computed(() => {
-		const slides = this.editor.slides();
-		if (this.editor.sections().length > 0) {
-			return this.editor.sectionGroups().flatMap((group) =>
+		const slides = this.deck();
+		if (this.sectionList().length > 0) {
+			return this.sectionGroups().flatMap((group) =>
 				group.slides.map((slide, offset) => ({
 					slide,
 					index: group.slideIndexes[offset],
@@ -191,12 +349,14 @@ export class SlidesPanelComponent {
 		this.viewportHeight.set(viewport.clientHeight || 600);
 	}
 
-	// ── Event handlers ────────────────────────────────────────────────────────
-
 	// ── Drag-to-reorder (the rail's reorder path; there are no per-card buttons) ──
 	private dragFrom: number | null = null;
 
 	onDragStart(event: DragEvent, index: number): void {
+		if (!this.canEdit()) {
+			event.preventDefault();
+			return;
+		}
 		this.dragFrom = index;
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
@@ -208,19 +368,28 @@ export class SlidesPanelComponent {
 		event.preventDefault();
 		const from = this.dragFrom;
 		this.dragFrom = null;
-		if (from !== null && from !== index) {
-			this.editor.moveSlide(from, index);
+		if (from === null || from === index || !this.canEdit()) {
+			return;
+		}
+		if (this.hostDriven()) {
+			this.moveSlide.emit({ fromIndex: from, toIndex: index });
+		} else {
+			this.editor?.moveSlide(from, index);
 		}
 	}
 
 	onAddSlide(): void {
-		this.editor.addSlide(this.activeIndex());
+		if (this.hostDriven()) {
+			this.addSlide.emit(this.activeIndex());
+		} else {
+			this.editor?.addSlide(this.activeIndex());
+		}
 	}
 
 	/** A click (even a Ctrl/Shift one) both updates the multi-selection AND
 	 * moves the canvas to the slide clicked, matching the sorter overlay. */
 	onThumbClick(event: MouseEvent, index: number): void {
-		const slide = this.editor.slides()[index];
+		const slide = this.deck()[index];
 		if (slide) {
 			this.rail.onClick(event, slide.id, this.orderedIds());
 		}
@@ -229,14 +398,29 @@ export class SlidesPanelComponent {
 
 	onThumbContextMenu(event: MouseEvent, index: number): void {
 		event.preventDefault();
-		this.rail.openContextMenu(event.clientX, event.clientY, index, this.orderedIds());
+		if (this.canEdit()) {
+			this.rail.openContextMenu(event.clientX, event.clientY, index, this.orderedIds());
+		}
+	}
+
+	/** The thumbnail menu's Layout entry (see {@link openLayoutGallery}). */
+	onOpenLayout(request: { index: number; x: number; y: number }): void {
+		if (!this.hostDriven()) {
+			this.openLayoutForSlide.emit(request);
+			return;
+		}
+		openSlidesPaneLayoutGallery(
+			{ slideIndex: request.index, x: request.x, y: request.y },
+			(index) => this.select.emit(index),
+			(gallery) => this.openLayoutGallery.emit(gallery),
+		);
 	}
 
 	/** PowerPoint's Enter on a focused thumbnail inserts a new slide after it. */
 	@HostListener('keydown.enter', ['$event'])
 	onPanelKeydown(event: Event): void {
 		const target = event.target;
-		if (target instanceof HTMLElement && target.tagName === 'INPUT') {
+		if (!this.canEdit() || (target instanceof HTMLElement && target.tagName === 'INPUT')) {
 			return;
 		}
 		event.preventDefault();
@@ -244,7 +428,7 @@ export class SlidesPanelComponent {
 	}
 
 	private orderedIds(): string[] {
-		return this.editor.slides().map((s) => s.id);
+		return this.deck().map((s) => s.id);
 	}
 
 	// ── Section header menu + inline rename ──
@@ -256,11 +440,13 @@ export class SlidesPanelComponent {
 
 	onSectionContextMenu(event: MouseEvent, sectionId: string): void {
 		event.preventDefault();
-		this.sectionMenu.set({ x: event.clientX, y: event.clientY, sectionId });
+		if (this.canEdit()) {
+			this.sectionMenu.set({ x: event.clientX, y: event.clientY, sectionId });
+		}
 	}
 
 	onSectionCommand(id: SectionContextMenuCommandId, sectionId: string): void {
-		const section = this.editor.sections().find((candidate) => candidate.id === sectionId);
+		const section = this.sectionList().find((candidate) => candidate.id === sectionId);
 		if (!section) {
 			return;
 		}
@@ -269,20 +455,22 @@ export class SlidesPanelComponent {
 				this.startRenameSection(sectionId, section.name);
 				break;
 			case 'delete':
-				this.editor.sectionOps.delete(sectionId);
+				if (this.hostDriven()) {
+					this.deleteSection.emit(sectionId);
+				} else {
+					this.editor?.sectionOps.delete(sectionId);
+				}
 				break;
 			case 'move-up':
-				this.editor.sectionOps.move(sectionId, 'up');
-				break;
 			case 'move-down':
-				this.editor.sectionOps.move(sectionId, 'down');
+				this.moveSection(sectionId, id === 'move-up' ? 'up' : 'down');
 				break;
 			case 'add-after': {
-				const group = this.editor.sectionGroups().find((g) => g.section?.id === sectionId);
+				const group = this.sectionGroups().find((g) => g.section?.id === sectionId);
 				this.addSectionAt.emit(
 					sectionAddAfterSlideIndex(
 						group?.slideIndexes[group.slideIndexes.length - 1],
-						this.editor.slides().length,
+						this.deck().length,
 					),
 				);
 				break;
@@ -292,7 +480,29 @@ export class SlidesPanelComponent {
 		}
 	}
 
+	private moveSection(sectionId: string, direction: 'up' | 'down'): void {
+		if (!this.hostDriven()) {
+			this.editor?.sectionOps.move(sectionId, direction);
+		} else if (direction === 'up') {
+			this.moveSectionUp.emit(sectionId);
+		} else {
+			this.moveSectionDown.emit(sectionId);
+		}
+	}
+
+	/** The section header's collapse toggle. */
+	onToggleSection(sectionId: string): void {
+		if (this.hostDriven()) {
+			this.toggleSectionCollapse.emit(sectionId);
+		} else {
+			this.editor?.sectionOps.toggle(sectionId);
+		}
+	}
+
 	startRenameSection(sectionId: string, currentName: string): void {
+		if (!this.canEdit()) {
+			return;
+		}
 		this.renamingSectionId.set(sectionId);
 		this.renameValue.set(currentName);
 		setTimeout(() => {
@@ -309,8 +519,13 @@ export class SlidesPanelComponent {
 		}
 		const name = this.renameValue().trim();
 		this.renamingSectionId.set(null);
-		if (name.length > 0) {
-			this.editor.sectionOps.rename(id, name);
+		if (name.length === 0) {
+			return;
+		}
+		if (this.hostDriven()) {
+			this.renameSection.emit({ sectionId: id, name });
+		} else {
+			this.editor?.sectionOps.rename(id, name);
 		}
 	}
 
@@ -326,7 +541,7 @@ export class SlidesPanelComponent {
 	}
 
 	sectionIndex(sectionId: string): number {
-		return this.editor.sections().findIndex((section) => section.id === sectionId);
+		return this.sectionList().findIndex((section) => section.id === sectionId);
 	}
 
 	/** Dictionary key for the word shown and announced on a hidden slide's card. */

@@ -252,6 +252,56 @@ framework-free state helpers (`ViewerState`, `PresentationLoader`, `clampSlideIn
 custom chrome on the same primitives. These are lower-level than the component API and not
 needed for typical embedding.
 
+### Slide thumbnail rail
+
+`SlidesPane` is the rail of slide thumbnails that `PowerPointViewer` shows beside the canvas,
+for a custom shell built on `createViewerState` and `SlideCanvas` (see
+[Collaboration](/svelte/collaboration#custom-host-chrome)). It lists every slide (grouped by section
+when the deck has sections) and highlights the active one; clicking a thumbnail moves the canvas
+there without marking the deck dirty. With `canEdit`, it also adds, duplicates, deletes, hides,
+reorders and groups slides (Ctrl/Shift click selects several) through the same operations, undo
+history and collaboration sync as the full editor. `createSlidesPaneProps(state)` builds its
+props from the viewer state, as live getters; spread them as they are.
+
+```svelte
+<script lang="ts">
+	import {
+		createSlidesPaneProps,
+		createViewerState,
+		SlideCanvas,
+		SlidesPane,
+	} from 'pptx-svelte-viewer/viewer';
+
+	const state = createViewerState(viewerOptions);
+	const paneProps = createSlidesPaneProps(state, {
+		onopenlayoutgallery: ({ slideIndex, x, y }) => openMyLayoutGallery(slideIndex, x, y),
+	});
+</script>
+
+<div style="display: flex; height: 600px">
+	<SlidesPane {...paneProps} />
+	<SlideCanvas
+		slide={state.activeSlide}
+		canvasSize={state.loader.canvasSize}
+		mediaDataUrls={state.loader.mediaDataUrls}
+		scale={state.scale}
+	/>
+</div>
+```
+
+The props are flat, so a host can also drive the rail from its own state: `slides` (with layout
+and master elements merged, as the canvas draws them), `activeSlideIndex`, `canvasSize`,
+`mediaDataUrls`, `sections`, `canEdit`, the `onselectslide` / `onmoveslide` / `onaddslide` /
+`onaddslideafter` / `onduplicateslides` / `ondeleteslides` / `onhideslides` and section
+callbacks, and the `fieldContext` and `tableStyleContext` built with
+`buildSlidesPaneFieldContext` and `buildSlidesPaneTableStyleContext` from `ooxml-ui/pptx`, so
+thumbnails substitute fields (including slide numbers on a deck that does not start at 1) and
+table colours as the canvas does. The "Layout" entry of a slide's context menu makes that slide
+active and calls the optional `onopenlayoutgallery({ slideIndex, x, y })`, since these building
+blocks do not render the Layout gallery. The rail has no collapse control of its own: render it
+conditionally to hide it. `SlidesPane` is also exported from the package root, and needs
+`pptx-svelte-viewer/styles.css`.
+
 ### `pptx-svelte-viewer/internals`: slide-transition helpers
 
 The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private

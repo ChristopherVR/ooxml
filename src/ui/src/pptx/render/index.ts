@@ -707,6 +707,7 @@ export * from './text-field-substitution';
 // resolves field runs from the same inputs (and a thumbnail can re-point the
 // deck context at its own slide).
 export * from './field-context';
+export * from './slides-pane-model';
 export * from './text-fill';
 export * from './text-effects';
 export * from './text-effects-3d';

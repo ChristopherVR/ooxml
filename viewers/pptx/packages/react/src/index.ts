@@ -5,17 +5,30 @@ export type { PowerPointViewerProps, PowerPointViewerHandle } from './viewer/Pow
 export type { ViewerLoadDetail } from './viewer/hooks/useLoadNotifications';
 
 // ── Building blocks: compose a custom viewer shell from standalone pieces ──
-// `Toolbar` and `SlideCanvas` are the same flat, self-contained components
-// `PowerPointViewer` renders internally. `useViewerBuildingBlocks` wires up
-// the same state/hooks `PowerPointViewer` does and maps them into the flat
-// props these components expect, so a host can compose its own shell:
+// `Toolbar`, `SlideCanvas` and `SlidesPane` (the slide thumbnail rail) are the
+// same flat, self-contained components `PowerPointViewer` renders internally.
+// `useViewerBuildingBlocks` wires up the same state and hooks `PowerPointViewer`
+// does and maps them into the flat props these components expect, so a host
+// can compose its own shell:
 //
-//   const { toolbarProps, canvasProps } = useViewerBuildingBlocks({ content, canEdit: true });
-//   return (<><Toolbar {...toolbarProps} /><SlideCanvas {...canvasProps} /></>);
+//   const { toolbarProps, canvasProps, slidesPaneProps } = useViewerBuildingBlocks({
+//     content,
+//     canEdit: true,
+//   });
+//   return (
+//     <>
+//       <Toolbar {...toolbarProps} />
+//       <SlidesPane {...slidesPaneProps} />
+//       <SlideCanvas {...canvasProps} />
+//     </>
+//   );
 export { Toolbar } from './viewer/components/Toolbar';
 export type { ToolbarProps } from './viewer/components/Toolbar';
 export { SlideCanvas } from './viewer/components/SlideCanvas';
 export type { SlideCanvasProps } from './viewer/components/SlideCanvas';
+export { SlidesPaneSidebar as SlidesPane } from './viewer/components/SlidesPaneSidebar';
+export type { SlidesPaneSidebarProps as SlidesPaneProps } from './viewer/components/SlidesPaneSidebar';
+export type { SlidesPaneLayoutGalleryRequest } from './viewer/hooks/useViewerBuildingBlocks-slides-pane-props';
 export { useViewerBuildingBlocks } from './viewer/hooks/useViewerBuildingBlocks';
 export type {
 	UseViewerBuildingBlocksInput,

@@ -19,10 +19,24 @@ import type { ThumbnailContextMenuState } from './thumbnail-rail-menu';
 
 export interface ThumbnailContextMenuDeps {
 	doc: Document;
-	store: Store<ViewerState>;
+	/**
+	 * The viewer store, for the built-in "Layout" list. Optional for a rail
+	 * composed outside the viewer, which sets `openLayout` instead.
+	 */
+	store?: Store<ViewerState>;
 	getTranslator(): Translator;
-	/** For "Layout" (`applyLayout`) and "Add Section" (`sections.addSection`). */
-	getEditActions(): EditActions;
+	/**
+	 * For "Layout" (`applyLayout`) and "Add Section" (`sections.addSection`).
+	 * Optional when `openLayout` and `addSection` are both set.
+	 */
+	getEditActions?(): EditActions;
+	/**
+	 * Handle the "Layout" entry for `index` at the click point instead of the
+	 * built-in layout list (a host-rendered Layout gallery).
+	 */
+	openLayout?(index: number, x: number, y: number): void;
+	/** Handle "Add Section" instead of `getEditActions().sections.addSection`. */
+	addSection?(name: string, afterSlideIndex: number): void;
 	/** Insert a new slide after the right-clicked one. */
 	addSlideAfter(index: number): void;
 	duplicateSlides(indexes: number[]): void;
@@ -55,6 +69,11 @@ export function createThumbnailContextMenu(deps: ThumbnailContextMenuDeps): Thum
 	/** "Layout": a plain named list of the deck's layouts, applied to `index`. */
 	const openLayoutList = (index: number, x: number, y: number): void => {
 		layoutPopup?.close();
+		if (deps.openLayout || !store) {
+			close();
+			deps.openLayout?.(index, x, y);
+			return;
+		}
 		layoutPopup = mountContextMenuSurface({
 			doc,
 			parent: parent(),
@@ -70,7 +89,7 @@ export function createThumbnailContextMenu(deps: ThumbnailContextMenuDeps): Thum
 			onRequest: (path) => {
 				close();
 				store.set({ currentSlide: index });
-				deps.getEditActions().applyLayout(path);
+				deps.getEditActions?.().applyLayout(path);
 			},
 			onClose: close,
 		});
@@ -99,12 +118,16 @@ export function createThumbnailContextMenu(deps: ThumbnailContextMenuDeps): Thum
 				close();
 				deps.toggleHideSlides(state.selectedIndexes);
 				break;
-			case 'add-section':
+			case 'add-section': {
 				close();
-				deps
-					.getEditActions()
-					.sections.addSection(deps.getTranslator()('pptx.sections.defaultName'), state.index);
+				const name = deps.getTranslator()('pptx.sections.defaultName');
+				if (deps.addSection) {
+					deps.addSection(name, state.index);
+				} else {
+					deps.getEditActions?.().sections.addSection(name, state.index);
+				}
 				break;
+			}
 			default:
 				close();
 		}

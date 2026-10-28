@@ -34,6 +34,7 @@ import {
 import type { CellParagraph, TableRowViewModel } from './table-renderer-helpers';
 import { TableResizeOverlayComponent } from './table-resize-overlay.component';
 import { TableSelectionService } from './table-selection.service';
+import { TABLE_STYLE_CONTEXT_OVERRIDE } from './table-style-context';
 
 /** A committed table-cell text edit (original grid coordinates + new text). */
 export interface TableCellCommit {
@@ -135,6 +136,8 @@ export class TableRendererComponent {
 	 * thumbnail/export renderers, where the hardcoded defaults are used.
 	 */
 	private readonly loader = inject(LoadContentService, { optional: true });
+	/** A surface's own table style context (the thumbnail rail's), preferred over the loader's. */
+	private readonly styleOverride = inject(TABLE_STYLE_CONTEXT_OVERRIDE, { optional: true });
 
 	/** The table element to render. Must be `type === 'table'`. */
 	readonly element = input.required<PptxElement>();
@@ -173,11 +176,14 @@ export class TableRendererComponent {
 	 * deck loader, or `undefined` outside the viewer subtree. `fontScheme` lets a
 	 * table style's `a:fontRef@idx` resolve to a concrete font family.
 	 */
-	private readonly styleCtx = computed<TableStyleContext | undefined>(() =>
-		this.loader
+	private readonly styleCtx = computed<TableStyleContext | undefined>(() => {
+		if (this.styleOverride) {
+			return this.styleOverride();
+		}
+		return this.loader
 			? tableStyleContextFor(this.loader.tableStyleMap(), this.loader.theme())
-			: undefined,
-	);
+			: undefined;
+	});
 
 	/** Projected view-model rows with merged-cell resolution + banding applied. */
 	readonly rows = computed<TableRowViewModel[]>(() =>

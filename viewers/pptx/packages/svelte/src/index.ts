@@ -18,6 +18,17 @@ export { describeCollaborationShellState } from 'ooxml-ui/pptx';
  * system (types, defaults, CSS-variable helpers, Vermilion presets).
  */
 export { PowerPointViewer } from './viewer/component';
+// The slide thumbnail rail, for a host composing its own shell beside
+// `SlideCanvas` (also exported, with the other building blocks, from
+// `pptx-svelte-viewer/viewer`).
+export { SlidesPane } from './viewer/components/typed-exports';
+export { createSlidesPaneProps } from './viewer/components/slides-pane-props';
+export type {
+	CreateSlidesPanePropsOptions,
+	SlidesPaneLayoutGalleryRequest,
+	SlidesPaneProps,
+	SlidesPaneTableStyleContext,
+} from './viewer/components/slides-pane-props';
 export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
 export { createImageElementFromFile } from 'ooxml-ui/pptx';
 export type {

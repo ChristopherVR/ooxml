@@ -11,6 +11,8 @@ import type { EditorLayerProps, SlideCanvasProps, ViewerToolbarProps } from './p
 import type { RibbonProps } from './ribbon/ribbon-types';
 import RibbonComponent from './ribbon/Ribbon.svelte';
 import SlideCanvasComponent from './SlideCanvas.svelte';
+import type { SlidesPaneProps } from './slides-pane-props';
+import SlidesPaneComponent from './SlidesPane.svelte';
 import ViewerToolbarComponent from './ViewerToolbar.svelte';
 
 /**
@@ -32,6 +34,9 @@ export const ViewerToolbar: Component<ViewerToolbarProps> =
 
 export const SlideCanvas: Component<SlideCanvasProps> =
 	SlideCanvasComponent as unknown as Component<SlideCanvasProps>;
+
+export const SlidesPane: Component<SlidesPaneProps> =
+	SlidesPaneComponent as unknown as Component<SlidesPaneProps>;
 
 export const CollaborationCursors: Component<CollaborationCursorsProps> =
 	CollaborationCursorsComponent as unknown as Component<CollaborationCursorsProps>;
