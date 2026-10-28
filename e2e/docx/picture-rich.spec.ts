@@ -55,3 +55,42 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(output).toContain('duotone');
 		await page.screenshot({ path: `test-results/picture-rich-word-${framework}.png` });
 	});
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	test(`${framework}: applies nonlinear picture stages in source order`, async ({ page }) => {
+		const mixed = await JSZip.loadAsync(bytes);
+		const xml = await mixed.file('word/document.xml')!.async('string');
+		mixed.file(
+			'word/document.xml',
+			xml.replace(
+				/<a:duotone>[\s\S]*?<\/a:duotone>/,
+				'<a:clrRepl><a:srgbClr val="FF0000"/></a:clrRepl><a:hsl hue="3600000" sat="100000" lum="100000"/><a:alphaModFix amt="50000"/>',
+			),
+		);
+		await page.goto(`/?framework=${framework}`);
+		await (
+			await fileInput(page)
+		).setInputFiles({
+			name: 'mixed.docx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			buffer: Buffer.from(await mixed.generateAsync({ type: 'uint8array' })),
+		});
+		const picture = page.locator('docx-editor .ProseMirror .dve-picture svg').first();
+		await expect(picture.locator('pattern')).toHaveAttribute('data-pixel-effects-ready', 'true');
+		const rgba = await picture
+			.locator('pattern image')
+			.first()
+			.evaluate(async (element) => {
+				const image = new Image();
+				image.src = element.getAttribute('href')!;
+				await image.decode();
+				const canvas = document.createElement('canvas');
+				canvas.width = image.naturalWidth;
+				canvas.height = image.naturalHeight;
+				const context = canvas.getContext('2d')!;
+				context.drawImage(image, 0, 0);
+				return Array.from(context.getImageData(5, 5, 1, 1).data);
+			});
+		expect(rgba).toEqual([255, 255, 0, 128]);
+		await expect(picture.locator('pattern image').first()).not.toHaveAttribute('filter');
+	});

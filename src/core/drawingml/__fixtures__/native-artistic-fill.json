@@ -1,0 +1,11 @@
+{
+ "generator": "src/ui/scripts/picture-native-fixture.ts",
+ "nativeAuthoring": "src/ui/scripts/author-picture-artistic.ps1 -InputPresentation <generated pictures.pptx> -OutputPresentation <native-artistic.pptx> -Slide 1 -Shape 1 -EffectCode 21",
+ "sourceImage": "pictureGridPng(): repository-generated 48x32 RGBA RGB bands",
+ "officeVersion": "16.0.20527.20088",
+ "emittedEffect": "a14:artisticPencilSketch",
+ "processedImage": "ppt/media/image1.png",
+ "pristineOriginal": "ppt/media/hdphoto1.wdp",
+ "assertion": "Preserve processed blip bytes, original WDP relationship and extension XML. Do not apply the artistic effect to the processed cache again.",
+ "limitation": "This is evidence for one native cached effect, not equivalence of uncached artistic preview algorithms."
+}

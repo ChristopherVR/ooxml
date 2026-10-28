@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import JSZip from 'jszip';
 import { expect, it } from 'vitest';
 import { NS, parseXml, buildXml, first } from '../xml/index';
 import { parsePictureEffects, applyPictureEffects } from './picture-effects';
@@ -99,4 +101,30 @@ it('validates authored rich values before rounding and preserves colour metadata
 		`<a:blip xmlns:a="${NS.a}" xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" xmlns:v="urn:vendor"><a:extLst><a:ext uri="x"><a14:imgProps><a14:imgLayer><a14:imgEffect><a14:artisticFilmGrain grainSize="30000"/></a14:imgEffect></a14:imgLayer></a14:imgProps><v:unknown/></a:ext></a:extLst></a:blip>`,
 	).documentElement;
 	expect(parsePictureEffects(art)[0]).toMatchObject({ kind: 'artistic', unhandled: ['unknown'] });
+});
+
+it('preserves the real Office pencil cache, original WDP relationship and artistic metadata', async () => {
+	const archive = await JSZip.loadAsync(
+		readFileSync(new URL('./__fixtures__/native-artistic-fill.pptx', import.meta.url)),
+	);
+	const source = await archive.file('ppt/slides/slide1.xml')!.async('string');
+	const document = parseXml(source);
+	const blip = document.getElementsByTagNameNS(NS.a, 'blip')[0]!;
+	const effects = parsePictureEffects(blip);
+	expect(effects[0]).toMatchObject({ kind: 'artistic', name: 'artisticPencilSketch', baked: true });
+	const before = buildXml(blip);
+	applyPictureEffects(blip, effects);
+	expect(buildXml(blip)).toBe(before);
+	applyPictureEffects(blip, [{ kind: 'grayscale' }, ...effects]);
+	const after = parsePictureEffects(blip);
+	expect(after[1]).toMatchObject({ kind: 'artistic', baked: true });
+	expect(buildXml(blip)).toContain('rId3');
+	archive.file('ppt/slides/slide1.xml', buildXml(document));
+	const reopened = await JSZip.loadAsync(await archive.generateAsync({ type: 'uint8array' }));
+	expect(await reopened.file('ppt/media/hdphoto1.wdp')!.async('uint8array')).toEqual(
+		await archive.file('ppt/media/hdphoto1.wdp')!.async('uint8array'),
+	);
+	expect(await reopened.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).toContain(
+		'hdphoto1.wdp',
+	);
 });

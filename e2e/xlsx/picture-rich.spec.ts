@@ -50,3 +50,46 @@ for (const framework of FRAMEWORKS)
 		});
 		await page.screenshot({ path: `test-results/picture-rich-excel-${framework}.png` });
 	});
+for (const framework of FRAMEWORKS)
+	test(`${framework}: applies nonlinear Excel picture stages in source order`, async ({ page }) => {
+		const mixed = await loadXlsx(bytes);
+		const image = mixed.sheets[sheet]!.drawings.find((d) => d.kind === 'image')!;
+		if (image.kind !== 'image') throw new Error('Missing image');
+		image.effects = [
+			{
+				kind: 'standard',
+				name: 'clrRepl',
+				colors: [{ kind: 'srgb', value: 'FF0000', transforms: [] }],
+			},
+			{ kind: 'standard', name: 'hsl', values: { hue: 60, saturation: 1, luminance: 1 } },
+			{ kind: 'alphaModFix', amount: 0.5 },
+		];
+		await openLanding(page, framework);
+		await page
+			.locator('#landing-file')
+			.setInputFiles({
+				name: 'mixed.xlsx',
+				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				buffer: Buffer.from(await saveXlsx(mixed)),
+			});
+		const picture = editor(page)
+			.locator('.xg-obj svg')
+			.filter({ has: page.locator('pattern') })
+			.first();
+		await expect(picture.locator('pattern')).toHaveAttribute('data-pixel-effects-ready', 'true');
+		const rgba = await picture
+			.locator('pattern image')
+			.first()
+			.evaluate(async (element) => {
+				const image = new Image();
+				image.src = element.getAttribute('href')!;
+				await image.decode();
+				const canvas = document.createElement('canvas');
+				canvas.width = image.naturalWidth;
+				canvas.height = image.naturalHeight;
+				const context = canvas.getContext('2d')!;
+				context.drawImage(image, 0, 0);
+				return Array.from(context.getImageData(5, 5, 1, 1).data);
+			});
+		expect(rgba).toEqual([255, 255, 0, 128]);
+	});

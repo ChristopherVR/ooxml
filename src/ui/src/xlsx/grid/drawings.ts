@@ -1,3 +1,4 @@
+import { needsPicturePixels } from '../../picture-pixels';
 import { pictureSvg } from '../../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
 import { pictureEffectFilter } from '../../picture-effects';
@@ -163,7 +164,8 @@ export class DrawingLayer {
 		node.className = 'xg-obj';
 		if (
 			drawing.kind === 'image' &&
-			(drawing.layout?.tile ||
+			(needsPicturePixels(drawing.effects ?? []) ||
+				drawing.layout?.tile ||
 				Object.values(drawing.layout?.fillRect ?? {}).some((value) => value !== 0))
 		) {
 			const url = this.#url(drawing.partName, drawing.contentType);

@@ -1,3 +1,4 @@
+import { needsPicturePixels, cachedPicturePixels, probePicturePixels } from './picture-pixels';
 import {
 	imageRectFromCrop,
 	pictureTileGeometry,
@@ -31,7 +32,7 @@ export function picturePaint(
 ): { paint: string; unapplied: string[]; approximated?: string[] } {
 	if (fill.unsupportedPicture?.length)
 		return { paint: '#d1d5db', unapplied: fill.unsupportedPicture };
-	const source = typeof media === 'string' ? { url: media } : media;
+	const source = typeof media === 'string' ? { url: media } : { ...media };
 	const pattern = doc.createElementNS(NS, 'pattern');
 	pattern.id = `office-picture-${++serial}`;
 	pattern.setAttribute('patternUnits', 'userSpaceOnUse');
@@ -50,7 +51,29 @@ export function picturePaint(
 				)
 			: undefined;
 	if (counter) pattern.setAttribute('patternTransform', counter);
-	const effects = pictureEffectFilter(doc, defs, fill.effects ?? [], context.scheme);
+	const originalEffects = fill.effects ?? [];
+	const pixelCache = needsPicturePixels(originalEffects)
+		? cachedPicturePixels(source.url, originalEffects, context.scheme)
+		: undefined;
+	const images: SVGImageElement[] = [];
+	const effects = pictureEffectFilter(doc, defs, originalEffects, context.scheme);
+	let pixelReady = Boolean(pixelCache);
+	if (pixelCache) {
+		source.url = pixelCache.url;
+		source.width = pixelCache.width;
+		source.height = pixelCache.height;
+		pattern.dataset.pixelEffectsReady = 'true';
+	} else if (needsPicturePixels(originalEffects))
+		void probePicturePixels(doc, source.url, originalEffects, context.scheme).then((result) => {
+			if (!result) return;
+			source.url = result.url;
+			pixelReady = true;
+			for (const image of images) {
+				image.setAttribute('href', result.url);
+				image.removeAttribute('filter');
+			}
+			pattern.dataset.pixelEffectsReady = 'true';
+		});
 	unapplied.push(...effects.unapplied);
 	if (effects.approximated?.length)
 		pattern.dataset.approximatedPictureEffects = effects.approximated.join(',');
@@ -59,8 +82,9 @@ export function picturePaint(
 		for (const [key, value] of Object.entries({ x, y, width, height }))
 			image.setAttribute(key, String(value));
 		image.setAttribute('href', source.url);
+		images.push(image);
 		image.setAttribute('preserveAspectRatio', 'none');
-		if (effects.filter) image.setAttribute('filter', effects.filter);
+		if (effects.filter && !pixelReady) image.setAttribute('filter', effects.filter);
 		parent.append(image);
 	};
 	if (spanX <= 0 || spanY <= 0) {

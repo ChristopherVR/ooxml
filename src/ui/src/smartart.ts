@@ -9,3 +9,5 @@ export * from './smartart/text-pane-controller';
 
 export { picturePaint, type PictureMedia, type PicturePaintContext } from './picture-paint';
 export { pictureSvg } from './picture-view';
+
+export { cachedPicturePixels, probePicturePixels, needsPicturePixels } from './picture-pixels';

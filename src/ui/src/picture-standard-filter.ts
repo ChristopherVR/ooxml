@@ -34,8 +34,16 @@ export function standardPictureFilter(
 	});
 	switch (effect.name) {
 		case 'alphaInv':
-			if (colors?.length) return { nodes: [], unapplied: 'alphaInv:colour' };
 			transfer(['A'], { type: 'linear', slope: -1, intercept: 1 });
+			{
+				const c = colors?.[0] ?? { r: 0, g: 0, b: 0, a: 1 };
+				nodes.push(
+					node('feColorMatrix', {
+						type: 'matrix',
+						values: `0 0 0 0 ${c.r} 0 0 0 0 ${c.g} 0 0 0 0 ${c.b} 0 0 0 ${c.a} 0`,
+					}),
+				);
+			}
 			break;
 		case 'alphaCeiling':
 			transfer(['A'], { type: 'discrete', tableValues: ['0', ...Array(255).fill('1')].join(' ') });
@@ -47,7 +55,7 @@ export function standardPictureFilter(
 			transfer(['A'], { type: 'linear', slope: 0, intercept: value.amount ?? 1 });
 			break;
 		case 'alphaMod':
-			transfer(['A'], { type: 'linear', slope: value.amount ?? 1, intercept: 0 });
+			transfer(['A'], { type: 'gamma', amplitude: value.amount ?? 1, exponent: 2, offset: 0 });
 			break;
 		case 'alphaBiLevel':
 			transfer(['A'], {
@@ -111,6 +119,12 @@ export function standardPictureFilter(
 			if (!a || !b) return { nodes: [], unapplied: 'clrChange:colour' };
 			if (effect.useAlpha !== false && a.a !== 1)
 				return { nodes: [], unapplied: 'clrChange:source-alpha' };
+			const opaque = node('feComponentTransfer', {
+				in: 'PICTURE_INPUT',
+				result: `${prefix}-opaque`,
+			});
+			opaque.append(node('feFuncA', { type: 'linear', slope: 0, intercept: 1 }));
+			nodes.push(opaque);
 			const from = node('feFlood', {
 				'flood-color': `rgb(${a.r * 255},${a.g * 255},${a.b * 255})`,
 				result: `${prefix}-key`,
@@ -118,7 +132,7 @@ export function standardPictureFilter(
 			nodes.push(from);
 			nodes.push(
 				node('feBlend', {
-					in: 'PICTURE_INPUT',
+					in: `${prefix}-opaque`,
 					in2: `${prefix}-key`,
 					mode: 'difference',
 					result: `${prefix}-distance`,
@@ -134,9 +148,10 @@ export function standardPictureFilter(
 			transfer(['A'], { type: 'discrete', tableValues: ['1', ...Array(255).fill('0')].join(' ') });
 			nodes[nodes.length - 1]!.setAttribute('result', `${prefix}-mask`);
 			nodes.push(
-				node('feFlood', {
-					'flood-color': `rgb(${b.r * 255},${b.g * 255},${b.b * 255})`,
-					'flood-opacity': b.a,
+				node('feColorMatrix', {
+					in: 'PICTURE_INPUT',
+					type: 'matrix',
+					values: `0 0 0 0 ${b.r} 0 0 0 0 ${b.g} 0 0 0 0 ${b.b} 0 0 0 ${b.a} 0`,
 					result: `${prefix}-replacement`,
 				}),
 			);

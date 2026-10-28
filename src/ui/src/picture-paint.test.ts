@@ -68,3 +68,28 @@ it('chains richer alpha, duotone and artistic preview primitives without applyin
 		]).filter,
 	).toBeUndefined();
 });
+
+it('matches native inverse-alpha colour replacement and nested alpha modulation', () => {
+	const target = defs();
+	pictureEffectFilter(document, target, [
+		{ kind: 'standard', name: 'alphaInv' },
+		{ kind: 'standard', name: 'alphaMod', values: { amount: 0.5 } },
+	]);
+	expect(target.querySelector('feColorMatrix')!.getAttribute('values')).toBe(
+		'0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0',
+	);
+	expect(target.querySelector('feFuncA[type="gamma"]')!.getAttribute('exponent')).toBe('2');
+	expect(target.querySelector('feFuncA[type="gamma"]')!.getAttribute('amplitude')).toBe('0.5');
+	const art = defs();
+	expect(
+		pictureEffectFilter(document, art, [
+			{
+				kind: 'artistic',
+				name: 'artisticPencilSketch',
+				radius: 0,
+				baked: true,
+				unhandled: ['vendorEffect'],
+			},
+		]).unapplied,
+	).toEqual(['vendorEffect']);
+});
