@@ -250,3 +250,44 @@ describe('data labels in the SVG', () => {
 		expect(svg).toContain('&lt;b&gt; &amp; co');
 	});
 });
+
+describe('authored label placement and pie leaders', () => {
+	const offset =
+		'<c:dLbl><c:idx val="1"/><c:layout><c:manualLayout><c:x val="0.1"/><c:y val="-0.1"/></c:manualLayout></c:layout></c:dLbl>';
+	it.each(['lineChart', 'radarChart'])('applies frame-relative point offsets on %s', (kind) => {
+		const source = (drag: string) =>
+			chart(
+				`<c:${kind}>${series(0, 'S', [11, 22, 33], dLbls(flags(['showVal']) + drag))}<c:axId val="1"/><c:axId val="2"/></c:${kind}>`,
+			);
+		const before = render(source(''));
+		const after = render(source(offset));
+		expect(textX(after, '22') - textX(before, '22')).toBeCloseTo(40);
+		expect(textY(after, '22') - textY(before, '22')).toBeCloseTo(-30);
+		expect(textX(after, '11')).toBe(textX(before, '11'));
+	});
+	it('draws outside pie leaders and honors explicit suppression and deleted labels', () => {
+		const source = (extra: string) =>
+			chart(
+				`<c:pieChart>${series(0, 'S', [11, 22, 33], dLbls(flags(['showVal'], '<c:dLblPos val="outEnd"/>' + extra)))}</c:pieChart>`,
+				false,
+			);
+		expect(render(source(''))).toContain('data-chart-part="leaderLine"');
+		expect(render(source('<c:showLeaderLines val="0"/>'))).not.toContain(
+			'data-chart-part="leaderLine"',
+		);
+		const deleted = render(source('<c:dLbl><c:idx val="1"/><c:delete val="1"/></c:dLbl>'));
+		expect(texts(deleted)).not.toContain('22');
+		expect(deleted.match(/data-chart-part="leaderLine"/gu) ?? []).toHaveLength(2);
+	});
+	it('applies authored doughnut offsets without applying a collision adjustment afterward', () => {
+		const source = (drag: string) =>
+			chart(
+				`<c:doughnutChart>${series(0, 'S', [11, 22, 33], dLbls(flags(['showVal']) + drag))}</c:doughnutChart>`,
+				false,
+			);
+		const before = render(source(''));
+		const after = render(source(offset));
+		expect(textX(after, '22') - textX(before, '22')).toBeCloseTo(40);
+		expect(textY(after, '22') - textY(before, '22')).toBeCloseTo(-30);
+	});
+});

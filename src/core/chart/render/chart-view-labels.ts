@@ -1,3 +1,5 @@
+import type { ChartManualLayout } from '../manual-layout';
+import { strokeOf, type ChartStrokeView } from './chart-view-analysis';
 // Resolves the data labels of a series into the text and placement the painters draw: the
 // point > series > group cascade of `c:dLbls` over the series' categories and values.
 import { composeDataLabelText, resolveDataLabelFlags } from '../data-label-text';
@@ -7,6 +9,9 @@ import type { ChartSummaryDataLabels, ChartSummarySeries } from './summary';
 
 /** One point's label: what it says, where it sits and the colour its number format asks for. */
 export interface ChartLabelView {
+	layout?: ChartManualLayout;
+	showLeaderLines?: boolean;
+	leaderLine?: ChartStrokeView;
 	text: string;
 	/** `c:dLblPos` of the point, else the series, else the group; absent for the chart's default. */
 	position?: string;
@@ -21,6 +26,9 @@ function labelsOf(
 	view: ChartSeriesView,
 	categories: string[],
 	numberFormat: string | undefined,
+	resolveColor: (
+		color: import('../../drawingml/types').DrawingColor | undefined,
+	) => string | undefined,
 ): SeriesLabelViews | undefined {
 	const { chart, series, points } = source;
 	if ((series?.deleted ?? chart?.deleted) === true) return undefined;
@@ -59,9 +67,19 @@ function labelsOf(
 			});
 		}
 		if (!built) return;
+		const layout = point?.layout;
+		const showLeaderLines = series?.showLeaderLines ?? chart?.showLeaderLines;
+		const leaderLine = strokeOf(
+			series?.leaderLine ?? chart?.leaderLine,
+			{ color: '#94a3b8', width: 0.75 },
+			resolveColor,
+		) ?? { color: 'none', width: 0 };
 		any = true;
 		out[i] = {
 			text: built.text,
+			...(layout ? { layout } : {}),
+			...(showLeaderLines !== undefined ? { showLeaderLines } : {}),
+			...(leaderLine ? { leaderLine } : {}),
 			...(position ? { position } : {}),
 			...(built.color ? { color: built.color } : {}),
 		};
@@ -74,10 +92,19 @@ export function applyDataLabels(
 	model: ChartViewModel,
 	sources: readonly ChartSummarySeries[],
 	extra: readonly { series: readonly ChartSummarySeries[] }[],
+	resolveColor: (
+		color: import('../../drawingml/types').DrawingColor | undefined,
+	) => string | undefined,
 ): void {
 	const apply = (source: ChartSummarySeries | undefined, view: ChartSeriesView): void => {
 		if (!source?.dataLabels) return;
-		const labels = labelsOf(source.dataLabels, view, model.categories, source.numberFormat);
+		const labels = labelsOf(
+			source.dataLabels,
+			view,
+			model.categories,
+			source.numberFormat,
+			resolveColor,
+		);
 		if (labels) view.labels = labels;
 	};
 	model.series.forEach((view, i) => apply(sources[i], view));

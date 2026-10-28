@@ -122,3 +122,13 @@ export function resolveManualPlotRect(
 		height: Math.max(1, rect.height - bands.top - bands.bottom),
 	};
 }
+
+/** Apply an authored data-label drag in chart frame coordinates. */
+export function applyLabelManualLayout(
+	layout: ChartManualLayout | null | undefined,
+	frame: ChartFrameSize,
+	point: { x: number; y: number },
+): { x: number; y: number } {
+	const rect = resolveManualLayoutRect(layout, frame, { ...point, width: 1, height: 1 });
+	return rect ? { x: rect.x, y: rect.y } : point;
+}

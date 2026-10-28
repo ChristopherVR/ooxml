@@ -37,6 +37,9 @@ export type ChartSummaryType =
 
 /** One cascade level of a series' data labels: its content switches, placement and format. */
 export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {
+	layout?: ChartManualLayout;
+	showLeaderLines?: boolean;
+	leaderLine?: DrawingLine;
 	/** `c:delete`: the label (or, at series and group level, every label) is suppressed. */
 	deleted?: boolean;
 	/** `c:dLblPos`: `ctr`, `inEnd`, `inBase`, `outEnd`, `bestFit`, `t`, `b`, `l`, `r`. */

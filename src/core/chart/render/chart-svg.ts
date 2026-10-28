@@ -26,7 +26,7 @@ export function renderChartSvg(
 	options: ChartSvgOptions = {},
 ): string {
 	const paint = chartGradientPaint(model, Math.max(1, width), Math.max(1, height));
-	model = paint.model;
+	model = { ...paint.model, frameSize: { width: Math.max(1, width), height: Math.max(1, height) } };
 	const w = Math.max(1, width);
 	const h = Math.max(1, height);
 	const out: string[] = [];

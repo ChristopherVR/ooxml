@@ -130,22 +130,7 @@ export function manualLegendAnchor(
  * `resolveManualLayoutRect`'s edge/factor arithmetic unchanged. A label with no
  * `layout` (the overwhelming majority) returns `point` unmodified.
  */
-export function applyLabelManualLayout(
-	layout: PptxChartManualLayout | null | undefined,
-	frame: ChartFrameSize,
-	point: ChartAnchorPoint,
-): ChartAnchorPoint {
-	if (!hasManualLayoutFields(layout)) {
-		return point;
-	}
-	const rect = resolveManualLayoutRect(layout, frame, {
-		x: point.x,
-		y: point.y,
-		width: 1,
-		height: 1,
-	});
-	return rect ? { x: rect.x, y: rect.y } : point;
-}
+export { applyLabelManualLayout } from 'ooxml-core/chart';
 
 /**
  * Offset from the chart element's pixel space to a view-model's SVG space.

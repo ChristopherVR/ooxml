@@ -1,8 +1,8 @@
+import { applyLabelManualLayout, type ChartFrameSize } from '../manual-layout';
 // Paints the data labels of a chart view model over its marks. Each painter that draws marks
 // (bars, lines, scatter points, pie slices, radar vertices) records where they are and hands the
 // records here, so the labels land on top of every series and follow the placement Office uses for
 // `c:dLblPos`.
-import { placeBestFitLabel } from '../pie-best-fit';
 import { chartTextAttributes } from './chart-svg-appearance';
 import { text, textWidth } from './chart-svg-util';
 import type { ChartSeriesView, ChartViewModel } from './chart-view';
@@ -16,7 +16,8 @@ const NAMED_COLORS = /^(black|blue|cyan|green|magenta|red|white|yellow)$/iu;
 
 type Anchor = 'start' | 'middle' | 'end';
 
-interface Measured {
+export interface Measured {
+	frame?: ChartFrameSize;
 	lines: string[];
 	size: number;
 	w: number;
@@ -24,11 +25,12 @@ interface Measured {
 	attrs: ReturnType<typeof chartTextAttributes>;
 }
 
-function measure(model: ChartViewModel, label: ChartLabelView): Measured {
+export function measure(model: ChartViewModel, label: ChartLabelView): Measured {
 	const attrs = chartTextAttributes(model, 'dataLabel', 10);
 	const size = attrs.size ?? 10;
 	const lines = label.text.split('\n');
 	return {
+		...(model.frameSize ? { frame: model.frameSize } : {}),
 		lines,
 		size,
 		w: Math.max(...lines.map((l) => textWidth(l, size))),
@@ -38,7 +40,7 @@ function measure(model: ChartViewModel, label: ChartLabelView): Measured {
 }
 
 /** One label with its text block centred vertically on `y`, aligned at `x` by `anchor`. */
-function draw(
+export function draw(
 	m: Measured,
 	label: ChartLabelView,
 	x: number,
@@ -46,6 +48,7 @@ function draw(
 	anchor: Anchor,
 	out: string[],
 ): void {
+	if (m.frame) ({ x, y } = applyLabelManualLayout(label.layout, m.frame, { x, y }));
 	const fill =
 		label.color && NAMED_COLORS.test(label.color) ? label.color.toLowerCase() : undefined;
 	m.lines.forEach((line, k) => {
@@ -147,68 +150,6 @@ export function pointLabels(
 			default:
 				draw(m, label, mark.x + reach, mark.y, 'start', out);
 		}
-	}
-}
-
-/** A pie or doughnut slice: its ring and its edge angles (radians clockwise from 12 o'clock). */
-export interface SliceMark {
-	series: ChartSeriesView;
-	index: number;
-	cx: number;
-	cy: number;
-	outer: number;
-	inner: number;
-	start: number;
-	end: number;
-}
-
-/**
- * Labels of pie slices: `ctr`, `inEnd`, `outEnd` and `bestFit` (the default), the latter with
- * Office's placement (`placeBestFitLabel`). A doughnut ring only ever centres its labels.
- */
-export function sliceLabels(
-	model: ChartViewModel,
-	marks: readonly SliceMark[],
-	out: string[],
-): void {
-	for (const mark of marks) {
-		const label = mark.series.labels?.[mark.index];
-		if (!label) continue;
-		const m = measure(model, label);
-		const mid = (mark.start + mark.end) / 2;
-		const ux = Math.sin(mid);
-		const uy = -Math.cos(mid);
-		const place = (radius: number): [number, number] => [
-			mark.cx + radius * ux,
-			mark.cy + radius * uy,
-		];
-		const position = model.type === 'doughnut' ? 'ctr' : (label.position ?? 'bestFit');
-		let x: number;
-		let y: number;
-		if (position === 'ctr') [x, y] = place(mark.inner + (mark.outer - mark.inner) / 2);
-		else if (position === 'inEnd') {
-			const extent = (Math.abs(ux) * m.w) / 2 + (Math.abs(uy) * m.h) / 2;
-			[x, y] = place(Math.max(0, mark.outer - GAP - extent));
-		} else if (position === 'outEnd') {
-			const extent = (Math.abs(ux) * m.w) / 2 + (Math.abs(uy) * m.h) / 2;
-			[x, y] = place(mark.outer + GAP + extent);
-		} else {
-			// The placement works in the SVG angle convention (0 at 3 o'clock).
-			const placed = placeBestFitLabel(
-				{
-					cx: mark.cx,
-					cy: mark.cy,
-					outerR: mark.outer,
-					startAngle: mark.start - Math.PI / 2,
-					endAngle: mark.end - Math.PI / 2,
-				},
-				m.w,
-				m.h,
-			);
-			x = placed.x;
-			y = placed.y;
-		}
-		draw(m, label, x, y, 'middle', out);
 	}
 }
 

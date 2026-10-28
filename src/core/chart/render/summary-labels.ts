@@ -1,14 +1,25 @@
 // The data labels of a summary series: the three cascade levels of `c:dLbls` (group, series,
 // point) as the painter needs them, read from a parsed chart part.
-import type { ChartDataLabelOptions, ChartDataLabels, ChartSpaceSeries } from '../model-series';
+import type {
+	ChartDataLabelOptions,
+	ChartDataLabels,
+	ChartSpaceSeries,
+	ChartDataLabel,
+} from '../model-series';
 import { resolveDataLabelFlags } from '../data-label-text';
 import type { ChartSummaryDataLabels, ChartSummaryLabelLevel } from './summary';
 
 function level(
-	options: ChartDataLabelOptions,
+	options: ChartDataLabelOptions &
+		Partial<
+			Pick<ChartDataLabel, 'layout'> & Pick<ChartDataLabels, 'showLeaderLines' | 'leaderLines'>
+		>,
 	custom?: { text?: string | undefined },
 ): ChartSummaryLabelLevel {
 	const out: ChartSummaryLabelLevel = {};
+	if (options.layout) out.layout = options.layout;
+	if (options.showLeaderLines !== undefined) out.showLeaderLines = options.showLeaderLines;
+	if (options.leaderLines?.spPr?.line) out.leaderLine = options.leaderLines.spPr.line;
 	if (options.deleted !== undefined) out.deleted = options.deleted;
 	if (options.showValue !== undefined) out.showValue = options.showValue;
 	if (options.showCategoryName !== undefined) out.showCategory = options.showCategoryName;

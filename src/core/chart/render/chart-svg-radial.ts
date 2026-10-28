@@ -1,3 +1,4 @@
+import { sliceLabels, type SliceMark } from './chart-svg-slice-labels';
 import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
 import { axisTickText, axisLine } from './chart-svg-axes';
 import { fit, n, text, type Rect } from './chart-svg-util';
@@ -5,13 +6,7 @@ import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
 import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 import type { ChartMarkerSeriesView } from './chart-view-markers';
-import {
-	hasOutsideLabels,
-	pointLabels,
-	sliceLabels,
-	type PointMark,
-	type SliceMark,
-} from './chart-svg-labels';
+import { hasOutsideLabels, pointLabels, type PointMark } from './chart-svg-labels';
 
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [
 	cx + r * Math.sin(angle),

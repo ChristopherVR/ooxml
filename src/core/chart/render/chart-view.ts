@@ -89,6 +89,7 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	frameSize?: import('../manual-layout').ChartFrameSize;
 	axes?: ChartAxesView;
 	plotLayout?: ChartManualLayout;
 	legendLayout?: ChartManualLayout;
@@ -261,7 +262,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		chartExtraView(chart, model, ctx, total, collect);
 	if (type === 'waterfall') waterfallView(chart, model, ctx);
 	else if (!byPoint) model.valueAxis = valueAxis(model);
-	applyDataLabels(model, chart.series, extra);
+	applyDataLabels(model, chart.series, extra, ctx.drawingColor);
 	chartExtraAxes(model);
 	applyChartAxes(model, chart, ctx.drawingColor);
 	return model;
