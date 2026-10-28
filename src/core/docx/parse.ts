@@ -214,7 +214,11 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const imagePartNames = new Set<string>();
 	forEachParagraph(pictureBlocks, (paragraph) => {
 		for (const run of paragraph.runs)
-			for (const part of [run.image?.partName, run.image?.svgPartName])
+			for (const part of [
+				run.image?.partName,
+				run.image?.svgPartName,
+				...Object.values(run.image?.diagram?.drawing?.pictureParts ?? {}),
+			])
 				if (part) imagePartNames.add(part);
 	});
 	const media = new Map<string, Uint8Array>();
