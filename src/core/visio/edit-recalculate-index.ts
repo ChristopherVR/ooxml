@@ -31,6 +31,8 @@ export interface VisioRecalculationOptions {
 	glueShapes?: ReadonlySet<Element>;
 	/** Internal authorization of the proven local parent-group Angle leaf only. */
 	groupRotationCells?: ReadonlySet<Element>;
+	/** Internal group-resize scope: read-only dependency discovery, or a proven local writer. */
+	groupResizeShapes?: ReadonlySet<Element>;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;
@@ -120,7 +122,11 @@ export function indexCells(
 							)) ||
 						children(node, 'Shapes').length > 0 ||
 						['1', 'true'].includes(attribute(node, 'Del') ?? '');
-					sheets.push({ node, shapeId, unsafe });
+					sheets.push({
+						node,
+						shapeId,
+						unsafe: options.groupResizeShapes?.has(node) ? false : unsafe,
+					});
 					visit(node, unsafe, true);
 				}
 		};

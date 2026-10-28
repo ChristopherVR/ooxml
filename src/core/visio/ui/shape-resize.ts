@@ -4,6 +4,39 @@ import { visioAnchoredResizeGeometry, type VisioResizeAnchor } from '../resize-a
 import { visioMovementShape, visioPageDragDelta, type VisioPagePoint } from './shape-move';
 import { visioPageEditToDrawing } from './page-edit';
 
+/** A flat local group whose member axes admit independent width/height scaling.
+ * Source admission additionally proves resize modes, locks, formulas and geometry. */
+function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
+	if (
+		shape.kind !== 'group' ||
+		shape.masterId ||
+		!shape.children.length ||
+		shape.children.length > 500
+	)
+		return false;
+	const ids = new Set([shape.id]);
+	for (const member of shape.children) {
+		if (
+			ids.has(member.id) ||
+			member.kind !== 'shape' ||
+			member.masterId ||
+			member.children.length ||
+			member.layerIds?.length ||
+			member.image ||
+			member.foreignVector ||
+			!member.rotation ||
+			Math.abs(member.transform[1]) > 1e-10 ||
+			Math.abs(member.transform[2]) > 1e-10 ||
+			!visioResizeFrame(member, member, { x: 0, y: 0 })
+		)
+			return false;
+		ids.add(member.id);
+	}
+	return !page.connectors.some(
+		(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
+	);
+}
+
 export const VISIO_RESIZE_HANDLES = [
 	{ id: 'sw', x: 0, y: 0 },
 	{ id: 's', x: 0.5, y: 0 },
@@ -25,12 +58,12 @@ export interface VisioResizeFrame {
 /** Only orthonormal ordinary local shapes have a scene-proven rectangular resize frame. */
 export function visioResizeShape(page: VisioPage, id: string): VisioShape | undefined {
 	const shape = visioMovementShape(page, id);
-	// Groups drawn here move but do not resize: members carry no group-scaling formulas yet. A
-	// stencil group resizes: its sub-shapes follow it through the master's formulas.
+	// Flat local groups use the core member-scaling proof. A stencil group instead follows
+	// the formulas in its master; the two source paths keep their own admission rules.
 	// Layered local shapes move, but core resize admission still refuses their layer membership;
 	// stencil shapes are resized on their (unlocked) stencil layer.
 	return shape &&
-		(!shape.children.length || !!shape.masterId) &&
+		(!shape.children.length || !!shape.masterId || resizableLocalGroup(page, shape)) &&
 		(!shape.layerIds?.length || !!shape.masterId) &&
 		visioResizeFrame(shape, { width: shape.width, height: shape.height }, { x: 0, y: 0 })
 		? shape

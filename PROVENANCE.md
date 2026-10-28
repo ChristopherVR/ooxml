@@ -2724,3 +2724,18 @@ The earlier PowerPoint export remains a compatibility re-export. The implementat
 now imports strict, format-neutral geometry types and the existing shared minimum
 size (12, identical to PowerPoint's default). Arithmetic and anchoring are unchanged.
 Test handle literals are narrowed for strict TypeScript. Apache-2.0 license retained.
+
+## Visio resize planning shared by leaves and groups (2026-10-28)
+
+Source: ChristopherVR/ooxml at `60cf8dd9c`,
+`src/core/visio/edit-resize-anchor.ts`. Extracted the bounded dependency closure,
+numeric comparison and canonical transform-cell checks into
+`src/core/visio/edit-resize-plan.ts`. The shared write descriptor now optionally
+identifies a member sheet, allowing the same anchored transaction to project and
+validate flat local group members before mutating any source cells. The existing
+leaf writer and regression tests remain in place. Apache-2.0 license retained.
+
+Browser fixture and inspection helpers moved from
+`e2e/visio/selection-resize.spec.ts` at the same commit into
+`e2e/visio/selection-resize-fixture.ts`; fixtures now include explicit grouping
+transforms, and inspection includes child geometry for group-resize coverage.

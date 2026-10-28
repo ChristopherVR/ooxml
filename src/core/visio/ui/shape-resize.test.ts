@@ -93,3 +93,28 @@ it('declines unproven affine, grouped, glued, ambiguous and nonfinite candidates
 	scene.shapes.push(structuredClone(scene.shapes[0]!));
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
 });
+
+it('offers flat group handles with rotated parents and refuses unsupported member trees', () => {
+	const scene = page(Math.PI / 6, true),
+		group = scene.shapes[0]!;
+	const member = structuredClone(page().shapes[0]!);
+	member.id = '2';
+	group.kind = 'group';
+	group.children = [member];
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	expect(visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 1, y: -1 })).toBeDefined();
+	member.transform = transform(4, 5, 0.25, 0.75, 0.1);
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	member.transform = transform(4, 5, 0.25, 0.75, 0);
+	member.children = [structuredClone(page().shapes[0]!)];
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	member.children = [];
+	member.masterId = '0';
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	delete member.masterId;
+	member.layerIds = ['0'];
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	delete member.layerIds;
+	scene.connectors = [{ fromShapeId: '3', toShapeId: '2', fromCell: 'BeginX', toCell: 'PinX' }];
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+});

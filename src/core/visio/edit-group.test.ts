@@ -183,7 +183,7 @@ describe('group-shapes and ungroup-shape', () => {
 		]);
 	});
 
-	it('keeps group resizing and flips unsupported', async () => {
+	it('keeps unanchored group resizing and flips unsupported', async () => {
 		const grouped = await editVsdx(await three(), [group]);
 		for (const command of [
 			{ type: 'resize-shape', width: 6, height: 6 },

@@ -17,6 +17,13 @@ pins. Browser save/reopen workflows pass in all six demos. Native Visio group an
 multi-selection comparison remains outstanding: this machine has neither a
 registered Visio.Application nor Visio.InvisibleApp COM class.
 
+The next increment enables single-selection anchored resizing for flat local
+groups with axis-aligned members. Parent rotation/reflection, off-center pins,
+member locks and local ResizeMode are included. Source formulas are projected
+before the edit is committed, including implicit child writes and dependencies
+outside the page. Nested groups, rotated members, glue and stencil members remain
+outside this resize subset. Desktop comparison remains outstanding.
+
 ### Implemented in this increment
 
 - Alt bypasses snapping while moving one or multiple shapes, including when the
@@ -40,6 +47,11 @@ registered Visio.Application nor Visio.InvisibleApp COM class.
   PowerPoint. Its minimum-size options now permit separate width and height
   limits, so the smallest selection member retains its physical minimum without
   forcing the other axis to use the same limit. Existing defaults are unchanged.
+- Flat local groups reuse the same anchored writer and dependency evaluator as
+  individual shapes. Their members scale or reposition according to constant
+  local ResizeMode values. Authored dependencies remain intact if they produce
+  the requested pose; incompatible formulas or locks reject the transaction.
+  Core owns this behavior, so every binding receives the same resize handles.
 
 Microsoft documents Alt's snap bypass and Alt+Shift movement in its
 [Visio interaction guide](https://www.microsoft.com/en-us/copilot/blog/2012/09/25/10-ways-to-be-more-efficient-in-the-new-visio/).
@@ -50,13 +62,13 @@ native ShapeSheet equivalence for this implementation.
 
 ### Next editing work, in priority order
 
-| Priority | Concrete gap and source evidence                                                                                                                                                                 | Completion gate                                                                                                                                                                  |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1        | Local groups cannot resize or flip (`edit-group.test.ts`); multi-selection resize excludes rotated shapes, groups, stencil instances, layers and attached connectors (`ui/selection-resize.ts`). | Native group/multi-selection fixtures, child transforms and glue preserved, atomic source edits, history and six-demo save/reopen.                                               |
-| 2        | Resize gestures ignore modifiers and resize both corner dimensions independently (`ui/shape-resize.ts`, `viewer-resize-handles.ts`).                                                             | Record native corner/edge behavior with modifiers, rotation, reflection, local pins and size/aspect locks; adapt the shared geometry to Visio's y-up coordinates and inch units. |
-| 3        | Dependency recalculation remains bounded; `formula-text.test.ts` still rejects STRSAMEEX, ANGLETOLOC, LOCTOPAR, FORMAT, DATE and INDIRECT.                                                       | Native formula fixtures plus affected-cache closure and atomic refusal tests, including inherited and cross-shape references.                                                    |
-| 4        | Snapping still uses bounded shape/guide geometry. Resize alignment/size-match hints and a complete saved snap-settings implementation are missing.                                               | Native snapping matrix for zoom, units, layers, group members, ruler subdivisions, resize and connectors; prevent snapping a container to members moving with it.                |
-| 5        | Size & Position uses fixed inch labels; field rendering and editing state are scattered between product panes.                                                                                   | Unit-aware UI with mixed selections, accessible validation, stable focus and one undo step; keep conversion and source edits in core.                                            |
+| Priority | Concrete gap and source evidence                                                                                                                                                                | Completion gate                                                                                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Local group resizing excludes nested groups, rotated or stencil members and glue; flips and unanchored resizing remain unsupported. Multi-selection excludes groups, rotation, layers and glue. | Native group/multi-selection fixtures, child transforms and glue preserved, atomic source edits, history and six-demo save/reopen.                                               |
+| 2        | Resize gestures ignore modifiers and resize both corner dimensions independently (`ui/shape-resize.ts`, `viewer-resize-handles.ts`).                                                            | Record native corner/edge behavior with modifiers, rotation, reflection, local pins and size/aspect locks; adapt the shared geometry to Visio's y-up coordinates and inch units. |
+| 3        | Dependency recalculation remains bounded; `formula-text.test.ts` still rejects STRSAMEEX, ANGLETOLOC, LOCTOPAR, FORMAT, DATE and INDIRECT.                                                      | Native formula fixtures plus affected-cache closure and atomic refusal tests, including inherited and cross-shape references.                                                    |
+| 4        | Snapping still uses bounded shape/guide geometry. Resize alignment/size-match hints and a complete saved snap-settings implementation are missing.                                              | Native snapping matrix for zoom, units, layers, group members, ruler subdivisions, resize and connectors; prevent snapping a container to members moving with it.                |
+| 5        | Size & Position uses fixed inch labels; field rendering and editing state are scattered between product panes.                                                                                  | Unit-aware UI with mixed selections, accessible validation, stable focus and one undo step; keep conversion and source edits in core.                                            |
 
 Native rendering, editing interaction and saved-package compatibility need separate
 acceptance gates. Existing connector, stencil, chart, text and collaboration subsets

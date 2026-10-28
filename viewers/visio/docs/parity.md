@@ -1,5 +1,39 @@
 # Visio capability ledger
 
+## Flat local group resizing, 2026-10-28
+
+A selected flat local group now has eight resize handles. Its ordinary,
+axis-aligned members can scale with the group or keep their size while their
+positions scale, following constant local ResizeMode values (0 inherits, 1
+repositions, 2 scales). The parent may be rotated or reflected; off-center local
+pins, reflected members and drawing scales are preserved. A gesture previews a
+frame without changing source, then commits one undoable transaction.
+
+The writer reuses the existing anchored-resize geometry and formula evaluator.
+Literal member transforms acquire proportional parent formulas. Authored and
+guarded formulas are retained only when evaluation proves the requested final
+pose. The same proof checks size, position and aspect locks and affected caches.
+Package and style dependency checks include child writes even before scaling
+formulas exist, including a group created earlier in the same transaction.
+
+This subset excludes nested groups, rotated members, stencil members, glue,
+layer membership, unsupported formulas and nondefault page-level ResizeMode.
+Unanchored group resizing, group flips and groups in a multi-selection resize
+remain unsupported. General Visio group semantics and native desktop acceptance
+are still open; generated fixtures and browser workflows are not parity evidence.
+
+Microsoft's [ResizeMode reference](https://learn.microsoft.com/en-us/office/client-developer/visio/resizemode-cell-shape-transform-section)
+defines the mode values used by this implementation.
+
+Verification: 4,256 core Visio tests passed (200 optional skips), and 1,323 Visio
+UI tests passed (eight optional skips). Strict core, UI and viewer typechecks,
+core/UI builds and changed-source lint/format checks passed. Twelve browser
+workflows passed across vanilla, React, Vue, Angular, Svelte and Solid, covering
+group and multi-selection resizing, cancellation, history, save/reopen and
+ungrouping. The group test selects the reopened group through its keyboard target
+because the bounding-box center can be empty SVG space. No native Visio acceptance,
+packaged-consumer rerun or `verify` script was run for this increment.
+
 ## Multi-selection resize, 2026-10-28
 
 Two or more selected ordinary, axis-aligned local shapes now share eight resize
@@ -22,7 +56,7 @@ a viewer or binding.
 This is a bounded editing subset, not native Visio parity. Mixed selections with
 rotated shapes, local groups, stencil instances, layers or attached connectors do
 not get multi-selection handles. Single-selection behavior remains available
-under its existing admission rules. Group resizing, resize modifiers and snapping,
+under its existing admission rules. General group resizing, resize modifiers and snapping,
 and native multi-selection comparisons remain open. Microsoft Visio is not
 registered on the machine used for this increment, so generated round-trip and
 browser fixtures do not establish desktop equivalence.

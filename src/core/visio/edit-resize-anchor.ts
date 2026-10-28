@@ -12,50 +12,21 @@ import {
 } from './edit-geometry-admission';
 import { indexCells, key, type IndexedCell } from './edit-recalculate-index';
 import { createVisioCellEvaluator } from './edit-recalculate-values';
-import { parseVisioFormula, visioFormulaCachedValue } from './formula';
+import { parseVisioFormula, analyzeVisioFormula, visioFormulaCachedValue } from './formula';
 import { transform } from './geometry';
 import { attribute, children, VISIO_NS, VISIO_LEGACY_NS } from './sheet';
 import { assertUnlayeredShape } from './edit-style-admission';
 import { visioAnchoredResizeGeometry } from './resize-anchor';
 import { fail } from './package-common';
+import { localGroupResize, planGroupResize } from './edit-group-resize';
+import {
+	assertCanonicalResizeCells,
+	resizeClosure as closure,
+	resizeClose as close,
+	type VisioResizeWrite as Write,
+} from './edit-resize-plan';
 
 type Resize = Extract<VisioGeometryEdit, { type: 'resize-shape' }>;
-interface Write {
-	name: string;
-	value: number;
-	formula?: string;
-}
-const close = (a: number, b: number) =>
-	Math.abs(a - b) <= 1e-10 * Math.max(1, Math.abs(a), Math.abs(b));
-
-function closure(
-	graph: ReadonlyMap<string, IndexedCell>,
-	changed: readonly string[],
-	check: () => void,
-) {
-	const reverse = new Map<string, string[]>();
-	for (const [id, item] of graph) {
-		check();
-		for (const dependency of item.dependencies) {
-			const list = reverse.get(dependency) ?? [];
-			list.push(id);
-			reverse.set(dependency, list);
-		}
-	}
-	const affected = new Set(changed),
-		pending = [...changed];
-	for (let index = 0; index < pending.length; index++) {
-		check();
-		for (const id of reverse.get(pending[index]!) ?? [])
-			if (!affected.has(id)) {
-				affected.add(id);
-				pending.push(id);
-			}
-		if (affected.size > 10_000)
-			fail('LIMIT_FORMULA_AFFECTED', 'Affected ShapeSheet cell limit exceeded.');
-	}
-	return affected;
-}
 /** All source and proposed caches are evaluated before writing either geometry or dependent caches. */
 export function resizeVisioShapeAtAnchor(
 	roots: ReadonlyMap<string, Element>,
@@ -67,38 +38,14 @@ export function resizeVisioShapeAtAnchor(
 	check();
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
-	const shape = admitted(root, edit.shapeId);
+	const group = localGroupResize(root, edit.shapeId, document, check);
+	const shape = admitted(root, edit.shapeId, new Set(), new Map(), undefined, group?.groups);
 	const local = cells(shape);
-	const canonical = [
-		'Width',
-		'Height',
-		'PinX',
-		'PinY',
-		'LocPinX',
-		'LocPinY',
-		'Angle',
-		'FlipX',
-		'FlipY',
-		'LockMoveX',
-		'LockMoveY',
-		'LockWidth',
-		'LockHeight',
-		'LockAspect',
-		'LockDelete',
-	];
-	for (const name of local.keys())
-		if (
-			canonical.some(
-				(expected) => expected.toLowerCase() === name.toLowerCase() && expected !== name,
-			)
-		)
-			fail(
-				'EDIT_AMBIGUOUS_CELL',
-				'Noncanonical transform and protection cell names are unsupported.',
-			);
+	assertCanonicalResizeCells(shape);
 	if (!edit.anchor || isLineSheet(cells(shape)) || edit.height <= 0)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Anchored resizing requires an ordinary local 2D shape.');
 	if (
+		!group &&
 		Array.from(shape.getElementsByTagName('*')).some(
 			(node) =>
 				node.localName === 'Shape' && [VISIO_NS, VISIO_LEGACY_NS].includes(node.namespaceURI ?? ''),
@@ -114,7 +61,11 @@ export function resizeVisioShapeAtAnchor(
 				['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === edit.shapeId)
 			)
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Glued shapes require routing outside this subset.');
-	const graph = indexCells(roots, { check, glueShapes });
+	const graph = indexCells(roots, {
+		check,
+		glueShapes,
+		...(group ? { groupResizeShapes: group.shapes } : {}),
+	});
 	const id = (cell: string) => key({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	const source = createVisioCellEvaluator(graph, { check, glueShapes }, true);
 	const read = (name: string, fallback?: number): number =>
@@ -136,7 +87,11 @@ export function resizeVisioShapeAtAnchor(
 	if (![0, 1].includes(flipX) || ![0, 1].includes(flipY))
 		fail('EDIT_FORMULA_UNIT', 'Flip cells must be scalar booleans.');
 	if (width === edit.width && height === edit.height) return [];
-	resizeGeometry(shape, roots, edit, check);
+	if (
+		!group ||
+		children(shape, 'Section').some((section) => attribute(section, 'N') === 'Geometry')
+	)
+		resizeGeometry(shape, roots, edit, check, new Set(), glueShapes, group?.shapes);
 	if (numeric(local.get('LockAspect'), 0) !== 0 && !close(edit.width / width, edit.height / height))
 		fail('EDIT_PROTECTED_CELL', 'LockAspect prevents changing the aspect ratio.');
 	const geometry = visioAnchoredResizeGeometry(
@@ -197,8 +152,12 @@ export function resizeVisioShapeAtAnchor(
 			writes.push({ name, value: close(value, old) ? old : value });
 		}
 	const projected = new Map(graph);
+	const writeId = (write: Write) =>
+		key({ pageId: edit.pageId, shapeId: attribute(write.shape ?? shape, 'ID')!, cell: write.name });
 	const install = (write: Write): void => {
-		const original = local.get(write.name);
+		const owner = write.shape ?? shape,
+			ownerId = attribute(owner, 'ID')!;
+		const original = cells(owner).get(write.name);
 		const node = original
 			? (original.cloneNode(true) as Element)
 			: shape.ownerDocument!.createElementNS(shape.namespaceURI, 'Cell');
@@ -208,7 +167,7 @@ export function resizeVisioShapeAtAnchor(
 		else node.removeAttribute('F');
 		const cell: IndexedCell = {
 			pageId: edit.pageId,
-			shapeId: edit.shapeId,
+			shapeId: ownerId,
 			cell: write.name,
 			node,
 			unsafe: false,
@@ -217,9 +176,11 @@ export function resizeVisioShapeAtAnchor(
 		};
 		if (write.formula) {
 			cell.formula = parseVisioFormula(write.formula);
-			cell.dependencies = [id(write.name === 'LocPinX' ? 'Width' : 'Height')];
+			cell.dependencies = analyzeVisioFormula(cell.formula).references.map((reference) =>
+				key({ pageId: edit.pageId, shapeId: reference.shapeId ?? ownerId, cell: reference.cell }),
+			);
 		}
-		projected.set(id(write.name), cell);
+		projected.set(writeId(write), cell);
 	};
 	for (const write of writes) install(write);
 	const guardedPins: { name: string; value: number }[] = [];
@@ -244,11 +205,12 @@ export function resizeVisioShapeAtAnchor(
 				'EDIT_PROTECTED_CELL',
 				'Guarded local pin does not scale proportionally with the requested dimension.',
 			);
-	const affected = closure(
-		projected,
-		writes.map((write) => id(write.name)),
-		check,
-	);
+	const members = group && planGroupResize(group, roots, edit, source, check);
+	for (const write of members?.writes ?? []) {
+		writes.push(write);
+		install(write);
+	}
+	const affected = closure(projected, writes.map(writeId), check);
 	for (const name of ['Angle', 'FlipX', 'FlipY'])
 		if (affected.has(id(name)))
 			fail(
@@ -280,12 +242,18 @@ export function resizeVisioShapeAtAnchor(
 				'EDIT_UNSUPPORTED_DEPENDENCY',
 				'Dependent formulas would violate the requested anchor or dimensions.',
 			);
+	for (const [cellId, expected] of members?.expected ?? [])
+		if (!close(projected.has(cellId) ? evaluate(cellId).value : 0, expected))
+			fail(
+				'EDIT_UNSUPPORTED_DEPENDENCY',
+				'Dependent formulas would violate a resized group member pose.',
+			);
 	check();
-	for (const write of writes) setCell(shape, write.name, write.value, write.formula);
+	for (const write of writes) setCell(write.shape ?? shape, write.name, write.value, write.formula);
 	const dirty = new Set([edit.pageId]);
 	for (const [cellId, value] of values) {
 		const item = graph.get(cellId);
-		if (!item?.node || !item.formula || writes.some((write) => id(write.name) === cellId)) continue;
+		if (!item?.node || !item.formula || writes.some((write) => writeId(write) === cellId)) continue;
 		if (attribute(item.node, 'V') !== String(value)) {
 			item.node.setAttribute('V', String(value));
 			dirty.add(item.pageId);
