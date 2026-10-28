@@ -269,8 +269,6 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					if (fill) shape.fill = fill;
 				}
 				const direct = originalModel?.nodes.find((entry) => entry.modelId === node.nodeId);
-				if (direct?.fill && direct.fill.kind !== 'picture') shape.fill = direct.fill;
-				if (direct?.line) shape.line = { ...shape.line, ...direct.line };
 				const sourceIds = [node.nodeId, ...(node.foldedNodeIds ?? [])];
 				const textNodes = sourceIds.flatMap((id) => {
 					const source = input.nodes.find((entry) => entry.id === id);
@@ -291,6 +289,8 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					),
 					input.minorFont,
 				);
+				if (direct?.fill && direct.fill.kind !== 'picture') shape.fill = direct.fill;
+				if (direct?.line) shape.line = { ...shape.line, ...direct.line };
 			});
 			applyDiagramPictureSources(
 				drawing,
