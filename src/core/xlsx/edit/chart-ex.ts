@@ -66,9 +66,11 @@ function reader(book: Workbook, scope: number) {
 	return { read, target, resolve };
 }
 /** Current data, resolved from local sheet cells and hidden chart defined names. */
+export function xlsxChartExSpace(book: Workbook, s: number, index: number): ChartExSpace {
+	return hydrateChartExSpace(at(book, s, index).chartExSpace, reader(book, s).read);
+}
 export function xlsxChartExDataSheet(book: Workbook, s: number, index: number) {
-	const chart = at(book, s, index);
-	return chartExSpaceDataSheet(hydrateChartExSpace(chart.chartExSpace, reader(book, s).read));
+	return chartExSpaceDataSheet(xlsxChartExSpace(book, s, index));
 }
 /** Apply one neutral operation, synchronizing changed caches and source cells as one undo step. */
 export function editChartEx(

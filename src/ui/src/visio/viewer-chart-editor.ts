@@ -2,12 +2,25 @@ import { normalizeVisioLocale, translateRibbonText } from './ribbon-locale';
 import {
 	applyChartSpaceDataSheetEdits,
 	applyChartEditIntent,
+	applyChartExEditIntent,
+	applyChartExSpaceDataSheetEdits,
+	chartExSpaceDataSheet,
+	chartExSummaryFromModel,
+	renderChartSummarySvg,
 	chartSpaceDataSheet,
 	renderChartSpaceSvg,
 	type ChartSpace,
+	type ChartExSpace,
 } from 'ooxml-core/chart';
 import type { DrawingColorTheme } from 'ooxml-core/drawingml';
-import { readEmbeddedChartSpace, renderChartSvg, writeEmbeddedChartSpace } from 'ooxml-core/xlsx';
+import {
+	readEmbeddedChartSpace,
+	readEmbeddedChartExSpace,
+	renderChartSvg,
+	writeEmbeddedChartSpace,
+	writeEmbeddedChartExSpace,
+} from 'ooxml-core/xlsx';
+import { chartExSpaceFormatSource } from '../chart/format-pane-chartex';
 import { readEmbeddedChart } from 'ooxml-core/xlsx/ui';
 import { encodeBitmapEmf } from 'ooxml-core/visio';
 import {
@@ -61,6 +74,7 @@ export class ChartObjectEditor {
 	#target: ChartTarget | undefined;
 	#bytes: Uint8Array | undefined;
 	#space: ChartSpace | undefined;
+	#exSpace: ChartExSpace | undefined;
 	#theme: DrawingColorTheme | undefined;
 	#busy = false;
 	constructor(
@@ -106,19 +120,22 @@ export class ChartObjectEditor {
 		this.sheet.addEventListener('office-chart-data-change', (event) => {
 			const { edits } = (event as OfficeChartDataChangeEvent).detail;
 			if (this.#space) this.#update(applyChartSpaceDataSheetEdits(this.#space, edits));
+			else if (this.#exSpace) this.#updateEx(applyChartExSpaceDataSheetEdits(this.#exSpace, edits));
 		});
 		this.pane.addEventListener('office-chart-format-target', (event) => {
 			this.pane.target = (event as ChartFormatTargetEvent).detail.target;
 		});
 		this.pane.addEventListener('office-chart-format-edit', (event) => {
 			const { intent } = (event as ChartFormatEditEvent).detail;
-			if (!intent || !this.#space) return this.#update(this.#space);
+			if (!intent) return;
 			try {
-				this.#update(applyChartEditIntent(this.#space, intent));
+				if (this.#space) this.#update(applyChartEditIntent(this.#space, intent));
+				else if (this.#exSpace) this.#updateEx(applyChartExEditIntent(this.#exSpace, intent));
 				this.error.textContent = '';
 			} catch (error) {
 				this.error.textContent = error instanceof Error ? error.message : String(error);
 				this.#update(this.#space);
+				this.#updateEx(this.#exSpace);
 			}
 		});
 		this.pane.addEventListener('office-chart-format-close', () => this.dialog.close());
@@ -128,13 +145,20 @@ export class ChartObjectEditor {
 	get space(): ChartSpace | undefined {
 		return this.#space;
 	}
+	get chartExSpace(): ChartExSpace | undefined {
+		return this.#exSpace;
+	}
 	/** The chart being edited while the editor is open, so a host can close it if the shape goes. */
 	get target(): ChartTarget | undefined {
 		return this.dialog.open ? this.#target : undefined;
 	}
 	/** Open `mode` for the chart object's workbook; false when the workbook holds no chart. */
 	async open(mode: ChartEditMode, target: ChartTarget, workbook: Uint8Array): Promise<boolean> {
-		const found = await readEmbeddedChartSpace(workbook);
+		const displayed = await readEmbeddedChart(workbook);
+		const candidate = await readEmbeddedChartSpace(workbook);
+		const classic = candidate?.partName === displayed?.chart.partName ? candidate : undefined;
+		const extended = classic ? undefined : await readEmbeddedChartExSpace(workbook);
+		const found = classic ?? extended;
 		if (!found) return false;
 		const scheme = found.scheme as unknown as Readonly<Record<string, string>>;
 		this.#theme = { scheme: (name) => scheme[name] };
@@ -148,9 +172,13 @@ export class ChartObjectEditor {
 		this.dialog.setAttribute('heading', HEADINGS[mode]);
 		this.error.textContent = '';
 		this.#buttons.get('OK')!.disabled = !found.editable;
-		this.#update(found.space);
+		this.#space = undefined;
+		this.#exSpace = undefined;
+		if (classic) this.#update(classic.space);
+		else if (extended) this.#updateEx(extended.space);
 		if (!found.editable) {
 			this.#space = undefined;
+			this.#exSpace = undefined;
 			this.sheet.hidden = true;
 			this.pane.hidden = true;
 			this.error.textContent = translateRibbonText(
@@ -173,15 +201,29 @@ export class ChartObjectEditor {
 		if (svg) this.preview.replaceChildren(svg);
 		else this.preview.replaceChildren();
 	}
+	#updateEx(space: ChartExSpace | undefined): void {
+		this.#exSpace = space;
+		if (!space) return;
+		this.sheet.data = chartExSpaceDataSheet(space);
+		this.pane.source = chartExSpaceFormatSource(space, this.#theme);
+		const summary = chartExSummaryFromModel(space)?.summary;
+		const svg =
+			summary && parseSvgPreview(this.dialog.ownerDocument, renderChartSummarySvg(summary, LIVE));
+		if (svg) this.preview.replaceChildren(svg);
+		else this.preview.replaceChildren();
+	}
 	async #save(): Promise<void> {
 		const target = this.#target;
 		const space = this.#space;
 		const bytes = this.#bytes;
-		if (this.#busy || !target || !space || !bytes) return;
+		const extended = this.#exSpace;
+		if (this.#busy || !target || (!space && !extended) || !bytes) return;
 		this.#busy = true;
 		for (const button of this.#buttons.values()) button.disabled = true;
 		try {
-			const workbook = await writeEmbeddedChartSpace(bytes, space);
+			const workbook = space
+				? await writeEmbeddedChartSpace(bytes, space)
+				: await writeEmbeddedChartExSpace(bytes, extended!);
 			const embedded = await readEmbeddedChart(workbook);
 			if (!embedded) throw new Error('The chart could not be written.');
 			const height = Math.min(

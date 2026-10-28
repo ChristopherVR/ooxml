@@ -20,5 +20,6 @@ export * from './pivot/index';
 export * from './slicer/index';
 export * from './compare/index';
 export * from './embedded-chart-space';
+export * from './embedded-chart-ex-space';
 
 export { xlsxChartExDataSheet } from './edit/chart-ex';

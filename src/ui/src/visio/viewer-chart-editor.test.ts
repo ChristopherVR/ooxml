@@ -1,7 +1,13 @@
 import JSZip from 'jszip';
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { chartSpaceDataSheet } from 'ooxml-core/chart';
-import { readEmbeddedChartSpace } from 'ooxml-core/xlsx';
+import { chartSpaceDataSheet, chartExSpaceDataSheet } from 'ooxml-core/chart';
+import {
+	readEmbeddedChartSpace,
+	readEmbeddedChartExSpace,
+	loadXlsx,
+	saveXlsx,
+} from 'ooxml-core/xlsx';
 import { gridChartWorkbook, readEmbeddedChart } from 'ooxml-core/xlsx/ui';
 import { registerOfficeUi } from '../index';
 import { ChartObjectEditor } from './viewer-chart-editor';
@@ -41,6 +47,43 @@ const isEmf = (bytes: Uint8Array) =>
 	new DataView(bytes.buffer, bytes.byteOffset).getUint32(40, true) === 0x464d4520;
 
 describe('chart object Edit Data and Format Chart', () => {
+	it('edits embedded ChartEx through the shared data sheet and formatting pane', async () => {
+		const book = await loadXlsx(
+			readFileSync('../core/xlsx/__fixtures__/excel-chart-families.xlsx'),
+		);
+		for (const ws of book.sheets)
+			ws.drawings = ws.drawings.filter(
+				(d) =>
+					d.kind === 'unsupported' && d.chartExSpace?.plotArea.series[0]?.layoutId === 'waterfall',
+			);
+		const submit = vi.fn<Submit>(async () => {});
+		const { editor, press } = setup(submit);
+		expect(await editor.open('data', TARGET, await saveXlsx(book))).toBe(true);
+		expect(editor.space).toBeUndefined();
+		expect(editor.chartExSpace?.plotArea.series[0]?.layoutId).toBe('waterfall');
+		editor.sheet.dispatchEvent(
+			new CustomEvent('office-chart-data-change', {
+				detail: { edits: [{ kind: 'value', series: 0, category: 0, value: 42 }] },
+			}),
+		);
+		editor.pane.dispatchEvent(
+			new CustomEvent('office-chart-format-edit', {
+				detail: {
+					intent: {
+						op: 'fill',
+						target: { kind: 'series', seriesIndex: 0 },
+						fill: { kind: 'solid', color: { kind: 'srgb', value: 'FF0000', transforms: [] } },
+					},
+				},
+			}),
+		);
+		expect(editor.preview.querySelector('svg')).not.toBeNull();
+		press('OK');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalled());
+		const back = (await readEmbeddedChartExSpace(submit.mock.calls[0]![0].workbook))!;
+		expect(chartExSpaceDataSheet(back.space).series[0]!.values[0]).toBe(42);
+		expect(isEmf(submit.mock.calls[0]![0].preview!)).toBe(true);
+	});
 	it('saves advanced shared chart settings without changing the embedded data', async () => {
 		const submit = vi.fn<Submit>(async () => {});
 		const { editor, press } = setup(submit);

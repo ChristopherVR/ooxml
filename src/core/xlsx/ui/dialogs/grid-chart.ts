@@ -143,9 +143,13 @@ export async function readEmbeddedChart(bytes: Uint8Array): Promise<EmbeddedChar
 		return undefined;
 	}
 	for (const [index, sheet] of workbook.sheets.entries()) {
-		const chart = sheet.drawings.find(
-			(drawing): drawing is ChartObject => drawing.kind === 'chart',
-		);
+		const chart = sheet.drawings.flatMap((drawing) =>
+			drawing.kind === 'chart'
+				? [drawing]
+				: drawing.kind === 'unsupported' && drawing.chartEx
+					? [drawing.chartEx]
+					: [],
+		)[0];
 		if (!chart) continue;
 		const used = usedRange(sheet);
 		const height = Math.min(used ? used.end.row + 1 : 0, MAX_GRID_ROWS);
