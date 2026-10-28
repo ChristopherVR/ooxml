@@ -6,6 +6,11 @@ The active implementation order and acceptance criteria for shared chart, SmartA
 parity are tracked in [Shared Office parity delivery](office-shared-parity-delivery.md). It separates
 extraction from consumer integration, rendering fidelity and native Office validation.
 
+The [2026-10-28 further sharing review](pptx-reuse-review-2026-10-28.md) identifies the next
+cross-product extraction candidates, their current source locations, consumer gaps and acceptance
+slices. It includes a fresh chart-renderer measurement and distinguishes shared-product gains
+from PowerPoint-only binding consolidation.
+
 ## Done
 
 - **Shared areas:** `xml`, `opc`, `units`, `color`, `geometry`, `drawingml`, `diagram` (SmartArt), `chart` (model, parser, writer and SVG painter), `digest`, `crypto` (package encryption), `math`, `text`, `i18n`, `ribbon`, `collab` (Yjs real-time collaboration), `teams` and `automation`. `AGENTS.md` has the authoritative list.

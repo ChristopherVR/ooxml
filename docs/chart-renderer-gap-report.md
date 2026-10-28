@@ -5,6 +5,12 @@ docx and pptx all draw through. This report is step 1: what the pptx renderer dr
 not, how big each piece is, and how hard it is to retarget. Step 2 ports the top gaps in slices (see
 "Slices" at the end for what has landed).
 
+**2026-10-28 review:** the harness was rerun at `16edc2fd9` (2 tests, 82 parts, no exceptions).
+See [the current sharing review](pptx-reuse-review-2026-10-28.md#fresh-evidence-and-limits) and
+[raw measurement](evidence/chart-gap-2026-10-28.json). The tables below retain their historical
+baseline. In particular, unchanged plot/point manual layouts do not imply missing title/legend
+layout support, and a nonempty SVG can contain placeholders rather than complete chart rendering.
+
 ## How the numbers were made
 
 - `src/core/pptx/__tests__/integration/chart-renderer-gap.test.ts` (kept; runs with the core tests).
