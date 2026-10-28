@@ -1,3 +1,4 @@
+import { chartLineSvg } from './chart-svg-line';
 import { chartPlotRect } from './chart-svg-plot-layout';
 import type { ChartFrameSize } from '../manual-layout';
 import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
@@ -237,17 +238,14 @@ export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]
 			out.push(`<polygon points="${poly}" fill="${color}" fill-opacity="0.85"${filter}/>`);
 			continue;
 		}
-		let segment: string[] = [];
+		let segment: { x: number; y: number }[] = [];
 		const flush = (): void => {
-			if (segment.length > 1)
-				out.push(
-					`<polyline points="${segment.join(' ')}" fill="none" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"${filter}/>`,
-				);
+			out.push(chartLineSvg(segment, series));
 			segment = [];
 		};
 		for (const [x, y] of points) {
 			if (Number.isNaN(x)) flush();
-			else segment.push(`${n(x)},${n(y)}`);
+			else segment.push({ x, y });
 		}
 		flush();
 		points.forEach(([x, y], index) => {

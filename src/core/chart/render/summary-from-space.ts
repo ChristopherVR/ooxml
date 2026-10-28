@@ -45,6 +45,7 @@ export function chartSummarySeries(
 	source: ChartSpaceSeries,
 	chartType: ChartSummaryType,
 	groupLabels?: ChartDataLabels,
+	groupSmooth?: boolean,
 ): ChartSummarySeries {
 	const categories = source.categories ?? source.xValues;
 	const values = source.values ?? source.yValues;
@@ -54,6 +55,9 @@ export function chartSummarySeries(
 		categories: chartSourceValues(categories),
 		values: chartSourceValues(values).map(numeric),
 	};
+	const smooth = source.smooth ?? groupSmooth;
+	if (smooth !== undefined) out.smooth = smooth;
+	if (source.spPr?.line) out.line = source.spPr.line;
 	if (values?.cache?.formatCode !== undefined) out.numberFormat = values.cache.formatCode;
 	if (source.bubbleSizes) {
 		out.bubbleSizes = chartSourceValues(source.bubbleSizes).map(numeric);
@@ -130,7 +134,15 @@ function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): Chart
 		const entry: ChartSummaryGroup = {
 			chartType: type,
 			series: group.series.map((source, index) => ({
-				...chartSummarySeries(source, type, group.dataLabels),
+				...chartSummarySeries(
+					source,
+					type,
+					group.dataLabels,
+					group.smooth ??
+						(group.scatterStyle
+							? ['smooth', 'smoothMarker'].includes(group.scatterStyle)
+							: undefined),
+				),
 				...summaryMarkers(source, group, index),
 			})),
 			secondary: valueAxisId(chartSpace, group.axisIds) !== primary,
@@ -163,8 +175,17 @@ export function chartSummaryFromSpace(
 	let chartType: ChartSummaryType = group ? GROUP_TYPES[group.kind] : 'column';
 	if (chartType === 'bar' && group?.barDirection !== 'bar') chartType = 'column';
 	const series = (group?.series ?? []).map((source, index) => ({
-		...chartSummarySeries(source, chartType, group?.dataLabels),
+		...chartSummarySeries(
+			source,
+			chartType,
+			group?.dataLabels,
+			group?.smooth ??
+				(group?.scatterStyle ? ['smooth', 'smoothMarker'].includes(group.scatterStyle) : undefined),
+		),
 		...(group ? summaryMarkers(source, group, index) : {}),
+		...(group?.kind === 'scatter'
+			? { showLine: !['marker', 'none'].includes(group.scatterStyle ?? 'marker') }
+			: {}),
 	}));
 	const summary: ChartSummary = {
 		chartType,

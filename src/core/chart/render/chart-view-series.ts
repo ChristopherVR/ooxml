@@ -8,7 +8,7 @@ import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { resolveDrawingShadowXml } from '../../drawingml/drawing-shadow';
 import { resolveChartGradient, type ChartGradientFill } from '../gradient-definition';
 import { autoSeriesColor, chartColorScheme } from './chart-colors';
-import { analysisView } from './chart-view-analysis';
+import { strokeOf, analysisView } from './chart-view-analysis';
 import type { ChartSeriesView } from './chart-view';
 import type { ChartSummary, ChartSummarySeries, ChartThemePalette } from './summary';
 
@@ -125,6 +125,13 @@ export function seriesView<S extends ChartSummarySeries>(
 		color,
 		sourceIndex: index,
 	};
+	if (s.showLine !== undefined) view.showLine = s.showLine;
+	if (s.smooth !== undefined) view.smooth = s.smooth;
+	if (s.line)
+		view.stroke = strokeOf(s.line, { color, width: 2.25 }, ctx.drawingColor) ?? {
+			color: 'none',
+			width: 0,
+		};
 	const shadow = resolveDrawingShadowXml(s.effectsXml, { scheme: (name) => scheme[name] });
 	if (shadow) view.shadow = shadow;
 	const resolvedGradient = ctx.gradient(s.fill);

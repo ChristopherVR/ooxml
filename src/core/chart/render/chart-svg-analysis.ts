@@ -26,7 +26,7 @@ const DASHES: Readonly<Record<string, readonly number[]>> = {
 
 const CAP = 4;
 
-function strokeAttributes(stroke: ChartStrokeView): string {
+export function strokeAttributes(stroke: ChartStrokeView): string {
 	const pattern = stroke.dash ? DASHES[stroke.dash] : undefined;
 	const dash = pattern
 		? ` stroke-dasharray="${pattern.map((step) => n(step * stroke.width)).join(' ')}"`

@@ -56,6 +56,9 @@ export interface ChartSummaryDataLabels {
 }
 
 export interface ChartSummarySeries extends ChartMarkerSummary {
+	smooth?: boolean;
+	showLine?: boolean;
+	line?: DrawingLine;
 	name?: string;
 	/** Formula reference for the series name (`Sheet1!$B$1`). */
 	nameRef?: string;

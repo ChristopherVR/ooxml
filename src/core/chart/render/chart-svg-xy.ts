@@ -1,3 +1,4 @@
+import { chartLineSvg } from './chart-svg-line';
 import { chartPlotRect } from './chart-svg-plot-layout';
 import type { ChartFrameSize } from '../manual-layout';
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
@@ -111,6 +112,21 @@ export function scatter(
 	out.push(
 		axisLine(model, model.axes?.value, 'valueAxis', plot.x, plot.y, plot.x, plot.y + plot.h),
 	);
+	if (!bubble)
+		for (const series of model.series) {
+			if (!series.showLine) continue;
+			let run: { x: number; y: number }[] = [];
+			const flush = () => {
+				out.push(chartLineSvg(run, series));
+				run = [];
+			};
+			series.values.forEach((value, i) => {
+				const x = series.xValues?.[i];
+				if (value === null || x === null || x === undefined) flush();
+				else run.push({ x: px(x), y: py(value) });
+			});
+			flush();
+		}
 	const marks: PointMark[] = [];
 	for (const [si, s] of model.series.entries())
 		s.values.forEach((v, i) => {

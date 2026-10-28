@@ -32,7 +32,7 @@ export interface ChartErrorBarsView {
 
 type ColorResolver = (color: DrawingColor | undefined) => string | undefined;
 
-function strokeOf(
+export function strokeOf(
 	line: DrawingLine | undefined,
 	fallback: ChartStrokeView,
 	resolve: ColorResolver,

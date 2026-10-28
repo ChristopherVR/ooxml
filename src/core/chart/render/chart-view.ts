@@ -43,6 +43,9 @@ export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-
 export type { WaterfallView } from './chart-view-ex';
 
 export interface ChartSeriesView extends ChartMarkerSeriesView {
+	smooth?: boolean;
+	showLine?: boolean;
+	stroke?: import('./chart-view-analysis').ChartStrokeView;
 	/** Document-order position, retained when combination groups are painted together. */
 	sourceIndex?: number;
 	shadow?: DrawingSvgShadow;

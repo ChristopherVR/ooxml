@@ -62,3 +62,5 @@ export * from './data-sheet';
 export * from './workbook/index';
 
 export { writeChartSpaceOverSource } from './keep-source';
+
+export * from './line-path';
