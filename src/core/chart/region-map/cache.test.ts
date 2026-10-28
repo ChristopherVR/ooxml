@@ -39,6 +39,15 @@ describe('document geography cache', () => {
 		const bytes = chunks.flatMap((chunk) => [...chunk]);
 		expect(inflateGeoCache(btoa(String.fromCharCode(...bytes)))).toBe(clear);
 	});
+	it('shares the remaining point budget across every ring before allocating them', () => {
+		const multi = clear
+			.replace('numPoints="4"', 'numPoints="8"')
+			.replace(`1,${encoded}`, `1,${encoded},${encoded}`);
+		expect(readGeographyCache(multi, 8).regions[0]?.rings).toHaveLength(2);
+		const bounded = readGeographyCache(multi, 6);
+		expect(bounded.regions).toEqual([]);
+		expect(bounded.issues).toContain('Invalid compressed geography polygon.');
+	});
 	it.each(['mercator', 'miller', 'robinson', 'albers'])(
 		'projects cached coordinates with %s',
 		(projection) => {

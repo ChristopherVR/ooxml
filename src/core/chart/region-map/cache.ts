@@ -73,10 +73,15 @@ export function inflateGeoCache(binary: string, maxOutputBytes = LIMIT): string 
 	}
 	return new TextDecoder('utf-8', { fatal: true }).decode(out);
 }
-export function readGeographyCache(xml: string | undefined): GeographyCache {
+export function readGeographyCache(
+	xml: string | undefined,
+	pointLimit = 1_000_000,
+): GeographyCache {
 	const result: GeographyCache = { regions: [], issues: [] };
 	if (!xml) return result;
 	try {
+		if (!Number.isSafeInteger(pointLimit) || pointLimit < 1 || pointLimit > 1_000_000)
+			throw new Error('Invalid geography point limit.');
 		if (xml.length > LIMIT) throw new Error('Geography cache input limit exceeded.');
 		let root = parseXml(`<cx:root xmlns:cx="${CX}">${xml}</cx:root>`).documentElement;
 		const binary = elements(root, 'binary')[0];
@@ -92,19 +97,25 @@ export function readGeographyCache(xml: string | undefined): GeographyCache {
 					result.issues.push('Invalid geography ring count.');
 					continue;
 				}
-				const decoded = parts.map((part) => decodeGeoRing(part, 1_000_000 - points));
-				if (
-					decoded.some((r) => !r) ||
-					decoded.reduce((n, r) => n + (r?.length ?? 0), 0) > Math.min(expected, 1_000_000 - points)
-				) {
+				const decoded: GeoPoint[][] = [];
+				let polygonPoints = 0;
+				for (const part of parts) {
+					const ring = decodeGeoRing(
+						part,
+						Math.min(expected - polygonPoints, pointLimit - points - polygonPoints),
+					);
+					if (!ring) break;
+					decoded.push(ring);
+					polygonPoints += ring.length;
+				}
+				if (decoded.length !== parts.length) {
 					result.issues.push('Invalid compressed geography polygon.');
 					continue;
 				}
-				for (const ring of decoded)
-					if (ring) {
-						rings.push(ring);
-						points += ring.length;
-					}
+				for (const ring of decoded) {
+					rings.push(ring);
+					points += ring.length;
+				}
 			}
 			if (rings.length)
 				result.regions.push({
