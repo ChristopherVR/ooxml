@@ -1,17 +1,21 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec, `test`/`expect` come from @playwright/test */
 /**
- * With a bare caret in a list paragraph, switching between Bullets and
- * Numbering converts the whole list around the caret (Word / Google Docs),
- * not only the caret's paragraph. Every binding routes its list buttons
- * through the shared `applyListStyleUpdate`; this pins that each one passes
- * the live caret through and renders the converted list.
+ * How far Bullets / Numbering reach from a bare caret, in every binding.
+ *
+ * By default a caret converts only its own paragraph, as in PowerPoint. With
+ * the host option `listConversionScope: 'list'` (the demos'
+ * `?listConversionScope=list`, see `demos/pptx/shared/demo-root-options.ts`),
+ * switching a list paragraph between bullets and numbering converts the whole
+ * list around the caret, as in Word and Google Docs. Every binding routes its
+ * list buttons through the shared `applyListStyleUpdate`; this pins that each
+ * one passes both the live caret and the option through.
  *
  * Fixture: `nested-list-continuation.pptx` holds one numbered list, two
  * top-level items around two nested level-1 items, then a third top-level item.
  */
 
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { fixture, loadDeck, slideElements } from './support/deck';
 
@@ -58,8 +62,8 @@ async function placeCaretIn(page: Page, text: string): Promise<void> {
 
 const bulletCount = (text: string | null) => (text?.match(/•/gu) ?? []).length;
 
-test('a caret in a numbered list switches the whole list to bullets', async ({ page }) => {
-	await loadDeck(page, NESTED_LIST);
+async function switchFirstItemToBullets(page: Page, url?: string): Promise<Locator> {
+	await loadDeck(page, NESTED_LIST, url);
 	await openRibbonTab(page, 'Home');
 	const target = slideElements(page).filter({ hasText: 'Roman first' }).first();
 	const elsewhere = slideElements(page).filter({ hasText: 'Native event probe' }).first();
@@ -73,12 +77,25 @@ test('a caret in a numbered list switches the whole list to bullets', async ({ p
 		.first()
 		.click();
 	await elsewhere.click();
+	await expect(target).toContainText('Roman last');
+	return target;
+}
 
+test('by default a caret switches only its own paragraph (PowerPoint)', async ({ page }) => {
+	const target = await switchFirstItemToBullets(page);
+	const bullets = () => target.textContent().then(bulletCount);
+	await expect.poll(bullets, { message: 'the caret paragraph carries a bullet' }).toBe(1);
+	// Settled, not mid-commit: the rest of the list stays numbered.
+	await page.waitForTimeout(500);
+	expect(await bullets(), 'only the caret paragraph carries a bullet').toBe(1);
+});
+
+test("listConversionScope 'list' switches the whole list around the caret", async ({ page }) => {
+	const target = await switchFirstItemToBullets(page, '/?listConversionScope=list');
 	await expect
 		.poll(async () => bulletCount(await target.textContent()), {
 			message: 'every paragraph of the list carries a bullet',
 		})
 		.toBe(PARAGRAPHS);
 	await expect(target).toContainText('Nested middle');
-	await expect(target).toContainText('Roman last');
 });

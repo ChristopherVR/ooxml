@@ -48,6 +48,7 @@ export function useElementOperations(input: UseElementOperationsInput): ElementO
 		inlineEditingElementId,
 		inlineEditingText,
 		inlineEditingSnapshotRef,
+		listConversionScope,
 	} = input;
 
 	// ── Selection ─────────────────────────────────────────────────────
@@ -156,6 +157,7 @@ export function useElementOperations(input: UseElementOperationsInput): ElementO
 			inlineEditingSnapshotRef,
 			setInlineEditingElementId,
 			updateSelectedElement,
+			listConversionScope,
 		});
 
 	// ── Slide-level helpers ───────────────────────────────────────────

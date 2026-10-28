@@ -99,16 +99,37 @@ export function restoreParagraphMetadata(
 }
 
 /**
- * The paragraphs a caret-only list switch acts on: the list around the caret.
+ * How far a list switch made with a bare caret reaches.
  *
- * PowerPoint applies Bullets / Numbering to the caret's paragraph only, but
- * users expect what Word and Google Docs do: with the caret in a bulleted
- * list, choosing Numbering converts the whole list. The list is the run of
- * adjacent paragraphs at the caret's level with the caret paragraph's kind,
- * including any deeper-level items nested between them; it stops at a
- * paragraph with no list or a shallower level. Returns `undefined` (keep the
- * caret's paragraph alone) unless the caret paragraph is a list paragraph
- * being switched to the other kind; turning a list off stays per paragraph.
+ * - `'paragraph'` (default, PowerPoint): Bullets / Numbering apply to the
+ *   paragraph holding the caret, exactly as they apply to the paragraphs a
+ *   range selection touches.
+ * - `'list'` (opt-in, Word / Google Docs): switching a list paragraph between
+ *   bullets and numbering converts the whole list around the caret; see
+ *   {@link caretListParagraphRange}. Turning a list off, listing a plain
+ *   paragraph and range selections are unaffected.
+ */
+export type ListConversionScope = 'paragraph' | 'list';
+
+/** The PowerPoint behaviour, used whenever a host does not choose. */
+export const DEFAULT_LIST_CONVERSION_SCOPE: ListConversionScope = 'paragraph';
+
+/** Options shared by the list-style entry points. */
+export interface ListStyleUpdateOptions {
+	/** Defaults to {@link DEFAULT_LIST_CONVERSION_SCOPE}. */
+	readonly listConversionScope?: ListConversionScope;
+}
+
+/**
+ * The paragraphs a caret-only list switch acts on in `'list'` scope: the list
+ * around the caret, as Word and Google Docs convert it.
+ *
+ * The list is the run of adjacent paragraphs at the caret's level with the
+ * caret paragraph's kind, including any deeper-level items nested between
+ * them; it stops at a paragraph with no list or a shallower level. Returns
+ * `undefined` (keep the caret's paragraph alone) unless the caret paragraph is
+ * a list paragraph being switched to the other kind; turning a list off stays
+ * per paragraph.
  */
 function caretListParagraphRange(
 	segments: readonly TextSegment[],
@@ -166,14 +187,15 @@ export function selectedParagraphBulletKind(
 /**
  * Apply a list request to touched paragraphs, while accompanying character
  * styles retain their existing selection scope. A null selection means the
- * whole element, matching the existing editor contract. A bare caret that
- * switches a list paragraph to the other kind converts the whole list around
- * it (see `caretListParagraphRange`).
+ * whole element, matching the existing editor contract. A bare caret touches
+ * its own paragraph, as in PowerPoint, unless `options.listConversionScope` is
+ * `'list'` (see {@link ListConversionScope}).
  */
 export function applyListStyleUpdate(
 	element: PptxElement,
 	updates: Partial<TextStyle>,
 	selection: InlineTextSelection | null,
+	options: ListStyleUpdateOptions = {},
 ): { patch: Partial<PptxElement>; selection: InlineTextSelection | null } {
 	if (!hasTextProperties(element) || !updates.listType) {
 		return { patch: {}, selection };
@@ -210,7 +232,8 @@ export function applyListStyleUpdate(
 	const patch = setElementBullets(
 		working,
 		listType,
-		(startOffset === endOffset
+		(startOffset === endOffset &&
+		(options.listConversionScope ?? DEFAULT_LIST_CONVERSION_SCOPE) === 'list'
 			? caretListParagraphRange(segments, startEntry.paragraph, listType)
 			: undefined) ?? {
 			startParagraph: startEntry.paragraph,

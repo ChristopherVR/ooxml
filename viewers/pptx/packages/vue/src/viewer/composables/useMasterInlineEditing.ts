@@ -1,5 +1,5 @@
 import { buildInlineListStylePatch, getInlineEditorSelectionResult } from 'ooxml-ui/pptx';
-import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot, ListConversionScope } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { computed, ref, shallowRef } from 'vue';
@@ -7,10 +7,16 @@ import { computed, ref, shallowRef } from 'vue';
 import { useInlineListSession } from './useInlineListSession';
 import type { UseMasterViewWiringResult } from './useMasterViewWiring';
 
-/** Owns the master overlay's current native text session and existing commit route. */
+/**
+ * Owns the master overlay's current native text session and existing commit route.
+ *
+ * `listConversionScope` reads the host prop of the same name at command time;
+ * unset keeps the shared default (`'paragraph'`).
+ */
 export function useMasterInlineEditing(
 	state: () => UseMasterViewWiringResult,
 	canEdit: () => boolean,
+	listConversionScope: () => ListConversionScope | undefined = () => undefined,
 ) {
 	/** The shape whose text is being typed into, and the text so far. */
 	const editingId = ref<string | null>(null);
@@ -38,6 +44,7 @@ export function useMasterInlineEditing(
 			{ ...element, text: snapshot.text, textSegments: snapshot.textSegments },
 			updates,
 			selection.selection,
+			{ listConversionScope: listConversionScope() },
 		);
 		if (
 			!patch?.textSegments ||

@@ -1456,6 +1456,7 @@ const ribbonActions = useRibbonActions({
 	readInlineSnapshot: inlineEdit.readInlineSnapshot,
 	formatInlineSnapshot: inlineEdit.formatInlineSnapshot,
 	endInlineListSession: inlineEdit.endInlineListSession,
+	listConversionScope: () => props.listConversionScope,
 	canEdit: () => canEditEffective.value,
 	presenting: presentation.presenting,
 	showMasterView: masterView.showMasterView,
@@ -2491,6 +2492,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				:notes-canvas-size="deck.notesCanvasSize.value"
 				:handout-master="handoutMaster"
 				:can-edit="canEditEffective"
+				:list-conversion-scope="props.listConversionScope"
 			/>
 
 			<ViewerDeckDialogs

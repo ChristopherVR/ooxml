@@ -9,6 +9,7 @@ import { masterViewOwnerElementId } from 'ooxml-ui/pptx';
  * which is handed over whole as `state` rather than being unpacked into a
  * dozen individual props.
  */
+import type { ListConversionScope } from 'ooxml-ui/pptx';
 import type { PptxHandoutMaster, PptxNotesMaster, PptxSlideMaster } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -42,6 +43,8 @@ const props = defineProps<{
 	handoutMaster: PptxHandoutMaster | undefined;
 	/** Editing affordances are offered only on an editable deck. */
 	canEdit?: boolean;
+	/** The viewer's `listConversionScope` prop; unset keeps the shared default. */
+	listConversionScope?: ListConversionScope;
 }>();
 
 const { t } = useI18n();
@@ -69,6 +72,7 @@ const {
 } = useMasterInlineEditing(
 	() => props.state,
 	() => Boolean(props.canEdit),
+	() => props.listConversionScope,
 );
 defineExpose({ readInlineSnapshot });
 

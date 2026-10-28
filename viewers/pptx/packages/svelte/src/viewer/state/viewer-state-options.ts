@@ -56,6 +56,7 @@ export function toViewerStateOptions(
 		getAuthorName: () => getProps().authorName,
 		getInitialSlide: () => resolveViewerRootOptions(getProps()).initialSlide,
 		getGoogleFonts: () => getProps().googleFonts,
+		getListConversionScope: () => getProps().listConversionScope,
 		getAllowExternalContent: () => getProps().allowExternalContent,
 		getLimits: () => getProps().limits,
 		getSmartArt3D: () => getProps().smartArt3D ?? false,

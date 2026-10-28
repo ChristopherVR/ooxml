@@ -5,7 +5,11 @@ import {
 	setElementBullets,
 	transformInlineListCase,
 } from 'ooxml-ui/pptx';
-import type { ElementBulletPatch, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type {
+	ElementBulletPatch,
+	InlineTextEditSnapshot,
+	ListStyleUpdateOptions,
+} from 'ooxml-ui/pptx';
 import { INLINE_EDITOR_SELECTOR } from 'ooxml-ui/pptx/render/context-menu-target';
 import { textStylePatch } from 'ooxml-ui/pptx/render/inspector-helpers';
 import { remapTextToSegments } from 'ooxml-ui/pptx/render/remap-text';
@@ -52,12 +56,17 @@ export function isTextElement(el: PptxElement | null): boolean {
 	return el !== null && hasTextProperties(el);
 }
 
-/** Merge `patch` into the selection's text style and commit via the editor. */
+/**
+ * Merge `patch` into the selection's text style and commit via the editor.
+ * `options.listConversionScope` decides how far a bare caret's list switch
+ * reaches (default `'paragraph'`; see `ListConversionScopeService`).
+ */
 export function formatInlineListStyle(
 	el: PptxElement,
 	patch: Partial<TextStyle>,
 	draft: InlineTextEditSnapshot,
 	formatSnapshot: (snapshot: InlineTextEditSnapshot) => boolean,
+	options?: ListStyleUpdateOptions,
 ): (ElementBulletPatch & { text: string }) | undefined {
 	if (!hasTextProperties(el) || draft.elementId !== el.id || !draft.textSegments) {
 		return undefined;
@@ -72,6 +81,7 @@ export function formatInlineListStyle(
 		{ ...el, text: draft.text, textSegments: draft.textSegments },
 		patch,
 		selection.selection,
+		options,
 	);
 	if (!changes?.textSegments || !formatSnapshot({ ...draft, textSegments: changes.textSegments })) {
 		return undefined;
@@ -86,6 +96,7 @@ export function patchTextStyle(
 	patch: Partial<TextStyle>,
 	snapshot?: InlineTextEditSnapshot,
 	formatSnapshot?: (snapshot: InlineTextEditSnapshot) => boolean,
+	options?: ListStyleUpdateOptions,
 ): void {
 	if (!el || !hasTextProperties(el)) {
 		return;
@@ -96,7 +107,7 @@ export function patchTextStyle(
 		return;
 	}
 	if (draft && formatSnapshot) {
-		const changes = formatInlineListStyle(el, patch, draft, formatSnapshot);
+		const changes = formatInlineListStyle(el, patch, draft, formatSnapshot, options);
 		if (changes) {
 			editor.updateElement(slideIndex, el.id, changes);
 		}

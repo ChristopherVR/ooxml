@@ -1,4 +1,4 @@
-import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
 /**
  * useViewerBuildingBlocksState: The dialogs / editor-operations /
  * integration half of `useViewerBuildingBlocks`'s hook wiring, split out
@@ -46,6 +46,8 @@ export interface UseViewerBuildingBlocksStateInput {
 	initialSlide?: number;
 	/** Host `googleFonts`: the Google Fonts fallback policy; forwarded to `useViewerIntegration`. */
 	googleFonts?: GoogleFontsOption;
+	/** Host `listConversionScope`: bare-caret Bullets / Numbering reach; forwarded to `useEditorOperations`. */
+	listConversionScope?: ListConversionScope;
 	/** Host `allowExternalContent`: overrides the Trust Center setting for every load when set. */
 	allowExternalContent?: boolean;
 	/** Host `limits`: the load limits; forwarded to `useViewerIntegration`. */
@@ -91,7 +93,7 @@ export function useViewerBuildingBlocksState(
 	input: UseViewerBuildingBlocksStateInput,
 ): ViewerBuildingBlocksState {
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
-	const { initialSlide, googleFonts, allowExternalContent, limits } = input;
+	const { initialSlide, googleFonts, listConversionScope, allowExternalContent, limits } = input;
 
 	// The headless API has no customization controller, so the host switch
 	// locks the options store directly, as `useViewerCustomization` does for
@@ -202,6 +204,7 @@ export function useViewerBuildingBlocksState(
 		presentation,
 		userName,
 		handlerRef: actionSoundHandlerRef,
+		listConversionScope,
 	});
 
 	const {

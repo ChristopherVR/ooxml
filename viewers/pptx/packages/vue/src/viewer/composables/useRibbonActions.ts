@@ -1,4 +1,9 @@
-import type { AlignEdge, ChangeCaseMode, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type {
+	AlignEdge,
+	ChangeCaseMode,
+	InlineTextEditSnapshot,
+	ListConversionScope,
+} from 'ooxml-ui/pptx';
 import {
 	applyTextStyleUpdate,
 	readEditableText,
@@ -34,6 +39,11 @@ export interface UseRibbonActionsInput {
 	readInlineSnapshot?: () => InlineTextEditSnapshot | undefined;
 	formatInlineSnapshot?: (snapshot: InlineTextEditSnapshot) => boolean;
 	endInlineListSession?: () => void;
+	/**
+	 * The host `listConversionScope` prop, read at command time. Unset keeps the
+	 * shared default (`'paragraph'`).
+	 */
+	listConversionScope?: () => ListConversionScope | undefined;
 	canEdit: () => boolean;
 	presenting: Ref<boolean>;
 	showMasterView: Ref<boolean>;
@@ -171,7 +181,9 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 			if (selected.kind === 'unsupported') {
 				return;
 			}
-			const patch = buildInlineListStylePatch(base, updates, selected.selection);
+			const patch = buildInlineListStylePatch(base, updates, selected.selection, {
+				listConversionScope: input.listConversionScope?.(),
+			});
 			const formatted = { ...base, ...patch };
 			if (
 				!patch ||

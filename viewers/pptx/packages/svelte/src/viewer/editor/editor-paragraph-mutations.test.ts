@@ -5,6 +5,7 @@ import {
 	initializeInlineListDom,
 	attachInlineListController,
 } from 'ooxml-ui/pptx';
+import type { ListStyleUpdateOptions } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -111,6 +112,53 @@ describe('editor-paragraph-mutations toggleListTypePatch', () => {
 	it('does not add text to unsupported elements', () => {
 		const table = { type: 'table', id: 't', x: 0, y: 0, width: 1, height: 1 } as PptxElement;
 		expect(toggleListTypePatch(table, 'bullet')).toStrictEqual({});
+	});
+});
+
+describe('editor-paragraph-mutations toggleListTypePatch listConversionScope', () => {
+	afterEach(() => {
+		document.body.innerHTML = '';
+	});
+
+	/** Number a three-item bulleted list with a bare caret inside the middle item. */
+	function numberWithCaret(options?: ListStyleUpdateOptions): (string | undefined)[] {
+		const source = {
+			...textEl(),
+			text: 'One\nTwo\nThree',
+			textSegments: [
+				{ text: 'One', style: {}, bulletInfo: { char: '•' } },
+				{ text: '\n', style: {}, isParagraphBreak: true },
+				{ text: 'Two', style: {}, bulletInfo: { char: '•' } },
+				{ text: '\n', style: {}, isParagraphBreak: true },
+				{ text: 'Three', style: {}, bulletInfo: { char: '•' } },
+			],
+		} as PptxElement;
+		const seed = createInlineListSeed(source)!;
+		const root = document.createElement('div');
+		document.body.append(root);
+		initializeInlineListDom(root, seed);
+		const controller = attachInlineListController(root, seed);
+		const node = root.children[1]!.firstElementChild!.firstChild!;
+		window.getSelection()!.setBaseAndExtent(node, 1, node, 1);
+		const read = controller.read();
+		if (read.kind !== 'supported') {
+			throw new Error(read.reason);
+		}
+		const next = {
+			...source,
+			...toggleListTypePatch(source, 'numbered', read.snapshot, options),
+		} as PptxElement;
+		controller.dispose();
+		return buildParagraphs(next).map((p) => p.bulletMarker);
+	}
+
+	it('numbers only the caret paragraph by default (PowerPoint)', () => {
+		expect(numberWithCaret()).toStrictEqual(['•', '1.', '•']);
+		expect(numberWithCaret({ listConversionScope: 'paragraph' })).toStrictEqual(['•', '1.', '•']);
+	});
+
+	it("numbers the whole list around the caret with 'list'", () => {
+		expect(numberWithCaret({ listConversionScope: 'list' })).toStrictEqual(['1.', '2.', '3.']);
 	});
 });
 

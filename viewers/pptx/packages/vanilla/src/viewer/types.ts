@@ -21,7 +21,7 @@ import type {
 	ViewportFitOptions,
 	RibbonAddInTab,
 } from 'ooxml-ui/pptx';
-import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
@@ -205,6 +205,17 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * once, when the viewer is created.
 	 */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * How far Bullets / Numbering reach when the selection is a bare caret.
+	 * `'paragraph'` (the default, PowerPoint behaviour): only the paragraph
+	 * holding the caret changes. `'list'` (opt-in, Word / Google Docs
+	 * behaviour): switching a list paragraph between bullets and numbering
+	 * converts the whole adjacent list around the caret. Turning a list off,
+	 * listing a plain paragraph and range selections behave the same in both.
+	 * Read on every list command, so a change to the options object applies
+	 * from the next Bullets / Numbering press.
+	 */
+	listConversionScope?: ListConversionScope;
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio

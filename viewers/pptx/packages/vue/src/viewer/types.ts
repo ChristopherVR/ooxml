@@ -1,5 +1,10 @@
 import type { CollaborationState } from 'ooxml-core/collab';
-import type { DocumentStorage, GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type {
+	DocumentStorage,
+	GoogleFontsOption,
+	ListConversionScope,
+	PptxLoadLimits,
+} from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
@@ -248,6 +253,15 @@ export interface PowerPointViewerProps {
 	 * invalid `baseUrl` disables the fallback (with a console warning).
 	 */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * How far Bullets / Numbering reaches when the text caret has no selection.
+	 * `'paragraph'` (the default, PowerPoint behaviour): only the caret's
+	 * paragraph changes. `'list'` (opt-in, word-processor behaviour): when the
+	 * caret switches a list paragraph between bullets and numbering, the whole
+	 * adjacent list converts with it. A range selection always affects exactly
+	 * the selected paragraphs. Unset means `'paragraph'`.
+	 */
+	listConversionScope?: ListConversionScope;
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio

@@ -1,4 +1,4 @@
-import type { InlineTextEditSnapshot, MasterViewTarget } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot, ListConversionScope, MasterViewTarget } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxHandoutMaster,
@@ -65,6 +65,11 @@ export interface UseElementOperationsInput {
 	inlineEditingElementId: string | null;
 	inlineEditingText: string;
 	inlineEditingSnapshotRef?: React.MutableRefObject<InlineTextEditSnapshot | undefined>;
+	/**
+	 * Host `listConversionScope`: how far a bare caret's Bullets / Numbering reach.
+	 * Unset keeps the shared default, `'paragraph'` (PowerPoint behaviour).
+	 */
+	listConversionScope?: ListConversionScope | undefined;
 	setContextMenuState: React.Dispatch<
 		React.SetStateAction<import('../types').ElementContextMenuState | null>
 	>;

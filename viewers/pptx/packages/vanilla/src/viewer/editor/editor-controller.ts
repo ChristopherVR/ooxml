@@ -88,6 +88,8 @@ export interface EditorControllerDeps {
 	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
 	getUserName?: () => string | undefined;
+	/** Host `listConversionScope` option: how far a bare caret's Bullets / Numbering reach. */
+	getListConversionScope?: () => import('ooxml-ui/pptx').ListConversionScope | undefined;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
 	transformCommittedText?: (text: string, previous?: string) => string;
 	/** Host `onChange` callback: fired after every committed mutation. */
@@ -213,6 +215,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		getHandler: deps.getHandler,
 		setHandler: deps.setHandler,
 		getUserName: deps.getUserName,
+		getListConversionScope: deps.getListConversionScope,
 	});
 	const findReplaceActions = createFindReplaceActions({ store, ops });
 

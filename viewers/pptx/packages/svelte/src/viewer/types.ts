@@ -10,6 +10,7 @@ import type {
 	DocumentStorage,
 	GoogleFontsOption,
 	ConnectionStatus,
+	ListConversionScope,
 	PowerPointViewerAPI,
 	PptxLoadLimits,
 	ThemeCatalogEntry,
@@ -137,6 +138,16 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * invalid `baseUrl` disables the fallback (with a console warning).
 	 */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * How far Bullets / Numbering reach when the selection is a bare caret.
+	 * `'paragraph'` (the default, PowerPoint behaviour): only the paragraph
+	 * holding the caret changes. `'list'` (opt-in, Word / Google Docs
+	 * behaviour): switching a list paragraph between bullets and numbering
+	 * converts the whole adjacent list around the caret. Turning a list off,
+	 * listing a plain paragraph and range selections behave the same in both.
+	 * A change applies from the next Bullets / Numbering press.
+	 */
+	listConversionScope?: ListConversionScope;
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio

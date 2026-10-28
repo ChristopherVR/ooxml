@@ -4,6 +4,7 @@ import { hasTextProperties } from 'ooxml-core/pptx';
 import type { ElementBulletPatch } from './bullet-toggle';
 import { isBulletMarkerSegment } from './bullet-toggle';
 import type { InlineTextSelection } from './inline-selection-utils';
+import type { ListStyleUpdateOptions } from './text-list-style-update';
 import { applyListStyleUpdate, restoreParagraphMetadata } from './text-list-style-update';
 import { applyTextStyleUpdate } from './text-style-update';
 import { updateTextSegmentStyle } from './update-text-segment-style';
@@ -13,12 +14,13 @@ export function buildInlineListStylePatch(
 	element: PptxElement,
 	updates: Partial<TextStyle>,
 	selection: InlineTextSelection | null,
+	options?: ListStyleUpdateOptions,
 ): ElementBulletPatch | undefined {
 	if (!hasTextProperties(element) || !element.textSegments) {
 		return undefined;
 	}
 	if (updates.listType !== undefined) {
-		const patch = applyListStyleUpdate(element, updates, selection).patch;
+		const patch = applyListStyleUpdate(element, updates, selection, options).patch;
 		return {
 			...('textStyle' in patch ? { textStyle: patch.textStyle } : {}),
 			...('textSegments' in patch ? { textSegments: patch.textSegments } : {}),

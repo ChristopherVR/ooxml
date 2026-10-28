@@ -9,6 +9,7 @@ import type {
 	ConnectionStatus,
 	FieldSubstitutionContext,
 	GoogleFontsOption,
+	ListConversionScope,
 	MobileSheetKey,
 	PptxLoadLimits,
 	ResolvedCustomization,
@@ -75,6 +76,8 @@ export interface CreateViewerStateOptions {
 	getInitialSlide: () => number;
 	/** Host `googleFonts` prop: the Google Fonts fallback policy. */
 	getGoogleFonts?: () => GoogleFontsOption | undefined;
+	/** Host `listConversionScope` prop: how far a bare caret's Bullets / Numbering reach. */
+	getListConversionScope?: () => ListConversionScope | undefined;
 	/** Host `allowExternalContent` prop: overrides the Trust Center setting for every load when set. */
 	getAllowExternalContent?: () => boolean | undefined;
 	/** Host `limits` prop: the load limits passed to every load (unset keeps the core defaults). */
