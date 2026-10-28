@@ -1,5 +1,6 @@
 import type { DrawingFill } from 'ooxml-core/drawingml';
 import { picturePaint, type PicturePaintContext } from './picture-paint';
+import type { PictureMedia } from './picture-paint';
 export function pictureNeedsSvg(
 	fill: Extract<DrawingFill, { kind: 'picture' }> | undefined,
 ): boolean {
@@ -14,7 +15,7 @@ export function pictureNeedsSvg(
 export function pictureSvg(
 	doc: Document,
 	fill: Extract<DrawingFill, { kind: 'picture' }>,
-	url: string,
+	url: string | PictureMedia,
 	width: number,
 	height: number,
 	context: Partial<PicturePaintContext> = {},

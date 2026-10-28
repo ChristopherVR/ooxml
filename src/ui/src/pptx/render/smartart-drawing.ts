@@ -30,6 +30,7 @@ import { styleShadow, styleStroke } from './smartart-layout-helpers';
 import { getPresetShapeVectorGeometry } from './stroke-outline';
 import type { SvgTextLine } from './svg-text-lines';
 import { centeredSvgTextLines } from './svg-text-lines';
+import { smartArtPictureImage } from './smartart-picture-image';
 
 /** Built-in named colour palettes (mirrors the Vue/React `PALETTES`). */
 export const PALETTES: Record<SmartArtColorScheme, string[]> = {
@@ -299,7 +300,7 @@ export function projectDrawingShapes(
 			stroke,
 			strokeWidth: shape.strokeWidth ?? sw,
 			transform,
-			imageUrl: shape.fillImageUrl,
+			imageUrl: smartArtPictureImage(shape),
 			textLines: shape.text
 				? centeredSvgTextLines(shape.text, fontSize, {
 						maxWidth: textWrapWidth,
