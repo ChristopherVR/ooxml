@@ -1,6 +1,7 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationTransport,
 } from 'ooxml-ui/pptx';
@@ -14,6 +15,8 @@ import type { UseCollaborationResult } from './useCollaboration';
 
 export interface UseCollaborationWiringInput {
 	slides: Ref<PptxSlide[]>;
+	/** The editor history, so Undo and Redo reach only this user's edits in a room. */
+	history?: CollaborationHistoryTarget;
 	/**
 	 * Bumped by the load pipeline each time a parsed deck is applied to viewer
 	 * state; the session re-adopts the doc's slides on each bump so a slow local
@@ -104,6 +107,7 @@ export function useCollaborationWiring(
 	const collab = useCollaboration({
 		collaboration: collaborationProp,
 		slides,
+		...(input.history ? { history: input.history } : {}),
 		loadVersion,
 		getLoadOrigin,
 		onRemoteSlides: (remote) => {

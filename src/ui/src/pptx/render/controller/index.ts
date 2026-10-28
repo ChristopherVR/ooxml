@@ -12,6 +12,17 @@ export type {
 	EditorHistoryControllerOptions,
 	EditorHistoryState,
 } from './history-controller';
+export {
+	bindCollaborationHistory,
+	collaborationHistoryReady,
+	createCollaborationHistory,
+} from './collaboration-history';
+export type {
+	CollaborationHistory,
+	CollaborationHistoryReadiness,
+	CollaborationHistoryState,
+	CollaborationHistoryTarget,
+} from './collaboration-history';
 export { createAutosaveController } from './autosave-controller';
 export type {
 	AutosaveController,

@@ -2928,6 +2928,7 @@ export class PowerPointViewerComponent
 			shareDefaults: () => this.shareDefaults(),
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => this.fileIO.sourceBytes(),
 			// Session-level save options (view properties, table styles, tags, deck

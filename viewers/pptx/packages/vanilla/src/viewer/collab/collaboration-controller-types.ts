@@ -7,6 +7,7 @@
 import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationLivePatcher,
 	CollaborationState,
@@ -27,6 +28,8 @@ export interface CollaborationControllerDeps {
 	 * dropped every session-level edit outside `slides`.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions;
+	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
+	getHistory?: () => CollaborationHistoryTarget | undefined;
 	/** Enforce the read-only `viewer` role by disabling editing. */
 	setEditable: (editable: boolean) => void;
 	/** When supplied, apply a session restriction without replacing host edit permission. */

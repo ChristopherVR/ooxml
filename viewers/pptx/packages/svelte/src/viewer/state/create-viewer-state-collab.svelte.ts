@@ -102,6 +102,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSlides: () => editor.committedRenderedSlides,
 		applyRemoteSlides: (slides: PptxSlide[]) => editor.applyRemoteSlides(slides),
 		getConfig: () => options.collaboration,
+		getHistory: () => editor.history.controller,
 		getSourceBytes: sourceBytes,
 		// Session-level save options (view properties, table styles, tags, deck
 		// properties, ...), built the same way as `saveEditorDocument`, so an

@@ -18,7 +18,9 @@ import type {
 	SanitizedPresence,
 } from 'ooxml-ui/pptx';
 import {
+	bindCollaborationHistory,
 	buildCollaborationState,
+	collaborationHistoryReady,
 	createCollaborationSessionController,
 	writeBackReport,
 	DEFAULT_CURSOR_COLOR,
@@ -29,6 +31,7 @@ import type { ControllerState } from '../state/controller-state';
 import type { CollaborationDeps } from './collaboration-deps';
 import { CollaborationDocument } from './collaboration-document.svelte';
 import { registerCollaborationEffects } from './collaboration-effects.svelte';
+import { collabModules } from './collaboration-modules';
 import { CollaborationPresence } from './collaboration-presence.svelte';
 import type { CollabSessionFactory } from './collaboration-session';
 import {
@@ -53,6 +56,7 @@ export class CollaborationController {
 	readonly #session: CollaborationSessionController;
 	readonly #state: ControllerState<CollaborationSessionState>;
 	#lastStarted: CollaborationConfig | null = null;
+	#liveDoc = $state.raw<unknown>(null);
 	#startedByEffect = false;
 	readonly #document: CollaborationDocument;
 	readonly #presence: CollaborationPresence;
@@ -85,6 +89,7 @@ export class CollaborationController {
 			syncConfig: (config) => this.#syncConfig(config),
 			isPublishable: () => this.active && this.#document.gate.isOpen(),
 			flushLocalSlides: (slides) => this.#document.flush(slides),
+			bindHistory: () => this.#bindHistory(),
 			destroy: () => this.#session.destroy(),
 		});
 	}
@@ -197,9 +202,33 @@ export class CollaborationController {
 		await this.#session.start(config);
 	}
 
+	/**
+	 * Whether this user's edits are being written into the room. A derived value, so the history
+	 * binding below only re-runs when it actually flips (a rebind would drop the undo stack).
+	 */
+	#historyReady = $derived.by(() => {
+		const config = this.activeCollaboration;
+		return collaborationHistoryReady({
+			hasDoc: this.#liveDoc !== null,
+			external: Boolean(config?.externalSession),
+			connected: this.status === 'connected',
+			synced: this.#document.synced,
+			viewer: config?.role === 'viewer',
+		});
+	});
+
+	/** Undo and Redo reach only this user's edits while they are written into the room. */
+	#bindHistory(): (() => void) | void {
+		const history = this.#deps.getHistory?.();
+		const doc = this.#liveDoc;
+		if (history && doc && this.#historyReady) {
+			return bindCollaborationHistory(history, doc, collabModules.loadYjs);
+		}
+	}
 	/** The session is live: attach the document and presence. */
 	#attach(live: CollabYSession, config: CollaborationConfig): void {
 		this.#document.attach(live.doc, live.factories);
+		this.#liveDoc = live.doc;
 		this.#presence.start(live.awareness, {
 			userName: config.userName,
 			userColor: config.userColor ?? DEFAULT_CURSOR_COLOR,
@@ -211,6 +240,7 @@ export class CollaborationController {
 
 	/** The session is ending (also on every restart): detach before it is disposed. */
 	#detach(): void {
+		this.#liveDoc = null;
 		this.#document.stop();
 		this.#presence.stop();
 		// The controller is still being built when its first stop() runs.

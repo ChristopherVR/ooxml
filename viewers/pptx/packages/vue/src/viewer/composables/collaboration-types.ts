@@ -3,6 +3,7 @@ import type {
 	AwarenessLike,
 	CollabLoadOrigin,
 	CollaborationConfig,
+	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationLivePatcher,
 	CollaborationRole,
@@ -21,6 +22,8 @@ export type { AwarenessLike, CollaborationConfig, CollaborationRole };
 export interface UseCollaborationOptions {
 	/** Optional reactive configuration; replacing or clearing it starts or stops the session. */
 	collaboration?: MaybeRefOrGetter<CollaborationInput | undefined>;
+	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
+	history?: CollaborationHistoryTarget;
 	/** Host authorization, combined with the session's canonical read-only state. */
 	canEdit?: MaybeRefOrGetter<boolean>;
 	/** Whether an actual source file is still loading or failed to load. */

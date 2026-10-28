@@ -64,6 +64,7 @@ export class ViewerCollaborationShellService {
 			shareDefaults: () => undefined,
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
 			getSourceBytes: () => {
 				const content = this.options()?.content();

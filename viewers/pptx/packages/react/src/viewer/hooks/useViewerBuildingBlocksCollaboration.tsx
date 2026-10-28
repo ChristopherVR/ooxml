@@ -28,6 +28,7 @@ export function useViewerBuildingBlocksCollaboration(input: BuildingBlocksCollab
 	});
 	useCollaborationDocumentSync({
 		collaboration,
+		history: input.core.history,
 		content: input.content,
 		slides: state.slides,
 		setSlides: state.setSlides,

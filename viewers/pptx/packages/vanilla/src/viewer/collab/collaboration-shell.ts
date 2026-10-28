@@ -13,7 +13,7 @@ import type { RemoteSelectionOverlay } from './ui/remote-selection-overlay';
 
 export interface CollaborationShellOptions extends Pick<
 	CollaborationControllerDeps,
-	'store' | 'getHandler' | 'getSaveOptions'
+	'store' | 'getHandler' | 'getSaveOptions' | 'getHistory'
 > {
 	document: Document;
 	/** Host permission, independent of the effective store.editable value. */
@@ -83,6 +83,7 @@ export function createCollaborationShell(options: CollaborationShellOptions): Co
 		store,
 		getHandler: options.getHandler,
 		getSaveOptions: options.getSaveOptions,
+		...(options.getHistory ? { getHistory: options.getHistory } : {}),
 		setEditable: (editable) => store.set({ editable }),
 		onReadOnlyChange: (value) => {
 			readOnly = value;

@@ -8,6 +8,8 @@ import type {
 	YjsFactories,
 } from 'ooxml-ui/pptx';
 import {
+	bindCollaborationHistory,
+	collaborationHistoryReady,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
 	createSyncGate,
@@ -25,6 +27,7 @@ import type {
 import { createCollaborationEditState } from './collaboration-edit-state';
 import type { ExternalSessionSync } from './collaboration-external-sync';
 import { createExternalSessionSync } from './collaboration-external-sync';
+import { collabModules } from './collaboration-modules';
 import type { PresenceController } from './collaboration-presence';
 import { createPresenceController } from './collaboration-presence';
 import { createCollaborationSession } from './collaboration-session';
@@ -39,9 +42,8 @@ import { createWriteBackScheduler } from './collaboration-writeback';
  * gate, pagehide teardown) is the shared `createCollaborationSessionController`;
  * granular slide sync and presence live in their focused modules.
  *
- * KNOWN LIMITATION: collaboration undo semantics are undefined - the local
- * `EditorHistory` stack keeps working but does not coordinate with peers
- * (matches React/Vue/Angular).
+ * Undo and Redo go through the room's own history (this editor's operations only, so a
+ * participant's later edit survives) while local edits are being written into the room.
  */
 
 export function createCollaborationController(
@@ -60,8 +62,29 @@ export function createCollaborationController(
 	let unobserveSlides: (() => void) | null = null;
 	let unsubscribeStore: (() => void) | null = null;
 	let loadApplying = false;
+	let releaseHistory: (() => void) | null = null;
 	const livePatcher = createCollaborationLivePatcher();
 	const stateTracker = createCollaborationStateTracker(store, deps.onStateChange);
+
+	/** Bind (or release) the room history as the connection, sync and role change. */
+	function updateHistoryBinding(): void {
+		const history = deps.getHistory?.();
+		const ready =
+			history !== undefined &&
+			collaborationHistoryReady({
+				hasDoc: currentYDoc !== null,
+				external: Boolean(lastConfig?.externalSession),
+				connected: status === 'connected',
+				synced: syncGate.isOpen(),
+				viewer: lastConfig?.role === 'viewer',
+			});
+		if (ready && !releaseHistory && currentYDoc) {
+			releaseHistory = bindCollaborationHistory(history, currentYDoc, collabModules.loadYjs);
+		} else if (!ready && releaseHistory) {
+			releaseHistory();
+			releaseHistory = null;
+		}
+	}
 
 	function setStatus(next: ConnectionStatus): void {
 		if (next === status) {
@@ -69,6 +92,7 @@ export function createCollaborationController(
 		}
 		status = next;
 		stateTracker.patch({ status: next });
+		updateHistoryBinding();
 		deps.onStatusChange?.(next);
 	}
 
@@ -93,6 +117,7 @@ export function createCollaborationController(
 	const baseGate = createSyncGate(() => {
 		stateTracker.patch({ synced: true });
 		flushLocal();
+		updateHistoryBinding();
 	});
 	const syncGate = {
 		...baseGate,
@@ -150,6 +175,7 @@ export function createCollaborationController(
 
 		active = true;
 		stateTracker.patch({ active: true, config, clientId: created.awareness.clientID ?? null });
+		updateHistoryBinding();
 		if (config.externalSession) {
 			externalSync = createExternalSessionSync(config.externalSession, config, {
 				factories: created.factories,
@@ -172,6 +198,8 @@ export function createCollaborationController(
 
 	/** The session is ending: detach everything `attach` set up. */
 	function detach(): void {
+		releaseHistory?.();
+		releaseHistory = null;
 		externalSync?.dispose();
 		externalSync = null;
 		loadApplying = false;

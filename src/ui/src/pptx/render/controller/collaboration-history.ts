@@ -1,6 +1,7 @@
 import type { Doc, UndoManager } from 'yjs';
 
 import { YDOC_ASSETS_KEY } from '../collaboration-assets';
+import { LOCAL_SYNC_ORIGIN } from '../collaboration-reconcile';
 import { YDOC_SLIDES_KEY } from '../collaboration-sync';
 import type { PptxController } from './controller';
 import { createControllerStore } from './controller';
@@ -18,6 +19,61 @@ export interface CollaborationHistory extends PptxController<CollaborationHistor
 	stopCapturing(): void;
 	clear(): void;
 	destroy(): void;
+}
+
+/** What decides whether local edits are being written into the room. */
+export interface CollaborationHistoryReadiness {
+	hasDoc: boolean;
+	/** A host-owned document stays editable while offline. */
+	external: boolean;
+	connected: boolean;
+	synced: boolean;
+	viewer: boolean;
+}
+
+/**
+ * Undo goes through the room only while this editor's edits reach it: otherwise an offline or
+ * read-only edit would be missing from the room history and could not be undone.
+ */
+export function collaborationHistoryReady(state: CollaborationHistoryReadiness): boolean {
+	return state.hasDoc && !state.viewer && (state.external || (state.connected && state.synced));
+}
+
+/** Where a room's history plugs in: the editor history controller. */
+export interface CollaborationHistoryTarget {
+	attachCollaboration(history: CollaborationHistory | null): () => void;
+}
+
+/**
+ * Give `target` a history over `doc` for as long as the returned release has not run. `loadYjs`
+ * must resolve the same Yjs instance that built `doc`; a build without `UndoManager` leaves the
+ * local stack in charge. Both an owned room and a host-owned document go through this, so every
+ * binding wires collaboration undo with the one call.
+ */
+export function bindCollaborationHistory(
+	target: CollaborationHistoryTarget,
+	doc: unknown,
+	loadYjs: () => Promise<unknown>,
+	localOrigin: unknown = LOCAL_SYNC_ORIGIN,
+): () => void {
+	let released = false;
+	let detach: (() => void) | null = null;
+	let history: CollaborationHistory | null = null;
+	void loadYjs().then((Y) => {
+		const Manager = (Y as { UndoManager?: typeof UndoManager }).UndoManager;
+		if (released || !Manager) {
+			return;
+		}
+		history = createCollaborationHistory(doc as Doc, Manager, localOrigin);
+		detach = target.attachCollaboration(history);
+	});
+	return () => {
+		released = true;
+		detach?.();
+		history?.destroy();
+		detach = null;
+		history = null;
+	};
 }
 
 /**

@@ -44,17 +44,21 @@ export class SlideSyncEngine {
 	readonly gate: SyncGate = this.#reportingGate();
 	/** True while the first-write gate is open (the first exchange with the room finished). */
 	readonly synced = signal(false);
+	/** Called whenever the first-write gate opens or resets. */
+	onGateChange: (() => void) | null = null;
 
 	#reportingGate(): SyncGate {
 		const base = createSyncGate(() => {
 			this.synced.set(true);
 			this.#flushPending();
+			this.onGateChange?.();
 		});
 		return {
 			...base,
 			reset: () => {
 				base.reset();
 				this.synced.set(false);
+				this.onGateChange?.();
 			},
 		};
 	}

@@ -1179,6 +1179,7 @@ const comments = useCommentsWiring({
 // -- Collaboration (Yjs) + broadcast -----------------------------------
 const collaboration = useCollaborationWiring({
 	slides,
+	history,
 	slidesPaused: () => deckStyleHeld.value,
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),

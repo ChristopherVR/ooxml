@@ -1,6 +1,7 @@
 import type {
 	AutosaveActivation,
 	CollabLoadOrigin,
+	CollaborationHistoryTarget,
 	CollaborationInput,
 	CollaborationState,
 	ConnectionStatus,
@@ -33,6 +34,8 @@ export interface SessionControllersDeps {
 	 * dropped every session-level edit outside `slides`.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions;
+	/** The editor's history; collaboration routes Undo and Redo through the room's own. */
+	getHistory?: () => CollaborationHistoryTarget | undefined;
 	getChrome: () => ViewerChrome;
 	getTranslator: () => Translator;
 	getScale: () => number;
@@ -190,6 +193,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		store: deps.store,
 		getHandler: deps.getHandler,
 		getSaveOptions: deps.getSaveOptions,
+		...(deps.getHistory ? { getHistory: deps.getHistory } : {}),
 		setEditable: deps.setEditable,
 		onReadOnlyChange: deps.onCollaborationReadOnlyChange,
 		onStatusChange: (status) => {

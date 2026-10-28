@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { YDOC_ASSETS_KEY } from '../collaboration-assets';
 import { LOCAL_SYNC_ORIGIN, reconcileSlidesInYDoc } from '../collaboration-reconcile';
 import { readSlidesFromYDoc, YDOC_SLIDES_KEY } from '../collaboration-sync';
-import { createCollaborationHistory } from './collaboration-history';
+import {
+	bindCollaborationHistory,
+	collaborationHistoryReady,
+	createCollaborationHistory,
+} from './collaboration-history';
 
 describe('collaboration history', () => {
 	it('distinguishes editors that share a host-owned document', () => {
@@ -167,5 +171,46 @@ describe('collaboration history', () => {
 		} finally {
 			doc.destroy();
 		}
+	});
+});
+
+describe('bindCollaborationHistory', () => {
+	it('attaches a room history once yjs loads and detaches on release', async () => {
+		const doc = new Y.Doc();
+		const attach = vi.fn((history: unknown) => (history ? () => detach() : () => {}));
+		const detach = vi.fn();
+		const release = bindCollaborationHistory({ attachCollaboration: attach }, doc, async () => Y);
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(attach).toHaveBeenCalledTimes(1);
+		release();
+		expect(detach).toHaveBeenCalledTimes(1);
+		doc.destroy();
+	});
+
+	it('does nothing when released before yjs resolves or without an UndoManager', async () => {
+		const doc = new Y.Doc();
+		const attach = vi.fn(() => () => {});
+		bindCollaborationHistory({ attachCollaboration: attach }, doc, async () => ({}));
+		const early = bindCollaborationHistory({ attachCollaboration: attach }, doc, async () => Y);
+		early();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(attach).not.toHaveBeenCalled();
+		doc.destroy();
+	});
+});
+
+describe('collaborationHistoryReady', () => {
+	const base = { hasDoc: true, external: false, connected: true, synced: true, viewer: false };
+	it('needs a writable, synchronized room unless the host owns the document', () => {
+		expect(collaborationHistoryReady(base)).toBe(true);
+		expect(collaborationHistoryReady({ ...base, synced: false })).toBe(false);
+		expect(collaborationHistoryReady({ ...base, connected: false })).toBe(false);
+		expect(collaborationHistoryReady({ ...base, viewer: true })).toBe(false);
+		expect(collaborationHistoryReady({ ...base, hasDoc: false })).toBe(false);
+		expect(
+			collaborationHistoryReady({ ...base, external: true, connected: false, synced: false }),
+		).toBe(true);
 	});
 });

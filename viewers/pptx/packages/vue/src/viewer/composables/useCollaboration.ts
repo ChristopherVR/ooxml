@@ -6,13 +6,15 @@
  */
 import type { CollaborationConfig, CollaborationRole, ConnectionStatus } from 'ooxml-ui/pptx';
 import {
+	bindCollaborationHistory,
 	buildCollaborationState,
+	collaborationHistoryReady,
 	createCollaborationSessionController,
 	resolveCollaborationConfig,
 	resolveCollaborationShellState,
 	writeBackReport,
 } from 'ooxml-ui/pptx';
-import { computed, onScopeDispose, toValue, watch } from 'vue';
+import { computed, onScopeDispose, shallowRef, toValue, watch } from 'vue';
 import type { Ref } from 'vue';
 
 import { collabModules } from './collaboration-modules';
@@ -41,6 +43,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	};
 	const presence = useCollaborationPresence(options);
 	const document = useCollaborationDocumentSync(options, statusPort);
+	const liveDoc = shallowRef<unknown>(null);
 	const session = createCollaborationSessionController({
 		modules: collabModules,
 		gate: document.gate,
@@ -50,8 +53,10 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 			// Observe and catch up before the first-write gate opens: a provider
 			// can already contain the room while its async factory is resolving.
 			document.attach(live.doc, live.factories);
+			liveDoc.value = live.doc;
 		},
 		onClose: () => {
+			liveDoc.value = null;
 			document.stop();
 			presence.stop();
 		},
@@ -94,6 +99,24 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 	const connectedCount = computed(
 		() => presence.remotePresences.value.length + (active.value ? 1 : 0),
 	);
+	const historyReady = computed(() =>
+		collaborationHistoryReady({
+			hasDoc: liveDoc.value !== null,
+			external: Boolean(activeCollaboration.value?.externalSession),
+			connected: connected.value,
+			synced: document.synced.value,
+			viewer: activeRole.value === 'viewer',
+		}),
+	);
+	const stopHistoryBinding = watch(
+		[liveDoc, historyReady],
+		([doc, ready], _previous, onCleanup) => {
+			if (options.history && doc && ready) {
+				onCleanup(bindCollaborationHistory(options.history, doc, collabModules.loadYjs));
+			}
+		},
+		{ immediate: true },
+	);
 	const start = (config: CollaborationConfig): Promise<void> => session.start(config);
 	const stop = (): void => session.stop();
 	const retry = (): Promise<void> => session.retry();
@@ -109,6 +132,7 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
 		{ immediate: true },
 	);
 	onScopeDispose(() => {
+		stopHistoryBinding();
 		session.destroy();
 		document.dispose();
 	});

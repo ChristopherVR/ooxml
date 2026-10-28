@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 
 import { DEFAULT_EDITOR_HISTORY_DEPTH } from '../editor-history';
 import { DEFAULT_VIEWER_OPTIONS } from '../options/viewer-options';
 import { resolveHistoryDepth } from '../options/viewer-options-apply';
+import { LOCAL_SYNC_ORIGIN } from '../collaboration-reconcile';
+import { YDOC_SLIDES_KEY } from '../collaboration-sync';
+import { createCollaborationHistory } from './collaboration-history';
 import { createEditorHistoryController } from './history-controller';
 
 describe('createEditorHistoryController', () => {
@@ -90,5 +94,53 @@ describe('createEditorHistoryController', () => {
 		history.undo(2);
 		history.clear();
 		expect(history.getSnapshot()).toMatchObject({ canUndo: false, canRedo: false });
+	});
+});
+
+describe('createEditorHistoryController with a room history', () => {
+	function seededRoom() {
+		const doc = new Y.Doc();
+		const shape = new Y.Map<string>();
+		doc.getArray(YDOC_SLIDES_KEY).push([shape]);
+		return { doc, shape };
+	}
+
+	it('routes undo and redo to the room, leaving a peer edit and returning nothing to restore', () => {
+		const { doc, shape } = seededRoom();
+		const room = createCollaborationHistory(doc, Y.UndoManager, LOCAL_SYNC_ORIGIN);
+		const history = createEditorHistoryController<string>();
+		history.record('before-join', 'Old');
+		const detach = history.attachCollaboration(room);
+		try {
+			expect(history.getSnapshot()).toMatchObject({ canUndo: false, undoLabel: undefined });
+			doc.transact(() => shape.set('mine', '1'), LOCAL_SYNC_ORIGIN);
+			doc.transact(() => shape.set('theirs', '2'), 'peer');
+			expect(history.getSnapshot().canUndo).toBe(true);
+			history.record('ignored', 'Ignored');
+			expect(history.undo('now')).toBeUndefined();
+			expect(shape.get('mine')).toBeUndefined();
+			expect(shape.get('theirs')).toBe('2');
+			expect(history.getSnapshot()).toMatchObject({ canUndo: false, canRedo: true });
+			expect(history.redo('now')).toBeUndefined();
+			expect(shape.get('mine')).toBe('1');
+			expect(shape.get('theirs')).toBe('2');
+		} finally {
+			detach();
+			room.destroy();
+			doc.destroy();
+		}
+	});
+
+	it('goes back to the local stack when detached', () => {
+		const { doc } = seededRoom();
+		const room = createCollaborationHistory(doc, Y.UndoManager, LOCAL_SYNC_ORIGIN);
+		const history = createEditorHistoryController<string>();
+		const detach = history.attachCollaboration(room);
+		detach();
+		history.record('a', 'Move');
+		expect(history.getSnapshot().canUndo).toBe(true);
+		expect(history.undo('b')).toEqual({ snapshot: 'a', label: 'Move' });
+		room.destroy();
+		doc.destroy();
 	});
 });

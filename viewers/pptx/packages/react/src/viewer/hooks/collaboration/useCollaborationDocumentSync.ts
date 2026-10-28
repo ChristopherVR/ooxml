@@ -1,14 +1,27 @@
-import type { CollabLoadOrigin, CollaborationLivePatcher, DeckSaveState } from 'ooxml-ui/pptx';
-import { buildDeckSaveOptions, readSlidesFromYDoc } from 'ooxml-ui/pptx';
+import type {
+	CollabLoadOrigin,
+	CollaborationHistoryTarget,
+	CollaborationLivePatcher,
+	DeckSaveState,
+} from 'ooxml-ui/pptx';
+import {
+	bindCollaborationHistory,
+	buildDeckSaveOptions,
+	collaborationHistoryReady,
+	readSlidesFromYDoc,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { useCallback, useEffect, useRef } from 'react';
 
+import { collabModules } from './collaboration-modules';
 import type { CollaborationContextValue } from './types';
 import { useCollaborationLivePatch } from './useCollaborationLivePatch';
 import { useYjsDocumentSync } from './useYjsDocumentSync';
 
 export interface CollaborationDocumentSyncInput {
 	collaboration: CollaborationContextValue | null;
+	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
+	history?: CollaborationHistoryTarget;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -22,7 +35,7 @@ export interface CollaborationDocumentSyncInput {
 
 /** Shared wiring for the bundled editor and custom toolbar/canvas hosts. */
 export function useCollaborationDocumentSync(input: CollaborationDocumentSyncInput): void {
-	const { collaboration, ...state } = input;
+	const { collaboration, history, ...state } = input;
 	const latest = useRef(input);
 	latest.current = input;
 	const getSourceBytes = useCallback(() => {
@@ -48,6 +61,21 @@ export function useCollaborationDocumentSync(input: CollaborationDocumentSyncInp
 	const isConnected = config?.externalSession
 		? Boolean(collaboration?.doc)
 		: collaboration?.status === 'connected';
+	const historyReady = collaborationHistoryReady({
+		hasDoc: Boolean(doc),
+		external: Boolean(config?.externalSession),
+		connected: isConnected && !config?.externalSession,
+		synced: collaboration?.synced ?? false,
+		viewer: config?.role === 'viewer',
+	});
+	// The history object is rebuilt every render; its attach function is the stable identity.
+	const attachCollaboration = history?.attachCollaboration;
+	useEffect(() => {
+		if (!attachCollaboration || !doc || !historyReady) {
+			return;
+		}
+		return bindCollaborationHistory({ attachCollaboration }, doc, collabModules.loadYjs);
+	}, [attachCollaboration, doc, historyReady]);
 	useYjsDocumentSync({
 		...state,
 		doc: collaboration?.doc ?? null,

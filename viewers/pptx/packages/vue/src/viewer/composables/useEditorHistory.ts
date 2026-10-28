@@ -4,7 +4,7 @@ import {
 	restoreCrossedTheme,
 	withHistoryMasterThemes,
 } from 'ooxml-ui/pptx';
-import type { HistoryTheme } from 'ooxml-ui/pptx';
+import type { CollaborationHistory, HistoryTheme } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
 import type { PptxHandler, PptxSlide, PptxSlideMaster, PptxTheme } from 'pptx-viewer-core';
 import { computed, nextTick } from 'vue';
@@ -78,6 +78,8 @@ export interface EditorHistoryResult {
 	 * the new limit is smaller.
 	 */
 	setMaxDepth: (depth: number) => void;
+	/** Route Undo and Redo through a room's history while attached (returns the detach). */
+	attachCollaboration: (history: CollaborationHistory | null) => () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -283,5 +285,6 @@ export function useEditorHistory(
 		clearHistory,
 		forgetHistory,
 		setMaxDepth,
+		attachCollaboration: stack.attachCollaboration,
 	};
 }

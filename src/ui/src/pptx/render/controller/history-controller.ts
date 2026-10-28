@@ -21,6 +21,7 @@ import {
 } from 'ooxml-core/pptx/editor/render/editor-history';
 import type { UndoRedoResult } from 'ooxml-core/pptx/editor/render/editor-history';
 
+import type { CollaborationHistory } from './collaboration-history';
 import type { PptxController } from './controller';
 import { createControllerStore } from './controller';
 
@@ -64,6 +65,14 @@ export interface EditorHistoryController<T> extends PptxController<EditorHistory
 	forget(reaches: (snapshot: T) => boolean): void;
 	/** Apply File > Options "Maximum number of undos"; trims the oldest entries. */
 	setMaxDepth(maxDepth: number): void;
+	/**
+	 * Route Undo and Redo through a room's own history while one is attached (`null` detaches).
+	 * The room history reverts only this editor's operations in the shared document, so a
+	 * participant's later edit survives. While attached, `undo` and `redo` return `undefined`
+	 * (nothing to restore: the document observer applies the result) and `record` is ignored.
+	 * Returns the detach function.
+	 */
+	attachCollaboration(history: CollaborationHistory | null): () => void;
 }
 
 function clampDepth(depth: number | undefined): number {
@@ -79,11 +88,14 @@ export function createEditorHistoryController<T>(
 	const stack = new EditorHistory<T>({ maxDepth });
 	let revision = 0;
 
+	let room: CollaborationHistory | null = null;
+	let unsubscribeRoom: (() => void) | null = null;
+
 	const read = (): EditorHistoryState => ({
-		canUndo: stack.canUndo,
-		canRedo: stack.canRedo,
-		undoLabel: stack.undoLabel || undefined,
-		redoLabel: stack.redoLabel || undefined,
+		canUndo: room ? room.getSnapshot().canUndo : stack.canUndo,
+		canRedo: room ? room.getSnapshot().canRedo : stack.canRedo,
+		undoLabel: room ? undefined : stack.undoLabel || undefined,
+		redoLabel: room ? undefined : stack.redoLabel || undefined,
 		depth: stack.depth,
 		maxDepth,
 		revision,
@@ -108,19 +120,60 @@ export function createEditorHistoryController<T>(
 		return result;
 	};
 
+	const stepRoom = (available: boolean, apply: () => void): undefined => {
+		if (available) {
+			apply();
+			revision += 1;
+			sync();
+		}
+		return undefined;
+	};
+
 	return {
 		getSnapshot: store.getSnapshot,
 		subscribe: store.subscribe,
 		record(snapshot, label = '') {
+			if (room) {
+				return;
+			}
 			stack.record(snapshot, label);
 			revision += 1;
 			sync();
 		},
-		undo: (current) => step(stack.undo(current)),
-		redo: (current) => step(stack.redo(current)),
+		undo(current) {
+			if (room) {
+				return stepRoom(room.getSnapshot().canUndo, () => room?.undo());
+			}
+			return step(stack.undo(current));
+		},
+		redo(current) {
+			if (room) {
+				return stepRoom(room.getSnapshot().canRedo, () => room?.redo());
+			}
+			return step(stack.redo(current));
+		},
 		clear() {
 			stack.clear();
+			room?.clear();
 			sync();
+		},
+		attachCollaboration(next) {
+			unsubscribeRoom?.();
+			unsubscribeRoom = null;
+			stack.clear();
+			room = next;
+			if (next) {
+				unsubscribeRoom = next.subscribe(sync);
+			}
+			sync();
+			return () => {
+				if (room === next) {
+					unsubscribeRoom?.();
+					unsubscribeRoom = null;
+					room = null;
+					sync();
+				}
+			};
 		},
 		forget(reaches) {
 			stack.forget(reaches);

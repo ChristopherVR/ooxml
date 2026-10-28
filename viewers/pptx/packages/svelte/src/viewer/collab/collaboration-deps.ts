@@ -1,4 +1,4 @@
-import type { CollaborationConfig } from 'ooxml-ui/pptx';
+import type { CollaborationConfig, CollaborationHistoryTarget } from 'ooxml-ui/pptx';
 /**
  * collaboration-deps.ts: the host-dependency seam for `CollaborationController`.
  * Split from `collaboration.svelte.ts` purely to keep that class within the
@@ -11,6 +11,8 @@ import type { CollabSessionFactory } from './collaboration-session';
 export interface CollaborationDeps {
 	/** Read the current local slides (broadcast granularly on change). */
 	getSlides: () => PptxSlide[];
+	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
+	getHistory?: () => CollaborationHistoryTarget | undefined;
 	/** Apply a remote peer's slide snapshot into the editable slides. */
 	applyRemoteSlides: (slides: PptxSlide[]) => void;
 	/** Live host `collaboration` config; watched to auto start/stop a session. */

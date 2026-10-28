@@ -17,6 +17,7 @@ import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core'
 import type {
 	CollabLoadOrigin,
 	CollabYSession,
+	CollaborationHistoryTarget,
 	CollaborationState,
 	CollaborationConfig,
 	CollaborationLivePatcher,
@@ -24,7 +25,9 @@ import type {
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import {
+	bindCollaborationHistory,
 	buildCollaborationState,
+	collaborationHistoryReady,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
 	writeBackReport,
@@ -33,7 +36,7 @@ import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
 import { activateExternalSession } from './collaboration-external-session';
 import { CollaborationPresenceState } from './collaboration-presence-state';
-import { openCollaborationSession } from './collaboration-providers';
+import { collabModules, openCollaborationSession } from './collaboration-providers';
 import { activateSession } from './collaboration-session-setup';
 import type { ActiveSession, ConnectOptions } from './collaboration-session-setup';
 import { SlideSyncEngine } from './collaboration-slide-sync';
@@ -124,6 +127,9 @@ export class CollaborationService {
 	private getTemplateElements: (() => TemplateElementsBySlideId) | null = null;
 	private getSaveOptions: (() => PptxHandlerSaveOptions) | null = null;
 	private currentConfig: CollaborationConfig | null = null;
+	private history: CollaborationHistoryTarget | null = null;
+	private readonly liveDoc = signal<unknown>(null);
+	private releaseHistory: (() => void) | null = null;
 	private lastOptions: ConnectOptions = {};
 
 	private readonly refreshPresence = (): void => {
@@ -133,10 +139,34 @@ export class CollaborationService {
 	constructor() {
 		// The session controller also leaves the room from `pagehide`.
 		inject(DestroyRef).onDestroy(() => this.sessionCtl.destroy());
+		this.slideSync.onGateChange = () => this.updateHistoryBinding();
+		this.sessionCtl.subscribe(() => this.updateHistoryBinding());
 	}
 
+	/** Undo and Redo reach only this user's edits while they are written into the room. */
+	private updateHistoryBinding(): void {
+		const history = this.history;
+		const doc = this.liveDoc();
+		const config = this.activeConfig();
+		const ready =
+			history !== null &&
+			collaborationHistoryReady({
+				hasDoc: doc !== null,
+				external: Boolean(config?.externalSession),
+				connected: this.status() === 'connected',
+				synced: this.synced(),
+				viewer: this.activeRole() === 'viewer',
+			});
+		if (ready && !this.releaseHistory && doc) {
+			this.releaseHistory = bindCollaborationHistory(history, doc, collabModules.loadYjs);
+		} else if (!ready && this.releaseHistory) {
+			this.releaseHistory();
+			this.releaseHistory = null;
+		}
+	}
 	async connect(requested: CollaborationConfig, options: ConnectOptions = {}): Promise<void> {
 		this.lastOptions = options;
+		this.history = options.history ?? null;
 		await this.sessionCtl.start(requested);
 	}
 
@@ -182,6 +212,8 @@ export class CollaborationService {
 			? activateExternalSession(config.externalSession, config, live, deps)
 			: activateSession(live, config, deps);
 		this.session = session;
+		this.liveDoc.set(live.doc);
+		this.updateHistoryBinding();
 		this.clientId.set(session.selfId);
 		this.refreshPresence();
 		// Readiness can seed/adopt synchronously before this.session exists.
@@ -193,6 +225,8 @@ export class CollaborationService {
 
 	/** The session is ending (also on every restart): detach before it is disposed. */
 	private detach(): void {
+		this.liveDoc.set(null);
+		this.updateHistoryBinding();
 		this.slideSync.reset();
 		this.writeBack.cancel();
 		this.writeBackState.set(undefined);

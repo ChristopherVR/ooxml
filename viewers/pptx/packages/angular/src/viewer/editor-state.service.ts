@@ -33,6 +33,7 @@ import {
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
 import type {
+	CollaborationHistory,
 	PasteSpecialFormat,
 	SlideMasterHistoryStep,
 	SlideTemplateId,
@@ -641,6 +642,11 @@ export class EditorStateService {
 	 */
 	forgetHistory(reaches: (step: SlideMasterHistoryStep) => boolean): void {
 		this.history.forget(reaches);
+	}
+
+	/** Route Undo and Redo through a room's history while attached (returns the detach). */
+	attachCollaboration(history: CollaborationHistory | null): () => void {
+		return this.history.attachCollaboration(history);
 	}
 
 	// ── Align / distribute (multi-selection) ─────────────────────────────────

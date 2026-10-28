@@ -1,5 +1,5 @@
 import { createEditorHistoryController, crossedHistoryTheme, historyTheme } from 'ooxml-ui/pptx';
-import type { HistoryTheme } from 'ooxml-ui/pptx';
+import type { EditorHistoryController, HistoryTheme } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxHeaderFooter,
@@ -105,6 +105,8 @@ export interface EditorHistoryResult {
 	 * behind them: a Slide Master view command removed a layout the package cannot get back.
 	 */
 	forgetHistory: (reaches: (snapshot: EditorHistorySnapshot) => boolean) => void;
+	/** Route Undo and Redo through a room's history while attached (returns the detach). */
+	attachCollaboration: EditorHistoryController<EditorHistorySnapshot>['attachCollaboration'];
 	/**
 	 * Pause (`true`) and resume (`false`) change tracking. A gallery hover preview swaps the
 	 * slides in for a moment; while tracking is held that is neither an undo step nor an edit, and
@@ -527,6 +529,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		handleRedo,
 		resetHistory,
 		forgetHistory: history.forget,
+		attachCollaboration: history.attachCollaboration,
 		markDirty,
 		withoutUndoStep,
 		buildHistorySnapshot,

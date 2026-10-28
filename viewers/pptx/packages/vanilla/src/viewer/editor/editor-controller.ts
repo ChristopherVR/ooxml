@@ -11,6 +11,7 @@ import {
 	savedPresentationFileName,
 } from 'ooxml-ui/pptx';
 import type {
+	CollaborationHistoryTarget,
 	FreeformToolKind,
 	ResolvedCustomization,
 	ResolvedKeyboardCustomization,
@@ -126,6 +127,8 @@ export interface EditorController {
 	canRedo(): boolean;
 	/** File > Options > Advanced > "Maximum number of undos". */
 	setHistoryDepth(depth: number): void;
+	/** The undo history; a collaboration session routes it through the room's own history. */
+	readonly history: CollaborationHistoryTarget;
 	deleteSelected(): void;
 	duplicateSelected(): string | null;
 	getSelectedElementId(): string | null;
@@ -198,6 +201,9 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		formatInlineList: (snapshot) => interactions.formatInlineList?.(snapshot) ?? false,
 		cancelInlineList: () => interactions.closeInline(false),
 	});
+
+	// A room's history changes canUndo/canRedo without any local edit going through the ops.
+	ops.history.subscribe(updateToolbar);
 
 	const editActions = createEditActions({
 		doc,
@@ -795,6 +801,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		canUndo: () => ops.canUndo(),
 		canRedo: () => ops.canRedo(),
 		setHistoryDepth: (depth) => ops.setHistoryDepth(depth),
+		history: ops.history,
 		deleteSelected: () => ops.deleteSelected(),
 		duplicateSelected: () => ops.duplicateSelected(),
 		getSelectedElementId: () => store.get().selectedElementId,

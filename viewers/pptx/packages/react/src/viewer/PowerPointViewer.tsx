@@ -21,6 +21,7 @@
 import type {
 	SlidePackageClipboard,
 	CollabLoadOrigin,
+	CollaborationHistoryTarget,
 	CollaborationLivePatcher,
 	ConnectionStatus,
 	DeckSaveState,
@@ -1804,6 +1805,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 													onStatus={onCollaborationStatus}
 												/>
 												<CollaborationDocumentSync
+													history={history}
 													slides={galleryDeckStyle.held()?.slides ?? slides}
 													templateElementsBySlideId={
 														galleryDeckStyle.held()?.templateElementsBySlideId ??
@@ -1930,7 +1932,9 @@ function CollaborationDocumentSync({
 	livePatcher,
 	deckSaveState,
 	onReadOnlyChange,
+	history,
 }: {
+	history: CollaborationHistoryTarget;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -1950,6 +1954,7 @@ function CollaborationDocumentSync({
 	const collab = useCollaboration();
 	useCollaborationDocumentSync({
 		collaboration: collab,
+		history,
 		slides,
 		templateElementsBySlideId,
 		setSlides,

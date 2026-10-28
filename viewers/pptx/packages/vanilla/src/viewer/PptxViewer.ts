@@ -739,6 +739,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			options,
 			getHandler: () => this.loading.getHandler(),
+			getHistory: () => this.editor?.history,
 			// Session-level save options (view properties, table styles, tags, deck
 			// properties, ...), built the same way as `editor.save`, so an owner's
 			// write-back file no longer drops every session-level edit outside

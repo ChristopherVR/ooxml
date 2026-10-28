@@ -11,6 +11,7 @@
 import type {
 	CollabYSession,
 	CollaborationConfig,
+	CollaborationHistoryTarget,
 	CollaborationLivePatcher,
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
@@ -27,6 +28,8 @@ import type { TemplateElementsBySlideId } from './template-mode';
 
 /** Options a host passes to `connect`, held for reconnection. */
 export interface ConnectOptions {
+	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
+	history?: CollaborationHistoryTarget;
 	onRemoteSlides?: (slides: PptxSlide[]) => void;
 	canvasWidth?: number;
 	canvasHeight?: number;
