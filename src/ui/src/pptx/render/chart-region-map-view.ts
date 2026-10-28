@@ -253,7 +253,7 @@ export function buildRegionMapViewModel(
 			kind: 'text',
 			x: 8,
 			y: titleH + 12,
-			text: 'Approximate country outlines',
+			text: '≈',
 			fontSize: 8,
 			fill: '#595959',
 			textAnchor: 'start',
@@ -278,6 +278,7 @@ export function buildRegionMapViewModel(
 	};
 
 	return {
+		reports: geometry.approximate ? ['approximate-country-outlines'] : [],
 		svgWidth,
 		svgHeight,
 		title: undefined, // Rendered inline as a dataLabel text primitive above.

@@ -132,6 +132,8 @@ export interface LegendEntry {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ChartViewModel {
+	/** Non-authored renderer limitations, separately from document text. */
+	reports?: readonly string[];
 	svgWidth: number;
 	svgHeight: number;
 	title: string | undefined;
