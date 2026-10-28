@@ -88,13 +88,14 @@ describe('computeDataTablePrimitives', () => {
 		expect(texts(result).map((p) => p.text)).toContain('Revenue');
 	});
 
-	it('does not include series name when showKeys is false', () => {
+	it('keeps series names without colored keys when showKeys is false', () => {
 		const chartData = makeChartData({
 			series: [makeSeries({ name: 'Revenue' })],
 			dataTable: { showKeys: false },
 		});
 		const result = computeDataTablePrimitives(chartData, LAYOUT);
-		expect(texts(result).map((p) => p.text)).not.toContain('Revenue');
+		expect(texts(result).map((p) => p.text)).toContain('Revenue');
+		expect(result.filter((p) => p.kind === 'rect')).toHaveLength(0);
 	});
 
 	it('places table below plotBottom', () => {

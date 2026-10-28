@@ -24,7 +24,7 @@ export interface DataTableMetrics {
 	fontSize: number;
 	/** Height of the header row and of each series row. */
 	rowH: number;
-	/** Width of the series-key column left of the plot (0 without keys). */
+	/** Width of the series-name column left of the plot, including optional legend keys. */
 	keyW: number;
 	/** Total table height: header plus one row per series. */
 	height: number;

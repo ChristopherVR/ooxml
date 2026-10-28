@@ -127,7 +127,7 @@ export function computeDataTablePrimitives(
 			out.push(line(x, top, x, bottom));
 		}
 	});
-	if (showV && showK) {
+	if (showV) {
 		out.push(line(layout.plotLeft, top, layout.plotLeft, bottom));
 	}
 
@@ -135,7 +135,7 @@ export function computeDataTablePrimitives(
 		const rowTop = top + rowH * (si + 1);
 		const cy = rowTop + rowH / 2;
 		if (showH) {
-			out.push(line(showK ? left : layout.plotLeft, rowTop, right, rowTop));
+			out.push(line(left, rowTop, right, rowTop));
 		}
 		if (showK) {
 			const swatch = Math.max(6, Math.round(metrics.fontSize * 0.55));
@@ -147,8 +147,9 @@ export function computeDataTablePrimitives(
 				h: swatch,
 				fill: seriesColor(s, si, colorPalette),
 			});
-			out.push(label(left + DATA_TABLE_PADDING + swatch + 3, cy, s.name, 'start'));
 		}
+		const keyInset = showK ? Math.max(6, Math.round(metrics.fontSize * 0.55)) + 3 : 0;
+		out.push(label(left + DATA_TABLE_PADDING + keyInset, cy, s.name, 'start'));
 		categories.forEach((_cat, ci) => {
 			const val = s.values[ci];
 			const x = layout.plotLeft + ci * cellW + cellW / 2;

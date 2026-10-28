@@ -1,3 +1,5 @@
+import { chartSummaryView } from './chart-view';
+import { chartThemePalette } from './render-space';
 import { describe, expect, it } from 'vitest';
 import { createChartExSpace } from '../ex/create';
 import { writeChartExSpace } from '../ex/write';
@@ -76,4 +78,33 @@ describe('shared box and whisker rendering', () => {
 		expect(svg.match(/data-chart-part="box"/gu)).toHaveLength(1);
 		expect(svg).toContain('data-chart-series="1"');
 	});
+});
+
+it('excludes hidden distributions from categories, automatic range and box slots', () => {
+	const space = createChartExSpace(
+		{
+			categories: ['A', 'A', 'A', 'A', 'A'],
+			series: [
+				{ name: 'Hidden', values: [10000, 10000, 10000, 10000, 10000] },
+				{ name: 'Visible', values: [1, 2, 3, 4, 5] },
+			],
+		},
+		'boxWhisker',
+	);
+	space.plotArea.series[0]!.hidden = true;
+	const summary = chartExSummary(writeChartExSpace(space))!.summary!;
+	summary.series[0]!.categories = ['Hidden', 'Hidden', 'Hidden', 'Hidden', 'Hidden'];
+	const view = chartSummaryView(summary, chartThemePalette(undefined));
+	expect(view.categories).toEqual(['A']);
+	expect(view.series).toHaveLength(1);
+	expect(view.series[0]!.sourceIndex).toBe(1);
+	expect(view.valueAxis!.max).toBeLessThan(10);
+	const without = { ...summary, series: summary.series.slice(1) };
+	const svg = renderChartSummarySvg(summary, { width: 400, height: 300 });
+	const reference = renderChartSummarySvg(without, { width: 400, height: 300 });
+	const box = (s: string) =>
+		/<g data-chart-part="box"[^>]*>([\s\S]*?)<\/g>/u
+			.exec(s)?.[1]
+			?.replace(/fill="#[A-F0-9]+"/giu, 'fill="color"');
+	expect(box(svg)).toBe(box(reference));
 });

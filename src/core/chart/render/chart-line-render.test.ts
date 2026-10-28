@@ -140,7 +140,8 @@ describe('chart data tables', () => {
 			),
 		);
 		expect(content).not.toContain('<line');
-		expect(content).not.toContain('Series1');
+		expect(content).toContain('Series1');
+		expect(content).not.toContain('<rect');
 		expect(content).toContain('100.0%');
 	});
 	it('keeps a small viewport finite and leaves absent tables automatic', () => {

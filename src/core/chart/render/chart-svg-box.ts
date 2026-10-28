@@ -6,9 +6,10 @@ import { line, rect, n } from './chart-svg-util';
 
 /** One box per series/category distribution; observations retain their original row identity. */
 export function boxWhiskerSvg(model: ChartViewModel, frame: Frame, out: string[]): void {
-	const slot = frame.bandSize / Math.max(1, model.series.length);
+	const visible = model.series.filter((s) => !s.hidden);
+	const slot = frame.bandSize / Math.max(1, visible.length);
 	const width = slot * 0.7;
-	model.series.forEach((series, si) => {
+	visible.forEach((series, si) => {
 		if (series.hidden) return;
 		const groups = groupRowsByCategory(series.boxCategories ?? []);
 		model.categories.forEach((category, ci) => {

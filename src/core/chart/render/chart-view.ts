@@ -237,7 +237,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		showLegend: chart.showLegend,
 		legendPosition: chart.legendPosition ?? 'r',
 		categories,
-		series,
+		series: type === 'boxWhisker' ? series.filter((s) => !s.hidden) : series,
 		horizontal: type === 'bar',
 		supported: SUPPORTED.has(type),
 	};
@@ -247,7 +247,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	if (chart.axes?.some((a) => a.kind === 'date')) model.dateCategories = firstCats.map(toNumber);
 	if (chart.plotLayout) model.plotLayout = chart.plotLayout;
 	if (type === 'boxWhisker')
-		model.categories = [...new Set(series.flatMap((s) => s.boxCategories ?? []))];
+		model.categories = [...new Set(model.series.flatMap((s) => s.boxCategories ?? []))];
 	if (chart.title) model.title = chart.title;
 	const titleFormatting = chart.formatting?.entries.title;
 	if (titleFormatting?.layout) model.titleLayout = titleFormatting.layout;

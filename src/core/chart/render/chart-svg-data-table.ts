@@ -65,8 +65,7 @@ export function chartDataTableSvg(model: ChartViewModel, plot: Rect): string {
 		if (source.showVerticalBorder !== false && i > 0)
 			border(plot.x + i * cellW, top, plot.x + i * cellW, bottom);
 	});
-	if (source.showVerticalBorder !== false && source.showKeys !== false)
-		border(plot.x, top, plot.x, bottom);
+	if (source.showVerticalBorder !== false) border(plot.x, top, plot.x, bottom);
 	series.forEach((s, i) => {
 		const rowTop = top + rowH * (i + 1);
 		const cy = rowTop + rowH / 2;
@@ -74,8 +73,9 @@ export function chartDataTableSvg(model: ChartViewModel, plot: Rect): string {
 		if (source.showKeys !== false) {
 			const swatch = Math.max(6, Math.round(fontSize * 0.55));
 			out.push(rect(left + 4, cy - swatch / 2, swatch, swatch, s.color));
-			label(left + swatch + 7, cy, s.name, keyW - swatch - 11, 'start');
 		}
+		const keyInset = source.showKeys !== false ? Math.max(6, Math.round(fontSize * 0.55)) + 7 : 4;
+		label(left + keyInset, cy, s.name, keyW - keyInset - 4, 'start');
 		model.categories.forEach((_, j) => {
 			const value = s.values[j];
 			const formatted =
