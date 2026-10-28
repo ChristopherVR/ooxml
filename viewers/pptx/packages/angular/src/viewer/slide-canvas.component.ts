@@ -408,7 +408,7 @@ export class SlideCanvasComponent implements SlideContext {
 	 * live preview so peers see typing before the edit commits.
 	 */
 	readonly textInput = output<{ id: string; text: string; snapshot?: InlineTextEditSnapshot }>();
-	/** Emitted when an inline edit is cancelled (Escape). */
+	/** Emitted when an inline edit is cancelled. */
 	readonly textCancel = output<void>();
 	/** Emitted on Ctrl/Cmd+B/I/U while inline-editing (parity with React/Vue). */
 	readonly textFormat = output<{ id: string; updates: Partial<TextStyle> }>();
@@ -1126,16 +1126,13 @@ export class SlideCanvasComponent implements SlideContext {
 			return;
 		}
 		const chord = mapInlineEditorChord(event);
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			this.editCancelled = true;
-			editor.blur();
-		} else if (chord) {
+		if (chord) {
 			// Before the plain Enter rules: Ctrl/Cmd+Shift+Enter is a `commit` too and
 			// must not reach the Shift+Enter line break. Ctrl/Cmd+D is only cancelled:
 			// the viewer keymap stands down mid-edit, so nothing else stops the
 			// browser opening its bookmark dialog over the deck.
 			event.preventDefault();
+			event.stopPropagation();
 			if (chord === 'commit') {
 				editor.blur();
 			}

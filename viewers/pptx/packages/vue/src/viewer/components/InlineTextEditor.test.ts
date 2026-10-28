@@ -197,14 +197,14 @@ describe('inlineTextEditor', () => {
 		expect(wrapper.emitted('format')).toBeUndefined();
 	});
 
-	it('ends the edit on Ctrl+Enter, committing the text', async () => {
+	it.each(['Enter', 'Escape'])('ends the edit on %s, committing the text', async (key) => {
 		const wrapper = mount(InlineTextEditor, { attachTo: document.body, props: { element } });
 		try {
 			const editor = wrapper.get('[data-inline-editor]').element as HTMLElement;
 			editor.focus();
 			const event = new KeyboardEvent('keydown', {
-				key: 'Enter',
-				ctrlKey: true,
+				key,
+				ctrlKey: key === 'Enter',
 				bubbles: true,
 				cancelable: true,
 			});

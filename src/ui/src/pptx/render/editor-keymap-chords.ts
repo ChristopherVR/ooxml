@@ -153,10 +153,9 @@ export interface InlineEditorChordInput extends EditorKeyInput {
 /**
  * Resolve the chords every binding's inline text editor handles itself.
  *
- * Ctrl/Cmd+Enter ends the edit. React and Angular already did this by hand;
- * Vanilla, Svelte and Vue let the chord through to the contenteditable, which
- * left the user in the text box. (PowerPoint uses the chord to move on to the
- * next placeholder; this viewer has no placeholder walk, so it ends the edit.)
+ * Escape and Ctrl/Cmd+Enter end the edit, keeping the text.
+ * PowerPoint uses Ctrl/Cmd+Enter to move to the next placeholder; this viewer
+ * has no placeholder walk, so it ends the edit.
  *
  * Ctrl/Cmd+D (and Ctrl/Cmd+Shift+D) is claimed and dropped. The editor keymap
  * stands down while text is under edit, so nothing cancelled the browser's own
@@ -165,7 +164,13 @@ export interface InlineEditorChordInput extends EditorKeyInput {
  * offered here.
  */
 export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEditorChord | null {
-	if (input.isComposing || !(input.ctrlKey || input.metaKey) || input.altKey) {
+	if (input.isComposing) {
+		return null;
+	}
+	if (input.key === 'Escape') {
+		return 'commit';
+	}
+	if (!(input.ctrlKey || input.metaKey) || input.altKey) {
 		return null;
 	}
 	// With or without Shift, as React and Angular already treated it.

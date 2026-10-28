@@ -262,19 +262,14 @@ export function InlineTextEditor({
 					}
 					return;
 				}
-				if (e.key === 'Escape') {
-					e.preventDefault();
-					list.retire();
-					onCancel();
-					return;
-				}
-				// Ctrl/Cmd+Enter leaves the edit, keeping the text. Ctrl/Cmd+D is
+				// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text. Ctrl/Cmd+D is
 				// only cancelled: the viewer keymap stands down mid-edit, so nothing
 				// else stops the browser opening its bookmark dialog. Shared with
 				// the other four bindings (`mapInlineEditorChord`).
 				const chord = mapInlineEditorChord(e.nativeEvent);
 				if (chord) {
 					e.preventDefault();
+					e.stopPropagation();
 					if (chord === 'suppress' || !list.canCommit()) {
 						return;
 					}

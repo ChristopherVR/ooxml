@@ -369,6 +369,19 @@ describe('angular list editor', () => {
 		}
 	});
 
+	it('commits the list on Escape', () => {
+		const editor = mountedEditor();
+		try {
+			editor.root.focus();
+			editor.root.addEventListener('blur', () => editor.handlers.commit());
+			editor.root.querySelector('span')!.textContent = 'Current';
+			editor.handlers.onKeyDown(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+			expect(editor.commits.mock.lastCall?.[0].text).toBe('Current');
+		} finally {
+			editor.cleanup();
+		}
+	});
+
 	it.each([false, true])('leaves native Enter insertion to the browser (shift=%s)', (shiftKey) => {
 		const editor = mountedEditor();
 		const previous = Object.getOwnPropertyDescriptor(document, 'execCommand');

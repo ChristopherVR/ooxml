@@ -211,15 +211,12 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 			return;
 		}
 		const chord = mapInlineEditorChord(event);
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			this.cancelled = true;
-			this.blur();
-		} else if (chord) {
-			// Ctrl/Cmd+Enter leaves the edit, keeping the text. Ctrl/Cmd+D is only
+		if (chord) {
+			// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text. Ctrl/Cmd+D is only
 			// cancelled: the viewer keymap stands down mid-edit, so nothing else
 			// stops the browser opening its bookmark dialog.
 			event.preventDefault();
+			event.stopPropagation();
 			if (chord === 'commit') {
 				this.blur();
 			}

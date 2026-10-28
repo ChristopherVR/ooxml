@@ -40,6 +40,7 @@ export function createCollaborationTextTarget({
 	isWritable,
 	onChange,
 	ownsModel,
+	origin = LOCAL_SYNC_ORIGIN,
 }: {
 	doc: YDocLike;
 	factories: YjsFactories;
@@ -50,6 +51,7 @@ export function createCollaborationTextTarget({
 	onChange?: () => void;
 	/** Native controller retires synchronously before explicit model changes reconcile. */
 	ownsModel?: (element: PptxElement) => boolean;
+	origin?: unknown;
 }): CollaborationTextTarget | undefined {
 	const element = findElementYMap(doc, slideId, elementId);
 	if (element && factories.createTextPositions) {
@@ -86,7 +88,7 @@ export function createCollaborationTextTarget({
 						element.set('text', value);
 					}
 				}
-			}, LOCAL_SYNC_ORIGIN),
+			}, origin),
 	});
 	if (!session) {
 		return undefined;

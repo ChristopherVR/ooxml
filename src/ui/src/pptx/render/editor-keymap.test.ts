@@ -452,6 +452,10 @@ describe('mapInlineTextFormatKey', () => {
 });
 
 describe('mapInlineEditorChord', () => {
+	it('commits on Escape unless an IME composition is active', () => {
+		expect(mapInlineEditorChord(press('Escape'))).toBe('commit');
+		expect(mapInlineEditorChord({ key: 'Escape', isComposing: true })).toBeNull();
+	});
 	it('ends the edit on Ctrl/Cmd+Enter', () => {
 		expect(mapInlineEditorChord(press('Enter', { ctrlKey: true }))).toBe('commit');
 		expect(mapInlineEditorChord(press('Enter', { metaKey: true }))).toBe('commit');

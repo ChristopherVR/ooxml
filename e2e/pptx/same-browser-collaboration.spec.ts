@@ -34,6 +34,67 @@ test.use({ viewport: { width: 1440, height: 1000 } });
 test.describe('same-browser collaboration', () => {
 	test.setTimeout(120_000);
 
+	test('undo and redo preserve another participant’s later edit', async ({ browser, baseURL }, info) => {
+		const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });
+		const a = await context.newPage();
+		const b = await context.newPage();
+		const room = `undo-${info.project.name}-${Date.now()}`;
+		try {
+			await open(a, room, 'Alice', false);
+			await open(b, room, 'Bob', true);
+			await replaceText(a, 'Product Overview', 'Alice edit');
+			await expect(elements(b).filter({ hasText: 'Alice edit' })).toBeVisible();
+			await replaceText(b, 'Q2 2026', 'Bob edit');
+			await expect(elements(a).filter({ hasText: 'Bob edit' })).toBeVisible();
+			const undo = a.getByRole('button', { name: /^undo/iu }).first();
+			await expect(undo).toBeEnabled();
+			await undo.click();
+			await expect(elements(a).filter({ hasText: 'Product Overview' })).toBeVisible();
+			await expect(elements(a).filter({ hasText: 'Bob edit' })).toBeVisible();
+			await expect(elements(b).filter({ hasText: 'Bob edit' })).toBeVisible();
+			const redo = a.getByRole('button', { name: /^redo/iu }).first();
+			await expect(redo).toBeEnabled();
+			await redo.click();
+			await expect(elements(a).filter({ hasText: 'Alice edit' })).toBeVisible();
+			await expect(elements(b).filter({ hasText: 'Alice edit' })).toBeVisible();
+			await expect(elements(b).filter({ hasText: 'Bob edit' })).toBeVisible();
+		} finally {
+			await context.close();
+		}
+	});
+
+	test('Escape keeps live text in both peers through a subsequent edit', async ({
+		browser,
+		baseURL,
+	}, info) => {
+		const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });
+		const a = await context.newPage();
+		const b = await context.newPage();
+		const room = `escape-${info.project.name}-${Date.now()}`;
+		try {
+			await open(a, room, 'Alice', false);
+			await open(b, room, 'Bob', true);
+			await elements(a).filter({ hasText: 'Product Overview' }).dblclick();
+			const editor = a.locator('[data-inline-editor]').first();
+			await expect(editor).toBeVisible();
+			await editor.press('ControlOrMeta+A');
+			await a.keyboard.type('Escape first');
+			await expect(elements(b).filter({ hasText: 'Escape first' })).toBeVisible();
+			await a.keyboard.press('Escape');
+			await expect(editor).toBeHidden();
+			await expect(elements(a).filter({ hasText: 'Escape first' })).toBeVisible();
+			await elements(a).filter({ hasText: 'Escape first' }).dblclick();
+			await expect(editor).toBeVisible();
+			await editor.press('End');
+			await a.keyboard.type(' second');
+			await a.keyboard.press('Escape');
+			await expect(elements(a).filter({ hasText: 'Escape first second' })).toBeVisible();
+			await expect(elements(b).filter({ hasText: 'Escape first second' })).toBeVisible();
+		} finally {
+			await context.close();
+		}
+	});
+
 	test('two pages of one context share a room, an edit and their collaborators', async ({
 		browser,
 		baseURL,

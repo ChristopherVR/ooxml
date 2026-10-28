@@ -27,7 +27,7 @@ import type {
  * {@link SelectionOverlay}), positioned over the element's box, and seeded once
  * from the element's plain text. It does NOT re-bind its value while the user
  * types (the DOM owns the text during an edit) and only reports changes via
- * `change`, committing on blur (`commit`) or cancelling on Escape (`cancel`).
+ * `change`, committing on blur or Escape (`commit`).
  * The host commits the typed text back onto the element's rich `textSegments`
  * (via `remapTextToSegments`) so per-run styling is preserved.
  */
@@ -262,16 +262,7 @@ function onKeydown(event: KeyboardEvent): void {
 		emit('format', { [property]: !ts?.[property] });
 		return;
 	}
-	if (event.key === 'Escape') {
-		event.preventDefault();
-		if (listController) {
-			disposed = true;
-			listController.dispose();
-		}
-		emit('cancel');
-		return;
-	}
-	// Ctrl/Cmd+Enter leaves the edit, keeping the text (blur is the commit
+	// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text (blur is the commit
 	// path, as for a click outside). Ctrl/Cmd+D is only cancelled: the viewer
 	// keymap stands down mid-edit, so nothing else stops the browser opening
 	// its bookmark dialog.

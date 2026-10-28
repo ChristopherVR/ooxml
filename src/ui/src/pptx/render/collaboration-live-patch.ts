@@ -58,6 +58,8 @@ export interface CollaborationLivePatcher {
 		factories: YjsFactories | null,
 		/** Publish synchronously when the host may revoke write readiness at any time. */
 		immediate?: boolean,
+		/** Origin for this editor's writes; defaults to the legacy shared origin. */
+		origin?: unknown,
 	) => void;
 	/** True when a doc + factories are attached, i.e. patches will be written. */
 	isActive: () => boolean;
@@ -90,6 +92,7 @@ export function createCollaborationLivePatcher(
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let lastWriteAt = Number.NEGATIVE_INFINITY;
 	let immediate = false;
+	let origin: unknown = LOCAL_SYNC_ORIGIN;
 	const textSessions = new Map<string, CollaborationTextTarget>();
 	const textOwners = new Map<string, object>();
 	const keyFor = (slideId: string | undefined, elementId: string): string =>
@@ -124,7 +127,7 @@ export function createCollaborationLivePatcher(
 				for (const patch of patches) {
 					applyLivePatch(activeDoc, activeFactories, patch, MAX_LIVE_TEXT_LENGTH);
 				}
-			}, LOCAL_SYNC_ORIGIN);
+			}, origin);
 		} catch {
 			/* a live preview must never break the gesture it mirrors */
 		}
@@ -189,6 +192,7 @@ export function createCollaborationLivePatcher(
 				onChange,
 				ownsModel,
 				isWritable,
+				origin,
 			});
 			if (!target || textOwners.get(key) !== owner) {
 				target?.dispose();
@@ -210,8 +214,13 @@ export function createCollaborationLivePatcher(
 			textSessions.set(key, target);
 			return target;
 		},
-		configure(nextDoc, nextFactories, nextImmediate = false) {
-			if (nextDoc === doc && nextFactories === factories && nextImmediate === immediate) {
+		configure(nextDoc, nextFactories, nextImmediate = false, nextOrigin = LOCAL_SYNC_ORIGIN) {
+			if (
+				nextDoc === doc &&
+				nextFactories === factories &&
+				nextImmediate === immediate &&
+				nextOrigin === origin
+			) {
 				return;
 			}
 			cancelTimer();
@@ -219,6 +228,7 @@ export function createCollaborationLivePatcher(
 			doc = nextDoc;
 			factories = nextFactories;
 			immediate = nextImmediate;
+			origin = nextOrigin;
 			lastWriteAt = Number.NEGATIVE_INFINITY;
 			retireTextSessions();
 		},

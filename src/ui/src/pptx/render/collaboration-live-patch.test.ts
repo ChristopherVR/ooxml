@@ -13,6 +13,7 @@ import type { YDocLike, YjsFactories } from './collaboration-sync';
 import { COMPLEX_ELEMENT_FIELDS, readSlidesFromYDoc } from './collaboration-sync';
 import { createSnapshotTextPositions } from './collaboration-text-snapshot-positions';
 import { buildInlineTextCommitPatch } from './inline-text-commit';
+import { createCollaborationHistory } from './controller/collaboration-history';
 
 const factories: YjsFactories = {
 	createMap: () => new Y.Map() as unknown as ReturnType<YjsFactories['createMap']>,
@@ -124,6 +125,29 @@ function createTextPeers(connected = true) {
 }
 
 describe('createCollaborationLivePatcher', () => {
+	it('tracks live text and geometry under the editor-specific origin', () => {
+		const doc = seedDoc();
+		const origin = {};
+		const patcher = createCollaborationLivePatcher();
+		const history = createCollaborationHistory(doc, Y.UndoManager, origin);
+		try {
+			patcher.configure(asDoc(doc), nativeFactories(doc), true, origin);
+			patcher.patchGeometry('s1', 'e1', { x: 42 });
+			history.stopCapturing();
+			const session = patcher.beginTextEdit?.('s1', 'e1');
+			expect(session?.applyLocalDelta([{ insert: 'Hello!' }])).toBe(true);
+			history.undo();
+			expect(textState(doc).textBody).toBe('Hello');
+			const peerOrigin = {};
+			doc.transact(() => findElementYMap(asDoc(doc), 's1', 'e1')!.set('y', 99), peerOrigin);
+			history.undo();
+			expect(firstElement(doc)).toMatchObject({ x: 10, y: 99 });
+		} finally {
+			patcher.dispose();
+			history.destroy();
+			doc.destroy();
+		}
+	});
 	beforeEach(() => {
 		vi.useFakeTimers();
 	});

@@ -66,6 +66,7 @@ describe('slide canvas textarea editor chords', () => {
 		['Cmd+Shift+Enter', { key: 'Enter', metaKey: true, shiftKey: true }],
 		['Ctrl+Enter', { key: 'Enter', ctrlKey: true }],
 		['Cmd+Enter', { key: 'Enter', metaKey: true }],
+		['Escape', { key: 'Escape' }],
 	])('%s leaves the edit instead of inserting a line break', (_name, init) => {
 		const { blur, trim, press } = harness();
 		const event = press(init);
