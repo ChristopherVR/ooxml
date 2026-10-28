@@ -914,7 +914,7 @@
 			"thresholdScope": "24 fixed 48x32 RGBA controls rendered into192x128 frames; MAE<=.02, foreground IoU>=.8. Not a bound for arbitrary image content."
 		},
 		"chartGallery": {
-			"comparedAt": "2026-10-28T20:50:14.022Z",
+			"comparedAt": "2026-10-28T20:57:28.852Z",
 			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
 			"native": {
 				"capturedAt": "2026-10-28T20:36:15.9180585Z",
@@ -1325,7 +1325,7 @@
 					{
 						"id": "chart-20-2-regionmap",
 						"sharedPng": "chart-20-2-regionmap.shared.png",
-						"svgSha256": "88bcd8c3bf34f7cb8b9cdb65e0efbd3b82eeed1be1e2d26aa682857e07401240"
+						"svgSha256": "dcc84322a23c3d897f98060ab4d16f67c74e93249b811f915e8f9d9bf74b2580"
 					}
 				]
 			},
@@ -1552,11 +1552,11 @@
 					"dimensionsMatch": true,
 					"nativeSize": [840, 420],
 					"sharedSize": [840, 420],
-					"normalizedMeanAbsoluteError": 0.08383667170571933,
-					"changedPixelRatio": 0.17106292517006802,
-					"foregroundIntersectionOverUnion": 0.24074899687917967,
+					"normalizedMeanAbsoluteError": 0.08820843152075646,
+					"changedPixelRatio": 0.17889172335600906,
+					"foregroundIntersectionOverUnion": 0.22455275301852204,
 					"nativeForegroundRatio": 0.17974773242630385,
-					"sharedForegroundRatio": 0.08845521541950113
+					"sharedForegroundRatio": 0.09478741496598639
 				}
 			]
 		},
@@ -1713,10 +1713,10 @@
 			]
 		},
 		"cachedMap": {
-			"comparedAt": "2026-10-28T20:50:47.636Z",
+			"comparedAt": "2026-10-28T20:57:31.624Z",
 			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
 			"native": {
-				"capturedAt": "2026-10-28T20:50:25.1502024Z",
+				"capturedAt": "2026-10-28T20:57:19.9532025Z",
 				"officeVersion": "16.0",
 				"officeFileVersion": "16.0.20527.20088",
 				"capture": "PowerPoint Slide.Export PNG at requested density, declared shape-frame crop without image registration",
@@ -1730,7 +1730,7 @@
 							"height": 420,
 							"x": 60
 						},
-						"sourceSha256": "B18042ECA7A342AED511404B26F493ADF19FEF0AC3ED5DDD7333CEC643B795F0",
+						"sourceSha256": "917F1CFC608A1ED5A0F16AAC83CB592981DB6F312A4CFB7BD2BFDD26700F94CF",
 						"widthPt": 630,
 						"heightPt": 315,
 						"rotation": 0,

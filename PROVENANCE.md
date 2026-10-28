@@ -2862,7 +2862,7 @@ second chart parser or editor. Native capture and comparison scripts are new tes
 
 ## Shared validated raster inspection (2026-10-29)
 
-Source: `ChristopherVR/ooxml`, commit `643f123a3` (this implementation worktree checkpoint).
+Source: `ChristopherVR/ooxml`, commit `bf7be3e5c` (the source modules are unchanged at the extraction checkpoint).
 `src/core/visio/media.ts` supplies PNG/JPEG/GIF header inspection now in
 `src/core/drawingml/raster-image.ts`; `src/core/visio/package-common.ts` supplies CRC32 now in
 `src/core/digest/crc32.ts`. Visio retains its public error messages and size-limit wrapper.

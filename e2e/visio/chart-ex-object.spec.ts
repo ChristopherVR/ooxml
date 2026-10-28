@@ -43,13 +43,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			page,
 			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
 		);
-		await page
-			.locator('#file')
-			.setInputFiles({
-				name: 'ChartEx.vsdx',
-				mimeType: 'application/vnd.ms-visio.drawing',
-				buffer: Buffer.from(await fixture()),
-			});
+		await page.locator('#file').setInputFiles({
+			name: 'ChartEx.vsdx',
+			mimeType: 'application/vnd.ms-visio.drawing',
+			buffer: Buffer.from(await fixture()),
+		});
 		const viewer = page.locator('visio-viewer');
 		const chart = viewer.locator('svg.paper [data-shape-id]:has([data-embedded-chart])').first();
 		await expect(chart.locator('svg [data-chart-point]')).not.toHaveCount(0);
