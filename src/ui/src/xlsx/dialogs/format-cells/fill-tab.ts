@@ -79,6 +79,7 @@ export function fillTab(init: TabInit): FormatTab {
 	pattern.addEventListener('change', mark);
 	const sample = el(ctx, 'div', 'xve-sample');
 	sample.dataset.sample = '';
+	sample.dataset.fillPreview = '';
 	const paint = (): void => {
 		const bg = resolveColor(background.value(), theme) ?? '#ffffff';
 		const fg = resolveColor(patternColor.value(), theme) ?? '#000000';

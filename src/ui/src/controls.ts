@@ -311,3 +311,4 @@ export {
 	type ChartFormatTargetEvent,
 } from './chart/format-pane';
 export * from './chart/format-pane-api';
+export * from './form/color-input/live-color-input';

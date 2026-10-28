@@ -109,6 +109,43 @@ describe('Format Cells: Border tab', () => {
 });
 
 describe('Format Cells: Fill tab', () => {
+	it('previews custom shades in the draft and submits one undoable fill', async () => {
+		const ctx = setup();
+		const before = styleOf(ctx).fill;
+		const result = ctx.dialogs.open('format-cells', { tab: 'fill' });
+		const dialog = dialogEl(ctx, 'format-cells');
+		const input = dialog.querySelector<HTMLInputElement>(
+			'office-ui-color-grid[aria-label="Background Color:"] input[type="color"]',
+		)!;
+		for (const color of ['#123456', '#abcdef']) {
+			input.value = color;
+			input.dispatchEvent(new Event('input'));
+		}
+		expect(styleOf(ctx).fill).toEqual(before);
+		expect(dialog.querySelector<HTMLElement>('[data-fill-preview]')!.style.background).toBe(
+			'rgb(171, 205, 239)',
+		);
+		input.dispatchEvent(new Event('change'));
+		clickButton(dialog, 'OK');
+		await result;
+		expect(styleOf(ctx).fill).toMatchObject({ fgColor: { rgb: 'FFABCDEF' } });
+		expect(ctx.session()!.undoLabel()).toBe('Format Cells');
+		ctx.session()!.undo();
+		expect(styleOf(ctx).fill).toEqual(before);
+	});
+
+	it('cancels custom colour previews without changing the workbook', async () => {
+		const ctx = setup();
+		const before = styleOf(ctx).fill;
+		const result = ctx.dialogs.open('format-cells', { tab: 'fill' });
+		const dialog = dialogEl(ctx, 'format-cells');
+		const input = dialog.querySelector<HTMLInputElement>('input[type="color"]')!;
+		input.value = '#123456';
+		input.dispatchEvent(new Event('input'));
+		clickButton(dialog, 'Cancel');
+		await result;
+		expect(styleOf(ctx).fill).toEqual(before);
+	});
 	it('applies a solid background colour', async () => {
 		const ctx = setup();
 		const result = ctx.dialogs.open('format-cells', { tab: 'fill' });
