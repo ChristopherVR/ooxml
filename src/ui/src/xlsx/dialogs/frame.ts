@@ -1,3 +1,4 @@
+import { createDialogSession } from '../../dialog/dialog-session';
 // The modal frame every UI-COMMANDS dialog uses: an `office-ui-dialog` (focus trap, Escape,
 // return focus) with OK / Cancel in its footer, Enter to confirm from a field, and a promise that
 // resolves with the dialog's result or undefined when it is cancelled.
@@ -74,71 +75,24 @@ export function showDialog<T>(
 	footer.append(...(spec.buttons ?? []), cancel, ...(ok ? [ok] : []));
 	dialog.append(body, footer);
 
-	return new Promise<T | undefined>((resolve) => {
-		let done = false;
-		const finish = (result: T | undefined): void => {
-			if (done) return;
-			done = true;
+	const session = createDialogSession<T>({
+		element: dialog,
+		confirm: ok,
+		cancel,
+		...(spec.submit ? { submit: spec.submit } : {}),
+		finish: () => {
 			dialog.removeAttribute('open');
 			dialog.remove();
 			if (ctx.grid()) ctx.grid()?.focus();
 			else if (opener instanceof doc.defaultView!.HTMLElement && opener.isConnected)
 				opener.focus({ preventScroll: true });
-			resolve(result);
-		};
-		// One submit at a time: a double Enter or double click must not apply an async submit twice.
-		// A synchronous submit settles at once; an async one disables OK until it settles.
-		let submitting = false;
-		const failed = (error: unknown) =>
-			ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'error');
-		const settle = (result: T | undefined) => {
-			if (result !== undefined) finish(result);
-		};
-		const confirm = async (): Promise<void> => {
-			if (done || submitting) return;
-			if (!spec.submit) return finish(undefined);
-			let outcome: T | undefined | Promise<T | undefined>;
-			try {
-				outcome = spec.submit();
-			} catch (error) {
-				return failed(error);
-			}
-			if (!(outcome instanceof Promise)) return settle(outcome);
-			submitting = true;
-			if (ok) ok.disabled = true;
-			try {
-				settle(await outcome);
-			} catch (error) {
-				failed(error);
-			} finally {
-				submitting = false;
-				if (ok && !done) ok.disabled = false;
-			}
-		};
-		dialog.addEventListener('office-dialog-close', () => finish(undefined));
-		cancel.addEventListener('click', () => finish(undefined));
-		ok?.addEventListener('click', () => void confirm());
-		dialog.addEventListener('keydown', (event) => {
-			const el = event.target as HTMLElement | null;
-			if (event.key === 'Escape' && !event.defaultPrevented) {
-				// office-ui-dialog handles Escape when it is upgraded; this covers the rest.
-				event.preventDefault();
-				finish(undefined);
-			} else if (
-				event.key === 'Enter' &&
-				ok &&
-				el instanceof doc.defaultView!.HTMLInputElement &&
-				el.type !== 'checkbox' &&
-				el.type !== 'radio' &&
-				el.type !== 'file'
-			) {
-				event.preventDefault();
-				void confirm();
-			}
-		});
-		dialogHost(ctx).append(dialog);
-		dialog.setAttribute('open', '');
-		handle?.({ element: dialog, close: () => finish(undefined) });
-		spec.opened?.();
+		},
+		error: (error) =>
+			ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'error'),
 	});
+	dialogHost(ctx).append(dialog);
+	dialog.setAttribute('open', '');
+	handle?.({ element: dialog, close: () => session.close() });
+	spec.opened?.();
+	return session.result;
 }

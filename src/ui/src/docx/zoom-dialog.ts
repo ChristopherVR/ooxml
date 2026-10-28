@@ -2,12 +2,12 @@ import { dialogButton, fieldset, labelled, numberInput } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { type EditorLocale } from './localization';
 import type { ZoomFit } from 'ooxml-core/docx/ui';
+import { createDialogSession } from '../dialog/dialog-session';
 import {
 	createDialogShell,
 	dialogActions,
 	isDialogOpen,
 	setDialogOpen,
-	onDialogDismiss,
 	localizeDialog,
 } from './dialog-shell';
 
@@ -81,20 +81,25 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 		const size = value === 'custom' ? parseZoomPercent(percent.value) : Number(value);
 		preview.style.fontSize = `${Math.round(((size ?? 100) / 100) * 14)}px`;
 	};
-	const hide = () => {
+	let session: ReturnType<typeof createDialogSession<true>> | undefined;
+	const cleanup = () => {
 		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
-	const submit = () => {
+	const hide = () => session?.close();
+	const submit = (): true | undefined => {
 		const value = chosen();
 		if (value === 'width' || value === 'page' || value === 'pages') host.fit(value);
 		else {
 			const next = value === 'custom' ? parseZoomPercent(percent.value) : Number(value);
-			if (next === null) return percent.focus();
+			if (next === null) {
+				percent.focus();
+				return;
+			}
 			host.setPercent(next);
 		}
-		hide();
+		return true;
 	};
 	for (const input of radios.values()) input.addEventListener('change', showPreview);
 	percent.addEventListener('input', () => {
@@ -102,18 +107,10 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 		if (radio) radio.checked = true;
 		showPreview();
 	});
-	cancel.addEventListener('click', hide);
-	confirm.addEventListener('click', submit);
-	onDialogDismiss(element, hide);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
-			event.preventDefault();
-			submit();
-		}
-	});
 	return {
 		element,
 		open() {
+			session?.dispose();
 			element.replaceChildren(...content);
 			localizeDialog(element, locale);
 			const current = host.percent();
@@ -122,6 +119,14 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 			const radio = radios.get(preset ?? 'custom');
 			if (radio) radio.checked = true;
 			showPreview();
+			session = createDialogSession<true>({
+				element,
+				confirm,
+				cancel,
+				submit,
+				finish: cleanup,
+				enter: (event) => (event.target as Element | null)?.tagName === 'INPUT',
+			});
 			setDialogOpen(element, true);
 			(radio ?? percent).focus();
 		},
