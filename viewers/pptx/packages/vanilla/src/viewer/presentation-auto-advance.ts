@@ -1,4 +1,4 @@
-import { resolveAutoAdvanceDelayMs } from 'ooxml-ui/pptx';
+import { resolveAutoAdvanceDelayMs, resolveTransitionDurationMs } from 'ooxml-ui/pptx';
 /**
  * PowerPoint's "Advance slide: After <n>" timing (`p:transition/@advTm`) for a
  * running slide show.
@@ -83,15 +83,21 @@ export function attachAutoAdvance(deps: AutoAdvanceDeps): AutoAdvanceHandle {
 		}
 	};
 
-	const arm = (): void => {
+	const arm = (onEntry = false): void => {
 		// Always cancel first: a manual advance must never leave the outgoing
 		// slide's timer running, or it fires on the slide the presenter just
 		// moved to and skips straight past it.
 		cancel();
-		const delayMs = resolveShowAutoAdvanceMs(deps.getState());
-		if (delayMs === undefined) {
+		const state = deps.getState();
+		const after = resolveShowAutoAdvanceMs(state);
+		if (after === undefined) {
 			return;
 		}
+		// PowerPoint counts After from the end of the slide's own transition. Arming at the
+		// start of a 0s timer cut every timed slide's entry transition short.
+		const delayMs =
+			after +
+			(onEntry ? resolveTransitionDurationMs(state.slides[state.currentSlide]?.transition) : 0);
 		timer = setTimer(() => {
 			timer = undefined;
 			const before = deps.getState().currentSlide;
@@ -126,7 +132,7 @@ export function attachAutoAdvance(deps: AutoAdvanceDeps): AutoAdvanceHandle {
 			return;
 		}
 		lastSignature = next;
-		arm();
+		arm(true);
 	};
 
 	const detachStore = deps.subscribe(sync);
@@ -134,7 +140,7 @@ export function attachAutoAdvance(deps: AutoAdvanceDeps): AutoAdvanceHandle {
 
 	return {
 		cancel,
-		rearm: arm,
+		rearm: () => arm(),
 		detach: () => {
 			cancel();
 			detachStore();

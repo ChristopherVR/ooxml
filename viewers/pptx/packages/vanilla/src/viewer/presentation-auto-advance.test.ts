@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AutoAdvanceState } from './presentation-auto-advance';
 import { attachAutoAdvance, resolveShowAutoAdvanceMs } from './presentation-auto-advance';
 
+const TRANSITION_MS = 700;
+
 function slide(id: string, advanceAfterMs?: number, advanceOnClick?: boolean): PptxSlide {
 	return {
 		id,
@@ -11,7 +13,9 @@ function slide(id: string, advanceAfterMs?: number, advanceOnClick?: boolean): P
 		slideNumber: 1,
 		elements: [],
 		transition:
-			advanceAfterMs === undefined ? undefined : { type: 'fade', advanceAfterMs, advanceOnClick },
+			advanceAfterMs === undefined
+				? undefined
+				: { type: 'fade', durationMs: TRANSITION_MS, advanceAfterMs, advanceOnClick },
 	} as unknown as PptxSlide;
 }
 
@@ -100,7 +104,8 @@ describe('attachAutoAdvance', () => {
 	it('advances a slide that forbids click-advance but sets a timing', () => {
 		const h = harness();
 		const { detach } = attachAutoAdvance(h.deps);
-		expect(h.scheduled).toStrictEqual([10]);
+		// After counts from the end of the slide's own transition.
+		expect(h.scheduled).toStrictEqual([TRANSITION_MS + 10]);
 
 		h.runTimers();
 		expect(h.deps.next).toHaveBeenCalledOnce();
@@ -133,18 +138,20 @@ describe('attachAutoAdvance', () => {
 		h.runTimers();
 		expect(h.deps.next).toHaveBeenCalledOnce();
 		expect(h.pending()).toBe(1);
+		// The re-armed tick is the next build's authored time, not another transition.
+		expect(h.scheduled).toStrictEqual([TRANSITION_MS + 10, 10]);
 		detach();
 	});
 
 	it('ignores unrelated store churn instead of restarting the timing', () => {
 		const h = harness();
 		const { detach } = attachAutoAdvance(h.deps);
-		expect(h.scheduled).toStrictEqual([10]);
+		expect(h.scheduled).toStrictEqual([TRANSITION_MS + 10]);
 
 		// A patch that cannot affect the schedule must not re-arm; re-arming on
 		// every store notification would restart a 10 ms timing for ever.
 		h.set({});
-		expect(h.scheduled).toStrictEqual([10]);
+		expect(h.scheduled).toStrictEqual([TRANSITION_MS + 10]);
 		detach();
 	});
 
@@ -173,7 +180,8 @@ describe('attachAutoAdvance', () => {
 
 		handle.rearm();
 		expect(h.pending()).toBe(1);
-		expect(h.scheduled).toStrictEqual([10, 10]);
+		// Entry waits out the transition; resuming a visible slide only restarts the authored time.
+		expect(h.scheduled).toStrictEqual([TRANSITION_MS + 10, 10]);
 
 		h.runTimers();
 		expect(h.deps.next).toHaveBeenCalledOnce();

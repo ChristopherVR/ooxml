@@ -1,4 +1,4 @@
-import { resolveAutoAdvanceDelayMs } from 'ooxml-ui/pptx';
+import { resolveAutoAdvanceDelayMs, resolveTransitionDurationMs } from 'ooxml-ui/pptx';
 /**
  * useSlideAutoAdvance - PowerPoint's "Advance slide: After <n>" timing.
  *
@@ -57,7 +57,7 @@ export function useSlideAutoAdvance(input: SlideAutoAdvanceInput): SlideAutoAdva
 		}
 	}
 
-	function arm(): void {
+	function arm(onEntry = false): void {
 		// Always cancel first: a manual advance must never leave the outgoing
 		// slide's timer running, or it fires on the slide the presenter just
 		// moved to and skips it.
@@ -65,12 +65,16 @@ export function useSlideAutoAdvance(input: SlideAutoAdvanceInput): SlideAutoAdva
 		if (toValue(input.suspended)) {
 			return;
 		}
-		const delayMs = resolveAutoAdvanceDelayMs(toValue(input.slide), {
+		const slide = toValue(input.slide);
+		const after = resolveAutoAdvanceDelayMs(slide, {
 			useTimings: toValue(input.useTimings),
 		});
-		if (delayMs === undefined) {
+		if (after === undefined) {
 			return;
 		}
+		// PowerPoint counts After from the end of the slide's own transition; arming at the
+		// start of a 0s timer cut every timed slide's entry transition short.
+		const delayMs = after + (onEntry ? resolveTransitionDurationMs(slide?.transition) : 0);
 		timer = setTimeout(() => {
 			timer = undefined;
 			const before = toValue(input.position);
@@ -86,11 +90,11 @@ export function useSlideAutoAdvance(input: SlideAutoAdvanceInput): SlideAutoAdva
 
 	watch(
 		() => [toValue(input.slide), toValue(input.useTimings), toValue(input.suspended)] as const,
-		arm,
+		() => arm(true),
 		{ immediate: true },
 	);
 
 	onBeforeUnmount(cancel);
 
-	return { cancel, rearm: arm };
+	return { cancel, rearm: () => arm() };
 }

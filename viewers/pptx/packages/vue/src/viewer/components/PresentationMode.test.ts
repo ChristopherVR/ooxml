@@ -38,12 +38,17 @@ function makeSlideNoClickAdvance(id: string): PptxSlide {
  * i.e. "on mouse click" OFF and "after 10 ms" ON. Its timing is the only thing
  * that can move the show off it.
  */
-function makeTimedSlide(id: string): PptxSlide {
+function makeTimedSlide(id: string, transitionMs = 20): PptxSlide {
 	return {
 		id,
 		elements: [],
 		backgroundColor: '#ffffff',
-		transition: { type: 'fade', advanceOnClick: false, advanceAfterMs: 10 },
+		transition: {
+			type: 'fade',
+			durationMs: transitionMs,
+			advanceOnClick: false,
+			advanceAfterMs: 10,
+		},
 	} as unknown as PptxSlide;
 }
 
@@ -227,6 +232,18 @@ describe('presentationMode', () => {
 		await settle();
 		expect(wrapper.emitted('slide-change')?.[0]).toStrictEqual([1]);
 		expect(counterText()).toContain('2 / 2');
+		wrapper.unmount();
+	});
+
+	it('counts the authored time from the end of the slide transition', async () => {
+		const wrapper = mountMode([makeTimedSlide('s1', 400), makeSlide('s2')]);
+		// The 10 ms timing must not cut the 400 ms entry transition short.
+		await settle();
+		expect(wrapper.emitted('slide-change')).toBeUndefined();
+		await new Promise((resolve) => {
+			setTimeout(resolve, 450);
+		});
+		expect(wrapper.emitted('slide-change')?.[0]).toStrictEqual([1]);
 		wrapper.unmount();
 	});
 

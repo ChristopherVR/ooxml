@@ -1,5 +1,5 @@
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
-import { attachPresentationVisibilityPause } from 'ooxml-ui/pptx';
+import { attachPresentationVisibilityPause, resolveTransitionDurationMs } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { untrack } from 'svelte';
 
@@ -134,13 +134,17 @@ export function usePresentationEffects(deps: PresentationEffectsDeps): void {
 		deps.controller.advance();
 	});
 	$effect(() => {
+		const slide = deps.getActiveSlide();
+		const after = resolveSlideAutoAdvanceMs({
+			presenting: deps.getPresenting(),
+			slide,
+			useTimings: deps.getUseTimings?.() ?? true,
+			endOfShow: deps.controller.endOfShowVisible,
+		});
+		// PowerPoint counts `After` from the end of the slide's own transition; arming at the
+		// start of a 0s timer cut every timed slide's entry transition short.
 		autoAdvance.schedule(
-			resolveSlideAutoAdvanceMs({
-				presenting: deps.getPresenting(),
-				slide: deps.getActiveSlide(),
-				useTimings: deps.getUseTimings?.() ?? true,
-				endOfShow: deps.controller.endOfShowVisible,
-			}),
+			after === undefined ? undefined : after + resolveTransitionDurationMs(slide?.transition),
 		);
 		return () => autoAdvance.cancel();
 	});
