@@ -3955,6 +3955,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "pictureResolver"
+						},
+						{
+							"kind": "field",
 							"name": "schemeColors"
 						},
 						{
