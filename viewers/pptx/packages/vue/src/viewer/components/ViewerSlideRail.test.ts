@@ -39,7 +39,6 @@ function mountRail(hasSections: boolean, canEdit = true) {
 	const wrapper = mount(ViewerSlideRail, {
 		props: {
 			mergedSlides: slides,
-			mergedSlideById: new Map(slides.map((slide) => [slide.id, slide])),
 			activeSlideIndex: 0,
 			canvasSize: { width: 960, height: 540 },
 			mediaDataUrls: new Map<string, string>(),

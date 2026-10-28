@@ -16,6 +16,16 @@ export { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from 'ooxml-ui/
 export { useEditorHistory } from './useEditorHistory';
 export { useEditorOperations } from './useEditorOperations';
 export type { EditorOperations } from './useEditorOperations';
+// Slide and section operations, the commands a host maps the `SlidesPane`
+// rail's events onto in a custom shell.
+export { useSlideOperations } from './useSlideOperations';
+export type { UseSlideOperationsInput, UseSlideOperationsResult } from './useSlideOperations';
+export { useSectionOperations } from './useSectionOperations';
+export type {
+	SectionGroup,
+	UseSectionOperationsInput,
+	UseSectionOperationsResult,
+} from './useSectionOperations';
 export type { TemplateElementMap } from './template-editing';
 export { useInlineEditing } from './useInlineEditing';
 export type { UseInlineEditingInput, UseInlineEditingResult } from './useInlineEditing';

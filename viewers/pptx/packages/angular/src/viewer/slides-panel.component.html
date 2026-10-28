@@ -34,7 +34,7 @@
 								type="button"
 								class="pptx-ng-section-toggle"
 								[attr.aria-expanded]="!item.section?.collapsed"
-								(click)="item.section && editor.sectionOps.toggle(item.section.id)"
+								(click)="item.section && onToggleSection(item.section.id)"
 								(dblclick)="item.section && startRenameSection(item.section.id, item.section.name)"
 							>
 								<span>{{ item.section?.collapsed ? '▸' : '▾' }}</span>
@@ -78,7 +78,7 @@
 							role="option"
 							[attr.aria-selected]="i === activeIndex()"
 							[attr.aria-label]="'pptx.notes.slideN' | translate: { n: i + 1 }"
-							[attr.draggable]="true"
+							[attr.draggable]="canEdit()"
 							(contextmenu)="onThumbContextMenu($event, i)"
 							(dragstart)="onDragStart($event, i)"
 							(dragover)="$event.preventDefault()"
@@ -114,7 +114,7 @@
 								>
 									<pptx-slide-canvas
 										[slide]="slide"
-										[templateElements]="editor.templateElementsBySlideId()[slide.id] ?? []"
+										[templateElements]="templateMap()[slide.id] ?? []"
 										[canvasSize]="canvasSize()"
 										[mediaDataUrls]="mediaDataUrls()"
 										[zoom]="thumbZoom()"
@@ -158,24 +158,26 @@
 		</div>
 	</div>
 
-	<!-- Footer: add new slide -->
-	<footer class="pptx-ng-spanel-footer" data-pptx-chrome="slide-footer">
-		<button
-			type="button"
-			class="pptx-ng-spanel-add"
-			[attr.aria-label]="'pptx.sections.addSlide' | translate"
-			(click)="onAddSlide()"
-		>
-			<svg lucidePlus class="h-3.5 w-3.5"></svg> {{ 'pptx.sections.addSlide' | translate }}
-		</button>
-	</footer>
+	<!-- Footer: add new slide (editing only) -->
+	@if (canEdit()) {
+		<footer class="pptx-ng-spanel-footer" data-pptx-chrome="slide-footer">
+			<button
+				type="button"
+				class="pptx-ng-spanel-add"
+				[attr.aria-label]="'pptx.sections.addSlide' | translate"
+				(click)="onAddSlide()"
+			>
+				<svg lucidePlus class="h-3.5 w-3.5"></svg> {{ 'pptx.sections.addSlide' | translate }}
+			</button>
+		</footer>
+	}
 
 	@if (sectionMenu(); as sm) {
 		<pptx-section-context-menu
 			[x]="sm.x"
 			[y]="sm.y"
 			[sectionIndex]="sectionIndex(sm.sectionId)"
-			[totalSections]="editor.sections().length"
+			[totalSections]="sectionList().length"
 			(command)="onSectionCommand($event, sm.sectionId)"
 			(closed)="sectionMenu.set(null)"
 		/>
@@ -186,11 +188,11 @@
 			[y]="m.y"
 			[slideIndex]="m.index"
 			[selectedIndexes]="m.selectedIndexes"
-			[slides]="editor.slides()"
+			[slides]="deck()"
 			(addSlideAfter)="addSlideAfter.emit($event)"
 			(duplicateSlides)="duplicateSlides.emit($event)"
 			(deleteSlides)="deleteSlides.emit($event)"
-			(openLayoutForSlide)="openLayoutForSlide.emit($event)"
+			(openLayoutForSlide)="onOpenLayout($event)"
 			(toggleHideSlides)="toggleHideSlides.emit($event)"
 			(addSectionAt)="addSectionAt.emit($event)"
 			(closed)="rail.closeContextMenu()"

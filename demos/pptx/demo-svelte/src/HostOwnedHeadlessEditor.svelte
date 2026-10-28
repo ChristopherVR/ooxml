@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { describeCollaborationShellState } from 'pptx-svelte-viewer';
-	import { CollaborationCursors, createViewerState, EditorLayer, RemoteSelectionOverlay, SlideCanvas } from 'pptx-svelte-viewer/viewer';
+	import { CollaborationCursors, createSlidesPaneProps, createViewerState, EditorLayer, RemoteSelectionOverlay, SlideCanvas, SlidesPane } from 'pptx-svelte-viewer/viewer';
 	import type { CollaborationShellState, ViewerStateBag } from 'pptx-svelte-viewer/viewer';
 	import { onDestroy } from 'svelte';
 
@@ -35,6 +35,9 @@
 		getMasterScale: () => 1,
 	});
 	const shellState: CollaborationShellState = $derived(viewerState.shellState);
+	// The thumbnail rail runs the same slide and section operations as the
+	// canvas, so a slide added from its footer reaches every peer.
+	const slidesPaneProps = createSlidesPaneProps(viewerState);
 	onDestroy(() => viewerState.destroy());
 	export function getContent(): Promise<Uint8Array> { return viewerState.editingApi.save(); }
 	export function setScale(next: number): void {
@@ -52,6 +55,8 @@
 		{/each}
 		<output aria-label={t('pptx.collaboration.shellStatusLabel')}>{describeCollaborationShellState(shellState, t)}</output>
 	</nav>
+	<div class="body">
+	<SlidesPane {...slidesPaneProps} />
 	<div data-pptx-viewport class="viewport">
 		{#if viewerState.loader.error}<p role="alert">{viewerState.loader.error}</p>{/if}
 		<SlideCanvas
@@ -72,10 +77,12 @@
 			<CollaborationCursors cursors={viewerState.collab.cursors} zoom={scale} />
 		</SlideCanvas>
 	</div>
+	</div>
 </div>
 
 <style>
 	.shell { height: 100%; display: flex; flex-direction: column; background: #e2e8f0; color: #0f172a; }
 	nav { display: flex; gap: 8px; padding: 8px; }
-	.viewport { overflow: auto; flex: 1; display: flex; padding: 24px; }
+	.body { flex: 1; min-height: 0; display: flex; }
+	.viewport { overflow: auto; flex: 1; min-width: 0; display: flex; padding: 24px; }
 </style>

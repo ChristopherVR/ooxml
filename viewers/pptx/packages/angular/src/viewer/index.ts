@@ -97,7 +97,12 @@ export {
 	hasCopyableFormat,
 	type CopiedFormat,
 } from './format-painter';
+// The slide thumbnail rail: a building block a custom shell places beside its canvas.
 export { SlidesPanelComponent } from './slides-panel.component';
+export type { SlidesPanelMoveSlide, SlidesPanelRenameSection } from './slides-panel.component';
+export { createSlidesPanelEditorCommands } from './slides-panel-commands';
+export type { SlidesPanelEditorCommands } from './slides-panel-commands';
+export type { SlidesPaneLayoutGalleryRequest } from 'ooxml-ui/pptx';
 export { EditorToolbarComponent } from './editor-toolbar.component';
 export { StatusBarComponent } from './status-bar.component';
 export { EditorContextMenuComponent } from './editor-context-menu.component';

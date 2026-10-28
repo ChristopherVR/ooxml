@@ -14,6 +14,9 @@ export type {
 } from 'ooxml-ui/pptx';
 export { default as SlideCanvas } from './components/SlideCanvas.vue';
 export { default as SlideStage } from './components/SlideStage.vue';
+// The slide thumbnail rail, for a host composing its own shell beside `SlideCanvas`.
+export { default as SlidesPane } from './components/SlidesPane.vue';
+export type { SlidesPaneLayoutGalleryRequest } from 'ooxml-ui/pptx';
 export { default as ElementRenderer } from './components/ElementRenderer.vue';
 export { default as ConnectorRenderer } from './components/ConnectorRenderer.vue';
 export { default as TableRenderer } from './components/TableRenderer.vue';

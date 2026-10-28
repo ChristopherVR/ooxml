@@ -214,6 +214,38 @@ const current = viewer?.getCustomization();
 
 `pptx-svelte-viewer/viewer` 入口还导出查看器内部不依赖框架的状态辅助接口：`ViewerState`、`PresentationLoader`、`clampSlideIndex`、`fitScale`、`resolveNavigationKey`、`zoomInPercent`、`zoomOutPercent`，供宿主基于相同基础能力构建自定义界面。这些接口比组件 API 更底层，常规嵌入场景无需使用。
 
+### 幻灯片缩略图栏 {#slide-thumbnail-rail}
+
+`SlidesPane` 是 `PowerPointViewer` 在画布旁显示的幻灯片缩略图栏，供基于 `createViewerState` 和 `SlideCanvas` 构建的自定义外壳使用（见[协作](/zh/svelte/collaboration#custom-host-chrome)）。它列出所有幻灯片（演示文稿包含节时按节分组）并突出显示当前幻灯片；点击缩略图会将画布切换到该幻灯片，不会把演示文稿标记为已修改。启用 `canEdit` 后，它还可以添加、复制、删除、隐藏、重新排序和分组幻灯片（按住 Ctrl 或 Shift 点击可多选），使用与完整编辑器相同的操作、撤销历史和协作同步。`createSlidesPaneProps(state)` 根据查看器状态构建其属性，这些属性是实时 getter，请原样展开传入。
+
+```svelte
+<script lang="ts">
+	import {
+		createSlidesPaneProps,
+		createViewerState,
+		SlideCanvas,
+		SlidesPane,
+	} from 'pptx-svelte-viewer/viewer';
+
+	const state = createViewerState(viewerOptions);
+	const paneProps = createSlidesPaneProps(state, {
+		onopenlayoutgallery: ({ slideIndex, x, y }) => openMyLayoutGallery(slideIndex, x, y),
+	});
+</script>
+
+<div style="display: flex; height: 600px">
+	<SlidesPane {...paneProps} />
+	<SlideCanvas
+		slide={state.activeSlide}
+		canvasSize={state.loader.canvasSize}
+		mediaDataUrls={state.loader.mediaDataUrls}
+		scale={state.scale}
+	/>
+</div>
+```
+
+这些属性是扁平的，因此宿主也可以用自己的状态驱动缩略图栏：`slides`（已合并版式和母版元素，与画布的绘制方式一致）、`activeSlideIndex`、`canvasSize`、`mediaDataUrls`、`sections`、`canEdit`、`onselectslide` / `onmoveslide` / `onaddslide` / `onaddslideafter` / `onduplicateslides` / `ondeleteslides` / `onhideslides` 及节相关回调，以及用 `ooxml-ui/pptx` 中的 `buildSlidesPaneFieldContext` 和 `buildSlidesPaneTableStyleContext` 构建的 `fieldContext` 和 `tableStyleContext`，使缩略图像画布一样替换字段（包括编号不从 1 开始的演示文稿中的幻灯片编号）和表格颜色。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onopenlayoutgallery({ slideIndex, x, y })`，因为这些构建模块不渲染版式库。缩略图栏自身没有折叠控件：要隐藏它，请按条件渲染。`SlidesPane` 也从包根入口导出，需要 `pptx-svelte-viewer/styles.css`。
+
 ### `pptx-svelte-viewer/internals`：幻灯片过渡辅助函数 {#pptx-svelte-viewer-internals-slide-transition-helpers}
 
 所有绑定共用的框架无关逻辑位于 `ooxml-ui/pptx`；私有的 `pptx-viewer-shared` 包只是它的兼容外观。宿主如果搭建了自己的放映界面（自定义舞台，而非完整的 `PowerPointViewer`），仍然需要用到过渡解析器/关键帧和叠加层组件，因此它们改从 `pptx-svelte-viewer/internals` 子路径重新导出：

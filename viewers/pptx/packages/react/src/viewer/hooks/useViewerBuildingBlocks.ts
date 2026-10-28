@@ -16,11 +16,17 @@ import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
  *
  * ```tsx
  * function MyCustomViewer({ content }: { content: Uint8Array }) {
- *   const { toolbarProps, canvasProps } = useViewerBuildingBlocks({ content, canEdit: true });
+ *   const { toolbarProps, canvasProps, slidesPaneProps } = useViewerBuildingBlocks({
+ *     content,
+ *     canEdit: true,
+ *   });
  *   return (
  *     <>
  *       <Toolbar {...toolbarProps} />
- *       <SlideCanvas {...canvasProps} />
+ *       <div style={{ display: 'flex' }}>
+ *         <SlidesPane {...slidesPaneProps} />
+ *         <SlideCanvas {...canvasProps} />
+ *       </div>
  *     </>
  *   );
  * }
@@ -39,6 +45,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTranslation } from '../i18n/use-translation';
 import { buildCanvasProps } from './useViewerBuildingBlocks-canvas-props';
+import { useSlidesPaneProps } from './useViewerBuildingBlocks-slides-pane-props';
 import { buildToolbarProps } from './useViewerBuildingBlocks-toolbar-props';
 import type {
 	UseViewerBuildingBlocksInput,
@@ -83,6 +90,7 @@ export function useViewerBuildingBlocks(
 		onOpenSettings,
 		onOpenHeaderFooter,
 		onOpenShareDialog,
+		onOpenLayoutGallery,
 	} = input;
 	const collaborationConfig = resolveCollaborationConfig(input.collaboration);
 	const [collaborationReadOnly, setCollaborationReadOnly] = useState(Boolean(collaborationConfig));
@@ -137,6 +145,7 @@ export function useViewerBuildingBlocks(
 		presentation,
 		masterPseudoSlide,
 		gridSpacingPx,
+		slideSectionGroups,
 		viewerOptions,
 	} = core;
 	// Shared slides can arrive before their original PPTX resources finish loading.
@@ -249,6 +258,17 @@ export function useViewerBuildingBlocks(
 	});
 
 	canvasProps.collaborationOverlay = overlay;
+	const slidesPaneProps = useSlidesPaneProps({
+		state,
+		slides,
+		canEdit,
+		activeSlideIndex,
+		slideSectionGroups,
+		slideOps: editorOps.slideOps,
+		sectionOps: editorOps.sectionOps,
+		recordedTimings: presentation.recordedTimings,
+		onOpenLayoutGallery,
+	});
 	// The same shell projection the other bindings hand their custom chrome.
 	const shellState = useMemo(
 		() =>
@@ -275,6 +295,7 @@ export function useViewerBuildingBlocks(
 	return {
 		toolbarProps,
 		canvasProps,
+		slidesPaneProps,
 		mode,
 		loading,
 		error,

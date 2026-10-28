@@ -49,6 +49,38 @@ shell.controller.notifyContentLoaded('bootstrap');
 
 Vanilla 的宿主自管示例仅使用公开导出，提供了可运行的范例。关于持久化边界，请参见[会话指南](/zh/guide/host-owned-collaboration)。
 
+### 幻灯片缩略图栏 {#slide-thumbnail-rail}
+
+`createSlidesPane(container, options)` 挂载 `createPptxViewer` 在画布旁显示的幻灯片缩略图栏，供使用 `renderSlideStage` 自行渲染画布的外壳使用。它列出所有幻灯片（传入 `sections` 时按节分组），并用 `aria-current="true"` 标记当前行。点击缩略图会调用 `onSelectSlide(index)`；缩略图栏本身从不修改演示文稿。启用 `canEdit` 后，它会增加“新建幻灯片”页脚、缩略图和节的右键菜单，以及按 Enter 插入，并把每个命令（添加、在其后添加、复制、删除、隐藏、节操作）报告给你的回调，因此幻灯片更改与你的其他编辑一样经过同一个 store 和协作同步。
+
+```ts
+import { createSlidesPane, loadPresentation } from 'pptx-vanilla-viewer';
+
+const deck = await loadPresentation(bytes);
+const pane = createSlidesPane(railHost, {
+	slides: deck.slides,
+	activeSlideIndex: 0,
+	canvasSize: deck.canvasSize,
+	mediaDataUrls: deck.mediaDataUrls,
+	headerFooter: deck.headerFooter,
+	customProperties: deck.customProperties,
+	firstSlideNumber: deck.firstSlideNumber,
+	colorScheme: deck.colorScheme,
+	fontScheme: deck.fontScheme,
+	formatScheme: deck.formatScheme,
+	tableStyleMap: deck.tableStyleMap,
+	canEdit: true,
+	onSelectSlide: (index) => showSlide(index),
+	onAddSlide: () => addSlideAfterCurrent(),
+});
+
+// Pass only what changed; a new active index moves the marker without redrawing thumbnails.
+pane.update({ activeSlideIndex: 2 });
+pane.destroy();
+```
+
+缩略图使用与画布相同的输入绘制：请传入与 `renderSlideStage` 调用相同的主题方案、表格样式和注册表；如果你把版式元素与各幻灯片自身的元素分开保存，还要传入 `templateElementsBySlideId`。日期、页脚、文档属性和幻灯片编号字段根据 `headerFooter`、`customProperties` 和 `firstSlideNumber`（`p:presentation/@firstSlideNum`）解析，因此编号从 45 开始的演示文稿会在第一张缩略图上显示“Slide 45”。多选命令（`onDuplicateSlides`、`onDeleteSlides`、`onHideSlides`）会收到所有选中的索引；`createSlidesPaneBulkSlideOps` 可将单张幻灯片操作提升为多选命令。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onOpenLayoutGallery({ slideIndex, x, y })`，因为自定义外壳会渲染自己的版式选择器。缩略图栏没有折叠控件，请自行隐藏或移除 `pane.el`。它需要完整的查看器样式表（`pptx-vanilla-viewer/styles.css` 或 `getViewerCss()`）以及一个 `.pptxv` 祖先元素。
+
 ## 加载 {#loading}
 
 | 方法                     | 签名                                                         | 说明                                                               |

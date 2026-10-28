@@ -483,6 +483,42 @@ test.describe('host-owned collaboration', () => {
 		});
 	}
 
+	test('the custom-shell slide rail navigates and syncs a slide added from it', async ({
+		page,
+		browser,
+		baseURL,
+	}, info) => {
+		// Every binding's custom shell composes the exported rail beside its canvas.
+		requireCustomHostShell();
+		const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });
+		const peer = await context.newPage();
+		const room = `external-shell-rail-${info.project.name}-${Date.now()}`;
+		const rows = (target: Page) =>
+			target.locator('[data-host-custom-shell] [data-pptx-chrome="slide-row"]');
+		try {
+			await open(page, room, { sample: '1' });
+			await open(peer, room, { name: 'Peer' });
+			const count = await rows(page).count();
+			expect(count).toBeGreaterThan(1);
+			await expect(rows(peer)).toHaveCount(count);
+			await expect(rows(page).first().locator('[data-pptx-chrome="slide-frame"]')).toBeVisible();
+
+			const firstSlideText = elements(page).filter({ hasText: 'Product Overview' });
+			await expect(firstSlideText).toBeVisible();
+			await rows(page).nth(1).click();
+			await expect(rows(page).nth(1)).toHaveAttribute('aria-current', 'true');
+			await expect(firstSlideText).toHaveCount(0);
+
+			await page
+				.locator('[data-host-custom-shell] [data-pptx-chrome="slide-footer"] button')
+				.click();
+			await expect(rows(page)).toHaveCount(count + 1);
+			await expect(rows(peer)).toHaveCount(count + 1, { timeout: 30_000 });
+		} finally {
+			await context.close();
+		}
+	});
+
 	test('custom-shell selections and cursors follow the receiver zoom exactly once', async ({
 		page,
 		browser,

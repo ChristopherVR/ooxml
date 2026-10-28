@@ -39,7 +39,7 @@ const state: CollaborationShellState = collab.shellState.value;
 
 复用 `loader.getContent()` 进行当选所有者的持久化时，还需要向 `useLoadContent` 传入 `getPendingInlineEdit`。在允许编辑期间，在其中读取当前的 `useInlineEditing.readInlineSnapshot()` 及其目标幻灯片 ID。当 `isInlineInputPending()` 为 true 时应拒绝保存，避免在原生输入或输入法组合未完成时保存旧模型。这样保存的快照会包含活动草稿，而无需提交或关闭编辑器；否则快照只包含最后一次已提交的模型。
 
-构建自定义编辑器时，请从 `pptx-vue-viewer/viewer` 组合 `SlideCanvas`、`SelectionOverlay`、`useElementDrag`、`InlineTextEditor`、`useInlineEditing`、`useLoadContent` 和各编辑器组合式函数。向 `InlineTextEditor` 传入当前幻灯片 ID 和 `livePatcher`。使用 `onConnectedSuspend` 通过导出的 `overlayInlineTextSnapshot` 在本地叠加其已接受的快照，这不会创建历史记录，也不会在权限丢失后发布新的编辑。权威的远程内容替换后，不要保留过期的编辑器 DOM。请在 `SlideCanvas` 插槽中渲染 `CollaborationCursors` 和 `RemoteSelectionOverlay`：该插槽已经被缩放，因此叠加层使用未缩放的幻灯片坐标。请使用 `SlideCanvas.getStageElement()` 作为公开的指针坐标原点，并在只读状态切换或销毁时取消正在进行的拖动。通过 `setCursor`、`setSelection` 和 `setActiveSlide` 发布除以舞台缩放比例后的本地光标坐标、选中 ID 和当前幻灯片。
+构建自定义编辑器时，请从 `pptx-vue-viewer/viewer` 组合 `SlideCanvas`、`SelectionOverlay`、`useElementDrag`、`InlineTextEditor`、`useInlineEditing`、`useLoadContent` 和各编辑器组合式函数，并在画布旁放置 [`SlidesPane`](/zh/vue/composables#slide-thumbnail-rail) 作为幻灯片缩略图栏。向 `InlineTextEditor` 传入当前幻灯片 ID 和 `livePatcher`。使用 `onConnectedSuspend` 通过导出的 `overlayInlineTextSnapshot` 在本地叠加其已接受的快照，这不会创建历史记录，也不会在权限丢失后发布新的编辑。权威的远程内容替换后，不要保留过期的编辑器 DOM。请在 `SlideCanvas` 插槽中渲染 `CollaborationCursors` 和 `RemoteSelectionOverlay`：该插槽已经被缩放，因此叠加层使用未缩放的幻灯片坐标。请使用 `SlideCanvas.getStageElement()` 作为公开的指针坐标原点，并在只读状态切换或销毁时取消正在进行的拖动。通过 `setCursor`、`setSelection` 和 `setActiveSlide` 发布除以舞台缩放比例后的本地光标坐标、选中 ID 和当前幻灯片。
 
 [自定义外壳演示源码](https://github.com/ChristopherVR/ooxml/blob/main/demos/pptx/demo-vue/src/HostOwnedHeadlessEditor.vue)展示了不渲染 `PowerPointViewer` 的完整接线。
 

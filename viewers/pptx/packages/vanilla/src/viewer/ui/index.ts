@@ -54,6 +54,8 @@ export { createPresentationTouchControls } from './presentation-touch-controls';
 export * from './ribbon';
 export type { ThumbnailRail } from './thumbnails';
 export { createThumbnailRail } from './thumbnails';
+export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './slides-pane';
+export { createSlidesPane } from './slides-pane';
 export type { RulerSelection, RulerStrips, RulerStripsState } from './ruler-strips';
 export { createRulerStrips } from './ruler-strips';
 export type { ProtectedViewBanner } from './protected-view-banner';

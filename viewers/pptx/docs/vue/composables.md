@@ -155,6 +155,96 @@ The operations returned by `useEditorOperations` handle this for you; only call 
 manually when you mutate `slides` yourself.
 :::
 
+### Slide thumbnail rail
+
+`SlidesPane` (exported from the package root and `pptx-vue-viewer/viewer`) is the rail of slide
+thumbnails that `PowerPointViewer` shows beside the canvas. It lists every slide (grouped under
+section headers when the deck has sections) and highlights the active one. It never changes the
+deck itself: clicking a thumbnail emits `select`, and with `canEdit` the footer, the context menus,
+Enter and drag-to-reorder emit commands you map onto `useSlideOperations` and
+`useSectionOperations` (also exported from `/viewer`), so they share your undo history and
+collaboration sync. Pass the deck props from `useLoadContent` so the thumbnails resolve slide
+numbers, header/footer fields and table styles as the canvas does.
+
+```vue
+<script setup lang="ts">
+import {
+	SlideCanvas,
+	SlidesPane,
+	useEditorHistory,
+	useLoadContent,
+	useSectionOperations,
+	useSlideOperations,
+} from 'pptx-vue-viewer/viewer';
+import { ref } from 'vue';
+import 'pptx-vue-viewer/styles';
+
+const props = defineProps<{ bytes: ArrayBuffer | null }>();
+const deck = useLoadContent(() => props.bytes);
+const { slides, templateElementsBySlideId } = deck;
+const active = ref(0);
+const history = useEditorHistory(slides);
+const slideOps = useSlideOperations({
+	slides,
+	activeSlideIndex: active,
+	pushHistory: history.pushHistory,
+	templateElementsBySlideId,
+});
+const sectionOps = useSectionOperations({
+	sections: deck.sections,
+	slides,
+	activeSlideIndex: active,
+	pushHistory: history.pushHistory,
+});
+</script>
+
+<template>
+	<div style="display: flex; height: 600px">
+		<SlidesPane
+			:slides="slides"
+			:template-elements-by-slide-id="templateElementsBySlideId"
+			:active-slide-index="active"
+			:canvas-size="deck.canvasSize.value"
+			:media-data-urls="deck.mediaDataUrls.value"
+			:section-groups="sectionOps.slidesBySection.value"
+			:header-footer="deck.headerFooter.value"
+			:custom-properties="deck.customProperties.value"
+			:first-slide-number="deck.firstSlideNumber.value"
+			:theme="deck.theme.value"
+			:table-style-map="deck.tableStyleMap.value"
+			can-edit
+			@select="active = $event"
+			@add-slide="slideOps.addSlide()"
+			@add-slide-after="slideOps.addSlide"
+			@move-slide="slideOps.moveSlide"
+			@duplicate-slide="slideOps.duplicateSlide"
+			@delete-slide="slideOps.deleteSlide"
+			@add-section="sectionOps.addSection"
+			@rename-section="sectionOps.renameSection"
+			@delete-section="sectionOps.deleteSection"
+			@move-section-up="sectionOps.moveSectionUp"
+			@move-section-down="sectionOps.moveSectionDown"
+			@toggle-section-collapse="sectionOps.toggleSectionCollapse"
+		/>
+		<div style="flex: 1; min-width: 0; position: relative">
+			<SlideCanvas
+				:slide="slides[active]"
+				:canvas-size="deck.canvasSize.value"
+				:media-data-urls="deck.mediaDataUrls.value"
+				:template-elements="templateElementsBySlideId[slides[active]?.id ?? '']"
+			/>
+		</div>
+	</div>
+</template>
+```
+
+A multi-slide command arrives as one `duplicate-slide`, `delete-slide` or `toggle-slide-hidden`
+event per selected slide, highest index first, so each copy lands right after its source. The
+"Layout" entry of a slide's context menu emits `select` for that slide, then
+`open-layout-gallery` with `{ slideIndex, x, y }` (the click point) for a Layout gallery of your
+own. Without `canEdit` the rail only navigates and shows no "Add Slide" footer. `SlidesPane`
+needs the full `pptx-vue-viewer/styles` stylesheet.
+
 ### `useCollaboration`
 
 `useCollaboration` manages a Yjs session, presence, cursors, and elected-writer synchronization

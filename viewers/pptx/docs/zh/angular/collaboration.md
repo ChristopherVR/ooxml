@@ -232,6 +232,55 @@ export class CustomSlidesComponent {
 
 可运行的自定义外壳示例（含文本和形状编辑、保存、缩放及两个在线状态叠加层）见 `demos/pptx/demo-angular/src/host-owned-headless-editor.component.ts`。[宿主自有协作约定](/zh/guide/host-owned-collaboration)及其同一文本框并发的限制，同样适用于自定义界面和完整查看器界面。
 
+### 幻灯片缩略图栏 {#slide-thumbnail-rail}
+
+`SlidesPanelComponent`（`<pptx-slides-panel>`）是 `PowerPointViewerComponent` 在画布旁显示的幻灯片缩略图栏，自定义外壳可以把它放在自己的画布旁边。它列出所有幻灯片（演示文稿包含节时按节分组）并突出显示当前幻灯片；点击缩略图会发出 `select`，不修改任何内容，因此演示文稿保持未修改状态。启用 `[canEdit]` 后，它还可以添加、复制、删除、隐藏、重新排序和分组幻灯片。
+
+设置 `[slides]` 后，缩略图栏由宿主驱动：它只渲染自己的输入，并把每个命令作为输出发出。`createSlidesPanelEditorCommands(editor, canEdit)` 通过外壳的 `EditorStateService` 应用这些输出，因此它们与画布共享撤销历史和协作同步；多选命令会把每张幻灯片复制到其自身紧后方。
+
+```ts
+import {
+	createSlidesPanelEditorCommands,
+	SlidesPanelComponent,
+	ViewerCollaborationShellService,
+} from 'pptx-angular-viewer';
+
+@Component({
+	// ...providers and canvas as in the example above
+	imports: [SlideCanvasComponent, SlidesPanelComponent],
+	template: `
+		<div style="display: flex; height: 600px">
+			<pptx-slides-panel
+				[slides]="shell.editor.slides()"
+				[templateElementsBySlideId]="shell.editor.templateElementsBySlideId()"
+				[sections]="shell.editor.sections()"
+				[canvasSize]="shell.loader.canvasSize()"
+				[mediaDataUrls]="shell.loader.mediaDataUrls()"
+				[activeIndex]="shell.activeSlideIndex()"
+				[canEdit]="shell.canEdit()"
+				[firstSlideNumber]="shell.loader.firstSlideNumber()"
+				(select)="shell.activeSlideIndex.set($event)"
+				(addSlide)="rail.addSlideAfter($event)"
+				(moveSlide)="rail.moveSlide($event)"
+				(duplicateSlides)="rail.duplicateSlides($event)"
+				(deleteSlides)="rail.deleteSlides($event)"
+				(toggleHideSlides)="rail.toggleHideSlides($event)"
+				(openLayoutGallery)="openLayouts($event)"
+			/>
+			<pptx-slide-canvas style="flex: 1; min-width: 0" ... />
+		</div>
+	`,
+})
+export class CustomSlidesComponent {
+	readonly shell = inject(ViewerCollaborationShellService);
+	readonly rail = createSlidesPanelEditorCommands(this.shell.editor, () => this.shell.canEdit());
+}
+```
+
+节相关输出（`addSectionAt`、`renameSection`、`deleteSection`、`moveSectionUp`、`moveSectionDown`、`toggleSectionCollapse`）和 `addSlideAfter`（菜单中的“新建幻灯片”和 Enter 键）对应同名命令。缩略图的绘制内容与画布一致：它们的字段上下文（幻灯片编号，包括编号从 `firstSlideNum` 开始的演示文稿、页眉页脚文本、文档属性）和表格样式来自 `[headerFooter]`、`[customProperties]`、`[firstSlideNumber]`、`[locale]`、`[theme]` 和 `[tableStyleMap]`，未设置时各自回退到外层的 `LoadContentService`。幻灯片右键菜单中的“版式”项会先为该幻灯片发出 `select`，再发出 `openLayoutGallery({ slideIndex, x, y })`，因为自定义外壳会渲染自己的版式库。只读模式（`[canEdit]="false"`）不显示页脚，也没有菜单。缩略图栏没有折叠控件，请用 `@if` 显示或隐藏它。未设置 `[slides]` 时，缩略图栏自行读取并编辑外层的 `EditorStateService`，与在 `PowerPointViewerComponent` 内部时相同。
+
+缩略图栏的布局位于其自身的组件样式中；请导入一次 `pptx-angular-viewer/styles`（与其他构建块相同），以获取其缩略图使用的主题令牌和作用域内的样式重置。
+
 协作服务和组件由包根入口导出，没有像 `pptx-react-viewer/viewer` 那样的独立子路径。需要自行驱动同步或渲染在线状态界面时可以使用：
 
 ```ts

@@ -28,15 +28,26 @@ export type { ThumbnailSectionActions } from './thumbnail-sections';
 
 /** The item-2 multi-select/context-menu deps; all optional so existing callers keep working. */
 export interface ThumbnailRailMenuDeps {
-	store: Store<ViewerState>;
-	getEditActions(): EditActions;
+	/** The viewer store, for the built-in Layout list; omit with `openLayout`. */
+	store?: Store<ViewerState>;
+	/** Layout and Add Section edit actions; omit with `openLayout` and `addSection`. */
+	getEditActions?(): EditActions;
 	addSlideAfter(index: number): void;
 	duplicateSlides(indexes: number[]): void;
 	deleteSlides(indexes: number[]): void;
 	toggleHideSlides(indexes: number[]): void;
+	/** Host handler for the menu's "Layout" entry (replaces the built-in list). */
+	openLayout?(index: number, x: number, y: number): void;
+	/** Host handler for the menu's "Add Section" entry. */
+	addSection?(name: string, afterSlideIndex: number): void;
 }
 
 const THUMB_STAGE_WIDTH = EDITOR_THUMBNAIL_WIDTH;
+/**
+ * `aria-current` value of the active slide row; the same token React, Vue,
+ * Svelte and Angular put on their rail rows.
+ */
+const CURRENT_ROW = 'true';
 
 export interface ThumbnailRail {
 	el: HTMLElement;
@@ -61,6 +72,8 @@ export interface ThumbnailRail {
 		onSelect: (masterIndex: number, layoutIndex: number | null) => void,
 		active: { masterIndex: number; layoutIndex: number | null },
 	): void;
+	/** Close an open thumbnail menu and release the rendered thumbnail stages. */
+	destroy(): void;
 }
 
 /**
@@ -92,6 +105,8 @@ export function createThumbnailRail(
 				duplicateSlides: menuDeps.duplicateSlides,
 				deleteSlides: menuDeps.deleteSlides,
 				toggleHideSlides: menuDeps.toggleHideSlides,
+				openLayout: menuDeps.openLayout,
+				addSection: menuDeps.addSection,
 				host: el,
 			})
 		: null;
@@ -176,7 +191,7 @@ export function createThumbnailRail(
 				}),
 			);
 			buttons.get(activeIndex)?.classList.add('is-active');
-			buttons.get(activeIndex)?.setAttribute('aria-current', 'page');
+			buttons.get(activeIndex)?.setAttribute('aria-current', CURRENT_ROW);
 			return;
 		}
 		const range = virtualized
@@ -220,7 +235,7 @@ export function createThumbnailRail(
 		list.replaceChildren(space);
 		const active = buttons.get(activeIndex);
 		active?.classList.add('is-active');
-		active?.setAttribute('aria-current', 'page');
+		active?.setAttribute('aria-current', CURRENT_ROW);
 	};
 
 	list.addEventListener('scroll', () => {
@@ -265,7 +280,7 @@ export function createThumbnailRail(
 			buttons.forEach((btn, buttonIndex) => {
 				btn.classList.toggle('is-active', buttonIndex === index);
 				if (buttonIndex === index) {
-					btn.setAttribute('aria-current', 'page');
+					btn.setAttribute('aria-current', CURRENT_ROW);
 				} else {
 					btn.removeAttribute('aria-current');
 				}
@@ -281,6 +296,13 @@ export function createThumbnailRail(
 		setAddSlideVisible(visible) {
 			addSlideVisible = visible;
 			applyFooterVisibility();
+		},
+		destroy() {
+			contextMenu?.destroy();
+			disposePptxRenderStage(list);
+			list.replaceChildren();
+			buttons = new Map();
+			sourceRenderStage = null;
 		},
 		renderMasters(masters, canvasSize, renderStage, select, active) {
 			masterMode = true;

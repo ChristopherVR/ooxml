@@ -5,6 +5,7 @@ export { PowerPointViewer } from './component';
 export {
 	Ribbon,
 	SlideCanvas,
+	SlidesPane,
 	ViewerToolbar,
 	CollaborationCursors,
 	RemoteSelectionOverlay,
@@ -16,6 +17,13 @@ export type {
 } from './collab/components/props';
 export type { RibbonProps } from './components/ribbon/ribbon-types';
 export type { SlideCanvasProps, ViewerToolbarProps, EditorLayerProps } from './components/props';
+export { createSlidesPaneProps } from './components/slides-pane-props';
+export type {
+	CreateSlidesPanePropsOptions,
+	SlidesPaneLayoutGalleryRequest,
+	SlidesPaneProps,
+	SlidesPaneTableStyleContext,
+} from './components/slides-pane-props';
 export type { EditorController } from './editor/editor-controller.svelte';
 export type {
 	ExportGifOptions,

@@ -2212,7 +2212,6 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 						panelVisible('slidesPane')
 					"
 					:merged-slides="mergedSlides"
-					:merged-slide-by-id="selection.mergedSlideById.value"
 					:active-slide-index="activeSlideIndex"
 					:canvas-size="canvasSize"
 					:media-data-urls="mediaDataUrls"
@@ -2222,6 +2221,11 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:slide-ops="slideOps"
 					:go-to="goTo"
 					:toggle-slide-hidden="toggleSlideHidden"
+					:header-footer="headerFooter"
+					:custom-properties="customProperties"
+					:first-slide-number="deck.firstSlideNumber.value"
+					:theme="pptxTheme"
+					:table-style-map="tableStyleMap"
 					:on-open-layout-for-slide="
 						(index, x, y) => {
 							goTo(index);

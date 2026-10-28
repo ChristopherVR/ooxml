@@ -103,12 +103,14 @@ Back the curated `chart-*-options` components ([Services › Public services](/a
 
 ## Table internals
 
-| Export                             | Concern                                               |
-| ---------------------------------- | ----------------------------------------------------- |
-| `table-cell-style` exports         | Table cell style resolution.                          |
-| `table-data-helpers` exports       | Table row/column/cell data editing helpers.           |
-| `table-properties-helpers` exports | Helpers backing `TablePropertiesComponent`.           |
-| `table-renderer-helpers` exports   | Helpers backing the curated `TableRendererComponent`. |
+| Export                             | Concern                                                          |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `table-cell-style` exports         | Table cell style resolution.                                     |
+| `table-data-helpers` exports       | Table row/column/cell data editing helpers.                      |
+| `table-properties-helpers` exports | Helpers backing `TablePropertiesComponent`.                      |
+| `table-renderer-helpers` exports   | Helpers backing the curated `TableRendererComponent`.            |
+| `table-style-context` exports      | `TABLE_STYLE_CONTEXT_OVERRIDE`, a subtree's table style context. |
+| `slides-panel-contexts` exports    | Field and table contexts of the thumbnail rail.                  |
 
 ## Ribbon (toolbar sub-sections)
 

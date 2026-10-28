@@ -30,7 +30,7 @@ description: 通过 Yjs CRDT 为 Svelte PowerPointViewer 提供多人实时协�
 
 除了禁用控件之外，也请用 `state.shellState.canEdit` 限制自定义编辑处理器。工厂内编辑器使用同一套共享规则：宿主权限、会话角色和就绪状态，以及实际来源仍在加载或加载失败，都会产生影响。没有来源并不等同于无限期加载中。清空 `config` 会让查看器脱离会话；它不会销毁借用的宿主文档、awareness 或提供程序。
 
-公开的 `pptx-svelte-viewer/viewer` 入口导出 `SlideCanvas`、`EditorLayer`、`CollaborationCursors`、`RemoteSelectionOverlay` 及其属性类型。请将编辑层和在线状态叠加层放在 `SlideCanvas` 的 children snippet 中。与 Vue 的缩放插槽不同，此绑定的容器不会被变换：请把它的 `scale` 作为在线状态叠加层的 `zoom` 传入，这样每个叠加层只会转换一次幻灯片坐标。工厂已有的控制器会发布光标、选区和当前幻灯片的在线状态，并在编辑不可用时撤销行内草稿。
+公开的 `pptx-svelte-viewer/viewer` 入口导出 `SlideCanvas`、`EditorLayer`、`CollaborationCursors`、`RemoteSelectionOverlay`、[`SlidesPane` 缩略图栏](/zh/svelte/api#slide-thumbnail-rail)及其属性类型。请将编辑层和在线状态叠加层放在 `SlideCanvas` 的 children snippet 中。与 Vue 的缩放插槽不同，此绑定的容器不会被变换：请把它的 `scale` 作为在线状态叠加层的 `zoom` 传入，这样每个叠加层只会转换一次幻灯片坐标。工厂已有的控制器会发布光标、选区和当前幻灯片的在线状态，并在编辑不可用时撤销行内草稿。
 
 [自定义外壳演示源码](https://github.com/ChristopherVR/ooxml/blob/main/demos/pptx/demo-svelte/src/HostOwnedHeadlessEditor.svelte)展示了不渲染 `PowerPointViewer`、使用原生编辑层和导出 API 的完整自定义画布。
 

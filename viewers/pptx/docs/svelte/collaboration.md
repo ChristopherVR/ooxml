@@ -39,7 +39,8 @@ An absent source is not an indefinitely pending load. Clearing `config` detaches
 the viewer; it does not destroy a borrowed host document, awareness or provider.
 
 The public `pptx-svelte-viewer/viewer` entry exports `SlideCanvas`, `EditorLayer`,
-`CollaborationCursors`, `RemoteSelectionOverlay`, and their prop types. Put the
+`CollaborationCursors`, `RemoteSelectionOverlay`, the
+[`SlidesPane` thumbnail rail](/svelte/api#slide-thumbnail-rail), and their prop types. Put the
 editing and presence overlays in `SlideCanvas`'s children snippet. Unlike Vue's
 scaled slot, this binding's holder is not transformed: pass its `scale` as the
 presence overlays' `zoom`, so each overlay converts slide coordinates once.

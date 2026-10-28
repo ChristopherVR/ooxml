@@ -55,7 +55,8 @@ the older model during unfinished native input or composition. This includes an 
 closing the editor; otherwise the snapshot only contains the last committed model.
 
 Compose `SlideCanvas`, `SelectionOverlay`, `useElementDrag`, `InlineTextEditor`, `useInlineEditing`, `useLoadContent` and
-the editor composables from `pptx-vue-viewer/viewer` for a custom editor. Pass the
+the editor composables from `pptx-vue-viewer/viewer` for a custom editor, with
+[`SlidesPane`](/vue/composables#slide-thumbnail-rail) beside the canvas for the slide rail. Pass the
 current slide ID and `livePatcher` to `InlineTextEditor`. Use `onConnectedSuspend`
 to overlay its accepted snapshot locally with the exported `overlayInlineTextSnapshot`,
 without creating a history entry or publishing a new edit after permission loss. Do not leave

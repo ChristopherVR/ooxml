@@ -43,7 +43,7 @@ description: 了解 PowerPointViewer 的 hooks 架构、/viewer 提供的稳定�
 
 ## 公共 hooks {#public-hooks}
 
-以下 hooks 从 `pptx-react-viewer/viewer` 导出，可按需使用并支持 tree-shaking。`useViewerBuildingBlocks` 也从包根入口导出，同时导出的还有独立的 `Toolbar` 和 `SlideCanvas` 组件。
+以下 hooks 从 `pptx-react-viewer/viewer` 导出，可按需使用并支持 tree-shaking。`useViewerBuildingBlocks` 也从包根入口导出，同时导出的还有独立的 `Toolbar`、`SlideCanvas` 和 `SlidesPane` 组件。
 
 ```tsx
 import { useThemeSwitching, useCollaborativeState } from 'pptx-react-viewer/viewer';
@@ -70,6 +70,31 @@ function Editor({ content, collaboration }) {
 该 hook 使用内置编辑器的文档同步、就绪检查和写回路径。`role: 'viewer'` 会禁用编辑。这不会改变其现有的撤销语义，也不会增加单独的宿主批注集成。
 
 仅在配置了协作时才会增加源加载和错误检查。未配置协作时，该 hook 保持原有的宿主授权行为，包括用 `content: null` 表示空白文档。活动的协作会话同样遵循宿主的编辑权限和就绪状态；仅有已连接的传输层并不授予编辑权限。宿主需要为返回的状态类型命名时，可从包根入口使用 `CollaborationContextValue`。
+
+### 幻灯片缩略图栏 {#slide-thumbnail-rail}
+
+`slidesPaneProps` 驱动 `SlidesPane`，即 `PowerPointViewer` 在画布旁显示的幻灯片缩略图栏。它列出所有幻灯片（演示文稿包含节时按节分组）并突出显示当前幻灯片；点击缩略图会将画布切换到该幻灯片，不会把演示文稿标记为已修改。启用 `canEdit` 后，它还可以添加、复制、删除、隐藏、重新排序和分组幻灯片，使用与完整编辑器相同的操作、撤销历史和协作同步。
+
+```tsx
+import { SlideCanvas, SlidesPane, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';
+
+function Editor({ content }) {
+	const blocks = useViewerBuildingBlocks({ content, canEdit: true });
+	return (
+		<>
+			<Toolbar {...blocks.toolbarProps} />
+			<div style={{ display: 'flex', height: 600 }}>
+				<SlidesPane {...blocks.slidesPaneProps} />
+				<div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+					<SlideCanvas {...blocks.canvasProps} />
+				</div>
+			</div>
+		</>
+	);
+}
+```
+
+缩略图栏的展开状态就是工具栏的侧边栏开关：折叠任一处都会隐藏缩略图栏。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onOpenLayoutGallery({ slideIndex, x, y })`，因为这些构建块不渲染版式库。`SlidesPane` 需要完整的 `styles.css`，而不是 `canvas.css`。
 
 ### 打开指定幻灯片 {#opening-on-a-slide}
 

@@ -74,6 +74,55 @@ Dispose the loaded handler and call
 The Vanilla host-owned demo provides a working example using only public exports.
 See the [session guide](/guide/host-owned-collaboration) for persistence boundaries.
 
+### Slide thumbnail rail {#slide-thumbnail-rail}
+
+`createSlidesPane(container, options)` mounts the rail of slide thumbnails that `createPptxViewer`
+shows beside the canvas, for a shell that renders its own canvas with `renderSlideStage`. It lists
+every slide (grouped by section when you pass `sections`) and marks the active row with
+`aria-current="true"`. Clicking a thumbnail calls `onSelectSlide(index)`; the rail never edits the
+deck itself. With `canEdit`, it adds a "New slide" footer, the thumbnail and section context menus
+and Enter-to-insert, and reports every command (add, add after, duplicate, delete, hide, sections)
+to your callbacks, so slide changes go through the same store and collaboration sync as your other
+edits.
+
+```ts
+import { createSlidesPane, loadPresentation } from 'pptx-vanilla-viewer';
+
+const deck = await loadPresentation(bytes);
+const pane = createSlidesPane(railHost, {
+	slides: deck.slides,
+	activeSlideIndex: 0,
+	canvasSize: deck.canvasSize,
+	mediaDataUrls: deck.mediaDataUrls,
+	headerFooter: deck.headerFooter,
+	customProperties: deck.customProperties,
+	firstSlideNumber: deck.firstSlideNumber,
+	colorScheme: deck.colorScheme,
+	fontScheme: deck.fontScheme,
+	formatScheme: deck.formatScheme,
+	tableStyleMap: deck.tableStyleMap,
+	canEdit: true,
+	onSelectSlide: (index) => showSlide(index),
+	onAddSlide: () => addSlideAfterCurrent(),
+});
+
+// Pass only what changed; a new active index moves the marker without redrawing thumbnails.
+pane.update({ activeSlideIndex: 2 });
+pane.destroy();
+```
+
+Thumbnails are drawn with the canvas's inputs: pass the same theme schemes, table styles and
+registry as your `renderSlideStage` calls, and `templateElementsBySlideId` if you keep layout
+elements apart from each slide's own. Date, footer, document-property and slide-number fields
+resolve from `headerFooter`, `customProperties` and `firstSlideNumber`
+(`p:presentation/@firstSlideNum`), so a deck numbered from 45 shows "Slide 45" on its first
+thumbnail. The multi-selection commands (`onDuplicateSlides`, `onDeleteSlides`, `onHideSlides`)
+receive every selected index; `createSlidesPaneBulkSlideOps` lifts single-slide operations to
+them. The "Layout" entry of a slide's context menu makes that slide active and calls the optional
+`onOpenLayoutGallery({ slideIndex, x, y })`, since a custom shell renders its own Layout picker.
+The rail has no collapse control; hide or remove `pane.el` yourself. It needs the full viewer
+stylesheet (`pptx-vanilla-viewer/styles.css` or `getViewerCss()`) and a `.pptxv` ancestor.
+
 ## Loading {#loading}
 
 | Method                   | Signature                                                    | Description                                                                                              |

@@ -38,7 +38,8 @@ describe('thumbnail rail display contract', () => {
 		const rows = window.querySelectorAll<HTMLButtonElement>('[data-pptx-chrome="slide-row"]');
 		rail.setActive(1);
 		expect(rows[0].hasAttribute('aria-current')).toBeFalsy();
-		expect(rows[1].getAttribute('aria-current')).toBe('page');
+		// Same token as the React, Vue, Svelte and Angular rails.
+		expect(rows[1].getAttribute('aria-current')).toBe('true');
 		expect(rows[1].querySelector('[data-pptx-chrome="slide-number"]')?.textContent).toBe('2');
 		rows[2].click();
 		expect(onSelect).toHaveBeenCalledExactlyOnceWith(2);

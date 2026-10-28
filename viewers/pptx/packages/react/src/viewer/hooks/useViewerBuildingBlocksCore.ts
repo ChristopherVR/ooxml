@@ -14,6 +14,7 @@ import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
 import { useCallback, useMemo } from 'react';
 
+import type { SlideSectionGroup } from '../types';
 import type { ViewerMode } from '../types-core';
 import { useDerivedSlideState } from './useDerivedSlideState';
 import type { EditorHistoryResult } from './useEditorHistory';
@@ -55,6 +56,8 @@ export interface ViewerBuildingBlocksCore {
 	setExitModeHandler: (handler: ((nextMode: ViewerMode) => void) | null) => void;
 	masterPseudoSlide: PptxSlide | undefined;
 	gridSpacingPx: number;
+	/** Slides grouped by section, as the slides pane lists them. */
+	slideSectionGroups: SlideSectionGroup[];
 	/** File > Options > Advanced > "Image Size and Quality" raster-scale multiplier. */
 	imageExportScale: number;
 	/**
@@ -162,17 +165,18 @@ export function useViewerBuildingBlocksCore(
 		setHeaderFooter: state.setHeaderFooter,
 	});
 
-	const { gridSpacingPx, visibleSlideIndexes, masterPseudoSlide } = useDerivedSlideState({
-		slides,
-		sections: state.sections,
-		customShows: state.customShows,
-		activeCustomShowId: state.activeCustomShowId,
-		presentationProperties: state.presentationProperties,
-		mode,
-		activeLayout: state.activeLayout,
-		activeMaster: state.activeMaster,
-		documentGridSpacing: state.viewProperties?.gridSpacing,
-	});
+	const { gridSpacingPx, visibleSlideIndexes, masterPseudoSlide, slideSectionGroups } =
+		useDerivedSlideState({
+			slides,
+			sections: state.sections,
+			customShows: state.customShows,
+			activeCustomShowId: state.activeCustomShowId,
+			presentationProperties: state.presentationProperties,
+			mode,
+			activeLayout: state.activeLayout,
+			activeMaster: state.activeMaster,
+			documentGridSpacing: state.viewProperties?.gridSpacing,
+		});
 
 	// Threaded into `useAnimationPlayback` so a `p:anim` formula that needs the
 	// animated shape's REAL box (Grow And Turn's `-#ppt_w/2` fly-in) and a
@@ -230,6 +234,7 @@ export function useViewerBuildingBlocksCore(
 		setExitModeHandler,
 		masterPseudoSlide,
 		gridSpacingPx,
+		slideSectionGroups,
 		// Multiplied against the pre-existing 2x baseline; see the matching
 		// comment in `PowerPointViewer.tsx`.
 		imageExportScale: 2 * resolveImageResolutionScale(viewerOptions),

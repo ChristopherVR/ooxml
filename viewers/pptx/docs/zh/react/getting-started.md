@@ -154,7 +154,7 @@ import 'pptx-react-viewer/styles'; // or 'pptx-react-viewer/styles.css'
 import 'pptx-react-viewer/canvas.css'; // 替代 pptx-react-viewer/styles
 ```
 
-它根据 `SlideCanvas` 和 `useViewerBuildingBlocks` 的导入图构建，约 46 KB（gzip 后 8 KB），完整 `styles.css` 约 112 KB（gzip 后 16 KB）。`<PowerPointViewer>` 和 `<Toolbar>` 需要完整样式表。
+它根据 `SlideCanvas` 和 `useViewerBuildingBlocks` 的导入图构建，约 46 KB（gzip 后 8 KB），完整 `styles.css` 约 112 KB（gzip 后 16 KB）。`<PowerPointViewer>`、`<Toolbar>` 和 `<SlidesPane>` 需要完整样式表。
 
 ## 下一步 {#next-steps}
 
