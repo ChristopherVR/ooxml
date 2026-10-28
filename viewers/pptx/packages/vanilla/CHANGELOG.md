@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.55.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.55.1) - 2026-10-28
+
+### Bug Fixes
+
+- **pptx:** Preserve axis styles when editing vanilla controls ([3633959](https://github.com/ChristopherVR/ooxml/commit/36339594ee7a5599339cace99a84c1c4621fa948))
+- **pptx:** Resolve viewer lint errors and stale save refs ([4abc45b](https://github.com/ChristopherVR/ooxml/commit/4abc45b210fbf2ce2cd7c4673bdf9d8f14a254be))
+
 ## [3.55.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.55.0) - 2026-10-28
 
 ### Features

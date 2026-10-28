@@ -939,7 +939,7 @@
     },
     "viewers/pptx/packages/react": {
       "name": "pptx-react-viewer",
-      "version": "4.56.0",
+      "version": "4.56.1",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.17",
@@ -1106,7 +1106,7 @@
     },
     "viewers/pptx/packages/vanilla": {
       "name": "pptx-vanilla-viewer",
-      "version": "3.55.0",
+      "version": "3.55.1",
       "dependencies": {
         "dompurify": "^3.4.17",
         "fast-xml-parser": "^5.11.2",
