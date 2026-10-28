@@ -7,6 +7,63 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.55.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.55.0) - 2026-10-28
+
+### Features
+
+- **pptx:** Expose the slide thumbnail rail as a building block in every binding ([#228](https://github.com/ChristopherVR/ooxml/issues/228)) ([2b77f02](https://github.com/ChristopherVR/ooxml/commit/2b77f026e1e26e6a5fe3c52f275608f39bc0ea8e))
+- **text:** Share font selection with word script layout ([59ad0a2](https://github.com/ChristopherVR/ooxml/commit/59ad0a2e8249d3ffc9be34c2c9e6f9ffe8b3b07a))
+- **chart:** Share manual plot layout across chart painters ([18b79c0](https://github.com/ChristopherVR/ooxml/commit/18b79c04bb1d2aa914630453413d995d0bb54922))
+- **chart:** Share smooth series paths and authored strokes ([7329e5c](https://github.com/ChristopherVR/ooxml/commit/7329e5cbb546a041c0e67417fbe84e9d3dc415a2))
+- **chart:** Share point label offsets and pie leader lines ([861f78f](https://github.com/ChristopherVR/ooxml/commit/861f78f5d9ba0fa93ed6e85ddfc209fd2bf828ca))
+- **drawingml:** Render guide-driven custom shapes in word ([81558e6](https://github.com/ChristopherVR/ooxml/commit/81558e6fcfdb2a64ced22661410cbdfba954cea2))
+- **drawingml:** Share picture crop with excel ([f093c0f](https://github.com/ChristopherVR/ooxml/commit/f093c0f6d1c2ea96736613990e870143d770774e))
+- **chart:** Share calendar date axis rendering ([474de5c](https://github.com/ChristopherVR/ooxml/commit/474de5c4f2418ee7b67ec34a5e08c8eefa4bb992))
+- **chart:** Share chart data table layout and rendering ([09fbdf1](https://github.com/ChristopherVR/ooxml/commit/09fbdf1ec8016b376b67053d8a5575fc3d1ef145))
+- **drawingml:** Share ordered picture effects with excel ([b669575](https://github.com/ChristopherVR/ooxml/commit/b669575a041ab25169a7c83757075fe9dffe390a))
+- **chart:** Share funnel geometry and neutral rendering ([28f6ce3](https://github.com/ChristopherVR/ooxml/commit/28f6ce302fa5791a11819209d6501e97e971b80b))
+- **chart:** Share box distributions and neutral rendering ([6390e30](https://github.com/ChristopherVR/ooxml/commit/6390e30ac6994e6891f8324e4264949f66e0a0a0))
+- **diagram:** Paint cached pictures in word and excel ([f254d51](https://github.com/ChristopherVR/ooxml/commit/f254d51eeed81279dd9f971cb7ac496364738ec2))
+- **drawingml:** Share source-backed text body 3d codecs ([bcf2a0a](https://github.com/ChristopherVR/ooxml/commit/bcf2a0a491c6e4dc4e5fd4f5b615f3673285cadf))
+- **pptx:** Add an /ai entry and createAiAssistant to every binding ([#219](https://github.com/ChristopherVR/ooxml/issues/219)) ([ecd4d43](https://github.com/ChristopherVR/ooxml/commit/ecd4d43acfc0133c2f9c1e3320f366244ba3bba3))
+- **visio:** Improve selection dragging and resizing ([60cf8dd](https://github.com/ChristopherVR/ooxml/commit/60cf8dd9c547f16e114b98ae01fed0968aca5866))
+
+### Bug Fixes
+
+- **pptx:** Scope collaboration undo to the local participant ([55b8bad](https://github.com/ChristopherVR/ooxml/commit/55b8badcf0ec06a7294debff8deff844dcfafb62))
+- **pptx:** Autocorrect only the text typed in this edit ([0e5a85e](https://github.com/ChristopherVR/ooxml/commit/0e5a85e496e0d53e36c00e6fdfd5dd3749337d8a))
+- **pptx:** Keep browser-local blob URLs out of the collaboration room ([433891b](https://github.com/ChristopherVR/ooxml/commit/433891b1db9a173780e6ad59cad56d92a5a0e929))
+- **chart:** Resolve chartex axes by position to avoid prototype pollution ([16edc2f](https://github.com/ChristopherVR/ooxml/commit/16edc2fd96b261ecbfbe388491fe12494be15b89))
+- **pptx:** Wait out the entry transition before a timed slide advances ([a4707a6](https://github.com/ChristopherVR/ooxml/commit/a4707a6e694d26e32af0375ee06d600541a1236a))
+- **drawingml:** Separate guide and path coordinate spaces ([4db9fe1](https://github.com/ChristopherVR/ooxml/commit/4db9fe140ec43aae8cac6cae8846ccf4dad9ba58))
+- **chart:** Export shared date format tokenizer ([b928657](https://github.com/ChristopherVR/ooxml/commit/b928657532d41bec6a83a5969c03be922ef0a90a))
+- **drawingml:** Bound picture luminance and report extensions ([a36e847](https://github.com/ChristopherVR/ooxml/commit/a36e84725c483815ae7508872dd4d89c5a8375b2))
+- **chart:** Paint date ticks over plot backgrounds ([e3fad37](https://github.com/ChristopherVR/ooxml/commit/e3fad379f6d990c1ad85658e751cb84176ca7852))
+- **docx:** Load media for cached smartart pictures ([149b350](https://github.com/ChristopherVR/ooxml/commit/149b35025750b5189813e34cfa33cd1ff5757a17))
+- **chart:** Retain table names and exclude hidden box series ([292dc25](https://github.com/ChristopherVR/ooxml/commit/292dc25c22544d9179d5c0fd31327a3d0aafb462))
+- **chart:** Match native funnel label and box mean defaults ([06bbf26](https://github.com/ChristopherVR/ooxml/commit/06bbf26e496f00270eca67472087454496217cc1))
+- **drawingml:** Preserve anchors and guard text 3d edits ([617a029](https://github.com/ChristopherVR/ooxml/commit/617a02979d5cdae5e3818afd8fb79af367de25eb))
+- **drawingml:** Preserve omitted picture source formatting ([5e2d57d](https://github.com/ChristopherVR/ooxml/commit/5e2d57dfe0b3076be7c6cb5b086c596643eb5203))
+
+### Refactor
+
+- **opc:** Share hyperlink policy with explicit host protocols ([5f8ac72](https://github.com/ChristopherVR/ooxml/commit/5f8ac72edbe4fff4d2fa303ed3ce8a471762bd12))
+
+### Documentation
+
+- Record further shared office capability delivery ([845ee99](https://github.com/ChristopherVR/ooxml/commit/845ee99bdc290e148c485c87e64d853a5884e7f8))
+
+### Testing
+
+- **svelte:** Keep the room history optional in the effects host ([15d7d2e](https://github.com/ChristopherVR/ooxml/commit/15d7d2ef52e19bac3fa1c0100d844ef7b4a85047))
+- **diagram:** Guard optional word media in picture assertion ([c8f5d14](https://github.com/ChristopherVR/ooxml/commit/c8f5d14ddcdef1ee04de6d4f3e557d1719eae5e8))
+
+### Chores
+
+- Prepare shared capability implementation worktree ([b36e947](https://github.com/ChristopherVR/ooxml/commit/b36e9472aa94839f82fcfe7e9a9569da7f5c1c52))
+- Integrate current main for reuse verification ([a22d5f5](https://github.com/ChristopherVR/ooxml/commit/a22d5f53406330909d3853ab64a4d850bc3c0ad1))
+- Integrate main before shared capability push ([9dc78da](https://github.com/ChristopherVR/ooxml/commit/9dc78da5262a854807b9fc8395f1fd97f71c2eb4))
+
 ## [4.54.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.54.0) - 2026-10-28
 
 ### Features
