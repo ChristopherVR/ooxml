@@ -99,3 +99,14 @@ export { humanizeDiffLine } from './proposals-diff';
 export { toRenderableParts } from './ui-parts';
 export { describeToolActivity, summarizeToolArgs, toolLabel } from './tool-summary';
 export { toolCanvasTarget } from './tool-target';
+
+// The `createAiAssistant` handle registry factory (`render/controller/ai-assistant`). Each
+// binding creates its own registry in a module its main entry and its `/ai` entry share.
+export { createAiAssistantRegistry } from '../render/controller/ai-assistant';
+export type {
+	AiAssistantRegistry,
+	AiAssistantRegistryOptions,
+	PptxAiAssistant,
+	ResolveAiAssistantOptions,
+	ResolvedAiAssistant,
+} from '../render/controller/ai-assistant';

@@ -28,7 +28,9 @@
 			"react/*": ["../react-compat/node_modules/@types/react/*"],
 			"react-dom": ["../react-compat/node_modules/@types/react-dom"],
 			"react-dom/*": ["../react-compat/node_modules/@types/react-dom/*"],
-			"pptx-react-viewer": ["./dist/index.d.ts"]
+			"pptx-react-viewer": ["./dist/index.d.ts"],
+			"pptx-react-viewer/ai": ["./dist/ai.d.ts"],
+			"pptx-react-viewer/viewer": ["./dist/viewer/index.d.ts"]
 		}
 	},
 	"include": ["compat/**/*.tsx"]

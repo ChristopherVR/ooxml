@@ -164,6 +164,11 @@ export { ColorChangedImageComponent } from './viewer/color-changed-image.compone
 export * from './viewer/color-changed-image-helpers';
 export * from './viewer/eyedropper';
 
+// ── AI assistant internals ──
+// Backs `createAiAssistant` of the `pptx-angular-viewer/ai` secondary entry point, which can
+// import only package entries; it takes a config only. Import `createAiAssistant` instead.
+export { createAiAssistantHandle } from './viewer/ai-assistant-registry';
+
 // ── Mobile chrome internals ──
 export * from './viewer/mobile-chrome-helpers';
 

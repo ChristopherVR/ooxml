@@ -86,6 +86,8 @@ export type {
 	PptxAiToolName,
 	PptxAiWritePolicy,
 } from 'ooxml-ui/pptx/ai';
+// `createAiAssistant` is exported from `pptx-vanilla-viewer/ai`.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 
 // ── Element renderer extension surface ─────────────────────────────────
 export type {

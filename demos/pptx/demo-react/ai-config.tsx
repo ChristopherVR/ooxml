@@ -5,7 +5,8 @@
  * supplies a `PptxAiConfig` whose `connection` reaches a language model. Here
  * the demo reads an OpenAI-compatible base URL + API key + model id from
  * localStorage and builds an in-browser model with `@ai-sdk/openai-compatible`,
- * which is handed to the viewer as `ai={{ connection: { kind: 'model', model } }}`.
+ * which is wrapped with `createAiAssistant` (from `pptx-react-viewer/ai`) and
+ * handed to the viewer's `ai` prop (`?ai=config` passes the plain config instead).
  *
  * There is deliberately NO configuration UI on the landing screen: the demo must
  * work, and be shippable, without anyone supplying a key. To try the assistant
@@ -21,7 +22,10 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { useMemo } from 'react';
 
+import { createAiAssistant } from '../../../viewers/pptx/packages/react/src/ai';
+import type { PptxAiAssistant } from '../../../viewers/pptx/packages/react/src/ai';
 import type { PptxAiConfig } from '../../../viewers/pptx/packages/react/src/viewer';
+import { demoAiUsesPlainConfig } from '../shared/demo-ai-path';
 
 const STORAGE_KEY = 'pptx-demo-ai-config';
 
@@ -67,14 +71,15 @@ export function buildDemoAiConfig(fields: DemoAiFields): PptxAiConfig | undefine
 }
 
 /**
- * Viewer `ai` config for the demo, or undefined when nothing is stored. A
- * malformed base URL throws inside the SDK; swallow it so the demo keeps
- * working with AI simply off.
+ * The demo's AI assistant for the viewer's `ai` prop, or undefined when nothing
+ * is stored. A malformed base URL throws inside the SDK; swallow it so the demo
+ * keeps working with AI simply off.
  */
-export function useDemoAiConfig(): PptxAiConfig | undefined {
+export function useDemoAiAssistant(): PptxAiAssistant | PptxAiConfig | undefined {
 	return useMemo(() => {
 		try {
-			return buildDemoAiConfig(readStoredAiFields());
+			const config = buildDemoAiConfig(readStoredAiFields());
+			return config && !demoAiUsesPlainConfig() ? createAiAssistant(config) : config;
 		} catch {
 			return undefined;
 		}

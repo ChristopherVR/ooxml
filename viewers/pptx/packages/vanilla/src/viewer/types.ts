@@ -23,6 +23,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxCoreProperties, PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
 
@@ -450,8 +451,14 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * first opened, so a viewer without this option pays nothing. The host owns
 	 * the model connection (a backend `endpoint`, an in-browser `model`, or a
 	 * custom `transport`); see {@link PptxAiConfig}.
+	 *
+	 * Pass a plain `PptxAiConfig` (supported and not deprecated), or the opaque
+	 * handle `createAiAssistant(config)` returns (from `pptx-vanilla-viewer/ai`,
+	 * the opt-in entry that brings the chat panel). Both open the same panel.
+	 * Only a value from `createAiAssistant` is read as a handle; any other value
+	 * is a plain config, which the viewer does not validate.
 	 */
-	ai?: PptxAiConfig;
+	ai?: PptxAiConfig | PptxAiAssistant;
 }
 
 /** The viewer handle returned by `createPptxViewer`. */

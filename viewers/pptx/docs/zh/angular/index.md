@@ -52,13 +52,25 @@ npm i pptx-angular-viewer
 
 ## 导入路径 {#import-paths}
 
-React 提供 `pptx-react-viewer` 和 `pptx-react-viewer/viewer` 两个入口，而 Angular 的 ng-packagr 构建产生**单一入口**，所有内容均从包根入口导入。
+ng-packagr 从一个入口文件构建包根入口，另有一个次级入口 `pptx-angular-viewer/ai`。除 AI 助手入口外，所有命名导出均从包根入口导入。
 
 ```ts
 import { PowerPointViewerComponent } from 'pptx-angular-viewer';
+// AI assistant entry - the recommended value for the `ai` input
+import { createAiAssistant } from 'pptx-angular-viewer/ai';
 ```
 
-`./styles` 子路径导出打包的样式表，参见[快速上手](/zh/angular/getting-started)。这是导出映射中唯一的其他入口，没有 React 和 Vue 那样独立的 `/viewer` 或 `/i18n` 子路径。`translationsEn`、`keyToLabel`、主题工具和其他命名导出都位于包根入口。国际化细节请参见[本地化](/zh/guide/localization)。
+包的导出映射包含以下入口：
+
+| 入口                                                                 | 导出内容                                                                                                                                              |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-angular-viewer`                                                | `PowerPointViewerComponent`、经过筛选的服务和组件、`translationsEn`、`keyToLabel`、主题工具以及其他所有公开命名导出。                                 |
+| `pptx-angular-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
+| `pptx-angular-viewer/internals`                                      | 包根产物的别名，用于内部构建模块（参见[完整服务参考](/zh/angular/services-reference)），不受语义化版本兼容承诺保障。                                  |
+| `pptx-angular-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
+| `pptx-angular-viewer/styles`（或 `/styles.css`）                     | 打包好的样式表（参见[快速上手](/zh/angular/getting-started)）。                                                                                       |
+
+没有 React 和 Vue 那样独立的 `/viewer` 或 `/i18n` 子路径：`translationsEn`、`keyToLabel` 和其他国际化导出都位于包根入口。国际化细节请参见[本地化](/zh/guide/localization)。
 
 ## 渲染方式：CSS 与 DOM {#rendering-philosophy-css-not-canvas}
 

@@ -44,7 +44,7 @@ import { currentDemoRootOptions } from '../shared/demo-root-options';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../shared/same-browser-collaboration';
-import { useDemoAiConfig } from './ai-config';
+import { useDemoAiAssistant } from './ai-config';
 import { HostOwnedDemoApp } from './HostOwnedDemo';
 import i18nInstance from './i18n'; // Initialises i18next before any component renders
 import { SameBrowserDemoApp } from './SameBrowserDemo';
@@ -450,7 +450,7 @@ function App() {
 
 	// ── AI assistant (demo-only: the host supplies the provider) ─────────
 	// Read from localStorage only; the demo ships no key and no config UI.
-	const aiConfig = useDemoAiConfig();
+	const aiAssistant = useDemoAiAssistant();
 
 	// ── Collaboration ────────────────────────────────────────────────────
 	// Auto-connect if room and/or broadcast is in the URL at mount (collaboration
@@ -980,7 +980,7 @@ function App() {
 						userName: autoName,
 						serverUrl: defaultServerUrl,
 					}}
-					ai={aiConfig}
+					ai={aiAssistant}
 					onDirtyChange={(dirty) => {
 						document.title = dirty ? `* ${fileName} - PPTX Viewer` : `${fileName} - PPTX Viewer`;
 					}}

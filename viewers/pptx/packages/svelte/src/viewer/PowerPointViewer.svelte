@@ -23,6 +23,7 @@
 	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
+	import { aiAssistants } from './ai-assistant-registry';
 	import { provideNotesBarHeight } from './state/notes-bar-height.svelte';
 	import AiDock from './components/ai/AiDock.svelte';
 	import CollaborationChrome from './collab/components/CollaborationChrome.svelte';
@@ -139,6 +140,9 @@
 	});
 	useCustomizationConstraints(customization, vm.optionsState);
 	const aiEnabled = $derived(Boolean(props.ai) && customization.isFeatureEnabled('ai'));
+	// A handle from `pptx-svelte-viewer/ai` brings its config and panel loader; any other
+	// value is a plain config for the viewer's own lazy panel, as before.
+	const aiAssistant = $derived(aiEnabled ? aiAssistants.resolve(props.ai) : undefined);
 	const hiddenActions = $derived(effectiveHiddenActions(customization.resolved, props.hiddenActions, vm.optionsState.hiddenRibbonTabIds));
 
 	// Stable controller references (the bag is built once and never reassigned).
@@ -410,7 +414,7 @@
 		{t}
 		{showThumbnails}
 		{showNotes}
-		ai={aiEnabled ? props.ai : undefined}
+		ai={aiAssistant?.config}
 		onnotesupdate={props.onnotesupdate}
 		onstageholder={(el) => {
 			stageHolderEl = el ?? undefined;
@@ -450,10 +454,11 @@
 		shareDefaults={props.shareDefaults}
 		showOverlay={collab.active && vm.chromeVisible}
 	/>
-	{#if props.ai && aiEnabled && vm.ai.panelOpen && vm.chromeVisible}
+	{#if aiAssistant && vm.ai.panelOpen && vm.chromeVisible}
 		<AiDock
 			bridge={vm.ai.bridge}
-			config={props.ai}
+			config={aiAssistant.config}
+			loadPanel={aiAssistant.panel}
 			aiPanel={vm.ai.panel}
 			onclose={() => (vm.ai.panelOpen = false)}
 		/>

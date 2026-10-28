@@ -56,6 +56,8 @@ export type {
 	PptxAiUIMessage,
 	PptxAiWritePolicy,
 } from 'ooxml-ui/pptx/ai';
+// `createAiAssistant` is exported from `pptx-svelte-viewer/ai`.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 export type { SvelteAiBridgeDeps } from './ai';
 export type {
 	ExternalCollaborationSession,

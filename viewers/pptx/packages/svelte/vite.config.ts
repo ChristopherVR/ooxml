@@ -19,6 +19,7 @@ const pkgVersion = (
  *  - `.`        - top-level barrel (component + theme helpers)
  *  - `./viewer` - viewer sub-package barrel
  *  - `./i18n`   - shared dictionary + translator helpers
+ *  - `./ai`     - `createAiAssistant`, the opt-in AI assistant entry
  *
  * The internal workspace packages (`pptx-viewer-core`, `pptx-viewer-shared`)
  * are intentionally NOT external; they are bundled in so consumers can
@@ -60,6 +61,7 @@ export default defineConfig({
 				'viewer/index': resolve(__dirname, 'src/viewer/index.ts'),
 				i18n: resolve(__dirname, 'src/i18n.ts'),
 				internals: resolve(__dirname, 'src/internals.ts'),
+				ai: resolve(__dirname, 'src/ai.ts'),
 			},
 			formats: ['es'],
 			fileName: (_format, entryName) => `${entryName}.js`,

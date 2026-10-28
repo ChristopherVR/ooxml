@@ -2,7 +2,8 @@
  * Demo-only AI wiring: the "host supplies the provider" example. The demo reads
  * an OpenAI-compatible base URL, API key, and model id from localStorage, then
  * builds an in-browser language model via `@ai-sdk/openai-compatible` and hands
- * it to the viewer as `ai={{ connection: { kind: 'model', model } }}`.
+ * it to the viewer wrapped with `createAiAssistant` (from `pptx-svelte-viewer/ai`);
+ * `?ai=config` passes the plain config instead.
  *
  * There is deliberately NO configuration UI on the landing screen: the demo must
  * work, and be shippable, without anyone supplying a key. To try the assistant
@@ -19,6 +20,10 @@
 
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { PptxAiConfig } from 'pptx-svelte-viewer';
+import { createAiAssistant } from 'pptx-svelte-viewer/ai';
+import type { PptxAiAssistant } from 'pptx-svelte-viewer/ai';
+
+import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
 
 const KEY_BASE_URL = 'demo.ai.baseURL';
 const KEY_API_KEY = 'demo.ai.apiKey';
@@ -57,4 +62,13 @@ export function buildViewerAiConfig(): PptxAiConfig | undefined {
 		connection: { kind: 'model', model: provider(settings.model.trim()) },
 		writePolicy: 'stage',
 	};
+}
+
+/**
+ * The viewer `ai` value: the `createAiAssistant` handle by default, the plain config with
+ * `?ai=config`, or `undefined` when no assistant is configured.
+ */
+export function buildViewerAi(): PptxAiAssistant | PptxAiConfig | undefined {
+	const config = buildViewerAiConfig();
+	return config && !demoAiUsesPlainConfig() ? createAiAssistant(config) : config;
 }

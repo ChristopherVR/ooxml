@@ -5,7 +5,8 @@
  * supplies a `PptxAiConfig` whose `connection` reaches a language model. Here
  * the demo reads an OpenAI-compatible base URL + API key + model id from
  * localStorage and builds an in-browser model with `@ai-sdk/openai-compatible`,
- * handed to the viewer as `[ai]="{ connection: { kind: 'model', model } }"`.
+ * wrapped with `createAiAssistant` (from `pptx-angular-viewer/ai`) and handed to
+ * the viewer's `ai` input (`?ai=config` passes the plain config instead).
  *
  * There is deliberately NO configuration UI on the landing screen: the demo must
  * work, and be shippable, without anyone supplying a key. To try the assistant
@@ -21,6 +22,10 @@
  */
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { PptxAiConfig } from 'pptx-angular-viewer';
+import { createAiAssistant } from 'pptx-angular-viewer/ai';
+import type { PptxAiAssistant } from 'pptx-angular-viewer/ai';
+
+import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
 
 const STORAGE_KEY = 'pptx-demo-ai-config';
 
@@ -71,4 +76,13 @@ export function buildDemoAiConfig(fields: DemoAiFields): PptxAiConfig | undefine
 	} catch {
 		return undefined;
 	}
+}
+
+/**
+ * The viewer `ai` value: the `createAiAssistant` handle by default, the plain config with
+ * `?ai=config`, or `undefined` when no assistant is configured.
+ */
+export function buildDemoAi(fields: DemoAiFields): PptxAiAssistant | PptxAiConfig | undefined {
+	const config = buildDemoAiConfig(fields);
+	return config && !demoAiUsesPlainConfig() ? createAiAssistant(config) : config;
 }

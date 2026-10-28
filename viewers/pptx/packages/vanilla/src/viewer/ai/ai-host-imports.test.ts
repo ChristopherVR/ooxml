@@ -18,7 +18,7 @@ describe('the vanilla entries load AI helpers from ooxml-ui/pptx/ai/host only', 
 		walkModuleGraph(join(packageRoot, file), { followDynamic: false });
 	// Forward slashes on every platform, to match the expectations below.
 	const relativeName = (file: string) => relative(packageRoot, file).split(sep).join('/');
-	const ENTRIES = ['src/index.ts', 'src/internals.ts'];
+	const ENTRIES = ['src/index.ts', 'src/internals.ts', 'src/ai.ts'];
 
 	it('lists every built entry', () => {
 		const tsup = readFileSync(join(packageRoot, 'tsup.config.ts'), 'utf-8');
@@ -43,8 +43,8 @@ describe('the vanilla entries load AI helpers from ooxml-ui/pptx/ai/host only', 
 		const panel = join(import.meta.dirname, 'ai-panel.ts');
 		expect(files).not.toContain(panel);
 		expect(lazy).toContain(panel);
-		// The bridge, the panel controller, the overlay and the Options section stay eager, on
-		// the SDK-free leaf.
+		// The bridge, the panel controller, the overlay, the Options section and the
+		// `createAiAssistant` handle registry stay eager, on the SDK-free leaf.
 		const hostImporters = [
 			...new Set(
 				bare
@@ -53,6 +53,7 @@ describe('the vanilla entries load AI helpers from ooxml-ui/pptx/ai/host only', 
 			),
 		].sort();
 		expect(hostImporters).toStrictEqual([
+			'src/viewer/ai-assistant-registry.ts',
 			'src/viewer/ai/ai-bridge.ts',
 			'src/viewer/ai/ai-change-overlay.ts',
 			'src/viewer/ai/ai-panel-controller.ts',
@@ -63,5 +64,12 @@ describe('the vanilla entries load AI helpers from ooxml-ui/pptx/ai/host only', 
 			({ specifier }) => specifier,
 		);
 		expect(panelImports).toContain('ooxml-ui/pptx/ai');
+	});
+
+	it('pptx-vanilla-viewer/ai reaches the same panel only through its lazy boundary', async () => {
+		const { files, lazy } = await staticGraph('src/ai.ts');
+		const panel = join(import.meta.dirname, 'ai-panel.ts');
+		expect(files).not.toContain(panel);
+		expect(lazy).toStrictEqual([panel]);
 	});
 });

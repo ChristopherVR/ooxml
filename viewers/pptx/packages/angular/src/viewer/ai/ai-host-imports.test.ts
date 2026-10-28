@@ -8,7 +8,13 @@ const forbidden =
 	/^(?:ooxml-ui\/pptx\/ai|ai|@ai-sdk\/.+|zod(?:\/.+)?|ooxml-core\/pptx\/automation(?:\/.+)?)$/;
 
 describe('angular assistant runtime boundary', () => {
-	for (const entry of ['public-api.ts', 'internals.ts', 'internal/shared-ai.ts']) {
+	// `../ai/public-api.ts` is the `pptx-angular-viewer/ai` secondary entry point.
+	for (const entry of [
+		'public-api.ts',
+		'internals.ts',
+		'internal/shared-ai.ts',
+		'../ai/public-api.ts',
+	]) {
 		it(`${entry} keeps the runtime behind an external dynamic import`, async () => {
 			const { bare } = await walkModuleGraph(resolve(import.meta.dirname, '../..', entry), {
 				followDynamic: false,
