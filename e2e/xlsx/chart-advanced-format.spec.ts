@@ -37,7 +37,8 @@ for (const framework of FRAMEWORKS)
 			buffer: Buffer.from(await saveXlsx(book)),
 		});
 		const host = editor(page);
-		const pane = host.locator('office-ui-chart-format-pane');
+		// The hidden ChartEx pane also holds a format pane; only the classic one carries this class.
+		const pane = host.locator('office-ui-chart-format-pane.xve-chart-series-pane');
 		const open = async () => {
 			await expect(host.locator('.xg-chart')).toBeVisible();
 			await host.locator('[data-chart-series="0"][data-chart-point="0"] rect').first().click();
