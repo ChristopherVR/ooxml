@@ -248,6 +248,15 @@ export function buildRegionMapViewModel(
 
 	// Fallback table for unmatched regions.
 	primitives.push(...buildRegionMapFallbackTable(unmatchedRows, legendY, svgWidth, svgHeight));
+	if (geometry.approximate)
+		primitives.push({
+			kind: 'text',
+			x: 8,
+			y: titleH + 12,
+			text: 'Approximate country outlines',
+			fontSize: 8,
+			fill: '#595959',
+		} satisfies SvgText);
 
 	const dataLabels: SvgText[] = titlePrimitive !== undefined ? [titlePrimitive] : [];
 
