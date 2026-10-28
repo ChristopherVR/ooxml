@@ -115,7 +115,11 @@ export function shapeSvg(
 	const w = Math.max(1, widthPx);
 	const h = Math.max(1, heightPx);
 	const customPaths = spec.customGeometryXml
-		? parseCustomGeometry(parseXml(spec.customGeometryXml).documentElement, w, h)
+		? parseCustomGeometry(
+				parseXml(spec.customGeometryXml).documentElement,
+				w * EMU_PER_PIXEL,
+				h * EMU_PER_PIXEL,
+			)
 		: undefined;
 	const geometry = customPaths
 		? {

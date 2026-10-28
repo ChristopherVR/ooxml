@@ -39,9 +39,9 @@ export function parseCustomGeometry(
 	const pathList = first(custom, 'pathLst', NS.a);
 	if (!pathList) return undefined;
 	const pathNodes = children(pathList, 'path', NS.a);
-	const firstPath = pathNodes[0];
-	const contextWidth = Number(firstPath?.getAttribute('w')) || width;
-	const contextHeight = Number(firstPath?.getAttribute('h')) || height;
+	// Guides use the shape extent. Each path's w/h controls only that path's local scaling.
+	const contextWidth = width;
+	const contextHeight = height;
 	const vars = createBuiltinVariables({ w: contextWidth, h: contextHeight });
 	for (const list of ['avLst', 'gdLst']) {
 		const parent = first(custom, list, NS.a);

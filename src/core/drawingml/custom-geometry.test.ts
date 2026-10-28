@@ -54,3 +54,20 @@ it('evaluates cached SmartArt paths through the same shared reader', () => {
 	expect(drawing.issues).toEqual([]);
 	expect(drawing.shapes[0]?.paths?.[0]?.commands[0]).toEqual({ op: 'M', x: 50, y: 0 });
 });
+
+it('keeps shape guide coordinates independent of differing local path dimensions', () => {
+	const source = custom.replace('<a:path>', '<a:path w="100" h="40">');
+	const paths = parseCustomGeometry(parseXml(source).documentElement, 200, 80)!;
+	expect(paths[0]).toMatchObject({
+		width: 100,
+		height: 40,
+		commands: [
+			{ op: 'M', x: 50, y: 0 },
+			{ op: 'L', x: 200, y: 80 },
+			{ op: 'L', x: 0, y: 80 },
+			{ op: 'Z' },
+		],
+	});
+	expect(paths[1]).toMatchObject({ width: 100, height: 100 });
+	expect(drawingPathData(paths[0]!, 200, 80)).toContain('M100 0 L400 160');
+});
