@@ -3,6 +3,7 @@ import { scriptLayoutRuns } from './script-fonts';
 import { adaptDocumentModel } from './adapter';
 import type { DocumentModel } from '../model';
 import type { LayoutParagraph } from './input';
+import { layoutDocumentModel } from './layout';
 
 describe('Word script font layout', () => {
 	it('preserves source lengths, formatting and the final hard break', () => {
@@ -59,5 +60,18 @@ describe('Word script font layout', () => {
 		]);
 		expect(paragraph.runs.reduce((sum, run) => sum + (run.sourceLength ?? 0), 0)).toBe(4);
 		expect(model.blocks[0]).toMatchObject({ runs: [{ text: 'A中عB' }] });
+		const measured: Array<[string, string]> = [];
+		const result = layoutDocumentModel(model, {
+			widthOf(text, font) {
+				measured.push([text, font.family]);
+				return text.length * 10;
+			},
+			lineHeightOf() {
+				return 16;
+			},
+		});
+		expect(result.pages).toHaveLength(1);
+		expect(measured).toContainEqual(['中', 'SimSun']);
+		expect(measured).toContainEqual(['ع', 'Arabic Face']);
 	});
 });
