@@ -75,6 +75,7 @@ export function chartObjectFromSpace(
 		showLegend: summary.showLegend,
 	};
 	if (frame.partName !== undefined) object.partName = frame.partName;
+	if (summary.dataTable) object.dataTable = summary.dataTable;
 	if (summary.date1904 !== undefined) object.date1904 = summary.date1904;
 	if (summary.plotLayout) object.plotLayout = summary.plotLayout;
 	if (summary.axes) object.axes = summary.axes;

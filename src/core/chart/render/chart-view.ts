@@ -1,3 +1,4 @@
+import { chartDataTableView, type ChartDataTableView } from './chart-view-data-table';
 import type { ChartMarkerSeriesView } from './chart-view-markers';
 import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
 import { extentOf } from '../extent';
@@ -43,6 +44,7 @@ export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-
 export type { WaterfallView } from './chart-view-ex';
 
 export interface ChartSeriesView extends ChartMarkerSeriesView {
+	numberFormat?: string;
 	smooth?: boolean;
 	showLine?: boolean;
 	stroke?: import('./chart-view-analysis').ChartStrokeView;
@@ -89,6 +91,7 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	dataTable?: ChartDataTableView;
 	dateCategories?: (number | null)[];
 	date1904?: boolean;
 	frameSize?: import('../manual-layout').ChartFrameSize;
@@ -233,6 +236,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		horizontal: type === 'bar',
 		supported: SUPPORTED.has(type),
 	};
+	const table = chartDataTableView(chart, theme, ctx.drawingColor);
+	if (table) model.dataTable = table;
 	if (chart.date1904 !== undefined) model.date1904 = chart.date1904;
 	if (chart.axes?.some((a) => a.kind === 'date')) model.dateCategories = firstCats.map(toNumber);
 	if (chart.plotLayout) model.plotLayout = chart.plotLayout;

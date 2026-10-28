@@ -84,3 +84,38 @@ describe('calendar category axis', () => {
 		expect(render(dateFixture('minMax', false, 45292))).toContain('2024-01-01');
 	});
 });
+
+describe('chart data tables', () => {
+	const tableFixture = (flags = '') =>
+		fixture('lineChart')
+			.replace('</c:plotArea>', `<c:dTable>${flags}</c:dTable></c:plotArea>`)
+			.replace('<c:val><c:numLit>', '<c:val><c:numLit><c:formatCode>0.0%</c:formatCode>');
+	const table = (svg: string) =>
+		/<g data-chart-part="dataTable">([\s\S]*?)<\/g>/u.exec(svg)?.[1] ?? '';
+	it('reserves room and draws category headers, keys and formatted values without duplicate labels', () => {
+		const svg = render(tableFixture());
+		const content = table(svg);
+		expect(content).toContain('100.0%');
+		expect(content).toContain('Series1');
+		expect(content).toContain('<line');
+		expect(svg.match(/text-anchor="middle"[^>]*>1<\/text>/gu)).toHaveLength(1);
+		expect(svg).not.toContain('NaN');
+	});
+	it('honors border and key switches', () => {
+		const content = table(
+			render(
+				tableFixture(
+					'<c:showHorzBorder val="0"/><c:showVertBorder val="0"/><c:showOutline val="0"/><c:showKeys val="0"/>',
+				),
+			),
+		);
+		expect(content).not.toContain('<line');
+		expect(content).not.toContain('Series1');
+		expect(content).toContain('100.0%');
+	});
+	it('keeps a small viewport finite and leaves absent tables automatic', () => {
+		const space = parseChartSpace(tableFixture()).chartSpace;
+		expect(renderChartSpaceSvg(space, { width: 90, height: 70 })).not.toMatch(/NaN|Infinity/u);
+		expect(render(fixture('lineChart'))).not.toContain('data-chart-part="dataTable"');
+	});
+});

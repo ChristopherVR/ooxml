@@ -66,3 +66,4 @@ export { writeChartSpaceOverSource } from './keep-source';
 export * from './line-path';
 export * from './date-axis';
 export * from './date-format';
+export * from './data-table-layout';

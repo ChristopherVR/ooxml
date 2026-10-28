@@ -125,6 +125,7 @@ export function seriesView<S extends ChartSummarySeries>(
 		color,
 		sourceIndex: index,
 	};
+	if (s.numberFormat !== undefined) view.numberFormat = s.numberFormat;
 	if (s.showLine !== undefined) view.showLine = s.showLine;
 	if (s.smooth !== undefined) view.smooth = s.smooth;
 	if (s.line)

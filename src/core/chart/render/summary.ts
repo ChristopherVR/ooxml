@@ -4,6 +4,7 @@
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { ChartMarkerSummary } from './chart-view-markers';
 import type { ChartManualLayout } from '../manual-layout';
+import type { ChartDataTable } from '../model-chrome';
 import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import type { DataLabelFlagLevel } from '../data-label-text';
@@ -160,6 +161,7 @@ export interface HierarchySummaryOptions {
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
 	/** Native axes and the primary plot group IDs, retained for shared rendering. */
+	dataTable?: ChartDataTable;
 	date1904?: boolean;
 	plotLayout?: ChartManualLayout;
 	axes?: ChartAxis[];

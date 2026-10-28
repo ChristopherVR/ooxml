@@ -1,3 +1,4 @@
+import { chartDataTableSvg } from './chart-svg-data-table';
 import type { ChartFrameSize } from '../manual-layout';
 // Which plot painter draws a chart view model: bars, lines and areas (alone or layered in a
 // combination chart), scatter, waterfall and histogram.
@@ -64,6 +65,7 @@ export function cartesianSvg(model: ChartViewModel, area: Rect, size?: ChartFram
 	}
 	const frame = cartesianAxes(model, area, out, size);
 	if (!frame) return '';
+	out.push(chartDataTableSvg(model, frame.plot));
 	if (model.type === 'waterfall') {
 		waterfallBars(model, frame, out);
 		return out.join('');

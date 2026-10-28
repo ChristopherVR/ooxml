@@ -10,7 +10,7 @@ export interface ChartTitleText {
 	> & { runs: { text: string; appearance: ChartAppearanceEntry }[] })[];
 }
 
-function properties(run: Partial<DrawingTextRun>): Partial<ChartStyleEntry> {
+export function chartRunStyle(run: Partial<DrawingTextRun>): Partial<ChartStyleEntry> {
 	return {
 		...(run.sizePt === undefined ? {} : { fontSize: run.sizePt }),
 		...(run.bold === undefined ? {} : { bold: run.bold }),
@@ -49,8 +49,8 @@ export function chartTitleText(
 				const direct = {
 					sourceXml: '',
 					...entry.textBodyStyle,
-					...properties(paragraph.defaultProperties ?? {}),
-					...properties(run),
+					...chartRunStyle(paragraph.defaultProperties ?? {}),
+					...chartRunStyle(run),
 				};
 				const appearance =
 					chartAppearance(

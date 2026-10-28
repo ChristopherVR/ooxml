@@ -55,6 +55,7 @@ export function chartDateAxis(model: ChartViewModel, plot: Rect, out: string[]) 
 		if (index % Math.max(1, axis.tickMarkSkip ?? 1) === 0) mark(serial, axis.majorTickMark, 4);
 		if (
 			axis.deleted ||
+			model.dataTable ||
 			axis.tickLabelPosition === 'none' ||
 			index % Math.max(1, axis.tickLabelSkip ?? 1)
 		)

@@ -1,3 +1,4 @@
+import { chartTableMetrics } from './chart-svg-data-table';
 import { chartDateAxis } from './chart-svg-date-axis';
 import { chartLineSvg } from './chart-svg-line';
 import { chartPlotRect } from './chart-svg-plot-layout';
@@ -32,6 +33,14 @@ export function cartesianAxes(
 ): Frame | undefined {
 	const scale = model.valueAxis;
 	if (!scale) return undefined;
+	const table = chartTableMetrics(model);
+	if (table)
+		area = {
+			...area,
+			x: Math.max(area.x, table.keyW + 8),
+			w: Math.max(1, area.w - Math.max(0, table.keyW + 8 - area.x)),
+			h: Math.max(1, area.h - table.height),
+		};
 	const labels = scale.ticks.map((t) => axisTickText(t, model.axes?.value, scale.percent));
 	const valueAttrs = chartTextAttributes(model, 'valueAxis')!;
 	const categoryAttrs = chartTextAttributes(model, 'categoryAxis')!;
@@ -40,6 +49,7 @@ export function cartesianAxes(
 	const valueLabels =
 		chartAxisLabels(model.axes?.value) && model.appearance?.valueAxis?.labelsVisible !== false;
 	const categoryLabels =
+		!table &&
 		chartAxisLabels(model.axes?.category) &&
 		model.appearance?.categoryAxis?.labelsVisible !== false;
 	const labelW = valueLabels ? Math.max(...labels.map((l) => textWidth(l, valueSize)), 8) + 6 : 4;
