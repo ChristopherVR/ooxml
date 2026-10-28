@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
@@ -11,7 +12,7 @@ const spec = JSON.parse(readFileSync(manifest, 'utf8')) as {
 };
 const browser = await chromium.launch({ headless: true });
 try {
-	const captures: { id: string; sharedPng: string }[] = [];
+	const captures: { id: string; sharedPng: string; svgSha256: string }[] = [];
 	for (const item of spec.cases) {
 		if (!/^[a-z0-9][a-z0-9-]*$/.test(item.id)) throw new Error('Invalid case id');
 		if (![item.width, item.height].every((n) => Number.isInteger(n) && n > 0 && n <= 4096))
@@ -21,10 +22,11 @@ try {
 			deviceScaleFactor: 1,
 		});
 		try {
+			const svgSource = readFileSync(resolve(root, item.sharedSvg), 'utf8');
 			// Never fetch remote fonts, images or scripts from a source fixture.
 			await page.route(/^https?:/, (route) => route.abort());
 			await page.setContent(
-				`<style>html,body{margin:0;width:100%;height:100%;overflow:hidden}svg{display:block;width:100%;height:100%}</style>${readFileSync(resolve(root, item.sharedSvg), 'utf8')}`,
+				`<style>html,body{margin:0;width:100%;height:100%;overflow:hidden}svg{display:block;width:100%;height:100%}</style>${svgSource}`,
 			);
 			await page.evaluate(async () => {
 				await document.fonts.ready;
@@ -40,7 +42,11 @@ try {
 			});
 			const sharedPng = `${item.id}.shared.png`;
 			await page.screenshot({ path: resolve(root, sharedPng), omitBackground: true });
-			captures.push({ id: item.id, sharedPng });
+			captures.push({
+				id: item.id,
+				sharedPng,
+				svgSha256: createHash('sha256').update(svgSource).digest('hex'),
+			});
 		} finally {
 			await page.close();
 		}

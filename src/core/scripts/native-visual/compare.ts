@@ -2,6 +2,7 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { comparePixels } from './metrics';
 
 const manifest = resolve(process.argv[2]!);
@@ -10,18 +11,37 @@ const nativeEvidence = JSON.parse(
 	readFileSync(resolve(root, 'native.json'), 'utf8').replace(/^\uFEFF/, ''),
 );
 const spec = JSON.parse(readFileSync(manifest, 'utf8')) as {
+	presentation?: string;
 	cases: {
 		id: string;
+		presentation?: string;
+		sharedSvg?: string;
 		width: number;
 		height: number;
 		expect?: { maximumError: number; minimumOverlap: number };
 	}[];
 };
+const sharedEvidence = JSON.parse(readFileSync(resolve(root, 'shared.json'), 'utf8'));
+const digest = (path: string) =>
+	createHash('sha256')
+		.update(readFileSync(resolve(root, path)))
+		.digest('hex');
 const results = [];
 let failed = false;
 for (const entry of spec.cases) {
 	if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id)) throw new Error('Invalid case id');
 	const capture = nativeEvidence.cases.find((item: { id: string }) => item.id === entry.id);
+	const source = entry.presentation ?? spec.presentation;
+	if (!capture || (source && digest(source) !== capture.sourceSha256.toLowerCase()))
+		throw new Error(`${entry.id}: missing or stale native capture`);
+	const sharedCapture = sharedEvidence.cases.find((item: { id: string }) => item.id === entry.id);
+	if (
+		!sharedCapture ||
+		(entry.sharedSvg &&
+			sharedCapture.svgSha256 &&
+			digest(entry.sharedSvg) !== sharedCapture.svgSha256)
+	)
+		throw new Error(`${entry.id}: missing or stale shared capture`);
 	if (capture?.nativeSlidePng) {
 		const slide = await loadImage(resolve(root, capture.nativeSlidePng));
 		const frame = capture.crop;
@@ -115,7 +135,7 @@ writeFileSync(
 			policy:
 				'White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.',
 			native: nativeEvidence,
-			shared: JSON.parse(readFileSync(resolve(root, 'shared.json'), 'utf8')),
+			shared: sharedEvidence,
 			cases: results,
 		},
 		null,
