@@ -79,7 +79,10 @@ export function paintSmartArt(
 		art.schemeColors = smartArtSchemeColors(theme);
 		art.schemeFonts = theme ? { major: theme.majorFont, minor: theme.minorFont } : {};
 		if (pictureResolver) art.pictureResolver = pictureResolver;
-		art.drawing = diagram;
+		art.drawing = {
+			...diagram,
+			extentEmu: { width: Math.round(size.w * 9525), height: Math.round(size.h * 9525) },
+		};
 		node.append(art);
 	} else {
 		node.classList.add('xg-smartart-placeholder');

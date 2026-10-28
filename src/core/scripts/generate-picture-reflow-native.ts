@@ -26,6 +26,7 @@ for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 		if (image) element.smartArtData!.pictureUrls![part] = `data:image/png;base64,${image}`;
 	}
 	const before = parseDiagramDrawing(await zip.file('ppt/diagrams/drawing1.xml')!.async('string'));
+	before.extentEmu = { width: element.width * 9525, height: element.height * 9525 };
 	before.pictureParts = Object.fromEntries(
 		[
 			...parseRelationships(
@@ -80,6 +81,8 @@ for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 				width: element.width,
 				height: element.height,
 				drawing: neutral.drawing,
+				scheme: element.smartArtData!.pictureScheme,
+				fonts: { minor: element.smartArtData!.themeMinorFont },
 				pictureUrls: element.smartArtData!.pictureUrls,
 				issues: neutral.issues,
 			},

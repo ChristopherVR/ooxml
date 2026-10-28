@@ -90,6 +90,11 @@ it('reflows a native Picture Accent List without assigning pictures to sibling t
 	const preview = previewDocxDiagram(edited, loaded.model.theme);
 	expect(preview.mode).toBe('interpreted');
 	expect(preview.issues).toEqual([]);
+	expect(preview.drawing?.extentEmu).toEqual(edited.extentEmu);
+	const panels = preview.drawing?.shapes.filter((shape) => shape.sourceStyleLabel === 'node1');
+	expect(panels?.map((shape) => shape.fill)).toEqual(
+		Array(3).fill({ kind: 'solid', color: { kind: 'scheme', value: 'accent1', transforms: [] } }),
+	);
 	expect(preview.drawing?.shapes.filter((shape) => shape.fill?.kind === 'picture')).toHaveLength(3);
 	expect(
 		preview.drawing?.shapes

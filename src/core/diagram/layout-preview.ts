@@ -16,6 +16,7 @@ import type { DiagramHostNode } from './edit/node-edit';
 import type { DiagramDrawing, DiagramIssue } from './types';
 import type { DiagramPictureSource } from './picture-layout';
 import { applyDiagramPictureSources } from './picture-layout';
+import { applyDiagramRoleColors } from './layout-role-style';
 
 /** Original part text, JSON-safe so hosts can retain it through undo and collaboration. */
 export interface DiagramLayoutSource {
@@ -230,6 +231,10 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 				];
 			});
 			const drawing = diagramDrawingFromViews(views);
+			drawing.extentEmu = { ...input.extentEmu };
+			const colors = input.source?.colorsXml
+				? parseDiagramColors(input.source.colorsXml)
+				: undefined;
 			const quickStyle = input.source?.quickStyleXml
 				? parseDiagramQuickStyle(input.source.quickStyleXml)
 				: undefined;
@@ -244,7 +249,9 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					shape.style = label;
 					shape.has3d = label.requires3d ?? label.hasShape3d;
 				}
-				if (node.nodeId) shape.sourceNodeId = node.nodeId;
+				const contextNodeId = node.nodeId ?? node.contextNodeId;
+				if (contextNodeId) shape.sourceNodeId = contextNodeId;
+				if (node.layoutRole) shape.sourceLayoutRole = node.layoutRole;
 				if (node.styleLabel) shape.sourceStyleLabel = node.styleLabel;
 				if (node.foldedNodeIds?.length) shape.foldedNodeIds = node.foldedNodeIds;
 				const sourceNode = data.nodes.find((entry) => entry.id === node.nodeId);
@@ -270,6 +277,15 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					return source ? [source] : [];
 				});
 				if (textNodes.length) shape.text = diagramPreviewText(textNodes, node.fontSize);
+				applyDiagramRoleColors(
+					shape,
+					colors?.labels.find((label) => label.name === node.styleLabel),
+					Math.max(
+						0,
+						input.nodes.findIndex((entry) => entry.id === contextNodeId),
+					),
+					input.minorFont,
+				);
 			});
 			applyDiagramPictureSources(
 				drawing,

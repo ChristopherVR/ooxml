@@ -237,6 +237,7 @@ export interface DiagramStyleReference {
 
 /** A shape of the cached `dsp:drawing`, renderer-neutral. Geometry in EMU, angles in degrees. */
 export interface DiagramDrawingShape {
+	sourceLayoutRole?: string;
 	/** Semantic association carried only by a generated layout, not by source cached parts. */
 	sourceNodeId?: string;
 	sourceStyleLabel?: string;
@@ -270,6 +271,8 @@ export interface DiagramDrawingShape {
 
 /** A parsed `dsp:drawing`: the layout the producing application last computed, cached in the package. */
 export interface DiagramDrawing {
+	/** Known host frame: retain layout padding when painting an interpreted drawing. */
+	extentEmu?: { width: number; height: number };
 	/** Cached drawing relationship id to internal image package part. External media is never resolved. */
 	pictureParts?: Record<string, string>;
 	shapes: DiagramDrawingShape[];

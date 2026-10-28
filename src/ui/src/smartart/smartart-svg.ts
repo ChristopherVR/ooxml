@@ -130,7 +130,10 @@ export function renderDiagramDrawing(
 		if (shape.text?.text) group.append(diagramTextElement(doc, shape, scheme, fonts, report));
 		svg.append(group);
 	}
-	svg.setAttribute('viewBox', `0 0 ${Math.max(right, 1)} ${Math.max(bottom, 1)}`);
+	svg.setAttribute(
+		'viewBox',
+		`0 0 ${Math.max(drawing.extentEmu ? drawing.extentEmu.width / EMU_PER_PX : right, 1)} ${Math.max(drawing.extentEmu ? drawing.extentEmu.height / EMU_PER_PX : bottom, 1)}`,
+	);
 	// The viewBox is the shapes' frames, and a centred outline straddles them: a
 	// node on the drawing's edge lost the outer half of its line to the
 	// viewport clip an inline <svg> applies by default.

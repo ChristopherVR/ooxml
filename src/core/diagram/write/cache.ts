@@ -247,7 +247,7 @@ export function buildGeneratedDiagramCache(
 		const point = add(points, NS.dgm, 'dgm:pt', { modelId: id, type: 'pres' });
 		add(point, NS.dgm, 'dgm:prSet', {
 			...(shape.sourceNodeId ? { presAssocID: shape.sourceNodeId } : {}),
-			presName: 'node',
+			presName: shape.sourceLayoutRole ?? 'node',
 			presStyleLbl: shape.sourceStyleLabel ?? 'node1',
 			presStyleIdx: String(index),
 			presStyleCnt: String(drawing.shapes.length),

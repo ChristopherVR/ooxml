@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { NS, parseXml, buildXml, first, children, type XmlElement } from '../../xml/index';
 import { RELATIONSHIP_TYPES, buildRelationshipsXml } from '../../opc/index';
+import { pictureGridPng } from './picture-grid';
 
 /** Native Office gallery layout/presentation identities, populated with actual image data. */
 export async function withNativePictureLayout(
@@ -17,7 +18,11 @@ export async function withNativePictureLayout(
 	const zip = await JSZip.loadAsync(bytes);
 	const types = parseXml(await zip.file('[Content_Types].xml')!.async('string'));
 	const typesNs = 'http://schemas.openxmlformats.org/package/2006/content-types';
-	if (![...types.documentElement.childNodes].some(node => node.nodeType === 1 && (node as XmlElement).getAttribute('Extension') === 'png')) {
+	if (
+		![...types.documentElement.childNodes].some(
+			(node) => node.nodeType === 1 && (node as XmlElement).getAttribute('Extension') === 'png',
+		)
+	) {
 		const png = types.createElementNS(typesNs, 'Default');
 		png.setAttribute('Extension', 'png');
 		png.setAttribute('ContentType', 'image/png');
@@ -41,6 +46,9 @@ export async function withNativePictureLayout(
 			(shape) => shape.getAttribute('modelId') === id,
 		);
 		if (!shape || !assoc) continue;
+		for (const owner of [point, points.find((entry) => entry.getAttribute('modelId') === assoc)!]) {
+			first(owner, 'prSet', NS.dgm)?.setAttribute('phldr', '0');
+		}
 		const rel = `picture${++count}`;
 		const fill = parseXml(
 			`<a:blipFill xmlns:a="${NS.a}" xmlns:r="${NS.r}"><a:blip r:embed="${rel}"><a:grayscl/><a:alphaModFix amt="75000"/></a:blip><a:srcRect l="12500" r="25000"/><a:stretch><a:fillRect/></a:stretch></a:blipFill>`,
@@ -71,10 +79,6 @@ export async function withNativePictureLayout(
 		);
 	for (const name of ['data', 'drawing'])
 		zip.file(`${prefix}/diagrams/_rels/${name}1.xml.rels`, buildRelationshipsXml(rels));
-	zip.file(
-		`${prefix}/media/shared-reflow-picture.png`,
-		'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGP8zwACTGCSAQANHQEDgslx/wAAAABJRU5ErkJggg==',
-		{ base64: true },
-	);
+	zip.file(`${prefix}/media/shared-reflow-picture.png`, pictureGridPng());
 	return zip.generateAsync({ type: 'uint8array' });
 }

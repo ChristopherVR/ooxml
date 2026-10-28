@@ -140,6 +140,7 @@ function buildRenderedNode(
 		nodeId: primary?.id ?? (node.shape?.blipPhldr ? node.point.source?.id : undefined),
 		picturePlaceholder: node.shape?.blipPhldr,
 		layoutRole: node.name,
+		contextNodeId: node.point.source?.id,
 		rotation: transform.rotation === 0 ? undefined : transform.rotation,
 		presetOverride: node.shape?.type ?? 'roundRect',
 		foldedNodeIds: foldedNodeIds.length > 0 ? foldedNodeIds : undefined,
