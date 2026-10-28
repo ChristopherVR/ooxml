@@ -79,7 +79,11 @@ export function renderChartSvg(
 		out.push('</svg>');
 		return out.join('');
 	}
-	const legend = chartLegendSvg(model, area, { width: w, height: h }, options);
+	// Region maps own a continuous value legend rather than one categorical series key.
+	const legend =
+		model.type === 'regionMap'
+			? { plot: area, foreground: false, markup: '' }
+			: chartLegendSvg(model, area, { width: w, height: h }, options);
 	area = legend.plot;
 	if (!legend.foreground) out.push(legend.markup);
 	if (area.w > 4 && area.h > 4) {

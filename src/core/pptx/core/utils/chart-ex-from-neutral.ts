@@ -89,6 +89,16 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 			.filter(Number.isFinite);
 		result.name = source.tx?.value?.trim() || `Series ${index + 1}`;
 		result.values = values?.length ? values : [0];
+		if (source.layoutId === 'regionMap') {
+			const dim = dimension(dataOf(index), 'numDim', 'colorVal')?.levels[0];
+			if (dim) {
+				result.values = Array.from({ length: dim.pointCount ?? dim.points.length }, () => NaN);
+				for (const [i, p] of dim.points.entries())
+					result.values[p.index ?? i] = Number.parseFloat(p.value);
+			}
+			if (source.spPr?.fill?.kind === 'solid' && result.color)
+				result.regionMapOptions = { ...result.regionMapOptions, fixedColor: result.color };
+		}
 		for (const key of [
 			'histogramOptions',
 			'waterfallOptions',
@@ -207,7 +217,18 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 	if (title) chartData.title = title;
 	else delete chartData.title;
 	return {
-		categories: (levels?.[0] ?? []).filter(Boolean),
+		categories:
+			space.plotArea.series[0]?.layoutId === 'regionMap'
+				? (() => {
+						const dim = dimension(dataOf(0), 'strDim', 'cat')?.levels[0];
+						const out = Array.from(
+							{ length: dim?.pointCount ?? dim?.points.length ?? 0 },
+							() => '',
+						);
+						for (const [i, p] of (dim?.points ?? []).entries()) out[p.index ?? i] = p.value.trim();
+						return out;
+					})()
+				: (levels?.[0] ?? []).filter(Boolean),
 		categoryLevels: levels,
 		series,
 		hasDataLabels: space.plotArea.series.some((series) => {

@@ -43,4 +43,18 @@ describe('shared region map painter', () => {
 		expect(unknown).not.toContain('<path');
 		expect(unknown).toContain('Sample: 42');
 	});
+	it('honors authored solid series fill and owns one continuous legend', () => {
+		const source = xml()
+			.replace(
+				'<cx:dataId',
+				'<cx:spPr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:solidFill><a:srgbClr val="4472C4"/></a:solidFill></cx:spPr><cx:dataId',
+			)
+			.replace('</cx:chart>', '<cx:legend pos="b"/></cx:chart>');
+		const svg = renderChartSummarySvg(chartExSummary(source)!.summary!, {
+			width: 480,
+			height: 300,
+		});
+		expect(svg).toMatch(/<path[^>]*fill="#4472C4"/u);
+		expect(svg).not.toContain('data-chart-part="legend"');
+	});
 });

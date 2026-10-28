@@ -612,6 +612,7 @@ export interface PptxCxValueColorPosition {
 
 /** Office 2016 ChartEx geographic series dimensions and layout options. */
 export interface PptxChartRegionMapOptions {
+	fixedColor?: string;
 	/**
 	 * Colour-by-value gradient stops (`cx:valueColors/cx:colors/cx:color`),
 	 * resolved to hex, 2 or 3 entries (matching PowerPoint's two- and

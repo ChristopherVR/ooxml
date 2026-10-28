@@ -125,7 +125,7 @@ function summarySeries(
 		),
 		...seriesFill(source),
 	};
-	if (chartType === 'funnel' || chartType === 'boxWhisker') {
+	if (chartType === 'funnel' || chartType === 'boxWhisker' || chartType === 'regionMap') {
 		chartExSeriesPaint(source, series, chartType === 'funnel' && source.dataLabels !== undefined);
 		if (source.hidden !== undefined) series.hidden = source.hidden;
 	}

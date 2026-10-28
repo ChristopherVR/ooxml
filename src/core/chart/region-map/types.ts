@@ -5,6 +5,8 @@ export interface RegionValueColorPosition {
 
 /** Office 2016 ChartEx geographic series dimensions and layout options. */
 export interface RegionMapOptions {
+	/** An authored series solid fill overrides the value gradient, including background regions. */
+	fixedColor?: string;
 	/**
 	 * Colour-by-value gradient stops (`cx:valueColors/cx:colors/cx:color`),
 	 * resolved to hex, 2 or 3 entries (matching PowerPoint's two- and

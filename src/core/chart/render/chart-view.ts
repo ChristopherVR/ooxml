@@ -248,6 +248,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	if (chart.funnelGapWidth !== undefined) model.funnelGapWidth = chart.funnelGapWidth;
 	if (chart.series[0]?.regionMap)
 		model.regionMap = resolveRegionValueColors(chart.series[0].regionMap, ctx.drawingColor);
+	if (model.regionMap && chart.series[0]?.fill?.kind === 'solid' && series[0])
+		model.regionMap.fixedColor = series[0].color;
 	const table = chartDataTableView(chart, theme, ctx.drawingColor);
 	if (table) model.dataTable = table;
 	if (chart.date1904 !== undefined) model.date1904 = chart.date1904;

@@ -153,6 +153,7 @@ export function buildRegionMapViewModel(
 			const t = normalizeValue(entry.value, minVal, maxVal);
 			fill = colorScale(t);
 		}
+		if (options?.fixedColor) fill = options.fixedColor;
 
 		// Embed the transform in the path's d attribute via a manual coordinate
 		// scale+translate since SvgPath has no transform field.  We replicate
