@@ -199,7 +199,10 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 	};
 	let destroyed = false;
 	const scheduler = createRecoveryScheduler({
-		timers: { set: timers.setTimeout, clear: timers.clearTimeout },
+		timers: {
+			set: (handler, ms) => timers.setTimeout(handler, ms),
+			clear: (id) => timers.clearTimeout(id),
+		},
 		tick: () => {
 			timer = null;
 			if (destroyed || !isActive() || !store.getSnapshot().dirty) return;
