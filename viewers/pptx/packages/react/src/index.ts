@@ -59,6 +59,8 @@ export { SLIDE_TEMPLATES, buildSlideTemplateContent, buildSlideTemplateSlide } f
 export type { SlideTemplateId, SlideTemplateSpec } from 'ooxml-ui/pptx';
 
 // ── AI assistant (optional; requires the `ai` + `@ai-sdk/react` peers) ──
+// `createAiAssistant` lives in `pptx-react-viewer/ai`, which also exports these types.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 export type {
 	PptxAiBridge,
 	PptxAiConfig,

@@ -110,7 +110,7 @@ const bytes = await viewerRef.current?.getContent(); // Uint8Array of a valid .p
 | `shareDefaults`                                                            | `{ roomId?, userName?, serverUrl? }`    | n/a      | Seed values for the Share dialog fields                                                                                                                                                                                                                                                                                                                        |
 | `smartArt3D`                                                               | `boolean`                               | `false`  | Opt-in Three.js 3D SmartArt renderer (needs the optional `three` dependency; falls back to SVG without it)                                                                                                                                                                                                                                                     |
 | `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                               | `false`  | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                      |
-| `ai`                                                                       | `PptxAiConfig`                          | n/a      | Optional AI assistant configuration. The SDK peers load only when its panel is opened.                                                                                                                                                                                                                                                                         |
+| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig`       | n/a      | Optional AI assistant: a handle from `createAiAssistant` (`pptx-react-viewer/ai`), or a plain config. The SDK peers load only when its panel is opened. See [AI assistant](#ai-assistant).                                                                                                                                                                     |
 | `onOpenFile`                                                               | `() => void`                            | n/a      | Host override for File > Open; bypasses the built-in file picker                                                                                                                                                                                                                                                                                               |
 | `onContentChange`                                                          | `(content: Uint8Array) => void`         | n/a      | Called with freshly serialised `.pptx` bytes when the content changes                                                                                                                                                                                                                                                                                          |
 | `onDirtyChange`                                                            | `(isDirty: boolean) => void`            | n/a      | Called when dirty state changes                                                                                                                                                                                                                                                                                                                                |
@@ -264,6 +264,21 @@ import { PowerPointViewer, vermilionLightTheme } from 'pptx-react-viewer';
 ```
 
 The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and radius (`vermilionRadius`) are exported too, so you can spread them into your own variant.
+
+## AI assistant
+
+Create the assistant with `createAiAssistant` from the `pptx-react-viewer/ai` entry. Install the `ai` and `@ai-sdk/react` peers, create an assistant once (at module scope or in `useMemo`) and pass it to the `ai` prop:
+
+```tsx
+import { PowerPointViewer } from 'pptx-react-viewer';
+import { createAiAssistant } from 'pptx-react-viewer/ai';
+
+const assistant = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
+
+<PowerPointViewer content={bytes} ai={assistant} />;
+```
+
+The panel still loads lazily, the first time the user opens it, and the main entries still reach the same lazy panel loader. The handle is opaque: only `createAiAssistant` makes one, and any other value is read as a plain config. A plain `PptxAiConfig` (`ai={{ connection }}`) keeps working through the viewer's own lazy panel and is not deprecated in this release; the handle is a preparatory, opt-in path for a later major release (see [The `/ai` entry](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant#ai-entry)). The `PptxAi*` types are exported from both `pptx-react-viewer` and `pptx-react-viewer/ai`. See the [AI assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant) for connection modes, tools and the write policy.
 
 ## Localization (i18n)
 

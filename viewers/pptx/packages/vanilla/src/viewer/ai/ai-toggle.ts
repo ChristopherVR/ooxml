@@ -25,6 +25,7 @@ import { mountAiContextMenu } from './ai-context-menu';
 import { mountAiHighlightOverlay } from './ai-highlight-overlay';
 import type { AiPanel } from './ai-panel';
 import type { AiFocusController } from './ai-panel-controller';
+import type { AiPanelLoader } from './ai-panel-loader';
 import { mountAiPickInterception } from './ai-pick-interception';
 
 export interface MountAiChatDeps {
@@ -38,6 +39,8 @@ export interface MountAiChatDeps {
 	controller: AiFocusController;
 	/** Navigate the viewer to a slide (used by the live tool focus). */
 	goToSlide(index: number): void;
+	/** The panel loader of a `createAiAssistant` handle; the viewer's own otherwise. */
+	loadPanel?: AiPanelLoader;
 }
 
 export interface AiChatMount {
@@ -129,7 +132,7 @@ export function mountAiChat(deps: MountAiChatDeps): AiChatMount {
 		loading = true;
 		host.classList.add('is-loading');
 		try {
-			const { createAiPanel } = await import('./ai-panel');
+			const { createAiPanel } = await (deps.loadPanel ? deps.loadPanel() : import('./ai-panel'));
 			panel = await createAiPanel({
 				host,
 				doc,

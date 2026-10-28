@@ -8,7 +8,7 @@ description: 组成 PowerPointViewerComponent 的全部内部服务、组件和�
 这是[服务](/zh/angular/services)页面所引用的完整列表，按职责列出组成 `PowerPointViewerComponent` 的全部内部构建模块。如需了解受语义化版本兼容承诺保障的小范围公开 API，请参见[公开服务与组件](/zh/angular/services#public-services-components)。
 
 ::: warning 内部构建模块
-以下所有内容都可以从 `pptx-angular-viewer/internals` 子路径导入。ng-packagr 将此包构建为单一编译单元，因此 `internals` 是同一产物的别名，这些符号也仍可从根入口导入。它们**不受语义化版本兼容承诺保障**：签名、行为乃至是否存在，都可能在不升级主版本的情况下变化。只有经过筛选的服务、输入、输出和[公开 API](/zh/angular/api) 无法满足需求时，才使用 `internals`。依赖它时请锁定精确版本。
+以下所有内容都可以从 `pptx-angular-viewer/internals` 子路径导入。ng-packagr 将包根入口构建为单一编译单元，因此 `internals` 是同一产物的别名，这些符号也仍可从根入口导入。它们**不受语义化版本兼容承诺保障**：签名、行为乃至是否存在，都可能在不升级主版本的情况下变化。只有经过筛选的服务、输入、输出和[公开 API](/zh/angular/api) 无法满足需求时，才使用 `internals`。依赖它时请锁定精确版本。
 
 ```ts
 import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/internals';
@@ -141,7 +141,7 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 
 ### 幻灯片过渡辅助函数 {#slide-transition-helpers}
 
-框架无关的渲染器以 `ooxml-ui/pptx` 发布，宿主可以直接导入。Angular 同样通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 重新导出这些辅助函数，而不只是 `internals`：ng-packagr 会把这个库编译成单一入口文件，因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
+框架无关的渲染器以 `ooxml-ui/pptx` 发布，宿主可以直接导入。Angular 同样通过精选的 `pptx-angular-viewer` 根入口（`viewer/index.ts`）从 `transition-helpers.ts` 重新导出这些辅助函数，而不只是 `internals`：ng-packagr 会从单一入口文件编译包根入口（它唯一的次级入口 `pptx-angular-viewer/ai` 只包含 `createAiAssistant`），因此 `pptx-angular-viewer/internals` 与根入口是完全相同的构建产物（参见 `src/internals.ts` 自身的头部注释），两者都能解析到下列同名符号。
 
 | 导出项                                                                                                                            | 职责                                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -176,6 +176,12 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 | `ColorChangedImageComponent`         | 渲染应用了双色调或重新着色滤镜的图片。                     |
 | `color-changed-image-helpers` 的导出 | 为 `ColorChangedImageComponent` 提供支持的辅助函数。       |
 | `eyedropper` 的导出                  | 使用屏幕吸管 `EyeDropper` API 的取色辅助函数。             |
+
+## AI 助手内部接口 {#ai-assistant-internals}
+
+| 导出项                    | 职责                                                                                                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createAiAssistantHandle` | 为 `pptx-angular-viewer/ai` 次级入口的 `createAiAssistant` 提供支持。ng-packagr 单独构建该入口，它只能导入包入口。此函数只接受配置；请改为导入 `createAiAssistant`。 |
 
 ## 移动端界面内部接口 {#mobile-chrome-internals}
 

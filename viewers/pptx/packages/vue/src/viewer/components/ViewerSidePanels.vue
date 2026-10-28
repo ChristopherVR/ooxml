@@ -21,6 +21,7 @@ import type {
 	PptxSlide,
 } from 'pptx-viewer-core';
 import { computed } from 'vue';
+import type { Component } from 'vue';
 
 import type { AiPanelController } from '../composables/ai/useAiPanelController';
 import type { UseAccessibilityResult } from '../composables/useAccessibility';
@@ -64,6 +65,8 @@ const props = defineProps<{
 	customShows: UseCustomShowsWiringResult;
 	/** AI assistant config; the panel is gated behind the host opting in. */
 	ai?: PptxAiConfig;
+	/** The chat panel of a `createAiAssistant` handle; the viewer's own lazy panel otherwise. */
+	aiChatPanel?: Component;
 	aiPanelOpen: boolean;
 	onCloseAiPanel: () => void;
 	aiPanel: AiPanelController;
@@ -126,7 +129,8 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 	     so `@ai-sdk/vue` + the AI core only ship when actually used. React
 	     parity: NOT gated on isMobile; a `!isMobile` clause here made the
 	     assistant unopenable on phones. -->
-	<AiChatPanelLazy
+	<component
+		:is="aiChatPanel ?? AiChatPanelLazy"
 		v-if="ai && aiPanelOpen && (ribbonMode === 'edit' || ribbonMode === 'master')"
 		:bridge="aiBridge"
 		:config="ai"

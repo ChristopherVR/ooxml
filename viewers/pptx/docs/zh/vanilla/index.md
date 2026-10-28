@@ -59,6 +59,25 @@ await viewer.enterPresentation();
 
 与此 monorepo 中所有绑定一样，幻灯片渲染为 **CSS 定位的 HTML/SVG**，通过 CSS transform 缩放，不绘制到 Canvas 上。文本在任意缩放下都保持可选中且清晰，屏幕阅读器也可以正常工作。相关取舍请参见[已知限制](/zh/guide/limitations)。
 
+## 导入路径 {#import-paths}
+
+`package.json` 的 `exports` 提供以下入口：
+
+```ts
+// Root entry - createPptxViewer, the renderer registry, theme utilities
+import { createPptxViewer } from 'pptx-vanilla-viewer';
+// AI assistant entry - the recommended value for the `ai` option
+import { createAiAssistant } from 'pptx-vanilla-viewer/ai';
+```
+
+| 入口                                                                 | 导出内容                                                                                                                                              |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-vanilla-viewer`                                                | `createPptxViewer`、元素渲染器注册表、主题工具、会话辅助函数和公开类型（参见[主要导出](#key-exports)）。                                              |
+| `pptx-vanilla-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
+| `pptx-vanilla-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
+| `pptx-vanilla-viewer/internals`                                      | 幻灯片切换辅助函数和 `playTransitionOverlay`，供自定义放映界面使用（参见 [API](/zh/vanilla/api)），不受语义化版本兼容承诺保障。                       |
+| `pptx-vanilla-viewer/styles.css`                                     | 查看器原本在运行时注入的样式表，供启用严格 CSP 的宿主使用（参见[主题](/zh/vanilla/theming)）。                                                        |
+
 ## 主要导出 {#key-exports}
 
 | 导出项                                                           | 类型 | 用途                                                                                 |

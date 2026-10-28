@@ -16,6 +16,7 @@ import type {
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type {
 	ConnectorArrowType,
@@ -657,22 +658,30 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 
 	/**
 	 * Opt in to the built-in AI assistant. When provided, a Sparkles toggle
-	 * appears in the toolbar and opens a chat panel wired to this config; when
-	 * omitted, no AI icon renders and no AI code is loaded (the panel and its
-	 * `@ai-sdk/react` dependency are `React.lazy`-imported only on first open).
+	 * appears in the toolbar and opens a chat panel; when omitted, no AI icon
+	 * renders and no AI code is loaded (the panel and its `@ai-sdk/react`
+	 * dependency are `React.lazy`-imported only on first open).
 	 *
-	 * The host supplies the model connection (a backend `endpoint`, an in-browser
-	 * `model`, or a custom `transport`) plus optional tool allow/deny lists and a
-	 * write policy. Requires the optional `ai` and `@ai-sdk/react` peers.
+	 * Pass a plain `PptxAiConfig` (supported and not deprecated), or the opaque
+	 * handle `createAiAssistant(config)` returns (from `pptx-react-viewer/ai`, the
+	 * opt-in entry that brings the chat panel). Both open the same panel. Only a
+	 * value from `createAiAssistant` is read as a handle; any other value is a
+	 * plain config, which the viewer does not validate. The config supplies the
+	 * model connection (a backend `endpoint`, an in-browser `model`, or a custom
+	 * `transport`) plus optional tool allow/deny lists and a write policy.
+	 * Requires the optional `ai` and `@ai-sdk/react` peers.
 	 *
 	 * @example
 	 * ```tsx
-	 * <PowerPointViewer content={bytes} ai={{ connection: { kind: 'model', model } }} />
+	 * import { createAiAssistant } from 'pptx-react-viewer/ai';
+	 *
+	 * const assistant = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/chat' } });
+	 * <PowerPointViewer content={bytes} ai={assistant} />
 	 * ```
 	 *
 	 * @see {@link PptxAiConfig}
 	 */
-	ai?: PptxAiConfig;
+	ai?: PptxAiConfig | PptxAiAssistant;
 
 	/**
 	 * Framework-neutral UI customisation. See docs/guide/customization.md.

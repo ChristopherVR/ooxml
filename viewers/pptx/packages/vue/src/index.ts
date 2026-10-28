@@ -60,6 +60,7 @@ export type {
 	ElementClipboardPayload,
 	TableCellEditorState,
 	LayoutOption,
+	PptxAiAssistant,
 	PptxAiConfig,
 	PptxAiConnection,
 	PptxAiContextStrategy,

@@ -19,6 +19,7 @@ import type {
 	ViewportFitPadding,
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { PptxCoreProperties } from 'pptx-viewer-core';
 
 import type { LocaleCatalogEntry } from '../i18n';
@@ -346,9 +347,15 @@ export interface PowerPointViewerProps {
 	 * lazily loaded only when first opened; omit this prop to disable the
 	 * assistant entirely.
 	 *
+	 * Pass a plain `PptxAiConfig` (supported and not deprecated), or the opaque
+	 * handle `createAiAssistant(config)` returns (from `pptx-vue-viewer/ai`, the
+	 * opt-in entry that brings the chat panel). Both open the same panel. Only a
+	 * value from `createAiAssistant` is read as a handle; any other value is a
+	 * plain config, which the viewer does not validate.
+	 *
 	 * @see {@link PptxAiConfig}
 	 */
-	ai?: PptxAiConfig;
+	ai?: PptxAiConfig | PptxAiAssistant;
 }
 
 /**

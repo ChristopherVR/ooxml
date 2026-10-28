@@ -63,6 +63,8 @@ export type {
 	PptxAiWritePolicy,
 	PptxAiBridge,
 } from 'ooxml-ui/pptx/ai';
+// `createAiAssistant` is exported from `pptx-vue-viewer/ai`.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 
 // `RibbonToolbar`'s prop contract, for composing a custom ribbon/toolbar shell
 // with `useRibbonProps` (see `pptx-vue-viewer/internals`) instead of

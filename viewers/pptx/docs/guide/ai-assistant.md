@@ -43,16 +43,27 @@ bun add @ai-sdk/anthropic
 
 ## Enabling the panel
 
-Pass an `ai` config to the viewer. The shape is identical across every binding;
-only the host-syntax for passing a prop differs.
+Pass an assistant to the viewer's `ai` prop (an input in Angular, an option in vanilla).
+Every binding has an `/ai` entry whose `createAiAssistant(config)` turns a config into an
+assistant handle. The config shape is identical across every binding; only the host
+syntax for passing a prop differs.
 
 ```tsx
 // React
-import { PowerPointViewer, type PptxAiConfig } from 'pptx-react-viewer';
+import { PowerPointViewer } from 'pptx-react-viewer';
+import { createAiAssistant } from 'pptx-react-viewer/ai';
 
-const ai: PptxAiConfig = { connection: { kind: 'endpoint', api: '/api/ai/chat' } };
+const ai = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
 
 <PowerPointViewer content={deck} ai={ai} />;
+```
+
+```ts
+// Vue, Angular, Svelte and vanilla: the same factory from the binding's own `/ai` entry
+import { createAiAssistant } from 'pptx-vue-viewer/ai';
+// or 'pptx-angular-viewer/ai', 'pptx-svelte-viewer/ai', 'pptx-vanilla-viewer/ai'
+
+const ai = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
 ```
 
 ```vue
@@ -76,6 +87,12 @@ import { createPptxViewer } from 'pptx-vanilla-viewer';
 
 createPptxViewer(container, { source: deck, ai });
 ```
+
+Passing the plain config instead (`ai: { connection }`) keeps working in every binding and
+is not deprecated in this release. Create the handle once (at module scope, in `useMemo`,
+or as a component field); a handle recreated on every render still keeps the open chat
+mounted. See [The `/ai` entry](#ai-entry) for what this release guarantees and what the
+next major release changes.
 
 ## Connection modes
 
@@ -256,3 +273,81 @@ None of the AI code ships on the critical path. The chat panel and the `ai` SDK
 are dynamically imported only when the user first opens the panel, and only when
 you pass an `ai` config at all. A viewer without AI configured downloads zero AI
 bytes.
+
+## The `/ai` entry {#ai-entry}
+
+Each binding's `/ai` entry exports `createAiAssistant(config)`, the `PptxAiAssistant`
+handle type and the `PptxAi*` config types. The handle carries the binding's own lazy
+panel loader, the same one its main entry uses for a plain config. An Angular handle
+carries its config only: the chat service loads the runtime for a handle and a plain
+config alike.
+
+| Binding | Entry                    | What the handle carries                                       |
+| ------- | ------------------------ | ------------------------------------------------------------- |
+| React   | `pptx-react-viewer/ai`   | the `React.lazy` chat panel (`@ai-sdk/react` loads inside it) |
+| Vue     | `pptx-vue-viewer/ai`     | the `defineAsyncComponent` chat panel (`@ai-sdk/vue`)         |
+| Svelte  | `pptx-svelte-viewer/ai`  | the loader of the chat panel component (`@ai-sdk/svelte`)     |
+| Angular | `pptx-angular-viewer/ai` | nothing (`AiChatService` imports `ooxml-ui/pptx/ai` itself)   |
+| Vanilla | `pptx-vanilla-viewer/ai` | the loader of the panel module (`ooxml-ui/pptx/ai`)           |
+
+### What this release guarantees {#what-this-release-guarantees}
+
+In all five bindings:
+
+- The handle is an opaque, supported value for `ai`. It is equivalent to passing its
+  config: the same panel, the same behaviour. It adds no host extension point: its type
+  has no members, only `createAiAssistant` makes one, and it cannot carry a panel or any
+  other code of yours. Each binding keeps its handles in a registry private to the package,
+  which no entry exports, so no other export of the binding or of `ooxml-ui` can make a
+  handle the viewer reads. The one exception is internal: Angular's `/ai` entry, which
+  ng-packagr builds on its own, reaches that registry through `createAiAssistantHandle`,
+  which the package root and `/internals` export as `@internal`. It takes a config only and
+  makes the same handle as `createAiAssistant`.
+- The `/ai` entry is stable: `createAiAssistant`, `PptxAiAssistant` and the `PptxAi*`
+  config types.
+- The plain `PptxAiConfig` is supported and not deprecated. The viewer reads any value
+  that is not a handle, including an object shaped like one, as a plain config and passes
+  it to the panel without validating it, as before; a config the panel cannot use ends in
+  its error state.
+- A handle made by another binding, or by another copy of the package (a second install,
+  or the ESM and CommonJS builds mixed), is read the same way. In development the viewer
+  warns about it once (`process.env.NODE_ENV !== 'production'`; Angular uses
+  `isDevMode()`).
+- The main entries still reach the lazy panel loader. `pptx-react-viewer`,
+  `pptx-vue-viewer` and `pptx-svelte-viewer` with their `/viewer` entries,
+  `pptx-angular-viewer` (and `/internals`, the same file) and `pptx-vanilla-viewer` reach
+  the binding's SDK package and `ooxml-ui/pptx/ai` through the same dynamic import as
+  `/ai`. None of them has the `ai` SDK, `@ai-sdk/*`, `zod` or the automation catalogue in
+  its initial chunks. The handle therefore does not change what loads, or when.
+
+### Why the handle ships now {#why-the-handle-ships-now}
+
+- You can switch to `createAiAssistant` in a minor release, so the next major release
+  needs no code change on your side.
+- The handle keeps the assistant behind one import you opt into. In React, Vue, Svelte and
+  vanilla, the panel loader a handle carries comes from the `/ai` entry, not from the main
+  entry. In Angular the chat service in the package root loads the runtime, so that `/ai`
+  never hands the root any code.
+
+### What the next major release changes {#what-the-next-major-release-changes}
+
+The main entries become free of the assistant runtime when all of these hold, in every
+binding:
+
+- The source and built module graphs of the main entries (`pptx-react-viewer`,
+  `pptx-vue-viewer` and `pptx-svelte-viewer` with their `/viewer` entries,
+  `pptx-angular-viewer` and its `/internals`, `pptx-vanilla-viewer`) reach no `ai`,
+  `@ai-sdk/*`, `zod`, `ooxml-ui/pptx/ai` or `ooxml-core/pptx/automation` module,
+  statically or through a dynamic import.
+- Their `.d.ts` files reach no type from `ai` or `@ai-sdk/*`.
+- The packed-binding check (`check-binding-packages.mjs`) expects only `./ai` among each
+  binding's entries to reach the binding's SDK package (`@ai-sdk/react`, `@ai-sdk/vue`,
+  `@ai-sdk/svelte`) and `ooxml-ui/pptx/ai`.
+- A plain config on a main entry's `ai` is removed from its type, and at runtime throws an
+  error that points to `createAiAssistant`.
+
+Only that release changes behaviour: `ai` takes only a handle, the `PptxAi*` config types
+(which name `ai` SDK types) are exported only from the `/ai` entries, and the main entries
+drop their own lazy panel loader. Code that already passes a handle keeps working
+unchanged. In Angular the runtime loader sits in the package root today, so that release
+also has to move it into `/ai` without adding an export that takes a loader.

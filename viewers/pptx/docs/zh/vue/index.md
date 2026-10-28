@@ -54,6 +54,8 @@ npm i pptx-vue-viewer
 ```ts
 // Root entry - viewer, theme utilities, i18n helper re-exports
 import { PowerPointViewer } from 'pptx-vue-viewer';
+// AI assistant entry - the recommended value for the `ai` prop
+import { createAiAssistant } from 'pptx-vue-viewer/ai';
 // vue-i18n dictionary (single-brace interpolation, converted from the shared dictionary)
 import { translationsEn } from 'pptx-vue-viewer/i18n';
 // Viewer sub-entry - the component plus renderers and the curated composables
@@ -61,6 +63,16 @@ import { PowerPointViewer } from 'pptx-vue-viewer/viewer';
 // Bundled stylesheet, for apps that don't already use Tailwind CSS v4
 import 'pptx-vue-viewer/styles';
 ```
+
+| 入口                                                             | 导出内容                                                                                                                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-vue-viewer`                                                | `PowerPointViewer`、主题工具、重新导出的国际化辅助函数和公开类型。                                                                                    |
+| `pptx-vue-viewer/viewer`                                         | 同一个组件，以及渲染组件和经过筛选的组合式函数（参见[组合式函数](/zh/vue/composables)）。                                                             |
+| `pptx-vue-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
+| `pptx-vue-viewer/i18n`                                           | vue-i18n 语法（单花括号插值）的英文字典及其辅助函数（参见[本地化](/zh/guide/localization)）。                                                         |
+| `pptx-vue-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
+| `pptx-vue-viewer/internals`                                      | `PowerPointViewer` 内部组合使用的组合式函数，不受语义化版本兼容承诺保障。                                                                             |
+| `pptx-vue-viewer/styles`（或 `/styles.css`）                     | 打包好的样式表。                                                                                                                                      |
 
 `.` 和 `./viewer` 都导出 `PowerPointViewer`；`./viewer` 还导出渲染组件和经过筛选的组合式函数，参见[组合式函数](/zh/vue/composables)。常规场景使用根入口即可。
 

@@ -7,12 +7,14 @@ import { describe, expect, it } from 'vitest';
 /**
  * The full `ooxml-ui/pptx/ai` barrel bundles the chat session, the tool registry, `zod`, the
  * automation catalogue and a dynamic `import('ai')`. These modules are part of the viewer's main
- * graph (the AI bridge, the panel controller, the change overlay and the Options AI section), so
- * they import the SDK-free helpers from `ooxml-ui/pptx/ai/host`. The barrel stays behind the
+ * graph (the AI bridge, the panel controller, the change overlay, the Options AI section and the
+ * `createAiAssistant` handle registry), so they import the SDK-free helpers from
+ * `ooxml-ui/pptx/ai/host`. The barrel stays behind the
  * lazily loaded `AiChatPanel.svelte`. `scripts/check-binding-packages.mjs` checks the same rule
  * on the packed build.
  */
 const EAGER_AI_MODULES = [
+	'ai-assistant-registry.ts',
 	'ai/ai-bridge.ts',
 	'ai/ai-panel-controller.svelte.ts',
 	'components/ai/AiChangeOverlay.svelte',
@@ -62,5 +64,9 @@ describe('AiDock loads the panel from its script block', () => {
 
 	it('has no import() in the template', () => {
 		expect(markup).not.toMatch(/\bimport\(/u);
+	});
+
+	it('uses the loader of a createAiAssistant handle when it has one', () => {
+		expect(script).toMatch(/loadPanel \? loadPanel\(\) : import\(/u);
 	});
 });

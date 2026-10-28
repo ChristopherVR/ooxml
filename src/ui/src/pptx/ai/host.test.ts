@@ -64,6 +64,7 @@ describe('ooxml-ui/pptx/ai/host', () => {
 				'changeGhostStyle',
 				'collectStoredChats',
 				'computeFocusTargets',
+				'createAiAssistantRegistry',
 				'createAiChangeAnimator',
 				'createAiChatHistoryController',
 				'deckIdFromBridge',

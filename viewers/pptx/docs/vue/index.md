@@ -56,11 +56,13 @@ poster image. Without `yjs`/`y-websocket`, the viewer runs in single-user mode.
 
 ## Import paths
 
-The package exposes several entry points (from `package.json` `exports`):
+The package exposes these entry points (from `package.json` `exports`):
 
 ```ts
 // Root entry - viewer, theme utilities, i18n helper re-exports
 import { PowerPointViewer } from 'pptx-vue-viewer';
+// AI assistant entry - the recommended value for the `ai` prop
+import { createAiAssistant } from 'pptx-vue-viewer/ai';
 // vue-i18n dictionary (single-brace interpolation, converted from the shared dictionary)
 import { translationsEn } from 'pptx-vue-viewer/i18n';
 // Viewer sub-entry - the component plus renderers and the curated composables
@@ -68,6 +70,16 @@ import { PowerPointViewer } from 'pptx-vue-viewer/viewer';
 // Bundled stylesheet, for apps that don't already use Tailwind CSS v4
 import 'pptx-vue-viewer/styles';
 ```
+
+| Entry                                                            | What it exports                                                                                                                                                            |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-vue-viewer`                                                | `PowerPointViewer`, theme utilities, i18n helper re-exports and the public types.                                                                                          |
+| `pptx-vue-viewer/viewer`                                         | The same component plus the renderer components and the curated composables ([Composables](/vue/composables)).                                                             |
+| `pptx-vue-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
+| `pptx-vue-viewer/i18n`                                           | The English dictionary in vue-i18n syntax (single-brace interpolation) and its helpers ([Localization](/guide/localization)).                                              |
+| `pptx-vue-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
+| `pptx-vue-viewer/internals`                                      | The internal composables `PowerPointViewer` composes. Not covered by semver.                                                                                               |
+| `pptx-vue-viewer/styles` (or `/styles.css`)                      | The bundled stylesheet.                                                                                                                                                    |
 
 Both `.` and `./viewer` export `PowerPointViewer`; `./viewer` additionally exposes the renderer
 components and a curated set of composables (see [Composables](/vue/composables)). Use the root

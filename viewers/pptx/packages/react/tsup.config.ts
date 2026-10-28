@@ -20,7 +20,7 @@ const pptxViewerCoreAsOoxmlCore: NonNullable<Options['esbuildPlugins']>[number] 
 };
 
 export default defineConfig((options) => ({
-	entry: ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts'],
+	entry: ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts', 'src/ai.ts'],
 	format: ['esm', 'cjs'],
 	minify: false,
 	// File > Account's About panel reads this to show the installed package

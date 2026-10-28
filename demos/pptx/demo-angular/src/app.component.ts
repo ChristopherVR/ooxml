@@ -21,6 +21,7 @@ import {
 } from 'pptx-angular-viewer';
 import type {
 	CollaborationConfig,
+	PptxAiAssistant,
 	PptxAiConfig,
 	ViewerCustomization,
 	ViewerTheme,
@@ -38,7 +39,7 @@ import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
-import { buildDemoAiConfig, readStoredAiFields } from './ai-config';
+import { buildDemoAi, readStoredAiFields } from './ai-config';
 import {
 	ensureAutoRoomId,
 	generateAutoName,
@@ -182,7 +183,9 @@ export class AppComponent {
 	 * when nothing is stored. The demo ships no key and no config UI, so this is
 	 * normally undefined and the assistant simply stays off.
 	 */
-	readonly aiConfig = signal<PptxAiConfig | undefined>(buildDemoAiConfig(readStoredAiFields()));
+	readonly aiConfig = signal<PptxAiAssistant | PptxAiConfig | undefined>(
+		buildDemoAi(readStoredAiFields()),
+	);
 
 	readonly activeTheme = computed<ViewerTheme>(
 		() => (THEMES[this.themeKey()] ?? THEMES['vermilionDark']).theme,

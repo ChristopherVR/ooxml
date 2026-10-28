@@ -75,6 +75,25 @@ Like every binding in this monorepo, slides render as **CSS-positioned HTML/SVG*
 transform, not onto a Canvas. Text stays selectable and crisp at any zoom, and screen readers keep
 working. The tradeoffs are listed in [Limitations](/guide/limitations).
 
+## Import paths
+
+The package exposes these entry points (from `package.json` `exports`):
+
+```ts
+// Root entry - createPptxViewer, the renderer registry, theme utilities
+import { createPptxViewer } from 'pptx-vanilla-viewer';
+// AI assistant entry - the recommended value for the `ai` option
+import { createAiAssistant } from 'pptx-vanilla-viewer/ai';
+```
+
+| Entry                                                                | What it exports                                                                                                                                                            |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-vanilla-viewer`                                                | `createPptxViewer`, the element renderer registry, theme utilities, the session helpers and the public types (see [Key exports](#key-exports)).                            |
+| `pptx-vanilla-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
+| `pptx-vanilla-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
+| `pptx-vanilla-viewer/internals`                                      | The slide-transition helpers and `playTransitionOverlay`, for a custom presentation surface ([API](/vanilla/api)). Not covered by semver.                                  |
+| `pptx-vanilla-viewer/styles.css`                                     | The stylesheet the viewer otherwise injects at runtime, for CSP-strict hosts ([Theming](/vanilla/theming)).                                                                |
+
 ## Key exports
 
 | Export                                                           | Kind     | Purpose                                                                                    |

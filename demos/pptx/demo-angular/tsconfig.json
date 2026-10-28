@@ -14,6 +14,9 @@
 		"paths": {
 			"pptx-angular-viewer": [
 				"../../../viewers/pptx/packages/angular/dist/types/pptx-angular-viewer.d.ts"
+			],
+			"pptx-angular-viewer/ai": [
+				"../../../viewers/pptx/packages/angular/dist/types/pptx-angular-viewer-ai.d.ts"
 			]
 		}
 	},

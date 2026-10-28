@@ -57,6 +57,11 @@
 			"import": "./dist/internals.js",
 			"require": "./dist/internals.cjs"
 		},
+		"./ai": {
+			"types": "./dist/ai.d.ts",
+			"import": "./dist/ai.js",
+			"require": "./dist/ai.cjs"
+		},
 		"./i18n": {
 			"types": "./dist/i18n.d.ts",
 			"import": "./dist/i18n.js",

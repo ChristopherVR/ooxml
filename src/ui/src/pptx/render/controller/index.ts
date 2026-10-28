@@ -47,3 +47,11 @@ export type {
 	CollaborationSessionState,
 	CollaborationSessionTimers,
 } from './collaboration-session-controller';
+export { createAiAssistantRegistry } from './ai-assistant';
+export type {
+	AiAssistantRegistry,
+	AiAssistantRegistryOptions,
+	PptxAiAssistant,
+	ResolveAiAssistantOptions,
+	ResolvedAiAssistant,
+} from './ai-assistant';

@@ -156,7 +156,13 @@ describe('the main entries load AI helpers from ooxml-ui/pptx/ai/host only', () 
 		walkModuleGraph(join(packageRoot, file), { followDynamic: false });
 	// Forward slashes on every platform, to match the expectations below.
 	const relativeName = (file: string) => relative(packageRoot, file).split(sep).join('/');
-	const ENTRIES = ['src/index.ts', 'src/viewer/index.ts', 'src/i18n.ts', 'src/internals.ts'];
+	const ENTRIES = [
+		'src/index.ts',
+		'src/viewer/index.ts',
+		'src/i18n.ts',
+		'src/internals.ts',
+		'src/ai.ts',
+	];
 
 	it('lists every built entry', () => {
 		const tsup = readFileSync(join(packageRoot, 'tsup.config.ts'), 'utf-8');
@@ -185,12 +191,14 @@ describe('the main entries load AI helpers from ooxml-ui/pptx/ai/host only', () 
 		const panel = join(import.meta.dirname, 'AiChatPanel.tsx');
 		expect(files).not.toContain(panel);
 		expect(lazy).toContain(panel);
-		// The overlays, the bridge and the Options tab stay eager, on the SDK-free leaf.
+		// The overlays, the bridge, the Options tab and the `createAiAssistant` handle registry
+		// stay eager, on the SDK-free leaf.
 		const hostImporters = bare
 			.filter(({ specifier }) => specifier === 'ooxml-ui/pptx/ai/host')
 			.map(({ importer }) => relativeName(importer))
 			.sort();
 		expect(hostImporters).toStrictEqual([
+			'src/viewer/ai-assistant-registry.ts',
 			'src/viewer/components/SettingsAiTab.tsx',
 			'src/viewer/components/ai/AiChangeOverlay.tsx',
 			'src/viewer/hooks/ai/useAiBridge.ts',

@@ -67,6 +67,8 @@ export type {
 	PptxAiUIMessage,
 	PptxAiWritePolicy,
 } from 'ooxml-ui/pptx/ai';
+// `createAiAssistant` is exported from `pptx-svelte-viewer/ai`.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 export type { AutosaveStatus } from './viewer/state/autosave.svelte';
 // Autosave recovery helpers (shared IndexedDB store). The viewer now OFFERS a
 // pre-crash snapshot back itself on load ("Recover unsaved changes?", see the

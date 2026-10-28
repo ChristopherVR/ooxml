@@ -21,6 +21,8 @@ export default defineConfig({
 		// than a separately bundled copy of the same helper.
 		alias: {
 			'ooxml-ui/pptx': resolve(import.meta.dirname, '../../../../src/ui/src/pptx'),
+			// The `/ai` secondary entry point imports the package root by name.
+			'pptx-angular-viewer': resolve(import.meta.dirname, 'src/public-api.ts'),
 			// Test against the locale sources, not a possibly stale dist.
 			'pptx-viewer-locales': resolve(import.meta.dirname, '../locales/src/index.ts'),
 		},
