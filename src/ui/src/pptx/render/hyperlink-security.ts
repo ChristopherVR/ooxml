@@ -1,85 +1,15 @@
-/* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
-   (many independent short-lived `const`s per function, several separated by
-   comments or guard clauses); merging them isn't a style choice here. */
-/**
- * Hyperlink security utilities  -  URL validation, sanitization, and slide-jump
- * resolution for hyperlink click actions in the viewer. Pure, framework-agnostic
- * logic shared by every binding (React / Vue / Angular).
- *
- * `safeOpenUrl` touches `window`/`console` but guards both, so it is safe to
- * call from non-DOM contexts (it simply no-ops/returns `false`).
- */
+import { isStorableHyperlinkHref, isOpenableHyperlinkHref } from 'ooxml-core/opc';
 
-// ---------------------------------------------------------------------------
-// Blocked protocols  -  URLs using these schemes will be rejected to prevent
-// XSS, code injection, or data exfiltration. Built without the literal
-// `javascript:` token to satisfy the no-script-url lint rule.
-// ---------------------------------------------------------------------------
+// Keep PowerPoint's deliberately broader navigation support than the default OPC host policy.
+const PPTX_HYPERLINK_POLICY = { additionalOpenSchemes: ['ftp', 'tel', 'file'], openRelative: true };
 
-const BLOCKED_PROTOCOLS = new Set([
-	`${'javascript'}:`,
-	'data:',
-	'vbscript:',
-	'mhtml:',
-	`x-]${'javascript'}:`,
-]);
-
-/**
- * Check whether a URL is safe to open / expose as an `href`.
- *
- * Blocks `javascript:`, `data:`, `vbscript:`, and `mhtml:` protocols
- * (case- and whitespace/zero-width-bypass resistant). Returns `true` for
- * `http:`, `https:`, `mailto:`, `tel:`, `ftp:`, and relative URLs.
- */
+/** Authoring policy: stored references may include relative and file paths; browser navigation is narrower. */
 export function isUrlSafe(url: string | undefined): boolean {
-	if (!url || typeof url !== 'string') {
-		return false;
-	}
-
-	const trimmed = url.trim();
-	if (trimmed.length === 0) {
-		return false;
-	}
-
-	// Normalize: lowercase to catch case-bypasses like "JaVaScRiPt:"
-	const lower = trimmed.toLowerCase();
-
-	// Strip whitespace and zero-width characters that could bypass naive checks.
-	// Characters stripped: ZWSP (U+200B), ZWNJ (U+200C), ZWJ (U+200D), BOM
-	// (U+FEFF), NUL. Named by code point rather than embedded literally so the
-	// characters stay visible/diffable in this comment instead of invisible.
-	// Separate replace calls avoid no-misleading-character-class (joined sequences)
-	// and no-control-regex (NUL literal) lint rules.
-	const stripped = lower
-		.replace(/[\s​﻿]/gu, '')
-		.replace(/‌/gu, '')
-		.replace(/‍/gu, '')
-		.split(String.fromCharCode(0))
-		.join('');
-
-	for (const protocol of BLOCKED_PROTOCOLS) {
-		if (stripped.startsWith(protocol)) {
-			return false;
-		}
-	}
-
-	return true;
+	return isPpactionUrl(url) || isStorableHyperlinkHref(url, PPTX_HYPERLINK_POLICY);
 }
 
-/**
- * Open a URL in a browser tab/window with security attributes.
- *
- * - Validates the URL against blocked protocols
- * - Opens with `noopener,noreferrer` unless `target` is `_self` (a same-tab
- *   navigation has no new browsing context to isolate)
- * - Returns `true` if the URL was opened, `false` if blocked / unavailable
- *
- * @param target - `window.open`'s target frame. Defaults to `_blank` (a new
- *   tab), matching every existing call site; a text-run hyperlink's authored
- *   `a:hlinkClick/@tgtFrame` (see `resolveHyperlinkTargetAttrs`) overrides it.
- */
 export function safeOpenUrl(url: string, target = '_blank'): boolean {
-	if (!isUrlSafe(url)) {
+	if (isPpactionUrl(url) || !isOpenableHyperlinkHref(url, PPTX_HYPERLINK_POLICY)) {
 		if (typeof console !== 'undefined') {
 			console.warn(`[pptx-viewer] Blocked attempt to open unsafe URL: ${url.slice(0, 100)}`);
 		}
@@ -163,7 +93,7 @@ export function isPpactionUrl(url: string | undefined): boolean {
  * `ppaction://` slide jump).
  */
 export function resolveHyperlinkHref(url: string | undefined): string | undefined {
-	if (!url || isPpactionUrl(url) || !isUrlSafe(url)) {
+	if (!url || isPpactionUrl(url) || !isOpenableHyperlinkHref(url, PPTX_HYPERLINK_POLICY)) {
 		return undefined;
 	}
 	return url.trim();

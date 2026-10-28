@@ -11,6 +11,35 @@ import {
 const JS = `${'java'}script`;
 const ch = (code: number): string => String.fromCharCode(code);
 
+describe('explicit host protocol compatibility', () => {
+	const options = { additionalOpenSchemes: ['ftp', 'tel', 'file'], openRelative: true };
+	it.each(['ftp://example.com/file', 'tel:+1234', 'file:///c:/report', '/relative', '#location'])(
+		'allows opted-in navigation without changing the default for %s',
+		(href) => {
+			expect(isOpenableHyperlinkHref(href)).toBe(false);
+			expect(isOpenableHyperlinkHref(href, options)).toBe(true);
+			expect(isStorableHyperlinkHref(href, options)).toBe(true);
+		},
+	);
+	it.each([
+		`${JS}:alert(1)`,
+		`java${ch(0x2060)}script:alert(1)`,
+		'data:text/html,x',
+		'blob:https://example.com/id',
+	])('never permits script-capable schemes through host options: %s', (href) => {
+		expect(
+			hyperlinkPolicy(href, {
+				additionalOpenSchemes: ['javascript', 'data', 'blob'],
+				openRelative: true,
+			}).open,
+		).toBe(false);
+	});
+	it('keeps drive paths stored only and unknown schemes blocked', () => {
+		expect(isOpenableHyperlinkHref('C:\\report.pptx', options)).toBe(false);
+		expect(isStorableHyperlinkHref('custom:thing', options)).toBe(false);
+	});
+});
+
 describe('hyperlinkPolicy: openable', () => {
 	it.each([
 		'https://example.com',

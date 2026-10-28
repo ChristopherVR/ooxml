@@ -23,8 +23,9 @@ describe('isUrlSafe', () => {
 		expect(isUrlSafe('mailto:user@example.com')).toBeTruthy();
 	});
 
-	it('accepts tel URLs', () => {
+	it('uses the common authoring scheme policy', () => {
 		expect(isUrlSafe('tel:+1234567890')).toBeTruthy();
+		expect(isUrlSafe('custom:example')).toBeFalsy();
 	});
 
 	it('accepts ftp URLs', () => {
@@ -103,6 +104,24 @@ describe('safeOpenUrl', () => {
 	afterEach(() => {
 		vi.unstubAllGlobals();
 	});
+
+	it.each(['ppaction://hlinksldjump', 'https\u200b://example.com'])(
+		'never opens unsafe or internal target %s',
+		(url) => {
+			expect(safeOpenUrl(url)).toBe(false);
+			expect(window.open).not.toHaveBeenCalled();
+			expect(resolveHyperlinkHref(url)).toBeUndefined();
+		},
+	);
+
+	it.each(['ftp://example.com/file', 'file:///c:/report', '/relative', '#slide', 'tel:+1234'])(
+		'preserves deliberate PowerPoint navigation compatibility for %s',
+		(url) => {
+			expect(safeOpenUrl(url)).toBe(true);
+			expect(window.open).toHaveBeenCalledWith(url, '_blank', 'noopener,noreferrer');
+			expect(resolveHyperlinkHref(url)).toBe(url);
+		},
+	);
 
 	it('opens safe URL and returns true', () => {
 		const result = safeOpenUrl('https://example.com');
@@ -318,6 +337,15 @@ describe('parsePpactionUrl', () => {
 });
 
 describe('resolveHyperlinkHref', () => {
+	it.each([
+		'java\u2060script:alert(1)',
+		'livescript:alert(1)',
+		'blob:https://example.com/a',
+		'https\u0001://example.com',
+	])('uses shared obfuscation and script rejection for %s', (url) => {
+		expect(isUrlSafe(url)).toBe(false);
+		expect(resolveHyperlinkHref(url)).toBeUndefined();
+	});
 	it('returns the trimmed href for a safe URL', () => {
 		expect(resolveHyperlinkHref('  https://example.com  ')).toBe('https://example.com');
 	});

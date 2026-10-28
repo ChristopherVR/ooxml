@@ -40,6 +40,14 @@ export interface HyperlinkPolicy {
 	readonly reason?: HyperlinkRejection;
 }
 
+/** Explicit host navigation compatibility; script-capable schemes are always rejected first. */
+export interface HyperlinkPolicyOptions {
+	/** Additional protocol names without a colon, such as `tel` or `ftp`. */
+	readonly additionalOpenSchemes?: readonly string[];
+	/** Allow relative paths and in-document fragments to navigate within the host origin. */
+	readonly openRelative?: boolean;
+}
+
 const OPEN_SCHEMES = new Set(['http', 'https', 'mailto']);
 const STORE_SCHEMES = new Set([...OPEN_SCHEMES, 'ftp', 'file']);
 // Schemes that run script or render attacker-supplied documents. Listed even though the
@@ -79,7 +87,10 @@ const reject = (reason: HyperlinkRejection): HyperlinkPolicy => ({
  * Classify a hyperlink target. Leading and trailing whitespace is ignored; anything else
  * that could disguise the scheme makes the href unsafe.
  */
-export function hyperlinkPolicy(href: string | undefined | null): HyperlinkPolicy {
+export function hyperlinkPolicy(
+	href: string | undefined | null,
+	options: HyperlinkPolicyOptions = {},
+): HyperlinkPolicy {
 	if (typeof href !== 'string') return reject('empty');
 	const trimmed = href.trim();
 	const normalized = trimmed.replace(IGNORABLE, '').toLowerCase();
@@ -90,18 +101,27 @@ export function hyperlinkPolicy(href: string | undefined | null): HyperlinkPolic
 		return reject('obfuscated-scheme');
 	if (CONTROL.test(trimmed)) return reject('control-characters');
 	// A one-letter "scheme" is a Windows drive path (C:\Reports\q1.xlsx).
-	if (scheme === undefined || scheme.length === 1) return STORE_ONLY;
+	if (scheme === undefined) return options.openRelative ? { store: true, open: true } : STORE_ONLY;
+	if (scheme.length === 1) return STORE_ONLY;
 	if (OPEN_SCHEMES.has(scheme)) return { store: true, open: true };
+	if (options.additionalOpenSchemes?.some((allowed) => allowed.toLowerCase() === scheme))
+		return { store: true, open: true };
 	if (STORE_SCHEMES.has(scheme)) return STORE_ONLY;
 	return reject('unsupported-scheme');
 }
 
 /** True when the href may be written to the document (see {@link hyperlinkPolicy}). */
-export function isStorableHyperlinkHref(href: string | undefined | null): boolean {
-	return hyperlinkPolicy(href).store;
+export function isStorableHyperlinkHref(
+	href: string | undefined | null,
+	options?: HyperlinkPolicyOptions,
+): boolean {
+	return hyperlinkPolicy(href, options).store;
 }
 
 /** True when a viewer may open the href on click (see {@link hyperlinkPolicy}). */
-export function isOpenableHyperlinkHref(href: string | undefined | null): boolean {
-	return hyperlinkPolicy(href).open;
+export function isOpenableHyperlinkHref(
+	href: string | undefined | null,
+	options?: HyperlinkPolicyOptions,
+): boolean {
+	return hyperlinkPolicy(href, options).open;
 }
