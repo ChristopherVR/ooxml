@@ -1,3 +1,7 @@
+import { chartSummaryView } from './chart-view';
+import { chartSummaryFromSpace } from './summary-from-space';
+import { chartThemePalette } from './render-space';
+import { renderChartSvg } from './chart-svg';
 import { describe, expect, it } from 'vitest';
 import { parseChartSpace } from '../parse-space';
 import { renderChartSpaceSvg } from './render-space';
@@ -78,6 +82,32 @@ describe('calendar category axis', () => {
 		const reverse = xy(render(dateFixture('maxMin')));
 		expect(reverse[0]).toBeGreaterThan(reverse[1]!);
 		expect(reverse[1]).toBeGreaterThan(reverse[2]!);
+	});
+
+	it.each([false, true])(
+		'paints calendar ticks above an opaque plot for horizontal=%s',
+		(horizontal) => {
+			const space = parseChartSpace(dateFixture('minMax', true)).chartSpace;
+			const axis = space.plotArea.axes[0]!;
+			axis.majorTickMark = 'cross';
+			if (horizontal) {
+				space.plotArea.groups[0]!.kind = 'bar';
+				space.plotArea.groups[0]!.barDirection = 'bar';
+				axis.position = 'l';
+			}
+			const view = chartSummaryView(chartSummaryFromSpace(space), chartThemePalette(undefined));
+			view.appearance = { ...view.appearance, plotArea: { fillColor: '#123456' } };
+			const svg = renderChartSvg(view, 400, 300);
+			const background = svg.indexOf('data-chart-part="plotArea"');
+			const tick = svg.indexOf('data-chart-part="dateTick"');
+			expect(background).toBeGreaterThan(0);
+			expect(tick).toBeGreaterThan(background);
+		},
+	);
+	it('suppresses calendar axis labels when table headers replace them', () => {
+		const source = dateFixture('minMax', true).replace('</c:plotArea>', '<c:dTable/></c:plotArea>');
+		expect(render(source)).not.toContain('1904-01-01');
+		expect(render(source)).toContain('data-chart-part="dataTable"');
 	});
 	it('uses the chart date system and authored format for calendar ticks', () => {
 		expect(render(dateFixture('minMax', true))).toContain('1904-01-01');

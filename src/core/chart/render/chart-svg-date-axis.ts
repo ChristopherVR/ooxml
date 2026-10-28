@@ -46,9 +46,22 @@ export function chartDateAxis(model: ChartViewModel, plot: Rect, out: string[]) 
 		const inward = axis.position === 't' ? length : -length;
 		const start = placement === 'cross' ? -length : 0;
 		const end = placement === 'cross' ? length : placement === 'in' ? inward : -inward;
-		if (!model.horizontal)
+		if (model.horizontal) {
+			const x = axis.position === 'r' ? plot.x + plot.w : plot.x;
+			const direction = axis.position === 'r' ? -1 : 1;
+			const a = placement === 'cross' ? -length : 0;
+			const b =
+				placement === 'cross'
+					? length
+					: placement === 'in'
+						? direction * length
+						: -direction * length;
 			out.push(
-				`<line x1="${position(serial)}" y1="${y + start}" x2="${position(serial)}" y2="${y + end}" ${strokeAttributes(stroke)}/>`,
+				`<line x1="${x + a}" y1="${position(serial)}" x2="${x + b}" y2="${position(serial)}" ${strokeAttributes(stroke)} data-chart-part="dateTick"/>`,
+			);
+		} else
+			out.push(
+				`<line x1="${position(serial)}" y1="${y + start}" x2="${position(serial)}" y2="${y + end}" ${strokeAttributes(stroke)} data-chart-part="dateTick"/>`,
 			);
 	};
 	ticks.forEach((serial, index) => {

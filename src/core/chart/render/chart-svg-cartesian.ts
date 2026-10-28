@@ -84,7 +84,8 @@ export function cartesianAxes(
 	const value = horizontal
 		? (v: number): number => plot.x + chartAxisRatio(v, scale, model.axes?.value) * plot.w
 		: (v: number): number => plot.y + plot.h - chartAxisRatio(v, scale, model.axes?.value) * plot.h;
-	const dates = chartDateAxis(model, plot, out);
+	const dateMarkup: string[] = [];
+	const dates = chartDateAxis(model, plot, dateMarkup);
 	const bandSize = dates?.bandSize ?? (horizontal ? plot.h : plot.w) / cats;
 	const index = (i: number): number =>
 		model.axes?.category?.range.reverseOrder ? cats - 1 - i : i;
@@ -136,6 +137,7 @@ export function cartesianAxes(
 		out.push(
 			axisLine(model, model.axes?.category, 'categoryAxis', plot.x, zero, plot.x + plot.w, zero),
 		);
+	out.push(...dateMarkup);
 	const step = Math.max(
 		1,
 		Math.ceil(cats / Math.max(1, Math.floor((horizontal ? plot.h : plot.w) / 14))),
