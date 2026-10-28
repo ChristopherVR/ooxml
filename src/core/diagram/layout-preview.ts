@@ -14,9 +14,14 @@ import { approximateDiagramDrawingFromNodes, type ApproximateDiagramInput } from
 import type { DiagramData, DiagramNode, DiagramPresLayoutVars } from './model';
 import type { DiagramHostNode } from './edit/node-edit';
 import type { DiagramDrawing, DiagramIssue } from './types';
+import type { DiagramPictureSource } from './picture-layout';
+import { applyDiagramPictureSources } from './picture-layout';
 
 /** Original part text, JSON-safe so hosts can retain it through undo and collaboration. */
 export interface DiagramLayoutSource {
+	/** Per-content-node image identities survive dropping stale presentation geometry. */
+	pictures?: DiagramPictureSource[];
+	pictureParts?: Record<string, string>;
 	layoutXml?: string;
 	dataXml?: string;
 	colorsXml?: string;
@@ -257,7 +262,7 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					if (fill) shape.fill = fill;
 				}
 				const direct = originalModel?.nodes.find((entry) => entry.modelId === node.nodeId);
-				if (direct?.fill) shape.fill = direct.fill;
+				if (direct?.fill && direct.fill.kind !== 'picture') shape.fill = direct.fill;
 				if (direct?.line) shape.line = { ...shape.line, ...direct.line };
 				const sourceIds = [node.nodeId, ...(node.foldedNodeIds ?? [])];
 				const textNodes = sourceIds.flatMap((id) => {
@@ -266,6 +271,13 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 				});
 				if (textNodes.length) shape.text = diagramPreviewText(textNodes, node.fontSize);
 			});
+			applyDiagramPictureSources(
+				drawing,
+				result.nodes,
+				input.source,
+				issues,
+				new Set(input.nodes.map((node) => node.id)),
+			);
 			return { drawing, mode: 'interpreted', issues };
 		}
 	} catch (error) {

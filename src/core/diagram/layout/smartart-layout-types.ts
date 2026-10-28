@@ -53,6 +53,9 @@ export interface RenderedNodeTextStyle {
  * `undefined` (no rotation) unless such an override is present.
  */
 export interface RenderedNodeIdentity {
+	/** This layout role is an image placeholder, not the sibling text/background role. */
+	picturePlaceholder?: boolean | undefined;
+	layoutRole?: string | undefined;
 	/** The `DiagramNode.id` this shape represents. */
 	nodeId?: string | undefined;
 	/** Additional rotation in degrees from a `custAng` manual override. */

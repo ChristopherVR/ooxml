@@ -11,6 +11,8 @@ import {
 	withDiagramXmlProlog,
 	writeEditedDiagramData,
 	writeInsertedDiagramData,
+	withDiagramPictureSources,
+	diagramPictureRelationships,
 } from '../../diagram/index';
 import { NS, buildXml, elements, parseXml } from '../../xml/index';
 import { relationshipsPartFor } from '../../opc/index';
@@ -101,6 +103,24 @@ export function writeEditedSmartArt(
 				: {}),
 		}),
 	);
+	if (object.layoutSource?.pictures?.length) {
+		const pending = writer.peek(dataPart);
+		if (typeof pending === 'string')
+			writer.add(dataPart, withDiagramPictureSources(pending, object.layoutSource));
+		const name = relationshipsPartFor(dataPart);
+		const existing = writer.peek(name) ?? writer.source?.text(name);
+		const relsXml = diagramPictureRelationships(
+			dataPart,
+			object.layoutSource,
+			typeof existing === 'string'
+				? existing
+				: existing
+					? new TextDecoder().decode(existing)
+					: undefined,
+		);
+		if (relsXml) writer.add(name, relsXml, CONTENT_TYPES.rels);
+		for (const part of Object.values(object.layoutSource.pictureParts ?? {})) writer.carry(part);
+	}
 	if (rels && relativeTarget)
 		writeSmartArtCache(
 			writer,

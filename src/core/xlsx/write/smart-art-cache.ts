@@ -3,6 +3,7 @@ import {
 	withDiagramDrawingRelationship,
 	DIAGRAM_RELATIONSHIP_TYPES,
 	DIAGRAM_CONTENT_TYPES,
+	diagramPictureRelationships,
 } from '../../diagram/index';
 import { drawingSchemeColors } from '../drawing-theme';
 import type { SmartArtObject, ThemePalette } from '../model';
@@ -40,6 +41,7 @@ export function writeSmartArtCache(
 			height: object.anchor.ext?.cy ?? 2667000,
 		},
 		source: {
+			...object.layoutSource,
 			...(layoutXml ? { layoutXml } : {}),
 			...(colorsXml ? { colorsXml } : {}),
 			...(quickStyleXml ? { quickStyleXml } : {}),
@@ -60,6 +62,8 @@ export function writeSmartArtCache(
 	const drawingName = `xl/diagrams/drawing${index}.xml`;
 	const relationship = rels.add(DIAGRAM_RELATIONSHIP_TYPES.drawing, relativeTarget(drawingName));
 	writer.add(drawingName, cache.drawingXml, DIAGRAM_CONTENT_TYPES.drawing);
+	const pictureRels = diagramPictureRelationships(drawingName, object.layoutSource);
+	if (pictureRels) writer.add(drawingName.replace(/([^/]+)$/, '_rels/$1.rels'), pictureRels);
 	writer.add(
 		parts.data,
 		withDiagramDrawingRelationship(cache.dataXml, relationship),

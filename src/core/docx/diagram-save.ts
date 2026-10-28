@@ -5,7 +5,12 @@
 // (relationship, part and content type), because Word ignores a stale drawing and lays the diagram
 // out again (docs/agnostic-core-plan.md). The run markup is written by write-diagram-drawing.ts.
 import type JSZip from 'jszip';
-import { writeEditedDiagramData, writeInsertedDiagramData } from '../diagram/index';
+import {
+	writeEditedDiagramData,
+	writeInsertedDiagramData,
+	withDiagramPictureSources,
+	diagramPictureRelationships,
+} from '../diagram/index';
 import { createOfficeGuid } from '../crypto/uuid';
 import { removeContentTypeOverride, resolvePartPath } from '../opc/index';
 import type { DocxDiagram } from './diagram';
@@ -133,6 +138,19 @@ export async function applyDiagramEdits(
 					: {}),
 			}),
 		);
+		if (diagram.layoutSource?.pictures?.length) {
+			zip.file(
+				partName,
+				withDiagramPictureSources(await zip.file(partName)!.async('string'), diagram.layoutSource),
+			);
+			const relsName = relationshipsPartFor(partName);
+			const rels = diagramPictureRelationships(
+				partName,
+				diagram.layoutSource,
+				await zip.file(relsName)?.async('string'),
+			);
+			if (rels) zip.file(relsName, rels);
+		}
 		if (drawing) await dropDrawingPart(zip, drawing.relId, drawing.partName, drawing.ownerPart);
 	}
 }

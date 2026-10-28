@@ -223,6 +223,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 				run.image?.partName,
 				run.image?.svgPartName,
 				...Object.values(run.image?.diagram?.drawing?.pictureParts ?? {}),
+				...Object.values(run.image?.diagram?.layoutSource?.pictureParts ?? {}),
 			])
 				if (part) imagePartNames.add(part);
 	});

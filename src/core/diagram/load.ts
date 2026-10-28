@@ -13,6 +13,7 @@ import {
 	type DiagramPartHost,
 } from './relationships';
 import type { DiagramLayoutSource } from './layout-preview';
+import { captureDiagramPictures } from './picture-layout';
 import { generatedDrawingDigest } from './cache-metadata';
 import type {
 	DiagramColorsDefinition,
@@ -192,6 +193,34 @@ export async function loadDiagram(
 				'The package has no cached drawing for this diagram; its layout can only be recomputed from the layout definition.',
 		});
 
+	if (data && layoutSource.dataXml) {
+		let pictureParts: Record<string, string> = {};
+		if (paths.data) {
+			const owner = paths.data;
+			try {
+				const entries = await host.readRelationshipEntries(diagramRelationshipsPart(owner));
+				pictureParts = Object.fromEntries(
+					(entries ?? [])
+						.filter(
+							(entry) =>
+								entry.type.endsWith('/image') &&
+								entry.mode !== 'External' &&
+								!/^[a-z][a-z0-9+.-]*:/i.test(entry.target),
+						)
+						.map((entry) => [entry.id, host.resolvePath(owner, entry.target)]),
+				);
+			} catch {
+				issues.push({
+					code: 'DIAGRAM_PICTURE_RELATIONSHIPS_UNREADABLE',
+					message: 'Picture relationships in the diagram data could not be read.',
+				});
+			}
+		}
+		Object.assign(
+			layoutSource,
+			captureDiagramPictures(data, layoutSource.dataXml, pictureParts, drawing),
+		);
+	}
 	return {
 		layoutSource,
 		...(generatedCache ? { generatedCache: true as const } : {}),

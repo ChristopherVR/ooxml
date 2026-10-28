@@ -4,6 +4,7 @@ import {
 	withDiagramDrawingRelationship,
 	DIAGRAM_CONTENT_TYPES,
 	DIAGRAM_RELATIONSHIP_TYPES,
+	diagramPictureRelationships,
 } from '../diagram/index';
 import type { DocxDiagram } from './diagram';
 import { diagramsIn } from './diagram-document';
@@ -57,6 +58,7 @@ export async function applyGeneratedDiagramCaches(
 		const colorsXml = await read('colors');
 		const quickStyleXml = await read('quickStyle');
 		const source = {
+			...diagram.layoutSource,
 			...(layoutXml ? { layoutXml } : {}),
 			...(colorsXml ? { colorsXml } : {}),
 			...(quickStyleXml ? { quickStyleXml } : {}),
@@ -81,6 +83,8 @@ export async function applyGeneratedDiagramCaches(
 		);
 		zip.file(name, withDiagramDrawingRelationship(cache.dataXml, relationship));
 		zip.file(drawingName, cache.drawingXml);
+		const pictureRels = diagramPictureRelationships(drawingName, diagram.layoutSource);
+		if (pictureRels) zip.file(drawingName.replace(/([^/]+)$/, '_rels/$1.rels'), pictureRels);
 		await ensureContentTypeOverride(zip, drawingName, DIAGRAM_CONTENT_TYPES.drawing);
 	}
 }

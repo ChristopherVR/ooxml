@@ -16,6 +16,7 @@ import {
 	DEFAULT_GENERATED_DIAGRAM_SCHEME,
 } from '../cache-metadata';
 import { writeGeneratedDiagramDrawing } from './drawing';
+import { withDiagramPictureSources } from '../picture-layout';
 
 const DSP = 'http://schemas.microsoft.com/office/drawing/2008/diagram';
 function add(
@@ -53,8 +54,10 @@ export function buildGeneratedDiagramCache(
 	| {
 			dataXml: string;
 			drawingXml: string;
+			pictureParts?: Record<string, string>;
 	  }
 	| undefined {
+	dataXml = withDiagramPictureSources(dataXml, input.source);
 	const source = { ...input.source, dataXml };
 	const model = parseDiagramDataModel(dataXml);
 	const scheme = { ...DEFAULT_GENERATED_DIAGRAM_SCHEME, ...input.scheme };
@@ -81,7 +84,13 @@ export function buildGeneratedDiagramCache(
 	}
 	for (const shape of drawing.shapes) {
 		if (shape.has3d || shape.foldedNodeIds?.length) return undefined;
-		if (shape.fill && !['none', 'solid', 'gradient'].includes(shape.fill.kind)) return undefined;
+		if (shape.fill && !['none', 'solid', 'gradient', 'picture'].includes(shape.fill.kind))
+			return undefined;
+		if (
+			shape.fill?.kind === 'picture' &&
+			(!shape.fill.relId || !drawing.pictureParts?.[shape.fill.relId])
+		)
+			return undefined;
 		if (
 			shape.fill?.kind === 'gradient' &&
 			shape.fill.path &&
@@ -256,5 +265,9 @@ export function buildGeneratedDiagramCache(
 			});
 		add(marker, GENERATED_DIAGRAM_CACHE_NS, 'oc:shape', { id });
 	});
-	return { dataXml: buildXml(doc), drawingXml: serialized.xml };
+	return {
+		dataXml: buildXml(doc),
+		drawingXml: serialized.xml,
+		...(drawing.pictureParts ? { pictureParts: drawing.pictureParts } : {}),
+	};
 }
