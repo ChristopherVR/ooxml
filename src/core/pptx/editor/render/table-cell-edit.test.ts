@@ -1,7 +1,7 @@
 import type { TablePptxElement } from '../../index';
 import { describe, expect, it } from 'vitest';
 
-import { setCellText, withCellStyle, withCellText } from './table-cell-edit';
+import { getCellText, setCellText, withCellStyle, withCellText } from './table-cell-edit';
 
 function makeTable(): TablePptxElement {
 	return {
@@ -138,5 +138,14 @@ describe('withCellStyle', () => {
 			{ paragraphIndent: 4, align: 'right' },
 			{ align: 'right' },
 		]);
+	});
+});
+
+describe('getCellText', () => {
+	it('reads one cell, or undefined when it does not exist', () => {
+		const el = makeTable();
+		expect(getCellText(el, 1, 0)).toBe('c');
+		expect(getCellText(el, 5, 0)).toBeUndefined();
+		expect(getCellText({ ...el, tableData: undefined } as TablePptxElement, 0, 0)).toBeUndefined();
 	});
 });

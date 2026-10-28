@@ -456,8 +456,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			setHandler: (handler, keepPrevious) => this.loading.setHandler(handler, keepPrevious),
 			getUserName: () =>
 				options.authorName || this.optionsController?.getOptions().general.userName,
-			transformCommittedText: (text) =>
-				this.optionsController?.transformCommittedText(text) ?? text,
+			transformCommittedText: (text, previous) =>
+				this.optionsController?.transformCommittedText(text, previous) ?? text,
 			onChange: () => {
 				options.onChange?.();
 				this.emitContentChange();

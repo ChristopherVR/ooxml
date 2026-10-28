@@ -184,8 +184,8 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 			return;
 		}
 		const rawText = result.kind === 'supported' ? result.snapshot.text : result.text;
-		const text = this.options?.autoCorrect(rawText) ?? rawText;
 		const element = this.element();
+		const text = this.options?.autoCorrect(rawText, (element as { text?: string }).text) ?? rawText;
 		const editor = this.editor().nativeElement;
 		const snapshot = result.kind === 'supported' ? result.snapshot : undefined;
 		const shrink = resolveCommitTextNormAutofitShrink(

@@ -17,6 +17,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import {
 	buildInlineTextCommitPatch,
+	getCellText,
 	overlayInlineTextSnapshot,
 	reportInlineTextDraft,
 	slideSpaceElement,
@@ -458,7 +459,10 @@ export class ViewerCanvasEditingService {
 			return;
 		}
 		const text = this.viewerOpts
-			? this.viewerOpts.autoCorrect(event.commit.text)
+			? this.viewerOpts.autoCorrect(
+					event.commit.text,
+					getCellText(el, event.commit.rowIndex, event.commit.colIndex),
+				)
 			: event.commit.text;
 		const updated = setCellText(el, event.commit.rowIndex, event.commit.colIndex, text);
 		this.editor.updateElement(host.activeSlideIndex(), event.id, {

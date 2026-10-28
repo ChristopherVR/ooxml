@@ -112,7 +112,7 @@ export interface UseSerializeInput {
 	inlineEditingReaderRef?: React.MutableRefObject<
 		import('./useInlineEditingState').PendingInlineEditReader | undefined
 	>;
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	password?: string;
 	/**
 	 * File > Fonts > "Embed fonts in the file". `false` passes

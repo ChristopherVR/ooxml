@@ -51,7 +51,7 @@ export interface EditorControllerDeps {
 	 * Transform inline-editor text at commit time (File > Options > Proofing
 	 * AutoCorrect); identity when unset.
 	 */
-	transformCommittedText?(text: string): string;
+	transformCommittedText?(text: string, previous?: string): string;
 	/**
 	 * Collaboration live-preview channel. Inline text only reaches the slides
 	 * state on commit, so peers saw nothing while a peer typed; each keystroke is

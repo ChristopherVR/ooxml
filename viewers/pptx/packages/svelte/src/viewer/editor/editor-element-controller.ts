@@ -214,7 +214,7 @@ export class EditorElementController {
 		if (!target) {
 			return;
 		}
-		const text = this.#editor.transformCommittedText(rawText);
+		const text = this.#editor.transformCommittedText(rawText, (target as { text?: string }).text);
 		this.#editor.pushHistory();
 		// `a:spAutoFit`: grow/shrink the shape to the text's natural content
 		// height, the way PowerPoint does. See `resolveInlineTextAutoFitHeight`

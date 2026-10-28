@@ -1,5 +1,5 @@
 import type { ViewerPreferences } from 'ooxml-ui/pptx';
-import { applyAutoCorrect } from 'ooxml-ui/pptx';
+import { applyAutoCorrectToEdit } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 import type { EditorState } from '../editor/editor-state.svelte';
@@ -40,8 +40,8 @@ function preferencesEqual(a: ViewerPreferences, b: ViewerPreferences): boolean {
 export function useViewerOptionsWiring(deps: ViewerOptionsWiringDeps): void {
 	// Options > Proofing > AutoCorrect: reads `deps.optionsState.options` fresh
 	// on every call, so this stays in sync without its own effect.
-	deps.editor.transformCommittedText = (text) =>
-		applyAutoCorrect(text, deps.optionsState.options.proofing);
+	deps.editor.transformCommittedText = (text, previous) =>
+		applyAutoCorrectToEdit(text, previous, deps.optionsState.options.proofing);
 
 	// Options -> scattered legacy state (dialog edits, persisted values).
 	let hydrated = false;

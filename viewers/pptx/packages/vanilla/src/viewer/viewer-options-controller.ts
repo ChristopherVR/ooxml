@@ -5,7 +5,7 @@ import type {
 	ViewerOptionsStoreInit,
 } from 'ooxml-ui/pptx';
 import {
-	applyAutoCorrect,
+	applyAutoCorrectToEdit,
 	applyPreferenceToOptions,
 	createViewerOptionsStore,
 	playFeedbackSound,
@@ -65,7 +65,7 @@ export interface ViewerOptionsController {
 	applyAll(): void;
 	screenTip(label: string, description?: string, shortcut?: string): string | undefined;
 	/** AutoCorrect for committed text runs (Options > Proofing). */
-	transformCommittedText(text: string): string;
+	transformCommittedText(text: string, previous?: string): string;
 	/** Accessibility > "feedback with sound" cue after a completed action. */
 	notifyActionSuccess(): void;
 	/** Mirror a title-bar/host autosave toggle back into the options model. */
@@ -155,7 +155,8 @@ export function createViewerOptionsController(
 		applyAll: () => applyBehavior(optionsStore.getOptions()),
 		screenTip: (label, description, shortcut) =>
 			resolveScreenTip(optionsStore.getOptions(), label, description, shortcut),
-		transformCommittedText: (text) => applyAutoCorrect(text, optionsStore.getOptions().proofing),
+		transformCommittedText: (text, previous) =>
+			applyAutoCorrectToEdit(text, previous, optionsStore.getOptions().proofing),
 		notifyActionSuccess: () => playFeedbackSound(optionsStore.getOptions()),
 		notifyAutosaveEnabled(enabled) {
 			if (!syncing && optionsStore.getOptions().save.autoSave !== enabled) {

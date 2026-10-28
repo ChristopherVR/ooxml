@@ -11,6 +11,7 @@ import {
 	removeTableElementRow,
 	insertTableElementColumn,
 	removeTableElementColumn,
+	getCellText,
 	setCellText,
 	withCellStyle,
 } from 'ooxml-ui/pptx';
@@ -53,7 +54,9 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 			return;
 		}
 
-		const text = transformCommittedText ? transformCommittedText(rawText) : rawText;
+		const text = transformCommittedText
+			? transformCommittedText(rawText, getCellText(el, rowIndex, colIndex))
+			: rawText;
 		const updates: Record<string, unknown> = {};
 
 		// Always update tableData if it exists. Through shared `setCellText`, not

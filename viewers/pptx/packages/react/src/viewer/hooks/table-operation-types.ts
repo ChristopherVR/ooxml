@@ -16,7 +16,7 @@ export interface UseTableOperationsInput {
 	ops: ElementOperations;
 	history: EditorHistoryResult;
 	/** AutoCorrect transform applied to committed table-cell text edits. */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 }
 
 export interface TableStructHandlers {

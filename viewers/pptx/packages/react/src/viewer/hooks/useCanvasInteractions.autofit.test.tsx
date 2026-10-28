@@ -122,7 +122,7 @@ function Harness({
 	inlineEditingText: string;
 	updateElementById: (elementId: string, updates: Partial<PptxElement>) => void;
 	markDirty?: () => void;
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	canEdit?: boolean;
 	patcher?: CollaborationLivePatcher;
 }) {
@@ -224,7 +224,7 @@ function mount(props: {
 	inlineEditingText: string;
 	updateElementById: (elementId: string, updates: Partial<PptxElement>) => void;
 	markDirty?: () => void;
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 }): void {
 	act(() => {
 		root.render(<Harness {...props} />);
@@ -407,6 +407,23 @@ describe('useCanvasInteractions - spAutoFit editor resize', () => {
 		);
 	});
 
+	it('hands autocorrect the text from before the edit, so only the typed part is corrected', () => {
+		stubScrollHeight(55);
+		const transform = vi.fn((text: string) => text);
+		const element = makeTextElement({ text: 'Before' } as Partial<PptxElement>);
+		mount({
+			element,
+			inlineEditingText: 'Before and after',
+			updateElementById: vi.fn(),
+			transformCommittedText: transform,
+		});
+
+		act(() => {
+			getInlineEditor().dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+		});
+
+		expect(transform).toHaveBeenCalledWith('Before and after', 'Before');
+	});
 	it('does not touch height for normAutofit (font-shrink mode)', () => {
 		stubScrollHeight(250);
 		const updateElementById = vi.fn<(elementId: string, updates: Partial<PptxElement>) => void>();

@@ -68,7 +68,7 @@ export interface UseEditorOperationsInput {
 	/** Ref to the loaded PPTX handler; populated by the content-lifecycle hook. */
 	handlerRef?: React.RefObject<PptxHandler | null> | React.MutableRefObject<PptxHandler | null>;
 	/** AutoCorrect transform applied to committed inline text edits. */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	/** Host keyboard customisation, forwarded to the Find shortcut. */
 	keyboard?: ResolvedKeyboardCustomization;
 }

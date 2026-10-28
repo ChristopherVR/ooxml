@@ -58,7 +58,7 @@ export interface UseContentLifecycleInput {
 	actionSoundHandlerRef: React.MutableRefObject<PptxHandler | null>;
 	setIsEncryptedDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	password?: string;
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	/** Forwarded to {@link useLoadContent}: fires after a parse applies. */
 	onContentApplied?: () => void;
 	/** Forwarded to {@link useLoadContent}: File > Options > Trust Center > "Allow external content". */

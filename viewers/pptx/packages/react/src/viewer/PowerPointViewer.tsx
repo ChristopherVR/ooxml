@@ -31,7 +31,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	createSlidePackageClipboard,
-	applyAutoCorrect,
+	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
 	applyPreferenceToOptions,
 	buildUserFontFaceStyles,
@@ -943,7 +943,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				authorName ?? collaboration?.userName ?? (viewerOptions.general.userName || undefined),
 			handlerRef: actionSoundHandlerRef,
 			// Options > Proofing > AutoCorrect, applied to committed inline-edit text.
-			transformCommittedText: (text) => applyAutoCorrect(text, viewerOptions.proofing),
+			transformCommittedText: (text, previous) =>
+				applyAutoCorrectToEdit(text, previous, viewerOptions.proofing),
 			keyboard: customizationResolved.keyboard,
 		});
 		// Merge Shapes + on-canvas picture crop, shared by ribbon, menu and canvas.
@@ -969,7 +970,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			viewerApi,
 			loadVersion,
 		} = useViewerIntegration({
-			transformCommittedText: (text) => applyAutoCorrect(text, viewerOptions.proofing),
+			transformCommittedText: (text, previous) =>
+				applyAutoCorrectToEdit(text, previous, viewerOptions.proofing),
 			state,
 			zoom,
 			history,

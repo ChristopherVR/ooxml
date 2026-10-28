@@ -31,7 +31,7 @@ import {
 	resolveCollaborationConfig,
 } from 'ooxml-ui/pptx';
 import {
-	applyAutoCorrect,
+	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
 	buildDeckSaveOptions,
 	buildFieldSubstitutionContext,
@@ -327,7 +327,11 @@ const deck = useLoadContent(() => activeContent.value, {
 		return snapshot && activeSlide.value
 			? {
 					snapshot,
-					text: applyAutoCorrect(snapshot.text, viewerOptions.value.proofing),
+					text: applyAutoCorrectToEdit(
+						snapshot.text,
+						inlineEdit.readInlineStartText(),
+						viewerOptions.value.proofing,
+					),
 					target: { slideId: activeSlide.value.id },
 				}
 			: undefined;

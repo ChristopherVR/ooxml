@@ -1194,7 +1194,12 @@ export class SlideCanvasComponent implements SlideContext {
 			return;
 		}
 		const editor = event.target as HTMLTextAreaElement;
-		const text = this.viewerOpts ? this.viewerOpts.autoCorrect(editor.value) : editor.value;
+		const previous = (
+			this.lookupElements().find((e) => e.id === id) as { text?: string } | undefined
+		)?.text;
+		const text = this.viewerOpts
+			? this.viewerOpts.autoCorrect(editor.value, previous)
+			: editor.value;
 		// `a:spAutoFit` ("Resize shape to fit text"): grow/shrink the shape to
 		// the text's natural content height after a real edit. `editor` is the
 		// live, still-mounted textarea (this handler runs off its own `blur`), so

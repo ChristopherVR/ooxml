@@ -89,7 +89,7 @@ export interface EditorControllerDeps {
 	/** Options > General > "User name" override for new comment/reply authorship. */
 	getUserName?: () => string | undefined;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	/** Host `onChange` callback: fired after every committed mutation. */
 	onChange?: () => void;
 	/** Host `onNotesUpdate` callback: the new text after a speaker-notes edit lands. */

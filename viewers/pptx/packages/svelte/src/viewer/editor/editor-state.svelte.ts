@@ -141,7 +141,7 @@ export class EditorState {
 	 * Identity until `useViewerOptionsWiring` installs the real transform (the
 	 * options store is constructed after `EditorState`).
 	 */
-	transformCommittedText: (text: string) => string = (text) => text;
+	transformCommittedText: (text: string, previous?: string) => string = (text) => text;
 	slides = $state.raw<PptxSlide[]>([]);
 	templateElementsBySlideId = $state.raw<TemplateElementMap>({});
 	slideMasters = $state.raw<PptxSlideMaster[]>([]);

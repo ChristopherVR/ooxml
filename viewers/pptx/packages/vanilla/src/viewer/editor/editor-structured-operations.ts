@@ -1,4 +1,4 @@
-import { withCellText } from 'ooxml-ui/pptx';
+import { getCellText, withCellText } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
@@ -19,7 +19,7 @@ export function createStructuredEditorOperations(deps: {
 	pushHistory(): void;
 	commitChange(): void;
 	/** Options > Proofing > AutoCorrect, applied to committed table-cell text. */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 }): StructuredEditorOperations {
 	return {
 		commitTableCell(id, row, column, rawText) {
@@ -28,7 +28,9 @@ export function createStructuredEditorOperations(deps: {
 			if (target?.type !== 'table' || !target.tableData?.rows[row]?.cells[column]) {
 				return;
 			}
-			const text = deps.transformCommittedText ? deps.transformCommittedText(rawText) : rawText;
+			const text = deps.transformCommittedText
+				? deps.transformCommittedText(rawText, getCellText(target, row, column))
+				: rawText;
 			deps.pushHistory();
 			const rows = target.tableData.rows.map((tableRow, rowIndex) => ({
 				...tableRow,

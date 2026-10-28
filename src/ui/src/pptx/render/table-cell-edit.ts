@@ -1,5 +1,6 @@
 // Compatibility exports: document operations live in ooxml-core.
 export {
+	getCellText,
 	withCellStyle,
 	withCellText,
 	setCellText,

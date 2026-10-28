@@ -91,7 +91,7 @@ export interface UseCanvasInteractionsInput {
 	 * (AutoCorrect, Options > Proofing). Applied only to user-typed commits,
 	 * never to programmatic segment remaps.
 	 */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 }
 
 /**
@@ -193,7 +193,9 @@ export function useCanvasInteractions(
 			}
 			// AutoCorrect runs on the typed text before it becomes segments.
 			const liveText = read?.snapshot.text ?? inlineEditingTextRef?.current ?? inlineEditingText;
-			const committedText = transformCommittedText ? transformCommittedText(liveText) : liveText;
+			const committedText = transformCommittedText
+				? transformCommittedText(liveText, el.text)
+				: liveText;
 			const textPatch = buildInlineTextCommitPatch(
 				el,
 				committedText,

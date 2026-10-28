@@ -17,7 +17,7 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
-	applyAutoCorrect,
+	applyAutoCorrectToEdit,
 	clearAutosaveSnapshots,
 	createViewerOptionsStore,
 	playFeedbackSound,
@@ -158,9 +158,9 @@ export class ViewerOptionsService {
 		return resolveScreenTip(this.options(), label, description, shortcut);
 	}
 
-	/** Run the enabled AutoCorrect rules over a committed run of text. */
-	autoCorrect(text: string): string {
-		return applyAutoCorrect(text, this.options().proofing);
+	/** Run the enabled AutoCorrect rules over what was typed since previous. */
+	autoCorrect(text: string, previous?: string): string {
+		return applyAutoCorrectToEdit(text, previous, this.options().proofing);
 	}
 
 	/** Play the Accessibility "feedback with sound" cue for a completed action. */

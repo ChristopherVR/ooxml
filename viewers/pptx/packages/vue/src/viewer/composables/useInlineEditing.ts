@@ -6,12 +6,13 @@ import type {
 	ViewerProofingOptions,
 } from 'ooxml-ui/pptx';
 import {
-	applyAutoCorrect,
+	applyAutoCorrectToEdit,
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
 	reportInlineTextDraft,
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
+	getCellText,
 	setCellText,
 } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
@@ -55,6 +56,8 @@ export interface UseInlineEditingResult {
 	updateInlineText: (text: string, snapshot?: InlineTextEditSnapshot) => void;
 	readInlineSnapshot: () => InlineTextEditSnapshot | undefined;
 	isInlineInputPending: () => boolean;
+	/** The element's text when the current inline edit began (AutoCorrect's baseline). */
+	readInlineStartText: () => string | undefined;
 	onListSession: (event: { controller: InlineListController; active: boolean }) => void;
 	formatInlineSnapshot: (snapshot: InlineTextEditSnapshot) => boolean;
 	endInlineListSession: () => void;
@@ -73,11 +76,13 @@ export interface UseInlineEditingResult {
 export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditingResult {
 	const { canEdit, findActiveElement, ops } = input;
 
-	/** Apply the enabled AutoCorrect rules to a typed-text commit. */
-	function autoCorrect(text: string): string {
+	/** Apply the enabled AutoCorrect rules to what was typed since previous. */
+	function autoCorrect(text: string, previous?: string): string {
 		const proofing = input.proofing?.();
-		return proofing ? applyAutoCorrect(text, proofing) : text;
+		return proofing ? applyAutoCorrectToEdit(text, previous, proofing) : text;
 	}
+	/** The element's text when the current inline edit began. */
+	let inlineStartText: string | undefined;
 
 	const inlineEditingElementId = ref<string | null>(null);
 	let inlineSlideId: string | undefined;
@@ -152,6 +157,7 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 		inlineEditingElementId.value = id;
 		inlineSnapshot.value = undefined;
 		inlineEditingText.value = (el as { text?: string }).text ?? '';
+		inlineStartText = inlineEditingText.value;
 	}
 	function commitInlineEdit(): void {
 		if (listSession.isPending()) {
@@ -170,7 +176,7 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 			listSession.end();
 			return;
 		}
-		const text = autoCorrect(current?.text ?? inlineEditingText.value);
+		const text = autoCorrect(current?.text ?? inlineEditingText.value, inlineStartText);
 		const snapshot = current ?? inlineSnapshot.value;
 		inlineSnapshot.value = undefined;
 		inlineEditingElementId.value = null;
@@ -267,7 +273,12 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 		if (!el || el.type !== 'table') {
 			return;
 		}
-		const updated = setCellText(el, rowIndex, colIndex, autoCorrect(text));
+		const updated = setCellText(
+			el,
+			rowIndex,
+			colIndex,
+			autoCorrect(text, getCellText(el, rowIndex, colIndex)),
+		);
 		ops.updateElement(elementId, { tableData: updated.tableData } as Partial<PptxElement>);
 	}
 
@@ -291,6 +302,7 @@ export function useInlineEditing(input: UseInlineEditingInput): UseInlineEditing
 			return inlineSnapshot.value?.elementId === id ? inlineSnapshot.value : undefined;
 		},
 		isInlineInputPending: listSession.isPending,
+		readInlineStartText: () => inlineStartText,
 		enterInlineEdit,
 		commitInlineEdit,
 		cancelInlineEdit,

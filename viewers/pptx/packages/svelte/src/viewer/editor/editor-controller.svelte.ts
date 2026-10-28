@@ -671,7 +671,12 @@ export class EditorController {
 		// Flush any queued interim frame first so it cannot land after the
 		// committed (AutoCorrected) text and revert it.
 		this.#deps.getLivePatcher?.()?.flush();
-		this.#editor.commitInlineText(id, this.#deps.transformCommittedText?.(text) ?? text, snapshot);
+		const previous = (this.#editor.elementById(id) as { text?: string } | undefined)?.text;
+		this.#editor.commitInlineText(
+			id,
+			this.#deps.transformCommittedText?.(text, previous) ?? text,
+			snapshot,
+		);
 	}
 
 	/** Register a live reader with this viewer's document and editing session. */
@@ -742,7 +747,9 @@ export class EditorController {
 			if (!snapshot || snapshot.elementId !== id || ('slideId' in target && !target.slideId)) {
 				return undefined;
 			}
-			return { snapshot, target, text: editor.transformCommittedText(snapshot.text) };
+			const previous = (editor.elementById(snapshot.elementId) as { text?: string } | undefined)
+				?.text;
+			return { snapshot, target, text: editor.transformCommittedText(snapshot.text, previous) };
 		};
 	}
 

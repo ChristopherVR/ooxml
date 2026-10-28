@@ -68,7 +68,7 @@ export interface EditorOpsDeps {
 	/** Fired whenever canUndo/canRedo may have changed (toolbar refresh). */
 	onHistoryChange(): void;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	getPendingInlineTextEdit?: () => import('ooxml-ui/pptx').PendingInlineTextEdit | undefined;
 	readInlineList?: () => import('ooxml-ui/pptx').InlineListReadResult | undefined;
 	formatInlineList?: (snapshot: import('ooxml-ui/pptx').InlineTextEditSnapshot) => boolean;
@@ -339,7 +339,9 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 			if (!target) {
 				return;
 			}
-			const text = deps.transformCommittedText ? deps.transformCommittedText(rawText) : rawText;
+			const text = deps.transformCommittedText
+				? deps.transformCommittedText(rawText, (target as { text?: string }).text)
+				: rawText;
 			pushHistory();
 			// `a:spAutoFit`: grow/shrink the shape to the text's natural content
 			// height, the way PowerPoint does. See `resolveInlineTextAutoFitHeight`
@@ -499,7 +501,11 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 			const state = store.get();
 			const pending = deps.getPendingInlineTextEdit?.();
 			const pendingText = pending
-				? (deps.transformCommittedText?.(pending.snapshot.text) ?? pending.snapshot.text)
+				? (deps.transformCommittedText?.(
+						pending.snapshot.text,
+						(findActiveElement(state, pending.snapshot.elementId) as { text?: string } | undefined)
+							?.text,
+					) ?? pending.snapshot.text)
 				: undefined;
 			const masterWrite =
 				pending && 'masterView' in pending.target

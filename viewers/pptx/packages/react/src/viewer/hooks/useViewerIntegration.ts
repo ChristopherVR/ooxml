@@ -56,7 +56,7 @@ import type { ViewerDialogsResult } from './viewer-dialog-types';
 // ---------------------------------------------------------------------------
 
 export interface UseViewerIntegrationInput {
-	transformCommittedText?: (text: string) => string;
+	transformCommittedText?: (text: string, previous?: string) => string;
 	state: ViewerState;
 	zoom: UseZoomViewportResult;
 	history: EditorHistoryResult;

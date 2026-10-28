@@ -108,3 +108,15 @@ export function setCellText(
 	});
 	return { ...element, tableData: { ...tableData, rows } };
 }
+
+/**
+ * The text of a single cell, or `undefined` when the table has no data or the
+ * cell does not exist.
+ */
+export function getCellText(
+	element: TablePptxElement,
+	rowIndex: number,
+	colIndex: number,
+): string | undefined {
+	return element.tableData?.rows[rowIndex]?.cells[colIndex]?.text;
+}

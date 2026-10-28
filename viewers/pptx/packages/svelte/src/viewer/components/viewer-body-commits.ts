@@ -1,4 +1,9 @@
-import { reflowSmartArtData, setCellText, shouldCommitSmartArtNodeText } from 'ooxml-ui/pptx';
+import {
+	getCellText,
+	reflowSmartArtData,
+	setCellText,
+	shouldCommitSmartArtNodeText,
+} from 'ooxml-ui/pptx';
 import { setSmartArtNodeStyle, updateSmartArtNodeText } from 'pptx-viewer-core';
 import type { PptxChartData } from 'pptx-viewer-core';
 
@@ -42,7 +47,7 @@ export function createEditCommits(editor: EditorState): EditCommitHandlers {
 			if (table?.type !== 'table') {
 				return;
 			}
-			const text = editor.transformCommittedText(rawText);
+			const text = editor.transformCommittedText(rawText, getCellText(table, rowIndex, cellIndex));
 			const updated = setCellText(table, rowIndex, cellIndex, text);
 			editor.applyElementPatch(id, { tableData: updated.tableData });
 		},

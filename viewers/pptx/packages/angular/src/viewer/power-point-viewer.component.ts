@@ -3106,7 +3106,14 @@ export class PowerPointViewerComponent
 			return snapshot && slide
 				? {
 						snapshot,
-						text: this.viewerOpts.autoCorrect(snapshot.text),
+						text: this.viewerOpts.autoCorrect(
+							snapshot.text,
+							(
+								slide.elements.find((e) => e.id === snapshot.elementId) as
+									| { text?: string }
+									| undefined
+							)?.text,
+						),
 						target: { slideId: slide.id },
 					}
 				: undefined;
