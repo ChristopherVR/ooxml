@@ -1,5 +1,6 @@
 import { recoveryStoreOf, type DocumentStorage } from 'ooxml-core/embedding';
 import type { ViewerController } from './controller';
+import { createRecoveryScheduler } from '../recovery-scheduler';
 
 /** A drawing with unsaved changes, kept as the bytes of the .vsdx it would save as. */
 export interface RecoveryEntry {
@@ -105,7 +106,7 @@ const sameBytes = (a: Uint8Array, b: Uint8Array): boolean =>
  */
 export class ViewerAutoRecover {
 	#enabled = false;
-	#timer: unknown;
+	readonly #scheduler: ReturnType<typeof createRecoveryScheduler>;
 	#lookup = 0;
 	constructor(
 		private readonly controller: ViewerController,
@@ -114,9 +115,19 @@ export class ViewerAutoRecover {
 		store: RecoveryStore | undefined | (() => RecoveryStore | undefined),
 		private readonly offer: (offer: RecoveryOffer) => void,
 		private readonly now: () => number = () => Date.now(),
-		private readonly timers: Timers = globalThis as unknown as Timers,
+		timers: Timers = globalThis as unknown as Timers,
 	) {
 		this.#store = typeof store === 'function' ? store : () => store;
+		this.#scheduler = createRecoveryScheduler({
+			timers: {
+				set: (handler, ms) => timers.setInterval(handler, ms),
+				clear: (id) => timers.clearInterval(id),
+			},
+			repeating: true,
+			tick: () => {
+				void this.saveNow();
+			},
+		});
 	}
 	readonly #store: () => RecoveryStore | undefined;
 	private get store(): RecoveryStore | undefined {
@@ -124,11 +135,9 @@ export class ViewerAutoRecover {
 	}
 	/** Apply the option: copy every `minutes` minutes while `enabled`. */
 	configure(enabled: boolean, minutes: number): void {
-		if (this.#timer !== undefined) this.timers.clearInterval(this.#timer);
-		this.#timer = undefined;
+		this.#scheduler.clear();
 		this.#enabled = enabled;
-		if (this.#enabled)
-			this.#timer = this.timers.setInterval(() => void this.saveNow(), minutes * 60_000);
+		if (this.#enabled) this.#scheduler.arm(minutes * 60_000);
 	}
 	get enabled(): boolean {
 		return this.#enabled && !!this.store;
@@ -138,6 +147,9 @@ export class ViewerAutoRecover {
 	}
 	/** Copy the drawing now if it has unsaved changes; true when a copy was kept. */
 	async saveNow(): Promise<boolean> {
+		return (await this.#scheduler.run(() => this.#save())) ?? false;
+	}
+	async #save(): Promise<boolean> {
 		const state = this.controller.state;
 		if (
 			!this.#enabled ||
@@ -226,8 +238,7 @@ export class ViewerAutoRecover {
 	}
 	dispose(): void {
 		++this.#lookup;
-		if (this.#timer !== undefined) this.timers.clearInterval(this.#timer);
-		this.#timer = undefined;
+		this.#scheduler.dispose();
 		this.#enabled = false;
 	}
 }

@@ -41,6 +41,7 @@ import type { AutosaveSnapshotMark } from '../autosave-tick';
 import type { InlineTextDraft } from '../autosave-inline-draft';
 import type { PptxController } from './controller';
 import { createControllerStore } from './controller';
+import { createRecoveryScheduler } from '../../../recovery-scheduler';
 
 /** The one autosave status every binding renders. */
 export type PptxAutosaveStatus =
@@ -197,12 +198,23 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		return inlineDraft;
 	};
 	let destroyed = false;
+	const scheduler = createRecoveryScheduler({
+		timers: { set: timers.setTimeout, clear: timers.clearTimeout },
+		tick: () => {
+			timer = null;
+			if (destroyed || !isActive() || !store.getSnapshot().dirty) return;
+			if (deps.isHeld?.()) {
+				firstDirtyAt = now();
+				schedule();
+				return;
+			}
+			void saveNow();
+		},
+	});
 
 	const clearTimer = (): void => {
-		if (timer !== null) {
-			timers.clearTimeout(timer);
-			timer = null;
-		}
+		scheduler.clear();
+		timer = null;
 	};
 
 	const schedule = (): void => {
@@ -215,18 +227,8 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 			firstDirtyAt,
 			now: now(),
 		});
-		timer = timers.setTimeout(() => {
-			timer = null;
-			if (destroyed || !isActive() || !store.getSnapshot().dirty) {
-				return;
-			}
-			if (deps.isHeld?.()) {
-				firstDirtyAt = now();
-				schedule();
-				return;
-			}
-			void saveNow();
-		}, delay);
+		timer = true;
+		scheduler.arm(delay);
 	};
 
 	const run = async (): Promise<void> => {
@@ -239,6 +241,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		patch({ status: { state: 'saving' } });
 		try {
 			const bytes = await deps.serialize(liveDraft());
+			if (destroyed) return;
 			if (!bytes) {
 				if (!destroyed) {
 					patch({ status: idleOrDisabled() });
@@ -283,7 +286,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		while (inFlight) {
 			await inFlight;
 		}
-		const pending = run();
+		const pending = scheduler.run(run).then(() => {});
 		inFlight = pending;
 		try {
 			await pending;
@@ -384,6 +387,7 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 		destroy() {
 			destroyed = true;
 			clearTimer();
+			scheduler.dispose();
 		},
 	};
 }
