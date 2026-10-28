@@ -91,5 +91,6 @@ export * from './auto-align';
 export * from './nudge';
 
 export * from './element-transform';
+export * from './resize-aspect';
 export * from './preset-shape-evaluator';
 export * from './ooxml-arc';

@@ -136,7 +136,7 @@ it('opens from the Show launcher with the page values and saves only what change
 	expect(ui.svg().style.getPropertyValue('--_vv-grid-x')).toBe('48px');
 	expect(ui.svg().style.getPropertyValue('--_vv-grid-y')).toBe('24px');
 	expect(ui.svg().style.getPropertyValue('--_vv-grid-origin-y')).toBe('96px');
-	expect(ui.commands.gridStep).toBe(0);
+	expect(ui.commands.gridStep).toEqual({ x: 0.5, y: 0.25, originX: 0, originY: 1 });
 	ui.commands.run({ type: 'grid' });
 	expect(ui.commands.gridStep).toEqual({ x: 0.5, y: 0.25, originX: 0, originY: 1 });
 	// One undoable step.

@@ -46,6 +46,14 @@ describe('rotateDelta', () => {
 });
 
 describe('applyResize', () => {
+	it('keeps opposite edges anchored with independent axis minimums', () => {
+		const result = applyResize(box(), 'nw', 1000, 1000, 1, { minWidth: 50, minHeight: 20 });
+		expect(result).toEqual({ x: 250, y: 180, width: 50, height: 20, rotation: 0 });
+		expect(applyResize(box(), 'e', -1000, 50, 1, { minSize: 25, minWidth: 50 })).toMatchObject({
+			width: 50,
+			height: 100,
+		});
+	});
 	it('grows from the SE handle keeping the top-left fixed', () => {
 		const r = applyResize(box(), 'se', 50, 30, 1);
 		expect(r.x).toBe(100);

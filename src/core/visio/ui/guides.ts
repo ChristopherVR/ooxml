@@ -77,6 +77,8 @@ export function visioShapeSnapBox(shape: VisioShape): SnapBox | undefined {
 }
 
 export interface VisioSnapOptions {
+	/** Restrict snapping and alignment hints to the movement axis of a constrained drag. */
+	axis?: 'x' | 'y';
 	/** Dynamic Grid: snap to other shapes' edges and centres. */
 	shapes: boolean;
 	/** Snap to the page's ruler guides. */
@@ -157,8 +159,11 @@ export function visioSnapMoveDelta(
 	// Snap boxes use y = -(page y), so a line at page y = origin sits at -origin.
 	if (grid.y && !axes.has('y')) snapped.y = gridEdge(snapped.y, box.height, grid.y, -grid.originY);
 	return {
-		delta: { x: delta.x + snapped.x - box.x, y: delta.y - (snapped.y - box.y) },
-		lines: snapped.guides,
+		delta: {
+			x: options.axis === 'y' ? delta.x : delta.x + snapped.x - box.x,
+			y: options.axis === 'x' ? delta.y : delta.y - (snapped.y - box.y),
+		},
+		lines: snapped.guides.filter((line) => !options.axis || line.axis === options.axis),
 	};
 }
 

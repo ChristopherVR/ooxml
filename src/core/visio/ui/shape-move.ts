@@ -45,8 +45,15 @@ export function visioMovementShape(page: VisioPage, id: string): VisioShape | un
 	return shape;
 }
 /** Client points have been converted to physical SVG page inches; commands use upward y. */
-export function visioPageDragDelta(start: VisioPagePoint, end: VisioPagePoint): VisioPagePoint {
-	return { x: end.x - start.x, y: start.y - end.y };
+export function visioPageDragDelta(
+	start: VisioPagePoint,
+	end: VisioPagePoint,
+	constrain = false,
+): VisioPagePoint {
+	const x = end.x - start.x,
+		y = start.y - end.y;
+	if (!constrain || !Number.isFinite(x) || !Number.isFinite(y)) return { x, y };
+	return Math.abs(x) >= Math.abs(y) ? { x, y: 0 } : { x: 0, y };
 }
 export function visioMovePreviewTransform(
 	shape: VisioShape,

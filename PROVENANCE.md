@@ -2713,3 +2713,14 @@ Source: ChristopherVR/ooxml at `a2605bfef`,
   in the ChartEx model. The UI retains only its capability filtering and theme adapter.
 - New neutral axis/group/point-label operations and PowerPoint save planners reuse this bridge.
   No second DrawingML formatting implementation or product storage model was introduced.
+
+## Resize aspect geometry (2026-10-28)
+
+Source: ChristopherVR/ooxml at `a4707a6e694d26e32af0375ee06d600541a1236a`,
+`src/ui/src/pptx/render/editor-geometry.ts` and its adjacent test. Moved
+`isCornerHandle` and `lockResizeAspect` with their tests to
+`src/core/geometry/resize-aspect.ts` and `resize-aspect.test.ts`.
+The earlier PowerPoint export remains a compatibility re-export. The implementation
+now imports strict, format-neutral geometry types and the existing shared minimum
+size (12, identical to PowerPoint's default). Arithmetic and anchoring are unchanged.
+Test handle literals are narrowed for strict TypeScript. Apache-2.0 license retained.

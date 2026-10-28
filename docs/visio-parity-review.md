@@ -1,5 +1,80 @@
 # Visio parity review, 2026-10-07
 
+## Editing and reuse review, 2026-10-28
+
+Reviewed source: `a4707a6e694d26e32af0375ee06d600541a1236a`. This section is a
+current code review; the dated measurements below are historical evidence, not a
+fresh native Visio acceptance run. Full 1:1 parity has not been established.
+
+The most visible editing limitation is the gap between commands existing and
+commands working on an ordinary mixed drawing. Core deliberately rejects edits
+whose dependencies it cannot preserve. Removing those guards without implementing
+recalculation would trade an editing refusal for a damaged drawing.
+
+The second increment adds bounded multi-selection resizing. Generated source
+round-trips cover every handle, drawing scales, reflected shapes and off-center
+pins. Browser save/reopen workflows pass in all six demos. Native Visio group and
+multi-selection comparison remains outstanding: this machine has neither a
+registered Visio.Application nor Visio.InvisibleApp COM class.
+
+### Implemented in this increment
+
+- Alt bypasses snapping while moving one or multiple shapes, including when the
+  modifier changes during the drag. Snap hints disappear during the bypass.
+- Shift constrains movement to the dominant page axis. Shape, guide and grid snaps
+  can adjust that axis, but cannot move the perpendicular axis or display a false
+  alignment hint for it. Alt+Shift combines both behaviors.
+- View > Grid controls visibility independently of Snap & Glue > Grid. Saved grid
+  origins, per-axis spacing and global snap disablement still apply.
+- Preview and release use the same modifier-aware path. The existing source-backed
+  batch, selection history, cancellation and protection checks remain authoritative.
+- PowerPoint's remaining pure `lockResizeAspect` and `isCornerHandle` helpers moved
+  from UI to `src/core/geometry/resize-aspect.ts`, with their regression tests.
+  Existing PowerPoint imports re-export them, preserving binding behavior.
+- Multiple selected local, axis-aligned shapes now share eight resize handles.
+  The gesture scales members and gaps together, including reflected shapes and
+  off-center pins, and saves one atomic history entry. Source protection or a
+  final pose mismatch rejects the entire edit. Core owns the plan and pose check;
+  all six bindings consume the same UI implementation.
+- Selection resizing reuses `geometry/element-transform.ts`, already shared with
+  PowerPoint. Its minimum-size options now permit separate width and height
+  limits, so the smallest selection member retains its physical minimum without
+  forcing the other axis to use the same limit. Existing defaults are unchanged.
+
+Microsoft documents Alt's snap bypass and Alt+Shift movement in its
+[Visio interaction guide](https://www.microsoft.com/en-us/copilot/blog/2012/09/25/10-ways-to-be-more-efficient-in-the-new-visio/).
+The separate visibility and snap controls are described in
+[the grid guide](https://support.microsoft.com/en-us/visio/show-hide-or-change-the-grid-in-visio).
+These references guide the interaction contract; they do not establish pixel or
+native ShapeSheet equivalence for this implementation.
+
+### Next editing work, in priority order
+
+| Priority | Concrete gap and source evidence                                                                                                                                                                 | Completion gate                                                                                                                                                                  |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Local groups cannot resize or flip (`edit-group.test.ts`); multi-selection resize excludes rotated shapes, groups, stencil instances, layers and attached connectors (`ui/selection-resize.ts`). | Native group/multi-selection fixtures, child transforms and glue preserved, atomic source edits, history and six-demo save/reopen.                                               |
+| 2        | Resize gestures ignore modifiers and resize both corner dimensions independently (`ui/shape-resize.ts`, `viewer-resize-handles.ts`).                                                             | Record native corner/edge behavior with modifiers, rotation, reflection, local pins and size/aspect locks; adapt the shared geometry to Visio's y-up coordinates and inch units. |
+| 3        | Dependency recalculation remains bounded; `formula-text.test.ts` still rejects STRSAMEEX, ANGLETOLOC, LOCTOPAR, FORMAT, DATE and INDIRECT.                                                       | Native formula fixtures plus affected-cache closure and atomic refusal tests, including inherited and cross-shape references.                                                    |
+| 4        | Snapping still uses bounded shape/guide geometry. Resize alignment/size-match hints and a complete saved snap-settings implementation are missing.                                               | Native snapping matrix for zoom, units, layers, group members, ruler subdivisions, resize and connectors; prevent snapping a container to members moving with it.                |
+| 5        | Size & Position uses fixed inch labels; field rendering and editing state are scattered between product panes.                                                                                   | Unit-aware UI with mixed selections, accessible validation, stable focus and one undo step; keep conversion and source edits in core.                                            |
+
+Native rendering, editing interaction and saved-package compatibility need separate
+acceptance gates. Existing connector, stencil, chart, text and collaboration subsets
+are useful foundations, but their existence is not evidence of general parity.
+
+### Reuse inventory and extraction decisions
+
+| Area                        | Current owner and reuse opportunity                                                                                                                                                                                                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Geometry already shared     | `src/core/geometry` owns alignment/distribution, shape snapping, orthogonal routing, rotations and move/resize geometry. Visio already consumes the snap/router/arrangement helpers. Extend these rather than importing a PowerPoint binding.                                                                 |
+| Extracted now               | `resize-aspect.ts` removes a remaining DOM-free PowerPoint algorithm from UI. Its current consumers retain their exports; Visio can use it when native resize semantics are recorded.                                                                                                                         |
+| Next core candidates        | `src/ui/src/pptx/render/element-interaction.ts` still contains `snapBoxToGrid`, marquee intersection and additive-selection helpers. Extract the geometric parts with explicit coordinate and minimum-size contracts. Visio marquee uses enclosure, while PowerPoint uses overlap: preserve that distinction. |
+| Shared UI already available | Ribbon, menus, task pane, dialogs, color controls, chart data/formatting and SmartArt controls live in `src/ui`. Visio's six bindings share the same product custom element. No additional framework-specific controls are needed for these edits.                                                            |
+| Next UI candidate           | Compare `visio/format-pane-view.ts`, `visio/viewer-size-position.ts` and `chart/format-pane-fields.ts`: extract neutral labeled numeric/choice field rendering and focus-preserving draft handling into shared form controls. Keep Visio cells, chart descriptors and product command routing separate.       |
+| Keep product-specific       | ShapeSheet/master inheritance, Visio glue, page units and source admission stay in `src/core/visio`. PowerPoint slide semantics and document history integration are not drop-in replacements for Visio's package-backed transactions.                                                                        |
+
+Verification for this increment is recorded in the current capability-ledger entry.
+
 Reviewed baseline: `f6e9b730a` (ooxml-core 0.23.0, ooxml-ui 0.30.1). The Findings section was
 re-checked against the tree on 2026-10-22; the dated round sections below describe the state at
 their dates.

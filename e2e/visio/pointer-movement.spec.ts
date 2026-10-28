@@ -134,6 +134,23 @@ for (const [index, framework] of [
 		const start = { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
 		const origin = await pagePoint(viewer, 0, 0),
 			delta = await pagePoint(viewer, 0.43, 0.27);
+		// Grid snapping works while View > Grid is hidden. Shift keeps its other axis fixed.
+		await page.keyboard.down('Shift');
+		await page.mouse.move(start.x, start.y);
+		await page.mouse.down();
+		await page.mouse.move(start.x + delta.x - origin.x, start.y + delta.y - origin.y, { steps: 5 });
+		await page.mouse.up();
+		await page.keyboard.up('Shift');
+		await expect.poll(async () => (await inventory(viewer)).pins[0]![0]).not.toBe(2);
+		const constrained = (await inventory(viewer)).pins;
+		expect(constrained[0]![1]).toBe(7);
+		expect(constrained[1]![1]).toBe(7);
+		expect(constrained[1]![0]! - constrained[0]![0]!).toBeCloseTo(3, 7);
+		expect(constrained[0]![0]).not.toBeCloseTo(2.43, 5);
+		await viewer.locator('.qat [data-command="undo"]').click();
+		await expect.poll(async () => (await inventory(viewer)).pins).toEqual(before.pins);
+		// Alt bypasses the hidden grid and Dynamic Grid, preserving a precise free drag.
+		await page.keyboard.down('Alt');
 		await page.mouse.move(start.x, start.y);
 		await page.mouse.down();
 		await page.mouse.move(start.x + delta.x - origin.x, start.y + delta.y - origin.y, { steps: 5 });
@@ -142,6 +159,7 @@ for (const [index, framework] of [
 		expect(await sourceBytes(viewer)).toEqual(beforeSource);
 		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		await page.mouse.up();
+		await page.keyboard.up('Alt');
 		// Browser client coordinates and CTM use finite floating point precision.
 		await expect
 			.poll(async () => (await inventory(viewer)).pins)

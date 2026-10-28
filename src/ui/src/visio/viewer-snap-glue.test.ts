@@ -143,8 +143,12 @@ it('stops snapping when Snap is off and leaves the grid out when Grid is uncheck
 	const page = () => ui.controller.state.document!.pages[0]!;
 	const guides = ui.commands.layoutCommands.guides;
 	const drag = { x: 0.03, y: 0 };
-	ui.commands.run({ type: 'grid' });
 	// The shape spans 0..1; its left edge snaps back to the grid line at 0.
+	// View > Grid starts hidden; showing or hiding it must not change snapping.
+	expect(guides.snap(page(), ['1'], drag, ui.commands.gridStep).x).toBeCloseTo(0, 9);
+	ui.commands.run({ type: 'grid' });
+	expect(guides.snap(page(), ['1'], drag, ui.commands.gridStep).x).toBeCloseTo(0, 9);
+	ui.commands.run({ type: 'grid' });
 	expect(guides.snap(page(), ['1'], drag, ui.commands.gridStep).x).toBeCloseTo(0, 9);
 	await ui.controller.applyEdits([
 		{ type: 'set-snap-glue', snapSettings: 65847 & ~VISIO_SNAP.grid },

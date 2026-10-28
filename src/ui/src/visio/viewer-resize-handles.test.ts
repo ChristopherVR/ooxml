@@ -88,7 +88,7 @@ it.each(['Escape', 'pointercancel', 'lostpointercapture', 'selection', 'source',
 	'cancels %s with saved content/source intact',
 	async (kind) => {
 		const ui = await setup();
-		ui.select();
+		ui.select(['1', '2']);
 		const original = ui.group().outerHTML;
 		ui.pointer('pointerdown', ui.handle(), 55, 35);
 		ui.pointer('pointermove', ui.svg, 65, 25);
@@ -113,10 +113,8 @@ it.each(['Escape', 'pointercancel', 'lostpointercapture', 'selection', 'source',
 		ui.dispose();
 	},
 );
-it('declines multi-selection, model-only and background identities, including forged handles', async () => {
+it('declines model-only and background identities, including forged handles', async () => {
 	const ui = await setup();
-	ui.select(['1', '2']);
-	expect(ui.svg.querySelectorAll('[data-resize-handle]')).toHaveLength(0);
 	ui.select();
 	const stale = ui.handle().cloneNode(true) as Element;
 	ui.svg.append(stale);
@@ -148,6 +146,61 @@ it('a handle click makes no edit and source protection rejects resizing without 
 	expect(ui.edits).toHaveLength(1);
 	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
 	expect(ui.controller.state.edit.canUndo).toBe(false);
+	expect(ui.feedback.join(' ')).toMatch(/LockMoveX|locked/i);
+	ui.dispose();
+});
+
+it('resizes members and spacing in one history entry, preserving selection after save/reopen and redo', async () => {
+	const ui = await setup();
+	ui.select(['1', '2']);
+	const selection = ui.controller.state.selectedShapes;
+	expect(ui.svg.querySelectorAll('[data-resize-handle]')).toHaveLength(8);
+	const original = ui.group().outerHTML;
+	ui.pointer('pointerdown', ui.handle(), 85, 35);
+	ui.pointer('pointerup', ui.svg, 85, 35);
+	expect(ui.edits).toHaveLength(0);
+	ui.pointer('pointerdown', ui.handle(), 85, 35);
+	ui.pointer('pointermove', ui.svg, 105, 25);
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('8');
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('2');
+	expect(ui.group().outerHTML).toBe(original);
+	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
+	ui.pointer('pointerup', ui.svg, 105, 25);
+	await ui.done();
+	expect(ui.edits).toHaveLength(1);
+	const saved = ui.controller.exportVsdx().bytes;
+	const resized = (await parseVsdx(saved)).pages[0]!.shapes;
+	expect(resized.map((shape) => [shape.width, shape.height])).toEqual([
+		[4, 2],
+		[4, 2],
+	]);
+	expect(resized.map((shape) => shape.transform.slice(4))).toEqual([
+		[2.5, 6.5],
+		[6.5, 6.5],
+	]);
+	expect(ui.controller.state.selectedShapes).toBe(selection);
+	await ui.controller.undo();
+	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
+	expect(ui.controller.state.edit.canUndo).toBe(false);
+	await ui.controller.redo();
+	expect(ui.controller.exportVsdx().bytes).toEqual(saved);
+	expect(ui.controller.state.selectedShapes).toBe(selection);
+	ui.dispose();
+});
+
+it('rejects a protected later member without accepting earlier edits or history', async () => {
+	const ui = await setup(true);
+	ui.select(['1', '2']);
+	ui.pointer('pointerdown', ui.handle(), 85, 35);
+	ui.pointer('pointermove', ui.svg, 105, 25);
+	ui.pointer('pointerup', ui.svg, 105, 25);
+	await ui.done();
+	expect(ui.edits).toHaveLength(1);
+	expect(ui.edits[0]!.length).toBeGreaterThan(1);
+	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
+	expect(ui.controller.state.edit.canUndo).toBe(false);
+	expect(ui.controller.state.selectedShapes.map((item) => item.id)).toEqual(['1', '2']);
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')).toBeNull();
 	expect(ui.feedback.join(' ')).toMatch(/LockMoveX|locked/i);
 	ui.dispose();
 });

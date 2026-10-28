@@ -277,9 +277,9 @@ export class ViewerCommands {
 			review: (action) => this.#review.run(action),
 		};
 	}
-	/** The page's grid lines while View > Grid is on (Snap to Grid), else 0. */
+	/** Page grid spacing; Snap & Glue controls snapping independently of View > Grid. */
 	get gridStep(): VisioGridSteps | 0 {
-		return this.#grid ? this.#pageSetup.rulerGrid.steps() : 0;
+		return this.#pageSetup.rulerGrid.steps();
 	}
 	get tool(): CanvasTool {
 		return this.#tool;
