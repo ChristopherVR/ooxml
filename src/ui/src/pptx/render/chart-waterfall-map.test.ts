@@ -490,7 +490,7 @@ describe('buildRegionMapViewModel — ChartEx geography options', () => {
 		);
 		expect(matched).toBeDefined();
 		expect(
-			vm.primitives.some((item) => item.kind === 'text' && item.text === '1.234,5'),
+			vm.primitives.some((item) => item.kind === 'text' && item.text === 'Australia'),
 		).toBeTruthy();
 		expect(vm.primitives.some((item) => item.kind === 'text' && item.text === 'Bing')).toBeTruthy();
 	});
@@ -499,7 +499,7 @@ describe('buildRegionMapViewModel — ChartEx geography options', () => {
 		const data = regionData('none');
 		const vm = buildRegionMapViewModel(el, data, data.categories);
 		expect(
-			vm.primitives.some((item) => item.kind === 'text' && item.text === '1.234,5'),
+			vm.primitives.some((item) => item.kind === 'text' && item.text === 'Australia'),
 		).toBeFalsy();
 	});
 

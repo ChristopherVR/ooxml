@@ -14,6 +14,8 @@ import {
 } from '../region-map';
 import { text, rect, esc, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
+import { chartTextAttributes } from './chart-svg-appearance';
+import { draw, measure } from './chart-svg-labels';
 export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 	const series = model.series[0];
 	if (!series || series.hidden) return '';
@@ -33,7 +35,9 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 		min,
 		max,
 	);
-	const colors = stops ? buildValueColorScale(stops) : sequentialColorScale;
+	const colors = stops
+		? buildValueColorScale(stops)
+		: (t: number) => sequentialColorScale(t, series.color);
 	const matched = new Map(entries.filter((e) => e.code).map((e) => [e.code!, e]));
 	const missing = entries.filter(
 		(e) => !e.code || !geometry.regions.some((r) => r.code === e.code),
@@ -60,7 +64,7 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 	for (const region of geometry.regions) {
 		const entry = matched.get(region.code);
 		out.push(
-			`<path d="${scalePathD(region.path, scale, dx, dy)}" fill="${esc(options?.fixedColor ?? (entry ? colors(normalizeValue(entry.value, min, max)) : '#e2e8f0'))}" stroke="#94a3b8" stroke-width="0.4" fill-rule="evenodd"${entry ? ` data-chart-series="0" data-chart-point="${entry.sourceIndex}"` : ''}><title>${esc(region.name)}${entry ? ': ' + esc(formatRegionMapValue(entry.value, options?.cultureLanguage)) : ''}</title></path>`,
+			`<path d="${scalePathD(region.path, scale, dx, dy)}" fill="${esc(options?.fixedColor ?? (entry ? colors(normalizeValue(entry.value, min, max)) : '#e2e8f0'))}" stroke="${esc(series.stroke?.color ?? 'none')}" stroke-width="${series.stroke?.width ?? 0}" fill-rule="evenodd"${entry ? ` data-chart-series="0" data-chart-point="${entry.sourceIndex}"` : ''}><title>${esc(region.name)}${entry ? ': ' + esc(formatRegionMapValue(entry.value, options?.cultureLanguage)) : ''}</title></path>`,
 		);
 		const b = regionBounds(region);
 		if (
@@ -72,12 +76,20 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 			)
 		)
 			out.push(
-				text(
-					region.labelXY[0] * scale + dx,
-					region.labelXY[1] * scale + dy,
-					formatRegionMapValue(entry.value, options?.cultureLanguage),
-					{ size: 8, anchor: 'middle' },
-				),
+				text(region.labelXY[0] * scale + dx, region.labelXY[1] * scale + dy, region.name, {
+					size: 8,
+					anchor: 'middle',
+				}),
+			);
+		const label = entry && series.labels?.[entry.sourceIndex];
+		if (label)
+			draw(
+				measure(model, label),
+				label,
+				region.labelXY[0] * scale + dx,
+				region.labelXY[1] * scale + dy,
+				'middle',
+				out,
 			);
 	}
 	out.push('</svg>');
@@ -85,12 +97,14 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 		bar = Math.min(160, area.w * 0.4),
 		left = area.x + (area.w - bar) / 2;
 	if (model.showLegend) {
-		out.push(text(left - 8, y + 6, series.name, { size: 10, anchor: 'end' }));
+		const attrs = chartTextAttributes(model, 'legend', 16),
+			size = attrs.size ?? 16;
+		out.push(text(left - 8, y + size * 0.4, series.name, { ...attrs, anchor: 'end' }));
 		for (let i = 0; i < 32; i++)
 			out.push(rect(left + (i * bar) / 32, y, bar / 32 + 0.1, 7, colors((i + 0.5) / 32)));
 		out.push(
-			text(left, y + 18, String(min), { size: 8 }),
-			text(left + bar, y + 18, String(max), { size: 8, anchor: 'end' }),
+			text(left, y + 8 + size, String(min), attrs),
+			text(left + bar, y + 8 + size, String(max), { ...attrs, anchor: 'end' }),
 		);
 	}
 	let row = y + (model.showLegend ? 32 : 0);

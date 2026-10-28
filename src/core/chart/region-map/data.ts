@@ -109,7 +109,7 @@ export function shouldRenderRegionLabel(
 	projectedWidth: number,
 	projectedHeight: number,
 ): boolean {
-	if (layout === 'none') {
+	if (!layout || layout === 'none') {
 		return false;
 	}
 	if (layout === 'bestFitOnly') {

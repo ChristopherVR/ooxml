@@ -20,6 +20,7 @@ export function chartExSeriesPaint(
 ): void {
 	const fill = source.spPr?.fill;
 	if (fill) series.fill = fill;
+	if (source.spPr?.line) series.line = source.spPr.line;
 	const points: NonNullable<ChartSummarySeries['pointColors']> = {};
 	const fills: NonNullable<ChartSummarySeries['pointFills']> = {};
 	for (const point of source.dataPoints) {

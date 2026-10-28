@@ -82,6 +82,10 @@ describe('chart object Edit Data and Format Chart', () => {
 		await vi.waitFor(() => expect(submit).toHaveBeenCalled());
 		const back = (await readEmbeddedChartExSpace(submit.mock.calls[0]![0].workbook))!;
 		expect(chartExSpaceDataSheet(back.space).series[0]!.values[0]).toBe(42);
+		expect(back.space.plotArea.series[0]!.spPr?.fill).toMatchObject({
+			kind: 'solid',
+			color: { value: 'FF0000' },
+		});
 		expect(isEmf(submit.mock.calls[0]![0].preview!)).toBe(true);
 	});
 	it('saves advanced shared chart settings without changing the embedded data', async () => {

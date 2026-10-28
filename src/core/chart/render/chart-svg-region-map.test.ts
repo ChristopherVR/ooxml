@@ -20,6 +20,26 @@ describe('shared region map painter', () => {
 		expect(svg).toContain('Test attribution');
 		expect(svg).not.toContain('Approximate country outlines');
 		expect(svg).not.toContain('NaN');
+		expect(svg).not.toMatch(/<text[^>]*>42<\/text>/u);
+	});
+	it('keeps geographic names separate from explicit numeric data labels', () => {
+		const named = xml().replace(
+			'<cx:layoutPr>',
+			'<cx:layoutPr><cx:regionLabelLayout val="showAll"/>',
+		);
+		const withData = named.replace(
+			'<cx:dataId',
+			'<cx:dataLabels><cx:visibility value="1"/></cx:dataLabels><cx:dataId',
+		);
+		const names = renderChartSummarySvg(chartExSummary(named)!.summary!, {
+			width: 480,
+			height: 300,
+		});
+		expect(names).toMatch(/<text[^>]*>Sample<\/text>/u);
+		expect(names).not.toMatch(/<text[^>]*>42<\/text>/u);
+		expect(
+			renderChartSummarySvg(chartExSummary(withData)!.summary!, { width: 480, height: 300 }),
+		).toMatch(/<text[^>]*>42<\/text>/u);
 	});
 	it('keeps authored ChartEx title size over the native fallback', () => {
 		const source = xml().replace(

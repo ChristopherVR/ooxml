@@ -22,10 +22,7 @@ export function chartExFormatting(space: ChartExSpace): NonNullable<ChartSummary
 				textColor: {
 					kind: 'scheme',
 					value: 'tx1',
-					transforms: [
-						{ name: 'lumMod', value: '65000' },
-						{ name: 'lumOff', value: '35000' },
-					],
+					transforms: [],
 				},
 				...textStyle(space.title?.txPr),
 				...textStyle(space.title?.tx?.rich),

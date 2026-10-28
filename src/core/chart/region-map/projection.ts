@@ -9,18 +9,19 @@ export interface RegionBounds {
 
 export function regionBounds(region: RegionDef): RegionBounds {
 	const coordinates = region.path.match(/-?\d+(?:\.\d+)?/gu)?.map(Number) ?? [];
-	const xs: number[] = [];
-	const ys: number[] = [];
+	let minX = Infinity,
+		minY = Infinity,
+		maxX = -Infinity,
+		maxY = -Infinity;
 	for (let index = 0; index < coordinates.length; index += 2) {
-		xs.push(coordinates[index] ?? 0);
-		ys.push(coordinates[index + 1] ?? 0);
+		const x = coordinates[index] ?? 0,
+			y = coordinates[index + 1] ?? 0;
+		minX = Math.min(minX, x);
+		maxX = Math.max(maxX, x);
+		minY = Math.min(minY, y);
+		maxY = Math.max(maxY, y);
 	}
-	return {
-		minX: Math.min(...xs),
-		minY: Math.min(...ys),
-		maxX: Math.max(...xs),
-		maxY: Math.max(...ys),
-	};
+	return { minX, minY, maxX, maxY };
 }
 
 export function regionViewBounds(

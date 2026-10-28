@@ -95,7 +95,7 @@ export function readGeographyCache(xml: string | undefined): GeographyCache {
 				const decoded = parts.map((part) => decodeGeoRing(part, 1_000_000 - points));
 				if (
 					decoded.some((r) => !r) ||
-					decoded.reduce((n, r) => n + (r?.length ?? 0), 0) > expected
+					decoded.reduce((n, r) => n + (r?.length ?? 0), 0) > Math.min(expected, 1_000_000 - points)
 				) {
 					result.issues.push('Invalid compressed geography polygon.');
 					continue;
