@@ -36,7 +36,8 @@ export type ChartSummaryType =
 	| 'treemap'
 	| 'sunburst'
 	| 'funnel'
-	| 'boxWhisker';
+	| 'boxWhisker'
+	| 'regionMap';
 
 /** One cascade level of a series' data labels: its content switches, placement and format. */
 export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {
@@ -62,6 +63,7 @@ export interface ChartSummaryDataLabels {
 }
 
 export interface ChartSummarySeries extends ChartMarkerSummary {
+	regionMap?: import('../region-map/types').RegionMapOptions;
 	boxWhisker?: import('../ex/model').ChartExLayoutProperties;
 	hidden?: boolean;
 	smooth?: boolean;
@@ -163,6 +165,7 @@ export interface HierarchySummaryOptions {
 }
 
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
+	funnelGapWidth?: number;
 	chartType: ChartSummaryType;
 	/** Native axes and the primary plot group IDs, retained for shared rendering. */
 	dataTable?: ChartDataTable;

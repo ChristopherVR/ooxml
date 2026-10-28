@@ -64,8 +64,8 @@ describe('chartExSummary', () => {
 	});
 
 	it('names an extended family it does not summarise, and ignores classic parts', () => {
-		const map = waterfallXml().replace('layoutId="waterfall"', 'layoutId="regionMap"');
-		expect(chartExSummary(map)).toEqual({ layoutId: 'regionMap' });
+		const map = waterfallXml().replace('layoutId="waterfall"', 'layoutId="unsupportedFamily"');
+		expect(chartExSummary(map)).toEqual({ layoutId: 'unsupportedFamily' });
 		expect(chartExSummary('<c:chartSpace xmlns:c="urn:x"/>')).toBeUndefined();
 	});
 });

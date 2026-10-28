@@ -1,3 +1,4 @@
+import { regionMapGeometry } from 'ooxml-core/chart/region-map';
 /**
  * View-model builder for the regionMap (choropleth) chart kind.
  *
@@ -16,7 +17,7 @@
 
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
-import { regionBounds, regionViewBounds, scalePathD, WORLD_REGIONS } from './chart-map-projection';
+import { regionBounds, regionViewBounds, scalePathD } from './chart-map-projection';
 import { resolveRegionCode } from './chart-region-map-alias';
 import {
 	buildRegionMapColorLegend,
@@ -61,12 +62,14 @@ export function buildRegionMapViewModel(
 	const categories = categoryLabels.length > 0 ? categoryLabels : chartData.categories;
 	const series = chartData.series[0];
 	const options = series?.regionMapOptions;
-	const entries = buildRegionMapEntries(
-		categories,
-		series?.values ?? [],
-		options,
-		resolveRegionCode,
-	);
+	const geometry = regionMapGeometry(options);
+	const regions = geometry.regions;
+	const resolve = (label: string) =>
+		regions.find(
+			(r) =>
+				r.entityId === label || r.code === label || r.name.toLowerCase() === label.toLowerCase(),
+		)?.code ?? resolveRegionCode(label);
+	const entries = buildRegionMapEntries(categories, series?.values ?? [], options, resolve);
 	const values = entries.map((entry) => entry.value);
 
 	const finiteVals = values.filter((v) => Number.isFinite(v));
@@ -106,7 +109,7 @@ export function buildRegionMapViewModel(
 	const titleH = chartData.title ? 22 : 0;
 	const mapAreaH = Math.max(svgHeight - titleH - legendHeight - fallbackTableH - 8, 80);
 
-	const viewBounds = regionViewBounds(options?.viewedRegionType, regionValueMap);
+	const viewBounds = regionViewBounds(options?.viewedRegionType, regionValueMap, regions);
 	const viewWidth = Math.max(viewBounds.maxX - viewBounds.minX, 1);
 	const viewHeight = Math.max(viewBounds.maxY - viewBounds.minY, 1);
 	const mapScale = Math.min((svgWidth - 20) / viewWidth, mapAreaH / viewHeight);
@@ -142,7 +145,7 @@ export function buildRegionMapViewModel(
 		: undefined;
 
 	// Region shape paths.
-	for (const region of WORLD_REGIONS) {
+	for (const region of regions) {
 		const entry = regionValueMap.get(region.code);
 		let fill = '#e2e8f0';
 

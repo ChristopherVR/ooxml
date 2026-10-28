@@ -1,3 +1,4 @@
+import { resolveRegionValueColors } from '../region-map/value-colors';
 import { chartDataTableView, type ChartDataTableView } from './chart-view-data-table';
 import type { ChartMarkerSeriesView } from './chart-view-markers';
 import { applyChartAxes, type ChartAxesView } from './chart-view-axes';
@@ -94,6 +95,8 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	funnelGapWidth?: number;
+	regionMap?: import('../region-map/types').RegionMapOptions;
 	dataTable?: ChartDataTableView;
 	dateCategories?: (number | null)[];
 	date1904?: boolean;
@@ -160,6 +163,7 @@ const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'treemap',
 	'sunburst',
 	'funnel',
+	'regionMap',
 	'boxWhisker',
 ]);
 
@@ -241,6 +245,9 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		horizontal: type === 'bar',
 		supported: SUPPORTED.has(type),
 	};
+	if (chart.funnelGapWidth !== undefined) model.funnelGapWidth = chart.funnelGapWidth;
+	if (chart.series[0]?.regionMap)
+		model.regionMap = resolveRegionValueColors(chart.series[0].regionMap, ctx.drawingColor);
 	const table = chartDataTableView(chart, theme, ctx.drawingColor);
 	if (table) model.dataTable = table;
 	if (chart.date1904 !== undefined) model.date1904 = chart.date1904;

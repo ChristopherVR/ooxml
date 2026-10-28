@@ -27,6 +27,7 @@ export const DRAWN_CHART_TYPES: ReadonlySet<ChartSummaryType> = new Set([
 	'treemap',
 	'sunburst',
 	'funnel',
+	'regionMap',
 	'boxWhisker',
 ]);
 

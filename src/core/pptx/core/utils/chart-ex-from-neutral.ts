@@ -97,6 +97,11 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 		] as const)
 			delete result[key];
 		Object.assign(result, chartExFamilyFields(source));
+		if (source.layoutId === 'regionMap' && source.layoutProperties?.geography?.geoCacheXml)
+			result.regionMapOptions = {
+				...result.regionMapOptions,
+				geographyCacheXml: source.layoutProperties.geography.geoCacheXml,
+			};
 		const group = source.dataLabels;
 		if (!group) {
 			delete result.dataLabels;

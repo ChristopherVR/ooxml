@@ -8,7 +8,6 @@
  * @module chart-region-map-colors
  */
 
-import { lerpColor } from './chart-region-map-data';
 import type { SvgRect, SvgText } from './chart-view-model';
 import { formatAxisValue } from './chart-view-model';
 
@@ -19,22 +18,7 @@ const REGION_LEGEND_BANDS = 32;
  * 3-stop sequential colour scale: light (#dbeafe) -> mid (#3b82f6) -> dark (#1e3a5f).
  * Mirrors `sequentialColorScale` in React's `chart-map.tsx`.
  */
-export function sequentialColorScale(t: number): string {
-	const clamped = Math.max(0, Math.min(1, t));
-	if (clamped <= 0.5) {
-		return lerpColor('#dbeafe', '#3b82f6', clamped * 2);
-	}
-	return lerpColor('#3b82f6', '#1e3a5f', (clamped - 0.5) * 2);
-}
-
-/** Normalise a value to [0..1] within a min/max range. */
-export function normalizeValue(value: number, min: number, max: number): number {
-	if (max === min) {
-		return 0.5;
-	}
-	return (value - min) / (max - min);
-}
-
+export { sequentialColorScale, normalizeValue } from 'ooxml-core/chart/region-map';
 export interface RegionMapColorLegendParams {
 	svgWidth: number;
 	legendY: number;

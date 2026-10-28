@@ -263,6 +263,11 @@
 			"types": "./dist/pptx/automation/schemas/*.d.ts",
 			"import": "./dist/pptx/automation/schemas/*.mjs",
 			"require": "./dist/pptx/automation/schemas/*.cjs"
+		},
+		"./chart/region-map": {
+			"types": "./dist/chart/region-map/index.d.ts",
+			"import": "./dist/chart/region-map/index.mjs",
+			"require": "./dist/chart/region-map/index.cjs"
 		}
 	},
 	"publishConfig": {

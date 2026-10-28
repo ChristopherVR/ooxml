@@ -645,6 +645,8 @@ export interface PptxChartRegionMapOptions {
 	attribution?: string;
 	/** Opaque authored provider cache under `cx:geography/cx:geoCache`. */
 	geographyCache?: XmlObject;
+	/** Neutral raw source cache retained for the shared renderer. */
+	geographyCacheXml?: string;
 }
 
 /** Layout for parent category labels in a hierarchical ChartEx treemap. */

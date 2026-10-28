@@ -1,7 +1,8 @@
+import { chartExFormatting } from './summary-ex-formatting';
 import { chartExSeriesPaint } from './summary-ex-series';
 // Builds neutral SVG summaries for supported Office 2016 extended chart parts: waterfall,
-// histogram, treemap, sunburst, funnel and box-and-whisker. Word uses cached points; Excel can
-// resolve the retained formulas from live cells. Region maps and Pareto remain unsummarised.
+// histogram, treemap, sunburst, funnel, box-and-whisker and region maps. Word uses cached points;
+// Excel can resolve retained formulas from live cells. Pareto remains unsummarised.
 import type { DrawingColor } from '../../drawingml/types';
 import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
@@ -101,31 +102,6 @@ export function chartExSummary(source: string | XmlElement): ChartExSummary | un
 	return chartExSummaryFromModel(parseChartExSpace(root).chartExSpace);
 }
 
-/** The text style Office draws an extended chart's title with (it has no `c:style`). */
-function chartExFormatting(): NonNullable<ChartSummary['formatting']> {
-	// Office draws it with the classic default text (grey, regular), not the larger bold text of
-	// the newly authored style.
-	return {
-		builtInStyle: 2,
-		sourceXml: '',
-		entries: {
-			title: {
-				fontSize: 14,
-				bold: false,
-				textColor: {
-					kind: 'scheme',
-					value: 'tx1',
-					transforms: [
-						{ name: 'lumMod', value: '65000' },
-						{ name: 'lumOff', value: '35000' },
-					],
-				},
-				sourceXml: '',
-			},
-		},
-	};
-}
-
 function summarySeries(
 	space: ChartExSpace,
 	source: ChartExSeries,
@@ -136,7 +112,11 @@ function summarySeries(
 	const values = dimension(
 		data,
 		'numDim',
-		chartType === 'treemap' || chartType === 'sunburst' ? 'size' : 'val',
+		chartType === 'treemap' || chartType === 'sunburst'
+			? 'size'
+			: chartType === 'regionMap'
+				? 'colorVal'
+				: 'val',
 	);
 	const series: ChartSummarySeries = {
 		categories: categories?.points ?? [],
@@ -150,6 +130,27 @@ function summarySeries(
 		if (source.hidden !== undefined) series.hidden = source.hidden;
 	}
 	if (chartType === 'boxWhisker') series.boxWhisker = source.layoutProperties ?? {};
+	if (chartType === 'regionMap') {
+		const geo = source.layoutProperties?.geography;
+		series.regionMap = {
+			...(geo as import('../region-map/types').RegionMapOptions),
+			...(geo?.geoCacheXml ? { geographyCacheXml: geo.geoCacheXml } : {}),
+			...(dimension(data, 'strDim', 'entityId')
+				? { entityIds: dimension(data, 'strDim', 'entityId')!.points }
+				: {}),
+			...(source.layoutProperties?.regionLabelLayout
+				? {
+						regionLabelLayout: source.layoutProperties.regionLabelLayout as NonNullable<
+							import('../region-map/types').RegionMapOptions['regionLabelLayout']
+						>,
+					}
+				: {}),
+			...(source.valueColorsXml ? { valueColorsXml: source.valueColorsXml } : {}),
+			...(source.valueColorPositionsXml
+				? { valueColorPositionsXml: source.valueColorPositionsXml }
+				: {}),
+		};
+	}
 	const name = source.tx?.value?.trim();
 	if (name) series.name = name;
 	const nameRef = source.tx?.formula?.formula.trim();
@@ -172,7 +173,8 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 				: layoutId === 'treemap' ||
 					  layoutId === 'sunburst' ||
 					  layoutId === 'funnel' ||
-					  layoutId === 'boxWhisker'
+					  layoutId === 'boxWhisker' ||
+					  layoutId === 'regionMap'
 					? layoutId
 					: undefined;
 	if (!primary || !chartType) return { layoutId };
@@ -221,7 +223,12 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 			];
 		});
 	}
-	summary.formatting = chartExFormatting();
+	if (chartType === 'funnel') {
+		const cat = space.plotArea.axes.find((axis) => axis.scaling?.kind === 'cat')?.scaling;
+		if (cat?.kind === 'cat' && typeof cat.gapWidth === 'number')
+			summary.funnelGapWidth = cat.gapWidth;
+	}
+	summary.formatting = chartExFormatting(space);
 	const title = titleOf(space);
 	if (title) summary.title = title;
 	const position = legend?.position;
