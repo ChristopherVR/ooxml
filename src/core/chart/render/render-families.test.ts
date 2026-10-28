@@ -225,13 +225,26 @@ describe('hierarchy charts without data labels', () => {
 		}
 	});
 
-	it('uses the classic grey regular title, not the large bold default', () => {
+	it('uses the native 18 point regular ChartEx title fallback', () => {
 		const svg = renderChartSummarySvg(chartExSummary(hierarchyXml('treemap'))!.summary!, {
 			width: 480,
 			height: 300,
 		});
+		const title = /<text [^>]*>Produce<\/text>/.exec(svg)![0];
+		expect(title).toContain('font-size="24"');
+		expect(title).toMatch(/fill="#000000"[^>]*font-weight="normal"/);
+	});
+	it('retains explicitly authored grey and bold ChartEx title styling', () => {
+		const source = hierarchyXml('treemap').replace(
+			'</cx:title>',
+			'<cx:txPr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr b="1"><a:solidFill><a:srgbClr val="595959"/></a:solidFill></a:defRPr></a:pPr><a:endParaRPr/></a:p></cx:txPr></cx:title>',
+		);
+		const svg = renderChartSummarySvg(chartExSummary(source)!.summary!, {
+			width: 480,
+			height: 300,
+		});
 		expect(/<text [^>]*>Produce<\/text>/.exec(svg)![0]).toMatch(
-			/fill="#595959"[^>]*font-weight="normal"/,
+			/fill="#595959"[^>]*font-weight="bold"/,
 		);
 	});
 });
