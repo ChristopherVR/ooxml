@@ -20,10 +20,11 @@ it('paints native-size mirrored tiles with crop and page-fixed orientation', () 
 	);
 	expect(result.unapplied).toEqual([]);
 	const pattern = target.querySelector('pattern')!;
-	expect(pattern.getAttribute('width')).toBe('60');
+	expect(pattern.getAttribute('width')).toBe('80');
 	expect(pattern.getAttribute('height')).toBe('20');
-	expect(pattern.getAttribute('x')).toBe('36');
+	expect(pattern.getAttribute('x')).toBe('31');
 	expect(pattern.querySelectorAll('image')).toHaveLength(4);
+	expect(Number(pattern.querySelector('image')!.getAttribute('width'))).toBeCloseTo(40 / 0.75);
 	expect(pattern.getAttribute('patternTransform')).toContain('rotate(-30)');
 });
 it('clips a stretched cropped image to its offset fillRect', () => {

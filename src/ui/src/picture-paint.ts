@@ -77,7 +77,9 @@ export function picturePaint(
 			const tile = fill.layout!.tile!;
 			const cell = pictureTileGeometry(
 				context,
-				{ width: size.width * spanX, height: size.height * spanY },
+				// Office scales the uncropped bitmap to set the tile period; srcRect
+				// expands its image inside that fixed cell (native PowerPoint probe).
+				size,
 				tile,
 				fill.layout?.dpi,
 			);

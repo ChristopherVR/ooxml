@@ -200,7 +200,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		dom.className = ['dve-picture', placementClass(node.attrs.placement)].filter(Boolean).join(' ');
 		dom.append(content);
 		if (painted) dom.append(painted);
-		content.addEventListener('dblclick', () => {
+		dom.addEventListener('dblclick', () => {
 			const pos = getPos();
 			if (pos !== undefined && view.editable) options.editPicture?.(pos);
 		});

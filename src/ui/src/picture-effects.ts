@@ -57,6 +57,7 @@ export function pictureEffectFilter(
 		if (effect.kind === 'standard') {
 			const result = standardPictureFilter(doc, effect, scheme, `${filter.id}-${step++}`);
 			if (result.unapplied) unapplied.push(result.unapplied);
+			if (['hsl', 'tint', 'clrChange'].includes(effect.name)) approximated.push(effect.name);
 			const input = previous;
 			for (const item of result.nodes) {
 				if (item.getAttribute('in') === 'PICTURE_INPUT') item.setAttribute('in', input);
