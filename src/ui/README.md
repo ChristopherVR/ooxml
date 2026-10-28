@@ -24,6 +24,16 @@ dependencies are `ooxml-core` (types and a few pure helpers) and `lit`, which ev
 > package, which registers them for you. Importing `ooxml-ui` directly is for
 > the viewer packages themselves and for people building their own Office-style UI.
 
+Shared behavior helpers are also available to product hosts. `ooxml-ui/controls`
+exports `createLiveColorInput` and its leaf helpers for target-aware preview/commit
+transactions, plus `createDialogSession` for asynchronous submit and dismissal.
+The package root exports font catalogue, availability and custom-font services
+(`buildFontCatalog`, `scanAvailableFontFamilies`, `createFontFaceScope`) and
+`createRecoveryScheduler`. Hosts retain their document model, undo, storage,
+translation and focus-restoration policies. Dispose owned font scopes and sessions
+when the host unmounts. Font selection and script segmentation are DOM-free APIs
+in `ooxml-core/text`.
+
 ## How the elements are built
 
 `office-ui-smartart` accepts `schemeFonts` (`major` and `minor` Latin typefaces)

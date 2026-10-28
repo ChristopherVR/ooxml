@@ -7,6 +7,7 @@ export interface RecoveryTimers {
 export function createRecoveryScheduler(options: {
 	tick(): void;
 	timers?: RecoveryTimers;
+	/** True only when injected timers.set already repeats (for example, setInterval). */
 	repeating?: boolean;
 }) {
 	const timers = options.timers ?? {

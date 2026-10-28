@@ -14,6 +14,7 @@ export * from './presence';
 export * from './smartart';
 export * from './teams/index';
 export * from './theme';
+export * from './recovery-scheduler';
 export { CONTRACT_REVISION, type Definer } from './registry';
 
 /** Every ooxml-ui tag this package defines, in registration order. */

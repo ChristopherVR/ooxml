@@ -316,3 +316,4 @@ export * from './fonts/catalog';
 export * from './fonts/availability';
 export * from './fonts/custom-fonts';
 export * from './dialog/dialog-session';
+export * from './form/color-input/live-color-leaves';
