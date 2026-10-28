@@ -31,6 +31,7 @@ import {
 	findHighlightClickTarget,
 	HIGHLIGHT_CLEAR_STYLE,
 	mayLeaveSlideShow,
+	resolveTransitionDurationMs,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
@@ -417,8 +418,12 @@ export class PresentationOverlayComponent implements OnInit {
 		// with no visible response to input, which reads as "presentation mode
 		// does nothing at all".
 		effect(() => {
+			const slide = this.currentSlide();
+			const after = resolveSlideAutoAdvanceMs(slide, this.useTimings(), this.endOfShow());
+			// PowerPoint counts `After` from the end of the slide's own transition; arming at the
+			// start of a 0s timer cut every timed slide's entry transition short.
 			this.navigator.armAutoAdvance(
-				resolveSlideAutoAdvanceMs(this.currentSlide(), this.useTimings(), this.endOfShow()),
+				after === undefined ? undefined : after + resolveTransitionDurationMs(slide?.transition),
 			);
 		});
 
