@@ -39,6 +39,10 @@ export function reflowSmartArtPictures(
 		if (view.pictureFill?.relId) {
 			const part = source.pictureParts?.[view.pictureFill.relId];
 			if (part && data.pictureUrls?.[part]) view.fillImageUrl = data.pictureUrls[part];
+			if (part && data.pictureSizes?.[part]) {
+				view.fillImageWidth = data.pictureSizes[part].width;
+				view.fillImageHeight = data.pictureSizes[part].height;
+			}
 		}
 		return view;
 	});

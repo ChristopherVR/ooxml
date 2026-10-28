@@ -17,6 +17,7 @@ it.each(['picture-accent-list--flat3', 'picture-grid--flat3'])(
 		if (element.type !== 'smartArt') throw new Error('Missing SmartArt');
 		const data = element.smartArtData!;
 		expect(data.pictureLayoutSource?.pictures).toHaveLength(3);
+		expect(Object.values(data.pictureSizes ?? {})).toEqual([{ width: 48, height: 32 }]);
 		data.nodes[0]!.text = 'Updated picture caption';
 		data.drawingShapes = relayoutSmartArt(data, element.width, element.height);
 		data.drawingDirty = true;

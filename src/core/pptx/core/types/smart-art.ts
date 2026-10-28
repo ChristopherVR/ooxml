@@ -159,6 +159,7 @@ export interface PptxSmartArtData extends DiagramData {
 	/** Resolved host media, keyed by stable package part path. */
 	pictureUrls?: Record<string, string>;
 	pictureScheme?: Record<string, string>;
+	pictureSizes?: Record<string, { width: number; height: number }>;
 	nodes: PptxSmartArtNode[];
 	/** Pre-computed shapes from `ppt/diagrams/drawing*.xml`. */
 	drawingShapes?: PptxSmartArtDrawingShape[];

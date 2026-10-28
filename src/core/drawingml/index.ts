@@ -57,3 +57,6 @@ export * from './picture-layout';
 export * from './picture-standard-effects';
 export * from './picture-transfer';
 export * from './picture-artistic';
+
+export { inspectRasterImage, RasterImageError, RASTER_IMAGE_LIMITS } from './raster-image';
+export type { RasterImageInfo, RasterImageOptions, RasterImageErrorCode } from './raster-image';

@@ -29,3 +29,5 @@ export { sha256 } from './sha256';
 export { sha384, sha512 } from './sha512';
 export { timingSafeEqual } from './timing-safe';
 export { whirlpool } from './whirlpool';
+
+export { crc32 } from './crc32';
