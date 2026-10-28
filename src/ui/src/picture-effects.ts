@@ -23,6 +23,7 @@ export function pictureEffectFilter(
 			continue;
 		}
 		if (effect.kind === 'artistic') {
+			if (effect.unhandled?.length) unapplied.push(...effect.unhandled);
 			if (effect.baked) continue;
 			const nodes = artisticPictureNodes(doc, effect.name, effect.radius);
 			if (!nodes) {

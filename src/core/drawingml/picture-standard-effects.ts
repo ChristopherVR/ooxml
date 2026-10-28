@@ -1,8 +1,6 @@
 import { NS, elements, first, type XmlElement } from '../xml/index';
 import { parseDrawingColor, parseDrawingColorIn } from './drawing-color';
-import { drawingColorXml } from './write-color';
 import { patchDrawingColorIn } from './patch-color';
-import { parseXml } from '../xml/index';
 import type { DrawingColor } from './types';
 export type PictureStandardEffectName =
 	| 'biLevel'
@@ -136,6 +134,26 @@ export function applyStandardPictureEffect(
 ): void {
 	const doc = node.ownerDocument,
 		before = parseStandardPictureEffect(node);
+	for (const [key, value] of Object.entries(effect.values ?? {})) {
+		if (
+			!Number.isFinite(value) ||
+			(key === 'hue' && (value < 0 || value >= 360)) ||
+			(key === 'threshold' && (value < 0 || value > 1)) ||
+			(key === 'radiusEmu' && (!Number.isSafeInteger(value) || value < 0)) ||
+			(key === 'amount' && effect.name === 'alphaMod' && value < 0) ||
+			(['saturation', 'luminance', 'amount'].includes(key) &&
+				effect.name !== 'alphaMod' &&
+				(value < (effect.name === 'alphaRepl' ? 0 : -1) || value > 1))
+		)
+			throw new RangeError('Invalid picture effect values');
+	}
+	const count = effect.colors?.length ?? 0;
+	if (
+		(['duotone', 'clrChange'].includes(effect.name) && count !== 2) ||
+		(effect.name === 'clrRepl' && count !== 1) ||
+		(effect.name === 'alphaInv' && count > 1)
+	)
+		throw new RangeError('Invalid picture effect colours');
 	for (const [key, attribute] of Object.entries(attrs[effect.name] ?? {})) {
 		const value = effect.values?.[key as keyof NonNullable<typeof effect.values>];
 		if (value === before?.values?.[key as keyof NonNullable<typeof effect.values>]) continue;
@@ -167,10 +185,10 @@ export function applyStandardPictureEffect(
 				(item) => item.namespaceURI === NS.a && /Clr$/.test(item.localName),
 			);
 			for (let i = 0; i < (effect.colors?.length ?? 0); i++) {
-				const next = doc.importNode(
-					parseXml(drawingColorXml(effect.colors![i]!)).documentElement,
-					true,
-				);
+				const holder = doc.createElementNS(NS.a, 'a:holder');
+				if (old[i]) holder.appendChild(doc.importNode(old[i]!, true));
+				patchDrawingColorIn(holder, effect.colors![i]!);
+				const next = elements(holder)[0]!;
 				if (old[i]) node.replaceChild(next, old[i]!);
 				else node.insertBefore(next, first(node, 'extLst', NS.a) ?? null);
 			}

@@ -76,3 +76,27 @@ it('does not double apply native cached artistic metadata and refuses uncached a
 		]),
 	).toThrow(/baked picture cache/);
 });
+
+it('validates authored rich values before rounding and preserves colour metadata on edits', () => {
+	const blip = parseXml(
+		`<a:blip xmlns:a="${NS.a}" xmlns:v="urn:vendor"><a:duotone><a:srgbClr val="000000" v:keep="yes"/><a:srgbClr val="FFFFFF"/></a:duotone></a:blip>`,
+	).documentElement;
+	const effects = parsePictureEffects(blip);
+	const effect = effects[0]!;
+	if (effect.kind !== 'standard') throw new Error('Missing duotone');
+	effect.colors![0]!.value = '112233';
+	applyPictureEffects(blip, effects);
+	expect(buildXml(blip)).toContain('v:keep="yes"');
+	expect(() =>
+		applyPictureEffects(blip, [
+			{ kind: 'standard', name: 'alphaRepl', values: { amount: 1.00000001 } },
+		]),
+	).toThrow(/Invalid/);
+	expect(() =>
+		applyPictureEffects(blip, [{ kind: 'standard', name: 'duotone', colors: [] }]),
+	).toThrow(/Invalid/);
+	const art = parseXml(
+		`<a:blip xmlns:a="${NS.a}" xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" xmlns:v="urn:vendor"><a:extLst><a:ext uri="x"><a14:imgProps><a14:imgLayer><a14:imgEffect><a14:artisticFilmGrain grainSize="30000"/></a14:imgEffect></a14:imgLayer></a14:imgProps><v:unknown/></a:ext></a:extLst></a:blip>`,
+	).documentElement;
+	expect(parsePictureEffects(art)[0]).toMatchObject({ kind: 'artistic', unhandled: ['unknown'] });
+});

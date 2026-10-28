@@ -1,7 +1,7 @@
 /** Generate repeatable native/shared picture comparison inputs. Run: bun src/ui/scripts/picture-native-fixture.ts <output-dir> */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { deflateSync } from 'node:zlib';
+import { pictureGridPng } from '../../core/diagram/test-support/picture-grid';
 import JSZip from 'jszip';
 import { JSDOM } from 'jsdom';
 import { buildBlankPresentationArchive } from '../../core/pptx/core/builders/sdk/PresentationBuilder';
@@ -10,43 +10,7 @@ import { parseDrawingPictureFill } from '../../core/drawingml/picture-fill';
 import { picturePaint } from '../src/picture-paint';
 const output = resolve(process.argv[2] ?? '.picture-native');
 await mkdir(output, { recursive: true });
-function crc(bytes: Uint8Array) {
-	let n = -1;
-	for (const byte of bytes) {
-		n ^= byte;
-		for (let bit = 0; bit < 8; bit++) n = (n >>> 1) ^ (n & 1 ? 0xedb88320 : 0);
-	}
-	return (n ^ -1) >>> 0;
-}
-function chunk(name: string, bytes: Uint8Array) {
-	const content = Buffer.concat([Buffer.from(name), bytes]);
-	const size = Buffer.alloc(4);
-	size.writeUInt32BE(bytes.length);
-	const hash = Buffer.alloc(4);
-	hash.writeUInt32BE(crc(content));
-	return Buffer.concat([size, content, hash]);
-}
-const header = Buffer.alloc(13);
-header.writeUInt32BE(48, 0);
-header.writeUInt32BE(32, 4);
-header[8] = 8;
-header[9] = 6;
-const raw = Buffer.alloc(32 * (48 * 4 + 1));
-for (let y = 0; y < 32; y++)
-	for (let x = 0; x < 48; x++) {
-		const i = y * 193 + 1 + x * 4;
-		const col = x < 16 ? [255, 0, 0] : x < 32 ? [0, 255, 0] : [0, 0, 255];
-		raw[i] = col[0]!;
-		raw[i + 1] = col[1]!;
-		raw[i + 2] = col[2]!;
-		raw[i + 3] = y < 16 ? 255 : 128;
-	}
-const png = Buffer.concat([
-	Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-	chunk('IHDR', header),
-	chunk('IDAT', deflateSync(raw)),
-	chunk('IEND', Buffer.alloc(0)),
-]);
+const png = pictureGridPng();
 const imageUrl = `data:image/png;base64,${png.toString('base64')}`;
 const a = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const cases = [
@@ -89,6 +53,27 @@ const cases = [
 		rotation: 30,
 		layout: '<a:tile sx="200000" sy="200000" algn="ctr"/>',
 	},
+
+	...[
+		['clr-repl', '<a:clrRepl><a:srgbClr val="FF7700"/></a:clrRepl>'],
+		[
+			'clr-change',
+			'<a:clrChange useA="0"><a:clrFrom><a:srgbClr val="FF0000"/></a:clrFrom><a:clrTo><a:srgbClr val="FFFF00"/></a:clrTo></a:clrChange>',
+		],
+		['hsl', '<a:hsl hue="1800000" sat="50000" lum="20000"/>'],
+		['tint', '<a:tint hue="3600000" amt="30000"/>'],
+		['blur', '<a:blur rad="19050" grow="0"/>'],
+		['alpha-inv', '<a:alphaInv/>'],
+		['alpha-inv-colour', '<a:alphaInv><a:srgbClr val="FF7700"/></a:alphaInv>'],
+		['alpha-ceiling', '<a:alphaCeiling/>'],
+		['alpha-floor', '<a:alphaFloor/>'],
+		['alpha-mod', '<a:alphaMod><a:cont><a:alphaModFix amt="50000"/></a:cont></a:alphaMod>'],
+		['alpha-repl', '<a:alphaRepl a="40000"/>'],
+	].map(([id, effects]) => ({
+		id: id!,
+		effects: effects!,
+		layout: '<a:stretch><a:fillRect/></a:stretch>',
+	})),
 ];
 const archive = await JSZip.loadAsync(
 	await buildBlankPresentationArchive({ initialSlideCount: cases.length }),
@@ -149,6 +134,7 @@ for (const [index, item] of cases.entries()) {
 		width: 192,
 		height: 128,
 		sharedSvg: `${item.id}.svg`,
+		expect: index < 8 ? { maximumError: 0.02, minimumOverlap: 0.8 } : undefined,
 		note: item.rotation
 			? 'Shape rotation and inverse fill rotation are clipped to the declared frame.'
 			: undefined,

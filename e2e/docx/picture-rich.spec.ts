@@ -1,3 +1,4 @@
+import { pictureGridPng } from '../../src/core/diagram/test-support/picture-grid';
 import JSZip from 'jszip';
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -10,6 +11,8 @@ const zip = await JSZip.loadAsync(
 		),
 	),
 );
+for (const name of Object.keys(zip.files))
+	if (name.startsWith('word/media/') && name.endsWith('.png')) zip.file(name, pictureGridPng());
 const xml = await zip.file('word/document.xml')!.async('string');
 zip.file(
 	'word/document.xml',
