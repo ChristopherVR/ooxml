@@ -53,7 +53,6 @@ import {
 	observeHtml2CanvasRuns,
 	pixelDiff,
 } from './support/pixel-diff';
-import type { FractionalCropRect } from './support/pixel-diff';
 
 const FIDELITY_DECK = fixture('fidelity-showcase.pptx');
 const SHAPE_SELECTOR = '[data-pptx-viewport] [data-pptx-element="true"]';
@@ -107,36 +106,6 @@ test('capture errors and download failures retain their cause and remove the dia
 	expect(listeners.size).toBe(0);
 });
 
-/**
- * Text runs on the slide, as fractions of the slide stage. The html2canvas fallback places glyphs
- * a few pixels differently from one capture to the next (CI saw two variants of the same export,
- * unrelated to selection), so a comparison that is about selection chrome, not text, leaves them
- * out. Handles and outlines sit outside the text runs and stay compared.
- */
-async function textRunRects(page: Page): Promise<FractionalCropRect[]> {
-	return slideStage(page).evaluate((stage) => {
-		const frame = stage.getBoundingClientRect();
-		const padX = 40;
-		const padY = 4;
-		const rects: FractionalCropRect[] = [];
-		const walker = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT);
-		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-			if (!node.textContent?.trim()) continue;
-			const range = document.createRange();
-			range.selectNodeContents(node);
-			for (const box of range.getClientRects()) {
-				rects.push({
-					x: (box.left - padX - frame.left) / frame.width,
-					y: (box.top - padY - frame.top) / frame.height,
-					width: (box.width + padX * 2) / frame.width,
-					height: (box.height + padY * 2) / frame.height,
-				});
-			}
-		}
-		return rects;
-	});
-}
-
 test.describe('selection chrome is absent from raster exports', () => {
 	test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 	// These elements exercise the rounded shape, clipped shape, and connector
@@ -167,7 +136,6 @@ test.describe('selection chrome is absent from raster exports', () => {
 				await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
 				const handle = viewport(page).getByRole('button', { name: 'Resize nw', exact: true });
 				await expect(handle).toBeVisible();
-				const textRects = await textRunRects(page);
 				await openBackstageExport(page);
 				// Keep the selection throughout capture: an equal image must not
 				// merely prove that File deselected the element before exporting.
@@ -176,10 +144,7 @@ test.describe('selection chrome is absent from raster exports', () => {
 				await selectedDownload.saveAs(testInfo.outputPath('selected.png'));
 				const selected = await downloadBytes(selectedDownload);
 				await expect(handle).toBeAttached();
-				const diff = await pixelDiff(page, unselected, selected, {
-					channelThreshold: 8,
-					ignoreRects: textRects,
-				});
+				const diff = await pixelDiff(page, unselected, selected, { channelThreshold: 8 });
 				await testInfo.attach('unselected.png', {
 					path: testInfo.outputPath('unselected.png'),
 					contentType: 'image/png',

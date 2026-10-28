@@ -205,8 +205,6 @@ export interface PixelDiffOptions {
 	targetH?: number;
 	/** Per-channel delta above which a pixel counts as "different" (default 24). */
 	channelThreshold?: number;
-	/** Regions, as fractions of the compared frame, whose pixels are skipped. */
-	ignoreRects?: FractionalCropRect[];
 }
 
 /**
@@ -222,9 +220,9 @@ export async function pixelDiff(
 	bytesB: Uint8Array,
 	options: PixelDiffOptions = {},
 ): Promise<PixelDiffStats> {
-	const { cropA, cropB, targetW, targetH, channelThreshold = 24, ignoreRects = [] } = options;
+	const { cropA, cropB, targetW, targetH, channelThreshold = 24 } = options;
 	return page.evaluate(
-		async ({ a, b, w, h, cropA: ca, cropB: cb, threshold, ignore }) => {
+		async ({ a, b, w, h, cropA: ca, cropB: cb, threshold }) => {
 			async function decode(b64: string): Promise<ImageBitmap> {
 				const blob = await (await fetch(`data:image/png;base64,${b64}`)).blob();
 				return createImageBitmap(blob);
@@ -257,16 +255,7 @@ export async function pixelDiff(
 			let total = 0;
 			let differing = 0;
 			const pixelCount = width * height;
-			const skip = new Uint8Array(pixelCount);
-			for (const rect of ignore) {
-				const x0 = Math.max(0, Math.floor(rect.x * width));
-				const x1 = Math.min(width, Math.ceil((rect.x + rect.width) * width));
-				const y0 = Math.max(0, Math.floor(rect.y * height));
-				const y1 = Math.min(height, Math.ceil((rect.y + rect.height) * height));
-				for (let y = y0; y < y1; y++) skip.fill(1, y * width + x0, y * width + x1);
-			}
 			for (let i = 0; i < pa.length; i += 4) {
-				if (skip[i / 4]) continue;
 				const dr = Math.abs(pa[i] - pb[i]);
 				const dg = Math.abs(pa[i + 1] - pb[i + 1]);
 				const db = Math.abs(pa[i + 2] - pb[i + 2]);
@@ -288,7 +277,6 @@ export async function pixelDiff(
 			cropA,
 			cropB,
 			threshold: channelThreshold,
-			ignore: ignoreRects,
 		},
 	);
 }
