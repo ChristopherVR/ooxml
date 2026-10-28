@@ -60,33 +60,60 @@ function reanchor(xml: string, anchor: DrawingAnchor): string {
 	} catch {
 		return xml;
 	}
-	const root = doc.documentElement;
-	const set = (name: 'from' | 'to', m: DrawingAnchor['from'] | undefined) => {
-		const node = first(root, name, NS.xdr);
-		if (!node || !m) return;
-		const values: Record<string, number> = {
-			col: m.col,
-			colOff: Math.round(m.colOffset),
-			row: m.row,
-			rowOff: Math.round(m.rowOffset),
-		};
-		for (const [local, value] of Object.entries(values)) {
-			const child = first(node, local, NS.xdr);
-			if (child) child.textContent = String(value);
+	const old = doc.documentElement;
+	const absolute =
+		old.localName === 'absoluteAnchor' &&
+		!anchor.to &&
+		anchor.from.row === 0 &&
+		anchor.from.col === 0;
+	const name = anchor.to ? 'twoCellAnchor' : absolute ? 'absoluteAnchor' : 'oneCellAnchor';
+	const root = doc.createElementNS(NS.xdr, `xdr:${name}`);
+	for (const attribute of Array.from(old.attributes)) {
+		if (attribute.name === 'editAs' && name !== 'twoCellAnchor') continue;
+		if (attribute.namespaceURI)
+			root.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+		else root.setAttribute(attribute.name, attribute.value);
+	}
+	const ext = anchor.ext ?? { cx: 914400, cy: 914400 };
+	const positions = absolute
+		? `<xdr:pos x="${Math.round(anchor.from.colOffset)}" y="${Math.round(anchor.from.rowOffset)}"/><xdr:ext cx="${Math.round(ext.cx)}" cy="${Math.round(ext.cy)}"/>`
+		: marker('from', anchor.from) +
+			(anchor.to
+				? marker('to', anchor.to)
+				: `<xdr:ext cx="${Math.round(ext.cx)}" cy="${Math.round(ext.cy)}"/>`);
+	const holder = parseXml(
+		`<xdr:anchor xmlns:xdr="${NS.xdr}">${positions}</xdr:anchor>`,
+	).documentElement;
+	for (const candidate of Array.from(holder.childNodes)) {
+		if (candidate.nodeType !== 1) continue;
+		const template = candidate as import('../../xml/index').XmlElement;
+		const original = first(old, template.localName, NS.xdr);
+		const position = original
+			? (original.cloneNode(true) as import('../../xml/index').XmlElement)
+			: (doc.importNode(template, true) as import('../../xml/index').XmlElement);
+		for (const attribute of Array.from(template.attributes))
+			position.setAttribute(attribute.name, attribute.value);
+		for (const value of Array.from(template.childNodes)) {
+			if (value.nodeType !== 1) continue;
+			const item = value as import('../../xml/index').XmlElement;
+			const existing = first(position, item.localName, NS.xdr);
+			if (existing) existing.textContent = item.textContent;
+			else position.appendChild(doc.importNode(item, true));
 		}
-	};
-	set('from', anchor.from);
-	set('to', anchor.to);
-	const ext = first(root, 'ext', NS.xdr);
-	if (ext && anchor.ext) {
-		ext.setAttribute('cx', String(Math.round(anchor.ext.cx)));
-		ext.setAttribute('cy', String(Math.round(anchor.ext.cy)));
+		root.appendChild(position);
 	}
-	if (root.localName === 'absoluteAnchor') {
-		const pos = first(root, 'pos', NS.xdr);
-		pos?.setAttribute('x', String(Math.round(anchor.from.colOffset)));
-		pos?.setAttribute('y', String(Math.round(anchor.from.rowOffset)));
+	for (const child of Array.from(old.childNodes)) {
+		if (
+			child.nodeType === 1 &&
+			(child as import('../../xml/index').XmlElement).namespaceURI === NS.xdr &&
+			['from', 'to', 'ext', 'pos'].includes(
+				(child as import('../../xml/index').XmlElement).localName,
+			)
+		)
+			continue;
+		root.appendChild(child);
 	}
+	doc.replaceChild(root, old);
 	return buildXml(doc);
 }
 

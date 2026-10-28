@@ -116,7 +116,7 @@ it('reports unsupported fills, geometry and optional 3D honestly', () => {
 	]);
 	expect(result.report).toMatchObject({
 		approximatedGeometries: ['foreign-shape'],
-		approximatedFills: ['picture'],
+		approximatedFills: ['picture:unresolved'],
 		flattened3d: 1,
 	});
 });

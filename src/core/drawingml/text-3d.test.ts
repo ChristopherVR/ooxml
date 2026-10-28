@@ -69,3 +69,36 @@ describe('source-backed typed text-body 3D', () => {
 		expect(xml.indexOf('<a:bevelB')).toBeLessThan(xml.indexOf('<a:extrusionClr'));
 	});
 });
+
+it.each(['cameraPreset', 'lightRigType', 'lightRigDirection'] as const)(
+	'rejects removal of required scene attribute %s',
+	(key) => {
+		const value = read();
+		delete value.scene3d![key];
+		expect(() => write(value)).toThrow(/required/);
+	},
+);
+it('keeps malformed rotation opaque through another axis edit and rejects invalid new angles', () => {
+	const value = read(source.replace('lat="0"', 'lat="-1"'));
+	expect(value.scene3d?.cameraRotX).toBeUndefined();
+	expect(write(value)).toContain('lat="-1"');
+	value.scene3d!.cameraRotY = 123;
+	expect(write(value)).toContain('lat="-1"');
+	for (const angle of [-1, 21600000, 0.5]) {
+		const edited = read();
+		edited.scene3d!.cameraRotX = angle;
+		expect(() => write(edited)).toThrow(RangeError);
+	}
+});
+it.each(['scene3d', 'sp3d'] as const)(
+	'carries duplicate %s children opaquely without dropping either',
+	(name) => {
+		const value = read(
+			`<a:bodyPr xmlns:a="${NS.a}" xmlns:v="urn:vendor"><a:${name} v:identity="first"/><a:${name} v:identity="second"/></a:bodyPr>`,
+		);
+		expect(name === 'scene3d' ? value.scene3d : value.shape3d).toBeUndefined();
+		const xml = write(value);
+		expect(xml).toContain('v:identity="first"');
+		expect(xml).toContain('v:identity="second"');
+	},
+);

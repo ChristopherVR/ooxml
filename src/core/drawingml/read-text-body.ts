@@ -82,10 +82,19 @@ export function parseDrawingBodyProperties(
 					? { lineSpacingReduction: reduction }
 					: {}),
 			};
-		} else if (name === 'scene3d') out.scene3d = parseDrawingTextScene3D(child);
-		else if (name === 'sp3d' && !first(element, 'flatTx', NS.a))
+		} else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
+			out.scene3d = parseDrawingTextScene3D(child);
+		else if (
+			name === 'sp3d' &&
+			children(element, 'sp3d', NS.a).length === 1 &&
+			!first(element, 'flatTx', NS.a)
+		)
 			out.shape3d = parseDrawingTextShape3D(child);
-		else if (name === 'flatTx' && !first(element, 'sp3d', NS.a))
+		else if (
+			name === 'flatTx' &&
+			children(element, 'flatTx', NS.a).length === 1 &&
+			!first(element, 'sp3d', NS.a)
+		)
 			out.flatText3d = parseDrawingFlatText3D(child);
 		else extra.push(outerXml(child));
 	}

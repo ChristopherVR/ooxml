@@ -94,7 +94,10 @@ function number(
 		node.removeAttribute(name);
 		return;
 	}
+	if (['lat', 'lon', 'rev'].includes(name) && !Number.isSafeInteger(value))
+		throw new RangeError(`Invalid 3D ${name}`);
 	const encoded = Math.round(value * scale);
+	if (name === 'zoom' && encoded <= 0) throw new RangeError('Invalid 3D zoom');
 	if (!Number.isFinite(value) || !Number.isSafeInteger(encoded) || value < min || value > max)
 		throw new RangeError(`Invalid 3D ${name}`);
 	node.setAttribute(name, String(encoded));
@@ -105,10 +108,13 @@ function token(
 	value: string | undefined,
 	before: string | undefined,
 	allowed: Set<string>,
+	required = false,
 ): void {
 	if (value === before) return;
-	if (value === undefined) node.removeAttribute(name);
-	else {
+	if (value === undefined) {
+		if (required && before !== undefined) throw new Error(`Cannot remove required 3D ${name}`);
+		node.removeAttribute(name);
+	} else {
 		if (!allowed.has(value)) throw new RangeError(`Invalid 3D ${name}`);
 		node.setAttribute(name, value);
 	}
@@ -126,9 +132,20 @@ function rotation(
 	] as const;
 	if (!axes.some(([, suffix]) => value[`${prefix}${suffix}`] !== before[`${prefix}${suffix}`]))
 		return;
+	const existing = first(node, 'rot', NS.a);
 	const rot = child(node, 'rot');
-	for (const [attribute, suffix] of axes)
-		number(rot, attribute, value[`${prefix}${suffix}`] ?? 0, before[`${prefix}${suffix}`]);
+	for (const [attribute, suffix] of axes) {
+		if (existing && value[`${prefix}${suffix}`] === before[`${prefix}${suffix}`]) continue;
+		number(
+			rot,
+			attribute,
+			value[`${prefix}${suffix}`] ?? 0,
+			before[`${prefix}${suffix}`],
+			1,
+			0,
+			21599999,
+		);
+	}
 }
 export function writeDrawingTextScene3D(doc: XmlDocument, value: DrawingTextScene3D): XmlElement {
 	const node = source(doc, 'scene3d', value.sourceXml);
@@ -138,9 +155,9 @@ export function writeDrawingTextScene3D(doc: XmlDocument, value: DrawingTextScen
 		throw new Error('A new scene needs camera and light rig presets');
 	const camera = child(node, 'camera');
 	const light = child(node, 'lightRig');
-	token(camera, 'prst', value.cameraPreset, before.cameraPreset, CAMERA_PRESETS);
-	token(light, 'rig', value.lightRigType, before.lightRigType, LIGHT_RIGS);
-	token(light, 'dir', value.lightRigDirection, before.lightRigDirection, LIGHT_DIRECTIONS);
+	token(camera, 'prst', value.cameraPreset, before.cameraPreset, CAMERA_PRESETS, true);
+	token(light, 'rig', value.lightRigType, before.lightRigType, LIGHT_RIGS, true);
+	token(light, 'dir', value.lightRigDirection, before.lightRigDirection, LIGHT_DIRECTIONS, true);
 	number(camera, 'fov', value.cameraFieldOfView, before.cameraFieldOfView, 1, 0, 10800000);
 	number(camera, 'zoom', value.cameraZoom, before.cameraZoom, 100000, Number.MIN_VALUE);
 	rotation(camera, value, before, 'camera');

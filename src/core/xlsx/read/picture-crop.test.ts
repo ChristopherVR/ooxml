@@ -71,7 +71,7 @@ it('reads and edits picture crop with history and preserves opaque picture conte
 		description: 'Changed alt text',
 		partName: changed.partName,
 		crop: { cropLeft: 0.1, cropRight: 0.2 },
-		anchor: { from: { row: 15 } },
+		anchor: { from: { row: 15 }, ext: { cx: 1905000, cy: 952500 } },
 	});
 	const reread = again.sheets[sheetIndex]!.drawings[index]!;
 	if (reread.kind !== 'image') throw new Error('Expected image');

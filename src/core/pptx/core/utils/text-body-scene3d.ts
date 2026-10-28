@@ -60,6 +60,13 @@ const ordered = (node: XmlObject, order: readonly string[]): XmlObject => {
 	return result;
 };
 const rotationXml = (x?: number, y?: number, z?: number): XmlObject | undefined => {
+	if (
+		[x, y, z].some(
+			(value) =>
+				value !== undefined && (!Number.isSafeInteger(value) || value < 0 || value >= 21600000),
+		)
+	)
+		throw new RangeError('Invalid 3D rotation angle');
 	if (![x, y, z].some(Number.isInteger)) {
 		return undefined;
 	}

@@ -37,7 +37,7 @@ export function readScene3DValues<T>(node: T, read: ThreeDReader<T>): DrawingSce
 			['rev', 'RotZ'],
 		] as const) {
 			const value = integer(read.attribute(rot, axis));
-			if (value !== undefined) out[`${prefix}${key}`] = value;
+			if (value !== undefined && value >= 0 && value < 21600000) out[`${prefix}${key}`] = value;
 		}
 	}
 	const backdrop = read.child(node, 'backdrop');
