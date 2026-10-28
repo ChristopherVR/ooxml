@@ -4,7 +4,7 @@ import { loadDocx, saveDocx } from './index';
 import { createDocument } from './model';
 import { expectParagraph } from './test-support/access';
 import { shapeSvg } from './shape-svg';
-import { custom } from '../drawingml/custom-geometry.test-support';
+import { custom } from '../drawingml/test-support/custom-geometry';
 it('renders, resizes and edits a custom Word shape without flattening its guides or opaque children', async () => {
 	const model = createDocument();
 	model.blocks = [

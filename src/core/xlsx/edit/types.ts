@@ -219,6 +219,12 @@ export interface EditSession {
 	deleteDefinedName(name: string, localSheet?: number): void;
 	/** Moves or resizes the picture, chart or shape at `index` of the sheet's drawings. */
 	/** Sets source crop insets on an image, with history. */
+	/** Applies admitted picture effects while retaining opaque operations. */
+	editPictureEffects(
+		sheet: number,
+		index: number,
+		patch: import('../../drawingml/picture-effects').PictureEffectPatch,
+	): void;
 	setPictureCrop(
 		sheet: number,
 		index: number,

@@ -271,6 +271,7 @@ export function createEditSession(
 		setSheetView: (s, patch) => view.setSheetView(ctx, s, patch),
 		setDefinedName: (name) => view.setDefinedName(ctx, name),
 		deleteDefinedName: (name, localSheet) => view.deleteDefinedName(ctx, name, localSheet),
+		editPictureEffects: (s, index, patch) => drawings.editPictureEffects(ctx, s, index, patch),
 		setPictureCrop: (s, index, crop) => drawings.setPictureCrop(ctx, s, index, crop),
 		setDrawingAnchor: (s, index, anchor) => drawings.setDrawingAnchor(ctx, s, index, anchor),
 		createPivotTable: (s, destination, options) =>

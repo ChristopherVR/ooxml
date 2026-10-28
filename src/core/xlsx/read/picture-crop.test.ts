@@ -44,6 +44,21 @@ it('reads and edits picture crop with history and preserves opaque picture conte
 		from: { row: 15, col: 2, rowOffset: 0, colOffset: 0 },
 		ext: { cx: 1905000, cy: 952500 },
 	});
+	const changed = wb.sheets[sheetIndex]!.drawings[index]!;
+	if (changed.kind !== 'image') throw new Error('Expected image');
+	changed.name = 'Renamed picture';
+	changed.description = 'Changed alt text';
+	const oldPart = changed.partName;
+	changed.partName = oldPart.replace(/(\.[^.]+)$/, '-replacement$1');
+	const sourceBytes = wb.source?.parts.get(oldPart);
+	if (!sourceBytes) throw new Error('Expected image source');
+	(wb.source!.parts as Map<string, Uint8Array>).set(changed.partName, sourceBytes);
+	session.editPictureEffects(sheetIndex, index, {
+		grayscale: true,
+		brightness: 0.2,
+		contrast: -0.1,
+		alpha: 0.5,
+	});
 	const saved = await saveXlsx(wb);
 	const xml = await (await JSZip.loadAsync(saved)).file(part)!.async('string');
 	expect(xml).toContain('l="10000"');
@@ -52,8 +67,20 @@ it('reads and edits picture crop with history and preserves opaque picture conte
 	const again = await loadXlsx(saved);
 	expect(again.sheets[sheetIndex]!.drawings[index]).toMatchObject({
 		kind: 'image',
+		name: 'Renamed picture',
+		description: 'Changed alt text',
+		partName: changed.partName,
 		crop: { cropLeft: 0.1, cropRight: 0.2 },
 		anchor: { from: { row: 15 } },
 	});
+	const reread = again.sheets[sheetIndex]!.drawings[index]!;
+	if (reread.kind !== 'image') throw new Error('Expected image');
+	expect(reread.effects?.slice(0, 3)).toMatchObject([
+		{ kind: 'grayscale' },
+		{ kind: 'luminance', brightness: 0.2, contrast: -0.1 },
+		{ kind: 'alphaModFix', amount: 0.5 },
+	]);
+	expect(reread.effects?.filter((effect) => effect.kind === 'unsupported').length).toBe(2);
+	expect(xml).toContain('uri="keep"');
 	expect(() => session.setPictureCrop(sheetIndex, index, { cropLeft: 1 })).toThrow(RangeError);
 });

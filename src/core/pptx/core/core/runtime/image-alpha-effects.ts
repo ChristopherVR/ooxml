@@ -1,3 +1,4 @@
+import { picturePercentage } from '../../../../drawingml/picture-effects';
 import type { PptxImageEffects, XmlObject } from '../../types';
 import {
 	buildSrgbColorChoice,
@@ -63,8 +64,8 @@ function parsePercent(value: unknown, fixed: boolean): number | undefined {
 	if (!text) {
 		return undefined;
 	}
-	const strict = text.endsWith('%');
-	const parsed = Number(strict ? text.slice(0, -1) : text) / (strict ? 1 : 1000);
+	const fraction = picturePercentage(text);
+	const parsed = fraction === undefined ? NaN : fraction * 100;
 	if (!Number.isFinite(parsed) || parsed < 0 || (fixed && parsed > 100)) {
 		return undefined;
 	}

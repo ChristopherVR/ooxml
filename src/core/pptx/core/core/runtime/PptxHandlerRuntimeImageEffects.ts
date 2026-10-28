@@ -1,3 +1,4 @@
+import { readPictureEffect } from '../../../../drawingml/picture-effects';
 import { XmlObject } from '../../types';
 import type { PptxImageEffects, MediaBookmark } from '../../types';
 import { xmlAttr, xmlChild } from '../../utils/xml-access';
@@ -79,20 +80,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// a:lum: luminance modulation (@_bright, @_contrast in 1/1000ths of a percent)
 		const lumNode = blip['a:lum'] as XmlObject | undefined;
 		if (lumNode) {
+			const neutral = readPictureEffect('lum', (name) => lumNode[`@_${name}`]);
 			const lumEffect: NonNullable<PptxImageEffects['lum']> = {};
-			const lumBright = lumNode['@_bright'];
-			const lumContrast = lumNode['@_contrast'];
-			if (lumBright !== undefined) {
-				const v = parseInt(String(lumBright)) / 1000;
-				if (Number.isFinite(v)) {
-					lumEffect.bright = v;
-				}
-			}
-			if (lumContrast !== undefined) {
-				const v = parseInt(String(lumContrast)) / 1000;
-				if (Number.isFinite(v)) {
-					lumEffect.contrast = v;
-				}
+			if (neutral?.kind === 'luminance') {
+				if (neutral.brightness !== undefined) lumEffect.bright = neutral.brightness * 100;
+				if (neutral.contrast !== undefined) lumEffect.contrast = neutral.contrast * 100;
 			}
 			effects.lum = lumEffect;
 			hasAny = true;

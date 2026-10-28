@@ -1,3 +1,4 @@
+import { applyPictureEffects, parsePictureEffects } from '../../drawingml/picture-effects';
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
@@ -287,6 +288,20 @@ export function writeDrawing(
 					: anchorXml(object.anchor, pictureXml(object, nextId++, relId), 'oneCell');
 			const picture = parseXml(xml);
 			const fill = picture.getElementsByTagNameNS(NS.xdr, 'blipFill')[0];
+			const blip = first(fill, 'blip', NS.a);
+			if (blip) {
+				blip.setAttributeNS(NS.r, 'r:embed', relId);
+				blip.removeAttributeNS(NS.r, 'link');
+			}
+			const identity = picture.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
+			if (identity) {
+				if (object.name !== undefined) identity.setAttribute('name', object.name);
+				else identity.removeAttribute('name');
+				if (object.description !== undefined) identity.setAttribute('descr', object.description);
+				else identity.removeAttribute('descr');
+			}
+			if (blip && !sameModel(object.effects ?? [], parsePictureEffects(blip)))
+				applyPictureEffects(blip, object.effects ?? []);
 			if (fill && !sameModel(object.crop, parsePictureCrop(fill)))
 				applyPictureCrop(fill, object.crop);
 			body += buildXml(picture);

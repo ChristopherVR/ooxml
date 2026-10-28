@@ -4,7 +4,7 @@ import { parseDrawingGeometry } from './drawing-geometry';
 import { parseCustomGeometry } from './custom-geometry';
 import { drawingPathData } from './path-data';
 import { parseDiagramDrawing } from '../diagram/drawing';
-import { custom } from './custom-geometry.test-support';
+import { custom } from './test-support/custom-geometry';
 const ns = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 describe('shared guide-driven custom geometry', () => {
 	it('evaluates guides at the current frame and retains ordered commands and per-path space', () => {

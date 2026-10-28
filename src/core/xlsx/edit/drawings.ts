@@ -1,3 +1,4 @@
+import { patchPictureEffects, type PictureEffectPatch } from '../../drawingml/picture-effects';
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
 import { deleteTimeline } from './timelines';
@@ -100,6 +101,27 @@ export function setPictureCrop(
 			drawing.crop = Object.fromEntries(
 				sides.flatMap((side) => (crop[side] === undefined ? [] : [[side, crop[side]]])),
 			);
+		},
+		{ sheet: s },
+	);
+}
+
+/** Applies admitted picture effects in one undo step, retaining every unknown effect. */
+export function editPictureEffects(
+	ctx: EditContext,
+	s: number,
+	index: number,
+	patch: PictureEffectPatch,
+): void {
+	const drawing = drawingAt(ctx, s, index);
+	if (drawing.kind !== 'image') throw new RangeError('Only pictures have picture effects');
+	const effects = patchPictureEffects(drawing.effects ?? [], patch);
+	ctx.run(
+		'Format picture',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			drawing.effects = effects;
 		},
 		{ sheet: s },
 	);

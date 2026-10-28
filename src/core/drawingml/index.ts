@@ -47,3 +47,4 @@ export * from './write-text-body';
 export * from './path-data';
 export * from './custom-geometry';
 export * from './picture-crop';
+export * from './picture-effects';

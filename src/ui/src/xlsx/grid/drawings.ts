@@ -1,3 +1,4 @@
+import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
 // Pictures, charts and SmartArt over the grid, positioned from their anchors in the quadrant of their
 // top-left cell. Pictures come from the package parts as object URLs; charts are drawn by the core
@@ -173,6 +174,17 @@ export class DrawingLayer {
 				height: `${rect.height}px`,
 				maxWidth: 'none',
 			});
+			if (drawing.effects?.length) {
+				const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+				svg.setAttribute('width', '0');
+				svg.setAttribute('height', '0');
+				const defs = doc.createElementNS(svg.namespaceURI, 'defs') as SVGDefsElement;
+				svg.append(defs);
+				const effects = pictureEffectFilter(doc, defs, drawing.effects);
+				if (effects.filter) img.style.filter = effects.filter;
+				node.dataset.unappliedPictureEffects = effects.unapplied.join(', ');
+				node.append(svg);
+			}
 			node.append(img);
 			node.setAttribute('role', 'img');
 		} else if (drawing.kind === 'chart') {
