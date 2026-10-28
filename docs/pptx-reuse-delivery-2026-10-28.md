@@ -99,10 +99,10 @@ they do not alone establish pixel equivalence with Microsoft Office.
 ## Scope and remaining limits
 
 The planned extraction sequence is implemented and its integration checks are complete.
-Visio embedded ChartEx admission, region-map rendering, richer artistic effects, tiled/offset
-picture fills and full native visual comparison remain open. Shared SmartArt picture painting
-currently uses cached drawing nodes; this does not make every picture-bearing layout reflow
-equivalent to Office.
+The follow-up [delivery on 29 October](pptx-reuse-delivery-2026-10-29.md) implements Visio
+embedded ChartEx admission, shared cached region-map rendering, richer picture effects and
+tiled/offset fills, picture-bearing SmartArt reflow, and the native visual comparison harness.
+That record distinguishes demonstrated capabilities from universal Office pixel equivalence.
 
 Product orchestration, framework lifecycle and clipboard payload formats remain product-owned.
 The review's optional PowerPoint clipboard-controller consolidation is separate from the

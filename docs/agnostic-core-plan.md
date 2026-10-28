@@ -692,3 +692,12 @@ complex text effects and spatial properties, picture details/relationships, exte
 series, external style/workbook/user-shape parts and unsupported layouts. This checkpoint does not
 claim that every classic chart read is DOM-only. The 81-frame chart projection corpus and focused
 adapter regressions remain the gate for deleting each compatibility reader.
+
+### Native picture and map reuse follow-up (2026-10-29)
+
+The [remaining-capabilities delivery](pptx-reuse-delivery-2026-10-29.md) adds neutral cached
+region maps, Visio embedded ChartEx admission/editing, rich ordered picture rendering and tiled
+fills, and picture-role-preserving SmartArt reflow/save. These capabilities are mounted by their
+product consumers rather than left as unused extractions. Native Office comparisons and source
+round-trip/browser regressions document their admitted scope; the general regeneration and
+unsupported-feature boundaries above still apply.

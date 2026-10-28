@@ -2829,3 +2829,43 @@ Browser fixture and inspection helpers moved from
 `e2e/visio/selection-resize.spec.ts` at the same commit into
 `e2e/visio/selection-resize-fixture.ts`; fixtures now include explicit grouping
 transforms, and inspection includes child geometry for group-resize coverage.
+
+## Shared region maps and picture rendering (2026-10-29)
+
+Source: `ChristopherVR/ooxml`, commit `bf7be3e5c`.
+
+| Source                                                 | Shared destination                                            | Adaptation                                                                                             |
+| ------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `src/ui/src/pptx/render/chart-region-map-alias.ts`     | `src/core/chart/region-map/alias.ts`                          | Strict, format-neutral region aliases                                                                  |
+| `src/ui/src/pptx/render/chart-region-map-data.ts`      | `src/core/chart/region-map/data.ts`                           | Strict value projection; skip missing values                                                           |
+| `src/ui/src/pptx/render/chart-map-projection.ts`       | `src/core/chart/region-map/world-regions.ts`, `projection.ts` | Extract hand-authored approximate regions and parameterize bounds/projection over the supplied regions |
+| `src/ui/src/pptx/render/chart-region-map-colors.ts`    | `src/core/chart/region-map/colors.ts`                         | Extract pure colour scale and normalization; product legend adapter remains                            |
+| `src/core/pptx/core/types/chart.ts`                    | `src/core/chart/region-map/types.ts`                          | Neutral region-map options and value-colour positions; retain compatibility interfaces                 |
+| `src/ui/src/pptx/render/image-effect-filter-values.ts` | `src/core/drawingml/picture-transfer.ts`                      | Strict shared numeric transfer functions                                                               |
+| `src/core/pptx/core/core/runtime/image-a14-effects.ts` | `src/core/drawingml/picture-artistic.ts`                      | Shared artistic-effect metadata table                                                                  |
+| `src/ui/src/pptx/render/image-effects.ts`              | `src/ui/src/picture-artistic-filters.ts`                      | Shared SVG artistic preview construction, explicitly approximate                                       |
+| `src/ui/src/pptx/render/image-native-size.ts`          | `src/ui/src/image-native-size.ts`                             | Reusable native image-size cache                                                                       |
+| `src/ui/src/pptx/render/render-cache.ts`               | `src/ui/src/render-cache.ts`                                  | Reusable bounded rendering cache                                                                       |
+| `src/ui/src/pptx/render/image-tiling.ts`               | `src/core/geometry/picture-tile.ts`                           | Shared tile alignment and layout arithmetic                                                            |
+
+The former PowerPoint entry points delegate to the shared implementations. New code adds
+source-preserving picture codecs, shared picture layout/painting, bounded compressed geographic
+cache decoding, Robinson projection, neutral map painting and host adapters. Native comparison
+corrected crop-independent tile periods and source-backed map paint. Provider geographic caches
+used for local comparison are not committed; decoder regression fixtures use synthetic polygons.
+Apache-2.0 source licensing is retained.
+
+SmartArt picture association, role metadata, generated image relationships and host cache writers
+are new implementations built on the existing shared diagram engine. Visio ChartEx admission and
+editing reuse the existing embedded workbook and ChartEx transaction APIs; they do not copy a
+second chart parser or editor. Native capture and comparison scripts are new test infrastructure.
+
+## Shared validated raster inspection (2026-10-29)
+
+Source: `ChristopherVR/ooxml`, commit `643f123a3` (this implementation worktree checkpoint).
+`src/core/visio/media.ts` supplies PNG/JPEG/GIF header inspection now in
+`src/core/drawingml/raster-image.ts`; `src/core/visio/package-common.ts` supplies CRC32 now in
+`src/core/digest/crc32.ts`. Visio retains its public error messages and size-limit wrapper.
+PowerPoint now reuses the validated dimensions for synchronous cropped/tiled SmartArt image
+serialization. The extraction preserves existing validation behavior and adds focused shared
+regressions. Unknown image formats retain the existing product fallback.

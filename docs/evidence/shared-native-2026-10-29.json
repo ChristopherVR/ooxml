@@ -1,0 +1,1777 @@
+{
+	"date": "2026-10-29",
+	"baseRevision": "bf7be3e5c",
+	"workflow": "docs/native-visual-comparison.md",
+	"claim": "Bounded acceptance and diagnostic measurements, not universal native pixel parity.",
+	"matrices": {
+		"pictures": {
+			"comparedAt": "2026-10-28T20:50:09.666Z",
+			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
+			"native": {
+				"capturedAt": "2026-10-28T20:47:44.7526393Z",
+				"officeVersion": "16.0",
+				"officeFileVersion": "16.0.20527.20088",
+				"capture": "PowerPoint Slide.Export PNG at requested density, declared shape-frame crop without image registration",
+				"cases": [
+					{
+						"id": "plain",
+						"nativeSlidePng": "plain.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 1
+					},
+					{
+						"id": "gray-lum-alpha",
+						"nativeSlidePng": "gray-lum-alpha.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 2,
+						"shape": 1
+					},
+					{
+						"id": "duotone",
+						"nativeSlidePng": "duotone.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 3,
+						"shape": 1
+					},
+					{
+						"id": "alpha-bilevel",
+						"nativeSlidePng": "alpha-bilevel.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 4,
+						"shape": 1
+					},
+					{
+						"id": "bilevel",
+						"nativeSlidePng": "bilevel.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 5,
+						"shape": 1
+					},
+					{
+						"id": "tile-flip-offset",
+						"nativeSlidePng": "tile-flip-offset.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 6,
+						"shape": 1
+					},
+					{
+						"id": "fill-rect",
+						"nativeSlidePng": "fill-rect.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 7,
+						"shape": 1
+					},
+					{
+						"id": "rot-with-shape-false",
+						"nativeSlidePng": "rot-with-shape-false.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 30,
+						"slide": 8,
+						"shape": 1
+					},
+					{
+						"id": "clr-repl",
+						"nativeSlidePng": "clr-repl.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 9,
+						"shape": 1
+					},
+					{
+						"id": "clr-change",
+						"nativeSlidePng": "clr-change.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 10,
+						"shape": 1
+					},
+					{
+						"id": "hsl",
+						"nativeSlidePng": "hsl.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 11,
+						"shape": 1
+					},
+					{
+						"id": "tint",
+						"nativeSlidePng": "tint.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 12,
+						"shape": 1
+					},
+					{
+						"id": "blur",
+						"nativeSlidePng": "blur.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 13,
+						"shape": 1
+					},
+					{
+						"id": "blur-six",
+						"nativeSlidePng": "blur-six.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 14,
+						"shape": 1
+					},
+					{
+						"id": "hsl-sat-only",
+						"nativeSlidePng": "hsl-sat-only.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 15,
+						"shape": 1
+					},
+					{
+						"id": "hsl-lum-only",
+						"nativeSlidePng": "hsl-lum-only.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 16,
+						"shape": 1
+					},
+					{
+						"id": "hsl-identity",
+						"nativeSlidePng": "hsl-identity.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 17,
+						"shape": 1
+					},
+					{
+						"id": "alpha-inv",
+						"nativeSlidePng": "alpha-inv.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 18,
+						"shape": 1
+					},
+					{
+						"id": "alpha-inv-colour",
+						"nativeSlidePng": "alpha-inv-colour.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 19,
+						"shape": 1
+					},
+					{
+						"id": "alpha-ceiling",
+						"nativeSlidePng": "alpha-ceiling.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 20,
+						"shape": 1
+					},
+					{
+						"id": "alpha-floor",
+						"nativeSlidePng": "alpha-floor.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 21,
+						"shape": 1
+					},
+					{
+						"id": "alpha-mod",
+						"nativeSlidePng": "alpha-mod.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 22,
+						"shape": 1
+					},
+					{
+						"id": "alpha-repl",
+						"nativeSlidePng": "alpha-repl.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 23,
+						"shape": 1
+					},
+					{
+						"id": "native-baked-pencil",
+						"nativeSlidePng": "native-baked-pencil.native-slide.png",
+						"crop": {
+							"y": 96,
+							"width": 192,
+							"height": 128,
+							"x": 96
+						},
+						"sourceSha256": "26132D307ABF012A80F2C804B752096B2F090011DA0E86D669F2D91983DD95E0",
+						"widthPt": 144,
+						"heightPt": 96,
+						"rotation": 0,
+						"slide": 24,
+						"shape": 1
+					}
+				]
+			},
+			"shared": {
+				"browser": "156.0.8078.4",
+				"capture": "Chromium SVG at 1x",
+				"cases": [
+					{
+						"id": "plain",
+						"sharedPng": "plain.shared.png",
+						"svgSha256": "900bbf5949bdde6b12aa1f885a815e5993d30a5c5362e9564c3ed18c520e4e8b"
+					},
+					{
+						"id": "gray-lum-alpha",
+						"sharedPng": "gray-lum-alpha.shared.png",
+						"svgSha256": "b0c975a1b02f1d5ee61975988ed783fb84af376e1c4f9b718a115b6107d3ea04"
+					},
+					{
+						"id": "duotone",
+						"sharedPng": "duotone.shared.png",
+						"svgSha256": "10e7d870f7046db5bf05a17d89997b7a526eb2a35dd39ed1a88f512fdc13c7e6"
+					},
+					{
+						"id": "alpha-bilevel",
+						"sharedPng": "alpha-bilevel.shared.png",
+						"svgSha256": "d65d17f45f0896d6b559509fab32dd885bdecc47f53329f185cb16300a2fba87"
+					},
+					{
+						"id": "bilevel",
+						"sharedPng": "bilevel.shared.png",
+						"svgSha256": "741b0b30d80bce13596be64f71eb314390c2887558a7d04b5f4223c3f95688f9"
+					},
+					{
+						"id": "tile-flip-offset",
+						"sharedPng": "tile-flip-offset.shared.png",
+						"svgSha256": "8a81643b0f2c9a4fb2da6ec332395d3c1d20856a308b5a14053150a49f213ccc"
+					},
+					{
+						"id": "fill-rect",
+						"sharedPng": "fill-rect.shared.png",
+						"svgSha256": "105488f199447165e5bc3c9cee0d0cb89842c42ac1d36a8427be3039a4686916"
+					},
+					{
+						"id": "rot-with-shape-false",
+						"sharedPng": "rot-with-shape-false.shared.png",
+						"svgSha256": "11d39bbceca983f2270a777db3e27fedf1460ae5e9a4ca513cd8b88e5d1be614"
+					},
+					{
+						"id": "clr-repl",
+						"sharedPng": "clr-repl.shared.png",
+						"svgSha256": "bf6b75e1c07b0c0eca621df247b6c7a91c3510b8c69558f2d2a883aa447e2cbe"
+					},
+					{
+						"id": "clr-change",
+						"sharedPng": "clr-change.shared.png",
+						"svgSha256": "84f4ee68166c573ea99e20a2ce0fcfeaa22fe46230ec456882c58aaa49ce921f"
+					},
+					{
+						"id": "hsl",
+						"sharedPng": "hsl.shared.png",
+						"svgSha256": "39b65ad2be8887f690a05232e1ad964e6dac7f76cba6963c9e122aff30c8b2fb"
+					},
+					{
+						"id": "tint",
+						"sharedPng": "tint.shared.png",
+						"svgSha256": "4d2577ee6586e42c4c34611e36f23a05eebcb10b1a3997fb6754b84809233322"
+					},
+					{
+						"id": "blur",
+						"sharedPng": "blur.shared.png",
+						"svgSha256": "3fba0e3cd481e58dcc2221f9e0fa80520abcfc5143f106e94508329df7c480ed"
+					},
+					{
+						"id": "blur-six",
+						"sharedPng": "blur-six.shared.png",
+						"svgSha256": "4403bcb363f1ac6318a9d8601d7ffca8f151640df2cfcfa83941ab5303f26f22"
+					},
+					{
+						"id": "hsl-sat-only",
+						"sharedPng": "hsl-sat-only.shared.png",
+						"svgSha256": "2732c531864fb57371f606a399132c94a1a6b5e4dd9f728abd67951b05964ef7"
+					},
+					{
+						"id": "hsl-lum-only",
+						"sharedPng": "hsl-lum-only.shared.png",
+						"svgSha256": "691f8d61e8efffd129468b5edd80bb891fc2b84a146da55a4c15124fefa89c81"
+					},
+					{
+						"id": "hsl-identity",
+						"sharedPng": "hsl-identity.shared.png",
+						"svgSha256": "ffe3825770197aea4066610b5b7fb01757752a7bd50e55c7729e921407a8b066"
+					},
+					{
+						"id": "alpha-inv",
+						"sharedPng": "alpha-inv.shared.png",
+						"svgSha256": "2dcc526404f75b9a71835f126b254b7a3e81fa890135c083d43d19d93da51a5b"
+					},
+					{
+						"id": "alpha-inv-colour",
+						"sharedPng": "alpha-inv-colour.shared.png",
+						"svgSha256": "0cdc2faf51ba3efb3eef386fe160fe9b54aef4eec81d7138902027b1ba679504"
+					},
+					{
+						"id": "alpha-ceiling",
+						"sharedPng": "alpha-ceiling.shared.png",
+						"svgSha256": "29fbf900ea900014a6129f328d003fe4a3610205674b64b34bf8716e5afb5bab"
+					},
+					{
+						"id": "alpha-floor",
+						"sharedPng": "alpha-floor.shared.png",
+						"svgSha256": "b39c0fbf4a6eb75ad523bdb4f3e9becb3edb530b0da72d89d47a5a00b6930d85"
+					},
+					{
+						"id": "alpha-mod",
+						"sharedPng": "alpha-mod.shared.png",
+						"svgSha256": "de422f5069b16e342989bcc2613d565982367cadbed8e0891e65f8a7846abfb8"
+					},
+					{
+						"id": "alpha-repl",
+						"sharedPng": "alpha-repl.shared.png",
+						"svgSha256": "0e1a70e6439ddf05e3a44e0056146b74dd7a609a38e020ca152c140693124435"
+					},
+					{
+						"id": "native-baked-pencil",
+						"sharedPng": "native-baked-pencil.shared.png",
+						"svgSha256": "9e98c8692338337697f626a51b9b2edf1d48eb3665dedf63b23aca4852377720"
+					}
+				]
+			},
+			"cases": [
+				{
+					"id": "plain",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0010488887820923592,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "gray-lum-alpha",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.012344751217475703,
+					"changedPixelRatio": 0.005167643229166667,
+					"foregroundIntersectionOverUnion": 0.8148148148148148,
+					"nativeForegroundRatio": 0.6875,
+					"sharedForegroundRatio": 0.84375,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "duotone",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0034612392836344407,
+					"changedPixelRatio": 0.0004069010416666667,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-bilevel",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.007015399475762527,
+					"changedPixelRatio": 0.03125,
+					"foregroundIntersectionOverUnion": 0.9848484848484849,
+					"nativeForegroundRatio": 0.515625,
+					"sharedForegroundRatio": 0.5078125,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "bilevel",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.010004021139705882,
+					"changedPixelRatio": 0.041666666666666664,
+					"foregroundIntersectionOverUnion": 0.9772727272727273,
+					"nativeForegroundRatio": 0.6875,
+					"sharedForegroundRatio": 0.671875,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "tile-flip-offset",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.009498584653939168,
+					"changedPixelRatio": 0.0484619140625,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "fill-rect",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.005563197139388184,
+					"changedPixelRatio": 0.032796223958333336,
+					"foregroundIntersectionOverUnion": 0.9849020544672719,
+					"nativeForegroundRatio": 0.4193929036458333,
+					"sharedForegroundRatio": 0.4258219401041667,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "rot-with-shape-false",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.005068625114806269,
+					"changedPixelRatio": 0.049519856770833336,
+					"foregroundIntersectionOverUnion": 0.9986191251171278,
+					"nativeForegroundRatio": 0.8243815104166666,
+					"sharedForegroundRatio": 0.8246256510416666,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "clr-repl",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.000807862360630405,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "clr-change",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0034544036798747286,
+					"changedPixelRatio": 0.020833333333333332,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "hsl",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0014419922125316783,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "tint",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0074287114381085895,
+					"changedPixelRatio": 0.005289713541666667,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "blur",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.00679864757211411,
+					"changedPixelRatio": 0.038492838541666664,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "blur-six",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.004039251312930014,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "hsl-sat-only",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0018627192332541975,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "hsl-lum-only",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.00242413733433168,
+					"changedPixelRatio": 0.0005696614583333334,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "hsl-identity",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0010488887820923592,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-inv",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0010723039215686275,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 0.515625,
+					"sharedForegroundRatio": 0.515625,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-inv-colour",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0006722975137771476,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 0.515625,
+					"sharedForegroundRatio": 0.515625,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-ceiling",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.000462962962962963,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-floor",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.010711656624455338,
+					"changedPixelRatio": 0.03125,
+					"foregroundIntersectionOverUnion": 0.9393939393939394,
+					"nativeForegroundRatio": 0.515625,
+					"sharedForegroundRatio": 0.484375,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-mod",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0026246987169733496,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "alpha-repl",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.0001906318082788671,
+					"changedPixelRatio": 0,
+					"foregroundIntersectionOverUnion": 1,
+					"nativeForegroundRatio": 1,
+					"sharedForegroundRatio": 1,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				},
+				{
+					"id": "native-baked-pencil",
+					"status": "passed",
+					"dimensionsMatch": true,
+					"nativeSize": [192, 128],
+					"sharedSize": [192, 128],
+					"normalizedMeanAbsoluteError": 0.01992474098503896,
+					"changedPixelRatio": 0.057902018229166664,
+					"foregroundIntersectionOverUnion": 0.9505046473171009,
+					"nativeForegroundRatio": 0.68603515625,
+					"sharedForegroundRatio": 0.705810546875,
+					"expected": {
+						"maximumError": 0.02,
+						"minimumOverlap": 0.8
+					}
+				}
+			],
+			"thresholdScope": "24 fixed 48x32 RGBA controls rendered into192x128 frames; MAE<=.02, foreground IoU>=.8. Not a bound for arbitrary image content."
+		},
+		"chartGallery": {
+			"comparedAt": "2026-10-28T20:50:14.022Z",
+			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
+			"native": {
+				"capturedAt": "2026-10-28T20:36:15.9180585Z",
+				"officeVersion": "16.0",
+				"officeFileVersion": "16.0.20527.20088",
+				"capture": "PowerPoint Slide.Export PNG at requested density, declared shape-frame crop without image registration",
+				"cases": [
+					{
+						"id": "chart-1-2-column",
+						"nativeSlidePng": "chart-1-2-column.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 2
+					},
+					{
+						"id": "chart-2-2-line",
+						"nativeSlidePng": "chart-2-2-line.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 2,
+						"shape": 2
+					},
+					{
+						"id": "chart-3-2-area",
+						"nativeSlidePng": "chart-3-2-area.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 3,
+						"shape": 2
+					},
+					{
+						"id": "chart-4-2-pie",
+						"nativeSlidePng": "chart-4-2-pie.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 4,
+						"shape": 2
+					},
+					{
+						"id": "chart-5-2-doughnut",
+						"nativeSlidePng": "chart-5-2-doughnut.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 5,
+						"shape": 2
+					},
+					{
+						"id": "chart-6-2-radar",
+						"nativeSlidePng": "chart-6-2-radar.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 6,
+						"shape": 2
+					},
+					{
+						"id": "chart-7-2-scatter",
+						"nativeSlidePng": "chart-7-2-scatter.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 7,
+						"shape": 2
+					},
+					{
+						"id": "chart-8-2-bubble",
+						"nativeSlidePng": "chart-8-2-bubble.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 8,
+						"shape": 2
+					},
+					{
+						"id": "chart-9-2-column",
+						"nativeSlidePng": "chart-9-2-column.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 9,
+						"shape": 2
+					},
+					{
+						"id": "chart-10-2-column",
+						"nativeSlidePng": "chart-10-2-column.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 10,
+						"shape": 2
+					},
+					{
+						"id": "chart-11-2-funnel",
+						"nativeSlidePng": "chart-11-2-funnel.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 11,
+						"shape": 2
+					},
+					{
+						"id": "chart-12-2-sunburst",
+						"nativeSlidePng": "chart-12-2-sunburst.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 12,
+						"shape": 2
+					},
+					{
+						"id": "chart-13-2-histogram",
+						"nativeSlidePng": "chart-13-2-histogram.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 13,
+						"shape": 2
+					},
+					{
+						"id": "chart-14-2-boxwhisker",
+						"nativeSlidePng": "chart-14-2-boxwhisker.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 14,
+						"shape": 2
+					},
+					{
+						"id": "chart-15-2-column",
+						"nativeSlidePng": "chart-15-2-column.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 15,
+						"shape": 2
+					},
+					{
+						"id": "chart-16-2-stock",
+						"nativeSlidePng": "chart-16-2-stock.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 16,
+						"shape": 2
+					},
+					{
+						"id": "chart-18-2-waterfall",
+						"nativeSlidePng": "chart-18-2-waterfall.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 18,
+						"shape": 2
+					},
+					{
+						"id": "chart-19-2-treemap",
+						"nativeSlidePng": "chart-19-2-treemap.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 19,
+						"shape": 2
+					},
+					{
+						"id": "chart-20-2-regionmap",
+						"nativeSlidePng": "chart-20-2-regionmap.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "768D6DD895AF224672B444AA64A52C92976A9D1E856EA2B7FA7A4D35B7875DE3",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 20,
+						"shape": 2
+					}
+				]
+			},
+			"shared": {
+				"browser": "156.0.8078.4",
+				"capture": "Chromium SVG at 1x",
+				"cases": [
+					{
+						"id": "chart-1-2-column",
+						"sharedPng": "chart-1-2-column.shared.png",
+						"svgSha256": "a69b09b3842a9e8594f23c9a768c83476bd159e7930bb979090f1e77bc51fa6b"
+					},
+					{
+						"id": "chart-2-2-line",
+						"sharedPng": "chart-2-2-line.shared.png",
+						"svgSha256": "2ee76450c77a38003fe7229d6c1d3e1515564f59a35f22a167b28c7a71f412f5"
+					},
+					{
+						"id": "chart-3-2-area",
+						"sharedPng": "chart-3-2-area.shared.png",
+						"svgSha256": "5de558a653ea9d2e18d24bd78dd15bb460ab2f7bb8703f649c7a768d92d49e87"
+					},
+					{
+						"id": "chart-4-2-pie",
+						"sharedPng": "chart-4-2-pie.shared.png",
+						"svgSha256": "35a156d545a4eb6a301f13a1b014eb7e21b332835fac04766f4f646fa743d328"
+					},
+					{
+						"id": "chart-5-2-doughnut",
+						"sharedPng": "chart-5-2-doughnut.shared.png",
+						"svgSha256": "2334d13fb1041dea1754bb05d9407bd25ad8d996f94ce80ad37583ceaf3293ce"
+					},
+					{
+						"id": "chart-6-2-radar",
+						"sharedPng": "chart-6-2-radar.shared.png",
+						"svgSha256": "d43c051474e9485734959e8479d38edc32d91944ed6b8f047eed6f15b4dffadd"
+					},
+					{
+						"id": "chart-7-2-scatter",
+						"sharedPng": "chart-7-2-scatter.shared.png",
+						"svgSha256": "6a67fb4fc1f7b4117e7793b32abb00bdafd7b5ce10bc151c99a603df37a758bf"
+					},
+					{
+						"id": "chart-8-2-bubble",
+						"sharedPng": "chart-8-2-bubble.shared.png",
+						"svgSha256": "37cc97d2e4618e47dffdb1f3b4d5b4678ef525ec349347e3973a41c61469a27a"
+					},
+					{
+						"id": "chart-9-2-column",
+						"sharedPng": "chart-9-2-column.shared.png",
+						"svgSha256": "bdd935488c00ebc5a5d10eee867816edcd4bcc8f9f191135d5ab2da787c9d7c8"
+					},
+					{
+						"id": "chart-10-2-column",
+						"sharedPng": "chart-10-2-column.shared.png",
+						"svgSha256": "1758b856407ef6ce9ecff66b46bf474e8b32be0696ef931667927201f1ac8ab7"
+					},
+					{
+						"id": "chart-11-2-funnel",
+						"sharedPng": "chart-11-2-funnel.shared.png",
+						"svgSha256": "c7dc9e27d2b34b74843da422f7cb149d4c24c89a167b517ba5b1aee81225a42b"
+					},
+					{
+						"id": "chart-12-2-sunburst",
+						"sharedPng": "chart-12-2-sunburst.shared.png",
+						"svgSha256": "38ee48023927c98a570ccb5d405dc314c622f7762aabd987f16aec1008cd0103"
+					},
+					{
+						"id": "chart-13-2-histogram",
+						"sharedPng": "chart-13-2-histogram.shared.png",
+						"svgSha256": "4403df873ce84a1a1a3437c3d2db3b695e92dcca4af7e8c0581be5e324c89065"
+					},
+					{
+						"id": "chart-14-2-boxwhisker",
+						"sharedPng": "chart-14-2-boxwhisker.shared.png",
+						"svgSha256": "9271793e30bb1394861bcfbe9dc9f70b00d284058c5653505ab20b160174091a"
+					},
+					{
+						"id": "chart-15-2-column",
+						"sharedPng": "chart-15-2-column.shared.png",
+						"svgSha256": "3f884fbe039622df52ad4bbe08f2bc92ac5bb81e16e0d4c99204e82c22883add"
+					},
+					{
+						"id": "chart-16-2-stock",
+						"sharedPng": "chart-16-2-stock.shared.png",
+						"svgSha256": "5c374991b3285d3947f24235bbbabe0ad3eb4cb086d497c54f8bcf5bffe48499"
+					},
+					{
+						"id": "chart-18-2-waterfall",
+						"sharedPng": "chart-18-2-waterfall.shared.png",
+						"svgSha256": "d7cfe3f64f0aeb3f47c821ea27434fb4bdfe10e5c346aeabba25464733c9cbbf"
+					},
+					{
+						"id": "chart-19-2-treemap",
+						"sharedPng": "chart-19-2-treemap.shared.png",
+						"svgSha256": "0ffb8dcb39514b1a258a53a222937a5053bd0e81ea2a5027077f90aec3ca7cd7"
+					},
+					{
+						"id": "chart-20-2-regionmap",
+						"sharedPng": "chart-20-2-regionmap.shared.png",
+						"svgSha256": "88bcd8c3bf34f7cb8b9cdb65e0efbd3b82eeed1be1e2d26aa682857e07401240"
+					}
+				]
+			},
+			"cases": [
+				{
+					"id": "chart-1-2-column",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.03356507788300506,
+					"changedPixelRatio": 0.06897108843537415,
+					"foregroundIntersectionOverUnion": 0.7722637799266152,
+					"nativeForegroundRatio": 0.23074546485260772,
+					"sharedForegroundRatio": 0.26485544217687074
+				},
+				{
+					"id": "chart-2-2-line",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.02218457753471759,
+					"changedPixelRatio": 0.04638321995464852,
+					"foregroundIntersectionOverUnion": 0.05861497112140447,
+					"nativeForegroundRatio": 0.02780895691609977,
+					"sharedForegroundRatio": 0.024662698412698414
+				},
+				{
+					"id": "chart-3-2-area",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.1883609258518222,
+					"changedPixelRatio": 0.555062358276644,
+					"foregroundIntersectionOverUnion": 0.6809044329450151,
+					"nativeForegroundRatio": 0.5009268707482993,
+					"sharedForegroundRatio": 0.4335997732426304
+				},
+				{
+					"id": "chart-4-2-pie",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.024178219435922518,
+					"changedPixelRatio": 0.055612244897959184,
+					"foregroundIntersectionOverUnion": 0.8269695505074915,
+					"nativeForegroundRatio": 0.22974489795918368,
+					"sharedForegroundRatio": 0.2738265306122449
+				},
+				{
+					"id": "chart-5-2-doughnut",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.030136584263334962,
+					"changedPixelRatio": 0.0677579365079365,
+					"foregroundIntersectionOverUnion": 0.7236852187683585,
+					"nativeForegroundRatio": 0.175640589569161,
+					"sharedForegroundRatio": 0.206921768707483
+				},
+				{
+					"id": "chart-6-2-radar",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.013997072903235368,
+					"changedPixelRatio": 0.03027777777777778,
+					"foregroundIntersectionOverUnion": 0.09128818783428519,
+					"nativeForegroundRatio": 0.017692743764172337,
+					"sharedForegroundRatio": 0.016428571428571428
+				},
+				{
+					"id": "chart-7-2-scatter",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.011672020660115898,
+					"changedPixelRatio": 0.019727891156462583,
+					"foregroundIntersectionOverUnion": 0.06354472374633151,
+					"nativeForegroundRatio": 0.011797052154195012,
+					"sharedForegroundRatio": 0.011828231292517007
+				},
+				{
+					"id": "chart-8-2-bubble",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.054907537088909636,
+					"changedPixelRatio": 0.12736678004535149,
+					"foregroundIntersectionOverUnion": 0.06867364746945899,
+					"nativeForegroundRatio": 0.0867687074829932,
+					"sharedForegroundRatio": 0.05208616780045351
+				},
+				{
+					"id": "chart-9-2-column",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.030567945696797237,
+					"changedPixelRatio": 0.06278061224489796,
+					"foregroundIntersectionOverUnion": 0.7885062455582457,
+					"nativeForegroundRatio": 0.19813208616780045,
+					"sharedForegroundRatio": 0.22272959183673469
+				},
+				{
+					"id": "chart-10-2-column",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.04386187437938138,
+					"changedPixelRatio": 0.09099206349206349,
+					"foregroundIntersectionOverUnion": 0.7720976784820649,
+					"nativeForegroundRatio": 0.2772760770975057,
+					"sharedForegroundRatio": 0.31491496598639457
+				},
+				{
+					"id": "chart-11-2-funnel",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.06910105894209535,
+					"changedPixelRatio": 0.14316043083900226,
+					"foregroundIntersectionOverUnion": 0.7397367628893802,
+					"nativeForegroundRatio": 0.46163832199546484,
+					"sharedForegroundRatio": 0.488500566893424
+				},
+				{
+					"id": "chart-12-2-sunburst",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.003194618588176011,
+					"changedPixelRatio": 0.005802154195011338,
+					"foregroundIntersectionOverUnion": 0.18532634587899,
+					"nativeForegroundRatio": 0.003253968253968254,
+					"sharedForegroundRatio": 0.003798185941043084
+				},
+				{
+					"id": "chart-13-2-histogram",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.10333423369347738,
+					"changedPixelRatio": 0.2086422902494331,
+					"foregroundIntersectionOverUnion": 0.6752251072103252,
+					"nativeForegroundRatio": 0.4221655328798186,
+					"sharedForegroundRatio": 0.6109041950113379
+				},
+				{
+					"id": "chart-14-2-boxwhisker",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.0386358876884087,
+					"changedPixelRatio": 0.09491213151927437,
+					"foregroundIntersectionOverUnion": 0.3333691033180238,
+					"nativeForegroundRatio": 0.07862528344671202,
+					"sharedForegroundRatio": 0.09747165532879819
+				},
+				{
+					"id": "chart-15-2-column",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.03351694751974864,
+					"changedPixelRatio": 0.07393707482993198,
+					"foregroundIntersectionOverUnion": 0.7583336969326759,
+					"nativeForegroundRatio": 0.21363378684807255,
+					"sharedForegroundRatio": 0.24327380952380953
+				},
+				{
+					"id": "chart-16-2-stock",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.015779656306967232,
+					"changedPixelRatio": 0.026567460317460316,
+					"foregroundIntersectionOverUnion": 0.09132024634334103,
+					"nativeForegroundRatio": 0.015487528344671202,
+					"sharedForegroundRatio": 0.01665816326530612
+				},
+				{
+					"id": "chart-18-2-waterfall",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.08318807523009204,
+					"changedPixelRatio": 0.1949858276643991,
+					"foregroundIntersectionOverUnion": 0.24244712990936557,
+					"nativeForegroundRatio": 0.12572278911564627,
+					"sharedForegroundRatio": 0.1913407029478458
+				},
+				{
+					"id": "chart-19-2-treemap",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.003168393283239222,
+					"changedPixelRatio": 0.005694444444444445,
+					"foregroundIntersectionOverUnion": 0.17047110247693054,
+					"nativeForegroundRatio": 0.003038548752834467,
+					"sharedForegroundRatio": 0.003792517006802721
+				},
+				{
+					"id": "chart-20-2-regionmap",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.08383667170571933,
+					"changedPixelRatio": 0.17106292517006802,
+					"foregroundIntersectionOverUnion": 0.24074899687917967,
+					"nativeForegroundRatio": 0.17974773242630385,
+					"sharedForegroundRatio": 0.08845521541950113
+				}
+			]
+		},
+		"smartArt": {
+			"comparedAt": "2026-10-28T20:50:16.798Z",
+			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
+			"native": {
+				"capturedAt": "2026-10-28T20:41:53.8000010Z",
+				"officeVersion": "16.0",
+				"officeFileVersion": "16.0.20527.20088",
+				"capture": "PowerPoint Slide.Export PNG at requested density, declared shape-frame crop without image registration",
+				"cases": [
+					{
+						"id": "picture-accent-list--flat3-after",
+						"nativeSlidePng": "picture-accent-list--flat3-after.native-slide.png",
+						"crop": {
+							"y": 120,
+							"width": 867,
+							"height": 533,
+							"x": 53
+						},
+						"sourceSha256": "94457B0F1A4BF29ACFF6105639C2440397E851CF3770CC8640923E5A8B560A0C",
+						"widthPt": 650,
+						"heightPt": 400,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 1
+					},
+					{
+						"id": "picture-accent-list--flat3-before",
+						"nativeSlidePng": "picture-accent-list--flat3-before.native-slide.png",
+						"crop": {
+							"y": 120,
+							"width": 867,
+							"height": 533,
+							"x": 53
+						},
+						"sourceSha256": "6A3ED0B1F07D0895EB76D50D3FB41B507617A6E9A55C5487C44958B231D67F11",
+						"widthPt": 650,
+						"heightPt": 400,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 1
+					},
+					{
+						"id": "picture-grid--flat3-after",
+						"nativeSlidePng": "picture-grid--flat3-after.native-slide.png",
+						"crop": {
+							"y": 120,
+							"width": 867,
+							"height": 533,
+							"x": 53
+						},
+						"sourceSha256": "05C9449B8C5398F38764279F08A88B73A4CF8E1C85D4413EF997C795BBD88ABE",
+						"widthPt": 650,
+						"heightPt": 400,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 1
+					},
+					{
+						"id": "picture-grid--flat3-before",
+						"nativeSlidePng": "picture-grid--flat3-before.native-slide.png",
+						"crop": {
+							"y": 120,
+							"width": 867,
+							"height": 533,
+							"x": 53
+						},
+						"sourceSha256": "F23AAD5A997E729E2B7522B54F7F8327AC2D5429631B605E6E7B177FD64E37E7",
+						"widthPt": 650,
+						"heightPt": 400,
+						"rotation": 0,
+						"slide": 1,
+						"shape": 1
+					}
+				]
+			},
+			"shared": {
+				"browser": "156.0.8078.4",
+				"capture": "Chromium SVG at 1x",
+				"cases": [
+					{
+						"id": "picture-accent-list--flat3-after",
+						"sharedPng": "picture-accent-list--flat3-after.shared.png",
+						"svgSha256": "6d4eda3bd450bb713f3392773a65cc9e2bd5fbbed8e504fbb4205e5a43262bc0"
+					},
+					{
+						"id": "picture-accent-list--flat3-before",
+						"sharedPng": "picture-accent-list--flat3-before.shared.png",
+						"svgSha256": "05d6ed489d8c2b65262f756dac8b7eb05d5b144932f4fc5c1c13ac8d70ab91e0"
+					},
+					{
+						"id": "picture-grid--flat3-after",
+						"sharedPng": "picture-grid--flat3-after.shared.png",
+						"svgSha256": "6b2cdb791a423fa6a97c90de1cc0d6508d6d9e6ff8da473f168e9fbf0d2c8d83"
+					},
+					{
+						"id": "picture-grid--flat3-before",
+						"sharedPng": "picture-grid--flat3-before.shared.png",
+						"svgSha256": "e646ea6bbbfb34f2728d63122286885d9f22c8afacb1dde23c541d13cc80ad36"
+					}
+				]
+			},
+			"cases": [
+				{
+					"id": "picture-accent-list--flat3-after",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [867, 533],
+					"sharedSize": [867, 533],
+					"normalizedMeanAbsoluteError": 0.03185636987960432,
+					"changedPixelRatio": 0.061545819078100285,
+					"foregroundIntersectionOverUnion": 0.9290028261637544,
+					"nativeForegroundRatio": 0.5982588598843135,
+					"sharedForegroundRatio": 0.6306298703125439
+				},
+				{
+					"id": "picture-accent-list--flat3-before",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [867, 533],
+					"sharedSize": [867, 533],
+					"normalizedMeanAbsoluteError": 0.006771729660385334,
+					"changedPixelRatio": 0.017677570973207737,
+					"foregroundIntersectionOverUnion": 0.9814751839057829,
+					"nativeForegroundRatio": 0.5959866785252894,
+					"sharedForegroundRatio": 0.601853234396065
+				},
+				{
+					"id": "picture-grid--flat3-after",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [867, 533],
+					"sharedSize": [867, 533],
+					"normalizedMeanAbsoluteError": 0.02663904373698371,
+					"changedPixelRatio": 0.07824310609355761,
+					"foregroundIntersectionOverUnion": 0.8353646470790856,
+					"nativeForegroundRatio": 0.29198396056358755,
+					"sharedForegroundRatio": 0.24994211347490106
+				},
+				{
+					"id": "picture-grid--flat3-before",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [867, 533],
+					"sharedSize": [867, 533],
+					"normalizedMeanAbsoluteError": 0.004027440855675411,
+					"changedPixelRatio": 0.007199568934736459,
+					"foregroundIntersectionOverUnion": 0.982325158413518,
+					"nativeForegroundRatio": 0.2909690528898901,
+					"sharedForegroundRatio": 0.2939423644968417
+				}
+			]
+		},
+		"cachedMap": {
+			"comparedAt": "2026-10-28T20:50:47.636Z",
+			"policy": "White composite, unregistered full frame, RGB MAE, delta >16 pixel ratio, foreground <245 IoU. Measured is not passed.",
+			"native": {
+				"capturedAt": "2026-10-28T20:50:25.1502024Z",
+				"officeVersion": "16.0",
+				"officeFileVersion": "16.0.20527.20088",
+				"capture": "PowerPoint Slide.Export PNG at requested density, declared shape-frame crop without image registration",
+				"cases": [
+					{
+						"id": "region-map-cached",
+						"nativeSlidePng": "region-map-cached.native-slide.png",
+						"crop": {
+							"y": 60,
+							"width": 840,
+							"height": 420,
+							"x": 60
+						},
+						"sourceSha256": "B18042ECA7A342AED511404B26F493ADF19FEF0AC3ED5DDD7333CEC643B795F0",
+						"widthPt": 630,
+						"heightPt": 315,
+						"rotation": 0,
+						"slide": 20,
+						"shape": 2
+					}
+				]
+			},
+			"shared": {
+				"browser": "156.0.8078.4",
+				"capture": "Chromium SVG at 1x",
+				"cases": [
+					{
+						"id": "region-map-cached",
+						"sharedPng": "region-map-cached.shared.png",
+						"svgSha256": "02f88187ced58548959128c8544428d229d4925da5e82387b56450f992adb240"
+					}
+				]
+			},
+			"cases": [
+				{
+					"id": "region-map-cached",
+					"status": "measured",
+					"dimensionsMatch": true,
+					"nativeSize": [840, 420],
+					"sharedSize": [840, 420],
+					"normalizedMeanAbsoluteError": 0.04884803180531472,
+					"changedPixelRatio": 0.11767290249433107,
+					"foregroundIntersectionOverUnion": 0.5484242594915645,
+					"nativeForegroundRatio": 0.16292800453514739,
+					"sharedForegroundRatio": 0.17994614512471654
+				}
+			],
+			"geography": {
+				"source": "locally authored native Excel map",
+				"decodedRegions": 270,
+				"decodedPoints": 531846,
+				"invalidPolygonEntries": 8,
+				"providerGeometryCommitted": false,
+				"cacheXmlSha256": "598B57AA2910C8A0034A94BF786E3185FDAC2BC76478E6D87C542F55D89457EC"
+			}
+		}
+	}
+}
