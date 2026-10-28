@@ -34,7 +34,10 @@ test.use({ viewport: { width: 1440, height: 1000 } });
 test.describe('same-browser collaboration', () => {
 	test.setTimeout(120_000);
 
-	test('undo and redo preserve another participant’s later edit', async ({ browser, baseURL }, info) => {
+	test('undo and redo preserve another participant’s later edit', async ({
+		browser,
+		baseURL,
+	}, info) => {
 		const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });
 		const a = await context.newPage();
 		const b = await context.newPage();
