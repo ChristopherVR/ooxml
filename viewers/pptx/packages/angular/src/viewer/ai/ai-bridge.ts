@@ -1,10 +1,10 @@
-import { createPptxAiBridge } from 'ooxml-ui/pptx/ai/host';
 import type {
 	PptxAiBridge,
 	PptxAiBridgePort,
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
 } from 'ooxml-ui/pptx/ai';
+import { createPptxAiBridge } from 'ooxml-ui/pptx/ai/host';
 /**
  * createAngularAiBridge: builds a {@link PptxAiBridge} that lets the
  * framework-agnostic AI core (`pptx-viewer-shared/ai`) read the open deck,

@@ -17,13 +17,6 @@
  * bridge all read the same store.
  */
 import { computed, DestroyRef, inject, Injectable } from '@angular/core';
-import {
-	computeFocusTargets,
-	createAiChangeAnimator,
-	createPptxAiPanelController,
-	isAiFocusPinned,
-	resolveAiEffectiveTargets,
-} from 'ooxml-ui/pptx/ai/host';
 import type {
 	AiCanvasHighlight,
 	AiChangeAnimationConfig,
@@ -34,6 +27,13 @@ import type {
 	PptxAiPanelController,
 	ToolCanvasTarget,
 } from 'ooxml-ui/pptx/ai';
+import {
+	computeFocusTargets,
+	createAiChangeAnimator,
+	createPptxAiPanelController,
+	isAiFocusPinned,
+	resolveAiEffectiveTargets,
+} from 'ooxml-ui/pptx/ai/host';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import { controllerSignal } from '../controller-signal';

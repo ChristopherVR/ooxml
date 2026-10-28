@@ -15,8 +15,8 @@ import {
 } from '@angular/core';
 import { LucideBot, LucideSparkles, LucideUser } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import { toRenderableParts } from 'ooxml-ui/pptx/ai/host';
 import type { PptxAiUIMessage, RenderablePart } from 'ooxml-ui/pptx/ai';
+import { toRenderableParts } from 'ooxml-ui/pptx/ai/host';
 
 import { AiToolCallCardComponent } from './ai-tool-call-card.component';
 
