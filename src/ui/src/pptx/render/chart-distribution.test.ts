@@ -516,8 +516,9 @@ describe('buildBoxWhiskerViewModel', () => {
 		const vm = buildBoxWhiskerViewModel(chartElement(typed), typed, typed.categories);
 		const circles = vm.primitives.filter((primitive) => primitive.kind === 'circle');
 		expect(vm.primitives.filter((primitive) => primitive.kind === 'line')).toHaveLength(6);
-		// 1 mean marker + 5 observation points.
-		expect(circles).toHaveLength(6);
+		// Mean is an X path; the five observations remain circles.
+		expect(circles).toHaveLength(5);
+		expect(vm.primitives.filter((primitive) => primitive.kind === 'path')).toHaveLength(1);
 		expect(circles.at(-1)?.part).toStrictEqual({
 			role: 'dataPoint',
 			seriesIndex: 0,

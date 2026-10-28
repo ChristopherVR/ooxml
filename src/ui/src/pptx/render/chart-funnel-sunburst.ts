@@ -28,7 +28,11 @@ import { computeFunnelGeometry } from 'ooxml-core/chart';
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
 import { resolveChartTitleText } from './chart-auto-title';
-import { dataLabelFontOverride, resolveDataLabelTextStyle } from './chart-data-label-text';
+import {
+	buildDataLabelText,
+	dataLabelFontOverride,
+	resolveDataLabelTextStyle,
+} from './chart-data-label-text';
 import { DEFAULT_CHART_TEXT_PX } from './chart-font';
 import type { ChartViewModel, SvgPath, SvgPrimitive, SvgText } from './chart-view-model';
 import {
@@ -158,7 +162,7 @@ export function computeFunnelSegments(
 
 /**
  * Build the view-model for a funnel chart: descending centred bars from
- * series[0], each labelled with its value; the category names form a
+ * series[0], with value labels only when requested; category names form a
  * left-side axis instead of the inline label (COM-verified: charts-com.pptx
  * slide 27). Mirrors `renderFunnelChart` (React) / `FunnelChart.vue`.
  */
@@ -194,11 +198,25 @@ export function buildFunnelViewModel(
 	}
 	const funnelSeries = chartData.series[0];
 	segments.forEach((seg, i) => {
+		if (
+			!funnelSeries ||
+			(!funnelSeries.dataLabelOptions &&
+				!chartData.style?.dataLabels &&
+				!funnelSeries.dataLabels?.some((label) => label.idx === i))
+		)
+			return;
+		const label = buildDataLabelText({
+			chartData,
+			series: funnelSeries,
+			pointIndex: i,
+			value: values[i],
+		});
+		if (!label) return;
 		dataLabels.push({
 			kind: 'text',
 			x: seg.labelX,
 			y: seg.labelY,
-			text: seg.labelText,
+			text: label.text,
 			fontSize: seg.fontSize,
 			fill: '#ffffff',
 			textAnchor: 'middle',
@@ -230,7 +248,7 @@ export function buildFunnelViewModel(
 		categoryLabels: categoryAxisLabels,
 		primitives,
 		dataLabels,
-		// Funnel does not draw a separate legend swatch list (labels are inline).
+		// The PPTX host keeps its existing funnel legend policy.
 		legend: [],
 		legendX: layout.svgWidth / 2,
 		legendY: layout.svgHeight - 8,

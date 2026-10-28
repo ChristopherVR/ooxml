@@ -1,4 +1,4 @@
-import { boxWhiskerDistribution } from 'ooxml-core/chart';
+import { boxWhiskerDistribution, boxMeanMarkerPath } from 'ooxml-core/chart';
 import type { PptxChartBoxWhiskerOptions, PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
 import { resolveChartTitleText } from './chart-auto-title';
@@ -13,6 +13,7 @@ import type {
 	SvgLine,
 	SvgPrimitive,
 	SvgRect,
+	SvgPath,
 	ValueRange,
 } from './chart-view-model';
 import {
@@ -190,11 +191,8 @@ function whiskerPrimitives(geometry: BoxWhiskerGeometry): SvgPrimitive[] {
 
 function optionPrimitives(geometry: BoxWhiskerGeometry): SvgPrimitive[] {
 	const options = geometry.options;
-	if (!options) {
-		return [];
-	}
 	const output: SvgPrimitive[] = [];
-	if (options.showMeanLine) {
+	if (options?.showMeanLine) {
 		output.push({
 			kind: 'line',
 			x1: geometry.boxX,
@@ -205,19 +203,19 @@ function optionPrimitives(geometry: BoxWhiskerGeometry): SvgPrimitive[] {
 			strokeWidth: 1.5,
 		} satisfies SvgLine);
 	}
-	if (options.showMeanMarker) {
+	if (options?.showMeanMarker !== false) {
 		output.push({
-			kind: 'circle',
-			cx: geometry.xMid,
-			cy: geometry.yMean,
-			r: 3,
-			fill: '#0f766e',
-		} satisfies SvgCircle);
+			kind: 'path',
+			d: boxMeanMarkerPath(geometry.xMid, geometry.yMean),
+			fill: 'none',
+			stroke: '#0f766e',
+			strokeWidth: 1.5,
+		} satisfies SvgPath);
 	}
 	for (const point of geometry.points) {
 		if (
-			(point.outlier && !options.showOutlierPoints) ||
-			(!point.outlier && !options.showInnerPoints)
+			(point.outlier && !options?.showOutlierPoints) ||
+			(!point.outlier && !options?.showInnerPoints)
 		) {
 			continue;
 		}

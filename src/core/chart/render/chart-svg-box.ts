@@ -1,4 +1,4 @@
-import { boxWhiskerDistribution } from '../box-distribution';
+import { boxWhiskerDistribution, boxMeanMarkerPath } from '../box-distribution';
 import { groupRowsByCategory } from '../box-stats';
 import type { ChartViewModel } from './chart-view';
 import type { Frame } from './chart-svg-cartesian';
@@ -57,9 +57,9 @@ export function boxWhiskerSvg(model: ChartViewModel, frame: Frame, out: string[]
 			);
 			out.push(line(x, y(stats.median), x + width, y(stats.median), '#1e293b', 2));
 			if (visibility?.meanLine) out.push(line(x, y(mean), x + width, y(mean), '#0f766e', 1.5));
-			if (visibility?.meanMarker)
+			if (visibility?.meanMarker !== false)
 				out.push(
-					`<circle cx="${n(mid)}" cy="${n(y(mean))}" r="3" fill="#0f766e" data-chart-part="mean"/>`,
+					`<path d="${boxMeanMarkerPath(mid, y(mean))}" fill="none" stroke="#0f766e" stroke-width="1.5" data-chart-part="mean"/>`,
 				);
 			observations.forEach((point, index) => {
 				const outlier = point.value < whiskerMin || point.value > whiskerMax;

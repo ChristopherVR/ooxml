@@ -146,7 +146,7 @@ function summarySeries(
 		...seriesFill(source),
 	};
 	if (chartType === 'funnel' || chartType === 'boxWhisker') {
-		chartExSeriesPaint(source, series, chartType === 'funnel');
+		chartExSeriesPaint(source, series, chartType === 'funnel' && source.dataLabels !== undefined);
 		if (source.hidden !== undefined) series.hidden = source.hidden;
 	}
 	if (chartType === 'boxWhisker') series.boxWhisker = source.layoutProperties ?? {};

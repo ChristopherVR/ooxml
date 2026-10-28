@@ -18,3 +18,8 @@ export function boxWhiskerDistribution(
 		mean: values.reduce((a, b) => a + b, 0) / values.length,
 	};
 }
+
+/** Office's default box mean symbol is an X, not a filled observation dot. */
+export function boxMeanMarkerPath(x: number, y: number, radius = 3): string {
+	return `M${x - radius},${y - radius} L${x + radius},${y + radius} M${x - radius},${y + radius} L${x + radius},${y - radius}`;
+}

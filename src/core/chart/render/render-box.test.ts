@@ -108,3 +108,18 @@ it('excludes hidden distributions from categories, automatic range and box slots
 			?.replace(/fill="#[A-F0-9]+"/giu, 'fill="color"');
 	expect(box(svg)).toBe(box(reference));
 });
+
+it('draws the native default mean X while respecting an explicit false override', () => {
+	const space = createChartExSpace(
+		{ categories: ['A', 'A', 'A'], series: [{ name: 'S', values: [1, 2, 3] }] },
+		'boxWhisker',
+	);
+	const render = () =>
+		renderChartSummarySvg(chartExSummary(writeChartExSpace(space))!.summary!, {
+			width: 400,
+			height: 300,
+		});
+	expect(render()).toMatch(/<path d="M[^"]+"[^>]+data-chart-part="mean"/u);
+	space.plotArea.series[0]!.layoutProperties = { visibility: { meanMarker: false } };
+	expect(render()).not.toContain('data-chart-part="mean"');
+});

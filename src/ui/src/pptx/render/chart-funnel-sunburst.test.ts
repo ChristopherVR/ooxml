@@ -149,12 +149,29 @@ describe('buildFunnelViewModel', () => {
 		expect(paths).toHaveLength(3);
 	});
 
-	it('produces one centred VALUE data label per segment (COM: slide 27)', () => {
-		const vm = buildFunnelViewModel(chartElement(chartData), chartData, chartData.categories);
+	it('produces one centred value label when explicitly requested', () => {
+		const labelled = {
+			...chartData,
+			style: { ...chartData.style, dataLabels: { showValue: true } },
+		};
+		const vm = buildFunnelViewModel(chartElement(labelled), labelled, labelled.categories);
 		expect(vm.dataLabels).toHaveLength(3);
 		expect(vm.dataLabels.map((label) => label.text)).toStrictEqual(['100', '60', '30']);
 	});
 
+	it('does not invent values when the funnel has no data-label declaration', () => {
+		const vm = buildFunnelViewModel(chartElement(chartData), chartData, chartData.categories);
+		expect(vm.dataLabels).toEqual([]);
+	});
+	it('preserves explicit false value-label visibility', () => {
+		const hidden = {
+			...chartData,
+			style: { ...chartData.style, dataLabels: { showValue: false } },
+		};
+		expect(
+			buildFunnelViewModel(chartElement(hidden), hidden, hidden.categories).dataLabels,
+		).toEqual([]);
+	});
 	it('lists the category names on a left-side axis, one per bar', () => {
 		const vm = buildFunnelViewModel(chartElement(chartData), chartData, chartData.categories);
 		expect(vm.categoryLabels.map((label) => label.text)).toStrictEqual(['A', 'B', 'C']);

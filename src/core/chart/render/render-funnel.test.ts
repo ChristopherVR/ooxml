@@ -18,6 +18,12 @@ describe('shared funnel rendering', () => {
 			[60, 100, 30],
 		]);
 	});
+	it('does not invent value labels when the source declares none', () => {
+		const summary = chartExSummary(writeChartExSpace(createChartExSpace(data, 'funnel')))!.summary!;
+		const svg = renderChartSummarySvg(summary, { width: 400, height: 300 });
+		expect(svg).not.toContain('>100</text>');
+		expect(svg).toContain('>A</text>');
+	});
 	it('reads a saved funnel part and draws values/categories without dropping negative or blank identities', () => {
 		const source = createChartExSpace(data, 'funnel');
 		const series = source.plotArea.series[0]!;
