@@ -277,6 +277,11 @@ export function previewDiagramLayout(input: DiagramPreviewInput): DiagramPreview
 					return source ? [source] : [];
 				});
 				if (textNodes.length) shape.text = diagramPreviewText(textNodes, node.fontSize);
+				if (shape.text) {
+					if (node.textVerticalAnchor) shape.text.anchor = node.textVerticalAnchor;
+					for (const paragraph of shape.text.paragraphs)
+						if (!paragraph.align && node.textAlign) paragraph.align = node.textAlign;
+				}
 				applyDiagramRoleColors(
 					shape,
 					colors?.labels.find((label) => label.name === node.styleLabel),

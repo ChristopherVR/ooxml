@@ -53,7 +53,7 @@ export async function withNativePictureLayout(
 		const fill = parseXml(
 			`<a:blipFill xmlns:a="${NS.a}" xmlns:r="${NS.r}"><a:blip r:embed="${rel}"><a:grayscl/><a:alphaModFix amt="75000"/></a:blip><a:srcRect l="12500" r="25000"/><a:stretch><a:fillRect/></a:stretch></a:blipFill>`,
 		).documentElement;
-		for (const owner of [shape, points.find((entry) => entry.getAttribute('modelId') === assoc)!]) {
+		for (const owner of [shape, point]) {
 			const props = first(owner, 'spPr', owner.namespaceURI!)!;
 			for (const old of [...props.childNodes]
 				.filter((child): child is XmlElement => child.nodeType === 1)

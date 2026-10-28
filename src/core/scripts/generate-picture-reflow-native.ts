@@ -72,6 +72,7 @@ for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 		})),
 		source: element.smartArtData!.pictureLayoutSource,
 		scheme: element.smartArtData!.pictureScheme,
+		minorFont: element.smartArtData!.themeMinorFont,
 		extentEmu: { width: element.width * 9525, height: element.height * 9525 },
 	});
 	writeFileSync(

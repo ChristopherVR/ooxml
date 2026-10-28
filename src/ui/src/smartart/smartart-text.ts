@@ -1,6 +1,6 @@
 import type { DiagramDrawingShape } from 'ooxml-core/diagram';
 import type { DrawingTextRun } from 'ooxml-core/drawingml';
-import { designTextWidthEm, wrapStyledRuns } from 'ooxml-core/text';
+import { designTextWidthEm, wrapStyledRuns, getSubstituteFontFamily } from 'ooxml-core/text';
 import {
 	colorToCss,
 	type SchemeColors,
@@ -27,7 +27,7 @@ function runStyle(
 		element.setAttribute('fill', colorToCss(run.color, scheme, report) ?? 'currentColor');
 	const typeface = run.typeface;
 	const font = typeface === '+mj-lt' ? fonts.major : typeface === '+mn-lt' ? fonts.minor : typeface;
-	if (font) element.setAttribute('font-family', font);
+	if (font) element.setAttribute('font-family', getSubstituteFontFamily(font));
 }
 
 /** Paint every paragraph and run, retaining authored styles instead of flattening to one label. */
@@ -98,7 +98,7 @@ export function diagramTextElement(
 	);
 	const ref = shape.style?.font?.fontIndex;
 	const inherited = ref === 'major' ? fonts.major : ref === 'minor' ? fonts.minor : undefined;
-	if (inherited) text.setAttribute('font-family', inherited);
+	if (inherited) text.setAttribute('font-family', getSubstituteFontFamily(inherited));
 	if (first) runStyle(text, first, fonts, scheme, report);
 	const body = shape.body?.bodyProperties;
 	if (body?.scene3d || body?.shape3d)

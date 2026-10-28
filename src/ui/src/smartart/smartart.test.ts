@@ -56,7 +56,7 @@ describe('office-ui-smartart', () => {
 			const expected = nodes[index]!;
 			expect(text.getAttribute('fill')).toBe(expected.fontColor);
 			expect(Number(text.getAttribute('font-size'))).toBeCloseTo((expected.fontSizePt * 96) / 72);
-			expect(text.getAttribute('font-family')).toBe(expected.fontName);
+			expect(text.getAttribute('font-family')).toContain(expected.fontName);
 		}
 	});
 
@@ -89,15 +89,15 @@ describe('office-ui-smartart', () => {
 		art.drawing = { issues: [], shapes: [base] };
 		let text = art.shadowRoot!.querySelector('text')!;
 		expect(text.getAttribute('fill')).toBe('#FF0000');
-		expect(text.getAttribute('font-family')).toBe('Courier New');
+		expect(text.getAttribute('font-family')).toMatch(/^\"Courier New\",.*monospace$/);
 		base.text!.paragraphs[0]!.runs[0]!.typeface = '+mj-lt';
 		art.drawing = { issues: [], shapes: [base] };
-		expect(art.shadowRoot!.querySelector('text')!.getAttribute('font-family')).toBe(
+		expect(art.shadowRoot!.querySelector('text')!.getAttribute('font-family')).toContain(
 			'Aptos Display',
 		);
 		art.schemeFonts = { major: 'Cambria' };
 		text = art.shadowRoot!.querySelector('text')!;
-		expect(text.getAttribute('font-family')).toBe('Cambria');
+		expect(text.getAttribute('font-family')).toContain('Cambria');
 	});
 
 	it('reuses DrawingML color transforms for fills and reports unsupported transforms', () => {

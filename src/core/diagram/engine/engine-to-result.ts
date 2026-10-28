@@ -141,6 +141,12 @@ function buildRenderedNode(
 		picturePlaceholder: node.shape?.blipPhldr,
 		layoutRole: node.name,
 		contextNodeId: node.point.source?.id,
+		textAlign: ['l', 'ctr', 'r'].includes(node.alg.params.parTxLTRAlign ?? '')
+			? (node.alg.params.parTxLTRAlign as 'l' | 'ctr' | 'r')
+			: undefined,
+		textVerticalAnchor: ['t', 'ctr', 'b'].includes(node.alg.params.txAnchorVert ?? '')
+			? (node.alg.params.txAnchorVert as 't' | 'ctr' | 'b')
+			: undefined,
 		rotation: transform.rotation === 0 ? undefined : transform.rotation,
 		presetOverride: node.shape?.type ?? 'roundRect',
 		foldedNodeIds: foldedNodeIds.length > 0 ? foldedNodeIds : undefined,

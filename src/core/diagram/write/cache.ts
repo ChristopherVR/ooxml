@@ -252,7 +252,10 @@ export function buildGeneratedDiagramCache(
 			presStyleIdx: String(index),
 			presStyleCnt: String(drawing.shapes.length),
 		});
-		add(point, NS.dgm, 'dgm:spPr');
+		const properties = add(point, NS.dgm, 'dgm:spPr');
+		if (shape.fill?.kind === 'picture' && shape.fill.sourceXml) {
+			properties.appendChild(doc.importNode(parseXml(shape.fill.sourceXml).documentElement, true));
+		}
 		if (shape.sourceNodeId)
 			add(connections, NS.dgm, 'dgm:cxn', {
 				modelId: createOfficeGuid(),

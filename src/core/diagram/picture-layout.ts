@@ -102,6 +102,21 @@ export function captureDiagramPictures(
 		const point = model.points.find((point) => point.modelId === shape.modelId);
 		const nodeId =
 			shape.sourceNodeId ?? (point?.type === 'pres' ? point.presAssocId : point?.modelId);
+		// A generated cache may use a different layout role after a layout switch. The saved
+		// association remains authoritative; do not manufacture a second image for that node.
+		const part = shape.fill.relId ? drawing?.pictureParts?.[shape.fill.relId] : undefined;
+		if (
+			saved.length &&
+			pictures.some(
+				(item) =>
+					item.nodeId === nodeId &&
+					item.fill.relId &&
+					parts[item.fill.relId] === part &&
+					item.role !== point?.presName &&
+					item.styleLabel !== point?.presStyleLabel,
+			)
+		)
+			continue;
 		if (nodeId && model.nodes.some((node) => node.modelId === nodeId))
 			add(
 				{
@@ -200,9 +215,17 @@ export function withDiagramPictureSources(
 		const fill = parseXml(picture.fill.sourceXml).documentElement;
 		element.appendChild(doc.importNode(fill, true));
 		payload.appendChild(element);
-		const siblings = retained.filter((entry) => entry.nodeId === picture.nodeId);
-		if (siblings.length === 1) {
-			const point = live.find((point) => point.getAttribute('modelId') === picture.nodeId)!;
+		const presentations = children(points ?? root, 'pt', NS.dgm).filter((point) => {
+			const props = first(point, 'prSet', NS.dgm);
+			return (
+				point.getAttribute('type') === 'pres' &&
+				props?.getAttribute('presAssocID') === picture.nodeId &&
+				((picture.role && props.getAttribute('presName') === picture.role) ||
+					(picture.styleLabel && props.getAttribute('presStyleLbl') === picture.styleLabel))
+			);
+		});
+		if (presentations.length === 1) {
+			const point = presentations[0]!;
 			const props = first(point, 'spPr', NS.dgm) ?? doc.createElementNS(NS.dgm, 'dgm:spPr');
 			if (!props.parentNode) point.appendChild(props);
 			for (const old of [...props.childNodes]
@@ -215,7 +238,7 @@ export function withDiagramPictureSources(
 						),
 				))
 				props.removeChild(old);
-			// Keep the native node's image so Office can regenerate a known picture layout too.
+			// Picture roles need their own direct fill. A content-node fill would paint captions too.
 			props.insertBefore(doc.importNode(fill, true), props.firstChild);
 		}
 	}
