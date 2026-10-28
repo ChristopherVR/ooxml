@@ -104,6 +104,20 @@ describe('buildTextBlockStyle', () => {
 		expect(buildTextBlockStyle(textEl({})).whiteSpace).toBeUndefined();
 	});
 
+	// The vanilla export stage sits outside the viewer's `.pptxv *` reset, and
+	// html2canvas's clone reloads the host page's linked sheets without waiting:
+	// a `content-box` body there widened by its insets and shifted centred text.
+	it('lays the body box out as border-box under bodyLayout, independent of page CSS', () => {
+		const el = textEl({ bodyInsetLeft: 10, bodyInsetRight: 40 });
+		for (const pxLengths of [false, true]) {
+			const style = buildTextBlockStyle(el, { bodyLayout: true, pxLengths });
+			expect(style.boxSizing).toBe('border-box');
+			expect(style.width).toBe('100%');
+		}
+		// React lays the box out on its own layer and keeps only the typography here.
+		expect(buildTextBlockStyle(el).boxSizing).toBeUndefined();
+	});
+
 	it('maps the body anchor to justify-content under bodyLayout', () => {
 		expect(
 			buildTextBlockStyle(textEl({ vAlign: 'middle' }), { bodyLayout: true }).justifyContent,

@@ -165,6 +165,57 @@ test.describe('selection chrome is absent from raster exports', () => {
 	}
 });
 
+/**
+ * html2canvas-pro reloads the host page's linked stylesheets inside its cloned document and
+ * used to capture without waiting for them. The first fallback export of a page then often
+ * painted without the page CSS (later ones reuse the cached sheet in time): in CI the
+ * selection-chrome comparison above failed on its unselected, first export, with every
+ * centred label shifted right while the selected export was correct. Slowing only the
+ * clone's reload makes that cold capture deterministic.
+ */
+test.describe('fallback raster export waits for the host page stylesheets', () => {
+	test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+	test('a stylesheet still loading in the capture clone does not change the export', async ({
+		page,
+	}, testInfo) => {
+		await forceHtml2CanvasFallback(page);
+		await observeHtml2CanvasRuns(page);
+		await loadDeck(page, fixture('canvas-interaction.pptx'));
+		await openBackstageExport(page);
+		const referenceDownload = await downloadViaCard(page, PNG_CARD);
+		await referenceDownload.saveAs(testInfo.outputPath('reference.png'));
+		const reference = await downloadBytes(referenceDownload);
+		await page.keyboard.press('Escape');
+		await expect(backstage(page)).not.toBeVisible();
+
+		// The page already has its stylesheets; only the clone's reload of them is slow.
+		let reloads = 0;
+		await page.route('**/*.css', async (route) => {
+			reloads++;
+			await new Promise((resolve) => setTimeout(resolve, 2_000));
+			await route.continue();
+		});
+		await openBackstageExport(page);
+		const exportedDownload = await downloadViaCard(page, PNG_CARD);
+		await exportedDownload.saveAs(testInfo.outputPath('exported.png'));
+		const exported = await downloadBytes(exportedDownload);
+		await page.unrouteAll({ behavior: 'ignoreErrors' });
+		const diff = await pixelDiff(page, reference, exported, { channelThreshold: 8 });
+		await testInfo.attach('reference.png', {
+			path: testInfo.outputPath('reference.png'),
+			contentType: 'image/png',
+		});
+		await testInfo.attach('exported.png', {
+			path: testInfo.outputPath('exported.png'),
+			contentType: 'image/png',
+		});
+		expect(reloads, 'the capture clone must have reloaded a stylesheet').toBeGreaterThan(0);
+		expect(diff.diffPixelFraction, JSON.stringify(diff)).toBeLessThan(0.0001);
+		expect(await countForcedFallbacks(page)).toBeGreaterThan(0);
+		expect(await countHtml2CanvasRuns(page)).toBeGreaterThan(0);
+	});
+});
+
 /** The fixture authors a red connector and navy outline strokes, not editor UI. */
 async function authoredStrokePixels(page: Page, bytes: Uint8Array) {
 	return page.evaluate(async (base64) => {

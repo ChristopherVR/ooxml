@@ -186,6 +186,14 @@ export function buildTextBlockStyle(
 	if (options.bodyLayout) {
 		style.width = '100%';
 		style.height = '100%';
+		// The insets below are padding inside that 100% box, so the box has to be
+		// `border-box` (the content-height math at the end assumes it too). Declared
+		// here rather than left to a stylesheet reset: a stage outside the viewer's
+		// scoped reset (the vanilla export stage) or html2canvas's cloned document
+		// (which reloads the host page's linked sheets without waiting) otherwise
+		// lays the body out as `content-box`: the box overflows the shape by its
+		// padding, and centred text moves right by half of it.
+		style.boxSizing = 'border-box';
 		style.whiteSpace = 'pre-wrap';
 		style.wordBreak = 'break-word';
 		// The box itself (columns, anchor, anchorCtr, tab-size, kinsoku) comes
