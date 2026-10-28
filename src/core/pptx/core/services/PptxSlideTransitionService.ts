@@ -28,6 +28,7 @@ import {
 } from './slide-transition-envelope';
 import {
 	applyTransitionAttributes,
+	buildEffectlessTransition,
 	buildStandardTransitionChild,
 	buildTransitionSound,
 	createPreservedTransitionNode,
@@ -201,8 +202,11 @@ export class PptxSlideTransitionService implements IPptxSlideTransitionService {
 	}
 
 	public buildSlideTransitionXml(transition: PptxSlideTransition): XmlObject | undefined {
-		if (!transition || transition.type === 'none') {
+		if (!transition) {
 			return undefined;
+		}
+		if (transition.type === 'none') {
+			return buildEffectlessTransition(transition, this.getXmlLocalName);
 		}
 
 		const transitionType = transition.type || 'cut';

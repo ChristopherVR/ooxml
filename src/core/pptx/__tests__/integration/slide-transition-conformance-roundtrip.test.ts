@@ -44,6 +44,32 @@ describe('slide transition package round-trip', () => {
 		});
 	});
 
+	// Issue #231: Transitions > None with Advance Slide > After set (what the
+	// ribbon commits) lost the timed advance on save.
+	it('keeps the timed advance of a slide with no transition effect', async () => {
+		const created = await PresentationBuilder.create();
+		const slide = created.createSlide('Blank').addText('Timed').build();
+		slide.transition = {
+			type: 'none',
+			durationMs: 1_000,
+			advanceOnClick: true,
+			advanceAfterMs: 5_000,
+		};
+		created.data.slides.push(slide);
+		const bytes = await created.handler.save(created.data.slides);
+
+		const zip = await JSZip.loadAsync(bytes);
+		const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+		expect(xml).toMatch(/<p:transition advClick="1" advTm="5000"(\/>|><\/p:transition>)/);
+
+		const data = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
+		expect(data.slides[0].transition).toMatchObject({
+			advanceOnClick: true,
+			advanceAfterMs: 5_000,
+		});
+		expect(data.slides[0].transition?.durationMs).toBeUndefined();
+	});
+
 	it('preserves unknown transition markup through a dirty edit and reload', async () => {
 		const base = await generatedDeck();
 		const zip = await JSZip.loadAsync(base);
