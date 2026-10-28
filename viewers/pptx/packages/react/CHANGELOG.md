@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.57.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.57.0) - 2026-10-28
+
+### Features
+
+- **pptx:** Add opt-in whole-list conversion with listConversionScope ([#229](https://github.com/ChristopherVR/ooxml/issues/229)) ([bf7be3e](https://github.com/ChristopherVR/ooxml/commit/bf7be3e5cedd7ff9ed9e6cc62b0bd5be7ec363c4))
+
+### Bug Fixes
+
+- **pptx:** Stretch textPlain WordArt to fill its shape ([#226](https://github.com/ChristopherVR/ooxml/issues/226)) ([120d3ce](https://github.com/ChristopherVR/ooxml/commit/120d3ce4e4e4dd8c5830902230fabb5e2c8dcfe7))
+- **pptx:** Keep the timed advance of a slide with no transition ([df75415](https://github.com/ChristopherVR/ooxml/commit/df75415df55557f9366732550540a149821ab939))
+
 ## [4.56.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.56.1) - 2026-10-28
 
 ### Bug Fixes
