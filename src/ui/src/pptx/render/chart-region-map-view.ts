@@ -256,6 +256,7 @@ export function buildRegionMapViewModel(
 			text: 'Approximate country outlines',
 			fontSize: 8,
 			fill: '#595959',
+			textAnchor: 'start',
 		} satisfies SvgText);
 
 	const dataLabels: SvgText[] = titlePrimitive !== undefined ? [titlePrimitive] : [];
