@@ -7,6 +7,7 @@ import {
 	flattenNodes,
 	getContainerStyle,
 	projectDrawingShapes,
+	refreshSmartArtPictureImage,
 	resolvePalette,
 	resolveRevealedDrawingShapeNodeIds,
 	resolveRevealedDrawingShapes,
@@ -214,6 +215,9 @@ function buildDrawingShapesSvg(
 				transform: shape.transform,
 			});
 			image.setAttribute('href', shape.imageUrl ?? '');
+			image.addEventListener('load', (event) =>
+				refreshSmartArtPictureImage(event, shape.pictureSource),
+			);
 			g.appendChild(image);
 		} else if (shape.kind === 'ellipse') {
 			g.appendChild(

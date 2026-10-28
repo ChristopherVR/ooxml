@@ -1,6 +1,12 @@
 // @vitest-environment happy-dom
-import { expect, it } from 'vitest';
-import { smartArtPictureImage } from './smartart-picture-image';
+import { afterEach, expect, it, vi } from 'vitest';
+import { smartArtPictureImage, refreshSmartArtPictureImage } from './smartart-picture-image';
+import * as pixels from '../../picture-pixels';
+import type { PptxSmartArtDrawingShape } from 'ooxml-core/pptx';
+afterEach(() => {
+	vi.restoreAllMocks();
+	document.body.replaceChildren();
+});
 
 it('shares cropped, effect-bearing image paint clipped to the authored preset', () => {
 	const result = smartArtPictureImage({
@@ -29,6 +35,49 @@ it('shares cropped, effect-bearing image paint clipped to the authored preset', 
 		/^url\(#office-picture-/,
 	);
 });
+
+it.each(['mounted', 'removed', 'changed'] as const)(
+	'invalidates only a current %s image after asynchronous pixel paint',
+	async (state) => {
+		let complete!: (value: pixels.PicturePixelImage) => void;
+		const probe = vi.spyOn(pixels, 'probePicturePixels').mockReturnValue(
+			new Promise((resolve) => {
+				complete = resolve;
+			}),
+		);
+		const cached = vi.spyOn(pixels, 'cachedPicturePixels').mockReturnValue(undefined);
+		const source: PptxSmartArtDrawingShape = {
+			id: 'async',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 50,
+			fillImageUrl: 'data:image/png;base64,AA==',
+			pictureFill: {
+				kind: 'picture',
+				effects: [{ kind: 'standard', name: 'hsl', attributes: { sat: '0' } }],
+			},
+		};
+		const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+		image.setAttribute('href', 'pending');
+		svg.append(image);
+		document.body.append(svg);
+		refreshSmartArtPictureImage({ currentTarget: image }, source);
+		if (state === 'removed') image.remove();
+		if (state === 'changed') source.fillImageUrl = 'data:image/png;base64,NEW';
+		const result = { url: 'data:image/png;base64,PROCESSED', width: 48, height: 32 };
+		cached.mockReturnValue(result);
+		complete(result);
+		await Promise.resolve();
+		if (state === 'mounted') {
+			expect(image.getAttribute('href')).toMatch(/^data:image\/svg\+xml,/);
+			expect(image.getAttribute('data-office-picture-pixels-ready')).toBe('true');
+			refreshSmartArtPictureImage({ currentTarget: image }, source);
+			expect(probe).toHaveBeenCalledTimes(1);
+		} else expect(image.getAttribute('href')).toBe('pending');
+	},
+);
 
 it('serializes native-size tiles synchronously without waiting for an image probe', () => {
 	const result = smartArtPictureImage({

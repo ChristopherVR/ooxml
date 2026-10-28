@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SMARTART_SVG_STYLE } from '../render';
 	import type { SmartArtDrawingViewProps } from './props';
+	import { refreshSmartArtPictureImage } from 'ooxml-ui/pptx';
 
 	const { view, canEditNodeText, onopeneditor, onshowstyle, onhidestyle }: SmartArtDrawingViewProps = $props();
 </script>
@@ -65,6 +66,7 @@
 					width={shape.width}
 					height={shape.height}
 					href={shape.imageUrl}
+					onload={(event) => refreshSmartArtPictureImage(event, shape.pictureSource)}
 					preserveAspectRatio="xMidYMid meet"
 					transform={shape.transform}
 				/>

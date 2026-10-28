@@ -1,6 +1,7 @@
 import {
 	computeDrawingViewBox,
 	projectDrawingShapes,
+	refreshSmartArtPictureImage,
 	resolveRevealedDrawingShapeNodeIds,
 	styleShadowFilter,
 } from 'ooxml-ui/pptx';
@@ -60,6 +61,7 @@ function shapeBody(shape: RenderedShape): React.ReactElement {
 					width={shape.width}
 					height={shape.height}
 					href={shape.imageUrl}
+					onLoad={(event) => refreshSmartArtPictureImage(event, shape.pictureSource)}
 					preserveAspectRatio='xMidYMid meet'
 					transform={shape.transform}
 				/>

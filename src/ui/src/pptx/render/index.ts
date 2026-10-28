@@ -1086,6 +1086,7 @@ export {
 	computeDrawingViewBox,
 	drawingShapeLabelColor,
 	projectDrawingShapes,
+	refreshSmartArtPictureImage,
 	styleShadowFilter,
 } from './smartart-drawing';
 export type {

@@ -16,6 +16,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	buildSmartArtA11y,
+	refreshSmartArtPictureImage,
 	measureSvgViewportRect,
 	computeSmartArtElementLayout,
 	findSmartArtNodeText,
@@ -95,6 +96,7 @@ import {
 	styleUrl: './smart-art-renderer.component.css',
 })
 export class SmartArtRendererComponent {
+	readonly refreshSmartArtPictureImage = refreshSmartArtPictureImage;
 	/** The smartArt element to render. Must be `type === 'smartArt'`. */
 	readonly element = input.required<PptxElement>();
 

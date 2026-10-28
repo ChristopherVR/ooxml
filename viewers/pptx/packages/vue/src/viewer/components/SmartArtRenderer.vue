@@ -6,6 +6,7 @@ import {
 	computeDrawingViewBox,
 	measureSvgViewportRect,
 	projectDrawingShapes,
+	refreshSmartArtPictureImage,
 	resolveRevealedDrawingShapeNodeIds,
 	resolvePalette,
 	resolveRevealedDrawingShapes,
@@ -512,6 +513,7 @@ function onEditorKeydown(event: KeyboardEvent): void {
 						:width="shape.width"
 						:height="shape.height"
 						:href="shape.imageUrl"
+						@load="refreshSmartArtPictureImage($event, shape.pictureSource)"
 						preserveAspectRatio="xMidYMid meet"
 						:transform="shape.transform"
 					/>

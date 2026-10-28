@@ -1,23 +1,88 @@
 import type { PptxSmartArtDrawingShape } from 'ooxml-core/pptx';
 import { pictureSvg } from '../../picture-view';
 import { getPresetShapeVectorGeometry } from './stroke-outline';
+import { cachedPicturePixels, needsPicturePixels, probePicturePixels } from '../../picture-pixels';
+import { getCachedNativeImageSize, probeNativeImageSize } from '../../image-native-size';
+
+export const needsSmartArtPictureRefresh = (shape: PptxSmartArtDrawingShape): boolean =>
+	Boolean(
+		shape.fillImageUrl &&
+		(needsPicturePixels(shape.pictureFill?.effects ?? []) ||
+			(shape.pictureFill?.layout?.tile && !(shape.fillImageWidth && shape.fillImageHeight))),
+	);
+
+const pendingImages = new WeakMap<
+	SVGImageElement,
+	{ source: PptxSmartArtDrawingShape; key: string; done: boolean }
+>();
+const sourceKey = (shape: PptxSmartArtDrawingShape) =>
+	JSON.stringify([
+		shape.fillImageUrl,
+		shape.pictureFill,
+		shape.width,
+		shape.height,
+		shape.rotation,
+		shape.flipHorizontal,
+		shape.flipVertical,
+		shape.shapeType,
+		shape.shapeAdjustments,
+	]);
+
+/** Native bindings invalidate only their mounted image once asynchronous pixel paint is ready. */
+export function refreshSmartArtPictureImage(
+	event: { currentTarget: EventTarget | null },
+	source?: PptxSmartArtDrawingShape,
+): void {
+	const image = event.currentTarget as SVGImageElement | null;
+	if (!image || image.localName !== 'image' || !source || !needsSmartArtPictureRefresh(source))
+		return;
+	const key = sourceKey(source);
+	if (pendingImages.get(image)?.key === key) return;
+	const state = { source, key, done: false };
+	pendingImages.set(image, state);
+	const pixels = needsPicturePixels(source.pictureFill?.effects ?? []);
+	const ready = pixels
+		? probePicturePixels(
+				image.ownerDocument,
+				source.fillImageUrl!,
+				source.pictureFill!.effects ?? [],
+			)
+		: probeNativeImageSize(source.fillImageUrl!);
+	void ready.then((result) => {
+		if (
+			!result ||
+			!image.parentNode ||
+			pendingImages.get(image) !== state ||
+			sourceKey(source) !== key
+		)
+			return;
+		state.done = true;
+		image.setAttribute('data-office-picture-paint-ready', 'true');
+		if (pixels) image.setAttribute('data-office-picture-pixels-ready', 'true');
+		const url = smartArtPictureImage(source);
+		if (url && image.getAttribute('href') !== url) image.setAttribute('href', url);
+	});
+}
 
 /** Self-contained image descriptors are shared by every native framework template. */
 export function smartArtPictureImage(shape: PptxSmartArtDrawingShape): string | undefined {
 	const url = shape.fillImageUrl;
 	if (!url?.startsWith('data:') || !shape.pictureFill || typeof document === 'undefined')
 		return url;
+	const size =
+		cachedPicturePixels(url, shape.pictureFill.effects ?? []) ?? getCachedNativeImageSize(url);
+	const width = shape.fillImageWidth ?? size?.width;
+	const height = shape.fillImageHeight ?? size?.height;
 	// Unknown raster formats retain the existing image fallback. Do not serialize an empty
 	// asynchronously populated tile pattern into a detached SVG image descriptor.
-	if (shape.pictureFill.layout?.tile && !(shape.fillImageWidth && shape.fillImageHeight))
-		return url;
+	if (shape.pictureFill.layout?.tile && !(width && height)) return url;
 	const svg = pictureSvg(
 		document,
 		shape.pictureFill,
 		{
 			url,
-			...(shape.fillImageWidth ? { width: shape.fillImageWidth } : {}),
-			...(shape.fillImageHeight ? { height: shape.fillImageHeight } : {}),
+			...(width ? { width } : {}),
+			...(height ? { height } : {}),
 		},
 		shape.width,
 		shape.height,
