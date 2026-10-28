@@ -13,7 +13,9 @@ const zip = await JSZip.loadAsync(
 );
 for (const name of Object.keys(zip.files))
 	if (name.startsWith('word/media/') && name.endsWith('.png')) zip.file(name, pictureGridPng());
-const xml = await zip.file('word/document.xml')!.async('string');
+const xml = (await zip.file('word/document.xml')!.async('string'))
+	.replace(/<wp:extent\b[^>]*\/>/, '<wp:extent cx="1828800" cy="1219200"/>')
+	.replace(/<a:ext\b[^>]*\/>/, '<a:ext cx="1828800" cy="1219200"/>');
 zip.file(
 	'word/document.xml',
 	xml
