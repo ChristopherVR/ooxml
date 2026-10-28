@@ -18,7 +18,7 @@ it('loads Word cached pictures with internal media identities and preserves sour
 			: [],
 	)[0]!;
 	const drawing = image.diagram!.drawing!;
-	expect(loaded.media.get('word/media/shared-picture.png')?.length).toBeGreaterThan(0);
+	expect(loaded.media?.get('word/media/shared-picture.png')?.length).toBeGreaterThan(0);
 	expect(drawing.pictureParts).toEqual({ picture: 'word/media/shared-picture.png' });
 	expect(drawing.shapes[0]).toMatchObject({
 		geometry: 'ellipse',
