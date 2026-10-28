@@ -159,33 +159,60 @@ function mapIdAt(arr: YArrayLike, index: number): string | undefined {
 }
 
 /**
- * Reconcile a Y.Array of Y.Maps against a desired item list, matching by id.
- * Items without a string id fall back to positional matching.
+ * Indices of the maps whose id already appeared earlier in `arr`.
+ *
+ * Two peers that insert the same item concurrently (typically two clients
+ * seeding one empty room with the same deck at the same moment) leave both
+ * copies in the merged array. The first copy wins everywhere: readers skip the
+ * later ones and the next write deletes them. Every peer converges on the same
+ * array order, so every peer keeps the same copy.
  */
-function reconcileYArrayById<T>(
-	arr: YArrayLike,
-	items: readonly T[],
-	adapter: ReconcileAdapter<T>,
-): void {
-	const desiredIds = new Set<string>();
-	for (const item of items) {
-		const id = adapter.idOf(item);
-		if (typeof id === 'string') {
-			desiredIds.add(id);
-		}
-	}
-
-	// Pass 1: delete maps whose id is gone (or duplicated); keep the last dup.
+function laterDuplicateIndices(arr: YArrayLike): number[] {
 	const seen = new Set<string>();
-	for (let i = arr.length - 1; i >= 0; i--) {
+	const duplicates: number[] = [];
+	for (let i = 0; i < arr.length; i++) {
 		const id = mapIdAt(arr, i);
 		if (id === undefined) {
 			continue;
 		}
-		if (!desiredIds.has(id) || seen.has(id)) {
-			arr.delete(i, 1);
+		if (seen.has(id)) {
+			duplicates.push(i);
 		} else {
 			seen.add(id);
+		}
+	}
+	return duplicates;
+}
+
+/**
+ * Reconcile a Y.Array of Y.Maps against a desired item list, matching by id.
+ * Items without a string id fall back to positional matching. An id repeated
+ * in `items` is written once, at its first position.
+ */
+function reconcileYArrayById<T>(
+	arr: YArrayLike,
+	desired: readonly T[],
+	adapter: ReconcileAdapter<T>,
+): void {
+	const desiredIds = new Set<string>();
+	const items = desired.filter((item) => {
+		const id = adapter.idOf(item);
+		if (typeof id !== 'string') {
+			return true;
+		}
+		if (desiredIds.has(id)) {
+			return false;
+		}
+		desiredIds.add(id);
+		return true;
+	});
+
+	// Pass 1: delete maps whose id is gone or repeated (the first copy stays).
+	const stale = new Set(laterDuplicateIndices(arr));
+	for (let i = arr.length - 1; i >= 0; i--) {
+		const id = mapIdAt(arr, i);
+		if (id !== undefined && (stale.has(i) || !desiredIds.has(id))) {
+			arr.delete(i, 1);
 		}
 	}
 
@@ -260,6 +287,34 @@ export function reconcileSlideYMap(
 		},
 		update: (map, el) => reconcileElementYMap(map, el, factories, assets),
 	});
+}
+
+/**
+ * Delete the later copies of any slide id that appears more than once in the
+ * document (see `laterDuplicateIndices`). Returns whether anything changed; a
+ * document without duplicates is left untouched and emits no update.
+ */
+export function removeDuplicateSlidesInYDoc(
+	ydoc: YDocLike,
+	origin: unknown = LOCAL_SYNC_ORIGIN,
+): boolean {
+	const arr = ydoc.getArray(YDOC_SLIDES_KEY);
+	// Read-only check first, so a document without copies gets no transaction.
+	if (laterDuplicateIndices(arr).length === 0) {
+		return false;
+	}
+	let removed = false;
+	ydoc.transact(() => {
+		// Locate the copies only now: a host's beforeTransaction listener may have
+		// changed the array as the transaction started, which would make positions
+		// found before it point at the wrong slides.
+		const duplicates = laterDuplicateIndices(arr);
+		for (let i = duplicates.length - 1; i >= 0; i--) {
+			arr.delete(duplicates[i], 1);
+		}
+		removed = duplicates.length > 0;
+	}, origin);
+	return removed;
 }
 
 /**

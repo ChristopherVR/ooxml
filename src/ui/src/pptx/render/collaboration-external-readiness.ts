@@ -6,7 +6,7 @@ import { observeExternalCollaborationSession } from './collaboration-external-se
 import type { CollaborationLivePatcher } from './collaboration-live-patch';
 import type { CollabLoadOrigin } from './collaboration-load-origin';
 import type { ConnectionStatus } from './collaboration-presence';
-import { LOCAL_SYNC_ORIGIN } from './collaboration-reconcile';
+import { LOCAL_SYNC_ORIGIN, removeDuplicateSlidesInYDoc } from './collaboration-reconcile';
 import type { YjsFactories, YTransactionLike } from './collaboration-sync';
 import { observeYDocSlides, readSlidesFromYDoc } from './collaboration-sync';
 import type { SyncGate } from './collaboration-sync-gate';
@@ -52,6 +52,27 @@ export function observeExternalCollaborationReadiness(
 	let unsubscribe: (() => void) | undefined;
 	const canWrite = (): boolean =>
 		active && options.gate.isOpen() && session.getSnapshot().synced && options.role !== 'viewer';
+	let dedupeQueued = false;
+	/**
+	 * Two create clients can each find the room empty and seed it before hearing
+	 * from the other, which leaves every slide in the merged document twice.
+	 * Readers already see one copy (the first); delete the rest so the document
+	 * itself converges. Every writer deletes the same copies, so concurrent
+	 * clean-ups merge. Deferred so the delete is its own local transaction
+	 * rather than a write from inside a Yjs observer.
+	 */
+	const scheduleDuplicateCleanup = (): void => {
+		if (dedupeQueued) {
+			return;
+		}
+		dedupeQueued = true;
+		queueMicrotask(() => {
+			dedupeQueued = false;
+			if (canWrite()) {
+				removeDuplicateSlidesInYDoc(session.doc);
+			}
+		});
+	};
 	const notifyReadOnly = (): void => {
 		const readOnly = !canWrite();
 		if (lastReadOnly !== readOnly) {
@@ -115,6 +136,7 @@ export function observeExternalCollaborationReadiness(
 		);
 		options.gate.open();
 		notifyReadOnly();
+		scheduleDuplicateCleanup();
 		options.onReady?.({ seedEmptyRoom: slides.length === 0 && !established });
 	};
 	const unobserve = observeYDocSlides(session.doc, (_events, transaction?: YTransactionLike) => {
@@ -136,6 +158,7 @@ export function observeExternalCollaborationReadiness(
 		} else if (slides.length > 0 || established) {
 			adopt(slides);
 		}
+		scheduleDuplicateCleanup();
 	});
 	const dispose = (): void => {
 		if (!active) {
