@@ -16,7 +16,11 @@ import { text, rect, esc, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartTextAttributes } from './chart-svg-appearance';
 import { draw, measure } from './chart-svg-labels';
-export function regionMapSvg(model: ChartViewModel, area: Rect): string {
+export function regionMapSvg(
+	model: ChartViewModel,
+	area: Rect,
+	approximationLabel?: string,
+): string {
 	const series = model.series[0];
 	if (!series || series.hidden) return '';
 	const options = model.regionMap;
@@ -48,7 +52,7 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 	const reserve =
 		(model.showLegend ? 46 : 12) +
 		Math.min(missing.length, 5) * 14 +
-		(geometry.approximate ? 14 : 0);
+		(geometry.approximate && approximationLabel ? 14 : 0);
 	const scale = Math.max(
 		0.00001,
 		Math.min(Math.max(1, area.w - 8) / width, Math.max(1, area.h - reserve) / height),
@@ -56,7 +60,7 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 	const dx = area.x + (area.w - width * scale) / 2 - bounds.minX * scale,
 		dy = area.y - bounds.minY * scale;
 	const out = [
-		`<g data-chart-part="regionMap" data-map-geometry="${geometry.approximate ? 'approximate' : 'cached'}"${geometry.issues.length ? ' data-map-partial="true"' : ''}>`,
+		`<g data-chart-part="regionMap" data-map-geometry="${geometry.approximate ? 'approximate' : 'cached'}"${geometry.approximate ? ' data-map-report="approximate-country-outlines"' : ''}${geometry.issues.length ? ' data-map-partial="true"' : ''}>`,
 	];
 	out.push(
 		`<svg x="${area.x}" y="${area.y}" width="${area.w}" height="${Math.max(1, area.h - reserve)}" viewBox="${area.x} ${area.y} ${area.w} ${Math.max(1, area.h - reserve)}" overflow="hidden">`,
@@ -108,8 +112,8 @@ export function regionMapSvg(model: ChartViewModel, area: Rect): string {
 		);
 	}
 	let row = y + (model.showLegend ? 32 : 0);
-	if (geometry.approximate) {
-		out.push(text(area.x, row, 'Approximate country outlines', { size: 8 }));
+	if (geometry.approximate && approximationLabel) {
+		out.push(text(area.x, row, approximationLabel, { size: 8 }));
 		row += 14;
 	}
 	for (const entry of missing.slice(0, 5)) {

@@ -4,6 +4,8 @@ export const CHART_FONT_FAMILY = 'Calibri, Carlito, Arial, sans-serif';
 type TextAttributes = NonNullable<Parameters<typeof text>[3]>;
 
 export interface ChartSvgOptions {
+	/** Localized host caption for the approximate-map report code; omitted, metadata alone reports it. */
+	mapApproximationLabel?: string;
 	/** Host width in CSS pixels for the painter's exact CSS font. Core never accesses a DOM. */
 	measureText?: (content: string, font: string) => number;
 	/** Natural font ascent/descent in CSS pixels, when the host has vertical metrics. */

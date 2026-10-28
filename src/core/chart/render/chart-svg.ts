@@ -87,7 +87,8 @@ export function renderChartSvg(
 	area = legend.plot;
 	if (!legend.foreground) out.push(legend.markup);
 	if (area.w > 4 && area.h > 4) {
-		if (model.type === 'regionMap') out.push(regionMapSvg(model, area));
+		if (model.type === 'regionMap')
+			out.push(regionMapSvg(model, area, options.mapApproximationLabel));
 		else if (model.type === 'pie' || model.type === 'doughnut') out.push(pieSvg(model, area));
 		else if (model.type === 'funnel') out.push(funnelSvg(model, area));
 		else if (model.type === 'radar') out.push(radarSvg(model, area));

@@ -54,7 +54,15 @@ describe('shared region map painter', () => {
 			width: 480,
 			height: 300,
 		});
-		expect(fallback).toContain('Approximate country outlines');
+		expect(fallback).toContain('data-map-report="approximate-country-outlines"');
+		expect(fallback).not.toContain('Approximate country outlines');
+		expect(
+			renderChartSummarySvg(chartExSummary(xml(''))!.summary!, {
+				width: 480,
+				height: 300,
+				mapApproximationLabel: 'Ungefähre Länderumrisse',
+			}),
+		).toContain('Ungefähre Länderumrisse');
 		const unknown = renderChartSummarySvg(chartExSummary(xml(clear, 'unsupported'))!.summary!, {
 			width: 480,
 			height: 300,
