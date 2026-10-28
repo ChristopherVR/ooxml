@@ -6,7 +6,9 @@ export type { PptxI18nProviderProps } from './i18n/provider';
 export type { PptxTranslate, PptxTranslateParams } from './i18n/types';
 export * from './types';
 
-// AI assistant config types (for hosts wiring the optional `ai` prop).
+// AI assistant types (for hosts wiring the optional `ai` prop; `createAiAssistant` is
+// exported from `pptx-react-viewer/ai`).
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 export type {
 	PptxAiBridge,
 	PptxAiConfig,

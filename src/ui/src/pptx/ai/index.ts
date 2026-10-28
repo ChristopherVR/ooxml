@@ -175,3 +175,13 @@ export type { ToolActivity, ToolActivityIcon, ToolActivityTense } from './tool-s
 
 export { toolCanvasTarget } from './tool-target';
 export type { ToolCanvasTarget } from './tool-target';
+
+// The `createAiAssistant` handle registry factory; each binding creates its own registry.
+export { createAiAssistantRegistry } from '../render/controller/ai-assistant';
+export type {
+	AiAssistantRegistry,
+	AiAssistantRegistryOptions,
+	PptxAiAssistant,
+	ResolveAiAssistantOptions,
+	ResolvedAiAssistant,
+} from '../render/controller/ai-assistant';

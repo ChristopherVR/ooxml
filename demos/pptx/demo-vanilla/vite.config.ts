@@ -38,6 +38,7 @@ export default defineConfig({
 	resolve: {
 		// Order matters: more specific subpath aliases must precede the bare ones.
 		alias: [
+			{ find: 'pptx-vanilla-viewer/ai', replacement: pkg('vanilla', 'src', 'ai.ts') },
 			{ find: 'pptx-vanilla-viewer', replacement: pkg('vanilla', 'src', 'index.ts') },
 			{
 				find: 'pptx-viewer-core/converter',

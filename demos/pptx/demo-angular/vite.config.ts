@@ -58,6 +58,10 @@ export default defineConfig({
 				find: /^pptx-angular-viewer\/styles(?<css>\.css)?$/u,
 				replacement: resolve(angularLibDist, 'pptx-angular-viewer.css'),
 			},
+			{
+				find: 'pptx-angular-viewer/ai',
+				replacement: resolve(angularLibDist, 'fesm2022', 'pptx-angular-viewer-ai.mjs'),
+			},
 			{ find: 'pptx-angular-viewer', replacement: angularLibDist },
 			{
 				find: 'pptx-viewer-locales',

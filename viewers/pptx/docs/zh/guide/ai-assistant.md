@@ -31,15 +31,24 @@ bun add @ai-sdk/anthropic
 
 ## 启用面板 {#enabling-the-panel}
 
-向组件传入 `ai` 配置。所有框架使用相同的数据结构，只有属性传递语法不同。
+把助手传给预览器的 `ai` 属性（Angular 中是输入，Vanilla 中是选项）。每个绑定都有一个 `/ai` 入口，其中的 `createAiAssistant(config)` 把配置转换为助手句柄。配置的结构在所有绑定中完全相同，只是传递属性的宿主语法不同。
 
 ```tsx
 // React
-import { PowerPointViewer, type PptxAiConfig } from 'pptx-react-viewer';
+import { PowerPointViewer } from 'pptx-react-viewer';
+import { createAiAssistant } from 'pptx-react-viewer/ai';
 
-const ai: PptxAiConfig = { connection: { kind: 'endpoint', api: '/api/ai/chat' } };
+const ai = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
 
 <PowerPointViewer content={deck} ai={ai} />;
+```
+
+```ts
+// Vue、Angular、Svelte 和 Vanilla：从各自绑定的 `/ai` 入口导入同一个工厂函数
+import { createAiAssistant } from 'pptx-vue-viewer/ai';
+// 或 'pptx-angular-viewer/ai'、'pptx-svelte-viewer/ai'、'pptx-vanilla-viewer/ai'
+
+const ai = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
 ```
 
 ```vue
@@ -63,6 +72,8 @@ import { createPptxViewer } from 'pptx-vanilla-viewer';
 
 createPptxViewer(container, { source: deck, ai });
 ```
+
+直接传入普通配置（`ai: { connection }`）在所有绑定中仍然有效，本版本也不会将其弃用。请只创建一次句柄（在模块作用域、`useMemo` 中或作为组件字段）；即使每次渲染都重新创建句柄，已打开的对话也不会被重新挂载。本版本保证什么、下一个主版本会改变什么，见 [`/ai` 入口](#ai-entry)。
 
 ## 连接方式 {#connection-modes}
 
@@ -203,3 +214,41 @@ const ai: PptxAiConfig = {
 ## 包体积 {#bundle-size}
 
 AI 代码不会进入关键加载路径。只有传入 `ai` 配置，并且用户首次打开聊天面板时，才会动态导入面板和 `ai` SDK。未配置 AI 的预览器不会下载这些代码。
+
+## `/ai` 入口 {#ai-entry}
+
+每个绑定的 `/ai` 入口都导出 `createAiAssistant(config)`、句柄类型 `PptxAiAssistant` 以及 `PptxAi*` 配置类型。句柄携带该绑定自己的惰性面板加载器，也就是主入口处理普通配置时使用的同一个加载器。Angular 的句柄只携带配置：无论传入句柄还是普通配置，都由聊天服务加载运行时。
+
+| 绑定    | 入口                     | 句柄携带的内容                                    |
+| ------- | ------------------------ | ------------------------------------------------- |
+| React   | `pptx-react-viewer/ai`   | `React.lazy` 聊天面板（其中加载 `@ai-sdk/react`） |
+| Vue     | `pptx-vue-viewer/ai`     | `defineAsyncComponent` 聊天面板（`@ai-sdk/vue`）  |
+| Svelte  | `pptx-svelte-viewer/ai`  | 聊天面板组件的加载器（`@ai-sdk/svelte`）          |
+| Angular | `pptx-angular-viewer/ai` | 无（`AiChatService` 自行导入 `ooxml-ui/pptx/ai`） |
+| Vanilla | `pptx-vanilla-viewer/ai` | 面板模块的加载器（`ooxml-ui/pptx/ai`）            |
+
+### 本版本保证什么 {#what-this-release-guarantees}
+
+在全部五个绑定中：
+
+- 句柄是 `ai` 接受的、受支持的不透明值。传入句柄等同于传入它的配置：同一个面板，同样的行为。句柄不提供任何宿主扩展点：其类型没有任何成员，只有 `createAiAssistant` 能创建句柄，句柄也无法携带面板或你自己的任何代码。每个绑定都把句柄保存在包内私有的注册表中，任何入口都不导出它，因此绑定或 `ooxml-ui` 的其他任何导出都无法创建查看器会读取的句柄。唯一的例外属于内部实现：Angular 的 `/ai` 入口由 ng-packagr 单独构建，它通过 `createAiAssistantHandle` 访问该注册表。包根入口和 `/internals` 以 `@internal` 形式导出该函数，它只接受配置，创建的句柄与 `createAiAssistant` 创建的相同。
+- `/ai` 入口是稳定的：`createAiAssistant`、`PptxAiAssistant` 和 `PptxAi*` 配置类型。
+- 普通的 `PptxAiConfig` 继续受支持，不会被弃用。预览器会把任何不是句柄的值（包括形状与句柄相同的对象）当作普通配置，并像以前一样不经校验地交给面板；面板无法使用的配置会让面板进入错误状态。
+- 由另一个绑定或另一份包副本（第二次安装，或混用 ESM 与 CommonJS 构建）创建的句柄也按同样方式处理。在开发环境中，预览器会对此警告一次（`process.env.NODE_ENV !== 'production'`；Angular 使用 `isDevMode()`）。
+- 主入口仍然会到达惰性面板加载器。`pptx-react-viewer`、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer`（以及同一文件的 `/internals`）和 `pptx-vanilla-viewer`，都通过与 `/ai` 相同的动态导入到达该绑定的 SDK 包和 `ooxml-ui/pptx/ai`。它们的初始代码块都不包含 `ai` SDK、`@ai-sdk/*`、`zod` 或自动化工具目录。因此句柄不会改变加载的内容和加载时机。
+
+### 为什么现在提供句柄 {#why-the-handle-ships-now}
+
+- 你可以在一个次版本中改用 `createAiAssistant`，这样下一个主版本就不需要你再修改代码。
+- 句柄把助手放在一个由你主动选用的导入之后。在 React、Vue、Svelte 和原生 JavaScript 中，句柄携带的面板加载器来自 `/ai` 入口，而不是主入口。在 Angular 中，由包根入口中的聊天服务加载运行时，这样 `/ai` 就不会向包根入口传入任何代码。
+
+### 下一个主版本会改变什么 {#what-the-next-major-release-changes}
+
+在每个绑定中满足以下全部条件时，主入口才不再包含助手运行时：
+
+- 主入口（`pptx-react-viewer`、`pptx-vue-viewer`、`pptx-svelte-viewer` 及其 `/viewer` 入口，`pptx-angular-viewer` 及其 `/internals`，`pptx-vanilla-viewer`）的源码与构建产物模块图，无论静态导入还是动态导入，都不会到达 `ai`、`@ai-sdk/*`、`zod`、`ooxml-ui/pptx/ai` 或 `ooxml-core/pptx/automation` 模块。
+- 它们的 `.d.ts` 文件不会引用 `ai` 或 `@ai-sdk/*` 的任何类型。
+- 打包绑定检查（`check-binding-packages.mjs`）要求每个绑定的入口中只有 `./ai` 会到达该绑定的 SDK 包（`@ai-sdk/react`、`@ai-sdk/vue`、`@ai-sdk/svelte`）和 `ooxml-ui/pptx/ai`。
+- 主入口 `ai` 的类型中移除普通配置；运行时传入普通配置会抛出错误，并提示改用 `createAiAssistant`。
+
+只有那个版本会改变行为：`ai` 只接受句柄，`PptxAi*` 配置类型（其中引用了 `ai` SDK 的类型）只从 `/ai` 入口导出，主入口也不再包含自己的惰性面板加载器。已经传入句柄的代码无需任何修改即可继续使用。在 Angular 中，运行时加载器目前位于包根入口，因此那个版本还必须把它移到 `/ai` 中，并且不能为此新增接受加载器的导出。

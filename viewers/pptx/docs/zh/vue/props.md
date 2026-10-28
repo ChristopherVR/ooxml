@@ -83,14 +83,14 @@ import type { PowerPointViewerProps } from 'pptx-vue-viewer';
 
 ## 展示与创作 {#presentation-authoring}
 
-| 属性                                                                       | 类型           | 默认值  | 说明                                                                                                          |
-| -------------------------------------------------------------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `authorName`                                                               | `string`       | -       | 批注和标记的作者显示名称。协作时回退到 `collaboration.userName`，否则回退到 `'You'`。                         |
-| `class`                                                                    | `string`       | -       | 应用于查看器根元素的可选类名，属性键为 `class`，不是 `className`。                                            |
-| `smartArt3D`                                                               | `boolean`      | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。            |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`      | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。 |
-| `ai`                                                                       | `PptxAiConfig` | -       | 启用可选智能助手。SDK 同级依赖只在打开面板时加载，省略则不提供助手。                                          |
-| `onOpenFile`                                                               | `() => void`   | -       | 由宿主接管“文件 > 打开”操作，绕过内置文件选择器，随后由宿主提供新的 `content` 属性。                          |
+| 属性                                                                       | 类型                              | 默认值  | 说明                                                                                                                                                            |
+| -------------------------------------------------------------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authorName`                                                               | `string`                          | -       | 批注和标记的作者显示名称。协作时回退到 `collaboration.userName`，否则回退到 `'You'`。                                                                           |
+| `class`                                                                    | `string`                          | -       | 应用于查看器根元素的可选类名，属性键为 `class`，不是 `className`。                                                                                              |
+| `smartArt3D`                                                               | `boolean`                         | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。                                                              |
+| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                         | `false` | 分别启用对应三维图表类型的交互式 Three.js 渲染器。缺少 `three`，或图表无法渲染为 WebGL 场景时，均回退为 SVG。                                                   |
+| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig` | -       | 启用可选智能助手：传入 `pptx-vue-viewer/ai` 中的 `createAiAssistant(config)`，或普通的 `PptxAiConfig`。SDK 同级依赖只在打开面板时加载，省略此属性则不提供助手。 |
+| `onOpenFile`                                                               | `() => void`                      | -       | 由宿主接管“文件 > 打开”操作，绕过内置文件选择器，随后由宿主提供新的 `content` 属性。                                                                            |
 
 ## 主题 {#theming}
 

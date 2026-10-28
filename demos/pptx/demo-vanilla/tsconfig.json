@@ -14,6 +14,7 @@
 		"allowImportingTsExtensions": true,
 		"types": ["node", "vite/client"],
 		"paths": {
+			"pptx-vanilla-viewer/ai": ["../../../viewers/pptx/packages/vanilla/src/ai.ts"],
 			"pptx-vanilla-viewer": ["../../../viewers/pptx/packages/vanilla/src/index.ts"],
 			"pptx-viewer-core/converter": ["../../../viewers/pptx/packages/core/src/converter/index.ts"],
 			"pptx-viewer-core": ["../../../viewers/pptx/packages/core/src/index.ts"],

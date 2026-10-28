@@ -22,9 +22,10 @@ const pkgVersion = (
 /**
  * Library build for `pptx-vue-viewer`.
  *
- * Two entry points mirror the React package:
+ * The entry points mirror the React package:
  *  - `.`        → top-level barrel (component + theme helpers)
  *  - `./viewer` → viewer sub-package barrel
+ *  - `./ai`     → `createAiAssistant`, the opt-in AI assistant entry
  *
  * Everything that ships as a peer/optional dependency is marked external so
  * the bundle stays slim and host apps dedupe a single Vue instance.
@@ -67,6 +68,7 @@ export default defineConfig({
 				'viewer/index': resolve(__dirname, 'src/viewer/index.ts'),
 				i18n: resolve(__dirname, 'src/i18n.ts'),
 				internals: resolve(__dirname, 'src/internals.ts'),
+				ai: resolve(__dirname, 'src/ai.ts'),
 			},
 			formats: ['es', 'cjs'],
 			fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,

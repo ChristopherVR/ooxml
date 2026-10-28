@@ -44,6 +44,7 @@ export default defineConfig({
 				replacement: pkg('svelte', 'src', 'viewer', 'index.ts'),
 			},
 			{ find: 'pptx-svelte-viewer/i18n', replacement: pkg('svelte', 'src', 'i18n.ts') },
+			{ find: 'pptx-svelte-viewer/ai', replacement: pkg('svelte', 'src', 'ai.ts') },
 			{ find: 'pptx-svelte-viewer', replacement: pkg('svelte', 'src', 'index.ts') },
 			{
 				find: 'pptx-viewer-core/converter',

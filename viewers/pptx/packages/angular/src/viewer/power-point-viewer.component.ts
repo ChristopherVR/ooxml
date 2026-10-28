@@ -10,6 +10,7 @@ import {
 	HostListener,
 	inject,
 	input,
+	isDevMode,
 	output,
 	signal,
 	untracked,
@@ -92,6 +93,7 @@ import type {
 	ViewportFitPadding,
 } from 'ooxml-ui/pptx';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type {
@@ -111,6 +113,7 @@ import type {
 import { themeStyle } from '../theme/viewer-theme';
 import { AccessibilityPanelComponent } from './accessibility-panel.component';
 import { AccessibilityService } from './accessibility.service';
+import { aiAssistants } from './ai-assistant-registry';
 import { createAngularAiBridge } from './ai/ai-bridge';
 import { AiChatPanelComponent } from './ai/ai-chat-panel.component';
 import { aiToggleVisible } from './ai/ai-gating';
@@ -857,11 +860,11 @@ const noopClose = (): void => undefined;
 						chunk (and the optional 'ai' SDK) only load when the panel first opens.
 					-->
 					@defer (when ai() && aiPanelOpen()) {
-						@if (ai(); as aiConfig) {
+						@if (aiAssistant(); as assistant) {
 							@if (aiPanelOpen() && chromeVisible() && aiEnabled()) {
 								<pptx-ai-chat-panel
 									[bridge]="aiBridge"
-									[config]="aiConfig"
+									[config]="assistant.config"
 									(closed)="aiPanelOpen.set(false)"
 								/>
 							}
@@ -1670,8 +1673,22 @@ export class PowerPointViewerComponent
 	 * `ai` SDK is an optional peer; when it is not installed the pane shows an
 	 * "unavailable" notice instead. Absent by default (no AI UI). Mirrors React's
 	 * `ai` prop.
+	 *
+	 * Pass a plain `PptxAiConfig` (supported and not deprecated), or the opaque
+	 * handle `createAiAssistant(config)` returns (from `pptx-angular-viewer/ai`,
+	 * the opt-in entry for the assistant). Both open the same panel. Only a value
+	 * from `createAiAssistant` is read as a handle; any other value is a plain
+	 * config, which the viewer does not validate.
 	 */
-	readonly ai = input<PptxAiConfig | undefined>(undefined);
+	readonly ai = input<PptxAiConfig | PptxAiAssistant | undefined>(undefined);
+	/**
+	 * The `ai` input read through this package's handle registry: a handle from
+	 * `pptx-angular-viewer/ai` gives its config; any other value is a plain
+	 * config, as before. The panel loads the chat runtime itself for both.
+	 */
+	protected readonly aiAssistant = computed(() =>
+		aiAssistants.resolve(this.ai(), { development: isDevMode() }),
+	);
 	/**
 	 * Framework-neutral UI customisation. See docs/guide/customization.md.
 	 * Unioned with `hiddenActions`. A new object identity REPLACES the whole
@@ -2378,7 +2395,8 @@ export class PowerPointViewerComponent
 	);
 	/** Whether the AI assistant toggle is shown (host supplied an `ai` config). */
 	protected readonly aiEnabled = computed(
-		() => aiToggleVisible(this.ai()) && this.customizationService.featureEnabled('ai'),
+		() =>
+			aiToggleVisible(this.aiAssistant()?.config) && this.customizationService.featureEnabled('ai'),
 	);
 	/**
 	 * Stable {@link PptxAiBridge} exposing this viewer's live state + editor to
@@ -2505,7 +2523,7 @@ export class PowerPointViewerComponent
 		// Apply the host's change-animation config (duration / colour / disable) to
 		// the store's shared animator whenever the `ai` config input changes.
 		effect(() => {
-			this.aiPanelStore.configureChangeAnimation(this.ai()?.changeAnimation);
+			this.aiPanelStore.configureChangeAnimation(this.aiAssistant()?.config.changeAnimation);
 		});
 
 		// Track the notes strip's live height. Re-runs when the `@if` above

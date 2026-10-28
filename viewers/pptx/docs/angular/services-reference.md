@@ -12,8 +12,8 @@ subset that has a semver-stable public API, see
 
 ::: warning Internal building blocks
 Everything below is importable from the `pptx-angular-viewer/internals` subpath (ng-packagr builds
-this package as a single compilation unit, so `internals` is an alias over the same bundle and these
-symbols stay importable from the root too). They are **not covered by semver**: signatures,
+the package root as a single compilation unit, so `internals` is an alias over the same bundle and
+these symbols stay importable from the root too). They are **not covered by semver**: signatures,
 behavior, and existence can change without a major bump. Reach for `internals` only when the curated
 services/inputs/outputs/[public API](/angular/api) genuinely can't do what you need. Pin an exact
 version if you depend on it.
@@ -153,8 +153,9 @@ Composed by `RibbonComponent`, itself composed by `PowerPointViewerComponent`.
 The framework-independent renderer is published as `ooxml-ui/pptx`, which hosts can import
 directly. Angular also re-exports these helpers from `transition-helpers.ts`
 via the CURATED `pptx-angular-viewer` root (`viewer/index.ts`), not only `internals`: ng-packagr
-compiles this library from a single entry file, so `pptx-angular-viewer/internals` is the exact
-same built bundle as the root (see `src/internals.ts`'s own header comment) and both resolve to
+compiles the package root from a single entry file (its one secondary entry point,
+`pptx-angular-viewer/ai`, holds only `createAiAssistant`), so `pptx-angular-viewer/internals` is the
+exact same built bundle as the root (see `src/internals.ts`'s own header comment) and both resolve to
 these same names.
 
 | Export                                                                                                                            | Concern                                                                                                                                                                                           |
@@ -191,6 +192,12 @@ the curated public surface).
 | `ColorChangedImageComponent`          | Renders an image with a duotone/recolor filter applied.     |
 | `color-changed-image-helpers` exports | Helpers backing `ColorChangedImageComponent`.               |
 | `eyedropper` exports                  | Screen eyedropper (`EyeDropper` API) color-picking helpers. |
+
+## AI assistant internals
+
+| Export                    | Concern                                                                                                                                                                                                                    |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createAiAssistantHandle` | Backs `createAiAssistant` of the `pptx-angular-viewer/ai` secondary entry point, which ng-packagr builds on its own and which can import only package entries. It takes a config only; import `createAiAssistant` instead. |
 
 ## Mobile chrome internals
 

@@ -28,7 +28,7 @@ import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
-import { useDemoAiConfig } from './ai-config';
+import { useDemoAiAssistant } from './ai-config';
 import {
 	isTrustedServerUrl,
 	randomUserColor,
@@ -68,7 +68,7 @@ const restoreChecked = ref(false);
 // localStorage-supplied fields and passes it to the viewer's optional `ai`
 // prop. The demo ships no key and no config UI, so this is normally undefined
 // and the assistant simply stays off.
-const aiConfig = useDemoAiConfig();
+const aiAssistant = useDemoAiAssistant();
 
 const themeKey = ref<string>(readStoredTheme());
 
@@ -562,7 +562,7 @@ function onZoneClick(e: MouseEvent): void {
 			:allow-external-content="rootOptions.allowExternalContent"
 			:limits="rootOptions.limits"
 			:inspector-initially-open="rootOptions.inspectorInitiallyOpen"
-			:ai="aiConfig"
+			:ai="aiAssistant"
 			:author-name="collaborationConfig?.userName ?? autoName"
 			:collaboration="collaborationConfig ?? undefined"
 			:share-defaults="{ roomId: autoRoomId, userName: autoName, serverUrl: defaultServerUrl }"

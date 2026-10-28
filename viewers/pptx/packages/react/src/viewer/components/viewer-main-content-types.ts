@@ -1,5 +1,6 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { PptxElement, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
 import type { ReactNode } from 'react';
 
@@ -61,8 +62,11 @@ export interface ViewerMainContentProps {
 	onResizeRight?: (delta: number) => void;
 	/** Host-supplied list of toolbar buttons/ribbon tabs to hide. */
 	hiddenActions?: readonly ToolbarActionId[];
-	/** AI assistant config (present only when the host passes the `ai` prop). */
-	aiConfig?: PptxAiConfig;
+	/**
+	 * The host's `ai` prop, a plain config or a `createAiAssistant` handle (present only
+	 * when the assistant is enabled).
+	 */
+	aiConfig?: PptxAiConfig | PptxAiAssistant;
 	/** Bridge exposing the live deck to the AI core. */
 	aiBridge?: PptxAiBridge;
 	/** AI panel open state + focus/prefill controller (present when `ai` is set). */

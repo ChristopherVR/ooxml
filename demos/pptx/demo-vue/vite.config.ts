@@ -50,6 +50,7 @@ export default defineConfig({
 			},
 			{ find: 'pptx-vue-viewer/viewer', replacement: pkg('vue', 'src', 'viewer', 'index.ts') },
 			{ find: 'pptx-vue-viewer/i18n', replacement: pkg('vue', 'src', 'i18n.ts') },
+			{ find: 'pptx-vue-viewer/ai', replacement: pkg('vue', 'src', 'ai.ts') },
 			{ find: 'pptx-vue-viewer', replacement: pkg('vue', 'src', 'index.ts') },
 			{ find: 'pptx-viewer-locales', replacement: pkg('locales', 'src', 'index.ts') },
 			{

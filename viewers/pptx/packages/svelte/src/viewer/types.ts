@@ -23,6 +23,7 @@ import type {
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxCoreProperties, PptxSaveFormat } from 'pptx-viewer-core';
 
@@ -57,7 +58,7 @@ export type {
 	ToolbarActionId,
 	ViewerTheme,
 };
-export type { PptxAiConfig };
+export type { PptxAiAssistant, PptxAiConfig };
 
 /** Payload for the `onload` callback. */
 export interface ViewerLoadDetail {
@@ -416,8 +417,14 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * The panel (and the optional `@ai-sdk/svelte` + `ai` peers it needs) is
 	 * lazily loaded only when first opened; leaving this undefined ships no AI UI
 	 * and never pulls the SDK. See `pptx-viewer-shared/ai`'s `PptxAiConfig`.
+	 *
+	 * Pass a plain `PptxAiConfig` (supported and not deprecated), or the opaque
+	 * handle `createAiAssistant(config)` returns (from `pptx-svelte-viewer/ai`,
+	 * the opt-in entry that brings the chat panel). Both open the same panel.
+	 * Only a value from `createAiAssistant` is read as a handle; any other value
+	 * is a plain config, which the viewer does not validate.
 	 */
-	ai?: PptxAiConfig;
+	ai?: PptxAiConfig | PptxAiAssistant;
 }
 
 /**

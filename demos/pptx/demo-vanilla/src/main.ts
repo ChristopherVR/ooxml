@@ -21,7 +21,7 @@ import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
-import { buildViewerAiConfig } from './ai-config';
+import { buildViewerAi } from './ai-config';
 import { buildRoomConfig, readRoomFromUrl, resolveAutoName } from './collab';
 import { getLanguage, onLanguageChange, t, viewerMessages } from './demo-i18n';
 import { createDropzone } from './dropzone';
@@ -173,7 +173,7 @@ function openViewer(
 		lineChart3D,
 		areaChart3D,
 		pieChart3D,
-		ai: buildViewerAiConfig(),
+		ai: buildViewerAi(),
 		shareDefaults: { userName },
 		// `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 		customization: currentDemoCustomization() as ViewerCustomization | undefined,

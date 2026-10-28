@@ -64,17 +64,29 @@ poster image. Without `yjs`/`y-websocket`/`y-webrtc`, the viewer runs in single-
 
 ## Import paths
 
-Unlike React (`pptx-react-viewer` + `pptx-react-viewer/viewer`), Angular's ng-packagr build produces
-a **single entry point**: everything is imported from the package root.
+ng-packagr builds the package root from one entry file and one secondary entry point,
+`pptx-angular-viewer/ai`. Apart from the AI assistant entry, every named export is imported from the
+package root.
 
 ```ts
 import { PowerPointViewerComponent } from 'pptx-angular-viewer';
+// AI assistant entry - the recommended value for the `ai` input
+import { createAiAssistant } from 'pptx-angular-viewer/ai';
 ```
 
-The `./styles` subpath exports the bundled stylesheet (see [Getting Started](/angular/getting-started)),
-and that is the only other export map entry - there is no separate `/viewer` or `/i18n` subpath the
-way React and Vue have. `translationsEn`, `keyToLabel`, theme utilities, and every other named export
-all live at the package root; see [Localization](/guide/localization) for the i18n specifics.
+The package's export map has these entries:
+
+| Entry                                                                | What it exports                                                                                                                                                            |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-angular-viewer`                                                | `PowerPointViewerComponent`, the curated services and components, `translationsEn`, `keyToLabel`, theme utilities and every other public named export.                     |
+| `pptx-angular-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
+| `pptx-angular-viewer/internals`                                      | An alias of the root bundle, for the internal building blocks ([Complete Services Reference](/angular/services-reference)). Not covered by semver.                         |
+| `pptx-angular-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
+| `pptx-angular-viewer/styles` (or `/styles.css`)                      | The bundled stylesheet ([Getting Started](/angular/getting-started)).                                                                                                      |
+
+There is no separate `/viewer` or `/i18n` subpath the way React and Vue have: `translationsEn`,
+`keyToLabel` and the other i18n exports live at the package root; see
+[Localization](/guide/localization) for the i18n specifics.
 
 ## Rendering philosophy: CSS, not Canvas
 

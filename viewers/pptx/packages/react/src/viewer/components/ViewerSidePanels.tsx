@@ -1,6 +1,7 @@
 import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import { isPanelVisible, scaleSlidesForSizeChange, slideSizeToCanvasPx } from 'ooxml-ui/pptx';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 /**
  * ViewerSidePanels: Inspector pane, selection pane, theme editor panel,
  * and theme gallery that appear alongside the slide canvas.
@@ -9,6 +10,7 @@ import { themeColorSchemesEqual } from 'pptx-viewer-core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import { ViewerInspector, SelectionPane } from '.';
+import { aiAssistants } from '../ai-assistant-registry';
 import type { AiPanelController } from '../hooks/ai/useAiPanelController';
 import type { UseCommentsResult } from '../hooks/useComments-helpers';
 import type { EditorHistoryResult } from '../hooks/useEditorHistory';
@@ -53,8 +55,11 @@ export interface ViewerSidePanelsProps {
 	panelWidth?: number;
 	/** Callback to resize the right panel. */
 	onResizeRight?: (delta: number) => void;
-	/** AI assistant config (present only when the host passes the `ai` prop). */
-	aiConfig?: PptxAiConfig;
+	/**
+	 * The host's `ai` prop, a plain config or a `createAiAssistant` handle (present only
+	 * when the assistant is enabled).
+	 */
+	aiConfig?: PptxAiConfig | PptxAiAssistant;
 	/** Bridge exposing the live deck to the AI core. */
 	aiBridge?: PptxAiBridge;
 	/** AI panel open state + focus/prefill controller (present when `ai` is set). */
@@ -88,6 +93,11 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 		aiBridge,
 		aiPanel,
 	} = props;
+	// A `createAiAssistant` handle brings its config and the chat panel of the `/ai` entry.
+	// Any other `ai` value is a plain config for the viewer's own lazy panel, as before.
+	// Both are the same component today, so switching paths does not remount the chat.
+	const aiAssistant = aiAssistants.resolve(aiConfig);
+	const AiPanel = aiAssistant?.panel ?? AiChatPanelLazy;
 
 	// A Slide Size preset / orientation pick moves BOTH the EMU size a save
 	// writes and the pixel canvas the stage renders at. Keeping them in step
@@ -228,9 +238,9 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 			{(mode === 'edit' || mode === 'master') && <ChartFormatPanel />}
 
 			{aiPanel?.isOpen && aiConfig && aiBridge && (mode === 'edit' || mode === 'master') && (
-				<AiChatPanelLazy
+				<AiPanel
 					bridge={aiBridge}
-					config={aiConfig}
+					config={aiAssistant?.config ?? (aiConfig as PptxAiConfig)}
 					aiPanel={aiPanel}
 					onClose={aiPanel.close}
 					panelWidth={panelWidth}

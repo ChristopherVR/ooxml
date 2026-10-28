@@ -55,18 +55,32 @@ poster image. Without `yjs`/`y-websocket`, the viewer runs in single-user mode.
 
 ## Import paths
 
-The package exposes two entry points (from `package.json` `exports`):
+The package exposes these entry points (from `package.json` `exports`):
 
 ```tsx
 // Root entry - viewer, theme utilities, renderToCanvas
 import { PowerPointViewer } from 'pptx-react-viewer';
+// AI assistant entry - the recommended value for the `ai` prop
+import { createAiAssistant } from 'pptx-react-viewer/ai';
 // Viewer sub-entry - same component PLUS the opt-in hooks/components surface
 import { PowerPointViewer } from 'pptx-react-viewer/viewer';
 ```
 
-Both entries export `PowerPointViewer`. The `pptx-react-viewer/viewer` entry additionally exposes the
-opt-in, tree-shakeable hooks and collaboration components (see [Hooks](/react/hooks)). Use the root
-entry for the common case.
+| Entry                                                              | What it exports                                                                                                                                                            |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-react-viewer`                                                | `PowerPointViewer`, theme utilities, `renderToCanvas` and the public types.                                                                                                |
+| `pptx-react-viewer/viewer`                                         | The same component plus the opt-in hooks and collaboration components ([Hooks](/react/hooks)).                                                                             |
+| `pptx-react-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
+| `pptx-react-viewer/i18n`                                           | The English dictionary, `keyToLabel` and the locale catalogue ([Localization](/guide/localization)).                                                                       |
+| `pptx-react-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
+| `pptx-react-viewer/internals`                                      | The internal hooks `PowerPointViewer` composes. Not covered by semver.                                                                                                     |
+| `pptx-react-viewer/styles` (or `/styles.css`)                      | The bundled stylesheet.                                                                                                                                                    |
+| `pptx-react-viewer/canvas.css`                                     | A smaller stylesheet for a read-only `SlideCanvas` ([Getting Started](/react/getting-started)).                                                                            |
+| `pptx-react-viewer/theme.css`                                      | The Tailwind CSS v4 `@theme` tokens, for a host that builds the viewer's utilities into its own stylesheet.                                                                |
+
+Both `.` and `./viewer` export `PowerPointViewer`. The `pptx-react-viewer/viewer` entry
+additionally exposes the opt-in, tree-shakeable hooks and collaboration components (see
+[Hooks](/react/hooks)). Use the root entry for the common case.
 
 ## Rendering philosophy: CSS, not Canvas
 

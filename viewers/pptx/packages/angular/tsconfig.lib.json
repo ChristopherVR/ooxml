@@ -3,11 +3,14 @@
 	"compilerOptions": {
 		"declaration": true,
 		"declarationMap": true,
-		"outDir": "dist"
+		"outDir": "dist",
+		// The `/ai` secondary entry point imports the package root by name. ng-packagr maps that
+		// name to the built root first; `tsc --noEmit` (`bun run typecheck`) uses the source.
+		"paths": { "pptx-angular-viewer": ["./src/public-api.ts"] }
 	},
 	"angularCompilerOptions": {
 		"compilationMode": "partial"
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "ai/**/*.ts"],
 	"exclude": ["**/*.test.ts", "**/*.spec.ts"]
 }

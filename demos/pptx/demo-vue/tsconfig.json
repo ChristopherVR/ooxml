@@ -17,6 +17,7 @@
 		"types": ["node", "vite/client"],
 		"paths": {
 			"pptx-vue-viewer/viewer": ["../../../viewers/pptx/packages/vue/src/viewer/index.ts"],
+			"pptx-vue-viewer/ai": ["../../../viewers/pptx/packages/vue/src/ai.ts"],
 			"pptx-vue-viewer": ["../../../viewers/pptx/packages/vue/src/index.ts"],
 			"pptx-viewer-core/converter": ["../../../viewers/pptx/packages/core/src/converter/index.ts"],
 			"pptx-viewer-core": ["../../../viewers/pptx/packages/core/src/index.ts"],

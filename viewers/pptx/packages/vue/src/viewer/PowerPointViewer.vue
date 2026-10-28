@@ -292,7 +292,7 @@ const password = usePasswordProtection();
 const { optionsStore, viewerOptions } = useViewerOptionsStore();
 // Host UI customisation (`customization` prop + handle helpers); locks `optionsStore`.
 const customization = useViewerCustomization({ props, optionsStore });
-const { panelVisible, dialogAvailable, effectiveHiddenActions, aiEnabled, aiConfig } =
+const { panelVisible, dialogAvailable, effectiveHiddenActions, aiEnabled, aiConfig, aiChatPanel } =
 	customization;
 // Ribbon group/control hiding: a scoped stylesheet from the shared rules.
 const ribbonScope = useRibbonCustomizationStyle(customization.resolved);
@@ -2321,6 +2321,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:collaboration="collaboration"
 					:custom-shows="customShowsWiring"
 					:ai="aiConfig"
+					:ai-chat-panel="aiChatPanel"
 					:ai-panel-open="aiPanelOpen"
 					:on-close-ai-panel="() => (aiPanelOpen = false)"
 					:ai-panel="aiPanel"

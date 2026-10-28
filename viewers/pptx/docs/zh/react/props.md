@@ -79,13 +79,13 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 展示与创作 {#presentation-authoring}
 
-| 属性                                                                       | 类型           | 默认值  | 说明                                                                                                                |
-| -------------------------------------------------------------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| `authorName`                                                               | `string`       | -       | 批注和标记的作者显示名称。协作时回退到 `collaboration.userName`，否则回退到 `'You'`。                               |
-| `className`                                                                | `string`       | -       | 添加到组件根元素的可选类名。                                                                                        |
-| `smartArt3D`                                                               | `boolean`      | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。                  |
-| `surfaceChart3D`、`barChart3D`、`lineChart3D`、`areaChart3D`、`pieChart3D` | `boolean`      | `false` | 分别启用对应三维图表的交互式 Three.js 渲染器。缺少 `three` 或图表无法作为 WebGL 场景渲染时，回退到对应 SVG 渲染器。 |
-| `ai`                                                                       | `PptxAiConfig` | -       | 启用可选智能助手。SDK 同级依赖只在打开面板时加载，省略则不提供助手。                                                |
+| 属性                                                                       | 类型                              | 默认值  | 说明                                                                                                                                                        |
+| -------------------------------------------------------------------------- | --------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authorName`                                                               | `string`                          | -       | 批注和标记的作者显示名称。协作时回退到 `collaboration.userName`，否则回退到 `'You'`。                                                                       |
+| `className`                                                                | `string`                          | -       | 添加到组件根元素的可选类名。                                                                                                                                |
+| `smartArt3D`                                                               | `boolean`                         | `false` | 启用基于 WebGL 的 Three.js SmartArt 挤出三维块渲染器，需要可选同级依赖 `three`，缺少时回退到 SVG。                                                          |
+| `surfaceChart3D`、`barChart3D`、`lineChart3D`、`areaChart3D`、`pieChart3D` | `boolean`                         | `false` | 分别启用对应三维图表的交互式 Three.js 渲染器。缺少 `three` 或图表无法作为 WebGL 场景渲染时，回退到对应 SVG 渲染器。                                         |
+| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig` | -       | 启用可选智能助手：传入 `pptx-react-viewer/ai` 中的 `createAiAssistant(config)`，或普通的 `PptxAiConfig`。SDK 同级依赖只在打开面板时加载，省略则不提供助手。 |
 
 ## 主题 {#theming}
 

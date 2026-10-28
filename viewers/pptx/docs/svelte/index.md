@@ -85,6 +85,27 @@ could never be `require()`d successfully anyway.
 {/if}
 ```
 
+## Import paths
+
+The package exposes these entry points (from `package.json` `exports`), ESM only:
+
+```ts
+// Root entry - viewer, theme utilities, export helpers
+import { PowerPointViewer } from 'pptx-svelte-viewer';
+// AI assistant entry - the recommended value for the `ai` prop
+import { createAiAssistant } from 'pptx-svelte-viewer/ai';
+```
+
+| Entry                                                               | What it exports                                                                                                                                                            |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-svelte-viewer`                                                | `PowerPointViewer`, theme utilities, the export and session helpers, and the public types (see [Key exports](#key-exports)).                                               |
+| `pptx-svelte-viewer/viewer`                                         | The same component plus `SlideCanvas`, `EditorLayer`, the collaboration overlays and the framework-free state helpers ([Instance API](/svelte/api)).                       |
+| `pptx-svelte-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
+| `pptx-svelte-viewer/i18n`                                           | The English dictionary and the translator helpers (`registerTranslations`, `translate`, ...) ([Localization](/svelte/i18n)).                                               |
+| `pptx-svelte-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
+| `pptx-svelte-viewer/internals`                                      | The slide-transition helpers and the transition overlay, for a custom presentation stage. Not covered by semver.                                                           |
+| `pptx-svelte-viewer/styles` (or `/styles.css`)                      | The extracted stylesheet.                                                                                                                                                  |
+
 ## Key exports
 
 | Export                                                             | Kind      | Purpose                                                                                                   |

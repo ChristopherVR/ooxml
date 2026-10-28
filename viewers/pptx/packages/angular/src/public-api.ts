@@ -25,6 +25,8 @@ export type {
 	ProposalView,
 	StagedProposal,
 } from 'ooxml-ui/pptx/ai';
+// `createAiAssistant` is exported from `pptx-angular-viewer/ai`.
+export type { PptxAiAssistant } from 'ooxml-ui/pptx/ai/host';
 
 // ── Internal building blocks. Not covered by semver; prefer the stable root exports. ──
 // Every internal service, component, and helper that composes

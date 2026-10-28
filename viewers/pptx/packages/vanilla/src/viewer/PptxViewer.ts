@@ -103,6 +103,7 @@ import type {
 
 import type { AiChatMount, AiFocusController } from './ai';
 import { createAiFocusController, createVanillaAiBridge, mountAiChat } from './ai';
+import { aiAssistants } from './ai-assistant-registry';
 import type { ChromeHost, ChromeLifecycle } from './chrome-lifecycle';
 import { buildMountChromeDeps, mountChrome, unmountChrome } from './chrome-lifecycle';
 import { ViewerCustomizationHost } from './customization-host';
@@ -925,9 +926,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	private setupAiChat(): void {
-		const config = this.options.ai;
+		// A handle from `pptx-vanilla-viewer/ai` brings its config and panel loader; any other
+		// value is a plain config for the viewer's own lazy panel, as before.
+		const assistant = aiAssistants.resolve(this.options.ai);
 		this.aiChat?.destroy();
-		if (!config || !this.customization.isAiEnabled()) {
+		if (!this.options.ai || !assistant || !this.customization.isAiEnabled()) {
 			this.aiChat = null;
 			this.aiFocus = null;
 			return;
@@ -958,7 +961,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			chrome: this.lifecycle.chrome,
 			t: this.t,
 			bridge,
-			config,
+			config: assistant.config,
+			loadPanel: assistant.panel,
 			store: this.store,
 			controller,
 			goToSlide: (index) => this.controls.goToSlide(index),

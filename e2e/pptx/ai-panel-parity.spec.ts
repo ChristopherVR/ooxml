@@ -22,6 +22,12 @@
  *   - on a phone viewport the panel opens as a bottom sheet that leaves the
  *     canvas visible above it, not a full-screen overlay.
  *
+ * Every demo hands its viewer the handle `createAiAssistant(config)` returns from
+ * the binding's `/ai` entry, so the tests above drive the handle path. With
+ * `?ai=config` the demos pass the plain config instead
+ * (`demos/pptx/shared/demo-ai-path.ts`); the round trip runs on that path too. The demos
+ * record which value they passed, and both round trips assert it.
+ *
  * Run: bunx playwright test ai-panel-parity
  */
 import { devices, expect, test } from '@playwright/test';
@@ -70,6 +76,14 @@ async function openAssistant(page: Page, origin: string): Promise<boolean> {
 	});
 	await loadDeckAt(page, origin, DECK);
 	return openAiPanel(page);
+}
+
+/**
+ * Which `ai` value the demo passed, `'handle'` or `'config'`
+ * (`demos/pptx/shared/demo-ai-path.ts`).
+ */
+function demoAiPath(page: Page): Promise<string | undefined> {
+	return page.evaluate(() => document.documentElement.dataset.demoAi);
 }
 
 test.describe('cross-binding AI assistant panel', () => {
@@ -147,12 +161,13 @@ test.describe('cross-binding AI assistant panel', () => {
 			async (page, origin) => {
 				const present = await openAssistant(page, origin);
 				if (!present) {
-					return { present, userShown: false, replyShown: false };
+					return { present, path: undefined, userShown: false, replyShown: false };
 				}
 				await sendAiMessage(page, 'Say hello');
 				const panel = aiPanel(page);
 				return {
 					present,
+					path: await demoAiPath(page),
 					userShown: await appears(panel.getByText('Say hello').first(), 10_000),
 					replyShown: await appears(panel.getByText(PLAIN_REPLY).first(), 20_000),
 				};
@@ -165,8 +180,47 @@ test.describe('cross-binding AI assistant panel', () => {
 				return [`${name}: no AI panel opened`];
 			}
 			return [
+				...(value.path === 'handle'
+					? []
+					: [`${name}: the demo passed ${value.path}, not a handle`]),
 				...(value.userShown ? [] : [`${name}: the sent user message never rendered`]),
 				...(value.replyShown ? [] : [`${name}: the streamed assistant reply never rendered`]),
+			];
+		});
+
+		expect(problems.join('\n')).toBe('');
+	});
+
+	test('a plain config opens the same panel and completes a round trip', async ({
+		browser,
+	}, testInfo) => {
+		const results = await acrossFrameworks(
+			browser,
+			testInfo,
+			async (page, origin) => {
+				const present = await openAssistant(page, origin);
+				if (!present) {
+					return { present, path: undefined, replyShown: false };
+				}
+				await sendAiMessage(page, 'Say hello');
+				return {
+					present,
+					path: await demoAiPath(page),
+					replyShown: await appears(aiPanel(page).getByText(PLAIN_REPLY).first(), 20_000),
+				};
+			},
+			{ viewport: VIEWPORT, path: '/?ai=config' },
+		);
+
+		const problems = byBinding(results).flatMap(({ name, value }) => {
+			if (!value.present) {
+				return [`${name}: no AI panel opened for a plain config`];
+			}
+			return [
+				...(value.path === 'config'
+					? []
+					: [`${name}: the demo passed ${value.path}, not a config`]),
+				...(value.replyShown ? [] : [`${name}: no reply rendered for a plain config`]),
 			];
 		});
 

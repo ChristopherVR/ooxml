@@ -77,6 +77,27 @@ import 'pptx-svelte-viewer/styles.css';
 {/if}
 ```
 
+## 导入路径 {#import-paths}
+
+`package.json` 的 `exports` 提供以下入口，仅有 ESM 构建：
+
+```ts
+// Root entry - viewer, theme utilities, export helpers
+import { PowerPointViewer } from 'pptx-svelte-viewer';
+// AI assistant entry - the recommended value for the `ai` prop
+import { createAiAssistant } from 'pptx-svelte-viewer/ai';
+```
+
+| 入口                                                                | 导出内容                                                                                                                                              |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-svelte-viewer`                                                | `PowerPointViewer`、主题工具、导出与会话辅助函数和公开类型（参见[主要导出](#key-exports)）。                                                          |
+| `pptx-svelte-viewer/viewer`                                         | 同一个组件，以及 `SlideCanvas`、`EditorLayer`、协作叠加层和不依赖框架的状态辅助函数（参见[实例 API](/zh/svelte/api)）。                               |
+| `pptx-svelte-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
+| `pptx-svelte-viewer/i18n`                                           | 英文字典和翻译辅助函数（`registerTranslations`、`translate` 等，参见[本地化](/zh/svelte/i18n)）。                                                     |
+| `pptx-svelte-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
+| `pptx-svelte-viewer/internals`                                      | 幻灯片切换辅助函数和切换叠加层组件，供自定义放映舞台使用，不受语义化版本兼容承诺保障。                                                                |
+| `pptx-svelte-viewer/styles`（或 `/styles.css`）                     | 提取出的样式表。                                                                                                                                      |
+
 ## 主要导出 {#key-exports}
 
 | 导出项                                                             | 类型 | 用途                                                                                       |
