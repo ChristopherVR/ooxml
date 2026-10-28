@@ -3,6 +3,7 @@
 // outline readers are the shared DrawingML ones.
 import { parseDrawingFill, parseDrawingGeometry, parseDrawingLine } from '../drawingml/index';
 import type { DrawingLine } from '../drawingml/index';
+import { buildXml } from '../xml/index';
 import { lookupPresetShape } from '../geometry/preset-shape-evaluator';
 import type { ShapeSpec } from './shape-model';
 import { isElement, type XmlElement } from './xml';
@@ -72,7 +73,8 @@ const FILLS = new Set(['solidFill', 'noFill']);
 function spPrIsSimple(spPr: XmlElement): boolean {
 	return elementsOf(spPr).every((item) => {
 		if (item.namespaceURI !== A_NS) return false;
-		if (item.localName === 'xfrm' || item.localName === 'prstGeom') return true;
+		if (item.localName === 'xfrm' || item.localName === 'prstGeom' || item.localName === 'custGeom')
+			return true;
 		if (FILLS.has(item.localName)) return true;
 		if (item.localName !== 'ln') return false;
 		return elementsOf(item).every(
@@ -101,9 +103,10 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 	if (!wsp) return undefined;
 	if (child(wsp, WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1') return undefined;
 	const spPr = child(wsp, WPS_NS, 'spPr');
-	if (!spPr || child(spPr, A_NS, 'custGeom')) return undefined;
+	if (!spPr) return undefined;
+	const custom = child(spPr, A_NS, 'custGeom');
 	const geometry = parseDrawingGeometry(spPr);
-	if (geometry.issue || !lookupPresetShape(geometry.geometry)) return undefined;
+	if (geometry.issue || (!custom && !lookupPresetShape(geometry.geometry))) return undefined;
 	const fill = parseDrawingFill(spPr);
 	const ln = child(spPr, A_NS, 'ln');
 	const line: DrawingLine | undefined = ln ? parseDrawingLine(ln) : undefined;
@@ -111,6 +114,7 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 	const simple = spPrIsSimple(spPr);
 	return {
 		preset: geometry.geometry,
+		...(custom ? { customGeometryXml: buildXml(custom) } : {}),
 		...(geometry.adjustments && Object.keys(geometry.adjustments).length
 			? { adjustments: geometry.adjustments }
 			: {}),

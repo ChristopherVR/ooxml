@@ -155,7 +155,9 @@ function geometry(doc: XmlDocument, spec: ShapeSpec): XmlElement[] {
 	const avLst = el(doc, A_NS, 'a:avLst');
 	for (const [name, value] of Object.entries(spec.adjustments ?? {}))
 		add(avLst, attrs(el(doc, A_NS, 'a:gd'), { name, fmla: `val ${Math.round(value)}` }));
-	const nodes: XmlElement[] = [add(prst, avLst)];
+	const nodes: XmlElement[] = spec.customGeometryXml
+		? importFragment(doc, spec.customGeometryXml)
+		: [add(prst, avLst)];
 	if (spec.fill) {
 		const xml = drawingFillXml(spec.fill);
 		if (xml) nodes.push(...importFragment(doc, xml));

@@ -7,6 +7,8 @@ import type { DrawingFill, DrawingLine } from '../drawingml/index';
 export interface ShapeSpec {
 	/** `a:prstGeom/@prst`, e.g. `rect`, `roundRect`, `rightArrow`, `line`. */
 	preset: string;
+	/** Source-backed custom geometry; retained verbatim through formatting and resize edits. */
+	customGeometryXml?: string;
 	/** `a:avLst` guide values by name (Word's yellow handles), in the guide's own units. */
 	adjustments?: Record<string, number>;
 	/** `spPr` fill. Undefined takes the shape style's fill (the theme's first accent colour). */

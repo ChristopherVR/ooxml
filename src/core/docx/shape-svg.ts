@@ -1,7 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Draws a shape as SVG from its preset geometry (the shared DrawingML geometry tables), fill and
 // outline, with its text centred inside. The editor, Print Layout and tests all use this one drawing.
-import { drawingColorCss, resolveDrawingColor } from '../drawingml/index';
+import {
+	drawingColorCss,
+	resolveDrawingColor,
+	parseCustomGeometry,
+	drawingPathData,
+} from '../drawingml/index';
 import type { DrawingColor, DrawingFill } from '../drawingml/index';
 import { evaluatePresetShape, lookupPresetShape } from '../geometry/preset-shape-evaluator';
 import { diagramColorTheme } from './diagram-theme';
@@ -13,6 +18,7 @@ import {
 	type ShapeSpec,
 } from './shape-model';
 import type { ThemeCatalog } from './theme-model';
+import { parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
 const DASHES: Record<string, string> = {
@@ -108,9 +114,22 @@ export function shapeSvg(
 ): string | undefined {
 	const w = Math.max(1, widthPx);
 	const h = Math.max(1, heightPx);
-	const geometry = lookupPresetShape(spec.preset)
-		? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
+	const customPaths = spec.customGeometryXml
+		? parseCustomGeometry(parseXml(spec.customGeometryXml).documentElement, w, h)
 		: undefined;
+	const geometry = customPaths
+		? {
+				paths: customPaths.map((path) => ({
+					d: drawingPathData(path, w, h),
+					fill: path.fill,
+					stroke: path.stroke,
+				})),
+				fillNone: false,
+				textRect: undefined,
+			}
+		: lookupPresetShape(spec.preset)
+			? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
+			: undefined;
 	if (!geometry) return undefined;
 	const look = shapeAppearance(spec, theme);
 	const paths = geometry.paths

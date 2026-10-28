@@ -43,3 +43,6 @@ export * from './read-text-body';
 export * from './write-run-properties';
 export * from './write-paragraph-properties';
 export * from './write-text-body';
+
+export * from './path-data';
+export * from './custom-geometry';
