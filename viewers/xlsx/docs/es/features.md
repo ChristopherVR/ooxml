@@ -4,6 +4,8 @@
 Actualización del 26-10-2026: ya están implementados los controles compartidos de formato de gráficos, la edición ChartEx y los estilos, colores y vistas interpretadas de SmartArt. Los apartados traducidos siguientes conservan algunas limitaciones anteriores. Consulte el alcance y los límites actuales en la [página en inglés](../features.md) y las [pruebas de entrega](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md), que distinguen implementación y validación nativa.
 :::
 
+ChartEx admite en libros locales aceptados la hoja de datos compartida, opciones de familia y controles de ejes y etiquetas de puntos, incluidas ediciones estructurales y ampliación segura del libro. El panel Formato compartido admite rellenos de trama, efectos y formato 3D de texto y formas. Se rechazan datos externos no admitidos y fuentes jerárquicas ambiguas; se ocultan los controles de series y ejes secundarios exclusivos de gráficos clásicos. Doce casos de navegador de Word y Excel en seis enlaces y pruebas seleccionadas en Office 16 ofrecen cobertura limitada, no paridad de diseño nativo.
+
 Esta es una implementación temprana. **No tiene paridad con Microsoft Excel** y el guardado no es sin pérdidas para las funciones que el modelo no cubre. Esta página enumera lo que el editor está preparado para gestionar y lo que no; cuando un libro contiene algo no admitido, el editor lo notifica (`workbook-warning`) en lugar de ocultarlo.
 
 El [estado actual de la paridad y las pruebas](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)

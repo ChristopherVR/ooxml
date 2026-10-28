@@ -1,5 +1,7 @@
 # 功能区对等：开始、插入、绘图和设计 {#ribbon-parity-home-insert-draw-and-design}
 
+2026-10-26 核对：当前图表和 SmartArt 控件及实现证据记录在[共享交付清单](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md)。功能区缺少专用入口不等于共享格式窗格、检查器或 SmartArt 文本窗格中缺少该命令。
+
 本页记录了对“开始”“插入”“绘图”和“设计”选项卡与 Microsoft PowerPoint（Microsoft 365、Windows、144 DPI、窗口宽 1440 CSS px）进行的审核，以及所做的更改。它并不声称像素级对等：图标、工具提示和若干库仍有差异，差距表中说明了具体内容。这是一份某一时间点的审核（2026 年 10 月）：“未修复”各行是当时的发现，而不是实时状态。
 
 证据位于 `/assets/ribbon-parity/<tab>/`：

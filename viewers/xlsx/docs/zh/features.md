@@ -4,6 +4,8 @@
 2026-10-26 更新：共享图表高级格式控件、ChartEx 编辑以及 SmartArt 样式、颜色和解释式预览已经实现。下方译文仍保留部分较早的限制说明。当前范围与剩余限制请参阅[英文功能页](../features.md)；[交付证据](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md)区分实现情况与原生 Office 验证。
 :::
 
+对于允许的本地工作簿，ChartEx 支持共享数据表、系列类型选项、坐标轴和数据点标签控件，包括结构编辑和安全扩展工作簿。共享格式窗格支持图案填充、效果以及文本和形状的三维格式。不支持的外部数据和存在歧义的层级来源会被拒绝；仅适用于经典图表的系列和次坐标轴控件会隐藏。跨六种绑定的十二个 Word/Excel 浏览器案例和部分 Office 16 验证仅覆盖有限路径，不代表原生布局一致。
+
 这是一个早期实现。它**不等同于 Microsoft Excel**，对于模型未覆盖的功能，保存也不是无损的。本页列出编辑器能够处理和无法处理的内容；当工作簿包含不受支持的内容时，编辑器会报告出来（`workbook-warning`），而不是隐藏。
 
 [当前的对等状态与证据](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)总结了已实现的工作、与原生 Excel 的对比以及剩余的差距。

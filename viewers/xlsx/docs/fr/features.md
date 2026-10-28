@@ -4,6 +4,8 @@
 Mise à jour du 26/10/2026 : les contrôles partagés de format des graphiques, l’édition ChartEx et les styles, couleurs et aperçus interprétés SmartArt sont désormais implémentés. Les sections traduites ci-dessous conservent certaines anciennes limites. Consultez la [page anglaise](../features.md) pour le périmètre actuel et le [registre des preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/office-shared-parity-delivery.md), qui distingue implémentation et validation native.
 :::
 
+ChartEx prend en charge, pour les classeurs locaux admis, la feuille de données partagée, les options de famille et les commandes d’axes et d’étiquettes de points, y compris les modifications structurelles et l’extension sécurisée du classeur. Le volet Format partagé prend en charge les remplissages par motif, les effets et la mise en forme 3D du texte et des formes. Les données externes non prises en charge et les sources hiérarchiques ambiguës sont refusées ; les commandes de séries et d’axes secondaires propres aux graphiques classiques sont masquées. Douze cas de navigateur Word et Excel sur six bindings et des vérifications ciblées dans Office 16 constituent une validation limitée, sans garantir la parité de mise en page native.
+
 Il s’agit d’une implémentation précoce. Elle n’atteint **pas la parité avec Microsoft Excel** et l’enregistrement n’est pas sans perte pour les fonctionnalités que le modèle ne couvre pas. Cette page énumère ce que l’éditeur est conçu pour gérer et ce qu’il ne gère pas ; quand un classeur contient un élément non pris en charge, l’éditeur le signale (`workbook-warning`) au lieu de le masquer.
 
 L’[état actuel de la parité et ses preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)

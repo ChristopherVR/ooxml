@@ -548,7 +548,7 @@ The labels U3 to U5 are assigned here; the remaining chart UI work was previousl
   **Remains:** rich text authoring in Excel's text pane, the wider native Office style catalogue, and 3D formatting controls.
 
   Acceptance on 2026-10-26: the shared formatting builder and
-  `scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop
+  `src/core/scripts/docx/smartart-format-acceptance.ps1` produced and reopened six documents, three combinations each in desktop
   Word 16 and Excel 16. Native node texts, colour ids and quick-style ids matched; Excel produced no repair log. These
   checks also verify native semantic-node drawing associations. Both host loaders independently verify the generated
   caches before native opening. These checks establish supported edit/save/reopen behavior, not pixel-identical effect or layout rendering. Unit tests cover
