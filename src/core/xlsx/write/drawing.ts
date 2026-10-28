@@ -2,7 +2,7 @@ import { applyPictureEffects, parsePictureEffects } from '../../drawingml/pictur
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
-import { NS, buildXml, first, parseXml } from '../../xml/index';
+import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import type {
 	ChartObject,
 	DrawingAnchor,
@@ -313,7 +313,12 @@ export function writeDrawing(
 				object.sourceXml && sourceDrawing
 					? reanchor(object.sourceXml, object.anchor)
 					: anchorXml(object.anchor, pictureXml(object, nextId++, relId), 'oneCell');
-			const picture = parseXml(xml);
+			const imported = Boolean(object.sourceXml && sourceDrawing);
+			const picture = parseXml(
+				imported
+					? xml
+					: `<root xmlns:xdr="${NS.xdr}" xmlns:a="${NS.a}" xmlns:r="${NS.r}">${xml}</root>`,
+			);
 			const fill = picture.getElementsByTagNameNS(NS.xdr, 'blipFill')[0];
 			const blip = first(fill, 'blip', NS.a);
 			if (blip) {
@@ -323,15 +328,18 @@ export function writeDrawing(
 			const identity = picture.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
 			if (identity) {
 				if (object.name !== undefined) identity.setAttribute('name', object.name);
-				else identity.removeAttribute('name');
 				if (object.description !== undefined) identity.setAttribute('descr', object.description);
 				else identity.removeAttribute('descr');
 			}
-			if (blip && !sameModel(object.effects ?? [], parsePictureEffects(blip)))
+			if (
+				blip &&
+				object.effects !== undefined &&
+				!sameModel(object.effects, parsePictureEffects(blip))
+			)
 				applyPictureEffects(blip, object.effects ?? []);
-			if (fill && !sameModel(object.crop, parsePictureCrop(fill)))
+			if (fill && object.crop !== undefined && !sameModel(object.crop, parsePictureCrop(fill)))
 				applyPictureCrop(fill, object.crop);
-			body += buildXml(picture);
+			body += buildXml(imported ? picture.documentElement : elements(picture.documentElement)[0]!);
 			continue;
 		}
 		const chartPart = writeChart(writer, object);

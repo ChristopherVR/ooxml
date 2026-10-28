@@ -100,3 +100,17 @@ describe('host-owned picture fill relationships', () => {
 		}
 	});
 });
+
+it('preserves omitted source-backed picture crop/effects and clears them only through explicit empty fields', () => {
+	const sourceXml = `<a:blipFill xmlns:a="${NS.a}" xmlns:r="${NS.r}" xmlns:v="urn:vendor"><a:blip r:embed="old"><a:alphaModFix amt="70000"/><a:extLst><a:ext uri="keep"><v:opaque/></a:ext></a:extLst></a:blip><a:srcRect l="25000"/><a:tile/></a:blipFill>`;
+	const kept = drawingFillXml({ kind: 'picture', relId: 'new', sourceXml })!;
+	const root = parseXml(kept).documentElement;
+	expect(first(first(root, 'blip', NS.a), 'alphaModFix', NS.a)?.getAttribute('amt')).toBe('70000');
+	expect(first(root, 'srcRect', NS.a)?.getAttribute('l')).toBe('25000');
+	expect(kept).toContain('<v:opaque');
+	const cleared = parseXml(
+		drawingFillXml({ kind: 'picture', relId: 'new', sourceXml, effects: [], crop: {} })!,
+	).documentElement;
+	expect(first(first(cleared, 'blip', NS.a), 'alphaModFix', NS.a)).toBeUndefined();
+	expect(first(cleared, 'srcRect', NS.a)?.hasAttribute('l')).toBe(false);
+});

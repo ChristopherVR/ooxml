@@ -133,6 +133,12 @@ export function parseDiagramDrawing(source: string | XmlDocument, part?: string)
 			if (element.localName === 'sp' || element.localName === 'pic') {
 				const shape = parseShape(element, counter++, group, issues);
 				if (shape) shapes.push(shape);
+				else if (element.localName === 'pic')
+					issues.push({
+						code: 'DIAGRAM_DRAWING_PICTURE_UNREADABLE',
+						message:
+							'A cached picture has no usable frame; its source is retained in the drawing part.',
+					});
 			} else if (element.localName === 'grpSp') visit(element, groupTransform(element, group));
 		}
 	};

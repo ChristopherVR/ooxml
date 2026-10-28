@@ -84,3 +84,40 @@ it('reads and edits picture crop with history and preserves opaque picture conte
 	expect(xml).toContain('uri="keep"');
 	expect(() => session.setPictureCrop(sheetIndex, index, { cropLeft: 1 })).toThrow(RangeError);
 });
+
+it('keeps omitted source picture properties and clears crop/effects only through explicit empty values', async () => {
+	const zip = await JSZip.loadAsync(
+		readFileSync(new URL('../__fixtures__/excel-features.xlsx', import.meta.url)),
+	);
+	const part = Object.keys(zip.files).find((name) => /^xl\/drawings\/drawing\d+\.xml$/.test(name))!;
+	const xml = await zip.file(part)!.async('string');
+	zip.file(
+		part,
+		xml
+			.replace(/(<a:blip\b[^>]*>)/, '$1<a:alphaModFix amt="70000"/>')
+			.replace('<a:stretch>', '<a:srcRect l="25000"/><a:stretch>'),
+	);
+	const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+	const sheet = wb.sheets.findIndex((value) =>
+		value.drawings.some((drawing) => drawing.kind === 'image'),
+	);
+	const index = wb.sheets[sheet]!.drawings.findIndex((drawing) => drawing.kind === 'image');
+	const image = wb.sheets[sheet]!.drawings[index]!;
+	if (image.kind !== 'image') throw new Error('Expected picture');
+	delete image.crop;
+	delete image.effects;
+	image.description = 'Rewrite picture without owning source formatting';
+	const kept = await loadXlsx(await saveXlsx(wb));
+	const picture = kept.sheets[sheet]!.drawings[index]!;
+	if (picture.kind !== 'image') throw new Error('Expected picture');
+	expect(picture.crop).toEqual({ cropLeft: 0.25 });
+	expect(picture.effects).toEqual(
+		expect.arrayContaining([expect.objectContaining({ kind: 'alphaModFix', amount: 0.7 })]),
+	);
+	image.crop = {};
+	image.effects = [];
+	const cleared = await loadXlsx(await saveXlsx(wb));
+	expect(cleared.sheets[sheet]!.drawings[index]).toMatchObject({ kind: 'image', crop: {} });
+	const clearImage = cleared.sheets[sheet]!.drawings[index]!;
+	expect(clearImage.kind === 'image' && clearImage.effects).toBeUndefined();
+});

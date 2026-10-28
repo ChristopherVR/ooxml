@@ -275,7 +275,7 @@ describe('cached drawing', () => {
 		expect(with3d).toBeGreaterThan(0);
 	});
 
-	it('reports an empty drawing and skips pictures honestly', () => {
+	it('reports empty drawings and unreadable cached pictures honestly', () => {
 		expect(
 			parseDiagramDrawing(
 				'<dsp:drawing xmlns:dsp="http://schemas.microsoft.com/office/drawing/2008/diagram"/>',
@@ -284,7 +284,8 @@ describe('cached drawing', () => {
 		const withPicture = parseDiagramDrawing(
 			'<dsp:drawing xmlns:dsp="http://schemas.microsoft.com/office/drawing/2008/diagram"><dsp:spTree><dsp:pic/></dsp:spTree></dsp:drawing>',
 		);
-		expect(withPicture.issues[0]?.code).toBe('DIAGRAM_DRAWING_PICTURE_SKIPPED');
+		expect(withPicture.issues[0]?.code).toBe('DIAGRAM_DRAWING_PICTURE_UNREADABLE');
+		expect(withPicture.shapes).toEqual([]);
 	});
 
 	it('maps nested group shapes through the group transform', () => {

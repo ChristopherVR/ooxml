@@ -68,13 +68,15 @@ export function drawingPatternPictureXml(
 				blip.setAttributeNS(NS.r, `r:${attribute}`, value);
 		}
 		if (
+			fill.crop !== undefined &&
 			JSON.stringify(before?.kind === 'picture' ? before.crop : undefined) !==
-			JSON.stringify(fill.crop)
+				JSON.stringify(fill.crop)
 		)
 			applyPictureCrop(root, fill.crop);
 		if (
+			fill.effects !== undefined &&
 			JSON.stringify(before?.kind === 'picture' ? (before.effects ?? []) : []) !==
-			JSON.stringify(fill.effects ?? [])
+				JSON.stringify(fill.effects ?? [])
 		)
 			applyPictureEffects(blip, fill.effects ?? []);
 		if (!fill.sourceXml) {
