@@ -50,8 +50,9 @@ extraction commit is named below. Product adapters and public compatibility path
   semantic scene/extrusion reads, integer-vector conversion and preset validation from
   PowerPoint `text-body-scene3d.ts`, `text-body-sp3d.ts`, `scene3d-coordinate.ts` and
   `text-body-scene3d-presets.ts` at `b36e9472a`. `DrawingScene3D` replaces the identical
-  PowerPoint interface through a type alias. Neutral source-backed body reader/writer codecs
-  are new strict code; PowerPoint keeps its compatibility object-tree writers. Theme colours,
+  PowerPoint interface from `src/core/pptx/core/types/three-d.ts` at `b36e9472a`, moved
+  to `core/drawingml/text-3d-model.ts`, through a type alias. Neutral source-backed body
+  reader/writer codecs are new strict code; PowerPoint keeps its compatibility object-tree writers. Theme colours,
   raw source spelling and extensions remain intact on admitted edits. Shared SmartArt reports
   these fields as approximated rather than claiming 3D text rendering.
 - `ui/src/form/color-input/live-color-{input,leaves}.ts` and adjacent tests move generic

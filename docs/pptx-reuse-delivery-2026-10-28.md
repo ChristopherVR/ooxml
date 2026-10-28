@@ -48,8 +48,9 @@ The browser font scope is additive; current PowerPoint font uploads retain page-
 
 - Strict core checks pass for all integrated feature slices. Each extraction includes focused
   unit tests and source-preservation/edit tests where appropriate.
-- Six Word mixed-script Print Layout browser cases pass, including font selection, decoding
-  supplementary-script offsets in core tests, and unchanged source ranges on the print surface.
+- Six Word mixed-script Print Layout browser cases pass, covering font selection and unchanged
+  source ranges on the print surface. Core tests separately cover UTF-16/supplementary-script
+  offsets and generated-field mapping.
 - Six Excel live-fill preview/submit/undo/cancel browser cases and six Word Zoom cases pass.
 - Forty PowerPoint recent-colour and embedded-font browser cases pass across all five bindings,
   including the shared core font adapter and font-part byte preservation on save.
@@ -75,17 +76,33 @@ The browser font scope is additive; current PowerPoint font uploads retain page-
   `src/core/scripts/shared-picture-native-fixtures.ts` and
   `src/core/scripts/shared-picture-native-acceptance.ps1`.
 
-Integrated CI-planned verification, final chart browser cases and native evidence artifacts
-are pending final integration. Source fixtures and SVG assertions establish supported
-semantics; they do not alone establish pixel equivalence with Microsoft Office.
+- Ten final PowerPoint funnel/box browser cases pass across all five bindings after the native
+  default corrections. The targeted browser total is **116 passing cases**.
+
+The CI-planned integration checks completed against `ecd4d43ac` after merging that main revision:
+
+- Core: **20,517 passed**, 16 expected failures and 423 skipped, across 1,352 affected files.
+- UI: **11,404 passed**, 11 skipped, with one generated-manifest mismatch. Regenerating the
+  manifest added the SmartArt `pictureResolver` property; all three manifest tests then passed.
+- All **29 remaining planner steps passed**, including Word, Excel, Visio and Teams checks,
+  PowerPoint package builds/typechecks/public-prop/tree-shaking checks, and every PowerPoint
+  binding suite (including React 18), locales and CLI.
+
+The initial command was `bun run verify --base ecd4d43ac --serial`. After the manifest-only
+correction, the unchanged planner resumed at step 12 through a temporary local runner. Passing
+core and UI behavior tests were not repeated for that generated metadata change. The source
+checkpoint is `a22d5f534`; the manifest correction is `94ff62641`. The temporary runner was removed.
+The default planner excludes browser and package-install smoke suites; the targeted browser
+cases above were run separately. Source fixtures and SVG assertions establish supported semantics;
+they do not alone establish pixel equivalence with Microsoft Office.
 
 ## Scope and remaining limits
 
-The planned extraction sequence is implemented. Final integrated verification is still pending.
+The planned extraction sequence is implemented and its integration checks are complete.
 Visio embedded ChartEx admission, region-map rendering, richer artistic effects, tiled/offset
-picture fills and full native visual
-comparison remain open. Shared SmartArt picture painting currently uses cached drawing nodes;
-this does not make every picture-bearing layout reflow equivalent to Office.
+picture fills and full native visual comparison remain open. Shared SmartArt picture painting
+currently uses cached drawing nodes; this does not make every picture-bearing layout reflow
+equivalent to Office.
 
 Product orchestration, framework lifecycle and clipboard payload formats remain product-owned.
 The review's optional PowerPoint clipboard-controller consolidation is separate from the
