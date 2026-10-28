@@ -59,6 +59,20 @@ describe('ChartEx neutral read adapter', () => {
 			for (const axis of neutral.chartData?.axes ?? [])
 				for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) delete axis[key];
 			for (const [index, series] of neutral.series.entries()) {
+				// The map adapter additionally exposes explicit fill and source-index dimensions.
+				// Their semantics and sparse editing round-trip are covered by dedicated regressions.
+				if (series.regionMapOptions) {
+					if (series.regionMapOptions.fixedColor)
+						expect(series.regionMapOptions.fixedColor).toBe(series.color);
+					delete series.regionMapOptions.fixedColor;
+					delete series.regionMapOptions.geographyCacheXml;
+					for (const key of [
+						'categorySourceIndices',
+						'entityIdSourceIndices',
+						'valueSourceIndices',
+					] as const)
+						if (!old.series[index]?.regionMapOptions?.[key]) delete series.regionMapOptions[key];
+				}
 				series.dataLabels = series.dataLabels?.filter(
 					(label) =>
 						!label.deleted || old.series[index]?.dataLabels?.some((item) => item.idx === label.idx),

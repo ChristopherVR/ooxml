@@ -92,9 +92,22 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 		if (source.layoutId === 'regionMap') {
 			const dim = dimension(dataOf(index), 'numDim', 'colorVal')?.levels[0];
 			if (dim) {
-				result.values = Array.from({ length: dim.pointCount ?? dim.points.length }, () => NaN);
-				for (const [i, p] of dim.points.entries())
-					result.values[p.index ?? i] = Number.parseFloat(p.value);
+				result.values = dim.points.map((p) => Number.parseFloat(p.value));
+				result.regionMapOptions = {
+					...result.regionMapOptions,
+					valueSourceIndices: dim.points.map((p, i) => p.index ?? i),
+				};
+			}
+			for (const [type, key] of [
+				['cat', 'categorySourceIndices'],
+				['entityId', 'entityIdSourceIndices'],
+			] as const) {
+				const points = dimension(dataOf(index), 'strDim', type)?.levels[0]?.points;
+				if (points)
+					result.regionMapOptions = {
+						...result.regionMapOptions,
+						[key]: points.map((p, i) => p.index ?? i),
+					};
 			}
 			if (source.spPr?.fill?.kind === 'solid' && result.color)
 				result.regionMapOptions = { ...result.regionMapOptions, fixedColor: result.color };
@@ -219,15 +232,7 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 	return {
 		categories:
 			space.plotArea.series[0]?.layoutId === 'regionMap'
-				? (() => {
-						const dim = dimension(dataOf(0), 'strDim', 'cat')?.levels[0];
-						const out = Array.from(
-							{ length: dim?.pointCount ?? dim?.points.length ?? 0 },
-							() => '',
-						);
-						for (const [i, p] of (dim?.points ?? []).entries()) out[p.index ?? i] = p.value.trim();
-						return out;
-					})()
+				? (levels?.[0] ?? [])
 				: (levels?.[0] ?? []).filter(Boolean),
 		categoryLevels: levels,
 		series,

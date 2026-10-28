@@ -10,8 +10,12 @@ it('adopts colorVal with sparse point identity, source cache and explicit fill',
 		categories: [],
 		series: [{ name: 'Value', values: [], color: '#4472C4' }],
 	});
-	expect(result.categories).toEqual(['', '', 'Australia']);
-	expect(result.series[0]!.values).toEqual([NaN, NaN, 42]);
-	expect(result.series[0]!.regionMapOptions).toMatchObject({ fixedColor: '#4472C4' });
+	expect(result.categories).toEqual(['Australia']);
+	expect(result.series[0]!.values).toEqual([42]);
+	expect(result.series[0]!.regionMapOptions).toMatchObject({
+		fixedColor: '#4472C4',
+		categorySourceIndices: [2],
+		valueSourceIndices: [2],
+	});
 	expect(result.series[0]!.regionMapOptions?.geographyCacheXml).toContain('geoCache');
 });
