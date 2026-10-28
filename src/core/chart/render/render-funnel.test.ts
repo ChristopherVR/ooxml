@@ -31,6 +31,19 @@ describe('shared funnel rendering', () => {
 			[62.5, 25],
 		]);
 	});
+	it('carries authored gap width through the shared painter', () => {
+		const summary = chartExSummary(writeChartExSpace(createChartExSpace(data, 'funnel')))!.summary!;
+		const paint = (gap: number) =>
+			renderChartSummarySvg({ ...summary, funnelGapWidth: gap }, { width: 400, height: 300 });
+		const heights = (svg: string) =>
+			[
+				...svg.matchAll(
+					/<g data-chart-series="0" data-chart-point="\d+"><rect [^>]*height="([\d.]+)"/g,
+				),
+			].map((match) => Number(match[1]));
+		expect(heights(paint(0)).length).toBeGreaterThan(0);
+		expect(heights(paint(0))[0]).toBeCloseTo(heights(paint(100))[0]! * 2, 1);
+	});
 	it('does not invent value labels when the source declares none', () => {
 		const summary = chartExSummary(writeChartExSpace(createChartExSpace(data, 'funnel')))!.summary!;
 		const svg = renderChartSummarySvg(summary, { width: 400, height: 300 });

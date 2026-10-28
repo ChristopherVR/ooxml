@@ -18,6 +18,7 @@ export function funnelSvg(model: ChartViewModel, area: Rect): string {
 	for (const bar of computeFunnelGeometry(
 		series.values.map((v) => v ?? 0),
 		plot,
+		model.funnelGapWidth,
 	)) {
 		const value = series.values[bar.index];
 		if (value === null || value === undefined) continue;
