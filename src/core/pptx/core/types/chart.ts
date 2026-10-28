@@ -1255,6 +1255,8 @@ export interface PptxChartDateCategories {
  * ```
  */
 export interface PptxChartData {
+	/** ChartEx category-axis gap as a percentage of funnel bar height; absent uses Office's 33. */
+	funnelGapWidth?: number;
 	title?: string;
 	/**
 	 * Rich-text runs of the title, parsed from `c:title/c:tx/c:rich` (issue:

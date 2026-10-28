@@ -111,6 +111,7 @@ export function computeFunnelSegments(
 	categories: ReadonlyArray<string>,
 	colorPalette: readonly string[] | undefined,
 	seriesColorOverride?: string,
+	gapWidth?: number,
 ): FunnelSegment[] {
 	const count = values.length;
 	if (count === 0) {
@@ -121,12 +122,16 @@ export function computeFunnelSegments(
 	const fill = seriesColorOverride ?? paletteColor(0, colorPalette);
 	const out: FunnelSegment[] = [];
 
-	for (const bar of computeFunnelGeometry(values, {
-		x: plotLeft,
-		y: plotTop,
-		width: plotWidth,
-		height: plotHeight,
-	})) {
+	for (const bar of computeFunnelGeometry(
+		values,
+		{
+			x: plotLeft,
+			y: plotTop,
+			width: plotWidth,
+			height: plotHeight,
+		},
+		gapWidth,
+	)) {
 		const i = bar.index;
 		const val = values[i];
 		const w = bar.width,
@@ -182,6 +187,7 @@ export function buildFunnelViewModel(
 		categoryLabels,
 		chartData.colorPalette,
 		chartData.series[0]?.color,
+		chartData.funnelGapWidth,
 	);
 
 	const primitives: SvgPrimitive[] = [];

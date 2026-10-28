@@ -191,6 +191,12 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 	});
 	const title = chartExText(space.title?.tx);
 	const chartData = { ...styled.chartData };
+	if (space.plotArea.series[0]?.layoutId === 'funnel') {
+		const category = space.plotArea.axes.find((axis) => axis.scaling?.kind === 'cat')?.scaling;
+		if (category?.kind === 'cat' && typeof category.gapWidth === 'number')
+			chartData.funnelGapWidth = category.gapWidth;
+		else delete chartData.funnelGapWidth;
+	}
 	if (axes.length) chartData.axes = axes;
 	else delete chartData.axes;
 	if (title) chartData.title = title;

@@ -34,6 +34,17 @@ function compare(xml: string) {
 	return { old, neutral, fonts };
 }
 describe('ChartEx neutral read adapter', () => {
+	it('projects numeric funnel category gaps, preserving explicit zero and native auto defaults', () => {
+		const space = parseChartExSpace(FULL).chartExSpace;
+		space.plotArea.series[0]!.layoutId = 'funnel';
+		const styled = { categories: [], series: [] };
+		for (const value of [0, 100]) {
+			space.plotArea.axes = [{ id: 0, scaling: { kind: 'cat', gapWidth: value } }];
+			expect(chartExFromNeutral(space, styled).chartData?.funnelGapWidth).toBe(value);
+		}
+		space.plotArea.axes = [{ id: 0, scaling: { kind: 'cat', gapWidth: 'auto' } }];
+		expect(chartExFromNeutral(space, styled).chartData?.funnelGapWidth).toBeUndefined();
+	});
 	it('retains the complete PowerPoint view and host-resolved styles on every committed part', () => {
 		for (const [name, xml] of parts) {
 			const { neutral, old } = compare(xml);

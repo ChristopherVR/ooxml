@@ -12,10 +12,23 @@ describe('shared funnel rendering', () => {
 	};
 	it('shares centred flat bars, zero width and absolute-value sizing with PowerPoint', () => {
 		const bars = computeFunnelGeometry([100, 0, -50], { x: 10, y: 20, width: 200, height: 90 });
-		expect(bars.map((b) => [b.x, b.width, b.height])).toEqual([
-			[10, 200, 30],
-			[110, 0, 30],
-			[60, 100, 30],
+		expect(bars.map((b) => [b.x, b.width])).toEqual([
+			[10, 200],
+			[110, 0],
+			[60, 100],
+		]);
+		expect(bars[0]!.height).toBeCloseTo(30 / 1.33);
+		expect(bars[0]!.y + bars[0]!.height / 2).toBeCloseTo(35);
+		expect(bars[1]!.y - bars[0]!.y).toBeCloseTo(30);
+	});
+	it('honors explicit touching bars and a gap equal to the bar height', () => {
+		const plot = { x: 0, y: 0, width: 200, height: 100 };
+		const touching = computeFunnelGeometry([100, 50], plot, 0);
+		expect(touching[0]!.y + touching[0]!.height).toBe(touching[1]!.y);
+		const spaced = computeFunnelGeometry([100, 50], plot, 100);
+		expect(spaced.map((bar) => [bar.y, bar.height])).toEqual([
+			[12.5, 25],
+			[62.5, 25],
 		]);
 	});
 	it('does not invent value labels when the source declares none', () => {
