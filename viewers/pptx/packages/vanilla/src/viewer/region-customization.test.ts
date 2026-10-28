@@ -30,7 +30,7 @@ describe('vanilla replaced regions: inspector', () => {
 		const first = mountRegion.mock.calls[0]?.[1] as ViewerRegionContext;
 		expect(first.region).toBe('inspector');
 		// The chrome is built before the editable flag lands; the update delivers it.
-		expect((update.mock.calls.at(-1)?.[0] as ViewerRegionContext).canEdit).toBe(true);
+		expect((update.mock.calls.at(-1)?.[0] as ViewerRegionContext | undefined)?.canEdit).toBe(true);
 		expect(first.selectedElementIds).toStrictEqual([]);
 		storeOf(viewer).set({ selectedElementIds: ['a'], selectedElementId: 'a' });
 		expect(update).toHaveBeenCalled();
@@ -94,7 +94,9 @@ describe('vanilla replaced regions: dialogs', () => {
 		const element = document.querySelector<OptionsView>('test-options-view');
 		expect(element).not.toBeNull();
 		expect(element?.context?.region).toBe('dialog.options');
-		expect(typeof (element?.context as { setOption?: unknown }).setOption).toBe('function');
+		expect(typeof (element?.context as { setOption?: unknown } | undefined)?.setOption).toBe(
+			'function',
+		);
 		// The frame stays; the built-in rail, panes and footer are gone.
 		const dialog = document.querySelector('pptx-ui-options-dialog');
 		expect(dialog?.hasAttribute('custom-body')).toBe(true);

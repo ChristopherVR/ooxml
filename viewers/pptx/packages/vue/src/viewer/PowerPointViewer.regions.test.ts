@@ -107,18 +107,17 @@ describe('powerPointViewer host regions', () => {
 		});
 		await mounted.get('button[aria-label="Settings"]').trigger('click');
 		await flushPromises();
-		const element = document.body.querySelector<HTMLElement & { context?: unknown }>(
-			'host-options-view',
-		);
-		const read = () => (element?.context as ViewerSettingsRegionContext).options;
+		const element = document.body.querySelector<
+			HTMLElement & { context?: ViewerSettingsRegionContext }
+		>('host-options-view');
+		expect(element?.context).toBeDefined();
+		const context = () => element!.context!;
+		const read = () => context().options;
 		const before = read().general.showStartScreen;
-		(element?.context as ViewerSettingsRegionContext).setOption(
-			'general.enableCustomFontUpload',
-			true,
-		);
+		context().setOption('general.enableCustomFontUpload', true);
 		await flushPromises();
 		expect(read().general.enableCustomFontUpload).toBe(false);
-		(element?.context as ViewerSettingsRegionContext).setOption('general.showStartScreen', !before);
+		context().setOption('general.showStartScreen', !before);
 		await flushPromises();
 		expect(read().general.showStartScreen).toBe(!before);
 	});

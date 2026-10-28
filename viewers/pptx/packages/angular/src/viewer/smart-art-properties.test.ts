@@ -57,18 +57,6 @@ function flatData(): PptxSmartArtData {
 	};
 }
 
-/** A diagram with one parent and two children. */
-function nestedData(): PptxSmartArtData {
-	return {
-		resolvedLayoutType: 'hierarchy',
-		nodes: [
-			node('root', 'Root'),
-			node('child1', 'Child 1', 'root'),
-			node('child2', 'Child 2', 'root'),
-		],
-	};
-}
-
 beforeEach(() => {
 	resetSmartArtEditCounter();
 });

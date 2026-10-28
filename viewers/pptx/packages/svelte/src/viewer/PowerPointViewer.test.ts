@@ -107,7 +107,7 @@ describe('powerPointViewer', () => {
 				},
 			};
 			try {
-				const { target, instance } = await mountViewer({
+				const { target } = await mountViewer({
 					get editable() {
 						return permission.get('editable');
 					},

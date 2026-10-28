@@ -269,10 +269,10 @@ describe('insertTab', () => {
 		target.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
 		flushSync();
 		const inserted = editor.slides[0]?.elements[0] as
-			| { tableData?: { rows: unknown[][] } }
+			| { tableData?: { rows: { cells: unknown[] }[] } }
 			| undefined;
 		expect(inserted?.tableData?.rows).toHaveLength(4);
-		expect((inserted?.tableData?.rows[0] as { cells: unknown[] }).cells).toHaveLength(3);
+		expect(inserted?.tableData?.rows[0]?.cells).toHaveLength(3);
 	});
 
 	it('adds a slide from the layout and opens the comments pane', async () => {

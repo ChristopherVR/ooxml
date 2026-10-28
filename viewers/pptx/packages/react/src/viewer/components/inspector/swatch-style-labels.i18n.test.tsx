@@ -6,9 +6,8 @@
  */
 import { createInstance } from 'i18next';
 import { translationsDe } from 'pptx-viewer-locales';
-import React, { act } from 'react';
+import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -43,12 +42,6 @@ async function german() {
 		interpolation: { escapeValue: false },
 	});
 	return instance;
-}
-
-function render(node: React.ReactElement, i18n: Awaited<ReturnType<typeof german>>) {
-	const container = document.createElement('div');
-	container.innerHTML = renderToStaticMarkup(<I18nextProvider i18n={i18n}>{node}</I18nextProvider>);
-	return container;
 }
 
 describe('swatch and style names follow the locale', () => {

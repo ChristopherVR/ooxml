@@ -53,6 +53,28 @@ afterEach(() => {
 });
 
 describe('useYjsProvider over the shared session controller', () => {
+	it('keeps identity edits connected and stops and restarts when enabled changes', async () => {
+		function Probe({ enabled, userName }: { enabled: boolean; userName: string }): null {
+			useYjsProvider({
+				config: enabled
+					? { roomId: 'room-1', serverUrl: '', transport: 'webrtc', userName }
+					: undefined,
+			});
+			return null;
+		}
+		await act(async () => root.render(<Probe enabled userName='Ada' />));
+		await act(async () => vi.dynamicImportSettled());
+		expect(created).toHaveLength(1);
+		await act(async () => root.render(<Probe enabled userName='Grace' />));
+		expect(created).toHaveLength(1);
+		expect(created[0]!.destroy).not.toHaveBeenCalled();
+		await act(async () => root.render(<Probe enabled={false} userName='Grace' />));
+		expect(created[0]!.destroy).toHaveBeenCalledOnce();
+		await act(async () => root.render(<Probe enabled userName='Grace' />));
+		await act(async () => vi.dynamicImportSettled());
+		expect(created).toHaveLength(2);
+	});
+
 	it('opens a webrtc room, reports it connected and leaves it on unmount', async () => {
 		let latest: Result | undefined;
 		function Probe(): null {

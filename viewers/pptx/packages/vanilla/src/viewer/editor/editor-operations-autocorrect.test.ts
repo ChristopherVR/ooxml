@@ -61,7 +61,7 @@ describe('createEditorOps commitTableCell autocorrect scope', () => {
 		ops.commitTableCell('tbl', 0, 0, `${EXISTING} typed monday`);
 		expect(transformCommittedText).toHaveBeenCalledWith(`${EXISTING} typed monday`, EXISTING);
 		const cell = (
-			store.get().slides[0]?.elements[0] as unknown as {
+			store.get().slides[0]!.elements[0] as unknown as {
 				tableData: { rows: { cells: { text: string }[] }[] };
 			}
 		).tableData.rows[0]?.cells[0];

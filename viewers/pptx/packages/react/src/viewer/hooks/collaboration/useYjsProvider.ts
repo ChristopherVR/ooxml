@@ -92,6 +92,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 	);
 	const state = useController(controller);
 	const signalingKey = config?.signaling?.join('\n');
+	const enabled = Boolean(config);
 
 	useEffect(() => {
 		if (!config) {
@@ -121,7 +122,7 @@ export function useYjsProvider({ config: inputConfig }: UseYjsProviderInput): Us
 		config?.authToken,
 		config?.transport,
 		signalingKey,
-		Boolean(config),
+		enabled,
 	]);
 
 	const session = state.active ? controller.getSession() : null;
