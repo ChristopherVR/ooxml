@@ -1,3 +1,4 @@
+import { parseRegionValueColorPositions } from '../../../chart/region-map';
 // ChartEx facts come from the namespace-aware shared parser. Host-resolved paint and fonts are
 // supplied separately so PowerPoint retains its theme and raw geography-cache compatibility.
 import type {
@@ -109,6 +110,9 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 						[key]: points.map((p, i) => p.index ?? i),
 					};
 			}
+			const positions = parseRegionValueColorPositions(source.valueColorPositionsXml);
+			if (positions)
+				result.regionMapOptions = { ...result.regionMapOptions, valueColorPositions: positions };
 			if (source.spPr?.fill?.kind === 'solid' && result.color)
 				result.regionMapOptions = { ...result.regionMapOptions, fixedColor: result.color };
 		}

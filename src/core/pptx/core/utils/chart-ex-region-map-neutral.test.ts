@@ -18,4 +18,10 @@ it('adopts colorVal with sparse point identity, source cache and explicit fill',
 		valueSourceIndices: [2],
 	});
 	expect(result.series[0]!.regionMapOptions?.geographyCacheXml).toContain('geoCache');
+	space.plotArea.series[0]!.valueColorPositionsXml =
+		'<cx:valueColorPositions count="3"><cx:min><cx:extremeValue/></cx:min><cx:mid><cx:number val="20"/></cx:mid><cx:max><cx:percent val="90"/></cx:max></cx:valueColorPositions>';
+	expect(
+		chartExFromNeutral(space, { categories: [], series: [] }).series[0]!.regionMapOptions
+			?.valueColorPositions,
+	).toEqual([{ kind: 'min' }, { kind: 'number', value: 20 }, { kind: 'percent', value: 90 }]);
 });

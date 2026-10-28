@@ -66,6 +66,8 @@ describe('ChartEx neutral read adapter', () => {
 						expect(series.regionMapOptions.fixedColor).toBe(series.color);
 					delete series.regionMapOptions.fixedColor;
 					delete series.regionMapOptions.geographyCacheXml;
+					if (!old.series[index]?.regionMapOptions?.valueColorPositions)
+						delete series.regionMapOptions.valueColorPositions;
 					for (const key of [
 						'categorySourceIndices',
 						'entityIdSourceIndices',

@@ -48,6 +48,13 @@ describe('document geography cache', () => {
 		expect(bounded.regions).toEqual([]);
 		expect(bounded.issues).toContain('Invalid compressed geography polygon.');
 	});
+	it('accepts provider pre-quantization counts larger than the decoded point count', () => {
+		// Native Office cache has 798 polygons with fewer decoded points, never more than numPoints.
+		expect(
+			readGeographyCache(clear.replace('numPoints="4"', 'numPoints="5"')).regions[0]?.rings[0],
+		).toHaveLength(4);
+		expect(readGeographyCache(clear.replace('numPoints="4"', 'numPoints="3"')).regions).toEqual([]);
+	});
 	it.each(['mercator', 'miller', 'robinson', 'albers'])(
 		'projects cached coordinates with %s',
 		(projection) => {

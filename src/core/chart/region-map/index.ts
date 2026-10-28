@@ -8,3 +8,4 @@ export * from './cache';
 export * from './geographic-projection';
 export * from './geometry';
 export * from './value-colors';
+export * from './value-color-positions';

@@ -1,6 +1,7 @@
 import { parseXml } from '../../xml';
 import { parseDrawingColorIn, type DrawingColor } from '../../drawingml';
-import type { RegionMapOptions, RegionValueColorPosition } from './types';
+import type { RegionMapOptions } from './types';
+import { parseRegionValueColorPositions } from './value-color-positions';
 export function resolveRegionValueColors(
 	options: RegionMapOptions,
 	color: (c: DrawingColor | undefined) => string | undefined,
@@ -15,20 +16,7 @@ export function resolveRegionValueColors(
 		});
 		if (colors.length) result.valueColors = colors;
 	}
-	if (options.valueColorPositionsXml) {
-		result.valueColorPositions = Array.from(root.getElementsByTagName('*'))
-			.filter((e) => e.localName === 'pos')
-			.flatMap((e) => {
-				const kind = e.getAttribute('type');
-				const value = Number(e.getAttribute('val'));
-				if (!['min', 'max', 'num', 'percent'].includes(kind ?? '')) return [];
-				return [
-					{
-						kind: kind === 'num' ? 'number' : kind,
-						...(kind === 'num' || kind === 'percent' ? { value } : {}),
-					} as RegionValueColorPosition,
-				];
-			});
-	}
+	const positions = parseRegionValueColorPositions(options.valueColorPositionsXml);
+	if (positions) result.valueColorPositions = positions;
 	return result;
 }
