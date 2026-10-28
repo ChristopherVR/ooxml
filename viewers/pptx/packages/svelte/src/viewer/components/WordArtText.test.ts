@@ -79,6 +79,19 @@ function warpedText(overrides: Partial<PptxElement> = {}): PptxElement {
 	} as PptxElement;
 }
 
+/** Far wider than its box at the default font size, so it must wrap. */
+const LONG_PARAGRAPH =
+	'The quick brown fox jumps over the lazy dog and then keeps on running far away';
+
+/** Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row. */
+function glyphRowCount(root: ParentNode): number {
+	return new Set(
+		[...root.querySelectorAll('svg > text, svg > g[data-glyph-slices] > text')].map((t) =>
+			t.getAttribute('y'),
+		),
+	).size;
+}
+
 function mountWarped(element: PptxElement): SVGSVGElement | null {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
@@ -107,8 +120,34 @@ describe('wordArtText (Svelte)', () => {
 	});
 
 	it('renders nothing for a non-warped preset', () => {
-		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textPlain' } }));
+		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textNoShape' } }));
 		expect(svg).toBeNull();
+	});
+
+	it('renders textPlain through the glyph envelope, one glyph per character', () => {
+		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textPlain' } }));
+		expect(svg?.querySelector('textPath')).toBeNull();
+		const glyphTexts = (svg ? logicalGlyphElements(svg) : []).map(representativeTextEl);
+		expect(glyphTexts.map((t) => t.textContent).join('')).toBe('Hello');
+	});
+
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		const long = mountWarped(
+			warpedText({ text: LONG_PARAGRAPH, textStyle: { textWarpPreset: 'textPlain' } }),
+		);
+		expect(long ? glyphRowCount(long) : 0).toBeGreaterThan(1);
+		cleanup?.();
+		// A word far wider than its small square box stays whole on one row.
+		const word = mountWarped(
+			warpedText({
+				text: 'schedule',
+				width: 40,
+				height: 40,
+				textStyle: { textWarpPreset: 'textPlain' },
+			}),
+		);
+		expect(word ? glyphRowCount(word) : 0).toBe(1);
+		expect(word ? logicalGlyphElements(word) : []).toHaveLength('schedule'.length);
 	});
 
 	it('renders one <text> per glyph (true two-curve envelope) for textInflate, not a shared textPath', () => {

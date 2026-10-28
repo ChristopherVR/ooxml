@@ -32,9 +32,11 @@
  *     `cascade` stay on the shared-baseline `<textPath>` renderer (a uniform
  *     tilt has no per-glyph height component to get wrong).
  *
- * Fixture: `text-warp-fidelity.pptx` (8 single-paragraph text boxes, in
- * authoring order: inflate, deflate, can-up, slant-up, fade-right,
- * cascade-down, an arch-control, and a plain-text control).
+ * Fixture: `text-warp-fidelity.pptx` (in authoring order: inflate, deflate,
+ * can-up, slant-up, fade-right, cascade-down, an arch-control, a no-warp
+ * `textNoShape` control, a two-paragraph inflate, a wide-glyph can-up, a
+ * `textPlain` word in a small square box, and a long `textPlain` paragraph in
+ * a wrapping box).
  *
  * `<svg>`/`<textPath>`/`<path>`/`<text>` are neutral tags, not per-binding
  * class names, so this spec reads DOM structure directly rather than any
@@ -64,10 +66,19 @@ const SHAPE_NAMES = [
 	'plain-control',
 	'inflate-multi',
 	'wide-glyph-can',
+	'plain',
+	'plain-paragraph',
 ] as const;
 
 /** Preset names that render as the true two-curve glyph envelope (one `<text>` per glyph). */
-const GLYPH_ENVELOPE_SHAPES = new Set(['inflate', 'deflate', 'can-up', 'inflate-multi']);
+const GLYPH_ENVELOPE_SHAPES = new Set([
+	'inflate',
+	'deflate',
+	'can-up',
+	'inflate-multi',
+	'plain',
+	'plain-paragraph',
+]);
 
 /**
  * Envelope shapes whose top/bottom curves DIVERGE (or converge) across the
@@ -322,9 +333,9 @@ test.describe('wordArt envelope/former-"simple" presets render as true SVG textP
 				const problems: string[] = [];
 				for (const shape of value) {
 					if (shape.name === 'plain-control') {
-						// `textPlain` carries no warp at all; must render no textPath/glyphs.
+						// `textNoShape` carries no warp at all; must render no textPath/glyphs.
 						if (shape.hasTextPath || shape.glyphCount > 0) {
-							problems.push(`${shape.name}: unexpectedly warped (textPlain has no warp)`);
+							problems.push(`${shape.name}: unexpectedly warped (textNoShape has no warp)`);
 						}
 						continue;
 					}
@@ -581,6 +592,168 @@ test.describe('wide-glyph-can: a font with no obtainable file still gets the exa
 					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
 				}
 			}
+		},
+	);
+});
+
+interface PlainFit {
+	/** The warp `<svg>`'s own width and height, in its user units. */
+	width: number;
+	height: number;
+	glyphCount: number;
+	/** Union of every glyph's post-transform box, in the same units. */
+	left: number;
+	right: number;
+	top: number;
+	bottom: number;
+	/** Each glyph's post-transform left edge, in DOM (layout) order. */
+	glyphLefts: number[];
+}
+
+/**
+ * A `textPlain` shape's glyph boxes, unioned. Read the same way as
+ * {@link readGlyphBoxesFor} (screen rect mapped back through the `<svg>`'s
+ * inverse screen CTM), so each binding's demo zoom cancels out.
+ */
+async function readPlainFitFor(
+	page: Page,
+	origin: string,
+	shapeName: 'plain' | 'plain-paragraph',
+): Promise<PlainFit | null> {
+	await loadDeckAt(page, origin, FIXTURE);
+	await slideStage(page).waitFor();
+	await page.waitForTimeout(300);
+	await waitForOutlineFetchSettle(page);
+
+	const node = slideElements(page).nth(SHAPE_NAMES.indexOf(shapeName));
+	const svg = node.locator('svg').first();
+	if ((await svg.count()) === 0) {
+		return null;
+	}
+	return svg.evaluate((el) => {
+		const root = el as SVGSVGElement;
+		const glyphs = [
+			...root.querySelectorAll(':scope > text, :scope > g[data-glyph-slices], :scope > path'),
+		] as SVGGraphicsElement[];
+		const ctm = root.getScreenCTM()!.inverse();
+		let left = Infinity;
+		let right = -Infinity;
+		let top = Infinity;
+		let bottom = -Infinity;
+		const glyphLefts: number[] = [];
+		for (const glyph of glyphs) {
+			const rect = glyph.getBoundingClientRect();
+			if (rect.width <= 0 || rect.height <= 0) {
+				// Nothing drawn (an empty box can sit anywhere, even at the origin).
+				continue;
+			}
+			const a = new DOMPoint(rect.left, rect.top).matrixTransform(ctm);
+			const b = new DOMPoint(rect.right, rect.bottom).matrixTransform(ctm);
+			glyphLefts.push(Math.min(a.x, b.x));
+			left = Math.min(left, a.x, b.x);
+			right = Math.max(right, a.x, b.x);
+			top = Math.min(top, a.y, b.y);
+			bottom = Math.max(bottom, a.y, b.y);
+		}
+		const box = root.viewBox.baseVal;
+		const width = box && box.width > 0 ? box.width : root.width.baseVal.value;
+		const height = box && box.height > 0 ? box.height : root.height.baseVal.value;
+		return { width, height, glyphCount: glyphs.length, left, right, top, bottom, glyphLefts };
+	});
+}
+
+async function readPlainFit(page: Page, origin: string): Promise<PlainFit | null> {
+	return readPlainFitFor(page, origin, 'plain');
+}
+
+async function readPlainParagraphFit(page: Page, origin: string): Promise<PlainFit | null> {
+	return readPlainFitFor(page, origin, 'plain-paragraph');
+}
+
+/**
+ * How many rows the glyphs fall into. Glyphs are emitted row by row, left to
+ * right, so every return to the left (a glyph starting well left of the one
+ * before it) starts a new row.
+ */
+function glyphRowCount(fit: PlainFit): number {
+	const tolerance = (fit.right - fit.left) * 0.05;
+	let rows = fit.glyphLefts.length > 0 ? 1 : 0;
+	for (let i = 1; i < fit.glyphLefts.length; i++) {
+		if (fit.glyphLefts[i] < fit.glyphLefts[i - 1] - tolerance) {
+			rows++;
+		}
+	}
+	return rows;
+}
+
+test.describe('textPlain: the text block is stretched to fill the shape', () => {
+	test(
+		'a word wider than its small box is squeezed onto one row that fills the box',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readPlainFit);
+
+			const failures = results.flatMap(({ framework, value }) => {
+				if (!value || value.glyphCount === 0) {
+					return [`${framework.name}: no glyph-envelope glyphs (rendered unwarped)`];
+				}
+				const problems: string[] = [];
+				const widthRatio = (value.right - value.left) / value.width;
+				const heightRatio = (value.bottom - value.top) / value.height;
+				// The block is normalised by its ink box, so the glyphs reach the
+				// box's edges. A `<text>` fallback glyph's screen rect is its em box,
+				// which overshoots the ink a little; the upper bounds leave for that.
+				if (widthRatio < 0.9 || widthRatio > 1.15) {
+					problems.push(`glyphs span ${widthRatio.toFixed(2)} of the box width`);
+				}
+				if (heightRatio < 0.85 || heightRatio > 1.5) {
+					problems.push(`glyphs span ${heightRatio.toFixed(2)} of the box height`);
+				}
+				const rows = glyphRowCount(value);
+				if (rows !== 1) {
+					problems.push(`a single word wrapped into ${rows} rows`);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+
+			expect(failures.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'a long paragraph in a wrapping box wraps into several rows, then fills the box',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readPlainParagraphFit);
+
+			const failures = results.flatMap(({ framework, value }) => {
+				if (!value || value.glyphCount === 0) {
+					return [`${framework.name}: no glyph-envelope glyphs (rendered unwarped)`];
+				}
+				const problems: string[] = [];
+				// PowerPoint wraps at the box width less its insets first, then
+				// stretches the wrapped block; squeezing the paragraph onto one row
+				// is the regression this guards against.
+				const rows = glyphRowCount(value);
+				if (rows < 2) {
+					problems.push(`glyphs fall into ${rows} row(s), expected the paragraph to wrap`);
+				}
+				// The widest row is stretched to the box width; the same em-box
+				// overshoot allowance as the single-word case above.
+				const widthRatio = (value.right - value.left) / value.width;
+				if (widthRatio < 0.9 || widthRatio > 1.15) {
+					problems.push(`glyphs span ${widthRatio.toFixed(2)} of the box width`);
+				}
+				const heightRatio = (value.bottom - value.top) / value.height;
+				if (heightRatio < 0.85 || heightRatio > 1.5) {
+					problems.push(`glyphs span ${heightRatio.toFixed(2)} of the box height`);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+
+			expect(failures.join('\n')).toBe('');
 		},
 	);
 });

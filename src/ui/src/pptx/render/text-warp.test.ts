@@ -16,11 +16,14 @@ import {
 } from './text-warp';
 
 describe('classifyTextWarp', () => {
-	it('returns "none" for undefined/empty and plain presets', () => {
+	it('returns "none" for undefined/empty and textNoShape', () => {
 		expect(classifyTextWarp(undefined)).toBe('none');
 		expect(classifyTextWarp('')).toBe('none');
 		expect(classifyTextWarp('textNoShape')).toBe('none');
-		expect(classifyTextWarp('textPlain')).toBe('none');
+	});
+
+	it('classifies textPlain as an envelope (the block stretched to the box)', () => {
+		expect(classifyTextWarp('textPlain')).toBe('envelope');
 	});
 
 	it('classifies path presets', () => {
@@ -69,10 +72,13 @@ describe('classifyTextWarp', () => {
 });
 
 describe('shouldUseSvgWarp', () => {
-	it('returns false for undefined / plain presets', () => {
+	it('returns false for undefined / textNoShape', () => {
 		expect(shouldUseSvgWarp(undefined)).toBeFalsy();
 		expect(shouldUseSvgWarp('textNoShape')).toBeFalsy();
-		expect(shouldUseSvgWarp('textPlain')).toBeFalsy();
+	});
+
+	it('returns true for textPlain', () => {
+		expect(shouldUseSvgWarp('textPlain')).toBeTruthy();
 	});
 
 	it('returns true for known SVG warp presets', () => {
@@ -110,7 +116,11 @@ describe('hasTextWarp', () => {
 
 	it('is false for a text element without a warp preset', () => {
 		expect(hasTextWarp(textElement())).toBeFalsy();
-		expect(hasTextWarp(textElement('textPlain'))).toBeFalsy();
+		expect(hasTextWarp(textElement('textNoShape'))).toBeFalsy();
+	});
+
+	it('is true for textPlain, which stretches the text to the box', () => {
+		expect(hasTextWarp(textElement('textPlain'))).toBeTruthy();
 	});
 
 	it('is false for a non-text element', () => {

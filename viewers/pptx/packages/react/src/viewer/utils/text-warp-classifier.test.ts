@@ -58,8 +58,8 @@ describe('text-warp-classifier', () => {
 			expect(getWarpCategory('textNoShape')).toBe('none');
 		});
 
-		it('returns "none" for textPlain', () => {
-			expect(getWarpCategory('textPlain')).toBe('none');
+		it('returns "envelope" for textPlain', () => {
+			expect(getWarpCategory('textPlain')).toBe('envelope');
 		});
 
 		it('returns "none" for undefined preset', () => {

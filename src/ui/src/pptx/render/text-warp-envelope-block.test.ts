@@ -74,6 +74,50 @@ describe('layoutEnvelopeBlock', () => {
 		expect(layoutEnvelopeBlock([], 'left', boxLookup).box).toBeUndefined();
 	});
 
+	it('stacks wrapped rows like paragraphs and aligns them against the widest row', () => {
+		const { lines, rowCounts, box } = layoutEnvelopeBlock(
+			[[seg('aaaa bb cccccc')]],
+			'center',
+			boxLookup,
+			75,
+		);
+		expect(rowCounts).toStrictEqual([2]);
+		// One array per paragraph, the soft-break space dropped.
+		expect(lines).toHaveLength(1);
+		expect(lines[0].map((g) => g.char).join('')).toBe('aaaa bbcccccc');
+		const baselines = [...new Set(lines[0].map((g) => g.baseline))];
+		expect(baselines).toHaveLength(2);
+		expect(baselines[1] - baselines[0]).toBeCloseTo(LINE_PITCH_EM * 20, 6);
+		// 'cccccc' (60) is centred against the wider 'aaaa bb' (70).
+		const second = lines[0].filter((g) => g.baseline === baselines[1]);
+		expect(second[0].x).toBe(5);
+		expect(box?.right).toBe(69);
+	});
+
+	it('leaves each paragraph on one row without a wrap width', () => {
+		const { rowCounts } = layoutEnvelopeBlock([[seg('aaaa bb cccccc')], [seg('d')]], 'center');
+		expect(rowCounts).toStrictEqual([1, 1]);
+	});
+
+	it('wraps every paragraph of a multi-paragraph block and keeps their order', () => {
+		const { lines, rowCounts } = layoutEnvelopeBlock(
+			[[seg('aa bb cc')], [seg('dd ee')]],
+			'left',
+			boxLookup,
+			25,
+		);
+		expect(rowCounts).toStrictEqual([3, 2]);
+		const lastOfFirst = Math.max(...lines[0].map((g) => g.baseline));
+		const firstOfSecond = Math.min(...lines[1].map((g) => g.baseline));
+		expect(firstOfSecond - lastOfFirst).toBeCloseTo(LINE_PITCH_EM * 20, 6);
+	});
+
+	it('starts a new row at a hard line break only when wrapping', () => {
+		const paragraph = [seg('ab'), seg('\n'), seg('cd')];
+		expect(layoutEnvelopeBlock([paragraph], 'left', boxLookup, 1000).rowCounts).toStrictEqual([2]);
+		expect(layoutEnvelopeBlock([paragraph], 'left', boxLookup).rowCounts).toStrictEqual([1]);
+	});
+
 	it('estimates an ink box from the advance when no outline or ink metrics exist', () => {
 		const { lines, box } = layoutEnvelopeBlock([[seg('a')]], 'left');
 		expect(lines[0][0].outline).toBeUndefined();

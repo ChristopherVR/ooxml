@@ -91,6 +91,7 @@ export function useTextWarpEnvelope(options: {
 			warpAdj.value,
 			warpAdj2.value,
 			getGlyphOutline,
+			textEl.value?.textStyle,
 		);
 		return paragraphs.value.map((paragraph, lineIndex) => {
 			const glyphs = perLine[lineIndex] ?? [];

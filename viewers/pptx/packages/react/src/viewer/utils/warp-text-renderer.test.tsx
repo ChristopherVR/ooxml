@@ -126,16 +126,33 @@ function multiParagraphWarpedElement(preset: string): PptxElement {
 	} as PptxElement;
 }
 
-function renderWarpedElement(element: PptxElement, height = 100): HTMLDivElement {
+function renderWarpedElement(element: PptxElement, height = 100, width = 300): HTMLDivElement {
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
 	act(() => {
 		root!.render(
-			<WarpedText element={element} width={300} height={height} fallbackColor='#111827' />,
+			<WarpedText element={element} width={width} height={height} fallbackColor='#111827' />,
 		);
 	});
 	return container;
+}
+
+/** Far wider than a 300px box at the default font size, so it must wrap. */
+const LONG_PARAGRAPH =
+	'The quick brown fox jumps over the lazy dog and then keeps on running far away';
+
+function textPlainElement(text: string): PptxElement {
+	return { ...warpedElement('textPlain'), id: 'wa-plain', text };
+}
+
+/** Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row. */
+function glyphRowCount(scope: ParentNode): number {
+	return new Set(
+		[...scope.querySelectorAll('svg > text, svg > g[data-glyph-slices] > text')].map((t) =>
+			t.getAttribute('y'),
+		),
+	).size;
 }
 
 function renderWarped(preset: string): HTMLDivElement {
@@ -175,9 +192,23 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 		expect(new Set(scales.map((s) => s.toFixed(4))).size).toBeGreaterThan(1);
 	});
 
-	it('renders nothing for textPlain', () => {
+	it('renders textPlain as one glyph per character, never a <textPath>', () => {
 		const el = renderWarped('textPlain');
-		expect(el.querySelector('svg')).toBeNull();
+		expect(el.querySelector('svg')).not.toBeNull();
+		expect(el.querySelector('textPath')).toBeNull();
+		const glyphs = logicalGlyphNodes(el).map(representativeText);
+		expect(glyphs.map((t) => t.textContent).join('')).toBe('Hello');
+	});
+
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		const long = renderWarpedElement(textPlainElement(LONG_PARAGRAPH));
+		expect(glyphRowCount(long)).toBeGreaterThan(1);
+		act(() => root!.unmount());
+		container?.remove();
+		// A word far wider than its small square box stays whole on one row.
+		const word = renderWarpedElement(textPlainElement('schedule'), 40, 40);
+		expect(glyphRowCount(word)).toBe(1);
+		expect(logicalGlyphNodes(word)).toHaveLength('schedule'.length);
 	});
 
 	it('a multi-paragraph inflate element still uses the per-glyph envelope for every line', () => {

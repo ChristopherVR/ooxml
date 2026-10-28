@@ -25,7 +25,7 @@
 	const textElement = $derived(hasTextProperties(element) ? element : undefined);
 	const preset = $derived(textElement?.textStyle?.textWarpPreset);
 	// Every classified preset renders along an SVG `<textPath>` baseline;
-	// only `textNoShape` / `textPlain` / unknown presets render nothing here.
+	// only `textNoShape` / unknown presets render nothing here.
 	// This used to additionally require `classifyTextWarp(preset) === 'path'`,
 	// which routed inflate/deflate/can/slant/fade/cascade to a flat CSS
 	// `transform` approximation instead - a cross-binding parity bug, since
@@ -127,6 +127,7 @@
 			textElement?.textStyle?.textWarpAdj,
 			textElement?.textStyle?.textWarpAdj2,
 			getGlyphOutline,
+			textElement?.textStyle,
 		);
 		return paragraphs.flatMap((paragraph, lineIndex) => {
 			const placements = perLine[lineIndex] ?? [];

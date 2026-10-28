@@ -310,6 +310,7 @@ export function WarpedText({
 			warpAdj,
 			warpAdj2,
 			getGlyphOutline,
+			textEl.textStyle,
 		);
 		return (
 			<svg

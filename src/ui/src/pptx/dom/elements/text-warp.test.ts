@@ -114,6 +114,32 @@ function warpedElement(preset: string): PptxElement {
 	} as PptxElement;
 }
 
+/** Far wider than a 300px box at the default font size, so it must wrap. */
+const LONG_PARAGRAPH =
+	'The quick brown fox jumps over the lazy dog and then keeps on running far away';
+
+function textPlainElement(text: string, width: number, height: number): PptxElement {
+	return {
+		type: 'text',
+		id: 'wa-plain',
+		x: 0,
+		y: 0,
+		width,
+		height,
+		text,
+		textStyle: { textWarpPreset: 'textPlain' },
+	} as PptxElement;
+}
+
+/** Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row. */
+function glyphRowCount(root: ParentNode): number {
+	return new Set(
+		[...root.querySelectorAll('svg > text, svg > g[data-glyph-slices] > text')].map((t) =>
+			t.getAttribute('y'),
+		),
+	).size;
+}
+
 describe('renderWarpedText: envelope/former-simple presets render as true SVG textPath', () => {
 	it.each(['textInflate', 'textDeflate', 'textCanUp', 'textCanDown'])(
 		'renders one <text> per glyph (true two-curve envelope) for the preset %s, not a shared textPath',
@@ -150,8 +176,29 @@ describe('renderWarpedText: envelope/former-simple presets render as true SVG te
 		expect(new Set(scales.map((s) => s.toFixed(4))).size).toBeGreaterThan(1);
 	});
 
-	it('renders nothing for textPlain', () => {
-		expect(renderWarpedText(warpedElement('textPlain'), buildContext())).toBeNull();
+	it('renders nothing for textNoShape', () => {
+		expect(renderWarpedText(warpedElement('textNoShape'), buildContext())).toBeNull();
+	});
+
+	it('renders textPlain through the glyph envelope, never a <textPath>', () => {
+		const node = renderWarpedText(warpedElement('textPlain'), buildContext());
+		expect(node?.tagName.toLowerCase()).toBe('svg');
+		expect(node?.querySelector('textPath')).toBeNull();
+		expect(node?.querySelectorAll('text, path').length).toBeGreaterThan(0);
+	});
+
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		const long = renderWarpedText(
+			textPlainElement(LONG_PARAGRAPH, 300, 100),
+			buildContext(),
+		) as SVGSVGElement;
+		expect(glyphRowCount(long)).toBeGreaterThan(1);
+		const word = renderWarpedText(
+			textPlainElement('schedule', 40, 40),
+			buildContext(),
+		) as SVGSVGElement;
+		expect(glyphRowCount(word)).toBe(1);
+		expect(logicalGlyphElements(word)).toHaveLength('schedule'.length);
 	});
 
 	it('a short caption of very wide glyphs on a steep can-up curve renders sliced glyphs, clipped and seamed', () => {

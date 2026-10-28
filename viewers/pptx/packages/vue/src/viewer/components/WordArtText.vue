@@ -22,7 +22,7 @@ import WordArtEnvelopeGlyph from './WordArtEnvelopeGlyph.vue';
  * WordArtText - Vue port of the React `WarpedText` SVG renderer.
  *
  * Renders warped (WordArt) text. Every classified preset (`textNoShape` /
- * `textPlain` / unknown excluded) renders along an SVG `<textPath>` baseline
+ * unknown excluded) renders along an SVG `<textPath>` baseline
  * built by {@link shouldUseSvgWarp} + `buildWarpPath`: arch/wave/circle/
  * triangle/chevron/ring/curve, and (as of the WordArt envelope fidelity fix)
  * inflate/deflate/can/slant/fade/cascade too, matching React and Vanilla.
@@ -36,7 +36,7 @@ import WordArtEnvelopeGlyph from './WordArtEnvelopeGlyph.vue';
  * and Vanilla already rendered them as true SVG textPath - a cross-binding
  * parity bug this component no longer has.
  *
- * Presets that are not classified (`textNoShape`, `textPlain`, unknown values)
+ * Presets that are not classified (`textNoShape`, unknown values)
  * cause the component to render nothing; callers fall back to flat text. The
  * overlay is absolutely positioned to fill the host box and is
  * `pointer-events: none` so it overlays without intercepting interaction.
@@ -65,7 +65,7 @@ const preset = computed(() => textEl.value?.textStyle?.textWarpPreset);
 
 /**
  * Every classified preset renders along an SVG `<textPath>` baseline; only
- * `textNoShape` / `textPlain` / unknown presets fall through to flat text
+ * `textNoShape` / unknown presets fall through to flat text
  * (handled by the caller, not this component). Matches React and Vanilla.
  */
 const usesTextPath = computed(() => Boolean(textEl.value) && shouldUseSvgWarp(preset.value));

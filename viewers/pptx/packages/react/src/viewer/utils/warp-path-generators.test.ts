@@ -49,9 +49,12 @@ describe('sVG_WARP_PRESETS', () => {
 		expect(SVG_WARP_PRESETS.has('textDeflateInflateDeflate')).toBeTruthy();
 	});
 
-	it('should not contain plain text presets', () => {
+	it('should not contain textNoShape', () => {
 		expect(SVG_WARP_PRESETS.has('textNoShape')).toBeFalsy();
-		expect(SVG_WARP_PRESETS.has('textPlain')).toBeFalsy();
+	});
+
+	it('should contain textPlain, which stretches the text to the box', () => {
+		expect(SVG_WARP_PRESETS.has('textPlain')).toBeTruthy();
 	});
 });
 
@@ -64,8 +67,8 @@ describe('shouldUseSvgWarp', () => {
 		expect(shouldUseSvgWarp('textNoShape')).toBeFalsy();
 	});
 
-	it('should return false for "textPlain"', () => {
-		expect(shouldUseSvgWarp('textPlain')).toBeFalsy();
+	it('should return true for "textPlain"', () => {
+		expect(shouldUseSvgWarp('textPlain')).toBeTruthy();
 	});
 
 	it('should return true for known SVG warp presets', () => {

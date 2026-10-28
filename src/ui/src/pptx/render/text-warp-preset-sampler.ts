@@ -14,7 +14,7 @@
  */
 import { evaluateGuides } from 'ooxml-core/pptx';
 
-import type { WarpCurveSegment } from './text-warp-preset-definitions';
+import type { WarpCurveSegment, WarpCurveXExtent } from './text-warp-preset-definitions';
 import { WARP_PRESET_DEFINITIONS } from './text-warp-preset-definitions';
 
 /** OOXML angles are stored in 60,000ths of a degree. */
@@ -171,6 +171,55 @@ export function sampleWarpPresetCurve(
 		top: sampleSegment(def.top, clampedU, vars) / BOX,
 		bottom: sampleSegment(def.bottom, clampedU, vars) / BOX,
 	};
+}
+
+/** Where the top and bottom paths start and end, each a `[start, end]` fraction of box width. */
+export interface SampledWarpXExtent {
+	top: readonly [number, number];
+	bottom: readonly [number, number];
+}
+
+const FULL_WIDTH: readonly [number, number] = [0, 1];
+
+function resolveXExtent(
+	extent: WarpCurveXExtent | undefined,
+	vars: Map<string, number>,
+): readonly [number, number] {
+	if (!extent) {
+		return FULL_WIDTH;
+	}
+	const start = vars.get(extent.startX);
+	const end = vars.get(extent.endX);
+	if (start === undefined || end === undefined || !(end > start)) {
+		return FULL_WIDTH;
+	}
+	return [Math.max(0, start / BOX), Math.min(1, end / BOX)];
+}
+
+/**
+ * The horizontal extent of `preset`'s top and bottom paths. Every path spans
+ * the full width except where a definition says otherwise (`textPlain` away
+ * from its default `adj`). Returns `undefined` when `preset` has no
+ * transcribed definition.
+ */
+export function sampleWarpPresetXExtent(
+	preset: string,
+	adj: number | undefined,
+	adj2: number | undefined,
+): SampledWarpXExtent | undefined {
+	const def = WARP_PRESET_DEFINITIONS[preset];
+	if (!def) {
+		return undefined;
+	}
+	if (!def.topX && !def.bottomX) {
+		return { top: FULL_WIDTH, bottom: FULL_WIDTH };
+	}
+	const adjustments = new Map<string, number>([
+		['adj', adj ?? def.defaultAdj],
+		['adj2', adj2 ?? 0],
+	]);
+	const vars = evaluateGuides([...def.gdLst], { w: BOX, h: BOX }, adjustments);
+	return { top: resolveXExtent(def.topX, vars), bottom: resolveXExtent(def.bottomX, vars) };
 }
 
 /** Preset names with a spec-transcribed definition (exported for tests/tooling). */

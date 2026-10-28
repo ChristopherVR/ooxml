@@ -34,7 +34,7 @@
  * middle `adj` values is PowerPoint ending a row short of its path end, a
  * non-monotonic flattening artifact this mapping does not model.
  */
-import { envelopeCurveAt } from './text-warp-envelope-curves';
+import { envelopeCurveAt, envelopeCurveXExtent } from './text-warp-envelope-curves';
 
 /** The unwarped text block's bounding box, in layout coordinates. */
 export interface EnvelopeBlockBox {
@@ -61,12 +61,13 @@ interface ArcTable {
 	s: Float64Array;
 }
 
-function buildArcTable(ys: Float64Array, width: number): ArcTable {
+/** `startX..endX` is the curve's horizontal span, in box units. */
+function buildArcTable(ys: Float64Array, startX: number, endX: number): ArcTable {
 	const xs = new Float64Array(ys.length);
 	const s = new Float64Array(ys.length);
 	let total = 0;
 	for (let i = 0; i < ys.length; i++) {
-		xs[i] = (i / (ys.length - 1)) * width;
+		xs[i] = startX + (i / (ys.length - 1)) * (endX - startX);
 		if (i > 0) {
 			total += Math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1]);
 		}
@@ -131,8 +132,9 @@ export function createEnvelopeWarp(
 		topYs[i] = band.top * height;
 		bottomYs[i] = band.bottom * height;
 	}
-	const top = buildArcTable(topYs, width);
-	const bottom = buildArcTable(bottomYs, width);
+	const extent = envelopeCurveXExtent(preset, adj, adj2);
+	const top = buildArcTable(topYs, extent.top[0] * width, extent.top[1] * width);
+	const bottom = buildArcTable(bottomYs, extent.bottom[0] * width, extent.bottom[1] * width);
 	return {
 		map(x: number, y: number) {
 			const s = (x - block.left) / blockW;

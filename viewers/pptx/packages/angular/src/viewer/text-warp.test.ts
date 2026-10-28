@@ -128,9 +128,12 @@ describe('getWarpCategory', () => {
 		expect(getWarpCategory(undefined)).toBe('none');
 	});
 
-	it('returns "none" for textNoShape and textPlain', () => {
+	it('returns "none" for textNoShape', () => {
 		expect(getWarpCategory('textNoShape')).toBe('none');
-		expect(getWarpCategory('textPlain')).toBe('none');
+	});
+
+	it('returns "envelope" for textPlain (the block stretched to the box)', () => {
+		expect(getWarpCategory('textPlain')).toBe('envelope');
 	});
 
 	it('returns "none" for unknown preset', () => {
@@ -227,8 +230,30 @@ describe('getTextWarp - no warp', () => {
 		expect(getTextWarp(makeTextElement('textNoShape', { text: 'hi' }))).toBeUndefined();
 	});
 
-	it('returns undefined for textPlain', () => {
-		expect(getTextWarp(makeTextElement('textPlain', { text: 'hi' }))).toBeUndefined();
+	it('resolves textPlain to the glyph envelope', () => {
+		const def = getTextWarp(makeTextElement('textPlain', { text: 'hi' }));
+		expect(def?.strategy).toBe('glyph');
+	});
+
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		// Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row.
+		const rows = (def: ReturnType<typeof getTextWarp>) =>
+			new Set((def as TextWarpGlyphDef).glyphs.map((g) => g.y)).size;
+		const long = getTextWarp(
+			makeTextElement('textPlain', {
+				text: 'The quick brown fox jumps over the lazy dog and then keeps on running far away',
+			}),
+		);
+		expect(long?.strategy).toBe('glyph');
+		expect(rows(long)).toBeGreaterThan(1);
+		// A word far wider than its small square box stays whole on one row.
+		const word = getTextWarp({
+			...makeTextElement('textPlain', { text: 'schedule' }),
+			width: 40,
+			height: 40,
+		} as PptxElement);
+		expect(rows(word)).toBe(1);
+		expect((word as TextWarpGlyphDef).glyphs.map((g) => g.char).join('')).toBe('schedule');
 	});
 
 	it('returns undefined for unknown preset', () => {

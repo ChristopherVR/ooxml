@@ -14,7 +14,9 @@ import type { EnvelopeBlockGlyph } from './text-warp-envelope-block';
  * The pipeline is PowerPoint's own, COM-derived (2026-09-24):
  *  1. `layoutEnvelopeBlock` lays the paragraphs out unwarped as one block and
  *     measures its box (ink vertically; ink plus whitespace advances
- *     horizontally).
+ *     horizontally). Unless the body says `wrap="none"`, each paragraph is
+ *     first wrapped at word boundaries to the box width less its left and
+ *     right insets (`text-warp-envelope-wrap.ts`), as PowerPoint does.
  *  2. `createEnvelopeWarp` maps that box onto the preset's top/bottom paths,
  *     placing horizontal position by ARC LENGTH along each path.
  *  3. Each glyph's outline is warped point by point
@@ -41,6 +43,8 @@ import type {
 } from './text-warp-envelope-types';
 import { buildWarpedGlyphOutlinePathD } from './text-warp-glyph-outline';
 import { fitGlyphEnvelopeAffine } from './text-warp-glyph-slicing';
+import { envelopeWrapWidth } from './text-warp-envelope-wrap';
+import type { EnvelopeTextBody } from './text-warp-envelope-wrap';
 
 export type {
 	EnvelopeAlign,
@@ -96,7 +100,12 @@ function placeGlyph(
  * Build every paragraph's glyph placements for one envelope-warped text
  * block in a `width` x `height` shape box. Returns one array per paragraph
  * (in order), each empty when the preset is outside the envelope family, the
- * box is degenerate, or the block has no ink at all.
+ * box is degenerate, or the block has no ink at all. A paragraph that wraps
+ * still returns one array, holding all of its rows' glyphs.
+ *
+ * `textBody` is the element's text style (its `a:bodyPr` insets and `wrap`):
+ * with it, paragraphs wrap at `width` less the insets before the warp, unless
+ * it says `wrap="none"`. Without it nothing wraps.
  */
 export function buildGlyphEnvelopeBlock(
 	preset: string,
@@ -107,12 +116,18 @@ export function buildGlyphEnvelopeBlock(
 	adj?: number,
 	adj2?: number,
 	getGlyphOutline?: GlyphOutlineLookup,
+	textBody?: EnvelopeTextBody,
 ): EnvelopeGlyphPlacement[][] {
 	const empty = paragraphs.map((): EnvelopeGlyphPlacement[] => []);
 	if (!hasGlyphEnvelope(preset) || !(width > 0) || !(height > 0)) {
 		return empty;
 	}
-	const layout = layoutEnvelopeBlock(paragraphs, align, getGlyphOutline);
+	const layout = layoutEnvelopeBlock(
+		paragraphs,
+		align,
+		getGlyphOutline,
+		envelopeWrapWidth(width, textBody),
+	);
 	if (!layout.box) {
 		return empty;
 	}
@@ -139,6 +154,7 @@ export function buildGlyphEnvelope(
 	adj?: number,
 	adj2?: number,
 	getGlyphOutline?: GlyphOutlineLookup,
+	textBody?: EnvelopeTextBody,
 ): EnvelopeGlyphPlacement[] {
 	return (
 		buildGlyphEnvelopeBlock(
@@ -150,6 +166,7 @@ export function buildGlyphEnvelope(
 			adj,
 			adj2,
 			getGlyphOutline,
+			textBody,
 		)[0] ?? []
 	);
 }
