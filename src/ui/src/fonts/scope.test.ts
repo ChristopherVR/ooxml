@@ -1,7 +1,20 @@
-import { afterEach, expect, it, vi } from 'vitest';
-import { createFontFaceScope } from './custom-fonts';
+import { afterEach, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+	createFontFaceScope,
+	type CustomFontRegistration,
+	type CustomFontDescriptor,
+	type OwnedCustomFontRegistration,
+} from './custom-fonts';
 
 afterEach(() => vi.unstubAllGlobals());
+
+it('retains the original structural registration API', () => {
+	expectTypeOf<{
+		family: string;
+		descriptor: CustomFontDescriptor;
+	}>().toExtend<CustomFontRegistration>();
+	expectTypeOf<OwnedCustomFontRegistration>().toExtend<CustomFontRegistration>();
+});
 
 it('removes only owned faces, including a load completed after disposal', async () => {
 	let finish!: () => void;

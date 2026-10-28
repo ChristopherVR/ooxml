@@ -160,6 +160,10 @@ export function deriveCustomFontDescriptor(fileName: string): CustomFontDescript
 export interface CustomFontRegistration {
 	family: string;
 	descriptor: CustomFontDescriptor;
+}
+
+/** A new browser registration with an explicit lifetime; the original result shape stays valid. */
+export interface OwnedCustomFontRegistration extends CustomFontRegistration {
 	/** Remove this registration only; other documents' faces are untouched. Idempotent. */
 	dispose(): void;
 }
@@ -178,7 +182,7 @@ export interface CustomFontRegistration {
 export async function registerCustomFont(
 	file: File,
 	target?: FontFaceSet,
-): Promise<CustomFontRegistration | null> {
+): Promise<OwnedCustomFontRegistration | null> {
 	const fontSet = target ?? (typeof document === 'undefined' ? undefined : document.fonts);
 	if (!fontSet || typeof FontFace === 'undefined') {
 		return null;
@@ -201,10 +205,10 @@ export async function registerCustomFont(
 
 /** Session-owned browser fonts. A registration finishing after disposal is removed immediately. */
 export function createFontFaceScope(target?: FontFaceSet) {
-	const registrations = new Set<CustomFontRegistration>();
+	const registrations = new Set<OwnedCustomFontRegistration>();
 	let disposed = false;
 	return {
-		async register(file: File): Promise<CustomFontRegistration | null> {
+		async register(file: File): Promise<OwnedCustomFontRegistration | null> {
 			if (disposed) return null;
 			const registration = await registerCustomFont(file, target);
 			if (!registration) return null;
