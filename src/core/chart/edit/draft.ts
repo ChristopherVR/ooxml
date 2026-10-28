@@ -60,6 +60,7 @@ export function assignOrDelete<T extends object, K extends keyof T>(
 	key: K,
 	value: T[K] | undefined,
 ): void {
+	if (key === '__proto__' || key === 'constructor' || key === 'prototype') return;
 	if (value === undefined) delete target[key];
 	else target[key] = value;
 }

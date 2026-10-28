@@ -1,6 +1,6 @@
 // Structural ChartEx edits preserve data sets, formatting and unrelated family metadata.
 import type { ChartExAxis, ChartExDataLabel, ChartExSeries, ChartExSpace } from '../ex/model';
-import { chartExSeriesAt, editChartExSpace } from './chartex';
+import { chartExAxisAt, chartExSeriesAt, editChartExSpace } from './chartex';
 import { chartExValueType } from './chartex-data';
 
 export const CHART_EX_LAYOUTS = [
@@ -132,14 +132,13 @@ export function setChartExAxis(
 	index: number,
 	edit: Partial<ChartExAxis>,
 ): ChartExSpace {
-	if (!Number.isSafeInteger(index) || !space.plotArea.axes[index])
-		throw new RangeError('No chart axis at index.');
+	chartExAxisAt(space, index);
 	if (edit.scaling)
 		for (const value of Object.values(edit.scaling))
 			if (typeof value === 'number' && !Number.isFinite(value))
 				throw new RangeError('Axis values must be finite.');
 	return editChartExSpace(space, (draft) => {
-		Object.assign(draft.plotArea.axes[index]!, edit);
+		Object.assign(chartExAxisAt(draft, index), edit);
 	});
 }
 

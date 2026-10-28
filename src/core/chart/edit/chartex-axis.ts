@@ -1,6 +1,6 @@
 // ChartEx axes have their own scaling and tick-label semantics; DrawingML formatting is shared.
 import type { ChartExSpace, ChartExAxis } from '../ex/model';
-import { editChartExSpace, setChartExTitle } from './chartex';
+import { chartExAxisAt, editChartExSpace, setChartExTitle } from './chartex';
 export interface ChartExAxisEdit {
 	min?: number | null;
 	max?: number | null;
@@ -21,8 +21,7 @@ export function editChartExAxis(
 	index: number,
 	edit: ChartExAxisEdit,
 ): ChartExSpace {
-	if (!Number.isSafeInteger(index) || !space.plotArea.axes[index])
-		throw new RangeError('No ChartEx axis at index.');
+	chartExAxisAt(space, index);
 	for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const) {
 		const value = edit[key];
 		if (
@@ -33,7 +32,7 @@ export function editChartExAxis(
 			throw new RangeError('Invalid ChartEx axis scaling.');
 	}
 	return editChartExSpace(space, (draft) => {
-		const axis = draft.plotArea.axes[index]!;
+		const axis = chartExAxisAt(draft, index);
 		for (const key of ['min', 'max', 'majorUnit', 'minorUnit'] as const)
 			if (edit[key] !== undefined) {
 				if (axis.scaling?.kind !== 'val')

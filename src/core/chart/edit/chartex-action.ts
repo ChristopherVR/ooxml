@@ -9,6 +9,7 @@ import {
 	type ChartExLayout,
 } from './chartex-structure';
 import {
+	chartExAxisAt,
 	editChartExSpace,
 	setChartExTitle,
 	setChartExWaterfall,
@@ -64,8 +65,7 @@ export function applyChartExEditAction(
 			return setChartExAxis(space, action.axisIndex, action.edit);
 		case 'tickLabels':
 			return editChartExSpace(space, (draft) => {
-				const axis = draft.plotArea.axes[action.axisIndex];
-				if (!axis) throw new RangeError('No chart axis at index.');
+				const axis = chartExAxisAt(draft, action.axisIndex);
 				if (action.visible) axis.tickLabels ??= {};
 				else delete axis.tickLabels;
 			});

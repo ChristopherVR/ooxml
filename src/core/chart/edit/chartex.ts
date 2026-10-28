@@ -7,6 +7,7 @@ import type { DrawingFill } from '../../drawingml/types';
 import type {
 	ChartExBinning,
 	ChartExLayoutProperties,
+	ChartExAxis,
 	ChartExSeries,
 	ChartExSeriesVisibility,
 	ChartExSpace,
@@ -33,6 +34,16 @@ export function chartExSeriesAt(space: ChartExSpace, index: number): ChartExSeri
 			: undefined;
 	if (!series) throw new RangeError(`No chart series at index ${String(index)}`);
 	return series;
+}
+
+/** The axis at `index` (compared as a position, never used as a property key). */
+export function chartExAxisAt(space: ChartExSpace, index: number): ChartExAxis {
+	const axis =
+		typeof index === 'number' && Number.isSafeInteger(index)
+			? space.plotArea.axes.find((_, position) => position === index)
+			: undefined;
+	if (!axis) throw new RangeError(`No chart axis at index ${String(index)}`);
+	return axis;
 }
 
 /**
