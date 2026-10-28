@@ -4,18 +4,14 @@ import { chartAxisTextStyle, chartLineStyle, isNoLine } from './chart-axis-style
 import { formatDate } from './chart-date-format';
 import type { PlotLayout, SvgLine, SvgText } from './chart-view-model';
 
-const DAY_MS = 86_400_000;
+import { excelSerialToDate, calendarTicks } from 'ooxml-core/chart';
+export { excelSerialToDate } from 'ooxml-core/chart';
 
 export interface DateAxisPlan {
 	sourceIndices: number[];
 	xPositions: number[];
 	labels: SvgText[];
 	tickMarks: SvgLine[];
-}
-
-export function excelSerialToDate(serial: number, date1904 = false): Date {
-	const epoch = date1904 ? Date.UTC(1904, 0, 1) : Date.UTC(1899, 11, serial < 60 ? 31 : 30);
-	return new Date(epoch + serial * DAY_MS);
 }
 
 function primaryDateAxis(chartData: PptxChartData): PptxChartAxisFormatting | undefined {
@@ -28,18 +24,6 @@ function primaryDateAxis(chartData: PptxChartData): PptxChartAxisFormatting | un
 function serialToX(serial: number, min: number, max: number, layout: PlotLayout): number {
 	const ratio = max === min ? 0.5 : (serial - min) / (max - min);
 	return layout.plotLeft + ratio * layout.plotWidth;
-}
-
-function addUnit(date: Date, amount: number, unit: 'days' | 'months' | 'years'): Date {
-	const next = new Date(date);
-	if (unit === 'days') {
-		next.setUTCDate(next.getUTCDate() + amount);
-	} else if (unit === 'months') {
-		next.setUTCMonth(next.getUTCMonth() + amount);
-	} else {
-		next.setUTCFullYear(next.getUTCFullYear() + amount);
-	}
-	return next;
 }
 
 function tickLine(
@@ -66,26 +50,6 @@ function tickLine(
 		y2: y + end,
 		...chartLineStyle(axis.spPr),
 	};
-}
-
-function calendarTicks(
-	min: number,
-	max: number,
-	date1904: boolean,
-	unit: 'days' | 'months' | 'years',
-	step: number,
-): number[] {
-	const result: number[] = [];
-	let date = excelSerialToDate(min, date1904);
-	for (
-		let guard = 0;
-		guard < 1000 && date.getTime() <= excelSerialToDate(max, date1904).getTime();
-		guard++
-	) {
-		result.push(min + (date.getTime() - excelSerialToDate(min, date1904).getTime()) / DAY_MS);
-		date = addUnit(date, step, unit);
-	}
-	return result;
 }
 
 /** Build a continuous calendar scale for classic ChartML date categories. */

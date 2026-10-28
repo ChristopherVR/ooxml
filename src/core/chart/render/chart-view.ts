@@ -89,6 +89,8 @@ export interface ChartGroupView {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	dateCategories?: (number | null)[];
+	date1904?: boolean;
 	frameSize?: import('../manual-layout').ChartFrameSize;
 	axes?: ChartAxesView;
 	plotLayout?: ChartManualLayout;
@@ -231,6 +233,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		horizontal: type === 'bar',
 		supported: SUPPORTED.has(type),
 	};
+	if (chart.date1904 !== undefined) model.date1904 = chart.date1904;
+	if (chart.axes?.some((a) => a.kind === 'date')) model.dateCategories = firstCats.map(toNumber);
 	if (chart.plotLayout) model.plotLayout = chart.plotLayout;
 	if (chart.title) model.title = chart.title;
 	const titleFormatting = chart.formatting?.entries.title;

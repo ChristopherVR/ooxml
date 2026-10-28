@@ -33,7 +33,8 @@ export function bars(
 	const marks: BarMark[] = [];
 	model.series.forEach((s, si) => {
 		values[si]?.forEach((v, i) => {
-			if (v === null || i >= model.categories.length) return;
+			if (v === null || i >= model.categories.length || (frame.order && !frame.order.includes(i)))
+				return;
 			let from = 0;
 			let to = v;
 			if (stacked) {

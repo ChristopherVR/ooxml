@@ -64,3 +64,5 @@ export * from './workbook/index';
 export { writeChartSpaceOverSource } from './keep-source';
 
 export * from './line-path';
+export * from './date-axis';
+export * from './date-format';

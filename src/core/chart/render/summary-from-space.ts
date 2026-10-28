@@ -194,6 +194,7 @@ export function chartSummaryFromSpace(
 		axes: chartSpace.plotArea.axes,
 		axisIds: group?.axisIds ?? [],
 	};
+	if (chartSpace.date1904 !== undefined) summary.date1904 = chartSpace.date1904;
 	if (chartSpace.plotArea.layout) summary.plotLayout = chartSpace.plotArea.layout;
 	const combined = extraGroups(chartSpace, chartType);
 	if (combined.length) summary.extraGroups = combined;

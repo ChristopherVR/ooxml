@@ -54,3 +54,33 @@ describe('shared series paths', () => {
 		);
 	});
 });
+
+describe('calendar category axis', () => {
+	const dateFixture = (orientation = 'minMax', origin1904 = false, min = 0) =>
+		fixture('lineChart')
+			.replace(
+				points(['1', '2', '3', '4', '5']),
+				points([String(min), String(min + 1), String(min + 10)]),
+			)
+			.replace('<c:chart>', `${origin1904 ? '<c:date1904 val="1"/>' : ''}<c:chart>`)
+			.replace(
+				'</c:plotArea>',
+				`<c:dateAx><c:axId val="1"/><c:scaling><c:orientation val="${orientation}"/><c:min val="${min}"/><c:max val="${min + 10}"/></c:scaling><c:axPos val="b"/><c:numFmt formatCode="yyyy-mm-dd" sourceLinked="0"/><c:majorUnit val="5"/><c:majorTimeUnit val="days"/></c:dateAx></c:plotArea>`,
+			);
+	it('spaces irregular dates continuously and reverses them without changing source data', () => {
+		const xy = (svg: string) =>
+			(/<polyline points="([^"]+)"/u.exec(svg)?.[1] ?? '')
+				.split(' ')
+				.map((p) => Number(p.split(',')[0]));
+		const normal = xy(render(dateFixture()));
+		expect(normal).toHaveLength(3);
+		expect((normal[2]! - normal[1]!) / (normal[1]! - normal[0]!)).toBeCloseTo(9, 1);
+		const reverse = xy(render(dateFixture('maxMin')));
+		expect(reverse[0]).toBeGreaterThan(reverse[1]!);
+		expect(reverse[1]).toBeGreaterThan(reverse[2]!);
+	});
+	it('uses the chart date system and authored format for calendar ticks', () => {
+		expect(render(dateFixture('minMax', true))).toContain('1904-01-01');
+		expect(render(dateFixture('minMax', false, 45292))).toContain('2024-01-01');
+	});
+});

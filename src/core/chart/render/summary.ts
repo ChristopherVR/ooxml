@@ -160,6 +160,7 @@ export interface HierarchySummaryOptions {
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
 	/** Native axes and the primary plot group IDs, retained for shared rendering. */
+	date1904?: boolean;
 	plotLayout?: ChartManualLayout;
 	axes?: ChartAxis[];
 	axisIds?: number[];
