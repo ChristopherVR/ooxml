@@ -7,6 +7,27 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.30.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.30.0) - 2026-10-28
+
+### Features
+
+- **diagram:** Share interpreted SmartArt previews across products ([f9dd019](https://github.com/ChristopherVR/ooxml/commit/f9dd0197da1871da3178a2d3ee880fe27266f0c0))
+- **diagram:** Share SmartArt style and color authoring ([86b43a4](https://github.com/ChristopherVR/ooxml/commit/86b43a497b5effa071b25e73dab91ab4bb18c296))
+- **ui:** Edit ChartEx charts in Word and Excel ([35ca2bd](https://github.com/ChristopherVR/ooxml/commit/35ca2bd824525a67220c533b6487b604118526b2))
+- **ui:** Expose shared advanced chart format controls ([ad2513b](https://github.com/ChristopherVR/ooxml/commit/ad2513b72b76c554d789dfd96f0a4968d4553eaa))
+- **diagram:** Attach generated caches in Word and Excel ([0ba0947](https://github.com/ChristopherVR/ooxml/commit/0ba09477b7c5a6b251dd607d0775feec4655abf0))
+- **ui:** Expose shared advanced ChartEx formatting ([1346009](https://github.com/ChristopherVR/ooxml/commit/13460090ee3104f6e2d7cd492c163e5910d965ec))
+
+### Bug Fixes
+
+- **chart:** Preserve source content across chart consumers ([1ce74e9](https://github.com/ChristopherVR/ooxml/commit/1ce74e92f8864a046f3ef756b35bf8568c685c5b))
+- **ui:** Localize unsupported chart diagnostics ([ce1c25b](https://github.com/ChristopherVR/ooxml/commit/ce1c25b09a209bde41cfffc7f0104e028f3f15a0))
+- **diagram:** Report partial interpreted preview capabilities ([ea9e474](https://github.com/ChristopherVR/ooxml/commit/ea9e4746aa826a00a8bc49ac58852687e62eaf12))
+- **pptx:** Morph offstage text size changes and keep run alpha ([75749c0](https://github.com/ChristopherVR/ooxml/commit/75749c0618fe24714d9f086ca7248f9f3e41e729))
+- **pptx:** End inline edit on Escape and scope collab undo origin ([1338d38](https://github.com/ChristopherVR/ooxml/commit/1338d388f137f8542ce07dbd61f5b6186a842d41))
+- **pptx:** Keep exported text in place when page stylesheets load late ([#227](https://github.com/ChristopherVR/ooxml/issues/227)) ([0b378f4](https://github.com/ChristopherVR/ooxml/commit/0b378f4e3c709c57e96a63394155c7e6467b4cfa))
+- **pptx:** Converge when two clients seed an empty room ([#217](https://github.com/ChristopherVR/ooxml/issues/217)) ([ee06f53](https://github.com/ChristopherVR/ooxml/commit/ee06f5389a9f277704640e4efaa567b3d5718507))
+
 ## [1.29.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.29.1) - 2026-10-26
 
 ### Bug Fixes

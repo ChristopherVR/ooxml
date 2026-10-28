@@ -7,6 +7,70 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.54.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.54.0) - 2026-10-28
+
+### Features
+
+- **pptx:** Save chart labels and series colours through core ([4b25d98](https://github.com/ChristopherVR/ooxml/commit/4b25d98dc70d336d400e185d2af60b190889c4fe))
+- **chart:** Share rich title and axis save semantics ([d55e49d](https://github.com/ChristopherVR/ooxml/commit/d55e49da53b2beef0e8215d76376b42bb74e16cd))
+- **drawingml:** Share outlines effects and theme style matrices ([1bcb6c2](https://github.com/ChristopherVR/ooxml/commit/1bcb6c228370994984ecc277f2d456705fae1134))
+- **drawingml:** Preserve and author pattern and picture fills ([b30778e](https://github.com/ChristopherVR/ooxml/commit/b30778e085f626605c3c42edd1e966733dc77d78))
+- **diagram:** Share interpreted SmartArt previews across products ([f9dd019](https://github.com/ChristopherVR/ooxml/commit/f9dd0197da1871da3178a2d3ee880fe27266f0c0))
+- **chart:** Add safe hierarchical ChartEx editing primitives ([1759131](https://github.com/ChristopherVR/ooxml/commit/17591312e4b41bdf6a10873f54d43bea979cfcc6))
+- **chart:** Bind ChartEx edits to Word and Excel storage ([8443244](https://github.com/ChristopherVR/ooxml/commit/8443244f5520e967b5ddda797b27ddf5929b7eb7))
+- **chart:** Preserve hidden labels and edit cell label ranges ([b17afec](https://github.com/ChristopherVR/ooxml/commit/b17afecadcfc83aa94431d3cf89e8e7621c67ec2))
+- **chart:** Add shared advanced formatting intents ([c4d6fa1](https://github.com/ChristopherVR/ooxml/commit/c4d6fa115445ef6bc99b341c92a46941a326859a))
+- **chart:** Allocate fresh embedded workbook data sheets ([909bc58](https://github.com/ChristopherVR/ooxml/commit/909bc582f793e08b63671d82abe70440a49afdfd))
+- **diagram:** Share SmartArt style and color authoring ([86b43a4](https://github.com/ChristopherVR/ooxml/commit/86b43a497b5effa071b25e73dab91ab4bb18c296))
+- **chart:** Save structural edits with fresh workbook ranges ([99d0a3e](https://github.com/ChristopherVR/ooxml/commit/99d0a3e11ff95d002feb3a6060faa2eac3f6057b))
+- **chart:** Share resolved appearance conversions across hosts ([f26c9ff](https://github.com/ChristopherVR/ooxml/commit/f26c9ffa072db97ae8632c5e97de960821d3cf8f))
+- **chart:** Support structural ChartEx data edits across hosts ([8fd8d15](https://github.com/ChristopherVR/ooxml/commit/8fd8d15729d3c8347c8090451f2fefd420e03c4a))
+- **chart:** Share standalone rich text formatting edits ([829764b](https://github.com/ChristopherVR/ooxml/commit/829764b41480dd4f91f7609cfc1d1071e6117de6))
+- **chart:** Share appearance and chart family save operations ([e1b4f4a](https://github.com/ChristopherVR/ooxml/commit/e1b4f4ae337a2b0b99b9a127219dbbd4e7392109))
+- **ui:** Edit ChartEx charts in Word and Excel ([35ca2bd](https://github.com/ChristopherVR/ooxml/commit/35ca2bd824525a67220c533b6487b604118526b2))
+- **diagram:** Attach generated caches in Word and Excel ([0ba0947](https://github.com/ChristopherVR/ooxml/commit/0ba09477b7c5a6b251dd607d0775feec4655abf0))
+- **chart:** Share chart text layout and point label saves ([a638df2](https://github.com/ChristopherVR/ooxml/commit/a638df2ea8d702b1595b96bddf668a94dc9946dc))
+- **chart:** Split secondary series without changing targets ([cd1d2d5](https://github.com/ChristopherVR/ooxml/commit/cd1d2d5e3fb74bdb1ae7b05f1b2a0836e7ae34c2))
+- **chart:** Share chart chrome and protection edits ([9d59053](https://github.com/ChristopherVR/ooxml/commit/9d590537db83f652b66a8e7c9431ca6b0f640c86))
+- **chart:** Create extended charts through shared operations ([5a8ece7](https://github.com/ChristopherVR/ooxml/commit/5a8ece72b122382e57f8648c8c58a17dec8e5a09))
+- **pptx:** Save extended chart families through the core ([f5c1091](https://github.com/ChristopherVR/ooxml/commit/f5c10914458e9cd31e92d6efdfd156f77de40dd0))
+- **pptx:** Plan shared analysis and point chart saves ([3ab4c64](https://github.com/ChristopherVR/ooxml/commit/3ab4c6462e18ef7a24f35322f7b424337a668384))
+- **chart:** Preserve series targets across combo type edits ([d991ecb](https://github.com/ChristopherVR/ooxml/commit/d991ecb51d855cec58efd752f7c959a8d5346f32))
+- **chart:** Share axis labels and plot decorations ([0838fa8](https://github.com/ChristopherVR/ooxml/commit/0838fa8e6832d6442cec0f9a71e0a83051a5581d))
+- **chart:** Edit rich title runs and typed data vectors ([a3b688e](https://github.com/ChristopherVR/ooxml/commit/a3b688e38ccecdf64d99856df1bed8a33e2866e6))
+- **chart:** Share extended chart style and axis editing ([906594d](https://github.com/ChristopherVR/ooxml/commit/906594d527d0c472cd5435f60049fe0f3e1e4a2b))
+
+### Bug Fixes
+
+- **chart:** Preserve source content across chart consumers ([1ce74e9](https://github.com/ChristopherVR/ooxml/commit/1ce74e92f8864a046f3ef756b35bf8568c685c5b))
+- **diagram:** Report partial interpreted preview capabilities ([ea9e474](https://github.com/ChristopherVR/ooxml/commit/ea9e4746aa826a00a8bc49ac58852687e62eaf12))
+- **chart:** Preserve resolved gradient focus geometry ([0db31bf](https://github.com/ChristopherVR/ooxml/commit/0db31bf6be311d50eceb9aae66b809c15a9ca48c))
+- **chart:** Retain histogram semantics when switching layouts ([95e9a75](https://github.com/ChristopherVR/ooxml/commit/95e9a75440adaf743bc3c76d399f2b39e40b662e))
+- **pptx:** Preserve chart label defaults and retry workbook writes ([78e8efb](https://github.com/ChristopherVR/ooxml/commit/78e8efbe56ff2000e4d189657d7cc972057fd50f))
+- **pptx:** Save ChartEx label content flags through the core ([88309ed](https://github.com/ChristopherVR/ooxml/commit/88309edce7d247d068fd9934cbf79990b40ea081))
+- **chart:** Preserve source attributes and reuse workbook writes ([4a5f40b](https://github.com/ChristopherVR/ooxml/commit/4a5f40b51644afcb8fdc8690e14a89c41fc5b5bd))
+- **pptx:** Refresh chart adapters after saving shared models ([fdebf79](https://github.com/ChristopherVR/ooxml/commit/fdebf796a8168693c678a9889d2b9b1135079f1e))
+- **chart:** Activate newly allocated workbook data sheets ([7767080](https://github.com/ChristopherVR/ooxml/commit/77670803f1e87ffdab709138f57f4850e2946e50))
+- **pptx:** Declare chart refresh across runtime mixins ([5f880e6](https://github.com/ChristopherVR/ooxml/commit/5f880e639b16111c9b591a6cb909a07d6d3f5607))
+- **chart:** Accept host-allocated picture preview sources ([08fe91b](https://github.com/ChristopherVR/ooxml/commit/08fe91b613a007141ec2291a458a6d02cb6f61ab))
+- **chart:** Preserve authored paint and typed category edits ([547e5c0](https://github.com/ChristopherVR/ooxml/commit/547e5c069fdbeb351e5a8fcddbcb67f790a2b677))
+- **chart:** Preserve rich axis title style projection ([b5d5b7a](https://github.com/ChristopherVR/ooxml/commit/b5d5b7a728785576550957ecd07c202ad36ede0e))
+- **pptx:** Default SmartArt reflow to its local origin ([ae8a59b](https://github.com/ChristopherVR/ooxml/commit/ae8a59b43dbf4dcfdec3d199cc0735b09f1d65ec))
+- **pptx:** Converge when two clients seed an empty room ([#217](https://github.com/ChristopherVR/ooxml/issues/217)) ([ee06f53](https://github.com/ChristopherVR/ooxml/commit/ee06f5389a9f277704640e4efaa567b3d5718507))
+
+### Refactor
+
+- **pptx:** Read ChartEx facts through the neutral model ([f78b582](https://github.com/ChristopherVR/ooxml/commit/f78b58266a5819121f92b9f954fdd5162b4c0eff))
+- **pptx:** Project classic chart paint from neutral models ([76dbdc6](https://github.com/ChristopherVR/ooxml/commit/76dbdc6dc0ba1c3afc8fe98ba92f482abfdcccd2))
+
+### Testing
+
+- **pptx:** Compare authored ChartEx visibility and scaling ([5748e23](https://github.com/ChristopherVR/ooxml/commit/5748e234bbe1919b522479f440440457267c4abf))
+
+### Styling
+
+- **chart:** Apply workspace formatting to chart tests ([b3f3a08](https://github.com/ChristopherVR/ooxml/commit/b3f3a0887eaff025d3fd7bf88cd288977df4121f))
+
 ## [4.53.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.53.0) - 2026-10-26
 
 ### Features
