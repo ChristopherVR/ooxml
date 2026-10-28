@@ -53,6 +53,7 @@ import { matchMorphElementsFull } from './morph-matching';
 import { resolveMorphOverlayLayers } from './morph-overlay-layers';
 import type { MorphOverlayLayer } from './morph-overlay-layers';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
+import { morphOffstageTextSizeChange } from './morph-text-slot';
 import type { MorphMode } from './morph-types';
 
 /**
@@ -165,6 +166,8 @@ export interface MorphTransitionPlan {
 	 * would hide the incoming slide's own arrivals. See `resolveMorphGhostIds`.
 	 */
 	outgoingElements: PptxElement[];
+	/** Outgoing ghost id to the incoming text layout it paints while travelling. */
+	outgoingTextReplacements?: ReadonlyMap<string, string>;
 	/**
 	 * {@link MorphTransitionPlan.outgoingElements} and
 	 * {@link MorphTransitionPlan.overlayIncomingElements} together, in the ONE
@@ -321,7 +324,24 @@ export function buildMorphTransitionPlan(
 	// put it on its own compositing layer and shift its raster by up to a pixel
 	// for the duration (issue #161); it still has to be painted, so this asks
 	// the ghost set directly rather than reading it off the animation map.
-	const ghostElements = flattenedOutgoing.filter((element) => ghostIds.has(element.id));
+	const offstageRestyles = new Map(
+		match.pairs
+			.filter(({ fromElement, toElement }) => morphOffstageTextSizeChange(fromElement, toElement))
+			.map(({ fromElement, toElement }) => [fromElement.id, toElement] as const),
+	);
+	const ghostElements = flattenedOutgoing
+		.filter((element) => ghostIds.has(element.id))
+		.map((element) => {
+			const target = offstageRestyles.get(element.id);
+			if (!target || element.type !== 'text' || target.type !== 'text') return element;
+			return {
+				...element,
+				width: target.width,
+				height: target.height,
+				textStyle: target.textStyle,
+				textSegments: target.textSegments,
+			} as PptxElement;
+		});
 
 	// Everything the overlay paints hides whatever the live stage is doing
 	// underneath, which is wrong for a shape that ARRIVES on top of a ghost:
@@ -413,6 +433,11 @@ export function buildMorphTransitionPlan(
 		outgoingImageAnimations,
 		overlayIncomingAnimations,
 		outgoingElements,
+		outgoingTextReplacements: new Map(
+			[...offstageRestyles]
+				.filter(([id]) => ghostIds.has(id))
+				.map(([id, target]) => [id, target.id]),
+		),
 		overlayIncomingElements,
 		overlayLayers,
 		crossfadeGroups,

@@ -5,6 +5,7 @@
  * @module render/morph-text-slot
  */
 import type { PptxElement } from 'ooxml-core/pptx';
+import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { boxOverlapRatio } from './morph-flatten';
 
@@ -26,6 +27,50 @@ const SAME_SLOT_OVERLAP = 0.4;
 /** An element's own words, whitespace-normalised. */
 function ownText(element: PptxElement): string {
 	return ((element as { text?: string }).text ?? '').replace(/\s+/gu, ' ').trim();
+}
+
+/**
+ * A text box entirely outside the top or left edge can adopt its destination
+ * font size before it enters the slide. This avoids superimposing two layouts
+ * of the same text during its flight. Restrict this to size-only run changes:
+ * a change in wording, font, colour or emphasis still needs a cross-dissolve.
+ */
+export function morphOffstageTextSizeChange(from: PptxElement, to: PptxElement): boolean {
+	if (
+		from.type !== 'text' ||
+		to.type !== 'text' ||
+		!hasTextProperties(from) ||
+		!hasTextProperties(to) ||
+		(from.rotation ?? 0) !== 0 ||
+		(from.x + from.width > 0 && from.y + from.height > 0) ||
+		JSON.stringify(from.shapeStyle ?? {}) !== JSON.stringify(to.shapeStyle ?? {}) ||
+		!from.text ||
+		from.text !== to.text
+	) {
+		return false;
+	}
+	const a = from.textSegments ?? [];
+	const b = to.textSegments ?? [];
+	if (a.length === 0 || a.length !== b.length) return false;
+	let sizeChanged = false;
+	for (let i = 0; i < a.length; i++) {
+		const old = a[i];
+		const next = b[i];
+		if (!old || !next || old.text !== next.text) return false;
+		const x = old.style;
+		const y = next.style;
+		if (x?.fontSize !== y?.fontSize) sizeChanged = true;
+		if (
+			x?.fontFamily !== y?.fontFamily ||
+			x?.color !== y?.color ||
+			(x?.colorRef?.alpha ?? 1) !== (y?.colorRef?.alpha ?? 1) ||
+			Boolean(x?.bold) !== Boolean(y?.bold) ||
+			Boolean(x?.italic) !== Boolean(y?.italic) ||
+			Boolean(x?.underline) !== Boolean(y?.underline)
+		)
+			return false;
+	}
+	return sizeChanged;
 }
 
 /**

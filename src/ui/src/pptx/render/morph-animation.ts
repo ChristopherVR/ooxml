@@ -36,7 +36,7 @@ import type { MorphBox } from './morph-overlay-order';
 import { boxesOverlap, travelledBox } from './morph-overlay-order';
 import { tokenizeText } from './morph-text';
 import { coveredStackedCopyIds } from './morph-stacked-copies';
-import { morphTextReplacedInSlot } from './morph-text-slot';
+import { morphOffstageTextSizeChange, morphTextReplacedInSlot } from './morph-text-slot';
 import { buildTokenMorphAnimations, diffTokens } from './morph-text-tokens';
 import type { MorphAnimationStyle, MorphMode, MorphPair } from './morph-types';
 import {
@@ -179,7 +179,11 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 	const image = element as { imagePath?: string; svgPath?: string };
 	parts.push(image.imagePath ?? '', image.svgPath ?? '');
 	if (hasTextProperties(element)) {
-		parts.push(element.text ?? '', element.textStyle?.color ?? '');
+		parts.push(
+			element.text ?? '',
+			element.textStyle?.color ?? '',
+			String(element.textStyle?.colorRef?.alpha ?? 1),
+		);
 		// The same words in another size or weight are a different look: issue
 		// #141's third column keeps its text from slide 17 to 18 but its second
 		// paragraph grows from 14pt to the default, and comparing the words alone
@@ -189,7 +193,7 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 			parts.push(
 				`${style?.fontSize ?? ''}|${style?.bold ? 1 : 0}|${style?.italic ? 1 : 0}|${
 					style?.underline ? 1 : 0
-				}|${style?.fontFamily ?? ''}|${style?.color ?? ''}`,
+				}|${style?.fontFamily ?? ''}|${style?.color ?? ''}|${style?.colorRef?.alpha ?? 1}`,
 			);
 		}
 	}
@@ -213,7 +217,10 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
  * or departing shapes faded (issue #131).
  */
 export function morphPairNeedsCrossfade(fromElement: PptxElement, toElement: PptxElement): boolean {
-	return appearanceSignature(fromElement) !== appearanceSignature(toElement);
+	return (
+		!morphOffstageTextSizeChange(fromElement, toElement) &&
+		appearanceSignature(fromElement) !== appearanceSignature(toElement)
+	);
 }
 
 /** Sub-pixel tolerance for calling a pair's geometry unchanged. */
@@ -524,7 +531,13 @@ export function generateMorphAnimations(
 		// plan ends, so the element reappears in the same frame. Where the ghost
 		// was dropped as redundant (see `resolveMorphGhostIds`) this half IS the
 		// single copy and the loop above has already skipped it.
-		const inert = ghosted && isInertMorphPair(fromElement, toElement);
+		// The offstage text-size case also uses a single overlay copy. Its ghost
+		// paints the destination's text layout (see `morph-plan`), so the live
+		// copy must stay hidden while that ghost travels.
+		const inert =
+			ghosted &&
+			(isInertMorphPair(fromElement, toElement) ||
+				morphOffstageTextSizeChange(fromElement, toElement));
 		// A restyled pair dissolves via its outgoing GHOST, which fades 1 -> 0 in
 		// the overlay above this element. Only a body-less element (a text box on
 		// `noFill`) may fade IN underneath it - see `crossfadeIncomingMayFadeIn`.
@@ -669,14 +682,21 @@ export function generateMorphGhostAnimations(
 		// dissolves where it stands, so its ghost must not travel either or the
 		// two halves would cross-dissolve out of register.
 		const inSlot = morphTextReplacedInSlot(fromElement, toElement);
+		const offstageText = morphOffstageTextSizeChange(fromElement, toElement);
 		const dx = inSlot
 			? 0
-			: toElement.x + toElement.width / 2 - (fromElement.x + fromElement.width / 2);
+			: offstageText
+				? toElement.x - fromElement.x
+				: toElement.x + toElement.width / 2 - (fromElement.x + fromElement.width / 2);
 		const dy = inSlot
 			? 0
-			: toElement.y + toElement.height / 2 - (fromElement.y + fromElement.height / 2);
-		const sx = inSlot ? 1 : Math.max(toElement.width, 1) / Math.max(fromElement.width, 1);
-		const sy = inSlot ? 1 : Math.max(toElement.height, 1) / Math.max(fromElement.height, 1);
+			: offstageText
+				? toElement.y - fromElement.y
+				: toElement.y + toElement.height / 2 - (fromElement.y + fromElement.height / 2);
+		const sx =
+			inSlot || offstageText ? 1 : Math.max(toElement.width, 1) / Math.max(fromElement.width, 1);
+		const sy =
+			inSlot || offstageText ? 1 : Math.max(toElement.height, 1) / Math.max(fromElement.height, 1);
 		// The ghost starts on its own authored rotation, so the SHORTEST-arc
 		// adjustment goes on the target angle here (mirror of the incoming
 		// half). Flips are per-frame, as in {@link generateMorphAnimations}.

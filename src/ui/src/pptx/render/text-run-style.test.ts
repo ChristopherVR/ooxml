@@ -10,6 +10,15 @@ function seg(style: NonNullable<TextSegment['style']>): TextSegment {
 }
 
 describe('segmentStyleToCss run properties', () => {
+	it('preserves the alpha of a theme-coloured text run', () => {
+		expect(
+			segmentStyleToCss(seg({ color: '#FFFFFF', colorRef: { scheme: 'bg1', alpha: 0.29747 } }))
+				.color,
+		).toBe('color-mix(in srgb, #FFFFFF 29.747%, transparent)');
+		expect(
+			segmentStyleToCss(seg({ color: '#FFFFFF', colorRef: { scheme: 'bg1', alpha: 0 } })).color,
+		).toBe('color-mix(in srgb, #FFFFFF 0%, transparent)');
+	});
 	it('renders a weight variant of a Google Fonts family at its weight', () => {
 		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans Light' })).fontWeight).toBe('300');
 		expect(segmentStyleToCss(seg({ fontFamily: 'DM Sans Medium', bold: true })).fontWeight).toBe(

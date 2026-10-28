@@ -34,4 +34,33 @@ describe('buildMorphOverlayLayers', () => {
 			Number(layer!.querySelector<HTMLElement>(`[data-element-id="${id}"]`)!.style.zIndex);
 		expect(z('column')).toBeGreaterThan(z('backdrop'));
 	});
+
+	it('paints an offstage ghost with its destination text layout', () => {
+		const outgoing = stage(['old']);
+		const old = outgoing.querySelector<HTMLElement>('[data-element-id="old"]')!;
+		old.style.left = '-500px';
+		old.style.top = '40px';
+		old.style.height = '100px';
+		old.textContent = 'old layout';
+		const incoming = stage(['new']);
+		const target = incoming.querySelector<HTMLElement>('[data-element-id="new"]')!;
+		target.style.left = '300px';
+		target.style.top = '60px';
+		target.style.height = '110px';
+		target.textContent = 'new layout';
+		const plan = {
+			overlayLayers: [{ side: 'outgoing', elements: [{ id: 'old' }] }],
+			outgoingTextReplacements: new Map([['old', 'new']]),
+		} as unknown as MorphTransitionPlan;
+		const [layer] = buildMorphOverlayLayers(document, outgoing, incoming, plan);
+		const ghost = layer!.querySelector<HTMLElement>('[data-element-id="old"]')!;
+		expect(ghost.textContent).toBe('new layout');
+		expect([ghost.style.left, ghost.style.top, ghost.style.height]).toEqual([
+			'-500px',
+			'40px',
+			'110px',
+		]);
+		expect(old.textContent).toBe('old layout');
+		expect(target.dataset.elementId).toBe('new');
+	});
 });

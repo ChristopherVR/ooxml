@@ -107,6 +107,29 @@ function collaborationFactories(doc: Y.Doc) {
 	};
 }
 
+test('Escape commits inline text instead of cancelling it', () => {
+	const commit = vi.fn();
+	const cancel = vi.fn();
+	const change = vi.fn();
+	mount(
+		makeProps({
+			onInlineEditCommit: commit,
+			onInlineEditCancel: cancel,
+			onInlineEditChange: change,
+		}),
+	);
+	const editor = container.querySelector<HTMLElement>('[data-inline-editor]')!;
+	act(() => {
+		editor.textContent = 'Hello typed';
+		editor.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+		);
+	});
+	expect(change).toHaveBeenCalledWith('Hello typed');
+	expect(commit).toHaveBeenCalledOnce();
+	expect(cancel).not.toHaveBeenCalled();
+});
+
 test('retires a native editor when the slide changes but its cloned element is identical', () => {
 	const doc = new Y.Doc();
 	const element = makeTextElement();
@@ -203,8 +226,19 @@ test('keeps collaborative native text through React rerenders and unrelated mode
 		expect(text.toString()).toBe('AHelloB');
 		expect(change.mock.lastCall?.[0]).toBe('AHelloB');
 		expect(registerReader).toHaveBeenCalledOnce();
-		act(() => editor.dispatchEvent(new FocusEvent('focusout', { bubbles: true })));
+		act(() =>
+			editor.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+			),
+		);
 		expect(commit).toHaveBeenCalledOnce();
+		const peer = new Y.Doc();
+		try {
+			Y.applyUpdate(peer, Y.encodeStateAsUpdate(doc));
+			expect(readSlidesFromYDoc(peer)[0].elements[0]).toMatchObject({ text: 'AHelloB' });
+		} finally {
+			peer.destroy();
+		}
 	} finally {
 		act(() => root.render(null));
 		patcher.dispose();

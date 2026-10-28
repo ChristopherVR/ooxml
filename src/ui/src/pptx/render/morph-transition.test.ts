@@ -1658,6 +1658,20 @@ describe('morphPairNeedsCrossfade', () => {
 		expect(morphPairNeedsCrossfade(from, to)).toBeTruthy();
 	});
 
+	it('crossfades a text run whose theme colour alpha changes', () => {
+		const item = (id: string, alpha: number): PptxElement =>
+			makeElement({
+				id,
+				type: 'text',
+				text: 'L',
+				textSegments: [
+					{ text: 'L', style: { color: '#FFFFFF', colorRef: { scheme: 'bg1', alpha } } },
+				],
+			} as Partial<PptxElement> & { id: string; type: PptxElement['type'] });
+		expect(morphPairNeedsCrossfade(item('a', 0.3), item('b', 0.8))).toBe(true);
+		expect(morphPairNeedsCrossfade(item('a', 0.3), item('b', 0.3))).toBe(false);
+	});
+
 	it('is true when only an adjustment handle moved', () => {
 		// `shouldGeometryMorph` already treats a moved handle as an outline change
 		// and emits a `clip-path` tween for it. If the appearance compared EQUAL

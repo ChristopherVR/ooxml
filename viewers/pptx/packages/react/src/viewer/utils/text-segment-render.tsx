@@ -11,6 +11,7 @@ import {
 	scaleFontSizeForAutoFit,
 	splitsUnderlineIntoWords,
 	stripUnderlineDecoration,
+	textRunColor,
 } from 'ooxml-ui/pptx';
 import type { EastAsianBreakOptions, ParagraphRun, RunStyle } from 'ooxml-ui/pptx';
 import { getSubstituteFontFamily, parsePanoseString } from 'pptx-viewer-core';
@@ -115,9 +116,12 @@ export function renderParagraphRun(
 
 	// A link with no colour of its own paints in PowerPoint's `hlink` blue; the
 	// same fallback shared applies to `run.style.color`.
-	const resolvedSegmentColor = normalizeHexColor(
-		segmentStyle.color || element.textStyle?.color,
-		run.hyperlink ? HYPERLINK_COLOR : fallbackColor,
+	const resolvedSegmentColor = textRunColor(
+		normalizeHexColor(
+			segmentStyle.color || element.textStyle?.color,
+			run.hyperlink ? HYPERLINK_COLOR : fallbackColor,
+		),
+		segmentStyle.color ? segmentStyle.colorRef?.alpha : element.textStyle?.colorRef?.alpha,
 	);
 
 	// Superscript / subscript via baseline shift.

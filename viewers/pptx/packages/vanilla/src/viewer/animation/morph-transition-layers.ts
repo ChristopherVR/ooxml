@@ -68,6 +68,26 @@ export function stackInRunOrder(stage: HTMLElement, ids: readonly string[]): HTM
 	return stage;
 }
 
+/** A stage clone must use the plan's destination text layout for these ghosts. */
+function replaceOutgoingTextLayouts(
+	stage: HTMLElement,
+	incoming: HTMLElement,
+	replacements: ReadonlyMap<string, string> | undefined,
+): void {
+	for (const [outgoingId, incomingId] of replacements ?? []) {
+		const old = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(outgoingId)}"]`);
+		const target = incoming.querySelector<HTMLElement>(
+			`[data-element-id="${CSS.escape(incomingId)}"]`,
+		);
+		if (!old || !target) continue;
+		const replacement = target.cloneNode(true) as HTMLElement;
+		replacement.dataset.elementId = outgoingId;
+		replacement.style.left = old.style.left;
+		replacement.style.top = old.style.top;
+		old.replaceWith(replacement);
+	}
+}
+
 /** The z-index of the first morph overlay layer, just above the incoming layer (1). */
 const MORPH_LAYER_Z_BASE = 2;
 
@@ -94,9 +114,13 @@ export function buildMorphOverlayLayers(
 	return (morphPlan?.overlayLayers ?? []).map((run, index) => {
 		const source = run.side === 'outgoing' ? outgoing : incoming;
 		const ids = run.elements.map((element) => element.id);
+		const snapshot = source.cloneNode(true) as HTMLElement;
+		if (run.side === 'outgoing') {
+			replaceOutgoingTextLayouts(snapshot, incoming, morphPlan?.outgoingTextReplacements);
+		}
 		const layer = buildLayer(
 			doc,
-			stackInRunOrder(keepOnlyElements(source.cloneNode(true) as HTMLElement, ids), ids),
+			stackInRunOrder(keepOnlyElements(snapshot, ids), ids),
 			MORPH_LAYER_Z_BASE + index,
 			'none',
 			run.side === 'outgoing' ? 'outgoing' : 'lifted',

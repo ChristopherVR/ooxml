@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { generateUnmatchedFadeInAnimations } from './morph-animation';
 import { matchMorphElementsFull } from './morph-matching';
 import { coveredStackedCopyIds } from './morph-stacked-copies';
+import { buildMorphTransitionPlan } from './morph-plan';
+import { morphOffstageTextSizeChange } from './morph-text-slot';
 
 function text(
 	id: string,
@@ -135,5 +137,74 @@ describe('stacked outgoing copies', () => {
 		const [dropped, fading] = generateUnmatchedFadeOutAnimations([lower, upper], 2000, 0);
 		expect(dropped?.keyframes).toMatch(/%, 100% \{\s*opacity: 0;/u);
 		expect(fading?.keyframes).not.toMatch(/%, 100% \{/u);
+	});
+});
+
+describe('offstage text with a changed run size', () => {
+	const from = {
+		...text('from', 'Heading\nBody', { x: -500, width: 200 }),
+		textSegments: [
+			{ text: 'Heading', style: { fontSize: 14, fontFamily: 'Arial' } },
+			{ text: '\n' },
+			{ text: 'Body', style: { fontSize: 18, fontFamily: 'Arial' } },
+		],
+	} as PptxElement;
+	const to = {
+		...text('to', 'Heading\nBody', { x: 300, width: 200, height: 210 }),
+		textSegments: [
+			{ text: 'Heading', style: { fontSize: 18, fontFamily: 'Arial' } },
+			{ text: '\n' },
+			{ text: 'Body', style: { fontSize: 18, fontFamily: 'Arial' } },
+		],
+	} as PptxElement;
+
+	it('uses one layout when the source starts wholly off the slide', () => {
+		expect(morphOffstageTextSizeChange(from, to)).toBe(true);
+		const plan = buildMorphTransitionPlan(slide([from]), slide([to]), 1000)!;
+		expect(plan.outgoingElements.filter((element) => element.id === from.id)).toHaveLength(0);
+		expect(plan.incomingAnimations.get(to.id)).not.toContain('-fade');
+	});
+
+	it('uses the destination layout on the ghost and hides the stage copy over a backdrop', () => {
+		const backdrop = {
+			id: 'backdrop',
+			type: 'shape',
+			x: -600,
+			y: 0,
+			width: 1200,
+			height: 300,
+		} as PptxElement;
+		const plan = buildMorphTransitionPlan(slide([backdrop, from]), slide([to]), 1000)!;
+		const ghost = plan.outgoingElements.find((element) => element.id === from.id);
+		expect(ghost).toBeDefined();
+		expect(plan.outgoingTextReplacements?.get(from.id)).toBe(to.id);
+		expect(ghost?.height).toBe(210);
+		expect(ghost && 'textSegments' in ghost && ghost.textSegments).toEqual(to.textSegments);
+		const ghostName = plan.outgoingAnimations.get(from.id)?.split(' ')[0];
+		const ghostBlock = plan.keyframesCss
+			.split(`@keyframes ${ghostName} {`)[1]
+			?.split('@keyframes')[0];
+		expect(ghostBlock).toContain('translate(800px, 0px) rotate(0deg) scale(1, 1)');
+		const name = plan.incomingAnimations.get(to.id)?.split(' ')[0];
+		expect(name).toBeDefined();
+		const block = plan.keyframesCss.split(`@keyframes ${name} {`)[1]?.split('@keyframes')[0];
+		expect(block?.match(/opacity: 0;/gu)).toHaveLength(2);
+	});
+
+	it('does not suppress crossfades for visible or differently styled text', () => {
+		expect(morphOffstageTextSizeChange({ ...from, x: 0 }, to)).toBe(false);
+		expect(morphOffstageTextSizeChange(from, { ...to, text: 'Other' })).toBe(false);
+		const changedFont = {
+			...to,
+			textSegments: [
+				{ text: 'Heading', style: { fontSize: 18, fontFamily: 'Calibri' } },
+				{ text: '\n' },
+				{ text: 'Body', style: { fontSize: 18, fontFamily: 'Arial' } },
+			],
+		} as PptxElement;
+		expect(morphOffstageTextSizeChange(from, changedFont)).toBe(false);
+		expect(morphOffstageTextSizeChange(from, { ...to, shapeStyle: { fillColor: '#ff0000' } })).toBe(
+			false,
+		);
 	});
 });
