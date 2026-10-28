@@ -11,6 +11,11 @@ See [the current sharing review](pptx-reuse-review-2026-10-28.md#fresh-evidence-
 baseline. In particular, unchanged plot/point manual layouts do not imply missing title/legend
 layout support, and a nonempty SVG can contain placeholders rather than complete chart rendering.
 
+**2026-10-28 implementation:** [the delivery record](pptx-reuse-delivery-2026-10-28.md)
+and [delivery measurement](evidence/chart-gap-delivery-2026-10-28.json) supersede the
+baseline counts for implemented slices: manual-layout ablation is now 10/10 and funnel/box
+ChartEx parts render. Historical tables below remain labelled baseline evidence.
+
 ## How the numbers were made
 
 - `src/core/pptx/__tests__/integration/chart-renderer-gap.test.ts` (kept; runs with the core tests).

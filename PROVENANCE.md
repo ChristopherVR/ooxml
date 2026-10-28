@@ -1,5 +1,76 @@
 # Provenance
 
+## Further shared Office capabilities (2026-10-28)
+
+Source repository: ChristopherVR/ooxml. Baseline `b36e9472a`, unless a later
+extraction commit is named below. Product adapters and public compatibility paths remain.
+
+- `core/chart/manual-layout.ts` derives inner/outer axis-band handling from
+  `ui/src/pptx/render/chart-view-model-layout.ts`; point-label offset application derives
+  from `chart-manual-layout.ts` at `40d9bf320`. The shared painter and Excel summary now
+  carry authored layouts; measured PowerPoint bands remain host inputs.
+- `core/chart/line-path.ts` moves `ui/src/pptx/render/chart-line-path.ts` at `9c46c08fa`,
+  with strict index assertions. Shared cartesian/XY painting consumes smoothing and
+  authored stroke choices. The PowerPoint file re-exports the neutral functions.
+- `core/chart/{date-axis,date-format}.ts` extracts calendar serial conversion, stepping
+  and date-format tokens from `ui/src/pptx/render/{chart-date-axis,chart-date-format}.ts`
+  at `3166b4d6e`. Product axis descriptors remain adapters; Excel supplies its date system.
+- `core/chart/data-table-layout.ts` extracts metrics from
+  `ui/src/pptx/render/chart-data-table-metrics.ts` at `6cdd0e7e1`. The neutral table
+  view and SVG painter are new strict code based on the PowerPoint behavior.
+- `core/drawingml/custom-geometry.ts` is new strict DOM admission using the already shared
+  guide evaluator. The PowerPoint object-tree parser remains an adapter. Guide and path
+  coordinate spaces are separate. `drawingml/path-data.ts` moves SVG projection from
+  `ui/src/smartart/smartart-geometry.ts`; the UI delegates to it. Word retains original
+  custom geometry XML through size and formatting edits.
+- `core/geometry/picture-crop.ts` extracts numeric rectangle/inset conversions from
+  `ui/src/pptx/render/picture-crop/crop-geometry.ts`. DrawingML crop read/write and Excel
+  model, edit, paint and source-preserving save adapters are new strict code. Product
+  pointer behavior and minimum frame sizes remain UI policy.
+- `core/drawingml/picture-effects.ts` is a new ordered DOM codec for grayscale,
+  luminance and alpha, retaining opaque source operations. Its percentage and transfer
+  helpers replace equivalent PowerPoint runtime and `render/image-effects.ts` formulas.
+  `ui/src/picture-effects.ts` is shared SVG filter construction; Excel is its first
+  product consumer. Source-backed Excel picture writes now patch identity and relationship
+  fields as well as crop/effects, retaining unrelated drawing content.
+- `core/chart/funnel-geometry.ts` extracts centred flat bar geometry from PowerPoint
+  `render/chart-funnel-sunburst.ts` at `c4644066f`. The neutral funnel painter and ChartEx
+  summary admission are new strict code; the PowerPoint wrapper retains its formatting API.
+- `core/chart/box-distribution.ts` extracts quartiles, whisker fences and mean calculations
+  from PowerPoint `render/chart-box-whisker.ts` at `c13e2e00f`, reusing existing box statistics.
+  The neutral painter and multi-series ChartEx summary preserve observation identities.
+- `core/drawingml/picture-fill.ts` extends the former shared picture-fill parser with crop,
+  ordered effects and unsupported rendering diagnostics. `drawingml/image-content-type.ts`
+  extracts Word's media MIME inference from `docx/drawing.ts`. Cached diagram `dsp:pic`
+  admission, relationship mapping and `ui/src/smartart/smartart-picture.ts` paint servers are
+  new code using the shared picture APIs and PowerPoint picture behavior as reference.
+  Word and Excel supply package-owned media resolution; external references remain preserved
+  source data rather than automatically loaded images.
+- `core/drawingml/{read-3d-values,scene3d-coordinate,scene3d-presets}.ts` extracts
+  semantic scene/extrusion reads, integer-vector conversion and preset validation from
+  PowerPoint `text-body-scene3d.ts`, `text-body-sp3d.ts`, `scene3d-coordinate.ts` and
+  `text-body-scene3d-presets.ts` at `b36e9472a`. `DrawingScene3D` replaces the identical
+  PowerPoint interface through a type alias. Neutral source-backed body reader/writer codecs
+  are new strict code; PowerPoint keeps its compatibility object-tree writers. Theme colours,
+  raw source spelling and extensions remain intact on admitted edits. Shared SmartArt reports
+  these fields as approximated rather than claiming 3D text rendering.
+- `ui/src/form/color-input/live-color-{input,leaves}.ts` and adjacent tests move generic
+  preview bookkeeping from `ui/src/pptx/render/`. PowerPoint paths are compatibility
+  facades; Excel's Format Cells fill draft is the second consumer.
+- `ui/src/fonts/{catalog,availability,custom-fonts}.ts` extracts grouping, browser checks
+  and registration from PowerPoint `font-catalog.ts`, `font-availability.ts` and
+  `custom-fonts.ts`. Product defaults, translated labels and placeholder rules stay in
+  the adapter. Owned FontFace scopes add disposal without changing existing upload lifetime.
+- `ui/src/dialog/dialog-session.ts` extracts submit/dismiss lifecycle from Excel
+  `dialogs/frame.ts` and Word `zoom-dialog.ts`. The existing dialog primitive retains
+  focus management; product adapters retain content and focus restoration.
+- `ui/src/recovery-scheduler.ts` extracts timer/write ownership from PowerPoint
+  `render/controller/autosave-controller.ts` and Visio `viewer-autorecover.ts`.
+  Product payload, cadence, dirty state, encryption and storage remain adapters.
+- PowerPoint `hyperlink-security.ts` now consumes existing `core/opc/safe-href.ts`.
+  Explicit additional protocol/relative-path options preserve its supported host policy;
+  shared defaults remain unchanged and PowerPoint action URLs stay product-owned.
+
 ## Shared font selection and Word script layout (2026-10-28)
 
 Source: ChristopherVR/ooxml at `b36e9472a`.

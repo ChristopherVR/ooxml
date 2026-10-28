@@ -1,0 +1,224 @@
+{
+	"table": [
+		{
+			"feature": "data labels",
+			"parts": 27,
+			"decks": 6,
+			"coreDraws": "27/27"
+		},
+		{
+			"feature": "data label positions (dLblPos)",
+			"parts": 22,
+			"decks": 3,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "per-point data labels (c:dLbl)",
+			"parts": 4,
+			"decks": 2,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "leader lines / callout labels",
+			"parts": 29,
+			"decks": 7,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "data table",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "0/0"
+		},
+		{
+			"feature": "secondary axis",
+			"parts": 4,
+			"decks": 2,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "combo (several chart groups)",
+			"parts": 1,
+			"decks": 1,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "date axis",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "multi-level categories",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "gradient fills",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "picture fills",
+			"parts": 2,
+			"decks": 2,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "pattern fills",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "major gridlines",
+			"parts": 32,
+			"decks": 11,
+			"coreDraws": "30/32"
+		},
+		{
+			"feature": "minor gridlines",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "0/0"
+		},
+		{
+			"feature": "axis titles",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "log scale",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "0/0"
+		},
+		{
+			"feature": "display units",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "0/0"
+		},
+		{
+			"feature": "manual layout",
+			"parts": 10,
+			"decks": 4,
+			"coreDraws": "10/10"
+		},
+		{
+			"feature": "trendlines",
+			"parts": 1,
+			"decks": 1,
+			"coreDraws": "1/1"
+		},
+		{
+			"feature": "error bars",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "0/0"
+		},
+		{
+			"feature": "markers",
+			"parts": 6,
+			"decks": 5,
+			"coreDraws": "6/6"
+		},
+		{
+			"feature": "up/down bars, high-low lines",
+			"parts": 1,
+			"decks": 1,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "3-D view",
+			"parts": 20,
+			"decks": 4,
+			"coreDraws": "0/20"
+		},
+		{
+			"feature": "surface",
+			"parts": 2,
+			"decks": 1,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "of-pie",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "doughnut",
+			"parts": 2,
+			"decks": 2,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "explosion",
+			"parts": 1,
+			"decks": 1,
+			"coreDraws": "0/1"
+		},
+		{
+			"feature": "smooth lines",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "legend manual layout / entries",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "chart title overlay",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "rounded corners",
+			"parts": 0,
+			"decks": 0,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "axis number format",
+			"parts": 2,
+			"decks": 2,
+			"coreDraws": "not ablated"
+		},
+		{
+			"feature": "text properties (c:txPr)",
+			"parts": 52,
+			"decks": 12,
+			"coreDraws": "50/52"
+		}
+	],
+	"kinds": {
+		"bar": 31,
+		"bubble": 2,
+		"scatter": 2,
+		"pie": 22,
+		"chartex:funnel": 1,
+		"chartex:sunburst": 1,
+		"chartex:clusteredColumn": 1,
+		"chartex:boxWhisker": 1,
+		"bar+line": 1,
+		"stock": 1,
+		"surface": 3,
+		"chartex:waterfall": 1,
+		"chartex:treemap": 1,
+		"line": 5,
+		"chartex:regionMap (not drawn)": 1,
+		"area": 4,
+		"doughnut": 2,
+		"radar": 2
+	},
+	"userShapes": 1,
+	"parts": 82
+}

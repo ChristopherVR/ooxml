@@ -6,6 +6,8 @@ The active implementation order and acceptance criteria for shared chart, SmartA
 parity are tracked in [Shared Office parity delivery](office-shared-parity-delivery.md). It separates
 extraction from consumer integration, rendering fidelity and native Office validation.
 
+Implementation and validation are tracked in [the further sharing delivery record](pptx-reuse-delivery-2026-10-28.md).
+
 The [2026-10-28 further sharing review](pptx-reuse-review-2026-10-28.md) identifies the next
 cross-product extraction candidates, their current source locations, consumer gaps and acceptance
 slices. It includes a fresh chart-renderer measurement and distinguishes shared-product gains

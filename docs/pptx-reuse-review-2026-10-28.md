@@ -1,5 +1,7 @@
 # Further PowerPoint logic sharing review
 
+Status: implementation and acceptance evidence are recorded in [the delivery ledger](pptx-reuse-delivery-2026-10-28.md). The findings below describe the reviewed baseline.
+
 Reviewed 2026-10-28 against `16edc2fd9`, after the six priorities in
 [Shared Office parity delivery](office-shared-parity-delivery.md). Three GPT-6.1-sol agents
 independently examined core semantics, shared UI and chart/SmartArt rendering in detached

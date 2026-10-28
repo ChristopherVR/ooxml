@@ -1,5 +1,10 @@
 # Plan: making ooxml-core format-agnostic
 
+Follow-on implementation on 2026-10-28: shared chart painting, custom geometry,
+font selection, picture semantics and cross-product UI services are tracked in
+[the further sharing delivery record](pptx-reuse-delivery-2026-10-28.md). The wave
+status and coupling measurements below describe their stated historical baselines.
+
 Status on 2026-10-23, after Wave 6 (`2fedfaae7`): steps 1 to 5 are done for the parts listed below,
 and step 6 (pptx off `XmlObject`) is started for charts only; section 6 was not pursued. The shared
 areas `drawingml`, `diagram` and `chart` (with `chart/edit`, `chart/ex`, `chart/workbook` and

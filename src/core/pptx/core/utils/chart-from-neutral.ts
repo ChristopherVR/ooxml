@@ -6,10 +6,10 @@
  * object-tree node. Series, axes and caches are in `chart-from-neutral-series.ts`,
  * `chart-from-neutral-axes.ts` and `chart-from-neutral-data.ts`.
  *
- * What the neutral model does not carry (resolved colours and fonts, gradients, trendlines, error
- * bars, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and
- * user-shape parts, `c:clrMapOvr`, pivot source and formats, print settings, protection) is still
- * read from the part's `fast-xml-parser` tree, handed to the existing object-tree readers.
+ * The neutral model owns chart structure, layouts, styling, analysis and preservation.
+ * This adapter still resolves product colours/fonts and projects compatibility fields
+ * through object-tree readers. Related style, workbook and user-shape package parts
+ * remain product packaging concerns; their adapter use does not imply missing core models.
  *
  * @module chart-from-neutral
  */
