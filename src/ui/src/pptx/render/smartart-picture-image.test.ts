@@ -55,7 +55,7 @@ it.each(['mounted', 'removed', 'subtree', 'changed', 'replaced'] as const)(
 			fillImageUrl: 'data:image/png;base64,AA==',
 			pictureFill: {
 				kind: 'picture',
-				effects: [{ kind: 'standard', name: 'hsl', attributes: { sat: '0' } }],
+				effects: [{ kind: 'standard', name: 'hsl', values: { saturation: 1, luminance: 0 } }],
 			},
 		};
 		const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
