@@ -70,13 +70,11 @@ for (const framework of FRAMEWORKS) {
 		});
 		workbook.activeSheet = sheet;
 		await openLanding(page, framework);
-		await page
-			.locator('#landing-file')
-			.setInputFiles({
-				name: 'corrected.xlsx',
-				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				buffer: Buffer.from(await saveXlsx(workbook)),
-			});
+		await page.locator('#landing-file').setInputFiles({
+			name: 'corrected.xlsx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			buffer: Buffer.from(await saveXlsx(workbook)),
+		});
 		const picture = editor(page)
 			.locator('.xg-obj')
 			.filter({ has: page.locator('img') })
