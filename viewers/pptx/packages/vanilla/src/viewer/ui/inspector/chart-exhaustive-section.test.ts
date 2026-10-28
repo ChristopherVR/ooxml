@@ -35,11 +35,42 @@ function mount(pointIndex?: ReturnType<typeof createChartPointIndexField>) {
 	const control = <T extends HTMLInputElement | HTMLSelectElement>(key: string): T =>
 		Array.from(section.el.querySelectorAll('label'))
 			.find((label) => label.textContent?.startsWith(key))!
-			.querySelector('input,pptx-ui-select') as T;
+			.querySelector('input,pptx-ui-select,pptx-ui-checkbox') as T;
 	return { section, onChange, control };
 }
 
 describe('chart exhaustive section', () => {
+	it.each([
+		['axisTitle', 'Edited Axis', { titleText: 'Edited Axis' }],
+		['minorUnit', '2.5', { minorUnit: 2.5 }],
+		['minorGridlines', true, { minorGridlines: true }],
+		['numberFormat', '0.00', { numFmt: { formatCode: '0.00', sourceLinked: true } }],
+		['tickLabelPosition', 'high', { tickLblPos: 'high' }],
+		['axisColor', '#123456', { spPr: { strokeColor: '#123456', strokeWidth: 2 } }],
+		['axisFontColor', '#654321', { fontColor: '#654321' }],
+		['axisFontSize', '18', { fontSize: 18 }],
+	])('commits only the changed axis control: %s', (key, next, patch) => {
+		const { section, control, onChange } = mount();
+		const original = chart();
+		original.axes![0] = {
+			...original.axes![0],
+			numFmt: { formatCode: '0%', sourceLinked: true },
+			spPr: { strokeColor: '#abcdef', strokeWidth: 2 },
+		};
+		section.update(original);
+		const field = control<HTMLInputElement>(`pptx.chart.${key}`);
+		if (typeof next === 'boolean') {
+			field.checked = next;
+		} else {
+			field.value = String(next);
+		}
+		field.dispatchEvent(new Event('change'));
+		expect(onChange).toHaveBeenLastCalledWith({
+			...original,
+			axes: [{ ...original.axes![0], ...patch }],
+		});
+	});
+
 	it('authors combo, data-label, and detailed axis options', () => {
 		const onChange = vi.fn();
 		const section = createChartExhaustiveSection(document, (key) => key, onChange);

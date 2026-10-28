@@ -6,6 +6,7 @@ import {
 	upsertDataPoint,
 } from 'ooxml-ui/pptx';
 import type {
+	PptxChartAxisFormatting,
 	PptxChartData,
 	PptxChartDataLabelPosition,
 	PptxChartErrBarDir,
@@ -170,23 +171,34 @@ export function createChartExhaustiveSection(
 			},
 		});
 	};
-	const commitAxis = (): void => {
+	const commitAxis = (event: Event): void => {
 		const selected = current?.axes?.[axisIndex()];
 		if (!current || !selected) {
 			return;
 		}
+		// Commit only the changed control: displayed defaults are not authored styles.
+		const patches = new Map<EventTarget, Partial<PptxChartAxisFormatting>>([
+			[axisTitle.control, { titleText: axisTitle.control.value }],
+			[minorUnit.control, { minorUnit: value(minorUnit.control) }],
+			[minorGridlines.control, { minorGridlines: minorGridlines.control.checked }],
+			[
+				numberFormat.control,
+				{ numFmt: { ...selected.numFmt, formatCode: numberFormat.control.value } },
+			],
+			[
+				tickPosition.control,
+				{ tickLblPos: tickPosition.control.value as typeof selected.tickLblPos },
+			],
+			[axisColor.control, { spPr: { ...selected.spPr, strokeColor: axisColor.control.value } }],
+			[axisFontColor.control, { fontColor: axisFontColor.control.value }],
+			[axisFontSize.control, { fontSize: value(axisFontSize.control) }],
+		]);
+		const patch = event.currentTarget && patches.get(event.currentTarget);
+		if (!patch) {
+			return;
+		}
 		const axes = [...(current.axes ?? [])];
-		axes[axisIndex()] = {
-			...selected,
-			titleText: axisTitle.control.value,
-			minorUnit: value(minorUnit.control),
-			minorGridlines: minorGridlines.control.checked,
-			numFmt: { formatCode: numberFormat.control.value },
-			tickLblPos: tickPosition.control.value as typeof selected.tickLblPos,
-			spPr: { ...selected.spPr, strokeColor: axisColor.control.value },
-			fontColor: axisFontColor.control.value,
-			fontSize: value(axisFontSize.control),
-		};
+		axes[axisIndex()] = { ...selected, ...patch };
 		onChange({ ...current, axes });
 	};
 	for (const field of seriesFields) {
