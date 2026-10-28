@@ -39,3 +39,29 @@ it.each(['pointercancel', 'lostpointercapture', 'Escape'])(
 		view.destroy();
 	},
 );
+
+it('uses source crop geometry when painting an Excel picture', () => {
+	const wb = createWorkbook();
+	wb.sheets[0]!.drawings.push({
+		kind: 'image',
+		partName: 'xl/media/image1.png',
+		contentType: 'image/png',
+		anchor: {
+			from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 },
+			ext: { cx: 952500, cy: 476250 },
+		},
+		crop: { cropLeft: 0.25, cropRight: 0.25 },
+	});
+	const ctx = createTestContext(wb);
+	const container = document.createElement('div');
+	ctx.root.append(container);
+	const view = new GridView(ctx, container);
+	const layer = new DrawingLayer(view);
+	layer.render();
+	const img = container.querySelector<HTMLImageElement>('.xg-obj img')!;
+	expect(img.style.width).toBe('200px');
+	expect(img.style.left).toBe('-50px');
+	expect(img.parentElement?.style.overflow).toBe('hidden');
+	layer.destroy();
+	view.destroy();
+});

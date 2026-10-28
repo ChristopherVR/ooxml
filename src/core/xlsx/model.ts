@@ -535,6 +535,9 @@ export interface ImageObject {
 	contentType: string;
 	name?: string;
 	description?: string;
+	crop?: import('../drawingml/picture-crop').DrawingPictureCrop;
+	/** Original anchor keeps picture extensions through unrelated edits. */
+	sourceXml?: string;
 }
 
 export type ChartType = ChartSummaryType;

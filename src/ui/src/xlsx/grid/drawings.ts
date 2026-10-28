@@ -1,3 +1,4 @@
+import { imageRectFromCrop } from 'ooxml-core/geometry';
 // Pictures, charts and SmartArt over the grid, positioned from their anchors in the quadrant of their
 // top-left cell. Pictures come from the package parts as object URLs; charts are drawn by the core
 // (`chartView` + `renderChartSvg`) from live cell values. When editing, objects can be selected,
@@ -159,6 +160,19 @@ export class DrawingLayer {
 			});
 			const url = this.#url(drawing.partName, drawing.contentType);
 			if (url) img.src = url;
+			const rect = imageRectFromCrop(
+				{ x: 0, y: 0, width: box.w, height: box.h },
+				{ cropLeft: 0, cropTop: 0, cropRight: 0, cropBottom: 0, ...drawing.crop },
+			);
+			node.style.overflow = 'hidden';
+			Object.assign(img.style, {
+				position: 'absolute',
+				left: `${rect.x}px`,
+				top: `${rect.y}px`,
+				width: `${rect.width}px`,
+				height: `${rect.height}px`,
+				maxWidth: 'none',
+			});
 			node.append(img);
 			node.setAttribute('role', 'img');
 		} else if (drawing.kind === 'chart') {

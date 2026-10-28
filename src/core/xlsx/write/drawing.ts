@@ -1,3 +1,4 @@
+import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { NS, buildXml, first, parseXml } from '../../xml/index';
@@ -280,7 +281,15 @@ export function writeDrawing(
 				RELATIONSHIP_TYPES.image,
 				relativeTarget(partName, object.partName),
 			);
-			body += anchorXml(object.anchor, pictureXml(object, nextId++, relId), 'oneCell');
+			const xml =
+				object.sourceXml && sourceDrawing
+					? reanchor(object.sourceXml, object.anchor)
+					: anchorXml(object.anchor, pictureXml(object, nextId++, relId), 'oneCell');
+			const picture = parseXml(xml);
+			const fill = picture.getElementsByTagNameNS(NS.xdr, 'blipFill')[0];
+			if (fill && !sameModel(object.crop, parsePictureCrop(fill)))
+				applyPictureCrop(fill, object.crop);
+			body += buildXml(picture);
 			continue;
 		}
 		const chartPart = writeChart(writer, object);

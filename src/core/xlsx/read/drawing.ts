@@ -1,3 +1,4 @@
+import { parsePictureCrop } from '../../drawingml/picture-crop';
 import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index';
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { parseChart } from './chart';
@@ -100,7 +101,8 @@ export function parseDrawing(
 		const cNvPr = nonVisual(content);
 		const name = att(cNvPr, 'name');
 		if (content.localName === 'pic') {
-			const blip = first(xdr(content, 'blipFill'), 'blip', NS.a);
+			const blipFill = xdr(content, 'blipFill');
+			const blip = first(blipFill, 'blip', NS.a);
 			const rel = rels.get(relAttr(blip, 'embed') ?? '');
 			const target = rel ? source.target(partName, rel) : undefined;
 			if (!target || !source.has(target)) {
@@ -110,6 +112,8 @@ export function parseDrawing(
 			const image: DrawingObject = {
 				kind: 'image',
 				anchor,
+				sourceXml: selfContainedXml(anchorEl),
+				...(parsePictureCrop(blipFill) ? { crop: parsePictureCrop(blipFill)! } : {}),
 				partName: target,
 				contentType: source.contentType(target) ?? 'application/octet-stream',
 			};

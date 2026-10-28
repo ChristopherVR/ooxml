@@ -75,3 +75,32 @@ export function deleteDrawing(ctx: EditContext, s: number, index: number): void 
 		{ sheet: s },
 	);
 }
+
+/** Crops the picture in source-image fractions (one undo step). Negative insets pad the frame. */
+export function setPictureCrop(
+	ctx: EditContext,
+	s: number,
+	index: number,
+	crop: import('../../drawingml/picture-crop').DrawingPictureCrop,
+): void {
+	const drawing = drawingAt(ctx, s, index);
+	if (drawing.kind !== 'image') throw new RangeError('Only pictures can be cropped');
+	const sides = ['cropLeft', 'cropTop', 'cropRight', 'cropBottom'] as const;
+	if (
+		sides.some((side) => crop[side] !== undefined && !Number.isFinite(crop[side])) ||
+		1 - (crop.cropLeft ?? 0) - (crop.cropRight ?? 0) <= 0 ||
+		1 - (crop.cropTop ?? 0) - (crop.cropBottom ?? 0) <= 0
+	)
+		throw new RangeError('Picture crop needs a positive source span and finite insets');
+	ctx.run(
+		'Crop picture',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			drawing.crop = Object.fromEntries(
+				sides.flatMap((side) => (crop[side] === undefined ? [] : [[side, crop[side]]])),
+			);
+		},
+		{ sheet: s },
+	);
+}

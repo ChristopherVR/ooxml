@@ -218,6 +218,12 @@ export interface EditSession {
 	setDefinedName(name: DefinedName): void;
 	deleteDefinedName(name: string, localSheet?: number): void;
 	/** Moves or resizes the picture, chart or shape at `index` of the sheet's drawings. */
+	/** Sets source crop insets on an image, with history. */
+	setPictureCrop(
+		sheet: number,
+		index: number,
+		crop: import('../../drawingml/picture-crop').DrawingPictureCrop,
+	): void;
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;

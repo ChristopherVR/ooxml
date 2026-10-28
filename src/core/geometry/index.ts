@@ -93,3 +93,5 @@ export * from './nudge';
 export * from './element-transform';
 export * from './preset-shape-evaluator';
 export * from './ooxml-arc';
+
+export * from './picture-crop';
