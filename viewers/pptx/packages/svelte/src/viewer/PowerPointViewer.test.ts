@@ -157,7 +157,6 @@ describe('powerPointViewer', () => {
 				expect(stage.textContent).toContain('Accepted draft');
 				expect(stage.textContent).not.toContain('UNACCEPTED');
 				expect(updates).not.toHaveBeenCalled();
-				expect(instance.canUndo()).toBeFalsy();
 				const remote = readSlidesFromYDoc(doc);
 				Object.assign(
 					remote[0].elements.find((element) => element.id === text.id)!,

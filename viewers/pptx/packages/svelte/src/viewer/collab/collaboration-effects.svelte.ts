@@ -16,7 +16,7 @@ export interface CollaborationEffectsHost {
 	isPublishable: () => boolean;
 	flushLocalSlides: (slides: PptxSlide[]) => void;
 	/** Route Undo and Redo through the room's history while it is writable (returns the release). */
-	bindHistory: () => (() => void) | void;
+	bindHistory?: () => (() => void) | void;
 	/** Tear the session down with the component (the shared session controller also leaves on `pagehide`). */
 	destroy: () => void;
 }
@@ -41,7 +41,7 @@ export function registerCollaborationEffects(host: CollaborationEffectsHost): vo
 		}
 	});
 
-	$effect(() => host.bindHistory());
+	$effect(() => host.bindHistory?.());
 
 	// Leave the room and drop the pagehide listeners when the component goes.
 	$effect(() => () => host.destroy());
