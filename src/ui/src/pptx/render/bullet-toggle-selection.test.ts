@@ -1,13 +1,19 @@
 /**
  * bullet-toggle-selection.test.ts: with an inline selection active, Bullets /
- * Numbering touch only the paragraphs the selection intersects (PowerPoint),
+ * Numbering touch only the paragraphs the selection intersects (PowerPoint;
+ * a bare caret switching a list's kind converts the whole list instead),
  * and the selection is remapped over the inserted / removed marker segments.
  */
 
 import type { PptxElement, TextSegment } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { isBulletMarkerSegment, toggleElementBullets } from './bullet-toggle';
+import {
+	isBulletMarkerSegment,
+	paragraphBulletKind,
+	splitBulletParagraphs,
+	toggleElementBullets,
+} from './bullet-toggle';
 import {
 	selectionBulletKind,
 	setSelectionBullets,
@@ -279,5 +285,126 @@ describe('toggleSelectionBullets', () => {
 		const { patch } = setSelectionBullets(el, 'bullet', null, [seg('live')]);
 		expect(texts(patch)).toStrictEqual(['• ', 'live']);
 		expect((patch as { textStyle: { listType?: string } }).textStyle.listType).toBeUndefined();
+	});
+});
+
+describe('a caret in a list switches the whole list (Word / Google Docs)', () => {
+	const bullet = (text: string, level = 0): TextSegment[] => [
+		seg('•', { bulletInfo: { char: '•' }, paragraphLevel: level }),
+		seg(text, { paragraphLevel: level }),
+	];
+	const numbered = (text: string, ordinal: number, level = 0): TextSegment[] => [
+		seg(`${ordinal + 1}.`, {
+			bulletInfo: { autoNumType: 'arabicPeriod', autoNumStartAt: 1, paragraphIndex: ordinal },
+			paragraphLevel: level,
+		}),
+		seg(text, { paragraphLevel: level }),
+	];
+	const kinds = (patch: Partial<PptxElement>) =>
+		splitBulletParagraphs((patch as { textSegments: TextSegment[] }).textSegments).map(
+			(paragraph) => paragraphBulletKind(paragraph.segments),
+		);
+	/** A collapsed caret inside the text run at `index`. */
+	const caret = (index: number, offset = 1) => ({
+		startSegIdx: index,
+		startOffset: offset,
+		endSegIdx: index,
+		endOffset: offset,
+	});
+
+	it('converts every item of a bulleted list to numbered, from any item', () => {
+		const el = textElement([...bullet('A'), brk(), ...bullet('B'), brk(), ...bullet('C')]);
+		for (const index of [1, 4, 7]) {
+			const { patch } = toggleSelectionBullets(el, 'numbered', caret(index));
+			expect(kinds(patch)).toStrictEqual(['numbered', 'numbered', 'numbered']);
+		}
+	});
+
+	it('numbers the converted list consecutively', () => {
+		const el = textElement([...bullet('A'), brk(), ...bullet('B'), brk(), ...bullet('C')]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', caret(4));
+		const segments = (patch as { textSegments: TextSegment[] }).textSegments;
+		expect(
+			splitBulletParagraphs(segments).map((p) => p.segments[0]?.bulletInfo?.paragraphIndex),
+		).toStrictEqual([0, 1, 2]);
+	});
+
+	it('converts a numbered list back to bullets', () => {
+		const el = textElement([...numbered('A', 0), brk(), ...numbered('B', 1)]);
+		const { patch } = toggleSelectionBullets(el, 'bullet', caret(1));
+		expect(kinds(patch)).toStrictEqual(['bullet', 'bullet']);
+	});
+
+	it('keeps the caret where it was', () => {
+		const el = textElement([...bullet('A'), brk(), ...bullet('Bee'), brk(), ...bullet('C')]);
+		const { patch, newSelection } = toggleSelectionBullets(el, 'numbered', caret(4, 2));
+		const segments = (patch as { textSegments: TextSegment[] }).textSegments;
+		expect(newSelection?.startSegIdx).toBe(newSelection?.endSegIdx);
+		expect(newSelection?.startOffset).toBe(newSelection?.endOffset);
+		expect(segments[newSelection!.startSegIdx].text).toBe('Bee');
+		expect(newSelection?.startOffset).toBe(2);
+	});
+
+	it('stops at a paragraph with no list on either side', () => {
+		const el = textElement([
+			seg('Intro'),
+			brk(),
+			...bullet('A'),
+			brk(),
+			...bullet('B'),
+			brk(),
+			seg('Outro'),
+			brk(),
+			...bullet('Z'),
+		]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', caret(3));
+		expect(kinds(patch)).toStrictEqual(['none', 'numbered', 'numbered', 'none', 'bullet']);
+	});
+
+	it('stops at a same-level item of the other kind', () => {
+		const el = textElement([...numbered('A', 0), brk(), ...bullet('B'), brk(), ...bullet('C')]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', caret(4));
+		expect(kinds(patch)).toStrictEqual(['numbered', 'numbered', 'numbered']);
+		const back = toggleSelectionBullets(el, 'bullet', caret(1));
+		expect(kinds(back.patch)).toStrictEqual(['bullet', 'bullet', 'bullet']);
+	});
+
+	it('carries nested deeper items with the list, and stops at a shallower level', () => {
+		const el = textElement([
+			...bullet('Top'),
+			brk(),
+			...bullet('A', 1),
+			brk(),
+			...bullet('a1', 2),
+			brk(),
+			...bullet('B', 1),
+			brk(),
+			...bullet('Next top'),
+		]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', caret(4));
+		expect(kinds(patch)).toStrictEqual(['bullet', 'numbered', 'numbered', 'numbered', 'bullet']);
+	});
+
+	it('turns a list off for the caret paragraph only', () => {
+		const el = textElement([...bullet('A'), brk(), ...bullet('B'), brk(), ...bullet('C')]);
+		const { patch } = toggleSelectionBullets(el, 'bullet', caret(4));
+		expect(kinds(patch)).toStrictEqual(['bullet', 'none', 'bullet']);
+	});
+
+	it('lists only the caret paragraph when it had no list', () => {
+		const el = textElement([seg('A'), brk(), seg('B'), brk(), seg('C')]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', caret(2));
+		expect(kinds(patch)).toStrictEqual(['none', 'numbered', 'none']);
+	});
+
+	it('keeps a range selection scoped to the paragraphs it touches', () => {
+		const el = textElement([...bullet('A'), brk(), ...bullet('B'), brk(), ...bullet('C')]);
+		const { patch } = toggleSelectionBullets(el, 'numbered', {
+			startSegIdx: 4,
+			startOffset: 0,
+			endSegIdx: 4,
+			endOffset: 1,
+		});
+		expect(kinds(patch)).toStrictEqual(['bullet', 'numbered', 'bullet']);
 	});
 });

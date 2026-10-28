@@ -1,7 +1,10 @@
 /**
  * Selection-scoped Bullets / Numbering: PowerPoint applies the ribbon's list
  * buttons to the paragraphs the text selection intersects, and to the whole
- * body when the shape (not a text range) is selected.
+ * body when the shape (not a text range) is selected. One deliberate
+ * difference: a bare caret in a list paragraph that switches between bullets
+ * and numbering converts the whole list around it, as Word and Google Docs do
+ * (see `applyListStyleUpdate`).
  *
  * `toggleSelectionBullets` is the one decision every binding's Bullets /
  * Numbering click routes through: it rewrites only the in-scope paragraphs
@@ -63,7 +66,8 @@ export function selectionBulletKind(
 
 /**
  * Set every paragraph the selection intersects to `kind` (every paragraph
- * when there is no selection), returning the element patch and the selection
+ * when there is no selection; the whole list around a bare caret that
+ * switches a list paragraph to the other kind), returning the element patch and the selection
  * remapped onto the rewritten segments. Numbered paragraphs are counted
  * consecutively so the renderer shows "1. 2. 3.".
  */
