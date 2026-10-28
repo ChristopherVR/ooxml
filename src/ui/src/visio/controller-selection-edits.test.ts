@@ -3,6 +3,7 @@ import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
 import { ViewerController } from './controller';
 import type { CancellableEditor } from './worker-editor';
+import { visioResizeSelectionFrame } from 'ooxml-core/visio/ui';
 const edit: CancellableEditor = async (bytes, commands) => {
 	const result = await editVsdx(bytes, commands);
 	return { ...result, document: await parseVsdx(result.bytes) };
@@ -69,5 +70,45 @@ it('refuses newer selection intent during an asynchronous gesture edit', async (
 	await refused;
 	expect(controller.exportVsdx().bytes).toEqual(before);
 	expect(controller.state.edit).toMatchObject({ canUndo: false, error: null });
+	controller.destroy();
+});
+
+it('rejects a saved pose that differs from the promised preview before accepting history', async () => {
+	const controller = await setup();
+	const bytes = controller.exportVsdx().bytes;
+	const page = controller.state.document!.pages[0]!;
+	const frame = visioResizeSelectionFrame(page, ['1'])!;
+	await expect(
+		controller.applySelectionEdits([move], { pageId: page.id, members: [{ id: '1', frame }] }),
+	).rejects.toThrow('Dependent formulas');
+	expect(controller.exportVsdx().bytes).toEqual(bytes);
+	expect(controller.state.edit).toMatchObject({ busy: false, canUndo: false });
+	expect(controller.state.document!.pages[0]).toBe(page);
+	controller.destroy();
+});
+
+it('snapshots geometry promises before asynchronous work', async () => {
+	let release!: () => void;
+	const waiting = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	const controller = await setup(async (bytes, commands) => {
+		await waiting;
+		return edit(bytes, commands);
+	});
+	const bytes = controller.exportVsdx().bytes;
+	const page = controller.state.document!.pages[0]!;
+	const frame = visioResizeSelectionFrame(page, ['1'])!;
+	const pending = controller.applySelectionEdits([move], {
+		pageId: page.id,
+		members: [{ id: '1', frame }],
+	});
+	const rejected = expect(pending).rejects.toThrow('Dependent formulas');
+	frame.pinX = 2;
+	frame.pinY = 3;
+	frame.transform = [1, 0, 0, 1, 0.5, 2.5];
+	release();
+	await rejected;
+	expect(controller.exportVsdx().bytes).toEqual(bytes);
 	controller.destroy();
 });

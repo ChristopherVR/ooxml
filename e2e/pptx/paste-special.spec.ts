@@ -54,112 +54,122 @@ function pasteSpecialDialog(page: Page) {
 }
 
 test.describe('cross-binding Paste Special', () => {
-	test('Ctrl+Alt+V opens a dialog offering all four paste formats', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await selectAndCopy(page);
-				await pressShortcut(page, 'Control+Alt+v');
-				const dialog = pasteSpecialDialog(page);
-				const present = await dialog.isVisible().catch(() => false);
-				const optionCount = present ? await dialog.getByRole('radio').count() : 0;
-				return { present, optionCount };
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'Ctrl+Alt+V opens a dialog offering all four paste formats',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await selectAndCopy(page);
+					await pressShortcut(page, 'Control+Alt+v');
+					const dialog = pasteSpecialDialog(page);
+					const present = await dialog.isVisible().catch(() => false);
+					const optionCount = present ? await dialog.getByRole('radio').count() : 0;
+					return { present, optionCount };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return report(name, ['Ctrl+Alt+V did not open a Paste Special dialog']);
-			}
-			return value.optionCount === 4
-				? []
-				: report(name, [`the dialog offered ${value.optionCount} formats, not 4`]);
-		});
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return report(name, ['Ctrl+Alt+V did not open a Paste Special dialog']);
+				}
+				return value.optionCount === 4
+					? []
+					: report(name, [`the dialog offered ${value.optionCount} formats, not 4`]);
+			});
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-	test('does not open with an empty clipboard', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await pressShortcut(page, 'Control+Alt+v');
-				return {
-					present: await pasteSpecialDialog(page)
-						.isVisible()
-						.catch(() => false),
-				};
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'does not open with an empty clipboard',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await pressShortcut(page, 'Control+Alt+v');
+					return {
+						present: await pasteSpecialDialog(page)
+							.isVisible()
+							.catch(() => false),
+					};
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			value.present
-				? report(name, ['Ctrl+Alt+V opened Paste Special with nothing on the clipboard'])
-				: [],
-		);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.present
+					? report(name, ['Ctrl+Alt+V opened Paste Special with nothing on the clipboard'])
+					: [],
+			);
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-	test('choosing Keep Text Only inserts exactly one bare text box', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await selectAndCopy(page);
-				const before = await stageElements(page).count();
-				await pressShortcut(page, 'Control+Alt+v');
-				const dialog = pasteSpecialDialog(page);
-				await dialog.getByRole('radio', { name: /keep text only/iu }).check();
-				await dialog.getByRole('button', { name: /^ok$/iu }).click();
-				await page.waitForTimeout(500);
-				return { delta: (await stageElements(page).count()) - before };
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'choosing Keep Text Only inserts exactly one bare text box',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await selectAndCopy(page);
+					const before = await stageElements(page).count();
+					await pressShortcut(page, 'Control+Alt+v');
+					const dialog = pasteSpecialDialog(page);
+					await dialog.getByRole('radio', { name: /keep text only/iu }).check();
+					await dialog.getByRole('button', { name: /^ok$/iu }).click();
+					await page.waitForTimeout(500);
+					return { delta: (await stageElements(page).count()) - before };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			value.delta === 1
-				? []
-				: report(name, [`Paste Special changed the element count by ${value.delta}, not 1`]),
-		);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.delta === 1
+					? []
+					: report(name, [`Paste Special changed the element count by ${value.delta}, not 1`]),
+			);
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-	test('an ordinary paste shows the Paste Options follow-up toolbar', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await selectAndCopy(page);
-				await pressShortcut(page, 'Control+v');
-				const toolbar = page.locator('[data-pptx-paste-options]').first();
-				return { present: await toolbar.isVisible().catch(() => false) };
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'an ordinary paste shows the Paste Options follow-up toolbar',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await selectAndCopy(page);
+					await pressShortcut(page, 'Control+v');
+					const toolbar = page.locator('[data-pptx-paste-options]').first();
+					return { present: await toolbar.isVisible().catch(() => false) };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			value.present
-				? []
-				: report(name, ['an ordinary paste did not show the Paste Options toolbar']),
-		);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.present
+					? []
+					: report(name, ['an ordinary paste did not show the Paste Options toolbar']),
+			);
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

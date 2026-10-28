@@ -4,6 +4,9 @@ import {
 	type ViewerEditState,
 	type SourceSnapshot,
 	type VsdxExportResult,
+	snapshotVisioGeometryExpectation,
+	assertVisioGeometryExpectation,
+	type VisioGeometryExpectation,
 } from 'ooxml-core/visio/ui';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
 import {
@@ -696,10 +699,13 @@ export class ViewerController {
 		return this.#replacement.apply(plan, token);
 	}
 	/** Gesture batches may only edit the captured current-page selection. */
-	async applySelectionEdits(edits: readonly VisioEdit[]): Promise<void> {
+	async applySelectionEdits(
+		edits: readonly VisioEdit[],
+		expected?: VisioGeometryExpectation,
+	): Promise<void> {
 		const preview = this.#previewSink;
 		try {
-			return await this.#applySelectionEdits(edits, preview);
+			return await this.#applySelectionEdits(edits, preview, expected);
 		} catch (error) {
 			if (!preview) throw error;
 			preview(undefined);
@@ -708,6 +714,7 @@ export class ViewerController {
 	async #applySelectionEdits(
 		edits: readonly VisioEdit[],
 		preview: ((document: VisioDocument | undefined) => void) | undefined,
+		expected?: VisioGeometryExpectation,
 	): Promise<void> {
 		this.#assertAlive();
 		const revision = this.#revision;
@@ -718,6 +725,7 @@ export class ViewerController {
 		// Members of a selected container move with it, as in Visio.
 		const selected = new Set(page ? visioWithContainerMembers(page, ids) : ids);
 		const commands = snapshotEdits(edits);
+		const geometry = expected && snapshotVisioGeometryExpectation(expected);
 		if (this.#destroyed || revision !== this.#revision)
 			throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
 		if (
@@ -725,14 +733,35 @@ export class ViewerController {
 			!selected.size ||
 			!commands.length ||
 			!state.selectedShapes.every((shape) => visioSelectionIsOnPage(shape, pageId)) ||
+			(geometry &&
+				(geometry.pageId !== pageId ||
+					geometry.members.some((member) => !selected.has(member.id)))) ||
 			commands.some(
 				(command) =>
 					!('shapeId' in command) || command.pageId !== pageId || !selected.has(command.shapeId),
 			)
 		)
 			throw new Error('Selection edits must target selected shapes on the current page.');
-		if (preview) return this.#preview(commands, preview);
-		return this.#mutate('edit', commands, undefined, undefined, true);
+		if (preview)
+			return this.#preview(commands, (document) => {
+				try {
+					if (document && geometry) assertVisioGeometryExpectation(document, geometry);
+				} catch {
+					return preview(undefined);
+				}
+				preview(document);
+			});
+		return this.#mutate(
+			'edit',
+			commands,
+			undefined,
+			undefined,
+			true,
+			undefined,
+			undefined,
+			undefined,
+			geometry,
+		);
 	}
 	/** Capture an internal drawing intent before pointer movement or draft input. */
 	captureCreationToken(pageId: string): ViewerCreationToken {
@@ -1215,6 +1244,7 @@ export class ViewerController {
 		creation?: CreationContext,
 		replacement?: ReplacementMutation,
 		remoteChange?: RemoteSourceChange,
+		geometry?: VisioGeometryExpectation,
 	): Promise<void> {
 		this.#assertAlive();
 		if (kind !== 'remote' && !this.canEdit) throw new Error('The drawing is read-only.');
@@ -1277,6 +1307,7 @@ export class ViewerController {
 			assertViewableDocument(document);
 			if (document.format !== 'vsdx')
 				throw new Error('A VSDX edit or history operation cannot change the source format.');
+			if (geometry) assertVisioGeometryExpectation(document, geometry);
 			if (edited && !edited.changedParts.length) {
 				if (replacement)
 					this.#requireReplacement({ ...replacement.context, operationGeneration: id }, true);

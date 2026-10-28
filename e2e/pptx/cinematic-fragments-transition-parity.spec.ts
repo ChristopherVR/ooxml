@@ -191,66 +191,70 @@ async function sampleFragments(
 }
 
 test.describe('cinematic fragment transition parity', () => {
-	test('every binding renders the same fragment descriptor for all seven presets', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openInPresentMode(page, origin);
-				await expect(await slideTitle(page, SLIDES.base)).toBeVisible();
+	test(
+		'every binding renders the same fragment descriptor for all seven presets',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openInPresentMode(page, origin);
+					await expect(await slideTitle(page, SLIDES.base)).toBeVisible();
 
-				const samples: FragmentSample[] = [];
-				for (const preset of PRESETS) {
-					samples.push(await sampleFragments(page, preset, preset));
-				}
-				return samples;
-			},
-			{ concurrency: 'sequential' },
-		);
+					const samples: FragmentSample[] = [];
+					for (const preset of PRESETS) {
+						samples.push(await sampleFragments(page, preset, preset));
+					}
+					return samples;
+				},
+				{ concurrency: 'sequential' },
+			);
 
-		expect(results.length).toBeGreaterThan(1);
-		const [reference, ...candidates] = results;
+			expect(results.length).toBeGreaterThan(1);
+			const [reference, ...candidates] = results;
 
-		for (const preset of PRESETS) {
-			const referenceSample = reference.value.find((s) => s.preset === preset);
-			expect(referenceSample, `${reference.framework.name} sampled ${preset}`).toBeDefined();
-			expect(
-				referenceSample!.fragmentGeometry.length,
-				`${reference.framework.name}/${preset}: more than one fragment (not a single-layer stand-in)`,
-			).toBeGreaterThan(1);
-		}
-
-		const perCandidateProblems: string[] = [];
-		for (const candidate of candidates) {
-			const problems: string[] = [];
 			for (const preset of PRESETS) {
-				const referenceSample = reference.value.find((s) => s.preset === preset)!;
-				const candidateSample = candidate.value.find((s) => s.preset === preset);
-				if (!candidateSample) {
-					problems.push(`${preset}: no sample captured`);
-					continue;
-				}
-				if (candidateSample.keyframesNames.join(',') !== referenceSample.keyframesNames.join(',')) {
-					problems.push(
-						`${preset}: keyframes [${candidateSample.keyframesNames.join(', ')}] ` +
-							`!= reference [${referenceSample.keyframesNames.join(', ')}]`,
-					);
-				}
-				if (candidateSample.fragmentGeometry.length !== referenceSample.fragmentGeometry.length) {
-					problems.push(
-						`${preset}: ${candidateSample.fragmentGeometry.length} fragments ` +
-							`!= reference's ${referenceSample.fragmentGeometry.length}`,
-					);
-				}
+				const referenceSample = reference.value.find((s) => s.preset === preset);
+				expect(referenceSample, `${reference.framework.name} sampled ${preset}`).toBeDefined();
+				expect(
+					referenceSample!.fragmentGeometry.length,
+					`${reference.framework.name}/${preset}: more than one fragment (not a single-layer stand-in)`,
+				).toBeGreaterThan(1);
 			}
-			if (problems.length > 0) {
-				perCandidateProblems.push(formatDiff(candidate.framework.name, problems));
-			}
-		}
 
-		expect(perCandidateProblems.join('\n\n')).toBe('');
-	});
+			const perCandidateProblems: string[] = [];
+			for (const candidate of candidates) {
+				const problems: string[] = [];
+				for (const preset of PRESETS) {
+					const referenceSample = reference.value.find((s) => s.preset === preset)!;
+					const candidateSample = candidate.value.find((s) => s.preset === preset);
+					if (!candidateSample) {
+						problems.push(`${preset}: no sample captured`);
+						continue;
+					}
+					if (
+						candidateSample.keyframesNames.join(',') !== referenceSample.keyframesNames.join(',')
+					) {
+						problems.push(
+							`${preset}: keyframes [${candidateSample.keyframesNames.join(', ')}] ` +
+								`!= reference [${referenceSample.keyframesNames.join(', ')}]`,
+						);
+					}
+					if (candidateSample.fragmentGeometry.length !== referenceSample.fragmentGeometry.length) {
+						problems.push(
+							`${preset}: ${candidateSample.fragmentGeometry.length} fragments ` +
+								`!= reference's ${referenceSample.fragmentGeometry.length}`,
+						);
+					}
+				}
+				if (problems.length > 0) {
+					perCandidateProblems.push(formatDiff(candidate.framework.name, problems));
+				}
+			}
+
+			expect(perCandidateProblems.join('\n\n')).toBe('');
+		},
+	);
 });

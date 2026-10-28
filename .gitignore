@@ -53,3 +53,4 @@ desktop/src-tauri/gen/
 
 # Report written by bun run docs:check
 /docs-health.md
+/.browser-timings/

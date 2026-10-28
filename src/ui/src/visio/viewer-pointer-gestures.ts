@@ -45,7 +45,12 @@ export class ViewerPointerGestures {
 			active(): boolean;
 			announce(message: string): void;
 			/** Guides and Dynamic Grid: adjust a drag delta and show alignment hints. */
-			snap?(page: VisioPage, ids: readonly string[], delta: VisioPagePoint): VisioPagePoint;
+			snap?(
+				page: VisioPage,
+				ids: readonly string[],
+				delta: VisioPagePoint,
+				axis?: 'x' | 'y',
+			): VisioPagePoint;
 			clearSnap?(): void;
 		},
 	) {
@@ -231,7 +236,7 @@ export class ViewerPointerGestures {
 		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point && this.#current(drag)) {
-			if (drag.preview) drag.preview.update(this.#delta(drag, point));
+			if (drag.preview) drag.preview.update(this.#delta(drag, point, event));
 			const box = drag.marquee && visioMarqueeBox(drag.start, point);
 			if (box)
 				for (const [name, value] of Object.entries(box))
@@ -240,10 +245,18 @@ export class ViewerPointerGestures {
 		event.preventDefault();
 		event.stopImmediatePropagation();
 	}
-	#delta(drag: Gesture, point: VisioPagePoint): VisioPagePoint {
-		const delta = visioPageDragDelta(drag.start, point);
+	#delta(drag: Gesture, point: VisioPagePoint, event: PointerEvent): VisioPagePoint {
+		const delta = visioPageDragDelta(drag.start, point, event.shiftKey);
+		if (!Number.isFinite(delta.x) || !Number.isFinite(delta.y)) return delta;
+		if (event.altKey) {
+			this.options.clearSnap?.();
+			return delta;
+		}
+		const axis = event.shiftKey ? (delta.y === 0 ? 'x' : 'y') : undefined;
 		const ids = drag.selection.map((shape) => shape.id);
-		return this.options.snap?.(drag.page, ids, delta) ?? delta;
+		const snapped = this.options.snap?.(drag.page, ids, delta, axis) ?? delta;
+		// A host-provided snap callback must not move the constrained axis either.
+		return { x: axis === 'y' ? 0 : snapped.x, y: axis === 'x' ? 0 : snapped.y };
 	}
 	#cancel(): void {
 		this.#release()();
@@ -295,7 +308,7 @@ export class ViewerPointerGestures {
 		const edits = visioMoveCommands(
 			drag.page,
 			drag.selection.map((shape) => shape.id),
-			this.#delta(drag, point),
+			this.#delta(drag, point, event),
 		);
 		this.options.clearSnap?.();
 		if (!edits?.length || !this.#current(drag)) {

@@ -270,8 +270,8 @@ export class VisioViewerElement extends BaseElement {
 		const editing = createCanvasEditing(this.#viewport, this.controller, {
 			pointerActive: () => this.#commands.tool === 'pointer',
 			announce,
-			snap: (page, ids, delta) =>
-				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep),
+			snap: (page, ids, delta, axis) =>
+				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep, axis),
 			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
 		});
 		this.#edit = editing.edit;

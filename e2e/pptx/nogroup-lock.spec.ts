@@ -87,57 +87,63 @@ async function readGroupState(
 }
 
 test.describe('noGrp lock disables Group', () => {
-	test('a selection including a locked shape disables Group in the ribbon and the context menu', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			(page, origin) => readGroupState(page, origin, ['Locked A', 'Free B']),
-			{ viewport: WIDE },
-		);
+	test(
+		'a selection including a locked shape disables Group in the ribbon and the context menu',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				(page, origin) => readGroupState(page, origin, ['Locked A', 'Free B']),
+				{ viewport: WIDE },
+			);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.ribbonPresent && !value.ribbonDisabled) {
-				problems.push('ribbon Group button is enabled with a locked shape in the selection');
-			}
-			if (value.menuPresent && !value.menuDisabled) {
-				problems.push('context-menu Group command is enabled with a locked shape in the selection');
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.ribbonPresent && !value.ribbonDisabled) {
+					problems.push('ribbon Group button is enabled with a locked shape in the selection');
+				}
+				if (value.menuPresent && !value.menuDisabled) {
+					problems.push(
+						'context-menu Group command is enabled with a locked shape in the selection',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 
-	test('control: a selection of two unlocked shapes keeps Group usable', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			(page, origin) => readGroupState(page, origin, ['Free B', 'Free C']),
-			{ viewport: WIDE },
-		);
+	test(
+		'control: a selection of two unlocked shapes keeps Group usable',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				(page, origin) => readGroupState(page, origin, ['Free B', 'Free C']),
+				{ viewport: WIDE },
+			);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (!value.ribbonPresent) {
-				problems.push('no ribbon Group button found for an unlocked multi-selection');
-			} else if (value.ribbonDisabled) {
-				problems.push('ribbon Group button is disabled for two unlocked shapes');
-			}
-			if (!value.menuPresent) {
-				problems.push('context menu offers no "group" command for an unlocked multi-selection');
-			} else if (value.menuDisabled) {
-				problems.push('context-menu Group command is disabled for two unlocked shapes');
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (!value.ribbonPresent) {
+					problems.push('no ribbon Group button found for an unlocked multi-selection');
+				} else if (value.ribbonDisabled) {
+					problems.push('ribbon Group button is disabled for two unlocked shapes');
+				}
+				if (!value.menuPresent) {
+					problems.push('context menu offers no "group" command for an unlocked multi-selection');
+				} else if (value.menuDisabled) {
+					problems.push('context-menu Group command is disabled for two unlocked shapes');
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

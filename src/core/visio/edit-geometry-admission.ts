@@ -259,6 +259,7 @@ export function resizeGeometry(
 	check: () => void,
 	lineEditShapes: ReadonlySet<Element> = new Set(),
 	glueShapes: ReadonlySet<Element> = new Set(),
+	groupResizeShapes: ReadonlySet<Element> = new Set(),
 ): void {
 	const sections = children(shape, 'Section').filter((node) => attribute(node, 'N') === 'Geometry');
 	let depends: ReturnType<typeof createVisioDependencyQuery> | undefined;
@@ -307,7 +308,12 @@ export function resizeGeometry(
 				const analysis = analyzeVisioFormula(formula);
 				if (!analysis.references.length && numeric(node) === 0) continue;
 				const cell = `Geometry${Number(attribute(section, 'IX') ?? '0') + 1}.${attribute(node, 'N')}${attribute(row, 'IX')}`;
-				depends ??= createVisioDependencyQuery(roots, { check, lineEditShapes, glueShapes });
+				depends ??= createVisioDependencyQuery(roots, {
+					check,
+					lineEditShapes,
+					glueShapes,
+					groupResizeShapes,
+				});
 				if (
 					!depends(
 						{ pageId: edit.pageId, shapeId: edit.shapeId, cell },

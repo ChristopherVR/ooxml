@@ -33,61 +33,63 @@ const FIXTURE = fixture('bar3d-horizontal.pptx');
 const SERIES_FILLS = ['rgb(68, 114, 196)', 'rgb(237, 125, 49)'];
 
 test.describe('horizontal bar3D chart', () => {
-	test('renders a real chart whose bars are wider than tall in every binding', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'renders a real chart whose bars are wider than tall in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, FIXTURE);
-				await slideStage(page).waitFor();
-				await page
-					.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
-					.first()
-					.waitFor({ timeout: 20_000 });
-				const charts = await fingerprintCharts(page);
-				return charts;
-			},
-			{ path: '/?barChart3D=0' },
-		);
-
-		const failures = results.flatMap(({ framework, value: charts }) => {
-			const problems: string[] = [];
-			if (charts.length === 0) {
-				return [`${framework.name}: no chart rendered at all`];
-			}
-			const chart = charts[0];
-			// The legend paints its own small colour-key swatch in each series'
-			// colour too (a fixed ~10x10 square), so filtering on fill alone also
-			// matches those; a real bar mark is far larger than a legend key.
-			const LEGEND_SWATCH_MAX_SIDE = 16;
-			const bars = chart.shapes.filter(
-				(shape) =>
-					shape.tag === 'rect' &&
-					SERIES_FILLS.includes(shape.fill) &&
-					shape.geometry[2] > LEGEND_SWATCH_MAX_SIDE &&
-					shape.geometry[3] > LEGEND_SWATCH_MAX_SIDE,
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, FIXTURE);
+					await slideStage(page).waitFor();
+					await page
+						.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
+						.first()
+						.waitFor({ timeout: 20_000 });
+					const charts = await fingerprintCharts(page);
+					return charts;
+				},
+				{ path: '/?barChart3D=0' },
 			);
-			if (bars.length === 0) {
-				problems.push(
-					`renders a blank/unrecognised chart: no rect carries either series colour ` +
-						`(saw fills: ${[...new Set(chart.shapes.map((s) => s.fill))].join(', ') || 'none'})`,
+
+			const failures = results.flatMap(({ framework, value: charts }) => {
+				const problems: string[] = [];
+				if (charts.length === 0) {
+					return [`${framework.name}: no chart rendered at all`];
+				}
+				const chart = charts[0];
+				// The legend paints its own small colour-key swatch in each series'
+				// colour too (a fixed ~10x10 square), so filtering on fill alone also
+				// matches those; a real bar mark is far larger than a legend key.
+				const LEGEND_SWATCH_MAX_SIDE = 16;
+				const bars = chart.shapes.filter(
+					(shape) =>
+						shape.tag === 'rect' &&
+						SERIES_FILLS.includes(shape.fill) &&
+						shape.geometry[2] > LEGEND_SWATCH_MAX_SIDE &&
+						shape.geometry[3] > LEGEND_SWATCH_MAX_SIDE,
 				);
-			}
-			for (const bar of bars) {
-				const [, , width, height] = bar.geometry;
-				if (!(width > height)) {
+				if (bars.length === 0) {
 					problems.push(
-						`a bar rect is ${width}x${height} (not wider than tall) - expected a HORIZONTAL bar`,
+						`renders a blank/unrecognised chart: no rect carries either series colour ` +
+							`(saw fills: ${[...new Set(chart.shapes.map((s) => s.fill))].join(', ') || 'none'})`,
 					);
 				}
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				for (const bar of bars) {
+					const [, , width, height] = bar.geometry;
+					if (!(width > height)) {
+						problems.push(
+							`a bar rect is ${width}x${height} (not wider than tall) - expected a HORIZONTAL bar`,
+						);
+					}
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

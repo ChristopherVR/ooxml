@@ -419,6 +419,25 @@ describe('grouping stencil instances', () => {
 		memberIds: ['1', '2'],
 	};
 
+	it('does not reuse stencil grouping permission to resize their new parent', async () => {
+		const bytes = await source();
+		const original = bytes.slice();
+		expect(
+			await refused(bytes, [
+				group,
+				{
+					type: 'resize-shape',
+					pageId: '0',
+					shapeId: '9',
+					width: 2,
+					height: 5.5,
+					anchor: { x: 0, y: 0 },
+				},
+			]),
+		).toBe('UNSUPPORTED_GEOMETRY_EDIT');
+		expect(bytes).toEqual(original);
+	});
+
 	it('groups instances with group-local pins and ungroups them back', async () => {
 		const bytes = await source();
 		const grouped = await editVsdx(bytes, [group]);

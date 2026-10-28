@@ -35,7 +35,7 @@ it('plans Group for two or more admissible top-level shapes in page order', asyn
 	expect(visioUngroupCommand(after, ['4', '3'])).toBeUndefined();
 	expect(visioMovableGroup(after, '4')).toBeDefined();
 	expect(visioMovementShape(after, '4')).toBeDefined();
-	expect(visioResizeShape(after, '4')).toBeUndefined();
+	expect(visioResizeShape(after, '4')).toBeDefined();
 });
 
 it('moves a group that holds stencil shapes and keeps glued groups out of the pointer scope', async () => {

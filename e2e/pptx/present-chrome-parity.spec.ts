@@ -106,97 +106,111 @@ async function probeToolbar(page: Page): Promise<ToolbarProbe> {
 }
 
 test.describe('cross-binding slide-show chrome', () => {
-	test('every binding floats the same show toolbar with the same controls', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await startShow(page, origin);
-			return probeToolbar(page);
-		});
+	test(
+		'every binding floats the same show toolbar with the same controls',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await startShow(page, origin);
+				return probeToolbar(page);
+			});
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.bar) {
-				problems.push(`${framework.name}: renders no [data-pptx-present-toolbar] during a show`);
-				continue;
-			}
-			if (value.ids.join(',') !== [...PRESENT_TOOLBAR_ORDER].join(',')) {
-				problems.push(
-					`${framework.name}: control order is [${value.ids.join(', ')}], shared spec is [${PRESENT_TOOLBAR_ORDER.join(', ')}]`,
-				);
-			}
-			if (value.role !== 'toolbar') {
-				problems.push(`${framework.name}: the bar's role is ${String(value.role)}, not "toolbar"`);
-			}
-			if (!value.roleName) {
-				problems.push(`${framework.name}: the bar has no accessible name`);
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('every control is named exactly as React names it', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await startShow(page, origin);
-			return probeToolbar(page);
-		});
-
-		const { reference, candidates } = splitReference(results);
-		const problems: string[] = [];
-		for (const { framework, value } of candidates) {
-			for (const id of PRESENT_TOOLBAR_ORDER) {
-				const expected = reference.value.names[id];
-				const actual = value.names[id];
-				if (expected === undefined) {
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.bar) {
+					problems.push(`${framework.name}: renders no [data-pptx-present-toolbar] during a show`);
 					continue;
 				}
-				if (actual !== expected) {
+				if (value.ids.join(',') !== [...PRESENT_TOOLBAR_ORDER].join(',')) {
 					problems.push(
-						`${framework.name}: "${id}" is named "${String(actual)}", React names it "${expected}"`,
+						`${framework.name}: control order is [${value.ids.join(', ')}], shared spec is [${PRESENT_TOOLBAR_ORDER.join(', ')}]`,
 					);
 				}
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('the bar is painted to the same measurements everywhere', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await startShow(page, origin);
-			return probeToolbar(page);
-		});
-
-		const { reference, candidates } = splitReference(results);
-		const problems: string[] = [];
-		// Whole CSS pixels at a device pixel ratio of 1, so 1px absorbs rounding
-		// without absorbing a real difference (the 18px-vs-28px caret this found).
-		const tolerance = 1;
-		for (const { framework, value } of candidates) {
-			if (!value.bar || !reference.value.bar) {
-				continue;
-			}
-			for (const [key, expected] of Object.entries(reference.value.bar)) {
-				const actual = value.bar[key as keyof typeof value.bar];
-				if (Math.abs(actual - expected) > tolerance) {
-					problems.push(`${framework.name}: bar ${key} is ${actual}px, React paints ${expected}px`);
+				if (value.role !== 'toolbar') {
+					problems.push(
+						`${framework.name}: the bar's role is ${String(value.role)}, not "toolbar"`,
+					);
+				}
+				if (!value.roleName) {
+					problems.push(`${framework.name}: the bar has no accessible name`);
 				}
 			}
-			for (const id of PRESENT_TOOLBAR_ORDER) {
-				const expected = reference.value.boxes[id];
-				const actual = value.boxes[id];
-				if (!expected || !actual) {
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'every control is named exactly as React names it',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await startShow(page, origin);
+				return probeToolbar(page);
+			});
+
+			const { reference, candidates } = splitReference(results);
+			const problems: string[] = [];
+			for (const { framework, value } of candidates) {
+				for (const id of PRESENT_TOOLBAR_ORDER) {
+					const expected = reference.value.names[id];
+					const actual = value.names[id];
+					if (expected === undefined) {
+						continue;
+					}
+					if (actual !== expected) {
+						problems.push(
+							`${framework.name}: "${id}" is named "${String(actual)}", React names it "${expected}"`,
+						);
+					}
+				}
+			}
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'the bar is painted to the same measurements everywhere',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await startShow(page, origin);
+				return probeToolbar(page);
+			});
+
+			const { reference, candidates } = splitReference(results);
+			const problems: string[] = [];
+			// Whole CSS pixels at a device pixel ratio of 1, so 1px absorbs rounding
+			// without absorbing a real difference (the 18px-vs-28px caret this found).
+			const tolerance = 1;
+			for (const { framework, value } of candidates) {
+				if (!value.bar || !reference.value.bar) {
 					continue;
 				}
-				if (
-					Math.abs(actual.width - expected.width) > tolerance ||
-					Math.abs(actual.height - expected.height) > tolerance
-				) {
-					problems.push(
-						`${framework.name}: "${id}" is ${actual.width}x${actual.height}, React paints ${expected.width}x${expected.height}`,
-					);
+				for (const [key, expected] of Object.entries(reference.value.bar)) {
+					const actual = value.bar[key as keyof typeof value.bar];
+					if (Math.abs(actual - expected) > tolerance) {
+						problems.push(
+							`${framework.name}: bar ${key} is ${actual}px, React paints ${expected}px`,
+						);
+					}
+				}
+				for (const id of PRESENT_TOOLBAR_ORDER) {
+					const expected = reference.value.boxes[id];
+					const actual = value.boxes[id];
+					if (!expected || !actual) {
+						continue;
+					}
+					if (
+						Math.abs(actual.width - expected.width) > tolerance ||
+						Math.abs(actual.height - expected.height) > tolerance
+					) {
+						problems.push(
+							`${framework.name}: "${id}" is ${actual.width}x${actual.height}, React paints ${expected.width}x${expected.height}`,
+						);
+					}
 				}
 			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

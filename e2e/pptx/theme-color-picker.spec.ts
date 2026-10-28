@@ -254,46 +254,48 @@ async function runScenario(page: Page, origin: string): Promise<ThemePickResult>
 }
 
 test.describe('theme colour picker', () => {
-	test('picking a theme swatch repaints and saves a schemeClr ref in every binding', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, runScenario, {
-			concurrency: 'sequential',
-		});
+	test(
+		'picking a theme swatch repaints and saves a schemeClr ref in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, runScenario, {
+				concurrency: 'sequential',
+			});
 
-		const expectedRgb = hexToRgb(EXPECTED_HEX);
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.gridOverflow > 0.5) {
-				problems.push(
-					`the Fill row's theme swatches reach ${value.gridOverflow.toFixed(1)}px past the row`,
-				);
-			}
-			if (value.smallestSwatch < MIN_SWATCH_PX) {
-				problems.push(
-					`the Fill row's smallest theme swatch is ${value.smallestSwatch.toFixed(1)}px, below ${MIN_SWATCH_PX}px`,
-				);
-			}
-			if (value.afterSwatchBg !== expectedRgb) {
-				problems.push(
-					`repaints the shape ${value.afterSwatchBg}, expected the resolved theme colour ${expectedRgb} (${EXPECTED_HEX})`,
-				);
-			}
-			if (!value.savedSchemeClr) {
-				problems.push(
-					'saved XML does not carry <a:schemeClr val="accent1"><a:lumMod val="20000"/>' +
-						'<a:lumOff val="80000"/></a:schemeClr> for the shape\'s solidFill',
-				);
-			}
-			if (!value.savedSrgbClr) {
-				problems.push(
-					`picking a custom hex afterwards did not save <a:srgbClr val="${THEME_SHAPE_CUSTOM_HEX.replace('#', '')}">`,
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const expectedRgb = hexToRgb(EXPECTED_HEX);
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.gridOverflow > 0.5) {
+					problems.push(
+						`the Fill row's theme swatches reach ${value.gridOverflow.toFixed(1)}px past the row`,
+					);
+				}
+				if (value.smallestSwatch < MIN_SWATCH_PX) {
+					problems.push(
+						`the Fill row's smallest theme swatch is ${value.smallestSwatch.toFixed(1)}px, below ${MIN_SWATCH_PX}px`,
+					);
+				}
+				if (value.afterSwatchBg !== expectedRgb) {
+					problems.push(
+						`repaints the shape ${value.afterSwatchBg}, expected the resolved theme colour ${expectedRgb} (${EXPECTED_HEX})`,
+					);
+				}
+				if (!value.savedSchemeClr) {
+					problems.push(
+						'saved XML does not carry <a:schemeClr val="accent1"><a:lumMod val="20000"/>' +
+							'<a:lumOff val="80000"/></a:schemeClr> for the shape\'s solidFill',
+					);
+				}
+				if (!value.savedSrgbClr) {
+					problems.push(
+						`picking a custom hex afterwards did not save <a:srgbClr val="${THEME_SHAPE_CUSTOM_HEX.replace('#', '')}">`,
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

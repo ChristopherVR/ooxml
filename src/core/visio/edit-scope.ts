@@ -1,6 +1,6 @@
 import { geometryChangedCells, type VisioGeometryEdit } from './edit-commands';
 import type { VisioPackage } from './package';
-import { analyzeVisioFormula } from './formula';
+import { analyzeVisioFormula, visioFormulaCachedValue } from './formula';
 import { fail } from './package-common';
 import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet';
 import { createVisioDependencyQuery } from './edit-recalculate';
@@ -62,6 +62,29 @@ export async function assertGeometryPackageScope(
 			cell,
 		})),
 	);
+	// A group resize also changes its members, even on the first resize before parent-scaling
+	// formulas exist. Package/style dependencies must see those implicit writes too. This set
+	// only enables read-only dependency discovery here; the writer proves its own local tree.
+	const groupResizeShapes = new Set<Element>();
+	const groupResizePages = new Set<string>();
+	for (const command of commands) {
+		if (command.type !== 'resize-shape' || !command.anchor) continue;
+		const group = children(children(roots.get(command.pageId), 'Shapes')[0], 'Shape').find(
+			(shape) =>
+				attribute(shape, 'ID') === command.shapeId &&
+				attribute(shape, 'Type') === 'Group' &&
+				!shape.hasAttribute('Master'),
+		);
+		if (!group) continue;
+		groupResizePages.add(command.pageId);
+		groupResizeShapes.add(group);
+		for (const member of Array.from(group.getElementsByTagNameNS(group.namespaceURI!, 'Shape'))) {
+			check();
+			groupResizeShapes.add(member);
+			for (const cell of ['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY'])
+				changed.push({ pageId: command.pageId, shapeId: attribute(member, 'ID')!, cell });
+		}
+	}
 	const deleting = commands.filter((command) => command.type === 'delete-shape');
 	let query: ReturnType<typeof createVisioDependencyQuery> | undefined;
 	const hasMasterInstances = [...roots.values()].some((root) =>
@@ -74,7 +97,7 @@ export async function assertGeometryPackageScope(
 		const key = JSON.stringify([pageId, shapeId, cell.toLowerCase()]);
 		let result = dependencyCache.get(key);
 		if (result === undefined) {
-			query ??= createVisioDependencyQuery(roots, { check });
+			query ??= createVisioDependencyQuery(roots, { check, groupResizeShapes });
 			result = query({ pageId, shapeId, cell }, changed);
 			dependencyCache.set(key, result);
 		}
@@ -148,6 +171,22 @@ export async function assertGeometryPackageScope(
 					? attribute(node, 'ID')
 					: item.pageId;
 			const style = item.style || (admitted(node) && node.localName === 'StyleSheets');
+			if (
+				pageId &&
+				groupResizePages.has(pageId) &&
+				node.localName === 'Cell' &&
+				attribute(node, 'N')?.toLowerCase() === 'resizemode' &&
+				node.parentNode?.nodeName.endsWith('PageSheet') &&
+				(node.hasAttribute('E') ||
+					visioFormulaCachedValue('0', attribute(node, 'U')).unit !== 'scalar' ||
+					executableCellFormula(attribute(node, 'F')) ||
+					attribute(node, 'F') === 'Inh' ||
+					!['0', '2'].includes(attribute(node, 'V') ?? ''))
+			)
+				fail(
+					'UNSUPPORTED_GEOMETRY_EDIT',
+					'Nondefault page-level ResizeMode is not supported for group resizing.',
+				);
 			// Styles need instance context and local override analysis below.
 			if (admitted(node) && !style) {
 				inspectFormula(node, path, pageId);

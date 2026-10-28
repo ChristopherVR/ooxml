@@ -1,5 +1,113 @@
 # Visio capability ledger
 
+## Flat local group resizing, 2026-10-28
+
+A selected flat local group now has eight resize handles. Its ordinary,
+axis-aligned members can scale with the group or keep their size while their
+positions scale, following constant local ResizeMode values (0 inherits, 1
+repositions, 2 scales). The parent may be rotated or reflected; off-center local
+pins, reflected members and drawing scales are preserved. A gesture previews a
+frame without changing source, then commits one undoable transaction.
+
+The writer reuses the existing anchored-resize geometry and formula evaluator.
+Literal member transforms acquire proportional parent formulas. Authored and
+guarded formulas are retained only when evaluation proves the requested final
+pose. The same proof checks size, position and aspect locks and affected caches.
+Package and style dependency checks include child writes even before scaling
+formulas exist, including a group created earlier in the same transaction.
+
+This subset excludes nested groups, rotated members, stencil members, glue,
+layer membership, unsupported formulas and nondefault page-level ResizeMode.
+Unanchored group resizing, group flips and groups in a multi-selection resize
+remain unsupported. General Visio group semantics and native desktop acceptance
+are still open; generated fixtures and browser workflows are not parity evidence.
+
+Microsoft's [ResizeMode reference](https://learn.microsoft.com/en-us/office/client-developer/visio/resizemode-cell-shape-transform-section)
+defines the mode values used by this implementation.
+
+Verification: 4,256 core Visio tests passed (200 optional skips), and 1,323 Visio
+UI tests passed (eight optional skips). Strict core, UI and viewer typechecks,
+core/UI builds and changed-source lint/format checks passed. Twelve browser
+workflows passed across vanilla, React, Vue, Angular, Svelte and Solid, covering
+group and multi-selection resizing, cancellation, history, save/reopen and
+ungrouping. The group test selects the reopened group through its keyboard target
+because the bounding-box center can be empty SVG space. No native Visio acceptance,
+packaged-consumer rerun or `verify` script was run for this increment.
+
+## Multi-selection resize, 2026-10-28
+
+Two or more selected ordinary, axis-aligned local shapes now share eight resize
+handles. Dragging scales their sizes and spacing together while fixing the
+opposite selection edge or corner. Reflections, off-center local pins and drawing
+scales are supported. Crossing an opposite handle clamps the common scale to
+preserve each member's minimum size, without introducing a flip. A drag makes one
+source transaction and one undo step; selection persists through undo and redo.
+
+Saved content stays unchanged during the frame preview. Cancelled or stale
+gestures discard the preview. A protected member rejects the entire batch, and
+the core checks every promised final pose before history accepts the result:
+cross-shape formulas must not silently change an earlier member after its command.
+
+The plan and geometry validation live in core. The shared UI paints the frame and
+commits the batch for all six bindings. This reuses PowerPoint's existing shared
+resize geometry with independent per-axis minimums; no algorithm was copied into
+a viewer or binding.
+
+This is a bounded editing subset, not native Visio parity. Mixed selections with
+rotated shapes, local groups, stencil instances, layers or attached connectors do
+not get multi-selection handles. Single-selection behavior remains available
+under its existing admission rules. General group resizing, resize modifiers and snapping,
+and native multi-selection comparisons remain open. Microsoft Visio is not
+registered on the machine used for this increment, so generated round-trip and
+browser fixtures do not establish desktop equivalence.
+
+Verification: 6,873 Visio/shared geometry tests passed (200 optional skips), and
+1,343 Visio UI/shared interaction tests passed (eight optional skips). Core and UI
+typechecks/builds, the viewer's complete `check`, and its final typecheck including
+the browser specs passed. The main browser suite passed 227 tests (715 optional
+fixture cases skipped), including the new workflow in all six demos; all 36
+framework-component browser tests also passed. The new browser test was corrected
+to allow pointer-coordinate rounding, compare saves against the measured preview,
+and wait for the edit worker before exporting source for inspection.
+All nine workspace tarballs passed clean-consumer installation, declarations and
+worker checks, and their packaged browser consumer passed across all six
+frameworks. That last stage ran through `test:packages:workspace` after regenerating
+the consumer fixture removed by the earlier registry-package check.
+
+## Precise shape dragging and shared geometry, 2026-10-28
+
+Moving shapes now supports Alt to bypass snapping, Shift to constrain movement to
+one page axis, and Alt+Shift together. The modifiers are read for each preview and
+again on release. A constrained drag only displays hints on its moving axis and
+cannot be pulled off-axis by grid or shape snapping. Grid snapping follows Snap &
+Glue independently of View > Grid visibility. This supersedes the hidden-grid
+limitation in the 2026-10-10 entry below.
+
+The existing source-backed batch handles one or multiple selected shapes, history,
+selection retention and protection failures. This increment changes shape-body
+movement; connector endpoint, resize and rotation modifiers retain their previous
+behavior. Dynamic Grid size matching, complete snap target coverage and native
+interaction equivalence remain open.
+
+PowerPoint's aspect-ratio constraint helper and its tests now live in shared core
+geometry, with compatible UI re-exports. No new Visio resize capability is claimed
+by that extraction. See `docs/visio-parity-review.md` in the repository root for the
+current editing priorities and reuse inventory.
+
+Verification: 4,209 Visio/core geometry tests passed (200 optional skips), and
+1,359 shared Visio UI/PowerPoint interaction tests passed (eight optional skips).
+The final coordinate-validation and modifier regressions also passed after the
+last code changes. Strict core and both UI typechecks, core/UI builds, changed-file
+lint/format checks and the complete viewer `check` command passed. The main browser
+suite passed 221 tests (715 optional cases skipped), including the updated workflow
+in all six demos. The 36 native-component browser tests passed in a final serial
+run; earlier concurrent runs had intermittent loading, history and theme failures.
+These browser components are framework-native controls, not Microsoft Visio itself.
+The nine workspace tarballs passed clean-consumer installation, declarations and
+worker checks; their packaged browser consumer mounted all six frameworks and
+verified selection, duplication, clipboard transactions and saved worker edits.
+No new Microsoft Visio desktop oracle was run for this increment.
+
 ## Connector jump formatting and print preservation, 2026-10-12
 
 Page Setup now includes Layout and Routing controls for jump placement, style,

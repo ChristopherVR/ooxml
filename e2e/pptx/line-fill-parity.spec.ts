@@ -84,174 +84,178 @@ interface ElementFacts {
 }
 
 test.describe('cross-binding a:ln and a:blipFill/a:tile', () => {
-	test('every binding paints compound lines, tiles, miter and reflection alike', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every binding paints compound lines, tiles, miter and reflection alike',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			return page.evaluate(() => {
-				const nodes = [
-					...document.querySelectorAll('[data-pptx-viewport] [data-element-id]'),
-				] as HTMLElement[];
-				return nodes.map((node) => {
-					const own = getComputedStyle(node);
-					// A tiled picture paints as a repeating background LAYER, which a
-					// binding may render on the element or on a child in place of the
-					// `<img>`; either is fine, the tiling values are what must match.
-					// Matched on `background-image` specifically, not the broader
-					// `background`: React wraps the paint layer in an intermediate
-					// `position:absolute` div that ALSO carries `background-color:
-					// transparent` for its own layering reasons, and that wrapper is
-					// encountered first in document order, so a bare `background` match
-					// silently read its un-set (`auto` / `0% 0%`) tiling values instead
-					// of the real paint layer's beneath it.
-					const layer = node.querySelector('div[style*="background-image"]');
-					const paint = layer ? getComputedStyle(layer) : own;
-					// The mirrored reflection sibling (`pptx-<binding>-reflection`, or
-					// `pptxv-reflection` for vanilla); excludes the differently-shaped
-					// `*-text-reflection` span a reflected text run also carries, which
-					// is not what these plain shapes render.
-					const reflectionEl = [
-						...node.querySelectorAll<HTMLElement>('[class*="reflection"]'),
-					].find((el) => !/text-reflection/u.test(el.className));
-					const reflectionMask = reflectionEl ? getComputedStyle(reflectionEl).maskImage : '';
-					// `@stPos` becomes a HOLD stop: the start colour repeated at a later
-					// offset before the ramp to the end colour begins. A plain fade goes
-					// straight from the start stop to the end stop, so its first two
-					// colour stops differ.
-					const maskColourStops = [...reflectionMask.matchAll(/rgba\([^)]*\)/gu)].map((m) => m[0]);
-					// The innermost element carrying text is the run span; a hollow
-					// run is the one place where the run's paint differs from the
-					// block's, so it must be read off the span and not the box.
-					const runs = [...node.querySelectorAll('span')].filter(
-						(span) => span.children.length === 0 && (span.textContent ?? '').trim().length > 0,
-					);
-					const run = runs[runs.length - 1];
-					const runCs = run ? getComputedStyle(run) : undefined;
-					// The shared stroke-outline overlay is an `<svg>` whose class ends in
-					// `-gradient-outline` (`pptx-react-gradient-outline`,
-					// `pptx-vue-gradient-outline`, `pptx-ng-gradient-outline`,
-					// `pptx-svelte-gradient-outline`, `pptx-vanilla-gradient-outline`); it
-					// is absent whenever the element's outline is a plain CSS border.
-					const overlaySvg = [...node.querySelectorAll('svg')].find((svg) =>
-						/gradient-outline/u.test(svg.getAttribute('class') ?? ''),
-					);
-					const overlayPaths = overlaySvg ? [...overlaySvg.querySelectorAll('path')] : [];
-					const firstOverlayPath = overlayPaths[0];
-					const overlayPathCs = firstOverlayPath ? getComputedStyle(firstOverlayPath) : undefined;
-					return {
-						borderTopStyle: own.borderTopStyle,
-						borderTopWidth: own.borderTopWidth,
-						strokeMiterlimit: own.strokeMiterlimit,
-						// The `@stPos` hold repeats the start colour as the mask's second
-						// stop; without it the gradient runs straight to the end colour.
-						reflectionHolds:
-							maskColourStops.length >= 2 && maskColourStops[0] === maskColourStops[1],
-						backgroundRepeat: paint.backgroundRepeat,
-						backgroundSize: paint.backgroundSize,
-						backgroundPosition: paint.backgroundPosition,
-						runPaint: runCs
-							? `${runCs.color} | ${runCs.webkitTextFillColor} | ${runCs.webkitTextStrokeWidth} ${runCs.webkitTextStrokeColor}`
-							: '-',
-						strokeOverlayWidths: overlayPaths.map((path) =>
-							Number.parseFloat(getComputedStyle(path).strokeWidth),
-						),
-						strokeOverlayColor: overlayPathCs?.stroke ?? '',
-						strokeOverlayDash: overlayPathCs?.strokeDasharray ?? '',
-					} satisfies ElementFacts;
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				return page.evaluate(() => {
+					const nodes = [
+						...document.querySelectorAll('[data-pptx-viewport] [data-element-id]'),
+					] as HTMLElement[];
+					return nodes.map((node) => {
+						const own = getComputedStyle(node);
+						// A tiled picture paints as a repeating background LAYER, which a
+						// binding may render on the element or on a child in place of the
+						// `<img>`; either is fine, the tiling values are what must match.
+						// Matched on `background-image` specifically, not the broader
+						// `background`: React wraps the paint layer in an intermediate
+						// `position:absolute` div that ALSO carries `background-color:
+						// transparent` for its own layering reasons, and that wrapper is
+						// encountered first in document order, so a bare `background` match
+						// silently read its un-set (`auto` / `0% 0%`) tiling values instead
+						// of the real paint layer's beneath it.
+						const layer = node.querySelector('div[style*="background-image"]');
+						const paint = layer ? getComputedStyle(layer) : own;
+						// The mirrored reflection sibling (`pptx-<binding>-reflection`, or
+						// `pptxv-reflection` for vanilla); excludes the differently-shaped
+						// `*-text-reflection` span a reflected text run also carries, which
+						// is not what these plain shapes render.
+						const reflectionEl = [
+							...node.querySelectorAll<HTMLElement>('[class*="reflection"]'),
+						].find((el) => !/text-reflection/u.test(el.className));
+						const reflectionMask = reflectionEl ? getComputedStyle(reflectionEl).maskImage : '';
+						// `@stPos` becomes a HOLD stop: the start colour repeated at a later
+						// offset before the ramp to the end colour begins. A plain fade goes
+						// straight from the start stop to the end stop, so its first two
+						// colour stops differ.
+						const maskColourStops = [...reflectionMask.matchAll(/rgba\([^)]*\)/gu)].map(
+							(m) => m[0],
+						);
+						// The innermost element carrying text is the run span; a hollow
+						// run is the one place where the run's paint differs from the
+						// block's, so it must be read off the span and not the box.
+						const runs = [...node.querySelectorAll('span')].filter(
+							(span) => span.children.length === 0 && (span.textContent ?? '').trim().length > 0,
+						);
+						const run = runs[runs.length - 1];
+						const runCs = run ? getComputedStyle(run) : undefined;
+						// The shared stroke-outline overlay is an `<svg>` whose class ends in
+						// `-gradient-outline` (`pptx-react-gradient-outline`,
+						// `pptx-vue-gradient-outline`, `pptx-ng-gradient-outline`,
+						// `pptx-svelte-gradient-outline`, `pptx-vanilla-gradient-outline`); it
+						// is absent whenever the element's outline is a plain CSS border.
+						const overlaySvg = [...node.querySelectorAll('svg')].find((svg) =>
+							/gradient-outline/u.test(svg.getAttribute('class') ?? ''),
+						);
+						const overlayPaths = overlaySvg ? [...overlaySvg.querySelectorAll('path')] : [];
+						const firstOverlayPath = overlayPaths[0];
+						const overlayPathCs = firstOverlayPath ? getComputedStyle(firstOverlayPath) : undefined;
+						return {
+							borderTopStyle: own.borderTopStyle,
+							borderTopWidth: own.borderTopWidth,
+							strokeMiterlimit: own.strokeMiterlimit,
+							// The `@stPos` hold repeats the start colour as the mask's second
+							// stop; without it the gradient runs straight to the end colour.
+							reflectionHolds:
+								maskColourStops.length >= 2 && maskColourStops[0] === maskColourStops[1],
+							backgroundRepeat: paint.backgroundRepeat,
+							backgroundSize: paint.backgroundSize,
+							backgroundPosition: paint.backgroundPosition,
+							runPaint: runCs
+								? `${runCs.color} | ${runCs.webkitTextFillColor} | ${runCs.webkitTextStrokeWidth} ${runCs.webkitTextStrokeColor}`
+								: '-',
+							strokeOverlayWidths: overlayPaths.map((path) =>
+								Number.parseFloat(getComputedStyle(path).strokeWidth),
+							),
+							strokeOverlayColor: overlayPathCs?.stroke ?? '',
+							strokeOverlayDash: overlayPathCs?.strokeDasharray ?? '',
+						} satisfies ElementFacts;
+					});
 				});
 			});
-		});
 
-		expect(results.length).toBeGreaterThan(1);
+			expect(results.length).toBeGreaterThan(1);
 
-		// Every binding must see the same ten elements.
-		for (const result of results) {
-			expect(result.value, `${result.framework.name} element count`).toHaveLength(10);
-		}
+			// Every binding must see the same ten elements.
+			for (const result of results) {
+				expect(result.value, `${result.framework.name} element count`).toHaveLength(10);
+			}
 
-		const [reference, ...rest] = results;
-		for (const other of rest) {
-			expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
-				reference.value,
-			);
-		}
+			const [reference, ...rest] = results;
+			for (const other of rest) {
+				expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
+					reference.value,
+				);
+			}
 
-		// And the reference values must be the CORRECT ones, so five bindings
-		// agreeing on a wrong answer still fails.
-		const [
-			dbl,
-			tri,
-			sng,
-			reflectionHold,
-			reflectionPlain,
-			algnInControl,
-			tilePlain,
-			tileCentred,
-			hollowText,
-			solidText,
-		] = reference.value;
+			// And the reference values must be the CORRECT ones, so five bindings
+			// agreeing on a wrong answer still fails.
+			const [
+				dbl,
+				tri,
+				sng,
+				reflectionHold,
+				reflectionPlain,
+				algnInControl,
+				tilePlain,
+				tileCentred,
+				hollowText,
+				solidText,
+			] = reference.value;
 
-		// None of `dbl`/`tri`/`sng` declare `a:ln/@algn`, so PowerPoint's default
-		// (`ctr`, the stroke centred on the path) applies. A `border-box` CSS
-		// border cannot straddle the box edge the way a centred stroke does, so
-		// the shared stroke-outline overlay paints these instead and the CSS
-		// border WIDTH is suppressed to 0 (each binding's Tailwind preflight
-		// still leaves `border-top-style` at its reset value of `solid` even at
-		// zero width, which paints nothing and is not the fact under test here;
-		// the overlay strand assertions below are).
-		expect(dbl.borderTopWidth).toBe('0px');
-		expect(tri.borderTopWidth).toBe('0px');
-		expect(sng.borderTopWidth).toBe('0px');
+			// None of `dbl`/`tri`/`sng` declare `a:ln/@algn`, so PowerPoint's default
+			// (`ctr`, the stroke centred on the path) applies. A `border-box` CSS
+			// border cannot straddle the box edge the way a centred stroke does, so
+			// the shared stroke-outline overlay paints these instead and the CSS
+			// border WIDTH is suppressed to 0 (each binding's Tailwind preflight
+			// still leaves `border-top-style` at its reset value of `solid` even at
+			// zero width, which paints nothing and is not the fact under test here;
+			// the overlay strand assertions below are).
+			expect(dbl.borderTopWidth).toBe('0px');
+			expect(tri.borderTopWidth).toBe('0px');
+			expect(sng.borderTopWidth).toBe('0px');
 
-		// `sng` -> one overlay strand at the FULL authored width (6 pt = 8 px).
-		// `dbl` / `tri` split that same width into two / three parallel strands
-		// that sum back to it (the compound line divides the weight, it does not
-		// add to it), all painted the outline's own colour with no dash.
-		expect(sng.strokeOverlayWidths).toStrictEqual([8]);
-		expect(dbl.strokeOverlayWidths).toStrictEqual([4, 4]);
-		expect(tri.strokeOverlayWidths).toStrictEqual([2.4, 3.2, 2.4]);
-		expect(dbl.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
-		expect(tri.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
-		expect(sng.strokeOverlayColor).toBe('rgb(192, 0, 0)');
-		expect(dbl.strokeOverlayColor).toBe(sng.strokeOverlayColor);
-		expect(tri.strokeOverlayColor).toBe(sng.strokeOverlayColor);
-		expect(sng.strokeOverlayDash).toBe('none');
+			// `sng` -> one overlay strand at the FULL authored width (6 pt = 8 px).
+			// `dbl` / `tri` split that same width into two / three parallel strands
+			// that sum back to it (the compound line divides the weight, it does not
+			// add to it), all painted the outline's own colour with no dash.
+			expect(sng.strokeOverlayWidths).toStrictEqual([8]);
+			expect(dbl.strokeOverlayWidths).toStrictEqual([4, 4]);
+			expect(tri.strokeOverlayWidths).toStrictEqual([2.4, 3.2, 2.4]);
+			expect(dbl.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
+			expect(tri.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
+			expect(sng.strokeOverlayColor).toBe('rgb(192, 0, 0)');
+			expect(dbl.strokeOverlayColor).toBe(sng.strokeOverlayColor);
+			expect(tri.strokeOverlayColor).toBe(sng.strokeOverlayColor);
+			expect(sng.strokeOverlayDash).toBe('none');
 
-		// `algn-in-control` explicitly declares `algn="in"`, PowerPoint's inset
-		// alignment, which is exactly what a `border-box` CSS border already
-		// draws: no stroke overlay at all, and a real solid border at the
-		// authored width.
-		expect(algnInControl.strokeOverlayWidths).toStrictEqual([]);
-		expect(algnInControl.strokeOverlayColor).toBe('');
-		expect(algnInControl.borderTopStyle).toBe('solid');
-		expect(algnInControl.borderTopWidth).toBe('8px');
+			// `algn-in-control` explicitly declares `algn="in"`, PowerPoint's inset
+			// alignment, which is exactly what a `border-box` CSS border already
+			// draws: no stroke overlay at all, and a real solid border at the
+			// authored width.
+			expect(algnInControl.strokeOverlayWidths).toStrictEqual([]);
+			expect(algnInControl.strokeOverlayColor).toBe('');
+			expect(algnInControl.borderTopStyle).toBe('solid');
+			expect(algnInControl.borderTopWidth).toBe('8px');
 
-		// `a:miter/@lim="800000"` is 800% -> an SVG ratio of 8 (4 is the default).
-		expect(sng.strokeMiterlimit).toBe('8');
-		expect(dbl.strokeMiterlimit).toBe('4');
+			// `a:miter/@lim="800000"` is 800% -> an SVG ratio of 8 (4 is the default).
+			expect(sng.strokeMiterlimit).toBe('8');
+			expect(dbl.strokeMiterlimit).toBe('4');
 
-		// `a:reflection/@stPos="50000"` holds the reflection at full opacity for
-		// half the fade before ramping out; without it the fade starts at once.
-		expect(reflectionHold.reflectionHolds).toBe(true);
-		expect(reflectionPlain.reflectionHolds).toBe(false);
+			// `a:reflection/@stPos="50000"` holds the reflection at full opacity for
+			// half the fade before ramping out; without it the fade starts at once.
+			expect(reflectionHold.reflectionHolds).toBe(true);
+			expect(reflectionPlain.reflectionHolds).toBe(false);
 
-		// `a:tile` sx/sy = 25% with the grid anchored top-left, then centred.
-		// ECMA-376 20.1.8.58 scales the tile from the picture's NATIVE size, not
-		// the shape's (92375c470): the fixture's image1.png is 16x16 px, so a
-		// 25% tile is 4x4 px however large the shape is.
-		expect(tilePlain.backgroundRepeat).toBe('repeat');
-		expect(tilePlain.backgroundSize).toBe('4px 4px');
-		expect(tilePlain.backgroundPosition).toBe('0% 0%');
-		expect(tileCentred.backgroundPosition).toBe('50% 50%');
+			// `a:tile` sx/sy = 25% with the grid anchored top-left, then centred.
+			// ECMA-376 20.1.8.58 scales the tile from the picture's NATIVE size, not
+			// the shape's (92375c470): the fixture's image1.png is 16x16 px, so a
+			// 25% tile is 4x4 px however large the shape is.
+			expect(tilePlain.backgroundRepeat).toBe('repeat');
+			expect(tilePlain.backgroundSize).toBe('4px 4px');
+			expect(tilePlain.backgroundPosition).toBe('0% 0%');
+			expect(tileCentred.backgroundPosition).toBe('50% 50%');
 
-		// `a:rPr > a:noFill`: the glyph interior is cleared while the 2px `a:ln`
-		// outline still draws the letterform. The control run, identical but for
-		// the `a:noFill`, keeps the blue its paragraph `lstStyle` supplies - so a
-		// binding that simply ignored the flag would fail on the first of these.
-		expect(hollowText.runPaint).toBe('rgba(0, 0, 0, 0) | rgba(0, 0, 0, 0) | 2px rgb(192, 0, 0)');
-		expect(solidText.runPaint).toBe('rgb(0, 0, 255) | rgb(0, 0, 255) | 2px rgb(192, 0, 0)');
-	});
+			// `a:rPr > a:noFill`: the glyph interior is cleared while the 2px `a:ln`
+			// outline still draws the letterform. The control run, identical but for
+			// the `a:noFill`, keeps the blue its paragraph `lstStyle` supplies - so a
+			// binding that simply ignored the flag would fail on the first of these.
+			expect(hollowText.runPaint).toBe('rgba(0, 0, 0, 0) | rgba(0, 0, 0, 0) | 2px rgb(192, 0, 0)');
+			expect(solidText.runPaint).toBe('rgb(0, 0, 255) | rgb(0, 0, 255) | 2px rgb(192, 0, 0)');
+		},
+	);
 });

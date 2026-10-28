@@ -21,6 +21,25 @@ async function page() {
 }
 
 describe('guide helpers', () => {
+	it.each(['x', 'y'] as const)(
+		'keeps %s-constrained moves on axis and omits other hints',
+		async (axis) => {
+			const scene = await page();
+			const delta = axis === 'x' ? { x: 4.45, y: 0 } : { x: 0, y: 6.95 };
+			const options = {
+				shapes: false,
+				guides: true,
+				threshold: 0.1,
+				grid: { x: 0.3, y: 0.3 },
+				axis,
+			};
+			const result = visioSnapMoveDelta(scene, ['1'], delta, options);
+			expect(result.delta[axis === 'x' ? 'y' : 'x']).toBe(0);
+			expect(result.delta[axis]).toBeCloseTo(axis === 'x' ? 4.5 : 7, 9);
+			expect(result.lines.length).toBeGreaterThan(0);
+			expect(result.lines.every((line) => line.axis === axis)).toBe(true);
+		},
+	);
 	it('lists guides and builds commands in drawing inches', async () => {
 		const scene = await page();
 		expect(visioPageGuides(scene)).toEqual([

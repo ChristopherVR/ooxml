@@ -82,6 +82,9 @@ export interface Point {
 export interface ResizeOptions {
 	/** Minimum width/height in element px. Defaults to `DEFAULT_INTERACTION_MIN_SIZE`. */
 	minSize?: number;
+	/** Per-axis minimums, in the same units as the box; override minSize when supplied. */
+	minWidth?: number;
+	minHeight?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +175,8 @@ export function applyResize(
 ): BoxTransform {
 	const scale = zoom || 1;
 	const minSize = opts.minSize ?? DEFAULT_INTERACTION_MIN_SIZE;
+	const minWidth = opts.minWidth ?? minSize;
+	const minHeight = opts.minHeight ?? minSize;
 	const rotation = rotationOf(box);
 
 	// Screen delta -> element px -> element-local frame.
@@ -190,16 +195,16 @@ export function applyResize(
 	const affectsBottom = handle === 'sw' || handle === 's' || handle === 'se';
 
 	if (affectsRight) {
-		newW = Math.max(minSize, box.width + dx);
+		newW = Math.max(minWidth, box.width + dx);
 	} else if (affectsLeft) {
-		newW = Math.max(minSize, box.width - dx);
+		newW = Math.max(minWidth, box.width - dx);
 		newX = box.x + (box.width - newW);
 	}
 
 	if (affectsBottom) {
-		newH = Math.max(minSize, box.height + dy);
+		newH = Math.max(minHeight, box.height + dy);
 	} else if (affectsTop) {
-		newH = Math.max(minSize, box.height - dy);
+		newH = Math.max(minHeight, box.height - dy);
 		newY = box.y + (box.height - newH);
 	}
 

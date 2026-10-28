@@ -36,58 +36,60 @@ interface ImgFacts {
 }
 
 test.describe('cross-binding a:blipFill/@rotWithShape on a shape-filled-by-picture', () => {
-	test('the picture stays upright while the shape outline still flips', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'the picture stays upright while the shape outline still flips',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			return page.evaluate(() => {
-				const nodes = [
-					...document.querySelectorAll('[data-pptx-viewport] [data-element-id]'),
-				] as HTMLElement[];
-				return nodes.map((node) => {
-					const img = node.querySelector('img');
-					return {
-						containerTransform: getComputedStyle(node).transform,
-						imgTransform: img ? getComputedStyle(img).transform : 'none',
-					} satisfies ImgFacts;
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				return page.evaluate(() => {
+					const nodes = [
+						...document.querySelectorAll('[data-pptx-viewport] [data-element-id]'),
+					] as HTMLElement[];
+					return nodes.map((node) => {
+						const img = node.querySelector('img');
+						return {
+							containerTransform: getComputedStyle(node).transform,
+							imgTransform: img ? getComputedStyle(img).transform : 'none',
+						} satisfies ImgFacts;
+					});
 				});
 			});
-		});
 
-		expect(results.length).toBeGreaterThan(1);
+			expect(results.length).toBeGreaterThan(1);
 
-		// Every binding must see the same two shapes, in the same order.
-		for (const result of results) {
-			expect(result.value, `${result.framework.name} element count`).toHaveLength(2);
-		}
+			// Every binding must see the same two shapes, in the same order.
+			for (const result of results) {
+				expect(result.value, `${result.framework.name} element count`).toHaveLength(2);
+			}
 
-		const [reference, ...rest] = results;
-		for (const other of rest) {
-			expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
-				reference.value,
-			);
-		}
+			const [reference, ...rest] = results;
+			for (const other of rest) {
+				expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
+					reference.value,
+				);
+			}
 
-		const [rotWithShapeFalse, rotWithShapeDefault] = reference.value;
+			const [rotWithShapeFalse, rotWithShapeDefault] = reference.value;
 
-		// Both trapezoids' OWN geometry still flips vertically: `flipV="1"` is
-		// unconditional on the shape, `rotWithShape` only governs the FILL.
-		// `scaleY(-1)` is `matrix(1, 0, 0, -1, 0, 0)`.
-		expect(rotWithShapeFalse.containerTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
-		expect(rotWithShapeDefault.containerTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
+			// Both trapezoids' OWN geometry still flips vertically: `flipV="1"` is
+			// unconditional on the shape, `rotWithShape` only governs the FILL.
+			// `scaleY(-1)` is `matrix(1, 0, 0, -1, 0, 0)`.
+			expect(rotWithShapeFalse.containerTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
+			expect(rotWithShapeDefault.containerTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
 
-		// `rotWithShape="0"`: the picture's own content layer must carry the
-		// EXACT inverse of the container's flip, so the two cancel out and the
-		// bitmap renders upright (this is the reported bug: it used to be
-		// 'none', so the picture flipped along with the outline).
-		expect(rotWithShapeFalse.imgTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
+			// `rotWithShape="0"`: the picture's own content layer must carry the
+			// EXACT inverse of the container's flip, so the two cancel out and the
+			// bitmap renders upright (this is the reported bug: it used to be
+			// 'none', so the picture flipped along with the outline).
+			expect(rotWithShapeFalse.imgTransform).toBe('matrix(1, 0, 0, -1, 0, 0)');
 
-		// The control shape (no `@rotWithShape`, schema default `true`) must be
-		// completely unaffected by this fix: its picture has no transform of its
-		// own and simply inherits the container's flip, exactly as before.
-		expect(rotWithShapeDefault.imgTransform).toBe('none');
-	});
+			// The control shape (no `@rotWithShape`, schema default `true`) must be
+			// completely unaffected by this fix: its picture has no transform of its
+			// own and simply inherits the container's flip, exactly as before.
+			expect(rotWithShapeDefault.imgTransform).toBe('none');
+		},
+	);
 });

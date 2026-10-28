@@ -7,7 +7,12 @@ import { wireViewerInputs } from '../viewer-input';
 import { renderPage } from '../render-svg';
 import { createVsdxFixture } from './fixture.mjs';
 
-export async function pointerViewer(protectedSecond = false, source = true, resizable = false) {
+export async function pointerViewer(
+	protectedSecond = false,
+	source = true,
+	resizable = false,
+	snapping: Pick<ConstructorParameters<typeof ViewerPointerGestures>[2], 'snap' | 'clearSnap'> = {},
+) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Movable'));
 	const xml = await zip.file('visio/pages/page1.xml')!.async('string');
 	const first = xml.match(/<Shape .*?<\/Shape>/s)![0];
@@ -66,6 +71,7 @@ export async function pointerViewer(protectedSecond = false, source = true, resi
 	let active = true;
 	const feedback: string[] = [];
 	const tool = new ViewerPointerGestures(viewport, controller, {
+		...snapping,
 		active: () => active,
 		announce: (message) => feedback.push(message),
 	});

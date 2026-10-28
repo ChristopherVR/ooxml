@@ -224,10 +224,7 @@ export function ribbonTab(page: Page, name: string): Locator {
 }
 
 /** Switch the ribbon to `name` and wait for the content row to settle. */
-export async function openRibbonTab(page: Page, name: string): Promise<void> {
-	await ribbonTab(page, name).click();
-	await page.waitForTimeout(150);
-}
+export { selectRibbonTab as openRibbonTab } from './render-ready';
 
 /** The properties inspector, when it is on screen. */
 export function inspector(page: Page): Locator {

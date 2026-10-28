@@ -21,6 +21,35 @@ function page() {
 	}));
 	return page;
 }
+it.each([
+	[
+		{ x: 4, y: 2 },
+		{ x: 3, y: 0 },
+	],
+	[
+		{ x: -2, y: 2 },
+		{ x: -3, y: 0 },
+	],
+	[
+		{ x: 2, y: 6 },
+		{ x: 0, y: -3 },
+	],
+	[
+		{ x: 2, y: 0 },
+		{ x: 0, y: 3 },
+	],
+	[
+		{ x: 3, y: 1 },
+		{ x: 2, y: 0 },
+	],
+] as const)('constrains page movement to the dominant axis: %j', (end, expected) => {
+	expect(visioPageDragDelta({ x: 1, y: 3 }, end, true)).toEqual(expected);
+});
+
+it('does not mask invalid pointer coordinates when constraining a drag', () => {
+	const delta = visioPageDragDelta({ x: 0, y: 0 }, { x: NaN, y: 1 }, true);
+	expect(visioMoveCommands(page(), ['a'], delta)).toBeUndefined();
+});
 it.each([0.5, 1, 2])('translates every pin by one physical delta at scale %s', (scale) => {
 	const scene = page();
 	scene.drawingToPageScale = scale;

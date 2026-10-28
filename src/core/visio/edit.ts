@@ -660,6 +660,13 @@ async function editVsdxTransaction(
 			command.type !== 'set-layer-properties' &&
 			!isVisioMasterDrop(command)
 		) {
+			// A group may have been created or pasted earlier in this transaction. Its member
+			// writes were not visible to the initial package proof; check the current tree too.
+			if (command.type === 'resize-shape' && command.anchor) {
+				const target = topShape(root, command.shapeId);
+				if (attribute(target, 'Type') === 'Group' && !target?.hasAttribute('Master'))
+					await assertGeometryPackageScope(pkg, new Set(pages.values()), [command], check, roots);
+			}
 			const changedPages =
 				instanceCommands.has(command) && isInstanceGeometryEdit(roots, command)
 					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)

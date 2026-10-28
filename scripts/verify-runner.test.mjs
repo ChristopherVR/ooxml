@@ -91,6 +91,24 @@ test('an unknown need is rejected', async () => {
 	);
 });
 
+test('an exclusive browser step drains running checks and gets the whole machine', async () => {
+	const active = new Set();
+	const order = [];
+	await runSteps([{ id: 'unit' }, { id: 'browser', exclusive: true }, { id: 'types' }], {
+		jobs: 3,
+		exec: async (step) => {
+			if (step.exclusive) assert.equal(active.size, 0);
+			else assert.ok(!active.has('browser'));
+			active.add(step.id);
+			order.push(step.id);
+			await delay(5);
+			active.delete(step.id);
+			return { code: 0, output: '' };
+		},
+	});
+	assert.deepEqual(order, ['unit', 'browser', 'types']);
+});
+
 test('defaultJobs is a quarter of the cores, at least one', () => {
 	assert.equal(defaultJobs(32), 8);
 	assert.equal(defaultJobs(2), 1);

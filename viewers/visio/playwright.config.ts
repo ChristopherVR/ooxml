@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import { resolve } from 'node:path';
+import { browserPerformance } from '../../scripts/browser-performance.mjs';
 
 // PLAYWRIGHT_PORT moves the preview server, so runs in separate worktrees do not collide.
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173);
@@ -8,6 +9,7 @@ export default defineConfig({
 	testDir: '../../e2e/visio',
 	testIgnore: ['native-building-blocks.spec.ts', 'native-theme.spec.ts', 'shadow-theme.spec.ts'],
 	fullyParallel: true,
+	workers: browserPerformance().workers,
 	use: {
 		baseURL: origin,
 		launchOptions: {
@@ -21,5 +23,7 @@ export default defineConfig({
 		env: { DOCS_BASE: '/', DOCS_OUT: resolve('.browser-test-dist') },
 		url: `${origin}/demo/`,
 		reuseExistingServer: false,
+		// This command builds every framework demo before the preview can answer.
+		timeout: 180_000,
 	},
 });

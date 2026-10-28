@@ -41,83 +41,100 @@ const SAMPLE = fixture('sample-deck.pptx');
 const ZOOM_SETTLE_MS = 400;
 
 test.describe('cross-binding application chrome', () => {
-	test('the title bar is painted to the same measurements everywhere', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			await slideStage(page).waitFor();
-			return measureChrome(page);
-		});
+	test(
+		'the title bar is painted to the same measurements everywhere',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				await slideStage(page).waitFor();
+				return measureChrome(page);
+			});
 
-		expect(titleBarProblems(results).join('\n')).toBe('');
-	});
+			expect(titleBarProblems(results).join('\n')).toBe('');
+		},
+	);
 
-	test('the status bar reports the same state and is named unambiguously', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			await slideStage(page).waitFor();
-			return measureChrome(page);
-		});
+	test(
+		'the status bar reports the same state and is named unambiguously',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				await slideStage(page).waitFor();
+				return measureChrome(page);
+			});
 
-		expect(statusBarProblems(results).join('\n')).toBe('');
-	});
+			expect(statusBarProblems(results).join('\n')).toBe('');
+		},
+	);
 
-	test('the status-bar zoom controls resize the rendered stage', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			await slideStage(page).waitFor();
-			const fitted = await stageWidth(page);
-			await zoomInButton(page).click();
-			await page.waitForTimeout(ZOOM_SETTLE_MS);
-			const zoomedIn = await stageWidth(page);
-			await zoomOutButton(page).click();
-			await page.waitForTimeout(ZOOM_SETTLE_MS);
-			const zoomedOut = await stageWidth(page);
-			await zoomFitButton(page).click();
-			await page.waitForTimeout(ZOOM_SETTLE_MS);
-			return { fitted, zoomedIn, zoomedOut, refitted: await stageWidth(page) } satisfies ZoomProbe;
-		});
+	test(
+		'the status-bar zoom controls resize the rendered stage',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				await slideStage(page).waitFor();
+				const fitted = await stageWidth(page);
+				await zoomInButton(page).click();
+				await page.waitForTimeout(ZOOM_SETTLE_MS);
+				const zoomedIn = await stageWidth(page);
+				await zoomOutButton(page).click();
+				await page.waitForTimeout(ZOOM_SETTLE_MS);
+				const zoomedOut = await stageWidth(page);
+				await zoomFitButton(page).click();
+				await page.waitForTimeout(ZOOM_SETTLE_MS);
+				return {
+					fitted,
+					zoomedIn,
+					zoomedOut,
+					refitted: await stageWidth(page),
+				} satisfies ZoomProbe;
+			});
 
-		expect(zoomProblems(results).join('\n')).toBe('');
-	});
+			expect(zoomProblems(results).join('\n')).toBe('');
+		},
+	);
 
-	test('the quick-access strip and command search reach every binding', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			await slideStage(page).waitFor();
-			return measureChrome(page);
-		});
+	test(
+		'the quick-access strip and command search reach every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				await slideStage(page).waitFor();
+				return measureChrome(page);
+			});
 
-		expect(quickAccessProblems(results).join('\n')).toBe('');
-	});
+			expect(quickAccessProblems(results).join('\n')).toBe('');
+		},
+	);
 
-	test('the title-bar command search returns the same rows in every binding', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			await slideStage(page).waitFor();
-			await page.locator('pptx-ui-search[variant="titlebar"] input[part="input"]').fill('ar');
-			const list = page.locator('pptx-ui-title-bar').getByRole('listbox');
-			await list.waitFor();
-			return [
-				...(await list.getByRole('option').allInnerTexts()),
-				...(await list.getByRole('button').allInnerTexts()),
-			].map((text) => text.replace(/\s+/gu, ' ').trim());
-		});
-		const [reference, ...others] = results;
-		const problems = others.flatMap((other) =>
-			other.value.join(' | ') === reference!.value.join(' | ')
-				? []
-				: [
-						`${other.framework.name}: rows [${other.value.join(' | ')}], reference has [${reference!.value.join(' | ')}]`,
-					],
-		);
-		expect(problems.join('\n')).toBe('');
-	});
+	test(
+		'the title-bar command search returns the same rows in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				await slideStage(page).waitFor();
+				await page.locator('pptx-ui-search[variant="titlebar"] input[part="input"]').fill('ar');
+				const list = page.locator('pptx-ui-title-bar').getByRole('listbox');
+				await list.waitFor();
+				return [
+					...(await list.getByRole('option').allInnerTexts()),
+					...(await list.getByRole('button').allInnerTexts()),
+				].map((text) => text.replace(/\s+/gu, ' ').trim());
+			});
+			const [reference, ...others] = results;
+			const problems = others.flatMap((other) =>
+				other.value.join(' | ') === reference!.value.join(' | ')
+					? []
+					: [
+							`${other.framework.name}: rows [${other.value.join(' | ')}], reference has [${reference!.value.join(' | ')}]`,
+						],
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

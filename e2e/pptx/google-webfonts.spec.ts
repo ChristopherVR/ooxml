@@ -146,74 +146,80 @@ async function probeWebfonts(
 }
 
 test.describe('google webfonts fallback', () => {
-	test('references a missing cloud font from Google Fonts in every binding', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
-			probeWebfonts(page, origin, ADLAM_DECK, 'ADLaM Display', 'ADLaM Display'),
-		);
+	test(
+		'references a missing cloud font from Google Fonts in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
+				probeWebfonts(page, origin, ADLAM_DECK, 'ADLaM Display', 'ADLaM Display'),
+			);
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.css2Url) {
-				problems.push(`${framework.name}: no Google Fonts css2 request was made`);
-				continue;
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.css2Url) {
+					problems.push(`${framework.name}: no Google Fonts css2 request was made`);
+					continue;
+				}
+				// Spaces must travel as %20: a literal '+' decodes to an invalid
+				// family-name character and the API answers 400. The probe requests
+				// the family with the universal axis spec appended after the name.
+				if (!value.css2Url.includes('family=ADLaM%20Display')) {
+					problems.push(`${framework.name}: css2 URL is not correctly encoded: ${value.css2Url}`);
+				}
+				if (!value.faceRegistered) {
+					problems.push(`${framework.name}: the stubbed @font-face never registered`);
+				}
+				if (!value.shapeFontFamily) {
+					problems.push(`${framework.name}: no slide text is styled with the webfont`);
+				}
 			}
-			// Spaces must travel as %20: a literal '+' decodes to an invalid
-			// family-name character and the API answers 400. The probe requests
-			// the family with the universal axis spec appended after the name.
-			if (!value.css2Url.includes('family=ADLaM%20Display')) {
-				problems.push(`${framework.name}: css2 URL is not correctly encoded: ${value.css2Url}`);
-			}
-			if (!value.faceRegistered) {
-				problems.push(`${framework.name}: the stubbed @font-face never registered`);
-			}
-			if (!value.shapeFontFamily) {
-				problems.push(`${framework.name}: no slide text is styled with the webfont`);
-			}
-		}
-		expect(problems).toStrictEqual([]);
-	});
+			expect(problems).toStrictEqual([]);
+		},
+	);
 
-	test('substitutes an unservable Office font with its metric-compatible clone, in every binding', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
-			probeWebfonts(page, origin, CALIBRI_DECK, 'Calibri', 'Carlito'),
-		);
+	test(
+		'substitutes an unservable Office font with its metric-compatible clone, in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
+				probeWebfonts(page, origin, CALIBRI_DECK, 'Calibri', 'Carlito'),
+			);
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.css2Url) {
-				problems.push(`${framework.name}: no Google Fonts css2 request was made for Calibri`);
-				continue;
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.css2Url) {
+					problems.push(`${framework.name}: no Google Fonts css2 request was made for Calibri`);
+					continue;
+				}
+				// The request must go out for Carlito (Calibri's verified
+				// metric-compatible clone), never for Calibri itself: Google Fonts
+				// does not serve Calibri and would answer 400.
+				if (!value.css2Url.includes('family=Carlito')) {
+					problems.push(
+						`${framework.name}: css2 request did not ask for Carlito: ${value.css2Url}`,
+					);
+				}
+				if (value.css2Url.includes('family=Calibri')) {
+					problems.push(`${framework.name}: css2 request asked for unservable "Calibri" directly`);
+				}
+				if (!value.faceRegistered) {
+					problems.push(`${framework.name}: the stubbed Carlito @font-face never registered`);
+				}
+				// The rendered stack must keep the authored family FIRST (so an
+				// actually-installed Calibri still wins) with Carlito right after it,
+				// matching getSubstituteFontFamily('Calibri').
+				if (!value.shapeFontFamily?.includes('Calibri')) {
+					problems.push(
+						`${framework.name}: rendered font-family dropped the authored "Calibri": ${value.shapeFontFamily}`,
+					);
+				}
+				if (!value.shapeFontFamily?.includes('Carlito')) {
+					problems.push(
+						`${framework.name}: rendered font-family is missing the "Carlito" fallback: ${value.shapeFontFamily}`,
+					);
+				}
 			}
-			// The request must go out for Carlito (Calibri's verified
-			// metric-compatible clone), never for Calibri itself: Google Fonts
-			// does not serve Calibri and would answer 400.
-			if (!value.css2Url.includes('family=Carlito')) {
-				problems.push(`${framework.name}: css2 request did not ask for Carlito: ${value.css2Url}`);
-			}
-			if (value.css2Url.includes('family=Calibri')) {
-				problems.push(`${framework.name}: css2 request asked for unservable "Calibri" directly`);
-			}
-			if (!value.faceRegistered) {
-				problems.push(`${framework.name}: the stubbed Carlito @font-face never registered`);
-			}
-			// The rendered stack must keep the authored family FIRST (so an
-			// actually-installed Calibri still wins) with Carlito right after it,
-			// matching getSubstituteFontFamily('Calibri').
-			if (!value.shapeFontFamily?.includes('Calibri')) {
-				problems.push(
-					`${framework.name}: rendered font-family dropped the authored "Calibri": ${value.shapeFontFamily}`,
-				);
-			}
-			if (!value.shapeFontFamily?.includes('Carlito')) {
-				problems.push(
-					`${framework.name}: rendered font-family is missing the "Carlito" fallback: ${value.shapeFontFamily}`,
-				);
-			}
-		}
-		expect(problems).toStrictEqual([]);
-	});
+			expect(problems).toStrictEqual([]);
+		},
+	);
 });

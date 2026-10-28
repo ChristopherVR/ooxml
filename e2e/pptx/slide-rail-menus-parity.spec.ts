@@ -66,292 +66,308 @@ const slideCount = (page: Page): Promise<number> =>
 const SECTION_COMMANDS = ['rename', 'delete', 'move up', 'move down', 'add section after'];
 
 test.describe('cross-binding slide rail menus', () => {
-	test('the rail has one persistent action, Add Slide, in flat and sectioned decks', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				const footerButtons = async (): Promise<string[]> =>
-					page
-						.locator('[data-pptx-chrome="slide-footer"] button')
-						.evaluateAll((nodes) => nodes.map((n) => (n.textContent ?? '').trim()));
-				const thumbActions = (): Promise<number> =>
-					page
-						.locator('[data-pptx-chrome="slides"]')
-						.getByRole('button', { name: /^(duplicate|delete|move up|move down)/iu })
-						.count();
-				const flat = { footer: await footerButtons(), perThumbnail: await thumbActions() };
-				await addSectionAt(page, 2);
-				const sectioned = { footer: await footerButtons(), perThumbnail: await thumbActions() };
-				const before = await slideCount(page);
-				await page
-					.locator('[data-pptx-chrome="slide-footer"]')
-					.getByRole('button', { name: 'Add Slide' })
-					.click();
-				await page.waitForTimeout(400);
-				return { flat, sectioned, added: (await slideCount(page)) - before };
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			const issues: string[] = [];
-			for (const [kind, shape] of [
-				['flat', value.flat],
-				['sectioned', value.sectioned],
-			] as const) {
-				if (shape.footer.length !== 1 || !/add slide/iu.test(shape.footer[0])) {
-					issues.push(
-						`${kind} rail footer holds [${shape.footer.join(', ')}] instead of just "Add Slide"`,
-					);
-				}
-				if (shape.perThumbnail > 0) {
-					issues.push(`${kind} rail renders ${shape.perThumbnail} per-thumbnail action buttons`);
-				}
-			}
-			if (value.added !== 1) {
-				issues.push(`Add Slide changed the slide count by ${value.added}, not 1`);
-			}
-			return report(name, issues);
-		});
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('Home > Section adds a section at the current slide', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				const errors: string[] = [];
-				page.on('pageerror', (error) => errors.push(error.message));
-				const before = await sectionHeaders(page).count();
-				await openRibbonTab(page, 'Home');
-				await page.locator('[data-ribbon-control="home.slides.section"]').click();
-				await page.waitForTimeout(300);
-				return { added: (await sectionHeaders(page).count()) - before, errors };
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			const issues: string[] = [];
-			if (value.added !== 1) {
-				issues.push(`Section changed the section count by ${value.added}, not 1`);
-			}
-			for (const error of value.errors) {
-				issues.push(`threw: ${error}`);
-			}
-			return report(name, issues);
-		});
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('right-clicking a section header opens the shared five-command menu', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await addSectionAt(page, 2);
-				const header = sectionHeaders(page).first();
-				await header.waitFor();
-				const nested = await header.locator('button').count();
-				const menu = await openHeaderMenu(page, header);
-				return { menu, nested };
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			inspect(name, value.menu, (snapshot) => {
-				const issues: string[] = [];
-				if (snapshot.role !== 'menu') {
-					issues.push(`the menu container declares role="${snapshot.role ?? '(none)'}"`);
-				}
-				if (snapshot.labels.join('|') !== SECTION_COMMANDS.join('|')) {
-					issues.push(
-						`offers [${snapshot.labels.join(', ')}] instead of [${SECTION_COMMANDS.join(', ')}]`,
-					);
-				}
-				if (value.nested > 1) {
-					issues.push(`the header still carries ${value.nested} inline buttons`);
-				}
-				return issues;
-			}),
-		);
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('Rename edits the section name inline, without a browser prompt', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				let dialogs = 0;
-				page.on('dialog', (dialog) => {
-					dialogs += 1;
-					void dialog.dismiss();
-				});
-				await openDeck(page, origin);
-				await addSectionAt(page, 2);
-				const header = sectionHeaders(page).first();
-				await header.waitFor();
-				await openHeaderMenu(page, header);
-				await chooseCommand(page, 'rename');
-				const input = page
-					.locator('[data-pptx-chrome="section-header"] input[type="text"]')
-					.first();
-				const inline = await input.isVisible().catch(() => false);
-				if (inline) {
-					await input.fill('Agenda');
-					await input.press('Enter');
+	test(
+		'the rail has one persistent action, Add Slide, in flat and sectioned decks',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					const footerButtons = async (): Promise<string[]> =>
+						page
+							.locator('[data-pptx-chrome="slide-footer"] button')
+							.evaluateAll((nodes) => nodes.map((n) => (n.textContent ?? '').trim()));
+					const thumbActions = (): Promise<number> =>
+						page
+							.locator('[data-pptx-chrome="slides"]')
+							.getByRole('button', { name: /^(duplicate|delete|move up|move down)/iu })
+							.count();
+					const flat = { footer: await footerButtons(), perThumbnail: await thumbActions() };
+					await addSectionAt(page, 2);
+					const sectioned = { footer: await footerButtons(), perThumbnail: await thumbActions() };
+					const before = await slideCount(page);
+					await page
+						.locator('[data-pptx-chrome="slide-footer"]')
+						.getByRole('button', { name: 'Add Slide' })
+						.click();
 					await page.waitForTimeout(400);
+					return { flat, sectioned, added: (await slideCount(page)) - before };
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				const issues: string[] = [];
+				for (const [kind, shape] of [
+					['flat', value.flat],
+					['sectioned', value.sectioned],
+				] as const) {
+					if (shape.footer.length !== 1 || !/add slide/iu.test(shape.footer[0])) {
+						issues.push(
+							`${kind} rail footer holds [${shape.footer.join(', ')}] instead of just "Add Slide"`,
+						);
+					}
+					if (shape.perThumbnail > 0) {
+						issues.push(`${kind} rail renders ${shape.perThumbnail} per-thumbnail action buttons`);
+					}
 				}
-				const renamed = await sectionHeaders(page).filter({ hasText: 'Agenda' }).count();
-				return { dialogs, inline, renamed };
-			},
-			{ viewport: VIEWPORT },
-		);
+				if (value.added !== 1) {
+					issues.push(`Add Slide changed the slide count by ${value.added}, not 1`);
+				}
+				return report(name, issues);
+			});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			report(name, [
-				...(value.dialogs > 0 ? ['Rename opened a browser prompt'] : []),
-				...(value.inline ? [] : ['Rename did not show an inline text field in the header']),
-				...(value.renamed === 1 ? [] : ['the header does not show the new name "Agenda"']),
-			]),
-		);
-		expect(problems.join('\n')).toBe('');
-	});
+	test(
+		'Home > Section adds a section at the current slide',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					const errors: string[] = [];
+					page.on('pageerror', (error) => errors.push(error.message));
+					const before = await sectionHeaders(page).count();
+					await openRibbonTab(page, 'Home');
+					await page.locator('[data-ribbon-control="home.slides.section"]').click();
+					await page.waitForTimeout(300);
+					return { added: (await sectionHeaders(page).count()) - before, errors };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-	test('Move Up and Move Down are gated at the ends and Move Up reorders', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await addSectionAt(page, 2);
-				await openHeaderMenu(page, sectionHeaders(page).first());
-				await chooseCommand(page, 'rename');
-				const first = page
-					.locator('[data-pptx-chrome="section-header"] input[type="text"]')
-					.first();
-				await first.fill('Agenda');
-				await first.press('Enter');
-				await page.waitForTimeout(300);
-				await addSectionAt(page, 4);
-				const headers = sectionHeaders(page);
-				const second = headers.nth(1);
-				await second.waitFor();
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				const issues: string[] = [];
+				if (value.added !== 1) {
+					issues.push(`Section changed the section count by ${value.added}, not 1`);
+				}
+				for (const error of value.errors) {
+					issues.push(`threw: ${error}`);
+				}
+				return report(name, issues);
+			});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-				const disabled = async (target: Locator, label: string): Promise<boolean | null> => {
-					const snapshot = await openHeaderMenu(page, target);
-					const command = snapshot.commands.find((c) => c.label.toLowerCase() === label);
+	test(
+		'right-clicking a section header opens the shared five-command menu',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await addSectionAt(page, 2);
+					const header = sectionHeaders(page).first();
+					await header.waitFor();
+					const nested = await header.locator('button').count();
+					const menu = await openHeaderMenu(page, header);
+					return { menu, nested };
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				inspect(name, value.menu, (snapshot) => {
+					const issues: string[] = [];
+					if (snapshot.role !== 'menu') {
+						issues.push(`the menu container declares role="${snapshot.role ?? '(none)'}"`);
+					}
+					if (snapshot.labels.join('|') !== SECTION_COMMANDS.join('|')) {
+						issues.push(
+							`offers [${snapshot.labels.join(', ')}] instead of [${SECTION_COMMANDS.join(', ')}]`,
+						);
+					}
+					if (value.nested > 1) {
+						issues.push(`the header still carries ${value.nested} inline buttons`);
+					}
+					return issues;
+				}),
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'Rename edits the section name inline, without a browser prompt',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					let dialogs = 0;
+					page.on('dialog', (dialog) => {
+						dialogs += 1;
+						void dialog.dismiss();
+					});
+					await openDeck(page, origin);
+					await addSectionAt(page, 2);
+					const header = sectionHeaders(page).first();
+					await header.waitFor();
+					await openHeaderMenu(page, header);
+					await chooseCommand(page, 'rename');
+					const input = page
+						.locator('[data-pptx-chrome="section-header"] input[type="text"]')
+						.first();
+					const inline = await input.isVisible().catch(() => false);
+					if (inline) {
+						await input.fill('Agenda');
+						await input.press('Enter');
+						await page.waitForTimeout(400);
+					}
+					const renamed = await sectionHeaders(page).filter({ hasText: 'Agenda' }).count();
+					return { dialogs, inline, renamed };
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				report(name, [
+					...(value.dialogs > 0 ? ['Rename opened a browser prompt'] : []),
+					...(value.inline ? [] : ['Rename did not show an inline text field in the header']),
+					...(value.renamed === 1 ? [] : ['the header does not show the new name "Agenda"']),
+				]),
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'Move Up and Move Down are gated at the ends and Move Up reorders',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await addSectionAt(page, 2);
+					await openHeaderMenu(page, sectionHeaders(page).first());
+					await chooseCommand(page, 'rename');
+					const first = page
+						.locator('[data-pptx-chrome="section-header"] input[type="text"]')
+						.first();
+					await first.fill('Agenda');
+					await first.press('Enter');
+					await page.waitForTimeout(300);
+					await addSectionAt(page, 4);
+					const headers = sectionHeaders(page);
+					const second = headers.nth(1);
+					await second.waitFor();
+
+					const disabled = async (target: Locator, label: string): Promise<boolean | null> => {
+						const snapshot = await openHeaderMenu(page, target);
+						const command = snapshot.commands.find((c) => c.label.toLowerCase() === label);
+						await page.keyboard.press('Escape');
+						await page.waitForTimeout(200);
+						return command ? command.disabled : null;
+					};
+					const gates = {
+						firstUp: await disabled(headers.first(), 'move up'),
+						firstDown: await disabled(headers.first(), 'move down'),
+						lastUp: await disabled(second, 'move up'),
+						lastDown: await disabled(second, 'move down'),
+					};
+
+					await openHeaderMenu(page, second);
+					await chooseCommand(page, 'move up');
+					await page.waitForTimeout(400);
+					const order = await sectionHeaders(page).evaluateAll((nodes) =>
+						nodes.map((n) => /Agenda/u.test(n.textContent ?? '')),
+					);
+					return { gates, order, menuOpen: (await readMenu(page)).present };
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				report(name, [
+					...(value.gates.firstUp === true ? [] : ['Move Up is not disabled on the first section']),
+					...(value.gates.firstDown === false
+						? []
+						: ['Move Down is not enabled on the first section']),
+					...(value.gates.lastUp === false ? [] : ['Move Up is not enabled on the last section']),
+					...(value.gates.lastDown === true
+						? []
+						: ['Move Down is not disabled on the last section']),
+					...(value.order.join() === 'false,true'
+						? []
+						: [`Move Up did not swap the sections (Agenda flags: ${value.order.join()})`]),
+				]),
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'the sorter tile menu offers the shared command list and Paste follows Copy',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openDeck(page, origin);
+					await page
+						.getByRole('button', { name: /slide sorter/iu })
+						.first()
+						.click();
+					await page
+						.getByRole('heading', { name: /slide sorter/iu })
+						.first()
+						.waitFor();
+					await page.waitForTimeout(500);
+					const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
+					const count = (): Promise<number> => tiles.count();
+					const start = await count();
+
+					const first = await openMenuOn(page, tiles.nth(1));
+					await chooseCommand(page, 'copy');
+					const second = await openMenuOn(page, tiles.nth(1));
+					await chooseCommand(page, 'paste');
+					await page.waitForTimeout(400);
+					const afterPaste = await count();
+
+					await openMenuOn(page, tiles.nth(1));
+					await chooseCommand(page, 'hide slides');
+					await page.waitForTimeout(300);
+					const fourth = await openMenuOn(page, tiles.nth(1));
 					await page.keyboard.press('Escape');
-					await page.waitForTimeout(200);
-					return command ? command.disabled : null;
-				};
-				const gates = {
-					firstUp: await disabled(headers.first(), 'move up'),
-					firstDown: await disabled(headers.first(), 'move down'),
-					lastUp: await disabled(second, 'move up'),
-					lastDown: await disabled(second, 'move down'),
-				};
+					return { start, first, second, afterPaste, fourth };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-				await openHeaderMenu(page, second);
-				await chooseCommand(page, 'move up');
-				await page.waitForTimeout(400);
-				const order = await sectionHeaders(page).evaluateAll((nodes) =>
-					nodes.map((n) => /Agenda/u.test(n.textContent ?? '')),
-				);
-				return { gates, order, menuOpen: (await readMenu(page)).present };
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			report(name, [
-				...(value.gates.firstUp === true ? [] : ['Move Up is not disabled on the first section']),
-				...(value.gates.firstDown === false
-					? []
-					: ['Move Down is not enabled on the first section']),
-				...(value.gates.lastUp === false ? [] : ['Move Up is not enabled on the last section']),
-				...(value.gates.lastDown === true ? [] : ['Move Down is not disabled on the last section']),
-				...(value.order.join() === 'false,true'
-					? []
-					: [`Move Up did not swap the sections (Agenda flags: ${value.order.join()})`]),
-			]),
-		);
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('the sorter tile menu offers the shared command list and Paste follows Copy', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openDeck(page, origin);
-				await page
-					.getByRole('button', { name: /slide sorter/iu })
-					.first()
-					.click();
-				await page
-					.getByRole('heading', { name: /slide sorter/iu })
-					.first()
-					.waitFor();
-				await page.waitForTimeout(500);
-				const tiles = page.locator('[data-pptx-chrome="sorter-tile"]');
-				const count = (): Promise<number> => tiles.count();
-				const start = await count();
-
-				const first = await openMenuOn(page, tiles.nth(1));
-				await chooseCommand(page, 'copy');
-				const second = await openMenuOn(page, tiles.nth(1));
-				await chooseCommand(page, 'paste');
-				await page.waitForTimeout(400);
-				const afterPaste = await count();
-
-				await openMenuOn(page, tiles.nth(1));
-				await chooseCommand(page, 'hide slides');
-				await page.waitForTimeout(300);
-				const fourth = await openMenuOn(page, tiles.nth(1));
-				await page.keyboard.press('Escape');
-				return { start, first, second, afterPaste, fourth };
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const labels = (snapshot: { labels: string[] }): string => snapshot.labels.join('|');
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			report(name, [
-				...(value.first.role === 'menu' ? [] : ['the sorter menu does not declare role="menu"']),
-				...(labels(value.first) === 'copy|duplicate|hide slides|delete'
-					? []
-					: [`first menu offers [${value.first.labels.join(', ')}]`]),
-				...(labels(value.second) === 'copy|paste|duplicate|hide slides|delete'
-					? []
-					: [`menu after Copy offers [${value.second.labels.join(', ')}]`]),
-				...(value.afterPaste === value.start + 1
-					? []
-					: [`Paste changed the slide count from ${value.start} to ${value.afterPaste}`]),
-				...(value.fourth.labels.includes('show slides')
-					? []
-					: [
-							`after Hide the menu offers [${value.fourth.labels.join(', ')}] instead of Show Slides`,
-						]),
-			]),
-		);
-		expect(problems.join('\n')).toBe('');
-	});
+			const labels = (snapshot: { labels: string[] }): string => snapshot.labels.join('|');
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				report(name, [
+					...(value.first.role === 'menu' ? [] : ['the sorter menu does not declare role="menu"']),
+					...(labels(value.first) === 'copy|duplicate|hide slides|delete'
+						? []
+						: [`first menu offers [${value.first.labels.join(', ')}]`]),
+					...(labels(value.second) === 'copy|paste|duplicate|hide slides|delete'
+						? []
+						: [`menu after Copy offers [${value.second.labels.join(', ')}]`]),
+					...(value.afterPaste === value.start + 1
+						? []
+						: [`Paste changed the slide count from ${value.start} to ${value.afterPaste}`]),
+					...(value.fourth.labels.includes('show slides')
+						? []
+						: [
+								`after Hide the menu offers [${value.fourth.labels.join(', ')}] instead of Show Slides`,
+							]),
+				]),
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

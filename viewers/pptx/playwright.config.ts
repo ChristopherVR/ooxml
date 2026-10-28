@@ -2,7 +2,9 @@ import { existsSync } from 'node:fs';
 
 import { defineConfig, devices } from '@playwright/test';
 
-import { e2eServers } from './e2e-servers';
+import { browserPerformance } from '../../scripts/browser-performance.mjs';
+import { e2eServers, selectedProjects } from './e2e-servers';
+import { shardMatch } from './e2e-shards';
 
 // Machine-specific settings (PPTX_E2E_WORKERS, PPTX_E2E_ALL_BINDINGS, ...) live in the git-ignored
 // `.env.local` next to this file; CI has none and so keeps the defaults below.
@@ -46,7 +48,10 @@ const ANGULAR_PORT = 4174 + PORT_OFFSET;
 const VANILLA_PORT = 4176 + PORT_OFFSET;
 const SVELTE_PORT = 4177 + PORT_OFFSET;
 const isCI = Boolean(process.env.CI);
-const WORKERS = Number(process.env.PPTX_E2E_WORKERS) || undefined;
+const performance = browserPerformance();
+const WORKERS = process.env.OOXML_E2E_WORKERS
+	? performance.workers
+	: Number(process.env.PPTX_E2E_WORKERS) || performance.workers;
 /**
  * Locally the suite runs React only unless asked otherwise. React is the parity reference: its
  * parity specs drive all five demos and diff them, so one project still checks every binding
@@ -61,6 +66,11 @@ if (explicitProject) {
 	process.env.PPTX_E2E_EXPLICIT_PROJECT = '1';
 }
 const onlyReference = !isCI && !explicitProject && process.env.PPTX_E2E_ALL_BINDINGS !== '1';
+// CI jobs select one project each; the planner tells them when React covers the same scenarios.
+const referenceCoversParity =
+	process.env.PPTX_E2E_REFERENCE_COVERS_PARITY !== '0' &&
+	(process.env.PPTX_E2E_REFERENCE_COVERS_PARITY === '1' ||
+		(selectedProjects()?.includes('react') ?? !explicitProject));
 
 export default defineConfig({
 	testDir: '../../e2e/pptx',
@@ -87,12 +97,13 @@ export default defineConfig({
 	// `bun run e2e:local-only`) and via the pre-push hook
 	// (.husky/pre-push, scripts/pre-push-local-e2e.mjs).
 	grepInvert: isCI ? /@local-only/ : undefined,
-	// One retry: a flaky test gets a second chance, a broken one is not run three times. The CI step
-	// does not re-run a shard Playwright reported failures for either.
+	// One diagnostic retry records a trace. CI may retry recorded failures after a cooldown.
 	retries: isCI ? 1 : 0,
-	reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
+	reporter: isCI
+		? [['list'], ['html', { open: 'never' }], ['../../scripts/browser-timing-reporter.mjs']]
+		: [['list'], ['../../scripts/browser-timing-reporter.mjs']],
 	use: {
-		trace: 'retain-on-failure',
+		trace: performance.trace,
 		actionTimeout: 10_000,
 		// CI-only: GitHub Actions' ubuntu-latest runners have no real GPU, and
 		// Chromium's software-GL (SwiftShader) compositing path is what actually
@@ -131,7 +142,7 @@ export default defineConfig({
 		// implied by it. Disabling that bucket too targets the exact subsystem
 		// this test drives instead of re-tuning shard/worker count again, which
 		// the original incident already found does not work.
-		launchOptions: isCI
+		launchOptions: performance.hosted
 			? {
 					args: [
 						'--disable-dev-shm-usage',
@@ -175,7 +186,19 @@ export default defineConfig({
 			testMatch: '**/host-owned-collaboration.spec.ts',
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${port}` },
 		})),
-	].filter((project) => !onlyReference || project.name.startsWith('react')),
+	]
+		.filter((project) => !onlyReference || project.name.startsWith('react'))
+		.map((project) => {
+			const match = shardMatch(project.name);
+			return {
+				...project,
+				...(match ? { testMatch: match } : {}),
+				grepInvert: [
+					...(isCI ? [/@local-only/] : []),
+					...(referenceCoversParity && project.name !== 'react' ? [/@cross-binding/] : []),
+				],
+			};
+		}),
 	// The same list backs `bun e2e-servers.ts start`, which keeps these servers warm between runs;
 	// a server that is already listening is reused outside CI. The first entry is the relay the
 	// host-owned collaboration tests use instead of BroadcastChannel.
@@ -184,7 +207,7 @@ export default defineConfig({
 		cwd: server.cwd,
 		env: server.env,
 		...(server.url ? { url: server.url } : { port: server.port }),
-		reuseExistingServer: !isCI,
+		reuseExistingServer: !isCI || process.env.OOXML_LOCAL_VERIFY === '1',
 		timeout: server.url ? 120_000 : 30_000,
 		stdout: 'ignore' as const,
 		stderr: 'pipe' as const,

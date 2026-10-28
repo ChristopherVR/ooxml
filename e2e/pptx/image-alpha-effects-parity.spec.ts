@@ -103,72 +103,82 @@ async function readImageAlphaFacts(page: Page, origin: string): Promise<PictureA
 }
 
 test.describe('alphaModFix applied exactly once (issue #286)', () => {
-	test('a picture with alphaModFix alone gets plain CSS opacity and no alpha SVG filter', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readImageAlphaFacts);
+	test(
+		'a picture with alphaModFix alone gets plain CSS opacity and no alpha SVG filter',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readImageAlphaFacts);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			const opacity = value.opacities[0];
-			if (opacity === undefined || Math.abs(opacity - ALPHA_MOD_FIX_OPACITY) > OPACITY_TOLERANCE) {
-				problems.push(
-					`"${ALONE_PICTURE_NAME}" opacity is ${opacity}, expected ~${ALPHA_MOD_FIX_OPACITY} ` +
-						'(a squared ~0.0225 means the alpha filter is ALSO multiplying it)',
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				const opacity = value.opacities[0];
+				if (
+					opacity === undefined ||
+					Math.abs(opacity - ALPHA_MOD_FIX_OPACITY) > OPACITY_TOLERANCE
+				) {
+					problems.push(
+						`"${ALONE_PICTURE_NAME}" opacity is ${opacity}, expected ~${ALPHA_MOD_FIX_OPACITY} ` +
+							'(a squared ~0.0225 means the alpha filter is ALSO multiplying it)',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 
-	test('combined with another advanced alpha effect (biLevel), alphaModFix still applies exactly once', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readImageAlphaFacts);
+	test(
+		'combined with another advanced alpha effect (biLevel), alphaModFix still applies exactly once',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readImageAlphaFacts);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			const opacity = value.opacities[1];
-			if (opacity === undefined || Math.abs(opacity - ALPHA_MOD_FIX_OPACITY) > OPACITY_TOLERANCE) {
-				problems.push(
-					`"${COMBINED_PICTURE_NAME}" opacity is ${opacity}, expected ~${ALPHA_MOD_FIX_OPACITY}`,
-				);
-			}
-			// biLevel genuinely needs the imgalpha SVG filter, so the combined
-			// picture's <img> must reference one, and the alone picture's must
-			// not (its alphaModFix is plain CSS opacity). Checked per image, not
-			// as a page-wide def count: the thumbnail strip renders the same
-			// picture again with its own filter def.
-			if (!value.filters[1]?.includes('imgalpha')) {
-				problems.push(
-					`"${COMBINED_PICTURE_NAME}" img filter is "${value.filters[1]}", expected an imgalpha url()`,
-				);
-			}
-			if (value.filters[0]?.includes('imgalpha')) {
-				problems.push(
-					`"${ALONE_PICTURE_NAME}" img filter is "${value.filters[0]}", expected no imgalpha filter`,
-				);
-			}
-			if (value.alphaFilterCount < 1) {
-				problems.push('expected at least one imgalpha SVG filter def on the page, found none');
-			}
-			// The filter is legitimately built (for biLevel's own primitives), but
-			// must not ALSO carry alphaModFix's multiplier: that would be the
-			// double-application bug even though the filter has a real reason to
-			// exist.
-			if (value.alphaFilterMarkup.includes(ALPHA_MOD_FIX_MATRIX_TAIL)) {
-				problems.push(
-					`the imgalpha SVG filter still contains alphaModFix's own multiplier ("${ALPHA_MOD_FIX_MATRIX_TAIL}") ` +
-						'alongside CSS opacity: alpha is being applied twice',
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				const opacity = value.opacities[1];
+				if (
+					opacity === undefined ||
+					Math.abs(opacity - ALPHA_MOD_FIX_OPACITY) > OPACITY_TOLERANCE
+				) {
+					problems.push(
+						`"${COMBINED_PICTURE_NAME}" opacity is ${opacity}, expected ~${ALPHA_MOD_FIX_OPACITY}`,
+					);
+				}
+				// biLevel genuinely needs the imgalpha SVG filter, so the combined
+				// picture's <img> must reference one, and the alone picture's must
+				// not (its alphaModFix is plain CSS opacity). Checked per image, not
+				// as a page-wide def count: the thumbnail strip renders the same
+				// picture again with its own filter def.
+				if (!value.filters[1]?.includes('imgalpha')) {
+					problems.push(
+						`"${COMBINED_PICTURE_NAME}" img filter is "${value.filters[1]}", expected an imgalpha url()`,
+					);
+				}
+				if (value.filters[0]?.includes('imgalpha')) {
+					problems.push(
+						`"${ALONE_PICTURE_NAME}" img filter is "${value.filters[0]}", expected no imgalpha filter`,
+					);
+				}
+				if (value.alphaFilterCount < 1) {
+					problems.push('expected at least one imgalpha SVG filter def on the page, found none');
+				}
+				// The filter is legitimately built (for biLevel's own primitives), but
+				// must not ALSO carry alphaModFix's multiplier: that would be the
+				// double-application bug even though the filter has a real reason to
+				// exist.
+				if (value.alphaFilterMarkup.includes(ALPHA_MOD_FIX_MATRIX_TAIL)) {
+					problems.push(
+						`the imgalpha SVG filter still contains alphaModFix's own multiplier ("${ALPHA_MOD_FIX_MATRIX_TAIL}") ` +
+							'alongside CSS opacity: alpha is being applied twice',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

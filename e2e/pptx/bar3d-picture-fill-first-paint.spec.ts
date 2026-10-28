@@ -66,46 +66,48 @@ const EXPECTED_END_FILL = toRgbString(tint(GREEN, 0.22));
 const EXPECTED_SIDE_FILL = toRgbString(shade(GREEN, 0.25));
 
 test.describe('bar3D untargeted picture-fill face colour (first paint, no flash)', () => {
-	test('every binding paints the untargeted side/end faces from the picture, not the fallback series colour', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every binding paints the untargeted side/end faces from the picture, not the fallback series colour',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, FIXTURE);
-				await slideStage(page).waitFor();
-				await page
-					.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
-					.first()
-					.waitFor({ timeout: 20_000 });
-				// Deliberately no extra wait/interaction beyond the chart existing:
-				// this spec's whole point is what colour is ALREADY painted the
-				// moment the chart is present, not what it eventually becomes.
-				const charts = await fingerprintCharts(page);
-				return charts;
-			},
-			{ path: '/?barChart3D=0' },
-		);
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, FIXTURE);
+					await slideStage(page).waitFor();
+					await page
+						.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
+						.first()
+						.waitFor({ timeout: 20_000 });
+					// Deliberately no extra wait/interaction beyond the chart existing:
+					// this spec's whole point is what colour is ALREADY painted the
+					// moment the chart is present, not what it eventually becomes.
+					const charts = await fingerprintCharts(page);
+					return charts;
+				},
+				{ path: '/?barChart3D=0' },
+			);
 
-		const failures = results.flatMap(({ framework, value: charts }) => {
-			if (charts.length === 0) {
-				return [`${framework.name}: no chart rendered at all`];
-			}
-			const fills = new Set(charts[0].shapes.map((s) => s.fill));
-			const problems: string[] = [];
-			if (!fills.has(EXPECTED_END_FILL) && !fills.has(EXPECTED_SIDE_FILL)) {
-				problems.push(
-					`neither the tinted end-face fill (${EXPECTED_END_FILL}) nor the shaded ` +
-						`side-face fill (${EXPECTED_SIDE_FILL}) is present - the untargeted faces ` +
-						`did not pick up the picture's sampled pixel. Fills seen: ${[...fills].join(', ') || 'none'}`,
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value: charts }) => {
+				if (charts.length === 0) {
+					return [`${framework.name}: no chart rendered at all`];
+				}
+				const fills = new Set(charts[0].shapes.map((s) => s.fill));
+				const problems: string[] = [];
+				if (!fills.has(EXPECTED_END_FILL) && !fills.has(EXPECTED_SIDE_FILL)) {
+					problems.push(
+						`neither the tinted end-face fill (${EXPECTED_END_FILL}) nor the shaded ` +
+							`side-face fill (${EXPECTED_SIDE_FILL}) is present - the untargeted faces ` +
+							`did not pick up the picture's sampled pixel. Fills seen: ${[...fills].join(', ') || 'none'}`,
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

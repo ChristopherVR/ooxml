@@ -92,31 +92,33 @@ async function readSlide(page: Page, origin: string): Promise<DecoratedPiece[]> 
 }
 
 test.describe('u="words" underline', () => {
-	test('every binding underlines the words and the gap, like PowerPoint', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'every binding underlines the words and the gap, like PowerPoint',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			const rendered = fullText(value);
-			if (!UNDERLINE_WORDS_TEXT.split('').every((ch) => ch === ' ' || rendered.includes(ch))) {
-				problems.push(`renders "${rendered}", expected the fixture's "${UNDERLINE_WORDS_TEXT}"`);
-			}
-			if (!gapUnderlined(value)) {
-				problems.push('the inter-word space is not underlined');
-			}
-			const bad = undecoratedPieces(value);
-			if (bad.length > 0) {
-				problems.push(
-					`piece(s) not underlined: ${bad.map((p) => JSON.stringify(p.text)).join(', ')} ` +
-						'(PowerPoint underlines u="words" continuously, gaps included)',
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				const rendered = fullText(value);
+				if (!UNDERLINE_WORDS_TEXT.split('').every((ch) => ch === ' ' || rendered.includes(ch))) {
+					problems.push(`renders "${rendered}", expected the fixture's "${UNDERLINE_WORDS_TEXT}"`);
+				}
+				if (!gapUnderlined(value)) {
+					problems.push('the inter-word space is not underlined');
+				}
+				const bad = undecoratedPieces(value);
+				if (bad.length > 0) {
+					problems.push(
+						`piece(s) not underlined: ${bad.map((p) => JSON.stringify(p.text)).join(', ')} ` +
+							'(PowerPoint underlines u="words" continuously, gaps included)',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

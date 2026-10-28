@@ -32,6 +32,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PLAYWRIGHT_INSTALL, changedSince, plan } from './ci-plan.mjs';
 import { argumentBatches, FORMATTER_CHECK } from './verify-arguments.mjs';
+import { browserPerformance, pptxBrowserCommand } from './browser-performance.mjs';
+import { verificationShell } from './verify-shell.mjs';
 import {
 	clearStamp,
 	defaultJobs,
@@ -173,7 +175,7 @@ if (browser)
 		const port = `export PLAYWRIGHT_PORT=${4300 + suite * 20}; `;
 		let previous = [add(`${name}:install`, PLAYWRIGHT_INSTALL, entry.dir, BUILT)];
 		for (const [index, cmd] of entry.local.split('\n').entries())
-			previous = [add(`${name}:${index}`, port + cmd, entry.dir, previous)];
+			previous = [add(`${name}:${index}`, port + cmd, entry.dir, previous, { exclusive: true })];
 	}
 if (p.pptx.run) {
 	// `packaged` is the planner's "this change alters what the viewer's packages build". Without it
@@ -202,18 +204,20 @@ if (p.pptx.run) {
 			add('pptx:test:react18', 'bun run test:react18', 'viewers/pptx/packages/react', needs);
 		else add(`pptx:test:${leg}`, 'bun run test', `viewers/pptx/packages/${leg}`, needs);
 	}
-	if (browser && p.pptx.e2e?.projects?.length)
-		add(
-			'pptx:e2e',
-			`bun run e2e ${p.pptx.e2e.projects.map((name) => `--project=${name}`).join(' ')}`,
-			'viewers/pptx',
-			steps.some((step) => step.id === 'pptx:build') ? ['pptx:build', ...BUILT] : BUILT,
-		);
+	if (browser && p.pptx.e2e?.projects?.length) {
+		const demos = add('pptx:demos', 'bun e2e-build.ts', 'viewers/pptx', ['pptx:build', ...BUILT], {
+			env: { PPTX_E2E_PROJECTS: p.pptx.e2e.projects.join(',') },
+		});
+		add('pptx:e2e', pptxBrowserCommand(p.pptx.e2e), 'viewers/pptx', [demos], {
+			exclusive: true,
+			env: { PPTX_E2E_SERVE: 'preview' },
+		});
+	}
 }
 
 // ---- Running. -------------------------------------------------------------------------------
 // Commands are written for bash (the planner's commands use bash syntax, as in CI).
-const shell = process.platform === 'win32' ? 'bash.exe' : 'bash';
+const shell = verificationShell();
 // Git hands a hook the repository it runs for (GIT_DIR, GIT_INDEX_FILE and so on). The steps must
 // not inherit it: the release planner's tests build throwaway repositories with `git init`,
 // `commit`, `tag` and `config`, which would otherwise land in this repository and its shared
@@ -221,7 +225,15 @@ const shell = process.platform === 'win32' ? 'bash.exe' : 'bash';
 const REPOSITORY_ENV =
 	/^GIT_(?:DIR|WORK_TREE|INDEX_FILE|COMMON_DIR|OBJECT_DIRECTORY|ALTERNATE_OBJECT_DIRECTORIES|PREFIX)$/;
 const env = Object.fromEntries(
-	Object.entries({ ...process.env, CI: '1' }).filter(([name]) => !REPOSITORY_ENV.test(name)),
+	Object.entries({
+		...process.env,
+		CI: '1',
+		OOXML_LOCAL_VERIFY: '1',
+		OOXML_E2E_WORKERS: String(
+			browserPerformance({ ...process.env, OOXML_LOCAL_VERIFY: '1' }).workers,
+		),
+		PPTX_E2E_PORT_OFFSET: process.env.PPTX_E2E_PORT_OFFSET ?? '200',
+	}).filter(([name]) => !REPOSITORY_ENV.test(name)),
 );
 
 const serial = flag('--serial');
@@ -242,7 +254,7 @@ function exec(step) {
 		const child = spawn(shell, ['-e', '-o', 'pipefail', '-s'], {
 			cwd: join(ROOT, step.cwd),
 			stdio: ['pipe', 'pipe', 'pipe'],
-			env,
+			env: { ...env, ...step.env },
 		});
 		const chunks = [];
 		child.stdout.on('data', (chunk) => chunks.push(chunk));

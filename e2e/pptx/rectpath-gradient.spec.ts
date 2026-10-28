@@ -108,41 +108,43 @@ async function readRectPathProbe(page: Page, origin: string): Promise<RectPathPr
 }
 
 test.describe('freeform path="rect" gradient', () => {
-	test('every binding paints the true nested-rect field, byte-identically', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readRectPathProbe);
+	test(
+		'every binding paints the true nested-rect field, byte-identically',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readRectPathProbe);
 
-		const failures: string[] = [];
-		for (const { framework, value } of results) {
-			if (value.kind === 'none') {
-				failures.push(
-					`${framework.name}: no <pattern>/<image> or CSS background-image data URI found - the gradient did not render at all`,
-				);
-				continue;
+			const failures: string[] = [];
+			for (const { framework, value } of results) {
+				if (value.kind === 'none') {
+					failures.push(
+						`${framework.name}: no <pattern>/<image> or CSS background-image data URI found - the gradient did not render at all`,
+					);
+					continue;
+				}
+				if (value.rectBandCount < 10) {
+					failures.push(
+						`${framework.name}: decoded markup has only ${value.rectBandCount} <rect> band(s) - expected the nested-rect field (~40 bands), not a flattened approximation`,
+					);
+				}
 			}
-			if (value.rectBandCount < 10) {
-				failures.push(
-					`${framework.name}: decoded markup has only ${value.rectBandCount} <rect> band(s) - expected the nested-rect field (~40 bands), not a flattened approximation`,
-				);
-			}
-		}
 
-		const [reference, ...rest] = results;
-		for (const candidate of rest) {
-			if (
-				candidate.value.kind !== 'none' &&
-				reference.value.kind !== 'none' &&
-				candidate.value.markup !== reference.value.markup
-			) {
-				failures.push(
-					`${candidate.framework.name}: decoded gradient markup differs from ${reference.framework.name}'s ` +
-						`(lengths ${candidate.value.markup.length} vs ${reference.value.markup.length})`,
-				);
+			const [reference, ...rest] = results;
+			for (const candidate of rest) {
+				if (
+					candidate.value.kind !== 'none' &&
+					reference.value.kind !== 'none' &&
+					candidate.value.markup !== reference.value.markup
+				) {
+					failures.push(
+						`${candidate.framework.name}: decoded gradient markup differs from ${reference.framework.name}'s ` +
+							`(lengths ${candidate.value.markup.length} vs ${reference.value.markup.length})`,
+					);
+				}
 			}
-		}
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

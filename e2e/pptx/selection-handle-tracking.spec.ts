@@ -30,6 +30,8 @@ import JSZip from 'jszip';
 import { fixture, loadDeck, slideElements, viewport } from './support/deck';
 
 test.use({ viewport: { width: 1440, height: 900 } });
+// Generated decks use testInfo.outputPath; pages and document state are per test.
+test.describe.configure({ mode: 'parallel' });
 
 const SHAPES_DECK = fixture('format-painter.pptx');
 

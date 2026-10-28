@@ -198,73 +198,81 @@ async function probeRename(page: Page, origin: string): Promise<RenameProbe> {
 }
 
 test.describe('blackboard mode', () => {
-	test('one click arms black screen + pen, and ink paints above the blackout', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
-			probeBlackboard(page, origin),
-		);
+	test(
+		'one click arms black screen + pen, and ink paints above the blackout',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
+				probeBlackboard(page, origin),
+			);
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.hasControl) {
-				problems.push(`${framework.name}: show toolbar has no "blackboard" control`);
-				continue;
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.hasControl) {
+					problems.push(`${framework.name}: show toolbar has no "blackboard" control`);
+					continue;
+				}
+				if (!value.blackoutVisible) {
+					problems.push(`${framework.name}: blackboard click did not raise the black screen`);
+				}
+				if (value.strokeCount < 1) {
+					problems.push(`${framework.name}: no ink stroke was recorded while blacked out`);
+				}
+				if (value.overlayZ === null || value.blackoutZ === null) {
+					problems.push(
+						`${framework.name}: stacking hooks missing (overlay z ${String(value.overlayZ)}, blackout z ${String(value.blackoutZ)})`,
+					);
+				} else if (value.overlayZ <= value.blackoutZ) {
+					problems.push(
+						`${framework.name}: ink overlay stacks at ${value.overlayZ}, below the blackout at ${value.blackoutZ}`,
+					);
+				}
+				if (!value.blackoutClearedOnSecondClick) {
+					problems.push(
+						`${framework.name}: second blackboard click did not clear the black screen`,
+					);
+				}
 			}
-			if (!value.blackoutVisible) {
-				problems.push(`${framework.name}: blackboard click did not raise the black screen`);
-			}
-			if (value.strokeCount < 1) {
-				problems.push(`${framework.name}: no ink stroke was recorded while blacked out`);
-			}
-			if (value.overlayZ === null || value.blackoutZ === null) {
-				problems.push(
-					`${framework.name}: stacking hooks missing (overlay z ${String(value.overlayZ)}, blackout z ${String(value.blackoutZ)})`,
-				);
-			} else if (value.overlayZ <= value.blackoutZ) {
-				problems.push(
-					`${framework.name}: ink overlay stacks at ${value.overlayZ}, below the blackout at ${value.blackoutZ}`,
-				);
-			}
-			if (!value.blackoutClearedOnSecondClick) {
-				problems.push(`${framework.name}: second blackboard click did not clear the black screen`);
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });
 
 test.describe('selection-pane rename', () => {
-	test('double-click renames, Escape cancels, undo restores', async ({ browser }, testInfo) => {
-		// It drives every framework's demo in one test, and took 59.4s of the 60s budget on a CI
-		// runner before timing out, so give it the tripled budget rather than a lucky margin.
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
-			probeRename(page, origin),
-		);
+	test(
+		'double-click renames, Escape cancels, undo restores',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			// It drives every framework's demo in one test, and took 59.4s of the 60s budget on a CI
+			// runner before timing out, so give it the tripled budget rather than a lucky margin.
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, (page, origin) =>
+				probeRename(page, origin),
+			);
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (value.rows < 1) {
-				problems.push(`${framework.name}: selection pane exposes no [data-pptx-selection-name]`);
-				continue;
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (value.rows < 1) {
+					problems.push(`${framework.name}: selection pane exposes no [data-pptx-selection-name]`);
+					continue;
+				}
+				if (value.after !== NEW_NAME) {
+					problems.push(
+						`${framework.name}: committed rename shows "${value.after}", expected "${NEW_NAME}"`,
+					);
+				}
+				if (value.afterCancel !== NEW_NAME) {
+					problems.push(
+						`${framework.name}: Escape should cancel, but the row shows "${value.afterCancel}"`,
+					);
+				}
+				if (value.afterUndo !== value.before) {
+					problems.push(
+						`${framework.name}: undo shows "${value.afterUndo}", expected the original "${value.before}"`,
+					);
+				}
 			}
-			if (value.after !== NEW_NAME) {
-				problems.push(
-					`${framework.name}: committed rename shows "${value.after}", expected "${NEW_NAME}"`,
-				);
-			}
-			if (value.afterCancel !== NEW_NAME) {
-				problems.push(
-					`${framework.name}: Escape should cancel, but the row shows "${value.afterCancel}"`,
-				);
-			}
-			if (value.afterUndo !== value.before) {
-				problems.push(
-					`${framework.name}: undo shows "${value.afterUndo}", expected the original "${value.before}"`,
-				);
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

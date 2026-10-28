@@ -268,101 +268,103 @@ interface Chart3DClickSelectResult {
 }
 
 test.describe('3D chart click-to-select (barChart3D opt-in)', () => {
-	test('clicking a bar3D mark selects it, mirrored into the inspector where a binding wires that up', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		requireWebGL();
+	test(
+		'clicking a bar3D mark selects it, mirrored into the inspector where a binding wires that up',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			requireWebGL();
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin): Promise<Chart3DClickSelectResult> => {
-				const pageErrors: string[] = [];
-				page.on('pageerror', (err) => pageErrors.push(String(err)));
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin): Promise<Chart3DClickSelectResult> => {
+					const pageErrors: string[] = [];
+					page.on('pageerror', (err) => pageErrors.push(String(err)));
 
-				await loadDeckAt(page, origin, FIXTURE);
-				await slideStage(page).waitFor();
+					await loadDeckAt(page, origin, FIXTURE);
+					await slideStage(page).waitFor();
 
-				const host = chartHost(page);
-				await host.waitFor({ timeout: 10_000 });
-				const canvas = host.locator('canvas');
-				await expect(canvas).toBeVisible({ timeout: 10_000 });
-				// Let the scene's first frame / OrbitControls settle.
-				await page.waitForTimeout(800);
+					const host = chartHost(page);
+					await host.waitFor({ timeout: 10_000 });
+					const canvas = host.locator('canvas');
+					await expect(canvas).toBeVisible({ timeout: 10_000 });
+					// Let the scene's first frame / OrbitControls settle.
+					await page.waitForTimeout(800);
 
-				// Select the chart first: see the file header for why every binding
-				// gets this step even though React/Vue did not strictly need it live.
-				const canvasBox = (await canvas.boundingBox())!;
-				await page.mouse.click(
-					canvasBox.x + canvasBox.width * 0.02,
-					canvasBox.y + canvasBox.height * 0.02,
-				);
-				await page.waitForTimeout(300);
+					// Select the chart first: see the file header for why every binding
+					// gets this step even though React/Vue did not strictly need it live.
+					const canvasBox = (await canvas.boundingBox())!;
+					await page.mouse.click(
+						canvasBox.x + canvasBox.width * 0.02,
+						canvasBox.y + canvasBox.height * 0.02,
+					);
+					await page.waitForTimeout(300);
 
-				const hit = await findMark(page, canvas);
+					const hit = await findMark(page, canvas);
 
-				// A plain click: no drag. Selection only, never value-editing.
-				await page.mouse.click(hit.x, hit.y);
-				await page.waitForTimeout(400);
+					// A plain click: no drag. Selection only, never value-editing.
+					await page.mouse.click(hit.x, hit.y);
+					await page.waitForTimeout(400);
 
-				// The scene must still be alive and interactive after the click: move
-				// away and back, and expect a fresh (still non-empty) tooltip.
-				await page.mouse.move(hit.x + 4, hit.y + 4);
-				await page.waitForTimeout(20);
-				await page.mouse.move(hit.x, hit.y);
-				await page.waitForTimeout(20);
-				const titleAfterClick = await tooltipOf(canvas);
+					// The scene must still be alive and interactive after the click: move
+					// away and back, and expect a fresh (still non-empty) tooltip.
+					await page.mouse.move(hit.x + 4, hit.y + 4);
+					await page.waitForTimeout(20);
+					await page.mouse.move(hit.x, hit.y);
+					await page.waitForTimeout(20);
+					const titleAfterClick = await tooltipOf(canvas);
 
-				const inspector = page.locator('[data-pptx-inspector]:visible').first();
-				const highlightCount = await inspector
-					.locator('[class*="highlight" i], [class*="ring-primary" i]')
-					.count()
-					.catch(() => 0);
+					const inspector = page.locator('[data-pptx-inspector]:visible').first();
+					const highlightCount = await inspector
+						.locator('[class*="highlight" i], [class*="ring-primary" i]')
+						.count()
+						.catch(() => 0);
 
-				return {
-					pageErrors,
-					hitTitle: hit.title,
-					canvasVisibleAfterClick: await canvas.isVisible(),
-					canvasBoxAfterClick: await canvas.boundingBox(),
-					titleAfterClick,
-					highlightCount,
-				};
-			},
-			{ path: '/?barChart3D=1', concurrency: 'sequential' },
-		);
+					return {
+						pageErrors,
+						hitTitle: hit.title,
+						canvasVisibleAfterClick: await canvas.isVisible(),
+						canvasBoxAfterClick: await canvas.boundingBox(),
+						titleAfterClick,
+						highlightCount,
+					};
+				},
+				{ path: '/?barChart3D=1', concurrency: 'sequential' },
+			);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.pageErrors.length > 0) {
-				problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
-			}
-			if (!value.hitTitle) {
-				problems.push('no 3D chart mark reported a hover tooltip anywhere in the probed grid');
-			}
-			if (
-				!value.canvasVisibleAfterClick ||
-				!value.canvasBoxAfterClick ||
-				value.canvasBoxAfterClick.width <= 0 ||
-				value.canvasBoxAfterClick.height <= 0
-			) {
-				problems.push('the WebGL canvas is gone or has zero size after clicking a mark');
-			}
-			if (!value.titleAfterClick) {
-				problems.push(
-					're-hovering the clicked mark reports no tooltip afterwards; the scene may have broken',
-				);
-			}
-			if (value.highlightCount > 1) {
-				problems.push(
-					`${value.highlightCount} inspector cells carry the canvas-selection highlight at once (expected at most 1)`,
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.pageErrors.length > 0) {
+					problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
+				}
+				if (!value.hitTitle) {
+					problems.push('no 3D chart mark reported a hover tooltip anywhere in the probed grid');
+				}
+				if (
+					!value.canvasVisibleAfterClick ||
+					!value.canvasBoxAfterClick ||
+					value.canvasBoxAfterClick.width <= 0 ||
+					value.canvasBoxAfterClick.height <= 0
+				) {
+					problems.push('the WebGL canvas is gone or has zero size after clicking a mark');
+				}
+				if (!value.titleAfterClick) {
+					problems.push(
+						're-hovering the clicked mark reports no tooltip afterwards; the scene may have broken',
+					);
+				}
+				if (value.highlightCount > 1) {
+					problems.push(
+						`${value.highlightCount} inspector cells carry the canvas-selection highlight at once (expected at most 1)`,
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });
 
 // ── surface3D: click-to-select (+ vertex highlight) and drag-to-value ───────
@@ -379,127 +381,129 @@ interface Surface3DResult {
 }
 
 test.describe('3D surface chart click-to-select + drag-to-value (surfaceChart3D opt-in)', () => {
-	test('clicking a surface3D vertex selects it (highlighting the vertex marker), and dragging it does not break the scene', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		requireWebGL();
+	test(
+		'clicking a surface3D vertex selects it (highlighting the vertex marker), and dragging it does not break the scene',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			requireWebGL();
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin): Promise<Surface3DResult> => {
-				const pageErrors: string[] = [];
-				page.on('pageerror', (err) => pageErrors.push(String(err)));
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin): Promise<Surface3DResult> => {
+					const pageErrors: string[] = [];
+					page.on('pageerror', (err) => pageErrors.push(String(err)));
 
-				await loadDeckAt(page, origin, GALLERY_FIXTURE);
-				await slideStage(page).waitFor();
-				await gotoSlide(page, SURFACE_SLIDE);
+					await loadDeckAt(page, origin, GALLERY_FIXTURE);
+					await slideStage(page).waitFor();
+					await gotoSlide(page, SURFACE_SLIDE);
 
-				const host = chartHost(page);
-				await host.waitFor({ timeout: 10_000 });
-				const canvas = host.locator('canvas');
-				await expect(canvas).toBeVisible({ timeout: 10_000 });
-				// Let the scene's first frame / OrbitControls settle.
-				await page.waitForTimeout(800);
+					const host = chartHost(page);
+					await host.waitFor({ timeout: 10_000 });
+					const canvas = host.locator('canvas');
+					await expect(canvas).toBeVisible({ timeout: 10_000 });
+					// Let the scene's first frame / OrbitControls settle.
+					await page.waitForTimeout(800);
 
-				// Select the chart first: see the barChart3D test above for why every
-				// binding gets this step even though not every one strictly needs it.
-				const canvasBox = (await canvas.boundingBox())!;
-				await page.mouse.click(
-					canvasBox.x + canvasBox.width * 0.02,
-					canvasBox.y + canvasBox.height * 0.02,
-				);
-				await page.waitForTimeout(300);
+					// Select the chart first: see the barChart3D test above for why every
+					// binding gets this step even though not every one strictly needs it.
+					const canvasBox = (await canvas.boundingBox())!;
+					await page.mouse.click(
+						canvasBox.x + canvasBox.width * 0.02,
+						canvasBox.y + canvasBox.height * 0.02,
+					);
+					await page.waitForTimeout(300);
 
-				const hit = await findMark(page, canvas);
+					const hit = await findMark(page, canvas);
 
-				// A plain click: no drag. Selects the vertex, which now (unlike the
-				// prior select-only surface3D scene) also positions the highlight
-				// marker mesh onto it - not pixel-verifiable headlessly, but a thrown
-				// error positioning it would surface as a page error below.
-				await page.mouse.click(hit.x, hit.y);
-				await page.waitForTimeout(400);
+					// A plain click: no drag. Selects the vertex, which now (unlike the
+					// prior select-only surface3D scene) also positions the highlight
+					// marker mesh onto it - not pixel-verifiable headlessly, but a thrown
+					// error positioning it would surface as a page error below.
+					await page.mouse.click(hit.x, hit.y);
+					await page.waitForTimeout(400);
 
-				await page.mouse.move(hit.x + 4, hit.y + 4);
-				await page.waitForTimeout(20);
-				await page.mouse.move(hit.x, hit.y);
-				await page.waitForTimeout(20);
-				const titleAfterSelect = await tooltipOf(canvas);
-				const canvasVisibleAfterSelect = await canvas.isVisible();
-				const canvasBoxAfterSelect = await canvas.boundingBox();
+					await page.mouse.move(hit.x + 4, hit.y + 4);
+					await page.waitForTimeout(20);
+					await page.mouse.move(hit.x, hit.y);
+					await page.waitForTimeout(20);
+					const titleAfterSelect = await tooltipOf(canvas);
+					const canvasVisibleAfterSelect = await canvas.isVisible();
+					const canvasBoxAfterSelect = await canvas.boundingBox();
 
-				// Drag the SAME vertex vertically past the threshold. Exact-value
-				// verification is out of scope (see the barChart3D test's file-header
-				// note: calibrating an exact pixel-to-value drag for a WebGL mesh's
-				// screen projection is fragile in headless WebGL); what is required is
-				// that the gesture completes, commits, and leaves the scene intact.
-				await page.mouse.move(hit.x, hit.y);
-				await page.mouse.down();
-				await page.mouse.move(hit.x, hit.y - 60, { steps: 8 });
-				await page.waitForTimeout(150);
-				await page.mouse.up();
-				await page.waitForTimeout(400);
+					// Drag the SAME vertex vertically past the threshold. Exact-value
+					// verification is out of scope (see the barChart3D test's file-header
+					// note: calibrating an exact pixel-to-value drag for a WebGL mesh's
+					// screen projection is fragile in headless WebGL); what is required is
+					// that the gesture completes, commits, and leaves the scene intact.
+					await page.mouse.move(hit.x, hit.y);
+					await page.mouse.down();
+					await page.mouse.move(hit.x, hit.y - 60, { steps: 8 });
+					await page.waitForTimeout(150);
+					await page.mouse.up();
+					await page.waitForTimeout(400);
 
-				await page.mouse.move(hit.x + 4, hit.y + 4);
-				await page.waitForTimeout(20);
-				await page.mouse.move(hit.x, hit.y);
-				await page.waitForTimeout(20);
-				const titleAfterDrag = await tooltipOf(canvas);
+					await page.mouse.move(hit.x + 4, hit.y + 4);
+					await page.waitForTimeout(20);
+					await page.mouse.move(hit.x, hit.y);
+					await page.waitForTimeout(20);
+					const titleAfterDrag = await tooltipOf(canvas);
 
-				return {
-					pageErrors,
-					hitTitle: hit.title,
-					canvasVisibleAfterSelect,
-					canvasBoxAfterSelect,
-					titleAfterSelect,
-					canvasVisibleAfterDrag: await canvas.isVisible(),
-					canvasBoxAfterDrag: await canvas.boundingBox(),
-					titleAfterDrag,
-				};
-			},
-			{ path: '/?surfaceChart3D=1', concurrency: 'sequential' },
-		);
+					return {
+						pageErrors,
+						hitTitle: hit.title,
+						canvasVisibleAfterSelect,
+						canvasBoxAfterSelect,
+						titleAfterSelect,
+						canvasVisibleAfterDrag: await canvas.isVisible(),
+						canvasBoxAfterDrag: await canvas.boundingBox(),
+						titleAfterDrag,
+					};
+				},
+				{ path: '/?surfaceChart3D=1', concurrency: 'sequential' },
+			);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.pageErrors.length > 0) {
-				problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
-			}
-			if (!value.hitTitle) {
-				problems.push('no surface3D vertex reported a hover tooltip anywhere in the probed grid');
-			}
-			if (
-				!value.canvasVisibleAfterSelect ||
-				!value.canvasBoxAfterSelect ||
-				value.canvasBoxAfterSelect.width <= 0 ||
-				value.canvasBoxAfterSelect.height <= 0
-			) {
-				problems.push('the WebGL canvas is gone or has zero size after selecting a vertex');
-			}
-			if (!value.titleAfterSelect) {
-				problems.push(
-					're-hovering the selected vertex reports no tooltip afterwards; the scene may have broken',
-				);
-			}
-			if (
-				!value.canvasVisibleAfterDrag ||
-				!value.canvasBoxAfterDrag ||
-				value.canvasBoxAfterDrag.width <= 0 ||
-				value.canvasBoxAfterDrag.height <= 0
-			) {
-				problems.push('the WebGL canvas is gone or has zero size after dragging a vertex');
-			}
-			if (!value.titleAfterDrag) {
-				problems.push(
-					're-hovering the dragged vertex reports no tooltip afterwards; the scene may have broken',
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.pageErrors.length > 0) {
+					problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
+				}
+				if (!value.hitTitle) {
+					problems.push('no surface3D vertex reported a hover tooltip anywhere in the probed grid');
+				}
+				if (
+					!value.canvasVisibleAfterSelect ||
+					!value.canvasBoxAfterSelect ||
+					value.canvasBoxAfterSelect.width <= 0 ||
+					value.canvasBoxAfterSelect.height <= 0
+				) {
+					problems.push('the WebGL canvas is gone or has zero size after selecting a vertex');
+				}
+				if (!value.titleAfterSelect) {
+					problems.push(
+						're-hovering the selected vertex reports no tooltip afterwards; the scene may have broken',
+					);
+				}
+				if (
+					!value.canvasVisibleAfterDrag ||
+					!value.canvasBoxAfterDrag ||
+					value.canvasBoxAfterDrag.width <= 0 ||
+					value.canvasBoxAfterDrag.height <= 0
+				) {
+					problems.push('the WebGL canvas is gone or has zero size after dragging a vertex');
+				}
+				if (!value.titleAfterDrag) {
+					problems.push(
+						're-hovering the dragged vertex reports no tooltip afterwards; the scene may have broken',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });
 
 // ── pie3D: click-to-select and drag-to-value ────────────────────────────────
@@ -516,125 +520,127 @@ interface Pie3DResult {
 }
 
 test.describe('3D pie chart click-to-select + drag-to-value (pieChart3D opt-in)', () => {
-	test('clicking a pie3D wedge selects it, and dragging it sweeps its value without breaking the scene', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		requireWebGL();
+	test(
+		'clicking a pie3D wedge selects it, and dragging it sweeps its value without breaking the scene',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			requireWebGL();
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin): Promise<Pie3DResult> => {
-				const pageErrors: string[] = [];
-				page.on('pageerror', (err) => pageErrors.push(String(err)));
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin): Promise<Pie3DResult> => {
+					const pageErrors: string[] = [];
+					page.on('pageerror', (err) => pageErrors.push(String(err)));
 
-				await loadDeckAt(page, origin, PIE3D_FIXTURE);
-				await slideStage(page).waitFor();
+					await loadDeckAt(page, origin, PIE3D_FIXTURE);
+					await slideStage(page).waitFor();
 
-				const host = chartHost(page);
-				await host.waitFor({ timeout: 10_000 });
-				const canvas = host.locator('canvas');
-				await expect(canvas).toBeVisible({ timeout: 10_000 });
-				// Let the scene's first frame / OrbitControls settle.
-				await page.waitForTimeout(800);
+					const host = chartHost(page);
+					await host.waitFor({ timeout: 10_000 });
+					const canvas = host.locator('canvas');
+					await expect(canvas).toBeVisible({ timeout: 10_000 });
+					// Let the scene's first frame / OrbitControls settle.
+					await page.waitForTimeout(800);
 
-				// Select the chart first: see the barChart3D test above for why every
-				// binding gets this step even though not every one strictly needs it.
-				const canvasBox = (await canvas.boundingBox())!;
-				await page.mouse.click(
-					canvasBox.x + canvasBox.width * 0.02,
-					canvasBox.y + canvasBox.height * 0.02,
-				);
-				await page.waitForTimeout(300);
+					// Select the chart first: see the barChart3D test above for why every
+					// binding gets this step even though not every one strictly needs it.
+					const canvasBox = (await canvas.boundingBox())!;
+					await page.mouse.click(
+						canvasBox.x + canvasBox.width * 0.02,
+						canvasBox.y + canvasBox.height * 0.02,
+					);
+					await page.waitForTimeout(300);
 
-				const hit = await findMark(page, canvas);
+					const hit = await findMark(page, canvas);
 
-				// A plain click: no drag. Selects the wedge, applying its own
-				// emissive highlight (`applyChart3DMeshHighlight`).
-				await page.mouse.click(hit.x, hit.y);
-				await page.waitForTimeout(400);
+					// A plain click: no drag. Selects the wedge, applying its own
+					// emissive highlight (`applyChart3DMeshHighlight`).
+					await page.mouse.click(hit.x, hit.y);
+					await page.waitForTimeout(400);
 
-				await page.mouse.move(hit.x + 4, hit.y + 4);
-				await page.waitForTimeout(20);
-				await page.mouse.move(hit.x, hit.y);
-				await page.waitForTimeout(20);
-				const titleAfterSelect = await tooltipOf(canvas);
-				const canvasVisibleAfterSelect = await canvas.isVisible();
-				const canvasBoxAfterSelect = await canvas.boundingBox();
+					await page.mouse.move(hit.x + 4, hit.y + 4);
+					await page.waitForTimeout(20);
+					await page.mouse.move(hit.x, hit.y);
+					await page.waitForTimeout(20);
+					const titleAfterSelect = await tooltipOf(canvas);
+					const canvasVisibleAfterSelect = await canvas.isVisible();
+					const canvasBoxAfterSelect = await canvas.boundingBox();
 
-				// Drag the SAME wedge: sweeps its trailing edge around the pie's
-				// centre (see `pie-chart-3d-drag.ts`), renormalising every other
-				// slice's angle live. Exact-value verification is out of scope (see
-				// the barChart3D test's file-header note: calibrating an exact
-				// pixel-to-value drag for a WebGL mesh's screen projection is
-				// fragile in headless WebGL, and doubly so for an ANGLE the camera
-				// orbit can reorient); what is required is that the gesture
-				// completes, commits, and leaves the scene intact.
-				await page.mouse.move(hit.x, hit.y);
-				await page.mouse.down();
-				await page.mouse.move(hit.x - 40, hit.y - 40, { steps: 8 });
-				await page.waitForTimeout(150);
-				await page.mouse.up();
-				await page.waitForTimeout(400);
+					// Drag the SAME wedge: sweeps its trailing edge around the pie's
+					// centre (see `pie-chart-3d-drag.ts`), renormalising every other
+					// slice's angle live. Exact-value verification is out of scope (see
+					// the barChart3D test's file-header note: calibrating an exact
+					// pixel-to-value drag for a WebGL mesh's screen projection is
+					// fragile in headless WebGL, and doubly so for an ANGLE the camera
+					// orbit can reorient); what is required is that the gesture
+					// completes, commits, and leaves the scene intact.
+					await page.mouse.move(hit.x, hit.y);
+					await page.mouse.down();
+					await page.mouse.move(hit.x - 40, hit.y - 40, { steps: 8 });
+					await page.waitForTimeout(150);
+					await page.mouse.up();
+					await page.waitForTimeout(400);
 
-				await page.mouse.move(hit.x + 4, hit.y + 4);
-				await page.waitForTimeout(20);
-				await page.mouse.move(hit.x, hit.y);
-				await page.waitForTimeout(20);
-				const titleAfterDrag = await tooltipOf(canvas);
+					await page.mouse.move(hit.x + 4, hit.y + 4);
+					await page.waitForTimeout(20);
+					await page.mouse.move(hit.x, hit.y);
+					await page.waitForTimeout(20);
+					const titleAfterDrag = await tooltipOf(canvas);
 
-				return {
-					pageErrors,
-					hitTitle: hit.title,
-					canvasVisibleAfterSelect,
-					canvasBoxAfterSelect,
-					titleAfterSelect,
-					canvasVisibleAfterDrag: await canvas.isVisible(),
-					canvasBoxAfterDrag: await canvas.boundingBox(),
-					titleAfterDrag,
-				};
-			},
-			{ path: '/?pieChart3D=1', concurrency: 'sequential' },
-		);
+					return {
+						pageErrors,
+						hitTitle: hit.title,
+						canvasVisibleAfterSelect,
+						canvasBoxAfterSelect,
+						titleAfterSelect,
+						canvasVisibleAfterDrag: await canvas.isVisible(),
+						canvasBoxAfterDrag: await canvas.boundingBox(),
+						titleAfterDrag,
+					};
+				},
+				{ path: '/?pieChart3D=1', concurrency: 'sequential' },
+			);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.pageErrors.length > 0) {
-				problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
-			}
-			if (!value.hitTitle) {
-				problems.push('no pie3D wedge reported a hover tooltip anywhere in the probed grid');
-			}
-			if (
-				!value.canvasVisibleAfterSelect ||
-				!value.canvasBoxAfterSelect ||
-				value.canvasBoxAfterSelect.width <= 0 ||
-				value.canvasBoxAfterSelect.height <= 0
-			) {
-				problems.push('the WebGL canvas is gone or has zero size after selecting a wedge');
-			}
-			if (!value.titleAfterSelect) {
-				problems.push(
-					're-hovering the selected wedge reports no tooltip afterwards; the scene may have broken',
-				);
-			}
-			if (
-				!value.canvasVisibleAfterDrag ||
-				!value.canvasBoxAfterDrag ||
-				value.canvasBoxAfterDrag.width <= 0 ||
-				value.canvasBoxAfterDrag.height <= 0
-			) {
-				problems.push('the WebGL canvas is gone or has zero size after dragging a wedge');
-			}
-			if (!value.titleAfterDrag) {
-				problems.push(
-					're-hovering the dragged wedge reports no tooltip afterwards; the scene may have broken',
-				);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.pageErrors.length > 0) {
+					problems.push(`unexpected page errors: ${value.pageErrors.join('; ')}`);
+				}
+				if (!value.hitTitle) {
+					problems.push('no pie3D wedge reported a hover tooltip anywhere in the probed grid');
+				}
+				if (
+					!value.canvasVisibleAfterSelect ||
+					!value.canvasBoxAfterSelect ||
+					value.canvasBoxAfterSelect.width <= 0 ||
+					value.canvasBoxAfterSelect.height <= 0
+				) {
+					problems.push('the WebGL canvas is gone or has zero size after selecting a wedge');
+				}
+				if (!value.titleAfterSelect) {
+					problems.push(
+						're-hovering the selected wedge reports no tooltip afterwards; the scene may have broken',
+					);
+				}
+				if (
+					!value.canvasVisibleAfterDrag ||
+					!value.canvasBoxAfterDrag ||
+					value.canvasBoxAfterDrag.width <= 0 ||
+					value.canvasBoxAfterDrag.height <= 0
+				) {
+					problems.push('the WebGL canvas is gone or has zero size after dragging a wedge');
+				}
+				if (!value.titleAfterDrag) {
+					problems.push(
+						're-hovering the dragged wedge reports no tooltip afterwards; the scene may have broken',
+					);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

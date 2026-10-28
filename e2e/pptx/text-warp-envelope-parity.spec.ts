@@ -311,215 +311,223 @@ async function readSlicedGlyphBoxes(page: Page, origin: string): Promise<SlicedG
 }
 
 test.describe('wordArt envelope/former-"simple" presets render as true SVG textPath', () => {
-	test('every classified preset uses <textPath> or the glyph envelope, none fall back to CSS-transform', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readShapes);
+	test(
+		'every classified preset uses <textPath> or the glyph envelope, none fall back to CSS-transform',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readShapes);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			for (const shape of value) {
-				if (shape.name === 'plain-control') {
-					// `textPlain` carries no warp at all; must render no textPath/glyphs.
-					if (shape.hasTextPath || shape.glyphCount > 0) {
-						problems.push(`${shape.name}: unexpectedly warped (textPlain has no warp)`);
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				for (const shape of value) {
+					if (shape.name === 'plain-control') {
+						// `textPlain` carries no warp at all; must render no textPath/glyphs.
+						if (shape.hasTextPath || shape.glyphCount > 0) {
+							problems.push(`${shape.name}: unexpectedly warped (textPlain has no warp)`);
+						}
+						continue;
 					}
-					continue;
-				}
-				if (GLYPH_ENVELOPE_SHAPES.has(shape.name)) {
-					// inflate/deflate/can-up: true two-curve envelope, one <text> per
-					// glyph, never a shared-baseline <textPath>.
-					if (shape.glyphCount === 0) {
+					if (GLYPH_ENVELOPE_SHAPES.has(shape.name)) {
+						// inflate/deflate/can-up: true two-curve envelope, one <text> per
+						// glyph, never a shared-baseline <textPath>.
+						if (shape.glyphCount === 0) {
+							problems.push(
+								`${shape.name}: no per-glyph <text> found (fell back to textPath or CSS)`,
+							);
+						}
+						if (shape.hasTextPath) {
+							problems.push(
+								`${shape.name}: unexpectedly has a <textPath> (should be glyph-envelope)`,
+							);
+						}
+						continue;
+					}
+					if (shape.name === WIDE_GLYPH_SHAPE) {
+						// Also a glyph-envelope shape, but `readShapes`'s direct-child
+						// `svg > text[transform]` locator undercounts it (at least one
+						// glyph is sliced into `svg > g > text`, not `svg > text`); it is
+						// asserted properly, sliced glyphs included, in the dedicated
+						// "wide-glyph-can" describe block below via
+						// `readSlicedGlyphBoxes`. Here just confirm no textPath fallback.
+						if (shape.hasTextPath) {
+							problems.push(
+								`${shape.name}: unexpectedly has a <textPath> (should be glyph-envelope)`,
+							);
+						}
+						continue;
+					}
+					if (!shape.hasTextPath) {
 						problems.push(
-							`${shape.name}: no per-glyph <text> found (fell back to textPath or CSS)`,
+							`${shape.name}: no <textPath> found (fell back to CSS-transform or flat text)`,
 						);
 					}
-					if (shape.hasTextPath) {
-						problems.push(
-							`${shape.name}: unexpectedly has a <textPath> (should be glyph-envelope)`,
-						);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+
+			expect(failures.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'a single-paragraph envelope/former-"simple" element still bends (non-flat baseline)',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readShapes);
+
+			// `fade-right`'s per-line generator used to degenerate to a flat
+			// baseline at a single paragraph's t=0.5 (see the fixture's own doc
+			// comment); `slant-up`/`cascade-down`/`arch-control` were never
+			// degenerate and are covered by the shared unit tests instead.
+			const mustBendPath = new Set(['fade-right']);
+
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				for (const shape of value) {
+					// Covered by the dedicated "wide-glyph-can" describe block below
+					// instead: `readShapes`'s direct-child locator undercounts a shape
+					// with sliced glyphs, so `distinctGlyphScaleCount` here is not a
+					// reliable signal for it.
+					if (shape.name === WIDE_GLYPH_SHAPE) {
+						continue;
 					}
-					continue;
-				}
-				if (shape.name === WIDE_GLYPH_SHAPE) {
-					// Also a glyph-envelope shape, but `readShapes`'s direct-child
-					// `svg > text[transform]` locator undercounts it (at least one
-					// glyph is sliced into `svg > g > text`, not `svg > text`); it is
-					// asserted properly, sliced glyphs included, in the dedicated
-					// "wide-glyph-can" describe block below via
-					// `readSlicedGlyphBoxes`. Here just confirm no textPath fallback.
-					if (shape.hasTextPath) {
-						problems.push(
-							`${shape.name}: unexpectedly has a <textPath> (should be glyph-envelope)`,
-						);
+					if (mustBendPath.has(shape.name) && shape.distinctBaselineYCount <= 1) {
+						problems.push(`${shape.name}: baseline path is a flat line (no warp visible)`);
 					}
-					continue;
+					// inflate/deflate/inflate-multi: the fixed residual - glyph HEIGHT
+					// must vary across the line (a true two-curve envelope), not just
+					// baseline Y. `can-up`/`can-down` are a DIFFERENT shape: their top
+					// and bottom `arcTo` curves share the same radius/centre-x and only
+					// differ by a constant vertical offset (see `glyphEnvelopeMatrix`'s
+					// doc comment), so they are mathematically parallel and every
+					// glyph's HEIGHT is genuinely equal - COM-verified 2026-09-06 (a
+					// cylinder warp shifts and shears glyphs along the arc, it does not
+					// stretch them). Asserting scaleY variation for `can-up` here was
+					// wrong; it is asserted via shear (`b`) variation instead, just
+					// below.
+					// An outline-rendered glyph (`ShapeFacts.outlineGlyphCount`) carries
+					// no `transform` attribute to read a scaleY/shear term FROM - the
+					// warp is already baked into its `d`, exactly (not an affine fit),
+					// so `outlineGlyphCount > 0` is itself the proof the envelope was
+					// applied for these two checks; whether the outline math itself is
+					// correct is covered by `text-warp-glyph-outline.test.ts` in
+					// pptx-viewer-shared, not this DOM-wiring spec.
+					if (
+						shape.outlineGlyphCount === 0 &&
+						GLYPH_ENVELOPE_HEIGHT_VARIES.has(shape.name) &&
+						shape.distinctGlyphScaleCount <= 1
+					) {
+						problems.push(`${shape.name}: every glyph has the same height (envelope not applied)`);
+					}
+					if (
+						shape.outlineGlyphCount === 0 &&
+						GLYPH_ENVELOPE_SHEAR_VARIES.has(shape.name) &&
+						shape.distinctGlyphShearCount <= 1
+					) {
+						problems.push(`${shape.name}: every glyph has the same shear (envelope not applied)`);
+					}
 				}
-				if (!shape.hasTextPath) {
-					problems.push(
-						`${shape.name}: no <textPath> found (fell back to CSS-transform or flat text)`,
-					);
-				}
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 
-	test('a single-paragraph envelope/former-"simple" element still bends (non-flat baseline)', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readShapes);
+	test(
+		'inflate glyph bbox height varies along the line, matching across bindings within 1px',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readInflateGlyphBoxes);
 
-		// `fade-right`'s per-line generator used to degenerate to a flat
-		// baseline at a single paragraph's t=0.5 (see the fixture's own doc
-		// comment); `slant-up`/`cascade-down`/`arch-control` were never
-		// degenerate and are covered by the shared unit tests instead.
-		const mustBendPath = new Set(['fade-right']);
-
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			for (const shape of value) {
-				// Covered by the dedicated "wide-glyph-can" describe block below
-				// instead: `readShapes`'s direct-child locator undercounts a shape
-				// with sliced glyphs, so `distinctGlyphScaleCount` here is not a
-				// reliable signal for it.
-				if (shape.name === WIDE_GLYPH_SHAPE) {
-					continue;
-				}
-				if (mustBendPath.has(shape.name) && shape.distinctBaselineYCount <= 1) {
-					problems.push(`${shape.name}: baseline path is a flat line (no warp visible)`);
-				}
-				// inflate/deflate/inflate-multi: the fixed residual - glyph HEIGHT
-				// must vary across the line (a true two-curve envelope), not just
-				// baseline Y. `can-up`/`can-down` are a DIFFERENT shape: their top
-				// and bottom `arcTo` curves share the same radius/centre-x and only
-				// differ by a constant vertical offset (see `glyphEnvelopeMatrix`'s
-				// doc comment), so they are mathematically parallel and every
-				// glyph's HEIGHT is genuinely equal - COM-verified 2026-09-06 (a
-				// cylinder warp shifts and shears glyphs along the arc, it does not
-				// stretch them). Asserting scaleY variation for `can-up` here was
-				// wrong; it is asserted via shear (`b`) variation instead, just
-				// below.
-				// An outline-rendered glyph (`ShapeFacts.outlineGlyphCount`) carries
-				// no `transform` attribute to read a scaleY/shear term FROM - the
-				// warp is already baked into its `d`, exactly (not an affine fit),
-				// so `outlineGlyphCount > 0` is itself the proof the envelope was
-				// applied for these two checks; whether the outline math itself is
-				// correct is covered by `text-warp-glyph-outline.test.ts` in
-				// pptx-viewer-shared, not this DOM-wiring spec.
-				if (
-					shape.outlineGlyphCount === 0 &&
-					GLYPH_ENVELOPE_HEIGHT_VARIES.has(shape.name) &&
-					shape.distinctGlyphScaleCount <= 1
-				) {
-					problems.push(`${shape.name}: every glyph has the same height (envelope not applied)`);
-				}
-				if (
-					shape.outlineGlyphCount === 0 &&
-					GLYPH_ENVELOPE_SHEAR_VARIES.has(shape.name) &&
-					shape.distinctGlyphShearCount <= 1
-				) {
-					problems.push(`${shape.name}: every glyph has the same shear (envelope not applied)`);
-				}
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-
-		expect(failures.join('\n')).toBe('');
-	});
-
-	test('inflate glyph bbox height varies along the line, matching across bindings within 1px', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readInflateGlyphBoxes);
-
-		// 1. Within each binding: a true two-curve envelope must vary glyph
-		//    height across the line (this is the fixed residual itself).
-		for (const { framework, value } of results) {
-			const heights = value.map((g) => g.bottom - g.top);
-			expect(
-				new Set(heights.map((h) => h.toFixed(1))).size,
-				`${framework.name}: glyph heights should vary across the line, got [${heights.map((h) => h.toFixed(1)).join(', ')}]`,
-			).toBeGreaterThan(1);
-		}
-
-		// 2. Across bindings: the same glyph index should land at (nearly) the
-		//    same top/bottom, since every binding computes the envelope from the
-		//    same shared `buildGlyphEnvelope` decision function. Measured on this
-		//    fixture: react/vue/angular/svelte agree to well under 1px; vanilla
-		//    (a different DOM-construction path than the other four's JSX/
-		//    template renderers) measured 1.03px on one glyph, pure sub-pixel
-		//    text anti-aliasing/hinting noise, not a logic difference (a real
-		//    envelope-math bug measured 7px on this same assertion before the
-		//    fixture pinned an explicit font - see this file's font comment).
-		const PIXEL_TOLERANCE = 1.5;
-		const [reference, ...rest] = results;
-		for (const { framework, value } of rest) {
-			expect(
-				value.length,
-				`${framework.name}: glyph count should match ${reference.framework.name}`,
-			).toBe(reference.value.length);
-			for (let i = 0; i < value.length; i++) {
+			// 1. Within each binding: a true two-curve envelope must vary glyph
+			//    height across the line (this is the fixed residual itself).
+			for (const { framework, value } of results) {
+				const heights = value.map((g) => g.bottom - g.top);
 				expect(
-					Math.abs(value[i].top - reference.value[i].top),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
-				expect(
-					Math.abs(value[i].bottom - reference.value[i].bottom),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					new Set(heights.map((h) => h.toFixed(1))).size,
+					`${framework.name}: glyph heights should vary across the line, got [${heights.map((h) => h.toFixed(1)).join(', ')}]`,
+				).toBeGreaterThan(1);
 			}
-		}
-	});
+
+			// 2. Across bindings: the same glyph index should land at (nearly) the
+			//    same top/bottom, since every binding computes the envelope from the
+			//    same shared `buildGlyphEnvelope` decision function. Measured on this
+			//    fixture: react/vue/angular/svelte agree to well under 1px; vanilla
+			//    (a different DOM-construction path than the other four's JSX/
+			//    template renderers) measured 1.03px on one glyph, pure sub-pixel
+			//    text anti-aliasing/hinting noise, not a logic difference (a real
+			//    envelope-math bug measured 7px on this same assertion before the
+			//    fixture pinned an explicit font - see this file's font comment).
+			const PIXEL_TOLERANCE = 1.5;
+			const [reference, ...rest] = results;
+			for (const { framework, value } of rest) {
+				expect(
+					value.length,
+					`${framework.name}: glyph count should match ${reference.framework.name}`,
+				).toBe(reference.value.length);
+				for (let i = 0; i < value.length; i++) {
+					expect(
+						Math.abs(value[i].top - reference.value[i].top),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					expect(
+						Math.abs(value[i].bottom - reference.value[i].bottom),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+				}
+			}
+		},
+	);
 
 	// Rows can no longer cross (the 2026-09-11 known gap): every paragraph is
 	// laid out as one unwarped block and warped by a single continuous mapping
 	// (`buildGlyphEnvelopeBlock` in pptx-viewer-shared), matching PowerPoint.
-	test('a multi-paragraph inflate block bends every paragraph in the same envelope, rows apart', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readInflateMultiGlyphBoxes);
+	test(
+		'a multi-paragraph inflate block bends every paragraph in the same envelope, rows apart',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readInflateMultiGlyphBoxes);
 
-		// `inflate-multi` is "Top" (3 glyphs) then "Bottom" (6 glyphs): 9 total.
-		// Paragraph 0 ("Top") must occupy the upper half of the envelope band,
-		// paragraph 1 ("Bottom") the lower half - the fixed residual this fixture
-		// pins (every binding used to gate the glyph envelope on a single
-		// paragraph and fall back to a shared-baseline `<textPath>` per line for
-		// anything else).
-		for (const { framework, value } of results) {
-			expect(value, `${framework.name}: expected 9 glyphs ("Top" + "Bottom")`).toHaveLength(9);
-			const topMaxBottom = Math.max(...value.slice(0, 3).map((g) => g.bottom));
-			const bottomMinTop = Math.min(...value.slice(3).map((g) => g.top));
-			expect(
-				topMaxBottom,
-				`${framework.name}: "Top" paragraph should sit entirely above "Bottom"`,
-			).toBeLessThan(bottomMinTop);
-		}
-
-		// Across bindings: the same glyph index should land at (nearly) the same
-		// top/bottom, since every binding computes the block from the same
-		// shared `buildGlyphEnvelopeBlock`.
-		const PIXEL_TOLERANCE = 1.5;
-		const [reference, ...rest] = results;
-		for (const { framework, value } of rest) {
-			for (let i = 0; i < value.length; i++) {
+			// `inflate-multi` is "Top" (3 glyphs) then "Bottom" (6 glyphs): 9 total.
+			// Paragraph 0 ("Top") must occupy the upper half of the envelope band,
+			// paragraph 1 ("Bottom") the lower half - the fixed residual this fixture
+			// pins (every binding used to gate the glyph envelope on a single
+			// paragraph and fall back to a shared-baseline `<textPath>` per line for
+			// anything else).
+			for (const { framework, value } of results) {
+				expect(value, `${framework.name}: expected 9 glyphs ("Top" + "Bottom")`).toHaveLength(9);
+				const topMaxBottom = Math.max(...value.slice(0, 3).map((g) => g.bottom));
+				const bottomMinTop = Math.min(...value.slice(3).map((g) => g.top));
 				expect(
-					Math.abs(value[i].top - reference.value[i].top),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
-				expect(
-					Math.abs(value[i].bottom - reference.value[i].bottom),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					topMaxBottom,
+					`${framework.name}: "Top" paragraph should sit entirely above "Bottom"`,
+				).toBeLessThan(bottomMinTop);
 			}
-		}
-	});
+
+			// Across bindings: the same glyph index should land at (nearly) the same
+			// top/bottom, since every binding computes the block from the same
+			// shared `buildGlyphEnvelopeBlock`.
+			const PIXEL_TOLERANCE = 1.5;
+			const [reference, ...rest] = results;
+			for (const { framework, value } of rest) {
+				for (let i = 0; i < value.length; i++) {
+					expect(
+						Math.abs(value[i].top - reference.value[i].top),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					expect(
+						Math.abs(value[i].bottom - reference.value[i].bottom),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+				}
+			}
+		},
+	);
 });
 
 test.describe('wide-glyph-can: a font with no obtainable file still gets the exact outline warp', () => {
@@ -529,44 +537,50 @@ test.describe('wide-glyph-can: a font with no obtainable file still gets the exa
 	// (pptx-viewer-shared) traces the glyph the browser itself renders for that
 	// family (`text-warp-glyph-trace.ts`), so the affine `<text transform>` /
 	// sliced fallback is no longer reached in a browser at all.
-	test('every binding renders the three glyphs as warped outlines, not affine text', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlicedGlyphBoxes);
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			if (value.length !== 3) {
-				problems.push(`expected 3 logical glyphs ("M", "O", "M"), got ${value.length}`);
-			}
-			if (!value.every((g) => g.isOutline)) {
-				problems.push('expected every glyph to be an outline <path>');
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-		expect(failures.join('\n')).toBe('');
-	});
+	test(
+		'every binding renders the three glyphs as warped outlines, not affine text',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlicedGlyphBoxes);
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				if (value.length !== 3) {
+					problems.push(`expected 3 logical glyphs ("M", "O", "M"), got ${value.length}`);
+				}
+				if (!value.every((g) => g.isOutline)) {
+					problems.push('expected every glyph to be an outline <path>');
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 
-	test('cross-binding agreement on the traced glyph boxes', async ({ browser }, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlicedGlyphBoxes);
-		const PIXEL_TOLERANCE = 1.5;
-		const [reference, ...rest] = results;
-		for (const { framework, value } of rest) {
-			expect(
-				value.length,
-				`${framework.name}: glyph count should match ${reference.framework.name}`,
-			).toBe(reference.value.length);
-			for (let i = 0; i < value.length; i++) {
+	test(
+		'cross-binding agreement on the traced glyph boxes',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlicedGlyphBoxes);
+			const PIXEL_TOLERANCE = 1.5;
+			const [reference, ...rest] = results;
+			for (const { framework, value } of rest) {
 				expect(
-					Math.abs(value[i].top - reference.value[i].top),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
-				expect(
-					Math.abs(value[i].bottom - reference.value[i].bottom),
-					`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
-				).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					value.length,
+					`${framework.name}: glyph count should match ${reference.framework.name}`,
+				).toBe(reference.value.length);
+				for (let i = 0; i < value.length; i++) {
+					expect(
+						Math.abs(value[i].top - reference.value[i].top),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} top`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+					expect(
+						Math.abs(value[i].bottom - reference.value[i].bottom),
+						`${framework.name} vs ${reference.framework.name}: glyph ${i} bottom`,
+					).toBeLessThanOrEqual(PIXEL_TOLERANCE);
+				}
 			}
-		}
-	});
+		},
+	);
 });

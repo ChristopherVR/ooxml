@@ -48,101 +48,108 @@ async function openAnimatedShapeInRibbon(page: Page, origin: string): Promise<vo
 }
 
 test.describe('cross-binding ribbon animation preview', () => {
-	test('Preview plays the selected element own effect in place, not a full slide show', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openAnimatedShapeInRibbon(page, origin);
-				// Scoped to the ribbon: an animated selection also opens the
-				// inspector's animation panel, which has a Preview button of its
-				// own, so an unscoped role query matched two buttons.
-				const preview = ribbon(page).getByRole('button', { name: 'Preview', exact: true });
-				const target = elementWithText(page, EFFECT_SOUND_SHAPE_TEXT);
-				// Record playback before clicking: the fixture's 500ms animation can
-				// finish before a busy runner resolves the next canvas locator.
-				await target.evaluate((el) => {
-					const doc = el.ownerDocument;
-					const elementId = el.getAttribute('data-element-id');
-					if (elementId === null) {
-						throw new Error('the preview target must identify its canvas element');
-					}
-					const record = (event: AnimationEvent): void => {
-						const node = event.target;
-						if (
-							!(node instanceof HTMLElement) ||
-							node.getAttribute('data-element-id') !== elementId ||
-							!node.closest('[data-pptx-viewport]')
-						) {
-							return;
+	test(
+		'Preview plays the selected element own effect in place, not a full slide show',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openAnimatedShapeInRibbon(page, origin);
+					// Scoped to the ribbon: an animated selection also opens the
+					// inspector's animation panel, which has a Preview button of its
+					// own, so an unscoped role query matched two buttons.
+					const preview = ribbon(page).getByRole('button', { name: 'Preview', exact: true });
+					const target = elementWithText(page, EFFECT_SOUND_SHAPE_TEXT);
+					// Record playback before clicking: the fixture's 500ms animation can
+					// finish before a busy runner resolves the next canvas locator.
+					await target.evaluate((el) => {
+						const doc = el.ownerDocument;
+						const elementId = el.getAttribute('data-element-id');
+						if (elementId === null) {
+							throw new Error('the preview target must identify its canvas element');
 						}
-						doc.documentElement.setAttribute('data-ribbon-preview-animation', event.animationName);
-						doc.removeEventListener('animationstart', record, true);
-					};
-					doc.addEventListener('animationstart', record, true);
-				});
-				await preview.click();
+						const record = (event: AnimationEvent): void => {
+							const node = event.target;
+							if (
+								!(node instanceof HTMLElement) ||
+								node.getAttribute('data-element-id') !== elementId ||
+								!node.closest('[data-pptx-viewport]')
+							) {
+								return;
+							}
+							doc.documentElement.setAttribute(
+								'data-ribbon-preview-animation',
+								event.animationName,
+							);
+							doc.removeEventListener('animationstart', record, true);
+						};
+						doc.addEventListener('animationstart', record, true);
+					});
+					await preview.click();
 
-				const playedInPlace = await expect(page.locator('html'))
-					.toHaveAttribute('data-ribbon-preview-animation', /^pptx-/)
-					.then(() => true)
-					.catch(() => false);
+					const playedInPlace = await expect(page.locator('html'))
+						.toHaveAttribute('data-ribbon-preview-animation', /^pptx-/)
+						.then(() => true)
+						.catch(() => false);
 
-				// Never navigates away to a full-screen slide show: the ribbon,
-				// canvas and inspector must all still be on screen right after.
-				const stillEditing = await page
-					.getByRole('toolbar', { name: 'Presentation toolbar' })
-					.isVisible()
-					.catch(() => false);
+					// Never navigates away to a full-screen slide show: the ribbon,
+					// canvas and inspector must all still be on screen right after.
+					const stillEditing = await page
+						.getByRole('toolbar', { name: 'Presentation toolbar' })
+						.isVisible()
+						.catch(() => false);
 
-				return { playedInPlace, stillEditing };
-			},
-			{ viewport: VIEWPORT },
-		);
+					return { playedInPlace, stillEditing };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			const issues: string[] = [];
-			if (!value.playedInPlace) {
-				issues.push('Preview did not start a real CSS animation on the selected element');
-			}
-			if (!value.stillEditing) {
-				issues.push(
-					'Preview left the editor (a full slide show took over) instead of staying in place',
-				);
-			}
-			return report(name, issues);
-		});
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				const issues: string[] = [];
+				if (!value.playedInPlace) {
+					issues.push('Preview did not start a real CSS animation on the selected element');
+				}
+				if (!value.stillEditing) {
+					issues.push(
+						'Preview left the editor (a full slide show took over) instead of staying in place',
+					);
+				}
+				return report(name, issues);
+			});
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-	test('Preview is enabled for a selection even before it carries an animation entry', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				// The sample deck's own elements carry no authored animations; the
-				// button must still be enabled (clicking it is a safe no-op), matching
-				// every binding but Svelte's pre-fix behaviour.
-				await loadDeckAt(page, origin, SAMPLE_DECK);
-				await selectElement(page, slideElements(page).first());
-				await openRibbonTab(page, 'Animations');
-				const preview = ribbon(page).getByRole('button', { name: 'Preview', exact: true });
-				return { disabled: await preview.isDisabled() };
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'Preview is enabled for a selection even before it carries an animation entry',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					// The sample deck's own elements carry no authored animations; the
+					// button must still be enabled (clicking it is a safe no-op), matching
+					// every binding but Svelte's pre-fix behaviour.
+					await loadDeckAt(page, origin, SAMPLE_DECK);
+					await selectElement(page, slideElements(page).first());
+					await openRibbonTab(page, 'Animations');
+					const preview = ribbon(page).getByRole('button', { name: 'Preview', exact: true });
+					return { disabled: await preview.isDisabled() };
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			value.disabled
-				? [`${name}: Preview is disabled for an editable selection with no animation yet`]
-				: [],
-		);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.disabled
+					? [`${name}: Preview is disabled for an editable selection with no animation yet`]
+					: [],
+			);
 
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

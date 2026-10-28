@@ -1,3 +1,4 @@
+import { generateFixture as generateAccessibilityImages } from './generate-accessibility-images-fixture';
 import { generateFixture as generateArrowTextRegressions } from './generate-arrow-text-regressions';
 /**
  * Every fixture the browser suite generates, in one place: `global-setup.ts`
@@ -27,6 +28,8 @@ import { generateFixture as generateFidelityShowcaseFixture } from './generate-f
 import { generateFieldSubstitutionFixture } from './generate-field-substitution-fixture';
 import { generateFixedLineSpacingFixture } from './generate-fixed-line-spacing-fixture';
 import { generateFixture } from './generate-format-painter-fixture';
+import { generateFixture as generateHyperlinkAction } from './generate-hyperlink-action-fixture';
+import { generateFixture as generateImageAlphaEffects } from './generate-image-alpha-effects-fixture';
 import { generateLineFillFidelityFixture } from './generate-line-fill-fidelity-fixture';
 import { generateLinkedTextBoxFixture } from './generate-linked-textbox-fixture';
 import { generateMasterViewsFixture } from './generate-master-views-fixture';
@@ -56,6 +59,9 @@ import { generateUnderlineWordsRubyTabFixture } from './generate-underline-words
 
 /** Every generator, keyed by a stable name that also seeds its randomness. */
 const GENERATORS: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
+	['generateAccessibilityImages', generateAccessibilityImages],
+	['generateImageAlphaEffects', generateImageAlphaEffects],
+	['generateHyperlinkAction', generateHyperlinkAction],
 	['generateFixture', generateFixture],
 	['generateRibbonGalleriesFixture', generateRibbonGalleriesFixture],
 	['generateChartFixture', generateChartFixture],

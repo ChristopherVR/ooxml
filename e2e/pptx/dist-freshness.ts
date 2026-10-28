@@ -118,7 +118,7 @@ function collectProblems(): Array<{ name: string; message: string }> {
 		mtimeOf(join(repoRoot, 'packages/core/dist/index.mjs')),
 		mtimeOf(join(repoRoot, '../../src/core/dist/pptx/index.mjs')),
 	);
-	if (prebundle > 0 && coreDist > prebundle) {
+	if (process.env.PPTX_E2E_SERVE !== 'preview' && prebundle > 0 && coreDist > prebundle) {
 		problems.push({
 			name: 'angular-prebundle',
 			message:

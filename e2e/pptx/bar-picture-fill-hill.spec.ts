@@ -43,65 +43,69 @@ const OVERLAP_PERCENT = 23;
 const EXPECTED_CLUSTER_RATIO = 1 + (SERIES_COUNT - 1) * (1 - OVERLAP_PERCENT / 100);
 
 test.describe('bar chart picture fill with no c:pictureOptions (hill silhouette)', () => {
-	test('every binding paints all 6 bars as picture-filled patterns, sized and overlapped identically', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every binding paints all 6 bars as picture-filled patterns, sized and overlapped identically',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, FIXTURE);
-			await slideStage(page).waitFor();
-			await page
-				.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
-				.first()
-				.waitFor({ timeout: 20_000 });
-			return fingerprintCharts(page);
-		});
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, FIXTURE);
+				await slideStage(page).waitFor();
+				await page
+					.locator('[aria-roledescription="slide"] [aria-roledescription="chart"] svg')
+					.first()
+					.waitFor({ timeout: 20_000 });
+				return fingerprintCharts(page);
+			});
 
-		const failures = results.flatMap(({ framework, value: charts }) => {
-			if (charts.length === 0) {
-				return [`${framework.name}: no chart rendered at all`];
-			}
-			const allRects = charts[0].shapes.filter((s) => s.tag === 'rect' && s.geometry.length === 4);
-			// Fix 1: every bar paints a pattern (the picture fill), never a solid
-			// palette colour. Filtering on `url(...)` here (rather than asserting
-			// the raw rect count) also excludes the plot area's own background
-			// rect, which is a plain (non-bar) solid-fill rect painted underneath.
-			const rects = allRects.filter((r) => r.fill.startsWith('url('));
-			const problems: string[] = [];
-
-			if (rects.length !== SERIES_COUNT) {
-				problems.push(
-					`expected ${SERIES_COUNT} picture-filled bar rects, found ${rects.length} ` +
-						`(${allRects.length} rects total; fills seen: ${allRects.map((r) => r.fill).join(', ')})`,
+			const failures = results.flatMap(({ framework, value: charts }) => {
+				if (charts.length === 0) {
+					return [`${framework.name}: no chart rendered at all`];
+				}
+				const allRects = charts[0].shapes.filter(
+					(s) => s.tag === 'rect' && s.geometry.length === 4,
 				);
-				return [`${framework.name}: ${problems.join('; ')}`];
-			}
+				// Fix 1: every bar paints a pattern (the picture fill), never a solid
+				// palette colour. Filtering on `url(...)` here (rather than asserting
+				// the raw rect count) also excludes the plot area's own background
+				// rect, which is a plain (non-bar) solid-fill rect painted underneath.
+				const rects = allRects.filter((r) => r.fill.startsWith('url('));
+				const problems: string[] = [];
 
-			// Fix 2: gapWidth/overlap sizing. All bars share one width, and the
-			// overlapped cluster's span matches the COM-verified ratio.
-			const sorted = [...rects].sort((a, b) => a.geometry[0] - b.geometry[0]);
-			const width = sorted[0].geometry[2];
-			const widths = sorted.map((r) => r.geometry[2]);
-			if (widths.some((w) => Math.abs(w - width) > 0.5)) {
-				problems.push(`bar widths are not uniform: ${widths.join(', ')}`);
-			}
-			const clusterSpan =
-				sorted[sorted.length - 1].geometry[0] +
-				sorted[sorted.length - 1].geometry[2] -
-				sorted[0].geometry[0];
-			const ratio = clusterSpan / width;
-			if (Math.abs(ratio - EXPECTED_CLUSTER_RATIO) > 0.05) {
-				problems.push(
-					`cluster-width-to-bar-width ratio is ${ratio.toFixed(3)}, expected ` +
-						`${EXPECTED_CLUSTER_RATIO.toFixed(3)} (COM-verified for ${SERIES_COUNT} series at ` +
-						`${OVERLAP_PERCENT}% overlap) - bars are too narrow relative to the cluster`,
-				);
-			}
+				if (rects.length !== SERIES_COUNT) {
+					problems.push(
+						`expected ${SERIES_COUNT} picture-filled bar rects, found ${rects.length} ` +
+							`(${allRects.length} rects total; fills seen: ${allRects.map((r) => r.fill).join(', ')})`,
+					);
+					return [`${framework.name}: ${problems.join('; ')}`];
+				}
 
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				// Fix 2: gapWidth/overlap sizing. All bars share one width, and the
+				// overlapped cluster's span matches the COM-verified ratio.
+				const sorted = [...rects].sort((a, b) => a.geometry[0] - b.geometry[0]);
+				const width = sorted[0].geometry[2];
+				const widths = sorted.map((r) => r.geometry[2]);
+				if (widths.some((w) => Math.abs(w - width) > 0.5)) {
+					problems.push(`bar widths are not uniform: ${widths.join(', ')}`);
+				}
+				const clusterSpan =
+					sorted[sorted.length - 1].geometry[0] +
+					sorted[sorted.length - 1].geometry[2] -
+					sorted[0].geometry[0];
+				const ratio = clusterSpan / width;
+				if (Math.abs(ratio - EXPECTED_CLUSTER_RATIO) > 0.05) {
+					problems.push(
+						`cluster-width-to-bar-width ratio is ${ratio.toFixed(3)}, expected ` +
+							`${EXPECTED_CLUSTER_RATIO.toFixed(3)} (COM-verified for ${SERIES_COUNT} series at ` +
+							`${OVERLAP_PERCENT}% overlap) - bars are too narrow relative to the cluster`,
+					);
+				}
 
-		expect(failures.join('\n')).toBe('');
-	});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

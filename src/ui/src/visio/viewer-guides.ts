@@ -68,13 +68,14 @@ export class ViewerGuides {
 	}
 	/**
 	 * Snap a shape drag; draws alignment hints. `grid` is the Snap to Grid step in page inches (0
-	 * while the grid is hidden). Unchanged when no snapping is active.
+	 * to omit grid snapping). Grid visibility is independent. Unchanged when no snapping is active.
 	 */
 	snap(
 		page: VisioPage,
 		ids: readonly string[],
 		delta: VisioPagePoint,
 		grid: number | VisioSnapGrid = 0,
+		axis?: 'x' | 'y',
 	): VisioPagePoint {
 		const svg = this.#svg();
 		this.clearHints();
@@ -90,6 +91,7 @@ export class ViewerGuides {
 			guides,
 			threshold: SNAP_PIXELS / (96 * zoom),
 			grid,
+			...(axis ? { axis } : {}),
 		});
 		if (!svg || !result.lines.length) return result.delta;
 		const hints = svg.ownerDocument.createElementNS(SVG, 'g');

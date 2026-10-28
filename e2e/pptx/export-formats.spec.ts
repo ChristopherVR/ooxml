@@ -94,118 +94,123 @@ test.describe('export formats', () => {
 		expect(bytes.byteLength).toBeGreaterThan(2_000);
 	});
 
-	test('a multi-slide PDF export surfaces a visible progress modal', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, EXPORT_DECK);
-				await openBackstageExport(page);
-				// The download itself is covered above; this scenario only needs the
-				// export to be in flight long enough to observe (or miss) its UI.
-				const downloadDone = page
-					.waitForEvent('download', { timeout: 120_000 })
-					.catch(() => undefined);
-				// Watch from before the click: a small deck exports in under a second, so polling
-				// afterwards can miss a modal that was up for a few frames.
-				const progressShown = await watchProgress(page, /export as pdf/iu);
-				await exportCard(page, PDF_CARD).click();
-				const progressSeen = await progressShown(60_000);
-				if (!progressSeen) {
-					// Let a modal-less export finish before the page closes under it.
+	test(
+		'a multi-slide PDF export surfaces a visible progress modal',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, EXPORT_DECK);
+					await openBackstageExport(page);
+					// The download itself is covered above; this scenario only needs the
+					// export to be in flight long enough to observe (or miss) its UI.
+					const downloadDone = page
+						.waitForEvent('download', { timeout: 120_000 })
+						.catch(() => undefined);
+					// Watch from before the click: a small deck exports in under a second, so polling
+					// afterwards can miss a modal that was up for a few frames.
+					const progressShown = await watchProgress(page, /export as pdf/iu);
+					await exportCard(page, PDF_CARD).click();
+					const progressSeen = await progressShown(60_000);
+					if (!progressSeen) {
+						// Let a modal-less export finish before the page closes under it.
+						await downloadDone;
+					}
+					return progressSeen;
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value ? [] : [`${name}: no visible "Export as PDF" progress UI appeared during the export`],
+			);
+
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'the export progress modal is a named dialog with a progress bar',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, EXPORT_DECK);
+					await openBackstageExport(page);
+					const downloadDone = page
+						.waitForEvent('download', { timeout: 120_000 })
+						.catch(() => undefined);
+					// Record the shared modal's semantics the first time it opens: a small deck exports
+					// in under a second, so the observer is installed before the click.
+					await page.evaluate(() => {
+						const w = window as unknown as { __exportModal?: Record<string, unknown> };
+						new MutationObserver(() => {
+							const host = document.querySelector('pptx-ui-export-progress[open]');
+							const root = host?.shadowRoot;
+							const dialog = root?.querySelector('[role="dialog"]');
+							if (w.__exportModal || !host || !root || !dialog) return;
+							const bar = root.querySelector('[role="progressbar"]');
+							w.__exportModal = {
+								modal: dialog.getAttribute('aria-modal'),
+								name: root.getElementById(dialog.getAttribute('aria-labelledby') ?? '')
+									?.textContent,
+								range: [bar?.getAttribute('aria-valuemin'), bar?.getAttribute('aria-valuemax')],
+								barNamed: Boolean(bar?.getAttribute('aria-labelledby')),
+								cancel: root.querySelector('button')?.textContent,
+								// Painted above the File backstage the export starts from: the centre of the box
+								// hits the modal, at the stacking order the old modals had.
+								zIndex: getComputedStyle(host).zIndex,
+								onTop: (() => {
+									const box = dialog.getBoundingClientRect();
+									const hit = document.elementFromPoint(
+										box.x + box.width / 2,
+										box.y + box.height / 2,
+									);
+									return hit === host;
+								})(),
+								// Mounted inside the viewer, so it takes the viewer's theme variables.
+								themed: (() => {
+									const viewport = document.querySelector('[data-pptx-viewport]');
+									const read = (el: Element) =>
+										getComputedStyle(el).getPropertyValue('--pptx-background').trim();
+									return Boolean(viewport) && read(host) !== '' && read(host) === read(viewport!);
+								})(),
+							};
+						}).observe(document.body, { childList: true, subtree: true, attributes: true });
+					});
+					await exportCard(page, PDF_CARD).click();
 					await downloadDone;
-				}
-				return progressSeen;
-			},
-			{ viewport: VIEWPORT },
-		);
+					return page.evaluate(
+						() =>
+							(window as unknown as { __exportModal?: Record<string, unknown> }).__exportModal ??
+							null,
+					);
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) =>
-			value ? [] : [`${name}: no visible "Export as PDF" progress UI appeared during the export`],
-		);
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value) return [`${name}: the shared export progress modal never opened`];
+				const expected = {
+					modal: 'true',
+					name: 'Export as PDF',
+					range: ['0', '100'],
+					barNamed: true,
+					cancel: 'Cancel',
+					zIndex: '1200',
+					onTop: true,
+					themed: true,
+				};
+				return JSON.stringify(value) === JSON.stringify(expected)
+					? []
+					: [`${name}: ${JSON.stringify(value)}`];
+			});
 
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('the export progress modal is a named dialog with a progress bar', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, EXPORT_DECK);
-				await openBackstageExport(page);
-				const downloadDone = page
-					.waitForEvent('download', { timeout: 120_000 })
-					.catch(() => undefined);
-				// Record the shared modal's semantics the first time it opens: a small deck exports
-				// in under a second, so the observer is installed before the click.
-				await page.evaluate(() => {
-					const w = window as unknown as { __exportModal?: Record<string, unknown> };
-					new MutationObserver(() => {
-						const host = document.querySelector('pptx-ui-export-progress[open]');
-						const root = host?.shadowRoot;
-						const dialog = root?.querySelector('[role="dialog"]');
-						if (w.__exportModal || !host || !root || !dialog) return;
-						const bar = root.querySelector('[role="progressbar"]');
-						w.__exportModal = {
-							modal: dialog.getAttribute('aria-modal'),
-							name: root.getElementById(dialog.getAttribute('aria-labelledby') ?? '')?.textContent,
-							range: [bar?.getAttribute('aria-valuemin'), bar?.getAttribute('aria-valuemax')],
-							barNamed: Boolean(bar?.getAttribute('aria-labelledby')),
-							cancel: root.querySelector('button')?.textContent,
-							// Painted above the File backstage the export starts from: the centre of the box
-							// hits the modal, at the stacking order the old modals had.
-							zIndex: getComputedStyle(host).zIndex,
-							onTop: (() => {
-								const box = dialog.getBoundingClientRect();
-								const hit = document.elementFromPoint(
-									box.x + box.width / 2,
-									box.y + box.height / 2,
-								);
-								return hit === host;
-							})(),
-							// Mounted inside the viewer, so it takes the viewer's theme variables.
-							themed: (() => {
-								const viewport = document.querySelector('[data-pptx-viewport]');
-								const read = (el: Element) =>
-									getComputedStyle(el).getPropertyValue('--pptx-background').trim();
-								return Boolean(viewport) && read(host) !== '' && read(host) === read(viewport!);
-							})(),
-						};
-					}).observe(document.body, { childList: true, subtree: true, attributes: true });
-				});
-				await exportCard(page, PDF_CARD).click();
-				await downloadDone;
-				return page.evaluate(
-					() =>
-						(window as unknown as { __exportModal?: Record<string, unknown> }).__exportModal ??
-						null,
-				);
-			},
-			{ viewport: VIEWPORT },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value) return [`${name}: the shared export progress modal never opened`];
-			const expected = {
-				modal: 'true',
-				name: 'Export as PDF',
-				range: ['0', '100'],
-				barNamed: true,
-				cancel: 'Cancel',
-				zIndex: '1200',
-				onTop: true,
-				themed: true,
-			};
-			return JSON.stringify(value) === JSON.stringify(expected)
-				? []
-				: [`${name}: ${JSON.stringify(value)}`];
-		});
-
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });
