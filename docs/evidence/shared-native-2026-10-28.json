@@ -1,0 +1,44 @@
+{
+	"chart": {
+		"limits": [
+			"No pixel-equivalence threshold asserted",
+			"Native export has transparent background; shared painter has its own chart background",
+			"Title, legend, fonts, chrome and mean/whisker paint still differ",
+			"Evidence covers generated committed gallery, not arbitrary producer documents"
+		],
+		"sharedCommit": "5aa6b0a72",
+		"fontsPresent": ["calibri.ttf", "arial.ttf"],
+		"sharedCapture": "renderChartSummarySvg, 840x420, Chromium screenshot",
+		"sourceSha256": "5FE485CBABAC088A8B420411557F8DFAA6D6EAE8241C7A62E0F37B472A55CEDE",
+		"source": "e2e/pptx/fixtures/chart-gallery.pptx",
+		"officeFileVersion": "16.0.20527.20088",
+		"nativeCapture": "PowerPoint COM shape.Export PNG, slides 11 and 14",
+		"date": "2026-10-28",
+		"observations": [
+			"No inline funnel values when cx:dataLabels is absent",
+			"Default box mean markers are X marks; explicit false remains supported"
+		]
+	},
+	"pictureAndGeometry": {
+		"timestamp": "2026-10-28T09:30:31.0692920Z",
+		"limits": "Normal open and native properties only; alpha pixel output and repair detection are not measured.",
+		"word": {
+			"widthPt": 150,
+			"build": "16.0.20527",
+			"version": "16.0",
+			"guideFraction": 0.125,
+			"nodes": 3
+		},
+		"excel": {
+			"widthPt": 75,
+			"build": 20527,
+			"brightness": 0.6,
+			"contrast": 0.45,
+			"version": "16.0",
+			"heightPt": 37.5,
+			"cropRightPt": 0.300039381,
+			"cropLeftPt": 0.7500984,
+			"colorType": 2
+		}
+	}
+}

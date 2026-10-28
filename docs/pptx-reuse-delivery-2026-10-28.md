@@ -21,7 +21,8 @@ not universal Office parity.
 Additional delivered boundaries:
 
 - Shared chart data-table metrics and painting, funnel geometry, and box distributions/painter.
-  Word, Excel and embedded chart hosts use the neutral painter. PowerPoint delegates geometry,
+  Word and Excel use the new neutral ChartEx painters. Visio receives the classic-chart
+  improvements; its embedded ChartEx admission remains separate work. PowerPoint delegates geometry,
   statistics and table metrics while retaining its presentation-specific rendering descriptors.
 - Ordered grayscale, luminance and alpha picture codecs and shared SVG filters. Excel reads,
   edits, paints and saves them; PowerPoint consumes the percentage/transfer helpers. Unknown
@@ -66,8 +67,13 @@ The browser font scope is additive; current PowerPoint font uploads retain page-
 - Twelve SmartArt picture browser cases pass across six Word and six Excel bindings,
   including actual blob image decoding and save/reload. This caught and fixed Word's missing
   diagram-picture media admission.
-- Twelve Word funnel/box editor and Print Layout browser cases pass across all six bindings.
-- Six Word custom-shape resize/save browser cases pass across all bindings.
+- Twenty-four Word/Excel funnel/box editor and Print Layout browser cases pass across all six bindings.
+- Six Word custom-shape resize/save browser cases and six Excel plain-picture crop/effect/resize
+  save/reopen cases pass across all bindings.
+- [Native property and capture evidence](evidence/shared-native-2026-10-28.json) records the Office
+  versions and explicit limits. Repeat the Word/Excel probes with
+  `src/core/scripts/shared-picture-native-fixtures.ts` and
+  `src/core/scripts/shared-picture-native-acceptance.ps1`.
 
 Integrated CI-planned verification, final chart browser cases and native evidence artifacts
 are pending final integration. Source fixtures and SVG assertions establish supported
@@ -76,7 +82,8 @@ semantics; they do not alone establish pixel equivalence with Microsoft Office.
 ## Scope and remaining limits
 
 The planned extraction sequence is implemented. Final integrated verification is still pending.
-Region-map rendering, richer artistic effects, tiled/offset picture fills and full native visual
+Visio embedded ChartEx admission, region-map rendering, richer artistic effects, tiled/offset
+picture fills and full native visual
 comparison remain open. Shared SmartArt picture painting currently uses cached drawing nodes;
 this does not make every picture-bearing layout reflow equivalent to Office.
 
