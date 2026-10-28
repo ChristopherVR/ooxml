@@ -35,6 +35,11 @@ it('retains default extremes and missing midpoint without shifting color alignme
 it('keeps explicit pos shorthand compatibility and declines invalid numeric values', () => {
 	expect(
 		parseRegionValueColorPositions(
+			'<cx:valueColorPositions count="2"><cx:pos type="num" val="20"/><cx:pos type="max"/></cx:valueColorPositions>',
+		),
+	).toEqual([{ kind: 'number', value: 20 }, { kind: 'max' }]);
+	expect(
+		parseRegionValueColorPositions(
 			'<cx:valueColorPositions><cx:pos type="min"/><cx:pos type="num" val="20"/><cx:pos type="percent" val="75"/><cx:pos type="max"/></cx:valueColorPositions>',
 		),
 	).toEqual([

@@ -22,7 +22,7 @@ export function parseRegionValueColorPositions(
 	if (!positions) return undefined;
 	const count = positions.getAttribute('count');
 	const native = ['min', 'mid', 'max'].some((key) => first(positions, key, NS.cx));
-	if (native || count !== null) {
+	if (native || (count !== null && children(positions, 'pos', NS.cx).length === 0)) {
 		const keys =
 			count === '3' || first(positions, 'mid', NS.cx)
 				? (['min', 'mid', 'max'] as const)
