@@ -110,7 +110,8 @@ export function seriesView<S extends ChartSummarySeries>(
 	const { theme, scheme, palette, evaluateRef } = ctx;
 	const values = (resolveRef(s.valuesRef, evaluateRef)?.map(toNumber) ??
 		s.values.map(toNumber)) as (number | null)[];
-	categoriesOf(resolveRef(s.categoriesRef, evaluateRef) ?? s.categories);
+	const categoryValues = resolveRef(s.categoriesRef, evaluateRef) ?? s.categories;
+	categoriesOf(categoryValues);
 	const paletteColor = palette && chartPaletteSeriesColor(palette, index, total, scheme);
 	const color =
 		s.fill?.kind === 'none'
@@ -125,6 +126,11 @@ export function seriesView<S extends ChartSummarySeries>(
 		color,
 		sourceIndex: index,
 	};
+	if (s.hidden !== undefined) view.hidden = s.hidden;
+	if (s.boxWhisker) {
+		view.boxWhisker = s.boxWhisker;
+		view.boxCategories = categoryValues.map(toText);
+	}
 	if (s.numberFormat !== undefined) view.numberFormat = s.numberFormat;
 	if (s.showLine !== undefined) view.showLine = s.showLine;
 	if (s.smooth !== undefined) view.smooth = s.smooth;

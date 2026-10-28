@@ -1,7 +1,8 @@
+import { boxWhiskerDistribution } from 'ooxml-core/chart';
 import type { PptxChartBoxWhiskerOptions, PptxChartData, PptxElement } from 'ooxml-core/pptx';
 
 import { resolveChartTitleText } from './chart-auto-title';
-import { computeBoxStats, groupRowsByCategory } from './chart-box-whisker-stats';
+import { groupRowsByCategory } from './chart-box-whisker-stats';
 import type { BoxStats } from './chart-box-whisker-stats';
 import { buildValueAxisGridlinesAndLabels, findValueAxis } from './chart-cx-axis-units';
 import { distributionRange } from './chart-distribution-range';
@@ -85,24 +86,18 @@ export function computeBoxWhiskerGeometry(
 				.filter((item): item is { row: number; value: number } => item.value !== undefined);
 			const values = observations.map((item) => item.value);
 			const options = series.boxWhiskerOptions;
-			const stats = computeBoxStats(values, options?.quartileMethod ?? 'exclusive');
-			if (!stats) {
-				return;
-			}
-			const iqr = stats.q3 - stats.q1;
-			const lowerFence = stats.q1 - 1.5 * iqr;
-			const upperFence = stats.q3 + 1.5 * iqr;
-			const inlierValues = values.filter(
-				(value) => !options || (value >= lowerFence && value <= upperFence),
+			const distribution = boxWhiskerDistribution(
+				values,
+				options?.quartileMethod ?? 'exclusive',
+				options !== undefined,
 			);
-			const whiskerMin = inlierValues.length > 0 ? Math.min(...inlierValues) : stats.min;
-			const whiskerMax = inlierValues.length > 0 ? Math.max(...inlierValues) : stats.max;
+			if (!distribution) return;
+			const { stats, whiskerMin, whiskerMax, mean } = distribution;
 			const boxX =
 				layout.plotLeft +
 				groupWidth * categoryIndex +
 				slotWidth * seriesIndex +
 				(slotWidth - boxW) / 2;
-			const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
 			output.push({
 				stats,
 				boxX,

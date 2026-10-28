@@ -44,6 +44,9 @@ export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-
 export type { WaterfallView } from './chart-view-ex';
 
 export interface ChartSeriesView extends ChartMarkerSeriesView {
+	boxWhisker?: import('../ex/model').ChartExLayoutProperties;
+	boxCategories?: string[];
+	hidden?: boolean;
 	numberFormat?: string;
 	smooth?: boolean;
 	showLine?: boolean;
@@ -157,6 +160,7 @@ const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'treemap',
 	'sunburst',
 	'funnel',
+	'boxWhisker',
 ]);
 
 /**
@@ -242,6 +246,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	if (chart.date1904 !== undefined) model.date1904 = chart.date1904;
 	if (chart.axes?.some((a) => a.kind === 'date')) model.dateCategories = firstCats.map(toNumber);
 	if (chart.plotLayout) model.plotLayout = chart.plotLayout;
+	if (type === 'boxWhisker')
+		model.categories = [...new Set(series.flatMap((s) => s.boxCategories ?? []))];
 	if (chart.title) model.title = chart.title;
 	const titleFormatting = chart.formatting?.entries.title;
 	if (titleFormatting?.layout) model.titleLayout = titleFormatting.layout;
@@ -264,7 +270,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		const range = extentOf(xs);
 		model.xAxis = xs.length ? niceScale(range.min, range.max) : niceScale(0, 1);
 	}
-	if (type === 'funnel')
+	if (type === 'funnel' || type === 'boxWhisker')
 		series.forEach((s, i) => {
 			const points = chart.series[i]?.pointColors;
 			if (points) s.pointColors = s.values.map((_, j) => drawingColor(points[j]) ?? s.color);

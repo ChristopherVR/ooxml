@@ -5,7 +5,7 @@ import type { ChartViewModel } from './chart-view';
 
 export function funnelSvg(model: ChartViewModel, area: Rect): string {
 	const series = model.series[0];
-	if (!series) return '';
+	if (!series || series.hidden) return '';
 	const attrs = chartTextAttributes(model, 'categoryAxis', 10);
 	const width = Math.min(
 		area.w * 0.3,

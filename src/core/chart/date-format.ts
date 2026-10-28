@@ -225,4 +225,3 @@ export function formatDate(date: Date, unit: 'days' | 'months' | 'years', format
 	}
 	return `${day} ${month}`;
 }
-

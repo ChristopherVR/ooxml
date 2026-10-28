@@ -35,7 +35,8 @@ export type ChartSummaryType =
 	| 'histogram'
 	| 'treemap'
 	| 'sunburst'
-	| 'funnel';
+	| 'funnel'
+	| 'boxWhisker';
 
 /** One cascade level of a series' data labels: its content switches, placement and format. */
 export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {
@@ -61,6 +62,8 @@ export interface ChartSummaryDataLabels {
 }
 
 export interface ChartSummarySeries extends ChartMarkerSummary {
+	boxWhisker?: import('../ex/model').ChartExLayoutProperties;
+	hidden?: boolean;
 	smooth?: boolean;
 	showLine?: boolean;
 	line?: DrawingLine;

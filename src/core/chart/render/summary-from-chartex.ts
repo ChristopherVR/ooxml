@@ -1,10 +1,7 @@
 import { chartExSeriesPaint } from './summary-ex-series';
-// Builds the painter's chart summary from an Office 2016 extended chart part (`cx:chartSpace`):
-// the waterfall (`layoutId="waterfall"`), the histogram (`layoutId="clusteredColumn"`), the treemap
-// and the sunburst. Word reads the cached points of `cx:data`; Excel files carry only the formula
-// (a hidden `_xlchart.v1.N` defined name) and the host resolves it from live cells. Other extended
-// families (funnel, box and whisker...) are reported by `layoutId` and not summarised. The part is
-// read through the neutral chartex model (`chart/ex`).
+// Builds neutral SVG summaries for supported Office 2016 extended chart parts: waterfall,
+// histogram, treemap, sunburst, funnel and box-and-whisker. Word uses cached points; Excel can
+// resolve the retained formulas from live cells. Region maps and Pareto remain unsummarised.
 import type { DrawingColor } from '../../drawingml/types';
 import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
@@ -129,21 +126,12 @@ function chartExFormatting(): NonNullable<ChartSummary['formatting']> {
 	};
 }
 
-/** The summary of a parsed extended chart part. */
-export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
-	const all = space.plotArea.series;
-	const primary = all.find((s) => s.layoutId !== 'paretoLine') ?? all[0];
-	const layoutId = primary?.layoutId ?? '';
-	const chartType =
-		layoutId === 'waterfall'
-			? 'waterfall'
-			: layoutId === 'clusteredColumn'
-				? 'histogram'
-				: layoutId === 'treemap' || layoutId === 'sunburst' || layoutId === 'funnel'
-					? layoutId
-					: undefined;
-	if (!primary || !chartType) return { layoutId };
-	const data = seriesData(space, primary);
+function summarySeries(
+	space: ChartExSpace,
+	source: ChartExSeries,
+	chartType: import('./summary').ChartSummaryType,
+): ChartSummarySeries {
+	const data = seriesData(space, source);
 	const categories = dimension(data, 'strDim', 'cat');
 	const values = dimension(
 		data,
@@ -155,18 +143,84 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 		values: (values?.points ?? []).map((p) =>
 			p !== '' && Number.isFinite(Number(p)) ? Number(p) : null,
 		),
-		...seriesFill(primary),
+		...seriesFill(source),
 	};
-	if (chartType === 'funnel') chartExSeriesPaint(primary, series, true);
-	const name = primary.tx?.value?.trim();
+	if (chartType === 'funnel' || chartType === 'boxWhisker') {
+		chartExSeriesPaint(source, series, chartType === 'funnel');
+		if (source.hidden !== undefined) series.hidden = source.hidden;
+	}
+	if (chartType === 'boxWhisker') series.boxWhisker = source.layoutProperties ?? {};
+	const name = source.tx?.value?.trim();
 	if (name) series.name = name;
-	const nameRef = primary.tx?.formula?.formula.trim();
+	const nameRef = source.tx?.formula?.formula.trim();
 	if (nameRef) series.nameRef = nameRef;
 	if (categories?.formula) series.categoriesRef = categories.formula;
 	if (values?.formula) series.valuesRef = values.formula;
+	return series;
+}
+
+/** The summary of a parsed extended chart part. */
+export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
+	const all = space.plotArea.series;
+	const primary = all.find((s) => s.layoutId !== 'paretoLine') ?? all[0];
+	const layoutId = primary?.layoutId ?? '';
+	const chartType =
+		layoutId === 'waterfall'
+			? 'waterfall'
+			: layoutId === 'clusteredColumn'
+				? 'histogram'
+				: layoutId === 'treemap' ||
+					  layoutId === 'sunburst' ||
+					  layoutId === 'funnel' ||
+					  layoutId === 'boxWhisker'
+					? layoutId
+					: undefined;
+	if (!primary || !chartType) return { layoutId };
+	const series = summarySeries(space, primary, chartType);
 	const layout = primary.layoutProperties;
 	const legend = space.legend;
-	const summary: ChartSummary = { chartType, series: [series], showLegend: legend !== undefined };
+	const summary: ChartSummary = {
+		chartType,
+		series:
+			chartType === 'boxWhisker'
+				? all
+						.filter((s) => s.layoutId === 'boxWhisker')
+						.map((source) => summarySeries(space, source, chartType))
+				: [series],
+		showLegend: legend !== undefined,
+	};
+	if (chartType === 'boxWhisker') {
+		summary.axes = space.plotArea.axes.flatMap((axis) => {
+			const scaling = axis.scaling;
+			if (!scaling) return [];
+			const value = scaling.kind === 'val';
+			return [
+				{
+					kind: value ? ('val' as const) : ('cat' as const),
+					...(axis.id === undefined ? {} : { id: axis.id }),
+					position: value ? 'l' : 'b',
+					deleted: axis.hidden ?? false,
+					scaling: {
+						...(value && typeof scaling.min === 'number' ? { min: scaling.min } : {}),
+						...(value && typeof scaling.max === 'number' ? { max: scaling.max } : {}),
+					},
+					majorGridlines: !!axis.majorGridlines,
+					minorGridlines: !!axis.minorGridlines,
+					...(axis.majorGridlines?.spPr ? { majorGridlinesSpPr: axis.majorGridlines.spPr } : {}),
+					...(axis.minorGridlines?.spPr ? { minorGridlinesSpPr: axis.minorGridlines.spPr } : {}),
+					...(value && typeof scaling.majorUnit === 'number'
+						? { majorUnit: scaling.majorUnit }
+						: {}),
+					...(value && typeof scaling.minorUnit === 'number'
+						? { minorUnit: scaling.minorUnit }
+						: {}),
+					...(axis.spPr ? { spPr: axis.spPr } : {}),
+					...(axis.numberFormat ? { numberFormat: axis.numberFormat } : {}),
+					...(axis.tickLabels ? {} : { tickLabelPosition: 'none' }),
+				},
+			];
+		});
+	}
 	summary.formatting = chartExFormatting();
 	const title = titleOf(space);
 	if (title) summary.title = title;
@@ -181,7 +235,7 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 	} else if (chartType === 'treemap' || chartType === 'sunburst') {
 		const parentLayout = layout?.parentLabelLayout;
 		summary.hierarchy = {
-			levels: categoryLevels(data),
+			levels: categoryLevels(seriesData(space, primary)),
 			dataLabels: primary.dataLabels !== undefined,
 			...(parentLayout === 'none' || parentLayout === 'banner' || parentLayout === 'overlapping'
 				? { parentLabelLayout: parentLayout }

@@ -68,3 +68,4 @@ export * from './date-axis';
 export * from './date-format';
 export * from './data-table-layout';
 export * from './funnel-geometry';
+export * from './box-distribution';
