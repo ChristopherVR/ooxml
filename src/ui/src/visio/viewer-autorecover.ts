@@ -173,7 +173,12 @@ export class ViewerAutoRecover {
 	}
 	/** A copy of the drawing was saved as a file: the kept one is no longer needed. */
 	saved(): void {
-		void this.store?.delete(this.#name()).catch(() => {});
+		// An older recovery write must finish before its copy is removed by an explicit save.
+		const store = this.store;
+		const name = this.#name();
+		void this.#scheduler.run(async () => {
+			await store?.delete(name).catch(() => {});
+		});
 	}
 	/**
 	 * A file has finished opening and has its name: look for a kept copy of it. Called by the viewer
