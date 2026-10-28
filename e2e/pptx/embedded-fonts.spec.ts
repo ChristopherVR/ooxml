@@ -98,68 +98,70 @@ async function facesOf(page: Page, family: string): Promise<FaceReport[]> {
 }
 
 test.describe('embedded fonts', () => {
-	test('registers and loads the embedded faces that match their typeface', async ({
-		browser,
-	}, testInfo) => {
-		const expected = [
-			['400', 'italic'],
-			['400', 'normal'],
-			['700', 'italic'],
-			['700', 'normal'],
-		].map(([weight, style]) => ({ family: TRUSTED, weight, style, status: 'loaded' }));
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await blockGoogleFonts(page);
-				await loadDeckAt(page, origin, DECK);
-				// Faces are registered by an effect after the first paint.
-				await expect
-					.poll(async () => (await facesOf(page, TRUSTED)).length, { timeout: 5_000 })
-					.toBe(4)
-					.catch(() => undefined);
-				// A loaded face only proves the CSS parsed; measuring proves the
-				// decoded font data is a real font with its own metrics.
-				const widths = await page.evaluate((name) => {
-					const context = document.createElement('canvas').getContext('2d')!;
-					context.font = `40px "${name}", monospace`;
-					const embedded = context.measureText('Hamburgefonstiv 0123456789').width;
-					context.font = '40px monospace';
-					return { embedded, fallback: context.measureText('Hamburgefonstiv 0123456789').width };
-				}, TRUSTED);
-				return {
-					trusted: await facesOf(page, TRUSTED),
-					rejected: await facesOf(page, REJECTED),
-					measuresInFace: Math.abs(widths.embedded - widths.fallback) > 1,
-				};
-			},
-			{ concurrency: 'sequential' },
-		);
-
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			const found: string[] = [];
-			if (value.trusted.length === 0) {
-				found.push('no embedded @font-face registered');
-			} else {
-				if (JSON.stringify(value.trusted) !== JSON.stringify(expected)) {
-					found.push(`registered ${JSON.stringify(value.trusted)}`);
-				}
-				if (!value.measuresInFace) {
-					found.push(`text does not measure in the embedded ${TRUSTED}`);
-				}
-			}
-			if (value.rejected.length > 0) {
-				found.push(`registered the mismatched ${REJECTED} files`);
-			}
-			problems.push(
-				...applyExclusions(found, { binding: framework.name }, EXCLUSIONS).map(
-					(problem) => `${framework.name}: ${problem}`,
-				),
+	test(
+		'registers and loads the embedded faces that match their typeface',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const expected = [
+				['400', 'italic'],
+				['400', 'normal'],
+				['700', 'italic'],
+				['700', 'normal'],
+			].map(([weight, style]) => ({ family: TRUSTED, weight, style, status: 'loaded' }));
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await blockGoogleFonts(page);
+					await loadDeckAt(page, origin, DECK);
+					// Faces are registered by an effect after the first paint.
+					await expect
+						.poll(async () => (await facesOf(page, TRUSTED)).length, { timeout: 5_000 })
+						.toBe(4)
+						.catch(() => undefined);
+					// A loaded face only proves the CSS parsed; measuring proves the
+					// decoded font data is a real font with its own metrics.
+					const widths = await page.evaluate((name) => {
+						const context = document.createElement('canvas').getContext('2d')!;
+						context.font = `40px "${name}", monospace`;
+						const embedded = context.measureText('Hamburgefonstiv 0123456789').width;
+						context.font = '40px monospace';
+						return { embedded, fallback: context.measureText('Hamburgefonstiv 0123456789').width };
+					}, TRUSTED);
+					return {
+						trusted: await facesOf(page, TRUSTED),
+						rejected: await facesOf(page, REJECTED),
+						measuresInFace: Math.abs(widths.embedded - widths.fallback) > 1,
+					};
+				},
+				{ concurrency: 'sequential' },
 			);
-		}
-		expect(problems).toStrictEqual([]);
-	});
+
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				const found: string[] = [];
+				if (value.trusted.length === 0) {
+					found.push('no embedded @font-face registered');
+				} else {
+					if (JSON.stringify(value.trusted) !== JSON.stringify(expected)) {
+						found.push(`registered ${JSON.stringify(value.trusted)}`);
+					}
+					if (!value.measuresInFace) {
+						found.push(`text does not measure in the embedded ${TRUSTED}`);
+					}
+				}
+				if (value.rejected.length > 0) {
+					found.push(`registered the mismatched ${REJECTED} files`);
+				}
+				problems.push(
+					...applyExclusions(found, { binding: framework.name }, EXCLUSIONS).map(
+						(problem) => `${framework.name}: ${problem}`,
+					),
+				);
+			}
+			expect(problems).toStrictEqual([]);
+		},
+	);
 
 	test('saves every embedded font part byte for byte', async ({ page }) => {
 		await blockGoogleFonts(page);

@@ -105,31 +105,33 @@ function renderedLines(layout: BoxLayout): string[] {
 }
 
 test.describe('CJK line breaking', () => {
-	test('every binding breaks East Asian text where PowerPoint does', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'every binding breaks East Asian text where PowerPoint does',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems = CJK_BREAK_BOXES.flatMap((box, i) => {
-				const layout = value[i];
-				if (!fullwidth(layout)) {
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems = CJK_BREAK_BOXES.flatMap((box, i) => {
+					const layout = value[i];
+					if (!fullwidth(layout)) {
+						return [];
+					}
+					const lines = renderedLines(layout);
+					if (lines.join('|') !== box.lines.join('|')) {
+						return [`${box.name}: rendered ${lines.join('|')}, PowerPoint ${box.lines.join('|')}`];
+					}
+					const mark = layout.chars[box.lines[0].length - 1];
+					if (box.hangs && mark.right <= layout.boxRight) {
+						return [`${box.name}: the hanging ${mark.ch} does not reach past the margin`];
+					}
 					return [];
-				}
-				const lines = renderedLines(layout);
-				if (lines.join('|') !== box.lines.join('|')) {
-					return [`${box.name}: rendered ${lines.join('|')}, PowerPoint ${box.lines.join('|')}`];
-				}
-				const mark = layout.chars[box.lines[0].length - 1];
-				if (box.hangs && mark.right <= layout.boxRight) {
-					return [`${box.name}: the hanging ${mark.ch} does not reach past the margin`];
-				}
-				return [];
+				});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
 			});
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

@@ -77,37 +77,41 @@ async function readSlide(page: Page, origin: string): Promise<Record<string, num
 }
 
 test.describe('Fixed line spacing', () => {
-	test('a larger run does not grow a line with exact spacing', async ({ browser }, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'a larger run does not grow a line with exact spacing',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const mid = value.Mid;
-			const problems: string[] = [];
-			for (const name of ['Left', 'Box']) {
-				const bottoms = value[name];
-				bottoms.forEach((bottom, i) => {
-					if (i === 0) {
-						return;
-					}
-					const pitch = bottom - bottoms[i - 1];
-					const midPitch = mid[i] - mid[i - 1];
-					if (Math.abs(pitch - midPitch) > TOLERANCE_PX) {
-						problems.push(
-							`${name} line ${i + 1}: pitch ${pitch.toFixed(2)}px, Mid ${midPitch.toFixed(2)}px`,
-						);
+			const failures = results.flatMap(({ framework, value }) => {
+				const mid = value.Mid;
+				const problems: string[] = [];
+				for (const name of ['Left', 'Box']) {
+					const bottoms = value[name];
+					bottoms.forEach((bottom, i) => {
+						if (i === 0) {
+							return;
+						}
+						const pitch = bottom - bottoms[i - 1];
+						const midPitch = mid[i] - mid[i - 1];
+						if (Math.abs(pitch - midPitch) > TOLERANCE_PX) {
+							problems.push(
+								`${name} line ${i + 1}: pitch ${pitch.toFixed(2)}px, Mid ${midPitch.toFixed(2)}px`,
+							);
+						}
+					});
+				}
+				// The two cells share a row and its top edge, so their lines are level.
+				value.Left.forEach((bottom, i) => {
+					if (Math.abs(bottom - mid[i]) > TOLERANCE_PX) {
+						problems.push(`Left line ${i + 1} sits ${(bottom - mid[i]).toFixed(2)}px off Mid's`);
 					}
 				});
-			}
-			// The two cells share a row and its top edge, so their lines are level.
-			value.Left.forEach((bottom, i) => {
-				if (Math.abs(bottom - mid[i]) > TOLERANCE_PX) {
-					problems.push(`Left line ${i + 1} sits ${(bottom - mid[i]).toFixed(2)}px off Mid's`);
-				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
 			});
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

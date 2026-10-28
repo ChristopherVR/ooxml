@@ -64,29 +64,31 @@ async function readDeck(page: Page, origin: string): Promise<Decorations[]> {
 }
 
 test.describe('chart data-label callouts', () => {
-	test('every binding boxes line, doughnut and radar labels like PowerPoint', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readDeck);
-		const failures = results.flatMap(({ framework, value }) => {
-			const [line, doughnut, radar] = value;
-			const problems: string[] = [];
-			// Line: four labels right of their markers, all pointing back at them.
-			if (line.boxes !== 4 || line.pointers !== 4 || line.leaders !== 1) {
-				problems.push(`line ${JSON.stringify(line)}`);
-			}
-			// Doughnut: labels centred on the ring keep a plain box; only the
-			// dragged one points back (and has the leader line).
-			if (doughnut.boxes !== 4 || doughnut.pointers !== 1 || doughnut.leaders !== 1) {
-				problems.push(`doughnut ${JSON.stringify(doughnut)}`);
-			}
-			// Radar: five labels out along their spokes, each pointing back.
-			if (radar.boxes !== 5 || radar.pointers !== 5 || radar.leaders !== 1) {
-				problems.push(`radar ${JSON.stringify(radar)}`);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-		expect(failures.join('\n')).toBe('');
-	});
+	test(
+		'every binding boxes line, doughnut and radar labels like PowerPoint',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readDeck);
+			const failures = results.flatMap(({ framework, value }) => {
+				const [line, doughnut, radar] = value;
+				const problems: string[] = [];
+				// Line: four labels right of their markers, all pointing back at them.
+				if (line.boxes !== 4 || line.pointers !== 4 || line.leaders !== 1) {
+					problems.push(`line ${JSON.stringify(line)}`);
+				}
+				// Doughnut: labels centred on the ring keep a plain box; only the
+				// dragged one points back (and has the leader line).
+				if (doughnut.boxes !== 4 || doughnut.pointers !== 1 || doughnut.leaders !== 1) {
+					problems.push(`doughnut ${JSON.stringify(doughnut)}`);
+				}
+				// Radar: five labels out along their spokes, each pointing back.
+				if (radar.boxes !== 5 || radar.pointers !== 5 || radar.leaders !== 1) {
+					problems.push(`radar ${JSON.stringify(radar)}`);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

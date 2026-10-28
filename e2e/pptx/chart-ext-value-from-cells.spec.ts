@@ -73,68 +73,76 @@ async function openChartInspector(page: Page, origin: string, fixturePath: strin
 }
 
 test.describe('chart extensions: Value From Cells + Chart Filters', () => {
-	test('the rendered label text comes from the c15:dlblRangeCache cache', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openChartInspector(page, origin, DATALABELS_RANGE_FIXTURE);
-			await expect.poll(async () => (await chartTexts(page)).length).toBeGreaterThan(0);
-			return await chartTexts(page);
-		});
+	test(
+		'the rendered label text comes from the c15:dlblRangeCache cache',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openChartInspector(page, origin, DATALABELS_RANGE_FIXTURE);
+				await expect.poll(async () => (await chartTexts(page)).length).toBeGreaterThan(0);
+				return await chartTexts(page);
+			});
 
-		for (const { framework, value } of results) {
-			const where = `[${framework.name}]`;
-			expect(value.join('|'), `${where} rendered chart text`).toContain('Low');
-		}
-	});
+			for (const { framework, value } of results) {
+				const where = `[${framework.name}]`;
+				expect(value.join('|'), `${where} rendered chart text`).toContain('Low');
+			}
+		},
+	);
 
-	test('editing a cached label in the inspector updates the rendered text live', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openChartInspector(page, origin, DATALABELS_RANGE_FIXTURE);
-			const input = inspector(page).locator('[data-testid="chart-dlbl-range-0-1"]');
-			await expect(input).toBeVisible();
-			await expect(input).toHaveValue('Medium');
-			await input.fill('Renamed');
-			await input.press('Tab');
-			await expect.poll(async () => (await chartTexts(page)).join('|')).toContain('Renamed');
-			return await chartTexts(page);
-		});
+	test(
+		'editing a cached label in the inspector updates the rendered text live',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openChartInspector(page, origin, DATALABELS_RANGE_FIXTURE);
+				const input = inspector(page).locator('[data-testid="chart-dlbl-range-0-1"]');
+				await expect(input).toBeVisible();
+				await expect(input).toHaveValue('Medium');
+				await input.fill('Renamed');
+				await input.press('Tab');
+				await expect.poll(async () => (await chartTexts(page)).join('|')).toContain('Renamed');
+				return await chartTexts(page);
+			});
 
-		for (const { framework, value } of results) {
-			const where = `[${framework.name}]`;
-			expect(value.join('|'), `${where} rendered chart text after edit`).toContain('Renamed');
-			expect(value.join('|'), `${where} the old cached text must be gone`).not.toContain('Medium');
-		}
-	});
+			for (const { framework, value } of results) {
+				const where = `[${framework.name}]`;
+				expect(value.join('|'), `${where} rendered chart text after edit`).toContain('Renamed');
+				expect(value.join('|'), `${where} the old cached text must be gone`).not.toContain(
+					'Medium',
+				);
+			}
+		},
+	);
 
-	test('hiding then restoring a series updates the plotted mark count', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openChartInspector(page, origin, FILTERED_TITLES_FIXTURE);
-			const before = await dataPointCount(page);
+	test(
+		'hiding then restoring a series updates the plotted mark count',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openChartInspector(page, origin, FILTERED_TITLES_FIXTURE);
+				const before = await dataPointCount(page);
 
-			const hideButton = inspector(page).locator('[data-testid="chart-series-hide-0"]');
-			await expect(hideButton).toBeVisible();
-			await hideButton.click();
-			await expect.poll(async () => dataPointCount(page)).toBeLessThan(before);
-			const afterHide = await dataPointCount(page);
+				const hideButton = inspector(page).locator('[data-testid="chart-series-hide-0"]');
+				await expect(hideButton).toBeVisible();
+				await hideButton.click();
+				await expect.poll(async () => dataPointCount(page)).toBeLessThan(before);
+				const afterHide = await dataPointCount(page);
 
-			const showButton = inspector(page).locator('[data-testid="chart-series-show-0"]');
-			await expect(showButton).toBeVisible();
-			await showButton.click();
-			await expect.poll(async () => dataPointCount(page)).toBeGreaterThan(afterHide);
-			const afterRestore = await dataPointCount(page);
+				const showButton = inspector(page).locator('[data-testid="chart-series-show-0"]');
+				await expect(showButton).toBeVisible();
+				await showButton.click();
+				await expect.poll(async () => dataPointCount(page)).toBeGreaterThan(afterHide);
+				const afterRestore = await dataPointCount(page);
 
-			return { before, afterHide, afterRestore };
-		});
+				return { before, afterHide, afterRestore };
+			});
 
-		for (const { framework, value } of results) {
-			const where = `[${framework.name}]`;
-			expect(value.afterHide, `${where} marks after hiding`).toBeLessThan(value.before);
-			expect(value.afterRestore, `${where} marks after restoring`).toBe(value.before);
-		}
-	});
+			for (const { framework, value } of results) {
+				const where = `[${framework.name}]`;
+				expect(value.afterHide, `${where} marks after hiding`).toBeLessThan(value.before);
+				expect(value.afterRestore, `${where} marks after restoring`).toBe(value.before);
+			}
+		},
+	);
 });

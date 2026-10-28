@@ -146,56 +146,58 @@ async function gotoSlide(
 
 test.describe('cross-binding slide rendering', () => {
 	for (const deck of DECKS) {
-		test(`${deck.file}: every fingerprinted slide is painted identically everywhere`, async ({
-			browser,
-		}, testInfo) => {
-			test.setTimeout(deck.timeout);
+		test(
+			`${deck.file}: every fingerprinted slide is painted identically everywhere`,
+			{ tag: '@cross-binding' },
+			async ({ browser }, testInfo) => {
+				test.setTimeout(deck.timeout);
 
-			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-				if (deck.loadTimeout > 30_000) {
-					await loadDeckSlowlyAt(page, origin, fixture(deck.file), deck.loadTimeout);
-				} else {
-					await loadDeckAt(page, origin, fixture(deck.file));
-				}
-				const perSlide: SlideFingerprint[] = [];
-				for (const slide of deck.slides) {
-					await gotoSlide(page, slide, deck.totalSlides, deck.loadTimeout);
-					perSlide.push(await fingerprintSlide(page));
-				}
-				return perSlide;
-			});
-
-			const { reference, candidates } = splitReference(results);
-			expect(
-				reference.value.every((slideResult) => slideResult.elements.length > 0),
-				'the reference binding rendered an empty slide',
-			).toBe(true);
-
-			const matched = new Set<ParityExclusion>();
-			const problems: string[] = [];
-			for (const candidate of candidates) {
-				const perBinding: string[] = [];
-				deck.slides.forEach((slide, index) => {
-					const where = `${deck.file} slide ${slide}`;
-					const raw = diffSlides(
-						reference.value[index],
-						candidate.value[index] ?? { aspect: 0, elements: [] },
-					).map((problem) => `${where}: ${problem}`);
-					perBinding.push(
-						...applyExclusions(
-							raw,
-							{ binding: candidate.framework.name, where },
-							KNOWN_DIVERGENCES,
-							matched,
-						),
-					);
+				const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+					if (deck.loadTimeout > 30_000) {
+						await loadDeckSlowlyAt(page, origin, fixture(deck.file), deck.loadTimeout);
+					} else {
+						await loadDeckAt(page, origin, fixture(deck.file));
+					}
+					const perSlide: SlideFingerprint[] = [];
+					for (const slide of deck.slides) {
+						await gotoSlide(page, slide, deck.totalSlides, deck.loadTimeout);
+						perSlide.push(await fingerprintSlide(page));
+					}
+					return perSlide;
 				});
-				if (perBinding.length > 0) {
-					problems.push(formatDiff(candidate.framework.name, perBinding, 40));
-				}
-			}
 
-			expect(problems.join('\n\n')).toBe('');
-		});
+				const { reference, candidates } = splitReference(results);
+				expect(
+					reference.value.every((slideResult) => slideResult.elements.length > 0),
+					'the reference binding rendered an empty slide',
+				).toBe(true);
+
+				const matched = new Set<ParityExclusion>();
+				const problems: string[] = [];
+				for (const candidate of candidates) {
+					const perBinding: string[] = [];
+					deck.slides.forEach((slide, index) => {
+						const where = `${deck.file} slide ${slide}`;
+						const raw = diffSlides(
+							reference.value[index],
+							candidate.value[index] ?? { aspect: 0, elements: [] },
+						).map((problem) => `${where}: ${problem}`);
+						perBinding.push(
+							...applyExclusions(
+								raw,
+								{ binding: candidate.framework.name, where },
+								KNOWN_DIVERGENCES,
+								matched,
+							),
+						);
+					});
+					if (perBinding.length > 0) {
+						problems.push(formatDiff(candidate.framework.name, perBinding, 40));
+					}
+				}
+
+				expect(problems.join('\n\n')).toBe('');
+			},
+		);
 	}
 });

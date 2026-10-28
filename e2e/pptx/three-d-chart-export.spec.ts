@@ -198,44 +198,48 @@ function describeProblems(outcome: ExportOutcome, path: string): string[] {
 test.describe('3D chart in a PNG export', () => {
 	test.describe.configure({ timeout: 600_000 });
 
-	test('the foreignObject path exports the 3D view, not its 2D fallback', async ({
-		browser,
-	}, testInfo) => {
-		test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
-		const results = await acrossFrameworks(browser, testInfo, exportChartSlide, {
-			path: ALL_CHART_SCENES,
-			concurrency: 'sequential',
-		});
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems = describeProblems(value, 'foreignObject');
-			if (value.html2canvasRuns !== 0) {
-				problems.push('the default export fell back to html2canvas');
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-		expect(failures.join('\n')).toBe('');
-	});
+	test(
+		'the foreignObject path exports the 3D view, not its 2D fallback',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
+			const results = await acrossFrameworks(browser, testInfo, exportChartSlide, {
+				path: ALL_CHART_SCENES,
+				concurrency: 'sequential',
+			});
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems = describeProblems(value, 'foreignObject');
+				if (value.html2canvasRuns !== 0) {
+					problems.push('the default export fell back to html2canvas');
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 
-	test('the html2canvas path exports the 3D view, not its 2D fallback', async ({
-		browser,
-	}, testInfo) => {
-		test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await forceHtml2CanvasFallback(page);
-				return exportChartSlide(page, origin);
-			},
-			{ path: ALL_CHART_SCENES, concurrency: 'sequential' },
-		);
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems = describeProblems(value, 'html2canvas');
-			if (value.html2canvasRuns < 1) {
-				problems.push('html2canvas never ran, so this did not test its path');
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-		expect(failures.join('\n')).toBe('');
-	});
+	test(
+		'the html2canvas path exports the 3D view, not its 2D fallback',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await forceHtml2CanvasFallback(page);
+					return exportChartSlide(page, origin);
+				},
+				{ path: ALL_CHART_SCENES, concurrency: 'sequential' },
+			);
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems = describeProblems(value, 'html2canvas');
+				if (value.html2canvasRuns < 1) {
+					problems.push('html2canvas never ran, so this did not test its path');
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

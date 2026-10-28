@@ -110,43 +110,45 @@ async function readAnimationDelayMs(page: Page): Promise<number | undefined> {
 }
 
 test.describe('onStopAudio headless-fallback timer uses the REAL media duration', () => {
-	test("every binding bakes the REAL 5000ms into the follow-on effect's CSS delay, not the stale authored 2000ms", async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		"every binding bakes the REAL 5000ms into the follow-on effect's CSS delay, not the stale authored 2000ms",
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await resetTabSession(page);
-			await page.goto(origin);
-			await page.locator('#file-input').setInputFiles(DECK);
-			await page.locator('[data-pptx-viewport] [data-element-id]').first().waitFor();
-			await enterPresentation(page);
-			await page.waitForTimeout(500);
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await resetTabSession(page);
+				await page.goto(origin);
+				await page.locator('#file-input').setInputFiles(DECK);
+				await page.locator('[data-pptx-viewport] [data-element-id]').first().waitFor();
+				await enterPresentation(page);
+				await page.waitForTimeout(500);
 
-			// The deck's first (and only) click-group requires a click to start; it
-			// plays the audio and, in the SAME synchronous step, bakes the
-			// follow-on entrance effect's CSS animation-delay.
-			await page.keyboard.press('PageDown');
-			// One retry loop, not a fixed sleep: a binding may take a task-queue
-			// tick to apply the click-group's state, but the delay VALUE itself is
-			// set synchronously with that state, not by a later timer firing.
-			for (let attempt = 0; attempt < 20; attempt++) {
-				const delayMs = await readAnimationDelayMs(page);
-				if (delayMs !== undefined) {
-					return delayMs;
+				// The deck's first (and only) click-group requires a click to start; it
+				// plays the audio and, in the SAME synchronous step, bakes the
+				// follow-on entrance effect's CSS animation-delay.
+				await page.keyboard.press('PageDown');
+				// One retry loop, not a fixed sleep: a binding may take a task-queue
+				// tick to apply the click-group's state, but the delay VALUE itself is
+				// set synchronously with that state, not by a later timer firing.
+				for (let attempt = 0; attempt < 20; attempt++) {
+					const delayMs = await readAnimationDelayMs(page);
+					if (delayMs !== undefined) {
+						return delayMs;
+					}
+					await page.waitForTimeout(100);
 				}
-				await page.waitForTimeout(100);
-			}
-			return undefined;
-		});
+				return undefined;
+			});
 
-		for (const { framework, value: delayMs } of results) {
-			expect(delayMs, `${framework.name}: no animation-delay was ever attached`).toBeDefined();
-			expect(
-				delayMs,
-				`${framework.name}: animation-delay was ${delayMs}ms - the STALE authored ` +
-					`${STALE_AUTHORED_DURATION_MS}ms estimate, not the REAL ${MISMATCHED_REAL_DURATION_MS}ms duration`,
-			).toBe(MISMATCHED_REAL_DURATION_MS);
-		}
-	});
+			for (const { framework, value: delayMs } of results) {
+				expect(delayMs, `${framework.name}: no animation-delay was ever attached`).toBeDefined();
+				expect(
+					delayMs,
+					`${framework.name}: animation-delay was ${delayMs}ms - the STALE authored ` +
+						`${STALE_AUTHORED_DURATION_MS}ms estimate, not the REAL ${MISMATCHED_REAL_DURATION_MS}ms duration`,
+				).toBe(MISMATCHED_REAL_DURATION_MS);
+			}
+		},
+	);
 });

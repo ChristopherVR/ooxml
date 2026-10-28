@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { browserPerformance } from '../../scripts/browser-performance.mjs';
+
 /**
  * Production-build smoke run: the packaged-bundle counterpart of
  * `playwright.config.ts`.
@@ -46,11 +48,12 @@ export default defineConfig({
 	timeout: 120_000,
 	expect: { timeout: 15_000 },
 	fullyParallel: false,
+	workers: browserPerformance().workers,
 	forbidOnly: isCI,
 	retries: isCI ? 1 : 0,
 	reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'list',
 	use: {
-		trace: 'retain-on-failure',
+		trace: browserPerformance().trace,
 		actionTimeout: 15_000,
 	},
 	projects: [

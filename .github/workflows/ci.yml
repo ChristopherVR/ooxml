@@ -208,15 +208,6 @@ jobs:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run build
-      # The package and boundary checks only matter when the core or the UI changed; a viewer-only
-      # change just needs the build output.
-      - if: fromJSON(needs.plan.outputs.plan).checks.core
-        run: bun run test:package
-      # The packed tarball's types resolve under NodeNext and bundlers (Are the Types Wrong).
-      - if: fromJSON(needs.plan.outputs.plan).checks.core
-        run: node scripts/check-package-types.mjs src/core
-      - if: fromJSON(needs.plan.outputs.plan).checks.core
-        run: node scripts/check-core-ui-boundary.mjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: core-dist
@@ -451,7 +442,7 @@ jobs:
   # browser suite split by framework and shard, and the packaged-build smoke (see VIEWERS.pptx in
   # scripts/ci-plan.mjs).
   pptx-build:
-    name: pptx build and checks
+    name: pptx build
     needs: [plan, build]
     if: |
       !cancelled() && needs.build.result == 'success' &&
@@ -471,15 +462,45 @@ jobs:
         with:
           name: ui-dist
           path: src/ui/dist
-      - name: Build the packages, typecheck and check the packed bindings
+      - name: Build the packages
         working-directory: viewers/pptx
+        run: bun run build:packages
+      - name: Build browser demos once for every shard
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        working-directory: viewers/pptx
+        env:
+          PPTX_E2E_PROJECTS: ${{ join(fromJSON(needs.plan.outputs.plan).pptx.e2e.projects, ',') }}
+        run: bun e2e-build.ts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        with:
+          name: pptx-demo-dist
+          path: |
+            demos/pptx/demo-react/dist/
+            demos/pptx/demo-vue/dist/
+            demos/pptx/demo-angular/dist/
+            demos/pptx/demo-vanilla/dist/
+            demos/pptx/demo-svelte/dist/
+          retention-days: 1
+      # One immutable history snapshot is distributed to every shard in this run.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        with:
+          path: .browser-timings/history.json
+          key: browser-timings-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: browser-timings-${{ runner.os }}-
+      - name: Ensure a cold timing baseline exists
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
         run: |
-          bun run build:packages
-          bun run typecheck
-          bun run e2e:contract
-          bun run check:viewer-props
-          bun run test:binding-packages
-          bun run check:tree-shaking
+          mkdir -p .browser-timings
+          if [ ! -f .browser-timings/history.json ]; then echo '{"version":1,"tests":{}}' > .browser-timings/history.json; fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null
+        with:
+          name: browser-timing-baseline
+          path: .browser-timings/history.json
+          include-hidden-files: true
+          retention-days: 1
       # The browser suite regenerates its fixture decks through the core's save pipeline, so a
       # core change that alters a save must commit the refreshed decks, or every later run
       # rewrites them and leaves the working tree dirty.
@@ -497,6 +518,54 @@ jobs:
             viewers/pptx/packages/angular/src/internal/shared-src/
             viewers/pptx/packages/angular/src/internal/version.ts
           retention-days: 1
+
+  core-package-checks:
+    needs: [plan, build]
+    if: fromJSON(needs.plan.outputs.plan).checks.core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - run: bun run test:package
+      - run: node scripts/check-package-types.mjs src/core
+      - run: node scripts/check-core-ui-boundary.mjs
+
+  pptx-checks:
+    needs: [plan, pptx-build]
+    if: fromJSON(needs.plan.outputs.plan).pptx.run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: pptx-dist
+          path: viewers/pptx/packages
+      - name: Check types, contracts and packaged bindings
+        working-directory: viewers/pptx
+        run: |
+          bun run typecheck
+          bun run e2e:contract
+          bun run check:viewer-props
+          bun run test:binding-packages
+          bun run check:tree-shaking
 
   pptx-test:
     name: pptx test (${{ matrix.leg }})
@@ -588,21 +657,14 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         working-directory: viewers/pptx
         run: bun x playwright install-deps chromium
-      # The demos are served from their production build (`vite preview`): no cold dependency
-      # optimisation and no unbundled module waterfall per shard. Only the demos the project drives
-      # are built: React plus the project's own binding (React's project sweeps all five).
-      # VITE_PPTX_E2E_HANDLE keeps the `window.__pptxViewer` handle that some specs use, which a
-      # production build otherwise leaves out.
-      - name: Build the demos
-        env:
-          PROJECT: ${{ matrix.project }}
-          VITE_PPTX_E2E_HANDLE: '1'
-        run: |
-          demos="react vue angular vanilla svelte"
-          if [ "$PROJECT" != react ]; then demos="react $PROJECT"; fi
-          for demo in $demos; do
-            (cd "demos/pptx/demo-$demo" && bun run build)
-          done
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: pptx-demo-dist
+          path: demos/pptx
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: browser-timing-baseline
+          path: .browser-timings
       # Playwright retries a failed test once itself. A second attempt then runs only the failures
       # Playwright recorded (`--last-failed`), or the whole shard again when the first attempt
       # crashed before recording a report (a runner-level browser crash). Some touch and hover
@@ -616,13 +678,17 @@ jobs:
           # The changed spec files when only specs changed; empty runs every spec.
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
           PPTX_E2E_SERVE: preview
+          PPTX_E2E_SHARD: ${{ matrix.shard }}/${{ matrix.total }}
+          PPTX_E2E_SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
+          PPTX_E2E_REFERENCE_COVERS_PARITY: ${{ contains(fromJSON(needs.plan.outputs.plan).pptx.e2e.projects, 'react') && '1' || '0' }}
+          PPTX_E2E_FIXTURES_VERIFIED: '1'
         run: |
           retry_args=()
           for attempt in 1 2; do
             # SPECS is a space-separated list of spec file names, split on purpose.
             # shellcheck disable=SC2086
             bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
-              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github \
+              --workers=2 --pass-with-no-tests --reporter=list,html,github,../../scripts/browser-timing-reporter.mjs \
               "${retry_args[@]}" && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
@@ -641,6 +707,16 @@ jobs:
             if [ "$attempt" -lt 2 ]; then sleep 15; fi
           done
           exit "$status"
+      - name: Preserve timings
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: browser-timing-result-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            viewers/pptx/test-results/timings.json
+            viewers/pptx/ci-evidence/attempt-*/test-results/timings.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve the report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -678,7 +754,8 @@ jobs:
         with:
           name: pptx-dist
           path: viewers/pptx/packages
-      - name: Build the demo bundles
+      # Shipping builds deliberately omit the product suite's VITE_PPTX_E2E_HANDLE hook.
+      - name: Build the production demo bundles
         run: |
           for demo in react vue angular vanilla svelte; do
             (cd "demos/pptx/demo-$demo" && bun run build)
@@ -710,6 +787,31 @@ jobs:
             viewers/pptx/playwright-report/
             viewers/pptx/test-results/
           retention-days: 7
+
+  browser-timings:
+    needs: [plan, pptx-e2e]
+    if: ${{ !cancelled() && needs.pptx-e2e.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: browser-timing-baseline
+          path: .browser-timings/reports/000-baseline
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: browser-timing-result-*
+          path: .browser-timings/reports
+      - run: node scripts/merge-browser-timings.mjs .browser-timings/reports .browser-timings/history.json
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: .browser-timings/history.json
+          key: browser-timings-${{ runner.os }}-${{ github.run_id }}
 
   # The viewers that are still their own repository (none today; see CONSUMERS in ci-plan.mjs),
   # linked to this change: the contract the shared elements and the format logic have to keep. It
@@ -789,6 +891,8 @@ jobs:
         viewers,
         viewer-browser,
         pptx-build,
+        pptx-checks,
+        core-package-checks,
         pptx-test,
         pptx-e2e,
         pptx-e2e-packaged,

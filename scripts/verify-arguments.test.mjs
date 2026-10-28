@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { argumentBatches, FORMATTER_CHECK } from './verify-arguments.mjs';
+import { verificationShell } from './verify-shell.mjs';
 
 test('large file lists reach bash unchanged across bounded commands', () => {
 	const files = Array.from(
@@ -16,7 +17,7 @@ test('large file lists reach bash unchanged across bounded commands', () => {
 	assert.ok(commands.length > 1);
 	const actual = commands.flatMap((command) => {
 		assert.ok(command.length <= 4000);
-		return execFileSync(process.platform === 'win32' ? 'bash.exe' : 'bash', ['-s'], {
+		return execFileSync(verificationShell(), ['-s'], {
 			encoding: 'utf8',
 			input: command + '\n',
 		})
@@ -39,7 +40,7 @@ test('formatter batches allow skipped formats while still rejecting unformatted 
 		writeFileSync(skipped, '<button>Example</button>');
 		writeFileSync(source, 'const value= {a:1,b:2};');
 		const run = (files) =>
-			spawnSync(process.platform === 'win32' ? 'bash.exe' : 'bash', ['-s'], {
+			spawnSync(verificationShell(), ['-s'], {
 				encoding: 'utf8',
 				input: argumentBatches(FORMATTER_CHECK, files).join('\n') + '\n',
 			});

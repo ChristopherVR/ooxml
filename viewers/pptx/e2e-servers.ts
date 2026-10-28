@@ -3,15 +3,14 @@
  * demo. `playwright.config.ts` builds its `webServer` list from this, and the same list backs
  * the warm-server commands, so the two cannot disagree on ports.
  *
- * Starting five Vite servers (each with `--force`, so a cold dependency optimize; CI turns it off) is minutes of
- * every local run. Keep them up between runs instead:
+ * Starting five Vite servers adds overhead to every local run. Keep them up between runs:
  *
  *   bun e2e-servers.ts start     # start whatever is not listening, wait until ready
  *   bun e2e-servers.ts status
  *   bun e2e-servers.ts stop
  *   bun e2e-servers.ts restart   # after rebuilding ooxml-ui, core or the angular package
  *
- * Playwright reuses a server it finds listening (`reuseExistingServer` outside CI), so
+ * Playwright reuses a server it finds listening (including local verification), so
  * `bun run e2e` then starts at once. A running server serves stale code after a package rebuild:
  * `restart` (or `stop`) after building.
  *
@@ -105,7 +104,7 @@ function demoCommand(port: number): string {
 	if (serveMode() === 'preview') {
 		return `npx vite preview --port ${port} --strictPort`;
 	}
-	const force = process.env.PPTX_E2E_VITE_FORCE === '0' ? '' : ' --force';
+	const force = process.env.PPTX_E2E_VITE_FORCE === '1' ? ' --force' : '';
 	return `npx vite${force} --port ${port} --strictPort`;
 }
 

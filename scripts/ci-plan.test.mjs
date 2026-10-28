@@ -655,6 +655,56 @@ test('the browser jobs cache Playwright browsers and ci-success waits on the new
 	}
 	assert.match(job('ui-test'), /--shard=\$\{\{ matrix\.shard \}\}\/3/u);
 	const needs = /^  ci-success:[\s\S]*?needs:\s*\[([^\]]*)\]/m.exec(workflow)?.[1] ?? '';
-	for (const name of ['ui', 'ui-test', 'viewers', 'viewer-browser'])
+	for (const name of [
+		'ui',
+		'ui-test',
+		'viewers',
+		'viewer-browser',
+		'pptx-checks',
+		'core-package-checks',
+	])
 		assert.match(needs, new RegExp(`\\b${name}\\b`, 'u'), name);
+});
+
+test('browser shards share built demos and an immutable timing baseline', () => {
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = (name) =>
+		workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  \\S)`, 'm'))?.[1] ?? '';
+	assert.match(job('pptx-build'), /bun e2e-build\.ts/);
+	assert.doesNotMatch(job('pptx-build'), /bun run typecheck|bun run test:binding-packages/);
+	assert.match(job('pptx-checks'), /bun run test:binding-packages/);
+	assert.match(job('core-package-checks'), /bun run test:package/);
+	assert.match(job('pptx-e2e'), /name: pptx-demo-dist/);
+	assert.doesNotMatch(job('pptx-e2e'), /bun run build/);
+	// The shipping smoke must retain a build with no injected test handle.
+	assert.match(job('pptx-e2e-packaged'), /bun run build/);
+	assert.doesNotMatch(job('pptx-e2e-packaged'), /name: pptx-demo-dist/);
+	assert.match(job('pptx-e2e'), /name: browser-timing-baseline/);
+	assert.match(job('pptx-e2e'), /PPTX_E2E_SHARD:/);
+	assert.doesNotMatch(job('pptx-e2e'), /--shard=/);
+});
+
+test('local verification preserves the same narrowed browser specs as CI', () => {
+	for (const product of ['docx', 'xlsx', 'teams']) {
+		const entry = plan([`e2e/${product}/example.spec.ts`]).viewerBrowser[0];
+		assert.ok(entry, product);
+		assert.match(entry.local, /example\.spec\.ts/, product);
+		assert.doesNotMatch(entry.local, /--shard=/, product);
+	}
+});
+
+test('shared browser runtime changes reach the configs that import them', () => {
+	const shared = plan(['scripts/browser-performance.mjs']);
+	assert.deepEqual([...new Set(shared.viewerBrowser.map((item) => item.name))].sort(), [
+		'docx',
+		'visio',
+		'xlsx',
+	]);
+	assert.deepEqual(shared.pptx.e2e.projects, PPTX_BINDINGS);
+	for (const script of ['browser-shards', 'browser-timing-reporter', 'merge-browser-timings']) {
+		const result = plan([`scripts/${script}.mjs`]);
+		assert.deepEqual(result.pptx.e2e.projects, PPTX_BINDINGS);
+		assert.equal(result.viewerBrowser.length, 0);
+	}
+	assert.equal(plan(['scripts/browser-shards.test.mjs']).pptx.run, false);
 });

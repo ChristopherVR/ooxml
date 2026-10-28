@@ -491,14 +491,15 @@ function browserEntries(name, { groups, specs }) {
 	const total = specs.size > 0 && viewer.specFilter ? 1 : (VIEWER_BROWSER_SHARDS[name] ?? 1);
 	return Array.from({ length: total }, (_, i) => {
 		const { before, test } = browserShardCommands(viewer, specs, i + 1, total);
+		const local = browserShardCommands(viewer, specs, 1, 1);
 		return {
 			name,
 			dir: viewer.dir,
 			shard: i + 1,
 			total,
 			verify: [...before, ...test].join('\n'),
-			// The whole suite in one run, for `verify.mjs --browser` (it runs shard 1 only).
-			local: [...(viewer.before?.browser ?? []), ...viewer.groups.browser].join('\n'),
+			// Same selection as CI, without sharding; retain every chained package check.
+			local: [...local.before, ...local.test].join('\n'),
 		};
 	});
 }
@@ -525,6 +526,19 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
 	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
+	// These shared runtime scripts are imported by viewer configs. Follow those edges just as
+	// if the importing config changed; script-only checks would never execute their browser path.
+	if (live.some((file) => /^scripts\/browser-performance\.(mjs|d\.mts)$/.test(file)))
+		for (const viewer of ['docx', 'xlsx', 'visio', 'pptx'])
+			live.push(`viewers/${viewer}/playwright.config.ts`);
+	if (
+		live.some((file) =>
+			/^scripts\/(browser-shards\.(mjs|d\.mts)|browser-timing-reporter\.mjs|merge-browser-timings\.mjs)$/.test(
+				file,
+			),
+		)
+	)
+		live.push('viewers/pptx/playwright.config.ts');
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const areas = new Set(src.map((file) => file.split('/')[2]));

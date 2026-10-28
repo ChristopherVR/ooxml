@@ -171,195 +171,207 @@ async function probeConsole(page: Page): Promise<ConsoleProbe> {
 }
 
 test.describe('cross-binding presenter view', () => {
-	test('every binding mounts the same presenter console strip, in order', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openPresenterView(page, origin);
-			return probeConsole(page);
-		});
-
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.mounted) {
-				problems.push(
-					`${framework.name}: renders no [data-pptx-presenter-control] after opening presenter view`,
-				);
-				continue;
-			}
-			// Rail ids share the attribute, so compare only the strip's own slots.
-			const stripIds = value.ids.filter((id) => STRIP_IDS.includes(id));
-			if (stripIds.join(',') !== STRIP_IDS.join(',')) {
-				problems.push(
-					`${framework.name}: strip order is [${stripIds.join(', ')}], shared spec is [${STRIP_IDS.join(', ')}]`,
-				);
-			}
-			for (const id of RAIL_IDS) {
-				if (!value.ids.includes(id)) {
-					problems.push(`${framework.name}: rail is missing the "${id}" control`);
-				}
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('every presenter control is named exactly as React names it', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openPresenterView(page, origin);
-			return probeConsole(page);
-		});
-
-		const { reference, candidates } = splitReference(results);
-		const problems: string[] = [];
-		for (const { framework, value } of candidates) {
-			for (const id of [...STRIP_IDS, ...RAIL_IDS]) {
-				const expected = reference.value.names[id];
-				const actual = value.names[id];
-				if (expected === undefined) {
-					continue;
-				}
-				if (actual !== expected) {
-					problems.push(
-						`${framework.name}: "${id}" is named "${String(actual)}", React names it "${expected}"`,
-					);
-				}
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('every console carries a stage pane, notes and an accessible timer bar', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openPresenterView(page, origin);
-			return probeConsole(page);
-		});
-
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (!value.hasStagePane) {
-				problems.push(`${framework.name}: no [data-pptx-presenter-slide] current-slide pane`);
-			}
-			if (!value.hasNotes) {
-				problems.push(`${framework.name}: no speaker-notes region`);
-			}
-			if (!value.progressBar) {
-				problems.push(`${framework.name}: no role="progressbar" timer bar`);
-				continue;
-			}
-			if (value.progressBar.valuemin !== '0' || value.progressBar.valuemax !== '100') {
-				problems.push(
-					`${framework.name}: timer bar range is ${String(value.progressBar.valuemin)}..${String(value.progressBar.valuemax)}, not 0..100`,
-				);
-			}
-			if (!value.progressBar.named) {
-				problems.push(`${framework.name}: timer bar has no accessible name`);
-			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
-
-	for (const factor of FORM_FACTORS) {
-		test(`on the last slide, Next stays live and Previous is disabled (${factor.name})`, async ({
-			browser,
-		}, testInfo) => {
-			// PowerPoint's console advances from the last slide to the end-of-show
-			// screen and then out of the show, so `presenterNextDisabled` is always
-			// false. Bindings kept re-deciding it locally: three desktop consoles
-			// added `disabled={current >= slides.length - 1}` (fixed once the rule
-			// moved into shared), and all three PHONE consoles then made the same
-			// call again through a near-duplicate `isLastSlide` helper, which
-			// stranded a presenter on a phone while a laptop let them finish.
-			//
-			// The deck has exactly one slide, so the console opens on the last slide
-			// without navigating: the phone layout has no thumbnail rail to jump
-			// with, and counting clicks to the end is at the mercy of every
-			// animation build on the way.
-			const results = await acrossFrameworks(
-				browser,
-				testInfo,
-				async (page, origin) => {
-					await openPresenterView(page, origin, ONE_SLIDE_DECK);
-					return page.evaluate(() => {
-						const read = (id: string) => {
-							const node = document.querySelector(`[data-pptx-presenter-control="${id}"]`);
-							if (node === null) {
-								return null;
-							}
-							return {
-								disabled:
-									node instanceof HTMLButtonElement
-										? node.disabled
-										: node.getAttribute('aria-disabled') === 'true',
-								visible: node.getClientRects().length > 0,
-							};
-						};
-						return { next: read('next'), prev: read('prev') };
-					});
-				},
-				{ device: factor.device },
-			);
+	test(
+		'every binding mounts the same presenter console strip, in order',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openPresenterView(page, origin);
+				return probeConsole(page);
+			});
 
 			const problems: string[] = [];
 			for (const { framework, value } of results) {
-				if (value.next === null) {
-					problems.push(`${framework.name}: no presenter "next" control`);
-				} else {
-					if (value.next.disabled) {
-						problems.push(`${framework.name}: presenter "next" is disabled on the last slide`);
-					}
-					if (!value.next.visible) {
-						problems.push(`${framework.name}: presenter "next" renders no box`);
-					}
+				if (!value.mounted) {
+					problems.push(
+						`${framework.name}: renders no [data-pptx-presenter-control] after opening presenter view`,
+					);
+					continue;
 				}
-				if (value.prev === null) {
-					problems.push(`${framework.name}: no presenter "prev" control`);
-				} else if (!value.prev.disabled) {
-					problems.push(`${framework.name}: presenter "prev" is live on the first slide`);
+				// Rail ids share the attribute, so compare only the strip's own slots.
+				const stripIds = value.ids.filter((id) => STRIP_IDS.includes(id));
+				if (stripIds.join(',') !== STRIP_IDS.join(',')) {
+					problems.push(
+						`${framework.name}: strip order is [${stripIds.join(', ')}], shared spec is [${STRIP_IDS.join(', ')}]`,
+					);
+				}
+				for (const id of RAIL_IDS) {
+					if (!value.ids.includes(id)) {
+						problems.push(`${framework.name}: rail is missing the "${id}" control`);
+					}
 				}
 			}
 			expect(problems.join('\n')).toBe('');
-		});
+		},
+	);
+
+	test(
+		'every presenter control is named exactly as React names it',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openPresenterView(page, origin);
+				return probeConsole(page);
+			});
+
+			const { reference, candidates } = splitReference(results);
+			const problems: string[] = [];
+			for (const { framework, value } of candidates) {
+				for (const id of [...STRIP_IDS, ...RAIL_IDS]) {
+					const expected = reference.value.names[id];
+					const actual = value.names[id];
+					if (expected === undefined) {
+						continue;
+					}
+					if (actual !== expected) {
+						problems.push(
+							`${framework.name}: "${id}" is named "${String(actual)}", React names it "${expected}"`,
+						);
+					}
+				}
+			}
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'every console carries a stage pane, notes and an accessible timer bar',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openPresenterView(page, origin);
+				return probeConsole(page);
+			});
+
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.hasStagePane) {
+					problems.push(`${framework.name}: no [data-pptx-presenter-slide] current-slide pane`);
+				}
+				if (!value.hasNotes) {
+					problems.push(`${framework.name}: no speaker-notes region`);
+				}
+				if (!value.progressBar) {
+					problems.push(`${framework.name}: no role="progressbar" timer bar`);
+					continue;
+				}
+				if (value.progressBar.valuemin !== '0' || value.progressBar.valuemax !== '100') {
+					problems.push(
+						`${framework.name}: timer bar range is ${String(value.progressBar.valuemin)}..${String(value.progressBar.valuemax)}, not 0..100`,
+					);
+				}
+				if (!value.progressBar.named) {
+					problems.push(`${framework.name}: timer bar has no accessible name`);
+				}
+			}
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	for (const factor of FORM_FACTORS) {
+		test(
+			`on the last slide, Next stays live and Previous is disabled (${factor.name})`,
+			{ tag: '@cross-binding' },
+			async ({ browser }, testInfo) => {
+				// PowerPoint's console advances from the last slide to the end-of-show
+				// screen and then out of the show, so `presenterNextDisabled` is always
+				// false. Bindings kept re-deciding it locally: three desktop consoles
+				// added `disabled={current >= slides.length - 1}` (fixed once the rule
+				// moved into shared), and all three PHONE consoles then made the same
+				// call again through a near-duplicate `isLastSlide` helper, which
+				// stranded a presenter on a phone while a laptop let them finish.
+				//
+				// The deck has exactly one slide, so the console opens on the last slide
+				// without navigating: the phone layout has no thumbnail rail to jump
+				// with, and counting clicks to the end is at the mercy of every
+				// animation build on the way.
+				const results = await acrossFrameworks(
+					browser,
+					testInfo,
+					async (page, origin) => {
+						await openPresenterView(page, origin, ONE_SLIDE_DECK);
+						return page.evaluate(() => {
+							const read = (id: string) => {
+								const node = document.querySelector(`[data-pptx-presenter-control="${id}"]`);
+								if (node === null) {
+									return null;
+								}
+								return {
+									disabled:
+										node instanceof HTMLButtonElement
+											? node.disabled
+											: node.getAttribute('aria-disabled') === 'true',
+									visible: node.getClientRects().length > 0,
+								};
+							};
+							return { next: read('next'), prev: read('prev') };
+						});
+					},
+					{ device: factor.device },
+				);
+
+				const problems: string[] = [];
+				for (const { framework, value } of results) {
+					if (value.next === null) {
+						problems.push(`${framework.name}: no presenter "next" control`);
+					} else {
+						if (value.next.disabled) {
+							problems.push(`${framework.name}: presenter "next" is disabled on the last slide`);
+						}
+						if (!value.next.visible) {
+							problems.push(`${framework.name}: presenter "next" renders no box`);
+						}
+					}
+					if (value.prev === null) {
+						problems.push(`${framework.name}: no presenter "prev" control`);
+					} else if (!value.prev.disabled) {
+						problems.push(`${framework.name}: presenter "prev" is live on the first slide`);
+					}
+				}
+				expect(problems.join('\n')).toBe('');
+			},
+		);
 	}
 
-	test('no presenter pane paints a native media transport', async ({ browser }, testInfo) => {
-		// A console pane is a STILL of a slide: the speaker cannot play it, and
-		// PowerPoint paints no control bar on one. Four bindings rendered their
-		// panes through a non-presenting stage whose rule was `controls =
-		// !presenting`, so Chrome's black scrubber sat across the bottom of the
-		// current-slide pane and the next-slide preview.
-		//
-		// The check is one-sided on purpose. React's preview renderer is handed no
-		// media map, so its video falls back to a poster IMAGE and there is no
-		// `<video>` to carry a transport; requiring a media node in every console
-		// would fail on the one binding that never had the defect.
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await openPresenterView(page, origin);
-			return page.evaluate(() => {
-				const panes = [
-					...document.querySelectorAll(
-						'[data-pptx-presenter-slide], [data-pptx-presenter-next-preview]',
-					),
-				];
-				const media = panes.flatMap((pane) => [...pane.querySelectorAll('video, audio')]);
-				return {
-					total: media.length,
-					withTransport: media.filter((node) => (node as HTMLMediaElement).controls).length,
-				};
+	test(
+		'no presenter pane paints a native media transport',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			// A console pane is a STILL of a slide: the speaker cannot play it, and
+			// PowerPoint paints no control bar on one. Four bindings rendered their
+			// panes through a non-presenting stage whose rule was `controls =
+			// !presenting`, so Chrome's black scrubber sat across the bottom of the
+			// current-slide pane and the next-slide preview.
+			//
+			// The check is one-sided on purpose. React's preview renderer is handed no
+			// media map, so its video falls back to a poster IMAGE and there is no
+			// `<video>` to carry a transport; requiring a media node in every console
+			// would fail on the one binding that never had the defect.
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await openPresenterView(page, origin);
+				return page.evaluate(() => {
+					const panes = [
+						...document.querySelectorAll(
+							'[data-pptx-presenter-slide], [data-pptx-presenter-next-preview]',
+						),
+					];
+					const media = panes.flatMap((pane) => [...pane.querySelectorAll('video, audio')]);
+					return {
+						total: media.length,
+						withTransport: media.filter((node) => (node as HTMLMediaElement).controls).length,
+					};
+				});
 			});
-		});
 
-		const problems: string[] = [];
-		for (const { framework, value } of results) {
-			if (value.withTransport > 0) {
-				problems.push(
-					`${framework.name}: ${value.withTransport} of ${value.total} media node(s) in the presenter panes still paint a native transport`,
-				);
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (value.withTransport > 0) {
+					problems.push(
+						`${framework.name}: ${value.withTransport} of ${value.total} media node(s) in the presenter panes still paint a native transport`,
+					);
+				}
 			}
-		}
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });

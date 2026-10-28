@@ -197,74 +197,76 @@ function expectEveryBinding(
 }
 
 test.describe('text-body properties', () => {
-	test('every binding honours numCol, tabs, anchorCtr, vertOverflow, rot and the text rect', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'every binding honours numCol, tabs, anchorCtr, vertOverflow, rot and the text rect',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		// 1. `numCol="2" spcCol="228600"` (0.25in = 24px at 9525 EMU/px).
-		expectEveryBinding(results, 'a two-column body renders in two columns', (facts) =>
-			facts.columns.columnCount === '2'
-				? undefined
-				: `column-count is "${facts.columns.columnCount}", expected "2"`,
-		);
-		expectEveryBinding(results, 'the authored column spacing is applied', (facts) =>
-			facts.columns.columnGap === '24px'
-				? undefined
-				: `column-gap is "${facts.columns.columnGap}", expected "24px"`,
-		);
+			// 1. `numCol="2" spcCol="228600"` (0.25in = 24px at 9525 EMU/px).
+			expectEveryBinding(results, 'a two-column body renders in two columns', (facts) =>
+				facts.columns.columnCount === '2'
+					? undefined
+					: `column-count is "${facts.columns.columnCount}", expected "2"`,
+			);
+			expectEveryBinding(results, 'the authored column spacing is applied', (facts) =>
+				facts.columns.columnGap === '24px'
+					? undefined
+					: `column-gap is "${facts.columns.columnGap}", expected "24px"`,
+			);
 
-		// 2. A single authored `a:tab` at 1828800 EMU = 192px is used verbatim.
-		expectEveryBinding(results, 'a tab advances by the authored stop', (facts) =>
-			facts.tabs.tabSize === '192px'
-				? undefined
-				: `tab-size is "${facts.tabs.tabSize}", expected "192px"`,
-		);
+			// 2. A single authored `a:tab` at 1828800 EMU = 192px is used verbatim.
+			expectEveryBinding(results, 'a tab advances by the authored stop', (facts) =>
+				facts.tabs.tabSize === '192px'
+					? undefined
+					: `tab-size is "${facts.tabs.tabSize}", expected "192px"`,
+			);
 
-		// 3. `anchorCtr="1"` centres the text bounding box on the shape.
-		//
-		// Asserted on the PAINTED glyph position, not a CSS property: the shared
-		// implementation centres the shrink-wrapped paragraph box with
-		// `width: fit-content` + auto margins rather than `align-items: center`
-		// (see `fix(shared): centre anchorCtr as one shared box, not per-paragraph`),
-		// and `getComputedStyle` resolves both `width` and `margin` to used pixel
-		// values, so neither keyword is observable from the DOM. What must hold
-		// regardless of mechanism is that the rendered text sits centred in the
-		// shape rather than hard against the left inset.
-		expectEveryBinding(results, 'anchorCtr centres the text bounding box', (facts) => {
-			const center = (facts.anchorCtr.textLeftFraction + facts.anchorCtr.textRightFraction) / 2;
-			return Math.abs(center - 0.5) <= 0.12
-				? undefined
-				: `the text's horizontal centre is at ${center.toFixed(3)} of the shape width, expected close to 0.5`;
-		});
+			// 3. `anchorCtr="1"` centres the text bounding box on the shape.
+			//
+			// Asserted on the PAINTED glyph position, not a CSS property: the shared
+			// implementation centres the shrink-wrapped paragraph box with
+			// `width: fit-content` + auto margins rather than `align-items: center`
+			// (see `fix(shared): centre anchorCtr as one shared box, not per-paragraph`),
+			// and `getComputedStyle` resolves both `width` and `margin` to used pixel
+			// values, so neither keyword is observable from the DOM. What must hold
+			// regardless of mechanism is that the rendered text sits centred in the
+			// shape rather than hard against the left inset.
+			expectEveryBinding(results, 'anchorCtr centres the text bounding box', (facts) => {
+				const center = (facts.anchorCtr.textLeftFraction + facts.anchorCtr.textRightFraction) / 2;
+				return Math.abs(center - 0.5) <= 0.12
+					? undefined
+					: `the text's horizontal centre is at ${center.toFixed(3)} of the shape width, expected close to 0.5`;
+			});
 
-		// 4. `vertOverflow="clip"` keeps the overflow inside the shape.
-		expectEveryBinding(results, 'a vertOverflow="clip" body clips', (facts) =>
-			facts.clip.overflow === 'hidden' && facts.clip.clipsOverflow
-				? undefined
-				: `overflow is "${facts.clip.overflow}" and the clipping box ${
-						facts.clip.clipsOverflow ? 'has' : 'has no'
-					} content to clip`,
-		);
+			// 4. `vertOverflow="clip"` keeps the overflow inside the shape.
+			expectEveryBinding(results, 'a vertOverflow="clip" body clips', (facts) =>
+				facts.clip.overflow === 'hidden' && facts.clip.clipsOverflow
+					? undefined
+					: `overflow is "${facts.clip.overflow}" and the clipping box ${
+							facts.clip.clipsOverflow ? 'has' : 'has no'
+						} content to clip`,
+			);
 
-		// 5. `rot="2700000"` (45 degrees) rotates the body.
-		expectEveryBinding(results, 'a:bodyPr/@rot rotates the text body', (facts) =>
-			facts.rotated.rotated ? undefined : 'no node under the element carries a rotation',
-		);
+			// 5. `rot="2700000"` (45 degrees) rotates the body.
+			expectEveryBinding(results, 'a:bodyPr/@rot rotates the text body', (facts) =>
+				facts.rotated.rotated ? undefined : 'no node under the element carries a rotation',
+			);
 
-		// 6. The chevron's `a:rect`. Its notch depth is the SHORT side times the
-		// 50000 default adjustment, so on the fixture's 384x96 box the rectangle
-		// is 0.125 .. 0.875 of the width; the body insets pull the glyphs a little
-		// further in again. Without the rectangle the wrapped paragraph fills the
-		// whole box (0.025 .. 0.975) and runs straight over both arrow points, so
-		// the 0.10 / 0.90 bounds separate the two cases with room to spare.
-		expectEveryBinding(results, 'a chevron insets its label into the text rectangle', (facts) =>
-			facts.chevron.textLeftFraction >= 0.1 && facts.chevron.textRightFraction <= 0.9
-				? undefined
-				: `the label spans ${facts.chevron.textLeftFraction.toFixed(3)}..${facts.chevron.textRightFraction.toFixed(
-						3,
-					)} of the shape, expected to stay within 0.10..0.90`,
-		);
-	});
+			// 6. The chevron's `a:rect`. Its notch depth is the SHORT side times the
+			// 50000 default adjustment, so on the fixture's 384x96 box the rectangle
+			// is 0.125 .. 0.875 of the width; the body insets pull the glyphs a little
+			// further in again. Without the rectangle the wrapped paragraph fills the
+			// whole box (0.025 .. 0.975) and runs straight over both arrow points, so
+			// the 0.10 / 0.90 bounds separate the two cases with room to spare.
+			expectEveryBinding(results, 'a chevron insets its label into the text rectangle', (facts) =>
+				facts.chevron.textLeftFraction >= 0.1 && facts.chevron.textRightFraction <= 0.9
+					? undefined
+					: `the label spans ${facts.chevron.textLeftFraction.toFixed(3)}..${facts.chevron.textRightFraction.toFixed(
+							3,
+						)} of the shape, expected to stay within 0.10..0.90`,
+			);
+		},
+	);
 });

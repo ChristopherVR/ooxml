@@ -28,32 +28,34 @@ const fixturePath = resolve(
 );
 
 test.describe('chart filtered-series (Chart Filters)', () => {
-	test('every binding plots only the visible series and categories', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await resetTabSession(page);
-			await loadDeckAt(page, origin, fixturePath);
-			const svg = page.locator('[data-pptx-viewport] [data-element-id] svg').first();
-			await svg.waitFor();
-			const marks = svg.locator('[data-chart-part="dataPoint"]');
-			await expect.poll(async () => marks.count(), { timeout: 5000 }).toBeGreaterThan(0);
-			const texts = await svg.evaluate((node) =>
-				[...node.querySelectorAll('text')].map((t) => t.textContent ?? ''),
-			);
-			return { markCount: await marks.count(), texts };
-		});
+	test(
+		'every binding plots only the visible series and categories',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await resetTabSession(page);
+				await loadDeckAt(page, origin, fixturePath);
+				const svg = page.locator('[data-pptx-viewport] [data-element-id] svg').first();
+				await svg.waitFor();
+				const marks = svg.locator('[data-chart-part="dataPoint"]');
+				await expect.poll(async () => marks.count(), { timeout: 5000 }).toBeGreaterThan(0);
+				const texts = await svg.evaluate((node) =>
+					[...node.querySelectorAll('text')].map((t) => t.textContent ?? ''),
+				);
+				return { markCount: await marks.count(), texts };
+			});
 
-		for (const { framework, value } of results) {
-			const where = `[${framework.name}]`;
-			// 2 visible series x 3 visible categories. Never 9 (the filtered
-			// series plotted too) or 8 (the filtered category not collapsed).
-			expect(value.markCount, `${where} plotted data marks`).toBe(6);
-			const legendText = value.texts.join('|');
-			expect(legendText, `${where} legend/labels`).toContain('Series A');
-			expect(legendText, `${where} legend/labels`).toContain('Series C');
-			expect(legendText, `${where} filtered series must not render`).not.toContain('Series B');
-			expect(legendText, `${where} filtered category must not render`).not.toContain('Cat3');
-		}
-	});
+			for (const { framework, value } of results) {
+				const where = `[${framework.name}]`;
+				// 2 visible series x 3 visible categories. Never 9 (the filtered
+				// series plotted too) or 8 (the filtered category not collapsed).
+				expect(value.markCount, `${where} plotted data marks`).toBe(6);
+				const legendText = value.texts.join('|');
+				expect(legendText, `${where} legend/labels`).toContain('Series A');
+				expect(legendText, `${where} legend/labels`).toContain('Series C');
+				expect(legendText, `${where} filtered series must not render`).not.toContain('Series B');
+				expect(legendText, `${where} filtered category must not render`).not.toContain('Cat3');
+			}
+		},
+	);
 });

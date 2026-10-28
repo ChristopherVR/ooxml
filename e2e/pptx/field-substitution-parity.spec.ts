@@ -84,111 +84,117 @@ async function textPerSlide(page: import('@playwright/test').Page): Promise<stri
 }
 
 test.describe('field substitution', () => {
-	test('every binding resolves the slide-number field to its own slide', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, DECK);
-				return textPerSlide(page);
-			},
-			{ concurrency: 'sequential' },
-		);
+	test(
+		'every binding resolves the slide-number field to its own slide',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, DECK);
+					return textPerSlide(page);
+				},
+				{ concurrency: 'sequential' },
+			);
 
-		const problems: string[] = [];
-		for (const result of results) {
-			const perBinding = result.value.flatMap((text, index) => {
-				const number = String(index + 1);
-				// Asserted on the resolved value alone, wherever the run ends up in the
-				// paragraph, so this stays a substitution test rather than doubling as
-				// the ordering test below. The fixture's literal runs contain no digits,
-				// so any digit on screen came from the field.
-				const found = text.includes(number);
-				const perSlide: string[] = [];
-				if (text.includes('#')) {
-					perSlide.push(
-						`slide ${index + 1}: the cached field literal "#" is still on screen ("${text}")`,
+			const problems: string[] = [];
+			for (const result of results) {
+				const perBinding = result.value.flatMap((text, index) => {
+					const number = String(index + 1);
+					// Asserted on the resolved value alone, wherever the run ends up in the
+					// paragraph, so this stays a substitution test rather than doubling as
+					// the ordering test below. The fixture's literal runs contain no digits,
+					// so any digit on screen came from the field.
+					const found = text.includes(number);
+					const perSlide: string[] = [];
+					if (text.includes('#')) {
+						perSlide.push(
+							`slide ${index + 1}: the cached field literal "#" is still on screen ("${text}")`,
+						);
+					}
+					if (!found) {
+						perSlide.push(
+							`slide ${index + 1}: no resolved slide number ${number} on screen ("${text}")`,
+						);
+					}
+					return perSlide;
+				});
+				if (perBinding.length > 0) {
+					problems.push(formatDiff(result.framework.name, perBinding));
+				}
+			}
+
+			expect(problems.join('\n\n')).toBe('');
+		},
+	);
+
+	test(
+		'an inline field stays in the position it was authored in',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, DECK);
+					return textPerSlide(page);
+				},
+				{ concurrency: 'sequential' },
+			);
+
+			const problems: string[] = [];
+			for (const result of results) {
+				const perBinding = result.value.flatMap((text, index) => {
+					const want = expectedFieldText(index + 1);
+					return text.includes(want)
+						? []
+						: [`slide ${index + 1}: expected the canvas to read "${want}", got "${text}"`];
+				});
+				if (perBinding.length > 0) {
+					problems.push(formatDiff(result.framework.name, perBinding));
+				}
+			}
+
+			expect(problems.join('\n\n')).toBe('');
+		},
+	);
+
+	test(
+		'thumbnails resolve their own slide number, not the active one',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await loadDeckAt(page, origin, DECK);
+					// Move off slide 1 first: a binding that resolves every stage against the
+					// active slide still looks correct while slide 1 is the active slide.
+					await thumbnail(page, 3).click();
+					await expect.poll(() => stageText(page)).toContain(FIELD_SLIDE_TITLES[2]);
+					return thumbnailFieldNumbers(page);
+				},
+				{ concurrency: 'sequential' },
+			);
+
+			const expected = FIELD_SLIDE_TITLES.map((_, index) => String(index + 1));
+			const problems: string[] = [];
+			for (const result of results) {
+				if (result.value.join(',') !== expected.join(',')) {
+					problems.push(
+						formatDiff(result.framework.name, [
+							`with slide 3 active, the thumbnails resolved to [${result.value.join(', ')}] ` +
+								`instead of [${expected.join(', ')}]`,
+						]),
 					);
 				}
-				if (!found) {
-					perSlide.push(
-						`slide ${index + 1}: no resolved slide number ${number} on screen ("${text}")`,
-					);
-				}
-				return perSlide;
-			});
-			if (perBinding.length > 0) {
-				problems.push(formatDiff(result.framework.name, perBinding));
 			}
-		}
 
-		expect(problems.join('\n\n')).toBe('');
-	});
-
-	test('an inline field stays in the position it was authored in', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, DECK);
-				return textPerSlide(page);
-			},
-			{ concurrency: 'sequential' },
-		);
-
-		const problems: string[] = [];
-		for (const result of results) {
-			const perBinding = result.value.flatMap((text, index) => {
-				const want = expectedFieldText(index + 1);
-				return text.includes(want)
-					? []
-					: [`slide ${index + 1}: expected the canvas to read "${want}", got "${text}"`];
-			});
-			if (perBinding.length > 0) {
-				problems.push(formatDiff(result.framework.name, perBinding));
-			}
-		}
-
-		expect(problems.join('\n\n')).toBe('');
-	});
-
-	test('thumbnails resolve their own slide number, not the active one', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await loadDeckAt(page, origin, DECK);
-				// Move off slide 1 first: a binding that resolves every stage against the
-				// active slide still looks correct while slide 1 is the active slide.
-				await thumbnail(page, 3).click();
-				await expect.poll(() => stageText(page)).toContain(FIELD_SLIDE_TITLES[2]);
-				return thumbnailFieldNumbers(page);
-			},
-			{ concurrency: 'sequential' },
-		);
-
-		const expected = FIELD_SLIDE_TITLES.map((_, index) => String(index + 1));
-		const problems: string[] = [];
-		for (const result of results) {
-			if (result.value.join(',') !== expected.join(',')) {
-				problems.push(
-					formatDiff(result.framework.name, [
-						`with slide 3 active, the thumbnails resolved to [${result.value.join(', ')}] ` +
-							`instead of [${expected.join(', ')}]`,
-					]),
-				);
-			}
-		}
-
-		expect(problems.join('\n\n')).toBe('');
-	});
+			expect(problems.join('\n\n')).toBe('');
+		},
+	);
 });

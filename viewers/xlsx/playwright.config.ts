@@ -1,5 +1,6 @@
 import { chromium, defineConfig } from '@playwright/test';
 import { resolveChromiumExecutable } from '../../scripts/playwright-chromium.mjs';
+import { browserPerformance } from '../../scripts/browser-performance.mjs';
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 4180);
 const origin = `http://127.0.0.1:${port}`;
@@ -10,7 +11,7 @@ export default defineConfig({
 	fullyParallel: false,
 	// CI's runners have 4 vCPUs: two workers about halve the suite and stay green, while four
 	// saturate the CPU and the chart raster specs, which loop over dozens of fixtures, time out.
-	workers: 2,
+	workers: browserPerformance().workers,
 	use: {
 		baseURL: origin,
 		headless: true,

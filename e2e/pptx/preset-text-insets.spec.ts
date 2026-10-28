@@ -155,64 +155,66 @@ function pct(value: number): string {
 }
 
 test.describe('preset text-inset rectangles', () => {
-	test('each preset insets its text further than a plain rect on its own affected edges, identically across bindings', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'each preset insets its text further than a plain rect on its own affected edges, identically across bindings',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			const control = value.rect;
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				const control = value.rect;
 
-			for (const [key, axes] of Object.entries(STRICTLY_GREATER_AXES) as [
-				ShapeKey,
-				readonly Axis[],
-			][]) {
-				const facts = value[key];
-				for (const axis of axes) {
-					if (facts[axis] <= control[axis] + EPSILON) {
-						problems.push(
-							`${key}: ${AXIS_LABEL[axis]} inset ${pct(facts[axis])} is not greater than the rect control's ${pct(control[axis])}`,
-						);
+				for (const [key, axes] of Object.entries(STRICTLY_GREATER_AXES) as [
+					ShapeKey,
+					readonly Axis[],
+				][]) {
+					const facts = value[key];
+					for (const axis of axes) {
+						if (facts[axis] <= control[axis] + EPSILON) {
+							problems.push(
+								`${key}: ${AXIS_LABEL[axis]} inset ${pct(facts[axis])} is not greater than the rect control's ${pct(control[axis])}`,
+							);
+						}
 					}
 				}
-			}
-			for (const [key, axes] of Object.entries(NOT_LESS_AXES) as [ShapeKey, readonly Axis[]][]) {
-				const facts = value[key];
-				for (const axis of axes) {
-					if (facts[axis] < control[axis] - EPSILON) {
-						problems.push(
-							`${key}: ${AXIS_LABEL[axis]} inset ${pct(facts[axis])} is LESS than the rect control's ${pct(control[axis])}`,
-						);
+				for (const [key, axes] of Object.entries(NOT_LESS_AXES) as [ShapeKey, readonly Axis[]][]) {
+					const facts = value[key];
+					for (const axis of axes) {
+						if (facts[axis] < control[axis] - EPSILON) {
+							problems.push(
+								`${key}: ${AXIS_LABEL[axis]} inset ${pct(facts[axis])} is LESS than the rect control's ${pct(control[axis])}`,
+							);
+						}
 					}
 				}
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
+			expect(failures.join('\n')).toBe('');
 
-		// Cross-framework equality: every binding must resolve the same inset,
-		// not merely "some positive inset", on the axes each preset actually moves.
-		const { reference, candidates } = splitReference(results);
-		const crossBindingFailures = candidates.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			for (const key of Object.keys(INSET_SHAPES) as ShapeKey[]) {
-				const axes = STRICTLY_GREATER_AXES[key] ?? NOT_LESS_AXES[key] ?? [];
-				for (const axis of axes) {
-					const a = reference.value[key][axis];
-					const b = value[key][axis];
-					if (Math.abs(a - b) > CROSS_BINDING_TOLERANCE) {
-						problems.push(
-							`${key}: ${AXIS_LABEL[axis]} inset ${pct(b)} vs ${reference.framework.name}'s ${pct(a)}`,
-						);
+			// Cross-framework equality: every binding must resolve the same inset,
+			// not merely "some positive inset", on the axes each preset actually moves.
+			const { reference, candidates } = splitReference(results);
+			const crossBindingFailures = candidates.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				for (const key of Object.keys(INSET_SHAPES) as ShapeKey[]) {
+					const axes = STRICTLY_GREATER_AXES[key] ?? NOT_LESS_AXES[key] ?? [];
+					for (const axis of axes) {
+						const a = reference.value[key][axis];
+						const b = value[key][axis];
+						if (Math.abs(a - b) > CROSS_BINDING_TOLERANCE) {
+							problems.push(
+								`${key}: ${AXIS_LABEL[axis]} inset ${pct(b)} vs ${reference.framework.name}'s ${pct(a)}`,
+							);
+						}
 					}
 				}
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(crossBindingFailures.join('\n')).toBe('');
-	});
+			expect(crossBindingFailures.join('\n')).toBe('');
+		},
+	);
 });

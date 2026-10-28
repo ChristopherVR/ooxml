@@ -54,6 +54,7 @@ import {
 	selectTableCell,
 } from './support/context-menu';
 import { resetTabSession } from './support/deck';
+import { nextPaint, selectRibbonTab, selectSlide } from './support/render-ready';
 import { chooseSelectValue } from './support/select-control';
 
 const fixturePath = resolve(
@@ -201,7 +202,8 @@ async function loadDeck(page: Page, deck: string | DeckPayload = fixturePath): P
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator('[aria-label="Go to slide 5"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
+	await page.waitForFunction(() => document.fonts.status === 'loaded');
+	await nextPaint(page);
 }
 
 /**
@@ -350,17 +352,12 @@ async function richAnchorWithEmptyRightDeck(): Promise<DeckPayload> {
 }
 
 async function gotoSlide(page: Page, slideNumber: number): Promise<void> {
-	await page.locator(`[aria-label="Go to slide ${slideNumber}"]`).first().click();
-	await page.waitForTimeout(800);
+	await selectSlide(page, slideNumber);
 }
 
 /** Switch the ribbon to a tab by its accessible name (all five expose this). */
 async function openRibbonTab(page: Page, name: string): Promise<void> {
-	await page
-		.getByRole('toolbar', { name: 'Presentation toolbar' })
-		.getByRole('tab', { name, exact: true })
-		.click();
-	await page.waitForTimeout(300);
+	await selectRibbonTab(page, name);
 }
 
 /** Insert a table from the Insert tab; every binding labels the control "Table". */
@@ -535,6 +532,8 @@ async function mergeFromInspector(page: Page, direction: 'right' | 'down'): Prom
 }
 
 test.describe('table styling', () => {
+	// Every case owns its page, document and generated buffers.
+	test.describe.configure({ mode: 'parallel' });
 	test.beforeEach(async ({ page }) => {
 		await loadDeck(page);
 	});

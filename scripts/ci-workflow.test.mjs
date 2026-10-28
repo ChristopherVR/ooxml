@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { verificationShell } from './verify-shell.mjs';
 
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 const browserJob = workflow.match(/^  pptx-e2e:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1];
@@ -40,6 +41,7 @@ attempts=0
 bun() {
   attempts=$((attempts + 1))
   printf '%s\\n' "$*" >> commands.txt
+  printf '%s\\n' "$PPTX_E2E_SHARD" >> shards.txt
   rm -rf test-results playwright-report
   mkdir -p test-results playwright-report
   printf 'trace-%s' "$attempts" > test-results/trace.zip
@@ -53,17 +55,25 @@ bun() {
 sleep() { :; }
 ${script}`;
 		writeFileSync(join(dir, 'run.sh'), harness);
-		const run = spawnSync('bash', ['-e', '-o', 'pipefail', 'run.sh'], {
+		const run = spawnSync(verificationShell(), ['-e', '-o', 'pipefail', 'run.sh'], {
 			cwd: dir,
 			encoding: 'utf8',
-			env: { ...process.env, PROJECT: 'vue', SHARD: '4', TOTAL: '7', SPECS: '' },
+			env: {
+				...process.env,
+				PROJECT: 'vue',
+				SHARD: '4',
+				TOTAL: '7',
+				SPECS: '',
+				PPTX_E2E_SHARD: '4/7',
+			},
 		});
 		const commands = readFileSync(join(dir, 'commands.txt'), 'utf8').trim().split('\n');
 		const firstTrace = readFileSync(
 			join(dir, 'ci-evidence/attempt-1/test-results/trace.zip'),
 			'utf8',
 		);
-		return { status: run.status, commands, firstTrace, stderr: run.stderr };
+		const shards = readFileSync(join(dir, 'shards.txt'), 'utf8').trim().split('\n');
+		return { status: run.status, commands, shards, firstTrace, stderr: run.stderr };
 	} finally {
 		rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 	}
@@ -92,7 +102,8 @@ test('recorded browser failures run again alone; a crash runs the shard again', 
 	const twice = runBrowserStep(['crash', 'crash']);
 	assert.notEqual(twice.status, 0);
 	assert.equal(twice.commands.length, 2);
-	assert.ok(twice.commands.every((command) => command.includes('--shard=4/7')));
+	assert.deepEqual(twice.shards, ['4/7', '4/7']);
+	assert.ok(twice.commands.every((command) => !command.includes('--shard=')));
 	assert.match(browserJob, /- name: Preserve the report\s+if: always\(\)/u);
 	assert.match(browserJob, /viewers\/pptx\/ci-evidence\//u);
 });

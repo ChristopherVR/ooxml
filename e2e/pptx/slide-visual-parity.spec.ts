@@ -125,51 +125,57 @@ async function assertVisualParity(
 }
 
 test.describe('cross-binding visual rendering', () => {
-	test('every slide of the sample deck paints the same pixels everywhere', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every slide of the sample deck paints the same pixels everywhere',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, SAMPLE);
-			// All 7 slides, deliberately including slide 5: it holds the suite's
-			// only table, which no other parity spec has ever compared visually.
-			return captureSlides(page, [1, 2, 3, 4, 5, 6, 7]);
-		});
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, SAMPLE);
+				// All 7 slides, deliberately including slide 5: it holds the suite's
+				// only table, which no other parity spec has ever compared visually.
+				return captureSlides(page, [1, 2, 3, 4, 5, 6, 7]);
+			});
 
-		await assertVisualParity(testInfo, results);
-	});
+			await assertVisualParity(testInfo, results);
+		},
+	);
 
-	test('the text-features title slide paints the same pixels everywhere', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'the text-features title slide paints the same pixels everywhere',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, TEXT_FEATURES);
-			// Slide 1 carries a slide-number field; it resolves to the same value
-			// on every load, so no masking is needed (there are no date/time
-			// fields anywhere in this suite's visual coverage).
-			return captureSlides(page, [1]);
-		});
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, TEXT_FEATURES);
+				// Slide 1 carries a slide-number field; it resolves to the same value
+				// on every load, so no masking is needed (there are no date/time
+				// fields anywhere in this suite's visual coverage).
+				return captureSlides(page, [1]);
+			});
 
-		await assertVisualParity(testInfo, results);
-	});
+			await assertVisualParity(testInfo, results);
+		},
+	);
 
-	test('chart slides of the gallery paint the same pixels everywhere', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'chart slides of the gallery paint the same pixels everywhere',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, GALLERY);
-			// Slide 1 is the clustered bar, slide 4 the pie: one rectangular and
-			// one radial chart family, per the fixture's CHART_SLIDES manifest.
-			// The chart <svg> mounts after the stage paints, so each capture
-			// additionally waits for the drawing itself.
-			return captureSlides(page, [1, 4], CHART_DRAWING);
-		});
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, GALLERY);
+				// Slide 1 is the clustered bar, slide 4 the pie: one rectangular and
+				// one radial chart family, per the fixture's CHART_SLIDES manifest.
+				// The chart <svg> mounts after the stage paints, so each capture
+				// additionally waits for the drawing itself.
+				return captureSlides(page, [1, 4], CHART_DRAWING);
+			});
 
-		await assertVisualParity(testInfo, results);
-	});
+			await assertVisualParity(testInfo, results);
+		},
+	);
 });

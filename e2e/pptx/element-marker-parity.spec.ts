@@ -85,90 +85,92 @@ function missingIds(from: readonly string[], inOther: readonly string[]): string
 }
 
 test.describe('cross-binding element marker', () => {
-	test('every binding marks the same elements, group children included', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every binding marks the same elements, group children included',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, fixture('solution-explorer.pptx'));
-			const perSlide: MarkerCount[] = [];
-			for (const slide of SLIDES) {
-				if (slide > 1) {
-					// The default 10s action timeout raced the thumbnail rail settling
-					// after the previous slide's marker count (every element on a large
-					// fixture like this one) under CI load; match the 15s this loop
-					// already gives the post-navigation "N of M" and marker-count waits
-					// below, rather than a plain `.click()`.
-					await thumbnail(page, slide).click({ timeout: 15_000 });
-					await slideStage(page).waitFor();
-					// The "N of M" indicator is the only neutral navigation-done signal;
-					// polling on marker counts alone captured the PREVIOUS slide's DOM in
-					// the slower bindings (its counts satisfy the poll immediately).
-					await page
-						.getByText(new RegExp(`\\b${slide} of \\d+\\b`, 'u'))
-						.first()
-						.waitFor({ timeout: 15_000 });
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, fixture('solution-explorer.pptx'));
+				const perSlide: MarkerCount[] = [];
+				for (const slide of SLIDES) {
+					if (slide > 1) {
+						// The default 10s action timeout raced the thumbnail rail settling
+						// after the previous slide's marker count (every element on a large
+						// fixture like this one) under CI load; match the 15s this loop
+						// already gives the post-navigation "N of M" and marker-count waits
+						// below, rather than a plain `.click()`.
+						await thumbnail(page, slide).click({ timeout: 15_000 });
+						await slideStage(page).waitFor();
+						// The "N of M" indicator is the only neutral navigation-done signal;
+						// polling on marker counts alone captured the PREVIOUS slide's DOM in
+						// the slower bindings (its counts satisfy the poll immediately).
+						await page
+							.getByText(new RegExp(`\\b${slide} of \\d+\\b`, 'u'))
+							.first()
+							.waitFor({ timeout: 15_000 });
+					}
+					// Angular and Svelte apply the contract in a microtask after mount.
+					await expect
+						.poll(async () => (await countMarkers(page, slide)).marked, { timeout: 15_000 })
+						.toBeGreaterThan(0);
+					perSlide.push(await countMarkers(page, slide));
 				}
-				// Angular and Svelte apply the contract in a microtask after mount.
-				await expect
-					.poll(async () => (await countMarkers(page, slide)).marked, { timeout: 15_000 })
-					.toBeGreaterThan(0);
-				perSlide.push(await countMarkers(page, slide));
-			}
-			return perSlide;
-		});
-
-		const { reference, candidates } = splitReference(results);
-
-		// Half the contract is internal to each binding: the marker set and the id
-		// set must be the SAME set, or a consumer that selects on one and reads the
-		// other silently disagrees with itself.
-		const problems: string[] = [];
-		for (const result of results) {
-			for (const count of result.value) {
-				if (count.marked !== count.withId) {
-					problems.push(
-						formatDiff(result.framework.name, [
-							`slide ${count.slide}: marks ${count.marked} elements but ${count.withId} carry an id`,
-						]),
-					);
-				}
-			}
-		}
-
-		for (const candidate of candidates) {
-			const perBinding: string[] = [];
-			reference.value.forEach((expected, index) => {
-				const actual = candidate.value[index];
-				if (!actual) {
-					return;
-				}
-				if (actual.marked !== expected.marked) {
-					perBinding.push(
-						`slide ${expected.slide}: marks ${actual.marked} elements, reference marks ${expected.marked}`,
-					);
-				}
-				// The id SETS, not just the counts: equal totals can still be two
-				// different subsets of the slide's elements.
-				const dropped = missingIds(expected.ids, actual.ids);
-				if (dropped.length > 0) {
-					perBinding.push(
-						`slide ${expected.slide}: does not render ids [${dropped.join(', ')}] that the reference renders`,
-					);
-				}
-				const invented = missingIds(actual.ids, expected.ids);
-				if (invented.length > 0) {
-					perBinding.push(
-						`slide ${expected.slide}: renders ids [${invented.join(', ')}] that the reference does not`,
-					);
-				}
+				return perSlide;
 			});
-			if (perBinding.length > 0) {
-				problems.push(formatDiff(candidate.framework.name, perBinding));
-			}
-		}
 
-		expect(problems.join('\n\n')).toBe('');
-	});
+			const { reference, candidates } = splitReference(results);
+
+			// Half the contract is internal to each binding: the marker set and the id
+			// set must be the SAME set, or a consumer that selects on one and reads the
+			// other silently disagrees with itself.
+			const problems: string[] = [];
+			for (const result of results) {
+				for (const count of result.value) {
+					if (count.marked !== count.withId) {
+						problems.push(
+							formatDiff(result.framework.name, [
+								`slide ${count.slide}: marks ${count.marked} elements but ${count.withId} carry an id`,
+							]),
+						);
+					}
+				}
+			}
+
+			for (const candidate of candidates) {
+				const perBinding: string[] = [];
+				reference.value.forEach((expected, index) => {
+					const actual = candidate.value[index];
+					if (!actual) {
+						return;
+					}
+					if (actual.marked !== expected.marked) {
+						perBinding.push(
+							`slide ${expected.slide}: marks ${actual.marked} elements, reference marks ${expected.marked}`,
+						);
+					}
+					// The id SETS, not just the counts: equal totals can still be two
+					// different subsets of the slide's elements.
+					const dropped = missingIds(expected.ids, actual.ids);
+					if (dropped.length > 0) {
+						perBinding.push(
+							`slide ${expected.slide}: does not render ids [${dropped.join(', ')}] that the reference renders`,
+						);
+					}
+					const invented = missingIds(actual.ids, expected.ids);
+					if (invented.length > 0) {
+						perBinding.push(
+							`slide ${expected.slide}: renders ids [${invented.join(', ')}] that the reference does not`,
+						);
+					}
+				});
+				if (perBinding.length > 0) {
+					problems.push(formatDiff(candidate.framework.name, perBinding));
+				}
+			}
+
+			expect(problems.join('\n\n')).toBe('');
+		},
+	);
 });

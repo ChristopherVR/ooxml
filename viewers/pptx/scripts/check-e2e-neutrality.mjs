@@ -99,6 +99,28 @@ export function scanSource(source, fileName = 'inline.spec.ts') {
 	const allowsReferenceOrchestration = basename(fileName) === REFERENCE_SPEC;
 
 	const visit = (node) => {
+		if (
+			ts.isCallExpression(node) &&
+			node.expression.getText(sourceFile) === 'test' &&
+			node.arguments[1]?.getText(sourceFile).includes('@cross-binding')
+		) {
+			const callback = node.arguments[2];
+			const fixtures = callback?.parameters?.[0]?.name.getText(sourceFile) ?? '';
+			const body = callback?.body?.getText(sourceFile) ?? '';
+			if (
+				!/^\{\s*browser\s*,?\s*\}$/.test(fixtures) ||
+				!body.includes('acrossFrameworks(') ||
+				/browser\.(newPage|newContext)/.test(body)
+			) {
+				addViolation(
+					violations,
+					sourceFile,
+					node,
+					'cross-binding-coverage',
+					'@cross-binding must replay through acrossFrameworks with only the browser fixture',
+				);
+			}
+		}
 		if (!allowsReferenceOrchestration) {
 			let condition;
 			if (ts.isIfStatement(node)) {

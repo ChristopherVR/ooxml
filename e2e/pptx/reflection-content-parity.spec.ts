@@ -51,207 +51,214 @@ interface MirrorFacts {
 }
 
 test.describe('cross-binding a:reflection mirrors full content, not just a resolved fill', () => {
-	test('every binding mirrors a reflected shape’s text and a reflected group’s children', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+	test(
+		'every binding mirrors a reflected shape’s text and a reflected group’s children',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			// The mirror content is a full recursive re-render (React's
-			// `StaticElementRenderer`, Svelte's self-referencing component, …), and
-			// this spec drives all five demo dev servers at once (this project's
-			// own comparison AND, under the full suite, four sibling projects'
-			// concurrently too), so a source-served dev server can still be
-			// transforming modules for a moment after the deck itself has loaded.
-			// A generous poll absorbs that without weakening what is asserted.
-			await page
-				.waitForFunction(
-					() =>
-						[
-							...document.querySelectorAll<HTMLElement>(
-								'[data-pptx-viewport] [class*="reflection"]',
-							),
-						]
-							.filter((el) => !/text-reflection/u.test(el.className))
-							.every((el) => (el.textContent ?? '').trim().length > 0),
-					undefined,
-					{ timeout: 20_000 },
-				)
-				.catch(() => {
-					// Fall through: the assertions below report the real mismatch
-					// (empty text, wrong count, …) with a clearer message than a
-					// bare wait timeout would.
-				});
-			return page.evaluate(() => {
-				// The mirrored `a:reflection` sibling node every binding paints
-				// (`pptx-react-reflection` / `pptx-vue-reflection` /
-				// `pptx-ng-reflection` / `pptx-svelte-reflection` /
-				// `pptxv-reflection`), excluding the differently-shaped
-				// `*-text-reflection` a reflected TEXT RUN also carries (not what
-				// this fixture's shape-level / group-level reflections are).
-				const mirrors = [
-					...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] [class*="reflection"]'),
-				].filter((el) => !/text-reflection/u.test(el.className));
-				// Text is rebuilt from the mirror's text NODES (each trimmed, empties
-				// dropped, joined by one space) rather than `textContent`: runs
-				// render as per-word spans, and a template's inter-element
-				// whitespace (Svelte's) would otherwise make identical content
-				// compare unequal across bindings.
-				const textOf = (root: HTMLElement): string => {
-					const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-					const parts: string[] = [];
-					for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-						const part = (node.textContent ?? '').trim();
-						if (part) {
-							parts.push(part);
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				// The mirror content is a full recursive re-render (React's
+				// `StaticElementRenderer`, Svelte's self-referencing component, …), and
+				// this spec drives all five demo dev servers at once (this project's
+				// own comparison AND, under the full suite, four sibling projects'
+				// concurrently too), so a source-served dev server can still be
+				// transforming modules for a moment after the deck itself has loaded.
+				// A generous poll absorbs that without weakening what is asserted.
+				await page
+					.waitForFunction(
+						() =>
+							[
+								...document.querySelectorAll<HTMLElement>(
+									'[data-pptx-viewport] [class*="reflection"]',
+								),
+							]
+								.filter((el) => !/text-reflection/u.test(el.className))
+								.every((el) => (el.textContent ?? '').trim().length > 0),
+						undefined,
+						{ timeout: 20_000 },
+					)
+					.catch(() => {
+						// Fall through: the assertions below report the real mismatch
+						// (empty text, wrong count, …) with a clearer message than a
+						// bare wait timeout would.
+					});
+				return page.evaluate(() => {
+					// The mirrored `a:reflection` sibling node every binding paints
+					// (`pptx-react-reflection` / `pptx-vue-reflection` /
+					// `pptx-ng-reflection` / `pptx-svelte-reflection` /
+					// `pptxv-reflection`), excluding the differently-shaped
+					// `*-text-reflection` a reflected TEXT RUN also carries (not what
+					// this fixture's shape-level / group-level reflections are).
+					const mirrors = [
+						...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] [class*="reflection"]'),
+					].filter((el) => !/text-reflection/u.test(el.className));
+					// Text is rebuilt from the mirror's text NODES (each trimmed, empties
+					// dropped, joined by one space) rather than `textContent`: runs
+					// render as per-word spans, and a template's inter-element
+					// whitespace (Svelte's) would otherwise make identical content
+					// compare unequal across bindings.
+					const textOf = (root: HTMLElement): string => {
+						const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+						const parts: string[] = [];
+						for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+							const part = (node.textContent ?? '').trim();
+							if (part) {
+								parts.push(part);
+							}
 						}
-					}
-					return parts.join(' ');
-				};
-				return mirrors
-					.map((mirror) => {
-						const text = textOf(mirror);
-						const hasBackgroundColor = [mirror, ...mirror.querySelectorAll<HTMLElement>('*')].some(
-							(node) => {
+						return parts.join(' ');
+					};
+					return mirrors
+						.map((mirror) => {
+							const text = textOf(mirror);
+							const hasBackgroundColor = [
+								mirror,
+								...mirror.querySelectorAll<HTMLElement>('*'),
+							].some((node) => {
 								const bg = getComputedStyle(node).backgroundColor;
 								return bg !== '' && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
-							},
-						);
-						return { text, hasBackgroundColor } satisfies MirrorFacts;
-					})
-					.sort((a, b) => a.text.localeCompare(b.text));
-			});
-		});
-
-		expect(results.length).toBeGreaterThan(1);
-
-		// Five mirror nodes total: `ReflectedTextShape` (1), `ReflectedGroup` (1),
-		// and `NestedReflectionGroup`'s child (3: its own LIVE reflection,
-		// rendered normally alongside the group; the group's own mirror; and -
-		// nested inside that mirror - the child's reflection AGAIN). Note
-		// `ShadowedGlowedGroup` carries no `a:reflection` at all, so it
-		// contributes nothing to this count.
-		for (const result of results) {
-			expect(result.value, `${result.framework.name} mirror count`).toHaveLength(5);
-		}
-
-		const [reference, ...rest] = results;
-		for (const other of rest) {
-			expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
-				reference.value,
-			);
-		}
-
-		const shapeMirror = reference.value.find((m) => m.text === 'Reflected text');
-		const groupMirror = reference.value.find((m) => m.text === 'Grouped child');
-		// The group's own mirror carries the child's text TWICE (the child's live
-		// reflection is part of the group's rendered content), so match by
-		// inclusion, not equality.
-		const nestedMirrors = reference.value.filter((m) =>
-			m.text.includes(NESTED_REFLECTION_CHILD_TEXT),
-		);
-
-		// The shape's mirror carries its OWN text run, not just its fill.
-		expect(shapeMirror?.hasBackgroundColor).toBe(true);
-
-		// The group's mirror recurses into its child: the child's text AND fill
-		// both reach the mirror, even though the group itself has no fill of
-		// its own to resolve.
-		expect(groupMirror?.hasBackgroundColor).toBe(true);
-
-		// The nested-reflection child: its own live reflection, the group's
-		// mirror, and the reflection nested inside that mirror, all three
-		// carrying the child's fill.
-		expect(nestedMirrors).toHaveLength(3);
-		expect(nestedMirrors.every((m) => m.hasBackgroundColor)).toBe(true);
-	});
-
-	test('a child with its own reflection is double-mirrored inside a reflected group', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			await page
-				.waitForFunction(
-					(childText) =>
-						[
-							...document.querySelectorAll<HTMLElement>(
-								'[data-pptx-viewport] [class*="reflection"]',
-							),
-						]
-							.filter((el) => !/text-reflection/u.test(el.className))
-							.filter((el) => (el.textContent ?? '').includes(childText)).length >= 3,
-					NESTED_REFLECTION_CHILD_TEXT,
-					{ timeout: 20_000 },
-				)
-				.catch(() => {
-					// Fall through: the assertion below reports the real mismatch.
+							});
+							return { text, hasBackgroundColor } satisfies MirrorFacts;
+						})
+						.sort((a, b) => a.text.localeCompare(b.text));
 				});
-			return page.evaluate((childText) => {
-				// The group's own mirror is a `[class*="reflection"]` node whose
-				// text is the child's, that itself CONTAINS another
-				// `[class*="reflection"]` descendant (the child's own reflection,
-				// nested a second time inside the group's mirror).
-				const mirrors = [
-					...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] [class*="reflection"]'),
-				].filter((el) => !/text-reflection/u.test(el.className));
-				const nestedMirrors = mirrors.filter((el) => (el.textContent ?? '').includes(childText));
-				const groupMirror = nestedMirrors.find((el) =>
-					nestedMirrors.some((other) => other !== el && el.contains(other)),
+			});
+
+			expect(results.length).toBeGreaterThan(1);
+
+			// Five mirror nodes total: `ReflectedTextShape` (1), `ReflectedGroup` (1),
+			// and `NestedReflectionGroup`'s child (3: its own LIVE reflection,
+			// rendered normally alongside the group; the group's own mirror; and -
+			// nested inside that mirror - the child's reflection AGAIN). Note
+			// `ShadowedGlowedGroup` carries no `a:reflection` at all, so it
+			// contributes nothing to this count.
+			for (const result of results) {
+				expect(result.value, `${result.framework.name} mirror count`).toHaveLength(5);
+			}
+
+			const [reference, ...rest] = results;
+			for (const other of rest) {
+				expect(other.value, `${other.framework.name} vs ${reference.framework.name}`).toStrictEqual(
+					reference.value,
 				);
-				return {
-					count: nestedMirrors.length,
-					hasNestedStructure: groupMirror !== undefined,
-				};
-			}, NESTED_REFLECTION_CHILD_TEXT);
-		});
+			}
 
-		for (const result of results) {
-			expect(result.value.count, `${result.framework.name} nested mirror count`).toBe(3);
-			expect(
-				result.value.hasNestedStructure,
-				`${result.framework.name} nested mirror DOM structure`,
-			).toBe(true);
-		}
-	});
+			const shapeMirror = reference.value.find((m) => m.text === 'Reflected text');
+			const groupMirror = reference.value.find((m) => m.text === 'Grouped child');
+			// The group's own mirror carries the child's text TWICE (the child's live
+			// reflection is part of the group's rendered content), so match by
+			// inclusion, not equality.
+			const nestedMirrors = reference.value.filter((m) =>
+				m.text.includes(NESTED_REFLECTION_CHILD_TEXT),
+			);
 
-	test('a group-level shadow/glow paints a CSS filter on the group composite', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
+			// The shape's mirror carries its OWN text run, not just its fill.
+			expect(shapeMirror?.hasBackgroundColor).toBe(true);
 
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			return page.evaluate((childText) => {
-				// Walk up from the child's own text to find the group container that
-				// carries the `filter: drop-shadow(...)` (the child itself has no
-				// shadow/glow of its own in this fixture). A run renders as per-word
-				// spans, so the start point is the DEEPEST element whose whole text
-				// is the child's, not a childless leaf.
-				const normalize = (value: string | null) => (value ?? '').replace(/\s+/gu, ' ').trim();
-				const holders = [
-					...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] *'),
-				].filter((el) => normalize(el.textContent) === childText);
-				const childNode = holders.find(
-					(el) => ![...el.children].some((child) => normalize(child.textContent) === childText),
-				);
-				let node: HTMLElement | null = childNode ?? null;
-				while (node) {
-					const filter = getComputedStyle(node).filter;
-					if (filter && filter !== 'none') {
-						return filter;
+			// The group's mirror recurses into its child: the child's text AND fill
+			// both reach the mirror, even though the group itself has no fill of
+			// its own to resolve.
+			expect(groupMirror?.hasBackgroundColor).toBe(true);
+
+			// The nested-reflection child: its own live reflection, the group's
+			// mirror, and the reflection nested inside that mirror, all three
+			// carrying the child's fill.
+			expect(nestedMirrors).toHaveLength(3);
+			expect(nestedMirrors.every((m) => m.hasBackgroundColor)).toBe(true);
+		},
+	);
+
+	test(
+		'a child with its own reflection is double-mirrored inside a reflected group',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				await page
+					.waitForFunction(
+						(childText) =>
+							[
+								...document.querySelectorAll<HTMLElement>(
+									'[data-pptx-viewport] [class*="reflection"]',
+								),
+							]
+								.filter((el) => !/text-reflection/u.test(el.className))
+								.filter((el) => (el.textContent ?? '').includes(childText)).length >= 3,
+						NESTED_REFLECTION_CHILD_TEXT,
+						{ timeout: 20_000 },
+					)
+					.catch(() => {
+						// Fall through: the assertion below reports the real mismatch.
+					});
+				return page.evaluate((childText) => {
+					// The group's own mirror is a `[class*="reflection"]` node whose
+					// text is the child's, that itself CONTAINS another
+					// `[class*="reflection"]` descendant (the child's own reflection,
+					// nested a second time inside the group's mirror).
+					const mirrors = [
+						...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] [class*="reflection"]'),
+					].filter((el) => !/text-reflection/u.test(el.className));
+					const nestedMirrors = mirrors.filter((el) => (el.textContent ?? '').includes(childText));
+					const groupMirror = nestedMirrors.find((el) =>
+						nestedMirrors.some((other) => other !== el && el.contains(other)),
+					);
+					return {
+						count: nestedMirrors.length,
+						hasNestedStructure: groupMirror !== undefined,
+					};
+				}, NESTED_REFLECTION_CHILD_TEXT);
+			});
+
+			for (const result of results) {
+				expect(result.value.count, `${result.framework.name} nested mirror count`).toBe(3);
+				expect(
+					result.value.hasNestedStructure,
+					`${result.framework.name} nested mirror DOM structure`,
+				).toBe(true);
+			}
+		},
+	);
+
+	test(
+		'a group-level shadow/glow paints a CSS filter on the group composite',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				return page.evaluate((childText) => {
+					// Walk up from the child's own text to find the group container that
+					// carries the `filter: drop-shadow(...)` (the child itself has no
+					// shadow/glow of its own in this fixture). A run renders as per-word
+					// spans, so the start point is the DEEPEST element whose whole text
+					// is the child's, not a childless leaf.
+					const normalize = (value: string | null) => (value ?? '').replace(/\s+/gu, ' ').trim();
+					const holders = [
+						...document.querySelectorAll<HTMLElement>('[data-pptx-viewport] *'),
+					].filter((el) => normalize(el.textContent) === childText);
+					const childNode = holders.find(
+						(el) => ![...el.children].some((child) => normalize(child.textContent) === childText),
+					);
+					let node: HTMLElement | null = childNode ?? null;
+					while (node) {
+						const filter = getComputedStyle(node).filter;
+						if (filter && filter !== 'none') {
+							return filter;
+						}
+						node = node.parentElement;
 					}
-					node = node.parentElement;
-				}
-				return null;
-			}, SHADOW_GLOW_GROUP_CHILD_TEXT);
-		});
+					return null;
+				}, SHADOW_GLOW_GROUP_CHILD_TEXT);
+			});
 
-		for (const result of results) {
-			expect(result.value, `${result.framework.name} group filter`).toContain('drop-shadow');
-		}
-	});
+			for (const result of results) {
+				expect(result.value, `${result.framework.name} group filter`).toContain('drop-shadow');
+			}
+		},
+	);
 });

@@ -15,7 +15,7 @@ export default defineConfig({
 	workers: 1,
 	use: { baseURL: origin, headless: true },
 	webServer: {
-		command: `bun x vite --host 127.0.0.1 --port ${port} --strictPort --force`,
+		command: `bun x vite build && bun x vite preview --host 127.0.0.1 --port ${port} --strictPort`,
 		cwd: `../../demos/teams/${framework}`,
 		url: origin,
 		reuseExistingServer: false,

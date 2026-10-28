@@ -120,50 +120,52 @@ function diffContract(
 
 test.describe('cross-binding element contract', () => {
 	for (const deck of DECKS) {
-		test(`${deck.name}: every element is tagged and named identically`, async ({
-			browser,
-		}, testInfo) => {
-			test.slow();
+		test(
+			`${deck.name}: every element is tagged and named identically`,
+			{ tag: '@cross-binding' },
+			async ({ browser }, testInfo) => {
+				test.slow();
 
-			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-				await loadDeckAt(page, origin, fixture(deck.name));
+				const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+					await loadDeckAt(page, origin, fixture(deck.name));
 
-				const perSlide: ElementContract[][] = [];
-				for (let slide = 1; slide <= deck.slides; slide += 1) {
-					if (slide > 1) {
-						await thumbnail(page, slide).click();
-						// Neutral navigation-done signal; a poll on contract counts alone
-						// can capture the PREVIOUS slide's DOM in the slower bindings.
-						await page
-							.getByText(new RegExp(`\\b${slide} of \\d+\\b`, 'u'))
-							.first()
-							.waitFor({ timeout: 15_000 });
+					const perSlide: ElementContract[][] = [];
+					for (let slide = 1; slide <= deck.slides; slide += 1) {
+						if (slide > 1) {
+							await thumbnail(page, slide).click();
+							// Neutral navigation-done signal; a poll on contract counts alone
+							// can capture the PREVIOUS slide's DOM in the slower bindings.
+							await page
+								.getByText(new RegExp(`\\b${slide} of \\d+\\b`, 'u'))
+								.first()
+								.waitFor({ timeout: 15_000 });
+						}
+						await slideStage(page).waitFor();
+						// Angular and Svelte apply the accessibility attributes in a
+						// microtask after the node mounts, so poll rather than read once.
+						await expect
+							.poll(async () => (await readContract(page)).length, { timeout: 15_000 })
+							.toBeGreaterThan(0);
+						perSlide.push(await readContract(page));
 					}
-					await slideStage(page).waitFor();
-					// Angular and Svelte apply the accessibility attributes in a
-					// microtask after the node mounts, so poll rather than read once.
-					await expect
-						.poll(async () => (await readContract(page)).length, { timeout: 15_000 })
-						.toBeGreaterThan(0);
-					perSlide.push(await readContract(page));
+					return perSlide;
+				});
+
+				const { reference, candidates } = splitReference(results);
+				expect(reference.value.flat().length).toBeGreaterThan(0);
+
+				const problems: string[] = [];
+				for (const candidate of candidates) {
+					const perBinding = reference.value.flatMap((referenceSlide, index) =>
+						diffContract(referenceSlide, candidate.value[index] ?? [], deck.name, index + 1),
+					);
+					if (perBinding.length > 0) {
+						problems.push(formatDiff(candidate.framework.name, perBinding));
+					}
 				}
-				return perSlide;
-			});
 
-			const { reference, candidates } = splitReference(results);
-			expect(reference.value.flat().length).toBeGreaterThan(0);
-
-			const problems: string[] = [];
-			for (const candidate of candidates) {
-				const perBinding = reference.value.flatMap((referenceSlide, index) =>
-					diffContract(referenceSlide, candidate.value[index] ?? [], deck.name, index + 1),
-				);
-				if (perBinding.length > 0) {
-					problems.push(formatDiff(candidate.framework.name, perBinding));
-				}
-			}
-
-			expect(problems.join('\n\n')).toBe('');
-		});
+				expect(problems.join('\n\n')).toBe('');
+			},
+		);
 	}
 });

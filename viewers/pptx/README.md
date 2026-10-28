@@ -295,8 +295,12 @@ cd viewers/pptx
 bun run build:packages   # core -> shared -> locales -> tools -> cli -> the five bindings
 bun run test
 bun run demo             # React demo on :4173 (also demo:vue, demo:angular, demo:svelte, demo:vanilla)
-bun run e2e              # Playwright across all five demos
+bun run e2e:fast         # cached production demos, React tests and cross-binding comparisons
+bun run e2e:all          # ordinary product tests in every binding
 ```
+
+See [fast browser testing](../../docs/browser-performance.md) for selected specs, warm servers,
+worker budgets, CI sharding and measured results.
 
 You will need [Bun](https://bun.sh/) and Node.js 22+. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR: it explains the **parity rule** (a UI change lands in all five bindings), Conventional Commits (they drive each package's version), and how the demos resolve packages. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md); report vulnerabilities privately via [SECURITY.md](SECURITY.md).
 

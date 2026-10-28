@@ -50,6 +50,10 @@ export async function runSteps(steps, { jobs = 1, exec, onStart, onDone } = {}) 
 					}
 					if (failed || running.size >= jobs) continue;
 					if (!needs.every((id) => state.has(id))) continue;
+					// Browser suites already fill their CPU budget internally. Drain other work
+					// before starting one and do not launch more work alongside it.
+					if ([...running].some((active) => active.exclusive)) continue;
+					if (step.exclusive && running.size > 0) break;
 					pending.delete(step);
 					progressed = true;
 					const reason = step.skipIf?.();

@@ -6,6 +6,19 @@ import { test } from 'node:test';
 
 import { isProductSpec, scanSource } from './check-e2e-neutrality.mjs';
 
+test('deduplicated scenarios must replay each binding through the parity harness', () => {
+	const valid = `test('parity', { tag: '@cross-binding' }, async ({ browser }, info) => {
+		await acrossFrameworks(browser, info, async (page) => page.title());
+	});`;
+	assert.deepEqual(scanSource(valid), []);
+	for (const invalid of [
+		valid.replace('{ browser }', '{ page }'),
+		valid.replace('acrossFrameworks(', 'otherHelper('),
+		valid.replace('await acrossFrameworks', 'await browser.newPage(); await acrossFrameworks'),
+	])
+		assert.ok(scanSource(invalid).some((entry) => entry.rule === 'cross-binding-coverage'));
+});
+
 test('allows benign project-name use for artifact and room isolation', () => {
 	const source = `
 		test('artifact', async ({ page }, testInfo) => {

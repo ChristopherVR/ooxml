@@ -193,69 +193,71 @@ async function readyState(page: Page): Promise<string> {
 }
 
 test.describe('3D charts smoke: every PowerPoint 3D chart family on <pptx-three-view>', () => {
-	test('all 17 charts reach ready, paint, and share one WebGL context', async ({
-		browser,
-	}, testInfo) => {
-		test.setTimeout(900_000);
-		test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
+	test(
+		'all 17 charts reach ready, paint, and share one WebGL context',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.setTimeout(900_000);
+			test.skip(!webglAvailable, 'headless Chromium has no WebGL context in this environment');
 
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin): Promise<SmokeResult> => {
-				const pageErrors: string[] = [];
-				const contextWarnings: string[] = [];
-				page.on('pageerror', (err) => pageErrors.push(String(err)));
-				page.on('console', (message) => {
-					if (/too many active webgl contexts/iu.test(message.text())) {
-						contextWarnings.push(message.text());
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin): Promise<SmokeResult> => {
+					const pageErrors: string[] = [];
+					const contextWarnings: string[] = [];
+					page.on('pageerror', (err) => pageErrors.push(String(err)));
+					page.on('console', (message) => {
+						if (/too many active webgl contexts/iu.test(message.text())) {
+							contextWarnings.push(message.text());
+						}
+					});
+					await watchWebGLContexts(page);
+
+					await loadDeckAt(page, origin, DECK);
+					await slideStage(page).waitFor();
+
+					const slides: SlideOutcome[] = [];
+					for (let slide = 1; slide <= SLIDE_COUNT; slide++) {
+						if (slide > 1) {
+							await gotoSlide(page, slide);
+						}
+						const state = await readyState(page);
+						const paint = state === 'ready' ? await paintedCanvas(page) : null;
+						slides.push({ slide, state, paint });
 					}
-				});
-				await watchWebGLContexts(page);
+					const { contexts, lost } = await webglCounters(page);
+					return { slides, pageErrors, contextWarnings, contexts, lost };
+				},
+				{ path: ALL_CHART_SCENES, concurrency: 'sequential' },
+			);
 
-				await loadDeckAt(page, origin, DECK);
-				await slideStage(page).waitFor();
-
-				const slides: SlideOutcome[] = [];
-				for (let slide = 1; slide <= SLIDE_COUNT; slide++) {
-					if (slide > 1) {
-						await gotoSlide(page, slide);
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				for (const { slide, state, paint } of value.slides) {
+					if (state !== 'ready') {
+						problems.push(`slide ${slide}: view state "${state || '(none)'}", expected "ready"`);
+					} else if (!isPainted(paint)) {
+						problems.push(`slide ${slide}: the chart canvas is blank (${JSON.stringify(paint)})`);
 					}
-					const state = await readyState(page);
-					const paint = state === 'ready' ? await paintedCanvas(page) : null;
-					slides.push({ slide, state, paint });
 				}
-				const { contexts, lost } = await webglCounters(page);
-				return { slides, pageErrors, contextWarnings, contexts, lost };
-			},
-			{ path: ALL_CHART_SCENES, concurrency: 'sequential' },
-		);
-
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			for (const { slide, state, paint } of value.slides) {
-				if (state !== 'ready') {
-					problems.push(`slide ${slide}: view state "${state || '(none)'}", expected "ready"`);
-				} else if (!isPainted(paint)) {
-					problems.push(`slide ${slide}: the chart canvas is blank (${JSON.stringify(paint)})`);
+				if (value.contextWarnings.length > 0) {
+					problems.push(`WebGL context eviction: ${value.contextWarnings[0]}`);
 				}
-			}
-			if (value.contextWarnings.length > 0) {
-				problems.push(`WebGL context eviction: ${value.contextWarnings[0]}`);
-			}
-			if (value.lost !== 0) {
-				problems.push(`${value.lost} webglcontextlost event(s)`);
-			}
-			// One shared renderer; allow a couple of capability probes on top.
-			if (value.contexts < 1 || value.contexts > 3) {
-				problems.push(`${value.contexts} WebGL contexts created, expected one shared context`);
-			}
-			if (value.pageErrors.length > 0) {
-				problems.push(`page errors: ${value.pageErrors.join('; ')}`);
-			}
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				if (value.lost !== 0) {
+					problems.push(`${value.lost} webglcontextlost event(s)`);
+				}
+				// One shared renderer; allow a couple of capability probes on top.
+				if (value.contexts < 1 || value.contexts > 3) {
+					problems.push(`${value.contexts} WebGL contexts created, expected one shared context`);
+				}
+				if (value.pageErrors.length > 0) {
+					problems.push(`page errors: ${value.pageErrors.join('; ')}`);
+				}
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

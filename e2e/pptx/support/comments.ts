@@ -15,7 +15,7 @@
  * skip. Spec files may not branch on the project name; this module is exempt.
  * @module e2e/support/comments
  */
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import { chooseCommand, menuIsOpen, openMenuOn } from './context-menu';
 
@@ -125,13 +125,13 @@ export async function addCommentViaContextMenu(
 	// menu ever lingers.
 	if (await menuIsOpen(page)) {
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(300);
+		await expect.poll(() => menuIsOpen(page)).toBe(false);
 	}
 	const compose = page.locator(COMPOSE_BOX_SELECTOR).first();
 	await compose.waitFor();
 	await compose.fill(text);
 	await page.locator('button:visible:text-is("Add Comment")').last().click();
-	await page.waitForTimeout(500);
+	await expect.poll(() => commentTextVisible(page, text)).toBe(true);
 }
 
 /**
@@ -149,7 +149,7 @@ export async function ensureCommentsListShowing(page: Page, text: string): Promi
 		.getByRole('button', { name: /^comments$/iu })
 		.first()
 		.click();
-	await page.waitForTimeout(500);
+	await expect.poll(() => commentTextVisible(page, text)).toBe(true);
 }
 
 /**
@@ -162,7 +162,7 @@ export async function openCommentsTabIfPresent(page: Page): Promise<boolean> {
 	for (const tab of await page.getByRole('tab', { name: /^comments$/iu }).all()) {
 		if (await tab.isVisible()) {
 			await tab.click();
-			await page.waitForTimeout(400);
+			await expect(tab).toHaveAttribute('aria-selected', 'true');
 			return true;
 		}
 	}
@@ -204,7 +204,7 @@ export async function startReply(page: Page): Promise<boolean> {
 		}
 	}
 	await button.click();
-	await page.waitForTimeout(300);
+	await expect(page.locator(REPLY_BOX_SELECTOR).first()).toBeVisible();
 	return true;
 }
 
@@ -223,7 +223,7 @@ export async function submitReply(page: Page, text: string): Promise<void> {
 		)
 		.last()
 		.click();
-	await page.waitForTimeout(500);
+	await expect.poll(() => commentTextVisible(page, text)).toBe(true);
 }
 
 /**
@@ -269,7 +269,7 @@ export function replyNestedUnderParent(
 /** Toggle the first visible Resolve affordance. */
 export async function resolveFirstComment(page: Page): Promise<void> {
 	await page.locator(RESOLVE_BUTTON_SELECTOR).first().click();
-	await page.waitForTimeout(400);
+	await expect.poll(() => resolvedStateVisible(page)).toBe(true);
 }
 
 /**

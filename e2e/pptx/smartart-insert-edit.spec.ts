@@ -288,6 +288,7 @@ async function exerciseDirectKeyboardNodeEdit(
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 test.describe('smartart insert and edit', () => {
+	test.describe.configure({ mode: 'parallel' });
 	test.use({ viewport: { width: 1440, height: 900 } });
 
 	test('keeps the node editor in local coordinates at fitted and enlarged zoom', async ({

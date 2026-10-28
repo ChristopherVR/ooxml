@@ -112,49 +112,51 @@ async function readSlide(page: Page, origin: string): Promise<ScenarioResult> {
 }
 
 test.describe('u="words" through ruby and tab-stop runs', () => {
-	test('every binding underlines the words and the gaps, in both paths', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readSlide);
+	test(
+		'every binding underlines the words and the gaps, in both paths',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readSlide);
 
-		const failures = results.flatMap(({ framework, value }) => {
-			const problems: string[] = [];
-			const describe = (pieces: DecoratedPiece[]) =>
-				pieces.map((p) => JSON.stringify(p.text)).join(', ');
+			const failures = results.flatMap(({ framework, value }) => {
+				const problems: string[] = [];
+				const describe = (pieces: DecoratedPiece[]) =>
+					pieces.map((p) => JSON.stringify(p.text)).join(', ');
 
-			const rubyBad = undecoratedWithin(value.ruby, RUBY_BASE_TEXT);
-			if (rubyBad.length > 0) {
-				problems.push(`ruby: piece(s) not underlined: ${describe(rubyBad)}`);
-			}
-			if (!gapUnderlinedWithin(value.ruby, RUBY_BASE_TEXT)) {
-				problems.push('ruby: the gap between the base words is not underlined');
-			}
-			if (!gapUnderlinedWithin(value.tab, TAB_PIECE_TEXT)) {
-				problems.push('tab: the gap inside the tab piece is not underlined');
-			}
-			const tabBad = undecoratedWithin(value.tab, `${TAB_PIECE_TEXT} ${TAB_SECOND_PIECE_TEXT}`);
-			if (tabBad.length > 0) {
-				problems.push(`tab: piece(s) not underlined: ${describe(tabBad)}`);
-			}
+				const rubyBad = undecoratedWithin(value.ruby, RUBY_BASE_TEXT);
+				if (rubyBad.length > 0) {
+					problems.push(`ruby: piece(s) not underlined: ${describe(rubyBad)}`);
+				}
+				if (!gapUnderlinedWithin(value.ruby, RUBY_BASE_TEXT)) {
+					problems.push('ruby: the gap between the base words is not underlined');
+				}
+				if (!gapUnderlinedWithin(value.tab, TAB_PIECE_TEXT)) {
+					problems.push('tab: the gap inside the tab piece is not underlined');
+				}
+				const tabBad = undecoratedWithin(value.tab, `${TAB_PIECE_TEXT} ${TAB_SECOND_PIECE_TEXT}`);
+				if (tabBad.length > 0) {
+					problems.push(`tab: piece(s) not underlined: ${describe(tabBad)}`);
+				}
 
-			const fullRubyText = value.ruby.map((p) => p.text).join('');
-			if (!RUBY_BASE_TEXT.split('').every((ch) => ch === ' ' || fullRubyText.includes(ch))) {
-				problems.push(
-					`ruby: rendered text "${fullRubyText}" is missing part of "${RUBY_BASE_TEXT}"`,
-				);
-			}
-			const fullTabText = value.tab.map((p) => p.text).join('');
-			const expectedTabChars = `${TAB_PIECE_TEXT}${TAB_SECOND_PIECE_TEXT}`;
-			if (!expectedTabChars.split('').every((ch) => ch === ' ' || fullTabText.includes(ch))) {
-				problems.push(
-					`tab: rendered text "${fullTabText}" is missing part of "${expectedTabChars}"`,
-				);
-			}
+				const fullRubyText = value.ruby.map((p) => p.text).join('');
+				if (!RUBY_BASE_TEXT.split('').every((ch) => ch === ' ' || fullRubyText.includes(ch))) {
+					problems.push(
+						`ruby: rendered text "${fullRubyText}" is missing part of "${RUBY_BASE_TEXT}"`,
+					);
+				}
+				const fullTabText = value.tab.map((p) => p.text).join('');
+				const expectedTabChars = `${TAB_PIECE_TEXT}${TAB_SECOND_PIECE_TEXT}`;
+				if (!expectedTabChars.split('').every((ch) => ch === ' ' || fullTabText.includes(ch))) {
+					problems.push(
+						`tab: rendered text "${fullTabText}" is missing part of "${expectedTabChars}"`,
+					);
+				}
 
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
 
-		expect(failures.join('\n')).toBe('');
-	});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

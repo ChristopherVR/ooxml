@@ -156,22 +156,24 @@ function checkPie(values: readonly number[], fit: string, pie: PieReading, calib
 }
 
 test.describe('pie bestFit data labels', () => {
-	test('every binding places bestFit labels and sizes label boxes like PowerPoint', async ({
-		browser,
-	}, testInfo) => {
-		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, readDeck);
-		const failures = results.flatMap(({ framework, value }) => {
-			if (value.pies.length !== BEST_FIT_PIES.length) {
-				return [`${framework.name}: found ${value.pies.length} boxed pies`];
-			}
-			const problems = BEST_FIT_PIES.flatMap((values, i) =>
-				checkPie(values, POWERPOINT_FIT[i], value.pies[i], value.calibri).map(
-					(problem) => `pie ${i + 1} ${problem}`,
-				),
-			);
-			return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
-		});
-		expect(failures.join('\n')).toBe('');
-	});
+	test(
+		'every binding places bestFit labels and sizes label boxes like PowerPoint',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			test.slow();
+			const results = await acrossFrameworks(browser, testInfo, readDeck);
+			const failures = results.flatMap(({ framework, value }) => {
+				if (value.pies.length !== BEST_FIT_PIES.length) {
+					return [`${framework.name}: found ${value.pies.length} boxed pies`];
+				}
+				const problems = BEST_FIT_PIES.flatMap((values, i) =>
+					checkPie(values, POWERPOINT_FIT[i], value.pies[i], value.calibri).map(
+						(problem) => `pie ${i + 1} ${problem}`,
+					),
+				);
+				return problems.length > 0 ? [`${framework.name}: ${problems.join('; ')}`] : [];
+			});
+			expect(failures.join('\n')).toBe('');
+		},
+	);
 });

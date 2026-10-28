@@ -87,109 +87,117 @@ function demoAiPath(page: Page): Promise<string | undefined> {
 }
 
 test.describe('cross-binding AI assistant panel', () => {
-	test('the toolbar toggle opens a panel with a composer and a send control', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openAssistant(page, origin);
-				return snapshotAiPanelChrome(page);
-			},
-			{ viewport: VIEWPORT },
-		);
+	test(
+		'the toolbar toggle opens a panel with a composer and a send control',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openAssistant(page, origin);
+					return snapshotAiPanelChrome(page);
+				},
+				{ viewport: VIEWPORT },
+			);
 
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return [`${name}: no AI panel opened within ${PANEL_TIMEOUT_MS}ms of the toggle click`];
-			}
-			return [
-				...(value.composer ? [] : [`${name}: the panel has no "Ask about this deck" composer`]),
-				...(value.send ? [] : [`${name}: the panel has no "Send" control`]),
-			];
-		});
-
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('the panel chrome matches the reference in every binding', async ({ browser }, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				await openAssistant(page, origin);
-				return snapshotAiPanelChrome(page);
-			},
-			{ viewport: VIEWPORT },
-		);
-		const { reference, candidates } = splitReference(results);
-
-		// Guard: the comparison is only meaningful while the reference actually
-		// offers the full chrome this test holds the others to.
-		expect(reference.value).toMatchObject({
-			present: true,
-			neutralMarker: true,
-			title: true,
-			close: true,
-			history: true,
-		} satisfies Partial<AiPanelChrome>);
-
-		const problems = byBinding(candidates).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return [`${name}: no AI panel opened`];
-			}
-			return [
-				...(value.neutralMarker
-					? []
-					: [`${name}: the panel does not carry the neutral data-pptx-ai-panel marker`]),
-				...(value.title ? [] : [`${name}: the panel has no "AI Assistant" title`]),
-				...(value.close ? [] : [`${name}: the panel has no "Close AI assistant" control`]),
-				...(value.history ? [] : [`${name}: the panel has no chat-history ("Chats") affordance`]),
-			];
-		});
-
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('a stubbed model round trip renders the user message and the reply', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				const present = await openAssistant(page, origin);
-				if (!present) {
-					return { present, path: undefined, userShown: false, replyShown: false };
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return [`${name}: no AI panel opened within ${PANEL_TIMEOUT_MS}ms of the toggle click`];
 				}
-				await sendAiMessage(page, 'Say hello');
-				const panel = aiPanel(page);
-				return {
-					present,
-					path: await demoAiPath(page),
-					userShown: await appears(panel.getByText('Say hello').first(), 10_000),
-					replyShown: await appears(panel.getByText(PLAIN_REPLY).first(), 20_000),
-				};
-			},
-			{ viewport: VIEWPORT },
-		);
+				return [
+					...(value.composer ? [] : [`${name}: the panel has no "Ask about this deck" composer`]),
+					...(value.send ? [] : [`${name}: the panel has no "Send" control`]),
+				];
+			});
 
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return [`${name}: no AI panel opened`];
-			}
-			return [
-				...(value.path === 'handle'
-					? []
-					: [`${name}: the demo passed ${value.path}, not a handle`]),
-				...(value.userShown ? [] : [`${name}: the sent user message never rendered`]),
-				...(value.replyShown ? [] : [`${name}: the streamed assistant reply never rendered`]),
-			];
-		});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
-		expect(problems.join('\n')).toBe('');
-	});
+	test(
+		'the panel chrome matches the reference in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await openAssistant(page, origin);
+					return snapshotAiPanelChrome(page);
+				},
+				{ viewport: VIEWPORT },
+			);
+			const { reference, candidates } = splitReference(results);
+
+			// Guard: the comparison is only meaningful while the reference actually
+			// offers the full chrome this test holds the others to.
+			expect(reference.value).toMatchObject({
+				present: true,
+				neutralMarker: true,
+				title: true,
+				close: true,
+				history: true,
+			} satisfies Partial<AiPanelChrome>);
+
+			const problems = byBinding(candidates).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return [`${name}: no AI panel opened`];
+				}
+				return [
+					...(value.neutralMarker
+						? []
+						: [`${name}: the panel does not carry the neutral data-pptx-ai-panel marker`]),
+					...(value.title ? [] : [`${name}: the panel has no "AI Assistant" title`]),
+					...(value.close ? [] : [`${name}: the panel has no "Close AI assistant" control`]),
+					...(value.history ? [] : [`${name}: the panel has no chat-history ("Chats") affordance`]),
+				];
+			});
+
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'a stubbed model round trip renders the user message and the reply',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					const present = await openAssistant(page, origin);
+					if (!present) {
+						return { present, path: undefined, userShown: false, replyShown: false };
+					}
+					await sendAiMessage(page, 'Say hello');
+					const panel = aiPanel(page);
+					return {
+						present,
+						path: await demoAiPath(page),
+						userShown: await appears(panel.getByText('Say hello').first(), 10_000),
+						replyShown: await appears(panel.getByText(PLAIN_REPLY).first(), 20_000),
+					};
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return [`${name}: no AI panel opened`];
+				}
+				return [
+					...(value.path === 'handle'
+						? []
+						: [`${name}: the demo passed ${value.path}, not a handle`]),
+					...(value.userShown ? [] : [`${name}: the sent user message never rendered`]),
+					...(value.replyShown ? [] : [`${name}: the streamed assistant reply never rendered`]),
+				];
+			});
+
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 
 	test('a plain config opens the same panel and completes a round trip', async ({
 		browser,
@@ -227,99 +235,103 @@ test.describe('cross-binding AI assistant panel', () => {
 		expect(problems.join('\n')).toBe('');
 	});
 
-	test('a scripted tool call stages a proposal and Apply mutates the deck', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				const present = await openAssistant(page, origin);
-				if (!present) {
-					return { present, followUp: false, apply: false, mutated: false };
+	test(
+		'a scripted tool call stages a proposal and Apply mutates the deck',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					const present = await openAssistant(page, origin);
+					if (!present) {
+						return { present, followUp: false, apply: false, mutated: false };
+					}
+					await sendAiMessage(page, 'Please rename SOURCE');
+					const panel = aiPanel(page);
+					// The follow-up reply only streams after the tool executed and its
+					// result went back through the agent loop, so it doubles as "the
+					// registry ran replace_text against the live deck".
+					const followUp = await appears(panel.getByText(TOOL_FOLLOW_UP).first(), 30_000);
+					const apply = await appears(aiApplyButton(page), 10_000);
+					let mutated = false;
+					if (apply) {
+						await aiApplyButton(page).click();
+						mutated = await appears(
+							page
+								.locator('[data-pptx-viewport] [data-pptx-element="true"]')
+								.filter({ hasText: REPLACED_TEXT })
+								.first(),
+							10_000,
+						);
+					}
+					return { present, followUp, apply, mutated };
+				},
+				{ viewport: VIEWPORT },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return [`${name}: no AI panel opened`];
 				}
-				await sendAiMessage(page, 'Please rename SOURCE');
-				const panel = aiPanel(page);
-				// The follow-up reply only streams after the tool executed and its
-				// result went back through the agent loop, so it doubles as "the
-				// registry ran replace_text against the live deck".
-				const followUp = await appears(panel.getByText(TOOL_FOLLOW_UP).first(), 30_000);
-				const apply = await appears(aiApplyButton(page), 10_000);
-				let mutated = false;
-				if (apply) {
-					await aiApplyButton(page).click();
-					mutated = await appears(
-						page
-							.locator('[data-pptx-viewport] [data-pptx-element="true"]')
-							.filter({ hasText: REPLACED_TEXT })
-							.first(),
-						10_000,
-					);
+				return [
+					...(value.followUp ? [] : [`${name}: the post-tool assistant reply never rendered`]),
+					...(value.apply ? [] : [`${name}: no Apply control appeared for the staged proposal`]),
+					...(value.mutated
+						? []
+						: value.apply
+							? [`${name}: Apply did not change the slide text on the canvas`]
+							: []),
+				];
+			});
+
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
+		'on a phone viewport the assistant opens as a bottom sheet over a visible canvas',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					const present = await openAssistant(page, origin);
+					return { present, sheet: await measureAiSheet(page) };
+				},
+				{ device: devices['Pixel 7'] },
+			);
+
+			const problems = byBinding(results).flatMap(({ name, value }) => {
+				if (!value.present) {
+					return [`${name}: the assistant is unreachable on a phone viewport`];
 				}
-				return { present, followUp, apply, mutated };
-			},
-			{ viewport: VIEWPORT },
-		);
+				const { topFraction, heightFraction, bottomOverflowPx } = value.sheet;
+				return [
+					// A sheet must leave canvas interactive above it and must not be a
+					// full-screen overlay (the exact regression the bottom-sheet fixed).
+					...(topFraction >= 0.08
+						? []
+						: [
+								`${name}: the mobile panel covers the whole canvas ` +
+									`(top at ${(topFraction * 100).toFixed(0)}% of the viewport)`,
+							]),
+					...(heightFraction <= 0.9
+						? []
+						: [
+								`${name}: the mobile panel fills ${(heightFraction * 100).toFixed(0)}% of the viewport`,
+							]),
+					...(bottomOverflowPx <= 8
+						? []
+						: [
+								`${name}: the mobile sheet hangs ${bottomOverflowPx.toFixed(0)}px below ` +
+									'the viewport, so its lower controls are unreachable',
+							]),
+				];
+			});
 
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return [`${name}: no AI panel opened`];
-			}
-			return [
-				...(value.followUp ? [] : [`${name}: the post-tool assistant reply never rendered`]),
-				...(value.apply ? [] : [`${name}: no Apply control appeared for the staged proposal`]),
-				...(value.mutated
-					? []
-					: value.apply
-						? [`${name}: Apply did not change the slide text on the canvas`]
-						: []),
-			];
-		});
-
-		expect(problems.join('\n')).toBe('');
-	});
-
-	test('on a phone viewport the assistant opens as a bottom sheet over a visible canvas', async ({
-		browser,
-	}, testInfo) => {
-		const results = await acrossFrameworks(
-			browser,
-			testInfo,
-			async (page, origin) => {
-				const present = await openAssistant(page, origin);
-				return { present, sheet: await measureAiSheet(page) };
-			},
-			{ device: devices['Pixel 7'] },
-		);
-
-		const problems = byBinding(results).flatMap(({ name, value }) => {
-			if (!value.present) {
-				return [`${name}: the assistant is unreachable on a phone viewport`];
-			}
-			const { topFraction, heightFraction, bottomOverflowPx } = value.sheet;
-			return [
-				// A sheet must leave canvas interactive above it and must not be a
-				// full-screen overlay (the exact regression the bottom-sheet fixed).
-				...(topFraction >= 0.08
-					? []
-					: [
-							`${name}: the mobile panel covers the whole canvas ` +
-								`(top at ${(topFraction * 100).toFixed(0)}% of the viewport)`,
-						]),
-				...(heightFraction <= 0.9
-					? []
-					: [
-							`${name}: the mobile panel fills ${(heightFraction * 100).toFixed(0)}% of the viewport`,
-						]),
-				...(bottomOverflowPx <= 8
-					? []
-					: [
-							`${name}: the mobile sheet hangs ${bottomOverflowPx.toFixed(0)}px below ` +
-								'the viewport, so its lower controls are unreachable',
-						]),
-			];
-		});
-
-		expect(problems.join('\n')).toBe('');
-	});
+			expect(problems.join('\n')).toBe('');
+		},
+	);
 });
