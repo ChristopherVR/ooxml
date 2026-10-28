@@ -312,3 +312,6 @@ export {
 } from './chart/format-pane';
 export * from './chart/format-pane-api';
 export * from './form/color-input/live-color-input';
+export * from './fonts/catalog';
+export * from './fonts/availability';
+export * from './fonts/custom-fonts';

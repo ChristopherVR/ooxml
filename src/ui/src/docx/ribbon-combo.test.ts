@@ -4,7 +4,13 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
 import { syncFontControls } from './font-sync';
 import { runStylesPlugin } from './run-styles';
-import { parseFontFamily, parseFontSize, setComboValue, type ComboInput } from './ribbon-combo';
+import {
+	comboBox,
+	parseFontFamily,
+	parseFontSize,
+	setComboValue,
+	type ComboInput,
+} from './ribbon-combo';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
 
@@ -14,6 +20,23 @@ const combo = (ribbon: HTMLElement, label: string) =>
 	ribbon.querySelector<ComboInput>(`input[aria-label="${label}"]`)!;
 
 describe('font input parsing', () => {
+	it('uses the shared catalogue to deduplicate font choices without changing size ordering', () => {
+		const family = comboBox(
+			'Font family',
+			[' Arial ', 'arial', 'Verdana'],
+			parseFontFamily,
+			(value) => ({ type: 'font', key: 'family', value }),
+			{ preview: true },
+		);
+		expect(family.querySelector<ComboInput>('input')!.comboItems).toEqual(['Arial', 'Verdana']);
+		const size = comboBox(
+			'Font size',
+			['10', '10.5', '11'],
+			(value) => value,
+			(value) => ({ type: 'font', key: 'size', value }),
+		);
+		expect(size.querySelector<ComboInput>('input')!.comboItems).toEqual(['10', '10.5', '11']);
+	});
 	it('accepts point sizes from 1 to 1638 in half points and comma decimals', () => {
 		expect(parseFontSize('12')).toBe(12);
 		expect(parseFontSize(' 10,5 ')).toBe(10.5);

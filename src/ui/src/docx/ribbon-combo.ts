@@ -2,6 +2,7 @@ import { emit } from './events';
 import type { RibbonAction } from './ribbon-action';
 import { openListPopover } from './ribbon-popover';
 import { ribbonIcon } from './ribbon-icons';
+import { buildFontCatalog } from '../fonts/catalog';
 
 export const FONT_FAMILIES = [
 	'Arial',
@@ -69,7 +70,11 @@ export function comboBox(
 	input.setAttribute('aria-haspopup', 'listbox');
 	input.autocomplete = 'off';
 	input.spellcheck = false;
-	input.comboItems = [...items];
+	input.comboItems = options.preview
+		? buildFontCatalog({ allFonts: items }).flatMap((group) =>
+				group.entries.map((entry) => entry.family),
+			)
+		: [...items];
 	let committed = '';
 	const commit = (raw: string) => {
 		const value = parse(raw);
