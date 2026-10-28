@@ -1,41 +1,5 @@
-import type {
-	BevelPresetType,
-	MaterialPresetType,
-	Text3DStyle,
-	TextStyle,
-	XmlObject,
-} from '../types';
-
-/** `parseInt` an attribute, or `undefined` when it is absent or not numeric. */
-function intAttr(value: unknown): number | undefined {
-	if (value === undefined || value === null) {
-		return undefined;
-	}
-	const parsed = parseInt(String(value), 10);
-	return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-/** Read one `a:bevelT` / `a:bevelB` node onto the matching Text3DStyle fields. */
-function applyBevel(
-	bevel: XmlObject | undefined,
-	t3d: Text3DStyle,
-	prefix: 'bevelTop' | 'bevelBottom',
-): void {
-	if (!bevel) {
-		return;
-	}
-	t3d[`${prefix}Type` as 'bevelTopType'] = String(
-		bevel['@_prst'] || 'circle',
-	).trim() as BevelPresetType;
-	const width = intAttr(bevel['@_w']);
-	if (width !== undefined) {
-		t3d[`${prefix}Width` as 'bevelTopWidth'] = width;
-	}
-	const height = intAttr(bevel['@_h']);
-	if (height !== undefined) {
-		t3d[`${prefix}Height` as 'bevelTopHeight'] = height;
-	}
-}
+import { readText3DValues } from '../../../drawingml/read-3d-values';
+import type { Text3DStyle, TextStyle, XmlObject } from '../types';
 
 /**
  * Parse `a:bodyPr/a:sp3d` (§20.1.5.12) into {@link TextStyle.text3d}.
@@ -80,23 +44,16 @@ export function parseTextBodySp3d(
 		return;
 	}
 
-	const t3d: Text3DStyle = {};
-	const extrusionHeight = intAttr(sp3d['@_extrusionH']);
-	if (extrusionHeight !== undefined) {
-		t3d.extrusionHeight = extrusionHeight;
-	}
+	const values = readText3DValues(sp3d, {
+		attribute: (node, name) => node?.[`@_${name}`],
+		child: (node, name) => node?.[`a:${name}`] as XmlObject | undefined,
+	});
+	const { z: _z, contourWidth: _contourWidth, ...scalars } = values;
+	const t3d = scalars as Text3DStyle;
 	const extrusionColor = parseColor(sp3d['a:extrusionClr'] as XmlObject | undefined);
 	if (extrusionColor) {
 		t3d.extrusionColor = extrusionColor;
 	}
-	const material = String(sp3d['@_prstMaterial'] || '').trim();
-	if (material) {
-		t3d.presetMaterial = material as MaterialPresetType;
-	}
-
-	applyBevel(sp3d['a:bevelT'] as XmlObject | undefined, t3d, 'bevelTop');
-	applyBevel(sp3d['a:bevelB'] as XmlObject | undefined, t3d, 'bevelBottom');
-
 	if (Object.keys(t3d).length > 0) {
 		style.text3d = t3d;
 	}

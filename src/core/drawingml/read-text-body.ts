@@ -1,3 +1,8 @@
+import {
+	parseDrawingTextScene3D,
+	parseDrawingTextShape3D,
+	parseDrawingFlatText3D,
+} from './read-text-3d';
 // DrawingML rich text body reader: `a:bodyPr` (CT_TextBodyProperties), `a:lstStyle` and the
 // paragraphs with their ordered runs, line breaks and fields, over the shared DOM. Works for any
 // element holding a text body (`a:txBody`, `p:txBody`, `dsp:txBody`, `dgm:t`, `c:rich`, `c:txPr`).
@@ -77,7 +82,12 @@ export function parseDrawingBodyProperties(
 					? { lineSpacingReduction: reduction }
 					: {}),
 			};
-		} else extra.push(outerXml(child));
+		} else if (name === 'scene3d') out.scene3d = parseDrawingTextScene3D(child);
+		else if (name === 'sp3d' && !first(element, 'flatTx', NS.a))
+			out.shape3d = parseDrawingTextShape3D(child);
+		else if (name === 'flatTx' && !first(element, 'sp3d', NS.a))
+			out.flatText3d = parseDrawingFlatText3D(child);
+		else extra.push(outerXml(child));
 	}
 	if (extra.length) out.extraXml = extra;
 	return out;

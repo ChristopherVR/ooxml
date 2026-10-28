@@ -101,6 +101,8 @@ export function diagramTextElement(
 	if (inherited) text.setAttribute('font-family', inherited);
 	if (first) runStyle(text, first, fonts, scheme, report);
 	const body = shape.body?.bodyProperties;
+	if (body?.scene3d || body?.shape3d)
+		report.approximatedText = [...new Set([...(report.approximatedText ?? []), '3d'])];
 	if (
 		body &&
 		((body.vertical && body.vertical !== 'horz') || body.rotation || (body.columnCount ?? 1) > 1)

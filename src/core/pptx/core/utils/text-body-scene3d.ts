@@ -1,4 +1,5 @@
-import type { Pptx3DScene, TextStyle, XmlObject } from '../types';
+import { readScene3DValues } from '../../../drawingml/read-3d-values';
+import type { TextStyle, XmlObject } from '../types';
 import { cloneXmlObject } from './clone-utils';
 import { roundCoordinate, scaleVectorToIntegers } from './scene3d-coordinate';
 import { CAMERA_PRESETS, LIGHT_DIRECTIONS, LIGHT_RIGS } from './text-body-scene3d-presets';
@@ -13,93 +14,23 @@ const child = (node: XmlObject | undefined, local: string): XmlObject | undefine
 	const key = childKey(node, local);
 	return key ? (node[key] as XmlObject | undefined) : undefined;
 };
-const finiteInt = (value: unknown): number | undefined => {
-	const parsed = Number(value);
-	return Number.isInteger(parsed) ? parsed : undefined;
-};
-const percentage = (value: unknown): number | undefined => {
-	if (typeof value === 'string' && value.endsWith('%')) {
-		const parsed = Number(value.slice(0, -1));
-		return Number.isFinite(parsed) && parsed > 0 ? parsed / 100 : undefined;
-	}
-	const parsed = finiteInt(value);
-	return parsed !== undefined && parsed > 0 ? parsed / 100000 : undefined;
-};
 const enumToken = (value: unknown, allowed: Set<string>): string | undefined => {
 	const token = String(value ?? '').trim();
 	return allowed.has(token) ? token : undefined;
 };
-const applyRotation = (target: Pptx3DScene, node: XmlObject | undefined, prefix: string): void => {
-	const rot = child(node, 'rot');
-	const x = finiteInt(rot?.['@_lat']);
-	const y = finiteInt(rot?.['@_lon']);
-	const z = finiteInt(rot?.['@_rev']);
-	if (x !== undefined) {
-		target[`${prefix}RotX` as 'cameraRotX'] = x;
-	}
-	if (y !== undefined) {
-		target[`${prefix}RotY` as 'cameraRotY'] = y;
-	}
-	if (z !== undefined) {
-		target[`${prefix}RotZ` as 'cameraRotZ'] = z;
-	}
-};
-/**
- * Read a `CT_Point3D` (`x`/`y`/`z`, e.g. `a:anchor`) or `CT_Vector3D`
- * (`dx`/`dy`/`dz`, e.g. `a:norm`/`a:up`) node's three components onto
- * `target`. `attrPrefix` selects which attribute names to read: the two
- * types are NOT interchangeable in the schema (an `a:norm`/`a:up` with
- * `x`/`y`/`z` instead of `dx`/`dy`/`dz` is schema-invalid).
- */
-const applyPoint = (
-	target: Pptx3DScene,
-	node: XmlObject | undefined,
-	prefix: string,
-	attrPrefix: '' | 'd' = '',
-): void => {
-	for (const [axis, suffix] of [
-		['x', 'X'],
-		['y', 'Y'],
-		['z', 'Z'],
-	] as const) {
-		const value = finiteInt(node?.[`@_${attrPrefix}${axis}`]);
-		if (value !== undefined) {
-			target[`${prefix}${suffix}` as 'backdropAnchorX'] = value;
-		}
-	}
-};
-
 export function parseTextBodyScene3d(bodyPr: XmlObject, style: TextStyle): void {
 	const scene = child(bodyPr, 'scene3d');
 	if (!scene) {
 		return;
 	}
 	style.textBodyScene3dXml = cloneXmlObject(scene);
-	const camera = child(scene, 'camera');
-	const light = child(scene, 'lightRig');
-	const typed: Pptx3DScene = {
-		cameraPreset: enumToken(camera?.['@_prst'], CAMERA_PRESETS),
-		lightRigType: enumToken(light?.['@_rig'], LIGHT_RIGS),
-		lightRigDirection: enumToken(light?.['@_dir'], LIGHT_DIRECTIONS),
+	const typed = readScene3DValues(scene, { child, attribute: (node, name) => node?.[`@_${name}`] });
+	style.textBodyScene3d = {
+		cameraPreset: undefined,
+		lightRigType: undefined,
+		lightRigDirection: undefined,
+		...typed,
 	};
-	const fov = finiteInt(camera?.['@_fov']);
-	if (fov !== undefined && fov >= 0 && fov <= 10800000) {
-		typed.cameraFieldOfView = fov;
-	}
-	const zoom = percentage(camera?.['@_zoom']);
-	if (zoom !== undefined) {
-		typed.cameraZoom = zoom;
-	}
-	applyRotation(typed, camera, 'camera');
-	applyRotation(typed, light, 'lightRig');
-	const backdrop = child(scene, 'backdrop');
-	if (backdrop) {
-		typed.hasBackdrop = true;
-		applyPoint(typed, child(backdrop, 'anchor'), 'backdropAnchor');
-		applyPoint(typed, child(backdrop, 'norm'), 'backdropNormal', 'd');
-		applyPoint(typed, child(backdrop, 'up'), 'backdropUp', 'd');
-	}
-	style.textBodyScene3d = typed;
 }
 
 const setAttrs = (node: XmlObject, attrs: Record<string, number | string | undefined>): void => {

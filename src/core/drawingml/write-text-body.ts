@@ -1,3 +1,8 @@
+import {
+	writeDrawingTextScene3D,
+	writeDrawingTextShape3D,
+	writeDrawingFlatText3D,
+} from './write-text-3d';
 // DrawingML rich text body writer: `a:bodyPr`, `a:lstStyle` and the paragraphs, the inverse of
 // `read-text-body.ts`. The container element is the caller's (`a:txBody`, `dsp:txBody`, `dgm:t`).
 import { NS, buildXml, parseXml, type XmlDocument, type XmlElement } from '../xml/index';
@@ -74,6 +79,14 @@ export function writeDrawingBodyProperties(
 		}
 		children.push({ name: local, node });
 	}
+	if (value.shape3d && value.flatText3d)
+		throw new Error('Text extrusion and flat override are mutually exclusive');
+	if (value.scene3d)
+		children.push({ name: 'scene3d', node: writeDrawingTextScene3D(doc, value.scene3d) });
+	if (value.shape3d)
+		children.push({ name: 'sp3d', node: writeDrawingTextShape3D(doc, value.shape3d) });
+	if (value.flatText3d)
+		children.push({ name: 'flatTx', node: writeDrawingFlatText3D(doc, value.flatText3d) });
 	appendInSchemaOrder(element, BODY_PROPERTIES_ORDER, [
 		...children,
 		...keptChildren(doc, value.extraXml),

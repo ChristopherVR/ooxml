@@ -163,6 +163,9 @@ export interface DrawingBodyProperties {
 	upright?: boolean;
 	compatibleLineSpacing?: boolean;
 	autofit?: DrawingAutofit;
+	scene3d?: import('./text-3d-model').DrawingTextScene3D;
+	shape3d?: import('./text-3d-model').DrawingTextShape3D;
+	flatText3d?: import('./text-3d-model').DrawingFlatText3D;
 	/** `a:prstTxWarp`, `a:scene3d`, `a:sp3d`, `a:flatTx`, `a:extLst`, verbatim. */
 	extraXml?: string[];
 }

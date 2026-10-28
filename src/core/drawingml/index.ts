@@ -50,3 +50,6 @@ export * from './picture-crop';
 export * from './picture-effects';
 export * from './picture-fill';
 export * from './image-content-type';
+export * from './text-3d-model';
+export * from './read-text-3d';
+export * from './write-text-3d';
