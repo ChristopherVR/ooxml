@@ -170,7 +170,7 @@ function renderDatePart(
  * separators like `:` (the same rule that lets Excel tell `h:mm` from
  * `mmm yyyy` apart), and as month otherwise.
  */
-function renderExcelDateFormat(date: Date, code: string): string {
+export function renderExcelDateFormat(date: Date, code: string): string {
 	const tokens = scanDateFormatTokens(code);
 	const hasAmPm = tokens.some((t) => t.kind === 'ampm');
 	let out = '';
@@ -225,3 +225,4 @@ export function formatDate(date: Date, unit: 'days' | 'months' | 'years', format
 	}
 	return `${day} ${month}`;
 }
+
