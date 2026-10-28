@@ -541,6 +541,7 @@ export interface ImageObject {
 	name?: string;
 	description?: string;
 	crop?: import('../drawingml/picture-crop').DrawingPictureCrop;
+	layout?: import('../drawingml/picture-layout').DrawingPictureLayout;
 	effects?: import('../drawingml/picture-effects').DrawingPictureEffect[];
 	/** Original anchor keeps picture extensions through unrelated edits. */
 	sourceXml?: string;

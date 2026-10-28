@@ -1,3 +1,4 @@
+import { applyPictureLayout } from '../../drawingml/picture-layout';
 import { applyPictureEffects, parsePictureEffects } from '../../drawingml/picture-effects';
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
 import { writeChartExSpaceOverSource } from '../../chart/ex/keep-source';
@@ -344,6 +345,7 @@ export function writeDrawing(
 				!sameModel(object.effects, parsePictureEffects(blip))
 			)
 				applyPictureEffects(blip, object.effects ?? []);
+			if (fill && object.layout !== undefined) applyPictureLayout(fill, object.layout);
 			if (fill && object.crop !== undefined && !sameModel(object.crop, parsePictureCrop(fill)))
 				applyPictureCrop(fill, object.crop);
 			body += buildXml(imported ? picture.documentElement : elements(picture.documentElement)[0]!);

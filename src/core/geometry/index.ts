@@ -96,3 +96,4 @@ export * from './preset-shape-evaluator';
 export * from './ooxml-arc';
 
 export * from './picture-crop';
+export * from './picture-tile';

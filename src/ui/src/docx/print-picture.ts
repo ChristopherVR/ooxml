@@ -1,3 +1,5 @@
+import { pictureNeedsSvg, pictureSvg } from '../picture-view';
+import type { DrawingFill } from 'ooxml-core/drawingml';
 // Print Layout pictures: package media through `PictureUrl`, charts painted by the core
 // (`LayoutObject.chart`), and a placeholder box for anything that cannot be shown.
 
@@ -61,6 +63,7 @@ function chartElement(chart: { svg?: string; label: string; shape?: true }): HTM
 
 export function pictureElement(
 	object: {
+		pictureFill?: Extract<DrawingFill, { kind: 'picture' }>;
 		partName: string;
 		contentType: string;
 		widthPx: number;
@@ -90,6 +93,15 @@ export function pictureElement(
 		return element;
 	}
 	const url = object.partName ? pictureUrl?.(object.partName, object.contentType) : undefined;
+	if (url && object.pictureFill && pictureNeedsSvg(object.pictureFill)) {
+		const element = document.createElement('span');
+		element.className = 'dve-print-picture';
+		element.style.position = 'absolute';
+		element.style.width = `${object.widthPx}px`;
+		element.style.height = `${object.heightPx}px`;
+		element.append(pictureSvg(document, object.pictureFill, url, object.widthPx, object.heightPx));
+		return element;
+	}
 	const element = document.createElement(url ? 'img' : 'div');
 	if (url) {
 		(element as HTMLImageElement).src = url;

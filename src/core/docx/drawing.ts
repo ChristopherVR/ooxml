@@ -1,3 +1,4 @@
+import { parseDrawingPictureFill } from '../drawingml/picture-fill';
 import { imageContentType as guessContentType } from '../drawingml/image-content-type';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Parses w:drawing (wp:inline / wp:anchor pictures) and legacy w:pict (VML) into InlineImage.
@@ -138,6 +139,9 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	if (picture)
 		return {
 			...picture,
+			...(blip?.parentNode
+				? { pictureFill: parseDrawingPictureFill(blip.parentNode as XmlElement) }
+				: {}),
 			widthPx,
 			heightPx,
 			...definedProps({ altText, title, anchored }),

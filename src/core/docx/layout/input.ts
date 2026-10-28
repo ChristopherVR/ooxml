@@ -50,6 +50,7 @@ export interface LayoutRun {
 
 /** A picture's package part and size in CSS pixels; the engine never loads its bytes. */
 export interface LayoutObject {
+	pictureFill?: Extract<import('../../drawingml/types').DrawingFill, { kind: 'picture' }>;
 	partName: string;
 	contentType: string;
 	widthPx: number;

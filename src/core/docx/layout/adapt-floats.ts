@@ -14,6 +14,7 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 			index: floats.length,
 			...(svg ? { chart: { svg, label: 'Shape', shape: true as const } } : {}),
 			partName: image.partName,
+			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 			contentType: image.contentType,
 			widthPx: image.widthPx,
 			heightPx: image.heightPx,

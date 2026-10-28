@@ -1,3 +1,6 @@
+import { applyPictureCrop } from '../drawingml/picture-crop';
+import { applyPictureEffects } from '../drawingml/picture-effects';
+import { applyPictureLayout } from '../drawingml/picture-layout';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes inline picture runs: reuses original wp:inline/pic:pic XML verbatim (only patching
 // extent/alt text) for unchanged pictures, and synthesizes a minimal valid drawing for insertions.
@@ -124,6 +127,9 @@ function buildInlineDrawing(
 	stretch.appendChild(el(doc, A_NS, 'a:fillRect'));
 	const blipFill = el(doc, PIC_NS, 'pic:blipFill');
 	appendAll(blipFill, blip, stretch);
+	if (image.pictureFill?.crop) applyPictureCrop(blipFill, image.pictureFill.crop);
+	if (image.pictureFill?.effects) applyPictureEffects(blip, image.pictureFill.effects);
+	if (image.pictureFill?.layout) applyPictureLayout(blipFill, image.pictureFill.layout);
 	const xfrm = el(doc, A_NS, 'a:xfrm');
 	const off = el(doc, A_NS, 'a:off');
 	off.setAttribute('x', '0');
@@ -225,6 +231,19 @@ export function createImageRun(
 		return node;
 	}
 	if (base && oldDrawing && sameUnderlyingImage(base, image)) {
+		if (
+			image.pictureFill &&
+			JSON.stringify(image.pictureFill) !== JSON.stringify(base.pictureFill)
+		) {
+			const fill = oldDrawing.getElementsByTagNameNS(PIC_NS, 'blipFill')[0];
+			const blip = fill?.getElementsByTagNameNS(A_NS, 'blip')[0];
+			if (fill && image.pictureFill.crop !== undefined)
+				applyPictureCrop(fill, image.pictureFill.crop);
+			if (blip && image.pictureFill.effects !== undefined)
+				applyPictureEffects(blip, image.pictureFill.effects);
+			if (fill && image.pictureFill.layout !== undefined)
+				applyPictureLayout(fill, image.pictureFill.layout);
+		}
 		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
 			updateExtent(oldDrawing, image.widthPx, image.heightPx);
 		if (image.altText !== base.altText || image.title !== base.title)

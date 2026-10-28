@@ -1,3 +1,4 @@
+import { pictureSvg } from '../../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
 import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
@@ -160,7 +161,29 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.replaceChildren();
 		node.className = 'xg-obj';
-		if (drawing.kind === 'image') {
+		if (
+			drawing.kind === 'image' &&
+			(drawing.layout?.tile ||
+				Object.values(drawing.layout?.fillRect ?? {}).some((value) => value !== 0))
+		) {
+			const url = this.#url(drawing.partName, drawing.contentType);
+			if (url)
+				node.append(
+					pictureSvg(
+						doc,
+						{
+							kind: 'picture',
+							...(drawing.crop ? { crop: drawing.crop } : {}),
+							...(drawing.effects ? { effects: drawing.effects } : {}),
+							...(drawing.layout ? { layout: drawing.layout } : {}),
+						},
+						url,
+						box.w,
+						box.h,
+					),
+				);
+			node.setAttribute('role', 'img');
+		} else if (drawing.kind === 'image') {
 			const img = h(doc, 'img', '', {
 				alt: drawing.description ?? drawing.name ?? '',
 				draggable: 'false',

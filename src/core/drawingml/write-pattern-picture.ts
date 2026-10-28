@@ -1,3 +1,4 @@
+import { applyPictureLayout } from './picture-layout';
 import { applyPictureCrop } from './picture-crop';
 import { applyPictureEffects } from './picture-effects';
 import { NS, buildXml, first, parseXml } from '../xml/index';
@@ -79,7 +80,8 @@ export function drawingPatternPictureXml(
 				JSON.stringify(fill.effects ?? [])
 		)
 			applyPictureEffects(blip, fill.effects ?? []);
-		if (!fill.sourceXml) {
+		if (fill.layout !== undefined) applyPictureLayout(root, fill.layout);
+		if (!fill.sourceXml && !fill.layout?.tile && !first(root, 'stretch', NS.a)) {
 			const stretch = doc.createElementNS(NS.a, 'a:stretch');
 			stretch.appendChild(doc.createElementNS(NS.a, 'a:fillRect'));
 			root.appendChild(stretch);

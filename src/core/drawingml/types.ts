@@ -50,6 +50,7 @@ export type DrawingFill =
 			crop?: import('./picture-crop').DrawingPictureCrop;
 			effects?: import('./picture-effects').DrawingPictureEffect[];
 			unsupportedPicture?: string[];
+			layout?: import('./picture-layout').DrawingPictureLayout;
 	  }
 	| { kind: 'unsupported'; element: string };
 

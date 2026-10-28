@@ -1,3 +1,4 @@
+import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import {
 	fieldName,
 	isRunHiddenForReview,
@@ -35,8 +36,13 @@ export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/d
 /** An inline header/footer picture, or a placeholder box when its bytes are unavailable. */
 function inlinePicture(image: NonNullable<TextRun['image']>, values: PageFieldValues): HTMLElement {
 	const url = image.partName ? values.pictureUrl?.(image.partName, image.contentType) : undefined;
-	const element = document.createElement(url ? 'img' : 'span');
-	if (url) {
+	const element = document.createElement(
+		url && !pictureNeedsSvg(image.pictureFill) ? 'img' : 'span',
+	);
+	if (url && image.pictureFill && pictureNeedsSvg(image.pictureFill)) {
+		element.append(pictureSvg(document, image.pictureFill, url, image.widthPx, image.heightPx));
+		element.setAttribute('aria-label', image.altText ?? '');
+	} else if (url) {
 		(element as HTMLImageElement).src = url;
 		(element as HTMLImageElement).alt = image.altText ?? '';
 	} else element.className = 'dve-print-picture-missing';
@@ -129,8 +135,12 @@ function floatingPictures(
 		}).map((float) => {
 			const { xPx, yPx } = floatPosition(float, page, column, { topPx: anchorTopPx, heightPx: 0 });
 			const url = values.pictureUrl?.(float.partName, float.contentType);
-			const element = document.createElement(url ? 'img' : 'div');
-			if (url) (element as HTMLImageElement).src = url;
+			const element = document.createElement(
+				url && !pictureNeedsSvg(float.pictureFill) ? 'img' : 'div',
+			);
+			if (url && float.pictureFill && pictureNeedsSvg(float.pictureFill))
+				element.append(pictureSvg(document, float.pictureFill, url, float.widthPx, float.heightPx));
+			else if (url) (element as HTMLImageElement).src = url;
 			else element.classList.add('dve-print-picture-missing');
 			element.classList.add('dve-print-picture', 'dve-print-float');
 			if (float.behindText) element.classList.add('dve-print-float-behind');

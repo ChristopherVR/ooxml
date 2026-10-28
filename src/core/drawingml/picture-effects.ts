@@ -1,7 +1,18 @@
+import {
+	parseArtisticPictureExtension,
+	type DrawingArtisticPictureEffect,
+} from './picture-artistic';
+import {
+	parseStandardPictureEffect,
+	applyStandardPictureEffect,
+	type DrawingStandardPictureEffect,
+} from './picture-standard-effects';
 // Ordered picture effects. Opaque effects are preserved and explicitly reported to painters.
 import { NS, buildXml, elements, parseXml, type XmlElement } from '../xml/index';
 
 export type DrawingPictureEffect = (
+	| DrawingArtisticPictureEffect
+	| DrawingStandardPictureEffect
 	| { kind: 'grayscale' }
 	| { kind: 'luminance'; brightness?: number; contrast?: number }
 	| { kind: 'alphaModFix'; amount: number }
@@ -52,7 +63,9 @@ export function parsePictureEffects(blip: XmlElement | undefined): DrawingPictur
 	if (!blip) return [];
 	return elements(blip).map((node) => ({
 		...((node.namespaceURI === NS.a
-			? readPictureEffect(node.localName, (name) => node.getAttribute(name))
+			? (readPictureEffect(node.localName, (name) => node.getAttribute(name)) ??
+				parseStandardPictureEffect(node) ??
+				parseArtisticPictureExtension(node))
 			: undefined) ?? { kind: 'unsupported' as const, name: node.localName }),
 		sourceXml: buildXml(node),
 	}));
@@ -72,7 +85,23 @@ export function applyPictureEffects(
 					? 'lum'
 					: effect.kind === 'unsupported'
 						? effect.name
-						: effect.kind;
+						: effect.kind === 'artistic'
+							? 'extLst'
+							: effect.kind === 'standard'
+								? effect.name
+								: effect.kind;
+		if (effect.kind === 'artistic') {
+			const before = effect.sourceXml
+				? parseArtisticPictureExtension(parseXml(effect.sourceXml).documentElement)
+				: undefined;
+			if (
+				!effect.baked ||
+				!before ||
+				before.name !== effect.name ||
+				before.radius !== effect.radius
+			)
+				throw new Error('Artistic authoring requires a host-generated baked picture cache');
+		}
 		const source = effect.sourceXml ? parseXml(effect.sourceXml).documentElement : undefined;
 		if (effect.kind === 'unsupported' && !source)
 			throw new Error('An unsupported picture effect needs source XML');
@@ -103,6 +132,7 @@ export function applyPictureEffects(
 			if (effect.amount < 0) throw new RangeError('Picture alpha must be nonnegative');
 			set('amt', effect.amount);
 		}
+		if (effect.kind === 'standard') applyStandardPictureEffect(node, effect);
 		return node;
 	});
 	for (const node of elements(blip)) blip.removeChild(node);
@@ -120,6 +150,7 @@ export function pictureLuminanceTransfer(
 }
 
 export interface PictureEffectPatch {
+	standard?: Omit<DrawingStandardPictureEffect, 'kind' | 'sourceXml'>;
 	grayscale?: boolean;
 	brightness?: number;
 	contrast?: number;
@@ -173,5 +204,32 @@ export function patchPictureEffects(
 			...(effect?.kind === 'alphaModFix' ? effect : { kind: 'alphaModFix' as const }),
 			amount: patch.alpha!,
 		}));
+	if (patch.standard) {
+		const target = patch.standard;
+		const matches = result.flatMap((effect, index) =>
+			(effect.kind === 'standard' && effect.name === target.name) ||
+			(effect.kind === 'unsupported' && effect.name === target.name)
+				? [index]
+				: [],
+		);
+		if (matches.length > 1 || matches.some((index) => result[index]?.kind === 'unsupported'))
+			throw new Error(`Ambiguous or unreadable picture effect: ${target.name}`);
+		const index = matches[0],
+			before = index === undefined ? undefined : result[index];
+		const next: DrawingStandardPictureEffect = {
+			...(before?.kind === 'standard' ? before : {}),
+			...target,
+			kind: 'standard',
+		};
+		const doc = parseXml(next.sourceXml ?? `<a:${next.name} xmlns:a="${NS.a}"/>`);
+		applyStandardPictureEffect(doc.documentElement, next);
+		if (index === undefined) {
+			const ext = result.findIndex(
+				(effect) =>
+					effect.kind === 'artistic' || (effect.kind === 'unsupported' && effect.name === 'extLst'),
+			);
+			result.splice(ext < 0 ? result.length : ext, 0, next);
+		} else result[index] = next;
+	}
 	return result;
 }

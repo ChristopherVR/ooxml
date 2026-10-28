@@ -1,3 +1,4 @@
+import type { PicturePaintContext } from '../picture-paint';
 import { diagramPictureFill, type DiagramPictureResolver } from './smartart-picture';
 import { buildRectPathGradientSvg, resolveDrawingColor } from 'ooxml-core/diagram';
 import type { DrawingFill } from 'ooxml-core/drawingml';
@@ -15,6 +16,7 @@ export function diagramFill(
 	report: SmartArtRenderReport,
 	pictureParts: Readonly<Record<string, string>> = {},
 	resolvePicture?: DiagramPictureResolver,
+	pictureContext?: PicturePaintContext,
 ): string {
 	if (!fill || fill.kind === 'none') return 'none';
 	if (fill.kind === 'solid') return colorToCss(fill.color, scheme, report) ?? 'none';
@@ -27,6 +29,7 @@ export function diagramFill(
 				fill.relId ? pictureParts[fill.relId] : undefined,
 				resolvePicture,
 				report,
+				pictureContext,
 			) ?? '#d1d5db'
 		);
 	if (fill.kind !== 'gradient') {

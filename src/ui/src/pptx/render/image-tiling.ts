@@ -1,3 +1,4 @@
+import { pictureTileAlignment } from 'ooxml-core/geometry';
 /**
  * `a:blipFill/a:tile`: a picture painted as a repeating TEXTURE rather than one
  * stretched copy.
@@ -58,29 +59,8 @@ export function isImageTiled(element: PptxElement): boolean {
  * `@tx`/`@ty` offset inside a `calc()`.
  */
 function tileAlignmentPercentages(alignment: string | undefined): { x: number; y: number } {
-	switch (alignment) {
-		case 'tl':
-			return { x: 0, y: 0 };
-		case 't':
-			return { x: 50, y: 0 };
-		case 'tr':
-			return { x: 100, y: 0 };
-		case 'l':
-			return { x: 0, y: 50 };
-		case 'ctr':
-			return { x: 50, y: 50 };
-		case 'r':
-			return { x: 100, y: 50 };
-		case 'bl':
-			return { x: 0, y: 100 };
-		case 'b':
-			return { x: 50, y: 100 };
-		case 'br':
-			return { x: 100, y: 100 };
-		default:
-			// `@algn` defaults to the top-left of the fill rectangle.
-			return { x: 0, y: 0 };
-	}
+	const point = pictureTileAlignment(alignment);
+	return { x: point.x * 100, y: point.y * 100 };
 }
 
 /** One axis of the tile origin: the alignment anchor plus the `@tx`/`@ty` offset. */

@@ -53,3 +53,7 @@ export * from './image-content-type';
 export * from './text-3d-model';
 export * from './read-text-3d';
 export * from './write-text-3d';
+export * from './picture-layout';
+export * from './picture-standard-effects';
+export * from './picture-transfer';
+export * from './picture-artistic';

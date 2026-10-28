@@ -88,31 +88,8 @@ export interface A14ImageExtension {
  * percentage in 1/1000ths of a percent, so it is divided by 1000 to land on the
  * 0..100 scale {@link A14ImageExtension.artisticRadius} uses.
  */
-export const ARTISTIC_PRIMARY_ATTRIBUTE: Readonly<Record<string, string>> = {
-	artisticBlur: 'radius',
-	artisticCement: 'crackSpacing',
-	artisticChalkSketch: 'pressure',
-	artisticCrisscrossEtching: 'pressure',
-	artisticCutout: 'numberOfShades',
-	artisticFilmGrain: 'grainSize',
-	artisticGlass: 'scaling',
-	artisticGlowDiffused: 'intensity',
-	artisticGlowEdges: 'smoothness',
-	artisticLightScreen: 'gridSize',
-	artisticLineDrawing: 'pencilSize',
-	artisticMarker: 'size',
-	// Spelled "Mosiaic" in the schema; Microsoft's typo is part of the format.
-	artisticMosiaicBubbles: 'pressure',
-	artisticPaintBrush: 'brushSize',
-	artisticPaintStrokes: 'intensity',
-	artisticPastelsSmooth: 'scaling',
-	artisticPencilGrayscale: 'pencilSize',
-	artisticPencilSketch: 'pressure',
-	artisticPhotocopy: 'detail',
-	artisticPlasticWrap: 'smoothness',
-	artisticTexturizer: 'scaling',
-	artisticWatercolorSponge: 'brushSize',
-};
+export { ARTISTIC_PRIMARY_ATTRIBUTE } from '../../../../drawingml/picture-artistic';
+import { ARTISTIC_PRIMARY_ATTRIBUTE } from '../../../../drawingml/picture-artistic';
 
 /** Attributes that never describe the effect's size/strength. */
 const NON_SIZE_ATTRIBUTES = new Set(['trans', 'visible']);

@@ -95,7 +95,13 @@ export function renderDiagramDrawing(
 		const body = diagramShapeElement(doc, shape, report.approximatedGeometries);
 		body.setAttribute(
 			'fill',
-			diagramFill(doc, defs, shape.fill, scheme, report, drawing.pictureParts, resolvePicture),
+			diagramFill(doc, defs, shape.fill, scheme, report, drawing.pictureParts, resolvePicture, {
+				width: frame.width / EMU_PER_PX,
+				height: frame.height / EMU_PER_PX,
+				...(shape.rotation !== undefined ? { rotation: shape.rotation } : {}),
+				...(shape.flipHorizontal ? { flipHorizontal: true } : {}),
+				...(shape.flipVertical ? { flipVertical: true } : {}),
+			}),
 		);
 		diagramEffects(doc, defs, body, shape, scheme, report);
 		const stroke =

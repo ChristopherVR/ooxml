@@ -194,6 +194,7 @@ export function adaptDocumentModel(
 				: image && !image.anchored
 					? {
 							partName: image.partName,
+							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 							contentType: image.contentType,
 							widthPx: image.widthPx,
 							heightPx: image.heightPx,

@@ -12,6 +12,8 @@ export interface InlineImage {
 	/** Package part name holding the image bytes, e.g. `word/media/image1.png`. */
 	partName: string;
 	contentType: string;
+	/** Shared source-backed crop, placement and ordered picture effects. */
+	pictureFill?: Extract<import('../drawingml/types').DrawingFill, { kind: 'picture' }>;
 	/** An SVG original (`asvg:svgBlip`) shown instead of the raster `partName`, which is its PNG fallback. */
 	svgPartName?: string;
 	/** Display size in CSS pixels (96 dpi), derived from the drawing extent in EMU (may be fractional). */

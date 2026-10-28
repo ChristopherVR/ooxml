@@ -1,3 +1,4 @@
+import { parsePictureLayout } from '../../drawingml/picture-layout';
 import { parsePictureEffects } from '../../drawingml/picture-effects';
 import { parsePictureCrop } from '../../drawingml/picture-crop';
 import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index';
@@ -121,6 +122,7 @@ export function parseDrawing(
 				kind: 'image',
 				anchor,
 				sourceXml: selfContainedXml(anchorEl),
+				...(blipFill ? { layout: parsePictureLayout(blipFill) } : {}),
 				...(parsePictureCrop(blipFill) ? { crop: parsePictureCrop(blipFill)! } : {}),
 				...(parsePictureEffects(blip).length ? { effects: parsePictureEffects(blip) } : {}),
 				partName: target,

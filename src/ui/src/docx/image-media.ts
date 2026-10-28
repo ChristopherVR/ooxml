@@ -1,3 +1,4 @@
+import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
@@ -170,11 +171,27 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		const content = renderSpec(node);
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.
 		if (content.tagName !== 'IMG') return { dom: content, ignoreMutation: () => true };
+		let painted: SVGSVGElement | undefined;
+		const fill =
+			typeof node.attrs.pictureFill === 'string' ? JSON.parse(node.attrs.pictureFill) : undefined;
 		const refresh = () => {
 			const src =
 				(node.attrs.svgPartName && cache.urlFor(String(node.attrs.svgPartName), 'image/svg+xml')) ||
 				cache.urlFor(String(node.attrs.partName), String(node.attrs.contentType));
 			if (src) content.setAttribute('src', src);
+			if (src && pictureNeedsSvg(fill)) {
+				const next = pictureSvg(
+					content.ownerDocument,
+					fill,
+					src,
+					Number(node.attrs.widthPx),
+					Number(node.attrs.heightPx),
+				);
+				if (painted) painted.replaceWith(next);
+				else content.after(next);
+				painted = next;
+				content.style.display = 'none';
+			}
 			content.classList.toggle('dve-image-missing', !src);
 		};
 		refresh();
@@ -182,6 +199,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		const dom = document.createElement('span');
 		dom.className = ['dve-picture', placementClass(node.attrs.placement)].filter(Boolean).join(' ');
 		dom.append(content);
+		if (painted) dom.append(painted);
 		content.addEventListener('dblclick', () => {
 			const pos = getPos();
 			if (pos !== undefined && view.editable) options.editPicture?.(pos);
@@ -193,6 +211,10 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 			preview: (width, height) => {
 				content.setAttribute('width', String(width));
 				content.setAttribute('height', String(height));
+				if (painted) {
+					painted.setAttribute('width', String(width));
+					painted.setAttribute('height', String(height));
+				}
 			},
 		});
 		dom.append(handle);
