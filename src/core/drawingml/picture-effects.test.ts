@@ -60,3 +60,20 @@ it('safe effect edits preserve unknown children and refuse duplicate targeted op
 		/duplicate/,
 	);
 });
+
+it('rejects out-of-range edited luminance while carrying malformed source opaquely', () => {
+	const blip = parseXml(
+		`<a:blip xmlns:a="${NS.a}"><a:lum bright="110000"/><a:alphaModFix amt="150000"/></a:blip>`,
+	).documentElement;
+	expect(parsePictureEffects(blip)).toMatchObject([
+		{ kind: 'unsupported', name: 'lum' },
+		{ kind: 'alphaModFix', amount: 1.5 },
+	]);
+	const before = buildXml(blip);
+	applyPictureEffects(blip, parsePictureEffects(blip));
+	expect(buildXml(blip)).toBe(before);
+	expect(() => patchPictureEffects([], { brightness: 1.1 })).toThrow(RangeError);
+	expect(() => applyPictureEffects(blip, [{ kind: 'luminance', contrast: -1.1 }])).toThrow(
+		RangeError,
+	);
+});

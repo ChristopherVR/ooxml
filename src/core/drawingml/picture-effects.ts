@@ -26,6 +26,14 @@ export function readPictureEffect(
 	if (name === 'lum') {
 		const brightness = picturePercentage(attribute('bright'));
 		const contrast = picturePercentage(attribute('contrast'));
+		for (const [name, value] of [
+			['bright', brightness],
+			['contrast', contrast],
+		] as const) {
+			const raw = attribute(name);
+			if (raw !== undefined && raw !== null && (value === undefined || Math.abs(value) > 1))
+				return undefined;
+		}
 		return {
 			kind: 'luminance',
 			...(brightness !== undefined ? { brightness } : {}),
@@ -82,6 +90,12 @@ export function applyPictureEffects(
 			}
 		};
 		if (effect.kind === 'luminance') {
+			if (
+				[effect.brightness, effect.contrast].some(
+					(value) => value !== undefined && (!Number.isFinite(value) || Math.abs(value) > 1),
+				)
+			)
+				throw new RangeError('Picture luminance must be between -1 and 1');
 			set('bright', effect.brightness);
 			set('contrast', effect.contrast);
 		}
@@ -138,6 +152,10 @@ export function patchPictureEffects(
 	for (const key of ['brightness', 'contrast', 'alpha'] as const)
 		if (patch[key] !== undefined && !Number.isFinite(patch[key]))
 			throw new RangeError('Picture effect must be finite');
+	if (
+		[patch.brightness, patch.contrast].some((value) => value !== undefined && Math.abs(value) > 1)
+	)
+		throw new RangeError('Picture luminance must be between -1 and 1');
 	if (patch.alpha !== undefined && patch.alpha < 0)
 		throw new RangeError('Picture alpha must be nonnegative');
 	if (patch.grayscale !== undefined)

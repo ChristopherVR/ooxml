@@ -13,7 +13,7 @@ export function pictureEffectFilter(
 	const unapplied: string[] = [];
 	for (const effect of effects) {
 		if (effect.kind === 'unsupported') {
-			if (effect.name !== 'extLst') unapplied.push(effect.name);
+			unapplied.push(effect.name);
 			continue;
 		}
 		if (effect.kind === 'grayscale') {
