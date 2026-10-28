@@ -1,3 +1,4 @@
+import { computeFunnelGeometry } from 'ooxml-core/chart';
 /**
  * View-model builder for the funnel chart kind, plus the barrel that
  * re-exports its sunburst sibling (`chart-sunburst-view.ts`) so every
@@ -111,18 +112,23 @@ export function computeFunnelSegments(
 	if (count === 0) {
 		return [];
 	}
-	const maxVal = Math.max(...values.map((v) => Math.abs(v)), 1);
-	const segH = plotHeight / Math.max(count, 1);
-	const centerX = plotLeft + plotWidth / 2;
 	// An explicit series colour (c:ser/cx:series spPr solidFill) wins over the
 	// palette default; either way every bar takes the SAME single colour.
 	const fill = seriesColorOverride ?? paletteColor(0, colorPalette);
 	const out: FunnelSegment[] = [];
 
-	for (let i = 0; i < count; i++) {
+	for (const bar of computeFunnelGeometry(values, {
+		x: plotLeft,
+		y: plotTop,
+		width: plotWidth,
+		height: plotHeight,
+	})) {
+		const i = bar.index;
 		const val = values[i];
-		const w = (Math.abs(val) / maxVal) * plotWidth;
-		const y = plotTop + i * segH;
+		const w = bar.width,
+			y = bar.y,
+			segH = bar.height,
+			centerX = bar.center;
 		const labelY = y + segH / 2 + 4;
 
 		const d = [

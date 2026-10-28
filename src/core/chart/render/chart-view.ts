@@ -156,6 +156,7 @@ const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'stock',
 	'treemap',
 	'sunburst',
+	'funnel',
 ]);
 
 /**
@@ -263,6 +264,11 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		const range = extentOf(xs);
 		model.xAxis = xs.length ? niceScale(range.min, range.max) : niceScale(0, 1);
 	}
+	if (type === 'funnel')
+		series.forEach((s, i) => {
+			const points = chart.series[i]?.pointColors;
+			if (points) s.pointColors = s.values.map((_, j) => drawingColor(points[j]) ?? s.color);
+		});
 	if (type === 'stock') model.stock = stockView(chart.stock, ctx);
 	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);
 	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model, ctx.evaluateRef);

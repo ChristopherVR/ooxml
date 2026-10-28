@@ -1,3 +1,4 @@
+import { chartExSeriesPaint } from './summary-ex-series';
 // Builds the painter's chart summary from an Office 2016 extended chart part (`cx:chartSpace`):
 // the waterfall (`layoutId="waterfall"`), the histogram (`layoutId="clusteredColumn"`), the treemap
 // and the sunburst. Word reads the cached points of `cx:data`; Excel files carry only the formula
@@ -138,7 +139,7 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 			? 'waterfall'
 			: layoutId === 'clusteredColumn'
 				? 'histogram'
-				: layoutId === 'treemap' || layoutId === 'sunburst'
+				: layoutId === 'treemap' || layoutId === 'sunburst' || layoutId === 'funnel'
 					? layoutId
 					: undefined;
 	if (!primary || !chartType) return { layoutId };
@@ -156,6 +157,7 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 		),
 		...seriesFill(primary),
 	};
+	if (chartType === 'funnel') chartExSeriesPaint(primary, series, true);
 	const name = primary.tx?.value?.trim();
 	if (name) series.name = name;
 	const nameRef = primary.tx?.formula?.formula.trim();
@@ -185,6 +187,6 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 				? { parentLabelLayout: parentLayout }
 				: {}),
 		};
-	} else summary.histogram = histogramOptions(primary);
+	} else if (chartType === 'histogram') summary.histogram = histogramOptions(primary);
 	return { layoutId, summary };
 }

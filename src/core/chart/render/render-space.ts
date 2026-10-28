@@ -26,6 +26,7 @@ export const DRAWN_CHART_TYPES: ReadonlySet<ChartSummaryType> = new Set([
 	'stock',
 	'treemap',
 	'sunburst',
+	'funnel',
 ]);
 
 /** Theme fonts (latin typefaces) for chart text. */

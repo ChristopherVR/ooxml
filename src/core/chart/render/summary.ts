@@ -34,7 +34,8 @@ export type ChartSummaryType =
 	| 'waterfall'
 	| 'histogram'
 	| 'treemap'
-	| 'sunburst';
+	| 'sunburst'
+	| 'funnel';
 
 /** One cascade level of a series' data labels: its content switches, placement and format. */
 export interface ChartSummaryLabelLevel extends DataLabelFlagLevel {

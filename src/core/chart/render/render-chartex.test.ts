@@ -64,8 +64,8 @@ describe('chartExSummary', () => {
 	});
 
 	it('names an extended family it does not summarise, and ignores classic parts', () => {
-		const funnel = waterfallXml().replace('layoutId="waterfall"', 'layoutId="funnel"');
-		expect(chartExSummary(funnel)).toEqual({ layoutId: 'funnel' });
+		const map = waterfallXml().replace('layoutId="waterfall"', 'layoutId="regionMap"');
+		expect(chartExSummary(map)).toEqual({ layoutId: 'regionMap' });
 		expect(chartExSummary('<c:chartSpace xmlns:c="urn:x"/>')).toBeUndefined();
 	});
 });

@@ -1,3 +1,4 @@
+import { funnelSvg } from './chart-svg-funnel';
 import { cartesianSvg } from './chart-svg-plots';
 import { pieSvg, radarSvg } from './chart-svg-radial';
 import { sunburstSvg, treemapSvg } from './chart-svg-hierarchy';
@@ -82,6 +83,7 @@ export function renderChartSvg(
 	if (!legend.foreground) out.push(legend.markup);
 	if (area.w > 4 && area.h > 4) {
 		if (model.type === 'pie' || model.type === 'doughnut') out.push(pieSvg(model, area));
+		else if (model.type === 'funnel') out.push(funnelSvg(model, area));
 		else if (model.type === 'radar') out.push(radarSvg(model, area));
 		else if (model.type === 'treemap') out.push(treemapSvg(model, area));
 		else if (model.type === 'sunburst') out.push(sunburstSvg(model, area));
