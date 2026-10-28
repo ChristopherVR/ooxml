@@ -9,7 +9,7 @@ import {
 	elementPictureFilename,
 	rasterResultToPngBlob,
 } from 'ooxml-ui/pptx';
-import type { ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
+import type { ListConversionScope, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxSlide, PptxElement, TextStyle } from 'pptx-viewer-core';
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
@@ -71,6 +71,8 @@ export interface UseEditorOperationsInput {
 	transformCommittedText?: (text: string, previous?: string) => string;
 	/** Host keyboard customisation, forwarded to the Find shortcut. */
 	keyboard?: ResolvedKeyboardCustomization;
+	/** Host `listConversionScope`: bare-caret Bullets / Numbering reach; forwarded to the text ops. */
+	listConversionScope?: ListConversionScope;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,6 +129,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		handlerRef,
 		transformCommittedText,
 		keyboard,
+		listConversionScope,
 	} = input;
 
 	// View > Slide Master edits a part that is not in `slides`, so element
@@ -182,6 +185,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		inlineEditingElementId: state.inlineEditingElementId,
 		inlineEditingText: state.inlineEditingText,
 		inlineEditingSnapshotRef: state.inlineEditingSnapshotRef,
+		listConversionScope,
 	});
 
 	const sectionOps = useSectionOperations({

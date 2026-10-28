@@ -58,6 +58,7 @@ export {
 } from 'ooxml-ui/pptx';
 export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
 export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export type { ListConversionScope } from 'ooxml-ui/pptx';
 export { createImageElementFromFile } from 'ooxml-ui/pptx';
 
 // ── UI customisation (the `customization` input + imperative helpers) ──

@@ -255,6 +255,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			customization,
 			initialSlide,
 			googleFonts,
+			listConversionScope,
 			allowExternalContent,
 			limits,
 		} = props;
@@ -946,6 +947,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			transformCommittedText: (text, previous) =>
 				applyAutoCorrectToEdit(text, previous, viewerOptions.proofing),
 			keyboard: customizationResolved.keyboard,
+			listConversionScope,
 		});
 		// Merge Shapes + on-canvas picture crop, shared by ribbon, menu and canvas.
 		const shapeFormat = useShapeFormatCommands({ state, editorOps, history, canEdit, mode });

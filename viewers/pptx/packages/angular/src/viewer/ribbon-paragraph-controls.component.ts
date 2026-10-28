@@ -23,6 +23,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { LoadContentService } from './load-content.service';
 /**
  * ribbon-paragraph-controls.component.ts: the ribbon's reusable Paragraph
@@ -54,6 +55,7 @@ export class RibbonParagraphControlsComponent {
 	private readonly translation = inject(TranslateService, { optional: true });
 	private readonly loader = inject(LoadContentService, { optional: true });
 	private readonly themes = inject(ViewerThemeGalleryService, { optional: true });
+	private readonly listScope = inject(ListConversionScopeService, { optional: true });
 	private readonly language = homeLanguage(this.translation);
 
 	readonly slideIndex = input<number>(0);
@@ -162,6 +164,7 @@ export class RibbonParagraphControlsComponent {
 			patch,
 			this.inlineEditing?.readInlineSnapshot(),
 			(next) => this.inlineEditing?.formatInlineSnapshot(next) ?? false,
+			this.listScope?.options(),
 		);
 	}
 }

@@ -1,7 +1,9 @@
 /**
  * Selection-scoped Bullets / Numbering: PowerPoint applies the ribbon's list
  * buttons to the paragraphs the text selection intersects, and to the whole
- * body when the shape (not a text range) is selected.
+ * body when the shape (not a text range) is selected. A host can opt in to
+ * the Word / Google Docs behaviour for a bare caret with
+ * `listConversionScope: 'list'` (see `ListConversionScope`).
  *
  * `toggleSelectionBullets` is the one decision every binding's Bullets /
  * Numbering click routes through: it rewrites only the in-scope paragraphs
@@ -20,6 +22,7 @@ import {
 	splitBulletParagraphs,
 } from './bullet-toggle';
 import type { InlineTextSelection } from './inline-selection-utils';
+import type { ListStyleUpdateOptions } from './text-list-style-update';
 import { applyListStyleUpdate } from './text-list-style-update';
 
 /** What a selection-scoped bullet edit hands back to the binding. */
@@ -63,7 +66,8 @@ export function selectionBulletKind(
 
 /**
  * Set every paragraph the selection intersects to `kind` (every paragraph
- * when there is no selection), returning the element patch and the selection
+ * when there is no selection; with `listConversionScope: 'list'`, the whole
+ * list around a bare caret that switches a list paragraph to the other kind), returning the element patch and the selection
  * remapped onto the rewritten segments. Numbered paragraphs are counted
  * consecutively so the renderer shows "1. 2. 3.".
  */
@@ -72,6 +76,7 @@ export function setSelectionBullets(
 	kind: ParagraphBulletKind,
 	selection: InlineTextSelection | null,
 	segments?: readonly TextSegment[],
+	options?: ListStyleUpdateOptions,
 ): BulletToggleResult {
 	if (!hasTextProperties(element)) {
 		return { patch: {}, newSelection: selection };
@@ -81,6 +86,7 @@ export function setSelectionBullets(
 		{ ...element, textSegments: source },
 		{ listType: kind },
 		selection,
+		options,
 	);
 	return { patch: result.patch, newSelection: result.selection };
 }
@@ -95,7 +101,14 @@ export function toggleSelectionBullets(
 	kind: Exclude<ParagraphBulletKind, 'none'>,
 	selection: InlineTextSelection | null,
 	segments?: readonly TextSegment[],
+	options?: ListStyleUpdateOptions,
 ): BulletToggleResult {
 	const current = selectionBulletKind(element, selection, segments);
-	return setSelectionBullets(element, current === kind ? 'none' : kind, selection, segments);
+	return setSelectionBullets(
+		element,
+		current === kind ? 'none' : kind,
+		selection,
+		segments,
+		options,
+	);
 }

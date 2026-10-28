@@ -6,6 +6,7 @@ import {
 	initializeInlineListDom,
 	attachInlineListController,
 } from 'ooxml-ui/pptx';
+import type { ListConversionScope } from 'ooxml-ui/pptx';
 import { remapTextToSegments } from 'ooxml-ui/pptx/render/remap-text';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, PptxSlide, TextSegment } from 'pptx-viewer-core';
@@ -13,12 +14,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { componentSource } from './component-source.test-support';
 import { EditorStateService } from './editor-state.service';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { RibbonParagraphControlsComponent } from './ribbon-paragraph-controls.component';
 import {
 	patchTextStyle,
 	transformSelectedTextCase,
 	formatInlineListStyle,
 } from './ribbon-text-helpers';
+import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
 
 function textElement(): PptxElement {
 	return {
@@ -179,6 +182,79 @@ describe('patchTextStyle list commands', () => {
 		controls.applyList();
 		expect(elementBulletKind(svc.slides()[0].elements[0])).toBe('bullet');
 	});
+
+	it.each([
+		[undefined, ['bullet', 'numbered', 'bullet']],
+		['paragraph', ['bullet', 'numbered', 'bullet']],
+		['list', ['numbered', 'numbered', 'numbered']],
+	] as const)(
+		'Numbering at a caret in a 3-item bulleted list with listConversionScope=%s',
+		(scope, expected) => {
+			class Controls extends RibbonParagraphControlsComponent {
+				number(): void {
+					this.toggleList('numbered');
+				}
+			}
+			const source = textElement();
+			Object.assign(source, {
+				text: 'A\nB\nC',
+				textSegments: [
+					{ text: 'A', style: {}, bulletInfo: { char: '•' } },
+					{ text: '\n', style: {}, isParagraphBreak: true },
+					{ text: 'B', style: {}, bulletInfo: { char: '•' } },
+					{ text: '\n', style: {}, isParagraphBreak: true },
+					{ text: 'C', style: {}, bulletInfo: { char: '•' } },
+				],
+			});
+			const svc = service(source);
+			const seed = createInlineListSeed(source)!;
+			const root = document.createElement('div');
+			document.body.append(root);
+			initializeInlineListDom(root, seed);
+			const controller = attachInlineListController(root, seed);
+			try {
+				const node = root.children[1]!.firstElementChild!.firstChild!;
+				window.getSelection()!.setBaseAndExtent(node, 0, node, 0);
+				const read = controller.read();
+				if (read.kind !== 'supported') {
+					throw new Error(read.reason);
+				}
+				const scopeService = new ListConversionScopeService().bind(
+					signal<ListConversionScope | undefined>(scope),
+				);
+				const inlineEditing = {
+					readInlineSnapshot: () => read.snapshot,
+					formatInlineSnapshot: (next: typeof read.snapshot) =>
+						controller.format(next).kind === 'supported',
+				};
+				const controls = runInInjectionContext(
+					Injector.create({
+						providers: [
+							{ provide: EditorStateService, useValue: svc },
+							{ provide: ViewerCanvasEditingService, useValue: inlineEditing },
+							{ provide: ListConversionScopeService, useValue: scopeService },
+						],
+					}),
+					() => new Controls(),
+				);
+				Object.defineProperty(controls, 'canEdit', { value: signal(true) });
+				Object.defineProperty(controls, 'selectedElement', { value: signal(source) });
+				controls.number();
+				expect(
+					buildParagraphs(svc.slides()[0].elements[0]).map((paragraph) =>
+						paragraph.bulletMarker === undefined
+							? 'none'
+							: /^\d/.test(paragraph.bulletMarker)
+								? 'numbered'
+								: 'bullet',
+					),
+				).toStrictEqual(expected);
+			} finally {
+				controller.dispose();
+				root.remove();
+			}
+		},
+	);
 
 	it('creates markers for plain multiline text without segments', () => {
 		const source = textElement();

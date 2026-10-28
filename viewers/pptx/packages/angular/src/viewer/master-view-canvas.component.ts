@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject,
+	input,
+	output,
+	signal,
+} from '@angular/core';
 import type {
 	CanvasSize,
 	InlineListController,
@@ -25,6 +33,7 @@ import type {
 } from 'pptx-viewer-core';
 
 import { InlineListSession } from './inline-list-session';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { formatInlineListStyle } from './ribbon-text-helpers';
 import { SlideCanvasComponent } from './slide-canvas.component';
 
@@ -108,6 +117,8 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 	],
 })
 export class MasterViewCanvasComponent {
+	/** The host `listConversionScope` input; absent outside a viewer keeps the default. */
+	private readonly listScope = inject(ListConversionScopeService, { optional: true });
 	private inlineSnapshot?: InlineTextEditSnapshot;
 	private readonly listSession = new InlineListSession(
 		() => this.pseudoSlide()?.elements.find((element) => element.id === this.editingId()),
@@ -125,8 +136,12 @@ export class MasterViewCanvasComponent {
 		if (!this.editable() || !element || !snapshot) {
 			return;
 		}
-		const patch = formatInlineListStyle(element, event.updates, snapshot, (next) =>
-			this.listSession.format(next),
+		const patch = formatInlineListStyle(
+			element,
+			event.updates,
+			snapshot,
+			(next) => this.listSession.format(next),
+			this.listScope?.options(),
 		);
 		if (patch) {
 			this.updateMasterElement(event.id, patch);

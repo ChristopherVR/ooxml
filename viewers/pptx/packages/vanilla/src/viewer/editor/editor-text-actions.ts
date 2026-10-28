@@ -1,4 +1,4 @@
-import type { ChangeCaseMode } from 'ooxml-ui/pptx';
+import type { ChangeCaseMode, ListConversionScope } from 'ooxml-ui/pptx';
 import { transformInlineListCase } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
 
@@ -63,10 +63,16 @@ export interface TextActions {
 	setColumnCount(count: number): void;
 }
 
+/**
+ * `getListConversionScope` is the live host `listConversionScope` option, read
+ * on every Bullets / Numbering press (unset keeps PowerPoint's single paragraph).
+ */
 export function createTextActions(
 	store: Store<ViewerState>,
 	applyToSelected: ApplyToSelected,
+	getListConversionScope?: () => ListConversionScope | undefined,
 ): TextActions {
+	const listOptions = () => ({ listConversionScope: getListConversionScope?.() });
 	return {
 		toggleBold: () => applyToSelected((el) => toggleTextProp(el, 'bold')),
 		toggleItalic: () => applyToSelected((el) => toggleTextProp(el, 'italic')),
@@ -97,9 +103,9 @@ export function createTextActions(
 		clearFormatting: () => applyToSelected((el) => clearFormatting(el)),
 		patchSelectedTextStyle: (patch) => applyToSelected((el) => patchTextStyle(el, patch)),
 		toggleBulletList: () =>
-			applyToSelected((el, snapshot) => toggleListType(el, 'bullet', snapshot)),
+			applyToSelected((el, snapshot) => toggleListType(el, 'bullet', snapshot, listOptions())),
 		toggleNumberedList: () =>
-			applyToSelected((el, snapshot) => toggleListType(el, 'numbered', snapshot)),
+			applyToSelected((el, snapshot) => toggleListType(el, 'numbered', snapshot, listOptions())),
 		increaseIndent: () => applyToSelected((el) => adjustIndent(el, 1)),
 		decreaseIndent: () => applyToSelected((el) => adjustIndent(el, -1)),
 		setTextAlign: (align) => applyToSelected((el) => setTextAlign(el, align)),

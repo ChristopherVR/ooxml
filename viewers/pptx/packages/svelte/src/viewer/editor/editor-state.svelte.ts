@@ -8,6 +8,7 @@ import type {
 	InlineTextEditSnapshot,
 	PendingInlineTextEdit,
 	InlineListController,
+	ListConversionScope,
 } from 'ooxml-ui/pptx';
 import {
 	canInteractWithElement,
@@ -99,6 +100,11 @@ export interface EditorStateDeps {
 	getCanvasSize?: () => { width: number; height: number } | undefined;
 	/** Host `authorName` prop: the comment/reply author that wins over Options > General. */
 	getAuthorName?: () => string | undefined;
+	/**
+	 * Host `listConversionScope` prop: how far a bare caret's Bullets /
+	 * Numbering reach. Optional; unset keeps PowerPoint's single paragraph.
+	 */
+	getListConversionScope?: () => ListConversionScope | undefined;
 	/**
 	 * The `tableStyles`/`tableStylesDefaultId`/`tableStylesToDelete` save
 	 * options (see `pptx-viewer-shared`'s `tableStyleSaveOptions`). Table style
@@ -420,6 +426,11 @@ export class EditorState {
 	/** The host `authorName` prop, or undefined (see {@link EditorStateDeps.getAuthorName}). */
 	get hostAuthorName(): string | undefined {
 		return this.#deps.getAuthorName?.();
+	}
+
+	/** The host `listConversionScope` prop, or undefined (see {@link EditorStateDeps.getListConversionScope}). */
+	get listConversionScope(): ListConversionScope | undefined {
+		return this.#deps.getListConversionScope?.();
 	}
 
 	/** The slide canvas in px (see {@link EditorStateDeps.getCanvasSize}). */

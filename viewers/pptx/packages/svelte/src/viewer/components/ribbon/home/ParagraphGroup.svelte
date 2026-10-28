@@ -78,7 +78,11 @@
 					return;
 				}
 				const kind = id === 'home.paragraph.bullets' ? 'bullet' : 'numbered';
-				apply((current, snapshot) => toggleListTypePatch(current, kind, snapshot));
+				apply((current, snapshot) =>
+					toggleListTypePatch(current, kind, snapshot, {
+						listConversionScope: editor.listConversionScope,
+					}),
+				);
 				return;
 			}
 			case 'home.paragraph.lineSpacing':

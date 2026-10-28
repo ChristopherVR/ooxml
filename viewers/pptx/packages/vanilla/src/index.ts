@@ -18,6 +18,7 @@ export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 // ── Viewer ─────────────────────────────────────────────────────────────
 export { createPptxViewer, PptxViewer } from './viewer';
 export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export type { ListConversionScope } from 'ooxml-ui/pptx';
 export type {
 	ExternalCollaborationAwareness,
 	ExternalCollaborationSession,

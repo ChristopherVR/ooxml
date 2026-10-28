@@ -102,6 +102,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 					[fitPadding]="rootOptions.fitPadding"
 					[googleFonts]="rootOptions.googleFonts"
 					[allowExternalContent]="rootOptions.allowExternalContent"
+					[listConversionScope]="rootOptions.listConversionScope"
 					[limits]="rootOptions.limits"
 					[inspectorInitiallyOpen]="rootOptions.inspectorInitiallyOpen"
 					[smartArt3D]="smartArt3D"

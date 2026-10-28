@@ -186,6 +186,8 @@ export interface EditActionsDeps {
 	setHandler(handler: PptxHandler, keepPrevious?: boolean): void;
 	/** Options > General > "User name" override for new comment/reply authorship. */
 	getUserName?: () => string | undefined;
+	/** Live host `listConversionScope` option, read on every Bullets / Numbering press. */
+	getListConversionScope?: () => import('ooxml-ui/pptx').ListConversionScope | undefined;
 }
 
 /**
@@ -218,7 +220,7 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 
 	return {
 		insertElement,
-		...createTextActions(store, applyToSelected),
+		...createTextActions(store, applyToSelected, deps.getListConversionScope),
 		...createArrangeActions({ store, ops, applyToSelected }),
 		...createClipboardActions({ store, ops }),
 		...createSlideActions({ store, ops, getHandler: deps.getHandler }),

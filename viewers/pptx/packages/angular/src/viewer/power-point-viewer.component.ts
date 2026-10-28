@@ -63,7 +63,7 @@ import {
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
-import type { GoogleFontsOption, PptxLoadLimits } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type {
 	AutosaveRecord,
 	InlineTextDraft,
@@ -151,6 +151,7 @@ import { GoogleWebfontsService } from './google-webfonts.service';
 import { HyperlinkDialogComponent } from './hyperlink-dialog.component';
 import { InsertDialogsHostComponent } from './insert-dialogs-host.component';
 import { IsMobileService } from './is-mobile';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { LoadContentService } from './load-content.service';
 import { LoadNoticesService } from './load-notices.service';
 import { createLoadNotifier } from './load-notifier';
@@ -1723,6 +1724,19 @@ export class PowerPointViewerComponent
 	 * invalid `baseUrl` disables the fallback (with a console warning).
 	 */
 	readonly googleFonts = input<GoogleFontsOption | undefined>(undefined);
+	/**
+	 * How far Bullets / Numbering reaches when the text caret has no selection.
+	 * `'paragraph'` (the default, PowerPoint behaviour): only the caret's
+	 * paragraph changes. `'list'` (opt-in, word-processor behaviour): when the
+	 * caret switches a list paragraph between bullets and numbering, the whole
+	 * adjacent list converts with it. A range selection always affects exactly
+	 * the selected paragraphs. Unset means `'paragraph'`.
+	 */
+	readonly listConversionScope = input<ListConversionScope | undefined>(undefined);
+	/** Hands the input to every list command (see `ListConversionScopeService`). */
+	protected readonly listConversionScopeService = inject(ListConversionScopeService).bind(
+		this.listConversionScope,
+	);
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio

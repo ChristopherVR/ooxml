@@ -35,6 +35,7 @@ import { ExportService } from './export.service';
 import { FieldContextService } from './field-context.service';
 import { GoogleWebfontsService } from './google-webfonts.service';
 import { IsMobileService } from './is-mobile';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { LoadContentService } from './load-content.service';
 import { LoadNoticesService } from './load-notices.service';
 import { OutlineAuthoringService } from './outline-authoring.service';
@@ -97,6 +98,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	FieldContextService,
 	RecentColorsService,
 	RibbonAddInsService,
+	ListConversionScopeService,
 	ZoomTargetService,
 	AiPanelStore,
 	ViewerDialogsService,

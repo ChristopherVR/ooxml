@@ -6,6 +6,7 @@ import {
 	isBulletMarkerSegment,
 	paragraphBulletKind,
 	setElementBullets,
+	splitBulletParagraphs,
 } from './bullet-toggle';
 import type { ParagraphBulletKind } from './bullet-toggle';
 import { applyStyleToSelectedSegments } from './inline-selection-utils';
@@ -97,6 +98,76 @@ export function restoreParagraphMetadata(
 	});
 }
 
+/**
+ * How far a list switch made with a bare caret reaches.
+ *
+ * - `'paragraph'` (default, PowerPoint): Bullets / Numbering apply to the
+ *   paragraph holding the caret, exactly as they apply to the paragraphs a
+ *   range selection touches.
+ * - `'list'` (opt-in, Word / Google Docs): switching a list paragraph between
+ *   bullets and numbering converts the whole list around the caret; see
+ *   {@link caretListParagraphRange}. Turning a list off, listing a plain
+ *   paragraph and range selections are unaffected.
+ */
+export type ListConversionScope = 'paragraph' | 'list';
+
+/** The PowerPoint behaviour, used whenever a host does not choose. */
+export const DEFAULT_LIST_CONVERSION_SCOPE: ListConversionScope = 'paragraph';
+
+/** Options shared by the list-style entry points. */
+export interface ListStyleUpdateOptions {
+	/** Defaults to {@link DEFAULT_LIST_CONVERSION_SCOPE}. */
+	readonly listConversionScope?: ListConversionScope;
+}
+
+/**
+ * The paragraphs a caret-only list switch acts on in `'list'` scope: the list
+ * around the caret, as Word and Google Docs convert it.
+ *
+ * The list is the run of adjacent paragraphs at the caret's level with the
+ * caret paragraph's kind, including any deeper-level items nested between
+ * them; it stops at a paragraph with no list or a shallower level. Returns
+ * `undefined` (keep the caret's paragraph alone) unless the caret paragraph is
+ * a list paragraph being switched to the other kind; turning a list off stays
+ * per paragraph.
+ */
+function caretListParagraphRange(
+	segments: readonly TextSegment[],
+	caretParagraph: number,
+	listType: ParagraphBulletKind,
+): { startParagraph: number; endParagraph: number } | undefined {
+	if (listType === 'none') {
+		return undefined;
+	}
+	const paragraphs = splitBulletParagraphs(segments).map((paragraph) => ({
+		kind: paragraphBulletKind(paragraph.segments),
+		level: paragraph.segments[0]?.paragraphLevel ?? 0,
+	}));
+	const caret = paragraphs[caretParagraph];
+	if (!caret || caret.kind === 'none' || caret.kind === listType) {
+		return undefined;
+	}
+	const inList = (index: number) => {
+		const paragraph = paragraphs[index];
+		if (!paragraph || paragraph.kind === 'none') {
+			return false;
+		}
+		return (
+			paragraph.level > caret.level ||
+			(paragraph.level === caret.level && paragraph.kind === caret.kind)
+		);
+	};
+	let startParagraph = caretParagraph;
+	while (inList(startParagraph - 1)) {
+		startParagraph -= 1;
+	}
+	let endParagraph = caretParagraph;
+	while (inList(endParagraph + 1)) {
+		endParagraph += 1;
+	}
+	return { startParagraph, endParagraph };
+}
+
 /** Current kind at the first selected paragraph; otherwise the element default. */
 export function selectedParagraphBulletKind(
 	element: PptxElement,
@@ -116,12 +187,15 @@ export function selectedParagraphBulletKind(
 /**
  * Apply a list request to touched paragraphs, while accompanying character
  * styles retain their existing selection scope. A null selection means the
- * whole element, matching the existing editor contract.
+ * whole element, matching the existing editor contract. A bare caret touches
+ * its own paragraph, as in PowerPoint, unless `options.listConversionScope` is
+ * `'list'` (see {@link ListConversionScope}).
  */
 export function applyListStyleUpdate(
 	element: PptxElement,
 	updates: Partial<TextStyle>,
 	selection: InlineTextSelection | null,
+	options: ListStyleUpdateOptions = {},
 ): { patch: Partial<PptxElement>; selection: InlineTextSelection | null } {
 	if (!hasTextProperties(element) || !updates.listType) {
 		return { patch: {}, selection };
@@ -155,10 +229,17 @@ export function applyListStyleUpdate(
 	const startOffset = startEntry.start + workingSelection.startOffset;
 	const endOffset = endEntry.start + workingSelection.endOffset;
 	const lastSelected = [...entries].reverse().find((entry) => entry.start < endOffset);
-	const patch = setElementBullets(working, listType, {
-		startParagraph: startEntry.paragraph,
-		endParagraph: Math.max(startEntry.paragraph, lastSelected?.paragraph ?? endEntry.paragraph),
-	});
+	const patch = setElementBullets(
+		working,
+		listType,
+		(startOffset === endOffset &&
+		(options.listConversionScope ?? DEFAULT_LIST_CONVERSION_SCOPE) === 'list'
+			? caretListParagraphRange(segments, startEntry.paragraph, listType)
+			: undefined) ?? {
+			startParagraph: startEntry.paragraph,
+			endParagraph: Math.max(startEntry.paragraph, lastSelected?.paragraph ?? endEntry.paragraph),
+		},
+	);
 	const next = { ...working, ...patch };
 	const nextSegments = hasTextProperties(next) ? next.textSegments : undefined;
 	if (!nextSegments) {

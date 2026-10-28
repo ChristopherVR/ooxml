@@ -2,6 +2,7 @@ import type {
 	CollaborationInput,
 	CollaborationShellState,
 	GoogleFontsOption,
+	ListConversionScope,
 	PptxLoadLimits,
 	ToolbarActionId,
 	ViewportFitOptions,
@@ -37,6 +38,13 @@ export interface UseViewerBuildingBlocksInput extends ViewportFitOptions {
 	initialSlide?: number;
 	/** As `PowerPointViewer`'s `googleFonts`: the Google Fonts fallback policy (off, or a self-hosted mirror). */
 	googleFonts?: GoogleFontsOption;
+	/**
+	 * As `PowerPointViewer`'s `listConversionScope`: how far Bullets / Numbering reach from a
+	 * bare caret. `'paragraph'` (default, PowerPoint behaviour) changes only the caret's
+	 * paragraph; `'list'` (Word / Google Docs behaviour) converts the whole adjacent list when
+	 * the caret switches a list paragraph between bullets and numbering.
+	 */
+	listConversionScope?: ListConversionScope;
 	/**
 	 * As `PowerPointViewer`'s `allowExternalContent`: `false` fetches no linked
 	 * http(s) content, `true` allows it, either value locks the Trust Center

@@ -24,6 +24,7 @@ type TextOperationsInput = Pick<
 	| 'inlineEditingText'
 	| 'inlineEditingSnapshotRef'
 	| 'setInlineEditingElementId'
+	| 'listConversionScope'
 > & { updateSelectedElement: (updates: Partial<PptxElement>) => void };
 
 /** Text commands reconcile the current native draft before writing the model. */
@@ -35,6 +36,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 		inlineEditingSnapshotRef,
 		setInlineEditingElementId,
 		updateSelectedElement,
+		listConversionScope,
 	} = input;
 
 	/**
@@ -97,6 +99,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 					},
 					updates,
 					inlineSel,
+					{ listConversionScope },
 				);
 				if (!patch || !('textSegments' in patch)) {
 					return;
@@ -120,6 +123,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 					{ ...selectedElement, textSegments: currentSegments },
 					updates,
 					inlineSel,
+					{ listConversionScope },
 				);
 				setPendingSelectionRestore(result.selection);
 				updateSelectedElement({
@@ -148,6 +152,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 			inlineEditingElementId,
 			inlineEditingText,
 			liveTextSegments,
+			listConversionScope,
 		],
 	);
 
@@ -172,6 +177,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 				kind,
 				result.selection,
 				draft?.textSegments ?? currentSegments,
+				{ listConversionScope },
 			);
 			if (draft) {
 				if (!('textSegments' in patch) || !patch.textSegments) {
@@ -205,6 +211,7 @@ export function useTextElementOperations(input: TextOperationsInput) {
 			updateSelectedElement,
 			inlineEditingElementId,
 			inlineEditingText,
+			listConversionScope,
 		],
 	);
 

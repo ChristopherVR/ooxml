@@ -5,7 +5,7 @@ import {
 	textStylePatch,
 	toggleSelectionBullets,
 } from 'ooxml-ui/pptx';
-import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot, ListStyleUpdateOptions } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
@@ -23,11 +23,16 @@ function textStyleBase(el: PptxElement): TextStyle {
 	return hasTextProperties(el) ? (el.textStyle ?? {}) : {};
 }
 
-/** Toggle the paragraph list type between the given kind and `'none'`. */
+/**
+ * Toggle the paragraph list type between the given kind and `'none'`.
+ * `options.listConversionScope` sets how far a bare caret reaches (the host
+ * `listConversionScope` prop; unset keeps PowerPoint's single paragraph).
+ */
 export function toggleListTypePatch(
 	el: PptxElement,
 	kind: 'bullet' | 'numbered',
 	snapshot?: InlineTextEditSnapshot,
+	options?: ListStyleUpdateOptions,
 ): Partial<PptxElement> {
 	if (!hasTextProperties(el)) {
 		return {};
@@ -52,7 +57,13 @@ export function toggleListTypePatch(
 	}
 	return {
 		...(liveText === undefined ? {} : { text: liveText }),
-		...toggleSelectionBullets(current, kind, result.selection, result.snapshot?.textSegments).patch,
+		...toggleSelectionBullets(
+			current,
+			kind,
+			result.selection,
+			result.snapshot?.textSegments,
+			options,
+		).patch,
 	};
 }
 

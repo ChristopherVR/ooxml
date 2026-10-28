@@ -4,7 +4,7 @@ import {
 	remapTextToSegments,
 	toggleSelectionBullets,
 } from 'ooxml-ui/pptx';
-import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot, ListStyleUpdateOptions } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 
 import { canFormatText, readTextFormatState } from './editor-format-mutations';
@@ -28,11 +28,16 @@ function patchTextStyle(el: PptxElement, patch: Partial<TextStyle>): Partial<Ppt
 	return applyTextStyleUpdate(el, patch, null).patch;
 }
 
-/** Toggle the selected paragraphs' list type; without an inline selection, target the element. */
+/**
+ * Toggle the selected paragraphs' list type; without an inline selection, target the element.
+ * `options.listConversionScope` sets how far a bare caret reaches (the host
+ * `listConversionScope` option; unset keeps PowerPoint's single paragraph).
+ */
 export function toggleListType(
 	el: PptxElement,
 	kind: Exclude<TextStyle['listType'], 'none' | undefined>,
 	snapshot?: InlineTextEditSnapshot,
+	options?: ListStyleUpdateOptions,
 ): Partial<PptxElement> {
 	if (!canFormatText(el)) {
 		return {};
@@ -53,7 +58,13 @@ export function toggleListType(
 	}
 	return {
 		...(liveText === undefined ? {} : { text: liveText }),
-		...toggleSelectionBullets(current, kind, result.selection, result.snapshot?.textSegments).patch,
+		...toggleSelectionBullets(
+			current,
+			kind,
+			result.selection,
+			result.snapshot?.textSegments,
+			options,
+		).patch,
 	};
 }
 

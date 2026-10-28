@@ -30,6 +30,7 @@ export type {
 	SlidesPaneTableStyleContext,
 } from './viewer/components/slides-pane-props';
 export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export type { ListConversionScope } from 'ooxml-ui/pptx';
 export { createImageElementFromFile } from 'ooxml-ui/pptx';
 export type {
 	ExportGifOptions,

@@ -84,6 +84,8 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	{ id: 'pieChart3D' },
 	{ id: 'initialSlide' },
 	{ id: 'googleFonts' },
+	// Bare-caret Bullets / Numbering reach: 'paragraph' (PowerPoint, default) or 'list' (opt-in).
+	{ id: 'listConversionScope' },
 	{ id: 'allowExternalContent' },
 	// Host load limits (`PptxLoadLimits`), passed to `PptxHandler.load` for the deck the viewer opens.
 	{ id: 'limits' },

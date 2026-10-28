@@ -72,6 +72,7 @@ export type {
 
 // ── Shared API types ──
 export { createImageElementFromFile } from 'ooxml-ui/pptx';
+export type { ListConversionScope } from 'ooxml-ui/pptx';
 export type {
 	ViewerMode,
 	PowerPointViewerAPI,

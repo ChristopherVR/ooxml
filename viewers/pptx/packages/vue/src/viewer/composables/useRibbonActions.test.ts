@@ -7,7 +7,11 @@ import {
 	initializeInlineListDom,
 	attachInlineListController,
 } from 'ooxml-ui/pptx';
-import type { InlineListController, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import type {
+	InlineListController,
+	InlineTextEditSnapshot,
+	ListConversionScope,
+} from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, PptxSlide, TextSegment } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
@@ -41,6 +45,7 @@ function useHarness(
 	readInlineSnapshot?: () => InlineTextEditSnapshot | undefined,
 	formatInlineSnapshot?: (snapshot: InlineTextEditSnapshot) => boolean,
 	endInlineListSession?: () => void,
+	listConversionScope?: ListConversionScope,
 ) {
 	const currentSlide = ref(slideWith(element));
 	const updateElement = vi.fn((elementId: string, updates: Partial<PptxElement>) => {
@@ -56,6 +61,7 @@ function useHarness(
 		readInlineSnapshot,
 		formatInlineSnapshot,
 		endInlineListSession,
+		listConversionScope: () => listConversionScope,
 		canEdit: () => canEdit,
 		presenting: ref(false),
 		showMasterView: ref(false),
@@ -125,6 +131,61 @@ describe('ribbonUpdateTextStyle list commands', () => {
 		controller.dispose();
 		root.remove();
 	});
+
+	it.each([
+		[undefined, ['bullet', 'numbered', 'bullet']],
+		['paragraph', ['bullet', 'numbered', 'bullet']],
+		['list', ['numbered', 'numbered', 'numbered']],
+	] as const)(
+		'switches a caret list item to numbering with listConversionScope=%s',
+		(scope, expected) => {
+			const source = textElement();
+			Object.assign(source, {
+				text: 'A\nB\nC',
+				textSegments: [
+					{ text: 'A', style: {}, bulletInfo: { char: '•' } },
+					{ text: '\n', style: {}, isParagraphBreak: true },
+					{ text: 'B', style: {}, bulletInfo: { char: '•' } },
+					{ text: '\n', style: {}, isParagraphBreak: true },
+					{ text: 'C', style: {}, bulletInfo: { char: '•' } },
+				],
+			});
+			const seed = createInlineListSeed(source)!;
+			const root = document.createElement('div');
+			document.body.append(root);
+			initializeInlineListDom(root, seed);
+			const controller = attachInlineListController(root, seed);
+			try {
+				const node = root.children[1]!.firstElementChild!.firstChild!;
+				window.getSelection()!.setBaseAndExtent(node, 0, node, 0);
+				const read = controller.read();
+				if (read.kind !== 'supported') {
+					throw new Error(read.reason);
+				}
+				const harness = useHarness(
+					source,
+					true,
+					() => read.snapshot,
+					(snapshot) => controller.format(snapshot).kind === 'supported',
+					undefined,
+					scope,
+				);
+				harness.actions.ribbonUpdateTextStyle({ listType: 'numbered' });
+				expect(
+					buildParagraphs(harness.element()).map((paragraph) =>
+						paragraph.bulletMarker === undefined
+							? 'none'
+							: /^\d/.test(paragraph.bulletMarker)
+								? 'numbered'
+								: 'bullet',
+					),
+				).toStrictEqual(expected);
+			} finally {
+				controller.dispose();
+				root.remove();
+			}
+		},
+	);
 
 	it('formats the mounted live body and refuses model-only changes during composition', async () => {
 		const source = textElement();

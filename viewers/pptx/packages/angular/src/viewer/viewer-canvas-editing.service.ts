@@ -38,6 +38,7 @@ import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { InlineListSession } from './inline-list-session';
 import { textStylePatch } from './inspector-helpers';
+import { ListConversionScopeService } from './list-conversion-scope.service';
 import { patchTextStyle } from './ribbon-text-helpers';
 import { setCellText } from './table-data-helpers';
 import type { TableCellCommit } from './table-renderer.component';
@@ -65,6 +66,8 @@ export class ViewerCanvasEditingService {
 	private readonly autosave = inject(AutosaveService, { optional: true });
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
 	private readonly viewerOpts = inject(ViewerOptionsService, { optional: true });
+	/** The host `listConversionScope` input, for list formats sent from the inline editor. */
+	private readonly listScope = inject(ListConversionScopeService, { optional: true });
 
 	/** Id of the element being inline text-edited, or null. */
 	readonly editingId = signal<string | null>(null);
@@ -217,6 +220,7 @@ export class ViewerCanvasEditingService {
 				event.updates,
 				snapshot,
 				(next) => this.formatInlineSnapshot(next),
+				this.listScope?.options(),
 			);
 			return;
 		}

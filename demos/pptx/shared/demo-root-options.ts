@@ -15,6 +15,9 @@
  *   `?googleFontsBaseUrl=<url>` points it at a self-hosted CSS2 mirror,
  * - `?allowExternalContent=0` / `?allowExternalContent=1` set the host
  *   external-content switch (absent leaves it to the Trust Center option),
+ * - `?listConversionScope=list` / `?listConversionScope=paragraph` set how far
+ *   a bare caret's Bullets / Numbering reaches (absent keeps the PowerPoint
+ *   default, `'paragraph'`),
  * - `?maxInputBytes=`, `?maxUncompressedBytes=`, `?maxEntries=`,
  *   `?maxSlides=` and `?maxShapes=` set the matching field of the host
  *   `limits` option (a positive number; any other value is ignored).
@@ -34,6 +37,7 @@ export interface DemoRootOptions {
 	fitPadding?: number;
 	googleFonts?: false | { baseUrl: string };
 	allowExternalContent?: boolean;
+	listConversionScope?: 'paragraph' | 'list';
 	limits?: DemoLoadLimits;
 }
 
@@ -112,6 +116,10 @@ export function parseDemoRootOptions(search: string): DemoRootOptions {
 	const allowExternalContent = parseFlag(params.get('allowExternalContent'));
 	if (allowExternalContent !== undefined) {
 		options.allowExternalContent = allowExternalContent;
+	}
+	const listConversionScope = params.get('listConversionScope');
+	if (listConversionScope === 'paragraph' || listConversionScope === 'list') {
+		options.listConversionScope = listConversionScope;
 	}
 	const limits = parseLimits(params);
 	if (limits) {
