@@ -477,3 +477,73 @@ describe('collaboration-sync: field-schema completeness guard', () => {
 		expect(Object.keys(coveredKind).sort()).toStrictEqual(Object.keys(SLIDE_FIELD_KIND).sort());
 	});
 });
+
+describe('collaboration-sync: browser-local blob URLs never reach the room', () => {
+	const picture = (imageData: string): PptxElement =>
+		({
+			type: 'picture',
+			id: 'pic',
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			imagePath: 'ppt/media/image1.png',
+			imageData,
+		}) as unknown as PptxElement;
+	const slideOf = (element: PptxElement): PptxSlide =>
+		({ id: 's1', slideNumber: 1, elements: [element] }) as unknown as PptxSlide;
+	const imageDataOf = (doc: Y.Doc): unknown =>
+		(readSlidesFromYDoc(asDoc(doc))[0]?.elements[0] as { imageData?: unknown } | undefined)
+			?.imageData;
+
+	it('writes the package path of a loaded picture but not its blob URL', () => {
+		const result = roundTripElement(picture('blob:http://localhost/abc')) as unknown as {
+			imagePath?: string;
+			imageData?: string;
+		};
+		expect(result.imagePath).toBe('ppt/media/image1.png');
+		expect(result.imageData).toBeUndefined();
+	});
+
+	it('shares an inserted picture as its data URL', () => {
+		const result = roundTripElement(picture('data:image/png;base64,AAA')) as unknown as {
+			imageData?: string;
+		};
+		expect(result.imageData).toBe('data:image/png;base64,AAA');
+	});
+
+	it('keeps a peer data URL when a later whole-slide write carries a blob URL', () => {
+		const doc = new Y.Doc();
+		reconcileSlidesInYDoc([slideOf(picture('data:image/png;base64,AAA'))], asDoc(doc), factories);
+		reconcileSlidesInYDoc([slideOf(picture('blob:http://localhost/abc'))], asDoc(doc), factories);
+		expect(imageDataOf(doc)).toBe('data:image/png;base64,AAA');
+	});
+
+	it('does not write a blob URL on a reconcile into an empty room either', () => {
+		const doc = new Y.Doc();
+		reconcileSlidesInYDoc([slideOf(picture('blob:http://localhost/abc'))], asDoc(doc), factories);
+		expect(imageDataOf(doc)).toBeUndefined();
+		expect(JSON.stringify(doc.toJSON())).not.toContain('blob:');
+	});
+
+	it('skips a blob poster frame without clearing the shared one', () => {
+		const media = (posterFrameData: string): PptxElement =>
+			({
+				type: 'media',
+				id: 'vid',
+				x: 0,
+				y: 0,
+				width: 10,
+				height: 10,
+				mediaType: 'video',
+				posterFrameData,
+			}) as unknown as PptxElement;
+		const doc = new Y.Doc();
+		reconcileSlidesInYDoc([slideOf(media('data:image/png;base64,PPP'))], asDoc(doc), factories);
+		reconcileSlidesInYDoc([slideOf(media('blob:http://localhost/p'))], asDoc(doc), factories);
+		const poster = (
+			readSlidesFromYDoc(asDoc(doc))[0]?.elements[0] as { posterFrameData?: string } | undefined
+		)?.posterFrameData;
+		expect(poster).toBe('data:image/png;base64,PPP');
+	});
+});

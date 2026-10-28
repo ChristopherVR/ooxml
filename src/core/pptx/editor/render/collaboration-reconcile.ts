@@ -22,7 +22,7 @@
 
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
-import { getAssetsMap, reconcileAssetFields } from './collaboration-assets';
+import { getAssetsMap, isLocalOnlyUrl, reconcileAssetFields } from './collaboration-assets';
 import type { YArrayLike, YDocLike, YjsFactories, YMapLike } from './collaboration-sync';
 import {
 	COMPLEX_ELEMENT_FIELDS,
@@ -60,6 +60,10 @@ function reconcileScalars(
 			continue;
 		}
 		const next = rec[key];
+		if (isLocalOnlyUrl(next)) {
+			// Not shareable (see isLocalOnlyUrl): leave the room's value as it is.
+			continue;
+		}
 		const current = ymap.get(key);
 		if (next === undefined) {
 			if (current !== undefined) {

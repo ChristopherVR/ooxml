@@ -21,6 +21,16 @@ import type { YDocLike, YMapLike } from './collaboration-sync';
 export const YDOC_ASSETS_KEY = 'pptx:assets';
 
 /**
+ * A lob: URL only resolves inside the browser profile that created it, so it must never
+ * enter the shared document: a participant elsewhere would get a picture or poster whose
+ * source never loads. Loaded pictures keep their package path (imagePath), which every
+ * participant resolves from its own copy of the deck; inserted ones carry a data: URL.
+ */
+export function isLocalOnlyUrl(value: unknown): boolean {
+	return typeof value === 'string' && value.startsWith('blob:');
+}
+
+/**
  * Element fields large/binary enough to route through the asset map instead
  * of being embedded inline as a scalar or complex JSON-blob field.
  */
@@ -96,7 +106,7 @@ export function writeAssetFields(
 ): void {
 	for (const field of ASSET_ELEMENT_FIELDS) {
 		const value = rec[field];
-		if (typeof value === 'string' && value.length > 0) {
+		if (typeof value === 'string' && value.length > 0 && !isLocalOnlyUrl(value)) {
 			const key = assetKey(elementId, field);
 			if (assets.get(key) !== value) {
 				assets.set(key, value);
@@ -121,6 +131,10 @@ export function reconcileAssetFields(
 	for (const field of ASSET_ELEMENT_FIELDS) {
 		const refKey = ASSET_REF_KEYS[field];
 		const value = rec[field];
+		if (isLocalOnlyUrl(value)) {
+			// Not shareable: keep whatever the room already holds for this field.
+			continue;
+		}
 		if (typeof value === 'string' && value.length > 0) {
 			const key = assetKey(elementId, field);
 			if (assets.get(key) !== value) {

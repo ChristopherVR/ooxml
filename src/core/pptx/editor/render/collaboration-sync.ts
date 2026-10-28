@@ -34,6 +34,7 @@ import {
 	getAssetsMap,
 	isAssetRefKey,
 	isAssetVersionKey,
+	isLocalOnlyUrl,
 	readAssetFields,
 	writeAssetFields,
 } from './collaboration-assets';
@@ -338,7 +339,9 @@ export function writeElementToYMap(
 			continue;
 		}
 		if (SCALAR_ELEMENT_KEYS.has(key)) {
-			ymap.set(key, value);
+			if (!isLocalOnlyUrl(value)) {
+				ymap.set(key, value);
+			}
 		} else if (key === 'textSegments') {
 			if (Array.isArray(value)) {
 				const ytext = factories.createText();
@@ -394,7 +397,7 @@ export function writeSlideToYMap(
 ): void {
 	const rec = slide as unknown as Record<string, unknown>;
 	for (const key of SCALAR_SLIDE_KEYS) {
-		if (rec[key] !== undefined) {
+		if (rec[key] !== undefined && !isLocalOnlyUrl(rec[key])) {
 			ymap.set(key, rec[key]);
 		}
 	}
