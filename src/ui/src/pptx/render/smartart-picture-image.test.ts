@@ -36,7 +36,7 @@ it('shares cropped, effect-bearing image paint clipped to the authored preset', 
 	);
 });
 
-it.each(['mounted', 'removed', 'changed'] as const)(
+it.each(['mounted', 'removed', 'subtree', 'changed', 'replaced'] as const)(
 	'invalidates only a current %s image after asynchronous pixel paint',
 	async (state) => {
 		let complete!: (value: pixels.PicturePixelImage) => void;
@@ -65,6 +65,8 @@ it.each(['mounted', 'removed', 'changed'] as const)(
 		document.body.append(svg);
 		refreshSmartArtPictureImage({ currentTarget: image }, source);
 		if (state === 'removed') image.remove();
+		if (state === 'subtree') svg.remove();
+		if (state === 'replaced') image.setAttribute('href', 'replacement');
 		if (state === 'changed') source.fillImageUrl = 'data:image/png;base64,NEW';
 		const result = { url: 'data:image/png;base64,PROCESSED', width: 48, height: 32 };
 		cached.mockReturnValue(result);
@@ -75,7 +77,8 @@ it.each(['mounted', 'removed', 'changed'] as const)(
 			expect(image.getAttribute('data-office-picture-pixels-ready')).toBe('true');
 			refreshSmartArtPictureImage({ currentTarget: image }, source);
 			expect(probe).toHaveBeenCalledTimes(1);
-		} else expect(image.getAttribute('href')).toBe('pending');
+		} else
+			expect(image.getAttribute('href')).toBe(state === 'replaced' ? 'replacement' : 'pending');
 	},
 );
 

@@ -37,6 +37,7 @@ export function refreshSmartArtPictureImage(
 	if (!image || image.localName !== 'image' || !source || !needsSmartArtPictureRefresh(source))
 		return;
 	const key = sourceKey(source);
+	const originalHref = image.getAttribute('href');
 	if (pendingImages.get(image)?.key === key) return;
 	const state = { source, key, done: false };
 	pendingImages.set(image, state);
@@ -51,7 +52,8 @@ export function refreshSmartArtPictureImage(
 	void ready.then((result) => {
 		if (
 			!result ||
-			!image.parentNode ||
+			!image.isConnected ||
+			image.getAttribute('href') !== originalHref ||
 			pendingImages.get(image) !== state ||
 			sourceKey(source) !== key
 		)
