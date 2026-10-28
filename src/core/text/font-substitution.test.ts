@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { TABLE as APTOS_TABLE } from '../../../text/font-metrics/font-advance-widths-aptos.generated';
-import { TABLE as ARIAL_TABLE } from '../../../text/font-metrics/font-advance-widths-arial.generated';
-import { TABLE as CALIBRI_LIGHT_TABLE } from '../../../text/font-metrics/font-advance-widths-calibri-light.generated';
-import { TABLE as CALIBRI_TABLE } from '../../../text/font-metrics/font-advance-widths-calibri.generated';
-import { TABLE as SEGOE_UI_TABLE } from '../../../text/font-metrics/font-advance-widths-segoe-ui.generated';
-import { TABLE as TIMES_NEW_ROMAN_TABLE } from '../../../text/font-metrics/font-advance-widths-times-new-roman.generated';
-import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-widths.generated';
+import { TABLE as APTOS_TABLE } from './font-metrics/font-advance-widths-aptos.generated';
+import { TABLE as ARIAL_TABLE } from './font-metrics/font-advance-widths-arial.generated';
+import { TABLE as CALIBRI_LIGHT_TABLE } from './font-metrics/font-advance-widths-calibri-light.generated';
+import { TABLE as CALIBRI_TABLE } from './font-metrics/font-advance-widths-calibri.generated';
+import { TABLE as SEGOE_UI_TABLE } from './font-metrics/font-advance-widths-segoe-ui.generated';
+import { TABLE as TIMES_NEW_ROMAN_TABLE } from './font-metrics/font-advance-widths-times-new-roman.generated';
+import type { FontAdvanceTable } from './font-metrics/font-advance-widths.generated';
 import {
 	FONT_SUBSTITUTION_MAP,
 	PANOSE_FAMILY_MAP,
@@ -415,7 +415,7 @@ describe('fONT_SUBSTITUTION_MAP', () => {
 		const genericFamilies = new Set(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy']);
 		for (const [_fontName, chain] of Object.entries(FONT_SUBSTITUTION_MAP)) {
 			const lastItem = chain[chain.length - 1];
-			expect(genericFamilies.has(lastItem)).toBeTruthy();
+			expect(genericFamilies.has(lastItem ?? '')).toBeTruthy();
 		}
 	});
 
@@ -458,7 +458,7 @@ describe('pANOSE constants', () => {
 		expect(PANOSE_SANS_SERIF_STYLES.has(11)).toBeTruthy();
 		expect(PANOSE_SANS_SERIF_STYLES.has(12)).toBeTruthy();
 		expect(PANOSE_SANS_SERIF_STYLES.has(13)).toBeTruthy();
-		// Value 2 is Cove — not sans-serif
+		// Value 2 is Cove - not sans-serif
 		expect(PANOSE_SANS_SERIF_STYLES.has(2)).toBeFalsy();
 	});
 });
@@ -488,7 +488,7 @@ describe('end-to-end PANOSE font substitution', () => {
 	});
 
 	it('courier New PANOSE string → monospace classification', () => {
-		// Courier New: 02070309020205020404 — bProportion=9 (monospace)
+		// Courier New: 02070309020205020404 - bProportion=9 (monospace)
 		const panose = parsePanoseString('02070309020205020404');
 		expect(panose).toBeDefined();
 		expect(classifyPanose(panose!)).toBe('monospace');

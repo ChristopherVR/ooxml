@@ -1,5 +1,23 @@
 # Provenance
 
+## Shared font selection and Word script layout (2026-10-28)
+
+Source: ChristopherVR/ooxml at `b36e9472a`.
+
+- `src/core/text/{font-substitution,font-substitution-map,font-style-name,panose}.ts`
+  and the adjacent substitution tests come from
+  `src/core/pptx/core/utils/font-substitution.ts` and its tests. The old module is a
+  compatibility facade. Changes: strict indexing, case-insensitive own-key lookup,
+  and sanitised CSS font names. Ordered fallback chains are retained.
+- `text/metric-font-family.ts` extracts the independent pagination policy from
+  `src/core/docx/layout/fonts.ts`, whose public adapter and metric fallback order remain.
+- `text/script-fonts.ts` extracts font-slot resolution and script decisions from
+  `src/ui/src/pptx/render/text-script-fonts.ts`; the UI retains span decoration only.
+  It reuses the existing Unicode detector, coalesces equal adjacent font choices,
+  and reports UTF-16 offsets. Word's new layout adapter consumes the shared segmenter
+  for literal text, inherited script fonts and theme slots. Generated fields,
+  hidden text, symbols and object source mappings keep their existing handling.
+
 ## Shared chart appearance conversions (2026-10-26)
 
 Source: ChristopherVR/ooxml at `b0f3279ac`, `src/ui/src/chart/format-pane-intent.ts`.

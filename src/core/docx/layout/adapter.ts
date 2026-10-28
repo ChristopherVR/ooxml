@@ -1,3 +1,4 @@
+import { scriptLayoutRuns } from './script-fonts';
 import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun } from '../index';
 import {
 	computeListLabels,
@@ -263,7 +264,13 @@ export function adaptDocumentModel(
 			resolved.firstLineTwips !== undefined || resolved.hangingTwips !== undefined;
 		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
 		const runs = paragraph.runs.flatMap((run) =>
-			symbolSegments(run).map((segment) => adaptRun(segment, paragraph.style, markLabel)),
+			symbolSegments(run).flatMap((segment) => {
+				const adapted = adaptRun(segment, paragraph.style, markLabel);
+				// Fields, note markers and symbol codes have their own display/source rules.
+				if (segment.field || segment.noteReference || segment.noteMark || symbolOnly(segment))
+					return [adapted];
+				return scriptLayoutRuns(adapted, effective(segment, paragraph.style).formatting, theme);
+			}),
 		);
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
 		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);

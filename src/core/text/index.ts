@@ -15,3 +15,7 @@ export * from './font-metrics/advance-width';
 export { parseTsv, toTsv } from './tsv';
 export * from './locale-number';
 export * from './realign-runs';
+
+export * from './font-substitution';
+export * from './metric-font-family';
+export * from './script-fonts';
