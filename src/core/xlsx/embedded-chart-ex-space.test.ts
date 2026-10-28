@@ -34,6 +34,33 @@ async function embedded() {
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
 describe('embedded ChartEx source transactions', () => {
+	it('targets the displayed part when an earlier extended family cannot be painted', async () => {
+		const book = await loadXlsx(fixture());
+		for (const ws of book.sheets)
+			ws.drawings = ws.drawings.filter((d) => d.kind === 'unsupported' && d.chartExSpace);
+		const bytes = await saveXlsx(book),
+			first = (await readEmbeddedChartExSpace(bytes))!;
+		const zip = await JSZip.loadAsync(bytes),
+			original = first.sourceXml.replace('layoutId="waterfall"', 'layoutId="surface"');
+		zip.file(first.partName, original);
+		const mixed = await zip.generateAsync({ type: 'uint8array' });
+		const displayed = (await readEmbeddedChart(mixed))!;
+		expect(displayed.chart.partName).not.toBe(first.partName);
+		const target = (await readEmbeddedChartExSpace(mixed, displayed.chart.partName))!;
+		expect(target.space.plotArea.series[0]!.layoutId).toBe('clusteredColumn');
+		const output = await writeEmbeddedChartExSpace(
+			mixed,
+			setChartExTitle(target.space, 'Exact target'),
+			target.partName,
+		);
+		expect((await readEmbeddedChart(output))!.view.title).toBe('Exact target');
+		expect(await (await JSZip.loadAsync(output)).file(first.partName)!.async('string')).toBe(
+			original,
+		);
+		await expect(
+			writeEmbeddedChartExSpace(mixed, target.space, 'xl/charts/missing.xml'),
+		).rejects.toThrow(/no extended chart/u);
+	});
 	it('admits ChartEx for Visio rendering and preserves a no-op workbook byte for byte', async () => {
 		const bytes = await embedded();
 		const found = (await readEmbeddedChartExSpace(bytes))!;

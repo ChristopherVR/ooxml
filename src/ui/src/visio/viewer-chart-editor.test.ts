@@ -47,6 +47,46 @@ const isEmf = (bytes: Uint8Array) =>
 	new DataView(bytes.buffer, bytes.byteOffset).getUint32(40, true) === 0x464d4520;
 
 describe('chart object Edit Data and Format Chart', () => {
+	it('formats the displayed part after an unpainted extended chart, preserving the earlier source', async () => {
+		const book = await loadXlsx(
+			readFileSync('../core/xlsx/__fixtures__/excel-chart-families.xlsx'),
+		);
+		for (const ws of book.sheets)
+			ws.drawings = ws.drawings.filter((d) => d.kind === 'unsupported' && d.chartExSpace);
+		const bytes = await saveXlsx(book),
+			first = (await readEmbeddedChartExSpace(bytes))!;
+		const zip = await JSZip.loadAsync(bytes),
+			original = first.sourceXml.replace('layoutId="waterfall"', 'layoutId="surface"');
+		zip.file(first.partName, original);
+		const submit = vi.fn<Submit>(async () => {}),
+			{ editor, press } = setup(submit);
+		expect(
+			await editor.open('format', TARGET, await zip.generateAsync({ type: 'uint8array' })),
+		).toBe(true);
+		expect(editor.chartExSpace?.plotArea.series[0]?.layoutId).toBe('clusteredColumn');
+		editor.pane.dispatchEvent(
+			new CustomEvent('office-chart-format-edit', {
+				detail: {
+					intent: {
+						op: 'fill',
+						target: { kind: 'series', seriesIndex: 0 },
+						fill: { kind: 'solid', color: { kind: 'srgb', value: 'FF0000', transforms: [] } },
+					},
+				},
+			}),
+		);
+		press('OK');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalled());
+		const output = submit.mock.calls[0]![0].workbook,
+			painted = (await readEmbeddedChart(output))!;
+		expect(
+			(await readEmbeddedChartExSpace(output, painted.chart.partName))!.space.plotArea.series[0]!
+				.spPr?.fill,
+		).toMatchObject({ kind: 'solid', color: { value: 'FF0000' } });
+		expect(await (await JSZip.loadAsync(output)).file(first.partName)!.async('string')).toBe(
+			original,
+		);
+	});
 	it('edits embedded ChartEx through the shared data sheet and formatting pane', async () => {
 		const book = await loadXlsx(
 			readFileSync('../core/xlsx/__fixtures__/excel-chart-families.xlsx'),

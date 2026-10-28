@@ -19,11 +19,12 @@ export interface EmbeddedChartExSpace {
 	editable: boolean;
 	scheme: ChartColorScheme;
 }
-function locate(book: Workbook): EmbeddedChartExSpace | undefined {
+function locate(book: Workbook, partName?: string): EmbeddedChartExSpace | undefined {
 	for (const [sheet, ws] of book.sheets.entries())
 		for (const [index, drawing] of ws.drawings.entries()) {
 			if (drawing.kind !== 'unsupported' || !drawing.chartExSpace || !drawing.chartExPartName)
 				continue;
+			if (partName !== undefined && drawing.chartExPartName !== partName) continue;
 			const bytes = book.source?.parts.get(drawing.chartExPartName);
 			if (!bytes) continue;
 			let space = drawing.chartExSpace;
@@ -48,9 +49,10 @@ function locate(book: Workbook): EmbeddedChartExSpace | undefined {
 /** The first extended chart of an embedded workbook, with live local source data when available. */
 export async function readEmbeddedChartExSpace(
 	bytes: Uint8Array,
+	partName?: string,
 ): Promise<EmbeddedChartExSpace | undefined> {
 	try {
-		return locate(await loadXlsx(bytes));
+		return locate(await loadXlsx(bytes), partName);
 	} catch {
 		return undefined;
 	}
@@ -59,9 +61,10 @@ export async function readEmbeddedChartExSpace(
 export async function writeEmbeddedChartExSpace(
 	bytes: Uint8Array,
 	space: ChartExSpace,
+	partName?: string,
 ): Promise<Uint8Array> {
 	const book = await loadXlsx(bytes);
-	const found = locate(book);
+	const found = locate(book, partName);
 	if (!found) throw new Error('The embedded workbook has no extended chart.');
 	if (JSON.stringify(found.space) === JSON.stringify(space)) return bytes;
 	// Validate before any source-cell mutation, including callers bypassing a host UI.

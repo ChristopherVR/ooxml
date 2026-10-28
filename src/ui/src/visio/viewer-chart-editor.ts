@@ -75,6 +75,7 @@ export class ChartObjectEditor {
 	#bytes: Uint8Array | undefined;
 	#space: ChartSpace | undefined;
 	#exSpace: ChartExSpace | undefined;
+	#exPartName: string | undefined;
 	#theme: DrawingColorTheme | undefined;
 	#busy = false;
 	constructor(
@@ -157,7 +158,10 @@ export class ChartObjectEditor {
 		const displayed = await readEmbeddedChart(workbook);
 		const candidate = await readEmbeddedChartSpace(workbook);
 		const classic = candidate?.partName === displayed?.chart.partName ? candidate : undefined;
-		const extended = classic ? undefined : await readEmbeddedChartExSpace(workbook);
+		const extended =
+			classic || !displayed?.chart.partName
+				? undefined
+				: await readEmbeddedChartExSpace(workbook, displayed.chart.partName);
 		const found = classic ?? extended;
 		if (!found) return false;
 		const scheme = found.scheme as unknown as Readonly<Record<string, string>>;
@@ -174,6 +178,7 @@ export class ChartObjectEditor {
 		this.#buttons.get('OK')!.disabled = !found.editable;
 		this.#space = undefined;
 		this.#exSpace = undefined;
+		this.#exPartName = extended?.partName;
 		if (classic) this.#update(classic.space);
 		else if (extended) this.#updateEx(extended.space);
 		if (!found.editable) {
@@ -223,7 +228,7 @@ export class ChartObjectEditor {
 		try {
 			const workbook = space
 				? await writeEmbeddedChartSpace(bytes, space)
-				: await writeEmbeddedChartExSpace(bytes, extended!);
+				: await writeEmbeddedChartExSpace(bytes, extended!, this.#exPartName);
 			const embedded = await readEmbeddedChart(workbook);
 			if (!embedded) throw new Error('The chart could not be written.');
 			const height = Math.min(
