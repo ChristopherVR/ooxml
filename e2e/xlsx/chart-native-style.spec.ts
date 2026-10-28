@@ -118,14 +118,19 @@ for (const framework of FRAMEWORKS)
 		const chart = await openNativeStyle(page, 209, framework);
 		await chart.locator('g[data-chart-series="1"][data-chart-point="0"] rect').dblclick();
 		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
+		// Fill and shadow expose controls with the same accessible names.
+		const fillControls = pane.locator('[slot="fill"]');
 		// The shared Format pane picks a series among the chart elements.
 		const series = pane.getByRole('combobox', { name: 'Chart element', exact: true });
-		const fill = pane.getByRole('combobox', { name: 'Fill', exact: true });
+		const fill = fillControls.getByRole('combobox', { name: 'Fill', exact: true });
 		await expect(series).toHaveValue('series:1');
 		await expect(fill).toHaveValue('gradient');
 		await fill.selectOption('solid');
-		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
-		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		const transparency = fillControls.getByRole('spinbutton', {
+			name: 'Transparency',
+			exact: true,
+		});
+		await fillControls.getByRole('button', { name: 'Color', exact: true }).click();
 		await page.getByRole('menuitemradio', { name: 'Accent 1, Lighter 40%', exact: true }).click();
 		await transparency.fill('37');
 		await transparency.press('Tab');
@@ -133,7 +138,7 @@ for (const framework of FRAMEWORKS)
 			'fill',
 			/^rgba\(.*0\.63\)$/,
 		);
-		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		await fillControls.getByRole('button', { name: 'Color', exact: true }).click();
 		await page.getByRole('menuitemradio', { name: 'Accent 1, Lighter 40%', exact: true }).click();
 		await expect(transparency).toHaveValue('37');
 		const bytes = await editor(page).evaluate(async (node) =>
@@ -161,7 +166,10 @@ for (const framework of FRAMEWORKS)
 		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
 		await expect(fill).toHaveValue('solid');
 		await expect(transparency).toHaveValue('37');
-		const transparencySlider = pane.getByRole('slider', { name: 'Transparency', exact: true });
+		const transparencySlider = fillControls.getByRole('slider', {
+			name: 'Transparency',
+			exact: true,
+		});
 		await transparencySlider.focus();
 		await transparencySlider.press('Home');
 		await expect(transparency).toHaveValue('0');
@@ -185,9 +193,11 @@ for (const framework of FRAMEWORKS)
 		const chart = await openNativeStyle(page, 209, framework);
 		await chart.locator('g[data-chart-series="1"][data-chart-point="0"] rect').dblclick();
 		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
-		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
+		// Fill and shadow expose controls with the same accessible names.
+		const fillControls = pane.locator('[slot="fill"]');
+		const stops = fillControls.getByRole('group', { name: 'Gradient stops', exact: true });
 		await expect(stops.getByRole('button')).toHaveCount(3);
-		const dragPosition = pane.getByRole('spinbutton', { name: 'Position', exact: true });
+		const dragPosition = fillControls.getByRole('spinbutton', { name: 'Position', exact: true });
 		await stops.scrollIntoViewIfNeeded();
 		const paintBox = await stops.locator('.office-gradient-stop-paint').boundingBox();
 		const markerBox = await stops
@@ -244,8 +254,8 @@ for (const framework of FRAMEWORKS)
 			(node as unknown as { readOnly: boolean }).readOnly = false;
 		});
 		await expect(dragPosition).toBeEnabled();
-		const direction = pane.getByRole('button', { name: 'Direction', exact: true });
-		const initialAngle = await pane
+		const direction = fillControls.getByRole('button', { name: 'Direction', exact: true });
+		const initialAngle = await fillControls
 			.getByRole('spinbutton', { name: 'Angle', exact: true })
 			.inputValue();
 		await direction.press('ArrowDown');
@@ -261,22 +271,27 @@ for (const framework of FRAMEWORKS)
 		).toBeFocused();
 		await page.keyboard.press('Enter');
 		await expect(directionPopup).toBeHidden();
-		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue('315');
+		await expect(fillControls.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue(
+			'315',
+		);
 		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
-		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue(
+		await expect(fillControls.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue(
 			initialAngle,
 		);
 		await stops.getByRole('button', { name: 'Gradient stop 2', exact: true }).click();
-		const angle = pane.getByRole('spinbutton', { name: 'Angle', exact: true });
+		const angle = fillControls.getByRole('spinbutton', { name: 'Angle', exact: true });
 		await angle.fill('54');
 		await angle.press('Tab');
-		const position = pane.getByRole('spinbutton', { name: 'Position', exact: true });
+		const position = fillControls.getByRole('spinbutton', { name: 'Position', exact: true });
 		await position.fill('23');
 		await position.press('Tab');
-		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
+		const transparency = fillControls.getByRole('spinbutton', {
+			name: 'Transparency',
+			exact: true,
+		});
 		await transparency.fill('37');
 		await transparency.press('Tab');
-		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		await fillControls.getByRole('button', { name: 'Color', exact: true }).click();
 		await page.getByRole('menuitemradio', { name: 'Red', exact: true }).click();
 		await expect(chart.locator('linearGradient[id$="-s1"] stop').nth(1)).toHaveAttribute(
 			'stop-opacity',
@@ -286,7 +301,7 @@ for (const framework of FRAMEWORKS)
 			'stop-color',
 			'#FF0000',
 		);
-		const brightness = pane.getByRole('spinbutton', { name: 'Brightness', exact: true });
+		const brightness = fillControls.getByRole('spinbutton', { name: 'Brightness', exact: true });
 		for (const [value, paint] of [
 			[-42, '#940000'],
 			[100, '#FFFFFF'],
@@ -304,16 +319,16 @@ for (const framework of FRAMEWORKS)
 		await brightness.fill('101');
 		await brightness.press('Tab');
 		await expect(brightness).toHaveValue('37');
-		await pane.getByRole('button', { name: 'Add gradient stop', exact: true }).click();
+		await fillControls.getByRole('button', { name: 'Add gradient stop', exact: true }).click();
 		await expect(stops.getByRole('button')).toHaveCount(4);
 		await expect(
 			stops.getByRole('button', { name: 'Gradient stop 4', exact: true }),
 		).toHaveAttribute('aria-pressed', 'true');
-		await pane.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
-		await pane.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
+		await fillControls.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
+		await fillControls.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
 		await expect(stops.getByRole('button')).toHaveCount(2);
 		await expect(
-			pane.getByRole('button', { name: 'Remove gradient stop', exact: true }),
+			fillControls.getByRole('button', { name: 'Remove gradient stop', exact: true }),
 		).toBeDisabled();
 		const bytes = await editor(page).evaluate(async (node) =>
 			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
@@ -350,8 +365,8 @@ for (const framework of FRAMEWORKS)
 			['Brightness', '-100', '37'],
 			['Transparency', '0', '37'],
 		] as const) {
-			const slider = pane.getByRole('slider', { name: label, exact: true });
-			const number = pane.getByRole('spinbutton', { name: label, exact: true });
+			const slider = fillControls.getByRole('slider', { name: label, exact: true });
+			const number = fillControls.getByRole('spinbutton', { name: label, exact: true });
 			await expect(slider).toHaveValue(original);
 			await slider.press('Home');
 			await expect(number).toHaveValue(min);
@@ -369,7 +384,7 @@ for (const framework of FRAMEWORKS)
 		await expect(brightness).toBeDisabled();
 		await expect(direction).toBeDisabled();
 		for (const label of ['Position', 'Brightness', 'Transparency'])
-			await expect(pane.getByRole('slider', { name: label, exact: true })).toBeDisabled();
+			await expect(fillControls.getByRole('slider', { name: label, exact: true })).toBeDisabled();
 		await expect(stops.getByRole('button').first()).toBeDisabled();
 		expect(errors).toEqual([]);
 	});
