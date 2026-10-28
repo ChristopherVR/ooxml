@@ -75,6 +75,18 @@ describe('embedded ChartEx source transactions', () => {
 		).toBe('<keep exact="true"/>');
 		expect(back.partName).toBe(found.partName);
 	});
+	it('renders live hidden-name data when Office omits the ChartEx caches', async () => {
+		const bytes = await embedded();
+		const found = (await readEmbeddedChartExSpace(bytes))!;
+		const zip = await JSZip.loadAsync(bytes);
+		zip.file(found.partName, found.sourceXml.replace(/<cx:lvl\b[^>]*>[\s\S]*?<\/cx:lvl>/gu, ''));
+		const uncached = await zip.generateAsync({ type: 'uint8array' });
+		const chart = (await readEmbeddedChart(uncached))!;
+		expect(chart.view.categories).toHaveLength(6);
+		expect(chart.view.series[0]!.values).toEqual(
+			chartExSpaceDataSheet(found.space).series[0]!.values,
+		);
+	});
 	it('refuses edits with unmodeled content while preserving an unchanged source', async () => {
 		const bytes = await embedded();
 		const found = (await readEmbeddedChartExSpace(bytes))!;
