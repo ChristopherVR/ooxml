@@ -235,6 +235,27 @@ describe('getTextWarp - no warp', () => {
 		expect(def?.strategy).toBe('glyph');
 	});
 
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		// Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row.
+		const rows = (def: ReturnType<typeof getTextWarp>) =>
+			new Set((def as TextWarpGlyphDef).glyphs.map((g) => g.y)).size;
+		const long = getTextWarp(
+			makeTextElement('textPlain', {
+				text: 'The quick brown fox jumps over the lazy dog and then keeps on running far away',
+			}),
+		);
+		expect(long?.strategy).toBe('glyph');
+		expect(rows(long)).toBeGreaterThan(1);
+		// A word far wider than its small square box stays whole on one row.
+		const word = getTextWarp({
+			...makeTextElement('textPlain', { text: 'schedule' }),
+			width: 40,
+			height: 40,
+		} as PptxElement);
+		expect(rows(word)).toBe(1);
+		expect((word as TextWarpGlyphDef).glyphs.map((g) => g.char).join('')).toBe('schedule');
+	});
+
 	it('returns undefined for unknown preset', () => {
 		expect(getTextWarp(makeTextElement('textFoo', { text: 'hi' }))).toBeUndefined();
 	});

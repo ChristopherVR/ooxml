@@ -67,6 +67,19 @@ function representativeTextEl(node: Element): Element {
 	return node.tagName.toLowerCase() === 'g' ? (node.querySelector('text') ?? node) : node;
 }
 
+/** Far wider than its box at the default font size, so it must wrap. */
+const LONG_PARAGRAPH =
+	'The quick brown fox jumps over the lazy dog and then keeps on running far away';
+
+/** Distinct unwarped baselines (`y`) among the glyphs: one per wrapped row. */
+function glyphRowCount(root: ParentNode): number {
+	return new Set(
+		[...root.querySelectorAll('svg > text, svg > g[data-glyph-slices] > text')].map((t) =>
+			t.getAttribute('y'),
+		),
+	).size;
+}
+
 function warpedText(overrides: Partial<PptxElement> = {}): PptxElement {
 	return {
 		type: 'text',
@@ -146,6 +159,30 @@ describe('wordArtText', () => {
 		expect(wrapper.find('textPath').exists()).toBeFalsy();
 		const glyphTexts = logicalGlyphElements(wrapper.element).map(representativeTextEl);
 		expect(glyphTexts.map((t) => t.textContent).join('')).toBe('Hello');
+	});
+
+	it('wraps a long textPlain paragraph into several rows, but keeps a single word on one', () => {
+		const long = mount(WordArtText, {
+			props: {
+				element: warpedText({ text: LONG_PARAGRAPH, textStyle: { textWarpPreset: 'textPlain' } }),
+				zIndex: 0,
+			},
+		});
+		expect(glyphRowCount(long.element)).toBeGreaterThan(1);
+		// A word far wider than its small square box stays whole on one row.
+		const word = mount(WordArtText, {
+			props: {
+				element: warpedText({
+					text: 'schedule',
+					width: 40,
+					height: 40,
+					textStyle: { textWarpPreset: 'textPlain' },
+				}),
+				zIndex: 0,
+			},
+		});
+		expect(glyphRowCount(word.element)).toBe(1);
+		expect(logicalGlyphElements(word.element)).toHaveLength('schedule'.length);
 	});
 
 	it('renders nothing when no warp preset is set', () => {

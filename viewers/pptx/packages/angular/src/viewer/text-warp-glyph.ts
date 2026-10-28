@@ -131,6 +131,7 @@ export function buildGlyphWarpDef(
 		adj1,
 		adj2,
 		getGlyphOutline,
+		elementStyle,
 	);
 	const glyphs: WarpGlyph[] = paragraphs.flatMap((paragraph, lineIndex) => {
 		const segments = paragraph.segments;

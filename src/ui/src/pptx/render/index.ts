@@ -97,6 +97,7 @@ export * from './text-warp-envelope-block';
 export * from './text-warp-envelope-layout';
 export * from './text-warp-envelope-map';
 export * from './text-warp-envelope-types';
+export * from './text-warp-envelope-wrap';
 export * from './text-warp-glyph-outline';
 export * from './text-warp-glyph-slicing';
 export * from './text-warp-glyph-trace';

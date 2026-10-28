@@ -130,6 +130,7 @@ function renderGlyphWarp(
 		style.textWarpAdj,
 		style.textWarpAdj2,
 		getGlyphOutline,
+		style,
 	);
 	paragraphs.forEach((paragraph, lineIndex) => {
 		const segments = paragraph.segments;

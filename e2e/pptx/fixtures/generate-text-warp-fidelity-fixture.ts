@@ -1,8 +1,8 @@
 /**
  * Generates `text-warp-fidelity.pptx`: WordArt (`a:prstTxWarp`) text boxes
  * covering the "envelope" (plain/inflate/deflate/can) and former "simple"
- * (slant/fade/cascade) preset families, plus arch and no-warp controls and a
- * multi-paragraph envelope case.
+ * (slant/fade/cascade) preset families, plus arch and no-warp controls, a
+ * multi-paragraph envelope case, and a long `textPlain` paragraph that wraps.
  *
  * Every single-paragraph shape here exercises the common WordArt authoring
  * path, which exposed two now-fixed bugs:
@@ -89,6 +89,11 @@ interface WarpSpec {
 	 * family instead of parsing a font file.
 	 */
 	fontFamily?: string;
+	/**
+	 * `a:bodyPr/@wrap`; defaults to `none`. `square` wraps each paragraph at
+	 * the box width less its insets before the warp is applied.
+	 */
+	wrap?: 'square' | 'none';
 }
 
 const WARPS: WarpSpec[] = [
@@ -152,6 +157,21 @@ const WARPS: WarpSpec[] = [
 		fontSizePt: 14,
 		paragraphs: ['schedule'],
 	},
+	// A long multi-word `textPlain` paragraph in an ordinary wrapping text box
+	// (`wrap="square"`): PowerPoint wraps it at the box width less the insets
+	// first and then stretches the wrapped rows to fill the shape, rather than
+	// squeezing the whole paragraph onto one row.
+	{
+		name: 'plain-paragraph',
+		prst: 'textPlain',
+		x: 320,
+		y: 300,
+		widthPt: 170,
+		heightPt: 80,
+		fontSizePt: 12,
+		paragraphs: ['Plain stretches the wrapped block of text to fill the whole shape'],
+		wrap: 'square',
+	},
 ];
 
 const WIDTH_PT = 220;
@@ -171,11 +191,12 @@ const warpShapeXml = (spec: WarpSpec, index: number) => {
 	const fontSizePt = spec.fontSizePt ?? DEFAULT_FONT_SIZE_PT;
 	const fontFamily = spec.fontFamily ?? 'Arial';
 	const paragraphs = spec.paragraphs ?? ['Warped'];
+	const wrap = spec.wrap ?? 'none';
 	return `<p:sp><p:nvSpPr><p:cNvPr id="${index + 2}" name="${spec.name}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${
 		spec.x * EMU_PER_PT
 	}" y="${spec.y * EMU_PER_PT}"/><a:ext cx="${widthPt * EMU_PER_PT}" cy="${
 		heightPt * EMU_PER_PT
-	}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="none"><a:prstTxWarp prst="${
+	}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="${wrap}"><a:prstTxWarp prst="${
 		spec.prst
 	}">${avLst}</a:prstTxWarp></a:bodyPr><a:lstStyle/>${paragraphs.map((p) => paragraphXml(p, fontSizePt, fontFamily)).join('')}</p:txBody></p:sp>`;
 };

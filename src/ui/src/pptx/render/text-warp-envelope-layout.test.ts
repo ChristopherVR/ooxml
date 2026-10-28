@@ -139,6 +139,113 @@ describe('buildGlyphEnvelopeBlock', () => {
 	});
 });
 
+describe('buildGlyphEnvelopeBlock wrapping (a:bodyPr insets and wrap)', () => {
+	// 'one two three four five six' is 27 x 12 = 324 wide.
+	const LONG = 'one two three four five six';
+
+	function rowsOf(line: { y: number }[]): number {
+		return new Set(line.map((g) => g.y)).size;
+	}
+
+	it('wraps a long textPlain paragraph at the box width less the insets, then fills the box', () => {
+		const [line] = buildGlyphEnvelopeBlock(
+			'textPlain',
+			[[seg(LONG)]],
+			200,
+			100,
+			'center',
+			undefined,
+			undefined,
+			boxLookup,
+			{},
+		);
+		expect(rowsOf(line)).toBeGreaterThan(1);
+		const points = line.flatMap((g) => (g.outlinePath ? pathPoints(g.outlinePath) : []));
+		expect(Math.min(...points.map((p) => p.x))).toBeCloseTo(0, 1);
+		expect(Math.max(...points.map((p) => p.x))).toBeCloseTo(200, 1);
+		expect(Math.min(...points.map((p) => p.y))).toBeCloseTo(0, 1);
+		expect(Math.max(...points.map((p) => p.y))).toBeCloseTo(100, 1);
+	});
+
+	it('wraps more rows as the insets grow', () => {
+		const rows = (inset: number) =>
+			rowsOf(
+				buildGlyphEnvelopeBlock(
+					'textPlain',
+					[[seg(LONG)]],
+					400,
+					100,
+					'center',
+					undefined,
+					undefined,
+					undefined,
+					{
+						bodyInsetLeft: inset,
+						bodyInsetRight: inset,
+					},
+				)[0],
+			);
+		expect(rows(0)).toBe(1);
+		expect(rows(100)).toBeGreaterThan(1);
+	});
+
+	it('keeps a single word wider than the box on one row', () => {
+		const [line] = buildGlyphEnvelopeBlock(
+			'textPlain',
+			[[seg('schedule')]],
+			40,
+			40,
+			'center',
+			undefined,
+			undefined,
+			undefined,
+			{},
+		);
+		expect(rowsOf(line)).toBe(1);
+		expect(line.map((g) => g.char).join('')).toBe('schedule');
+	});
+
+	it('does not wrap for wrap="none" or without a text body', () => {
+		const none = buildGlyphEnvelopeBlock(
+			'textPlain',
+			[[seg(LONG)]],
+			200,
+			100,
+			'center',
+			undefined,
+			undefined,
+			undefined,
+			{
+				textWrap: 'none',
+			},
+		);
+		expect(rowsOf(none[0])).toBe(1);
+		expect(none[0].map((g) => g.char).join('')).toBe(LONG);
+		expect(rowsOf(buildGlyphEnvelopeBlock('textPlain', [[seg(LONG)]], 200, 100, 'center')[0])).toBe(
+			1,
+		);
+	});
+
+	it('wraps every paragraph and still returns one array per paragraph', () => {
+		const lines = buildGlyphEnvelopeBlock(
+			'textInflate',
+			[[seg(LONG)], [seg('end')]],
+			200,
+			160,
+			'center',
+			undefined,
+			undefined,
+			undefined,
+			{ textWrap: 'square' },
+		);
+		expect(lines).toHaveLength(2);
+		expect(rowsOf(lines[0])).toBeGreaterThan(1);
+		expect(Math.min(...lines[1].map((g) => g.y))).toBeGreaterThan(
+			Math.max(...lines[0].map((g) => g.y)),
+		);
+	});
+});
+
 describe('buildGlyphEnvelope', () => {
 	it('is the single-paragraph case of buildGlyphEnvelopeBlock', () => {
 		const single = buildGlyphEnvelope('textCanDown', [seg('abc')], 300, 100, 'center', 20000);

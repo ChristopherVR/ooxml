@@ -127,6 +127,7 @@
 			textElement?.textStyle?.textWarpAdj,
 			textElement?.textStyle?.textWarpAdj2,
 			getGlyphOutline,
+			textElement?.textStyle,
 		);
 		return paragraphs.flatMap((paragraph, lineIndex) => {
 			const placements = perLine[lineIndex] ?? [];
