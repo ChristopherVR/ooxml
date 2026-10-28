@@ -5,6 +5,7 @@ import { FRAMEWORKS, editor, openLanding } from './helpers';
 
 for (const framework of FRAMEWORKS) {
 	test(`${framework}: native picture SmartArt reflows and saves its images`, async ({ page }) => {
+		await page.setViewportSize({ width: 1700, height: 950 });
 		await openLanding(page, framework);
 		const bytes = await withNativePictureLayout(
 			readFileSync(
@@ -22,7 +23,10 @@ for (const framework of FRAMEWORKS) {
 			});
 		const art = editor(page).locator('office-ui-smartart').first();
 		await expect(art.locator('image')).toHaveCount(3);
-		await art.click();
+		await editor(page)
+			.locator('.xg-obj:has(office-ui-smartart)')
+			.first()
+			.click({ position: { x: 20, y: 20 } });
 		await editor(page).getByRole('tab', { name: 'SmartArt Design', exact: true }).click();
 		await editor(page).getByRole('button', { name: 'Text Pane', exact: true }).first().click();
 		await editor(page)
