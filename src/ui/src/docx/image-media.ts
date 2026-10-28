@@ -1,3 +1,4 @@
+import { imageContentType } from 'ooxml-core/drawingml';
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
@@ -161,7 +162,10 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
 		if (node.attrs.shape) return shapeNodeView(node, view, getPos, () => options.theme?.());
 		const diagram = parseDiagram(node.attrs.diagram);
-		if (diagram) return smartArtNodeView(node, diagram, options.theme?.(), options.locale?.());
+		if (diagram)
+			return smartArtNodeView(node, diagram, options.theme?.(), options.locale?.(), (part) =>
+				cache.urlFor(part, imageContentType(part)),
+			);
 		if (node.attrs.chart) return chartNodeView(node, view, getPos, options);
 		const content = renderSpec(node);
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.

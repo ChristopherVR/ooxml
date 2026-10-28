@@ -28,6 +28,7 @@ export function paintSmartArt(
 		w: (obj.anchor.ext?.cx ?? 4572000) / 9525,
 		h: (obj.anchor.ext?.cy ?? 2667000) / 9525,
 	},
+	pictureResolver?: (partName: string) => string | undefined,
 ): void {
 	const doc = node.ownerDocument;
 	node.classList.add('xg-smartart');
@@ -70,12 +71,14 @@ export function paintSmartArt(
 			drawing?: SmartArtObject['diagram'];
 			schemeColors?: SchemeColors;
 			schemeFonts?: SchemeFonts;
+			pictureResolver?: (partName: string) => string | undefined;
 		};
 		art.setAttribute('label', label);
 		art.style.width = '100%';
 		art.style.height = '100%';
 		art.schemeColors = smartArtSchemeColors(theme);
 		art.schemeFonts = theme ? { major: theme.majorFont, minor: theme.minorFont } : {};
+		if (pictureResolver) art.pictureResolver = pictureResolver;
 		art.drawing = diagram;
 		node.append(art);
 	} else {

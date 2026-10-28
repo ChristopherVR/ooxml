@@ -1,3 +1,4 @@
+import { imageContentType as guessContentType } from '../drawingml/image-content-type';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Parses w:drawing (wp:inline / wp:anchor pictures) and legacy w:pict (VML) into InlineImage.
 // Adapted layout/EMU-conversion approach from pptx-viewer-new packages/core/src/core (DrawingML
@@ -65,22 +66,6 @@ function descendantNS(
 function emuToPx(value: string | null): number {
 	const n = value ? Number(value) : NaN;
 	return Number.isFinite(n) ? Math.round(n / EMU_PER_PIXEL) : 0;
-}
-function guessContentType(partName: string): string {
-	const extension = partName.split('.').pop()?.toLowerCase();
-	const known: Record<string, string> = {
-		png: 'image/png',
-		jpg: 'image/jpeg',
-		jpeg: 'image/jpeg',
-		gif: 'image/gif',
-		bmp: 'image/bmp',
-		svg: 'image/svg+xml',
-		tif: 'image/tiff',
-		tiff: 'image/tiff',
-		emf: 'image/x-emf',
-		wmf: 'image/x-wmf',
-	};
-	return (extension && known[extension]) || 'application/octet-stream';
 }
 function resolvePicture(
 	relId: string,

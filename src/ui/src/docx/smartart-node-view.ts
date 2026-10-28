@@ -20,6 +20,7 @@ type SmartArtElement = HTMLElement & {
 	drawing: unknown;
 	schemeColors: Record<string, string>;
 	schemeFonts: { major?: string; minor?: string };
+	pictureResolver?: (partName: string) => string | undefined;
 };
 
 /** Registers `<office-ui-smartart>` once; a no-op without a DOM (server rendering). */
@@ -117,6 +118,7 @@ export function smartArtNodeView(
 	diagram: DocxDiagram,
 	theme: ThemeCatalog | undefined,
 	locale: EditorLocale = 'en',
+	pictureResolver?: (partName: string) => string | undefined,
 ): NodeView {
 	registerSmartArt();
 	const dom = box(node, diagram);
@@ -190,6 +192,7 @@ export function smartArtNodeView(
 			...(theme?.fonts.major.latin ? { major: theme.fonts.major.latin } : {}),
 			...(theme?.fonts.minor.latin ? { minor: theme.fonts.minor.latin } : {}),
 		};
+		if (pictureResolver) element.pictureResolver = pictureResolver;
 		element.drawing = themed.drawing;
 		dom.append(element);
 	} else {

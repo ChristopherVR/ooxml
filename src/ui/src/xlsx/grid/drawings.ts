@@ -1,3 +1,4 @@
+import { imageContentType } from 'ooxml-core/drawingml';
 import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
 // Pictures, charts and SmartArt over the grid, positioned from their anchors in the quadrant of their
@@ -198,7 +199,9 @@ export class DrawingLayer {
 		} else if (drawing.kind === 'timeline') {
 			paintTimeline(node, drawing, box.w, box.h, view.ctx, view.workbook());
 		} else if (drawing.kind === 'smartArt') {
-			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme, box);
+			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme, box, (part) =>
+				this.#url(part, imageContentType(part)),
+			);
 		} else if (drawing.chartEx) {
 			// An extended chart (waterfall, histogram) the core painter draws; the frame is read-only.
 			this.#paintChart(node, drawing.chartEx, box);

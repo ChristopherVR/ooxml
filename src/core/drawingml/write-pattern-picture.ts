@@ -1,3 +1,5 @@
+import { applyPictureCrop } from './picture-crop';
+import { applyPictureEffects } from './picture-effects';
 import { NS, buildXml, first, parseXml } from '../xml/index';
 import type { DrawingFill } from './types';
 import { patchDrawingColorIn } from './patch-color';
@@ -65,6 +67,16 @@ export function drawingPatternPictureXml(
 			else if (blip.getAttributeNS(NS.r, attribute) !== value)
 				blip.setAttributeNS(NS.r, `r:${attribute}`, value);
 		}
+		if (
+			JSON.stringify(before?.kind === 'picture' ? before.crop : undefined) !==
+			JSON.stringify(fill.crop)
+		)
+			applyPictureCrop(root, fill.crop);
+		if (
+			JSON.stringify(before?.kind === 'picture' ? (before.effects ?? []) : []) !==
+			JSON.stringify(fill.effects ?? [])
+		)
+			applyPictureEffects(blip, fill.effects ?? []);
 		if (!fill.sourceXml) {
 			const stretch = doc.createElementNS(NS.a, 'a:stretch');
 			stretch.appendChild(doc.createElementNS(NS.a, 'a:fillRect'));

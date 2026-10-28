@@ -1,3 +1,4 @@
+import { parseDrawingPictureFill } from '../drawingml/picture-fill';
 // Reads the cached drawing part of a diagram (`dsp:drawing`): the shape tree the producing
 // application last laid out, as a renderer-neutral model in EMU. Generalises
 // `parseSmartArtDrawingShapes`/`parseDrawingShape` of the pptx runtime without its theme and
@@ -96,7 +97,8 @@ function parseShape(
 	if (transform.flipVertical) shape.flipVertical = true;
 	if (adjustments) shape.adjustments = adjustments;
 	if (paths) shape.paths = paths;
-	const fill = parseDrawingFill(spPr);
+	const picture = first(sp, 'blipFill', NS.dsp);
+	const fill = picture ? parseDrawingPictureFill(picture) : parseDrawingFill(spPr);
 	if (fill) shape.fill = fill;
 	const line = parseDrawingLine(first(spPr, 'ln', NS.a));
 	if (line) shape.line = line;
@@ -128,15 +130,10 @@ export function parseDiagramDrawing(source: string | XmlDocument, part?: string)
 		for (const child of Array.from(container.childNodes)) {
 			if (child.nodeType !== 1) continue;
 			const element = child as XmlElement;
-			if (element.localName === 'sp') {
+			if (element.localName === 'sp' || element.localName === 'pic') {
 				const shape = parseShape(element, counter++, group, issues);
 				if (shape) shapes.push(shape);
 			} else if (element.localName === 'grpSp') visit(element, groupTransform(element, group));
-			else if (element.localName === 'pic')
-				issues.push({
-					code: 'DIAGRAM_DRAWING_PICTURE_SKIPPED',
-					message: 'A dsp:pic in the cached drawing is not modelled; the part still holds it.',
-				});
 		}
 	};
 	if (tree) visit(tree, IDENTITY);

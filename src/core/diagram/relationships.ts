@@ -8,6 +8,7 @@ export interface DiagramRelationshipEntry {
 	id: string;
 	type: string;
 	target: string;
+	mode?: string;
 }
 
 /** What the resolver needs from the package that hosts the diagram. */

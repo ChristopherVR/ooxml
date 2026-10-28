@@ -229,10 +229,11 @@ export async function resolveDiagramParts(
 			const xml = await readText(relsPart);
 			if (!xml) return undefined;
 			try {
-				return [...parseRelationships(xml).values()].map(({ id, type, target }) => ({
+				return [...parseRelationships(xml).values()].map(({ id, type, target, mode }) => ({
 					id,
 					type,
 					target,
+					...(mode ? { mode } : {}),
 				}));
 			} catch {
 				return undefined;

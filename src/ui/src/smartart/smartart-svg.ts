@@ -1,3 +1,4 @@
+import type { DiagramPictureResolver } from './smartart-picture';
 import { hexToRgbChannels } from 'ooxml-core/color';
 import { resolveDrawingColor } from 'ooxml-core/diagram';
 import type { DiagramDrawing } from 'ooxml-core/diagram';
@@ -62,6 +63,7 @@ export function renderDiagramDrawing(
 	drawing: DiagramDrawing,
 	scheme: SchemeColors = {},
 	fonts: SchemeFonts = {},
+	resolvePicture?: DiagramPictureResolver,
 ): { svg: SVGSVGElement; report: SmartArtRenderReport } {
 	const report: SmartArtRenderReport = {
 		shapeCount: drawing.shapes.length,
@@ -91,11 +93,22 @@ export function renderDiagramDrawing(
 		}
 		group.setAttribute('transform', transform.join(' '));
 		const body = diagramShapeElement(doc, shape, report.approximatedGeometries);
-		body.setAttribute('fill', diagramFill(doc, defs, shape.fill, scheme, report));
+		body.setAttribute(
+			'fill',
+			diagramFill(doc, defs, shape.fill, scheme, report, drawing.pictureParts, resolvePicture),
+		);
 		diagramEffects(doc, defs, body, shape, scheme, report);
 		const stroke =
 			shape.line?.fill && shape.line.widthEmu !== 0
-				? diagramFill(doc, defs, shape.line.fill, scheme, report)
+				? diagramFill(
+						doc,
+						defs,
+						shape.line.fill,
+						scheme,
+						report,
+						drawing.pictureParts,
+						resolvePicture,
+					)
 				: undefined;
 		body.setAttribute('stroke', stroke ?? 'none');
 		if (stroke)

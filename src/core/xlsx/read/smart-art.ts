@@ -90,10 +90,11 @@ async function resolveOne(object: SmartArtObject, info: Pending, source: SourceI
 			const xml = source.text(relsPart);
 			if (!xml) return undefined;
 			try {
-				return [...parseRelationships(xml).values()].map(({ id, type, target }) => ({
+				return [...parseRelationships(xml).values()].map(({ id, type, target, mode }) => ({
 					id,
 					type,
 					target,
+					...(mode ? { mode } : {}),
 				}));
 			} catch {
 				return undefined;

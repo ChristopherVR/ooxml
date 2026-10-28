@@ -1,3 +1,4 @@
+import { parseDrawingPictureFill } from './picture-fill';
 // DrawingML fill and line readers over the DOM.
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, children, elements, first, type XmlElement } from './dom';
@@ -85,18 +86,8 @@ export function parseDrawingFill(properties: XmlElement | undefined): DrawingFil
 				...(background ? { background } : {}),
 			};
 		}
-		case 'blipFill': {
-			const blip = first(fill, 'blip', NS.a);
-			const relId =
-				blip?.getAttributeNS(NS.r, 'embed') || blip?.getAttribute('r:embed') || undefined;
-			const linkRelId = blip?.getAttributeNS(NS.r, 'link') || undefined;
-			return {
-				kind: 'picture',
-				sourceXml: buildXml(fill),
-				...(relId ? { relId } : {}),
-				...(linkRelId ? { linkRelId } : {}),
-			};
-		}
+		case 'blipFill':
+			return parseDrawingPictureFill(fill);
 		default:
 			return { kind: 'unsupported', element: fill.localName };
 	}

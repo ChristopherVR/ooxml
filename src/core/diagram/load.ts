@@ -7,7 +7,11 @@ import {
 } from './definitions';
 import { parseDiagramDataModel } from './data-model';
 import { parseDiagramDrawing } from './drawing';
-import { resolveDiagramDrawingPart, type DiagramPartHost } from './relationships';
+import {
+	resolveDiagramDrawingPart,
+	diagramRelationshipsPart,
+	type DiagramPartHost,
+} from './relationships';
 import type { DiagramLayoutSource } from './layout-preview';
 import { generatedDrawingDigest } from './cache-metadata';
 import type {
@@ -155,7 +159,32 @@ export async function loadDiagram(
 			);
 			return parseDiagramDrawing(xml, part);
 		});
-		if (drawing) issues.push(...drawing.issues);
+		if (drawing) {
+			try {
+				const entries = await host.readRelationshipEntries(
+					diagramRelationshipsPart(drawingResolution.path),
+				);
+				const pictures = (entries ?? []).filter(
+					(entry) =>
+						entry.type.endsWith('/image') &&
+						entry.mode !== 'External' &&
+						!/^[a-z][a-z0-9+.-]*:/i.test(entry.target),
+				);
+				if (pictures.length)
+					drawing.pictureParts = Object.fromEntries(
+						pictures.map((entry) => [
+							entry.id,
+							host.resolvePath(drawingResolution.path, entry.target),
+						]),
+					);
+			} catch {
+				issues.push({
+					code: 'DIAGRAM_PICTURE_RELATIONSHIPS_UNREADABLE',
+					message: 'Picture relationships in the cached drawing could not be read.',
+				});
+			}
+			issues.push(...drawing.issues);
+		}
 	} else if (data)
 		issues.push({
 			code: 'DIAGRAM_DRAWING_ABSENT',

@@ -270,6 +270,8 @@ export interface DiagramDrawingShape {
 
 /** A parsed `dsp:drawing`: the layout the producing application last computed, cached in the package. */
 export interface DiagramDrawing {
+	/** Cached drawing relationship id to internal image package part. External media is never resolved. */
+	pictureParts?: Record<string, string>;
 	shapes: DiagramDrawingShape[];
 	issues: DiagramIssue[];
 }

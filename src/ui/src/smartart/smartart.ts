@@ -1,3 +1,5 @@
+import type { DiagramPictureResolver } from './smartart-picture';
+export type { DiagramPictureResolver } from './smartart-picture';
 import { html, type PropertyValues } from 'lit';
 import type { DiagramDrawing } from 'ooxml-core/diagram';
 import { OfficeElement, controlStyles } from '../base';
@@ -30,11 +32,13 @@ export class OfficeUiSmartArt extends OfficeElement {
 		drawing: { attribute: false },
 		schemeColors: { attribute: false },
 		schemeFonts: { attribute: false },
+		pictureResolver: { attribute: false },
 		label: { type: String },
 	};
 	declare drawing: DiagramDrawing | undefined;
 	declare schemeColors: SchemeColors;
 	declare schemeFonts: SchemeFonts;
+	declare pictureResolver: DiagramPictureResolver | undefined;
 	declare label: string | null;
 	private figure: SVGSVGElement | undefined;
 	private lastReport: SmartArtRenderReport | undefined;
@@ -44,6 +48,7 @@ export class OfficeUiSmartArt extends OfficeElement {
 		this.drawing = undefined;
 		this.schemeColors = {};
 		this.schemeFonts = {};
+		this.pictureResolver = undefined;
 		this.label = null;
 	}
 
@@ -54,7 +59,12 @@ export class OfficeUiSmartArt extends OfficeElement {
 
 	/** The SVG is rebuilt only when the drawing or the scheme colours change. */
 	protected override willUpdate(changed: PropertyValues<this>): void {
-		if (changed.has('drawing') || changed.has('schemeColors') || changed.has('schemeFonts')) {
+		if (
+			changed.has('drawing') ||
+			changed.has('schemeColors') ||
+			changed.has('schemeFonts') ||
+			changed.has('pictureResolver')
+		) {
 			if (!this.drawing || this.drawing.shapes.length === 0) {
 				this.figure = undefined;
 				this.lastReport = undefined;
@@ -64,6 +74,7 @@ export class OfficeUiSmartArt extends OfficeElement {
 					this.drawing,
 					this.schemeColors,
 					this.schemeFonts,
+					this.pictureResolver,
 				);
 				svg.setAttribute('role', 'img');
 				this.figure = svg;
@@ -76,7 +87,10 @@ export class OfficeUiSmartArt extends OfficeElement {
 	protected override updated(changed: PropertyValues<this>): void {
 		if (
 			this.lastReport &&
-			(changed.has('drawing') || changed.has('schemeColors') || changed.has('schemeFonts'))
+			(changed.has('drawing') ||
+				changed.has('schemeColors') ||
+				changed.has('schemeFonts') ||
+				changed.has('pictureResolver'))
 		)
 			this.fire('office-smartart-render', this.lastReport);
 	}

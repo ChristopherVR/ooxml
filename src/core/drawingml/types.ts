@@ -42,7 +42,15 @@ export type DrawingFill =
 			background?: DrawingColor;
 			sourceXml?: string;
 	  }
-	| { kind: 'picture'; relId?: string; linkRelId?: string; sourceXml?: string }
+	| {
+			kind: 'picture';
+			relId?: string;
+			linkRelId?: string;
+			sourceXml?: string;
+			crop?: import('./picture-crop').DrawingPictureCrop;
+			effects?: import('./picture-effects').DrawingPictureEffect[];
+			unsupportedPicture?: string[];
+	  }
 	| { kind: 'unsupported'; element: string };
 
 /** A DrawingML outline (`a:ln`). */

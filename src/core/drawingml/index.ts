@@ -48,3 +48,5 @@ export * from './path-data';
 export * from './custom-geometry';
 export * from './picture-crop';
 export * from './picture-effects';
+export * from './picture-fill';
+export * from './image-content-type';
