@@ -1,3 +1,5 @@
+import { chartPlotRect } from './chart-svg-plot-layout';
+import type { ChartFrameSize } from '../manual-layout';
 import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
 import { chartAxisRatio, chartAxisLabels } from './chart-view-axes';
@@ -19,7 +21,12 @@ export interface Frame {
 }
 
 /** Axes, gridlines and labels; returns the plot frame for the series painters. */
-export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefined {
+export function cartesianAxes(
+	model: ChartViewModel,
+	area: Rect,
+	out: string[],
+	size?: ChartFrameSize,
+): Frame | undefined {
 	const scale = model.valueAxis;
 	if (!scale) return undefined;
 	const labels = scale.ticks.map((t) => axisTickText(t, model.axes?.value, scale.percent));
@@ -47,7 +54,7 @@ export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]):
 			? Math.max(...secondLabels.map((l) => textWidth(l, valueSize)), 8) + 8
 			: 4
 		: 0;
-	const plot: Rect = horizontal
+	const auto: Rect = horizontal
 		? {
 				x: area.x + catW,
 				y: area.y,
@@ -60,6 +67,7 @@ export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]):
 				w: Math.max(1, area.w - labelW - 4 - secondW),
 				h: Math.max(1, area.h - Math.max(20, categorySize * 1.5)),
 			};
+	const plot = chartPlotRect(model, auto, area, size);
 	const value = horizontal
 		? (v: number): number => plot.x + chartAxisRatio(v, scale, model.axes?.value) * plot.w
 		: (v: number): number => plot.y + plot.h - chartAxisRatio(v, scale, model.axes?.value) * plot.h;

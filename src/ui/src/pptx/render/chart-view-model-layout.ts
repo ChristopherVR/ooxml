@@ -13,12 +13,13 @@
    `--fix` cannot do this safely once a non-declaration statement sits between
    them) would churn geometry code far beyond this change's scope. */
 
+import { resolveManualPlotRect } from 'ooxml-core/chart';
 import type { PptxChartData } from 'ooxml-core/pptx';
 
 import { resolveDataTableMetrics } from './chart-data-table-metrics';
 import { chartFontPx, DEFAULT_CHART_TEXT_PX } from './chart-font';
 import { reserveLegendSpace } from './chart-legend-placement';
-import { manualLayoutOf, resolveManualLayoutRect } from './chart-manual-layout';
+import { manualLayoutOf } from './chart-manual-layout';
 import { chartTitleReservePx } from './chart-title-band';
 import type { PlotLayout, PlotLayoutOptions } from './chart-view-model-types';
 
@@ -158,20 +159,22 @@ export function computePlotLayout(
 	// (the default) includes the axis labels, so the plot proper is inset by
 	// the same bands the automatic layout reserves for them.
 	const plotLayout = manualLayoutOf(chartData, 'plotArea'),
-		manual = resolveManualLayoutRect(
+		manual = resolveManualPlotRect(
 			plotLayout,
 			{ width: svgWidth, height: svgHeight },
 			{ x: plotLeft, y: plotTop, width: plotRight - plotLeft, height: plotBottom - plotTop },
+			{
+				left: hasAxes ? leftAxisBand(options?.leftCategoryLabelWidth) : 0,
+				top: 0,
+				right: 0,
+				bottom: hasAxes ? categoryAxisBand(chartData) - 8 : 0,
+			},
 		);
 	if (plotLayout && manual) {
 		plotLeft = manual.x;
 		plotTop = manual.y;
 		plotRight = manual.x + manual.width;
 		plotBottom = manual.y + manual.height;
-		if (hasAxes && plotLayout.layoutTarget !== 'inner') {
-			plotLeft += leftAxisBand(options?.leftCategoryLabelWidth);
-			plotBottom -= categoryAxisBand(chartData) - 8;
-		}
 	}
 
 	const plotWidth = Math.max(plotRight - plotLeft, 1),

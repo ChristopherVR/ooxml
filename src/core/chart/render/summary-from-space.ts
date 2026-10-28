@@ -173,6 +173,7 @@ export function chartSummaryFromSpace(
 		axes: chartSpace.plotArea.axes,
 		axisIds: group?.axisIds ?? [],
 	};
+	if (chartSpace.plotArea.layout) summary.plotLayout = chartSpace.plotArea.layout;
 	const combined = extraGroups(chartSpace, chartType);
 	if (combined.length) summary.extraGroups = combined;
 	if (chartType === 'stock' && group) summary.stock = stockStyle(group);

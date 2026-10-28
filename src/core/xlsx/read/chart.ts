@@ -75,6 +75,7 @@ export function chartObjectFromSpace(
 		showLegend: summary.showLegend,
 	};
 	if (frame.partName !== undefined) object.partName = frame.partName;
+	if (summary.plotLayout) object.plotLayout = summary.plotLayout;
 	if (summary.axes) object.axes = summary.axes;
 	if (summary.axisIds) object.axisIds = summary.axisIds;
 	if (summary.grouping) object.grouping = summary.grouping;

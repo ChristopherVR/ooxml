@@ -3,6 +3,7 @@
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { ChartMarkerSummary } from './chart-view-markers';
+import type { ChartManualLayout } from '../manual-layout';
 import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import type { DataLabelFlagLevel } from '../data-label-text';
@@ -153,6 +154,7 @@ export interface HierarchySummaryOptions {
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
 	/** Native axes and the primary plot group IDs, retained for shared rendering. */
+	plotLayout?: ChartManualLayout;
 	axes?: ChartAxis[];
 	axisIds?: number[];
 	/** Bar/column grouping. */

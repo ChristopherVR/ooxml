@@ -1,3 +1,5 @@
+import { chartPlotRect } from './chart-svg-plot-layout';
+import type { ChartFrameSize } from '../manual-layout';
 import { axisTickText, axisGridlines, axisLine } from './chart-svg-axes';
 import { chartAxisRatio, chartAxisLabels, type ChartAxisView } from './chart-view-axes';
 // Scatter and bubble plots: two numeric axes, then one dot per point (a bubble's radius follows its
@@ -11,7 +13,12 @@ import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-app
 import { pointLabels, type PointMark } from './chart-svg-labels';
 import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 
-export function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
+export function scatter(
+	model: ChartViewModel,
+	area: Rect,
+	out: string[],
+	size?: ChartFrameSize,
+): void {
 	const ys = model.valueAxis;
 	const xs = model.xAxis;
 	if (!ys || !xs) return;
@@ -27,12 +34,13 @@ export function scatter(model: ChartViewModel, area: Rect, out: string[]): void 
 		chartAxisLabels(model.axes?.category) &&
 		model.appearance?.categoryAxis?.labelsVisible !== false;
 	const labelW = valueLabels ? Math.max(...yLabels.map((l) => textWidth(l, valueSize)), 8) + 6 : 4;
-	const plot: Rect = {
+	const auto: Rect = {
 		x: area.x + labelW,
 		y: area.y + 4,
 		w: Math.max(1, area.w - labelW - 8),
 		h: Math.max(1, area.h - Math.max(20, categorySize * 1.5)),
 	};
+	const plot = chartPlotRect(model, auto, area, size);
 	const bubble = model.type === 'bubble' ? model.bubble : undefined;
 	// One size scale for the whole chart, so bubbles stay comparable across series.
 	const biggest = maxBubbleSize(

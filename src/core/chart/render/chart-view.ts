@@ -87,6 +87,7 @@ export interface ChartGroupView {
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
 	axes?: ChartAxesView;
+	plotLayout?: ChartManualLayout;
 	legendLayout?: ChartManualLayout;
 	legendOverlay?: boolean;
 	titleLayout?: ChartManualLayout;
@@ -226,6 +227,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		horizontal: type === 'bar',
 		supported: SUPPORTED.has(type),
 	};
+	if (chart.plotLayout) model.plotLayout = chart.plotLayout;
 	if (chart.title) model.title = chart.title;
 	const titleFormatting = chart.formatting?.entries.title;
 	if (titleFormatting?.layout) model.titleLayout = titleFormatting.layout;

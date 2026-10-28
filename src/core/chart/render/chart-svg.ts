@@ -85,7 +85,7 @@ export function renderChartSvg(
 		else if (model.type === 'radar') out.push(radarSvg(model, area));
 		else if (model.type === 'treemap') out.push(treemapSvg(model, area));
 		else if (model.type === 'sunburst') out.push(sunburstSvg(model, area));
-		else out.push(cartesianSvg(model, area));
+		else out.push(cartesianSvg(model, area, { width: w, height: h }));
 	}
 	if (legend.foreground) out.push(legend.markup);
 	if (foregroundTitle) out.push(foregroundTitle);

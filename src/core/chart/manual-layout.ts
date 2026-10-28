@@ -105,3 +105,20 @@ export function resolveManualLayoutRect(
 				: layout.height * frame.height;
 	return { x, y, width: Math.max(width, 1), height: Math.max(height, 1) };
 }
+
+/** Resolve a plot rectangle, applying host axis bands only to an outer target. */
+export function resolveManualPlotRect(
+	layout: ChartManualLayout | null | undefined,
+	frame: ChartFrameSize,
+	auto: ChartLayoutRect,
+	bands: { left: number; top: number; right: number; bottom: number },
+): ChartLayoutRect | undefined {
+	const rect = resolveManualLayoutRect(layout, frame, auto);
+	if (!rect || layout?.layoutTarget === 'inner') return rect;
+	return {
+		x: rect.x + bands.left,
+		y: rect.y + bands.top,
+		width: Math.max(1, rect.width - bands.left - bands.right),
+		height: Math.max(1, rect.height - bands.top - bands.bottom),
+	};
+}
