@@ -1,3 +1,5 @@
+import { standardPictureFilter } from './picture-standard-filter';
+import { needsPicturePixels } from './picture-pixels';
 import { expect, it } from 'vitest';
 import { picturePaint } from './picture-paint';
 import { pictureEffectFilter } from './picture-effects';
@@ -92,4 +94,11 @@ it('matches native inverse-alpha colour replacement and nested alpha modulation'
 			},
 		]).unapplied,
 	).toEqual(['vendorEffect']);
+});
+
+it('evaluates native blip blur at source pixel scale before resizing', () => {
+	const effect = { kind: 'standard' as const, name: 'blur' as const, values: { radiusEmu: 6 } };
+	const result = standardPictureFilter(document, effect);
+	expect(result.nodes[0]!.getAttribute('stdDeviation')).toBe('2');
+	expect(needsPicturePixels([effect])).toBe(true);
 });

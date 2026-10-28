@@ -1,3 +1,4 @@
+import { pictureEffectFilter } from '../src/picture-effects';
 import { applyPictureHslPixels } from '../../core/drawingml/picture-hsl-pixels';
 /** Generate repeatable native/shared picture comparison inputs. Run: bun src/ui/scripts/picture-native-fixture.ts <output-dir> */
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
@@ -79,6 +80,7 @@ const cases = [
 		['hsl', '<a:hsl hue="1800000" sat="50000" lum="20000"/>'],
 		['tint', '<a:tint hue="3600000" amt="30000"/>'],
 		['blur', '<a:blur rad="2" grow="0"/>'],
+		['blur-six', '<a:blur rad="6" grow="0"/>'],
 		['hsl-sat-only', '<a:hsl hue="0" sat="50000" lum="100000"/>'],
 		['hsl-lum-only', '<a:hsl hue="0" sat="100000" lum="50000"/>'],
 		['hsl-identity', '<a:hsl hue="0" sat="100000" lum="100000"/>'],
@@ -155,6 +157,22 @@ for (const [index, item] of cases.entries()) {
 		}
 		pixelsUrl = `data:image/png;base64,${rgbaPng(48, 32, pixels).toString('base64')}`;
 	}
+	if (parsed.effects?.some((e) => e.kind === 'standard' && e.name === 'blur')) {
+		const stage = document.createElementNS(ns, 'svg');
+		stage.setAttribute('xmlns', ns);
+		stage.setAttribute('width', '48');
+		stage.setAttribute('height', '32');
+		const d = document.createElementNS(ns, 'defs');
+		stage.append(d);
+		const fx = pictureEffectFilter(document, d, parsed.effects);
+		const img = document.createElementNS(ns, 'image');
+		img.setAttribute('href', imageUrl);
+		img.setAttribute('width', '48');
+		img.setAttribute('height', '32');
+		if (fx.filter) img.setAttribute('filter', fx.filter);
+		stage.append(img);
+		pixelsUrl = `data:image/svg+xml,${encodeURIComponent(stage.outerHTML)}`;
+	}
 	const paint = picturePaint(
 		document,
 		defs,
@@ -196,6 +214,6 @@ await writeFile(
 );
 await writeFile(
 	resolve(output, 'manifest.json'),
-	JSON.stringify({ presentation: 'pictures.pptx', entries: manifest }, null, 2),
+	JSON.stringify({ presentation: 'pictures.pptx', cases: manifest }, null, 2),
 );
 console.log(output);

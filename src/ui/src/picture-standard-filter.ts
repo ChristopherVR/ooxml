@@ -71,7 +71,7 @@ export function standardPictureFilter(
 			});
 			break;
 		case 'blur':
-			nodes.push(node('feGaussianBlur', { stdDeviation: (value.radiusEmu ?? 0) / 9525 }));
+			nodes.push(node('feGaussianBlur', { stdDeviation: (value.radiusEmu ?? 0) / 3 }));
 			break;
 		case 'hsl':
 		case 'tint':

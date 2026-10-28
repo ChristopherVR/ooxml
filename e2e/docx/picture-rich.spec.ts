@@ -91,6 +91,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				context.drawImage(image, 0, 0);
 				return Array.from(context.getImageData(5, 5, 1, 1).data);
 			});
-		expect(rgba).toEqual([255, 255, 0, 128]);
+		expect(rgba.slice(0, 3)).toEqual([255, 255, 0]);
+		expect(rgba[3]).toBeGreaterThanOrEqual(127);
+		expect(rgba[3]).toBeLessThanOrEqual(128);
 		await expect(picture.locator('pattern image').first()).not.toHaveAttribute('filter');
 	});

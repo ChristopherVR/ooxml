@@ -15,7 +15,9 @@ const keyOf = (
 	scheme: Readonly<Record<string, string>>,
 ) => JSON.stringify([url, effects, scheme]);
 export const needsPicturePixels = (effects: readonly DrawingPictureEffect[]) =>
-	effects.some((e) => e.kind === 'standard' && (e.name === 'hsl' || e.name === 'tint'));
+	effects.some(
+		(e) => e.kind === 'standard' && (e.name === 'hsl' || e.name === 'tint' || e.name === 'blur'),
+	);
 export function cachedPicturePixels(
 	url: string,
 	effects: readonly DrawingPictureEffect[],
