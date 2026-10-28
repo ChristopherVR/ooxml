@@ -154,6 +154,11 @@ export type { PptxSmartArtChrome, PptxSmartArtRawBackgroundFill } from './smart-
  * ```
  */
 export interface PptxSmartArtData extends DiagramData {
+	/** Source picture identities and original definitions retained across structural edits. */
+	pictureLayoutSource?: import('../../../diagram/layout-preview').DiagramLayoutSource;
+	/** Resolved host media, keyed by stable package part path. */
+	pictureUrls?: Record<string, string>;
+	pictureScheme?: Record<string, string>;
 	nodes: PptxSmartArtNode[];
 	/** Pre-computed shapes from `ppt/diagrams/drawing*.xml`. */
 	drawingShapes?: PptxSmartArtDrawingShape[];

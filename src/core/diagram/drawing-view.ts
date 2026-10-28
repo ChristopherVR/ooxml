@@ -61,6 +61,8 @@ export interface DiagramShapeView {
 	fillBlipEmbedId?: string;
 	/** Resolved data-URI/URL for a picture fill, when the host could resolve the image part. */
 	fillImageUrl?: string;
+	/** Complete source-backed image fill, including crop, effects and layout semantics. */
+	pictureFill?: Extract<import('../drawingml/types').DrawingFill, { kind: 'picture' }>;
 	/** Whether the cached shape carries an outer-shadow effect (`a:effectLst`). */
 	hasShadow?: boolean;
 	/** Resolved outer-shadow colour (hex), when present. */

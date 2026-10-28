@@ -42,6 +42,14 @@ import {
 } from './smartart-save-geometry';
 import { mergeSmartArtPointXml, mergeSmartArtConnectionXml } from './smartart-xml-builders';
 import { withOrderedTableParagraphs } from './table-paragraph-save-order';
+import {
+	buildGeneratedDiagramCache,
+	withDiagramDrawingRelationship,
+} from '../../../../diagram/write/cache';
+import {
+	withDiagramPictureSources,
+	diagramPictureRelationships,
+} from '../../../../diagram/picture-layout';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Pending SmartArt data updates to process during save. */
@@ -194,7 +202,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					this.compatibilityService.getXmlLocalName(k),
 				);
 
-				this.zip.file(dataPartPath, this.builder.build(parsed));
+				this.zip.file(
+					dataPartPath,
+					withDiagramPictureSources(this.builder.build(parsed), smartArtData.pictureLayoutSource),
+				);
+				const pictureDataRelsPath = dataPartPath.replace(/([^/]+)$/, '_rels/$1.rels');
+				const pictureDataRels = diagramPictureRelationships(
+					dataPartPath,
+					smartArtData.pictureLayoutSource,
+					await this.zip.file(pictureDataRelsPath)?.async('string'),
+				);
+				if (pictureDataRels) this.zip.file(pictureDataRelsPath, pictureDataRels);
 
 				if (saveLayout && smartArtData.layoutRelId) {
 					const layoutTarget = relationships?.get(smartArtData.layoutRelId);
@@ -219,7 +237,34 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						presentationIds,
 					);
 					if (drawingTarget && drawingXml) {
-						this.zip.file(this.resolveImagePath(slidePath, drawingTarget), drawingXml);
+						const drawingPath = this.resolveImagePath(slidePath, drawingTarget);
+						const pictureSource = smartArtData.pictureLayoutSource;
+						const savedData = await this.zip.file(dataPartPath)?.async('string');
+						const pictureCache =
+							pictureSource && savedData
+								? buildGeneratedDiagramCache(savedData, {
+										extentEmu: { width: element.width * 9525, height: element.height * 9525 },
+										source: {
+											...pictureSource,
+											...(saveLayout ? { layoutXml: saveLayout.xml } : {}),
+										},
+										minorFont: smartArtData.themeMinorFont,
+										scheme: smartArtData.pictureScheme,
+									})
+								: undefined;
+						if (pictureCache)
+							this.zip.file(
+								dataPartPath,
+								withDiagramDrawingRelationship(pictureCache.dataXml, smartArtData.drawingRelId),
+							);
+						this.zip.file(drawingPath, pictureCache?.drawingXml ?? drawingXml);
+						const relsPath = drawingPath.replace(/([^/]+)$/, '_rels/$1.rels');
+						const rels = diagramPictureRelationships(
+							drawingPath,
+							pictureSource,
+							await this.zip.file(relsPath)?.async('string'),
+						);
+						if (rels) this.zip.file(relsPath, rels);
 					}
 				}
 			} catch (e) {

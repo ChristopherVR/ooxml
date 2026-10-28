@@ -2,6 +2,7 @@ import { XMLBuilder } from 'fast-xml-parser';
 import { diagramShapePropertiesXml } from '../../../../diagram/write/drawing';
 import { normalizeStShapeType } from '../../../../geometry/preset-geometry-names';
 import type { DrawingColor } from '../../../../drawingml/types';
+import { drawingFillXml } from '../../../../drawingml/write-fill';
 
 /**
  * Fabricate the cached diagram DRAWING part (`ppt/diagrams/drawingN.xml`) for
@@ -161,9 +162,11 @@ function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
 			},
 			...(shape.rotation ? { rotation: shape.rotation } : {}),
 			...(shape.shapeAdjustments ? { adjustments: shape.shapeAdjustments } : {}),
-			...(fillHex
-				? { fill: { kind: 'solid', color: color(fillHex, shape.fillOpacity) } as const }
-				: {}),
+			...(shape.pictureFill
+				? { fill: shape.pictureFill }
+				: fillHex
+					? { fill: { kind: 'solid', color: color(fillHex, shape.fillOpacity) } as const }
+					: {}),
 			...(strokeHex
 				? {
 						line: {
@@ -207,11 +210,13 @@ function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
 		shape.fillOpacity !== undefined && shape.fillOpacity < 1
 			? `<a:alpha val="${Math.round(Math.max(0, shape.fillOpacity) * 100000)}"/>`
 			: '';
-	const fill = fillHex
-		? fillAlpha
-			? `<a:solidFill><a:srgbClr val="${fillHex}">${fillAlpha}</a:srgbClr></a:solidFill>`
-			: `<a:solidFill><a:srgbClr val="${fillHex}"/></a:solidFill>`
-		: '';
+	const fill = shape.pictureFill
+		? drawingFillXml(shape.pictureFill)
+		: fillHex
+			? fillAlpha
+				? `<a:solidFill><a:srgbClr val="${fillHex}">${fillAlpha}</a:srgbClr></a:solidFill>`
+				: `<a:solidFill><a:srgbClr val="${fillHex}"/></a:solidFill>`
+			: '';
 	const strokeHex = normalizeHex(shape.strokeColor);
 	const strokeW =
 		shape.strokeWidth && shape.strokeWidth > 0

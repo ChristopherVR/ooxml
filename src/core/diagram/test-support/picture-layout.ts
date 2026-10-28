@@ -6,7 +6,7 @@ import { RELATIONSHIP_TYPES, buildRelationshipsXml } from '../../opc/index';
 /** Native Office gallery layout/presentation identities, populated with actual image data. */
 export async function withNativePictureLayout(
 	bytes: Uint8Array,
-	prefix: 'word' | 'xl',
+	prefix: 'word' | 'xl' | 'ppt',
 	layout = 'picture-accent-list--flat3',
 ): Promise<Uint8Array> {
 	const native = await JSZip.loadAsync(
@@ -15,6 +15,15 @@ export async function withNativePictureLayout(
 		),
 	);
 	const zip = await JSZip.loadAsync(bytes);
+	const types = parseXml(await zip.file('[Content_Types].xml')!.async('string'));
+	const typesNs = 'http://schemas.openxmlformats.org/package/2006/content-types';
+	if (![...types.documentElement.childNodes].some(node => node.nodeType === 1 && (node as XmlElement).getAttribute('Extension') === 'png')) {
+		const png = types.createElementNS(typesNs, 'Default');
+		png.setAttribute('Extension', 'png');
+		png.setAttribute('ContentType', 'image/png');
+		types.documentElement.appendChild(png);
+		zip.file('[Content_Types].xml', buildXml(types));
+	}
 	const data = parseXml(await native.file('ppt/diagrams/data1.xml')!.async('string'));
 	const drawing = parseXml(await native.file('ppt/diagrams/drawing1.xml')!.async('string'));
 	const points = children(first(data.documentElement, 'ptLst', NS.dgm)!, 'pt', NS.dgm);

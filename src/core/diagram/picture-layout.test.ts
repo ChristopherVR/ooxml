@@ -8,6 +8,7 @@ import { loadXlsx } from '../xlsx/read/index';
 import { saveXlsx } from '../xlsx/write/index';
 import { createEditSession } from '../xlsx/edit/index';
 import type { SmartArtObject } from '../xlsx/model';
+import { loadBuiltinSmartArtLayoutXml } from './builtin/index';
 
 it('retains picture identity, crops and effects through Excel edits and save', async () => {
 	const bytes = await withNativePictureLayout(
@@ -33,6 +34,39 @@ it('retains picture identity, crops and effects through Excel edits and save', a
 				source.fill.crop?.cropRight === 0.25 && source.fill.sourceXml?.includes('alphaModFix'),
 		),
 	).toBe(true);
+});
+
+it('retains dormant image associations through a non-picture layout, reopen and picture-grid switch', async () => {
+	const bytes = await withNativePictureLayout(
+		readFileSync(new URL('../xlsx/__fixtures__/excel-smartart.xlsx', import.meta.url)),
+		'xl',
+	);
+	let workbook = await loadXlsx(bytes);
+	const index = workbook.sheets[0]!.drawings.findIndex((item) => item.kind === 'smartArt');
+	let session = createEditSession(workbook);
+	const plain = 'urn:microsoft.com/office/officeart/2005/8/layout/default';
+	session.changeSmartArtLayout(0, index, {
+		layoutId: plain,
+		layoutXml: loadBuiltinSmartArtLayoutXml(plain),
+		family: 'list',
+	});
+	workbook = await loadXlsx(await saveXlsx(workbook));
+	let object = workbook.sheets[0]!.drawings[index] as SmartArtObject;
+	expect(object.layoutSource?.pictures).toHaveLength(3);
+	expect(object.diagram).toBeUndefined();
+	session = createEditSession(workbook);
+	const grid = 'urn:microsoft.com/office/officeart/2008/layout/PictureGrid';
+	session.changeSmartArtLayout(0, index, {
+		layoutId: grid,
+		layoutXml: loadBuiltinSmartArtLayoutXml(grid),
+		family: 'matrix',
+	});
+	session.editSmartArt(0, index, { kind: 'move', nodeId: object.nodes[0]!.id, direction: 1 });
+	session.editSmartArt(0, index, { kind: 'remove', nodeId: object.nodes[2]!.id });
+	workbook = await loadXlsx(await saveXlsx(workbook));
+	object = workbook.sheets[0]!.drawings[index] as SmartArtObject;
+	expect(object.layoutSource?.pictures).toHaveLength(2);
+	expect(object.diagram?.shapes.filter((shape) => shape.fill?.kind === 'picture')).toHaveLength(2);
 });
 
 it('reflows a native Picture Accent List without assigning pictures to sibling text roles', async () => {

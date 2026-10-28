@@ -18,6 +18,7 @@
  */
 
 import type { XmlObject, PptxSmartArtDrawingShape } from '../../types';
+import { parseDiagramDrawing } from '../../../../diagram/drawing';
 
 /** A drawing node plus whether it is a `dsp:pic` (blip lives outside `spPr`). */
 export interface DrawingNodeRef {
@@ -188,6 +189,11 @@ export async function parseDrawingShapesFromPart(
 			shapes.push(shape);
 		});
 		await resolveDrawingBlipFills(shapes, drawingPath, deps);
+		const source = parseDiagramDrawing(xmlString);
+		for (const shape of shapes) {
+			const fill = source.shapes.find((entry) => entry.modelId === shape.id)?.fill;
+			if (fill?.kind === 'picture') shape.pictureFill = fill;
+		}
 		return shapes;
 	} catch {
 		return [];

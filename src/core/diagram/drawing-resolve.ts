@@ -49,10 +49,12 @@ type FillView = Pick<
 	| 'fillPatternForegroundColor'
 	| 'fillPatternBackgroundColor'
 	| 'fillBlipEmbedId'
+	| 'pictureFill'
 >;
 
 function resolveFill(fill: DiagramFill | undefined, resolve: DiagramColorResolver): FillView {
 	const view: FillView = {};
+	if (fill?.kind === 'picture') view.pictureFill = fill;
 	const hex = (color: DiagramColor | undefined) => (color ? resolve(color)?.hex : undefined);
 	switch (fill?.kind) {
 		case 'none':

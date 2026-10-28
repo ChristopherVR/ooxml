@@ -17,6 +17,7 @@ import { smartArtElementsToDrawingShapes } from '../core/runtime/smartart-fabric
 import type { PptxSmartArtData, PptxSmartArtDrawingShape } from '../types';
 import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from './smartart-decompose';
 import { applySmartArtQuickStyle3d } from './smartart-quick-style-3d';
+import { reflowSmartArtPictures } from './smartart-picture-reflow';
 
 /**
  * Re-evaluate SmartArt layout after an editing operation.
@@ -42,6 +43,8 @@ export function relayoutSmartArt(
 	containerWidth: number,
 	containerHeight: number,
 ): PptxSmartArtDrawingShape[] {
+	const pictures = reflowSmartArtPictures(smartArtData, containerWidth, containerHeight);
+	if (pictures) return applySmartArtQuickStyle3d(pictures, smartArtData);
 	if (!smartArtData.nodes || smartArtData.nodes.length === 0) {
 		return [];
 	}
@@ -68,6 +71,8 @@ export function regenerateSmartArtDrawingShapes(
 	containerWidth: number,
 	containerHeight: number,
 ): PptxSmartArtDrawingShape[] {
+	const pictures = reflowSmartArtPictures(smartArtData, containerWidth, containerHeight);
+	if (pictures) return applySmartArtQuickStyle3d(pictures, smartArtData);
 	const elements = decomposeSmartArt(smartArtData, {
 		x: 0,
 		y: 0,

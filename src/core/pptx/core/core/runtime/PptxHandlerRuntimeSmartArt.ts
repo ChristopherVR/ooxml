@@ -17,6 +17,8 @@ import {
 } from './smartart-text-paragraphs';
 import { resolveSmartArtTextStyles } from './smartart-text-style-resolution';
 import { isContentPoint } from './smartart-xml-builders';
+import { loadDiagram } from '../../../../diagram/load';
+import { parseRelationships } from '../../../../opc/relationships';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	public async getSmartArtDataForGraphicFrame(
@@ -185,8 +187,34 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// ── Parse quick style from ppt/diagrams/quickStyles*.xml ─────────
 		const styleRelationshipId = parsedRelationshipIds?.styleRelId ?? '';
 		const quickStyle = await this.parseSmartArtQuickStyle(slidePath, styleRelationshipId);
+		const neutral = await loadDiagram(slidePath, parsedRelationshipIds ?? {}, {
+			hostRelationships: (path) => this.slideRelsMap.get(path),
+			resolvePath: (base, target) => this.resolveImagePath(base, target),
+			readText: (path) => this.zip.file(path)?.async('string') ?? Promise.resolve(undefined),
+			readRelationshipEntries: async (path) => {
+				const xml = await this.zip.file(path)?.async('string');
+				return xml ? [...parseRelationships(xml).values()] : undefined;
+			},
+		});
+		const pictureLayoutSource = neutral.layoutSource?.pictures?.length
+			? neutral.layoutSource
+			: undefined;
+		const pictureUrls: Record<string, string> = {};
+		for (const part of Object.values(pictureLayoutSource?.pictureParts ?? {})) {
+			const url = await this.getImageDataAsDataUrl(part);
+			if (url) pictureUrls[part] = url;
+		}
+		for (const shape of drawingShapes) {
+			const part = shape.fillBlipEmbedId
+				? neutral.drawing?.pictureParts?.[shape.fillBlipEmbedId]
+				: undefined;
+			if (part && pictureUrls[part]) shape.fillImageUrl = pictureUrls[part];
+		}
 
 		return {
+			pictureLayoutSource,
+			pictureUrls: pictureLayoutSource ? pictureUrls : undefined,
+			pictureScheme: pictureLayoutSource ? { ...this.themeColorMap } : undefined,
 			layoutType,
 			resolvedLayoutType,
 			layoutDefinition,
