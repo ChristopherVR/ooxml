@@ -6,7 +6,12 @@
 // peak rounds to the wrong period), on impulse trains with noise, and on noisy waves. What it does
 // not reproduce is Excel's answers on pure noise: Excel reports a period on about a third of
 // short noisy series (7 of 20 between 8 and 36 points, none beyond 48) and the statistic behind
-// that is not the autocorrelation (it picks lags with autocorrelation below zero).
+// that is not the autocorrelation (it picks lags with autocorrelation below zero). 352 more designed
+// series (forecast-ets-detect.test.ts) show it is symmetric in time and scale (it does not change
+// when the series is negated, reversed or rescaled, so it is not a model fit) and that the period is
+// n / k, rounded with halves down, for the strongest periodogram frequency on 66 of 77 noise
+// series; no threshold on that peak's share decides when a period is reported, and a periodogram
+// detector with a fitted threshold agrees on 384 of 463 series against 377 for this one.
 
 /** Longest tail of the series that is analysed; keeps the quadratic autocorrelation bounded. */
 const MAX_POINTS = 8192;
