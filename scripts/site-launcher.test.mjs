@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { APPS, demoUrl, isLive } from '../site/apps.js';
 import { currentTheme, initTheme } from '../site/theme.js';
+import { apps as suiteApps, teamsApp } from '../apps/office-suite/src/ui.js';
 
 test('Excel beta launches the six deployed viewer routes', () => {
 	const excel = APPS.find((app) => app.id === 'excel');
@@ -22,6 +23,17 @@ test('Excel beta launches the six deployed viewer routes', () => {
 			solid: 'https://christophervr.github.io/ooxml/xlsx/demo-solid/',
 		},
 	);
+});
+
+test('Visio is beta and OpenTeams is alpha on the launcher and in the suite', () => {
+	const visio = APPS.find((app) => app.id === 'visio');
+	const teams = APPS.find((app) => app.id === 'teams');
+	assert(visio);
+	assert(teams);
+	assert.deepEqual(visio.tag, { label: 'Beta', tone: 'beta' });
+	assert.deepEqual(teams.tag, { label: 'Alpha', tone: 'alpha' });
+	assert.equal(suiteApps.find((app) => app.id === 'vsdx')?.tag, 'Beta');
+	assert.equal(teamsApp.tag, 'Alpha');
 });
 
 test('suite appearance writes the Excel shared preference without reloading its workbook', (t) => {

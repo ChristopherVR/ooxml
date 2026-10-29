@@ -90,7 +90,7 @@ export const APPS = [
 		color: '#8a6cf0',
 		format: '.vsdx',
 		description: 'Diagrams and flowcharts.',
-		tag: { label: 'Alpha', tone: 'alpha' },
+		tag: { label: 'Beta', tone: 'beta' },
 		repo: 'visio',
 		docs: `${PAGES}/ooxml/visio/`,
 		frameworks: VISIO_FRAMEWORKS,

@@ -3,7 +3,7 @@ export const apps = [
 	{ id: 'docx', name: 'Word', letter: 'W', color: '#185abd', tag: 'Beta' },
 	{ id: 'xlsx', name: 'Excel', letter: 'X', color: '#107c41', tag: 'Beta' },
 	{ id: 'pptx', name: 'PowerPoint', letter: 'P', color: '#c43e1c' },
-	{ id: 'vsdx', name: 'Visio', letter: 'V', color: '#3955a3', tag: 'Alpha' },
+	{ id: 'vsdx', name: 'Visio', letter: 'V', color: '#3955a3', tag: 'Beta' },
 ];
 export const teamsApp = { id: 'teams', name: 'Teams', letter: 'T', color: '#6264a7', tag: 'Alpha' };
 /** A maturity tag, or nothing for an app without one. */
