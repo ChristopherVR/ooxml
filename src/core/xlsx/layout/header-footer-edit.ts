@@ -1,5 +1,5 @@
-import type { PageSetup } from '../model';
-import type { HeaderFooterSection } from './header-footer';
+import type { HeaderFooterImage, PageSetup, Worksheet } from '../model';
+import { headerFooterImageKey, type HeaderFooterSection } from './header-footer';
 
 export type HeaderFooterKind = 'header' | 'footer';
 export type HeaderFooterKey =
@@ -68,6 +68,20 @@ export function headerFooterKey(
 	if (physicalPage === 1 && setup.differentFirst) return head ? 'firstHeader' : 'firstFooter';
 	if (pageNumber % 2 === 0 && setup.differentOddEven) return head ? 'evenHeader' : 'evenFooter';
 	return kind;
+}
+
+/** The picture (`&G`) of one section of the header or footer a page shows, if the sheet has it. */
+export function headerFooterPicture(
+	sheet: Worksheet,
+	kind: HeaderFooterKind,
+	section: HeaderFooterSection,
+	physicalPage: number,
+	pageNumber: number,
+): HeaderFooterImage | undefined {
+	const setup = sheet.pageSetup ?? {};
+	const key = headerFooterKey(setup, kind, physicalPage, pageNumber);
+	const variant = key.startsWith('first') ? 'first' : key.startsWith('even') ? 'even' : 'default';
+	return sheet.headerFooterImages?.[headerFooterImageKey(kind, section, variant)];
 }
 
 /** A page-setup patch that replaces one section of a header or footer. */

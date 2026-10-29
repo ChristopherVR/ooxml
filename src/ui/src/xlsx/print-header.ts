@@ -1,10 +1,12 @@
 import {
+	headerFooterPicture,
 	pageHeaderFooter,
 	renderHeaderFooterRuns,
 	type HeaderFooterContext,
 	type PrintLayout,
 	type Workbook,
 } from 'ooxml-core/xlsx';
+import { headerFooterImageSize, headerFooterImageUrl } from './header-image';
 import { escapeHtml } from './print-cell';
 
 export interface PrintHeaderOptions {
@@ -32,6 +34,7 @@ export function printPageHeaders(
 		file: (options.fileName ?? title).split(/[\\/]/).at(-1)!,
 		...(options.date ? { date: options.date } : {}),
 		...(options.locale ? { locale: options.locale } : {}),
+		themeColors: workbook.theme.colors,
 	};
 	const left = (setup.alignWithMargins === false ? 0.7 : layout.margins.left) * 96;
 	const right = (setup.alignWithMargins === false ? 0.7 : layout.margins.right) * 96;
@@ -41,14 +44,26 @@ export function printPageHeaders(
 		const sections = renderHeaderFooterRuns(value, context).sections;
 		const runs = (section: 'left' | 'center' | 'right') =>
 			sections[section]
-				.map(({ text, style }) => {
+				.map(({ text, style, picture }) => {
+					if (picture) {
+						const image = headerFooterPicture(sheet, kind, section, page, number);
+						const url = image ? headerFooterImageUrl(workbook, image) : undefined;
+						if (!image || !url) return '';
+						const { width, height } = headerFooterImageSize(
+							image,
+							setup.scaleWithDoc === false ? 1 : layout.scale,
+						);
+						return `<img src="${escapeHtml(url)}" alt="" style="width:${width}px;height:${height}px;vertical-align:top">`;
+					}
 					const css = [
 						style.font ? `font-family:${style.font.replace(/["\\;<>]/g, '')}` : '',
 						style.size ? `font-size:${(style.size / 11) * size}px` : '',
 						style.color ? `color:${style.color}` : '',
 						`font-weight:${style.bold ? 700 : 400}`,
 						`font-style:${style.italic ? 'italic' : 'normal'}`,
-						`text-decoration:${[style.underline ? 'underline' : '', style.strike ? 'line-through' : ''].filter(Boolean).join(' ') || 'none'}`,
+						`text-decoration:${[style.underline || style.doubleUnderline ? 'underline' : '', style.strike ? 'line-through' : ''].filter(Boolean).join(' ') || 'none'}${style.doubleUnderline ? ';text-decoration-style:double' : ''}`,
+						style.superscript ? 'vertical-align:super;font-size:smaller' : '',
+						style.subscript ? 'vertical-align:sub;font-size:smaller' : '',
 					]
 						.filter(Boolean)
 						.join(';');

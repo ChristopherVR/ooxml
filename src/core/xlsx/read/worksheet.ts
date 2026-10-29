@@ -9,6 +9,7 @@ import { readConditionalFormats, readDataValidations } from './conditional';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
 import { attachFormControls } from './form-control';
+import { readHeaderFooterImages } from './header-footer-images';
 import { parseDataXml } from './limits';
 import type { SourceIndex } from './package';
 import { readSheetData, type CellContext } from './sheet-data';
@@ -232,6 +233,8 @@ function readWorksheet(
 		readFitToPage(sheetPr),
 	);
 	if (page) sheet.pageSetup = page;
+	const hfImages = readHeaderFooterImages(ctx.source, partName, byName.get('legacyDrawingHF'));
+	if (hfImages) sheet.headerFooterImages = hfImages;
 	const printOptions = readPrintOptions(byName.get('printOptions'));
 	if (printOptions) sheet.printOptions = printOptions;
 	const drawing = byName.get('drawing');

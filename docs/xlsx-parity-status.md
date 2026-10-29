@@ -221,9 +221,14 @@ line/marker swatches and position-authoring controls remain incomplete.
   supported; legacy `.xls` and CSV load through `xlsx/load`. External connections use cached
   values; VBA is carried but never executed; add-ins and Power Query are not implemented.
 - Print: paginated preview and print fields support saved page setup and header/footer fields
-  with font family/size, RGB colour, bold, italic, underline and strike (native PDF checks:
-  `scripts/xlsx-print-acceptance.ps1`, `xlsx-print-format-acceptance.ps1`). Theme colours, images,
-  page offsets, double underline and super/subscript are outside preview support.
+  with font family/size, RGB and theme colour (`&KTT+SSS`, resolved against the workbook theme),
+  bold, italic, underline, double underline, strike, super/subscript, page-number offsets
+  (`&P+n`, negative results print as Excel does) and pictures (`&G`, from `legacyDrawingHF`, for
+  the default, first and even headers and footers; `excel-header-images.xlsx`). Native PDF
+  checks: `scripts/xlsx-print-acceptance.ps1`, `xlsx-print-format-acceptance.ps1`; the
+  offsets and theme colours were measured from an Excel PDF export. Tinted theme colours can
+  differ from Excel by a couple of levels per channel; picture crop and recolour settings are
+  not applied.
 - Collaboration: `ooxml-core/xlsx/collab` maps the workbook to Yjs (cell values and formulas,
   formats, row heights, column widths, merges, sheet add/rename/move/delete/state/tab colour,
   defined names, selections; row and column inserts travel as the resulting cell moves), and

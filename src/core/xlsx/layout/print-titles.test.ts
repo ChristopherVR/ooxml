@@ -51,14 +51,15 @@ it('evaluates field codes, sections, escaped ampersands and localized date/time'
 	});
 	expect(result.sections.left).toBe('Report & Book.xlsx');
 	expect(result.sections.right).toBe('Page 5 of 4');
-	// Excel 16.0.20430.20146 printed "Offset 72" for "Offset &P+2" on page 7.
-	// Native oddHeader XML ended with "Offset &amp;P+2".
-	// Keep the raw offset token unsupported rather than assume arithmetic behavior.
-	expect(parseHeaderFooter('&P+2').unsupported).toEqual(['&P+2']);
+	// Excel 16 prints pages 1..3 of "[&P+2]" as 3, 4, 5 (hf-probe via ExportAsFixedFormat).
+	expect(parseHeaderFooter('&P+2').unsupported).toEqual([]);
+	expect(
+		renderHeaderFooter('&P+2', { page: 7, pages: 9, sheet: 'S', file: 'F' }).sections.center,
+	).toBe('9');
 	expect(result.sections.center).toContain('12/10/26');
 	expect(result.sections.center).toMatch(/1:04/);
 	expect(result.unsupported).toEqual([]);
-	expect(parseHeaderFooter('&C&"Calibri,Bold"&12&BHello &G').unsupported).toEqual(['&G']);
+	expect(parseHeaderFooter('&C&"Calibri,Bold"&12&BHello &G').unsupported).toEqual([]);
 	expect(
 		pageHeaderFooter(
 			{

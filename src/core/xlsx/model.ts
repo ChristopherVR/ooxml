@@ -747,6 +747,17 @@ export interface PageSetup {
 	alignWithMargins?: boolean;
 }
 
+/** A picture of a header or footer (`&G`), from the VML drawing `legacyDrawingHF`. */
+export interface HeaderFooterImage {
+	/** Package part of the image (`xl/media/image1.png`). */
+	partName: string;
+	contentType: string;
+	/** Size of the shape in points. */
+	widthPt: number;
+	heightPt: number;
+	title?: string;
+}
+
 /** `<sheetFormatPr>` attributes besides the default row height and column width. */
 export interface SheetFormat {
 	/** Rows are hidden unless written (`zeroHeight`). */
@@ -815,6 +826,11 @@ export interface Worksheet {
 	scenarios?: import('./model-whatif').ScenarioSet;
 	autoFilter?: AutoFilter;
 	pageSetup?: PageSetup;
+	/**
+	 * Header and footer pictures by their VML id (`LH`, `CH`, `RH`, `LF`... with `FIRST` or `EVEN`
+	 * for those pages), read for display; the VML part itself is kept verbatim.
+	 */
+	headerFooterImages?: Record<string, HeaderFooterImage>;
 	/** Print options; absent means none set. */
 	printOptions?: PrintOptions;
 	protection?: SheetProtection;

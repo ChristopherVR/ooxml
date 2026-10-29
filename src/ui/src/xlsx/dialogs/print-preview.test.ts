@@ -13,7 +13,7 @@ it('previews core pages with navigation and reports unsupported print features',
 	edit.setCellInput(0, 0, 0, 'First');
 	edit.setCellInput(0, 8, 0, 'Last');
 	edit.setPageBreak(0, 'row', 5);
-	edit.setPageSetup(0, { header: '&G' });
+	edit.setPageSetup(0, { header: '&"Arial,Unknown"' });
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('print-preview');
 	const dialog = dialogEl(ctx, 'print-preview');
