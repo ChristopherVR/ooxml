@@ -1,6 +1,6 @@
 # Prise en main
 
-docx-viewer se compose d'un composant web `<docx-editor>` et de six fines couches d'adaptation pour les frameworks. Cette page installe un adaptateur, monte l'éditeur, puis charge et enregistre un document. Il s'agit d'une implémentation précoce : elle n'offre pas la parité avec Microsoft Word ni un export sans perte (voir la [feuille de route de la prise en charge](/parity-roadmap)).
+docx-viewer se compose d'un composant web `<docx-editor>` et de six fines couches d'adaptation pour les frameworks. Cette page installe un adaptateur, monte l'éditeur, puis charge et enregistre un document. Elle est stable au sens de la [politique de stabilité](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md), avec une [garantie de préservation](/preservation), mais elle n'offre pas la parité avec Microsoft Word (voir la [feuille de route de la prise en charge](/parity-roadmap)).
 
 ## 1. Installer
 

@@ -1,6 +1,6 @@
 # 快速开始
 
-docx-viewer 由一个 `<docx-editor>` Web Component 和六个轻量的框架适配器组成。本页将安装适配器、挂载编辑器，并加载和保存文档。它是一个早期实现：并不等同于 Microsoft Word，也不是无损导出（参见[支持路线图](/parity-roadmap)）。
+docx-viewer 由一个 `<docx-editor>` Web Component 和六个轻量的框架适配器组成。本页将安装适配器、挂载编辑器，并加载和保存文档。它依据[稳定性策略](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)属于稳定版，并提供[保留保证](/preservation)，但并不等同于 Microsoft Word（参见[支持路线图](/parity-roadmap)）。
 
 ## 1. 安装
 

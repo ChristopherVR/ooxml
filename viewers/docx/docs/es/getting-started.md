@@ -1,6 +1,6 @@
 # Primeros pasos
 
-docx-viewer es un único componente web `<docx-editor>` más seis adaptadores de framework muy ligeros. Esta página instala un adaptador, monta el editor y carga y guarda un documento. Es una implementación temprana: no equivale a Microsoft Word ni garantiza una exportación sin pérdidas (consulte la [hoja de ruta de compatibilidad](/parity-roadmap)).
+docx-viewer es un único componente web `<docx-editor>` más seis adaptadores de framework muy ligeros. Esta página instala un adaptador, monta el editor y carga y guarda un documento. Es estable según la [política de estabilidad](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md), con una [garantía de conservación](/preservation), pero no equivale a Microsoft Word (consulte la [hoja de ruta de compatibilidad](/parity-roadmap)).
 
 ## 1. Instalación
 
