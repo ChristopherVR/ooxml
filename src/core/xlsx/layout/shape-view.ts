@@ -111,9 +111,9 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 		const anchorAttr = line.align === 'ctr' ? 'middle' : line.align === 'r' ? 'end' : 'start';
 		const baseline = y + (heights[index] ?? 0) * 0.8;
 		y += heights[index] ?? 0;
-		return `<text x="${round(x)}" y="${round(baseline)}" font-family="Calibri,Arial,sans-serif" font-size="${round(line.fontPx)}" fill="${line.color}" text-anchor="${anchorAttr}"${line.bold ? ' font-weight="bold"' : ''}${line.italic ? ' font-style="italic"' : ''}>${escapeXml(line.text)}</text>`;
+		return `<text x="${round(x)}" y="${round(baseline)}" font-family="Calibri,Arial,sans-serif" font-size="${round(line.fontPx)}" fill="${escapeXml(line.color)}" text-anchor="${anchorAttr}"${line.bold ? ' font-weight="bold"' : ''}${line.italic ? ' font-style="italic"' : ''}>${escapeXml(line.text)}</text>`;
 	});
-	return `<g clip-path="url(#${clip})">${spans.join('')}</g>`;
+	return `<g clip-path="url(#${escapeXml(clip)})">${spans.join('')}</g>`;
 }
 
 function markerDef(
@@ -132,7 +132,7 @@ function markerDef(
 					? '<path d="M1 1 L9 5 L1 9" fill="none" stroke-width="1.5"/>'
 					: '<path d="M1 1 L9 5 L1 9 Z"/>';
 	ctx.defs.push(
-		`<marker id="${id}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse" fill="${color}" stroke="${color}">${shape}</marker>`,
+		`<marker id="${escapeXml(id)}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse" fill="${escapeXml(color)}" stroke="${escapeXml(color)}">${shape}</marker>`,
 	);
 	return id;
 }
@@ -202,7 +202,7 @@ function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
 			const fill =
 				fillNone || path.fill === 'none' || node.kind === 'connector' ? 'none' : paint.fill;
 			const line = path.stroke === false ? 'none' : stroke.stroke;
-			return `<path d="${escapeXml(path.d)}" transform="translate(${round(box.x)} ${round(box.y)})" fill="${fill}" stroke="${line}" stroke-width="${round(stroke.width)}" stroke-linejoin="miter"${stroke.dash ? ` stroke-dasharray="${stroke.dash}"` : ''}${head ? ` marker-start="url(#${head})"` : ''}${tail ? ` marker-end="url(#${tail})"` : ''}/>`;
+			return `<path d="${escapeXml(path.d)}" transform="translate(${round(box.x)} ${round(box.y)})" fill="${escapeXml(fill)}" stroke="${escapeXml(line)}" stroke-width="${round(stroke.width)}" stroke-linejoin="miter"${stroke.dash ? ` stroke-dasharray="${escapeXml(stroke.dash)}"` : ''}${head ? ` marker-start="url(#${escapeXml(head)})"` : ''}${tail ? ` marker-end="url(#${escapeXml(tail)})"` : ''}/>`;
 		})
 		.join('');
 	const rect: Box = textRect

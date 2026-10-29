@@ -66,8 +66,8 @@ function dropdown(
 ) {
 	const button = Math.min(16, w / 2);
 	const text = s.selected >= 1 ? (items[s.selected - 1] ?? '') : '';
-	const clip = `<clipPath id="fc-drop-${c.shapeId}"><rect x="2" y="1" width="${round(Math.max(0, w - button - 4))}" height="${round(h - 2)}"/></clipPath>`;
-	return `<defs>${clip}</defs><rect x="0.5" y="0.5" width="${round(w - 1)}" height="${round(h - 1)}" fill="#fff" stroke="#7a7a7a"/><g clip-path="url(#fc-drop-${c.shapeId})">${caption(text, 4, h, size)}</g><rect data-control-part="drop" x="${round(w - button - 0.5)}" y="1.5" width="${round(button - 1)}" height="${round(h - 3)}" fill="${FACE}" stroke="${EDGE}"/>${arrow(w - button / 2, h / 2, false)}`;
+	const clip = `<clipPath id="fc-drop-${escapeXml(String(c.shapeId))}"><rect x="2" y="1" width="${round(Math.max(0, w - button - 4))}" height="${round(h - 2)}"/></clipPath>`;
+	return `<defs>${clip}</defs><rect x="0.5" y="0.5" width="${round(w - 1)}" height="${round(h - 1)}" fill="#fff" stroke="#7a7a7a"/><g clip-path="url(#fc-drop-${escapeXml(String(c.shapeId))})">${caption(text, 4, h, size)}</g><rect data-control-part="drop" x="${round(w - button - 0.5)}" y="1.5" width="${round(button - 1)}" height="${round(h - 3)}" fill="${FACE}" stroke="${EDGE}"/>${arrow(w - button / 2, h / 2, false)}`;
 }
 
 function list(s: ControlState, items: readonly string[], w: number, h: number, size: number) {
@@ -100,7 +100,7 @@ function scroll(c: FormControlObject, s: ControlState, w: number, h: number) {
 	const offset = end + ratio * Math.max(0, length - thumbLength);
 	const track = '#f0f0f0';
 	const rect = (part: string, x: number, y: number, rw: number, rh: number, fill: string) =>
-		`<rect data-control-part="${part}" x="${round(x)}" y="${round(y)}" width="${round(rw)}" height="${round(rh)}" fill="${fill}" stroke="${EDGE}"/>`;
+		`<rect data-control-part="${escapeXml(part)}" x="${round(x)}" y="${round(y)}" width="${round(rw)}" height="${round(rh)}" fill="${escapeXml(fill)}" stroke="${EDGE}"/>`;
 	if (horizontal)
 		return `${rect('track', end, 0.5, length, h - 1, track)}${rect('step-down', 0.5, 0.5, end, h - 1, FACE)}${rect('step-up', w - end - 0.5, 0.5, end, h - 1, FACE)}${rect('thumb', offset, 0.5, thumbLength, h - 1, FACE)}<path d="M${round(end * 0.6)} ${round(h / 2 - 3)} l-3 3 l3 3 Z M${round(w - end * 0.6)} ${round(h / 2 - 3)} l3 3 l-3 3 Z" fill="#606060"/>`;
 	return `${rect('track', 0.5, end, w - 1, length, track)}${rect('step-down', 0.5, 0.5, w - 1, end, FACE)}${rect('step-up', 0.5, h - end - 0.5, w - 1, end, FACE)}${rect('thumb', 0.5, offset, w - 1, thumbLength, FACE)}${arrow(w / 2, end / 2, true)}${arrow(w / 2, h - end / 2, false)}`;
