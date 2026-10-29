@@ -279,3 +279,34 @@ describe('office-ui-call-grid', () => {
 		expect(q(el, '.empty').textContent).toBe('Nobody is in the call');
 	});
 });
+
+describe('office-ui-chat-list moderation', () => {
+	const rows = [msg({ id: 'mine', authorId: 'me' }), msg({ id: 'theirs', authorId: 'x' })];
+	const toolbars = (el: HTMLElement): HTMLElement[] => qa<HTMLElement>(el, '.toolbar');
+
+	it('offers Delete on your own messages only, and Hide on others only to a moderator', async () => {
+		const plain = await mount<OfficeUiChatList>('office-ui-chat-list', {
+			messages: rows,
+			selfId: 'me',
+		});
+		const [own, other] = toolbars(plain);
+		expect(own!.querySelector('[title="Delete"]')).not.toBeNull();
+		expect(own!.querySelector('[data-action="hide"]')).toBeNull();
+		expect(other!.querySelector('[title="Delete"]')).toBeNull();
+		expect(other!.querySelector('[data-action="hide"]')).toBeNull();
+
+		const moderator = await mount<OfficeUiChatList>('office-ui-chat-list', {
+			messages: rows,
+			selfId: 'me',
+			moderator: true,
+		});
+		const [ownMod, otherMod] = toolbars(moderator);
+		expect(ownMod!.querySelector('[data-action="hide"]')).toBeNull();
+		const hide = otherMod!.querySelector<HTMLButtonElement>('[data-action="hide"]')!;
+		const detail = events(moderator, 'office-chat-delete');
+		hide.click();
+		expect(detail).toEqual([{ messageId: 'theirs', moderation: true }]);
+		// Hiding is not editing: a moderator gets no Edit on somebody else's message.
+		expect(otherMod!.querySelector('[title="Edit"]')).toBeNull();
+	});
+});

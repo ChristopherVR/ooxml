@@ -5,6 +5,8 @@ export const deChat: Record<keyof typeof enChat, string> = {
 	'chat.backToChats': 'Zurück zu den Chats',
 	'chat.call': 'Anrufen',
 	'chat.confirmDelete': 'Diese Nachricht löschen?',
+	'chat.confirmHide': 'Diese Nachricht für alle ausblenden?',
+	'chat.hide': 'Nachricht ausblenden',
 	'chat.delete': 'Löschen',
 	'chat.deleted': 'Diese Nachricht wurde gelöscht',
 	'chat.edited': '(bearbeitet)',

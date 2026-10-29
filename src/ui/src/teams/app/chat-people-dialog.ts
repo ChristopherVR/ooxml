@@ -15,11 +15,14 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 		...TeamsDialog.properties,
 		chat: { attribute: false },
 		contacts: { attribute: false },
+		moderator: { type: Boolean },
 		name: { state: true },
 		adding: { state: true },
 	};
 	declare chat: ChatView | null;
 	declare contacts: ContactView[];
+	/** Only a moderator removes somebody else; anybody may leave (the server enforces both). */
+	declare moderator: boolean;
 	declare name: string;
 	declare adding: string[];
 
@@ -27,6 +30,7 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 		super();
 		this.chat = null;
 		this.contacts = [];
+		this.moderator = false;
 		this.name = '';
 		this.adding = [];
 	}
@@ -80,7 +84,7 @@ export class TeamsChatPeopleDialog extends TeamsDialog {
 									>${m.self ? this.t('common.nameYou', { name: m.name }) : m.name}</span
 								>
 								${
-									group && !m.self && chat.members.length > 1
+									group && !m.self && this.moderator && chat.members.length > 1
 										? html`<button
 												type="button"
 												aria-label=${this.t('people.remove', { name: m.name })}

@@ -85,7 +85,10 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 	const mirrorMembers = (chat: ChatInfo, chatDoc: Y.Doc): void => {
 		const map = chatDoc.getMap<boolean>(CHAT_MEMBERS_MAP);
 		const want = new Set(chat.members.map((m) => m.id));
-		const stale = [...map.keys()].filter((k) => !want.has(k));
+		// The server lets a member drop only themselves; a stale view must not delete others.
+		const stale = [...map.keys()].filter(
+			(k) => !want.has(k) && (k === user.id || user.moderator === true),
+		);
 		const missing = [...want].filter((k) => map.get(k) !== true);
 		if (!stale.length && !missing.length) return;
 		chatDoc.transact(() => {
@@ -159,6 +162,8 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		const chat = directory.get(id);
 		const gone = chat?.members.find((m) => m.id === userId);
 		if (!chat || !gone || !isChatMember(chat, user.id)) return false;
+		// The server lets a member remove only themselves; removing others is a moderator action.
+		if (userId !== user.id && user.moderator !== true) return false;
 		// Say it while the chat is still open on this device.
 		if (userId === user.id) notice(id, `${user.name} left the chat`);
 		const ok = directory.remove(id, userId);
@@ -208,6 +213,7 @@ export function createChatRooms(options: ChatRoomsOptions): ChatRooms {
 		},
 		createChannel: (input) => base.createChannel(input),
 		archiveChannel: (id, archived) => base.archiveChannel(id, archived),
+		renameChannel: (id, name) => base.renameChannel(id, name),
 		messages: (id) =>
 			route<Message[]>(
 				id,

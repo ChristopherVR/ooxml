@@ -10,6 +10,8 @@ export interface TeamsSession {
 	token: string;
 	/** The id the server authenticated: use it as the workspace user id. */
 	userId: string;
+	/** `moderator` when the server granted it; the UI offers moderation actions only then. */
+	role?: 'moderator';
 	/** Epoch milliseconds; request a new session before then. */
 	expiresAt: number;
 }
@@ -77,7 +79,12 @@ export async function requestTeamsSession(
 		typeof body.expiresAt !== 'number'
 	)
 		throw new Error('Server returned an invalid session');
-	return { token: body.session, userId: body.user, expiresAt: body.expiresAt };
+	return {
+		token: body.session,
+		userId: body.user,
+		expiresAt: body.expiresAt,
+		...(body.role === 'moderator' ? { role: 'moderator' as const } : {}),
+	};
 }
 
 /** `https://host` for the HTTP side of a server config (the origin of its sync or signaling URL). */

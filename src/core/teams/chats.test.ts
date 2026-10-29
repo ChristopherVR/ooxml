@@ -14,10 +14,11 @@ const until = async (fn: () => boolean, ms = 3000): Promise<boolean> => {
 const clients: TeamsClient[] = [];
 let room = 0;
 const workspace = (): string => `chats-${Date.now()}-${room++}`;
-const make = (name: string, workspaceId: string): TeamsClient => {
+const make = (name: string, workspaceId: string, moderator = false): TeamsClient => {
 	const c = createTeamsClient({
 		workspaceId,
 		user: { id: name, name: name[0]!.toUpperCase() + name.slice(1) },
+		moderator,
 		reminderCheckMs: 0,
 	});
 	clients.push(c);
@@ -122,7 +123,7 @@ describe('chats in the client', () => {
 
 	it('creates a group chat with a name, system messages, rename, add, remove and leave', async () => {
 		const ws = workspace();
-		const ada = make('ada', ws);
+		const ada = make('ada', ws, true);
 		const bob = make('bob', ws);
 		const cy = make('cy', ws);
 		const dan = make('dan', ws);
@@ -149,7 +150,11 @@ describe('chats in the client', () => {
 		await until(() => ada.getState().messages.some((m) => m.text === 'Bob left the chat'));
 		expect(ada.getState().messages.some((m) => m.text === 'Bob left the chat')).toBe(true);
 
+		// Only a moderator removes somebody else: the server refuses it from a plain member.
 		cy.removeFromChat(id, 'dan');
+		await sleep(100);
+		expect(dan.getState().chats.some((c) => c.id === id)).toBe(true);
+		ada.removeFromChat(id, 'dan');
 		expect(await until(() => dan.getState().chats.length === 0)).toBe(true);
 		expect(dan.workspace.chat.messages(id)).toEqual([]);
 	});

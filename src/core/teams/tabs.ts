@@ -98,13 +98,13 @@ export function createTabStore(
 		rename(id, name) {
 			const tab = read(id, rows.get(id));
 			const clean = sanitizeChannelName(name);
-			if (!tab || tab.createdBy !== user.id || !clean) return false;
+			if (!tab || (tab.createdBy !== user.id && user.moderator !== true) || !clean) return false;
 			rows.get(id)!.set('name', clean);
 			return true;
 		},
 		remove(id) {
 			const tab = read(id, rows.get(id));
-			if (!tab || tab.createdBy !== user.id) return false;
+			if (!tab || (tab.createdBy !== user.id && user.moderator !== true)) return false;
 			rows.delete(id);
 			return true;
 		},

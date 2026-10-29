@@ -464,6 +464,41 @@ describe('websocket transport', () => {
 		expect(FakeSocket.instances).toHaveLength(2);
 		vi.useRealTimers();
 	});
+	it('reports a 1008 refusal, backs off hard and gives up on repeated rejected updates', () => {
+		vi.useFakeTimers();
+		FakeSocket.instances = [];
+		const transport = createWebSocketTransport({
+			url: 'wss://h/c/r',
+			WebSocket: FakeSocket,
+			baseDelayMs: 100,
+		});
+		const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };
+		transport.connect(handlers);
+		const refuse = (): void => {
+			const socket = FakeSocket.instances.at(-1)!;
+			socket.readyState = 1;
+			socket.onopen!({});
+			socket.onclose!({ code: 1008, reason: 'update rejected: foreign-row' });
+		};
+		refuse();
+		expect(handlers.error.mock.calls[0]![0].message).toContain('update rejected: foreign-row');
+		// The handshake succeeded, yet the retry waits for the policy delay, not 100 ms.
+		vi.advanceTimersByTime(4999);
+		expect(FakeSocket.instances).toHaveLength(1);
+		vi.advanceTimersByTime(1);
+		expect(FakeSocket.instances).toHaveLength(2);
+		refuse();
+		vi.advanceTimersByTime(9999);
+		expect(FakeSocket.instances).toHaveLength(2);
+		vi.advanceTimersByTime(1);
+		expect(FakeSocket.instances).toHaveLength(3);
+		refuse();
+		expect(handlers.error.mock.calls.at(-1)![0].message).toContain('sync stopped');
+		vi.advanceTimersByTime(600_000);
+		expect(FakeSocket.instances).toHaveLength(3);
+		transport.disconnect();
+		vi.useRealTimers();
+	});
 	it('fails fast on mixed content', () => {
 		const handlers = { open: vi.fn(), close: vi.fn(), message: vi.fn(), error: vi.fn() };
 		FakeSocket.instances = [];

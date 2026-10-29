@@ -5,6 +5,8 @@ export const zhCNChat: Record<keyof typeof enChat, string> = {
 	'chat.backToChats': '返回聊天',
 	'chat.call': '呼叫',
 	'chat.confirmDelete': '要删除此消息吗？',
+	'chat.confirmHide': '要对所有人隐藏此消息吗？',
+	'chat.hide': '隐藏消息',
 	'chat.delete': '删除',
 	'chat.deleted': '此消息已删除',
 	'chat.edited': '（已编辑）',

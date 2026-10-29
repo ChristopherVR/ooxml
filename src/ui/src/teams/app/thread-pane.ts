@@ -30,13 +30,14 @@ export function threadPane(
 			.messages=${[thread.root, ...thread.replies]}
 			.pinnedIds=${state.pinned.map((p) => p.message.id)}
 			self-id=${state.user.id}
+			?moderator=${state.moderator}
 			.highlightId=${highlightId}
 			@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => client.pinMessage(e.detail.messageId)}
 			@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => client.unpinMessage(e.detail.messageId)}
 			@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => client.toggleReaction(e.detail.messageId, e.detail.emoji)}
 			@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => client.startReply(e.detail.messageId)}
 			@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => client.startEdit(e.detail.messageId)}
-			@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.(t('chat.confirmDelete')) !== false && client.deleteMessage(e.detail.messageId)}
+			@office-chat-delete=${(e: CustomEvent<{ messageId: string; moderation?: boolean }>) => globalThis.confirm?.(t(e.detail.moderation ? 'chat.confirmHide' : 'chat.confirmDelete')) !== false && client.deleteMessage(e.detail.messageId)}
 			@office-chat-open-file=${(e: CustomEvent<{ attachment: Attachment }>) => openFile(e.detail.attachment)}
 		></office-ui-chat-list>
 		<office-ui-chat-composer

@@ -371,6 +371,7 @@ export class TeamsApp extends TeamsLitElement {
 			workspaceId,
 			user: named,
 			config: this.signIn.apply(base),
+			moderator: account?.role === 'moderator',
 			storage: safeStorage,
 			...(this.uploadFile ? { uploadFile: this.uploadFile } : {}),
 		});
@@ -1133,7 +1134,7 @@ export class TeamsApp extends TeamsLitElement {
 										: nothing
 								}
 								${
-									sharedTab?.createdBy === s.user.id
+									sharedTab && (sharedTab.createdBy === s.user.id || s.moderator)
 										? html`<office-ui-menu-button
 												label=${this.t('app.tabOptions')}
 												icon="more"
@@ -1165,6 +1166,42 @@ export class TeamsApp extends TeamsLitElement {
 												><office-ui-menu-item
 													label=${this.t('app.removeTab')}
 													command="remove-tab"
+												></office-ui-menu-item
+											></office-ui-menu-button>`
+										: nothing
+								}
+								${
+									channel &&
+									channel.kind === 'channel' &&
+									(channel.createdBy === s.user.id || s.moderator)
+										? html`<office-ui-menu-button
+												data-channel-options
+												label=${this.t('app.channelOptions')}
+												icon="more"
+												icon-only
+												@office-command=${(event: CustomEvent<{ command: string }>) => {
+													if (event.detail.command === 'rename-channel') {
+														const name = globalThis
+															.prompt?.(this.t('app.channelNamePrompt'), channel.name)
+															?.trim();
+														if (name) c?.renameChannel(channel.id, name);
+													} else if (event.detail.command === 'archive-channel') {
+														if (!this.canLeaveContent()) return;
+														if (
+															globalThis.confirm?.(
+																this.t('app.confirmArchiveChannel', { name: channel.name }),
+															) === true
+														)
+															c?.archiveChannel(channel.id);
+													}
+												}}
+												><office-ui-menu-item
+													label=${this.t('app.renameChannel')}
+													command="rename-channel"
+												></office-ui-menu-item
+												><office-ui-menu-item
+													label=${this.t('app.archiveChannel')}
+													command="archive-channel"
 												></office-ui-menu-item
 											></office-ui-menu-button>`
 										: nothing
@@ -1232,6 +1269,7 @@ export class TeamsApp extends TeamsLitElement {
 										.replyCounts=${compact ? {} : s.replyCounts}
 										.pinnedIds=${s.pinned.map((p) => p.message.id)}
 										self-id=${s.user.id}
+										?moderator=${s.moderator}
 										.highlightId=${this.highlightId}
 										.meetings=${meetingCards(s.meetings, Date.now())}
 										@office-chat-meeting=${(e: CustomEvent<{ meetingId: string; action: 'join' | 'open' }>) => (e.detail.action === 'join' ? void this.joinMeeting(e.detail.meetingId) : this.openMeeting(e.detail.meetingId))}
@@ -1241,7 +1279,7 @@ export class TeamsApp extends TeamsLitElement {
 										@office-chat-thread=${(e: CustomEvent<{ messageId: string }>) => void this.openThread(e.detail.messageId)}
 										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? w?.startReply(e.detail.messageId) : w ? void this.openThread(e.detail.messageId, 'reply') : undefined)}
 										@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => (compact ? w?.startEdit(e.detail.messageId) : w ? void this.openThread(e.detail.messageId, 'edit') : undefined)}
-										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.(this.t('chat.confirmDelete')) !== false && w?.deleteMessage(e.detail.messageId)}
+										@office-chat-delete=${(e: CustomEvent<{ messageId: string; moderation?: boolean }>) => globalThis.confirm?.(this.t(e.detail.moderation ? 'chat.confirmHide' : 'chat.confirmDelete')) !== false && w?.deleteMessage(e.detail.messageId)}
 										@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
 									></office-ui-chat-list>
 									${
@@ -1389,6 +1427,7 @@ export class TeamsApp extends TeamsLitElement {
 				?open=${this.chatPeople && chat !== null}
 				.chat=${chat}
 				.contacts=${s.contacts}
+				?moderator=${s.moderator}
 				@teams-chat-rename=${(e: CustomEvent<{ id: string; name: string }>) => c?.renameChat(e.detail.id, e.detail.name)}
 				@teams-chat-add=${(e: CustomEvent<{ id: string; userIds: string[] }>) => c?.addToChat(e.detail.id, e.detail.userIds)}
 				@teams-chat-remove=${(e: CustomEvent<{ id: string; userId: string }>) => c?.removeFromChat(e.detail.id, e.detail.userId)}

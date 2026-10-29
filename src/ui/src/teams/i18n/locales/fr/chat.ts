@@ -5,6 +5,8 @@ export const frChat: Record<keyof typeof enChat, string> = {
 	'chat.backToChats': 'Retour aux conversations',
 	'chat.call': 'Appeler',
 	'chat.confirmDelete': 'Supprimer ce message ?',
+	'chat.confirmHide': 'Masquer ce message pour tout le monde ?',
+	'chat.hide': 'Masquer le message',
 	'chat.delete': 'Supprimer',
 	'chat.deleted': 'Ce message a été supprimé',
 	'chat.edited': '(modifié)',

@@ -3,6 +3,8 @@ export const enChat = {
 	'chat.backToChats': 'Back to chats',
 	'chat.call': 'Call',
 	'chat.confirmDelete': 'Delete this message?',
+	'chat.confirmHide': 'Hide this message for everyone?',
+	'chat.hide': 'Hide message',
 	'chat.delete': 'Delete',
 	'chat.deleted': 'This message was deleted',
 	'chat.edited': '(edited)',

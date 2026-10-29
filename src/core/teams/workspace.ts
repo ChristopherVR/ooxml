@@ -70,6 +70,8 @@ export interface WorkspaceOptions {
 	/** Room id for the shared state: 1-128 alphanumeric, `-` or `_`. */
 	workspaceId: string;
 	user: { id?: string; name: string; color?: string };
+	/** The signed session says moderator: offer moderation actions (the server still enforces). */
+	moderator?: boolean;
 	config?: TeamsServerConfig;
 	/** Bring your own Y.Doc, for example one restored from a local snapshot. */
 	doc?: Y.Doc;
@@ -83,7 +85,7 @@ export interface WorkspaceOptions {
 }
 
 export interface TeamsWorkspace {
-	readonly user: { id: string; name: string };
+	readonly user: { id: string; name: string; moderator?: boolean };
 	readonly session: CollabSession<TeamsPresence>;
 	/** Channels and private chats behind one store; chats sync in rooms of their own. */
 	readonly chat: ChatRooms;
@@ -133,7 +135,11 @@ function sanitizePresence(raw: Record<string, unknown>): TeamsPresence {
 
 export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace {
 	const config = options.config ?? localServerConfig();
-	const user = { id: options.user.id ?? createClientId(), name: options.user.name };
+	const user = {
+		id: options.user.id ?? createClientId(),
+		name: options.user.name,
+		...(options.moderator === true ? { moderator: true } : {}),
+	};
 	// With accounts the server reads the user from the session; the claimed id is only a dev default.
 	const auth = connectionAuth(config);
 	const wsCtor = options.WebSocket;

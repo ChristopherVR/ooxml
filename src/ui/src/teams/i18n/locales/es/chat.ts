@@ -5,6 +5,8 @@ export const esChat: Record<keyof typeof enChat, string> = {
 	'chat.backToChats': 'Volver a los chats',
 	'chat.call': 'Llamar',
 	'chat.confirmDelete': '¿Eliminar este mensaje?',
+	'chat.confirmHide': '¿Ocultar este mensaje para todos?',
+	'chat.hide': 'Ocultar mensaje',
 	'chat.delete': 'Eliminar',
 	'chat.deleted': 'Este mensaje se eliminó',
 	'chat.edited': '(editado)',

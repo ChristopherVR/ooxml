@@ -29,6 +29,11 @@ const SEP = '|';
 export interface ChatUser {
 	id: string;
 	name: string;
+	/**
+	 * The server session grants moderation: hide anybody's message, rename or archive anybody's
+	 * channel. Advisory on the client (it only decides which actions are offered); the server enforces.
+	 */
+	moderator?: boolean;
 }
 
 export interface ReactionEvent {
@@ -47,6 +52,8 @@ export interface ChatStore {
 		id?: string;
 	}) => Channel | null;
 	archiveChannel: (channelId: string, archived?: boolean) => void;
+	/** Rename a channel; false when it does not exist or the name is empty. */
+	renameChannel: (channelId: string, name: string) => boolean;
 	messages: (channelId: string) => Message[];
 	/** Post a message; returns null when the text and attachments are both empty. */
 	post: (
@@ -223,6 +230,13 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 		archiveChannel(channelId, archived = true) {
 			channelMap.get(channelId)?.set('archived', archived);
 		},
+		renameChannel(channelId, name) {
+			const clean = sanitizeChannelName(name);
+			const row = channelMap.get(channelId);
+			if (!row || !clean) return false;
+			row.set('name', clean);
+			return true;
+		},
 		messages(channelId) {
 			if (!isChannelId(channelId)) return [];
 			const out: Message[] = [];
@@ -294,7 +308,7 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 		remove(channelId, messageId) {
 			if (!isChannelId(channelId)) return false;
 			const m = channelMessages(channelId).get(messageId);
-			if (!m || m.get('authorId') !== user.id) return false;
+			if (!m || (m.get('authorId') !== user.id && user.moderator !== true)) return false;
 			m.set('deleted', true);
 			return true;
 		},

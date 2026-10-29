@@ -102,6 +102,37 @@ describe('<teams-app> Chat and Calendar', () => {
 		el.remove();
 	});
 
+	it('offers channel options only for a channel you created (no moderator here)', async () => {
+		const el = await mount();
+		el.client!.createChannel('Mine');
+		await tick(10);
+		await el.updateComplete;
+		expect(el.shadowRoot!.querySelector('[data-channel-options]')).not.toBeNull();
+		// A channel somebody else created: no rename or archive.
+		const doc = el.client!.workspace.session.doc;
+		const channels = doc.getMap<unknown>('teams:channels');
+		const Row = channels.constructor as new () => { set: (k: string, v: unknown) => void };
+		doc.transact(() => {
+			const row = new Row();
+			for (const [k, v] of Object.entries({
+				name: 'Theirs',
+				topic: '',
+				kind: 'channel',
+				createdAt: 1,
+				createdBy: 'zed',
+				archived: false,
+			}))
+				row.set(k, v);
+			channels.set('theirs', row);
+		});
+		el.client!.select('theirs');
+		await tick(10);
+		await el.updateComplete;
+		expect(el.client!.getState().channel?.name).toBe('Theirs');
+		expect(el.shadowRoot!.querySelector('[data-channel-options]')).toBeNull();
+		el.remove();
+	});
+
 	it('creates a named group chat and manages its people from the header', async () => {
 		const el = await mount();
 		addColleague(el, 'bob', 'Bob');
@@ -129,7 +160,14 @@ describe('<teams-app> Chat and Calendar', () => {
 		expect(el.client!.getState().chats[0]!.title).toBe('Launch crew');
 		people.dispatchEvent(new CustomEvent('teams-chat-remove', { detail: { id, userId: 'cy' } }));
 		await tick(10);
-		expect(el.client!.getState().chats[0]!.members.map((m) => m.id)).toEqual(['ada', 'bob']);
+		// Only a moderator removes somebody else (the server refuses it otherwise).
+		expect(el.client!.getState().chats[0]!.members.map((m) => m.id)).toEqual(['ada', 'bob', 'cy']);
+		const dialogEl = people as HTMLElement & { updateComplete: Promise<boolean> };
+		await dialogEl.updateComplete;
+		expect(dialogEl.shadowRoot!.querySelector('.members button')).toBeNull();
+		Object.assign(dialogEl, { moderator: true });
+		await dialogEl.updateComplete;
+		expect(dialogEl.shadowRoot!.querySelectorAll('.members button').length).toBe(2);
 		el.remove();
 	});
 

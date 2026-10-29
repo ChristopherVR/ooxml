@@ -71,6 +71,7 @@ export class OfficeUiChatList extends TeamsElement {
 		pinnedIds: { attribute: false },
 		highlightId: { type: String, attribute: 'highlight-id' },
 		meetings: { attribute: false },
+		moderator: { type: Boolean },
 	};
 	declare messages: ChatMessage[];
 	declare selfId: string;
@@ -80,6 +81,8 @@ export class OfficeUiChatList extends TeamsElement {
 	declare highlightId: string;
 	/** Meeting cards by meeting id (the meetings in the person's calendar). */
 	declare meetings: Record<string, MeetingCard>;
+	/** The signed-in person moderates: others' messages get a Hide action (the server enforces). */
+	declare moderator: boolean;
 	private stickToBottom = true;
 
 	constructor() {
@@ -90,6 +93,7 @@ export class OfficeUiChatList extends TeamsElement {
 		this.pinnedIds = [];
 		this.highlightId = '';
 		this.meetings = {};
+		this.moderator = false;
 	}
 
 	override connectedCallback(): void {
@@ -299,7 +303,17 @@ export class OfficeUiChatList extends TeamsElement {
 								>
 									${icon('trash')}
 								</button>`
-						: nothing
+						: this.moderator && !m.system
+							? html`<button
+									type="button"
+									data-action="hide"
+									title=${this.t('chat.hide')}
+									aria-label=${this.t('chat.hide')}
+									@click=${() => this.fire('office-chat-delete', { messageId: m.id, moderation: true })}
+								>
+									${icon('trash')}
+								</button>`
+							: nothing
 				}
 			</div>
 		`;

@@ -12,7 +12,7 @@ export interface WebSocketLike {
 	send: (data: Uint8Array) => void;
 	close: () => void;
 	onopen: ((event: unknown) => void) | null;
-	onclose: ((event: { reason?: string }) => void) | null;
+	onclose: ((event: { reason?: string; code?: number }) => void) | null;
 	onerror: ((event: unknown) => void) | null;
 	onmessage: ((event: { data: unknown }) => void) | null;
 }
@@ -27,6 +27,11 @@ export interface WebSocketTransportOptions {
 	maxDelayMs?: number;
 	/** Give up after this many consecutive failed attempts. Default unlimited. */
 	maxRetries?: number;
+	/**
+	 * Stop reconnecting after this many consecutive closes of `1008 update rejected: ...` (the server
+	 * refuses the same local state each time). Default 3.
+	 */
+	maxRejectedRetries?: number;
 	/** WebSocket subprotocols to offer (for example a credential that must stay out of the URL). */
 	protocols?: string[] | undefined;
 	/** Page protocol for the mixed-content check; defaults to the ambient location. */
@@ -34,6 +39,12 @@ export interface WebSocketTransportOptions {
 }
 
 const OPEN = 1;
+/** WebSocket close code the reference server uses for policy refusals. */
+const POLICY_VIOLATION = 1008;
+const POLICY_BASE_DELAY_MS = 5000;
+const POLICY_MAX_DELAY_MS = 60_000;
+/** A connection that stayed up this long was healthy: its later refusal starts a fresh count. */
+const POLICY_RESET_MS = 30_000;
 
 /** Join a server base URL and a validated room id: `roomUrl('wss://h/collab', 'r1')`. */
 export function roomUrl(server: string, roomId: string): string {
@@ -41,11 +52,18 @@ export function roomUrl(server: string, roomId: string): string {
 }
 
 export function createWebSocketTransport(options: WebSocketTransportOptions): Transport {
-	const { baseDelayMs = 250, maxDelayMs = 10_000, maxRetries = Infinity } = options;
+	const {
+		baseDelayMs = 250,
+		maxDelayMs = 10_000,
+		maxRetries = Infinity,
+		maxRejectedRetries = 3,
+	} = options;
 	let socket: WebSocketLike | null = null;
 	let handlers: TransportHandlers | null = null;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let failures = 0;
+	let policyCloses = 0;
+	let openedAt = 0;
 	let stopped = true;
 
 	const open = (): void => {
@@ -64,7 +82,9 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 		socket = ws;
 		ws.binaryType = 'arraybuffer';
 		ws.onopen = () => {
-			failures = 0;
+			// A server that accepts the handshake and then refuses us (1008) must not reset the backoff.
+			if (policyCloses === 0) failures = 0;
+			openedAt = Date.now();
 			active.open();
 		};
 		ws.onmessage = (event) => {
@@ -79,11 +99,32 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 			socket = null;
 			active.close(event.reason);
 			if (stopped) return;
+			const policy = event.code === POLICY_VIOLATION;
+			if (!policy || Date.now() - openedAt > POLICY_RESET_MS) policyCloses = 0;
+			if (policy) policyCloses++;
 			if (++failures > maxRetries) {
 				stopped = true;
 				return active.error(new Error('WebSocket reconnect attempts exhausted'));
 			}
-			timer = setTimeout(open, Math.min(maxDelayMs, baseDelayMs * 2 ** (failures - 1)));
+			let delay = Math.min(maxDelayMs, baseDelayMs * 2 ** (failures - 1));
+			if (policy) {
+				// The server closed on purpose (rejected update, rate limit, revoked session): say why,
+				// and wait longer each time. A rejected update would be sent again on every reconnect.
+				const reason = event.reason || 'connection refused by the server';
+				const rejected = reason.startsWith('update rejected');
+				if (rejected && policyCloses >= maxRejectedRetries) {
+					stopped = true;
+					return active.error(
+						new Error(`The server rejected your changes and sync stopped: ${reason}`),
+					);
+				}
+				active.error(new Error(`The server closed the connection: ${reason}`));
+				delay = Math.max(
+					delay,
+					Math.min(POLICY_MAX_DELAY_MS, POLICY_BASE_DELAY_MS * 2 ** (policyCloses - 1)),
+				);
+			}
+			timer = setTimeout(open, delay);
 		};
 	};
 

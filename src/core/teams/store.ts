@@ -126,6 +126,8 @@ export interface TeamsState {
 	/** Whether this app may edit the workspace; `unsupported-schema` means a newer app wrote it. */
 	schema: SchemaStatus;
 	user: { id: string; name: string };
+	/** The signed session grants moderation (hide others' messages, manage others' channels and tabs). */
+	moderator: boolean;
 	/** What others see for you: your chosen status, or Away when idle. */
 	availability: Availability;
 	/** Your chosen status and message with their expiry, idleness and the idle setting. */
@@ -194,6 +196,10 @@ export interface TeamsClient extends ChatActions, MeetingActions {
 	readonly workspace: TeamsWorkspace;
 	select: (channelId: string) => void;
 	createChannel: (name: string, topic?: string) => void;
+	/** Rename a channel you created (or any channel as a moderator). */
+	renameChannel: (id: string, name: string) => boolean;
+	/** Archive a channel you created (or any channel as a moderator). */
+	archiveChannel: (id: string) => boolean;
 	addTab: (
 		name: string,
 		content: TabContent,
@@ -465,6 +471,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			mode: ws.config.mode,
 			schema: ws.schema.status(),
 			user: ws.user,
+			moderator: ws.user.moderator === true,
 			availability: presenceView().effective,
 			presence: presenceView(),
 			channels: channelViews({
@@ -680,6 +687,15 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		changed: refresh,
 	});
 
+	/** The creator or a moderator may rename or archive a shared channel (not a private chat). */
+	const canManageChannel = (id: string): boolean => {
+		const channel = ws.chat.channels().find((c) => c.id === id);
+		return (
+			channel !== undefined &&
+			channel.kind === 'channel' &&
+			(channel.createdBy === ws.user.id || ws.user.moderator === true)
+		);
+	};
 	const act =
 		<A extends unknown[]>(fn: (...args: A) => void) =>
 		(...args: A): void => {
@@ -812,6 +828,20 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			},
 		}),
 		select: act(selectId),
+		renameChannel(id, name) {
+			const ok = canManageChannel(id) && ws.chat.renameChannel(id, name);
+			if (ok) refresh();
+			else notice('You cannot rename this channel');
+			return ok;
+		},
+		archiveChannel(id) {
+			const ok = canManageChannel(id);
+			if (ok) {
+				ws.chat.archiveChannel(id, true);
+				refresh();
+			} else notice('You cannot archive this channel');
+			return ok;
+		},
 		createChannel: act((name, topic = '') => {
 			const channel = ws.chat.createChannel({ name, topic });
 			if (channel) {
