@@ -5,6 +5,7 @@
  * @module sdk/shape-style-input
  */
 
+import type { ConnectorArrowType } from '../../types/common';
 import type { PptxCustomDashSegment, ShapeStyle } from '../../types/shape-style';
 import type { GlowInput, InnerShadowInput, ReflectionInput } from './shape-style-input-types';
 import type { FillInput, ShadowInput, StrokeInput } from './types';
@@ -94,6 +95,10 @@ export function mapStrokeToShapeStyle(stroke?: StrokeInput): Partial<ShapeStyle>
 		return {};
 	}
 	const lineJoin = stroke.join ?? (stroke.miterLimit !== undefined ? 'miter' : undefined);
+	// Only `a:miter` carries a limit (CT_LineJoinMiterProperties); with an
+	// explicit round or bevel join there is nowhere to write one, so the model
+	// does not claim it either.
+	const miterLimit = lineJoin === 'miter' ? stroke.miterLimit : undefined;
 	return {
 		strokeColor: stroke.color,
 		strokeWidth: stroke.width,
@@ -102,8 +107,8 @@ export function mapStrokeToShapeStyle(stroke?: StrokeInput): Partial<ShapeStyle>
 		lineJoin,
 		lineCap: stroke.cap,
 		...(stroke.themeColorRef ? { strokeColorRef: stroke.themeColorRef } : {}),
-		...(stroke.miterLimit !== undefined
-			? { miterLimit: Math.round(stroke.miterLimit * MITER_UNITS_PER_RATIO) }
+		...(miterLimit !== undefined
+			? { miterLimit: Math.round(miterLimit * MITER_UNITS_PER_RATIO) }
 			: {}),
 		...(stroke.compound ? { compoundLine: stroke.compound } : {}),
 		...(stroke.align ? { lineAlignment: stroke.align } : {}),
@@ -121,6 +126,25 @@ export function mapStrokeToShapeStyle(stroke?: StrokeInput): Partial<ShapeStyle>
 					connectorEndArrowLength: stroke.tailEnd.length,
 				}
 			: {}),
+	};
+}
+
+/**
+ * A connector's explicit `startArrow` / `endArrow` replaces that end of the
+ * stroke whole: its size comes back to the default rather than carrying over
+ * from a `stroke.headEnd` / `stroke.tailEnd` of a different type.
+ */
+export function connectorLineEndOverride(
+	end: 'Start' | 'End',
+	type: ConnectorArrowType | undefined,
+): Partial<ShapeStyle> {
+	if (type === undefined) {
+		return {};
+	}
+	return {
+		[`connector${end}Arrow`]: type,
+		[`connector${end}ArrowWidth`]: undefined,
+		[`connector${end}ArrowLength`]: undefined,
 	};
 }
 

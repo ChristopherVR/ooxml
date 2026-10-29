@@ -27,7 +27,11 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
-import { buildShapeStyle, mapStrokeToShapeStyle } from './shape-style-input';
+import {
+	buildShapeStyle,
+	connectorLineEndOverride,
+	mapStrokeToShapeStyle,
+} from './shape-style-input';
 import type { ShapeStyleInputs } from './shape-style-input';
 import type {
 	TextOptions,
@@ -281,12 +285,22 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
 				? 'curvedConnector3'
 				: 'straightConnector1';
 
-	const stroke = mapStrokeToShapeStyle(options?.stroke ?? { color: '#000000', width: 1 });
+	// The SDK's own connector defaults (black, 1 px) apply field by field, so a
+	// stroke that sets only a dash or an arrow does not fall through to the
+	// connector writer's UI defaults instead.
+	const strokeInput = options?.stroke;
+	const stroke = mapStrokeToShapeStyle({
+		...strokeInput,
+		color: strokeInput?.color ?? '#000000',
+		width: strokeInput?.width ?? 1,
+	});
 	const style: ShapeStyle = {
 		...stroke,
-		connectorStartArrow: options?.startArrow ?? stroke.connectorStartArrow ?? 'none',
-		connectorEndArrow: options?.endArrow ?? stroke.connectorEndArrow ?? 'none',
+		...connectorLineEndOverride('Start', options?.startArrow),
+		...connectorLineEndOverride('End', options?.endArrow),
 	} as ShapeStyle;
+	style.connectorStartArrow ??= 'none';
+	style.connectorEndArrow ??= 'none';
 
 	if (options?.from) {
 		style.connectorStartConnection = {

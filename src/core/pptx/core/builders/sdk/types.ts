@@ -143,7 +143,11 @@ export interface StrokeInput {
 	dash?: StrokeDashType | number[];
 	opacity?: number;
 	join?: 'round' | 'bevel' | 'miter';
-	/** Miter limit as a ratio of the line width (e.g. 8); implies `join: 'miter'`. */
+	/**
+	 * Miter limit as a ratio of the line width (e.g. 8). Implies `join: 'miter'`
+	 * when `join` is omitted; ignored with `'round'` or `'bevel'`, which have no
+	 * limit in DrawingML.
+	 */
 	miterLimit?: number;
 	cap?: 'flat' | 'rnd' | 'sq';
 	/** Compound line type (`a:ln/@cmpd`). */
@@ -334,8 +338,11 @@ export interface ChartOptions extends Partial<ElementPosition> {}
 
 export interface ConnectorOptions extends Partial<ElementPosition> {
 	type?: 'straight' | 'bent' | 'curved';
+	/** The outline; an omitted `color` is black and an omitted `width` 1 px. */
 	stroke?: StrokeInput;
+	/** Arrow on the start; replaces `stroke.headEnd`, its size included. */
 	startArrow?: ConnectorArrowType;
+	/** Arrow on the end; replaces `stroke.tailEnd`, its size included. */
 	endArrow?: ConnectorArrowType;
 	from?: { elementId: string; site: number };
 	to?: { elementId: string; site: number };

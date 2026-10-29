@@ -2,7 +2,7 @@
  * Shape style inputs that must survive save and load through the public SDK,
  * not just appear in the mapped model: the documented defaults the SDK fills
  * in itself, and inputs whose saved form depends on what the writers emit
- * (a fractional connector width the custom dash is relative to, a reflection
+ * (a fractional width the custom dash is relative to, a reflection
  * that is visible only at its end).
  */
 import JSZip from 'jszip';
@@ -20,7 +20,9 @@ async function roundTrip(element: PptxElement): Promise<{ xml: string; style: Sh
 	slide.elements.push(element);
 	const bytes = await handler.save([slide]);
 	const zip = await JSZip.loadAsync(bytes);
-	const xml = (await zip.file('ppt/slides/slide1.xml')?.async('string')) ?? '';
+	const raw = (await zip.file('ppt/slides/slide1.xml')?.async('string')) ?? '';
+	// The writer spells empty elements `<x></x>`; compare them as `<x/>`.
+	const xml = raw.replace(/<([\w:]+)([^<>]*)><\/\1>/gu, '<$1$2/>');
 	const loaded = await new PptxHandler().load(bytes);
 	// A blank slide holds only this element; ids are reassigned on load.
 	const elements = loaded.slides[0]?.elements ?? [];
@@ -108,5 +110,63 @@ describe('reflection input', () => {
 			createShapeElement('rect', { ...box, reflection: { startOpacity: 0, endOpacity: 0 } }),
 		);
 		expect(xml).not.toContain('a:reflection');
+	});
+});
+
+describe('line join input', () => {
+	it('writes a miter limit on an implied miter join', async () => {
+		const { xml, style } = await roundTrip(
+			createShapeElement('rect', { ...box, stroke: { color: '#000000', miterLimit: 8 } }),
+		);
+		expect(xml).toContain('<a:miter lim="800000"/>');
+		expect(style.lineJoin).toBe('miter');
+		expect(style.miterLimit).toBe(800000);
+	});
+
+	it('keeps an explicit round join and does not claim the limit it cannot write', async () => {
+		const shape = createShapeElement('rect', {
+			...box,
+			stroke: { color: '#000000', join: 'round', miterLimit: 8 },
+		});
+		expect(shape.shapeStyle?.miterLimit).toBeUndefined();
+		const { xml, style } = await roundTrip(shape);
+		expect(xml).toContain('<a:round/>');
+		expect(xml).not.toContain('a:miter');
+		expect(style.lineJoin).toBe('round');
+	});
+});
+
+describe('connector defaults and line ends', () => {
+	it('draws a stroke with no colour in the SDK default black', async () => {
+		const { xml, style } = await roundTrip(
+			createConnectorElement({ ...box, height: 0, stroke: { dash: 'dash' } }),
+		);
+		expect(xml).toMatch(/<a:ln\b[^>]*\bw="9525"[^>]*><a:solidFill><a:srgbClr val="000000"/u);
+		expect(style.strokeColor?.toUpperCase()).toBe('#000000');
+	});
+
+	it('replaces the stroke head end whole, its size included, with startArrow', async () => {
+		const { xml, style } = await roundTrip(
+			createConnectorElement({
+				...box,
+				height: 0,
+				startArrow: 'arrow',
+				stroke: { color: '#000000', headEnd: { type: 'oval', width: 'lg', length: 'sm' } },
+			}),
+		);
+		expect(xml).toContain('<a:headEnd type="arrow"/>');
+		expect(style.connectorStartArrow).toBe('arrow');
+		expect(style.connectorStartArrowWidth).toBeUndefined();
+	});
+
+	it('keeps the stroke head end and its size when no startArrow is given', async () => {
+		const { xml } = await roundTrip(
+			createConnectorElement({
+				...box,
+				height: 0,
+				stroke: { color: '#000000', headEnd: { type: 'oval', width: 'lg' } },
+			}),
+		);
+		expect(xml).toContain('<a:headEnd type="oval" w="lg"/>');
 	});
 });
