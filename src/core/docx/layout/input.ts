@@ -174,6 +174,8 @@ export interface LayoutTableCell {
 	/** Source merge provenance, retained for bounded paragraph-keeping admission. */
 	gridSpan?: number;
 	verticalMerge?: 'restart' | 'continue';
+	/** Rows a vertical merge starting at this cell covers (2 or more), for vertical alignment. */
+	rowSpan?: number;
 	/** Source child order including read-only nested table stories. */
 	blocks?: LayoutBlock[];
 	/** Column width in CSS pixels; undefined cells share the row's remaining width evenly. */

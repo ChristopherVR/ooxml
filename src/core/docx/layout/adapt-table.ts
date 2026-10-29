@@ -1,3 +1,4 @@
+import { rowSpanOf, tableGrid } from '../table-grid';
 import {
 	resolveCellVisuals,
 	resolveThemeColorReference,
@@ -101,6 +102,7 @@ export function adaptTable(
 			return start;
 		});
 	});
+	const merges = tableGrid(table);
 	const cellAt = (rowIndex: number, gridIndex: number) => {
 		const position = gridIndexes[rowIndex]?.indexOf(gridIndex) ?? -1;
 		return position >= 0 ? table.rows[rowIndex]?.[position] : undefined;
@@ -147,10 +149,13 @@ export function adaptTable(
 					gridWidth(start, span) ?? (cell.widthTwips ? twipsToPx(cell.widthTwips) : undefined);
 				const xPx = grid ? gridWidth(0, start) : undefined;
 				const fill = cssHex(visuals.shadingFill);
+				const entry = merges?.rows[rowIndex]?.[cellIndex];
+				const rowSpan = merges && entry ? rowSpanOf(merges, entry) : 1;
 				return {
 					paragraphs: cell.paragraphs.map(adaptParagraph),
 					...(cell.gridSpan !== undefined ? { gridSpan: cell.gridSpan } : {}),
 					...(cell.verticalMerge ? { verticalMerge: cell.verticalMerge } : {}),
+					...(rowSpan > 1 ? { rowSpan } : {}),
 					...(cell.sourceBlocks
 						? {
 								blocks: cellSourceBlocks(cell).map((block) =>

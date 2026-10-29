@@ -100,6 +100,7 @@ export function placeTable(
 
 	function flushFragment() {
 		fragmentHeight += fragmentBorders.restore(fragmentRows.at(-1));
+		alignMergedCells(fragmentRows);
 		if (!fragmentRows.length) {
 			footnotes?.holdFragment();
 			return;
@@ -353,4 +354,22 @@ export function placeTable(
 		);
 	}
 	flushFragment();
+}
+
+/**
+ * A vertically merged cell aligns its content across every row it covers, not in its first row.
+ * The first row's geometry gets the merged height when the whole merge sits in this fragment (a
+ * merge broken by a page or column boundary keeps aligning within its first row).
+ */
+function alignMergedCells(rows: LayoutTableRowBox[]): void {
+	rows.forEach((row, index) => {
+		for (const geometry of row.geometry ?? []) {
+			const count = geometry.mergeRows ?? 1;
+			if (count < 2 || !geometry.verticalAlign || geometry.verticalAlign === 'top') continue;
+			const last = rows[index + count - 1];
+			if (!last || rows.slice(index, index + count).some((item) => item.repeated !== row.repeated))
+				continue;
+			geometry.alignmentHeightPx = last.yPx + last.heightPx - row.yPx;
+		}
+	});
 }

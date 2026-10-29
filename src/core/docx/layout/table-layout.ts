@@ -116,6 +116,7 @@ export function layoutRow(
 			...(cell.borders ? { borders: cell.borders } : {}),
 			...(cell.shading ? { shading: cell.shading } : {}),
 			...(cell.verticalAlign ? { verticalAlign: cell.verticalAlign } : {}),
+			...(cell.rowSpan ? { mergeRows: cell.rowSpan } : {}),
 		});
 		x = (cell.xPx ?? x) + widthPx;
 		return { heightPx, boxes: content.boxes, tables: content.tables ?? [] };
@@ -260,7 +261,7 @@ export function splitRowAtHeight(
 					),
 				}
 			: {}),
-		geometry: row.geometry.map((geometry, index) => ({
+		geometry: row.geometry.map(({ mergeRows: _merge, ...geometry }, index) => ({
 			...geometry,
 			contentHeightPx: splits[index]!.beforeHeightPx,
 			...(row.borderBottomPx !== undefined ? { alignmentHeightPx: beforeHeightPx } : {}),
@@ -292,7 +293,7 @@ export function splitRowAtHeight(
 					),
 				}
 			: {}),
-		geometry: row.geometry.map((geometry, index) => ({
+		geometry: row.geometry.map(({ mergeRows: _merge, ...geometry }, index) => ({
 			...geometry,
 			contentHeightPx: cellContentBottom(
 				splits[index]!.after,

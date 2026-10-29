@@ -90,6 +90,8 @@ export interface LayoutCellGeometry {
 	/** Nested frame borders are already included in source-coordinate content insets. */
 	borderInsetsReserved?: boolean;
 	alignmentHeightPx?: number;
+	/** Rows covered by a vertical merge that starts in this cell; its alignment spans them all. */
+	mergeRows?: number;
 }
 
 export interface LayoutTableRowBox {
