@@ -65,6 +65,12 @@ function dimension(data: ChartExData | undefined, kind: ChartExDimension['kind']
 		if (d.kind === kind) map.set(d.type?.trim() || (kind === 'numDim' ? 'val' : 'cat'), d);
 	return map.get(type) ?? map.values().next().value;
 }
+/** The dimension of exactly this type; unlike `dimension` it never falls back to another one. */
+const exactDimension = (
+	data: ChartExData | undefined,
+	kind: ChartExDimension['kind'],
+	type: string,
+) => data?.dimensions.find((d) => d.kind === kind && d.type?.trim() === type);
 const levelText = (dimension: ChartExDimension | undefined) =>
 	dimension?.levels.map((level) => level.points.map((point) => point.value.trim()));
 function flags(visibility: ChartExLabelVisibility | undefined) {
@@ -91,7 +97,7 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 		result.name = source.tx?.value?.trim() || `Series ${index + 1}`;
 		result.values = values?.length ? values : [0];
 		if (source.layoutId === 'regionMap') {
-			const dim = dimension(dataOf(index), 'numDim', 'colorVal')?.levels[0];
+			const dim = exactDimension(dataOf(index), 'numDim', 'colorVal')?.levels[0];
 			if (dim) {
 				result.values = dim.points.map((p) => Number.parseFloat(p.value));
 				result.regionMapOptions = {
@@ -103,7 +109,7 @@ export function chartExFromNeutral(space: ChartExSpace, styled: Styled) {
 				['cat', 'categorySourceIndices'],
 				['entityId', 'entityIdSourceIndices'],
 			] as const) {
-				const points = dimension(dataOf(index), 'strDim', type)?.levels[0]?.points;
+				const points = exactDimension(dataOf(index), 'strDim', type)?.levels[0]?.points;
 				if (points)
 					result.regionMapOptions = {
 						...result.regionMapOptions,

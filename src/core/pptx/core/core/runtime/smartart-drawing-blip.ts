@@ -189,10 +189,15 @@ export async function parseDrawingShapesFromPart(
 			shapes.push(shape);
 		});
 		await resolveDrawingBlipFills(shapes, drawingPath, deps);
-		const source = parseDiagramDrawing(xmlString);
-		for (const shape of shapes) {
-			const fill = source.shapes.find((entry) => entry.modelId === shape.id)?.fill;
-			if (fill?.kind === 'picture') shape.pictureFill = fill;
+		try {
+			// The source picture fill enriches the shapes; a part it cannot read must not drop them.
+			const source = parseDiagramDrawing(xmlString);
+			for (const shape of shapes) {
+				const fill = source.shapes.find((entry) => entry.modelId === shape.id)?.fill;
+				if (fill?.kind === 'picture') shape.pictureFill = fill;
+			}
+		} catch {
+			// keep the shapes without a source picture fill
 		}
 		return shapes;
 	} catch {
