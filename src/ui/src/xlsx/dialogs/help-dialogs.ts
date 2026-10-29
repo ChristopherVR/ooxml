@@ -52,14 +52,15 @@ export const SUPPORTED_FEATURES = [
 export const UNSUPPORTED_FEATURES = [
 	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)',
 	'Multiple/dynamic report filters and repeated column captions (preserved)',
-	'Show Formulas',
-	'Manual calculation',
-	'Outline (grouping) for columns',
-	'Password protection hashes',
+	'AutoFilter drop-down menus (filters can be turned on, cleared and reapplied)',
+	'Sorting by cell colour, font colour or icon',
+	'Flash Fill, Subtotal and Consolidate',
+	'Split panes (Freeze Panes works)',
+	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window',
+	'Opening .xlsb binary workbooks',
 	'Editing threaded comment replies',
 	'Macros (VBA is kept in the file but never run)',
 	'Changing the workbook theme',
-	'Page Layout view',
 ] as const;
 
 function bullets(ctx: EditorContext, items: readonly string[]): HTMLUListElement {

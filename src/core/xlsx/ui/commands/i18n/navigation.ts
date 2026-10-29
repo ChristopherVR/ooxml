@@ -395,17 +395,41 @@ export const NAVIGATION_STRINGS: Translations = {
 	],
 	'Show Formulas': ['Afficher les formules', 'Formeln anzeigen', 'Mostrar fórmulas', '显示公式'],
 	'Manual calculation': ['Calcul manuel', 'Manuelle Berechnung', 'Cálculo manual', '手动计算'],
-	'Outline (grouping) for columns': [
-		'Plan (groupement) des colonnes',
-		'Gliederung (Gruppierung) für Spalten',
-		'Esquema (agrupación) de columnas',
-		'列的分级显示(组合)',
+	'AutoFilter drop-down menus (filters can be turned on, cleared and reapplied)': [
+		'Menus déroulants de filtre automatique (les filtres peuvent être activés, effacés et réappliqués)',
+		'AutoFilter-Dropdownmenüs (Filter können aktiviert, gelöscht und erneut angewendet werden)',
+		'Menús desplegables de Autofiltro (los filtros se pueden activar, borrar y volver a aplicar)',
+		'自动筛选下拉菜单(可以启用、清除和重新应用筛选)',
 	],
-	'Password protection hashes': [
-		'Hachages de protection par mot de passe',
-		'Kennwortschutz-Hashes',
-		'Hashes de protección con contraseña',
-		'密码保护哈希',
+	'Sorting by cell colour, font colour or icon': [
+		'Tri par couleur de cellule, couleur de police ou icône',
+		'Sortieren nach Zellenfarbe, Schriftfarbe oder Symbol',
+		'Ordenar por color de celda, color de fuente o icono',
+		'按单元格颜色、字体颜色或图标排序',
+	],
+	'Flash Fill, Subtotal and Consolidate': [
+		'Remplissage instantané, Sous-total et Consolider',
+		'Blitzvorschau, Teilergebnis und Konsolidieren',
+		'Relleno rápido, Subtotal y Consolidar',
+		'快速填充、分类汇总和合并计算',
+	],
+	'Split panes (Freeze Panes works)': [
+		'Fractionnement des volets (Figer les volets fonctionne)',
+		'Fenster teilen (Fenster fixieren funktioniert)',
+		'Dividir paneles (Inmovilizar paneles funciona)',
+		'拆分窗格(冻结窗格可用)',
+	],
+	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window': [
+		'Audit de formules : repérer les antécédents, repérer les dépendants, évaluer la formule, fenêtre Espion',
+		'Formelüberwachung: Spur zum Vorgänger, Spur zum Nachfolger, Formelauswertung, Überwachungsfenster',
+		'Auditoría de fórmulas: rastrear precedentes, rastrear dependientes, evaluar fórmula, ventana Inspección',
+		'公式审核:追踪引用单元格、追踪从属单元格、公式求值、监视窗口',
+	],
+	'Opening .xlsb binary workbooks': [
+		'Ouverture des classeurs binaires .xlsb',
+		'Öffnen binärer .xlsb-Arbeitsmappen',
+		'Apertura de libros binarios .xlsb',
+		'打开 .xlsb 二进制工作簿',
 	],
 	'Editing threaded comment replies': [
 		'Modification des réponses aux commentaires',
