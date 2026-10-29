@@ -103,9 +103,15 @@ export function resolveLimits(options = {}, env = process.env) {
 		maxDocBytes: int(options.maxDocBytes ?? Number(env.TEAMS_MAX_DOC_MB) * MB, 64 * MB),
 		messageRate: int(options.messageRate ?? env.TEAMS_MESSAGE_RATE, 100),
 		messageBurst: int(options.messageBurst ?? env.TEAMS_MESSAGE_BURST, 200),
+		// Per workspace (a chat room counts for the workspace it belongs to).
+		workspaceQuotaBytes: int(
+			options.workspaceQuotaBytes ?? Number(env.TEAMS_WORKSPACE_QUOTA_MB) * MB,
+			1024 * MB,
+		),
+		// Optional ceiling on the whole files directory; off unless set.
 		filesQuotaBytes: int(
 			options.filesQuotaBytes ?? Number(env.TEAMS_FILES_QUOTA_MB) * MB,
-			1024 * MB,
+			Number.POSITIVE_INFINITY,
 		),
 	};
 }

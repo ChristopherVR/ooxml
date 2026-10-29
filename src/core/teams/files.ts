@@ -7,7 +7,7 @@ type FileBlob = UploadableFile & Blob;
 interface FileContext {
 	available(channelId: string): boolean;
 	canUpload(): boolean;
-	upload(file: FileBlob, signal?: AbortSignal): Promise<Attachment>;
+	upload(file: FileBlob, signal?: AbortSignal, channelId?: string): Promise<Attachment>;
 	post(channelId: string, text: string, attachments: Attachment[]): boolean;
 }
 
@@ -23,9 +23,10 @@ export function createFileActions(
 	async function stored(
 		file: FileBlob,
 		prefix: string,
+		channelId: string,
 		options?: FileOperationOptions,
 	): Promise<Attachment> {
-		return storeAttachment(file, prefix, context.upload, options);
+		return storeAttachment(file, prefix, context.upload, options, channelId);
 	}
 	function shared(
 		channelId: string,
@@ -48,7 +49,7 @@ export function createFileActions(
 				completed: 0,
 				total: 1,
 			});
-			const attachment = await stored(file, 'copy', options);
+			const attachment = await stored(file, 'copy', channelId, options);
 			options?.onProgress?.({
 				phase: 'uploaded',
 				fileName: attachment.name,
@@ -72,7 +73,7 @@ export function createFileActions(
 					completed: attachments.length,
 					total: files.length,
 				});
-				attachments.push(await stored(file, 'file', options));
+				attachments.push(await stored(file, 'file', channelId, options));
 				options?.onProgress?.({
 					phase: 'uploaded',
 					fileName: fileName(file.name),
@@ -108,7 +109,7 @@ export function createFileActions(
 				{ name },
 			);
 			options?.onProgress?.({ phase: 'uploading', fileName: name, completed: 0, total: 1 });
-			const attachment = await stored(file, 'workbook', options);
+			const attachment = await stored(file, 'workbook', channelId, options);
 			options?.onProgress?.({ phase: 'uploaded', fileName: name, completed: 1, total: 1 });
 			shared(channelId, `Created ${name}`, [attachment], options);
 			return attachment;

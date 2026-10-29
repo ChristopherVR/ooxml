@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { uploadTeamsServerFile } from './server-file-storage';
+import { fileRequestHeaders, uploadTeamsServerFile } from './server-file-storage';
 
 describe('host Teams storage', () => {
 	it('uploads only to the configured server with redirects disabled', async () => {
@@ -37,5 +37,25 @@ describe('host Teams storage', () => {
 				{ fetch },
 			),
 		).rejects.toThrow('invalid file URL');
+	});
+	it('names the signed session, or the claimed user without one', async () => {
+		const base = { mode: 'server' as const, iceServers: [] };
+		expect(fileRequestHeaders({ ...base, token: 't', sessionToken: 's' }, 'ada')).toEqual({
+			Authorization: 'Bearer t',
+			'X-Teams-Session': 's',
+		});
+		expect(fileRequestHeaders(base, 'ada')).toEqual({ 'X-Teams-User': 'ada' });
+		expect(fileRequestHeaders(base)).toEqual({});
+		const fetch = vi
+			.fn<typeof globalThis.fetch>()
+			.mockResolvedValue(new Response(JSON.stringify({ url: '/files/chat-1/a.docx' })));
+		await uploadTeamsServerFile(
+			{ ...base, syncUrl: 'wss://teams.test/sync', sessionToken: 's' },
+			'chat-1',
+			Object.assign(new Blob(['x']), { name: 'a.docx' }),
+			{ fetch },
+		);
+		expect(fetch.mock.calls[0]?.[0]).toBe('https://teams.test/files/chat-1/a.docx');
+		expect(fetch.mock.calls[0]?.[1]?.headers).toEqual({ 'X-Teams-Session': 's' });
 	});
 });

@@ -15,8 +15,13 @@ export function validateStorageFile(file: UploadableFile): void {
 export async function storeAttachment(
 	file: UploadableFile & Blob,
 	prefix: string,
-	upload: (file: UploadableFile & Blob, signal?: AbortSignal) => Promise<Attachment>,
+	upload: (
+		file: UploadableFile & Blob,
+		signal?: AbortSignal,
+		channelId?: string,
+	) => Promise<Attachment>,
 	options?: FileOperationOptions,
+	channelId?: string,
 ): Promise<Attachment> {
 	validateStorageFile(file);
 	const name = storageFileName(file.name);
@@ -27,7 +32,10 @@ export async function storeAttachment(
 	});
 	let uploaded: Attachment;
 	try {
-		uploaded = await withFileAbort(() => upload(unique, options?.signal), options?.signal);
+		uploaded = await withFileAbort(
+			() => upload(unique, options?.signal, channelId),
+			options?.signal,
+		);
 	} catch (error) {
 		if (error instanceof Error && error.name === 'AbortError') throw error;
 		throw new Error(

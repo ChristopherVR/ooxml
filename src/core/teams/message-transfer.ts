@@ -13,7 +13,11 @@ export interface MessageTransfer {
 export function createMessageTransfers(context: {
 	available(channelId: string): boolean;
 	canUpload(): boolean;
-	upload(file: UploadableFile & Blob, signal?: AbortSignal): Promise<Attachment>;
+	upload(
+		file: UploadableFile & Blob,
+		signal?: AbortSignal,
+		channelId?: string,
+	): Promise<Attachment>;
 	changed(): void;
 }) {
 	const active = new Map<string, { view: MessageTransfer; controller: AbortController }>();
@@ -70,7 +74,13 @@ export function createMessageTransfers(context: {
 					};
 					context.changed();
 					attachments.push(
-						await storeAttachment(file, 'message', context.upload, { signal: controller.signal }),
+						await storeAttachment(
+							file,
+							'message',
+							context.upload,
+							{ signal: controller.signal },
+							destination.channelId,
+						),
 					);
 					view.progress = { ...view.progress, phase: 'uploaded', completed: attachments.length };
 					context.changed();

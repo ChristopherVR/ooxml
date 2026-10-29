@@ -5,8 +5,9 @@ Node process does three jobs:
 
 - `ws /sync/<room>`: a y-websocket compatible Yjs document and awareness server, persisted to disk;
 - `ws /signal/<room>`: a JSON relay for WebRTC call signaling;
-- `POST|GET /files/<workspace>/<name>`: plain file storage for attachments (25 MB cap), with
-  short-lived signed download links when a token is set.
+- `POST|GET|DELETE /files/<scope>/<name>`, `GET /files/<scope>`: file storage for attachments (25 MB cap), scoped
+  by workspace and by private chat, with short-lived signed download links;
+- `GET /metrics`: Prometheus metrics, only when `TEAMS_METRICS_TOKEN` is set.
 
 It understands neither chat nor Office formats: it moves bytes, so any server that speaks the same
 three contracts works with the OpenTeams bindings just as well.
@@ -45,12 +46,16 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_MAX_ROOMS`                                            | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
 | `TEAMS_MAX_DOC_MB`                                           | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                        |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`                  | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                           |
-| `TEAMS_FILES_QUOTA_MB`                                       | Total size of the files directory in MB (default 1024); uploads past it get 507.                                                                                         |
+| `TEAMS_WORKSPACE_QUOTA_MB`                                   | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                              |
+| `TEAMS_FILES_QUOTA_MB`                                       | Optional ceiling on the whole files directory in MB (off by default); uploads past it get 507.                                                                           |
+| `TEAMS_COMPACT_INTERVAL_MIN`                                 | Minutes between room snapshot compactions (default 360, `0` turns the timer off). A room is also compacted when it loads.                                                |
+| `TEAMS_METRICS_TOKEN`                                        | Turns on `GET /metrics`, served only to `Authorization: Bearer <this token>`. Off without it.                                                                            |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                      | `text` (default) or `json`: one JSON object per line with `time`, `level` and `msg`.                                                                                     |
 | `TEAMS_DATA`                                                 | Data directory (default `./data`): room snapshots and files.                                                                                                             |
 
 The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnectionsPerIp`,
-`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `filesQuotaBytes`, `insecure`,
-`insecureDev`, `trustProxy`).
+`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
+`metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
 
 Or embed it:
 
@@ -210,7 +215,7 @@ uses all of this for collaborative PowerPoint review.
 
 ## Security model
 
-- **One shared token opens every room and every file.** Per-room permissions exist only
+- **One shared token opens every room and every channel file.** Per-room permissions exist only
   when you pass `authorizeSync` (above). Treat the token like a team password.
 - **All members of a room trust each other** (the workspace room, and each private chat's room). The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles.
@@ -241,6 +246,29 @@ uses all of this for collaborative PowerPoint review.
 - A socket can only speak for the awareness ids and the call peer id it announced itself, and an
   addressed call signal is delivered to that peer only. An upload never overwrites a file: a name
   already taken is stored under a new one, returned in the response `url`.
+
+## Files, compaction and metrics
+
+- **File permissions.** A file lives under a scope: the workspace id (channel files, readable by every
+  signed-in user of the server) or a private chat's room name `chat-<hash>-<chat id>` (only that chat's
+  members may list, read, upload to, delete from or link it; the server reads the room's
+  `teams:chat-members` map as it does for the sync room, and a room nobody created has no members).
+  With accounts every file request needs the signed session in `X-Teams-Session`; without them the claimed
+  `X-Teams-User` stands in. A signed download link is issued only after that check and opens its one
+  file for five minutes.
+- **Listing and deleting.** `GET /files/<scope>` answers `{ files: [{ name, size, modified, uploader }] }`;
+  `DELETE /files/<scope>/<name>` is allowed to the uploader or a moderator. Uploader records live in
+  `file-meta/<scope>.json` (files from older versions have none: only a moderator may delete them).
+- **Cleanup and quotas.** Uploads stream to a hidden `.part` file that failed uploads remove; start-up removes
+  every leftover and a timer (`sweepIntervalMs`) those older than an hour. The quota is per workspace
+  (`TEAMS_WORKSPACE_QUOTA_MB`).
+- **Compaction.** A room's snapshot is re-encoded as one Yjs update on a fresh document when the room loads and every
+  `TEAMS_COMPACT_INTERVAL_MIN` minutes, only if it is smaller and describes the same state. Snapshots are
+  written to a temporary file, flushed and renamed, so a crash keeps the old or the new one.
+- **Metrics.** `GET /metrics` (with `TEAMS_METRICS_TOKEN`) exposes `teams_rooms_open`, `teams_connections{kind}`,
+  `teams_stored_bytes{kind}`, `teams_updates_rejected_total{code}`, `teams_auth_failures_total{kind}`,
+  `teams_rate_limited_total{scope}` and `teams_room_compactions_total`. Logs are plain text, or JSON lines with
+  `--log-format=json`.
 
 ## Honest limits
 

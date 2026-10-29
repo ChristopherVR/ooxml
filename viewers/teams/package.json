@@ -14,7 +14,7 @@
 		"server": "node server/index.mjs --insecure-dev",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run --passWithNoTests && npm run test:server",
-		"test:server": "node --test server/server.test.mjs server/hardening.test.mjs server/chat-access.test.mjs server/auth.test.mjs server/accounts.test.mjs server/session-hardening.test.mjs server/authorize-sync.test.mjs server/secure-default.test.mjs",
+		"test:server": "node --test server/server.test.mjs server/hardening.test.mjs server/chat-access.test.mjs server/auth.test.mjs server/accounts.test.mjs server/session-hardening.test.mjs server/authorize-sync.test.mjs server/secure-default.test.mjs server/files.test.mjs server/maintenance.test.mjs",
 		"bundle:validator": "node scripts/bundle-validator.mjs",
 		"build:packages": "node scripts/build-packages.mjs",
 		"docs:dev": "bun run --cwd docs docs:dev",

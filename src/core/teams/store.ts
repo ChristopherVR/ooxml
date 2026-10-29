@@ -25,7 +25,8 @@ import { localZone } from './time-zone';
 import { shouldNotify } from './notifications';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
-import { uploadTeamsServerFile } from './server-file-storage';
+import { chatRoomId } from './chats';
+import { fileRequestHeaders, uploadTeamsServerFile } from './server-file-storage';
 import type { ChannelTab, TabContent } from './tabs';
 import { channelThreads, type MessageThread } from './threads';
 import { tabConversationId } from './tab-conversation';
@@ -649,8 +650,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		return { base: u.origin, token: config.token };
 	};
 
-	const upload = async (file: UploadableFile & Blob, signal?: AbortSignal): Promise<Attachment> => {
+	const upload = async (
+		file: UploadableFile & Blob,
+		signal?: AbortSignal,
+		channelId?: string,
+	): Promise<Attachment> => {
 		checkFileAbort(signal);
+		// A private chat's files are stored under its room so the server limits them to its members.
+		const scopeId =
+			channelId !== undefined && ws.chat.isChat(channelId)
+				? chatRoomId(workspaceId, channelId)
+				: workspaceId;
 		const attachment: Attachment = {
 			name: file.name,
 			kind: 'other',
@@ -668,7 +678,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				return attachment;
 			}
 			attachment.url = (
-				await uploadTeamsServerFile(ws.config, workspaceId, file, {
+				await uploadTeamsServerFile(ws.config, scopeId, file, {
+					userId: ws.user.id,
 					...(signal ? { signal } : {}),
 					...(options.fetch ? { fetch: options.fetch } : {}),
 				})
@@ -1024,7 +1035,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		async fileUrl(attachment) {
 			const target = server();
 			const raw = attachment.url;
-			if (!raw || !target?.token) return raw;
+			if (!raw || !target) return raw;
 			// Attachment URLs come from peers: the token goes only to the exact configured origin
 			// (a prefix test would match `http://host:8787.evil.example`), only for /files/ paths,
 			// and never to a URL carrying credentials.
@@ -1042,7 +1053,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 					`${target.base}/files/link${url.pathname.slice('/files'.length)}`,
 					{
 						method: 'POST',
-						headers: { Authorization: `Bearer ${target.token}` },
+						headers: fileRequestHeaders(ws.config, ws.user.id),
 					},
 				);
 				if (!res.ok) throw new Error(`Link failed (${res.status})`);

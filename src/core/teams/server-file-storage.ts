@@ -1,11 +1,30 @@
 import type { TeamsServerConfig } from './server-config';
 
-/** The Teams server's file-upload protocol, shared by the default client and storage hosts. */
+/**
+ * Headers that tell the server who is asking for a file: the signed session when there is one,
+ * else (servers without accounts) the claimed user id. Shared by upload and link requests.
+ */
+export function fileRequestHeaders(
+	config: TeamsServerConfig,
+	userId?: string,
+): Record<string, string> {
+	return {
+		...(config.token ? { Authorization: `Bearer ${config.token}` } : {}),
+		...(config.sessionToken ? { 'X-Teams-Session': config.sessionToken } : {}),
+		...(!config.sessionToken && userId ? { 'X-Teams-User': userId } : {}),
+	};
+}
+
+/**
+ * The Teams server's file-upload protocol, shared by the default client and storage hosts.
+ * `scopeId` is the workspace id for channel files, or the chat room id for a private chat, which
+ * the server restricts to that chat's members.
+ */
 export async function uploadTeamsServerFile(
 	config: TeamsServerConfig,
 	workspaceId: string,
 	file: Blob & { name: string },
-	options: { signal?: AbortSignal; fetch?: typeof fetch } = {},
+	options: { signal?: AbortSignal; fetch?: typeof fetch; userId?: string } = {},
 ): Promise<{ url: string }> {
 	if (config.mode !== 'server' || !config.syncUrl)
 		throw new Error('Configure file storage before sharing attachments');
@@ -19,7 +38,7 @@ export async function uploadTeamsServerFile(
 			redirect: 'error',
 			credentials: 'omit',
 			...(options.signal ? { signal: options.signal } : {}),
-			...(config.token ? { headers: { Authorization: `Bearer ${config.token}` } } : {}),
+			headers: fileRequestHeaders(config, options.userId),
 		},
 	);
 	if (!response.ok) throw new Error(`Upload failed (${response.status})`);

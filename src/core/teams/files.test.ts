@@ -7,15 +7,21 @@ function setup() {
 	const messages: { channelId: string; text: string; attachments: Attachment[] }[] = [];
 	const available = vi.fn(() => true);
 	const canUpload = vi.fn(() => true);
-	const upload = vi.fn(async (file: Blob & { name: string }): Promise<Attachment> => {
-		uploads.push(file);
-		return {
-			name: file.name,
-			kind: 'other' as const,
-			mime: file.type,
-			url: `https://files.test/${file.name}`,
-		};
-	});
+	const upload = vi.fn(
+		async (
+			file: Blob & { name: string },
+			_signal?: AbortSignal,
+			_channelId?: string,
+		): Promise<Attachment> => {
+			uploads.push(file);
+			return {
+				name: file.name,
+				kind: 'other' as const,
+				mime: file.type,
+				url: `https://files.test/${file.name}`,
+			};
+		},
+	);
 	const actions = createFileActions({
 		available,
 		canUpload,
@@ -101,6 +107,12 @@ describe('channel file actions', () => {
 			channelId: 'finance',
 			text: 'Created Budget.xlsx',
 		});
+	});
+	it('tells the uploader which channel a file is for, so private chats can scope it', async () => {
+		const actions = setup();
+		const file = Object.assign(new Blob(['x']), { name: 'a.txt' });
+		await actions.uploadFiles('g-1', [file]);
+		expect(actions.upload.mock.calls[0]?.[2]).toBe('g-1');
 	});
 	it('shares duplicate upload names at separate URLs and keeps their MIME types', async () => {
 		const actions = setup();
