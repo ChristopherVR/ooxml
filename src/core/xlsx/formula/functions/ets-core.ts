@@ -10,7 +10,7 @@ import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
 import { isExactLength } from './ets-init-chain';
 import { chooseSmoothing } from './ets-search';
-import { etsValidationCost } from './ets-validate';
+import { etsSearchSeries, etsValidationCost } from './ets-validate';
 
 export interface EtsFit {
 	alpha: number;
@@ -75,10 +75,11 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	// (`ets-init-chain.ts`: 4 whole seasons or 5 and more); elsewhere they are not, and that cost
 	// chooses worse than the plain one-step error (season3-11: 8% against 1% forecast error).
 	const holdout = m >= 2 && !isExactLength(n, m) ? 0 : etsHoldout(n, m);
-	const { drift, ...chosen } = chooseSmoothing(n, m, (p) =>
-		etsValidationCost(y, m, solve(p).init, p, holdout),
+	const searched = m >= 2 ? y : etsSearchSeries(y);
+	const { drift, fit, ...chosen } = chooseSmoothing(n, m, (p) =>
+		etsValidationCost(searched, m, solve(p).init, p, holdout),
 	);
-	const { run } = solve(chosen);
+	const { run } = solve(fit ?? chosen);
 	// Excel forecasts from the last value and the untouched slope when its search ends at 0.998.
 	const state = drift ? solve({ alpha: 1, beta: 0, gamma: chosen.gamma }).run : run;
 	return {

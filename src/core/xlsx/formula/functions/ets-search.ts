@@ -1,67 +1,56 @@
 // How the smoothing parameters of FORECAST.ETS are chosen. Excel's search is undocumented. What was
-// measured against Excel 16 (about 1100 non-seasonal probe series: 491 in __fixtures__/
-// ets-search-excel.json, 484 morphing a random walk into noise, 136 spikes and steps, see
-// docs/xlsx-parity-status.md):
+// measured against Excel 16 (about 1500 non-seasonal probe series: 491 in __fixtures__/
+// ets-search-excel.json, 484 morphing a random walk into noise, 136 spikes and steps, 392 of the
+// first rescaled, negated and reversed; docs/xlsx-parity-status.md has the detail):
 //   - the objective is not the one-step error of the whole series. The series is split into a
 //     training part and a hold-out (`etsHoldout` trailing points); the cost is the one-step squared
 //     error of the training part plus the squared multi-step forecast errors of the hold-out
-//     (`ets-validate.ts`). Starting from the least-squares trend, this single change moved the match
-//     with Excel's alpha from 44% to 85% (a constant with a spike or step in the hold-out is the
-//     clearest evidence: the choice stops depending on the data in the hold-out as the training part
-//     becomes constant);
+//     (`ets-validate.ts`), from the least-squares trend of the whole series. A weight other than 1
+//     on the hold-out loses clearly (1188 of 1353 alphas at 1, 1125 at 0.9, 1089 at 1.1);
 //   - the result is scale, offset and sign invariant, so there is no absolute tolerance;
-//   - Excel lands on a coarse lattice of values (below), not on the continuous minimum, so the
-//     lowest cost on the lattice is taken. Excel avoids the upper end: 0.998 is chosen only when it
-//     beats the rest by about 5%;
-//   - a beta above the lowest is chosen on about 4% of series: alpha - 0.001 and, with alpha 0.998,
-//     0.099, 0.249 or 0.499, each a little less often than the plain cost says;
-//   - when alpha lands on 0.998 with the lowest beta, the forecast is `last value + trend`, with the
-//     least-squares slope untouched (alpha 1, beta 0), which is what Excel prints for those series.
-// Variants of the cost that lose clearly (alpha agreement on the 491 probes, against 471 here):
-// starting the training run from the slope of the training window only (251), the training error
-// alone (225), a second split inside the training part (149 alone, 326 added), hold-out forecasts
-// from the training end with the training-window slope (298) or the full-run trend (357). Beta
-// moves off 0.001 are matched on 42 of 49 only by the full-data start used here. Continuous
-// optimisers (golden section, Nelder-Mead) and lattice descents on this cost do not beat it.
-// What is not reproduced: the choice of 1/6 on a family of 51 bimodal series, and the rare alphas of
-// 1/3, 2/3 and 5/6.
+//   - Excel searches a fixed lattice of (alpha, beta) pairs, not the continuous optimum
+//     (`ets-search-map.ts`). The error statistics of 1392 series are reproduced to the last digit by
+//     one pair of the lattice, and the lowest cost on it is that pair for 1386 of them (with 5%
+//     added to alpha 0.998 with the lowest beta). Alpha 0.998 is chosen only when it beats the rest
+//     clearly;
+//   - what STAT 1 and 2 report is a function of that optimum. For a large beta (alpha - 0.001, and
+//     the larger betas of alpha 0.998 half of the time) STAT 2 reports 0.001, the reported alpha can
+//     be another of 1/6, 2/3 or 5/6 and the forecast is the last value plus the least-squares slope
+//     (alpha 1, beta 0) while the statistics use the pair. The map to the reported values is the
+//     commonest outcome of the probes for each optimum: 95% of the 1438 series of 11 or more points
+//     (cross-validated, training on two of the sets and testing on the third: 90 to 97%).
+// Variants of the cost that lose clearly (alpha agreement on the 491 probes): starting the training
+// run from the slope of the training window only (251), the training error alone (225), a second
+// split inside the training part (149 alone, 326 added), hold-out forecasts from the training end
+// with the training-window slope (298) or the full-run trend (357), a mean error in place of the sum
+// (1158), a rolling set of hold-out sizes or a skipped warm-up (no better than the one hold-out).
+// Continuous optimisers (golden section, Nelder-Mead) and lattice descents on this cost do not
+// beat it. A ratio threshold on the cost of 0.9 against 0.998 does not separate Excel's choices
+// (they overlap from 1.001 to 1.057), so the choice is not a margin on that pair of costs.
+// What is not reproduced: which of the two outcomes a few optima give (a quarter of the 2/3 pairs
+// forecast the drift, 3 of 28 of the 0.998 with 0.249), the pair behind the reported alpha of 1/6,
+// and the series of fewer than 11 points, which have no hold-out.
 import type { Smoothing } from './ets-core';
+import { CANDIDATES, reportedFor, TOP_COST } from './ets-search-map';
 
 export interface Chosen extends Smoothing {
 	/** Excel's forecast for this fit is the last value plus the least-squares slope (alpha 1, beta 0). */
 	drift: boolean;
+	/** The pair the error statistics are measured with when it is not the reported one. */
+	fit?: Smoothing;
 }
 
 export const LOW = 0.001;
-/** Series of fewer points than this keep the lattice of the earlier fit (no Excel data beyond them). */
-const MIN_FLAT_POINTS = 8;
+/** Series of fewer points than this report one fixed pair (no search is possible). */
+const MIN_SEARCH_POINTS = 4;
+/** What Excel reports for the 7 series of 3 points recorded, whatever their values. */
+const THREE_POINTS: Chosen = { alpha: 0.1, beta: 0.099, gamma: LOW, drift: false };
 
-/** Values of alpha Excel is seen to choose without a season (on 8 or more points). */
-const FLAT_ALPHAS = [0.002, 0.1, 0.126, 0.25, 0.5, 0.75, 0.9, 0.998];
-/** Relative cost added to alpha 0.998 (Excel prefers 0.9 unless 0.998 is clearly better). */
-const TOP_COST = 0.05;
-/** Relative cost added to a beta of alpha - 0.001 (chosen with the alphas below). */
-const TIED_BETA_COST = 0.15;
-/** The alphas that may take beta = alpha - 0.001. */
-const TIED_BETA_ALPHAS = [0.126, 0.25, 0.5, 0.75];
-/** The betas Excel is seen to choose with alpha 0.998, beside the lowest. */
-const TOP_BETAS = [0.099, 0.249, 0.499];
-/** Other (alpha, beta) pairs Excel is seen to choose, with a small extra cost. */
-const OTHER_PAIRS: [number, number][] = [
-	[0.5, 0.25],
-	[0.666667, 0.166667],
-	[0.333333, 0.166667],
-	[0.666667, 0.5],
-];
-const OTHER_PAIR_COST = 0.03;
-
-/** Values of alpha Excel is seen to choose on fewer than 8 points. */
-const SHORT_ALPHAS = [0.002, 0.1, 0.126, 0.25, 0.5, 2 / 3, 0.75, 0.9];
-/** The same with a season: the middle values sit 0.001 higher. */
+/** Values of alpha Excel is seen to choose with a season (the middle values sit 0.001 higher). */
 const SEASON_ALPHAS = [0.002, 0.126, 0.251, 0.501, 2 / 3, 0.75, 0.9];
 /** Values of gamma (besides 1 - alpha - 0.001) Excel is seen to choose. */
 const SEASON_STEPS = [LOW, 0.125, 0.25, 0.5, 0.75, 0.9];
-/** Series up to this length can move beta to alpha - 0.001 with a season or without one below 8 points. */
+/** Series up to this length can move beta to alpha - 0.001 with a season. */
 const SHORT_SERIES = 16;
 
 /** Whether a cost beats the best so far by a relative margin (ties keep the first). */
@@ -88,47 +77,32 @@ function searchSeasonal(n: number, cost: Cost): Chosen {
 	return { ...best, drift: false };
 }
 
-/** Fewer than 8 points: the lowest cost on the earlier lattice. */
-function searchTiny(n: number, cost: Cost): Chosen {
-	let best: Smoothing = { alpha: 0.9, beta: LOW, gamma: LOW };
-	let bestCost = cost(best);
-	for (const a of SHORT_ALPHAS)
-		for (const b of n >= 7 ? [LOW, a - LOW] : [LOW]) {
-			const c = cost({ alpha: a, beta: b, gamma: LOW });
-			if (better(c, bestCost)) {
-				bestCost = c;
-				best = { alpha: a, beta: b, gamma: LOW };
-			}
-		}
-	return { ...best, drift: false };
-}
-
-/** The (alpha, beta, extra relative cost) triples tried for 8 or more points without a season. */
-function flatCandidates(): [number, number, number][] {
-	const out: [number, number, number][] = [];
-	for (const a of FLAT_ALPHAS) {
-		out.push([a, LOW, a > 0.99 ? TOP_COST : 0]);
-		if (TIED_BETA_ALPHAS.includes(a)) out.push([a, a - LOW, TIED_BETA_COST]);
-	}
-	for (const b of TOP_BETAS) out.push([0.998, b, TOP_COST - 0.02]);
-	for (const [a, b] of OTHER_PAIRS) out.push([a, b, OTHER_PAIR_COST]);
-	return out;
-}
-const FLAT_CANDIDATES = flatCandidates();
-
-/** 8 or more points without a season: the cheapest candidate, ties keeping the earlier one. */
-function searchFlat(cost: Cost): Chosen {
+/**
+ * 4 or more points without a season: the lowest cost on the lattice of (alpha, beta), ties keeping
+ * the earlier pair, then what Excel reports for that optimum (`ets-search-map.ts`).
+ */
+function searchLattice(n: number, cost: Cost): Chosen {
 	// An exact fit costs the same everywhere and Excel reports 0.9 for it, so that is the start.
-	let best: Smoothing = { alpha: 0.9, beta: LOW, gamma: LOW };
-	let bestCost = cost(best);
-	for (const [a, b, extra] of FLAT_CANDIDATES) {
-		const c = cost({ alpha: a, beta: b, gamma: LOW }) * (1 + extra);
+	let best: readonly [number, number] = [0.9, LOW];
+	let bestCost = cost({ alpha: 0.9, beta: LOW, gamma: LOW });
+	for (const [alpha, beta] of CANDIDATES) {
+		const top = alpha > 0.99 && beta === LOW ? 1 + TOP_COST : 1;
+		const c = cost({ alpha, beta, gamma: LOW }) * top;
 		if (better(c, bestCost)) {
 			bestCost = c;
-			best = { alpha: a, beta: b, gamma: LOW };
+			best = [alpha, beta];
 		}
 	}
-	return { ...best, drift: best.alpha === 0.998 && best.beta === LOW };
+	const out = reportedFor(best[0], best[1], n);
+	const [fa, fb] = out.fit;
+	const same = fa === out.alpha && fb === out.beta;
+	return {
+		alpha: out.alpha,
+		beta: out.beta,
+		gamma: LOW,
+		drift: out.drift,
+		...(same ? {} : { fit: { alpha: fa, beta: fb, gamma: LOW } }),
+	};
 }
 
 /**
@@ -137,5 +111,6 @@ function searchFlat(cost: Cost): Chosen {
  */
 export function chooseSmoothing(n: number, m: number, cost: Cost): Chosen {
 	if (m >= 2) return searchSeasonal(n, cost);
-	return n < MIN_FLAT_POINTS ? searchTiny(n, cost) : searchFlat(cost);
+	if (n < MIN_SEARCH_POINTS) return THREE_POINTS;
+	return searchLattice(n, cost);
 }
