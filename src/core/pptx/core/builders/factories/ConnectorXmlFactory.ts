@@ -36,7 +36,11 @@ export class ConnectorXmlFactory implements IConnectorXmlFactory {
 				? this.context.normalizePresetGeometry(element.shapeType)
 				: 'straightConnector1';
 		const strokeColor = element.shapeStyle?.strokeColor || '#1F2937';
-		const strokeWidth = Math.max(1, element.shapeStyle?.strokeWidth || 1);
+		// A positive width is written as requested, fractional ones included: a
+		// custom dash's `a:ds` lengths are relative to it, so rounding it up to
+		// 1 px here stretched the dash pattern by the same factor.
+		const requestedWidth = element.shapeStyle?.strokeWidth;
+		const strokeWidth = requestedWidth !== undefined && requestedWidth > 0 ? requestedWidth : 1;
 		// Build the a:ln (line) node with width in EMU
 		const lineNode: XmlObject = {
 			'@_w': String(Math.round(strokeWidth * this.context.emuPerPx)),

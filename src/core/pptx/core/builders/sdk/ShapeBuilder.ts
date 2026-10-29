@@ -19,7 +19,16 @@
 
 import type { ShapePptxElement } from '../../types/elements';
 import { createShapeElement } from './ElementFactory';
-import type { ShapeOptions, TextStyleInput, FillInput, StrokeInput, ShadowInput } from './types';
+import type {
+	ShapeOptions,
+	TextStyleInput,
+	FillInput,
+	StrokeInput,
+	ShadowInput,
+	InnerShadowInput,
+	GlowInput,
+	ReflectionInput,
+} from './types';
 
 /**
  * Fluent builder for {@link ShapePptxElement} instances.
@@ -204,6 +213,46 @@ export class ShapeBuilder {
 	 */
 	shadow(input: ShadowInput): this {
 		this._options.shadow = input;
+		return this;
+	}
+
+	/**
+	 * Add an inner shadow to the shape.
+	 *
+	 * @param input - An {@link InnerShadowInput} descriptor.
+	 */
+	innerShadow(input: InnerShadowInput): this {
+		this._options.innerShadow = input;
+		return this;
+	}
+
+	/**
+	 * Add a glow around the shape.
+	 *
+	 * @param input - A {@link GlowInput} descriptor.
+	 */
+	glow(input: GlowInput): this {
+		this._options.glow = input;
+		return this;
+	}
+
+	/**
+	 * Soften the shape's edges.
+	 *
+	 * @param radius - Soft-edge radius in px.
+	 */
+	softEdge(radius: number): this {
+		this._options.softEdge = radius;
+		return this;
+	}
+
+	/**
+	 * Add a reflection below the shape.
+	 *
+	 * @param input - A {@link ReflectionInput} descriptor.
+	 */
+	reflection(input: ReflectionInput): this {
+		this._options.reflection = input;
 		return this;
 	}
 

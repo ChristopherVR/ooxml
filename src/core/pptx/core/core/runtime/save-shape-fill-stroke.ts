@@ -1,6 +1,7 @@
 import type { ShapeStyle, XmlObject } from '../../types';
 import { serializeColorChoiceWithRef } from '../../utils/color-xml-preservation';
 import { applyDrawingLineDash } from '../../utils/drawing-line-dash';
+import { LN_CHILD_ORDER, reorderObjectKeysByLocalName } from '../../utils/xml-reorder';
 import { mergeDrawingFillXml } from '../builders/drawing-fill-xml';
 import type { ShapeStyleGate } from './authored-shape-style';
 import { createLineStyleGate, fillIsPurelyStyleMatrix } from './authored-shape-style';
@@ -320,40 +321,39 @@ export function writeShapeStroke(
 	// Shapes with no `a:lnRef` (and SDK-built ones) have no baseline, so the
 	// gate is open and every branch behaves exactly as it always did.
 	const owns = createLineStyleGate(shapeStyle);
+	// The width is decided on its own `owns('strokeWidth')`, apart from the
+	// paint below: the paint block runs for a color/fill edit alone, and a
+	// shape whose own `a:ln` carries just a color (`<a:ln><a:solidFill>
+	// .../></a:ln>`, no `@w`, common when the width is meant to keep
+	// following `<a:lnRef>`) had its purely INHERITED width baked in as soon
+	// as the color made that block run. Nor may the width wait for a paint:
+	// an outline given only a width (an SDK stroke with the colour omitted)
+	// lost it, and a custom dash, whose `a:ds` lengths are relative to the
+	// width, then saved at the wrong length.
+	// A zero width is how `<a:ln><a:noFill/></a:ln>` parses, and an
+	// UNDEFINED one is how `<a:ln>` with no `@w` (and no `a:lnRef` to
+	// resolve one) parses. Both used to fall through a `|| 1` fallback into
+	// `w="9525"`, inventing a 0.75pt width the source never authored
+	// (measured: every colour-only outline on `text-body.pptx` and
+	// `preset-text-insets.pptx` gained one on a rewritten slide). Only a
+	// real width is written; an absent one stays absent and PowerPoint
+	// applies its own default, exactly as it did for the source.
+	if (
+		typeof shapeStyle.strokeWidth === 'number' &&
+		shapeStyle.strokeWidth > 0 &&
+		owns('strokeWidth')
+	) {
+		ensureLineNode(spPr)['@_w'] = String(Math.round(shapeStyle.strokeWidth * ctx.emuPerPx));
+	}
 	if (
 		(shapeStyle.strokeColor !== undefined ||
 			shapeStyle.strokeFillMode === 'gradient' ||
 			shapeStyle.strokeFillMode === 'pattern') &&
-		// The width travels with the paint: `writeLineFill` turns a zero width
+		// The paint still waits on the width: `writeLineFill` turns a zero width
 		// into `a:noFill`, so the two cannot be decided apart.
 		owns('strokeColor', 'strokeOpacity', 'strokeFillMode', 'strokeWidth')
 	) {
-		const lineNode = ensureLineNode(spPr);
-		// `owns('strokeWidth')` here, separately from the combined check above:
-		// the combined check only decides whether THIS block runs at all (a
-		// color/fill edit alone must still enter it), not whether the WIDTH
-		// specifically was authored. A shape whose own `a:ln` carries just a
-		// color (`<a:ln><a:solidFill>.../></a:ln>`, no `@w`, common when the
-		// width is meant to keep following `<a:lnRef>`) had its purely
-		// INHERITED width baked in as soon as the color made the block run,
-		// because the combined gate does not distinguish "some property in
-		// the group differs" from "this specific one does".
-		// A zero width is how `<a:ln><a:noFill/></a:ln>` parses, and an
-		// UNDEFINED one is how `<a:ln>` with no `@w` (and no `a:lnRef` to
-		// resolve one) parses. Both used to fall through a `|| 1` fallback into
-		// `w="9525"`, inventing a 0.75pt width the source never authored
-		// (measured: every colour-only outline on `text-body.pptx` and
-		// `preset-text-insets.pptx` gained one on a rewritten slide). Only a
-		// real width is written; an absent one stays absent and PowerPoint
-		// applies its own default, exactly as it did for the source.
-		if (
-			typeof shapeStyle.strokeWidth === 'number' &&
-			shapeStyle.strokeWidth > 0 &&
-			owns('strokeWidth')
-		) {
-			lineNode['@_w'] = String(Math.round(shapeStyle.strokeWidth * ctx.emuPerPx));
-		}
-		writeLineFill(lineNode, shapeStyle, ctx.parseColor);
+		writeLineFill(ensureLineNode(spPr), shapeStyle, ctx.parseColor);
 	}
 	if (shapeStyle.strokeDash !== undefined && owns('strokeDash')) {
 		applyDrawingLineDash(ensureLineNode(spPr), shapeStyle);
@@ -377,6 +377,14 @@ export function writeShapeStroke(
 	// Line-level effects (a:ln/a:effectLst)
 	if (ctx.lineEffectListXml && spPr['a:ln']) {
 		(spPr['a:ln'] as XmlObject)['a:effectLst'] = ctx.lineEffectListXml;
+	}
+
+	// The writers above add children in the order they run (ends before the
+	// join, the tail before the head), and fast-xml-parser emits keys in
+	// insertion order, so put `a:ln` in CT_LineProperties order once here.
+	const lineNode = spPr['a:ln'];
+	if (lineNode && typeof lineNode === 'object' && !Array.isArray(lineNode)) {
+		spPr['a:ln'] = reorderObjectKeysByLocalName(lineNode as XmlObject, LN_CHILD_ORDER);
 	}
 }
 

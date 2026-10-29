@@ -27,6 +27,12 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import {
+	buildShapeStyle,
+	connectorLineEndOverride,
+	mapStrokeToShapeStyle,
+} from './shape-style-input';
+import type { ShapeStyleInputs } from './shape-style-input';
 import type {
 	TextOptions,
 	TextSegmentInput,
@@ -39,9 +45,6 @@ import type {
 	ConnectorOptions,
 	MediaOptions,
 	GroupOptions,
-	FillInput,
-	StrokeInput,
-	ShadowInput,
 	TextStyleInput,
 } from './types';
 
@@ -65,87 +68,20 @@ export function resetIdCounter(): void {
 // Internal mapping helpers
 // ---------------------------------------------------------------------------
 
-function mapFillToShapeStyle(fill?: FillInput): Partial<ShapeStyle> {
-	if (!fill) {
-		return {};
-	}
-	switch (fill.type) {
-		case 'solid':
-			return {
-				fillMode: 'solid',
-				fillColor: fill.color,
-				fillOpacity: fill.opacity,
-				...(fill.themeColorRef ? { fillColorRef: fill.themeColorRef } : {}),
-			};
-		case 'gradient':
-			return {
-				fillMode: 'gradient',
-				fillGradientType: fill.gradientType ?? 'linear',
-				fillGradientAngle: fill.angle ?? 0,
-				fillGradientStops: fill.stops.map((s) => ({
-					color: s.color,
-					position: s.position,
-					opacity: s.opacity,
-				})),
-			};
-		case 'pattern':
-			return {
-				fillMode: 'pattern',
-				fillPatternPreset: fill.preset,
-				fillPatternBackgroundColor: fill.background,
-			};
-		case 'image':
-			return {
-				fillMode: 'image',
-				fillImageUrl: fill.url,
-				fillImageMode: fill.mode ?? 'stretch',
-			};
-		case 'none':
-			return { fillMode: 'none' };
-		default:
-			return {};
-	}
-}
-
-function mapStrokeToShapeStyle(stroke?: StrokeInput): Partial<ShapeStyle> {
-	if (!stroke) {
-		return {};
-	}
+/** The fill, stroke and effect inputs of a text box or shape, with `fill` resolved. */
+function effectInputs(
+	options: TextOptions | ShapeOptions | undefined,
+	fill: ShapeStyleInputs['fill'],
+): ShapeStyleInputs {
 	return {
-		strokeColor: stroke.color,
-		strokeWidth: stroke.width,
-		strokeDash: stroke.dash,
-		strokeOpacity: stroke.opacity,
-		lineJoin: stroke.join,
-		lineCap: stroke.cap,
-		...(stroke.themeColorRef ? { strokeColorRef: stroke.themeColorRef } : {}),
+		fill,
+		stroke: options?.stroke,
+		shadow: options?.shadow,
+		innerShadow: options?.innerShadow,
+		glow: options?.glow,
+		softEdge: options?.softEdge,
+		reflection: options?.reflection,
 	};
-}
-
-function mapShadowToShapeStyle(shadow?: ShadowInput): Partial<ShapeStyle> {
-	if (!shadow) {
-		return {};
-	}
-	return {
-		shadowColor: shadow.color ?? '#000000',
-		shadowBlur: shadow.blur ?? 4,
-		shadowOffsetX: shadow.offsetX ?? 2,
-		shadowOffsetY: shadow.offsetY ?? 2,
-		shadowOpacity: shadow.opacity ?? 0.4,
-	};
-}
-
-function buildShapeStyle(opts: {
-	fill?: FillInput;
-	stroke?: StrokeInput;
-	shadow?: ShadowInput;
-}): ShapeStyle | undefined {
-	const parts: Partial<ShapeStyle> = {
-		...mapFillToShapeStyle(opts.fill),
-		...mapStrokeToShapeStyle(opts.stroke),
-		...mapShadowToShapeStyle(opts.shadow),
-	};
-	return Object.keys(parts).length > 0 ? (parts as ShapeStyle) : undefined;
 }
 
 function mapTextStyleInput(opts?: Partial<TextStyleInput>): Partial<TextStyle> {
@@ -293,11 +229,7 @@ export function createTextElement(
 		text: plainText,
 		textStyle: mapTextStyleInput(textStyleBase) as TextStyle,
 		textSegments: buildTextSegments(text, textStyleBase),
-		shapeStyle: buildShapeStyle({
-			fill: options?.fill,
-			stroke: options?.stroke,
-			shadow: options?.shadow,
-		}),
+		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
 	};
 }
 
@@ -326,11 +258,9 @@ export function createShapeElement(shapeType: string, options?: ShapeOptions): S
 		opacity: options?.opacity,
 		shapeType,
 		shapeAdjustments: options?.adjustments,
-		shapeStyle: buildShapeStyle({
-			fill: options?.fill ?? { type: 'solid', color: '#4472C4' },
-			stroke: options?.stroke,
-			shadow: options?.shadow,
-		}),
+		shapeStyle: buildShapeStyle(
+			effectInputs(options, options?.fill ?? { type: 'solid', color: '#4472C4' }),
+		),
 	};
 	if (options?.text) {
 		el.text = options.text;
@@ -355,11 +285,22 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
 				? 'curvedConnector3'
 				: 'straightConnector1';
 
+	// The SDK's own connector defaults (black, 1 px) apply field by field, so a
+	// stroke that sets only a dash or an arrow does not fall through to the
+	// connector writer's UI defaults instead.
+	const strokeInput = options?.stroke;
+	const stroke = mapStrokeToShapeStyle({
+		...strokeInput,
+		color: strokeInput?.color ?? '#000000',
+		width: strokeInput?.width ?? 1,
+	});
 	const style: ShapeStyle = {
-		...mapStrokeToShapeStyle(options?.stroke ?? { color: '#000000', width: 1 }),
-		connectorStartArrow: options?.startArrow ?? 'none',
-		connectorEndArrow: options?.endArrow ?? 'none',
+		...stroke,
+		...connectorLineEndOverride('Start', options?.startArrow),
+		...connectorLineEndOverride('End', options?.endArrow),
 	} as ShapeStyle;
+	style.connectorStartArrow ??= 'none';
+	style.connectorEndArrow ??= 'none';
 
 	if (options?.from) {
 		style.connectorStartConnection = {
@@ -653,9 +594,8 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 		pathHeight,
 		customGeometryPaths,
 		shapeStyle: buildShapeStyle({
-			fill: options?.fill ?? { type: 'none' },
+			...effectInputs(options, options?.fill ?? { type: 'none' }),
 			stroke: options?.stroke ?? { color: '#000000', width: 2 },
-			shadow: options?.shadow,
 		}),
 	};
 	if (options?.text) {
