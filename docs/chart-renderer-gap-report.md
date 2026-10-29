@@ -16,6 +16,13 @@ and [delivery measurement](evidence/chart-gap-delivery-2026-10-28.json) supersed
 baseline counts for implemented slices: manual-layout ablation is now 10/10 and funnel/box
 ChartEx parts render. Historical tables below remain labelled baseline evidence.
 
+**2026-10-30 code check:** still open in `src/core/chart/render/` are 3-D views (no `view3D`,
+perspective or rotation handling, so Word, Excel and Visio draw 3-D charts flat; the three.js
+meshes stay in `src/ui/src/pptx/render`), region map ChartEx (`cx:geography` is modelled but not
+drawn), the Pareto cumulative line (unconfirmed), `c:userShapes` (parsed, not drawn) and pivot
+chart field buttons. Surface charts have no dedicated painter; how they draw now was not
+re-measured. The [Office parity checklist](parity-checklist.md) carries these items.
+
 ## How the numbers were made
 
 - `src/core/pptx/__tests__/integration/chart-renderer-gap.test.ts` (kept; runs with the core tests).

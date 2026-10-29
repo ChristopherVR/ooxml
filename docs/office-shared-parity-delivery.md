@@ -15,6 +15,11 @@ Core owns document semantics, layout, geometry and serialization. Shared DOM pai
 belong in `ooxml-ui`; package relationships, host placement and framework lifecycle remain adapters.
 Every changed PowerPoint control must reach all five bindings.
 
+A ticked box below means the admitted subset named in that item shipped with its tests; it does
+not mean Office parity for the feature. Open gaps in the shared layer (3-D chart views outside
+PowerPoint, region map ChartEx, Visio ChartEx, SmartArt and equations, equations in Excel) are
+tracked in the [Office parity checklist](parity-checklist.md).
+
 ## 1. Safe chart editing and preservation
 
 - [x] One shared source-backed chart writer and edit-eligibility policy.

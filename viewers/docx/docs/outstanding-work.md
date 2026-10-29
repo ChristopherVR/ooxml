@@ -4,7 +4,8 @@ Status reviewed on 2026-10-03. Reviewed 2026-10-15 for footnote continuation, ne
 Update Fields, chart painting and editable Print Layout pages. This page is the per-feature detail: what each area supports and where its limits are
 (the original six workstreams below are historical foundations). The live list of next
 priorities, the baseline and the evidence required for Word equivalence is kept only in the
-[parity roadmap](/parity-roadmap). No full Word parity is claimed; model
+[parity roadmap](/parity-roadmap), and the cross-product gap list in the
+[Office parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md). No full Word parity is claimed; model
 warnings identify unsupported imported content.
 
 ## Merged workstreams
@@ -12,7 +13,7 @@ warnings identify unsupported imported content.
 | Workstream                               | What landed                                                                                                                                                                                                                                                                                |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Numbering and lists                      | `numbering.xml` catalog, style-inherited `numPr`, computed labels (decimal, Roman, letter, ordinal, cardinal/ordinal text, bullet, legal, multilevel `lvlText`), list commands, Enter-on-empty exits a list, Tab/Shift+Tab levels, numbering part surgery on save.                         |
-| Sections, breaks, headers/footers, notes | `DocumentModel.sections`; editable page/column breaks and `pageBreakBefore` (Ctrl+Enter); headers/footers and footnotes/endnotes edited in place on the continuous surface (double-click; off in Viewing mode and during collaboration), read-only on Print Layout pages.                  |
+| Sections, breaks, headers/footers, notes | `DocumentModel.sections`; editable page/column breaks and `pageBreakBefore` (Ctrl+Enter); headers/footers and footnotes/endnotes edited in place on the continuous surface (double-click; off in Viewing mode and during collaboration), and edited in place on Print Layout pages too.    |
 | Pagination / Print Layout                | `ooxml-core/docx/layout` engine (line breaking, spacing, indents, widow/orphan, keep rules, table row splitting, columns) and an editable paginated Print Layout view (typing, selection and IME on the pages, with the limits under Fidelity) with printing, driven by the section model. |
 | Tracked changes and comments             | Revisions on runs and paragraph marks, markup display modes, accept/reject (one/all), next/previous, Track Changes mode, comments pane with replies and resolve, `comments.xml` writing.                                                                                                   |
 | Theme, character styles, tables          | Theme colors/fonts, character styles with toggle-property inheritance, extra run properties (caps, small caps, double strike, underline style/color, spacing, shading, hidden text), table grid/widths/merges/borders/shading/table styles.                                                |

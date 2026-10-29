@@ -2,7 +2,7 @@
 
 Last reconciled 2026-10-26 for shared charts, SmartArt and DrawingML; other headline areas reviewed 2026-10-22: the headline table below was re-checked against the later rounds in this file and
 the code; the per-batch sections are dated by the work they describe (through round 6, 2026-10-16),
-and their test counts are snapshots. Per-product trackers: [xlsx-parity-status.md](xlsx-parity-status.md),
+and their test counts are snapshots. The single list of open gaps across products is the [Office parity checklist](parity-checklist.md) (2026-10-30). Per-product trackers: [xlsx-parity-status.md](xlsx-parity-status.md),
 [word-parity-review.md](word-parity-review.md), [visio-parity-review.md](visio-parity-review.md).
 This is an evidence-based source review and tested implementation batch, not
 a claim of Microsoft Office equivalence. The consolidated repository contains

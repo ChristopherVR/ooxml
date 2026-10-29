@@ -57,14 +57,14 @@ Evidence: `transitions/` (`powerpoint.png`, `viewer-before-react.png`, `viewer-a
 
 Evidence: `animations/`.
 
-| Gap                                                                                          | Severity | Status                                                                                                                                                                                                                           |
-| -------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Effects were three captioned text columns inside a bordered box with a vertical scrollbar    | High     | Fixed: one row of icon-over-label tiles (entrance green, emphasis amber, exit red, motion path blue), a rule between families, chevron pages the strip, no scrollbar                                                             |
-| Effect Options was in the Advanced group, PowerPoint puts it beside the gallery              | Medium   | Fixed: large command with chevron, id unchanged                                                                                                                                                                                  |
-| Advanced Animation stacked Effect Options + Panel and Trigger + Painter in two 2-row columns | Medium   | Fixed: Animation Pane, Trigger (chevron) and Animation Painter in one three-row stack, Add Animation (chevron) and Path Animation large                                                                                          |
-| Reorder Animation (Move Earlier / Later) and Delay                                           | Medium   | Implemented in the Animation Pane (move earlier or later, drag in the timeline, per-effect Delay); the ribbon itself still has no Delay field or reorder buttons, Start and Duration stay as the existing honest disabled fields |
-| Motion Paths is a second gallery, PowerPoint folds paths into the main gallery's expander    | Low      | Not fixed: kept as a separate gallery (ids and tests depend on it); it now uses the same tile look                                                                                                                               |
-| No live preview of an effect on hover                                                        | Medium   | Not fixed: needs a playback preview path outside the UI layer                                                                                                                                                                    |
+| Gap                                                                                          | Severity | Status                                                                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Effects were three captioned text columns inside a bordered box with a vertical scrollbar    | High     | Fixed: one row of icon-over-label tiles (entrance green, emphasis amber, exit red, motion path blue), a rule between families, chevron pages the strip, no scrollbar                                                                                                                                          |
+| Effect Options was in the Advanced group, PowerPoint puts it beside the gallery              | Medium   | Fixed: large command with chevron, id unchanged                                                                                                                                                                                                                                                               |
+| Advanced Animation stacked Effect Options + Panel and Trigger + Painter in two 2-row columns | Medium   | Fixed layout: Animation Pane, Trigger (chevron) and Animation Painter in one three-row stack, Add Animation (chevron) and Path Animation large. Animation Painter itself is a disabled placeholder (`ribbon-animations-view.ts`): copying an effect between shapes is not implemented                         |
+| Reorder Animation (Move Earlier / Later) and Delay                                           | Medium   | Implemented in the Animation Pane (move earlier or later, drag in the timeline, per-effect Delay); the ribbon itself still has no Delay field or reorder buttons, Start and Duration stay disabled placeholders in every binding (`ribbon-animations-timing-view.ts`); timing is edited in the Animation Pane |
+| Motion Paths is a second gallery, PowerPoint folds paths into the main gallery's expander    | Low      | Not fixed: kept as a separate gallery (ids and tests depend on it); it now uses the same tile look                                                                                                                                                                                                            |
+| No live preview of an effect on hover                                                        | Medium   | Not fixed: needs a playback preview path outside the UI layer                                                                                                                                                                                                                                                 |
 
 ## Slide Show
 
@@ -82,12 +82,13 @@ Evidence: `slideshow/`.
 
 Evidence: `record/`.
 
-| Gap                                                                            | Severity | Status                                                                                                           |
-| ------------------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------- |
-| Every command was a small icon-beside-label row, PowerPoint uses large buttons | High     | Fixed in all five bindings (they each forced `compact`)                                                          |
-| Group names "Camera" and "Manage"                                              | Low      | Fixed: "Cameo" and "Edit"                                                                                        |
-| No chevron on Cameo, Clear Recording, Reset to Cameo                           | Low      | Fixed                                                                                                            |
-| Preview, Screen Recording, Audio, Save as Show, Export to Video are missing    | Medium   | Not fixed: the viewer records through the existing rehearsal flow only; unbacked disabled buttons were not added |
+| Gap                                                                            | Severity | Status                                                                                                                        |
+| ------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Every command was a small icon-beside-label row, PowerPoint uses large buttons | High     | Fixed in all five bindings (they each forced `compact`)                                                                       |
+| Group names "Camera" and "Manage"                                              | Low      | Fixed: "Cameo" and "Edit"                                                                                                     |
+| No chevron on Cameo, Clear Recording, Reset to Cameo                           | Low      | Fixed                                                                                                                         |
+| Preview, Screen Recording, Audio, Save as Show, Export to Video are missing    | Medium   | Not fixed: the viewer records through the existing rehearsal flow only; unbacked disabled buttons were not added              |
+| Cameo, Clear, Reset to Cameo and Learn More do nothing                         | Medium   | Not fixed: listed disabled (`ribbon-record-commands.ts`), so recorded timings and narration cannot be cleared from the ribbon |
 
 ## Review
 
@@ -108,13 +109,15 @@ Evidence: `review/`.
 
 Evidence: `view/`.
 
-| Gap                                                                                                   | Severity | Status                                                                                          |
-| ----------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| Show group was a six-row column of controls, the tab was about 50 percent taller than every other tab | High     | Fixed: three columns of three rows                                                              |
-| Color/Grayscale group (Color, Grayscale, Black and White)                                             | Medium   | Not fixed: the renderer has no grayscale mode; adding buttons would claim a view it cannot show |
-| Window group (New Window, Arrange All, Cascade, Move Split, Switch Windows)                           | Low      | Not applicable to an embeddable web component                                                   |
-| Macros shares the Window group, PowerPoint gives it its own group                                     | Low      | Not fixed: would change a public group id                                                       |
-| Notes and Ruler/Gridlines/Guides labels differ ("Rulers", "Grid")                                     | Low      | Not fixed: these strings are shared with other UI and localized                                 |
+| Gap                                                                                                   | Severity | Status                                                                                               |
+| ----------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| Show group was a six-row column of controls, the tab was about 50 percent taller than every other tab | High     | Fixed: three columns of three rows                                                                   |
+| Color/Grayscale group (Color, Grayscale, Black and White)                                             | Medium   | Not fixed: the renderer has no grayscale mode; adding buttons would claim a view it cannot show      |
+| Window group (New Window, Arrange All, Cascade, Move Split, Switch Windows)                           | Low      | Not applicable to an embeddable web component                                                        |
+| Macros shares the Window group, PowerPoint gives it its own group                                     | Low      | Not fixed: would change a public group id                                                            |
+| Ruler/Gridlines/Guides labels differ ("Rulers", "Grid")                                               | Low      | Not fixed: these strings are shared with other UI and localized                                      |
+| Notes toggle and Notes Page view are missing                                                          | Medium   | Not fixed: the ribbon has neither control, and there is no Notes Page view                           |
+| Zoom, Handout Master, Notes Master and Macros do nothing                                              | Medium   | Not fixed: disabled placeholders (`ribbon-view-view.ts`); only Slide Master is a working master view |
 
 ## Contextual tabs
 

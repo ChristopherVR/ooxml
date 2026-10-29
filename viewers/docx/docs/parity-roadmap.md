@@ -63,23 +63,33 @@ of unsupported OOXML properties or objects.
 This is the one live list of open work. [Outstanding work](/outstanding-work) records the
 detail and limits of each feature already built.
 
-1. **Editable pages and reliable layout.** Establish stable page/line/run mappings
-   for caret placement, selections, scrolling, keyboard movement and IME before
-   adding editing directly to pages. Improve footnote continuation, per-column
-   notes, text-box layout, complex scripts and font substitution against references.
-2. **Document preservation under richer edits.** Add merged-cell/table commands,
-   remaining table/cell geometry controls only with imported-package surgery,
-   identity-aware undo and save/reopen tests. Extend formatted clipboard coverage
-   across paragraphs, cells and document stories.
+1. **Reliable layout.** Print Layout pages are editable (caret, selection, IME and
+   stories). What remains is fidelity: merged cells on pages, caret placement at line
+   and page boundaries, hyphenation (`autoHyphenation` is read but never applied), wrap
+   polygons for tight and through wrapping, table autofit, floats inside table cells,
+   text-box layout, vertical and East Asian text, complex scripts and font substitution
+   against Word-rendered references.
+2. **Document preservation under richer edits.** Merge and split cells and row and
+   column commands exist. Next are table-level properties (width, alignment, indent,
+   borders, style, look), modelled table-structure revisions (`cellIns`, `cellDel`,
+   `cellMerge`, `tblPrChange`, `trPrChange`, `tcPrChange`), the tables that stay
+   refused (`gridBefore`/`gridAfter`, `hMerge`, row SDTs, inline markup in cells),
+   identity-aware undo and save/reopen tests, and formatted clipboard coverage across
+   paragraphs, cells and stories. Legacy `.doc` import is main-body text only and needs
+   tables, headers, images, fields and formatting.
 3. **Drawing and embedded objects.** SmartArt, classic charts and admitted ChartEx editing
    run on the format-neutral core and shared `ooxml-ui` elements. SmartArt style/colour galleries
    and admitted generated 2D caches are implemented. Next are wider native styles, complex
    typography/3D, picture relationship authoring and shapes beyond preset geometry. Add each only after model, parser, layout and
    serializer contracts preserve the source package. Keep UI controls in `ooxml-ui`
    and framework adapters in the viewer.
-4. **Word authoring breadth.** Extend style-definition editing, object positioning
-   and wrapping, citations/bibliography/index, field recalculation and accessibility
-   inspection. Unsupported imported content must remain visible or explicitly
+4. **Word authoring breadth.** Creating styles and editing the style catalogue and
+   theme (both refused on save today), the Design tab (themes, colours, fonts,
+   paragraph spacing, all disabled), Mailings (all 16 commands disabled, no merge
+   engine), object positioning and wrapping (no Layout > Arrange group, no Picture
+   Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
+   `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,
+   wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly
    identified and preserved.
 5. **Production review and integration.** Add proofing services, compare/protection
    and application persistence as explicit contracts. Complete cross-browser,

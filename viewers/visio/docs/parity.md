@@ -1272,7 +1272,10 @@ atomically. Groups, masters, foreign objects, multi-shape resize, full-content
 resize preview, snapping, aspect-modifier gestures, numeric formula/unit-string
 entry and pin-position editing remain open. Native source and reopen evidence
 is recorded in [verification](verification.md); it does not establish full
-Visio behavior or visual parity.
+Visio behavior or visual parity. (Update 2026-10-30: multi-selection resize, anchored
+resize of flat local groups and move snapping with the Alt bypass have landed; nested,
+rotated and stencil group members, aspect-modifier gestures and resize alignment hints are
+still open. See the editing review in `docs/visio-parity-review.md`.)
 
 ## Blank drawings and pointer gestures, 2026-10-09
 
@@ -1288,7 +1291,10 @@ additive modifiers. Source/page/selection changes cancel gestures and pending
 source acceptance. Protected targets reject the complete move. Masters, groups,
 layers, foreign objects and glued connectors remain outside pointer movement;
 resize handles now have the separate bounded proof described above; routing
-remains unsupported.
+remains unsupported. (Update 2026-10-30: glued connectors now follow a moved shape and
+right-angle connectors are routed around shapes placed on their path
+(`edit-connector-follow.ts`, `edit-connector-reroute.ts`), and master instances move and
+resize natively; connectors in files saved by Visio are still refused for geometry edits.)
 
 Pure deletion batches now permit references entirely inside the removed set.
 Retained references, metadata and Connect records still refuse, with all target
@@ -1420,6 +1426,8 @@ members, LockGroup or other active protection, formulas that read a member's pin
 formulas, references to the removed group and groups with their own geometry or
 text are refused. Members are written with plain values rather than Visio's
 group-scaling formulas, so resizing or flipping a group remains unsupported here
+(Update 2026-10-30: anchored resize and rotation of flat groups now work, `edit-group-resize.ts`
+and `edit-group-rotation.ts`; flips and nested groups remain unsupported)
 and native Visio group-resize behaviour for these groups is unverified; Add to
 Group, Remove from Group, container behaviour and native save/reopen acceptance
 remain open. Evidence: core `edit-group.test.ts` and `ui/shape-group.test.ts`,

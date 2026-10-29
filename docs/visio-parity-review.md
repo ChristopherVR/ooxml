@@ -5,6 +5,8 @@
 Reviewed source: `a4707a6e694d26e32af0375ee06d600541a1236a`. This section is a
 current code review; the dated measurements below are historical evidence, not a
 fresh native Visio acceptance run. Full 1:1 parity has not been established.
+The open gaps, re-checked against the code on 2026-10-30, are listed with the other products in
+the [Office parity checklist](parity-checklist.md).
 
 The most visible editing limitation is the gap between commands existing and
 commands working on an ordinary mixed drawing. Core deliberately rejects edits
@@ -177,10 +179,12 @@ by Visio when opened and remains a live-routing gap. See
   glued-end cases only).
 - Recalculation: ROUND, INT, TRUNC, POW, EXP, LN, LOG10, ASIN, ACOS, ATAN and the TRUE/FALSE
   constants are evaluated, so formulas that use them no longer refuse a resize or move. Still
-  refused: SUM, DEG, RAD, string and document-property functions, INDIRECT and the other
+  refused when this round landed: SUM, DEG, RAD, string and document-property functions, INDIRECT and the other
   reference-building functions, `ThePage!` / `TheDoc!` references, and dependencies on inherited
   or grouped cells. ROUND's two-argument form is read as decimal places, which is not yet checked
-  against Visio.
+  against Visio. Update 2026-10-30: SUM, DEG, RAD and the string functions (LEFT, MID, LEN,
+  TRIM and others) now evaluate (`formula-*-functions.ts`); INDIRECT stays dynamic for every
+  edit guard, and see priority 3 of the 2026-10-28 review for what else remains.
 
 ## Round four: straight stencil connectors, string, angle and point functions (2026-10-15)
 
