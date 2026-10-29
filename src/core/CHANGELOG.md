@@ -7,6 +7,53 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.32.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.32.0) - 2026-10-29
+
+### Features
+
+- **teams:** One status per person across tabs, and busy during meetings ([#233](https://github.com/ChristopherVR/ooxml/issues/233)) ([119432c](https://github.com/ChristopherVR/ooxml/commit/119432c9bfb11e079e0372ff0f4e95d8ebfbbb6f))
+- **pptx:** Accept effects, line options and path gradients on shapes ([#230](https://github.com/ChristopherVR/ooxml/issues/230)) ([a22501f](https://github.com/ChristopherVR/ooxml/commit/a22501fb6044c526f1860b1fae12eb49d6e43ce7))
+- **xlsx:** Start seasonal FORECAST.ETS from Excel's exact chain rule ([af3c103](https://github.com/ChristopherVR/ooxml/commit/af3c1038cd3f5d76adfc70e64dd5a8e97b09eb9a))
+- **xlsx:** Approximate the ETS start for 4 seasons plus a partial one ([606893a](https://github.com/ChristopherVR/ooxml/commit/606893aa768eb8ea16c6a08876a71b9cc55700f8))
+- **xlsx:** Search Excel's ETS (alpha, beta) lattice and its report map ([31fb89e](https://github.com/ChristopherVR/ooxml/commit/31fb89e2de3b63d17d26460a038db15428f13405))
+- **xlsx:** Search Excel's seasonal ETS triples where the start is exact ([598b846](https://github.com/ChristopherVR/ooxml/commit/598b8468e6a005bd0298fe7ed32ab1b2fb59d877))
+- **xlsx:** Fit the 1/6 ETS family with its own pair (0.166667, 0.0833333) ([1987910](https://github.com/ChristopherVR/ooxml/commit/1987910c34011e568644d2261e76bd449a8a027b))
+- **xlsx:** Replace the ETS stand-in pairs with Excel's own lattice ([b1ccdf9](https://github.com/ChristopherVR/ooxml/commit/b1ccdf98b4948b24caf7278392d66546f4dd2402))
+- **xlsx:** Start seasonal FORECAST.ETS exactly for 3 seasons and 2 ([6dd12a2](https://github.com/ChristopherVR/ooxml/commit/6dd12a209cb1cf6f6b2f164bc16ab285f68d8c43))
+- **xlsx:** Extend the exact 3-season ETS start to ceil(m / 2) + 1 points ([6e1d84f](https://github.com/ChristopherVR/ooxml/commit/6e1d84f300a185a888ec091eaab030535230f219))
+- **xlsx:** Search seasonal ETS parameters on the padded series ([6c012c5](https://github.com/ChristopherVR/ooxml/commit/6c012c56fbcfbd12610bbb10160c9d84e5cf6a7b))
+- **xlsx:** Start FORECAST.ETS exactly for 4m+r and 3m+ points ([1093514](https://github.com/ChristopherVR/ooxml/commit/10935140610ce8aadc00dcac03e3342c5e718da7))
+- **xlsx:** Start FORECAST.ETS exactly for 2 seasons plus a partial one ([1b17e17](https://github.com/ChristopherVR/ooxml/commit/1b17e17e6651650cc39c135d82faf5ddfd443d02))
+- **xlsx:** Start FORECAST.ETS exactly below 2 seasons ([3e841eb](https://github.com/ChristopherVR/ooxml/commit/3e841ebc9ec4d13587b26251460410291344cdc9))
+
+### Bug Fixes
+
+- **xlsx:** Detect seasonality by autocorrelation like Excel ([7208f82](https://github.com/ChristopherVR/ooxml/commit/7208f8225faca5afcea90cc76dcc7086a6856495))
+- **xlsx:** Match Excel's 6-point ETS start and record its start states ([c3314ee](https://github.com/ChristopherVR/ooxml/commit/c3314eef49223c6e08da7b06105a241e3cb151ec))
+- **xlsx:** Search FORECAST.ETS smoothing like Excel, swap MEDIAN, MIN ([aa16418](https://github.com/ChristopherVR/ooxml/commit/aa1641847cda58891fa62f45692bd949634fedc3))
+- **xlsx:** Choose FORECAST.ETS parameters on the hold-out cost ([407c87c](https://github.com/ChristopherVR/ooxml/commit/407c87c262329d848167c342fc0d5b048edad2a4))
+- **xlsx:** Match Excel's FORECAST.ETS start trend for 4 and 5 values ([6f6be1f](https://github.com/ChristopherVR/ooxml/commit/6f6be1f120935199c077d2ffa94603176de5f547))
+- **xlsx:** Resolve code scanning alerts in escaping and workflow pins ([52c1c28](https://github.com/ChristopherVR/ooxml/commit/52c1c2815f4aa74ceb84414987913f8c0aa7fe7b))
+- **pptx:** Edit tag and customer-data owners without regrouping slides ([adbe9ca](https://github.com/ChristopherVR/ooxml/commit/adbe9ca129f0c4fcb18dd850bfd486091c569813))
+- **geometry:** Draw arc, pie, chord and blockArc sweeps that wrap past 0 ([ee4a502](https://github.com/ChristopherVR/ooxml/commit/ee4a502022d615bfee5057bed4d87804265e90e2))
+
+### Documentation
+
+- **xlsx:** Record ETS start-state hypotheses ruled out against Excel ([e73fea8](https://github.com/ChristopherVR/ooxml/commit/e73fea8ea15197cde26c978b1e6e964995486000))
+- **xlsx:** Record ETS cost variants that lose to the hold-out cost ([1d8d0c8](https://github.com/ChristopherVR/ooxml/commit/1d8d0c8536de716efe623bf8edba8d2f31aff4be))
+- **xlsx:** Record what the seasonal ETS start does not depend on ([f7602e8](https://github.com/ChristopherVR/ooxml/commit/f7602e8f16e436ad65393f2597ca390b49ab2398))
+- **xlsx:** Record that the lowest seasonal ETS cost does not pick Excel's period ([5847116](https://github.com/ChristopherVR/ooxml/commit/58471162e30b202355e77417e2d2f802e88ce716))
+- **xlsx:** Record Fisher, ADF and KPSS negatives for the ETS rules ([9ddccc5](https://github.com/ChristopherVR/ooxml/commit/9ddccc5e470d99337a5d08a1f3008a6fcbd8650a))
+
+### Testing
+
+- **xlsx:** Record Excel's FORECAST.ETS starting-state maps and laws ([c1c5bff](https://github.com/ChristopherVR/ooxml/commit/c1c5bff5a4ecd5176b16f09e41513390add42973))
+- **xlsx:** Re-measure the ETS tolerances on the hold-out search ([120726c](https://github.com/ChristopherVR/ooxml/commit/120726c959d5f20ac355aa4799714f226a622043))
+- **xlsx:** Commit the ets-init9 to ets-init12 series fixtures ([6b3251d](https://github.com/ChristopherVR/ooxml/commit/6b3251de5403705006a4c4cb0c2de0a452f7384c))
+- **xlsx:** Record seasonality detection and drift probes from Excel ([47b8101](https://github.com/ChristopherVR/ooxml/commit/47b8101f1537e2b74f23ddbb1664bd664071f563))
+- **xlsx:** Record seasonality amplitude sweep and rule out ETS hypotheses ([18d685b](https://github.com/ChristopherVR/ooxml/commit/18d685b15923b23e5958655462be83e7fdab2f82))
+- **xlsx:** Check the short-season rules on seasons 14, 16 and up to 40 ([ae973c0](https://github.com/ChristopherVR/ooxml/commit/ae973c0d7767f891aa9de88c4f505f208b71ca91))
+
 ## [1.31.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.31.0) - 2026-10-29
 
 ### Features

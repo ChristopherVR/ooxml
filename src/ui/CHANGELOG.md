@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.34.0) - 2026-10-29
+
+### Features
+
+- **teams:** One status per person across tabs, and busy during meetings ([#233](https://github.com/ChristopherVR/ooxml/issues/233)) ([119432c](https://github.com/ChristopherVR/ooxml/commit/119432c9bfb11e079e0372ff0f4e95d8ebfbbb6f))
+
 ## [1.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.33.0) - 2026-10-29
 
 ### Features

@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.58.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.58.0) - 2026-10-29
+
+### Features
+
+- **pptx:** Accept effects, line options and path gradients on shapes ([#230](https://github.com/ChristopherVR/ooxml/issues/230)) ([a22501f](https://github.com/ChristopherVR/ooxml/commit/a22501fb6044c526f1860b1fae12eb49d6e43ce7))
+
+### Bug Fixes
+
+- **pptx:** Edit tag and customer-data owners without regrouping slides ([adbe9ca](https://github.com/ChristopherVR/ooxml/commit/adbe9ca129f0c4fcb18dd850bfd486091c569813))
+- **geometry:** Draw arc, pie, chord and blockArc sweeps that wrap past 0 ([ee4a502](https://github.com/ChristopherVR/ooxml/commit/ee4a502022d615bfee5057bed4d87804265e90e2))
+
 ## [4.57.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.57.1) - 2026-10-29
 
 ### Bug Fixes
