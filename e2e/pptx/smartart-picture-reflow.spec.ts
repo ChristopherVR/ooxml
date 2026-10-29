@@ -7,7 +7,6 @@ import JSZip from 'jszip';
 import { withNativePictureLayout } from '../../src/core/diagram/test-support/picture-layout';
 import { savePptxViaBackstage } from './save-pptx';
 import { resetTabSession, slideStage, loadDeck } from './support/deck';
-import { unobstructedNodePoint } from './support/smartart-hit-target';
 
 for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 	test(`${layout} keeps image fills after caption edit, reflow and save/reopen`, async ({
@@ -32,20 +31,18 @@ for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 		});
 		const stage = slideStage(page);
 		await expect(stage.locator('image')).toHaveCount(3);
-		const caption = stage
-			.locator('[data-smartart-node-id]')
-			.filter({ has: page.locator('text').filter({ hasText: /^Alpha$/ }) })
-			.first();
-		const point = await unobstructedNodePoint(caption);
-		await page.mouse.dblclick(point.x, point.y);
-		const editor = page.locator('[data-pptx-viewport] textarea:visible');
-		await expect(editor).toHaveCount(1);
-		await editor.fill('Updated picture caption');
-		await page
-			.getByRole('toolbar', { name: 'Presentation toolbar' })
-			.getByRole('tab', { name: 'Home', exact: true })
-			.click();
-		await expect(editor).toHaveCount(0);
+		await stage
+			.locator('[data-pptx-element="true"]')
+			.first()
+			.click({ position: { x: 10, y: 10 } });
+		const pane = page.locator('pptx-ui-smartart-text-pane');
+		const lines = pane.locator('input[data-node]');
+		await expect(lines).toHaveCount(3);
+		await lines.first().fill('Updated picture caption');
+		await lines.first().press('Enter');
+		await expect(lines).toHaveCount(4);
+		await lines.nth(1).press('Backspace');
+		await expect(lines).toHaveCount(3);
 		await expect(stage.locator('image')).toHaveCount(3);
 		await expect(stage).toContainText('Updated picture caption');
 		const download = await savePptxViaBackstage(page);

@@ -11,10 +11,7 @@ export const needsSmartArtPictureRefresh = (shape: PptxSmartArtDrawingShape): bo
 			(shape.pictureFill?.layout?.tile && !(shape.fillImageWidth && shape.fillImageHeight))),
 	);
 
-const pendingImages = new WeakMap<
-	SVGImageElement,
-	{ source: PptxSmartArtDrawingShape; key: string; done: boolean }
->();
+const pendingImages = new WeakMap<SVGImageElement, { key: string; href: string | null }>();
 const sourceKey = (shape: PptxSmartArtDrawingShape) =>
 	JSON.stringify([
 		shape.fillImageUrl,
@@ -38,8 +35,9 @@ export function refreshSmartArtPictureImage(
 		return;
 	const key = sourceKey(source);
 	const originalHref = image.getAttribute('href');
-	if (pendingImages.get(image)?.key === key) return;
-	const state = { source, key, done: false };
+	const previous = pendingImages.get(image);
+	if (previous?.key === key && previous.href === originalHref) return;
+	const state = { key, href: originalHref };
 	pendingImages.set(image, state);
 	const pixels = needsPicturePixels(source.pictureFill?.effects ?? []);
 	const ready = pixels
@@ -58,10 +56,10 @@ export function refreshSmartArtPictureImage(
 			sourceKey(source) !== key
 		)
 			return;
-		state.done = true;
 		image.setAttribute('data-office-picture-paint-ready', 'true');
 		if (pixels) image.setAttribute('data-office-picture-pixels-ready', 'true');
 		const url = smartArtPictureImage(source);
+		state.href = url ?? originalHref;
 		if (url && image.getAttribute('href') !== url) image.setAttribute('href', url);
 	});
 }

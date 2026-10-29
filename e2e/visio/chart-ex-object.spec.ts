@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import JSZip from 'jszip';
+import { readEmbeddedChart } from 'ooxml-core/xlsx/ui';
 import { expect, test } from '@playwright/test';
 import { chartExSpaceDataSheet } from 'ooxml-core/chart';
 import { loadXlsx, saveXlsx, readEmbeddedChartExSpace } from 'ooxml-core/xlsx';
@@ -11,13 +13,18 @@ async function fixture() {
 			new URL('../../src/core/xlsx/__fixtures__/excel-chart-families.xlsx', import.meta.url),
 		),
 	);
+	let count = 0;
 	for (const sheet of book.sheets)
 		sheet.drawings = sheet.drawings.filter(
-			(d) =>
-				d.kind === 'unsupported' && d.chartExSpace?.plotArea.series[0]?.layoutId === 'waterfall',
+			(d) => d.kind === 'unsupported' && d.chartExSpace && count++ < 2,
 		);
-	const workbook = await saveXlsx(book);
-	return (
+	const source = await saveXlsx(book),
+		first = (await readEmbeddedChartExSpace(source))!;
+	const zip = await JSZip.loadAsync(source),
+		blockedXml = first.sourceXml.replace('layoutId="waterfall"', 'layoutId="surface"');
+	zip.file(first.partName, blockedXml);
+	const workbook = await zip.generateAsync({ type: 'uint8array' });
+	const vsdx = (
 		await editVsdx(await createVsdx(), [
 			{
 				type: 'insert-chart-object',
@@ -31,6 +38,7 @@ async function fixture() {
 			},
 		])
 	).bytes;
+	return { vsdx, blockedPart: first.partName, blockedXml };
 }
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
 	test(`${framework}: embedded ChartEx paints, edits, and preserves its workbook`, async ({
@@ -43,10 +51,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			page,
 			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
 		);
+		const source = await fixture();
 		await page.locator('#file').setInputFiles({
 			name: 'ChartEx.vsdx',
 			mimeType: 'application/vnd.ms-visio.drawing',
-			buffer: Buffer.from(await fixture()),
+			buffer: Buffer.from(source.vsdx),
 		});
 		const viewer = page.locator('visio-viewer');
 		const chart = viewer.locator('svg.paper [data-shape-id]:has([data-embedded-chart])').first();
@@ -68,7 +77,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				)!.embeddedObject!.bytes,
 			),
 		);
-		const found = (await readEmbeddedChartExSpace(Uint8Array.from(data)))!;
+		const shown = (await readEmbeddedChart(Uint8Array.from(data)))!;
+		const found = (await readEmbeddedChartExSpace(Uint8Array.from(data), shown.chart.partName))!;
+		expect(found.partName).not.toBe(source.blockedPart);
 		expect(chartExSpaceDataSheet(found.space).series[0]!.values[0]).toBe(42);
 		await chart.click({ button: 'right' });
 		await viewer.locator('[command="ctx-chart-format"]').click();
@@ -86,9 +97,16 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			),
 		);
 		expect(
-			(await readEmbeddedChartExSpace(Uint8Array.from(formatted)))!.space.plotArea.series[0]!.spPr
-				?.fill,
+			(await readEmbeddedChartExSpace(Uint8Array.from(formatted), found.partName))!.space.plotArea
+				.series[0]!.spPr?.fill,
 		).toMatchObject({ kind: 'solid', color: { value: 'FF0000' } });
+		expect(
+			await (
+				await JSZip.loadAsync(Uint8Array.from(formatted))
+			)
+				.file(source.blockedPart)!
+				.async('string'),
+		).toBe(source.blockedXml);
 		await testInfo.attach('embedded-chartex.png', {
 			body: await chart.screenshot(),
 			contentType: 'image/png',
