@@ -6,7 +6,7 @@
 // first observation, the trend starting at the least-squares slope of the series (for seasons: of the series without the exact seasonal start of ets-init-chain.ts), the error
 // statistics being measured on the last points only (see `etsHoldout`) and the interval
 // being RMSE * sqrt(1 + sum of (alpha + j*beta)^2). What is not: Excel's search for alpha, beta and
-// gamma stops early on some series, and its starting values for a seasonal model of fewer than 4 whole seasons and for fewer than
+// gamma stops early on some series, and its starting values for seasonal models outside ets-init-chain.ts and ets-init-three.ts (seasons of 2 or 3, say) and for fewer than
 // 7 points are not the least-squares ones (ets-init-excel.test.ts recovers them from Excel; the search
 // is measured on 1100 more series in forecast-ets-search.test.ts and forecast-ets-validate.test.ts). The tolerances below are the measured worst cases plus a
 // small margin, not a promise of parity: they pin today's accuracy so a regression shows.
@@ -37,40 +37,29 @@ const EXACT = [
 	'walk-50',
 ];
 
-/** Relative forecast tolerance per series (the measured worst case plus 3%); 0.003 unless listed. */
+/** Relative forecast tolerance per series (the measured worst case plus 3%); 1e-9 unless listed. */
 const FORECAST_TOLERANCE: Record<string, number> = {
-	'flat-noisy': 0.039, // Excel finds a period of 2 in this noise, which no detector here reproduces
-	'seasonal4-trend': 0.015, // exact start; the search lands on other parameters than Excel's
-	'monthly-dates-seasonal12': 0.0035,
-	gaps: 0.092, // zero-filled gaps: Excel picks a smaller alpha than the best fit
-	duplicates: 0.049, // the calls that detect a season (those with seasonality 0 are exact)
-	'short-6': 0.025, // the start is exact; Excel ends at alpha 0.998 with beta 0.099, the cost says 0.002
+	'flat-noisy': 0.0387, // Excel finds a period of 2 in this noise, which no detector here reproduces
+	gaps: 0.145, // zero-filled gaps: Excel finds no period, the detector here finds 5 (see ets-season.ts)
+	duplicates: 0.0484, // the calls that detect a season (those with seasonality 0 are exact)
+	'short-6': 0.0249, // the start is exact; Excel ends at alpha 0.998 with beta 0.099, the cost says 0.002
 	'yearly-step': 0.055, // Excel reports the pair 0.9 and 0.899 and forecasts from it; this reports 0.001
 	'seasonal3-noisy': 0.0145,
-	'walk-25-anomaly': 0.036, // Excel reports alpha 0.998 with beta 0.001; this takes the pair with 0.249
-	'walk-13': 0.12, // Excel reports the pair 0.75 and 0.749 here; the pair drifts in most other series
-	'season2-9': 0.0036,
+	'walk-13': 0.124, // Excel reports the pair 0.75 and 0.749 here; the pair drifts in most other series
+	'season2-9': 0.0037,
 	'season3-9': 0.0079,
-	'season4-8': 0.0073,
-	'season5-10': 0.054,
-	'season3-11': 0.011,
+	'season3-11': 0.0111,
 };
-/** Relative confidence interval tolerance per series (the measured worst case plus 3%); 0.002 unless listed. */
+/** Relative confidence interval tolerance per series (the measured worst case plus 3%); 1e-9 unless listed. */
 const CONFINT_TOLERANCE: Record<string, number> = {
-	'flat-noisy': 0.2,
-	'monthly-dates-seasonal12': 0.32,
-	gaps: 0.385, // zero completion: Excel's period 4 on the gap-filled grid is not reproduced
-	'short-6': 0.18,
-	'yearly-step': 0.55,
-	'walk-25-anomaly': 0.27,
-	'walk-13': 0.5,
+	'flat-noisy': 0.201,
+	gaps: 0.276, // zero completion: Excel finds no period on the gap-filled grid, this finds 5
+	'short-6': 0.176,
+	'yearly-step': 0.539,
+	'walk-13': 0.509,
 	'season2-9': 0.068,
 	'season3-9': 0.073,
-	'season4-8': 0.26,
-	'season5-10': 0.223,
-	'season3-11': 0.132,
-	'linear-noisy': 0.002,
-	'walk-7': 0.002,
+	'season3-11': 0.131,
 };
 
 describe('FORECAST.ETS against Excel', () => {
@@ -86,7 +75,7 @@ describe('FORECAST.ETS against Excel', () => {
 	it.each(only('forecast').map((r) => [r.name, r.formula, r] as const))(
 		'%s %s',
 		(name, _formula, r) => {
-			expect(r.error).toBeLessThanOrEqual(FORECAST_TOLERANCE[name] ?? 0.003);
+			expect(r.error).toBeLessThanOrEqual(FORECAST_TOLERANCE[name] ?? 1e-9);
 		},
 	);
 });
@@ -95,7 +84,7 @@ describe('FORECAST.ETS.CONFINT against Excel', () => {
 	it.each(only('confint').map((r) => [r.name, r.formula, r] as const))(
 		'%s %s',
 		(name, _formula, r) => {
-			expect(r.error).toBeLessThanOrEqual(CONFINT_TOLERANCE[name] ?? 0.002);
+			expect(r.error).toBeLessThanOrEqual(CONFINT_TOLERANCE[name] ?? 1e-9);
 		},
 	);
 });

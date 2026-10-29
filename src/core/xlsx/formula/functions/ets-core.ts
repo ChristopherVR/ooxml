@@ -9,6 +9,7 @@
 import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
 import { isExactLength } from './ets-init-chain';
+import { paddedSearchSeries } from './ets-init-three';
 import { chooseSmoothing } from './ets-search';
 import { trendShape } from './ets-search-map';
 import { etsSearchSeries, etsValidationCost } from './ets-validate';
@@ -73,10 +74,15 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	};
 	// Without a season Excel's cost is the training one-step error plus the hold-out forecast error
 	// (`ets-validate.ts`). With a season it is the same where the starting states are Excel's own
-	// (`ets-init-chain.ts`: 4 whole seasons or 5 and more); elsewhere they are not, and that cost
-	// chooses worse than the plain one-step error (season3-11: 8% against 1% forecast error).
-	const holdout = m >= 2 && !isExactLength(n, m) ? 0 : etsHoldout(n, m);
-	const searched = m >= 2 ? y : etsSearchSeries(y);
+	// (`ets-init-chain.ts` and `ets-init-three.ts`); elsewhere they are not, and that cost chooses
+	// worse than the plain one-step error (season3-11: 8% against 1% forecast error). Where the
+	// start pads the series (2 seasons, and 3 seasons plus up to `ceil(m / 2) + 1` points) the cost
+	// runs over the padded series with the hold-out of its length: Excel's triple is then found on
+	// 2307 of the 2319 recorded exact-start series, against 1790 on the unpadded one.
+	const exact = m < 2 || isExactLength(n, m);
+	const padded = m >= 2 && exact ? paddedSearchSeries(y, m) : undefined;
+	const searched = padded ?? (m >= 2 ? y : etsSearchSeries(y));
+	const holdout = m >= 2 && !exact ? 0 : etsHoldout(padded ? padded.length : n, m);
 	const { drift, fit, ...chosen } = chooseSmoothing(
 		n,
 		m,

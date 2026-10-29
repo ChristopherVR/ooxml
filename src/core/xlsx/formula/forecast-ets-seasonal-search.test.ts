@@ -1,8 +1,8 @@
 // The parameter search of seasonal FORECAST.ETS fits whose starting states are Excel's own
-// (ets-init-chain.ts: 4 whole seasons or 5 and more), against the 700 such series of the start-state
-// probes (__fixtures__/ets-init*-excel.json). Excel's triple is always one of 18 (alpha, beta, gamma)
-// triples, and the lowest hold-out cost over them is its triple on 697 of the 700 series
-// (functions/ets-search.ts). Before that lattice the search reproduced 427 of 700.
+// (ets-init-chain.ts, ets-init-three.ts), against the 2319 such series of the start-state probes
+// (__fixtures__/ets-init*-excel.json). Excel's triple is almost always one of 20 (alpha, beta, gamma)
+// triples, and the lowest hold-out cost over them (on the padded series where the start pads it) is
+// its triple on 2307 of the 2319 series (functions/ets-search.ts).
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ interface Probe {
 function probes(): Probe[] {
 	const dir = fileURLToPath(new URL('./__fixtures__/', import.meta.url));
 	const out: Probe[] = [];
-	for (const f of readdirSync(dir).filter((x) => /^ets-init\d?-excel\.json$/.test(x))) {
+	for (const f of readdirSync(dir).filter((x) => /^ets-init\d*-excel\.json$/.test(x))) {
 		const cases = JSON.parse(readFileSync(dir + f, 'utf8')) as {
 			values?: (number | null)[];
 			results?: { formula: string; type: string; value: number }[];
@@ -47,11 +47,11 @@ function probes(): Probe[] {
 describe('seasonal parameter search with exact starting states', () => {
 	const cases = probes();
 
-	it('records 700 series', () => {
-		expect(cases.length).toBe(700);
+	it('records the exact-start series', () => {
+		expect(cases.length).toBeGreaterThan(2300);
 	});
 
-	it('finds Excel alpha, beta and gamma together on 697 of them', () => {
+	it('finds Excel alpha, beta and gamma together on 2300 of them', () => {
 		const same = cases.filter((c) => {
 			const f = fitEts(c.y, c.m);
 			return (
@@ -60,6 +60,6 @@ describe('seasonal parameter search with exact starting states', () => {
 				Math.abs(f.gamma - c.gamma) < 1e-9
 			);
 		});
-		expect(same.length).toBeGreaterThanOrEqual(697);
+		expect(same.length).toBeGreaterThanOrEqual(2300);
 	});
 });

@@ -90,13 +90,20 @@ export function threeSeasonSeasonals(y: readonly number[], m: number): number[] 
 	return out;
 }
 
-/** The starting trend: slope of the series extended past 3 seasons, with the states removed. */
-export function threeSeasonTrend(y: readonly number[], m: number, rel: readonly number[]): number {
+/** The series padded to `3m + ceil(m / 2)` points by `y[t - 3m] + 3m * (mean of S)`. */
+export function padThreeSeasons(y: readonly number[], m: number): number[] {
 	const n = y.length;
 	const total = Math.max(3 * m + Math.ceil(m / 2), n);
 	const slopeMean = mean(positionSlopes(y, m));
 	const ext = [...y];
 	for (let t = n; t < total; t++) ext.push((y[t - 3 * m] as number) + 3 * m * slopeMean);
+	return ext;
+}
+
+/** The starting trend: slope of the series extended past 3 seasons, with the states removed. */
+export function threeSeasonTrend(y: readonly number[], m: number, rel: readonly number[]): number {
+	const ext = padThreeSeasons(y, m);
+	const total = ext.length;
 	const mx = (total - 1) / 2;
 	let sxx = 0;
 	let sxy = 0;
@@ -126,4 +133,11 @@ export function extendTwoSeasons(y: readonly number[], m: number): number[] {
 	}
 	const b = num / den;
 	return [...y, ...Array.from({ length: m }, (_v, c) => (y[c] as number) + 2 * m * b)];
+}
+
+/** The series a seasonal search measures its error over, or undefined where no padding applies. */
+export function paddedSearchSeries(y: readonly number[], m: number): number[] | undefined {
+	if (isTwoSeasonLength(y.length, m)) return padThreeSeasons(extendTwoSeasons(y, m), m);
+	if (isThreeSeasonLength(y.length, m)) return padThreeSeasons(y, m);
+	return undefined;
 }

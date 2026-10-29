@@ -66,10 +66,12 @@ type Cost = (p: Smoothing) => number;
 
 /**
  * Seasonal triples (alpha, beta, gamma) Excel is seen to report where the starting states are its
- * own (`isExactLength`). The lowest hold-out cost over exactly these is Excel's triple on 697
- * of the 700 recorded series that the forecasts identify (adding 0.002 or 0.9 with the lowest
- * beta and gamma drops it to 506, so Excel does not try them). Reported as they are, with no
- * drift forecast.
+ * own (`isExactLength`). The lowest hold-out cost over exactly these (on the series padded as in
+ * `ets-init-three.ts` where the start pads it) is Excel's triple on 2307 of the 2319 recorded
+ * series that the forecasts identify (on the first 700, adding 0.002 or 0.9 with the lowest beta
+ * and gamma dropped it to 506, so Excel does not try them; the last two triples, (0.251, 0.25,
+ * 0.25) and (0.501, 0.5, 0.001), were added for the 3-season series). Reported as they are, with
+ * no drift forecast.
  */
 const SEASONAL_TRIPLES: readonly (readonly [number, number, number])[] = [
 	[0.126, LOW, LOW],
@@ -90,6 +92,8 @@ const SEASONAL_TRIPLES: readonly (readonly [number, number, number])[] = [
 	[0.25, LOW, 0.749],
 	[0.5, LOW, 0.499],
 	[0.5, 0.25, LOW],
+	[0.251, 0.25, 0.25],
+	[0.501, 0.5, LOW],
 ];
 
 /** Seasonal series with Excel's own starting states: the lowest cost on `SEASONAL_TRIPLES`. */
