@@ -5,6 +5,7 @@ import * as borders from './borders';
 import * as cellShift from './cell-shift';
 import * as values from './cell-values';
 import * as clipboard from './clipboard';
+import { copyAreas } from './clipboard-areas';
 import { pasteSelection } from './paste-selection';
 import type { EditContext, RunInfo } from './context';
 import { createCalcEngine, type CellPosition } from './deps';
@@ -245,6 +246,7 @@ export function createEditSession(
 		sort: (s, range, keys, hasHeader) => sort.sortRange(ctx, s, range, keys, hasHeader),
 		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
+		copyAreas: (s, ranges) => copyAreas(workbook, s, ranges),
 		cut: (s, range) => ({ ...clipboard.copyRange(workbook, s, range), cut: true }),
 		paste: (s, at, payload, mode) =>
 			'start' in at

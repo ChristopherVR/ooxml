@@ -185,6 +185,12 @@ export interface EditSession {
 	): void;
 	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
+	/**
+	 * Copies several areas as one block (Excel's rule: the areas share their rows or their
+	 * columns; they are placed next to each other, gaps dropped). Any other shape throws
+	 * "This action won't work on multiple selections."
+	 */
+	copyAreas(sheet: number, ranges: CellRange[]): ClipboardPayload;
 	cut(sheet: number, range: CellRange): ClipboardPayload;
 	paste(
 		sheet: number,

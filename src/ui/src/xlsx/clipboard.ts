@@ -33,6 +33,7 @@ export interface GridClipboard {
 	destroy(): void;
 }
 
+const MULTIPLE = "This action won't work on multiple selections.";
 const normalize = (text: string): string => text.replace(/\r\n/g, '\n').replace(/\n+$/, '');
 
 export function createGridClipboard(host: ClipboardHost): GridClipboard {
@@ -51,16 +52,26 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 		const session = ctx.session();
 		const range = lastRange();
 		if (!session || !range) return undefined;
-		if (ctx.selection.get().ranges.length > 1) {
-			ctx.toast(ctx.t("This action won't work on multiple selections."), 'warning');
+		const ranges = ctx.selection.get().ranges;
+		const sheet = ctx.activeSheet();
+		let payload: ClipboardPayload;
+		try {
+			// Several areas copy when they share rows or columns (Excel's rule); they cannot be cut.
+			if (ranges.length > 1 && cut) throw new RangeError(MULTIPLE);
+			payload =
+				ranges.length > 1
+					? session.copyAreas(sheet, ranges)
+					: cut && !ctx.readOnly()
+						? session.cut(sheet, range)
+						: session.copy(sheet, range);
+		} catch (error) {
+			ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'warning');
 			return undefined;
 		}
-		const sheet = ctx.activeSheet();
-		const payload = cut && !ctx.readOnly() ? session.cut(sheet, range) : session.copy(sheet, range);
 		internal = payload;
 		internalSheet = sheet;
 		marquee = true;
-		host.setMarquee(range, sheet);
+		host.setMarquee(ranges.length > 1 ? (ranges[0] ?? range) : range, sheet);
 		return payload;
 	};
 

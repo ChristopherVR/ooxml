@@ -40,7 +40,6 @@ export function pasteSelection(
 		return pasteAt(ctx, sheet, dest.start, clip, options);
 	if (rows % height || cols % width)
 		throw new RangeError('The copy and paste areas are not compatible sizes.');
-	if (rows * cols > 250_000) throw new RangeError('The selected paste area is too large.');
 	// The outer step captures every destination cell and merge once, rather than per tile.
 	const tileContext: EditContext = { ...ctx, run: (_label, _kind, _scopes, fn) => fn() };
 	const tileClip = { ...clip, cells: { ...clip.cells } };
