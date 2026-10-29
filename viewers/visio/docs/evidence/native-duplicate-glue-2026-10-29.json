@@ -1,0 +1,22 @@
+{
+	"product": "Visio 16.0 build 20527",
+	"method": "Visio.InvisibleApp COM: select one glued connector on the page, Selection.Duplicate(), read the copy's cells, SaveAsEx, read the saved page XML. Source documents: viewers/visio/docs/evidence/reference-corpus/reference-corpus.vsdx (page connectors, stencil Dynamic connector, shape 4 glued Conn.A to Conn.B) and reference-flat.vsdx (page flat-glued-lines, drawn line shape 3 point-glued to Glue.A and Glue.B).",
+	"stencilDynamicConnector": {
+		"copyHasConnectRows": false,
+		"connectRowsAfterSave": 4,
+		"connectRowsBeforeDuplicate": 4,
+		"copyEndPoints": "unchanged (BeginX 2, BeginY 5, EndX 5, EndY 3.5); Duplicate applied no offset to a glued dynamic connector",
+		"copyFormulas": "BeginX..EndY keep _WALKGLUE(BegTrigger,EndTrigger,WalkPreference) and carry E=#VALUE! in the saved XML",
+		"copyTriggers": "BegTrigger and EndTrigger become _XFTRIGGER(Sheet.<copy id>!EventXFMod) with V=1"
+	},
+	"drawnLineWithPointGlue": {
+		"copyHasConnectRows": false,
+		"connectRowsAfterSave": 2,
+		"connectRowsBeforeDuplicate": 2,
+		"copyEndPoints": "offset by the page duplicate offset (0.33, -0.33 in) and held as plain values: BeginX V=2.33 and no formula",
+		"copyPinFormulas": "PinX (BeginX+EndX)/2 and PinY (BeginY+EndY)/2 are kept",
+		"copyName": "Glue.Line.4"
+	},
+	"coreBehaviour": "duplicate-shapes of a glued line writes no Connect rows, turns the end formulas into plain values shifted by the edit offset, and for a stencil connector rewrites the two triggers to the copy's own sheet. Copying a glued target shape leaves the connectors with the original.",
+	"status": "recorded"
+}

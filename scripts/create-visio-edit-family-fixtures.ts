@@ -124,11 +124,20 @@ const line = await idOf(basicName, 'Basic.Line');
 const group = await idOf(prefix + 'groups', 'Group.Main');
 const groupsPage = pid(prefix + 'groups');
 const containerPage = pid(flatDocument ? 'flat-glued-lines' : 'containers');
-const connPage = pid(flatDocument ? 'flat-glued-lines' : 'connectors');
+const connName = flatDocument ? 'flat-glued-lines' : 'connectors';
+const connPage = pid(connName);
 const connA = await idOf(
 	flatDocument ? 'flat-glued-lines' : 'connectors',
 	flatDocument ? 'Glue.Line' : 'Conn.A',
 );
+
+const glueName = flatDocument ? 'Glue.Line' : 'Dynamic connector';
+const glueLine = await idOf(connName, glueName);
+const glueTarget = await idOf(connName, flatDocument ? 'Glue.A' : 'Conn.A');
+const glueOther = await idOf(connName, flatDocument ? 'Glue.B' : 'Conn.B');
+// Master instances exist only in the full reference document.
+const masterPage = flatDocument ? undefined : pid('master-instances');
+const masterShape = async (name: string) => (masterPage ? idOf('master-instances', name) : '');
 
 let captured: Awaited<ReturnType<typeof captureVisioClipboard>> | undefined;
 let captureError = '';
@@ -231,7 +240,7 @@ const cases: { name: string; family: string; edits: VisioEdit[] }[] = [
 				pageId: connPage,
 				copies: [{ shapeId: connA, newShapeId: '70' }],
 				offsetX: 0,
-				offsetY: -2,
+				offsetY: flatDocument ? -2 : 2,
 			},
 		],
 	},
@@ -317,6 +326,129 @@ const cases: { name: string; family: string; edits: VisioEdit[] }[] = [
 		],
 	},
 ];
+
+const masterProcess = await masterShape('Process');
+const masterDecision = await masterShape('Decision');
+const masterTerminator = await masterShape('Start/End');
+// Edits of master instances (full document) and of glued lines and their shapes (both documents).
+cases.push(
+	...(masterPage
+		? ([
+				{
+					name: 'master-instance-move',
+					family: 'master instances',
+					edits: [{ type: 'move-shape', pageId: masterPage, shapeId: masterDecision, x: 3, y: 8 }],
+				},
+				{
+					name: 'master-instance-resize',
+					family: 'master instances',
+					edits: [
+						{
+							type: 'resize-shape',
+							pageId: masterPage,
+							shapeId: masterProcess,
+							width: 2.5,
+							height: 1.25,
+						},
+					],
+				},
+				{
+					name: 'master-instance-format',
+					family: 'master instances',
+					edits: [
+						{
+							type: 'format-shape',
+							pageId: masterPage,
+							shapeId: masterTerminator,
+							fillColor: '#336699',
+							lineColor: '#cc0000',
+							lineWeight: 2,
+						},
+						{
+							type: 'format-text',
+							pageId: masterPage,
+							shapeId: masterTerminator,
+							fontSize: 14,
+							bold: true,
+						},
+					],
+				},
+				{
+					name: 'master-instance-arrange',
+					family: 'master instances',
+					edits: [
+						{ type: 'move-shape', pageId: masterPage, shapeId: masterProcess, x: 1.5, y: 7 },
+						{
+							type: 'resize-shape',
+							pageId: masterPage,
+							shapeId: masterDecision,
+							width: 1.75,
+							height: 1,
+						},
+						{ type: 'reorder-shape', pageId: masterPage, shapeId: masterProcess, order: 'front' },
+					],
+				},
+			] as { name: string; family: string; edits: VisioEdit[] }[])
+		: []),
+	{
+		name: 'glue-move-target',
+		family: 'glue',
+		edits: [{ type: 'move-shape', pageId: connPage, shapeId: glueTarget, x: 2, y: 3.75 }],
+	},
+	{
+		name: 'glue-move-target-edge',
+		family: 'glue',
+		edits: [{ type: 'move-shape', pageId: connPage, shapeId: glueTarget, x: 2, y: 3 }],
+	},
+	{
+		name: 'glue-move-both-targets',
+		family: 'glue',
+		edits: [
+			{ type: 'move-shape', pageId: connPage, shapeId: glueTarget, x: 2.5, y: 7.5 },
+			{ type: 'move-shape', pageId: connPage, shapeId: glueOther, x: 6.5, y: 2 },
+		],
+	},
+	{
+		name: 'glue-resize-target',
+		family: 'glue',
+		edits: [{ type: 'resize-shape', pageId: connPage, shapeId: glueTarget, width: 3, height: 0.8 }],
+	},
+	{
+		name: 'glue-duplicate-line',
+		family: 'glue',
+		edits: [
+			{
+				type: 'duplicate-shapes',
+				pageId: connPage,
+				copies: [{ shapeId: glueLine, newShapeId: '75' }],
+				offsetX: flatDocument ? 0.5 : -1,
+				offsetY: flatDocument ? -1 : 3.5,
+			},
+		],
+	},
+	...[
+		['overlap-a', 0.5, 2],
+		['overlap-b', 3, 0],
+		['overlap-c', 0.5, -1],
+	].map(([suffix, offsetX, offsetY]) => ({
+		name: 'glue-duplicate-line-' + suffix,
+		family: 'glue',
+		edits: [
+			{
+				type: 'duplicate-shapes' as const,
+				pageId: connPage,
+				copies: [{ shapeId: glueLine, newShapeId: '76' }],
+				offsetX: offsetX as number,
+				offsetY: offsetY as number,
+			},
+		],
+	})),
+	{
+		name: 'glue-delete-line',
+		family: 'glue',
+		edits: [{ type: 'delete-shape', pageId: connPage, shapeId: glueLine }],
+	},
+);
 const manifest: unknown[] = [];
 for (const c of cases) {
 	try {

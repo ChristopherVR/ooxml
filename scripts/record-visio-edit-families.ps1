@@ -3,14 +3,16 @@
 # Height, Angle, LocPinX, LocPinY, LineWeight) with the ResultIU Visio reports after opening, then
 # saves a copy from Visio, reopens it and checks the values are unchanged.
 # First run: bun scripts/create-visio-edit-family-fixtures.ts <OutputDirectory> [reference-flat.vsdx|reference-corpus.vsdx]
-# Then:      pwsh scripts/record-visio-edit-families.ps1 -OutputDirectory <OutputDirectory> [-EvidencePath <json>]
+# Then:      pwsh scripts/record-visio-edit-families.ps1 -OutputDirectory <OutputDirectory> [-EvidencePath <json>] [-Only <case,case>]
 param(
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
-    [string]$EvidencePath
+    [string]$EvidencePath,
+    [string]$Only
 )
 $ErrorActionPreference = 'Stop'
 $directory = (Resolve-Path -LiteralPath $OutputDirectory).Path
 $cases = @(Get-Content -LiteralPath (Join-Path $directory 'cases.json') -Raw | ConvertFrom-Json)
+if ($Only) { $wanted = $Only.Split(','); $cases = @($cases | Where-Object { $wanted -contains $_.name }) }
 $application = New-Object -ComObject Visio.InvisibleApp
 $document = $null
 function Index-Shapes($shapes, $index) {
