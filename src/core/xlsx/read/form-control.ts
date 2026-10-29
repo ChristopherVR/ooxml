@@ -103,9 +103,13 @@ export function vmlCaption(vml: string, shapeId: number): string | undefined {
 	const shape = vml.slice(start, end < 0 ? undefined : end);
 	const box = /<v:textbox[^>]*>([\s\S]*?)<\/v:textbox>/.exec(shape)?.[1];
 	if (!box) return undefined;
-	const text = box
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<[^>]*>/g, '')
+	let stripped = box.replace(/<br\s*\/?>/gi, '\n');
+	// Repeat until stable so removing one tag cannot assemble another from what remains.
+	for (let prev = ''; prev !== stripped;) {
+		prev = stripped;
+		stripped = stripped.replace(/<[^>]*>/g, '');
+	}
+	const text = stripped
 		.replace(/&(#x?[0-9a-f]+|\w+);/gi, (match, code: string) => {
 			if (code.startsWith('#')) {
 				const value =

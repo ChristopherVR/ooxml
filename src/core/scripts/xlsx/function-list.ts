@@ -57,7 +57,7 @@ export function excelVerifiedNames(): Set<string> {
 	return names;
 }
 
-const cell = (text: string): string => text.replace(/\|/g, '\\|');
+const cell = (text: string): string => text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 
 export function buildFunctionList(): string {
 	const verified = excelVerifiedNames();

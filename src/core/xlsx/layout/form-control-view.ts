@@ -18,7 +18,12 @@ const TEXT = '#000000';
 const FONT = 'font-family="Segoe UI,Arial,sans-serif"';
 const round = (value: number) => Math.round(value * 100) / 100;
 const escapeXml = (text: string) =>
-	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+	text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 
 function caption(text: string | undefined, x: number, h: number, size: number) {
 	if (!text) return '';

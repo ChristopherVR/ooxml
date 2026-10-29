@@ -25,7 +25,12 @@ interface Context {
 }
 
 const escapeXml = (text: string) =>
-	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+	text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 const round = (value: number) => Math.round(value * 100) / 100;
 const POINT_PX = 96 / 72;
 const DEFAULT_FONT_PT = 11;
