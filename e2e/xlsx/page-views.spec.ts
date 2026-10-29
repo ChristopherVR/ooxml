@@ -35,7 +35,7 @@ test('status bar and View tab switch between Normal, Page Layout and Page Break 
 	await expect(view(page, 'pageBreak')).toHaveAttribute('aria-pressed', 'true');
 	await expect(editor(page).locator('.xpl-root')).toBeHidden();
 	await expect(editor(page).locator('.xgpb-mark').first()).toHaveText('Page 1');
-	await expect(ribbon(page).locator('[data-command="view.custom-views"]')).toBeDisabled();
+	await expect(ribbon(page).locator('[data-command="view.custom-views"]')).toBeEnabled();
 
 	await ribbon(page).locator('[data-command="view.normal"]').click();
 	await expect(view(page, 'normal')).toHaveAttribute('aria-pressed', 'true');
