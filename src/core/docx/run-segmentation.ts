@@ -21,9 +21,13 @@ const basisOf = (run: TextRun): string | undefined =>
  * hold is still in a run with the same source XML, character for character through a diff of the
  * paragraph's text.
  */
-function keepsUnmodeledProperties(before: readonly TextRun[], after: readonly TextRun[]): boolean {
+function keepsUnmodeledProperties(
+	before: readonly TextRun[],
+	after: readonly TextRun[],
+	basis: (run: TextRun) => string | undefined = basisOf,
+): boolean {
 	const owners = (runs: readonly TextRun[]) =>
-		runs.flatMap((run) => Array.from({ length: positionText(run).length }, () => basisOf(run)));
+		runs.flatMap((run) => Array.from({ length: positionText(run).length }, () => basis(run)));
 	const was = owners(before);
 	const now = owners(after);
 	const kept = (from: number, to: number, shift: number) => {
@@ -81,21 +85,34 @@ export function runsToWriteAnew(
 		})
 	)
 		return none;
-	// Imported opaque properties or a rejected format revision supply a complete XML basis.
-	// The writer imports that basis before applying modeled edits, independently of source slots.
-	if (
-		paragraph.runs.every(
-			(run) =>
-				!run.image && !run.equation && (run.restoredRunPropertiesXml || run.sourceRunPropertiesXml),
-		)
-	)
-		return none;
 	const sameText =
 		paragraph.runs.map((run) => run.text).join('') === base.runs.map((run) => run.text).join('');
 	const sameBoundaries =
 		paragraph.runs.length === base.runs.length &&
 		paragraph.runs.every((run, index) => run.text === base.runs[index]?.text);
 	if (sameBoundaries || (!sameText && paragraph.runs.length === base.runs.length)) return none;
+	// Imported opaque properties or a rejected format revision supply a complete XML basis. The
+	// writer imports that basis before applying modeled edits, independently of source slots, so
+	// joined runs only need to agree on the imported source XML: a merge of runs whose opaque
+	// properties differ would give one side's properties to the other side's text.
+	if (
+		paragraph.runs.every(
+			(run) =>
+				!run.image && !run.equation && (run.restoredRunPropertiesXml || run.sourceRunPropertiesXml),
+		)
+	) {
+		if (
+			keepsUnmodeledProperties(
+				base.runs,
+				paragraph.runs,
+				(run) => run.sourceRunPropertiesXml ?? run.restoredRunPropertiesXml,
+			)
+		)
+			return none;
+		throw new Error(
+			`Cannot edit paragraph ${paragraph.id}: changing run boundaries could drop unsupported run properties because the merged runs carry different unsupported properties. The original DOCX package remains unchanged.`,
+		);
+	}
 	// The boundaries changed. Text keeps its unmodeled properties when each unchanged character
 	// that had them is in a run with the same source XML; a run without source XML of its own is
 	// then written on a new element, so that it takes none of the element's at its place.
