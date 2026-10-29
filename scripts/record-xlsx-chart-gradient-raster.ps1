@@ -1,9 +1,10 @@
 param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'),
-    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent','path-center-circle','path-corner-circle','path-center-circle-transparent','path-corner-circle-transparent','path-center-shape','path-corner-shape','path-center-shape-transparent','path-corner-shape-transparent')]
+    [ValidateSet('opaque','transparent','interior','three','three-transparent','rg-unequal','rg-swapped','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent','path-center-circle','path-corner-circle','path-center-circle-transparent','path-corner-circle-transparent','path-center-shape','path-corner-shape','path-center-shape-transparent','path-corner-shape-transparent')]
     [string]$Profile = 'opaque',
     [ValidateSet('chart-area','series-column','series-bar')]
-    [string]$Target = 'chart-area'
+    [string]$Target = 'chart-area',
+    [int[]]$Angles = @(0,45,90,135,180,225,270,315,30,60)
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -38,7 +39,7 @@ try {
         $directions = switch -Wildcard ($Profile) {
             'path-corner*' {@(1,2,3,4)}
             'path-center*' {@(1,2)}
-            default {@(0,45,90,135,180,225,270,315,30,60)}
+            default {$Angles}
         }
         foreach($angle in $directions) {
             $object=$sheet.ChartObjects().Add(20,20,$size[0],$size[1]); $chart=$object.Chart
@@ -75,6 +76,16 @@ try {
                 'three-transparent' {
                     $fill.GradientStops.Item(1).Transparency=[single]0.37
                     $fill.GradientStops.Insert(65280,[single]0.56,[single]0.13)
+                }
+                'rg-unequal' {
+                    $fill.GradientStops.Item(2).Color.RGB=65280
+                    $fill.GradientStops.Item(1).Transparency=[single]0.37
+                    $fill.GradientStops.Item(2).Transparency=[single]0.13
+                }
+                'rg-swapped' {
+                    $fill.GradientStops.Item(2).Color.RGB=65280
+                    $fill.GradientStops.Item(1).Transparency=[single]0.13
+                    $fill.GradientStops.Item(2).Transparency=[single]0.37
                 }
                 'crossed' {
                     $fill.GradientStops.Item(1).Position=[single]0.85

@@ -62,9 +62,13 @@ const acceptedNativeGaps = [
 			'about 0.08), plus roughly one level of PARGB-to-ARGB truncation in the reference ' +
 			'export (opaque green reads 254). An alpha weight of a^0.05 would pass but is an ' +
 			'unexplained fit, so it is not applied and the global tolerance is not loosened. ' +
-			'Needed evidence: native captures of a two-stop red-to-green fill with unequal ' +
-			'alphas, and of the same fill with its alphas swapped, to separate the colour ' +
-			'weighting from export truncation.',
+			'Measured in native-gradient-two-stop-weighting.json (red to green, alphas 0.63/0.87 ' +
+			'and swapped, angles 0/45/90, both sizes): the red+green sum falls 1 to 3 levels ' +
+			'below 255 at alpha near 190, which is PARGB truncation in the reference export, ' +
+			'and the colour fraction leans 0.005 to 0.014 toward the more opaque stop in both ' +
+			'orders. That residual lean is real but too small and asymmetric to fit a single ' +
+			'model (exponent k of a^k is 0.16 for one order and 0.06 for the other), so the ' +
+			'gap is accepted rather than fitted.',
 	},
 ];
 for (const sample of samples) {

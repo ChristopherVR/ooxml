@@ -37,6 +37,13 @@ centres. The wide 135-degree coincident-edge case passes since coincident
 linear stops open into the measured 1/256 native ramp
 (`gradient-coincident-stops.ts`).
 
+`native-gradient-two-stop-weighting.json` holds 12 captures (profiles
+`rg-unequal` and `rg-swapped`, angles 0, 45 and 90, both sizes, recorded with
+`-Angles 0,90,45`) of red-to-green two-stop fills with alphas 0.63/0.87 and swapped.
+They show the colour weighting is near straight interpolation (lean under 0.015
+toward the more opaque stop) with PARGB truncation in the export, and back the
+accepted gap above.
+
 ## Rectangular path profiles
 
 `native-gradient-path-profiles.json` contains 24 additional Excel 16.0 build
