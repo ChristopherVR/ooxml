@@ -6,7 +6,7 @@ import { drawEquation } from './omml-svg';
 const draw = (latex: string, size = 16, display = false) => {
 	const xml = latexToOmmlXml(latex, display);
 	if (!xml) throw new Error('no markup');
-	return drawEquation(xml, size, latex);
+	return drawEquation(xml, size, latex, { display });
 };
 
 describe('latexToOmmlXml', () => {
@@ -51,7 +51,9 @@ describe('equation drawing', () => {
 	it('stacks fractions, raises scripts and widens with content', () => {
 		const flat = draw('a+b')!;
 		const fraction = draw('\\frac{a}{b}')!;
-		expect(fraction.heightPx).toBeGreaterThan(flat.heightPx * 1.6);
+		expect(fraction.heightPx).toBeGreaterThan(flat.heightPx * 1.4);
+		// A display fraction keeps its full size, so it is taller than an inline one.
+		expect(draw('\\frac{a}{b}', 16, true)!.heightPx).toBeGreaterThan(fraction.heightPx * 1.2);
 		expect(fraction.svg).toContain('<line');
 		expect(fraction.descentPx).toBeGreaterThan(flat.descentPx);
 		const power = draw('x^2')!;

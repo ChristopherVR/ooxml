@@ -18,11 +18,15 @@ function latexLabel(omml: string): string {
  * The inline object for an equation at `sizePx`, or undefined when its markup holds nothing that
  * can be drawn (the caller then shows a marker).
  */
-export function equationObject(omml: string, sizePx: number): LayoutObject | undefined {
-	const key = `${sizePx}|${omml}`;
+export function equationObject(
+	omml: string,
+	sizePx: number,
+	display = false,
+): LayoutObject | undefined {
+	const key = `${sizePx}|${display}|${omml}`;
 	const hit = cache.get(key);
 	if (hit !== undefined) return hit ?? undefined;
-	const drawing = drawEquation(omml, sizePx, latexLabel(omml));
+	const drawing = drawEquation(omml, sizePx, latexLabel(omml), { display });
 	const object: LayoutObject | null = drawing
 		? {
 				partName: '',

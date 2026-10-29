@@ -1,0 +1,269 @@
+{
+  "name": "13-equation-shapes",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 15,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Shapes",
+      "length": 7,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "𝑥=1",
+      "length": 5,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 292.5,
+      "yPt": 112.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 131.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "\r𝑎\r𝑛\r=\r𝑘\r2",
+      "length": 15,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 287.2,
+      "yPt": 149.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 168.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "\r𝑎+𝑏\r𝑐+𝑑",
+      "length": 14,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 293.2,
+      "yPt": 186.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 7,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 218.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 8,
+      "text": "\r𝑘=1\r𝑛\r\r𝑘\r2",
+      "length": 17,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 291.8,
+      "yPt": 237.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 9,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 279.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 10,
+      "text": "\r1\r2\r3\r4",
+      "length": 10,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 294.8,
+      "yPt": 297.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 11,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 325.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 12,
+      "text": "\r\r𝑏\r2\r−4𝑎𝑐",
+      "length": 16,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 280.5,
+      "yPt": 343.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 13,
+      "text": "After the equation.",
+      "length": 20,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 366.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 14,
+      "text": "Inline fraction \r𝑎+𝑏\r𝑐+𝑑\r an",
+      "length": 45,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 384.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 15,
+      "text": "Last paragraph.",
+      "length": 16,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 409.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 16,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72,
+      "yPt": 428.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "13-equation-shapes-p1.png"
+  ],
+  "dpi": 50
+}

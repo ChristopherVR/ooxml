@@ -96,7 +96,11 @@ function ourParagraphs(pages: LayoutPageBox[]): OurParagraph[] {
 					earlier.text += text;
 					continue;
 				}
-				const first = box.lines[0]?.fragments.find((f) => f.sourceStart !== undefined);
+				// Word reports the caret at the first source character, not at a list label or other
+				// generated marker (those fragments have a source offset but no source length).
+				const first = box.lines[0]?.fragments.find(
+					(f) => f.sourceStart !== undefined && (f.sourceEnd ?? f.sourceStart) > f.sourceStart,
+				);
 				found.push({
 					blockId: box.blockId,
 					page: page.index + 1,

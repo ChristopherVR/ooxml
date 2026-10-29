@@ -46,8 +46,9 @@ export function drawOmmlTree(
 	root: OmmlNode,
 	sizePx: number,
 	label = '',
+	options: { display?: boolean } = {},
 ): EquationDrawing | undefined {
-	const { box, widthPx, heightPx, descentPx } = layoutEquation(root, sizePx);
+	const { box, widthPx, heightPx, descentPx } = layoutEquation(root, sizePx, options);
 	if (!box.prims.length) return undefined;
 	const body = box.prims.map(primMarkup).join('');
 	const aria = label ? ` aria-label="${escapeXml(label).replace(/"/g, '&quot;')}"` : '';
@@ -62,9 +63,10 @@ export function drawEquation(
 	omml: string,
 	sizePx: number,
 	label = '',
+	options: { display?: boolean } = {},
 ): EquationDrawing | undefined {
 	try {
-		return drawOmmlTree(parseOmml(omml), sizePx, label);
+		return drawOmmlTree(parseOmml(omml), sizePx, label, options);
 	} catch {
 		return undefined;
 	}

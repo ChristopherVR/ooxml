@@ -22,15 +22,16 @@ export type { LayoutContext } from './omml-box';
 
 function fraction(node: OmmlNode, style: MathStyle, ctx: LayoutContext): Box {
 	const type = val(child(child(node, 'm:fPr'), 'm:type'));
-	const inner = ctx.script({ ...style, level: Math.min(style.level, 0) });
-	const small = style.level === 0 ? { ...style, size: style.size * 0.9 } : inner;
+	const inner = ctx.script({ ...style, level: Math.min(style.level, 0), display: false });
+	// A display fraction keeps its full size (text style inside); an inline one is set smaller.
+	const small = style.level === 0 && style.display ? { ...style, display: false } : inner;
 	const num = ctx.layout(child(node, 'm:num'), small);
 	const den = ctx.layout(child(node, 'm:den'), small);
 	if (type === 'lin') {
 		const slash = glyph('/', style.size);
 		return row([num, slash, den]);
 	}
-	const gap = style.size * 0.12;
+	const gap = style.size * 0.15;
 	const axis = style.size * AXIS;
 	const width = Math.max(num.width, den.width) + style.size * 0.2;
 	const bar =
@@ -61,9 +62,9 @@ function radical(node: OmmlNode, style: MathStyle, ctx: LayoutContext): Box {
 	const degree = hide
 		? undefined
 		: ctx.layout(child(node, 'm:deg'), { ...ctx.script(ctx.script(style)) });
-	const gap = style.size * 0.12;
+	const gap = style.size * 0.2;
 	const top = -(content.ascent + gap);
-	const bottom = content.descent + style.size * 0.05;
+	const bottom = content.descent + style.size * 0.15;
 	const height = bottom - top;
 	const sign = style.size * 0.55;
 	const lead = degree && degree.width ? Math.max(0, degree.width - sign * 0.4) : 0;

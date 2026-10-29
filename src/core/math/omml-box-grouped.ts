@@ -22,8 +22,9 @@ export function nary(node: OmmlNode, style: MathStyle, ctx: LayoutContext): Box 
 	const chr = val(child(pr, 'm:chr')) || '∫';
 	const big = NARY.has(chr) ? 1.4 : 1.6;
 	const op = glyph(chr, style.size * big);
-	op.ascent = style.size * 0.78 * (big > 1.5 ? 1.5 : 1.25);
-	op.descent = style.size * (big > 1.5 ? 0.55 : 0.4);
+	// Display-style operators reserve the tall extent Word gives them (measured against Word).
+	op.ascent = style.size * (big > 1.5 ? 1.17 : 1.15);
+	op.descent = style.size * (big > 1.5 ? 0.55 : 0.6);
 	const limits = (val(child(pr, 'm:limLoc')) || (NARY.has(chr) ? 'undOvr' : 'subSup')) === 'undOvr';
 	const sub = isOn(val(child(pr, 'm:subHide')))
 		? undefined
@@ -41,13 +42,13 @@ export function nary(node: OmmlNode, style: MathStyle, ctx: LayoutContext): Box 
 			parts.push({
 				box: sup!,
 				x: (width - sup!.width) / 2,
-				y: -(op.ascent + sup!.descent + style.size * 0.05),
+				y: -(op.ascent + sup!.descent + style.size * 0.075),
 			});
 		if (hasSub)
 			parts.push({
 				box: sub!,
 				x: (width - sub!.width) / 2,
-				y: op.descent + sub!.ascent + style.size * 0.05,
+				y: op.descent + sub!.ascent + style.size * 0.075,
 			});
 		head = overlay(parts);
 		head.width = width;
@@ -95,7 +96,7 @@ export function matrix(node: OmmlNode, style: MathStyle, ctx: LayoutContext): Bo
 		Math.max(0, ...rows.map((cells) => cells[c]?.width ?? 0)),
 	);
 	const gapX = style.size * 0.8;
-	const gapY = style.size * 0.3;
+	const gapY = 0;
 	const result = emptyBox();
 	let y = 0;
 	const heights = rows.map((cells) => ({

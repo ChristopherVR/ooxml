@@ -143,7 +143,11 @@ export function adaptDocumentModel(
 			return { text: run.text, hidden: true, sourceLength: reviewSourceLength(run) };
 		const { formatting, family, color } = effective(run, paragraphStyleId);
 		const equation = run.equation
-			? equationObject(run.equation.omml, ptToPx(formatting.fontSize ?? DEFAULT_FONT_SIZE_PT))
+			? equationObject(
+					run.equation.omml,
+					ptToPx(formatting.fontSize ?? DEFAULT_FONT_SIZE_PT),
+					Boolean(run.equation.display),
+				)
 			: undefined;
 		if (run.equation && !equation) reportOnce(EQUATION_NOTE);
 		// DATE and TIME update when Word paginates for display or printing.
@@ -266,9 +270,13 @@ export function adaptDocumentModel(
 	function adaptParagraphOnly(paragraph: Paragraph, markLabel?: string): LayoutParagraph {
 		const resolved = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
 		const label = labels.get(paragraph.id);
-		// Numbering level indents apply unless the paragraph or its style sets its own.
-		const ownFirstLine =
-			resolved.firstLineTwips !== undefined || resolved.hangingTwips !== undefined;
+		// Numbering level indents apply unless the paragraph or its style sets its own. A paragraph
+		// numbered directly (`w:numPr`) takes the level's indents over its style's (Word draws the
+		// text of a List Paragraph at the level's indent, not the style's 720 twips): only the
+		// paragraph's own indents beat the level.
+		const levelWins = Boolean(label && paragraph.numbering);
+		const indents = levelWins ? paragraph : resolved;
+		const ownFirstLine = indents.firstLineTwips !== undefined || indents.hangingTwips !== undefined;
 		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
 		const runs = paragraph.runs.flatMap((run) =>
 			symbolSegments(run).flatMap((segment) => {
@@ -310,12 +318,15 @@ export function adaptDocumentModel(
 				spacingAfterTwips: autoSpaced(resolved.spacingAfterAuto, resolved.spacingAfterTwips),
 				lineSpacingTwips: resolved.lineSpacingTwips,
 				lineSpacingRule: resolved.lineSpacingRule,
-				indentLeftTwips: resolved.indentLeftTwips ?? label?.indentLeftTwips,
+				indentLeftTwips:
+					indents.indentLeftTwips ??
+					label?.indentLeftTwips ??
+					(levelWins ? resolved.indentLeftTwips : undefined),
 				indentRightTwips: resolved.indentRightTwips,
 				indentStartTwips: resolved.indentStartTwips,
 				indentEndTwips: resolved.indentEndTwips,
-				firstLineTwips: ownFirstLine ? resolved.firstLineTwips : label?.firstLineTwips,
-				hangingTwips: ownFirstLine ? resolved.hangingTwips : label?.hangingTwips,
+				firstLineTwips: ownFirstLine ? indents.firstLineTwips : label?.firstLineTwips,
+				hangingTwips: ownFirstLine ? indents.hangingTwips : label?.hangingTwips,
 				styleId: paragraph.style,
 			}),
 			...(resolved.pageBreakBefore ? { pageBreakBefore: true } : {}),

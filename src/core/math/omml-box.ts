@@ -38,6 +38,8 @@ export interface MathStyle {
 	size: number;
 	/** 0 text, 1 script, 2+ script of script. */
 	level: number;
+	/** Display style (a display equation at the top level): fractions keep their full size. */
+	display?: boolean;
 	plain?: boolean;
 	bold?: boolean;
 	italic?: boolean;
@@ -175,17 +177,20 @@ export function scripts(
 	sup: Box | undefined,
 	style: MathStyle,
 ): Box {
-	const raise = Math.max(style.size * 0.4, base.ascent - style.size * 0.3);
-	const drop = Math.max(style.size * 0.2, base.descent + style.size * 0.12);
+	// Script shifts follow the TeX-style rules Cambria Math is tuned for: a script moves only as
+	// far as it must, so a lone subscript or superscript adds little to the line (measured against
+	// Word in `docx/__fixtures__/word-corpus/13-equation-shapes`).
+	const raise = Math.max(style.size * 0.36, base.ascent - style.size * 0.42);
+	const drop = Math.max(style.size * 0.15, base.descent - style.size * 0.07);
 	const parts = [{ box: base, x: 0, y: 0 }];
 	let width = base.width;
 	if (sup) {
-		const y = -Math.max(raise, sup.descent + style.size * 0.25);
+		const y = -Math.max(raise, sup.descent + style.size * 0.2);
 		parts.push({ box: sup, x: base.width + 1, y });
 		width = Math.max(width, base.width + 1 + sup.width);
 	}
 	if (sub) {
-		const y = Math.max(drop, sub.ascent - style.size * 0.1);
+		const y = Math.max(drop, sub.ascent - style.size * 0.4);
 		parts.push({ box: sub, x: base.width + 1, y });
 		width = Math.max(width, base.width + 1 + sub.width);
 	}

@@ -14,7 +14,9 @@
 param(
 	[string]$OutDir = (Join-Path (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)) 'docx/__fixtures__/word-corpus'),
 	[int]$Dpi = 50,
-	[int]$WaitMinutes = 15
+	[int]$WaitMinutes = 15,
+	# Regenerate only these documents (names without extension); default is the whole corpus.
+	[string[]]$Only = @()
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -67,6 +69,16 @@ function Add-Para($doc, [string]$text, [string]$style = 'Normal') {
 	return $p
 }
 
+# Where the first character of a paragraph is drawn. Range.Information(5) is NOT reliable for this:
+# for a collapsed range, and often for a one-character range, it returns the column edge (72 pt for an
+# indented or centred paragraph). Selection.Information(5) after selecting the character reports the
+# caret position, which is where the text really starts (it agrees with Information(7), the offset
+# from the text boundary, added to the column edge).
+function Get-CaretX($word, $doc, [int]$start, [int]$end) {
+	$doc.Range($start, [Math]::Min($start + 1, $end)).Select()
+	return [Math]::Round([double]$word.Selection.Information(5), 1)
+}
+
 function Get-Facts($word, $doc, [string]$name) {
 	$paras = @()
 	$i = 0
@@ -83,7 +95,7 @@ function Get-Facts($word, $doc, [string]$name) {
 			inTable  = [bool]$r.Information(12)
 			style    = [string]$p.Style.NameLocal
 			page     = [int]$first.Information(3)
-			xPt      = [Math]::Round([double]$first.Information(5), 1)
+			xPt      = Get-CaretX $word $doc $start $end
 			yPt      = [Math]::Round([double]$first.Information(6), 1)
 		}
 		# Line starts: scan characters, a new line begins where the vertical position or page changes
@@ -277,6 +289,24 @@ $builders['08-equation'] = {
 	$d.OMaths.Add($r) | Out-Null; $d.OMaths.BuildUp()
 	Add-Para $d (Body 3) | Out-Null
 }
+# Display and inline equations of several shapes, each followed by a plain paragraph, so the height
+# Word gives an equation paragraph shows in where the next paragraph starts.
+function Add-Equation($d, [string]$linear, [string]$before = '', [string]$after = '') {
+	$p = Add-Para $d ($before + $linear + $after)
+	$r = $p.Range; $r.SetRange($r.Start + $before.Length, $r.Start + $before.Length + $linear.Length)
+	$d.OMaths.Add($r) | Out-Null
+}
+$builders['13-equation-shapes'] = {
+	param($d)
+	Add-Para $d 'Shapes' 'Heading 1' | Out-Null
+	foreach ($e in 'x=1', 'a_n=k^2', '(a+b)/(c+d)', "$([char]0x2211)_(k=1)^n k^2 ", "$([char]0x25A0)(1&2@3&4)", "$([char]0x221A)(b^2-4ac)") {
+		Add-Equation $d $e
+		Add-Para $d 'After the equation.' | Out-Null
+	}
+	Add-Equation $d '(a+b)/(c+d)' 'Inline fraction ' ' and more text.'
+	Add-Para $d 'Last paragraph.' | Out-Null
+	$d.OMaths.BuildUp()
+}
 $builders['09-fields-toc'] = {
 	param($d)
 	$p = Add-Para $d 'Contents' 'Heading 1'; $p.OutlineLevel = 10
@@ -341,6 +371,7 @@ try {
 	$word.Visible = $true
 	$word.DisplayAlerts = 0
 	foreach ($name in $builders.Keys) {
+		if ($Only.Count -gt 0 -and $Only -notcontains $name) { continue }
 		$doc = $null
 		try {
 			$doc = Initialize-Doc $word

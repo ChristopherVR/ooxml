@@ -127,11 +127,17 @@ export interface EquationMetrics {
 }
 
 /** Lays out an `m:oMath` / `m:oMathPara` tree at `sizePx`. */
-export function layoutEquation(root: OmmlNode, sizePx: number): EquationMetrics {
-	const box = layoutChildren(root, { level: 0, size: sizePx });
+export function layoutEquation(
+	root: OmmlNode,
+	sizePx: number,
+	options: { display?: boolean } = {},
+): EquationMetrics {
+	const box = layoutChildren(root, { level: 0, size: sizePx, display: Boolean(options.display) });
+	// The line a math zone occupies is never shorter than Cambria Math's: Word reserves about 1.14 em
+	// for a lone run (ascent 0.9, descent 0.24), and scripts that stay inside it add nothing.
 	const pad = 1;
-	const ascent = Math.max(box.ascent, sizePx * 0.78) + pad;
-	const descent = Math.max(box.descent, sizePx * 0.22) + pad;
+	const ascent = Math.max(box.ascent, sizePx * 0.9);
+	const descent = Math.max(box.descent, sizePx * 0.24);
 	return {
 		box: { ...box, prims: shifted(box.prims, pad, 0), ascent, descent },
 		widthPx: round(Math.max(box.width, sizePx * 0.5) + pad * 2),
