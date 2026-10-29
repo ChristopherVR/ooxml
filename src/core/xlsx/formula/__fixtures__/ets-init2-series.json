@@ -1,0 +1,11457 @@
+[
+	{
+		"name": "n9-base",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp0",
+		"values": [
+			25.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp1",
+		"values": [
+			20.28,
+			24.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp2",
+		"values": [
+			20.28,
+			19.172,
+			28.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp3",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			26.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp4",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			28.013,
+			21.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp5",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			26.227,
+			21.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp6",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			26.558,
+			22.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp7",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			27.909,
+			23.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n9-imp8",
+		"values": [
+			20.28,
+			19.172,
+			23.587,
+			21.543,
+			23.013,
+			21.227,
+			21.558,
+			22.909,
+			28.065
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(10,{V},{L},0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-base",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp0",
+		"values": [
+			25.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp1",
+		"values": [
+			20.526,
+			26.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp2",
+		"values": [
+			20.526,
+			21.887,
+			27.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp3",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			27.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp4",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			29.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp5",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			26.523,
+			24.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp6",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			29.507,
+			25.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp7",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			30.659,
+			22.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp8",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			27.203,
+			25.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n10-imp9",
+		"values": [
+			20.526,
+			21.887,
+			22.527,
+			22.146,
+			24.965,
+			21.523,
+			24.507,
+			25.659,
+			22.203,
+			30.353
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(11,{V},{L},0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-base",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp0",
+		"values": [
+			22.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp1",
+		"values": [
+			17.642,
+			23.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp2",
+		"values": [
+			17.642,
+			18.622,
+			24.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp3",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			24.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp4",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			25.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp5",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			25.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp6",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			26.182,
+			23.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp7",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			28.215,
+			23.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp8",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			28.575,
+			24.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp9",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			29.895,
+			24.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n11-imp10",
+		"values": [
+			17.642,
+			18.622,
+			19.341,
+			19.24,
+			20.262,
+			20.251,
+			21.182,
+			23.215,
+			23.575,
+			24.895,
+			29.951
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(12,{V},{L},0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-base",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp0",
+		"values": [
+			27.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp1",
+		"values": [
+			22.541,
+			24.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp2",
+		"values": [
+			22.541,
+			19.667,
+			23.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp3",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			28.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp4",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			24.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp5",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			28.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp6",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			29.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp7",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			27.38,
+			26.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp8",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			31.096,
+			21.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp9",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			26.642,
+			27.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp10",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			32.972,
+			23.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n12-imp11",
+		"values": [
+			22.541,
+			19.667,
+			18.749,
+			23.626,
+			19.481,
+			23.46,
+			24.104,
+			22.38,
+			26.096,
+			21.642,
+			27.972,
+			28.105
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(13,{V},{L},0)",
+			"FORECAST.ETS(14,{V},{L},0)",
+			"FORECAST.ETS(15,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-base",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp0",
+		"values": [
+			24.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp1",
+		"values": [
+			19.932,
+			26.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp2",
+		"values": [
+			19.932,
+			21.104,
+			27.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp3",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			26.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp4",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			28.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp5",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			28.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp6",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			30.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp7",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			26.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp8",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			31.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp9",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			32.459,
+			22.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp10",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			27.529,
+			24.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp11",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			29.7,
+			27.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp12",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			32.604,
+			24.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n14-imp13",
+		"values": [
+			19.932,
+			21.104,
+			22.652,
+			21.344,
+			23.295,
+			23.174,
+			25.673,
+			21.841,
+			26.549,
+			27.459,
+			22.529,
+			24.7,
+			27.604,
+			29.624
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(15,{V},{L},0)",
+			"FORECAST.ETS(16,{V},{L},0)",
+			"FORECAST.ETS(17,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-base",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp0",
+		"values": [
+			27.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp1",
+		"values": [
+			22.598,
+			26.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp2",
+		"values": [
+			22.598,
+			21.6,
+			26.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp3",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			24.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp4",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			28.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp5",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			29.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp6",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			29.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp7",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			29.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp8",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			26.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp9",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			31.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp10",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			32.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp11",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			30.033,
+			28.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp12",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			33.171,
+			29.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp13",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			34.412,
+			25.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp14",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			30.049,
+			29.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "n16-imp15",
+		"values": [
+			22.598,
+			21.6,
+			21.83,
+			19.714,
+			23.813,
+			24.679,
+			24.523,
+			24.752,
+			21.659,
+			26.154,
+			27.049,
+			25.033,
+			28.171,
+			29.412,
+			25.049,
+			34.231
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,0)",
+			"FORECAST.ETS.STAT({V},{L},2,0)",
+			"FORECAST.ETS.STAT({V},{L},3,0)",
+			"FORECAST.ETS(17,{V},{L},0)",
+			"FORECAST.ETS(18,{V},{L},0)",
+			"FORECAST.ETS(19,{V},{L},0)"
+		]
+	},
+	{
+		"name": "s2-6-base",
+		"values": [
+			21.335,
+			21.059,
+			21.77,
+			21.8,
+			21.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp0",
+		"values": [
+			26.335,
+			21.059,
+			21.77,
+			21.8,
+			21.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp1",
+		"values": [
+			21.335,
+			26.059,
+			21.77,
+			21.8,
+			21.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp2",
+		"values": [
+			21.335,
+			21.059,
+			26.77,
+			21.8,
+			21.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp3",
+		"values": [
+			21.335,
+			21.059,
+			21.77,
+			26.8,
+			21.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp4",
+		"values": [
+			21.335,
+			21.059,
+			21.77,
+			21.8,
+			26.745,
+			23.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-6-imp5",
+		"values": [
+			21.335,
+			21.059,
+			21.77,
+			21.8,
+			21.745,
+			28.445
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(7,{V},{L},2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-base",
+		"values": [
+			18.576,
+			20.003,
+			21.535,
+			22.252,
+			21.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp0",
+		"values": [
+			23.576,
+			20.003,
+			21.535,
+			22.252,
+			21.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp1",
+		"values": [
+			18.576,
+			25.003,
+			21.535,
+			22.252,
+			21.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp2",
+		"values": [
+			18.576,
+			20.003,
+			26.535,
+			22.252,
+			21.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp3",
+		"values": [
+			18.576,
+			20.003,
+			21.535,
+			27.252,
+			21.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp4",
+		"values": [
+			18.576,
+			20.003,
+			21.535,
+			22.252,
+			26.008,
+			22.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp5",
+		"values": [
+			18.576,
+			20.003,
+			21.535,
+			22.252,
+			21.008,
+			27.265,
+			23.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-7-imp6",
+		"values": [
+			18.576,
+			20.003,
+			21.535,
+			22.252,
+			21.008,
+			22.265,
+			28.481
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(8,{V},{L},2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-base",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			21.709,
+			20.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp0",
+		"values": [
+			24.754,
+			19.494,
+			21.59,
+			21.709,
+			20.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp1",
+		"values": [
+			19.754,
+			24.494,
+			21.59,
+			21.709,
+			20.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp2",
+		"values": [
+			19.754,
+			19.494,
+			26.59,
+			21.709,
+			20.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp3",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			26.709,
+			20.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp4",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			21.709,
+			25.635,
+			22.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp5",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			21.709,
+			20.635,
+			27.883,
+			24.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp6",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			21.709,
+			20.635,
+			22.883,
+			29.496,
+			22.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-8-imp7",
+		"values": [
+			19.754,
+			19.494,
+			21.59,
+			21.709,
+			20.635,
+			22.883,
+			24.496,
+			27.821
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(9,{V},{L},2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-base",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp0",
+		"values": [
+			25.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp1",
+		"values": [
+			20.146,
+			26.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp2",
+		"values": [
+			20.146,
+			21.665,
+			26.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp3",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			25.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp4",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			27.416,
+			21.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp5",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			26.954,
+			23.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp6",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			28.747,
+			22.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp7",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			27.027,
+			24.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-9-imp8",
+		"values": [
+			20.146,
+			21.665,
+			21.412,
+			20.039,
+			22.416,
+			21.954,
+			23.747,
+			22.027,
+			29.609
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(10,{V},{L},2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-base",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp0",
+		"values": [
+			26.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp1",
+		"values": [
+			21.034,
+			26.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp2",
+		"values": [
+			21.034,
+			21.587,
+			26.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp3",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			26.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp4",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			25.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp5",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			28.564,
+			22.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp6",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			27.801,
+			24.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp7",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			29.286,
+			24.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp8",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			29.996,
+			25.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s2-10-imp9",
+		"values": [
+			21.034,
+			21.587,
+			21.575,
+			21.589,
+			20.619,
+			23.564,
+			22.801,
+			24.286,
+			24.996,
+			30.602
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,2)",
+			"FORECAST.ETS.STAT({V},{L},2,2)",
+			"FORECAST.ETS.STAT({V},{L},3,2)",
+			"FORECAST.ETS(11,{V},{L},2)",
+			"FORECAST.ETS(12,{V},{L},2)",
+			"FORECAST.ETS(13,{V},{L},2)",
+			"FORECAST.ETS(14,{V},{L},2)",
+			"FORECAST.ETS(15,{V},{L},2)"
+		]
+	},
+	{
+		"name": "s3-6-base",
+		"values": [
+			21.373,
+			23.173,
+			16.128,
+			21.471,
+			25.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp0",
+		"values": [
+			26.373,
+			23.173,
+			16.128,
+			21.471,
+			25.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp1",
+		"values": [
+			21.373,
+			28.173,
+			16.128,
+			21.471,
+			25.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp2",
+		"values": [
+			21.373,
+			23.173,
+			21.128,
+			21.471,
+			25.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp3",
+		"values": [
+			21.373,
+			23.173,
+			16.128,
+			26.471,
+			25.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp4",
+		"values": [
+			21.373,
+			23.173,
+			16.128,
+			21.471,
+			30.398,
+			20.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-6-imp5",
+		"values": [
+			21.373,
+			23.173,
+			16.128,
+			21.471,
+			25.398,
+			25.152
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(7,{V},{L},3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-base",
+		"values": [
+			20.72,
+			23.729,
+			17.062,
+			20.52,
+			26.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp0",
+		"values": [
+			25.72,
+			23.729,
+			17.062,
+			20.52,
+			26.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp1",
+		"values": [
+			20.72,
+			28.729,
+			17.062,
+			20.52,
+			26.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp2",
+		"values": [
+			20.72,
+			23.729,
+			22.062,
+			20.52,
+			26.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp3",
+		"values": [
+			20.72,
+			23.729,
+			17.062,
+			25.52,
+			26.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp4",
+		"values": [
+			20.72,
+			23.729,
+			17.062,
+			20.52,
+			31.235,
+			20.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp5",
+		"values": [
+			20.72,
+			23.729,
+			17.062,
+			20.52,
+			26.235,
+			25.432,
+			21.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-7-imp6",
+		"values": [
+			20.72,
+			23.729,
+			17.062,
+			20.52,
+			26.235,
+			20.432,
+			26.786
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(8,{V},{L},3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-base",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			21.946,
+			24.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp0",
+		"values": [
+			24.66,
+			24.1,
+			17.563,
+			21.946,
+			24.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp1",
+		"values": [
+			19.66,
+			29.1,
+			17.563,
+			21.946,
+			24.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp2",
+		"values": [
+			19.66,
+			24.1,
+			22.563,
+			21.946,
+			24.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp3",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			26.946,
+			24.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp4",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			21.946,
+			29.292,
+			18.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp5",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			21.946,
+			24.292,
+			23.064,
+			21.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp6",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			21.946,
+			24.292,
+			18.064,
+			26.976,
+			28.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-8-imp7",
+		"values": [
+			19.66,
+			24.1,
+			17.563,
+			21.946,
+			24.292,
+			18.064,
+			21.976,
+			33.118
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(9,{V},{L},3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-base",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp0",
+		"values": [
+			23.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp1",
+		"values": [
+			18.872,
+			28.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp2",
+		"values": [
+			18.872,
+			23.065,
+			21.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp3",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			26.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp4",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			29.141,
+			17.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp5",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			22.759,
+			23.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp6",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			28.796,
+			25.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp7",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			30.605,
+			21.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-9-imp8",
+		"values": [
+			18.872,
+			23.065,
+			16.204,
+			21.597,
+			24.141,
+			17.759,
+			23.796,
+			25.605,
+			26.746
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(10,{V},{L},3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-base",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp0",
+		"values": [
+			24.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp1",
+		"values": [
+			19.593,
+			27.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp2",
+		"values": [
+			19.593,
+			22.9,
+			22.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp3",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			25.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp4",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			29.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp5",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			23.139,
+			22.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp6",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			27.764,
+			27.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp7",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			32.297,
+			19.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp8",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			24.674,
+			23.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-10-imp9",
+		"values": [
+			19.593,
+			22.9,
+			17.379,
+			20.733,
+			24.721,
+			18.139,
+			22.764,
+			27.297,
+			19.674,
+			28.363
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(11,{V},{L},3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-base",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp0",
+		"values": [
+			23.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp1",
+		"values": [
+			18.678,
+			29.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp2",
+		"values": [
+			18.678,
+			24.886,
+			22.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp3",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			26.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp4",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			30.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp5",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			24.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp6",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			27.593,
+			25.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp7",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			30.768,
+			20.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp8",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			25.492,
+			23.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp9",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			28.812,
+			28.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-11-imp10",
+		"values": [
+			18.678,
+			24.886,
+			17.477,
+			21.35,
+			25.618,
+			19.577,
+			22.593,
+			25.768,
+			20.492,
+			23.812,
+			33.594
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(12,{V},{L},3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-base",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp0",
+		"values": [
+			23.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp1",
+		"values": [
+			18.653,
+			30.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp2",
+		"values": [
+			18.653,
+			25.36,
+			23.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp3",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			25.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp4",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			31.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp5",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			24.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp6",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			27.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp7",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			32.495,
+			19.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp8",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			24.839,
+			23.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp9",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			28.531,
+			28.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp10",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			33.588,
+			21.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s3-12-imp11",
+		"values": [
+			18.653,
+			25.36,
+			18.192,
+			20.357,
+			26.066,
+			19.641,
+			22.156,
+			27.495,
+			19.839,
+			23.531,
+			28.588,
+			26.037
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,3)",
+			"FORECAST.ETS.STAT({V},{L},2,3)",
+			"FORECAST.ETS.STAT({V},{L},3,3)",
+			"FORECAST.ETS(13,{V},{L},3)",
+			"FORECAST.ETS(14,{V},{L},3)",
+			"FORECAST.ETS(15,{V},{L},3)",
+			"FORECAST.ETS(16,{V},{L},3)",
+			"FORECAST.ETS(17,{V},{L},3)",
+			"FORECAST.ETS(18,{V},{L},3)",
+			"FORECAST.ETS(19,{V},{L},3)"
+		]
+	},
+	{
+		"name": "s4-8-base",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			18.163,
+			21.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp0",
+		"values": [
+			25.503,
+			25.947,
+			19.534,
+			18.163,
+			21.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp1",
+		"values": [
+			20.503,
+			30.947,
+			19.534,
+			18.163,
+			21.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp2",
+		"values": [
+			20.503,
+			25.947,
+			24.534,
+			18.163,
+			21.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp3",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			23.163,
+			21.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp4",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			18.163,
+			26.066,
+			25.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp5",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			18.163,
+			21.066,
+			30.125,
+			22.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp6",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			18.163,
+			21.066,
+			25.125,
+			27.652,
+			19.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-8-imp7",
+		"values": [
+			20.503,
+			25.947,
+			19.534,
+			18.163,
+			21.066,
+			25.125,
+			22.652,
+			24.074
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(9,{V},{L},4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-base",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp0",
+		"values": [
+			25.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp1",
+		"values": [
+			20.897,
+			28.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp2",
+		"values": [
+			20.897,
+			23.312,
+			27.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp3",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			21.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp4",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			25.96,
+			26.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp5",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			31.224,
+			24.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp6",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			29.056,
+			20.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp7",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			25.851,
+			23.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-9-imp8",
+		"values": [
+			20.897,
+			23.312,
+			22.237,
+			16.283,
+			20.96,
+			26.224,
+			24.056,
+			20.851,
+			28.63
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(10,{V},{L},4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-base",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp0",
+		"values": [
+			24.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp1",
+		"values": [
+			19.854,
+			28.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp2",
+		"values": [
+			19.854,
+			23.792,
+			27.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp3",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			21.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp4",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			28.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp5",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			32.042,
+			24.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp6",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			29.389,
+			19.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp7",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			24.702,
+			24.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp8",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			29.832,
+			27.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-10-imp9",
+		"values": [
+			19.854,
+			23.792,
+			22.318,
+			16.93,
+			23.09,
+			27.042,
+			24.389,
+			19.702,
+			24.832,
+			32.991
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(11,{V},{L},4)",
+			"FORECAST.ETS(12,{V},{L},4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-base",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp0",
+		"values": [
+			25.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp1",
+		"values": [
+			20.234,
+			29.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp2",
+		"values": [
+			20.234,
+			24.935,
+			26.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp3",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			21.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp4",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			27.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp5",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			31.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp6",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			28.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp7",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			23.697,
+			23.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp8",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			28.151,
+			28.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp9",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			33.648,
+			25.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp10",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			30.909,
+			22.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s4-12-imp11",
+		"values": [
+			20.234,
+			24.935,
+			21.34,
+			16.154,
+			22.783,
+			26.856,
+			23.023,
+			18.697,
+			23.151,
+			28.648,
+			25.909,
+			27.284
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,4)",
+			"FORECAST.ETS.STAT({V},{L},2,4)",
+			"FORECAST.ETS.STAT({V},{L},3,4)",
+			"FORECAST.ETS(13,{V},{L},4)",
+			"FORECAST.ETS(14,{V},{L},4)",
+			"FORECAST.ETS(15,{V},{L},4)",
+			"FORECAST.ETS(16,{V},{L},4)",
+			"FORECAST.ETS(17,{V},{L},4)",
+			"FORECAST.ETS(18,{V},{L},4)",
+			"FORECAST.ETS(19,{V},{L},4)",
+			"FORECAST.ETS(20,{V},{L},4)",
+			"FORECAST.ETS(21,{V},{L},4)"
+		]
+	},
+	{
+		"name": "s5-10-base",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp0",
+		"values": [
+			25.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp1",
+		"values": [
+			20.391,
+			30.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp2",
+		"values": [
+			20.391,
+			25.233,
+			28.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp3",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			23.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp4",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			24.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp5",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			28.053,
+			26.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp6",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			31.26,
+			24.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp7",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			29.972,
+			21.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp8",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			26.886,
+			19.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-10-imp9",
+		"values": [
+			20.391,
+			25.233,
+			23.36,
+			18.331,
+			19.058,
+			23.053,
+			26.26,
+			24.972,
+			21.886,
+			24.551
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(11,{V},{L},5)",
+			"FORECAST.ETS(12,{V},{L},5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-base",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp0",
+		"values": [
+			23.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp1",
+		"values": [
+			18.696,
+			28.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp2",
+		"values": [
+			18.696,
+			23.674,
+			27.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp3",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			25,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp4",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			22.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp5",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			26.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp6",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			31.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp7",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			30.693,
+			21.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp8",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			26.914,
+			21.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp9",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			26.634,
+			25.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp10",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			30.563,
+			29.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s5-12-imp11",
+		"values": [
+			18.696,
+			23.674,
+			22.95,
+			20,
+			17.95,
+			21.447,
+			26.054,
+			25.693,
+			21.914,
+			21.634,
+			25.563,
+			34.22
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,5)",
+			"FORECAST.ETS.STAT({V},{L},2,5)",
+			"FORECAST.ETS.STAT({V},{L},3,5)",
+			"FORECAST.ETS(13,{V},{L},5)",
+			"FORECAST.ETS(14,{V},{L},5)",
+			"FORECAST.ETS(15,{V},{L},5)",
+			"FORECAST.ETS(16,{V},{L},5)",
+			"FORECAST.ETS(17,{V},{L},5)",
+			"FORECAST.ETS(18,{V},{L},5)",
+			"FORECAST.ETS(19,{V},{L},5)",
+			"FORECAST.ETS(20,{V},{L},5)",
+			"FORECAST.ETS(21,{V},{L},5)",
+			"FORECAST.ETS(22,{V},{L},5)",
+			"FORECAST.ETS(23,{V},{L},5)"
+		]
+	},
+	{
+		"name": "s6-12-base",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp0",
+		"values": [
+			23.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp1",
+		"values": [
+			18.578,
+			29.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp2",
+		"values": [
+			18.578,
+			24.793,
+			29.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp3",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			26.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp4",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			22.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp5",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			24.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp6",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			29.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp7",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			33.118,
+			26.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp8",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			31.971,
+			24.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp9",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			29.149,
+			21.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp10",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			26.616,
+			21.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-12-imp11",
+		"values": [
+			18.578,
+			24.793,
+			24.292,
+			21.01,
+			17.633,
+			19.504,
+			24.299,
+			28.118,
+			26.971,
+			24.149,
+			21.616,
+			26.441
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(13,{V},{L},6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-base",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp0",
+		"values": [
+			25.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp1",
+		"values": [
+			20.312,
+			29.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp2",
+		"values": [
+			20.312,
+			24.721,
+			29.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp3",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			25.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp4",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			23.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp5",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			24.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp6",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			28.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp7",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			31.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp8",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			33.276,
+			25.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp9",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			30.595,
+			20.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp10",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			25.853,
+			23.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp11",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			28.512,
+			27.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	},
+	{
+		"name": "s6-13-imp12",
+		"values": [
+			20.312,
+			24.721,
+			24.479,
+			20.659,
+			18.228,
+			19.081,
+			23.992,
+			26.912,
+			28.276,
+			25.595,
+			20.853,
+			23.512,
+			32.203
+		],
+		"timeline": [
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13
+		],
+		"formulas": [
+			"FORECAST.ETS.STAT({V},{L},1,6)",
+			"FORECAST.ETS.STAT({V},{L},2,6)",
+			"FORECAST.ETS.STAT({V},{L},3,6)",
+			"FORECAST.ETS(14,{V},{L},6)",
+			"FORECAST.ETS(15,{V},{L},6)",
+			"FORECAST.ETS(16,{V},{L},6)",
+			"FORECAST.ETS(17,{V},{L},6)",
+			"FORECAST.ETS(18,{V},{L},6)",
+			"FORECAST.ETS(19,{V},{L},6)",
+			"FORECAST.ETS(20,{V},{L},6)",
+			"FORECAST.ETS(21,{V},{L},6)",
+			"FORECAST.ETS(22,{V},{L},6)",
+			"FORECAST.ETS(23,{V},{L},6)",
+			"FORECAST.ETS(24,{V},{L},6)",
+			"FORECAST.ETS(25,{V},{L},6)",
+			"FORECAST.ETS(26,{V},{L},6)"
+		]
+	}
+]

@@ -85,9 +85,9 @@ export function recoverInit(name: string, y: number[], m: number, values: number
 	};
 }
 
-/** Every series of the starting-state probes with Excel's recovered starting state. */
-export function recoveredInits(): EtsInitCase[] {
-	const path = fileURLToPath(new URL('./__fixtures__/ets-init-excel.json', import.meta.url));
+/** Every series of one starting-state probe file with Excel's recovered starting state. */
+export function recoveredInits(file = 'ets-init-excel.json'): EtsInitCase[] {
+	const path = fileURLToPath(new URL(`./__fixtures__/${file}`, import.meta.url));
 	const data = JSON.parse(readFileSync(path, 'utf8')) as Recorded[];
 	return data
 		.filter((e) => /^(s\d+-|n\d+-)/.test(e.name))
