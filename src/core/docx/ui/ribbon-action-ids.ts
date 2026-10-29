@@ -199,6 +199,8 @@ export const RIBBON_ACTION_IDS = [
 	'insert-column-left',
 	'insert-column-right',
 	'delete-column',
+	'merge-cells',
+	'split-cells',
 	'delete-table',
 	'table-properties',
 ] as const;
@@ -399,6 +401,8 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	'insert-column-left': 'Insert column left',
 	'insert-column-right': 'Insert column right',
 	'delete-column': 'Delete column',
+	'merge-cells': 'Merge cells',
+	'split-cells': 'Split cells',
 	'delete-table': 'Delete table',
 	'table-properties': 'Table properties',
 };
