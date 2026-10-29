@@ -13,17 +13,6 @@ export interface AcceptedGap {
 
 export const acceptedGaps: AcceptedGap[] = [
 	{
-		id: 'bullet-marker-line-height',
-		name: '02-lists-numbering',
-		paragraphs: [3, 4, 5, 6, 7, 8, 9, 10],
-		aspect: 'y',
-		reason:
-			'Word spaces the three bullet lines 14.2 pt apart where a text line is 12.5 pt (the ' +
-			'bullet glyph font is taller); the layout ignores the marker font in line height. Each ' +
-			'bullet adds about 1.8 pt, so every later paragraph is 2.2 to 6.1 pt high (the drift grows with each bullet ' +
-			'above it).',
-	},
-	{
 		id: 'indented-first-character-x',
 		name: '01-headings-styles',
 		paragraphs: [5, 7],
@@ -44,17 +33,6 @@ export const acceptedGaps: AcceptedGap[] = [
 			'The paragraph after the merged-cell table starts 28.7 pt lower than in Word: the ' +
 			'layout’s table height differs from Word’s. Table layout is being reworked ' +
 			'separately, so this is recorded rather than adjusted here.',
-	},
-	{
-		id: 'section-break-spacing',
-		name: '06-sections-columns',
-		paragraphs: [5, 6, 9, 10],
-		aspect: 'y',
-		reason:
-			'The first heading of a section that starts on a new page is 6 pt lower than Word: Word ' +
-			'collapses its space before (18 pt) against the space after (6 pt) of the section-break ' +
-			'paragraph that ends the previous section, the layout starts each section without that ' +
-			'neighbour. The paragraph after it keeps the 6 pt offset.',
 	},
 	{
 		id: 'display-equation-height',

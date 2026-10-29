@@ -96,23 +96,51 @@ bullets below are results for this corpus only). Fixed after this comparison was
   of a paragraph, so a 1386 character paragraph was recorded with 39 lines. Rescanned in full, Word
   has 45 lines, as the layout does (the committed 06 facts file was regenerated; all other facts
   files are byte-identical from a full regeneration).
-- Vertical positions exposed real spacing bugs, now fixed: a paragraph's box was placed above its
-  own space before (the space was added after it); the space between two paragraphs is the larger
-  of the space after the first and the space before the second, not their sum; contextual spacing
-  also drops the space after; and a page break drops the space before of the next paragraph.
+- Vertical positions exposed real spacing bugs, now fixed; the rules are measured in the
+  paragraph spacing probe below.
+- The bullet line height gap was the marker font: Word's Symbol bullet lines are 14.25 pt apart at
+  11 pt (1.29 em) against 12.46 pt for Courier New. The layout already measures the marker's font,
+  so the headless test measurer now gives Symbol that height and the gap is gone.
 
 Remaining accepted gaps, all vertical or positional (`word-corpus-gaps.ts`):
 
-| Id                            | Document              | Paragraphs  | Difference                                                           |
-| ----------------------------- | --------------------- | ----------- | -------------------------------------------------------------------- |
-| `bullet-marker-line-height`   | `02-lists-numbering`  | 3 to 10     | Bullet lines are 14.2 pt apart in Word, 12.5 pt here (2.2 to 6.1 pt) |
-| `indented-first-character-x`  | `01-headings-styles`  | 5, 7        | Word records x = 72 for an indented and a centred paragraph          |
-| `table-height`                | `03-tables-merged`    | 20          | Paragraph after the merged-cell table is 28.7 pt lower               |
-| `section-break-spacing`       | `06-sections-columns` | 5, 6, 9, 10 | First heading of a new-page section is 6 pt lower                    |
-| `display-equation-height`     | `08-equation`         | 5           | Paragraph after a display equation is 6.8 pt lower                   |
-| `content-control-line-height` | `11-content-controls` | 5           | Paragraph after a check-box content control is 2 pt higher           |
+| Id                            | Document              | Paragraphs | Difference                                                  |
+| ----------------------------- | --------------------- | ---------- | ----------------------------------------------------------- |
+| `indented-first-character-x`  | `01-headings-styles`  | 5, 7       | Word records x = 72 for an indented and a centred paragraph |
+| `table-height`                | `03-tables-merged`    | 20         | Paragraph after the merged-cell table is 28.7 pt lower      |
+| `display-equation-height`     | `08-equation`         | 5          | Paragraph after a display equation is 6.8 pt lower          |
+| `content-control-line-height` | `11-content-controls` | 5          | Paragraph after a check-box content control is 2 pt higher  |
 
 Floating picture geometry (07) matches Word within 1 pt. Page counts match for all twelve.
+
+## Paragraph spacing probe
+
+`src/core/scripts/docx-word-spacing-probe.ps1` writes small documents by hand (Courier New 11 pt,
+no default spacing) for each compatibility mode (15, 14, 12) with and without
+`w:doNotUseHTMLParagraphAutoSpacing`, opens them in Word 16.0.20527 and records the page and top y
+of every paragraph (`__fixtures__/word-spacing/spacing-probe.json`). `word-spacing.test.ts`
+rebuilds the same documents (`word-spacing-docs.ts`), lays them out and compares every paragraph
+(page exact, y within 1 pt; Word reports 0.75 pt pixels). Measured gap between two paragraphs
+(first has space after A, second space before B), the same in all three modes unless noted:
+
+| Case                                                   | Option off (default)                     | Option on                        |
+| ------------------------------------------------------ | ---------------------------------------- | -------------------------------- |
+| Two paragraphs (A, B in 0, 6, 12, 18 pt)               | max(A, B)                                | A + B                            |
+| `afterAutospacing` / `beforeAutospacing`               | 14 pt each, then max                     | flag ignored, the twips are used |
+| Paragraph into a table, cell paragraph before B        | A + B (sum)                              | A + B                            |
+| Out of a table (cell after A, next paragraph before B) | A + B (sum)                              | A + B                            |
+| Continuous section break between the two               | max(A, B)                                | A + B                            |
+| Next-page section break (y of the first paragraph)     | max(0, B - A), so B - A when B is bigger | B                                |
+| Explicit page break in the first paragraph             | 0 (dropped)                              | 0                                |
+| Natural overflow to the next page, or next column      | 0 (dropped)                              | 0                                |
+| `pageBreakBefore`, compatibility mode 15               | 0 (dropped)                              | 0                                |
+| `pageBreakBefore`, compatibility modes 12 and 14       | max(0, B - A)                            | B                                |
+
+The compatibility mode changes only the `pageBreakBefore` row. Measured in Word, not derived from the
+specification. Not measured: other fonts or sizes, spacing in headers, footers, notes and text
+boxes, and `w:contextualSpacing` (the corpus covers it for list items). Known gap kept in the test:
+a one-row table that Word moves whole to the next page loses its last cell paragraph's space after
+(12 pt) in the layout, which shifts the paragraphs after it on that page.
 
 ## Reopen check
 
