@@ -50,3 +50,14 @@ The workflow uploads one artifact per product, `office-acceptance-<product>`, ke
 - one folder per script with the files it generated (documents, workbooks, manifests) for inspection. The pivot, slicer, sparkline and print scripts write to their own temporary folder instead.
 
 A failed run is a failed job. The scheduled run only reads the repository; it never publishes, tags or pushes.
+
+## Recorded runs
+
+Local runs of `node scripts/office-acceptance.mjs <product>` on a Windows workstation with Office 16.0 build 20527 (Word, Excel, PowerPoint and Visio), before the self-hosted runner is registered. The scheduled workflow replaces these once it runs.
+
+| Date       | Product    | Commit      | Status | Passed | Failed | Skipped                                   |
+| ---------- | ---------- | ----------- | ------ | ------ | ------ | ----------------------------------------- |
+| 2026-10-29 | Word       | `ab769a453` | passed | 22     | 0      | 0                                         |
+| 2026-10-29 | Excel      | `09976a614` | passed | 124    | 0      | 1 (`xlsx-print`: `pdfinfo` not installed) |
+| 2026-10-29 | PowerPoint | `09976a614` | passed | 1      | 0      | 0                                         |
+| 2026-10-29 | Visio      | `ab769a453` | passed | 2      | 0      | 0                                         |
