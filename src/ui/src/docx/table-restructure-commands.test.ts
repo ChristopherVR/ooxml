@@ -238,3 +238,22 @@ describe('table commands on a nested table', () => {
 		expect(layout(saved)[0]![1]).toBe('B');
 	});
 });
+
+describe('a row covered entirely by vertical merges', () => {
+	const COVERED =
+		`<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr/>${grid([2000, 2000])}` +
+		`<w:tr>${tc('a', w(2000) + '<w:vMerge w:val="restart"/>')}${tc('b', w(2000) + '<w:vMerge w:val="restart"/>')}</w:tr>` +
+		`<w:tr>${tc('', w(2000) + '<w:vMerge/>')}${tc('', w(2000) + '<w:vMerge/>')}</w:tr>` +
+		`</w:tbl><w:sectPr/></w:body></w:document>`;
+
+	it('opens as a row without cells and saves the merge again', async () => {
+		const ctx = await setup(COVERED, 'a');
+		const table = ctx.view.state.doc.firstChild!;
+		expect(table.child(1).childCount).toBe(0);
+		const { saved } = await roundTrip(ctx);
+		expect(layout(saved)).toEqual([
+			['a^', 'b^'],
+			['|', '|'],
+		]);
+	});
+});

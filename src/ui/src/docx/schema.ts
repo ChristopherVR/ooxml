@@ -278,7 +278,8 @@ export const schema = new Schema({
 			toDOM: (node) => ['table', { style: tableStyle(node.attrs) }, ['tbody', 0]],
 		},
 		tableRow: {
-			content: 'tableCell+',
+			// A row whose cells all continue vertical merges from above holds no cell of its own.
+			content: 'tableCell*',
 			/** Row formatting travels with the row during structural edits and undo. */
 			attrs: { heightPx: { default: null }, properties: { default: null } },
 			parseDOM: [{ tag: 'tr' }],
