@@ -32,6 +32,7 @@ import {
 	lowSeasonSeasonals,
 	threePlusSeasonals,
 } from './ets-init-threeplus';
+import { isShortSeasonLength, shortSeasonStart } from './ets-init-short';
 import { chainSeasonals } from './ets-init-states';
 
 export { chainSeasonals, chainStates } from './ets-init-states';
@@ -50,7 +51,8 @@ export function isExactLength(n: number, m: number): boolean {
 		isThreePlusLength(n, m) ||
 		isLowThreeLength(n, m) ||
 		isTwoSeasonLength(n, m) ||
-		isTwoPlusLength(n, m)
+		isTwoPlusLength(n, m) ||
+		isShortSeasonLength(n, m)
 	);
 }
 
@@ -70,6 +72,10 @@ function fromRelative(y0: number, rel: readonly number[], trend: number): EtsIni
 export function chainStart(y: readonly number[], m: number): EtsInit | undefined {
 	const n = y.length;
 	const whole = Math.floor(n / m);
+	if (isShortSeasonLength(n, m)) {
+		const { rel, trend } = shortSeasonStart(y, m);
+		return fromRelative(y[0] as number, rel, trend);
+	}
 	if (isThreeSeasonLength(n, m) || isTwoSeasonLength(n, m) || isTwoPlusLength(n, m)) {
 		const short = isTwoSeasonLength(n, m) || isTwoPlusLength(n, m);
 		const series = short ? extendTwoSeasons(y, m) : y;

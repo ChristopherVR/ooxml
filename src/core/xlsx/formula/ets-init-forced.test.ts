@@ -17,7 +17,7 @@ interface Recorded {
 	results: { value: number }[];
 }
 
-const FILES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'];
+const FILES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'];
 const FLOORED = new Set([
 	's2-10-imp9',
 	's3-18-imp11',

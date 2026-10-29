@@ -16,10 +16,12 @@
 // 4 seasons (`ets-init-threeplus.ts`) are exact too: the 4-season chain and the
 // 3-season rule each plus a template shifted along the first positions (see those files).
 // 2 seasons plus a partial one are exact by the same rule on the series extended to 3 seasons, and so are
-// seasons of 3 (from 6 points) and 2 (from 6 points) with the template taken at the reference at time 0.
-// Unknown: every length below 2 seasons (Excel ignores the season for the shortest series, and from about
-// m + 2 + ceil(m / 3) points uses it by a rule not recovered).
-// For those the trend and the other seasonal states here are solved by least squares
+// seasons of 3 (from 6 points) and 2 (from 5 points) with the template taken at the reference at time 0.
+// Below 2 seasons Excel ignores the season for the shortest series (no seasonal states, the non-seasonal
+// trend above, gamma reported as the epsilon) and uses it from `ceil(10 (m + 1) / 7)` points; from there
+// to 2 seasons minus 1 point (seasons of 5 and more) the start is exact too, see `ets-init-short.ts`.
+// Not exact: seasons above `MAX_EXACT_SEASON`, and seasons of 2 or 3 below the lengths above (those
+// are ignored lengths). The trend and the other seasonal states are then solved by least squares
 // under the first-point constraint, which lands near (not on) Excel's own starting values (a plain
 // seasonal-dummy regression does worse on the recorded forecasts). Seasons of 25 and more start
 // from first-cycle values when short.

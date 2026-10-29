@@ -26,9 +26,9 @@ function shift(y: readonly number[], m: number, k: number): number {
 	);
 }
 
-/** Whether `lowSeasonSeasonals` is Excel's rule: 3 whole seasons of 2 or 3 and up to 4 seasons. */
+/** Whether `lowSeasonSeasonals` is Excel's rule: seasons of 2 from 5 points (2 seasons and 1), of 3 from 6, up to 4 seasons. */
 export function isLowThreeLength(n: number, m: number): boolean {
-	return (m === 2 && n >= 6 && n < 8) || (m === 3 && n >= 6 && n < 12);
+	return (m === 2 && n >= 5 && n < 8) || (m === 3 && n >= 6 && n < 12);
 }
 
 /**

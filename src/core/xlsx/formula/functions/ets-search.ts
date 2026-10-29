@@ -35,6 +35,7 @@
 // What is not reproduced: which large-beta pairs drift (see above).
 import type { Smoothing } from './ets-core';
 import { isExactLength } from './ets-init-chain';
+import { isShortSeasonLength } from './ets-init-short';
 import { CANDIDATES, reportedFor, type TrendShape } from './ets-search-map';
 
 export interface Chosen extends Smoothing {
@@ -96,11 +97,26 @@ const SEASONAL_TRIPLES: readonly (readonly [number, number, number])[] = [
 	[0.501, 0.5, LOW],
 ];
 
+/**
+ * Triples Excel reports below 2 seasons (`ets-init-short.ts`) besides `SEASONAL_TRIPLES`: the sixths
+ * and twelfths of the non-seasonal lattice, seen on 5 to 25 of the probe series of some lengths.
+ */
+const SHORT_EXTRA_TRIPLES: readonly (readonly [number, number, number])[] = [
+	[1 / 6, 1 / 12, 1 / 12],
+	[1 / 3, 1 / 6, 1 / 6],
+	[1 / 6, 1 / 12, 0.75],
+	[1 / 3, 1 / 6, 0.5],
+	[5 / 6, 1 / 12, 1 / 12],
+];
+
 /** Seasonal series with Excel's own starting states: the lowest cost on `SEASONAL_TRIPLES`. */
-function searchSeasonalLattice(cost: Cost): Chosen {
+function searchSeasonalLattice(
+	cost: Cost,
+	extra: readonly (readonly [number, number, number])[] = [],
+): Chosen {
 	let best: Smoothing = { alpha: 0.126, beta: LOW, gamma: LOW };
 	let bestCost = cost(best);
-	for (const [alpha, beta, gamma] of SEASONAL_TRIPLES) {
+	for (const [alpha, beta, gamma] of [...SEASONAL_TRIPLES, ...extra]) {
 		const c = cost({ alpha, beta, gamma });
 		if (better(c, bestCost)) {
 			bestCost = c;
@@ -164,6 +180,7 @@ export function chooseSmoothing(
 	cost: Cost,
 	shape: TrendShape = { shift: 9, t: 99 },
 ): Chosen {
+	if (m >= 2 && isShortSeasonLength(n, m)) return searchSeasonalLattice(cost, SHORT_EXTRA_TRIPLES);
 	if (m >= 2) return isExactLength(n, m) ? searchSeasonalLattice(cost) : searchSeasonal(n, cost);
 	if (n < MIN_SEARCH_POINTS) return THREE_POINTS;
 	return searchLattice(shape, cost);

@@ -9,6 +9,7 @@
 import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
 import { isExactLength } from './ets-init-chain';
+import { isShortSeasonLength, seasonStart, shortSearchSeries } from './ets-init-short';
 import { paddedSearchSeries } from './ets-init-three';
 import { chooseSmoothing } from './ets-search';
 import { trendShape } from './ets-search-map';
@@ -67,7 +68,9 @@ const NO_SEASON_GAMMA = Number.EPSILON;
 export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	const n = y.length;
 	if (n < 2) fail(ERR.NUM);
-	const m = seasonLength >= 2 && n >= 2 * seasonLength ? seasonLength : 0;
+	// Excel ignores the season for the shortest series (`ets-init-short.ts`: it starts using it at
+	// `ceil(10 (m + 1) / 7)` points and reports gamma as the epsilon before that).
+	const m = seasonLength >= 2 && n >= seasonStart(seasonLength) ? seasonLength : 0;
 	const solve = (p: Smoothing) => {
 		const init = initialStates(y, m, p, etsRun);
 		return { init, run: etsRun(y, m, init, p) };
@@ -80,9 +83,19 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	// runs over the padded series with the hold-out of its length: Excel's triple is then found on
 	// 2307 of the 2319 recorded exact-start series, against 1790 on the unpadded one.
 	const exact = m < 2 || isExactLength(n, m);
-	const padded = m >= 2 && exact ? paddedSearchSeries(y, m) : undefined;
+	const padded =
+		m >= 2 && exact
+			? isShortSeasonLength(n, m)
+				? shortSearchSeries(y, m)
+				: paddedSearchSeries(y, m)
+			: undefined;
 	const searched = padded ?? (m >= 2 ? y : etsSearchSeries(y));
-	const holdout = m >= 2 && !exact ? 0 : etsHoldout(padded ? padded.length : n, m);
+	// Below 2 seasons the hold-out follows the length of the data, not of the padded series (408 of 809
+	// triples against 286).
+	const holdout =
+		m >= 2 && !exact
+			? 0
+			: etsHoldout(padded && !(m >= 2 && isShortSeasonLength(n, m)) ? padded.length : n, m);
 	const { drift, fit, ...chosen } = chooseSmoothing(
 		n,
 		m,
