@@ -20,6 +20,7 @@ export const enShell = {
 	'presence.available': 'Available',
 	'presence.busy': 'Busy',
 	'presence.dnd': 'Do not disturb',
+	'presence.inMeeting': 'Busy · In a meeting',
 	'presence.brb': 'Be right back',
 	'presence.away': 'Away',
 	'presence.offline': 'Offline',

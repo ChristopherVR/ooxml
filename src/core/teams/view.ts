@@ -2,7 +2,12 @@
 // people, typing names, a channel's files and cross-channel message search. No side effects, so
 // every binding (and every test) gets the same answers. New code.
 import type { CallParticipant } from './call';
-import { type PresenceStatus, statusFromWire } from './presence';
+import {
+	type PresenceActivity,
+	type PresenceStatus,
+	activityFromWire,
+	statusFromWire,
+} from './presence';
 import type { Availability } from './workspace';
 import type { Channel, Message, OfficeKind } from './model';
 
@@ -27,6 +32,7 @@ export interface PeerLike {
 	availability?: string;
 	status?: string;
 	statusMessage?: string;
+	activity?: string;
 	userId?: string;
 }
 
@@ -38,6 +44,8 @@ export interface PersonView {
 	color: string;
 	self: boolean;
 	availability: Availability;
+	/** Why `availability` is derived (`meeting`: Busy in a meeting), when it is. */
+	activity?: PresenceActivity;
 	/** Custom status message, empty when none. */
 	statusMessage: string;
 	inCall: boolean;
@@ -116,6 +124,7 @@ export function peopleViews(
 		name: string;
 		color: string;
 		availability: Availability;
+		activity?: PresenceActivity;
 		statusMessage?: string;
 		inCall: boolean;
 	},
@@ -130,6 +139,7 @@ export function peopleViews(
 			color: p.userColor,
 			self: false,
 			availability: statusFromWire(p) satisfies PresenceStatus,
+			...(activityFromWire(p) ? { activity: activityFromWire(p)! } : {}),
 			statusMessage: p.statusMessage ?? '',
 			inCall: Boolean(p.callRoom),
 		})),

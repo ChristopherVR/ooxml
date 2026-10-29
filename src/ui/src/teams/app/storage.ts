@@ -18,6 +18,20 @@ export const safeStorage: StorageLike = {
 			// Blocked or over quota: the convenience is lost, the app keeps working.
 		}
 	},
+	// `storage` events fire in the other tabs of this origin, which is what shares a chosen status.
+	subscribe(listener) {
+		const target = globalThis as Partial<Pick<Window, 'addEventListener' | 'removeEventListener'>>;
+		const onStorage = (event: StorageEvent): void => {
+			try {
+				if (event.storageArea && event.storageArea !== globalThis.localStorage) return;
+			} catch {
+				return;
+			}
+			listener(event.key);
+		};
+		target.addEventListener?.('storage', onStorage);
+		return () => target.removeEventListener?.('storage', onStorage);
+	},
 };
 
 export interface Identity {

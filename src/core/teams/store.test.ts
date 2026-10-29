@@ -523,6 +523,62 @@ describe('teams client', () => {
 		expect(a.getState().people.find((p) => !p.self)?.availability).toBe('available');
 	});
 
+	it("syncs a status chosen in one tab to the same person's other tab", async () => {
+		const values = new Map<string, string>();
+		const watchers = new Set<{ owner: number; fn: (key: string | null) => void }>();
+		const tabStorage = (owner: number) => ({
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => {
+				values.set(key, value);
+				for (const w of watchers) if (w.owner !== owner) w.fn(key);
+			},
+			subscribe: (fn: (key: string | null) => void) => {
+				const w = { owner, fn };
+				watchers.add(w);
+				return () => watchers.delete(w);
+			},
+		});
+		const tab1 = make('ada', 'store-tabs', { idleMinutes: 0, storage: tabStorage(1) });
+		const tab2 = make('ada', 'store-tabs', { idleMinutes: 0, storage: tabStorage(2) });
+		await tick(100);
+		tab1.setAvailability('dnd', '1h');
+		await tick(100);
+		expect(tab2.getState().presence).toMatchObject({ status: 'dnd', effective: 'dnd' });
+		const wire = tab1.workspace.session.peers()[0] as unknown as Record<string, unknown>;
+		expect(wire.status).toBe('dnd');
+		tab2.destroy();
+		expect(watchers.size).toBe(1);
+	});
+
+	it('shows Busy in a meeting while one the person is in is in progress', async () => {
+		const a = make('ada', 'store-meeting-presence', { idleMinutes: 0 });
+		const b = make('bob', 'store-meeting-presence', { idleMinutes: 0 });
+		const c = make('cy', 'store-meeting-presence', { idleMinutes: 0 });
+		await tick(100);
+		const now = Date.now();
+		const meeting = a.workspace.meetings.create({
+			title: 'Design review',
+			start: now - 60_000,
+			end: now + 60 * 60_000,
+			attendees: [{ id: 'bob', name: 'bob' }],
+		})!;
+		await tick(150);
+		expect(a.getState().presence).toMatchObject({ effective: 'busy', activity: 'meeting' });
+		expect(b.getState().presence).toMatchObject({ effective: 'busy', activity: 'meeting' });
+		expect(c.getState().presence).toMatchObject({ effective: 'available' });
+		const ada = c.getState().people.find((p) => p.name === 'ada')!;
+		expect(ada).toMatchObject({ availability: 'busy', activity: 'meeting' });
+		const wire = c.workspace.session.peers().find((p) => p.userId === 'ada') as unknown as Record<
+			string,
+			unknown
+		>;
+		expect(wire).toMatchObject({ status: 'busy', availability: 'busy', activity: 'meeting' });
+		expect(a.workspace.meetings.cancel(meeting.id)).toBe(true);
+		await tick(150);
+		expect(a.getState().presence.effective).toBe('available');
+		expect(c.getState().people.find((p) => p.name === 'ada')?.activity).toBeUndefined();
+	});
+
 	it('shows Away after the idle time and Available again on activity', async () => {
 		vi.useFakeTimers();
 		try {

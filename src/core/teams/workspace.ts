@@ -19,7 +19,9 @@ import { type Roster, createRoster } from './roster';
 import { createTabStore, type TabStore } from './tabs';
 import {
 	type LegacyAvailability,
+	type PresenceActivity,
 	type PresenceStatus,
+	activityFromWire,
 	legacyAvailability,
 	sanitizeStatusMessage,
 	statusFromWire,
@@ -64,6 +66,8 @@ export interface TeamsPresence {
 	status?: PresenceStatus;
 	/** Custom status message. */
 	statusMessage?: string;
+	/** Why a derived status is shown: `meeting` beside Busy. Empty or absent otherwise. */
+	activity?: PresenceActivity | '';
 }
 
 export interface WorkspaceOptions {
@@ -106,7 +110,8 @@ export interface TeamsWorkspace {
 	call: (channelId: string) => CallSession;
 	setActiveChannel: (channelId: string | undefined) => void;
 	setTyping: (channelId: string | undefined) => void;
-	setAvailability: (value: Availability) => void;
+	/** Publish the status; `activity` says why a derived one is shown (Busy in a meeting). */
+	setAvailability: (value: Availability, activity?: PresenceActivity) => void;
 	setStatusMessage: (message: string) => void;
 	destroy: () => void;
 }
@@ -128,6 +133,8 @@ function sanitizePresence(raw: Record<string, unknown>): TeamsPresence {
 	if (isValidId(raw.userId)) out.userId = raw.userId;
 	out.status = statusFromWire(raw);
 	out.availability = legacyAvailability(out.status);
+	const activity = activityFromWire(raw);
+	if (activity) out.activity = activity;
 	const statusMessage = sanitizeStatusMessage(raw.statusMessage);
 	if (statusMessage) out.statusMessage = statusMessage;
 	return out;
@@ -282,8 +289,12 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		},
 		setActiveChannel: (channelId) => session.updatePresence({ channelId: channelId ?? '' }),
 		setTyping: (channelId) => session.updatePresence({ typingIn: channelId ?? '' }),
-		setAvailability: (status) =>
-			session.updatePresence({ status, availability: legacyAvailability(status) }),
+		setAvailability: (status, activity) =>
+			session.updatePresence({
+				status,
+				availability: legacyAvailability(status),
+				activity: activity ?? '',
+			}),
 		setStatusMessage: (message) =>
 			session.updatePresence({ statusMessage: sanitizeStatusMessage(message) }),
 		destroy() {

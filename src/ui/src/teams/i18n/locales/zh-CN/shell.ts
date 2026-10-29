@@ -21,6 +21,7 @@ export const zhCNShell: Record<keyof typeof enShell, string> = {
 	'presence.available': '可用',
 	'presence.busy': '忙碌',
 	'presence.dnd': '请勿打扰',
+	'presence.inMeeting': '忙碌 · 会议中',
 	'presence.brb': '马上回来',
 	'presence.away': '离开',
 	'presence.offline': '脱机',
