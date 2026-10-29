@@ -90,7 +90,7 @@ function Get-Facts($word, $doc, [string]$name) {
 		# (or the horizontal position steps back on the same row, as in columns).
 		$starts = @(0)
 		$lastY = $entry.yPt; $lastPage = $entry.page; $lastX = $entry.xPt
-		$limit = [Math]::Min($end - $start, 1200)
+		$limit = $end - $start
 		if (-not $entry.inTable -or $true) {
 			for ($c = 1; $c -lt $limit; $c++) {
 				$cr = $doc.Range($start + $c, $start + $c)

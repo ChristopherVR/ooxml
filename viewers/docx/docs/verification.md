@@ -55,14 +55,20 @@ facts:
 - each paragraph's line count and line-start offsets: exact (monospace text leaves no rounding
   room, so any tolerance would hide a real difference).
 
-Not compared: vertical positions (the line-height model is not Word's), paragraphs inside tables
-(Word's end-of-cell marks make the numbering differ), paragraphs with no letters (equation-only
-paragraphs, whose text Word linearises), and floating-object geometry.
+- the page position of each paragraph's first line (x and y, in points): within 1 pt. Word records
+  twips and the layout works in CSS pixels, so a rounded pixel (0.75 pt) or line height can differ
+  without being a layout difference; the differences found so far are several points;
+- floating pictures: page, left, top, width and height within 1 pt (the corpus has one, anchored
+  to the page).
+
+Not compared: paragraphs inside tables (Word's end-of-cell marks make the numbering differ),
+paragraphs with no letters (equation-only paragraphs, whose text Word linearises), inline picture
+sizes, and anything between the first lines (per-line y).
 
 Paragraphs are matched by their first eight letters in document order, so list labels, note marks
 and field results do not matter. Differences that are real layout gaps are named in
-`acceptedGaps` in the test (id, document, paragraph, reason). The test fails if an accepted gap
-starts to pass, so the entry has to be removed when the gap is fixed.
+`acceptedGaps` (`word-corpus-gaps.ts`: id, document, Word paragraph numbers, aspect, reason). The
+test fails if an accepted gap starts to pass, so the entry has to be removed when the gap is fixed.
 
 ### Raster comparison
 
@@ -72,17 +78,41 @@ needs a recorded browser and font version, as the roadmap requires.
 
 ### Current results
 
-Eight of twelve documents match Word on every compared fact. Accepted gaps:
+Line breaks, line counts and page counts match Word for all twelve documents (as recorded; the
+bullets below are results for this corpus only). Fixed after this comparison was first made:
 
-| Id                                   | Document              | Paragraph | Difference                                                             |
-| ------------------------------------ | --------------------- | --------- | ---------------------------------------------------------------------- |
-| `bold-justified-indented-first-line` | `01-headings-styles`  | 5         | First line breaks at 56 characters, Word 64; cause not isolated        |
-| `two-column-section-line-count`      | `06-sections-columns` | 10        | 45 lines against Word 39 in the two-column section                     |
-| `wrapped-float-line-count`           | `07-images`           | 3         | 13 lines against 12 beside a square-wrapped picture                    |
-| `heading-first-line-offset`          | `07-images`           | 1         | Heading line starts at offset 1, Word 0                                |
-| `toc-field-line-start`               | `09-fields-toc`       | 2         | Table-of-contents paragraph starts at offset 3, Word 0 (field offsets) |
+- Justified text now squeezes its spaces to fit one more word. The 01 paragraph 5 gap was this, not
+  indent handling: Word fits 64 characters where 63 fit only by narrowing 11 spaces by about 14%.
+  The squeeze limit (`SPACE_SHRINK` = 0.145 of a space) is fitted to probes of Courier New at
+  9 to 13 pt; it reproduces all but 2 of 106 line-end decisions (Word accepted 0.20 at 13 pt and
+  refused 0.14 at 10 pt), so it is an approximation, not Word's rule.
+- Square wrapping with `wrapText="bothSides"` now continues a line past the picture, as Word does
+  (07 paragraph 3: 12 lines like Word). Other `wrapText` values keep the larger-side approximation.
+- The first line of a paragraph starts at character 0 even when the paragraph begins with an
+  anchor or field code that draws nothing (07 paragraph 1, 09 paragraph 2). That was a layout
+  difference, not only the recorder: the first line reported offset 1 or 3, so it did not "start the
+  block".
+- The 06 paragraph 10 gap was a recording error: the facts script scanned at most 1200 characters
+  of a paragraph, so a 1386 character paragraph was recorded with 39 lines. Rescanned in full, Word
+  has 45 lines, as the layout does (the committed 06 facts file was regenerated; all other facts
+  files are byte-identical from a full regeneration).
+- Vertical positions exposed real spacing bugs, now fixed: a paragraph's box was placed above its
+  own space before (the space was added after it); the space between two paragraphs is the larger
+  of the space after the first and the space before the second, not their sum; contextual spacing
+  also drops the space after; and a page break drops the space before of the next paragraph.
 
-Page counts match Word for all twelve documents.
+Remaining accepted gaps, all vertical or positional (`word-corpus-gaps.ts`):
+
+| Id                            | Document              | Paragraphs  | Difference                                                           |
+| ----------------------------- | --------------------- | ----------- | -------------------------------------------------------------------- |
+| `bullet-marker-line-height`   | `02-lists-numbering`  | 3 to 10     | Bullet lines are 14.2 pt apart in Word, 12.5 pt here (2.2 to 6.1 pt) |
+| `indented-first-character-x`  | `01-headings-styles`  | 5, 7        | Word records x = 72 for an indented and a centred paragraph          |
+| `table-height`                | `03-tables-merged`    | 20          | Paragraph after the merged-cell table is 28.7 pt lower               |
+| `section-break-spacing`       | `06-sections-columns` | 5, 6, 9, 10 | First heading of a new-page section is 6 pt lower                    |
+| `display-equation-height`     | `08-equation`         | 5           | Paragraph after a display equation is 6.8 pt lower                   |
+| `content-control-line-height` | `11-content-controls` | 5           | Paragraph after a check-box content control is 2 pt higher           |
+
+Floating picture geometry (07) matches Word within 1 pt. Page counts match for all twelve.
 
 ## Reopen check
 
