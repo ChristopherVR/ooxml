@@ -1,8 +1,8 @@
 import { executableCellFormula } from './cell-formula';
 import { connectRows } from './edit-connector';
+import { isStencilConnector, planConnectorCopy } from './edit-duplicate-line';
 import {
 	assertInstanceUnlocked,
-	instanceCell,
 	instancePin,
 	placeInstance,
 	type StencilInstance,
@@ -25,20 +25,32 @@ export async function planInstanceCopy(
 	offsetX: number,
 	offsetY: number,
 	code = 'UNSUPPORTED_DUPLICATE',
-): Promise<{ x: number; y: number }> {
+	allowConnector = code === 'UNSUPPORTED_DUPLICATE',
+): Promise<{ x: number; y: number; connector: boolean }> {
 	const id = attribute(target.instance, 'ID');
+	const connector = allowConnector && isStencilConnector(target);
 	if (
-		['BeginX', 'EndX'].some((name) => instanceCell(target, name)) ||
-		connectRows(sourceRoot).some((row) => attribute(row, 'FromSheet') === id)
+		!connector &&
+		(isStencilConnector(target) ||
+			connectRows(sourceRoot).some((row) => attribute(row, 'FromSheet') === id))
 	)
 		fail(code, 'Lines and connectors that come from a stencil cannot be copied yet.');
 	await assertInstanceUnlocked(pkg, pageId, target, ['LockSelect'], 'selection');
+	// A connector copy keeps its end points and loses its glue, as Visio does (edit-duplicate-line.ts).
+	if (connector) {
+		const pin = planConnectorCopy(target, code);
+		const x = pin.x + offsetX,
+			y = pin.y + offsetY;
+		if (Math.abs(x) > 1e6 || Math.abs(y) > 1e6)
+			fail(code, 'Duplicated pins exceed coordinate limits.');
+		return { x, y, connector };
+	}
 	const pin = instancePin(target);
 	const x = pin.x + offsetX,
 		y = pin.y + offsetY;
 	if (Math.abs(x) > 1e6 || Math.abs(y) > 1e6)
 		fail(code, 'Duplicated pins exceed coordinate limits.');
-	return { x, y };
+	return { x, y, connector };
 }
 
 /**

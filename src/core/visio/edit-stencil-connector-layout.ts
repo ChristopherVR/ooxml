@@ -13,7 +13,7 @@ const same = (a: number, b: number) =>
 	Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a), Math.abs(b));
 
 /** A dynamically glued shape as a walking-glue end: side midpoints, bounds, middle and outline. */
-export function walkShape(box: VisioGlueBox): VisioWalkEnd {
+export function walkShape(box: VisioGlueBox, floating = false): VisioWalkEnd {
 	const [a, b, c, d, e, f] = box.transform;
 	const at = (x: number, y: number): VisioRoutePoint => ({
 		x: a * x + c * y + e,
@@ -26,6 +26,7 @@ export function walkShape(box: VisioGlueBox): VisioWalkEnd {
 			bounds: sites[0]!.box!,
 			center: at(box.width / 2, box.height / 2),
 			corners: [at(0, 0), at(box.width, 0), at(box.width, box.height), at(0, box.height)],
+			...(floating ? { floating } : {}),
 		},
 	};
 }

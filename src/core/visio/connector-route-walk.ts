@@ -18,6 +18,8 @@ export interface VisioWalkEnd {
 		bounds: VisioRouteBox;
 		center: VisioRoutePoint;
 		corners: readonly VisioRoutePoint[];
+		/** The shape has no connection points, so a glued end floats along its side. */
+		floating?: boolean;
 	};
 }
 
@@ -79,9 +81,19 @@ export function visioWalkPath(
 			: [p, { x: p.x, y: p.y + turn }, { x: q.x, y: p.y + turn }, q];
 	};
 	let path: VisioRoutePoint[];
-	if (gapX >= -EPSILON && inside(from.y, b.minY, b.maxY))
-		path = jog(side(begin, sx, 0), side(end, -sx, 0), true);
-	else if (gapY >= -EPSILON && inside(from.x, b.minX, b.maxX))
+	if (gapX >= -EPSILON && inside(from.y, b.minY, b.maxY)) {
+		const p = side(begin, sx, 0),
+			q = side(end, -sx, 0);
+		// Two floating ends meet on a straight line through the middle of the shared extent
+		// (Visio 16.0, shapes without connection points; evidence/native-edit-families-full-2026-10-29.json).
+		if (begin.shape?.floating && end.shape?.floating) {
+			const y = (Math.max(a.minY, b.minY) + Math.min(a.maxY, b.maxY)) / 2;
+			path = [
+				{ x: p.x, y },
+				{ x: q.x, y },
+			];
+		} else path = jog(p, q, true);
+	} else if (gapY >= -EPSILON && inside(from.x, b.minX, b.maxX))
 		path = jog(side(begin, 0, sy), side(end, 0, -sy), false);
 	else if (gapY < -EPSILON || (gapY < CHANNEL && gapX >= CHANNEL)) {
 		const p = side(begin, sx, 0);

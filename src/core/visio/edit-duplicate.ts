@@ -18,8 +18,17 @@ import { indexCells, key } from './edit-recalculate-index';
 import { createVisioCellEvaluator } from './edit-recalculate-values';
 import { recalculateVisioCells, type VisioCellKey } from './edit-recalculate';
 import { createVisioDependencyQuery } from './edit-recalculate';
+import { rerouteBlockedConnectors } from './edit-connector-follow';
 import { assertGeometryPackageScope } from './edit-scope';
 import { finishInstanceCopy, planInstanceCopy } from './edit-instance-duplicate';
+import {
+	assertConnectorCopyApart,
+	assertGlueDroppable,
+	finishConnectorCopy,
+	finishLineCopy,
+	isLineSheet,
+	planLineCopy,
+} from './edit-duplicate-line';
 import { pageShapes, shapeIsStructural, stencilInstance } from './edit-instance-shape';
 import { masterTemplate } from './edit-text-scope';
 
@@ -74,9 +83,18 @@ export async function duplicateVisioShapes(
 		structural ||= !source || (await shapeIsStructural(source, template));
 	}
 	await assertDuplicateScope(pkg, pagePaths, root, newIds, check, structural);
+	// A glued target is copied alone, so its own cells are read as any other shape's.
+	const glueTargets = new Set(
+		children(sourceRoot, 'Connects').flatMap((container) =>
+			children(container, 'Connect').map((row) => attribute(row, 'ToSheet')),
+		),
+	);
 	const indexed = indexCells(detached ? new Map([[sourcePageId, sourceRoot]]) : roots, {
 		check,
 		scope: 'affected',
+		glueShapes: new Set(
+			pageShapes(sourceRoot).filter((shape) => glueTargets.has(attribute(shape, 'ID'))),
+		),
 	});
 	const evaluate = createVisioCellEvaluator(indexed, { check }, true);
 	const containers = children(root, 'Shapes');
@@ -91,7 +109,16 @@ export async function duplicateVisioShapes(
 				const value = attribute(node, name);
 				if (value !== undefined) occupied.add(value.toLowerCase());
 			}
-	const plans: { source: Element; id: string; x: number; y: number; template?: Element }[] = [];
+	const plans: {
+		source: Element;
+		id: string;
+		x: number;
+		y: number;
+		template?: Element;
+		connector?: boolean;
+		line?: boolean;
+	}[] = [];
+	const copied = new Set(edit.copies.map((copy) => copy.shapeId));
 	let cloneNodes = 0,
 		cloneCharacters = buildXml(root).length;
 	const size = (source: Element) => {
@@ -110,6 +137,7 @@ export async function duplicateVisioShapes(
 			'UNSUPPORTED_DUPLICATE',
 		);
 		if (stencil) {
+			assertGlueDroppable(sourceRoot, copy.shapeId, copied);
 			const pin = await planInstanceCopy(
 				pkg,
 				edit.pageId,
@@ -122,9 +150,25 @@ export async function duplicateVisioShapes(
 			plans.push({
 				source: stencil.instance,
 				id: copy.newShapeId,
-				...pin,
+				x: pin.x,
+				y: pin.y,
+				...(pin.connector ? { connector: true } : {}),
 				template: stencil.template,
 			});
+			continue;
+		}
+		// A line is copied with its end points moved and its glue dropped, as Visio does.
+		const line = pageShapes(sourceRoot).find((shape) => attribute(shape, 'ID') === copy.shapeId);
+		if (line && !line.hasAttribute('Master') && isLineSheet(line)) {
+			assertCloneLeaf(line);
+			assertUnlayeredShape(line, document);
+			assertShapeLocks(line, document, ['LockSelect']);
+			assertGlueDroppable(sourceRoot, copy.shapeId, copied);
+			const pin = planLineCopy(line);
+			if (Math.abs(pin.x + edit.offsetX) > 1e6 || Math.abs(pin.y + edit.offsetY) > 1e6)
+				fail('UNSUPPORTED_DUPLICATE', 'Duplicated pins exceed coordinate limits.');
+			size(line);
+			plans.push({ source: line, id: copy.newShapeId, x: pin.x, y: pin.y, line: true });
 			continue;
 		}
 		const source = admitted(sourceRoot, copy.shapeId);
@@ -133,7 +177,8 @@ export async function duplicateVisioShapes(
 		assertShapeLocks(source, document, ['LockSelect']);
 		for (const connects of children(sourceRoot, 'Connects'))
 			for (const connection of children(connects, 'Connect'))
-				if (['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === copy.shapeId))
+				// A glued target is copied alone, as Visio does: its connectors stay with the original.
+				if (attribute(connection, 'FromSheet') === copy.shapeId)
 					fail('UNSUPPORTED_DUPLICATE', 'Glued shapes cannot be duplicated safely.');
 		const x = numeric(formattingCell(source, 'PinX')),
 			y = numeric(formattingCell(source, 'PinY'));
@@ -149,6 +194,9 @@ export async function duplicateVisioShapes(
 		size(source);
 		plans.push({ source, id: copy.newShapeId, x: x + edit.offsetX, y: y + edit.offsetY });
 	}
+	const connectorSources = plans.filter((plan) => plan.connector).map((plan) => plan.source);
+	if (connectorSources.length)
+		assertConnectorCopyApart(root, connectorSources, edit.offsetX, edit.offsetY);
 	const order = new Map(
 		children(children(sourceRoot, 'Shapes')[0], 'Shape').map((source, index) => [source, index]),
 	);
@@ -159,6 +207,7 @@ export async function duplicateVisioShapes(
 		check();
 		const shape = root.ownerDocument!.importNode(plan.source, true) as Element;
 		copyIdentity(shape, plan.id, names);
+		if (plan.line) finishLineCopy(shape, edit.offsetX, edit.offsetY);
 		for (const node of [shape, ...Array.from(shape.getElementsByTagName('*'))]) {
 			const source = executableCellFormula(attribute(node, 'F'));
 			if (!source) continue;
@@ -179,6 +228,15 @@ export async function duplicateVisioShapes(
 					),
 				);
 		}
+		if (plan.line) {
+			container.appendChild(shape);
+			continue;
+		}
+		if (plan.connector) {
+			finishConnectorCopy(shape, plan.id, edit.offsetX, edit.offsetY);
+			container.appendChild(shape);
+			continue;
+		}
 		if (plan.template) {
 			// Sub-shapes of a group instance take IDs beyond the page's and every copy's own.
 			for (const id of newIds) ids.add(id);
@@ -196,7 +254,7 @@ export async function duplicateVisioShapes(
 			}
 		container.appendChild(shape);
 	}
-	const local = plans.filter((plan) => !plan.template);
+	const local = plans.filter((plan) => !plan.template && !plan.line);
 	if (changed.length) {
 		// Reuse inherited-style and package admission in the copies' actual sheet context.
 		await assertGeometryPackageScope(
@@ -231,6 +289,10 @@ export async function duplicateVisioShapes(
 	}
 	const dirty = new Set([edit.pageId]);
 	for (const id of recalculateVisioCells(roots, changed, { check })) dirty.add(id);
+	// Visio lays a right-angle connector out again around a shape copied onto its path.
+	for (const plan of plans)
+		if (!plan.line && !plan.connector)
+			for (const id of rerouteBlockedConnectors(roots, edit.pageId, plan.id, check)) dirty.add(id);
 	return [...dirty];
 }
 

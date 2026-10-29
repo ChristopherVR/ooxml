@@ -24,6 +24,7 @@ import {
 	glueBox,
 	glueEnd,
 	glueSites,
+	hasConnectionPoints,
 	topShape,
 	unglueConnector,
 	proveConnector,
@@ -146,7 +147,7 @@ export function rerouteConnector(
 	const walk = (end: End) => {
 		const target = glue.ends[end];
 		return target && target.point === undefined
-			? walkShape(glueBox(root, target.target))
+			? walkShape(glueBox(root, target.target), !hasConnectionPoints(root, target.target))
 			: { point: sites(end)[0]!.point };
 	};
 	const route = options.route ?? current;

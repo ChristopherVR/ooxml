@@ -96,6 +96,15 @@ export function connectionRows(shape: Element): Map<number, Element> {
 					rows.set(Number(attribute(row, 'IX') ?? '0'), row);
 	return rows;
 }
+/** Whether a shape has connection points, local or from its master. */
+export function hasConnectionPoints(root: Element, shapeId: string): boolean {
+	const target = topShape(root, shapeId);
+	if (!target) return false;
+	return (
+		(stencilTemplate(target) ? effectiveRows(target, 'Connection') : connectionRows(target)).size >
+		0
+	);
+}
 /** Candidate sites of a glued end: four side midpoints, or the one connection point. */
 export function glueSites(root: Element, end: GlueEnd): ConnectorSite[] {
 	const box = glueBox(root, end.target);
@@ -244,9 +253,14 @@ export function proveConnector(root: Element, connectorId: string): ConnectorGlu
 			(index === undefined
 				? toCell !== 'PinX' || attribute(row, 'ToPart') !== '3'
 				: attribute(row, 'ToPart') !== String(100 + index)) ||
-			// A line master has no glue trigger of its own unless Visio wrote one with the glue.
+			// A line master has no glue trigger of its own unless Visio wrote one with the glue, and
+			// point glue on a drawn line has none either (native-edit-families-flat-2026-10-29.json).
 			(visioGlueTriggerTarget(formula(triggerName(end))) !== target &&
-				!(isStencilLine(shape) && formula(triggerName(end)) === undefined)) ||
+				!(
+					formula(triggerName(end)) === undefined &&
+					!local.has(triggerName(end)) &&
+					(isStencilLine(shape) || index !== undefined)
+				)) ||
 			!glued('X') ||
 			!glued('Y')
 		)

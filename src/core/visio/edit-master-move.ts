@@ -157,13 +157,27 @@ export function prepareMasterMovePins(
 	// A separate page cache depending on an authorized pin still needs a broader proof.
 	// This first slice changes only the two local pin leaves, never dependent caches.
 	if (result.size) {
-		const indexed = indexCells(roots, { check });
+		const indexed = indexCells(roots, { check, scope: 'affected' });
 		const pins = new Set(
 			[...indexed.values()].filter((cell) => cell.node && result.has(cell.node)).map(key),
 		);
-		for (const cell of indexed.values())
-			if ((charge(), cell.dependencies.some((dependency) => pins.has(dependency))))
+		const pinPages = new Set(
+			[...indexed.values()]
+				.filter((cell) => cell.node && result.has(cell.node))
+				.map((c) => c.pageId),
+		);
+		for (const cell of indexed.values()) {
+			charge();
+			// A formula that may read cells it does not name could read the pin; every other
+			// unevaluable formula only matters if it names it.
+			if (cell.opaque && pinPages.has(cell.pageId))
+				fail(
+					'EDIT_UNSUPPORTED_DEPENDENCY',
+					'A formula that may read a master rotation pin exists.',
+				);
+			if (cell.dependencies.some((dependency) => pins.has(dependency)))
 				fail('EDIT_UNSUPPORTED_DEPENDENCY', 'A page cache depends on a master rotation pin.');
+		}
 	}
 	return { pins: result, dimensions: provenDimensions };
 }
