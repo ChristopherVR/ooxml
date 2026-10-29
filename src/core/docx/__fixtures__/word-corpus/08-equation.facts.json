@@ -1,0 +1,124 @@
+{
+  "name": "08-equation",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 10,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Equations",
+      "length": 10,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "The quick brown fox jumps over t",
+      "length": 154,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0,
+        68,
+        133
+      ],
+      "lineCount": 3,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "𝑥=\r−𝑏+𝑠𝑞𝑟𝑡\r\r𝑏\r2\r−4𝑎𝑐\r\r2",
+      "length": 36,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 155.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "\r𝑎\r𝑛\r=𝑠𝑢\r𝑚\r𝑘=1\r𝑛\r\r𝑘\r2",
+      "length": 31,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 188.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "The quick brown fox jumps over t",
+      "length": 231,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 207.0,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204
+      ],
+      "lineCount": 4,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 263.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "08-equation-p1.png"
+  ],
+  "dpi": 50
+}

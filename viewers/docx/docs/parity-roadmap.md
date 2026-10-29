@@ -106,6 +106,9 @@ For each supported feature, require:
 - Accessibility, clipboard and IME coverage; browser and font versions recorded
   with visual references so differences can be investigated.
 
+The Word reference corpus, how to regenerate it and its current results are in
+[verification](/verification).
+
 The existing Word COM checks documented in [outstanding work](/outstanding-work)
 validate specific exported properties. They are useful evidence for those cases,
 not a complete rendered-document comparison corpus or proof of full parity.

@@ -1,0 +1,302 @@
+{
+  "name": "09-fields-toc",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 4,
+  "lineCount": 31,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Contents",
+      "length": 9,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "Contents\t1",
+      "length": 57,
+      "inTable": false,
+      "style": "TOC 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "Introduction\t2",
+      "length": 45,
+      "inTable": false,
+      "style": "TOC 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 129.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "Method\t3",
+      "length": 39,
+      "inTable": false,
+      "style": "TOC 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 147.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "Results\t4",
+      "length": 40,
+      "inTable": false,
+      "style": "TOC 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 164.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "",
+      "length": 2,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 182.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 7,
+      "text": "\f",
+      "length": 2,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 200.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 8,
+      "text": "Introduction",
+      "length": 13,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 2,
+      "xPt": 72.0,
+      "yPt": 72.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 2
+    },
+    {
+      "index": 9,
+      "text": "The quick brown fox jumps over t",
+      "length": 385,
+      "inTable": false,
+      "style": "Normal",
+      "page": 2,
+      "xPt": 72.0,
+      "yPt": 94.5,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343
+      ],
+      "lineCount": 6,
+      "endPage": 2
+    },
+    {
+      "index": 10,
+      "text": "\f",
+      "length": 2,
+      "inTable": false,
+      "style": "Normal",
+      "page": 2,
+      "xPt": 72.0,
+      "yPt": 174.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 2
+    },
+    {
+      "index": 11,
+      "text": "Method",
+      "length": 7,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 3,
+      "xPt": 72.0,
+      "yPt": 72.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 3
+    },
+    {
+      "index": 12,
+      "text": "The quick brown fox jumps over t",
+      "length": 385,
+      "inTable": false,
+      "style": "Normal",
+      "page": 3,
+      "xPt": 72.0,
+      "yPt": 94.5,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343
+      ],
+      "lineCount": 6,
+      "endPage": 3
+    },
+    {
+      "index": 13,
+      "text": "\f",
+      "length": 2,
+      "inTable": false,
+      "style": "Normal",
+      "page": 3,
+      "xPt": 72.0,
+      "yPt": 174.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 3
+    },
+    {
+      "index": 14,
+      "text": "Results",
+      "length": 8,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 4,
+      "xPt": 72.0,
+      "yPt": 72.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 4
+    },
+    {
+      "index": 15,
+      "text": "The quick brown fox jumps over t",
+      "length": 385,
+      "inTable": false,
+      "style": "Normal",
+      "page": 4,
+      "xPt": 72.0,
+      "yPt": 94.5,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343
+      ],
+      "lineCount": 6,
+      "endPage": 4
+    },
+    {
+      "index": 16,
+      "text": "Date field: 2026-10-29",
+      "length": 48,
+      "inTable": false,
+      "style": "Normal",
+      "page": 4,
+      "xPt": 72.0,
+      "yPt": 174.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 4
+    },
+    {
+      "index": 17,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 4,
+      "xPt": 72.0,
+      "yPt": 193.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 4
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "09-fields-toc-p1.png",
+    "09-fields-toc-p2.png",
+    "09-fields-toc-p3.png",
+    "09-fields-toc-p4.png"
+  ],
+  "dpi": 50
+}

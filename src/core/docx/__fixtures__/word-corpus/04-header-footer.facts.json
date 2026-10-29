@@ -1,0 +1,180 @@
+{
+  "name": "04-header-footer",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 2,
+  "lineCount": 51,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Section text 1",
+      "length": 15,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "The quick brown fox jumps over t",
+      "length": 1078,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343,
+        411,
+        482,
+        549,
+        620,
+        684,
+        749,
+        820,
+        891,
+        959,
+        1027
+      ],
+      "lineCount": 16,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "Section text 2",
+      "length": 15,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 329.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "The quick brown fox jumps over t",
+      "length": 1078,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 351.8,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343,
+        411,
+        482,
+        549,
+        620,
+        684,
+        749,
+        820,
+        891,
+        959,
+        1027
+      ],
+      "lineCount": 16,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "Section text 3",
+      "length": 15,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 569.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "The quick brown fox jumps over t",
+      "length": 1078,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 591.0,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343,
+        411,
+        482,
+        549,
+        620,
+        684,
+        749,
+        820,
+        891,
+        959,
+        1027
+      ],
+      "lineCount": 16,
+      "endPage": 2
+    },
+    {
+      "index": 7,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 2,
+      "xPt": 72.0,
+      "yPt": 153.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 2
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "04-header-footer-p1.png",
+    "04-header-footer-p2.png"
+  ],
+  "dpi": 50
+}

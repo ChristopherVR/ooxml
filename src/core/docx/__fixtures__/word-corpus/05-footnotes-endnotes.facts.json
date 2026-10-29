@@ -1,0 +1,119 @@
+{
+  "name": "05-footnotes-endnotes",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 19,
+  "footnotes": 2,
+  "endnotes": 1,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Notes",
+      "length": 6,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "The quick brown fox \u0002jumps over ",
+      "length": 463,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0,
+        69,
+        134,
+        205,
+        276,
+        344,
+        412
+      ],
+      "lineCount": 7,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "The quick brown fox jumps over t",
+      "length": 386,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 205.5,
+      "lineStarts": [
+        0,
+        69,
+        134,
+        205,
+        276,
+        344
+      ],
+      "lineCount": 6,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "The quick \u0002brown fox jumps over ",
+      "length": 309,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 285.8,
+      "lineStarts": [
+        0,
+        69,
+        134,
+        205,
+        276
+      ],
+      "lineCount": 5,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 354.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "05-footnotes-endnotes-p1.png"
+  ],
+  "dpi": 50
+}

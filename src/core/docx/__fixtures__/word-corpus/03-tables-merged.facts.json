@@ -1,0 +1,357 @@
+{
+  "name": "03-tables-merged",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 29,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 1,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Table with merged cells",
+      "length": 24,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "R1 C1 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 78.0,
+      "yPt": 113.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "R1 C2 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 78.0,
+      "yPt": 132.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "R1 C3 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 390.0,
+      "yPt": 113.2,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "",
+      "length": 1,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 540.8,
+      "yPt": 113.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "R2 C1 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 78.0,
+      "yPt": 150.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 7,
+      "text": "R2 C2 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 234.0,
+      "yPt": 150.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 8,
+      "text": "R2 C3 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 390.0,
+      "yPt": 150.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 9,
+      "text": "R3 C3 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 390.0,
+      "yPt": 181.5,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 10,
+      "text": "",
+      "length": 1,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 540.8,
+      "yPt": 150.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 11,
+      "text": "R3 C1 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 78.0,
+      "yPt": 182.2,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 12,
+      "text": "R3 C2 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 234.0,
+      "yPt": 182.2,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 13,
+      "text": "",
+      "length": 1,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 390.0,
+      "yPt": 150.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 14,
+      "text": "",
+      "length": 1,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 540.8,
+      "yPt": 182.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 15,
+      "text": "R4 C1 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 78.0,
+      "yPt": 213.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 16,
+      "text": "R4 C2 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 234.0,
+      "yPt": 213.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 17,
+      "text": "R4 C3 alpha beta gamma delta",
+      "length": 29,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 390.0,
+      "yPt": 213.8,
+      "lineStarts": [
+        0,
+        17
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 18,
+      "text": "",
+      "length": 1,
+      "inTable": true,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 540.8,
+      "yPt": 213.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 19,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 244.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 20,
+      "text": "The quick brown fox jumps over t",
+      "length": 231,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 262.5,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204
+      ],
+      "lineCount": 4,
+      "endPage": 1
+    },
+    {
+      "index": 21,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 318.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "03-tables-merged-p1.png"
+  ],
+  "dpi": 50
+}

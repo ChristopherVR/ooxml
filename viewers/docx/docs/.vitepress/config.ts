@@ -109,6 +109,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Support roadmap', link: '/parity-roadmap' },
 					{ text: 'Outstanding work', link: '/outstanding-work' },
+					{ text: 'Verification corpus', link: '/verification' },
 					{ text: 'Package releases', link: '/releasing' },
 				],
 			},

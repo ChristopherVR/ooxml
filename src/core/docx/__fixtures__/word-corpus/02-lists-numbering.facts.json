@@ -1,0 +1,196 @@
+{
+  "name": "02-lists-numbering",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 12,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Shopping",
+      "length": 9,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "Apples and pears from the market",
+      "length": 60,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "Bread",
+      "length": 6,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 126.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "Milk",
+      "length": 5,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 141.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "Steps",
+      "length": 6,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 173.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 6,
+      "text": "Open the box and check every par",
+      "length": 75,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 195.0,
+      "lineStarts": [
+        0,
+        59
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 7,
+      "text": "Attach the legs",
+      "length": 16,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 220.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 8,
+      "text": "Turn the table over",
+      "length": 20,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 232.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 9,
+      "text": "Outline level one",
+      "length": 18,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 245.2,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 10,
+      "text": "Outline level two with enough wo",
+      "length": 75,
+      "inTable": false,
+      "style": "List Paragraph",
+      "page": 1,
+      "xPt": 90.0,
+      "yPt": 258.0,
+      "lineStarts": [
+        0,
+        66
+      ],
+      "lineCount": 2,
+      "endPage": 1
+    },
+    {
+      "index": 11,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 288.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "02-lists-numbering-p1.png"
+  ],
+  "dpi": 50
+}

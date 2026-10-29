@@ -1,0 +1,145 @@
+{
+  "name": "07-images",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 23,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 0,
+  "revisions": 0,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Pictures",
+      "length": 10,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "Inline picture: /",
+      "length": 18,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "The quick brown fox jumps over t",
+      "length": 616,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 196.5,
+      "lineStarts": [
+        0,
+        44,
+        93,
+        133,
+        180,
+        231,
+        275,
+        324,
+        395,
+        466,
+        530,
+        595
+      ],
+      "lineCount": 12,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "The quick brown fox jumps over t",
+      "length": 770,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 351.8,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204,
+        275,
+        343,
+        411,
+        482,
+        549,
+        620,
+        684,
+        749
+      ],
+      "lineCount": 12,
+      "endPage": 1
+    },
+    {
+      "index": 5,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 507.8,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [
+    {
+      "name": "Picture 2",
+      "type": 13,
+      "page": 1,
+      "leftPt": 330.0,
+      "topPt": 200.2,
+      "widthPt": 120.0,
+      "heightPt": 75.0,
+      "relH": 1,
+      "relV": 1,
+      "wrap": 0
+    }
+  ],
+  "inlineShapes": [
+    {
+      "type": 3,
+      "widthPt": 120.0,
+      "heightPt": 75.0
+    }
+  ],
+  "pages": [
+    "07-images-p1.png"
+  ],
+  "dpi": 50
+}

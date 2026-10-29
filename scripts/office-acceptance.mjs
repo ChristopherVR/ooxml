@@ -31,6 +31,11 @@ export const PRODUCTS = {
 				args: ['-OutDir', '{out}'],
 			},
 			{
+				id: 'docx-corpus-reopen',
+				script: join(core, 'scripts/docx-word-corpus-reopen.ps1'),
+				args: ['-OutDir', '{out}'],
+			},
+			{
 				id: 'docx-chart',
 				script: join(core, 'scripts/docx-word-chart-acceptance.ps1'),
 				args: ['-OutDir', '{out}'],

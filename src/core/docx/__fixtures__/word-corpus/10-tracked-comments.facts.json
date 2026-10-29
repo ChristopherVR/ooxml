@@ -1,0 +1,97 @@
+{
+  "name": "10-tracked-comments",
+  "word": "16.0.20527",
+  "font": "Courier New",
+  "pageCount": 1,
+  "lineCount": 11,
+  "footnotes": 0,
+  "endnotes": 0,
+  "tables": 0,
+  "comments": 1,
+  "revisions": 4,
+  "sections": [
+    {
+      "orientation": 0,
+      "columns": 1,
+      "pageWidthPt": 612.0,
+      "pageHeightPt": 792.0,
+      "start": 2
+    }
+  ],
+  "paragraphs": [
+    {
+      "index": 1,
+      "text": "Review",
+      "length": 7,
+      "inTable": false,
+      "style": "Heading 1",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 90.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    },
+    {
+      "index": 2,
+      "text": "The swiftquick brown fox jumps i",
+      "length": 406,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 112.5,
+      "lineStarts": [
+        0,
+        71,
+        142,
+        210,
+        278,
+        349
+      ],
+      "lineCount": 6,
+      "endPage": 1
+    },
+    {
+      "index": 3,
+      "text": "The quick brown fox jumps over t",
+      "length": 231,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 192.8,
+      "lineStarts": [
+        0,
+        68,
+        133,
+        204
+      ],
+      "lineCount": 4,
+      "endPage": 1
+    },
+    {
+      "index": 4,
+      "text": "",
+      "length": 1,
+      "inTable": false,
+      "style": "Normal",
+      "page": 1,
+      "xPt": 72.0,
+      "yPt": 249.0,
+      "lineStarts": [
+        0
+      ],
+      "lineCount": 1,
+      "endPage": 1
+    }
+  ],
+  "shapes": [],
+  "inlineShapes": [],
+  "pages": [
+    "10-tracked-comments-p1.png"
+  ],
+  "dpi": 50
+}
