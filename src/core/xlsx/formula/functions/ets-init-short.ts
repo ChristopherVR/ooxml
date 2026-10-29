@@ -1,10 +1,10 @@
 // Excel's seasonal FORECAST.ETS start below 2 seasons. Excel ignores the season for the shortest series
 // (no seasonal states and gamma reported as the machine epsilon, the model is the non-seasonal one)
 // and uses it from `ceil(10 (m + 1) / 7)` points (`seasonStart`, probed for seasons of 2 to 16:
-// ets-init14, 15 and 17). From there up to 2 seasons minus 1 (seasons of 5 and more) the start is
+// ets-init14, 15, 17 and 18). From there up to 2 seasons minus 1 (seasons of 5 and more) the start is
 // the 2-season rule of `ets-init-three.ts` on the series padded to 2 seasons by `y[t - m]` (the points
 // past the data repeat the previous season, so their positions have no slope), with two changes
-// recovered exactly from the impulse probes (ets-init15 and ets-init16, seasons 5 to 13):
+// recovered exactly from the impulse probes (ets-init15, 16 and 18, seasons 5 to 16):
 //  * the positions that were padded, except the last one (`k = n - m .. m - 2`), get `slopeSum / 2`
 //    added to their seasonal state, `slopeSum` being the sum of the positions' slopes of the padded
 //    series;

@@ -36,6 +36,16 @@ describe('the season below its first length', () => {
 		expect(checked).toBe(360);
 	});
 
+	it('keeps that boundary for seasons 17 to 24, 30 and 40 (predicted, then recorded)', () => {
+		const rows = load('ets-init18-excel.json').filter((e) => e.name.startsWith('c'));
+		expect(rows).toHaveLength(40);
+		for (const e of rows) {
+			const [, m, n] = /^c(\d+)-(\d+)-\d$/.exec(e.name) as RegExpExecArray;
+			const gamma = (e.results[2] as { value: number }).value;
+			expect(Math.abs(gamma - EPSILON) > 1e-12, e.name).toBe(Number(n) >= seasonStart(Number(m)));
+		}
+	});
+
 	it('has a zero seasonal map and the non-seasonal trend map', () => {
 		// The map is read off Excel's forecasts, which carry no seasonal information at gamma = epsilon, so
 		// a few groups recovered at extreme parameters are off: most must match.

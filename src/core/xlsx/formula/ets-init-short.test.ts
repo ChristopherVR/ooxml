@@ -1,6 +1,6 @@
 // The seasonal start below 2 seasons (functions/ets-init-short.ts) against the starting-state maps
-// recovered from Excel's impulse probes (ets-init14 to ets-init16): every probed series from the first
-// seasonal length up to 2 seasons minus 1 point, seasons of 5 to 13.
+// recovered from Excel's impulse probes (ets-init14 to ets-init18): every probed series from the first
+// seasonal length up to 2 seasons minus 1 point, seasons of 5 to 16.
 import { describe, expect, it } from 'vitest';
 import { chainStart } from './functions/ets-init-chain';
 import { isShortSeasonLength, seasonStart } from './functions/ets-init-short';
