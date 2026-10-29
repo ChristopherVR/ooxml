@@ -607,7 +607,11 @@ const dodecagon: PresetShapeGeometryDefinition = {
 };
 
 // pie / pieWedge / chord / arc / donut / noSmoking / blockArc share the same
-// circular-cut machinery: stAng / endAng pairs into wd2,hd2 ellipses.
+// circular-cut machinery: stAng / endAng pairs into wd2,hd2 ellipses. A sweep
+// that crosses 0 degrees (endAng < stAng) wraps by a full turn. A guide formula
+// is one operator over plain operands, so the wrap needs its own guide: written
+// inline as `?: swAng swAng +- 21600000 swAng 0`, the third operand was the
+// bare token `+-`, which resolves to 0, and every wrapping arc drew nothing.
 const pie: PresetShapeGeometryDefinition = {
 	name: 'pie',
 	avLst: { adj1: 0, adj2: 16200000 },
@@ -615,7 +619,8 @@ const pie: PresetShapeGeometryDefinition = {
 		gd('stAng', 'pin 0 adj1 21599999'),
 		gd('endAng', 'pin 0 adj2 21599999'),
 		gd('swAng', '+- endAng 0 stAng'),
-		gd('swAng2', '?: swAng swAng +- 21600000 swAng 0'),
+		gd('swAngWrap', '+- swAng 21600000 0'),
+		gd('swAng2', '?: swAng swAng swAngWrap'),
 		gd('stx', 'cos wd2 stAng'),
 		gd('sty', 'sin hd2 stAng'),
 		gd('x1', '+- hc stx 0'),
@@ -662,7 +667,8 @@ const chord: PresetShapeGeometryDefinition = {
 		gd('stAng', 'pin 0 adj1 21599999'),
 		gd('endAng', 'pin 0 adj2 21599999'),
 		gd('swAng', '+- endAng 0 stAng'),
-		gd('swAng2', '?: swAng swAng +- 21600000 swAng 0'),
+		gd('swAngWrap', '+- swAng 21600000 0'),
+		gd('swAng2', '?: swAng swAng swAngWrap'),
 		gd('stx', 'cos wd2 stAng'),
 		gd('sty', 'sin hd2 stAng'),
 		gd('x1', '+- hc stx 0'),
@@ -687,7 +693,8 @@ const arc: PresetShapeGeometryDefinition = {
 		gd('stAng', 'pin 0 adj1 21599999'),
 		gd('endAng', 'pin 0 adj2 21599999'),
 		gd('swAng', '+- endAng 0 stAng'),
-		gd('swAng2', '?: swAng swAng +- 21600000 swAng 0'),
+		gd('swAngWrap', '+- swAng 21600000 0'),
+		gd('swAng2', '?: swAng swAng swAngWrap'),
 		gd('stx', 'cos wd2 stAng'),
 		gd('sty', 'sin hd2 stAng'),
 		gd('x1', '+- hc stx 0'),
@@ -787,7 +794,8 @@ const blockArc: PresetShapeGeometryDefinition = {
 		gd('iwd2', '+- wd2 0 thw'),
 		gd('ihd2', '+- hd2 0 thh2'),
 		gd('swAng', '+- endAng 0 stAng'),
-		gd('swAng2', '?: swAng swAng +- 21600000 swAng 0'),
+		gd('swAngWrap', '+- swAng 21600000 0'),
+		gd('swAng2', '?: swAng swAng swAngWrap'),
 		gd('mswAng', '+- 0 0 swAng2'),
 		gd('stx', 'cos wd2 stAng'),
 		gd('sty', 'sin hd2 stAng'),
