@@ -36,11 +36,11 @@ export function warningsFor(document: XmlDocument): string[] {
 		],
 		[
 			['rPrChange'],
-			'Formatting-change revisions retain their prior run-properties snapshots and support acceptance and rejection; recording new formatting changes and showing prior formatting in Original display are not supported yet.',
+			'Formatting-change revisions retain their prior run-properties snapshots and support acceptance, rejection and Original display; supported run-formatting changes are recorded as new revisions, other formatting edits are not.',
 		],
 		[
 			['pPrChange'],
-			'Paragraph-formatting-change revisions retain their prior properties snapshots and support acceptance and rejection; recording new paragraph formatting changes and showing prior formatting in Original display are not supported yet.',
+			'Paragraph-formatting-change revisions retain their prior properties snapshots and support acceptance, rejection and Original display; pure paragraph-formatting changes are recorded as new revisions, and revised paragraph-mark merging is not shown yet.',
 		],
 		[
 			['ffData'],
