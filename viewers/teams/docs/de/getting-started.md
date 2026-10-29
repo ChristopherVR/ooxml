@@ -5,7 +5,7 @@ Besprechungen mit Video und Bildschirmfreigabe über WebRTC sowie Office-Dateien
 installieren ein Binding für Ihr Framework, verweisen es auf einen Server (oder starten ganz ohne) und erhalten die
 vollständige Oberfläche oder einen rohen Hook, mit dem Sie eine eigene bauen.
 
-::: warning Eine frühe Implementierung
+::: warning Beta
 Dies ist nicht Microsoft Teams und steht in keiner Verbindung zu Microsoft. Es gibt **keine
 Ende-zu-Ende-Verschlüsselung**: Wer den Server betreibt, kann jede Nachricht und jede Datei lesen. Lesen Sie
 [Einschränkungen](/de/limitations), bevor Sie sich darauf verlassen.

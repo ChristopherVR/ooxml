@@ -1,6 +1,6 @@
 # Limitaciones
 
-OpenTeams es una implementación temprana. Esta página enumera lo que no hace, para que puedas decidir antes de depender de él.
+OpenTeams está en beta. Esta página enumera lo que no hace, para que puedas decidir antes de depender de él.
 
 ## No es Microsoft Teams
 

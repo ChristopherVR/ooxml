@@ -6,7 +6,7 @@ partagés dans la conversation. Vous installez une intégration pour votre frame
 pointer vers un serveur (ou vous démarrez sans), et vous obtenez l’interface complète, ou un hook
 brut pour construire la vôtre.
 
-::: warning Une implémentation précoce
+::: warning Bêta
 Ce n’est pas Microsoft Teams et il n’est pas affilié à Microsoft. Il n’y a **pas de chiffrement de
 bout en bout** : quiconque exploite le serveur peut lire chaque message et chaque fichier. Consultez
 les [Limites](/fr/limitations) avant de vous y fier.

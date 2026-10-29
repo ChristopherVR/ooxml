@@ -2,7 +2,7 @@
 
 OpenTeams es un espacio de trabajo de equipo de código abierto en el que aportas tu propio servidor: canales y chat, presencia, reuniones con vídeo y pantalla compartida sobre WebRTC, y archivos de Office compartidos en la conversación. Instalas un binding para tu framework, lo apuntas a un servidor (o empiezas sin ninguno) y obtienes la interfaz completa, o un hook sin procesar para construir la tuya.
 
-::: warning Una implementación temprana
+::: warning Beta
 Esto no es Microsoft Teams y no está afiliado a Microsoft. **No hay cifrado de extremo a extremo**: quien administre el servidor puede leer todos los mensajes y archivos. Consulta las
 [Limitaciones](/es/limitations) antes de depender de él.
 :::
