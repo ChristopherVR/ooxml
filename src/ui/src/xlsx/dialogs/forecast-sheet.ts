@@ -163,6 +163,7 @@ export function openForecastSheet(ctx: EditorContext): Promise<number | undefine
 					statistics: statistics.input.checked,
 					chart: chart.value === 'column' ? 'column' : 'line',
 				});
+				ctx.setActiveSheet(result.sheet);
 				return result.sheet;
 			} catch (error) {
 				if (!(error instanceof ForecastError)) throw error;

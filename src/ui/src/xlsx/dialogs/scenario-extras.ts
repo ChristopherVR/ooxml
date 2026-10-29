@@ -26,7 +26,12 @@ export async function openScenarioSummary(ctx: EditorContext, t: Target): Promis
 		opened: () => results.focus(),
 		submit: () => {
 			try {
-				return createScenarioSummary(t.session, { sheet: t.sheet, resultCells: results.value });
+				const sheet = createScenarioSummary(t.session, {
+					sheet: t.sheet,
+					resultCells: results.value,
+				});
+				ctx.setActiveSheet(sheet);
+				return sheet;
 			} catch (error) {
 				report(ctx, error);
 				return undefined;
