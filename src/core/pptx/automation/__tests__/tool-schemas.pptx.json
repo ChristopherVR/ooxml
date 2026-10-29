@@ -3,9 +3,7 @@
 		"name": "add_chart_series",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -36,12 +34,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"name",
-				"values"
-			],
+			"required": ["slideIndex", "elementId", "name", "values"],
 			"additionalProperties": false
 		}
 	},
@@ -49,9 +42,7 @@
 		"name": "add_element",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -64,13 +55,7 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": [
-						"text",
-						"shape",
-						"image",
-						"table",
-						"connector"
-					],
+					"enum": ["text", "shape", "image", "table", "connector"],
 					"description": "Element type to add"
 				},
 				"x": {
@@ -120,12 +105,7 @@
 				"alignment": {
 					"description": "Text alignment",
 					"type": "string",
-					"enum": [
-						"left",
-						"center",
-						"right",
-						"justify"
-					]
+					"enum": ["left", "center", "right", "justify"]
 				},
 				"shapeType": {
 					"description": "Shape type (e.g. \"rect\", \"ellipse\")",
@@ -194,10 +174,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"type"
-			],
+			"required": ["slideIndex", "type"],
 			"additionalProperties": false
 		}
 	},
@@ -205,9 +182,7 @@
 		"name": "add_slide",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -230,9 +205,7 @@
 		"name": "apply_layout",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -252,9 +225,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex"
-			],
+			"required": ["slideIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -262,9 +233,7 @@
 		"name": "apply_template",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -278,9 +247,7 @@
 					"description": "Template data: keys are placeholder names, values are replacement values"
 				}
 			},
-			"required": [
-				"data"
-			],
+			"required": ["data"],
 			"additionalProperties": false
 		}
 	},
@@ -288,9 +255,7 @@
 		"name": "apply_theme_preset",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -300,9 +265,7 @@
 					"description": "Theme preset name (e.g. \"OFFICE\", \"MODERN_BLUE\", \"EARTH\", \"MONOCHROME\", \"VIBRANT\", \"CORPORATE\", \"MINIMAL\", \"DARK\")"
 				}
 			},
-			"required": [
-				"presetName"
-			],
+			"required": ["presetName"],
 			"additionalProperties": false
 		}
 	},
@@ -310,9 +273,7 @@
 		"name": "arrange_elements",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -324,10 +285,7 @@
 				},
 				"action": {
 					"type": "string",
-					"enum": [
-						"align",
-						"reorderLayer"
-					]
+					"enum": ["align", "reorderLayer"]
 				},
 				"elementIds": {
 					"description": "Element IDs (for align)",
@@ -338,14 +296,7 @@
 				},
 				"alignment": {
 					"type": "string",
-					"enum": [
-						"left",
-						"right",
-						"top",
-						"bottom",
-						"centerH",
-						"centerV"
-					]
+					"enum": ["left", "right", "top", "bottom", "centerH", "centerV"]
 				},
 				"elementId": {
 					"description": "Element ID (for reorderLayer)",
@@ -353,18 +304,10 @@
 				},
 				"layerAction": {
 					"type": "string",
-					"enum": [
-						"bringForward",
-						"sendBackward",
-						"bringToFront",
-						"sendToBack"
-					]
+					"enum": ["bringForward", "sendBackward", "bringToFront", "sendToBack"]
 				}
 			},
-			"required": [
-				"slideIndex",
-				"action"
-			],
+			"required": ["slideIndex", "action"],
 			"additionalProperties": false
 		}
 	},
@@ -372,9 +315,7 @@
 		"name": "assign_table_style",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -411,10 +352,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -422,9 +360,7 @@
 		"name": "batch_update_elements",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -465,10 +401,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementIds"
-			],
+			"required": ["slideIndex", "elementIds"],
 			"additionalProperties": false
 		}
 	},
@@ -476,9 +409,7 @@
 		"name": "chart_user_shape_add",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -499,18 +430,12 @@
 						"kind": {
 							"description": "Overlay shape kind: \"sp\" (text/preset shape, default) or \"cxnSp\" (connector).",
 							"type": "string",
-							"enum": [
-								"sp",
-								"cxnSp"
-							]
+							"enum": ["sp", "cxnSp"]
 						},
 						"anchor": {
 							"description": "Anchor kind: \"rel\" (default, resizes with the chart; needs `to`) or \"abs\" (fixed EMU size; needs `ext`).",
 							"type": "string",
-							"enum": [
-								"rel",
-								"abs"
-							]
+							"enum": ["rel", "abs"]
 						},
 						"from": {
 							"type": "object",
@@ -522,10 +447,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"x",
-								"y"
-							],
+							"required": ["x", "y"],
 							"additionalProperties": false,
 							"description": "Top-left corner as chart-relative fractions (0-1 each)."
 						},
@@ -540,10 +462,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"x",
-								"y"
-							],
+							"required": ["x", "y"],
 							"additionalProperties": false
 						},
 						"ext": {
@@ -557,10 +476,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"cx",
-								"cy"
-							],
+							"required": ["cx", "cy"],
 							"additionalProperties": false
 						},
 						"prst": {
@@ -584,18 +500,12 @@
 							"type": "string"
 						}
 					},
-					"required": [
-						"from"
-					],
+					"required": ["from"],
 					"additionalProperties": false,
 					"description": "The overlay shape to add."
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"shape"
-			],
+			"required": ["slideIndex", "elementId", "shape"],
 			"additionalProperties": false
 		}
 	},
@@ -603,10 +513,7 @@
 		"name": "chart_user_shape_list",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -622,10 +529,7 @@
 					"description": "Chart element ID"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -633,9 +537,7 @@
 		"name": "chart_user_shape_remove",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -657,11 +559,7 @@
 					"description": "Zero-based overlay-shape index to remove"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"index"
-			],
+			"required": ["slideIndex", "elementId", "index"],
 			"additionalProperties": false
 		}
 	},
@@ -669,9 +567,7 @@
 		"name": "chart_user_shape_update",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -698,18 +594,12 @@
 						"kind": {
 							"description": "Overlay shape kind: \"sp\" (text/preset shape, default) or \"cxnSp\" (connector).",
 							"type": "string",
-							"enum": [
-								"sp",
-								"cxnSp"
-							]
+							"enum": ["sp", "cxnSp"]
 						},
 						"anchor": {
 							"description": "Anchor kind: \"rel\" (default, resizes with the chart; needs `to`) or \"abs\" (fixed EMU size; needs `ext`).",
 							"type": "string",
-							"enum": [
-								"rel",
-								"abs"
-							]
+							"enum": ["rel", "abs"]
 						},
 						"from": {
 							"type": "object",
@@ -721,10 +611,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"x",
-								"y"
-							],
+							"required": ["x", "y"],
 							"additionalProperties": false,
 							"description": "Top-left corner as chart-relative fractions (0-1 each)."
 						},
@@ -739,10 +626,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"x",
-								"y"
-							],
+							"required": ["x", "y"],
 							"additionalProperties": false
 						},
 						"ext": {
@@ -756,10 +640,7 @@
 									"type": "number"
 								}
 							},
-							"required": [
-								"cx",
-								"cy"
-							],
+							"required": ["cx", "cy"],
 							"additionalProperties": false
 						},
 						"prst": {
@@ -787,12 +668,7 @@
 					"description": "Fields to overwrite; anything omitted is left as-is."
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"index",
-				"patch"
-			],
+			"required": ["slideIndex", "elementId", "index", "patch"],
 			"additionalProperties": false
 		}
 	},
@@ -800,9 +676,7 @@
 		"name": "clone_element",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -830,10 +704,7 @@
 					"type": "number"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -841,10 +712,7 @@
 		"name": "convert_to_markdown",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -894,9 +762,7 @@
 		"name": "create_chart",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -957,10 +823,7 @@
 								"type": "string"
 							}
 						},
-						"required": [
-							"name",
-							"values"
-						],
+						"required": ["name", "values"],
 						"additionalProperties": false
 					}
 				},
@@ -975,16 +838,11 @@
 							"type": "string"
 						}
 					},
-					"required": [
-						"show"
-					],
+					"required": ["show"],
 					"additionalProperties": false
 				}
 			},
-			"required": [
-				"slideIndex",
-				"chartType"
-			],
+			"required": ["slideIndex", "chartType"],
 			"additionalProperties": false
 		}
 	},
@@ -992,9 +850,7 @@
 		"name": "create_table_style",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1012,9 +868,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"styleName"
-			],
+			"required": ["styleName"],
 			"additionalProperties": false
 		}
 	},
@@ -1022,9 +876,7 @@
 		"name": "delete_elements",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1043,10 +895,7 @@
 					"description": "Element IDs to delete"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementIds"
-			],
+			"required": ["slideIndex", "elementIds"],
 			"additionalProperties": false
 		}
 	},
@@ -1054,9 +903,7 @@
 		"name": "delete_slides",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1072,9 +919,7 @@
 					"description": "Slide indexes to delete"
 				}
 			},
-			"required": [
-				"slideIndexes"
-			],
+			"required": ["slideIndexes"],
 			"additionalProperties": false
 		}
 	},
@@ -1082,9 +927,7 @@
 		"name": "delete_table_style",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1098,9 +941,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"styleId"
-			],
+			"required": ["styleId"],
 			"additionalProperties": false
 		}
 	},
@@ -1108,9 +949,7 @@
 		"name": "duplicate_slide",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1128,9 +967,7 @@
 					"maximum": 9007199254740991
 				}
 			},
-			"required": [
-				"slideIndex"
-			],
+			"required": ["slideIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1138,10 +975,7 @@
 		"name": "export_slide_svg",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1161,9 +995,7 @@
 					"type": "number"
 				}
 			},
-			"required": [
-				"slideIndex"
-			],
+			"required": ["slideIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1171,10 +1003,7 @@
 		"name": "export_to_json",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1191,10 +1020,7 @@
 		"name": "export_to_svg",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1228,10 +1054,7 @@
 		"name": "find_placeholders",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1243,10 +1066,7 @@
 		"name": "find_text",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1273,9 +1093,7 @@
 					}
 				}
 			},
-			"required": [
-				"query"
-			],
+			"required": ["query"],
 			"additionalProperties": false
 		}
 	},
@@ -1283,9 +1101,7 @@
 		"name": "format_chart_data_label",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1333,17 +1149,7 @@
 				},
 				"position": {
 					"type": "string",
-					"enum": [
-						"bestFit",
-						"b",
-						"ctr",
-						"inBase",
-						"inEnd",
-						"l",
-						"outEnd",
-						"r",
-						"t"
-					]
+					"enum": ["bestFit", "b", "ctr", "inBase", "inEnd", "l", "outEnd", "r", "t"]
 				},
 				"text": {
 					"description": "Custom label text override; '' clears it",
@@ -1405,12 +1211,7 @@
 					]
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"seriesIndex",
-				"pointIndex"
-			],
+			"required": ["slideIndex", "elementId", "seriesIndex", "pointIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1418,9 +1219,7 @@
 		"name": "format_chart_data_point",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1469,10 +1268,7 @@
 				},
 				"explosion": {
 					"description": "Pie/doughnut slice pull-out distance 0-100; null clears it",
-					"type": [
-						"number",
-						"null"
-					]
+					"type": ["number", "null"]
 				},
 				"marker": {
 					"description": "Per-point marker override (line/scatter/bubble); null clears it",
@@ -1512,12 +1308,7 @@
 					]
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"seriesIndex",
-				"pointIndex"
-			],
+			"required": ["slideIndex", "elementId", "seriesIndex", "pointIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1525,9 +1316,7 @@
 		"name": "format_chart_series",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1636,9 +1425,7 @@
 									"type": "boolean"
 								}
 							},
-							"required": [
-								"trendlineType"
-							],
+							"required": ["trendlineType"],
 							"additionalProperties": false
 						},
 						{
@@ -1654,28 +1441,15 @@
 							"properties": {
 								"direction": {
 									"type": "string",
-									"enum": [
-										"x",
-										"y"
-									]
+									"enum": ["x", "y"]
 								},
 								"barType": {
 									"type": "string",
-									"enum": [
-										"both",
-										"minus",
-										"plus"
-									]
+									"enum": ["both", "minus", "plus"]
 								},
 								"valType": {
 									"type": "string",
-									"enum": [
-										"cust",
-										"fixedVal",
-										"percentage",
-										"stdDev",
-										"stdErr"
-									]
+									"enum": ["cust", "fixedVal", "percentage", "stdDev", "stdErr"]
 								},
 								"val": {
 									"type": "number"
@@ -1706,11 +1480,7 @@
 									"type": "string"
 								}
 							},
-							"required": [
-								"direction",
-								"barType",
-								"valType"
-							],
+							"required": ["direction", "barType", "valType"],
 							"additionalProperties": false
 						},
 						{
@@ -1719,11 +1489,7 @@
 					]
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"seriesIndex"
-			],
+			"required": ["slideIndex", "elementId", "seriesIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1731,10 +1497,7 @@
 		"name": "get_layouts",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1746,10 +1509,7 @@
 		"name": "get_metadata",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1761,10 +1521,7 @@
 		"name": "get_presentation_properties",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1776,10 +1533,7 @@
 		"name": "get_slide",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1791,9 +1545,7 @@
 					"description": "Zero-based slide index"
 				}
 			},
-			"required": [
-				"slideIndex"
-			],
+			"required": ["slideIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -1801,10 +1553,7 @@
 		"name": "get_theme_info",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1816,9 +1565,7 @@
 		"name": "group_elements",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1837,10 +1584,7 @@
 					"description": "At least 2 element IDs to group"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementIds"
-			],
+			"required": ["slideIndex", "elementIds"],
 			"additionalProperties": false
 		}
 	},
@@ -1848,9 +1592,7 @@
 		"name": "import_from_json",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1860,9 +1602,7 @@
 					"description": "The pptx-viewer-json document text to import (replaces the deck content)"
 				}
 			},
-			"required": [
-				"json"
-			],
+			"required": ["json"],
 			"additionalProperties": false
 		}
 	},
@@ -1870,21 +1610,14 @@
 		"name": "manage_comments",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
 			"properties": {
 				"action": {
 					"type": "string",
-					"enum": [
-						"list",
-						"add",
-						"delete",
-						"resolve"
-					]
+					"enum": ["list", "add", "delete", "resolve"]
 				},
 				"slideIndex": {
 					"type": "integer",
@@ -1907,9 +1640,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"action"
-			],
+			"required": ["action"],
 			"additionalProperties": false
 		}
 	},
@@ -1917,9 +1648,7 @@
 		"name": "manage_hyperlinks",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -1932,11 +1661,7 @@
 				},
 				"action": {
 					"type": "string",
-					"enum": [
-						"list",
-						"set",
-						"remove"
-					],
+					"enum": ["list", "set", "remove"],
 					"description": "Hyperlink action"
 				},
 				"elementId": {
@@ -1946,10 +1671,7 @@
 				"trigger": {
 					"description": "Action trigger (default: click)",
 					"type": "string",
-					"enum": [
-						"click",
-						"hover"
-					]
+					"enum": ["click", "hover"]
 				},
 				"url": {
 					"description": "URL for the hyperlink",
@@ -1968,21 +1690,10 @@
 				"actionType": {
 					"description": "Link action type",
 					"type": "string",
-					"enum": [
-						"url",
-						"slide",
-						"nextSlide",
-						"prevSlide",
-						"firstSlide",
-						"lastSlide",
-						"endShow"
-					]
+					"enum": ["url", "slide", "nextSlide", "prevSlide", "firstSlide", "lastSlide", "endShow"]
 				}
 			},
-			"required": [
-				"slideIndex",
-				"action"
-			],
+			"required": ["slideIndex", "action"],
 			"additionalProperties": false
 		}
 	},
@@ -1990,23 +1701,14 @@
 		"name": "manage_sections",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
 			"properties": {
 				"action": {
 					"type": "string",
-					"enum": [
-						"list",
-						"add",
-						"remove",
-						"reorder",
-						"moveSlides",
-						"getForSlide"
-					],
+					"enum": ["list", "add", "remove", "reorder", "moveSlides", "getForSlide"],
 					"description": "Section action"
 				},
 				"name": {
@@ -2040,9 +1742,7 @@
 					"maximum": 9007199254740991
 				}
 			},
-			"required": [
-				"action"
-			],
+			"required": ["action"],
 			"additionalProperties": false
 		}
 	},
@@ -2050,9 +1750,7 @@
 		"name": "manage_smart_art",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2098,11 +1796,7 @@
 					"type": "number"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"action"
-			],
+			"required": ["slideIndex", "elementId", "action"],
 			"additionalProperties": false
 		}
 	},
@@ -2110,9 +1804,7 @@
 		"name": "manage_table_structure",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2128,12 +1820,7 @@
 				},
 				"action": {
 					"type": "string",
-					"enum": [
-						"insertRow",
-						"deleteRow",
-						"insertColumn",
-						"deleteColumn"
-					]
+					"enum": ["insertRow", "deleteRow", "insertColumn", "deleteColumn"]
 				},
 				"position": {
 					"description": "Insertion position index",
@@ -2153,11 +1840,7 @@
 					}
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"action"
-			],
+			"required": ["slideIndex", "elementId", "action"],
 			"additionalProperties": false
 		}
 	},
@@ -2165,10 +1848,7 @@
 		"name": "ole_get_content",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2184,10 +1864,7 @@
 					"description": "OLE element ID"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -2195,9 +1872,7 @@
 		"name": "ole_replace_file",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2221,11 +1896,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"fileData"
-			],
+			"required": ["slideIndex", "elementId", "fileData"],
 			"additionalProperties": false
 		}
 	},
@@ -2233,9 +1904,7 @@
 		"name": "ole_set_deck_slide_title",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2265,13 +1934,7 @@
 					"description": "New text for the chosen shape"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"deckSlideIndex",
-				"deckElementId",
-				"title"
-			],
+			"required": ["slideIndex", "elementId", "deckSlideIndex", "deckElementId", "title"],
 			"additionalProperties": false
 		}
 	},
@@ -2279,9 +1942,7 @@
 		"name": "ole_set_document_paragraph",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2307,12 +1968,7 @@
 					"description": "New paragraph text"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"paragraphIndex",
-				"text"
-			],
+			"required": ["slideIndex", "elementId", "paragraphIndex", "text"],
 			"additionalProperties": false
 		}
 	},
@@ -2320,9 +1976,7 @@
 		"name": "ole_set_object_name",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2342,11 +1996,7 @@
 					"description": "New Object Name (p:oleObj/@name); blank/whitespace clears it"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"name"
-			],
+			"required": ["slideIndex", "elementId", "name"],
 			"additionalProperties": false
 		}
 	},
@@ -2354,9 +2004,7 @@
 		"name": "ole_set_sheet_cell",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2388,13 +2036,7 @@
 					"description": "New cell value"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"row",
-				"col",
-				"value"
-			],
+			"required": ["slideIndex", "elementId", "row", "col", "value"],
 			"additionalProperties": false
 		}
 	},
@@ -2402,9 +2044,7 @@
 		"name": "remove_chart_series",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2426,11 +2066,7 @@
 					"description": "Zero-based series index to remove"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"seriesIndex"
-			],
+			"required": ["slideIndex", "elementId", "seriesIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -2438,9 +2074,7 @@
 		"name": "rename_element",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2460,11 +2094,7 @@
 					"description": "New element name (empty string clears the name)"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"name"
-			],
+			"required": ["slideIndex", "elementId", "name"],
 			"additionalProperties": false
 		}
 	},
@@ -2472,9 +2102,7 @@
 		"name": "reorder_slides",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2490,9 +2118,7 @@
 					"description": "New slide order as array of indexes"
 				}
 			},
-			"required": [
-				"newOrder"
-			],
+			"required": ["newOrder"],
 			"additionalProperties": false
 		}
 	},
@@ -2500,9 +2126,7 @@
 		"name": "repair_presentation",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2514,9 +2138,7 @@
 		"name": "replace_geometry",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2558,10 +2180,7 @@
 					}
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -2569,9 +2188,7 @@
 		"name": "replace_text",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2599,10 +2216,7 @@
 					}
 				}
 			},
-			"required": [
-				"query",
-				"replacement"
-			],
+			"required": ["query", "replacement"],
 			"additionalProperties": false
 		}
 	},
@@ -2610,10 +2224,7 @@
 		"name": "run_accessibility_check",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2625,9 +2236,7 @@
 		"name": "set_canvas_size",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2643,10 +2252,7 @@
 					"description": "Canvas height in points"
 				}
 			},
-			"required": [
-				"width",
-				"height"
-			],
+			"required": ["width", "height"],
 			"additionalProperties": false
 		}
 	},
@@ -2654,9 +2260,7 @@
 		"name": "set_chart_color_map_override",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2689,11 +2293,7 @@
 					"description": "Theme colour role remap (bg1/tx1/bg2/tx2/accent1-6/hlink/folHlink -> role), e.g. { \"accent1\": \"accent2\" }; null removes the override"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"overrides"
-			],
+			"required": ["slideIndex", "elementId", "overrides"],
 			"additionalProperties": false
 		}
 	},
@@ -2701,9 +2301,7 @@
 		"name": "set_chart_helper_line",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2720,10 +2318,7 @@
 				},
 				"line": {
 					"type": "string",
-					"enum": [
-						"dropLines",
-						"hiLowLines"
-					],
+					"enum": ["dropLines", "hiLowLines"],
 					"description": "Which helper line to set"
 				},
 				"style": {
@@ -2750,12 +2345,7 @@
 					"description": "Line colour/width/dash; {} shows the line with defaults, null removes it"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"line",
-				"style"
-			],
+			"required": ["slideIndex", "elementId", "line", "style"],
 			"additionalProperties": false
 		}
 	},
@@ -2763,9 +2353,7 @@
 		"name": "set_element_animation",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2794,10 +2382,7 @@
 					"type": "number"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -2805,9 +2390,7 @@
 		"name": "set_element_lock",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2847,11 +2430,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"locked"
-			],
+			"required": ["slideIndex", "elementId", "locked"],
 			"additionalProperties": false
 		}
 	},
@@ -2859,9 +2438,7 @@
 		"name": "set_slide_transition",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2897,10 +2474,7 @@
 					"maximum": 9007199254740991
 				}
 			},
-			"required": [
-				"slideIndex",
-				"type"
-			],
+			"required": ["slideIndex", "type"],
 			"additionalProperties": false
 		}
 	},
@@ -2908,9 +2482,7 @@
 		"name": "set_table_style_section",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -2965,10 +2537,7 @@
 							"properties": {
 								"type": {
 									"type": "string",
-									"enum": [
-										"linear",
-										"radial"
-									]
+									"enum": ["linear", "radial"]
 								},
 								"angle": {
 									"type": "number"
@@ -3001,24 +2570,16 @@
 														"type": "string"
 													}
 												},
-												"required": [
-													"schemeColor"
-												],
+												"required": ["schemeColor"],
 												"additionalProperties": false
 											}
 										},
-										"required": [
-											"position",
-											"fill"
-										],
+										"required": ["position", "fill"],
 										"additionalProperties": false
 									}
 								}
 							},
-							"required": [
-								"type",
-								"stops"
-							],
+							"required": ["type", "stops"],
 							"additionalProperties": false
 						},
 						"pattern": {
@@ -3047,9 +2608,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"background": {
@@ -3072,15 +2631,11 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								}
 							},
-							"required": [
-								"preset"
-							],
+							"required": ["preset"],
 							"additionalProperties": false
 						},
 						"image": {
@@ -3096,9 +2651,7 @@
 							"additionalProperties": false
 						}
 					},
-					"required": [
-						"schemeColor"
-					],
+					"required": ["schemeColor"],
 					"additionalProperties": false
 				},
 				"text": {
@@ -3166,9 +2719,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3209,9 +2760,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3252,9 +2801,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3295,9 +2842,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3338,9 +2883,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3381,9 +2924,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3424,9 +2965,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3467,9 +3006,7 @@
 											"type": "string"
 										}
 									},
-									"required": [
-										"schemeColor"
-									],
+									"required": ["schemeColor"],
 									"additionalProperties": false
 								},
 								"color": {
@@ -3509,10 +3046,7 @@
 					"additionalProperties": false
 				}
 			},
-			"required": [
-				"styleId",
-				"section"
-			],
+			"required": ["styleId", "section"],
 			"additionalProperties": false
 		}
 	},
@@ -3520,9 +3054,7 @@
 		"name": "ungroup_elements",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -3537,10 +3069,7 @@
 					"description": "Group element ID to ungroup"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"groupElementId"
-			],
+			"required": ["slideIndex", "groupElementId"],
 			"additionalProperties": false
 		}
 	},
@@ -3548,9 +3077,7 @@
 		"name": "update_chart",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -3576,11 +3103,7 @@
 				"grouping": {
 					"description": "Bar/column grouping",
 					"type": "string",
-					"enum": [
-						"clustered",
-						"stacked",
-						"percentStacked"
-					]
+					"enum": ["clustered", "stacked", "percentStacked"]
 				},
 				"legend": {
 					"description": "Legend configuration",
@@ -3630,28 +3153,16 @@
 							"type": "object",
 							"properties": {
 								"min": {
-									"type": [
-										"number",
-										"null"
-									]
+									"type": ["number", "null"]
 								},
 								"max": {
-									"type": [
-										"number",
-										"null"
-									]
+									"type": ["number", "null"]
 								},
 								"majorUnit": {
-									"type": [
-										"number",
-										"null"
-									]
+									"type": ["number", "null"]
 								},
 								"title": {
-									"type": [
-										"string",
-										"null"
-									]
+									"type": ["string", "null"]
 								},
 								"numberFormat": {
 									"type": "string"
@@ -3666,10 +3177,7 @@
 							"additionalProperties": false
 						}
 					},
-					"required": [
-						"type",
-						"edit"
-					],
+					"required": ["type", "edit"],
 					"additionalProperties": false
 				},
 				"categories": {
@@ -3680,10 +3188,7 @@
 					}
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -3691,9 +3196,7 @@
 		"name": "update_chart_series_data",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -3722,12 +3225,7 @@
 					"description": "New data values"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"seriesIndex",
-				"values"
-			],
+			"required": ["slideIndex", "elementId", "seriesIndex", "values"],
 			"additionalProperties": false
 		}
 	},
@@ -3735,9 +3233,7 @@
 		"name": "update_element",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -3787,10 +3283,7 @@
 								"additionalProperties": {}
 							}
 						},
-						"required": [
-							"text",
-							"style"
-						],
+						"required": ["text", "style"],
 						"additionalProperties": {}
 					}
 				},
@@ -3849,9 +3342,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"scheme"
-					],
+					"required": ["scheme"],
 					"additionalProperties": false
 				},
 				"bold": {
@@ -3865,12 +3356,7 @@
 				},
 				"alignment": {
 					"type": "string",
-					"enum": [
-						"left",
-						"center",
-						"right",
-						"justify"
-					]
+					"enum": ["left", "center", "right", "justify"]
 				},
 				"fillColor": {
 					"type": "string"
@@ -3904,10 +3390,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -3915,9 +3398,7 @@
 		"name": "update_element_style",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -3979,9 +3460,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"scheme"
-					],
+					"required": ["scheme"],
 					"additionalProperties": false
 				},
 				"fillMode": {
@@ -4002,10 +3481,7 @@
 								"type": "number"
 							}
 						},
-						"required": [
-							"color",
-							"position"
-						],
+						"required": ["color", "position"],
 						"additionalProperties": false
 					}
 				},
@@ -4067,9 +3543,7 @@
 							"type": "number"
 						}
 					},
-					"required": [
-						"scheme"
-					],
+					"required": ["scheme"],
 					"additionalProperties": false
 				},
 				"strokeWidth": {
@@ -4138,10 +3612,7 @@
 					"type": "string"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId"
-			],
+			"required": ["slideIndex", "elementId"],
 			"additionalProperties": false
 		}
 	},
@@ -4149,9 +3620,7 @@
 		"name": "update_metadata",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4202,17 +3671,10 @@
 								"type": "string"
 							},
 							"value": {
-								"type": [
-									"string",
-									"number",
-									"boolean"
-								]
+								"type": ["string", "number", "boolean"]
 							}
 						},
-						"required": [
-							"name",
-							"value"
-						],
+						"required": ["name", "value"],
 						"additionalProperties": false
 					}
 				}
@@ -4224,9 +3686,7 @@
 		"name": "update_presentation_properties",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4234,11 +3694,7 @@
 				"showType": {
 					"description": "Slideshow mode",
 					"type": "string",
-					"enum": [
-						"presented",
-						"browsed",
-						"kiosk"
-					]
+					"enum": ["presented", "browsed", "kiosk"]
 				},
 				"loopContinuously": {
 					"description": "Loop the slideshow",
@@ -4255,19 +3711,12 @@
 				"advanceMode": {
 					"description": "Slide advance mode",
 					"type": "string",
-					"enum": [
-						"manual",
-						"useTimings"
-					]
+					"enum": ["manual", "useTimings"]
 				},
 				"showSlidesMode": {
 					"description": "Which slides to show",
 					"type": "string",
-					"enum": [
-						"all",
-						"customShow",
-						"range"
-					]
+					"enum": ["all", "customShow", "range"]
 				},
 				"showSlidesFrom": {
 					"description": "Range start (1-based)",
@@ -4293,9 +3742,7 @@
 		"name": "update_slide_properties",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4327,9 +3774,7 @@
 					"type": "boolean"
 				}
 			},
-			"required": [
-				"slideIndex"
-			],
+			"required": ["slideIndex"],
 			"additionalProperties": false
 		}
 	},
@@ -4337,9 +3782,7 @@
 		"name": "update_table_cells",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4373,21 +3816,13 @@
 								"type": "string"
 							}
 						},
-						"required": [
-							"row",
-							"col",
-							"text"
-						],
+						"required": ["row", "col", "text"],
 						"additionalProperties": false
 					},
 					"description": "Cells to update"
 				}
 			},
-			"required": [
-				"slideIndex",
-				"elementId",
-				"cells"
-			],
+			"required": ["slideIndex", "elementId", "cells"],
 			"additionalProperties": false
 		}
 	},
@@ -4395,9 +3830,7 @@
 		"name": "update_theme_colors",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4458,9 +3891,7 @@
 		"name": "update_theme_fonts",
 		"kind": "edit",
 		"version": 1,
-		"extensions": [
-			".pptx"
-		],
+		"extensions": [".pptx"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",
@@ -4481,10 +3912,7 @@
 		"name": "validate_presentation",
 		"kind": "read",
 		"version": 1,
-		"extensions": [
-			".pptx",
-			".ppt"
-		],
+		"extensions": [".pptx", ".ppt"],
 		"inputSchema": {
 			"$schema": "https://json-schema.org/draft/2020-12/schema",
 			"type": "object",

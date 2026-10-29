@@ -145,7 +145,12 @@ describe('teams server with a token and origin list', () => {
 	let port;
 	before(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'teams-server-auth-'));
-		server = createTeamsServer({ dataDir: dir, insecureDev: true, token: 's3cret', origins: ['https://app.example'] });
+		server = createTeamsServer({
+			dataDir: dir,
+			insecureDev: true,
+			token: 's3cret',
+			origins: ['https://app.example'],
+		});
 		port = (await server.listen(0, '127.0.0.1')).port;
 	});
 	after(async () => {
