@@ -131,6 +131,8 @@ export const zhCNShell: Record<keyof typeof enShell, string> = {
 	'app.backToChannels': '返回频道',
 	'app.confirmRemoveTab': '要从此频道中删除 {name} 吗？',
 	'app.createChannelFirst': '请先创建频道',
+	'app.schemaTooNew':
+		'此工作区由较新版本的 OpenTeams 创建，因此在这里是只读的。请更新应用以发布消息或进行更改。',
 	'app.dismiss': '关闭',
 	'app.downloadFailed': '无法开始下载',
 	'app.inCall': '你正在 {where} 中通话',

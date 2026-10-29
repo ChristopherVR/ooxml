@@ -131,6 +131,8 @@ export const enShell = {
 	'app.backToChannels': 'Back to channels',
 	'app.confirmRemoveTab': 'Remove {name} from this channel?',
 	'app.createChannelFirst': 'Create a channel first',
+	'app.schemaTooNew':
+		'This workspace was created by a newer version of OpenTeams, so it is read-only here. Update the app to post or make changes.',
 	'app.dismiss': 'Dismiss',
 	'app.downloadFailed': 'Could not start the download',
 	'app.inCall': 'You are in a call in {where}',

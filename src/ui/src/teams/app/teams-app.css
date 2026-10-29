@@ -806,3 +806,15 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 		background: var(--office-background);
 	}
 }
+
+.shell:has(> .schema-banner) {
+	grid-template-rows: auto auto minmax(0, 1fr);
+}
+/* The workspace was written by a newer release: read-only, with the reason always visible. */
+.schema-banner {
+	padding: var(--office-space-2) var(--office-space-4);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+	background: var(--office-teams-panel);
+	color: var(--office-foreground);
+	font-size: var(--office-font-size-sm);
+}

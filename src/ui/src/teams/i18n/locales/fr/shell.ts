@@ -133,6 +133,8 @@ export const frShell: Record<keyof typeof enShell, string> = {
 	'app.backToChannels': 'Retour aux canaux',
 	'app.confirmRemoveTab': 'Supprimer {name} de ce canal ?',
 	'app.createChannelFirst': "Créez d'abord un canal",
+	'app.schemaTooNew':
+		'Cet espace de travail a été créé avec une version plus récente d’OpenTeams ; il est donc en lecture seule ici. Mettez l’application à jour pour publier ou modifier.',
 	'app.dismiss': 'Ignorer',
 	'app.downloadFailed': 'Impossible de démarrer le téléchargement',
 	'app.inCall': 'Vous participez à un appel dans {where}',

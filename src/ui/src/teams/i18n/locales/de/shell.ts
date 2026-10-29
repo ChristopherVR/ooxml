@@ -132,6 +132,8 @@ export const deShell: Record<keyof typeof enShell, string> = {
 	'app.backToChannels': 'Zurück zu den Kanälen',
 	'app.confirmRemoveTab': '{name} aus diesem Kanal entfernen?',
 	'app.createChannelFirst': 'Erstellen Sie zuerst einen Kanal',
+	'app.schemaTooNew':
+		'Dieser Arbeitsbereich wurde mit einer neueren Version von OpenTeams erstellt und ist hier daher schreibgeschützt. Aktualisieren Sie die App, um zu schreiben oder Änderungen vorzunehmen.',
 	'app.dismiss': 'Schließen',
 	'app.downloadFailed': 'Der Download konnte nicht gestartet werden',
 	'app.inCall': 'Sie sind in einem Anruf in {where}',

@@ -518,6 +518,7 @@ export class TeamsApp extends TeamsLitElement {
 	}
 
 	private createChannel(): void {
+		if (this.teams.state && this.isLocked(this.teams.state)) return;
 		this.creatingChannel = true;
 	}
 
@@ -629,7 +630,7 @@ export class TeamsApp extends TeamsLitElement {
 					else this.notify(this.t('app.tabGone'));
 				}}
 			>
-				${this.topbar(s)}
+				${this.topbar(s)} ${this.schemaBanner(s)}
 				<div class="body">
 					<office-ui-app-rail
 						.hideLabels=${!this.showAppNames}
@@ -790,6 +791,19 @@ export class TeamsApp extends TeamsLitElement {
 		`;
 	}
 
+	/** A workspace written by a newer release is read-only here: say why instead of failing quietly. */
+	private isLocked(s: TeamsState): boolean {
+		return s.schema.state === 'unsupported-schema';
+	}
+
+	private schemaBanner(s: TeamsState) {
+		return this.isLocked(s)
+			? html`<div class="schema-banner" role="alert" data-schema-banner>
+					${this.t('app.schemaTooNew')}
+				</div>`
+			: nothing;
+	}
+
 	private topbar(s: TeamsState) {
 		return html`
 			<header class="topbar">
@@ -915,7 +929,7 @@ export class TeamsApp extends TeamsLitElement {
 				.chats=${s.chats}
 				selected-id=${s.selectedChannelId}
 				@office-chat-select=${(e: CustomEvent<{ id: string }>) => this.selectChannel(e.detail.id)}
-				@office-chat-new=${() => (this.newChat = true)}
+				@office-chat-new=${() => (this.newChat = !this.isLocked(s))}
 			></office-ui-chat-sidebar>`;
 		if (this.rail === 'calendar')
 			return html`<office-ui-calendar-agenda
@@ -1032,6 +1046,8 @@ export class TeamsApp extends TeamsLitElement {
 		const channel = s.channel;
 		const chat = s.chats.find((x) => x.id === s.selectedChannelId);
 		const c = this.teams.client;
+		// Writes go through `w`: none while the workspace is read-only (a newer release wrote it).
+		const w = this.isLocked(s) ? null : c;
 		const compose = s.editing ?? s.replyingTo;
 		const sharedTab = s.tabs.find((t) => t.id === this.tab);
 		if (sharedTab) this.retainedTab = sharedTab;
@@ -1084,7 +1100,7 @@ export class TeamsApp extends TeamsLitElement {
 									aria-label=${this.t('app.addTab')}
 									title=${this.t('app.addTab')}
 									?disabled=${!channel}
-									@click=${() => (this.addingTab = !this.addingTab)}
+									@click=${() => (this.addingTab = !this.addingTab && !this.isLocked(s))}
 								>
 									+
 								</button>
@@ -1208,7 +1224,7 @@ export class TeamsApp extends TeamsLitElement {
 											: html`<teams-pinned-bar
 													.pinned=${s.pinned}
 													@teams-pinned-open=${(e: CustomEvent<{ messageId: string }>) => void this.revealMessage(e.detail.messageId)}
-													@teams-pinned-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
+													@teams-pinned-unpin=${(e: CustomEvent<{ messageId: string }>) => w?.unpinMessage(e.detail.messageId)}
 												></teams-pinned-bar>`
 									}
 									<office-ui-chat-list
@@ -1219,13 +1235,13 @@ export class TeamsApp extends TeamsLitElement {
 										.highlightId=${this.highlightId}
 										.meetings=${meetingCards(s.meetings, Date.now())}
 										@office-chat-meeting=${(e: CustomEvent<{ meetingId: string; action: 'join' | 'open' }>) => (e.detail.action === 'join' ? void this.joinMeeting(e.detail.meetingId) : this.openMeeting(e.detail.meetingId))}
-										@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => c?.pinMessage(e.detail.messageId)}
-										@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
-										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
+										@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => w?.pinMessage(e.detail.messageId)}
+										@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => w?.unpinMessage(e.detail.messageId)}
+										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => w?.toggleReaction(e.detail.messageId, e.detail.emoji)}
 										@office-chat-thread=${(e: CustomEvent<{ messageId: string }>) => void this.openThread(e.detail.messageId)}
-										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startReply(e.detail.messageId) : void this.openThread(e.detail.messageId, 'reply'))}
-										@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startEdit(e.detail.messageId) : void this.openThread(e.detail.messageId, 'edit'))}
-										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.(this.t('chat.confirmDelete')) !== false && c?.deleteMessage(e.detail.messageId)}
+										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? w?.startReply(e.detail.messageId) : w ? void this.openThread(e.detail.messageId, 'reply') : undefined)}
+										@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => (compact ? w?.startEdit(e.detail.messageId) : w ? void this.openThread(e.detail.messageId, 'edit') : undefined)}
+										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.(this.t('chat.confirmDelete')) !== false && w?.deleteMessage(e.detail.messageId)}
 										@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
 									></office-ui-chat-list>
 									${
@@ -1240,7 +1256,7 @@ export class TeamsApp extends TeamsLitElement {
 													.missingFiles=${s.draft.missingFiles}
 													.mentionTargets=${s.mentionTargets}
 													@office-chat-draft=${(e: CustomEvent<TeamsState['draft']>) => c?.setDraft(e.detail)}
-													?disabled=${!channel}
+													?disabled=${!channel || !w}
 													placeholder=${chat ? this.t('app.messageTo', { name: chat.title }) : channel ? this.t('app.messageTo', { name: `# ${channel.name}` }) : this.t('app.createChannelFirst')}
 													@office-chat-typing=${() => c?.notifyTyping()}
 													@office-chat-cancel=${() => c?.cancelCompose()}

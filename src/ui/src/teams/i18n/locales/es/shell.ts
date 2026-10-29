@@ -133,6 +133,8 @@ export const esShell: Record<keyof typeof enShell, string> = {
 	'app.backToChannels': 'Volver a los canales',
 	'app.confirmRemoveTab': '¿Quitar {name} de este canal?',
 	'app.createChannelFirst': 'Crea primero un canal',
+	'app.schemaTooNew':
+		'Este espacio de trabajo se creó con una versión más reciente de OpenTeams, por lo que aquí es de solo lectura. Actualiza la aplicación para publicar o hacer cambios.',
 	'app.dismiss': 'Descartar',
 	'app.downloadFailed': 'No se pudo iniciar la descarga',
 	'app.inCall': 'Estás en una llamada en {where}',
