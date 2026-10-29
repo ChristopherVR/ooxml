@@ -12,10 +12,18 @@ import {
 	evaluateNumericFormulaFunction,
 } from './formula-numeric-functions';
 import {
+	evaluateFormulaText,
 	evaluateTextNumberFunction,
 	textNumberFunctions,
 	textResultFunctions,
 } from './formula-text-functions';
+import {
+	angleToLocal,
+	localToParent,
+	visioDateSerial,
+	type ShapeFrame,
+} from './formula-extra-functions';
+import { FRAME_INPUTS, literalIndirectTarget } from './formula-indirect';
 import { mathFormulaFunctions, evaluateMathFormulaFunction } from './formula-math-functions';
 import { formulaFailure, formulaLimit, parseVisioFormula, VisioFormulaError } from './formula';
 import type {
@@ -46,6 +54,11 @@ const supported = new Set([
 	'PNTY',
 	'ISERROR',
 	'IFERROR',
+	'INDIRECT',
+	'DATE',
+	'ANGLETOLOC',
+	'LOCTOPAR',
+	'SHEETREF',
 	...textNumberFunctions,
 	...textResultFunctions,
 	...numericFormulaFunctions,
@@ -103,7 +116,6 @@ const staticUnsupported = new Set([
 ]);
 // These functions can introduce references that cannot be identified from argument ASTs.
 const dynamic = new Set([
-	'INDIRECT',
 	'EVALCELL',
 	'EVALTEXT',
 	'DEPENDSON',
@@ -170,6 +182,16 @@ export function analyzeVisioFormula(
 						? themeInputs
 						: [];
 			for (const cell of inputs) references.set(`!${cell.toLowerCase()}`, { cell });
+			for (const cell of FRAME_INPUTS[node.name] ?? [])
+				references.set(`!${cell.toLowerCase()}`, { cell });
+			if (node.name === 'INDIRECT') {
+				// A literal address is an ordinary static reference when the caller opts in; a computed one is
+				// never provable, and by default every INDIRECT stays dynamic.
+				const target = literalIndirectTarget(node);
+				if (target && limits.literalIndirect)
+					references.set(`${target.shapeId ?? ''}!${target.cell.toLowerCase()}`, target);
+				else unsafe = true;
+			}
 			if (!supported.has(node.name)) unsupportedFunctions.add(node.name);
 			if (
 				dynamic.has(node.name) ||
@@ -227,6 +249,28 @@ export function evaluateVisioFormula(
 	// Validate caller-supplied ASTs as well as parsed ones before recursive evaluation.
 	traverse(ast, limits, () => {});
 	let steps = 0;
+	// The frame of the formula's own shape (SHEETREF()), unflipped; other sheets are unsupported.
+	const shapeFrame = (sheet: VisioFormulaAst): ShapeFrame => {
+		if (sheet.kind !== 'call' || sheet.name !== 'SHEETREF' || sheet.args.length)
+			return formulaFailure('unsupported', 'A sheet other than SHEETREF()');
+		const read = (cell: string, fallback?: number): number => {
+			try {
+				return finite(resolve({ cell })).value;
+			} catch (error) {
+				if (fallback === undefined) throw error;
+				return fallback;
+			}
+		};
+		if (read('FlipX', 0) !== 0 || read('FlipY', 0) !== 0)
+			return formulaFailure('unsupported', 'A coordinate conversion on a flipped shape');
+		return {
+			pinX: read('PinX'),
+			pinY: read('PinY'),
+			locPinX: read('LocPinX', 0),
+			locPinY: read('LocPinY', 0),
+			angle: read('Angle', 0),
+		};
+	};
 	const evaluate = (node: VisioFormulaAst, depth = 0): VisioFormulaValue => {
 		if (++steps > maxSteps || depth > maxDepth)
 			return formulaFailure('limit', 'Formula evaluation limit');
@@ -287,19 +331,60 @@ export function evaluateVisioFormula(
 				return formulaFailure('context', `${name} requires a valid document context`);
 			return { value, unit: 'scalar' };
 		}
+		const textContext = {
+			number: (child: VisioFormulaAst) => evaluate(child, depth + 1),
+			tick: () => {
+				if (++steps > maxSteps) formulaFailure('limit', 'Formula evaluation limit');
+			},
+		};
 		if (textNumberFunctions.has(name))
-			return evaluateTextNumberFunction(name, node.args, {
-				number: (child) => evaluate(child, depth + 1),
-				tick: () => {
-					if (++steps > maxSteps) formulaFailure('limit', 'Formula evaluation limit');
-				},
+			return evaluateTextNumberFunction(name, node.args, textContext);
+		if (name === 'INDIRECT') {
+			// INDIRECT(address): the value of the cell a text address names, read from this shape.
+			arity(1);
+			const target = parseVisioFormula(evaluateFormulaText(node.args[0]!, textContext, 1));
+			if (target.kind !== 'reference')
+				return formulaFailure('value', 'INDIRECT needs a cell address');
+			return finite(resolve(target.reference));
+		}
+		if (name === 'DATE') {
+			// DATE(year, month, day): an OLE date serial; the unit keeps it from posing as a plain number.
+			arity(3);
+			const [year, month, day] = node.args.map((_, index) => {
+				const part = arg(index);
+				if (part.unit !== 'scalar') return formulaFailure('unit', 'DATE requires plain numbers');
+				return part.value;
 			});
+			return { value: visioDateSerial(year!, month!, day!), unit: 'time' };
+		}
+		if (name === 'SHEETREF' || name === 'LOCTOPAR')
+			return formulaFailure('unsupported', `${name} does not return a number`);
+		if (name === 'ANGLETOLOC') {
+			arity(2);
+			const angle = arg(1);
+			if (angle.unit !== 'angle' && angle.unit !== 'scalar')
+				return formulaFailure('unit', 'ANGLETOLOC requires an angle');
+			return { value: angleToLocal(shapeFrame(node.args[0]!), angle.value), unit: 'angle' };
+		}
 		if (textResultFunctions.has(name) || name === 'PNT')
 			return formulaFailure('unsupported', `${name} does not return a number`);
 		if (name === 'PNTX' || name === 'PNTY') {
 			// PNT(x, y) builds a point; its coordinates are read straight back with PNTX / PNTY.
 			arity(1);
 			const point = node.args[0]!;
+			if (point.kind === 'call' && point.name === 'LOCTOPAR') {
+				// LOCTOPAR(SHEETREF(), x, y): the point in the parent's coordinates.
+				if (point.args.length !== 3)
+					return formulaFailure('arity', 'Invalid LOCTOPAR argument count');
+				const [x, y] = [1, 2].map((index) => {
+					const part = evaluate(point.args[index]!, depth + 2);
+					if (part.unit !== 'scalar' && part.unit !== 'length')
+						return formulaFailure('unit', 'LOCTOPAR requires lengths');
+					return part.value;
+				});
+				const parent = localToParent(shapeFrame(point.args[0]!), x!, y!);
+				return finite({ value: parent[name === 'PNTX' ? 0 : 1], unit: 'length' });
+			}
 			if (point.kind !== 'call' || point.name !== 'PNT')
 				return formulaFailure('unsupported', `${name} of something other than PNT(x,y)`);
 			if (point.args.length !== 2) return formulaFailure('arity', 'Invalid PNT argument count');

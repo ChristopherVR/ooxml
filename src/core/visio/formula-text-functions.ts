@@ -1,5 +1,6 @@
 import { formulaFailure } from './formula';
 import type { VisioFormulaAst, VisioFormulaValue } from './formula';
+import { formatNumberPicture, strSameEx } from './formula-extra-functions';
 
 /**
  * ShapeSheet string functions that work on text written in the formula itself. A cell's own text
@@ -21,12 +22,14 @@ export const textResultFunctions: ReadonlySet<string> = new Set([
 	'REPLACE',
 	'CHAR',
 	'INDEX',
+	'FORMAT',
 ]);
 /** Functions that read text and return a number. */
 export const textNumberFunctions: ReadonlySet<string> = new Set([
 	'LEN',
 	'FIND',
 	'STRSAME',
+	'STRSAMEEX',
 	'LOOKUP',
 ]);
 
@@ -159,6 +162,11 @@ export function evaluateFormulaText(
 		if (code >= 128 && code <= 159) return unsupported('CHAR in the Windows-1252 range');
 		return String.fromCharCode(code);
 	}
+	if (name === 'FORMAT') {
+		// FORMAT(number, picture): numeric pictures only (formula-extra-functions.ts).
+		arity(2);
+		return formatNumberPicture(context.number(args[0]!), text(args[1], name));
+	}
 	// INDEX(i, list): the zero-based item, or an empty string when there is none.
 	arity(2);
 	const index = integer(context, args[0]!, name);
@@ -201,6 +209,12 @@ export function evaluateTextNumberFunction(
 			b = text(1);
 		const ignoreCase = args[2] ? context.number(args[2]).value !== 0 : false;
 		return scalar(ignoreCase ? Number(a.toLowerCase() === b.toLowerCase()) : Number(a === b));
+	}
+	if (name === 'STRSAMEEX') {
+		// STRSAMEEX(a, b, flags): flags are Windows NORM_* bits; a locale argument is unsupported.
+		if (args.length === 4) return formulaFailure('unsupported', 'STRSAMEEX with a locale');
+		arity(3);
+		return scalar(Number(strSameEx(text(0), text(1), context.number(args[2]!).value)));
 	}
 	// LOOKUP(text, list): the zero-based place of the first item that matches without regard to
 	// case, or -1.

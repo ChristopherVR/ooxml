@@ -83,7 +83,7 @@ describe('ShapeSheet string functions on literal text', () => {
 		expect(number('IFERROR(FIND("l","hello"),-5)')).toBe(3);
 		expect(number('IFERROR(1/0,7)')).toBe(7);
 		// A function this evaluator cannot run is not an error of the sheet.
-		expect(() => run('IFERROR(STRSAMEEX("a","a"),1)')).toThrow(/Unsupported/);
+		expect(() => run('IFERROR(STRSAMEEX("a","a",1,1033),1)')).toThrow(/locale/);
 	});
 
 	it('refuses text it cannot know and text results', () => {
@@ -99,9 +99,7 @@ describe('ShapeSheet string functions on literal text', () => {
 		expect(
 			analyzeVisioFormula('LEN(MID("hello",2,3))+FIND("l","hello")').unsupportedFunctions,
 		).toEqual([]);
-		expect(analyzeVisioFormula('STRSAMEEX("a","a",1,1)').unsupportedFunctions).toEqual([
-			'STRSAMEEX',
-		]);
+		expect(analyzeVisioFormula('STRSAMEEX("a","a",1)').unsupportedFunctions).toEqual([]);
 	});
 });
 
@@ -135,7 +133,7 @@ describe('ShapeSheet angle, sum and point functions', () => {
 	});
 
 	it('still refuses what Visio documents but this evaluator does not run', () => {
-		for (const name of ['STRSAMEEX', 'ANGLETOLOC', 'LOCTOPAR', 'FORMAT', 'DATE', 'INDIRECT'])
+		for (const name of ['ANGLETOPAR', 'LOCTOLOC', 'FORMATEX', 'DATEVALUE', 'EVALTEXT'])
 			expect(() => run(`${name}(1)`)).toThrow();
 	});
 });

@@ -16,6 +16,11 @@ export interface VisioFormulaLimits {
 	maxNodes?: number;
 	maxDepth?: number;
 	maxSteps?: number;
+	/**
+	 * Analysis only: treat `INDIRECT("literal address")` as a static reference to that cell instead
+	 * of a dynamic dependency. Off by default, so every edit guard keeps refusing INDIRECT.
+	 */
+	literalIndirect?: boolean;
 	onStep?: () => void;
 	/**
 	 * A bare number added to or subtracted from a length is inches, the unit ShapeSheet formulas
