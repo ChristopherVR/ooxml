@@ -3,6 +3,7 @@
 // then record Excel's answers with `xlsx/formula/__fixtures__/ets-cases.ps1`.
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { ETS_PROBES } from './ets-probes';
 
 export interface EtsCaseInput {
 	name: string;
@@ -176,6 +177,16 @@ export function buildEtsCases(): EtsCaseInput[] {
 		'FORECAST.ETS(9,{V},{L},1,0)',
 		'FORECAST.ETS.STAT({V},{L},1)',
 	]);
+	// Series that identified the model: the season is passed explicitly so detection plays no part.
+	for (const [name, values, m] of ETS_PROBES) {
+		const n = values.length;
+		const s = `,${m}`;
+		add(name, values, seq(n), [
+			...[1, 2, 5].map((k) => `FORECAST.ETS(${n + k},{V},{L}${s})`),
+			...[1, 3].map((k) => `FORECAST.ETS.CONFINT(${n + k},{V},{L},0.95${s})`),
+			...[1, 2, 3, 4, 5, 6, 7, 8].map((k) => `FORECAST.ETS.STAT({V},{L},${k}${s})`),
+		]);
+	}
 	return out;
 }
 

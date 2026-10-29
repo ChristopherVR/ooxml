@@ -409,10 +409,10 @@ nested in a larger formula, and one case does not prove every argument combinati
 | `FISHER` | `FISHER(x)` | Excel |  |
 | `FISHERINV` | `FISHERINV(y)` | Excel |  |
 | `FORECAST` | `FORECAST(x, known_ys, known_xs)` | Excel |  |
-| `FORECAST.ETS` | `FORECAST.ETS(target_date, values, timeline, [seasonality], [data_completion], [aggregation])` | Excel | Compared with Excel on 17 series: usually within 0.3% to 2%, up to 37% on short or exponential series (Excel's optimiser is undocumented). |
-| `FORECAST.ETS.CONFINT` | `FORECAST.ETS.CONFINT(target_date, values, timeline, [confidence_level], [seasonality], [data_completion], [aggregation])` | Excel | Within 0.3% to 40% of Excel (the interval depends on the fitted parameters, which differ); up to 80% on exponential growth. |
-| `FORECAST.ETS.SEASONALITY` | `FORECAST.ETS.SEASONALITY(values, timeline, [data_completion], [aggregation])` | Excel | Dominant periodogram peak; agrees with Excel on 14 of 15 series, 0 means none (Excel's rule for a noisy series differs). |
-| `FORECAST.ETS.STAT` | `FORECAST.ETS.STAT(values, timeline, statistic_type, [seasonality], [data_completion], [aggregation])` | Excel | Step size and SMAPE agree with Excel; alpha, beta, gamma and the error statistics come from this optimiser and differ. |
+| `FORECAST.ETS` | `FORECAST.ETS(target_date, values, timeline, [seasonality], [data_completion], [aggregation])` | Excel | The filter, starting values and error statistics were identified against Excel on 34 series: 10 reproduce to the last digit, typical series are within 0.5%, up to 26% on SUM-aggregated duplicates. Excel's search for alpha, beta and gamma stops early on some series, and its seasonal starting values and its starting trend for fewer than 7 points are not reproduced. |
+| `FORECAST.ETS.CONFINT` | `FORECAST.ETS.CONFINT(target_date, values, timeline, [confidence_level], [seasonality], [data_completion], [aggregation])` | Excel | RMSE times sqrt(1 + sum of (alpha + j*beta)^2) as in Excel: equal to Excel where the fitted parameters are, up to 31% off where they differ (mostly seasonal models, whose gamma term was not checked against Excel). |
+| `FORECAST.ETS.SEASONALITY` | `FORECAST.ETS.SEASONALITY(values, timeline, [data_completion], [aggregation])` | Excel | Dominant periodogram peak; agrees with Excel on 54 of 58 series, 0 means none (Excel's rule for pure noise is not published and looks arbitrary there). |
+| `FORECAST.ETS.STAT` | `FORECAST.ETS.STAT(values, timeline, statistic_type, [seasonality], [data_completion], [aggregation])` | Excel | Step size agrees; the error statistics are measured on the last points as in Excel and equal it where the parameters do (11 of 32 series); alpha is found on 16 of 34 series, beta on 29 and gamma on 27. |
 | `FORECAST.LINEAR` | `FORECAST.LINEAR(x, known_ys, known_xs)` | Excel |  |
 | `FREQUENCY` | `FREQUENCY(data_array, bins_array)` | Excel |  |
 | `FTEST` | `FTEST(array1, array2)` | Unit |  |

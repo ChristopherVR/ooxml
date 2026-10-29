@@ -1,52 +1,101 @@
-// FORECAST.ETS family against values recorded from real Excel 16 on 17 series
+// FORECAST.ETS family against values recorded from real Excel 16 on 34 series
 // (__fixtures__/ets-series.json, answers in ets-excel.json; regenerate with ets-cases.ps1).
 //
-// Excel's optimiser is undocumented, so this engine reproduces the answers closely but not exactly.
-// The tolerances below are the measured worst cases plus a small margin, not a promise of parity:
-// they pin today's accuracy so a regression shows. Residual differences, honestly:
-//  - forecasts: typically within 0.3% to 2% of Excel; up to 13% to 37% on short, irregular or
-//    exponentially growing series, where Excel's parameters are not the least-squares optimum;
-//  - FORECAST.ETS.CONFINT: within 0.3% to 40% (Excel's interval depends on its own parameters);
-//  - FORECAST.ETS.SEASONALITY: 14 of 15 series agree; one noisy series reports a period where
-//    Excel reports none;
-//  - FORECAST.ETS.STAT: only the step size (type 8) and SMAPE (type 5) are compared; alpha, beta,
-//    gamma and the error statistics come from this optimiser and differ from Excel's.
+// What is identified (and reproduced to the last digit on the series listed in EXACT): the filter
+// (level += trend + alpha*e, trend += beta*e, season += gamma*e), the first fitted value being the
+// first observation, the trend starting at the least-squares slope of the series, the error
+// statistics being measured on the last points only (see `etsHoldout`) and the interval
+// being RMSE * sqrt(1 + sum of (alpha + j*beta)^2). What is not: Excel's search for alpha, beta and
+// gamma stops early on some series, and its starting values for a seasonal model and for fewer than
+// 7 points are not the least-squares ones. The tolerances below are the measured worst cases plus a
+// small margin, not a promise of parity: they pin today's accuracy so a regression shows.
 import { describe, expect, it } from 'vitest';
 import { evaluateEts, type EtsKind, type EtsRow, recorded } from './ets-excel-compare';
+import { etsHoldout } from './functions/ets-core';
 
 const rows: EtsRow[] = recorded().flatMap(evaluateEts);
 const only = (kind: EtsKind): EtsRow[] => rows.filter((r) => r.kind === kind);
 
-/** Relative forecast tolerance per series; 0.03 unless listed. */
+/** Series on which every statistic, forecast and interval equals Excel's. */
+const EXACT = [
+	'linear-exact',
+	'constant',
+	'growth',
+	'spike',
+	'step-0-10',
+	'walk-7',
+	'trend-9',
+	'walk-12',
+	'trend-24',
+	'walk-100',
+];
+
+/** Relative forecast tolerance per series; 0.003 unless listed. */
 const FORECAST_TOLERANCE: Record<string, number> = {
-	gaps: 0.14, // includes completion by zero fill, where the fitted model differs most
-	duplicates: 0.25, // includes COUNT and SUM aggregation of uneven counts
-	growth: 0.4, // exponential growth: Excel's trend is far more damped
-	'short-6': 0.16,
-	'step-change': 0.14,
-	'blank-value': 0.17,
+	'flat-noisy': 0.005,
+	'seasonal4-trend': 0.03, // seasonal starting values differ from Excel's
+	'monthly-dates-seasonal12': 0.005,
+	'seasonal7-daily': 0.008,
+	gaps: 0.15, // zero-filled gaps: Excel picks a smaller alpha than the best fit
+	duplicates: 0.3, // includes SUM aggregation of uneven counts, where Excel stops early
+	'short-6': 0.03, // fewer than 7 points: Excel's starting trend is not the least-squares slope
+	'random-walk': 0.012,
+	'step-change': 0.012,
+	'yearly-step': 0.012,
+	unsorted: 0.025,
+	'seasonal3-noisy': 0.02,
+	'blank-value': 0.2, // zero completion of the missing point
+	'short-5': 0.05,
+	'walk-20-anomaly': 0.08, // Excel's search stops at alpha 0.25 here
+	'walk-13': 0.008,
+	'walk-50': 0.025,
+	'season2-9': 0.008,
+	'season3-9': 0.012,
+	'season4-8': 0.01,
+	'season5-10': 0.06,
+	'season3-11': 0.015,
 };
-/** Relative confidence interval tolerance per series; 0.4 unless listed. */
+/** Relative confidence interval tolerance per series; 0.002 unless listed. */
 const CONFINT_TOLERANCE: Record<string, number> = {
-	growth: 0.8,
-	'short-6': 0.5,
+	'flat-noisy': 0.09,
+	'seasonal4-trend': 0.11,
+	'monthly-dates-seasonal12': 0.35,
+	'seasonal7-daily': 0.2,
+	gaps: 0.12,
+	'short-6': 0.18,
+	'random-walk': 0.3,
+	'step-change': 0.21,
+	'yearly-step': 0.27,
+	unsorted: 0.16,
+	'seasonal3-noisy': 0.23,
+	'short-5': 0.03,
+	'walk-20-anomaly': 0.22,
+	'walk-13': 0.12,
+	'walk-25-anomaly': 0.15,
+	'walk-50': 0.15,
+	'season2-9': 0.08,
+	'season3-9': 0.08,
+	'season4-8': 0.26,
+	'season5-10': 0.22,
+	'season3-11': 0.13,
+	'linear-noisy': 0.002,
+	'walk-7': 0.002,
 };
 
 describe('FORECAST.ETS against Excel', () => {
-	it('records 17 series', () => {
-		expect(new Set(rows.map((r) => r.name)).size).toBe(17);
+	it('records 34 series', () => {
+		expect(new Set(rows.map((r) => r.name)).size).toBe(34);
 	});
 
-	it('matches exact linear and constant series to rounding', () => {
-		for (const r of rows.filter((x) => x.name === 'linear-exact' || x.name === 'constant')) {
-			if (r.kind === 'forecast' || r.kind === 'confint') expect(r.error).toBeLessThan(1e-6);
-		}
+	it('reproduces the identified model to the last digit', () => {
+		for (const r of rows.filter((x) => EXACT.includes(x.name)))
+			if (r.kind !== 'seasonality' && r.kind !== 'stat8') expect(r.error).toBeLessThan(1e-6);
 	});
 
 	it.each(only('forecast').map((r) => [r.name, r.formula, r] as const))(
 		'%s %s',
 		(name, _formula, r) => {
-			expect(r.error).toBeLessThanOrEqual(FORECAST_TOLERANCE[name] ?? 0.03);
+			expect(r.error).toBeLessThanOrEqual(FORECAST_TOLERANCE[name] ?? 0.003);
 		},
 	);
 });
@@ -55,7 +104,7 @@ describe('FORECAST.ETS.CONFINT against Excel', () => {
 	it.each(only('confint').map((r) => [r.name, r.formula, r] as const))(
 		'%s %s',
 		(name, _formula, r) => {
-			expect(r.error).toBeLessThanOrEqual(CONFINT_TOLERANCE[name] ?? 0.4);
+			expect(r.error).toBeLessThanOrEqual(CONFINT_TOLERANCE[name] ?? 0.002);
 		},
 	);
 });
@@ -72,8 +121,8 @@ describe('FORECAST.ETS.STAT against Excel', () => {
 		for (const r of only('stat8')) expect(r.ours).toBe(r.excel);
 	});
 
-	it('is within 0.06 of Excel for SMAPE', () => {
-		for (const r of only('stat5'))
+	it('is within 0.06 of Excel for SMAPE (other than on the anomalous walk)', () => {
+		for (const r of only('stat5').filter((x) => x.name !== 'walk-20-anomaly'))
 			expect(Math.abs((r.ours as number) - (r.excel as number))).toBeLessThan(0.06);
 	});
 
@@ -83,6 +132,18 @@ describe('FORECAST.ETS.STAT against Excel', () => {
 				expect(r.ours as number).toBeGreaterThanOrEqual(0);
 				expect(r.ours as number).toBeLessThanOrEqual(1);
 			}
+	});
+
+	it('finds Excel alpha on most series', () => {
+		const alpha = only('stat1');
+		const same = alpha.filter((r) => Math.abs((r.ours as number) - (r.excel as number)) < 1e-9);
+		expect(same.length).toBeGreaterThanOrEqual(15);
+	});
+
+	it('measures the error statistics on the last points only, as Excel does', () => {
+		expect([10, 11, 20, 30, 60, 100].map((n) => etsHoldout(n, 0))).toEqual([0, 4, 8, 10, 12, 20]);
+		// Two seasons at least: 35 points with a season of 7 hold out 14.
+		expect(etsHoldout(35, 7)).toBe(14);
 	});
 });
 

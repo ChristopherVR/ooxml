@@ -1,11 +1,12 @@
 // FORECAST.ETS, FORECAST.ETS.CONFINT, FORECAST.ETS.SEASONALITY and FORECAST.ETS.STAT. Built on
-// the additive exponential triple smoothing in `ets-core`. Excel's optimiser is undocumented; this
-// one is calibrated on Excel's recorded answers (forecast-ets-excel.test.ts), which it follows
-// closely for forecasts and seasonality but not exactly (see the deviations in functions.md).
+// the additive exponential triple smoothing in `ets-core`, whose filter, starting values, error
+// statistics and interval were identified against Excel's recorded answers
+// (forecast-ets-excel.test.ts). Excel's own search for the smoothing parameters is undocumented
+// and not reproduced exactly (see the deviations in functions.md).
 import type { CallContext } from '../context';
 import { ERR, fail, type Value } from '../values';
 import { normInv } from './dist-core';
-import { etsErrorSd, type EtsFit, etsPredict, fitEts } from './ets-core';
+import { etsErrorSd, type EtsFit, etsHoldout, etsPredict, fitEts } from './ets-core';
 import { detectSeasonality } from './ets-season';
 import { etsSeries } from './ets-input';
 import { num, omitted, spec } from './helpers';
@@ -53,7 +54,11 @@ const MAE = (e: number[]): number => e.reduce((a, v) => a + Math.abs(v), 0) / e.
 
 function statistic(m: Model, kind: number): number {
 	const { fit, y } = m;
-	const errors = y.map((v, i) => v - (fit.fitted[i] as number));
+	// Excel measures the one-step errors of the last `holdout` points only (every point of a short
+	// series); the scale of MASE comes from the points before them.
+	const holdout = etsHoldout(y.length, fit.m);
+	const from = y.length - holdout;
+	const errors = y.map((v, i) => v - (fit.fitted[i] as number)).slice(holdout ? from : 0);
 	switch (kind) {
 		case 1:
 			return fit.alpha;
@@ -62,8 +67,7 @@ function statistic(m: Model, kind: number): number {
 		case 3:
 			return fit.gamma;
 		case 4: {
-			const lag = fit.m >= 2 ? fit.m : 1;
-			const naive = y.slice(lag).map((v, i) => v - (y[i] as number));
+			const naive = y.slice(1, from).map((v, i) => v - (y[i] as number));
 			const scale = naive.length ? MAE(naive) : 0;
 			// A series that never changes has no scale; Excel reports 0 when it is also fitted exactly.
 			if (scale === 0) return MAE(errors) === 0 ? 0 : fail(ERR.DIV0);
@@ -72,7 +76,8 @@ function statistic(m: Model, kind: number): number {
 		case 5:
 			return (
 				errors.reduce((a, e, i) => {
-					const d = Math.abs(y[i] as number) + Math.abs(fit.fitted[i] as number);
+					const at = (holdout ? from : 0) + i;
+					const d = Math.abs(y[at] as number) + Math.abs(fit.fitted[at] as number);
 					return a + (d === 0 ? 0 : (2 * Math.abs(e)) / d);
 				}, 0) / errors.length
 			);

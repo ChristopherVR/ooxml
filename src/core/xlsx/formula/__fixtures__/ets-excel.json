@@ -2149,5 +2149,1927 @@
                             "type":  "number"
                         }
                     ]
+    },
+    {
+        "name":  "spike",
+        "values":  [
+                       0,
+                       0,
+                       0,
+                       0,
+                       10,
+                       0,
+                       0,
+                       0,
+                       0,
+                       0
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},0)",
+                            "value":  -0.51190643075165154,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(12,{V},{L},0)",
+                            "value":  -0.56006800013298252,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(15,{V},{L},0)",
+                            "value":  -0.70455270827696659,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(11,{V},{L},0.95,0)",
+                            "value":  6.370100687241707,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(13,{V},{L},0.95,0)",
+                            "value":  6.37018031300264,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.002,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.5600021051129338,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  1.8,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.2444491224731862,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  3.2501110925957062,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "step-0-10",
+        "values":  [
+                       0,
+                       0,
+                       0,
+                       0,
+                       0,
+                       10,
+                       10,
+                       10,
+                       10,
+                       10
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},0)",
+                            "value":  13.752092733945563,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(12,{V},{L},0)",
+                            "value":  15.256686696045429,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(15,{V},{L},0)",
+                            "value":  19.770468582345025,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(11,{V},{L},0.95,0)",
+                            "value":  5.5763391957714523,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(13,{V},{L},0.95,0)",
+                            "value":  5.6662658541950179,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.126,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  2.1329431565105255,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.9132707311840228,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  2.3699368405672505,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  2.845123298058998,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "short-5",
+        "values":  [
+                       1,
+                       3,
+                       2,
+                       5,
+                       4
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(6,{V},{L},0)",
+                            "value":  5.2258478820102452,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(7,{V},{L},0)",
+                            "value":  6.041627131381917,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(10,{V},{L},0)",
+                            "value":  8.4889648794969332,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(6,{V},{L},0.95,0)",
+                            "value":  1.8508945020005063,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(8,{V},{L},0.95,0)",
+                            "value":  1.8698661133924068,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.1,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.44588066936000009,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.25435103617662691,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  0.78029117138000015,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  0.94435128226851439,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-7",
+        "values":  [
+                       8.87,
+                       5.91,
+                       5.69,
+                       4.44,
+                       4.88,
+                       7.65,
+                       4.74
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(8,{V},{L},0)",
+                            "value":  4.8834935844778258,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(9,{V},{L},0)",
+                            "value":  4.5332818303454392,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(12,{V},{L},0)",
+                            "value":  3.4826465679482776,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(8,{V},{L},0.95,0)",
+                            "value":  3.4191774899356218,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(10,{V},{L},0.95,0)",
+                            "value":  4.1918125959446559,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.5,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.76856810679223941,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.22185215233967392,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.3513989211096875,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  1.7445103669790152,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "trend-9",
+        "values":  [
+                       7.41,
+                       8.25,
+                       11.83,
+                       16.9,
+                       16.99,
+                       16.79,
+                       15.78,
+                       18.24,
+                       23.36
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(10,{V},{L},0)",
+                            "value":  23.198583703355922,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},0)",
+                            "value":  24.896482828583835,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(14,{V},{L},0)",
+                            "value":  29.990180204267574,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(10,{V},{L},0.95,0)",
+                            "value":  4.1140176539625966,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(12,{V},{L},0.95,0)",
+                            "value":  4.15618620765706,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.1,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.726047254131197,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.10847779304811173,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.6671860072987608,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  2.0990271690773117,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-12",
+        "values":  [
+                       11.38,
+                       10.64,
+                       8.72,
+                       7.41,
+                       9.7,
+                       9.05,
+                       10.71,
+                       12.01,
+                       9.56,
+                       10.98,
+                       13.04,
+                       13.39
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(13,{V},{L},0)",
+                            "value":  13.524809744146516,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(14,{V},{L},0)",
+                            "value":  13.799075481662664,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(17,{V},{L},0)",
+                            "value":  14.62187269421111,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(13,{V},{L},0.95,0)",
+                            "value":  2.9781252313090252,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(15,{V},{L},0.95,0)",
+                            "value":  4.3459256095863381,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.75,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.96172321240737824,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.11891738586789663,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.356029729494403,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  1.5835493768496558,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "trend-24",
+        "values":  [
+                       7.44,
+                       11.83,
+                       12.34,
+                       12.58,
+                       15.98,
+                       16.6,
+                       19.34,
+                       19.71,
+                       18.71,
+                       20.48,
+                       25.64,
+                       21.69,
+                       27.4,
+                       24.08,
+                       28.36,
+                       28.47,
+                       29.41,
+                       28.66,
+                       30.88,
+                       32.33,
+                       39.58,
+                       35.59,
+                       36.78,
+                       43.04
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13,
+                         14,
+                         15,
+                         16,
+                         17,
+                         18,
+                         19,
+                         20,
+                         21,
+                         22,
+                         23,
+                         24
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(25,{V},{L},0)",
+                            "value":  41.185224889769835,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(26,{V},{L},0)",
+                            "value":  42.488034867931766,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(29,{V},{L},0)",
+                            "value":  46.396464802417576,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(25,{V},{L},0.95,0)",
+                            "value":  4.3654406231585057,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(27,{V},{L},0.95,0)",
+                            "value":  4.6333450882406222,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.25,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.73309488618975926,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.055722805028486526,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.9615524597620271,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  2.5752381228979853,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-20-anomaly",
+        "values":  [
+                       7.71,
+                       5.29,
+                       5.95,
+                       3.71,
+                       3.06,
+                       0.51,
+                       -0.85,
+                       0.77,
+                       -0.62,
+                       -0.47,
+                       -1.55,
+                       -2.07,
+                       -0.67,
+                       0.79,
+                       -1.44,
+                       -0.55,
+                       2.39,
+                       -0.05,
+                       -1.6,
+                       -2.29
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13,
+                         14,
+                         15,
+                         16,
+                         17,
+                         18,
+                         19,
+                         20
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(21,{V},{L},0)",
+                            "value":  -2.6454135338345859,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(22,{V},{L},0)",
+                            "value":  -3.0008270676691731,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(25,{V},{L},0)",
+                            "value":  -4.0670676691729319,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(21,{V},{L},0.95,0)",
+                            "value":  3.4522556539710458,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(23,{V},{L},0.95,0)",
+                            "value":  3.6641185068059685,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.25,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  1.4497497253680385,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  1.8046931951966116,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.9294850890352804,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  2.0536116955718122,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-13",
+        "values":  [
+                       52.59,
+                       52.98,
+                       54.88,
+                       52.91,
+                       51.18,
+                       52.83,
+                       53.21,
+                       54.63,
+                       55.26,
+                       58.19,
+                       60.43,
+                       63.61,
+                       66.32
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(14,{V},{L},0)",
+                            "value":  69.31303441553635,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(15,{V},{L},0)",
+                            "value":  72.249939325723361,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(18,{V},{L},0)",
+                            "value":  81.060654056284363,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(14,{V},{L},0.95,0)",
+                            "value":  3.0151598585886075,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(16,{V},{L},0.95,0)",
+                            "value":  8.6868555602724911,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.75,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.749,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.56095009252159378,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.012878642732482463,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  0.75648126762912116,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  0.93679739489215086,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-25-anomaly",
+        "values":  [
+                       51.61,
+                       51.3,
+                       49.27,
+                       48.07,
+                       47.68,
+                       47.14,
+                       46.8,
+                       50.02,
+                       50.5,
+                       49.01,
+                       48.72,
+                       48.87,
+                       49.25,
+                       47.89,
+                       49.67,
+                       49.43,
+                       49.55,
+                       50.66,
+                       49.22,
+                       48.59,
+                       50.9,
+                       50.44,
+                       53.33,
+                       53.65,
+                       53.45
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13,
+                         14,
+                         15,
+                         16,
+                         17,
+                         18,
+                         19,
+                         20,
+                         21,
+                         22,
+                         23,
+                         24,
+                         25
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(26,{V},{L},0)",
+                            "value":  53.574515384615388,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(27,{V},{L},0)",
+                            "value":  53.699030769230774,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(30,{V},{L},0)",
+                            "value":  54.072576923076923,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(26,{V},{L},0.95,0)",
+                            "value":  2.7624818173016421,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(28,{V},{L},0.95,0)",
+                            "value":  4.783164474747915,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.998,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  1.1403441516356192,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.022347574650067453,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.1370860254880895,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  1.4254554891923275,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-50",
+        "values":  [
+                       49.79,
+                       52.27,
+                       51.56,
+                       51.68,
+                       54.87,
+                       55.28,
+                       56.7,
+                       56.81,
+                       59.36,
+                       58.15,
+                       55.89,
+                       56.54,
+                       58.01,
+                       59.55,
+                       61.77,
+                       59.87,
+                       62.61,
+                       62.38,
+                       64.17,
+                       65.21,
+                       64.77,
+                       62.25,
+                       61.44,
+                       61.24,
+                       63.02,
+                       61.22,
+                       61.59,
+                       59.94,
+                       57.51,
+                       58.39,
+                       58.93,
+                       60.37,
+                       58.78,
+                       59.93,
+                       60.41,
+                       62.33,
+                       60.92,
+                       62.36,
+                       64.47,
+                       66.94,
+                       67.14,
+                       65.86,
+                       65.99,
+                       65.24,
+                       63.14,
+                       61.78,
+                       61.27,
+                       62.25,
+                       61.57,
+                       59.33
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13,
+                         14,
+                         15,
+                         16,
+                         17,
+                         18,
+                         19,
+                         20,
+                         21,
+                         22,
+                         23,
+                         24,
+                         25,
+                         26,
+                         27,
+                         28,
+                         29,
+                         30,
+                         31,
+                         32,
+                         33,
+                         34,
+                         35,
+                         36,
+                         37,
+                         38,
+                         39,
+                         40,
+                         41,
+                         42,
+                         43,
+                         44,
+                         45,
+                         46,
+                         47,
+                         48,
+                         49,
+                         50
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(51,{V},{L},0)",
+                            "value":  60.994098429927789,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(52,{V},{L},0)",
+                            "value":  61.183861213517879,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(55,{V},{L},0)",
+                            "value":  61.753149564288165,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(51,{V},{L},0.95,0)",
+                            "value":  3.5426598210523368,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(53,{V},{L},0.95,0)",
+                            "value":  4.343198358302784,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.5,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  1.1425194903015741,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.02560487089958103,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.6250142596673924,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  1.9181262126632714,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "walk-100",
+        "values":  [
+                       50.16,
+                       47.65,
+                       47.27,
+                       47.33,
+                       50.2,
+                       47.75,
+                       45.61,
+                       44.09,
+                       46.27,
+                       45.96,
+                       46.37,
+                       44.32,
+                       43.15,
+                       44.4,
+                       41.87,
+                       44.46,
+                       44.13,
+                       41.71,
+                       42.52,
+                       45.46,
+                       47.74,
+                       50.19,
+                       50.09,
+                       53.33,
+                       55.45,
+                       58.66,
+                       58.46,
+                       60.22,
+                       62.92,
+                       63.76,
+                       62.57,
+                       65.82,
+                       64.75,
+                       62.49,
+                       62.48,
+                       61.52,
+                       62.69,
+                       64.97,
+                       66.65,
+                       69.23,
+                       70.38,
+                       70.4,
+                       68.46,
+                       69.58,
+                       67.89,
+                       67.6,
+                       65.52,
+                       63.7,
+                       66.32,
+                       65.2,
+                       64.81,
+                       63.55,
+                       61.14,
+                       59.13,
+                       58.57,
+                       59.14,
+                       57.55,
+                       58.92,
+                       57.3,
+                       59.99,
+                       59.96,
+                       58.47,
+                       55.95,
+                       57.4,
+                       58.1,
+                       57.08,
+                       54.82,
+                       55.04,
+                       57,
+                       54.84,
+                       52.73,
+                       52.76,
+                       50.76,
+                       52.27,
+                       55.03,
+                       55.42,
+                       58.46,
+                       58.55,
+                       61.35,
+                       59.71,
+                       61.45,
+                       62.5,
+                       62.92,
+                       63.23,
+                       61.64,
+                       62.94,
+                       61.51,
+                       62.95,
+                       63.22,
+                       60.88,
+                       61.25,
+                       59.47,
+                       58.7,
+                       58.23,
+                       56.44,
+                       54.72,
+                       54.96,
+                       57.95,
+                       55.97,
+                       55.41
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11,
+                         12,
+                         13,
+                         14,
+                         15,
+                         16,
+                         17,
+                         18,
+                         19,
+                         20,
+                         21,
+                         22,
+                         23,
+                         24,
+                         25,
+                         26,
+                         27,
+                         28,
+                         29,
+                         30,
+                         31,
+                         32,
+                         33,
+                         34,
+                         35,
+                         36,
+                         37,
+                         38,
+                         39,
+                         40,
+                         41,
+                         42,
+                         43,
+                         44,
+                         45,
+                         46,
+                         47,
+                         48,
+                         49,
+                         50,
+                         51,
+                         52,
+                         53,
+                         54,
+                         55,
+                         56,
+                         57,
+                         58,
+                         59,
+                         60,
+                         61,
+                         62,
+                         63,
+                         64,
+                         65,
+                         66,
+                         67,
+                         68,
+                         69,
+                         70,
+                         71,
+                         72,
+                         73,
+                         74,
+                         75,
+                         76,
+                         77,
+                         78,
+                         79,
+                         80,
+                         81,
+                         82,
+                         83,
+                         84,
+                         85,
+                         86,
+                         87,
+                         88,
+                         89,
+                         90,
+                         91,
+                         92,
+                         93,
+                         94,
+                         95,
+                         96,
+                         97,
+                         98,
+                         99,
+                         100
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(101,{V},{L},0)",
+                            "value":  55.601539302528771,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(102,{V},{L},0)",
+                            "value":  55.708300184337844,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(105,{V},{L},0)",
+                            "value":  56.028582829765071,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(101,{V},{L},0.95,0)",
+                            "value":  3.4819762076004519,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(103,{V},{L},0.95,0)",
+                            "value":  5.6418814103667305,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,0)",
+                            "value":  0.9,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,0)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,0)",
+                            "value":  2.2204460492503131E-16,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,0)",
+                            "value":  0.77523826284140507,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,0)",
+                            "value":  0.020596299335906735,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,0)",
+                            "value":  1.2243857981610393,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,0)",
+                            "value":  1.454911386894066,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,0)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "season2-9",
+        "values":  [
+                       20.17,
+                       25.97,
+                       22.11,
+                       26.53,
+                       23.01,
+                       26.73,
+                       22.98,
+                       29.74,
+                       27.1
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(10,{V},{L},2)",
+                            "value":  30.744415316752633,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},2)",
+                            "value":  27.099407614079759,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(14,{V},{L},2)",
+                            "value":  33.476275861265961,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(10,{V},{L},0.95,2)",
+                            "value":  1.7597561233668111,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(12,{V},{L},0.95,2)",
+                            "value":  1.7743456150354533,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,2)",
+                            "value":  0.002,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,2)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,2)",
+                            "value":  0.125,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,2)",
+                            "value":  0.16115631663240548,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,2)",
+                            "value":  0.027163474240150646,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,2)",
+                            "value":  0.694382279289877,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,2)",
+                            "value":  0.89785125504730867,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,2)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "season3-9",
+        "values":  [
+                       20.07,
+                       27.01,
+                       16.68,
+                       21.36,
+                       27.46,
+                       17.69,
+                       22.52,
+                       29.48,
+                       19.56
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(10,{V},{L},3)",
+                            "value":  24.09847615107515,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},3)",
+                            "value":  30.687913017862336,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(14,{V},{L},3)",
+                            "value":  32.043512865343111,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(10,{V},{L},0.95,3)",
+                            "value":  0.57840142340773271,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(12,{V},{L},0.95,3)",
+                            "value":  0.5784086533803382,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,3)",
+                            "value":  0.002,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,3)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,3)",
+                            "value":  0.125,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,3)",
+                            "value":  0.031532000166716187,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,3)",
+                            "value":  0.010206871440502375,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,3)",
+                            "value":  0.23463749624057684,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,3)",
+                            "value":  0.29510818972699981,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,3)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "season4-8",
+        "values":  [
+                       20,
+                       26.72,
+                       23.34,
+                       17.93,
+                       23.46,
+                       30.11,
+                       28.32,
+                       21.26
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(9,{V},{L},4)",
+                            "value":  27.255775157200471,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(10,{V},{L},4)",
+                            "value":  34.109303961545471,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(13,{V},{L},4)",
+                            "value":  31.061175772594563,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(9,{V},{L},0.95,4)",
+                            "value":  0.886858808567287,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(11,{V},{L},0.95,4)",
+                            "value":  0.94170583821700771,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,4)",
+                            "value":  0.251,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,4)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,4)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,4)",
+                            "value":  0.063958799060838428,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,4)",
+                            "value":  0.013667983963828453,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,4)",
+                            "value":  0.33386493109757653,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,4)",
+                            "value":  0.45248729852319552,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,4)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "season5-10",
+        "values":  [
+                       20.47,
+                       24.26,
+                       27.77,
+                       22.63,
+                       17.29,
+                       21.07,
+                       24.57,
+                       27.96,
+                       24.71,
+                       19.55
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(11,{V},{L},5)",
+                            "value":  22.537466475574963,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(12,{V},{L},5)",
+                            "value":  26.436882327478283,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(15,{V},{L},5)",
+                            "value":  19.889969945702575,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(11,{V},{L},0.95,5)",
+                            "value":  1.0842843277703833,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(13,{V},{L},0.95,5)",
+                            "value":  1.1513409709467899,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,5)",
+                            "value":  0.251,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,5)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,5)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,5)",
+                            "value":  0.10387747859711424,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,5)",
+                            "value":  0.019173504461591905,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,5)",
+                            "value":  0.42543598456551451,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,5)",
+                            "value":  0.553216455160952,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,5)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
+    },
+    {
+        "name":  "season3-11",
+        "values":  [
+                       19.16,
+                       26.02,
+                       17.01,
+                       21.91,
+                       27.84,
+                       17.25,
+                       23.51,
+                       30.13,
+                       17.87,
+                       24.15,
+                       31.52
+                   ],
+        "timeline":  [
+                         1,
+                         2,
+                         3,
+                         4,
+                         5,
+                         6,
+                         7,
+                         8,
+                         9,
+                         10,
+                         11
+                     ],
+        "results":  [
+                        {
+                            "formula":  "FORECAST.ETS(12,{V},{L},3)",
+                            "value":  19.346897758118782,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(13,{V},{L},3)",
+                            "value":  25.716589144262628,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS(16,{V},{L},3)",
+                            "value":  27.280273513135853,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(12,{V},{L},0.95,3)",
+                            "value":  1.554932790042169,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.CONFINT(14,{V},{L},0.95,3)",
+                            "value":  1.5708708030414618,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},1,3)",
+                            "value":  0.1,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},2,3)",
+                            "value":  0.001,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},3,3)",
+                            "value":  0.899,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},4,3)",
+                            "value":  0.097379093871384,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},5,3)",
+                            "value":  0.030805422432855889,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},6,3)",
+                            "value":  0.70680992301646217,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},7,3)",
+                            "value":  0.81372163952134013,
+                            "type":  "number"
+                        },
+                        {
+                            "formula":  "FORECAST.ETS.STAT({V},{L},8,3)",
+                            "value":  1,
+                            "type":  "number"
+                        }
+                    ]
     }
 ]
