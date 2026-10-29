@@ -88,12 +88,7 @@ export async function writeTagCollections(
 		collection.rawXml = { ...(collection.rawXml ?? {}), 'p:tagLst': root };
 		zip.file(collection.path, codec.build(collection.rawXml));
 		await upsertTagRelationship(zip, codec, collection);
-		await upsertTagsOwningElement(
-			zip,
-			codec,
-			collection.sourcePartPath,
-			collection.relationshipId!,
-		);
+		await upsertTagsOwningElement(zip, collection.sourcePartPath, collection.relationshipId!);
 		writtenPaths.add(collection.path);
 	}
 	await upsertTagContentTypes(zip, codec, writtenPaths);
@@ -113,7 +108,7 @@ async function removeTagCollection(
 	if (!collection.path || !collection.sourcePartPath) {
 		return;
 	}
-	await removeTagsOwningElement(zip, codec, collection.sourcePartPath);
+	await removeTagsOwningElement(zip, collection.sourcePartPath, collection.relationshipId);
 	await removeTagRelationship(zip, codec, collection);
 	zip.remove(collection.path);
 	await removeTagContentTypeOverride(zip, codec, collection.path);

@@ -109,7 +109,7 @@ describe('p:smartTags (preserve only) and p:custDataLst/p:tags (authored) refere
 			/<Relationship Id="(rId\d+)" Type="http:\/\/schemas\.openxmlformats\.org\/officeDocument\/2006\/relationships\/tags"/u,
 		);
 		expect(relMatch).toBeTruthy();
-		expect(presentationXml).toContain(`<p:tags r:id="${relMatch![1]}"></p:tags>`);
+		expect(presentationXml).toContain(`<p:tags r:id="${relMatch![1]}"/>`);
 		expect(presentationXml).not.toContain('<p:smartTags');
 	});
 });

@@ -95,7 +95,7 @@ describe('customer data package authoring', () => {
 			savedSlideXml.indexOf('<p:custDataLst>'),
 		);
 		expect(savedSlideXml.indexOf('<p:custDataLst>')).toBeLessThan(
-			savedSlideXml.indexOf('<p:controls>'),
+			savedSlideXml.indexOf('<p:controls'),
 		);
 		expect(slideRels).toContain('Target="../../customXml/item1.xml"');
 		expect(types).toContain(

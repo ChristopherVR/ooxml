@@ -60,9 +60,9 @@ describe('user-defined tags package integration', () => {
 		const relId = relMatch![1]!;
 		// The element AND the relationship both exist and reference each other:
 		// the relationship id above and the element's r:id below must match.
-		expect(presentationXml).toContain(`<p:tags r:id="${relId}"></p:tags>`);
+		expect(presentationXml).toContain(`<p:tags r:id="${relId}"/>`);
 		expect(presentationXml).toMatch(
-			/<p:custDataLst>[\s\S]*<p:tags r:id="rId\d+">[\s\S]*<\/p:custDataLst>/u,
+			/<p:custDataLst>[\s\S]*<p:tags r:id="rId\d+"\/>[\s\S]*<\/p:custDataLst>/u,
 		);
 	});
 
@@ -112,7 +112,7 @@ describe('user-defined tags package integration', () => {
 		// The owning element lives in the slide's own p:cSld/p:custDataLst, not
 		// the presentation root, and references the same relationship id.
 		const slideXml = await authoredZip.file('ppt/slides/slide1.xml')!.async('string');
-		expect(slideXml).toContain(`<p:tags r:id="${relId}"></p:tags>`);
+		expect(slideXml).toContain(`<p:tags r:id="${relId}"/>`);
 
 		const tagXml = await authoredZip.file(tags[0].path!)!.async('string');
 		authoredZip.file(

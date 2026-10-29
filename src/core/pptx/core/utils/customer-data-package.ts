@@ -1,6 +1,13 @@
 import type JSZip from 'jszip';
 
+import { buildXml, parseXml, type XmlDocument, type XmlElement } from '../../../xml/index';
 import type { PptxCustomerData, XmlObject } from '../types';
+import {
+	custDataContainer,
+	ensureCustDataList,
+	listChildren,
+	removeIfEmpty,
+} from './cust-data-list-dom';
 import { safeResolveZipPath } from './safe-path';
 
 export const CUSTOM_XML_RELATIONSHIP_TYPE =
@@ -30,9 +37,11 @@ export async function writeCustomerDataScopes(
 		if (!sourceXml) {
 			continue;
 		}
-		const sourceData = codec.parse(sourceXml);
-		const container = getContainer(sourceData, scope.location);
-		if (!container) {
+		// Edited as a DOM: rebuilding the written part through the grouping
+		// object model would regroup its interleaved siblings (see cust-data-list-dom).
+		const sourceDoc = parseXml(sourceXml, { label: scope.sourcePartPath });
+		const container = custDataContainer(sourceDoc);
+		if (!container || !matchesLocation(container, scope.location)) {
 			continue;
 		}
 		const relsPath = relsForSourcePart(scope.sourcePartPath);
@@ -69,12 +78,10 @@ export async function writeCustomerDataScopes(
 			authoredEntries.push(rawEntry);
 			contentTypes.set(path, entry.contentType);
 		}
-		const existingList = (container['p:custDataLst'] as XmlObject | undefined) ?? {};
-		existingList['p:custData'] = authoredEntries;
-		placeCustomerDataList(container, existingList, scope.location);
+		replaceCustomerDataEntries(sourceDoc, container, authoredEntries, codec);
 		relsRoot['Relationship'] = relationships;
 		zip.file(relsPath, codec.build(relsData));
-		zip.file(scope.sourcePartPath, codec.build(sourceData));
+		zip.file(scope.sourcePartPath, buildXml(sourceDoc));
 	}
 	await upsertContentTypes(zip, codec, contentTypes);
 }
@@ -102,15 +109,10 @@ export async function resolveContentType(
 	return fallback?.['@_ContentType'] ? String(fallback['@_ContentType']) : undefined;
 }
 
-function getContainer(
-	data: XmlObject,
-	location: CustomerDataScope['location'],
-): XmlObject | undefined {
-	if (location === 'presentation') {
-		return data['p:presentation'] as XmlObject | undefined;
-	}
-	const slide = data['p:sld'] as XmlObject | undefined;
-	return slide?.['p:cSld'] as XmlObject | undefined;
+/** Whether the part's `p:custDataLst` container is the one `location` names. */
+function matchesLocation(container: XmlElement, location: CustomerDataScope['location']): boolean {
+	const rootName = container.ownerDocument?.documentElement?.localName;
+	return rootName === (location === 'presentation' ? 'presentation' : 'sld');
 }
 
 function upsertRelationship(
@@ -137,34 +139,43 @@ function isCustomXmlRelationship(value: unknown): boolean {
 	return String(value ?? '').endsWith('/relationships/customXml');
 }
 
-function placeCustomerDataList(
-	container: XmlObject,
-	list: XmlObject,
-	location: CustomerDataScope['location'],
+/**
+ * Make `entries` the container list's `p:custData` children, ahead of any
+ * `p:tags` (CT_CustomerDataList is `custData*, tags?`), leaving everything else
+ * in the part untouched. Each entry is serialized through `codec` so its
+ * preserved unknown attributes and children survive, then imported into the
+ * part under the part's own namespace declarations.
+ */
+function replaceCustomerDataEntries(
+	doc: XmlDocument,
+	container: XmlElement,
+	entries: XmlObject[],
+	codec: XmlCodec,
 ): void {
-	const insertBefore =
-		location === 'presentation'
-			? new Set(['p:kinsoku', 'p:defaultTextStyle', 'p:modifyVerifier', 'p:extLst'])
-			: new Set(['p:controls', 'p:extLst']);
-	const rebuilt: XmlObject = {};
-	let inserted = false;
-	for (const [key, value] of Object.entries(container)) {
-		if (key === 'p:custDataLst') {
-			continue;
-		}
-		if (!inserted && insertBefore.has(key)) {
-			rebuilt['p:custDataLst'] = list;
-			inserted = true;
-		}
-		rebuilt[key] = value;
+	const list = ensureCustDataList(doc, container);
+	for (const stale of listChildren(list, 'custData')) {
+		list.removeChild(stale);
 	}
-	if (!inserted) {
-		rebuilt['p:custDataLst'] = list;
+	const anchor = listChildren(list, 'tags')[0] ?? null;
+	for (const entry of entries) {
+		list.insertBefore(customerDataElement(doc, entry, codec), anchor);
 	}
-	for (const key of Object.keys(container)) {
-		delete container[key];
-	}
-	Object.assign(container, rebuilt);
+	removeIfEmpty(list);
+}
+
+function customerDataElement(doc: XmlDocument, entry: XmlObject, codec: XmlCodec): XmlElement {
+	const root = doc.documentElement!;
+	const declarations = Array.from(root.attributes)
+		.filter((attribute) => attribute.name === 'xmlns' || attribute.name.startsWith('xmlns:'))
+		.map((attribute) => `${attribute.name}="${attribute.value}"`)
+		.join(' ');
+	const fragment = parseXml(
+		`<wrap ${declarations}>${codec.build({ 'p:custData': entry })}</wrap>`,
+		{
+			label: 'p:custData',
+		},
+	);
+	return doc.importNode(fragment.documentElement!.firstChild!, true) as XmlElement;
 }
 
 async function upsertContentTypes(
