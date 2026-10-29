@@ -25,7 +25,7 @@ npx openteams-server --insecure-dev     # 仅用于本地开发：监听 127.0.0
 | `TEAMS_ORIGINS` | 无          | 以逗号分隔的、允许访问套接字和文件的 `Origin`。未设置时：有令牌则允许任意来源，无令牌则仅允许回环地址。 |
 | `TEAMS_DATA`    | `./data`    | 数据目录：`rooms/<room>.bin` 快照和 `files/<workspace>/`。                                              |
 
-服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes`、`insecure`、`insecureDev` 和 `trustProxy`。
+服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`、`TEAMS_WORKSPACE_QUOTA_MB`、`TEAMS_COMPACT_INTERVAL_MIN`、`TEAMS_METRICS_TOKEN`、`TEAMS_LOG_FORMAT`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes`、`workspaceQuotaBytes`、`metricsToken`、`compactIntervalMs`、`insecure`、`insecureDev` 和 `trustProxy`。
 
 也可以将其嵌入：
 
@@ -60,17 +60,20 @@ const config = {
 
 ## 端点
 
-| 端点                                  | 作用                                                                                                      |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `ws /sync/<room>`                     | 兼容 y-websocket 的同步：每个房间一个 `Y.Doc` 和 awareness，持久化到 `rooms/<room>.bin`。消息最大 32 MB。 |
-| `ws /signal/<room>`                   | 通话信令的 JSON 中继：将每条文本消息转发给房间内的其他套接字。消息最大 256 KB。                           |
-| `POST /files/<workspace>/<name>`      | 存储附件（上限 25 MB），并返回 `201 { url, size }`。                                                      |
-| `GET /files/<workspace>/<name>`       | 以附件形式下载（`Content-Disposition: attachment`、`Referrer-Policy: no-referrer`、`nosniff`）。          |
-| `POST /files/link/<workspace>/<name>` | 返回 `{ url }`：仅针对该文件签名的链接，有效期五分钟，因此令牌不会出现在 URL 中。                         |
-| `GET /health`                         | `{ ok, rooms, calls, auth }`。                                                                            |
-| `POST /auth/session`                  | 为 `{ user, credential }` 签发会话（有速率限制）。参见服务器 README 中的 "Accounts and sessions"。        |
-| `POST /auth/check`, `/auth/signout`   | 检查 `{ session }`（204 或 401）；登出，会撤销该用户的会话。                                              |
-| `POST /auth/revoke`                   | 运营者使用 `TEAMS_ADMIN_TOKEN` 撤销 `{ user }`；没有管理员令牌时为 404。                                  |
+| 端点                                  | 作用                                                                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `ws /sync/<room>`                     | 兼容 y-websocket 的同步：每个房间一个 `Y.Doc` 和 awareness，持久化到 `rooms/<room>.bin`。消息最大 32 MB。                |
+| `ws /signal/<room>`                   | 通话信令的 JSON 中继：将每条文本消息转发给房间内的其他套接字。消息最大 256 KB。                                          |
+| `POST /files/<workspace>/<name>`      | 存储附件（上限 25 MB），并返回 `201 { url, size }`。                                                                     |
+| `GET /files/<workspace>/<name>`       | 以附件形式下载（`Content-Disposition: attachment`、`Referrer-Policy: no-referrer`、`nosniff`）。                         |
+| `POST /files/link/<workspace>/<name>` | 返回 `{ url }`：仅针对该文件签名的链接，有效期五分钟，因此令牌不会出现在 URL 中。                                        |
+| `GET /files/<scope>`                  | 列出某个范围的文件，格式为 `{ files: [{ name, size, modified, uploader }] }`。范围是工作空间 id 或私聊房间名（仅成员）。 |
+| `DELETE /files/<scope>/<name>`        | 删除文件（上传者或版主）。返回 `204`、`403` 或 `404`。                                                                   |
+| `GET /metrics`                        | Prometheus 文本，仅当以 `TEAMS_METRICS_TOKEN` 作为 Bearer 令牌时提供（未设置则 404）。                                   |
+| `GET /health`                         | `{ ok, rooms, calls, auth }`。                                                                                           |
+| `POST /auth/session`                  | 为 `{ user, credential }` 签发会话（有速率限制）。参见服务器 README 中的 "Accounts and sessions"。                       |
+| `POST /auth/check`, `/auth/signout`   | 检查 `{ session }`（204 或 401）；登出，会撤销该用户的会话。                                                             |
+| `POST /auth/revoke`                   | 运营者使用 `TEAMS_ADMIN_TOKEN` 撤销 `{ user }`；没有管理员令牌时为 404。                                                 |
 
 房间名必须匹配 `^[\w-]{1,128}$`，文件路径中的工作空间 id 必须匹配 `^[\w-]{1,64}$`；文件名会被清理为仅含字母、数字、`.`、`-`、`_`、空格和括号，并截断为 120 个字符。
 
@@ -90,6 +93,10 @@ const config = {
 
 可选。使用 `POST|GET <origin>/files/<workspace>/<name>`，令牌放在 `Authorization: Bearer` 头中，另有 `POST <origin>/files/link/<workspace>/<name>` 返回短期有效的签名 `{ url }`，用于在浏览器标签页中打开文件。origin 取自 `syncUrl`。没有文件服务器时，可以给元素提供一个 `uploadFile` 函数（把附件放入你自己的对象存储），否则附件仅按名称共享。
 
+文件有范围之分。`<scope>` 对频道文件是工作空间 id，对私聊是其房间名（`chat-<hash>-<chat id>`），只有该聊天的成员能访问其文件。
+启用账户的服务器要求每个文件请求都在 `X-Teams-Session` 头中携带已签名会话（未启用账户的服务器则读取 `X-Teams-User` 中声明的用户）；
+客户端两者都会发送。另有可选接口：`GET <origin>/files/<scope>` 用于列出，`DELETE <origin>/files/<scope>/<name>` 供上传者或版主使用。
+
 配置了令牌时，两个套接字都会收到 `?token=<token>`，因为浏览器无法为 WebSocket 设置请求头。请在服务器端强制校验它以及来源白名单。
 
 ## 通话：STUN 与 TURN {#calls-stun-and-turn}
@@ -104,6 +111,6 @@ const config = {
 - **账户功能精简。** 使用 `users`（或 `TEAMS_USERS_FILE`）或 `authenticate` 函数时，服务器会签发会话（`POST /auth/session`）、从会话中获取用户 ID，并可以撤销会话。没有它们时，`TEAMS_TOKEN` 是所有人共用的一个密钥，保存在浏览器中，用户 ID 只是声明。没有密码重置、账户管理、SSO，也没有按团队的访问控制。客户端中的作者和角色检查可以被恶意客户端绕过，因此服务器是信任边界：请使用 `authenticate` 接入你的身份提供方，并用 `authorizeSync` 实现按房间的权限。
 - **自身不提供 TLS。** 请在终止 TLS 并升级 WebSocket 的反向代理之后运行它；浏览器会拒绝 `https://` 页面发起的 `ws://` 连接。
 - **单进程，房间驻留内存。** 它不支持水平扩展。房间在其最后一个套接字关闭 30 秒后被卸载。
-- **每个房间一个快照，不做压缩。** 文档会随历史增长，且从不修剪。
-- **简单的文件存储。** 没有列表、没有删除、没有按工作空间的配额；上传同名文件会替换原文件。每个文件上限 25 MB。
+- **每个房间一个快照。** 房间加载时以及按定时器（`TEAMS_COMPACT_INTERVAL_MIN`）会把它重新编码为单个紧凑更新，但历史从不修剪，活跃房间仍会增长；大小上限（`TEAMS_MAX_DOC_MB`）对其设限。
+- **简单的文件存储。** 文件按工作空间和私聊分隔（只有私聊成员能访问其文件），上传者或版主可列出和删除，并按工作空间统计（`TEAMS_WORKSPACE_QUOTA_MB`）。频道文件任何已登录用户都可读取；没有按文件共享、版本管理或病毒扫描。上传绝不会覆盖已有文件：重名文件会以新名称保存。每个文件上限 25 MB。
 - **无速率限制**，也没有媒体服务器：通话是点对点的（网状）。

@@ -129,7 +129,7 @@ throws):
    sockets of the room, and sends `{ "type": "bye", "from": <id> }` to them when a socket closes. A
    socket speaks for one peer id (the first `from` it uses). It does not need to understand the
    messages (`signaling.ts` defines them).
-3. **Files** (optional): `POST|GET <origin>/files/<workspace>/<name>`, with the token in an
+3. **Files** (optional): `POST|GET|DELETE <origin>/files/<scope>/<name>` and `GET <origin>/files/<scope>` (a scope is the workspace id, or a private chat's room name whose files only that chat's members reach; the client sends `X-Teams-Session`, or `X-Teams-User` without accounts), with the token in an
    `Authorization: Bearer` header. To open a file in a browser tab the client calls
    `POST <origin>/files/link/<workspace>/<name>` (same header) and gets `{ url }` back: a link
    signed for that one file, valid for a few minutes (`?sig=...&exp=...`), so the token never

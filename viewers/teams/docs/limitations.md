@@ -33,10 +33,12 @@ never translated.
 
 Files views support direct upload, blank Excel creation and metadata search when
 storage is configured. Uploads show a busy state and allow retry, with no byte
-progress or cancellation. Failed batches can leave unreferenced storage objects;
-the reference server has no cleanup contract for these objects. Folders, document
-content indexing, file version history and authenticated file permissions are
-not implemented.
+progress or cancellation. A failed batch can leave files that were uploaded before the failure and are not
+referenced by any message; the reference server removes its partial uploads and lets the uploader or a
+moderator delete the rest (`DELETE /files/<scope>/<name>`), but does not remove them on its own.
+The reference server limits private chat files to the chat's members and counts storage per
+workspace; channel files are readable by every signed-in user of the server. Folders, document
+content indexing and file version history are not implemented.
 
 Markdown supports headings, bullets, quotes, fenced code, basic emphasis and web
 links, flat task lists, top-level pipe tables and file-relative web links. It does not

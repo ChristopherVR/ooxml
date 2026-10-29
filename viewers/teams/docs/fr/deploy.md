@@ -19,7 +19,11 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `TEAMS_MAX_ROOMS`                                       | Salles de synchronisation et d’appel (1000 chacune par défaut).                                                                                                                                                                                                                               |
 | `TEAMS_MAX_DOC_MB`                                      | Plus grand document de salle persisté, en Mo (64 par défaut) ; les mises à jour au-delà sont rejetées.                                                                                                                                                                                        |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Messages par seconde (100 par défaut) et rafale (200) par socket ; un socket qui dépasse est fermé.                                                                                                                                                                                           |
-| `TEAMS_FILES_QUOTA_MB`                                  | Taille totale du répertoire des fichiers, en Mo (1024 par défaut) ; les envois au-delà reçoivent 507.                                                                                                                                                                                         |
+| `TEAMS_FILES_QUOTA_MB`                                  | Plafond facultatif pour tout le répertoire des fichiers, en Mo (désactivé par défaut) ; les envois au-delà reçoivent 507.                                                                                                                                                                     |
+| `TEAMS_WORKSPACE_QUOTA_MB`                              | Fichiers par espace de travail, en Mo (1024 par défaut ; un chat privé compte pour son espace de travail) ; les envois au-delà reçoivent 507.                                                                                                                                                 |
+| `TEAMS_COMPACT_INTERVAL_MIN`                            | Minutes entre deux compactages des instantanés de salle (360 par défaut, `0` coupe le minuteur). Une salle est aussi compactée à son chargement.                                                                                                                                              |
+| `TEAMS_METRICS_TOKEN`                                   | Active `GET /metrics` (texte Prometheus), servi seulement avec `Authorization: Bearer <ce jeton>`. Désactivé sans lui.                                                                                                                                                                        |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                 | `text` (par défaut) ou `json` : un objet JSON par ligne avec `time`, `level` et `msg`.                                                                                                                                                                                                        |
 
 Il sert `ws /sync/<room>` (compatible y-websocket, un `Y.Doc` persisté par salle),
 `ws /signal/<room>` (un relais JSON) et `POST|GET /files/<workspace>/<name>` (plafond de 25 Mo,
@@ -112,7 +116,7 @@ WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
 COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
-  server/rate-limit.mjs server/chat-access.mjs ./
+  server/rate-limit.mjs server/chat-access.mjs server/validator.generated.mjs server/files.mjs server/metrics.mjs server/room-store.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data TEAMS_USERS_FILE=/config/users.json
 RUN mkdir /data && chown node:node /data
 VOLUME /data
@@ -148,6 +152,7 @@ Tout ce que le serveur conserve se trouve sous `TEAMS_DATA` (`./data` par défau
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `rooms/<room>.bin`         | Un instantané Yjs par salle : tout le chat, les canaux, les calendriers et les données des onglets.                         |
 | `files/<workspace>/`       | Les fichiers téléversés.                                                                                                    |
+| `file-meta/<scope>.json`   | Qui a envoyé chaque fichier (décide qui peut le supprimer). À sauvegarder avec `files/`.                                    |
 | `session-revocations.json` | Les générations de révocation des sessions (sans lui, les sessions révoquées redeviennent valides jusqu’à leur expiration). |
 
 Conservez aussi ce qui ne se trouve pas dans le répertoire de données : votre fichier de comptes (`TEAMS_USERS_FILE`) et `TEAMS_SESSION_SECRET`.
@@ -162,6 +167,35 @@ du volume au niveau du système de fichiers.
 Pour restaurer, arrêtez le serveur, remplacez le répertoire de données par la sauvegarde (en gardant `rooms/`, `files/` et `session-revocations.json`
 ensemble), restaurez le fichier de comptes et le secret, puis démarrez-le. Les clients connectés se reconnectent et fusionnent : Yjs conserve ce qu’ils
 détiennent et que la sauvegarde ne contient pas, de sorte qu’une restauration n’efface pas le travail encore ouvert dans un navigateur.
+
+### Fichiers, compactage et métriques
+
+- **Permissions des fichiers.** Un fichier vit dans un périmètre : l'identifiant de l'espace de travail pour les fichiers de
+  canal (tout utilisateur connecté du serveur) ou le nom de salle d'un chat privé (`chat-<hash>-<chat id>`), que seuls les
+  membres de ce chat peuvent lister, lire, alimenter ou lier. Le serveur vérifie la liste des membres du chat comme pour sa
+  salle de synchronisation. Avec des comptes, chaque requête de fichier doit porter la session signée dans `X-Teams-Session`
+  (le client le fait) ; un lien de téléchargement signé n'est délivré qu'après cette vérification et ouvre son seul fichier
+  pendant cinq minutes. Avec `--insecure-dev`, le `X-Teams-User` déclaré fait foi, comme toute déclaration là-bas. Les
+  fichiers de canal ne sont pas restreints par canal : tous les utilisateurs du serveur peuvent les lire.
+- **Liste et suppression.** `GET /files/<scope>` répond `{ files: [{ name, size, modified, uploader }] }`.
+  `DELETE /files/<scope>/<name>` est permis à la personne qui l'a envoyé ou à un modérateur (`204`, sinon `403`). Les
+  fichiers envoyés avant cette version n'ont pas d'auteur enregistré : seul un modérateur peut les supprimer.
+- **Nettoyage.** Un envoi est écrit dans un fichier caché `.part`, qu'un envoi échoué ou interrompu supprime. Au démarrage,
+  le serveur supprime tous les `.part` restants (et les temporaires de salle périmés), puis toutes les 15 minutes ceux de
+  plus d'une heure. Les fichiers envoyés mais jamais joints à un message restent jusqu'à leur suppression.
+- **Quotas.** La limite est par espace de travail (`TEAMS_WORKSPACE_QUOTA_MB`, 1024 par défaut) et compte ses fichiers de
+  canal et ceux de ses chats privés ; supprimer libère de la place. `TEAMS_FILES_QUOTA_MB` est un plafond facultatif pour
+  tout le répertoire.
+- **Compactage.** Au chargement d'une salle, et toutes les `TEAMS_COMPACT_INTERVAL_MIN` minutes pour chaque salle, le serveur
+  ré-encode la salle en une seule mise à jour Yjs sur un document neuf et ne l'écrit que si elle est plus petite et décrit
+  exactement le même état. L'écriture va dans un fichier temporaire, est forcée sur disque puis renommée par-dessus
+  l'instantané : un plantage laisse l'ancien ou le nouvel instantané, jamais un instantané tronqué ; les temporaires
+  interrompus sont supprimés au démarrage. Les sauvegardes faites avant ou après un compactage se restaurent toutes deux.
+- **Métriques.** Définissez `TEAMS_METRICS_TOKEN` et interrogez `GET /metrics` avec `Authorization: Bearer <jeton>` :
+  `teams_rooms_open`, `teams_connections{kind}`, `teams_stored_bytes{kind="rooms|files"}`,
+  `teams_updates_rejected_total{code}`, `teams_auth_failures_total{kind}`, `teams_rate_limited_total{scope}` et
+  `teams_room_compactions_total`. Sans jeton, le point d'accès répond 404. Ne l'exposez pas sur Internet.
+- **Journaux.** `--log-format=json` (ou `TEAMS_LOG_FORMAT=json`) écrit un objet JSON par ligne : `{ "time", "level", "msg" }`.
 
 ### Mise à niveau
 
@@ -184,7 +218,7 @@ développement local. Un `TEAMS_TOKEN` partagé seul ne démarre plus le serveur
 - [ ] Les journaux d’accès du proxy n’enregistrent pas les chaînes de requête (les sockets portent `?token=` et `?session=`), ou vous l’acceptez.
 - [ ] `TEAMS_ADMIN_TOKEN` défini si vous avez besoin de `POST /auth/revoke`, et gardé secret.
 - [ ] Le répertoire de données est sur un volume persistant, accessible en écriture seulement à l’utilisateur du serveur, et sauvegardé.
-- [ ] Limites revues (`TEAMS_MAX_*`, `TEAMS_FILES_QUOTA_MB`) et le proxy applique sa propre limitation de débit.
+- [ ] Limites revues (`TEAMS_MAX_*`, `TEAMS_WORKSPACE_QUOTA_MB`) et le proxy applique sa propre limitation de débit.
 - [ ] Identifiants TURN de courte durée, pas de secret statique dans la page.
 - [ ] Le processus est supervisé et arrêté par `SIGTERM` afin que les salles soient enregistrées.
 - [ ] Vous avez lu [Limitations](./limitations.md) : pas de chiffrement de bout en bout, les membres d’une salle se font mutuellement confiance.

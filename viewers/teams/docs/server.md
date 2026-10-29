@@ -33,7 +33,7 @@ with a warning, for local development. It is configured through the environment 
 | `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one. |
 | `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                             |
 
-The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `insecure`, `insecureDev` and `trustProxy`.
+The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` and `trustProxy`.
 
 Or embed it:
 
@@ -68,17 +68,20 @@ const config = {
 
 ## Endpoints
 
-| Endpoint                              | What it does                                                                                                            |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `ws /sync/<room>`                     | y-websocket compatible sync: one `Y.Doc` and awareness per room, persisted to `rooms/<room>.bin`. Messages up to 32 MB. |
-| `ws /signal/<room>`                   | JSON relay for call signaling: forwards each text message to the room's other sockets. Messages up to 256 KB.           |
-| `POST /files/<workspace>/<name>`      | Stores an attachment (25 MB cap) and answers `201 { url, size }`.                                                       |
-| `GET /files/<workspace>/<name>`       | Downloads it as an attachment (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).           |
-| `POST /files/link/<workspace>/<name>` | Returns `{ url }`: a link signed for that one file, valid for five minutes, so the token never appears in a URL.        |
-| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                           |
-| `POST /auth/session`                  | Signs a session for `{ user, credential }` (rate limited). See "Accounts and sessions" in the server's README.          |
-| `POST /auth/check`, `/auth/signout`   | Check a `{ session }` (204 or 401); sign out, which revokes the user's sessions.                                        |
-| `POST /auth/revoke`                   | Operator revocation of `{ user }` with `TEAMS_ADMIN_TOKEN`; a 404 without an admin token.                               |
+| Endpoint                              | What it does                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ws /sync/<room>`                     | y-websocket compatible sync: one `Y.Doc` and awareness per room, persisted to `rooms/<room>.bin`. Messages up to 32 MB.                           |
+| `ws /signal/<room>`                   | JSON relay for call signaling: forwards each text message to the room's other sockets. Messages up to 256 KB.                                     |
+| `POST /files/<workspace>/<name>`      | Stores an attachment (25 MB cap) and answers `201 { url, size }`.                                                                                 |
+| `GET /files/<workspace>/<name>`       | Downloads it as an attachment (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                     |
+| `POST /files/link/<workspace>/<name>` | Returns `{ url }`: a link signed for that one file, valid for five minutes, so the token never appears in a URL.                                  |
+| `GET /files/<scope>`                  | Lists a scope's files as `{ files: [{ name, size, modified, uploader }] }`. A scope is a workspace id or a private chat room name (members only). |
+| `DELETE /files/<scope>/<name>`        | Deletes a file (the uploader or a moderator). `204`, `403` or `404`.                                                                              |
+| `GET /metrics`                        | Prometheus text, only with `TEAMS_METRICS_TOKEN` as the Bearer token (404 when unset).                                                            |
+| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                                     |
+| `POST /auth/session`                  | Signs a session for `{ user, credential }` (rate limited). See "Accounts and sessions" in the server's README.                                    |
+| `POST /auth/check`, `/auth/signout`   | Check a `{ session }` (204 or 401); sign out, which revokes the user's sessions.                                                                  |
+| `POST /auth/revoke`                   | Operator revocation of `{ user }` with `TEAMS_ADMIN_TOKEN`; a 404 without an admin token.                                                         |
 
 Room names must match `^[\w-]{1,128}$` and workspace ids in file paths `^[\w-]{1,64}$`; file names
 are sanitised to letters, digits, `.`, `-`, `_`, spaces and parentheses, and capped at 120
@@ -113,6 +116,12 @@ for opening a file in a browser tab. The origin is taken from `syncUrl`. Without
 the element an `uploadFile` function (to put attachments in your own object store), or attachments
 are shared by name only.
 
+Files are scoped. `<scope>` is the workspace id for channel files, or the room name of a private chat
+(`chat-<hash>-<chat id>`), whose files only that chat's members may reach. A server with accounts expects the
+signed session in an `X-Teams-Session` header on every file request (a server without them reads the
+claimed user from `X-Teams-User`); the client sends both. Also optional: `GET <origin>/files/<scope>` to list and
+`DELETE <origin>/files/<scope>/<name>` for the uploader or a moderator.
+
 Both sockets receive `?token=<token>` when a token is configured, because a browser cannot set
 headers on a WebSocket. Enforce it, and an origin allowlist, on the server.
 
@@ -140,9 +149,13 @@ Be clear about these before you put people on it:
   WebSockets; browsers refuse `ws://` from an `https://` page.
 - **One process, rooms in memory.** It does not scale horizontally. A room is unloaded 30 seconds
   after its last socket closes.
-- **One snapshot per room, no compaction.** The document grows with history and is never pruned.
-- **Plain file storage.** No listing and no deletion; there is one total quota for the files directory
-  (`TEAMS_FILES_QUOTA_MB`), not one per workspace. An upload never overwrites a file: a taken name
-  is stored under a new one. Files are capped at 25 MB each.
+- **One snapshot per room.** It is re-encoded as a single compact update when a room loads and on a timer
+  (`TEAMS_COMPACT_INTERVAL_MIN`), but history is never pruned, so a busy room still grows; the size cap
+  (`TEAMS_MAX_DOC_MB`) bounds it.
+- **Plain file storage.** Files are scoped by workspace and by private chat (only a chat's members reach its files),
+  can be listed and deleted by their uploader or a moderator, and are counted per workspace
+  (`TEAMS_WORKSPACE_QUOTA_MB`). Channel files are readable by every signed-in user, and there is no per-file
+  sharing, versioning or virus scanning. An upload never overwrites a file: a taken name is stored under a
+  new one. Files are capped at 25 MB each.
 - **Rate limiting covers only `/auth/session`** (per address and user, in memory); sockets and
   messages have the abuse limits in the README, and there is no media server: calls are peer to peer (mesh).

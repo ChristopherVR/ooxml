@@ -19,7 +19,11 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `TEAMS_MAX_ROOMS`                                       | Sync-Räume und Anrufräume (Standard je 1000).                                                                                                                                                                                                                                 |
 | `TEAMS_MAX_DOC_MB`                                      | Größtes persistiertes Raumdokument in MB (Standard 64); größere Updates werden abgelehnt.                                                                                                                                                                                     |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Nachrichten pro Sekunde (Standard 100) und Burst (200) je Socket; ein Socket darüber wird geschlossen.                                                                                                                                                                        |
-| `TEAMS_FILES_QUOTA_MB`                                  | Gesamtgröße des Dateiverzeichnisses in MB (Standard 1024); weitere Uploads erhalten 507.                                                                                                                                                                                      |
+| `TEAMS_FILES_QUOTA_MB`                                  | Optionale Obergrenze für das gesamte Dateiverzeichnis in MB (standardmäßig aus); weitere Uploads erhalten 507.                                                                                                                                                                |
+| `TEAMS_WORKSPACE_QUOTA_MB`                              | Dateien pro Workspace in MB (Standard 1024; ein privater Chat zählt zu seinem Workspace); weitere Uploads erhalten 507.                                                                                                                                                       |
+| `TEAMS_COMPACT_INTERVAL_MIN`                            | Minuten zwischen den Verdichtungen der Raum-Snapshots (Standard 360, `0` schaltet den Timer ab). Ein Raum wird außerdem beim Laden verdichtet.                                                                                                                                |
+| `TEAMS_METRICS_TOKEN`                                   | Aktiviert `GET /metrics` (Prometheus-Text), nur mit `Authorization: Bearer <dieses Token>`. Ohne Token aus.                                                                                                                                                                   |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                 | `text` (Standard) oder `json`: ein JSON-Objekt pro Zeile mit `time`, `level` und `msg`.                                                                                                                                                                                       |
 
 Er stellt `ws /sync/<room>` (kompatibel mit y-websocket, ein gespeichertes `Y.Doc` pro Raum),
 `ws /signal/<room>` (ein JSON-Relay) und `POST|GET /files/<workspace>/<name>` (Limit 25 MB, Namen
@@ -110,7 +114,7 @@ WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
 COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
-  server/rate-limit.mjs server/chat-access.mjs ./
+  server/rate-limit.mjs server/chat-access.mjs server/validator.generated.mjs server/files.mjs server/metrics.mjs server/room-store.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data TEAMS_USERS_FILE=/config/users.json
 RUN mkdir /data && chown node:node /data
 VOLUME /data
@@ -147,6 +151,7 @@ Alles, was der Server speichert, liegt unter `TEAMS_DATA` (Standard `./data`):
 | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `rooms/<room>.bin`         | Ein Yjs-Snapshot pro Raum: alle Chats, Kanäle, Kalender und Tab-Daten.                                         |
 | `files/<workspace>/`       | Hochgeladene Dateien.                                                                                          |
+| `file-meta/<scope>.json`   | Wer welche Datei hochgeladen hat (bestimmt, wer sie löschen darf). Zusammen mit `files/` sichern.              |
 | `session-revocations.json` | Widerrufsgenerationen der Sitzungen (fehlt sie, werden widerrufene Sitzungen wieder gültig, bis sie ablaufen). |
 
 Bewahren Sie außerdem auf, was nicht im Datenverzeichnis liegt: Ihre Kontendatei (`TEAMS_USERS_FILE`) und
@@ -163,6 +168,36 @@ Zum Wiederherstellen stoppen Sie den Server, ersetzen das Datenverzeichnis durch
 und `session-revocations.json` bleiben zusammen), stellen die Kontendatei und das Geheimnis wieder her und starten
 ihn. Verbundene Clients verbinden sich neu und führen ihre Daten zusammen: Yjs behält, was sie halten und der
 Sicherung fehlt, sodass eine Wiederherstellung keine Arbeit verwirft, die noch in einem Browser offen ist.
+
+### Dateien, Verdichtung und Metriken
+
+- **Dateiberechtigungen.** Eine Datei liegt in einem Geltungsbereich: der Workspace-ID für Kanaldateien (jede
+  angemeldete Person des Servers) oder dem Raumnamen eines privaten Chats (`chat-<hash>-<chat id>`), den nur dessen
+  Mitglieder auflisten, lesen, befüllen oder verlinken dürfen. Der Server prüft die Mitgliederliste des Chats wie bei
+  dessen Sync-Raum. Mit Konten muss jede Dateianfrage die signierte Sitzung in `X-Teams-Session` tragen (der Client
+  tut das); ein signierter Download-Link wird erst nach dieser Prüfung ausgestellt und öffnet fünf Minuten lang
+  genau seine Datei. Mit `--insecure-dev` gilt der behauptete `X-Teams-User`, wie jede Angabe dort. Kanaldateien
+  sind nicht pro Kanal eingeschränkt: alle Nutzer des Servers können sie lesen.
+- **Auflisten und Löschen.** `GET /files/<scope>` antwortet mit `{ files: [{ name, size, modified, uploader }] }`.
+  `DELETE /files/<scope>/<name>` dürfen die hochladende Person oder ein Moderator (`204`, sonst `403`). Vor dieser
+  Version hochgeladene Dateien haben keinen erfassten Uploader; nur ein Moderator kann sie löschen.
+- **Bereinigung.** Ein Upload wird in eine verborgene `.part`-Datei geschrieben, die ein fehlgeschlagener oder
+  abgebrochener Upload entfernt. Beim Start löscht der Server alle übrig gebliebenen `.part`-Dateien (und veraltete
+  temporäre Raumdateien), danach alle 15 Minuten jene, die älter als eine Stunde sind. Hochgeladene, aber nie an eine
+  Nachricht angehängte Dateien bleiben, bis sie jemand löscht.
+- **Kontingente.** Das Limit gilt pro Workspace (`TEAMS_WORKSPACE_QUOTA_MB`, Standard 1024) und zählt die Kanaldateien
+  und die Dateien seiner privaten Chats; Löschen gibt Platz frei. `TEAMS_FILES_QUOTA_MB` ist eine optionale Obergrenze
+  für das ganze Verzeichnis.
+- **Verdichtung.** Beim Laden eines Raums und alle `TEAMS_COMPACT_INTERVAL_MIN` Minuten für jeden Raum kodiert der
+  Server den Raum als einziges Yjs-Update auf einem frischen Dokument neu und schreibt es nur, wenn es kleiner ist und
+  exakt denselben Zustand beschreibt. Geschrieben wird in eine temporäre Datei, auf den Datenträger geschrieben und über
+  den Snapshot umbenannt; ein Absturz hinterlässt den alten oder den neuen Snapshot, nie einen halben. Unterbrochene
+  temporäre Dateien werden beim Start entfernt. Sicherungen vor und nach einer Verdichtung lassen sich beide wiederherstellen.
+- **Metriken.** Setzen Sie `TEAMS_METRICS_TOKEN` und rufen Sie `GET /metrics` mit `Authorization: Bearer <token>` ab:
+  `teams_rooms_open`, `teams_connections{kind}`, `teams_stored_bytes{kind="rooms|files"}`,
+  `teams_updates_rejected_total{code}`, `teams_auth_failures_total{kind}`, `teams_rate_limited_total{scope}` und
+  `teams_room_compactions_total`. Ohne Token antwortet der Endpunkt mit 404. Nicht ins öffentliche Internet stellen.
+- **Logs.** `--log-format=json` (oder `TEAMS_LOG_FORMAT=json`) schreibt ein JSON-Objekt pro Zeile: `{ "time", "level", "msg" }`.
 
 ### Aktualisieren
 
@@ -186,7 +221,7 @@ startet den Server nicht mehr.
 - [ ] Proxy-Zugriffsprotokolle zeichnen keine Query-Zeichenfolgen auf (Sockets tragen `?token=` und `?session=`), oder Sie akzeptieren das.
 - [ ] `TEAMS_ADMIN_TOKEN` gesetzt, falls Sie `POST /auth/revoke` brauchen, und geheim gehalten.
 - [ ] Das Datenverzeichnis liegt auf einem dauerhaften Volume, ist nur für den Benutzer des Servers schreibbar und wird gesichert.
-- [ ] Grenzwerte geprüft (`TEAMS_MAX_*`, `TEAMS_FILES_QUOTA_MB`), und der Proxy wendet eigenes Rate-Limiting an.
+- [ ] Grenzwerte geprüft (`TEAMS_MAX_*`, `TEAMS_WORKSPACE_QUOTA_MB`), und der Proxy wendet eigenes Rate-Limiting an.
 - [ ] Kurzlebige TURN-Zugangsdaten, kein statisches Geheimnis auf der Seite.
 - [ ] Der Prozess wird überwacht und mit `SIGTERM` beendet, damit Räume gespeichert werden.
 - [ ] Sie haben die [Einschränkungen](./limitations.md) gelesen: keine Ende-zu-Ende-Verschlüsselung, Raummitglieder vertrauen einander.

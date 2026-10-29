@@ -32,10 +32,12 @@ volet. La lecture de texte est limitée à 2 Mio et celle des fichiers Office na
 
 Les vues Fichiers permettent l’envoi direct, la création d’un classeur Excel vierge et la recherche
 dans les métadonnées lorsque le stockage est configuré. Les envois affichent un état d’occupation et
-permettent de réessayer, sans progression en octets ni annulation. Des lots en échec peuvent laisser
-des objets de stockage non référencés ; le serveur de référence n’a pas de contrat de nettoyage pour
-ces objets. Les dossiers, l’indexation du contenu des documents, l’historique des versions de
-fichiers et les permissions de fichiers authentifiées ne sont pas implémentés.
+permettent de réessayer, sans progression en octets ni annulation. Un lot en échec peut laisser des fichiers envoyés avant l'échec que aucun message ne référence ; le serveur de
+référence supprime ses envois partiels et laisse la personne qui a envoyé le fichier ou un modérateur supprimer le reste
+(`DELETE /files/<scope>/<name>`), mais ne le fait pas de lui-même. Le serveur de référence limite les fichiers des chats
+privés à leurs membres et compte le stockage par espace de travail ; les fichiers de canal sont lisibles par tout
+utilisateur connecté du serveur. Les dossiers, l'indexation du contenu des documents et l'historique des versions de
+fichiers ne sont pas implémentés.
 
 Markdown prend en charge les titres, les puces, les citations, le code délimité, l’emphase de base,
 les liens web, les listes de tâches plates, les tableaux de premier niveau et les liens web relatifs au fichier. Il n’implémente pas CommonMark/GFM complet,

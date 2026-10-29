@@ -22,7 +22,11 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `TEAMS_MAX_ROOMS`                                       | Sync rooms and call rooms (default 1000 each).                                                                                                                                                                      |
 | `TEAMS_MAX_DOC_MB`                                      | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                                                                   |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                                                                      |
-| `TEAMS_FILES_QUOTA_MB`                                  | Total size of the files directory in MB (default 1024); uploads past it get 507.                                                                                                                                    |
+| `TEAMS_FILES_QUOTA_MB`                                  | Optional ceiling on the whole files directory in MB (off by default); uploads past it get 507.                                                                                                                      |
+| `TEAMS_WORKSPACE_QUOTA_MB`                              | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                                                                         |
+| `TEAMS_COMPACT_INTERVAL_MIN`                            | Minutes between room snapshot compactions (default 360, `0` turns the timer off). A room is also compacted when it loads.                                                                                           |
+| `TEAMS_METRICS_TOKEN`                                   | Turns on `GET /metrics` (Prometheus text), served only to `Authorization: Bearer <this token>`. Off without it.                                                                                                     |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                 | `text` (default) or `json`: one JSON object per line with `time`, `level` and `msg`.                                                                                                                                |
 
 It serves `ws /sync/<room>` (y-websocket compatible, one persisted `Y.Doc` per room),
 `ws /signal/<room>` (a JSON relay) and `POST|GET /files/<workspace>/<name>` (25 MB cap, names
@@ -113,7 +117,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY server/package.json ./
 RUN npm install --omit=dev
-COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs   server/rate-limit.mjs server/chat-access.mjs ./
+COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs   server/rate-limit.mjs server/chat-access.mjs server/validator.generated.mjs server/files.mjs server/metrics.mjs server/room-store.mjs ./
 ENV HOST=0.0.0.0 TEAMS_DATA=/data TEAMS_USERS_FILE=/config/users.json
 RUN mkdir /data && chown node:node /data
 VOLUME /data
@@ -156,6 +160,7 @@ Everything the server keeps is under `TEAMS_DATA` (default `./data`):
 | -------------------------- | --------------------------------------------------------------------------------------- |
 | `rooms/<room>.bin`         | One Yjs snapshot per room: all chat, channels, calendars and tab data.                  |
 | `files/<workspace>/`       | Uploaded files.                                                                         |
+| `file-meta/<scope>.json`   | Who uploaded each file (decides who may delete it). Back it up with `files/`.           |
 | `session-revocations.json` | Session revocation generations (lose it and revoked sessions revive until they expire). |
 
 Also keep what is not in the data directory: your accounts file (`TEAMS_USERS_FILE`) and
@@ -171,6 +176,35 @@ To restore, stop the server, replace the data directory with the backup (keeping
 and `session-revocations.json` together), restore the accounts file and secret, and start it. Clients
 that were connected reconnect and merge: Yjs keeps whatever they hold that the backup lacks, so a
 restore does not discard work still open in a browser.
+
+### Files, compaction and metrics
+
+- **File permissions.** A file lives under a scope: the workspace id for channel files (any signed-in
+  user of the server) or a private chat's room name (`chat-<hash>-<chat id>`), which only that
+  chat's members may list, read, upload to or link. The server checks the chat's member list the same
+  way it does for the chat's sync room. With accounts, every file request must carry the signed session
+  in `X-Teams-Session` (the client does this); a signed download link is issued only after that check and
+  opens its one file for five minutes. With `--insecure-dev` the claimed `X-Teams-User` stands in, like
+  every claim there. Channel files are not restricted per channel: all users of the server can read them.
+- **Listing and deleting.** `GET /files/<scope>` answers `{ files: [{ name, size, modified, uploader }] }`.
+  `DELETE /files/<scope>/<name>` is allowed to the uploader or a moderator (`204`, else `403`). Files
+  uploaded before this version have no recorded uploader, so only a moderator can delete them.
+- **Cleanup.** An upload streams to a hidden `.part` file that a failed or aborted upload removes. At start-up
+  the server deletes every leftover `.part` file (and stale room temp files), and every 15 minutes
+  any older than an hour. Files that were uploaded but never attached to a message stay until someone deletes them.
+- **Quotas.** The limit is per workspace (`TEAMS_WORKSPACE_QUOTA_MB`, default 1024), counting the
+  workspace's channel files and its private chats' files; deleting frees the space.
+  `TEAMS_FILES_QUOTA_MB` is an optional ceiling on the whole directory.
+- **Compaction.** When a room loads, and every `TEAMS_COMPACT_INTERVAL_MIN` minutes for every room, the server
+  re-encodes the room as a single Yjs update on a fresh document and writes it only if it is smaller and
+  describes exactly the same state. The write goes to a temporary file, is flushed to disk and renamed over
+  the snapshot, so a crash leaves the old or the new snapshot, never a torn one; interrupted temp files are
+  removed at start-up. Backups made before or after a compaction both restore.
+- **Metrics.** Set `TEAMS_METRICS_TOKEN` and scrape `GET /metrics` with `Authorization: Bearer <token>`: `teams_rooms_open`,
+  `teams_connections{kind}`, `teams_stored_bytes{kind="rooms|files"}`, `teams_updates_rejected_total{code}`,
+  `teams_auth_failures_total{kind}`, `teams_rate_limited_total{scope}` and `teams_room_compactions_total`. Without
+  the token the endpoint answers 404. Keep it off the public internet like any admin endpoint.
+- **Logs.** `--log-format=json` (or `TEAMS_LOG_FORMAT=json`) writes one JSON object per line: `{ "time", "level", "msg" }`.
 
 ### Upgrading
 
@@ -195,7 +229,7 @@ longer starts the server.
 - [ ] Moderator accounts (`"role": "moderator"` in the users file) are the people you intend; remember a role is read at sign-in.
 - [ ] `TEAMS_ADMIN_TOKEN` set if you need `POST /auth/revoke`, and kept secret.
 - [ ] The data directory is on a persistent volume, writable only by the server's user, and backed up.
-- [ ] Limits reviewed (`TEAMS_MAX_*`, `TEAMS_FILES_QUOTA_MB`) and the proxy applies its own rate limiting.
+- [ ] Limits reviewed (`TEAMS_MAX_*`, `TEAMS_WORKSPACE_QUOTA_MB`) and the proxy applies its own rate limiting.
 - [ ] Short-lived TURN credentials, not a static secret in the page.
 - [ ] The process is supervised and stopped with `SIGTERM` so rooms are saved.
 - [ ] You have read [Limitations](./limitations.md): no end-to-end encryption, room members trust each other.

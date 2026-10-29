@@ -30,9 +30,11 @@ Textlesevorgänge sind auf 2 MiB und native Office-Lesevorgänge auf 32 MiB begr
 
 Die Dateiansichten unterstützen direktes Hochladen, das Anlegen leerer Excel-Dateien und die Metadatensuche, wenn
 Speicher konfiguriert ist. Uploads zeigen einen Beschäftigt-Zustand und erlauben Wiederholen, ohne Byte-
-Fortschritt oder Abbruch. Fehlgeschlagene Stapel können nicht referenzierte Speicherobjekte hinterlassen;
-der Referenzserver hat keinen Bereinigungsvertrag für diese Objekte. Ordner, Indizierung des Dokument-
-inhalts, Dateiversionsverlauf und authentifizierte Dateiberechtigungen sind
+Fortschritt oder Abbruch. Ein fehlgeschlagener Stapel kann Dateien hinterlassen, die vor dem Fehler hochgeladen wurden und an keiner Nachricht
+hängen; der Referenzserver entfernt seine unvollständigen Uploads und lässt die hochladende Person oder einen
+Moderator den Rest löschen (`DELETE /files/<scope>/<name>`), tut das aber nicht von selbst. Der Referenzserver
+beschränkt Dateien privater Chats auf deren Mitglieder und zählt den Speicher pro Workspace; Kanaldateien kann jede
+angemeldete Person des Servers lesen. Ordner, Indizierung des Dokumentinhalts und Dateiversionsverlauf sind
 nicht implementiert.
 
 Markdown unterstützt Überschriften, Aufzählungen, Zitate, umzäunten Code, einfache Hervorhebung, Web-Links, flache Aufgabenlisten, Tabellen auf oberster Ebene und dateirelative Web-Links. Es implementiert nicht das vollständige

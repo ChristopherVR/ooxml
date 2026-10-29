@@ -33,7 +33,7 @@ Warnung, für die lokale Entwicklung. Er wird über die Umgebung konfiguriert, e
 | `TEAMS_ORIGINS` | keine       | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Ohne Angabe: jede Origin mit Token, ohne Token nur Loopback. |
 | `TEAMS_DATA`    | `./data`    | Datenverzeichnis: `rooms/<room>.bin`-Snapshots und `files/<workspace>/`.                                                |
 
-Der Server liest weitere Variablen für Konten (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) und für Limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Die Limits stehen im [Bereitstellungsleitfaden](/de/deploy); die README des Servers ist die vollständige Referenz. Die entsprechenden Optionen von `createTeamsServer` sind `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `insecure`, `insecureDev` und `trustProxy`.
+Der Server liest weitere Variablen für Konten (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) und für Limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`, `TEAMS_WORKSPACE_QUOTA_MB`, `TEAMS_COMPACT_INTERVAL_MIN`, `TEAMS_METRICS_TOKEN`, `TEAMS_LOG_FORMAT`). Die Limits stehen im [Bereitstellungsleitfaden](/de/deploy); die README des Servers ist die vollständige Referenz. Die entsprechenden Optionen von `createTeamsServer` sind `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `workspaceQuotaBytes`, `metricsToken`, `compactIntervalMs`, `insecure`, `insecureDev` und `trustProxy`.
 
 Oder binden Sie ihn ein:
 
@@ -68,17 +68,20 @@ const config = {
 
 ## Endpunkte
 
-| Endpunkt                              | Was er tut                                                                                                                                |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `ws /sync/<room>`                     | Zu y-websocket kompatible Synchronisierung: ein `Y.Doc` und Awareness pro Raum, gespeichert in `rooms/<room>.bin`. Nachrichten bis 32 MB. |
-| `ws /signal/<room>`                   | JSON-Relay für die Anruf-Signalisierung: leitet jede Textnachricht an die anderen Sockets des Raums weiter. Nachrichten bis 256 KB.       |
-| `POST /files/<workspace>/<name>`      | Speichert einen Anhang (Limit 25 MB) und antwortet mit `201 { url, size }`.                                                               |
-| `GET /files/<workspace>/<name>`       | Lädt ihn als Anhang herunter (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                              |
-| `POST /files/link/<workspace>/<name>` | Liefert `{ url }`: einen für genau diese Datei signierten Link, fünf Minuten gültig, sodass das Token nie in einer URL erscheint.         |
-| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                             |
-| `POST /auth/session`                  | Signiert eine Sitzung für `{ user, credential }` (mit Ratenbegrenzung). Siehe "Accounts and sessions" in der README des Servers.          |
-| `POST /auth/check`, `/auth/signout`   | Prüfen einer `{ session }` (204 oder 401); Abmelden, was die Sitzungen des Benutzers widerruft.                                           |
-| `POST /auth/revoke`                   | Widerruf durch den Betreiber für `{ user }` mit `TEAMS_ADMIN_TOKEN`; ohne Admin-Token ein 404.                                            |
+| Endpunkt                              | Was er tut                                                                                                                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ws /sync/<room>`                     | Zu y-websocket kompatible Synchronisierung: ein `Y.Doc` und Awareness pro Raum, gespeichert in `rooms/<room>.bin`. Nachrichten bis 32 MB.                                                   |
+| `ws /signal/<room>`                   | JSON-Relay für die Anruf-Signalisierung: leitet jede Textnachricht an die anderen Sockets des Raums weiter. Nachrichten bis 256 KB.                                                         |
+| `POST /files/<workspace>/<name>`      | Speichert einen Anhang (Limit 25 MB) und antwortet mit `201 { url, size }`.                                                                                                                 |
+| `GET /files/<workspace>/<name>`       | Lädt ihn als Anhang herunter (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                                                                |
+| `POST /files/link/<workspace>/<name>` | Liefert `{ url }`: einen für genau diese Datei signierten Link, fünf Minuten gültig, sodass das Token nie in einer URL erscheint.                                                           |
+| `GET /files/<scope>`                  | Listet die Dateien eines Geltungsbereichs als `{ files: [{ name, size, modified, uploader }] }`. Ein Bereich ist eine Workspace-ID oder der Raumname eines privaten Chats (nur Mitglieder). |
+| `DELETE /files/<scope>/<name>`        | Löscht eine Datei (hochladende Person oder Moderator). `204`, `403` oder `404`.                                                                                                             |
+| `GET /metrics`                        | Prometheus-Text, nur mit `TEAMS_METRICS_TOKEN` als Bearer-Token (404, wenn nicht gesetzt).                                                                                                  |
+| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                                                                               |
+| `POST /auth/session`                  | Signiert eine Sitzung für `{ user, credential }` (mit Ratenbegrenzung). Siehe "Accounts and sessions" in der README des Servers.                                                            |
+| `POST /auth/check`, `/auth/signout`   | Prüfen einer `{ session }` (204 oder 401); Abmelden, was die Sitzungen des Benutzers widerruft.                                                                                             |
+| `POST /auth/revoke`                   | Widerruf durch den Betreiber für `{ user }` mit `TEAMS_ADMIN_TOKEN`; ohne Admin-Token ein 404.                                                                                              |
 
 Raumnamen müssen `^[\w-]{1,128}$` entsprechen und Workspace-IDs in Dateipfaden `^[\w-]{1,64}$`; Dateinamen
 werden auf Buchstaben, Ziffern, `.`, `-`, `_`, Leerzeichen und Klammern bereinigt und auf 120
@@ -108,6 +111,12 @@ um eine Datei in einem Browser-Tab zu öffnen. Der Origin wird aus `syncUrl` üb
 dem Element eine `uploadFile`-Funktion (um Anhänge in Ihrem eigenen Objektspeicher abzulegen), sonst werden Anhänge
 nur per Name geteilt.
 
+Dateien haben einen Geltungsbereich. `<scope>` ist die Workspace-ID für Kanaldateien oder der Raumname eines
+privaten Chats (`chat-<hash>-<chat id>`), dessen Dateien nur dessen Mitglieder erreichen. Ein Server mit Konten erwartet
+bei jeder Dateianfrage die signierte Sitzung im Header `X-Teams-Session` (ein Server ohne Konten liest den
+behaupteten Nutzer aus `X-Teams-User`); der Client sendet beides. Ebenfalls optional: `GET <origin>/files/<scope>` zum
+Auflisten und `DELETE <origin>/files/<scope>/<name>` für die hochladende Person oder einen Moderator.
+
 Beide Sockets erhalten `?token=<token>`, wenn ein Token konfiguriert ist, weil ein Browser bei einem WebSocket keine
 Header setzen kann. Erzwingen Sie es auf dem Server, ebenso wie eine Origin-Allowlist.
 
@@ -129,7 +138,12 @@ Machen Sie sich dies klar, bevor Sie Personen darauf arbeiten lassen:
   hochstuft; Browser verweigern `ws://` von einer `https://`-Seite.
 - **Ein Prozess, Räume im Arbeitsspeicher.** Er skaliert nicht horizontal. Ein Raum wird 30 Sekunden
   nach dem Schließen seines letzten Sockets entladen.
-- **Ein Snapshot pro Raum, keine Verdichtung.** Das Dokument wächst mit dem Verlauf und wird nie bereinigt.
-- **Einfache Dateispeicherung.** Kein Auflisten, kein Löschen, kein Kontingent pro Workspace; das Hochladen einer Datei mit
-  einem vorhandenen Namen ersetzt sie. Dateien sind auf je 25 MB begrenzt.
+- **Ein Snapshot pro Raum.** Er wird beim Laden eines Raums und per Timer (`TEAMS_COMPACT_INTERVAL_MIN`) als einziges
+  kompaktes Update neu kodiert, der Verlauf wird aber nie beschnitten, ein aktiver Raum wächst also weiter; die
+  Größenobergrenze (`TEAMS_MAX_DOC_MB`) begrenzt ihn.
+- **Einfache Dateispeicherung.** Dateien sind nach Workspace und privatem Chat getrennt (nur dessen Mitglieder erreichen
+  seine Dateien), können von der hochladenden Person oder einem Moderator aufgelistet und gelöscht werden und werden pro
+  Workspace gezählt (`TEAMS_WORKSPACE_QUOTA_MB`). Kanaldateien kann jede angemeldete Person lesen; es gibt keine
+  Freigabe pro Datei, keine Versionierung und keinen Virenscan. Ein Upload überschreibt nie eine Datei: ein vergebener
+  Name wird unter einem neuen gespeichert. Dateien sind auf je 25 MB begrenzt.
 - **Kein Rate Limiting** und kein Medienserver: Anrufe laufen Peer-to-Peer (Mesh).
