@@ -14,6 +14,9 @@ import { readNames } from './names';
 import { type SharedWorkbook, childMap, jsonEqual } from './schema';
 import { applySheetParts } from './sheet-parts';
 import { partHost } from './write';
+
+/** Whether the room's writers share the object-list parts (see write.ts). */
+const sharesParts = (shared: SharedWorkbook): boolean => shared.meta.get('parts') === 1;
 import { type SheetEntry, type SheetKeys, sheetEntries } from './sheets';
 import { StyleBridge } from './styles';
 
@@ -66,7 +69,10 @@ export function applyShared(
 			applyMerges(sheet, merges);
 			sheetsTouched.add(index);
 		}
-		if (applySheetParts(sheet, map, partHost(keys, key), full ? undefined : part.parts))
+		if (
+			sharesParts(shared) &&
+			applySheetParts(sheet, partHost(shared, keys, key), full ? undefined : part.parts)
+		)
 			sheetsTouched.add(index);
 		const cells = childMap(map, 'cells');
 		if (!cells) continue;

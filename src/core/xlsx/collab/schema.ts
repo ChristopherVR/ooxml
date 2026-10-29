@@ -1,10 +1,11 @@
-// The shared workbook schema. Four top-level Yjs maps (top-level types never conflict when two
+// The shared workbook schema. Top-level Yjs maps (top-level types never conflict when two
 // peers initialise a room at once, unlike nested maps created concurrently):
 //   xlsx:meta    { v: schema version, defaultStyle: style key, date1904 }
 //   xlsx:styles  style key -> resolved CellStyle (content-addressed, see styles.ts)
 //   xlsx:names   `${sheetKey}!${lower-case name}` -> NameEntry
-//   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges, comments, replies, cf, dv,
-//                links, tables, charts } (the last seven are keyed object lists, see part-specs.ts)
+//   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges }
+//   xlsx:comments, xlsx:replies, xlsx:cf, xlsx:dv, xlsx:links, xlsx:tables, xlsx:charts
+//                `${sheetKey}/${item key}` -> { i, d } (keyed object lists, see part-specs.ts)
 // A sheet key is a stable id minted by the peer that added the sheet (never its name or index).
 // Inside a sheet: `props` (Y.Map: name, sheetId, order, state, tab, rh, cw), `cells` (`A1` ->
 // CellEntry), `rows` (1-based row number -> RowEntry), `cols` (`C:E` span -> ColEntry) and
@@ -18,20 +19,15 @@ export const STYLES = 'xlsx:styles';
 export const NAMES = 'xlsx:names';
 export const SHEETS = 'xlsx:sheets';
 
-export const SHEET_PARTS = [
-	'props',
-	'cells',
-	'rows',
-	'cols',
-	'merges',
-	'comments',
-	'replies',
-	'cf',
-	'dv',
-	'links',
-	'tables',
-	'charts',
-] as const;
+export const SHEET_PARTS = ['props', 'cells', 'rows', 'cols', 'merges'] as const;
+
+/**
+ * The object-list parts (see part-specs.ts). Each is a top-level map named `xlsx:<part>` shared by
+ * every sheet, with entries keyed `${sheetKey}/${item}`, so no peer ever has to create one: rooms
+ * written before these parts existed, and two peers writing first at once, converge.
+ */
+export const LIST_PARTS = ['comments', 'replies', 'cf', 'dv', 'links', 'tables', 'charts'] as const;
+export type ListPart = (typeof LIST_PARTS)[number];
 export type SheetPart = (typeof SHEET_PARTS)[number];
 
 export interface SharedWorkbook {
@@ -39,6 +35,7 @@ export interface SharedWorkbook {
 	styles: Y.Map<unknown>;
 	names: Y.Map<unknown>;
 	sheets: Y.Map<unknown>;
+	parts: Record<ListPart, Y.Map<unknown>>;
 }
 
 /** The workbook's top-level maps in `doc`. */
@@ -48,6 +45,9 @@ export function sharedWorkbook(doc: Y.Doc): SharedWorkbook {
 		styles: doc.getMap<unknown>(STYLES),
 		names: doc.getMap<unknown>(NAMES),
 		sheets: doc.getMap<unknown>(SHEETS),
+		parts: Object.fromEntries(
+			LIST_PARTS.map((part) => [part, doc.getMap<unknown>(`xlsx:${part}`)]),
+		) as Record<ListPart, Y.Map<unknown>>,
 	};
 }
 
@@ -57,6 +57,7 @@ export const sharedTypes = (shared: SharedWorkbook): Y.Map<unknown>[] => [
 	shared.styles,
 	shared.names,
 	shared.sheets,
+	...LIST_PARTS.map((part) => shared.parts[part]),
 ];
 
 /** A nested map, or undefined when the entry is missing or malformed. */

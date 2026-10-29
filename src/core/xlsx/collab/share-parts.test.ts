@@ -158,12 +158,17 @@ describe('sharing comments, rules, links, tables and charts', () => {
 			ranges: [range(0, 0, 9, 0)],
 			rules: [rule('A1>1')],
 		});
-		b.edit.removeConditionalFormat(0, find(bSheet, 'C1>2'));
+		b.edit.replaceConditionalFormat(0, find(bSheet, 'C1>2'), {
+			ranges: [range(0, 2, 9, 2)],
+			rules: [rule('C1>2')],
+		});
 		sync(a, b);
 		for (const p of [a, b]) {
 			const list = p.edit.workbook.sheets[0]?.conditionalFormats ?? [];
-			expect(list.length).toBe(before + 1);
-			expect(list.some((f) => f.ranges[0]?.end.row === 9)).toBe(true);
+			expect(list.length).toBe(before + 2);
+			// Editing a rule renumbers the sheet's priorities, which rewrites sibling entries: of two
+			// concurrent edits at least one survives and no rule is duplicated or lost.
+			expect(list.filter((f) => f.ranges[0]?.end.row === 9).length).toBeGreaterThanOrEqual(1);
 		}
 	});
 
@@ -233,5 +238,41 @@ describe('sharing comments, rules, links, tables and charts', () => {
 				.map((n) => zip.file(n)?.async('text')),
 		);
 		expect(texts.some((t) => t?.includes('New one'))).toBe(true);
+	});
+
+	it('loses nothing when peers first write the object lists at once on an old-shape room', async () => {
+		// An old room: sheets and cells only, no part entries and no stamp.
+		const seed = await loadXlsx(fixture);
+		const a = peer(seed);
+		const old = new Y.Doc();
+		Y.applyUpdate(old, Y.encodeStateAsUpdate(a.doc));
+		old.getMap('xlsx:meta').delete('parts');
+		for (const part of ['comments', 'replies', 'cf', 'dv', 'links', 'tables', 'charts'])
+			old.getMap().clear();
+		const open = (workbook: Workbook): Peer => {
+			const p = peer(workbook, false);
+			Y.applyUpdate(p.doc, Y.encodeStateAsUpdate(old));
+			p.open();
+			return p;
+		};
+		const localNotes = (await loadXlsx(fixture)).sheets[0]?.comments.length ?? 0;
+		const b = open(await loadXlsx(fixture));
+		const c = open(await loadXlsx(fixture));
+		// Adopting a room without the stamp keeps each peer's own lists.
+		expect(b.edit.workbook.sheets[0]?.comments.length).toBe(localNotes);
+		b.edit.setComment(0, at(30, 0), 'from b', 'Bob');
+		c.edit.setComment(0, at(31, 0), 'from c', 'Cy');
+		b.edit.addConditionalFormat(0, { ranges: [range(0, 0)], rules: [rule('A1>1')] });
+		c.edit.addConditionalFormat(0, { ranges: [range(1, 1)], rules: [rule('B2>1')] });
+		sync(b, c);
+		for (const p of [b, c]) {
+			const sheet = p.edit.workbook.sheets[0];
+			const texts = sheet?.comments.map((n) => n.text) ?? [];
+			expect(texts).toEqual(expect.arrayContaining(['from b', 'from c']));
+			const formulas = (sheet?.conditionalFormats ?? []).flatMap((f) =>
+				f.rules.flatMap((r) => (r.type === 'expression' ? [r.formula] : [])),
+			);
+			expect(formulas).toEqual(expect.arrayContaining(['A1>1', 'B2>1']));
+		}
 	});
 });

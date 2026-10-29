@@ -5,7 +5,7 @@
 // matched by exact content, then by a natural key (a part name, a cell address). An entry is
 // `{ i, d }`: `i` the position (ties broken by key) and `d` the plain JSON item.
 import type * as Y from 'yjs';
-import { isRecord, jsonEqual, setIfChanged } from './schema';
+import { isRecord, jsonEqual } from './schema';
 
 export interface PartSpec<T extends object> {
 	/** The plain JSON of an item; undefined leaves the item out of the shared state. */
@@ -18,6 +18,40 @@ export interface PartSpec<T extends object> {
 	natural?: (encoded: unknown) => string | undefined;
 	/** Carries what only the local package knows (a part name) onto a decoded item. */
 	adopt?: (decoded: T, local: T | undefined) => void;
+}
+
+/** The entries of one sheet inside a part map shared by every sheet (keys `${sheetKey}/${item}`). */
+export class PrefixStore {
+	private readonly prefix: string;
+
+	constructor(
+		private readonly map: Y.Map<unknown>,
+		sheetKey: string,
+	) {
+		this.prefix = `${sheetKey}/`;
+	}
+
+	*entries(): IterableIterator<[string, unknown]> {
+		for (const [key, value] of this.map.entries())
+			if (key.startsWith(this.prefix)) yield [key.slice(this.prefix.length), value];
+	}
+
+	has(key: string): boolean {
+		return this.map.has(this.prefix + key);
+	}
+
+	keys(): string[] {
+		return [...this.entries()].map(([key]) => key);
+	}
+
+	delete(key: string): void {
+		this.map.delete(this.prefix + key);
+	}
+
+	/** Sets `key` only when its JSON value differs. */
+	setIfChanged(key: string, value: unknown): void {
+		if (!jsonEqual(this.map.get(this.prefix + key), value)) this.map.set(this.prefix + key, value);
+	}
 }
 
 /** Item identity of one part of one sheet. */
@@ -48,16 +82,55 @@ function push<K, V>(index: Map<K, V[]>, key: K, value: V): void {
 	else index.set(key, [value]);
 }
 
+/**
+ * The `i` of each item. Entries keep the `i` they have while the list order still agrees with it
+ * (rewriting an untouched entry would resurrect it when a peer deleted it at the same time); new
+ * items get a value between their neighbours. Only a reordering renumbers everything.
+ */
+function positions(keys: readonly (string | undefined)[], known: Map<string, number>): number[] {
+	const renumber = keys.map((_key, n) => n);
+	const current = keys.map((key) => (key === undefined ? undefined : known.get(key)));
+	let last: number | undefined;
+	let lastKey = '';
+	for (const [n, value] of current.entries()) {
+		const key = keys[n] ?? '';
+		if (value === undefined) continue;
+		if (last !== undefined && !(last < value || (last === value && lastKey < key))) return renumber;
+		last = value;
+		lastKey = key;
+	}
+	const out: number[] = [];
+	for (let n = 0; n < current.length; n++) {
+		const value = current[n];
+		if (value !== undefined) {
+			out.push(value);
+			continue;
+		}
+		const low = out[n - 1];
+		const high = current.slice(n + 1).find((v) => v !== undefined);
+		const next =
+			high === undefined ? (low ?? -1) + 1 : low === undefined ? high - 1 : (low + high) / 2;
+		if ((low !== undefined && next <= low) || (high !== undefined && next >= high)) return renumber;
+		out.push(next);
+	}
+	return out;
+}
+
 /** Writes `items` into `map` where they differ; keys of vanished items are deleted. */
 export function writeKeyed<T extends object>(
-	map: Y.Map<unknown>,
+	map: PrefixStore,
 	items: readonly T[],
 	ids: PartIds,
 	spec: PartSpec<T>,
 	mint: () => string,
 ): void {
 	const existing = new Map<string, unknown>();
-	for (const [key, raw] of map.entries()) if (isEntry(raw)) existing.set(key, raw.d);
+	const position = new Map<string, number>();
+	for (const [key, raw] of map.entries())
+		if (isEntry(raw)) {
+			existing.set(key, raw.d);
+			position.set(key, raw.i);
+		}
 	const list = items.flatMap((item) => {
 		const encoded = spec.encode(item);
 		return encoded === undefined ? [] : [{ item, encoded }];
@@ -108,6 +181,19 @@ export function writeKeyed<T extends object>(
 					keys[n] = key;
 				}
 			});
+		// An edit that replaced items (the model swaps the object) is the same entry updated in place:
+		// pair what is left over in order when as many items as entries remain.
+		const unmatched = list.flatMap((_entry, n) => (keys[n] === undefined ? [n] : []));
+		const spare = [...existing.keys()]
+			.filter((key) => !used.has(key))
+			.sort((a, b) => (position.get(a) ?? 0) - (position.get(b) ?? 0) || (a < b ? -1 : 1));
+		if (unmatched.length > 0 && unmatched.length === spare.length)
+			unmatched.forEach((n, k) => {
+				const key = spare[k];
+				if (key === undefined) return;
+				used.add(key);
+				keys[n] = key;
+			});
 		list.forEach((_entry, n) => {
 			if (keys[n] !== undefined) return;
 			let key = mint();
@@ -116,18 +202,19 @@ export function writeKeyed<T extends object>(
 			keys[n] = key;
 		});
 	}
+	const order = positions(keys, position);
 	list.forEach(({ item, encoded }, n) => {
 		const key = keys[n];
 		if (key === undefined) return;
 		ids.set(item, key);
-		setIfChanged(map, key, { i: n, d: encoded });
+		map.setIfChanged(key, { i: order[n] ?? n, d: encoded });
 	});
-	for (const key of [...map.keys()]) if (!used.has(key)) map.delete(key);
+	for (const key of map.keys()) if (!used.has(key)) map.delete(key);
 }
 
 /** The items of `map` in order, reusing the objects of `local` that still match; undefined when unchanged. */
 export function readKeyed<T extends object>(
-	map: Y.Map<unknown>,
+	map: PrefixStore,
 	local: readonly T[],
 	ids: PartIds,
 	spec: PartSpec<T>,

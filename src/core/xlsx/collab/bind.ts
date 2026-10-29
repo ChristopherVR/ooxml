@@ -10,7 +10,7 @@ import { applyShared } from './apply';
 import { collectDirty, emptyDirty, isDirty } from './dirty';
 import { type XlsxPresence, type RemoteSelection, resolveSelections } from './presence';
 import { formatRange } from '../address';
-import { sharedTypes, sharedWorkbook } from './schema';
+import { LIST_PARTS, sharedTypes, sharedWorkbook } from './schema';
 import { SheetKeys, sheetEntries } from './sheets';
 import { type WriteScope, writeWorkbook } from './write';
 
@@ -127,7 +127,7 @@ export function bindWorkbookSession(
 	};
 
 	const observers = types.map((type, i) => {
-		const top = (['meta', 'styles', 'names', 'sheets'] as const)[i] ?? 'sheets';
+		const top = ([...['meta', 'styles', 'names', 'sheets'], ...LIST_PARTS] as const)[i] ?? 'sheets';
 		const observer = (
 			events: Y.YEvent<Y.AbstractType<unknown>>[],
 			transaction: Y.Transaction,

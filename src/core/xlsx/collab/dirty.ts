@@ -1,7 +1,7 @@
 // Collects what a remote transaction touched from Yjs deep events, so applying it to the model
 // visits only the changed cells, rows and sheets. Events must be read inside the observer.
 import type * as Y from 'yjs';
-import { LIST_PARTS } from './sheet-parts';
+import type { ListPart } from './schema';
 
 export interface SheetDirty {
 	full: boolean;
@@ -55,7 +55,7 @@ const changedKeys = (event: AnyEvent): string[] => [...event.changes.keys.keys()
 /** Records the events of one observed top-level map. */
 export function collectDirty(
 	dirty: Dirty,
-	top: 'meta' | 'styles' | 'names' | 'sheets',
+	top: 'meta' | 'styles' | 'names' | 'sheets' | ListPart,
 	events: AnyEvent[],
 ): void {
 	if (top === 'styles') return; // Formats are content-addressed and read on demand.
@@ -65,6 +65,15 @@ export function collectDirty(
 	}
 	if (top === 'names') {
 		dirty.names = true;
+		return;
+	}
+	if (top !== 'sheets') {
+		// A part map shared by all sheets: the key prefix names the sheet.
+		for (const event of events)
+			for (const key of changedKeys(event)) {
+				const sheet = key.slice(0, Math.max(0, key.indexOf('/')));
+				if (sheet) sheetDirty(dirty, sheet).parts.add(top);
+			}
 		return;
 	}
 	for (const event of events) {
@@ -83,8 +92,6 @@ export function collectDirty(
 		else if (part === 'rows') for (const k of changedKeys(event)) entry.rows.add(k);
 		else if (part === 'cols') entry.cols = true;
 		else if (part === 'merges') entry.merges = true;
-		else if ((LIST_PARTS as readonly string[]).includes(String(part)))
-			entry.parts.add(String(part));
 		else entry.full = true;
 	}
 }

@@ -1,9 +1,8 @@
 // The list-shaped parts of a shared sheet (comments, conditional formats, validations, links,
 // tables, charts) between the model and their shared maps. See part-specs.ts for the mapping.
-import type * as Y from 'yjs';
 import { formatAddress } from '../address';
 import type { Comment, DrawingObject, Worksheet } from '../model';
-import { type PartIds, type PartSpec, readKeyed, writeKeyed } from './keyed';
+import { type PartIds, type PartSpec, type PrefixStore, readKeyed, writeKeyed } from './keyed';
 import {
 	chartSpec,
 	commentSpec,
@@ -13,14 +12,11 @@ import {
 	tableSpec,
 	validationSpec,
 } from './part-specs';
-import { childMap, sheetPart } from './schema';
-
-/** The parts holding object lists, in the order they are written. */
-export const LIST_PARTS = ['comments', 'replies', 'cf', 'dv', 'links', 'tables', 'charts'] as const;
-export type ListPart = (typeof LIST_PARTS)[number];
+import type { ListPart } from './schema';
 
 /** What the sheet's keyed parts need from the binding: item identity and key minting. */
 export interface PartHost {
+	store: (part: ListPart) => PrefixStore;
 	ids: (part: ListPart) => PartIds;
 	mint: () => string;
 }
@@ -40,12 +36,11 @@ const allReplies = (comments: readonly Comment[]): Reply[] =>
 /** Writes the object lists of `sheet`; `charts` is skipped for edits that cannot touch drawings. */
 export function writeSheetParts(
 	sheet: Worksheet,
-	map: Y.Map<unknown>,
 	host: PartHost,
 	options: { charts: boolean },
 ): void {
 	const put = <T extends object>(part: ListPart, items: readonly T[], spec: PartSpec<T>): void =>
-		writeKeyed(sheetPart(map, part), items, host.ids(part), spec, host.mint);
+		writeKeyed(host.store(part), items, host.ids(part), spec, host.mint);
 	put('comments', sheet.comments, commentSpec);
 	put('replies', allReplies(sheet.comments), replySpec(repliesOwners(sheet.comments), new Map()));
 	put('cf', sheet.conditionalFormats, conditionalSpec);
@@ -63,18 +58,16 @@ export function writeSheetParts(
 }
 
 /**
- * Reads the object lists named in `parts` (all when undefined) into `sheet`, in place. A part the
- * room does not have yet (written by an older peer) leaves the local list alone. Returns whether
+ * Reads the object lists named in `parts` (all when undefined) into `sheet`, in place.  Returns whether
  * anything in the sheet changed.
  */
 export function applySheetParts(
 	sheet: Worksheet,
-	map: Y.Map<unknown>,
 	host: PartHost,
 	parts?: ReadonlySet<string>,
 ): boolean {
-	const wants = (part: ListPart): Y.Map<unknown> | undefined =>
-		!parts || parts.has(part) ? childMap(map, part) : undefined;
+	const wants = (part: ListPart): PrefixStore | undefined =>
+		!parts || parts.has(part) ? host.store(part) : undefined;
 	let changed = false;
 	const swap = <T extends object>(
 		part: ListPart,

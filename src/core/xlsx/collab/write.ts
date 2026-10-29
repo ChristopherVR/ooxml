@@ -15,6 +15,7 @@ import { encodeCell } from './codec';
 import { writeLines } from './lines';
 import { writeNames } from './names';
 import {
+	LIST_PARTS,
 	SCHEMA_VERSION,
 	type SharedWorkbook,
 	childMap,
@@ -23,11 +24,13 @@ import {
 	sheetPart,
 } from './schema';
 import { type SheetEntry, type SheetKeys, reorder, sheetEntries } from './sheets';
+import { PrefixStore } from './keyed';
 import { type PartHost, writeSheetParts } from './sheet-parts';
 import { StyleBridge, sharedStyleKey } from './styles';
 
 /** Item identity and key minting of one sheet's keyed parts. */
-export const partHost = (keys: SheetKeys, sheetKey: string): PartHost => ({
+export const partHost = (shared: SharedWorkbook, keys: SheetKeys, sheetKey: string): PartHost => ({
+	store: (part) => new PrefixStore(shared.parts[part], sheetKey),
 	ids: (part) => keys.ids(sheetKey, part),
 	mint: () => keys.mint(),
 });
@@ -46,6 +49,8 @@ export function writeWorkbook(
 ): void {
 	const { meta, sheets } = shared;
 	setIfChanged(meta, 'v', SCHEMA_VERSION);
+	// Stamps rooms whose peers share the object-list parts; older rooms are left alone on read.
+	setIfChanged(meta, 'parts', 1);
 	let defaultKey = meta.get('defaultStyle');
 	if (typeof defaultKey !== 'string') {
 		const base = workbook.styles[0];
@@ -63,6 +68,9 @@ export function writeWorkbook(
 	if (full) {
 		const live = new Set(keyList);
 		for (const key of [...sheets.keys()]) if (!live.has(key)) sheets.delete(key);
+		for (const part of LIST_PARTS)
+			for (const key of [...shared.parts[part].keys()])
+				if (!live.has(key.slice(0, key.indexOf('/')))) shared.parts[part].delete(key);
 	}
 	workbook.sheets.forEach((sheet, index) => {
 		const key = keyList[index];
@@ -90,7 +98,7 @@ export function writeWorkbook(
 		const ranges = !full && scope.kind === 'sheet' ? scope.ranges : undefined;
 		writeCells(sheet, sheetPart(map, 'cells'), styles.keyOf, ranges);
 		// A cell-range edit (typing, paste, format) cannot change drawings: skip the charts.
-		writeSheetParts(sheet, map, partHost(keys, key), { charts: ranges === undefined });
+		writeSheetParts(sheet, partHost(shared, keys, key), { charts: ranges === undefined });
 	});
 	writeOrder(sheets, keyList, entries);
 	writeNames(shared.names, workbook.definedNames, (index) => keyList[index]);
