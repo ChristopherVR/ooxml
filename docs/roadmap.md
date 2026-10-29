@@ -2,6 +2,8 @@
 
 Where the project stands and what comes next. The repository layout and the way of working are described in the [repository README](../.github/README.md) and in [AGENTS.md](../AGENTS.md).
 
+What the 1.0 releases promise (public API, semver, deprecation, and what Alpha, Beta and Stable mean) is in the [stability policy](stability.md).
+
 The active implementation order and acceptance criteria for shared chart, SmartArt and DrawingML
 parity are tracked in [Shared Office parity delivery](office-shared-parity-delivery.md). It separates
 extraction from consumer integration, rendering fidelity and native Office validation.

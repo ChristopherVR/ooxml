@@ -205,6 +205,10 @@ bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 
 [Architecture](docs/architecture.md) &middot; [Framework bindings](docs/bindings.md) &middot; [Editing text](docs/editing.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Support roadmap](docs/parity-roadmap.md) &middot; [Outstanding work](docs/outstanding-work.md)
 
+## Stability
+
+What is public API, the semver and deprecation rules and what the Alpha, Beta and Stable labels mean are in the [stability policy](../../docs/stability.md).
+
 ## License
 
 [Apache License 2.0](LICENSE). See [`NOTICE`](NOTICE) for attributions.

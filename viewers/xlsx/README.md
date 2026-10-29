@@ -195,6 +195,10 @@ bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 
 [Getting started](https://christophervr.github.io/ooxml/xlsx/getting-started) &middot; [Architecture](https://christophervr.github.io/ooxml/xlsx/architecture) &middot; [Framework bindings](https://christophervr.github.io/ooxml/xlsx/bindings) &middot; [Element API](https://christophervr.github.io/ooxml/xlsx/api) &middot; [Theming](https://christophervr.github.io/ooxml/xlsx/theming) &middot; [Localization](https://christophervr.github.io/ooxml/xlsx/localization) &middot; [Features and limitations](https://christophervr.github.io/ooxml/xlsx/features)
 
+## Stability
+
+What is public API, the semver and deprecation rules and what the Alpha, Beta and Stable labels mean are in the [stability policy](../../docs/stability.md). The Excel packages keep the `@christophervr` scope because the unscoped names belong to others.
+
 ## License
 
 [Apache License 2.0](LICENSE). See [`NOTICE`](NOTICE) for attributions.

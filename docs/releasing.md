@@ -15,6 +15,8 @@ The UI package depends on the core, never the reverse. The viewers' packages dep
 
 Releases are automatic: an hourly workflow (and a manual dispatch) looks at the conventional commits on `main` since each package's last release tag and, for every package whose published files changed, bumps the version, writes the changelog, tags, creates a GitHub release and publishes with provenance.
 
+What counts as a breaking change, the deprecation rules and the Stable label are defined in [stability.md](stability.md).
+
 ## How a release is decided
 
 `scripts/release-plan.mjs` computes everything from git history. Run it locally at any time; it writes the git-ignored `release-plan.json` and changes nothing else (`--write` also stamps versions into the manifests, which CI does):
