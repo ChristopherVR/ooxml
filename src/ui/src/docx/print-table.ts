@@ -70,6 +70,11 @@ export function renderTable(
 			content.className = 'dve-print-cell-content';
 			content.style.zIndex = '2';
 			const offset = cellVerticalOffset(geometry, row.heightPx);
+			// Text aligned across a vertical merge sits below this row's box: let it show, above the rows below.
+			if (geometry.mergeRows && geometry.alignmentHeightPx !== undefined) {
+				cell.style.overflow = 'visible';
+				rowEl.style.zIndex = '1';
+			}
 			Object.assign(content.style, {
 				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? measuredBorderWidth(cssBorder(borders?.left), borders?.left?.widthPx ?? 0) : 0)}px`,
 				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? measuredBorderWidth(cssBorder(borders?.right), borders?.right?.widthPx ?? 0) : 0)}px`,

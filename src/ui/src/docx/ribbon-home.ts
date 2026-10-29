@@ -195,6 +195,18 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 					{ large: true },
 				),
 				tool(
+					'Merge cells',
+					'mergeCells',
+					{ type: 'tableEdit', key: 'mergeCells' },
+					{ large: true },
+				),
+				tool(
+					'Split cells',
+					'splitCell',
+					{ type: 'formatDialog', kind: 'splitCells' },
+					{ large: true },
+				),
+				tool(
 					'Delete table',
 					'deleteTable',
 					{ type: 'tableEdit', key: 'deleteTable' },

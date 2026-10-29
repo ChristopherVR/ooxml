@@ -4,6 +4,14 @@ import { closeHistory } from 'prosemirror-history';
 import { Selection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
+import {
+	canRestructure,
+	executeRestructure,
+	restructureContext,
+	usesRestructure,
+	type RestructureCommand,
+	type Split,
+} from './table-restructure-commands';
 
 export type TableCommand =
 	| 'rowBefore'
@@ -12,6 +20,8 @@ export type TableCommand =
 	| 'columnBefore'
 	| 'columnAfter'
 	| 'deleteColumn'
+	| 'mergeCells'
+	| 'splitCell'
 	| 'deleteTable';
 
 type Context = {
@@ -46,7 +56,7 @@ function context(view: EditorView): Context | null {
 	};
 }
 
-function paragraphIdFactory(view: EditorView): () => string {
+export function paragraphIdFactory(view: EditorView): () => string {
 	const ids = new Set<string>();
 	view.state.doc.descendants((node) => {
 		if (typeof node.attrs.id === 'string' && node.attrs.id) ids.add(node.attrs.id);
@@ -86,22 +96,55 @@ function replaceWithParagraph(view: EditorView, ctx: Context): void {
 
 /** Reports whether the current selection can receive the requested table edit. */
 export function canExecuteTableCommand(view: EditorView, action: TableCommand): boolean {
+	if (action === 'deleteTable') return canDeleteTable(view);
+	const merged = restructureContext(view);
+	if (usesRestructure(merged, action))
+		return Boolean(view.editable && merged && canRestructure(merged, action as RestructureCommand));
 	const ctx = context(view);
 	// A nested table keeps the grid it was authored with; only its text is editable.
 	const nested =
 		ctx && view.state.selection.$from.node(ctx.tableDepth - 1).type.name === 'tableCell';
-	return Boolean(
-		view.editable &&
-		ctx &&
-		!nested &&
-		(action === 'deleteTable' || ctx.table.attrs.structureEditable !== false),
-	);
+	return Boolean(view.editable && ctx && !nested && ctx.table.attrs.structureEditable !== false);
 }
 
-/** Applies a structural command to the rectangular table containing the selection. */
-export function executeTableCommand(view: EditorView, action: TableCommand): boolean {
+/** Any table that is not nested in a cell can be deleted whole, merged or not. */
+function canDeleteTable(view: EditorView): boolean {
+	const ctx = context(view) ?? tableAround(view);
+	const nested =
+		ctx && view.state.selection.$from.node(ctx.tableDepth - 1).type === schema.nodes.tableCell;
+	return Boolean(view.editable && ctx && !nested);
+}
+
+/** The table around the selection when it is not rectangular, for deleting it whole. */
+function tableAround(view: EditorView): Context | null {
+	const { $from } = view.state.selection;
+	for (let depth = $from.depth; depth > 0; depth--)
+		if ($from.node(depth).type === schema.nodes.table && depth > 0 && $from.depth >= depth + 2)
+			return {
+				table: $from.node(depth),
+				tablePos: $from.before(depth),
+				tableDepth: depth,
+				rowIndex: $from.index(depth),
+				columnIndex: $from.index(depth + 1),
+			};
+	return null;
+}
+
+/**
+ * Applies a structural command to the table containing the selection: rows and columns of a
+ * rectangular table directly, merged and nested tables, and merge and split, through the
+ * merge-aware editor. `split` sizes Split Cells (it defaults to two columns).
+ */
+export function executeTableCommand(
+	view: EditorView,
+	action: TableCommand,
+	split?: Split,
+): boolean {
 	if (!canExecuteTableCommand(view, action)) return false;
-	const ctx = context(view);
+	const merged = restructureContext(view);
+	if (action !== 'deleteTable' && usesRestructure(merged, action))
+		return executeRestructure(view, action as RestructureCommand, paragraphIdFactory(view), split);
+	const ctx = context(view) ?? tableAround(view);
 	if (!ctx) return false;
 	if (action === 'deleteTable') {
 		replaceWithParagraph(view, ctx);

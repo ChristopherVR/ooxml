@@ -12,7 +12,8 @@ import type {
 	TableStyleCatalog,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { resolveCellVisuals } from 'ooxml-core/docx/ui';
+import { continuationsOf, resolveCellVisuals, rowSpanOf, tableGrid } from 'ooxml-core/docx/ui';
+import { convertRestructuredTable, structureChanged } from './table-restructure-convert';
 
 function cellKey(cell: TableCell): string {
 	return cell.paragraphs[0]?.id ?? '';
@@ -28,6 +29,7 @@ export function tableNode(
 		1,
 		...block.rows.map((row) => row.reduce((sum, cell) => sum + (cell.gridSpan ?? 1), 0)),
 	);
+	const layout = tableGrid(block);
 	const rows = block.rows.map((row, rowIndex) => {
 		const cells: ProseMirrorNode[] = [];
 		let gridColumn = 0;
@@ -36,7 +38,10 @@ export function tableNode(
 			gridColumn += cell.gridSpan ?? 1;
 			if (cell.verticalMerge === 'continue') return;
 			let rowspan = 1;
-			if (cell.verticalMerge === 'restart') {
+			const entry = layout?.rows[rowIndex]?.[columnIndex];
+			const continues = layout && entry ? continuationsOf(layout, entry) : [];
+			if (layout && entry) rowspan = rowSpanOf(layout, entry);
+			else if (cell.verticalMerge === 'restart') {
 				let next = rowIndex + 1;
 				while (block.rows[next]?.[columnIndex]?.verticalMerge === 'continue') {
 					rowspan++;
@@ -75,6 +80,9 @@ export function tableNode(
 						sourceCellKey: cellKey(cell),
 						colspan: cell.gridSpan ?? 1,
 						rowspan,
+						continueKeys: continues.length
+							? JSON.stringify(continues.map((c) => cellKey(c.cell)))
+							: null,
 						widthTwips: cell.widthTwips ?? null,
 						verticalAlign: cell.verticalAlign ?? null,
 						shadingFill: visuals.shadingFill ?? null,
@@ -104,6 +112,10 @@ export function tableNode(
 			id: block.id,
 			// Nested tables edit their text on the page; their grid and merges stay as authored.
 			structureEditable: !nested && block.structureEditable !== false,
+			// Merge and split work on any table whose cells tile its grid.
+			restructurable:
+				block.restructurable === true || (block.structureEditable !== false && Boolean(layout)),
+			grid: block.grid ? JSON.stringify(block.grid) : null,
 			widthTwips: block.widthTwips ?? null,
 			alignment: block.alignment ?? null,
 			indentTwips: block.indentTwips ?? null,
@@ -245,10 +257,33 @@ export function convertMergedTable(
 				target.sourceBlocks = target.sourceBlocks.map((block) => {
 					const node = block.type === 'table' ? nested[index++] : undefined;
 					return node && block.type === 'table'
-						? convertMergedTable(node, block, convertParagraph)
+						? convertStructuredTable(node, block, convertParagraph)
 						: block;
 				});
 		}),
 	);
+	return updated;
+}
+
+/**
+ * A merged or nested table back to the model: rebuilt from the node when its cells, merges or
+ * grid were edited, otherwise patched by cell identity so its structure stays as authored.
+ */
+export function convertStructuredTable(
+	node: ProseMirrorNode,
+	prior: Table,
+	convertParagraph: (paragraph: ProseMirrorNode) => Paragraph,
+): Table {
+	if (!node.attrs.restructurable || !structureChanged(node, prior))
+		return convertMergedTable(node, prior, convertParagraph);
+	const updated = convertRestructuredTable(
+		node,
+		prior,
+		convertParagraph,
+		(inner, innerPrior) => convertStructuredTable(inner, innerPrior, convertParagraph),
+		heldControl,
+	);
+	delete updated.contentControl;
+	Object.assign(updated, tableControl(node, prior));
 	return updated;
 }

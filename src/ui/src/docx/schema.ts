@@ -261,6 +261,10 @@ export const schema = new Schema({
 			attrs: {
 				id: { default: '' },
 				structureEditable: { default: true },
+				/** Merged or nested table whose rows, columns and cells the structure commands can edit. */
+				restructurable: { default: false },
+				/** The table's `w:tblGrid` widths as JSON, kept so column edits reach the model. */
+				grid: { default: null },
 				widthTwips: { default: null },
 				alignment: { default: null },
 				indentTwips: { default: null },
@@ -291,6 +295,8 @@ export const schema = new Schema({
 				sourceCellKey: { default: '' },
 				colspan: { default: 1 },
 				rowspan: { default: 1 },
+				/** First-paragraph ids (JSON) of the continuation cells a vertical merge has below this cell. */
+				continueKeys: { default: null },
 				widthTwips: { default: null },
 				verticalAlign: { default: null },
 				shadingFill: { default: null },

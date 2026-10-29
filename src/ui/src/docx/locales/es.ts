@@ -1,3 +1,4 @@
+import { esSplitCells } from './split-cells';
 import { esOptions } from './options';
 import { esColumns } from './columns';
 import { esMultilevelList } from './multilevel-list';
@@ -24,6 +25,7 @@ export const es: LocaleStrings = {
 	...esDropCap,
 	...esNavigation,
 	...esColumns,
+	...esSplitCells,
 	...esMultilevelList,
 	...esFontAdvanced,
 	...esLigatures,

@@ -78,6 +78,8 @@ const paths = {
 	columnLeft: 'M10 4h10v16H10z M15 4v16 M3 12h4 M5 10v4',
 	columnRight: 'M4 4h10v16H4z M9 4v16 M17 12h4 M19 10v4',
 	deleteColumn: 'M6 4h9v16H6z M10.5 4v16 M19 8v8',
+	mergeCells: 'M4 5h16v14H4z M4 12h4 M16 12h4 M10 9l-3 3 3 3 M14 9l3 3-3 3',
+	splitCell: 'M4 5h16v14H4z M12 5v14 M8 9l-3 3 3 3 M16 9l3 3-3 3',
 	deleteTable: 'M4 5h16v14H4z M4 10h16 M10 5v14 M14 13l5 5 M19 13l-5 5',
 	margins: 'M5 3h14v18H5z M8 6h8v12H8z',
 	orientation: 'M6 3h9l3 3v15H6z M12 9v6 M9 12h6',

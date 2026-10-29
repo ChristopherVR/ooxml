@@ -1,3 +1,4 @@
+import { zhSplitCells } from './split-cells';
 import { zhOptions } from './options';
 import { zhColumns } from './columns';
 import { zhMultilevelList } from './multilevel-list';
@@ -24,6 +25,7 @@ export const zhCN: LocaleStrings = {
 	...zhDropCap,
 	...zhNavigation,
 	...zhColumns,
+	...zhSplitCells,
 	...zhMultilevelList,
 	...zhFontAdvanced,
 	...zhLigatures,

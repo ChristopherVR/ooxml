@@ -1,3 +1,4 @@
+import { deSplitCells } from './split-cells';
 import { deOptions } from './options';
 import { deColumns } from './columns';
 import { deMultilevelList } from './multilevel-list';
@@ -24,6 +25,7 @@ export const de: LocaleStrings = {
 	...deDropCap,
 	...deNavigation,
 	...deColumns,
+	...deSplitCells,
 	...deMultilevelList,
 	...deFontAdvanced,
 	...deLigatures,

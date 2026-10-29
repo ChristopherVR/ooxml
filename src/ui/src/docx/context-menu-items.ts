@@ -42,6 +42,8 @@ const TABLE_ITEMS: [TableCommand, LocalizationKey][] = [
 	['columnBefore', 'Insert column left'],
 	['columnAfter', 'Insert column right'],
 	['deleteColumn', 'Delete column'],
+	['mergeCells', 'Merge cells'],
+	['splitCell', 'Split cells'],
 	['deleteTable', 'Delete table'],
 ];
 
@@ -99,7 +101,10 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 			TABLE_ITEMS.map(([key, label]) => ({
 				id: `table-${key}`,
 				label,
-				command: { kind: 'ribbon', action: { type: 'tableEdit', key } } as const,
+				command:
+					key === 'splitCell'
+						? ({ kind: 'ribbon', action: { type: 'formatDialog', kind: 'splitCells' } } as const)
+						: ({ kind: 'ribbon', action: { type: 'tableEdit', key } } as const),
 				disabled: state.readOnly || !state.canTable(key),
 			})),
 		);

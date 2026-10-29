@@ -21,6 +21,7 @@ import { createZoomDialog, type ZoomHost } from './zoom-dialog';
 import { createTablePropertiesDialog } from './table-properties-dialog';
 import { createLineNumberDialog, type LineNumberHost } from './line-number-dialog';
 import { createDropCapDialog } from './drop-cap-dialog';
+import { createSplitCellsDialog } from './split-cells-dialog';
 import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
 import { createMultilevelListDialog } from './multilevel-list-dialog';
 import { createReviewOptionsDialog } from './review-options-dialog';
@@ -35,6 +36,7 @@ export type FormatDialogKind =
 	| 'zoom'
 	| 'borders'
 	| 'tableProperties'
+	| 'splitCells'
 	| 'lineNumbers'
 	| 'textBox'
 	| 'contentControl'
@@ -105,6 +107,7 @@ export class FormatDialogs {
 			}),
 			borders: createBordersDialog(() => host.view()),
 			tableProperties: createTablePropertiesDialog(() => host.view()),
+			splitCells: createSplitCellsDialog(() => host.view()),
 			watermark: createWatermarkDialog({
 				...(host.watermark ?? { current: () => undefined, canEdit: () => false, apply: () => {} }),
 				restoreFocus: () => focusView(host.view()),

@@ -80,6 +80,9 @@ export function refreshEditorControls(
 					readOnly || Boolean(collaboration) || !canExecuteTableCommand(view, action.key);
 			if (action.type === 'formatDialog' && action.kind === 'tableProperties')
 				button.disabled = readOnly || !tablePropertiesContext(state);
+			if (action.type === 'formatDialog' && action.kind === 'splitCells')
+				button.disabled =
+					readOnly || Boolean(collaboration) || !canExecuteTableCommand(view, 'splitCell');
 		}
 		syncFontControls(toolbar, state);
 		syncParagraphControls(toolbar, state);

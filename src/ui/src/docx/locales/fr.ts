@@ -1,3 +1,4 @@
+import { frSplitCells } from './split-cells';
 import { frOptions } from './options';
 import { frColumns } from './columns';
 import { frMultilevelList } from './multilevel-list';
@@ -24,6 +25,7 @@ export const fr: LocaleStrings = {
 	...frDropCap,
 	...frNavigation,
 	...frColumns,
+	...frSplitCells,
 	...frMultilevelList,
 	...frFontAdvanced,
 	...frLigatures,

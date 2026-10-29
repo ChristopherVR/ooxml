@@ -23,7 +23,7 @@ import {
 import { sameJson, sameRuns } from 'ooxml-core/docx/ui';
 import { appendInlineNode, runToInlineNodes, type NoteNumberLookup } from './run-adapter';
 import {
-	convertMergedTable,
+	convertStructuredTable,
 	convertSimpleTable,
 	tableControl,
 	tableNode,
@@ -243,8 +243,12 @@ export function docToModel(
 			const id = String(node.attrs.id || `t-edit-${++nextId}`);
 			const prior = priorTables.get(id);
 			const asParagraph = (n: unknown) => convertParagraph(n as typeof doc);
-			if (prior && prior.structureEditable === false)
-				blocks.push(convertMergedTable(node, prior, asParagraph));
+			if (
+				prior &&
+				(prior.structureEditable === false ||
+					(node.attrs.structureEditable === false && node.attrs.restructurable))
+			)
+				blocks.push(convertStructuredTable(node, prior, asParagraph));
 			else
 				blocks.push({
 					// Table-level properties (grid, width, borders, style, look) have no editor node;

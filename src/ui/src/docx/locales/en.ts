@@ -1,3 +1,4 @@
+import { enSplitCells } from './split-cells';
 import { enObjects } from './objects';
 import { enShapes } from './shapes';
 import { enSmartArt } from './smartart';
@@ -27,6 +28,7 @@ export const en = {
 	...enDropCap,
 	...enNavigation,
 	...enColumns,
+	...enSplitCells,
 	...enMultilevelList,
 	...enFontAdvanced,
 	...enLigatures,
