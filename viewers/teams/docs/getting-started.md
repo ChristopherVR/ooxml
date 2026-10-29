@@ -5,7 +5,7 @@ meetings with video and screen share over WebRTC, and Office files shared in the
 install one binding for your framework, point it at a server (or start without one), and get the
 full UI, or a raw hook to build your own.
 
-::: warning An early implementation
+::: warning Beta
 This is not Microsoft Teams and is not affiliated with Microsoft. There is **no end-to-end
 encryption**: whoever runs the server can read every message and file. See
 [Limitations](/limitations) before you rely on it.

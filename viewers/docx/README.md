@@ -7,7 +7,7 @@
 [![types](https://img.shields.io/npm/types/docx-react-viewer.svg)](https://www.npmjs.com/package/docx-react-viewer)
 
 **A browser Word document editor with one document model, one web component and thin adapters for your framework.**
-An early implementation: not Microsoft Word parity, and not lossless export.
+Stable under the [stability policy](../../docs/stability.md): a semver-stable API, a written [preservation guarantee](docs/preservation.md) and native Word save and reopen checks. Not Microsoft Word parity: what is supported and what is not is in the [support roadmap](docs/parity-roadmap.md).
 
 [![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/ooxml/docx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)

@@ -154,6 +154,10 @@ Each product (Word, Excel, PowerPoint, Visio, Teams) carries a label in its READ
      without repair) run on a schedule, with the last passing run recorded in the docs. For Excel
      that is `src/core/scripts/xlsx-excel-acceptance.ps1`.
 
+Until the self-hosted Office runner is registered, a passing local run of the same
+workflow (`node scripts/office-acceptance.mjs <product>`), recorded with its date, Office build and
+commit in [office-acceptance.md](office-acceptance.md), satisfies point 4.
+
 Stable is not a claim that the product matches Microsoft Office: rendering, layout and feature
 coverage are described honestly in each product's feature list, and anything not on it is
 unsupported.
@@ -164,3 +168,13 @@ The unscoped npm names `xlsx-core` and `xlsx-viewer` belong to other people, so 
 packages stay `@christophervr/xlsx-core` and the other `@christophervr/xlsx-*` names at 1.0 and
 afterwards. Renaming them would break every consumer for no gain, and the scope is part of the
 public API like any other name. The Word packages are unscoped (`docx-core`) and stay so.
+
+## Current labels
+
+| Product    | Label  | Notes                                                                                                                                                    |
+| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PowerPoint | (none) | Carries no label on the launcher; not yet assessed against this bar.                                                                                     |
+| Word       | Stable | Since 2026-10-29: API snapshot, [preservation guarantee](../viewers/docx/docs/preservation.md), Word corpus and native acceptance.                       |
+| Excel      | Stable | Since 2026-10-29: API snapshot, [preservation guarantee](../viewers/xlsx/docs/preservation.md), function list and native acceptance.                     |
+| Visio      | Beta   | Plain-text editing and the shape clipboard are still experimental ([API](../viewers/visio/docs/api.md)); there is no written preservation guarantee yet. |
+| OpenTeams  | Beta   | 1.0 packages on sync protocol 1 and schema 1; the Docker recipe has not been built and no production deployment has been reported.                       |

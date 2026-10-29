@@ -87,8 +87,8 @@ re-emit its events as callbacks.
   `packages/web-component` and is injected into the core's layout functions; it
   is the one piece of layout that needs a DOM.
 - Unsupported workbook features must be reported honestly (for example pivots from
-  external or OLAP sources and Power Query are preserved but not shown or refreshed, sparkline style
-  galleries and grouping are missing, chart style definitions cannot be authored, surface charts show a
+  external or OLAP sources and Power Query are preserved but not shown or refreshed, the sparkline style
+  gallery is missing, chart style definitions cannot be authored, surface charts show a
   labelled frame, a chart part the model cannot carry is never rewritten and is reported, and a SmartArt
   drawn with an approximate layout is badged as such; `docs/features.md` has the full table).
   Never claim Excel parity or lossless export.

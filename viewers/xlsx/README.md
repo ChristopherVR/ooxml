@@ -7,7 +7,7 @@
 [![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
 
 **A browser Excel spreadsheet editor with one workbook model, one web component and thin adapters for your framework.**
-An early implementation: not Microsoft Excel parity, and not lossless export.
+Stable under the [stability policy](../../docs/stability.md): a semver-stable API, a written [preservation guarantee](docs/preservation.md) and native Excel save and reopen checks. Not Microsoft Excel parity: what is supported and what is not is in the [feature list](docs/features.md).
 
 [![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/ooxml/xlsx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
@@ -33,7 +33,7 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Features and limitations
 
-An early release: the areas below work and are covered by unit and browser tests, but this is not Excel parity and saving is not lossless for what the model does not cover.
+The areas below are covered by unit, browser and native Excel tests. This is not Excel parity; content the model does not cover is kept through a save or reported, as the [preservation guarantee](docs/preservation.md) describes.
 
 |                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

@@ -1,6 +1,6 @@
 # Getting started
 
-docx-viewer is one `<docx-editor>` web component plus six thin framework adapters. This page installs an adapter, mounts the editor and loads and saves a document. It is an early implementation: it is not Microsoft Word parity and not lossless export (see the [support roadmap](/parity-roadmap)).
+docx-viewer is one `<docx-editor>` web component plus six thin framework adapters. This page installs an adapter, mounts the editor and loads and saves a document. It is Stable under the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md), with a [preservation guarantee](/preservation), but it is not Microsoft Word parity (see the [support roadmap](/parity-roadmap)).
 
 ## 1. Install
 

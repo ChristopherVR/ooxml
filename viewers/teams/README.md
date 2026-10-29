@@ -7,7 +7,7 @@
 [![types](https://img.shields.io/npm/types/openteams-react-viewer.svg)](https://www.npmjs.com/package/openteams-react-viewer)
 
 **An open-source, bring-your-own-server team workspace: channels and chat, presence and WebRTC meetings, one web component and thin adapters for your framework.**
-An early implementation: not Microsoft Teams, not affiliated with Microsoft, and no end-to-end encryption.
+A beta: not Microsoft Teams, not affiliated with Microsoft, and no end-to-end encryption.
 
 [![docs](https://img.shields.io/badge/docs-christophervr.github.io-0e8f8f.svg)](https://christophervr.github.io/ooxml/teams/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)

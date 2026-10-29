@@ -4,11 +4,11 @@ import { APPS, demoUrl, isLive } from '../site/apps.js';
 import { currentTheme, initTheme } from '../site/theme.js';
 import { apps as suiteApps, teamsApp } from '../apps/office-suite/src/ui.js';
 
-test('Excel beta launches the six deployed viewer routes', () => {
+test('Excel launches the six deployed viewer routes', () => {
 	const excel = APPS.find((app) => app.id === 'excel');
 	assert(excel);
 	assert(isLive(excel));
-	assert.equal(excel.tag.label, 'Beta');
+	assert.equal(excel.tag, undefined);
 	assert.equal(excel.docs, 'https://christophervr.github.io/ooxml/xlsx/');
 	assert.deepEqual(
 		Object.fromEntries(
@@ -25,15 +25,18 @@ test('Excel beta launches the six deployed viewer routes', () => {
 	);
 });
 
-test('Visio is beta and OpenTeams is alpha on the launcher and in the suite', () => {
+test('Word and Excel are stable, Visio and OpenTeams beta, on the launcher and in the suite', () => {
 	const visio = APPS.find((app) => app.id === 'visio');
 	const teams = APPS.find((app) => app.id === 'teams');
 	assert(visio);
 	assert(teams);
 	assert.deepEqual(visio.tag, { label: 'Beta', tone: 'beta' });
-	assert.deepEqual(teams.tag, { label: 'Alpha', tone: 'alpha' });
+	assert.deepEqual(teams.tag, { label: 'Beta', tone: 'beta' });
+	assert.equal(APPS.find((app) => app.id === 'word')?.tag, undefined);
 	assert.equal(suiteApps.find((app) => app.id === 'vsdx')?.tag, 'Beta');
-	assert.equal(teamsApp.tag, 'Alpha');
+	assert.equal(teamsApp.tag, 'Beta');
+	assert.equal(suiteApps.find((app) => app.id === 'docx')?.tag, undefined);
+	assert.equal(suiteApps.find((app) => app.id === 'xlsx')?.tag, undefined);
 });
 
 test('suite appearance writes the Excel shared preference without reloading its workbook', (t) => {
