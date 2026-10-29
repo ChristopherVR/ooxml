@@ -4,6 +4,7 @@ import { clearFilteredRows } from '../filter-rows';
 import type { Cell, DrawingAnchor, Table, TableColumn, Worksheet } from '../model';
 import { normalizeColumns } from './columns';
 import { assertInsertFits } from './insert-guard';
+import { shiftDataTables } from './shift-data-tables';
 import { shiftPreservedXml } from './shift-preserved';
 import {
 	type AxisShift,
@@ -49,6 +50,7 @@ export function shiftSheetContent(sheet: Worksheet, shift: AxisShift, band?: Ban
 		return range ? [{ ...c, address: range.start }] : [];
 	});
 	sheet.tables = sheet.tables.flatMap((t) => shiftTable(sheet, t, shift, moveRange));
+	shiftDataTables(sheet, moveRange);
 	for (const pivot of sheet.pivotTables ?? []) {
 		const location = moveRange(pivot.location);
 		if (location) {

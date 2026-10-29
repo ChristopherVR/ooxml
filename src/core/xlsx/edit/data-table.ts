@@ -26,8 +26,9 @@ export function dataTableAt(sheet: Worksheet, row: number, col: number): DataTab
 
 /** The formula Excel shows for a data table's result cells, without braces: `TABLE(B1,A1)`. */
 export function dataTableFormula(table: DataTable): string {
-	if (table.dt2D) return `TABLE(${table.r1},${table.r2 ?? ''})`;
-	return table.dtr ? `TABLE(${table.r1},)` : `TABLE(,${table.r1})`;
+	const r1 = table.del1 ? '#REF!' : table.r1;
+	if (table.dt2D) return `TABLE(${r1},${table.del2 ? '#REF!' : (table.r2 ?? '')})`;
+	return table.dtr ? `TABLE(${r1},)` : `TABLE(,${r1})`;
 }
 
 /** What the formula bar shows for a cell inside a data table, or undefined outside one. */
