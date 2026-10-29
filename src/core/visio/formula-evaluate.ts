@@ -1,4 +1,6 @@
-import { themeInputs } from './formula-theme';
+import { supported, traverse } from './formula-analyze';
+import { evaluateBound } from './formula-bound';
+import { binaryOperator as binary, evaluatedShapeFrame } from './formula-operators';
 import {
 	finiteFormulaValue as finite,
 	compatibleFormulaUnits as compatible,
@@ -13,7 +15,6 @@ import {
 } from './formula-numeric-functions';
 import {
 	evaluateFormulaText,
-	isTheText,
 	evaluateTextNumberFunction,
 	textNumberFunctions,
 	textResultFunctions,
@@ -24,7 +25,6 @@ import {
 	visioDateSerial,
 	type ShapeFrame,
 } from './formula-extra-functions';
-import { FRAME_INPUTS, literalIndirectTarget } from './formula-indirect';
 import { mathFormulaFunctions, evaluateMathFormulaFunction } from './formula-math-functions';
 import { formulaFailure, formulaLimit, parseVisioFormula, VisioFormulaError } from './formula';
 import type {
@@ -34,216 +34,6 @@ import type {
 	VisioFormulaValue,
 } from './formula';
 
-const supported = new Set([
-	'GUARD',
-	'IF',
-	'ABS',
-	'MIN',
-	'MAX',
-	'BOUND',
-	'SQRT',
-	'SIN',
-	'COS',
-	'TAN',
-	'ATAN2',
-	'SIGN',
-	'PI',
-	'PAGENUMBER',
-	'PAGECOUNT',
-	'PNT',
-	'PNTX',
-	'PNTY',
-	'ISERROR',
-	'IFERROR',
-	'INDIRECT',
-	'DATE',
-	'ANGLETOLOC',
-	'LOCTOPAR',
-	'SHEETREF',
-	...textNumberFunctions,
-	...textResultFunctions,
-	...numericFormulaFunctions,
-	...mathFormulaFunctions,
-]);
-// Known pure functions may be independent of an edit even when evaluation is unsupported.
-const staticUnsupported = new Set([
-	// FONT reads the font table by name, not a hidden ShapeSheet reference.
-	// Keep evaluation unsupported: identifiers depend on the document/system.
-	// https://learn.microsoft.com/en-us/office/client-developer/visio/font-function
-	'FONT',
-	// Page-name lookup has explicit arguments but returns a string, outside numeric evaluation.
-	'PAGENAME',
-	// Text-field functions read document properties or the clock, never ShapeSheet cells.
-	// https://learn.microsoft.com/en-us/office/client-developer/visio/now-function
-	'NOW',
-	'DOCCREATION',
-	'DOCLASTSAVE',
-	'DOCLASTEDIT',
-	'DOCLASTPRINT',
-	'TITLE',
-	'SUBJECT',
-	'CREATOR',
-	'KEYWORDS',
-	'DESCRIPTION',
-	'CATEGORY',
-	'COMPANY',
-	'MANAGER',
-	// POLYLINE encodes explicitly supplied geometry data; affected expressions
-	// still require the geometry evaluator and are rejected by numeric recalculation.
-	// https://learn.microsoft.com/en-us/office/client-developer/visio/polyline-function
-	'POLYLINE',
-	// NURBS likewise carries explicit control points (curved connectors write literal ones).
-	// https://learn.microsoft.com/en-us/office/client-developer/visio/nurbs-function
-	'NURBS',
-	'MOD',
-	'LOG',
-	'AND',
-	'OR',
-	'NOT',
-	'RGB',
-	'HSL',
-	'THEMEGUARD',
-	'THEMEVAL',
-	'THEME',
-	'ISTHEMED',
-	'BITAND',
-	'BITOR',
-	'BITXOR',
-	'TINT',
-	'MSOTINT',
-	'SHADE',
-	'LUMDIFF',
-	'MODULUS',
-]);
-// These functions can introduce references that cannot be identified from argument ASTs.
-const dynamic = new Set([
-	'EVALCELL',
-	'EVALTEXT',
-	'DEPENDSON',
-	'SETATREF',
-	'SETATREFEXPR',
-	'SETATREFEVAL',
-	'GETREF',
-	'REF',
-	'SHAPETEXT',
-	'CALLOUTTARGET',
-	'CONTAINERSHEETREF',
-	'MEMBERSHEETREF',
-	'PARENT',
-	'PAR',
-]);
-/** A function the analyser classifies by name, whether or not it can evaluate it. */
-export const isClassifiedVisioFunction = (name: string): boolean =>
-	supported.has(name) || staticUnsupported.has(name) || dynamic.has(name);
-export interface VisioFormulaAnalysis {
-	references: VisioFormulaReference[];
-	unsupportedFunctions: string[];
-	dynamic: boolean;
-	guarded: boolean;
-}
-function traverse(
-	ast: VisioFormulaAst,
-	limits: VisioFormulaLimits,
-	visit: (node: VisioFormulaAst) => void,
-): void {
-	const maxNodes = formulaLimit(limits.maxNodes, 1024),
-		maxDepth = formulaLimit(limits.maxDepth, 64);
-	const queue: [VisioFormulaAst, number][] = [[ast, 0]];
-	let count = 0;
-	while (queue.length) {
-		const [node, depth] = queue.pop()!;
-		if (++count > maxNodes || depth > maxDepth)
-			return formulaFailure('limit', 'Formula analysis limit');
-		visit(node);
-		if (node.kind === 'unary') queue.push([node.operand, depth + 1]);
-		if (node.kind === 'binary') queue.push([node.left, depth + 1], [node.right, depth + 1]);
-		if (node.kind === 'call') for (const arg of node.args) queue.push([arg, depth + 1]);
-	}
-}
-export function analyzeVisioFormula(
-	source: string | VisioFormulaAst,
-	limits: VisioFormulaLimits = {},
-): VisioFormulaAnalysis {
-	const ast = typeof source === 'string' ? parseVisioFormula(source, limits) : source;
-	const references = new Map<string, VisioFormulaReference>(),
-		unsupportedFunctions = new Set<string>();
-	let unsafe = false,
-		guarded = false;
-	traverse(ast, limits, (node) => {
-		if (node.kind === 'reference')
-			references.set(
-				`${node.reference.shapeId ?? ''}!${node.reference.cell.toLowerCase()}`,
-				node.reference,
-			);
-		if (node.kind === 'call') {
-			const inputs =
-				node.name === 'ISTHEMED'
-					? ['ColorSchemeIndex']
-					: ['THEMEVAL', 'THEME'].includes(node.name)
-						? themeInputs
-						: [];
-			for (const cell of inputs) references.set(`!${cell.toLowerCase()}`, { cell });
-			for (const cell of FRAME_INPUTS[node.name] ?? [])
-				references.set(`!${cell.toLowerCase()}`, { cell });
-			if (node.name === 'INDIRECT') {
-				// A literal address is an ordinary static reference when the caller opts in; a computed one is
-				// never provable, and by default every INDIRECT stays dynamic.
-				const target = literalIndirectTarget(node);
-				if (target && limits.literalIndirect)
-					references.set(`${target.shapeId ?? ''}!${target.cell.toLowerCase()}`, target);
-				else unsafe = true;
-			}
-			if (!supported.has(node.name)) unsupportedFunctions.add(node.name);
-			const shapeText =
-				node.name === 'SHAPETEXT' &&
-				limits.shapeTextReads === true &&
-				node.args.length === 1 &&
-				isTheText(node.args[0]!);
-			if (
-				(dynamic.has(node.name) && !shapeText) ||
-				(!supported.has(node.name) && !staticUnsupported.has(node.name))
-			)
-				unsafe = true;
-			if (node.name === 'GUARD') guarded = true;
-		}
-	});
-	return {
-		references: [...references.values()],
-		unsupportedFunctions: [...unsupportedFunctions],
-		dynamic: unsafe,
-		guarded,
-	};
-}
-function binary(operator: string, a: VisioFormulaValue, b: VisioFormulaValue): VisioFormulaValue {
-	let unit: VisioFormulaValue['unit'];
-	if (operator === '+' || operator === '-') {
-		unit = compatible(a, b);
-		return finite({ value: operator === '+' ? a.value + b.value : a.value - b.value, unit });
-	}
-	if (operator === '*') {
-		return finite({ value: a.value * b.value, unit: formulaProductUnit(a.unit, b.unit) });
-	}
-	if (operator === '/') {
-		if (b.value === 0) return formulaFailure('value', 'Division by zero');
-		return finite({ value: a.value / b.value, unit: formulaQuotientUnit(a.unit, b.unit) });
-	}
-	if (operator === '^') {
-		return finite({ value: a.value ** b.value, unit: formulaExponentUnit(a.unit, b) });
-	}
-	compatible(a, b);
-	const comparisons: Record<string, boolean> = {
-		'=': a.value === b.value,
-		'<>': a.value !== b.value,
-		'!=': a.value !== b.value,
-		'<': a.value < b.value,
-		'>': a.value > b.value,
-		'<=': a.value <= b.value,
-		'>=': a.value >= b.value,
-	};
-	if (!(operator in comparisons))
-		return formulaFailure('syntax', `Unsupported operator ${operator}`);
-	return { value: comparisons[operator] ? 1 : 0, unit: 'scalar' };
-}
 export function evaluateVisioFormula(
 	source: string | VisioFormulaAst,
 	resolve: (reference: VisioFormulaReference) => VisioFormulaValue,
@@ -255,28 +45,7 @@ export function evaluateVisioFormula(
 	// Validate caller-supplied ASTs as well as parsed ones before recursive evaluation.
 	traverse(ast, limits, () => {});
 	let steps = 0;
-	// The frame of the formula's own shape (SHEETREF()), unflipped; other sheets are unsupported.
-	const shapeFrame = (sheet: VisioFormulaAst): ShapeFrame => {
-		if (sheet.kind !== 'call' || sheet.name !== 'SHEETREF' || sheet.args.length)
-			return formulaFailure('unsupported', 'A sheet other than SHEETREF()');
-		const read = (cell: string, fallback?: number): number => {
-			try {
-				return finite(resolve({ cell })).value;
-			} catch (error) {
-				if (fallback === undefined) throw error;
-				return fallback;
-			}
-		};
-		if (read('FlipX', 0) !== 0 || read('FlipY', 0) !== 0)
-			return formulaFailure('unsupported', 'A coordinate conversion on a flipped shape');
-		return {
-			pinX: read('PinX'),
-			pinY: read('PinY'),
-			locPinX: read('LocPinX', 0),
-			locPinY: read('LocPinY', 0),
-			angle: read('Angle', 0),
-		};
-	};
+	const shapeFrame = (sheet: VisioFormulaAst) => evaluatedShapeFrame(sheet, resolve);
 	const evaluate = (node: VisioFormulaAst, depth = 0): VisioFormulaValue => {
 		if (++steps > maxSteps || depth > maxDepth)
 			return formulaFailure('limit', 'Formula evaluation limit');
@@ -454,57 +223,7 @@ export function evaluateVisioFormula(
 			}
 			return finite(result);
 		}
-		if (name === 'BOUND') {
-			// BOUND(value, type, ignore1, min1, max1, ...): control handles of stencil shapes use it.
-			// https://learn.microsoft.com/en-us/office/client-developer/visio/bound-function
-			if (node.args.length < 5 || (node.args.length - 2) % 3 !== 0 || node.args.length > 302)
-				return formulaFailure('arity', 'Invalid BOUND argument count');
-			const value = arg(0),
-				type = arg(1);
-			if (type.unit !== 'scalar' || ![0, 1, 2].includes(type.value))
-				return formulaFailure('value', 'BOUND type must be 0, 1 or 2');
-			if (type.value === 2) return value;
-			if (type.value === 1) {
-				// Excluded ranges: a value strictly inside one moves to its nearest edge (the upper
-				// one halfway), and may then fall inside another, so repeat.
-				let current = value.value,
-					unit = value.unit;
-				for (let pass = 0; pass <= (node.args.length - 2) / 3; pass++) {
-					let moved = false;
-					for (let index = 2; index < node.args.length; index += 3) {
-						if (arg(index).value !== 0) continue;
-						const a = arg(index + 1),
-							b = arg(index + 2);
-						unit = compatible({ value: current, unit }, a);
-						unit = compatible({ value: current, unit }, b);
-						const low = Math.min(a.value, b.value),
-							high = Math.max(a.value, b.value);
-						if (current > low && current < high) {
-							current = current - low < high - current ? low : high;
-							moved = true;
-						}
-					}
-					if (!moved) break;
-				}
-				return finite({ value: current, unit });
-			}
-			let nearest: number | undefined;
-			let unit = value.unit;
-			for (let index = 2; index < node.args.length; index += 3) {
-				if (arg(index).value !== 0) continue;
-				const a = arg(index + 1),
-					b = arg(index + 2);
-				unit = compatible({ value: value.value, unit }, a);
-				unit = compatible({ value: value.value, unit }, b);
-				const low = Math.min(a.value, b.value),
-					high = Math.max(a.value, b.value);
-				if (value.value >= low && value.value <= high) return finite({ value: value.value, unit });
-				const edge = value.value < low ? low : high;
-				if (nearest === undefined || Math.abs(edge - value.value) < Math.abs(nearest - value.value))
-					nearest = edge;
-			}
-			return finite({ value: nearest ?? value.value, unit });
-		}
+		if (name === 'BOUND') return evaluateBound(node.args, arg);
 		if (name === 'ATAN2') {
 			arity(2);
 			const y = arg(0),
@@ -543,3 +262,6 @@ export function evaluateVisioFormula(
 	};
 	return evaluate(ast);
 }
+
+export { analyzeVisioFormula, isClassifiedVisioFunction } from './formula-analyze';
+export type { VisioFormulaAnalysis } from './formula-analyze';
