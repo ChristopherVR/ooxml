@@ -1,0 +1,58 @@
+name: Office acceptance
+
+# Runs the native Office acceptance scripts (Word, Excel, PowerPoint, Visio through COM) on a
+# self-hosted Windows runner with the desktop apps installed. Hosted runners have no Office, so
+# this never runs in the main CI. It only reads the repository and uploads results: it never
+# publishes, tags or pushes. See docs/office-acceptance.md for setting up the runner.
+on:
+  schedule:
+    - cron: '23 4 * * 0' # weekly, Sunday
+  workflow_dispatch:
+    inputs:
+      product:
+        description: 'Which product to check.'
+        type: choice
+        options: [all, word, excel, powerpoint, visio]
+        default: all
+
+permissions:
+  contents: read
+
+# One Office session at a time: the scripts refuse to start beside an existing Word, Excel or
+# PowerPoint process, and COM automation is not safe to run in parallel on one desktop.
+concurrency:
+  group: office-acceptance
+  cancel-in-progress: false
+
+jobs:
+  acceptance:
+    name: ${{ matrix.product }}
+    runs-on: [self-hosted, windows, office]
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        product: ${{ fromJSON((inputs.product == '' || inputs.product == 'all') && '["word","excel","powerpoint","visio"]' || format('["{0}"]', inputs.product)) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Needs Git for Windows' bash on the runner (the setup action runs `bun install` in bash).
+      # The scripts run TypeScript directly with Bun, so no build step is needed.
+      - uses: ./.github/actions/setup
+
+      # A product whose Office app is not installed is skipped with a notice, not failed.
+      - name: Run ${{ matrix.product }} acceptance
+        shell: pwsh
+        run: node scripts/office-acceptance.mjs '${{ matrix.product }}' --out office-acceptance-results
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: office-acceptance-${{ matrix.product }}
+          path: office-acceptance-results/
+          if-no-files-found: warn
+          retention-days: 90
