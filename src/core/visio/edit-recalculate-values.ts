@@ -56,7 +56,7 @@ export function createVisioCellEvaluator(
 	};
 	const evaluateCell = (id: string, item: IndexedCell): VisioFormulaValue => {
 		let result: VisioFormulaValue;
-		const analysis = item.formula ? analyzeVisioFormula(item.formula) : undefined;
+		const analysis = item.formula ? analyzeVisioFormula(item.formula, { literalIndirect: true }) : undefined;
 		if (item.formula && item.node && analysis!.unsupportedFunctions.length) {
 			if (!textSizeFormula(item.formula))
 				fail('EDIT_UNSUPPORTED_FORMULA', 'Affected formula uses unsupported functions.');

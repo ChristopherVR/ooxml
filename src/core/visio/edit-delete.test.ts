@@ -182,7 +182,7 @@ describe('atomic reference-closed deletion', () => {
 	it('rejects malformed dynamic selected formulas before removing their XML', async () => {
 		await expect(
 			editVsdx(
-				await source(leaf('1', cell('PinX', 2, 'INDIRECT(&quot;Sheet.2!PinX&quot;)')) + leaf('2')),
+				await source(leaf('1', cell('PinX', 2, 'INDIRECT(&quot;Sheet.&quot;&amp;&quot;2!PinX&quot;)')) + leaf('2')),
 				[remove('1'), remove('2')],
 			),
 		).rejects.toThrow('dependency');

@@ -175,7 +175,7 @@ export function indexCells(
 						item.formula = parseVisioFormula(source!);
 						// A size measured from the shape's own text reads only the cells it names; the
 						// text itself is followed after text edits (edit-text-size.ts).
-						const plain = analyzeVisioFormula(item.formula, { shapeTextReads: true });
+						const plain = analyzeVisioFormula(item.formula, { shapeTextReads: true, literalIndirect: true });
 						const analysis = (plain.dynamic && textSizeFormula(item.formula)) || plain;
 						if (analysis.dynamic)
 							fail(

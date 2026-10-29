@@ -145,7 +145,7 @@ export function createVisioDependencyQuery(
 			if (seen.size > maxSteps) fail('LIMIT_FORMULA_STEPS', 'Dependency analysis limit exceeded.');
 			const item = cells.get(id);
 			if (!item || item.unsafe || item.node?.hasAttribute('E')) return false;
-			if (item.formula && analyzeVisioFormula(item.formula).unsupportedFunctions.length)
+			if (item.formula && analyzeVisioFormula(item.formula, { literalIndirect: true }).unsupportedFunctions.length)
 				return false;
 			if (wanted.has(id)) found = true;
 			else pending.push(...item.dependencies);

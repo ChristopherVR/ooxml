@@ -15,7 +15,8 @@ export function literalIndirectTarget(node: VisioFormulaAst): VisioFormulaRefere
 	try {
 		const target = parseVisioFormula(address.value);
 		return target.kind === 'reference' &&
-			!(target.reference.shapeId === undefined && /^(true|false)$/i.test(target.reference.cell))
+			!(target.reference.shapeId === undefined && /^(true|false)$/i.test(target.reference.cell)) &&
+			target.reference.cell.toLowerCase() !== 'thetext'
 			? target.reference
 			: undefined;
 	} catch {
