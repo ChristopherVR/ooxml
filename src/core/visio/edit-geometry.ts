@@ -25,6 +25,7 @@ import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import {
 	assertVisioShapeUnreferenced,
+	freezeVisioCells,
 	recalculateVisioCells,
 	type VisioCellKey,
 } from './edit-recalculate';
@@ -175,8 +176,12 @@ export function applyGeometryEdit(
 		if (edit.type === 'delete-shape') {
 			unlocked('LockDelete');
 			releaseDeletedGlue(roots, new Map([[edit.pageId, new Set([edit.shapeId])]]));
-			assertVisioShapeUnreferenced(roots, edit.pageId, edit.shapeId, { check });
+			const frozen = assertVisioShapeUnreferenced(roots, edit.pageId, edit.shapeId, {
+				check,
+				freeze: true,
+			});
 			shape.parentNode!.removeChild(shape);
+			freezeVisioCells(frozen);
 			return [edit.pageId];
 		}
 		if (edit.type === 'rotate-shape' || edit.type === 'flip-shape') {

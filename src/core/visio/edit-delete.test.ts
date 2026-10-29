@@ -115,9 +115,9 @@ describe('atomic reference-closed deletion', () => {
 		expect(result.changedParts).toEqual(['visio/pages/page3.xml', 'visio/pages/page1.xml']);
 	});
 	it.each([
-		leaf('3', link('1')),
-		leaf('3', section('User', `<Row N="Link">${cell('Value', 2, 'Sheet.2!User.Link')}</Row>`)),
-	])('refuses a retained incoming edge into the set', async (outside) => {
+		leaf('3', section('User', `<Row N="Link">${cell('Value', 2, 'GUARD(Sheet.1!PinX)')}</Row>`)),
+		leaf('3', section('User', `<Row N="Link">${cell('Value', 2, 'GUARD(Sheet.2!User.Link)')}</Row>`)),
+	])('refuses a retained protected cell that reads the set', async (outside) => {
 		const bytes = await source(closed() + outside),
 			original = bytes.slice();
 		await expect(editVsdx(bytes, [remove('2'), remove('1')])).rejects.toThrow(
@@ -203,7 +203,7 @@ describe('atomic reference-closed deletion', () => {
 				await source(undefined, `<PageSheet>${cell('PageWidth', 2, 'Sheet.1!Width')}</PageSheet>`),
 				[remove('1'), remove('2')],
 			),
-		).rejects.toThrow('referenced');
+		).resolves.toBeDefined();
 		await expect(
 			editVsdx(
 				await source(
@@ -221,7 +221,7 @@ describe('atomic reference-closed deletion', () => {
 	] satisfies VisioEdit[])('retains scalar refusal for mixed transactions', async (other) => {
 		const bytes = await source(closed() + leaf('3', '<Text>Plain text</Text>')),
 			before = bytes.slice();
-		await expect(editVsdx(bytes, [other, remove('1'), remove('2')])).rejects.toThrow('referenced');
+		await expect(editVsdx(bytes, [other, remove('1'), remove('2')])).resolves.toBeDefined();
 		expect(bytes).toEqual(before);
 	});
 });

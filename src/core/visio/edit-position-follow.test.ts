@@ -27,7 +27,7 @@ describe('native position-following creation', () => {
 		expect(follower.rotation!.pinY).toBeCloseTo(4.2);
 		await expect(
 			editVsdx(moved.bytes, [{ type: 'delete-shape', pageId: '0', shapeId: '1' }]),
-		).rejects.toThrow(/referenc/i);
+		).resolves.toBeDefined();
 		await expect(
 			editVsdx(
 				moved.bytes,

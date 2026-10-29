@@ -79,7 +79,7 @@ it('checks local and inherited LockDelete, references and Connects with the shar
 	);
 	const bytes = await source(line(), '', '', dependent),
 		original = bytes.slice();
-	await expect(editVsdx(bytes, [remove])).rejects.toThrow('referenced by a ShapeSheet formula');
+	await expect(editVsdx(bytes, [remove])).resolves.toBeDefined();
 	expect(bytes).toEqual(original);
 	await expect(
 		editVsdx(

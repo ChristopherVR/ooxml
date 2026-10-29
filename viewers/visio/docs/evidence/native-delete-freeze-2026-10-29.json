@@ -1,0 +1,23 @@
+{
+  "product": "Visio 16.0 build 20527",
+  "before": {
+    "pinXFormula": "Sheet.1!PinX+(1 in)",
+    "pinX": 5.0,
+    "pinYFormula": "Sheet.1!PinY+(-0.8 in)",
+    "pinY": 4.2,
+    "shapeCount": 2
+  },
+  "after": {
+    "pinXFormula": "5 in",
+    "pinX": 5.0,
+    "pinYFormula": "4.2 in",
+    "pinY": 4.2,
+    "shapeCount": 1
+  },
+  "coreCache": {
+    "pinX": 5,
+    "pinY": 4.2
+  },
+  "maxDelta": 0.0,
+  "status": "pass"
+}

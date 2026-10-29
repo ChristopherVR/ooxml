@@ -1,7 +1,7 @@
 import { createVisioCellEvaluator } from './edit-recalculate-values';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
-import { analyzeVisioFormula, type VisioFormulaValue } from './formula';
+import { analyzeVisioFormula, visioFormulaCachedValue, type VisioFormulaValue } from './formula';
 import { plainShapeText } from './edit-recalculate-text';
 import { VisioPackageError } from './package-common';
 import {
@@ -81,13 +81,20 @@ export function recalculateVisioCells(
 	return [...pages];
 }
 
-/** Retained cells must not refer to a removed sheet. Selected owners disappear together. */
+/**
+ * Retained cells must not refer to a removed sheet. Selected owners disappear together. With
+ * `freeze`, a retained cell that reads a removed sheet is instead returned to be frozen: Visio
+ * replaces the formula of such a cell by its last result as a constant (`Sheet.2!Width*0.25`
+ * becomes `0.5 in`; evidence/native-delete-error-2026-10-29.json) and does not recompute it.
+ * Only a plain evaluable cell qualifies; a protected, error-valued or unanalysable one refuses.
+ */
 export function assertVisioShapesUnreferenced(
 	roots: ReadonlyMap<string, Element>,
 	removed: ReadonlyMap<string, ReadonlySet<string>>,
-	options: VisioRecalculationOptions = {},
-): void {
+	options: VisioRecalculationOptions & { freeze?: boolean } = {},
+): Element[] {
 	const cells = indexCells(roots, { scope: 'affected', ...options });
+	const frozen: Element[] = [];
 	for (const cell of cells.values()) {
 		options.check?.();
 		if (cell.opaque && removed.has(cell.pageId) && !removed.get(cell.pageId)!.has(cell.shapeId))
@@ -101,8 +108,24 @@ export function assertVisioShapesUnreferenced(
 				const parts = JSON.parse(id) as string[];
 				return removed.get(parts[0]!)?.has(parts[1]!) ?? false;
 			})
-		)
-			fail('EDIT_REFERENCED_DELETE', 'Shape is referenced by a ShapeSheet formula.');
+		) {
+			if (
+				!options.freeze ||
+				!cell.node ||
+				!cell.formula ||
+				cell.unsafe ||
+				cell.node.hasAttribute('E') ||
+				analyzeVisioFormula(cell.formula, { literalIndirect: true }).guarded ||
+				!Number.isFinite(
+					visioFormulaCachedValue(
+						cell.node.getAttribute('V') ?? '',
+						cell.node.getAttribute('U') ?? undefined,
+					).value,
+				)
+			)
+				fail('EDIT_REFERENCED_DELETE', 'Shape is referenced by a ShapeSheet formula.');
+			frozen.push(cell.node);
+		}
 	}
 	for (const [pageId, ids] of removed)
 		for (const connections of children(roots.get(pageId), 'Connects'))
@@ -111,16 +134,22 @@ export function assertVisioShapesUnreferenced(
 				if (['FromSheet', 'ToSheet'].some((name) => ids.has(attribute(connection, name) ?? '')))
 					fail('EDIT_REFERENCED_DELETE', 'Shape participates in a Connect record.');
 			}
+	return frozen;
 }
+
+/** Make the cells returned by `assertVisioShapesUnreferenced` constants holding their last result. */
+export const freezeVisioCells = (nodes: readonly Element[]): void => {
+	for (const node of nodes) node.removeAttribute('F');
+};
 
 /** Scalar deletion retains its existing reference policy. */
 export function assertVisioShapeUnreferenced(
 	roots: ReadonlyMap<string, Element>,
 	pageId: string,
 	shapeId: string,
-	options: VisioRecalculationOptions = {},
-): void {
-	assertVisioShapesUnreferenced(roots, new Map([[pageId, new Set([shapeId])]]), options);
+	options: VisioRecalculationOptions & { freeze?: boolean } = {},
+): Element[] {
+	return assertVisioShapesUnreferenced(roots, new Map([[pageId, new Set([shapeId])]]), options);
 }
 
 /** Static transitive proof for admission of dimension-dependent absolute geometry. */
