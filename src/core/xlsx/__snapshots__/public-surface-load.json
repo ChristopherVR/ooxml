@@ -1,0 +1,23 @@
+[
+	"DataIntegrityError",
+	"IncorrectPasswordError",
+	"LegacyXlsError",
+	"PasswordRequiredError",
+	"UnsupportedWorkbookError",
+	"WorkbookTooLargeError",
+	"csvToWorkbook",
+	"decodeSpreadsheetText",
+	"decodeText",
+	"detectDelimiter",
+	"detectWorkbookFormat",
+	"isEncryptedOoxmlPackage",
+	"isOoxmlCryptoError",
+	"isWorkbookTooLargeError",
+	"loadLegacyXls",
+	"loadWorkbook",
+	"neutraliseCsvFormula",
+	"parseCsv",
+	"saveWorkbook",
+	"sheetNameFromFileName",
+	"sheetToCsv"
+]
