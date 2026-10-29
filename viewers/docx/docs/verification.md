@@ -128,17 +128,11 @@ bullets below are results for this corpus only). Fixed after this comparison was
   display n-ary operators reserve more room. The numbers are fitted to this corpus at 11 pt
   Cambria Math, not Word's own rule, so other sizes and constructs (delimiters around tall
   content, accents, limits on inline operators) are unchecked.
-
 - Two more gaps were closed by probes (below): the table height of 03 (a vertical merge was sized
   with its first row, and the border of a table with merged cells was not counted) and the
   check-box line height of 11 (the MS Gothic font, not the content control).
 
 No accepted gaps remain in `word-corpus-gaps.ts`.
-
-| Id                            | Document              | Paragraphs | Difference                                                 |
-| ----------------------------- | --------------------- | ---------- | ---------------------------------------------------------- |
-| `table-height`                | `03-tables-merged`    | 20         | Paragraph after the merged-cell table is 28.7 pt lower     |
-| `content-control-line-height` | `11-content-controls` | 5          | Paragraph after a check-box content control is 2 pt higher |
 
 Floating picture geometry (07) matches Word within 1 pt. Page counts match for all thirteen.
 
