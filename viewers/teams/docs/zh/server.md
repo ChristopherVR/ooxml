@@ -11,11 +11,11 @@ OpenTeams 没有托管服务。工作空间要么**不使用服务器**运行（
 需要 Node 22 或更高版本。
 
 ```bash
-npx openteams-server                    # listens on 127.0.0.1:8787
-TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+npx openteams-server --insecure-dev     # 仅用于本地开发：监听 127.0.0.1:8787，无账户
 ```
 
-它仅通过环境变量配置；该命令不接受任何命令行参数。
+服务器**默认安全**：没有账户文件（`TEAMS_USERS_FILE`）、`authenticate` 钩子或 `authorizeSync` 钩子时，它会拒绝启动。`--insecure-dev`（选项 `insecureDev: true`）会在带警告的情况下仍然启动，供本地开发使用。它通过环境变量配置，并支持 `--insecure-dev`、`--trust-proxy[=N]` 和 `--insecure` 这些标志（参见[部署指南](./deploy.md)中的 `TEAMS_INSECURE` 和 `TEAMS_TRUST_PROXY`）。`SIGTERM` 和 `SIGINT` 会在退出前保存每个房间。
 
 | 变量            | 默认值      | 含义                                                                                                    |
 | --------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | `TEAMS_ORIGINS` | 无          | 以逗号分隔的、允许访问套接字和文件的 `Origin`。未设置时：有令牌则允许任意来源，无令牌则仅允许回环地址。 |
 | `TEAMS_DATA`    | `./data`    | 数据目录：`rooms/<room>.bin` 快照和 `files/<workspace>/`。                                              |
 
-服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes` 和 `insecure`。
+服务器还会读取用于账户的变量（`TEAMS_USERS_FILE`、`TEAMS_SESSION_SECRET`、`TEAMS_ADMIN_TOKEN`、`TEAMS_AUTH_RATE_*`）和用于限制的变量（`TEAMS_INSECURE`、`TEAMS_MAX_CONNECTIONS`、`TEAMS_MAX_CONNECTIONS_PER_IP`、`TEAMS_MAX_ROOMS`、`TEAMS_MAX_DOC_MB`、`TEAMS_MESSAGE_RATE`、`TEAMS_MESSAGE_BURST`、`TEAMS_FILES_QUOTA_MB`）。限制见[部署指南](/zh/deploy)；服务器的 README 是完整参考。对应的 `createTeamsServer` 选项有 `users`、`authenticate`、`sessionSecret`、`adminToken`、`sessionRate`、`authorizeSync`、`maxConnections`、`maxRooms`、`messageRate`、`filesQuotaBytes`、`insecure`、`insecureDev` 和 `trustProxy`。
 
 也可以将其嵌入：
 
@@ -33,6 +33,7 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 import { createTeamsServer } from 'openteams-server';
 
 const server = createTeamsServer({
+	users: { alice: 'long-random-secret' },
 	token: process.env.TEAMS_TOKEN,
 	origins: ['https://app.example.com'],
 	dataDir: '/var/lib/openteams',
@@ -100,7 +101,7 @@ const config = {
 在让人们使用它之前，请先弄清楚以下几点：
 
 - **无端到端加密。** 它存储并且可以读取每一条消息和每一个文件。
-- **账户是可选且精简的。** 使用 `users`（或 `TEAMS_USERS_FILE`）或 `authenticate` 函数时，服务器会签发会话（`POST /auth/session`）、从会话中获取用户 ID，并可以撤销会话。没有它们时，`TEAMS_TOKEN` 是所有人共用的一个密钥，保存在浏览器中，用户 ID 只是声明。没有密码重置、账户管理、SSO，也没有按团队的访问控制。客户端中的作者和角色检查可以被恶意客户端绕过，因此服务器是信任边界：请使用 `authenticate` 接入你的身份提供方，并用 `authorizeSync` 实现按房间的权限。
+- **账户功能精简。** 使用 `users`（或 `TEAMS_USERS_FILE`）或 `authenticate` 函数时，服务器会签发会话（`POST /auth/session`）、从会话中获取用户 ID，并可以撤销会话。没有它们时，`TEAMS_TOKEN` 是所有人共用的一个密钥，保存在浏览器中，用户 ID 只是声明。没有密码重置、账户管理、SSO，也没有按团队的访问控制。客户端中的作者和角色检查可以被恶意客户端绕过，因此服务器是信任边界：请使用 `authenticate` 接入你的身份提供方，并用 `authorizeSync` 实现按房间的权限。
 - **自身不提供 TLS。** 请在终止 TLS 并升级 WebSocket 的反向代理之后运行它；浏览器会拒绝 `https://` 页面发起的 `ws://` 连接。
 - **单进程，房间驻留内存。** 它不支持水平扩展。房间在其最后一个套接字关闭 30 秒后被卸载。
 - **每个房间一个快照，不做压缩。** 文档会随历史增长，且从不修剪。

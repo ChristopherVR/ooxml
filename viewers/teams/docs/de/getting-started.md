@@ -126,7 +126,7 @@ Der lokale Modus ist der, den die [Live-Demos](/demos) verwenden. Sobald mehr al
 Server:
 
 ```bash
-npx openteams-server                    # the reference server on 127.0.0.1:8787
+npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787
 ```
 
 Verwenden Sie dann `ws://127.0.0.1:8787/sync` und `ws://127.0.0.1:8787/signal` (oder `wss://` hinter TLS).

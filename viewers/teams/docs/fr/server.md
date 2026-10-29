@@ -18,11 +18,14 @@ passe par le serveur.
 Nécessite Node 22 ou ultérieur.
 
 ```bash
-npx openteams-server                    # listens on 127.0.0.1:8787
-TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+npx openteams-server --insecure-dev     # développement local uniquement : écoute sur 127.0.0.1:8787, sans comptes
 ```
 
-Il se configure uniquement par l’environnement ; la commande n’accepte aucun indicateur.
+Le serveur est **sûr par défaut** : sans fichier de comptes (`TEAMS_USERS_FILE`), sans hook `authenticate` ni hook `authorizeSync`, il refuse de
+démarrer. `--insecure-dev` (option `insecureDev: true`) le démarre quand même, avec un avertissement, pour le développement local. Il se configure
+par l’environnement, plus les indicateurs `--insecure-dev`, `--trust-proxy[=N]` et `--insecure` (voir `TEAMS_INSECURE` et `TEAMS_TRUST_PROXY` dans le
+[guide de déploiement](./deploy.md)). `SIGTERM` et `SIGINT` enregistrent chaque salle avant la sortie.
 
 | Variable        | Valeur par défaut | Signification                                                                                                                                               |
 | --------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -32,7 +35,7 @@ Il se configure uniquement par l’environnement ; la commande n’accepte aucun
 | `TEAMS_ORIGINS` | aucune            | `Origin` autorisées pour les sockets et les fichiers, séparées par des virgules. Sans valeur : toute origine avec un jeton, loopback uniquement sans jeton. |
 | `TEAMS_DATA`    | `./data`          | Répertoire de données : instantanés `rooms/<room>.bin` et `files/<workspace>/`.                                                                             |
 
-Le serveur lit d’autres variables pour les comptes (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) et pour les limites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Le [guide de déploiement](/fr/deploy) liste les limites ; le README du serveur est la référence complète. Les options correspondantes de `createTeamsServer` sont `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` et `insecure`.
+Le serveur lit d’autres variables pour les comptes (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) et pour les limites (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Le [guide de déploiement](/fr/deploy) liste les limites ; le README du serveur est la référence complète. Les options correspondantes de `createTeamsServer` sont `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `insecure`, `insecureDev` et `trustProxy`.
 
 Ou l’intégrer :
 
@@ -40,6 +43,7 @@ Ou l’intégrer :
 import { createTeamsServer } from 'openteams-server';
 
 const server = createTeamsServer({
+	users: { alice: 'long-random-secret' },
 	token: process.env.TEAMS_TOKEN,
 	origins: ['https://app.example.com'],
 	dataDir: '/var/lib/openteams',

@@ -129,7 +129,7 @@ short-lived ones. The [deployment guide](/deploy#calls-across-nats-turn) has a c
 Be clear about these before you put people on it:
 
 - **No end-to-end encryption.** It stores and can read every message and file.
-- **Accounts are optional and small.** With `users` (or `TEAMS_USERS_FILE`) or an `authenticate`
+- **Accounts are minimal.** With `users` (or `TEAMS_USERS_FILE`) or an `authenticate`
   hook the server signs sessions (`POST /auth/session`), takes the user id from the session and can
   revoke it. Without them `TEAMS_TOKEN` is one shared secret for everybody, stored in the browser,
   and user ids are claims. There is no password reset, account management, SSO or per-team access

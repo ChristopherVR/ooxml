@@ -6,18 +6,20 @@
 cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 ```
 
-| Variable                                                | Bedeutung                                                                                                                                                            |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`, `HOST`                                          | Listen-Adresse. Binden Sie `0.0.0.0` nur hinter TLS.                                                                                                                 |
-| `TEAMS_TOKEN`                                           | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`.                                                                      |
-| `TEAMS_ORIGINS`                                         | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Leer: jede Origin, wenn ein Token gesetzt ist; ohne Token nur Loopback-Origins und Clients ohne `Origin`. |
-| `TEAMS_DATA`                                            | Datenverzeichnis (Standard `./data`): `rooms/<room>.bin`-Snapshots und `files/`.                                                                                     |
-| `TEAMS_INSECURE`                                        | `1` (oder `--insecure`) erlaubt einen Nicht-Loopback-`HOST` ohne Token. Sonst startet der Server nicht.                                                              |
-| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Offene Sockets insgesamt (Standard 500) und je Remote-Adresse (20).                                                                                                  |
-| `TEAMS_MAX_ROOMS`                                       | Sync-Räume und Anrufräume (Standard je 1000).                                                                                                                        |
-| `TEAMS_MAX_DOC_MB`                                      | Größtes persistiertes Raumdokument in MB (Standard 64); größere Updates werden abgelehnt.                                                                            |
-| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Nachrichten pro Sekunde (Standard 100) und Burst (200) je Socket; ein Socket darüber wird geschlossen.                                                               |
-| `TEAMS_FILES_QUOTA_MB`                                  | Gesamtgröße des Dateiverzeichnisses in MB (Standard 1024); weitere Uploads erhalten 507.                                                                             |
+| Variable                                                | Bedeutung                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`, `HOST`                                          | Listen-Adresse. Binden Sie `0.0.0.0` nur hinter TLS.                                                                                                                                                                                                                          |
+| `TEAMS_TOKEN`                                           | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`.                                                                                                                                                                               |
+| `TEAMS_ORIGINS`                                         | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Leer: jede Origin, wenn ein Token gesetzt ist; ohne Token nur Loopback-Origins und Clients ohne `Origin`.                                                                                                          |
+| `TEAMS_DATA`                                            | Datenverzeichnis (Standard `./data`): `rooms/<room>.bin`-Snapshots und `files/`.                                                                                                                                                                                              |
+| `TEAMS_TRUST_PROXY`, `--trust-proxy[=N]`                | Schlüsselt den Auth-Ratenbegrenzer und die Verbindungsgrenze pro Adresse auf `X-Forwarded-For` (den Eintrag des N-ten vertrauenswürdigen Proxys, Standard 1). Standardmäßig aus; nur hinter einem Proxy aktivieren, der den Header setzt, sonst kann ein Client ihn fälschen. |
+| `--insecure-dev`                                        | Startet ohne Konten und ohne `authenticate`-Hook (Option `insecureDev`). Ohne diese Option startet der Server nur, wenn `TEAMS_USERS_FILE` gesetzt ist. Nur für die Entwicklung.                                                                                              |
+| `TEAMS_INSECURE`                                        | `1` (oder `--insecure`) erlaubt einen Nicht-Loopback-`HOST` ohne Token. Sonst startet der Server nicht.                                                                                                                                                                       |
+| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Offene Sockets insgesamt (Standard 500) und je Remote-Adresse (20).                                                                                                                                                                                                           |
+| `TEAMS_MAX_ROOMS`                                       | Sync-Räume und Anrufräume (Standard je 1000).                                                                                                                                                                                                                                 |
+| `TEAMS_MAX_DOC_MB`                                      | Größtes persistiertes Raumdokument in MB (Standard 64); größere Updates werden abgelehnt.                                                                                                                                                                                     |
+| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Nachrichten pro Sekunde (Standard 100) und Burst (200) je Socket; ein Socket darüber wird geschlossen.                                                                                                                                                                        |
+| `TEAMS_FILES_QUOTA_MB`                                  | Gesamtgröße des Dateiverzeichnisses in MB (Standard 1024); weitere Uploads erhalten 507.                                                                                                                                                                                      |
 
 Er stellt `ws /sync/<room>` (kompatibel mit y-websocket, ein gespeichertes `Y.Doc` pro Raum),
 `ws /signal/<room>` (ein JSON-Relay) und `POST|GET /files/<workspace>/<name>` (Limit 25 MB, Namen
@@ -48,10 +50,16 @@ es ist keine Authentifizierung pro Benutzer. Für echte Konten geben Sie dem Ser
 - **Alle Mitglieder eines Raums vertrauen einander.** Der Server bewegt nur Yjs-Bytes, daher kann jedes
   Mitglied Nachrichten anderer bearbeiten oder löschen und Autoren-IDs und Rollen fälschen. Laden Sie
   nur Personen ein, denen Sie den ganzen Raum anvertrauen.
-- **Das Token wandert in der WebSocket-Query-Zeichenfolge** (`?token=`), die Proxys und Zugriffsprotokolle
-  aufzeichnen und Browser im Verlauf behalten können. Betreiben Sie den Server hinter TLS und
-  protokollieren Sie keine Query-Zeichenfolgen. Dateien nehmen das Token nie in einer URL: sie nutzen
-  den `Authorization`-Header oder einen signierten Link.
+- **Token und Sitzung wandern in der WebSocket-Query-Zeichenfolge** (`?token=`, `?session=`), die Proxys und
+  Zugriffsprotokolle aufzeichnen und Browser im Verlauf behalten können. Der Server akzeptiert sie auch als
+  `Sec-WebSocket-Protocol`-Einträge (`openteams.session.<session>`, `openteams.token.<token>`, neben einem
+  einfachen `openteams`), die nicht in URLs oder Protokollen landen; der mitgelieferte Client sendet sie noch
+  nicht (Folgearbeit im `teams`-Bereich des Cores). Betreiben Sie den Server hinter TLS und protokollieren Sie
+  keine Query-Zeichenfolgen. Dateien nehmen das Token nie in einer URL: sie nutzen den `Authorization`-Header
+  oder einen signierten Link.
+- **Sicher per Standard.** Ohne Konten, einen `authenticate`-Hook oder `authorizeSync` startet der Server nicht;
+  `--insecure-dev` ist die ausdrückliche Abweichung, die mit einer Warnung quittiert wird. Ein gemeinsames Token
+  allein ist keine Authentifizierung.
 - **Die Standardwerte sind lokal.** Ohne Token lehnt der Server einen Nicht-Loopback-`HOST` ab (außer mit
   `TEAMS_INSECURE=1`) und akzeptiert nur Loopback-Origins, sodass eine besuchte Website keinen Server auf
   Ihrem eigenen Rechner steuern kann. Setzen Sie für jede gemeinsame Bereitstellung `TEAMS_TOKEN` und
@@ -102,15 +110,85 @@ COPY server/package.json ./
 RUN npm install --omit=dev
 COPY server/bin.mjs server/index.mjs server/auth.mjs server/passwords.mjs server/guards.mjs \
   server/rate-limit.mjs server/chat-access.mjs ./
-ENV HOST=0.0.0.0 TEAMS_DATA=/data
+ENV HOST=0.0.0.0 TEAMS_DATA=/data TEAMS_USERS_FILE=/config/users.json
+RUN mkdir /data && chown node:node /data
 VOLUME /data
 EXPOSE 8787
+USER node
 CMD ["node", "bin.mjs"]
 ```
 
 Bauen Sie es in `viewers/teams`. Es kopiert jedes Modul, das der Einstiegspunkt importiert (die `files` aus `server/package.json`); nur `index.mjs` zu kopieren scheitert mit einem fehlenden Modul. Das Rezept wurde durch Ausführen dieser Dateien mit `npm install --omit=dev` unter Node geprüft, das Image selbst wurde nicht gebaut.
 
-Starten Sie ihn mit gesetzten `TEAMS_TOKEN` und `TEAMS_ORIGINS`, hinter Ihrem TLS-Proxy.
+Starten Sie ihn mit eingehängter Kontendatei, gesetztem `TEAMS_SESSION_SECRET` und `TEAMS_ORIGINS`, hinter Ihrem TLS-Proxy:
+
+```bash
+docker run -d --name openteams -p 127.0.0.1:8787:8787 \
+  -v openteams-data:/data -v "$PWD/users.json:/config/users.json:ro" \
+  -e TEAMS_SESSION_SECRET=change-me -e TEAMS_ORIGINS=https://app.example.com \
+  openteams-server
+```
+
+Ohne eingehängte Kontendatei beendet sich der Container mit der Meldung „refusing to start“; fügen Sie
+`--insecure-dev` keinem Container hinzu, der aus einem Netzwerk erreichbar ist. Fügen Sie `--trust-proxy` dem
+Befehl hinzu (`CMD ["node", "bin.mjs", "--trust-proxy"]`), aber nur, wenn ein Reverse-Proxy `X-Forwarded-For`
+setzt. `docker stop` sendet `SIGTERM`, worauf der Server zuerst jeden Raum speichert (Docker wartet standardmäßig
+zehn Sekunden, das genügt). Das Image legt `/data` im Besitz von `node` an; bei einem Bind-Mount setzen Sie das
+Host-Verzeichnis mit `chown` auf uid 1000.
+
+## Betrieb
+
+### Sicherung und Wiederherstellung
+
+Alles, was der Server speichert, liegt unter `TEAMS_DATA` (Standard `./data`):
+
+| Pfad                       | Enthält                                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `rooms/<room>.bin`         | Ein Yjs-Snapshot pro Raum: alle Chats, Kanäle, Kalender und Tab-Daten.                                         |
+| `files/<workspace>/`       | Hochgeladene Dateien.                                                                                          |
+| `session-revocations.json` | Widerrufsgenerationen der Sitzungen (fehlt sie, werden widerrufene Sitzungen wieder gültig, bis sie ablaufen). |
+
+Bewahren Sie außerdem auf, was nicht im Datenverzeichnis liegt: Ihre Kontendatei (`TEAMS_USERS_FILE`) und
+`TEAMS_SESSION_SECRET`. Ein geändertes oder verlorenes Geheimnis meldet alle ab, was harmlos ist.
+
+Zum Sichern kopieren Sie das ganze Datenverzeichnis. Raum-Snapshots werden in eine temporäre Datei geschrieben und
+umbenannt, sodass eine Kopie nie einen halb geschriebenen Snapshot sieht. Eine Kopie, die während des Betriebs
+entsteht, kann die Änderungen der letzten halben Sekunde verpassen (Schreibvorgänge sind um 500 ms verzögert) und
+eine Datei erfassen, die neuer ist als die Nachbarn ihres Raums. Für eine konsistente Kopie stoppen Sie den Server
+zuerst (`SIGTERM` speichert vor dem Beenden jeden Raum), kopieren und starten ihn wieder; oder Sie erstellen einen
+Snapshot des Volumes auf Dateisystemebene.
+
+Zum Wiederherstellen stoppen Sie den Server, ersetzen das Datenverzeichnis durch die Sicherung (`rooms/`, `files/`
+und `session-revocations.json` bleiben zusammen), stellen die Kontendatei und das Geheimnis wieder her und starten
+ihn. Verbundene Clients verbinden sich neu und führen ihre Daten zusammen: Yjs behält, was sie halten und der
+Sicherung fehlt, sodass eine Wiederherstellung keine Arbeit verwirft, die noch in einem Browser offen ist.
+
+### Aktualisieren
+
+1. Lesen Sie die `CHANGELOG.md` des Servers für den Versionsbereich, den Sie überschreiten; Breaking Changes sind markiert.
+2. Sichern Sie das Datenverzeichnis.
+3. Stoppen Sie den Server (`SIGTERM`), installieren Sie die neue Version (`npx openteams-server@<version>` oder das Image neu bauen) und starten Sie ihn. Raum-Snapshots sind einfache Yjs-Updates; ältere werden unverändert gelesen.
+4. Prüfen Sie `GET /health` und öffnen Sie einen Raum.
+
+Aktualisierung von einer Version vor dem sicheren Standard: Ein Server, der ohne Konten startete, startet jetzt nicht
+mehr. Fügen Sie Konten (`TEAMS_USERS_FILE`), einen `authenticate`-Hook oder `authorizeSync` hinzu, oder übergeben Sie
+`--insecure-dev`, wenn (und nur wenn) es ein lokaler Entwicklungsserver ist. Ein gemeinsames `TEAMS_TOKEN` allein
+startet den Server nicht mehr.
+
+### Checkliste für den Produktionsbetrieb
+
+- [ ] Konten eingerichtet (`TEAMS_USERS_FILE` mit gehashten Zugangsdaten aus `openteams-hash-password` oder ein `authenticate`-Hook); `--insecure-dev` wird nicht verwendet.
+- [ ] `TEAMS_SESSION_SECRET` auf einen langen Zufallswert gesetzt, außerhalb des Repositorys aufbewahrt, damit Sitzungen Neustarts überstehen.
+- [ ] TLS endet vor dem Server; die App nutzt `wss://`. Der Server selbst lauscht auf Loopback oder einem privaten Netz.
+- [ ] `TEAMS_ORIGINS` listet die genauen Origins Ihrer App.
+- [ ] `--trust-proxy` nur gesetzt, wenn der Proxy `X-Forwarded-For` setzt und Clients den Server nur über ihn erreichen können; sonst aus lassen (alle Clients teilen sich dann hinter dem Proxy einen Rate-Limit-Schlüssel, was sicher, aber grob ist).
+- [ ] Proxy-Zugriffsprotokolle zeichnen keine Query-Zeichenfolgen auf (Sockets tragen `?token=` und `?session=`), oder Sie akzeptieren das.
+- [ ] `TEAMS_ADMIN_TOKEN` gesetzt, falls Sie `POST /auth/revoke` brauchen, und geheim gehalten.
+- [ ] Das Datenverzeichnis liegt auf einem dauerhaften Volume, ist nur für den Benutzer des Servers schreibbar und wird gesichert.
+- [ ] Grenzwerte geprüft (`TEAMS_MAX_*`, `TEAMS_FILES_QUOTA_MB`), und der Proxy wendet eigenes Rate-Limiting an.
+- [ ] Kurzlebige TURN-Zugangsdaten, kein statisches Geheimnis auf der Seite.
+- [ ] Der Prozess wird überwacht und mit `SIGTERM` beendet, damit Räume gespeichert werden.
+- [ ] Sie haben die [Einschränkungen](./limitations.md) gelesen: keine Ende-zu-Ende-Verschlüsselung, Raummitglieder vertrauen einander.
 
 ## Einen anderen Server verwenden
 

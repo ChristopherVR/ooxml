@@ -15,11 +15,15 @@ kann sie nicht entschlüsseln, die Signalisierung läuft jedoch über den Server
 Erfordert Node 22 oder neuer.
 
 ```bash
-npx openteams-server                    # listens on 127.0.0.1:8787
-TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+npx openteams-server --insecure-dev     # nur für die lokale Entwicklung: lauscht auf 127.0.0.1:8787, ohne Konten
 ```
 
-Er wird über die Umgebung konfiguriert; der Befehl kennt keine Optionen.
+Der Server ist **standardmäßig sicher**: Ohne Kontendatei (`TEAMS_USERS_FILE`), `authenticate`-Hook oder
+`authorizeSync`-Hook startet er nicht. `--insecure-dev` (Option `insecureDev: true`) startet ihn trotzdem, mit einer
+Warnung, für die lokale Entwicklung. Er wird über die Umgebung konfiguriert, ergänzt um die Flags `--insecure-dev`,
+`--trust-proxy[=N]` und `--insecure` (siehe `TEAMS_INSECURE` und `TEAMS_TRUST_PROXY` im
+[Bereitstellungsleitfaden](./deploy.md)). `SIGTERM` und `SIGINT` speichern jeden Raum, bevor der Server beendet wird.
 
 | Variable        | Standard    | Bedeutung                                                                                                               |
 | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -29,7 +33,7 @@ Er wird über die Umgebung konfiguriert; der Befehl kennt keine Optionen.
 | `TEAMS_ORIGINS` | keine       | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Ohne Angabe: jede Origin mit Token, ohne Token nur Loopback. |
 | `TEAMS_DATA`    | `./data`    | Datenverzeichnis: `rooms/<room>.bin`-Snapshots und `files/<workspace>/`.                                                |
 
-Der Server liest weitere Variablen für Konten (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) und für Limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Die Limits stehen im [Bereitstellungsleitfaden](/de/deploy); die README des Servers ist die vollständige Referenz. Die entsprechenden Optionen von `createTeamsServer` sind `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` und `insecure`.
+Der Server liest weitere Variablen für Konten (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) und für Limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). Die Limits stehen im [Bereitstellungsleitfaden](/de/deploy); die README des Servers ist die vollständige Referenz. Die entsprechenden Optionen von `createTeamsServer` sind `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `insecure`, `insecureDev` und `trustProxy`.
 
 Oder binden Sie ihn ein:
 
@@ -37,6 +41,7 @@ Oder binden Sie ihn ein:
 import { createTeamsServer } from 'openteams-server';
 
 const server = createTeamsServer({
+	users: { alice: 'long-random-secret' },
 	token: process.env.TEAMS_TOKEN,
 	origins: ['https://app.example.com'],
 	dataDir: '/var/lib/openteams',
@@ -119,7 +124,7 @@ kurzlebige aus. Die [Bereitstellungsanleitung](/de/deploy#anrufe-uber-nats-hinwe
 Machen Sie sich dies klar, bevor Sie Personen darauf arbeiten lassen:
 
 - **Keine Ende-zu-Ende-Verschlüsselung.** Er speichert jede Nachricht und jede Datei und kann sie lesen.
-- **Konten sind optional und klein.** Mit `users` (oder `TEAMS_USERS_FILE`) oder einer `authenticate`-Funktion signiert der Server Sitzungen (`POST /auth/session`), übernimmt die Benutzer-ID aus der Sitzung und kann sie widerrufen. Ohne sie ist `TEAMS_TOKEN` ein gemeinsames Geheimnis für alle, im Browser gespeichert, und Benutzer-IDs sind Behauptungen. Es gibt kein Zurücksetzen von Passwörtern, keine Kontenverwaltung, kein SSO und keine Zugriffssteuerung pro Team. Autor- und Rollenprüfungen im Client lassen sich von einem feindlichen Client umgehen, daher ist der Server die Vertrauensgrenze: Nutzen Sie `authenticate` mit Ihrem Identitätsanbieter und `authorizeSync` für Rechte pro Raum.
+- **Konten sind minimal gehalten.** Mit `users` (oder `TEAMS_USERS_FILE`) oder einer `authenticate`-Funktion signiert der Server Sitzungen (`POST /auth/session`), übernimmt die Benutzer-ID aus der Sitzung und kann sie widerrufen. Ohne sie ist `TEAMS_TOKEN` ein gemeinsames Geheimnis für alle, im Browser gespeichert, und Benutzer-IDs sind Behauptungen. Es gibt kein Zurücksetzen von Passwörtern, keine Kontenverwaltung, kein SSO und keine Zugriffssteuerung pro Team. Autor- und Rollenprüfungen im Client lassen sich von einem feindlichen Client umgehen, daher ist der Server die Vertrauensgrenze: Nutzen Sie `authenticate` mit Ihrem Identitätsanbieter und `authorizeSync` für Rechte pro Raum.
 - **Kein eigenes TLS.** Betreiben Sie ihn hinter einem Reverse-Proxy, der TLS terminiert und WebSockets
   hochstuft; Browser verweigern `ws://` von einer `https://`-Seite.
 - **Ein Prozess, Räume im Arbeitsspeicher.** Er skaliert nicht horizontal. Ein Raum wird 30 Sekunden

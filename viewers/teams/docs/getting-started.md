@@ -126,7 +126,7 @@ Local mode is what the [live demos](/demos) use. For anything with more than one
 server:
 
 ```bash
-npx openteams-server                    # the reference server on 127.0.0.1:8787
+npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787
 ```
 
 Then use `ws://127.0.0.1:8787/sync` and `ws://127.0.0.1:8787/signal` (or `wss://` behind TLS).
