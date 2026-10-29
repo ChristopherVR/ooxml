@@ -36,6 +36,7 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
 | `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential, or to `{ credential, role }` (enables accounts); the secret that signs sessions.                                         |
 | `TEAMS_ENFORCE_AUTHORSHIP`                              | `0` turns off the authorship checks for signed-in users (default on).                                                                                                    |
+| `TEAMS_MAX_MESSAGE_CHARS`, `TEAMS_MAX_REACTIONS_PER_MESSAGE` | Longest message text (default 32768) and most reactions on one message (default 200) the authorship check accepts. |
 | `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_TRUST_PROXY`                                     | `1` (or a hop count, or `--trust-proxy`): take the client address for rate limits from `X-Forwarded-For`. Off by default.                                                |
@@ -73,7 +74,8 @@ messages, create channels and tabs as themselves, rename, archive or delete only
 tabs they created, and pin as themselves (in a private chat, only members pin). A violating message
 is not applied and the socket is closed with 1008 (`update rejected: forged-author`), so the client
 resyncs. A user with the `moderator` role may additionally hide or remove anybody's messages and
-reactions and change anybody's channels and tabs, but never write in another person's name. Give
+reactions and change anybody's channels, tabs and meetings, remove anybody from a private chat and
+remove anybody's roster entry, but never write in another person's name. Give
 the role in the users file:
 
 ```json
@@ -84,8 +86,12 @@ or return `{ id, role: 'moderator' }` from `authenticate`. The role rides in the
 (`POST /auth/session` also answers it as `role`), so changing a role takes effect when the person
 signs in again; revoke their sessions to force it. Disable with `enforceAuthorship: false` or
 `TEAMS_ENFORCE_AUTHORSHIP=0`. Without accounts nothing is enforced, because the user is a claim.
-Meetings, the roster, the chat member map, message content and size, and Yjs client ids are not
-checked; the full list is in the core's `docs/teams-area.md`.
+Meetings follow the channel rule (only the organiser edits or cancels), a roster entry is writable
+only under your own id, a chat member is added only by a member and removed only by themselves, and
+message text and reactions per message are capped (`maxMessageChars`, `maxReactionsPerMessage`).
+Yjs client ids and who may post where are not checked; the full list is in the core's
+`docs/teams-area.md`. A close with `1008 update rejected` is shown to the person, and the client
+backs off (5 s, 10 s, ...) and stops after three in a row instead of reconnecting in a loop.
 
 ## Accounts and sessions
 

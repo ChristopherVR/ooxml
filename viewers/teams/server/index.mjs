@@ -13,7 +13,7 @@
 // With `authenticate` or `users`, sockets must also present a session and the user id is the one
 // the session binds, never the claimed `user` parameter.
 import { createServer } from 'node:http';
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 import {
 	mkdirSync,
 	existsSync,
@@ -122,7 +122,7 @@ const unlinkQuiet = (path) => {
  *   sessionSecret?: string, sessionTtlMs?: number, adminToken?: string,
  *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
- *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean,
+ *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean, maxMessageChars?: number, maxReactionsPerMessage?: number,
  *   authorizeSync?: (request: { room: string, user: string | null, url: URL,
  *   headers: Record<string, string | string[] | undefined> }) => SyncVerdict | Promise<SyncVerdict>,
  *   log?: (m: string) => void }} [options]
@@ -151,6 +151,15 @@ export function createTeamsServer(options = {}) {
 	// needs a verified identity, so it applies only to sockets that carry a signed session.
 	const enforceAuthorship =
 		options.enforceAuthorship ?? process.env.TEAMS_ENFORCE_AUTHORSHIP !== '0';
+	// Content caps of the same check: the longest message text and the most reactions on one message.
+	const contentLimits = {};
+	const maxMessageChars = options.maxMessageChars ?? Number(process.env.TEAMS_MAX_MESSAGE_CHARS);
+	if (Number.isInteger(maxMessageChars) && maxMessageChars > 0)
+		contentLimits.maxMessageChars = maxMessageChars;
+	const maxReactions =
+		options.maxReactionsPerMessage ?? Number(process.env.TEAMS_MAX_REACTIONS_PER_MESSAGE);
+	if (Number.isInteger(maxReactions) && maxReactions > 0)
+		contentLimits.maxReactionsPerMessage = maxReactions;
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
 	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;
@@ -418,7 +427,12 @@ export function createTeamsServer(options = {}) {
 					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
 						return;
 					if (actor && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1) {
-						const verdict = validateTeamsSyncMessage(room.doc, new Uint8Array(data), actor);
+						const verdict = validateTeamsSyncMessage(
+							room.doc,
+							new Uint8Array(data),
+							actor,
+							contentLimits,
+						);
 						if (!verdict.ok) {
 							const codes = [...new Set(verdict.violations.map((v) => v.code))].join(',');
 							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);

@@ -89,10 +89,11 @@ describe('private chats on the reference server', () => {
 		signalingUrl: `ws://127.0.0.1:${port}/signal`,
 		iceServers: [],
 	});
-	const client = (name, workspaceId) => {
+	const client = (name, workspaceId, moderator = false) => {
 		const c = createTeamsClient({
 			workspaceId,
 			user: { id: name, name },
+			moderator,
 			config: config(),
 			WebSocket,
 			reminderCheckMs: 0,
@@ -166,7 +167,7 @@ describe('private chats on the reference server', () => {
 
 	it('closes the socket of someone removed from a group chat', async () => {
 		const workspace = 'chat-ws-3';
-		const ada = client('ada', workspace);
+		const ada = client('ada', workspace, true);
 		const bob = client('bob', workspace);
 		client('cy', workspace);
 		assert.ok(await until(() => ada.getState().contacts.length === 2));

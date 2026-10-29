@@ -6,10 +6,14 @@ import type { UpdateActor, UpdateViolation } from './validate-update';
 
 const CHANNELS = 'teams:channels';
 const TABS = 'teams:tabs';
+const MEETINGS = 'teams:meetings';
 const CHAT_MEMBERS = 'teams:chat-members';
 
-/** Maps whose rows carry a `createdBy` field naming the only non-moderator who may change them. */
-export const OWNED_MAPS: readonly string[] = [CHANNELS, TABS];
+/** Maps whose rows carry an owner field (`createdBy`, or a meeting's `organizerId`) naming the only non-moderator who may change them. */
+export const OWNED_MAPS: readonly string[] = [CHANNELS, TABS, MEETINGS];
+
+/** The row field that names the owner: a meeting's organiser, otherwise the creator. */
+const ownerField = (map: string): string => (map === MEETINGS ? 'organizerId' : 'createdBy');
 
 export const isOwnedMap = (name: string): boolean => OWNED_MAPS.includes(name);
 
@@ -24,7 +28,7 @@ function isSameRow(before: Y.Map<unknown>, next: Y.Map<unknown>): boolean {
 }
 
 /**
- * Channel and tab rows. A new row must name the actor as `createdBy`. Only the creator or a
+ * Channel, tab and meeting rows. A new row must name the actor as `createdBy` (a meeting: `organizerId`). Only the creator or a
  * moderator may then rename, archive, replace or remove it, and the creator cannot hand it on.
  * Exception: clients seed a channel with a fixed id (`general`, the `Chat` of a direct chat) when
  * they first connect, so the creator of a channel row may replace another person's row of the same
@@ -38,17 +42,18 @@ export function checkOwnedRow(
 	actor: UpdateActor,
 ): UpdateViolation | null {
 	const at = { map, key: rowId };
+	const field = ownerField(map);
 	if (after !== undefined && !(after instanceof Y.Map)) return { code: 'malformed-row', ...at };
 	const next = after as Y.Map<unknown> | undefined;
 	if (before === undefined)
-		return next === undefined || next.get('createdBy') === actor.id
+		return next === undefined || next.get(field) === actor.id
 			? null
 			: { code: 'forged-author', ...at };
 	const prior = before instanceof Y.Map ? before : undefined;
 	if (prior && next && isSameRow(prior, next)) return null;
-	const owner = prior?.get('createdBy');
+	const owner = prior?.get(field);
 	if (owner === actor.id)
-		return next === undefined || next.get('createdBy') === owner
+		return next === undefined || next.get(field) === owner
 			? null
 			: { code: 'author-changed', ...at };
 	if (actor.moderator === true) return null;
@@ -56,7 +61,7 @@ export function checkOwnedRow(
 	if (
 		map === CHANNELS &&
 		replaced &&
-		next.get('createdBy') === actor.id &&
+		next.get(field) === actor.id &&
 		next.get('name') === prior.get('name') &&
 		next.get('kind') === prior.get('kind')
 	)

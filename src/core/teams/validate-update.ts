@@ -9,6 +9,15 @@ import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
 import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
+import {
+	CHAT_MEMBERS,
+	type ContentLimits,
+	ROSTER,
+	checkMemberKey,
+	checkMessageSize,
+	checkReactionCount,
+	checkRosterRow,
+} from './validate-members';
 
 const MESSAGES_PREFIX = 'teams:messages:';
 const PINS_PREFIX = 'teams:pins:';
@@ -39,6 +48,8 @@ export type UpdateViolationCode =
 	| 'not-member'
 	/** The update refers to state the server does not have, so it cannot be checked. */
 	| 'incomplete-update'
+	/** A message is longer, or a message has more reactions, than the configured limits allow. */
+	| 'content-too-large'
 	/** The bytes are not a valid Yjs update, or are too large. */
 	| 'invalid-update';
 
@@ -49,6 +60,9 @@ export interface UpdateViolation {
 	/** The message id or reaction key. */
 	key?: string;
 }
+
+/** Size limits of an update, a message's text and the reactions of one message. */
+export type ValidateOptions = ContentLimits & { maxBytes?: number };
 
 export type UpdateVerdict = { ok: true } | { ok: false; violations: UpdateViolation[] };
 
@@ -67,7 +81,11 @@ function mapOf(doc: Y.Doc, name: string): Y.Map<unknown> | undefined {
 
 /** Maps whose rows the walk collects: messages, channels, tabs and pins. */
 const isTrackedMap = (name: string): boolean =>
-	name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || isOwnedMap(name);
+	name.startsWith(MESSAGES_PREFIX) ||
+	name.startsWith(PINS_PREFIX) ||
+	name === ROSTER ||
+	name === CHAT_MEMBERS ||
+	isOwnedMap(name);
 
 /** What the walk needs of a shared type; its event type parameter is irrelevant here. */
 interface TypeNode {
@@ -205,8 +223,10 @@ function checkReaction(
  * - a reaction key `message|emoji|user` may be added or removed only with `user` equal to the actor.
  * A moderator may in addition set `deleted` to true on a row or remove a row, and remove a reaction.
  * Channels and tabs (rows with a `createdBy`) and pins follow the rules of `validate-owned.ts`.
- * Everything else in the document (meetings, roster, chat members) passes; see the coverage list
- * in docs/teams-area.md.
+ * Meetings follow the same owner rule (`organizerId`). A roster row may be written only under the
+ * actor's own id. A chat member may be added only by a member and removed only by themselves or a
+ * moderator. Message text and the reactions per message are capped (`maxMessageChars`,
+ * `maxReactionsPerMessage`). Everything else passes; see the coverage list in docs/teams-area.md.
  *
  * An update that depends on state the server lacks stays pending in Yjs and would be applied later
  * unchecked, so it is refused as `incomplete-update`.
@@ -215,7 +235,7 @@ export function validateTeamsUpdate(
 	doc: Y.Doc,
 	update: Uint8Array,
 	actor: UpdateActor,
-	options: { maxBytes?: number } = {},
+	options: ValidateOptions = {},
 ): UpdateVerdict {
 	if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
 		return fail({ code: 'invalid-update' });
@@ -239,11 +259,15 @@ export function validateTeamsUpdate(
 			for (const rowId of rows) {
 				const was = beforeMap?.get(rowId);
 				const now = afterMap?.get(rowId);
-				const found = name.startsWith(MESSAGES_PREFIX)
-					? checkRow(name, rowId, was, now, actor)
-					: name.startsWith(PINS_PREFIX)
-						? checkPinRow(name, rowId, was, now, actor, doc)
-						: checkOwnedRow(name, rowId, was, now, actor);
+				let found: UpdateViolation | null;
+				if (name.startsWith(MESSAGES_PREFIX))
+					found =
+						checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
+				else if (name.startsWith(PINS_PREFIX))
+					found = checkPinRow(name, rowId, was, now, actor, doc);
+				else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
+				else if (name === CHAT_MEMBERS) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+				else found = checkOwnedRow(name, rowId, was, now, actor);
 				if (found) violations.push(found);
 			}
 		}
@@ -256,6 +280,14 @@ export function validateTeamsUpdate(
 				afterReactions?.has(key) === true,
 				actor,
 			);
+			if (found) violations.push(found);
+		}
+		const counted = new Set<string>();
+		for (const key of touched.reactions) {
+			const messageId = key.split(REACTION_SEP)[0] ?? '';
+			if (counted.has(messageId)) continue;
+			counted.add(messageId);
+			const found = checkReactionCount(messageId, afterReactions, options);
 			if (found) violations.push(found);
 		}
 		return violations.length ? { ok: false, violations } : OK;
@@ -273,6 +305,7 @@ export function validateTeamsSyncMessage(
 	doc: Y.Doc,
 	message: Uint8Array,
 	actor: UpdateActor,
+	options: ValidateOptions = {},
 ): UpdateVerdict {
 	let payload: Uint8Array;
 	try {
@@ -284,5 +317,5 @@ export function validateTeamsSyncMessage(
 	} catch {
 		return fail({ code: 'invalid-update' });
 	}
-	return validateTeamsUpdate(doc, payload, actor);
+	return validateTeamsUpdate(doc, payload, actor, options);
 }

@@ -290,7 +290,21 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
   fixed-id channels (`general`, the `Chat` of a direct chat) concurrently;
 - a pin row in `teams:pins:<channel>` must name the actor in `by`; in a private chat (a room whose
   `teams:chat-members` map has entries) only members may pin or unpin. Any member may unpin, as in
-  Teams, and a moderator may unpin without being a member.
+  Teams, and a moderator may unpin without being a member;
+- a meeting row follows the channel rule with `organizerId` as the owner (create as yourself; only
+  the organiser or a moderator edits or cancels it);
+- a `teams:roster` row may be written or removed only under the actor's own id (a moderator may
+  also remove one);
+- in `teams:chat-members` a member may be added only by an existing member (the first writer of an
+  empty map must list themselves), and removed only by themselves; a moderator may do both freely.
+  The client therefore lets only moderators remove other people from a chat;
+- message text and reactions per message are capped, see the limits below.
+
+**Client behaviour.** `POST /auth/session` answers `role`; `TeamsSession.role` and
+`TeamsState.moderator` carry it, and `<teams-app>` offers Hide on others' messages, rename and
+archive on others' channels, tab options and removing chat members only to moderators; plain members
+see those actions only on what they created. A `1008` close is surfaced as a notice and the
+WebSocket transport backs off and gives up after three consecutive `update rejected` closes.
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
 step 2 and update are checked, everything else passes). The reference server
@@ -319,11 +333,14 @@ What it does not cover, honestly:
 - **Yjs client ids are not checked.** Content is validated, not which client id wrote a struct; a
   hostile client can still insert structs under another client's id and disturb that client's later
   updates.
-- Everything outside messages, reactions, channels, tabs and pins: meetings, the roster, the chat
-  directory and the chat member map. A channel or tab row is attributed only through its `createdBy`
-  field; whether the pinned message exists, or the tab content is sensible, is not checked. In a
+- Everything outside messages, reactions, channels, tabs, pins, meetings, the roster and the chat
+  member map: the chat directory (who talks to whom) is unvalidated, and so is the meeting
+  attendee list beyond the organiser rule (there are no RSVP rows). A channel or tab row is
+  attributed only through its `createdBy` field, a meeting through `organizerId`; whether the pinned message exists, or the tab content is sensible, is not checked. In a
   workspace room "member" means any authenticated user (there is no workspace member list).
-- Message content and size (use the server's size limits), and who may post in which channel.
+- Message text is capped (`maxMessageChars`, default 32768) and so are the reactions per message
+  (`maxReactionsPerMessage`, default 200); attachments, mentions and other fields are not
+  inspected, and who may post in which channel is not checked.
 - **Updates that depend on missing state** (Yjs would hold them pending and apply them later
   unchecked) are refused as `incomplete-update`. A client that relays another person's unsynced rows
   has its whole update refused: Yjs updates cannot be filtered struct by struct.

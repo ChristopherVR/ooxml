@@ -2,7 +2,7 @@
 // protocol.ts (ooxml-core). Do not edit; run `node scripts/bundle-validator.mjs` instead.
 // ../../src/core/teams/validate-update.ts
 import * as decoding2 from "lib0/decoding";
-import * as Y4 from "yjs";
+import * as Y5 from "yjs";
 
 // ../../src/core/collab/codec.ts
 import * as Y from "yjs";
@@ -19,26 +19,29 @@ var MESSAGE_SYNC = 0;
 import * as Y3 from "yjs";
 var CHANNELS = "teams:channels";
 var TABS = "teams:tabs";
+var MEETINGS = "teams:meetings";
 var CHAT_MEMBERS = "teams:chat-members";
-var OWNED_MAPS = [CHANNELS, TABS];
+var OWNED_MAPS = [CHANNELS, TABS, MEETINGS];
+var ownerField = (map) => map === MEETINGS ? "organizerId" : "createdBy";
 var isOwnedMap = (name) => OWNED_MAPS.includes(name);
 function isSameRow(before, next) {
   return next._item !== null && before._item !== null && Y3.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON());
 }
 function checkOwnedRow(map, rowId, before, after, actor) {
   const at = { map, key: rowId };
+  const field = ownerField(map);
   if (after !== void 0 && !(after instanceof Y3.Map)) return { code: "malformed-row", ...at };
   const next = after;
   if (before === void 0)
-    return next === void 0 || next.get("createdBy") === actor.id ? null : { code: "forged-author", ...at };
+    return next === void 0 || next.get(field) === actor.id ? null : { code: "forged-author", ...at };
   const prior = before instanceof Y3.Map ? before : void 0;
   if (prior && next && isSameRow(prior, next)) return null;
-  const owner = prior?.get("createdBy");
+  const owner = prior?.get(field);
   if (owner === actor.id)
-    return next === void 0 || next.get("createdBy") === owner ? null : { code: "author-changed", ...at };
+    return next === void 0 || next.get(field) === owner ? null : { code: "author-changed", ...at };
   if (actor.moderator === true) return null;
   const replaced = prior !== void 0 && next !== void 0;
-  if (map === CHANNELS && replaced && next.get("createdBy") === actor.id && next.get("name") === prior.get("name") && next.get("kind") === prior.get("kind"))
+  if (map === CHANNELS && replaced && next.get(field) === actor.id && next.get("name") === prior.get("name") && next.get("kind") === prior.get("kind"))
     return null;
   return { code: "foreign-row", ...at };
 }
@@ -57,6 +60,47 @@ function checkPinRow(map, rowId, before, after, actor, doc) {
   return { code: "forged-author", ...at };
 }
 
+// ../../src/core/teams/validate-members.ts
+import * as Y4 from "yjs";
+var ROSTER = "teams:roster";
+var CHAT_MEMBERS2 = "teams:chat-members";
+var DEFAULT_MAX_MESSAGE_CHARS = 32768;
+var DEFAULT_MAX_REACTIONS_PER_MESSAGE = 200;
+function checkRosterRow(rowId, before, after, actor) {
+  const at = { map: ROSTER, key: rowId };
+  if (after !== void 0 && !(after instanceof Y4.Map)) return { code: "malformed-row", ...at };
+  if (rowId === actor.id) return null;
+  if (actor.moderator === true && after === void 0 && before !== void 0) return null;
+  return { code: "foreign-row", ...at };
+}
+function checkMemberKey(userId, before, after, actor) {
+  const at = { map: CHAT_MEMBERS2, key: userId };
+  const was = before?.has(userId) === true;
+  const now = after?.has(userId) === true;
+  if (was === now) return null;
+  if (now) {
+    if (after?.get(userId) !== true) return { code: "malformed-row", ...at };
+    if (actor.moderator === true) return null;
+    const existing = before !== void 0 && before.size > 0;
+    const allowed = existing ? before.has(actor.id) : after?.has(actor.id) === true;
+    return allowed ? null : { code: "not-member", ...at };
+  }
+  return userId === actor.id || actor.moderator === true ? null : { code: "foreign-row", ...at };
+}
+function checkMessageSize(map, rowId, after, limits) {
+  if (!(after instanceof Y4.Map)) return null;
+  const text = after.get("text");
+  const max = limits.maxMessageChars ?? DEFAULT_MAX_MESSAGE_CHARS;
+  return typeof text === "string" && text.length > max ? { code: "content-too-large", map, key: rowId } : null;
+}
+function checkReactionCount(messageId, reactions, limits) {
+  if (!reactions) return null;
+  const prefix = `${messageId}|`;
+  let count = 0;
+  for (const key of reactions.keys()) if (key.startsWith(prefix)) count++;
+  return count > (limits.maxReactionsPerMessage ?? DEFAULT_MAX_REACTIONS_PER_MESSAGE) ? { code: "content-too-large", map: "teams:reactions", key: messageId } : null;
+}
+
 // ../../src/core/teams/validate-update.ts
 var MESSAGES_PREFIX = "teams:messages:";
 var PINS_PREFIX = "teams:pins:";
@@ -73,7 +117,7 @@ function mapOf(doc, name) {
     return void 0;
   }
 }
-var isTrackedMap = (name) => name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || isOwnedMap(name);
+var isTrackedMap = (name) => name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || name === ROSTER || name === CHAT_MEMBERS2 || isOwnedMap(name);
 function rootName(doc, type) {
   for (const [name, root] of doc.share) if (root === type) return name;
   return void 0;
@@ -94,7 +138,7 @@ function collectTouched(doc, txn, into) {
       continue;
     }
     let node = type;
-    while (node._item && node._item.parent instanceof Y4.AbstractType) {
+    while (node._item && node._item.parent instanceof Y5.AbstractType) {
       const parent = node._item.parent;
       if (parent._item === null) {
         const name = rootName(doc, parent);
@@ -110,7 +154,7 @@ function collectTouched(doc, txn, into) {
     }
   }
 }
-var authorOf = (row) => row instanceof Y4.Map ? row.get("authorId") : void 0;
+var authorOf = (row) => row instanceof Y5.Map ? row.get("authorId") : void 0;
 function isHideOnly(before, after) {
   if (after.get("deleted") !== true) return false;
   const keys = /* @__PURE__ */ new Set([...before.keys(), ...after.keys()]);
@@ -122,23 +166,23 @@ function isHideOnly(before, after) {
 }
 function checkRow(map, rowId, before, after, actor) {
   const at = { map, key: rowId };
-  if (after !== void 0 && !(after instanceof Y4.Map)) return { code: "malformed-row", ...at };
+  if (after !== void 0 && !(after instanceof Y5.Map)) return { code: "malformed-row", ...at };
   const next = after;
   if (before === void 0) {
     return next === void 0 || next.get("authorId") === actor.id ? null : { code: "forged-author", ...at };
   }
   const owner = authorOf(before);
-  if (next !== void 0 && before instanceof Y4.Map && next._item && before._item && Y4.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON()))
+  if (next !== void 0 && before instanceof Y5.Map && next._item && before._item && Y5.compareIDs(next._item.id, before._item.id) && JSON.stringify(before.toJSON()) === JSON.stringify(next.toJSON()))
     return null;
   if (owner === actor.id) {
     return next === void 0 || next.get("authorId") === owner ? null : { code: "author-changed", ...at };
   }
-  const replaced = next !== void 0 && before instanceof Y4.Map && !(next._item && before._item && Y4.compareIDs(next._item.id, before._item.id));
+  const replaced = next !== void 0 && before instanceof Y5.Map && !(next._item && before._item && Y5.compareIDs(next._item.id, before._item.id));
   if (replaced && rowId.startsWith(TAB_ROOT_PREFIX) && next?.get("authorId") === actor.id)
     return null;
   if (actor.moderator === true) {
     if (next === void 0) return null;
-    if (!replaced && before instanceof Y4.Map && isHideOnly(before, next)) return null;
+    if (!replaced && before instanceof Y5.Map && isHideOnly(before, next)) return null;
   }
   return { code: "foreign-row", ...at };
 }
@@ -152,12 +196,12 @@ function checkReaction(key, beforeHas, afterHas, actor) {
 function validateTeamsUpdate(doc, update, actor, options = {}) {
   if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
     return fail({ code: "invalid-update" });
-  const scratch = new Y4.Doc();
+  const scratch = new Y5.Doc();
   const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
   try {
-    Y4.applyUpdate(scratch, Y4.encodeStateAsUpdate(doc));
+    Y5.applyUpdate(scratch, Y5.encodeStateAsUpdate(doc));
     scratch.on("afterTransaction", (txn) => collectTouched(scratch, txn, touched));
-    Y4.applyUpdate(scratch, update);
+    Y5.applyUpdate(scratch, update);
   } catch {
     scratch.destroy();
     return fail({ code: "invalid-update" });
@@ -172,7 +216,14 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
       for (const rowId of rows) {
         const was = beforeMap?.get(rowId);
         const now = afterMap?.get(rowId);
-        const found = name.startsWith(MESSAGES_PREFIX) ? checkRow(name, rowId, was, now, actor) : name.startsWith(PINS_PREFIX) ? checkPinRow(name, rowId, was, now, actor, doc) : checkOwnedRow(name, rowId, was, now, actor);
+        let found;
+        if (name.startsWith(MESSAGES_PREFIX))
+          found = checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
+        else if (name.startsWith(PINS_PREFIX))
+          found = checkPinRow(name, rowId, was, now, actor, doc);
+        else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
+        else if (name === CHAT_MEMBERS2) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+        else found = checkOwnedRow(name, rowId, was, now, actor);
         if (found) violations.push(found);
       }
     }
@@ -187,12 +238,20 @@ function validateTeamsUpdate(doc, update, actor, options = {}) {
       );
       if (found) violations.push(found);
     }
+    const counted = /* @__PURE__ */ new Set();
+    for (const key of touched.reactions) {
+      const messageId = key.split(REACTION_SEP)[0] ?? "";
+      if (counted.has(messageId)) continue;
+      counted.add(messageId);
+      const found = checkReactionCount(messageId, afterReactions, options);
+      if (found) violations.push(found);
+    }
     return violations.length ? { ok: false, violations } : OK;
   } finally {
     scratch.destroy();
   }
 }
-function validateTeamsSyncMessage(doc, message, actor) {
+function validateTeamsSyncMessage(doc, message, actor, options = {}) {
   let payload;
   try {
     const decoder = decoding2.createDecoder(message);
@@ -203,7 +262,7 @@ function validateTeamsSyncMessage(doc, message, actor) {
   } catch {
     return fail({ code: "invalid-update" });
   }
-  return validateTeamsUpdate(doc, payload, actor);
+  return validateTeamsUpdate(doc, payload, actor, options);
 }
 
 // ../../src/core/teams/protocol.ts
