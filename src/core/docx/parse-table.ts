@@ -8,7 +8,8 @@ import type {
 } from './table-model';
 import type { Paragraph, Table } from './model';
 import { children, first, getW, type XmlElement, WORD_NS } from './xml';
-import { canEditTableStructure } from './write-table';
+import { canEditTableStructure, canRestructureTable } from './table-structure-check';
+import { tableGrid } from './table-grid';
 import type { ContentControl } from './content-control-model';
 import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
 import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types';
@@ -85,8 +86,12 @@ function parseCell(
 				const element = child as XmlElement;
 				if (element.namespaceURI !== WORD_NS) return [];
 				if (element.localName === 'p') return [result.paragraphs[paragraphIndex++]!];
-				if (element.localName === 'tbl')
-					return [parseTable(element, `${id}-nested${tableIndex++}`, parseParagraph)];
+				if (element.localName === 'tbl') {
+					const inner = parseTable(element, `${id}-nested${tableIndex++}`, parseParagraph);
+					// A table in a cell is always edited through the merge-aware structure editors.
+					markRestructurable(inner, element);
+					return [inner];
+				}
 				return [];
 			},
 		);
@@ -154,6 +159,11 @@ function parseRowProperties(row: XmlElement): TableRowProperties {
 	return result;
 }
 
+/** Flags a table whose cells tile its grid and whose XML the structure editors can keep. */
+function markRestructurable(table: Table, node: XmlElement): void {
+	if (canRestructureTable(node) && tableGrid(table)) table.restructurable = true;
+}
+
 /** Parses a `w:tbl`, including grid widths, merges, borders, shading and table style/look. */
 export function parseTable(
 	node: XmlElement,
@@ -211,5 +221,6 @@ export function parseTable(
 		return properties;
 	});
 	if (rowProperties.some((row) => Object.keys(row).length)) table.rowProperties = rowProperties;
+	if (!table.structureEditable) markRestructurable(table, node);
 	return table;
 }

@@ -167,7 +167,11 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const pageColor = parsePageBackground(document.documentElement);
 	if (pageColor) model.pageColor = pageColor;
 	model.warnings.push(...parts.warnings);
-	if (blocks.some((block) => block.type === 'table' && !block.structureEditable))
+	if (
+		blocks.some(
+			(block) => block.type === 'table' && !block.structureEditable && !block.restructurable,
+		)
+	)
 		model.warnings.push(
 			'Merged, nested, or complex tables can be read, but their row and column structure cannot be edited safely.',
 		);
@@ -197,7 +201,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		)
 	)
 		model.warnings.push(
-			'Text in nested tables is editable; the grid, merges and formatting of a nested table are preserved but cannot be changed.',
+			'Text and structure (rows, columns, merged and split cells) of nested tables are editable; their borders, shading and other formatting are preserved but cannot be changed.',
 		);
 	// Every block that can hold a drawing: body, headers, footers, footnotes and endnotes.
 	const pictureBlocks = documentDrawingBlocks({ ...model, blocks });

@@ -78,7 +78,9 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		const nested = at(at(table.rows, 1), 1).nestedTables;
 		expect(nested).toHaveLength(1);
 		expect(at(nested, 0).rows).toEqual([[{ text: 'Nested' }]]);
-		expect(loaded.model.warnings.join(' ')).toContain('Text in nested tables is editable');
+		expect(loaded.model.warnings.join(' ')).toContain(
+			'Text and structure (rows, columns, merged and split cells) of nested tables are editable',
+		);
 	});
 
 	it('saves an edit to nested table text into the nested cell and keeps the rest', async () => {
@@ -120,10 +122,12 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		await expect(loaded.save()).rejects.toThrow('Cannot edit table grid widths, width, alignment');
 	});
 
-	it('rejects silently dropping a direct edit to cell-level descriptive properties', async () => {
+	it('writes a direct edit to a cell width of a merged table instead of dropping it', async () => {
 		const { table, loaded } = await loadTable();
 		at(at(table.rows, 0), 0).widthTwips = twips(9999);
-		await expect(loaded.save()).rejects.toThrow('Cannot edit table cell width or merge');
+		const zip = await JSZip.loadAsync(await loaded.save());
+		const xml = (await zip.file('word/document.xml')?.async('string')) ?? '';
+		expect(xml).toContain('<w:tcW w:w="9999"');
 	});
 
 	it('parses table style conditional formatting (tblStylePr) and resolves banding/first-row precedence', () => {

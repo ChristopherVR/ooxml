@@ -93,7 +93,7 @@ export function patchTableMargins(
 	);
 }
 
-const CELL_ORDER = [
+export const CELL_ORDER = [
 	'cnfStyle',
 	'tcW',
 	'gridSpan',

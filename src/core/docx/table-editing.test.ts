@@ -93,13 +93,6 @@ describe('DOCX table structure editing', () => {
 		['inconsistent grid', sourceXml.replace('<w:gridCol w:w="2000"/>', '')],
 		['merged cells', sourceXml.replace('<w:tcPr>', '<w:tcPr><w:gridSpan w:val="2"/>')],
 		[
-			'nested tables',
-			sourceXml.replace(
-				'</w:p></w:tc>',
-				'</w:p><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl></w:tc>',
-			),
-		],
-		[
 			'hidden inline content',
 			sourceXml.replace('<w:t>A</w:t>', '<w:bookmarkStart w:id="1" w:name="hidden"/><w:t>A</w:t>'),
 		],
@@ -121,4 +114,21 @@ describe('DOCX table structure editing', () => {
 			expect(await (await loadDocx(original)).save()).toEqual(original);
 		},
 	);
+
+	it('adds a row to a table with a nested table through the merge-aware writer', async () => {
+		const xml = sourceXml.replace(
+			'</w:p></w:tc>',
+			'</w:p><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl></w:tc>',
+		);
+		const zip = new JSZip();
+		zip.file('word/document.xml', xml);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const table = expectTable(loaded.model.blocks[0]);
+		expect(table.structureEditable).toBe(false);
+		expect(table.restructurable).toBe(true);
+		table.rows.splice(1, 0, [emptyCell('new-left'), emptyCell('new-right')]);
+		const saved = await savedTableXml(loaded);
+		expect(saved.match(/<w:tr[ >]/g)).toHaveLength(4);
+		expect(saved).toContain('<w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl>');
+	});
 });

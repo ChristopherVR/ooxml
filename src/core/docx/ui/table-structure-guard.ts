@@ -1,6 +1,9 @@
 import type { Node } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 /** Enforce the serializer's existing structure boundary before unsupported edits enter history. */
+/** Meta on a transaction made by the merge-aware table commands, which may restructure a merged table. */
+export const RESTRUCTURE_TABLE_META = 'docx-restructure-table';
+
 export function tableStructureGuardPlugin(): Plugin {
 	const cache = new WeakMap<Node, ReadonlyMap<string, Node>>();
 	const tables = (node: Node): ReadonlyMap<string, Node> => {
@@ -44,7 +47,9 @@ export function tableStructureGuardPlugin(): Plugin {
 	};
 	return new Plugin({
 		filterTransaction(transaction, state) {
-			if (!transaction.docChanged) return true;
+			if (!transaction.docChanged || transaction.getMeta(RESTRUCTURE_TABLE_META)) return true;
+			// Undo and redo only move between states a structure command (or the source) produced.
+			if (transaction.getMeta('history$')) return true;
 			const after = tables(transaction.doc);
 			for (const [id, before] of tables(state.doc)) {
 				if (before.attrs.structureEditable !== false) continue;

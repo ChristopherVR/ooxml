@@ -75,6 +75,11 @@ export interface Table {
 	id: string;
 	/** Whether row, cell and paragraph structure can be edited without losing unsupported table XML. */
 	structureEditable?: boolean;
+	/**
+	 * Set on a table that is not rectangular (merged cells, nested tables) but whose cells tile its
+	 * grid and carry no XML the merge-aware structure editors (table-structure.ts) cannot keep.
+	 */
+	restructurable?: boolean;
 	rows: TableCell[][];
 	/** `w:tblGrid/w:gridCol` widths in twips, one per grid column. */
 	grid?: Twips[];

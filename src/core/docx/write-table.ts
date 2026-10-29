@@ -11,7 +11,7 @@ import {
 } from './write-table-properties';
 import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
 import { syncBlockControls } from './write-block-placement';
-import { children, first, isElement, makeW, named, type XmlDocument, type XmlElement } from './xml';
+import { children, first, makeW, type XmlDocument, type XmlElement } from './xml';
 
 type ParagraphWriter = (
 	doc: XmlDocument,
@@ -26,41 +26,11 @@ type SlotsWriter = (
 	next: XmlElement[],
 ) => void;
 
-/** Structural edits are restricted to plain rectangular tables with no hidden inline content. */
-export function canEditTableStructure(table: XmlElement): boolean {
-	const only = (parent: XmlElement, allowed: string[]) =>
-		Array.from(parent.childNodes)
-			.filter(isElement)
-			.every((node) => allowed.some((name) => named(node, name)));
-	if (!only(table, ['tblPr', 'tblGrid', 'tr'])) return false;
-	const grid = first(table, 'tblGrid');
-	if (grid && !only(grid, ['gridCol'])) return false;
-	const rows = children(table, 'tr');
-	if (!rows.length) return false;
-	const [firstRow] = rows;
-	if (!firstRow) return false;
-	const width = children(firstRow, 'tc').length;
-	if (!width) return false;
-	if (grid && children(grid, 'gridCol').length !== width) return false;
-	for (const row of rows) {
-		if (!only(row, ['trPr', 'tc']) || children(row, 'tc').length !== width) return false;
-		const rowProps = first(row, 'trPr');
-		if (rowProps && ['gridBefore', 'gridAfter', 'trPrChange'].some((key) => first(rowProps, key)))
-			return false;
-		for (const cell of children(row, 'tc')) {
-			if (!only(cell, ['tcPr', 'p']) || !children(cell, 'p').length) return false;
-			const props = first(cell, 'tcPr');
-			if (props && ['gridSpan', 'vMerge', 'hMerge', 'tcPrChange'].some((key) => first(props, key)))
-				return false;
-			for (const paragraph of children(cell, 'p')) {
-				if (!only(paragraph, ['pPr', 'r'])) return false;
-				for (const run of children(paragraph, 'r'))
-					if (!only(run, ['rPr', 't', 'tab', 'br', 'cr', 'noBreakHyphen'])) return false;
-			}
-		}
-	}
-	return true;
-}
+import { canEditTableStructure, canRestructureTable } from './table-structure-check';
+import { restructured, writeRestructuredTable } from './write-table-structure';
+import { tableGrid } from './table-grid';
+
+export { canEditTableStructure };
 
 const layout = (table: Table) =>
 	table.rows.map((row) => row.map((cell) => cell.paragraphs.map((p) => p.id)));
@@ -86,16 +56,17 @@ function pick(source: object, keys: readonly string[]): Record<string, unknown> 
  * Table grid/width/border/style and per-cell width/merge values render but cannot be edited yet.
  * Cell borders, shading, margins and vertical alignment have preservation-safe writers below.
  */
-function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
+function assertNoDescriptorEdits(table: Table, base: Table | undefined, layoutEdits = false): void {
 	if (!base) return;
-	if (
-		JSON.stringify(pick(table, TABLE_DESCRIPTOR_KEYS)) !==
-		JSON.stringify(pick(base, TABLE_DESCRIPTOR_KEYS))
-	)
+	const tableKeys = layoutEdits
+		? TABLE_DESCRIPTOR_KEYS.filter((key) => key !== 'grid')
+		: TABLE_DESCRIPTOR_KEYS;
+	if (JSON.stringify(pick(table, tableKeys)) !== JSON.stringify(pick(base, tableKeys)))
 		throw new Error(
 			'Cannot edit table grid widths, width, alignment, indent, borders, or style; only cell text and row/column structure changes are supported. The original DOCX package remains unchanged.',
 		);
 	const baseCellById = new Map<string, TableCell>();
+	if (layoutEdits) return;
 	for (const row of base.rows)
 		for (const cell of row) {
 			const id = cell.paragraphs[0]?.id;
@@ -133,7 +104,7 @@ function writeNestedTables(
 	next.forEach((table, index) => {
 		const node = nodes[index];
 		if (node && before[index])
-			writeTable(doc, table, node, before[index], writeParagraph, replaceSlots);
+			writeTable(doc, table, node, before[index], writeParagraph, replaceSlots, true);
 	});
 }
 
@@ -144,8 +115,30 @@ export function writeTable(
 	base: Table | undefined,
 	writeParagraph: ParagraphWriter,
 	replaceSlots: SlotsWriter,
+	nested = false,
 ): XmlElement {
 	if (base && JSON.stringify(table) === JSON.stringify(base)) return node;
+	// Merged tables, tables nested in a cell and edits that merge or split cells restructure
+	// through the merge-aware writer; plain rectangular tables keep the row and column writer below.
+	const baseGrid = base && tableGrid(base);
+	if (
+		base &&
+		baseGrid &&
+		(nested || !base.structureEditable || table.structureEditable === false) &&
+		restructured(table, base) &&
+		canRestructureTable(node)
+	) {
+		assertNoDescriptorEdits(table, base, true);
+		return writeRestructuredTable(
+			doc,
+			table,
+			node,
+			base,
+			writeParagraph,
+			replaceSlots,
+			(d, tc, cell, before) => writeNestedTables(d, tc, cell, before, writeParagraph, replaceSlots),
+		);
+	}
 	assertNoDescriptorEdits(table, base);
 	patchTableMargins(doc, table, node, base);
 	const structural = base && JSON.stringify(layout(table)) !== JSON.stringify(layout(base));
