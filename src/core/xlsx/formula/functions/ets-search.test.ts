@@ -47,18 +47,15 @@ describe('chooseSmoothing', () => {
 		expect([c.alpha, c.beta, c.drift]).toEqual([0.166667, LOW, true]);
 	});
 
-	it('takes alpha 0.998 with the lowest beta only when it clearly beats 0.9', () => {
-		const slightly = (p: Smoothing): number =>
-			1 + 0.01 * (1 - p.alpha) ** 2 + 1000 * (p.beta - LOW) ** 2;
-		expect(chooseSmoothing(12, 0, slightly).alpha).toBe(0.9);
+	it('never fits alpha 0.998 with the lowest beta, however much lower its cost is', () => {
 		const clearly = (p: Smoothing): number =>
 			1 + 10 * (1 - p.alpha) ** 2 + 1000 * (p.beta - LOW) ** 2;
-		expect(chooseSmoothing(12, 0, clearly).alpha).toBe(0.998);
+		expect(chooseSmoothing(12, 0, clearly).alpha).toBe(0.9);
 	});
 
-	it('starts the lattice with the eight alphas at the lowest beta', () => {
-		expect(CANDIDATES.slice(0, 8).map(([a]) => a)).toEqual([
-			0.002, 0.1, 0.126, 0.25, 0.5, 0.75, 0.9, 0.998,
+	it('starts the lattice with the seven alphas at the lowest beta', () => {
+		expect(CANDIDATES.slice(0, 7).map(([a]) => a)).toEqual([
+			0.002, 0.1, 0.126, 0.25, 0.5, 0.75, 0.9,
 		]);
 		expect(CANDIDATES.every(([a, b]) => b < a)).toBe(true);
 	});
@@ -73,13 +70,17 @@ describe('chooseSmoothing', () => {
 describe('reportedFor', () => {
 	it('reports the pairs of the base lattice as they are', () => {
 		for (const a of [0.002, 0.1, 0.126, 0.25, 0.5, 0.75, 0.9]) {
-			const out = reportedFor(a, LOW, 30);
+			const out = reportedFor(a, LOW, { shift: 0, t: 0 });
 			expect([out.alpha, out.beta, out.drift]).toEqual([a, LOW, false]);
 		}
 	});
 
-	it('splits the optimum 0.75 with 0.749 by length, as the three recorded series do', () => {
-		expect(reportedFor(0.75, 0.749, 13).drift).toBe(false);
-		expect(reportedFor(0.75, 0.749, 24).drift).toBe(true);
+	it('drifts at the pairs next to alpha - 0.001 that mostly drift, and decides the rest by the shape', () => {
+		const trending = { shift: 3, t: 30 };
+		const flat = { shift: 0.5, t: 1 };
+		expect(reportedFor(0.25, 0.249, trending).drift).toBe(true);
+		expect(reportedFor(0.5, 0.25, trending).drift).toBe(false);
+		expect(reportedFor(0.5, 0.25, flat).drift).toBe(true);
+		expect(reportedFor(0.5, 0.25, flat).beta).toBe(LOW);
 	});
 });

@@ -8,7 +8,7 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { EtsCaseInput } from './ets-series';
 
-function rng(seed: number): () => number {
+export function rng(seed: number): () => number {
 	let a = seed >>> 0;
 	return () => {
 		a = (a + 0x6d2b79f5) >>> 0;
@@ -20,10 +20,10 @@ function rng(seed: number): () => number {
 }
 const round = (v: number): number => Math.round(v * 1000) / 1000;
 
-type Kind = 'walk' | 'drift' | 'trend' | 'ar' | 'shift' | 'noise';
-const KINDS: Kind[] = ['walk', 'drift', 'trend', 'ar', 'shift', 'noise'];
+export type Kind = 'walk' | 'drift' | 'trend' | 'ar' | 'shift' | 'noise';
+export const KINDS: Kind[] = ['walk', 'drift', 'trend', 'ar', 'shift', 'noise'];
 
-function make(kind: Kind, n: number, r: () => number): number[] {
+export function make(kind: Kind, n: number, r: () => number): number[] {
 	const g = (): number => (r() + r() + r() + r() - 2) * 1.7;
 	const out: number[] = [];
 	let x = 50;
@@ -40,7 +40,7 @@ function make(kind: Kind, n: number, r: () => number): number[] {
 }
 
 /** The probe calls: alpha, beta, RMSE, two forecasts, gamma, MASE, SMAPE, MAE, a longer and a back forecast, an interval. */
-function search(name: string, values: number[]): EtsCaseInput {
+export function search(name: string, values: number[]): EtsCaseInput {
 	const n = values.length;
 	return {
 		name,

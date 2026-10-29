@@ -61,11 +61,11 @@ describe('FORECAST.ETS parameter search on series morphing from a random walk to
 describe('FORECAST.ETS parameter search on a constant with one spike or step', () => {
 	const spikes = probeRecorded('spike');
 
-	it('finds Excel alpha on all but two of 136 series', () => {
+	it('finds Excel alpha on all 136 series', () => {
 		// The cost sees the hold-out only as forecasts: a spike or step among the last points leaves
 		// the training part constant and Excel's alpha falls to 0.1, 0.126 and 0.25 as it nears the end.
 		expect(spikes.length).toBe(136);
-		expect(spikes.filter(sameAlpha).length).toBeGreaterThanOrEqual(134);
+		expect(spikes.filter(sameAlpha).length).toBeGreaterThanOrEqual(136);
 	});
 
 	it('reproduces the late spikes of 30 points', () => {
@@ -101,8 +101,8 @@ describe('FORECAST.ETS parameter search is invariant to scale and sign, as Excel
 		}
 	});
 
-	it('finds Excel alpha on 99% of the series, reversed ones included', () => {
+	it('finds Excel alpha on every series, reversed ones included', () => {
 		expect(scaled.length).toBe(392);
-		expect(scaled.filter(sameAlpha).length).toBeGreaterThanOrEqual(388);
+		expect(scaled.filter(sameAlpha).length).toBe(392);
 	});
 });

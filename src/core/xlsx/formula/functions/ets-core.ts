@@ -10,6 +10,7 @@ import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
 import { isExactLength } from './ets-init-chain';
 import { chooseSmoothing } from './ets-search';
+import { trendShape } from './ets-search-map';
 import { etsSearchSeries, etsValidationCost } from './ets-validate';
 
 export interface EtsFit {
@@ -76,11 +77,14 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	// chooses worse than the plain one-step error (season3-11: 8% against 1% forecast error).
 	const holdout = m >= 2 && !isExactLength(n, m) ? 0 : etsHoldout(n, m);
 	const searched = m >= 2 ? y : etsSearchSeries(y);
-	const { drift, fit, ...chosen } = chooseSmoothing(n, m, (p) =>
-		etsValidationCost(searched, m, solve(p).init, p, holdout),
+	const { drift, fit, ...chosen } = chooseSmoothing(
+		n,
+		m,
+		(p) => etsValidationCost(searched, m, solve(p).init, p, holdout),
+		trendShape(y, holdout),
 	);
 	const { run } = solve(fit ?? chosen);
-	// Excel forecasts from the last value and the untouched slope when its search ends at 0.998.
+	// Excel forecasts from the last value and the untouched slope where its pair drifts (ets-search-map.ts).
 	const state = drift ? solve({ alpha: 1, beta: 0, gamma: chosen.gamma }).run : run;
 	return {
 		...chosen,

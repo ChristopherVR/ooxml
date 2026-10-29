@@ -8,17 +8,22 @@
 //     (`ets-validate.ts`), from the least-squares trend of the whole series. A weight other than 1
 //     on the hold-out loses clearly (1188 of 1353 alphas at 1, 1125 at 0.9, 1089 at 1.1);
 //   - the result is scale, offset and sign invariant, so there is no absolute tolerance;
-//   - Excel searches a fixed lattice of (alpha, beta) pairs, not the continuous optimum
-//     (`ets-search-map.ts`). The error statistics of 1392 series are reproduced to the last digit by
-//     one pair of the lattice, and the lowest cost on it is that pair for 1386 of them (with 5%
-//     added to alpha 0.998 with the lowest beta). Alpha 0.998 is chosen only when it beats the rest
-//     clearly;
-//   - what STAT 1 and 2 report is a function of that optimum. For a large beta (alpha - 0.001, and
-//     the larger betas of alpha 0.998 half of the time) STAT 2 reports 0.001, the reported alpha can
-//     be another of 1/6, 2/3 or 5/6 and the forecast is the last value plus the least-squares slope
-//     (alpha 1, beta 0) while the statistics use the pair. The map to the reported values is the
-//     commonest outcome of the probes for each optimum: 95% of the 1438 series of 11 or more points
-//     (cross-validated, training on two of the sets and testing on the third: 90 to 97%).
+//   - Excel searches a fixed lattice of 25 (alpha, beta) pairs, not the continuous optimum
+//     (`ets-search-map.ts`). The error statistics of every probe are reproduced to the last digit by
+//     one pair of the lattice, and the lowest cost on it is that pair on all of them: 1392 earlier
+//     probes, 162 hard ones recorded for large-beta pairs, the 8 to 10 point series (120 recorded,
+//     no hold-out: the plain one-step error) and the 4 to 7 point ones (extended to 7, see
+//     `etsSearchSeries`). Alpha 0.998 is only fitted with a beta of 0.099 or more;
+//   - what STAT 1 and 2 report is a function of that pair: its alpha always, and its beta unless the
+//     forecast is the last value plus the least-squares slope (alpha 1, beta 0, "drift"), when STAT 2
+//     says 0.001 while the error statistics still use the pair. Alpha 1/6, 2/3 and 5/6 are pairs
+//     of their own ((1/6, 1/12) and (5/6, 1/12) were found by solving STAT 4-7 for the pair), not
+//     rounded versions of another alpha. Whether a large-beta pair drifts is the one thing left
+//     open: a few pairs always do, and for the rest a series drifts when its hold-out mean is within
+//     1.5 sd of its training mean and its slope is under 9.3 standard errors (83% of 643 probes);
+//     no single statistic does better (R squared 74%, cost ratios, trend ratios, n, h, margins,
+//     autocorrelation, Mann-Kendall 60 to 79%), and blending a drifting and a pair series in 20
+//     steps (231 recorded) flips the outcome at points where those statistics move smoothly.
 // Variants of the cost that lose clearly (alpha agreement on the 491 probes): starting the training
 // run from the slope of the training window only (251), the training error alone (225), a second
 // split inside the training part (149 alone, 326 added), hold-out forecasts from the training end
@@ -27,12 +32,10 @@
 // Continuous optimisers (golden section, Nelder-Mead) and lattice descents on this cost do not
 // beat it. A ratio threshold on the cost of 0.9 against 0.998 does not separate Excel's choices
 // (they overlap from 1.001 to 1.057), so the choice is not a margin on that pair of costs.
-// What is not reproduced: which of the two outcomes a few optima give (a quarter of the 2/3 pairs
-// forecast the drift, 3 of 28 of the 0.998 with 0.249), the pair behind the reported alpha of 1/6,
-// and the series of fewer than 11 points, which have no hold-out.
+// What is not reproduced: which large-beta pairs drift (see above).
 import type { Smoothing } from './ets-core';
 import { isExactLength } from './ets-init-chain';
-import { CANDIDATES, reportedFor, TOP_COST } from './ets-search-map';
+import { CANDIDATES, reportedFor, type TrendShape } from './ets-search-map';
 
 export interface Chosen extends Smoothing {
 	/** Excel's forecast for this fit is the last value plus the least-squares slope (alpha 1, beta 0). */
@@ -124,19 +127,18 @@ function searchSeasonal(n: number, cost: Cost): Chosen {
  * 4 or more points without a season: the lowest cost on the lattice of (alpha, beta), ties keeping
  * the earlier pair, then what Excel reports for that optimum (`ets-search-map.ts`).
  */
-function searchLattice(n: number, cost: Cost): Chosen {
+function searchLattice(shape: TrendShape, cost: Cost): Chosen {
 	// An exact fit costs the same everywhere and Excel reports 0.9 for it, so that is the start.
 	let best: readonly [number, number] = [0.9, LOW];
 	let bestCost = cost({ alpha: 0.9, beta: LOW, gamma: LOW });
 	for (const [alpha, beta] of CANDIDATES) {
-		const top = alpha > 0.99 && beta === LOW ? 1 + TOP_COST : 1;
-		const c = cost({ alpha, beta, gamma: LOW }) * top;
+		const c = cost({ alpha, beta, gamma: LOW });
 		if (better(c, bestCost)) {
 			bestCost = c;
 			best = [alpha, beta];
 		}
 	}
-	const out = reportedFor(best[0], best[1], n);
+	const out = reportedFor(best[0], best[1], shape);
 	const [fa, fb] = out.fit;
 	const same = fa === out.alpha && fb === out.beta;
 	return {
@@ -152,8 +154,13 @@ function searchLattice(n: number, cost: Cost): Chosen {
  * Chooses alpha, beta and gamma. `cost` is the training-plus-hold-out squared error of a parameter
  * set (`ets-validate.ts`); `m` is the season length (0 for none) and `n` the number of points.
  */
-export function chooseSmoothing(n: number, m: number, cost: Cost): Chosen {
+export function chooseSmoothing(
+	n: number,
+	m: number,
+	cost: Cost,
+	shape: TrendShape = { shift: 9, t: 99 },
+): Chosen {
 	if (m >= 2) return isExactLength(n, m) ? searchSeasonalLattice(cost) : searchSeasonal(n, cost);
 	if (n < MIN_SEARCH_POINTS) return THREE_POINTS;
-	return searchLattice(n, cost);
+	return searchLattice(shape, cost);
 }
