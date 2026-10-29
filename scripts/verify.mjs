@@ -136,7 +136,9 @@ for (const [dir, list] of byViewer)
 // the source (vitest aliases the core to it), so they do not wait.
 const BUILT = [];
 if (p.build) {
-	const coreHash = buildStep('build:core', 'bun run build', '.', 'src/core');
+	// After lint: oxlint's import plugin resolves `ooxml-core/*` into `src/core/dist`, and a build
+	// that replaces `dist` while lint reads it fails lint with "Failed to open file".
+	const coreHash = buildStep('build:core', 'bun run build', '.', 'src/core', { needs: ['lint'] });
 	buildStep('build:ui', 'bun run --cwd src/ui build', '.', 'src/ui', {
 		extra: [coreHash],
 		needs: ['build:core'],
