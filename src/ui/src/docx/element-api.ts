@@ -10,7 +10,7 @@ import { saveDocx } from 'ooxml-core/docx';
 import { schema } from './schema';
 import { docToModel } from './model-adapter';
 import type { EditorCore } from './editor-core';
-import { reflectAttribute } from './editor-attributes';
+import { modifiedStamp, reflectAttribute } from './editor-attributes';
 import { downloadBytes, wordBlob } from './file-commands';
 import {
 	normalizeRibbonActions,
@@ -234,7 +234,8 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 			...(core.collab.yjs?.media.all() ?? []),
 		]);
 		const media = pending.size ? pending : undefined;
-		if (core.loaded) return core.loaded.save(core.model, media, { modified: {} });
+		if (core.loaded)
+			return core.loaded.save(core.model, media, { modified: modifiedStamp(core.reviewAuthor) });
 		return saveDocx(core.model, media);
 	}
 

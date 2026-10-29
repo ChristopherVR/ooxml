@@ -21,6 +21,14 @@ export type DocxEditorAttribute = (typeof DOCX_EDITOR_ATTRIBUTES)[number];
 export const DEFAULT_FILE_NAME = 'Document1.docx';
 export const DEFAULT_REVIEW_AUTHOR = 'Author';
 
+/**
+ * The last-modified stamp a save records: the host's `reviewAuthor` becomes `cp:lastModifiedBy`.
+ * The default name is a placeholder, not a person, so it never overwrites the package's own value.
+ */
+export function modifiedStamp(reviewAuthor: string): { author?: string } {
+	return reviewAuthor && reviewAuthor !== DEFAULT_REVIEW_AUTHOR ? { author: reviewAuthor } : {};
+}
+
 /** The element properties the attributes drive. */
 export interface AttributeProperties {
 	locale: string;
