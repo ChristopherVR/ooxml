@@ -1,3 +1,4 @@
+import { FORECAST_ETS_FUNCTIONS } from './forecast-ets';
 import { REGRESSION_FUNCTIONS } from './regression';
 import { HYPOTHESIS_TESTS } from './hypothesis-tests';
 import { ERR, fail, type Scalar } from '../values';
@@ -18,6 +19,7 @@ const extreme = S.extreme;
 
 export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 	...REGRESSION_FUNCTIONS,
+	...FORECAST_ETS_FUNCTIONS,
 	...HYPOTHESIS_TESTS,
 	...STATISTICAL_SPREAD,
 	...STATISTICAL_MORE,
