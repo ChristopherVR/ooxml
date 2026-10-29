@@ -122,6 +122,8 @@ needs, which `--browser` runs. Each viewer browser suite gets its own `PLAYWRIGH
 suites can run side by side, and Visio's browser suite ends with the packed-package check in a
 browser.
 
+Native Office checks (Word, Excel, PowerPoint, Visio through COM) run weekly on a self-hosted runner and gate Stable labels, not releases: see [office-acceptance.md](office-acceptance.md).
+
 ## One-time setup
 
 1. **Rulesets on `main`**: require the `ci-success` and `Conventional Commits` checks; add a bypass for repository admins (the release commit is pushed straight to `main`).
