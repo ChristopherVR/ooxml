@@ -211,3 +211,93 @@ describe('a status chosen in another tab', () => {
 		expect(listeners()).toBe(0);
 	});
 });
+
+describe('presence in a meeting', () => {
+	const window = (fromMin: number, toMin: number) => ({
+		start: Date.now() + fromMin * MIN,
+		end: Date.now() + toMin * MIN,
+	});
+
+	it('is Busy (in a meeting) from the start to the end of the window and wakes by itself', () => {
+		const { controller, published } = make({ idleMinutes: 0 });
+		controller.setMeetingWindows([window(10, 40)]);
+		expect(published).toEqual(['available|']);
+		vi.advanceTimersByTime(10 * MIN);
+		expect(controller.view()).toMatchObject({
+			effective: 'busy',
+			activity: 'meeting',
+			status: 'available',
+		});
+		expect(published.at(-1)).toBe('busy|');
+		vi.advanceTimersByTime(29 * MIN);
+		expect(controller.view().effective).toBe('busy');
+		vi.advanceTimersByTime(MIN);
+		expect(controller.view().effective).toBe('available');
+		expect(controller.view().activity).toBeUndefined();
+		expect(published).toEqual(['available|', 'busy|', 'available|']);
+		controller.destroy();
+	});
+
+	it('tells the wire why, and asks to be shown again when the view changes', () => {
+		const calls: (string | undefined)[] = [];
+		let changes = 0;
+		const controller = createPresenceController({
+			storageKey: 'k',
+			idleMinutes: 0,
+			publish: (_s, _m, activity) => calls.push(activity),
+			changed: () => changes++,
+		});
+		controller.setMeetingWindows([window(-5, 5)]);
+		expect(calls).toEqual([undefined, 'meeting']);
+		expect(changes).toBeGreaterThan(0);
+		vi.advanceTimersByTime(5 * MIN);
+		expect(calls).toEqual([undefined, 'meeting', undefined]);
+		controller.destroy();
+	});
+
+	it('lets a status the person chose win, and returns to Busy-in-meeting when it resets', () => {
+		const { controller } = make({ idleMinutes: 0 });
+		controller.setMeetingWindows([window(-5, 120)]);
+		expect(controller.view().effective).toBe('busy');
+		controller.setStatus('brb', '30m');
+		expect(controller.view()).toMatchObject({ effective: 'brb' });
+		expect(controller.view().activity).toBeUndefined();
+		vi.advanceTimersByTime(30 * MIN);
+		expect(controller.view()).toMatchObject({ effective: 'busy', activity: 'meeting' });
+		controller.destroy();
+	});
+
+	it('stays Busy when idle during the meeting, and goes Away if idle after it', () => {
+		const { controller } = make({ idleMinutes: 5 });
+		controller.setMeetingWindows([window(2, 20)]);
+		vi.advanceTimersByTime(10 * MIN);
+		expect(controller.view()).toMatchObject({ idle: true, effective: 'busy', activity: 'meeting' });
+		vi.advanceTimersByTime(10 * MIN);
+		expect(controller.view()).toMatchObject({ idle: true, effective: 'away' });
+		controller.destroy();
+	});
+
+	it('ignores an unchanged list, and a list set after destroy', () => {
+		const { controller, published, changes } = make({ idleMinutes: 0 });
+		const w = [window(-1, 10)];
+		controller.setMeetingWindows(w);
+		const n = published.length;
+		const c = changes();
+		controller.setMeetingWindows(w.map((x) => ({ ...x })));
+		expect(published.length).toBe(n);
+		expect(changes()).toBe(c);
+		controller.destroy();
+		controller.setMeetingWindows([]);
+		expect(controller.view().effective).toBe('busy');
+	});
+
+	it('drops the Busy at once when the windows are cleared (meeting cancelled)', () => {
+		const { controller, published } = make({ idleMinutes: 0 });
+		controller.setMeetingWindows([window(-1, 30)]);
+		expect(controller.view().effective).toBe('busy');
+		controller.setMeetingWindows([]);
+		expect(controller.view().effective).toBe('available');
+		expect(published.at(-1)).toBe('available|');
+		controller.destroy();
+	});
+});

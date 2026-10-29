@@ -219,6 +219,35 @@ describe('<teams-app>', () => {
 		el.remove();
 	});
 
+	it('labels the profile card Busy, in a meeting, while a meeting the person is in runs', async () => {
+		const el = await mount({
+			'workspace-id': 'ta-meeting-presence',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
+		const menu = q<HTMLElement & { updateComplete: Promise<boolean> }>(
+			el.shadowRoot,
+			'teams-profile-menu',
+		);
+		const now = Date.now();
+		el.client!.workspace.meetings.create({
+			title: 'Design review',
+			start: now - 60_000,
+			end: now + 3_600_000,
+		});
+		await tick(50);
+		await el.updateComplete;
+		await menu.updateComplete;
+		expect(el.client!.getState().presence).toMatchObject({
+			effective: 'busy',
+			activity: 'meeting',
+		});
+		expect(q(menu.shadowRoot, 'office-ui-avatar').getAttribute('presence')).toBe('busy');
+		expect(q(menu.shadowRoot, '.status-line').textContent).toContain('Busy · In a meeting');
+		el.remove();
+	});
+
 	it('restarts the client when the workspace changes', async () => {
 		const el = await mount({
 			'workspace-id': 'ta-one',

@@ -6,6 +6,7 @@ import { type ChatInfo, type ChatKind, chatTitle } from './chats';
 import type { Message } from './model';
 import {
 	type ClientPresence,
+	type PresenceActivity,
 	type PresenceStatus,
 	clientPresenceFromWire,
 	combinePresence,
@@ -18,6 +19,8 @@ export interface ChatMemberView {
 	name: string;
 	self: boolean;
 	availability: PresenceStatus;
+	/** `meeting` while the status is Busy because of a meeting. */
+	activity?: PresenceActivity;
 }
 
 export interface ChatLastMessage {
@@ -50,6 +53,7 @@ export interface ContactView {
 	id: string;
 	name: string;
 	availability: PresenceStatus;
+	activity?: PresenceActivity;
 }
 
 /**
@@ -72,12 +76,30 @@ export function memberPresence(
 	return peerPresenceOf(userId, peers)?.status ?? 'offline';
 }
 
+/** `memberPresence` with the activity behind a derived status. */
+function memberShown(
+	userId: string,
+	selfId: string,
+	self: { status: PresenceStatus; activity?: PresenceActivity | undefined },
+	peers: readonly PeerLike[],
+): { availability: PresenceStatus; activity?: PresenceActivity } {
+	const shown =
+		userId === selfId
+			? { status: self.status, activity: self.activity }
+			: (peerPresenceOf(userId, peers) ?? { status: 'offline' as const, activity: undefined });
+	return {
+		availability: shown.status,
+		...(shown.activity ? { activity: shown.activity } : {}),
+	};
+}
+
 /** Chats the person belongs to, newest activity first. Unread = others' messages after the marker. */
 export function chatViews(input: {
 	chats: readonly ChatInfo[];
 	messagesOf: (chatId: string) => Message[];
 	selfId: string;
 	selfStatus: PresenceStatus;
+	selfActivity?: PresenceActivity;
 	lastRead: Record<string, number>;
 	peers: readonly PeerLike[];
 	workspaceId: string;
@@ -100,7 +122,7 @@ export function chatViews(input: {
 					id: m.id,
 					name: m.name,
 					self: m.id === selfId,
-					availability: memberPresence(m.id, selfId, selfStatus, peers),
+					...memberShown(m.id, selfId, { status: selfStatus, activity: input.selfActivity }, peers),
 				})),
 				unread:
 					chat.id === selectedId
@@ -136,7 +158,7 @@ export function contactViews(
 		.map((r) => ({
 			id: r.id,
 			name: r.name,
-			availability: memberPresence(r.id, selfId, 'available', peers),
+			...memberShown(r.id, selfId, { status: 'available' }, peers),
 		}))
 		.sort((a, b) => rank(a.availability) - rank(b.availability) || a.name.localeCompare(b.name));
 }

@@ -45,6 +45,7 @@ import {
 } from './presence-controller';
 import type { SchemaStatus } from './schema';
 import { defaultPresenceSetting, type StatusDuration } from './presence';
+import { meetingWindows } from './presence-meetings';
 import {
 	type ChannelView,
 	type FileEntry,
@@ -450,6 +451,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				name: ws.user.name,
 				color: ws.session.identity.userColor,
 				availability: presenceView().effective,
+				...(presenceView().activity ? { activity: presenceView().activity! } : {}),
 				statusMessage: presenceView().message,
 				inCall: call?.phase === 'connected',
 			},
@@ -497,6 +499,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				messagesOf,
 				selfId: ws.user.id,
 				selfStatus: presenceView().effective,
+				...(presenceView().activity ? { selfActivity: presenceView().activity! } : {}),
 				lastRead,
 				peers: p,
 				workspaceId,
@@ -567,12 +570,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 
 	let state = compute();
 	let queued = false;
+	/** Tell presence when the person's meetings are, so it shows Busy while one is in progress. */
+	const syncMeetingPresence = (): void =>
+		presence?.setMeetingWindows(meetingWindows(ws.meetings.list(), ws.user.id, now()));
 	const refresh = (): void => {
 		if (queued || destroyed) return;
 		queued = true;
 		queueMicrotask(() => {
 			queued = false;
 			if (destroyed) return;
+			syncMeetingPresence();
 			state = compute();
 			for (const l of [...listeners]) l();
 			for (const item of feed.drain()) notices.emit('notification', item);
@@ -618,12 +625,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				}
 			: {}),
 		idleMinutes: options.idleMinutes,
-		publish: (status, message) => {
-			ws.setAvailability(status);
+		publish: (status, message, activity) => {
+			ws.setAvailability(status, activity);
 			ws.setStatusMessage(message);
 		},
 		changed: refresh,
 	});
+	syncMeetingPresence();
 	state = compute();
 
 	const unsubs = [
@@ -779,6 +787,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	});
 	const checkReminders = (): void => {
 		if (destroyed) return;
+		// A repeat that was beyond the look-ahead when the meetings last changed comes into range.
+		syncMeetingPresence();
 		const settings = feed.settings.get();
 		const status = presenceView().effective;
 		const due = reminders.due(ws.meetings.list(), ws.user.id, now(), (item) =>

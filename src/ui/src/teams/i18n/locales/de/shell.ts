@@ -21,6 +21,7 @@ export const deShell: Record<keyof typeof enShell, string> = {
 	'presence.available': 'Verfügbar',
 	'presence.busy': 'Beschäftigt',
 	'presence.dnd': 'Nicht stören',
+	'presence.inMeeting': 'Beschäftigt · In einer Besprechung',
 	'presence.brb': 'Bin gleich zurück',
 	'presence.away': 'Abwesend',
 	'presence.offline': 'Offline',

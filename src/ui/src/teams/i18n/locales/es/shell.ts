@@ -21,6 +21,7 @@ export const esShell: Record<keyof typeof enShell, string> = {
 	'presence.available': 'Disponible',
 	'presence.busy': 'Ocupado',
 	'presence.dnd': 'No molestar',
+	'presence.inMeeting': 'Ocupado · En una reunión',
 	'presence.brb': 'Vuelvo enseguida',
 	'presence.away': 'Ausente',
 	'presence.offline': 'Sin conexión',

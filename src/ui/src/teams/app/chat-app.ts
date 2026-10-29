@@ -29,7 +29,7 @@ export function chatHeader(chat: ChatView, on: ChatHeaderHandlers, i18n: TeamsI1
 	const topic =
 		chat.kind === 'direct'
 			? other
-				? t(PRESENCE_KEY[other.availability])
+				? t(other.activity === 'meeting' ? 'presence.inMeeting' : PRESENCE_KEY[other.availability])
 				: ''
 			: online
 				? t('chat.peopleOnline', { count: chat.members.length, online })

@@ -21,6 +21,7 @@ export const frShell: Record<keyof typeof enShell, string> = {
 	'presence.available': 'Disponible',
 	'presence.busy': 'Occupé',
 	'presence.dnd': 'Ne pas déranger',
+	'presence.inMeeting': 'Occupé · En réunion',
 	'presence.brb': 'Je reviens tout de suite',
 	'presence.away': 'Absent',
 	'presence.offline': 'Hors connexion',

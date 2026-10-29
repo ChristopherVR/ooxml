@@ -168,7 +168,7 @@ export class TeamsProfileMenu extends TeamsLitElement {
 					<div class="who">
 						<strong>${state.user.name}</strong>
 						<span class="status-line"
-							>${this.t(STATUS_KEY[state.availability])}${state.presence.idle && state.presence.status === 'available' ? ` ${this.t('profile.idle')}` : ''}</span
+							>${state.presence.activity === 'meeting' ? this.t('presence.inMeeting') : this.t(STATUS_KEY[state.availability])}${state.presence.idle && state.presence.status === 'available' && !state.presence.activity ? ` ${this.t('profile.idle')}` : ''}</span
 						>
 						${presence.message ? html`<span class="message">${presence.message}</span>` : nothing}
 					</div>

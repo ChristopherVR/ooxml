@@ -44,4 +44,15 @@ describe('presence of a person with two tabs', () => {
 		expect(views.map((v) => v.availability)).toEqual(['available']);
 		expect(contactViews(roster as never, 'me', activeFirst)).toEqual(views);
 	});
+
+	it('carries the meeting activity of the winning tab to contacts', () => {
+		const roster = [{ id: 'ada', name: 'Ada' }];
+		const meeting = { ...peer(1, 'ada', 'busy'), activity: 'meeting' };
+		const [view] = contactViews(roster as never, 'me', [meeting]);
+		expect(view).toMatchObject({ availability: 'busy', activity: 'meeting' });
+		const [set] = contactViews(roster as never, 'me', [meeting, peer(2, 'ada', 'busy')]);
+		expect(set?.activity).toBeUndefined();
+		const [free] = contactViews(roster as never, 'me', [peer(2, 'ada', 'available'), meeting]);
+		expect(free).toMatchObject({ availability: 'busy', activity: 'meeting' });
+	});
 });

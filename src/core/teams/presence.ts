@@ -9,6 +9,20 @@ export type PresenceStatus = 'available' | 'busy' | 'dnd' | 'brb' | 'away' | 'of
 /** The values older clients understand. */
 export type LegacyAvailability = 'available' | 'busy' | 'away';
 
+/**
+ * What a derived status is for, published next to the status. Only `meeting`: Busy because a
+ * scheduled meeting is in progress. Older clients ignore the field and just see Busy.
+ */
+export type PresenceActivity = 'meeting';
+
+/** The activity a peer's payload means: only the known value, and only beside Busy. */
+export const activityFromWire = (raw: {
+	status?: unknown;
+	availability?: unknown;
+	activity?: unknown;
+}): PresenceActivity | undefined =>
+	raw.activity === 'meeting' && statusFromWire(raw) === 'busy' ? 'meeting' : undefined;
+
 export const PRESENCE_STATUSES: readonly PresenceStatus[] = [
 	'available',
 	'busy',
@@ -75,10 +89,11 @@ export function statusFromWire(raw: { status?: unknown; availability?: unknown }
 		: 'available';
 }
 
-/** One client's (tab's or device's) published presence, as the status and message it shows. */
+/** One client's (tab's or device's) published presence: status, message and any activity. */
 export interface ClientPresence {
 	status: PresenceStatus;
 	message: string;
+	activity?: PresenceActivity;
 }
 
 /**
@@ -98,33 +113,41 @@ const PRESENCE_RANK: Record<PresenceStatus, number> = {
 	offline: 5,
 };
 
-const messageFirst = (a: string, b: string): boolean =>
-	a !== b && (b === '' || (a !== '' && a < b));
+/**
+ * Negative when `a` is the better answer. After the status, ties go to the client with a message,
+ * then the alphabetically first message, then the one without an activity (a Busy the person set
+ * over a Busy derived from a meeting), so the answer never depends on which tab connected first.
+ */
+function comparePresence(a: ClientPresence, b: ClientPresence): number {
+	return (
+		PRESENCE_RANK[a.status] - PRESENCE_RANK[b.status] ||
+		Number(b.message !== '') - Number(a.message !== '') ||
+		(a.message < b.message ? -1 : a.message > b.message ? 1 : 0) ||
+		Number(a.activity !== undefined) - Number(b.activity !== undefined)
+	);
+}
 
 /** The client a person shows as, or null with no clients. Independent of the order of `clients`. */
 export function combinePresence(clients: readonly ClientPresence[]): ClientPresence | null {
 	let best: ClientPresence | null = null;
-	for (const c of clients) {
-		if (!best) best = c;
-		else {
-			const d = PRESENCE_RANK[c.status] - PRESENCE_RANK[best.status];
-			// Same status: keep the one with a message, then the alphabetically first, so the
-			// message shown does not depend on which tab connected first.
-			if (d < 0 || (d === 0 && messageFirst(c.message, best.message))) best = c;
-		}
-	}
+	for (const c of clients) if (!best || comparePresence(c, best) < 0) best = c;
 	return best;
 }
 
 /** The presence a peer's wire payload means (status via `statusFromWire`, message sanitized). */
-export const clientPresenceFromWire = (raw: {
+export function clientPresenceFromWire(raw: {
 	status?: unknown;
 	availability?: unknown;
 	statusMessage?: unknown;
-}): ClientPresence => ({
-	status: statusFromWire(raw),
-	message: sanitizeStatusMessage(raw.statusMessage),
-});
+	activity?: unknown;
+}): ClientPresence {
+	const activity = activityFromWire(raw);
+	return {
+		status: statusFromWire(raw),
+		message: sanitizeStatusMessage(raw.statusMessage),
+		...(activity ? { activity } : {}),
+	};
+}
 
 /** A custom status message: tags and control characters removed, one line, length-capped. */
 export function sanitizeStatusMessage(text: unknown): string {
@@ -196,15 +219,37 @@ export function isIdle(lastActivityAt: number, now: number, idleMinutes: number)
 	return idleMinutes > 0 && now - lastActivityAt >= idleMinutes * 60_000;
 }
 
-/** The status others see: only Available turns into Away when idle; a chosen state always wins. */
-export function effectiveStatus(
+/** What others see: the status, and the activity that status stands for, if any. */
+export interface EffectivePresence {
+	status: PresenceStatus;
+	activity?: PresenceActivity;
+}
+
+/**
+ * What others see. A status the person chose (anything but Available) always wins. Available turns
+ * into Busy with the `meeting` activity while a meeting they belong to is in progress, and into Away
+ * when idle otherwise. Meeting beats idle: someone in a meeting is not at the keyboard, and "Away"
+ * would be wrong for them.
+ */
+export function effectivePresence(
 	setting: PresenceSetting,
 	idle: boolean,
 	now: number,
-): PresenceStatus {
+	inMeeting = false,
+): EffectivePresence {
 	const { status } = applyExpiry(setting, now);
-	return status === 'available' && idle ? 'away' : status;
+	if (status !== 'available') return { status };
+	if (inMeeting) return { status: 'busy', activity: 'meeting' };
+	return { status: idle ? 'away' : 'available' };
 }
+
+/** The status others see (see `effectivePresence`); without `inMeeting` only idleness applies. */
+export const effectiveStatus = (
+	setting: PresenceSetting,
+	idle: boolean,
+	now: number,
+	inMeeting = false,
+): PresenceStatus => effectivePresence(setting, idle, now, inMeeting).status;
 
 /** The earliest moment the setting changes by itself, for scheduling one timer; null if never. */
 export function nextExpiry(setting: PresenceSetting): number | null {

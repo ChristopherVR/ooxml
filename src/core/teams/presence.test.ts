@@ -2,10 +2,12 @@ import {
 	DEFAULT_IDLE_MINUTES,
 	MAX_STATUS_MESSAGE_CHARS,
 	type PresenceSetting,
+	activityFromWire,
 	applyExpiry,
 	clientPresenceFromWire,
 	combinePresence,
 	defaultPresenceSetting,
+	effectivePresence,
 	effectiveStatus,
 	expiryFor,
 	isIdle,
@@ -173,5 +175,49 @@ describe('a person with several clients', () => {
 			status: 'brb',
 			message: 'back soon',
 		});
+	});
+});
+
+describe('meeting-driven presence', () => {
+	it('shows an available person as Busy in a meeting, even when idle', () => {
+		const s = setting({});
+		expect(effectivePresence(s, false, 0, true)).toEqual({ status: 'busy', activity: 'meeting' });
+		expect(effectivePresence(s, true, 0, true)).toEqual({ status: 'busy', activity: 'meeting' });
+		expect(effectiveStatus(s, true, 0, true)).toBe('busy');
+	});
+
+	it('leaves a status the person chose alone, with no activity', () => {
+		for (const status of ['busy', 'dnd', 'brb', 'away', 'offline'] as const)
+			expect(effectivePresence(setting({ status }), false, 0, true)).toEqual({ status });
+	});
+
+	it('applies expiry first: an expired Busy is Available again and then in the meeting', () => {
+		const s = setting({ status: 'dnd', statusExpiresAt: 50 });
+		expect(effectivePresence(s, false, 49, true)).toEqual({ status: 'dnd' });
+		expect(effectivePresence(s, false, 50, true)).toEqual({ status: 'busy', activity: 'meeting' });
+	});
+
+	it('keeps the old behaviour without a meeting', () => {
+		expect(effectivePresence(setting({}), false, 0)).toEqual({ status: 'available' });
+		expect(effectivePresence(setting({}), true, 0)).toEqual({ status: 'away' });
+		expect(effectiveStatus(setting({}), true, 0)).toBe('away');
+	});
+
+	it('reads the activity from the wire only for the known value beside Busy', () => {
+		expect(activityFromWire({ status: 'busy', activity: 'meeting' })).toBe('meeting');
+		expect(activityFromWire({ availability: 'busy', activity: 'meeting' })).toBe('meeting');
+		expect(activityFromWire({ status: 'busy', activity: 'party' })).toBeUndefined();
+		expect(activityFromWire({ status: 'busy', activity: { a: 1 } })).toBeUndefined();
+		expect(activityFromWire({ status: 'dnd', activity: 'meeting' })).toBeUndefined();
+		expect(activityFromWire({ status: 'available', activity: 'meeting' })).toBeUndefined();
+		expect(activityFromWire({ status: 'busy' })).toBeUndefined();
+	});
+
+	it('prefers a Busy the person set over a Busy from a meeting, whatever the order', () => {
+		const set = { status: 'busy' as const, message: '' };
+		const auto = { status: 'busy' as const, message: '', activity: 'meeting' as const };
+		expect(combinePresence([auto, set])).toBe(set);
+		expect(combinePresence([set, auto])).toBe(set);
+		expect(clientPresenceFromWire({ status: 'busy', activity: 'meeting' })).toEqual(auto);
 	});
 });

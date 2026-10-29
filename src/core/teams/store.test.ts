@@ -550,6 +550,35 @@ describe('teams client', () => {
 		expect(watchers.size).toBe(1);
 	});
 
+	it('shows Busy in a meeting while one the person is in is in progress', async () => {
+		const a = make('ada', 'store-meeting-presence', { idleMinutes: 0 });
+		const b = make('bob', 'store-meeting-presence', { idleMinutes: 0 });
+		const c = make('cy', 'store-meeting-presence', { idleMinutes: 0 });
+		await tick(100);
+		const now = Date.now();
+		const meeting = a.workspace.meetings.create({
+			title: 'Design review',
+			start: now - 60_000,
+			end: now + 60 * 60_000,
+			attendees: [{ id: 'bob', name: 'bob' }],
+		})!;
+		await tick(150);
+		expect(a.getState().presence).toMatchObject({ effective: 'busy', activity: 'meeting' });
+		expect(b.getState().presence).toMatchObject({ effective: 'busy', activity: 'meeting' });
+		expect(c.getState().presence).toMatchObject({ effective: 'available' });
+		const ada = c.getState().people.find((p) => p.name === 'ada')!;
+		expect(ada).toMatchObject({ availability: 'busy', activity: 'meeting' });
+		const wire = c.workspace.session.peers().find((p) => p.userId === 'ada') as unknown as Record<
+			string,
+			unknown
+		>;
+		expect(wire).toMatchObject({ status: 'busy', availability: 'busy', activity: 'meeting' });
+		expect(a.workspace.meetings.cancel(meeting.id)).toBe(true);
+		await tick(150);
+		expect(a.getState().presence.effective).toBe('available');
+		expect(c.getState().people.find((p) => p.name === 'ada')?.activity).toBeUndefined();
+	});
+
 	it('shows Away after the idle time and Available again on activity', async () => {
 		vi.useFakeTimers();
 		try {
