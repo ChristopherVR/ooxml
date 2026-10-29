@@ -6,6 +6,7 @@ import { indexCells } from './edit-recalculate-index';
 import { fail } from './package-common';
 import { isThemeLookupFormula } from './edit-formatting-cell-admission';
 import { isConnectedGlueCell, visioGlueTriggerTarget } from './edit-connector-glue';
+import { textReadFormula } from './edit-recalculate-text';
 import { textSizeFormula } from './edit-text-size-formula';
 import { independentTextFieldFormula } from './text-field-independent';
 
@@ -25,6 +26,8 @@ export async function assertFormattingDependencies(
 	 * instance's (through this view), and other masters, which cannot read this shape, are skipped.
 	 */
 	instanceView?: Element,
+	/** `textReads`: formulas that only read the text through text functions are recalculated by the caller. */
+	options: { textReads?: boolean } = {},
 ): Promise<void> {
 	indexCells(roots, { check });
 	const shapeId = attribute(shape, 'ID')!;
@@ -109,6 +112,14 @@ export async function assertFormattingDependencies(
 				if (textEdit && localShapeId === shapeId && sourcePageId === pageId) continue;
 				analysis = sized;
 			}
+			if (
+				options.textReads &&
+				textEdit &&
+				!named &&
+				sourcePageId !== undefined &&
+				textReadFormula(source)
+			)
+				continue;
 			if (named && analysis.dynamic) {
 				if (mentions()) failure();
 				continue;

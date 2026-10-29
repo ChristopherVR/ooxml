@@ -238,4 +238,28 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 			recalculateVisioCells(new Map([['0', root]]), widthChange, { maxSteps: 5 }),
 		).toThrow(/limit/);
 	});
+	it('keeps the cache of a cell in a cycle and reports it when asked to', () => {
+		const root = page(
+			shape(
+				'1',
+				cell('Width', '8') +
+					cell('PinX', '1', 'Width+PinY') +
+					cell('PinY', '1', 'PinX') +
+					cell('Height', '1', 'Width*2'),
+			),
+		);
+		const diagnostics: { code: string; message: string }[] = [];
+		const pages = recalculateVisioCells(new Map([['0', root]]), widthChange, {
+			cycles: 'keep',
+			diagnostics,
+		});
+		expect(pages).toEqual(['0']);
+		expect(getCell(root, 'Height').getAttribute('V')).toBe('16');
+		expect(getCell(root, 'PinX').getAttribute('V')).toBe('1');
+		expect(getCell(root, 'PinY').getAttribute('V')).toBe('1');
+		expect(diagnostics.map((item) => item.code)).toEqual(['FORMULA_CYCLE', 'FORMULA_CYCLE']);
+		expect(diagnostics[0]!.message).toMatch(/PinX|PinY/);
+		// Default behaviour is unchanged: the whole recalculation is refused.
+		expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(/cycle/);
+	});
 });

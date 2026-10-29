@@ -522,6 +522,7 @@ async function editVsdxTransaction(
 	if (deleteOnly)
 		for (const pageId of deleteVisioShapes(roots, document!, deletions, check, instanceDeletes))
 			dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+	const formulaDiagnostics: { code: string; message: string }[] = [];
 	// A shape that sizes itself from its text follows it after the transaction.
 	const noteTextSize = async (target: { pageId: string; shapeId: string }, root: Element) => {
 		if (await measuresOwnText(root, target.shapeId, masterTemplate(pkg), check))
@@ -540,7 +541,15 @@ async function editVsdxTransaction(
 		if (command.type === 'replace-plain-text' || command.type === 'replace-text-ranges') {
 			if (
 				await (command.type === 'replace-plain-text'
-					? replaceScopedPlainText(pkg, new Set(pages.values()), roots, document!, command, check)
+					? replaceScopedPlainText(
+							pkg,
+							new Set(pages.values()),
+							roots,
+							document!,
+							command,
+							check,
+							formulaDiagnostics,
+						)
 					: replaceScopedTextRanges(pkg, new Set(pages.values()), roots, document!, command, check))
 			) {
 				dirty.set(path, root);
@@ -723,6 +732,7 @@ async function editVsdxTransaction(
 		bytes,
 		changedParts: [...dirty.keys()],
 		diagnostics: [
+			...formulaDiagnostics,
 			...(pasteChanged
 				? [
 						{

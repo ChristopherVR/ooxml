@@ -33,6 +33,15 @@ export interface VisioRecalculationOptions {
 	groupRotationCells?: ReadonlySet<Element>;
 	/** Internal group-resize scope: read-only dependency discovery, or a proven local writer. */
 	groupResizeShapes?: ReadonlySet<Element>;
+	/**
+	 * A cell caught in a dependency cycle keeps its cached value and is reported in `diagnostics`
+	 * instead of refusing the whole recalculation. Default: refuse.
+	 */
+	cycles?: 'refuse' | 'keep';
+	/** Receives one entry per cell that kept its cache because of a cycle. */
+	diagnostics?: { code: string; message: string }[];
+	/** The plain text of a shape for `TheText` readers; recalculation fills it from the pages. */
+	textOf?: (pageId: string, shapeId: string) => string | undefined;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;
@@ -166,7 +175,7 @@ export function indexCells(
 						item.formula = parseVisioFormula(source!);
 						// A size measured from the shape's own text reads only the cells it names; the
 						// text itself is followed after text edits (edit-text-size.ts).
-						const plain = analyzeVisioFormula(item.formula);
+						const plain = analyzeVisioFormula(item.formula, { shapeTextReads: true });
 						const analysis = (plain.dynamic && textSizeFormula(item.formula)) || plain;
 						if (analysis.dynamic)
 							fail(

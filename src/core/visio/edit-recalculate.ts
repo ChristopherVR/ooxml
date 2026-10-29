@@ -2,6 +2,8 @@ import { createVisioCellEvaluator } from './edit-recalculate-values';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
 import { analyzeVisioFormula, type VisioFormulaValue } from './formula';
+import { plainShapeText } from './edit-recalculate-text';
+import { VisioPackageError } from './package-common';
 import {
 	indexCells,
 	key,
@@ -38,13 +40,34 @@ export function recalculateVisioCells(
 		if (affected.size > maxAffected)
 			fail('LIMIT_FORMULA_AFFECTED', 'Affected ShapeSheet cell limit exceeded.');
 	}
-	const evaluate = createVisioCellEvaluator(cells, options);
+	const evaluate = createVisioCellEvaluator(cells, {
+		textOf: (pageId, shapeId) => plainShapeText(roots.get(pageId), shapeId),
+		...options,
+	});
 	const values = new Map<string, VisioFormulaValue>();
-	for (const id of affected) values.set(id, evaluate(id));
+	for (const id of affected) {
+		// The edited text is an input, not a cell with a formula or a cache.
+		if (!cells.has(id) && /,"thetext"]$/.test(id)) continue;
+		try {
+			values.set(id, evaluate(id));
+		} catch (error) {
+			if (
+				options.cycles !== 'keep' ||
+				!(error instanceof VisioPackageError) ||
+				error.code !== 'EDIT_FORMULA_CYCLE'
+			)
+				throw error;
+			const cyclic = cells.get(id)!;
+			options.diagnostics?.push({
+				code: 'FORMULA_CYCLE',
+				message: `Kept the cached value of ${cyclic.cell} on shape ${cyclic.shapeId || 'page'} (page ${cyclic.pageId}): it is part of, or depends on, a dependency cycle.`,
+			});
+		}
+	}
 	const pages = new Set<string>();
 	for (const id of affected) {
-		const item = cells.get(id)!;
-		if (item.node && item.formula) {
+		const item = cells.get(id);
+		if (item?.node && item.formula && values.has(id)) {
 			const value = String(values.get(id)!.value);
 			if (item.node.getAttribute('V') !== value) {
 				item.node.setAttribute('V', value);

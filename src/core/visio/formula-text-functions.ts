@@ -1,5 +1,5 @@
 import { formulaFailure } from './formula';
-import type { VisioFormulaAst, VisioFormulaValue } from './formula';
+import type { VisioFormulaAst, VisioFormulaReference, VisioFormulaValue } from './formula';
 import { formatNumberPicture, strSameEx } from './formula-extra-functions';
 
 /**
@@ -23,6 +23,7 @@ export const textResultFunctions: ReadonlySet<string> = new Set([
 	'CHAR',
 	'INDEX',
 	'FORMAT',
+	'SHAPETEXT',
 ]);
 /** Functions that read text and return a number. */
 export const textNumberFunctions: ReadonlySet<string> = new Set([
@@ -39,6 +40,8 @@ const LIST_SEPARATOR = ';';
 export interface VisioTextContext {
 	/** Evaluate a numeric argument (counted against the evaluation limits). */
 	number(node: VisioFormulaAst): VisioFormulaValue;
+	/** The plain text of a `TheText` reference, or undefined when it cannot be known. */
+	textOf?(reference: VisioFormulaReference): string | undefined;
 	/** Count one evaluation step. */
 	tick(): void;
 }
@@ -59,6 +62,10 @@ function exactInteger(context: VisioTextContext, node: VisioFormulaAst, name: st
 	return value.value;
 }
 
+/** True for `TheText` and `Sheet.N!TheText`. */
+export const isTheText = (node: VisioFormulaAst): boolean =>
+	node.kind === 'reference' && node.reference.cell.toLowerCase() === 'thetext';
+
 /** The text of an argument: a literal, a text function, `&`, or a plain number written out. */
 export function evaluateFormulaText(
 	node: VisioFormulaAst,
@@ -74,6 +81,10 @@ export function evaluateFormulaText(
 	if (node.kind === 'string') return node.value;
 	if (node.kind === 'binary' && node.operator === '&')
 		return text(node.left, '&') + text(node.right, '&');
+	if (node.kind === 'reference' && isTheText(node)) {
+		const read = context.textOf?.(node.reference);
+		return read === undefined ? unsupported('Text read from a cell') : read;
+	}
 	if (node.kind !== 'call') {
 		// A number is written the way Visio writes it in a joined string: plain, no unit.
 		let value: VisioFormulaValue;
@@ -96,6 +107,13 @@ export function evaluateFormulaText(
 		const value = context.number(node);
 		if (value.unit !== 'scalar') return unsupported('Text from a number with a unit');
 		return String(value.value);
+	}
+	if (name === 'SHAPETEXT') {
+		// SHAPETEXT(TheText) or SHAPETEXT(Sheet.N!TheText): the plain text of a shape.
+		arity(1);
+		const target = args[0]!;
+		if (!isTheText(target)) return unsupported('SHAPETEXT of something other than TheText');
+		return text(target, name);
 	}
 	if (name === 'MID') {
 		arity(3);

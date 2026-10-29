@@ -13,6 +13,7 @@ import {
 } from './formula-numeric-functions';
 import {
 	evaluateFormulaText,
+	isTheText,
 	evaluateTextNumberFunction,
 	textNumberFunctions,
 	textResultFunctions,
@@ -193,8 +194,13 @@ export function analyzeVisioFormula(
 				else unsafe = true;
 			}
 			if (!supported.has(node.name)) unsupportedFunctions.add(node.name);
+			const shapeText =
+				node.name === 'SHAPETEXT' &&
+				limits.shapeTextReads === true &&
+				node.args.length === 1 &&
+				isTheText(node.args[0]!);
 			if (
-				dynamic.has(node.name) ||
+				(dynamic.has(node.name) && !shapeText) ||
 				(!supported.has(node.name) && !staticUnsupported.has(node.name))
 			)
 				unsafe = true;
@@ -333,6 +339,7 @@ export function evaluateVisioFormula(
 		}
 		const textContext = {
 			number: (child: VisioFormulaAst) => evaluate(child, depth + 1),
+			...(limits.textOf ? { textOf: limits.textOf } : {}),
 			tick: () => {
 				if (++steps > maxSteps) formulaFailure('limit', 'Formula evaluation limit');
 			},

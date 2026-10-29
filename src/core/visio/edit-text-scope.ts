@@ -4,6 +4,7 @@ import { replacePlainText } from './edit-text';
 import type { MasterTemplate } from './edit-text-instance';
 import { assertFormattingDependencies } from './edit-formatting-scope';
 import { masterShapes } from './edit-master-index';
+import { recalculateVisioCells } from './edit-recalculate';
 import { fail } from './package-common';
 import { indexedPart, related, visioXml } from './parts';
 import { attribute, children } from './sheet';
@@ -46,6 +47,7 @@ export function replaceScopedPlainText(
 	document: Element,
 	edit: VisioTextEdit,
 	check: () => void,
+	diagnostics: { code: string; message: string }[] = [],
 ): Promise<boolean> {
 	return replacePlainText(
 		roots.get(edit.pageId)!,
@@ -62,7 +64,18 @@ export function replaceScopedPlainText(
 				shape,
 				new Map([['TheText', text]]),
 				check,
+				undefined,
+				{ textReads: true },
 			),
 		masterTemplate(pkg),
-	);
+	).then((changed) => {
+		// Formulas that read this text (LEN(SHAPETEXT(TheText)) and the like) follow the new text.
+		if (changed)
+			recalculateVisioCells(
+				roots,
+				[{ pageId: edit.pageId, shapeId: edit.shapeId, cell: 'TheText' }],
+				{ check, cycles: 'keep', diagnostics },
+			);
+		return changed;
+	});
 }

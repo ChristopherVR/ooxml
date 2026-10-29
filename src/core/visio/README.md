@@ -866,6 +866,13 @@ reordered, copied or grouped is itself a container or a list. A master's
 `Sheet.N!` reference names a shape of that master and no longer collides with a
 new page shape of the same ID.
 
+Plain-text replacement recalculates cells that read the replaced text only through
+`SHAPETEXT(TheText)` or a text function (`LEN`, `FIND`, `STRSAME`, ...) and everything
+downstream, writing new `V` caches; a bare `TheText` in arithmetic, text-valued cells and
+formulas that cannot be evaluated still refuse the whole edit. A cell in a dependency cycle keeps
+its cache and the edit reports a `FORMULA_CYCLE` diagnostic. Master, document-sheet and theme cells
+are not part of this graph yet.
+
 This first bundle has deliberate exclusions:
 
 | Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |

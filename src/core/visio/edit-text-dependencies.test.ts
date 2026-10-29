@@ -25,7 +25,9 @@ describe('plain text dependency preservation', () => {
 		const original = bytes.slice();
 		await expect(editVsdx(bytes, [edit])).rejects.toMatchObject({
 			code:
-				formula === 'TheText' ? 'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY' : 'EDIT_UNKNOWN_DEPENDENCY',
+				formula === 'TheText' || formula.startsWith('SHAPETEXT')
+					? 'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY'
+					: 'EDIT_UNKNOWN_DEPENDENCY',
 		});
 		expect(bytes).toEqual(original);
 	});

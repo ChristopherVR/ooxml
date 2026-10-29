@@ -21,6 +21,13 @@ export interface VisioFormulaLimits {
 	 * of a dynamic dependency. Off by default, so every edit guard keeps refusing INDIRECT.
 	 */
 	literalIndirect?: boolean;
+	/**
+	 * Analysis only: treat `SHAPETEXT(TheText)` as a static read of that shape's text instead of a
+	 * dynamic dependency. Off by default for the same reason as `literalIndirect`.
+	 */
+	shapeTextReads?: boolean;
+	/** The plain text of a `TheText` reference, for the text functions; unknown when undefined. */
+	textOf?: (reference: VisioFormulaReference) => string | undefined;
 	onStep?: () => void;
 	/**
 	 * A bare number added to or subtracted from a length is inches, the unit ShapeSheet formulas

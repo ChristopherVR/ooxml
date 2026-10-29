@@ -48,6 +48,13 @@ export function createVisioCellEvaluator(
 		if (item.node?.hasAttribute('E'))
 			fail('EDIT_FORMULA_ERROR', 'Affected ShapeSheet cell has an error cache.');
 		active.add(id);
+		try {
+			return evaluateCell(id, item);
+		} finally {
+			active.delete(id);
+		}
+	};
+	const evaluateCell = (id: string, item: IndexedCell): VisioFormulaValue => {
 		let result: VisioFormulaValue;
 		const analysis = item.formula ? analyzeVisioFormula(item.formula) : undefined;
 		if (item.formula && item.node && analysis!.unsupportedFunctions.length) {
@@ -70,6 +77,11 @@ export function createVisioCellEvaluator(
 							),
 				{
 					...options.pageContext?.get(item.pageId),
+					...(options.textOf
+						? {
+								textOf: (ref) => options.textOf!(item.pageId, ref.shapeId ?? item.shapeId),
+							}
+						: {}),
 					onStep: () => {
 						if (--steps < 0)
 							fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
@@ -94,7 +106,6 @@ export function createVisioCellEvaluator(
 			if (Math.abs(cachedValue.value - result.value) > 1e-10 * Math.max(1, Math.abs(result.value)))
 				fail('EDIT_FORMULA_CACHE', 'Source formula and numeric cache disagree.');
 		}
-		active.delete(id);
 		values.set(id, result);
 		return result;
 	};
