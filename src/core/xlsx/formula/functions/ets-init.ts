@@ -7,6 +7,11 @@
 // depend on the smoothing parameters and is exact for any trend plus season (docs/xlsx-parity-status.md
 // records what is known); the trend and the other seasonal states here are solved by least squares
 // under the first-point constraint, which lands near (not on) Excel's own starting values.
+// Eliminated against the recovered maps (see ets-init-excel.test.ts): backcasting and forward or
+// backward passes with fixed smoothing parameters, geometric-weight regressions, and padding the
+// series. What the 4 to 6 point maps show: the trend weights are linear in time on the last points
+// (points 2 to 4 of 5, points 1 to 5 of 6), as in a regression whose earliest points have reduced
+// weight (6 points: weight 6/13 on the first, 1 elsewhere; 5: 26/41, 13/23, then 1; 4: 2/3, 3/5, 1, 1).
 import type { Smoothing } from './ets-core';
 
 export interface EtsInit {
