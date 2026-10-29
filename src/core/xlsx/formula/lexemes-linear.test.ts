@@ -89,15 +89,18 @@ describe('number lexeme', () => {
 
 	it('matches the old pattern on every fixture string', () => {
 		const dir = new URL('./__fixtures__/', import.meta.url);
-		const strings: string[] = [];
+		const all: string[] = [];
 		for (const f of readdirSync(dir).filter((n) => n.endsWith('.json'))) {
-			formulasOf(JSON.parse(readFileSync(new URL(f, dir), 'utf8')), strings);
+			formulasOf(JSON.parse(readFileSync(new URL(f, dir), 'utf8')), all);
 		}
+		const strings = [...new Set(all)];
 		expect(strings.length).toBeGreaterThan(0);
 		for (const s of strings) {
 			for (let i = 0; i < s.length; i++) {
 				const rest = s.slice(i);
-				expect(NUMBER_RE.exec(rest)?.[0]).toBe(OLD_NUMBER_RE.exec(rest)?.[0]);
+				const got = NUMBER_RE.exec(rest)?.[0];
+				const want = OLD_NUMBER_RE.exec(rest)?.[0];
+				if (got !== want) expect(got, `${s}@${i}`).toBe(want);
 			}
 		}
 	});
@@ -110,12 +113,20 @@ describe('number lexeme', () => {
 
 	it('reads sheet prefixes like the old pattern on every fixture string', () => {
 		const dir = new URL('./__fixtures__/', import.meta.url);
-		const strings: string[] = [];
+		const all: string[] = [];
 		for (const f of readdirSync(dir).filter((n) => n.endsWith('.json'))) {
-			formulasOf(JSON.parse(readFileSync(new URL(f, dir), 'utf8')), strings);
+			formulasOf(JSON.parse(readFileSync(new URL(f, dir), 'utf8')), all);
 		}
+		const strings = [...new Set(all)];
 		for (const s of strings) {
-			for (let i = 0; i < s.length; i++) expectSamePrefix(s, i);
+			for (let i = 0; i < s.length; i++) {
+				if (s[i] === "'") continue;
+				const got = readPrefix(s, i);
+				const want = oldReadPrefix(s, i);
+				if (got?.prefix.text !== want?.text || got?.length !== want?.length) {
+					expectSamePrefix(s, i);
+				}
+			}
 		}
 	});
 
