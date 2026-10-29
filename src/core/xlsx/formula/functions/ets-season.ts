@@ -11,7 +11,10 @@
 // when the series is negated, reversed or rescaled, so it is not a model fit) and that the period is
 // n / k, rounded with halves down, for the strongest periodogram frequency on 66 of 77 noise
 // series; no threshold on that peak's share decides when a period is reported, and a periodogram
-// detector with a fitted threshold agrees on 384 of 463 series against 377 for this one.
+// detector with a fitted threshold agrees on 384 of 463 series against 377 for this one. 290 more
+// (the amplitude sweep in forecast-ets-detect.test.ts) show that even the bin rule is only a
+// correlation: multiples of the period are reported at middling amplitudes, 7.5 reads 7 weak and
+// 8 strong, and folded-variance F tests, integer-period scores and seasonal regressions do not fit.
 
 /** Longest tail of the series that is analysed; keeps the quadratic autocorrelation bounded. */
 const MAX_POINTS = 8192;
