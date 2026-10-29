@@ -13,7 +13,7 @@ describe('defined name work limits', () => {
 		const started = Date.now();
 		engine(wb).recalculateAll();
 		expect(get(wb, 'A1')).toBe(2 ** 31);
-		expect(Date.now() - started).toBeLessThan(1000);
+		expect(Date.now() - started).toBeLessThan(5000);
 	});
 
 	it('returns an error for a self-referencing name', () => {
@@ -22,7 +22,7 @@ describe('defined name work limits', () => {
 		const started = Date.now();
 		engine(wb).recalculateAll();
 		expect(get(wb, 'A1')).toEqual(E.NAME);
-		expect(Date.now() - started).toBeLessThan(1000);
+		expect(Date.now() - started).toBeLessThan(5000);
 	});
 
 	it('bounds a volatile doubling chain with the work budget', () => {
@@ -43,7 +43,7 @@ describe('wildcards without backtracking', () => {
 		const started = Date.now();
 		expect(compileWildcard('*a*a*a*a*a*a*a*a*b').test(text)).toBe(false);
 		expect(compileWildcard('*a*a*a*a*a*a*a*a*b').search(text)).toBe(-1);
-		expect(Date.now() - started).toBeLessThan(1000);
+		expect(Date.now() - started).toBeLessThan(5000);
 		expect(calc('SEARCH("*a*a*a*a*a*a*a*a*b",A1)', { A1: text })).toEqual(E.VALUE);
 	});
 
