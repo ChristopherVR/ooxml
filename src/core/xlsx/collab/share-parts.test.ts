@@ -248,7 +248,7 @@ describe('sharing comments, rules, links, tables and charts', () => {
 		Y.applyUpdate(old, Y.encodeStateAsUpdate(a.doc));
 		old.getMap('xlsx:meta').delete('parts');
 		for (const part of ['comments', 'replies', 'cf', 'dv', 'links', 'tables', 'charts'])
-			old.getMap().clear();
+			old.getMap(`xlsx:${part}`).clear();
 		const open = (workbook: Workbook): Peer => {
 			const p = peer(workbook, false);
 			Y.applyUpdate(p.doc, Y.encodeStateAsUpdate(old));

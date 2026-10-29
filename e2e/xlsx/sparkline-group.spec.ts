@@ -16,13 +16,6 @@ const kinds = (page: Page): Promise<string[]> =>
 		});
 	});
 
-async function selectRange(page: Page, from: string, to: string) {
-	await goToCell(page, from);
-	await page.keyboard.down('Shift');
-	await goToCell(page, to);
-	await page.keyboard.up('Shift');
-}
-
 async function command(page: Page, id: string) {
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
 	await clickRibbonControl(page, ribbon(page).locator(`[data-command="${id}"]`).first());
