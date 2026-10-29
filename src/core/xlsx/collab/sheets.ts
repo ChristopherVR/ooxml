@@ -4,6 +4,7 @@
 // `sheetId`s that collide after concurrent adds are made unique deterministically on read.
 import type * as Y from 'yjs';
 import type { Color, SheetState, Worksheet } from '../model';
+import { PartIds } from './keyed';
 import { childMap, isRecord } from './schema';
 
 export interface SheetEntry {
@@ -71,11 +72,25 @@ export function sheetEntries(sheets: Y.Map<unknown>): SheetEntry[] {
 export class SheetKeys {
 	private readonly byObject = new WeakMap<Worksheet, string>();
 	private counter = 0;
+	private readonly partIds = new Map<string, PartIds>();
 
 	constructor(private readonly clientId: number) {}
 
 	remember(sheet: Worksheet, key: string): void {
 		this.byObject.set(sheet, key);
+	}
+
+	/** Item identity of a keyed part of the sheet with `sheetKey`. */
+	ids(sheetKey: string, part: string): PartIds {
+		const id = `${sheetKey}/${part}`;
+		let ids = this.partIds.get(id);
+		if (!ids) this.partIds.set(id, (ids = new PartIds()));
+		return ids;
+	}
+
+	/** A new key for a part item, unique to this peer. */
+	mint(): string {
+		return `${this.clientId.toString(36)}-${(this.counter++).toString(36)}`;
 	}
 
 	/** The key of a known sheet object, else of the shared sheet with its sheetId. */

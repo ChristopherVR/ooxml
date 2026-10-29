@@ -23,7 +23,14 @@ import {
 	sheetPart,
 } from './schema';
 import { type SheetEntry, type SheetKeys, reorder, sheetEntries } from './sheets';
+import { type PartHost, writeSheetParts } from './sheet-parts';
 import { StyleBridge, sharedStyleKey } from './styles';
+
+/** Item identity and key minting of one sheet's keyed parts. */
+export const partHost = (keys: SheetKeys, sheetKey: string): PartHost => ({
+	ids: (part) => keys.ids(sheetKey, part),
+	mint: () => keys.mint(),
+});
 
 /** What a write covers: the whole workbook, or one sheet (optionally only some cell ranges). */
 export type WriteScope = { kind: 'all' } | { kind: 'sheet'; sheet: number; ranges?: CellRange[] };
@@ -82,6 +89,8 @@ export function writeWorkbook(
 		);
 		const ranges = !full && scope.kind === 'sheet' ? scope.ranges : undefined;
 		writeCells(sheet, sheetPart(map, 'cells'), styles.keyOf, ranges);
+		// A cell-range edit (typing, paste, format) cannot change drawings: skip the charts.
+		writeSheetParts(sheet, map, partHost(keys, key), { charts: ranges === undefined });
 	});
 	writeOrder(sheets, keyList, entries);
 	writeNames(shared.names, workbook.definedNames, (index) => keyList[index]);

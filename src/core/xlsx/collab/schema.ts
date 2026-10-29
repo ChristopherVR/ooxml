@@ -3,7 +3,8 @@
 //   xlsx:meta    { v: schema version, defaultStyle: style key, date1904 }
 //   xlsx:styles  style key -> resolved CellStyle (content-addressed, see styles.ts)
 //   xlsx:names   `${sheetKey}!${lower-case name}` -> NameEntry
-//   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges }
+//   xlsx:sheets  sheet key -> Y.Map { props, cells, rows, cols, merges, comments, replies, cf, dv,
+//                links, tables, charts } (the last seven are keyed object lists, see part-specs.ts)
 // A sheet key is a stable id minted by the peer that added the sheet (never its name or index).
 // Inside a sheet: `props` (Y.Map: name, sheetId, order, state, tab, rh, cw), `cells` (`A1` ->
 // CellEntry), `rows` (1-based row number -> RowEntry), `cols` (`C:E` span -> ColEntry) and
@@ -17,7 +18,20 @@ export const STYLES = 'xlsx:styles';
 export const NAMES = 'xlsx:names';
 export const SHEETS = 'xlsx:sheets';
 
-export const SHEET_PARTS = ['props', 'cells', 'rows', 'cols', 'merges'] as const;
+export const SHEET_PARTS = [
+	'props',
+	'cells',
+	'rows',
+	'cols',
+	'merges',
+	'comments',
+	'replies',
+	'cf',
+	'dv',
+	'links',
+	'tables',
+	'charts',
+] as const;
 export type SheetPart = (typeof SHEET_PARTS)[number];
 
 export interface SharedWorkbook {

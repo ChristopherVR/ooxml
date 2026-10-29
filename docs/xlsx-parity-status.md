@@ -235,9 +235,10 @@ line/marker swatches and position-authoring controls remain incomplete.
 - Collaboration: `ooxml-core/xlsx/collab` maps the workbook to Yjs (cell values and formulas,
   formats, row heights, column widths, merges, sheet add/rename/move/delete/state/tab colour,
   defined names, selections; row and column inserts travel as the resulting cell moves), and
-  `<xlsx-editor>` is wired (share dialog, presence). Not shared yet: charts, drawings, images,
-  comments, hyperlinks, conditional formats, validations, tables, filters, pivots, freeze panes
-  and views, page setup, protection and document properties. See [collab-area.md](collab-area.md).
+  `<xlsx-editor>` is wired (share dialog, presence). Also shared, as keyed entries per item:
+  notes, threaded replies (one entry per reply), hyperlinks, conditional formats, validations,
+  tables and charts (last writer wins per chart). Not shared yet: images and other drawings,
+  filters, pivots, freeze panes and views, page setup, protection and document properties. See [collab-area.md](collab-area.md).
 - Clipboard: finite copies keep trailing blanks and tile into compatible selections; directional
   fills translate formulas; Paste Special supports content modes, transpose, Skip Blanks,
   arithmetic, All Except Borders and column widths; notes, validation, hyperlinks and supported

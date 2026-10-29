@@ -12,6 +12,8 @@ import type { Dirty } from './dirty';
 import { applyColumns, applyMerges, applyRows } from './lines';
 import { readNames } from './names';
 import { type SharedWorkbook, childMap, jsonEqual } from './schema';
+import { applySheetParts } from './sheet-parts';
+import { partHost } from './write';
 import { type SheetEntry, type SheetKeys, sheetEntries } from './sheets';
 import { StyleBridge } from './styles';
 
@@ -64,6 +66,8 @@ export function applyShared(
 			applyMerges(sheet, merges);
 			sheetsTouched.add(index);
 		}
+		if (applySheetParts(sheet, map, partHost(keys, key), full ? undefined : part.parts))
+			sheetsTouched.add(index);
 		const cells = childMap(map, 'cells');
 		if (!cells) continue;
 		const put = (address: string): void => {
