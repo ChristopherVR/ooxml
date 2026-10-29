@@ -15,12 +15,15 @@ relay cannot decrypt it, but signaling passes through the server.
 Needs Node 22 or later.
 
 ```bash
-npx openteams-server                    # listens on 127.0.0.1:8787
-TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+npx openteams-server --insecure-dev     # local development only: listens on 127.0.0.1:8787, no accounts
 ```
 
-It is configured through the environment; the only flag is `--insecure` (see `TEAMS_INSECURE` in the
-[deployment guide](./deploy.md)), which allows a non-loopback `HOST` without a token.
+The server is **secure by default**: with no accounts file (`TEAMS_USERS_FILE`), `authenticate` hook or
+`authorizeSync` hook it refuses to start. `--insecure-dev` (option `insecureDev: true`) starts it anyway,
+with a warning, for local development. It is configured through the environment plus the flags
+`--insecure-dev`, `--trust-proxy[=N]` and `--insecure` (see `TEAMS_INSECURE` and `TEAMS_TRUST_PROXY` in the
+[deployment guide](./deploy.md)). `SIGTERM` and `SIGINT` save every room before exit.
 
 | Variable        | Default     | Meaning                                                                                                            |
 | --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -30,7 +33,7 @@ It is configured through the environment; the only flag is `--insecure` (see `TE
 | `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one. |
 | `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                             |
 
-The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes` and `insecure`.
+The server reads more variables for accounts (`TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`, `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`) and for limits (`TEAMS_INSECURE`, `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`, `TEAMS_MAX_ROOMS`, `TEAMS_MAX_DOC_MB`, `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`, `TEAMS_FILES_QUOTA_MB`). The [deployment guide](./deploy.md) lists the limits; the server's README is the full reference. The `createTeamsServer` options for them are `users`, `authenticate`, `sessionSecret`, `adminToken`, `sessionRate`, `authorizeSync`, `maxConnections`, `maxRooms`, `messageRate`, `filesQuotaBytes`, `insecure`, `insecureDev` and `trustProxy`.
 
 Or embed it:
 
@@ -38,6 +41,7 @@ Or embed it:
 import { createTeamsServer } from 'openteams-server';
 
 const server = createTeamsServer({
+	users: { alice: 'long-random-secret' },
 	token: process.env.TEAMS_TOKEN,
 	origins: ['https://app.example.com'],
 	dataDir: '/var/lib/openteams',

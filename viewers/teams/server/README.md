@@ -18,9 +18,17 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 Needs Node 22 or later.
 
 ```bash
-npx openteams-server                    # PORT=8787 HOST=127.0.0.1 by default
-TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me npx openteams-server   # PORT=8787 HOST=127.0.0.1 by default
+npx openteams-server --insecure-dev     # local development only: no accounts, ids are claims
 ```
+
+**The server is secure by default.** With no `TEAMS_USERS_FILE` (or `users`), no `authenticate`
+hook and no `authorizeSync` hook it refuses to start, because every client could otherwise claim any
+user id. `--insecure-dev` (option `insecureDev: true`) opts out, logs a loud warning and is meant
+for your own machine. A shared `TEAMS_TOKEN` alone does not count as authentication.
+
+Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[=N]`. `SIGTERM` and
+`SIGINT` save every room before the process exits.
 
 | Variable                                                | Meaning                                                                                                                                                                  |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -29,6 +37,7 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
 | `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
+| `TEAMS_TRUST_PROXY`                                     | `1` (or a hop count, or `--trust-proxy`): take the client address for rate limits from `X-Forwarded-For`. Off by default.                                                |
 | `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
 | `TEAMS_MAX_ROOMS`                                       | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
@@ -38,14 +47,15 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | `TEAMS_DATA`                                            | Data directory (default `./data`): room snapshots and files.                                                                                                             |
 
 The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnectionsPerIp`,
-`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `filesQuotaBytes`, `insecure`).
+`maxRooms`, `maxDocBytes`, `messageRate`, `messageBurst`, `filesQuotaBytes`, `insecure`,
+`insecureDev`, `trustProxy`).
 
 Or embed it:
 
 ```js
 import { createTeamsServer } from 'openteams-server';
 
-const server = createTeamsServer({ token: process.env.TEAMS_TOKEN });
+const server = createTeamsServer({ users: { alice: 'long-random-secret' } });
 await server.listen(8787, '127.0.0.1');
 ```
 
@@ -55,8 +65,9 @@ across NATs. The full deployment guide is
 
 ## Accounts and sessions
 
-By default there are **no accounts**: user ids are claims and the server says so at startup. To bind
-ids to real people, give the server a way to check a credential:
+The server needs a way to check a credential (see above); without one it only starts with
+`--insecure-dev`, where user ids are claims and the server says so at startup. To bind ids to real
+people:
 
 ```js
 import { createTeamsServer } from 'openteams-server';
@@ -126,8 +137,8 @@ account management, a revocation applies to the whole user rather than one devic
 travel in the socket query string. Plug an identity provider into `authenticate` for anything
 larger than a small closed team.
 
-**The dev default is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
-claimed id, so it adds nothing over the old behaviour.
+**`--insecure-dev` is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
+claimed id, so it adds nothing over open access. The server only runs that way when asked to.
 
 ## Per-room permissions
 
@@ -180,9 +191,13 @@ uses all of this for collaborative PowerPoint review.
   workspace members who are not on the list out of the room. Without accounts the `user` is a claim,
   so anyone holding the token can claim another person's id; with accounts (above) it comes from
   the signed session.
-- **The token travels in the WebSocket query string** (`?token=`), which proxies and access logs can
-  record and browsers can keep in history. Run the server behind TLS and do not log query strings.
-  Files never take the token in a URL: they use the `Authorization` header or a signed link.
+- **The token and session travel in the WebSocket query string** (`?token=`, `?session=`), which
+  proxies and access logs can record and browsers can keep in history. The server also accepts them
+  in the `Sec-WebSocket-Protocol` header as `openteams.session.<session>` and
+  `openteams.token.<token>` next to the bare `openteams` entry (the server echoes only `openteams`),
+  which keeps them out of URLs and logs. The shipped client still sends the query string; switching
+  it needs a change in the core's `teams` area (follow-up). Run the server behind TLS and do not log
+  query strings. Files never take the token in a URL: they use the `Authorization` header or a signed link.
 - **Defaults are local.** Without a token the server refuses a non-loopback `HOST` (unless
   `TEAMS_INSECURE=1`) and accepts only loopback origins, so a website you visit cannot drive a server
   on your own machine. Set `TEAMS_TOKEN` and `TEAMS_ORIGINS` for any shared deployment.
