@@ -45,6 +45,8 @@ describe('context menu items', () => {
 			'table-columnBefore',
 			'table-columnAfter',
 			'table-deleteColumn',
+			'table-mergeCells',
+			'table-splitCell',
 			'table-deleteTable',
 		]);
 	});
