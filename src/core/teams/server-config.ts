@@ -15,11 +15,11 @@ export interface TeamsServerConfig {
 	signalingUrl?: string;
 	iceServers: IceServer[];
 	iceTransportPolicy?: 'all' | 'relay';
-	/** Bearer token sent as `?token=` on both sockets. Treat it as a secret. */
+	/** Bearer token for both sockets (see {@link connectionAuth}). Treat it as a secret. */
 	token?: string;
 	/**
 	 * Signed session from the server's `POST /auth/session` (see `requestSession`), sent as
-	 * `?session=` on both sockets. The server takes the user id from it, not from the client's claim.
+	 * the sockets (see {@link connectionAuth}). The server takes the user id from it, not from the client's claim.
 	 * Short-lived and secret: never persist it with the settings.
 	 */
 	sessionToken?: string;
@@ -154,6 +154,44 @@ export function endpointUrl(
 		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
 		.join('&');
 	return query ? `${url}?${query}` : url;
+}
+
+/** The subprotocol marker the server echoes; credentials ride as `openteams.<kind>.<value>`. */
+export const TEAMS_SUBPROTOCOL = 'openteams';
+const SUBPROTOCOL_SAFE = /^[\w.-]+$/u;
+
+export interface ConnectionAuth {
+	/** The token for {@link endpointUrl}: set only when it has to travel in the query string. */
+	token?: string;
+	/** Extra query parameters: the session, only when it has to travel in the query string. */
+	params: Record<string, string>;
+	/** WebSocket subprotocols to offer, or undefined when everything is in the query string. */
+	protocols?: string[];
+}
+
+/**
+ * Where the token and the signed session of a config travel. Preferably in the
+ * `Sec-WebSocket-Protocol` header (`openteams, openteams.session.<s>`), which proxies and access logs
+ * do not record like a URL. The header only allows token characters, so when a credential has
+ * others (a hand-made token) all credentials fall back to the query string.
+ */
+export function connectionAuth(config: TeamsServerConfig): ConnectionAuth {
+	const secrets: [string, string][] = [];
+	if (config.token) secrets.push(['token', config.token]);
+	if (config.sessionToken) secrets.push(['session', config.sessionToken]);
+	if (secrets.length === 0) return { params: {} };
+	if (secrets.every(([, value]) => SUBPROTOCOL_SAFE.test(value)))
+		return {
+			params: {},
+			protocols: [
+				TEAMS_SUBPROTOCOL,
+				...secrets.map(([kind, value]) => `${TEAMS_SUBPROTOCOL}.${kind}.${value}`),
+			],
+		};
+	return {
+		...(config.token ? { token: config.token } : {}),
+		params: config.sessionToken ? { session: config.sessionToken } : {},
+	};
 }
 
 /** The local-only config: no server, same-browser tabs. */

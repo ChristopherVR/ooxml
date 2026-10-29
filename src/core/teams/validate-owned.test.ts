@@ -29,6 +29,8 @@ const codes = (v: ReturnType<typeof validateTeamsUpdate>): string[] =>
 /** A server holding Ann's channel, tab and a pinned message. */
 function seeded(): { server: Y.Doc; messageId: string; otherId: string; tabId: string } {
 	const doc = new Y.Doc();
+	// A low client id loses every concurrent write to the same key, which the seed test relies on.
+	doc.clientID = 1;
 	const store = createChatStore(doc, { id: 'ann', name: 'Ann' });
 	store.createChannel({ id: 'general', name: 'General' });
 	const message = store.post('general', { text: 'hello' })!;

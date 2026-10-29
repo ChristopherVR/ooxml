@@ -7,7 +7,7 @@ import type { Transport } from '../collab/provider';
 import { createWebSocketTransport } from '../collab/websocket-transport';
 import type { WebSocketConstructor } from '../collab/websocket-transport';
 import { protocolParams } from './protocol';
-import { type TeamsServerConfig, endpointUrl } from './server-config';
+import { type TeamsServerConfig, connectionAuth, endpointUrl } from './server-config';
 
 export interface SyncTransportClasses {
 	WebSocket?: WebSocketConstructor | undefined;
@@ -22,11 +22,12 @@ export function createSyncTransport(
 	query?: Record<string, string>,
 ): Transport {
 	// With accounts the server reads the user from the signed session, not from a claimed id.
-	const base = { ...query, ...protocolParams() };
-	const params = config.sessionToken ? { ...base, session: config.sessionToken } : base;
+	const auth = connectionAuth(config);
+	const params = { ...query, ...protocolParams(), ...auth.params };
 	return config.mode === 'server' && config.syncUrl
 		? createWebSocketTransport({
-				url: endpointUrl(config.syncUrl, roomId, config.token, params),
+				url: endpointUrl(config.syncUrl, roomId, auth.token, params),
+				protocols: auth.protocols,
 				...(classes.WebSocket ? { WebSocket: classes.WebSocket } : {}),
 			})
 		: createBroadcastTransport({

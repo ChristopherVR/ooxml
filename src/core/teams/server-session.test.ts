@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { endpointUrl, parseServerConfig } from './server-config';
+import { connectionAuth, endpointUrl, parseServerConfig } from './server-config';
 import {
 	TeamsSignInError,
 	checkTeamsSession,
@@ -56,13 +56,17 @@ describe('requestTeamsSession', () => {
 });
 
 describe('session token in the config', () => {
-	it('is kept when valid and sent as ?session=', () => {
+	it('is kept when valid and travels as a subprotocol', () => {
 		const parsed = parseServerConfig({
 			mode: 'server',
 			syncUrl: 'wss://h/sync',
 			sessionToken: 'v1.a.b',
 		});
 		expect(parsed.config.sessionToken).toBe('v1.a.b');
+		expect(connectionAuth(parsed.config)).toEqual({
+			params: {},
+			protocols: ['openteams', 'openteams.session.v1.a.b'],
+		});
 		expect(endpointUrl('wss://h/sync', 'room', undefined, { session: 'v1.a.b' })).toBe(
 			'wss://h/sync/room?session=v1.a.b',
 		);

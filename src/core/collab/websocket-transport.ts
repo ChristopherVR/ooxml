@@ -16,7 +16,7 @@ export interface WebSocketLike {
 	onerror: ((event: unknown) => void) | null;
 	onmessage: ((event: { data: unknown }) => void) | null;
 }
-export type WebSocketConstructor = new (url: string) => WebSocketLike;
+export type WebSocketConstructor = new (url: string, protocols?: string[]) => WebSocketLike;
 
 export interface WebSocketTransportOptions {
 	/** Full URL including the room, for example `wss://host/room-id` (see {@link roomUrl}). */
@@ -27,6 +27,8 @@ export interface WebSocketTransportOptions {
 	maxDelayMs?: number;
 	/** Give up after this many consecutive failed attempts. Default unlimited. */
 	maxRetries?: number;
+	/** WebSocket subprotocols to offer (for example a credential that must stay out of the URL). */
+	protocols?: string[] | undefined;
 	/** Page protocol for the mixed-content check; defaults to the ambient location. */
 	pageProtocol?: string | undefined;
 }
@@ -56,7 +58,9 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 			stopped = true;
 			return active.error(new Error('Insecure ws:// connection blocked from an https page'));
 		}
-		const ws = new Impl(options.url);
+		const ws = options.protocols?.length
+			? new Impl(options.url, options.protocols)
+			: new Impl(options.url);
 		socket = ws;
 		ws.binaryType = 'arraybuffer';
 		ws.onopen = () => {

@@ -180,6 +180,8 @@ export interface WebSocketSignalingOptions {
 	/** Full URL including the room, for example `wss://host/signal/room-1`. */
 	url: string;
 	WebSocket?: WebSocketConstructor;
+	/** WebSocket subprotocols to offer, such as the credential entries of {@link connectionAuth}. */
+	protocols?: string[] | undefined;
 	baseDelayMs?: number;
 	maxDelayMs?: number;
 }
@@ -199,7 +201,9 @@ export function createWebSocketSignaling(options: WebSocketSignalingOptions): Si
 		const Impl =
 			options.WebSocket ?? (globalThis as { WebSocket?: WebSocketConstructor }).WebSocket;
 		if (!Impl) return handlers.error(new Error('No WebSocket implementation available'));
-		const ws = new Impl(options.url);
+		const ws = options.protocols?.length
+			? new Impl(options.url, options.protocols)
+			: new Impl(options.url);
 		socket = ws as unknown as typeof socket;
 		ws.onopen = () => {
 			failures = 0;

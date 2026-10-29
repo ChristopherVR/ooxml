@@ -25,7 +25,12 @@ import {
 	statusFromWire,
 } from './presence';
 import type { PeerConnectionFactory, StreamFactory } from './peer';
-import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config';
+import {
+	type TeamsServerConfig,
+	connectionAuth,
+	endpointUrl,
+	localServerConfig,
+} from './server-config';
 import { protocolParams } from './protocol';
 import {
 	META_MAP,
@@ -130,9 +135,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 	const config = options.config ?? localServerConfig();
 	const user = { id: options.user.id ?? createClientId(), name: options.user.name };
 	// With accounts the server reads the user from the session; the claimed id is only a dev default.
-	const sessionParams: Record<string, string> = config.sessionToken
-		? { session: config.sessionToken }
-		: {};
+	const auth = connectionAuth(config);
 	const wsCtor = options.WebSocket;
 	const bcCtor = options.BroadcastChannel;
 
@@ -160,10 +163,11 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 	const signaling = (roomId: string): SignalingChannel =>
 		config.mode === 'server' && config.signalingUrl
 			? createWebSocketSignaling({
-					url: endpointUrl(config.signalingUrl, roomId, config.token, {
+					url: endpointUrl(config.signalingUrl, roomId, auth.token, {
 						...protocolParams(),
-						...sessionParams,
+						...auth.params,
 					}),
+					protocols: auth.protocols,
 					...(wsCtor ? { WebSocket: wsCtor } : {}),
 				})
 			: createBroadcastSignaling({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
