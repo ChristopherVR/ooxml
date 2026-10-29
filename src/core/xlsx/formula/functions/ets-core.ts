@@ -8,6 +8,7 @@
 // the training-plus-hold-out error (`ets-validate.ts`) on the lattice Excel is seen to land on.
 import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
+import { chainStart } from './ets-init-chain';
 import { chooseSmoothing } from './ets-search';
 import { etsValidationCost } from './ets-validate';
 
@@ -72,7 +73,7 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	// Without a season Excel's cost is the training one-step error plus the hold-out forecast error
 	// (`ets-validate.ts`). With a season the starting states here are not Excel's, which makes that
 	// cost choose worse than the plain one-step error (season3-11: 8% against 1% forecast error).
-	const holdout = m >= 2 ? 0 : etsHoldout(n, m);
+	const holdout = m >= 2 && !chainStart(y, m) ? 0 : etsHoldout(n, m);
 	const { drift, ...chosen } = chooseSmoothing(n, m, (p) =>
 		etsValidationCost(y, m, solve(p).init, p, holdout),
 	);

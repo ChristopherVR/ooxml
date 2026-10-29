@@ -38,15 +38,14 @@ const EXACT = [
 /** Relative forecast tolerance per series (the measured worst case plus 3%); 0.003 unless listed. */
 const FORECAST_TOLERANCE: Record<string, number> = {
 	'flat-noisy': 0.039, // Excel finds a period of 2 in this noise, which no detector here reproduces
-	'seasonal4-trend': 0.023, // seasonal starting values differ from Excel's
+	'seasonal4-trend': 0.015, // exact start; the search lands on other parameters than Excel's
 	'monthly-dates-seasonal12': 0.0035,
-	'seasonal7-daily': 0.0051,
 	gaps: 0.093, // zero-filled gaps: Excel picks a smaller alpha than the best fit
 	duplicates: 0.053, // the calls that detect a season (those with seasonality 0 are exact)
 	'short-6': 0.025, // the start is exact; Excel ends at alpha 0.998 and forecasts from the last value
 	'step-change': 0.11, // Excel ends in the basin of alpha 0.75; the lowest cost is at 0.25
 	'yearly-step': 0.071, // Excel picks alpha 0.9 with beta 0.899; the search takes 0.25
-	'seasonal3-noisy': 0.017,
+	'seasonal3-noisy': 0.0145,
 	'short-5': 0.029, // the start is exact; the search takes alpha 0.002, Excel 0.1
 	'walk-20-anomaly': 0.49, // Excel keeps beta at 0.001 where the search takes alpha - 0.001
 	'walk-25-anomaly': 0.036, // the same
@@ -59,14 +58,11 @@ const FORECAST_TOLERANCE: Record<string, number> = {
 /** Relative confidence interval tolerance per series (the measured worst case plus 3%); 0.002 unless listed. */
 const CONFINT_TOLERANCE: Record<string, number> = {
 	'flat-noisy': 0.2,
-	'seasonal4-trend': 0.11,
 	'monthly-dates-seasonal12': 0.32,
-	'seasonal7-daily': 0.18,
 	gaps: 0.385, // zero completion: Excel's period 4 on the gap-filled grid is not reproduced
 	'short-6': 0.18,
 	'step-change': 0.28,
 	'yearly-step': 0.77,
-	'seasonal3-noisy': 0.234,
 	'short-5': 0.03, // alpha 0.002 instead of Excel's 0.1 (exact interval with Excel's parameters)
 	'walk-20-anomaly': 0.28,
 	'walk-25-anomaly': 0.272,

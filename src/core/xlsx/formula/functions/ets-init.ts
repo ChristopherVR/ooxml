@@ -28,6 +28,7 @@
 // weighted dummy regressions with diagonal weights (they cannot give both the trend and the
 // seasonal states).
 import type { Smoothing } from './ets-core';
+import { chainStart } from './ets-init-chain';
 
 export interface EtsInit {
 	level: number;
@@ -147,6 +148,8 @@ export function initialStates(y: readonly number[], m: number, p: Smoothing, run
 		const trend = shortSeriesTrend(y);
 		return { level: y0 - trend, trend, season: [] };
 	}
+	const exact = chainStart(y, m);
+	if (exact) return exact;
 	if (m > MAX_EXACT_SEASON) return heuristicStates(y, m);
 	// Unknowns u = (trend, c1 .. c(m-1)) with c0 = y0 - trend, where c is level plus season. The
 	// fitted values are affine in u, so the least-squares solution comes from the normal equations.
