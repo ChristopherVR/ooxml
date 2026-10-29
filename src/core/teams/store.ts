@@ -42,6 +42,7 @@ import {
 	type PresenceView,
 	createPresenceController,
 } from './presence-controller';
+import type { SchemaStatus } from './schema';
 import { defaultPresenceSetting, type StatusDuration } from './presence';
 import {
 	type ChannelView,
@@ -122,6 +123,8 @@ export interface CallView {
 export interface TeamsState {
 	status: ConnectionStatus;
 	mode: 'local' | 'server';
+	/** Whether this app may edit the workspace; `unsupported-schema` means a newer app wrote it. */
+	schema: SchemaStatus;
 	user: { id: string; name: string };
 	/** What others see for you: your chosen status, or Away when idle. */
 	availability: Availability;
@@ -460,6 +463,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		return {
 			status: ws.session.status,
 			mode: ws.config.mode,
+			schema: ws.schema.status(),
 			user: ws.user,
 			availability: presenceView().effective,
 			presence: presenceView(),
@@ -563,7 +567,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	};
 
 	const saveSnapshot = (): void => {
-		if (!storage) return;
+		if (!storage || ws.schema.status().state === 'unsupported-schema') return;
 		try {
 			const text = toBase64(Y.encodeStateAsUpdate(doc));
 			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
@@ -603,6 +607,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		ws.chat.observe(refresh),
 		ws.session.on('peers', refresh),
 		ws.session.on('status', refresh),
+		ws.schema.subscribe((s) => {
+			if (s.state === 'unsupported-schema')
+				notice(
+					'This workspace was upgraded by a newer version of the app. It is read-only until you update.',
+				);
+			refresh();
+		}),
 		ws.session.on('error', (e) => notice(e.message)),
 	];
 

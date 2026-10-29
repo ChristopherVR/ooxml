@@ -26,6 +26,15 @@ import {
 } from './presence';
 import type { PeerConnectionFactory, StreamFactory } from './peer';
 import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config';
+import { protocolParams } from './protocol';
+import {
+	META_MAP,
+	SCHEMA_VERSION,
+	type SchemaStatus,
+	checkSchema,
+	ensureSchema,
+	readOnlyTransport,
+} from './schema';
 import { createSyncTransport } from './sync-transport';
 import {
 	type SignalingChannel,
@@ -77,6 +86,14 @@ export interface TeamsWorkspace {
 	/** Scheduled meetings, shared through the workspace document. */
 	readonly meetings: MeetingStore;
 	readonly tabs: TabStore;
+	/**
+	 * Whether this build may write the workspace document. `unsupported-schema` means a newer
+	 * release stamped it: the workspace reads it, sends nothing and the UI should disable editing.
+	 */
+	readonly schema: {
+		status: () => SchemaStatus;
+		subscribe: (listener: (status: SchemaStatus) => void) => () => void;
+	};
 	readonly config: TeamsServerConfig;
 	/** A call for a channel; call `join()` on it. One call per channel per workspace. */
 	call: (channelId: string) => CallSession;
@@ -119,13 +136,34 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 	const wsCtor = options.WebSocket;
 	const bcCtor = options.BroadcastChannel;
 
+	// Schema gate: a document stamped by a newer release is read but never written.
+	let schema: SchemaStatus = { state: 'ok', version: null, supported: SCHEMA_VERSION };
+	const schemaListeners = new Set<(status: SchemaStatus) => void>();
+	const setSchema = (next: SchemaStatus): void => {
+		const same =
+			next.state === schema.state &&
+			(next.state === 'ok'
+				? schema.state === 'ok' && next.version === schema.version
+				: schema.state === 'unsupported-schema' && next.found === schema.found);
+		if (same) return;
+		schema = next;
+		for (const l of [...schemaListeners]) l(next);
+	};
+	const isReadOnly = (): boolean => schema.state === 'unsupported-schema';
+
 	const syncTransport = (roomId: string): Transport =>
-		createSyncTransport(config, roomId, { WebSocket: wsCtor, BroadcastChannel: bcCtor });
+		readOnlyTransport(
+			createSyncTransport(config, roomId, { WebSocket: wsCtor, BroadcastChannel: bcCtor }),
+			isReadOnly,
+		);
 
 	const signaling = (roomId: string): SignalingChannel =>
 		config.mode === 'server' && config.signalingUrl
 			? createWebSocketSignaling({
-					url: endpointUrl(config.signalingUrl, roomId, config.token, sessionParams),
+					url: endpointUrl(config.signalingUrl, roomId, config.token, {
+						...protocolParams(),
+						...sessionParams,
+					}),
 					...(wsCtor ? { WebSocket: wsCtor } : {}),
 				})
 			: createBroadcastSignaling({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
@@ -141,6 +179,10 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		teardown: true,
 		// Any writer may seed the default channel; the fixed id makes concurrent seeds converge.
 		onReady: () => {
+			// After the first sync the document is complete: stamp a fresh one, migrate an old one.
+			setSchema(ensureSchema(session.doc, { stampEmpty: true }));
+			if (isReadOnly()) return;
+			roster.register();
 			if (channels.channels().length === 0)
 				channels.createChannel({
 					id: 'general',
@@ -154,7 +196,11 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		channels.channels().some((c) => c.id === id && !c.archived),
 	);
 	const roster = createRoster(session.doc, user);
-	roster.register();
+	// A restored document that already has data is migrated now; an empty one waits for the first
+	// sync (`onReady`), so nothing is written before we know the server's schema.
+	setSchema(ensureSchema(session.doc, { stampEmpty: false }));
+	session.doc.getMap(META_MAP).observe(() => setSchema(checkSchema(session.doc)));
+	if (schema.state === 'ok' && schema.version === SCHEMA_VERSION) roster.register();
 	const meetings = createMeetingStore(session.doc, user);
 	// A private chat syncs in a room of its own. The server admits only the members listed in the
 	// chat document, so the user id and the first member list ride along as query parameters.
@@ -166,11 +212,14 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		openRoom: (info, doc) => {
 			const roomId = chatRoomId(options.workspaceId, info.id);
 			const members = info.members.map((m) => m.id).join(',');
-			const transport = createSyncTransport(
-				config,
-				roomId,
-				{ WebSocket: wsCtor, BroadcastChannel: bcCtor },
-				{ user: user.id, members },
+			const transport = readOnlyTransport(
+				createSyncTransport(
+					config,
+					roomId,
+					{ WebSocket: wsCtor, BroadcastChannel: bcCtor },
+					{ user: user.id, members },
+				),
+				isReadOnly,
 			);
 			const chatSession = createCollabSession({
 				roomId,
@@ -190,6 +239,13 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		roster,
 		meetings,
 		tabs,
+		schema: {
+			status: () => schema,
+			subscribe(listener) {
+				schemaListeners.add(listener);
+				return () => schemaListeners.delete(listener);
+			},
+		},
 		config,
 		call(channelId) {
 			const existing = calls.get(channelId);

@@ -29,6 +29,8 @@ export * from './peer';
 export * from './pins';
 export * from './presence';
 export * from './presence-controller';
+export * from './protocol';
+export * from './schema';
 export * from './server-config';
 export * from './server-session';
 export * from './server-file-storage';
