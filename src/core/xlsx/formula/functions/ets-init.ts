@@ -1,9 +1,12 @@
 // Initial states of the exponential smoothing model behind FORECAST.ETS. Excel's first fitted
 // value is always the first observation, so the states before the first point satisfy
 // `level + season[0] + trend = y[0]`. Without a season the trend starts at the least-squares slope
-// of the whole series (checked against Excel for series of 7 or more points); with a season the
-// trend and the other seasonal states are solved by least squares under that constraint, which
-// lands close to (but not exactly on) Excel's own starting values.
+// of the whole series for 7 or more points (and for 3), and for 6 points at the slope of the line
+// through the data plus one extra point (`sixPointTrend`); 4 and 5 points still differ from Excel.
+// With a season Excel's starting states are a fixed linear function of the data that does not
+// depend on the smoothing parameters and is exact for any trend plus season (docs/xlsx-parity-status.md
+// records what is known); the trend and the other seasonal states here are solved by least squares
+// under the first-point constraint, which lands near (not on) Excel's own starting values.
 import type { Smoothing } from './ets-core';
 
 export interface EtsInit {
@@ -38,6 +41,17 @@ export function olsSlope(y: readonly number[]): number {
 	return sxx === 0 ? 0 : sxy / sxx;
 }
 
+/**
+ * Six points: the slope of the least-squares line through the data and a seventh point at
+ * `y[0] + 6 * slope`. This reproduces Excel's starting trend to the last digit on 10 recorded
+ * series; the same construction does not fit 4 or 5 points, so it is an identity found by fitting
+ * and not a known rule.
+ */
+export function sixPointTrend(y: readonly number[]): number {
+	const seventh = (y[0] as number) + 6 * olsSlope(y);
+	return olsSlope([...y, seventh]);
+}
+
 /** Splits combined level-plus-season values into a level (their mean) and zero-sum seasonals. */
 function split(trend: number, combined: readonly number[]): EtsInit {
 	const level = mean(combined);
@@ -54,7 +68,7 @@ function heuristicStates(y: readonly number[], m: number): EtsInit {
 }
 
 /** Solves `a x = b` by Gaussian elimination with partial pivoting (destroys its inputs). */
-function solveSystem(a: number[][], b: number[]): number[] {
+export function solveSystem(a: number[][], b: number[]): number[] {
 	const k = b.length;
 	for (let i = 0; i < k; i++) {
 		let p = i;
@@ -87,7 +101,7 @@ function solveSystem(a: number[][], b: number[]): number[] {
 export function initialStates(y: readonly number[], m: number, p: Smoothing, run: Runner): EtsInit {
 	const y0 = y[0] as number;
 	if (m < 2) {
-		const trend = olsSlope(y);
+		const trend = y.length === 6 ? sixPointTrend(y) : olsSlope(y);
 		return { level: y0 - trend, trend, season: [] };
 	}
 	if (m > MAX_EXACT_SEASON) return heuristicStates(y, m);

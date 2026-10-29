@@ -10,11 +10,11 @@ const root = (path: string): URL => new URL(path, import.meta.url);
 /** Known deviations from Excel, by function name. Every name must exist in the registry. */
 export const DEVIATIONS: Readonly<Record<string, string>> = {
 	'FORECAST.ETS':
-		"The filter, starting values and error statistics were identified against Excel on 34 series: 10 reproduce to the last digit, typical series are within 0.5%, up to 26% on SUM-aggregated duplicates. Excel's search for alpha, beta and gamma stops early on some series, and its seasonal starting values and its starting trend for fewer than 7 points are not reproduced.",
+		"The filter, starting values and error statistics were identified against Excel on 34 series: 10 reproduce to the last digit, typical series are within 0.5%, the worst is 9% (zero-filled gaps). Excel's search for alpha, beta and gamma stops early on some series. Starting states: the starting trend is exact for 3, 6 and 7 or more points without a season; for 4 and 5 points (up to 0.31 off) and for seasonal series (mean 0.2 off in trend, several units in the seasonal states) it is not, because Excel's rule, a fixed linear function of the data, is not known.",
 	'FORECAST.ETS.CONFINT':
-		'RMSE times sqrt(1 + sum of (alpha + j*beta)^2) as in Excel: equal to Excel where the fitted parameters are, up to 31% off where they differ (mostly seasonal models, whose gamma term was not checked against Excel).',
+		'RMSE times sqrt(1 + sum of (alpha + j*beta)^2) as in Excel: equal to Excel where the fitted parameters are, up to 37% off where they differ (mostly seasonal models, whose gamma term was not checked against Excel).',
 	'FORECAST.ETS.SEASONALITY':
-		"Dominant periodogram peak; agrees with Excel on 54 of 58 series, 0 means none (Excel's rule for pure noise is not published and looks arbitrary there).",
+		'First peak of the autocorrelation of the detrended series that reaches 0.3 (lags 2 to a third of the series); agrees with Excel on 113 of 126 recorded series, all noiseless waves, trends and impulse trains included. 0 means none. Excel also reports a period on about a third of short white-noise series (8 to 36 points) by a rule that is not the autocorrelation, and this does not.',
 	'FORECAST.ETS.STAT':
 		'Step size agrees; the error statistics are measured on the last points as in Excel and equal it where the parameters do (11 of 32 series); alpha is found on 16 of 34 series, beta on 29 and gamma on 27.',
 	BESSELJ: 'About 1e-7 from the value Microsoft documents for some arguments.',
