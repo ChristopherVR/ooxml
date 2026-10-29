@@ -69,7 +69,9 @@ export function openForecastSheet(ctx: EditorContext): Promise<number | undefine
 	const timeline = textInput(ctx, guess ? addressOf(guess.timeline) : '');
 	const values = textInput(ctx, guess ? addressOf(guess.values) : '');
 	const date1904 = Boolean(t.workbook.date1904);
-	const suggestion = guess ? suggestForecastEnd(t.session, { sheet: t.sheet, ...guess }) : undefined;
+	const suggestion = guess
+		? suggestForecastEnd(t.session, { sheet: t.sheet, ...guess })
+		: undefined;
 	const endText = suggestion
 		? suggestion.date
 			? serialToDate(suggestion.end, date1904).toISOString().slice(0, 10)

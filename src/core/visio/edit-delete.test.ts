@@ -116,7 +116,10 @@ describe('atomic reference-closed deletion', () => {
 	});
 	it.each([
 		leaf('3', section('User', `<Row N="Link">${cell('Value', 2, 'GUARD(Sheet.1!PinX)')}</Row>`)),
-		leaf('3', section('User', `<Row N="Link">${cell('Value', 2, 'GUARD(Sheet.2!User.Link)')}</Row>`)),
+		leaf(
+			'3',
+			section('User', `<Row N="Link">${cell('Value', 2, 'GUARD(Sheet.2!User.Link)')}</Row>`),
+		),
 	])('refuses a retained protected cell that reads the set', async (outside) => {
 		const bytes = await source(closed() + outside),
 			original = bytes.slice();

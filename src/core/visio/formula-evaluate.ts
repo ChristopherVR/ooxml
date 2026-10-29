@@ -4,9 +4,6 @@ import { binaryOperator as binary, evaluatedShapeFrame } from './formula-operato
 import {
 	finiteFormulaValue as finite,
 	compatibleFormulaUnits as compatible,
-	formulaProductUnit,
-	formulaQuotientUnit,
-	formulaExponentUnit,
 	formulaSquareRootUnit,
 } from './formula-arithmetic';
 import {
@@ -19,12 +16,7 @@ import {
 	textNumberFunctions,
 	textResultFunctions,
 } from './formula-text-functions';
-import {
-	angleToLocal,
-	localToParent,
-	visioDateSerial,
-	type ShapeFrame,
-} from './formula-extra-functions';
+import { angleToLocal, localToParent, visioDateSerial } from './formula-extra-functions';
 import { mathFormulaFunctions, evaluateMathFormulaFunction } from './formula-math-functions';
 import { formulaFailure, formulaLimit, parseVisioFormula, VisioFormulaError } from './formula';
 import type {
