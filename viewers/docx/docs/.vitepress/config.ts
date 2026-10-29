@@ -108,6 +108,7 @@ export default defineConfig({
 				text: 'Project Status',
 				items: [
 					{ text: 'Support roadmap', link: '/parity-roadmap' },
+					{ text: 'Supported features and preservation', link: '/preservation' },
 					{ text: 'Outstanding work', link: '/outstanding-work' },
 					{ text: 'Verification corpus', link: '/verification' },
 					{ text: 'Package releases', link: '/releasing' },
