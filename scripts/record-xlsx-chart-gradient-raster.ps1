@@ -4,7 +4,12 @@ param(
     [string]$Profile = 'opaque',
     [ValidateSet('chart-area','series-column','series-bar')]
     [string]$Target = 'chart-area',
-    [int[]]$Angles = @(0,45,90,135,180,225,270,315,30,60)
+    [int[]]$Angles = @(0,45,90,135,180,225,270,315,30,60),
+    # Series targets only: paint the chart area a solid colour so the exported PNG is opaque and
+    # keeps no PARGB-to-ARGB truncation. Two backdrops (black, white) let a translucent
+    # fill be checked by compositing the model over the same colour.
+    [ValidateSet('none','black','white')]
+    [string]$Backdrop = 'none'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -53,7 +58,12 @@ try {
                 $fill=$chart.ChartArea.Format.Fill
                 $fillXPath='/c:chartSpace/c:spPr/a:gradFill'
             } else {
-                $chart.ChartArea.Format.Fill.Visible=0
+                if($Backdrop -eq 'none') {$chart.ChartArea.Format.Fill.Visible=0}
+                else {
+                    $chart.ChartArea.Format.Fill.Visible=-1; $chart.ChartArea.Format.Fill.Solid()
+                    $chart.ChartArea.Format.Fill.ForeColor.RGB=$(if($Backdrop -eq 'white'){16777215}else{0})
+                    $chart.ChartArea.Format.Fill.Transparency=[single]0
+                }
                 $fill=$chart.SeriesCollection(1).Format.Fill
                 $fillXPath='/c:chartSpace/c:chart/c:plotArea/c:barChart/c:ser/c:spPr/a:gradFill'
             }
@@ -105,6 +115,7 @@ try {
             $name="angle-$angle-$($size[0])x$($size[1])"
             if($Profile -ne 'opaque') {$name="$Profile-$name"}
             if($Target -ne 'chart-area') {$name="$Target-$name"}
+            if($Backdrop -ne 'none') {$name="$Backdrop-$name"}
             $path=Join-Path $OutputFolder "$name.xlsx"; $book.SaveCopyAs($path)
             $pathType = if($Profile -match '-(circle|shape)(-transparent)?$') {$Matches[1]} else {$null}
             if($pathType) {

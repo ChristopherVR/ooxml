@@ -60,15 +60,17 @@ const acceptedNativeGaps = [
 			'levels below the model and green about 0.9 above, i.e. colour leans about 0.01 of ' +
 			'the segment toward the more opaque stop (premultiplied interpolation would lean ' +
 			'about 0.08), plus roughly one level of PARGB-to-ARGB truncation in the reference ' +
-			'export (opaque green reads 254). An alpha weight of a^0.05 would pass but is an ' +
-			'unexplained fit, so it is not applied and the global tolerance is not loosened. ' +
-			'Measured in native-gradient-two-stop-weighting.json (red to green, alphas 0.63/0.87 ' +
-			'and swapped, angles 0/45/90, both sizes): the red+green sum falls 1 to 3 levels ' +
-			'below 255 at alpha near 190, which is PARGB truncation in the reference export, ' +
-			'and the colour fraction leans 0.005 to 0.014 toward the more opaque stop in both ' +
-			'orders. That residual lean is real but too small and asymmetric to fit a single ' +
-			'model (exponent k of a^k is 0.16 for one order and 0.06 for the other), so the ' +
-			'gap is accepted rather than fitted.',
+			'export (opaque green reads 254). Re-captured over opaque black and white chart areas ' +
+			'(native-gradient-three-stop-backdrops.json, 20 series-fill cases): the solved alpha ' +
+			'is linear to rounding, so truncation was only part of the gap, and the straight ' +
+			'model still misses composites by up to 3.4 levels. Fitting 480 solved samples gives ' +
+			'a colour lean toward the more opaque stop that is consistent across both segments: ' +
+			'a premultiplied weight with alpha^0.1 (equivalently 10 percent of the premultiplied ' +
+			'lean) has rms 1.0 and 0.5 levels against 1.9 and 0.8 for straight. GDI+ ' +
+			'(LinearGradientBrush with ColorBlend, rendered on this machine) leans far more, ' +
+			'about premultiplied, so Excel does not use it here; fixed-gamma and 8-bit stop ' +
+			'quantisation do not produce a lean of this size either. The 0.1 exponent has no ' +
+			'known origin, so it is not applied and the global tolerance is not loosened.',
 	},
 ];
 for (const sample of samples) {

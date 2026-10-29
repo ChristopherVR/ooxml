@@ -44,6 +44,13 @@ They show the colour weighting is near straight interpolation (lean under 0.015
 toward the more opaque stop) with PARGB truncation in the export, and back the
 accepted gap above.
 
+`native-gradient-three-stop-backdrops.json` holds the `three-transparent` profile as a
+series column fill over an opaque black and an opaque white chart area (20 cases, recorder
+options `-Target series-column -Backdrop black|white`). The opaque exports have no
+PARGB truncation, so alpha and colour can be solved per pixel. The alpha is linear; the colour
+leans about alpha^0.1 toward the more opaque stop, which keeps the accepted gap above real
+rather than a capture artifact. `gradient-backdrop.test.ts` pins both facts.
+
 ## Rectangular path profiles
 
 `native-gradient-path-profiles.json` contains 24 additional Excel 16.0 build
