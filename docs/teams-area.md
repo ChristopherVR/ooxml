@@ -201,12 +201,116 @@ a change on `<teams-app>` reaches everything it rendered.
   chat messages, channel and meeting titles, and the system lines the core writes into a chat
   ("Ada joined the chat") stay in the language they were written in.
 
+## Compatibility policy
+
+Three things must stay compatible between releases of the app and the server: the **schema** of the
+stored workspace document, the **protocol** (room names, connection parameters, message framing)
+and the **server contract**. Each has a number or a pinned test.
+
+### Schema version (`schema.ts`)
+
+- The workspace document carries an integer `schemaVersion` in the `teams:meta` map
+  (`SCHEMA_VERSION`, 1 today). A fresh workspace is stamped after its first sync (so an empty local
+  document is never stamped before the server's state arrives); a document with data and no stamp is
+  version 0 and is migrated when it opens, from a stored snapshot or after the first sync.
+- Migrations are an append-only ordered list (`MIGRATIONS`), one per version, applied in a single
+  transaction (origin `teams:migration`) and idempotent: they only fill what is missing. Several
+  clients may migrate at once; they write the same values and Yjs converges. 0 to 1 gives channel
+  and message rows the fields v1 treats as always present (`topic`, `kind`, `archived`,
+  `createdAt`, `deleted`, `ts`). A message without `mentions` is valid in v1 and is not rewritten.
+  The legacy presence `availability` field lives in awareness, not in the document, so it stays a
+  wire fallback (`statusFromWire`), not a migration. Readers keep tolerating missing fields even
+  after migration, because peers are untrusted.
+- A client that sees a **newer** stamp (or one it cannot read) does not write.
+  `TeamsState.schema` becomes `{ state: 'unsupported-schema', found, supported }`, the client emits
+  a notice, no seed, roster entry, migration or local snapshot is written, and the transport drops
+  sync step 2 and update messages (`readOnlyTransport`) while still asking for state and showing
+  presence. Local edits a UI still lets the person make are not sent; the UI should disable editing
+  from `state.schema`. Private chat documents are not stamped separately: they follow the
+  workspace.
+- **When a change needs a bump:** a field that old readers would misread or drop (a new meaning for
+  an existing key, a renamed key or map, a changed value shape, a removed field a reader relies
+  on), or a rule that makes previously valid rows invalid. **No bump:** adding an optional field or
+  a new map that old clients ignore, adding a UI string, tightening validation of new writes only.
+- **How a migration ships:** add `{ version: N + 1, name, up }` and raise `SCHEMA_VERSION` in the
+  same commit, with a test that migrates a document written by the previous release, and say so in
+  the commit. A release that raises the version is a deliberate event: older clients become
+  read-only on migrated workspaces, so announce it. Never edit or reorder a shipped migration;
+  there is no downgrade.
+
+### Protocol version and room names (`protocol.ts`)
+
+- `PROTOCOL_VERSION` (1) rides as the `proto` query parameter on every sync and signaling
+  connection. A server may refuse a client with an unsupported or missing value (a missing one is a
+  client older than this parameter); the reference server does not check it yet. `protocolOfUrl`
+  reads it back.
+- Room names are pinned by tests: a workspace room is the workspace id (1 to 128 of `[\w-]`); a chat
+  room is `chat-<16 hex of the workspace id>-<chat id>`; a 1:1 chat id is `dm-<16 hex of the sorted
+  pair>`; a call room is `call-<workspace>-<channel>`; all are cut to 128. The hash (`shortHash`) is
+  duplicated in the reference server's `chat-access.mjs`; a test keeps them equal. Changing any of
+  this orphans stored rooms and needs a protocol bump.
+- The protocol version changes only when an old client or server could misread the other: room
+  naming, required query parameters, or message framing. Additive parameters and new optional
+  document fields do not change it.
+
+### Version skew
+
+- **New client, old server:** works; the server ignores `proto`. A new client on an old document
+  migrates it for everyone.
+- **Old client, new document:** read-only (`unsupported-schema`), never corrupting.
+- **Old client, new server:** the server must keep accepting a missing `proto` until it deliberately
+  drops those clients, and should say so in its changelog.
+- Deploy the app and the server from the same release when you can.
+
+### Server-side authorship (`validate-update.ts`)
+
+Author checks in the client are not enforcement. `validateTeamsUpdate(doc, update, actor)` lets a
+server check a Yjs update before applying it: it applies the update to a scratch copy and compares
+every touched message row and reaction with the room document, which it never changes. For a
+non-moderator actor (the user id of the **signed session**, never a claimed one):
+
+- a new row in a `teams:messages:<channel>` map must have `authorId` equal to the actor;
+- an existing row may be edited, soft-deleted or removed only by its author, and `authorId` cannot
+  change; replacing a row counts as editing it;
+- a `teams:reactions` key `message|emoji|user` may be added or removed only with `user` equal to
+  the actor;
+- a moderator may additionally set `deleted` to true on any row (and change nothing else), remove a
+  row, and remove a reaction, but never write in somebody else's name.
+
+`validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
+step 2 and update are checked, everything else passes). To wire it into the reference server, call
+it in the `ws.on('message')` handler of `handleSync` before `syncProtocol.readSyncMessage`, with the
+room's document and the session user (`sessionSockets.get(ws)`); on `{ ok: false }` log the
+violations, close the socket (1008) and do not apply the message, so the client resyncs instead of
+diverging. **Wiring is not done in the reference server**: it is a standalone `.mjs` package
+without a dependency on `ooxml-core`, it has no moderator role, and without signed sessions the user
+is only a claim, so the check would not be authoritative.
+
+What it does not cover, honestly:
+
+- **Identity is only as good as the actor you pass.** Without accounts the actor is a claim.
+- **Yjs client ids are not checked.** Content is validated, not which client id wrote a struct; a
+  hostile client can still insert structs under another client's id and disturb that client's later
+  updates.
+- Everything outside message rows and reactions: channel creation and archiving, tabs (the creator
+  checks are client-side), pins, meetings, the roster, the chat directory and the chat member map.
+- Message content and size (use the server's size limits), and who may post in which channel.
+- **Updates that depend on missing state** (Yjs would hold them pending and apply them later
+  unchecked) are refused as `incomplete-update`. A client that relays another person's unsynced rows
+  has its whole update refused: Yjs updates cannot be filtered struct by struct.
+- Concurrent writes of the same tab discussion root (`tab:...`) are allowed as the writer, because
+  clients create it with a deterministic id; so any member can overwrite a tab's boilerplate root.
+- Cost: each check copies the room state, so it is O(document size) per update. Cache or rate-limit
+  on busy rooms.
+
 ## Honest limits
 
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read
   them. Media is DTLS-SRTP between peers (or to your TURN relay, which cannot decrypt it).
 - **Authorization is the server's job.** The `role` and author checks here are client-side; a
-  hostile client can write anything the server accepts. Treat the server as the trust boundary.
+  hostile client can write anything the server accepts. `validateTeamsUpdate` can enforce message
+  authorship on the server but is not wired into the reference server yet (see "Compatibility
+  policy"). Treat the server as the trust boundary.
 - **Mesh calls scale to a handful of people**, not a webinar.
 - A sync server that never compacts will grow with history; the reference server stores one
   snapshot per room.
