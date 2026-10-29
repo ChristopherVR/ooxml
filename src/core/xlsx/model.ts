@@ -246,6 +246,9 @@ export interface RowInfo {
 	styleId?: number;
 	outlineLevel?: number;
 	collapsed?: boolean;
+	/** The row has a thick top / bottom border (a rendering hint Excel writes; kept as read). */
+	thickTop?: boolean;
+	thickBot?: boolean;
 }
 
 export interface ColumnInfo {
@@ -829,6 +832,12 @@ export interface DefinedName {
 	localSheet?: number;
 	hidden?: boolean;
 	comment?: string;
+	/**
+	 * Attributes of the name the model does not interpret (`function`, `vbProcedure`, `xlm`,
+	 * `customMenu`, `description`, `help`, `statusBar`, `shortcutKey`, `functionGroupId`,
+	 * `publishToServer`, `workbookParameter`), kept so a macro or function name saves unchanged.
+	 */
+	extra?: Record<string, string>;
 }
 
 /** The workbook theme's colour palette and fonts, resolved for rendering. */

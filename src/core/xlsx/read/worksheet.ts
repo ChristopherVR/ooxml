@@ -1,3 +1,4 @@
+import { WORKSHEET_CHILD_ORDER } from './worksheet-children';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { LiteDeclinedError, elements, relAttr, type XmlElement } from '../../xml/index';
 import { parseRange } from '../address';
@@ -66,6 +67,13 @@ const MODELLED = new Set([
 	'tableParts',
 	'scenarios',
 ]);
+
+/** An element outside the worksheet schema cannot be written back in place, so it is reported. */
+function reportUnplaceable(ctx: SheetContext, sheet: string, element: string): void {
+	ctx.warn(
+		`Sheet "${sheet}": the element "${element}" is not part of the worksheet schema and is dropped on save.`,
+	);
+}
 
 function keep(sheet: Worksheet, key: string, xml: string): void {
 	const list = sheet.preserved.get(key);
@@ -180,9 +188,15 @@ function readWorksheet(
 		else if (!byName.has(local)) byName.set(local, node);
 		if ((SNAPSHOT_ELEMENTS as readonly string[]).includes(local))
 			keep(sheet, snapshotKey(local), outerXml(node));
-		else if (local === 'AlternateContent')
-			keep(sheet, alternateContentName(node) ?? local, selfContainedXml(node));
-		else if (!MODELLED.has(local)) keep(sheet, local, selfContainedXml(node));
+		else if (local === 'AlternateContent') {
+			const inner = alternateContentName(node);
+			if (!WORKSHEET_CHILD_ORDER.includes(inner ?? local))
+				reportUnplaceable(ctx, name, inner ?? local);
+			keep(sheet, inner ?? local, selfContainedXml(node));
+		} else if (!MODELLED.has(local)) {
+			if (!WORKSHEET_CHILD_ORDER.includes(local)) reportUnplaceable(ctx, name, local);
+			keep(sheet, local, selfContainedXml(node));
+		}
 	}
 	const sheetPr = byName.get('sheetPr');
 	const tabColor = readTabColor(sheetPr, ctx.palette);

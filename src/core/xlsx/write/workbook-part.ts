@@ -111,8 +111,14 @@ export function workbookXml(
 			: '';
 		out += `<workbookProtection${copyAttrs(kept.get('workbookProtection'), skip)}${modern}${password} lockStructure="1"/>`;
 	}
-	const view = kept.get('bookViews') ? elements(kept.get('bookViews') as XmlElement)[0] : undefined;
-	out += `<bookViews><workbookView${copyAttrs(view, ['activeTab', 'firstSheet', 'xr2:uid'])}${activeTab ? ` activeTab="${activeTab}"` : ''}/></bookViews>`;
+	const views = kept.get('bookViews') ? elements(kept.get('bookViews') as XmlElement) : [];
+	// The first window follows the model's active sheet; further windows are kept verbatim.
+	const first = views[0];
+	const otherWindows = views
+		.slice(1)
+		.map((view) => inlineFragment(selfContainedXml(view)))
+		.join('');
+	out += `<bookViews><workbookView${copyAttrs(first, ['activeTab', 'firstSheet', 'xr2:uid'])}${activeTab ? ` activeTab="${activeTab}"` : ''}/>${otherWindows}</bookViews>`;
 	out += `<sheets>${sheets
 		.map(
 			(sheet) =>
@@ -125,7 +131,7 @@ export function workbookXml(
 		out += `<definedNames>${names
 			.map(
 				(name) =>
-					`<definedName${attrs({ name: name.name, comment: name.comment, localSheetId: name.localSheet, hidden: name.hidden || undefined })}>${escapeText(addFuturePrefixes(name.formula))}</definedName>`,
+					`<definedName${attrs({ name: name.name, comment: name.comment, localSheetId: name.localSheet, hidden: name.hidden || undefined, ...name.extra })}>${escapeText(addFuturePrefixes(name.formula))}</definedName>`,
 			)
 			.join('')}</definedNames>`;
 	const calc = kept.get('calcPr');

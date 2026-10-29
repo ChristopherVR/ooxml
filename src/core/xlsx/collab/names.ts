@@ -11,6 +11,8 @@ export interface NameEntry {
 	k?: string;
 	h?: 1;
 	c?: string;
+	/** Attributes the model keeps without interpreting them (see `DefinedName.extra`). */
+	x?: Record<string, string>;
 }
 
 export const nameKey = (name: string, sheetKey: string | undefined): string =>
@@ -30,6 +32,7 @@ export function writeNames(
 		if (scope !== undefined) entry.k = scope;
 		if (name.hidden) entry.h = 1;
 		if (name.comment !== undefined) entry.c = name.comment;
+		if (name.extra) entry.x = { ...name.extra };
 		const key = nameKey(name.name, scope);
 		keys.add(key);
 		setIfChanged(names, key, entry);
@@ -55,6 +58,12 @@ export function readNames(
 		}
 		if (raw.h === 1) name.hidden = true;
 		if (typeof raw.c === 'string') name.comment = raw.c;
+		if (isRecord(raw.x)) {
+			const extra = Object.fromEntries(
+				Object.entries(raw.x).filter((e): e is [string, string] => typeof e[1] === 'string'),
+			);
+			if (Object.keys(extra).length) name.extra = extra;
+		}
 		out.push(name);
 	}
 	return out;

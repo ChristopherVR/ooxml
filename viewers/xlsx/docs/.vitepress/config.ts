@@ -91,6 +91,7 @@ export default defineConfig({
 				text: 'Project Status',
 				items: [
 					{ text: 'Features and limitations', link: '/features' },
+					{ text: 'Preservation guarantee', link: '/preservation' },
 					{ text: 'Collaboration', link: '/collaboration' },
 					{ text: 'Package releases', link: '/releasing' },
 					{

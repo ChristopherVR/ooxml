@@ -117,6 +117,8 @@ function rowAttrs(ctx: CellWriteContext, row: number, info: RowInfo | undefined)
 		customHeight: info?.customHeight || undefined,
 		outlineLevel: info?.outlineLevel || undefined,
 		collapsed: info?.collapsed || undefined,
+		thickTop: info?.thickTop || undefined,
+		thickBot: info?.thickBot || undefined,
 	});
 }
 

@@ -37,6 +37,8 @@ export interface LineEntry {
 	bf?: 1;
 	filtered?: 0 | 1;
 	manual?: 1;
+	tt?: 1;
+	tb?: 1;
 }
 
 type KeyOf = (styleId: number | undefined) => string | undefined;
@@ -141,6 +143,8 @@ export function encodeLine(info: RowInfo | ColumnInfo, keyOf: KeyOf, column = fa
 	if (info.outlineLevel) entry.ol = info.outlineLevel;
 	if (info.collapsed) entry.c = 1;
 	if (column && (info as ColumnInfo).bestFit) entry.bf = 1;
+	if (!column && (info as RowInfo).thickTop) entry.tt = 1;
+	if (!column && (info as RowInfo).thickBot) entry.tb = 1;
 	return entry;
 }
 
@@ -165,6 +169,8 @@ export function decodeRow(raw: unknown, idOf: IdOf): RowInfo | undefined {
 	if (styleId) info.styleId = styleId;
 	if (entry.ol) info.outlineLevel = entry.ol;
 	if (entry.c === 1) info.collapsed = true;
+	if (entry.tt === 1) info.thickTop = true;
+	if (entry.tb === 1) info.thickBot = true;
 	return info;
 }
 

@@ -9,6 +9,21 @@ import { stripFuturePrefixes } from './formula-text';
 import { readModernHash } from './password-hash';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
+/** Defined name attributes the model keeps without interpreting them. */
+export const NAME_EXTRA_ATTRIBUTES = [
+	'function',
+	'vbProcedure',
+	'xlm',
+	'customMenu',
+	'description',
+	'help',
+	'statusBar',
+	'shortcutKey',
+	'functionGroupId',
+	'publishToServer',
+	'workbookParameter',
+] as const;
+
 export interface SheetEntry {
 	name: string;
 	sheetId: number;
@@ -58,6 +73,12 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 		if (boolAttr(node, 'hidden')) name.hidden = true;
 		const comment = att(node, 'comment');
 		if (comment) name.comment = comment;
+		const extra: Record<string, string> = {};
+		for (const key of NAME_EXTRA_ATTRIBUTES) {
+			const value = att(node, key);
+			if (value !== undefined) extra[key] = value;
+		}
+		if (Object.keys(extra).length) name.extra = extra;
 		if (name.name) definedNames.push(name);
 	}
 	const view = xFirst(xFirst(root, 'bookViews'), 'workbookView');

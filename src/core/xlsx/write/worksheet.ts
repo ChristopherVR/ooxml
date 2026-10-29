@@ -27,52 +27,10 @@ import {
 	sheetViewsXml,
 } from './sheet-props';
 import { scenariosXml } from './scenarios';
+import { WORKSHEET_CHILD_ORDER as ORDER } from '../read/worksheet-children';
 import { XML_HEADER, attrs, inlineFragment } from './xml-out';
 
 export type { SaveContext } from './sheet-parts';
-
-/** CT_Worksheet child order; kept elements are slotted in by local name. */
-const ORDER = [
-	'sheetPr',
-	'dimension',
-	'sheetViews',
-	'sheetFormatPr',
-	'cols',
-	'sheetData',
-	'sheetCalcPr',
-	'sheetProtection',
-	'protectedRanges',
-	'scenarios',
-	'autoFilter',
-	'sortState',
-	'dataConsolidate',
-	'customSheetViews',
-	'mergeCells',
-	'phoneticPr',
-	'conditionalFormatting',
-	'dataValidations',
-	'hyperlinks',
-	'printOptions',
-	'pageMargins',
-	'pageSetup',
-	'headerFooter',
-	'rowBreaks',
-	'colBreaks',
-	'customProperties',
-	'cellWatches',
-	'ignoredErrors',
-	'smartTags',
-	'drawing',
-	'legacyDrawing',
-	'legacyDrawingHF',
-	'drawingHF',
-	'picture',
-	'oleObjects',
-	'controls',
-	'webPublishItems',
-	'tableParts',
-	'extLst',
-];
 
 /** Relationship types the writer regenerates from the model instead of keeping. */
 const REGENERATED = new Set<string>([

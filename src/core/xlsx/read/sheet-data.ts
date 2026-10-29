@@ -166,6 +166,8 @@ function readRowInfo(ctx: CellContext, rowEl: XmlElement): RowInfo | undefined {
 	const outline = numAttr(rowEl, 'outlineLevel');
 	if (outline) info.outlineLevel = outline;
 	if (boolAttr(rowEl, 'collapsed')) info.collapsed = true;
+	if (boolAttr(rowEl, 'thickTop')) info.thickTop = true;
+	if (boolAttr(rowEl, 'thickBot')) info.thickBot = true;
 	return Object.keys(info).length ? info : undefined;
 }
 
