@@ -3,7 +3,9 @@
 // then text/html (a table), then text/plain. Keyboard copy/paste use the native clipboard events
 // of the grid's focus sink, which need no permission; menu commands use the async Clipboard API.
 import {
+	CUT_MULTIPLE,
 	parseHtmlTable,
+	pasteAreas,
 	type CellRange,
 	type ClipboardPayload,
 	type PasteRequest,
@@ -33,7 +35,6 @@ export interface GridClipboard {
 	destroy(): void;
 }
 
-const MULTIPLE = "This action won't work on multiple selections.";
 const normalize = (text: string): string => text.replace(/\r\n/g, '\n').replace(/\n+$/, '');
 
 export function createGridClipboard(host: ClipboardHost): GridClipboard {
@@ -57,7 +58,7 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 		let payload: ClipboardPayload;
 		try {
 			// Several areas copy when they share rows or columns (Excel's rule); they cannot be cut.
-			if (ranges.length > 1 && cut) throw new RangeError(MULTIPLE);
+			if (ranges.length > 1 && cut) throw new RangeError(CUT_MULTIPLE);
 			payload =
 				ranges.length > 1
 					? session.copyAreas(sheet, ranges)
@@ -87,13 +88,13 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 		const session = ctx.session();
 		const at = lastRange();
 		if (!session || !at || ctx.readOnly()) return false;
-		if (ctx.selection.get().ranges.length > 1) {
-			ctx.toast(ctx.t("This action won't work on multiple selections."), 'warning');
-			return false;
-		}
+		const areas = ctx.selection.get().ranges;
 		try {
 			const wasCut = typeof payload !== 'string' && payload.cut;
-			const range = session.paste(ctx.activeSheet(), at, payload, mode);
+			const range =
+				areas.length > 1
+					? pasteAreas(session, ctx.activeSheet(), areas, payload, mode)
+					: session.paste(ctx.activeSheet(), at, payload, mode);
 			host.selectRange(range);
 			if (typeof payload !== 'string' && wasCut) {
 				internal = { ...payload, cut: false };

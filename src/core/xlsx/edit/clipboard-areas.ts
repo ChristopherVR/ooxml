@@ -2,16 +2,30 @@
 // every area has the same rows (side by side) or the same columns (stacked), and then puts the
 // areas next to each other on the clipboard with the gaps between them dropped, in sheet order;
 // any other shape is refused with "This action won't work on multiple selections."
-// Cut of several areas, validations and conditional formats of the areas are not carried.
+// Validations and conditional formats of the areas travel with their ranges moved the same way.
+// Excel refuses to cut several areas (see CUT_MULTIPLE).
 import { type CellRange, normalizeRange, rangesIntersect } from '../address';
 import type { Workbook } from '../model';
-import { copyRange } from './clipboard';
+import { cellsFromText, copyRange } from './clipboard';
 import { toHtml } from './clipboard-html';
 import { toTsv } from './clipboard-text';
+import { rewriteConditionalRule } from './conditional-formulas';
 import { moveFormula } from './fill';
-import type { ClipboardCell, ClipboardCells, ClipboardPayload } from './types';
+import { moveValidationFormula } from './validation-ranges';
+import { resolvePasteOptions } from './paste-options';
+import type {
+	ClipboardCell,
+	ClipboardCells,
+	ClipboardPayload,
+	EditSession,
+	PasteRequest,
+} from './types';
 
 export const MULTIPLE_SELECTIONS = "This action won't work on multiple selections.";
+
+/** Excel's message for cutting several areas. */
+export const CUT_MULTIPLE =
+	"This can't be done on a multiple range selection. Select a single range and try again.";
 
 /** How the areas line up: `across` share their rows, `down` share their columns. */
 export function areaLayout(ranges: readonly CellRange[]): 'across' | 'down' | undefined {
@@ -56,6 +70,8 @@ export function copyAreas(
 	const cells: ClipboardCells = { rows, cols, data, merges: [] };
 	const comments: NonNullable<ClipboardCells['comments']> = [];
 	const hyperlinks: NonNullable<ClipboardCells['hyperlinks']> = [];
+	const validations: NonNullable<ClipboardCells['dataValidations']> = [];
+	const formats: NonNullable<ClipboardCells['conditionalFormats']> = [];
 	const widths: number[] = [];
 	let offset = 0;
 	for (const { area, copy } of parts) {
@@ -90,11 +106,31 @@ export function copyAreas(
 				...structuredClone(h),
 				range: { start: at(h.range.start), end: at(h.range.end) },
 			});
+		const moveRange = (r: CellRange): CellRange => ({ start: at(r.start), end: at(r.end) });
+		const fix = (f: string): string =>
+			gap === 0
+				? f
+				: across
+					? moveValidationFormula(f, 0, -gap)
+					: moveValidationFormula(f, -gap, 0);
+		for (const v of copy.cells.dataValidations ?? []) {
+			const next = { ...structuredClone(v), ranges: v.ranges.map(moveRange) };
+			if (next.formula1 !== undefined) next.formula1 = fix(next.formula1);
+			if (next.formula2 !== undefined) next.formula2 = fix(next.formula2);
+			validations.push(next);
+		}
+		for (const f of copy.cells.conditionalFormats ?? []) {
+			const next = { ...structuredClone(f), ranges: f.ranges.map(moveRange) };
+			if (gap !== 0) for (const rule of next.rules) rewriteConditionalRule(rule, fix);
+			formats.push(next);
+		}
 		if (across) widths.push(...(copy.cells.columnWidths ?? []));
 		offset += across ? copy.cells.cols : copy.cells.rows;
 	}
 	if (comments.length) cells.comments = comments;
 	if (hyperlinks.length) cells.hyperlinks = hyperlinks;
+	if (validations.length) cells.dataValidations = validations;
+	if (formats.length) cells.conditionalFormats = formats;
 	cells.columnWidths = across ? widths : (first.copy.cells.columnWidths ?? []);
 	cells.columnWidthRows = rows;
 	cells.source = {
@@ -109,4 +145,36 @@ export function copyAreas(
 		html: toHtml(cells, workbook.theme),
 		cells,
 	};
+}
+
+/**
+ * Pastes a payload into every area of a multi-area selection as one undo step (Excel 16 pastes
+ * the block into each area: a single cell receives it at its top-left, a larger area must hold
+ * whole copies). A cut cannot go into several areas; nothing is written if any area does not fit.
+ */
+export function pasteAreas(
+	session: EditSession,
+	sheet: number,
+	ranges: readonly CellRange[],
+	payload: ClipboardPayload | string,
+	mode: PasteRequest = 'all',
+): CellRange {
+	const areas = ranges.map(normalizeRange);
+	if (typeof payload !== 'string' && payload.cut) throw new RangeError(CUT_MULTIPLE);
+	const clip =
+		typeof payload === 'string' ? cellsFromText(session.workbook, payload) : payload.cells;
+	const turned = resolvePasteOptions(mode).transpose;
+	const height = turned ? clip.cols : clip.rows;
+	const width = turned ? clip.rows : clip.cols;
+	for (const area of areas) {
+		const rows = area.end.row - area.start.row + 1;
+		const cols = area.end.col - area.start.col + 1;
+		if ((rows > 1 || cols > 1) && height > 0 && width > 0 && (rows % height || cols % width))
+			throw new RangeError('The copy and paste areas are not compatible sizes.');
+	}
+	let last = areas[0];
+	session.batch('Paste', () => {
+		for (const area of areas) last = session.paste(sheet, area, payload, mode);
+	});
+	return last ?? { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } };
 }

@@ -81,6 +81,8 @@ export const grid: Record<string, string> = {
 	'The insert area extends beyond the sheet.':
 		'Der einzufügende Bereich reicht über das Blatt hinaus.',
 	'The paste area extends beyond the sheet.': 'Der Einfügebereich reicht über das Blatt hinaus.',
+	"This can't be done on a multiple range selection. Select a single range and try again.":
+		'Dies ist bei einer Mehrfachbereichsauswahl nicht möglich. Wählen Sie einen einzelnen Bereich aus, und versuchen Sie es erneut.',
 	"This action won't work on multiple selections.":
 		'Diese Aktion funktioniert nicht bei Mehrfachauswahlen.',
 	'This chart could not be displayed.': 'Dieses Diagramm konnte nicht angezeigt werden.',

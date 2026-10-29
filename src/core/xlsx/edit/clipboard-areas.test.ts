@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseRange } from '../address';
 import { getCell } from '../cells';
 import { createWorkbook } from '../workbook';
+import { CUT_MULTIPLE, pasteAreas } from './clipboard-areas';
 import { createEditSession } from './session';
 
 const R = (ref: string) => {
@@ -57,6 +58,45 @@ describe('multi-area copy (checked against Excel 16)', () => {
 		const sheet = wb.sheets[0]!;
 		expect(getCell(sheet, 0, 13)?.formula).toBe('N2');
 		expect(getCell(sheet, 0, 14)?.formula).toBe('O2');
+	});
+});
+
+describe('multi-area paste, cut and annotations', () => {
+	it('pastes a block into every area as one undo step', () => {
+		const { s, at } = sheetWith();
+		const payload = s.copy(0, R('A1:B1'));
+		pasteAreas(s, 0, [R('H1'), R('H3'), R('J1:M1')], payload);
+		expect([at(0, 7), at(0, 8), at(2, 7), at(2, 8), at(0, 9), at(0, 10), at(0, 11)]).toEqual([
+			11, 12, 11, 12, 11, 12, 11,
+		]);
+		s.undo();
+		expect(at(0, 7)).toBeNull();
+		expect(at(2, 7)).toBeNull();
+	});
+
+	it('refuses areas that do not hold whole copies and writes nothing', () => {
+		const { s, at } = sheetWith();
+		const payload = s.copy(0, R('A1:B1'));
+		expect(() => pasteAreas(s, 0, [R('H1'), R('J1:L1')], payload)).toThrow('not compatible');
+		expect(at(0, 7)).toBeNull();
+	});
+
+	it('refuses to cut into several areas with the Excel message', () => {
+		const { s } = sheetWith();
+		expect(() => pasteAreas(s, 0, [R('H1'), R('H3')], s.cut(0, R('A1')))).toThrow(CUT_MULTIPLE);
+	});
+
+	it('carries validations of every area', () => {
+		const { wb, s } = sheetWith();
+		s.setDataValidation(0, { ranges: [], type: 'list', formula1: '"x,y"' }, R('A1'));
+		s.setDataValidation(0, { ranges: [], type: 'list', formula1: '"p,q"' }, R('C1'));
+		s.paste(0, { row: 5, col: 0 }, s.copyAreas(0, [R('A1'), R('C1')]));
+		const at = (col: number) =>
+			wb.sheets[0]?.dataValidations.find((v) =>
+				v.ranges.some((r) => r.start.row === 5 && r.start.col === col),
+			)?.formula1;
+		expect(at(0)).toBe('"x,y"');
+		expect(at(1)).toBe('"p,q"');
 	});
 });
 

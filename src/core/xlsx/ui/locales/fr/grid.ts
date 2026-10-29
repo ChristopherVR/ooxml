@@ -82,6 +82,8 @@ export const grid: Record<string, string> = {
 		'La zone d’insertion dépasse les limites de la feuille.',
 	'The paste area extends beyond the sheet.':
 		'La zone de collage dépasse les limites de la feuille.',
+	"This can't be done on a multiple range selection. Select a single range and try again.":
+		'Impossible sur une sélection de plages multiples. Sélectionnez une seule plage et réessayez.',
 	"This action won't work on multiple selections.":
 		'Cette action ne fonctionne pas sur des sélections multiples.',
 	'This chart could not be displayed.': "Ce graphique n'a pas pu être affiché.",

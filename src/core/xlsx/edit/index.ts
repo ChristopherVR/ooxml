@@ -12,6 +12,7 @@ export { parseTsv, toTsv } from './clipboard-text';
 export { parseHtmlTable } from './clipboard-html-parse';
 export { toHtml } from './clipboard-html';
 export { cellsFromText } from './clipboard';
+export { CUT_MULTIPLE, MULTIPLE_SELECTIONS, areaLayout, pasteAreas } from './clipboard-areas';
 export { resolvePasteOptions } from './paste-options';
 export { currentRegion } from './filter';
 export { mergeWouldDiscard } from './merge';

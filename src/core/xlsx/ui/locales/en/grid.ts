@@ -78,6 +78,8 @@ export const grid: Record<string, string> = {
 		"The browser didn't allow access to the clipboard. Use Ctrl+V to paste.",
 	'The insert area extends beyond the sheet.': 'The insert area extends beyond the sheet.',
 	'The paste area extends beyond the sheet.': 'The paste area extends beyond the sheet.',
+	"This can't be done on a multiple range selection. Select a single range and try again.":
+		"This can't be done on a multiple range selection. Select a single range and try again.",
 	"This action won't work on multiple selections.":
 		"This action won't work on multiple selections.",
 	'This chart could not be displayed.': 'This chart could not be displayed.',

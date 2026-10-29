@@ -77,6 +77,8 @@ export const grid: Record<string, string> = {
 		'浏览器不允许访问剪贴板。请使用 Ctrl+V 粘贴。',
 	'The insert area extends beyond the sheet.': '插入区域超出了工作表范围。',
 	'The paste area extends beyond the sheet.': '粘贴区域超出了工作表范围。',
+	"This can't be done on a multiple range selection. Select a single range and try again.":
+		'无法对多重选定区域执行此操作。请选择单个区域，然后重试。',
 	"This action won't work on multiple selections.": '此操作不适用于多重选择。',
 	'This chart could not be displayed.': '无法显示此图表。',
 	'This link was not opened because its address is not allowed.':
