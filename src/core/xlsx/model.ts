@@ -4,6 +4,7 @@ import type { DiagramLayoutSource } from '../diagram/layout-preview';
 import type { ThemeFormatScheme } from '../drawingml/format-scheme';
 import type { DiagramHostNode } from '../diagram/edit/node-edit';
 import type { CellAddress, CellRange } from './address';
+import type { FormControlObject, ShapeNode } from './model-shapes';
 import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
 import type {
 	ChartSummary,
@@ -589,6 +590,8 @@ export interface UnsupportedDrawingObject {
 	description: string;
 	/** The anchor element's XML as read, written back verbatim when the drawing is regenerated. */
 	sourceXml?: string;
+	/** A DrawingML shape, connector or group the painter draws (saved from `sourceXml`). */
+	shape?: ShapeNode;
 	/**
 	 * An extended chart (waterfall, histogram) the chart painter draws: its summary, read for
 	 * display only. The frame is still saved from `sourceXml`.
@@ -678,6 +681,7 @@ export type DrawingObject =
 	| ChartObject
 	| SmartArtObject
 	| SlicerFrameObject
+	| FormControlObject
 	| UnsupportedDrawingObject;
 
 /** `sheetView/@view`: absent means Normal. */
@@ -937,3 +941,4 @@ export type * from './model-sparklines';
 export type * from './model-pivots';
 export type * from './model-slicers';
 export type * from './model-whatif';
+export type * from './model-shapes';

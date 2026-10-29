@@ -1,3 +1,4 @@
+import { refreshFormControlParts } from './form-control';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { NS } from '../../xml/index';
 import { formatRange } from '../address';
@@ -121,6 +122,7 @@ export function writeWorksheet(
 	);
 	blocks.set('headerFooter', page.headerFooter);
 	blocks.set('drawing', writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing));
+	refreshFormControlParts(writer, ctx.workbook, sheet);
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);
 	ctx.pivots?.writeSheet(writer, sheet, partName, rels);

@@ -8,6 +8,8 @@ import { readChartPaletteId, readChartStylePart } from './chart-colors';
 import type { SourceIndex } from './package';
 import { readSlicerFrame } from '../slicer/frame';
 import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
+import { readFormControlFrame } from './form-control';
+import { readShapeNode } from './shape';
 import { att, selfContainedXml } from './xml-util';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);
@@ -88,6 +90,11 @@ export function parseDrawing(
 	const rels = source.rels(partName);
 	const out: DrawingObject[] = [];
 	for (const anchorEl of elements(root)) {
+		if (anchorEl.localName === 'AlternateContent') {
+			const control = readFormControlFrame(anchorEl, readAnchor);
+			if (control) out.push(control);
+			continue;
+		}
 		if (!['twoCellAnchor', 'oneCellAnchor', 'absoluteAnchor'].includes(anchorEl.localName ?? ''))
 			continue;
 		const anchor = readAnchor(anchorEl);
@@ -181,7 +188,8 @@ export function parseDrawing(
 				continue;
 			}
 		}
-		out.push(unsupported(describe(content)));
+		const shape = readShapeNode(content);
+		out.push({ ...unsupported(describe(content)), ...(shape ? { shape } : {}) });
 	}
 	return out;
 }

@@ -15,7 +15,7 @@ export interface RefEvaluatorOptions {
 }
 
 /** The sheet and range of a single plain A1 reference, or undefined for anything else. */
-function plainReference(
+export function plainReference(
 	workbook: Workbook,
 	text: string,
 	sheetIndex: number,

@@ -106,6 +106,13 @@ export const GRID_CSS = `
 .xg-obj.xg-obj-sel{outline:1px solid #8a8a8a;outline-offset:0}
 .xg-obj .xg-grip{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #555;box-sizing:border-box;border-radius:50%}
 @media(pointer:coarse){.xg-grip::before{content:'';position:absolute;inset:-${(MIN_TOUCH_TARGET_PX - 8) / 2}px;touch-action:none}}
+.xg-obj.xg-shape svg{overflow:visible}
+.xg-obj.xg-formcontrol{overflow:visible}
+.xg-formcontrol svg [data-control-part]{pointer-events:auto;cursor:pointer}
+.xg-formcontrol[data-control-type=button] svg{pointer-events:auto}
+.xg-fc-pop{position:absolute;left:0;z-index:5;max-height:160px;overflow:auto;background:#fff;border:1px solid #7a7a7a;box-sizing:border-box;font:12px 'Segoe UI',Arial,sans-serif}
+.xg-fc-item{padding:2px 4px;cursor:pointer;white-space:nowrap}
+.xg-fc-item:hover,.xg-fc-on{background:#0078d7;color:#fff}
 .xg-obj-unsupported{background:repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 6px,#ececec 6px,#ececec 12px);border:1px dashed #aaa;
 	font-size:11px;color:#555;display:flex;align-items:center;justify-content:center;text-align:center}
 .xg-obj.xg-smartart{overflow:visible}

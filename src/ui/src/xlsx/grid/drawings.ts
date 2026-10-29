@@ -23,6 +23,7 @@ import type { GridView } from './grid-view';
 import { paintTimeline, periodAt, timelineOf } from './timeline';
 import { paintSlicer, slicerClickResult, slicerOf, type SlicerUiState } from './slicer';
 import { paintSmartArt } from './smartart';
+import { paintFormControl, paintShape, pressFormControl } from './shapes';
 import { selectionOfPeriods } from 'ooxml-core/xlsx';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
@@ -40,6 +41,9 @@ export class DrawingLayer {
 	#generation = 0;
 	#cancelDrag: (() => void) | undefined;
 	#slicerStates = new Map<string, SlicerUiState>();
+	/** Index of the form control drop-down whose list is open. */
+	#openDrop: number | undefined;
+	#closeDrop: (() => void) | undefined;
 
 	constructor(view: GridView) {
 		this.#view = view;
@@ -135,7 +139,8 @@ export class DrawingLayer {
 				if (node.parentNode !== parent) parent.append(node);
 				place(node, box.x, box.y, box.w, box.h);
 				const multi = drawing.kind === 'slicer' && this.#slicerState(drawing.name).multi;
-				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${multi}`;
+				const open = this.#openDrop === index;
+				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${multi}:${open}`;
 				if (node.xgSig !== sig) {
 					node.xgSig = sig;
 					this.#paint(node, drawing, box);
@@ -202,6 +207,10 @@ export class DrawingLayer {
 			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme, box, (part) =>
 				this.#url(part, imageContentType(part)),
 			);
+		} else if (drawing.kind === 'formControl') {
+			paintFormControl(view, node, drawing, box, this.#openDrop === Number(node.dataset.index));
+		} else if (drawing.kind === 'unsupported' && drawing.shape) {
+			paintShape(view, node, drawing.shape, box, `xs${view.sheetIndex()}_${node.dataset.index}_`);
 		} else if (drawing.chartEx) {
 			// An extended chart (waterfall, histogram) the core painter draws; the frame is read-only.
 			this.#paintChart(node, drawing.chartEx, box);
@@ -273,6 +282,18 @@ export class DrawingLayer {
 		const node = event.currentTarget as ObjectNode;
 		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
 		if (drawing.kind === 'timeline' && this.#pressTimeline(event, index, drawing, node)) return;
+		if (
+			drawing.kind === 'formControl' &&
+			pressFormControl(view, event, drawing, node, {
+				isOpen: () => this.#openDrop === index,
+				toggleOpen: (open) => this.#setOpen(open ? index : undefined),
+				refresh: () => {
+					this.invalidate();
+					this.render();
+				},
+			})
+		)
+			return;
 		const series = (event.target as Element).closest<SVGElement>('[data-chart-series]')?.dataset
 			.chartSeries;
 		node.xgSeriesHit = series === undefined ? undefined : Number(series);
@@ -284,7 +305,9 @@ export class DrawingLayer {
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();
-		if (view.ctx.readOnly() || !session) return;
+		// A control's anchor is kept as written (its shape sits in `mc:AlternateContent`), so it is
+		// selected but not moved or resized here.
+		if (view.ctx.readOnly() || !session || drawing.kind === 'formControl') return;
 		const grip = (event.target as Element).closest<HTMLElement>('[data-grip]')?.dataset.grip as
 			| ResizeHandleId
 			| undefined;
@@ -319,6 +342,24 @@ export class DrawingLayer {
 				place(node, origin.x, origin.y, origin.w, origin.h);
 			},
 		});
+	}
+
+	/** Opens or closes a form control drop-down list; a press anywhere else closes it. */
+	#setOpen(index: number | undefined): void {
+		if (this.#openDrop === index) return;
+		this.#closeDrop?.();
+		this.#closeDrop = undefined;
+		this.#openDrop = index;
+		if (index !== undefined) {
+			const doc = this.#view.doc;
+			const close = (event: Event) => {
+				if ((event.target as Element | null)?.closest?.('.xg-formcontrol')) return;
+				this.#setOpen(undefined);
+			};
+			doc.addEventListener('pointerdown', close, true);
+			this.#closeDrop = () => doc.removeEventListener('pointerdown', close, true);
+		}
+		this.render();
 	}
 
 	/** Runs an edit from a timeline or slicer control and reports a refusal as a toast. */
@@ -458,6 +499,7 @@ export class DrawingLayer {
 
 	destroy(): void {
 		this.#cancelDrag?.();
+		this.#closeDrop?.();
 		const win = viewOf(this.#view.root);
 		for (const url of this.#urls.values()) win?.URL?.revokeObjectURL?.(url);
 		this.#urls.clear();

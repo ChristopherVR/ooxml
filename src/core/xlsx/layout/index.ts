@@ -134,3 +134,24 @@ export * from './print-merges';
 export * from './page-view';
 export * from './page-break-view';
 export * from './header-footer-edit';
+export { shapeSvg, wrapShapeLine } from './shape-view';
+export { shapeColor } from './shape-paint';
+export { formControlSvg, type FormControlViewOptions } from './form-control-view';
+export {
+	applyControlAction,
+	controlBounds,
+	controlState,
+	controlValueAtFraction,
+	isInteractiveControl,
+	radioGroup,
+	type ControlState,
+	type FormControlAction,
+	type LinkedValue,
+} from './form-control-state';
+export {
+	controlLinkCell,
+	controlLinkedValue,
+	controlListItems,
+	controlStateIn,
+	type ControlCell,
+} from './form-control-link';

@@ -8,6 +8,7 @@ import { mergeComments, parseLegacyComments, parseThreadedComments } from './com
 import { readConditionalFormats, readDataValidations } from './conditional';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
+import { attachFormControls } from './form-control';
 import { parseDataXml } from './limits';
 import type { SourceIndex } from './package';
 import { readSheetData, type CellContext } from './sheet-data';
@@ -238,6 +239,7 @@ function readWorksheet(
 		const rel = ctx.source.rels(partName).get(relAttr(drawing, 'id') ?? '');
 		const target = rel ? ctx.source.target(partName, rel) : undefined;
 		if (target) sheet.drawings = parseDrawing(ctx.source, target, (m) => ctx.warn(m));
+		attachFormControls(ctx.source, partName, root, sheet, byName.get('legacyDrawing'));
 	}
 	readTables(ctx, partName, byName.get('tableParts'), sheet);
 	readComments(ctx, partName, sheet);

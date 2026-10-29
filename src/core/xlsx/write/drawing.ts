@@ -198,10 +198,12 @@ export const savedDrawingShape = (objects: readonly DrawingObject[]): unknown[] 
 					sourceXml: o.sourceXml,
 					...(isRewrittenSmartArt(o) ? { rewritten: true } : {}),
 				}
-			: o.kind === 'slicer' || o.kind === 'timeline'
-				? // A frame whose slicer is not modelled is the same kept anchor as the placeholder.
-					{ kind: 'unsupported', anchor: o.anchor, description: o.kind, sourceXml: o.sourceXml }
-				: o,
+			: o.kind === 'formControl'
+				? { kind: o.kind, anchor: o.anchor, shapeId: o.shapeId, sourceXml: o.sourceXml }
+				: o.kind === 'slicer' || o.kind === 'timeline'
+					? // A frame whose slicer is not modelled is the same kept anchor as the placeholder.
+						{ kind: 'unsupported', anchor: o.anchor, description: o.kind, sourceXml: o.sourceXml }
+					: o,
 	);
 
 /**
@@ -269,6 +271,11 @@ export function writeDrawing(
 				cacheContext,
 			);
 			body += anchorXml(object.anchor, frame);
+			continue;
+		}
+		if (object.kind === 'formControl') {
+			// The control shape sits inside `mc:AlternateContent`; its anchor is not re-written.
+			body += object.sourceXml;
 			continue;
 		}
 		if (object.kind === 'unsupported' && object.chartExSpace && object.chartExPartName) {
