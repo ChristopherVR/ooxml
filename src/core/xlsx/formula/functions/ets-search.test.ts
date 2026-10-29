@@ -23,19 +23,24 @@ describe('chooseSmoothing', () => {
 		expect(chooseSmoothing(12, 0, bowl(0.12)).alpha).toBe(0.126);
 	});
 
-	it('moves beta to alpha - 0.001 only on 8 to 16 points', () => {
-		const wantsBeta = bowl(0.5, 0.499);
+	it('moves beta to alpha - 0.001 only where the cost falls a lot', () => {
+		const wantsBeta = (p: Smoothing): number =>
+			1 + 100 * ((p.alpha - 0.5) ** 2 + (p.beta - 0.499) ** 2);
 		expect(chooseSmoothing(12, 0, wantsBeta).beta).toBeCloseTo(0.499, 9);
-		expect(chooseSmoothing(30, 0, wantsBeta).beta).toBe(LOW);
+		expect(chooseSmoothing(30, 0, wantsBeta).beta).toBeCloseTo(0.499, 9);
+		// A small gain is not enough: Excel keeps the lowest beta.
+		const slight = (p: Smoothing): number => 1000 + (p.beta - LOW) ** 2 - 20 * p.beta * p.alpha;
+		expect(chooseSmoothing(30, 0, slight).beta).toBe(LOW);
 	});
 
-	it('falls back to the last value plus slope only when alpha lands on 0.998 on 8 to 16 points', () => {
-		const top = (p: Smoothing): number => 1 + 1000 * (p.alpha - 0.999) ** 2 + (p.beta - LOW) ** 2;
-		const short = chooseSmoothing(12, 0, top);
-		expect([short.alpha, short.beta, short.drift]).toEqual([0.998, LOW, true]);
-		// Beyond 16 points 0.998 is not taken: 0.9 stays.
-		const long = chooseSmoothing(30, 0, top);
-		expect([long.alpha, long.drift]).toEqual([0.9, false]);
+	it('takes alpha 0.998 only when it clearly beats 0.9, and then forecasts from the last value', () => {
+		const slightly = (p: Smoothing): number => 1 + 0.01 * (1 - p.alpha) ** 2;
+		expect(chooseSmoothing(12, 0, slightly).alpha).toBe(0.9);
+		const clearly = (p: Smoothing): number =>
+			1 + 10 * (1 - p.alpha) ** 2 + 1000 * (p.beta - LOW) ** 2;
+		const top = chooseSmoothing(12, 0, clearly);
+		expect([top.alpha, top.beta, top.drift]).toEqual([0.998, LOW, true]);
+		expect(chooseSmoothing(30, 0, clearly).drift).toBe(true);
 	});
 
 	it('keeps the earlier lattice for a season and for fewer than 8 points', () => {

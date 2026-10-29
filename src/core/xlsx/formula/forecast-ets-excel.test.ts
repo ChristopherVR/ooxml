@@ -8,7 +8,7 @@
 // being RMSE * sqrt(1 + sum of (alpha + j*beta)^2). What is not: Excel's search for alpha, beta and
 // gamma stops early on some series, and its starting values for a seasonal model and for fewer than
 // 7 points are not the least-squares ones (ets-init-excel.test.ts recovers them from Excel; the search
-// is measured on 491 more series in forecast-ets-search.test.ts). The tolerances below are the measured worst cases plus a
+// is measured on 1100 more series in forecast-ets-search.test.ts and forecast-ets-validate.test.ts). The tolerances below are the measured worst cases plus a
 // small margin, not a promise of parity: they pin today's accuracy so a regression shows.
 import { describe, expect, it } from 'vitest';
 import { evaluateEts, type EtsKind, type EtsRow, recorded } from './ets-excel-compare';
@@ -29,6 +29,10 @@ const EXACT = [
 	'trend-24',
 	'walk-100',
 	'unsorted',
+	'random-walk',
+	'spike',
+	'walk-13',
+	'walk-50',
 ];
 
 /** Relative forecast tolerance per series (the measured worst case plus 3%); 0.003 unless listed. */
@@ -40,15 +44,12 @@ const FORECAST_TOLERANCE: Record<string, number> = {
 	gaps: 0.093, // zero-filled gaps: Excel picks a smaller alpha than the best fit
 	duplicates: 0.053, // the calls that detect a season (those with seasonality 0 are exact)
 	'short-6': 0.025, // fewer than 7 points: Excel's starting trend is not the least-squares slope
-	'random-walk': 0.0094, // Excel stops at alpha 0.25, the search takes 0.9
-	'step-change': 0.0081,
-	'yearly-step': 0.015, // Excel keeps beta at alpha - 0.001, the search takes 0.001
-	spike: 0.78, // Excel picks alpha 0.002, the search 0.1 (their squared errors are almost equal)
+	'step-change': 0.11, // Excel ends in the basin of alpha 0.75; the lowest cost is at 0.25
+	'yearly-step': 0.071, // Excel picks alpha 0.9 with beta 0.899; the search takes 0.25
 	'seasonal3-noisy': 0.017,
 	'short-5': 0.043, // fewer than 7 points
-	'walk-20-anomaly': 0.017, // Excel's search stops at alpha 0.25 here
-	'walk-13': 0.019,
-	'walk-50': 0.021,
+	'walk-20-anomaly': 0.49, // Excel keeps beta at 0.001 where the search takes alpha - 0.001
+	'walk-25-anomaly': 0.036, // the same
 	'season2-9': 0.0054,
 	'season3-9': 0.0079,
 	'season4-8': 0.0073,
@@ -63,16 +64,12 @@ const CONFINT_TOLERANCE: Record<string, number> = {
 	'seasonal7-daily': 0.18,
 	gaps: 0.385, // zero completion: Excel's period 4 on the gap-filled grid is not reproduced
 	'short-6': 0.18,
-	'random-walk': 0.305,
-	'step-change': 0.21,
-	'yearly-step': 0.28,
-	spike: 0.012,
+	'step-change': 0.28,
+	'yearly-step': 0.77,
 	'seasonal3-noisy': 0.234,
 	'short-5': 0.018,
-	'walk-20-anomaly': 0.345,
-	'walk-13': 0.097,
-	'walk-25-anomaly': 0.146,
-	'walk-50': 0.146,
+	'walk-20-anomaly': 0.28,
+	'walk-25-anomaly': 0.272,
 	'season2-9': 0.076,
 	'season3-9': 0.073,
 	'season4-8': 0.26,

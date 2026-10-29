@@ -37,6 +37,17 @@ export function searchRecorded(): EtsRecorded[] {
 	return JSON.parse(readFileSync(path, 'utf8')) as EtsRecorded[];
 }
 
+/**
+ * More non-seasonal probes recorded from Excel (answers in __fixtures__/<name>-excel.json, series
+ * written by scripts/xlsx/ets-<name>-series.ts): `morph` (a random walk turned into noise step by
+ * step), `spike` (a constant with one spike or step at every position) and `scale` (the search
+ * series rescaled, negated and reversed).
+ */
+export function probeRecorded(name: 'morph' | 'spike' | 'scale'): EtsRecorded[] {
+	const path = fileURLToPath(new URL(`./__fixtures__/ets-${name}-excel.json`, import.meta.url));
+	return JSON.parse(readFileSync(path, 'utf8')) as EtsRecorded[];
+}
+
 export function kindOf(formula: string): EtsKind {
 	if (formula.startsWith('FORECAST.ETS.CONFINT')) return 'confint';
 	if (formula.startsWith('FORECAST.ETS.SEASONALITY')) return 'seasonality';

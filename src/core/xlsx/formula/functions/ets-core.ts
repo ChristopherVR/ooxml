@@ -4,11 +4,12 @@
 //   forecast = level + trend + season[t mod m];  e = y - forecast
 //   level += trend + alpha*e;  trend += beta*e;  season[t mod m] += gamma*e
 // and the first forecast is exactly the first observation (`ets-init.ts`). Excel's search for alpha,
-// beta and gamma is undocumented and stops at coarse values; `ets-search.ts` picks the squared
-// one-step error's minimum on the lattice Excel is seen to land on.
+// beta and gamma is undocumented and stops at coarse values; `ets-search.ts` picks the minimum of
+// the training-plus-hold-out error (`ets-validate.ts`) on the lattice Excel is seen to land on.
 import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
 import { chooseSmoothing } from './ets-search';
+import { etsValidationCost } from './ets-validate';
 
 export interface EtsFit {
 	alpha: number;
@@ -68,7 +69,13 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 		const init = initialStates(y, m, p, etsRun);
 		return { init, run: etsRun(y, m, init, p) };
 	};
-	const { drift, ...chosen } = chooseSmoothing(n, m, (p) => solve(p).run.sse);
+	// Without a season Excel's cost is the training one-step error plus the hold-out forecast error
+	// (`ets-validate.ts`). With a season the starting states here are not Excel's, which makes that
+	// cost choose worse than the plain one-step error (season3-11: 8% against 1% forecast error).
+	const holdout = m >= 2 ? 0 : etsHoldout(n, m);
+	const { drift, ...chosen } = chooseSmoothing(n, m, (p) =>
+		etsValidationCost(y, m, solve(p).init, p, holdout),
+	);
 	const { run } = solve(chosen);
 	// Excel forecasts from the last value and the untouched slope when its search ends at 0.998.
 	const state = drift ? solve({ alpha: 1, beta: 0, gamma: chosen.gamma }).run : run;
