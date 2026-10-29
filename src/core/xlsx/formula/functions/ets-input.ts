@@ -1,8 +1,8 @@
 // Argument handling shared by the FORECAST.ETS functions: the timeline rules, aggregation of
 // duplicate timestamps and data completion of missing ones.
 import type { CallContext } from '../context';
-import { serialToYmd } from '../date-serial';
 import { ERR, fail, isError, type Value } from '../values';
+import { timelineGrid } from './ets-grid';
 
 export interface EtsSeries {
 	/** Values on an evenly spaced grid. */
@@ -26,23 +26,6 @@ function numbersOf(ctx: CallContext, value: Value, blanks: boolean): (number | n
 			if (typeof cell !== 'number') return fail(ERR.VALUE);
 			return cell;
 		});
-}
-
-/**
- * Month numbers of a date timeline that falls on the same day of each month (or on month ends)
- * with unequal gaps in days, such as monthly or yearly data; `undefined` for any other timeline.
- */
-function monthGrid(times: readonly number[]): number[] | undefined {
-	if (times.length < 2 || times.some((t) => !Number.isInteger(t) || t < 1)) return undefined;
-	const gaps = new Set<number>();
-	for (let i = 1; i < times.length; i++) gaps.add((times[i] as number) - (times[i - 1] as number));
-	if (gaps.size < 2 || Math.min(...gaps) < 28) return undefined;
-	const dates = times.map((t) => serialToYmd(t));
-	const monthEnd = (d: { year: number; month: number; day: number }): boolean =>
-		d.day === new Date(Date.UTC(d.year, d.month, 0)).getUTCDate();
-	const sameDay = dates.every((d) => d.day === (dates[0] as { day: number }).day);
-	if (!sameDay && !dates.every(monthEnd)) return undefined;
-	return dates.map((d) => d.year * 12 + d.month);
 }
 
 const median = (xs: number[]): number => {
@@ -95,26 +78,20 @@ export function etsSeries(
 	});
 	const times = [...stamps].sort((a, b) => a - b);
 	if (times.length < 2) fail(ERR.NUM);
-	const months = monthGrid(times);
-	const axis = months ?? times;
-	let step = Number.POSITIVE_INFINITY;
-	for (let i = 1; i < axis.length; i++)
-		step = Math.min(step, (axis[i] as number) - (axis[i - 1] as number));
-	const start = axis[0] as number;
-	const length = Math.round(((axis[axis.length - 1] as number) - start) / step) + 1;
+	const grid = timelineGrid(times);
+	const length = (grid.index[grid.index.length - 1] as number) + 1;
 	if (length > MAX_POINTS) fail(ERR.NUM);
 	const y: (number | undefined)[] = new Array<number | undefined>(length).fill(undefined);
 	times.forEach((t, i) => {
-		const k = ((axis[i] as number) - start) / step;
-		if (Math.abs(k - Math.round(k)) > 1e-6) fail(ERR.NUM);
 		const group = groups.get(t);
-		if (group) y[Math.round(k)] = aggregate(aggregation, group);
+		if (group) y[grid.index[i] as number] = aggregate(aggregation, group);
 	});
 	if (y[0] === undefined || y[length - 1] === undefined) {
 		// Leading or trailing gaps cannot be interpolated; they take the nearest value (or zero).
 		const first = y.findIndex((v) => v !== undefined);
 		if (first < 0) fail(ERR.NUM);
-		const last = y.findLastIndex((v) => v !== undefined);
+		let last = length - 1;
+		while (last > first && y[last] === undefined) last--;
 		for (let i = 0; i < first; i++) y[i] = completion === 1 ? y[first] : 0;
 		for (let i = last + 1; i < length; i++) y[i] = completion === 1 ? y[last] : 0;
 	}
@@ -132,11 +109,5 @@ export function etsSeries(
 			prev = i;
 		}
 	}
-	const position = (time: number): number => {
-		if (!months) return (time - start) / step;
-		const d = serialToYmd(time);
-		return (d.year * 12 + d.month - start) / step;
-	};
-	const stepOut = months ? (times[1] as number) - (times[0] as number) : step;
-	return { y: y as number[], position, step: stepOut };
+	return { y: y as number[], position: grid.position, step: grid.stepStat };
 }

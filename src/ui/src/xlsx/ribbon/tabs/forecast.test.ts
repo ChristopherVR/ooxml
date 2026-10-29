@@ -29,7 +29,7 @@ function setup() {
 }
 
 describe('Data tab Forecast group', () => {
-	it('has a What-If Analysis menu with the three tools and a disabled Forecast Sheet', async () => {
+	it('has a What-If Analysis menu with the three tools and an enabled Forecast Sheet', async () => {
 		const { group, core } = setup();
 		await flush();
 		const menu = group.querySelector<HTMLButtonElement>('.ribbon-menu-button')!;
@@ -48,10 +48,20 @@ describe('Data tab Forecast group', () => {
 		const forecast = group.querySelector<HTMLButtonElement>(
 			'[data-command="data.forecast-sheet"]',
 		)!;
-		expect(forecast.disabled).toBe(true);
-		expect(forecast.title).toContain('FORECAST.ETS');
-		expect(forecast.getAttribute('aria-description')).toContain('not available');
-		expect(core.commands.isEnabled('data.forecast-sheet')).toBe(false);
+		expect(forecast.disabled).toBe(false);
+		expect(forecast.getAttribute('aria-description')).toBeNull();
+		expect(core.commands.isEnabled('data.forecast-sheet')).toBe(true);
+	});
+
+	it('opens the forecast dialog when Forecast Sheet runs', () => {
+		const { core } = setup();
+		const opened: string[] = [];
+		core.ctx.dialogs.register('forecast-sheet', async () => {
+			opened.push('forecast-sheet');
+			return undefined;
+		});
+		core.commands.run('data.forecast-sheet');
+		expect(opened).toEqual(['forecast-sheet']);
 	});
 
 	it('every command in the group is registered', () => {

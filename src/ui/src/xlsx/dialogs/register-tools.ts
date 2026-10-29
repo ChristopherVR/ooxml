@@ -14,6 +14,7 @@ import { openSymbol } from './symbol';
 import { openTextToColumns } from './text-to-columns';
 import { openZoom } from './zoom';
 import { openDataTable, openGoalSeek } from './what-if';
+import { openForecastSheet } from './forecast-sheet';
 import { openScenarioManager } from './scenario-manager';
 import { openCreateSparklines, openSparklineSettings } from './sparklines';
 import { openPivotFieldSettings } from './pivot-field-settings';
@@ -62,6 +63,7 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	d.register('text-to-columns', (c) => openTextToColumns(c));
 	d.register('goal-seek', (c) => openGoalSeek(c));
 	d.register('data-table', (c) => openDataTable(c));
+	d.register('forecast-sheet', (c) => openForecastSheet(c));
 	d.register('scenario-manager', (c) => openScenarioManager(c));
 	d.register('symbol', (c) => openSymbol(c));
 	d.register('fill-series', (c) => openFillSeries(c));
