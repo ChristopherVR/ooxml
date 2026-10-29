@@ -56,9 +56,10 @@ date pickers, replaces a placeholder when typing and restores it when the text i
 deleted, and enforces `contentLocked` and `sdtLocked`. Insert > Content control adds
 rich text, plain text, check box, drop-down list, combo box and date picker controls
 and a properties dialog edits title, tag, locks, list entries and the date format.
-Row and cell controls are read and preserved but not drawn or edited. A data-bound
-control is edited in the document only: its custom XML part is not updated, so Word
-shows the bound value again on open. Repeating sections, picture, citation,
+Row and cell controls are read and preserved but not drawn or edited. Editing a data-bound
+control also writes its text to the bound custom XML part for simple absolute XPaths
+(child steps with indexes, a final attribute); an XPath outside those forms makes the save
+fail with a diagnostic. Repeating sections, picture, citation,
 bibliography and building-block controls are preserved without special editing, and a
 control whose content is deleted entirely through code (rather than Delete) is not
 re-created.

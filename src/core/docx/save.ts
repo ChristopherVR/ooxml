@@ -5,6 +5,7 @@ import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { stampModified } from './save-modified';
+import { applyDataBindings } from './data-binding';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
 import { applyModel } from './write';
@@ -200,6 +201,7 @@ export async function saveDocx(
 	}
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
+	if (binding) await applyDataBindings(zip, model, binding.base, binding.context.sourceXml);
 	if (binding) await stampModified(zip, options?.modified);
 	dropAddedFolders(zip, sourceEntries);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
