@@ -286,7 +286,7 @@ de resultados entre páginas. Los eventos nativos `document-change`, `selection-
 siguen disponibles mediante los callbacks del framework. Reemplazar todo conserva la
 selección; el reemplazo actual avanza a la siguiente aparición. Un reemplazo con el mismo texto
 conserva los bytes exactos del origen y no añade historial, aunque sí navega.
-Si el texto coincidente es enriquecido, contiene campos, está vinculado a una plantilla maestra, está protegido o es dependiente,
+Si el texto coincidente es enriquecido, contiene campos, está protegido o es dependiente,
 y no se admite, se rechaza todo el lote. El borrador muestra el error y sigue siendo editable.
 Cerrar los controles o cambiar de intención cancela la operación pendiente.
 
@@ -308,7 +308,7 @@ con estilos alternativos diagnosticados. Los bytes heredados originales se conse
 la edición, deshacer y rehacer y la exportación a VSDX están desactivados para los orígenes heredados. Las versiones
 binarias anteriores, los grupos y plantillas maestras, la geometría compleja, los stencils, las plantillas y los
 formatos con macros siguen sin admitirse. Asignar un modelo con `document` no proporciona
-bytes de paquete editables. La validación del núcleo rechaza las formas vinculadas a plantillas maestras, el texto enriquecido,
+bytes de paquete editables. La validación del núcleo rechaza el texto enriquecido no admitido,
 los campos, los paquetes firmados y el contenido con macros. Las ediciones de XML y del paquete se ejecutan en un
 worker aislado; los envoltorios de frameworks no implementan lógica de formato. Las ediciones de texto sin formato
 rechazan las cachés de fórmulas dependientes del texto afectadas o desconocidas en lugar de dejarlas

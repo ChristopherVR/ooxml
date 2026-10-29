@@ -37,18 +37,20 @@ Word-equivalent grammar or proofing engine.
 Imported inline and display equations now render through native MathML using
 `ooxml-core/math`. They remain display-only: the original OMML is preserved when
 surrounding text is edited and saved. Unsupported equation previews show a visible
-notice. Print Layout uses an `[Equation]` placeholder with an approximation warning;
-it does not typeset the equation or reproduce Word's equation layout.
+notice. Print Layout draws equations as SVG from the shared `ooxml-core/math` box model
+(the `[Equation]` placeholder appears only when no drawn object is available); this does
+not reproduce Word's equation layout.
 
 Print Layout already paginates through `ooxml-core/docx/layout`, including
 sections/columns, keep rules, table row fragmentation, repeating table headers,
 footnotes, headers/footers, page fields and supported floating pictures. The main
 editing surface remains continuous, and Print Layout pages are editable too: the caret,
 selection and IME run through the editor's ProseMirror input and are painted on the pages
-(`print-editing.spec.ts`, `print-cursor.spec.ts`). Nested and merged table cells are read-only
-on pages; headers, footers and footnotes are not edited by clicking on the page; floats,
-pictures and text boxes are not selectable there; and caret placement at line and page
-boundaries is heuristic. Pagination is approximate.
+(`print-editing.spec.ts`, `print-cursor.spec.ts`). Headers, footers, footnotes and endnotes
+are edited in place on the pages (double-click a header or footer; press a note's text),
+and floating pictures are selectable there (see `outstanding-work.md`). Merged table cells
+are read-only on pages, nested tables keep their authored grid, and caret placement at line
+and page boundaries is heuristic. Pagination is approximate.
 
 Selected-cell vertical alignment is editable with save/reopen and undo coverage
 (`table-cell-alignment.spec.ts`). Toolbar/context-menu clipboard commands retain

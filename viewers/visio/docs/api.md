@@ -348,7 +348,7 @@ result navigation. Native `document-change`, `selection-change` and `shape-selec
 events remain available through the framework callbacks. Replace All preserves
 selection; current replacement advances to the next occurrence. A same-text
 replacement keeps exact source bytes and adds no history while still navigating.
-Unsupported matched rich, field-bearing, master-linked, protected or dependent
+Unsupported matched rich, field-bearing, protected or dependent
 text refuses the entire batch. The draft displays the error and remains editable.
 Closing the controls or changing intent cancels its pending operation.
 
@@ -370,7 +370,7 @@ with diagnosed fallback styles. Original legacy bytes remain privately retained;
 editing, undo/redo and VSDX export are disabled for legacy sources. Earlier binary
 versions, groups/masters, complex geometry, stencils, templates and macro-enabled
 formats remain unsupported. Assigning a model with `document` does not supply
-editable package bytes. Core validation rejects master-linked shapes, rich text,
+editable package bytes. Core validation rejects unsupported rich text,
 fields, signed packages and macro-enabled content. XML/package edits run in an
 isolated worker; framework wrappers do not implement format logic. Plain-text
 edits refuse affected or unknown text-dependent formula caches instead of leaving

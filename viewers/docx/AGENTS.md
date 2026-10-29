@@ -104,7 +104,7 @@ the element, forward props and options, and re-emit its events.
   an approximate layout, not Word's, and its styles and colours are not editable.
   Charts paint from their cached values; classic charts can be inserted, edited
   (type, legend, data, the shared Format pane's fills, outlines and options) and
-  resized through the shared chart core. Chartex charts are read-only: waterfall,
+  resized through the shared chart core. Admitted ChartEx charts are editable through the same core: waterfall,
   histogram, treemap and sunburst are drawn, and the other families show a labelled
   frame. Never claim Word layout parity or lossless export.
 - Bun, TypeScript strict mode, Vitest (tests next to the code) and Playwright

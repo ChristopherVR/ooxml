@@ -323,8 +323,8 @@ auch bei seitenübergreifender Ergebnisnavigation. Die nativen Ereignisse
 Framework-Callbacks verfügbar. „Alle ersetzen“ erhält die Auswahl; das Ersetzen
 des aktuellen Vorkommens springt zum nächsten. Ein Ersetzen durch denselben Text
 erhält die exakten Quellbytes und fügt dem Verlauf nichts hinzu, navigiert aber
-weiterhin. Nicht unterstützter passender Rich Text, Text mit Feldern, mit
-Masterverknüpfung, geschützter oder abhängiger Text lehnt den gesamten Stapel
+weiterhin. Nicht unterstützter passender Rich Text, Text mit Feldern,
+geschützter oder abhängiger Text lehnt den gesamten Stapel
 ab. Der Entwurf zeigt den Fehler an und bleibt bearbeitbar. Das Schließen der
 Steuerelemente oder ein Wechsel der Absicht bricht die ausstehende Operation ab.
 
@@ -350,8 +350,8 @@ privat erhalten; Bearbeitung, Rückgängig/Wiederholen und VSDX-Export sind für
 Legacy-Quellen deaktiviert. Frühere Binärversionen, Gruppen und Master,
 komplexe Geometrie, Schablonen, Vorlagen und makroaktivierte Formate bleiben
 nicht unterstützt. Die Zuweisung eines Modells mit `document` liefert keine
-bearbeitbaren Paketbytes. Die Kern-Validierung lehnt Formen mit
-Masterverknüpfung, Rich Text, Felder, signierte Pakete und makroaktivierte
+bearbeitbaren Paketbytes. Die Kern-Validierung lehnt nicht unterstützten
+Rich Text, Felder, signierte Pakete und makroaktivierte
 Inhalte ab. XML- und Paketbearbeitungen laufen in einem isolierten Worker;
 Framework-Wrapper implementieren keine Formatlogik. Nur-Text-Bearbeitungen
 verweigern betroffene oder unbekannte textabhängige Formel-Caches, statt sie

@@ -1,9 +1,9 @@
 # XLSX parity status
 
-Last reviewed 2026-10-22. This page is the single live status tracker for the Excel product; the
+Last reviewed 2026-10-22 (text only; the figures below were not re-measured then). This page is the single live status tracker for the Excel product; the
 earlier separate Excel review, lookup evidence and implementation-log pages were folded into it
 (the per-increment history lives in git). The chart-title and legend increments below were recorded
-at `f12ee7ea6` on 8 October 2026, and the test counts quoted further down are from that revision.
+at `f12ee7ea6` on 8 October 2026, and any test counts quoted further down are snapshots from that revision (8 October 2026), not current figures.
 Native references, core and browser regressions, and selected Excel reopen checks bound the
 implemented scope.
 
