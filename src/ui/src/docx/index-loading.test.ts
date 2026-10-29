@@ -34,7 +34,7 @@ describe('DocxEditorElement loading', () => {
 		await first;
 		expect(editor.documentModel?.blocks[0]).toMatchObject({ runs: [{ text: 'current' }] });
 		await expect(editor.saveBytes()).resolves.toBe(bytes);
-		expect(save).toHaveBeenCalledWith(current);
+		expect(save).toHaveBeenCalledWith(current, undefined, { modified: {} });
 	});
 
 	it('exposes import errors as events while rejecting the load promise', async () => {

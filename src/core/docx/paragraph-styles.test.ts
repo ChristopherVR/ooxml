@@ -151,9 +151,9 @@ describe('paragraph style catalog', () => {
 		);
 	});
 
-	it('rejects catalog mutations because styles.xml editing is unsupported', async () => {
+	it('rejects catalog mutations the writer cannot express', async () => {
 		const loaded = await loadDocx(await fixture());
-		must(loaded.model.paragraphStyles?.styles.Derived, 'Derived style').formatting.align = 'center';
+		must(loaded.model.paragraphStyles?.styles.Derived, 'Derived style').name = 'Renamed';
 		await expect(loaded.save()).rejects.toThrow(
 			'Editing the paragraph style catalog is not supported',
 		);

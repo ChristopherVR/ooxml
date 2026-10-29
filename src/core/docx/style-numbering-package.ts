@@ -3,6 +3,7 @@ import type JSZip from 'jszip';
 import type { DocumentModel } from './model';
 import type { ParagraphStyleCatalog } from './model-paragraph';
 import { orderParagraphProperties } from './tab-stops';
+import { unwritableFormatting } from './style-formatting-package';
 import { buildXml, children, first, getW, makeW, parseXml, WORD_NS, type XmlElement } from './xml';
 
 const STYLES_PART = 'word/styles.xml';
@@ -15,14 +16,17 @@ const withoutNumbering = (catalog: ParagraphStyleCatalog | undefined) =>
 				...catalog,
 				styles: Object.fromEntries(
 					Object.entries(catalog.styles).map(([id, style]) => {
-						const { numbering: _numbering, ...rest } = style;
-						return [id, rest];
+						const { numbering: _numbering, formatting, ...rest } = style;
+						return [id, { ...rest, formatting: unwritableFormatting(formatting) }];
 					}),
 				),
 			}
 		: undefined;
 
-/** Whether the only difference between the two style catalogs is style-level `numbering`. */
+/**
+ * Whether the only difference between the two style catalogs is style-level `numbering` or the
+ * paragraph formatting a style edit can write (see `applyStyleFormatting`).
+ */
 export function differsOnlyByStyleNumbering(
 	next: ParagraphStyleCatalog | undefined,
 	prior: ParagraphStyleCatalog | undefined,

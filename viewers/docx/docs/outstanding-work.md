@@ -394,7 +394,7 @@ second heading's numbering when that redundant style level is omitted; the viewe
 OOXML association rule for those imports. Each level has a Link level to style
 select (a style belongs to one level). Applying the list writes `w:numPr` into those existing
 paragraph styles in `styles.xml` (schema-ordered, the rest of the style XML untouched) and a
-`w:pStyle` on the new level; any other style-catalog edit is still refused on save. The style link
+`w:pStyle` on the new level; changed paragraph formatting of existing styles (alignment, direction, spacing, indents, pagination, borders, shading) is written into their `w:pPr` with unknown children kept; any other style-catalog edit (names, inheritance, outline level, new styles) is still refused on save. The style link
 is not part of editor history: Undo removes the list from the selection, but styles stay linked to
 the (retained) definition. Creating new styles from the dialog is not supported.
 

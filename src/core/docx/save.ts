@@ -5,6 +5,7 @@ import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { stampModified } from './save-modified';
+import { applyStyleFormatting } from './style-formatting-package';
 import { applyDataBindings } from './data-binding';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
@@ -168,6 +169,7 @@ export async function saveDocx(
 	await applyNumberingCatalog(zip, model, binding);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
 	if (binding) await applyStyleNumbering(zip, model, binding.base);
+	if (binding) await applyStyleFormatting(zip, model, binding.base);
 	if (model.compatibilityMode !== binding?.base.compatibilityMode)
 		await applyCompatibilityMode(zip, model.compatibilityMode);
 	if (Boolean(model.evenAndOddHeaders) !== Boolean(binding?.base.evenAndOddHeaders))
