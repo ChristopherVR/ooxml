@@ -30,7 +30,7 @@ Excel options, interactions or visual details in that area are implemented.
 | Whole-product parity           | Not achieved | Bounded pivots, partial collaboration and Page Layout / Page Break Preview exist; shared pivot caches, label and value filters, FORECAST.ETS, data connections, macro execution and full print fidelity are missing, which prevents this claim.                                                                                |
 
 The latest diagram/chart/XLSX and PowerPoint layout-parser sweep passed
-**8,591 ordinary tests**, with **17 existing expected raster failures**.
+**8,591 ordinary tests**, with **16 accepted native raster gaps** (one named entry, `translucent-three-stop-colour-weighting` in `src/core/chart/gradient-raster.test.ts`).
 The updated seven-reference title-layout tests and **16 PowerPoint UI layout
 checks** also passed. Focused chart browser checks passed **302 unique cases**
 across six bindings, including 48 new legend cases. Core/UI typechecks, builds
@@ -126,7 +126,7 @@ logic reuse and extraction.
 ## What the recorded validation proves
 
 The latest completed increment has the regression results listed above:
-8,591 ordinary core tests, 17 expected raster failures, 302 focused browser
+8,591 ordinary core tests, 16 accepted native raster gaps, 302 focused browser
 cases across vanilla, React, Vue, Angular, Svelte and Solid, and passing
 core/UI build, type and package checks. These are scoped implementation-run
 results, rather than a full-product equivalence suite. Earlier
@@ -136,8 +136,8 @@ Core tests cover supported parsing, editing, preservation and layout behavior.
 Browser tests cover selected painted geometry and actual edit/history/save
 flows. Excel COM and native PNG comparisons independently verify selected
 references. Passing those layers establishes their tested scope, not every
-option of a chart family or every Excel workflow. The 17 expected raster
-failures remain unresolved visual differences.
+option of a chart family or every Excel workflow. The 16 accepted native raster
+gaps (translucent three-stop gradient colour weighting, 3.2 to 3.7 levels against a limit of 3) remain unresolved; the earlier count of 17 had no 17th test in the repository.
 
 Native evidence uses owned hidden Excel instances, principally Excel 16.0
 build 20430. The current chart text corpus includes 96 built-in style
