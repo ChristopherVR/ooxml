@@ -2,7 +2,7 @@
 # ets-init<N>-series.json (written by `bun scripts/xlsx/ets-init2-probes.ts` in src/core).
 #   powershell -NoProfile -ExecutionPolicy Bypass -File src/core/xlsx/formula/__fixtures__/ets-init2-cases.ps1 -Set 3
 # Manual step (Windows, Excel 16+): CI never runs it; the committed JSON is what tests compare with.
-param([ValidateSet(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)][int]$Set = 2)
+param([ValidateSet(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)][int]$Set = 2)
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $series = Get-Content -Raw -Encoding UTF8 (Join-Path $here "ets-init$Set-series.json") | ConvertFrom-Json
 

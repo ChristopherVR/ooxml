@@ -18,10 +18,11 @@
 //      - for each of those wrapped positions `i` the term `(y[i + m] + y[i + 2m] - 2 y[i]) / 4m`.
 //  * The trend is the least-squares slope of the series, extended to `3m + ceil(m / 2)` points
 //    by `y[t - 3m] + 3m * (mean of S)`, after removing the seasonal states.
-//  * Two whole seasons: the series is extended to 3 seasons by `y[t - 2m] + 2m * b`, with b the slope
-//    of a regression on the time and seasonal dummies, and then handled as above.
-// More than `ceil(m / 2) + 1` extra points are in ets-init-threeplus.ts. Not covered (still approximate):
-// 2 seasons plus a partial one, and seasons of 2 and 3 (their reference is time 0).
+//  * Two whole seasons, or two plus a partial one: the series is extended to 3 seasons by
+//    `y[t - 2m] + 2m * b`, b the mean over the positions of their least-squares slopes (the slope of a
+//    regression on the time and seasonal dummies for 2 whole seasons), and then handled as above, with
+//    the drift term (`slopeSumOf`) and the trend padding slope taken from the original series.
+// More than `ceil(m / 2) + 1` extra points are in ets-init-threeplus.ts, as are seasons of 2 and 3.
 
 const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
 
@@ -54,7 +55,11 @@ export function isThreeSeasonLength(n: number, m: number): boolean {
 }
 
 /** Seasonal states relative to position 0 (`s[k] - s[0]`), see `isThreeSeasonLength`. */
-export function threeSeasonSeasonals(y: readonly number[], m: number): number[] {
+export function threeSeasonSeasonals(
+	y: readonly number[],
+	m: number,
+	slopeSumOverride?: number,
+): number[] {
 	const n = y.length;
 	const extra = n - 3 * m;
 	const j0 = Math.floor(m / 2);
@@ -62,7 +67,7 @@ export function threeSeasonSeasonals(y: readonly number[], m: number): number[] 
 	const slope = (j: number): number => (at(j + 2 * m) - at(j)) / (2 * m);
 	const B = (j: number): number => (j + 2 * m < n ? slope(j) : slope(j % m));
 	const e = (t: number): number => at(t) - at(t - 1) - B(t - j0);
-	const slopeSum = positionSlopes(y, m).reduce((a, b) => a + b, 0);
+	const slopeSum = slopeSumOverride ?? positionSlopes(y, m).reduce((a, b) => a + b, 0);
 	const out = [0];
 	for (let k = 1; k < m; k++) {
 		let back = 0;
@@ -90,18 +95,26 @@ export function threeSeasonSeasonals(y: readonly number[], m: number): number[] 
 }
 
 /** The series padded to `3m + ceil(m / 2)` points by `y[t - 3m] + 3m * (mean of S)`. */
-export function padThreeSeasons(y: readonly number[], m: number): number[] {
+export function padThreeSeasons(
+	y: readonly number[],
+	m: number,
+	slopeMean = mean(positionSlopes(y, m)),
+): number[] {
 	const n = y.length;
 	const total = Math.max(3 * m + Math.ceil(m / 2), n);
-	const slopeMean = mean(positionSlopes(y, m));
 	const ext = [...y];
 	for (let t = n; t < total; t++) ext.push((y[t - 3 * m] as number) + 3 * m * slopeMean);
 	return ext;
 }
 
 /** The starting trend: slope of the series extended past 3 seasons, with the states removed. */
-export function threeSeasonTrend(y: readonly number[], m: number, rel: readonly number[]): number {
-	const ext = padThreeSeasons(y, m);
+export function threeSeasonTrend(
+	y: readonly number[],
+	m: number,
+	rel: readonly number[],
+	slopeMean?: number,
+): number {
+	const ext = padThreeSeasons(y, m, slopeMean);
 	const total = ext.length;
 	const mx = (total - 1) / 2;
 	let sxx = 0;
@@ -118,25 +131,32 @@ export function isTwoSeasonLength(n: number, m: number): boolean {
 	return m >= 4 && n === 2 * m;
 }
 
-/** Two seasons extended to three by `y[t - 2m] + 2m * b` (b: slope with seasonal dummies). */
+/** Whether a series of 2 seasons plus a partial one is started through the 3-season rule. */
+export function isTwoPlusLength(n: number, m: number): boolean {
+	return m >= 4 && n > 2 * m && n < 3 * m;
+}
+
+/** The sum over the positions of their least-squares slopes (the 3-season rule's drift term). */
+export function slopeSumOf(y: readonly number[], m: number): number {
+	return positionSlopes(y, m).reduce((a, c) => a + c, 0);
+}
+
+/**
+ * Two seasons, or two seasons and a partial one, extended to three by `y[t - 2m] + 2m * b`, with b the
+ * mean over the positions of their least-squares slopes (for 2 whole seasons the slope of the
+ * regression with seasonal dummies).
+ */
 export function extendTwoSeasons(y: readonly number[], m: number): number[] {
-	let num = 0;
-	let den = 0;
-	for (let c = 0; c < m; c++) {
-		const t0 = c;
-		const t1 = c + m;
-		const mid = (t0 + t1) / 2;
-		const avg = ((y[t0] as number) + (y[t1] as number)) / 2;
-		num += (t0 - mid) * ((y[t0] as number) - avg) + (t1 - mid) * ((y[t1] as number) - avg);
-		den += (t0 - mid) ** 2 + (t1 - mid) ** 2;
-	}
-	const b = num / den;
-	return [...y, ...Array.from({ length: m }, (_v, c) => (y[c] as number) + 2 * m * b)];
+	const b = mean(positionSlopes(y, m));
+	const out = [...y];
+	for (let t = y.length; t < 3 * m; t++) out.push((y[t - 2 * m] as number) + 2 * m * b);
+	return out;
 }
 
 /** The series a seasonal search measures its error over, or undefined where no padding applies. */
 export function paddedSearchSeries(y: readonly number[], m: number): number[] | undefined {
-	if (isTwoSeasonLength(y.length, m)) return padThreeSeasons(extendTwoSeasons(y, m), m);
+	if (isTwoSeasonLength(y.length, m) || isTwoPlusLength(y.length, m))
+		return padThreeSeasons(extendTwoSeasons(y, m), m, slopeSumOf(y, m) / m);
 	if (isThreeSeasonLength(y.length, m)) return padThreeSeasons(y, m);
 	return undefined;
 }

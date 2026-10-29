@@ -42,7 +42,7 @@ describe('exact seasonal start', () => {
 		});
 	}
 	it('leaves other lengths to the fallback', () => {
-		expect(chainStart([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)).toBeUndefined();
+		expect(chainStart([1, 2, 3, 4, 5], 3)).toBeUndefined();
 		expect(
 			chainStart(
 				Array.from({ length: 7 }, (_v, i) => i),

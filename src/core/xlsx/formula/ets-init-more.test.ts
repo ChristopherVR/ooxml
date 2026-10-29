@@ -3,18 +3,24 @@
 // maps recovered from Excel's impulse probes, seasons of 4 to 10.
 import { describe, expect, it } from 'vitest';
 import { chainStart, isExactLength } from './functions/ets-init-chain';
-import { isThreePlusLength } from './functions/ets-init-threeplus';
+import { isLowThreeLength, isThreePlusLength } from './functions/ets-init-threeplus';
+import { isTwoPlusLength } from './functions/ets-init-three';
 import { recoveredMaps } from './ets-init-maps';
 
 const unit = (n: number, i: number): number[] =>
 	Array.from({ length: n }, (_v, j) => (i === j ? 1 : 0));
 
-const fourPlus = (n: number, m: number): boolean => m >= 4 && n > 4 * m && n < 5 * m;
+const fourPlus = (n: number, m: number): boolean => n > 4 * m && n < 5 * m;
 const maps = recoveredMaps().filter(
-	(g) => g.missing === 0 && (fourPlus(g.n, g.m) || isThreePlusLength(g.n, g.m)),
+	(g) =>
+		g.missing === 0 &&
+		(fourPlus(g.n, g.m) ||
+			isThreePlusLength(g.n, g.m) ||
+			isTwoPlusLength(g.n, g.m) ||
+			isLowThreeLength(g.n, g.m)),
 );
 
-describe('4 seasons plus a partial one, 3 seasons plus many points', () => {
+describe('4 seasons plus a partial one, 3 seasons plus many points, 2 seasons plus a partial one', () => {
 	it('covers the probed lengths', () => {
 		const keys = new Set(maps.map((g) => g.key));
 		for (const key of ['s4-17', 's5-22', 's6-27', 's7-32', 's8-35'])

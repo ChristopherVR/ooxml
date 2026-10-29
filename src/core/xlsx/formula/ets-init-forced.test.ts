@@ -1,8 +1,9 @@
 // With Excel's own smoothing parameters (STAT 1 to 3 of every probe series), the exact seasonal start
-// (functions/ets-init-chain.ts and ets-init-three.ts) reproduces Excel's forecasts to rounding error:
-// hundreds of probe series of 4 and more seasons, of 3 seasons plus up to ceil(m / 2) + 1 points and of 2 seasons
-// (seasons of 4 and more), seasons 2 to 12. The only exceptions are the series on which Excel reports
-// a parameter pair at its floor (0.001) that does not reproduce its own forecasts.
+// (functions/ets-init-chain.ts and its helpers) reproduces Excel's forecasts to rounding error on
+// hundreds of probe series: 4 and more seasons with a partial one, 3 seasons plus a partial one, 2
+// seasons plus a partial one (seasons of 4 and more; of 3 from 6 points and of 2 from 6), seasons 2 to
+// 12. The only exceptions are the series on which Excel reports a parameter pair at its floor (0.001)
+// that does not reproduce its own forecasts.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +17,7 @@ interface Recorded {
 	results: { value: number }[];
 }
 
-const FILES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const FILES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'];
 const FLOORED = new Set([
 	's2-10-imp9',
 	's3-18-imp11',
@@ -24,6 +25,12 @@ const FLOORED = new Set([
 	's4-13-imp11',
 	's4-15-imp6',
 	's8-29-imp8',
+	's2-9-imp0',
+	's3-9-imp0',
+	's3-9-imp4',
+	's3-9-imp8',
+	's3-10-imp8',
+	's7-17-imp6',
 ]);
 
 // Probe groups whose parameter pair Excel reports at the beta floor (0.001) does not reproduce its own
@@ -69,27 +76,5 @@ describe('exact seasonal start at Excel parameters', () => {
 
 	it('checked hundreds of exact-start series', () => {
 		expect(total).toBeGreaterThan(300);
-	});
-
-	it('is close for 4 seasons plus a partial one, whose exact rule is not known', () => {
-		let worst = 0;
-		let checked = 0;
-		for (const f of FILES) {
-			const path = fileURLToPath(
-				new URL(`./__fixtures__/ets-init${f}-excel.json`, import.meta.url),
-			);
-			for (const e of JSON.parse(readFileSync(path, 'utf8')) as Recorded[]) {
-				const m = /^s(\d+)-/.exec(e.name);
-				if (!m || FLOORED.has(e.name)) continue;
-				const season = Number(m[1]);
-				if (!chainStart(e.values, season) || isExactLength(e.values.length, season)) continue;
-				worst = Math.max(worst, worstError(e, season));
-				checked++;
-			}
-		}
-		expect(checked).toBeGreaterThan(30);
-		// A least-squares start gives 5e-2 here, the first 4 seasons alone 4e-2; the window mean reaches 5e-2
-		// only for 4 seasons plus m - 2 points (s7-33).
-		expect(worst).toBeLessThan(0.06);
 	});
 });

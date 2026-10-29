@@ -18,13 +18,20 @@ import type { EtsInit } from './ets-init';
 import {
 	extendTwoSeasons,
 	isThreeSeasonLength,
+	isTwoPlusLength,
 	isTwoSeasonLength,
+	slopeSumOf,
 	threeSeasonSeasonals,
 	threeSeasonTrend,
 } from './ets-init-three';
 
 import { fourSeasonPlusSeasonals } from './ets-init-four';
-import { isThreePlusLength, threePlusSeasonals } from './ets-init-threeplus';
+import {
+	isLowThreeLength,
+	isThreePlusLength,
+	lowSeasonSeasonals,
+	threePlusSeasonals,
+} from './ets-init-threeplus';
 import { chainSeasonals } from './ets-init-states';
 
 export { chainSeasonals, chainStates } from './ets-init-states';
@@ -38,10 +45,12 @@ export function isExactLength(n: number, m: number): boolean {
 	const whole = Math.floor(n / m);
 	return (
 		whole >= MAX_SEASONS ||
-		(whole === 4 && (n % m === 0 || m >= 4)) ||
+		whole === 4 ||
 		isThreeSeasonLength(n, m) ||
 		isThreePlusLength(n, m) ||
-		isTwoSeasonLength(n, m)
+		isLowThreeLength(n, m) ||
+		isTwoSeasonLength(n, m) ||
+		isTwoPlusLength(n, m)
 	);
 }
 
@@ -61,10 +70,22 @@ function fromRelative(y0: number, rel: readonly number[], trend: number): EtsIni
 export function chainStart(y: readonly number[], m: number): EtsInit | undefined {
 	const n = y.length;
 	const whole = Math.floor(n / m);
-	if (isThreeSeasonLength(n, m) || isTwoSeasonLength(n, m)) {
-		const series = isTwoSeasonLength(n, m) ? extendTwoSeasons(y, m) : y;
-		const rel = threeSeasonSeasonals(series, m);
-		return fromRelative(y[0] as number, rel, threeSeasonTrend(series, m, rel));
+	if (isThreeSeasonLength(n, m) || isTwoSeasonLength(n, m) || isTwoPlusLength(n, m)) {
+		const short = isTwoSeasonLength(n, m) || isTwoPlusLength(n, m);
+		const series = short ? extendTwoSeasons(y, m) : y;
+		const rel = threeSeasonSeasonals(series, m, short ? slopeSumOf(y, m) : undefined);
+		return fromRelative(
+			y[0] as number,
+			rel,
+			threeSeasonTrend(series, m, rel, short ? slopeSumOf(y, m) / m : undefined),
+		);
+	}
+	if (isLowThreeLength(n, m)) {
+		const short = n < 3 * m;
+		const series = short ? extendTwoSeasons(y, m) : y;
+		const rel = lowSeasonSeasonals(series, m, short ? slopeSumOf(y, m) : undefined);
+		const pad = short ? slopeSumOf(y, m) / m : undefined;
+		return fromRelative(y[0] as number, rel, threeSeasonTrend(series, m, rel, pad));
 	}
 	if (isThreePlusLength(n, m)) {
 		const rel = threePlusSeasonals(y, m);

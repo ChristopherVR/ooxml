@@ -13,10 +13,12 @@
 // lives in `ets-init-three.ts` (a blend of a forward and a backward chain; 2 seasons are first
 // extended to 3 by `y[t - 2m] + 2m * b`, b the slope of a trend-plus-dummies fit; see that file).
 // 4 seasons plus a partial one (`ets-init-four.ts`) and 3 seasons plus more than `ceil(m / 2) + 1` points up to
-// 4 seasons (`ets-init-threeplus.ts`) are exact too for seasons of 4 and more: the 4-season chain and the
-// 3-season rule each plus a template shifted along the first positions (see those files). Still unknown:
-// 2 seasons plus a partial one (the same extension to 3 seasons is close but not exact) and every length
-// with seasons of 2 or 3 (their reference position sits at time 0, so the blend differs).
+// 4 seasons (`ets-init-threeplus.ts`) are exact too: the 4-season chain and the
+// 3-season rule each plus a template shifted along the first positions (see those files).
+// 2 seasons plus a partial one are exact by the same rule on the series extended to 3 seasons, and so are
+// seasons of 3 (from 6 points) and 2 (from 6 points) with the template taken at the reference at time 0.
+// Unknown: every length below 2 seasons (Excel ignores the season for the shortest series, and from about
+// m + 2 + ceil(m / 3) points uses it by a rule not recovered).
 // For those the trend and the other seasonal states here are solved by least squares
 // under the first-point constraint, which lands near (not on) Excel's own starting values (a plain
 // seasonal-dummy regression does worse on the recorded forecasts). Seasons of 25 and more start

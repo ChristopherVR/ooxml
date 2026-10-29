@@ -26,6 +26,22 @@ function shift(y: readonly number[], m: number, k: number): number {
 	);
 }
 
+/** Whether `lowSeasonSeasonals` is Excel's rule: 3 whole seasons of 2 or 3 and up to 4 seasons. */
+export function isLowThreeLength(n: number, m: number): boolean {
+	return (m === 2 && n >= 6 && n < 8) || (m === 3 && n >= 6 && n < 12);
+}
+
+/**
+ * Seasonal states relative to position 0 for seasons of 2 or 3 over 3 whole seasons and fewer than 4:
+ * the 3-season rule, with the template at the reference at time 0 (`-D_{-m}`) added to every other
+ * position.
+ */
+export function lowSeasonSeasonals(y: readonly number[], m: number, slopeSum?: number): number[] {
+	const base = threeSeasonSeasonals(y, m, slopeSum);
+	const d = -shift(y, m, -m);
+	return base.map((s, k) => (k === 0 ? 0 : s + d));
+}
+
 /** Seasonal states relative to position 0, for lengths where `isThreePlusLength` holds. */
 export function threePlusSeasonals(y: readonly number[], m: number): number[] {
 	const base = threeSeasonSeasonals(y, m);
