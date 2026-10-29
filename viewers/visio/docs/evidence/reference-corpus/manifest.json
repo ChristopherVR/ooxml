@@ -1,0 +1,347 @@
+{
+  "application": "Microsoft Visio",
+  "version": "16.0",
+  "build": 20527,
+  "generated": "2026-10-29",
+  "themeApplied": true,
+  "documents": {
+    "reference-corpus.vsdx": [
+      {
+        "name": "basic-shapes",
+        "png": "basic-shapes.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Basic.Rect",
+            "type": 3,
+            "text": "Rectangle",
+            "PinX": 2.25,
+            "PinY": 6.75,
+            "Width": 2.5,
+            "Height": 1.5
+          },
+          {
+            "id": 2,
+            "name": "Basic.Oval",
+            "type": 3,
+            "text": "Oval",
+            "PinX": 5.75,
+            "PinY": 6.75,
+            "Width": 2.5,
+            "Height": 1.5
+          },
+          {
+            "id": 3,
+            "name": "Basic.Line",
+            "type": 3,
+            "text": "",
+            "PinX": 4.0,
+            "PinY": 4.5,
+            "Width": 6.082762530298219,
+            "Height": 0.0
+          },
+          {
+            "id": 4,
+            "name": "Basic.Rotated",
+            "type": 3,
+            "text": "Rotated 30 deg",
+            "PinX": 2.5,
+            "PinY": 2.5,
+            "Width": 3.0,
+            "Height": 1.0
+          }
+        ]
+      },
+      {
+        "name": "master-instances",
+        "png": "master-instances.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Process",
+            "type": 3,
+            "text": "Process",
+            "PinX": 2.0,
+            "PinY": 6.0,
+            "Width": 1.0,
+            "Height": 0.75
+          },
+          {
+            "id": 2,
+            "name": "Decision",
+            "type": 3,
+            "text": "Decision",
+            "PinX": 4.5,
+            "PinY": 6.0,
+            "Width": 1.0,
+            "Height": 0.75
+          },
+          {
+            "id": 3,
+            "name": "Start/End",
+            "type": 3,
+            "text": "Start/End",
+            "PinX": 7.0,
+            "PinY": 6.0,
+            "Width": 1.0,
+            "Height": 0.375
+          }
+        ]
+      },
+      {
+        "name": "connectors",
+        "png": "connectors.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Conn.A",
+            "type": 3,
+            "text": "A",
+            "PinX": 2.0,
+            "PinY": 5.5,
+            "Width": 2.0,
+            "Height": 1.0
+          },
+          {
+            "id": 2,
+            "name": "Conn.B",
+            "type": 3,
+            "text": "B",
+            "PinX": 6.0,
+            "PinY": 3.5,
+            "Width": 2.0,
+            "Height": 1.0
+          },
+          {
+            "id": 3,
+            "name": "Conn.C",
+            "type": 3,
+            "text": "C",
+            "PinX": 6.0,
+            "PinY": 6.5,
+            "Width": 2.0,
+            "Height": 1.0
+          },
+          {
+            "id": 4,
+            "name": "Dynamic connector",
+            "type": 3,
+            "text": "",
+            "PinX": 3.5,
+            "PinY": 4.25,
+            "Width": 3.0,
+            "Height": -1.5
+          },
+          {
+            "id": 5,
+            "name": "Dynamic connector.5",
+            "type": 3,
+            "text": "",
+            "PinX": 4.5,
+            "PinY": 5.75,
+            "Width": 3.0,
+            "Height": 0.5
+          }
+        ]
+      },
+      {
+        "name": "groups",
+        "png": "groups.png",
+        "shapes": [
+          {
+            "id": 4,
+            "name": "Group.Main",
+            "type": 2,
+            "text": "",
+            "PinX": 2.75,
+            "PinY": 4.75,
+            "Width": 3.5,
+            "Height": 3.5
+          },
+          {
+            "id": 5,
+            "name": "Sheet.5",
+            "type": 3,
+            "text": "Ungrouped",
+            "PinX": 7.0,
+            "PinY": 3.75,
+            "Width": 2.0,
+            "Height": 1.5
+          }
+        ]
+      },
+      {
+        "name": "containers",
+        "png": "containers.png",
+        "shapes": [
+          {
+            "id": 3,
+            "name": "Container.Main",
+            "type": 2,
+            "text": "Heading",
+            "PinX": 4.0,
+            "PinY": 5.65625,
+            "Width": 4.25,
+            "Height": 1.5625
+          },
+          {
+            "id": 1,
+            "name": "Sheet.1",
+            "type": 3,
+            "text": "In 1",
+            "PinX": 2.75,
+            "PinY": 5.5,
+            "Width": 1.5,
+            "Height": 1.0
+          },
+          {
+            "id": 2,
+            "name": "Sheet.2",
+            "type": 3,
+            "text": "In 2",
+            "PinX": 5.25,
+            "PinY": 5.5,
+            "Width": 1.5,
+            "Height": 1.0
+          }
+        ]
+      },
+      {
+        "name": "themed",
+        "png": "themed.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Sheet.1",
+            "type": 3,
+            "text": "Themed 1",
+            "PinX": 2.0,
+            "PinY": 5.75,
+            "Width": 2.0,
+            "Height": 1.5
+          },
+          {
+            "id": 2,
+            "name": "Sheet.2",
+            "type": 3,
+            "text": "Themed 2",
+            "PinX": 5.0,
+            "PinY": 5.75,
+            "Width": 2.0,
+            "Height": 1.5
+          }
+        ]
+      }
+    ],
+    "reference-flat.vsdx": [
+      {
+        "name": "flat-basic-shapes",
+        "png": "flat-basic-shapes.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Basic.Rect",
+            "type": 3,
+            "text": "Rectangle",
+            "PinX": 2.25,
+            "PinY": 6.75,
+            "Width": 2.5,
+            "Height": 1.5
+          },
+          {
+            "id": 2,
+            "name": "Basic.Oval",
+            "type": 3,
+            "text": "Oval",
+            "PinX": 5.75,
+            "PinY": 6.75,
+            "Width": 2.5,
+            "Height": 1.5
+          },
+          {
+            "id": 3,
+            "name": "Basic.Line",
+            "type": 3,
+            "text": "",
+            "PinX": 4.0,
+            "PinY": 4.5,
+            "Width": 6.082762530298219,
+            "Height": 0.0
+          },
+          {
+            "id": 4,
+            "name": "Basic.Rotated",
+            "type": 3,
+            "text": "Rotated 30 deg",
+            "PinX": 2.5,
+            "PinY": 2.5,
+            "Width": 3.0,
+            "Height": 1.0
+          }
+        ]
+      },
+      {
+        "name": "flat-groups",
+        "png": "flat-groups.png",
+        "shapes": [
+          {
+            "id": 4,
+            "name": "Group.Main",
+            "type": 2,
+            "text": "",
+            "PinX": 2.75,
+            "PinY": 4.75,
+            "Width": 3.5,
+            "Height": 3.5
+          },
+          {
+            "id": 5,
+            "name": "Sheet.5",
+            "type": 3,
+            "text": "Ungrouped",
+            "PinX": 7.0,
+            "PinY": 3.75,
+            "Width": 2.0,
+            "Height": 1.5
+          }
+        ]
+      },
+      {
+        "name": "flat-glued-lines",
+        "png": "flat-glued-lines.png",
+        "shapes": [
+          {
+            "id": 1,
+            "name": "Glue.A",
+            "type": 3,
+            "text": "A",
+            "PinX": 2.0,
+            "PinY": 5.5,
+            "Width": 2.0,
+            "Height": 1.0
+          },
+          {
+            "id": 2,
+            "name": "Glue.B",
+            "type": 3,
+            "text": "B",
+            "PinX": 6.0,
+            "PinY": 3.5,
+            "Width": 2.0,
+            "Height": 1.0
+          },
+          {
+            "id": 3,
+            "name": "Glue.Line",
+            "type": 3,
+            "text": "",
+            "PinX": 4.0,
+            "PinY": 4.5,
+            "Width": 4.47213595499958,
+            "Height": 0.0
+          }
+        ]
+      }
+    ]
+  }
+}

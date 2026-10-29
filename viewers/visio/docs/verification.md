@@ -4,6 +4,44 @@ Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio par
 
 Entries that cite commits or CI runs of `ChristopherVR/visio-viewer` refer to the former standalone repository, whose history is now part of `viewers/visio` in this repository.
 
+## Native Visio edit-family checks, 2026-10-29
+
+Product and build: Microsoft Visio, `Application.Version` 16.0, `Application.Build` 20527, driven through `Visio.InvisibleApp` COM on Windows 11 (the earlier statements in this file and in `docs/visio-parity-review.md` that no Visio COM class is registered no longer hold). Nothing in this section establishes Visio parity.
+
+Method (`scripts/create-visio-edit-family-fixtures.ts`, `scripts/record-visio-edit-families.ps1`): the core `editVsdx` API applies one edit per family to a Visio-authored reference document; Visio opens each result with `AlertResponse = 7` (a repair prompt would throw); every cached numeric cell the core wrote for every shape on every page (PinX, PinY, Width, Height, Angle, LocPinX, LocPinY, LineWeight, FillPattern, LinePattern, FlipX, FlipY, Char.Size) and the fill and line colours are compared with `ResultIU` / `ResultStr`; Visio saves a copy (`SaveAsEx`); each numeric cell's own formula is re-entered to force Visio to evaluate it and the result is compared again; the saved copy is reopened and compared with the first read-back. Tolerance 1e-6. Evidence JSON: `evidence/native-edit-families-flat-2026-10-29.json` and `evidence/native-edit-families-full-2026-10-29.json`.
+
+Reference documents (`scripts/record-visio-reference-corpus.ps1`, see [reference corpus](#reference-corpus-2026-10-29)): `reference-flat.vsdx` has no stencil masters; `reference-corpus.vsdx` adds master instances, a stencil dynamic connector with glue, a Visio container and a themed page.
+
+| Family                 | Edit                                                                             | `reference-flat.vsdx`                                                                    | `reference-corpus.vsdx`                                                |
+| ---------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Geometry               | move, resize, rotate, flip, line endpoint                                        | pass (112 cells, delta 0, recalc delta 1.5e-14, reopen drift 8.9e-16)                    | core refused: ShapeSheet dependency closure (qualified function names) |
+| Geometry               | anchored resize (bottom-right anchor)                                            | pass (112 cells, delta 0)                                                                | core refused (same)                                                    |
+| Multi-selection resize | resize plus move of two shapes (the viewer's composition, applied by the script) | pass (112 cells, delta 0)                                                                | core refused (same)                                                    |
+| Group resize           | `resize-shape` on a Visio-authored group                                         | core refused: "Master, group, foreign, deleted and non-shape operations are unsupported" | core refused (same)                                                    |
+| Group                  | `group-shapes`                                                                   | pass (121 cells, delta 0)                                                                | core refused: formula uses ARG                                         |
+| Group                  | `ungroup-shape` on a Visio-authored group                                        | pass (103 cells, delta 0)                                                                | core refused: ARG                                                      |
+| Duplication            | `duplicate-shapes` of two shapes                                                 | pass (133 cells, delta 0)                                                                | core refused: ARG                                                      |
+| Duplication            | glued line                                                                       | core refused: line routing and glue unsupported (documented limit)                       | core refused: ARG                                                      |
+| Clipboard              | `captureVisioClipboard` then `paste-shapes`                                      | pass (133 cells, delta 0)                                                                | capture refused: ARG                                                   |
+| Formatting             | fill and line colour, line weight, pattern, font size, bold, alignment           | pass (118 cells including colours and Char.Size, delta 0)                                | core refused (dependency closure)                                      |
+| Arrangement            | `reorder-shape` to front                                                         | pass (112 cells, delta 0)                                                                | core refused: ARG                                                      |
+| Containers             | `insert-container` with two members                                              | pass (124 cells, delta 0)                                                                | pass (203 cells, delta 0)                                              |
+| Containers             | `insert-container` with a box and no members                                     | pass (124 cells, delta 0)                                                                | pass (203 cells, delta 0)                                              |
+
+Every pass also opened without a repair prompt, saved from Visio, reopened with no cell drift above 1e-6, and agreed after Visio re-evaluated 109 to 184 formulas per case (largest difference 1.5e-14).
+
+What this does not show:
+
+- The two checks that compare geometry only prove the cached cells equal what Visio holds and recomputes; they do not prove the drawing looks as Visio would draw it. Pixel comparison against Visio `Page.Export` renders was not done.
+- Group resize on a Visio-authored group is refused by the core (no edit produced, so no native check). This is the pending group comparison named in `docs/visio-parity-review.md`; a code change is needed before it can be checked.
+- On the corpus that contains stencil master instances (a normal Visio-authored document), the core refuses every edit family except container insertion, because document-wide formula admission fails on Visio's `ARG` and qualified function names. The flat document avoids this by having no masters. This is an honest functional gap, not a native-fidelity result.
+- Container membership (`ooxmlContainerMembers`) and whether Visio recognizes the inserted frame as a container were not checked; connector glue after duplication, paste across pages and scaled pages were not exercised.
+- One Visio build, one machine, default fonts.
+
+## Reference corpus, 2026-10-29
+
+`viewers/visio/docs/evidence/reference-corpus/` holds Visio 16.0 build 20527 authored files and `Page.Export` PNGs (about 150 KB in total): `reference-corpus.vsdx` (pages `basic-shapes`, `master-instances`, `connectors` with glued dynamic connectors, `groups`, `containers` with a Visio container, `themed`), `reference-flat.vsdx` (`flat-basic-shapes`, `flat-groups`, `flat-glued-lines`), one PNG per page and `manifest.json` (version, build, every shape's id, name, text and PinX/PinY/Width/Height). The themed page has a theme applied with `Page.SetTheme('Office Theme')`, but its shapes use default styling, so it is a weak theme reference. Regenerate with `pwsh scripts/record-visio-reference-corpus.ps1`; PNGs depend on the installed fonts and renderer, so a regeneration on another machine may differ and should be reviewed, not assumed equal. These are visual references only: the viewer's SVG output has not been compared with them numerically.
+
 ## Rich-text ranges and fixed drawing-page dimensions, 2026-10-09
 
 The core replacement planner now retains character formatting for replacements
@@ -1509,7 +1547,7 @@ These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch
 
 - Local Chromium remains launch-blocked by IPC socket permissions. The 12 existing scenarios passed remotely at the published editing baseline; the newly added arrow pixel scenario has not yet passed remote CI.
 - Microsoft Visio desktop open/render/edit/save/reopen testing
-- A complete reference corpus with fixed Visio version, fonts, page settings and expected outputs
+- A complete reference corpus: a small fixed one now exists (see "Reference corpus, 2026-10-29") but it is not compared with the viewer's rendering and does not fix fonts or cover most features
 - Full accessibility testing with assistive technology
 - All historical framework/Node/browser combinations
 - Native Microsoft Visio validation of VSDX editing/history, formula recalculation, complete routing, legacy binary formats or full product parity
