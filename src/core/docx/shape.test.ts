@@ -51,7 +51,7 @@ describe('shapes authored by Word', () => {
 		expect(xml).toContain('<v:rect');
 	});
 
-	it('rebuilds an edited shape as a modern drawing and keeps its identity and style', async () => {
+	it('rebuilds an edited shape in its mc:Choice and keeps its identity, style and fallback', async () => {
 		const loaded = await load();
 		const paragraph = expectParagraph(loaded.model.blocks[0]);
 		const rect = shapes(paragraph).find((image) => image.shape?.preset === 'rect')!;
@@ -72,8 +72,11 @@ describe('shapes authored by Word', () => {
 		expect(xml).toContain('<wp:wrapTopAndBottom/>');
 		expect(xml).toContain(`<wp:docPr id="${docPr[1]}" name="Rectangle 1"`);
 		expect(xml).toContain('<wp:posOffset>95250</wp:posOffset>');
-		expect(xml).not.toContain('<v:rect');
-		expect(xml.match(/<mc:AlternateContent>/g)).toHaveLength(3);
+		// The wrapper and the VML fallback stay; the fallback follows the resize (200px = 150pt).
+		expect(xml).toContain('<v:rect');
+		expect(xml).toContain('width:150pt;height:70pt');
+		expect(xml).toContain('<w:t>Changed text</w:t>');
+		expect(xml.match(/<mc:AlternateContent>/g)).toHaveLength(4);
 		const reopened = await loadDocx(await loaded.save(loaded.model));
 		const again = shapes(expectParagraph(reopened.model.blocks[0])).find(
 			(image) => image.shape?.preset === 'roundRect',

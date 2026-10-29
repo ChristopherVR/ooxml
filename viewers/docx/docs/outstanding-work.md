@@ -78,8 +78,9 @@ floating shape in front of text anchored to the paragraph under the pointer (a c
 gives Word's 1 by 0.67 inch box). The Shape Format tab sets fill, outline colour and
 weight, text, wrapping (in line, square, tight, through, top and bottom, behind and in front
 of text) and size; a corner handle resizes. Editing a shape rewrites its drawing from the
-model while keeping its identity, style and body properties, and drops a VML fallback
-(`mc:AlternateContent`), so Word 2007 would not show the edited shape. Moving a floating
+model while keeping its identity, style and body properties; a shape wrapped in
+`mc:AlternateContent` keeps the wrapper and its VML fallback, which follows a resize but
+not other edits, so Word 2007 may show a stale shape. Moving a floating
 shape by dragging, rotating, adjusting the yellow handles, gradient and picture fills, shape
 effects, grouping, aligning and text formatting inside a shape are not supported, and
 Print Layout selection and moving belong to the Print Layout editing work.

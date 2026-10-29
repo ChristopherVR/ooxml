@@ -14,6 +14,7 @@ import {
 	updatePlacement,
 } from './write-drawing-patch';
 import type { RelationshipAllocator } from './relationship-allocator';
+import { patchFallbackSize } from './write-fallback';
 import { diagramRun } from './write-diagram-drawing';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -184,6 +185,14 @@ export function createImageRun(
 	}
 	if (base && oldDrawing && image.shape?.editable && base.shape?.editable) {
 		const next = rebuildShapeDrawing(doc, image, oldDrawing);
+		const choice = oldDrawing.parentNode as XmlElement | null;
+		if (oldContainer?.localName === 'AlternateContent' && choice) {
+			// Keep the wrapper and its fallback: only the modern drawing is rebuilt.
+			choice.replaceChild(next, oldDrawing);
+			patchFallbackSize(oldContainer, image, base);
+			clearNonProperties(node, oldContainer);
+			return node;
+		}
 		clearNonProperties(node);
 		node.appendChild(next);
 		return node;
