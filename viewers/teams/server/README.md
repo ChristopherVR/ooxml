@@ -34,7 +34,8 @@ Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
-| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential, or to `{ credential, role }` (enables accounts); the secret that signs sessions.                                         |
+| `TEAMS_ENFORCE_AUTHORSHIP`                              | `0` turns off the authorship checks for signed-in users (default on).                                                                                                    |
 | `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_TRUST_PROXY`                                     | `1` (or a hop count, or `--trust-proxy`): take the client address for rate limits from `X-Forwarded-For`. Off by default.                                                |
@@ -63,6 +64,29 @@ Put it behind TLS (browsers refuse `ws://` from an `https://` page), and add a T
 across NATs. The full deployment guide is
 [docs/deploy.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md).
 
+## Authorship and moderators
+
+With accounts, every sync message from a socket is checked against the room document before it is
+applied (`validateTeamsSyncMessage` of ooxml-core, bundled into `validator.generated.mjs`). A
+signed-in user may only post messages and reactions as themselves, edit or delete their own
+messages, create channels and tabs as themselves, rename, archive or delete only the channels and
+tabs they created, and pin as themselves (in a private chat, only members pin). A violating message
+is not applied and the socket is closed with 1008 (`update rejected: forged-author`), so the client
+resyncs. A user with the `moderator` role may additionally hide or remove anybody's messages and
+reactions and change anybody's channels and tabs, but never write in another person's name. Give
+the role in the users file:
+
+```json
+{ "ann": "scrypt$...", "root": { "credential": "scrypt$...", "role": "moderator" } }
+```
+
+or return `{ id, role: 'moderator' }` from `authenticate`. The role rides in the signed session
+(`POST /auth/session` also answers it as `role`), so changing a role takes effect when the person
+signs in again; revoke their sessions to force it. Disable with `enforceAuthorship: false` or
+`TEAMS_ENFORCE_AUTHORSHIP=0`. Without accounts nothing is enforced, because the user is a claim.
+Meetings, the roster, the chat member map, message content and size, and Yjs client ids are not
+checked; the full list is in the core's `docs/teams-area.md`.
+
 ## Accounts and sessions
 
 The server needs a way to check a credential (see above); without one it only starts with
@@ -87,7 +111,7 @@ createTeamsServer({
 
 Clients call `POST /auth/session` with `{ user, credential }` (core: `requestTeamsSession`) and get
 a signed session (HMAC-SHA-256, 12 hours by default, `sessionTtlMs`). Sockets then pass
-`?session=`; the server takes the user id from it and ignores the claimed `?user=`. With accounts
+it as the subprotocol `openteams.session.<session>`; the server takes the user id from it and ignores the claimed `?user=`. With accounts
 configured, sockets without a valid session get 401. Set `TEAMS_SESSION_SECRET` (or
 `sessionSecret`) to keep sessions across restarts and across processes; without it a random secret
 is used per process. The server never logs credentials, sessions or the secret.
@@ -134,7 +158,7 @@ is used per process. The server never logs credentials, sessions or the secret.
 
 Remaining limits: the `users` table is a file you must protect, there is no password reset or
 account management, a revocation applies to the whole user rather than one device, and sessions
-travel in the socket query string. Plug an identity provider into `authenticate` for anything
+are valid until they expire or are revoked. Plug an identity provider into `authenticate` for anything
 larger than a small closed team.
 
 **`--insecure-dev` is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
@@ -191,13 +215,17 @@ uses all of this for collaborative PowerPoint review.
   workspace members who are not on the list out of the room. Without accounts the `user` is a claim,
   so anyone holding the token can claim another person's id; with accounts (above) it comes from
   the signed session.
-- **The token and session travel in the WebSocket query string** (`?token=`, `?session=`), which
-  proxies and access logs can record and browsers can keep in history. The server also accepts them
-  in the `Sec-WebSocket-Protocol` header as `openteams.session.<session>` and
-  `openteams.token.<token>` next to the bare `openteams` entry (the server echoes only `openteams`),
-  which keeps them out of URLs and logs. The shipped client still sends the query string; switching
-  it needs a change in the core's `teams` area (follow-up). Run the server behind TLS and do not log
-  query strings. Files never take the token in a URL: they use the `Authorization` header or a signed link.
+- **The token and session travel in the `Sec-WebSocket-Protocol` header**
+  (`openteams, openteams.session.<session>, openteams.token.<token>`; the server echoes only
+  `openteams`), which keeps them out of URLs and access logs. The shipped client sends them that
+  way, and falls back to the query string (`?token=`, `?session=`) only for a credential that
+  contains characters a subprotocol cannot carry; the server accepts both. Run the server behind
+  TLS. Files never take the token in a URL: they use the `Authorization` header or a signed link.
+- **Authorship is enforced for signed-in users** (see Authorship below).
+- **Protocol version.** Clients announce `proto=<n>`. A client whose major version the server does
+  not speak is accepted at the handshake and closed with 1008 and a reason such as `unsupported
+  protocol version 2: this server speaks 1`. A missing `proto` is accepted (older clients) and
+  logged.
 - **Defaults are local.** Without a token the server refuses a non-loopback `HOST` (unless
   `TEAMS_INSECURE=1`) and accepts only loopback origins, so a website you visit cannot drive a server
   on your own machine. Set `TEAMS_TOKEN` and `TEAMS_ORIGINS` for any shared deployment.

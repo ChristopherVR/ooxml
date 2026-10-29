@@ -30,6 +30,7 @@
 		"index.mjs",
 		"guards.mjs",
 		"auth.mjs",
+		"validator.generated.mjs",
 		"passwords.mjs",
 		"rate-limit.mjs",
 		"hash-password.mjs",

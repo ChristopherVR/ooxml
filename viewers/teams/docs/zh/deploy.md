@@ -40,10 +40,8 @@ teams.example.com {
 - **一个共享令牌可打开所有房间和所有文件。** 只有启用账户时才有按用户的身份，只有传入 `authorizeSync` 时才有按房间的权限。请把令牌当作团队密码对待。
 - **房间内的所有成员彼此信任。** 服务器只转发 Yjs 字节，因此任何成员都可以编辑或删除他人的消息，并伪造作者
   ID 和角色。不要邀请你不愿把整个房间托付的人。
-- **令牌和会话通过 WebSocket 查询字符串传输**（`?token=`、`?session=`），代理和访问日志可能记录它们，浏览器也可能把它们保留在历史记录中。
-  服务器也接受以 `Sec-WebSocket-Protocol` 条目携带它们（`openteams.session.<session>`、`openteams.token.<token>`，与裸的 `openteams` 并列），这些条目不会出现在 URL 和日志中；随附的客户端尚未发送它们（后续工作位于核心的 `teams` 区域）。
-  请把服务器置于 TLS 之后，并且不要记录查询字符串。文件从不在 URL 中携带令牌：它们使用 `Authorization`
-  请求头或签名链接。
+- **令牌和会话通过 `Sec-WebSocket-Protocol` 请求头传输**（`openteams.session.<session>`、`openteams.token.<token>`，与裸的 `openteams` 并列），不会出现在 URL 和日志中。只有当某个值含有子协议无法携带的字符时，随附的客户端才会退回到查询字符串。请把服务器置于 TLS 之后。文件从不在 URL 中携带令牌：它们使用 `Authorization` 请求头或签名链接。
+- **对已登录用户强制校验作者身份**：除非账户在用户文件中带有 `"role": "moderator"`，否则任何人都不能以他人名义发言、编辑或删除他人的消息，也不能修改自己未创建的频道和标签页。`TEAMS_ENFORCE_AUTHORSHIP=0` 可关闭。
 - **默认需要身份验证。** 没有账户、`authenticate` 函数或 `authorizeSync` 时，服务器拒绝启动；`--insecure-dev` 是明确且带警告的例外。单独的共享令牌不算身份验证。
 - **默认配置仅限本机。** 未设置令牌时，服务器会拒绝非回环的 `HOST`（除非设置 `TEAMS_INSECURE=1`），并且只接受回环来源，
   因此你访问的网站无法操控你本机上的服务器。任何共享部署都应设置 `TEAMS_TOKEN` 和 `TEAMS_ORIGINS`。

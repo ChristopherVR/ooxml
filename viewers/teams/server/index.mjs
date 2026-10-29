@@ -42,6 +42,12 @@ import {
 	sameSecret as sameCredential,
 } from './auth.mjs';
 import { createSlidingLimiter } from './rate-limit.mjs';
+import {
+	PROTOCOL_PARAM,
+	PROTOCOL_VERSION,
+	protocolOfUrl,
+	validateTeamsSyncMessage,
+} from './validator.generated.mjs';
 import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
 import {
 	createBucket,
@@ -116,7 +122,7 @@ const unlinkQuiet = (path) => {
  *   sessionSecret?: string, sessionTtlMs?: number, adminToken?: string,
  *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
- *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number,
+ *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number, enforceAuthorship?: boolean,
  *   authorizeSync?: (request: { room: string, user: string | null, url: URL,
  *   headers: Record<string, string | string[] | undefined> }) => SyncVerdict | Promise<SyncVerdict>,
  *   log?: (m: string) => void }} [options]
@@ -141,6 +147,10 @@ export function createTeamsServer(options = {}) {
 		maxSignalBytes = 256 * 1024,
 		log = () => {},
 	} = options;
+	// Reject updates that forge or destroy another user's rows (see "Authorship" in the README). It
+	// needs a verified identity, so it applies only to sockets that carry a signed session.
+	const enforceAuthorship =
+		options.enforceAuthorship ?? process.env.TEAMS_ENFORCE_AUTHORSHIP !== '0';
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Per-room permissions decided by the host (see "Per-room permissions" in the README).
 	const authorizeSync = typeof options.authorizeSync === 'function' ? options.authorizeSync : null;
@@ -383,7 +393,7 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	function handleSync(ws, name, admission, grant) {
+	function handleSync(ws, name, admission, grant, actor) {
 		const room = getRoom(name);
 		if (grant) room.grants.set(ws, grant);
 		const readOnly = grant?.access === 'read';
@@ -407,6 +417,14 @@ export function createTeamsServer(options = {}) {
 					// A read-only socket may ask for the document (step 1), never change it.
 					if (readOnly && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1)
 						return;
+					if (actor && decoding.peekVarUint(decoder) !== syncProtocol.messageYjsSyncStep1) {
+						const verdict = validateTeamsSyncMessage(room.doc, new Uint8Array(data), actor);
+						if (!verdict.ok) {
+							const codes = [...new Set(verdict.violations.map((v) => v.code))].join(',');
+							log(`sync ${name}: update from ${actor.id} rejected (${codes})`);
+							return void ws.close(1008, `update rejected: ${codes}`);
+						}
+					}
 					if (room.bytes + data.byteLength > limits.maxDocBytes) {
 						// The running total over-counts (merged and deleted content shrinks); measure once.
 						room.bytes = Y.encodeStateAsUpdate(room.doc).length;
@@ -639,8 +657,15 @@ export function createTeamsServer(options = {}) {
 					: { id: user };
 				const id = typeof verdict === 'string' ? verdict : verdict?.id;
 				if (!isUserId(id)) return plain(res, 401);
-				const issued = signer.issue(id);
-				json(res, 200, { session: issued.token, user: id, expiresAt: issued.expiresAt });
+				const role =
+					typeof verdict === 'object' && verdict?.role === 'moderator' ? 'moderator' : undefined;
+				const issued = signer.issue(id, role);
+				json(res, 200, {
+					session: issued.token,
+					user: id,
+					...(role ? { role } : {}),
+					expiresAt: issued.expiresAt,
+				});
 			} catch (error) {
 				// Never log the credential or the hook's input, only the failure.
 				log(`authenticate failed (${error?.message ?? 'error'})`);
@@ -798,7 +823,9 @@ export function createTeamsServer(options = {}) {
 		if (!tokenOk(url, req)) return reject(socket, '401 Unauthorized');
 		// Identity: with accounts the session decides who this is; without, the claim stands (dev).
 		const sessionToken = credentialOf(url, req, 'session');
-		const sessionUser = signer.verify(sessionToken);
+		const claims = signer.inspect(sessionToken);
+		const sessionUser = claims?.user ?? null;
+		const sessionRole = claims?.role;
 		if (sessionToken !== null && sessionUser === null) return reject(socket, '401 Unauthorized');
 		if (authRequired && sessionUser === null) return reject(socket, '401 Unauthorized');
 		// Private chats: only the people listed in the room's member map may join.
@@ -826,7 +853,10 @@ export function createTeamsServer(options = {}) {
 		const admit = (grant) => {
 			if (socket.destroyed) return;
 			perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
-			upgradeSocket(req, socket, head, m[1], name, admission, sessionUser, ip, grant);
+			upgradeSocket(req, socket, head, m[1], name, admission, sessionUser, ip, grant, {
+				role: sessionRole,
+				proto: protocolCheck(url, name),
+			});
 		};
 		if (m[1] !== 'sync' || !authorizeSync) return admit(null);
 		const user = sessionUser ?? url.searchParams.get('user');
@@ -844,7 +874,18 @@ export function createTeamsServer(options = {}) {
 				},
 			);
 	}
-	function upgradeSocket(req, socket, head, kind, name, admission, sessionUser, ip, grant) {
+	/** The reason to refuse a client's protocol version, or null. A missing version is a legacy client. */
+	function protocolCheck(url, name) {
+		if (!url.searchParams.has(PROTOCOL_PARAM)) {
+			log(`${name}: client announced no protocol version (legacy), accepted`);
+			return null;
+		}
+		const version = protocolOfUrl(url.href);
+		return version === PROTOCOL_VERSION
+			? null
+			: `unsupported protocol version ${url.searchParams.get(PROTOCOL_PARAM)?.slice(0, 12)}: this server speaks ${PROTOCOL_VERSION}`;
+	}
+	function upgradeSocket(req, socket, head, kind, name, admission, sessionUser, ip, grant, extra) {
 		const wss = kind === 'sync' ? syncWss : signalWss;
 		wss.handleUpgrade(req, socket, head, (ws) => {
 			if (sessionUser !== null) {
@@ -856,8 +897,16 @@ export function createTeamsServer(options = {}) {
 				if (left <= 0) perIp.delete(ip);
 				else perIp.set(ip, left);
 			});
+			if (extra.proto) {
+				log(`${kind} ${name}: ${extra.proto}`);
+				return void ws.close(1008, extra.proto);
+			}
+			const actor =
+				enforceAuthorship && sessionUser !== null
+					? { id: sessionUser, moderator: extra.role === 'moderator' }
+					: null;
 			try {
-				if (kind === 'sync') handleSync(ws, name, admission, grant);
+				if (kind === 'sync') handleSync(ws, name, admission, grant, actor);
 				else handleSignal(ws, name);
 			} catch (error) {
 				log(`${kind} ${name}: setup failed (${error.message})`);

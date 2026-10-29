@@ -241,9 +241,14 @@ and the **server contract**. Each has a number or a pinned test.
 ### Protocol version and room names (`protocol.ts`)
 
 - `PROTOCOL_VERSION` (1) rides as the `proto` query parameter on every sync and signaling
-  connection. A server may refuse a client with an unsupported or missing value (a missing one is a
-  client older than this parameter); the reference server does not check it yet. `protocolOfUrl`
-  reads it back.
+  connection. The reference server completes the handshake and then closes a client whose value is
+  not its own with code 1008 and the reason `unsupported protocol version N: this server speaks 1`
+  (an HTTP refusal would not show the client a reason). A missing `proto` (a client older than this
+  parameter) is still accepted, with a log line. `protocolOfUrl` reads it back.
+- Credentials: the client sends the workspace token and the signed session in the
+  `Sec-WebSocket-Protocol` header (`openteams, openteams.session.<s>`, `connectionAuth` in
+  `server-config.ts`), not in the URL. The header only allows token characters, so a credential with
+  others (a hand-made token) makes the client fall back to the query string for all of them.
 - Room names are pinned by tests: a workspace room is the workspace id (1 to 128 of `[\w-]`); a chat
   room is `chat-<16 hex of the workspace id>-<chat id>`; a 1:1 chat id is `dm-<16 hex of the sorted
   pair>`; a call room is `call-<workspace>-<channel>`; all are cut to 128. The hash (`shortHash`) is
@@ -255,11 +260,13 @@ and the **server contract**. Each has a number or a pinned test.
 
 ### Version skew
 
-- **New client, old server:** works; the server ignores `proto`. A new client on an old document
+- **New client, old server:** works if the server ignores `proto` and reads credentials from the
+  subprotocol header (the reference server does both); an older server that only reads
+  `?session=` answers 401. A new client on an old document
   migrates it for everyone.
 - **Old client, new document:** read-only (`unsupported-schema`), never corrupting.
-- **Old client, new server:** the server must keep accepting a missing `proto` until it deliberately
-  drops those clients, and should say so in its changelog.
+- **Old client, new server:** the reference server accepts a missing `proto` (and query-string
+  credentials) until it deliberately drops those clients, and will say so in its changelog.
 - Deploy the app and the server from the same release when you can.
 
 ### Server-side authorship (`validate-update.ts`)
@@ -286,13 +293,25 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
   Teams, and a moderator may unpin without being a member.
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
-step 2 and update are checked, everything else passes). To wire it into the reference server, call
-it in the `ws.on('message')` handler of `handleSync` before `syncProtocol.readSyncMessage`, with the
-room's document and the session user (`sessionSockets.get(ws)`); on `{ ok: false }` log the
-violations, close the socket (1008) and do not apply the message, so the client resyncs instead of
-diverging. **Wiring is not done in the reference server**: it is a standalone `.mjs` package
-without a dependency on `ooxml-core`, it has no moderator role, and without signed sessions the user
-is only a claim, so the check would not be authoritative.
+step 2 and update are checked, everything else passes). The reference server
+(`viewers/teams/server`) calls it in the `ws.on('message')` handler of `handleSync` before
+`readSyncMessage`, for every sync room (workspace and private chats), with the room's document and
+the user of the **signed session**; on `{ ok: false }` it logs the violation codes, closes the socket
+with 1008 (`update rejected: <codes>`) and does not apply the message. It applies only to sockets
+that carry a verified identity (a session, from `users` or the `authenticate` hook); without
+accounts the user is a claim and nothing is enforced. `enforceAuthorship: false` (or
+`TEAMS_ENFORCE_AUTHORSHIP=0`) turns it off. The moderator flag comes from the session (a `users`
+entry `{ "credential": "...", "role": "moderator" }`, or `role: 'moderator'` returned by
+`authenticate`).
+
+**Packaging.** `openteams-server` is a standalone `.mjs` package. Rather than add `ooxml-core` (a
+large package with its own dependency tree, whose `dist` must be built before the server's tests
+can run) to a small server, `viewers/teams/scripts/bundle-validator.mjs` bundles
+`validate-update.ts` and `protocol.ts` with esbuild into the committed
+`server/validator.generated.mjs` (about 9 KB, `yjs`, `lib0` and `y-protocols` external, which the
+server already depends on). A script test fails when the committed file is stale, so a change to the
+validator must be followed by `bun run bundle:validator` in `viewers/teams`; the commit then touches
+`server/` and releases `openteams-server`.
 
 What it does not cover, honestly:
 
@@ -318,9 +337,9 @@ What it does not cover, honestly:
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read
   them. Media is DTLS-SRTP between peers (or to your TURN relay, which cannot decrypt it).
 - **Authorization is the server's job.** The `role` and author checks here are client-side; a
-  hostile client can write anything the server accepts. `validateTeamsUpdate` can enforce message
-  authorship on the server but is not wired into the reference server yet (see "Compatibility
-  policy"). Treat the server as the trust boundary.
+  hostile client can write anything the server accepts. The reference server enforces message,
+  channel, tab and pin ownership for signed-in users (see "Server-side authorship"); the rest of the
+  document is unchecked. Treat the server as the trust boundary.
 - **Mesh calls scale to a handful of people**, not a webinar.
 - A sync server that never compacts will grow with history; the reference server stores one
   snapshot per room.

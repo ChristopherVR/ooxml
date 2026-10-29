@@ -53,12 +53,14 @@ comptes, donnez au serveur `users` (ou `TEAMS_USERS_FILE`) ou une fonction `auth
   des octets Yjs : n’importe quel membre peut modifier ou supprimer les messages des autres et falsifier
   les identifiants d’auteur et les rôles. N’invitez pas des personnes à qui vous ne confieriez pas toute
   la salle.
-- **Le jeton et la session circulent dans la chaîne de requête du WebSocket** (`?token=`, `?session=`), que les proxys et les
-  journaux d’accès peuvent enregistrer et que les navigateurs peuvent garder dans l’historique. Le serveur les accepte aussi
-  sous forme d’entrées `Sec-WebSocket-Protocol` (`openteams.session.<session>`, `openteams.token.<token>`, à côté d’un
-  `openteams` simple), qui n’apparaissent ni dans les URL ni dans les journaux ; le client fourni ne les envoie pas encore
-  (travail à suivre dans la zone `teams` du cœur). Placez le serveur derrière TLS et ne journalisez pas les chaînes de
-  requête. Les fichiers n’acceptent jamais le jeton dans une URL : ils utilisent l’en-tête `Authorization` ou un lien signé.
+- **Le jeton et la session circulent dans l’en-tête `Sec-WebSocket-Protocol`** (`openteams.session.<session>`,
+  `openteams.token.<token>`, à côté d’un `openteams` simple), qui n’apparaît ni dans les URL ni dans les journaux. Le
+  client fourni ne se rabat sur la chaîne de requête que si une valeur contient des caractères qu’un sous-protocole ne
+  peut pas porter. Placez le serveur derrière TLS. Les fichiers ne portent jamais le jeton dans une URL : ils utilisent
+  l’en-tête `Authorization` ou un lien signé.
+- **L’attribution des auteurs est appliquée** aux utilisateurs connectés : personne ne peut écrire au nom d’un autre,
+  modifier ou supprimer ses messages, ni changer les canaux et onglets qu’il n’a pas créés, sauf si le compte a
+  `"role": "moderator"` dans le fichier des utilisateurs. `TEAMS_ENFORCE_AUTHORSHIP=0` la désactive.
 - **Sûr par défaut.** Sans comptes, sans fonction `authenticate` ni `authorizeSync`, le serveur refuse de démarrer ;
   `--insecure-dev` est l’exception explicite, assortie d’un avertissement. Un jeton partagé seul n’est pas une authentification.
 - **Les valeurs par défaut sont locales.** Sans jeton, le serveur refuse un `HOST` non loopback (sauf

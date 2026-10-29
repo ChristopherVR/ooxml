@@ -41,12 +41,14 @@ Después apunta la aplicación a `wss://teams.example.com/sync` y `wss://teams.e
 - **Todos los miembros de una sala confían entre sí.** El servidor solo mueve bytes de Yjs, así que
   cualquier miembro puede editar o borrar los mensajes de otros y falsificar identificadores de autor
   y roles. No invites a quien no sea de confianza para toda la sala.
-- **El token y la sesión viajan en la cadena de consulta del WebSocket** (`?token=`, `?session=`), que los proxies y los
-  registros de acceso pueden guardar y los navegadores conservar en el historial. El servidor también los acepta como
-  entradas `Sec-WebSocket-Protocol` (`openteams.session.<session>`, `openteams.token.<token>`, junto a un `openteams`
-  sin más), que no aparecen en URLs ni registros; el cliente incluido todavía no los envía (trabajo pendiente en el área
-  `teams` del núcleo). Ejecuta el servidor detrás de TLS y no registres las cadenas de consulta. Los archivos nunca llevan
-  el token en una URL: usan la cabecera `Authorization` o un enlace firmado.
+- **El token y la sesión viajan en la cabecera `Sec-WebSocket-Protocol`** (`openteams.session.<session>`,
+  `openteams.token.<token>`, junto a un `openteams` sin más), que no aparece en URLs ni registros. El cliente incluido
+  solo recurre a la cadena de consulta si un valor contiene caracteres que un subprotocolo no puede llevar. Ejecuta el
+  servidor detrás de TLS. Los archivos nunca llevan el token en una URL: usan la cabecera `Authorization` o un enlace
+  firmado.
+- **La autoría se aplica** a los usuarios con sesión: nadie puede escribir en nombre de otra persona, editar o borrar
+  sus mensajes, ni cambiar canales y pestañas que no creó, salvo que la cuenta tenga `"role": "moderator"` en el
+  archivo de usuarios. `TEAMS_ENFORCE_AUTHORSHIP=0` lo desactiva.
 - **Seguro por defecto.** Sin cuentas, un hook `authenticate` ni `authorizeSync`, el servidor se niega a arrancar;
   `--insecure-dev` es la excepción explícita y con advertencia. Un token compartido por sí solo no es autenticación.
 - **Los valores por defecto son locales.** Sin token, el servidor rechaza un `HOST` que no sea loopback

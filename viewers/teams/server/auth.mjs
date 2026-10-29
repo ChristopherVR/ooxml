@@ -10,6 +10,9 @@ const USER = /^[\w.@:+-]{1,64}$/u;
 export const DEFAULT_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const b64 = (buffer) => Buffer.from(buffer).toString('base64url');
 
+export const ROLES = ['moderator'];
+export const isRole = (value) => typeof value === 'string' && ROLES.includes(value);
+
 export const isUserId = (value) => typeof value === 'string' && USER.test(value);
 
 /** Constant-time string comparison that does not leak the length. */
@@ -49,15 +52,25 @@ export function createSessionSigner({
 			onRevoke(user, next, Object.fromEntries(generation));
 			return next;
 		},
-		/** A token for `user`, valid for `ttlMs`. */
-		issue(user) {
+		/** A token for `user` (optionally with a `role`), valid for `ttlMs`. */
+		issue(user, role) {
 			if (!isUserId(user)) throw new Error('invalid user id');
 			const exp = now() + ttlMs;
-			const payload = b64(JSON.stringify({ u: user, exp, g: currentGeneration(user) }));
+			const claims = {
+				u: user,
+				exp,
+				g: currentGeneration(user),
+				...(isRole(role) ? { r: role } : {}),
+			};
+			const payload = b64(JSON.stringify(claims));
 			return { token: `v1.${payload}.${b64(mac(payload))}`, user, expiresAt: exp };
 		},
 		/** The authenticated user id of a token, or null when it is forged, malformed or expired. */
 		verify(token) {
+			return this.inspect(token)?.user ?? null;
+		},
+		/** `{ user, role }` of a valid token (role is undefined for an ordinary member), else null. */
+		inspect(token) {
 			if (typeof token !== 'string' || token.length > 1024) return null;
 			const parts = token.split('.');
 			if (parts.length !== 3 || parts[0] !== 'v1') return null;
@@ -71,12 +84,20 @@ export function createSessionSigner({
 					return null;
 				if ((typeof claims.g === 'number' ? claims.g : 0) !== currentGeneration(claims.u))
 					return null;
-				return claims.u;
+				return { user: claims.u, role: isRole(claims.r) ? claims.r : undefined };
 			} catch {
 				return null;
 			}
 		},
 	};
+}
+
+/** A users entry is a credential string or `{ credential, role? }` (role: 'moderator'). */
+function accountOf(entry) {
+	if (typeof entry === 'string') return { credential: entry };
+	if (entry && typeof entry === 'object')
+		return { credential: entry.credential, ...(isRole(entry.role) ? { role: entry.role } : {}) };
+	return { credential: undefined };
 }
 
 /**
@@ -87,10 +108,11 @@ export function createSessionSigner({
  * `authenticate` for anything larger.
  */
 export function authenticateFromUsers(users) {
-	const table = new Map(Object.entries(users));
+	const table = new Map(Object.entries(users).map(([id, entry]) => [id, accountOf(entry)]));
 	let decoy;
 	return async ({ user, credential }) => {
-		const expected = table.get(user);
+		const account = table.get(user);
+		const expected = account?.credential;
 		if (typeof credential !== 'string') return null;
 		if (expected === undefined) {
 			decoy ??= await hashPassword('decoy-credential');
@@ -101,12 +123,12 @@ export function authenticateFromUsers(users) {
 		const ok = isHashedCredential(expected)
 			? await verifyPassword(credential, expected)
 			: sameSecret(credential, expected);
-		return ok ? { id: user } : null;
+		return ok ? { id: user, ...(account.role ? { role: account.role } : {}) } : null;
 	};
 }
 
 /** User ids whose stored credential is plain text (for the startup warning). */
 export const plainTextUsers = (users) =>
 	Object.entries(users)
-		.filter(([, value]) => !isHashedCredential(value))
+		.filter(([, value]) => !isHashedCredential(accountOf(value).credential))
 		.map(([id]) => id);

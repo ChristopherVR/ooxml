@@ -50,13 +50,14 @@ es ist keine Authentifizierung pro Benutzer. Für echte Konten geben Sie dem Ser
 - **Alle Mitglieder eines Raums vertrauen einander.** Der Server bewegt nur Yjs-Bytes, daher kann jedes
   Mitglied Nachrichten anderer bearbeiten oder löschen und Autoren-IDs und Rollen fälschen. Laden Sie
   nur Personen ein, denen Sie den ganzen Raum anvertrauen.
-- **Token und Sitzung wandern in der WebSocket-Query-Zeichenfolge** (`?token=`, `?session=`), die Proxys und
-  Zugriffsprotokolle aufzeichnen und Browser im Verlauf behalten können. Der Server akzeptiert sie auch als
-  `Sec-WebSocket-Protocol`-Einträge (`openteams.session.<session>`, `openteams.token.<token>`, neben einem
-  einfachen `openteams`), die nicht in URLs oder Protokollen landen; der mitgelieferte Client sendet sie noch
-  nicht (Folgearbeit im `teams`-Bereich des Cores). Betreiben Sie den Server hinter TLS und protokollieren Sie
-  keine Query-Zeichenfolgen. Dateien nehmen das Token nie in einer URL: sie nutzen den `Authorization`-Header
-  oder einen signierten Link.
+- **Token und Sitzung wandern im `Sec-WebSocket-Protocol`-Header** (`openteams.session.<session>`,
+  `openteams.token.<token>`, neben einem einfachen `openteams`), der nicht in URLs oder Protokollen landet. Der
+  mitgelieferte Client weicht nur auf die Query-Zeichenfolge aus, wenn ein Wert Zeichen enthält, die ein Subprotokoll
+  nicht tragen kann. Betreiben Sie den Server hinter TLS. Dateien nehmen das Token nie in einer URL: sie nutzen den
+  `Authorization`-Header oder einen signierten Link.
+- **Autorenschaft wird durchgesetzt** für angemeldete Benutzer: niemand kann als eine andere Person schreiben, deren
+  Nachrichten bearbeiten oder löschen oder Kanäle und Tabs ändern, die er nicht erstellt hat, außer das Konto hat
+  `"role": "moderator"` in der Benutzerdatei. `TEAMS_ENFORCE_AUTHORSHIP=0` schaltet das ab.
 - **Sicher per Standard.** Ohne Konten, einen `authenticate`-Hook oder `authorizeSync` startet der Server nicht;
   `--insecure-dev` ist die ausdrückliche Abweichung, die mit einer Warnung quittiert wird. Ein gemeinsames Token
   allein ist keine Authentifizierung.

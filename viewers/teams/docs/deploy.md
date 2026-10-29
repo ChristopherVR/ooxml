@@ -12,7 +12,8 @@ cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                                                                  |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`.                                            |
 | `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.                                                                                                                                       |
-| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                                                                  |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential, or `{ credential, role }` (enables accounts); the secret that signs sessions.                                                                                       |
+| `TEAMS_ENFORCE_AUTHORSHIP`                              | `0` turns off the authorship checks for signed-in users (default on).                                                                                                                                               |
 | `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (window, per address, per user).                                                                                                                        |
 | `TEAMS_TRUST_PROXY`, `--trust-proxy[=N]`                | Key the auth rate limiter and per-address connection cap on `X-Forwarded-For` (the Nth trusted proxy's entry, default 1). Off by default; enable only behind a proxy that sets the header, or clients can forge it. |
 | `--insecure-dev`                                        | Start with no accounts and no `authenticate` hook (option `insecureDev`). Without it the server refuses to start unless `TEAMS_USERS_FILE` is set. Development only.                                                |
@@ -55,12 +56,14 @@ README. Keep the same three contracts.
 - **All members of a room trust each other.** The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles. Do not invite people you would
   not trust with the whole room.
-- **The token and session travel in the WebSocket query string** (`?token=`, `?session=`), which
-  proxies and access logs can record and browsers can keep in history. The server also accepts them
-  as `Sec-WebSocket-Protocol` entries (`openteams.session.<session>`, `openteams.token.<token>`, next to
-  a bare `openteams`), which stay out of URLs and logs; the shipped client does not send them yet
-  (follow-up in the core's `teams` area). Run the server behind TLS and do not log query strings.
-  Files never take the token in a URL: they use the `Authorization` header or a signed link.
+- **The token and session travel in the `Sec-WebSocket-Protocol` header** (`openteams.session.<session>`,
+  `openteams.token.<token>`, next to a bare `openteams`), which stays out of URLs and logs. The
+  shipped client falls back to the query string only for a credential a subprotocol cannot carry.
+  Run the server behind TLS. Files never take the token in a URL: they use the `Authorization`
+  header or a signed link.
+- **Authorship is enforced** for signed-in users: nobody can post as, edit or delete another
+  person's messages, or change channels and tabs they did not create, unless the account has
+  `"role": "moderator"` in the users file. `TEAMS_ENFORCE_AUTHORSHIP=0` turns it off.
 - **Secure by default.** Without accounts, an `authenticate` hook or `authorizeSync` the server
   refuses to start; `--insecure-dev` is the explicit, warned opt-out. A shared token alone is not
   authentication.
@@ -189,7 +192,7 @@ longer starts the server.
 - [ ] TLS terminates in front of the server; the app uses `wss://`. The server itself listens on loopback or a private network.
 - [ ] `TEAMS_ORIGINS` lists the exact origins of your app.
 - [ ] `--trust-proxy` set only if the proxy sets `X-Forwarded-For` and clients cannot reach the server except through it; otherwise leave it off (all clients then share one rate-limit key behind the proxy, which is safe but coarse).
-- [ ] Proxy access logs do not record query strings (sockets carry `?token=` and `?session=`), or you accept that.
+- [ ] Moderator accounts (`"role": "moderator"` in the users file) are the people you intend; remember a role is read at sign-in.
 - [ ] `TEAMS_ADMIN_TOKEN` set if you need `POST /auth/revoke`, and kept secret.
 - [ ] The data directory is on a persistent volume, writable only by the server's user, and backed up.
 - [ ] Limits reviewed (`TEAMS_MAX_*`, `TEAMS_FILES_QUOTA_MB`) and the proxy applies its own rate limiting.
