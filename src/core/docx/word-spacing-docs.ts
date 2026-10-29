@@ -4,8 +4,8 @@
 import JSZip from 'jszip';
 
 const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
-const tw = (pt: number) => Math.trunc(pt * 20);
-const para = (label: string, spacing = '', extra = '', run = '') =>
+export const tw = (pt: number) => Math.trunc(pt * 20);
+export const para = (label: string, spacing = '', extra = '', run = '') =>
 	`<w:p><w:pPr>${spacing ? `<w:spacing ${spacing}/>` : ''}${extra}</w:pPr><w:r><w:t>${label}</w:t></w:r>${run}</w:p>`;
 const sect = (type: string) =>
 	`<w:sectPr><w:type w:val="${type}"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>`;
@@ -102,6 +102,16 @@ const bullet = (id: number, text: string, font: string) =>
 /** A `.docx` for one probe group in the given compatibility mode and HTML auto spacing option. */
 export async function probeDocx(group: string, mode: number, noHtml: boolean): Promise<Uint8Array> {
 	const { body, sect: bodySect } = probeBodies()[group]!;
+	return packProbe(body, bodySect, mode, noHtml);
+}
+
+/** The minimal package every Word probe uses (Courier New 11 pt, no spacing), around a body. */
+export async function packProbe(
+	body: string,
+	bodySect: string | undefined,
+	mode: number,
+	noHtml: boolean,
+): Promise<Uint8Array> {
 	const ct = (name: string, type: string) =>
 		`<Override PartName="/word/${name}.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${type}+xml"/>`;
 	const zip = new JSZip();

@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { loadDocx } from './index';
 import { layoutDocumentModel } from './layout/layout';
 import type { LayoutPageBox } from './layout/result';
-import type { TextMeasurer } from './layout/measure';
+import { wordProbeMeasurer } from './word-measurer';
 import { probeDocx } from './word-spacing-docs';
 
 interface Row {
@@ -32,10 +32,7 @@ const probe = JSON.parse(
 		'utf8',
 	).replace(/^﻿/, ''),
 ) as Probe;
-const measurer: TextMeasurer = {
-	widthOf: (text, font) => Array.from(text).length * font.sizePx * 0.6,
-	lineHeightOf: (font) => font.sizePx * (font.family.includes('Symbol') ? 1.29 : 1.1328),
-};
+const measurer = wordProbeMeasurer;
 const PT_PER_PX = 0.75;
 
 /** Page and top y (pt) of the first line of each labelled paragraph outside tables. */
@@ -79,20 +76,15 @@ describe('paragraph spacing against the Word probe', () => {
 			const loaded = await loadDocx(await probeDocx(group, config.mode, config.noHtmlAutoSpacing));
 			const ours = positions(layoutDocumentModel(loaded.model, measurer).pages);
 			const wrong: string[] = [];
-			const split: string[] = [];
 			for (const row of config.groups[group]!) {
 				const mine = ours.get(row.label);
 				if (!mine) continue; // table cell paragraphs and section-break leftovers
 				if (mine.page !== row.page || Math.abs(mine.y - row.y) > 1)
-					(group === 'table' && row.page === 2 ? split : wrong).push(
+					wrong.push(
 						`${row.label}: page ${mine.page} y ${mine.y.toFixed(1)}, Word ${row.page}/${row.y}`,
 					);
 			}
 			expect(wrong).toEqual([]);
-			// Known gap: a one-row table moved whole to the next page loses its last cell paragraph's
-			// space after (12 pt) in the layout, which shifts everything after it on that page.
-			if (group === 'table')
-				expect(split, 'table page-split gap now passes: remove it').not.toEqual([]);
 		});
 	});
 });

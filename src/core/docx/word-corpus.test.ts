@@ -16,17 +16,13 @@ import { describe, expect, it } from 'vitest';
 import { loadDocx } from './index';
 import { layoutDocumentModel } from './layout/layout';
 import type { LayoutBlockBox, LayoutPageBox, LayoutParagraphBox } from './layout/result';
-import type { TextMeasurer } from './layout/measure';
+import { wordProbeMeasurer } from './word-measurer';
 import { acceptedGaps } from './word-corpus-gaps';
 
 const dir = new URL('./__fixtures__/word-corpus/', import.meta.url);
 const POSITION_TOLERANCE_PT = 1;
 const PT_PER_PX = 0.75;
-const measurer: TextMeasurer = {
-	widthOf: (text, font) => Array.from(text).filter((c) => c !== '\t').length * font.sizePx * 0.6,
-	// Courier New is 1.1328 em tall. Word spaced Symbol bullet lines 14.25 pt apart at 11 pt, 1.29 em.
-	lineHeightOf: (font) => font.sizePx * (font.family.includes('Symbol') ? 1.29 : 1.1328),
-};
+const measurer = wordProbeMeasurer;
 
 interface WordParagraph {
 	index: number;

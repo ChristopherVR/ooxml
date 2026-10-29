@@ -7,6 +7,7 @@ import { cellParagraphs } from './table-cell-layout';
 import { TableFootnotes } from './table-footnotes';
 import type { ReferenceFootnotes } from './reference-footnotes';
 import type { PageCursor } from './page-cursor';
+import { MergedRowPlan } from './table-merged-rows';
 import { splitRowAtHeight, type RowLayout } from './table-layout';
 import type { TextMeasurer } from './measure';
 import type { LayoutTable, LayoutTableRow } from './input';
@@ -50,7 +51,7 @@ export function placeTable(
 				: (table.indentPx ?? 0);
 	};
 
-	const profile = nestedFrameProfile(table, table.widthPx ?? cursor.columnWidthPx);
+	const profile = nestedFrameProfile(table, table.widthPx ?? cursor.columnWidthPx, true);
 	const activeBorders =
 		profile !== undefined && (profile.leftPx > 0 || profile.rightPx > 0 || profile.bottomPx > 0);
 	if (!profile && table.rows.some((row) => row.cells.some((cell) => cell.borders)))
@@ -318,7 +319,16 @@ export function placeTable(
 		}
 	}
 
-	for (const row of table.rows) {
+	const merged = new MergedRowPlan(table.rows);
+	for (const [index, source] of table.rows.entries()) {
+		merged.plan(
+			index,
+			(candidate) =>
+				layoutRow(candidate, cursor.columnWidthPx, measurer, () => {}, undefined, source),
+			cursor.remainingHeightPx() - fragmentHeight,
+		);
+		const row = merged.effective(source);
+		if (row !== source) nativeFragments.set(row, nativeFragments.get(source) ?? false);
 		const layout = layoutRow(row, cursor.columnWidthPx, measurer, note);
 		if (
 			layout.heightPx > cursor.remainingHeightPx() &&
@@ -349,7 +359,7 @@ export function placeTable(
 			row,
 			layout,
 			Boolean(row.cantSplit) ||
-				headerRows.includes(row) ||
+				headerRows.includes(source) ||
 				(!!footnotes && row.heightRule === 'exact'),
 		);
 	}

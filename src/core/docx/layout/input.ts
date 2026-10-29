@@ -203,6 +203,8 @@ export interface LayoutTableRow {
 	heightRule?: 'atLeast' | 'exact';
 	/** `w:trPr/w:tblHeader`: repeat this row at the top of every page the table continues onto. */
 	isHeader?: boolean;
+	/** Count the text of vertically merged cells in this row's height (the merge is not placed whole). */
+	mergedTextInRow?: boolean;
 }
 
 export interface LayoutTable {

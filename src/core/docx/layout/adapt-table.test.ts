@@ -80,16 +80,19 @@ describe('tables in Print Layout', () => {
 	it('centers the table in its column and positions cells on the grid', () => {
 		const result = layoutDocument(adaptDocumentModel(model(table)), measurer);
 		const box = at(at(at(result.pages, 0).columns, 0).blocks, 0) as LayoutTableBox;
-		// The 624px content column (816 − 2 × 96) centers the 400px table.
-		expect(box.xPx).toBe(112);
+		// The 624px content column (816 − 2 × 96) centers the 400px table, widened by half of its
+		// left and right borders (4/3 px each) the way every fully bordered table is.
+		expect(box.xPx).toBeCloseTo(112 - 2 / 3, 6);
 		expect(at(box.rows, 0).geometry?.map((g) => [g.xPx, g.widthPx])).toEqual([
 			[0, 200],
-			[200, 200],
+			// The last cell also takes the right border that the table now reserves.
+			[200, 200 + 4 / 3],
 		]);
 		const text = at(at(at(box.rows, 1).cells, 1), 0);
 		expect(at(at(text.lines, 0).fragments, 0).xPx).toBe(0);
 		expect(at(box.rows, 1).geometry?.[1]).toMatchObject({
-			paddingLeftPx: 20,
+			// 20 px margin plus half of the 4/3 px left border, which the reserved layout insets.
+			paddingLeftPx: 20 + 2 / 3,
 			verticalAlign: 'bottom',
 		});
 	});

@@ -129,7 +129,11 @@ bullets below are results for this corpus only). Fixed after this comparison was
   Cambria Math, not Word's own rule, so other sizes and constructs (delimiters around tall
   content, accents, limits on inline operators) are unchecked.
 
-Remaining accepted gaps, all vertical (`word-corpus-gaps.ts`):
+- Two more gaps were closed by probes (below): the table height of 03 (a vertical merge was sized
+  with its first row, and the border of a table with merged cells was not counted) and the
+  check-box line height of 11 (the MS Gothic font, not the content control).
+
+No accepted gaps remain in `word-corpus-gaps.ts`.
 
 | Id                            | Document              | Paragraphs | Difference                                                 |
 | ----------------------------- | --------------------- | ---------- | ---------------------------------------------------------- |
@@ -163,9 +167,48 @@ rebuilds the same documents (`word-spacing-docs.ts`), lays them out and compares
 
 The compatibility mode changes only the `pageBreakBefore` row. Measured in Word, not derived from the
 specification. Not measured: other fonts or sizes, spacing in headers, footers, notes and text
-boxes, and `w:contextualSpacing` (the corpus covers it for list items). Known gap kept in the test:
-a one-row table that Word moves whole to the next page loses its last cell paragraph's space after
-(12 pt) in the layout, which shifts the paragraphs after it on that page.
+boxes, and `w:contextualSpacing` (the corpus covers it for list items). A one-row table that Word
+moves whole to the next page keeps the space after its last cell paragraph (12 pt); the layout lost
+it when a row was cut at a page boundary because the paragraph boxes do not carry that space, so a
+row now records the trailing space of each cell and the continuation keeps it.
+
+## Table row probe
+
+`src/core/scripts/docx-word-table-probe.ps1` (with `docx-word-probe-common.ps1`) measures how Word
+sizes table rows in 43 small documents (`__fixtures__/word-table/table-probe.json`, Word
+16.0.20527); `word-table.test.ts` rebuilds them (`word-table-docs.ts`) and compares the top y of every
+paragraph. Measured:
+
+| Case                                                             | Word                                                                                      |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Vertical merge whose text fits the rows it covers                | rows keep the height of their own cells                                                   |
+| Vertical merge taller than its rows (2 or 3 rows, either column) | the LAST spanned row grows, the rows above keep their height                              |
+| Row with a 0.5, 1.5 or 3 pt single border                        | row height = content + one border width, the first row also starts one border width lower |
+| Double 0.5 pt border                                             | three times the width of a single one                                                     |
+| `atLeast` / `exact` row heights                                  | the height, plus one border width when the table has borders                              |
+
+Fixed in the layout: a merged cell's text no longer sizes its first row (`table-merged-rows.ts`;
+a merge that does not fit the room left on the page keeps the old behaviour so the row splitter can
+cut it), and a body table whose cells are merged, vertically or by column span, now reserves its
+borders like any other fully bordered table (`nested-frame-profile.ts`; nested tables stay as they
+were, they have their own native evidence). Word draws a 0.5 pt border one whole 0.75 pt pixel
+wide, so bordered tables differ by up to 0.25 pt per row edge and a three-row merge by up to 1.6 pt;
+the test allows 2 pt there and 1 pt for tables without borders. Known and not fixed: a double
+border is not a solid edge, so no space is reserved for it (`bd_dbl4`, asserted as a gap). Word
+reports a merged-away cell's paragraph at the top of the merge; the test skips those labels.
+
+## Content control line probe
+
+`src/core/scripts/docx-word-content-control-probe.ps1` measures the line height of lines with
+content controls and symbol fonts (`__fixtures__/word-content-control/line-probe.json`);
+`word-content-control.test.ts` rebuilds the document. A check box content control and a plain
+MS Gothic run have the same 14.25 pt line at 11 pt (1.295 em; Courier New is 12 to 12.75 pt, a plain
+text or drop-down control 12 to 12.75 pt too), so the 2 pt gap in 11 was the font of the symbol,
+which the host's measurer owns, not the control. The shared headless measurer
+(`word-measurer.ts`) now carries the measured heights (MS Gothic 14.25, Segoe UI Symbol 15, Symbol
+14.25 pt at 11 pt). Not modelled: a symbol in a Courier New run inside a check box is 15.75 pt (a
+font fallback that depends on the installed fonts); a Latin run set in MS Gothic is 15 pt against
+14.25 pt here.
 
 ## Reopen check
 

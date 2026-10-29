@@ -70,8 +70,8 @@ export function renderTable(
 			content.className = 'dve-print-cell-content';
 			content.style.zIndex = '2';
 			const offset = cellVerticalOffset(geometry, row.heightPx);
-			// Text aligned across a vertical merge sits below this row's box: let it show, above the rows below.
-			if (geometry.mergeRows && geometry.alignmentHeightPx !== undefined) {
+			// Text of a vertical merge sits below this row's box (aligned across the merge, or taller than the first row): let it show, above the rows below.
+			if (geometry.mergeRows && geometry.mergeRows > 1) {
 				cell.style.overflow = 'visible';
 				rowEl.style.zIndex = '1';
 			}

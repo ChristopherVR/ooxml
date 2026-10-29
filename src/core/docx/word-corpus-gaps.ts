@@ -11,24 +11,4 @@ export interface AcceptedGap {
 	reason: string;
 }
 
-export const acceptedGaps: AcceptedGap[] = [
-	{
-		id: 'table-height',
-		name: '03-tables-merged',
-		paragraphs: [20],
-		aspect: 'y',
-		reason:
-			'The paragraph after the merged-cell table starts 28.7 pt lower than in Word: the ' +
-			'layout’s table height differs from Word’s. Table layout is being reworked ' +
-			'separately, so this is recorded rather than adjusted here.',
-	},
-	{
-		id: 'content-control-line-height',
-		name: '11-content-controls',
-		paragraphs: [5],
-		aspect: 'y',
-		reason:
-			'The fifth paragraph starts 2.0 pt higher than in Word, after a paragraph holding a ' +
-			'check-box content control; the cause is not isolated.',
-	},
-];
+export const acceptedGaps: AcceptedGap[] = [];
