@@ -8,17 +8,15 @@
 // depend on the smoothing parameters, is exact for any trend plus season, and keeps any periodic
 // pattern out of the trend. For 4 whole seasons and for 5 or more it is known exactly and lives in
 // `ets-init-chain.ts` (it reproduces Excel's forecasts at its own parameters to rounding
-// error on about 1200 probe series, seasons 2 to 12); for 4 seasons plus a partial one that file
-// uses a mean over windows, close but not exact. For 3 whole seasons plus up to `ceil(m / 2) + 1`
+// error on about 1200 probe series, seasons 2 to 12); 4 seasons plus a partial one are in `ets-init-four.ts`. For 3 whole seasons plus up to `ceil(m / 2) + 1`
 // points and for exactly 2 seasons, with seasons of 4 and more, the rule is also known exactly and
 // lives in `ets-init-three.ts` (a blend of a forward and a backward chain; 2 seasons are first
 // extended to 3 by `y[t - 2m] + 2m * b`, b the slope of a trend-plus-dummies fit; see that file).
-// Still unknown: 3 seasons plus more than `ceil(m / 2) + 1` points (every position changes there,
-// towards the 4-season chain), 2 seasons plus a partial one (the same extension to 3 seasons is
-// close but not exact), 4 seasons plus a partial one (the window mean here differs from Excel by a
-// contrast of the cycle means over all positions plus a second difference on the positions whose
-// chain step has a further value; measured on seasons 4 to 8, ets-init6/9/10 fixtures), and every
-// length with seasons of 2 or 3 (their reference position sits at time 0, so the blend differs).
+// 4 seasons plus a partial one (`ets-init-four.ts`) and 3 seasons plus more than `ceil(m / 2) + 1` points up to
+// 4 seasons (`ets-init-threeplus.ts`) are exact too for seasons of 4 and more: the 4-season chain and the
+// 3-season rule each plus a template shifted along the first positions (see those files). Still unknown:
+// 2 seasons plus a partial one (the same extension to 3 seasons is close but not exact) and every length
+// with seasons of 2 or 3 (their reference position sits at time 0, so the blend differs).
 // For those the trend and the other seasonal states here are solved by least squares
 // under the first-point constraint, which lands near (not on) Excel's own starting values (a plain
 // seasonal-dummy regression does worse on the recorded forecasts). Seasons of 25 and more start
@@ -28,7 +26,8 @@
 // last + slope, constrained least squares of the filter at fixed parameters, classical
 // decomposition, seasonal-dummy least squares with or without the first-point constraint, weighted
 // dummy regressions with diagonal weights, the seasonal start of the hold-out training window, and
-// for 4 seasons plus a partial one the first 4 seasons alone or any single window of them.
+// for 4 seasons plus a partial one the first 4 seasons alone or any single window of them (the exact
+// rule is the chain of the first 4 seasons plus the shifted template).
 import type { Smoothing } from './ets-core';
 import { chainStart } from './ets-init-chain';
 

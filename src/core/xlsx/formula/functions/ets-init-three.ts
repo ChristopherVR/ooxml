@@ -20,9 +20,8 @@
 //    by `y[t - 3m] + 3m * (mean of S)`, after removing the seasonal states.
 //  * Two whole seasons: the series is extended to 3 seasons by `y[t - 2m] + 2m * b`, with b the slope
 //    of a regression on the time and seasonal dummies, and then handled as above.
-// Not covered (still approximate): 3 seasons with more than `ceil(m / 2) + 1` extra points (Excel's
-// rule there is a different one, close to the 4-season chain: every position changes), 2 seasons
-// plus a partial one, and seasons of 2 and 3 (their reference is time 0).
+// More than `ceil(m / 2) + 1` extra points are in ets-init-threeplus.ts. Not covered (still approximate):
+// 2 seasons plus a partial one, and seasons of 2 and 3 (their reference is time 0).
 
 const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
 

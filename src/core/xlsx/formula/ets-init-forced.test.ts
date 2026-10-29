@@ -26,6 +26,10 @@ const FLOORED = new Set([
 	's8-29-imp8',
 ]);
 
+// Probe groups whose parameter pair Excel reports at the beta floor (0.001) does not reproduce its own
+// forecasts, while the same series at other parameters does (file:group).
+const FLOORED_GROUPS = ['10:s7-33', '11:s6-23', '11:s12-47'];
+
 function worstError(e: Recorded, m: number): number {
 	const y = e.values;
 	const n = y.length;
@@ -52,6 +56,9 @@ describe('exact seasonal start at Excel parameters', () => {
 			for (const e of data) {
 				const m = /^s(\d+)-/.exec(e.name);
 				if (!m || FLOORED.has(e.name) || !chainStart(e.values, Number(m[1]))) continue;
+				const group = `${f}:${e.name.replace(/-(base|imp[0-9]+)$/, '')}`;
+				if (FLOORED_GROUPS.includes(group) && (e.results[1] as { value: number }).value < 0.0011)
+					continue;
 				if (!isExactLength(e.values.length, Number(m[1]))) continue;
 				expect(worstError(e, Number(m[1]))).toBeLessThan(1e-9);
 				checked++;
