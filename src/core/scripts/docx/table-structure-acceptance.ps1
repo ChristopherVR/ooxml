@@ -31,19 +31,22 @@ while (Get-Process WINWORD -ErrorAction SilentlyContinue) {
 
 # Rows of cell texts as Word reports them (end-of-cell marks removed), through Cells in row order.
 function Read-Cells($table) {
-	$rows = @{}
+	# Word lists a vertical merge once, at its first row; `Rows` cannot be used on such a table.
+	$byRow = [ordered]@{}
 	foreach ($cell in $table.Range.Cells) {
-		# A cell holding a nested table also reports that table's text; keep the cell's own paragraphs.
-		$text = ([string]$cell.Range.Text) -replace "[\r\a]+$", ''
-		$key = [int]$cell.RowIndex
-		if (-not $rows.ContainsKey($key)) { $rows[$key] = @() }
-		$rows[$key] += $text
+		$text = ([string]$cell.Range.Text) -replace "[
+]+$", ''
+		$key = 'r' + ([int]$cell.RowIndex).ToString('000')
+		if (-not $byRow.Contains($key)) { $byRow[$key] = New-Object System.Collections.ArrayList }
+		[void]$byRow[$key].Add($text)
 	}
-	return @($rows.Keys | Sort-Object | ForEach-Object { , @($rows[$_]) })
+	$rows = New-Object System.Collections.ArrayList
+	foreach ($key in (@($byRow.Keys) | Sort-Object)) { [void]$rows.Add(@($byRow[$key])) }
+	return , $rows
 }
 function Compare-Rows($want, $got, $skipUnchecked) {
 	$problems = @()
-	if (@($want).Count -ne @($got).Count) { return @("Word has $(@($got).Count) rows, expected $(@($want).Count)") }
+	if (@($want).Count -ne $got.Count) { return @("Word has $($($got.Count)) rows, expected $(@($want).Count)") }
 	for ($r = 0; $r -lt @($want).Count; $r++) {
 		$wantRow = @($want[$r]); $gotRow = @($got[$r])
 		if ($wantRow.Count -ne $gotRow.Count) { $problems += "row $($r + 1): Word has $($gotRow.Count) cells, expected $($wantRow.Count)"; continue }
