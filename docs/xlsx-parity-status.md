@@ -194,9 +194,11 @@ line/marker swatches and position-authoring controls remain incomplete.
 - Sparklines: line, column and win/loss groups are drawn and authored (create, format, clear, with
   an Insert ribbon group; `edit/sparklines.ts`, `scripts/xlsx-sparkline-acceptance.ps1`). Excel
   ignores the extension if its URI uses uppercase `4FD2`, so the writer uses lowercase `4fd2`;
-  edits to revision-tagged groups need a distinct revision UID, which the commands supply. Style
-  galleries, grouping/ungrouping, date-axis authoring and individual source-range editing remain;
-  existing date-axis metadata is preserved.
+  edits to revision-tagged groups need a distinct revision UID, which the commands supply. Group and
+  Ungroup (`edit/sparkline-grouping.ts`) merge the touched groups into the first one or split each
+  into one group per sparkline. The style gallery (no ground truth for Excel's 36 colour sets could
+  be read through COM), date-axis authoring and individual source-range editing remain; existing
+  date-axis metadata is preserved.
 
 ## Calculation: lookups and regular expressions
 
@@ -260,7 +262,7 @@ line/marker swatches and position-authoring controls remain incomplete.
    inside Page Layout view,
    separate per-view zoom attributes, and native-printer metrics.
 6. Pivots beyond the bounded profiles (label and value filters, shared caches, filters on date
-   group items, report captions in other languages), sparkline style galleries, grouping and
+   group items, report captions in other languages), sparkline style galleries and
    individual source-range editing, data connections, and the sheet parts the collaboration
    mapping does not share yet (see "Import, print and collaboration").
 7. Wider formula and clipboard differential coverage. VBA execution, add-ins,

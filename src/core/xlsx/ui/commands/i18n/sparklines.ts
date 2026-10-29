@@ -14,6 +14,18 @@ export const SPARKLINE_STRINGS: Translations = {
 		'Los colores varían entre los grupos seleccionados.',
 		'选定组的颜色不同。',
 	],
+	'Group Sparklines': [
+		'Grouper les graphiques sparkline',
+		'Sparklines gruppieren',
+		'Agrupar minigráficos',
+		'组合迷你图',
+	],
+	'Ungroup Sparklines': [
+		'Dissocier les graphiques sparkline',
+		'Sparklines gruppieren aufheben',
+		'Desagrupar minigráficos',
+		'取消组合迷你图',
+	],
 	Markers: ['Marqueurs', 'Markierungen', 'Marcadores', '标记'],
 	Gaps: ['Espaces', 'Lücken', 'Huecos', '间隙'],
 	Zero: ['Zéro', 'Null', 'Cero', '零'],

@@ -276,6 +276,10 @@ export interface EditSession {
 	setSparklineDateRange(sheet: number, ranges: CellRange[], source?: string): void;
 	/** Clears selected hosts, or their whole groups. Cell contents remain. */
 	deleteSparklines(sheet: number, ranges: CellRange[], wholeGroups?: boolean): void;
+	/** Merges the sparkline groups the ranges touch into the first one; returns the groups merged. */
+	groupSparklines(sheet: number, ranges: CellRange[]): number;
+	/** Gives every sparkline of the touched groups a group of its own; returns the groups made. */
+	ungroupSparklines(sheet: number, ranges: CellRange[]): number;
 	/** Adds a chart drawn from the model; returns its index in the sheet's drawings. */
 	addChart(sheet: number, chart: Omit<ChartObject, 'kind'>): number;
 	/** Edits the chart at `index` of the sheet's drawings through its summary fields. */

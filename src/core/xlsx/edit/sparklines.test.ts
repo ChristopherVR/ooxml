@@ -225,4 +225,45 @@ describe('sparkline authoring', () => {
 		expect(uids).toHaveLength(5);
 		expect(new Set(uids).size).toBe(5);
 	});
+
+	it('groups sparklines of several groups under the first group and ungroups them again', async () => {
+		const { wb, edit, groups } = setup();
+		edit.createSparklineGroup(0, 'A1:C1', range('F1'), { type: 'column', markers: true });
+		edit.createSparklineGroup(0, 'A2:C2', range('F2'));
+		edit.createSparklineGroup(0, 'A3:C3', range('F3'));
+		expect(groups()).toHaveLength(3);
+		// One group touched: nothing to merge.
+		expect(edit.groupSparklines(0, [range('F1')])).toBe(1);
+		expect(groups()).toHaveLength(3);
+
+		expect(edit.groupSparklines(0, [range('F1:F3')])).toBe(3);
+		expect(groups()).toHaveLength(1);
+		expect(groups()[0]).toMatchObject({ type: 'column', markers: true });
+		expect(groups()[0]?.sparklines.map((line) => line.host)).toEqual([
+			range('F1'),
+			range('F2'),
+			range('F3'),
+		]);
+		const reloaded = await loadXlsx(await saveXlsx(wb));
+		expect(sheetSparklineGroups(reloaded.sheets[0]!)).toHaveLength(1);
+
+		// A group setting now applies to all three.
+		edit.setSparklineGroups(0, [range('F2')], { type: 'line' });
+		expect(groups()[0]?.type).toBe('line');
+
+		expect(edit.ungroupSparklines(0, [range('F1')])).toBe(2);
+		expect(groups()).toHaveLength(3);
+		expect(groups().map((g) => g.sparklines.map((l) => l.formula))).toEqual([
+			["'Sales'!A1:C1"],
+			["'Sales'!A2:C2"],
+			["'Sales'!A3:C3"],
+		]);
+		expect(groups().every((g) => g.type === 'line' && g.markers)).toBe(true);
+		edit.undo();
+		expect(groups()).toHaveLength(1);
+		edit.undo();
+		edit.undo();
+		expect(groups()).toHaveLength(3);
+		expect(edit.ungroupSparklines(0, [range('F1')])).toBe(0);
+	});
 });

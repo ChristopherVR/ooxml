@@ -33,6 +33,24 @@ export function sparklineCommands(): Command[] {
 		}),
 		...(
 			[
+				['group', 'Group Sparklines', 'groupSparklines'],
+				['ungroup', 'Ungroup Sparklines', 'ungroupSparklines'],
+			] as const
+		).map(([id, label, method]) =>
+			editing({
+				id: `sparkline.${id}`,
+				label,
+				icon: icon('chartLine'),
+				lock: 'objects',
+				enabled: hasSparklines,
+				run: (ctx) => {
+					const t = target(ctx);
+					if (t) t.session[method](t.sheet, t.ranges);
+				},
+			}),
+		),
+		...(
+			[
 				['selected', false, 'Clear Selected Sparklines'],
 				['groups', true, 'Clear Sparkline Groups'],
 			] as const

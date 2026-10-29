@@ -28,6 +28,7 @@ import * as goalSeek from './goal-seek';
 import * as scenarios from './scenarios';
 import { mergeScenarios } from './scenario-merge';
 import * as customViews from './custom-views';
+import * as sparklineGrouping from './sparkline-grouping';
 import * as docProps from './doc-properties';
 import * as drawings from './drawings';
 import * as sparklines from './sparklines';
@@ -300,6 +301,8 @@ export function createEditSession(
 		setSparklineGroups: (s, ranges, patch) => sparklines.setSparklineGroups(ctx, s, ranges, patch),
 		setSparklineDateRange: (s, ranges, source) =>
 			sparklines.setSparklineDateRange(ctx, s, ranges, source),
+		groupSparklines: (s, ranges) => sparklineGrouping.groupSparklines(ctx, s, ranges),
+		ungroupSparklines: (s, ranges) => sparklineGrouping.ungroupSparklines(ctx, s, ranges),
 		deleteSparklines: (s, ranges, wholeGroups) =>
 			sparklines.deleteSparklines(ctx, s, ranges, wholeGroups),
 		addChart: (s, chart) => charts.addChart(ctx, s, chart),

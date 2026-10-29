@@ -87,6 +87,8 @@ export function insertTab(): RibbonTab {
 						kind: 'stack',
 						controls: [
 							{ kind: 'button', command: 'sparkline.settings' },
+							{ kind: 'button', command: 'sparkline.group' },
+							{ kind: 'button', command: 'sparkline.ungroup' },
 							{
 								kind: 'menu',
 								label: 'Clear Sparklines',
