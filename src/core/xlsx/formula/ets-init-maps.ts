@@ -36,6 +36,10 @@ const FILES = [
 	'ets-init6-excel.json',
 	'ets-init7-excel.json',
 	'ets-init8-excel.json',
+	'ets-init9-excel.json',
+	'ets-init10-excel.json',
+	'ets-init11-excel.json',
+	'ets-init12-excel.json',
 ];
 
 const FIRST_VALUE_TOLERANCE = 1e-6;

@@ -11,7 +11,7 @@
 //    time m (time 0 when m is 2 or 3) and the first fitted value is the first observation.
 //  * The starting trend is the least-squares slope of the whole series after removing those
 //    seasonal states, so it ignores any periodic pattern.
-// 3 seasons plus up to m - 2 points and exactly 2 seasons are in `ets-init-three.ts` (also reached
+// 3 seasons plus up to ceil(m / 2) + 1 points and exactly 2 seasons are in `ets-init-three.ts` (also reached
 // through `chainStart`); other lengths are not covered here (`ets-init.ts` falls back to least
 // squares for them).
 import type { EtsInit } from './ets-init';
@@ -86,7 +86,7 @@ function fromRelative(y0: number, rel: readonly number[], trend: number): EtsIni
 }
 
 /**
- * The start for a series of 4 or more seasons, for 3 seasons and up to `m - 2` more points and for
+ * The start for a series of 4 or more seasons, for 3 seasons and up to `ceil(m / 2) + 1` more points and for
  * exactly 2 seasons (seasons of 4 and more), or undefined for the rest. It is Excel's own except for
  * 4 seasons plus a partial one (`isExactLength` tells which).
  */

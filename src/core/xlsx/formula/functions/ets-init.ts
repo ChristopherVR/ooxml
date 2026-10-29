@@ -9,15 +9,17 @@
 // pattern out of the trend. For 4 whole seasons and for 5 or more it is known exactly and lives in
 // `ets-init-chain.ts` (it reproduces Excel's forecasts at its own parameters to rounding
 // error on about 1200 probe series, seasons 2 to 12); for 4 seasons plus a partial one that file
-// uses a mean over windows, close but not exact. For 3 whole seasons plus up to `m - 2` points and
-// for exactly 2 seasons, with seasons of 4 and more, the rule is also known exactly and lives in
-// `ets-init-three.ts` (a blend of a forward and a backward chain; 2 seasons are first extended to
-// 3 by `y[t - 2m] + 2m * b`, b the slope of a trend-plus-dummies fit; see that file). Still unknown:
-// 3 seasons plus `m - 1` points (only the last position differs from the 3-season rule), 2 seasons
-// plus a partial one (the same extension to 3 seasons is close but not exact), 4 seasons plus a
-// partial one (there Excel's chain changes at a position when the next one has a further value),
-// and every length with seasons of 2 or 3 (their reference position sits at time 0, so the blend
-// differs). For those the trend and the other seasonal states here are solved by least squares
+// uses a mean over windows, close but not exact. For 3 whole seasons plus up to `ceil(m / 2) + 1`
+// points and for exactly 2 seasons, with seasons of 4 and more, the rule is also known exactly and
+// lives in `ets-init-three.ts` (a blend of a forward and a backward chain; 2 seasons are first
+// extended to 3 by `y[t - 2m] + 2m * b`, b the slope of a trend-plus-dummies fit; see that file).
+// Still unknown: 3 seasons plus more than `ceil(m / 2) + 1` points (every position changes there,
+// towards the 4-season chain), 2 seasons plus a partial one (the same extension to 3 seasons is
+// close but not exact), 4 seasons plus a partial one (the window mean here differs from Excel by a
+// contrast of the cycle means over all positions plus a second difference on the positions whose
+// chain step has a further value; measured on seasons 4 to 8, ets-init6/9/10 fixtures), and every
+// length with seasons of 2 or 3 (their reference position sits at time 0, so the blend differs).
+// For those the trend and the other seasonal states here are solved by least squares
 // under the first-point constraint, which lands near (not on) Excel's own starting values (a plain
 // seasonal-dummy regression does worse on the recorded forecasts). Seasons of 25 and more start
 // from first-cycle values when short.

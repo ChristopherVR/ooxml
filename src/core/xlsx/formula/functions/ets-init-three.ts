@@ -1,26 +1,28 @@
-// Excel's seasonal FORECAST.ETS start for a series of 3 whole seasons and up to `m - 2` more points
-// (3m <= n <= 4m - 2, seasons of 4 and more), and for exactly 2 seasons through the same rule. It was
-// recovered exactly (to 1e-9) from the impulse probes of ets-init3 to ets-init8 (seasons 4, 5, 6, 7,
-// 8, 9, 10, 11, 12; ets-init-three.test.ts). The 5-season chain rule is in ets-init-chain.ts; this
-// is its 3-season relative, which is not a single chain but a blend of two:
+// Excel's seasonal FORECAST.ETS start for a series of 3 whole seasons plus up to `ceil(m / 2) + 1`
+// more points (seasons of 4 and more), and for exactly 2 seasons through the same rule. It was
+// recovered exactly (to 1e-9) from the impulse probes of ets-init3 to ets-init12 (seasons 4 to 12;
+// ets-init-three.test.ts). The 5-season chain rule is in ets-init-chain.ts; this is its 3-season
+// relative, which is not a single chain but a blend of two:
 //  * A step `e(t) = y[t] - y[t - 1] - B(t - j0)` with `j0 = floor(m / 2)` and `B(j)` the slope
 //    `(y[j + 2m] - y[j]) / 2m` of position `j` (j >= m reads the position one season later, and is
 //    used only while `j + 2m < n`; otherwise `B(j)` is the slope of position `j mod m`).
 //  * Position 0 is the reference at time m. Position k is reached backwards (`back`: k at time k, up
 //    to the reference) and forwards (`fwd`: the reference to k at time m + k). Positions below
-//    `j0 - 1` are the forward path alone and the last position is the backward path alone; the
-//    others are `lev + (back + fwd) / 2` (the level is the mean of the two ends) plus:
+//    `j0 - 1` are the forward path alone, and the last position is the backward path alone while
+//    r <= ceil(m / 2) (r the points beyond 3 seasons); the others are `lev + (back + fwd) / 2` (the
+//    level is the mean of the two ends) plus:
 //      - `-(3u / 4m) * sum of the slopes of every position`, with u the number of positions the
-//        forward path wraps past the season whose slope is unavailable (`u = k - j0 + 1 - r`, r the
-//        points beyond 3 seasons), and slopes `S` the least-squares slopes of all of a position's
-//        values (a position with a 4th value uses it here only),
+//        forward path wraps past the season whose slope is unavailable (`u = k - j0 + 1 - r`, at
+//        least 0), and slopes `S` the least-squares slopes of all of a position's values (a position
+//        with a 4th value uses it here only),
 //      - for each of those wrapped positions `i` the term `(y[i + m] + y[i + 2m] - 2 y[i]) / 4m`.
 //  * The trend is the least-squares slope of the series, extended to `3m + ceil(m / 2)` points
 //    by `y[t - 3m] + 3m * (mean of S)`, after removing the seasonal states.
 //  * Two whole seasons: the series is extended to 3 seasons by `y[t - 2m] + 2m * b`, with b the slope
 //    of a regression on the time and seasonal dummies, and then handled as above.
-// Not covered (still approximate): 3 seasons with `m - 1` extra points, 2 seasons plus a partial one,
-// seasons of 2 and 3 (their reference is time 0).
+// Not covered (still approximate): 3 seasons with more than `ceil(m / 2) + 1` extra points (Excel's
+// rule there is a different one, close to the 4-season chain: every position changes), 2 seasons
+// plus a partial one, and seasons of 2 and 3 (their reference is time 0).
 
 const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
 
@@ -49,10 +51,10 @@ function positionSlopes(y: readonly number[], m: number): number[] {
 
 /** Whether `threeSeasonSeasonals` is Excel's rule for a series of `n` values with seasons of `m`. */
 export function isThreeSeasonLength(n: number, m: number): boolean {
-	return m >= 4 && n >= 3 * m && n <= 4 * m - 2;
+	return m >= 4 && n >= 3 * m && n <= 3 * m + Math.ceil(m / 2) + 1;
 }
 
-/** Seasonal states relative to position 0 (`s[k] - s[0]`) for 3m <= n <= 4m - 2. */
+/** Seasonal states relative to position 0 (`s[k] - s[0]`), see `isThreeSeasonLength`. */
 export function threeSeasonSeasonals(y: readonly number[], m: number): number[] {
 	const n = y.length;
 	const extra = n - 3 * m;
@@ -72,7 +74,7 @@ export function threeSeasonSeasonals(y: readonly number[], m: number): number[] 
 			out.push(fwd);
 			continue;
 		}
-		if (k === m - 1) {
+		if (k === m - 1 && extra <= Math.ceil(m / 2)) {
 			out.push(back);
 			continue;
 		}

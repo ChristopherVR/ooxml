@@ -1,6 +1,6 @@
 // The 3-season (and exactly 2-season) seasonal start (functions/ets-init-three.ts) against the
 // starting-state maps recovered from Excel's impulse probes: every probed series of 3 seasons plus up
-// to m - 2 points and of 2 seasons, for seasons of 4 to 12.
+// to ceil(m / 2) + 1 points and of 2 seasons, for seasons of 4 to 12.
 import { describe, expect, it } from 'vitest';
 import {
 	extendTwoSeasons,
@@ -33,7 +33,18 @@ describe('3-season seasonal start', () => {
 	const covered = maps.filter((g) => isThreeSeasonLength(g.n, g.m) || isTwoSeasonLength(g.n, g.m));
 	it('covers the probed lengths', () => {
 		const keys = new Set(covered.map((g) => g.key));
-		for (const key of ['s4-12', 's4-13', 's4-14', 's5-15', 's5-16', 's5-17', 's7-21', 's12-36']) {
+		const probed = [
+			's4-12',
+			's4-15',
+			's5-17',
+			's5-18',
+			's6-22',
+			's7-21',
+			's7-26',
+			's10-36',
+			's12-36',
+		];
+		for (const key of probed) {
 			expect(keys.has(key)).toBe(true);
 		}
 		for (const key of ['s4-8', 's5-10', 's6-12']) expect(keys.has(key)).toBe(true);
@@ -72,8 +83,11 @@ describe('3-season seasonal start', () => {
 		expect(ext[11]).toBeCloseTo(6, 9);
 	});
 
-	it('leaves 4 seasons less one point and seasons below 4 to the fallback', () => {
-		expect(isThreeSeasonLength(15, 4)).toBe(false);
+	it('stops after ceil(m / 2) + 1 points past 3 seasons and below seasons of 4', () => {
+		expect(isThreeSeasonLength(15, 4)).toBe(true);
+		expect(isThreeSeasonLength(16, 4)).toBe(false);
+		expect(isThreeSeasonLength(22, 6)).toBe(true);
+		expect(isThreeSeasonLength(23, 6)).toBe(false);
 		expect(isThreeSeasonLength(9, 3)).toBe(false);
 		expect(isTwoSeasonLength(6, 3)).toBe(false);
 	});
