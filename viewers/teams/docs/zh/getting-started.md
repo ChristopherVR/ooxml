@@ -109,7 +109,7 @@ teams.destroy();
 [在线演示](/demos)使用的是本地模式。只要涉及多个浏览器，就需要运行一台服务器：
 
 ```bash
-npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787
+npx openteams-server --insecure-dev     # 仅用于本地开发：127.0.0.1:8787
 ```
 
 然后使用 `ws://127.0.0.1:8787/sync` 和 `ws://127.0.0.1:8787/signal`（置于 TLS 之后则使用 `wss://`）。[服务器指南](/zh/server)介绍了协议、环境变量以及参考服务器不做的事情；[部署](/zh/deploy)介绍了 TLS、令牌、TURN 和 Docker。

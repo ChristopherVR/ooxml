@@ -33,6 +33,6 @@ it there (or clear the site's storage) to return to local mode.
 
 ## Use your own server
 
-Real use needs a server: run `npx openteams-server` and see [Bring your own server](/server). From
+Real use needs a server: run `npx openteams-server --insecure-dev` (local development only) and see [Bring your own server](/server). From
 source, `bun run dev` starts the reference server and both demos against it (see
 [Getting started](/getting-started#run-it-from-source)).

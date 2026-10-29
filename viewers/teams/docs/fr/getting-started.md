@@ -129,7 +129,7 @@ Le mode local est celui qu’utilisent les [démos en direct](/demos). Dès qu�
 navigateur, lancez un serveur :
 
 ```bash
-npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787
+npx openteams-server --insecure-dev     # uniquement pour le développement local : 127.0.0.1:8787
 ```
 
 Utilisez ensuite `ws://127.0.0.1:8787/sync` et `ws://127.0.0.1:8787/signal` (ou `wss://` derrière

@@ -113,7 +113,7 @@ Si omites `config`, el elemento ofrece un cuadro de diálogo de ajustes (recorda
 El modo local es el que usan las [demos en vivo](/demos). Para cualquier caso con más de un navegador, ejecuta un servidor:
 
 ```bash
-npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787
+npx openteams-server --insecure-dev     # solo para desarrollo local: 127.0.0.1:8787
 ```
 
 Después usa `ws://127.0.0.1:8787/sync` y `ws://127.0.0.1:8787/signal` (o `wss://` detrás de TLS). La [guía del servidor](/es/server) cubre el protocolo, las variables de entorno y lo que el servidor de referencia no hace; el [despliegue](/es/deploy) cubre TLS, tokens, TURN y Docker.

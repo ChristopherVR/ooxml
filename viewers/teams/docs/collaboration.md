@@ -45,4 +45,4 @@ The same works across real tabs, in any pairing: open [the vanilla demo as Ada](
 
 ## Across machines
 
-Run the reference server (`npx openteams-server`) or any server that honours the three contracts (sync, signaling, optional files) and set `config.mode` to `'server'`. See [Bring your own server](/server) and [Deploying](/deploy). Co-editing Office files is not part of OpenTeams: files are shared as links, and a host can open them in the Word, Excel, PowerPoint or Visio viewer, each with its own collaboration story.
+Run the reference server (`npx openteams-server --insecure-dev` for local development only; see [Bring your own server](/server) for accounts) or any server that honours the three contracts (sync, signaling, optional files) and set `config.mode` to `'server'`. See [Bring your own server](/server) and [Deploying](/deploy). Co-editing Office files is not part of OpenTeams: files are shared as links, and a host can open them in the Word, Excel, PowerPoint or Visio viewer, each with its own collaboration story.

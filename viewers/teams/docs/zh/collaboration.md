@@ -45,4 +45,4 @@
 
 ## 跨机器
 
-运行参考服务器（`npx openteams-server`）或任何遵守这三个约定（同步、信令、可选的文件）的服务器，并将 `config.mode` 设置为 `'server'`。参见[自带服务器](/zh/server)和[部署](/zh/deploy)。Office 文件的协同编辑不属于 OpenTeams：文件以链接形式共享，宿主可以在 Word、Excel、PowerPoint 或 Visio 查看器中打开它们，各自有自己的协作方式。
+运行参考服务器（`npx openteams-server --insecure-dev`，仅用于本地开发；账户请参见[自带服务器](/zh/server)）或任何遵守这三个约定（同步、信令、可选的文件）的服务器，并将 `config.mode` 设置为 `'server'`。参见[自带服务器](/zh/server)和[部署](/zh/deploy)。Office 文件的协同编辑不属于 OpenTeams：文件以链接形式共享，宿主可以在 Word、Excel、PowerPoint 或 Visio 查看器中打开它们，各自有自己的协作方式。
