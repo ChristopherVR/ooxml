@@ -512,7 +512,7 @@ replacement. Native `Shape.Text`, `Characters.Text` and reparsing native-resaved
 outputs retain these logical strings. This does not establish exact text layout,
 automatic text sizing or general native rendering fidelity.
 
-## Experimental geometry transaction
+## Geometry transaction
 
 The same atomic `editVsdx` transaction accepts the typed `VisioEdit` union:
 

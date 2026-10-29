@@ -326,7 +326,7 @@ mise en forme et de géométrie ci-dessous ont leurs propres règles d'admission
 native couvrent des cas enregistrés précis, décrits dans le
 [registre de vérification](/verification) ; elles n'établissent pas une fidélité générale.
 
-## Mise en forme et disposition expérimentales {#experimental-formatting-and-arrangement}
+## Mise en forme et disposition {#experimental-formatting-and-arrangement}
 
 Le ruban Accueil et `applyEdits()` partagent les commandes `format-text`, `format-shape` et
 `reorder-shape`. La mise en forme du texte comprend les familles de polices enregistrées, la taille
@@ -377,7 +377,7 @@ la distribution selon les centres et préserve l'ordre de sélection en cas d'é
 calques et connecteurs collés restent hors de sa portée d'admission. Ces actions
 partagent l'historique, la conservation de la sélection et le téléchargement/la réouverture VSDX avec les autres modifications.
 
-## Duplication expérimentale {#experimental-duplication}
+## Duplication {#experimental-duplication}
 
 `duplicateSelection(): Promise<void>` sur le contrôleur et sur chaque handle monté ou natif
 duplique les formes sélectionnées admises de la page courante. Le menu Coller de l'onglet Accueil, le menu contextuel de la forme,
@@ -436,7 +436,7 @@ Le cœur sans DOM exporte `captureVisioClipboard`, `serializeVisioClipboard`,
 `deserializeVisioClipboard`, la modification `paste-shapes` et le constructeur de commandes
 `visioPasteCommand(page, clipboard, offset?)`.
 
-## Édition expérimentale de la géométrie {#experimental-geometry-editing}
+## Édition de la géométrie {#experimental-geometry-editing}
 
 Les commandes de géométrie partagées exposent la création d'un rectangle, le déplacement, le redimensionnement et la suppression
 sûre. Chaque handle de framework natif ou monté transmet aussi

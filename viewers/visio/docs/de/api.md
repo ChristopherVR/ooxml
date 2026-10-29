@@ -372,7 +372,7 @@ Geometrieoperationen gelten eigene Zulassungsregeln. Die Nachweise zum nativen
 Wiederöffnen decken bestimmte aufgezeichnete Fälle ab und stehen im
 [Verifikationsprotokoll](/verification); sie belegen keine allgemeine Treue.
 
-## Experimentelle Formatierung und Anordnung {#experimental-formatting-and-arrangement}
+## Formatierung und Anordnung {#experimental-formatting-and-arrangement}
 
 Das Menüband Start und `applyEdits()` teilen sich die Befehle `format-text`,
 `format-shape` und `reorder-shape`. Die Textformatierung umfasst gespeicherte
@@ -436,7 +436,7 @@ außerhalb seines Zulassungsbereichs. Diese Aktionen teilen sich Verlauf,
 Beibehaltung der Auswahl und VSDX-Download bzw. -Wiederöffnen mit anderen
 Bearbeitungen.
 
-## Experimentelles Duplizieren {#experimental-duplication}
+## Duplizieren {#experimental-duplication}
 
 `duplicateSelection(): Promise<void>` am Controller und an jedem eingehängten
 bzw. nativen Handle dupliziert zugelassene ausgewählte Formen der aktuellen
@@ -508,7 +508,7 @@ ab. Der DOM-freie Kern exportiert `captureVisioClipboard`,
 `serializeVisioClipboard`, `deserializeVisioClipboard`, die Bearbeitung
 `paste-shapes` und den Befehlsbauer `visioPasteCommand(page, clipboard, offset?)`.
 
-## Experimentelle Geometriebearbeitung {#experimental-geometry-editing}
+## Geometriebearbeitung {#experimental-geometry-editing}
 
 Die gemeinsamen Geometrie-Steuerelemente bieten Rechteck erstellen, Verschieben,
 Größe ändern und sicheres Löschen. Jedes native bzw. eingehängte Framework-Handle

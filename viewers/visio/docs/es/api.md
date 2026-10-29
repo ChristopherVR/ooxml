@@ -326,7 +326,7 @@ operaciones de formato y geometría que figuran a continuación tienen reglas de
 reapertura nativa cubre casos registrados concretos, descritos en el
 [registro de verificación](/verification); no establece una fidelidad general.
 
-## Formato y organización experimentales {#experimental-formatting-and-arrangement}
+## Formato y organización {#experimental-formatting-and-arrangement}
 
 La cinta Inicio y `applyEdits()` comparten los comandos `format-text`, `format-shape` y
 `reorder-shape`. El formato de texto incluye familias de fuentes guardadas, tamaño en puntos,
@@ -377,7 +377,7 @@ la distribución por centros y conserva el orden de selección en los empates. L
 las capas y los conectores pegados quedan fuera de su ámbito de admisión. Estas acciones
 comparten con las demás ediciones el historial, la conservación de la selección y la descarga y reapertura de VSDX.
 
-## Duplicación experimental {#experimental-duplication}
+## Duplicación {#experimental-duplication}
 
 `duplicateSelection(): Promise<void>` en el controlador y en todo manejador montado o nativo
 duplica las formas seleccionadas admitidas de la página actual. El menú Pegar de Inicio,
@@ -438,7 +438,7 @@ El núcleo sin DOM exporta `captureVisioClipboard`, `serializeVisioClipboard`,
 `deserializeVisioClipboard`, la edición `paste-shapes` y el constructor de comandos
 `visioPasteCommand(page, clipboard, offset?)`.
 
-## Edición de geometría experimental {#experimental-geometry-editing}
+## Edición de geometría {#experimental-geometry-editing}
 
 Los controles de geometría compartidos exponen crear rectángulo, mover, cambiar de tamaño y eliminar
 de forma segura. Todo manejador de framework nativo o montado reenvía además

@@ -13,16 +13,36 @@ recalculation would trade an editing refusal for a damaged drawing.
 
 The second increment adds bounded multi-selection resizing. Generated source
 round-trips cover every handle, drawing scales, reflected shapes and off-center
-pins. Browser save/reopen workflows pass in all six demos. Native Visio group and
-multi-selection comparison remains outstanding: this machine has neither a
-registered Visio.Application nor Visio.InvisibleApp COM class.
+pins. Browser save/reopen workflows pass in all six demos. Native Visio 16.0
+comparison was recorded on 2026-10-29 (Visio.InvisibleApp is registered on the
+review machine): multi-selection and group resize open without repair and agree
+with Visio's recalculation (`viewers/visio/docs/evidence/native-edit-families-*-2026-10-29.json`).
 
 The next increment enables single-selection anchored resizing for flat local
 groups with axis-aligned members. Parent rotation/reflection, off-center pins,
 member locks and local ResizeMode are included. Source formulas are projected
 before the edit is committed, including implicit child writes and dependencies
 outside the page. Nested groups, rotated members, glue and stencil members remain
-outside this resize subset. Desktop comparison remains outstanding.
+outside this resize subset. The group-resize comparison is no longer pending: it
+passes natively on a Visio-authored group (anchored resize, 191 cells, reopen drift 4.4e-16).
+Refusals are scoped to the formulas an edit reaches; a formula the core cannot follow
+no longer refuses every edit of a document.
+
+### Native findings, 2026-10-29
+
+- Deleting a shape that other cells read: Visio replaces such a cell's formula by its last
+  result as a constant and does not recompute it (`native-delete-freeze-2026-10-29.json`:
+  `Sheet.1!PinX+(1 in)` becomes `5 in`). The core freezes the cell the same way. A cell
+  holding an error cache after the deleted reference is recorded in
+  `native-delete-error-2026-10-29.json`; protected, error-valued or unanalysable readers still refuse.
+- Duplicating a glued connector keeps its end points and drops the glue; duplicating a glue
+  target leaves its connectors with the original (`native-duplicate-glue-2026-10-29.json`). Implemented.
+- Master instances move, resize, format and reorder natively without repair. Dynamic glue to a
+  shape without connection points floats along the shared extent (a straight run through the
+  middle of the overlap); the core now does the same for the horizontal case and leaves the
+  vertical case unverified.
+- A connector copy that meets another dynamic connector makes Visio route both again; the core
+  refuses that placement.
 
 ### Implemented in this increment
 

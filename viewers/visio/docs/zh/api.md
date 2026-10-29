@@ -152,7 +152,7 @@ UTF-8 的上限为 16 MiB；调用方可以降低它。保守的预检可能会�
 
 `exportVsdx()` 返回 `{ bytes, dirty, diagnostics }`，用于明确下载的副本。它不会覆盖源文件、上传它，也不声称具备原生往返保真度。共享 UI 仅在用户明确操作之后才下载。历史记录有上限，可能会丢弃较早的撤销状态，这通过 `historyTruncated` 报告。纯文本替换仍限于上述已获准的子集。下文的格式设置和几何操作有各自独立的准入规则。原生重新打开的证据涵盖具体的已记录用例，详见[验证记录](/verification)；它并不证明通用保真度。
 
-## 实验性格式设置与排列 {#experimental-formatting-and-arrangement}
+## 格式设置与排列 {#experimental-formatting-and-arrangement}
 
 “开始”功能区和 `applyEdits()` 共用 `format-text`、`format-shape` 和 `reorder-shape` 命令。文本格式设置包括已保存的字体系列、磅值大小、粗体/斜体/下划线/删除线、颜色、项目符号、缩进以及水平/垂直对齐。形状格式设置包括纯色填充、线条颜色/粗细、线条图案 0-23、填充图案 0-24、背景色和透明度。格式设置要求是普通的本地叶子形状。针对整个形状的文本格式设置会更新每个有效的字符或段落行，同时保留运行标记、文本、无关的样式位以及受支持的缓存字段。字符格式和段落格式有各自独立的源准入；垂直对齐不会改写这两个部分中的任何一个。受保护的或有歧义的行以及受影响的公式依赖项会使整个事务被拒绝。字号增大和减小要求大小一致；字号选择器可以为大小不一的选区设置字号。当其祖先和缓存值/单位可以被证明时，本地的 Character/Paragraph `F="Inh"` 单元格是可编辑的。无缓存的委托需要真实的祖先；明确的格式选择会创建本地覆盖，即使值没有变化。顶层继承的保护和变换单元格仍受到保护。字体必须已存在于源绘图中。层叠命令支持对显示层带零中的一个普通顶层形状执行置于顶层/置于底层/上移一层/下移一层。
 
@@ -162,7 +162,7 @@ UTF-8 的上限为 16 MiB；调用方可以降低它。保守的预检可能会�
 
 六个“对齐”命令以所选的第一个形状为基准对齐。“位置”命令为三个或更多形状提供相等的水平和垂直边缘间距。核心的 `visioArrangeCommands(page, selectedIds, action)` 辅助函数为带有自定义控件的宿主生成原子编辑。它测量旋转后的宽/高边框，按中心点排序分布，并在并列时保留选择顺序。组、母版、图层和已粘合的连接线仍在其准入范围之外。这些操作与其他编辑共享历史记录、选择保留以及 VSDX 下载/重新打开。
 
-## 实验性复制 {#experimental-duplication}
+## 复制 {#experimental-duplication}
 
 控制器以及每个已挂载的/原生句柄上的 `duplicateSelection(): Promise<void>` 会复制当前页面上获准的选中形状。“开始”的“粘贴”菜单、形状右键菜单、“告诉我”和 Ctrl+D 调用同一个方法。文本输入框保留其原生键盘行为。复制不使用系统剪贴板。
 
@@ -180,7 +180,7 @@ UTF-8 的上限为 16 MiB；调用方可以降低它。保守的预检可能会�
 
 `controller.state.clipboard` 通过各框架现有的响应式订阅公开不可变的 `ready`、`preparing` 和 `error` 状态。源捕获在可取消的 Worker 中运行，并会因选择、页面、可见性或文档的更改而失效。提供自己的剪贴板传输的宿主可以在控制器上使用 `captureClipboardToken()`、`prepareClipboardSelection(token)`、`getPreparedClipboard(token)`、`cutPreparedSelection(token)` 和 `pasteClipboardText(text, token)`。令牌会拒绝过期的操作。不依赖 DOM 的核心导出 `captureVisioClipboard`、`serializeVisioClipboard`、`deserializeVisioClipboard`、`paste-shapes` 编辑以及 `visioPasteCommand(page, clipboard, offset?)` 命令构建器。
 
-## 实验性几何编辑 {#experimental-geometry-editing}
+## 几何编辑 {#experimental-geometry-editing}
 
 共享的几何控件提供创建矩形、移动、调整大小和安全删除。每个原生/已挂载的框架句柄还转发 `applyEdits(edits: readonly VisioEdit[])`，用于通过相同的 Worker、历史记录和取消路径执行原子批处理。
 

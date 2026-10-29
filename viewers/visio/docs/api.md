@@ -354,6 +354,8 @@ Closing the controls or changing intent cancels its pending operation.
 
 ## Experimental local plain-text editing
 
+Stays experimental. Missing: native reopen of the Visio-saved reference through COM (the probe hung, 2026-10-09), evidence on the reference corpus, rich text and fields, which are refused.
+
 After `load(bytesOrBlob)`, select a local shape and use the shared text controls,
 or call `replacePlainText(pageId, shapeId, text)` on any mounted/native handle.
 `undo()` and `redo()` use bounded document history; `cancelEdit()` cancels
@@ -388,7 +390,9 @@ formatting and geometry operations below have separate admission rules. Native
 reopen evidence covers specific recorded cases, described in the
 [verification record](verification.md); it does not establish general fidelity.
 
-## Experimental formatting and arrangement
+## Formatting and arrangement
+
+Stable scope: the `format-text`, `format-shape` and `reorder-shape` commands on ordinary local leaf shapes and on one-shape master instances, as listed below. Native evidence: Visio 16.0 opened each recorded result without repair, read back every cached cell, recomputed the formulas and saved a copy (`evidence/native-edit-families-full-2026-10-29.json`, cases `formatting`, `arrangement`, `master-instance-format`, `master-instance-arrange`; [verification record](verification.md)). Limits: one Visio build and machine, no pixel comparison with Visio renders, groups, layers and glued connectors outside the Align and Position admission scope. Anything outside the listed scope is refused, never approximated. The shape of these commands is frozen by `src/core/visio/public-surface.test.ts` and the `VisioEdit` types under the [stability policy](../../../docs/stability.md).
 
 The Home ribbon and `applyEdits()` share `format-text`, `format-shape` and
 `reorder-shape` commands. Text formatting includes saved font families, point
@@ -439,7 +443,11 @@ distribution by centers and preserves selection order for ties. Groups, masters,
 layers and glued connectors remain outside its admission scope. These actions
 share history, selection retention and VSDX download/reopen with other edits.
 
-## Experimental duplication
+## Duplication
+
+Stable scope: `duplicate-shapes` of ordinary local 2D leaves, of one-shape master instances, of lines and connectors (below), and of a shape that connectors are glued to. Native evidence: cases `duplicate`, `duplicate-connected`, `glue-duplicate-line` and the flat-document equivalents in `evidence/native-edit-families-*-2026-10-29.json`, plus the Visio duplicate probe `evidence/native-duplicate-glue-2026-10-29.json`. Limits: groups, layers, foreign content and a connector copied together with a shape it is glued to are refused; a copy of a stencil connector whose end point box meets another dynamic connector is refused because Visio lays both out again on the next layout; Visio's own offset of a lone glued dynamic connector (none) is not reproduced, the edit offset is applied.
+
+**Glue.** Like Visio, copying a glued line keeps its end points and drops its glue: no Connect rows are written, end formulas become plain values (a stencil connector keeps its `_WALKGLUE` formulas and its triggers name the copy's own sheet). Copying a shape that connectors are glued to leaves the connectors with the original. Moving or resizing a glued shape follows its connectors (Visio's walking glue for right-angle dynamic connectors, point glue for drawn lines); shapes without connection points float the connector along the shared extent as Visio does.
 
 `duplicateSelection(): Promise<void>` on the controller and every mounted/native
 handle duplicates admitted selected shapes on the current page. Home's Paste
@@ -450,8 +458,7 @@ clipboard.
 The core `visioDuplicateCommand(page, selectedIds)` helper produces a
 `duplicate-shapes` source command with fresh page-local IDs. Copies retain source
 XML, mixed text and stacking order, receive fresh names without copied unique
-IDs, and move 0.33 drawing inches right and down. Source validation currently
-admits local unglued 2D leaf shapes, excluding masters, groups, foreign content,
+IDs, and move 0.33 drawing inches right and down. Source validation admits local 2D leaf shapes, glued or not, and the lines and connectors above, excluding groups, foreign content,
 layers, ambiguous identities and unsupported dependencies. Pin protection and
 affected formula caches are checked before accepting any source change.
 
@@ -462,6 +469,8 @@ partially change source bytes or selection. The ordinary `selection-change` and
 `document-change` events expose the accepted result to native framework state.
 
 ## Experimental shape clipboard
+
+Stays experimental. Missing: native evidence for paste across pages and documents, scaled pages and paste cascade (only a same-page `captureVisioClipboard` then `paste-shapes` case is recorded), and a decision on the wire format.
 
 Every mounted/native handle exposes `copySelection()`, `cutSelection()` and
 `pasteSelection()`, each returning `Promise<void>`. Invoke them from a user
@@ -500,7 +509,9 @@ The DOM-free core exports `captureVisioClipboard`, `serializeVisioClipboard`,
 `deserializeVisioClipboard`, the `paste-shapes` edit and the
 `visioPasteCommand(page, clipboard, offset?)` command builder.
 
-## Experimental geometry editing
+## Geometry editing
+
+Stable scope: create, move, resize (with anchor), rotate, flip, line end points and safe delete on local shapes, one-shape master instances, groups (resize with anchor, rotate) and glued shapes with their connectors. Native evidence: cases `geometry-*`, `multi-selection-resize`, `group-resize`, `master-instance-move`, `master-instance-resize`, `glue-move-*`, `glue-resize-target`, `glue-delete-line` and the delete findings `evidence/native-delete-freeze-2026-10-29.json` and `native-delete-error-2026-10-29.json` (Visio freezes a cell that read a deleted shape to its last result; the core does the same). Limits: formulas the core cannot evaluate refuse an edit only when the edit reaches them; connector routing is the walking-glue subset recorded in the evidence, not Visio's router, and vertical floating alignment and non-listed layouts are unverified; one Visio build.
 
 The shared geometry controls expose create rectangle, move, resize and safe
 delete. Every native/mounted framework handle also forwards
