@@ -1,22 +1,22 @@
 {
-  "product": "Visio 16.0 build 20527",
-  "deleteReferenced": {
-    "before": {
-      "formula": "Sheet.2!Width*0.25",
-      "result": 0.5
-    },
-    "after": {
-      "formula": "0.5 in",
-      "result": 0.5,
-      "resultStr": "0.5000 in."
-    }
-  },
-  "errorCell": {
-    "formula": "1/0",
-    "result": 2.0,
-    "resultStr": "#DIV/0!",
-    "dependentFormula": "Sheet.3!PinX+1",
-    "dependentResult": 3.0,
-    "dependentStr": "3.0000 in."
-  }
+	"product": "Visio 16.0 build 20527",
+	"deleteReferenced": {
+		"before": {
+			"formula": "Sheet.2!Width*0.25",
+			"result": 0.5
+		},
+		"after": {
+			"formula": "0.5 in",
+			"result": 0.5,
+			"resultStr": "0.5000 in."
+		}
+	},
+	"errorCell": {
+		"formula": "1/0",
+		"result": 2.0,
+		"resultStr": "#DIV/0!",
+		"dependentFormula": "Sheet.3!PinX+1",
+		"dependentResult": 3.0,
+		"dependentStr": "3.0000 in."
+	}
 }
