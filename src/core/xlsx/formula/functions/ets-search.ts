@@ -17,6 +17,12 @@
 //     0.099, 0.249 or 0.499, each a little less often than the plain cost says;
 //   - when alpha lands on 0.998 with the lowest beta, the forecast is `last value + trend`, with the
 //     least-squares slope untouched (alpha 1, beta 0), which is what Excel prints for those series.
+// Variants of the cost that lose clearly (alpha agreement on the 491 probes, against 471 here):
+// starting the training run from the slope of the training window only (251), the training error
+// alone (225), a second split inside the training part (149 alone, 326 added), hold-out forecasts
+// from the training end with the training-window slope (298) or the full-run trend (357). Beta
+// moves off 0.001 are matched on 42 of 49 only by the full-data start used here. Continuous
+// optimisers (golden section, Nelder-Mead) and lattice descents on this cost do not beat it.
 // What is not reproduced: the choice of 1/6 on a family of 51 bimodal series, and the rare alphas of
 // 1/3, 2/3 and 5/6.
 import type { Smoothing } from './ets-core';
