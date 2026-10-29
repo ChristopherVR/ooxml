@@ -92,6 +92,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Features and limitations', link: '/features' },
 					{ text: 'Preservation guarantee', link: '/preservation' },
+					{ text: 'Supported functions', link: '/functions' },
 					{ text: 'Collaboration', link: '/collaboration' },
 					{ text: 'Package releases', link: '/releasing' },
 					{
