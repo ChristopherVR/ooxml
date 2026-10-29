@@ -1175,6 +1175,9 @@
 							"name": "locale"
 						},
 						{
+							"name": "moderator"
+						},
+						{
 							"name": "self-id"
 						}
 					],
@@ -1201,6 +1204,13 @@
 						{
 							"kind": "field",
 							"name": "messages"
+						},
+						{
+							"kind": "field",
+							"name": "moderator",
+							"type": {
+								"text": "boolean"
+							}
 						},
 						{
 							"kind": "field",
