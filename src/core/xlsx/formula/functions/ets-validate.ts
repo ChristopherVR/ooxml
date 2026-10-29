@@ -5,7 +5,7 @@
 // the squared one-step errors of the training part plus the squared multi-step forecast errors of
 // the hold-out. Series too short for a hold-out use the plain one-step error, and a series of 4 to 6
 // points is first extended to 7 (`etsSearchSeries`).
-import { type EtsInit, olsSlope } from './ets-init';
+import { type EtsInit, olsSlope, PADS } from './ets-init';
 
 interface Params {
 	alpha: number;
@@ -14,29 +14,12 @@ interface Params {
 }
 
 /**
- * The points appended to a series of 4 to 6 values, as `[source, lag]` pairs: the point is
- * `y[source] + lag * slope`. The same extension gives the starting trend (`PADS` in `ets-init.ts`).
- */
-const EXTENSION: Record<number, readonly (readonly [number, number])[]> = {
-	6: [[0, 6]],
-	5: [
-		[1, 4],
-		[0, 6],
-	],
-	4: [
-		[0, 4],
-		[1, 4],
-		[0, 6],
-	],
-};
-
-/**
  * The series Excel's search measures the one-step error over: 4 to 6 values are extended to 7 with
  * the same points the starting trend uses, and the search then picks Excel's parameters on all of
  * the 40 recorded series of 4 to 7 values (on the values alone it picks 29).
  */
 export function etsSearchSeries(y: readonly number[]): readonly number[] {
-	const pads = EXTENSION[y.length];
+	const pads = PADS[y.length];
 	if (!pads) return y;
 	const slope = olsSlope(y);
 	return [...y, ...pads.map(([src, lag]) => (y[src] as number) + lag * slope)];

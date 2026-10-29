@@ -67,7 +67,7 @@ export function olsSlope(y: readonly number[]): number {
  * (-90, -124, -53, 18, 89, 160) / 980 for 6). The 6-value row is a copy of the first point six
  * steps on; the others are the unique decomposition of that form, not a derived rule.
  */
-const PADS: Record<number, readonly (readonly [number, number])[]> = {
+export const PADS: Record<number, readonly (readonly [number, number])[]> = {
 	6: [[0, 6]],
 	5: [
 		[1, 4],

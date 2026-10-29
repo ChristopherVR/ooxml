@@ -31,6 +31,7 @@
 // forecast the drift, 3 of 28 of the 0.998 with 0.249), the pair behind the reported alpha of 1/6,
 // and the series of fewer than 11 points, which have no hold-out.
 import type { Smoothing } from './ets-core';
+import { isExactLength } from './ets-init-chain';
 import { CANDIDATES, reportedFor, TOP_COST } from './ets-search-map';
 
 export interface Chosen extends Smoothing {
@@ -59,6 +60,48 @@ function better(c: number, best: number): boolean {
 }
 
 type Cost = (p: Smoothing) => number;
+
+/**
+ * Seasonal triples (alpha, beta, gamma) Excel is seen to report where the starting states are its
+ * own (`isExactLength`). The lowest hold-out cost over exactly these is Excel's triple on 697
+ * of the 700 recorded series that the forecasts identify (adding 0.002 or 0.9 with the lowest
+ * beta and gamma drops it to 506, so Excel does not try them). Reported as they are, with no
+ * drift forecast.
+ */
+const SEASONAL_TRIPLES: readonly (readonly [number, number, number])[] = [
+	[0.126, LOW, LOW],
+	[0.251, LOW, LOW],
+	[0.501, LOW, LOW],
+	[0.751, LOW, LOW],
+	[0.002, LOW, 0.125],
+	[0.002, LOW, 0.25],
+	[0.002, LOW, 0.5],
+	[0.002, LOW, 0.75],
+	[0.251, LOW, 0.25],
+	[0.75, LOW, 0.249],
+	[0.9, LOW, 0.099],
+	[0.251, 0.25, LOW],
+	[0.1, LOW, 0.899],
+	[0.126, 0.125, LOW],
+	[0.998, 0.099, LOW],
+	[0.25, LOW, 0.749],
+	[0.5, LOW, 0.499],
+	[0.5, 0.25, LOW],
+];
+
+/** Seasonal series with Excel's own starting states: the lowest cost on `SEASONAL_TRIPLES`. */
+function searchSeasonalLattice(cost: Cost): Chosen {
+	let best: Smoothing = { alpha: 0.126, beta: LOW, gamma: LOW };
+	let bestCost = cost(best);
+	for (const [alpha, beta, gamma] of SEASONAL_TRIPLES) {
+		const c = cost({ alpha, beta, gamma });
+		if (better(c, bestCost)) {
+			bestCost = c;
+			best = { alpha, beta, gamma };
+		}
+	}
+	return { ...best, drift: false };
+}
 
 /** Seasonal series: the lowest cost on the earlier lattice, beta up to alpha on 7 to 16 points. */
 function searchSeasonal(n: number, cost: Cost): Chosen {
@@ -110,7 +153,7 @@ function searchLattice(n: number, cost: Cost): Chosen {
  * set (`ets-validate.ts`); `m` is the season length (0 for none) and `n` the number of points.
  */
 export function chooseSmoothing(n: number, m: number, cost: Cost): Chosen {
-	if (m >= 2) return searchSeasonal(n, cost);
+	if (m >= 2) return isExactLength(n, m) ? searchSeasonalLattice(cost) : searchSeasonal(n, cost);
 	if (n < MIN_SEARCH_POINTS) return THREE_POINTS;
 	return searchLattice(n, cost);
 }
