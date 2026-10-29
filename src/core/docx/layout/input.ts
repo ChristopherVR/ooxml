@@ -80,6 +80,8 @@ export interface LayoutFloat extends LayoutObject {
 	offsetYPx?: number;
 	behindText?: boolean;
 	wrap?: string;
+	/** `wrapText` of a square, tight or through wrap (bothSides, left, right, largest). */
+	wrapText?: string;
 }
 
 /** A paragraph tab stop, positioned from the paragraph's text margin (not its indent). */

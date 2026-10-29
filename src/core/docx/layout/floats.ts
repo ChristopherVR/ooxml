@@ -2,7 +2,7 @@ import type { LayoutDocumentInput, LayoutFloat } from './input';
 import type { LayoutColumnBox, LayoutFloatBox, LayoutPageBox } from './result';
 
 export const FLOAT_WRAP_NOTE =
-	'Text wraps around floating pictures on their largest side (square, tight and through wrapping use the picture’s rectangle, not its outline); lines continuing onto a later page keep their wrapped widths.';
+	'Text wraps around floating pictures on their largest side, or on both sides of a square, tight or through picture whose wrapText is bothSides (all use the picture’s rectangle, not its outline); lines continuing onto a later page keep their wrapped widths.';
 
 interface Span {
 	start: number;
@@ -139,6 +139,7 @@ export function positionFloats(input: LayoutDocumentInput, pages: LayoutPageBox[
 						...(float.chart ? { chart: float.chart } : {}),
 						behindText: Boolean(float.behindText),
 						...(float.wrap ? { wrap: float.wrap } : {}),
+						...(float.wrapText ? { wrapText: float.wrapText } : {}),
 					});
 				}
 			}

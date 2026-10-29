@@ -25,6 +25,7 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 			...(placement?.offsetYPx !== undefined ? { offsetYPx: placement.offsetYPx } : {}),
 			...(placement?.behindText ? { behindText: true } : {}),
 			...(placement?.wrap ? { wrap: placement.wrap } : {}),
+			...(placement?.wrapText ? { wrapText: placement.wrapText } : {}),
 		});
 	}
 	return floats;

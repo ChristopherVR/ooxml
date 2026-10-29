@@ -221,8 +221,20 @@ export class SectionFlow {
 		if (block?.kind !== 'paragraph') return 0;
 		const layout = this.paragraphLayout(index);
 		const previous = index > 0 ? this.blocks[index - 1] : undefined;
-		if (previous?.kind === 'paragraph' && suppressesSpacing(previous, block)) return 0;
-		return layout.spacingBeforePx;
+		if (previous?.kind !== 'paragraph') return layout.spacingBeforePx;
+		if (suppressesSpacing(previous, block)) return 0;
+		// Between two paragraphs Word leaves the larger of the space after the first and the space
+		// before the second (measured in the corpus), not their sum: the first already took its own.
+		return Math.max(0, layout.spacingBeforePx - this.paragraphLayout(index - 1).spacingAfterPx);
+	}
+
+	/** Contextual spacing: no space after a paragraph that is followed by one of its own style. */
+	private spacingAfterSuppressed(index: number): boolean {
+		const block = this.blocks[index];
+		const next = this.blocks[index + 1];
+		return (
+			block?.kind === 'paragraph' && next?.kind === 'paragraph' && suppressesSpacing(block, next)
+		);
 	}
 
 	/** Minimum height that must fit before `index` may start, walking a `keepNext` chain. */
@@ -311,6 +323,7 @@ export class SectionFlow {
 					layout,
 					footnotes,
 					spacingBeforePx,
+					...(this.spacingAfterSuppressed(index) ? { spacingAfterPx: 0 } : {}),
 					...(this.section.modernFootnoteSeparator || this.section.legacyFootnoteColumns
 						? { trimLeadingColumnBreak: true }
 						: {}),

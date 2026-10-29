@@ -17,6 +17,15 @@ import { alignFragments, buildFragments } from './paragraph-fragments';
 import { expectDefined } from '../expect-defined';
 import { cachedParagraphLayout } from './paragraph-cache';
 
+/**
+ * How far justified text may squeeze its spaces, as a fraction of their width, to fit one more word.
+ * Word 16 does this. The value is fitted to probes of justified Courier New paragraphs from 9 to
+ * 13 pt (it reproduces all but 2 of 106 line-end decisions; Word accepted up to 0.20 at 13 pt and
+ * refused 0.14 at 10 pt, so no constant is exact), not a documented rule: the one number to revisit
+ * if more references disagree.
+ */
+const SPACE_SHRINK = 0.145;
+
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
 	lines: LayoutLine[];
@@ -48,7 +57,13 @@ export interface ParagraphLayoutResult {
 export type LineBoxFn = (
 	yPx: number,
 	heightPx: number,
-) => { leftInsetPx: number; rightInsetPx: number; gapBeforePx: number };
+) => {
+	leftInsetPx: number;
+	rightInsetPx: number;
+	gapBeforePx: number;
+	/** A picture the line runs around: text fills the space before it, then the space after it. */
+	hole?: { startPx: number; endPx: number };
+};
 
 export function layoutParagraph(
 	paragraph: LayoutParagraph,
@@ -108,13 +123,22 @@ function measureParagraph(
 
 	let placed: PlacedToken[] = [];
 	let lineWidthPx = 0;
+	// Width of the spaces on the current line: justified text may squeeze them to fit one more word.
+	let lineSpacePx = 0;
+	// Where the current line continues past a picture, and how far its later fragments move for it.
+	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
 	let marginReachPx = 0;
 	let tokenCursor = startToken;
 	let firstToken = startToken;
 
 	// Per-line boxes around wrapped floats, computed when each line starts (its top is then known).
-	const boxes: { leftInsetPx: number; rightInsetPx: number; gapBeforePx: number }[] = [];
+	const boxes: {
+		leftInsetPx: number;
+		rightInsetPx: number;
+		gapBeforePx: number;
+		hole?: { startPx: number; endPx: number };
+	}[] = [];
 	let runningY = 0;
 	const guessHeight = measurer.lineHeightOf(fonts[0] ?? fontOf({ text: '' }));
 	const boxFor = (lineIndex: number) => {
@@ -130,6 +154,7 @@ function measureParagraph(
 				leftInsetPx: box?.leftInsetPx ?? 0,
 				rightInsetPx: box?.rightInsetPx ?? 0,
 				gapBeforePx: gap,
+				...(box?.hole ? { hole: box.hole } : {}),
 			};
 		}
 		return expectDefined(boxes[lineIndex], 'line box');
@@ -189,7 +214,14 @@ function measureParagraph(
 		while (rendered.length && rendered.at(-1)!.token.kind === 'space') rendered.pop();
 		const fragments = buildFragments(rendered, paragraph);
 		const [firstPlaced] = placed;
-		const start = firstPlaced ? globalOffset(firstPlaced.token) : 0;
+		// The first line of a paragraph starts at its first character, even when that is an anchor or
+		// field code that draws nothing in the line (Word reports offset 0 there too).
+		const start =
+			lines.length === 0 && startToken === 0
+				? 0
+				: firstPlaced
+					? globalOffset(firstPlaced.token)
+					: 0;
 		const last = placed.at(-1)?.token;
 		const end = last
 			? globalOffset(last, last.kind === 'word' || last.kind === 'space' ? last.text.length : 1)
@@ -208,6 +240,9 @@ function measureParagraph(
 			fragment.topPx = baselinePx - extent.above;
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
 		});
+		if (jump) {
+			for (const fragment of fragments.slice(jump.index)) fragment.xPx += jump.shiftPx;
+		}
 		lines.push({
 			yPx: 0,
 			heightPx,
@@ -224,6 +259,8 @@ function measureParagraph(
 		if (forcedByBreak === 'column') columnBreakAfterLine.add(lineIndex);
 		placed = [];
 		lineWidthPx = 0;
+		lineSpacePx = 0;
+		jump = undefined;
 		marginReachPx = 0;
 	}
 
@@ -288,15 +325,29 @@ function measureParagraph(
 			leader = tab.leader === 'none' ? undefined : tab.leader;
 		}
 		const lineIndex = lines.length;
-		const limit = Math.max(availableWidth(lineIndex), marginReachPx);
+		const hole = boxFor(lineIndex).hole;
+		const beforeHole = hole && !jump ? hole.startPx - lineStart(lineIndex) : undefined;
+		const limit = Math.max(
+			beforeHole ?? availableWidth(lineIndex) - (jump?.shiftPx ?? 0),
+			marginReachPx,
+		);
 		// A pending trailing space only ever gets counted once it turns out to be
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
+		const squeezePx =
+			effectiveAlign === 'justify' && token.kind === 'word' ? lineSpacePx * SPACE_SHRINK : 0;
+		const fits = lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
 		const wouldFit =
-			lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit ||
-			placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
-		if (!wouldFit && token.kind !== 'space') {
+			fits || placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
+		// A word that no longer fits before a picture continues after it, on the same line.
+		const pastHole =
+			!fits && hole && !jump && token.kind === 'word'
+				? hole.endPx - lineStart(lineIndex) - lineWidthPx
+				: undefined;
+		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
+			jump = { index: placed.length, shiftPx: pastHole };
+		} else if (!wouldFit && token.kind !== 'space') {
 			tokenCursor = tokenIndex;
 			flushLine(false, undefined);
 			tokenCursor = tokenIndex + 1;
@@ -316,6 +367,7 @@ function measureParagraph(
 			...(markerFactor ? { xOffsetPx: -width * markerFactor, advancePx: advance } : {}),
 		});
 		lineWidthPx += token.kind === 'tab' ? width : advance;
+		if (token.kind === 'space') lineSpacePx += advance;
 	}
 	flushLine(lines.length === 0, undefined);
 
@@ -327,7 +379,8 @@ function measureParagraph(
 				line.fragments,
 				availableWidth(index),
 				index === lastIndex,
-				effectiveAlign,
+				// A line that runs around a picture is not aligned across it.
+				boxes[index]?.hole ? 'left' : effectiveAlign,
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),
 		};
 	}

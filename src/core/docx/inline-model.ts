@@ -56,6 +56,8 @@ export interface PicturePlacement {
 	wrap: 'square' | 'tight' | 'through' | 'topAndBottom' | 'none';
 	/** `behindDoc`: with `wrap: 'none'`, the picture is behind rather than in front of text. */
 	behindText?: boolean;
+	/** `wrapText` of a square, tight or through wrap: which sides of the picture text may use. */
+	wrapText?: 'bothSides' | 'left' | 'right' | 'largest';
 	/** `wp:positionH/wp:align`, when the picture is aligned rather than offset. */
 	align?: 'left' | 'center' | 'right' | 'inside' | 'outside';
 	/** `wp:positionH/wp:posOffset` in CSS pixels, relative to `relativeFrom`. */

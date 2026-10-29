@@ -44,8 +44,9 @@ function justify(fragments: LayoutFragment[], width: number): LayoutFragment[] {
 	const spaceIndices = fragments.map((f, i) => (f.text === ' ' ? i : -1)).filter((i) => i >= 0);
 	if (!spaceIndices.length || !fragments.length) return fragments;
 	const natural = fragments.at(-1)!.xPx + fragments.at(-1)!.widthPx;
-	const extra = Math.max(0, width - natural) / spaceIndices.length;
-	if (extra <= 0) return fragments;
+	// A line that was fitted by squeezing its spaces has a negative remainder.
+	const extra = (width - natural) / spaceIndices.length;
+	if (extra === 0) return fragments;
 	let shift = 0;
 	return fragments.map((fragment, index) => {
 		const placedFragment = { ...fragment, xPx: fragment.xPx + shift };

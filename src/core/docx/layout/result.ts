@@ -204,6 +204,8 @@ export interface LayoutFloatBox {
 	behindText: boolean;
 	/** `wp:wrapSquare`, `wrapTopAndBottom`… (`none` floats over or behind the text). */
 	wrap?: string;
+	/** `wrapText`: which sides of the picture text may use (bothSides, left, right, largest). */
+	wrapText?: string;
 }
 
 export interface LayoutResult {

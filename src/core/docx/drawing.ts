@@ -186,6 +186,15 @@ const WRAPS: [string, PicturePlacement['wrap']][] = [
 function parsePlacement(anchor: XmlElement): PicturePlacement {
 	const wrap = WRAPS.find(([local]) => firstNS(anchor, WP_NS, local))?.[1] ?? 'none';
 	const placement: PicturePlacement = { wrap };
+	const wrapElement = WRAPS.map(([local]) => firstNS(anchor, WP_NS, local)).find(Boolean);
+	const wrapText = wrapElement?.getAttribute('wrapText');
+	if (
+		wrapText === 'bothSides' ||
+		wrapText === 'left' ||
+		wrapText === 'right' ||
+		wrapText === 'largest'
+	)
+		placement.wrapText = wrapText;
 	if (anchor.getAttribute('behindDoc') === '1') placement.behindText = true;
 	const positionH = firstNS(anchor, WP_NS, 'positionH');
 	const relativeFrom = enumValue(

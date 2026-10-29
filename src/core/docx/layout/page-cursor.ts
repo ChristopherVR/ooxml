@@ -240,6 +240,9 @@ export class PageCursor {
 			else this.newPage();
 	}
 
+	/** Set by an explicit page break: Word drops the space before of the paragraph that follows it. */
+	spaceBeforeSuppressed = false;
+
 	newPage(): void {
 		this.pushPage();
 	}
@@ -255,8 +258,11 @@ export class PageCursor {
 		}
 	}
 
-	/** Places a box at the current fill position (sets its `yPx`) and advances by `advancePx`. */
-	place(box: LayoutBlockBox, advancePx: number): void {
+	/**
+	 * Places a box at the current fill position (sets its `yPx`) and advances by `advancePx`. The box
+	 * sits `offsetPx` below the fill position when the advance starts with space above it.
+	 */
+	place(box: LayoutBlockBox, advancePx: number, offsetPx = 0): void {
 		if (
 			this.page.sectionIndex !== this.sectionIndex &&
 			!this.page.sectionIndices?.includes(this.sectionIndex)
@@ -264,7 +270,8 @@ export class PageCursor {
 			(this.page.sectionIndices ??= [this.page.sectionIndex]).push(this.sectionIndex);
 			this.pageInSection = 1;
 		}
-		box.yPx = this.yPx;
+		this.spaceBeforeSuppressed = false;
+		box.yPx = this.yPx + offsetPx;
 		this.column.blocks.push(box);
 		this.yPx += advancePx;
 		const bodyBottom = this.legacyFootnoteColumns
