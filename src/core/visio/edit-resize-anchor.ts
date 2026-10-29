@@ -63,6 +63,7 @@ export function resizeVisioShapeAtAnchor(
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Glued shapes require routing outside this subset.');
 	const graph = indexCells(roots, {
 		check,
+		scope: 'affected',
 		glueShapes,
 		...(group ? { groupResizeShapes: group.shapes } : {}),
 	});

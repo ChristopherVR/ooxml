@@ -46,31 +46,35 @@ describe('plain text dependency preservation', () => {
 			code: 'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
 		});
 	});
-	it.each(['style', 'master', 'metadata'])(
-		'refuses unproven text dependence in %s XML',
-		async (scope) => {
-			const formula = cell('TxtWidth', 1, 'TEXTWIDTH(TheText)');
-			const bytes = await fixture({
-				pages: [{ id: '0', contents: contents() }],
-				...(scope === 'style'
-					? { document: `<StyleSheets><StyleSheet ID="2">${formula}</StyleSheet></StyleSheets>` }
-					: {}),
-				...(scope === 'master' ? { masters: [{ id: '1', shapes: shape('1', formula) }] } : {}),
-				...(scope === 'metadata'
-					? {
-							edit: (zip) =>
-								zip.file(
-									'visio/custom.xml',
-									`<Metadata xmlns="http://schemas.microsoft.com/office/visio/2012/main">${formula}</Metadata>`,
-								),
-						}
-					: {}),
-			});
-			await expect(editVsdx(bytes, [edit])).rejects.toMatchObject({
-				code: 'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
-			});
-		},
-	);
+	it.each(['style', 'metadata'])('refuses unproven text dependence in %s XML', async (scope) => {
+		const formula = cell('TxtWidth', 1, 'TEXTWIDTH(TheText)');
+		const bytes = await fixture({
+			pages: [{ id: '0', contents: contents() }],
+			...(scope === 'style'
+				? { document: `<StyleSheets><StyleSheet ID="2">${formula}</StyleSheet></StyleSheets>` }
+				: {}),
+			...(scope === 'master' ? { masters: [{ id: '1', shapes: shape('1', formula) }] } : {}),
+			...(scope === 'metadata'
+				? {
+						edit: (zip) =>
+							zip.file(
+								'visio/custom.xml',
+								`<Metadata xmlns="http://schemas.microsoft.com/office/visio/2012/main">${formula}</Metadata>`,
+							),
+					}
+				: {}),
+		});
+		await expect(editVsdx(bytes, [edit])).rejects.toMatchObject({
+			code: 'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
+		});
+	});
+	it('ignores text-measuring formulas of a master the shape does not inherit from', async () => {
+		const bytes = await fixture({
+			pages: [{ id: '0', contents: contents() }],
+			masters: [{ id: '1', shapes: shape('1', cell('TxtWidth', 1, 'TEXTWIDTH(TheText)')) }],
+		});
+		await expect(editVsdx(bytes, [edit])).resolves.toBeDefined();
+	});
 	it('preserves unrelated static caches and page-local shape references', async () => {
 		const bytes = await fixture({
 			pages: [

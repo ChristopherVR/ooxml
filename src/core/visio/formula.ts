@@ -180,14 +180,21 @@ export function parseVisioFormula(
 				offset += identifier[0].length;
 				whitespace();
 				if (source[offset] === '(') {
-					if (!/^[A-Za-z_][A-Za-z_0-9]*$/.test(identifier[0]))
+					const qualified = /^Sheet\.(\d+)!([A-Za-z_][A-Za-z_0-9]*)$/i.exec(identifier[0]);
+					if (!qualified && !/^[A-Za-z_][A-Za-z_0-9]*$/.test(identifier[0]))
 						return formulaFailure('syntax', 'Qualified function names are unsupported');
 					offset++;
 					const args: VisioFormulaAst[] = [];
 					whitespace();
 					if (source[offset] !== ')') {
 						for (;;) {
-							args.push(expression(0, depth + 1));
+							whitespace();
+							// An omitted argument (`SETATREF(User.X,,1)`) is an empty text.
+							args.push(
+								/^[,)]/.test(source.slice(offset))
+									? node({ kind: 'string', value: '' })
+									: expression(0, depth + 1),
+							);
 							whitespace();
 							if (source[offset] !== ',') break;
 							offset++;
@@ -195,7 +202,30 @@ export function parseVisioFormula(
 					}
 					if (source[offset++] !== ')')
 						return formulaFailure('syntax', 'Expected function closing parenthesis');
-					left = node({ kind: 'call', name: identifier[0].toUpperCase(), args });
+					left = node({
+						kind: 'call',
+						name: (qualified ? qualified[2]! : identifier[0]).toUpperCase(),
+						args,
+					});
+					// `Sheet.2!SheetRef()` calls a function on another sheet; `CONTAINERSHEETREF(1)!User.X`
+					// reads a cell of the sheet a function returns. Neither can be evaluated here.
+					if (qualified)
+						left = node({
+							kind: 'call',
+							name: '_SHEETCALL',
+							args: [node({ kind: 'string', value: qualified[1]! }), left],
+						});
+					whitespace();
+					const member =
+						source[offset] === '!' && /^!([A-Za-z_][A-Za-z_0-9.]*)/.exec(source.slice(offset));
+					if (member) {
+						offset += member[0].length;
+						left = node({
+							kind: 'call',
+							name: '_SHEETCELL',
+							args: [left, node({ kind: 'string', value: member[1]! })],
+						});
+					}
 				} else {
 					const ref = /^Sheet\.(\d+)!(.+)$/i.exec(identifier[0]);
 					left = node({

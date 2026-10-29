@@ -86,6 +86,8 @@ const staticUnsupported = new Set([
 	'SHADE',
 	'LUMDIFF',
 	'MODULUS',
+	// Reads an argument of the master the shape was dropped from; pure, evaluated in master scope.
+	'ARG',
 ]);
 // These functions can introduce references that cannot be identified from argument ASTs.
 const dynamic = new Set([
@@ -111,8 +113,27 @@ export interface VisioFormulaAnalysis {
 	references: VisioFormulaReference[];
 	unsupportedFunctions: string[];
 	dynamic: boolean;
+	/**
+	 * The formula can read a cell its text does not name (EVALCELL, a computed INDIRECT, a cell of a
+	 * returned sheet, an unknown function). A merely dynamic formula still names what it reads.
+	 */
+	opaque: boolean;
 	guarded: boolean;
 }
+/** Functions whose reads cannot be recovered from their arguments. */
+const opaqueFunctions = new Set([
+	'EVALCELL',
+	'EVALTEXT',
+	'GETREF',
+	'REF',
+	'_SHEETCELL',
+	// Structure lookups: the result changes when shapes are created, moved or reparented.
+	'CONTAINERSHEETREF',
+	'MEMBERSHEETREF',
+	'CALLOUTTARGET',
+	'PARENT',
+	'PAR',
+]);
 export function traverse(
 	ast: VisioFormulaAst,
 	limits: VisioFormulaLimits,
@@ -140,6 +161,7 @@ export function analyzeVisioFormula(
 	const references = new Map<string, VisioFormulaReference>(),
 		unsupportedFunctions = new Set<string>();
 	let unsafe = false,
+		opaque = false,
 		guarded = false;
 	traverse(ast, limits, (node) => {
 		if (node.kind === 'reference')
@@ -163,7 +185,10 @@ export function analyzeVisioFormula(
 				const target = literalIndirectTarget(node);
 				if (target && limits.literalIndirect)
 					references.set(`${target.shapeId ?? ''}!${target.cell.toLowerCase()}`, target);
-				else unsafe = true;
+				else {
+					unsafe = true;
+					opaque = true;
+				}
 			}
 			if (!supported.has(node.name)) unsupportedFunctions.add(node.name);
 			const shapeText =
@@ -176,6 +201,15 @@ export function analyzeVisioFormula(
 				(!supported.has(node.name) && !staticUnsupported.has(node.name))
 			)
 				unsafe = true;
+			if (
+				opaqueFunctions.has(node.name) ||
+				(node.name === 'SHAPETEXT' && !shapeText) ||
+				(!supported.has(node.name) &&
+					!staticUnsupported.has(node.name) &&
+					!dynamic.has(node.name) &&
+					node.name !== '_SHEETCALL')
+			)
+				opaque = true;
 			if (node.name === 'GUARD') guarded = true;
 		}
 	});
@@ -183,6 +217,7 @@ export function analyzeVisioFormula(
 		references: [...references.values()],
 		unsupportedFunctions: [...unsupportedFunctions],
 		dynamic: unsafe,
+		opaque,
 		guarded,
 	};
 }

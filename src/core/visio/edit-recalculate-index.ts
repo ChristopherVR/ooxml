@@ -38,6 +38,13 @@ export interface VisioRecalculationOptions {
 	 * instead of refusing the whole recalculation. Default: refuse.
 	 */
 	cycles?: 'refuse' | 'keep';
+	/**
+	 * `affected`: a cell whose formula cannot be analysed (dynamic functions, unknown functions)
+	 * is indexed as unevaluable instead of failing the whole index, so it refuses an edit only when
+	 * the edit reaches it. A cell that may read cells its text does not name is assumed to be
+	 * reached by every edit on its page. Default `document`: such a cell fails the index.
+	 */
+	scope?: 'document' | 'affected';
 	/** Receives one entry per cell that kept its cache because of a cycle. */
 	diagnostics?: { code: string; message: string }[];
 	/** The plain text of a shape for `TheText` readers; recalculation fills it from the pages. */
@@ -48,6 +55,10 @@ export interface IndexedCell extends VisioCellKey {
 	formula?: ReturnType<typeof parseVisioFormula>;
 	dependencies: string[];
 	unsafe: boolean;
+	/** Why the cell cannot be evaluated, when its formula was indexed as unevaluable. */
+	refusal?: string;
+	/** The formula may read cells it does not name: any edit on its page may reach it. */
+	opaque?: boolean;
 	unit: VisioFormulaValue['unit'];
 }
 export const key = (cell: VisioCellKey) =>
@@ -171,24 +182,40 @@ export function indexCells(
 					// (Visio's freshly dropped connector names its own sheet).
 					!(/^(BegTrigger|EndTrigger)$/.test(cell) && isNativeGlueCell(cell, source!))
 				) {
+					const lenient = options.scope === 'affected';
+					const unprovable = (message: string, opaque: boolean) => {
+						if (!lenient) fail('EDIT_UNKNOWN_DEPENDENCY', message);
+						item.unsafe = true;
+						item.refusal = message;
+						if (opaque) item.opaque = true;
+					};
 					try {
 						item.formula = parseVisioFormula(source!);
 						// A size measured from the shape's own text reads only the cells it names; the
 						// text itself is followed after text edits (edit-text-size.ts).
-						const plain = analyzeVisioFormula(item.formula, { shapeTextReads: true, literalIndirect: true });
+						const plain = analyzeVisioFormula(item.formula, {
+							shapeTextReads: true,
+							literalIndirect: true,
+						});
 						const analysis = (plain.dynamic && textSizeFormula(item.formula)) || plain;
-						if (analysis.dynamic)
-							fail(
-								'EDIT_DYNAMIC_DEPENDENCY',
-								'Dynamic ShapeSheet dependencies cannot be safely edited.',
+						if (analysis.dynamic) {
+							if (!lenient)
+								fail(
+									'EDIT_DYNAMIC_DEPENDENCY',
+									'Dynamic ShapeSheet dependencies cannot be safely edited.',
+								);
+							unprovable(
+								`${cell} on shape ${sheet.shapeId || 'page'} has dynamic ShapeSheet dependencies that cannot be followed.`,
+								'opaque' in analysis && analysis.opaque,
 							);
+						}
 						item.dependencies = analysis.references
 							.filter((ref) => !isBooleanLiteral(ref))
 							.map((ref) => key({ pageId, shapeId: ref.shapeId ?? sheet.shapeId, cell: ref.cell }));
 					} catch (error) {
-						fail(
-							'EDIT_UNKNOWN_DEPENDENCY',
+						unprovable(
 							`Cannot prove ShapeSheet dependency closure: ${error instanceof Error ? error.message : 'invalid formula'}`,
+							true,
 						);
 					}
 				}

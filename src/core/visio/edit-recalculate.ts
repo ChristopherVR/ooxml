@@ -19,7 +19,7 @@ export function recalculateVisioCells(
 	changed: readonly VisioCellKey[],
 	options: VisioRecalculationOptions = {},
 ): readonly string[] {
-	const cells = indexCells(roots, options);
+	const cells = indexCells(roots, { scope: 'affected', ...options });
 	const reverse = new Map<string, string[]>();
 	for (const [id, item] of cells)
 		for (const dependency of item.dependencies) {
@@ -28,6 +28,9 @@ export function recalculateVisioCells(
 			reverse.set(dependency, next);
 		}
 	const affected = new Set(changed.map(key));
+	// A formula that may read cells it does not name is reached by every edit on its page.
+	const editedPages = new Set(changed.map((cell) => cell.pageId));
+	for (const [id, item] of cells) if (item.opaque && editedPages.has(item.pageId)) affected.add(id);
 	const pending = [...affected];
 	const maxAffected = bound(options.maxAffectedCells, 10_000);
 	for (let i = 0; i < pending.length; i++) {
@@ -84,9 +87,14 @@ export function assertVisioShapesUnreferenced(
 	removed: ReadonlyMap<string, ReadonlySet<string>>,
 	options: VisioRecalculationOptions = {},
 ): void {
-	const cells = indexCells(roots, options);
+	const cells = indexCells(roots, { scope: 'affected', ...options });
 	for (const cell of cells.values()) {
 		options.check?.();
+		if (cell.opaque && removed.has(cell.pageId) && !removed.get(cell.pageId)!.has(cell.shapeId))
+			fail(
+				'EDIT_REFERENCED_DELETE',
+				`${cell.cell} on shape ${cell.shapeId || 'page'} may read the removed shape through a dynamic dependency.`,
+			);
 		if (removed.get(cell.pageId)?.has(cell.shapeId)) continue;
 		if (
 			cell.dependencies.some((id) => {
@@ -130,7 +138,7 @@ export function createVisioDependencyQuery(
 	roots: ReadonlyMap<string, Element>,
 	options: VisioRecalculationOptions = {},
 ): (source: VisioCellKey, targets: readonly VisioCellKey[]) => boolean {
-	const cells = indexCells(roots, options);
+	const cells = indexCells(roots, { scope: 'affected', ...options });
 	return (source, targets) => {
 		const wanted = new Set(targets.map(key));
 		const seen = new Set<string>();
@@ -145,7 +153,10 @@ export function createVisioDependencyQuery(
 			if (seen.size > maxSteps) fail('LIMIT_FORMULA_STEPS', 'Dependency analysis limit exceeded.');
 			const item = cells.get(id);
 			if (!item || item.unsafe || item.node?.hasAttribute('E')) return false;
-			if (item.formula && analyzeVisioFormula(item.formula, { literalIndirect: true }).unsupportedFunctions.length)
+			if (
+				item.formula &&
+				analyzeVisioFormula(item.formula, { literalIndirect: true }).unsupportedFunctions.length
+			)
 				return false;
 			if (wanted.has(id)) found = true;
 			else pending.push(...item.dependencies);

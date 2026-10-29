@@ -185,7 +185,16 @@ const cases: { name: string; family: string; edits: VisioEdit[] }[] = [
 	{
 		name: 'group-resize',
 		family: 'group and multi-selection resize',
-		edits: [{ type: 'resize-shape', pageId: groupsPage, shapeId: group, width: 5, height: 4 }],
+		edits: [
+			{
+				type: 'resize-shape',
+				pageId: groupsPage,
+				shapeId: group,
+				width: 5,
+				height: 4,
+				anchor: { x: 0, y: 0 },
+			},
+		],
 	},
 	{
 		name: 'group-create',
@@ -321,7 +330,12 @@ for (const c of cases) {
 			pages: await claims(result.bytes),
 		});
 	} catch (error) {
-		manifest.push({ name: c.name, family: c.family, status: 'core-refused', error: String(error) });
+		manifest.push({
+			name: c.name,
+			family: c.family,
+			status: 'core-refused',
+			error: String(error) + (process.env.STACK ? String((error as Error).stack) : ''),
+		});
 	}
 }
 await writeFile(join(output, 'cases.json'), JSON.stringify(manifest, null, 1));

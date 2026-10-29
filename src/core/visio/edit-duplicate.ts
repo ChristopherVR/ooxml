@@ -74,7 +74,10 @@ export async function duplicateVisioShapes(
 		structural ||= !source || (await shapeIsStructural(source, template));
 	}
 	await assertDuplicateScope(pkg, pagePaths, root, newIds, check, structural);
-	const indexed = indexCells(detached ? new Map([[sourcePageId, sourceRoot]]) : roots, { check });
+	const indexed = indexCells(detached ? new Map([[sourcePageId, sourceRoot]]) : roots, {
+		check,
+		scope: 'affected',
+	});
 	const evaluate = createVisioCellEvaluator(indexed, { check }, true);
 	const containers = children(root, 'Shapes');
 	if (containers.length > 1) fail('INVALID_SHAPE_ID', 'Duplicate Shapes containers.');

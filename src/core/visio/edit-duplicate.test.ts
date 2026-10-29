@@ -216,7 +216,7 @@ describe('source-preserving shape duplication', () => {
 		[
 			'dynamic lookup',
 			local('1', user('Dynamic', 0, 'CONTAINERSHEETREF(1)')),
-			'EDIT_UNKNOWN_DEPENDENCY',
+			'EDIT_UNSUPPORTED_DEPENDENCY',
 		],
 		[
 			'container with lookups in the drawing',
