@@ -3,6 +3,8 @@ import {
 	MAX_STATUS_MESSAGE_CHARS,
 	type PresenceSetting,
 	applyExpiry,
+	clientPresenceFromWire,
+	combinePresence,
 	defaultPresenceSetting,
 	effectiveStatus,
 	expiryFor,
@@ -120,6 +122,56 @@ describe('stored settings', () => {
 		expect(parsePresenceSetting({ status: 'dnd', statusExpiresAt: 5 })).toMatchObject({
 			status: 'dnd',
 			statusExpiresAt: 5,
+		});
+	});
+});
+
+describe('a person with several clients', () => {
+	const c = (status: Parameters<typeof legacyAvailability>[0], message = '') => ({
+		status,
+		message,
+	});
+
+	it('has no presence without clients', () => {
+		expect(combinePresence([])).toBeNull();
+	});
+
+	it('ranks do not disturb, busy, available, be right back, away, offline', () => {
+		const order = ['dnd', 'busy', 'available', 'brb', 'away', 'offline'] as const;
+		for (let i = 0; i < order.length; i++)
+			for (let j = i + 1; j < order.length; j++) {
+				expect(combinePresence([c(order[i]!), c(order[j]!)])?.status).toBe(order[i]);
+				expect(combinePresence([c(order[j]!), c(order[i]!)])?.status).toBe(order[i]);
+			}
+	});
+
+	it('shows an active tab over an idle one, in either order', () => {
+		expect(combinePresence([c('away'), c('available')])?.status).toBe('available');
+		expect(combinePresence([c('available'), c('away')])?.status).toBe('available');
+	});
+
+	it('takes the message of the client whose status won', () => {
+		const won = combinePresence([c('away', 'lunch'), c('available', 'in the lab')]);
+		expect(won).toEqual({ status: 'available', message: 'in the lab' });
+	});
+
+	it('breaks a tie on the message, not on the order', () => {
+		const a = c('busy', 'b');
+		const b = c('busy', 'a');
+		const none = c('busy');
+		expect(combinePresence([a, b, none])).toEqual(b);
+		expect(combinePresence([none, b, a])).toEqual(b);
+		expect(combinePresence([none, none])).toEqual(none);
+	});
+
+	it('reads a wire payload through the same fallbacks as a single peer', () => {
+		expect(clientPresenceFromWire({ availability: 'busy' })).toEqual({
+			status: 'busy',
+			message: '',
+		});
+		expect(clientPresenceFromWire({ status: 'brb', statusMessage: '<b>back</b>\n soon' })).toEqual({
+			status: 'brb',
+			message: 'back soon',
 		});
 	});
 });

@@ -75,6 +75,57 @@ export function statusFromWire(raw: { status?: unknown; availability?: unknown }
 		: 'available';
 }
 
+/** One client's (tab's or device's) published presence, as the status and message it shows. */
+export interface ClientPresence {
+	status: PresenceStatus;
+	message: string;
+}
+
+/**
+ * How present a status is when one person has several clients: the lowest rank wins. A status the
+ * person set that asks not to be bothered (Do not disturb, Busy) beats Available, so a busy tab is
+ * not hidden by an open one; Available beats the states that mean "not at the screen" (Be right
+ * back, Away), and Appear offline loses to any client that is showing. Since the chosen status is
+ * shared by every tab, the clients only differ by idleness and meetings, and this keeps the more
+ * conservative answer for the person.
+ */
+const PRESENCE_RANK: Record<PresenceStatus, number> = {
+	dnd: 0,
+	busy: 1,
+	available: 2,
+	brb: 3,
+	away: 4,
+	offline: 5,
+};
+
+const messageFirst = (a: string, b: string): boolean =>
+	a !== b && (b === '' || (a !== '' && a < b));
+
+/** The client a person shows as, or null with no clients. Independent of the order of `clients`. */
+export function combinePresence(clients: readonly ClientPresence[]): ClientPresence | null {
+	let best: ClientPresence | null = null;
+	for (const c of clients) {
+		if (!best) best = c;
+		else {
+			const d = PRESENCE_RANK[c.status] - PRESENCE_RANK[best.status];
+			// Same status: keep the one with a message, then the alphabetically first, so the
+			// message shown does not depend on which tab connected first.
+			if (d < 0 || (d === 0 && messageFirst(c.message, best.message))) best = c;
+		}
+	}
+	return best;
+}
+
+/** The presence a peer's wire payload means (status via `statusFromWire`, message sanitized). */
+export const clientPresenceFromWire = (raw: {
+	status?: unknown;
+	availability?: unknown;
+	statusMessage?: unknown;
+}): ClientPresence => ({
+	status: statusFromWire(raw),
+	message: sanitizeStatusMessage(raw.statusMessage),
+});
+
 /** A custom status message: tags and control characters removed, one line, length-capped. */
 export function sanitizeStatusMessage(text: unknown): string {
 	if (typeof text !== 'string') return '';

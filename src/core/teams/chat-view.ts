@@ -4,7 +4,12 @@
 import { activityPreview } from './activity';
 import { type ChatInfo, type ChatKind, chatTitle } from './chats';
 import type { Message } from './model';
-import { type PresenceStatus, statusFromWire } from './presence';
+import {
+	type ClientPresence,
+	type PresenceStatus,
+	clientPresenceFromWire,
+	combinePresence,
+} from './presence';
 import type { RosterEntry } from './roster';
 import { type PeerLike, callRoomId } from './view';
 
@@ -47,6 +52,16 @@ export interface ContactView {
 	availability: PresenceStatus;
 }
 
+/**
+ * What another person shows as. One person can have several clients (tabs, devices), each its own
+ * awareness entry: they are merged by `combinePresence`, never picked by order. Null when none.
+ */
+export function peerPresenceOf(userId: string, peers: readonly PeerLike[]): ClientPresence | null {
+	return combinePresence(
+		peers.filter((p) => p.userId === userId).map((p) => clientPresenceFromWire(p)),
+	);
+}
+
 export function memberPresence(
 	userId: string,
 	selfId: string,
@@ -54,8 +69,7 @@ export function memberPresence(
 	peers: readonly PeerLike[],
 ): PresenceStatus {
 	if (userId === selfId) return selfStatus;
-	const peer = peers.find((p) => p.userId === userId);
-	return peer ? statusFromWire(peer) : 'offline';
+	return peerPresenceOf(userId, peers)?.status ?? 'offline';
 }
 
 /** Chats the person belongs to, newest activity first. Unread = others' messages after the marker. */
