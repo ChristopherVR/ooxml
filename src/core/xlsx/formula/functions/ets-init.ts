@@ -14,6 +14,13 @@
 // the other seasonal states here are solved by least squares under the first-point constraint,
 // which lands near (not on) Excel's own starting values (a plain seasonal-dummy regression does
 // worse on the recorded forecasts).
+// Also checked: the seasonal start does not look like the rules applied to the hold-out training
+// window (the maps use the whole series, except that season-2 position states stop at 5 seasons),
+// and switching seasonal fits to the hold-out cost with these approximate starts makes the
+// recorded forecasts worse (season3-11 0.011 -> 0.079), so it waits for the exact start.
+// Position-wise, the seasonal trend is close to a weighted mean of each position's least-squares
+// slope over its seasons, the weights growing with the position (about 0.30, 0.34, 0.38 for season
+// 3 with 5 seasons), plus smaller terms that are not explained.
 // Eliminated against the recovered maps: backcasting and forward or backward passes with fixed
 // smoothing parameters, geometric-weight regressions, iterated padding by y0 + k * slope or
 // last + slope, constrained least squares of the filter at fixed parameters, classical
