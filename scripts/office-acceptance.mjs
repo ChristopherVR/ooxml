@@ -135,9 +135,22 @@ function powershell(...args) {
 	});
 }
 
-/** The version and build of an installed Office app, or null when its COM class is absent. */
+/** The process each probed COM server runs as, so the probe can wait for it to exit. */
+const PROCESS_OF = {
+	'Word.Application': 'WINWORD',
+	'Excel.Application': 'EXCEL',
+	'PowerPoint.Application': 'POWERPNT',
+	'Visio.Application': 'VISIO',
+};
+
+/**
+ * The version and build of an installed Office app, or null when its COM class is absent. The
+ * probe waits (up to a minute) for the instance it started to exit, because several scripts
+ * refuse to start while that app is already running.
+ */
 function probeApp(progId) {
-	const script = `$t=[type]::GetTypeFromProgID('${progId}'); if(-not $t){exit 3}; $a=$null; try{ $a=New-Object -ComObject '${progId}'; $b=''; try{$b=[string]$a.Build}catch{}; Write-Output ($a.Version+'|'+$b) } finally { if($a){ try{$a.Quit()}catch{} } }`;
+	const name = PROCESS_OF[progId] ?? '';
+	const script = `$t=[type]::GetTypeFromProgID('${progId}'); if(-not $t){exit 3}; $before=@(Get-Process '${name}' -ErrorAction SilentlyContinue | ForEach-Object Id); $a=$null; try{ $a=New-Object -ComObject '${progId}'; $b=''; try{$b=[string]$a.Build}catch{}; Write-Output ($a.Version+'|'+$b) } finally { if($a){ try{$a.Quit()}catch{}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($a); $a=$null; [GC]::Collect(); [GC]::WaitForPendingFinalizers() } }; $deadline=(Get-Date).AddSeconds(60); while((Get-Date) -lt $deadline -and @(Get-Process '${name}' -ErrorAction SilentlyContinue | Where-Object { $before -notcontains $_.Id }).Count -gt 0){ Start-Sleep -Milliseconds 500 }`;
 	const r = powershell('-Command', script);
 	if (r.status === 3) return null;
 	if (r.status !== 0)
