@@ -24,7 +24,7 @@ describe('teams server hardening', () => {
 	const start = async (options = {}) => {
 		const dir = mkdtempSync(join(tmpdir(), 'teams-server-hard-'));
 		dirs.push(dir);
-		const server = createTeamsServer({ dataDir: dir, ...options });
+		const server = createTeamsServer({ dataDir: dir, insecureDev: true, ...options });
 		const port = (await server.listen(0, '127.0.0.1')).port;
 		return { server, port };
 	};
@@ -85,12 +85,12 @@ describe('teams server hardening', () => {
 	it('refuses a non-loopback host without a token unless insecure', async () => {
 		const dir = mkdtempSync(join(tmpdir(), 'teams-server-host-'));
 		dirs.push(dir);
-		const bare = createTeamsServer({ dataDir: dir });
+		const bare = createTeamsServer({ dataDir: dir, insecureDev: true });
 		await assert.rejects(bare.listen(0, '0.0.0.0'), /refusing to listen/u);
-		const withToken = createTeamsServer({ dataDir: dir, token: 't' });
+		const withToken = createTeamsServer({ dataDir: dir, insecureDev: true, token: 't' });
 		await withToken.listen(0, '0.0.0.0');
 		await withToken.close();
-		const insecure = createTeamsServer({ dataDir: dir, insecure: true });
+		const insecure = createTeamsServer({ dataDir: dir, insecureDev: true, insecure: true });
 		await insecure.listen(0, '0.0.0.0');
 		await insecure.close();
 	});

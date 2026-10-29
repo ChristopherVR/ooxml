@@ -115,7 +115,7 @@ describe('private chats on the reference server', () => {
 
 	before(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'teams-chat-access-'));
-		server = createTeamsServer({ dataDir: dir });
+		server = createTeamsServer({ dataDir: dir, insecureDev: true });
 		port = (await server.listen(0, '127.0.0.1')).port;
 	});
 	after(async () => {

@@ -46,7 +46,7 @@ describe('teams server', () => {
 
 	before(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'teams-server-'));
-		server = createTeamsServer({ dataDir: dir });
+		server = createTeamsServer({ dataDir: dir, insecureDev: true });
 		port = (await server.listen(0, '127.0.0.1')).port;
 	});
 	after(async () => {
@@ -87,7 +87,7 @@ describe('teams server', () => {
 		await sleep(800); // snapshot debounce
 		a.destroy();
 		await server.close();
-		server = createTeamsServer({ dataDir: dir });
+		server = createTeamsServer({ dataDir: dir, insecureDev: true });
 		port = (await server.listen(0, '127.0.0.1')).port;
 		const b = client('bob', 'persist-room', { config: config() });
 		assert.ok(await until(() => b.getState().channels.some((c) => c.name === 'Keep')));
@@ -126,7 +126,7 @@ describe('teams server', () => {
 		assert.ok(!url.includes('..') || url.startsWith('/files/ws1/'));
 		const got = await fetch(`${base}/files/ws1/${encodeURIComponent('.._Q3 Plan.docx')}`);
 		assert.equal(got.status === 200 || got.status === 404, true);
-		const small = createTeamsServer({ dataDir: dir, maxFileBytes: 10 });
+		const small = createTeamsServer({ dataDir: dir, insecureDev: true, maxFileBytes: 10 });
 		const sp = (await small.listen(0, '127.0.0.1')).port;
 		const tooBig = await fetch(`http://127.0.0.1:${sp}/files/ws1/big.bin`, {
 			method: 'POST',
@@ -145,7 +145,7 @@ describe('teams server with a token and origin list', () => {
 	let port;
 	before(async () => {
 		dir = mkdtempSync(join(tmpdir(), 'teams-server-auth-'));
-		server = createTeamsServer({ dataDir: dir, token: 's3cret', origins: ['https://app.example'] });
+		server = createTeamsServer({ dataDir: dir, insecureDev: true, token: 's3cret', origins: ['https://app.example'] });
 		port = (await server.listen(0, '127.0.0.1')).port;
 	});
 	after(async () => {

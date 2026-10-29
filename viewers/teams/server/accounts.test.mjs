@@ -23,7 +23,7 @@ describe('accounts', () => {
 	const start = async (options) => {
 		const dir = mkdtempSync(join(tmpdir(), 'teams-accounts-'));
 		dirs.push(dir);
-		const server = createTeamsServer({ dataDir: dir, ...options });
+		const server = createTeamsServer({ dataDir: dir, insecureDev: true, ...options });
 		servers.push(server);
 		return { server, port: (await server.listen(0, '127.0.0.1')).port };
 	};

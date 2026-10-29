@@ -16,7 +16,7 @@ describe('session hardening', () => {
 	const start = async (options) => {
 		const dir = options.dataDir ?? mkdtempSync(join(tmpdir(), 'teams-hardening-'));
 		dirs.push(dir);
-		const server = createTeamsServer({ dataDir: dir, log: (m) => logs.push(m), ...options });
+		const server = createTeamsServer({ dataDir: dir, insecureDev: true, log: (m) => logs.push(m), ...options });
 		servers.push(server);
 		return { server, dir, port: (await server.listen(0, '127.0.0.1')).port };
 	};

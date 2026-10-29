@@ -173,7 +173,7 @@ async function checkServerBin(installed) {
 		process.platform === 'win32'
 			? process.execPath
 			: path.join(installed, '.bin', 'openteams-server');
-	const args = process.platform === 'win32' ? [bin] : [];
+	const args = [...(process.platform === 'win32' ? [bin] : []), '--insecure-dev'];
 	const port = 20000 + Math.floor(Math.random() * 20000);
 	const child = spawn(command, args, {
 		cwd: work,

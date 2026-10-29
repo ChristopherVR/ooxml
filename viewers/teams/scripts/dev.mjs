@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
 const demos = process.env.TEAMS_DEMOS ?? 'vanilla,react';
 const procs = [
-	spawn(process.execPath, ['server/index.mjs'], { stdio: 'inherit' }),
+	spawn(process.execPath, ['server/index.mjs', '--insecure-dev'], { stdio: 'inherit' }),
 	...demos.split(',').map((d) =>
 		spawn(process.execPath, [vite, '--host', '127.0.0.1'], {
 			stdio: 'inherit',
