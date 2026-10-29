@@ -162,7 +162,8 @@ for (const profile of ['partial', 'fresh', 'oversize', 'consumed', 'mirror-fresh
 				tableProps(await zip.file('word/document.xml')!.async('string')),
 			);
 			for (const [path, file] of Object.entries(zip.files))
-				if (!file.dir && path !== 'word/document.xml')
+				// docProps/core.xml carries the save's last-modified stamp.
+				if (!file.dir && path !== 'word/document.xml' && path !== 'docProps/core.xml')
 					expect(await edited.file(path)!.async('uint8array')).toEqual(
 						await file.async('uint8array'),
 					);
