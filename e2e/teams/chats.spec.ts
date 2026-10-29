@@ -144,11 +144,20 @@ test('group chat: name, people dialog, system notices, leave', async ({ browser 
 		ada.locator('office-ui-chat-list .system', { hasText: 'named the chat' }),
 	).toBeVisible();
 	await shot(ada, 'chat-1366x768-people');
-	await people.getByRole('button', { name: 'Remove Cy', exact: true }).click();
-	await expect(ada.locator('office-ui-chat-list .system', { hasText: 'removed Cy' })).toBeVisible();
+	// Only a moderator removes somebody else (the server refuses it), so a plain member has no button.
+	await expect(people.getByRole('button', { name: 'Remove Cy', exact: true })).toHaveCount(0);
 	await people.getByRole('button', { name: 'Done', exact: true }).click();
 
-	// Cy no longer has the chat or its messages; Bob leaves on his own.
+	// Cy and Bob each leave on their own.
+	cy.once('dialog', (dialog) => void dialog.accept());
+	await sidebar(cy)
+		.getByRole('button', { name: /Launch crew/u })
+		.click();
+	await cy.getByRole('button', { name: 'People', exact: true }).click();
+	await cy
+		.getByRole('dialog', { name: 'People', exact: true })
+		.getByRole('button', { name: 'Leave chat' })
+		.click();
 	await expect.poll(() => client(cy, (c) => c.getState().chats.length)).toBe(0);
 	bob.once('dialog', (dialog) => void dialog.accept());
 	await bob.getByRole('button', { name: 'People', exact: true }).click();
