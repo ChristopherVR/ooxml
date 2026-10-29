@@ -9,6 +9,7 @@ import { readConditionalFormats, readDataValidations } from './conditional';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
 import { attachFormControls } from './form-control';
+import { readCustomSheetViews } from './custom-views';
 import { readHeaderFooterImages } from './header-footer-images';
 import { parseDataXml } from './limits';
 import type { SourceIndex } from './package';
@@ -68,6 +69,7 @@ const MODELLED = new Set([
 	'legacyDrawing',
 	'tableParts',
 	'scenarios',
+	'customSheetViews',
 ]);
 
 /** An element outside the worksheet schema cannot be written back in place, so it is reported. */
@@ -233,6 +235,8 @@ function readWorksheet(
 		readFitToPage(sheetPr),
 	);
 	if (page) sheet.pageSetup = page;
+	const customViews = byName.get('customSheetViews');
+	if (customViews) sheet.customViews = readCustomSheetViews(customViews);
 	const hfImages = readHeaderFooterImages(ctx.source, partName, byName.get('legacyDrawingHF'));
 	if (hfImages) sheet.headerFooterImages = hfImages;
 	const printOptions = readPrintOptions(byName.get('printOptions'));

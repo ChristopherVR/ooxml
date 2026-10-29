@@ -5,6 +5,7 @@ import type { ThemeFormatScheme } from '../drawingml/format-scheme';
 import type { DiagramHostNode } from '../diagram/edit/node-edit';
 import type { CellAddress, CellRange } from './address';
 import type { FormControlObject, ShapeNode } from './model-shapes';
+import type { CustomSheetView, CustomWorkbookView } from './model-custom-views';
 import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
 import type {
 	ChartSummary,
@@ -831,6 +832,8 @@ export interface Worksheet {
 	 * for those pages), read for display; the VML part itself is kept verbatim.
 	 */
 	headerFooterImages?: Record<string, HeaderFooterImage>;
+	/** Custom views of this sheet (`customSheetViews`); see {@link Workbook.customViews}. */
+	customViews?: CustomSheetView[];
 	/** Print options; absent means none set. */
 	printOptions?: PrintOptions;
 	protection?: SheetProtection;
@@ -896,6 +899,11 @@ export interface Workbook {
 	 * Word). A chart-only object sets it to the chart's cells so only the chart is visible.
 	 */
 	oleSize?: string;
+	/**
+	 * Custom views (`customWorkbookViews`). Replaced, never mutated, by the edits so history can
+	 * restore them; absent when the file has none.
+	 */
+	customViews?: CustomWorkbookView[];
 	/** Recalculate formulas when the file opens (`calcPr fullCalcOnLoad`). */
 	fullCalcOnLoad?: boolean;
 	/** Workbook structure protection (no adding, deleting or renaming sheets). */
@@ -958,3 +966,4 @@ export type * from './model-pivots';
 export type * from './model-slicers';
 export type * from './model-whatif';
 export type * from './model-shapes';
+export type * from './model-custom-views';

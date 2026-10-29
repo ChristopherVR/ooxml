@@ -133,6 +133,8 @@
 	"createWorkbook",
 	"createWorksheet",
 	"currentRegion",
+	"customViewMessage",
+	"customViewsOf",
 	"cutsDataTable",
 	"dataTableAt",
 	"dataTableFormula",

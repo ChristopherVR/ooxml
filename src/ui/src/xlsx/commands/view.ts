@@ -82,8 +82,8 @@ function workbookViewCommands(): Command[] {
 			id: 'view.custom-views',
 			label: 'Custom Views',
 			icon: icon('customViews'),
-			enabled: () => false,
-			run: () => undefined,
+			enabled: (ctx) => !!ctx.session() && !ctx.readOnly(),
+			run: (ctx) => void ctx.dialogs.open('custom-views'),
 		},
 	];
 }

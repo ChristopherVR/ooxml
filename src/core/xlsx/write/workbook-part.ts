@@ -4,6 +4,7 @@ import type { DefinedName, Workbook } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
 import { selfContainedXml } from '../read/xml-util';
 import { modernHashValues } from './password-hash';
+import { customWorkbookViewsXml } from './custom-views';
 import { XML_HEADER, attrs, escapeAttr, escapeText, inlineFragment } from './xml-out';
 
 /** CT_Workbook children kept verbatim from the source, by position in the schema sequence. */
@@ -147,7 +148,9 @@ export function workbookXml(
 			.map((name) =>
 				name === 'oleSize' && workbook.oleSize
 					? `<oleSize ref="${escapeAttr(workbook.oleSize)}"/>`
-					: raw([name]),
+					: name === 'customWorkbookViews' && workbook.customViews
+						? customWorkbookViewsXml(workbook.customViews)
+						: raw([name]),
 			)
 			.join('');
 	out +=

@@ -28,6 +28,7 @@ import {
 	sheetViewsXml,
 } from './sheet-props';
 import { scenariosXml } from './scenarios';
+import { customSheetViewsXml } from './custom-views';
 import { WORKSHEET_CHILD_ORDER as ORDER } from '../read/worksheet-children';
 import { XML_HEADER, attrs, inlineFragment } from './xml-out';
 
@@ -101,6 +102,7 @@ export function writeWorksheet(
 	);
 	blocks.set('sheetProtection', protectionXml(sheet));
 	blocks.set('scenarios', scenariosXml(sheet.scenarios));
+	blocks.set('customSheetViews', customSheetViewsXml(sheet.customViews));
 	blocks.set('autoFilter', autoFilterXml(sheet));
 	blocks.set('mergeCells', mergeCellsXml(sheet));
 	blocks.set('conditionalFormatting', conditionalFormatsXml(sheet.conditionalFormats, ctx.styles));

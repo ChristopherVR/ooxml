@@ -138,6 +138,7 @@ export async function loadXlsx(
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
 	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;
 	if (book.oleSize) workbook.oleSize = book.oleSize;
+	if (book.customViews) workbook.customViews = book.customViews;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
 	if (book.iterate) workbook.iterate = book.iterate;
 	if (signatures.hasSignatures)

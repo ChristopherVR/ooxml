@@ -16,6 +16,7 @@ import { openZoom } from './zoom';
 import { openDataTable, openGoalSeek } from './what-if';
 import { openForecastSheet } from './forecast-sheet';
 import { openScenarioManager } from './scenario-manager';
+import { openCustomViews } from './custom-views';
 import { openCreateSparklines, openSparklineSettings } from './sparklines';
 import { openPivotFieldSettings } from './pivot-field-settings';
 import { openPivotGroup } from './pivot-group';
@@ -65,6 +66,7 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	d.register('data-table', (c) => openDataTable(c));
 	d.register('forecast-sheet', (c) => openForecastSheet(c));
 	d.register('scenario-manager', (c) => openScenarioManager(c));
+	d.register('custom-views', (c) => openCustomViews(c));
 	d.register('symbol', (c) => openSymbol(c));
 	d.register('fill-series', (c) => openFillSeries(c));
 	d.register('create-table', (c, p) => openCreateTable(c, props<CreateTableProps>(p)));

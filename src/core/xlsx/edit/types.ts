@@ -3,6 +3,7 @@ import type { DocumentPropertiesPatch } from './doc-properties';
 import type { DataTableRequest } from './data-table';
 import type { GoalSeekRequest, GoalSeekResult } from './goal-seek';
 import type { ScenarioDraft } from './scenarios';
+import type { CustomViewDraft } from './custom-views';
 import type { ExternalChange } from './external';
 import type { CellAddress, CellRange } from '../address';
 import type {
@@ -373,6 +374,14 @@ export interface EditSession {
 	deleteScenario(sheet: number, index: number): void;
 	/** Writes a scenario's values into its changing cells. */
 	showScenario(sheet: number, index: number): void;
+	/**
+	 * View > Custom Views: saves the current look of every sheet under a name (replacing a view of
+	 * that name) and returns its guid. Refused when the workbook has tables, as in Excel.
+	 */
+	addCustomView(draft: CustomViewDraft): string;
+	/** Applies a saved view to every sheet that recorded it. */
+	showCustomView(guid: string): void;
+	deleteCustomView(guid: string): void;
 	/** Appends the scenarios of another sheet (renaming taken names); returns how many were added. */
 	mergeScenarios(sheet: number, from: number): number;
 	/** Automatic or manual calculation (saved with the workbook). */

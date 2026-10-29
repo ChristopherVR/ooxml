@@ -114,4 +114,10 @@ export {
 	scenariosOf,
 	type ScenarioDraft,
 } from './scenarios';
+export {
+	customViewMessage,
+	customViewsOf,
+	type CustomViewDraft,
+	type CustomViewProblem,
+} from './custom-views';
 export { displayText } from '../display-text';

@@ -27,6 +27,7 @@ import * as dataTable from './data-table';
 import * as goalSeek from './goal-seek';
 import * as scenarios from './scenarios';
 import { mergeScenarios } from './scenario-merge';
+import * as customViews from './custom-views';
 import * as docProps from './doc-properties';
 import * as drawings from './drawings';
 import * as sparklines from './sparklines';
@@ -339,6 +340,9 @@ export function createEditSession(
 		deleteScenario: (s, i) => scenarios.deleteScenario(ctx, s, i),
 		showScenario: (s, i) => scenarios.showScenario(ctx, s, i),
 		mergeScenarios: (s, from) => mergeScenarios(ctx, s, from),
+		addCustomView: (draft) => customViews.addCustomView(ctx, draft),
+		showCustomView: (guid) => customViews.showCustomView(ctx, guid),
+		deleteCustomView: (guid) => customViews.deleteCustomView(ctx, guid),
 		setCalcMode: (mode) => calcMode.setCalcMode(ctx, mode),
 		setDocumentProperties: (patch) => docProps.setDocumentProperties(ctx, patch),
 		setAutoRecalc: (enabled) => calcMode.setCalcMode(ctx, enabled ? 'auto' : 'manual'),

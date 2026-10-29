@@ -4,7 +4,14 @@ import {
 	parseCustomProperties,
 } from '../../opc/properties/index';
 import { parseXml, relAttr } from '../../xml/index';
-import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model';
+import type {
+	CustomWorkbookView,
+	DefinedName,
+	ModernPasswordHash,
+	SheetState,
+	WorkbookProperties,
+} from '../model';
+import { readCustomWorkbookViews } from './custom-views';
 import { stripFuturePrefixes } from './formula-text';
 import { readModernHash } from './password-hash';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
@@ -44,6 +51,8 @@ export interface WorkbookPart {
 	workbookModernHash?: ModernPasswordHash;
 	/** `oleSize ref`. */
 	oleSize?: string;
+	/** `customWorkbookViews`, when the part has them. */
+	customViews?: CustomWorkbookView[];
 	/** `calcPr calcMode`: `manual` (and `autoNoTable`, read as automatic). */
 	calcMode?: 'auto' | 'manual';
 	/** `calcPr iterate` with its count (default 100) and maximum change (default 0.001). */
@@ -94,7 +103,9 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 			}
 		: undefined;
 	const oleSize = att(xFirst(root, 'oleSize'), 'ref');
+	const customViews = xFirst(root, 'customWorkbookViews');
 	return {
+		...(customViews ? { customViews: readCustomWorkbookViews(customViews) } : {}),
 		...(oleSize ? { oleSize } : {}),
 		...(iterate ? { iterate } : {}),
 		...(password ? { workbookPasswordHash: password } : {}),

@@ -67,6 +67,7 @@ type BookSettings = Pick<
 	| 'calcMode'
 	| 'properties'
 	| 'slicers'
+	| 'customViews'
 >;
 const SETTING_KEYS = [
 	'structureLocked',
@@ -77,6 +78,8 @@ const SETTING_KEYS = [
 	'properties',
 	// Replaced, never mutated, by the slicer edits.
 	'slicers',
+	// Replaced, never mutated, by the custom view edits.
+	'customViews',
 ] as const;
 
 function captureSettings(workbook: Workbook): BookSettings {
