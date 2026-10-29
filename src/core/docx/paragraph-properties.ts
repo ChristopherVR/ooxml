@@ -2,7 +2,13 @@ import type { Paragraph } from './model';
 import { first, getW, type XmlElement } from './xml';
 import { parseTabStops } from './tab-stops';
 import { parseJustification } from './paragraph-alignment';
-import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types';
+import {
+	onOffElement,
+	parseInteger,
+	parseOnOff,
+	parseSignedTwips,
+	parseTwips,
+} from './simple-types';
 import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 
@@ -64,6 +70,10 @@ export function parseDirectParagraphProperties(
 	const line = signedTwipValue(getW(spacing, 'line'));
 	if (before !== undefined) paragraph.spacingBeforeTwips = before;
 	if (after !== undefined) paragraph.spacingAfterTwips = after;
+	const beforeAuto = parseOnOff(getW(spacing, 'beforeAutospacing'));
+	const afterAuto = parseOnOff(getW(spacing, 'afterAutospacing'));
+	if (beforeAuto !== undefined) paragraph.spacingBeforeAuto = beforeAuto;
+	if (afterAuto !== undefined) paragraph.spacingAfterAuto = afterAuto;
 	if (line !== undefined) {
 		paragraph.lineSpacingTwips = line;
 	}

@@ -130,6 +130,12 @@ export interface DocumentModel {
 	footnotes?: Note[];
 	/** Saved Word layout compatibility mode; native mode15 footnotes use independent columns. */
 	compatibilityMode?: number;
+	/**
+	 * `w:compat/w:doNotUseHTMLParagraphAutoSpacing`. Absent, Word leaves the larger of the space after
+	 * a paragraph and the space before the next (and gives `w:beforeAutospacing` 14 pt); set, it adds
+	 * them and reads the twips. Measured the same in compatibility modes 12, 14 and 15 except pageBreakBefore.
+	 */
+	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	/** Custom separator stories, including explicitly empty separators. */
 	footnoteSeparators?: { separator?: Note; continuationSeparator?: Note };
 	endnotes?: Note[];

@@ -151,6 +151,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const parts = await parseDocumentParts(zip, body, blocks, drawings);
 	model.sections = parts.sections;
 	if (parts.compatibilityMode !== undefined) model.compatibilityMode = parts.compatibilityMode;
+	if (parts.doNotUseHtmlParagraphAutoSpacing) model.doNotUseHtmlParagraphAutoSpacing = true;
 	if (parts.footnotes) model.footnotes = parts.footnotes;
 	if (parts.footnoteSeparators) model.footnoteSeparators = parts.footnoteSeparators;
 	if (parts.endnotes) model.endnotes = parts.endnotes;

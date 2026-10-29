@@ -32,6 +32,9 @@ export interface Paragraph {
 	/** Word paragraph spacing and indentation values, kept in their native twip units (1/20 pt). */
 	spacingBeforeTwips?: Twips;
 	spacingAfterTwips?: Twips;
+	/** `w:beforeAutospacing` / `w:afterAutospacing`: HTML auto spacing (14 pt) replaces the twips. */
+	spacingBeforeAuto?: boolean;
+	spacingAfterAuto?: boolean;
 	lineSpacingTwips?: SignedTwips;
 	/** `auto` uses 240ths of a line; `exact` and `atLeast` use twips. */
 	lineSpacingRule?: 'auto' | 'exact' | 'atLeast';
@@ -92,6 +95,8 @@ export type ParagraphFormatting = Pick<
 	| 'direction'
 	| 'spacingBeforeTwips'
 	| 'spacingAfterTwips'
+	| 'spacingBeforeAuto'
+	| 'spacingAfterAuto'
 	| 'lineSpacingTwips'
 	| 'lineSpacingRule'
 	| 'indentLeftTwips'

@@ -221,10 +221,14 @@ export class SectionFlow {
 		if (block?.kind !== 'paragraph') return 0;
 		const layout = this.paragraphLayout(index);
 		const previous = index > 0 ? this.blocks[index - 1] : undefined;
+		if (index === 0 && !this.section.addParagraphSpacing)
+			return Math.max(0, layout.spacingBeforePx - (this.section.leadingSpacingAfterPx ?? 0));
 		if (previous?.kind !== 'paragraph') return layout.spacingBeforePx;
 		if (suppressesSpacing(previous, block)) return 0;
-		// Between two paragraphs Word leaves the larger of the space after the first and the space
-		// before the second (measured in the corpus), not their sum: the first already took its own.
+		// Unless the document sets doNotUseHTMLParagraphAutoSpacing, Word leaves the larger of the space
+		// after the first paragraph and the space before the second (measured, spacing-probe.json), not
+		// their sum: the first already took its own. Tables and sections are handled by their callers.
+		if (this.section.addParagraphSpacing) return layout.spacingBeforePx;
 		return Math.max(0, layout.spacingBeforePx - this.paragraphLayout(index - 1).spacingAfterPx);
 	}
 
@@ -323,6 +327,7 @@ export class SectionFlow {
 					layout,
 					footnotes,
 					spacingBeforePx,
+					...(this.section.keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
 					...(this.spacingAfterSuppressed(index) ? { spacingAfterPx: 0 } : {}),
 					...(this.section.modernFootnoteSeparator || this.section.legacyFootnoteColumns
 						? { trimLeadingColumnBreak: true }

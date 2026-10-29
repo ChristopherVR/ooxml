@@ -138,6 +138,18 @@ export class PageCursor {
 	get usedColumnHeightPx(): number {
 		return this.yPx - this.columnTopPx;
 	}
+	/**
+	 * At the top of a later page or a later column of the section (not the section's first page, nor
+	 * a continuous band). Word drops the space before of the paragraph placed here, whether a page
+	 * break, a natural overflow, `pageBreakBefore` or a column overflow brought it (spacing-probe.json).
+	 */
+	get atContinuationTop(): boolean {
+		return (
+			this.atColumnTop &&
+			this.columnTopPx === 0 &&
+			(this.page.pageInSection > 0 || this.columnIndex > 0)
+		);
+	}
 	get atColumnTop(): boolean {
 		return this.yPx === this.columnTopPx;
 	}
@@ -240,9 +252,6 @@ export class PageCursor {
 			else this.newPage();
 	}
 
-	/** Set by an explicit page break: Word drops the space before of the paragraph that follows it. */
-	spaceBeforeSuppressed = false;
-
 	newPage(): void {
 		this.pushPage();
 	}
@@ -270,7 +279,6 @@ export class PageCursor {
 			(this.page.sectionIndices ??= [this.page.sectionIndex]).push(this.sectionIndex);
 			this.pageInSection = 1;
 		}
-		this.spaceBeforeSuppressed = false;
 		box.yPx = this.yPx + offsetPx;
 		this.column.blocks.push(box);
 		this.yPx += advancePx;

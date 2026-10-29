@@ -63,6 +63,10 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	const line = signedTwipValue(getW(spacing, 'line'));
 	if (before !== undefined) result.spacingBeforeTwips = before;
 	if (after !== undefined) result.spacingAfterTwips = after;
+	const beforeAuto = parseOnOff(getW(spacing, 'beforeAutospacing'));
+	const afterAuto = parseOnOff(getW(spacing, 'afterAutospacing'));
+	if (beforeAuto !== undefined) result.spacingBeforeAuto = beforeAuto;
+	if (afterAuto !== undefined) result.spacingAfterAuto = afterAuto;
 	if (line !== undefined) result.lineSpacingTwips = line;
 	const rule = getW(spacing, 'lineRule');
 	if (rule === 'auto' || rule === 'exact' || rule === 'atLeast') result.lineSpacingRule = rule;
@@ -177,6 +181,8 @@ export function resolveParagraphFormatting(
 		'direction',
 		'spacingBeforeTwips',
 		'spacingAfterTwips',
+		'spacingBeforeAuto',
+		'spacingAfterAuto',
 		'lineSpacingTwips',
 		'lineSpacingRule',
 		'indentLeftTwips',

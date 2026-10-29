@@ -36,6 +36,7 @@ interface SettingsInfo {
 	evenAndOddHeaders: boolean;
 	autoHyphenation: boolean;
 	compatibilityMode?: number;
+	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 }
@@ -65,6 +66,9 @@ function parseSettings(xml: string | undefined): SettingsInfo {
 		Number.isInteger(compatibilityMode) &&
 		compatibilityMode > 0
 			? { compatibilityMode }
+			: {}),
+		...(onOffElement(first(first(root, 'compat'), 'doNotUseHTMLParagraphAutoSpacing')) === true
+			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),
 		evenAndOddHeaders: onOffElement(first(root, 'evenAndOddHeaders')) === true,
 		autoHyphenation: onOffElement(first(root, 'autoHyphenation')) === true,
@@ -111,6 +115,7 @@ export interface DocumentPartsResult {
 	footnoteSeparators?: import('./model').DocumentModel['footnoteSeparators'];
 	endnotes?: Note[];
 	compatibilityMode?: number;
+	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 	evenAndOddHeaders?: boolean;
@@ -183,6 +188,9 @@ export async function parseDocumentParts(
 		sections,
 		...(settings.compatibilityMode !== undefined
 			? { compatibilityMode: settings.compatibilityMode }
+			: {}),
+		...(settings.doNotUseHtmlParagraphAutoSpacing
+			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),
 		...(footnotes ? { footnotes } : {}),
 		...(footnoteSeparators ? { footnoteSeparators } : {}),

@@ -1,5 +1,5 @@
 import { scriptLayoutRuns } from './script-fonts';
-import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun } from '../index';
+import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun, Twips } from '../index';
 import {
 	computeListLabels,
 	dateFieldResult,
@@ -57,6 +57,8 @@ const EQUATION_NOTE =
 const NEXT_COLUMN_NOTE = 'A "next column" section break is laid out as a continuous section break.';
 
 const twipsToPx = twipsToPixels;
+/** Word gives `beforeAutospacing` and `afterAutospacing` 14 pt (measured in spacing-probe.json). */
+const HTML_AUTO_SPACING_TWIPS = twips(280);
 
 /** A paragraph holding only a display equation (`m:oMathPara`) is centred, as in Word. */
 function isDisplayEquationParagraph(paragraph: Paragraph): boolean {
@@ -97,6 +99,11 @@ export function adaptDocumentModel(
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
 	const catalog = model.paragraphStyles;
+	const addParagraphSpacing = model.doNotUseHtmlParagraphAutoSpacing === true;
+	const keepSpaceBeforePageBreak = model.compatibilityMode !== 15;
+	/** HTML auto spacing is 14 pt when the compatibility option is off; otherwise the twips are used. */
+	const autoSpaced = (auto: boolean | undefined, twipsValue: Twips | undefined) =>
+		auto && !addParagraphSpacing ? HTML_AUTO_SPACING_TWIPS : twipsValue;
 	const noted = new Set<string>();
 	const reportOnce = (message: string) => {
 		if (!noted.has(message)) {
@@ -299,8 +306,8 @@ export function adaptDocumentModel(
 			...definedProps({
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
-				spacingBeforeTwips: resolved.spacingBeforeTwips,
-				spacingAfterTwips: resolved.spacingAfterTwips,
+				spacingBeforeTwips: autoSpaced(resolved.spacingBeforeAuto, resolved.spacingBeforeTwips),
+				spacingAfterTwips: autoSpaced(resolved.spacingAfterAuto, resolved.spacingAfterTwips),
 				lineSpacingTwips: resolved.lineSpacingTwips,
 				lineSpacingRule: resolved.lineSpacingRule,
 				indentLeftTwips: resolved.indentLeftTwips ?? label?.indentLeftTwips,
@@ -378,6 +385,8 @@ export function adaptDocumentModel(
 						marginLeftPx: model.page.marginLeft,
 					},
 					...(footnoteSeparators ? { footnoteSeparators } : {}),
+					...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
+					...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
 					...(modernFootnoteSeparator ? { modernFootnoteSeparator: true } : {}),
 					...(legacyFootnoteColumns ? { legacyFootnoteColumns: true } : {}),
 					blocks: blocks.filter((block) => !folded.has(block)),
@@ -468,6 +477,8 @@ export function adaptDocumentModel(
 						},
 					}
 				: {}),
+			...(addParagraphSpacing ? { addParagraphSpacing: true } : {}),
+			...(keepSpaceBeforePageBreak ? { keepSpaceBeforePageBreak: true } : {}),
 			...(sectionStart && { break: sectionStart }),
 			...(section.verticalAlign ? { verticalAlign: section.verticalAlign } : {}),
 			// Empty text break markers share the preceding line. The mandatory
@@ -488,5 +499,14 @@ export function adaptDocumentModel(
 			}),
 		};
 	});
-	return { sections: result };
+	// Word collapses the first paragraph's space before with the previous section's last space after.
+	return {
+		sections: result.map((section, index) => {
+			const last = result[index - 1]?.blocks.at(-1);
+			const after = last?.kind === 'paragraph' ? last.spacingAfterTwips : undefined;
+			return !addParagraphSpacing && after
+				? { ...section, leadingSpacingAfterPx: twipsToPx(after) }
+				: section;
+		}),
+	};
 }

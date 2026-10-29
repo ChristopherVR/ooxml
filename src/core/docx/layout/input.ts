@@ -241,6 +241,12 @@ export interface LayoutSection {
 	footnoteColumns?: LayoutColumns;
 	/** Native Word mode15 repeats the normal story on continued pages. */
 	modernFootnoteSeparator?: boolean;
+	/** `doNotUseHTMLParagraphAutoSpacing`: add the space after and before instead of the larger. */
+	addParagraphSpacing?: boolean;
+	/** Compatibility mode before 15: `pageBreakBefore` keeps the space before at the page top. */
+	keepSpaceBeforePageBreak?: boolean;
+	/** Space after (px) of the previous section's last paragraph, which collapses with this one's first. */
+	leadingSpacingAfterPx?: number;
 	/** Measured Word compatibility modes 12 and 14 attach notes to body columns. */
 	legacyFootnoteColumns?: boolean;
 	footnoteSeparators?: { separator?: LayoutParagraph[]; continuationSeparator?: LayoutParagraph[] };
