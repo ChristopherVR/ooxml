@@ -14,9 +14,12 @@ export function buildSoftEdgeXml(style: ShapeStyle, emuPerPx: number): XmlObject
 }
 
 export function buildReflectionXml(style: ShapeStyle, context: Context): XmlObject | undefined {
+	// A reflection is visible when either end is: one that fades in from a
+	// transparent start (`stA` 0, `endA` > 0) is as real as one that fades out.
 	const numericValues = [
 		style.reflectionBlurRadius,
 		style.reflectionStartOpacity,
+		style.reflectionEndOpacity,
 		style.reflectionDistance,
 	];
 	if (

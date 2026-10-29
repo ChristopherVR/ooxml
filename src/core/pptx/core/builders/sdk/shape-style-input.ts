@@ -154,7 +154,9 @@ function mapGlowToShapeStyle(glow?: GlowInput): Partial<ShapeStyle> {
 	if (!glow) {
 		return {};
 	}
-	return { glowColor: glow.color, glowRadius: glow.radius, glowOpacity: glow.opacity };
+	// `GlowInput.opacity` documents a fully opaque default; resolve it here
+	// rather than fall through to the glow writer's own 0.4.
+	return { glowColor: glow.color, glowRadius: glow.radius, glowOpacity: glow.opacity ?? 1 };
 }
 
 function mapReflectionToShapeStyle(reflection?: ReflectionInput): Partial<ShapeStyle> {
