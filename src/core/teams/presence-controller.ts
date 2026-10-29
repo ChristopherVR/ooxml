@@ -13,10 +13,17 @@ import {
 	nextExpiry,
 	normalizeIdleMinutes,
 	parsePresenceSetting,
+	type PresenceSetting,
 	sanitizeStatusMessage,
 } from './presence';
 
 const MAX_TIMER_MS = 2 ** 31 - 1;
+
+const sameSetting = (a: PresenceSetting, b: PresenceSetting): boolean =>
+	a.status === b.status &&
+	a.statusExpiresAt === b.statusExpiresAt &&
+	a.message === b.message &&
+	a.messageExpiresAt === b.messageExpiresAt;
 
 export interface PresenceView {
 	/** What the person chose. */
@@ -46,6 +53,12 @@ export interface PresenceControllerOptions {
 	publish: (status: PresenceStatus, message: string) => void;
 	/** Called whenever the view changes, including idleness and expiry. */
 	changed: () => void;
+	/**
+	 * Tells the controller the stored setting may have changed (another tab saved a new status).
+	 * Returns the unsubscribe. The browser binding listens for `storage` events on the key; core
+	 * stays DOM-free. Idleness stays per tab: only the chosen status and message are shared.
+	 */
+	subscribe?: (onChange: () => void) => () => void;
 }
 
 export interface PresenceController {
@@ -61,19 +74,26 @@ export interface PresenceController {
 export function createPresenceController(options: PresenceControllerOptions): PresenceController {
 	const now = options.now ?? Date.now;
 	const { storage, storageKey } = options;
-	let setting = defaultPresenceSetting();
-	let idleMinutes = normalizeIdleMinutes(options.idleMinutes);
-	try {
-		const stored = JSON.parse(storage?.getItem(storageKey) ?? 'null') as Record<
-			string,
-			unknown
-		> | null;
-		setting = parsePresenceSetting(stored);
-		if (stored && options.idleMinutes === undefined && 'idleMinutes' in stored)
-			idleMinutes = normalizeIdleMinutes(stored.idleMinutes);
-	} catch {
-		// A corrupt value is ignored.
-	}
+	/** The stored setting and idle choice; the defaults when nothing usable is stored. */
+	const readStored = (): { setting: PresenceSetting; idleMinutes: number } => {
+		let read = {
+			setting: defaultPresenceSetting(),
+			idleMinutes: normalizeIdleMinutes(options.idleMinutes),
+		};
+		try {
+			const stored = JSON.parse(storage?.getItem(storageKey) ?? 'null') as Record<
+				string,
+				unknown
+			> | null;
+			read = { ...read, setting: parsePresenceSetting(stored) };
+			if (stored && options.idleMinutes === undefined && 'idleMinutes' in stored)
+				read.idleMinutes = normalizeIdleMinutes(stored.idleMinutes);
+		} catch {
+			// A corrupt value is ignored.
+		}
+		return read;
+	};
+	let { setting, idleMinutes } = readStored();
 	let lastActivity = now();
 	let idle = false;
 	let timer: ReturnType<typeof setTimeout> | undefined;
@@ -133,6 +153,19 @@ export function createPresenceController(options: PresenceControllerOptions): Pr
 	};
 	evaluate();
 
+	/** Another tab saved: adopt its status, message and idle choice, keep this tab's idleness. */
+	const reload = (): void => {
+		if (destroyed) return;
+		const next = readStored();
+		const same = next.idleMinutes === idleMinutes && sameSetting(next.setting, setting);
+		if (same) return;
+		setting = next.setting;
+		idleMinutes = next.idleMinutes;
+		evaluate();
+		options.changed();
+	};
+	const unsubscribe = options.subscribe?.(reload);
+
 	return {
 		view,
 		setStatus(status, duration = 'never') {
@@ -175,6 +208,7 @@ export function createPresenceController(options: PresenceControllerOptions): Pr
 		destroy() {
 			destroyed = true;
 			clearTimeout(timer);
+			unsubscribe?.();
 		},
 	};
 }

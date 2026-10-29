@@ -119,3 +119,95 @@ describe('presence controller', () => {
 		controller.destroy();
 	});
 });
+
+/** Two tabs of one person: a shared fake storage that tells the other tab when one saves. */
+function twoTabs(idleMinutes = 5) {
+	const store = new Map<string, string>();
+	const listeners = new Set<{ tab: number; fn: () => void }>();
+	const tab = (id: number) => {
+		const published: string[] = [];
+		let changes = 0;
+		const controller = createPresenceController({
+			storage: {
+				getItem: (k) => store.get(k) ?? null,
+				setItem: (k, v) => {
+					store.set(k, v);
+					for (const l of [...listeners]) if (l.tab !== id) l.fn();
+				},
+			},
+			storageKey: 'k',
+			idleMinutes,
+			publish: (status, message) => published.push(`${status}|${message}`),
+			changed: () => changes++,
+			subscribe: (fn) => {
+				const entry = { tab: id, fn };
+				listeners.add(entry);
+				return () => listeners.delete(entry);
+			},
+		});
+		return { controller, published, changes: () => changes, listeners: () => listeners.size };
+	};
+	return { a: tab(1), b: tab(2), listeners: () => listeners.size };
+}
+
+describe('a status chosen in another tab', () => {
+	it('reaches this tab and is published from it', () => {
+		const { a, b } = twoTabs(0);
+		a.controller.setStatus('dnd', '1h');
+		a.controller.setMessage('Deep work');
+		expect(b.controller.view()).toMatchObject({
+			status: 'dnd',
+			effective: 'dnd',
+			message: 'Deep work',
+		});
+		expect(b.published.at(-1)).toBe('dnd|Deep work');
+		expect(b.changes()).toBeGreaterThan(0);
+		a.controller.setStatus('available');
+		expect(b.controller.view().effective).toBe('available');
+		expect(b.published.at(-1)).toBe('available|Deep work');
+		a.controller.destroy();
+		b.controller.destroy();
+	});
+
+	it('keeps idleness per tab', () => {
+		const { a, b } = twoTabs(5);
+		vi.advanceTimersByTime(5 * MIN);
+		expect(b.controller.view().idle).toBe(true);
+		// Tab A is where the person is: choosing a status there is activity in A only.
+		a.controller.setStatus('busy');
+		expect(a.controller.view().idle).toBe(false);
+		expect(b.controller.view()).toMatchObject({ idle: true, status: 'busy', effective: 'busy' });
+		a.controller.setStatus('available');
+		expect(a.controller.view().effective).toBe('available');
+		expect(b.controller.view()).toMatchObject({
+			idle: true,
+			status: 'available',
+			effective: 'away',
+		});
+		a.controller.destroy();
+		b.controller.destroy();
+	});
+
+	it('ignores a notification that changes nothing', () => {
+		const { a, b } = twoTabs(0);
+		a.controller.setStatus('brb');
+		const before = b.changes();
+		const published = b.published.length;
+		a.controller.setIdleMinutes(0);
+		expect(b.changes()).toBe(before);
+		expect(b.published.length).toBe(published);
+		a.controller.destroy();
+		b.controller.destroy();
+	});
+
+	it('stops listening on destroy', () => {
+		const { a, b, listeners } = twoTabs(0);
+		expect(listeners()).toBe(2);
+		b.controller.destroy();
+		expect(listeners()).toBe(1);
+		a.controller.setStatus('dnd');
+		expect(b.controller.view().status).toBe('available');
+		a.controller.destroy();
+		expect(listeners()).toBe(0);
+	});
+});

@@ -523,6 +523,33 @@ describe('teams client', () => {
 		expect(a.getState().people.find((p) => !p.self)?.availability).toBe('available');
 	});
 
+	it("syncs a status chosen in one tab to the same person's other tab", async () => {
+		const values = new Map<string, string>();
+		const watchers = new Set<{ owner: number; fn: (key: string | null) => void }>();
+		const tabStorage = (owner: number) => ({
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => {
+				values.set(key, value);
+				for (const w of watchers) if (w.owner !== owner) w.fn(key);
+			},
+			subscribe: (fn: (key: string | null) => void) => {
+				const w = { owner, fn };
+				watchers.add(w);
+				return () => watchers.delete(w);
+			},
+		});
+		const tab1 = make('ada', 'store-tabs', { idleMinutes: 0, storage: tabStorage(1) });
+		const tab2 = make('ada', 'store-tabs', { idleMinutes: 0, storage: tabStorage(2) });
+		await tick(100);
+		tab1.setAvailability('dnd', '1h');
+		await tick(100);
+		expect(tab2.getState().presence).toMatchObject({ status: 'dnd', effective: 'dnd' });
+		const wire = tab1.workspace.session.peers()[0] as unknown as Record<string, unknown>;
+		expect(wire.status).toBe('dnd');
+		tab2.destroy();
+		expect(watchers.size).toBe(1);
+	});
+
 	it('shows Away after the idle time and Available again on activity', async () => {
 		vi.useFakeTimers();
 		try {

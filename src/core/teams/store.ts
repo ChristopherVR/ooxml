@@ -69,6 +69,11 @@ import {
 export interface StorageLike {
 	getItem: (key: string) => string | null;
 	setItem: (key: string, value: string) => void;
+	/**
+	 * Optional: calls `listener` with the key whenever another tab or window changes the storage
+	 * (null when it was cleared). The browser binding is the `storage` event. Returns the unsubscribe.
+	 */
+	subscribe?: (listener: (key: string | null) => void) => () => void;
 }
 export interface UploadableFile {
 	name: string;
@@ -599,9 +604,19 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	doc.on('update', scheduleSave);
 	onChatDocUpdate = scheduleSave;
 
+	const presenceKey = `teams:presence:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`;
 	presence = createPresenceController({
 		storage,
-		storageKey: `teams:presence:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
+		storageKey: presenceKey,
+		...(storage?.subscribe
+			? {
+					// A status chosen in another tab of this person reaches this one.
+					subscribe: (onChange: () => void) =>
+						storage.subscribe!((key) => {
+							if (key === null || key === presenceKey) onChange();
+						}),
+				}
+			: {}),
 		idleMinutes: options.idleMinutes,
 		publish: (status, message) => {
 			ws.setAvailability(status);
