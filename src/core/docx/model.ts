@@ -156,6 +156,15 @@ export interface PendingMediaPart {
 	bytes: Uint8Array;
 	contentType: string;
 }
+/** Options of a save. */
+export interface SaveOptions {
+	/**
+	 * Stamps `dcterms:modified` (and `cp:lastModifiedBy` when `author` is given) in
+	 * `docProps/core.xml` of a package whose content changed. Off unless given (a save keeps every
+	 * other part byte for byte); `at` fixes the time. The editor element saves with it on.
+	 */
+	modified?: { at?: Date; author?: string };
+}
 export interface LoadedDocument {
 	model: DocumentModel;
 	/** Original image/media bytes keyed by package part name, kept off the JSON model so diffs stay small.
@@ -166,6 +175,7 @@ export interface LoadedDocument {
 	save(
 		model?: DocumentModel,
 		pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
+		options?: SaveOptions,
 	): Promise<Uint8Array>;
 }
 export function createDocument(): DocumentModel {

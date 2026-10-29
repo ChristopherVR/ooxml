@@ -3,7 +3,8 @@ import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
 import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { DOCX_ZIP_LIMITS } from './package-limits';
-import type { DocumentModel, PendingMediaPart } from './model';
+import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
+import { stampModified } from './save-modified';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
 import { applyModel } from './write';
@@ -68,6 +69,7 @@ function headerFooterResults(model: DocumentModel): DocumentModel | undefined {
 export async function saveDocx(
 	model: DocumentModel,
 	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
+	options?: SaveOptions,
 ): Promise<Uint8Array> {
 	const ids = new Set<string>();
 	for (const block of model.blocks) {
@@ -198,6 +200,7 @@ export async function saveDocx(
 	}
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
+	if (binding) await stampModified(zip, options?.modified);
 	dropAddedFolders(zip, sourceEntries);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

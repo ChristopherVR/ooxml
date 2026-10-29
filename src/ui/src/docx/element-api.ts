@@ -234,8 +234,7 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 			...(core.collab.yjs?.media.all() ?? []),
 		]);
 		const media = pending.size ? pending : undefined;
-		if (core.loaded)
-			return media ? core.loaded.save(core.model, media) : core.loaded.save(core.model);
+		if (core.loaded) return core.loaded.save(core.model, media, { modified: {} });
 		return saveDocx(core.model, media);
 	}
 

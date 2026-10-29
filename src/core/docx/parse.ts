@@ -236,9 +236,9 @@ export async function loadDocx(input: Uint8Array | ArrayBuffer): Promise<LoadedD
 	return {
 		model,
 		media,
-		save: (next = model, pendingMedia) => {
+		save: (next = model, pendingMedia, options) => {
 			if (next !== model) remember(next, context);
-			return saveDocx(next, pendingMedia);
+			return saveDocx(next, pendingMedia, options);
 		},
 	};
 }
