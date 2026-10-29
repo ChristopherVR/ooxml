@@ -43,7 +43,7 @@ describe('chooseSmoothing', () => {
 	});
 
 	it('maps the optimum 0.25 with 0.099 to the 1/6 Excel reports', () => {
-		const c = chooseSmoothing(30, 0, bowl(0.25, 0.125));
+		const c = chooseSmoothing(30, 0, bowl(0.166667, 0.0833333));
 		expect([c.alpha, c.beta, c.drift]).toEqual([0.166667, LOW, true]);
 	});
 

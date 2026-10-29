@@ -47,10 +47,10 @@ describe('FORECAST.ETS parameter search on series morphing from a random walk to
 		expect(morph.length).toBe(484);
 	});
 
-	it('finds Excel alpha on 98% of the series', () => {
+	it('finds Excel alpha on every series', () => {
 		// 51 of the 63 misses were one family (Excel's 1/6 on a bimodal cost surface of 40 points), which
 		// the lattice and the report map (functions/ets-search-map.ts) now reproduce.
-		expect(morph.filter(sameAlpha).length).toBeGreaterThanOrEqual(476);
+		expect(morph.filter(sameAlpha).length).toBeGreaterThanOrEqual(484);
 	});
 
 	it('finds Excel beta on every series', () => {

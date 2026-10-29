@@ -48,8 +48,8 @@ export const CANDIDATES: readonly (readonly [number, number])[] = [
 	[0.998, 0.499],
 	[0.998, 0.749],
 	[0.998, 0.899],
+	[0.166667, 0.0833333],
 	// The proxies: pairs that are not Excel's own but stand for one outcome each.
-	[0.25, 0.125],
 	[0.9, 0.099],
 	[0.9, 0.499],
 	[0.9, 0.249],
@@ -75,14 +75,14 @@ const drift = (alpha: number, fitBeta: number = LOW): Outcome => ({
 const OUTCOMES: Record<string, Outcome> = {
 	'0.1/0.099': drift(0.1, 0.099), // 10 of 11
 	'0.126/0.125': rep(0.126, 0.125),
-	'0.25/0.125': drift(0.166667, 0.125), // 35 of 36: the pair behind it is not known
+	'0.166667/0.0833333': drift(0.166667, 0.0833333), // 35 of 36; the pair itself, found from the error statistics
 	'0.25/0.249': drift(0.25, 0.249), // 54 of 55
 	'0.333333/0.166667': rep(0.333333, 0.166667),
 	'0.5/0.25': drift(0.5, 0.25), // 8 of 11
 	'0.5/0.499': drift(0.5, 0.499), // 14 of 15
 	'0.666667/0.166667': rep(0.666667, 0.166667), // 14 of 25, the rest forecast the drift
 	'0.666667/0.5': drift(0.666667, 0.5), // 7 of 8
-	'0.75/0.125': drift(0.833333, 0.75), // 2 of 3
+	'0.75/0.125': drift(0.833333, 0.0833333), // 2 of 3
 	'0.833333/0.75': drift(0.833333, 0.75), // 2 of 2
 	'0.9/0.099': rep(0.998, 0.099), // 16 of 16
 	'0.9/0.249': drift(0.998, 0.249), // 11 of 14
@@ -90,7 +90,7 @@ const OUTCOMES: Record<string, Outcome> = {
 	'0.9/0.899': drift(0.9, 0.899), // 12 of 19, 7 report 1/6
 	'0.998/0.001': rep(0.998, 0.099), // 3 of 5, 2 report 0.9 (the 5% above keeps this rare)
 	'0.998/0.099': rep(0.998, 0.099),
-	'0.998/0.125': drift(0.998, 0.125), // 18 of 20
+	'0.998/0.125': drift(0.998, 0.099), // 18 of 20
 	'0.998/0.249': rep(0.998, 0.249), // 25 of 28
 	'0.998/0.499': rep(0.998, 0.499),
 	'0.998/0.749': drift(0.998, 0.749),
