@@ -45,7 +45,7 @@ describe('exact seasonal start', () => {
 		expect(chainStart([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)).toBeUndefined();
 		expect(
 			chainStart(
-				Array.from({ length: 13 }, (_v, i) => i),
+				Array.from({ length: 15 }, (_v, i) => i),
 				4,
 			),
 		).toBeUndefined();

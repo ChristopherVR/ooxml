@@ -11,8 +11,17 @@
 //    time m (time 0 when m is 2 or 3) and the first fitted value is the first observation.
 //  * The starting trend is the least-squares slope of the whole series after removing those
 //    seasonal states, so it ignores any periodic pattern.
-// Other lengths are not covered here (`ets-init.ts` falls back to least squares for them).
+// 3 seasons plus up to m - 2 points and exactly 2 seasons are in `ets-init-three.ts` (also reached
+// through `chainStart`); other lengths are not covered here (`ets-init.ts` falls back to least
+// squares for them).
 import type { EtsInit } from './ets-init';
+import {
+	extendTwoSeasons,
+	isThreeSeasonLength,
+	isTwoSeasonLength,
+	threeSeasonSeasonals,
+	threeSeasonTrend,
+} from './ets-init-three';
 
 const MAX_SEASONS = 5;
 
@@ -60,16 +69,35 @@ function windowMeanSeasonals(y: readonly number[], m: number): number[] {
 /** Whether `chainStart` is Excel's exact rule for a series of `n` values (not 4 seasons plus a bit). */
 export function isExactLength(n: number, m: number): boolean {
 	const whole = Math.floor(n / m);
-	return whole >= MAX_SEASONS || (whole === 4 && n % m === 0);
+	return (
+		whole >= MAX_SEASONS ||
+		(whole === 4 && n % m === 0) ||
+		isThreeSeasonLength(n, m) ||
+		isTwoSeasonLength(n, m)
+	);
+}
+
+/** The initial states from seasonal states relative to position 0 and the trend. */
+function fromRelative(y0: number, rel: readonly number[], trend: number): EtsInit {
+	// z[k] = level + season[k] + trend is the fitted value of position k at time 0.
+	const combined = rel.map((s) => y0 + s - trend);
+	const level = mean(combined);
+	return { level, trend, season: combined.map((c) => c - level) };
 }
 
 /**
- * The start for a series of 4 or more seasons, or undefined for shorter ones. It is Excel's own
- * except for 4 seasons plus a partial one (`isExactLength` tells which).
+ * The start for a series of 4 or more seasons, for 3 seasons and up to `m - 2` more points and for
+ * exactly 2 seasons (seasons of 4 and more), or undefined for the rest. It is Excel's own except for
+ * 4 seasons plus a partial one (`isExactLength` tells which).
  */
 export function chainStart(y: readonly number[], m: number): EtsInit | undefined {
 	const n = y.length;
 	const whole = Math.floor(n / m);
+	if (isThreeSeasonLength(n, m) || isTwoSeasonLength(n, m)) {
+		const series = isTwoSeasonLength(n, m) ? extendTwoSeasons(y, m) : y;
+		const rel = threeSeasonSeasonals(series, m);
+		return fromRelative(y[0] as number, rel, threeSeasonTrend(series, m, rel));
+	}
 	if (m < 2 || whole < 4) return undefined;
 	const partial = whole < MAX_SEASONS && n % m !== 0;
 	const rel = partial
@@ -84,10 +112,5 @@ export function chainStart(y: readonly number[], m: number): EtsInit | undefined
 		sxy += (t - mx) * d;
 		sxx += (t - mx) * (t - mx);
 	}
-	const trend = sxy / sxx;
-	const y0 = y[0] as number;
-	// z[k] = level + season[k] + trend is the fitted value of position k at time 0.
-	const combined = rel.map((s) => y0 + s - trend);
-	const level = mean(combined);
-	return { level, trend, season: combined.map((c) => c - level) };
+	return fromRelative(y[0] as number, rel, sxy / sxx);
 }

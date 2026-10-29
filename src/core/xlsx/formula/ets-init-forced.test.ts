@@ -1,7 +1,8 @@
 // With Excel's own smoothing parameters (STAT 1 to 3 of every probe series), the exact seasonal start
-// (functions/ets-init-chain.ts) reproduces Excel's forecasts to rounding error: ~1200 probe series of
-// 4 and more seasons, seasons 2 to 12. The only exceptions are the three series on which Excel
-// reports a parameter pair at its floor (0.001) that does not reproduce its own forecasts.
+// (functions/ets-init-chain.ts and ets-init-three.ts) reproduces Excel's forecasts to rounding error:
+// hundreds of probe series of 4 and more seasons, of 3 seasons plus up to m - 2 points and of 2 seasons
+// (seasons of 4 and more), seasons 2 to 12. The only exceptions are the series on which Excel reports
+// a parameter pair at its floor (0.001) that does not reproduce its own forecasts.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -15,8 +16,8 @@ interface Recorded {
 	results: { value: number }[];
 }
 
-const FILES = ['2', '3', '4', '5'];
-const FLOORED = new Set(['s2-10-imp9', 's3-18-imp11', 's3-18-imp12']);
+const FILES = ['2', '3', '4', '5', '6', '7', '8'];
+const FLOORED = new Set(['s2-10-imp9', 's3-18-imp11', 's3-18-imp12', 's4-13-imp11']);
 
 function worstError(e: Recorded, m: number): number {
 	const y = e.values;
