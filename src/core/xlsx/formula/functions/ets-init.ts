@@ -1,17 +1,25 @@
 // Initial states of the exponential smoothing model behind FORECAST.ETS. Excel's first fitted
 // value is always the first observation, so the states before the first point satisfy
 // `level + season[0] + trend = y[0]`. Without a season the trend starts at the least-squares slope
-// of the whole series for 7 or more points (and for 3), and for 6 points at the slope of the line
-// through the data plus one extra point (`sixPointTrend`); 4 and 5 points still differ from Excel.
+// of the whole series for 3 and for 7 or more points, and for 4 to 6 points at the slope of the line
+// through the data extended to 7 points (`shortSeriesTrend`); this matches Excel to the last digit
+// for 3 to 16 points (ets-init-excel.test.ts, ets-init-maps.test.ts).
 // With a season Excel's starting states are a fixed linear function of the data that does not
-// depend on the smoothing parameters and is exact for any trend plus season (docs/xlsx-parity-status.md
-// records what is known); the trend and the other seasonal states here are solved by least squares
-// under the first-point constraint, which lands near (not on) Excel's own starting values.
-// Eliminated against the recovered maps (see ets-init-excel.test.ts): backcasting and forward or
-// backward passes with fixed smoothing parameters, geometric-weight regressions, and padding the
-// series. What the 4 to 6 point maps show: the trend weights are linear in time on the last points
-// (points 2 to 4 of 5, points 1 to 5 of 6), as in a regression whose earliest points have reduced
-// weight (6 points: weight 6/13 on the first, 1 elsewhere; 5: 26/41, 13/23, then 1; 4: 2/3, 3/5, 1, 1).
+// depend on the smoothing parameters, is exact for any trend plus season, and keeps any periodic
+// pattern out of the trend. The laws found so far are tested in ets-init-maps.test.ts: below 3
+// seasons Excel runs its 3-season algorithm on the series extended by copies of the first points
+// moved by `n` slopes of a trend-plus-dummies fit; from 4 seasons, for seasons of 2 and 3, each
+// position state follows the one before it through half-split slopes of the early seasons. The
+// 3-season algorithm, the seasonal trend and seasons of 4 and more are not known, so the trend and
+// the other seasonal states here are solved by least squares under the first-point constraint,
+// which lands near (not on) Excel's own starting values (a plain seasonal-dummy regression does
+// worse on the recorded forecasts).
+// Eliminated against the recovered maps: backcasting and forward or backward passes with fixed
+// smoothing parameters, geometric-weight regressions, iterated padding by y0 + k * slope or
+// last + slope, constrained least squares of the filter at fixed parameters, classical
+// decomposition, seasonal-dummy least squares with or without the first-point constraint, and
+// weighted dummy regressions with diagonal weights (they cannot give both the trend and the
+// seasonal states).
 import type { Smoothing } from './ets-core';
 
 export interface EtsInit {
@@ -47,14 +55,37 @@ export function olsSlope(y: readonly number[]): number {
 }
 
 /**
- * Six points: the slope of the least-squares line through the data and a seventh point at
- * `y[0] + 6 * slope`. This reproduces Excel's starting trend to the last digit on 10 recorded
- * series; the same construction does not fit 4 or 5 points, so it is an identity found by fitting
- * and not a known rule.
+ * The points Excel appends to a series of 4 to 6 values before fitting the line, as `[source,
+ * lag]` pairs for the times 4 (if the series has 4 values), 5 and 6: the point is `y[source] +
+ * lag * slope`, with the slope the least-squares slope of the original values. Recovered exactly
+ * from the starting trends Excel's forecasts imply (ets-init-excel.test.ts, 90 series; the exact
+ * weights are (-8, -3, 2, 9) / 28 for 4 values, (-26, -13, -5, 13, 31) / 140 for 5 and
+ * (-90, -124, -53, 18, 89, 160) / 980 for 6). The 6-value row is a copy of the first point six
+ * steps on; the others are the unique decomposition of that form, not a derived rule.
  */
-export function sixPointTrend(y: readonly number[]): number {
-	const seventh = (y[0] as number) + 6 * olsSlope(y);
-	return olsSlope([...y, seventh]);
+const PADS: Record<number, readonly (readonly [number, number])[]> = {
+	6: [[0, 6]],
+	5: [
+		[1, 4],
+		[0, 6],
+	],
+	4: [
+		[0, 4],
+		[1, 4],
+		[0, 6],
+	],
+};
+
+/**
+ * Starting trend of a series without a season: the least-squares slope, except that 4 to 6 values
+ * are first extended to 7 (`PADS`) and the line is fitted to all 7. Matches Excel to the last digit
+ * for 3 to 16 values.
+ */
+export function shortSeriesTrend(y: readonly number[]): number {
+	const pads = PADS[y.length];
+	if (!pads) return olsSlope(y);
+	const slope = olsSlope(y);
+	return olsSlope([...y, ...pads.map(([src, lag]) => (y[src] as number) + lag * slope)]);
 }
 
 /** Splits combined level-plus-season values into a level (their mean) and zero-sum seasonals. */
@@ -106,7 +137,7 @@ export function solveSystem(a: number[][], b: number[]): number[] {
 export function initialStates(y: readonly number[], m: number, p: Smoothing, run: Runner): EtsInit {
 	const y0 = y[0] as number;
 	if (m < 2) {
-		const trend = y.length === 6 ? sixPointTrend(y) : olsSlope(y);
+		const trend = shortSeriesTrend(y);
 		return { level: y0 - trend, trend, season: [] };
 	}
 	if (m > MAX_EXACT_SEASON) return heuristicStates(y, m);
