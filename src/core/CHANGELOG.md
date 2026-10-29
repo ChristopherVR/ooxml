@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.32.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.32.1) - 2026-10-29
+
+### Bug Fixes
+
+- **xlsx:** Escape every interpolated SVG attribute in shape and control views ([cf18fff](https://github.com/ChristopherVR/ooxml/commit/cf18fff438a6a71d2180dacbabc44f07c3c9312d))
+
+### Testing
+
+- **xlsx:** Keep the lexeme equivalence sweeps inside the timeout ([3a4d48a](https://github.com/ChristopherVR/ooxml/commit/3a4d48a7018e4b3aef8d695e0369f1cd9c4f971a))
+
 ## [1.32.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.32.0) - 2026-10-29
 
 ### Features
