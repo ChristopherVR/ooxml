@@ -1,5 +1,5 @@
-// Evaluates the FORECAST.ETS cases recorded from real Excel (__fixtures__/ets-excel.json) with this
-// engine. Used by forecast-ets-excel.test.ts and by the error report in docs.
+// Evaluates the FORECAST.ETS cases recorded from real Excel (__fixtures__/ets-excel.json and
+// ets-search-excel.json) with this engine. Used by forecast-ets-excel.test.ts and by the error report in docs.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { book, engine, get } from './test-helpers';
@@ -25,6 +25,15 @@ export interface EtsRow {
 
 export function recorded(): EtsRecorded[] {
 	const path = fileURLToPath(new URL('./__fixtures__/ets-excel.json', import.meta.url));
+	return JSON.parse(readFileSync(path, 'utf8')) as EtsRecorded[];
+}
+
+/**
+ * The 491 non-seasonal probe series of ets-search-series.json with Excel's answers
+ * (ets-search-excel.json), used to identify how Excel searches for alpha, beta and gamma.
+ */
+export function searchRecorded(): EtsRecorded[] {
+	const path = fileURLToPath(new URL('./__fixtures__/ets-search-excel.json', import.meta.url));
 	return JSON.parse(readFileSync(path, 'utf8')) as EtsRecorded[];
 }
 

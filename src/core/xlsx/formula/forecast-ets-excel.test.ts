@@ -7,7 +7,8 @@
 // statistics being measured on the last points only (see `etsHoldout`) and the interval
 // being RMSE * sqrt(1 + sum of (alpha + j*beta)^2). What is not: Excel's search for alpha, beta and
 // gamma stops early on some series, and its starting values for a seasonal model and for fewer than
-// 7 points are not the least-squares ones (ets-init-excel.test.ts recovers them from Excel). The tolerances below are the measured worst cases plus a
+// 7 points are not the least-squares ones (ets-init-excel.test.ts recovers them from Excel; the search
+// is measured on 491 more series in forecast-ets-search.test.ts). The tolerances below are the measured worst cases plus a
 // small margin, not a promise of parity: they pin today's accuracy so a regression shows.
 import { describe, expect, it } from 'vitest';
 import { evaluateEts, type EtsKind, type EtsRow, recorded } from './ets-excel-compare';
@@ -21,61 +22,62 @@ const EXACT = [
 	'linear-exact',
 	'constant',
 	'growth',
-	'spike',
 	'step-0-10',
 	'walk-7',
 	'trend-9',
 	'walk-12',
 	'trend-24',
 	'walk-100',
+	'unsorted',
 ];
 
-/** Relative forecast tolerance per series; 0.003 unless listed. */
+/** Relative forecast tolerance per series (the measured worst case plus 3%); 0.003 unless listed. */
 const FORECAST_TOLERANCE: Record<string, number> = {
-	'flat-noisy': 0.04, // Excel finds a period of 2 in this noise, which no detector here reproduces
-	'seasonal4-trend': 0.025, // seasonal starting values differ from Excel's
-	'monthly-dates-seasonal12': 0.004,
-	'seasonal7-daily': 0.006,
-	gaps: 0.1, // zero-filled gaps: Excel picks a smaller alpha than the best fit
-	duplicates: 0.06, // includes SUM aggregation of uneven counts, where Excel stops early
+	'flat-noisy': 0.039, // Excel finds a period of 2 in this noise, which no detector here reproduces
+	'seasonal4-trend': 0.023, // seasonal starting values differ from Excel's
+	'monthly-dates-seasonal12': 0.0035,
+	'seasonal7-daily': 0.0051,
+	gaps: 0.093, // zero-filled gaps: Excel picks a smaller alpha than the best fit
+	duplicates: 0.053, // the calls that detect a season (those with seasonality 0 are exact)
 	'short-6': 0.025, // fewer than 7 points: Excel's starting trend is not the least-squares slope
-	'random-walk': 0.012,
-	'step-change': 0.012,
-	'yearly-step': 0.012,
-	'seasonal3-noisy': 0.02,
-	'blank-value': 0.2, // zero completion of the missing point
-	'short-5': 0.045,
-	'walk-20-anomaly': 0.07, // Excel's search stops at alpha 0.25 here
-	'walk-13': 0.008,
-	'walk-50': 0.022,
-	'season2-9': 0.008,
-	'season3-9': 0.012,
-	'season4-8': 0.01,
-	'season5-10': 0.055,
-	'season3-11': 0.015,
+	'random-walk': 0.0094, // Excel stops at alpha 0.25, the search takes 0.9
+	'step-change': 0.0081,
+	'yearly-step': 0.015, // Excel keeps beta at alpha - 0.001, the search takes 0.001
+	spike: 0.78, // Excel picks alpha 0.002, the search 0.1 (their squared errors are almost equal)
+	'seasonal3-noisy': 0.017,
+	'short-5': 0.043, // fewer than 7 points
+	'walk-20-anomaly': 0.017, // Excel's search stops at alpha 0.25 here
+	'walk-13': 0.019,
+	'walk-50': 0.021,
+	'season2-9': 0.0054,
+	'season3-9': 0.0079,
+	'season4-8': 0.0073,
+	'season5-10': 0.054,
+	'season3-11': 0.011,
 };
-/** Relative confidence interval tolerance per series; 0.002 unless listed. */
+/** Relative confidence interval tolerance per series (the measured worst case plus 3%); 0.002 unless listed. */
 const CONFINT_TOLERANCE: Record<string, number> = {
 	'flat-noisy': 0.2,
 	'seasonal4-trend': 0.11,
-	'monthly-dates-seasonal12': 0.35,
-	'seasonal7-daily': 0.2,
-	gaps: 0.38, // zero completion: Excel's period 4 on the gap-filled grid is not reproduced
+	'monthly-dates-seasonal12': 0.32,
+	'seasonal7-daily': 0.18,
+	gaps: 0.385, // zero completion: Excel's period 4 on the gap-filled grid is not reproduced
 	'short-6': 0.18,
-	'random-walk': 0.3,
+	'random-walk': 0.305,
 	'step-change': 0.21,
-	'yearly-step': 0.27,
-	'seasonal3-noisy': 0.23,
-	'short-5': 0.03,
-	'walk-20-anomaly': 0.22,
-	'walk-13': 0.12,
-	'walk-25-anomaly': 0.15,
-	'walk-50': 0.15,
-	'season2-9': 0.08,
-	'season3-9': 0.08,
+	'yearly-step': 0.28,
+	spike: 0.012,
+	'seasonal3-noisy': 0.234,
+	'short-5': 0.018,
+	'walk-20-anomaly': 0.345,
+	'walk-13': 0.097,
+	'walk-25-anomaly': 0.146,
+	'walk-50': 0.146,
+	'season2-9': 0.076,
+	'season3-9': 0.073,
 	'season4-8': 0.26,
-	'season5-10': 0.22,
-	'season3-11': 0.13,
+	'season5-10': 0.223,
+	'season3-11': 0.132,
 	'linear-noisy': 0.002,
 	'walk-7': 0.002,
 };
@@ -151,6 +153,14 @@ describe('FORECAST.ETS argument handling matched to Excel', () => {
 			(r) => r.name === 'blank-value' && r.formula.startsWith('FORECAST.ETS(9,{V},{L})'),
 		);
 		expect(row?.ours).toBeCloseTo(19, 6);
+	});
+
+	it('aggregates duplicate times as Excel numbers them (5 is MEDIAN, 6 is MIN), exactly', () => {
+		const model = rows.filter(
+			(r) => r.name === 'duplicates' && /^FORECAST\.ETS\(13,\{V\},\{L\},0,1,\d\)$/.test(r.formula),
+		);
+		expect(model.length).toBe(7);
+		for (const r of model) expect(r.error).toBeLessThan(1e-9);
 	});
 
 	it('steps a monthly date timeline by calendar months', () => {

@@ -4,10 +4,11 @@
 //   forecast = level + trend + season[t mod m];  e = y - forecast
 //   level += trend + alpha*e;  trend += beta*e;  season[t mod m] += gamma*e
 // and the first forecast is exactly the first observation (`ets-init.ts`). Excel's search for alpha,
-// beta and gamma is undocumented and stops at coarse values; this one minimises the squared one-step
-// error within Excel's bounds of 0.001 to 0.999, which lands on or near Excel's choice.
+// beta and gamma is undocumented and stops at coarse values; `ets-search.ts` picks the squared
+// one-step error's minimum on the lattice Excel is seen to land on.
 import { ERR, fail } from '../values';
 import { initialStates, type EtsInit } from './ets-init';
+import { chooseSmoothing } from './ets-search';
 
 export interface EtsFit {
 	alpha: number;
@@ -55,19 +56,10 @@ export function etsRun(
 	return { fitted, level, trend, season, sse };
 }
 
-const LOW = 0.001;
-/** Excel keeps beta at its lower bound on longer series; on 7 to 16 points it sometimes goes to alpha. */
-const SHORT_SERIES = 16;
 /** What Excel reports for gamma when the model has no season. */
 const NO_SEASON_GAMMA = Number.EPSILON;
-/** Values of alpha Excel is seen to choose. */
-const ALPHAS = [0.002, 0.1, 0.126, 0.25, 0.5, 2 / 3, 0.75, 0.9];
-/** The same with a season: the middle values sit 0.001 higher. */
-const SEASON_ALPHAS = [0.002, 0.126, 0.251, 0.501, 2 / 3, 0.75, 0.9];
-/** Values of gamma (besides 1 - alpha - 0.001) Excel is seen to choose. */
-const SEASON_STEPS = [LOW, 0.125, 0.25, 0.5, 0.75, 0.9];
 
-/** Fits alpha, beta and gamma by a coarse grid followed by shrinking pattern search. */
+/** Fits alpha, beta and gamma: the choice among Excel's lattice is in `ets-search.ts`. */
 export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 	const n = y.length;
 	if (n < 2) fail(ERR.NUM);
@@ -76,27 +68,19 @@ export function fitEts(y: readonly number[], seasonLength: number): EtsFit {
 		const init = initialStates(y, m, p, etsRun);
 		return { init, run: etsRun(y, m, init, p) };
 	};
-	const cost = (v: readonly number[]): number =>
-		solve({ alpha: v[0] as number, beta: v[1] as number, gamma: v[2] as number }).run.sse;
-	// Excel's search settles on a coarse set of values (0.9 for an exact fit, whose cost is the
-	// same everywhere), keeps beta <= alpha and gamma <= 1 - alpha, and never exceeds alpha 0.9
-	// except on very short series. It does not always reach the best point (on a few series it stops
-	// early), so the best point of the same kind of lattice is the closest reproducible match.
-	let best: number[] = [0.9, LOW, LOW];
-	let bestCost = cost(best);
-	for (const a of m >= 2 ? SEASON_ALPHAS : ALPHAS)
-		for (const b of n >= 7 && n <= SHORT_SERIES ? [LOW, a - LOW] : [LOW])
-			for (const g of m >= 2 ? [...SEASON_STEPS, 1 - a - LOW] : [LOW]) {
-				if (b < LOW || g > 1 - a - LOW + 1e-9) continue;
-				const c = cost([a, b, g]);
-				if (c < bestCost * (1 - 1e-6) && c < bestCost - 1e-12) {
-					bestCost = c;
-					best = [a, b, g];
-				}
-			}
-	const [alpha, beta, gamma] = best as [number, number, number];
-	const { run } = solve({ alpha, beta, gamma });
-	return { alpha, beta, gamma: m >= 2 ? gamma : NO_SEASON_GAMMA, m, n, ...run };
+	const { drift, ...chosen } = chooseSmoothing(n, m, (p) => solve(p).run.sse);
+	const { run } = solve(chosen);
+	// Excel forecasts from the last value and the untouched slope when its search ends at 0.998.
+	const state = drift ? solve({ alpha: 1, beta: 0, gamma: chosen.gamma }).run : run;
+	return {
+		...chosen,
+		gamma: m >= 2 ? chosen.gamma : NO_SEASON_GAMMA,
+		m,
+		n,
+		...run,
+		level: state.level,
+		trend: state.trend,
+	};
 }
 
 /**

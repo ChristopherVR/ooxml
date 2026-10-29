@@ -34,7 +34,7 @@ const median = (xs: number[]): number => {
 	return s.length % 2 ? (s[mid] as number) : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
 };
 
-/** Aggregation codes 1..7: AVERAGE, COUNT, COUNTA, MAX, MIN, MEDIAN, SUM. */
+/** Aggregation codes 1..7: AVERAGE, COUNT, COUNTA, MAX, MEDIAN, MIN, SUM (as Excel numbers them). */
 function aggregate(code: number, xs: number[]): number {
 	switch (code) {
 		case 1:
@@ -45,9 +45,9 @@ function aggregate(code: number, xs: number[]): number {
 		case 4:
 			return Math.max(...xs);
 		case 5:
-			return Math.min(...xs);
-		case 6:
 			return median(xs);
+		case 6:
+			return Math.min(...xs);
 		default:
 			return xs.reduce((a, b) => a + b, 0);
 	}
