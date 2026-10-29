@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { etsRun } from './functions/ets-core';
 import { initialStates } from './functions/ets-init';
-import { chainStart } from './functions/ets-init-chain';
+import { chainStart, isExactLength } from './functions/ets-init-chain';
 
 interface Recorded {
 	name: string;
@@ -43,10 +43,32 @@ describe('exact seasonal start at Excel parameters', () => {
 			for (const e of data) {
 				const m = /^s(\d+)-/.exec(e.name);
 				if (!m || FLOORED.has(e.name) || !chainStart(e.values, Number(m[1]))) continue;
+				if (!isExactLength(e.values.length, Number(m[1]))) continue;
 				expect(worstError(e, Number(m[1]))).toBeLessThan(1e-9);
 				checked++;
 			}
 			expect(checked).toBeGreaterThan(30);
 		});
 	}
+
+	it('is close for 4 seasons plus a partial one, whose exact rule is not known', () => {
+		let worst = 0;
+		let checked = 0;
+		for (const f of FILES) {
+			const path = fileURLToPath(
+				new URL(`./__fixtures__/ets-init${f}-excel.json`, import.meta.url),
+			);
+			for (const e of JSON.parse(readFileSync(path, 'utf8')) as Recorded[]) {
+				const m = /^s(\d+)-/.exec(e.name);
+				if (!m || FLOORED.has(e.name)) continue;
+				const season = Number(m[1]);
+				if (!chainStart(e.values, season) || isExactLength(e.values.length, season)) continue;
+				worst = Math.max(worst, worstError(e, season));
+				checked++;
+			}
+		}
+		expect(checked).toBeGreaterThan(30);
+		// A least-squares start gives 5e-2 here, the first 4 seasons alone 4e-2.
+		expect(worst).toBeLessThan(0.03);
+	});
 });

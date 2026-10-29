@@ -13,8 +13,8 @@
 //     `z[k] = z[k-1] + P[k] - P[k-1] - b[k-1]`, P being the mean of the first `C - h` seasons of
 //     that position and b the half-split slope of position `k - 1` (mean of its last `h` seasons
 //     minus mean of its first `h`, over the distance between those means, `h = floor(C / 2)`);
-//     `z[0]` is the first value. Seasons of 4 and more deviate (the rule above is for 2 and 3).
-//     The starting trend itself, from 2 seasons up, is the unexplained part (docs/xlsx-parity-status.md).
+//     `z[0]` is the first value. Larger seasons use the same chain with the slope of position k - floor(m / 2) (ets-init-chain.ts).
+//     The starting trend is the least-squares slope of the series without those states (ets-init-chain.test.ts).
 import { describe, expect, it } from 'vitest';
 import { shortSeriesTrend, solveSystem } from './functions/ets-init';
 import { recoveredMaps, type StartMap } from './ets-init-maps';

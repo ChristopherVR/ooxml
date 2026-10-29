@@ -3,10 +3,10 @@
 //
 // What is identified (and reproduced to the last digit on the series listed in EXACT): the filter
 // (level += trend + alpha*e, trend += beta*e, season += gamma*e), the first fitted value being the
-// first observation, the trend starting at the least-squares slope of the series, the error
+// first observation, the trend starting at the least-squares slope of the series (for seasons: of the series without the exact seasonal start of ets-init-chain.ts), the error
 // statistics being measured on the last points only (see `etsHoldout`) and the interval
 // being RMSE * sqrt(1 + sum of (alpha + j*beta)^2). What is not: Excel's search for alpha, beta and
-// gamma stops early on some series, and its starting values for a seasonal model and for fewer than
+// gamma stops early on some series, and its starting values for a seasonal model of fewer than 4 whole seasons and for fewer than
 // 7 points are not the least-squares ones (ets-init-excel.test.ts recovers them from Excel; the search
 // is measured on 1100 more series in forecast-ets-search.test.ts and forecast-ets-validate.test.ts). The tolerances below are the measured worst cases plus a
 // small margin, not a promise of parity: they pin today's accuracy so a regression shows.

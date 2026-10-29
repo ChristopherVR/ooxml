@@ -6,27 +6,23 @@
 // for 3 to 16 points (ets-init-excel.test.ts, ets-init-maps.test.ts).
 // With a season Excel's starting states are a fixed linear function of the data that does not
 // depend on the smoothing parameters, is exact for any trend plus season, and keeps any periodic
-// pattern out of the trend. The laws found so far are tested in ets-init-maps.test.ts: below 3
-// seasons Excel runs its 3-season algorithm on the series extended by copies of the first points
-// moved by `n` slopes of a trend-plus-dummies fit; from 4 seasons, for seasons of 2 and 3, each
-// position state follows the one before it through half-split slopes of the early seasons. The
-// 3-season algorithm, the seasonal trend and seasons of 4 and more are not known, so the trend and
-// the other seasonal states here are solved by least squares under the first-point constraint,
-// which lands near (not on) Excel's own starting values (a plain seasonal-dummy regression does
-// worse on the recorded forecasts).
-// Also checked: the seasonal start does not look like the rules applied to the hold-out training
-// window (the maps use the whole series, except that season-2 position states stop at 5 seasons),
-// and switching seasonal fits to the hold-out cost with these approximate starts makes the
-// recorded forecasts worse (season3-11 0.011 -> 0.079), so it waits for the exact start.
-// Position-wise, the seasonal trend is close to a weighted mean of each position's least-squares
-// slope over its seasons, the weights growing with the position (about 0.30, 0.34, 0.38 for season
-// 3 with 5 seasons), plus smaller terms that are not explained.
+// pattern out of the trend. For 4 whole seasons and for 5 or more it is known exactly and lives in
+// `ets-init-chain.ts` (it reproduces Excel's forecasts at its own parameters to rounding
+// error on about 1200 probe series, seasons 2 to 12); for 4 seasons plus a partial one that file
+// uses a mean over windows, close but not exact. The laws found for shorter series are tested in
+// ets-init-maps.test.ts: below 3 seasons Excel runs its 3-season algorithm on the series extended
+// by copies of the first points moved by `n` slopes of a trend-plus-dummies fit; the 3-season
+// algorithm itself is not known (for 3 seasons of 3 the first state follows the 4-season rule on the
+// series extended the same way, the others do not), so for 3 seasons or fewer the trend and the
+// other seasonal states here are solved by least squares under the first-point constraint, which
+// lands near (not on) Excel's own starting values (a plain seasonal-dummy regression does worse on
+// the recorded forecasts). Seasons of 25 and more start from first-cycle values when short.
 // Eliminated against the recovered maps: backcasting and forward or backward passes with fixed
 // smoothing parameters, geometric-weight regressions, iterated padding by y0 + k * slope or
 // last + slope, constrained least squares of the filter at fixed parameters, classical
-// decomposition, seasonal-dummy least squares with or without the first-point constraint, and
-// weighted dummy regressions with diagonal weights (they cannot give both the trend and the
-// seasonal states).
+// decomposition, seasonal-dummy least squares with or without the first-point constraint, weighted
+// dummy regressions with diagonal weights, the seasonal start of the hold-out training window, and
+// for 4 seasons plus a partial one the first 4 seasons alone or any single window of them.
 import type { Smoothing } from './ets-core';
 import { chainStart } from './ets-init-chain';
 

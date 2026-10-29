@@ -2,7 +2,7 @@
 // from Excel's impulse probes: every probed series of 4 or 5 whole seasons (seasons 2 to 6), and the
 // seasons of 2 beyond 5 seasons, where Excel looks at the first 5 only.
 import { describe, expect, it } from 'vitest';
-import { chainStart } from './functions/ets-init-chain';
+import { chainStart, isExactLength } from './functions/ets-init-chain';
 import { recoveredMaps, type StartMap } from './ets-init-maps';
 
 const maps = recoveredMaps().filter((g) => g.missing === 0);
@@ -24,9 +24,7 @@ function ourMap(g: StartMap): { z: number[][]; trend: number[] } | undefined {
 }
 
 describe('exact seasonal start', () => {
-	const covered = maps.filter(
-		(g) => g.m >= 2 && (g.n % g.m === 0 ? g.n / g.m >= 4 : g.n / g.m >= 5),
-	);
+	const covered = maps.filter((g) => g.m >= 2 && isExactLength(g.n, g.m) && g.n >= 4 * g.m);
 	it('covers the probed whole-season series', () => {
 		expect(covered.length).toBeGreaterThanOrEqual(12);
 	});

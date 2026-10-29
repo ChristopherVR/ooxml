@@ -40,13 +40,41 @@ export function chainSeasonals(y: readonly number[], m: number, seasons: number)
 	return byPosition.map((s) => s - origin);
 }
 
-/** The exact start for a series of 4 or more whole seasons, or undefined for other lengths. */
+/**
+ * Seasonal states of 4 whole seasons plus a partial one: the mean over every window of 4 whole
+ * seasons (they start at 0 to `n mod m`). Not Excel's rule, which is unknown for this length: it
+ * agrees with it on the differences between most positions and is off on one position.
+ */
+function windowMeanSeasonals(y: readonly number[], m: number): number[] {
+	const extra = y.length % m;
+	const sums = new Array<number>(m).fill(0);
+	for (let o = 0; o <= extra; o++) {
+		const rel = chainSeasonals(y.slice(o, o + 4 * m), m, 4);
+		const origin = rel[(m - o) % m] as number;
+		for (let k = 0; k < m; k++)
+			sums[k] = (sums[k] as number) + (rel[(k - o + m) % m] as number) - origin;
+	}
+	return sums.map((s) => s / (extra + 1));
+}
+
+/** Whether `chainStart` is Excel's exact rule for a series of `n` values (not 4 seasons plus a bit). */
+export function isExactLength(n: number, m: number): boolean {
+	const whole = Math.floor(n / m);
+	return whole >= MAX_SEASONS || (whole === 4 && n % m === 0);
+}
+
+/**
+ * The start for a series of 4 or more seasons, or undefined for shorter ones. It is Excel's own
+ * except for 4 seasons plus a partial one (`isExactLength` tells which).
+ */
 export function chainStart(y: readonly number[], m: number): EtsInit | undefined {
 	const n = y.length;
 	const whole = Math.floor(n / m);
-	if (m < 2 || whole < 4 || (whole < MAX_SEASONS && n % m !== 0)) return undefined;
-	const used = Math.min(whole, MAX_SEASONS);
-	const rel = chainSeasonals(y, m, used);
+	if (m < 2 || whole < 4) return undefined;
+	const partial = whole < MAX_SEASONS && n % m !== 0;
+	const rel = partial
+		? windowMeanSeasonals(y, m)
+		: chainSeasonals(y, m, Math.min(whole, MAX_SEASONS));
 	const mx = (n - 1) / 2;
 	let sxy = 0;
 	let sxx = 0;
