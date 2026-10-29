@@ -309,13 +309,13 @@ describe('validateTeamsUpdate: Yjs semantics and safety', () => {
 		expect(Y.encodeStateAsUpdate(server)).toEqual(before);
 	});
 
-	it('passes changes outside message rows and reactions', () => {
+	it('passes changes outside the checked maps', () => {
 		const { server, fresh } = seeded();
 		const doc = fresh();
 		const update = capture(doc, () => {
-			const channel = new Y.Map<unknown>();
-			channel.set('name', 'Ops');
-			doc.getMap<Y.Map<unknown>>('teams:channels').set('ops', channel);
+			const row = new Y.Map<unknown>();
+			row.set('name', 'Bob');
+			doc.getMap<Y.Map<unknown>>('teams:roster').set('bob', row);
 		});
 		expect(validateTeamsUpdate(server, update, bob)).toEqual({ ok: true });
 	});

@@ -275,7 +275,15 @@ non-moderator actor (the user id of the **signed session**, never a claimed one)
 - a `teams:reactions` key `message|emoji|user` may be added or removed only with `user` equal to
   the actor;
 - a moderator may additionally set `deleted` to true on any row (and change nothing else), remove a
-  row, and remove a reaction, but never write in somebody else's name.
+  row, and remove a reaction, but never write in somebody else's name;
+- a row in `teams:channels` or `teams:tabs` must name the actor as `createdBy` when created, and only
+  its creator or a moderator may then rename, archive, replace or remove it (the creator cannot
+  change `createdBy`). Archiving is a change like any other. The one exception: the creator of a
+  channel row may replace another person's row of the same name and kind, because clients seed
+  fixed-id channels (`general`, the `Chat` of a direct chat) concurrently;
+- a pin row in `teams:pins:<channel>` must name the actor in `by`; in a private chat (a room whose
+  `teams:chat-members` map has entries) only members may pin or unpin. Any member may unpin, as in
+  Teams, and a moderator may unpin without being a member.
 
 `validateTeamsSyncMessage(doc, message, actor)` does the same for a raw y-websocket message (sync
 step 2 and update are checked, everything else passes). To wire it into the reference server, call
@@ -292,8 +300,10 @@ What it does not cover, honestly:
 - **Yjs client ids are not checked.** Content is validated, not which client id wrote a struct; a
   hostile client can still insert structs under another client's id and disturb that client's later
   updates.
-- Everything outside message rows and reactions: channel creation and archiving, tabs (the creator
-  checks are client-side), pins, meetings, the roster, the chat directory and the chat member map.
+- Everything outside messages, reactions, channels, tabs and pins: meetings, the roster, the chat
+  directory and the chat member map. A channel or tab row is attributed only through its `createdBy`
+  field; whether the pinned message exists, or the tab content is sensible, is not checked. In a
+  workspace room "member" means any authenticated user (there is no workspace member list).
 - Message content and size (use the server's size limits), and who may post in which channel.
 - **Updates that depend on missing state** (Yjs would hold them pending and apply them later
   unchecked) are refused as `incomplete-update`. A client that relays another person's unsynced rows

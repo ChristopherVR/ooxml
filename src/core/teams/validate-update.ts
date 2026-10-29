@@ -8,8 +8,10 @@ import * as decoding from 'lib0/decoding';
 import * as Y from 'yjs';
 import { MAX_UPDATE_BYTES } from '../collab/codec';
 import { MESSAGE_SYNC } from '../collab/transport-provider';
+import { checkOwnedRow, checkPinRow, isOwnedMap } from './validate-owned';
 
 const MESSAGES_PREFIX = 'teams:messages:';
+const PINS_PREFIX = 'teams:pins:';
 const REACTIONS = 'teams:reactions';
 const REACTION_SEP = '|';
 /** Tab discussion roots have deterministic ids; concurrent clients legitimately write the same one. */
@@ -33,6 +35,8 @@ export type UpdateViolationCode =
 	| 'malformed-row'
 	/** A reaction was added or removed in somebody else's name. */
 	| 'foreign-reaction'
+	/** A pin was written by somebody who is not a member of the private chat. */
+	| 'not-member'
 	/** The update refers to state the server does not have, so it cannot be checked. */
 	| 'incomplete-update'
 	/** The bytes are not a valid Yjs update, or are too large. */
@@ -61,6 +65,10 @@ function mapOf(doc: Y.Doc, name: string): Y.Map<unknown> | undefined {
 	}
 }
 
+/** Maps whose rows the walk collects: messages, channels, tabs and pins. */
+const isTrackedMap = (name: string): boolean =>
+	name.startsWith(MESSAGES_PREFIX) || name.startsWith(PINS_PREFIX) || isOwnedMap(name);
+
 /** What the walk needs of a shared type; its event type parameter is irrelevant here. */
 interface TypeNode {
 	_item: Y.Item | null;
@@ -84,7 +92,7 @@ function collectTouched(doc: Y.Doc, txn: Y.Transaction, into: Touched): void {
 			if (name === undefined) continue;
 			for (const key of keys) {
 				if (key === null) continue;
-				if (name.startsWith(MESSAGES_PREFIX)) {
+				if (isTrackedMap(name)) {
 					let rows = into.rows.get(name);
 					if (!rows) into.rows.set(name, (rows = new Set()));
 					rows.add(key);
@@ -99,7 +107,7 @@ function collectTouched(doc: Y.Doc, txn: Y.Transaction, into: Touched): void {
 			if (parent._item === null) {
 				const name = rootName(doc, parent);
 				const rowId = node._item.parentSub;
-				if (name?.startsWith(MESSAGES_PREFIX) && rowId !== null) {
+				if (name !== undefined && isTrackedMap(name) && rowId !== null) {
 					let rows = into.rows.get(name);
 					if (!rows) into.rows.set(name, (rows = new Set()));
 					rows.add(rowId);
@@ -196,8 +204,9 @@ function checkReaction(
  *   `authorId`;
  * - a reaction key `message|emoji|user` may be added or removed only with `user` equal to the actor.
  * A moderator may in addition set `deleted` to true on a row or remove a row, and remove a reaction.
- * Everything else in the document (channels, pins, tabs, meetings, roster, chat members) passes;
- * see the coverage list in docs/teams-area.md.
+ * Channels and tabs (rows with a `createdBy`) and pins follow the rules of `validate-owned.ts`.
+ * Everything else in the document (meetings, roster, chat members) passes; see the coverage list
+ * in docs/teams-area.md.
  *
  * An update that depends on state the server lacks stays pending in Yjs and would be applied later
  * unchecked, so it is refused as `incomplete-update`.
@@ -228,7 +237,13 @@ export function validateTeamsUpdate(
 			const beforeMap = mapOf(doc, name);
 			const afterMap = mapOf(scratch, name);
 			for (const rowId of rows) {
-				const found = checkRow(name, rowId, beforeMap?.get(rowId), afterMap?.get(rowId), actor);
+				const was = beforeMap?.get(rowId);
+				const now = afterMap?.get(rowId);
+				const found = name.startsWith(MESSAGES_PREFIX)
+					? checkRow(name, rowId, was, now, actor)
+					: name.startsWith(PINS_PREFIX)
+						? checkPinRow(name, rowId, was, now, actor, doc)
+						: checkOwnedRow(name, rowId, was, now, actor);
 				if (found) violations.push(found);
 			}
 		}
