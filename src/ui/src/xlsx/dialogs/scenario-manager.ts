@@ -1,10 +1,11 @@
 // Data > What-If Analysis > Scenario Manager: add, edit, delete and show the sheet's scenarios.
-// Summary reports and merging scenarios from other sheets are not offered.
+// Merge copies the scenarios of another sheet; Summary builds the report on a new sheet.
 import { formatRange, previewScenario, scenariosOf, type Scenario } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, listBox, text, textArea, textInput } from './fields';
 import { button, showDialog } from './frame';
+import { openScenarioMerge, openScenarioSummary } from './scenario-extras';
 
 type Target = NonNullable<ReturnType<typeof target>>;
 
@@ -83,6 +84,8 @@ export function openScenarioManager(ctx: EditorContext): Promise<undefined> {
 	const add = button(ctx, 'Add...');
 	const edit = button(ctx, 'Edit...');
 	const del = button(ctx, 'Delete');
+	const merge = button(ctx, 'Merge...');
+	const summary = button(ctx, 'Summary...');
 	const scenarios = (): Scenario[] => scenariosOf(t.ws);
 	const chosen = (): number | undefined => {
 		const value = list.value();
@@ -92,6 +95,7 @@ export function openScenarioManager(ctx: EditorContext): Promise<undefined> {
 		const index = chosen();
 		const scenario = index === undefined ? undefined : scenarios()[index];
 		edit.disabled = del.disabled = !scenario;
+		summary.disabled = !scenarios().length;
 		if (!scenario) {
 			details.textContent = scenarios().length
 				? ctx.t('Select a scenario to see its changing cells.')
@@ -127,6 +131,8 @@ export function openScenarioManager(ctx: EditorContext): Promise<undefined> {
 	add.addEventListener('click', () => void run('add'));
 	edit.addEventListener('click', () => void run('edit'));
 	del.addEventListener('click', () => void run('delete'));
+	merge.addEventListener('click', () => void openScenarioMerge(ctx, t).then(refresh));
+	summary.addEventListener('click', () => void openScenarioSummary(ctx, t).then(refresh));
 	refresh();
 	const first = scenarios()[t.ws.scenarios?.show ?? 0] ? (t.ws.scenarios?.show ?? 0) : 0;
 	if (scenarios().length) list.select(String(first));
@@ -135,7 +141,7 @@ export function openScenarioManager(ctx: EditorContext): Promise<undefined> {
 		heading: 'Scenario Manager',
 		okLabel: 'Show',
 		cancelLabel: 'Close',
-		buttons: [add, del, edit],
+		buttons: [add, del, edit, merge, summary],
 		body: [list.element, details],
 		opened: () => list.element.focus(),
 		// Show keeps the dialog open, as Excel does.

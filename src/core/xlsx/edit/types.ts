@@ -373,6 +373,8 @@ export interface EditSession {
 	deleteScenario(sheet: number, index: number): void;
 	/** Writes a scenario's values into its changing cells. */
 	showScenario(sheet: number, index: number): void;
+	/** Appends the scenarios of another sheet (renaming taken names); returns how many were added. */
+	mergeScenarios(sheet: number, from: number): number;
 	/** Automatic or manual calculation (saved with the workbook). */
 	setCalcMode(mode: 'auto' | 'manual'): void;
 	/**

@@ -128,4 +128,33 @@ describe('Scenario Manager', () => {
 		expect(v(ctx, 0, 0)).toBe(99);
 		expect(ctx.root.querySelector('[data-dialog="scenario-manager"]')).not.toBeNull();
 	});
+
+	it('builds a summary sheet and merges scenarios from another sheet', async () => {
+		const ctx = setup();
+		const s = ctx.session()!;
+		s.setCellValue(0, 0, 0, 5);
+		s.setCellInput(0, 1, 0, '=A1*2');
+		s.addScenario(0, { name: 'Big', cells: 'A1', values: { A1: '50' } });
+		s.addSheet('Other');
+		s.addScenario(1, { name: 'Huge', cells: 'A1', values: { A1: '500' } });
+		ctx.select('A1');
+		void ctx.dialogs.open('scenario-manager');
+		const manager = dialogEl(ctx, 'scenario-manager');
+		clickButton(manager, 'Merge...');
+		const merge = await vi.waitFor(() => dialogEl(ctx, 'scenario-merge'));
+		clickButton(merge, 'OK');
+		await vi.waitFor(() =>
+			expect(s.workbook.sheets[0]!.scenarios?.list.map((x) => x.name)).toEqual(['Big', 'Huge']),
+		);
+		clickButton(manager, 'Summary...');
+		const summary = await vi.waitFor(() => dialogEl(ctx, 'scenario-summary'));
+		setValue(inputByLabel(summary, 'Result cells:'), 'A2');
+		clickButton(summary, 'OK');
+		await vi.waitFor(() => expect(s.workbook.sheets[0]!.name).toBe('Scenario Summary'));
+		const sheet = s.workbook.sheets[0]!;
+		expect(getCell(sheet, 2, 4)?.value).toBe('Big');
+		expect(getCell(sheet, 2, 5)?.value).toBe('Huge');
+		expect(getCell(sheet, 7, 4)?.value).toBe(100);
+		expect(getCell(sheet, 7, 5)?.value).toBe(1000);
+	});
 });

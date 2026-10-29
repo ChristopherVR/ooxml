@@ -36,6 +36,7 @@ export * from './dialogs/format-cells/number-categories';
 export * from './dialogs/format-cells/types';
 export * from './dialogs/insert-chart-model';
 export * from './dialogs/forecast-sheet';
+export * from './dialogs/scenario-summary';
 export * from './dialogs/grid-chart';
 export * from './dirty-state';
 export * from './formula-bar/name-resolve';
