@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@1.0.0) - 2026-10-29
+
+### Features
+
+- **automation:** Release ooxml-mcp 1.0 with versioned tool schemas ([e07b773](https://github.com/ChristopherVR/ooxml/commit/e07b77322730c4b427f29ed6e3479364aea8f54f))
+
+### Other
+
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
 ## [0.1.19](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.19) - 2026-10-22
 
 ### Documentation

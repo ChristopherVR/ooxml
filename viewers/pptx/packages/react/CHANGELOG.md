@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.57.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.57.1) - 2026-10-29
+
+### Bug Fixes
+
+- **docx:** Match Word equation heights and list indents, record caret x ([5e51378](https://github.com/ChristopherVR/ooxml/commit/5e51378d484b6f8538d29b7878f260ec8e97f233))
+
+### Testing
+
+- **automation:** Snapshot mcp tool names and schemas ([6469eac](https://github.com/ChristopherVR/ooxml/commit/6469eace8bbcdb604c5d9681fccd59e6bc6e68a3))
+- **chart:** Name the accepted native gradient raster gaps ([4b21b72](https://github.com/ChristopherVR/ooxml/commit/4b21b727d63cb6f29c7005cad1e270be388dc128))
+- **chart:** Record native two-stop alpha weighting evidence ([2b0cb3a](https://github.com/ChristopherVR/ooxml/commit/2b0cb3a659c534c50a51e843d7da889edbc34bdd))
+- **automation:** Keep the pptx schema snapshot out of the formatter ([21bac92](https://github.com/ChristopherVR/ooxml/commit/21bac92f9bb8d54b220d8240f53505a7000fed12))
+- **chart:** Record translucent gradients over opaque backdrops ([7afd300](https://github.com/ChristopherVR/ooxml/commit/7afd300d057fea24b019efca945e83bf9b06d6a5))
+
+### Styling
+
+- Format files from the stability work ([6ebb965](https://github.com/ChristopherVR/ooxml/commit/6ebb965ec54f2424db7297ff89a1fda5066ea280))
+
 ## [4.57.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.57.0) - 2026-10-28
 
 ### Features

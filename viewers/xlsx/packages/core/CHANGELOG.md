@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@1.0.0) - 2026-10-29
+
+### Features
+
+- **xlsx:** Commit xlsx-core and xlsx-viewer-mcp to a stable 1.0 api ([e458ecf](https://github.com/ChristopherVR/ooxml/commit/e458ecf368421096ccffb366cc1e0ba17f438b77))
+
 ## [0.3.1](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/xlsx-core@0.3.1) - 2026-10-23
 
 ### Other

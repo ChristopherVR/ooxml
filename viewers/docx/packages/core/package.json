@@ -1,6 +1,6 @@
 {
 	"name": "docx-core",
-	"version": "0.3.0",
+	"version": "1.0.0",
 	"description": "Framework-neutral DOCX document model, parser and serializer with a semver-stable public API (thin entry point over ooxml-core/docx)",
 	"homepage": "https://christophervr.github.io/ooxml/docx/",
 	"bugs": {

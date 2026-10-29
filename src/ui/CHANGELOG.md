@@ -7,6 +7,44 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.33.0) - 2026-10-29
+
+### Features
+
+- **docx:** Stamp the last-modified time when a host asks on save ([8fd056a](https://github.com/ChristopherVR/ooxml/commit/8fd056a79271bb55195cd0f500da876e59a83393))
+- **docx:** Save edits to the formatting of existing paragraph styles ([4716ef0](https://github.com/ChristopherVR/ooxml/commit/4716ef0dcbcdb50b47b3823b703a7231630538e4))
+- **teams:** Lock the app when the workspace schema is newer ([0ef86c8](https://github.com/ChristopherVR/ooxml/commit/0ef86c8ad19a77ef3d277a9273fc531ebac0c0d2))
+- **xlsx:** Add forecast sheet ([cacb63e](https://github.com/ChristopherVR/ooxml/commit/cacb63e5e7ba8e3e42ecd2af5045a636eedfd41b))
+- **teams:** Offer moderation in the app and back off on refusals ([0801ef2](https://github.com/ChristopherVR/ooxml/commit/0801ef2f68dc98e0b30a04687708b6bfdd5bf549))
+- **docx:** Stamp the host review author as the last modifier on save ([fa39dbe](https://github.com/ChristopherVR/ooxml/commit/fa39dbe0e4d60fd6cb56f64a02dedba59678292a))
+- **ui:** Merge, split and edit rows and columns of merged tables ([2dadb31](https://github.com/ChristopherVR/ooxml/commit/2dadb312c052ade9a0be0e55b688df3e821daab1))
+- **xlsx:** Draw worksheet shapes and form controls ([656762d](https://github.com/ChristopherVR/ooxml/commit/656762d445d8516c5415ceaa0a6036e194d603f5))
+- **xlsx:** Show header pictures, offsets and theme colours in print ([47fb4bd](https://github.com/ChristopherVR/ooxml/commit/47fb4bdef22f45959d68473248b31ed779a92d6b))
+- **xlsx:** Add scenario summary and merge ([58d9b07](https://github.com/ChristopherVR/ooxml/commit/58d9b074d052a1f2a82e36ca700b785057ba48a7))
+- **xlsx:** Add custom views ([671a7a9](https://github.com/ChristopherVR/ooxml/commit/671a7a965bc1bf5d877b0f89a2f3679c2ca86a69))
+- **xlsx:** Group and ungroup sparklines ([4bbd9f8](https://github.com/ChristopherVR/ooxml/commit/4bbd9f8ca19b9570fc8ff11b0347164526f46926))
+- **xlsx:** Copy multi-area selections and lift the paste tile cap ([d60224f](https://github.com/ChristopherVR/ooxml/commit/d60224f1684f8af78848ca6372b29c05f6c6830d))
+- **xlsx:** Paste into multi-area selections and refuse multi-area cut ([15061b1](https://github.com/ChristopherVR/ooxml/commit/15061b1dec4903a861fc1ef700247d3fda9ae50b))
+
+### Bug Fixes
+
+- **ui:** Allow a table row covered by vertical merges ([c95178b](https://github.com/ChristopherVR/ooxml/commit/c95178b7fce1574dc16dd3540c7a8c18c26cb898))
+- **xlsx:** Activate the new sheet after forecast and scenario summary ([2132fd7](https://github.com/ChristopherVR/ooxml/commit/2132fd79c14921b8555a2f4251e142654bc7b05d))
+- **docx:** Size merged table rows and spaces like Word ([853787f](https://github.com/ChristopherVR/ooxml/commit/853787f8c59c6be78313ba1c8caf464f1d13501d))
+
+### Testing
+
+- **teams:** Cover moderator actions in the mounted app ([f2fef2f](https://github.com/ChristopherVR/ooxml/commit/f2fef2fb16a73ca7321647438ce4390e77321fd8))
+- **ui:** Expect merge and split in the table context menu ([91bc2de](https://github.com/ChristopherVR/ooxml/commit/91bc2dec8a926702371d89804a41d79a87d6d317))
+
+### Styling
+
+- Drop unused visio imports and format merged files ([41d4e2a](https://github.com/ChristopherVR/ooxml/commit/41d4e2a2bbd5b84e9c3a66e66dc6923772b93bbc))
+
+### Chores
+
+- **ui:** Regenerate the custom elements manifest ([0818fcb](https://github.com/ChristopherVR/ooxml/commit/0818fcba41fd1a4b9535b64c81f015cf56ef07ff))
+
 ## [1.32.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.32.0) - 2026-10-28
 
 ### Features

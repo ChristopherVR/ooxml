@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-svelte-viewer@1.0.0) - 2026-10-29
+
+### Features
+
+- **teams:** Release openteams 1.0 on the versioned sync protocol ([e035417](https://github.com/ChristopherVR/ooxml/commit/e035417be1285095f9bbe1b9655743dcd059b55a))
+
 ## [0.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-svelte-viewer@0.2.1) - 2026-10-23
 
 ### Other

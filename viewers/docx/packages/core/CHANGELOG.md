@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@1.0.0) - 2026-10-29
+
+### Features
+
+- **docx:** Commit docx-core and docx-viewer-mcp to a stable 1.0 api ([7aef089](https://github.com/ChristopherVR/ooxml/commit/7aef089212f2c496360a0ec1cca4b1831d8d0771))
+
 ## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@0.3.0) - 2026-10-22
 
 ### Features

@@ -7,6 +7,84 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.31.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.31.0) - 2026-10-29
+
+### Features
+
+- **xlsx:** Add the forecast.ets functions ([2272c4d](https://github.com/ChristopherVR/ooxml/commit/2272c4db6e77db512840250eb238614a2db7567b))
+- **teams:** Stamp and migrate the workspace schema version ([a536adc](https://github.com/ChristopherVR/ooxml/commit/a536adc55f2212d4b47b2aac1ca9799acdf94643))
+- **teams:** Validate message authorship in updates ([9ab23ec](https://github.com/ChristopherVR/ooxml/commit/9ab23ec2096dceb15b348ea7c90270e7911b7d58))
+- **visio:** Evaluate the remaining shapesheet functions ([1940c7b](https://github.com/ChristopherVR/ooxml/commit/1940c7b557416bd9715b25942fc889462b313901))
+- **visio:** Recalculate dependent cells after text edits ([08bb874](https://github.com/ChristopherVR/ooxml/commit/08bb874e479fe11049bd8ad17b3634d3c8fbccf6))
+- **docx:** Stamp the last-modified time when a host asks on save ([8fd056a](https://github.com/ChristopherVR/ooxml/commit/8fd056a79271bb55195cd0f500da876e59a83393))
+- **docx:** Update the bound custom xml when a bound control is edited ([ab14bf4](https://github.com/ChristopherVR/ooxml/commit/ab14bf4c53b3db1ec277612d6911f3a22f9466c9))
+- **docx:** Save edits to the formatting of existing paragraph styles ([4716ef0](https://github.com/ChristopherVR/ooxml/commit/4716ef0dcbcdb50b47b3823b703a7231630538e4))
+- **teams:** Validate channel, tab and pin ownership in updates ([684fb3b](https://github.com/ChristopherVR/ooxml/commit/684fb3b9b06b94c61d8752d81f64023d69e305e9))
+- **teams:** Send credentials in the websocket subprotocol ([2f4572e](https://github.com/ChristopherVR/ooxml/commit/2f4572ec67adb78e71a434c17ff3a4c9f314b76a))
+- **xlsx:** Compare forecast.ets with excel and calibrate it ([adccf86](https://github.com/ChristopherVR/ooxml/commit/adccf863749d18a14b634ec3d75e60231a3f2893))
+- **xlsx:** Add forecast sheet ([cacb63e](https://github.com/ChristopherVR/ooxml/commit/cacb63e5e7ba8e3e42ecd2af5045a636eedfd41b))
+- **visio:** Follow literal INDIRECT addresses in the dependency graph ([17bcdca](https://github.com/ChristopherVR/ooxml/commit/17bcdca3f444552a785da0c1ceda1bef22c5b819))
+- **visio:** Scope edit admission to the formulas an edit reaches ([6b7e82c](https://github.com/ChristopherVR/ooxml/commit/6b7e82c300bc1c0a3441ffd1813082dc75652e74))
+- **visio:** Freeze cells that read a deleted shape like Visio does ([d7f1241](https://github.com/ChristopherVR/ooxml/commit/d7f1241391dd640836c798f197265ffba0ecf94c))
+- **docx:** Add Word reference corpus with layout comparison and reopen check ([899cce1](https://github.com/ChristopherVR/ooxml/commit/899cce197c6ae71fa0308e8d21a863d2607d85c1))
+- **teams:** Validate meetings, roster, chat members and content size ([05565a0](https://github.com/ChristopherVR/ooxml/commit/05565a0dc83c0a292fa20202fa1be1b54623b7d4))
+- **teams:** Offer moderation in the app and back off on refusals ([0801ef2](https://github.com/ChristopherVR/ooxml/commit/0801ef2f68dc98e0b30a04687708b6bfdd5bf549))
+- **teams:** Scope files, compact rooms and add metrics to the server ([9c2f821](https://github.com/ChristopherVR/ooxml/commit/9c2f821d160f158176b426b9a5a2c7bf3212c083))
+- **visio:** Duplicate glued lines and move master instances ([cf827b2](https://github.com/ChristopherVR/ooxml/commit/cf827b200420b4ab7d1825544e14758da6844541))
+- **docx:** Edit rows, columns and cells of merged and nested tables ([a28e61c](https://github.com/ChristopherVR/ooxml/commit/a28e61cb8a31087fe22ec411ef5cf620e09528f8))
+- **xlsx:** Draw worksheet shapes and form controls ([656762d](https://github.com/ChristopherVR/ooxml/commit/656762d445d8516c5415ceaa0a6036e194d603f5))
+- **xlsx:** Show header pictures, offsets and theme colours in print ([47fb4bd](https://github.com/ChristopherVR/ooxml/commit/47fb4bdef22f45959d68473248b31ed779a92d6b))
+- **xlsx:** Add scenario summary and merge ([58d9b07](https://github.com/ChristopherVR/ooxml/commit/58d9b074d052a1f2a82e36ca700b785057ba48a7))
+- **xlsx:** Add custom views ([671a7a9](https://github.com/ChristopherVR/ooxml/commit/671a7a965bc1bf5d877b0f89a2f3679c2ca86a69))
+- **xlsx:** Group and ungroup sparklines ([4bbd9f8](https://github.com/ChristopherVR/ooxml/commit/4bbd9f8ca19b9570fc8ff11b0347164526f46926))
+- **xlsx:** Share notes, rules, links, tables and charts in collab ([6a4daa5](https://github.com/ChristopherVR/ooxml/commit/6a4daa531f065a3f1af766bf99d6307733bde4ec))
+- **xlsx:** Copy multi-area selections and lift the paste tile cap ([d60224f](https://github.com/ChristopherVR/ooxml/commit/d60224f1684f8af78848ca6372b29c05f6c6830d))
+- **xlsx:** Paste into multi-area selections and refuse multi-area cut ([15061b1](https://github.com/ChristopherVR/ooxml/commit/15061b1dec4903a861fc1ef700247d3fda9ae50b))
+
+### Bug Fixes
+
+- **xlsx:** Shift data tables on row and column edits ([1aad48c](https://github.com/ChristopherVR/ooxml/commit/1aad48c9e05955db0111aaf67e3d0ddb12fa7c1b))
+- **docx:** Keep unmodelled run properties through run edits ([f85075a](https://github.com/ChristopherVR/ooxml/commit/f85075a5acb15c04eef3e33ee97bd4c7d02f119c))
+- **docx:** Keep the vml fallback when a shape is edited ([ce214cc](https://github.com/ChristopherVR/ooxml/commit/ce214cca7689cafda2a95c7586b4ae48fb0d0f3e))
+- **xlsx:** Shift scenarios on row and column edits ([63b6b84](https://github.com/ChristopherVR/ooxml/commit/63b6b845c4977fa4b4cc490441c38d1f5e5cf00f))
+- **xlsx:** Keep defined name attributes and all workbook windows on save ([93b2606](https://github.com/ChristopherVR/ooxml/commit/93b26067f1bbf5c1a74ed3c4dcc253aaad402d56))
+- **docx:** Align vertically merged cell text across the whole merge ([7b524bc](https://github.com/ChristopherVR/ooxml/commit/7b524bcc28012f403ab651ca91aad426b8b02854))
+- **docx:** Register the merge and split ribbon action ids ([a5d10d4](https://github.com/ChristopherVR/ooxml/commit/a5d10d45f2b03d1ba6112e2acf0c95efcaa237bc))
+- **docx:** Match Word on paragraph spacing, justify squeeze and float sides ([58e277c](https://github.com/ChristopherVR/ooxml/commit/58e277ce451207a11ddead8bd5b64dba9a23bfcc))
+- **docx:** Follow Word's measured paragraph spacing rules ([bd93d94](https://github.com/ChristopherVR/ooxml/commit/bd93d942496537cebe715f1d2c57a81077dda90b))
+- **xlsx:** Make collab object lists race-free with top-level maps ([9530694](https://github.com/ChristopherVR/ooxml/commit/95306945b24407f18dffd652d341089a47ca5316))
+- **docx:** Match Word equation heights and list indents, record caret x ([5e51378](https://github.com/ChristopherVR/ooxml/commit/5e51378d484b6f8538d29b7878f260ec8e97f233))
+- **docx:** Size merged table rows and spaces like Word ([853787f](https://github.com/ChristopherVR/ooxml/commit/853787f8c59c6be78313ba1c8caf464f1d13501d))
+- **xlsx:** Reproduce Excel's FORECAST.ETS model, stats and interval ([c7865a2](https://github.com/ChristopherVR/ooxml/commit/c7865a2df1317bc05545aad80e60cdcbe9427747))
+
+### Refactor
+
+- **visio:** Split the formula evaluator into cohesive modules ([66e2b4f](https://github.com/ChristopherVR/ooxml/commit/66e2b4ffa7ccd0975985312082bcf6e92df9c2ee))
+
+### Documentation
+
+- **xlsx:** Generate the supported function list ([efe4c1c](https://github.com/ChristopherVR/ooxml/commit/efe4c1c5eeccf84c89f4668b279928f8555cf3c8))
+- **visio:** Graduate formatting, duplication and geometry editing ([113d51b](https://github.com/ChristopherVR/ooxml/commit/113d51b7b8ce1bddc5c315f638cb96626f9f9382))
+
+### Testing
+
+- **automation:** Snapshot mcp tool names and schemas ([6469eac](https://github.com/ChristopherVR/ooxml/commit/6469eace8bbcdb604c5d9681fccd59e6bc6e68a3))
+- **docx:** Snapshot the public export surface ([f025c62](https://github.com/ChristopherVR/ooxml/commit/f025c6242e9ae502ffac90accc1ef1e8c980ae92))
+- **chart:** Name the accepted native gradient raster gaps ([4b21b72](https://github.com/ChristopherVR/ooxml/commit/4b21b727d63cb6f29c7005cad1e270be388dc128))
+- **chart:** Record native two-stop alpha weighting evidence ([2b0cb3a](https://github.com/ChristopherVR/ooxml/commit/2b0cb3a659c534c50a51e843d7da889edbc34bdd))
+- **automation:** Keep the pptx schema snapshot out of the formatter ([21bac92](https://github.com/ChristopherVR/ooxml/commit/21bac92f9bb8d54b220d8240f53505a7000fed12))
+- **visio:** Record native master-instance and glue edit cases ([68b03bd](https://github.com/ChristopherVR/ooxml/commit/68b03bd06430af0bac637f98b6b7ec791f8a3da0))
+- **docx:** Fix the table structure Word reopen check ([a21b0ea](https://github.com/ChristopherVR/ooxml/commit/a21b0ea3300eff5cde102dee7a8637bb319bfbdb))
+- **docx:** Compare paragraph and float positions with the Word corpus ([a4d38e6](https://github.com/ChristopherVR/ooxml/commit/a4d38e623be44a25bff911c83fc9d5e094b8eaf6))
+- **docx:** Pin paragraph spacing to a Word probe fixture ([fa73e6f](https://github.com/ChristopherVR/ooxml/commit/fa73e6f9867991657121dbce4062d521f1129b0a))
+- **xlsx:** Strip the part maps in the old-room collab test ([2c19790](https://github.com/ChristopherVR/ooxml/commit/2c19790ada6dd3e261dddda126e04c685a503906))
+- **chart:** Record translucent gradients over opaque backdrops ([7afd300](https://github.com/ChristopherVR/ooxml/commit/7afd300d057fea24b019efca945e83bf9b06d6a5))
+
+### Styling
+
+- Format files from the stability work ([6ebb965](https://github.com/ChristopherVR/ooxml/commit/6ebb965ec54f2424db7297ff89a1fda5066ea280))
+- Drop unused visio imports and format merged files ([41d4e2a](https://github.com/ChristopherVR/ooxml/commit/41d4e2a2bbd5b84e9c3a66e66dc6923772b93bbc))
+
 ## [1.30.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.30.1) - 2026-10-28
 
 ### Bug Fixes
