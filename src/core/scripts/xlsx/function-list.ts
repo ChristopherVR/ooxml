@@ -10,10 +10,13 @@ const root = (path: string): URL => new URL(path, import.meta.url);
 /** Known deviations from Excel, by function name. Every name must exist in the registry. */
 export const DEVIATIONS: Readonly<Record<string, string>> = {
 	'FORECAST.ETS':
-		"Documented AAA smoothing; the optimiser is not Excel's. Not compared with Excel.",
-	'FORECAST.ETS.CONFINT': 'Documented AAA smoothing; interval width is an approximation.',
-	'FORECAST.ETS.SEASONALITY': "Autocorrelation based detection, not Excel's.",
-	'FORECAST.ETS.STAT': "Smoothing parameters come from this optimiser, not Excel's.",
+		"Compared with Excel on 17 series: usually within 0.3% to 2%, up to 37% on short or exponential series (Excel's optimiser is undocumented).",
+	'FORECAST.ETS.CONFINT':
+		'Within 0.3% to 40% of Excel (the interval depends on the fitted parameters, which differ); up to 80% on exponential growth.',
+	'FORECAST.ETS.SEASONALITY':
+		"Dominant periodogram peak; agrees with Excel on 14 of 15 series, 0 means none (Excel's rule for a noisy series differs).",
+	'FORECAST.ETS.STAT':
+		'Step size and SMAPE agree with Excel; alpha, beta, gamma and the error statistics come from this optimiser and differ.',
 	BESSELJ: 'About 1e-7 from the value Microsoft documents for some arguments.',
 	GETPIVOTDATA: "Reads this editor's worksheet-range pivots; `#REF!` for anything else.",
 	GROUPBY: 'Subset: one aggregating function, grand totals only, flat output.',
@@ -30,6 +33,7 @@ const FIXTURES = [
 	'depreciation-excel.json',
 	'amorlinc-excel.json',
 	'lookup-native.json',
+	'ets-excel.json',
 ];
 
 const upperCalls = (formula: string): string[] =>
@@ -42,10 +46,11 @@ export function excelVerifiedNames(): Set<string> {
 		readFileSync(root(`../../xlsx/formula/__fixtures__/${name}`), 'utf8');
 	for (const file of FIXTURES) {
 		const json = JSON.parse(read(file)) as unknown;
-		const cases = (Array.isArray(json) ? json : (json as { cases: unknown[] }).cases) as {
-			formula: string;
-			type?: string;
-		}[];
+		const list = (Array.isArray(json) ? json : (json as { cases: unknown[] }).cases) as (
+			| { formula: string; type?: string }
+			| { results: { formula: string; type?: string }[] }
+		)[];
+		const cases = list.flatMap((c) => ('results' in c ? c.results : [c]));
 		for (const c of cases)
 			if (c.type !== 'rejected') for (const n of upperCalls(c.formula)) names.add(n);
 	}

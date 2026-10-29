@@ -1,6 +1,6 @@
 // FORECAST.ETS family: structural behaviour, argument validation and series whose answer is
-// determined (an exact linear trend, an exactly repeating pattern). Not compared with Excel output:
-// Excel's optimiser is undocumented, so smoothed series are only checked for closeness.
+// determined (an exact linear trend, an exactly repeating pattern). Smoothed series are compared
+// with Excel's recorded answers in ../forecast-ets-excel.test.ts.
 import { describe, expect, it } from 'vitest';
 import { calc, E } from '../test-helpers';
 
@@ -30,7 +30,7 @@ describe('FORECAST.ETS', () => {
 
 	it('repeats an exactly repeating pattern', () => {
 		near(calc('FORECAST.ETS(13,A1:A12,B1:B12,4)', seasonal), 10, 4);
-		near(calc('FORECAST.ETS(16,A1:A12,B1:B12)', seasonal), 30, 4);
+		near(calc('FORECAST.ETS(16,A1:A12,B1:B12,4)', seasonal), 30, 4);
 	});
 
 	it('reads fitted values inside the history', () => {
@@ -77,11 +77,26 @@ describe('FORECAST.ETS', () => {
 
 describe('FORECAST.ETS.SEASONALITY', () => {
 	it('finds the length of a repeating pattern', () => {
-		expect(calc('FORECAST.ETS.SEASONALITY(A1:A12,B1:B12)', seasonal)).toBe(4);
+		const wave = [0, 10, 0, -10];
+		const cells = {
+			...col(
+				'A',
+				Array.from({ length: 12 }, (_v, i) => wave[i % 4] as number),
+			),
+			...col(
+				'B',
+				Array.from({ length: 12 }, (_v, i) => i + 1),
+			),
+		};
+		expect(calc('FORECAST.ETS.SEASONALITY(A1:A12,B1:B12)', cells)).toBe(4);
 	});
 
-	it('is 1 for a straight line', () => {
-		expect(calc('FORECAST.ETS.SEASONALITY(A1:A6,B1:B6)', linear)).toBe(1);
+	it('reports the dominant harmonic like Excel (a 10,20,15,30 pattern reports 2)', () => {
+		expect(calc('FORECAST.ETS.SEASONALITY(A1:A12,B1:B12)', seasonal)).toBe(2);
+	});
+
+	it('is 0 for a straight line', () => {
+		expect(calc('FORECAST.ETS.SEASONALITY(A1:A6,B1:B6)', linear)).toBe(0);
 	});
 });
 

@@ -211,7 +211,7 @@ line/marker swatches and position-authoring controls remain incomplete.
   `#VALUE!`, no match is `#N/A`. Patterns are JavaScript regular expressions, so PCRE2-only syntax
   is unsupported, and the installed Excel returned `#NAME?`, so it could not validate them.
 - Functions: odd-period bond pricing (`odd-securities.ts`) and Bessel functions (`bessel.ts`)
-  exist; `FORECAST.ETS`, `.CONFINT`, `.SEASONALITY` and `.STAT` use a documented additive exponential smoothing whose optimiser is not Excel's; results are not yet compared with Excel output. Native fixtures cover
+  exist; `FORECAST.ETS`, `.CONFINT`, `.SEASONALITY` and `.STAT` use a documented additive exponential smoothing whose optimiser is not Excel's; 17 series were compared with real Excel (forecasts typically within 0.3% to 2%, up to 37% on short or exponential series; seasonality agrees on 14 of 15; alpha, beta, gamma and the error statistics differ), see `forecast-ets-excel.test.ts`. Native fixtures cover
   AMORLINC, DB and DDB (`scripts/record-xlsx-amorlinc.ps1`, `record-xlsx-depreciation.ps1`).
 
 ## Import, print and collaboration

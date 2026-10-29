@@ -1,10 +1,12 @@
 // FORECAST.ETS, FORECAST.ETS.CONFINT, FORECAST.ETS.SEASONALITY and FORECAST.ETS.STAT. Built on
-// the additive exponential triple smoothing in `ets-core`; the optimiser is not Excel's (which is
-// undocumented), so results are not yet compared with Excel output.
+// the additive exponential triple smoothing in `ets-core`. Excel's optimiser is undocumented; this
+// one is calibrated on Excel's recorded answers (forecast-ets-excel.test.ts), which it follows
+// closely for forecasts and seasonality but not exactly (see the deviations in functions.md).
 import type { CallContext } from '../context';
 import { ERR, fail, type Value } from '../values';
 import { normInv } from './dist-core';
-import { detectSeasonality, etsErrorSd, type EtsFit, etsPredict, fitEts } from './ets-core';
+import { etsErrorSd, type EtsFit, etsPredict, fitEts } from './ets-core';
+import { detectSeasonality } from './ets-season';
 import { etsSeries } from './ets-input';
 import { num, omitted, spec } from './helpers';
 import type { FunctionSpec } from './types';
@@ -17,7 +19,7 @@ const opt = (args: Value[], i: number): number => (omitted(args, i) ? 1 : num(ar
 
 interface Model {
 	fit: EtsFit;
-	start: number;
+	position: (time: number) => number;
 	step: number;
 	y: number[];
 }
@@ -28,7 +30,7 @@ function model(ctx: CallContext, args: Value[], at: number): Model {
 	const completion = opt(args, at + 1);
 	const aggregation = opt(args, at + 2);
 	if (!Number.isInteger(seasonality) || seasonality < 0 || seasonality > MAX_SEASON) fail(ERR.NUM);
-	const { y, start, step } = etsSeries(
+	const { y, position, step } = etsSeries(
 		ctx,
 		args[1] ?? null,
 		args[2] ?? null,
@@ -37,12 +39,12 @@ function model(ctx: CallContext, args: Value[], at: number): Model {
 	);
 	// 1 means "detect"; 0 turns the seasonal component off.
 	const m = seasonality === 1 ? detectSeasonality(y) : seasonality;
-	return { fit: fitEts(y, m), start, step, y };
+	return { fit: fitEts(y, m), position, step, y };
 }
 
 /** Steps from the last point to the target date, rounded to the grid. */
 function stepsAhead(m: Model, target: number): number {
-	const k = Math.round((target - m.start) / m.step);
+	const k = Math.round(m.position(target));
 	if (k < 0) fail(ERR.NUM);
 	return k - (m.fit.n - 1);
 }
@@ -63,7 +65,8 @@ function statistic(m: Model, kind: number): number {
 			const lag = fit.m >= 2 ? fit.m : 1;
 			const naive = y.slice(lag).map((v, i) => v - (y[i] as number));
 			const scale = naive.length ? MAE(naive) : 0;
-			if (scale === 0) fail(ERR.DIV0);
+			// A series that never changes has no scale; Excel reports 0 when it is also fitted exactly.
+			if (scale === 0) return MAE(errors) === 0 ? 0 : fail(ERR.DIV0);
 			return MAE(errors) / scale;
 		}
 		case 5:
@@ -121,7 +124,7 @@ export const FORECAST_ETS_FUNCTIONS: FunctionSpec[] = [
 		'FORECAST.ETS.SEASONALITY',
 		C,
 		'FORECAST.ETS.SEASONALITY(values, timeline, [data_completion], [aggregation])',
-		'The length of the repeating pattern detected in a series (1 when there is none).',
+		'The length of the repeating pattern detected in a series (0 when there is none).',
 		2,
 		4,
 		(args, ctx) => {
