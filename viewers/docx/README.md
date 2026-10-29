@@ -203,7 +203,7 @@ bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 
 ## Documentation
 
-[Architecture](docs/architecture.md) &middot; [Framework bindings](docs/bindings.md) &middot; [Editing text](docs/editing.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Support roadmap](docs/parity-roadmap.md) &middot; [Outstanding work](docs/outstanding-work.md)
+[Architecture](docs/architecture.md) &middot; [Framework bindings](docs/bindings.md) &middot; [Editing text](docs/editing.md) &middot; [Collaboration](docs/collaboration.md) &middot; [Support roadmap](docs/parity-roadmap.md) &middot; [Preservation guarantee](docs/preservation.md) &middot; [Outstanding work](docs/outstanding-work.md)
 
 ## Stability
 

@@ -138,7 +138,7 @@ Still missing:
 - Pictures and links in headers, footers and notes are resolved, shown and saved with each part's own
   relationships; while a header, footer or note is being edited, the ribbon (formatting, Insert
   Picture, Link) targets it.
-- Tables: default cell margins (`tblCellMar`) and row properties (height with its rule, keep-together, repeat-as-header) are modeled and render in both views; Print Layout clips exact-height rows and repeats header rows. Table > Properties now edits these settings for rectangular tables, with mixed selected rows, validation and one-step undo. Row properties follow surviving rows during structural edits. Opened DOCX packages save changes to these fields while preserving unrelated table XML. Merged/nested/complex tables remain protected. Table > Properties also edits selected-cell
+- Tables: default cell margins (`tblCellMar`) and row properties (height with its rule, keep-together, repeat-as-header) are modeled and render in both views; Print Layout clips exact-height rows and repeats header rows. Table > Properties now edits these settings for rectangular tables, with mixed selected rows, validation and one-step undo. Row properties follow surviving rows during structural edits. Opened DOCX packages save changes to these fields while preserving unrelated table XML. Merged and nested tables take Insert/Delete row and column, Merge cells and Split cells (Word's results recorded in `src/core/docx/__fixtures__/word-table-structure.json`); edits Word turns into non-grid tables (column insert left of or through a merged cell, partial column delete through a merge) are refused. Tables with row offsets, tracked row/cell changes or inline markup in cells remain protected. Table > Properties also edits selected-cell
   margin overrides, with mixed values left blank and only changed sides applied. Use table
   defaults removes the selected cells’ direct overrides. Row settings, table defaults and
   cell overrides apply together as one undoable edit; imported widths, borders, shading
@@ -497,7 +497,7 @@ Still not at parity:
   Word as edited. The editing surface and Print Layout apply the same spacing and line heights.
 - Print Layout tables use the document's grid widths, cell margins, borders (table style, table
   and cell), shading, vertical alignment and table indent or alignment. Vertically merged cells are
-  drawn as one cell, but their text stays in the merge's first row.
+  drawn as one cell; centre- and bottom-aligned text aligns across the whole merge when it sits on one page (a merge broken by a page boundary aligns within its first row).
 
 ### Engineering follow-ups
 
