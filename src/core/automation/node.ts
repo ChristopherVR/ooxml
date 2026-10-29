@@ -220,6 +220,7 @@ interface ToolConfig {
 	description: string;
 	inputSchema: Readonly<Record<string, unknown>>;
 	annotations: { readOnlyHint: boolean; destructiveHint: boolean; openWorldHint: boolean };
+	_meta: { schemaVersion: number };
 }
 
 type ToolHandler = (
@@ -249,6 +250,7 @@ export function registerAutomationTools(
 			description: tool.description + NOTES[tool.kind],
 			inputSchema: tool.fileInput,
 			annotations: { readOnlyHint: readOnly, destructiveHint: !readOnly, openWorldHint: false },
+			_meta: { schemaVersion: tool.version },
 		};
 		const handler: ToolHandler = async (params) => {
 			try {

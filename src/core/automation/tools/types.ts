@@ -14,6 +14,12 @@ interface AutomationToolBase {
 	 */
 	readonly name: string;
 	readonly description: string;
+	/**
+	 * The tool's schema version, an integer starting at 1. It is raised whenever the name, a
+	 * required input or an input's type changes incompatibly (`docs/stability.md`), so a client can
+	 * detect a schema change. MCP clients see it as `_meta.schemaVersion`.
+	 */
+	readonly version: number;
 	readonly format: AutomationFormat;
 	/** File extensions (lower case, with the dot) the tool accepts. */
 	readonly extensions: readonly string[];

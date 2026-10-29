@@ -13,6 +13,8 @@ type Params<S extends z.ZodRawShape> = z.infer<z.ZodObject<S>>;
 interface Definition<S extends z.ZodRawShape> {
 	name: string;
 	description: string;
+	/** Schema version; omit for 1. */
+	version?: number;
 	format: AutomationFormat;
 	extensions: readonly string[];
 	input: S;
@@ -36,6 +38,7 @@ function base<S extends z.ZodRawShape>(
 		tool: {
 			name: definition.name,
 			description: definition.description,
+			version: definition.version ?? 1,
 			format: definition.format,
 			extensions: definition.extensions,
 			input: definition.input,
