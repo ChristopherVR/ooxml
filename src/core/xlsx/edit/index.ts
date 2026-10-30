@@ -7,6 +7,7 @@ export {
 	type ValidationOptions,
 } from './validation';
 export { compareCellValues, type SortKey, type SortOptions } from './sort';
+export { savedSortAt } from './sort-reapply';
 export { sortChoices, type SortChoices } from './sort-choices';
 export { BUILT_IN_SORT_LISTS, formatSortList, parseSortList } from '../sort-lists';
 export { detectSeries, type SeriesGenerator, type SeriesStep } from './fill-series';

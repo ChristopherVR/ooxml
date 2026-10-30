@@ -100,7 +100,7 @@ function conditionTest(
 	};
 }
 
-const SOLID = (fill: Fill | undefined) =>
+export const SOLID = (fill: Fill | undefined) =>
 	fill?.type === 'pattern' && fill.pattern !== 'none' ? (fill.fgColor ?? fill.bgColor) : undefined;
 
 /** The `#RRGGBB` fill of a cell (conditional format included), or `undefined` for no fill. */

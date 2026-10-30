@@ -558,6 +558,8 @@ export interface Table {
 	partName?: string;
 	/** The table part filters columns by criteria the model does not hold (custom, top 10, ...). */
 	filterNotModeled?: boolean;
+	/** The sort saved in the table part's `autoFilter`. */
+	sortState?: import('./model-sort').SortState;
 }
 
 /** Where a drawing object sits on the grid (two-cell anchor, offsets in EMU). */

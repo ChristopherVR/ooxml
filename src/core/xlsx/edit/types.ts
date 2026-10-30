@@ -223,7 +223,7 @@ export interface EditSession {
 	/** Sets any criteria (checklist, custom, top 10, dynamic, colour, icon) of an auto-filter column; undefined clears. */
 	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
 	/** Re-evaluates the auto-filter against the current cell values. */
-	reapplyFilter(sheet: number): void;
+	reapplyFilter(sheet: number, at?: CellAddress): void;
 	/** Sorts the auto-filter (or table) containing `col` by that column, keeping the header. */
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;

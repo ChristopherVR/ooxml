@@ -272,7 +272,7 @@ export function createEditSession(
 		setAutoFilter: (s, range) => filter.setAutoFilter(ctx, s, range),
 		filterColumn: (s, col, vals) => filter.filterColumn(ctx, s, col, vals),
 		setFilterCriteria: (s, col, criteria) => filter.setColumnCriteria(ctx, s, col, criteria),
-		reapplyFilter: (s) => filter.reapplyFilter(ctx, s),
+		reapplyFilter: (s, at) => filter.reapplyFilter(ctx, s, at),
 		sortByColumn: (s, col, descending) => filter.sortByColumn(ctx, s, col, descending ?? false),
 		createTable: (s, range, hasHeader, styleName) =>
 			tables.createTable(ctx, s, range, hasHeader, styleName),

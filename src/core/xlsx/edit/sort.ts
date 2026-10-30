@@ -187,13 +187,40 @@ function sortStateOf(
 /** Saves the sort with the sheet's auto-filter when it spans the range, else with the sheet. */
 function recordSortState(sheet: Worksheet, range: CellRange, state: SortState | undefined): void {
 	const filter = sheet.autoFilter;
-	const inTable = sheet.tables.some((t) => rangesIntersect(t.range, range));
-	if (inTable) return;
+	const table = sheet.tables.find((t) => rangesIntersect(t.range, range));
+	if (table) {
+		if (state) table.sortState = state;
+		else Reflect.deleteProperty(table, 'sortState');
+		return;
+	}
 	if (filter && formatRange(filter.range) === formatRange(range)) {
 		if (state) filter.sortState = state;
 		else Reflect.deleteProperty(filter, 'sortState');
 	} else if (state) sheet.sortState = state;
 	else Reflect.deleteProperty(sheet, 'sortState');
+}
+
+/** Adds the workbook and, for colour and icon levels, the conditional-format output. */
+export function resolveSortOptions(
+	ctx: EditContext,
+	s: number,
+	keys: SortKey[],
+	options: SortOptions,
+): SortOptions {
+	const sheet = sheetAt(ctx.workbook, s);
+	const resolved: SortOptions = { ...options, workbook: ctx.workbook };
+	const needsFormats = keys.some((k) => k.sortOn && k.sortOn !== 'value');
+	if (needsFormats && sheet.conditionalFormats.length) {
+		try {
+			const cf = createConditionalFormatEvaluator(ctx.workbook, s, (formula, at) =>
+				ctx.calc.evaluate(formula, at),
+			);
+			resolved.formatAt = (row, col) => cf.at(row, col);
+		} catch {
+			// Colour and icon levels then see the static formatting only.
+		}
+	}
+	return resolved;
 }
 
 /**
@@ -211,20 +238,7 @@ export function sortRange(
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const r = normalizeRange(range);
-	const needsFormats = keys.some(
-		(k) => k.sortOn === 'icon' || k.sortOn === 'cellColor' || k.sortOn === 'fontColor',
-	);
-	const resolved: SortOptions = { ...options, workbook: ctx.workbook };
-	if (needsFormats && sheet.conditionalFormats.length) {
-		try {
-			const cf = createConditionalFormatEvaluator(ctx.workbook, s, (formula, at) =>
-				ctx.calc.evaluate(formula, at),
-			);
-			resolved.formatAt = (row, col) => cf.at(row, col);
-		} catch {
-			// Colour and icon levels then see the static formatting only.
-		}
-	}
+	const resolved = resolveSortOptions(ctx, s, keys, options);
 	ctx.run(
 		'Sort',
 		'cells',

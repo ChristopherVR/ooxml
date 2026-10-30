@@ -284,9 +284,12 @@ line/marker swatches and position-authoring controls remain incomplete.
    (lower case first) and left-to-right sorting (`edit/sort.ts`, `edit/sort-keys.ts`,
    `edit/sort-choices.ts`, `sort-lists.ts`). The levels are saved as `sortState` (sheet or
    auto-filter: `sortBy`, `dxfId`, `iconSet`, `iconId`, `customList`, `caseSensitive`,
-   `columnSort`) and round-trip. Not done: saving the sort of a table (its own `autoFilter`
-   keeps the source `sortState`), Reapply, a persistent store for user-defined custom lists,
-   and hidden columns are skipped but not checked against Excel when sorting left to right.
+   `columnSort`) and round-trip, a table's sort in its own part (`table.sortState`, patched into
+   `xl/tables/tableN.xml`). Data > Reapply re-runs the saved sort (table, filter or sheet) and
+   the filter criteria (`edit/sort-reapply.ts`). Typed custom lists persist in browser
+   localStorage (`dialogs/custom-lists.ts`). Not done: an Options > Edit Custom Lists manager
+   (rename, delete, import from cells) and a roaming store; hidden columns are skipped but not
+   checked against Excel when sorting left to right.
    The criteria and sort modes were checked against the ECMA-376 semantics and unit tests, not against real
    Excel row results.
 9. Functions. 501 functions are registered (`viewers/xlsx/docs/functions.md`); these 22

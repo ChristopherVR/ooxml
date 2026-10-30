@@ -14,6 +14,7 @@ import {
 } from 'ooxml-core/xlsx';
 import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { saveUserSortList, userSortLists } from './custom-lists';
 import { checkbox, el, row, select, textInput } from './fields';
 import { button, showDialog } from './frame';
 
@@ -30,6 +31,10 @@ interface Level {
 }
 
 const NEW_LIST = 'new';
+const allLists = (): string[][] => [
+	...BUILT_IN_SORT_LISTS.map((items) => [...items]),
+	...userSortLists(),
+];
 
 export function sortDialog(ctx: EditorContext): Promise<SortKeySpec[] | undefined> {
 	const t = target(ctx);
@@ -180,7 +185,7 @@ export function sortDialog(ctx: EditorContext): Promise<SortKeySpec[] | undefine
 		const listPick = select(
 			ctx,
 			[
-				...BUILT_IN_SORT_LISTS.map((items, i): [string, string] => [String(i), items.join(', ')]),
+				...allLists().map((items, i): [string, string] => [String(i), items.join(', ')]),
 				[NEW_LIST, ctx.t('New list...')],
 			],
 			undefined,
@@ -277,11 +282,10 @@ export function sortDialog(ctx: EditorContext): Promise<SortKeySpec[] | undefine
 		if (on === 'value') {
 			const spec: SortKeySpec = { col, descending: level.order.value === 'desc' };
 			if (level.order.value === 'custom') {
-				const text = level.listPick.value === NEW_LIST ? level.listText.value : '';
-				const items =
-					level.listPick.value === NEW_LIST
-						? parseSortList(text)
-						: [...(BUILT_IN_SORT_LISTS[Number(level.listPick.value)] ?? [])];
+				const typed = level.listPick.value === NEW_LIST;
+				const items = typed
+					? parseSortList(level.listText.value)
+					: (allLists()[Number(level.listPick.value)] ?? []);
 				if (items.length) spec.customList = items;
 			}
 			return spec;
@@ -305,6 +309,9 @@ export function sortDialog(ctx: EditorContext): Promise<SortKeySpec[] | undefine
 		opened: () => levels[0]?.column.focus(),
 		submit: () => {
 			const keys = levels.map(keyOf);
+			for (const [i, level] of levels.entries())
+				if (level.listPick.value === NEW_LIST && keys[i]?.customList)
+					saveUserSortList(keys[i].customList);
 			t.session.sort(t.sheet, region, keys, header.input.checked, {
 				...(across() ? { leftToRight: true } : {}),
 				...(caseBox.input.checked ? { caseSensitive: true } : {}),

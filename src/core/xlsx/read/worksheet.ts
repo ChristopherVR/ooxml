@@ -129,7 +129,7 @@ function readTables(
 		const rel = rels.get(relAttr(part, 'id') ?? '');
 		const target = rel ? ctx.source.target(partName, rel) : undefined;
 		const xml = target ? ctx.source.text(target) : undefined;
-		const table = target && xml ? parseTable(xml, target) : undefined;
+		const table = target && xml ? parseTable(xml, target, ctx.dxfs) : undefined;
 		if (table) sheet.tables.push(table);
 		else ctx.warn('A table part could not be read and was dropped.');
 	}

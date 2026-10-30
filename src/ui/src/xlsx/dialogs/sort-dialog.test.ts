@@ -8,6 +8,7 @@ import {
 	pressKey,
 	setValue,
 } from '../commands/test-support';
+import { clearUserSortLists, userSortLists } from './custom-lists';
 import { registerRuleDialogs } from './register-rules';
 
 afterEach(() => (document.body.innerHTML = ''));
@@ -112,5 +113,22 @@ describe('sort dialog', () => {
 		clickButton(d, 'OK');
 		await result;
 		expect(ctx.workbook()!.sheets[0]!.sortState?.columnSort).toBe(true);
+	});
+
+	it('keeps a typed custom list for later dialogs', async () => {
+		clearUserSortLists();
+		const ctx = setup();
+		const result = ctx.dialogs.open('sort');
+		const d = dialogEl(ctx, 'sort');
+		setValue(selects(d, 'Order')[0]!, 'custom');
+		setValue(selects(d, 'Custom List...')[0]!, 'new');
+		setValue(d.querySelector<HTMLInputElement>('input[aria-label="List entries"]')!, 'b, a, c');
+		clickButton(d, 'OK');
+		expect((await result)?.[0]?.customList).toEqual(['b', 'a', 'c']);
+		expect(userSortLists()).toEqual([['b', 'a', 'c']]);
+		void ctx.dialogs.open('sort');
+		const again = [...selects(dialogEl(ctx, 'sort'), 'Custom List...')[0]!.options];
+		expect(again.map((o) => o.textContent)).toContain('b, a, c');
+		clearUserSortLists();
 	});
 });

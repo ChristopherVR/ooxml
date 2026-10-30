@@ -1,6 +1,6 @@
 import { parseXml } from '../../xml/index';
 import { formatRange } from '../address';
-import type { SortState, Worksheet } from '../model';
+import type { SortState, Table, Worksheet } from '../model';
 import { readSortState } from '../read/sort-state';
 import { sameModel } from './snapshot';
 import type { StyleWriter } from './styles';
@@ -34,7 +34,7 @@ export function sortStateXml(state: SortState | undefined, styles?: StyleWriter)
 	);
 }
 
-const bare = (state: SortState | undefined) =>
+export const bareSortState = (state: SortState | undefined) =>
 	state && {
 		...state,
 		conditions: state.conditions.map(({ style: _style, ...rest }) => rest),
@@ -50,10 +50,14 @@ export function sheetSortStateXml(sheet: Worksheet, styles?: StyleWriter): strin
 	if (kept) {
 		try {
 			const source = readSortState(parseXml(kept, { label: 'XLSX worksheet' }).documentElement);
-			if (sameModel(bare(source), bare(sheet.sortState))) return '';
+			if (sameModel(bareSortState(source), bareSortState(sheet.sortState))) return '';
 		} catch {
 			// Fall through and write the model.
 		}
 	}
 	return sortStateXml(sheet.sortState, styles);
 }
+
+/** A table without its resolved sort formats, to compare a model with its re-read source. */
+export const unresolvedTable = (table: Table | undefined) =>
+	table && { ...table, sortState: bareSortState(table.sortState) };
