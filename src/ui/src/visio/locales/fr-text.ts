@@ -61,8 +61,6 @@ export const frText: Readonly<Record<string, string>> = {
 		'Les graphiques Excel incorporés ne sont pas pris en charge.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'Les objets OLE incorporés ne sont pas pris en charge ; seules les images peuvent être insérées.',
-	'Embellishment needs theme-driven shape geometry.':
-		"L'embellissement nécessite une géométrie de forme pilotée par le thème.",
 	'Feedback is not collected by this viewer.':
 		'Cette visionneuse ne recueille pas de commentaires.',
 	'Ink strokes are not supported.': "Les traits d'encre ne sont pas pris en charge.",

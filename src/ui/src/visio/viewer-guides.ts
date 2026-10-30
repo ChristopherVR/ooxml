@@ -7,7 +7,10 @@ import {
 	visioGuideMoveCommand,
 	visioPageGuides,
 	visioSnapMoveDelta,
+	type VisioResizeSizeMatch,
+	type VisioResizeSnapOptions,
 	type VisioSnapGrid,
+	type VisioSnapResult,
 	type VisioPagePoint,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -77,7 +80,6 @@ export class ViewerGuides {
 		grid: number | VisioSnapGrid = 0,
 		axis?: 'x' | 'y',
 	): VisioPagePoint {
-		const svg = this.#svg();
 		this.clearHints();
 		// Snap & Glue: Snap off stops all of it; Grid and Guides can be left out one by one.
 		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
@@ -93,12 +95,42 @@ export class ViewerGuides {
 			grid,
 			...(axis ? { axis } : {}),
 		});
-		if (!svg || !result.lines.length) return result.delta;
+		this.#drawHints(page, result.lines);
+		return result.delta;
+	}
+	/**
+	 * The snapping a resize drag uses (Dynamic Grid and shown guides, with the same threshold as a
+	 * move), or undefined when none of it is on. Snap & Glue switched off leaves it undefined too.
+	 */
+	resizeSnapSettings(): VisioResizeSnapOptions | undefined {
+		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
+		if (settings & VISIO_SNAP.disabled) return undefined;
+		const guides = this.#shown && !!(settings & VISIO_SNAP.guides);
+		if (!guides && !this.#dynamic) return undefined;
+		const zoom = this.controller.state.zoom || 1;
+		return { shapes: this.#dynamic, guides, threshold: SNAP_PIXELS / (96 * zoom) };
+	}
+	/** Draws a resize's alignment lines and size-match outlines, replacing the earlier hints. */
+	resizeHints(
+		page: VisioPage,
+		lines: VisioSnapResult['lines'],
+		matches: readonly VisioResizeSizeMatch[],
+	): void {
+		this.#drawHints(page, lines, matches);
+	}
+	#drawHints(
+		page: VisioPage,
+		lines: VisioSnapResult['lines'],
+		matches: readonly VisioResizeSizeMatch[] = [],
+	): void {
+		const svg = this.#svg();
+		this.clearHints();
+		if (!svg || !(lines.length || matches.length)) return;
 		const hints = svg.ownerDocument.createElementNS(SVG, 'g');
 		hints.dataset.snapHints = '';
 		hints.setAttribute('aria-hidden', 'true');
 		hints.style.pointerEvents = 'none';
-		for (const line of result.lines) {
+		for (const line of lines) {
 			const element = svg.ownerDocument.createElementNS(SVG, 'line');
 			// Snap boxes use y = -(page y); the SVG's y is page height minus page y.
 			const clamp = (value: number, size: number) => Math.max(-size, Math.min(2 * size, value));
@@ -114,8 +146,25 @@ export class ViewerGuides {
 			element.setAttribute('vector-effect', 'non-scaling-stroke');
 			hints.append(element);
 		}
+		// A size match outlines the shape whose width or height the resized one now equals.
+		for (const match of matches) {
+			const element = svg.ownerDocument.createElementNS(SVG, 'rect');
+			element.dataset.sizeMatch = match.axis;
+			const { x, y, width, height } = match.box;
+			for (const [name, value] of Object.entries({
+				x,
+				y: page.height + y,
+				width,
+				height,
+			}))
+				element.setAttribute(name, String(value));
+			element.setAttribute('fill', 'none');
+			element.setAttribute('stroke', 'var(--_vv-accent)');
+			element.setAttribute('stroke-dasharray', '4 3');
+			element.setAttribute('vector-effect', 'non-scaling-stroke');
+			hints.append(element);
+		}
 		svg.append(hints);
-		return result.delta;
 	}
 	clearHints(): void {
 		for (const node of this.viewport.querySelectorAll('[data-snap-hints]')) node.remove();

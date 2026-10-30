@@ -222,6 +222,7 @@ export {
 export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
 export { VISIO_SCALE_UNITS } from './edit-page-setup-commands';
 export type { VisioPageLayoutEdit } from './edit-page-layout';
+export type { VisioEmbellishment } from './edit-page-theme-commands';
 export type { VisioSnapGlueEdit } from './edit-snap-glue';
 export {
 	VISIO_GLUE,

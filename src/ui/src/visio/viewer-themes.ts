@@ -7,6 +7,7 @@ import type { VisioRibbonAction } from './ribbon-action';
 import {
 	NO_THEME_VARIANTS,
 	THEMES_HINT,
+	VARIANT_EMBELLISHMENTS,
 	VARIANT_SCHEME_MENUS,
 	schemeItemId,
 	VARIANTS_HINT,
@@ -40,6 +41,20 @@ export class ViewerThemes {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || this.#reason(state)) return;
+		if (action.embellishment !== undefined) {
+			const level = VARIANT_EMBELLISHMENTS.find(([key]) => key === action.embellishment);
+			if (!level) return;
+			const edit: VisioPageThemeEdit = {
+				type: 'set-page-theme',
+				pageId: page.id,
+				embellishment: level[0],
+			};
+			this.edit(
+				() => this.controller.applyEdits([edit]),
+				`Applied ${level[1]} embellishment to ${page.name}.`,
+			);
+			return;
+		}
 		if (action.variant !== undefined && !page.theme) return;
 		const scheme = VARIANT_SCHEME_MENUS.find(([key]) => action[key] !== undefined)?.[0];
 		const edit: VisioPageThemeEdit = {

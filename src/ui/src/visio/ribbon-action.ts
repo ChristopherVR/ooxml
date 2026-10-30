@@ -1,6 +1,7 @@
 import type { VisioThemeColorRef } from 'ooxml-core/visio';
 import type {
 	VisioBuiltInThemeId,
+	VisioEmbellishment,
 	VisioCalloutStyle,
 	VisioChangeShapeTarget,
 	VisioContainerStyle,
@@ -156,6 +157,7 @@ export type VisioRibbonAction =
 			fonts?: VisioBuiltInThemeId;
 			effects?: VisioBuiltInThemeId;
 			connectors?: VisioBuiltInThemeId;
+			embellishment?: VisioEmbellishment;
 	  }
 	| { type: 'delete' }
 	| { type: 'duplicate' }

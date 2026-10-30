@@ -199,6 +199,32 @@ describe('page theme edits', () => {
 			snapshotPageTheme({ type: 'set-page-theme', pageId: page, theme: 'office', colors: 'ember' }),
 		).toThrow();
 	});
+	it('Embellishment writes only the page EmbellishmentIndex, alone in its transaction', async () => {
+		const drawn = await drawing();
+		const themed = await editVsdx(drawn, [
+			{ type: 'set-page-theme', pageId: page, theme: 'harbor' },
+		]);
+		const before = await pageSheet(themed.bytes);
+		const embellished = await editVsdx(themed.bytes, [
+			{ type: 'set-page-theme', pageId: page, embellishment: 'high' },
+		]);
+		const after = await pageSheet(embellished.bytes);
+		expect(after.get('EmbellishmentIndex')).toBe('3');
+		// The theme selectors and the shapes are untouched.
+		for (const name of ['ColorSchemeIndex', 'EffectSchemeIndex', 'ConnectorSchemeIndex'])
+			expect(after.get(name)).toBe(before.get(name));
+		await expect(
+			editVsdx(themed.bytes, [
+				{ type: 'set-page-theme', pageId: page, embellishment: 'low', variant: 1 },
+			]),
+		).rejects.toMatchObject({ code: 'INVALID_EDIT' });
+		await expect(
+			editVsdx(themed.bytes, [
+				{ type: 'set-page-theme', pageId: page, embellishment: 'huge' as 'low' },
+			]),
+		).rejects.toMatchObject({ code: 'INVALID_EDIT' });
+	});
+
 	it('refuses invalid commands, mixed transactions and variants without a theme', async () => {
 		expect(() => snapshotPageTheme({ type: 'set-page-theme', pageId: page })).toThrow();
 		expect(() =>

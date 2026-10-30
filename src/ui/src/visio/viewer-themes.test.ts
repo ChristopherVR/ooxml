@@ -2,7 +2,6 @@ import { afterEach, expect, it } from 'vitest';
 import { visioBuiltInTheme, visioThemeVariantColors } from 'ooxml-core/visio';
 import type { OfficeUiGallery } from '../ribbon/gallery';
 import { setupFormattingViewer as setup } from './__fixtures__/formatting-viewer';
-import { VARIANT_OPTION_REASONS } from './ribbon-themes';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -149,12 +148,13 @@ it('Colors marks the current colour scheme', async () => {
 	ui.controller.destroy();
 });
 
-it('keeps theme part options it cannot change disabled with reasons', async () => {
+it('Embellishment in More Variants writes the page level, with no theme needed', async () => {
 	const ui = await setup();
-	for (const [id, , reason] of VARIANT_OPTION_REASONS) {
-		expect(ui.button(id).disabled).toBe(true);
-		expect(ui.button(id).title).toContain(reason);
-	}
+	const page = () => ui.controller.state.document!.pages[0]!;
+	await choose(ui, 'theme-embellishment', 'embellishment-high');
+	expect(ui.edits.at(-1)).toEqual([
+		{ type: 'set-page-theme', pageId: page().id, embellishment: 'high' },
+	]);
 	ui.dispose();
 	ui.controller.destroy();
 });

@@ -19,7 +19,11 @@ import { refreshThemeColorCaches } from './edit-page-theme-refresh';
 import { VISIO_UNTHEMED_COLORS, type VisioThemeColorValues } from './theme-color-ref';
 import { drawingColor } from './theme-color';
 import { recolorQuickStyledShapes } from './edit-page-theme-recolor';
-import { PAGE_THEME_PARTS, type VisioPageThemeEdit } from './edit-page-theme-commands';
+import {
+	PAGE_THEME_PARTS,
+	VISIO_EMBELLISHMENT_INDEX,
+	type VisioPageThemeEdit,
+} from './edit-page-theme-commands';
 import { ensureBuiltInThemePart } from './edit-page-theme-part';
 import type { EditVsdxResult } from './edit';
 
@@ -85,6 +89,9 @@ export async function editVsdxPageTheme(
 	const contents = copy(await visioXml(pkg, contentsPath!, 'PageContents'));
 	let recolored = false;
 	const part = PAGE_THEME_PARTS.find((name) => edit[name] !== undefined);
+	// Embellishment only selects the page's EmbellishmentIndex; the theme and shapes stay as they are.
+	if (edit.embellishment !== undefined)
+		setCell(sheet, 'EmbellishmentIndex', VISIO_EMBELLISHMENT_INDEX[edit.embellishment]);
 	if (edit.theme === 'none') {
 		for (const name of [...SCHEME_CELLS, 'VariationColorIndex', 'VariationStyleIndex'])
 			setCell(sheet, name, 0);
@@ -119,7 +126,7 @@ export async function editVsdxPageTheme(
 			colors[`variant${index}` as 'variant1'] = `#${variant[index - 1]!.toLowerCase()}`;
 		if (!part || part === 'colors')
 			recolored = refreshThemeColorCaches(contents, colors, check) || recolored;
-	} else {
+	} else if (edit.variant !== undefined) {
 		const current = pageSelectedTheme(themes, sheet);
 		if (!current || current.variants.length <= edit.variant!)
 			fail('UNSUPPORTED_THEME_EDIT', 'The page uses no theme with this variant.');

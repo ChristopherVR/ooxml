@@ -57,7 +57,6 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	'Embedded Excel charts are not supported.': '不支持嵌入的 Excel 图表。',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'不支持嵌入的 OLE 对象；只能插入图片。',
-	'Embellishment needs theme-driven shape geometry.': '修饰需要由主题驱动的形状几何。',
 	'Feedback is not collected by this viewer.': '此查看器不收集反馈。',
 	'Ink strokes are not supported.': '不支持墨迹笔画。',
 	'Macros and add-ons never run in this viewer.': '宏和加载项在此查看器中从不运行。',

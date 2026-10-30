@@ -59,8 +59,6 @@ export const esText: Readonly<Record<string, string>> = {
 	'Embedded Excel charts are not supported.': 'No se admiten los gráficos de Excel incrustados.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'No se admiten los objetos OLE incrustados; solo se pueden insertar imágenes.',
-	'Embellishment needs theme-driven shape geometry.':
-		'El adorno requiere geometría de forma controlada por el tema.',
 	'Feedback is not collected by this viewer.': 'Este visor no recopila comentarios.',
 	'Ink strokes are not supported.': 'No se admiten los trazos de tinta.',
 	'Macros and add-ons never run in this viewer.':
