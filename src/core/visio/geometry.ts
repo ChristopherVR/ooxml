@@ -1,5 +1,6 @@
 import { splineGeometry } from './spline-geometry';
 import { geometryRow } from './complex-geometry';
+import { clipInfiniteLine, type InfiniteLineFrame } from './infinite-line';
 import {
 	roundedRectanglePath,
 	roundedOrthogonalPath,
@@ -105,6 +106,7 @@ export function geometryPaths(
 	report: Report,
 	consume: () => void,
 	consumeWork: (units: number) => void = () => {},
+	frame?: InfiniteLineFrame,
 ): VisioGeometry[] {
 	const geometry: VisioGeometry[] = [];
 	const rounding = number(sheet.cells, 'Rounding', 0, report);
@@ -118,6 +120,7 @@ export function geometryPaths(
 		)
 			continue;
 		const commands: string[] = [];
+		const lines: string[] = [];
 		const rows = [...section.rows.values()]
 			.filter((row) => !row.deleted)
 			.sort((a, b) => Number(a.index) - Number(b.index));
@@ -242,6 +245,32 @@ export function geometryPaths(
 					}
 					break;
 				}
+				case 'InfiniteLine': {
+					// A and B are absolute shape-local points on the line. It is drawn only where it
+					// crosses the page; equal points draw nothing.
+					const ax = cell('A'),
+						ay = cell('B');
+					if (![x, y, ax, ay].every(Number.isFinite)) {
+						supported = false;
+						report(
+							'invalid-geometry',
+							'Invalid infinite line points; its geometry section was omitted.',
+						);
+						break;
+					}
+					if (!frame) {
+						supported = false;
+						report(
+							'unsupported-geometry',
+							'InfiniteLine needs its page frame; its geometry section was omitted.',
+						);
+						break;
+					}
+					const segment = clipInfiniteLine(x, y, ax, ay, frame);
+					if (segment)
+						lines.push(`M ${point(segment[0], segment[1])} L ${point(segment[2], segment[3])}`);
+					break;
+				}
 				case 'Ellipse': {
 					const a = cell('A') - x,
 						b = cell('B') - y;
@@ -316,6 +345,11 @@ export function geometryPaths(
 				'unsupported-corner-rounding',
 				'Corner rounding requires a closed axis-aligned rectangle or an open orthogonal line chain with representable tangent arcs; this geometry was left unchanged.',
 			);
+		// Infinite lines are open strokes that never fill, so each is a separate path.
+		if (lines.length) {
+			const stroke = !number(section.cells, 'NoLine', 0, report);
+			for (const path of lines) geometry.push({ path, fill: false, stroke });
+		}
 		// SVG implicitly closes filled paths; leave strokes open unless the source returns to its origin.
 		if (commands.length)
 			geometry.push({

@@ -7,6 +7,7 @@ import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
 import type { VisioLayer, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
+import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from '../geometry/affine';
 import { shapeConnections } from './shape-connections';
 import { readConnectorJumps } from './connector-jumps';
 import { VisioPackageError } from './package';
@@ -29,6 +30,8 @@ export interface ShapeContext extends StyleContext {
 	resources: Resources;
 	maxShapes: number;
 	maxShapeDepth: number;
+	/** Current page size in pre-scale geometry units; infinite lines are clipped to it. */
+	pageSize?: { width: number; height: number };
 	shapeCount: number;
 	consumeExpansion: () => void;
 	consumeGeometry: () => void;
@@ -86,6 +89,7 @@ export function normalizeShapes(
 	context: ShapeContext,
 	depth = 0,
 	masterStack: readonly string[] = [],
+	parentToPage: AffineMatrix = IDENTITY_AFFINE,
 ): VisioShape[] {
 	if (depth > context.maxShapeDepth)
 		throw new VisioPackageError('SHAPE_DEPTH_LIMIT', 'Shape nesting depth limit exceeded.');
@@ -219,6 +223,7 @@ export function normalizeShapes(
 				);
 			const cachedNoShow = number(sheet.cells, 'NoShow', sheet.cells.has('NoShow') ? NaN : 0);
 			const nonPrinting = number(sheet.cells, 'NonPrinting', NaN);
+			const toPage = composeAffine(parentToPage, transformDetails.transform);
 			const geometry = geometryPaths(
 				sheet,
 				width,
@@ -226,6 +231,7 @@ export function normalizeShapes(
 				report,
 				context.consumeGeometry,
 				context.consumeCurveWork,
+				context.pageSize ? { toPage, ...context.pageSize } : undefined,
 			);
 			if (
 				!geometry.length &&
@@ -297,7 +303,7 @@ export function normalizeShapes(
 					...(Number.isNaN(nonPrinting) ? {} : { nonPrinting: nonPrinting !== 0 }),
 				},
 				layerIds: membership.layerIds,
-				children: normalizeShapes(shape.children, context, depth + 1, stack),
+				children: normalizeShapes(shape.children, context, depth + 1, stack, toPage),
 				...(masterId === undefined ? {} : { masterId }),
 				...(shape.foreignVector
 					? {

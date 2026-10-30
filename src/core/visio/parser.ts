@@ -309,10 +309,14 @@ export async function parseVsdx(
 		const layers = pageLayers(sheet, resources, localReport);
 		context.layers = indexLayers(layers);
 		const drawingToPageScale = visioPageGeometryScale(sheet.cells, localReport);
-		const width = number(sheet.cells, 'PageWidth', 8.5, localReport) * drawingToPageScale,
-			height = number(sheet.cells, 'PageHeight', 11, localReport) * drawingToPageScale;
+		const pageWidth = number(sheet.cells, 'PageWidth', 8.5, localReport),
+			pageHeight = number(sheet.cells, 'PageHeight', 11, localReport);
+		const width = pageWidth * drawingToPageScale,
+			height = pageHeight * drawingToPageScale;
 		if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0)
 			throw new VisioPackageError('INVALID_PAGE_SIZE', 'Page dimensions must be positive.');
+		// Shape geometry is still in drawing units here; normalizeVisioPageGeometry scales it later.
+		context.pageSize = { width: pageWidth, height: pageHeight };
 		const backgroundPageId = attribute(page, 'BackPage');
 		if (backgroundPageId !== undefined) metadata(backgroundPageId, 256, 'Background page ID');
 		const rawShapes = readShapes(root);
