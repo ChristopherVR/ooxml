@@ -1,4 +1,4 @@
-import { NS, elements, parseXml } from '../../xml/index';
+import { elements } from '../../xml/index';
 import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
 import type { ColumnInfo, Worksheet } from '../model';

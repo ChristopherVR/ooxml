@@ -1,5 +1,5 @@
 import { compileAutoFilter } from './filter-criteria';
-import type { AutoFilter, Workbook, Worksheet } from './model';
+import type { Workbook, Worksheet } from './model';
 
 export { compileAutoFilter, rowMatchesFilter } from './filter-criteria';
 export type { FilterEvalOptions } from './filter-criteria';

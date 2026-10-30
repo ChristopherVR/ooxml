@@ -278,7 +278,10 @@ function checklistPanel(
 		sync();
 	};
 	selectAll.addEventListener('change', () => {
-		for (const v of visible()) selectAll.checked ? checked.add(v.text) : checked.delete(v.text);
+		for (const v of visible()) {
+			if (selectAll.checked) checked.add(v.text);
+			else checked.delete(v.text);
+		}
 		if (showBlanks()) blanks = selectAll.checked;
 		render();
 	});

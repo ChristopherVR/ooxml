@@ -13,7 +13,7 @@ import type { XmlElement } from '../../xml/index';
 import { readModernHash } from './password-hash';
 import { readFilterColumn } from './filter-columns';
 import { parseColor } from './style-parts';
-import { att, boolAttr, numAttr, outerXml, xChildren, xFirst, xText } from './xml-util';
+import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
 export const defaultSheetView = (): SheetView => ({
 	showGridLines: true,
