@@ -281,8 +281,9 @@ line/marker swatches and position-authoring controls remain incomplete.
    TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service).
 10. Data tools and auditing: Flash Fill, Subtotal, Consolidate, Advanced filter, Split panes
     (only Freeze Panes exists), Trace Precedents and Dependents, Remove Arrows, Evaluate
-    Formula, Error Checking and Watch Window have no commands. Text to Columns refuses
-    fixed-width splitting, and Page Layout > Themes > Colors only reports that changing the
+    Formula, Error Checking and Watch Window have no commands. Text to Columns splits at
+    delimiters or typed fixed-width break positions (no per-column data format step), and
+    Page Layout > Themes > Colors only reports that changing the
     theme is not supported.
 11. File format. `.xlsb` is detected and refused (`load/detect.ts`) and `.ods` is not read or
     written. A save keeps the loaded `calcPr` and writes `fullCalcOnLoad="1"` only when a

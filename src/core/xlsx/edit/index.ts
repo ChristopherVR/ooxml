@@ -19,6 +19,12 @@ export { mergeWouldDiscard } from './merge';
 export { queryPattern, replaceText } from './find';
 export { cellInputText, formulaBarText, numberInputText } from './input-text';
 export { presetEdges } from './borders';
+export {
+	parseBreakPositions,
+	splitDelimited,
+	splitFixedWidth,
+	type SplitOptions,
+} from './text-columns';
 export { validateDefinedName } from './view';
 export { uniqueHeaders } from './tables';
 export { IMAGE_EXTENSIONS, chartSpaceOf, newMediaPart, type ChartPatch } from './charts';

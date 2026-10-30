@@ -505,11 +505,31 @@ export const TOOLS_STRINGS: Translations = {
 	'(none)': ['(aucun)', '(ohne)', '(ninguno)', '(无)'],
 	'Destination:': ['Destination :', 'Ziel:', 'Destino:', '目标区域:'],
 	'Data preview': ['Aperçu de données', 'Datenvorschau', 'Vista previa de los datos', '数据预览'],
-	'Only delimited text is supported; fixed width splitting is not available yet.': [
-		'Seul le texte délimité est pris en charge ; le fractionnement à largeur fixe n’est pas encore disponible.',
-		'Nur Text mit Trennzeichen wird unterstützt; feste Breite ist noch nicht verfügbar.',
-		'Solo se admite texto delimitado; la división de ancho fijo aún no está disponible.',
-		'仅支持分隔符号文本；尚不支持固定宽度分列。',
+	'Original data type': [
+		'Type de données d’origine',
+		'Ursprünglicher Datentyp',
+		'Tipo de datos original',
+		'原始数据类型',
+	],
+	Delimited: ['Délimité', 'Getrennt', 'Delimitados', '分隔符号'],
+	'Fixed width': ['Largeur fixe', 'Feste Breite', 'Ancho fijo', '固定宽度'],
+	'Break positions:': [
+		'Positions de rupture :',
+		'Trennstellen:',
+		'Posiciones de corte:',
+		'分列位置:',
+	],
+	'Each number ends a column after that character, for example 5, 12.': [
+		'Chaque nombre termine une colonne après ce caractère, par exemple 5, 12.',
+		'Jede Zahl beendet eine Spalte nach diesem Zeichen, z. B. 5, 12.',
+		'Cada número termina una columna después de ese carácter, por ejemplo 5, 12.',
+		'每个数字表示在该字符后结束一列，例如 5, 12。',
+	],
+	'Enter break positions as whole numbers from 1, separated by commas.': [
+		'Saisissez les positions de rupture sous forme de nombres entiers à partir de 1, séparés par des virgules.',
+		'Trennstellen als ganze Zahlen ab 1 eingeben, durch Kommas getrennt.',
+		'Escriba las posiciones de corte como números enteros desde 1, separados por comas.',
+		'请输入从 1 开始的整数分列位置，用逗号分隔。',
 	],
 	// Symbol
 	Symbol: ['Symbole', 'Symbol', 'Símbolo', '符号'],

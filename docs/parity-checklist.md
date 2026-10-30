@@ -113,7 +113,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Error Checking and Watch Window.
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
 - [ ] **P1** Split panes (only Freeze Panes exists).
-- [ ] **P1** Text to Columns refuses fixed-width splitting (`dialogs/text-to-columns.ts`).
+- [x] **P1** Text to Columns refuses fixed-width splitting (`dialogs/text-to-columns.ts`).
+      Closed: the dialog offers Fixed width with typed break positions and a preview; the split
+      rules are `splitFixedWidth` in `src/core/xlsx/edit/text-columns.ts`. Column-data-format
+      conversion per column (Excel's Column data format step) is not offered.
 - [ ] **P1** Changing the workbook theme: Page Layout > Themes > Colors only reports that it is
       not supported (`src/core/xlsx/ui/commands/page-layout.ts`); no Themes, Fonts or Effects.
 - [ ] **P1** Form controls cannot be moved or resized and buttons run no macros; shapes have no

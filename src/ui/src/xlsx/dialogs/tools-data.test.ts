@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createWorkbook, getCell } from 'ooxml-core/xlsx';
+import { createWorkbook, getCell, splitDelimited } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
 	clickButton,
@@ -11,7 +11,6 @@ import {
 } from '../commands/test-support';
 import { seriesValues } from './fill-series';
 import { registerToolDialogs } from './register-tools';
-import { splitLine } from './text-to-columns';
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -100,13 +99,29 @@ describe('Remove Duplicates', () => {
 
 describe('Text to Columns', () => {
 	it('splits with qualifiers and consecutive delimiters', () => {
-		expect(splitLine('"a,b",c', { delimiters: [','], consecutive: false, qualifier: '"' })).toEqual(
-			['a,b', 'c'],
+		expect(
+			splitDelimited('"a,b",c', { delimiters: [','], consecutive: false, qualifier: '"' }),
+		).toEqual(['a,b', 'c']);
+		expect(splitDelimited('a  b', { delimiters: [' '], consecutive: true, qualifier: '' })).toEqual(
+			['a', 'b'],
 		);
-		expect(splitLine('a  b', { delimiters: [' '], consecutive: true, qualifier: '' })).toEqual([
-			'a',
-			'b',
-		]);
+	});
+
+	it('splits fixed-width columns at the typed break positions', async () => {
+		const ctx = setup();
+		ctx.session()!.setRangeValues(0, { row: 0, col: 0 }, [['ABCDEFGHIJ']]);
+		ctx.select('A1');
+		const result = ctx.dialogs.open('text-to-columns');
+		const dialog = dialogEl(ctx, 'text-to-columns');
+		inputByLabel(dialog, 'Fixed width').click();
+		setValue(inputByLabel(dialog, 'Break positions:'), '5');
+		expect(dialog.querySelectorAll('.xve-results td').length).toBe(2);
+		setValue(inputByLabel(dialog, 'Break positions:'), '5, x');
+		expect(dialog.querySelectorAll('.xve-results td').length).toBe(0);
+		setValue(inputByLabel(dialog, 'Break positions:'), '5');
+		clickButton(dialog, 'OK');
+		await result;
+		expect([v(ctx, 0, 0), v(ctx, 0, 1)]).toEqual(['ABCDE', 'FGHIJ']);
 	});
 
 	it('splits the column at commas into the destination', async () => {
