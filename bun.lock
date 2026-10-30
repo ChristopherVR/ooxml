@@ -461,7 +461,7 @@
         "yjs": "^13.6.33",
       },
       "devDependencies": {
-        "@christophervr/ole2": "0.13.0",
+        "@christophervr/ole2": "0.14.0",
         "@modelcontextprotocol/sdk": "^1.32.1",
         "@napi-rs/canvas": "^1.0.13",
         "@types/node": "^26.6.5",
@@ -1774,7 +1774,7 @@
 
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.16.0", "", {}, "sha512-FWa0sPlqYGJgpTs6OxBRcL/AW4JT0OIO+W1ajerluoTVh8CV0B7XM1qsNCRgnkSCkRCgOICKHRQlY17jrsm0+Q=="],
 
-    "@christophervr/ole2": ["@christophervr/ole2@0.13.0", "", {}, "sha512-YQ5b8d0SkbQ5ZOdRTt41V1rnUFsCGOPndCkfJ6LLRY0LmPp12V/ocYaA6GL+bOuQtPqnMwMM0ciomARWgMfGkg=="],
+    "@christophervr/ole2": ["@christophervr/ole2@0.14.0", "", {}, "sha512-Idb7v4HwHNPQzKPCzEtkLeO5hVUjwGHlo1vvNQIcemg5mREXjMuVq+/6kPUU/rmjC/4+3/JYPzAMiulqkweTPQ=="],
 
     "@christophervr/pptx-viewer": ["@christophervr/pptx-viewer@workspace:viewers/pptx/packages/cli"],
 

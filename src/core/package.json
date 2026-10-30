@@ -306,7 +306,7 @@
 		"yjs": "^13.6.33"
 	},
 	"devDependencies": {
-		"@christophervr/ole2": "0.13.0",
+		"@christophervr/ole2": "0.14.0",
 		"@modelcontextprotocol/sdk": "^1.32.1",
 		"@napi-rs/canvas": "^1.0.13",
 		"@types/node": "^26.6.5",
