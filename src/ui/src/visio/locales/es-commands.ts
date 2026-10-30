@@ -234,4 +234,11 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Contact Support': 'Ponerse en contacto con soporte',
 	Feedback: 'Comentarios',
 	'Show Training': 'Mostrar formación',
+	'Shape Format': 'Formato de forma',
+	'WordArt Styles': 'Estilos de WordArt',
+	'Text Fill': 'Relleno de texto',
+	'Text Outline': 'Contorno de texto',
+	'Text Effects': 'Efectos de texto',
+	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
+		'El relleno, el contorno y los efectos del texto aún no se guardan por fragmento; use Inicio > Fuente para el color y el estilo del texto.',
 };

@@ -20,6 +20,7 @@ import { localizeRibbon } from './ribbon-localize';
 import { applyScreenTips, restoreScreenTips } from './viewer-screen-tips';
 import { CUSTOMIZABLE_TABS, DEFAULT_BEHAVIOUR, type VisioBehaviour } from './viewer-behaviour';
 import { wireRibbonOverflow } from './ribbon-overflow';
+import { renderContextualTabs } from './viewer-contextual-tabs';
 import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
 import { ViewerReplace } from './viewer-replace';
@@ -956,6 +957,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit.render(state);
 		this.#chrome.render(state);
 		this.#commands.render(state);
+		renderContextualTabs(this.#toolbar, state);
 		if (this.#mini.visible) this.#mini.sync();
 		this.#presentation.render(state);
 		this.#backstage.render(state);

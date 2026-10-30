@@ -234,4 +234,11 @@ export const deCommands: Readonly<Record<string, string>> = {
 	'Contact Support': 'Support kontaktieren',
 	Feedback: 'Feedback',
 	'Show Training': 'Schulung anzeigen',
+	'Shape Format': 'Formformat',
+	'WordArt Styles': 'WordArt-Formatvorlagen',
+	'Text Fill': 'Textfüllung',
+	'Text Outline': 'Textkontur',
+	'Text Effects': 'Texteffekte',
+	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
+		'Textfüllung, Kontur und Effekte werden noch nicht pro Textabschnitt gespeichert; verwenden Sie Start > Schriftart für Textfarbe und Formatierung.',
 };

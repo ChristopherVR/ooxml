@@ -234,4 +234,11 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Contact Support': 'Contacter le support',
 	Feedback: 'Commentaires',
 	'Show Training': 'Afficher la formation',
+	'Shape Format': 'Format de la forme',
+	'WordArt Styles': 'Styles WordArt',
+	'Text Fill': 'Remplissage du texte',
+	'Text Outline': 'Contour du texte',
+	'Text Effects': 'Effets de texte',
+	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
+		'Le remplissage, le contour et les effets du texte ne sont pas encore enregistrés par segment ; utilisez Accueil > Police pour la couleur et le style du texte.',
 };

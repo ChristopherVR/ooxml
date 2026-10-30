@@ -234,4 +234,11 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	'Contact Support': '联系支持人员',
 	Feedback: '反馈',
 	'Show Training': '显示培训',
+	'Shape Format': '形状格式',
+	'WordArt Styles': '艺术字样式',
+	'Text Fill': '文本填充',
+	'Text Outline': '文本轮廓',
+	'Text Effects': '文本效果',
+	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
+		'尚不支持按文本片段保存文本填充、轮廓和效果；请使用“开始”>“字体”设置文本颜色和样式。',
 };

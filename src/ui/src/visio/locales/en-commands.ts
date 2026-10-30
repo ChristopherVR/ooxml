@@ -234,4 +234,11 @@ export const enCommands: Readonly<Record<string, string>> = {
 	'Contact Support': 'Contact Support',
 	Feedback: 'Feedback',
 	'Show Training': 'Show Training',
+	'Shape Format': 'Shape Format',
+	'WordArt Styles': 'WordArt Styles',
+	'Text Fill': 'Text Fill',
+	'Text Outline': 'Text Outline',
+	'Text Effects': 'Text Effects',
+	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
+		'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.',
 };

@@ -12,6 +12,7 @@ const TABS: Readonly<Record<string, string>> = {
 	review: 'R',
 	view: 'W',
 	help: 'Y',
+	'shape-format': 'JD',
 };
 const PANELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 	'home-panel': {
@@ -59,6 +60,21 @@ const PANELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 		find: 'FD',
 		layers: 'LY',
 		select: 'SL',
+	},
+	'shape-format-panel': {
+		'quick-styles': 'QS',
+		fill: 'SF',
+		line: 'SO',
+		effects: 'SE',
+		'text-fill': 'TF',
+		'text-outline': 'TO',
+		'text-effects': 'TE',
+		align: 'GA',
+		position: 'GP',
+		'bring-to-front': 'GF',
+		'send-to-back': 'GB',
+		group: 'GG',
+		'size-position': 'SZ',
 	},
 	'view-panel': {
 		presentation: 'PM',

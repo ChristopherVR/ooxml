@@ -7,6 +7,7 @@ import {
 	buildProcessPanel,
 	buildReviewPanel,
 } from './ribbon-other-tabs';
+import { buildShapeFormatPanel } from './ribbon-shape-format';
 import { buildViewPanel } from './ribbon-view';
 import { createTellMe } from './viewer-tell-me';
 
@@ -22,6 +23,8 @@ export const RIBBON_TABS = [
 	['review', 'Review', buildReviewPanel],
 	['view', 'View', buildViewPanel],
 	['help', 'Help', buildHelpPanel],
+	// Contextual: shown only while shapes are selected (viewer-contextual-tabs.ts).
+	['shape-format', 'Shape Format', buildShapeFormatPanel],
 ] as const;
 export type RibbonTab = (typeof RIBBON_TABS)[number][0];
 
@@ -48,6 +51,10 @@ export function createRibbon(doc: Document): HTMLElement {
 		panel.dataset.ribbonTab = key;
 		panel.dataset.label = name;
 		build(doc, panel);
+		if (panel.dataset.contextual !== undefined) {
+			panel.dataset.tabHiddenBy = 'contextual';
+			panel.setAttribute('data-tab-hidden', '');
+		}
 		ribbon.append(panel);
 	}
 	return ribbon;
