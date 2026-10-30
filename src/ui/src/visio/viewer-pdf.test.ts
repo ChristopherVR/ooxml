@@ -5,9 +5,33 @@ import { buildVectorPdf, PdfVectorPage } from '../export/pdf-vector';
 import { convertSvgPage } from './pdf-svg';
 import { PdfFontSet } from '../export/pdf-embedded-font';
 import { existsSync, readFileSync } from 'node:fs';
+import { inflateSync } from 'node:zlib';
 import { exportDocumentPdfDetailed, pdfPageIndexes } from './viewer-pdf';
 
 const latin1 = (bytes: Uint8Array) => String.fromCharCode(...bytes);
+/** Each stream of a PDF: its dictionary, and its bytes inflated when the filter is FlateDecode. */
+function pdfStreams(bytes: Uint8Array): { dict: string; data: Uint8Array }[] {
+	const text = latin1(bytes);
+	const found: { dict: string; data: Uint8Array }[] = [];
+	const pattern = /<<([^<>]*?)\/Length (\d+) >>\nstream\n/g;
+	for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
+		const start = match.index + match[0].length;
+		const end = start + Number(match[2]);
+		const raw = bytes.subarray(start, end);
+		const dict = match[1]!;
+		found.push({
+			dict,
+			data: dict.includes('/FlateDecode') ? new Uint8Array(inflateSync(raw)) : raw,
+		});
+		pattern.lastIndex = end;
+	}
+	return found;
+}
+/** The inflated content of every stream, as text, for reading drawing operators. */
+const streamText = (bytes: Uint8Array) =>
+	pdfStreams(bytes)
+		.map((stream) => latin1(stream.data))
+		.join('\n');
 const scene = () => {
 	const model = structuredClone(demoDocument);
 	// U+2212 has no WinAnsi code and would (correctly) force the picture fallback.
@@ -153,13 +177,15 @@ describe('exportDocumentPdfDetailed', () => {
 	it('writes one correctly sized page per foreground page with extractable text', async () => {
 		const model = scene();
 		const { blob, pages } = await exportDocumentPdfDetailed(document, model);
-		const text = latin1(new Uint8Array(await blob.arrayBuffer()));
+		const bytes = new Uint8Array(await blob.arrayBuffer());
+		const text = latin1(bytes);
 		expect(text.startsWith('%PDF-1.4')).toBe(true);
 		expect(text).toContain('/Count 2');
 		expect(text).toContain('/MediaBox [0 0 612 504]');
 		expect(text).toContain('/MediaBox [0 0 612 396]');
 		expect(pages.map((page) => page.mode)).toEqual(['vector', 'vector']);
-		expect(shown(text)).toContain('Framework-neutral rendering');
+		expect(text).toContain('/Filter /FlateDecode');
+		expect(shown(streamText(bytes))).toContain('Framework-neutral rendering');
 		expect(text).toMatch(/\/BaseFont \/Helvetica /);
 	});
 
@@ -191,6 +217,14 @@ describe('PdfVectorPage', () => {
 		const xref = Number(/startxref\n(\d+)/.exec(text)![1]);
 		expect(text.slice(xref, xref + 4)).toBe('xref');
 	});
+
+	it('Flate-compresses the content stream, which inflates back to the page operators', () => {
+		const page = new PdfVectorPage(100, 100);
+		page.text('Helvetica', 12, 0, 0, 'Compressed');
+		const bytes = buildVectorPdf([page]);
+		expect(latin1(bytes)).toContain('/Filter /FlateDecode');
+		expect(pdfStreams(bytes).map((stream) => latin1(stream.data))).toContain(page.content);
+	});
 });
 
 describe('embedded fonts', () => {
@@ -221,12 +255,19 @@ describe('embedded fonts', () => {
 			const result = convertSvgPage(minus, 1, 1, new Map(), fonts);
 			expect(result.fallback).toEqual([]);
 			expect(result.page!.content).toMatch(/\/E0 [\d.]+ Tf .* TJ ET/);
-			const text = latin1(buildVectorPdf([result.page!]));
+			const bytes = buildVectorPdf([result.page!]);
+			const text = latin1(bytes);
 			expect(text).toContain('/Subtype /CIDFontType2');
 			expect(text).toContain('/Encoding /Identity-H');
 			expect(text).toContain('/FontFile2');
+			// The font file is Flate-compressed, and inflates to the subset's bytes; /Length1 is their size.
+			const fontFile = [...result.page!.embeddedFonts.values()][0]!.build().fontFile;
+			const font = pdfStreams(bytes).find((stream) => stream.dict.includes('/Length1'));
+			expect(font?.dict).toContain('/Filter /FlateDecode');
+			expect(text).toContain(`/Length1 ${fontFile.length} `);
+			expect(font?.data).toEqual(fontFile);
 			// ToUnicode maps the minus sign back to U+2212.
-			expect(text).toContain('<2212>');
+			expect(streamText(bytes)).toContain('<2212>');
 			expect(text.length).toBeLessThan(60_000);
 		},
 	);

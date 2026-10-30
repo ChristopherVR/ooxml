@@ -396,9 +396,11 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** PDF Export has a page range (all, current page, from/to over the foreground pages),
       shows the per-page report on the Export page, draws linear and radial gradients as PDF
       shadings, shadows as hard-edged offset copies, glow as a half-strength halo, and embeds
-      host-supplied TrueType fonts as subset Type0/CIDFontType2 fonts with a ToUnicode CMap
+      host-supplied TrueType fonts as subset Type0/CIDFontType2 fonts with a ToUnicode CMap,
+      and every embedded font, ToUnicode and page stream is Flate-compressed (`/FlateDecode`,
+      `/Length1` the uncompressed size)
       (`visio-viewer.pdfFonts`; `core/text/truetype`, `export/pdf-embedded-font.ts`,
-      `visio/viewer-pdf-options.ts`, `visio/pdf-svg-gradient.ts`).
+      `export/pdf-vector.ts`, `visio/viewer-pdf-options.ts`, `visio/pdf-svg-gradient.ts`).
 - [ ] **P1** PDF: no font is bundled or looked up, so text outside WinAnsi still becomes a
       picture page unless the host sets `pdfFonts` with a font that has the glyphs (CFF/OpenType
       fonts and fonts whose licence forbids embedding are refused and reported); shadow and glow

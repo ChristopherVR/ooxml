@@ -4,6 +4,7 @@
  * JPEG picture, so one document can mix vector and raster pages. DOM-free; callers own the Blob.
  * Raster-only documents can use `pdf-pages.ts`.
  */
+import { zlibCompress } from 'ooxml-core/opc';
 import { pdfLiteral } from './pdf-fonts';
 import type { PdfEmbeddedFont } from './pdf-embedded-font';
 
@@ -191,7 +192,7 @@ function shadingDict(shading: PdfShading): string {
 }
 
 type ObjectWriter = (id: number, body: string) => void;
-type StreamWriter = (id: number, dictionary: string, data: Uint8Array) => void;
+type StreamWriter = (id: number, dictionary: string, data: Uint8Array, filtered?: boolean) => void;
 
 /** The five objects of an embedded subset font starting at `id`; returns the next free id. */
 function writeEmbeddedFont(
@@ -239,10 +240,14 @@ export function buildVectorPdf(
 		offsets[id] = position;
 		emit(`${id} 0 obj\n${body}\nendobj\n`);
 	};
-	const stream = (id: number, dictionary: string, data: Uint8Array) => {
+	// Every stream is Flate-compressed here unless its caller already filtered the bytes (`filtered`).
+	// `/Length1` (a font's uncompressed size) stays the length of the original bytes.
+	const stream = (id: number, dictionary: string, data: Uint8Array, filtered = false) => {
+		const packed = filtered ? data : zlibCompress(data);
+		const entries = [dictionary, filtered ? '' : '/Filter /FlateDecode'].filter(Boolean);
 		offsets[id] = position;
-		emit(`${id} 0 obj\n<< ${dictionary} /Length ${data.length} >>\nstream\n`);
-		emit(data);
+		emit(`${id} 0 obj\n<< ${entries.join(' ')} /Length ${packed.length} >>\nstream\n`);
+		emit(packed);
 		emit('\nendstream\nendobj\n');
 	};
 	emit('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
@@ -263,6 +268,7 @@ export function buildVectorPdf(
 					maskId,
 					`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceGray /BitsPerComponent 8${image.alpha.filter ? ` /Filter /${image.alpha.filter}` : ''}`,
 					image.alpha.data,
+					!!image.alpha.filter,
 				);
 				mask = ` /SMask ${maskId} 0 R`;
 			}
@@ -271,6 +277,7 @@ export function buildVectorPdf(
 				id,
 				`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8${image.filter ? ` /Filter /${image.filter}` : ''}${mask}`,
 				image.data,
+				!!image.filter,
 			);
 			xobjects.push(`/${name} ${id} 0 R`);
 		}

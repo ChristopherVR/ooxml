@@ -105,6 +105,14 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
   no-subsetting licences are refused and reported. Checked with `pypdf` text extraction and a
   `pymupdf` render of an Arial subset (Latin, minus sign, Greek, Cyrillic). Nothing is bundled.
   Still open: XPS, PDF/A, blur, reflections, pattern fills.
+- **Compressed streams, 2026-10-30.** Every stream the writer makes is Flate (`/FlateDecode`):
+  the font file (`/Length1` stays the uncompressed size), ToUnicode, page content and raw
+  pictures. Pictures that already carry a filter (Flate or JPEG) are written as they are. The
+  deflate is `zlibCompress` in `ooxml-core/opc` (the `fflate` the core already ships).
+- **The File backstage speaks the display language, 2026-10-30.** The pages, tiles, the PDF options
+  panel, the export report and the backstage's status messages go through the same dictionaries as
+  the ribbon (`locales/*-backstage.ts`). Still English: the nav's shadow-rendered Lit elements
+  (Account, presence, print preview controls) and the per-page degradation notes the core writes.
 
 ## Native cross-functional flowcharts, 2026-10-30
 

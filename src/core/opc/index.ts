@@ -8,3 +8,4 @@ export * from './embedded-packages';
 export * from './properties/index';
 export * as signature from './signature/index';
 export * from './zip-limits';
+export { zlibCompress } from './zlib';
