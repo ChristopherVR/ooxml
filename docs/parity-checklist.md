@@ -384,9 +384,17 @@ installed Visio 16 build is used to check that saved files open without repair.
       source itself: the connection names the file, not its folder.
 - [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
       pictures are refused on insert.
-- [ ] **P1** Bevel and 3-D rotation are approximations (a lighting overlay and a parallel
-      projection; no perspective foreshortening, extrusion, bevel contour or bottom bevel, themed
-      bevels are not read); text has no Visio font metrics.
+- [ ] **P1** Bevel and 3-D rotation are approximations, not Visio's renderer. Perspective
+      foreshortening (camera distance fitted to Visio 16 renders), extrusion (flat-shaded side
+      faces) and the contour are drawn (`solid-3d.ts`, `render-solid.ts`), and a themed top bevel
+      or contour is read from the effect style's `a:sp3d` (`theme-solid.ts`). Still open: the
+      bevel profiles and lighting are a blurred diffuse overlay, side-face shading is fitted to a
+      few renders, materials and lighting cells (`BevelMaterialType`, `BevelLightingType`) are
+      not read, a bottom bevel is read and reported (Visio 16 shows no change on the front),
+      text and pictures use a parallel projection, child shapes of a group are not turned, the
+      perspective gallery presets other than three are unverified angles, and the shipped Visio
+      themes carry no `a:bevelT`, so the themed bevel path has no real-file evidence. Text has
+      no Visio font metrics.
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
 - [ ] **P2** Periodic NURBS are missing; stencil previews still omit `InfiniteLine`.
 - [ ] **P2** Visio validation rule-set parts (`validation.xml`) are not modelled; Check Diagram is

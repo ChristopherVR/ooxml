@@ -215,6 +215,34 @@ export const PANE_FIELDS: readonly PaneField[] = [
 		read: (context) => text(effect(context, (values) => values.softEdges)),
 		patch: (value) => ({ softEdges: value }),
 	},
+	// Visio 16 draws a depth or a contour only on a shape that has a top bevel (3-D Format).
+	...(
+		[
+			[
+				'extrusionDepth',
+				'3-D depth (pt)',
+				'a 3-D depth',
+				288,
+				(s: VisioShape) => s.style.extrusion?.depth,
+			],
+			[
+				'contourSize',
+				'3-D contour size (pt)',
+				'a 3-D contour size',
+				72,
+				(s: VisioShape) => s.style.contour?.size,
+			],
+		] as const
+	).map(([key, label, name, max, inches]): PaneField => ({
+		key,
+		label,
+		group: 'effects',
+		max,
+		step: '1',
+		name,
+		read: (context) => text(style(context, (shape) => round((inches(shape) ?? 0) * 72))),
+		patch: (amount) => ({ [key]: amount }),
+	})),
 	...(
 		[
 			['size', 'Reflection size (%)', 'a reflection size'],

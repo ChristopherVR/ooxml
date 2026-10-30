@@ -142,7 +142,11 @@ class Converter {
 			this.degraded.add('Bevel lighting is not drawn.');
 			return;
 		}
-		if (element.hasAttribute('data-perspective'))
+		if (element.hasAttribute('data-solid3d'))
+			this.degraded.add(
+				'Perspective and extrusion are drawn from the projected outline with flat shading; text and pictures use a parallel projection.',
+			);
+		else if (element.hasAttribute('data-perspective'))
 			this.degraded.add('3-D rotation is drawn as a parallel projection without perspective.');
 		if (element.hasAttribute('data-embedded-chart')) throw new PdfFallback('embedded chart');
 		if (element.hasAttribute('filter') && !shadow && !glow)
