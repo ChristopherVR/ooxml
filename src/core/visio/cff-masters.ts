@@ -14,14 +14,37 @@ const ROLES: Record<string, CffRole> = {
 	'phase list': 'phase-list',
 };
 
+/**
+ * The UniqueIDs of the masters this package writes for the charts it creates (`cff-author.ts`).
+ * They carry Visio's names and structure rows but not its formulas, so the editor treats their
+ * instances as it treats its own plain shapes (direct cells), and only tells Visio what they are.
+ */
+export const CFF_AUTHORED_IDS: Record<CffRole, string> = {
+	frame: '{0F0C7A10-0001-0000-8E40-00608CF305B2}',
+	'swimlane-list': '{0F0C7A10-0002-0000-8E40-00608CF305B2}',
+	'phase-list': '{0F0C7A10-0003-0000-8E40-00608CF305B2}',
+	lane: '{0F0C7A10-0004-0000-8E40-00608CF305B2}',
+	separator: '{0F0C7A10-0005-0000-8E40-00608CF305B2}',
+};
+const AUTHORED_ROLES = new Map(
+	(Object.entries(CFF_AUTHORED_IDS) as [CffRole, string][]).map(([role, id]) => [id, role]),
+);
+
 /** The drawing's masters of the cross-functional flowchart, with their top-level shapes. */
 export interface CffMasterSet extends CffMasters {
+	/** The role of a master Visio built; masters this package wrote answer nothing. */
 	roleOf(masterId: string | null | undefined): CffRole | undefined;
+	/** The ID of the master this package wrote for a role, when the drawing has it. */
+	authoredId(role: CffRole): string | undefined;
+	/** The part of that master, which a page that uses it must be related to. */
+	authoredPart(role: CffRole): string | undefined;
 	readonly empty: boolean;
 }
 export const noCffMasters: CffMasterSet = {
 	get: () => undefined,
 	roleOf: () => undefined,
+	authoredId: () => undefined,
+	authoredPart: () => undefined,
 	empty: true,
 };
 
@@ -37,25 +60,31 @@ export async function loadCffMasters(pkg: VisioPackage): Promise<CffMasterSet> {
 	const list = await visioXml(pkg, mastersPart, 'Masters');
 	const shapes = new Map<string, Element>();
 	const roles = new Map<string, CffRole>();
+	const authored = new Map<CffRole, { id: string; part: string }>();
 	for (const master of children(list, 'Master')) {
 		const id = attribute(master, 'ID');
 		const role =
 			ROLES[(attribute(master, 'NameU') ?? attribute(master, 'Name') ?? '').toLowerCase()];
-		if (!id || !role) continue;
-		const root = await visioXml(
-			pkg,
-			await indexedPart(pkg, mastersPart, master, 'master'),
-			'MasterContents',
-		);
+		if (!id) continue;
+		const own = AUTHORED_ROLES.get((attribute(master, 'UniqueID') ?? '').toUpperCase());
+		if (!role && !own) continue;
+		const part = await indexedPart(pkg, mastersPart, master, 'master');
+		if (own) {
+			authored.set(own, { id, part });
+			continue;
+		}
+		const root = await visioXml(pkg, part, 'MasterContents');
 		const top = children(children(root, 'Shapes')[0], 'Shape');
 		if (top.length !== 1) continue;
 		shapes.set(id, top[0]!);
-		roles.set(id, role);
+		roles.set(id, role!);
 	}
-	if (!shapes.size) return noCffMasters;
+	if (!shapes.size && !authored.size) return noCffMasters;
 	return {
 		get: (id) => shapes.get(id),
 		roleOf: (id) => (id ? roles.get(id) : undefined),
-		empty: false,
+		authoredId: (role) => authored.get(role)?.id,
+		authoredPart: (role) => authored.get(role)?.part,
+		empty: !shapes.size,
 	};
 }

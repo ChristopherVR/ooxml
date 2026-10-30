@@ -417,10 +417,17 @@ installed Visio 16 build is used to check that saved files open without repair.
       formulas (`cff-recalc.ts`, `edit-swimlane-clone.ts`). A vertical Cross-Functional Flowchart
       starter is on the New page, and shapes lying in a lane join its members on load, as Visio
       does (`swimlane-membership.ts`).
-- [ ] **P1** Charts the editor creates still use plain shapes with direct cells, not Visio's hidden
-      CFF master instances (so Visio's add-in that inserts lanes and handles drops does not act on
-      them); phases, options (title, style, labels) and Direction of a chart Visio built are
-      refused.
+- [x] **P1** Charts the editor creates (File > New starters, Insert swimlane commands) are built
+      from Visio's five hidden masters (CFF Container, Swimlane List, Phase List, Swimlane,
+      Separator): the frame, lists, lanes and separators are instances of them, the page is
+      related to the masters, and Visio 16 loads them as `CFF Container.50`, `Swimlane.10` and so
+      on with the container, list and lane structure intact (`cff-author.ts`,
+      `edit-swimlane-stamp.ts`). The masters are authored here: they carry Visio's names and
+      structure rows but not its formulas, geometry or heading shapes, so the instances keep every
+      cell they carry.
+- [ ] **P1** Phases, options (title, style, labels) and Direction of a chart Visio built are
+      refused, and Visio's own add-in behaviour on a chart the editor built (its Insert Swimlane
+      and drop handling) is unverified: Visio's UI cannot be driven here.
 - [x] **P1** Org chart positions carry Visio's org chart Shape Data (Department, Telephone, Name,
       Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
       deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a
