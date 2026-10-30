@@ -3,6 +3,7 @@ import type {
 	AutoFilter,
 	Color,
 	ColumnInfo,
+	DifferentialStyle,
 	PageSetup,
 	SheetFormat,
 	SheetProtection,
@@ -10,6 +11,7 @@ import type {
 } from '../model';
 import type { XmlElement } from '../../xml/index';
 import { readModernHash } from './password-hash';
+import { readFilterColumn } from './filter-columns';
 import { parseColor } from './style-parts';
 import { att, boolAttr, numAttr, outerXml, xChildren, xFirst, xText } from './xml-util';
 
@@ -125,27 +127,14 @@ export function readColumns(cols: XmlElement | undefined, xfMap: readonly number
 	return out;
 }
 
-/** The default SpreadsheetML declaration xmldom adds to a serialized fragment's first tag. */
-const MAIN_NS_DECL =
-	/(?<=^<[^>]*) xmlns="http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main"/;
-
-export function readAutoFilter(node: XmlElement | undefined): AutoFilter | undefined {
+export function readAutoFilter(
+	node: XmlElement | undefined,
+	dxfs?: readonly DifferentialStyle[],
+): AutoFilter | undefined {
 	const range = parseRange(att(node, 'ref') ?? '');
 	if (!node || !range) return undefined;
 	const filter: AutoFilter = { range };
-	const columns: NonNullable<AutoFilter['columns']> = [];
-	for (const column of xChildren(node, 'filterColumn')) {
-		const entry: NonNullable<AutoFilter['columns']>[number] = {
-			offset: numAttr(column, 'colId') ?? 0,
-		};
-		const filters = xFirst(column, 'filters');
-		if (filters) {
-			entry.values = xChildren(filters, 'filter').map((f) => att(f, 'val') ?? '');
-			if (boolAttr(filters, 'blank')) entry.blank = true;
-		}
-		entry.sourceXml = outerXml(column).replace(MAIN_NS_DECL, '');
-		columns.push(entry);
-	}
+	const columns = xChildren(node, 'filterColumn').map((column) => readFilterColumn(column, dxfs));
 	if (columns.length) filter.columns = columns;
 	return filter;
 }

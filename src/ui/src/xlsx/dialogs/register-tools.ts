@@ -3,6 +3,8 @@
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { openCellShift, openOutlineAxis } from './cell-shift';
 import { type CreateTableProps, openCreateTable } from './create-table';
+import { type CustomAutoFilterProps, openCustomAutoFilter } from './custom-autofilter';
+import { type Top10Props, openTop10Filter } from './top10-filter';
 import { openFillSeries } from './fill-series';
 import { type InsertChartProps, openInsertChart } from './insert-chart';
 import { openMoveCopySheet } from './move-copy-sheet';
@@ -60,6 +62,10 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	d.register('delete-cells', (c) => openCellShift(c, 'delete'));
 	d.register('group', (c) => openOutlineAxis(c, 'group'));
 	d.register('ungroup', (c) => openOutlineAxis(c, 'ungroup'));
+	d.register('custom-autofilter', (c, p) =>
+		openCustomAutoFilter(c, props<CustomAutoFilterProps>(p)),
+	);
+	d.register('top10-filter', (c, p) => openTop10Filter(c, props<Top10Props>(p)));
 	d.register('remove-duplicates', (c) => openRemoveDuplicates(c));
 	d.register('text-to-columns', (c) => openTextToColumns(c));
 	d.register('goal-seek', (c) => openGoalSeek(c));

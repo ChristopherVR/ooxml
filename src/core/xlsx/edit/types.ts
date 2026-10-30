@@ -7,6 +7,7 @@ import type { CustomViewDraft } from './custom-views';
 import type { ExternalChange } from './external';
 import type { CellAddress, CellRange } from '../address';
 import type {
+	FilterCriteria,
 	BorderEdge,
 	CellStyle,
 	CellValue,
@@ -218,6 +219,10 @@ export interface EditSession {
 	setAutoFilter(sheet: number, range: CellRange | undefined): void;
 	/** Filters an auto-filter column to display texts in `values` (`''` keeps blanks); undefined clears. */
 	filterColumn(sheet: number, col: number, values: string[] | undefined): void;
+	/** Sets any criteria (checklist, custom, top 10, dynamic, colour, icon) of an auto-filter column; undefined clears. */
+	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
+	/** Re-evaluates the auto-filter against the current cell values. */
+	reapplyFilter(sheet: number): void;
 	/** Sorts the auto-filter (or table) containing `col` by that column, keeping the header. */
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;

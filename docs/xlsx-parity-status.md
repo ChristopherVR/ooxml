@@ -268,12 +268,19 @@ line/marker swatches and position-authoring controls remain incomplete.
    mapping does not share yet (see "Import, print and collaboration").
 7. Wider formula and clipboard differential coverage. VBA execution, add-ins,
    Power Query and unsupported file formats also prevent whole-product parity.
-8. Filter and sort. The grid has no AutoFilter drop-down: Data > Filter turns the filter
-   on and off, and Clear and Reapply work, but there is no value checklist, search, Text,
-   Number or Date filters, Top 10 or Filter by Colour. Custom, Top 10, dynamic, colour and
-   icon criteria in a file are kept as source XML and are neither evaluated nor authored
-   (`AutoFilterColumn` in `model.ts` holds a value list only). Sort has no Sort On cell
-   colour, font colour or icon, custom lists, case sensitivity or left-to-right sorting.
+8. Filter and sort. The sheet AutoFilter header cells have a drop-down (`grid/filter-buttons.ts`,
+   `grid/filter-menu.ts`): Sort, Clear Filter From, Filter by Color (cell fill and font),
+   Text / Number / Date Filters with the Custom AutoFilter and Top 10 dialogs, Above and Below
+   Average, the date periods, a search box and the value checklist with (Select All) and
+   (Blanks). Value lists with date groups, custom (with wildcards), top 10, dynamic and colour
+   criteria are modelled (`AutoFilterColumn`), read, written and evaluated to hide rows
+   (`filter-criteria.ts`); icon criteria are evaluated when the sheet's conditional formats
+   supply the icon. Not done: drop-downs on table headers (a table keeps value lists only),
+   the date checklist as a year / month / day tree (dates list as their displayed text),
+   colours that come only from conditional formats in the menu's colour list, and the Sort On
+   cell colour, font colour or icon, custom lists, case sensitivity or left-to-right sorting.
+   The criteria were checked against the ECMA-376 semantics and unit tests, not against real
+   Excel row results.
 9. Functions. 501 functions are registered (`viewers/xlsx/docs/functions.md`); these 22
    return `#NAME?`: INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT (no host service
    needed), and CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,

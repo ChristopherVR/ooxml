@@ -1,7 +1,7 @@
 import { NS, elements, parseXml } from '../../xml/index';
 import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
-import type { AutoFilterColumn, ColumnInfo, Worksheet } from '../model';
+import type { ColumnInfo, Worksheet } from '../model';
 import {
 	defaultSheetView,
 	readAutoFilter,
@@ -12,9 +12,11 @@ import {
 	readTabColor,
 } from '../read/sheet-props';
 import { outerXml } from '../read/xml-util';
+import { filterColumnXml, unresolvedFilter } from './filter-columns';
 import { mergedAttrs } from './attr-merge';
 import { modernHashValues } from './password-hash';
 import { sameModel, snapshotElement, snapshotXml } from './snapshot';
+import type { StyleWriter } from './styles';
 import { colorXml } from './style-xml';
 import { attrs, el, escapeAttr } from './xml-out';
 
@@ -188,54 +190,17 @@ export function protectionXml(sheet: Worksheet): string {
 	return el('sheetProtection', values);
 }
 
-/** The modelled criteria of a kept `<filterColumn>`, to tell whether an edit replaced them. */
-function sourceCriteria(
-	xml: string,
-): { values: string[] | undefined; blank: boolean | undefined } | undefined {
-	try {
-		const wrapped = `<autoFilter xmlns="${NS.x}" ref="A1">${xml}</autoFilter>`;
-		const column = readAutoFilter(parseXml(wrapped).documentElement)?.columns?.[0];
-		return column ? { values: column.values, blank: column.blank } : undefined;
-	} catch {
-		return undefined;
-	}
-}
-
-function filterColumnXml(column: AutoFilterColumn): string {
-	if (
-		column.sourceXml &&
-		sameModel(sourceCriteria(column.sourceXml), { values: column.values, blank: column.blank })
-	) {
-		const head = /^<filterColumn\b[^>]*?>/.exec(column.sourceXml)?.[0];
-		if (head) {
-			const colId = ` colId="${column.offset}"`;
-			const patched = /\scolId="[^"]*"/.test(head)
-				? head.replace(/\scolId="[^"]*"/, colId)
-				: head.replace(/^<filterColumn\b/, `<filterColumn${colId}`);
-			return patched + column.sourceXml.slice(head.length);
-		}
-	}
-	// Criteria the model does not hold are never written as an empty `<filterColumn>`.
-	if (!column.values?.length && !column.blank) return '';
-	const values = (column.values ?? []).map((value) => el('filter', { val: value })).join('');
-	return el(
-		'filterColumn',
-		{ colId: column.offset },
-		el('filters', { blank: column.blank || undefined }, values) || '<filters/>',
-	);
-}
-
-export function autoFilterXml(sheet: Worksheet): string {
+export function autoFilterXml(sheet: Worksheet, styles?: StyleWriter): string {
 	const filter = sheet.autoFilter;
 	if (!filter) return '';
 	const source = snapshotElement(sheet, 'autoFilter');
-	if (source && sameModel(readAutoFilter(source), filter))
+	if (source && sameModel(unresolvedFilter(readAutoFilter(source)), unresolvedFilter(filter)))
 		return snapshotXml(sheet, 'autoFilter') ?? '';
 	const width = filter.range.end.col - filter.range.start.col + 1;
 	const columns = (filter.columns ?? [])
 		.filter((column) => column.offset >= 0 && column.offset < width)
 		.sort((a, b) => a.offset - b.offset)
-		.map(filterColumnXml)
+		.map((column) => filterColumnXml(column, styles))
 		.join('');
 	// A kept `sortState` (inside the filter) stays only while the range is unchanged.
 	const sort =

@@ -1,8 +1,9 @@
 import { type CellAddress, type CellRange, normalizeRange, rangeContains } from '../address';
 import { getCell } from '../cells';
-import type { AutoFilter, Worksheet } from '../model';
+import type { AutoFilter, AutoFilterColumn, FilterCriteria, Worksheet } from '../model';
 import { type EditContext, sheetAt } from './context';
-import { rowMatchesFilter, setRowFiltered } from '../filter-rows';
+import { compileAutoFilter, setRowFiltered, type FilterEvalOptions } from '../filter-rows';
+import { createConditionalFormatEvaluator } from '../layout/cf-evaluator';
 import { sortRows } from './sort';
 
 /**
@@ -50,9 +51,23 @@ export function currentRegion(sheet: Worksheet, at: CellAddress): CellRange {
 /** Shows or hides the data rows of an auto-filter according to its column filters. */
 export function applyFilter(ctx: EditContext, sheet: Worksheet, filter: AutoFilter): void {
 	const { range } = filter;
-	for (let row = range.start.row + 1; row <= range.end.row; row++) {
-		const visible = rowMatchesFilter(ctx.workbook, sheet, row, filter);
-		setRowFiltered(sheet, row, !visible, !!filter.columns?.length);
+	const matches = compileAutoFilter(ctx.workbook, sheet, filter, filterOptions(ctx, sheet, filter));
+	for (let row = range.start.row + 1; row <= range.end.row; row++)
+		setRowFiltered(sheet, row, !matches(row), !!filter.columns?.length);
+}
+
+/** Conditional-format output for colour and icon filters, built only when a column needs it. */
+function filterOptions(ctx: EditContext, sheet: Worksheet, filter: AutoFilter): FilterEvalOptions {
+	const needs = filter.columns?.some((c) => c.color || c.icon);
+	const index = ctx.workbook.sheets.indexOf(sheet);
+	if (!needs || index < 0 || !sheet.conditionalFormats.length) return {};
+	try {
+		const cf = createConditionalFormatEvaluator(ctx.workbook, index, (formula, at) =>
+			ctx.calc.evaluate(formula, at),
+		);
+		return { formatAt: (row, col) => cf.at(row, col) };
+	} catch {
+		return {};
 	}
 }
 
@@ -83,23 +98,39 @@ export function filterColumn(
 	col: number,
 	values: string[] | undefined,
 ): void {
+	setColumnCriteria(
+		ctx,
+		s,
+		col,
+		values && {
+			values: values.filter((v) => v !== ''),
+			...(values.includes('') ? { blank: true as const } : {}),
+		},
+	);
+}
+
+/** Sets (or with `undefined` clears) any criteria of one auto-filter column and reapplies. */
+export function setColumnCriteria(
+	ctx: EditContext,
+	s: number,
+	col: number,
+	criteria: FilterCriteria | undefined,
+): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const filter = sheet.autoFilter;
 	if (!filter || col < filter.range.start.col || col > filter.range.end.col)
 		throw new Error('The column is not inside an auto-filter range.');
 	const offset = col - filter.range.start.col;
 	ctx.run(
-		values ? 'Filter column' : 'Clear column filter',
+		criteria ? 'Filter column' : 'Clear column filter',
 		'view',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
+			const old = filter.columns?.find((fc) => fc.offset === offset);
 			const columns = (filter.columns ?? []).filter((fc) => fc.offset !== offset);
-			if (values) {
-				const entry: { offset: number; values?: string[]; blank?: boolean } = {
-					offset,
-					values: values.filter((v) => v !== ''),
-				};
-				if (values.includes('')) entry.blank = true;
+			if (criteria) {
+				const entry: AutoFilterColumn = { offset, ...structuredClone(criteria) };
+				if (old?.hiddenButton) entry.hiddenButton = true;
 				columns.push(entry);
 			}
 			columns.sort((a, b) => a.offset - b.offset);
@@ -111,6 +142,17 @@ export function filterColumn(
 		},
 		{ sheet: s, structural: true },
 	);
+}
+
+/** Re-evaluates every column criterion against the current cell values (Data > Reapply). */
+export function reapplyFilter(ctx: EditContext, s: number): void {
+	const sheet = sheetAt(ctx.workbook, s);
+	const filter = sheet.autoFilter;
+	if (!filter) return;
+	ctx.run('Reapply', 'view', [{ kind: 'sheet', sheet: s }], () => applyFilter(ctx, sheet, filter), {
+		sheet: s,
+		structural: true,
+	});
 }
 
 /** Sorts the table or auto-filter range containing `col` by that column, keeping its header. */

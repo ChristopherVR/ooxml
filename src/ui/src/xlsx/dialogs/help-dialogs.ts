@@ -46,13 +46,14 @@ export const SUPPORTED_FEATURES = [
 	'Hyperlinks',
 	'Data validation',
 	'Sort and filter',
+	'AutoFilter drop-down: value checklist with search, Text, Number and Date filters, Top 10, Above and Below Average, colour and custom criteria',
 	'Freeze panes',
 ] as const;
 
 export const UNSUPPORTED_FEATURES = [
 	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)',
 	'Multiple/dynamic report filters and repeated column captions (preserved)',
-	'AutoFilter drop-down menus (filters can be turned on, cleared and reapplied)',
+	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Sorting by cell colour, font colour or icon',
 	'Flash Fill, Subtotal and Consolidate',
 	'Split panes (Freeze Panes works)',

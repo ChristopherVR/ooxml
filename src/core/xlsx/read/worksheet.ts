@@ -215,7 +215,7 @@ function readWorksheet(
 	if (data) readSheetData(ctx, rows ?? elements(data), sheet);
 	const protection = readProtection(byName.get('sheetProtection'));
 	if (protection) sheet.protection = protection;
-	const autoFilter = readAutoFilter(byName.get('autoFilter'));
+	const autoFilter = readAutoFilter(byName.get('autoFilter'), ctx.dxfs);
 	if (autoFilter) sheet.autoFilter = autoFilter;
 	sheet.merges = xChildren(byName.get('mergeCells') ?? root, 'mergeCell')
 		.map((node) => parseRange(att(node, 'ref') ?? ''))

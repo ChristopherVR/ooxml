@@ -103,7 +103,7 @@ export function writeWorksheet(
 	blocks.set('sheetProtection', protectionXml(sheet));
 	blocks.set('scenarios', scenariosXml(sheet.scenarios));
 	blocks.set('customSheetViews', customSheetViewsXml(sheet.customViews));
-	blocks.set('autoFilter', autoFilterXml(sheet));
+	blocks.set('autoFilter', autoFilterXml(sheet, ctx.styles));
 	blocks.set('mergeCells', mergeCellsXml(sheet));
 	blocks.set('conditionalFormatting', conditionalFormatsXml(sheet.conditionalFormats, ctx.styles));
 	blocks.set('dataValidations', dataValidationsXml(sheet.dataValidations));

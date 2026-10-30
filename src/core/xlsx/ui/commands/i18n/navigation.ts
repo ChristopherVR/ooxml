@@ -395,11 +395,18 @@ export const NAVIGATION_STRINGS: Translations = {
 	],
 	'Show Formulas': ['Afficher les formules', 'Formeln anzeigen', 'Mostrar fórmulas', '显示公式'],
 	'Manual calculation': ['Calcul manuel', 'Manuelle Berechnung', 'Cálculo manual', '手动计算'],
-	'AutoFilter drop-down menus (filters can be turned on, cleared and reapplied)': [
-		'Menus déroulants de filtre automatique (les filtres peuvent être activés, effacés et réappliqués)',
-		'AutoFilter-Dropdownmenüs (Filter können aktiviert, gelöscht und erneut angewendet werden)',
-		'Menús desplegables de Autofiltro (los filtros se pueden activar, borrar y volver a aplicar)',
-		'自动筛选下拉菜单(可以启用、清除和重新应用筛选)',
+	'AutoFilter drop-down: value checklist with search, Text, Number and Date filters, Top 10, Above and Below Average, colour and custom criteria':
+		[
+			'Liste déroulante de filtre automatique : liste de valeurs avec recherche, filtres textuels, numériques et chronologiques, 10 premiers, au-dessus et en dessous de la moyenne, couleur et critères personnalisés',
+			'AutoFilter-Dropdown: Werteliste mit Suche, Text-, Zahlen- und Datumsfilter, Top 10, über und unter dem Durchschnitt, Farbe und benutzerdefinierte Kriterien',
+			'Lista desplegable de Autofiltro: lista de valores con búsqueda, filtros de texto, número y fecha, 10 mejores, por encima y por debajo del promedio, color y criterios personalizados',
+			'自动筛选下拉列表：带搜索的值列表、文本、数字和日期筛选、前 10 项、高于和低于平均值、颜色和自定义条件',
+		],
+	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu': [
+		'Filtre automatique sur les en-têtes de tableau, liste hiérarchique des dates, filtres par icône depuis le menu',
+		'AutoFilter in Tabellenüberschriften, hierarchische Datumsliste, Symbolfilter im Menü',
+		'Autofiltro en los encabezados de tabla, lista jerárquica de fechas, filtros por icono desde el menú',
+		'表格标题上的自动筛选、日期层次列表、菜单中的图标筛选',
 	],
 	'Sorting by cell colour, font colour or icon': [
 		'Tri par couleur de cellule, couleur de police ou icône',

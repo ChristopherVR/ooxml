@@ -18,6 +18,7 @@ import { GridView } from './grid-view';
 import { followLink, wireTooltips } from './indicators';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles';
+import { FilterButtons } from './filter-buttons';
 import { ValidationList } from './validation-list';
 import { installRemoteSelections } from './remote-layer';
 import { installPageBreakPreview, PAGE_BREAK_CSS } from './page-break-layer';
@@ -43,6 +44,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const sink = editor.field.input;
 	const drawings = new DrawingLayer(view);
 	const list = new ValidationList(view, () => editor.focus());
+	const filters = new FilterButtons(view, () => editor.focus());
 	const a11y = new GridA11y(view, sink);
 	const removeRemote = installRemoteSelections(view);
 	const removePageBreaks = installPageBreakPreview(view);
@@ -65,12 +67,25 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			});
 		},
 	});
+	const openFilterAtActive = (): boolean => {
+		const filter = view.sheet()?.autoFilter;
+		const { row, col } = ctx.selection.get().active;
+		if (
+			!filter ||
+			row !== filter.range.start.row ||
+			col < filter.range.start.col ||
+			col > filter.range.end.col
+		)
+			return false;
+		filters.open(col);
+		return true;
+	};
 	const keyHost: KeyHost = {
 		view,
 		selection,
 		editor,
 		openCellMenu: () => openMenuAtActive(view, () => editor.focus()),
-		openValidationList: () => list.open(true),
+		openValidationList: () => openFilterAtActive() || list.open(true),
 		clearMarquee: () => clipboard.clearMarquee(),
 		prepareCopy: (cut) => clipboard.prepareNativeCopy(cut),
 	};
@@ -112,7 +127,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			cancelEdit: () => editor.cancel(),
 			isEditing: () => editor.editing,
 			selectAll: () => selection.all(),
-			openValidationList: () => list.open(true),
+			openValidationList: () => openFilterAtActive() || list.open(true),
 		}),
 	);
 
@@ -202,6 +217,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		for (const dispose of disposers) dispose();
 		clipboard.destroy();
 		list.close();
+		filters.destroy();
 		drawings.destroy();
 		editor.destroy();
 		a11y.destroy();

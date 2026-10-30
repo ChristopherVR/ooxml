@@ -83,16 +83,7 @@ export function sortCommands(): Command[] {
 			enabled: (ctx) => filtered(ctx).length > 0,
 			run: (ctx) => {
 				const t = target(ctx);
-				const filter = t?.ws.autoFilter;
-				if (!t || !filter) return;
-				const columns = structuredClone(filter.columns ?? []);
-				t.session.batch('Reapply', () => {
-					for (const fc of columns)
-						t.session.filterColumn(t.sheet, filter.range.start.col + fc.offset, [
-							...(fc.values ?? []),
-							...(fc.blank ? [''] : []),
-						]);
-				});
+				if (t?.ws.autoFilter) t.session.reapplyFilter(t.sheet);
 			},
 		}),
 	];

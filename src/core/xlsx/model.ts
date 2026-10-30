@@ -502,15 +502,27 @@ export interface AutoFilter {
 
 export interface AutoFilterColumn {
 	offset: number;
+	/** Value checklist (`filters/filter`), compared with the cell's display text. */
 	values?: string[];
 	blank?: boolean;
+	/** Date groups of the checklist (`filters/dateGroupItem`), OR-ed with `values`. */
+	dateGroups?: import('./model-filter').DateGroupItem[];
+	custom?: import('./model-filter').CustomFilters;
+	top10?: import('./model-filter').Top10Filter;
+	dynamic?: import('./model-filter').DynamicFilter;
+	color?: import('./model-filter').ColorFilter;
+	icon?: import('./model-filter').IconFilter;
+	/** The drop-down button is hidden (`hiddenButton`). */
+	hiddenButton?: true;
 	/**
-	 * The `<filterColumn>` XML as read (custom, top 10, dynamic, colour, icon and date-group
-	 * criteria the model does not represent). Written back, re-indexed to `offset`, while
-	 * `values` and `blank` still match it; an edit that replaces the column drops it.
+	 * The `<filterColumn>` XML as read. Written back, re-indexed to `offset`, while the
+	 * criteria above still match it; an edit that replaces them drops it.
 	 */
 	sourceXml?: string;
 }
+
+/** The criteria of one auto-filter column, without its position or source XML. */
+export type FilterCriteria = Omit<AutoFilterColumn, 'offset' | 'sourceXml'>;
 
 export interface TableColumn {
 	name: string;
@@ -992,6 +1004,7 @@ export type {
 	HeadingPair,
 } from '../opc/properties/types';
 export type * from './model-sparklines';
+export type * from './model-filter';
 export type * from './model-pivots';
 export type * from './model-slicers';
 export type * from './model-whatif';

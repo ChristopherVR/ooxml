@@ -107,10 +107,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Editing and behaviour
 
-- [ ] **P0** No AutoFilter drop-down in the grid: no value checklist, search, Text, Number or Date
-      filters, Top 10 or Filter by Colour (`src/core/xlsx/ui/commands/sort-filter.ts`; the model's
-      `AutoFilterColumn` holds a value list only). Custom, Top 10, dynamic, colour and icon
-      criteria in a file are neither evaluated nor authored.
+- [x] **P0** AutoFilter drop-down in the grid: Sort, Clear Filter, Filter by Color, Text, Number
+      and Date Filters (Custom AutoFilter and Top 10 dialogs, Above/Below Average, date periods),
+      search and the value checklist. Value, date-group, custom, Top 10, dynamic and colour
+      criteria are read, written and evaluated (`src/core/xlsx/filter-criteria.ts`).
+- [ ] **P1** AutoFilter remainders: drop-downs on table headers (tables keep value lists only),
+      the date checklist as a year/month/day tree, icon filters in the menu (icon criteria in a
+      file are evaluated through conditional formats), colour list entries that come only from
+      conditional formats.
 - [ ] **P1** Sort has no Sort On cell colour, font colour or icon, custom lists, case sensitivity
       or left-to-right sorting (`src/ui/src/xlsx/dialogs/sort-dialog.ts`).
 - [ ] **P1** Formula auditing: Trace Precedents, Trace Dependents, Remove Arrows, Evaluate Formula,
