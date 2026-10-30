@@ -7,6 +7,15 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.59.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.59.0) - 2026-10-30
+
+### Features
+
+- **visio:** Apply theme fonts, effects and connectors separately ([aae09b5](https://github.com/ChristopherVR/ooxml/commit/aae09b5a74a214ddb93ced67ddc8648ea92ac2e5))
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+- **pptx:** Add the Custom Shows dialog and write valid custom show ids ([5e4aca6](https://github.com/ChristopherVR/ooxml/commit/5e4aca69a8ca52e249492cd908dba239104538f3))
+- **visio:** Add PDF page range, gradients, shadows and embedded fonts ([f4cec01](https://github.com/ChristopherVR/ooxml/commit/f4cec01b5923e37e6b0bbdc9fab66adaa0339da6))
+
 ## [3.58.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.58.0) - 2026-10-30
 
 ### Features

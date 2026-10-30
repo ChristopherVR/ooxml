@@ -7,6 +7,54 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.36.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.36.0) - 2026-10-30
+
+### Features
+
+- **visio:** Keep proportions on corner handles and with shift ([9de0a3d](https://github.com/ChristopherVR/ooxml/commit/9de0a3d6e9a7d7deb9fb67e239c74d00db064991))
+- **visio:** Apply theme colours separately from Design > Variants > More ([e9e1144](https://github.com/ChristopherVR/ooxml/commit/e9e114426b99ae23d6293872959b53509b1b0d5b))
+- **visio:** Add a New-drawing template gallery ([dd7ea20](https://github.com/ChristopherVR/ooxml/commit/dd7ea200977a83f90e9d0f77c1a4812e9346173a))
+- **visio:** Add the contextual shape format tab ([5544516](https://github.com/ChristopherVR/ooxml/commit/5544516dc80f0b54de2869cf7bf3b5d60e3c4d23))
+- **visio:** Drag page tabs to reorder pages ([cb6726c](https://github.com/ChristopherVR/ooxml/commit/cb6726c846d7e5468b8437b6a4d5729b07596a46))
+- **visio:** Open and edit vsdm, vstx, vstm and vssm packages ([53054e9](https://github.com/ChristopherVR/ooxml/commit/53054e9fe3cc465ddbb50a6a40e0026f6a884a55))
+- **docx:** Name and save an opened .doc as .docx in the editor ([ac29dc4](https://github.com/ChristopherVR/ooxml/commit/ac29dc49f2762ea480a3d0655a4fe0d63325b752))
+- **visio:** Add Picture Format, Container Format and Chart Design tabs ([3e7033b](https://github.com/ChristopherVR/ooxml/commit/3e7033b0a01691594d77e2e91fd55ae82871218c))
+- **visio:** Export vector PDF pages with selectable text ([306e6b7](https://github.com/ChristopherVR/ooxml/commit/306e6b7c0842d8877d35b3fd7aef101385e6362b))
+- **visio:** Apply theme fonts, effects and connectors separately ([aae09b5](https://github.com/ChristopherVR/ooxml/commit/aae09b5a74a214ddb93ced67ddc8648ea92ac2e5))
+- **visio:** Add the Cross-Functional Flowchart contextual tab ([2cc81c1](https://github.com/ChristopherVR/ooxml/commit/2cc81c1cb72c345f5554fdc9ebe1492bc23e9b18))
+- **docx:** Draw and preserve picture bullets (numPicBullet) ([3206b76](https://github.com/ChristopherVR/ooxml/commit/3206b765bfa8caad2d982ffa498ef680a6271168))
+- **docx:** Measure picture bullets and add a Picture bullet command ([e059a2b](https://github.com/ChristopherVR/ooxml/commit/e059a2b0c0235d6a7a5ffad06d57cb43027c8383))
+- **docx:** Add find options, wildcards and special codes to Find ([ed81d75](https://github.com/ChristopherVR/ooxml/commit/ed81d7524a6cb5380d098f9d6a9360c07f273cd8))
+- **xlsx:** Sort on colour, icon, custom list, case and left to right ([a5fcbc0](https://github.com/ChristopherVR/ooxml/commit/a5fcbc0b20840c08d92f85281800a6fbf014975f))
+- **xlsx:** Save table sort, reapply sorts and keep typed sort lists ([e88ee1e](https://github.com/ChristopherVR/ooxml/commit/e88ee1e783a7a8e636c461573077d3203d01cd19))
+- **xlsx:** Add View > Split with independently scrolling panes ([b66bbd1](https://github.com/ChristopherVR/ooxml/commit/b66bbd184ff2b95bf007b11147704e73cf632ab8))
+- **xlsx:** Save split pane scroll and selections, keep frozen scroll ([bf5bf9d](https://github.com/ChristopherVR/ooxml/commit/bf5bf9d544e03874e2b023076172d7636e71702e))
+- **visio:** Resize with Visio's modifiers, locks and edge snapping ([eb4bc59](https://github.com/ChristopherVR/ooxml/commit/eb4bc597aa286d14aaa26d0f745beedf181275c8))
+- **xlsx:** Add formula auditing with trace arrows, evaluate and watch ([6648d59](https://github.com/ChristopherVR/ooxml/commit/6648d5910d0a40e2faf92d791611061dc268386e))
+- **xlsx:** Trace through names, save ignored errors, add audit rules ([4ffab80](https://github.com/ChristopherVR/ooxml/commit/4ffab80fe0ec464f314b3386b2c21fab712309bd))
+- **docx:** Enforce document protection and add Restrict Editing ([b45d6dc](https://github.com/ChristopherVR/ooxml/commit/b45d6dc1ec109ea7bf97c702a406763c9452d3e6))
+- **docx:** Dock the Restrict Editing pane and check passwords against Word ([6340399](https://github.com/ChristopherVR/ooxml/commit/63403999b204521d6d255eff14d00c0f49484e06))
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+- **pptx:** Add the Custom Shows dialog and write valid custom show ids ([5e4aca6](https://github.com/ChristopherVR/ooxml/commit/5e4aca69a8ca52e249492cd908dba239104538f3))
+- **visio:** Add org chart position data, Org Chart tab and template thumbnails ([12240ba](https://github.com/ChristopherVR/ooxml/commit/12240baf20246a80c0a6fa432fb12bb47a3b9f2d))
+- **visio:** Save data connections and primary keys, refresh by key ([d5d968a](https://github.com/ChristopherVR/ooxml/commit/d5d968ae88bcec5519d2d5b7c49a6f7b45bf831d))
+- **visio:** Snap resize to shapes and guides, add Ctrl centre resize and embellishment ([88e5959](https://github.com/ChristopherVR/ooxml/commit/88e5959e90cc89e274a1af65ae7e1a7706a49701))
+- **visio:** Add PDF page range, gradients, shadows and embedded fonts ([f4cec01](https://github.com/ChristopherVR/ooxml/commit/f4cec01b5923e37e6b0bbdc9fab66adaa0339da6))
+- **visio:** Add picture adjust, crop and container options ([67c93ae](https://github.com/ChristopherVR/ooxml/commit/67c93ae3ea5737cb51691575fe9b2088d3fee105))
+- **visio:** Write cross-functional flowcharts in Visio's list structure ([155a625](https://github.com/ChristopherVR/ooxml/commit/155a6259e770f3952ef37c84ca0f940ace632aba))
+
+### Bug Fixes
+
+- **ui:** List the tab strip reorderable attribute in the manifest ([33140cb](https://github.com/ChristopherVR/ooxml/commit/33140cb8e50c26ea8cf2fd8e5f1b6a4a05b01bb9))
+- **docx:** Keep saving a legacy .doc as .doc and add saveDocx ([2e91700](https://github.com/ChristopherVR/ooxml/commit/2e91700191d72b0116def67da6a328b7344b99f8))
+- **docx:** Save a copy as docx through the session save ([7be91e5](https://github.com/ChristopherVR/ooxml/commit/7be91e5658703dee862d5af95a0936d6c092e422))
+- **visio:** Keep corner handles proportional and scale selections from the centre ([8df7e8e](https://github.com/ChristopherVR/ooxml/commit/8df7e8ea470e84858ab0ab62e93e250ed1e82cb6))
+- **docx:** Give the picture bullet file input its own class and label ([139edd9](https://github.com/ChristopherVR/ooxml/commit/139edd98a42a9f7e4acc959aff50ba83a2fde56c))
+
+### Testing
+
+- **xlsx:** Type the sort dialog results in its tests ([8921fb3](https://github.com/ChristopherVR/ooxml/commit/8921fb3bc0c6109a4abdc48d122ab79d292a8651))
+
 ## [1.35.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.35.0) - 2026-10-30
 
 ### Features

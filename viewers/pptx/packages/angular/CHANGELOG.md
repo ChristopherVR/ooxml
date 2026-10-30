@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.59.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.59.0) - 2026-10-30
+
+### Features
+
+- **visio:** Apply theme fonts, effects and connectors separately ([aae09b5](https://github.com/ChristopherVR/ooxml/commit/aae09b5a74a214ddb93ced67ddc8648ea92ac2e5))
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+- **pptx:** Add the Custom Shows dialog and write valid custom show ids ([5e4aca6](https://github.com/ChristopherVR/ooxml/commit/5e4aca69a8ca52e249492cd908dba239104538f3))
+- **visio:** Add PDF page range, gradients, shadows and embedded fonts ([f4cec01](https://github.com/ChristopherVR/ooxml/commit/f4cec01b5923e37e6b0bbdc9fab66adaa0339da6))
+
+### Bug Fixes
+
+- **pptx:** Use the shared select in the Angular custom shows dialog ([932dcdf](https://github.com/ChristopherVR/ooxml/commit/932dcdf02b8fb7361f3b5f93f541aa6c0b70d4b4))
+
+### Styling
+
+- Format picture bullet numbering and the custom shows template ([2cdcec1](https://github.com/ChristopherVR/ooxml/commit/2cdcec1c9e79ced33688aa18573002ce77034b0d))
+
 ## [4.58.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.58.0) - 2026-10-30
 
 ### Features

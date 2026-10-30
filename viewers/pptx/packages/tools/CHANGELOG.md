@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.9.0) - 2026-10-30
+
+### Features
+
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+
+### Other
+
+- Bring origin/main into the embedding work ([a3711a1](https://github.com/ChristopherVR/ooxml/commit/a3711a14049a2cd11b994e76eafec039db2dc2de))
+
 ## [2.8.9](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.9) - 2026-10-22
 
 ### Documentation
