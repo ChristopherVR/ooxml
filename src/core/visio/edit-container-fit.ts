@@ -13,6 +13,7 @@ import {
 	containerClosure,
 	containerMembersOf,
 	isContainerSheet,
+	isLockedContainer,
 	shapeIdOf,
 	topLevelShapes,
 	userValue,
@@ -101,7 +102,8 @@ export function placeVisioBox(
 /**
  * Grow (or, when always-fit, shrink) a container so it surrounds its members with its margin and
  * heading allowance. Returns whether the container changed. Only an unrotated ordinary container
- * is resized; any other is left alone.
+ * is resized; any other is left alone. `tight` is Fit to Contents: it takes the members' box
+ * whatever the resize mode, so it also shrinks an expanding container and fits a non-resizing one.
  */
 export function fitVisioContainer(
 	roots: ReadonlyMap<string, Element>,
@@ -109,6 +111,7 @@ export function fitVisioContainer(
 	pageId: string,
 	container: Element,
 	check: () => void,
+	tight = false,
 ): boolean {
 	const root = roots.get(pageId)!;
 	const mode = number(userValue(container, VISIO_CONTAINER_RESIZE_ROW), CONTAINER_RESIZE_EXPAND);
@@ -116,7 +119,8 @@ export function fitVisioContainer(
 	const members = topLevelShapes(root).filter((shape) => memberIds.has(shapeIdOf(shape)));
 	const need = boundsOf(members);
 	const have = boundsOf([container]);
-	if (mode === CONTAINER_RESIZE_NONE || !need || !have || !unrotated(container)) return false;
+	if ((!tight && mode === CONTAINER_RESIZE_NONE) || !need || !have || !unrotated(container))
+		return false;
 	const margin = number(userValue(container, VISIO_CONTAINER_MARGIN_ROW), VISIO_CONTAINER_MARGIN);
 	const heading = number(userValue(container, VISIO_CONTAINER_HEADING_ROW), 0);
 	const wanted: Box = {
@@ -126,7 +130,7 @@ export function fitVisioContainer(
 		maxY: need.maxY + margin + heading,
 	};
 	const target: Box =
-		mode === CONTAINER_RESIZE_TIGHT
+		tight || mode === CONTAINER_RESIZE_TIGHT
 			? wanted
 			: {
 					minX: Math.min(have.minX, wanted.minX),
@@ -177,6 +181,8 @@ export function reconcileVisioContainers(
 			const frame = boxes.get(container);
 			if (!frame || mine.has(shapeIdOf(container))) continue;
 			const members = containerMembersOf(container);
+			// A locked container keeps its members: neither leaving nor joining changes it.
+			const locked = isLockedContainer(container);
 			const inside =
 				box.minX >= frame.minX - EPSILON &&
 				box.maxX <= frame.maxX + EPSILON &&
@@ -188,15 +194,18 @@ export function reconcileVisioContainers(
 				centre.y >= frame.minY &&
 				centre.y <= frame.maxY;
 			if (members.includes(id) && !centred) {
-				writeContainerMembers(
-					root,
-					container,
-					members.filter((m) => m !== id),
-				);
-				touched.add(container);
-				changed = true;
+				if (!locked) {
+					writeContainerMembers(
+						root,
+						container,
+						members.filter((m) => m !== id),
+					);
+					touched.add(container);
+					changed = true;
+				}
 			} else if (
 				inside &&
+				!locked &&
 				!members.includes(id) &&
 				(!inner || area(frame) < area(boxes.get(inner)!))
 			)

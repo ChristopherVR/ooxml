@@ -1,5 +1,6 @@
 import { arrangeGroup, shapeStylesGroup } from './ribbon-arrange';
 import { command, commandRow, group, menu, stack } from './ribbon-parts';
+import { sizeFields } from './ribbon-size-fields';
 
 const WORDART =
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.';
@@ -27,6 +28,7 @@ export function buildShapeFormatPanel(doc: Document, panel: HTMLElement): void {
 			]),
 			arrangeGroup(doc),
 			group(doc, 'Size', [
+				sizeFields(doc),
 				command(doc, {
 					id: 'size-position',
 					label: 'Size & Position',

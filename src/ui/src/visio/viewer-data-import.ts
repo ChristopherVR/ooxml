@@ -115,6 +115,7 @@ export function createImportDialog(
 			{ name: 'name', label: 'Recordset name', maxLength: 255 },
 			{ name: 'sheet', label: 'Worksheet', choices: true },
 			{ name: 'range', label: 'Range (optional)', placeholder: 'A1:D20' },
+			{ name: 'key', label: 'Unique identifier column (optional)', maxLength: 255 },
 			{ name: 'header', label: 'First row of data contains column headings', input: 'checkbox' },
 		],
 		['Import', 'Cancel'],

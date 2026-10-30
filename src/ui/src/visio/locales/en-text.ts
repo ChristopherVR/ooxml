@@ -58,8 +58,6 @@ export const enText: Readonly<Record<string, string>> = {
 	'Embedded Excel charts are not supported.': 'Embedded Excel charts are not supported.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'Embedded OLE objects are not supported; only pictures can be inserted.',
-	'Embellishment needs theme-driven shape geometry.':
-		'Embellishment needs theme-driven shape geometry.',
 	'Feedback is not collected by this viewer.': 'Feedback is not collected by this viewer.',
 	'Ink strokes are not supported.': 'Ink strokes are not supported.',
 	'Macros and add-ons never run in this viewer.': 'Macros and add-ons never run in this viewer.',
@@ -108,6 +106,4 @@ export const enText: Readonly<Record<string, string>> = {
 	Options: 'Options',
 	Share: 'Share',
 	'Style {n}': 'Style {n}',
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
-		'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.',
 };

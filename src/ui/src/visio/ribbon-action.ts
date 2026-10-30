@@ -1,6 +1,8 @@
 import type { VisioThemeColorRef } from 'ooxml-core/visio';
+import type { VisioDataGraphicPosition } from 'ooxml-core/visio/ui';
 import type {
 	VisioBuiltInThemeId,
+	VisioEmbellishment,
 	VisioCalloutStyle,
 	VisioChangeShapeTarget,
 	VisioContainerStyle,
@@ -89,6 +91,20 @@ export type VisioContainerAction = {
 	type: 'container';
 	command: 'fit' | 'select-contents' | 'disband';
 };
+/**
+ * Container Format > Margins, Automatic Resize and Lock Container: one core option edit each. The
+ * lock is `toggle` on its command; the viewer resolves it from the container's current state.
+ */
+export type VisioContainerOptionAction = {
+	type: 'container-options';
+	margin?: number;
+	resize?: 0 | 1 | 2;
+	locked?: boolean | 'toggle';
+};
+/** Picture Format > Brightness and Contrast presets (0 to 1, 0.5 neutral) and Crop to Square or Reset Crop. */
+export type VisioPictureAction =
+	| { type: 'picture-adjust'; brightness?: number; contrast?: number }
+	| { type: 'picture-crop'; crop: 'square' | 'reset' };
 /** The Cross-Functional Flowchart tab: lanes, separators and the Design and Arrange options. */
 export type VisioSwimlaneAction = {
 	type: 'swimlane';
@@ -100,9 +116,16 @@ export type VisioSwimlaneAction = {
 		| 'title'
 		| 'separators'
 		| 'rotate-labels'
+		| 'direction-horizontal'
+		| 'direction-vertical'
 		| 'style';
 	/** The Style number (1-4) for the style command. */
 	style?: number;
+};
+/** The Org Chart tab: add a position under, beside or for the selected one, delete it, lay out. */
+export type VisioOrgChartAction = {
+	type: 'org-chart';
+	command: 'subordinate' | 'coworker' | 'assistant' | 'delete' | 'layout';
 };
 /** Data-tab commands: import, refresh, data graphics, legend, windows and Shape Data. */
 export type VisioDataCommand =
@@ -117,6 +140,10 @@ export type VisioDataCommand =
 	| 'legend'
 	| 'legend-horizontal'
 	| 'external-data-window'
+	| 'link-data'
+	| 'graphic-configure'
+	| 'graphic-auto-space'
+	| `graphic-position-${VisioDataGraphicPosition}`
 	| 'define-shape-data';
 /** Arrangement, layout, layer, selection, view and output commands (viewer-layout and friends). */
 export type VisioLayoutAction =
@@ -136,6 +163,7 @@ export type VisioLayoutAction =
 export type VisioRibbonAction =
 	| VisioFormattingAction
 	| VisioSwimlaneAction
+	| VisioOrgChartAction
 	| VisioLayoutAction
 	| { type: 'arrange'; operation: VisioArrangement }
 	| { type: 'selection'; mode: 'all' | 'clear' }
@@ -156,6 +184,7 @@ export type VisioRibbonAction =
 			fonts?: VisioBuiltInThemeId;
 			effects?: VisioBuiltInThemeId;
 			connectors?: VisioBuiltInThemeId;
+			embellishment?: VisioEmbellishment;
 	  }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
@@ -168,6 +197,8 @@ export type VisioRibbonAction =
 	| { type: 'change-shape'; shape: VisioChangeShapeTarget | `document:${string}` }
 	| VisioDiagramPartAction
 	| VisioContainerAction
+	| VisioContainerOptionAction
+	| VisioPictureAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }
 	| { type: 'grid' }

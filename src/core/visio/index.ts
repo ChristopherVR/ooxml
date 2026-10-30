@@ -15,6 +15,17 @@ export {
 	canonicalShapeDataValue,
 } from './edit-shape-data-commands';
 export { visioLinkedRowNames } from './edit-data';
+export {
+	visioDataConnectionFor,
+	type VisioDataConnection,
+	type VisioDataSource,
+} from './data-connections';
+export {
+	matchRefreshedRows,
+	visioRefreshReport,
+	type VisioRefreshReport,
+	type VisioRowMatch,
+} from './data-refresh';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
 export type { VisioDocumentCache } from './document-level';
 export { readVisioStencil, type VisioStencilFile } from './stencil-file';
@@ -222,6 +233,7 @@ export {
 export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
 export { VISIO_SCALE_UNITS } from './edit-page-setup-commands';
 export type { VisioPageLayoutEdit } from './edit-page-layout';
+export type { VisioEmbellishment } from './edit-page-theme-commands';
 export type { VisioSnapGlueEdit } from './edit-snap-glue';
 export {
 	VISIO_GLUE,
@@ -292,6 +304,7 @@ export {
 	type VisioPartBox,
 } from './edit-diagram-parts-commands';
 export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';
+export type { VisioContainerOptions } from './model';
 export type {
 	VisioSwimlaneEdit,
 	VisioCreateSwimlanesEdit,

@@ -22,6 +22,7 @@ export interface RibbonTargets {
 	changeShape(shape: Extract<VisioRibbonAction, { type: 'change-shape' }>['shape']): void;
 	insertDiagramPart(action: Extract<VisioRibbonAction, { type: 'diagram-part' }>): void;
 	swimlane(action: Extract<VisioRibbonAction, { type: 'swimlane' }>): void;
+	orgChart(action: Extract<VisioRibbonAction, { type: 'org-chart' }>): void;
 	formatSelection(action: VisioFormattingAction): void;
 	formatPainter(mode: 'once' | 'sticky' | 'cancel'): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
@@ -53,6 +54,10 @@ export interface RibbonTargets {
 	layout(action: VisioLayoutAction): void;
 	/** Container Format: fit, select the contents or disband the selected container. */
 	container(command: Extract<VisioRibbonAction, { type: 'container' }>['command']): void;
+	/** Container Format > Margins, Automatic Resize and Lock Container. */
+	containerOptions(action: Extract<VisioRibbonAction, { type: 'container-options' }>): void;
+	/** Picture Format > Brightness, Contrast and Crop of the selected picture. */
+	picture(action: Extract<VisioRibbonAction, { type: 'picture-adjust' | 'picture-crop' }>): void;
 }
 
 /** Routes a ribbon, status-bar or shortcut action to the controller that owns it. */
@@ -113,6 +118,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.insertDiagramPart(action);
 		case 'swimlane':
 			return targets.swimlane(action);
+		case 'org-chart':
+			return targets.orgChart(action);
 		case 'tool':
 			return targets.setTool(action.tool);
 		case 'cancel-drawing':
@@ -141,6 +148,11 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.togglePanZoom();
 		case 'container':
 			return targets.container(action.command);
+		case 'container-options':
+			return targets.containerOptions(action);
+		case 'picture-adjust':
+		case 'picture-crop':
+			return targets.picture(action);
 		case 'sizePosition':
 			return targets.toggleSizePosition();
 		case 'fullscreen':

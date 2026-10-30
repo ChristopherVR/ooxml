@@ -180,6 +180,9 @@ test('File > Export creates a PDF and Help opens the viewer guide', async ({ pag
 	expect(pdf).toMatch(/\/MediaBox \[0 0 612(\.00)? 792(\.00)?\]/);
 	// Vector pages carry real text, not one picture per page.
 	expect(pdf).toMatch(/\) Tj\b/);
+	// A PDF export keeps the Export page open (its report is there); go back to the drawing.
+	await viewer.getByRole('button', { name: 'Back to the drawing' }).click();
+	await expect(viewer.locator('office-ui-backstage')).not.toHaveAttribute('open', '');
 
 	await context.route('https://christophervr.github.io/**', (route) =>
 		route.fulfill({ body: '<title>Guide</title>', contentType: 'text/html' }),

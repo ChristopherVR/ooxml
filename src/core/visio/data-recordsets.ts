@@ -3,6 +3,7 @@ import type { VisioPackage } from './package';
 import { VisioPackageError } from './package-common';
 import { indexedPart, related, visioXml } from './parts';
 import { attribute, children } from './sheet';
+import { readDataConnections, type VisioDataConnection } from './data-connections';
 
 /** Column types the importer infers and Shape Data rows receive. */
 export type VisioDataColumnType = 'string' | 'number' | 'boolean' | 'date';
@@ -33,6 +34,12 @@ export interface VisioDataRecordset {
 	links: VisioDataLink[];
 	/** TimeRefreshed as saved, ISO text. */
 	refreshed?: string;
+	/** The saved data connection (ConnectionID) Visio refreshes this recordset from. */
+	connection?: VisioDataConnection;
+	/** The saved Command run against the connection. */
+	command?: string;
+	/** ColumnNameID of the primary key; refresh matches rows by it instead of by row order. */
+	primaryKey?: string;
 }
 
 export const VISIO_DATA_LIMITS = {
@@ -193,6 +200,7 @@ export async function readDataRecordsets(
 	const part = await related(pkg, documentPart, 'recordsets', false);
 	if (!part) return [];
 	const root = await visioXml(pkg, part, 'DataRecordSets');
+	const connections = await readDataConnections(pkg, documentPart);
 	const result: VisioDataRecordset[] = [];
 	const budget = { characters: 0 };
 	const ids = new Set<string>();
@@ -228,6 +236,9 @@ export async function readDataRecordsets(
 		});
 		const name = attribute(set, 'Name') ?? `Recordset ${id}`;
 		const refreshed = attribute(set, 'TimeRefreshed');
+		const connection = connections.get(attribute(set, 'ConnectionID') ?? '');
+		const command = attribute(set, 'Command');
+		const primaryKey = attribute(children(set, 'PrimaryKey')[0], 'ColumnNameID');
 		result.push({
 			id,
 			name: name.slice(0, 255),
@@ -238,6 +249,9 @@ export async function readDataRecordsets(
 			})),
 			links: links.slice(0, VISIO_DATA_LIMITS.maxRows * 4),
 			...(refreshed && refreshed.length <= 64 ? { refreshed } : {}),
+			...(connection ? { connection } : {}),
+			...(command && command.length <= 4096 ? { command } : {}),
+			...(primaryKey && columns.some((column) => column.name === primaryKey) ? { primaryKey } : {}),
 		});
 	}
 	return result;

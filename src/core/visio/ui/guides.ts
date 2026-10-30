@@ -57,7 +57,9 @@ export function visioGuideMoveCommand(
 }
 
 /** A shape's axis-aligned page box with y growing downward (y is the negated y-up top). */
-export function visioShapeSnapBox(shape: VisioShape): SnapBox | undefined {
+export function visioShapeSnapBox(
+	shape: Pick<VisioShape, 'transform' | 'width' | 'height'>,
+): SnapBox | undefined {
 	const [a, b, c, d, e, f] = shape.transform;
 	const corners = [
 		[0, 0],
@@ -74,6 +76,32 @@ export function visioShapeSnapBox(shape: VisioShape): SnapBox | undefined {
 		height: Math.max(...ys) - Math.min(...ys),
 	};
 	return Object.values(box).every(Number.isFinite) ? box : undefined;
+}
+
+/**
+ * The snap boxes a moving selection can snap to: the page's other visible shapes (Dynamic Grid)
+ * and its shown guides (Guides), in the snap box convention (y = -page y). `moving` is left out.
+ */
+export function visioSnapTargets(
+	page: VisioPage,
+	moving: ReadonlySet<string>,
+	options: { shapes: boolean; guides: boolean },
+): SnapBox[] {
+	const others: SnapBox[] = [];
+	if (options.shapes)
+		for (const shape of page.shapes) {
+			if (moving.has(shape.id) || shape.hidden || shape.visibility?.guide) continue;
+			const other = visioShapeSnapBox(shape);
+			if (other && (other.width > 0 || other.height > 0)) others.push(other);
+		}
+	if (options.guides)
+		for (const guide of visioPageGuides(page))
+			others.push(
+				guide.orientation === 'vertical'
+					? { x: guide.position, y: -1e6, width: 0, height: 4e6 }
+					: { x: -1e6, y: -guide.position, width: 4e6, height: 0 },
+			);
+	return others;
 }
 
 export interface VisioSnapOptions {
@@ -105,33 +133,6 @@ export interface VisioSnapResult {
 	delta: VisioPagePoint;
 	/** Alignment hints in page inches with y growing downward, for an overlay. */
 	lines: SnapGuide[];
-}
-
-/**
- * The snap targets in the snap frame (y = -page y): other visible shapes' boxes when `shapes` is
- * set (Dynamic Grid), and the page's ruler guides as zero-thickness boxes when `guides` is set.
- * Moving shapes and hidden shapes or guides are never targets.
- */
-export function visioSnapTargetBoxes(
-	page: VisioPage,
-	moving: ReadonlySet<string>,
-	options: Pick<VisioSnapOptions, 'shapes' | 'guides'>,
-): SnapBox[] {
-	const others: SnapBox[] = [];
-	if (options.shapes)
-		for (const shape of page.shapes) {
-			if (moving.has(shape.id) || shape.hidden || shape.visibility?.guide) continue;
-			const other = visioShapeSnapBox(shape);
-			if (other && (other.width > 0 || other.height > 0)) others.push(other);
-		}
-	if (options.guides)
-		for (const guide of visioPageGuides(page))
-			others.push(
-				guide.orientation === 'vertical'
-					? { x: guide.position, y: -1e6, width: 0, height: 4e6 }
-					: { x: -1e6, y: -guide.position, width: 4e6, height: 0 },
-			);
-	return others;
 }
 
 /** Snap the union box of a moving selection to shapes and guides (closest per axis). */
@@ -166,7 +167,7 @@ export function visioSnapMoveDelta(
 	const right = Math.max(...boxes.map((box) => box!.x + box!.width));
 	const bottom = Math.max(...boxes.map((box) => box!.y + box!.height));
 	const box = { x: left + delta.x, y: top - delta.y, width: right - left, height: bottom - top };
-	const others = visioSnapTargetBoxes(page, moving, options);
+	const others = visioSnapTargets(page, moving, options);
 	const snapped = computeSnap(box, others, options.threshold);
 	const axes = new Set(snapped.guides.map((line) => line.axis));
 	if (grid.x && !axes.has('x')) snapped.x = gridEdge(snapped.x, box.width, grid.x, grid.originX);

@@ -203,8 +203,7 @@ for (const [index, framework] of [
 					(node) => (node as VisioViewerElement).controller.state.edit.error?.message ?? '',
 				),
 			)
-			.toBe('');
-		// A corner keeps the proportions, so the LockWidth shape holds still: no edit, no error.
+			.toMatch(/LockWidth|locked/i);
 		expect((await inventory(viewer)).bytes).toEqual(locked.bytes);
 		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		expect(errors).toEqual([]);

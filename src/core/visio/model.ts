@@ -229,6 +229,9 @@ export interface VisioImage {
 	pixelWidth: number;
 	pixelHeight: number;
 	opacity?: number;
+	/** Picture Format > Brightness and Contrast, 0 to 1 (0.5 neutral); absent means neutral. */
+	brightness?: number;
+	contrast?: number;
 	/** Optional placement in local y-up inches, defaulting to the shape bounds. */
 	x?: number;
 	y?: number;
@@ -281,13 +284,6 @@ export interface VisioShapeVisibility {
 	 */
 	nonPrinting?: boolean;
 }
-/** Resize protection from the local LockWidth, LockHeight and LockAspect cells. */
-export interface VisioResizeLocks {
-	width?: boolean;
-	height?: boolean;
-	aspect?: boolean;
-}
-
 export interface VisioShape {
 	id: string;
 	name: string;
@@ -309,8 +305,6 @@ export interface VisioShape {
 	hidden: boolean;
 	/** Additive metadata. Older or manually constructed scenes may omit it. */
 	visibility?: VisioShapeVisibility;
-	/** Saved LockWidth, LockHeight and LockAspect cells, present only when one is set. */
-	resizeLocks?: VisioResizeLocks;
 	children: VisioShape[];
 	masterId?: string;
 	layerIds?: string[];
@@ -365,14 +359,32 @@ export interface VisioSwimlaneFrameOptions {
 }
 export type VisioSwimlaneRole =
 	| { role: 'frame'; options: VisioSwimlaneFrameOptions }
-	| { role: 'lane' };
+	| { role: 'lane' }
+	/** A phase separator: a member of the frame's Phase List. */
+	| { role: 'separator' };
+/** The Container Format options a container stores as User rows; absent rows mean Visio's defaults. */
+export interface VisioContainerOptions {
+	/** Visio's margin in inches (User.msvSDContainerMargin). */
+	margin?: number;
+	/** 0 no automatic resize, 1 expand as needed, 2 always fit to contents (User.msvSDContainerResize). */
+	resize?: 0 | 1 | 2;
+	/** Lock Container: membership cannot change (User.msvSDContainerLocked). */
+	locked?: boolean;
+}
 export type VisioShapeStructure =
 	| {
 			type: 'container';
 			memberIds: string[];
-			/** Set on a cross-functional flowchart's frame or one of its lanes. */
+			/** Set on a cross-functional flowchart's frame, one of its lanes or a phase separator. */
 			swimlane?: VisioSwimlaneRole;
+			options?: VisioContainerOptions;
 	  }
+	/**
+	 * A Visio list (User.msvStructureType = List), in member order: a cross-functional flowchart's
+	 * Swimlane List or Phase List. `direction` is User.msvSDListDirection (0 left to right, 1 right
+	 * to left, 2 top to bottom, 3 bottom to top).
+	 */
+	| { type: 'list'; memberIds: string[]; direction: number; kind?: 'swimlane' | 'phase' }
 	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {
 	fromShapeId: string;

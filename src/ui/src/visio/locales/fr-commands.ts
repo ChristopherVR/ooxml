@@ -143,6 +143,9 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Fonts: 'Polices',
 	Connectors: 'Connecteurs',
 	Embellishment: 'Embellissement',
+	Low: 'Faible',
+	Medium: 'Moyen',
+	High: 'Élevé',
 	Backgrounds: 'Arrière-plans',
 	'Background Color': "Couleur d'arrière-plan",
 	White: 'Blanc',
@@ -169,6 +172,14 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Icon Set...': "Jeu d'icônes...",
 	'Color by Value...': 'Couleur par valeur...',
 	'Remove Data Graphics': 'Supprimer les graphiques de données',
+	'Top Left': 'En haut à gauche',
+	'Top Center': 'En haut au centre',
+	'Top Right': 'En haut à droite',
+	Left: 'Gauche',
+	Right: 'Droite',
+	'Bottom Left': 'En bas à gauche',
+	'Bottom Center': 'En bas au centre',
+	'Bottom Right': 'En bas à droite',
 	Configure: 'Configurer',
 	'Auto Space': 'Espacement automatique',
 	'Display Data': 'Afficher les données',
@@ -262,16 +273,6 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Modifier le graphique',
 	'Edit Data': 'Modifier les données',
 	'Format Chart': 'Mettre en forme le graphique',
-	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
-		'Visio stocke une image comme image incorporée que cet éditeur ne recolore ni ne recompresse ; remplacez-la par une image modifiée.',
-	'Cropping needs the picture clip cells, which the editor does not write yet.':
-		"Le rognage nécessite les cellules de découpe de l'image, que l'éditeur n'écrit pas encore.",
-	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
-		'La marge du conteneur (User.msvSDContainerMargin) ne peut pas encore être modifiée.',
-	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
-		'Le mode de redimensionnement du conteneur (User.msvSDContainerResize) ne peut pas encore être modifié.',
-	'Locking a container needs the shape protection cells, which are not editable yet.':
-		'Le verrouillage d’un conteneur nécessite les cellules de protection de forme, qui ne sont pas encore modifiables.',
 	'Open a .vsdx file with members to fit.': 'Ouvrez un fichier .vsdx avec des membres à ajuster.',
 	'Open a .vsdx file to disband a container.':
 		'Ouvrez un fichier .vsdx pour dissocier un conteneur.',
@@ -292,4 +293,46 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Style: 'Style',
 	'Show Title Bar': 'Afficher la barre de titre',
 	'Show Separator Bar': 'Afficher la barre de séparation',
+	'Org Chart': 'Organigramme',
+	Subordinate: 'Subordonné',
+	Coworker: 'Collègue',
+	Assistant: 'Assistant',
+	'Delete Position': 'Supprimer la position',
+	None: 'Aucun',
+	Narrow: 'Étroit',
+	Normal: 'Normal',
+	Wide: 'Large',
+	'No automatic resize': 'Aucun redimensionnement automatique',
+	'Expand as needed': 'Agrandir si nécessaire',
+	'Always fit to contents': 'Toujours ajuster au contenu',
+	'Crop to Square': 'Recadrer en carré',
+	'Reset Crop': 'Réinitialiser le recadrage',
+	Width: 'Largeur',
+	Height: 'Hauteur',
+	'Width (in)': 'Largeur (po)',
+	'Height (in)': 'Hauteur (po)',
+	'-40%': '-40%',
+	'-20%': '-20%',
+	'0%': '0%',
+	'+20%': '+20%',
+	'+40%': '+40%',
+	'Compressing a picture re-encodes its embedded image, which the editor does not do yet.':
+		"Compresser une image réencode son image intégrée, ce que l'éditeur ne fait pas encore.",
+	'Auto Balance needs the picture histogram, which the editor does not compute yet.':
+		"L'équilibrage automatique nécessite l'histogramme de l'image, que l'éditeur ne calcule pas encore.",
+	'Open a .vsdx file to edit a picture.': 'Ouvrez un fichier .vsdx pour modifier une image.',
+	'Select one picture to adjust or crop it.':
+		'Sélectionnez une image pour la régler ou la recadrer.',
+	'Adjusted the picture.': 'Image réglée.',
+	'Cropped the picture to a square.': 'Image recadrée en carré.',
+	'Reset the picture crop.': "Recadrage de l'image réinitialisé.",
+	'Select a container to change its options.':
+		'Sélectionnez un conteneur pour modifier ses options.',
+	'Open a .vsdx file to change the container.':
+		'Ouvrez un fichier .vsdx pour modifier le conteneur.',
+	'Locked the container.': 'Conteneur verrouillé.',
+	'Unlocked the container.': 'Conteneur déverrouillé.',
+	'Changed the automatic resize of the container.':
+		'Redimensionnement automatique du conteneur modifié.',
+	'Changed the container margin.': 'Marge du conteneur modifiée.',
 };

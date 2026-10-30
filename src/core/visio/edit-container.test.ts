@@ -62,9 +62,10 @@ const move = (shapeId: string, x: number, y: number): VisioEdit => ({
 describe('container membership in Visio form', () => {
 	it('writes DEPENDSON relationships, back references and msvSDContainer rows', async () => {
 		const root = await pageRoot(await framed());
-		expect(formula(root, '9')).toBe('SUM(DEPENDSON(4,Sheet.1!SheetRef(),Sheet.2!SheetRef()))');
-		expect(formula(root, '1')).toBe('SUM(DEPENDSON(1,Sheet.9!SheetRef()))');
-		expect(formula(root, '2')).toBe('SUM(DEPENDSON(1,Sheet.9!SheetRef()))');
+		// Visio's numbers (read from a diagram Visio 16 built): members are 1, back references 4.
+		expect(formula(root, '9')).toBe('SUM(DEPENDSON(1,Sheet.1!SheetRef(),Sheet.2!SheetRef()))');
+		expect(formula(root, '1')).toBe('SUM(DEPENDSON(4,Sheet.9!SheetRef()))');
+		expect(formula(root, '2')).toBe('SUM(DEPENDSON(4,Sheet.9!SheetRef()))');
 		expect(formula(root, '3')).toBeUndefined();
 		const rows = Array.from(sheet(root, '9').getElementsByTagName('Row')).map((row) =>
 			attribute(row, 'N'),
@@ -78,7 +79,12 @@ describe('container membership in Visio form', () => {
 
 	it('still reads membership from the private row of older files', () => {
 		expect(containerMemberIds('1,2', undefined)).toEqual(['1', '2']);
+		expect(containerMemberIds(undefined, 'SUM(DEPENDSON(1,Sheet.3!SheetRef()))')).toEqual(['3']);
+		// Files saved before 2026-10-30 put the members under kind 4 with no kind 1 term.
 		expect(containerMemberIds(undefined, 'SUM(DEPENDSON(4,Sheet.3!SheetRef()))')).toEqual(['3']);
+		expect(
+			containerMemberIds(undefined, 'SUM(DEPENDSON(1),DEPENDSON(4,Sheet.3!SheetRef()))'),
+		).toEqual([]);
 	});
 
 	it('moves a container with the relationships in place and round-trips', async () => {
@@ -100,9 +106,9 @@ describe('container membership in Visio form', () => {
 			{ type: 'set-container-members', pageId: '0', shapeId: '9', memberIds: ['2', '3'] },
 		]);
 		const root = await pageRoot(saved.bytes);
-		expect(formula(root, '9')).toBe('SUM(DEPENDSON(4,Sheet.2!SheetRef(),Sheet.3!SheetRef()))');
+		expect(formula(root, '9')).toBe('SUM(DEPENDSON(1,Sheet.2!SheetRef(),Sheet.3!SheetRef()))');
 		expect(formula(root, '1')).toBeUndefined();
-		expect(formula(root, '3')).toBe('SUM(DEPENDSON(1,Sheet.9!SheetRef()))');
+		expect(formula(root, '3')).toBe('SUM(DEPENDSON(4,Sheet.9!SheetRef()))');
 		expect(await members(saved.bytes)).toEqual(['2', '3']);
 	});
 
@@ -119,7 +125,7 @@ describe('container membership in Visio form', () => {
 			{ type: 'delete-shape', pageId: '0', shapeId: '2' },
 		]);
 		expect(await members(saved.bytes)).toEqual(['1']);
-		expect(formula(await pageRoot(saved.bytes), '9')).toBe('SUM(DEPENDSON(4,Sheet.1!SheetRef()))');
+		expect(formula(await pageRoot(saved.bytes), '9')).toBe('SUM(DEPENDSON(1,Sheet.1!SheetRef()))');
 	});
 });
 
@@ -128,7 +134,7 @@ describe('reconcile-containers', () => {
 		// Shape 3 moves into the frame (members span x 1.5..4.5, y 1.5..2.5).
 		const into = await editVsdx(await framed(), [move('3', 3, 2), reconcile('3')]);
 		expect(await members(into.bytes)).toEqual(['1', '2', '3']);
-		expect(formula(await pageRoot(into.bytes), '3')).toBe('SUM(DEPENDSON(1,Sheet.9!SheetRef()))');
+		expect(formula(await pageRoot(into.bytes), '3')).toBe('SUM(DEPENDSON(4,Sheet.9!SheetRef()))');
 		const out = await editVsdx(into.bytes, [move('3', 30, 30), reconcile('3')]);
 		expect(await members(out.bytes)).toEqual(['1', '2']);
 		expect(formula(await pageRoot(out.bytes), '3')).toBeUndefined();

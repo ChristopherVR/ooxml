@@ -63,8 +63,6 @@ export const deText: Readonly<Record<string, string>> = {
 		'Eingebettete Excel-Diagramme werden nicht unterstützt.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'Eingebettete OLE-Objekte werden nicht unterstützt; es können nur Bilder eingefügt werden.',
-	'Embellishment needs theme-driven shape geometry.':
-		'Verzierungen benötigen designgesteuerte Formgeometrie.',
 	'Feedback is not collected by this viewer.': 'Dieser Viewer sammelt kein Feedback.',
 	'Ink strokes are not supported.': 'Freihandstriche werden nicht unterstützt.',
 	'Macros and add-ons never run in this viewer.':
@@ -114,6 +112,4 @@ export const deText: Readonly<Record<string, string>> = {
 	Options: 'Optionen',
 	Share: 'Freigeben',
 	'Style {n}': 'Stil {n}',
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
-		'Die Richtung wird beim Erstellen des Flussdiagramms gewählt (Datei > Neu > Funktionsübergreifendes Flussdiagramm); ein vorhandenes Flussdiagramm kann noch nicht gedreht werden.',
 };

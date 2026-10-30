@@ -32,6 +32,7 @@ import type { VisioTemplateId } from 'ooxml-core/visio/ui';
 import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
+import { ViewerInlineSize } from './viewer-inline-size';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import {
 	applyVisioCommandVisibility,
@@ -76,7 +77,9 @@ import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
-import { exportDocumentPdf } from './viewer-pdf';
+import { exportDocumentPdfDetailed } from './viewer-pdf';
+import { pdfOptionsFor } from './viewer-pdf-options';
+import type { PdfFontFile } from '../export/pdf-embedded-font';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
@@ -150,6 +153,12 @@ export class VisioViewerElement extends BaseElement {
 	set storage(value: DocumentStorage | null | undefined) {
 		this.#storage = value ?? undefined;
 	}
+	/**
+	 * TrueType fonts File > Export > PDF embeds (as subsets) so text outside the standard fonts'
+	 * character set, or in a particular typeface, stays real text. The host supplies the bytes
+	 * (nothing is bundled); a font whose licence forbids embedding is reported and skipped.
+	 */
+	pdfFonts: readonly PdfFontFile[] = [];
 	/** What `collaboration-change` last reported. */
 	get collaborationState(): VisioCollaborationState {
 		return this.#share.state;
@@ -184,6 +193,7 @@ export class VisioViewerElement extends BaseElement {
 	#backstage: ViewerBackstage;
 	#pointer: ViewerPointerGestures;
 	#sizePosition: ViewerSizePosition;
+	#inlineSize: ViewerInlineSize;
 	#fileName = '';
 	#storage: DocumentStorage | undefined;
 	#loadToken = 0;
@@ -275,9 +285,13 @@ export class VisioViewerElement extends BaseElement {
 			announce,
 			snap: (page, ids, delta, axis) =>
 				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep, axis),
-			snapResize: (page, id, handle, start, end, modifiers) =>
-				this.#commands.layoutCommands.guides.snapResize(page, id, handle, start, end, modifiers),
 			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
+			resizeSnap: {
+				settings: () => this.#commands.layoutCommands.guides.resizeSnapSettings(),
+				hint: (page, lines, matches) =>
+					this.#commands.layoutCommands.guides.resizeHints(page, lines, matches),
+				clear: () => this.#commands.layoutCommands.guides.clearHints(),
+			},
 		});
 		this.#edit = editing.edit;
 		this.#pointer = editing.pointer;
@@ -297,6 +311,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
+		this.#inlineSize = new ViewerInlineSize(this.#root, this.controller);
 		this.#sizePosition = new ViewerSizePosition(this.#root, this.controller, (open) =>
 			this.#root.querySelector('[command="size-position"]')?.setAttribute('checked', String(open)),
 		);
@@ -381,17 +396,17 @@ export class VisioViewerElement extends BaseElement {
 			// A downloaded copy exists as a file: the AutoRecover copy has done its job.
 			downloaded: () => this.#recover.saved(),
 			exportSvg: () => this.exportSvg(),
-			exportPicture: async (format) => {
+			exportPicture: async (format, choice) => {
 				const { document: model, pageIndex } = this.controller.state;
 				if (!model) throw new Error('Open a drawing before exporting.');
 				const doc = this.ownerDocument;
-				return {
-					blob:
-						format === 'pdf'
-							? await exportDocumentPdf(doc, model)
-							: await exportPagePng(doc, model, pageIndex),
-					pageIndex,
-				};
+				if (format === 'png')
+					return { blob: await exportPagePng(doc, model, pageIndex), pageIndex };
+				const result = await exportDocumentPdfDetailed(doc, model, {
+					...pdfOptionsFor(choice ?? { scope: 'all' }, pageIndex),
+					fonts: this.pdfFonts,
+				});
+				return { blob: result.blob, pageIndex, report: result };
 			},
 			closeDocument: () => {
 				this.#fileName = '';
@@ -834,6 +849,7 @@ export class VisioViewerElement extends BaseElement {
 		const keyTips = attachKeyTips(this.#root);
 		const disposePanZoom = this.#panZoom.wire();
 		const disposeSizePosition = this.#sizePosition.wire();
+		const disposeInlineSize = this.#inlineSize.wire();
 		const disposeProfile = this.#profile.wire();
 		// The title bar's Quick Access Toolbar: Save downloads a copy, Undo and Redo use the history.
 		const quickAccess = (event: Event): void => {
@@ -896,6 +912,7 @@ export class VisioViewerElement extends BaseElement {
 			keyTips.dispose();
 			disposePanZoom();
 			disposeSizePosition();
+			disposeInlineSize();
 			disposeProfile();
 			this.#titleBar.removeEventListener('office-command', quickAccess);
 			disposeShare();
@@ -967,6 +984,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#pointer.render(state);
 		this.#panZoom.render();
 		this.#sizePosition.render(state);
+		this.#inlineSize.render(state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

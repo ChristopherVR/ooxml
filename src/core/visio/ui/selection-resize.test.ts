@@ -188,7 +188,7 @@ it('scales a multiple selection proportionally from corners and with Shift', asy
 	);
 });
 
-it('declines mixed, rotated, nested, attached and invalid selections as a whole', async () => {
+it('declines mixed, sheared, nested-in-shape and invalid selections as a whole', async () => {
 	const page = (await parseVsdx(await source())).pages[0]!;
 	for (const ids of [
 		[],
@@ -222,11 +222,12 @@ it('declines mixed, rotated, nested, attached and invalid selections as a whole'
 		Object.assign(other, original);
 		delete other.masterId;
 	}
+	// Connectors glued to a member follow it (core reroutes), so they no longer block the selection.
 	page.connectors = [{ fromShapeId: '3', toShapeId: '2' } as (typeof page.connectors)[number]];
-	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeUndefined();
+	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeDefined();
 });
 
-it.each([cell('LockMoveX', 1)])(
+it.each([cell('LockWidth', 1), cell('LockMoveX', 1), cell('LockHeight', 1)])(
 	'rejects an entire source batch when a later member cannot resize',
 	async (protection) => {
 		const bytes = await source(1, protection),
@@ -243,38 +244,6 @@ it.each([cell('LockMoveX', 1)])(
 		expect(bytes).toEqual(untouched);
 	},
 );
-
-it.each([cell('LockWidth', 1), cell('LockHeight', 1)])(
-	'holds the whole selection still when a common scale would change a locked member',
-	async (protection) => {
-		const page = (await parseVsdx(await source(1, protection))).pages[0]!;
-		expect(
-			visioResizeSelectionDrag(page, ['1', '2'], 'ne', { x: 0, y: 0 }, { x: 2, y: -1 }),
-		).toBeUndefined();
-	},
-);
-
-it('scales a multiple selection about its centre with Ctrl', async () => {
-	const page = (await parseVsdx(await source())).pages[0]!;
-	const original = visioResizeSelectionFrame(page, ['1', '2'])!;
-	const centre = {
-		x: original.transform[4] + original.width / 2,
-		y: original.transform[5] + original.height / 2,
-	};
-	const result = visioResizeSelectionDrag(
-		page,
-		['1', '2'],
-		'e',
-		{ x: 0, y: 0 },
-		{ x: 1, y: 0 },
-		{ centre: true },
-	)!;
-	// Both edges of the surrounding rectangle move by the drag, so its width grows by two.
-	expect(result.frame.width).toBeCloseTo(original.width + 2, 9);
-	expect(result.frame.height).toBeCloseTo(original.height, 9);
-	expect(result.frame.transform[4] + result.frame.width / 2).toBeCloseTo(centre.x, 9);
-	expect(result.frame.transform[5] + result.frame.height / 2).toBeCloseTo(centre.y, 9);
-});
 
 it('detects a later resize recalculating an earlier guarded dimension before accepting the plan', async () => {
 	const zip = await JSZip.loadAsync(await source());

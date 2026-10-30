@@ -77,18 +77,16 @@ describe('Picture Format tab', () => {
 		expect(
 			[...panel.querySelectorAll('office-ui-ribbon-group')].map((g) => g.getAttribute('label')),
 		).toEqual(['Adjust', 'Picture Styles', 'Arrange', 'Size']);
-		for (const id of [
-			'picture-brightness',
-			'picture-contrast',
-			'picture-auto-balance',
-			'picture-compression',
-		]) {
+		// Brightness, Contrast and Crop are real menus; Auto Balance and Compression stay listed disabled.
+		for (const id of ['picture-auto-balance', 'picture-compression']) {
 			const el = panel.querySelector<HTMLElement>(`[data-menu="${id}"]`)!;
 			expect(el.hasAttribute('disabled'), id).toBe(true);
 			expect(el.title).toContain('not available yet');
 		}
-		const crop = panel.querySelector<HTMLElement>('[command="picture-crop"]')!;
-		expect(crop.hasAttribute('disabled')).toBe(true);
+		const crop = panel.querySelector<HTMLElement>('[data-menu="picture-crop"]')!;
+		expect(crop.hasAttribute('disabled')).toBe(false);
+		expect(panel.querySelector('[command="picture-brightness-0.7"]')).not.toBeNull();
+		expect(panel.querySelector('[command="picture-crop-reset"]')).not.toBeNull();
 		const home = ribbon.querySelector<HTMLElement>('#home-panel [command="bring-forward"]')!;
 		home.setAttribute('disabled', '');
 		renderContextualTabs(ribbon, stateOf(all, ['1']));
@@ -104,8 +102,12 @@ describe('Container Format tab', () => {
 		expect(
 			[...panel.querySelectorAll('office-ui-ribbon-group')].map((g) => g.getAttribute('label')),
 		).toEqual(['Size', 'Container Styles', 'Membership', 'Arrange']);
-		for (const id of ['container-margins', 'container-resize', 'container-lock'])
-			expect(panel.querySelector(`[data-menu="${id}"]`)!.hasAttribute('disabled'), id).toBe(true);
+		// The options are enabled by the viewer when a container is selected, not here.
+		for (const id of ['container-margins', 'container-resize'])
+			expect(panel.querySelector(`[data-menu="${id}"]`)!.hasAttribute('disabled'), id).toBe(false);
+		expect(panel.querySelector('[command="container-lock"]')).not.toBeNull();
+		expect(panel.querySelector('[command="container-resize-2"]')).not.toBeNull();
+		expect(panel.querySelectorAll('[data-size-field], [data-inline-size]').length).toBe(2);
 		ribbon.remove();
 	});
 
@@ -118,6 +120,20 @@ describe('Container Format tab', () => {
 		for (const command of ['fit', 'select-contents', 'disband'] as const)
 			routeRibbonAction(targets, { type: 'container', command });
 		expect(calls).toEqual(['fit', 'select-contents', 'disband']);
+	});
+
+	it('routes container options and picture adjustments to their targets', () => {
+		const seen: string[] = [];
+		const targets = {
+			controller: { state: {} },
+			containerOptions: (action: { locked?: unknown }) =>
+				seen.push(`options:${String(action.locked)}`),
+			picture: (action: { type: string }) => seen.push(`picture:${action.type}`),
+		} as never as RibbonTargets;
+		routeRibbonAction(targets, { type: 'container-options', locked: 'toggle' });
+		routeRibbonAction(targets, { type: 'picture-crop', crop: 'square' });
+		routeRibbonAction(targets, { type: 'picture-adjust', brightness: 0.7 });
+		expect(seen).toEqual(['options:toggle', 'picture:picture-crop', 'picture:picture-adjust']);
 	});
 });
 

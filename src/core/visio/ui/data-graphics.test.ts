@@ -10,6 +10,9 @@ import {
 	visioDataGraphicEdits,
 	visioDataGraphicFields,
 	visioDataGraphicParts,
+	visioDataGraphicConfigs,
+	visioPositionDataGraphicEdits,
+	visioAutoSpaceDataGraphicEdits,
 	visioLegendEdits,
 	visioRemoveDataGraphicEdits,
 	visioWithDataGraphics,
@@ -168,6 +171,55 @@ describe('data graphics', () => {
 		expect(removed.document.pages[0]!.shapes.map((shape) => shape.id)).toEqual(['1', '2']);
 	});
 
+	it('moves and auto spaces graphics from the config they remember', async () => {
+		let state = await linked();
+		for (const kind of ['text', 'bar'] as const)
+			state = await apply(
+				state.bytes,
+				visioDataGraphicEdits(state.document.pages[0]!, ['1'], {
+					kind,
+					field: kind === 'text' ? 'Name' : 'Load',
+				}),
+			);
+		expect(visioDataGraphicConfigs(state.document.pages[0]!, '1')).toEqual([
+			{ kind: 'text', field: 'Name' },
+			{ kind: 'bar', field: 'Load', min: 0, max: 20 },
+		]);
+		const centre = (document: VisioDocument, kind: string) => {
+			const page = document.pages[0]!;
+			const part = visioDataGraphicParts(page)
+				.get('1')!
+				.find((item) => item.kind === kind)!;
+			return page.shapes.find((shape) => shape.id === part.id)!.rotation!;
+		};
+		const owner = state.document.pages[0]!.shapes.find((shape) => shape.id === '1')!.rotation!;
+		const above = await apply(
+			state.bytes,
+			visioPositionDataGraphicEdits(state.document.pages[0]!, ['1'], 'top'),
+		);
+		const text = centre(above.document, 'text');
+		const bar = centre(above.document, 'bar');
+		expect(text.pinY).toBeGreaterThan(owner.pinY);
+		expect(bar.pinY).toBeGreaterThan(text.pinY + 0.2);
+		expect(visioDataGraphicConfigs(above.document.pages[0]!, '1')[1]).toMatchObject({
+			position: 'top',
+			min: 0,
+			max: 20,
+		});
+		// Drawn fresh the text and the bar overlap; Auto Space separates them.
+		const spaced = await apply(
+			state.bytes,
+			visioAutoSpaceDataGraphicEdits(state.document.pages[0]!, ['1']),
+		);
+		const gap = centre(spaced.document, 'text').pinY - centre(spaced.document, 'bar').pinY;
+		expect(Math.abs(gap)).toBeGreaterThan(0.2);
+		expect(visioDataGraphicParts(spaced.document.pages[0]!).get('1')).toHaveLength(3);
+		const right = await apply(
+			state.bytes,
+			visioPositionDataGraphicEdits(state.document.pages[0]!, ['1'], 'right'),
+		);
+		expect(centre(right.document, 'text').pinX).toBeGreaterThan(owner.pinX + 0.75);
+	});
 	it('colours by value, remembers the fill, restores it and inserts a grouped legend', async () => {
 		const start = await linked();
 		const page = start.document.pages[0]!;

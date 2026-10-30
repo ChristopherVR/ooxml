@@ -23,6 +23,9 @@ export interface VisioCreateSwimlanesEdit {
 	direction: VisioSwimlaneDirection;
 	title: string;
 	style?: number;
+	/** IDs of the Swimlane List and Phase List shapes; the next free IDs when absent. */
+	listId?: string;
+	phaseListId?: string;
 }
 /** Insert a lane before or after `relativeTo`; later lanes shift and the frame grows. */
 export interface VisioInsertSwimlaneEdit {
@@ -62,6 +65,8 @@ export interface VisioInsertSeparatorEdit {
 	frameId: string;
 	shapeId: string;
 	at?: number;
+	/** The phase's name, shown beside the bar. */
+	label?: string;
 }
 /** The Cross-Functional Flowchart tab's Design and Arrange options. */
 export interface VisioSwimlaneOptionsEdit {
@@ -72,6 +77,12 @@ export interface VisioSwimlaneOptionsEdit {
 	showSeparators?: boolean;
 	rotateLabels?: boolean;
 	style?: number;
+	/**
+	 * Turn the flowchart: lanes become columns (or rows) and the phase bars turn with them, each
+	 * lane keeping its size along the stacking axis. Shapes in a lane are carried to the mirrored
+	 * place (`transposeSwimlanes`) unless `contents` is 'leave'.
+	 */
+	direction?: VisioSwimlaneDirection;
 	/** 'leave': the caller moves the shapes in shifted lanes (stencil shapes need it). */
 	contents?: 'move' | 'leave';
 }
@@ -123,6 +134,11 @@ const style = (value: unknown): number => {
 		fail('INVALID_EDIT', 'Unknown cross-functional flowchart style.');
 	return value as number;
 };
+const direction = (value: unknown): VisioSwimlaneDirection => {
+	if (value !== 'horizontal' && value !== 'vertical')
+		fail('INVALID_EDIT', 'Unknown swimlane direction.');
+	return value as VisioSwimlaneDirection;
+};
 const bool = (value: unknown): boolean => {
 	if (typeof value !== 'boolean') fail('INVALID_EDIT', 'A swimlane option must be true or false.');
 	return value;
@@ -142,8 +158,14 @@ export function snapshotSwimlaneEdit(edit: VisioSwimlaneEdit): VisioSwimlaneEdit
 				fail('INVALID_EDIT', 'A cross-functional flowchart has 1 to 100 lanes.');
 			const laneIds = Array.from(edit.laneIds, id);
 			const headings = Array.from(edit.headings ?? [], text);
-			if (new Set([...laneIds, base.frameId]).size !== laneIds.length + 1)
-				fail('INVALID_EDIT', 'The frame and its lanes need distinct IDs.');
+			const listIds = [edit.listId, edit.phaseListId].flatMap((value) =>
+				value === undefined ? [] : [id(value)],
+			);
+			if (
+				new Set([...laneIds, base.frameId, ...listIds]).size !==
+				laneIds.length + 1 + listIds.length
+			)
+				fail('INVALID_EDIT', 'The frame, its lists and its lanes need distinct IDs.');
 			if (edit.direction !== 'horizontal' && edit.direction !== 'vertical')
 				fail('INVALID_EDIT', 'Unknown swimlane direction.');
 			const b = edit.box ?? ({} as VisioPartBox);
@@ -161,6 +183,8 @@ export function snapshotSwimlaneEdit(edit: VisioSwimlaneEdit): VisioSwimlaneEdit
 				direction: edit.direction,
 				title: text(edit.title),
 				...(edit.style === undefined ? {} : { style: style(edit.style) }),
+				...(edit.listId === undefined ? {} : { listId: id(edit.listId) }),
+				...(edit.phaseListId === undefined ? {} : { phaseListId: id(edit.phaseListId) }),
 			};
 		}
 		case 'insert-swimlane':
@@ -191,6 +215,7 @@ export function snapshotSwimlaneEdit(edit: VisioSwimlaneEdit): VisioSwimlaneEdit
 				...base,
 				shapeId: id(edit.shapeId),
 				...(edit.at === undefined ? {} : { at: finite(edit.at) }),
+				...(edit.label === undefined ? {} : { label: text(edit.label) }),
 			};
 		default:
 			return {
@@ -200,6 +225,7 @@ export function snapshotSwimlaneEdit(edit: VisioSwimlaneEdit): VisioSwimlaneEdit
 				...(edit.showSeparators === undefined ? {} : { showSeparators: bool(edit.showSeparators) }),
 				...(edit.rotateLabels === undefined ? {} : { rotateLabels: bool(edit.rotateLabels) }),
 				...(edit.style === undefined ? {} : { style: style(edit.style) }),
+				...(edit.direction === undefined ? {} : { direction: direction(edit.direction) }),
 				...leave(edit),
 			};
 	}

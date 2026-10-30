@@ -97,8 +97,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.mouse.down();
 		await page.mouse.move(locked.x + locked.dx, locked.y + locked.dy);
 		await page.mouse.up();
-		// A common corner scale would change the LockWidth member, so the whole selection holds still.
-		await expect.poll(async () => (await inventory(viewer)).error ?? '').toBe('');
+		await expect.poll(async () => (await inventory(viewer)).error).toMatch(/LockWidth|locked/i);
 		expect((await inventory(viewer)).bytes).toEqual(protectedBefore.bytes);
 		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		expect(errors).toEqual([]);

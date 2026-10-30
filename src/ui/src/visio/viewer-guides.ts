@@ -6,10 +6,9 @@ import {
 	visioGuideCreateCommand,
 	visioGuideMoveCommand,
 	visioPageGuides,
-	visioResizeSnapEnd,
 	visioSnapMoveDelta,
-	type VisioResizeDragOptions,
-	type VisioResizeHandle,
+	type VisioResizeSizeMatch,
+	type VisioResizeSnapOptions,
 	type VisioSnapGrid,
 	type VisioSnapResult,
 	type VisioPagePoint,
@@ -100,33 +99,33 @@ export class ViewerGuides {
 		return result.delta;
 	}
 	/**
-	 * Snap a resize handle's drag end onto shape edges (Dynamic Grid) and shown guides, and draw the
-	 * alignment hints. Snap & Glue's Snap switch turns it off, as it does for moves.
+	 * The snapping a resize drag uses (Dynamic Grid and shown guides, with the same threshold as a
+	 * move), or undefined when none of it is on. Snap & Glue switched off leaves it undefined too.
 	 */
-	snapResize(
-		page: VisioPage,
-		id: string,
-		handle: VisioResizeHandle,
-		start: VisioPagePoint,
-		end: VisioPagePoint,
-		modifiers: VisioResizeDragOptions,
-	): VisioPagePoint {
-		this.clearHints();
+	resizeSnapSettings(): VisioResizeSnapOptions | undefined {
 		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
+		if (settings & VISIO_SNAP.disabled) return undefined;
 		const guides = this.#shown && !!(settings & VISIO_SNAP.guides);
-		if (settings & VISIO_SNAP.disabled || (!guides && !this.#dynamic)) return end;
+		if (!guides && !this.#dynamic) return undefined;
 		const zoom = this.controller.state.zoom || 1;
-		const result = visioResizeSnapEnd(page, id, handle, start, end, {
-			...modifiers,
-			snap: { shapes: this.#dynamic, guides, threshold: SNAP_PIXELS / (96 * zoom) },
-		});
-		this.#drawHints(page, result.lines);
-		return result.end;
+		return { shapes: this.#dynamic, guides, threshold: SNAP_PIXELS / (96 * zoom) };
 	}
-	/** Alignment hints in the snap frame (y = -page y), drawn as thin lines across the page. */
-	#drawHints(page: VisioPage, lines: readonly VisioSnapResult['lines'][number][]): void {
+	/** Draws a resize's alignment lines and size-match outlines, replacing the earlier hints. */
+	resizeHints(
+		page: VisioPage,
+		lines: VisioSnapResult['lines'],
+		matches: readonly VisioResizeSizeMatch[],
+	): void {
+		this.#drawHints(page, lines, matches);
+	}
+	#drawHints(
+		page: VisioPage,
+		lines: VisioSnapResult['lines'],
+		matches: readonly VisioResizeSizeMatch[] = [],
+	): void {
 		const svg = this.#svg();
-		if (!svg || !lines.length) return;
+		this.clearHints();
+		if (!svg || !(lines.length || matches.length)) return;
 		const hints = svg.ownerDocument.createElementNS(SVG, 'g');
 		hints.dataset.snapHints = '';
 		hints.setAttribute('aria-hidden', 'true');
@@ -144,6 +143,24 @@ export class ViewerGuides {
 				element.setAttribute(name, String(value));
 			element.setAttribute('stroke', 'var(--_vv-accent)');
 			element.setAttribute('stroke-width', '1');
+			element.setAttribute('vector-effect', 'non-scaling-stroke');
+			hints.append(element);
+		}
+		// A size match outlines the shape whose width or height the resized one now equals.
+		for (const match of matches) {
+			const element = svg.ownerDocument.createElementNS(SVG, 'rect');
+			element.dataset.sizeMatch = match.axis;
+			const { x, y, width, height } = match.box;
+			for (const [name, value] of Object.entries({
+				x,
+				y: page.height + y,
+				width,
+				height,
+			}))
+				element.setAttribute(name, String(value));
+			element.setAttribute('fill', 'none');
+			element.setAttribute('stroke', 'var(--_vv-accent)');
+			element.setAttribute('stroke-dasharray', '4 3');
 			element.setAttribute('vector-effect', 'non-scaling-stroke');
 			hints.append(element);
 		}

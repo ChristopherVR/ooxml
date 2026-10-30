@@ -19,3 +19,5 @@ export * from './realign-runs';
 export * from './font-substitution';
 export * from './metric-font-family';
 export * from './script-fonts';
+export { parseTrueType, type TrueTypeFont } from './truetype/parse';
+export { subsetTrueType, type TrueTypeSubset } from './truetype/subset';

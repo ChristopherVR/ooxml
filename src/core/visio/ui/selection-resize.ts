@@ -21,25 +21,25 @@ function candidates(page: VisioPage, ids: readonly string[]): VisioShape[] | und
 	for (const id of ids) {
 		const shape = visioResizeShape(page, id);
 		if (!shape) return undefined;
-		// Anisotropic page scaling would shear rotated shapes. Local groups, stencil instances
-		// and attached connectors need separate selection-resize proofs, even if singly resizable.
-		if (ids.length > 1) {
-			const [a, b, c, d] = shape.transform;
-			if (
-				shape.children.length ||
-				shape.masterId ||
-				shape.kind !== 'shape' ||
-				Math.abs(b) > 1e-10 ||
-				Math.abs(c) > 1e-10 ||
-				Math.abs(Math.abs(a) - 1) > 1e-10 ||
-				Math.abs(Math.abs(d) - 1) > 1e-10 ||
-				page.connectors.some((edge) => edge.fromShapeId === id || edge.toShapeId === id)
-			)
-				return undefined;
-		}
+		// Connectors resize through their end glue, not as selection members; stencil instances
+		// follow master formulas, so a shared page scale cannot prove their pose. Rotated shapes
+		// and groups resize by Visio's rule (see memberSize); glued connectors reroute in core.
+		if (ids.length > 1 && ((shape.kind !== 'shape' && shape.kind !== 'group') || shape.masterId))
+			return undefined;
 		shapes.push(shape);
 	}
 	return shapes;
+}
+
+/** A member's local size after the page-axis selection scales by (sx, sy). Visio scales a rotated
+ * member by the squared direction cosines of its local axes (the group-resize rule it uses for
+ * members, verified through COM): W' = W(a^2 sx + b^2 sy), H' = H(c^2 sx + d^2 sy). */
+function memberSize(shape: VisioShape, sx: number, sy: number): { width: number; height: number } {
+	const [a, b, c, d] = shape.transform;
+	return {
+		width: shape.width * (a * a * sx + b * b * sy),
+		height: shape.height * (c * c * sx + d * d * sy),
+	};
 }
 
 function selectionFrame(shapes: readonly VisioShape[]): VisioResizeFrame | undefined {
@@ -50,11 +50,20 @@ function selectionFrame(shapes: readonly VisioShape[]): VisioResizeFrame | undef
 		right = -Infinity,
 		top = -Infinity;
 	for (const shape of shapes) {
-		const [a, , , d, x, y] = shape.transform;
-		left = Math.min(left, x, x + a * shape.width);
-		right = Math.max(right, x, x + a * shape.width);
-		bottom = Math.min(bottom, y, y + d * shape.height);
-		top = Math.max(top, y, y + d * shape.height);
+		const [a, b, c, d, e, f] = shape.transform;
+		for (const [lx, ly] of [
+			[0, 0],
+			[shape.width, 0],
+			[0, shape.height],
+			[shape.width, shape.height],
+		] as const) {
+			const x = a * lx + c * ly + e,
+				y = b * lx + d * ly + f;
+			left = Math.min(left, x);
+			right = Math.max(right, x);
+			bottom = Math.min(bottom, y);
+			top = Math.max(top, y);
+		}
 	}
 	const width = right - left,
 		height = top - bottom;
@@ -121,48 +130,35 @@ export function visioResizeSelectionDrag(
 			original.height *
 			Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.height) / shape.height)),
 	};
-	// Ctrl moves both edges of the surrounding rectangle, so the drag counts twice.
-	const reach = options.centre ? 2 : 1;
+	// A symmetric (Ctrl) drag doubles the pointer travel, then re-centres the box below.
+	const k = options.symmetric ? 2 : 1;
 	let box = applyResize(
 		{ x: left, y: -bottom - original.height, width: original.width, height: original.height },
 		handle,
-		reach * (end.x - start.x),
-		reach * (end.y - start.y),
+		k * (end.x - start.x),
+		k * (end.y - start.y),
 		1,
 		{ minWidth: min.width, minHeight: min.height },
 	);
-	// One common scale: any member's LockAspect keeps the whole selection proportional.
-	const aspect = shapes.some((shape) => shape.resizeLocks?.aspect);
-	if (visioResizeKeepsProportions(handle, { ...options, aspect })) {
-		// Scale the surrounding rectangle uniformly about the point opposite the handle (or its
-		// centre with Ctrl).
+	if (visioResizeKeepsProportions(handle, options)) {
+		// Scale the surrounding rectangle uniformly about the point opposite the handle.
 		const location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle)!;
 		const size = visioProportionalSize(original, box, location, min);
-		const ax = options.centre ? 0.5 : 1 - location.x,
-			ay = options.centre ? 0.5 : 1 - location.y;
+		const ax = 1 - location.x,
+			ay = 1 - location.y;
 		const nextLeft = left + ax * (original.width - size.width),
 			nextBottomEdge = bottom + ay * (original.height - size.height);
 		box = { ...box, ...size, x: nextLeft, y: -nextBottomEdge - size.height };
 	}
-	if (options.centre) {
-		// Ctrl keeps the surrounding rectangle's centre fixed (box y holds the negated top edge).
+	if (options.symmetric)
+		// The centre of the original selection stays put (y is in the box convention, -page y).
 		box = {
 			...box,
 			x: left + (original.width - box.width) / 2,
-			y: -(bottom + original.height / 2) - box.height / 2,
+			y: -bottom - original.height / 2 - box.height / 2,
 		};
-	}
 	const sx = box.width / original.width,
 		sy = box.height / original.height;
-	// A member's LockWidth or LockHeight refuses a common scale that would change that dimension.
-	if (
-		shapes.some(
-			(shape) =>
-				(shape.resizeLocks?.width && Math.abs(sx - 1) > 1e-12) ||
-				(shape.resizeLocks?.height && Math.abs(sy - 1) > 1e-12),
-		)
-	)
-		return undefined;
 	const nextBottom = -box.y - box.height;
 	const frame: VisioResizeFrame = {
 		width: box.width,
@@ -179,8 +175,7 @@ export function visioResizeSelectionDrag(
 	const members: { id: string; frame: VisioResizeFrame }[] = [];
 	try {
 		for (const shape of shapes) {
-			const width = shape.width * sx,
-				height = shape.height * sy;
+			const { width, height } = memberSize(shape, sx, sy);
 			const x = box.x + (shape.rotation!.pinX - left) * sx;
 			const y = nextBottom + (shape.rotation!.pinY - bottom) * sy;
 			// Use the lower-left local anchor, whose resulting pin is proved by the same helper

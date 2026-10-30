@@ -4,13 +4,17 @@ import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import {
 	visioResizeSelectionFrame,
 	visioResizeSelectionDrag,
+	visioSnapResizeDrag,
 	visioSelectionIsOnPage,
 	editErrorMessage,
 	isEditCancellation,
-	type VisioResizeDragOptions,
 	type VisioResizeHandle,
 	type VisioPagePoint,
 	type VisioResizeFrame,
+	type VisioResizeSizeMatch,
+	type VisioResizeSnapOptions,
+	type VisioSnapResizeResult,
+	type VisioSnapResult,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
@@ -33,11 +37,8 @@ interface Drag {
 	showOverlays?: () => void;
 }
 const pointOptions = { snap: false, bounded: false } as const;
-/**
- * Eight source-backed selection handles; saved content is never speculatively resized. Modifiers as in
- * Visio: a corner resizes freely unless the shape's LockAspect is set, Shift keeps the proportions,
- * Ctrl resizes about the centre, and Alt turns snapping off for the drag.
- */
+/** Eight source-backed selection handles; saved content is never speculatively resized.
+ * Like Visio, corners keep the proportions and Shift keeps them on every handle. */
 export class ViewerResizeHandles {
 	#drag: Drag | undefined;
 	#frame: ReturnType<typeof createResizeFrame> | undefined;
@@ -48,18 +49,37 @@ export class ViewerResizeHandles {
 		private readonly options: {
 			active(): boolean;
 			announce(message: string): void;
-			/** Dynamic Grid and guides: moves the drag end onto an edge and shows the hints. */
-			snap?(
-				page: VisioPage,
-				id: string,
-				handle: VisioResizeHandle,
-				start: VisioPagePoint,
-				end: VisioPagePoint,
-				modifiers: VisioResizeDragOptions,
-			): VisioPagePoint;
-			clearSnap?(): void;
+			/**
+			 * Dynamic Grid and Guides for a resize: `settings` is undefined when snapping is off,
+			 * `hint` draws the alignment lines and size matches, `clear` removes them.
+			 */
+			snap?: {
+				settings(): VisioResizeSnapOptions | undefined;
+				hint(
+					page: VisioPage,
+					lines: VisioSnapResult['lines'],
+					matches: VisioResizeSizeMatch[],
+				): void;
+				clear(): void;
+			};
 		},
 	) {}
+	/**
+	 * The resize solver for a pointer position. Ctrl resizes about the centre and Shift keeps the
+	 * proportions; holding Alt leaves snapping out for this drag, as it does for a move.
+	 */
+	#solve(
+		drag: Drag,
+		point: VisioPagePoint,
+		event: PointerEvent,
+	): VisioSnapResizeResult | undefined {
+		const snap = event.altKey ? undefined : this.options.snap?.settings();
+		return visioSnapResizeDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point, {
+			proportional: event.shiftKey,
+			symmetric: event.ctrlKey,
+			...(snap ? { snap } : {}),
+		});
+	}
 	#current(drag: Drag, state = this.controller.state): boolean {
 		return (
 			state.document === drag.document &&
@@ -185,31 +205,6 @@ export class ViewerResizeHandles {
 		if (this.#drag === drag && this.#current(drag))
 			this.viewport.setPointerCapture?.(event.pointerId);
 	}
-	/**
-	 * The resize for a pointer position under the held modifiers. Snapping applies to one shape and
-	 * not while Alt is held; a multiple selection moves by its common scale without snapping.
-	 */
-	#resize(drag: Drag, point: VisioPagePoint | undefined, event: PointerEvent) {
-		if (!point) return undefined;
-		const modifiers: VisioResizeDragOptions = {
-			proportional: event.shiftKey,
-			centre: event.ctrlKey,
-		};
-		if (event.altKey) this.options.clearSnap?.();
-		const id = drag.shapeIds.length === 1 ? drag.shapeIds[0]! : undefined;
-		const end =
-			id !== undefined && !event.altKey && this.options.snap
-				? this.options.snap(drag.page, id, drag.handle, drag.start, point, modifiers)
-				: point;
-		return visioResizeSelectionDrag(
-			drag.page,
-			drag.shapeIds,
-			drag.handle,
-			drag.start,
-			end,
-			modifiers,
-		);
-	}
 	#move(event: PointerEvent): void {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
@@ -217,8 +212,12 @@ export class ViewerResizeHandles {
 			this.#cancel();
 			return;
 		}
-		const resized = this.#resize(drag, pagePoint(drag.svg, drag.page, event, pointOptions), event);
-		if (resized && this.#current(drag)) drag.frame.update(resized.frame);
+		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
+		const resized = point && this.#solve(drag, point, event);
+		if (resized && this.#current(drag)) {
+			drag.frame.update(resized.frame);
+			this.options.snap?.hint(drag.page, resized.lines, resized.sizeMatches);
+		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
 	}
@@ -232,8 +231,8 @@ export class ViewerResizeHandles {
 	#release(): () => void {
 		const drag = this.#drag;
 		this.#drag = undefined;
+		this.options.snap?.clear();
 		if (!drag) return () => {};
-		this.options.clearSnap?.();
 		if (this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 		// Detached, so the renders while the edit runs do not remove the preview early.
@@ -246,9 +245,8 @@ export class ViewerResizeHandles {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
-		const resized =
-			this.#current(drag) &&
-			this.#resize(drag, pagePoint(drag.svg, drag.page, event, pointOptions), event);
+		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
+		const resized = point && this.#current(drag) && this.#solve(drag, point, event);
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const settle = this.#release();

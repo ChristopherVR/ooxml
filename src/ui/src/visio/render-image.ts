@@ -1,8 +1,34 @@
-import type { VisioShape } from 'ooxml-core/visio';
+import type { VisioImage, VisioShape } from 'ooxml-core/visio';
 import type { RenderResources } from './render-resources';
 import { svgElement } from './render-svg';
 
 let clipId = 0;
+let filterId = 0;
+
+/**
+ * Picture Format > Brightness and Contrast as one colour transfer per channel: contrast scales
+ * around mid grey, brightness shifts. Both are 0 to 1 with 0.5 neutral, as Visio stores them.
+ */
+function adjustmentFilter(image: VisioImage): SVGFilterElement | undefined {
+	const brightness = image.brightness ?? 0.5,
+		contrast = image.contrast ?? 0.5;
+	if (brightness === 0.5 && contrast === 0.5) return undefined;
+	const slope = 1 + (contrast - 0.5) * 2;
+	const intercept = 0.5 * (1 - slope) + (brightness - 0.5);
+	const filter = svgElement('filter') as SVGFilterElement;
+	filter.id = `visio-image-adjust-${++filterId}`;
+	filter.setAttribute('color-interpolation-filters', 'sRGB');
+	const transfer = svgElement('feComponentTransfer');
+	for (const channel of ['feFuncR', 'feFuncG', 'feFuncB'] as const) {
+		const func = svgElement(channel);
+		func.setAttribute('type', 'linear');
+		func.setAttribute('slope', String(slope));
+		func.setAttribute('intercept', String(intercept));
+		transfer.append(func);
+	}
+	filter.append(transfer);
+	return filter;
+}
 
 /** URLs are created only from bounded embedded raster bytes, never from document strings. */
 export function renderImage(
@@ -34,6 +60,11 @@ export function renderImage(
 	clip.append(rectangle);
 	const defs = svgElement('defs');
 	defs.append(clip);
+	const filter = adjustmentFilter(image);
+	if (filter) {
+		defs.append(filter);
+		node.setAttribute('filter', `url(#${filter.id})`);
+	}
 	group.append(defs);
 	// Clip on an untransformed wrapper, so clipping remains in the shape's frame.
 	const cropped = svgElement('g');

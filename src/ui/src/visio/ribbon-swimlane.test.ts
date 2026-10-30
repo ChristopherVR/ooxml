@@ -41,10 +41,14 @@ describe('Cross-Functional Flowchart contextual tab', () => {
 			'Delete Swimlane',
 		])
 			expect(labels).toContain(name);
-		// Direction is listed, disabled, with the reason it cannot change an existing flowchart.
+		// Direction turns an existing flowchart: both choices are real commands.
 		const direction = panel.querySelector<HTMLElement>('[data-menu="swimlane-direction"]')!;
-		expect(direction.hasAttribute('disabled')).toBe(true);
-		expect(direction.title).toContain('not available yet');
+		expect(direction.hasAttribute('disabled')).toBe(false);
+		expect(direction.title).not.toContain('not available yet');
+		for (const id of ['swimlane-horizontal', 'swimlane-vertical'])
+			expect(
+				panel.querySelector<HTMLElement>(`[command="${id}"]`)?.hasAttribute('data-unsupported'),
+			).toBe(false);
 		ribbon.remove();
 	});
 

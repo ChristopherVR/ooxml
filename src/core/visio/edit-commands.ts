@@ -114,6 +114,26 @@ export type { VisioMasterInstanceEdit } from './edit-master-instance';
 import { snapshotStencilMasterDrop, type VisioStencilMasterDropEdit } from './edit-master-drop';
 export type { VisioStencilMasterDropEdit } from './edit-master-drop';
 import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
+import {
+	isVisioContainerEdit,
+	snapshotContainerEdit,
+	type VisioContainerEdit,
+} from './edit-container-options';
+import {
+	isVisioPictureEdit,
+	snapshotPictureEdit,
+	type VisioPictureEdit,
+} from './edit-picture-adjust';
+export type {
+	VisioContainerEdit,
+	VisioContainerFitEdit,
+	VisioContainerOptionsEdit,
+} from './edit-container-options';
+export type {
+	VisioPictureEdit,
+	VisioPictureAdjustEdit,
+	VisioPictureCropEdit,
+} from './edit-picture-adjust';
 export type { VisioGuideEdit } from './edit-guide-commands';
 import {
 	snapshotTextFieldInsert,
@@ -265,7 +285,9 @@ export type VisioEdit =
 	| VisioLayerPropertiesEdit
 	| VisioMasterInstanceEdit
 	| VisioStencilMasterDropEdit
-	| VisioGuideEdit;
+	| VisioGuideEdit
+	| VisioContainerEdit
+	| VisioPictureEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -376,6 +398,8 @@ export function snapshotVisioEdits(
 		if (edit.type === 'insert-master-instance') return snapshotMasterInstance(edit);
 		if (edit.type === 'drop-stencil-master') return snapshotStencilMasterDrop(edit);
 		if (isVisioGuideEdit(edit)) return snapshotGuideEdit(edit);
+		if (isVisioContainerEdit(edit)) return snapshotContainerEdit(edit);
+		if (isVisioPictureEdit(edit)) return snapshotPictureEdit(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
 		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);

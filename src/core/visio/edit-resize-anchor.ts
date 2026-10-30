@@ -15,7 +15,6 @@ import { createVisioCellEvaluator } from './edit-recalculate-values';
 import { parseVisioFormula, analyzeVisioFormula, visioFormulaCachedValue } from './formula';
 import { transform } from './geometry';
 import { attribute, children, VISIO_NS, VISIO_LEGACY_NS } from './sheet';
-import { assertUnlayeredShape } from './edit-style-admission';
 import { visioAnchoredResizeGeometry } from './resize-anchor';
 import { fail } from './package-common';
 import { localGroupResize, planGroupResize } from './edit-group-resize';
@@ -53,7 +52,7 @@ export function resizeVisioShapeAtAnchor(
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Nested shape identities cannot be resized as a local leaf.');
 	protectedShape(shape, document);
-	assertUnlayeredShape(shape, document);
+	// Layer membership does not touch geometry; edit.ts refuses a shape on a locked layer.
 	for (const container of children(root, 'Connects'))
 		for (const connection of children(container, 'Connect'))
 			if (

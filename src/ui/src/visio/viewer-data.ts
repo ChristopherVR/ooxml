@@ -3,8 +3,14 @@ import type { VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_DATA_GRAPHIC_FILL_ROW,
 	visioColorRules,
+	visioAutoSpaceDataGraphicEdits,
+	visioDataGraphicConfigs,
 	visioDataGraphicEdits,
 	visioDataGraphicFields,
+	visioDataGraphicParts,
+	visioPositionDataGraphicEdits,
+	VISIO_DATA_GRAPHIC_POSITIONS,
+	type VisioDataGraphicPosition,
 	visioLegendEdits,
 	visioRemoveDataGraphicEdits,
 	visioShapeDataRow,
@@ -26,6 +32,17 @@ const KINDS: Record<string, VisioDataGraphicKind> = {
 	'graphic-color': 'color',
 };
 const KIND_LABELS = ['Text Callout', 'Data Bar', 'Icon Set', 'Color by Value'];
+const POSITION_LABELS = [
+	'Top left',
+	'Top center',
+	'Top right',
+	'Left',
+	'Right',
+	'Bottom left',
+	'Bottom center',
+	'Bottom right',
+];
+const POSITION_PREFIX = 'graphic-position-';
 
 /**
  * Visio's Data tab: Quick and Custom Import of a local workbook or CSV into a saved recordset,
@@ -50,6 +67,7 @@ export class ViewerData {
 			[
 				{ name: 'field', label: 'Data field', choices: true },
 				{ name: 'kind', label: 'Display as', choices: true },
+				{ name: 'position', label: 'Position', choices: true },
 				{ name: 'min', label: 'Minimum (blank for automatic)', input: 'number' },
 				{ name: 'max', label: 'Maximum (blank for automatic)', input: 'number' },
 			],
@@ -59,6 +77,11 @@ export class ViewerData {
 		this.graphics.choices('kind', Object.values(KINDS), 'text', {
 			labels: KIND_LABELS,
 			none: false,
+		});
+		this.graphics.choices('position', [...VISIO_DATA_GRAPHIC_POSITIONS], '', {
+			labels: POSITION_LABELS,
+			none: true,
+			noneLabel: 'Default',
 		});
 		this.links = new ViewerDataLinks(root, controller, announce, run);
 		this.sources = new ViewerDataSources(root, controller, announce, run, this.links);
@@ -85,6 +108,11 @@ export class ViewerData {
 		if (command === 'external-data-window') return this.links.toggle();
 		if (!this.#editable(state)) return;
 		if (command === 'define-shape-data') return this.shapeData.open();
+		if (command === 'link-data') {
+			this.links.show();
+			if (!state.document?.dataRecordsets?.length) void this.sources.import(false);
+			return;
+		}
 		if (command === 'quick-import' || command === 'custom-import')
 			return void this.sources.import(command === 'custom-import');
 		if (command === 'refresh') return void this.sources.refresh();
@@ -97,6 +125,12 @@ export class ViewerData {
 			if (!edits.length) return this.announce('No data graphics to remove.');
 			return this.run(() => this.controller.applyEdits(edits), 'Removed data graphics.');
 		}
+		if (
+			command === 'graphic-auto-space' ||
+			command === 'graphic-configure' ||
+			command.startsWith(POSITION_PREFIX)
+		)
+			return this.#arrange(page, command);
 		if (command === 'legend') return this.#legend(page, 'vertical');
 		if (command === 'legend-horizontal') return this.#legend(page, 'horizontal');
 		const fields = visioDataGraphicFields(page);
@@ -113,9 +147,48 @@ export class ViewerData {
 		(this.graphics.fields.get('kind') as HTMLSelectElement).value = KINDS[command] ?? 'text';
 		for (const name of ['min', 'max'])
 			(this.graphics.fields.get(name) as HTMLInputElement).value = '';
+		(this.graphics.fields.get('position') as HTMLSelectElement).value = '';
 		this.graphics.error.textContent = '';
 		this.graphics.dialog.show();
 		this.graphics.fields.get('field')!.focus();
+	}
+	/** Data Graphics Position, Configure and Auto Space act on graphics this viewer generated. */
+	#arrange(page: VisioPage, command: VisioDataCommand): void {
+		const targets = this.#targets(page);
+		const owners = targets.filter((id) => visioDataGraphicConfigs(page, id).length);
+		if (!owners.length)
+			return this.announce('Select a shape with a text callout, data bar or icon set first.');
+		if (command === 'graphic-configure') {
+			const config = visioDataGraphicConfigs(page, owners[0]!)[0]!;
+			this.graphics.choices(
+				'field',
+				visioDataGraphicFields(page).map((field) => field.name),
+				config.field,
+				{ labels: visioDataGraphicFields(page).map((field) => field.label), none: false },
+			);
+			(this.graphics.fields.get('kind') as HTMLSelectElement).value = config.kind;
+			(this.graphics.fields.get('position') as HTMLSelectElement).value = config.position ?? '';
+			(this.graphics.fields.get('min') as HTMLInputElement).value = String(config.min ?? '');
+			(this.graphics.fields.get('max') as HTMLInputElement).value = String(config.max ?? '');
+			this.graphics.error.textContent = '';
+			this.graphics.dialog.show();
+			this.graphics.fields.get('field')!.focus();
+			return;
+		}
+		const edits =
+			command === 'graphic-auto-space'
+				? visioAutoSpaceDataGraphicEdits(page, owners)
+				: visioPositionDataGraphicEdits(
+						page,
+						owners,
+						command.slice(POSITION_PREFIX.length) as VisioDataGraphicPosition,
+					);
+		this.run(
+			() => this.controller.applyEdits(edits),
+			command === 'graphic-auto-space'
+				? 'Spaced the data graphics so they do not overlap.'
+				: 'Moved the data graphics.',
+		);
 	}
 	#applyGraphic(button: string): void {
 		if (button === 'Cancel') return this.graphics.dialog.close();
@@ -129,8 +202,10 @@ export class ViewerData {
 		if ([min, max].some((value) => value !== undefined && !Number.isFinite(value)))
 			return void (this.graphics.error.textContent = 'Type numbers for the minimum and maximum.');
 		const kind = this.graphics.value('kind') as VisioDataGraphicKind;
+		const position = this.graphics.value('position') as VisioDataGraphicPosition | '';
 		const edits = visioDataGraphicEdits(page, this.#targets(page), {
 			kind,
+			...(position && kind !== 'color' ? { position } : {}),
 			field: this.graphics.value('field'),
 			...(min === undefined ? {} : { min }),
 			...(max === undefined ? {} : { max }),
@@ -218,6 +293,17 @@ export class ViewerData {
 			'graphic-remove',
 		])
 			set(id, editing && fields > 0);
+		const arranged =
+			editing &&
+			!!page &&
+			[...visioDataGraphicParts(page).keys()].some(
+				(owner) => owner !== 'legend' && visioDataGraphicConfigs(page, owner).length > 0,
+			);
+		for (const id of ['graphic-configure', 'graphic-auto-space', 'graphic-position'])
+			set(id, arranged);
+		for (const place of VISIO_DATA_GRAPHIC_POSITIONS) set(POSITION_PREFIX + place, arranged);
+		const positionMenu = this.root.querySelector<RibbonCommand>('[data-menu="graphic-position"]');
+		if (positionMenu) positionMenu.disabled = !arranged;
 		const menuButton = this.root.querySelector<RibbonCommand>('[data-menu="data-graphics"]');
 		if (menuButton) menuButton.disabled = !editing || !fields;
 		const coloured = !!page?.shapes.some((shape) =>

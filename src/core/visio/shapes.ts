@@ -5,7 +5,7 @@ import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
 import { visioShapeStructure } from './shape-structure';
 import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
-import type { VisioLayer, VisioResizeLocks, VisioShape } from './model';
+import type { VisioLayer, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
 import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from '../geometry/affine';
 import { shapeConnections } from './shape-connections';
@@ -14,22 +14,12 @@ import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
 	emptySheet,
-	type Cells,
 	mergeSheets,
 	number,
 	reportCachedErrors,
 	type RawShape,
 	type Report,
 } from './sheet';
-
-/** The shape's resize locks, spread into the shape only when one of them is set. */
-function resizeLocks(cells: Cells): { resizeLocks?: VisioResizeLocks } {
-	const locks: VisioResizeLocks = {};
-	if (number(cells, 'LockWidth', 0) !== 0) locks.width = true;
-	if (number(cells, 'LockHeight', 0) !== 0) locks.height = true;
-	if (number(cells, 'LockAspect', 0) !== 0) locks.aspect = true;
-	return Object.keys(locks).length ? { resizeLocks: locks } : {};
-}
 
 export interface ShapeContext extends StyleContext {
 	metadataBudget: VisioMetadataBudget;
@@ -312,7 +302,6 @@ export function normalizeShapes(
 					layerPrintSummary: membership.printSummary,
 					...(Number.isNaN(nonPrinting) ? {} : { nonPrinting: nonPrinting !== 0 }),
 				},
-				...resizeLocks(sheet.cells),
 				layerIds: membership.layerIds,
 				children: normalizeShapes(shape.children, context, depth + 1, stack, toPage),
 				...(masterId === undefined ? {} : { masterId }),
@@ -354,6 +343,7 @@ export function normalizeShapes(
 									0,
 									Math.min(1, 1 - number(sheet.cells, 'Transparency', 0, report)),
 								),
+								...pictureAdjustment(sheet, report),
 								x: number(sheet.cells, 'ImgOffsetX', 0, report),
 								y: number(sheet.cells, 'ImgOffsetY', 0, report),
 								width: Math.max(0, number(sheet.cells, 'ImgWidth', width, report)),
@@ -363,6 +353,18 @@ export function normalizeShapes(
 					: {}),
 			};
 		});
+}
+
+/** Picture Format > Adjust: Brightness and Contrast, reported only when they are not neutral. */
+function pictureAdjustment(sheet: Parameters<typeof visioShapeStructure>[0], report: Report) {
+	const fraction = (name: string) =>
+		Math.max(0, Math.min(1, number(sheet.cells, name, 0.5, report)));
+	const brightness = fraction('Brightness');
+	const contrast = fraction('Contrast');
+	return {
+		...(brightness === 0.5 ? {} : { brightness }),
+		...(contrast === 0.5 ? {} : { contrast }),
+	};
 }
 
 function structureOf(sheet: Parameters<typeof visioShapeStructure>[0]) {

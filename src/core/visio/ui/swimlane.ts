@@ -1,10 +1,11 @@
 import type { VisioEdit } from '../edit-commands';
 import type { VisioPage, VisioShape, VisioSwimlaneFrameOptions } from '../model';
 import { VISIO_SWIMLANE_MIN, type VisioSwimlaneDirection } from '../edit-swimlane-commands';
-import { stackSwimlanes, type StackBox, type StackLane } from '../swimlane-stack';
+import { stackSwimlanes, turnSwimlanes, type StackBox, type StackLane } from '../swimlane-stack';
 import { visioNextShapeId } from './shape-id';
 import { visioShapePageBounds } from './diagram-parts';
-import { visioMoveCommands } from './shape-move';
+import { visioMoveCommands, visioMovementShape } from './shape-move';
+import { visioPageEditToDrawing } from './page-edit';
 
 /** A cross-functional flowchart on a page: its frame, options and lanes in stacking order. */
 export interface VisioSwimlaneInfo {
@@ -32,13 +33,26 @@ function drawingBox(page: VisioPage, shape: VisioShape): StackBox {
 	};
 }
 
+/**
+ * The ids of a frame's lanes: through its Swimlane List, or directly for a flowchart saved as
+ * plain containers (no lists yet).
+ */
+function laneIdsOf(page: VisioPage, frame: VisioShape, phases = false): string[] {
+	return membersOf(frame).flatMap((id) => {
+		const structure = topLevel(page, id)?.structure;
+		if (structure?.type !== 'list') return [id];
+		return structure.kind === 'swimlane' || (phases && structure.kind === 'phase')
+			? structure.memberIds
+			: [];
+	});
+}
 /** The flowchart a frame, a lane or any shape inside a lane belongs to. */
 export function visioSwimlaneInfo(page: VisioPage, shapeId: string): VisioSwimlaneInfo | undefined {
 	const frame = page.shapes.find((shape) => {
 		const role = shape.structure?.type === 'container' ? shape.structure.swimlane : undefined;
 		if (role?.role !== 'frame') return false;
 		if (shape.id === shapeId) return true;
-		return membersOf(shape).some((laneId) => {
+		return laneIdsOf(page, shape, true).some((laneId) => {
 			const lane = topLevel(page, laneId);
 			return laneId === shapeId || membersOf(lane).includes(shapeId);
 		});
@@ -46,7 +60,7 @@ export function visioSwimlaneInfo(page: VisioPage, shapeId: string): VisioSwimla
 	const role = frame?.structure?.type === 'container' ? frame.structure.swimlane : undefined;
 	if (!frame || role?.role !== 'frame') return undefined;
 	const horizontal = role.options.direction === 'horizontal';
-	const lanes = membersOf(frame)
+	const lanes = laneIdsOf(page, frame)
 		.map((id) => topLevel(page, id))
 		.filter(
 			(lane): lane is VisioShape =>
@@ -100,6 +114,43 @@ function carryContents(
 const stackInput = (page: VisioPage, lanes: readonly VisioShape[]): StackLane[] =>
 	lanes.map((lane) => ({ id: lane.id, box: drawingBox(page, lane) }));
 
+/** Room kept between a flowchart that grew past the page edge and the new edge, page inches. */
+const PAGE_GROWTH_MARGIN = 0.25;
+/**
+ * The page grows with the frame: a `set-page-size` that makes room for `frame` (drawing inches)
+ * when it reaches past the page's right or top edge, else nothing. The page never shrinks and the
+ * origin stays, so every shape keeps its place. Applied in the same step as the flowchart edit.
+ */
+function growPage(page: VisioPage, frame: StackBox): VisioEdit[] {
+	const ratio = scale(page);
+	const fit = (needed: number, have: number) =>
+		needed + 1e-6 > have ? Math.ceil((needed + PAGE_GROWTH_MARGIN) * 4) / 4 : have;
+	const width = fit(frame.maxX * ratio, page.width);
+	const height = fit(frame.maxY * ratio, page.height);
+	return width > page.width || height > page.height
+		? [{ type: 'set-page-size', pageId: page.id, width, height }]
+		: [];
+}
+/** `edits` led by the page growth the turned or resized flowchart (its new `frame`) needs. */
+const withGrowth = (page: VisioPage, frame: StackBox, edits: VisioEdit[]): VisioEdit[] => [
+	...growPage(page, frame),
+	...edits,
+];
+
+/** A move of one shape by a drawing-inch offset, or undefined when the editor cannot move it. */
+function moveBy(page: VisioPage, id: string, dx: number, dy: number): VisioEdit | undefined {
+	const shape = visioMovementShape(page, id);
+	if (!shape?.rotation) return undefined;
+	const ratio = scale(page);
+	return visioPageEditToDrawing(page, {
+		type: 'move-shape',
+		pageId: page.id,
+		shapeId: id,
+		x: shape.rotation.pinX + dx * ratio,
+		y: shape.rotation.pinY + dy * ratio,
+	});
+}
+
 /** Insert Swimlane: a lane before or after the selected one, shifting the lanes after it. */
 export function visioInsertSwimlane(
 	page: VisioPage,
@@ -128,7 +179,7 @@ export function visioInsertSwimlane(
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
-	return [
+	return withGrowth(page, stacking.frame, [
 		{
 			type: 'insert-swimlane',
 			pageId: page.id,
@@ -140,7 +191,7 @@ export function visioInsertSwimlane(
 			contents: 'leave',
 		},
 		...moves,
-	];
+	]);
 }
 
 /**
@@ -160,23 +211,20 @@ export function visioDeleteSwimlane(page: VisioPage, laneId: string): VisioEdit[
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
-	const removed = contentClosure(page, lane);
-	const structure: VisioEdit[] = [
-		{
-			type: 'delete-swimlane',
-			pageId: page.id,
-			frameId: info.frame.id,
-			laneId,
-			contents: 'leave',
-		},
-		...moves,
+	// One batch: the edit deletes the lane's shapes with it (stencil instances included) and
+	// `moves` close the gap, so undo steps back the whole command.
+	return [
+		[
+			{
+				type: 'delete-swimlane',
+				pageId: page.id,
+				frameId: info.frame.id,
+				laneId,
+				contents: 'leave',
+			},
+			...moves,
+		],
 	];
-	return removed.length
-		? [
-				removed.map((shapeId): VisioEdit => ({ type: 'delete-shape', pageId: page.id, shapeId })),
-				structure,
-			]
-		: [structure];
 }
 
 /** Resize a lane along the stacking axis (page inches); the lanes after it move and the frame follows. */
@@ -208,7 +256,7 @@ export function visioResizeSwimlane(
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
-	return [
+	return withGrowth(page, stacking.frame, [
 		{
 			type: 'resize-swimlane',
 			pageId: page.id,
@@ -218,7 +266,7 @@ export function visioResizeSwimlane(
 			contents: 'leave',
 		},
 		...moves,
-	];
+	]);
 }
 
 /** Insert Separator: a phase bar across the lanes, at the middle of the flowchart by default. */
@@ -251,6 +299,48 @@ export interface VisioSwimlaneChange {
 	showSeparators?: boolean;
 	rotateLabels?: boolean;
 	style?: number;
+	/** Direction > Horizontal or Vertical; turning is a command of its own (no other option). */
+	direction?: VisioSwimlaneDirection;
+}
+
+/**
+ * Direction: turn the flowchart on its side. Lanes keep their size along the stacking axis,
+ * every shape in a lane goes to the mirrored place in the turned lane, the phase bars turn with
+ * the flow, and the page grows when the turned frame no longer fits.
+ */
+function turnEdits(page: VisioPage, info: VisioSwimlaneInfo, direction: VisioSwimlaneDirection) {
+	const turn = turnSwimlanes(
+		info.options.direction,
+		drawingBox(page, info.frame),
+		info.options.showTitle,
+		stackInput(page, info.lanes),
+	);
+	const edits: VisioEdit[] = [];
+	for (const [index, lane] of info.lanes.entries()) {
+		for (const id of contentClosure(page, lane)) {
+			const shape = topLevel(page, id);
+			if (!shape) continue;
+			const box = drawingBox(page, shape);
+			const centre = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 };
+			const target = turn.point(turn.lanes[index]!, centre.x, centre.y);
+			const dx = target.x - centre.x;
+			const dy = target.y - centre.y;
+			if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) continue;
+			const move = moveBy(page, id, dx, dy);
+			if (!move) return undefined;
+			edits.push(move);
+		}
+	}
+	return withGrowth(page, turn.stacking.frame, [
+		{
+			type: 'set-swimlane-options',
+			pageId: page.id,
+			frameId: info.frame.id,
+			direction,
+			contents: 'leave',
+		},
+		...edits,
+	]);
 }
 /** The Design and Arrange options; hiding or showing the title bar shifts every lane. */
 export function visioSwimlaneOptions(
@@ -260,6 +350,12 @@ export function visioSwimlaneOptions(
 ): VisioEdit[] | undefined {
 	const info = visioSwimlaneInfo(page, shapeId);
 	if (!info) return undefined;
+	if (change.direction !== undefined) {
+		if (Object.keys(change).length > 1) return undefined;
+		return change.direction === info.options.direction
+			? []
+			: turnEdits(page, info, change.direction);
+	}
 	let moves: VisioEdit[] = [];
 	if (change.showTitle !== undefined && change.showTitle !== info.options.showTitle) {
 		const frame = drawingBox(page, info.frame);
@@ -298,7 +394,7 @@ export function visioCreateSwimlanes(
 	} catch {
 		return undefined;
 	}
-	if (first + laneCount >= 4294967295) return undefined;
+	if (first + laneCount + 2 >= 4294967295) return undefined;
 	const ratio = scale(page);
 	const width = Math.min(page.width * 0.85, 9) / ratio;
 	const height = Math.min(page.height * 0.7, 6) / ratio;
@@ -312,6 +408,8 @@ export function visioCreateSwimlanes(
 			box: { x: page.width / 2 / ratio, y: page.height / 2 / ratio, width, height },
 			direction,
 			title: 'Title',
+			listId: String(first + laneCount + 1),
+			phaseListId: String(first + laneCount + 2),
 		},
 	];
 }

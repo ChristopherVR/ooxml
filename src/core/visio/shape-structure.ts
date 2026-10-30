@@ -1,4 +1,4 @@
-import type { VisioShapeStructure, VisioSwimlaneRole } from './model';
+import type { VisioContainerOptions, VisioShapeStructure, VisioSwimlaneRole } from './model';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	VISIO_CALLOUT_LEADER_ROW,
@@ -8,8 +8,11 @@ import {
 import {
 	SHEET_ID as ID,
 	VISIO_RELATIONSHIP_CALLOUT_TARGET,
+	VISIO_RELATIONSHIP_LIST_MEMBERS,
 	VISIO_RELATIONSHIP_MEMBERS,
+	VISIO_RELATIONSHIP_MEMBER_OF,
 	dependsOn,
+	relationTerms,
 	sheetIdList,
 } from './container-relationships';
 export type { VisioShapeStructure } from './model';
@@ -17,28 +20,64 @@ export type { VisioShapeStructure } from './model';
 /** Strip the quotes Visio writes around string results of formulas. */
 const unquote = (value: string | undefined) => value?.replace(/^"(.*)"$/s, '$1').trim();
 
-/** Container members from the editor's older private User row, else from Relationships text. */
+/**
+ * Container Format options stored as local User rows (margin, resize mode, lock). Absent rows
+ * mean Visio's defaults, so only the rows that exist are reported.
+ */
+function containerOptions(
+	rows: ReadonlyMap<string, string | undefined>,
+): VisioContainerOptions | undefined {
+	const options: VisioContainerOptions = {};
+	const margin = Number(unquote(rows.get('msvSDContainerMargin')));
+	if (unquote(rows.get('msvSDContainerMargin')) !== undefined && Number.isFinite(margin))
+		options.margin = margin;
+	const resize = Number(unquote(rows.get('msvSDContainerResize')));
+	if (resize === 0 || resize === 1 || resize === 2) options.resize = resize;
+	const locked = unquote(rows.get('msvSDContainerLocked'))?.toUpperCase();
+	if (locked !== undefined) options.locked = locked === '1' || locked === 'TRUE';
+	return Object.keys(options).length ? options : undefined;
+}
+
+/**
+ * Container members from the editor's older private User row, else from Relationships text
+ * (kind 1). A formula with a kind 4 term and no kind 1 term is the form this editor wrote before
+ * 2026-10-30, which put the members under 4.
+ */
 export function containerMemberIds(
 	ownRow: string | undefined,
 	relationships: string | undefined,
 ): string[] {
+	if (ownRow !== undefined) return [...new Set(sheetIdList(unquote(ownRow)))];
+	const terms = relationTerms(relationships);
+	const legacy = terms && !terms.some((term) => term.kind === VISIO_RELATIONSHIP_MEMBERS);
 	return [
 		...new Set(
-			ownRow !== undefined
-				? sheetIdList(unquote(ownRow))
-				: dependsOn(relationships, VISIO_RELATIONSHIP_MEMBERS),
+			dependsOn(relationships, legacy ? VISIO_RELATIONSHIP_MEMBER_OF : VISIO_RELATIONSHIP_MEMBERS),
 		),
 	];
 }
 
-/** The editor's swimlane marker rows (non-native: Visio keeps its lists in master formulas). */
+/**
+ * The swimlane markers. Lanes, frames and separators carry Visio's own User.msvShapeCategories
+ * (Swimlane, CFF Container, Phase) and are members of its Swimlane List and Phase List. The
+ * editor's own marker rows are written too and still read, for flowcharts it saved as plain
+ * containers.
+ */
 export const VISIO_SWIMLANE_FRAME_ROW = 'ooxmlSwimlaneFrame';
 export const VISIO_SWIMLANE_LANE_ROW = 'ooxmlSwimlane';
+export const VISIO_SEPARATOR_ROW = 'ooxmlSeparator';
+const categoriesOf = (rows: ReadonlyMap<string, string | undefined>): string[] =>
+	(unquote(rows.get('msvShapeCategories')) ?? '').split(';').map((item) => item.trim());
 function swimlaneRole(
 	rows: ReadonlyMap<string, string | undefined>,
 ): VisioSwimlaneRole | undefined {
-	if (unquote(rows.get(VISIO_SWIMLANE_LANE_ROW)) === '1') return { role: 'lane' };
-	if (unquote(rows.get(VISIO_SWIMLANE_FRAME_ROW)) !== '1') return undefined;
+	const categories = categoriesOf(rows);
+	if (unquote(rows.get(VISIO_SWIMLANE_LANE_ROW)) === '1' || categories.includes('Swimlane'))
+		return { role: 'lane' };
+	if (unquote(rows.get(VISIO_SEPARATOR_ROW)) === '1' || categories.includes('Phase'))
+		return { role: 'separator' };
+	if (unquote(rows.get(VISIO_SWIMLANE_FRAME_ROW)) !== '1' && !categories.includes('CFF Container'))
+		return undefined;
 	const flag = (name: string, fallback: boolean) => {
 		const value = unquote(rows.get(name));
 		return value === undefined ? fallback : value !== '0';
@@ -70,10 +109,23 @@ export function visioShapeStructure(sheet: Sheet): VisioShapeStructure | undefin
 	const relationships = sheet.cells.get('Relationships')?.formula;
 	if (type === 'container') {
 		const swimlane = swimlaneRole(rows);
+		const options = containerOptions(rows);
 		return {
 			type,
 			memberIds: containerMemberIds(rows.get(VISIO_CONTAINER_MEMBERS_ROW), relationships),
 			...(swimlane ? { swimlane } : {}),
+			...(options ? { options } : {}),
+		};
+	}
+	if (type === 'list') {
+		const required = unquote(rows.get('msvSDListRequiredCategories'));
+		const direction = Number(unquote(rows.get('msvSDListDirection')));
+		return {
+			type,
+			memberIds: [...new Set(dependsOn(relationships, VISIO_RELATIONSHIP_LIST_MEMBERS))],
+			direction: Number.isInteger(direction) ? direction : 0,
+			...(required === 'Swimlane' ? { kind: 'swimlane' as const } : {}),
+			...(required === 'Phase' ? { kind: 'phase' as const } : {}),
 		};
 	}
 	if (type === 'callout') {

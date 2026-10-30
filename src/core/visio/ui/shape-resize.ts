@@ -4,33 +4,36 @@ import { visioAnchoredResizeGeometry, type VisioResizeAnchor } from '../resize-a
 import { visioMovementShape, visioPageDragDelta, type VisioPagePoint } from './shape-move';
 import { visioPageEditToDrawing } from './page-edit';
 
-/** A flat local group whose member axes admit independent width/height scaling.
- * Source admission additionally proves resize modes, locks, formulas and geometry. */
+/** A local group tree whose members scale with it: nested groups and rotated or flipped members
+ * are admitted (core scales a rotated member by the squared cosines of its axes). Stencil, layered,
+ * image and foreign members stay out; source admission also proves resize modes, locks, formulas
+ * and geometry. */
 function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
-	if (
-		shape.kind !== 'group' ||
-		shape.masterId ||
-		!shape.children.length ||
-		shape.children.length > 500
-	)
-		return false;
-	const ids = new Set([shape.id]);
-	for (const member of shape.children) {
-		if (
-			ids.has(member.id) ||
-			member.kind !== 'shape' ||
-			member.masterId ||
-			member.children.length ||
-			member.layerIds?.length ||
-			member.image ||
-			member.foreignVector ||
-			!member.rotation ||
-			Math.abs(member.transform[1]) > 1e-10 ||
-			Math.abs(member.transform[2]) > 1e-10 ||
-			!visioResizeFrame(member, member, { x: 0, y: 0 })
-		)
-			return false;
-		ids.add(member.id);
+	if (shape.kind !== 'group' || shape.masterId || !shape.children.length) return false;
+	const ids = new Set<string>();
+	const pending = [shape];
+	while (pending.length) {
+		const group = pending.pop()!;
+		if (group.children.length > 500 || ids.size > 1000) return false;
+		if (ids.has(group.id)) return false;
+		ids.add(group.id);
+		for (const member of group.children) {
+			if (
+				ids.has(member.id) ||
+				member.masterId ||
+				member.layerIds?.length ||
+				member.image ||
+				member.foreignVector ||
+				!member.rotation ||
+				(member.kind === 'group'
+					? !member.children.length
+					: member.kind !== 'shape' || member.children.length) ||
+				!visioResizeFrame(member, member, { x: 0, y: 0 })
+			)
+				return false;
+			if (member.kind === 'group') pending.push(member);
+			else ids.add(member.id);
+		}
 	}
 	return !page.connectors.some(
 		(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
@@ -60,11 +63,11 @@ export function visioResizeShape(page: VisioPage, id: string): VisioShape | unde
 	const shape = visioMovementShape(page, id);
 	// Flat local groups use the core member-scaling proof. A stencil group instead follows
 	// the formulas in its master; the two source paths keep their own admission rules.
-	// Layered local shapes move, but core resize admission still refuses their layer membership;
-	// stencil shapes are resized on their (unlocked) stencil layer.
+	// Layered local shapes resize like they move: visioMovementShape refuses a locked layer.
 	return shape &&
 		(!shape.children.length || !!shape.masterId || resizableLocalGroup(page, shape)) &&
-		(!shape.layerIds?.length || !!shape.masterId) &&
+		// The core proves a group's own layer membership only when it has none.
+		(!shape.children.length || !!shape.masterId || !shape.layerIds?.length) &&
 		visioResizeFrame(shape, { width: shape.width, height: shape.height }, { x: 0, y: 0 })
 		? shape
 		: undefined;
@@ -90,23 +93,20 @@ export function visioResizeFrame(
 			}
 		: undefined;
 }
-/** How a drag maps onto the shape's size, as Visio's modifiers do. A corner handle keeps the
- * proportions by default; Shift keeps them on any handle (`proportional`); Ctrl resizes about the
- * centre (`centre`), so both opposite edges move. A side handle changes one dimension. */
+/** How a drag maps onto the shape's size. Visio keeps the proportions when a corner handle is
+ * dragged, and on any handle while Shift is held (`proportional`); side handles otherwise change
+ * one dimension. */
 export interface VisioResizeDragOptions {
-	/** Shift: keep the original aspect ratio on any handle. */
 	proportional?: boolean;
-	/** Ctrl: grow or shrink symmetrically about the shape's centre. */
-	centre?: boolean;
-	/** The shape's LockAspect, which keeps the proportions on every handle. */
-	aspect?: boolean;
+	/** Ctrl: resize about the centre, so each dragged edge moves twice the pointer distance. */
+	symmetric?: boolean;
 }
-/** True when a drag on `handle` keeps the shape's proportions: a corner, Shift, or LockAspect. */
+/** True when a drag on `handle` keeps the shape's proportions, as Visio does. */
 export function visioResizeKeepsProportions(
 	handle: VisioResizeHandle,
 	options: VisioResizeDragOptions = {},
 ): boolean {
-	return !!options.proportional || !!options.aspect || handle.length === 2;
+	return !!options.proportional || handle.length === 2;
 }
 /** Scale a raw resize uniformly. A corner follows the axis that changed more; a side handle
  * scales the other axis with it about its centre. The ratio survives the minimum-size clamp. */
@@ -148,32 +148,24 @@ export function visioResizeDrag(
 		determinant = a * d - b * c;
 	const x = (d * delta.x - c * delta.y) / determinant,
 		y = (-b * delta.x + a * delta.y) / determinant;
-	const locks = shape.resizeLocks ?? {};
-	// Ctrl moves both edges by the drag, so the size changes twice as much.
-	const reach = options.centre ? 2 : 1;
-	const side = (edge: number, size: number, local: number, locked: boolean | undefined) =>
-		locked || edge === 0.5
-			? size
-			: Math.max(Math.min(1 / 16, size), size + reach * (edge === 1 ? local : -local));
+	// A symmetric (Ctrl) drag keeps the centre fixed, so each moving edge travels twice as far.
+	const k = options.symmetric ? 2 : 1;
 	const raw = {
-		width: side(location.x, shape.width, x, locks.width),
-		height: side(location.y, shape.height, y, locks.height),
+		width:
+			location.x === 0.5
+				? shape.width
+				: Math.max(Math.min(1 / 16, shape.width), shape.width + k * (location.x === 1 ? x : -x)),
+		height:
+			location.y === 0.5
+				? shape.height
+				: Math.max(Math.min(1 / 16, shape.height), shape.height + k * (location.y === 1 ? y : -y)),
 	};
-	const proportional = visioResizeKeepsProportions(handle, {
-		...options,
-		aspect: !!locks.aspect,
-	});
-	// A proportional drag cannot leave a locked dimension, so the shape holds still instead.
-	const size =
-		proportional && (locks.width || locks.height)
-			? { width: shape.width, height: shape.height }
-			: proportional
-				? visioProportionalSize(shape, raw, location)
-				: raw;
-	if ((locks.width && size.width !== shape.width) || (locks.height && size.height !== shape.height))
-		return undefined;
-	// The opposite point stays fixed; with Ctrl the centre does, and each edge moves by the drag.
-	const anchor: VisioResizeAnchor = options.centre
+	const size = visioResizeKeepsProportions(handle, options)
+		? visioProportionalSize(shape, raw, location)
+		: raw;
+	// The opposite point stays fixed; a proportional side drag grows the other axis about its
+	// centre. A symmetric drag anchors the centre instead.
+	const anchor: VisioResizeAnchor = options.symmetric
 		? { x: 0.5, y: 0.5 }
 		: {
 				x: (1 - location.x) as VisioResizeAnchor['x'],

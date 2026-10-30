@@ -5,9 +5,11 @@
  * throws `PdfFallback` inside `convertSvgPage`, which then reports `fallback` so the caller can
  * use a picture of the page instead.
  */
+import type { PdfFontSet } from '../export/pdf-embedded-font';
 import { PdfVectorPage, type PdfImageResource } from '../export/pdf-vector';
 import { pathEnds, pathOperators, parsePath, type PathSegment } from './pdf-path';
 import { drawSvgText } from './pdf-svg-text';
+import { gradientPaint, isGradient, pathBounds, type GradientPaint } from './pdf-svg-gradient';
 import {
 	hrefOf,
 	number,
@@ -73,7 +75,10 @@ class Converter {
 		readonly root: Element,
 		readonly page: PdfVectorPage,
 		readonly images: ReadonlyMap<string, PdfImageResource>,
+		readonly fonts?: PdfFontSet,
 	) {}
+	/** Set while a glow group is drawn: the halo width in the group's units. */
+	#glow: number | undefined;
 	#ids = new Map<string, Element>();
 	#byId(id: string | undefined): Element | undefined {
 		if (!id) return undefined;
@@ -82,41 +87,61 @@ class Converter {
 				this.#ids.set(node.id, node);
 		return this.#ids.get(id);
 	}
-	#paint(value: string | null): Rgba | null {
+	/** A flat colour, or (for fills with `bounds`) a gradient shading. */
+	#paint(
+		value: string | null,
+		bounds?: [number, number, number, number],
+		gradient = false,
+	): Rgba | GradientPaint | null {
 		const id = urlId(value);
 		if (!id) return parseColor(value);
 		const target = this.#byId(id);
-		if (target?.localName === 'linearGradient' || target?.localName === 'radialGradient') {
+		if (isGradient(target)) {
+			if (gradient) {
+				const paint = gradientPaint(target, bounds);
+				if (paint) {
+					if (paint.variableOpacity)
+						this.degraded.add('Gradient transparency is averaged: a PDF shading has one opacity.');
+					if (paint.spreadApproximated)
+						this.degraded.add('Repeating and reflecting gradients are drawn as one gradient.');
+					return paint;
+				}
+			}
 			const stops = Array.from(target.children).filter((child) => child.localName === 'stop');
 			const stop = stops[Math.floor(stops.length / 2)];
-			this.degraded.add('Gradient fills are drawn as one flat colour (the middle stop).');
+			this.degraded.add(
+				gradient
+					? 'A gradient with no usable area is drawn as one flat colour (the middle stop).'
+					: 'Gradient outlines are drawn as one flat colour (the middle stop).',
+			);
 			if (!stop) return null;
 			const color = parseColor(stop.getAttribute('stop-color') ?? '#000000');
 			return color && { ...color, a: color.a * number(stop.getAttribute('stop-opacity'), 1) };
 		}
-		if (target?.localName === 'pattern') throw new PdfFallback('pattern fill');
+		if ((target as Element | undefined)?.localName === 'pattern')
+			throw new PdfFallback('pattern fill');
 		return null;
 	}
 	walk(element: Element, alpha: number): void {
 		if (++this.#nodes > MAX_NODES) throw new PdfFallback('too many drawing nodes');
 		const name = element.localName;
 		if (SKIPPED.has(name) || element.getAttribute('display') === 'none') return;
-		if (element.hasAttribute('data-shadow')) {
-			this.degraded.add('Shadows are not drawn.');
-			return;
-		}
-		if (element.hasAttribute('data-glow')) {
-			this.degraded.add('Glow is not drawn.');
-			return;
+		const shadow = element.hasAttribute('data-shadow');
+		const glow = element.hasAttribute('data-glow');
+		if (shadow && element.hasAttribute('filter'))
+			this.degraded.add('Shadow blur is not applied: shadows are drawn hard-edged.');
+		if (glow) {
+			this.degraded.add('Glow is approximated by a hard-edged halo at half strength (no blur).');
+			this.#glow = this.#glowWidth(element);
 		}
 		if (element.hasAttribute('data-reflection') || element.hasAttribute('mask')) {
 			this.degraded.add('Reflections and masked shapes are not drawn.');
 			return;
 		}
 		if (element.hasAttribute('data-embedded-chart')) throw new PdfFallback('embedded chart');
-		if (element.hasAttribute('filter'))
+		if (element.hasAttribute('filter') && !shadow && !glow)
 			this.degraded.add('Blur and soft-edge filters are not applied.');
-		const opacity = alpha * number(element.getAttribute('opacity'), 1);
+		const opacity = alpha * number(element.getAttribute('opacity'), 1) * (glow ? 0.5 : 1);
 		const transforms = parseTransform(element.getAttribute('transform'));
 		const clip = this.#clip(element);
 		const wrap = transforms.length > 0 || !!clip;
@@ -149,7 +174,7 @@ class Converter {
 				break;
 			}
 			case 'text':
-				drawSvgText(this.page, element, opacity);
+				drawSvgText(this.page, element, opacity, this.fonts);
 				break;
 			case 'use':
 			case 'image':
@@ -159,6 +184,17 @@ class Converter {
 				throw new PdfFallback(`<${name}> element`);
 		}
 		if (wrap) this.page.restore();
+		if (glow) this.#glow = undefined;
+	}
+	/** The dilation of a glow's filter, as a stroke width (the radius reaches `size / 2`). */
+	#glowWidth(element: Element): number {
+		const filter = this.#byId(urlId(element.getAttribute('filter')));
+		const radius = number(
+			Array.from(filter?.children ?? [])
+				.find((child) => child.localName === 'feMorphology')
+				?.getAttribute('radius') ?? null,
+		);
+		return Math.max(0, radius * 2);
 	}
 	#clip(element: Element): [number, number, number, number] | undefined {
 		const id = urlId(element.getAttribute('clip-path'));
@@ -184,23 +220,42 @@ class Converter {
 		const segments = parsePath(d);
 		if (!segments) throw new PdfFallback('path data');
 		if (!segments.length) return;
-		const fill = this.#paint(element.getAttribute('fill') ?? '#000000');
-		const stroke = this.#paint(element.getAttribute('stroke'));
+		const bounds = pathBounds(segments);
+		const painted = this.#paint(element.getAttribute('fill') ?? '#000000', bounds, true);
+		const gradient = painted && 'shading' in painted ? painted : undefined;
+		const fill = gradient ? { r: 0, g: 0, b: 0, a: gradient.opacity } : (painted as Rgba | null);
+		const flat = this.#paint(element.getAttribute('stroke')) as Rgba | null;
+		// A glow is a halo: the shape's own colour, stroked wide.
+		const stroke = this.#glow !== undefined ? (fill ?? flat) : flat;
 		const fillAlpha = fill ? alpha * fill.a * number(element.getAttribute('fill-opacity'), 1) : 0;
 		const strokeAlpha = stroke
 			? alpha * stroke.a * number(element.getAttribute('stroke-opacity'), 1)
 			: 0;
-		const width = number(element.getAttribute('stroke-width'), 1);
+		const width =
+			this.#glow !== undefined
+				? this.#glow + number(element.getAttribute('stroke-width'), 0)
+				: number(element.getAttribute('stroke-width'), 1);
 		const page = this.page;
 		const doFill = !!fill && fillAlpha > 0,
 			doStroke = !!stroke && strokeAlpha > 0 && width > 0;
-		if (doFill || doStroke) {
+		const evenOdd = element.getAttribute('fill-rule') === 'evenodd' ? '*' : '';
+		if (gradient && doFill) {
 			page.save();
-			if (fillAlpha < 1 || strokeAlpha < 1) page.alpha(fillAlpha, strokeAlpha);
-			if (doFill) page.fillColor(fill.r, fill.g, fill.b);
+			if (fillAlpha < 1) page.alpha(fillAlpha, 1);
+			for (const operator of pathOperators(segments)) page.op(operator);
+			page.op(`W${evenOdd} n`);
+			for (const matrix of gradient.matrices) page.concat(matrix);
+			page.paintShading(gradient.shading);
+			page.restore();
+		}
+		if (doFill || doStroke) {
+			const flatFill = doFill && !gradient;
+			page.save();
+			if (fillAlpha < 1 || strokeAlpha < 1) page.alpha(flatFill ? fillAlpha : 1, strokeAlpha);
+			if (flatFill) page.fillColor(fill.r, fill.g, fill.b);
 			if (doStroke) {
 				page.strokeColor(stroke.r, stroke.g, stroke.b);
-				const join = element.getAttribute('stroke-linejoin');
+				const join = this.#glow !== undefined ? 'round' : element.getAttribute('stroke-linejoin');
 				const cap = element.getAttribute('stroke-linecap');
 				const dash = (element.getAttribute('stroke-dasharray') ?? '')
 					.split(/[\s,]+/)
@@ -213,9 +268,10 @@ class Converter {
 					dash.length && dash.some((v) => v > 0) ? dash : [],
 				);
 			}
-			for (const operator of pathOperators(segments)) page.op(operator);
-			const evenOdd = element.getAttribute('fill-rule') === 'evenodd' ? '*' : '';
-			page.op(doFill && doStroke ? `B${evenOdd}` : doFill ? `f${evenOdd}` : 'S');
+			if (flatFill || doStroke) {
+				for (const operator of pathOperators(segments)) page.op(operator);
+				page.op(flatFill && doStroke ? `B${evenOdd}` : flatFill ? `f${evenOdd}` : 'S');
+			}
 			page.restore();
 		}
 		if (stroke && doStroke) this.#markers(element, segments, alpha);
@@ -277,9 +333,10 @@ export function convertSvgPage(
 	widthIn: number,
 	heightIn: number,
 	images: ReadonlyMap<string, PdfImageResource>,
+	fonts?: PdfFontSet,
 ): SvgPageConversion {
 	const page = new PdfVectorPage(widthIn * 72, heightIn * 72);
-	const converter = new Converter(svg, page, images);
+	const converter = new Converter(svg, page, images, fonts);
 	try {
 		// SVG user space is y-down inches: map it to PDF points, origin bottom left.
 		page.concat([72, 0, 0, -72, 0, page.height]);

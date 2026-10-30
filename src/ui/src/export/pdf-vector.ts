@@ -5,6 +5,7 @@
  * Raster-only documents can use `pdf-pages.ts`.
  */
 import { pdfLiteral } from './pdf-fonts';
+import type { PdfEmbeddedFont } from './pdf-embedded-font';
 
 /** Pixel data for one image XObject. `data` is the (optionally compressed) sample stream. */
 export interface PdfImageResource {
@@ -15,6 +16,15 @@ export interface PdfImageResource {
 	filter?: 'FlateDecode' | 'DCTDecode';
 	/** Optional 8-bit alpha plane of the same pixel size. */
 	alpha?: { data: Uint8Array; filter?: 'FlateDecode' };
+}
+
+/** An axial (linear) or radial gradient painted with the `sh` operator in the current space. */
+export interface PdfShading {
+	kind: 'axial' | 'radial';
+	/** Axial: x0 y0 x1 y1. Radial: x0 y0 r0 x1 y1 r1. */
+	coords: readonly number[];
+	/** Colour stops with offsets in 0..1, in order. */
+	stops: readonly { offset: number; r: number; g: number; b: number }[];
 }
 
 const num = (value: number): string => {
@@ -29,6 +39,8 @@ export class PdfVectorPage {
 	readonly fonts = new Map<string, string>();
 	readonly alphas = new Map<string, { fill: number; stroke: number }>();
 	readonly images = new Map<string, PdfImageResource>();
+	readonly embeddedFonts = new Map<string, PdfEmbeddedFont>();
+	readonly shadings = new Map<string, PdfShading>();
 	constructor(
 		/** Page size in points. */
 		readonly width: number,
@@ -98,6 +110,42 @@ export class PdfVectorPage {
 			)} Tc ${num(spacing.word ?? 0)} Tw ${pdfLiteral(text)} Tj ET`,
 		);
 	}
+	/**
+	 * Text in an embedded font (2-byte CIDs), y-down like `text`. Word spacing is emulated with
+	 * kerning after each space, since `Tw` does not apply to multi-byte codes.
+	 */
+	embeddedText(
+		font: PdfEmbeddedFont,
+		size: number,
+		x: number,
+		y: number,
+		text: string,
+		spacing: { word?: number; character?: number } = {},
+	): void {
+		let name = [...this.embeddedFonts].find(([, existing]) => existing === font)?.[0];
+		if (!name) {
+			name = `E${this.embeddedFonts.size}`;
+			this.embeddedFonts.set(name, font);
+		}
+		const word = spacing.word ? -(spacing.word * 1000) / size : 0;
+		const parts: string[] = [];
+		for (const piece of text.split(/( )/)) {
+			if (!piece) continue;
+			parts.push(`<${font.encode(piece)}>`);
+			if (piece === ' ' && word) parts.push(num(word));
+		}
+		this.op(
+			`BT /${name} ${num(size)} Tf 1 0 0 -1 ${num(x)} ${num(y)} Tm ${num(
+				spacing.character ?? 0,
+			)} Tc [${parts.join(' ')}] TJ ET`,
+		);
+	}
+	/** Paint a gradient over the current clip, in the current space. */
+	paintShading(shading: PdfShading): void {
+		const name = `Sh${this.shadings.size}`;
+		this.shadings.set(name, shading);
+		this.op(`/${name} sh`);
+	}
 	image(resource: PdfImageResource): string {
 		let name = [...this.images].find(([, existing]) => existing === resource)?.[0];
 		if (!name) {
@@ -121,6 +169,57 @@ const latin1 = (text: string): Uint8Array => {
 	for (let index = 0; index < text.length; index++) bytes[index] = text.charCodeAt(index) & 0xff;
 	return bytes;
 };
+
+function shadingDict(shading: PdfShading): string {
+	const stops = shading.stops.length ? shading.stops : [{ offset: 0, r: 0, g: 0, b: 0 }];
+	const colour = (s: { r: number; g: number; b: number }) =>
+		`[${num(s.r)} ${num(s.g)} ${num(s.b)}]`;
+	const pairs = stops.slice(1).map((stop, i) => {
+		const from = stops[i]!;
+		return `<< /FunctionType 2 /Domain [0 1] /C0 ${colour(from)} /C1 ${colour(stop)} /N 1 >>`;
+	});
+	const fn =
+		pairs.length === 0
+			? `<< /FunctionType 2 /Domain [0 1] /C0 ${colour(stops[0]!)} /C1 ${colour(stops[0]!)} /N 1 >>`
+			: pairs.length === 1
+				? pairs[0]!
+				: `<< /FunctionType 3 /Domain [0 1] /Functions [${pairs.join(' ')}] /Bounds [${stops
+						.slice(1, -1)
+						.map((s) => num(Math.min(1, Math.max(0, s.offset))))
+						.join(' ')}] /Encode [${pairs.map(() => '0 1').join(' ')}] >>`;
+	return `<< /ShadingType ${shading.kind === 'axial' ? 2 : 3} /ColorSpace /DeviceRGB /Coords [${shading.coords.map(num).join(' ')}] /Function ${fn} /Extend [true true] >>`;
+}
+
+type ObjectWriter = (id: number, body: string) => void;
+type StreamWriter = (id: number, dictionary: string, data: Uint8Array) => void;
+
+/** The five objects of an embedded subset font starting at `id`; returns the next free id. */
+function writeEmbeddedFont(
+	font: PdfEmbeddedFont,
+	id: number,
+	object: ObjectWriter,
+	stream: StreamWriter,
+): number {
+	const parts = font.build();
+	const base = `${[...'ABCDEF'].map((_, i) => String.fromCharCode(65 + ((id * 7 + i * 5) % 26))).join('')}+${font.family.replace(/[^A-Za-z0-9]/g, '') || 'Font'}`;
+	const [type0, cid, descriptor, file, unicode] = [id, id + 1, id + 2, id + 3, id + 4];
+	const d = parts.descriptor;
+	object(
+		type0,
+		`<< /Type /Font /Subtype /Type0 /BaseFont /${base} /Encoding /Identity-H /DescendantFonts [${cid} 0 R] /ToUnicode ${unicode} 0 R >>`,
+	);
+	object(
+		cid,
+		`<< /Type /Font /Subtype /CIDFontType2 /BaseFont /${base} /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ${descriptor} 0 R /CIDToGIDMap /Identity /DW 1000 /W [0 [${parts.widths.join(' ')}]] >>`,
+	);
+	object(
+		descriptor,
+		`<< /Type /FontDescriptor /FontName /${base} /Flags ${d.flags} /FontBBox [${d.bbox.join(' ')}] /ItalicAngle ${num(d.italicAngle)} /Ascent ${d.ascent} /Descent ${d.descent} /CapHeight ${d.capHeight} /StemV ${d.stemV} /FontFile2 ${file} 0 R >>`,
+	);
+	stream(file, `/Length1 ${parts.fontFile.length}`, parts.fontFile);
+	stream(unicode, '', latin1(parts.toUnicode));
+	return id + 5;
+}
 
 /** Assemble the PDF bytes for one or more pages. */
 export function buildVectorPdf(
@@ -150,6 +249,7 @@ export function buildVectorPdf(
 	// 1 catalog, 2 page tree, 3 info; the rest from 4.
 	let next = 4;
 	const fontIds = new Map<string, number>();
+	const embeddedIds = new Map<PdfEmbeddedFont, number>();
 	const kids: number[] = [];
 	for (const page of pages) {
 		const xobjects: string[] = [];
@@ -187,6 +287,18 @@ export function buildVectorPdf(
 			}
 			fontEntries.push(`/${name} ${id} 0 R`);
 		}
+		for (const [name, font] of page.embeddedFonts) {
+			let id = embeddedIds.get(font);
+			if (!id) {
+				id = next;
+				embeddedIds.set(font, id);
+				next = writeEmbeddedFont(font, id, object, stream);
+			}
+			fontEntries.push(`/${name} ${id} 0 R`);
+		}
+		const shadings = [...page.shadings].map(
+			([name, shading]) => `/${name} ${shadingDict(shading)}`,
+		);
 		const states = [...page.alphas].map(
 			([name, v]) => `/${name} << /ca ${num(v.fill)} /CA ${num(v.stroke)} >>`,
 		);
@@ -197,7 +309,7 @@ export function buildVectorPdf(
 		kids.push(pageId);
 		object(
 			pageId,
-			`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Contents ${contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << ${fontEntries.join(' ')} >> /XObject << ${xobjects.join(' ')} >> /ExtGState << ${states.join(' ')} >> >> >>`,
+			`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Contents ${contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << ${fontEntries.join(' ')} >> /XObject << ${xobjects.join(' ')} >> /ExtGState << ${states.join(' ')} >> /Shading << ${shadings.join(' ')} >> >> >>`,
 		);
 	}
 	object(1, '<< /Type /Catalog /Pages 2 0 R >>');

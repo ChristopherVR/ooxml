@@ -57,8 +57,10 @@ import { isVisioCommentEdit, type VisioCommentEdit } from './edit-comment-comman
 import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
 import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
+import { applyContainerEdit, isVisioContainerEdit } from './edit-container-options';
+import { applyPictureEdit, isVisioPictureEdit } from './edit-picture-adjust';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
-import { applySwimlaneEdit } from './edit-swimlane-ops';
+import { applySwimlaneEdit, swimlaneDeleteTargets } from './edit-swimlane-ops';
 import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
@@ -357,8 +359,9 @@ async function editVsdxTransaction(
 	if (commands.length !== allCommands.length) {
 		const pageCommands = allCommands.filter(isVisioPageEdit);
 		// Fit to Drawing: a page resize and the moves that bring the drawing onto it, as one step.
+		// A cross-functional flowchart that outgrows the page does the same with its own edits.
 		const fit =
-			commands.every((command) => command.type === 'move-shape') &&
+			commands.every((command) => command.type === 'move-shape' || isVisioSwimlaneEdit(command)) &&
 			pageCommands.every((command) => command.type === 'set-page-size');
 		if (commands.length && !fit)
 			fail(
@@ -416,6 +419,8 @@ async function editVsdxTransaction(
 			command.type !== 'set-shape-data' &&
 			!isVisioGroupEdit(command) &&
 			!isVisioDiagramPartEdit(command) &&
+			!isVisioContainerEdit(command) &&
+			!isVisioPictureEdit(command) &&
 			!isVisioGuideEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
@@ -441,6 +446,8 @@ async function editVsdxTransaction(
 				command.type === 'change-shape' ||
 				isVisioGroupEdit(command) ||
 				isVisioDiagramPartEdit(command) ||
+				isVisioContainerEdit(command) ||
+				isVisioPictureEdit(command) ||
 				isVisioGuideEdit(command),
 		)
 	) {
@@ -483,7 +490,14 @@ async function editVsdxTransaction(
 		);
 		// Deleting a stencil shape removes it whole; it needs no proof about its master's formulas.
 		const removals = geometryCommands.filter((command) => command.type === 'delete-shape');
-		instanceDeletes = await admitInstanceDeletes(pkg, roots, removals, masterTemplate(pkg), check);
+		// Deleting a swimlane deletes the shapes in it, stencil instances included, in one step.
+		instanceDeletes = await admitInstanceDeletes(
+			pkg,
+			roots,
+			[...removals, ...commands.flatMap((command) => swimlaneDeleteTargets(roots, command))],
+			masterTemplate(pkg),
+			check,
+		);
 		for (const command of removals)
 			if (
 				pageShapes(roots.get(command.pageId)!).some(
@@ -507,6 +521,19 @@ async function editVsdxTransaction(
 					instanceCommands.add(command);
 				else instanceMoves.add(command);
 			}
+		// A local shape on a layer resizes unless one of its layers is locked, as Visio does.
+		for (const command of geometryCommands)
+			if (
+				command.type === 'resize-shape' &&
+				!instanceCommands.has(command) &&
+				!connectorCommands.has(command)
+			)
+				await assertInstanceLayerUnlocked(
+					pkg,
+					roots.get(command.pageId),
+					command.pageId,
+					command.shapeId,
+				);
 		const scope = async () => {
 			const local = geometryCommands.filter(
 				(command) => !instanceCommands.has(command) && !connectorCommands.has(command),
@@ -671,13 +698,21 @@ async function editVsdxTransaction(
 				setVisioContainerMembers(root, command, check);
 				dirty.set(path, root);
 			} else if (isVisioSwimlaneEdit(command)) {
-				applySwimlaneEdit(roots, document!, command, check);
+				applySwimlaneEdit(roots, document!, command, check, instanceDeletes);
 				dirty.set(path, root);
 			} else if (command.type === 'reconcile-containers') {
 				if (reconcileVisioContainers(roots, document!, command, check)) dirty.set(path, root);
 			} else
 				for (const pageId of insertVisioCallout(roots, document!, command, check))
 					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			partChanged = true;
+		} else if (isVisioContainerEdit(command)) {
+			applyContainerEdit(roots, document!, command, check);
+			dirty.set(pages.get(command.pageId)!, roots.get(command.pageId)!);
+			partChanged = true;
+		} else if (isVisioPictureEdit(command)) {
+			for (const pageId of applyPictureEdit(roots, command, check))
+				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			partChanged = true;
 		} else if (isVisioGuideEdit(command)) {
 			applyGuideEdit(roots, command, check);
