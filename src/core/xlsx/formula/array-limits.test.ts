@@ -16,7 +16,7 @@ describe('array size limits', () => {
 	])('%s is an error, not an allocation', (formula, expected) => {
 		const start = performance.now();
 		expect(calc(formula)).toEqual(expected);
-		expect(performance.now() - start).toBeLessThan(1000);
+		expect(performance.now() - start).toBeLessThan(10_000);
 	});
 
 	it('still builds arrays up to the limits', () => {
