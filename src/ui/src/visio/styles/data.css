@@ -100,6 +100,7 @@
 .shape-data-dialog label,
 .data-import-dialog label,
 .data-graphics-dialog label,
+.data-graphic-items-dialog label,
 .data-link-dialog label {
 	display: grid;
 	gap: 4px;
@@ -118,6 +119,7 @@
 .data-import-dialog select,
 .data-graphics-dialog input,
 .data-graphics-dialog select,
+.data-graphic-items-dialog select,
 .data-link-dialog select {
 	box-sizing: border-box;
 	width: 100%;
@@ -130,10 +132,54 @@
 .shape-data-dialog [role='alert'],
 .data-import-dialog [role='alert'],
 .data-graphics-dialog [role='alert'],
+.data-graphic-items-dialog [role='alert'],
 .data-link-dialog [role='alert'] {
 	margin: 0;
 	color: var(--office-error, #b00020);
 }
 .shape-inspector [data-define-shape-data] {
 	margin-top: 8px;
+}
+/* Data Graphic Fields pane: docked at the right edge of the drawing area. */
+.graphic-fields {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 7;
+	display: flex;
+	flex-direction: column;
+	width: min(280px, 80%);
+	background: var(--_vv-surface);
+	color: var(--_vv-ink);
+	border-left: 1px solid var(--_vv-border);
+	box-shadow: -2px 0 8px #0002;
+	--office-background: var(--_vv-surface);
+	--office-surface: var(--_vv-secondary);
+	--office-foreground: var(--_vv-ink);
+}
+.graphic-fields[hidden] {
+	display: none;
+}
+.graphic-fields-hint {
+	margin: 8px 12px;
+	font-size: 12px;
+	color: var(--_vv-muted);
+}
+.graphic-fields-list {
+	display: grid;
+	gap: 2px;
+	padding: 0 12px 12px;
+	overflow: auto;
+}
+.graphic-fields-list label {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	column-gap: 8px;
+	padding: 4px 0;
+}
+.graphic-fields-list small {
+	grid-column: 2;
+	color: var(--_vv-muted);
 }

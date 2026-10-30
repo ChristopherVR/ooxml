@@ -406,9 +406,16 @@ installed Visio 16 build is used to check that saved files open without repair.
       drive the pointer); the size-match outline is our drawing, not Visio's.
 - [x] **P1** Link Data (opens the External Data window, or imports first), Data Graphics Position,
       Configure and Auto Space (`data-graphic-config.ts`).
-- [ ] **P1** Data Visualizer (a diagram generated from a table), Data Graphic Fields and the
-      Advanced Data Graphics editor are not built; graphics remain separate marked shapes, not
-      Visio data graphic masters.
+- [x] **P1** Data Visualizer (Data tab: Basic and Cross-Functional Flowchart from a local CSV or
+      workbook with Process Step ID, Description, Next Step ID, Connector Label, Shape Type and
+      Function columns, Refresh Diagram from the edited table), Data Graphic Fields (a pane of the
+      selected shape's fields that show as text) and Advanced Data Graphics (the Edit Data Graphic
+      item list: add, edit, delete) (`data-visualizer*.ts`, `data-graphic-items.ts`; ledger 2026-10-30).
+- [ ] **P1** Data graphics are still separate marked shapes, not Visio data graphic masters
+      (`DataGraphic` groups that follow their shape and refresh with the data); Data Visualizer
+      does not connect to Visio's online template service, its connector labels are text boxes that
+      do not follow the connector, and a refresh redraws the generated shapes (new IDs, one undo
+      step per stage).
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).

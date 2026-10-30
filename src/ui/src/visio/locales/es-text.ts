@@ -49,8 +49,6 @@ export const esText: Readonly<Record<string, string>> = {
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Los conjuntos de colores de tema personalizados aún no se escriben; elija un tema o una variante.',
 	'DWG and DXF import is not supported.': 'No se admite la importación de DWG y DXF.',
-	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
-		'Los gráficos de datos se eligen en el menú Gráficos de datos; no hay panel de campos.',
 	'Data graphics are placed at their default position; this option is not built yet.':
 		'Los gráficos de datos se colocan en su posición predeterminada; esta opción aún no está disponible.',
 	'Embedded Excel charts are not supported.': 'No se admiten los gráficos de Excel incrustados.',
