@@ -289,6 +289,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ## Visio
 
+The target is current Microsoft 365 Visio (ribbon, tabs and behaviour, decided 2026-10-30); the
+installed Visio 16 build is used to check that saved files open without repair.
+
 ### File format and model
 
 - [x] **P0** Formula dependencies the evaluator cannot follow no longer refuse a recalculation
