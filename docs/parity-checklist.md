@@ -355,9 +355,16 @@ installed Visio 16 build is used to check that saved files open without repair.
       Phase List, `Relationships` kinds 1/4/2/5/11 confirmed through COM), Direction turns an
       existing chart, separators have phase labels, the page grows with the frame and deleting a
       lane is one undo step (`edit-swimlane-*.ts`, `ui/swimlane.ts`).
-- [ ] **P1** Visio's hidden CFF master shapes (and its add-in that inserts lanes and handles drops)
-      are not written, and lane edits refuse a chart Visio built from its template; no vertical
-      starter template; Visio adds shapes under a list to the list on load.
+- [x] **P1** Lane edits (insert, delete, resize) work on a chart Visio built from its own template:
+      the frame, lists and lanes are recognised by their masters, a new lane is a copy of its
+      neighbour, and the cached values of the master instances are recomputed from the master's
+      formulas (`cff-recalc.ts`, `edit-swimlane-clone.ts`). A vertical Cross-Functional Flowchart
+      starter is on the New page, and shapes lying in a lane join its members on load, as Visio
+      does (`swimlane-membership.ts`).
+- [ ] **P1** Charts the editor creates still use plain shapes with direct cells, not Visio's hidden
+      CFF master instances (so Visio's add-in that inserts lanes and handles drops does not act on
+      them); phases, options (title, style, labels) and Direction of a chart Visio built are
+      refused.
 - [x] **P1** Org chart positions carry Visio's org chart Shape Data (Department, Telephone, Name,
       Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
       deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a

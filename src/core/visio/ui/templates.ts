@@ -16,6 +16,12 @@ export const VISIO_TEMPLATES = [
 		description: 'A process across three horizontal swimlanes that stack and resize together.',
 	},
 	{
+		id: 'cross-functional-flowchart-vertical',
+		name: 'Cross-Functional Flowchart (Vertical)',
+		description:
+			'A process across three vertical swimlanes, lanes side by side with the flow running down.',
+	},
+	{
 		id: 'organization-chart',
 		name: 'Basic Organization Chart',
 		description: 'A small reporting hierarchy joined by connectors.',
@@ -69,16 +75,34 @@ const SWIM: SamplePage = {
 	links: links(['1', '2'], ['2', '3'], ['3', '4']),
 };
 
+const SWIM_VERTICAL: SamplePage = {
+	id: '0',
+	name: 'Cross-Functional Flowchart (Vertical)',
+	width: 11,
+	height: 8.5,
+	boxes: [
+		step('1', 'Place order', 3.1, 5.5, '#F3EEE1', 'flowchart-terminator', 1.6, 0.6),
+		step('2', 'Review order', 5.5, 4.3, '#D8EFEB'),
+		step('3', 'In stock?', 5.5, 2.9, '#DFEBF7', 'flowchart-decision', 1.5, 1),
+		step('4', 'Ship order', 7.9, 1.8, '#D8EFEB'),
+	],
+	links: links(['1', '2'], ['2', '3'], ['3', '4']),
+};
+
 const SWIM_STEPS = ['1', '2', '3', '4'];
 /** Three 1.8 inch lanes under a title bar, 8.4 inches wide, from the lower-left corner (0.6, 1.1). */
-const swimlaneFrame = (pageId: string): VisioEdit => ({
+const swimlaneFrame = (pageId: string, direction: 'horizontal' | 'vertical'): VisioEdit => ({
 	type: 'create-swimlanes',
 	pageId,
 	frameId: '50',
 	laneIds: ['10', '11', '12'],
 	headings: LANES,
-	box: { x: 4.8, y: 1.1 + (5.4 + 0.35) / 2, width: 8.4, height: 5.4 + 0.35 },
-	direction: 'horizontal',
+	// Vertical: three 2.4 inch columns, 5.4 inches tall, centred on the 11 inch page.
+	box:
+		direction === 'horizontal'
+			? { x: 4.8, y: 1.1 + (5.4 + 0.35) / 2, width: 8.4, height: 5.4 + 0.35 }
+			: { x: 5.5, y: 1.1 + (5.4 + 0.35) / 2, width: 7.2, height: 5.4 + 0.35 },
+	direction,
 	title: 'Cross-Functional Flowchart',
 });
 
@@ -105,17 +129,26 @@ const ORG: SamplePage = {
 export async function createTemplateVsdx(id: VisioTemplateId): Promise<Uint8Array> {
 	if (!isVisioTemplateId(id)) throw new Error('Unknown drawing template.');
 	if (id === 'blank') return createVsdx();
-	const page = id === 'basic-flowchart' ? FLOW : id === 'organization-chart' ? ORG : SWIM;
+	const page =
+		id === 'basic-flowchart'
+			? FLOW
+			: id === 'organization-chart'
+				? ORG
+				: id === 'cross-functional-flowchart-vertical'
+					? SWIM_VERTICAL
+					: SWIM;
 	const blank = await createVsdx({
 		width: page.width,
 		height: page.height,
 		stencils: id === 'organization-chart' ? ['basic'] : ['basic-flowchart'],
 	});
 	const named = await editVsdx(blank, [{ type: 'rename-page', pageId: page.id, name: page.name }]);
-	if (page === SWIM) {
+	if (page === SWIM || page === SWIM_VERTICAL) {
 		// The frame and its lanes go in first so they sit behind the process shapes, which then
 		// join the lane they were drawn in.
-		const lanes = await editVsdx(named.bytes, [swimlaneFrame(page.id)]);
+		const lanes = await editVsdx(named.bytes, [
+			swimlaneFrame(page.id, page === SWIM ? 'horizontal' : 'vertical'),
+		]);
 		const drawn = await editVsdx(lanes.bytes, shapeEdits(page));
 		const joined = [
 			{ type: 'reconcile-containers' as const, pageId: page.id, shapeIds: SWIM_STEPS },

@@ -30,6 +30,7 @@ it('shows a tile per template, Blank Drawing first', () => {
 it.each([
 	['basic-flowchart', 4],
 	['cross-functional-flowchart', 3],
+	['cross-functional-flowchart-vertical', 3],
 	['organization-chart', 5],
 ] as const)('creates the %s template from its tile', async (id, links) => {
 	const { viewer, root } = setup();

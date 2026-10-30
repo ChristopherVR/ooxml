@@ -43,6 +43,7 @@ import {
 	type Report,
 } from './sheet';
 import { listVisioMasters } from './master-list';
+import { adoptSwimlaneContents } from './swimlane-membership';
 import { readVisioStencilWindows } from './stencil-windows';
 import { readVisioFieldProperties } from './text-field-context';
 import { visioWallClock } from './text-fields';
@@ -332,6 +333,7 @@ export async function parseVsdx(
 		);
 		const shapes = normalizeShapes(rawShapes, context);
 		normalizeVisioPageGeometry(shapes, drawingToPageScale, checkTime);
+		adoptSwimlaneContents(shapes);
 		const seen = new Set<string>();
 		const visit = (items: typeof shapes): void => {
 			for (const shape of items) {

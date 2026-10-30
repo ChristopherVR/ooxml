@@ -9,6 +9,7 @@ describe('drawing templates', () => {
 			'Blank Drawing',
 			'Basic Flowchart',
 			'Cross-Functional Flowchart',
+			'Cross-Functional Flowchart (Vertical)',
 			'Basic Organization Chart',
 		]);
 		expect(isVisioTemplateId('nope')).toBe(false);
@@ -22,6 +23,7 @@ describe('drawing templates', () => {
 	it.each([
 		['basic-flowchart', 5, 4],
 		['cross-functional-flowchart', 8, 3],
+		['cross-functional-flowchart-vertical', 8, 3],
 		['organization-chart', 6, 5],
 	] as const)('round-trips %s with glued connectors', async (id, boxes, links) => {
 		const model = await parseVsdx(await createTemplateVsdx(id));
@@ -61,6 +63,27 @@ describe('drawing templates', () => {
 		expect(members('10')).toContain('1');
 		expect(members('11')).toEqual(expect.arrayContaining(['2', '3']));
 		expect(members('12')).toContain('4');
+	});
+
+	it('builds a vertical flowchart: columns side by side, shapes in their column', async () => {
+		const page = (await parseVsdx(await createTemplateVsdx('cross-functional-flowchart-vertical')))
+			.pages[0]!;
+		const frame = page.shapes.find((shape) => shape.id === '50')?.structure;
+		expect(frame).toMatchObject({
+			swimlane: { role: 'frame', options: { direction: 'vertical' } },
+		});
+		const lane = (id: string) => page.shapes.find((shape) => shape.id === id)!;
+		expect(lane('10').width).toBeLessThan(lane('10').height);
+		const members = (id: string) => {
+			const found = lane(id).structure;
+			return found?.type === 'container' ? found.memberIds : [];
+		};
+		expect(members('10')).toContain('1');
+		expect(members('11')).toEqual(expect.arrayContaining(['2', '3']));
+		expect(members('12')).toContain('4');
+		// Left to right in the order the lanes are listed.
+		expect(lane('10').transform[4]).toBeLessThan(lane('11').transform[4]);
+		expect(lane('11').transform[4]).toBeLessThan(lane('12').transform[4]);
 	});
 
 	it('rejects unknown ids', async () => {

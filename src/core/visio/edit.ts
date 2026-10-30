@@ -66,6 +66,7 @@ import { applyPictureEdit, isVisioPictureEdit } from './edit-picture-adjust';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
 import { applySwimlaneEdit, swimlaneDeleteTargets } from './edit-swimlane-ops';
 import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
+import { loadCffMasters, noCffMasters } from './cff-masters';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
@@ -429,6 +430,8 @@ async function editVsdxTransaction(
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
+	// Lane commands also run on charts Visio built, whose frame, lists and lanes are master instances.
+	const cffMasters = commands.some(isVisioSwimlaneEdit) ? await loadCffMasters(pkg) : noCffMasters;
 	let masterMovePins = emptyMasterMoveProof();
 	const instanceCommands = new Set<VisioGeometryEdit>();
 	let instanceDeletes: ReadonlySet<Element> = new Set();
@@ -704,7 +707,7 @@ async function editVsdxTransaction(
 				setVisioContainerMembers(root, command, check);
 				dirty.set(path, root);
 			} else if (isVisioSwimlaneEdit(command)) {
-				applySwimlaneEdit(roots, document!, command, check, instanceDeletes);
+				applySwimlaneEdit(roots, document!, command, check, instanceDeletes, cffMasters);
 				dirty.set(path, root);
 			} else if (command.type === 'reconcile-containers') {
 				if (reconcileVisioContainers(roots, document!, command, check)) dirty.set(path, root);

@@ -1,4 +1,5 @@
-import { children } from './sheet';
+import { attribute, children } from './sheet';
+import { cloneNativeLane } from './edit-swimlane-clone';
 import { fail } from './package-common';
 import { setCell } from './edit-geometry-cells';
 import { deleteVisioShapes } from './edit-delete';
@@ -12,6 +13,7 @@ import {
 	writeContainerMembers,
 	writeListMembers,
 } from './edit-container-members';
+import { noCffMasters, type CffMasterSet } from './cff-masters';
 import { turnFlowchart } from './edit-swimlane-turn';
 import {
 	VISIO_CONTAINER_MARGIN_ROW,
@@ -46,6 +48,7 @@ import {
 	frameOf,
 	laneOf,
 	lanesOf,
+	masterRole,
 	optionsOf,
 	orderSeparators,
 	place,
@@ -129,6 +132,21 @@ function createSwimlanes(scope: Scope, edit: VisioCreateSwimlanesEdit): void {
 	sendBehind(root, [swim, phase, frame, ...lanes]);
 }
 
+/** A lane Visio built goes without its edge cases: its connects go, the lists forget it in relayout. */
+function removeNativeLane(scope: Scope, lane: Element): void {
+	const ids = new Set(
+		Array.from(lane.getElementsByTagName('Shape')).map((shape) => attribute(shape, 'ID') ?? ''),
+	);
+	for (const connects of children(scope.root, 'Connects'))
+		for (const connect of children(connects, 'Connect'))
+			if (
+				ids.has(attribute(connect, 'FromSheet') ?? '') ||
+				ids.has(attribute(connect, 'ToSheet') ?? '')
+			)
+				connects.removeChild(connect);
+	lane.parentNode!.removeChild(lane);
+}
+
 function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 	const frame = frameOf(scope, edit.frameId);
 	ensureLists(scope, frame);
@@ -137,22 +155,25 @@ function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 	const reference = laneOf(scope, frame, edit.relativeTo, options.direction);
 	const old = boundsOf([reference]);
 	if (!old) fail('UNSUPPORTED_GEOMETRY_EDIT', 'The lane has no usable bounds.');
-	const lane = createLaneShape(
-		scope.root,
-		scope.document,
-		edit.shapeId,
-		{
-			x: (old.minX + old.maxX) / 2,
-			y: (old.minY + old.maxY) / 2,
-			width: old.maxX - old.minX,
-			height: old.maxY - old.minY,
-		},
-		edit.heading,
-		options.direction,
-		options.rotate,
-		options.style,
-	);
-	frame.parentNode!.insertBefore(lane, frame.nextSibling);
+	const native = masterRole(scope, reference) === 'lane';
+	const lane = native
+		? cloneNativeLane(scope.root, reference, edit.shapeId, edit.heading)
+		: createLaneShape(
+				scope.root,
+				scope.document,
+				edit.shapeId,
+				{
+					x: (old.minX + old.maxX) / 2,
+					y: (old.minY + old.maxY) / 2,
+					width: old.maxX - old.minX,
+					height: old.maxY - old.minY,
+				},
+				edit.heading,
+				options.direction,
+				options.rotate,
+				options.style,
+			);
+	if (!native) frame.parentNode!.insertBefore(lane, frame.nextSibling);
 	const order = [...lanes];
 	order.splice(order.indexOf(reference) + (edit.position === 'after' ? 1 : 0), 0, lane);
 	relayout(scope, frame, order);
@@ -169,17 +190,21 @@ function deleteSwimlane(
 	if (lanesOf(scope, frame, options.direction).length < 2)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'The last lane of a flowchart cannot be deleted.');
 	const lane = laneOf(scope, frame, edit.laneId, options.direction);
+	const native = masterRole(scope, lane) === 'lane';
 	const present = new Set(topLevelShapes(scope.root).map(shapeIdOf));
 	// The lane's shapes go with it in the same step, stencil instances included (the transaction
 	// admitted them: `instances`); `contents` only decides who moves the lanes that close up.
-	const ids = [edit.laneId, ...containerClosure(scope.root, lane)].filter((id) => present.has(id));
-	deleteVisioShapes(
-		scope.roots,
-		scope.document,
-		ids.map((shapeId) => ({ type: 'delete-shape' as const, pageId: edit.pageId, shapeId })),
-		scope.check,
-		instances,
-	);
+	const closure = [...containerClosure(scope.root, lane)].filter((id) => present.has(id));
+	const ids = native ? closure : [edit.laneId, ...closure];
+	if (ids.length)
+		deleteVisioShapes(
+			scope.roots,
+			scope.document,
+			ids.map((shapeId) => ({ type: 'delete-shape' as const, pageId: edit.pageId, shapeId })),
+			scope.check,
+			instances,
+		);
+	if (native) removeNativeLane(scope, lane);
 	relayout(scope, frame);
 }
 
@@ -295,6 +320,18 @@ function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
 const styleLine = (style: number) =>
 	['#C99A55', '#5B9BD5', '#7F7F7F', '#6AA84F'][style - 1] ?? '#C99A55';
 
+/** The commands a chart Visio built does not take yet: they would rewrite the masters' own cells. */
+function refuseBuiltByVisio(scope: Scope, edit: VisioSwimlaneEdit): void {
+	if (edit.type === 'create-swimlanes' || scope.masters.empty) return;
+	const frame = topLevelShapes(scope.root).find((shape) => shapeIdOf(shape) === edit.frameId);
+	if (!frame || masterRole(scope, frame) !== 'frame') return;
+	if (edit.type === 'insert-separator' || edit.type === 'set-swimlane-options')
+		fail(
+			'UNSUPPORTED_GEOMETRY_EDIT',
+			'Phases, flowchart options and direction of a chart Visio built are not editable yet; lanes are.',
+		);
+}
+
 /** Apply a cross-functional flowchart command to its page; throws a VisioPackageError on refusal. */
 export function applySwimlaneEdit(
 	roots: ReadonlyMap<string, Element>,
@@ -302,12 +339,14 @@ export function applySwimlaneEdit(
 	edit: VisioSwimlaneEdit,
 	check: () => void,
 	instances: ReadonlySet<Element> = new Set(),
+	masters: CffMasterSet = noCffMasters,
 ): void {
 	check();
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const contents = 'contents' in edit && edit.contents === 'leave' ? 'leave' : 'move';
-	const scope: Scope = { roots, document, root, pageId: edit.pageId, check, contents };
+	const scope: Scope = { roots, document, root, pageId: edit.pageId, check, contents, masters };
+	refuseBuiltByVisio(scope, edit);
 	if (edit.type === 'create-swimlanes') createSwimlanes(scope, edit);
 	else if (edit.type === 'insert-swimlane') insertSwimlane(scope, edit);
 	else if (edit.type === 'delete-swimlane') deleteSwimlane(scope, edit, instances);

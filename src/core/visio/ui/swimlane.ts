@@ -76,6 +76,17 @@ export function visioSwimlaneInfo(page: VisioPage, shapeId: string): VisioSwimla
 export const visioIsSwimlaneShape = (page: VisioPage, shapeId: string): boolean =>
 	visioSwimlaneInfo(page, shapeId) !== undefined;
 
+/**
+ * The title area a chart keeps above its lanes: Visio's own is taller than the editor's bar, so a
+ * chart whose frame is an instance of Visio's master keeps the space it has between frame and lanes.
+ */
+function titleSize(page: VisioPage, info: VisioSwimlaneInfo): number | undefined {
+	if (!info.frame.masterId || !info.options.showTitle || !info.lanes.length) return undefined;
+	const frame = drawingBox(page, info.frame);
+	const top = Math.max(...info.lanes.map((lane) => drawingBox(page, lane).maxY));
+	return Number.isFinite(top) ? Math.max(0, frame.maxY - top) : undefined;
+}
+
 /** Direct members of a lane that are not lanes themselves; nested ones move with their container. */
 function contentIds(page: VisioPage, lane: VisioShape): string[] {
 	return membersOf(lane).filter((id) => topLevel(page, id));
@@ -176,6 +187,7 @@ export function visioInsertSwimlane(
 		drawingBox(page, info.frame),
 		info.options.showTitle,
 		inputs,
+		titleSize(page, info),
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
@@ -208,6 +220,7 @@ export function visioDeleteSwimlane(page: VisioPage, laneId: string): VisioEdit[
 		drawingBox(page, info.frame),
 		info.options.showTitle,
 		stackInput(page, remaining),
+		titleSize(page, info),
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
@@ -253,6 +266,7 @@ export function visioResizeSwimlane(
 		drawingBox(page, info.frame),
 		info.options.showTitle,
 		inputs,
+		titleSize(page, info),
 	);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
