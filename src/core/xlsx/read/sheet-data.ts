@@ -56,6 +56,7 @@ function readValue(ctx: CellContext, c: XmlElement, cell: Cell): void {
 			}
 			cell.value = entry.text;
 			if (entry.runs) cell.richText = entry.runs.map((run) => ({ ...run }));
+			if (entry.phonetic) cell.phonetic = structuredClone(entry.phonetic);
 			return;
 		}
 		case 'inlineStr': {
@@ -64,6 +65,7 @@ function readValue(ctx: CellContext, c: XmlElement, cell: Cell): void {
 			const entry = parseRichString(is, ctx.palette);
 			cell.value = entry.text;
 			if (entry.runs) cell.richText = entry.runs;
+			if (entry.phonetic) cell.phonetic = entry.phonetic;
 			return;
 		}
 		case 'str':

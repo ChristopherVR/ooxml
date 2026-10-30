@@ -82,7 +82,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       use cached values and cannot be refreshed or edited.
 - [ ] **P1** Pivots outside the bounded profile are read-only: label and value filters, shared
       caches, calculated fields and items, date-group filters (`pivot/admission.ts`).
-- [ ] **P2** Phonetic runs (`rPh`) are dropped from shared strings (`read/shared-strings.ts`).
+- [x] **P2** Phonetic runs (`rPh`) are dropped from shared strings (`read/shared-strings.ts`).
+      Closed: `rPh` runs and `phoneticPr` are read onto the cell (`Cell.phonetic`) and written back
+      with the shared string. The guide is not displayed, edited or carried by copy and paste or
+      collaboration, and `phoneticPr` `fontId` is written as read.
 - [ ] **P2** Named sheet views and ActiveX controls are not modelled.
 - [ ] **P2** Collaboration does not share filters, pivots, panes and views, page setup,
       protection, images and drawings or document properties.

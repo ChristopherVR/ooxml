@@ -1,17 +1,35 @@
 import { NS } from '../../xml/index';
-import type { RichTextRun } from '../model';
+import type { PhoneticText, RichTextRun } from '../model';
 import { fontXml } from './style-xml';
-import { XML_HEADER, tElement } from './xml-out';
+import { XML_HEADER, attrs, tElement } from './xml-out';
 
-/** The `<si>`/`<is>` body of a plain or rich string. */
-export function richStringXml(text: string, runs: readonly RichTextRun[] | undefined): string {
-	if (!runs?.length) return tElement(text);
-	return runs
+/** The `rPh` runs and `phoneticPr` of a string's phonetic guide (after the runs in `CT_Rst`). */
+function phoneticXml(phonetic: PhoneticText): string {
+	const runs = phonetic.runs
+		.map((run) => `<rPh${attrs({ sb: run.sb, eb: run.eb })}>${tElement(run.text)}</rPh>`)
+		.join('');
+	const pr = phonetic.properties;
+	const settings = pr
+		? `<phoneticPr${attrs({ fontId: pr.fontId, type: pr.type, alignment: pr.alignment })}/>`
+		: '';
+	return runs + settings;
+}
+
+/** The `<si>`/`<is>` body of a plain or rich string, with its phonetic guide when it has one. */
+export function richStringXml(
+	text: string,
+	runs: readonly RichTextRun[] | undefined,
+	phonetic?: PhoneticText,
+): string {
+	const guide = phonetic ? phoneticXml(phonetic) : '';
+	if (!runs?.length) return tElement(text) + guide;
+	const body = runs
 		.map(
 			(run) =>
 				`<r>${run.font && Object.keys(run.font).length ? fontXml(run.font, 'rPr') : ''}${tElement(run.text)}</r>`,
 		)
 		.join('');
+	return body + guide;
 }
 
 /** Collects the shared string table while worksheets are written. */
@@ -20,9 +38,9 @@ export class SharedStringTable {
 	private readonly index = new Map<string, number>();
 	private references = 0;
 
-	id(text: string, runs?: readonly RichTextRun[]): number {
+	id(text: string, runs?: readonly RichTextRun[], phonetic?: PhoneticText): number {
 		this.references++;
-		const body = richStringXml(text, runs);
+		const body = richStringXml(text, runs, phonetic);
 		let id = this.index.get(body);
 		if (id === undefined) {
 			id = this.items.length;

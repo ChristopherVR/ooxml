@@ -289,7 +289,8 @@ line/marker swatches and position-authoring controls remain incomplete.
     (`write/workbook-part.ts`), so Excel recalculates each saved workbook on open and asks
     to save on close. x14 data validation (lists over another sheet) is kept in `extLst` but
     not modelled, rich values and in-cell pictures (`xl/richData`, IMAGE() results, linked
-    data types) have no model, phonetic runs (`rPh`) are dropped from shared strings,
+    data types) have no model, phonetic guides (`rPh`) are read and written with their string
+    but not displayed, edited or copied,
     connections and query tables are only carried verbatim, and named sheet views and
     ActiveX controls are not modelled.
 12. Ribbon. There are no Draw, Picture Format, Shape Format, Chart Format (a pane instead),

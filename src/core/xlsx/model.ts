@@ -199,6 +199,26 @@ export interface RichTextRun {
 	font?: Font;
 }
 
+/** One phonetic guide run (`rPh`): the reading of the base characters `sb` up to `eb`. */
+export interface PhoneticRun {
+	text: string;
+	sb: number;
+	eb: number;
+}
+
+/** Phonetic guide settings (`phoneticPr`), kept as read. */
+export interface PhoneticProperties {
+	fontId?: number;
+	type?: 'halfwidthKatakana' | 'fullwidthKatakana' | 'Hiragana' | 'noConversion';
+	alignment?: 'noControl' | 'left' | 'center' | 'distributed';
+}
+
+/** The phonetic guide of a string (East Asian reading runs), kept with the cell it is shown in. */
+export interface PhoneticText {
+	runs: PhoneticRun[];
+	properties?: PhoneticProperties;
+}
+
 export interface Cell {
 	value: CellValue;
 	/** The formula without its leading `=`, as written in `<f>`. */
@@ -209,6 +229,8 @@ export interface Cell {
 	styleId?: number;
 	/** Rich text runs for a string value with mixed formatting. */
 	richText?: RichTextRun[];
+	/** Phonetic guide runs and settings of a string (`rPh`, `phoneticPr`). */
+	phonetic?: PhoneticText;
 	/**
 	 * The formula was stored as an Excel dynamic-array formula (`cm` pointing at `XLDAPR`
 	 * cell metadata with `fDynamic`). Informational: formulas without {@link legacyFormula}

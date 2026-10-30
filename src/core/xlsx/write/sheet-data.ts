@@ -84,7 +84,7 @@ function cellXml(
 			v = escapeText(encodeEscapes(text));
 		} else {
 			t = 's';
-			v = String(ctx.strings.id(text, cell.richText));
+			v = String(ctx.strings.id(text, cell.richText, cell.phonetic));
 		}
 	} else if (isCellError(value)) {
 		t = 'e';
