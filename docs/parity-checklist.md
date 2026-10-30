@@ -182,11 +182,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
-- [ ] **P1** Picture bullets (`numPicBullet`): existing ones are now resolved (VML `imagedata` and
-      `w:drawing`), drawn as the editor marker at the font size or the authored shape size, kept
-      byte-identical on save and reusable by new levels (`lvlPicBulletId`). Still open: there is no
-      Define New Bullet > Picture path (a new picture cannot be added or edited), and page layout
-      measures the fallback glyph rather than the picture width.
+- [x] **P1** Picture bullets (`numPicBullet`): resolved (VML `imagedata` and `w:drawing`), drawn as
+      the editor marker at the font size or the authored shape size, measured by the picture width
+      in page layout, kept byte-identical on save, and creatable through Bullets > Picture bullet...
+      (new entry, media part and `numbering.xml.rels` relationship written on save).
 - [ ] **P1** Protection: forms protection is enforced; read-only, comments-only and
       tracked-changes-only are kept but not enforced, and there is no Restrict Editing UI.
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not

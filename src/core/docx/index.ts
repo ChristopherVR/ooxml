@@ -83,6 +83,7 @@ export { setListStartOverride } from './numbering-start-edit';
 export {
 	ensureListDefinition,
 	createListDefinition,
+	createPictureBulletList,
 	linkStylesToList,
 	type ListKind,
 } from './numbering-editing';

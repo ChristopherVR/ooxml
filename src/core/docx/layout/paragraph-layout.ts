@@ -169,8 +169,12 @@ function measureParagraph(
 	/** Where a line's text starts, from the paragraph's text margin (indent plus first-line offset). */
 	const lineStart = (lineIndex: number) =>
 		leftPx + (lineIndex === 0 ? firstLineExtraPx : 0) + boxFor(lineIndex).leftInsetPx;
-	const tokenWidth = (token: BreakToken): number =>
-		token.kind === 'word' || token.kind === 'space'
+	const tokenWidth = (token: BreakToken): number => {
+		const run = token.kind === 'word' ? paragraph.runs[token.runIndex] : undefined;
+		// A picture bullet takes its picture's width, not the fallback glyph's.
+		if (run?.marker?.widthPx !== undefined && token.kind === 'word' && token.sourceStart === 0)
+			if (token.text === run.text.slice(0, run.marker.length)) return run.marker.widthPx;
+		return token.kind === 'word' || token.kind === 'space'
 			? runTextWidth(
 					token.text,
 					expectDefined(paragraph.runs[token.runIndex], 'token run'),
@@ -180,6 +184,7 @@ function measureParagraph(
 			: token.kind === 'object'
 				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)
 				: 0;
+	};
 	const widths = tokens.map(tokenWidth);
 	const ends = new Set(['tab', 'lineBreak', 'pageBreak', 'columnBreak']);
 	/** Width of the text after the tab at `index`, whole and up to its first decimal separator. */

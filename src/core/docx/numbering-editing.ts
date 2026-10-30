@@ -3,6 +3,7 @@ import type {
 	AbstractNumDefinition,
 	NumberingCatalog,
 	NumberingLevelDefinition,
+	NumberingPictureBullet,
 	NumDefinition,
 } from './numbering-model';
 import type { ParagraphStyleCatalog } from './model-paragraph';
@@ -78,6 +79,33 @@ export function ensureListDefinition(
 	kind: ListKind,
 ): { catalog: NumberingCatalog; numId: number } {
 	return createListDefinition(catalog, Object.values(buildLevels(kind)));
+}
+
+/**
+ * A new bulleted list whose every level draws the given picture (Define New Bullet > Picture).
+ * The picture becomes a new `numPicBullet` entry; its bytes are supplied as pending media under
+ * `picture.partName` when the document is saved. Pure: never mutates `catalog`.
+ */
+export function createPictureBulletList(
+	catalog: NumberingCatalog | undefined,
+	picture: Omit<NumberingPictureBullet, 'id'>,
+): { catalog: NumberingCatalog; numId: number; pictureBulletId: string } {
+	const pictureBulletId = nextId(Object.keys(catalog?.pictureBullets ?? {}), 0);
+	const withPicture: NumberingCatalog = {
+		abstractNums: { ...(catalog?.abstractNums ?? {}) },
+		nums: { ...(catalog?.nums ?? {}) },
+		pictureBullets: {
+			...(catalog?.pictureBullets ?? {}),
+			[pictureBulletId]: { ...picture, id: pictureBulletId },
+		},
+		warnings: catalog?.warnings ?? [],
+	};
+	const levels = Object.values(buildLevels('bullet')).map((level) => ({
+		...level,
+		pictureBulletId,
+	}));
+	const created = createListDefinition(withPicture, levels);
+	return { ...created, pictureBulletId };
 }
 
 /** Adds a validated independent definition without modifying any imported list. */

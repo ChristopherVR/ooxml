@@ -277,6 +277,7 @@ export const zhCNRibbon: RibbonStrings = {
 	'Numbered list': '编号',
 	'Decrease list level': '降低列表级别',
 	'Increase list level': '提高列表级别',
+	'Picture bullet...': '图片项目符号...',
 	'Remove list': '删除列表',
 	'Insert row above': '在上方插入行',
 	'Insert row below': '在下方插入行',

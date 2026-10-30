@@ -239,6 +239,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		core.inserts.smartArt.dialog.element,
 		...core.formatDialogs.elements,
 		core.inserts.pictureInput,
+		core.inserts.bulletInput,
 	);
 	if (core.pendingFileName) chrome.fileName = core.pendingFileName;
 	root.append(style, frame);

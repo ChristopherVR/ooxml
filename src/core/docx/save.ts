@@ -166,7 +166,7 @@ export async function saveDocx(
 	);
 	// Edited charts are written back with their workbooks; unedited chart parts are not touched.
 	await applyChartPartEdits(zip, model, binding?.base);
-	await applyNumberingCatalog(zip, model, binding);
+	await applyNumberingCatalog(zip, model, binding, pendingMedia);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
 	if (binding) await applyStyleNumbering(zip, model, binding.base);
 	if (binding) await applyStyleFormatting(zip, model, binding.base);

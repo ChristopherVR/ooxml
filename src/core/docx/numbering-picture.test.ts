@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './parse';
-import { createListDefinition } from './numbering-editing';
+import { createListDefinition, createPictureBulletList } from './numbering-editing';
 import { computeListLabels } from './numbering-format';
 import { pictureBulletSizePt } from './numbering-picture';
 import type { Paragraph } from './model';
@@ -108,5 +108,67 @@ describe('picture bullets', () => {
 		await expect(
 			loaded.save({ ...loaded.model, blocks: [paragraph], numberingCatalog: catalog }),
 		).rejects.toThrow(/picture bullet "9"/);
+	});
+
+	it('adds a new picture bullet with its media and relationship, leaving the old one untouched', async () => {
+		const bytes = await pictureBulletDocx();
+		const loaded = await loadDocx(bytes);
+		const newPng = Uint8Array.from([137, 80, 78, 71, 9, 9, 9]);
+		const { catalog, numId, pictureBulletId } = createPictureBulletList(
+			loaded.model.numberingCatalog,
+			{
+				partName: 'word/media/new-bullet.png',
+				contentType: 'image/png',
+				widthPt: 10,
+				heightPt: 10,
+			},
+		);
+		expect(pictureBulletId).toBe('1');
+		const paragraph: Paragraph = {
+			type: 'paragraph',
+			id: 'added',
+			runs: [{ text: 'Picture list' }],
+			numbering: { numId, level: 0 },
+		};
+		const saved = await loaded.save(
+			{ ...loaded.model, blocks: [...loaded.model.blocks, paragraph], numberingCatalog: catalog },
+			new Map([['word/media/new-bullet.png', { bytes: newPng, contentType: 'image/png' }]]),
+		);
+		const output = await JSZip.loadAsync(saved);
+		const xml = (await output.file('word/numbering.xml')?.async('string')) ?? '';
+		// The original entry is preserved verbatim and the new one follows it, before any abstractNum.
+		expect(xml).toContain('style="width:9pt;height:12pt"');
+		expect(xml.indexOf('w:numPicBulletId="1"')).toBeGreaterThan(
+			xml.indexOf('w:numPicBulletId="0"'),
+		);
+		expect(xml.indexOf('w:numPicBulletId="1"')).toBeLessThan(xml.indexOf('<w:abstractNum '));
+		const rels = (await output.file('word/_rels/numbering.xml.rels')?.async('string')) ?? '';
+		expect(rels).toContain('Target="media/image1.png"');
+		expect(rels).toContain('Target="media/new-bullet.png"');
+		expect(await output.file('word/media/new-bullet.png')?.async('uint8array')).toEqual(newPng);
+		expect(await output.file('word/media/image1.png')?.async('uint8array')).toEqual(PNG);
+		const reopened = await loadDocx(await output.generateAsync({ type: 'uint8array' }));
+		const picture = reopened.model.numberingCatalog?.pictureBullets?.['1'];
+		expect(picture).toMatchObject({ partName: 'word/media/new-bullet.png', widthPt: 10 });
+		expect(reopened.media?.get('word/media/new-bullet.png')).toEqual(newPng);
+		const label = computeListLabels(reopened.model).get((reopened.model.blocks[1] as Paragraph).id);
+		expect(label?.picture?.id).toBe('1');
+	});
+
+	it('rejects a new picture bullet whose bytes were not supplied', async () => {
+		const loaded = await loadDocx(await pictureBulletDocx());
+		const { catalog, numId } = createPictureBulletList(loaded.model.numberingCatalog, {
+			partName: 'word/media/missing.png',
+			contentType: 'image/png',
+		});
+		const paragraph: Paragraph = {
+			type: 'paragraph',
+			id: 'm',
+			runs: [{ text: 'x' }],
+			numbering: { numId, level: 0 },
+		};
+		await expect(
+			loaded.save({ ...loaded.model, blocks: [paragraph], numberingCatalog: catalog }),
+		).rejects.toThrow(/Missing bytes for picture bullet/);
 	});
 });

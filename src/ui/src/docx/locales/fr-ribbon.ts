@@ -273,6 +273,7 @@ export const frRibbon: RibbonStrings = {
 	'Numbered list': 'Liste numérotée',
 	'Decrease list level': 'Réduire le niveau de liste',
 	'Increase list level': 'Augmenter le niveau de liste',
+	'Picture bullet...': 'Puce image...',
 	'Remove list': 'Supprimer la liste',
 	'Insert row above': 'Insérer une ligne au-dessus',
 	'Insert row below': 'Insérer une ligne au-dessous',

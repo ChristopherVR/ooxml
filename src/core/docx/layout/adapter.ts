@@ -19,6 +19,7 @@ import { shapeSvg } from '../shape-svg';
 import type { ShapeSpec } from '../shape-model';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
+import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
@@ -245,10 +246,22 @@ export function adaptDocumentModel(
 		const first = adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style);
 		const marker = label.markerFormat;
 		const suffix = label.suffix === 'tab' ? '\t' : label.suffix === 'space' ? ' ' : '';
+		const pictureWidthPx = label.picture
+			? (pictureBulletSizePt(
+					label.picture,
+					marker?.fontSizeHalfPoints ? marker.fontSizeHalfPoints / 2 : (first.fontSizePt ?? 11),
+				).widthPt *
+					4) /
+				3
+			: undefined;
 		return {
 			text: `${displayListLabel(label.text)}${suffix}`,
 			synthetic: true,
-			marker: { length: displayListLabel(label.text).length, alignment: label.alignment ?? 'left' },
+			marker: {
+				length: displayListLabel(label.text).length,
+				alignment: label.alignment ?? 'left',
+				...(pictureWidthPx !== undefined ? { widthPx: pictureWidthPx } : {}),
+			},
 			...definedProps({
 				bold: marker?.bold ?? first.bold,
 				italic: marker?.italic ?? first.italic,

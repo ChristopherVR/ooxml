@@ -1,9 +1,15 @@
 import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
-import type { DocumentModel, NumberingCatalog, NumberingLevelDefinition } from 'ooxml-core/docx';
+import type {
+	DocumentModel,
+	NumberingCatalog,
+	NumberingLevelDefinition,
+	NumberingPictureBullet,
+} from 'ooxml-core/docx';
 import {
 	createListDefinition,
+	createPictureBulletList,
 	headingListLevels,
 	isHeadingListKind,
 	type HeadingListKind,
@@ -181,6 +187,19 @@ export function applyCustomList(
 		model.numberingCatalog = created.catalog;
 		const linked = linkStylesToList(model.paragraphStyles, levels, created.numId);
 		if (linked) model.paragraphStyles = linked;
+		return created.numId;
+	});
+}
+
+/** Starts a list whose bullets draw `picture` (a new `numPicBullet`; bytes are staged as media). */
+export function applyPictureBulletList(
+	view: EditorView,
+	model: DocumentModel,
+	picture: Omit<NumberingPictureBullet, 'id'>,
+): void {
+	toggleList(view, false, () => {
+		const created = createPictureBulletList(model.numberingCatalog, picture);
+		model.numberingCatalog = created.catalog;
 		return created.numId;
 	});
 }

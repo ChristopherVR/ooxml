@@ -271,6 +271,7 @@ export const enRibbon = {
 	'Numbered list': 'Numbered list',
 	'Decrease list level': 'Decrease list level',
 	'Increase list level': 'Increase list level',
+	'Picture bullet...': 'Picture bullet...',
 	'Remove list': 'Remove list',
 	'Insert row above': 'Insert row above',
 	'Insert row below': 'Insert row below',

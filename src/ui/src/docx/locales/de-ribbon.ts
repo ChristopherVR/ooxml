@@ -280,6 +280,7 @@ export const deRibbon: RibbonStrings = {
 	'Numbered list': 'Nummerierung',
 	'Decrease list level': 'Listenebene verringern',
 	'Increase list level': 'Listenebene erhöhen',
+	'Picture bullet...': 'Bildaufzählungszeichen...',
 	'Remove list': 'Liste entfernen',
 	'Insert row above': 'Zeile oberhalb einfügen',
 	'Insert row below': 'Zeile unterhalb einfügen',

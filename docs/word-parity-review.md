@@ -793,6 +793,13 @@ size from the VML `style` or the drawing extent). A level's `w:lvlPicBulletId` b
 place of the marker text, sized to the marker font size unless the shape authors a size
 (`pictureBulletSizePt`); without bytes it falls back to the bullet glyph. Existing `numbering.xml`,
 its relationships and media are preserved on save, and new levels may reference an existing picture
-bullet (`lvlPicBulletId` is written). Not done: Define New Bullet > Picture (no way to add or edit
-picture bullets, so changing `pictureBullets` on save is rejected), and pagination measures the
-fallback glyph width, not the picture.
+bullet (`lvlPicBulletId` is written).
+
+Page layout measures a picture bullet marker by `pictureBulletSizePt` (the layout run's
+`marker.widthPx`) instead of the fallback glyph. Home > Bullets > Picture bullet... lets the user
+choose a PNG, JPEG, GIF or BMP file; `createPictureBulletList` adds a new `numPicBullet` entry and a
+bullet list whose levels use it. On save the new entries are inserted before the first definition,
+their media parts are written from pending media, and `word/_rels/numbering.xml.rels` gains the
+image relationships; existing entries and relationships are untouched, and editing or removing an
+existing entry is rejected. Not done: changing the picture of an existing bullet, SVG pictures, and
+choosing the picture for a single level only (the new list uses it on every level).

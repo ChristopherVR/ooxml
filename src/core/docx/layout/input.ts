@@ -35,7 +35,12 @@ export interface LayoutRun {
 	/** Generated text (a list label) that is not part of the paragraph's own characters. */
 	synthetic?: boolean;
 	/** Generated list marker; the remaining characters in this run are its separator. */
-	marker?: { length: number; alignment: 'left' | 'center' | 'right' };
+	marker?: {
+		length: number;
+		alignment: 'left' | 'center' | 'right';
+		/** Picture bullet: the marker occupies this width instead of its fallback glyph's. */
+		widthPx?: number;
+	};
 	/** Superscript or subscript: drawn smaller and raised or lowered (note marks are superscript). */
 	script?: 'super' | 'sub';
 	/** `#rrggbb`, display only. */

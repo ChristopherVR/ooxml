@@ -280,6 +280,7 @@ export const esRibbon: RibbonStrings = {
 	'Numbered list': 'Numeración',
 	'Decrease list level': 'Disminuir nivel de lista',
 	'Increase list level': 'Aumentar nivel de lista',
+	'Picture bullet...': 'Viñeta de imagen...',
 	'Remove list': 'Quitar lista',
 	'Insert row above': 'Insertar fila encima',
 	'Insert row below': 'Insertar fila debajo',
