@@ -53,7 +53,7 @@ async function setup() {
 	const shape = model.pages[0]!.shapes[0]!;
 	shape.id = '7';
 	shape.controls = [free, fixed];
-	const edit = vi.fn(async (bytes: Uint8Array) => ({
+	const edit = vi.fn(async (bytes: Uint8Array, _edits: readonly unknown[]) => ({
 		bytes,
 		changedParts: [],
 		diagnostics: [],
