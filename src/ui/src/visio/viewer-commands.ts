@@ -36,6 +36,7 @@ import { ViewerColorMenus } from './viewer-color-menus';
 import { ViewerFormatPane } from './viewer-format-pane';
 import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
+import { ViewerSwimlanes, swimlaneSelection } from './viewer-swimlanes';
 import { ViewerData } from './viewer-data';
 import { ViewerLayoutCommands } from './viewer-layout-commands';
 import { ViewerTextFeatures } from './viewer-text-features';
@@ -101,6 +102,7 @@ export class ViewerCommands {
 	#formatPane: ViewerFormatPane;
 	#review: ViewerReview;
 	#parts: ViewerDiagramParts;
+	#swimlanes: ViewerSwimlanes;
 	#data: ViewerData;
 	readonly layoutCommands: ViewerLayoutCommands;
 	#textFeatures: ViewerTextFeatures;
@@ -147,6 +149,11 @@ export class ViewerCommands {
 			host.controller,
 			(run, message) => void this.#edit(run, message),
 			() => host.reveal('edit', true),
+		);
+		this.#swimlanes = new ViewerSwimlanes(
+			host.root,
+			host.controller,
+			(run, message) => void this.#edit(run, message),
 		);
 		this.#data = new ViewerData(host.root, host.controller, host.announce, (run, message) => {
 			void this.#edit(run, message);
@@ -237,6 +244,7 @@ export class ViewerCommands {
 			changeShape: (shape) => this.#changeShape.run(shape),
 			insertDiagramPart: (action) => this.#parts.run(action),
 			container: (command) => this.#parts.container(command),
+			swimlane: (action) => this.#swimlanes.run(action),
 			formatSelection: (action) => this.#formatting.run(action),
 			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
@@ -437,6 +445,12 @@ export class ViewerCommands {
 	#delete(): void {
 		const state = this.host.controller.state;
 		if (this.#tool === 'connection-point' && this.#points.deleteSelected()) return;
+		// Deleting a selected swimlane takes its shapes with it and closes the gap.
+		const lane = swimlaneSelection(state);
+		if (lane?.isLane && state.selectedShapes.length === 1) {
+			this.#swimlanes.run({ type: 'swimlane', command: 'delete' });
+			return;
+		}
 		const plan = planDeleteSelection(state);
 		if (!plan || !this.#canEdit(state)) return;
 		void this.#edit(() => this.host.controller.applyEdits(plan.edits), plan.message);
@@ -628,6 +642,7 @@ export class ViewerCommands {
 		this.#formatting.render(state);
 		this.#changeShape.render(state);
 		this.#parts.render(state);
+		this.#swimlanes.render(state);
 		this.#painter.render(state);
 		this.#insert.render(state);
 		this.#themes.render(state);

@@ -13,6 +13,7 @@ import {
 	buildContainerFormatPanel,
 	buildPictureFormatPanel,
 } from './ribbon-contextual-formats';
+import { buildSwimlanePanel } from './ribbon-swimlane';
 import { buildViewPanel } from './ribbon-view';
 import { createTellMe } from './viewer-tell-me';
 
@@ -33,6 +34,8 @@ export const RIBBON_TABS = [
 	['picture-format', 'Picture Format', buildPictureFormatPanel],
 	['container-format', 'Container Format', buildContainerFormatPanel],
 	['chart-design', 'Chart Design', buildChartDesignPanel],
+	// Contextual: shown while a cross-functional flowchart is selected.
+	['cross-functional', 'Cross-Functional Flowchart', buildSwimlanePanel],
 ] as const;
 export type RibbonTab = (typeof RIBBON_TABS)[number][0];
 

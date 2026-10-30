@@ -1,8 +1,9 @@
 import type { VisioShape } from 'ooxml-core/visio';
 import type { ViewerState } from './controller';
 import { selectedShape } from './shape-inspector';
+import { swimlaneSelection } from './viewer-swimlanes';
 
-/** The contextual tabs, in the order the ribbon lists them. */
+/** The format tabs, in the order the ribbon lists them; one at most shows at a time. */
 export const CONTEXTUAL_TABS = [
 	'shape-format',
 	'picture-format',
@@ -48,6 +49,9 @@ export function renderContextualTabs(toolbar: HTMLElement, state: ViewerState): 
 	const ribbon = toolbar as HTMLElement & { setTabHidden?(t: string, r: string, h: boolean): void };
 	const active = contextualTabFor(state);
 	for (const tab of CONTEXTUAL_TABS) ribbon.setTabHidden?.(tab, 'contextual', tab !== active);
+	// The Cross-Functional Flowchart tab shows beside the format tab while a flowchart, one of
+	// its lanes or a shape in a lane is selected; its commands are its own, so nothing is mirrored.
+	ribbon.setTabHidden?.('cross-functional', 'contextual', swimlaneSelection(state) === undefined);
 	const panel = active && toolbar.querySelector<HTMLElement>(`[data-ribbon-tab="${active}"]`);
 	if (!panel) return;
 	for (const twin of panel.querySelectorAll<HTMLElement>('[command], [data-menu]')) {

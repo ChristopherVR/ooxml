@@ -21,6 +21,7 @@ export interface RibbonTargets {
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
 	changeShape(shape: Extract<VisioRibbonAction, { type: 'change-shape' }>['shape']): void;
 	insertDiagramPart(action: Extract<VisioRibbonAction, { type: 'diagram-part' }>): void;
+	swimlane(action: Extract<VisioRibbonAction, { type: 'swimlane' }>): void;
 	formatSelection(action: VisioFormattingAction): void;
 	formatPainter(mode: 'once' | 'sticky' | 'cancel'): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
@@ -110,6 +111,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.changeShape(action.shape);
 		case 'diagram-part':
 			return targets.insertDiagramPart(action);
+		case 'swimlane':
+			return targets.swimlane(action);
 		case 'tool':
 			return targets.setTool(action.tool);
 		case 'cancel-drawing':

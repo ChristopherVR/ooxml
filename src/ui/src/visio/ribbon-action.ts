@@ -89,6 +89,21 @@ export type VisioContainerAction = {
 	type: 'container';
 	command: 'fit' | 'select-contents' | 'disband';
 };
+/** The Cross-Functional Flowchart tab: lanes, separators and the Design and Arrange options. */
+export type VisioSwimlaneAction = {
+	type: 'swimlane';
+	command:
+		| 'insert-before'
+		| 'insert-after'
+		| 'delete'
+		| 'separator'
+		| 'title'
+		| 'separators'
+		| 'rotate-labels'
+		| 'style';
+	/** The Style number (1-4) for the style command. */
+	style?: number;
+};
 /** Data-tab commands: import, refresh, data graphics, legend, windows and Shape Data. */
 export type VisioDataCommand =
 	| 'quick-import'
@@ -120,6 +135,7 @@ export type VisioLayoutAction =
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
+	| VisioSwimlaneAction
 	| VisioLayoutAction
 	| { type: 'arrange'; operation: VisioArrangement }
 	| { type: 'selection'; mode: 'all' | 'clear' }

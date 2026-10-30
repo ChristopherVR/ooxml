@@ -279,4 +279,15 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Disbanded the container; its contents stay on the page.':
 		'Se disolvió el contenedor; su contenido permanece en la página.',
 	'Select one chart to edit or format it.': 'Seleccione un gráfico para editarlo o darle formato.',
+	'Cross-Functional Flowchart': 'Diagrama de flujo multifuncional',
+	Swimlane: 'Calle',
+	'Insert Swimlane Before': 'Insertar calle antes',
+	'Insert Swimlane After': 'Insertar calle después',
+	'Delete Swimlane': 'Eliminar calle',
+	Separator: 'Separador',
+	Direction: 'Dirección',
+	'Rotate Lane Labels': 'Girar etiquetas de calle',
+	Style: 'Estilo',
+	'Show Title Bar': 'Mostrar barra de título',
+	'Show Separator Bar': 'Mostrar barra de separación',
 };

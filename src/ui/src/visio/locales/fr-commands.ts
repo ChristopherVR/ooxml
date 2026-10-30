@@ -281,4 +281,15 @@ export const frCommands: Readonly<Record<string, string>> = {
 		'Le conteneur a été dissocié ; son contenu reste sur la page.',
 	'Select one chart to edit or format it.':
 		'Sélectionnez un graphique pour le modifier ou le mettre en forme.',
+	'Cross-Functional Flowchart': 'Organigramme interfonctionnel',
+	Swimlane: 'Couloir',
+	'Insert Swimlane Before': 'Insérer un couloir avant',
+	'Insert Swimlane After': 'Insérer un couloir après',
+	'Delete Swimlane': 'Supprimer le couloir',
+	Separator: 'Séparateur',
+	Direction: 'Orientation',
+	'Rotate Lane Labels': 'Faire pivoter les étiquettes de couloir',
+	Style: 'Style',
+	'Show Title Bar': 'Afficher la barre de titre',
+	'Show Separator Bar': 'Afficher la barre de séparation',
 };

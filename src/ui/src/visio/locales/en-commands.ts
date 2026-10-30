@@ -279,4 +279,15 @@ export const enCommands: Readonly<Record<string, string>> = {
 	'Disbanded the container; its contents stay on the page.':
 		'Disbanded the container; its contents stay on the page.',
 	'Select one chart to edit or format it.': 'Select one chart to edit or format it.',
+	'Cross-Functional Flowchart': 'Cross-Functional Flowchart',
+	Swimlane: 'Swimlane',
+	'Insert Swimlane Before': 'Insert Swimlane Before',
+	'Insert Swimlane After': 'Insert Swimlane After',
+	'Delete Swimlane': 'Delete Swimlane',
+	Separator: 'Separator',
+	Direction: 'Direction',
+	'Rotate Lane Labels': 'Rotate Lane Labels',
+	Style: 'Style',
+	'Show Title Bar': 'Show Title Bar',
+	'Show Separator Bar': 'Show Separator Bar',
 };

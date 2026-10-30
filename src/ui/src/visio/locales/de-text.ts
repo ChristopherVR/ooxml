@@ -113,4 +113,7 @@ export const deText: Readonly<Record<string, string>> = {
 	Open: 'Öffnen',
 	Options: 'Optionen',
 	Share: 'Freigeben',
+	'Style {n}': 'Stil {n}',
+	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
+		'Die Richtung wird beim Erstellen des Flussdiagramms gewählt (Datei > Neu > Funktionsübergreifendes Flussdiagramm); ein vorhandenes Flussdiagramm kann noch nicht gedreht werden.',
 };

@@ -1,4 +1,5 @@
 import { canEditDiagram } from './controller';
+import { swimlaneResizeEdits } from './viewer-swimlanes';
 import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import {
 	visioResizeSelectionFrame,
@@ -230,12 +231,22 @@ export class ViewerResizeHandles {
 			this.render(this.controller.state);
 			return;
 		}
+		// A lane resizes with the lanes after it moving and the frame following.
+		const lane = swimlaneResizeEdits(drag.page, drag.shapeIds, resized.frame);
+		if (lane === undefined) {
+			settle();
+			this.options.announce('Resize a swimlane by its own handles; the frame follows its lanes.');
+			this.render(this.controller.state);
+			return;
+		}
 		const request = ++this.#request;
 		try {
-			await this.controller.applySelectionEdits(resized.commands, {
-				pageId: drag.page.id,
-				members: resized.members,
-			});
+			if (lane) await this.controller.applyEdits(lane);
+			else
+				await this.controller.applySelectionEdits(resized.commands, {
+					pageId: drag.page.id,
+					members: resized.members,
+				});
 			if (request === this.#request) this.options.announce('Shape resized.');
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))

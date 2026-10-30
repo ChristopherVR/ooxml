@@ -112,4 +112,7 @@ export const frText: Readonly<Record<string, string>> = {
 	Open: 'Ouvrir',
 	Options: 'Options',
 	Share: 'Partager',
+	'Style {n}': 'Style {n}',
+	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
+		"L'orientation est choisie à la création de l'organigramme (Fichier > Nouveau > Organigramme interfonctionnel) ; un organigramme existant ne peut pas encore être pivoté.",
 };

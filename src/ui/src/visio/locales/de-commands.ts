@@ -282,4 +282,15 @@ export const deCommands: Readonly<Record<string, string>> = {
 		'Der Container wurde aufgelöst; sein Inhalt bleibt auf der Seite.',
 	'Select one chart to edit or format it.':
 		'Wählen Sie ein Diagramm aus, um es zu bearbeiten oder zu formatieren.',
+	'Cross-Functional Flowchart': 'Funktionsübergreifendes Flussdiagramm',
+	Swimlane: 'Swimlane',
+	'Insert Swimlane Before': 'Swimlane davor einfügen',
+	'Insert Swimlane After': 'Swimlane danach einfügen',
+	'Delete Swimlane': 'Swimlane löschen',
+	Separator: 'Trennlinie',
+	Direction: 'Richtung',
+	'Rotate Lane Labels': 'Swimlane-Beschriftungen drehen',
+	Style: 'Stil',
+	'Show Title Bar': 'Titelleiste anzeigen',
+	'Show Separator Bar': 'Trennleiste anzeigen',
 };
