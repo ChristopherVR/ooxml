@@ -4,6 +4,7 @@ import {
 	type VisioDataColumn,
 	type VisioDataColumnType,
 } from './data-recordsets';
+import type { VisioDataSource } from './data-connections';
 import { canonicalShapeDataValue, shapeDataText } from './edit-shape-data-commands';
 
 /** Import a table as a new recordset (Data > Quick Import / Custom Import). */
@@ -15,6 +16,10 @@ export interface VisioDataImportEdit {
 	columns: VisioDataColumn[];
 	/** Text per column: numbers, TRUE/FALSE, ISO dates (yyyy-mm-dd) or strings; '' is empty. */
 	rows: string[][];
+	/** Where the table came from; saved as a data connection and command. */
+	source?: VisioDataSource;
+	/** Name of the column that identifies a row; a refresh matches rows by it, not by order. */
+	primaryKey?: string;
 }
 /** Replace a recordset's rows (Refresh); linked shapes get the new values by row order. */
 export interface VisioDataRefreshEdit {
@@ -110,19 +115,50 @@ function table(columns: unknown, rows: unknown): { columns: VisioDataColumn[]; r
 	return { columns: copied, rows: values };
 }
 
+function snapshotSource(source: VisioDataSource): VisioDataSource {
+	if (!source || (source.kind !== 'workbook' && source.kind !== 'csv'))
+		fail('INVALID_EDIT', 'Unsupported data source.');
+	const clean = (value: unknown, label: string, required = false) => {
+		if (value === undefined && !required) return undefined;
+		const text = name(value, label);
+		if (/[\][;"\u0000-\u001f]/.test(text))
+			fail('INVALID_EDIT', `${label} has unsupported characters.`);
+		return text;
+	};
+	const sheet = clean(source.sheet, 'The sheet name');
+	const range =
+		source.range === undefined || source.range === ''
+			? undefined
+			: clean(source.range, 'The range');
+	return {
+		kind: source.kind,
+		fileName: clean(source.fileName, 'The file name', true)!,
+		...(sheet ? { sheet } : {}),
+		...(range ? { range } : {}),
+	};
+}
+
 /** Copy and validate a data command; host properties never reach the transaction. */
 export function snapshotDataEdit(edit: VisioDataEdit): VisioDataEdit {
 	if (typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 		fail('INVALID_EDIT', 'Invalid edit target.');
 	const pageId = edit.pageId;
 	switch (edit.type) {
-		case 'import-data-recordset':
+		case 'import-data-recordset': {
+			const data = table(edit.columns, edit.rows);
+			const key = edit.primaryKey;
+			if (key !== undefined && !data.columns.some((column) => column.name === key))
+				fail('INVALID_EDIT', 'The primary key must be one of the columns.');
+			const source = edit.source && snapshotSource(edit.source);
 			return {
 				type: edit.type,
 				pageId,
 				name: name(edit.name, 'The recordset name'),
-				...table(edit.columns, edit.rows),
+				...data,
+				...(source ? { source } : {}),
+				...(key === undefined ? {} : { primaryKey: key }),
 			};
+		}
 		case 'refresh-data-recordset':
 			return {
 				type: edit.type,

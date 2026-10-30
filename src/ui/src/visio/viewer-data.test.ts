@@ -224,3 +224,80 @@ it('applies, replaces and removes data graphics and inserts a Color by Value leg
 	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(3);
 	view.dispose();
 });
+
+it('imports with a unique identifier and refreshes by that key when rows move', async () => {
+	const view = await setup();
+	let text = 'Server,Load\nImport test,20\nOther,80\n';
+	(window as unknown as { showOpenFilePicker: unknown }).showOpenFilePicker = vi.fn(async () => [
+		{ getFile: async () => csv(text) },
+	]);
+	view.data({ type: 'data', command: 'custom-import' });
+	await vi.waitFor(
+		() => expect(view.q<HTMLElement & { open: boolean }>('.data-import-dialog').open).toBe(true),
+		{ timeout: 15_000 },
+	);
+	view.field('data-import-dialog', 'key', 'Nothing');
+	view.dialogButton('data-import-dialog', 'Import');
+	expect(view.q('.data-import-dialog [role="alert"]').textContent).toMatch(/no column named/);
+	view.field('data-import-dialog', 'key', 'Server');
+	view.dialogButton('data-import-dialog', 'Import');
+	await vi.waitFor(() => expect(view.controller.state.document?.dataRecordsets).toHaveLength(1));
+	await view.done();
+	expect(view.edits.at(-1)![0]).toMatchObject({
+		primaryKey: 'Server',
+		source: { kind: 'csv', fileName: 'servers.csv' },
+	});
+	expect(view.controller.state.document!.dataRecordsets![0]).toMatchObject({
+		primaryKey: 'Server',
+		command: 'SELECT * FROM [servers.csv]',
+	});
+	view.pane().querySelector<HTMLButtonElement>('[data-data-action="auto-link"]')!.click();
+	view.field('data-link-dialog', 'shapeField', 'name');
+	view.dialogButton('data-link-dialog', 'Link');
+	await vi.waitFor(() => expect(view.shape().shapeData?.[1]?.value).toBe(20));
+	await view.done();
+	// The row moved to the end and another was added; by order the shape would show 80.
+	text = 'Server,Load\nOther,80\nNew,1\nImport test,33\n';
+	view.data({ type: 'data', command: 'refresh' });
+	await vi.waitFor(() => expect(view.shape().shapeData?.[1]?.value).toBe(33), { timeout: 5000 });
+	await view.done();
+	view.dispose();
+});
+
+it('positions, configures and auto spaces data graphics', async () => {
+	const view = await setup();
+	expect(view.button('graphic-auto-space').disabled).toBe(true);
+	await view.controller.applyEdits([
+		{
+			type: 'set-shape-data',
+			pageId: '1',
+			shapeId: '1',
+			row: 'Status',
+			data: { label: 'Status', prompt: '', type: 'string', format: '', value: 'Up' },
+		},
+	]);
+	view.selection();
+	view.data({ type: 'data', command: 'graphic-text' });
+	view.dialogButton('data-graphics-dialog', 'Apply');
+	await vi.waitFor(() => expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2));
+	await view.done();
+	expect(view.button('graphic-auto-space').disabled).toBe(false);
+	expect(view.button('graphic-configure').disabled).toBe(false);
+	const callout = () => view.controller.state.document!.pages[0]!.shapes.at(-1)!;
+	const before = callout().rotation!.pinY;
+	view.data({ type: 'data', command: 'graphic-position-top' });
+	await vi.waitFor(() => expect(callout().rotation!.pinY).toBeGreaterThan(before + 0.5));
+	await view.done();
+	// Configure opens the dialog with the graphic's own field, kind and position.
+	view.data({ type: 'data', command: 'graphic-configure' });
+	expect(view.q<HTMLSelectElement>('.data-graphics-dialog [name="kind"]').value).toBe('text');
+	expect(view.q<HTMLSelectElement>('.data-graphics-dialog [name="position"]').value).toBe('top');
+	view.field('data-graphics-dialog', 'position', 'bottom');
+	view.dialogButton('data-graphics-dialog', 'Apply');
+	await vi.waitFor(() => expect(callout().rotation!.pinY).toBeLessThan(before + 0.1));
+	await view.done();
+	view.data({ type: 'data', command: 'graphic-auto-space' });
+	await view.done();
+	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2);
+	view.dispose();
+});

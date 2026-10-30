@@ -14,6 +14,8 @@ import {
 	readDataRecordsets,
 	type VisioDataColumn,
 } from './data-recordsets';
+import { DATA_CONNECTIONS_TYPE, visioDataConnectionFor } from './data-connections';
+import { matchRefreshedRows } from './data-refresh';
 import type { VisioDataEdit } from './edit-data-commands';
 import {
 	DataPackageParts,
@@ -61,6 +63,11 @@ export async function editVsdxData(
 	let recordsetsPart = await related(pkg, documentPart, 'recordsets', false);
 	if (recordsetsPart) await visioXml(pkg, recordsetsPart, 'DataRecordSets');
 	let root = recordsetsPart ? await store.load(recordsetsPart, 'DataRecordSets') : undefined;
+	let connectionsPart = await related(pkg, documentPart, 'connections', false);
+	if (connectionsPart) await visioXml(pkg, connectionsPart, 'DataConnections');
+	let connectionsRoot = connectionsPart
+		? await store.load(connectionsPart, 'DataConnections')
+		: undefined;
 	const sets = new Map<string, Recordset>();
 	const relTargets = new Map(
 		recordsetsPart
@@ -176,6 +183,50 @@ export async function editVsdxData(
 		set.element.setAttribute('NextRowID', String(rows.length + 1));
 		set.element.setAttribute('TimeRefreshed', now);
 	};
+	/** The ID of a DataConnection for this connection string, shared with an equal one. */
+	const connectionFor = async (connectionString: string): Promise<string> => {
+		if (!connectionsRoot) {
+			connectionsPart = store.exists('visio/data/connections.xml')
+				? store.freeName('visio/data/connections')
+				: 'visio/data/connections.xml';
+			connectionsRoot = store.createConnections(connectionsPart);
+			await store.relate(documentPart, 'connections', connectionsPart);
+			await store.override(connectionsPart, DATA_CONNECTIONS_TYPE);
+		}
+		const root = connectionsRoot;
+		const existing = children(root, 'DataConnection').find(
+			(item) => attribute(item, 'ConnectionString') === connectionString,
+		);
+		if (existing) return attribute(existing, 'ID') ?? '1';
+		let id = Number(attribute(root, 'NextID') ?? '1');
+		if (!Number.isSafeInteger(id) || id < 1) id = 1;
+		while (children(root, 'DataConnection').some((item) => attribute(item, 'ID') === String(id)))
+			id++;
+		root.setAttribute('NextID', String(id + 1));
+		root.appendChild(
+			dataElement(root, 'DataConnection', {
+				ID: String(id),
+				FileName: '',
+				ConnectionString: connectionString,
+				Timeout: '15',
+			}),
+		);
+		return String(id);
+	};
+	/** Drop a connection no recordset uses any more, and its part when it was the last. */
+	const releaseConnection = async (connectionId: string | undefined) => {
+		if (!connectionId || !connectionsRoot || !connectionsPart) return;
+		if ([...sets.values()].some((set) => attribute(set.element, 'ConnectionID') === connectionId))
+			return;
+		for (const item of children(connectionsRoot, 'DataConnection'))
+			if (attribute(item, 'ID') === connectionId) connectionsRoot.removeChild(item);
+		if (children(connectionsRoot, 'DataConnection').length) return;
+		await store.unrelate(documentPart, 'connections');
+		await store.override(connectionsPart, null);
+		store.remove(connectionsPart);
+		connectionsRoot = undefined;
+		connectionsPart = undefined;
+	};
 	for (const edit of edits) {
 		check();
 		if (edit.type === 'import-data-recordset') {
@@ -195,11 +246,21 @@ export async function editVsdxData(
 			const dataPart = store.freeName('visio/data/data');
 			const relId = await store.relate(recordsetsPart!, 'recordset', dataPart);
 			await store.override(dataPart, DATA_RECORDSET_TYPE);
-			const element = node('DataRecordSet', { ID: String(id), Name: edit.name, RowOrder: '1' });
+			const source = edit.source && visioDataConnectionFor(edit.source);
+			const connectionId = source && (await connectionFor(source.connectionString));
+			const element = node('DataRecordSet', {
+				ID: String(id),
+				...(source ? { ConnectionID: connectionId!, Command: source.command } : {}),
+				Name: edit.name,
+				// A primary key replaces row order as the way a refresh finds a row.
+				...(edit.primaryKey === undefined ? { RowOrder: '1' } : {}),
+			});
 			const rel = node('Rel', {});
 			rel.setAttributeNS(NS.r, 'r:id', relId);
 			element.appendChild(rel);
 			element.appendChild(columnsElement(edit.columns));
+			if (edit.primaryKey !== undefined)
+				element.appendChild(node('PrimaryKey', { ColumnNameID: edit.primaryKey }));
 			root.appendChild(element);
 			const set: Recordset = { element, dataPart, relId, columns: edit.columns };
 			sets.set(String(id), set);
@@ -212,12 +273,26 @@ export async function editVsdxData(
 			else
 				set.element.insertBefore(replacement, children(set.element, 'Rel')[0]?.nextSibling ?? null);
 			const previous = set.columns;
+			const key = attribute(children(set.element, 'PrimaryKey')[0], 'ColumnNameID');
+			const match = matchRefreshedRows(
+				previous.map((column) => column.name),
+				await rowsOf(set),
+				edit.columns.map((column) => column.name),
+				edit.rows,
+				key,
+			);
+			if (match.keyMissing)
+				fail(
+					'INVALID_EDIT',
+					`The refreshed data has no ${key} column, the recordset's primary key.`,
+				);
 			writeData(set, edit.columns, edit.rows);
 			for (const map of children(set.element, 'RowMap')) {
-				const index = Number(attribute(map, 'RowID')) - 1;
+				const index = match.map[Number(attribute(map, 'RowID')) - 1];
 				const pageId = attribute(map, 'PageID') ?? '',
 					shapeId = attribute(map, 'ShapeID') ?? '';
-				const values = edit.rows[index];
+				const values = index === undefined ? undefined : edit.rows[index];
+				if (values) map.setAttribute('RowID', String(index! + 1));
 				if (!values || !linkShape(pageId, shapeId, set, values)) {
 					unlinkShape(pageId, shapeId, { ...set, columns: previous });
 					set.element.removeChild(map);
@@ -229,6 +304,7 @@ export async function editVsdxData(
 				unlinkShape(attribute(map, 'PageID') ?? '', attribute(map, 'ShapeID') ?? '', set);
 			root!.removeChild(set.element);
 			sets.delete(edit.recordsetId);
+			await releaseConnection(attribute(set.element, 'ConnectionID'));
 			await store.unrelate(recordsetsPart!, 'recordset', set.relId);
 			await store.override(set.dataPart, null);
 			store.remove(set.dataPart);

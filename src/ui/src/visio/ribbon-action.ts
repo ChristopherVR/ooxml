@@ -1,4 +1,5 @@
 import type { VisioThemeColorRef } from 'ooxml-core/visio';
+import type { VisioDataGraphicPosition } from 'ooxml-core/visio/ui';
 import type {
 	VisioBuiltInThemeId,
 	VisioCalloutStyle,
@@ -122,6 +123,10 @@ export type VisioDataCommand =
 	| 'legend'
 	| 'legend-horizontal'
 	| 'external-data-window'
+	| 'link-data'
+	| 'graphic-configure'
+	| 'graphic-auto-space'
+	| `graphic-position-${VisioDataGraphicPosition}`
 	| 'define-shape-data';
 /** Arrangement, layout, layer, selection, view and output commands (viewer-layout and friends). */
 export type VisioLayoutAction =

@@ -100,6 +100,15 @@ export class DataPackageParts {
 		this.xml.delete(path);
 		this.bytes.set(path, null);
 	}
+	/** A new empty DataConnections root. */
+	createConnections(path: string): Element {
+		const root = parseXml(
+			`<DataConnections xmlns="${VISIO_NS}" xmlns:r="${NS.r}" NextID="1"/>`,
+		).documentElement;
+		this.xml.set(path, root);
+		this.bytes.delete(path);
+		return root;
+	}
 	/** A new empty DataRecordSets root. */
 	createRecordsets(path: string): Element {
 		const root = parseXml(

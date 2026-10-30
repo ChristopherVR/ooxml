@@ -15,6 +15,17 @@ export {
 	canonicalShapeDataValue,
 } from './edit-shape-data-commands';
 export { visioLinkedRowNames } from './edit-data';
+export {
+	visioDataConnectionFor,
+	type VisioDataConnection,
+	type VisioDataSource,
+} from './data-connections';
+export {
+	matchRefreshedRows,
+	visioRefreshReport,
+	type VisioRefreshReport,
+	type VisioRowMatch,
+} from './data-refresh';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
 export type { VisioDocumentCache } from './document-level';
 export { readVisioStencil, type VisioStencilFile } from './stencil-file';

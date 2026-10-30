@@ -326,7 +326,10 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [ ] **P1** Containers and lists: containers now write `msvStructureType`, `msvSDContainer*` rows and
       `DEPENDSON` relationships (container kind 4, member back reference kind 1), but those kinds are
       not yet confirmed in a Visio build, and lists are not modelled (`edit-container-members.ts`).
-- [ ] **P1** Data linking stores no data connection; refresh matches rows by order, not by key.
+- [x] **P1** Data linking stores a data connection (`connections.xml`), the command and the primary key;
+      refresh matches rows by the key column and reports shapes whose row vanished
+      (`data-connections.ts`, `data-refresh.ts`). Visio does not yet refresh from the
+      source itself: the connection names the file, not its folder.
 - [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
       pictures are refused on insert.
 - [ ] **P1** Bevel, 3-D rotation and full theme effects are not drawn; text has no Visio font
@@ -376,7 +379,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
 - [ ] **P1** Resize has no alignment or size-match hints, and Ctrl and Alt during a resize are
       not verified against Visio.
-- [ ] **P1** Link Data and Data Visualizer; Data Graphics Position, Configure and Auto Space.
+- [x] **P1** Link Data (opens the External Data window, or imports first), Data Graphics Position,
+      Configure and Auto Space (`data-graphic-config.ts`).
+- [ ] **P1** Data Visualizer (a diagram generated from a table), Data Graphic Fields and the
+      Advanced Data Graphics editor are not built; graphics remain separate marked shapes, not
+      Visio data graphic masters.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).
