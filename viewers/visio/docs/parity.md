@@ -25,6 +25,37 @@ backstage "Swimlanes" and "Verbindungslinien", and `.vsdx-Datei` in the text str
 resize message wording; fr Crop `Recadrer` (matching Crop to Square and Reset Crop); zh-CN
 Add Comment `添加批注` (matching Comments). The Picture Format names (de, es, fr, zh-CN) already
 matched the expected terms. The strings still need a native review.
+## Data Visualizer refresh and connector labels, 2026-10-31
+
+- **Connector labels are the connector's own text.** `create-line` takes an optional `text`; the
+  line gets a text block (`TxtPinX` at `Width*0.5`, `TxtAngle` of `-Angle` so the label stays level)
+  and a `Text` element, so a label moves, reroutes and is deleted with its connector. Visio 16 opened
+  a Data Visualizer file through COM and read `Yes` and `No` as the connectors' `Text`. Files drawn by
+  the earlier version keep their separate label text boxes until the next refresh, which removes
+  them.
+- **A refresh keeps shapes whose row key matches.** A step whose Process Step ID and Shape Type
+  are unchanged keeps its shape ID, formatting and glued connectors: only its text, Shape Data and
+  (in a cross-functional chart, when its Function changed) its lane are updated. A connector whose
+  `from>to` key remains and whose ends were kept keeps its ID and only its label text is updated.
+  Steps whose Shape Type changed, new rows and new links are drawn; rows and links no longer in the
+  table are deleted. Shapes the user added are untouched.
+- **One undo step.** A draw or refresh is one `applyEdits` call. A stencil instance can only be
+  deleted in a transaction of deletions alone, so `delete-shape` takes `deferred: true`: the editor
+  runs those deletions after the rest of the batch in a transaction of their own, still one call for
+  the caller. Other mixed delete batches keep refusing atomically.
+- **Still open: data graphic masters.** Data graphics stay separate marked shapes. Findings for
+  whoever continues: `Shape.DataGraphic = master` through Visio 16's `InvisibleApp` imports the
+  graphic's masters into the document but does not bind it to the shape (reading `DataGraphic` back
+  is empty and the page gets no callouts), so applying one could not be captured through COM here.
+  What Visio itself writes was read from its shipped PivotDiagram templates: the owner becomes a
+  `Group` whose children include an inheriting copy of the original shape (`MasterShape`) and one
+  instance per callout item (`Border rectangle`, `Text callout`, ...), each a stencil master
+  instance whose cells are formulas on the owner's `Prop` rows (`visDGCalloutItem`,
+  `visDGDefaultPos`, `visDGMinBorderSize`, `visDGCBVFill` User rows), plus an `msvDGPosition`
+  control on the owner, a `Data Graphic` layer, and the graphic itself as a hidden master of the
+  data graphic kind carrying `visDGNextItemID` and `msvDGCalloutGap`. Writing that needs the callout
+  item masters (Microsoft's, from the `DVCALL` stencil) and an owner-to-group conversion, which was
+  not attempted. Data Visualizer still does not use Visio's online template service.
 
 ## Control handles, shape actions, User and Scratch cells and tab stops, 2026-10-30
 

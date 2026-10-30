@@ -48,8 +48,9 @@ describe('Data Visualizer', () => {
 		const page = await first(await draw('basic'));
 		const made = visioVisualizerShapes(page);
 		expect(made.steps.size).toBe(5);
-		// Five connectors and the two labels.
-		expect(made.links).toHaveLength(7);
+		// Five connectors; the two labels are the connectors' own text, not extra shapes.
+		expect(made.links).toHaveLength(5);
+		expect(page.shapes.filter((shape) => shape.text.plainText === 'Yes')).toHaveLength(1);
 		const text = (id: string) => page.shapes.find((shape) => shape.id === id)!.text.plainText;
 		expect(text(made.steps.get('2')!)).toBe('Check stock');
 		const step = page.shapes.find((shape) => shape.id === made.steps.get('2'))!;
@@ -79,6 +80,55 @@ describe('Data Visualizer', () => {
 		expect(pin(after, made.steps.get('2')!).pinX).toBeCloseTo(pin(before, ids.get('2')!).pinX);
 		expect(pin(after, made.steps.get('2')!).pinY).toBeCloseTo(pin(before, ids.get('2')!).pinY);
 		expect(after.shapes.find((s) => s.id === made.steps.get('3'))!.text.plainText).toBe('Dispatch');
+	});
+
+	it('draws and redraws in one transaction, so each is one undo step', async () => {
+		const bytes = await createVsdx({ width: 8.5, height: 7, stencils: ['basic-flowchart'] });
+		const drawn = visioDataVisualizerEdits(await first(bytes), parse(rows).steps, 'basic');
+		expect(drawn.batches).toHaveLength(1);
+		const done = (await editVsdx(bytes, drawn.batches[0]!)).bytes;
+		const again = visioDataVisualizerEdits(await first(done), parse(rows).steps, 'basic');
+		expect(again.batches).toHaveLength(1);
+		expect(again.batches[0]!.filter((edit) => edit.type === 'delete-shape')).toEqual([]);
+	});
+
+	it('keeps shape and connector IDs where the row key matches and follows connector labels', async () => {
+		const bytes = await draw('basic');
+		const before = await first(bytes);
+		const was = visioVisualizerShapes(before);
+		const edited = rows.map((row) => [...row]);
+		edited[1]![3] = 'Available,Missing';
+		edited[2]![1] = 'Dispatch';
+		edited[3]![4] = 'Decision';
+		const after = await first(await draw('basic', edited, bytes));
+		const now = visioVisualizerShapes(after);
+		for (const key of ['1', '2', '3', '5']) expect(now.steps.get(key)).toBe(was.steps.get(key));
+		// A step whose Shape Type changed is drawn again; the rest keep their IDs.
+		expect(now.steps.get('4')).not.toBe(was.steps.get('4'));
+		for (const key of ['1>2', '2>3', '3>5'])
+			expect(now.linkKeys.get(key)).toBe(was.linkKeys.get(key));
+		const text = (id: string) => after.shapes.find((shape) => shape.id === id)!.text.plainText;
+		expect(text(now.steps.get('3')!)).toBe('Dispatch');
+		expect(text(now.linkKeys.get('2>3')!)).toBe('Available');
+		expect(text(now.linkKeys.get('2>4')!)).toBe('Missing');
+		// The label is the connector's own text, glued like the connector.
+		const glued = after.connectors.filter((link) => link.fromShapeId === now.linkKeys.get('2>3'));
+		expect(glued.length).toBeGreaterThan(0);
+	});
+
+	it('removes the shapes and connectors of rows that left the table', async () => {
+		const bytes = await draw('basic');
+		const slim = [
+			rows[0]!,
+			['2', 'Check stock', '3', 'Yes', 'Decision', 'Warehouse'],
+			rows[2]!,
+			rows[4]!,
+		];
+		const fixed = slim.map((row) => (row[0] === '3' ? ['3', 'Ship', '5', '', 'Process', ''] : row));
+		const after = await first(await draw('basic', fixed, bytes));
+		const now = visioVisualizerShapes(after);
+		expect([...now.steps.keys()].sort()).toEqual(['1', '2', '3', '5']);
+		expect([...now.linkKeys.keys()].sort()).toEqual(['1>2', '2>3', '3>5']);
 	});
 
 	it('refreshes a cross-functional flowchart into its existing lanes', async () => {

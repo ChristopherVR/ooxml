@@ -24,19 +24,26 @@ const TITLE = 0.35;
 const LEFT = 0.6;
 const GUTTER = 1.5;
 
+const norm = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
 const rowName = (name: string) => name.replace(/[^A-Za-z0-9]/g, '') || 'Column';
 
 /** The shapes this tool made on a page, by step ID, plus its connectors. */
 export function visioVisualizerShapes(page: VisioPage) {
 	const steps = new Map<string, string>();
 	const links: string[] = [];
+	/** Connectors by `from>to` key. Text boxes an older version drew as labels are not here. */
+	const linkKeys = new Map<string, string>();
 	for (const shape of page.shapes) {
 		const row = shape.shapeData?.find((item) => item.name === VISIO_VISUALIZER_ROW);
 		if (!row) continue;
-		if (row.label === 'step') steps.set(String(row.value ?? row.rawValue ?? ''), shape.id);
-		else links.push(shape.id);
+		const value = String(row.value ?? row.rawValue ?? '');
+		if (row.label === 'step') steps.set(value, shape.id);
+		else {
+			links.push(shape.id);
+			if (!value.endsWith(':label')) linkKeys.set(value, shape.id);
+		}
 	}
-	return { steps, links };
+	return { steps, links, linkKeys };
 }
 
 const hidden = (label: string, value: string, invisible = true) => ({
@@ -67,10 +74,33 @@ export function visioDataVisualizerEdits(
 		if (shape?.rotation)
 			centre.set(stepId, { x: shape.rotation.pinX / ratio, y: shape.rotation.pinY / ratio });
 	}
-	const removals: VisioEdit[] = [...old.links, ...old.steps.values()].map((shapeId): VisioEdit => ({
+	const byId = new Map(page.shapes.map((shape) => [shape.id, shape]));
+	// A step whose row key and Shape Type still match keeps its shape (and so its ID, formatting
+	// and glued connectors); its text and Shape Data are updated in place.
+	const kept = new Map<string, string>();
+	for (const step of steps) {
+		const shapeId = old.steps.get(step.id);
+		const shape = shapeId ? byId.get(shapeId) : undefined;
+		const type = shape?.shapeData?.find((row) => row.name === 'ShapeType');
+		if (shapeId && shape && norm(String(type?.value ?? 'Process')) === norm(step.shapeType))
+			kept.set(step.id, shapeId);
+	}
+	const wanted = new Set(steps.flatMap((step) => step.next.map((link) => `${step.id}>${link.id}`)));
+	const keptLinks = new Map<string, string>();
+	for (const [key, shapeId] of old.linkKeys) {
+		const [from, to] = key.split('>');
+		if (wanted.has(key) && kept.has(from!) && kept.has(to!)) keptLinks.set(key, shapeId);
+	}
+	const gone = new Set(keptLinks.values());
+	const goneSteps = new Set(kept.values());
+	const removals: VisioEdit[] = [
+		...old.links.filter((shapeId) => !gone.has(shapeId)),
+		...[...old.steps.values()].filter((shapeId) => !goneSteps.has(shapeId)),
+	].map((shapeId): VisioEdit => ({
 		type: 'delete-shape',
 		pageId: page.id,
 		shapeId,
+		deferred: true,
 	}));
 	const edits: VisioEdit[] = [];
 	const notes: string[] = [];
@@ -181,10 +211,40 @@ export function visioDataVisualizerEdits(
 				y: bottom + frameHeight - TITLE - (names.indexOf(step.lane || 'Unassigned') + 0.5) * LANE,
 			});
 	}
-	const shapeIds = new Map(steps.map((step) => [step.id, id()]));
+	const shapeIds = new Map(steps.map((step) => [step.id, kept.get(step.id) ?? id()]));
+	const data = (shapeId: string, step: VisioVisualizerStep): VisioEdit[] => [
+		...step.values.map((value): VisioEdit => ({
+			type: 'set-shape-data',
+			pageId: page.id,
+			shapeId,
+			row: rowName(value.name),
+			data: hidden(value.label, value.value, false),
+		})),
+		{
+			type: 'set-shape-data',
+			pageId: page.id,
+			shapeId,
+			row: VISIO_VISUALIZER_ROW,
+			data: hidden('step', step.id),
+		},
+	];
 	for (const step of steps) {
 		const shapeId = shapeIds.get(step.id)!;
 		const place = at.get(step.id)!;
+		if (kept.has(step.id)) {
+			const before = centre.get(step.id);
+			if (!before || Math.hypot(before.x - place.x, before.y - place.y) > 0.01)
+				edits.push({ type: 'move-shape', pageId: page.id, shapeId, x: place.x, y: place.y });
+			if (byId.get(shapeId)?.text.plainText !== step.description)
+				edits.push({
+					type: 'replace-plain-text',
+					pageId: page.id,
+					shapeId,
+					text: step.description,
+				});
+			edits.push(...data(shapeId, step));
+			continue;
+		}
 		edits.push(
 			{
 				type: 'drop-stencil-master',
@@ -203,24 +263,24 @@ export function visioDataVisualizerEdits(
 				fillColor: FILLS[step.master] ?? '#D8EFEB',
 				lineColor: LINE,
 			},
-			...step.values.map((value): VisioEdit => ({
-				type: 'set-shape-data',
-				pageId: page.id,
-				shapeId,
-				row: rowName(value.name),
-				data: hidden(value.label, value.value, false),
-			})),
-			{
-				type: 'set-shape-data',
-				pageId: page.id,
-				shapeId,
-				row: VISIO_VISUALIZER_ROW,
-				data: hidden('step', step.id),
-			},
+			...data(shapeId, step),
 		);
 	}
 	for (const step of steps)
 		for (const link of step.next) {
+			const key = `${step.id}>${link.id}`;
+			const existing = keptLinks.get(key);
+			if (existing) {
+				// The label is the connector's own text, so it follows the connector.
+				if (byId.get(existing)?.text.plainText !== link.label)
+					edits.push({
+						type: 'replace-plain-text',
+						pageId: page.id,
+						shapeId: existing,
+						text: link.label,
+					});
+				continue;
+			}
 			const from = at.get(step.id)!;
 			const to = at.get(link.id)!;
 			const shapeId = id();
@@ -234,6 +294,7 @@ export function visioDataVisualizerEdits(
 					endX: to.x,
 					endY: to.y,
 					connect: { begin: shapeIds.get(step.id)!, end: shapeIds.get(link.id)! },
+					text: link.label,
 				},
 				{ type: 'format-shape', pageId: page.id, shapeId, lineColor: LINE },
 				{
@@ -241,36 +302,16 @@ export function visioDataVisualizerEdits(
 					pageId: page.id,
 					shapeId,
 					row: VISIO_VISUALIZER_ROW,
-					data: hidden('link', `${step.id}>${link.id}`),
+					data: hidden('link', key),
 				},
 			);
-			if (link.label) {
-				// A connector has no text block of its own here, so its label is a text box that
-				// sits at the middle of the line (it does not follow the connector when a step moves).
-				const labelId = id();
-				edits.push(
-					{
-						type: 'create-text-box',
-						pageId: page.id,
-						shapeId: labelId,
-						x: (from.x + to.x) / 2 + 0.05,
-						y: (from.y + to.y) / 2,
-						width: 0.7,
-						height: 0.25,
-						text: link.label,
-					},
-					{
-						type: 'set-shape-data',
-						pageId: page.id,
-						shapeId: labelId,
-						row: VISIO_VISUALIZER_ROW,
-						data: hidden('link', `${step.id}>${link.id}:label`),
-					},
-				);
-			}
 		}
 	if (variant === 'cross-functional')
 		edits.push({ type: 'reconcile-containers', pageId: page.id, shapeIds: [...shapeIds.values()] });
-	// Page, delete and draw edits cannot share a transaction, so they are applied in turn.
-	return { batches: [pageEdits, removals, edits].filter((batch) => batch.length), notes };
+	// One batch, so a draw or redraw is one undo step. The caller falls back to applying page
+	// edits on their own when the page cannot be enlarged.
+	return {
+		batches: [[...pageEdits, ...edits, ...removals]].filter((batch) => batch.length),
+		notes,
+	};
 }
