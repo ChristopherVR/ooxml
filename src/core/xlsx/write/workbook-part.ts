@@ -44,6 +44,17 @@ function absoluteRange(
 	return `${cell(range.start.row, range.start.col)}:${cell(range.end.row, range.end.col)}`;
 }
 
+/** Whether a formula has no cached result: one written without a value, or loaded without one. */
+function hasUncachedFormula(workbook: Workbook): boolean {
+	return workbook.sheets.some((sheet) => {
+		for (const row of sheet.rows.values())
+			for (const cell of row.values())
+				if (cell.formula !== undefined && (cell.value === null || cell.value === undefined))
+					return true;
+		return false;
+	});
+}
+
 /** Defined names plus print areas lifted onto page setup at load time. */
 export function definedNamesOf(workbook: Workbook): DefinedName[] {
 	const names = workbook.definedNames.filter(
@@ -140,8 +151,22 @@ export function workbookXml(
 	const iterate = workbook.iterate
 		? ` iterate="1" iterateCount="${workbook.iterate.count}" iterateDelta="${workbook.iterate.delta}"`
 		: '';
+	// The source's calcPr attributes survive (calcId included, 191029 only when the source has
+	// none). fullCalcOnLoad is written only when a cached result may be stale, so Excel does not
+	// recalculate and ask to save an untouched workbook.
 	const owned = ['fullCalcOnLoad', 'calcId', 'calcMode', 'iterate', 'iterateCount', 'iterateDelta'];
-	out += `<calcPr${copyAttrs(calc, owned)} calcId="191029"${mode}${iterate} fullCalcOnLoad="1"/>`;
+	const sourceAttr = (name: string): string | undefined =>
+		calc ? Array.from(calc.attributes).find((a) => a.name === name)?.value : undefined;
+	const calcId = sourceAttr('calcId') ?? '191029';
+	const recalculate =
+		workbook.fullCalcOnLoad || workbook.valuesStale || hasUncachedFormula(workbook);
+	const sourceFull = sourceAttr('fullCalcOnLoad');
+	const fullCalc = recalculate
+		? ' fullCalcOnLoad="1"'
+		: sourceFull !== undefined
+			? ` fullCalcOnLoad="${escapeAttr(sourceFull)}"`
+			: '';
+	out += `<calcPr${copyAttrs(calc, owned)} calcId="${escapeAttr(calcId)}"${mode}${iterate}${fullCalc}/>`;
 	// The model owns oleSize; a source's own element is kept only when the model sets none.
 	const tailOf = (names: readonly string[]) =>
 		names

@@ -83,7 +83,8 @@ describe('saveXlsx round trips', () => {
 		const first = await loadXlsx(fixture(name));
 		const second = await loadXlsx(await saveXlsx(first));
 		expect(comparable(second)).toEqual(comparable(first));
-		expect(second.fullCalcOnLoad).toBe(true);
+		// The source's own flag survives; a save adds it only for a stale cached result.
+		expect(second.fullCalcOnLoad).toBe(first.fullCalcOnLoad);
 	});
 
 	it.each(FIXTURES)('a second save of %s is identical to the first', async (name) => {
@@ -122,7 +123,7 @@ describe('saveXlsx round trips', () => {
 			expect(saved.get(part), part).toEqual(source.get(part));
 		expect(saved.has('xl/calcChain.xml')).toBe(false);
 		expect(text(saved, '[Content_Types].xml')).not.toContain('calcChain');
-		expect(text(saved, 'xl/workbook.xml')).toContain('fullCalcOnLoad="1"');
+		expect(text(saved, 'xl/workbook.xml')).toContain('<calcPr calcId="191029"/>');
 		expect(text(saved, 'xl/workbook.xml')).toContain('x15:workbookPr');
 	});
 

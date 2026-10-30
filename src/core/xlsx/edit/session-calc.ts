@@ -46,11 +46,13 @@ export class SessionCalculator {
 		if (!this.enabled) {
 			// The engine is not told about this change, so a graph built ahead of time is stale.
 			this.calc.discardPreparation();
+			this.workbook.valuesStale = true;
 			return;
 		}
 		const structural = isStructural(step);
 		const hint = structural ? hintFor(step, mode) : undefined;
 		if (calcModeOf(this.workbook) === 'manual') {
+			this.workbook.valuesStale = true;
 			// The graph follows a structural edit only while it matches the workbook.
 			if (hint && !this.staleGraph && !this.dirty.length) {
 				this.guard(() => this.follow(hint));
@@ -66,6 +68,7 @@ export class SessionCalculator {
 				this.follow(hint);
 				this.calc.recalculateFrom(touchedCells(step));
 				this.calculated = settingsOf(this.workbook);
+				this.settle();
 			});
 			return;
 		}
@@ -76,6 +79,7 @@ export class SessionCalculator {
 	afterExternal(structural: boolean, cells: Position[]): void {
 		if (!this.enabled || calcModeOf(this.workbook) === 'manual') {
 			this.calc.discardPreparation();
+			this.workbook.valuesStale = true;
 			if (!this.enabled) return;
 			if (structural) this.staleGraph = true;
 			else for (const cell of cells) this.dirty.push(cell);
@@ -126,8 +130,17 @@ export class SessionCalculator {
 				const changed = cells();
 				if (changed.length) this.calc.recalculateFrom(changed);
 				this.calculated = settingsOf(this.workbook);
+				this.settle();
 			}
 		});
+	}
+
+	/**
+	 * Clears `valuesStale` once no change is waiting for a calculation: the graph matches the
+	 * workbook and no manual-mode edit is pending. Never clears it while recalculation is off.
+	 */
+	private settle(): void {
+		if (this.enabled && !this.staleGraph && !this.dirty.length) delete this.workbook.valuesStale;
 	}
 
 	/** Rebuilds the dependency graph and recalculates every formula (Ctrl+Alt+F9). */
@@ -137,6 +150,7 @@ export class SessionCalculator {
 		this.calc.invalidate();
 		this.calc.recalculateAll();
 		this.calculated = settingsOf(this.workbook);
+		this.settle();
 	}
 
 	/**
@@ -153,6 +167,7 @@ export class SessionCalculator {
 		const changed = this.dirty;
 		this.dirty = [];
 		this.calc.recalculateFrom(changed);
+		this.settle();
 	}
 
 	/**

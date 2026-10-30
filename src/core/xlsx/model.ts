@@ -929,6 +929,13 @@ export interface Workbook {
 	customViews?: CustomWorkbookView[];
 	/** Recalculate formulas when the file opens (`calcPr fullCalcOnLoad`). */
 	fullCalcOnLoad?: boolean;
+	/**
+	 * Cached formula results may not match the cells: an edit was applied without recalculating
+	 * (recalculation off, or manual calculation with pending changes). Cleared by the next full
+	 * recalculation. The save then writes `calcPr fullCalcOnLoad="1"`, as it does for a formula
+	 * with no cached result.
+	 */
+	valuesStale?: boolean;
 	/** Workbook structure protection (no adding, deleting or renaming sheets). */
 	structureLocked?: boolean;
 	/** Legacy 16-bit hash of the structure protection password (`workbookPassword`, hex). */

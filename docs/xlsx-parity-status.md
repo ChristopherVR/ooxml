@@ -285,9 +285,9 @@ line/marker swatches and position-authoring controls remain incomplete.
     fixed-width splitting, and Page Layout > Themes > Colors only reports that changing the
     theme is not supported.
 11. File format. `.xlsb` is detected and refused (`load/detect.ts`) and `.ods` is not read or
-    written. Every save writes `fullCalcOnLoad="1"` and `calcId="191029"`
-    (`write/workbook-part.ts`), so Excel recalculates each saved workbook on open and asks
-    to save on close. x14 data validation (lists over another sheet) is kept in `extLst` but
+    written. A save keeps the loaded `calcPr` and writes `fullCalcOnLoad="1"` only when a
+    cached formula result may be stale (no cached value, or an edit not recalculated), so Excel
+    recalculates those workbooks on open. x14 data validation (lists over another sheet) is kept in `extLst` but
     not modelled, rich values and in-cell pictures (`xl/richData`, IMAGE() results, linked
     data types) have no model, phonetic guides (`rPh`) are read and written with their string
     but not displayed, edited or copied,

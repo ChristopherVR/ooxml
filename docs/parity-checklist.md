@@ -70,9 +70,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
-- [ ] **P1** Every save writes `fullCalcOnLoad="1"` and `calcId="191029"`
+- [x] **P1** Every save writes `fullCalcOnLoad="1"` and `calcId="191029"`
       (`src/core/xlsx/write/workbook-part.ts`), so Excel recalculates each saved file and asks to
       save on close. Write it only when cached values may be stale.
+      Closed: the source calcPr attributes are kept (calcId included), and `fullCalcOnLoad="1"` is
+      written only for a formula without a cached result or after an edit that was not
+      recalculated (`Workbook.valuesStale`, set by `edit/session-calc.ts`).
 - [ ] **P1** `.xlsb` is detected and refused (`load/detect.ts`); `.ods` is not read or written.
 - [ ] **P1** x14 data validation (lists over another sheet) is kept in `extLst`, not modelled or
       editable.
