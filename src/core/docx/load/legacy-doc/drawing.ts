@@ -61,7 +61,9 @@ export function inlinePictureXml(
 	fallbackName = 'Picture',
 ): string {
 	if (!picture.blip) {
-		conversion.warn('A picture whose image data could not be read was left out.');
+		conversion.warn(
+			'A picture without image data (for example a linked INCLUDEPICTURE) was left out.',
+		);
 		return '';
 	}
 	const cx = emu(picture.widthTwips);
