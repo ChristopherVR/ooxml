@@ -65,7 +65,7 @@ describe('SearchController', () => {
 		expect(findTextMatches(doc, 'e')).toHaveLength(0);
 		expect(findTextMatches(doc, 'e\u0301')).toHaveLength(1);
 		expect(findTextMatches(doc, 'café')).toHaveLength(1);
-		expect(findTextMatches(doc, 'café', true)).toHaveLength(0);
+		expect(findTextMatches(doc, 'café', { matchCase: true })).toHaveLength(0);
 	});
 
 	it('finds words that hold soft hyphens, which show only where a line breaks, and replaces them whole', () => {
@@ -116,7 +116,7 @@ describe('SearchController', () => {
 		]);
 		const view = makeView(original);
 		const search = new SearchController(() => view);
-		search.search('cat', true);
+		search.search('cat', { matchCase: true });
 		expect(search.replaceAll('dog\ncat')).toBe(3);
 		expect(view.state.doc.child(0).textContent).toBe('dog\ncat dog\ncat');
 		expect(view.state.doc.child(1).textContent).toBe('dog\ncat');
@@ -150,7 +150,7 @@ describe('SearchController', () => {
 		const search = new SearchController(() => view);
 		expect(search.search('').count).toBe(0);
 		expect(search.replaceAll('x')).toBe(0);
-		search.search('$a', true);
+		search.search('$a', { matchCase: true });
 		expect(search.replaceOne('')).toBe(true);
 		expect(view.state.doc.textContent).toBe('a a$a');
 		view.destroy();
@@ -184,6 +184,116 @@ describe('accessible search panel', () => {
 		query.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 		expect(panel.isOpen).toBe(false);
 		expect(onClose).toHaveBeenCalledOnce();
+		view.destroy();
+	});
+});
+
+describe('Find and Replace options', () => {
+	const doc = (...paragraphs: ReturnType<typeof paragraph>[]) =>
+		schema.node('doc', null, paragraphs);
+
+	it('finds across paragraph marks with ^p and joins paragraphs when replacing', () => {
+		const view = makeView(
+			doc(paragraph('a', schema.text('Hello')), paragraph('b', schema.text('world'))),
+		);
+		const search = new SearchController(() => view);
+		expect(search.search('o^pw').count).toBe(1);
+		expect(search.replaceAll(' ')).toBe(1);
+		expect(view.state.doc.childCount).toBe(1);
+		expect(view.state.doc.textContent).toBe('Hell orld');
+		expect(view.state.doc.firstChild?.attrs.id).toBe('a');
+		view.destroy();
+	});
+
+	it('splits a paragraph where the replacement holds ^p and gives the new paragraph its own id', () => {
+		const view = makeView(doc(paragraph('split', schema.text('one two'))));
+		const search = new SearchController(() => view);
+		search.search(' ');
+		expect(search.replaceAll('^p')).toBe(1);
+		expect(view.state.doc.childCount).toBe(2);
+		expect(view.state.doc.child(0).textContent).toBe('one');
+		expect(view.state.doc.child(1).textContent).toBe('two');
+		expect(view.state.doc.child(0).attrs.id).toBe('split');
+		expect(view.state.doc.child(1).attrs.id).not.toBe('split');
+		view.destroy();
+	});
+
+	it('replaces with wildcard groups \\1 and \\2 and with ^& and ^t', () => {
+		const view = makeView(doc(paragraph('names', schema.text('John Smith'))));
+		const search = new SearchController(() => view);
+		search.search('(J*) (S*h)', { wildcards: true });
+		expect(search.replaceAll('\\2, \\1')).toBe(1);
+		expect(view.state.doc.textContent).toBe('Smith, John');
+		search.search('Smith', { matchCase: true });
+		expect(search.replaceAll('[^&]^t')).toBe(1);
+		expect(view.state.doc.textContent).toBe('[Smith]\t, John');
+		view.destroy();
+	});
+
+	it('finds whole words only and the Special codes for tabs and any digit', () => {
+		const view = makeView(doc(paragraph('words', schema.text('the there\tthe 7 x'))));
+		const search = new SearchController(() => view);
+		expect(search.search('the', { wholeWords: true }).count).toBe(2);
+		expect(search.search('the', {}).count).toBe(3);
+		expect(search.search('^t', {}).count).toBe(1);
+		expect(search.search('^#', {}).count).toBe(1);
+		view.destroy();
+	});
+
+	it('reports an invalid wildcard pattern and replaces nothing', () => {
+		const view = makeView(doc(paragraph('bad', schema.text('a(b'))));
+		const search = new SearchController(() => view);
+		const status = search.search('(a', { wildcards: true });
+		expect(status).toMatchObject({ count: 0, invalid: true });
+		expect(search.replaceAll('x')).toBe(0);
+		expect(view.state.doc.textContent).toBe('a(b');
+		expect(search.search('(a', {}).invalid).toBe(false);
+		view.destroy();
+	});
+
+	it('does not match across table cells, even with wildcards or ^p', () => {
+		const table = schema.nodes.table.create(null, [
+			schema.nodes.tableRow.create(null, [
+				schema.nodes.tableCell.create(null, paragraph('c1', schema.text('x'))),
+				schema.nodes.tableCell.create(null, paragraph('c2', schema.text('y'))),
+			]),
+		]);
+		const cells = schema.node('doc', null, [table]);
+		expect(findTextMatches(cells, 'x*y', { wildcards: true })).toHaveLength(0);
+		expect(findTextMatches(cells, 'x^py')).toHaveLength(0);
+	});
+
+	it('shows the More >> options, disables the wildcard-off options, and inserts Special codes', () => {
+		const view = makeView(doc(paragraph('panel', schema.text('tab\there'))));
+		const panel = createSearchPanel({ getView: () => view });
+		document.body.append(panel.element);
+		panel.open();
+		const more = panel.element.querySelector<HTMLButtonElement>('[aria-label="More >>"]')!;
+		const options = panel.element.querySelector<HTMLElement>('.dve-search-options')!;
+		expect(options.hidden).toBe(true);
+		more.click();
+		expect(options.hidden).toBe(false);
+		expect(more.getAttribute('aria-expanded')).toBe('true');
+		const wildcards = panel.element.querySelector<HTMLInputElement>(
+			'[aria-label="Use wildcards"]',
+		)!;
+		const whole = panel.element.querySelector<HTMLInputElement>(
+			'[aria-label="Find whole words only"]',
+		)!;
+		wildcards.checked = true;
+		wildcards.dispatchEvent(new Event('change'));
+		expect(whole.disabled).toBe(true);
+		wildcards.checked = false;
+		wildcards.dispatchEvent(new Event('change'));
+		expect(whole.disabled).toBe(false);
+		const query = panel.element.querySelector<HTMLInputElement>('[aria-label="Find text"]')!;
+		query.value = 'tab';
+		query.dispatchEvent(new Event('input'));
+		const special = panel.element.querySelector<HTMLSelectElement>('select')!;
+		special.value = '^t';
+		special.dispatchEvent(new Event('change'));
+		expect(query.value).toBe('tab^t');
+		expect(panel.element.querySelector('[role="status"]')?.textContent).toBe('1 match');
 		view.destroy();
 	});
 });

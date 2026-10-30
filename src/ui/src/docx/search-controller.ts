@@ -1,8 +1,18 @@
 import { closeHistory } from 'prosemirror-history';
-import { Fragment, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { expectDefined, insertedTextMarks } from 'ooxml-core/docx/ui';
+import {
+	expectDefined,
+	FindPatternError,
+	replacementParts,
+	type FindOptions,
+} from 'ooxml-core/docx/ui';
+import {
+	findDocumentMatches,
+	replaceTargets,
+	type DocumentMatch,
+	type ReplacementTarget,
+} from './search-document';
 
 export interface SearchMatch {
 	from: number;
@@ -14,107 +24,19 @@ export interface SearchStatus {
 	count: number;
 	active: number;
 	readOnly: boolean;
+	/** The query is a wildcard pattern Word would reject; nothing matches it. */
+	invalid: boolean;
 }
 
-type Segment = { text: string; from: number };
-
-function escapedLiteral(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function graphemeBoundaries(value: string): Set<number> {
-	const boundaries = new Set<number>([0, value.length]);
-	if (typeof Intl.Segmenter === 'function') {
-		const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-		for (const part of segmenter.segment(value)) boundaries.add(part.index);
-		return boundaries;
-	}
-	for (let index = 0; index < value.length;) {
-		const point = value.codePointAt(index)!;
-		index += point > 0xffff ? 2 : 1;
-		while (index < value.length && /\p{Mark}/u.test(value.charAt(index))) index++;
-		boundaries.add(index);
-	}
-	return boundaries;
-}
-
-function paragraphSegments(node: ProseMirrorNode, pos: number): Segment[] {
-	const segments: Segment[] = [];
-	let value = '';
-	let from = -1;
-	const flush = () => {
-		if (value) segments.push({ text: value, from });
-		value = '';
-		from = -1;
-	};
-	node.forEach((child, offset) => {
-		if (!child.isText) {
-			flush();
-			return;
-		}
-		if (!child.text) return;
-		if (from < 0) from = pos + 1 + offset;
-		value += child.text;
-	});
-	flush();
-	return segments;
-}
-
-// A soft hyphen (`w:softHyphen`) shows only where a line breaks at it, so Find skips it.
-const SOFT_HYPHEN = '\u00AD';
-
-/** `text` without its soft hyphens, and the offset in `text` of each character that is left. */
-function withoutSoftHyphens(text: string): { text: string; offsets: number[] } {
-	let kept = '';
-	const offsets: number[] = [];
-	for (let index = 0; index < text.length; index++) {
-		if (text[index] === SOFT_HYPHEN) continue;
-		kept += text[index];
-		offsets.push(index);
-	}
-	return { text: kept, offsets };
-}
-
-function collectMatches(
-	doc: ProseMirrorNode,
-	query: string,
-	caseSensitive: boolean,
-): SearchMatch[] {
-	const literal = query.replaceAll(SOFT_HYPHEN, '');
-	if (!literal) return [];
-	const expression = new RegExp(escapedLiteral(literal), caseSensitive ? 'gu' : 'giu');
-	const matches: SearchMatch[] = [];
-	doc.descendants((node, pos) => {
-		if (node.type.name !== 'paragraph') return;
-		for (const segment of paragraphSegments(node, pos)) {
-			const boundaries = graphemeBoundaries(segment.text);
-			const { text, offsets } = withoutSoftHyphens(segment.text);
-			expression.lastIndex = 0;
-			for (const match of text.matchAll(expression)) {
-				// The match in the segment, with the soft hyphens inside it but none at its ends.
-				const start = offsets[match.index]!;
-				const end = offsets[match.index + match[0].length - 1]! + 1;
-				if (boundaries.has(start) && boundaries.has(end))
-					matches.push({ from: segment.from + start, to: segment.from + end });
-			}
-		}
-		return false;
-	});
-	return matches;
-}
-
-function marksAt(doc: ProseMirrorNode, pos: number): readonly Mark[] {
-	const $pos = doc.resolve(pos);
-	if ($pos.nodeAfter?.isText) return $pos.nodeAfter.marks;
-	if ($pos.nodeBefore?.isText) return $pos.nodeBefore.marks;
-	return $pos.marks();
-}
+/** The Find options of the dialog: Match case, whole words, wildcards and the rest of More >>. */
+export type SearchOptions = FindOptions;
 
 export class SearchController {
 	private query = '';
-	private caseSensitive = false;
-	private matches: SearchMatch[] = [];
+	private options: SearchOptions = {};
+	private matches: DocumentMatch[] = [];
 	private activeIndex = -1;
+	private invalid = false;
 
 	constructor(private readonly getView: () => EditorView | undefined) {}
 
@@ -124,19 +46,28 @@ export class SearchController {
 			count: this.matches.length,
 			active: this.activeIndex < 0 ? 0 : this.activeIndex + 1,
 			readOnly: !this.getView()?.editable,
+			invalid: this.invalid,
 		};
 	}
 
-	search(query: string, caseSensitive = this.caseSensitive): SearchStatus {
+	search(query: string, options: SearchOptions = this.options): SearchStatus {
 		this.query = query;
-		this.caseSensitive = caseSensitive;
-		this.matches = this.currentMatches();
-		this.activeIndex = this.indexAtSelection();
-		return this.status;
+		this.options = options;
+		return this.refresh();
 	}
 
 	refresh(): SearchStatus {
-		this.matches = this.currentMatches();
+		const view = this.getView();
+		this.matches = [];
+		this.invalid = false;
+		if (view) {
+			try {
+				this.matches = findDocumentMatches(view.state.doc, this.query, this.options);
+			} catch (error) {
+				if (!(error instanceof FindPatternError)) throw error;
+				this.invalid = true;
+			}
+		}
 		this.activeIndex = this.indexAtSelection();
 		return this.status;
 	}
@@ -181,8 +112,7 @@ export class SearchController {
 		if (this.activeIndex < 0 && !this.findNext()) return false;
 		const match = this.matches[this.activeIndex];
 		if (!match) return false;
-		this.replace(view, [match], replacement);
-		return true;
+		return this.replace(view, [match], replacement);
 	}
 
 	replaceAll(replacement: string): number {
@@ -191,13 +121,7 @@ export class SearchController {
 		this.refresh();
 		if (!this.matches.length) return 0;
 		const targets = [...this.matches];
-		this.replace(view, targets, replacement);
-		return targets.length;
-	}
-
-	private currentMatches(): SearchMatch[] {
-		const view = this.getView();
-		return view ? collectMatches(view.state.doc, this.query, this.caseSensitive) : [];
+		return this.replace(view, targets, replacement) ? targets.length : 0;
 	}
 
 	private indexAtSelection(): number {
@@ -220,47 +144,36 @@ export class SearchController {
 		return match;
 	}
 
-	private replace(view: EditorView, matches: SearchMatch[], replacement: string): void {
-		const { state } = view;
-		let transaction = state.tr;
-		for (const match of [...matches].sort((left, right) => right.from - left.from)) {
-			const marks = marksAt(state.doc, match.from);
-			const content = replacementFragment(state.schema, replacement, marks);
-			transaction = transaction.replaceWith(match.from, match.to, content);
+	/** Replaces the matches (in document order) in one undoable step; false if the replacement is invalid. */
+	private replace(view: EditorView, matches: DocumentMatch[], replacement: string): boolean {
+		const wildcards = Boolean(this.options.wildcards);
+		let targets: ReplacementTarget[];
+		try {
+			targets = matches.map((match) => ({
+				from: match.from,
+				to: match.to,
+				parts: replacementParts(replacement, match, wildcards),
+			}));
+		} catch (error) {
+			if (!(error instanceof FindPatternError)) throw error;
+			this.invalid = true;
+			return false;
 		}
-		const last = matches[0];
-		if (!last) return;
-		const cursor =
-			last.from +
-			replacementFragment(state.schema, replacement, marksAt(state.doc, last.from)).size;
-		transaction = transaction.setSelection(TextSelection.create(transaction.doc, cursor));
-		view.dispatch(closeHistory(transaction.scrollIntoView()));
+		const transaction = replaceTargets(view.state, targets);
+		// The cursor goes after the first replacement, mapped through every step of the transaction.
+		const cursor = transaction.mapping.map(expectDefined(matches[0], 'first match').to, 1);
+		const selection = TextSelection.near(transaction.doc.resolve(cursor));
+		view.dispatch(closeHistory(transaction.setSelection(selection).scrollIntoView()));
 		this.refresh();
+		return true;
 	}
 }
 
-function replacementFragment(
-	schema: EditorView['state']['schema'],
-	replacement: string,
-	marks: readonly Mark[],
-): Fragment {
-	if (!replacement) return Fragment.empty;
-	const lines = replacement.split(/\r\n|\r|\n/);
-	const content: ProseMirrorNode[] = [];
-	lines.forEach((line, index) => {
-		if (line) content.push(schema.text(line, insertedTextMarks(marks, line)));
-		if (index < lines.length - 1)
-			content.push(
-				expectDefined(schema.nodes.hardBreak, 'hardBreak node type').create(null, null, marks),
-			);
-	});
-	return Fragment.fromArray(content);
-}
-
+/** Every match of a query in the document, as ranges (Find without its replacement details). */
 export function findTextMatches(
-	doc: ProseMirrorNode,
+	doc: Parameters<typeof findDocumentMatches>[0],
 	query: string,
-	caseSensitive = false,
+	options: SearchOptions = {},
 ): SearchMatch[] {
-	return collectMatches(doc, query, caseSensitive);
+	return findDocumentMatches(doc, query, options).map(({ from, to }) => ({ from, to }));
 }
