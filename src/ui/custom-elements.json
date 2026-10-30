@@ -4410,7 +4410,7 @@
 					"name": "OfficeUiTabStrip",
 					"tagName": "office-ui-tab-strip",
 					"customElement": true,
-					"description": "Bottom document tabs (Visio pages, Excel sheets). Set `tabs` (`OfficeTab[]`) and `selected` (a tab id). Labels are inserted as text. The previous/next buttons and arrow, Home and End keys move the selection; the tab list uses a roving tabindex. User selection emits `office-tab-select` `{ id }` (cancelable); setting properties never emits. Attributes: `label` (tab list name, default \"Tabs\"), `previous-label` and `next-label` (step button names, default \"Previous\" and \"Next\"), `disabled`, and `add-label` to show an add button after the tabs (Insert Page, New Sheet) that emits `office-command` `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it. The `after-tabs` slot sits between the tabs and the add button (Visio's All pages list), and the `plain` attribute draws the selected tab as bold accent text without a box, as Visio does.",
+					"description": "Bottom document tabs (Visio pages, Excel sheets). Set `tabs` (`OfficeTab[]`) and `selected` (a tab id). Labels are inserted as text. The previous/next buttons and arrow, Home and End keys move the selection; the tab list uses a roving tabindex. User selection emits `office-tab-select` `{ id }` (cancelable); setting properties never emits. Attributes: `label` (tab list name, default \"Tabs\"), `previous-label` and `next-label` (step button names, default \"Previous\" and \"Next\"), `disabled`, and `add-label` to show an add button after the tabs (Insert Page, New Sheet) that emits `office-command` `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it. The `after-tabs` slot sits between the tabs and the add button (Visio's All pages list), and the `reorderable` attribute lets a pointer (mouse, pen or touch) drag a tab along the strip: past a small threshold an insertion marker shows the gap, Escape cancels, and releasing emits `office-tab-reorder` `{ id, index }` (the tab's new index) without moving anything itself; the host reorders its model and sets `tabs` again. A tab with a `group` only drops within that group. The `plain` attribute draws the selected tab as bold accent text without a box, as Visio does.",
 					"attributes": [
 						{
 							"name": "add-disabled"
@@ -4432,6 +4432,9 @@
 						},
 						{
 							"name": "previous-label"
+						},
+						{
+							"name": "reorderable"
 						},
 						{
 							"name": "selected"
@@ -4494,6 +4497,13 @@
 						},
 						{
 							"kind": "field",
+							"name": "reorderable",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
 							"name": "selected",
 							"type": {
 								"text": "string"
@@ -4507,6 +4517,9 @@
 					"events": [
 						{
 							"name": "office-command"
+						},
+						{
+							"name": "office-tab-reorder"
 						},
 						{
 							"name": "office-tab-select"
