@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.35.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.35.0) - 2026-10-30
+
+### Features
+
+- **visio:** Flate-compress embedded PDF streams ([e6fa351](https://github.com/ChristopherVR/ooxml/commit/e6fa3512a86d86ecb88768b392996914d8591a17))
+- **visio:** Add bevel and 3-D rotation presets with approximate drawing ([875226c](https://github.com/ChristopherVR/ooxml/commit/875226cd1d9e330008ffc9b47f5530ceffca156d))
+- **visio:** Follow group members with glued connectors and stencil members ([3aa87c7](https://github.com/ChristopherVR/ooxml/commit/3aa87c70762b331ea0f4cb8440d7a988977d77c0))
+- **visio:** Move and resize groups and selections with glue and stencil members ([21cd946](https://github.com/ChristopherVR/ooxml/commit/21cd946aeee137197ba1589a5fcea05f2a81e654))
+- **visio:** Edit lanes of charts Visio built, vertical starter, lane membership ([3eaf193](https://github.com/ChristopherVR/ooxml/commit/3eaf193906f20b4ba976382ef556b878b03105eb))
+- **visio:** Add Data Visualizer, graphic fields and advanced graphics ([9f19f73](https://github.com/ChristopherVR/ooxml/commit/9f19f73bee4dc22e2940cf21a72b80fec4c60556))
+- **visio:** Add control handles, shape actions and tab stops ([2b9f183](https://github.com/ChristopherVR/ooxml/commit/2b9f1831e89ae12844f4082076c13956bf15d321))
+- **visio:** Write org charts with Visio's Belt masters and import them ([5872254](https://github.com/ChristopherVR/ooxml/commit/5872254aa72c78930efd3bb143b3823a3facc588))
+
+### Styling
+
+- **visio:** Format the parity ledger and assert unchanged CFF caches ([ec83709](https://github.com/ChristopherVR/ooxml/commit/ec837090b6621b75ade433739ea5785523c08dea))
+- **visio:** Drop unused imports and bindings left by the merge ([1df9829](https://github.com/ChristopherVR/ooxml/commit/1df9829e6e94078c911e87089e46b36abe40d567))
+
 ## [1.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.34.0) - 2026-10-30
 
 ### Features

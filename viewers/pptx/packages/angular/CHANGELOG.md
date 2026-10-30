@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.60.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.60.0) - 2026-10-30
+
+### Features
+
+- **visio:** Flate-compress embedded PDF streams ([e6fa351](https://github.com/ChristopherVR/ooxml/commit/e6fa3512a86d86ecb88768b392996914d8591a17))
+
 ## [4.59.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.59.0) - 2026-10-30
 
 ### Features

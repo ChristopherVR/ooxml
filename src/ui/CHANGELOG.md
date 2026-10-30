@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.37.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.37.0) - 2026-10-30
+
+### Features
+
+- **visio:** Translate the File backstage with the ribbon dictionaries ([fc13243](https://github.com/ChristopherVR/ooxml/commit/fc13243b3373b79311a2f459225782e805158e16))
+- **visio:** Flate-compress embedded PDF streams ([e6fa351](https://github.com/ChristopherVR/ooxml/commit/e6fa3512a86d86ecb88768b392996914d8591a17))
+- **visio:** Add bevel and 3-D rotation presets with approximate drawing ([875226c](https://github.com/ChristopherVR/ooxml/commit/875226cd1d9e330008ffc9b47f5530ceffca156d))
+- **visio:** Edit lanes of charts Visio built, vertical starter, lane membership ([3eaf193](https://github.com/ChristopherVR/ooxml/commit/3eaf193906f20b4ba976382ef556b878b03105eb))
+- **visio:** Add Data Visualizer, graphic fields and advanced graphics ([9f19f73](https://github.com/ChristopherVR/ooxml/commit/9f19f73bee4dc22e2940cf21a72b80fec4c60556))
+- **visio:** Add control handles, shape actions and tab stops ([2b9f183](https://github.com/ChristopherVR/ooxml/commit/2b9f1831e89ae12844f4082076c13956bf15d321))
+- **visio:** Write org charts with Visio's Belt masters and import them ([5872254](https://github.com/ChristopherVR/ooxml/commit/5872254aa72c78930efd3bb143b3823a3facc588))
+
+### Testing
+
+- **visio:** Type the control handle edit mock with its edits argument ([cb7612f](https://github.com/ChristopherVR/ooxml/commit/cb7612f528d1469a329b74a9b2dd2c4401ffd282))
+
 ## [1.36.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.36.0) - 2026-10-30
 
 ### Features
