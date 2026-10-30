@@ -179,6 +179,7 @@ export function dataValidationDialog(
 		const hasMessages = promptTitle.value || prompt.value || errorTitle.value || error.value;
 		if (type === 'none' && !hasMessages) return null;
 		const dv: DataValidation = { ranges: [], type, allowBlank: ignoreBlank.input.checked };
+		if (current?.extensionXml) dv.extensionXml = current.extensionXml;
 		if (
 			type === 'whole' ||
 			type === 'decimal' ||

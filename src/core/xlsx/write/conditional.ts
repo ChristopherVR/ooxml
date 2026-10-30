@@ -1,12 +1,12 @@
 import { NS } from '../../xml/index';
 import { formatAddress, formatRange } from '../address';
 import { dataBarBaseLengths } from '../conditional-extensions';
-import type { CfvoThreshold, ConditionalFormat, ConditionalRule, DataValidation } from '../model';
+import type { CfvoThreshold, ConditionalFormat, ConditionalRule } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
 import { timePeriodFormula } from '../time-period';
 import { colorXml } from './style-xml';
 import type { StyleWriter } from './styles';
-import { attrs, el, escapeText } from './xml-out';
+import { el, escapeText } from './xml-out';
 
 const cfvoXml = (threshold: CfvoThreshold) =>
 	el('cfvo', {
@@ -169,33 +169,4 @@ export function conditionalFormatsXml(
 		.join('');
 }
 
-export function dataValidationsXml(validations: readonly DataValidation[]): string {
-	const items = validations
-		.filter((dv) => dv.ranges.length)
-		.map((dv) => {
-			const hideDropDown = dv.showDropDown === false ? true : undefined;
-			const values = attrs({
-				type: dv.type === 'none' ? undefined : dv.type,
-				errorStyle: dv.errorStyle,
-				operator: dv.operator,
-				allowBlank: dv.allowBlank || undefined,
-				showDropDown: hideDropDown,
-				showInputMessage: dv.showInputMessage || undefined,
-				showErrorMessage: dv.showErrorMessage || undefined,
-				errorTitle: dv.errorTitle,
-				error: dv.error,
-				promptTitle: dv.promptTitle,
-				prompt: dv.prompt,
-				sqref: dv.ranges.map((r) => formatRange(r)).join(' '),
-			});
-			const formulas =
-				(dv.formula1 !== undefined ? formulaXml(dv.formula1, 'formula1') : '') +
-				(dv.formula2 !== undefined ? formulaXml(dv.formula2, 'formula2') : '');
-			return formulas
-				? `<dataValidation${values}>${formulas}</dataValidation>`
-				: `<dataValidation${values}/>`;
-		});
-	return items.length
-		? `<dataValidations count="${items.length}">${items.join('')}</dataValidations>`
-		: '';
-}
+export { dataValidationsXml } from './data-validations';

@@ -35,6 +35,8 @@ export interface SaveContext {
 	/** Part names of the source package, avoided when naming new parts. */
 	reserved: ReadonlySet<string>;
 	tableIds: Set<number>;
+	/** Revision identities already written by x14 validation rules, including copied sheets. */
+	validationIds?: Set<string>;
 	/** Set when a threaded comment part was written or kept. */
 	threaded: { used: boolean };
 	/** Set when a dynamic-array formula was written (see `DYNAMIC_ARRAY_METADATA_XML`). */

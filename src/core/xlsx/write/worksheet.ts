@@ -5,7 +5,9 @@ import { formatRange } from '../address';
 import type { Worksheet } from '../model';
 import { CONTENT_TYPES } from '../read/package';
 import { printOptionsXml } from '../read/print-options';
-import { conditionalFormatsXml, dataValidationsXml } from './conditional';
+import { conditionalFormatsXml } from './conditional';
+import { dataValidationsXml } from './data-validations';
+import { validationExtensionsXml } from '../validation-extensions';
 import { conditionalExtensionsXml } from '../conditional-extensions';
 import { RelationshipSet } from './package-writer';
 import { pageXml } from './page-setup';
@@ -132,7 +134,11 @@ export function writeWorksheet(
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);
 	ctx.pivots?.writeSheet(writer, sheet, partName, rels);
-	const extensions = conditionalExtensionsXml(sheet);
+	const extensions = validationExtensionsXml(
+		sheet,
+		conditionalExtensionsXml(sheet),
+		(ctx.validationIds ??= new Set()),
+	);
 	blocks.set(
 		'extLst',
 		ctx.slicers?.active ? ctx.slicers.writeSheet(sheet, partName, rels, extensions) : extensions,
@@ -142,7 +148,7 @@ export function writeWorksheet(
 			key.startsWith('source:') ||
 			!ORDER.includes(key) ||
 			(blocks.get(key) ?? '') !== '' ||
-			(key === 'extLst' && ctx.slicers?.active)
+			key === 'extLst'
 		)
 			continue;
 		const valid = list.filter((xml) =>

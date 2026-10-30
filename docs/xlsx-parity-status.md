@@ -44,6 +44,16 @@ complete end-to-end Excel comparison.
 
 ## Latest completed increments
 
+2026-10-31: Excel 2010 (`x14`) data validations now use the same model, list drop-down,
+restriction checks and Data Validation dialog as ordinary rules. Cross-sheet references are
+written in the x14 form, with current formulas and ranges after sheet renames, row inserts,
+copying, partial clearing and undo. Source rule metadata and collection settings are kept;
+copied rules do not duplicate revision identities. The Excel-authored fixture
+`src/core/xlsx/__fixtures__/excel-x14-validation.xlsx` and its COM generator accompany the
+round-trip regressions. All six bindings loaded, edited, saved and cleared the native rule in
+`e2e/xlsx/x14-validation.spec.ts`, including the grid's list values. Excel 16 reopened three
+outputs with the expected edited, cleared and newly authored cross-sheet list formulas.
+
 2026-10-31: Navigation now saves each sheet's active cell and ranges, the active workbook tab,
 and each split pane's selection, without adding content undo steps or marking the workbook dirty.
 Disjoint selections write `activeCellId` for the range containing the active cell. Frozen panes
@@ -321,8 +331,8 @@ line/marker swatches and position-authoring controls remain incomplete.
 11. File format. `.xlsb` is detected and refused (`load/detect.ts`) and `.ods` is not read or
     written. A save keeps the loaded `calcPr` and writes `fullCalcOnLoad="1"` only when a
     cached formula result may be stale (no cached value, or an edit not recalculated), so Excel
-    recalculates those workbooks on open. x14 data validation (lists over another sheet) is kept in `extLst` but
-    not modelled, rich values and in-cell pictures (`xl/richData`, IMAGE() results, linked
+    recalculates those workbooks on open. x14 data validation is modelled and editable, including
+    lists over another sheet. Rich values and in-cell pictures (`xl/richData`, IMAGE() results, linked
     data types) have no model, phonetic guides (`rPh`) are read and written with their string
     but not displayed, edited or copied,
     connections and query tables are only carried verbatim, and named sheet views and

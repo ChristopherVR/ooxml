@@ -470,6 +470,8 @@ export type ValidationType =
 	| 'custom';
 
 export interface DataValidation {
+	/** Source x14 rule, retaining attributes and children outside the editable model. */
+	extensionXml?: string;
 	ranges: CellRange[];
 	type: ValidationType;
 	operator?: ConditionalOperator;

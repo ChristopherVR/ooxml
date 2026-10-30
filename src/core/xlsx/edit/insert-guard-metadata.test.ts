@@ -141,9 +141,9 @@ describe('insertion preserves metadata on empty boundary cells', () => {
 			expect(() => createEditSession(wb).insertRows(0, 0, 1)).toThrow(/pushed off/);
 			expect(wb).toEqual(before);
 			const saved = await loadXlsx(await saveXlsx(wb));
-			expect(saved.sheets[0]?.preserved.get(kind)?.[0]).toContain(
-				kind === 'rowBreaks' ? `id="${MAX_ROW}"` : 'A1048576',
-			);
+			if (kind === 'rowBreaks')
+				expect(saved.sheets[0]?.preserved.get(kind)?.[0]).toContain(`id="${MAX_ROW}"`);
+			else expect(saved.sheets[0]?.dataValidations[0]?.ranges).toEqual([range('A1048576')]);
 		});
 
 	it('rejects a totals row beyond the grid without changing the table or history', async () => {

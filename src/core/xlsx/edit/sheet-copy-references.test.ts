@@ -193,7 +193,11 @@ describe('references inside a copied worksheet', () => {
 		expect(savedXml).toContain('keep="yes"');
 		expect(source.preserved.get('extLst')).toEqual([xml]);
 		const loaded = await loadXlsx(await saveXlsx(workbook));
-		expect(loaded.sheets[1]?.preserved.get('extLst')?.[0]).toContain("'Source (2)'!$A$1:$A$2");
+		expect(loaded.sheets[1]?.dataValidations[0]).toMatchObject({
+			formula1: "'Source (2)'!$A$1:$A$2",
+			ranges: [range('G2:G4')],
+		});
+		expect(loaded.sheets[1]?.preserved.get('extLst')?.[0]).toContain('keep="yes"');
 	});
 
 	it('keeps copied table formulas and scoped names on the copied table', async () => {

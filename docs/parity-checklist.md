@@ -83,8 +83,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       written only for a formula without a cached result or after an edit that was not
       recalculated (`Workbook.valuesStale`, set by `edit/session-calc.ts`).
 - [ ] **P1** `.xlsb` is detected and refused (`load/detect.ts`); `.ods` is not read or written.
-- [ ] **P1** x14 data validation (lists over another sheet) is kept in `extLst`, not modelled or
-      editable.
+- [x] **P1** x14 data validation uses the shared validation model and editor. Cross-sheet lists,
+      both formula operands, messages, flags, reference updates, clearing and undo survive save;
+      unknown rule markup and collection settings are retained. Evidence: the Excel-authored
+      `excel-x14-validation.xlsx`, `xlsx/write/validation-extensions.test.ts`, and all six bindings
+      in `e2e/xlsx/x14-validation.spec.ts`. Excel 16 reopened edited, cleared and newly authored rules.
 - [ ] **P1** Rich values and in-cell pictures (`xl/richData`, IMAGE() results, Place in Cell,
       linked data types) have no model.
 - [ ] **P1** Connections, query tables and Power Query are carried verbatim only; external links

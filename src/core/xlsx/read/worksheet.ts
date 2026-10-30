@@ -5,7 +5,9 @@ import { parseRange } from '../address';
 import type { DifferentialStyle, Hyperlink, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
 import { mergeComments, parseLegacyComments, parseThreadedComments } from './comments';
-import { readConditionalFormats, readDataValidations } from './conditional';
+import { readConditionalFormats } from './conditional';
+import { readDataValidations } from './data-validations';
+import { readValidationExtensions } from '../validation-extensions';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
 import { attachFormControls } from './form-control';
@@ -233,6 +235,7 @@ function readWorksheet(
 	const scenarios = readScenarios(byName.get('scenarios'));
 	if (scenarios) sheet.scenarios = scenarios;
 	sheet.dataValidations = readDataValidations(byName.get('dataValidations'));
+	readValidationExtensions(sheet);
 	readConditionalExtensions(sheet);
 	sheet.hyperlinks = readHyperlinks(ctx, partName, byName.get('hyperlinks'));
 	const page = readPageSetup(

@@ -5,10 +5,8 @@ import type {
 	ConditionalFormat,
 	ConditionalOperator,
 	ConditionalRule,
-	DataValidation,
 	DifferentialStyle,
 	TimePeriod,
-	ValidationType,
 } from '../model';
 import { TIME_PERIODS } from '../model';
 import { stripFuturePrefixes } from './formula-text';
@@ -171,49 +169,4 @@ export function readConditionalFormats(
 	return out;
 }
 
-const VALIDATION_TYPES = new Set([
-	'none',
-	'whole',
-	'decimal',
-	'list',
-	'date',
-	'time',
-	'textLength',
-	'custom',
-]);
-const ERROR_STYLES = new Set(['stop', 'warning', 'information']);
-
-export function readDataValidations(node: XmlElement | undefined): DataValidation[] {
-	if (!node) return [];
-	const out: DataValidation[] = [];
-	for (const dv of xChildren(node, 'dataValidation')) {
-		const ranges = parseSqref(att(dv, 'sqref'));
-		if (!ranges.length) continue;
-		const type = att(dv, 'type') ?? 'none';
-		const validation: DataValidation = {
-			ranges,
-			type: (VALIDATION_TYPES.has(type) ? type : 'none') as ValidationType,
-		};
-		const operator = att(dv, 'operator');
-		if (operator) validation.operator = operator as ConditionalOperator;
-		const f1 = xFirst(dv, 'formula1');
-		if (f1) validation.formula1 = stripFuturePrefixes(f1.textContent ?? '');
-		const f2 = xFirst(dv, 'formula2');
-		if (f2) validation.formula2 = stripFuturePrefixes(f2.textContent ?? '');
-		if (boolAttr(dv, 'allowBlank')) validation.allowBlank = true;
-		const hideDropDown = boolAttr(dv, 'showDropDown');
-		if (validation.type === 'list') validation.showDropDown = !hideDropDown;
-		else if (hideDropDown) validation.showDropDown = false;
-		if (boolAttr(dv, 'showErrorMessage')) validation.showErrorMessage = true;
-		if (boolAttr(dv, 'showInputMessage')) validation.showInputMessage = true;
-		const errorStyle = att(dv, 'errorStyle');
-		if (errorStyle && ERROR_STYLES.has(errorStyle))
-			validation.errorStyle = errorStyle as 'stop' | 'warning' | 'information';
-		for (const key of ['errorTitle', 'error', 'promptTitle', 'prompt'] as const) {
-			const value = att(dv, key);
-			if (value !== undefined) validation[key] = value;
-		}
-		out.push(validation);
-	}
-	return out;
-}
+export { readDataValidations } from './data-validations';
