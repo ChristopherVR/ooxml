@@ -8,6 +8,7 @@ import type {
 	SheetFormat,
 	SheetProtection,
 	SheetView,
+	SplitPane,
 } from '../model';
 import type { XmlElement } from '../../xml/index';
 import { readModernHash } from './password-hash';
@@ -42,6 +43,8 @@ export const readTabColor = (
 export const readFitToPage = (sheetPr: XmlElement | undefined): boolean =>
 	boolAttr(xFirst(sheetPr, 'pageSetUpPr'), 'fitToPage') ?? false;
 
+const PANES = new Set(['topLeft', 'topRight', 'bottomLeft', 'bottomRight']);
+
 /** The first `sheetView` (the one Excel shows), with frozen panes and the active selection. */
 export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 	const view = defaultSheetView();
@@ -63,24 +66,44 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 		const cols = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
 		if (rows || cols) view.freeze = { rows, cols };
 	}
+	const split = pane && state === 'split';
+	if (split) {
+		const x = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
+		const y = Math.max(0, Math.round(numAttr(pane, 'ySplit') ?? 0));
+		if (x || y) {
+			view.split = { x, y };
+			const first = parseAddress(att(node, 'topLeftCell') ?? '');
+			if (first) view.split.topLeft = first;
+			const active = att(pane, 'activePane');
+			if (active && PANES.has(active))
+				view.split.activePane = active as NonNullable<SplitPane['activePane']>;
+		}
+	}
 	const topLeft = parseAddress(
-		(frozen ? att(pane, 'topLeftCell') : att(node, 'topLeftCell')) ?? '',
+		(frozen || split ? att(pane, 'topLeftCell') : att(node, 'topLeftCell')) ?? '',
 	);
 	if (topLeft) view.topLeft = topLeft;
 	const selections = xChildren(node, 'selection');
 	const activePane = att(pane, 'activePane') ?? 'topLeft';
 	const selection =
 		selections.find((sel) => (att(sel, 'pane') ?? 'topLeft') === activePane) ?? selections[0];
-	if (selection) {
-		const ranges = parseSqref(att(selection, 'sqref') ?? att(selection, 'activeCell') ?? 'A1');
-		const active = parseAddress(att(selection, 'activeCell') ?? '') ??
-			ranges[0]?.start ?? { row: 0, col: 0 };
-		view.selection = {
-			active,
-			ranges: ranges.length ? ranges : [{ start: active, end: { ...active } }],
-		};
+	if (selection) view.selection = readSelection(selection);
+	if (view.split) {
+		for (const other of selections) {
+			const name = att(other, 'pane') ?? 'topLeft';
+			if (other === selection || !PANES.has(name)) continue;
+			(view.split.paneSelections ??= {})[name as keyof typeof view.split.paneSelections] =
+				readSelection(other);
+		}
 	}
 	return view;
+}
+
+function readSelection(selection: XmlElement): NonNullable<SheetView['selection']> {
+	const ranges = parseSqref(att(selection, 'sqref') ?? att(selection, 'activeCell') ?? 'A1');
+	const active = parseAddress(att(selection, 'activeCell') ?? '') ??
+		ranges[0]?.start ?? { row: 0, col: 0 };
+	return { active, ranges: ranges.length ? ranges : [{ start: active, end: { ...active } }] };
 }
 
 const FORMAT_FLAGS = ['zeroHeight', 'customHeight', 'thickTop', 'thickBottom'] as const;

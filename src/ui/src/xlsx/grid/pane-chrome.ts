@@ -7,6 +7,9 @@ import type { GridGeometry } from 'ooxml-core/xlsx/ui';
 import type { HeaderLayer } from './headers';
 import { colSelected, rowSelected } from 'ooxml-core/xlsx/ui';
 
+/** Thickness of a split bar in pixels. */
+export const SPLIT_BAR = 5;
+
 export interface HeaderPane {
 	box: HTMLDivElement;
 	layer: HeaderLayer;
@@ -46,28 +49,10 @@ export function paintChrome(
 	const fh = Math.min(g.frozenH, g.cellsH);
 	const { colHeaders, rowHeaders } = nodes;
 	const panes: PaneSpec[] = [
-		[colHeaders.frozen, g.headerW, 0, fw, g.headerH, vis.frozenCols, 0, 'col'],
-		[
-			colHeaders.scroll,
-			g.headerW + fw,
-			0,
-			g.cellsW - fw,
-			g.headerH,
-			vis.cols,
-			g.frozenW + g.scrollLeft,
-			'col',
-		],
-		[rowHeaders.frozen, 0, g.headerH, g.headerW, fh, vis.frozenRows, 0, 'row'],
-		[
-			rowHeaders.scroll,
-			0,
-			g.headerH + fh,
-			g.headerW,
-			g.cellsH - fh,
-			vis.rows,
-			g.frozenH + g.scrollTop,
-			'row',
-		],
+		[colHeaders.frozen, g.headerW, 0, fw, g.headerH, vis.frozenCols, g.fixedOx, 'col'],
+		[colHeaders.scroll, g.headerW + fw, 0, g.cellsW - fw, g.headerH, vis.cols, g.mainOx, 'col'],
+		[rowHeaders.frozen, 0, g.headerH, g.headerW, fh, vis.frozenRows, g.fixedOy, 'row'],
+		[rowHeaders.scroll, 0, g.headerH + fh, g.headerW, g.cellsH - fh, vis.rows, g.mainOy, 'row'],
 	];
 	for (const [pane, x, y, w, hgt, indices, offset, axis] of panes) {
 		pane.box.hidden = !show || w <= 0 || hgt <= 0;
@@ -81,8 +66,14 @@ export function paintChrome(
 	}
 	nodes.corner.hidden = !show;
 	if (show) place(nodes.corner, 0, 0, g.headerW, g.headerH);
-	nodes.freezeH.hidden = g.fRows === 0;
-	nodes.freezeV.hidden = g.fCols === 0;
-	if (g.fRows) place(nodes.freezeH, 0, g.headerH + g.frozenH - 1, g.width, 1);
-	if (g.fCols) place(nodes.freezeV, g.headerW + g.frozenW - 1, 0, 1, g.height);
+	const rowsFixed = g.split ? g.split.y > 0 : g.fRows > 0;
+	const colsFixed = g.split ? g.split.x > 0 : g.fCols > 0;
+	for (const bar of [nodes.freezeH, nodes.freezeV]) bar.classList.toggle('xg-split-bar', !!g.split);
+	nodes.freezeH.hidden = !rowsFixed;
+	nodes.freezeV.hidden = !colsFixed;
+	// A split bar is wider than a freeze line so it can be grabbed.
+	const t = g.split ? SPLIT_BAR : 1;
+	const o = g.split ? Math.floor(SPLIT_BAR / 2) : 1;
+	if (rowsFixed) place(nodes.freezeH, 0, g.headerH + g.frozenH - o, g.width, t);
+	if (colsFixed) place(nodes.freezeV, g.headerW + g.frozenW - o, 0, t, g.height);
 }

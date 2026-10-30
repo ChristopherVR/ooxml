@@ -494,6 +494,25 @@ export interface FreezePane {
 	cols: number;
 }
 
+/**
+ * A split window (`pane` with `state="split"`). Unlike a frozen pane the sizes are in twentieths of
+ * a point (not rows and columns) and every pane scrolls on its own.
+ */
+export interface SplitPane {
+	/** Width of the left panes (`xSplit`); 0 when the window is split horizontally only. */
+	x: number;
+	/** Height of the top panes (`ySplit`); 0 when the window is split vertically only. */
+	y: number;
+	/** First cell of the top-left pane (`sheetView/@topLeftCell`). */
+	topLeft?: CellAddress;
+	/** The pane holding the selection (`activePane`). */
+	activePane?: SplitPaneName;
+	/** The selection each other pane keeps (`selection pane=...`); the active pane uses `selection`. */
+	paneSelections?: Partial<Record<SplitPaneName, { active: CellAddress; ranges: CellRange[] }>>;
+}
+
+export type SplitPaneName = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
+
 export interface AutoFilter {
 	range: CellRange;
 	/** Per-column filters keyed by zero-based column offset within the range. */
@@ -737,7 +756,9 @@ export interface SheetView {
 	/** Percent. */
 	zoom: number;
 	freeze?: FreezePane;
-	/** Top-left visible cell of the scrollable pane. */
+	/** A split window; never set together with `freeze`. */
+	split?: SplitPane;
+	/** Top-left visible cell of the scrollable (bottom-right) pane. */
 	topLeft?: CellAddress;
 	selection?: { active: CellAddress; ranges: CellRange[] };
 	/** Show formula text instead of results (`showFormulas`, Ctrl+`). */

@@ -18,6 +18,7 @@ import { GridView } from './grid-view';
 import { followLink, wireTooltips } from './indicators';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles';
+import { installSplitBars } from './split-bars';
 import { FilterButtons } from './filter-buttons';
 import { ValidationList } from './validation-list';
 import { installRemoteSelections } from './remote-layer';
@@ -48,6 +49,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const a11y = new GridA11y(view, sink);
 	const removeRemote = installRemoteSelections(view);
 	const removePageBreaks = installPageBreakPreview(view);
+	const removeSplitBars = installSplitBars(view);
 	let marqueeSheet = -1;
 	const clipboard = createGridClipboard({
 		ctx,
@@ -169,7 +171,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			view.rebuild();
 			if (ctx.selection.get().sheet !== view.sheetIndex() || !workbook) restoreSelection();
 			const top = sheet?.view.topLeft;
-			if (top) view.reveal(top.row, top.col);
+			if (top) view.showTopLeft(top);
 			return;
 		}
 		const kind =
@@ -203,6 +205,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		measureText: (text, font) => view.measurer.measure(text, font),
 		zoom: () => view.zoom(),
 		setZoom: (percent) => view.setZoom(percent),
+		splitAt: (active) => view.splitAt(active),
 		mode: () => editor.bridge.state().mode,
 	};
 	ctx.attachGrid(controller);
@@ -223,6 +226,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		a11y.destroy();
 		removeRemote();
 		removePageBreaks();
+		removeSplitBars();
 		view.destroy();
 	};
 }

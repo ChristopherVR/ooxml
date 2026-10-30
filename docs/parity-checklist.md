@@ -124,7 +124,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Formula auditing: Trace Precedents, Trace Dependents, Remove Arrows, Evaluate Formula,
       Error Checking and Watch Window.
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
-- [ ] **P1** Split panes (only Freeze Panes exists).
+- [x] **P1** Split panes (only Freeze Panes exists).
+      Closed: View > Split splits at the active cell (a cross in the middle for A1), giving two or
+      four independently scrolling panes with draggable bars and double-click removal; Split and
+      Freeze Panes replace each other, keeping the window where it was. `pane state="split"`
+      (twentieths of a point, `activePane`, each pane's `selection`) is modelled as
+      `SheetView.split`, and both panes' first cells are kept current as the user scrolls and
+      written as `pane/@topLeftCell` and `sheetView/@topLeftCell`. Maths:
+      `src/core/xlsx/layout/split.ts`; painting: `grid/split-bars.ts` and the quadrant painter;
+      browser check: `e2e/xlsx/split-panes.spec.ts`.
 - [x] **P1** Text to Columns refuses fixed-width splitting (`dialogs/text-to-columns.ts`).
       Closed: the dialog offers Fixed width with typed break positions and a preview; the split
       rules are `splitFixedWidth` in `src/core/xlsx/edit/text-columns.ts`. Column-data-format

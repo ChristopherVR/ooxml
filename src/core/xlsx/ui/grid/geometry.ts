@@ -1,7 +1,7 @@
 // Pure pane geometry: where the frozen and scrolling quadrants sit, how a cell maps to view
 // pixels and back (hit testing), and header sizes. View coordinates have (0,0) at the top-left of
 // the grid element, headers included. Cell coordinates come from the core's GridMetrics.
-import type { CellRange, FreezePane, GridMetrics } from '../../index';
+import { revealInSplit, type CellRange, type FreezePane, type GridMetrics } from '../../index';
 
 export type Quadrant = 'corner' | 'top' | 'left' | 'main';
 export const QUADRANTS: readonly Quadrant[] = ['main', 'top', 'left', 'corner'];
@@ -23,6 +23,12 @@ export interface GeometryInput {
 	height: number;
 	scrollLeft: number;
 	scrollTop: number;
+	/**
+	 * A split window instead of a frozen one: bar positions in pixels (0 for none) and the scroll of
+	 * the left and top panes. `scrollLeft` and `scrollTop` then scroll the right and bottom panes
+	 * and are absolute plane offsets.
+	 */
+	split?: { x: number; y: number; left: number; top: number } | undefined;
 }
 
 export type HitArea = 'cell' | 'col-header' | 'row-header' | 'corner' | 'outside';
@@ -44,13 +50,24 @@ export class GridGeometry {
 	readonly height: number;
 	readonly scrollLeft: number;
 	readonly scrollTop: number;
+	/** The split window, when there is one (it replaces the frozen panes). */
+	readonly split: { x: number; y: number; left: number; top: number } | undefined;
 
 	constructor(input: GeometryInput) {
 		this.metrics = input.metrics;
-		this.fRows = Math.max(0, input.freeze?.rows ?? 0);
-		this.fCols = Math.max(0, input.freeze?.cols ?? 0);
-		this.frozenW = this.fCols > 0 ? input.metrics.colLeft(this.fCols) : 0;
-		this.frozenH = this.fRows > 0 ? input.metrics.rowTop(this.fRows) : 0;
+		this.split = input.split && (input.split.x > 0 || input.split.y > 0) ? input.split : undefined;
+		this.fRows = this.split ? 0 : Math.max(0, input.freeze?.rows ?? 0);
+		this.fCols = this.split ? 0 : Math.max(0, input.freeze?.cols ?? 0);
+		this.frozenW = this.split
+			? this.split.x
+			: this.fCols > 0
+				? input.metrics.colLeft(this.fCols)
+				: 0;
+		this.frozenH = this.split
+			? this.split.y
+			: this.fRows > 0
+				? input.metrics.rowTop(this.fRows)
+				: 0;
 		this.headerW = input.headerW;
 		this.headerH = input.headerH;
 		this.width = input.width;
@@ -85,10 +102,37 @@ export class GridGeometry {
 	origin(q: Quadrant): { ox: number; oy: number } {
 		const scrollX = q === 'main' || q === 'top';
 		const scrollY = q === 'main' || q === 'left';
+		const s = this.split;
+		if (s) {
+			return {
+				ox: scrollX ? this.scrollLeft : s.left,
+				oy: scrollY ? this.scrollTop : s.top,
+			};
+		}
 		return {
 			ox: scrollX ? this.frozenW + this.scrollLeft : 0,
 			oy: scrollY ? this.frozenH + this.scrollTop : 0,
 		};
+	}
+
+	/** Which fixed-pane layout this is. */
+	get mode(): 'split' | 'freeze' | 'none' {
+		return this.split ? 'split' : this.fRows > 0 || this.fCols > 0 ? 'freeze' : 'none';
+	}
+
+	/** Plane offset of the left edge of the right panes (the scrolling ones). */
+	get mainOx(): number {
+		return this.split ? this.scrollLeft : this.frozenW + this.scrollLeft;
+	}
+	get mainOy(): number {
+		return this.split ? this.scrollTop : this.frozenH + this.scrollTop;
+	}
+	/** Plane offset of the left edge of the left (frozen or split) panes. */
+	get fixedOx(): number {
+		return this.split?.left ?? 0;
+	}
+	get fixedOy(): number {
+		return this.split?.top ?? 0;
 	}
 
 	/** The quadrant a cell is painted in. */
@@ -101,12 +145,42 @@ export class GridGeometry {
 	/** View x of a column's left edge. */
 	colX(col: number): number {
 		const left = this.metrics.colLeft(col);
+		if (this.split)
+			return (
+				this.headerW +
+				this.splitPos(
+					left,
+					this.scrollLeft,
+					this.split.left,
+					this.frozenW,
+					this.metrics.colWidth(col),
+				)
+			);
 		return this.headerW + (col < this.fCols ? left : left - this.scrollLeft);
 	}
 
 	rowY(row: number): number {
 		const top = this.metrics.rowTop(row);
+		if (this.split)
+			return (
+				this.headerH +
+				this.splitPos(
+					top,
+					this.scrollTop,
+					this.split.top,
+					this.frozenH,
+					this.metrics.rowHeight(row),
+				)
+			);
 		return this.headerH + (row < this.fRows ? top : top - this.scrollTop);
+	}
+
+	/** Offset in a cell area of a plane position: in the main pane when it shows it, else in the fixed one. */
+	private splitPos(at: number, main: number, fixed: number, bar: number, size: number): number {
+		const inFixed = bar > 0 && at >= fixed && at + size <= fixed + bar;
+		const inMain = at + size > main && at - main >= 0;
+		if (inFixed && !inMain) return at - fixed;
+		return bar + at - main;
 	}
 
 	/** View rectangle of a range (spanning panes is approximated from its top-left cell's pane). */
@@ -121,12 +195,16 @@ export class GridGeometry {
 	/** Column under a view x (clamped into the cell area). */
 	colAtX(x: number): number {
 		const cx = Math.max(0, x - this.headerW);
+		if (this.split && cx < this.frozenW) return this.metrics.colAt(cx + this.split.left);
+		if (this.split) return this.metrics.colAt(cx - this.frozenW + this.scrollLeft);
 		if (cx < this.frozenW) return this.metrics.colAt(cx);
 		return this.metrics.colAt(cx + this.scrollLeft);
 	}
 
 	rowAtY(y: number): number {
 		const cy = Math.max(0, y - this.headerH);
+		if (this.split && cy < this.frozenH) return this.metrics.rowAt(cy + this.split.top);
+		if (this.split) return this.metrics.rowAt(cy - this.frozenH + this.scrollTop);
 		if (cy < this.frozenH) return this.metrics.rowAt(cy);
 		return this.metrics.rowAt(cy + this.scrollTop);
 	}
@@ -189,6 +267,24 @@ export function scrollToReveal(
 ): { left: number; top: number } {
 	let { scrollLeft: left, scrollTop: top } = g;
 	const m = g.metrics;
+	if (g.split) {
+		const next = revealInSplit(
+			m,
+			{
+				x: g.split.x,
+				y: g.split.y,
+				left: g.split.left,
+				top: g.split.top,
+				mainLeft: left,
+				mainTop: top,
+				width: g.cellsW,
+				height: g.cellsH,
+			},
+			row,
+			col,
+		);
+		return { left: Math.max(0, next.left), top: Math.max(0, next.top) };
+	}
 	if (col >= g.fCols) {
 		const x = m.colLeft(col) - g.frozenW;
 		const w = m.colWidth(col);

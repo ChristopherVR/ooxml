@@ -81,6 +81,7 @@ export function viewTab(): RibbonTab {
 				id: 'window',
 				label: 'Window',
 				controls: [
+					{ kind: 'button', command: 'view.split', size: 'large' },
 					{
 						kind: 'menu',
 						label: 'Freeze Panes',

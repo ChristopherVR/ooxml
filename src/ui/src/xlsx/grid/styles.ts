@@ -66,6 +66,8 @@ export const GRID_CSS = `
 	border-right:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));border-bottom:1px solid var(--xve-header-line, var(--office-border, #d4d4d4));cursor:default}
 .xg-corner::after{content:"";position:absolute;right:3px;bottom:3px;border-left:9px solid transparent;border-bottom:9px solid #b4b4b4}
 .xg-freeze-h,.xg-freeze-v{position:absolute;background:var(--xve-freeze-line, var(--office-border, #9b9b9b));z-index:6;pointer-events:none}
+.xg-freeze-h.xg-split-bar,.xg-freeze-v.xg-split-bar{pointer-events:auto;background:var(--xve-split-bar, var(--office-border, #b4b4b4));touch-action:none}
+.xg-freeze-h.xg-split-bar{cursor:row-resize}.xg-freeze-v.xg-split-bar{cursor:col-resize}
 .xg-col-resize{cursor:col-resize!important}.xg-row-resize{cursor:row-resize!important}
 .xg-resize-guide{position:absolute;z-index:8;border:0 dashed #666;pointer-events:none}
 .xg-editor-host{position:absolute;z-index:7;box-sizing:border-box;opacity:0;overflow:hidden;pointer-events:none;background:#fff;color:#000;line-height:1.25}

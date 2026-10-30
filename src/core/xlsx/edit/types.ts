@@ -21,6 +21,7 @@ import type {
 	DefinedName,
 	DrawingAnchor,
 	FreezePane,
+	SplitPane,
 	Hyperlink,
 	PageSetup,
 	PrintOptions,
@@ -212,6 +213,8 @@ export interface EditSession {
 	setSheetState(index: number, state: SheetState): void;
 	setTabColor(index: number, color?: Color): void;
 	setFreeze(sheet: number, freeze: FreezePane | undefined): void;
+	/** Splits the window (twentieths of a point); removes any frozen pane. Undefined removes the split. */
+	setSplit(sheet: number, split: SplitPane | undefined, topLeft?: CellAddress): void;
 	setComment(sheet: number, at: CellAddress, text: string | undefined, author: string): void;
 	setHyperlink(sheet: number, range: CellRange, link: Omit<Hyperlink, 'range'> | undefined): void;
 	addConditionalFormat(sheet: number, format: ConditionalFormat): void;

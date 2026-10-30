@@ -56,7 +56,6 @@ export const UNSUPPORTED_FEATURES = [
 	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Sorting by cell colour, font colour or icon',
 	'Flash Fill, Subtotal and Consolidate',
-	'Split panes (Freeze Panes works)',
 	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window',
 	'Opening .xlsb binary workbooks',
 	'Editing threaded comment replies',
