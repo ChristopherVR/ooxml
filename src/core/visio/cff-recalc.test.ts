@@ -46,6 +46,7 @@ describe('recalculating the instances Visio saved', () => {
 		const written = recalculateMasterInstances(page, masters);
 		const after = snapshot(page);
 		const changed = before.map((value, index) => [value, after[index]]).filter(([a, b]) => a !== b);
+		expect(changed).toEqual([]);
 		expect(written).toBe(0);
 	});
 
