@@ -92,7 +92,7 @@ export class InsertController {
 		this.bulletInput.type = 'file';
 		this.bulletInput.accept = Object.keys(PICTURE_TYPES).join(',');
 		this.bulletInput.hidden = true;
-		this.bulletInput.className = 'dve-picture-input';
+		this.bulletInput.className = 'dve-picture-bullet-input';
 		this.bulletInput.addEventListener('change', () => void this.applySelectedPictureBullet());
 		this.smartArt = new SmartArtController({
 			view: () => host.view(),
@@ -234,6 +234,7 @@ export class InsertController {
 		this.pictureDialog.setLocale(locale);
 		this.smartArt.setLocale(locale);
 		this.pictureInput.setAttribute('aria-label', translate(locale, 'Insert picture'));
+		this.bulletInput.setAttribute('aria-label', translate(locale, 'Picture bullet...'));
 	}
 
 	/** Re-applies the hidden-text display state after the paper is rebuilt. */
