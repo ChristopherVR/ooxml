@@ -144,13 +144,14 @@ it('clamps by the smallest member without enlarging already tiny untouched dimen
 	)!;
 	expect(result.frame.width).toBe(original.width);
 	expect(result.frame.height / original.height).toBeCloseTo(1 / 16);
-	// A corner keeps the proportions, so the tiny member's width holds the whole selection.
+	// With Shift a corner keeps the proportions, so the tiny member's width holds the whole selection.
 	const corner = visioResizeSelectionDrag(
 		page,
 		['1', '2'],
 		'ne',
 		{ x: 0, y: 0 },
 		{ x: -100, y: 100 },
+		{ proportional: true },
 	)!;
 	expect(corner.frame.width).toBeCloseTo(original.width);
 	expect(corner.frame.height).toBeCloseTo(original.height);
@@ -159,7 +160,14 @@ it('clamps by the smallest member without enlarging already tiny untouched dimen
 it('scales a multiple selection proportionally from corners and with Shift', async () => {
 	const page = (await parseVsdx(await source())).pages[0]!;
 	const original = visioResizeSelectionFrame(page, ['1', '2'])!;
-	const corner = visioResizeSelectionDrag(page, ['1', '2'], 'sw', { x: 0, y: 0 }, { x: -1, y: 0 })!;
+	const corner = visioResizeSelectionDrag(
+		page,
+		['1', '2'],
+		'sw',
+		{ x: 0, y: 0 },
+		{ x: -1, y: 0 },
+		{ proportional: true },
+	)!;
 	const scale = corner.frame.width / original.width;
 	expect(scale).toBeGreaterThan(1);
 	expect(corner.frame.height / original.height).toBeCloseTo(scale);
@@ -226,7 +234,7 @@ it('declines mixed, rotated, nested, attached and invalid selections as a whole'
 	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeUndefined();
 });
 
-it.each([cell('LockWidth', 1), cell('LockMoveX', 1), cell('LockHeight', 1)])(
+it.each([cell('LockMoveX', 1)])(
 	'rejects an entire source batch when a later member cannot resize',
 	async (protection) => {
 		const bytes = await source(1, protection),
@@ -241,6 +249,16 @@ it.each([cell('LockWidth', 1), cell('LockMoveX', 1), cell('LockHeight', 1)])(
 		)!;
 		await expect(editVsdx(bytes, result.commands)).rejects.toThrow();
 		expect(bytes).toEqual(untouched);
+	},
+);
+
+it.each([cell('LockWidth', 1), cell('LockHeight', 1)])(
+	'refuses a common scale that would change a member locked in that dimension',
+	async (protection) => {
+		const page = (await parseVsdx(await source(1, protection))).pages[0]!;
+		expect(
+			visioResizeSelectionDrag(page, ['1', '2'], 'ne', { x: 0, y: 0 }, { x: 2, y: -1 }),
+		).toBeUndefined();
 	},
 );
 

@@ -281,6 +281,13 @@ export interface VisioShapeVisibility {
 	 */
 	nonPrinting?: boolean;
 }
+/** Resize protection from the local LockWidth, LockHeight and LockAspect cells. */
+export interface VisioResizeLocks {
+	width?: boolean;
+	height?: boolean;
+	aspect?: boolean;
+}
+
 export interface VisioShape {
 	id: string;
 	name: string;
@@ -302,6 +309,8 @@ export interface VisioShape {
 	hidden: boolean;
 	/** Additive metadata. Older or manually constructed scenes may omit it. */
 	visibility?: VisioShapeVisibility;
+	/** Saved LockWidth, LockHeight and LockAspect cells, present only when one is set. */
+	resizeLocks?: VisioResizeLocks;
 	children: VisioShape[];
 	masterId?: string;
 	layerIds?: string[];

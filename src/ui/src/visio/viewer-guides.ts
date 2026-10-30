@@ -6,8 +6,12 @@ import {
 	visioGuideCreateCommand,
 	visioGuideMoveCommand,
 	visioPageGuides,
+	visioResizeSnapEnd,
 	visioSnapMoveDelta,
+	type VisioResizeDragOptions,
+	type VisioResizeHandle,
 	type VisioSnapGrid,
+	type VisioSnapResult,
 	type VisioPagePoint,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -77,7 +81,6 @@ export class ViewerGuides {
 		grid: number | VisioSnapGrid = 0,
 		axis?: 'x' | 'y',
 	): VisioPagePoint {
-		const svg = this.#svg();
 		this.clearHints();
 		// Snap & Glue: Snap off stops all of it; Grid and Guides can be left out one by one.
 		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
@@ -93,12 +96,42 @@ export class ViewerGuides {
 			grid,
 			...(axis ? { axis } : {}),
 		});
-		if (!svg || !result.lines.length) return result.delta;
+		this.#drawHints(page, result.lines);
+		return result.delta;
+	}
+	/**
+	 * Snap a resize handle's drag end onto shape edges (Dynamic Grid) and shown guides, and draw the
+	 * alignment hints. Snap & Glue's Snap switch turns it off, as it does for moves.
+	 */
+	snapResize(
+		page: VisioPage,
+		id: string,
+		handle: VisioResizeHandle,
+		start: VisioPagePoint,
+		end: VisioPagePoint,
+		modifiers: VisioResizeDragOptions,
+	): VisioPagePoint {
+		this.clearHints();
+		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
+		const guides = this.#shown && !!(settings & VISIO_SNAP.guides);
+		if (settings & VISIO_SNAP.disabled || (!guides && !this.#dynamic)) return end;
+		const zoom = this.controller.state.zoom || 1;
+		const result = visioResizeSnapEnd(page, id, handle, start, end, {
+			...modifiers,
+			snap: { shapes: this.#dynamic, guides, threshold: SNAP_PIXELS / (96 * zoom) },
+		});
+		this.#drawHints(page, result.lines);
+		return result.end;
+	}
+	/** Alignment hints in the snap frame (y = -page y), drawn as thin lines across the page. */
+	#drawHints(page: VisioPage, lines: readonly VisioSnapResult['lines'][number][]): void {
+		const svg = this.#svg();
+		if (!svg || !lines.length) return;
 		const hints = svg.ownerDocument.createElementNS(SVG, 'g');
 		hints.dataset.snapHints = '';
 		hints.setAttribute('aria-hidden', 'true');
 		hints.style.pointerEvents = 'none';
-		for (const line of result.lines) {
+		for (const line of lines) {
 			const element = svg.ownerDocument.createElementNS(SVG, 'line');
 			// Snap boxes use y = -(page y); the SVG's y is page height minus page y.
 			const clamp = (value: number, size: number) => Math.max(-size, Math.min(2 * size, value));
@@ -115,7 +148,6 @@ export class ViewerGuides {
 			hints.append(element);
 		}
 		svg.append(hints);
-		return result.delta;
 	}
 	clearHints(): void {
 		for (const node of this.viewport.querySelectorAll('[data-snap-hints]')) node.remove();

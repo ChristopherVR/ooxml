@@ -42,6 +42,7 @@ export * from './size-position';
 export * from './marquee';
 export * from './auto-connect';
 export * from './shape-resize';
+export * from './shape-resize-snap';
 export * from './selection-resize';
 export * from './geometry-expectation';
 export * from './draw-plan';

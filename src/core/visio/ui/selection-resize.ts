@@ -129,7 +129,9 @@ export function visioResizeSelectionDrag(
 		1,
 		{ minWidth: min.width, minHeight: min.height },
 	);
-	if (visioResizeKeepsProportions(handle, options)) {
+	// One common scale: any member's LockAspect keeps the whole selection proportional.
+	const aspect = shapes.some((shape) => shape.resizeLocks?.aspect);
+	if (visioResizeKeepsProportions({ ...options, aspect })) {
 		// Scale the surrounding rectangle uniformly about the point opposite the handle.
 		const location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle)!;
 		const size = visioProportionalSize(original, box, location, min);
@@ -141,6 +143,15 @@ export function visioResizeSelectionDrag(
 	}
 	const sx = box.width / original.width,
 		sy = box.height / original.height;
+	// A member's LockWidth or LockHeight refuses a common scale that would change that dimension.
+	if (
+		shapes.some(
+			(shape) =>
+				(shape.resizeLocks?.width && Math.abs(sx - 1) > 1e-12) ||
+				(shape.resizeLocks?.height && Math.abs(sy - 1) > 1e-12),
+		)
+	)
+		return undefined;
 	const nextBottom = -box.y - box.height;
 	const frame: VisioResizeFrame = {
 		width: box.width,

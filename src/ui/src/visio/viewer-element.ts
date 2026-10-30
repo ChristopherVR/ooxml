@@ -275,6 +275,8 @@ export class VisioViewerElement extends BaseElement {
 			announce,
 			snap: (page, ids, delta, axis) =>
 				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep, axis),
+			snapResize: (page, id, handle, start, end, modifiers) =>
+				this.#commands.layoutCommands.guides.snapResize(page, id, handle, start, end, modifiers),
 			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
 		});
 		this.#edit = editing.edit;

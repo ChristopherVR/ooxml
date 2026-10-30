@@ -14,6 +14,8 @@ export interface CanvasEditingOptions {
 	pointerActive(): boolean;
 	announce(message: string): void;
 	snap?: ConstructorParameters<typeof ViewerPointerGestures>[2]['snap'];
+	/** Snaps a resize handle's end onto shape edges and guides, as `snap` does for moves. */
+	snapResize?: ConstructorParameters<typeof ViewerResizeHandles>[2]['snap'];
 	clearSnap?: ConstructorParameters<typeof ViewerPointerGestures>[2]['clearSnap'];
 	/**
 	 * The active tool, present only where the tools live in this wiring (the standalone canvas).
@@ -41,7 +43,11 @@ export function createCanvasEditing(
 	});
 	const lineEndpoints = new ViewerLineEndpoints(viewport, controller, gesture);
 	const rotation = new ViewerRotationHandle(viewport, controller, gesture);
-	const resize = new ViewerResizeHandles(viewport, controller, gesture);
+	const resize = new ViewerResizeHandles(viewport, controller, {
+		...gesture,
+		...(options.snapResize ? { snap: options.snapResize } : {}),
+		...(options.clearSnap ? { clearSnap: options.clearSnap } : {}),
+	});
 	const edit = new ViewerInlineText(viewport, controller, options.announce);
 	const current = options.tool;
 	const draw = current

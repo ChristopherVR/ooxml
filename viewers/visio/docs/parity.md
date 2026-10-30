@@ -59,25 +59,42 @@ Six increments landed together; the open remainder of each is in
 
 ## Proportional resizing, 2026-10-30
 
-Dragging a corner handle now keeps the shape's proportions, and Shift keeps them
-on every handle, as Microsoft's
-[resize guide](https://support.microsoft.com/en-us/visio/resize-a-shape) describes
-for Visio. The axis that changed more sets the scale; a Shift side drag grows the
-other axis about its centre (anchor 0.5). The same rule applies to the surrounding
-rectangle of a multiple selection and to flat local groups. The ratio survives the
-1/16 inch minimum.
-Side handles without Shift still change one dimension. The rule lives in core
-(`visioResizeKeepsProportions`, `visioProportionalSize` in
-`src/core/visio/ui/shape-resize.ts`), so every binding gets it from the shared
-viewer element.
+Resize modifiers follow the rule the Visio UI is specified to: a corner handle resizes
+freely unless the shape's LockAspect is set; Shift keeps the proportions on any handle
+(the axis that changed more sets the scale, and a side drag grows the other axis about its
+centre); Ctrl resizes about the centre, so both opposite edges move (Ctrl+Shift does both);
+Alt turns snapping off for the drag. The same proportional rule applies to the surrounding
+rectangle of a multiple selection, and a LockAspect member makes the whole selection
+proportional. The ratio survives the 1/16 inch minimum.
 
-Not established: a native comparison of the gesture itself (COM cannot drive a
-handle drag, and keystrokes into a visible Visio are not allowed here), Ctrl and
-Alt during a resize, and resize alignment or size-match hints.
+Locks are respected in the drag itself: LockWidth and LockHeight hold their dimension, a
+LockAspect shape with a locked dimension holds still, and a multiple selection refuses a
+common scale that would change a locked member's dimension. The lock cells are read into
+`VisioShape.resizeLocks` from the local LockWidth, LockHeight and LockAspect cells.
 
-Verification: the Visio core UI tests (270) and the Visio UI tests (1,329) pass, and
-the resize, selection-resize, group-resize, stencil and mobile browser specs pass in
-all six demos (26 tests).
+Snapping (single shape only): the moving edges of the dragged handle snap to other visible
+shapes' left, centre and right edges (and bottom, centre and top) and to shown ruler guides,
+within the Dynamic Grid distance, and show the same alignment hints as moves. An edge snaps
+only when it lies along a page axis, so a rotated edge that is off both axes is not snapped,
+and a proportional drag does not snap because one edge would drag the other off its line.
+Core: `src/core/visio/ui/shape-resize.ts` (modifiers and locks) and
+`src/core/visio/ui/shape-resize-snap.ts` (snapping); the viewer passes Shift, Ctrl and Alt
+from the pointer events, so every binding gets them from the shared viewer element.
+
+Open: Microsoft's [resize guide](https://support.microsoft.com/en-us/visio/resize-a-shape)
+says to drag a corner handle to resize proportionally and that Shift works on any handle;
+it does not state whether a corner keeps proportions without Shift. The implemented default
+(free corners unless LockAspect) follows the specification for this change and must be
+confirmed in native Visio; the earlier 2026-10-30 rule (corners always proportional) was
+reverted for it. Not established: a native comparison of the gesture itself (COM cannot
+drive a handle drag). A multiple selection ignores Ctrl and does not snap, and size-match
+hints are not implemented.
+
+Verification for this change: the core Visio UI tests (`shape-resize`, `shape-resize-snap`,
+`shape-resize-modifiers`, `selection-resize`, `guides`) and the viewer resize-handle UI tests
+pass. The resize, selection-resize and group-resize browser specs pass in all six demos
+(18 tests) on PLAYWRIGHT_PORT 5381 with four workers; the locked-width expectations there
+now check that the width holds and the height follows, instead of an edit error.
 
 ## Flat local group resizing, 2026-10-28
 
