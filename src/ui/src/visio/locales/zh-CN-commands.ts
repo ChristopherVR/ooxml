@@ -295,6 +295,7 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	Coworker: '同事',
 	Assistant: '助理',
 	'Delete Position': '删除职位',
+	'Import Org Chart': '导入组织结构图',
 	None: '无',
 	Narrow: '窄',
 	Normal: '普通',

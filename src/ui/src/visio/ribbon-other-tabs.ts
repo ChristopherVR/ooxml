@@ -183,6 +183,12 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					action: data('custom-import'),
 				}),
 				command(doc, {
+					id: 'org-import-data',
+					label: 'Import Org Chart',
+					icon: 'visioData',
+					action: { type: 'org-chart', command: 'import' },
+				}),
+				command(doc, {
 					id: 'refresh-all',
 					label: 'Refresh All',
 					icon: 'reset',

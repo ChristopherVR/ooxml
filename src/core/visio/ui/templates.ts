@@ -1,5 +1,5 @@
 import { createVsdx, editVsdx, type VisioEdit } from '../index';
-import { visioOrgDataEdits } from './org-chart';
+import { createOrgChartTemplate } from './org-chart-template';
 import { shapeEdits, type SampleBox, type SampleLink, type SamplePage } from './sample-drawing';
 
 /** The templates File > New offers, in Visio's order: Blank Drawing first. */
@@ -82,22 +82,6 @@ const swimlaneFrame = (pageId: string): VisioEdit => ({
 	title: 'Cross-Functional Flowchart',
 });
 
-const ORG: SamplePage = {
-	id: '0',
-	name: 'Organization Chart',
-	width: 11,
-	height: 8.5,
-	boxes: [
-		step('1', 'Chief Executive\nName', 5.5, 7, '#DFEBF7', 'rectangle', 2.2, 0.8),
-		step('2', 'Manager\nName', 2.6, 5.2, '#D8EFEB', 'rectangle', 2.2, 0.8),
-		step('3', 'Manager\nName', 5.5, 5.2, '#D8EFEB', 'rectangle', 2.2, 0.8),
-		step('4', 'Manager\nName', 8.4, 5.2, '#D8EFEB', 'rectangle', 2.2, 0.8),
-		step('5', 'Position\nName', 1.6, 3.4, '#F3EEE1', 'rectangle', 1.8, 0.8),
-		step('6', 'Position\nName', 3.7, 3.4, '#F3EEE1', 'rectangle', 1.8, 0.8),
-	],
-	links: links(['1', '2'], ['1', '3'], ['1', '4'], ['2', '5'], ['2', '6']),
-};
-
 /**
  * A starter drawing as a real VSDX package, built by the editor's own edit API from built-in
  * stencil masters, so every shape can be selected and edited and every connector is glued.
@@ -105,11 +89,12 @@ const ORG: SamplePage = {
 export async function createTemplateVsdx(id: VisioTemplateId): Promise<Uint8Array> {
 	if (!isVisioTemplateId(id)) throw new Error('Unknown drawing template.');
 	if (id === 'blank') return createVsdx();
-	const page = id === 'basic-flowchart' ? FLOW : id === 'organization-chart' ? ORG : SWIM;
+	if (id === 'organization-chart') return createOrgChartTemplate();
+	const page = id === 'basic-flowchart' ? FLOW : SWIM;
 	const blank = await createVsdx({
 		width: page.width,
 		height: page.height,
-		stencils: id === 'organization-chart' ? ['basic'] : ['basic-flowchart'],
+		stencils: ['basic-flowchart'],
 	});
 	const named = await editVsdx(blank, [{ type: 'rename-page', pageId: page.id, name: page.name }]);
 	if (page === SWIM) {
@@ -122,12 +107,5 @@ export async function createTemplateVsdx(id: VisioTemplateId): Promise<Uint8Arra
 		];
 		return (await editVsdx(drawn.bytes, joined)).bytes;
 	}
-	const drawn = await editVsdx(named.bytes, shapeEdits(page));
-	if (page !== ORG) return drawn.bytes;
-	// Each box is an org chart position: the title and name in its text are also its Shape Data.
-	const data = page.boxes.flatMap((box) => {
-		const [title = '', name = ''] = box.text.split('\n');
-		return visioOrgDataEdits(page.id, box.id, { Title: title, Name: name });
-	});
-	return (await editVsdx(drawn.bytes, data)).bytes;
+	return (await editVsdx(named.bytes, shapeEdits(page))).bytes;
 }

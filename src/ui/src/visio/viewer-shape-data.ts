@@ -8,6 +8,7 @@ import {
 import {
 	editErrorMessage,
 	isEditCancellation,
+	visioOrgFollowData,
 	visioSelectionIsOnPage,
 	visioShapeDataText,
 } from 'ooxml-core/visio/ui';
@@ -154,7 +155,11 @@ export class ViewerShapeData {
 						...(this.form.checked('hidden') ? { invisible: true } : {}),
 					};
 		try {
-			await this.controller.applyEdits([{ type: 'set-shape-data', ...target, row, data }]);
+			const state = this.controller.state;
+			const page = state.document?.pages[state.pageIndex];
+			const edit = { type: 'set-shape-data' as const, ...target, row, data };
+			// An org chart position shows its Name and Title, so its text follows a change to them.
+			await this.controller.applyEdits(page ? visioOrgFollowData(page, [edit]) : [edit]);
 			this.form.dialog.close();
 			this.announce(data ? `Saved Shape Data ${label}.` : `Deleted Shape Data ${existing}.`);
 		} catch (error) {

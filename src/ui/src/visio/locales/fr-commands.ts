@@ -298,6 +298,7 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Coworker: 'Collègue',
 	Assistant: 'Assistant',
 	'Delete Position': 'Supprimer la position',
+	'Import Org Chart': 'Importer un organigramme',
 	None: 'Aucun',
 	Narrow: 'Étroit',
 	Normal: 'Normal',

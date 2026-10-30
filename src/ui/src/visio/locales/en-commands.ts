@@ -296,6 +296,7 @@ export const enCommands: Readonly<Record<string, string>> = {
 	Coworker: 'Coworker',
 	Assistant: 'Assistant',
 	'Delete Position': 'Delete Position',
+	'Import Org Chart': 'Import Org Chart',
 	None: 'None',
 	Narrow: 'Narrow',
 	Normal: 'Normal',

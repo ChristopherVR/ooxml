@@ -5,7 +5,12 @@ import {
 	connectorPolylineMiddle,
 	cornerCurveKnots,
 } from './connector-curve-spans';
-import { effectiveCells, effectiveNumber, proveStencilConnector } from './edit-stencil-connector';
+import {
+	effectiveCells,
+	effectiveNumber,
+	hasTextPositionControl,
+	proveStencilConnector,
+} from './edit-stencil-connector';
 import { fail } from './package-common';
 import { attribute, children } from './sheet';
 
@@ -107,7 +112,9 @@ export function writeStencilConnector(
 	const template = proveStencilConnector(shape);
 	const effective = effectiveCells(shape);
 	for (const [name, allowed] of [
-		['ShapeRouteStyle', [0, 1, 16]],
+		// 3 is the organization chart route the Org Chart stencil's connector carries; it is laid
+		// out as a right-angle connector here and Visio routes it again when a position moves.
+		['ShapeRouteStyle', [0, 1, 3, 16]],
 		['ConLineRouteExt', [0, 1, 2]],
 	] as const)
 		if (!(allowed as readonly number[]).includes(effectiveNumber(effective, name, 0)))
@@ -224,6 +231,11 @@ export function writeStencilConnector(
 	}
 	drop(shape, geometry);
 	const middle = curved ? connectorCurveMiddle(local) : connectorPolylineMiddle(local);
+	if (!hasTextPositionControl(template)) {
+		put(shape, template, 'TxtPinX', middle.x);
+		put(shape, template, 'TxtPinY', middle.y);
+		return;
+	}
 	const masterControl = children(template, 'Section')
 		.filter((item) => attribute(item, 'N') === 'Control')
 		.flatMap((item) => children(item, 'Row'))

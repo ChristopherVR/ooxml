@@ -1,6 +1,7 @@
 import type { VisioEdit } from 'ooxml-core/visio';
 import { visioWithCalloutLeaders, visioWithDataGraphics } from 'ooxml-core/visio/ui';
 import type { ViewerState } from './controller';
+import { orgChartDeleteSelection } from './viewer-org-chart';
 
 /**
  * The edits that delete the current selection, with the generated graphics and callout leaders
@@ -9,6 +10,9 @@ import type { ViewerState } from './controller';
 export function planDeleteSelection(
 	state: ViewerState,
 ): { edits: VisioEdit[]; message: string } | undefined {
+	// A lone org chart position goes the way Org Chart > Delete Position removes it.
+	const position = orgChartDeleteSelection(state);
+	if (position?.edits) return { edits: position.edits, message: position.message };
 	const shapes = state.selectedShapes;
 	const page = state.document?.pages[state.pageIndex];
 	if (!shapes.length || !page || shapes.some((shape) => shape.pageId && shape.pageId !== page.id))

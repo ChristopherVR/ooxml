@@ -96,10 +96,19 @@ export function instanceSheet(
 ): InstanceSheet {
 	for (const node of [instance, template]) {
 		const type = attribute(node, 'Type');
+		// A picture a group master owns (an org chart position's photo) stays with the master:
+		// the instance inherits it, and only the cells of the sheet are merged here.
+		const inheritedPicture =
+			options.group &&
+			type === 'Foreign' &&
+			template.getAttribute('Type') === 'Foreign' &&
+			instance.getAttribute('Type') === 'Foreign' &&
+			!children(instance, 'ForeignData').length;
 		if (
-			!(options.group ? ['Shape', 'Group', undefined] : ['Shape', undefined]).includes(type) ||
+			(!inheritedPicture &&
+				(!(options.group ? ['Shape', 'Group', undefined] : ['Shape', undefined]).includes(type) ||
+					children(node, 'ForeignData').length)) ||
 			(!options.group && children(node, 'Shapes').length > 0) ||
-			children(node, 'ForeignData').length ||
 			deleted(node)
 		)
 			fail(
