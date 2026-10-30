@@ -7,6 +7,7 @@ import {
 	visioSelectionIsOnPage,
 	editErrorMessage,
 	isEditCancellation,
+	type VisioResizeDragOptions,
 	type VisioResizeHandle,
 	type VisioPagePoint,
 	type VisioResizeFrame,
@@ -32,8 +33,11 @@ interface Drag {
 	showOverlays?: () => void;
 }
 const pointOptions = { snap: false, bounded: false } as const;
-/** Eight source-backed selection handles; saved content is never speculatively resized.
- * Like Visio, corners keep the proportions and Shift keeps them on every handle. */
+/**
+ * Eight source-backed selection handles; saved content is never speculatively resized. Modifiers as in
+ * Visio: a corner resizes freely unless the shape's LockAspect is set, Shift keeps the proportions,
+ * Ctrl resizes about the centre, and Alt turns snapping off for the drag.
+ */
 export class ViewerResizeHandles {
 	#drag: Drag | undefined;
 	#frame: ReturnType<typeof createResizeFrame> | undefined;
@@ -41,7 +45,20 @@ export class ViewerResizeHandles {
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
-		private readonly options: { active(): boolean; announce(message: string): void },
+		private readonly options: {
+			active(): boolean;
+			announce(message: string): void;
+			/** Dynamic Grid and guides: moves the drag end onto an edge and shows the hints. */
+			snap?(
+				page: VisioPage,
+				id: string,
+				handle: VisioResizeHandle,
+				start: VisioPagePoint,
+				end: VisioPagePoint,
+				modifiers: VisioResizeDragOptions,
+			): VisioPagePoint;
+			clearSnap?(): void;
+		},
 	) {}
 	#current(drag: Drag, state = this.controller.state): boolean {
 		return (
@@ -168,6 +185,31 @@ export class ViewerResizeHandles {
 		if (this.#drag === drag && this.#current(drag))
 			this.viewport.setPointerCapture?.(event.pointerId);
 	}
+	/**
+	 * The resize for a pointer position under the held modifiers. Snapping applies to one shape and
+	 * not while Alt is held; a multiple selection moves by its common scale without snapping.
+	 */
+	#resize(drag: Drag, point: VisioPagePoint | undefined, event: PointerEvent) {
+		if (!point) return undefined;
+		const modifiers: VisioResizeDragOptions = {
+			proportional: event.shiftKey,
+			centre: event.ctrlKey,
+		};
+		if (event.altKey) this.options.clearSnap?.();
+		const id = drag.shapeIds.length === 1 ? drag.shapeIds[0]! : undefined;
+		const end =
+			id !== undefined && !event.altKey && this.options.snap
+				? this.options.snap(drag.page, id, drag.handle, drag.start, point, modifiers)
+				: point;
+		return visioResizeSelectionDrag(
+			drag.page,
+			drag.shapeIds,
+			drag.handle,
+			drag.start,
+			end,
+			modifiers,
+		);
+	}
 	#move(event: PointerEvent): void {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
@@ -175,12 +217,7 @@ export class ViewerResizeHandles {
 			this.#cancel();
 			return;
 		}
-		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
-		const resized =
-			point &&
-			visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point, {
-				proportional: event.shiftKey,
-			});
+		const resized = this.#resize(drag, pagePoint(drag.svg, drag.page, event, pointOptions), event);
 		if (resized && this.#current(drag)) drag.frame.update(resized.frame);
 		event.preventDefault();
 		event.stopImmediatePropagation();
@@ -196,6 +233,7 @@ export class ViewerResizeHandles {
 		const drag = this.#drag;
 		this.#drag = undefined;
 		if (!drag) return () => {};
+		this.options.clearSnap?.();
 		if (this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 		// Detached, so the renders while the edit runs do not remove the preview early.
@@ -208,13 +246,9 @@ export class ViewerResizeHandles {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
-		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		const resized =
-			point &&
 			this.#current(drag) &&
-			visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point, {
-				proportional: event.shiftKey,
-			});
+			this.#resize(drag, pagePoint(drag.svg, drag.page, event, pointOptions), event);
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const settle = this.#release();

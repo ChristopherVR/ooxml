@@ -85,6 +85,20 @@ it('renders eight single-selection handles, previews only a frame and commits an
 	expect(ui.controller.state.selectedShapes).toBe(selection);
 	ui.dispose();
 });
+it('resizes about the centre with Ctrl and commits one source edit anchored there', async () => {
+	const ui = await setup();
+	ui.select();
+	ui.pointer('pointerdown', ui.handle(), 55, 35);
+	ui.pointer('pointermove', ui.svg, 65, 25, { ctrlKey: true });
+	ui.pointer('pointerup', ui.svg, 65, 25, { ctrlKey: true });
+	await ui.done();
+	expect(ui.edits).toHaveLength(1);
+	expect(ui.edits[0]).toEqual([
+		expect.objectContaining({ type: 'resize-shape', anchor: { x: 0.5, y: 0.5 } }),
+	]);
+	ui.dispose();
+});
+
 it.each(['Escape', 'pointercancel', 'lostpointercapture', 'selection', 'source', 'tool'] as const)(
 	'cancels %s with saved content/source intact',
 	async (kind) => {

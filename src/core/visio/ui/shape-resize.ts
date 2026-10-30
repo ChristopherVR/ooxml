@@ -90,18 +90,23 @@ export function visioResizeFrame(
 			}
 		: undefined;
 }
-/** How a drag maps onto the shape's size. Visio keeps the proportions when a corner handle is
- * dragged, and on any handle while Shift is held (`proportional`); side handles otherwise change
- * one dimension. */
+/** How a drag maps onto the shape's size, as Visio's modifiers do. A corner handle keeps the
+ * proportions by default; Shift keeps them on any handle (`proportional`); Ctrl resizes about the
+ * centre (`centre`), so both opposite edges move. A side handle changes one dimension. */
 export interface VisioResizeDragOptions {
+	/** Shift: keep the original aspect ratio on any handle. */
 	proportional?: boolean;
+	/** Ctrl: grow or shrink symmetrically about the shape's centre. */
+	centre?: boolean;
+	/** The shape's LockAspect, which keeps the proportions on every handle. */
+	aspect?: boolean;
 }
-/** True when a drag on `handle` keeps the shape's proportions, as Visio does. */
+/** True when a drag on `handle` keeps the shape's proportions: a corner, Shift, or LockAspect. */
 export function visioResizeKeepsProportions(
 	handle: VisioResizeHandle,
 	options: VisioResizeDragOptions = {},
 ): boolean {
-	return !!options.proportional || handle.length === 2;
+	return !!options.proportional || !!options.aspect || handle.length === 2;
 }
 /** Scale a raw resize uniformly. A corner follows the axis that changed more; a side handle
  * scales the other axis with it about its centre. The ratio survives the minimum-size clamp. */
@@ -143,24 +148,37 @@ export function visioResizeDrag(
 		determinant = a * d - b * c;
 	const x = (d * delta.x - c * delta.y) / determinant,
 		y = (-b * delta.x + a * delta.y) / determinant;
+	const locks = shape.resizeLocks ?? {};
+	// Ctrl moves both edges by the drag, so the size changes twice as much.
+	const reach = options.centre ? 2 : 1;
+	const side = (edge: number, size: number, local: number, locked: boolean | undefined) =>
+		locked || edge === 0.5
+			? size
+			: Math.max(Math.min(1 / 16, size), size + reach * (edge === 1 ? local : -local));
 	const raw = {
-		width:
-			location.x === 0.5
-				? shape.width
-				: Math.max(Math.min(1 / 16, shape.width), shape.width + (location.x === 1 ? x : -x)),
-		height:
-			location.y === 0.5
-				? shape.height
-				: Math.max(Math.min(1 / 16, shape.height), shape.height + (location.y === 1 ? y : -y)),
+		width: side(location.x, shape.width, x, locks.width),
+		height: side(location.y, shape.height, y, locks.height),
 	};
-	const size = visioResizeKeepsProportions(handle, options)
-		? visioProportionalSize(shape, raw, location)
-		: raw;
-	// The opposite point stays fixed; a proportional side drag grows the other axis about its centre.
-	const anchor: VisioResizeAnchor = {
-		x: (1 - location.x) as VisioResizeAnchor['x'],
-		y: (1 - location.y) as VisioResizeAnchor['y'],
-	};
+	const proportional = visioResizeKeepsProportions(handle, {
+		...options,
+		aspect: !!locks.aspect,
+	});
+	// A proportional drag cannot leave a locked dimension, so the shape holds still instead.
+	const size =
+		proportional && (locks.width || locks.height)
+			? { width: shape.width, height: shape.height }
+			: proportional
+				? visioProportionalSize(shape, raw, location)
+				: raw;
+	if ((locks.width && size.width !== shape.width) || (locks.height && size.height !== shape.height))
+		return undefined;
+	// The opposite point stays fixed; with Ctrl the centre does, and each edge moves by the drag.
+	const anchor: VisioResizeAnchor = options.centre
+		? { x: 0.5, y: 0.5 }
+		: {
+				x: (1 - location.x) as VisioResizeAnchor['x'],
+				y: (1 - location.y) as VisioResizeAnchor['y'],
+			};
 	const frame = visioResizeFrame(shape, size, anchor);
 	if (!frame) return undefined;
 	try {

@@ -5,7 +5,7 @@ import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
 import { visioShapeStructure } from './shape-structure';
 import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
-import type { VisioLayer, VisioShape } from './model';
+import type { VisioLayer, VisioResizeLocks, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
 import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from '../geometry/affine';
 import { shapeConnections } from './shape-connections';
@@ -14,12 +14,22 @@ import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
 	emptySheet,
+	type Cells,
 	mergeSheets,
 	number,
 	reportCachedErrors,
 	type RawShape,
 	type Report,
 } from './sheet';
+
+/** The shape's resize locks, spread into the shape only when one of them is set. */
+function resizeLocks(cells: Cells): { resizeLocks?: VisioResizeLocks } {
+	const locks: VisioResizeLocks = {};
+	if (number(cells, 'LockWidth', 0) !== 0) locks.width = true;
+	if (number(cells, 'LockHeight', 0) !== 0) locks.height = true;
+	if (number(cells, 'LockAspect', 0) !== 0) locks.aspect = true;
+	return Object.keys(locks).length ? { resizeLocks: locks } : {};
+}
 
 export interface ShapeContext extends StyleContext {
 	metadataBudget: VisioMetadataBudget;
@@ -302,6 +312,7 @@ export function normalizeShapes(
 					layerPrintSummary: membership.printSummary,
 					...(Number.isNaN(nonPrinting) ? {} : { nonPrinting: nonPrinting !== 0 }),
 				},
+				...resizeLocks(sheet.cells),
 				layerIds: membership.layerIds,
 				children: normalizeShapes(shape.children, context, depth + 1, stack, toPage),
 				...(masterId === undefined ? {} : { masterId }),

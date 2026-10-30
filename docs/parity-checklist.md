@@ -377,10 +377,16 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [ ] **P1** A copy that meets another dynamic connector is refused; Visio also reroutes unglued
       connectors whose old path crossed a moved shape, the core does not; non-Dynamic and
       grouped connector masters are refused.
-- [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
-      (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
-- [ ] **P1** Resize has no alignment or size-match hints, and Ctrl and Alt during a resize are
-      not verified against Visio.
+- [x] **P1** Resize modifiers as Visio: a corner handle keeps the proportions by default, Shift
+      keeps them on a side handle, Ctrl resizes about the centre (Ctrl+Shift both) for a single
+      shape and a multiple selection, and Alt turns snapping off; LockWidth, LockHeight and
+      LockAspect are respected; a single shape's side-handle edges snap to other shapes' edges and
+      centres and to shown guides, with hints (`src/core/visio/ui/shape-resize.ts`,
+      `selection-resize.ts`, `shape-resize-snap.ts`; ledger entry of 2026-10-30).
+- [ ] **P1** Resize modifiers are not verified against native Visio, and a corner's proportional
+      default in particular must be confirmed there. A multiple selection does not snap, and
+      neither a multiple selection nor a corner drag has size-match hints. Snapping skips corner
+      and Shift drags and a rotated edge that is off both page axes.
 - [ ] **P1** Link Data and Data Visualizer; Data Graphics Position, Configure and Auto Space.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
