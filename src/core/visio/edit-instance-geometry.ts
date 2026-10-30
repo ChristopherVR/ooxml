@@ -96,7 +96,7 @@ function reader(sheet: InstanceSheet) {
  * file, so one this editor cannot reroute (Visio's own Dynamic connector, today) refuses the
  * edit instead of being left behind.
  */
-function followConnectors(
+export function followConnectors(
 	roots: ReadonlyMap<string, Element>,
 	pageId: string,
 	shapeId: string,

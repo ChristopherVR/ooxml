@@ -34,6 +34,7 @@ import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { ViewerInlineSize } from './viewer-inline-size';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import { syncShapeActions } from './viewer-shape-actions';
 import {
 	applyVisioCommandVisibility,
 	quickAccessShown,
@@ -71,6 +72,7 @@ import { ViewerCanvas } from './viewer-canvas';
 import { ViewerCommands } from './viewer-commands';
 import { ViewerPresentation } from './viewer-presentation';
 import type { ViewerLineEndpoints } from './viewer-line-endpoints';
+import type { ViewerControlHandles } from './viewer-control-handles';
 import type { ViewerRotationHandle } from './viewer-rotation-handle';
 import type { ViewerResizeHandles } from './viewer-resize-handles';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
@@ -182,6 +184,7 @@ export class VisioViewerElement extends BaseElement {
 	#commands: ViewerCommands;
 	#presentation: ViewerPresentation;
 	#lineEndpoints: ViewerLineEndpoints;
+	#controlHandles: ViewerControlHandles;
 	#rotationHandle: ViewerRotationHandle;
 	#resizeHandles: ViewerResizeHandles;
 	#handleState: ViewerState | undefined;
@@ -296,6 +299,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit = editing.edit;
 		this.#pointer = editing.pointer;
 		this.#lineEndpoints = editing.lineEndpoints;
+		this.#controlHandles = editing.controls;
 		this.#rotationHandle = editing.rotation;
 		this.#resizeHandles = editing.resize;
 		// Selecting text in the editor shows the Mini Toolbar over it; collapsing the selection hides it.
@@ -328,6 +332,7 @@ export class VisioViewerElement extends BaseElement {
 			toolChanged: () => {
 				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
+				this.#controlHandles.render(this.controller.state);
 				this.#rotationHandle.render(this.controller.state);
 				this.#resizeHandles.render(this.controller.state);
 			},
@@ -833,6 +838,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposePresentation = this.#presentation.wire();
 		const disposePointer = this.#pointer.wire();
 		const disposeLineEndpoints = this.#lineEndpoints.wire();
+		const disposeControls = this.#controlHandles.wire();
 		const disposeRotation = this.#rotationHandle.wire();
 		const disposeResize = this.#resizeHandles.wire();
 		const disposeBackstage = this.#backstage.wire();
@@ -844,7 +850,13 @@ export class VisioViewerElement extends BaseElement {
 			this.#viewport,
 			this.controller,
 			(x, y) => this.#mini.showAt(x, y),
-			(menu, target) => syncVisioHostMenu(menu, target, this.#custom.resolved, this.controller),
+			(menu, target) => {
+				syncVisioHostMenu(menu, target, this.#custom.resolved, this.controller);
+				syncShapeActions(menu, target, this.controller, (message) => {
+					this.#announcement = message;
+					this.#status.textContent = message;
+				});
+			},
 		);
 		const disposeTellMe = wireTellMe(this.#root);
 		const disposeGalleries = wireInlineGalleries(this, this.#root);
@@ -901,6 +913,7 @@ export class VisioViewerElement extends BaseElement {
 			disposePresentation();
 			disposePointer();
 			disposeLineEndpoints();
+			disposeControls();
 			disposeRotation();
 			disposeResize();
 			disposeBackstage();
@@ -954,6 +967,7 @@ export class VisioViewerElement extends BaseElement {
 			previous.edit.sourceAvailable !== state.edit.sourceAvailable
 		) {
 			this.#lineEndpoints.render(state);
+			this.#controlHandles.render(state);
 			this.#rotationHandle.render(state);
 			this.#resizeHandles.render(state);
 			this.#viewport.toggleAttribute(

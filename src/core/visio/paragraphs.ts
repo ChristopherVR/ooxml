@@ -1,5 +1,6 @@
 import type { VisioParagraph, VisioTextRun } from './model';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
+import { tabStops } from './shape-sections';
 import type { Resources } from './style';
 
 export interface ParagraphMarker {
@@ -68,10 +69,14 @@ export function textParagraphs(
 	report: Report,
 	runs: VisioTextRun[] = [],
 	consume: () => void = () => {},
+	tabMarkers: ParagraphMarker[] = [],
 ): VisioParagraph[] {
 	if (!text) return [];
 	const rows = new Map(sectionRows(sheet, 'Paragraph').map((row) => [row.index, row.cells]));
 	const defaults = rows.get('0') ?? new Map();
+	const tabRows = new Map(sectionRows(sheet, 'Tabs').map((row) => [row.index, row.cells]));
+	let tabIndex = '0',
+		tabMarker = 0;
 	const paragraphs: VisioParagraph[] = [];
 	let start = 0,
 		markerIndex = 0,
@@ -82,6 +87,9 @@ export function textParagraphs(
 		consume();
 		while (markerIndex < markers.length && markers[markerIndex]!.offset <= start)
 			styleIndex = markers[markerIndex++]!.index;
+		while (tabMarker < tabMarkers.length && tabMarkers[tabMarker]!.offset <= start)
+			tabIndex = tabMarkers[tabMarker++]!.index;
+		const tabs = tabStops(tabRows.get(tabIndex) ?? new Map(), report);
 		const style = rows.get(styleIndex);
 		if (!style && styleIndex !== '0')
 			report('missing-paragraph-style', `Paragraph style ${styleIndex} could not be resolved.`);
@@ -98,6 +106,7 @@ export function textParagraphs(
 				resources,
 				report,
 			),
+			...(tabs.length ? { tabs } : {}),
 		});
 	};
 	for (const match of text.matchAll(/\r\n|\r|\n/g)) {

@@ -1,5 +1,40 @@
 # Visio capability ledger
 
+## Control handles, shape actions, User and Scratch cells and tab stops, 2026-10-30
+
+The model now carries each shape's Controls rows (`controls`: local position, prompt, which axes a
+drag may change and why not), Actions rows (`actions`: menu text, checked, disabled, invisible,
+sort key and whether the editor runs it), User cells (`userCells`), Scratch rows (`scratch`) and
+the tab stops of each paragraph (`tabs`), all merged with the master's rows. A selected shape
+draws a yellow square per control (grey when it cannot move). Dragging one on a free axis (XCon or
+YCon of 0 and an X or Y formula that is a ratio of the size, optionally inside `BOUND(...)`)
+commits a `set-control` edit: the cell becomes `Width*r` or `Height*r` inside its own BOUND limits,
+as Visio writes it, the value is clamped by those limits, and every geometry, connection point and
+text block cache that follows is recalculated through the instance evaluator (stencil instances
+write `F="Inh"` caches, local shapes update their cached values). A formula the evaluator cannot
+recompute, a locked axis or a formula that is not a ratio refuses the drag with the reason and
+writes nothing. Checked against Visio 16 over COM (`scripts/record-visio-controls.ps1`, optional
+test `edit-control-native.test.ts`): dragging the free axis of the Basic Shapes Can,
+Parallelogram, Trapezoid, Chevron, Cube and Cone to 30% saves the same cells, units and formulas
+and the same parsed geometry (the Cone's limit is another geometry cell). The Cross and Drop
+dropped without a free first handle in that run and are not compared. The geometry updates on
+release; nothing is recomputed live during the drag.
+
+The shape context menu lists the Actions rows (checked and disabled kept, SortKey order, the
+reason as the tip of a disabled entry). An action runs when its formula is
+`SETF(GetRef(cell), value)`, alone or added together, on a cell of the shape itself; the value is
+evaluated, written as a plain value, dependents are recalculated and Menu texts that are
+`IF(..., "a", "b")` are refreshed. Checked against Visio 16 (`scripts/record-visio-actions.ps1`,
+`edit-action-native.test.ts`) for the Annotations Callout `Show Box` action: the saved page matches
+cell for cell (section order aside). Other functions are disabled with their name.
+
+Tab stops are laid out for left-aligned text from the text block's left margin: left, centre,
+right and decimal stops, then 0.5 in steps. No Visio-authored file with explicit tab stops could
+be produced (Visio's automation does not add stops), so the Tabs cell names (`Position<n>`,
+`Alignment<n>`) follow the documentation, the 0.5 in default is assumed, and centred,
+right-aligned and justified lines keep the old single-run layout. User and Scratch cells have no
+editor yet.
+
 ## Resize hints and theme embellishment, 2026-10-30
 
 Resize now snaps the moving handle point to the edges and centres of other visible shapes
@@ -1384,7 +1419,7 @@ background colour and transparency) and Bullets (Visio's seven built-in styles
 or a custom character) tabs. Only changed fields are written, as one undoable
 `format-text` edit over every selected shape's whole text. The Tabs tab is
 informational: tab stops are not written because the Tabs section layout is not
-verified against Visio and the renderer does not lay out tab stops. Character
+verified against a Visio-authored file (the renderer does lay out the stops it reads). Character
 scale and position offsets, double underline/strikethrough, per-run dialog
 editing and the bullet font are not offered. The renderer now draws letter
 spacing, all/initial/small caps and super/subscript (Visio's default 2/3 size

@@ -1,4 +1,11 @@
 import type { VisioPageLayout } from './page-layout';
+import type {
+	VisioAction,
+	VisioControl,
+	VisioScratchRow,
+	VisioTabStop,
+	VisioUserCell,
+} from './shape-sections-types';
 import type { VisioSnapGlue } from './snap-glue';
 import type { ChartViewModel } from '../chart/index';
 import type { VisioForeignVector } from './foreign-vector';
@@ -186,6 +193,8 @@ export interface VisioParagraph {
 	lineSpacing: { kind: 'multiple' | 'exact'; value: number };
 	direction: 'ltr' | 'rtl';
 	bullet?: { text: string; fontFamily: string; fontSize: number; offset: number };
+	/** Tab stops of the Tabs row in effect, sorted by position; absent when the row has none. */
+	tabs?: VisioTabStop[];
 }
 export interface VisioText {
 	/** Logical displayed text. VSDX excludes its stored terminal paragraph marker. */
@@ -317,6 +326,14 @@ export interface VisioShape {
 	embeddedObject?: VisioEmbeddedObject;
 	foreignVector?: VisioPlacedForeignVector;
 	shapeData?: VisioShapeData[];
+	/** Controls rows: the yellow handles of the shape, in local y-up inches. */
+	controls?: VisioControl[];
+	/** Actions rows: the shape's right-click menu entries. */
+	actions?: VisioAction[];
+	/** User-defined cells (User section). */
+	userCells?: VisioUserCell[];
+	/** Scratch rows (Scratch section). */
+	scratch?: VisioScratchRow[];
 	hyperlinks?: VisioHyperlink[];
 	/** Cached Comment cell text, which Visio shows as the shape's ScreenTip. Inert plain text. */
 	screenTip?: string;

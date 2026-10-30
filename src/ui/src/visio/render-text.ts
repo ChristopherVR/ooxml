@@ -1,8 +1,36 @@
-import type { VisioText } from 'ooxml-core/visio';
+import type { VisioText, VisioTextRun } from 'ooxml-core/visio';
 import { matrix, safeColor, svgElement } from './render-svg';
 import type { TextLayoutBudget } from './text-layout';
 import { layoutParagraphs } from './paragraph-layout';
+import { layoutTabbedLine } from './tab-layout';
 import { runBaselineShift, runDisplaySize, runDisplayText } from './text-run-style';
+
+/** The run spans of one row of text, with super- and subscript baseline shifts. */
+function appendRuns(row: SVGElement, runs: readonly VisioTextRun[], text: VisioText): void {
+	let shift = 0;
+	for (const run of runs) {
+		const span = svgElement('tspan');
+		span.textContent = runDisplayText(run.text, run);
+		span.setAttribute('font-family', run.fontFamily);
+		span.setAttribute('font-size', String(runDisplaySize(run)));
+		if (run.textCase === 'small-caps') span.setAttribute('font-variant', 'small-caps');
+		if (run.letterSpacing) span.setAttribute('letter-spacing', String(run.letterSpacing));
+		// Super/subscript: relative dy moves the baseline and the next run moves it back.
+		const target = runBaselineShift(run);
+		if (target !== shift) span.setAttribute('dy', String(target - shift));
+		shift = target;
+		span.setAttribute('fill', safeColor(run.color));
+		span.setAttribute('fill-opacity', String(run.opacity ?? text.opacity ?? 1));
+		if (run.bold) span.setAttribute('font-weight', 'bold');
+		if (run.italic) span.setAttribute('font-style', 'italic');
+		const decorations = [
+			run.underline ? 'underline' : '',
+			run.strikethrough ? 'line-through' : '',
+		].filter(Boolean);
+		if (decorations.length) span.setAttribute('text-decoration', decorations.join(' '));
+		row.append(span);
+	}
+}
 
 /** Browser-font layout is approximate until compared with the licensed Visio reference corpus. */
 export function renderText(
@@ -84,30 +112,19 @@ export function renderText(
 			row.setAttribute('textLength', String(line.availableWidth));
 			row.setAttribute('lengthAdjust', 'spacing');
 		}
-		let shift = 0;
-		for (const run of line.runs) {
-			const span = svgElement('tspan');
-			span.textContent = runDisplayText(run.text, run);
-			span.setAttribute('font-family', run.fontFamily);
-			span.setAttribute('font-size', String(runDisplaySize(run)));
-			if (run.textCase === 'small-caps') span.setAttribute('font-variant', 'small-caps');
-			if (run.letterSpacing) span.setAttribute('letter-spacing', String(run.letterSpacing));
-			// Super/subscript: relative dy moves the baseline and the next run moves it back.
-			const target = runBaselineShift(run);
-			if (target !== shift) span.setAttribute('dy', String(target - shift));
-			shift = target;
-			span.setAttribute('fill', safeColor(run.color));
-			span.setAttribute('fill-opacity', String(run.opacity ?? text.opacity ?? 1));
-			if (run.bold) span.setAttribute('font-weight', 'bold');
-			if (run.italic) span.setAttribute('font-style', 'italic');
-			const decorations = [
-				run.underline ? 'underline' : '',
-				run.strikethrough ? 'line-through' : '',
-			].filter(Boolean);
-			if (decorations.length) span.setAttribute('text-decoration', decorations.join(' '));
-			row.append(span);
+		const tabbed = layoutTabbedLine(line);
+		if (tabbed) row.remove();
+		else appendRuns(row, line.runs, text);
+		for (const part of tabbed ?? []) {
+			const segment = svgElement('tspan');
+			segment.setAttribute('x', String(part.x));
+			segment.setAttribute('y', String(y + line.y));
+			segment.setAttribute('direction', 'ltr');
+			segment.setAttribute('text-anchor', 'start');
+			appendRuns(segment, part.runs, text);
+			node.append(segment);
 		}
-		node.append(row);
+		if (!tabbed) node.append(row);
 		if (line.bullet) {
 			const bullet = svgElement('text');
 			bullet.textContent = line.bullet.text;

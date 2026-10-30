@@ -321,8 +321,18 @@ installed Visio 16 build is used to check that saved files open without repair.
       refused.
 - [ ] **P1** No `.vssx` or `.vstx` writer; built-in stencils are outlines without master
       ShapeSheets, connection points or Shape Data.
-- [ ] **P1** Controls (control handles), Actions, User-defined and Scratch cells, and tab stops are
-      not in the model, so they cannot be shown or edited (they survive saving).
+- [x] **P1** Controls, Actions, User-defined and Scratch cells and tab stops are in the model
+      (`controls`, `actions`, `userCells`, `scratch`, paragraph `tabs`). Control handles are drawn
+      yellow on a selected shape and dragging one writes `Controls.Row_N.X/Y` as Visio does and
+      recomputes the dependent geometry (matched to Visio 16 for the Basic Shapes Can,
+      Parallelogram, Trapezoid, Chevron, Cube and Cone). Actions list in the shape context menu and
+      run when they are `SETF(GetRef(cell), value)` on the shape's own cells. Still open: User and
+      Scratch cells have no editor; actions that call other functions (RUNADDON, OPENFILE, DOCMD)
+      are shown disabled with the reason; a Menu text is refreshed after a run only when it is an
+      `IF`/`&` of strings; handles locked by XCon/YCon or driven by a formula such as
+      `Width*0.5+User.Offset` cannot be moved; geometry updates on release, not during the drag;
+      tab stops follow the documented Tabs cell names without a Visio-authored sample and lay out
+      for left-aligned text only, from the text block's left margin, with a 0.5 in default.
 - [ ] **P1** Containers and lists: containers now write `msvStructureType`, `msvSDContainer*` rows and
       `DEPENDSON` relationships (container kind 4, member back reference kind 1), but those kinds are
       not yet confirmed in a Visio build, and lists are not modelled (`edit-container-members.ts`).

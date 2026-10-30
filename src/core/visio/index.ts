@@ -401,3 +401,15 @@ export {
 } from './text-extent';
 export { visioFontAssumed } from './style';
 export { checkVisioAlternativeText, type VisioAccessibilityIssue } from './accessibility';
+export type {
+	VisioAction,
+	VisioActionRun,
+	VisioControl,
+	VisioScratchRow,
+	VisioTabStop,
+	VisioUserCell,
+} from './shape-sections-types';
+export type { VisioControlEdit } from './edit-control';
+export type { VisioActionEdit } from './edit-action';
+export { rewriteControlFormula } from './control-formula';
+export { visioTabStarts, VISIO_DEFAULT_TAB_SPACING, type VisioTabSegment } from './tab-stops';

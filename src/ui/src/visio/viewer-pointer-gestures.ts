@@ -106,7 +106,7 @@ export class ViewerPointerGestures {
 		const node = event.target as Element;
 		if (
 			node.closest?.(
-				'[data-line-endpoint], [data-rotation-handle], [data-resize-handle], .rotation-overlay, [data-guide-id]',
+				'[data-line-endpoint], [data-control-handle], [data-rotation-handle], [data-resize-handle], .rotation-overlay, [data-guide-id]',
 			)
 		)
 			return;
@@ -198,7 +198,7 @@ export class ViewerPointerGestures {
 			);
 			drag.showOverlays = hideGestureOverlays(
 				this.viewport,
-				'[data-resize-overlay], .rotation-overlay',
+				'[data-resize-overlay], [data-control-overlay], .rotation-overlay',
 			);
 		} else {
 			drag.marquee = createMarqueeRect(drag.svg);
