@@ -151,9 +151,20 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
-- [ ] **P0** Legacy `.doc` opens as main-body text only: tables, headers, footers, images, fields
-      and formatting are dropped, and saving writes plain paragraphs
-      (`src/core/docx/load/legacy-doc.ts`).
+- [x] **P0** Legacy `.doc` opens as main-body text only: tables, headers, footers, images, fields
+      and formatting are dropped, and saving writes plain paragraphs. Closed: `readDocModel`
+      (`@christophervr/ole2`) is converted to a WordprocessingML package that the normal reader
+      opens (`src/core/docx/load/legacy-doc.ts`, `legacy-doc/`): styles, numbering, run and
+      paragraph formatting, tables (spans, merges, borders, shading, nested), sections, headers and
+      footers by variant, footnotes, endnotes, comments, pictures (inline and floating), text
+      boxes, hyperlinks, fields and bookmarks. The result saves as a full `.docx`.
+- [ ] **P1** Legacy `.doc` is read-only as a format: saving writes `.docx` (the file is renamed on
+      open and the load warnings say so), never the binary format. Not converted: revision marks,
+      form-field data, the commented text range of a comment (it is anchored at its mark), drawing
+      shapes other than pictures and text boxes (lines, rectangles, groups), embedded OLE data
+      (the preview picture is kept), WordArt, line numbering, footnote numbering settings, macros,
+      document protection, table-style definitions, hyperlink and field flags, `PICT` and
+      Symbol-font character runs.
 - [ ] **P1** Styles: no new styles; the paragraph, character and table style catalogues and the
       theme are refused on save; latent styles are not modelled.
 - [ ] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)

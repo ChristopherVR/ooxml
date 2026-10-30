@@ -762,3 +762,21 @@ the untracked edit before tracked replay. This retains text revisions without
 turning metadata repair into formatting history. Mounted checks cover review,
 undo/redo, locked updates and edited save/reload; remote repairs do not add local
 revisions. This does not certify concurrent changes to field structure or locks.
+
+## Legacy .doc import (2026-10-30)
+
+Word 97-2003 files no longer open as main-body text. `loadLegacyDoc` reads the file with ole2's
+`readDocModel`, writes the model as a WordprocessingML package in memory
+(`src/core/docx/load/legacy-doc/`) and opens that with `loadDocx`, so the loaded document is the
+model a `.docx` gives and every editing, layout and save path applies unchanged. Run and paragraph
+formatting is written only where it differs from what the style cascade already gives, so styles
+stay meaningful; hyperlink fields become hyperlinks and the other fields keep their instruction
+and cached result. The converter reports what it cannot carry through the document's load
+warnings (OLE data, drawing shapes other than pictures and text boxes, comment ranges).
+
+Saving a `.doc` session writes a `.docx`; the binary format is not written back. The editor names
+the document `<name>.docx` when it opens a `.doc`, Save As offers `.docx` only, and the standing
+load warning says so. Twelve Word-generated fixtures (copied from the ole2 repository, see
+PROVENANCE.md) cover styles, lists, tables with merges and nesting, sections, header and footer
+variants, notes, comments, pictures, text boxes, hyperlinks and fields, each through a second
+save and read. These checks do not establish pixel-equivalent rendering of arbitrary `.doc` files.
