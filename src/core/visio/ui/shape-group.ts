@@ -8,8 +8,8 @@ import { visioNextShapeId } from './shape-id';
  * unglued 2D stencil shapes, which stay instances of their master inside the group.
  * Source locks, formulas and glue remain authoritative in core admission.
  */
-function groupable(page: VisioPage, id: string): VisioShape | undefined {
-	const shape = visioLocalRotationShape(page, id);
+function groupable(page: VisioPage, id: string, followGlue = false): VisioShape | undefined {
+	const shape = visioLocalRotationShape(page, id, true, followGlue);
 	if (shape) return shape.layerIds?.length ? undefined : shape;
 	const stencil = visioStencilShape(page, id);
 	return stencil &&
@@ -23,8 +23,13 @@ function groupable(page: VisioPage, id: string): VisioShape | undefined {
 }
 
 /** A top-level group the pointer can move as one sheet. */
-export function visioMovableGroup(page: VisioPage, id: string): VisioShape | undefined {
-	const shape = groupable(page, id);
+export function visioMovableGroup(
+	page: VisioPage,
+	id: string,
+	/** Moving may leave connectors glued to members; ungrouping may not. */
+	followGlue = false,
+): VisioShape | undefined {
+	const shape = groupable(page, id, followGlue);
 	// A group dropped from a stencil is an instance, not a group that was made here.
 	return shape?.kind === 'group' && !shape.masterId && shape.children.length ? shape : undefined;
 }
