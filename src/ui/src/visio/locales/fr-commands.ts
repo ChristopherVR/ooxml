@@ -290,7 +290,7 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Contrast: 'Contraste',
 	'Auto Balance': 'Équilibrage automatique',
 	Compression: 'Compression',
-	Crop: 'Rogner',
+	Crop: 'Recadrer',
 	Margins: 'Marges',
 	'Fit to Contents': 'Ajuster au contenu',
 	'Automatic Resize': 'Redimensionnement automatique',

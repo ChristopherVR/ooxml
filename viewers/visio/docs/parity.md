@@ -1,5 +1,16 @@
 # Visio capability ledger
 
+## Locale terminology pass, 2026-10-31
+
+The de, es, fr and zh-CN strings added for the Picture Format, Container Format, Org Chart,
+Data Visualizer, Data Graphic Fields, Bevel and 3-D Rotation, Cross-Functional Flowchart tabs and
+the File backstage were checked for terminology consistency, not by a native speaker. Changes:
+de Bevel `Abschrägung` (matching "No Bevel"), `Container-Format` and `Container-Formatvorlagen`,
+backstage "Swimlanes" and "Verbindungslinien", and `.vsdx-Datei` in the text strings; es container
+resize message wording; fr Crop `Recadrer` (matching Crop to Square and Reset Crop); zh-CN
+Add Comment `添加批注` (matching Comments). The Picture Format names (de, es, fr, zh-CN) already
+matched the expected terms. The strings still need a native review.
+
 ## Control handles, shape actions, User and Scratch cells and tab stops, 2026-10-30
 
 The model now carries each shape's Controls rows (`controls`: local position, prompt, which axes a
