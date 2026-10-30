@@ -11,7 +11,7 @@ import type { ChartViewModel } from '../chart/index';
 import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 import type { VisioComment } from './comments';
-import type { VisioBevel, VisioRotation3d } from './bevel-3d';
+import type { VisioBevel, VisioContour, VisioExtrusion, VisioRotation3d } from './bevel-3d';
 export type { VisioComment } from './comments';
 import type { VisioDataRecordset } from './data-recordsets';
 
@@ -140,7 +140,11 @@ export interface VisioStyle {
 	reflection?: VisioReflection;
 	/** Saved top bevel (Visio types 1-12); drawn as an approximate lighting overlay. */
 	bevel?: VisioBevel;
-	/** Saved 3-D rotation; drawn as a parallel projection of the flat shape. */
+	/** Extrusion depth and colour; drawn as the side faces of the projected shape. */
+	extrusion?: VisioExtrusion;
+	/** Contour outline around the 3-D shape. */
+	contour?: VisioContour;
+	/** Saved 3-D rotation; projected with perspective when the field of view is set. */
 	rotation3d?: VisioRotation3d;
 }
 export interface VisioTextRun {

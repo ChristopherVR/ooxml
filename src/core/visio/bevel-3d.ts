@@ -10,12 +10,23 @@
 import { fail } from './package-common';
 import type { FormattingWrite } from './edit-formatting';
 import { number, type Cells } from './sheet';
+import type { ThemeSolid } from './theme-solid';
 
 /** A top bevel: Visio type 1-12 and its width and height in inches. */
 export interface VisioBevel {
 	type: number;
 	width: number;
 	height: number;
+}
+/** Extrusion (Format Shape > 3-D Format > Depth): `BevelDepthSize` in inches and its colour. */
+export interface VisioExtrusion {
+	depth: number;
+	color: string;
+}
+/** Contour (3-D Format > Contour): an outline of `size` inches drawn around the 3-D shape. */
+export interface VisioContour {
+	size: number;
+	color: string;
 }
 /** 3-D rotation in radians (counter-clockwise Z); `perspective` is the camera field of view. */
 export interface VisioRotation3d {
@@ -69,6 +80,10 @@ export const VISIO_ROTATION_PRESETS: readonly {
 	['perspective-left', 'Perspective Left', -35, 0, 0, 60],
 	['perspective-right', 'Perspective Right', 35, 0, 0, 60],
 	['perspective-relaxed', 'Perspective Relaxed', 20, 10, 0, 60],
+	['perspective-above', 'Perspective Above', 0, -25, 0, 60],
+	['perspective-below', 'Perspective Below', 0, 25, 0, 60],
+	['perspective-heroic-left', 'Perspective Heroic Left', -45, -20, 0, 90],
+	['perspective-heroic-right', 'Perspective Heroic Right', 45, -20, 0, 90],
 ].map(([id, label, x, y, z, perspective]) => ({
 	id: id as string,
 	label: label as string,
@@ -106,6 +121,47 @@ export function rotationWrites(id: VisioRotationPreset, add: Add): void {
 	add('RotationZAngle', radians(preset.z), 'FillStyle', 'DEG');
 	add('Perspective', radians(preset.perspective), 'FillStyle', 'DEG');
 }
+/** The depth and contour of the 3-D format: lengths in points, colours as #rrggbb. */
+export interface SolidPatch {
+	extrusionDepth?: number;
+	extrusionColor?: string;
+	contourSize?: number;
+	contourColor?: string;
+}
+const rgb = (color: string) =>
+	`RGB(${[1, 3, 5].map((index) => parseInt(color.slice(index, index + 2), 16)).join(',')})`;
+export function solidWrites(edit: SolidPatch, add: Add): void {
+	if (edit.extrusionDepth !== undefined)
+		add('BevelDepthSize', edit.extrusionDepth / 72, 'FillStyle', 'PT');
+	if (edit.extrusionColor !== undefined)
+		add('BevelDepthColor', edit.extrusionColor, 'FillStyle', undefined, rgb(edit.extrusionColor));
+	if (edit.contourSize !== undefined)
+		add('BevelContourSize', edit.contourSize / 72, 'FillStyle', 'PT');
+	if (edit.contourColor !== undefined)
+		add('BevelContourColor', edit.contourColor, 'FillStyle', undefined, rgb(edit.contourColor));
+}
+export function snapshotSolid(edit: SolidPatch): SolidPatch {
+	const length = (value: unknown, high: number, what: string) => {
+		if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > high)
+			fail('INVALID_EDIT', `${what} must be 0 to ${high} points.`);
+		return Math.round(value * 100) / 100;
+	};
+	const color = (value: unknown, what: string) => {
+		if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))
+			fail('INVALID_EDIT', `${what} requires six hexadecimal digits.`);
+		return value.toLowerCase();
+	};
+	const result: SolidPatch = {};
+	if (edit.extrusionDepth !== undefined)
+		result.extrusionDepth = length(edit.extrusionDepth, 288, 'Extrusion depth');
+	if (edit.extrusionColor !== undefined)
+		result.extrusionColor = color(edit.extrusionColor, 'The extrusion colour');
+	if (edit.contourSize !== undefined)
+		result.contourSize = length(edit.contourSize, 72, 'Contour size');
+	if (edit.contourColor !== undefined)
+		result.contourColor = color(edit.contourColor, 'The contour colour');
+	return result;
+}
 export function snapshotBevel(value: unknown): VisioBevelPreset {
 	if (!isVisioBevelPreset(value)) fail('INVALID_EDIT', 'Unknown bevel preset.');
 	return value;
@@ -115,18 +171,51 @@ export function snapshotRotation(value: unknown): VisioRotationPreset {
 	return value;
 }
 
+const themedCell = (cells: Cells, name: string) => cells.get(name)?.value === 'Themed';
 const saved = (cells: Cells, name: string) =>
-	cells.has(name) && cells.get(name)?.value !== 'Themed' ? number(cells, name, 0) : 0;
-/** The saved top bevel; a `Themed` cell takes its value from the theme, which is not read. */
-export function shapeBevel(cells: Cells): VisioBevel | undefined {
-	const type = Math.trunc(saved(cells, 'BevelTopType'));
-	const width = Math.max(0, Math.min(2, saved(cells, 'BevelTopWidth')));
-	const height = Math.max(0, Math.min(2, saved(cells, 'BevelTopHeight')));
-	return type >= 1 && type <= 12 && (width > 0 || height > 0) ? { type, width, height } : undefined;
+	cells.has(name) && !themedCell(cells, name) ? number(cells, name, 0) : 0;
+const clamp = (value: number, high: number) => Math.max(0, Math.min(high, value));
+/**
+ * The top bevel: the saved cells, or for a `Themed` cell the theme's `a:bevelT`. A bevel of type
+ * 1-12 with no size still makes the shape a solid (extrusion and contour need it, measured in
+ * Visio 16), so it is returned with zero width and height.
+ */
+export function shapeBevel(cells: Cells, themed?: ThemeSolid): VisioBevel | undefined {
+	const read = (name: string, themeValue: number | undefined) =>
+		themedCell(cells, name) ? (themeValue ?? 0) : saved(cells, name);
+	const type = Math.trunc(read('BevelTopType', themed?.bevel?.type));
+	const width = clamp(read('BevelTopWidth', themed?.bevel?.width), 2);
+	const height = clamp(read('BevelTopHeight', themed?.bevel?.height), 2);
+	return type >= 1 && type <= 12 ? { type, width, height } : undefined;
 }
-/** Whether a bevel the model does not draw is saved: a bottom bevel or a contour. */
-export const hasUndrawnBevel = (cells: Cells): boolean =>
-	saved(cells, 'BevelBottomType') > 0 || saved(cells, 'BevelContourSize') > 0;
+/** The extrusion, only on a shape with a top bevel (a depth alone is not drawn by Visio 16). */
+export function shapeExtrusion(
+	cells: Cells,
+	solid: boolean,
+	colorOf: (name: string, fallback: string) => string,
+): VisioExtrusion | undefined {
+	const depth = clamp(saved(cells, 'BevelDepthSize'), 4);
+	return solid && depth > 0 ? { depth, color: colorOf('BevelDepthColor', '#ffffff') } : undefined;
+}
+export function shapeContour(
+	cells: Cells,
+	solid: boolean,
+	themed: ThemeSolid | undefined,
+	colorOf: (name: string, fallback: string) => string,
+): VisioContour | undefined {
+	const size = clamp(
+		themedCell(cells, 'BevelContourSize')
+			? (themed?.contour?.size ?? 0)
+			: saved(cells, 'BevelContourSize'),
+		1,
+	);
+	const color = themedCell(cells, 'BevelContourColor')
+		? (themed?.contour?.color ?? colorOf('BevelContourColor', '#000000'))
+		: colorOf('BevelContourColor', '#000000');
+	return solid && size > 0 ? { size, color } : undefined;
+}
+/** Whether a bevel the model does not draw is saved: a bottom bevel (no visible effect in front). */
+export const hasUndrawnBevel = (cells: Cells): boolean => saved(cells, 'BevelBottomType') > 0;
 export function shapeRotation3d(cells: Cells): VisioRotation3d | undefined {
 	const angle = (name: string) => Math.max(-Math.PI, Math.min(Math.PI, saved(cells, name)));
 	const x = angle('RotationXAngle'),
@@ -146,7 +235,7 @@ export function shapeRotation3d(cells: Cells): VisioRotation3d | undefined {
  * The parallel projection of a flat shape turned by the rotation, as an SVG matrix over local
  * y-up coordinates [a, b, c, d] (x' = a*x + c*y, y' = b*x + d*y). Measured against Visio 16's
  * raster export: X compresses the width, Y the height, X and Y together shear the shape so its
- * right side drops, and Z turns it counter-clockwise. Perspective foreshortening is not applied.
+ * right side drops, and Z turns it counter-clockwise. Perspective and extrusion are `solid-3d.ts`.
  */
 export function visioRotation3dMatrix(
 	rotation: Pick<VisioRotation3d, 'x' | 'y' | 'z'>,

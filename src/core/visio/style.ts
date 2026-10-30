@@ -17,7 +17,14 @@ import { linePattern } from './line-pattern';
 import { sourcePaint } from './source-paint';
 import { shapeShadow } from './shadow';
 import { shapeEffects } from './effects';
-import { hasUndrawnBevel, shapeBevel, shapeRotation3d } from './bevel-3d';
+import {
+	hasUndrawnBevel,
+	shapeBevel,
+	shapeContour,
+	shapeExtrusion,
+	shapeRotation3d,
+} from './bevel-3d';
+import { themeSolid } from './theme-solid';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { characterExtras } from './text-character';
@@ -167,15 +174,27 @@ export function shapeStyle(
 		report,
 		themedEffects,
 	);
-	const bevel = shapeBevel(cells);
+	const themedSolid = themeSolid(
+		cells,
+		resources,
+		color(cells, 'FillForegnd', '#ffffff', resources, () => {}),
+	);
+	const bevel = shapeBevel(cells, themedSolid);
+	const solidColor = (name: string, fallback: string) =>
+		color(cells, name, fallback, resources, report);
+	const extrusion = shapeExtrusion(cells, !!bevel, solidColor);
+	const contour = shapeContour(cells, !!bevel, themedSolid, solidColor);
 	const rotation3d = shapeRotation3d(cells);
-	if (bevel || rotation3d)
+	if ((bevel && (bevel.width > 0 || bevel.height > 0)) || rotation3d || extrusion || contour)
 		report(
 			'approximated-3d',
-			'Bevel and 3-D rotation are approximated by a lighting overlay and a parallel projection; perspective and extrusion are not drawn.',
+			"Bevel, 3-D rotation, perspective, extrusion and contour are approximations: a lighting overlay, a projection and flat-shaded side faces, not Visio's renderer.",
 		);
 	if (hasUndrawnBevel(cells))
-		report('unsupported-bevel', 'Bottom bevels and bevel contours are not drawn.');
+		report(
+			'unsupported-bevel',
+			'Bottom bevels are not drawn (Visio 16 shows no change on the front of a shape).',
+		);
 	const themedBegin = themeArrow(cells, resources, 'Begin');
 	const themedEnd = themeArrow(cells, resources, 'End');
 	const cap = lineCap(cells, resources, report);
@@ -210,6 +229,8 @@ export function shapeStyle(
 		...(shadow ? { shadow } : {}),
 		...effects,
 		...(bevel ? { bevel } : {}),
+		...(extrusion ? { extrusion } : {}),
+		...(contour ? { contour } : {}),
 		...(rotation3d ? { rotation3d } : {}),
 	};
 }

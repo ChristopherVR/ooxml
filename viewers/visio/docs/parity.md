@@ -1951,6 +1951,48 @@ export ignores both effects.
   no measured glyph and stay unthemed. That mapping is unverified against a real theme that
   carries arrowheads and has no unit test beyond the literal-cell case.
 
+## Perspective, extrusion, contour and themed bevels, 2026-10-31
+
+Evidence came from Visio 16 over COM (cell names, value semantics) and its raster export. Rendering
+is still not pixel-identical to Visio: the numbers below are fits to a handful of renders.
+
+- Cells: `BevelDepthSize` (length, PT) and `BevelDepthColor` (extrusion), `BevelContourSize` and
+  `BevelContourColor`, besides the cells of the previous entry. `BevelBottomType/Width/Height` also
+  exist. `RotationType` 0, 1 and 2 render alike. Visio draws depth and contour only when
+  `BevelTopType` is 1-12 (a depth on a shape with no top bevel, or a contour alone, changed nothing
+  in the export), even with a bevel of zero size, so the reader keeps a zero-size bevel as the
+  "solid" marker. A bottom bevel alone, or with the top bevel, changed nothing on a face-on shape.
+- Perspective: `Perspective` is a field of view, clamped at 120 degrees. Measured on 3x2 in, 6x2 in,
+  1.5x1 in and 3x6 in shapes at 30, 60 and 100 degrees, the near and far edge scales follow
+  `f / (f - z)` with `f = 6.36 in / tan(fov / 2)`, independent of the shape size, with the shape
+  centre fixed. RotationXAngle is a turn about the vertical axis (positive brings the right side
+  nearer) and RotationYAngle about the horizontal axis (positive brings the top nearer), then
+  RotationZAngle in the page plane. This is a rigid rotation, so the old parallel matrix is its
+  `f -> infinity` case (unit-tested). A shape with perspective or an extrusion is drawn from its
+  projected, flattened outline (`solid-3d.ts`, `render-solid.ts`), so the outline is polylines.
+- Extrusion: runs away from the viewer; the back outline is the same shape at `z = -depth`, and the
+  visible side faces are back-face culled and painted far to near. Offsets match Visio at the angles
+  measured (depth 30 pt, 35 degrees: 0.4 in * sin 35 in picture). Side brightness is a fit to four
+  renders (right dark, top slightly dark, bottom light), not Visio's lighting; Visio shades the
+  faces with a gradient and honours `BevelLightingType`/`BevelMaterialType`, which are not read.
+- Contour: drawn as the extruded silhouette stroked at twice the contour size beneath the faces.
+- Themed bevels: a `Themed` `BevelTopType`, `BevelTopWidth`, `BevelTopHeight`, `BevelContourSize`
+  or `BevelContourColor` is read from the selected effect style's `a:sp3d` (`bevelT` preset names
+  map to types 1-12 by gallery order, `contourW`, `contourClr` with `phClr` as the shape fill). The
+  themes shipped with Visio 16 (Facet checked) have `a:sp3d` with only `extrusionClr` and
+  `contourClr`, so for them nothing is drawn; a theme with `bevelT` is unit-tested on a generated
+  theme, with no real-file evidence.
+- UI: the 3-D Rotation gallery gains Perspective Above, Below, Heroic Left and Heroic Right with
+  our own angles (unverified against Visio's gallery); the Format Shape pane's Effects section has
+  3-D depth and contour size fields (colours are settable through the edit but have no pane
+  control yet).
+- PDF export draws the projected outline, extrusion and contour as ordinary paths and reports that
+  text and pictures use a parallel projection; the bevel lighting overlay is still skipped and
+  reported.
+- Still open: bevel profiles and lighting, materials, side-face gradients, a bottom bevel's
+  effect (none visible from the front), turning child shapes with a group, perspective for text
+  and pictures.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.
