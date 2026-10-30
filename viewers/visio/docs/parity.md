@@ -2186,3 +2186,32 @@ Warnings are useful but not comprehensive. Absence of diagnostics is not a fidel
 - [Introduction to VSDX](https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
 - [MS-VSDX](https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/50c23601-c943-4ff2-b4a1-02445f52daf0)
 - [Engine](https://github.com/ChristopherVR/ooxml), implemented in this repository under `src/core/visio` (the viewer UI is `src/ui/src/visio`).
+
+## Created charts as master instances, 2026-10-31
+
+- **Instances of Visio's hidden masters.** `create-swimlanes` (File > New starters and the Insert
+  swimlane commands) now adds CFF Container, Swimlane List, Phase List, Swimlane and Separator to
+  the drawing (hidden, `MasterType` 34, `cff-author.ts`) and every edit that touches a
+  cross-functional page stamps the frame, lists, lanes and separators with those masters
+  (`edit-swimlane-stamp.ts`), including lanes and separators inserted later. The page is related
+  to each master it uses.
+- **Why the page relationship matters.** Found with Visio 16 through COM: an instance of a master
+  the page has no relationship to is silently dropped when Visio loads the page (the whole chart
+  vanished). Bisected over fifteen variants of the masters part, entry, IDs, names and instance
+  cells; only the page relationship mattered. `edit-master-instance.ts` already did this for
+  stencil drops.
+- **Verified with Visio 16 (COM, read-only).** Both starters open without repair; the masters are
+  listed hidden; shapes are named `CFF Container.50`, `Swimlane List.51`, `Swimlane.10`, each with
+  the master; the container reports the two lists as members, the Swimlane List reports the lanes
+  in order, and `User.numLanes`, `visCFFStyle`, `CFFVertical` and `msvSDListDirection` read back.
+- **How the editor treats them.** The masters are authored here, not copied from Visio: they hold
+  Visio's names and the structure User rows, but none of its formulas, geometry or heading
+  sub-shapes. Every instance keeps all its cells, so the existing plain-shape edit paths are
+  unchanged: the stamp is lifted when a transaction loads the pages and put back before they are
+  saved, and the masters this package wrote answer no role to the Visio-built-chart paths
+  (`CffMasterSet.roleOf`), so only `authoredId` and `authoredPart` see them.
+- **Still open.** Visio's own add-in (Insert Swimlane, drop handling) acting on a chart the editor
+  built was not exercised: it needs Visio's UI, which is not driven here, and the authored
+  masters lack the formulas that add-in may rely on. Charts saved before this change gain the
+  masters only when they are re-created. Phases (Insert Phase), options (title, style, labels)
+  and Direction of a chart Visio built are still refused, as before.
