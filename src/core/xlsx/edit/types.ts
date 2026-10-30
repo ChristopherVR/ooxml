@@ -181,8 +181,9 @@ export interface EditSession {
 	sort(
 		sheet: number,
 		range: CellRange,
-		keys: { col: number; descending?: boolean }[],
+		keys: import('./sort-keys').SortKey[],
 		hasHeader: boolean,
+		options?: Pick<import('./sort-keys').SortOptions, 'leftToRight' | 'caseSensitive'>,
 	): void;
 	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
@@ -222,7 +223,7 @@ export interface EditSession {
 	/** Sets any criteria (checklist, custom, top 10, dynamic, colour, icon) of an auto-filter column; undefined clears. */
 	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
 	/** Re-evaluates the auto-filter against the current cell values. */
-	reapplyFilter(sheet: number): void;
+	reapplyFilter(sheet: number, at?: CellAddress): void;
 	/** Sorts the auto-filter (or table) containing `col` by that column, keeping the header. */
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;

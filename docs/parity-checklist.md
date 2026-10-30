@@ -115,8 +115,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       the date checklist as a year/month/day tree, icon filters in the menu (icon criteria in a
       file are evaluated through conditional formats), colour list entries that come only from
       conditional formats.
-- [ ] **P1** Sort has no Sort On cell colour, font colour or icon, custom lists, case sensitivity
-      or left-to-right sorting (`src/ui/src/xlsx/dialogs/sort-dialog.ts`).
+- [ ] **P1** Sort on cell colour, font colour or icon, custom lists, case sensitivity and
+      left-to-right sorting, a table's own saved sort and Data > Reapply are done
+      (`src/ui/src/xlsx/dialogs/sort-dialog.ts`, `src/core/xlsx/edit/sort*.ts`). Still open: user
+      custom lists are kept in the browser's localStorage (session only when it is blocked), not
+      in a roaming profile, and there is no Options > Edit Custom Lists manager to rename, delete
+      or import a list from cells.
 - [ ] **P1** Formula auditing: Trace Precedents, Trace Dependents, Remove Arrows, Evaluate Formula,
       Error Checking and Watch Window.
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.

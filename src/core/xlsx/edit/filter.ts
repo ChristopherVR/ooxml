@@ -5,6 +5,7 @@ import { type EditContext, sheetAt } from './context';
 import { compileAutoFilter, setRowFiltered, type FilterEvalOptions } from '../filter-rows';
 import { createConditionalFormatEvaluator } from '../layout/cf-evaluator';
 import { sortRows } from './sort';
+import { reapplySavedSort, savedSortAt } from './sort-reapply';
 
 /**
  * The current region around a cell (Ctrl+A / Ctrl+Shift+8): the smallest rectangle bounded by
@@ -144,15 +145,25 @@ export function setColumnCriteria(
 	);
 }
 
-/** Re-evaluates every column criterion against the current cell values (Data > Reapply). */
-export function reapplyFilter(ctx: EditContext, s: number): void {
+/**
+ * Data > Reapply: re-runs the saved sort (of the table or filter around `at`, else the sheet's)
+ * and re-evaluates every column criterion against the current cell values.
+ */
+export function reapplyFilter(ctx: EditContext, s: number, at?: CellAddress): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const filter = sheet.autoFilter;
-	if (!filter) return;
-	ctx.run('Reapply', 'view', [{ kind: 'sheet', sheet: s }], () => applyFilter(ctx, sheet, filter), {
-		sheet: s,
-		structural: true,
-	});
+	const saved = savedSortAt(sheet, at);
+	if (!filter && !saved) return;
+	ctx.run(
+		'Reapply',
+		saved ? 'cells' : 'view',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			if (saved) reapplySavedSort(ctx, s, saved);
+			if (filter) applyFilter(ctx, sheet, filter);
+		},
+		{ sheet: s, structural: true },
+	);
 }
 
 /** Sorts the table or auto-filter range containing `col` by that column, keeping its header. */

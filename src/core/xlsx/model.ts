@@ -498,6 +498,8 @@ export interface AutoFilter {
 	range: CellRange;
 	/** Per-column filters keyed by zero-based column offset within the range. */
 	columns?: AutoFilterColumn[];
+	/** The sort saved with the filter. */
+	sortState?: import('./model-sort').SortState;
 }
 
 export interface AutoFilterColumn {
@@ -556,6 +558,8 @@ export interface Table {
 	partName?: string;
 	/** The table part filters columns by criteria the model does not hold (custom, top 10, ...). */
 	filterNotModeled?: boolean;
+	/** The sort saved in the table part's `autoFilter`. */
+	sortState?: import('./model-sort').SortState;
 }
 
 /** Where a drawing object sits on the grid (two-cell anchor, offsets in EMU). */
@@ -861,6 +865,8 @@ export interface Worksheet {
 	/** Scenario Manager scenarios. */
 	scenarios?: import('./model-whatif').ScenarioSet;
 	autoFilter?: AutoFilter;
+	/** The saved sort of the sheet (outside a filter or table). */
+	sortState?: import('./model-sort').SortState;
 	pageSetup?: PageSetup;
 	/**
 	 * Header and footer pictures by their VML id (`LH`, `CH`, `RH`, `LF`... with `FIRST` or `EVEN`
@@ -1005,6 +1011,7 @@ export type {
 } from '../opc/properties/types';
 export type * from './model-sparklines';
 export type * from './model-filter';
+export type * from './model-sort';
 export type * from './model-pivots';
 export type * from './model-slicers';
 export type * from './model-whatif';

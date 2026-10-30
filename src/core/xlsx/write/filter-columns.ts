@@ -17,6 +17,10 @@ export function unresolvedFilter(filter: AutoFilter | undefined) {
 	return (
 		filter && {
 			range: filter.range,
+			sortState: filter.sortState && {
+				...filter.sortState,
+				conditions: filter.sortState.conditions.map(({ style: _style, ...rest }) => rest),
+			},
 			columns: filter.columns?.map((column) => ({
 				offset: column.offset,
 				sourceXml: column.sourceXml,

@@ -2,8 +2,12 @@ import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/ind
 import { formatRange, parseRange, type CellRange } from '../address';
 import type { Table, Worksheet } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
+import { readSortState } from '../read/sort-state';
 import { isValueListFilterColumn } from '../read/tables';
 import { filterColumnXml } from '../slicer/table-filter';
+import { sameModel } from './snapshot';
+import { bareSortState, sortStateXml } from './sort-state';
+import type { StyleWriter } from './styles';
 import { num } from './xml-out';
 
 const xKids = (parent: XmlElement, local: string): XmlElement[] =>
@@ -111,6 +115,7 @@ function patchAutoFilter(
 	table: Table,
 	before: CellRange,
 	names: readonly string[],
+	styles?: StyleWriter,
 ): void {
 	const existing = xKid(root, 'autoFilter');
 	if (!table.headerRow) {
@@ -132,6 +137,20 @@ function patchAutoFilter(
 	syncColumnFilters(doc, filter, table);
 	if (!existing) insertBefore(root, filter, ['sortState', 'tableColumns']);
 	const sort = xKid(filter, 'sortState') ?? xKid(root, 'sortState');
+	if (table.sortState) {
+		const kept = sort && bareSortState(readSortState(sort));
+		if (!sameModel(kept, bareSortState(table.sortState))) {
+			// The model's sort replaces the kept one (an edit made it).
+			sort?.parentNode?.removeChild(sort);
+			const xml = sortStateXml(table.sortState, styles).replace(
+				'<sortState',
+				`<sortState xmlns="${NS.x}"`,
+			);
+			const fresh = doc.importNode(parseXml(xml, { label: 'XLSX table' }).documentElement, true);
+			insertBefore(filter, fresh as XmlElement, ['extLst']);
+			return;
+		}
+	}
 	if (!sort) return;
 	const moved =
 		before.start.row !== table.range.start.row ||
@@ -244,6 +263,7 @@ export function patchTableXml(
 	table: Table,
 	id: number,
 	names: readonly string[],
+	styles?: StyleWriter,
 ): string | undefined {
 	let doc: Document;
 	try {
@@ -266,7 +286,7 @@ export function patchTableXml(
 		root.removeAttribute('totalsRowCount');
 		if (!root.hasAttribute('totalsRowShown')) root.setAttribute('totalsRowShown', '0');
 	}
-	patchAutoFilter(doc, root, table, before, names);
+	patchAutoFilter(doc, root, table, before, names, styles);
 	patchColumns(doc, root, sheet, table, names);
 	patchStyleInfo(doc, root, table);
 	return buildXml(doc);

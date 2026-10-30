@@ -277,9 +277,20 @@ line/marker swatches and position-authoring controls remain incomplete.
    (`filter-criteria.ts`); icon criteria are evaluated when the sheet's conditional formats
    supply the icon. Not done: drop-downs on table headers (a table keeps value lists only),
    the date checklist as a year / month / day tree (dates list as their displayed text),
-   colours that come only from conditional formats in the menu's colour list, and the Sort On
-   cell colour, font colour or icon, custom lists, case sensitivity or left-to-right sorting.
-   The criteria were checked against the ECMA-376 semantics and unit tests, not against real
+   and colours that come only from conditional formats in the menu's colour list. Data > Sort
+   has Sort On cell values, cell colour, font colour and conditional-format icon (On Top / On
+   Bottom, or On Left / On Right), Order A to Z / Z to A / Custom List (the four built-in
+   weekday and month lists or a list typed in the dialog), and Options for case sensitivity
+   (lower case first) and left-to-right sorting (`edit/sort.ts`, `edit/sort-keys.ts`,
+   `edit/sort-choices.ts`, `sort-lists.ts`). The levels are saved as `sortState` (sheet or
+   auto-filter: `sortBy`, `dxfId`, `iconSet`, `iconId`, `customList`, `caseSensitive`,
+   `columnSort`) and round-trip, a table's sort in its own part (`table.sortState`, patched into
+   `xl/tables/tableN.xml`). Data > Reapply re-runs the saved sort (table, filter or sheet) and
+   the filter criteria (`edit/sort-reapply.ts`). Typed custom lists persist in browser
+   localStorage (`dialogs/custom-lists.ts`). Not done: an Options > Edit Custom Lists manager
+   (rename, delete, import from cells) and a roaming store; hidden columns are skipped but not
+   checked against Excel when sorting left to right.
+   The criteria and sort modes were checked against the ECMA-376 semantics and unit tests, not against real
    Excel row results.
 9. Functions. 501 functions are registered (`viewers/xlsx/docs/functions.md`); these 22
    return `#NAME?`: INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT (no host service

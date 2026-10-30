@@ -243,7 +243,8 @@ export function createEditSession(
 		setHidden: (s, axis, indices, hidden) => dimensions.setHidden(ctx, s, axis, indices, hidden),
 		merge: (s, range, mode) => merge.merge(ctx, s, range, mode),
 		unmerge: (s, range) => merge.unmerge(ctx, s, range),
-		sort: (s, range, keys, hasHeader) => sort.sortRange(ctx, s, range, keys, hasHeader),
+		sort: (s, range, keys, hasHeader, options) =>
+			sort.sortRange(ctx, s, range, keys, hasHeader, options),
 		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
 		copyAreas: (s, ranges) => copyAreas(workbook, s, ranges),
@@ -271,7 +272,7 @@ export function createEditSession(
 		setAutoFilter: (s, range) => filter.setAutoFilter(ctx, s, range),
 		filterColumn: (s, col, vals) => filter.filterColumn(ctx, s, col, vals),
 		setFilterCriteria: (s, col, criteria) => filter.setColumnCriteria(ctx, s, col, criteria),
-		reapplyFilter: (s) => filter.reapplyFilter(ctx, s),
+		reapplyFilter: (s, at) => filter.reapplyFilter(ctx, s, at),
 		sortByColumn: (s, col, descending) => filter.sortByColumn(ctx, s, col, descending ?? false),
 		createTable: (s, range, hasHeader, styleName) =>
 			tables.createTable(ctx, s, range, hasHeader, styleName),
