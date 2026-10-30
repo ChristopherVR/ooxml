@@ -1,5 +1,5 @@
 import { parseAddress } from '../address';
-import type { DefinedName, FreezePane, SheetView } from '../model';
+import type { DefinedName, FreezePane, IgnoredError, SheetView } from '../model';
 import { type EditContext, sheetAt } from './context';
 
 /** Freezes the top `rows` and left `cols` (both zero, or undefined, unfreezes). */
@@ -36,6 +36,21 @@ export function setSheetView(ctx: EditContext, s: number, patch: Partial<SheetVi
 			sheet.view = view;
 		},
 		{ sheet: s, structural: patch.zoom !== undefined || 'freeze' in patch },
+	);
+}
+
+/** Replaces the sheet's ignored Error Checking rules (Ignore Error), with history. */
+export function setIgnoredErrors(ctx: EditContext, s: number, list: IgnoredError[]): void {
+	const sheet = sheetAt(ctx.workbook, s);
+	ctx.run(
+		'Ignore error',
+		'view',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			if (list.length) sheet.ignoredErrors = structuredClone(list);
+			else delete sheet.ignoredErrors;
+		},
+		{ sheet: s, structural: false },
 	);
 }
 

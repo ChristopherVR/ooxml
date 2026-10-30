@@ -103,7 +103,7 @@ export function mountWatchWindow(ctx: EditorContext): () => void {
 			headRow.append(th);
 		}
 		const body = table.createTBody();
-		const book = (ctx.host as { fileName?: string }).fileName ?? '';
+		const book = (ctx.host as { fileName?: string }).fileName || 'Book1';
 		state.watches.forEach((watch, index) => {
 			if (!workbook || !watchExists(workbook, watch)) return;
 			const info = describeWatch(workbook, watch);

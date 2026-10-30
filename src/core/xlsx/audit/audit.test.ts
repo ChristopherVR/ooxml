@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseFormula } from '../formula/parser';
 import { book, engine, locate } from '../formula/test-helpers';
 import { printFormula } from './ast-text';
-import { adjacentIssue, findErrors, ignoreError } from './error-check';
+import { adjacentIssue, findErrors, withIgnoredError } from './error-check';
 import { FormulaStepper } from './evaluate-steps';
 import { directDependents, directPrecedents, removeArrows, traceNext } from './trace';
 import { describeWatch } from './watch';
@@ -147,7 +147,7 @@ describe('findErrors', () => {
 		expect(rules).toContain('2,2:inconsistent-formula');
 		const first = issues[0];
 		if (!first) throw new Error('no issue');
-		ignoreError(wb, first);
+		wb.sheets[0]!.ignoredErrors = withIgnoredError(wb, first);
 		expect(findErrors(wb, 0)).toHaveLength(issues.length - 1);
 		expect(adjacentIssue(issues, { sheet: 0, row: 99, col: 0 }, 1)).toBe(issues[0]);
 		expect(adjacentIssue(issues, { sheet: 0, row: 0, col: 0 }, -1)).toBe(issues[issues.length - 1]);

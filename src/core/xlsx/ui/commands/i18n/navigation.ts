@@ -463,11 +463,4 @@ export const NAVIGATION_STRINGS: Translations = {
 			'Auditoría de fórmulas: rastreo de precedentes y dependientes, quitar flechas, evaluar fórmula, comprobación de errores y ventana Inspección',
 			'公式审核:追踪引用和从属单元格、移去箭头、公式求值、错误检查和监视窗口',
 		],
-	'Tracing precedents and dependents through defined names, structured references and 3D references':
-		[
-			'Repérage des antécédents et dépendants via les noms définis, les références structurées et les références 3D',
-			'Spuren zu Vorgängern und Nachfolgern über definierte Namen, strukturierte Bezüge und 3D-Bezüge',
-			'Rastreo de precedentes y dependientes a través de nombres definidos, referencias estructuradas y referencias 3D',
-			'通过定义的名称、结构化引用和三维引用追踪引用和从属单元格',
-		],
 };

@@ -27,6 +27,7 @@ import type {
 	SheetProtection,
 	SheetState,
 	SheetView,
+	IgnoredError,
 	Table,
 	Workbook,
 } from '../model';
@@ -227,6 +228,8 @@ export interface EditSession {
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;
 	setSheetView(sheet: number, patch: Partial<SheetView>): void;
+	/** Replaces the sheet's ignored Error Checking rules (Ignore Error). */
+	setIgnoredErrors(sheet: number, list: IgnoredError[]): void;
 	setDefinedName(name: DefinedName): void;
 	deleteDefinedName(name: string, localSheet?: number): void;
 	/** Moves or resizes the picture, chart or shape at `index` of the sheet's drawings. */

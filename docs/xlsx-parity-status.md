@@ -289,9 +289,9 @@ line/marker swatches and position-authoring controls remain incomplete.
 10. Data tools and auditing: Flash Fill, Subtotal, Consolidate, Advanced filter and Split panes
     (only Freeze Panes exists) have no commands. Formula auditing (Trace Precedents and
     Dependents, Remove Arrows, Evaluate Formula with Step In and Step Out, Error Checking and
-    the Watch Window) exists, but does not trace through defined names, structured or 3D
-    references, and Error Checking covers five rules (error values, inconsistent formulas,
-    omitted adjacent cells, numbers stored as text, unlocked formulas). Text to Columns splits at
+    the Watch Window) exists. Error Checking covers seven rules (not the two-digit-year and list
+    data validation ones) and has no green-triangle indicators; OFFSET and INDIRECT targets are
+    not traced. Text to Columns splits at
     delimiters or typed fixed-width break positions (no per-column data format step), and
     Page Layout > Themes > Colors only reports that changing the
     theme is not supported.

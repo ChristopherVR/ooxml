@@ -117,14 +117,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       conditional formats.
 - [ ] **P1** Sort has no Sort On cell colour, font colour or icon, custom lists, case sensitivity
       or left-to-right sorting (`src/ui/src/xlsx/dialogs/sort-dialog.ts`).
-- [ ] **P1** Formula auditing is implemented (: Trace Precedents/Dependents with repeated
-      levels, off-sheet markers and red error arrows, Remove Arrows, Evaluate Formula with Step In/Out,
-      Error Checking for error values, inconsistent formulas, omitted adjacent cells, numbers stored as
-      text and unlocked formulas, and a live Watch Window). Still open: tracing through defined names,
-      structured and 3D references; arrows are not cleared by structural edits; Error Checking has no
-      options dialog, no rules for empty-cell references, data-validation or table-column formulas, and
-      Ignore Error is not saved in the file; Watch Window position and watches are not saved with the
-      workbook; the Evaluate Formula IF/IFERROR shortcut is the only lazy-argument handling.
+- [ ] **P1** Formula auditing is implemented (`src/core/xlsx/audit/`: Trace Precedents/Dependents through
+      names, tables and 3D references with repeated levels, off-sheet markers and red error arrows,
+      cleared by structural edits; Remove Arrows; Evaluate Formula with Step In/Out; Error Checking
+      with seven rules, Ignore Error saved as `ignoredErrors` and the rules listed in File >
+      Options > Formulas; a live Watch Window). Still open: OFFSET and INDIRECT targets are not traced;
+      Error Checking lacks the two-digit-year and list-data-validation rules and the background
+      green-triangle indicators; the rule toggles in Options are not stored between sessions;
+      Evaluate Formula runs IF, IFERROR, IFNA, CHOOSE, IFS and SWITCH in one step once their first
+      argument is a value (Excel shows the chosen branch step by step).
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
 - [ ] **P1** Split panes (only Freeze Panes exists).
 - [x] **P1** Text to Columns refuses fixed-width splitting (`dialogs/text-to-columns.ts`).

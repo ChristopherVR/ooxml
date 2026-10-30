@@ -58,7 +58,6 @@ export const UNSUPPORTED_FEATURES = [
 	'Sorting by cell colour, font colour or icon',
 	'Flash Fill, Subtotal and Consolidate',
 	'Split panes (Freeze Panes works)',
-	'Tracing precedents and dependents through defined names, structured references and 3D references',
 	'Opening .xlsb binary workbooks',
 	'Editing threaded comment replies',
 	'Macros (VBA is kept in the file but never run)',

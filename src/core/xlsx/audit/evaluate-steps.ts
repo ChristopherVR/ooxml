@@ -33,7 +33,7 @@ export interface StepView {
 	canStepOut: boolean;
 }
 
-const LAZY = new Set(['IF', 'IFERROR', 'IFNA']);
+const LAZY = new Set(['IF', 'IFERROR', 'IFNA', 'CHOOSE', 'IFS', 'SWITCH']);
 const isLiteral = (n: FormulaAst): boolean =>
 	n.type === 'number' ||
 	n.type === 'string' ||
@@ -61,7 +61,7 @@ function childrenOf(node: FormulaAst): FormulaAst[] {
 /** The next node to compute: first in evaluation order whose operands are all values. */
 function nextNode(node: FormulaAst): FormulaAst | undefined {
 	if (isLiteral(node)) return undefined;
-	// IF/IFERROR/IFNA only compute the branch they need once the first argument is a value.
+	// These only compute the branch they need once the first argument is a value.
 	if (node.type === 'call' && LAZY.has(node.name) && node.args[0] && isLiteral(node.args[0]))
 		return node;
 	for (const child of childrenOf(node)) {

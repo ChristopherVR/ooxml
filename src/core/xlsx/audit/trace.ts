@@ -101,15 +101,32 @@ function rangeHasError(workbook: Workbook, sheet: number, range: CellRange): boo
 	return found;
 }
 
+/** Where the areas a formula cell reads come from; the calc engine's precedents() resolves names, tables and 3D. */
+export type PrecedentSource = (cell: CellRef) => { sheet: number; range: CellRange }[];
+
+function areasOf(
+	workbook: Workbook,
+	cell: CellRef,
+	source: PrecedentSource | undefined,
+): { sheet: number; range: CellRange }[] {
+	const formula = workbook.sheets[cell.sheet]?.rows.get(cell.row)?.get(cell.col)?.formula;
+	if (!formula) return [];
+	if (!source) return formulaReferences(workbook, formula, cell.sheet);
+	return source(cell).map((a) =>
+		a.range.end.row >= MAX_ROW || a.range.end.col >= MAX_COL
+			? { sheet: a.sheet, range: clampToUsed(workbook, a.sheet, a.range) }
+			: a,
+	);
+}
+
 /** The distinct areas a formula cell reads, in formula order. */
 export function directPrecedents(
 	workbook: Workbook,
 	cell: CellRef,
+	source?: PrecedentSource,
 ): { sheet: number; range: CellRange }[] {
-	const formula = workbook.sheets[cell.sheet]?.rows.get(cell.row)?.get(cell.col)?.formula;
-	if (!formula) return [];
 	const seen = new Set<string>();
-	return formulaReferences(workbook, formula, cell.sheet).filter((r) => {
+	return areasOf(workbook, cell, source).filter((r) => {
 		const key = `${r.sheet}:${rangeKey(r.range)}`;
 		if (seen.has(key)) return false;
 		seen.add(key);
@@ -118,13 +135,17 @@ export function directPrecedents(
 }
 
 /** The formula cells (on any sheet) that read `cell` directly, in sheet then row-major order. */
-export function directDependents(workbook: Workbook, cell: CellRef): CellRef[] {
+export function directDependents(
+	workbook: Workbook,
+	cell: CellRef,
+	source?: PrecedentSource,
+): CellRef[] {
 	const out: CellRef[] = [];
 	workbook.sheets.forEach((ws, sheet) => {
 		forEachCell(ws, (c, row, col) => {
 			if (!c.formula) return;
 			if (sheet === cell.sheet && row === cell.row && col === cell.col) return;
-			const hit = formulaReferences(workbook, c.formula, sheet).some(
+			const hit = areasOf(workbook, { sheet, row, col }, source).some(
 				(r) => r.sheet === cell.sheet && rangeContains(r.range, cell),
 			);
 			if (hit) out.push({ sheet, row, col });
@@ -158,6 +179,7 @@ export function traceNext(
 	arrows: readonly TraceArrow[],
 	kind: TraceKind,
 	anchor: CellRef,
+	source?: PrecedentSource,
 ): { arrows: TraceArrow[]; outcome: TraceOutcome } {
 	const mine = arrows.filter((a) => a.kind === kind && sameCell(a.root, anchor));
 	const level = mine.reduce((max, a) => Math.max(max, a.level), 0);
@@ -177,7 +199,7 @@ export function traceNext(
 	};
 	for (const cell of frontier) {
 		if (kind === 'precedents') {
-			for (const p of directPrecedents(workbook, cell))
+			for (const p of directPrecedents(workbook, cell, source))
 				push({
 					kind,
 					root: anchor,
@@ -188,7 +210,7 @@ export function traceNext(
 					error: rangeHasError(workbook, p.sheet, p.range),
 				});
 		} else {
-			for (const d of directDependents(workbook, cell)) {
+			for (const d of directDependents(workbook, cell, source)) {
 				const value = workbook.sheets[d.sheet]?.rows.get(d.row)?.get(d.col)?.value;
 				push({
 					kind,

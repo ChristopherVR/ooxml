@@ -27,7 +27,13 @@ function trace(ctx: EditorContext, kind: TraceKind): void {
 	const a = anchorOf(ctx);
 	if (!a) return;
 	const { workbook, ...cell } = a;
-	const result = traceNext(workbook, auditState(ctx).arrows, kind, cell);
+	const result = traceNext(
+		workbook,
+		auditState(ctx).arrows,
+		kind,
+		cell,
+		(c) => ctx.session()?.calc.precedents(c) ?? [],
+	);
 	if (result.outcome !== 'ok') {
 		ctx.toast(ctx.t(MESSAGES[result.outcome] ?? ''), 'warning');
 		return;

@@ -11,7 +11,7 @@ import { EngineStructure } from './engine-structure';
 import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types';
 import { rangeHas, sameRange } from './engine-util';
 import { evaluateNode } from './evaluator';
-import type { FormulaNode } from './graph';
+import { analyze, type FormulaNode } from './graph';
 import { implicitIntersection, toMatrix } from './references';
 import { clearFootprint, isSpilledCell } from './spill';
 import { type Area, ERR, ErrorSignal, LambdaValue, resetArrayBudget, type Value } from './values';
@@ -277,6 +277,20 @@ class Engine extends EngineStructure implements CalcEngine {
 		} catch (e) {
 			if (e instanceof ErrorSignal) return [[e.value]];
 			throw e;
+		}
+	}
+
+	precedents(at: CellPosition): { sheet: number; range: CellRange }[] {
+		const sheet = this.workbook.sheets[at.sheet];
+		const formula = sheet ? getCell(sheet, at.row, at.col)?.formula : undefined;
+		if (!formula) return [];
+		const parsed = this.parse(formula);
+		if (parsed instanceof FormulaError) return [];
+		try {
+			const { deps, dynamicDeps } = analyze(parsed, this, at.sheet, at.row, at.col);
+			return [...deps, ...dynamicDeps].map(({ sheet, range }) => ({ sheet, range }));
+		} catch {
+			return [];
 		}
 	}
 

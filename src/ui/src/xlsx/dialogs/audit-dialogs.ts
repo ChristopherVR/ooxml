@@ -7,10 +7,10 @@ import {
 	findErrors,
 	formatAddress,
 	FormulaStepper,
-	ignoreError,
+	withIgnoredError,
 	parseNumberText,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { auditState, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, text } from './fields';
 import { button, showDialog } from './frame';
 import { selectOn } from './go-to';
@@ -98,6 +98,14 @@ const RULE_TEXT: Record<ErrorRule, readonly [title: string, body: string]> = {
 		'Formula omits adjacent cells',
 		'The formula in this cell refers to a range that has additional numbers adjacent to it.',
 	],
+	'empty-cell-reference': [
+		'Formula refers to empty cells',
+		'The formula in this cell refers to cells that are empty.',
+	],
+	'calculated-column': [
+		'Inconsistent calculated column formula',
+		'The formula in this cell differs from the formula of the rest of its table column.',
+	],
 	'unlocked-formula': [
 		'Unlocked cell containing formula',
 		'This cell contains a formula and is not locked, so it can still be changed when the sheet is protected.',
@@ -111,7 +119,7 @@ export function openErrorChecking(ctx: EditorContext): Promise<undefined> {
 	const workbook = session.workbook;
 	const sheet = ctx.activeSheet();
 	const active = ctx.selection.get().active;
-	let issues = findErrors(workbook, sheet);
+	let issues = findErrors(workbook, sheet, auditState(ctx).rules);
 	let current = adjacentIssue(issues, { sheet, row: active.row, col: active.col }, 1, true);
 	const complete = (): void =>
 		ctx.toast(ctx.t('The error check is complete for the entire sheet.'), 'info');
@@ -154,8 +162,8 @@ export function openErrorChecking(ctx: EditorContext): Promise<undefined> {
 	ignore.addEventListener('click', () => {
 		if (!current) return;
 		const done = current;
-		ignoreError(workbook, done);
-		issues = findErrors(workbook, sheet);
+		session.setIgnoredErrors(done.sheet, withIgnoredError(workbook, done));
+		issues = findErrors(workbook, sheet, auditState(ctx).rules);
 		const target = adjacentIssue(issues, done, 1);
 		if (!target) {
 			close();
@@ -178,7 +186,7 @@ export function openErrorChecking(ctx: EditorContext): Promise<undefined> {
 		const value = typeof cell?.value === 'string' ? parseNumberText(cell.value) : undefined;
 		if (value === undefined) return;
 		session.setCellInput(current.sheet, current.row, current.col, String(value));
-		issues = findErrors(workbook, sheet);
+		issues = findErrors(workbook, sheet, auditState(ctx).rules);
 		const target = adjacentIssue(issues, current, 1);
 		if (!target) {
 			close();
