@@ -56,7 +56,7 @@ describe('Visio theme line widths and unresolved effects', () => {
 	it('reports actual selected shadow effects without fabricating empty effects', async () => {
 		const contents = cell('QuickStyleEffectsMatrix', 1) + cell('ShdwPattern', 'Themed');
 		const shadow = await parse({
-			effects: '<a:outerShdw><a:srgbClr val="000000"/></a:outerShdw>',
+			effects: '<a:innerShdw><a:srgbClr val="000000"/></a:innerShdw>',
 			contents,
 		});
 		expect(shadow.diagnostics.map((item) => item.code)).toContain('unsupported-theme-effects');

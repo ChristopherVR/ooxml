@@ -449,6 +449,8 @@ export interface VisioPage {
 	connectors: VisioConnection[];
 	layers?: VisioLayer[];
 	theme?: VisioPageTheme;
+	/** The built-in theme each scheme (colours, fonts, effects, connectors) of the page comes from. */
+	themeSchemes?: Partial<Record<'colors' | 'fonts' | 'effects' | 'connectors', string>>;
 }
 /** One master of the drawing's document stencil (visio/masters). */
 export interface VisioMaster {

@@ -331,6 +331,11 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 						},
 					}
 				: {}),
+			...(page.themeSchemes
+				? {
+						themeSchemes: fields(page.themeSchemes, ['colors', 'fonts', 'effects', 'connectors']),
+					}
+				: {}),
 			shapes: shapes(page.shapes),
 			...(page.layout
 				? {

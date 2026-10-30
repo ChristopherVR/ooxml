@@ -110,6 +110,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 			for (const flag of [layer.visible, layer.printable, layer.locked])
 				member(flag, [true, false], 'layer flag');
 		}
+		for (const scheme of Object.values(page.themeSchemes ?? {})) label(scheme, 64);
 		if (page.theme !== undefined) {
 			label(page.theme.name, 256);
 			if (page.theme.builtIn !== undefined) label(page.theme.builtIn, 64);

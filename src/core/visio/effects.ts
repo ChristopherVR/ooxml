@@ -1,15 +1,17 @@
 import type { VisioGlow, VisioReflection } from './model';
+import type { ThemeEffects } from './theme-effects';
 import { number, type Cells, type Report } from './sheet';
 
 /**
  * Saved Glow, Soft Edges and Reflection cells (Additional Effect Properties). Theme-selected
- * values (`Themed`) are left to the theme diagnostics; only explicit caches are drawn.
+ * values (`Themed`) come from the selected theme effect style (`theme-effects.ts`).
  * https://learn.microsoft.com/en-us/office/client-developer/visio/glowsize-cell-additional-effect-properties-section
  */
 export function shapeEffects(
 	cells: Cells,
 	color: (name: string, fallback: string) => string,
 	report: Report,
+	themed?: ThemeEffects,
 ): { glow?: VisioGlow; softEdges?: number; reflection?: VisioReflection } {
 	const explicit = (name: string) => cells.has(name) && cells.get(name)?.value !== 'Themed';
 	const clamp = (value: number, maximum: number) => Math.max(0, Math.min(maximum, value));
@@ -34,6 +36,12 @@ export function shapeEffects(
 				blur: clamp(number(cells, 'ReflectionBlur', 0, report), 2),
 			};
 	}
+	const themedCell = (...names: string[]) =>
+		names.some((name) => cells.get(name)?.value === 'Themed');
+	if (themed?.glow && themedCell('GlowSize')) result.glow = themed.glow;
+	if (themed?.softEdges && themedCell('SoftEdgesSize')) result.softEdges = themed.softEdges;
+	if (themed?.reflection && themedCell('ReflectionSize', 'ReflectionTrans'))
+		result.reflection = themed.reflection;
 	if (result.glow || result.softEdges || result.reflection)
 		report(
 			'unverified-effects',

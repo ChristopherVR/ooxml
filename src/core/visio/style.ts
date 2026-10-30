@@ -4,6 +4,8 @@ import { legacyFillGradient } from './legacy-fill-gradient';
 import { cachedFillPattern } from './fill-pattern';
 import { clampUnitInterval } from '../color/color-primitives';
 import { themeLinearGradient } from './theme-gradient';
+import { themeEffects } from './theme-effects';
+import { themeFontFamily } from './theme-font';
 import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
 import { lineCap } from './line-style';
 import { linePattern } from './line-pattern';
@@ -146,15 +148,18 @@ export function shapeStyle(
 	if (lineGradient && (number(cells, 'BeginArrow', 0) || number(cells, 'EndArrow', 0)))
 		report('unsupported-gradient-arrows', 'Arrow markers retain the solid line fallback color.');
 	reportThemeEffects(cells, resources, report);
+	const themedEffects = themeEffects(cells, resources);
 	const shadow = shapeShadow(
 		cells,
 		(name, fallback) => color(cells, name, fallback, resources, report),
 		report,
+		themedEffects,
 	);
 	const effects = shapeEffects(
 		cells,
 		(name, fallback) => color(cells, name, fallback, resources, report),
 		report,
+		themedEffects,
 	);
 	const cap = lineCap(cells, resources, report);
 	// The geometry reader reports a bad value; here it is only shown to the user.
@@ -197,7 +202,7 @@ const literalFont = (value: string | undefined, resources: Resources): string | 
 /**
  * A `Themed` font where no font theme is selected (FontSchemeIndex 0 on the shape, or inherited
  * from a page that has none) is the font of the verified No Style root, as for root paint
- * (MS-VSDX 2.4.4.58). Theme font schemes themselves are not resolved.
+ * (MS-VSDX 2.4.4.58). A selected font scheme resolves through `theme-font.ts`.
  */
 function rootFont(themeCells: Cells, resources: Resources): string | undefined {
 	const index = (cells: Cells | undefined) => {
@@ -222,7 +227,9 @@ function fontOf(
 	const value = cells.get('Font')?.value;
 	const family =
 		literalFont(value, resources) ??
-		(value === 'Themed' ? rootFont(themeCells, resources) : undefined);
+		(value === 'Themed'
+			? (themeFontFamily(themeCells, resources) ?? rootFont(themeCells, resources))
+			: undefined);
 	return { family: family ?? 'Arial', assumed: !family };
 }
 const assumedFonts = new WeakSet<VisioText>();

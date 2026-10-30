@@ -70,11 +70,6 @@ export const enText: Readonly<Record<string, string>> = {
 	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
 		'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.',
 	'The viewer shows one drawing window.': 'The viewer shows one drawing window.',
-	'Theme connector styles cannot be chosen separately yet.':
-		'Theme connector styles cannot be chosen separately yet.',
-	'Theme effect styles are not rendered yet.': 'Theme effect styles are not rendered yet.',
-	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
-		'Theme fonts are written to the theme part, but text does not follow theme fonts yet.',
 	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
 		'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.',
 	'Bottom Right': 'Bottom Right',

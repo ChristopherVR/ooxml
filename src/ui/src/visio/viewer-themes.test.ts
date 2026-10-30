@@ -86,6 +86,69 @@ it('Colors in More Variants applies one theme colour scheme to the page and undo
 	ui.controller.destroy();
 });
 
+const choose = async (ui: Awaited<ReturnType<typeof setup>>, menu: string, command: string) => {
+	ui.root
+		.querySelector<HTMLElement>(`[data-menu="${menu}"] [command="${command}"]`)!
+		.dispatchEvent(new CustomEvent('office-command', { bubbles: true, detail: { command } }));
+	await ui.done();
+};
+const checked = (root: ShadowRoot, menu: string) =>
+	[...root.querySelectorAll<HTMLElement>(`[data-menu="${menu}"] office-ui-menu-item`)]
+		.filter((item) => item.getAttribute('checked') === 'true')
+		.map((item) => item.getAttribute('command'));
+
+it('Fonts, Effects and Connectors apply one scheme each, mark it and undo', async () => {
+	const ui = await setup();
+	const page = () => ui.controller.state.document!.pages[0]!;
+	const disabled = (menu: string) =>
+		ui.root.querySelector(`[data-menu="${menu}"]`)!.hasAttribute('disabled');
+	// Without a theme only Colors and Fonts apply; effect and connector styles belong to a theme.
+	expect(disabled('theme-fonts')).toBe(false);
+	expect(disabled('theme-effects')).toBe(true);
+	expect(disabled('theme-connectors')).toBe(true);
+	expect(checked(ui.root, 'theme-fonts')).toEqual([]);
+	await choose(ui, 'theme-fonts', 'fonts-harbor');
+	expect(ui.edits.at(-1)).toEqual([{ type: 'set-page-theme', pageId: page().id, fonts: 'harbor' }]);
+	expect(page().themeSchemes).toEqual({ fonts: 'harbor' });
+	expect(checked(ui.root, 'theme-fonts')).toEqual(['fonts-harbor']);
+	expect(checked(ui.root, 'theme-colors')).toEqual([]);
+	await pick(ui.root, 'themes', 'theme-slate');
+	await ui.done();
+	expect(disabled('theme-effects')).toBe(false);
+	expect(disabled('theme-connectors')).toBe(false);
+	await choose(ui, 'theme-effects', 'effects-ember');
+	await choose(ui, 'theme-connectors', 'connectors-grove');
+	expect(ui.edits.at(-1)).toEqual([
+		{ type: 'set-page-theme', pageId: page().id, connectors: 'grove' },
+	]);
+	expect(page().themeSchemes).toMatchObject({
+		colors: 'slate',
+		fonts: 'slate',
+		effects: 'ember',
+		connectors: 'grove',
+	});
+	expect(checked(ui.root, 'theme-colors')).toEqual(['colors-slate']);
+	expect(checked(ui.root, 'theme-effects')).toEqual(['effects-ember']);
+	expect(checked(ui.root, 'theme-connectors')).toEqual(['connectors-grove']);
+	ui.press('undo');
+	await ui.done();
+	expect(checked(ui.root, 'theme-connectors')).toEqual(['connectors-slate']);
+	expect(checked(ui.root, 'theme-effects')).toEqual(['effects-ember']);
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('Colors marks the current colour scheme', async () => {
+	const ui = await setup();
+	expect(checked(ui.root, 'theme-colors')).toEqual([]);
+	await choose(ui, 'theme-colors', 'colors-ember');
+	expect(checked(ui.root, 'theme-colors')).toEqual(['colors-ember']);
+	await choose(ui, 'theme-colors', 'colors-harbor');
+	expect(checked(ui.root, 'theme-colors')).toEqual(['colors-harbor']);
+	ui.dispose();
+	ui.controller.destroy();
+});
+
 it('keeps theme part options it cannot change disabled with reasons', async () => {
 	const ui = await setup();
 	for (const [id, , reason] of VARIANT_OPTION_REASONS) {

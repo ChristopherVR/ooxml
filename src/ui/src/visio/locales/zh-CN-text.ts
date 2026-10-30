@@ -67,10 +67,6 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
 		'通过从“外部数据”窗口拖动行来链接；尚未提供链接向导。',
 	'The viewer shows one drawing window.': '查看器只显示一个绘图窗口。',
-	'Theme connector styles cannot be chosen separately yet.': '尚不能单独选择主题连接线样式。',
-	'Theme effect styles are not rendered yet.': '尚不能呈现主题效果样式。',
-	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
-		'主题字体会写入主题部件，但文字尚不会跟随主题字体。',
 	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
 		'不计算 Visio 规则集（基于公式的 RuleFilter 和 RuleTest）；仅运行内置通用规则。',
 	'Bottom Right': '右下',

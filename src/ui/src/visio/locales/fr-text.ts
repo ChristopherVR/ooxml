@@ -75,12 +75,6 @@ export const frText: Readonly<Record<string, string>> = {
 	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
 		"Les lignes se lient en les faisant glisser depuis la fenêtre Données externes ; l'assistant de liaison n'est pas encore disponible.",
 	'The viewer shows one drawing window.': 'La visionneuse affiche une seule fenêtre de dessin.',
-	'Theme connector styles cannot be chosen separately yet.':
-		'Les styles de connecteur du thème ne peuvent pas encore être choisis séparément.',
-	'Theme effect styles are not rendered yet.':
-		"Les styles d'effet du thème ne sont pas encore rendus.",
-	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
-		'Les polices du thème sont écrites dans la partie du thème, mais le texte ne les suit pas encore.',
 	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
 		"Les jeux de règles Visio (RuleFilter et RuleTest à base de formules) ne sont pas évalués ; seules les règles génériques intégrées s'exécutent.",
 	'Bottom Right': 'En bas à droite',

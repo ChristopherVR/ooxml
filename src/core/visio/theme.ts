@@ -20,7 +20,14 @@ import {
 export interface VisioTheme {
 	/** `a:theme/@name`, when present. */
 	name?: string;
+	/** Package path of the theme part. */
+	part?: string;
 	colorId: number | undefined;
+	/** The font scheme ID (`a:fontScheme` extension), when the part has one. */
+	fontId?: number;
+	/** The theme's heading (major) and body (minor) Latin typefaces, when named. */
+	majorFont?: string;
+	minorFont?: string;
 	effectId: number | undefined;
 	connectorId: number | undefined;
 	/** Scheme slots (`dk1`, `lt1`, `accent1`-`accent6`) and the Visio `bkgnd` extension colour. */
@@ -98,8 +105,20 @@ export async function loadVisioThemes(
 		const connector = extension(base, 'fmtConnectorScheme');
 		const fonts = extension(base, 'fontStylesGroup');
 		const name = root.getAttribute('name');
+		const fontScheme = parseTheme(root).fontScheme;
+		const fontId = integer(
+			extension(themeChild(base, 'fontScheme'), 'schemeID')?.getAttribute('schemeEnum'),
+		);
+		const face = (value: string | undefined) =>
+			value && value.length <= 256 && !/[\u0000-\u001f\u007f]/.test(value) ? value : undefined;
+		const major = face(fontScheme.major.latin);
+		const minor = face(fontScheme.minor.latin);
 		result.push({
 			...(name ? { name: name.slice(0, 256) } : {}),
+			part: rel.target,
+			...(fontId === undefined ? {} : { fontId }),
+			...(major ? { majorFont: major } : {}),
+			...(minor ? { minorFont: minor } : {}),
 			colorId: integer(extension(palette, 'schemeID')?.getAttribute('schemeEnum')),
 			effectId: componentId(extension(base, 'fmtSchemeEx')),
 			connectorId: componentId(extension(base, 'fmtConnectorSchemeEx')),

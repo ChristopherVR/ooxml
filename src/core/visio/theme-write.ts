@@ -19,6 +19,8 @@ const EXTENSIONS = {
 	connectorScheme: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B06}',
 	fontStyles: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B07}',
 	variantStyles: '{B5B5C0A4-6F0E-4C61-9A43-1D2E5F6A7B08}',
+	/** The font scheme ID extension of `a:fontScheme`; Visio's own parts use this URI. */
+	fontSchemeId: '{B3C0788F-89CC-4CDB-A57D-0664CFDA821B}',
 } as const;
 
 const placeholder = (transform = '') => `<a:schemeClr val="phClr">${transform}</a:schemeClr>`;
@@ -45,9 +47,31 @@ const lines = (widths: readonly number[]) =>
 		(color, index) =>
 			`<a:ln w="${Math.round(widths[index]! * 12700)}" cap="flat" cmpd="sng" algn="ctr">${solid(color)}<a:prstDash val="solid"/><a:round/></a:ln>`,
 	).join('');
-const lists = (source: VisioBuiltInTheme) =>
+const srgb = (value: string, alpha?: number) =>
+	alpha === undefined
+		? `<a:srgbClr val="${value}"/>`
+		: `<a:srgbClr val="${value}"><a:alpha val="${alpha}"/></a:srgbClr>`;
+type EffectBuilder = (step: number, source: VisioBuiltInTheme) => string;
+const EFFECTS: Partial<Record<VisioBuiltInTheme['effect'], EffectBuilder>> = {
+	shadow: (step) =>
+		`<a:outerShdw blurRad="${step * 19050}" dist="${step * 12700}" dir="2700000" algn="tl" rotWithShape="0">${srgb('000000', 20000 + step * 8000)}</a:outerShdw>`,
+	glow: (step, source) =>
+		`<a:glow rad="${step * 63500}">${srgb(source.colors[4]!, 40000)}</a:glow>`,
+	soft: (step) => `<a:softEdge rad="${step * 25400}"/>`,
+	reflection: (step) =>
+		`<a:reflection blurRad="${step * 6350}" stA="40000" endA="0" endPos="${15000 + step * 10000}" dist="0" dir="5400000" sy="-100000" algn="bl" rotWithShape="0"/>`,
+};
+/** Effect style `matrix` (1-6) of a theme's effect scheme: none at 1, then growing with it. */
+const effectStyle = (source: VisioBuiltInTheme, matrix: number) =>
+	`<a:effectStyle><a:effectLst>${matrix > 1 ? (EFFECTS[source.effect]?.(matrix - 1, source) ?? '') : ''}</a:effectLst></a:effectStyle>`;
+/** The connector scheme keeps empty effect styles: connectors take no theme shadow or glow. */
+const lists = (source: VisioBuiltInTheme, effects = false) =>
 	`<a:fillStyleLst>${FILLS.join('')}</a:fillStyleLst><a:lnStyleLst>${lines(source.lineWidths)}</a:lnStyleLst>` +
-	`<a:effectStyleLst>${'<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(6)}</a:effectStyleLst>`;
+	`<a:effectStyleLst>${[1, 2, 3, 4, 5, 6]
+		.map((matrix) =>
+			effects ? effectStyle(source, matrix) : '<a:effectStyle><a:effectLst/></a:effectStyle>',
+		)
+		.join('')}</a:effectStyleLst>`;
 const fontProps = () =>
 	[1, 2, 3, 4, 5, 6]
 		.map(
@@ -55,7 +79,6 @@ const fontProps = () =>
 				`<vt:fontProps><vt:color><a:schemeClr val="${matrix < 4 ? 'dk1' : 'lt1'}"/></vt:color></vt:fontProps>`,
 		)
 		.join('');
-const srgb = (value: string) => `<a:srgbClr val="${value}"/>`;
 
 /** The complete theme part XML for one built-in theme. */
 export function visioThemeXml(source: VisioBuiltInTheme): string {
@@ -96,7 +119,8 @@ export function visioThemeXml(source: VisioBuiltInTheme): string {
 		.join('');
 	return drawingThemeXml(theme, {
 		namespaces: { vt: THEME_NS },
-		formatScheme: `<a:fmtScheme name="${source.name}">${lists(source)}<a:bgFillStyleLst>${solid(placeholder()).repeat(3)}</a:bgFillStyleLst></a:fmtScheme>`,
+		fontSchemeExtensions: { [EXTENSIONS.fontSchemeId]: id },
+		formatScheme: `<a:fmtScheme name="${source.name}">${lists(source, true)}<a:bgFillStyleLst>${solid(placeholder()).repeat(3)}</a:bgFillStyleLst></a:fmtScheme>`,
 		colorSchemeExtensions: {
 			[EXTENSIONS.schemeId]: id,
 			[EXTENSIONS.background]: `<vt:bkgnd>${srgb(source.colors[1]!)}</vt:bkgnd>`,

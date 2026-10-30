@@ -76,12 +76,6 @@ export const deText: Readonly<Record<string, string>> = {
 	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
 		'Zeilen werden verknüpft, indem sie aus dem Fenster „Externe Daten“ gezogen werden; der Verknüpfungs-Assistent ist noch nicht verfügbar.',
 	'The viewer shows one drawing window.': 'Der Viewer zeigt ein Zeichnungsfenster.',
-	'Theme connector styles cannot be chosen separately yet.':
-		'Verbindungsformatvorlagen des Designs können noch nicht einzeln gewählt werden.',
-	'Theme effect styles are not rendered yet.':
-		'Effektformatvorlagen des Designs werden noch nicht dargestellt.',
-	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
-		'Designschriftarten werden in den Designteil geschrieben, der Text folgt ihnen jedoch noch nicht.',
 	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
 		'Visio-Regelsätze (formelbasierte RuleFilter und RuleTest) werden nicht ausgewertet; nur die integrierten allgemeinen Regeln werden ausgeführt.',
 	'Bottom Right': 'Unten rechts',

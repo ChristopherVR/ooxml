@@ -1,4 +1,5 @@
 import type { VisioShadow } from './model';
+import type { ThemeEffects } from './theme-effects';
 import { number, type Cells, type Report } from './sheet';
 
 /**
@@ -10,10 +11,12 @@ export function shapeShadow(
 	cells: Cells,
 	color: (name: string, fallback: string) => string,
 	report: Report,
+	themed?: ThemeEffects,
 ): VisioShadow | undefined {
 	if (cells.get('ShdwPattern')?.value === 'Themed') {
-		report('unsupported-theme-shadow', 'Theme-selected shadows are not rendered.');
-		return undefined;
+		// A resolved theme effect style decides, including a style without a shadow.
+		if (!themed) report('unsupported-theme-shadow', 'Theme-selected shadows are not rendered.');
+		return themed?.shadow;
 	}
 	const pattern = number(cells, 'ShdwPattern', 0, report);
 	if (!pattern) return undefined;

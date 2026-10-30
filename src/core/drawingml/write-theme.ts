@@ -11,6 +11,8 @@ export interface DrawingThemeXmlParts {
 	formatScheme?: string;
 	/** Children of an `a:ext` appended to `a:clrScheme`, keyed by extension URI. */
 	colorSchemeExtensions?: Readonly<Record<string, string>>;
+	/** Children of an `a:ext` appended to `a:fontScheme`, keyed by extension URI. */
+	fontSchemeExtensions?: Readonly<Record<string, string>>;
 	/** Children of an `a:ext` appended to `a:themeElements`, keyed by extension URI. */
 	themeElementsExtensions?: Readonly<Record<string, string>>;
 	/** Extra namespace prefixes the fragments use (the `a` prefix is always declared). */
@@ -100,6 +102,7 @@ export function drawingThemeXml(theme: DrawingTheme, parts: DrawingThemeXmlParts
 	fonts.setAttribute('name', theme.fontScheme.name ?? theme.name ?? 'Custom');
 	fontCollection(fonts, 'majorFont', theme.fontScheme.major);
 	fontCollection(fonts, 'minorFont', theme.fontScheme.minor);
+	extensionList(fonts, parts.fontSchemeExtensions, namespaces);
 	elementsNode.appendChild(fonts);
 	const formatXml =
 		parts.formatScheme ?? (theme.formatScheme && drawingThemeFormatSchemeXml(theme.formatScheme));

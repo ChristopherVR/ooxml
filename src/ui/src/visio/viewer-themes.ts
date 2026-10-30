@@ -2,10 +2,13 @@ import { canEditDiagram } from './controller';
 import { VISIO_BUILT_IN_THEMES, type VisioPageThemeEdit } from 'ooxml-core/visio';
 import type { OfficeUiGallery } from '../ribbon/gallery';
 import type { ViewerController, ViewerState } from './controller';
+import type { VisioPage } from 'ooxml-core/visio';
 import type { VisioRibbonAction } from './ribbon-action';
 import {
 	NO_THEME_VARIANTS,
 	THEMES_HINT,
+	VARIANT_SCHEME_MENUS,
+	schemeItemId,
 	VARIANTS_HINT,
 	themesGalleryState,
 	variantsGalleryState,
@@ -38,23 +41,44 @@ export class ViewerThemes {
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || this.#reason(state)) return;
 		if (action.variant !== undefined && !page.theme) return;
+		const scheme = VARIANT_SCHEME_MENUS.find(([key]) => action[key] !== undefined)?.[0];
 		const edit: VisioPageThemeEdit = {
 			type: 'set-page-theme',
 			pageId: page.id,
 			...(action.theme === undefined ? {} : { theme: action.theme }),
-			...(action.colors === undefined ? {} : { colors: action.colors }),
+			...(scheme ? { [scheme]: action[scheme] } : {}),
 			...(action.variant === undefined ? {} : { variant: action.variant }),
 		};
 		const name =
 			action.theme === 'none'
 				? 'No Theme'
-				: VISIO_BUILT_IN_THEMES.find((theme) => theme.id === (action.theme ?? action.colors))?.name;
+				: VISIO_BUILT_IN_THEMES.find(
+						(theme) => theme.id === (action.theme ?? (scheme && action[scheme])),
+					)?.name;
 		this.edit(
 			() => this.controller.applyEdits([edit]),
 			name
-				? `Applied ${name}${action.colors ? ' colors' : ''} to ${page.name}.`
+				? `Applied ${name}${scheme ? ` ${scheme}` : ''} to ${page.name}.`
 				: `Applied variant ${(action.variant ?? 0) + 1} to ${page.name}.`,
 		);
+	}
+
+	/** Mark the built-in theme behind each scheme of the page, and gate what needs a theme. */
+	#schemes(page: VisioPage | undefined, reason: string): void {
+		for (const [scheme, menuId, label] of VARIANT_SCHEME_MENUS) {
+			const menu = this.root.querySelector<HTMLElement>(`[data-menu="${menuId}"]`);
+			if (!menu) continue;
+			// Effect and connector styles are formats of the page's theme: without one they draw nothing.
+			const needsTheme = scheme === 'effects' || scheme === 'connectors';
+			const why = reason || (needsTheme && !page?.theme ? NO_THEME_VARIANTS : '');
+			menu.toggleAttribute('disabled', !!why);
+			if (why) menu.title = `${label}: ${why}`;
+			else menu.removeAttribute('title');
+			const current = page?.themeSchemes?.[scheme];
+			const checked = current && schemeItemId(scheme, current);
+			for (const item of menu.querySelectorAll<HTMLElement>('office-ui-menu-item'))
+				item.setAttribute('checked', String(item.getAttribute('command') === checked));
+		}
 	}
 
 	render(state: ViewerState): void {
@@ -70,6 +94,7 @@ export class ViewerThemes {
 		}
 		const options = this.root.querySelector<HTMLElement>('[data-menu="variant-options"]');
 		if (options) options.toggleAttribute('disabled', !!reason);
+		this.#schemes(page, reason);
 		const variants = this.root.querySelector<OfficeUiGallery>(
 			'office-ui-gallery[data-menu="variants"]',
 		);

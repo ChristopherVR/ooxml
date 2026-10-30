@@ -3,7 +3,7 @@ import { connections, indexedPart, related, validateBackgrounds, visioXml } from
 import { prepareImages } from './prepare-images';
 import type { VisioImageOptions } from './media';
 import { createLayerBudget, indexLayers, pageLayers } from './layers';
-import { visioPageTheme } from './page-theme';
+import { visioPageTheme, visioPageThemeSchemes } from './page-theme';
 import type { Resources } from './style';
 import { elements } from '../xml/index';
 import { DRAWING_MAIN_TYPES, STENCIL_MAIN_TYPES } from './package-kind';
@@ -298,6 +298,7 @@ export async function parseVsdx(
 		}
 		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
 		const theme = visioPageTheme(resources.themes, resources.pageCells);
+		const themeSchemes = visioPageThemeSchemes(resources.themes, resources.pageCells);
 		comments.push(...readVisioAnnotations(sheet, id));
 		const pageNumber = foreground.indexOf(page) + 1;
 		resources.fieldContext = {
@@ -397,6 +398,7 @@ export async function parseVsdx(
 			connectors,
 			layers,
 			...(theme ? { theme } : {}),
+			...(themeSchemes ? { themeSchemes } : {}),
 		});
 	}
 	checkTime();

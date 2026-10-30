@@ -137,6 +137,9 @@ export type VisioRibbonAction =
 			theme?: VisioBuiltInThemeId | 'none';
 			variant?: number;
 			colors?: VisioBuiltInThemeId;
+			fonts?: VisioBuiltInThemeId;
+			effects?: VisioBuiltInThemeId;
+			connectors?: VisioBuiltInThemeId;
 	  }
 	| { type: 'delete' }
 	| { type: 'duplicate' }

@@ -40,3 +40,39 @@ export function visioPageTheme(
 		),
 	};
 }
+
+/** Which built-in theme each scheme of a page comes from; see `VisioPage.themeSchemes`. */
+export type VisioPageThemeSchemes = Partial<
+	Record<'colors' | 'fonts' | 'effects' | 'connectors', string>
+>;
+
+const SCHEME_SELECTORS = [
+	['colors', 'ColorSchemeIndex', 'colorId'],
+	['fonts', 'FontSchemeIndex', 'fontId'],
+	['effects', 'EffectSchemeIndex', 'effectId'],
+	['connectors', 'ConnectorSchemeIndex', 'connectorId'],
+] as const;
+
+/**
+ * The built-in theme behind each separately selectable scheme (Design > Variants > More marks
+ * it); a scheme that is unset, absent from the drawing or not a built-in one is left out.
+ */
+export function visioPageThemeSchemes(
+	themes: readonly VisioTheme[] | undefined,
+	pageCells: Cells,
+): VisioPageThemeSchemes | undefined {
+	const result: VisioPageThemeSchemes = {};
+	for (const [key, cell, field] of SCHEME_SELECTORS) {
+		const id = integer(pageCells.get(cell)?.value);
+		if (!themes || id === undefined || id === 0 || id >= 65534) continue;
+		const matches = themes.filter((theme) => theme[field] === id);
+		const builtIn =
+			matches.length === 1
+				? VISIO_BUILT_IN_THEMES.find(
+						(entry) => entry.schemeId === id && entry.name === matches[0]!.name,
+					)
+				: undefined;
+		if (builtIn) result[key] = builtIn.id;
+	}
+	return Object.keys(result).length ? result : undefined;
+}

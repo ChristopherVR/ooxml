@@ -6,11 +6,8 @@
  * recolour through those selectors when the drawing is read again.
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/9753d977-a1de-49e8-888c-cf532efe7982
  */
-import { NS, parseXml } from '../xml/index';
-import { RELATIONSHIP_TYPES } from '../opc/relationship-types';
-import { relationshipsPartFor, resolvePartPath } from '../opc/relationships';
 import type { VisioPackage } from './package';
-import { decodePath, fail, type VisioPackageLimits } from './package-common';
+import { fail, type VisioPackageLimits } from './package-common';
 import { related, visioXml } from './parts';
 import { attribute, child, children } from './sheet';
 import { setCell } from './edit-geometry-cells';
@@ -18,15 +15,14 @@ import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import { loadVisioThemes, type VisioTheme } from './theme';
 import { visioBuiltInTheme, visioThemeVariantColors } from './theme-builtins';
-import { visioThemeXml } from './theme-write';
 import { refreshThemeColorCaches } from './edit-page-theme-refresh';
 import { VISIO_UNTHEMED_COLORS, type VisioThemeColorValues } from './theme-color-ref';
 import { drawingColor } from './theme-color';
 import { recolorQuickStyledShapes } from './edit-page-theme-recolor';
-import type { VisioPageThemeEdit } from './edit-page-theme-commands';
+import { PAGE_THEME_PARTS, type VisioPageThemeEdit } from './edit-page-theme-commands';
+import { ensureBuiltInThemePart } from './edit-page-theme-part';
 import type { EditVsdxResult } from './edit';
 
-const THEME_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.theme+xml';
 const SCHEME_CELLS = [
 	'ThemeIndex',
 	'ColorSchemeIndex',
@@ -34,6 +30,12 @@ const SCHEME_CELLS = [
 	'ConnectorSchemeIndex',
 	'FontSchemeIndex',
 ];
+const PART_CELLS = {
+	colors: 'ColorSchemeIndex',
+	fonts: 'FontSchemeIndex',
+	effects: 'EffectSchemeIndex',
+	connectors: 'ConnectorSchemeIndex',
+} as const;
 const copy = (root: Element) => (root.ownerDocument!.cloneNode(true) as Document).documentElement;
 const cellValue = (sheet: Element | undefined, name: string) => {
 	const value = attribute(
@@ -82,6 +84,7 @@ export async function editVsdxPageTheme(
 	const created = new Map<string, Uint8Array>();
 	const contents = copy(await visioXml(pkg, contentsPath!, 'PageContents'));
 	let recolored = false;
+	const part = PAGE_THEME_PARTS.find((name) => edit[name] !== undefined);
 	if (edit.theme === 'none') {
 		for (const name of [...SCHEME_CELLS, 'VariationColorIndex', 'VariationStyleIndex'])
 			setCell(sheet, name, 0);
@@ -95,56 +98,18 @@ export async function editVsdxPageTheme(
 			recolored = recolorQuickStyledShapes(contents, 'fallback', check);
 		// Without a theme the theme-colour formulas resolve to Visio's own colours.
 		recolored = refreshThemeColorCaches(contents, VISIO_UNTHEMED_COLORS, check) || recolored;
-	} else if (edit.theme || edit.colors) {
-		const source = visioBuiltInTheme((edit.theme ?? edit.colors)!);
-		const matches = themes.filter((theme) =>
-			[theme.colorId, theme.effectId, theme.connectorId].includes(source.schemeId),
-		);
-		if (matches.length > 1 || (matches[0] && matches[0].name !== source.name))
-			fail(
-				'EDIT_THEME_CONFLICT',
-				'Another theme part already uses the scheme IDs of this built-in theme.',
-			);
-		if (!matches.length) {
-			const relsPart = relationshipsPartFor(documentPath);
-			const rels = parts.has(relsPart)
-				? copy(await pkg.readXml(relsPart, 'Relationships'))
-				: parseXml(`<Relationships xmlns="${NS.rels}"/>`).documentElement;
-			const types = copy(await pkg.readXml('[Content_Types].xml', 'Types'));
-			const taken = new Set([...parts.keys()].map((name) => decodePath(name).toLowerCase()));
-			const ids = new Set(
-				Array.from(rels.getElementsByTagNameNS(rels.namespaceURI, 'Relationship')).map(
-					(node) => node.getAttribute('Id') ?? '',
-				),
-			);
-			let index = 1;
-			let target = '';
-			let path = '';
-			do {
-				check();
-				target = `theme/theme${index++}.xml`;
-				path = resolvePartPath(documentPath, target);
-			} while (taken.has(path.toLowerCase()));
-			index = 1;
-			while (ids.has(`rId${index}`)) index++;
-			const relationship = rels.ownerDocument!.createElementNS(rels.namespaceURI, 'Relationship');
-			relationship.setAttribute('Id', `rId${index}`);
-			relationship.setAttribute('Type', RELATIONSHIP_TYPES.theme);
-			relationship.setAttribute('Target', target);
-			rels.appendChild(relationship);
-			const override = types.ownerDocument!.createElementNS(types.namespaceURI, 'Override');
-			override.setAttribute('PartName', `/${path}`);
-			override.setAttribute('ContentType', THEME_CONTENT_TYPE);
-			types.appendChild(override);
-			dirty.set(relsPart, rels);
-			dirty.set('[Content_Types].xml', types);
-			created.set(path, new TextEncoder().encode(visioThemeXml(source)));
-		}
-		for (const name of edit.colors ? ['ColorSchemeIndex'] : SCHEME_CELLS)
+	} else if (edit.theme || part) {
+		const source = visioBuiltInTheme((edit.theme ?? edit[part!])!);
+		await ensureBuiltInThemePart(pkg, parts, documentPath, themes, source, dirty, created, check);
+		for (const name of part ? [PART_CELLS[part]] : SCHEME_CELLS)
 			setCell(sheet, name, source.schemeId);
-		for (const name of ['VariationColorIndex', 'VariationStyleIndex'])
-			setCell(sheet, name, edit.variant ?? 0);
-		recolored = recolorQuickStyledShapes(contents, 'themed', check);
+		// Fonts, effects and connectors change nothing else: they are read from the theme parts
+		// when the drawing is opened, so no variant selector moves and no shape is recoloured.
+		if (!part || part === 'colors') {
+			for (const name of ['VariationColorIndex', 'VariationStyleIndex'])
+				setCell(sheet, name, edit.variant ?? 0);
+			recolored = recolorQuickStyledShapes(contents, 'themed', check);
+		}
 		// dk1, lt1, dk2, lt2, accent1-6: the theme-colour formulas follow the new theme.
 		const hex = (index: number) => `#${source.colors[index]!.toLowerCase()}`;
 		const variant = visioThemeVariantColors(source, edit.variant ?? 0);
@@ -152,7 +117,8 @@ export async function editVsdxPageTheme(
 		for (let index = 1; index <= 6; index++) colors[`accent${index}` as 'accent1'] = hex(index + 3);
 		for (let index = 1; index <= 7; index++)
 			colors[`variant${index}` as 'variant1'] = `#${variant[index - 1]!.toLowerCase()}`;
-		recolored = refreshThemeColorCaches(contents, colors, check) || recolored;
+		if (!part || part === 'colors')
+			recolored = refreshThemeColorCaches(contents, colors, check) || recolored;
 	} else {
 		const current = pageSelectedTheme(themes, sheet);
 		if (!current || current.variants.length <= edit.variant!)

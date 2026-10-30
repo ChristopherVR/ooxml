@@ -39,7 +39,16 @@ export function reportThemeEffects(cells: Cells, resources: ThemeResources, repo
 			(node) =>
 				node.localName === 'effectLst' &&
 				elements(node).some(
-					(effect) => !['blur', 'fillOverlay', 'prstShdw'].includes(effect.localName),
+					(effect) =>
+						![
+							'blur',
+							'fillOverlay',
+							'prstShdw',
+							'outerShdw',
+							'glow',
+							'softEdge',
+							'reflection',
+						].includes(effect.localName),
 				),
 		)
 	)
