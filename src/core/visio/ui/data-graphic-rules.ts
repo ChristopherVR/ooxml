@@ -1,4 +1,5 @@
 import type { VisioPage, VisioShape } from '../model';
+import type { VisioDataGraphicPosition } from './data-graphic-config';
 
 /** Hidden Shape Data row that marks a shape this viewer created as a data graphic part. */
 export const VISIO_DATA_GRAPHIC_ROW = '_ooxmlDataGraphic';
@@ -12,6 +13,12 @@ export interface VisioDataGraphicOptions {
 	/** Data bar and icon set range; defaults to the values' minimum and maximum. */
 	min?: number;
 	max?: number;
+	/** Where the graphic sits around the shape; omitted keeps the kind's original place. */
+	position?: VisioDataGraphicPosition;
+	/** How many graphics already sit at that position, so this one stacks beyond them. */
+	slot?: number;
+	/** First shape ID to use, when several graphics are built from one page snapshot. */
+	idStart?: number;
 }
 /** One Color by Value entry, as the legend lists it. */
 export interface VisioColorRule {

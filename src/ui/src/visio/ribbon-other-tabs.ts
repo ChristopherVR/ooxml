@@ -9,9 +9,17 @@ import { layoutGroup, reLayoutGallery } from './ribbon-layout';
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 
 const GRAPHICS =
-	'Data graphics are placed at their default position; this option is not built yet.';
-const LINKING =
-	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.';
+	'Advanced data graphics (editing individual items, rules and callout styles) are not built yet.';
+const POSITIONS: readonly [string, string][] = [
+	['top-left', 'Top Left'],
+	['top', 'Top Center'],
+	['top-right', 'Top Right'],
+	['left', 'Left'],
+	['right', 'Right'],
+	['bottom-left', 'Bottom Left'],
+	['bottom', 'Bottom Center'],
+	['bottom-right', 'Bottom Right'],
+];
 
 const unsupported = (
 	id: string,
@@ -199,12 +207,31 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					],
 				}),
 				stack(doc, [
-					command(doc, unsupported('graphic-position', 'Position', 'position', GRAPHICS, 'small')),
-					command(
-						doc,
-						unsupported('graphic-configure', 'Configure', 'settings', GRAPHICS, 'small'),
-					),
-					command(doc, unsupported('graphic-auto-space', 'Auto Space', 'grid', GRAPHICS, 'small')),
+					menu(doc, {
+						id: 'graphic-position',
+						label: 'Position',
+						icon: 'position',
+						size: 'small',
+						items: POSITIONS.map(([place, label]) => ({
+							id: `graphic-position-${place}`,
+							label,
+							action: data(`graphic-position-${place}` as VisioDataCommand),
+						})),
+					}),
+					command(doc, {
+						id: 'graphic-configure',
+						label: 'Configure',
+						icon: 'settings',
+						size: 'small',
+						action: data('graphic-configure'),
+					}),
+					command(doc, {
+						id: 'graphic-auto-space',
+						label: 'Auto Space',
+						icon: 'grid',
+						size: 'small',
+						action: data('graphic-auto-space'),
+					}),
 				]),
 			]),
 			group(doc, 'Display Data', [
@@ -243,7 +270,12 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 				]),
 			]),
 			group(doc, 'Advanced Data Linking', [
-				command(doc, unsupported('link-data', 'Link Data', 'visioLink', LINKING)),
+				command(doc, {
+					id: 'link-data',
+					label: 'Link Data',
+					icon: 'visioLink',
+					action: data('link-data'),
+				}),
 				command(
 					doc,
 					unsupported('advanced-data-graphics', 'Advanced Data Graphics', 'visioChart', GRAPHICS),

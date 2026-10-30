@@ -1,4 +1,10 @@
-import type { VisioDataRecordset, VisioEdit, VisioPage } from 'ooxml-core/visio';
+import {
+	visioRefreshReport,
+	type VisioDataRecordset,
+	type VisioEdit,
+	type VisioPage,
+	type VisioRefreshReport,
+} from 'ooxml-core/visio';
 import type { ViewerController } from './controller';
 import type { InsertDialog } from './viewer-insert-dialog';
 import {
@@ -66,6 +72,7 @@ export class ViewerDataSources {
 			{ labels: workbook.sheets.map((sheet) => sheet.name), none: false },
 		);
 		(this.importer.fields.get('range') as HTMLInputElement).value = '';
+		(this.importer.fields.get('key') as HTMLInputElement).value = '';
 		(this.importer.fields.get('header') as HTMLInputElement).checked = true;
 		this.importer.error.textContent = '';
 		this.importer.dialog.show();
@@ -81,21 +88,25 @@ export class ViewerDataSources {
 			range: this.importer.value('range'),
 			header: this.importer.checked('header'),
 		};
+		const key = this.importer.value('key').trim();
 		try {
-			readTable(pending.workbook, options);
+			const table = readTable(pending.workbook, options);
+			if (key && !table.columns.some((column) => column.name === key || column.label === key))
+				throw new Error(`The data has no column named ${key}.`);
 		} catch (error) {
 			return void (this.importer.error.textContent =
 				error instanceof Error ? error.message : String(error));
 		}
 		this.importer.dialog.close();
 		this.#pendingImport = undefined;
-		await this.#importTable(pending.picked, pending.workbook, options, name);
+		await this.#importTable(pending.picked, pending.workbook, options, name, key);
 	}
 	async #importTable(
 		picked: PickedFile,
 		workbook: Awaited<ReturnType<typeof readWorkbook>>,
 		options: DataSourceOptions,
 		name: string,
+		key = '',
 	): Promise<void> {
 		const page = this.#page();
 		if (!page) return;
@@ -107,12 +118,30 @@ export class ViewerDataSources {
 				`${picked.file.name} cannot be imported: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
+		const column = key
+			? table.columns.find((item) => item.name === key || item.label === key)
+			: undefined;
+		const csv = /\.(csv|txt)$/i.test(picked.file.name);
+		const range = options.range.trim().toUpperCase();
 		const before = new Set(
 			(this.controller.state.document?.dataRecordsets ?? []).map((set) => set.id),
 		);
 		this.run(async () => {
 			await this.controller.applyEdits([
-				{ type: 'import-data-recordset', pageId: page.id, name, ...table },
+				{
+					type: 'import-data-recordset',
+					pageId: page.id,
+					name,
+					...table,
+					// Saved as the recordset's data connection, command and primary key.
+					source: {
+						kind: csv ? 'csv' : 'workbook',
+						fileName: picked.file.name,
+						...(csv ? {} : { sheet: workbook.sheets[options.sheet]?.name ?? 'Sheet1' }),
+						...(range ? { range } : {}),
+					},
+					...(column ? { primaryKey: column.name } : {}),
+				},
 			]);
 			const added = (this.controller.state.document?.dataRecordsets ?? []).find(
 				(set) => !before.has(set.id),
@@ -131,6 +160,7 @@ export class ViewerDataSources {
 		const page = this.#page();
 		if (!sets.length || !page) return this.announce('There is no external data to refresh.');
 		const edits: VisioEdit[] = [];
+		const reports: { set: VisioDataRecordset; report: VisioRefreshReport }[] = [];
 		const missing: VisioDataRecordset[] = [];
 		for (const set of sets) {
 			const source = this.#sources.get(set.id);
@@ -140,6 +170,12 @@ export class ViewerDataSources {
 			}
 			try {
 				const table = readTable(await readWorkbook(await source.handle.getFile()), source.options);
+				const report = visioRefreshReport(set, table.columns, table.rows);
+				if (report.keyMissing)
+					return this.announce(
+						`${set.name} cannot be refreshed: the data has no ${report.key} column, its unique identifier.`,
+					);
+				reports.push({ set, report });
 				edits.push({
 					type: 'refresh-data-recordset',
 					pageId: page.id,
@@ -167,6 +203,12 @@ export class ViewerDataSources {
 					header: true,
 				};
 				const table = readTable(await readWorkbook(picked.file), options);
+				const report = visioRefreshReport(active, table.columns, table.rows);
+				if (report.keyMissing)
+					return this.announce(
+						`${active.name} cannot be refreshed: the data has no ${report.key} column, its unique identifier.`,
+					);
+				reports.push({ set: active, report });
 				this.#sources.set(active.id, {
 					name: picked.file.name,
 					options,
@@ -186,7 +228,24 @@ export class ViewerDataSources {
 		}
 		this.run(
 			() => this.controller.applyEdits(edits),
-			`Refreshed ${edits.length === 1 ? '1 recordset' : `${edits.length} recordsets`}${missing.length && edits.length < sets.length ? '; choose the other files again to refresh them' : ''}.`,
+			`Refreshed ${edits.length === 1 ? '1 recordset' : `${edits.length} recordsets`}${missing.length && edits.length < sets.length ? '; choose the other files again to refresh them' : ''}.${reports.map(refreshNote).join('')}`,
 		);
 	}
+}
+
+/** What a refresh did to linked shapes: how rows were matched and which links were lost. */
+function refreshNote({ set, report }: { set: VisioDataRecordset; report: VisioRefreshReport }) {
+	const lost = report.unmatched.length;
+	const by = report.key ? `by ${report.key}` : 'by row order';
+	const parts = [`${set.name}: matched ${report.matched} linked shapes ${by}`];
+	if (lost)
+		parts.push(
+			`${lost} linked ${lost === 1 ? 'shape has' : 'shapes have'} no matching row and ${lost === 1 ? 'was' : 'were'} unlinked (shape ${report.unmatched
+				.slice(0, 5)
+				.map((link) => link.shapeId)
+				.join(', ')}${lost > 5 ? ', ...' : ''})`,
+		);
+	if (report.added)
+		parts.push(`${report.added} new ${report.added === 1 ? 'row' : 'rows'} to link`);
+	return ` ${parts.join('; ')}.`;
 }

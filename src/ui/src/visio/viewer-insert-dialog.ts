@@ -92,7 +92,7 @@ export class InsertDialog {
 		name: string,
 		values: readonly string[],
 		current: string,
-		options: { labels?: readonly string[]; none?: boolean } = {},
+		options: { labels?: readonly string[]; none?: boolean; noneLabel?: string } = {},
 	): void {
 		const select = this.fields.get(name);
 		if (!(select instanceof HTMLSelectElement)) return;
@@ -105,7 +105,8 @@ export class InsertDialog {
 				option.value = value;
 				const index = values.indexOf(value);
 				option.textContent =
-					(index >= 0 ? options.labels?.[index] : undefined) ?? (value || '(none)');
+					(index >= 0 ? options.labels?.[index] : undefined) ??
+					(value || options.noneLabel || '(none)');
 				return option;
 			}),
 		);

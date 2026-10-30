@@ -4,6 +4,7 @@ import { parseVsdx } from './parser';
 import { editVsdx } from './edit';
 import { VisioPackage } from './package';
 import type { VisioDataColumn } from './data-recordsets';
+import { visioRefreshReport } from './data-refresh';
 
 const columns: VisioDataColumn[] = [
 	{ name: 'Name', label: 'Name', type: 'string' },
@@ -204,5 +205,135 @@ describe('external data recordsets', () => {
 				{ type: 'move-shape', pageId: '0', shapeId: '1', x: 1, y: 1 },
 			]),
 		).rejects.toMatchObject({ code: 'EDIT_MIXED_DATA_TRANSACTION' });
+	});
+
+	it('saves a data connection, command and primary key that round-trip', async () => {
+		const source = { kind: 'workbook', fileName: 'servers.xlsx', sheet: 'Sheet1' } as const;
+		const bytes = (
+			await editVsdx(await drawing(), [
+				{
+					type: 'import-data-recordset',
+					pageId: '0',
+					name: 'servers',
+					columns,
+					rows,
+					source,
+					primaryKey: 'Name',
+				},
+				{
+					type: 'import-data-recordset',
+					pageId: '0',
+					name: 'servers again',
+					columns,
+					rows,
+					source,
+				},
+			])
+		).bytes;
+		const connections = await text(bytes, 'visio/data/connections.xml');
+		expect(connections).toContain('<DataConnections');
+		// An equal connection string is shared, as Visio shares one workbook connection.
+		expect(connections.match(/<DataConnection /g)).toHaveLength(1);
+		expect(await text(bytes, '[Content_Types].xml')).toContain(
+			'PartName="/visio/data/connections.xml" ContentType="application/vnd.ms-visio.connections+xml"',
+		);
+		expect(await text(bytes, 'visio/_rels/document.xml.rels')).toContain(
+			'relationships/connections" Target="data/connections.xml"',
+		);
+		const sets = (await parseVsdx(bytes)).dataRecordsets!;
+		expect(sets[0]).toMatchObject({
+			command: 'SELECT * FROM [Sheet1$]',
+			primaryKey: 'Name',
+			connection: { id: '1' },
+		});
+		expect(sets[0]!.connection!.connectionString).toContain('Data Source=servers.xlsx');
+		expect(await text(bytes, 'visio/data/recordsets.xml')).toContain(
+			'<PrimaryKey ColumnNameID="Name"/>',
+		);
+		expect(sets[1]!.primaryKey).toBeUndefined();
+		// The connection stays until the last recordset using it goes.
+		const one = await editVsdx(bytes, [
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '0' },
+		]);
+		expect(await text(one.bytes, 'visio/data/connections.xml')).toContain('<DataConnection ');
+		const none = await editVsdx(one.bytes, [
+			{ type: 'delete-data-recordset', pageId: '0', recordsetId: '1' },
+		]);
+		expect((await VisioPackage.open(none.bytes)).has('visio/data/connections.xml')).toBe(false);
+		expect(await text(none.bytes, '[Content_Types].xml')).not.toContain('connections');
+		await expect(
+			editVsdx(await drawing(), [
+				{
+					type: 'import-data-recordset',
+					pageId: '0',
+					name: 'x',
+					columns,
+					rows,
+					primaryKey: 'Missing',
+				},
+			]),
+		).rejects.toMatchObject({ code: 'INVALID_EDIT' });
+	});
+
+	it('refreshes by the primary key when rows move, and reports rows that vanish', async () => {
+		const keyed = await editVsdx(await drawing(), [
+			{ type: 'import-data-recordset', pageId: '0', name: 'k', columns, rows, primaryKey: 'Name' },
+			{
+				type: 'link-data-rows',
+				pageId: '0',
+				recordsetId: '0',
+				links: [
+					{ shapeId: '1', rowId: '1' },
+					{ shapeId: '2', rowId: '2' },
+				],
+			},
+		]);
+		const table = [
+			['New', '1', ''],
+			['Database', '30', ''],
+		];
+		const set = (await parseVsdx(keyed.bytes)).dataRecordsets![0]!;
+		expect(visioRefreshReport(set, columns, table)).toMatchObject({
+			key: 'Name',
+			matched: 1,
+			added: 1,
+			unmatched: [{ shapeId: '1', rowId: '1' }],
+		});
+		const refreshed = await editVsdx(keyed.bytes, [
+			{ type: 'refresh-data-recordset', pageId: '0', recordsetId: '0', columns, rows: table },
+		]);
+		const document = await parseVsdx(refreshed.bytes);
+		// By order Web would have become New; by key it is unlinked and Database updates.
+		expect(document.dataRecordsets![0]!.links).toEqual([{ rowId: '2', pageId: '0', shapeId: '2' }]);
+		expect(document.pages[0]!.shapes[1]!.shapeData![1]).toMatchObject({ value: 30 });
+		expect(document.pages[0]!.shapes[0]!.shapeData![0]).toMatchObject({ value: 'Web' });
+		expect(document.pages[0]!.shapes[0]!.shapeData![0]!.dataLinked).toBeUndefined();
+		// Reordered rows keep their shapes.
+		const swapped = await editVsdx(keyed.bytes, [
+			{
+				type: 'refresh-data-recordset',
+				pageId: '0',
+				recordsetId: '0',
+				columns,
+				rows: [rows[1]!.map((v, i) => (i === 1 ? '99' : v)), rows[0]!],
+			},
+		]);
+		const after = await parseVsdx(swapped.bytes);
+		expect(after.dataRecordsets![0]!.links).toEqual([
+			{ rowId: '2', pageId: '0', shapeId: '1' },
+			{ rowId: '1', pageId: '0', shapeId: '2' },
+		]);
+		expect(after.pages[0]!.shapes[1]!.shapeData![1]).toMatchObject({ value: 99 });
+		await expect(
+			editVsdx(keyed.bytes, [
+				{
+					type: 'refresh-data-recordset',
+					pageId: '0',
+					recordsetId: '0',
+					columns: [columns[1]!],
+					rows: [['1']],
+				},
+			]),
+		).rejects.toMatchObject({ code: 'INVALID_EDIT' });
 	});
 });
