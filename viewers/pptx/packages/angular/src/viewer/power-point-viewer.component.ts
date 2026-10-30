@@ -1328,17 +1328,17 @@ const noopClose = (): void => undefined;
 			/>
 
 			@if (canEdit()) {
-				<pptx-custom-shows
-					[open]="customShowsCtl.showDialog()"
-					[slides]="displaySlidesMut()"
-					[customShows]="customShowsCtl.shows()"
-					[activeCustomShowId]="customShowsCtl.activeId()"
-					(create)="customShowsCtl.onCreate($event)"
-					(remove)="customShowsCtl.onRemove($event)"
-					(update)="customShowsCtl.onUpdate($event)"
-					(setActive)="customShowsCtl.activeId.set($event)"
-					(close)="customShowsCtl.showDialog.set(false)"
-				/>
+				@if (customShowsCtl.showDialog()) {
+					<pptx-custom-shows
+						[slides]="displaySlidesMut()"
+						[customShows]="customShowsCtl.pptxCustomShows()"
+						[activeCustomShowId]="customShowsCtl.activeId()"
+						(save)="customShowsCtl.onSaveDialog($event)"
+						(setActive)="customShowsCtl.activeId.set($event)"
+						(run)="onRunCustomShow($event)"
+						(close)="customShowsCtl.showDialog.set(false)"
+					/>
+				}
 
 				<!-- ── Insert SmartArt and Insert Chart dialogs (shared elements) ── -->
 				<pptx-insert-dialogs-host
@@ -2957,6 +2957,7 @@ export class PowerPointViewerComponent
 		this.customShowsCtl.bind({
 			activeSlideIndex: () => this.activeSlideIndex(),
 			liveSlides: () => this.displaySlidesMut(),
+			applySlides: (slides, label) => this.editor.applyReplacement(slides, label),
 		});
 
 		// Hand the collaboration-session controller the host inputs it cannot own
@@ -3373,6 +3374,12 @@ export class PowerPointViewerComponent
 	protected selectMasterTab(tab: MasterViewTab): void {
 		this.masterViewTab.set(tab);
 		this.editor.clearSelection();
+	}
+
+	/** The Custom Shows dialog's Show button: restrict playback to the show, then start it. */
+	protected onRunCustomShow(showId: string): void {
+		this.customShowsCtl.activeId.set(showId);
+		this.presentationMode.presentFromBeginning();
 	}
 
 	/**

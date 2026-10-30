@@ -5,20 +5,26 @@
  * Framework-agnostic: no React, Vue, or Angular imports. Shared across bindings.
  */
 
+import { nextCustomShowId } from 'ooxml-core/pptx/editor/render/custom-show-operations';
+
 export interface CustomShow {
 	id: string;
 	name: string;
 	slideIds: readonly string[];
 }
 
-export function generateCustomShowId(): string {
-	const c = globalThis.crypto;
-	if (c && typeof c.randomUUID === 'function') {
-		return `show-${c.randomUUID()}`;
-	}
-	return `show-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+/**
+ * The next free show id. `p:custShow/@id` is an `xsd:unsignedInt` (and
+ * `ppaction://customshow?id=N` names it), so ids are plain numbers, never UUIDs.
+ */
+export function generateCustomShowId(existing: readonly { id: string }[] = []): string {
+	return nextCustomShowId(existing.map(({ id }) => ({ id, name: '', slideRIds: [] })));
 }
 
-export function createCustomShow(name: string, slideIds: readonly string[]): CustomShow {
-	return { id: generateCustomShowId(), name: name.trim(), slideIds: [...slideIds] };
+export function createCustomShow(
+	name: string,
+	slideIds: readonly string[],
+	existing: readonly { id: string }[] = [],
+): CustomShow {
+	return { id: generateCustomShowId(existing), name: name.trim(), slideIds: [...slideIds] };
 }

@@ -1305,6 +1305,7 @@ const customShowsWiring = useCustomShowsWiring({
 	// now plays that show instead of the whole deck.
 	presentationProperties,
 	pushHistory: history.pushHistory,
+	startShow: () => presentation.presentFromBeginning(),
 });
 
 // Honours `p:showPr/p:sldRg`: a deck authored to open into a custom slide

@@ -789,6 +789,18 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				onAddRunProgramNotice: runProgramNoticesState.addNotice,
 			});
 
+		// The Custom Shows dialog's Show button selects a show and then starts the slide show. The
+		// start must read the NEW selection, so it runs in the effect after that state commits
+		// (calling it in the click handler would still see the previous show).
+		const [customShowRunRequest, setCustomShowRunRequest] = useState(0);
+		useEffect(() => {
+			if (customShowRunRequest > 0) {
+				presentation.enterPresentModeFromBeginning();
+			}
+			// Only a new request starts the show; `presentation` is read at that commit.
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [customShowRunRequest]);
+
 		// ── Touch gestures: pinch-to-zoom on canvas viewport ──────
 		useEffect(() => {
 			const root = containerRef.current;
@@ -863,6 +875,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeCustomShowId: state.activeCustomShowId,
 			setCustomShows: state.setCustomShows,
 			setActiveCustomShowId: state.setActiveCustomShowId,
+			setSlides: state.setSlides,
 			setGuides: state.setGuides,
 			setPresentationProperties: state.setPresentationProperties,
 			setAccessibilityIssues: state.setAccessibilityIssues as unknown as React.Dispatch<
@@ -1598,6 +1611,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					digitalSignatureCount={state.digitalSignatureCount}
 					presentationProperties={state.presentationProperties}
 					customShows={state.customShows}
+					activeCustomShowId={state.activeCustomShowId}
+					onSetActiveCustomShowId={state.setActiveCustomShowId}
+					onRunCustomShow={() => setCustomShowRunRequest((count) => count + 1)}
 					selectedElements={state.selectedElements}
 					isEncryptedDialogOpen={isEncryptedDialogOpen}
 					setIsEncryptedDialogOpen={setIsEncryptedDialogOpen}

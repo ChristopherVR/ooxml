@@ -13,7 +13,8 @@
  * {@link pruneCustomShowSlides} to keep the in-memory model in step.
  */
 
-import type { PptxCustomShow, PptxElement, PptxSlide } from 'ooxml-core/pptx';
+import { mapCustomShowActions } from '../../index';
+import type { PptxCustomShow, PptxSlide } from 'ooxml-core/pptx';
 
 /** Result of an edit that targets one show. `show` is undefined when the id is unknown. */
 export interface CustomShowEditResult {
@@ -204,81 +205,15 @@ export function customShowSlides<T extends Pick<PptxSlide, 'rId'>>(
 	});
 }
 
-function targetsShow(action: string | undefined, id: string): boolean {
-	if (!action) {
-		return false;
-	}
-	const lower = action.toLowerCase();
-	if (!lower.includes('ppaction://customshow')) {
-		return false;
-	}
-	const match = lower.match(/[?&]id=([^&]*)/);
-	return match !== null && decodeURIComponent(match[1] as string) === id.toLowerCase();
-}
-
-function clearElement(element: PptxElement, id: string): { element: PptxElement; cleared: number } {
-	let cleared = 0;
-	let next: PptxElement = element;
-	const edit = (): Record<string, unknown> => {
-		if (next === element) {
-			next = { ...element };
-		}
-		return next as unknown as Record<string, unknown>;
-	};
-	if (element.actionClick && targetsShow(element.actionClick.action, id)) {
-		delete edit().actionClick;
-		cleared++;
-	}
-	if (element.actionHover && targetsShow(element.actionHover.action, id)) {
-		delete edit().actionHover;
-		cleared++;
-	}
-	const segments = 'textSegments' in element ? element.textSegments : undefined;
-	if (segments?.some((s) => targetsShow(s.style?.hyperlinkAction, id))) {
-		edit().textSegments = segments.map((s) => {
-			if (!targetsShow(s.style?.hyperlinkAction, id)) {
-				return s;
-			}
-			cleared++;
-			const {
-				hyperlink: _h,
-				hyperlinkRId: _r,
-				hyperlinkTooltip: _t,
-				hyperlinkAction: _a,
-				hyperlinkTargetSlideIndex: _i,
-				...rest
-			} = s.style;
-			return { ...s, style: rest };
-		});
-	}
-	if (element.type === 'group') {
-		const children = element.children.map((child) => clearElement(child, id));
-		if (children.some((c) => c.cleared > 0)) {
-			edit().children = children.map((c) => c.element);
-			cleared += children.reduce((n, c) => n + c.cleared, 0);
-		}
-	}
-	return { element: next, cleared };
-}
-
 /**
- * Remove the click and hover actions and text hyperlinks that jump into custom show
- * `id` (`ppaction://customshow?id=N`), so deleting the show leaves no dangling jump.
+ * Remove the click and hover actions and text hyperlinks that jump into custom show `id`
+ * (`ppaction://customshow?id=N`), so deleting the show leaves no dangling jump.
  * Returns new slides (unchanged slides keep their identity) and how many were cleared.
  */
 export function clearCustomShowActions(
 	slides: readonly PptxSlide[],
 	id: string,
 ): { slides: PptxSlide[]; cleared: number } {
-	let cleared = 0;
-	const next = slides.map((slide) => {
-		const results = slide.elements.map((el) => clearElement(el, id));
-		const n = results.reduce((sum, r) => sum + r.cleared, 0);
-		if (n === 0) {
-			return slide;
-		}
-		cleared += n;
-		return { ...slide, elements: results.map((r) => r.element) };
-	});
-	return { slides: next, cleared };
+	const result = mapCustomShowActions(slides, (target) => (target === id ? null : target));
+	return { slides: result.slides, cleared: result.changed };
 }

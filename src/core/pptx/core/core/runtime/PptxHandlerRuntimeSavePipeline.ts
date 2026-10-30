@@ -6,6 +6,7 @@ import { persistModernCommentPackage } from '../../utils/modern-comment-package'
 import { PptxSaveStateBuilder } from '../builders';
 import { createPptxSaveConstants } from '../factories';
 import type { PptxHandlerSaveOptions } from '../types';
+import { withValidCustomShowIds } from './custom-show-save-ids';
 import { shouldKeepSourceCommentAuthors } from './comment-authors-retention';
 import { applyHeaderFooterToMaster } from './header-footer-parts';
 import { slidesPerPageToPrintOutput } from './pptx-print-properties';
@@ -41,8 +42,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * one that fails does not hold up the next.
 	 */
 	async save(slides: PptxSlide[], options?: PptxHandlerSaveOptions): Promise<Uint8Array> {
+		const valid = withValidCustomShowIds(slides, options);
 		// `saveQueue` never rejects (the catch below), so a failed save does not hold up this one.
-		const run = this.saveQueue.then(() => this.saveNow(slides, options));
+		const run = this.saveQueue.then(() => this.saveNow(valid.slides, valid.options));
 		this.saveQueue = run.catch(() => undefined);
 		return run;
 	}

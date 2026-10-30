@@ -30,19 +30,14 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
 	firstShowSlideIndex,
-	generateCustomShowId,
 	presentationEntrySlideIndex,
 	resolveAuthoredCustomShowId,
 	resolveShowSlideIndexes,
 } from 'ooxml-ui/pptx';
-import type { AuthoredSlideRange, CustomShow, ShowOrderCustomShow } from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 
-import {
-	activeCustomShowMembership,
-	customShowsFromDeck,
-	customShowsToDeck,
-} from './custom-shows-deck';
+import { activeCustomShowMembership } from './custom-shows-deck';
 import { LoadContentService } from './load-content.service';
 
 @Injectable()
@@ -64,21 +59,21 @@ export class ViewerCustomShowsService {
 	 * (`loader.slides()`), mirroring React/Vue where present mode shows the
 	 * working set. Defaults to the loaded slides until bound.
 	 */
+	private applySlides: ((slides: PptxSlide[], label: string) => void) | undefined;
+
 	private liveSlides: () => readonly PptxSlide[] = () => this.loader.slides();
 
 	/** Wire the host's active-slide-index + live-slides accessors (called once from the constructor). */
 	bind(accessors: {
 		activeSlideIndex: () => number;
 		liveSlides: () => readonly PptxSlide[];
+		/** An undoable slide replacement, used when removing a show clears jumps into it. */
+		applySlides?: (slides: PptxSlide[], label: string) => void;
 	}): void {
 		this.activeSlideIndex = accessors.activeSlideIndex;
 		this.liveSlides = accessors.liveSlides;
+		this.applySlides = accessors.applySlides;
 	}
-
-	/** The deck's shows in the dialog's key space (slide ids, not relationship ids). */
-	readonly shows = computed<readonly CustomShow[]>(() =>
-		customShowsFromDeck(this.loader.customShows(), this.liveSlides()),
-	);
 
 	/** Custom shows in the core shape consumed by set-up-slide-show and by save. */
 	readonly pptxCustomShows = computed<PptxCustomShow[]>(() =>
@@ -222,32 +217,20 @@ export class ViewerCustomShowsService {
 		);
 	}
 
-	onCreate(show: { name: string; slideIds: string[] }): void {
-		const created: CustomShow = {
-			id: generateCustomShowId(),
-			name: show.name.trim(),
-			slideIds: [...show.slideIds],
-		};
-		this.commit([...this.shows(), created]);
-	}
-
-	onRemove(id: string): void {
-		this.commit(this.shows().filter((s) => s.id !== id));
-		if (this.activeId() === id) {
+	/**
+	 * OK in the Custom Shows dialog: store the edited shows (relationship-id keyed, as the package
+	 * wants them) and the slides with jumps into removed shows cleared, then drop an active id
+	 * that no longer resolves.
+	 */
+	onSaveDialog(save: { shows: PptxCustomShow[]; clearedSlides: PptxSlide[] | undefined }): void {
+		this.loader.customShows.set(
+			save.shows.map((show) => ({ ...show, slideRIds: [...show.slideRIds] })),
+		);
+		if (save.clearedSlides) {
+			this.applySlides?.(save.clearedSlides, 'Custom shows');
+		}
+		if (!save.shows.some(({ id }) => id === this.activeId())) {
 			this.activeId.set(null);
 		}
-	}
-
-	onUpdate(show: { id: string; name: string; slideIds: string[] }): void {
-		this.commit(
-			this.shows().map((s) =>
-				s.id === show.id ? { ...s, name: show.name, slideIds: show.slideIds } : s,
-			),
-		);
-	}
-
-	/** Write an edited list back into the deck's key space (relationship ids). */
-	private commit(shows: readonly CustomShow[]): void {
-		this.loader.customShows.set(customShowsToDeck(shows, this.liveSlides()));
 	}
 }

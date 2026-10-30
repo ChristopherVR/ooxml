@@ -306,7 +306,13 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 				shows: current.customShows,
 				slides: current.slides,
 				activeShowId: current.activeCustomShowId,
-				onSave: (shows) => host.editor.updateCustomShows(shows),
+				onSave: (shows, clearedSlides) => {
+					host.editor.updateCustomShows(shows);
+					// Jumps into a removed show are cleared so none points at a show that is gone.
+					if (clearedSlides) {
+						host.editor.commitSlides(clearedSlides, state().currentSlide);
+					}
+				},
 				// The id lives in viewer state, not the editor's document state: it is
 				// a playback choice for this session, not an edit to the deck, so it
 				// must not enter the undo history or mark the file dirty.

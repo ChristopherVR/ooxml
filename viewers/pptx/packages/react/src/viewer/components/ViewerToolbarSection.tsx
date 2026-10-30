@@ -778,6 +778,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				eyedropperActive={s.eyedropperActive}
 				onToggleEyedropper={() => s.setEyedropperActive((p) => !p)}
 				onOpenSetUpSlideShow={() => dialogs.setIsSetUpSlideShowOpen(true)}
+				onOpenCustomShows={() => dialogs.setIsCustomShowsOpen(true)}
 				onToggleHideSlide={() => slideOps.handleToggleHideSlides([activeSlideIndex])}
 				activeSlideHidden={Boolean(activeSlide?.hidden)}
 				onOpenBroadcastDialog={() => dialogs.setIsBroadcastDialogOpen(true)}

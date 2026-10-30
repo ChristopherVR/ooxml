@@ -3,14 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { createCustomShow, generateCustomShowId } from './custom-shows-helpers';
 
 describe('generateCustomShowId', () => {
-	it('returns a string starting with "show-"', () => {
-		const id = generateCustomShowId();
-		expect(id).toMatch(/^show-/u);
+	it('returns an unsigned integer string (p:custShow/@id is an xsd:unsignedInt)', () => {
+		expect(generateCustomShowId()).toMatch(/^\d+$/u);
 	});
 
-	it('returns unique ids on each call', () => {
-		const ids = new Set(Array.from({ length: 20 }, () => generateCustomShowId()));
-		expect(ids.size).toBe(20);
+	it('returns the next id above the ones in use', () => {
+		expect(generateCustomShowId([{ id: '0' }, { id: '4' }, { id: 'legacy' }])).toBe('5');
 	});
 });
 
@@ -26,11 +24,11 @@ describe('createCustomShow', () => {
 		expect(show.name).toBe('Trimmed');
 	});
 
-	it('assigns a unique id', () => {
+	it('assigns a unique numeric id among the existing shows', () => {
 		const show1 = createCustomShow('A', []);
-		const show2 = createCustomShow('B', []);
-		expect(show1.id).not.toBe(show2.id);
-		expect(show1.id).toMatch(/^show-/u);
+		const show2 = createCustomShow('B', [], [show1]);
+		expect(show1.id).toMatch(/^\d+$/u);
+		expect(show2.id).not.toBe(show1.id);
 	});
 
 	it('creates a copy of the slideIds array', () => {
