@@ -6,9 +6,12 @@ import { createTestContext } from './test-support';
 
 // The grid measures the painted window; the command only needs its answer.
 const splitAt = (active: { row: number; col: number }) => ({
-	x: active.col * 960,
-	y: active.row * 300,
-	activePane: 'bottomRight' as const,
+	split: {
+		x: active.col * 960,
+		y: active.row * 300,
+		activePane: 'bottomRight' as const,
+	},
+	topLeft: { row: 7, col: 9 },
 });
 
 function setup() {
@@ -24,6 +27,7 @@ describe('View > Split', () => {
 		ctx.select('C4');
 		await ctx.commands.run('view.split');
 		expect(ws.view.split).toEqual({ x: 1920, y: 900, activePane: 'bottomRight' });
+		expect(ws.view.topLeft).toEqual({ row: 7, col: 9 });
 		expect(ctx.commands.get('view.split')?.checked?.(ctx)).toBe(true);
 		await ctx.commands.run('view.split');
 		expect(ws.view.split).toBeUndefined();

@@ -1,4 +1,4 @@
-import { parseAddress } from '../address';
+import { parseAddress, type CellAddress } from '../address';
 import type { DefinedName, FreezePane, SheetView, SplitPane } from '../model';
 import { type EditContext, sheetAt } from './context';
 
@@ -27,7 +27,12 @@ export function setFreeze(ctx: EditContext, s: number, freeze: FreezePane | unde
  * Splits the window (sizes in twentieths of a point; both zero, or undefined, removes the split).
  * A split removes any frozen pane, as in Excel.
  */
-export function setSplit(ctx: EditContext, s: number, split: SplitPane | undefined): void {
+export function setSplit(
+	ctx: EditContext,
+	s: number,
+	split: SplitPane | undefined,
+	topLeft?: CellAddress,
+): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const next =
 		split && (split.x > 0 || split.y > 0)
@@ -41,6 +46,7 @@ export function setSplit(ctx: EditContext, s: number, split: SplitPane | undefin
 			if (next) {
 				delete sheet.view.freeze;
 				sheet.view.split = structuredClone(next);
+				if (topLeft) sheet.view.topLeft = { ...topLeft };
 			} else delete sheet.view.split;
 		},
 		{ sheet: s, structural: true },

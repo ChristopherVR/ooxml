@@ -52,7 +52,7 @@ function toggleSplit(ctx: EditorContext): void {
 	if (!t) return;
 	if (split(ctx)) return t.session.setSplit(t.sheet, undefined);
 	const next = ctx.grid()?.splitAt?.(t.active);
-	if (next) t.session.setSplit(t.sheet, next);
+	if (next) t.session.setSplit(t.sheet, next.split, next.topLeft);
 }
 
 interface FormulaBarHost {

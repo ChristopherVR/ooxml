@@ -506,8 +506,12 @@ export interface SplitPane {
 	/** First cell of the top-left pane (`sheetView/@topLeftCell`). */
 	topLeft?: CellAddress;
 	/** The pane holding the selection (`activePane`). */
-	activePane?: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
+	activePane?: SplitPaneName;
+	/** The selection each other pane keeps (`selection pane=...`); the active pane uses `selection`. */
+	paneSelections?: Partial<Record<SplitPaneName, { active: CellAddress; ranges: CellRange[] }>>;
 }
+
+export type SplitPaneName = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
 
 export interface AutoFilter {
 	range: CellRange;

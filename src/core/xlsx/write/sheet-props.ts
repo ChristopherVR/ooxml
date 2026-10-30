@@ -72,6 +72,17 @@ function splitActivePane(split: SplitPane): string {
 	return both ? 'bottomRight' : split.y > 0 ? 'bottomLeft' : 'topRight';
 }
 
+function selectionXml(
+	selection: NonNullable<Worksheet['view']['selection']>,
+	pane: string | undefined,
+): string {
+	return el('selection', {
+		pane,
+		activeCell: formatAddress(selection.active),
+		sqref: sqref(selection.ranges) || formatAddress(selection.active),
+	});
+}
+
 export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 	const source = snapshotElement(sheet, 'sheetViews');
 	if (source && sameModel(readSheetView(source), sheet.view)) {
@@ -113,13 +124,13 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 			state: 'split',
 		});
 	}
-	if (view.selection) {
-		inner += el('selection', {
-			pane,
-			activeCell: formatAddress(view.selection.active),
-			sqref: sqref(view.selection.ranges) || formatAddress(view.selection.active),
-		});
-	}
+	if (split) {
+		// One selection per pane, in the order Excel writes them.
+		for (const name of ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const) {
+			const own = name === pane ? view.selection : split.paneSelections?.[name];
+			if (own) inner += selectionXml(own, name);
+		}
+	} else if (view.selection) inner += selectionXml(view.selection, pane);
 	const attributes = attrs({
 		tabSelected: tabSelected || undefined,
 		showGridLines: view.showGridLines ? undefined : false,

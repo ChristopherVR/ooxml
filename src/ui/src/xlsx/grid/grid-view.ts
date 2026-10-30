@@ -85,6 +85,7 @@ export class GridView {
 	readonly barV: HTMLDivElement;
 	/** Bar positions (pixels) while a split bar is being dragged. */
 	splitDrag: { x?: number; y?: number } | undefined;
+	#paintedMode: { sheet: Worksheet | undefined; kind: string; ox: number; oy: number } | undefined;
 	#splitScroll = new WeakMap<Worksheet, { left: number; top: number }>();
 	#sheetRef: Worksheet | undefined;
 
@@ -127,7 +128,14 @@ export class GridView {
 		this.view.append(this.corner, this.barH, this.barV);
 		this.view.addEventListener('wheel', (event) => this.#onWheel(event), { passive: false });
 		container.append(this.root);
-		this.scroller.addEventListener('scroll', () => this.schedule(), { passive: true });
+		this.scroller.addEventListener(
+			'scroll',
+			() => {
+				this.#syncSplitView();
+				this.schedule();
+			},
+			{ passive: true },
+		);
 		this.rebuild();
 	}
 
@@ -241,14 +249,38 @@ export class GridView {
 	}
 
 	/** The split View > Split makes with `active` selected, from the painted window. */
-	splitAt(active: CellAddress): SplitPane | undefined {
+	splitAt(active: CellAddress): { split: SplitPane; topLeft: CellAddress } | undefined {
 		const g = this.#geometry();
-		return splitAtCell(
+		const split = splitAtCell(
 			this.metrics,
 			active,
 			{ left: g.mainOx, top: g.mainOy },
 			{ width: g.cellsW, height: g.cellsH },
 		);
+		if (!split) return undefined;
+		const topLeft = { row: this.metrics.rowAt(g.mainOy), col: this.metrics.colAt(g.mainOx) };
+		return { split, topLeft };
+	}
+
+	/**
+	 * Writes the panes' scroll positions into the sheet view, as Excel saves them: the scrolling
+	 * pane's first cell is `pane/@topLeftCell` (`view.topLeft`), the top-left pane's `split.topLeft`.
+	 */
+	#syncSplitView(): void {
+		const view = this.sheet()?.view;
+		const state = this.splitState();
+		if (!view?.split || !state || this.splitDrag) return;
+		const m = this.metrics;
+		const g = this.#geometry();
+		const main = { row: m.rowAt(g.scrollTop), col: m.colAt(g.scrollLeft) };
+		const first = {
+			row: m.rowAt(state.y > 0 ? state.top : g.scrollTop),
+			col: m.colAt(state.x > 0 ? state.left : g.scrollLeft),
+		};
+		const differs = (a: CellAddress | undefined, b: CellAddress) =>
+			!a || a.row !== b.row || a.col !== b.col;
+		if (differs(view.topLeft, main)) view.topLeft = main;
+		if (differs(view.split.topLeft, first)) view.split.topLeft = first;
 	}
 
 	/** Shows `cell` at the top-left of the scrolling pane (a loaded sheet's saved scroll position). */
@@ -284,6 +316,7 @@ export class GridView {
 		if (inTop) scroll.top = Math.max(0, scroll.top + dy);
 		else this.scroller.scrollTop += dy;
 		event.preventDefault();
+		this.#syncSplitView();
 		this.schedule();
 	}
 
@@ -330,8 +363,23 @@ export class GridView {
 	paint(): void {
 		this.#cancelFrame?.();
 		this.#cancelFrame = undefined;
-		const g = (this.geometry = this.#geometry());
+		let g = this.#geometry();
 		const sheet = this.sheet();
+		// Frozen scroll is relative to the frozen edge, split scroll is absolute: keep the window
+		// where it was when one replaces the other.
+		const before = this.#paintedMode;
+		if (before && before.sheet === sheet && before.kind !== g.mode && g.mode !== 'none') {
+			if (before.kind === 'freeze' && g.mode === 'split') {
+				this.scroller.scrollLeft = before.ox;
+				this.scroller.scrollTop = before.oy;
+			} else if (before.kind === 'split' && g.mode === 'freeze') {
+				this.scroller.scrollLeft = Math.max(0, before.ox - g.frozenW);
+				this.scroller.scrollTop = Math.max(0, before.oy - g.frozenH);
+			}
+			g = this.#geometry();
+		}
+		this.geometry = g;
+		this.#paintedMode = { sheet, kind: g.mode, ox: g.mainOx, oy: g.mainOy };
 		this.view.style.width = `${g.width}px`;
 		this.view.style.height = `${g.height}px`;
 		if (g.scrollTop + g.height > this.metrics.totalHeight(this.extentRow) - 400)

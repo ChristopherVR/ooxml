@@ -86,16 +86,23 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 	const activePane = att(pane, 'activePane') ?? 'topLeft';
 	const selection =
 		selections.find((sel) => (att(sel, 'pane') ?? 'topLeft') === activePane) ?? selections[0];
-	if (selection) {
-		const ranges = parseSqref(att(selection, 'sqref') ?? att(selection, 'activeCell') ?? 'A1');
-		const active = parseAddress(att(selection, 'activeCell') ?? '') ??
-			ranges[0]?.start ?? { row: 0, col: 0 };
-		view.selection = {
-			active,
-			ranges: ranges.length ? ranges : [{ start: active, end: { ...active } }],
-		};
+	if (selection) view.selection = readSelection(selection);
+	if (view.split) {
+		for (const other of selections) {
+			const name = att(other, 'pane') ?? 'topLeft';
+			if (other === selection || !PANES.has(name)) continue;
+			(view.split.paneSelections ??= {})[name as keyof typeof view.split.paneSelections] =
+				readSelection(other);
+		}
 	}
 	return view;
+}
+
+function readSelection(selection: XmlElement): NonNullable<SheetView['selection']> {
+	const ranges = parseSqref(att(selection, 'sqref') ?? att(selection, 'activeCell') ?? 'A1');
+	const active = parseAddress(att(selection, 'activeCell') ?? '') ??
+		ranges[0]?.start ?? { row: 0, col: 0 };
+	return { active, ranges: ranges.length ? ranges : [{ start: active, end: { ...active } }] };
 }
 
 const FORMAT_FLAGS = ['zeroHeight', 'customHeight', 'thickTop', 'thickBottom'] as const;

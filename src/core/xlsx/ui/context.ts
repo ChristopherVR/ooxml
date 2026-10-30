@@ -45,8 +45,8 @@ export interface GridController {
 	measureText(text: string, font: string): number;
 	zoom(): number;
 	setZoom(percent: number): void;
-	/** The split View > Split makes with `active` selected, from the painted window. */
-	splitAt?(active: CellAddress): SplitPane | undefined;
+	/** The split View > Split makes with `active` selected, and the first cell of its scrolling pane. */
+	splitAt?(active: CellAddress): { split: SplitPane; topLeft: CellAddress } | undefined;
 }
 
 export interface EditorContext {

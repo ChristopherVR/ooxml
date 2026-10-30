@@ -115,6 +115,11 @@ export class GridGeometry {
 		};
 	}
 
+	/** Which fixed-pane layout this is. */
+	get mode(): 'split' | 'freeze' | 'none' {
+		return this.split ? 'split' : this.fRows > 0 || this.fCols > 0 ? 'freeze' : 'none';
+	}
+
 	/** Plane offset of the left edge of the right panes (the scrolling ones). */
 	get mainOx(): number {
 		return this.split ? this.scrollLeft : this.frozenW + this.scrollLeft;
