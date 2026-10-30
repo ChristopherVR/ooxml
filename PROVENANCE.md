@@ -2880,3 +2880,16 @@ non-hex paints); the PowerPoint modules re-export them and keep the normal-based
 `c:shape` bars. The camera, prism meshes, depth-ordered SVG scene, walls, bar, line, area, pie and
 surface generators (`chart-3d-camera|mesh|scene|layout|marks|walls|pie|surface|svg.ts`) are new
 implementations; the PowerPoint WebGL meshes were not copied.
+
+## Legacy .doc conversion fixtures (2026-10-30)
+
+Source: `ChristopherVR/ole2`, branch `doc-model`, commit `e6b3fed`, folder `test/fixtures/doc/`.
+`src/core/docx/load/__fixtures__/legacy-doc/` holds `formatting-lists`, `formatting-rich`,
+`formatting-styles`, `header-field`, `objects`, `structure-headers`, `structure-notes`,
+`structure-sections`, `structure-table-merged`, `structure-table-nested`, `structure-table-simple`
+and `structure-textbox` (all `.doc`), the two inputs of `objects` (`objects-input-a.png`,
+`objects-input-b.jpg`) and the generator scripts that wrote them in desktop Word
+(`generate-formatting-fixtures.ps1`, `generate-structure-fixtures.ps1`,
+`generate-objects-fixture.ps1`, `generate-doc-fixtures.ps1`). Files are unchanged copies; they are
+original synthetic content owned by that repository under Apache-2.0. The converter that reads
+them (`src/core/docx/load/legacy-doc/`) is a new implementation over ole2's `readDocModel`.

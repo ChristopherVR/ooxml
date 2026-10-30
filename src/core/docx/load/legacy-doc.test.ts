@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { LegacyDocError, loadLegacyDoc } from './legacy-doc';
+import { loadDocx } from '../parse';
+import { LEGACY_DOC_NOTICE, LegacyDocError, loadLegacyDoc } from './legacy-doc';
 import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
 import { ENTRY_TYPE_ROOT, ENTRY_TYPE_STREAM } from '@christophervr/ole2/ole2-parser-types';
@@ -82,13 +83,16 @@ describe('legacy .doc', () => {
 			else expect((await loadLegacyDoc(bytes)).model.blocks.length).toBeGreaterThan(0);
 		},
 	);
-	it('extracts Word 97 text and preserves original bytes on a no-op save', async () => {
+	it('opens a Word 97 document as a docx model and saves it as a docx package', async () => {
 		const bytes = new Uint8Array(await readFile(fixture));
 		const loaded = await loadLegacyDoc(bytes);
 		expect(loaded.model.blocks.length).toBeGreaterThan(0);
 		expect(loaded.model.blocks[0]?.type).toBe('paragraph');
-		expect(loaded.model.warnings[0]).toMatch(/main-body text only/);
-		expect(await loaded.save()).toEqual(bytes);
+		expect(loaded.model.warnings[0]).toBe(LEGACY_DOC_NOTICE);
+		const saved = await loaded.save();
+		expect(Array.from(saved.slice(0, 4))).toEqual([0x50, 0x4b, 0x03, 0x04]);
+		const reopened = await loadDocx(saved);
+		expect(reopened.model.blocks.length).toBe(loaded.model.blocks.length);
 	});
 
 	it('rejects truncated and non-OLE inputs clearly', async () => {
@@ -96,24 +100,6 @@ describe('legacy .doc', () => {
 			/Invalid or truncated/,
 		);
 		await expect(loadLegacyDoc(new Uint8Array(512))).rejects.toThrow(LegacyDocError);
-	});
-
-	it('rejects structural edits beyond the supported subset', async () => {
-		const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		loaded.model.blocks.push({ type: 'paragraph', id: 'extra', runs: [{ text: 'new' }] });
-		await expect(loaded.save()).rejects.toThrow(/Adding or removing paragraphs/);
-	});
-
-	it('rejects formatting and page-layout edits it cannot represent safely', async () => {
-		const formatted = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		const first = formatted.model.blocks[0];
-		if (first?.type !== 'paragraph') throw new Error('fixture has no paragraph');
-		first.runs[0]!.bold = true;
-		await expect(formatted.save()).rejects.toThrow(/formatting edits are unsupported/);
-
-		const pageChanged = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		pageChanged.model.page.marginTop += 1;
-		await expect(pageChanged.save()).rejects.toThrow(/page layout/);
 	});
 
 	it.each([1 << 8, 1 << 15])(
@@ -150,57 +136,4 @@ describe('legacy .doc', () => {
 			await expect(loadLegacyDoc(encrypted)).rejects.toThrow(/Encrypted legacy Word/);
 		},
 	);
-
-	it.each([
-		['language', 'ar-SA'],
-		['eastAsiaLanguage', 'ja-JP'],
-		['bidiLanguage', 'he-IL'],
-		['rtl', false],
-		['strike', true],
-		['highlight', 'yellow'],
-		['verticalAlign', 'superscript'],
-	])('rejects unsupported run property %s instead of silently dropping it', async (key, value) => {
-		const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		const paragraph = loaded.model.blocks[0];
-		if (paragraph?.type !== 'paragraph') throw new Error('Expected paragraph');
-		const [run] = paragraph.runs;
-		if (!run) throw new Error('Expected run');
-		Object.assign(run, { [String(key)]: value });
-		await expect(loaded.save()).rejects.toThrow(/formatting edits are unsupported/);
-	});
-
-	it('rejects paragraph direction, spacing and new line breaks in legacy DOC output', async () => {
-		for (const change of [{ direction: 'rtl' }, { lineSpacingTwips: 480 }]) {
-			const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-			const block = loaded.model.blocks[0];
-			if (!block) throw new Error('Expected block');
-			Object.assign(block, change);
-			await expect(loaded.save()).rejects.toThrow(/formatting edits are unsupported/);
-		}
-		const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		const paragraph = loaded.model.blocks[0];
-		if (paragraph?.type !== 'paragraph') throw new Error('Expected paragraph');
-		const [run] = paragraph.runs;
-		if (!run) throw new Error('Expected run');
-		run.text += '\nAnother line';
-		await expect(loaded.save()).rejects.toThrow(/line breaks/);
-	});
-
-	it('rejects a style catalog added to a legacy DOC model', async () => {
-		const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		loaded.model.paragraphStyles = { docDefaults: { align: 'center' }, styles: {}, warnings: [] };
-		await expect(loaded.save()).rejects.toThrow(/style catalogs/);
-	});
-	it('saves supported paragraph text edits and can reopen them', async () => {
-		const loaded = await loadLegacyDoc(new Uint8Array(await readFile(fixture)));
-		const first = loaded.model.blocks[0];
-		if (first?.type !== 'paragraph') throw new Error('fixture has no paragraph');
-		first.runs[0]!.text += ' edited';
-		const saved = await loaded.save();
-		const reopened = await loadLegacyDoc(saved);
-		const para = reopened.model.blocks[0];
-		expect(para?.type === 'paragraph' ? para.runs.map((run) => run.text).join('') : '').toContain(
-			'edited',
-		);
-	});
 });
