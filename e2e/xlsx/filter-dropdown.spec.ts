@@ -53,7 +53,7 @@ for (const framework of FRAMEWORKS) {
 		await menu.getByRole('menuitem', { name: 'Text Filters' }).click();
 		await menu.getByRole('menuitem', { name: 'Begins With...' }).click();
 		const dialog = editor(page).locator('[data-dialog="custom-autofilter"]');
-		await dialog.locator('input[type=text]').fill('ap');
+		await dialog.getByLabel('First condition').getByRole('textbox', { name: 'Value' }).fill('ap');
 		await dialog.locator('.xve-btn-primary').click();
 		expect(await hidden()).toEqual([false, true, false, true]);
 
@@ -62,7 +62,9 @@ for (const framework of FRAMEWORKS) {
 		await menu.getByRole('menuitem', { name: 'Number Filters' }).click();
 		await menu.getByRole('menuitem', { name: 'Top 10...' }).click();
 		const top = editor(page).locator('[data-dialog="top10-filter"]');
-		await top.locator('input[type=number]').fill('1');
+		// Excel ranks Top 10 over the whole column, not only rows other filters leave visible:
+		// the top two are banana (already hidden by Kind) and apricot.
+		await top.locator('input[type=number]').fill('2');
 		await top.locator('.xve-btn-primary').click();
 		expect(await hidden()).toEqual([true, true, false, true]);
 

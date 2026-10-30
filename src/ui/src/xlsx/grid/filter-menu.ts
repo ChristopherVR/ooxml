@@ -94,7 +94,8 @@ export function openFilterMenu(
 				sub.hidden = !show;
 				button.setAttribute('aria-expanded', String(show));
 			};
-			button.addEventListener('click', () => toggle(sub.hidden !== false));
+			// Hover opens the submenu before the click lands, so a click opens it too, as in Excel.
+			button.addEventListener('click', () => toggle(true));
 			button.addEventListener('mouseenter', () => !item.disabled && toggle(true));
 			wrap.addEventListener('mouseleave', () => toggle(false));
 			button.addEventListener('keydown', (event) => {

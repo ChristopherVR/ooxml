@@ -61,6 +61,19 @@ describe('AutoFilter drop-down menu', () => {
 		expect(items(number)).toContain('Between...');
 	});
 
+	it('keeps a submenu open when the pointer hovers and then clicks its parent', () => {
+		const { open } = setup();
+		const { menu } = open(0);
+		const parent = [...menu.querySelectorAll<HTMLElement>('.xg-fm-parent')].find(
+			(n) => n.textContent === 'Text Filters',
+		)!;
+		const sub = parent.nextElementSibling as HTMLElement;
+		parent.dispatchEvent(new MouseEvent('mouseenter'));
+		click(parent);
+		expect(sub.hidden).toBe(false);
+		expect(parent.getAttribute('aria-expanded')).toBe('true');
+	});
+
 	it('applies the ticked values on OK and clears when all are ticked', () => {
 		const { open, hidden, session, closed } = setup();
 		const { menu } = open(0);
