@@ -3,10 +3,14 @@ import { fail } from './package-common';
 import { cells, setCell } from './edit-geometry-cells';
 import { containerMemberIds } from './shape-structure';
 import {
+	VISIO_RELATIONSHIP_LIST_MEMBERS,
+	VISIO_RELATIONSHIP_LIST_MEMBER_OF,
 	VISIO_RELATIONSHIP_MEMBERS,
 	VISIO_RELATIONSHIP_MEMBER_OF,
 	dependsOn,
-	relationshipsFormula,
+	relationTerms,
+	withRelation,
+	withoutSheets,
 } from './container-relationships';
 import {
 	VISIO_CONTAINER_MEMBERS_ROW,
@@ -51,18 +55,23 @@ function writeRelationships(shape: Element, formula: string | undefined): void {
 	if (formula) setCell(shape, 'Relationships', 0, formula);
 	else if (node) node.parentNode!.removeChild(node);
 }
-/** A member's back references: the containers it belongs to, kept as one DEPENDSON(1, ...). */
+/**
+ * Replace the ids of one relationship kind in a shape's Relationships cell, keeping the other
+ * kinds. A formula that holds more than relationships is left alone. A container or list keeps
+ * its (possibly empty) members term, as Visio writes it.
+ */
+export function setRelation(shape: Element, kind: number, ids: readonly string[]): void {
+	const formula = attribute(cells(shape).get('Relationships'), 'F');
+	const keepEmpty = kind === VISIO_RELATIONSHIP_MEMBERS && isContainerSheet(shape);
+	const next = withRelation(formula, kind, ids, keepEmpty);
+	if (next !== null) writeRelationships(shape, next);
+}
+/** A member's back references: the containers it belongs to, kept as one DEPENDSON(4, ...). */
 function setMembership(member: Element, containerId: string, belongs: boolean): void {
 	const formula = attribute(cells(member).get('Relationships'), 'F');
-	const known =
-		formula === undefined || /^SUM\(DEPENDSON\(1(,Sheet\.\d+!SheetRef\(\))*\)\)$/.test(formula);
-	if (!known) return;
 	const ids = dependsOn(formula, VISIO_RELATIONSHIP_MEMBER_OF).filter((id) => id !== containerId);
 	if (belongs) ids.push(containerId);
-	writeRelationships(
-		member,
-		ids.length ? relationshipsFormula(VISIO_RELATIONSHIP_MEMBER_OF, ids) : undefined,
-	);
+	setRelation(member, VISIO_RELATIONSHIP_MEMBER_OF, ids);
 }
 
 /**
@@ -84,9 +93,55 @@ export function writeContainerMembers(
 		const member = shapes.get(memberId);
 		if (member) setMembership(member, id, true);
 	}
-	writeRelationships(container, relationshipsFormula(VISIO_RELATIONSHIP_MEMBERS, memberIds));
+	// Before 2026-10-30 the members were kind 4 and there was no kind 1 term: drop that reading.
+	const formula = attribute(cells(container).get('Relationships'), 'F');
+	const terms = relationTerms(formula);
+	if (terms && !terms.some((term) => term.kind === VISIO_RELATIONSHIP_MEMBERS))
+		writeRelationships(
+			container,
+			withRelation(formula, VISIO_RELATIONSHIP_MEMBER_OF, []) ?? undefined,
+		);
+	setRelation(container, VISIO_RELATIONSHIP_MEMBERS, memberIds);
 	const legacy = userRow(container, VISIO_CONTAINER_MEMBERS_ROW);
 	legacy?.parentNode?.removeChild(legacy);
+}
+
+/** A list's members in order (the Swimlane List and Phase List of a cross-functional flowchart). */
+export function listMembersOf(shape: Element): string[] {
+	return [
+		...new Set(
+			dependsOn(attribute(cells(shape).get('Relationships'), 'F'), VISIO_RELATIONSHIP_LIST_MEMBERS),
+		),
+	];
+}
+const backReferences = (shape: Element, kind: number) =>
+	dependsOn(attribute(cells(shape).get('Relationships'), 'F'), kind);
+/** Record a list's members: the list names them in order, each member points back with kind 5. */
+export function writeListMembers(root: Element, list: Element, memberIds: readonly string[]): void {
+	const id = shapeIdOf(list);
+	const shapes = new Map(topLevelShapes(root).map((shape) => [shapeIdOf(shape), shape]));
+	for (const memberId of listMembersOf(list)) {
+		const old = shapes.get(memberId);
+		if (old && !memberIds.includes(memberId))
+			setRelation(
+				old,
+				VISIO_RELATIONSHIP_LIST_MEMBER_OF,
+				backReferences(old, VISIO_RELATIONSHIP_LIST_MEMBER_OF).filter((other) => other !== id),
+			);
+	}
+	for (const memberId of memberIds) {
+		const member = shapes.get(memberId);
+		if (!member) continue;
+		setRelation(member, VISIO_RELATIONSHIP_LIST_MEMBER_OF, [
+			...backReferences(member, VISIO_RELATIONSHIP_LIST_MEMBER_OF).filter((other) => other !== id),
+			id,
+		]);
+		// A container member keeps its (possibly empty) members term, as Visio writes it.
+		const terms = relationTerms(attribute(cells(member).get('Relationships'), 'F'));
+		if (isContainerSheet(member) && !terms?.some((t) => t.kind === VISIO_RELATIONSHIP_MEMBERS))
+			setRelation(member, VISIO_RELATIONSHIP_MEMBERS, []);
+	}
+	setRelation(list, VISIO_RELATIONSHIP_LIST_MEMBERS, memberIds);
 }
 
 /** Every shape that is, directly or through nested containers, a member of `container`. */
@@ -146,16 +201,11 @@ export function pruneContainerReferences(root: Element, removed: ReadonlySet<str
 				);
 		}
 		const formula = attribute(cells(shape).get('Relationships'), 'F');
-		const parents = dependsOn(formula, VISIO_RELATIONSHIP_MEMBER_OF);
-		if (parents.some((id) => removed.has(id)))
-			writeRelationships(
-				shape,
-				parents.filter((id) => !removed.has(id)).length
-					? relationshipsFormula(
-							VISIO_RELATIONSHIP_MEMBER_OF,
-							parents.filter((id) => !removed.has(id)),
-						)
-					: undefined,
-			);
+		const mentioned = relationTerms(formula)?.some((term) =>
+			term.ids.some((id) => removed.has(id)),
+		);
+		if (!mentioned) continue;
+		const next = withoutSheets(formula, removed);
+		if (next !== null) writeRelationships(shape, next);
 	}
 }

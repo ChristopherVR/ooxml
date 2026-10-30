@@ -43,6 +43,14 @@ const members = (map: Map<string, VisioShape>, id: string): string[] => {
 	const structure = map.get(id)?.structure;
 	return structure?.type === 'container' ? structure.memberIds : [];
 };
+/** The lanes of a flowchart in order, through its Swimlane List. */
+const laneIds = (map: Map<string, VisioShape>, frameId: string): string[] => {
+	for (const id of members(map, frameId)) {
+		const structure = map.get(id)?.structure;
+		if (structure?.type === 'list' && structure.kind === 'swimlane') return structure.memberIds;
+	}
+	return [];
+};
 async function built(direction: 'horizontal' | 'vertical' = 'horizontal') {
 	const blank = await fixture({ pages: [{ id: '0', contents: '' }] });
 	// Process shapes first, then the lanes behind them, then membership by reconcile.
@@ -65,7 +73,6 @@ describe('cross-functional flowchart', () => {
 		}
 		expect(map.get('50')!.structure).toMatchObject({
 			type: 'container',
-			memberIds: ['51', '52', '53'],
 			swimlane: { role: 'frame', options: { direction: 'horizontal', showTitle: true } },
 		});
 		expect(map.get('51')!.structure).toMatchObject({ swimlane: { role: 'lane' } });
@@ -115,7 +122,7 @@ describe('cross-functional flowchart', () => {
 				},
 			]),
 		);
-		expect(members(map, '50')).toContain('60');
+		expect(laneIds(map, '50')).toEqual(['51', '60', '52', '53']);
 		const added = box(map.get('60')!);
 		expect(added.maxY).toBeCloseTo(box(map.get('51')!).minY);
 		expect(box(map.get('52')!).maxY).toBeCloseTo(added.minY);
@@ -154,7 +161,7 @@ describe('cross-functional flowchart', () => {
 		expect(map.has('2')).toBe(false);
 		expect(map.has('1')).toBe(true);
 		expect(box(map.get('53')!).maxY).toBeCloseTo(box(map.get('51')!).minY);
-		expect(members(map, '50')).toEqual(['51', '53']);
+		expect(laneIds(map, '50')).toEqual(['51', '53']);
 		expect(box(map.get('50')!).minY).toBeGreaterThan(box(before.get('50')!).minY);
 		expect(box(map.get('50')!).minY).toBeCloseTo(box(map.get('53')!).minY);
 	});

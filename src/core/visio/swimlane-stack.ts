@@ -29,6 +29,77 @@ export interface Stacking {
 	top: number;
 }
 
+/** A lane's old box and the box the turned flowchart gives it. */
+export interface TurnedLane {
+	id: string;
+	from: StackBox;
+	to: StackBox;
+}
+export interface Turn {
+	/** The direction the flowchart now has. */
+	direction: VisioSwimlaneDirection;
+	lanes: TurnedLane[];
+	stacking: Stacking;
+	/** Where a point of an old lane lands in its new lane: the lane's corner stays, the axes swap. */
+	point(lane: TurnedLane, x: number, y: number): { x: number; y: number };
+	/**
+	 * The centre line of a phase separator after the turn: `centre` is its old x (horizontal
+	 * flowcharts) or y (vertical ones), the result the new y or x.
+	 */
+	separator(centre: number): number;
+}
+
+/**
+ * Turn a flowchart on its side (Direction > Horizontal or Vertical): lanes keep their size along
+ * the stacking axis and the flow axis becomes the lane axis, so a shape one inch from a lane's
+ * left edge and half an inch below its top lands one inch below the top and half an inch from the
+ * left of the turned lane. The frame's top-left corner stays. `lanes` is in stacking order.
+ */
+export function turnSwimlanes(
+	from: VisioSwimlaneDirection,
+	frame: StackBox,
+	showTitle: boolean,
+	lanes: readonly StackLane[],
+): Turn {
+	const horizontal = from === 'horizontal';
+	const direction: VisioSwimlaneDirection = horizontal ? 'vertical' : 'horizontal';
+	const cross = horizontal
+		? frame.maxX - frame.minX
+		: Math.max(0, ...lanes.map(({ box }) => box.maxY - box.minY));
+	const sizes = lanes.map(({ id, box }) => ({
+		id,
+		size: horizontal ? box.maxY - box.minY : box.maxX - box.minX,
+	}));
+	const oldTop = frame.maxY - (showTitle ? VISIO_SWIMLANE_TITLE : 0);
+	const stacking = stackSwimlanes(
+		direction,
+		{ minX: frame.minX, maxX: frame.minX + cross, minY: frame.maxY - 1, maxY: frame.maxY },
+		showTitle,
+		sizes.map(({ id, size }) => ({
+			id,
+			box: horizontal
+				? { minX: 0, maxX: size, minY: 0, maxY: cross }
+				: { minX: 0, maxX: cross, minY: 0, maxY: size },
+		})),
+	);
+	const turned = stacking.lanes.map((entry, index) => ({
+		id: entry.id,
+		from: lanes[index]!.box,
+		to: entry.target,
+	}));
+	return {
+		direction,
+		lanes: turned,
+		stacking,
+		point: (lane, x, y) => ({
+			x: lane.to.minX + (lane.from.maxY - y),
+			y: lane.to.maxY - (x - lane.from.minX),
+		}),
+		separator: (centre) =>
+			horizontal ? stacking.top - (centre - frame.minX) : frame.minX + (oldTop - centre),
+	};
+}
+
 /**
  * Pure layout of a cross-functional flowchart: lanes edge to edge under the title bar, each
  * keeping its size along the stacking axis and taking the frame's width (horizontal flows) or

@@ -9,12 +9,30 @@ async function lanes(viewer: Locator): Promise<{ id: string; height: number }[]>
 	return viewer.evaluate((node) => {
 		const state = (node as VisioViewerElement).controller.state;
 		const page = state.document!.pages[0]!;
-		const frame = page.shapes.find((shape) => shape.id === '50')!;
-		const ids = frame.structure?.type === 'container' ? frame.structure.memberIds : [];
+		// The lanes are the members of the frame's Swimlane List, as in a diagram Visio builds.
+		const list = page.shapes.find(
+			(shape) => shape.structure?.type === 'list' && shape.structure.kind === 'swimlane',
+		);
+		const ids = list?.structure?.type === 'list' ? list.structure.memberIds : [];
 		return page.shapes
 			.filter((shape) => ids.includes(shape.id) && shape.structure?.type === 'container')
 			.sort((a, b) => b.transform[5] + b.height - (a.transform[5] + a.height))
 			.map((shape) => ({ id: shape.id, height: shape.height }));
+	});
+}
+
+/** The flowchart's direction and the page size, read from the viewer. */
+function flowchart(viewer: Locator) {
+	return viewer.evaluate((node) => {
+		const pageModel = (node as VisioViewerElement).controller.state.document!.pages[0]!;
+		const frame = pageModel.shapes.find((shape) => shape.id === '50')!;
+		const role = frame.structure?.type === 'container' ? frame.structure.swimlane : undefined;
+		return {
+			direction: role?.role === 'frame' ? role.options.direction : undefined,
+			width: pageModel.width,
+			height: pageModel.height,
+			frameRight: frame.transform[4] + frame.width,
+		};
 	});
 }
 
@@ -83,6 +101,28 @@ test('a cross-functional flowchart gets lanes that stack, insert, resize and del
 		)
 		.toBeGreaterThan(0);
 
+	// Direction > Vertical turns the flowchart on its side: lanes side by side, shapes carried,
+	// and the page grows to hold the turned frame. One undo step puts it back.
+	const horizontalPage = await flowchart(viewer);
+	expect(horizontalPage.direction).toBe('horizontal');
+	await viewer
+		.locator('svg.paper [data-shape-id="11"]')
+		.click({ force: true, position: { x: 10, y: 10 } });
+	await panel.getByRole('button', { name: 'Direction', exact: true }).click();
+	await viewer.locator(`${TAB} office-ui-menu-item[label="Vertical"]`).click();
+	await expect.poll(async () => (await flowchart(viewer)).direction).toBe('vertical');
+	await expect(viewer.locator('svg.paper')).toContainText('Place order');
+	const turned = await flowchart(viewer);
+	expect(turned.frameRight).toBeLessThanOrEqual(turned.width + 1e-6);
+	await viewer.evaluate((node) => (node as VisioViewerElement).controller.undo());
+	await expect.poll(async () => (await flowchart(viewer)).direction).toBe('horizontal');
+	expect((await flowchart(viewer)).width).toBeCloseTo(horizontalPage.width);
+	await viewer.evaluate((node) => (node as VisioViewerElement).controller.redo());
+	await expect.poll(async () => (await flowchart(viewer)).direction).toBe('vertical');
+	await panel.getByRole('button', { name: 'Direction', exact: true }).click();
+	await viewer.locator(`${TAB} office-ui-menu-item[label="Horizontal"]`).click();
+	await expect.poll(async () => (await flowchart(viewer)).direction).toBe('horizontal');
+
 	// Delete the selected lane: its shapes go and the lanes close up.
 	await viewer
 		.locator('svg.paper [data-shape-id="12"]')
@@ -91,6 +131,12 @@ test('a cross-functional flowchart gets lanes that stack, insert, resize and del
 	await viewer.locator(`${TAB} office-ui-menu-item[label="Delete Swimlane"]`).click();
 	await expect.poll(async () => (await lanes(viewer)).length).toBe(3);
 	await expect(viewer.locator('svg.paper')).not.toContainText('Ship order');
+	// Deleting a lane that holds stencil shapes is one undo step, not two.
+	await viewer.evaluate((node) => (node as VisioViewerElement).controller.undo());
+	await expect.poll(async () => (await lanes(viewer)).length).toBe(4);
+	await expect(viewer.locator('svg.paper')).toContainText('Ship order');
+	await viewer.evaluate((node) => (node as VisioViewerElement).controller.redo());
+	await expect.poll(async () => (await lanes(viewer)).length).toBe(3);
 	const info = await viewer.evaluate((node) => {
 		const state = (node as VisioViewerElement).controller.state;
 		return state.document!.pages[0]!.shapes.some((shape) => shape.id === '12');

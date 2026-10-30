@@ -6,12 +6,13 @@ import { insertVisioContainer } from './edit-diagram-parts';
 import { boundsOf, type Box } from './edit-container-fit';
 import {
 	containerClosure,
-	containerMembersOf,
 	shapeIdOf,
 	topLevelShapes,
 	userValue,
 	writeContainerMembers,
+	writeListMembers,
 } from './edit-container-members';
+import { turnFlowchart } from './edit-swimlane-turn';
 import {
 	VISIO_CONTAINER_MARGIN_ROW,
 	VISIO_CONTAINER_RESIZE_ROW,
@@ -34,20 +35,23 @@ import {
 	applyFrameTitle,
 	applyLaneLabel,
 	applyLaneStyle,
+	applySeparatorLabel,
 	createLaneShape,
 	createSeparatorShape,
 	setTextCell,
 	setUserRow,
 } from './edit-swimlane-shapes';
 import {
+	ensureLists,
 	frameOf,
-	isSeparator,
 	laneOf,
 	lanesOf,
 	optionsOf,
+	orderSeparators,
 	place,
 	relayout,
 	sendBehind,
+	separatorsOf,
 	type Scope,
 } from './edit-swimlane-layout';
 
@@ -81,13 +85,20 @@ function createSwimlanes(scope: Scope, edit: VisioCreateSwimlanesEdit): void {
 		[VISIO_CONTAINER_MARGIN_ROW, '0', 'IN'],
 		[VISIO_CONTAINER_RESIZE_ROW, '0', 'STR'],
 		[VISIO_SWIMLANE_FRAME_ROW, '1', 'STR'],
-		['numLanes', String(count), 'STR'],
-		['visCFFStyle', String(style), 'STR'],
-		['visShowTitle', '1', 'STR'],
-		['visShowPhase', '1', 'STR'],
+		// Visio's own categories and flowchart rows (numbers carry no unit, as Visio writes them).
+		['msvShapeCategories', 'CFF Container;DoNotContain', 'STR'],
+		['msvSDContainerRequiredCategories', 'CFF List', 'STR'],
+		['msvSDContainerLocked', '1', 'BOOL'],
+		['numLanes', String(count), ''],
+		['visCFFStyle', String(style), ''],
+		['visShowTitle', '1', ''],
+		['visShowPhase', '1', ''],
 		['visMargins', '0', 'IN'],
-		['CFFVertical', flagText(!horizontal), 'STR'],
-		['visRotateLabel', '0', 'STR'],
+		['CFFVertical', flagText(!horizontal), ''],
+		['visRotateLabel', '0', ''],
+		['RTL', '0', ''],
+		['visCFFHeadingPos', '2', ''],
+		['visVersion', '15', ''],
 	] as const)
 		setUserRow(frame, name, value, unit);
 	const title = VISIO_SWIMLANE_TITLE;
@@ -110,12 +121,17 @@ function createSwimlanes(scope: Scope, edit: VisioCreateSwimlanesEdit): void {
 				};
 		return createLaneShape(root, document, id, laneBox, heading, edit.direction, false, style);
 	});
-	sendBehind(root, [frame, ...lanes]);
 	writeContainerMembers(root, frame, edit.laneIds);
+	const { swim, phase } = ensureLists(scope, frame, {
+		...(edit.listId ? { swim: edit.listId } : {}),
+		...(edit.phaseListId ? { phase: edit.phaseListId } : {}),
+	});
+	sendBehind(root, [swim, phase, frame, ...lanes]);
 }
 
 function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 	const frame = frameOf(scope, edit.frameId);
+	ensureLists(scope, frame);
 	const options = optionsOf(frame);
 	const lanes = lanesOf(scope, frame, options.direction);
 	const reference = laneOf(scope, frame, edit.relativeTo, options.direction);
@@ -139,35 +155,52 @@ function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 	frame.parentNode!.insertBefore(lane, frame.nextSibling);
 	const order = [...lanes];
 	order.splice(order.indexOf(reference) + (edit.position === 'after' ? 1 : 0), 0, lane);
-	writeContainerMembers(scope.root, frame, [...containerMembersOf(frame), edit.shapeId]);
 	relayout(scope, frame, order);
 }
 
-function deleteSwimlane(scope: Scope, edit: VisioDeleteSwimlaneEdit): void {
+function deleteSwimlane(
+	scope: Scope,
+	edit: VisioDeleteSwimlaneEdit,
+	instances: ReadonlySet<Element>,
+): void {
 	const frame = frameOf(scope, edit.frameId);
+	ensureLists(scope, frame);
 	const options = optionsOf(frame);
 	if (lanesOf(scope, frame, options.direction).length < 2)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'The last lane of a flowchart cannot be deleted.');
 	const lane = laneOf(scope, frame, edit.laneId, options.direction);
 	const present = new Set(topLevelShapes(scope.root).map(shapeIdOf));
-	// With contents: 'leave' the caller deletes the lane's shapes itself (stencil shapes need that).
-	const ids = [
-		edit.laneId,
-		...(scope.contents === 'leave' ? [] : containerClosure(scope.root, lane)),
-	].filter((id) => present.has(id));
+	// The lane's shapes go with it in the same step, stencil instances included (the transaction
+	// admitted them: `instances`); `contents` only decides who moves the lanes that close up.
+	const ids = [edit.laneId, ...containerClosure(scope.root, lane)].filter((id) => present.has(id));
 	deleteVisioShapes(
 		scope.roots,
 		scope.document,
 		ids.map((shapeId) => ({ type: 'delete-shape' as const, pageId: edit.pageId, shapeId })),
 		scope.check,
+		instances,
 	);
 	relayout(scope, frame);
+}
+
+/** The shapes a delete-swimlane command removes with its lane (for the transaction's admission). */
+export function swimlaneDeleteTargets(
+	roots: ReadonlyMap<string, Element>,
+	command: { type: string },
+): { pageId: string; shapeId: string }[] {
+	if (command.type !== 'delete-swimlane') return [];
+	const edit = command as VisioDeleteSwimlaneEdit;
+	const root = roots.get(edit.pageId);
+	const lane = root && topLevelShapes(root).find((shape) => shapeIdOf(shape) === edit.laneId);
+	if (!root || !lane) return [];
+	return [...containerClosure(root, lane)].map((shapeId) => ({ pageId: edit.pageId, shapeId }));
 }
 
 function resizeSwimlane(scope: Scope, edit: VisioResizeSwimlaneEdit): void {
 	if (edit.size < VISIO_SWIMLANE_MIN)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'A lane cannot be narrower than three quarters of an inch.');
 	const frame = frameOf(scope, edit.frameId);
+	ensureLists(scope, frame);
 	const options = optionsOf(frame);
 	const lane = laneOf(scope, frame, edit.laneId, options.direction);
 	const old = boundsOf([lane])!;
@@ -181,6 +214,7 @@ function resizeSwimlane(scope: Scope, edit: VisioResizeSwimlaneEdit): void {
 
 function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 	const frame = frameOf(scope, edit.frameId);
+	const { phase } = ensureLists(scope, frame);
 	const options = optionsOf(frame);
 	const lanes = lanesOf(scope, frame, options.direction);
 	const area = boundsOf(lanes);
@@ -209,10 +243,16 @@ function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 				},
 		options.style,
 		options.separators,
+		options.direction,
+		edit.label ?? `Phase ${separatorsOf(scope, frame).length + 1}`,
 	);
 	const last = lanes[lanes.length - 1]!;
 	last.parentNode!.insertBefore(bar, last.nextSibling);
-	writeContainerMembers(scope.root, frame, [...containerMembersOf(frame), edit.shapeId]);
+	writeListMembers(
+		scope.root,
+		phase,
+		orderSeparators([...separatorsOf(scope, frame), bar], options.direction).map(shapeIdOf),
+	);
 }
 
 function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
@@ -224,11 +264,11 @@ function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
 	if (edit.rotateLabels !== undefined)
 		setUserRow(frame, 'visRotateLabel', flagText(edit.rotateLabels));
 	if (edit.style !== undefined) setUserRow(frame, 'visCFFStyle', String(edit.style));
+	if (edit.direction !== undefined && edit.direction !== before.direction)
+		turnFlowchart(scope, frame, edit.direction);
 	const options = optionsOf(frame);
 	const lanes = lanesOf(scope, frame, options.direction);
-	const separators = topLevelShapes(scope.root).filter(
-		(shape) => isSeparator(shape) && containerMembersOf(frame).includes(shapeIdOf(shape)),
-	);
+	const separators = separatorsOf(scope, frame);
 	if (options.title !== before.title) {
 		const text = children(frame, 'Text')[0];
 		if (text) {
@@ -246,7 +286,10 @@ function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
 		applyLaneStyle(frame, options.style, true);
 		for (const bar of separators) setTextCell(bar, 'FillForegnd', styleLine(options.style));
 	}
-	for (const bar of separators) setCell(bar, 'FillPattern', options.separators ? 1 : 0);
+	for (const bar of separators) {
+		setCell(bar, 'FillPattern', options.separators ? 1 : 0);
+		applySeparatorLabel(bar, options.direction, options.separators);
+	}
 	if (options.title !== before.title) relayout(scope, frame);
 }
 const styleLine = (style: number) =>
@@ -258,6 +301,7 @@ export function applySwimlaneEdit(
 	document: Element,
 	edit: VisioSwimlaneEdit,
 	check: () => void,
+	instances: ReadonlySet<Element> = new Set(),
 ): void {
 	check();
 	const root = roots.get(edit.pageId);
@@ -266,7 +310,7 @@ export function applySwimlaneEdit(
 	const scope: Scope = { roots, document, root, pageId: edit.pageId, check, contents };
 	if (edit.type === 'create-swimlanes') createSwimlanes(scope, edit);
 	else if (edit.type === 'insert-swimlane') insertSwimlane(scope, edit);
-	else if (edit.type === 'delete-swimlane') deleteSwimlane(scope, edit);
+	else if (edit.type === 'delete-swimlane') deleteSwimlane(scope, edit, instances);
 	else if (edit.type === 'resize-swimlane') resizeSwimlane(scope, edit);
 	else if (edit.type === 'insert-separator') insertSeparator(scope, edit);
 	else setOptions(scope, edit);

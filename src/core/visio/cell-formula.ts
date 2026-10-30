@@ -1,3 +1,5 @@
+import { isRelationshipsOnly } from './container-relationships';
+
 /** Microsoft Cell_Type F markers are distinct from executable formulas.
  * No Formula locally deletes/blocks a formula; Inh delegates to inheritance.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/cell-element-geometry-sectionvisio-xml
@@ -15,8 +17,7 @@ export function executableCellFormula(source: string | undefined): string | unde
 export function inertDoubleClickFormula(cell: string, source: string): boolean {
 	return (
 		(cell === 'EventDblClick' && /^\s*=?\s*(OPENTEXTWIN|DEFAULTEVENT)\(\s*\)\s*$/i.test(source)) ||
-		(cell === 'Relationships' &&
-			/^SUM\(DEPENDSON\(\d+(,\s*Sheet\.\d+!SheetRef\(\))*\)\)$/.test(source))
+		(cell === 'Relationships' && isRelationshipsOnly(source))
 	);
 }
 

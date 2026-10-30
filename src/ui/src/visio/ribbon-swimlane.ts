@@ -1,12 +1,10 @@
 import { VISIO_SWIMLANE_STYLES } from 'ooxml-core/visio';
 import { check, command, commandRow, group, menu, stack } from './ribbon-parts';
 
-const DIRECTION =
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.';
-
 /**
  * Visio's contextual Cross-Functional Flowchart tab (Microsoft's "Create a cross-functional
- * flowchart"): Insert (Swimlane, Separator), Arrange (Direction, Rotate Lane Labels) and Design
+ * flowchart"): Insert (Swimlane, Separator), Arrange (Direction turns the flowchart on its side,
+ * Rotate Lane Labels) and Design
  * (Style, Show Title Bar, Show Separator Bar). It shows while a flowchart's frame, a lane or a
  * shape in a lane is selected (`viewer-contextual-tabs.ts`); `viewer-swimlanes.ts` keeps its
  * state and availability.
@@ -51,8 +49,16 @@ export function buildSwimlanePanel(doc: Document, panel: HTMLElement): void {
 					label: 'Direction',
 					icon: 'position',
 					items: [
-						{ id: 'swimlane-horizontal', label: 'Horizontal', unsupported: DIRECTION },
-						{ id: 'swimlane-vertical', label: 'Vertical', unsupported: DIRECTION },
+						{
+							id: 'swimlane-horizontal',
+							label: 'Horizontal',
+							action: { type: 'swimlane', command: 'direction-horizontal' },
+						},
+						{
+							id: 'swimlane-vertical',
+							label: 'Vertical',
+							action: { type: 'swimlane', command: 'direction-vertical' },
+						},
 					],
 				}),
 				command(doc, {

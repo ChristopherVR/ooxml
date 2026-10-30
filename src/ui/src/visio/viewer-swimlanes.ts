@@ -119,6 +119,17 @@ export class ViewerSwimlanes {
 					}),
 					info.options.showSeparators ? 'Hid the separator bars.' : 'Showed the separator bars.',
 				);
+			case 'direction-horizontal':
+			case 'direction-vertical': {
+				const direction = action.command === 'direction-vertical' ? 'vertical' : 'horizontal';
+				if (direction === info.options.direction) return undefined;
+				return one(
+					visioSwimlaneOptions(page, info.frame.id, { direction }),
+					direction === 'vertical'
+						? 'Turned the flowchart: lanes now run side by side.'
+						: 'Turned the flowchart: lanes now run top to bottom.',
+				);
+			}
 			case 'rotate-labels':
 				return one(
 					visioSwimlaneOptions(page, info.frame.id, { rotateLabels: !info.options.rotateLabels }),
@@ -160,6 +171,7 @@ export class ViewerSwimlanes {
 		const menus: [string, Command][] = [
 			['swimlane-insert', 'insert-after'],
 			['swimlane-style', 'style'],
+			['swimlane-direction', 'direction-horizontal'],
 		];
 		for (const [id, command] of menus) {
 			const button = panel.querySelector<RibbonCommand>(`[data-menu="${id}"]`);
@@ -178,6 +190,10 @@ export class ViewerSwimlanes {
 			box.checked = on;
 			box.disabled = this.reason(state, command) !== undefined;
 		}
+		for (const direction of ['horizontal', 'vertical'])
+			panel
+				.querySelector<HTMLElement>(`[command="swimlane-${direction}"]`)
+				?.setAttribute('checked', String(options?.direction === direction));
 		for (const item of panel.querySelectorAll<HTMLElement>('[command^="swimlane-style-"]'))
 			item.setAttribute(
 				'checked',
