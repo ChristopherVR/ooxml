@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
-import { decodePath } from './package-common';
+import { VisioPackage, VisioPackageError } from './package';
+import { decodePath, type VisioPackageLimits } from './package-common';
 import { isSignaturePart } from '../opc/signature/index';
 
 /** Main-part content types of the Visio package kinds (.vsdx, .vsdm, .vstx, .vstm, .vssx, .vssm). */
@@ -52,24 +53,33 @@ const DIGITAL_SIGNATURE_TYPE = /digital-signature/i;
  * dropped (an edit invalidates them), and a template becomes a drawing of the same kind (a
  * macro-enabled template becomes a macro-enabled drawing). The VBA project, its relationship and
  * the macro-enabled content type are never touched, and macros are never run. Packages that need
- * neither change are returned as they are, byte for byte. Input that is not a readable ZIP is
- * returned unchanged for the caller's own validation to refuse.
+ * neither change are returned as they are, byte for byte. Every part is read through the bounded
+ * `VisioPackage` reader, so the input limits (size, entry count, compression ratio, deadline)
+ * apply before anything is decompressed. Only the standard signature layout (origin and signature
+ * parts under `_xmlsignatures/`, the origin relationship in `_rels/.rels`) is removed; a
+ * signature relationship anywhere else stays and the edit refuses it (`openEditablePackage`).
  */
 export async function prepareVisioPackageForEdit(
 	input: Uint8Array,
+	limits: Partial<VisioPackageLimits> = {},
 ): Promise<VisioPackagePreparation> {
 	const unchanged = { bytes: input, signatureRemoved: false, templateConverted: false };
-	let zip: JSZip;
+	let pkg: VisioPackage;
 	try {
-		zip = await JSZip.loadAsync(input);
-	} catch {
+		pkg = await VisioPackage.open(input, limits);
+	} catch (error) {
+		// A limit is final; anything else is reported by the edit's own open, with its own code.
+		if (error instanceof VisioPackageError && error.code.startsWith('LIMIT_')) throw error;
 		return unchanged;
 	}
-	const signed = Object.keys(zip.files).filter((name) => isSignaturePart(decodePath(name)));
-	const typesFile = zip.file('[Content_Types].xml');
-	const relsFile = zip.file('_rels/.rels');
-	let types = typesFile ? await typesFile.async('string') : '';
-	let rels = relsFile ? await relsFile.async('string') : '';
+	const paths = pkg.paths();
+	const signed = paths.filter((name) => isSignaturePart(decodePath(name)));
+	let types = paths.includes('[Content_Types].xml')
+		? new TextDecoder().decode(await pkg.readBytes('[Content_Types].xml'))
+		: '';
+	let rels = paths.includes('_rels/.rels')
+		? new TextDecoder().decode(await pkg.readBytes('_rels/.rels'))
+		: '';
 	let signatureRemoved = signed.length > 0;
 	let templateConverted = false;
 	const newRels = rels.replace(
@@ -97,10 +107,14 @@ export async function prepareVisioPackageForEdit(
 	if (!signatureRemoved && !templateConverted) return unchanged;
 	types = newTypes;
 	rels = newRels;
-	for (const name of signed) zip.remove(name);
-	if (typesFile) zip.file('[Content_Types].xml', types);
-	if (relsFile) zip.file('_rels/.rels', rels);
-	// Every other part is stored as it was read; a ZIP is rewritten only when it had to change.
-	const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+	const removed = new Set(signed);
+	const zip = new JSZip();
+	for (const path of paths) {
+		if (removed.has(path)) continue;
+		if (path === '[Content_Types].xml') zip.file(path, types);
+		else if (path === '_rels/.rels') zip.file(path, rels);
+		else zip.file(path, await pkg.readBytes(path), { createFolders: false });
+	}
+	const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
 	return { bytes, signatureRemoved, templateConverted };
 }

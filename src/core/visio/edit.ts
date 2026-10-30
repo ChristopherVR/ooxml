@@ -177,6 +177,7 @@ export async function editVsdx(
 	);
 	const prepared = await prepareVisioPackageForEdit(
 		new Uint8Array(input instanceof Uint8Array ? input : new Uint8Array(input)),
+		options.limits,
 	);
 	const notes = [
 		...(prepared.signatureRemoved

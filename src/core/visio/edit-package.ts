@@ -45,6 +45,19 @@ export async function openEditablePackage(
 			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package has a VBA project but is not macro-enabled.');
 		if (isSignaturePart(decoded))
 			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package still has digital signature parts.');
+		// Preparation removes only the standard signature layout. A signature relationship that is
+		// left (in a part's own .rels), or a VBA relationship in a package that does not advertise
+		// macros, would be saved as stale or inconsistent data: refuse the edit instead.
+		if (path === '_rels/.rels' || /(^|\/)\_rels\/[^/]+\.rels$/.test(path)) {
+			const source =
+				path === '_rels/.rels' ? '' : path.replace(/(^|\/)\_rels\/([^/]+)\.rels$/, '$1$2');
+			for (const rel of (await pkg.relationships(source)).values())
+				if (/digital-signature/i.test(rel.type) || (!macroEnabled && /vbaProject/i.test(rel.type)))
+					fail(
+						'UNSUPPORTED_EDIT_PACKAGE',
+						'The package has a signature or VBA part it cannot keep.',
+					);
+		}
 		// Validate size and CRC even for unused opaque parts; never fetch external targets.
 		parts.set(path, new Uint8Array(await pkg.readBytes(path)));
 	}

@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 import { editVsdx } from './edit';
-import { fixture, shape } from './test-fixtures';
+import { fixture, shape, relations } from './test-fixtures';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'New' };
 const input = (edit?: (zip: JSZip) => void) =>
 	fixture({
@@ -102,6 +102,28 @@ describe('VSDX edit security boundaries', () => {
 			expect(
 				(await editVsdx(await input(change), [command])).diagnostics.map((item) => item.code),
 			).toContain('SIGNATURE_REMOVED');
+	});
+	it('refuses a signature relationship it cannot remove', async () => {
+		const signed = await input((zip) => {
+			zip.file('signature.bin', 'opaque');
+			zip.file(
+				'visio/_rels/document.xml.rels',
+				relations(
+					'<Relationship Id="sig" Type="http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature" Target="../signature.bin"/>',
+				),
+			);
+		});
+		await expect(editVsdx(signed, [command])).rejects.toMatchObject({
+			code: 'UNSUPPORTED_EDIT_PACKAGE',
+		});
+	});
+	it('keeps the input limits while removing a signature', async () => {
+		const signed = await input((zip) => {
+			zip.file('_xmlsignatures/sig.xml', '<Signature/>');
+		});
+		await expect(editVsdx(signed, [command], { limits: { maxEntries: 2 } })).rejects.toBeInstanceOf(
+			Error,
+		);
 	});
 	it.each([
 		'<Shapes><Shape ID="1"><Text>Old</Text></Shape><Shape ID="1"><Text>Other</Text></Shape></Shapes>',
