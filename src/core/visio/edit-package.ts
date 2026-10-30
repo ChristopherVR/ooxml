@@ -2,6 +2,8 @@ import JSZip from 'jszip';
 import { elements } from '../xml/index';
 import { VisioPackage } from './package';
 import { fail, decodePath, type VisioPackageLimits } from './package-common';
+import { DRAWING_MACRO_MAIN, EDITABLE_MAIN_TYPES } from './package-kind';
+import { isSignaturePart } from '../opc/signature/index';
 import { related, indexedPart, visioXml } from './parts';
 import { attribute, children } from './sheet';
 
@@ -27,26 +29,22 @@ export async function openEditablePackage(
 	);
 	if (
 		overrides.length !== 1 ||
-		overrides[0]?.getAttribute('ContentType') !== 'application/vnd.ms-visio.drawing.main+xml'
+		!EDITABLE_MAIN_TYPES.has(overrides[0]?.getAttribute('ContentType') ?? '')
 	)
-		fail('UNSUPPORTED_FORMAT', 'Editing supports only VSDX drawing packages.');
-	for (const node of elements(types)) {
-		const type = node.getAttribute('ContentType') ?? '';
-		if (/digital-signature|macroEnabled|vbaProject/i.test(type))
-			fail('UNSUPPORTED_EDIT_PACKAGE', 'Signed or macro-enabled packages cannot be edited.');
-	}
+		fail('UNSUPPORTED_FORMAT', 'Editing supports only VSDX and VSDM drawing packages.');
+	// Signatures and macros are opaque parts: signatures are dropped before an edit
+	// (prepareVisioPackageForEdit) and the VBA project is carried byte for byte, never run.
+	const macroEnabled = overrides[0]?.getAttribute('ContentType') === DRAWING_MACRO_MAIN;
 	const parts = new Map<string, Uint8Array>();
 	for (const path of pkg.paths()) {
 		check();
-		if (/(^|\/)_xmlsignatures(\/|$)|(^|\/)vbaProject\.bin$/i.test(decodePath(path)))
-			fail('UNSUPPORTED_EDIT_PACKAGE', 'Signed packages cannot be edited.');
-		if (path === '_rels/.rels' || /(^|\/)\_rels\/[^/]+\.rels$/.test(path)) {
-			const source =
-				path === '_rels/.rels' ? '' : path.replace(/(^|\/)\_rels\/([^/]+)\.rels$/, '$1$2');
-			for (const rel of (await pkg.relationships(source)).values())
-				if (/digital-signature|vbaProject/i.test(rel.type))
-					fail('UNSUPPORTED_EDIT_PACKAGE', 'Signed or macro-enabled packages cannot be edited.');
-		}
+		const decoded = decodePath(path);
+		// A VBA project in a package that does not advertise macros, or a signature part that
+		// preparation could not recognise, is an inconsistent package: never carry it along.
+		if (!macroEnabled && /(^|\/)vbaProject\.bin$/i.test(decoded))
+			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package has a VBA project but is not macro-enabled.');
+		if (isSignaturePart(decoded))
+			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package still has digital signature parts.');
 		// Validate size and CRC even for unused opaque parts; never fetch external targets.
 		parts.set(path, new Uint8Array(await pkg.readBytes(path)));
 	}

@@ -2,7 +2,7 @@ import type { Stencil } from './stencil-catalog';
 import type { StencilFiles } from './stencil-files';
 
 /** What a stencil file picker offers; Visio's own stencils are .vssx, and the rest is refused by name. */
-export const STENCIL_FILE_ACCEPT = '.vssx,.vstx,.vsdx,.vss,.vst';
+export const STENCIL_FILE_ACCEPT = '.vssx,.vssm,.vstx,.vstm,.vsdx,.vsdm,.vss,.vst';
 
 /**
  * The hidden file input behind More Shapes > Open Stencil and the line that says why a file could

@@ -6,6 +6,7 @@ import { createLayerBudget, indexLayers, pageLayers } from './layers';
 import { visioPageTheme } from './page-theme';
 import type { Resources } from './style';
 import { elements } from '../xml/index';
+import { DRAWING_MAIN_TYPES, STENCIL_MAIN_TYPES } from './package-kind';
 import type { VisioDocument, VisioMaster, VisioPage } from './model';
 import { diagnosticCollector } from './diagnostics';
 import {
@@ -63,8 +64,8 @@ export interface ParseVsdxOptions {
 	maxDiagnostics?: number;
 	/**
 	 * Read a stencil or template package (.vssx, .vstx) for its masters: its main part may carry
-	 * the stencil or template content type, and a missing pages part means no pages. Macro-enabled
-	 * packages stay refused.
+	 * the stencil or template content type (macro-enabled or not), and a missing pages part means
+	 * no pages.
 	 */
 	stencil?: boolean;
 	/**
@@ -82,10 +83,6 @@ export interface ParseVsdxOptions {
 	documentCache?: VisioDocumentCache;
 }
 
-const STENCIL_MAIN_TYPES = new Set([
-	'application/vnd.ms-visio.stencil.main+xml',
-	'application/vnd.ms-visio.template.main+xml',
-]);
 function option(value: number | undefined, fallback: number): number {
 	if (value === undefined) return fallback;
 	if (!Number.isSafeInteger(value) || value <= 0)
@@ -125,13 +122,17 @@ export async function parseVsdx(
 			(node) => node.localName === 'Override' && attribute(node, 'PartName') === `/${documentPart}`,
 		)
 		?.getAttribute('ContentType');
-	if (
-		documentType !== 'application/vnd.ms-visio.drawing.main+xml' &&
-		!(options.stencil && documentType && STENCIL_MAIN_TYPES.has(documentType))
-	)
+	const allowed = options.stencil ? STENCIL_MAIN_TYPES : DRAWING_MAIN_TYPES;
+	if (!documentType || !allowed.has(documentType))
 		throw new VisioPackageError(
 			'UNSUPPORTED_FORMAT',
-			'Only VSDX drawing packages are supported; VSD, VDX, VSDM and templates are not supported.',
+			'Only VSDX, VSDM, VSTX, VSTM, VSSX and VSSM packages are supported (stencils open for their masters only); VSD and VDX are not.',
+		);
+	if (pkg.paths().some((path) => /(^|\/)vbaProject\.bin$/i.test(path)))
+		report(
+			'macros-not-run',
+			'This package contains a VBA project. It is kept when the drawing is saved and is never run.',
+			{ severity: 'info' },
 		);
 	// Validate every relationship part, including unused ones; never dereference external URLs.
 	for (const path of pkg.paths()) {

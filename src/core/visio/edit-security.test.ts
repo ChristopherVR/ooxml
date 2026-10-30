@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 import { editVsdx } from './edit';
-import { fixture, shape, relations } from './test-fixtures';
+import { fixture, shape } from './test-fixtures';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'New' };
 const input = (edit?: (zip: JSZip) => void) =>
 	fixture({
@@ -87,19 +87,10 @@ describe('VSDX edit security boundaries', () => {
 			),
 		).rejects.toMatchObject({ code: 'INVALID_XML' });
 	});
-	it('rejects signed packages by path, content type and relationship', async () => {
+	it('drops signatures found by path, content type and relationship', async () => {
 		for (const change of [
 			(zip: JSZip) => {
 				zip.file('_xmlsignatures/sig.xml', '<Signature/>');
-			},
-			(zip: JSZip) => {
-				zip.file('signature.bin', 'opaque');
-				zip.file(
-					'visio/_rels/document.xml.rels',
-					relations(
-						'<Relationship Id="sig" Type="http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature" Target="../signature.bin"/>',
-					),
-				);
 			},
 			(zip: JSZip) => {
 				zip.file(
@@ -108,9 +99,9 @@ describe('VSDX edit security boundaries', () => {
 				);
 			},
 		])
-			await expect(editVsdx(await input(change), [command])).rejects.toMatchObject({
-				code: 'UNSUPPORTED_EDIT_PACKAGE',
-			});
+			expect(
+				(await editVsdx(await input(change), [command])).diagnostics.map((item) => item.code),
+			).toContain('SIGNATURE_REMOVED');
 	});
 	it.each([
 		'<Shapes><Shape ID="1"><Text>Old</Text></Shape><Shape ID="1"><Text>Other</Text></Shape></Shapes>',

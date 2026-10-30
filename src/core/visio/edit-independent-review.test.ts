@@ -30,9 +30,13 @@ it('review rejects spoofed relationship prefix', async () => {
 	);
 	await expect(editVsdx(input, [command])).rejects.toBeDefined();
 });
-it('review rejects percent encoded signature path', async () => {
+it('review drops a percent encoded signature path', async () => {
 	const input = await base(undefined, (z) => z.file('%5Fxmlsignatures/sig.xml', '<Signature/>'));
-	await expect(editVsdx(input, [command])).rejects.toBeDefined();
+	const result = await editVsdx(input, [command]);
+	expect(result.diagnostics.map((item) => item.code)).toContain('SIGNATURE_REMOVED');
+	expect(Object.keys((await JSZip.loadAsync(result.bytes)).files).join()).not.toMatch(
+		/xmlsignatures/i,
+	);
 });
 it('review rejects unadvertised VBA payload', async () => {
 	const input = await base(undefined, (z) =>

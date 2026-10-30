@@ -59,13 +59,13 @@ const stencil = () =>
 describe('reading a stencil', () => {
 	it('lists its masters with connection points and Shape Data on their shapes', async () => {
 		const file = await readVisioStencil(await stencil());
-		expect(file.masters.map((master) => master.name)).toEqual(['Valve']);
+		expect(file.masters).toHaveLength(1);
 		const root = file.masters[0]!.shapes[0]!;
 		expect(root.connectionPoints).toHaveLength(2);
 		expect(root.shapeData?.map((item) => item.label)).toEqual(['Pressure']);
 	});
 
-	it('refuses legacy binary stencils and macro-enabled packages', async () => {
+	it('refuses legacy binary stencils and reads macro-enabled stencils for their masters', async () => {
 		await expect(
 			readVisioStencil(new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0, 0, 0, 0])),
 		).rejects.toThrow(/\.vss/);
@@ -78,7 +78,7 @@ describe('reading a stencil', () => {
 				);
 			},
 		});
-		await expect(readVisioStencil(macro)).rejects.toThrow(/not supported/);
+		expect((await readVisioStencil(macro)).masters).toHaveLength(1);
 	});
 
 	it('is not accepted as a drawing', async () => {

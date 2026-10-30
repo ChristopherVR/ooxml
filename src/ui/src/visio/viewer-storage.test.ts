@@ -291,5 +291,8 @@ describe('storageRecoveryStore', () => {
 	it('names saved drawings as .vsdx', () => {
 		expect(storageFileName('Plan.vsd')).toBe('Plan.vsdx');
 		expect(storageFileName('')).toBe('Drawing1.vsdx');
+		expect(storageFileName('Plan.vstx')).toBe('Plan.vsdx');
+		expect(storageFileName('Plan.vsdm')).toBe('Plan.vsdm');
+		expect(storageFileName('Plan.vstm')).toBe('Plan.vsdm');
 	});
 });

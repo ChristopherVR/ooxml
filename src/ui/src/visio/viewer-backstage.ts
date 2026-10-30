@@ -2,7 +2,7 @@ import type { ViewerState } from './controller';
 import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
 import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
-import { openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
+import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { wireNewDrawing } from './viewer-new-drawing';
 import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
 import type { VisioRegionContext } from 'ooxml-core/visio/ui';
@@ -225,7 +225,7 @@ export class ViewerBackstage {
 		}, 1000);
 	}
 	#base(): string {
-		return this.host.fileName().replace(/\.vsdx?$/i, '') || 'Drawing';
+		return this.host.fileName().replace(/\.vs[dt][xm]?$/i, '') || 'Drawing';
 	}
 	/** Save: download the edited drawing as a copy (File > Save and the Quick Access Toolbar). */
 	download(): void {
@@ -247,7 +247,7 @@ export class ViewerBackstage {
 			const result = this.host.exportVsdx();
 			this.#save(
 				new Blob([new Uint8Array(result.bytes)], { type: 'application/vnd.ms-visio.drawing' }),
-				`${this.#base()}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`,
+				`${this.#base()}-${result.dirty ? 'edited' : 'original'}-copy.${drawingExtension(this.host.fileName())}`,
 			);
 			this.host.downloaded?.();
 			this.hide();

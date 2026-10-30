@@ -22,10 +22,18 @@ export function announceFileCommand(host: HTMLElement, command: VisioFileCommand
 	);
 }
 
-/** The name a drawing is saved under in host storage: its own name as a .vsdx. */
+/**
+ * The extension a drawing is saved with: .vsdm for a macro-enabled drawing or template (its VBA
+ * project is kept, never run), .vsdx for everything else (a template saves as a drawing).
+ */
+export function drawingExtension(fileName: string): 'vsdx' | 'vsdm' {
+	return /\.vs[dt]m$/i.test(fileName.trim()) ? 'vsdm' : 'vsdx';
+}
+
+/** The name a drawing is saved under in host storage: its own name as a .vsdx (or .vsdm). */
 export function storageFileName(fileName: string): string {
 	const base = fileName.trim().replace(/\.vs[dt][xm]?$/i, '') || 'Drawing1';
-	return `${base}.vsdx`;
+	return `${base}.${drawingExtension(fileName)}`;
 }
 
 /** Saves the drawing's bytes to the host's storage; resolves with the name it now has. */

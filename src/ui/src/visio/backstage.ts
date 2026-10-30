@@ -196,7 +196,7 @@ export function createBackstage(doc: Document): HTMLElement {
 	templates.append(slot);
 	const input = el(doc, 'input', 'backstage-file-input');
 	input.type = 'file';
-	input.accept = '.vsdx,.vsd';
+	input.accept = '.vsdx,.vsdm,.vstx,.vstm,.vsd';
 	input.hidden = true;
 	input.setAttribute('aria-label', 'Choose a Visio drawing');
 	const preview = doc.createElement('office-ui-print-preview');

@@ -1,6 +1,7 @@
 import { DEFAULTS, fail, VisioPackageError, type VisioPackageLimits } from './package-common';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
+import { prepareVisioPackageForEdit } from './package-kind';
 import { serializeEditedXml } from './edit-text';
 import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
 import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-text-size';
@@ -166,6 +167,40 @@ export async function editVsdx(
 		jumpPages: new Set<string>(),
 		jumpSource: undefined as Uint8Array | undefined,
 	};
+	// Like Visio, saving drops digital signatures (an edit invalidates them) and turns a template
+	// into a drawing; the VBA project of a macro-enabled package is kept and never run.
+	// Commands and input are copied before the first await: caller mutation cannot change the edit.
+	const snapshot = snapshotVisioEdits(
+		edits,
+		positive(options.maxEdits ?? 1000),
+		positive(options.maxTextCharacters ?? 1_000_000),
+	);
+	const prepared = await prepareVisioPackageForEdit(
+		new Uint8Array(input instanceof Uint8Array ? input : new Uint8Array(input)),
+	);
+	const notes = [
+		...(prepared.signatureRemoved
+			? [
+					{
+						code: 'SIGNATURE_REMOVED',
+						message: 'The edit invalidated the digital signature, so it was removed.',
+					},
+				]
+			: []),
+		...(prepared.templateConverted
+			? [{ code: 'TEMPLATE_SAVED_AS_DRAWING', message: 'The template was saved as a drawing.' }]
+			: []),
+	];
+	const final = await editVisioPrepared(prepared.bytes, snapshot, options, clock);
+	return notes.length ? { ...final, diagnostics: [...notes, ...final.diagnostics] } : final;
+}
+
+async function editVisioPrepared(
+	input: Uint8Array,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
+	clock: Parameters<typeof editVsdxTransaction>[3] & object,
+): Promise<EditVsdxResult> {
 	const edited = await editVsdxTransaction(input, edits, options, clock);
 	// Shapes that size themselves from their text follow it, as far as it can be measured.
 	const resized = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
