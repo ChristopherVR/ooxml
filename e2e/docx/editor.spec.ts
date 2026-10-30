@@ -91,6 +91,10 @@ test('imports a legacy DOC and saves it as a DOCX with its content', async ({ pa
 	await saveCopyAsDocx(page);
 	const docx = await exported;
 	expect(docx.suggestedFilename()).toBe('edited.docx');
+	// The copy keeps the converted document's own styles, which the standalone writer refuses.
+	const copy = await JSZip.loadAsync(await readFile((await docx.path())!));
+	expect(await copy.file('word/document.xml')!.async('string')).toContain('Legacy edit.');
+	expect(copy.file('word/styles.xml')).not.toBeNull();
 });
 
 test('ribbon edits preserve font properties and save table and page settings', async ({ page }) => {

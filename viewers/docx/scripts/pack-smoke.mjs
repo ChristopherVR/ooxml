@@ -134,7 +134,8 @@ for (const [name, entry] of Object.entries(frameworks)) {
 	assert.equal(entry.detectDocumentFormat(doc), 'doc');
 	const legacy = await entry.loadDocument(doc);
 	assert(legacy.model.blocks.length > 0 && legacy.model.blocks[0].type === 'paragraph', name + ' legacy .doc');
-	assert.match(legacy.model.warnings[0], /main-body text only/, name);
+	assert.match(legacy.model.warnings[0], /converted when it was opened/, name);
+	assert.equal(typeof legacy.saveDocx, 'function', name + ' legacy .doc saves as .docx through saveDocx');
 	assert.deepEqual(await legacy.save(), doc, name + ' legacy no-op save must return the original bytes');
 }
 const authority = vanilla.createCollaborationAuthority(model, { sessionId: 'packed-consumer' });

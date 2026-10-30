@@ -1,5 +1,5 @@
 import type { RibbonElement } from './ribbon-tab-api';
-import { saveDocx, type DocumentModel } from 'ooxml-core/docx';
+import type { DocumentModel } from 'ooxml-core/docx';
 import {
 	documentSaveMeta,
 	saveToStorage,
@@ -228,11 +228,10 @@ export class EditorChrome {
 					await this.saveDocument('saveAs', false);
 				else if (announceFileCommand(this.host.element, 'save')) await this.saveDocument('saveAs');
 			} else if (command === 'save') await this.saveDocument('save');
+			// The session's own save keeps what the standalone writer cannot create (the opened
+			// document's styles, media, parts), and is .docx for every format the editor opens.
 			else if (command === 'export')
-				downloadBytes(
-					await saveDocx(structuredClone(this.host.model())),
-					withExtension(this._fileName, 'docx'),
-				);
+				downloadBytes(await this.host.save(), withExtension(this._fileName, 'docx'));
 		} catch (cause) {
 			if (command === 'save' || command === 'saveAs') this.setSaveState('dirty');
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
