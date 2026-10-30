@@ -3,6 +3,7 @@ import type { EditorView } from 'prosemirror-view';
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
 import type { WordYjsCollaboration } from 'ooxml-core/docx/ui';
 import {
+	forcesTrackChanges,
 	toggleTrackChanges,
 	commentThreadsFromDoc,
 	updateCommentThreads,
@@ -149,6 +150,12 @@ export class ReviewController {
 	}
 
 	handleReview(key: Extract<RibbonAction, { type: 'review' }>['key']): void {
+		// Tracked changes protection keeps Track Changes on and every change unresolved.
+		if (
+			forcesTrackChanges(this.host.getModel().protection) &&
+			['trackChanges', 'acceptOne', 'rejectOne', 'acceptAll', 'rejectAll'].includes(key)
+		)
+			return;
 		if (key === 'trackChanges') {
 			const view = this.host.getView();
 			if (view) toggleTrackChanges(view.state, view.dispatch, view);

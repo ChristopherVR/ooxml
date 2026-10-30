@@ -18,7 +18,12 @@ import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-number
 import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
 import { applyNoteEdits } from './write-notes';
 import { writeNewRelationships } from './part-relationships';
-import { applyCompatibilityMode, applySettingsFlag, applyTrackChangesSetting } from './settings';
+import {
+	applyCompatibilityMode,
+	applyDocumentProtection,
+	applySettingsFlag,
+	applyTrackChangesSetting,
+} from './settings';
 import { applyPageBackground } from './page-background';
 import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
@@ -181,6 +186,8 @@ export async function saveDocx(
 		await applySettingsFlag(zip, 'autoHyphenation', Boolean(model.autoHyphenation));
 	if (model.trackChanges !== binding?.base.trackChanges)
 		await applyTrackChangesSetting(zip, model.trackChanges === true);
+	if (JSON.stringify(model.protection) !== JSON.stringify(binding?.base.protection))
+		await applyDocumentProtection(zip, model.protection);
 	for (const [key, flag] of [
 		['trackFormatting', 'doNotTrackFormatting'],
 		['trackMoves', 'doNotTrackMoves'],

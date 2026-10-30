@@ -10,7 +10,7 @@ import { syncStylePicker } from './paragraph-styles';
 import { syncCharacterStylePicker } from './character-style-picker';
 import { canExecuteTableCommand } from './table-commands';
 import type { RibbonAction } from './ribbon';
-import { documentWordCount } from 'ooxml-core/docx/ui';
+import { documentWordCount, forcesTrackChanges } from 'ooxml-core/docx/ui';
 import { syncSpellingButton } from './spelling';
 import { syncIndentInputs } from './indent-commands';
 import { syncParagraphToggles } from './paragraph-toggle-sync';
@@ -21,6 +21,7 @@ import { tablePropertiesContext } from './table-properties';
 import { syncRuler } from './ruler-sync';
 import { hasAnyChange, hasChangeAtCursor } from './review-commands';
 import { commentAnchors, commentIdsAtSelection } from './comment-commands';
+import { syncProtectionControls } from './protection-controls';
 
 export function refreshEditorControls(
 	toolbar: HTMLElement | undefined,
@@ -118,6 +119,8 @@ export function refreshEditorControls(
 			const control = findLocalizedControl<HTMLButtonElement>(toolbar, label);
 			if (control) control.disabled = readOnly || !enabled;
 		}
+		if (forcesTrackChanges(model.protection)) trackButton?.setAttribute('aria-pressed', 'true');
+		syncProtectionControls(toolbar, model.protection, locale);
 	}
 	const words = documentWordCount(state.doc, language || undefined);
 	const pageText = printPageStatus

@@ -136,6 +136,11 @@ export {
 } from './table-of-figures';
 export * from './document-stats';
 export * from './column-settings';
+export {
+	createProtectionPassword,
+	enforceProtection,
+	verifyProtectionPassword,
+} from './protection';
 export * from './line-spacing';
 export * from './section-layout';
 export * from './attr-units';

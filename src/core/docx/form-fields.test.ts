@@ -302,7 +302,7 @@ describe('document protection and form field shading settings', () => {
 		expect(await documentXml(await loaded.save())).toContain('<w:formProt w:val="0"/>');
 	});
 
-	it('warns about restrictions it keeps but does not enforce, and not about none', async () => {
+	it('warns about the restriction it enforces, and not about none', async () => {
 		const warnings = async (edit: string) =>
 			(
 				await load(
@@ -310,8 +310,10 @@ describe('document protection and form field shading settings', () => {
 					`<w:documentProtection w:edit="${edit}" w:enforcement="1"/>`,
 				)
 			).loaded.model.warnings.join(' ');
-		expect(await warnings('readOnly')).toContain('limits editing to reading');
-		expect(await warnings('none')).not.toMatch(/protect|limits editing/);
+		expect(await warnings('readOnly')).toContain('protected against changes');
+		expect(await warnings('comments')).toContain('protected for comments');
+		expect(await warnings('trackedChanges')).toContain('protected for tracked changes');
+		expect(await warnings('none')).not.toMatch(/protect/);
 	});
 
 	it('enforces protection whose enforcement is not given, as Word does', async () => {

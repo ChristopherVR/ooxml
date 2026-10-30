@@ -33,21 +33,17 @@ export interface PackageContext {
 	base: DocumentModel;
 }
 
-/** What a user may still do under each enforced editing restriction this editor does not apply. */
-const RESTRICTED_TO: Record<string, string | undefined> = {
-	readOnly: 'reading',
-	comments: 'comments',
-	trackedChanges: 'tracked changes',
-};
-
 /** The load warning for an enforced editing restriction (`w:documentProtection`), if any. */
 function protectionWarning(edit: string): string | undefined {
 	if (edit === 'forms')
-		return 'The document is protected for filling in forms: the editor lets only form fields, content controls and sections left unprotected change. The protection password is not checked.';
-	const allowed = RESTRICTED_TO[edit];
-	return allowed
-		? `The document limits editing to ${allowed}; the restriction is kept but not enforced while editing.`
-		: undefined;
+		return 'The document is protected for filling in forms: the editor lets only form fields, content controls and sections left unprotected change. The protection password is checked only when you stop the protection.';
+	if (edit === 'readOnly')
+		return 'The document is protected against changes: the editor lets only its editable regions change. Stop protection (Review > Restrict Editing) to edit the rest.';
+	if (edit === 'comments')
+		return 'The document is protected for comments: the editor lets you add comments and change its editable regions. Stop protection (Review > Restrict Editing) to edit the rest.';
+	if (edit === 'trackedChanges')
+		return 'The document is protected for tracked changes: every change is recorded and cannot be accepted or rejected until the protection is stopped (Review > Restrict Editing).';
+	return undefined;
 }
 
 export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{

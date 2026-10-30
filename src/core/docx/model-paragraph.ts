@@ -84,6 +84,11 @@ export interface Paragraph {
 	 * ranges are not modeled.
 	 */
 	bookmarks?: string[];
+	/**
+	 * Editable ranges (`w:permStart`/`w:permEnd`) covering text of this paragraph. Read only: the
+	 * markers stay in the source and are carried through edits. Enforced under document protection.
+	 */
+	permissions?: import('./form-field-model').PermissionRange[];
 	/** The block-level content control (`w:sdt` around paragraphs) this paragraph belongs to. */
 	contentControl?: ContentControl;
 }

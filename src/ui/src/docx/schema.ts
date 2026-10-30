@@ -170,6 +170,8 @@ export const schema = new Schema({
 				tabStops: { default: null },
 				/** Read-only bookmark names starting in this paragraph; not user-editable. */
 				bookmarks: { default: [] },
+				/** Editable ranges (`w:permStart`/`w:permEnd`) in this paragraph; read-only. */
+				permissions: { default: null },
 				/** Block-level content control (`w:sdt`) around this paragraph, as an object. */
 				contentControl: { default: null },
 			},

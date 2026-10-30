@@ -445,4 +445,33 @@ export const deRibbon: RibbonStrings = {
 	'Finish & Merge': 'Fertig stellen und zusammenführen',
 	Help: 'Hilfe',
 	'Not available in this editor': 'In diesem Editor nicht verfügbar',
+	Protect: 'Schützen',
+	'Restrict editing': 'Bearbeitung einschränken',
+	'Formatting restrictions': 'Formatierungseinschränkungen',
+	'Limit formatting to a selection of styles':
+		'Formatierung auf eine Auswahl von Formatvorlagen beschränken',
+	'Editing restrictions': 'Bearbeitungseinschränkungen',
+	'Allow only this type of editing in the document':
+		'Nur diese Art der Bearbeitung im Dokument zulassen',
+	'No changes (Read only)': 'Keine Änderungen (schreibgeschützt)',
+	'Filling in forms': 'Ausfüllen von Formularen',
+	'Exceptions (optional)': 'Ausnahmen (optional)',
+	Everyone: 'Jeder',
+	'Start enforcement': 'Schutz anwenden',
+	'Yes, start enforcing protection': 'Ja, Schutz jetzt anwenden',
+	'Enter new password (optional)': 'Neues Kennwort eingeben (optional)',
+	'Reenter password to confirm': 'Kennwort zur Bestätigung erneut eingeben',
+	Password: 'Kennwort',
+	'Stop protection': 'Schutz aufheben',
+	'The document is protected': 'Das Dokument ist geschützt',
+	'The passwords do not match': 'Die Kennwörter stimmen nicht überein',
+	'Incorrect password': 'Falsches Kennwort',
+	'This protection uses a password that cannot be checked here':
+		'Dieser Schutz verwendet ein Kennwort, das hier nicht geprüft werden kann',
+	'Select text first': 'Markieren Sie zuerst Text',
+	'This exception continues into another paragraph; change it in Word':
+		'Diese Ausnahme reicht in einen anderen Absatz; ändern Sie sie in Word',
+	'Choose the type of editing to allow': 'Wählen Sie die zulässige Art der Bearbeitung',
+	'Editing is restricted by document protection':
+		'Die Bearbeitung ist durch den Dokumentschutz eingeschränkt',
 };

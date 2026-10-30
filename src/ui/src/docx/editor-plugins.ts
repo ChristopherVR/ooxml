@@ -5,7 +5,9 @@ import type { Plugin } from 'prosemirror-state';
 import { editorKeymap } from './editor-commands';
 import {
 	contentControlPlugin,
+	editRestrictionPlugin,
 	fieldGuardPlugin,
+	forcesTrackChanges,
 	formFieldGuardPlugin,
 	positionalTabInputPlugin,
 	symbolFontPlugin,
@@ -13,6 +15,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
 import { formFieldViewPlugin } from './form-field-view';
+import { editableRegionViewPlugin } from './editable-region-view';
 import { tabStopsPlugin } from './tab-stops-view';
 import { noteNumberingPlugin } from './note-commands';
 import { paragraphStylesPlugin } from './paragraph-styles';
@@ -48,6 +51,14 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		contentControlPlugin(),
 		contentControlViewPlugin(),
 		formFieldGuardPlugin(() => host.model().protection),
+		editRestrictionPlugin(
+			() => host.model().protection,
+			() => host.reviewAuthor(),
+		),
+		editableRegionViewPlugin(
+			() => host.model().protection,
+			() => host.reviewAuthor(),
+		),
 		formFieldViewPlugin(() => host.model()),
 		symbolFontPlugin(),
 		positionalTabInputPlugin(),
@@ -67,7 +78,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		),
 		trackChangesPlugin(
 			() => host.reviewAuthor(),
-			() => Boolean(host.model().trackChanges),
+			() => Boolean(host.model().trackChanges) || forcesTrackChanges(host.model().protection),
 			host.revisionIds,
 		),
 		reviewDisplayPlugin(() => host.reviewDisplayMode()),

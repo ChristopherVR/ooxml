@@ -42,6 +42,7 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		...(attrs.borders ? { borders: structuredClone(attrs.borders) } : {}),
 		...(attrs.shadingFill ? { shadingFill: attrs.shadingFill } : {}),
 		...(attrs.bookmarks?.length ? { bookmarks: [...attrs.bookmarks] } : {}),
+		...(attrs.permissions?.length ? { permissions: structuredClone(attrs.permissions) } : {}),
 		...(attrs.contentControl ? { contentControl: structuredClone(attrs.contentControl) } : {}),
 	};
 }
@@ -82,6 +83,7 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		borders: paragraph.borders ?? null,
 		shadingFill: paragraph.shadingFill ?? null,
 		bookmarks: paragraph.bookmarks ?? [],
+		permissions: paragraph.permissions ?? null,
 		contentControl: paragraph.contentControl ?? null,
 	};
 }

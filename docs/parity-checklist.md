@@ -183,8 +183,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
 - [ ] **P1** Picture bullets (`numPicBullet`) are not drawn or written.
-- [ ] **P1** Protection: forms protection is enforced; read-only, comments-only and
-      tracked-changes-only are kept but not enforced, and there is no Restrict Editing UI.
+- [x] **P1** Protection: forms, read-only, comments-only and tracked-changes-only protection are
+      enforced, and Review > Restrict Editing starts and stops them (password checked with the
+      ECMA-376 hash, written back on save).
+- [ ] **P2** Restrict Editing leftovers: it is a dialog, not a docked pane; exceptions are only
+      "Everyone" (no per-user exceptions UI, no "Find next region I can edit", no highlight toggle);
+      an exception that continues across paragraphs or sits between blocks, and column-range
+      permissions (`w:colFirst`), are kept and enforced but cannot be edited in the dialog;
+      formatting restrictions (`w:formatting`) are kept but the allowed-styles list is not
+      enforced; the Word 97 four-byte password hash cannot be verified (the protection then
+      cannot be stopped here); the digest of an unknown `w:cryptAlgorithmSid` is likewise not
+      checked.
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
       detected before an edit.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.

@@ -438,4 +438,32 @@ export const frRibbon: RibbonStrings = {
 	'Finish & Merge': 'Terminer et fusionner',
 	Help: 'Aide',
 	'Not available in this editor': 'Indisponible dans cet éditeur',
+	Protect: 'Protéger',
+	'Restrict editing': 'Restreindre la modification',
+	'Formatting restrictions': 'Restrictions de mise en forme',
+	'Limit formatting to a selection of styles': 'Limiter la mise en forme à une sélection de styles',
+	'Editing restrictions': 'Restrictions de modification',
+	'Allow only this type of editing in the document':
+		'Autoriser uniquement ce type de modification dans le document',
+	'No changes (Read only)': 'Aucune modification (lecture seule)',
+	'Filling in forms': 'Remplissage de formulaires',
+	'Exceptions (optional)': 'Exceptions (facultatif)',
+	Everyone: 'Tout le monde',
+	'Start enforcement': 'Démarrer l’application',
+	'Yes, start enforcing protection': 'Oui, appliquer la protection',
+	'Enter new password (optional)': 'Entrez un nouveau mot de passe (facultatif)',
+	'Reenter password to confirm': 'Entrez à nouveau le mot de passe pour confirmer',
+	Password: 'Mot de passe',
+	'Stop protection': 'Désactiver la protection',
+	'The document is protected': 'Le document est protégé',
+	'The passwords do not match': 'Les mots de passe ne correspondent pas',
+	'Incorrect password': 'Mot de passe incorrect',
+	'This protection uses a password that cannot be checked here':
+		'Cette protection utilise un mot de passe qui ne peut pas être vérifié ici',
+	'Select text first': 'Sélectionnez d’abord du texte',
+	'This exception continues into another paragraph; change it in Word':
+		'Cette exception se poursuit dans un autre paragraphe ; modifiez-la dans Word',
+	'Choose the type of editing to allow': 'Choisissez le type de modification autorisé',
+	'Editing is restricted by document protection':
+		'La modification est restreinte par la protection du document',
 };

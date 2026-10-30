@@ -11,6 +11,7 @@ import { parseTable as parseTableWithFidelity } from './parse-table';
 import { parseDrawing, type DrawingContext } from './drawing';
 import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
 import { paragraphBookmarkNames } from './bookmarks';
+import { readParagraphPermissionMarkers, resolvePermissions } from './permissions';
 import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from './field-runs';
 import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
@@ -269,6 +270,7 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 	if (props) paragraph.sourceParagraphPropertiesXml = buildXml(props);
 	const bookmarks = paragraphBookmarkNames(node);
 	if (bookmarks.length) paragraph.bookmarks = bookmarks;
+	readParagraphPermissionMarkers(node, paragraph);
 	const markRevision = paragraphMarkRevision(props);
 	if (markRevision) paragraph.markRevision = markRevision;
 	const formatRevision = paragraphFormatRevision(props);
@@ -319,6 +321,7 @@ function parseContainer(container: XmlElement, idPrefix: string): Block[] {
 		if (control) block.contentControl = control;
 		blocks.push(block);
 	}
+	resolvePermissions(blocks);
 	return blocks;
 }
 

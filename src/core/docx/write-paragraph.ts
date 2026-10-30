@@ -18,6 +18,7 @@ import { orderParagraphProperties, writeTabStops } from './tab-stops';
 import { continuationKey } from './comment-spans';
 import type { CommentSpans } from './write-ranges';
 import { reconcileBookmarks } from './bookmarks';
+import { changedPermissionMarkers } from './permission-markers';
 import { writeNumberingProperties } from './numbering-write';
 import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
 import { paragraphJustification } from './paragraph-alignment';
@@ -128,8 +129,16 @@ export function writeParagraphImpl(
 	const source = new Set(sourceBookmarks);
 	const kept = new Set([...starts, ...ends]);
 	const sourcePositions = runPositions(base?.runs ?? []);
+	const permissions = changedPermissionMarkers(
+		doc,
+		paragraph,
+		base,
+		markers.map((marker) => marker.element),
+		runPositions(paragraph.runs).at(-1)!,
+	);
 	const read = markers
 		.filter((marker) => !isBookmark(marker.element) || kept.has(marker.element))
+		.filter((marker) => !permissions?.drop.has(marker.element))
 		.map((marker) => {
 			const position = sourcePositions[marker.boundary] ?? 0;
 			const annotation = marker.annotation;
@@ -145,8 +154,8 @@ export function writeParagraphImpl(
 		});
 	const end = runPositions(paragraph.runs).at(-1)!;
 	const sources = containerSources(paragraph.runs, base?.runs, slots);
-	const carried = orderRangeEnds(
-		base
+	const carried = orderRangeEnds([
+		...(base
 			? followFormFieldBookmarks(
 					followContainers(
 						moveMarkers(base.runs, paragraph.runs, read),
@@ -157,8 +166,9 @@ export function writeParagraphImpl(
 					base.runs,
 					paragraph.runs,
 				)
-			: read.map((marker) => ({ ...marker, position: marker.opening ? 0 : end })),
-	);
+			: read.map((marker) => ({ ...marker, position: marker.opening ? 0 : end }))),
+		...(permissions?.added ?? []),
+	]);
 	for (const marker of markers) marker.element.parentNode?.removeChild(marker.element);
 	for (const oldNode of replaceableInlineChildren(node)) node.removeChild(oldNode);
 	const { nodes, placed, containers } = buildInlineContent(

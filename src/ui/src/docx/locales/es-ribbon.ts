@@ -445,4 +445,32 @@ export const esRibbon: RibbonStrings = {
 	'Finish & Merge': 'Finalizar y combinar',
 	Help: 'Ayuda',
 	'Not available in this editor': 'No disponible en este editor',
+	Protect: 'Proteger',
+	'Restrict editing': 'Restringir edición',
+	'Formatting restrictions': 'Restricciones de formato',
+	'Limit formatting to a selection of styles': 'Limitar el formato a una selección de estilos',
+	'Editing restrictions': 'Restricciones de edición',
+	'Allow only this type of editing in the document':
+		'Permitir solo este tipo de edición en el documento',
+	'No changes (Read only)': 'Sin cambios (solo lectura)',
+	'Filling in forms': 'Rellenar formularios',
+	'Exceptions (optional)': 'Excepciones (opcional)',
+	Everyone: 'Todos',
+	'Start enforcement': 'Comenzar a aplicar',
+	'Yes, start enforcing protection': 'Sí, aplicar la protección',
+	'Enter new password (optional)': 'Escriba la nueva contraseña (opcional)',
+	'Reenter password to confirm': 'Vuelva a escribir la contraseña para confirmarla',
+	Password: 'Contraseña',
+	'Stop protection': 'Suspender protección',
+	'The document is protected': 'El documento está protegido',
+	'The passwords do not match': 'Las contraseñas no coinciden',
+	'Incorrect password': 'Contraseña incorrecta',
+	'This protection uses a password that cannot be checked here':
+		'Esta protección usa una contraseña que no se puede comprobar aquí',
+	'Select text first': 'Seleccione primero el texto',
+	'This exception continues into another paragraph; change it in Word':
+		'Esta excepción continúa en otro párrafo; cámbiela en Word',
+	'Choose the type of editing to allow': 'Elija el tipo de edición que se permite',
+	'Editing is restricted by document protection':
+		'La edición está restringida por la protección del documento',
 };
