@@ -2,7 +2,11 @@ import { executableCellFormula } from './cell-formula';
 import type { VisioGeometryEdit } from './edit-commands';
 import { glueParticipants } from './edit-connector';
 import { rerouteConnector } from './edit-connector-reroute';
-import { assertOverridable, recalculateInstanceCaches } from './edit-instance-recalculate';
+import {
+	assertOverridable,
+	recalculateInstanceCaches,
+	type InstanceCacheWrite,
+} from './edit-instance-recalculate';
 import { assertNoPageDependents, assertPartsFollow, inchTagged } from './edit-instance-checks';
 import { instanceScope, isGroupInstance } from './edit-instance-scope';
 import {
@@ -114,6 +118,43 @@ function followConnectors(
 }
 
 const format = (value: number) => String(Object.is(value, -0) ? 0 : value);
+
+/**
+ * Put the local values (and, in formulas, the formulas) of an instance edit on its sheet, then the
+ * refreshed Inh caches of what follows from them, as Visio saves them.
+ */
+export function writeInstanceResult(
+	sheet: InstanceSheet,
+	cell: (name: string) => InstanceCell | undefined,
+	local: ReadonlyMap<string, number>,
+	writes: readonly InstanceCacheWrite[],
+	check: () => void,
+	formulas: ReadonlyMap<string, string> = new Map(),
+): void {
+	for (const [name, value] of local) {
+		const item: InstanceCell = cell(name) ?? { names: [name.toLowerCase()], name, relative: false };
+		const sized = name === 'Width' || name === 'Height';
+		const created = !item.local;
+		const node = writeInstanceCell(sheet, item, format(value));
+		// Visio tags a new local size with inches and leaves pins, angles and flags bare.
+		if (created && sized && !node.hasAttribute('U')) node.setAttribute('U', 'IN');
+		if (created && !sized) node.removeAttribute('U');
+		const formula = formulas.get(name);
+		if (formula !== undefined) node.setAttribute('F', formula);
+	}
+	for (const write of writes) {
+		check();
+		const own = write.cell.local;
+		if (own && executableCellFormula(attribute(own, 'F'))) {
+			own.setAttribute('V', format(write.value));
+			own.removeAttribute('E');
+		} else
+			writeInstanceCell(write.sheet, write.cell, format(write.value), {
+				formula: 'Inh',
+				...(inchTagged(write) ? { unit: 'IN' } : {}),
+			});
+	}
+}
 
 /**
  * Resize, rotate or flip a stencil instance the way Visio saves it: the changed cells become
@@ -265,26 +306,6 @@ export async function applyInstanceGeometryEdit(
 	touch(sheet, [...local.keys()]);
 	for (const write of writes) touch(write.sheet, write.cell.names);
 	assertNoPageDependents(root, target.instance, changed, check);
-	for (const [name, value] of local) {
-		const item: InstanceCell = cell(name) ?? { names: [name.toLowerCase()], name, relative: false };
-		const sized = name === 'Width' || name === 'Height';
-		const created = !item.local;
-		const node = writeInstanceCell(sheet, item, format(value));
-		// Visio tags a new local size with inches and leaves pins, angles and flags bare.
-		if (created && sized && !node.hasAttribute('U')) node.setAttribute('U', 'IN');
-		if (created && !sized) node.removeAttribute('U');
-	}
-	for (const write of writes) {
-		check();
-		const own = write.cell.local;
-		if (own && executableCellFormula(attribute(own, 'F'))) {
-			own.setAttribute('V', format(write.value));
-			own.removeAttribute('E');
-		} else
-			writeInstanceCell(write.sheet, write.cell, format(write.value), {
-				formula: 'Inh',
-				...(inchTagged(write) ? { unit: 'IN' } : {}),
-			});
-	}
+	writeInstanceResult(sheet, cell, local, writes, check);
 	return [...new Set([edit.pageId, ...followConnectors(roots, edit.pageId, edit.shapeId, check)])];
 }

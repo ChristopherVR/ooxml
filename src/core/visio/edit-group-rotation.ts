@@ -12,6 +12,14 @@ const stencilMembers = new WeakSet<Element>();
 export const markStencilMember = (shape: Element): void => void stencilMembers.add(shape);
 export const isStencilMember = (shape: Element): boolean => stencilMembers.has(shape);
 
+/**
+ * Transform cells of a stencil member that a group resize rewrites itself (`edit-group-resize-instances`):
+ * the package proof that master instances do not read edited page cells leaves them to that writer.
+ */
+const plannedMemberCells = new WeakSet<Element>();
+export const markPlannedMemberCell = (cell: Element): void => void plannedMemberCells.add(cell);
+export const isPlannedMemberCell = (cell: Element): boolean => plannedMemberCells.has(cell);
+
 /** Prove a local 2D sheet tree without unproved masters, lines or foreign objects; returns its IDs. */
 export function proveLocalShapeTree(top: Element, check: () => void): Set<string> {
 	const pending = [top],
@@ -101,6 +109,31 @@ export function assertUngluedTree(root: Element, ids: ReadonlySet<string>, messa
 				fail('UNSUPPORTED_GEOMETRY_EDIT', message);
 }
 
+/**
+ * Like `assertUngluedTree`, but connector ends glued to the tree's shapes are allowed: the core
+ * lays those connectors out again after the edit (`glueParticipants`). A Connect record that
+ * starts inside the tree (a connector or glued member) or is not an end of a connector is refused.
+ */
+export function assertFollowedGlueTree(
+	root: Element,
+	ids: ReadonlySet<string>,
+	top: Element,
+	message: string,
+): void {
+	const topId = attribute(top, 'ID');
+	for (const container of children(root, 'Connects'))
+		for (const connection of children(container, 'Connect')) {
+			const from = attribute(connection, 'FromSheet') ?? '',
+				to = attribute(connection, 'ToSheet') ?? '';
+			if (
+				ids.has(from) ||
+				to === topId ||
+				(ids.has(to) && !/^(Begin|End)X$/.test(attribute(connection, 'FromCell') ?? ''))
+			)
+				fail('UNSUPPORTED_GEOMETRY_EDIT', message);
+		}
+}
+
 /** Authorize only a local group Angle leaf (rotation) or its explicit pins (move).
  * Descendants remain read-only and unsafe to recalculate.
  */
@@ -114,9 +147,10 @@ export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, 
 	if (candidates.length !== 1 || attribute(candidates[0], 'Type') !== 'Group')
 		return { groups, angleCells };
 	const group = candidates[0]!;
-	assertUngluedTree(
+	assertFollowedGlueTree(
 		root,
 		proveLocalShapeTree(group, check),
+		group,
 		edit.type === 'move-shape'
 			? 'Group moves cannot update glued descendant connections.'
 			: 'Group rotation cannot update glued descendant connections.',

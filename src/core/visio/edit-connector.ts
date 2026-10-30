@@ -21,6 +21,7 @@ import {
 	isStencilConnector,
 	stencilTemplate,
 } from './edit-stencil-connector';
+import { shapeChain, worldFrame } from './edit-connector-world';
 import { isStencilLine, proveAnyStencilConnector } from './edit-stencil-line';
 import {
 	ENDS,
@@ -62,8 +63,21 @@ export function topShape(root: Element, shapeId: string): Element | undefined {
 	);
 }
 
+/** A glue target at any depth: top-level shapes and the members of groups. */
+export function glueShape(root: Element, shapeId: string): Element | undefined {
+	return shapeChain(root, shapeId)?.at(-1);
+}
+
 /** A glue target's alignment box and transform, read from its own proven caches. */
 export function glueBox(root: Element, shapeId: string): VisioGlueBox {
+	// A group member is drawn through its groups: compose their transforms to page coordinates.
+	const chain = shapeChain(root, shapeId);
+	if (chain && chain.length > 1) {
+		const member = chain[chain.length - 1]!;
+		if (isLineSheet(stencilTemplate(member) ? effectiveCells(member) : cells(member)))
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Connectors glue to 2D shapes only.');
+		return worldFrame(chain);
+	}
 	// A stencil shape's size and pin may live in its master: read the cells in effect.
 	const stencil = topShape(root, shapeId);
 	const shape = stencilTemplate(stencil) ? stencil! : admitted(root, shapeId);
@@ -103,7 +117,7 @@ export function connectionRows(shape: Element): Map<number, Element> {
 }
 /** Whether a shape has connection points, local or from its master. */
 export function hasConnectionPoints(root: Element, shapeId: string): boolean {
-	const target = topShape(root, shapeId);
+	const target = glueShape(root, shapeId);
 	if (!target) return false;
 	return (
 		(stencilTemplate(target) ? effectiveRows(target, 'Connection') : connectionRows(target)).size >
@@ -114,7 +128,7 @@ export function hasConnectionPoints(root: Element, shapeId: string): boolean {
 export function glueSites(root: Element, end: GlueEnd): ConnectorSite[] {
 	const box = glueBox(root, end.target);
 	if (end.point === undefined) return dynamicSites(box);
-	const target = topShape(root, end.target)!;
+	const target = glueShape(root, end.target)!;
 	// A stencil shape's connection points are its master's rows with any local overrides.
 	const local = stencilTemplate(target)
 		? effectiveRows(target, 'Connection').get(end.point)
@@ -192,7 +206,7 @@ export function glueEnd(root: Element, shape: Element, end: End, glue: GlueEnd):
 		container = doc.createElementNS(root.namespaceURI, 'Connects');
 		root.insertBefore(container, children(root, 'Shapes')[0]!.nextSibling);
 	}
-	markPlaceable(topShape(root, glue.target));
+	markPlaceable(glueShape(root, glue.target));
 	const row = doc.createElementNS(root.namespaceURI, 'Connect');
 	for (const [name, value] of [
 		['FromSheet', attribute(shape, 'ID')!],
@@ -279,12 +293,32 @@ export function proveConnector(root: Element, connectorId: string): ConnectorGlu
 export function glueParticipants(
 	root: Element,
 	shapeId: string,
+	/** A group that is moved, resized or turned: connectors glued to its members follow too. */
+	withMembers = false,
 ): { connectors: ConnectorGlue[]; connector?: ConnectorGlue } {
 	const connectorIds = new Set<string>();
 	let own = false;
+	const members = new Set<string>();
+	if (withMembers) {
+		const pending = [shapeChain(root, shapeId)?.at(-1)];
+		while (pending.length) {
+			const node = pending.pop();
+			if (!node) continue;
+			for (const container of children(node, 'Shapes'))
+				for (const member of children(container, 'Shape')) {
+					members.add(attribute(member, 'ID') ?? '');
+					pending.push(member);
+				}
+		}
+	}
 	for (const row of connectRows(root)) {
-		if (attribute(row, 'ToSheet') === shapeId) connectorIds.add(attribute(row, 'FromSheet') ?? '');
-		if (attribute(row, 'FromSheet') === shapeId) own = true;
+		const to = attribute(row, 'ToSheet') ?? '',
+			from = attribute(row, 'FromSheet') ?? '';
+		if (to === shapeId || members.has(to)) connectorIds.add(from);
+		if (from === shapeId) own = true;
+		// A connector inside the group would need its own ends moved with the members.
+		if (members.has(from))
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'A group holding a connector or a glued member shape.');
 	}
 	if (own && connectorIds.size) fail('UNSUPPORTED_GEOMETRY_EDIT', UNSUPPORTED);
 	return {

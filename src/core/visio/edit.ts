@@ -18,6 +18,10 @@ import { groupInstances } from './edit-instance-group';
 import { replaceInstanceMaster } from './edit-instance-replace';
 import { instanceOrderViews, orderTargetsAreStructural } from './edit-instance-order';
 import { assertInstanceLayerUnlocked, pageShapes } from './edit-instance-shape';
+import {
+	assertGroupMemberLayersUnlocked,
+	prepareGroupResizeInstances,
+} from './edit-group-resize-instances';
 import { attribute } from './sheet';
 import { replaceScopedTextRanges } from './edit-text-ranges';
 import { insertVisioTextField } from './edit-text-field';
@@ -470,6 +474,8 @@ async function editVsdxTransaction(
 		await registerStencilShapes(roots, masterTemplate(pkg), check);
 		// Stencil shapes that are grouped, or sit in a group that is ungrouped, moved or rotated.
 		groupMembers = await groupInstances(pkg, roots, commands, masterTemplate(pkg), check);
+		await prepareGroupResizeInstances(roots, geometryCommands, masterTemplate(pkg), check);
+		await assertGroupMemberLayersUnlocked(pkg, roots, geometryCommands, check);
 		// Said plainly first: the master proofs below would refuse the same edit in formula terms.
 		for (const command of geometryCommands)
 			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
