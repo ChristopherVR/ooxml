@@ -63,6 +63,12 @@ function main(argv) {
 			execFileSync('bunx', [ATTW, '--pack', resolve(directory), '--format', 'json'], {
 				stdio: ['ignore', fd, 'inherit'],
 				shell: process.platform === 'win32',
+				// attw holds every entry point's declaration graph at once; the core's 100+ subpaths
+				// sit at Node's default heap limit on hosted runners, so it gets more room.
+				env: {
+					...process.env,
+					NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --max-old-space-size=8192`.trim(),
+				},
 			});
 		} catch (error) {
 			// attw exits non-zero when it finds any problem; the report is written all the same.
