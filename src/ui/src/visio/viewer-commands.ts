@@ -1,3 +1,4 @@
+import type { VisioPageReorder } from 'ooxml-core/visio';
 import type { VisioGridSteps } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { planDeleteSelection } from './viewer-delete';
@@ -332,6 +333,12 @@ export class ViewerCommands {
 			},
 			options,
 		);
+		// A page tab dragged to a new place in the page tab bar is one reorder-page edit.
+		root.addEventListener(
+			'office-tab-reorder',
+			(event) => this.#reorderPage((event as CustomEvent<{ id: string; index: number }>).detail),
+			options,
+		);
 		// First, so its handles take the pointer before shape and marquee gestures.
 		const disposeTextFeatures = this.#textFeatures.wire();
 		root.addEventListener('keydown', (event) => this.#shortcut(event as KeyboardEvent), options);
@@ -432,6 +439,17 @@ export class ViewerCommands {
 		const plan = planDeleteSelection(state);
 		if (!plan || !this.#canEdit(state)) return;
 		void this.#edit(() => this.host.controller.applyEdits(plan.edits), plan.message);
+	}
+	#reorderPage(detail: { id: string; index: number }): void {
+		const state = this.host.controller.state;
+		const page = state.document?.pages[Number(detail.id)];
+		if (!page || !this.#canEdit(state)) return;
+		const command: VisioPageReorder = {
+			type: 'reorder-page',
+			pageId: page.id,
+			index: detail.index,
+		};
+		void this.#edit(() => this.host.controller.applyEdits([command]), 'Moved the page.');
 	}
 	#insertPage(): void {
 		const state = this.host.controller.state;

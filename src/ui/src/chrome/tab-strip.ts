@@ -3,13 +3,17 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
 import css from './tab-strip.css?raw';
+import { indexAfterDrop, wireTabDrag } from './tab-drag';
 
 export interface OfficeTab {
 	id: string;
 	label: string;
 	/** Tooltip; defaults to the label. */
 	title?: string;
+	/** Tabs only reorder within their own group (Visio keeps background pages after the others). */
+	group?: string;
 }
+export type OfficeTabReorderEvent = CustomEvent<{ id: string; index: number }>;
 export type OfficeTabSelectEvent = CustomEvent<{ id: string }>;
 
 const KEY_STEPS: Record<string, number> = {
@@ -29,7 +33,11 @@ const KEY_STEPS: Record<string, number> = {
  * add button after the tabs (Insert Page, New Sheet) that emits `office-command`
  * `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it. The
  * `after-tabs` slot sits between the tabs and the add button (Visio's All pages list), and the
- * `plain` attribute draws the selected tab as bold accent text without a box, as Visio does.
+ * `reorderable` attribute lets a pointer (mouse, pen or touch) drag a tab along the strip: past a
+ * small threshold an insertion marker shows the gap, Escape cancels, and releasing emits
+ * `office-tab-reorder` `{ id, index }` (the tab's new index) without moving anything itself; the
+ * host reorders its model and sets `tabs` again. A tab with a `group` only drops within that group.
+ * The `plain` attribute draws the selected tab as bold accent text without a box, as Visio does.
  */
 export class OfficeUiTabStrip extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -43,6 +51,7 @@ export class OfficeUiTabStrip extends OfficeElement {
 		addTitle: { attribute: 'add-title', type: String },
 		addDisabled: { attribute: 'add-disabled', ...flag },
 		disabled: flag,
+		reorderable: flag,
 	};
 	declare label: string | null;
 	declare previousLabel: string | null;
@@ -51,6 +60,8 @@ export class OfficeUiTabStrip extends OfficeElement {
 	declare addTitle: string | null;
 	declare addDisabled: boolean;
 	declare disabled: boolean;
+	declare reorderable: boolean;
+	private disposeDrag: (() => void) | undefined;
 	private items: OfficeTab[] = [];
 	private picked: string | null = null;
 
@@ -63,6 +74,7 @@ export class OfficeUiTabStrip extends OfficeElement {
 		this.addTitle = null;
 		this.addDisabled = false;
 		this.disabled = false;
+		this.reorderable = false;
 	}
 
 	get tabs(): OfficeTab[] {
@@ -75,6 +87,7 @@ export class OfficeUiTabStrip extends OfficeElement {
 				id: tab.id,
 				label: String(tab.label ?? ''),
 				...(tab.title === undefined ? {} : { title: String(tab.title) }),
+				...(tab.group === undefined ? {} : { group: String(tab.group) }),
 			}));
 		this.requestUpdate('tabs');
 	}
@@ -120,6 +133,51 @@ export class OfficeUiTabStrip extends OfficeElement {
 			event.preventDefault();
 			this.move(KEY_STEPS[event.key]!, true);
 		}
+	}
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		if (this.hasUpdated) this.wireDrag();
+	}
+
+	override disconnectedCallback(): void {
+		this.disposeDrag?.();
+		this.disposeDrag = undefined;
+		super.disconnectedCallback();
+	}
+
+	private wireDrag(): void {
+		const list = this.renderRoot.querySelector<HTMLElement>('.list');
+		if (!list || this.disposeDrag) return;
+		const tabs = () => [...list.querySelectorAll<HTMLElement>('.tab')];
+		const groupOf = (tab: HTMLElement) =>
+			this.items.find((item) => item.id === tab.dataset.id)?.group;
+		this.disposeDrag = wireTabDrag({
+			area: list,
+			tabs,
+			tabSelector: '.tab',
+			canDrag: (tab) => present(this.reorderable) && !present(this.disabled) && !!tab.dataset.id,
+			draggingClass: 'dragging',
+			markerClass: 'marker',
+			markerParent: this.renderRoot,
+			markerBox: this,
+			limit: (tab) => {
+				const group = groupOf(tab);
+				const same = tabs().filter((other) => groupOf(other) === group);
+				const first = tabs().indexOf(same[0]!);
+				return [first, first + same.length];
+			},
+			drop: (tab, slot) => {
+				const from = tabs().indexOf(tab);
+				const index = indexAfterDrop(from, slot);
+				if (from >= 0 && index !== from)
+					this.fire('office-tab-reorder', { id: tab.dataset.id!, index });
+			},
+		});
+	}
+
+	protected override firstUpdated(_changed: PropertyValues<this>): void {
+		this.wireDrag();
 	}
 
 	protected override updated(_changed: PropertyValues<this>): void {

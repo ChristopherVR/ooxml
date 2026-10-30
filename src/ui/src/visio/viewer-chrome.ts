@@ -167,6 +167,7 @@ export class ViewerChrome {
 				id: String(index),
 				label: candidate.name,
 				title: candidate.isBackground ? `${candidate.name} (background page)` : candidate.name,
+				group: candidate.isBackground ? 'background' : 'page',
 			}));
 			this.#allPages.replaceChildren(
 				...pages.map((candidate, index) => {
@@ -196,6 +197,10 @@ export class ViewerChrome {
 		this.#pageTabs.toggleAttribute(
 			'add-disabled',
 			!page || !canEditDiagram(state) || state.edit.busy || state.loading,
+		);
+		this.#pageTabs.toggleAttribute(
+			'reorderable',
+			!!page && canEditDiagram(state) && !state.edit.busy && !state.loading,
 		);
 		this.#pageTabs.setAttribute(
 			'add-title',
