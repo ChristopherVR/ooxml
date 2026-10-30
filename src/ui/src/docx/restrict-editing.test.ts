@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createDocument, enforceProtection, type DocumentModel } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
@@ -34,6 +34,13 @@ const texts = (view: EditorView) => {
 };
 
 describe('Restrict Editing', () => {
+	// jsdom has no execCommand, which ProseMirror calls when a selection is drawn in a shadow root.
+	beforeAll(() => {
+		Object.defineProperty(document, 'execCommand', { value: () => false, configurable: true });
+	});
+	afterAll(() => {
+		delete (document as unknown as Record<string, unknown>).execCommand;
+	});
 	afterEach(() => document.body.replaceChildren());
 
 	it('lets a read only document change only in its editable regions, and highlights them', () => {
@@ -60,6 +67,26 @@ describe('Restrict Editing', () => {
 			if (node.marks.some((mark) => mark.type.name === 'insertion')) marked = true;
 		});
 		expect(marked).toBe(true);
+	});
+
+	it('docks the pane beside the page and finds the next editable region', () => {
+		const { core, editor, view } = mount({ edit: 'readOnly', enforced: true });
+		core.formatDialogs.open('restrictEditing');
+		const pane = editor.shadowRoot!.querySelector<HTMLElement>('.dve-restrict-pane')!;
+		expect(pane.hidden).toBe(false);
+		expect(pane.parentElement?.className).toBe('dve-body');
+		const button = (text: string) =>
+			Array.from(pane.querySelectorAll('button')).find((b) => b.textContent === text)!;
+		button('Find next region I can edit').click();
+		const { from, to } = view.state.selection;
+		expect(view.state.doc.textBetween(from, to)).toBe('world');
+		const toggle = pane.querySelector<HTMLInputElement>(
+			'input[aria-label="Highlight the regions I can edit"]',
+		)!;
+		expect(editor.shadowRoot!.querySelector('.dve-editable-region')).not.toBeNull();
+		toggle.checked = false;
+		toggle.dispatchEvent(new Event('change'));
+		expect(editor.shadowRoot!.querySelector('.dve-editable-region')).toBeNull();
 	});
 
 	it('starts and stops protection with a password from the Review tab', () => {

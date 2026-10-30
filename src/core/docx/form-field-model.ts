@@ -41,7 +41,10 @@ export interface ProtectionPassword {
 	saltValue: string;
 	/** `w:spinCount` or `w:cryptSpinCount`. */
 	spinCount?: number;
-	/** Set for the Word form (`w:crypt*` attributes), which is also how it is written back. */
+	/**
+	 * Set for the Word form (`w:crypt*` attributes), which is also how it is written back. Word's
+	 * hash cannot be checked here (see `verifyProtectionPassword`).
+	 */
 	word?: { algorithmSid: number };
 }
 

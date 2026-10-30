@@ -474,4 +474,7 @@ export const deRibbon: RibbonStrings = {
 	'Choose the type of editing to allow': 'Wählen Sie die zulässige Art der Bearbeitung',
 	'Editing is restricted by document protection':
 		'Die Bearbeitung ist durch den Dokumentschutz eingeschränkt',
+	'Highlight the regions I can edit': 'Bereiche hervorheben, die ich bearbeiten kann',
+	'Find next region I can edit': 'Nächsten Bereich suchen, den ich bearbeiten kann',
+	'There are no regions you can edit': 'Es gibt keine Bereiche, die Sie bearbeiten können',
 };

@@ -4,7 +4,13 @@
 // forces Track Changes on and keeps it from being turned off. Forms protection has its own guard
 // (form-field-guard.ts).
 import type { Node } from 'prosemirror-model';
-import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+	Plugin,
+	PluginKey,
+	TextSelection,
+	type EditorState,
+	type Transaction,
+} from 'prosemirror-state';
 import {
 	AddMarkStep,
 	AttrStep,
@@ -272,4 +278,16 @@ export function setEditableRegion(
 	});
 	if (blocked) return { error: 'spansParagraphs' };
 	return { tr: tr.setMeta(editRestrictionKey, 'reset') };
+}
+
+/**
+ * The next region `user` may edit after the selection (Word's "Find next region I can edit"),
+ * wrapping to the first one, as a selection of its text; null when there is none.
+ */
+export function nextEditableRegion(state: EditorState, user: string): TextSelection | null {
+	const ranges = editableRanges(state, user)
+		.filter((range) => range.to >= range.from)
+		.sort((a, b) => a.from - b.from);
+	const next = ranges.find((range) => range.from > state.selection.from) ?? ranges[0];
+	return next ? TextSelection.create(state.doc, next.from, next.to) : null;
 }

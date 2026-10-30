@@ -78,6 +78,10 @@ export function verifyProtectionPassword(
 ): boolean | undefined {
 	if (protection?.unverifiablePassword) return undefined;
 	if (!protection?.password) return true;
+	// Word's own `cryptAlgorithmSid` hash is not the plain spin: Word feeds the spin a legacy key
+	// derived from the password (generate-word-protection.ps1 fixtures do not match it), which this
+	// code does not implement. Those documents can be kept but not unlocked here.
+	if (protection.password.word) return undefined;
 	return verifyPasswordHash(password, protection.password);
 }
 
@@ -91,8 +95,10 @@ function randomSalt(): string {
 }
 
 /**
- * A verifier for `password` the way Word 2010 and later write it (SHA-512, 100,000 rounds, a
- * random salt), or `undefined` for an empty password, which Word treats as none.
+ * A verifier for `password` in the ISO 29500 form (`w:algorithmName`, `w:hashValue`,
+ * `w:saltValue`, `w:spinCount`): SHA-512, 100,000 rounds, a random salt. Word unprotects a
+ * document with it (checked with desktop Word through COM), so it can be used to stop protection
+ * in Word. `undefined` for an empty password, which Word treats as none.
  */
 export function createProtectionPassword(
 	password: string,
@@ -101,7 +107,7 @@ export function createProtectionPassword(
 	if (!password) return undefined;
 	const options = { algorithmName: 'SHA-512', saltValue, spinCount: SPIN_COUNT };
 	const hashValue = hashPassword(password, options);
-	return hashValue ? { ...options, hashValue, word: { algorithmSid: 14 } } : undefined;
+	return hashValue ? { ...options, hashValue } : undefined;
 }
 
 /** Starts enforcing `edit` (with `password`, if any), keeping the formatting restriction. */

@@ -463,4 +463,7 @@ export const enRibbon = {
 		'This exception continues into another paragraph; change it in Word',
 	'Choose the type of editing to allow': 'Choose the type of editing to allow',
 	'Editing is restricted by document protection': 'Editing is restricted by document protection',
+	'Highlight the regions I can edit': 'Highlight the regions I can edit',
+	'Find next region I can edit': 'Find next region I can edit',
+	'There are no regions you can edit': 'There are no regions you can edit',
 } as const;

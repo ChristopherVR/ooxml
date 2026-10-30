@@ -467,4 +467,7 @@ export const zhCNRibbon: RibbonStrings = {
 		'此例外项延续到另一个段落,请在 Word 中更改',
 	'Choose the type of editing to allow': '请选择允许的编辑类型',
 	'Editing is restricted by document protection': '文档保护限制了编辑',
+	'Highlight the regions I can edit': '突出显示我可以编辑的区域',
+	'Find next region I can edit': '查找我可以编辑的下一个区域',
+	'There are no regions you can edit': '没有您可以编辑的区域',
 };

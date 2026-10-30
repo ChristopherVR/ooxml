@@ -23,11 +23,8 @@ const part = async (bytes: Uint8Array, name: string) =>
 describe('protection passwords', () => {
 	it('checks a password against the verifier it created, and refuses a wrong one', () => {
 		const protection = enforceProtection('readOnly', { password: 'Secret1', salt: 'AAECAwQFBgc=' });
-		expect(protection.password).toMatchObject({
-			algorithmName: 'SHA-512',
-			spinCount: 100000,
-			word: { algorithmSid: 14 },
-		});
+		expect(protection.password).toMatchObject({ algorithmName: 'SHA-512', spinCount: 100000 });
+		expect(protection.password?.word).toBeUndefined();
 		expect(verifyProtectionPassword(protection, 'Secret1')).toBe(true);
 		expect(verifyProtectionPassword(protection, 'secret1')).toBe(false);
 		expect(verifyProtectionPassword(protection, '')).toBe(false);
@@ -38,20 +35,21 @@ describe('protection passwords', () => {
 		expect(verifyProtectionPassword(undefined, 'x')).toBe(true);
 	});
 
-	it('reads both attribute spellings and verifies them', async () => {
+	it('reads the ISO spelling and verifies it, and keeps the Word spelling without checking it', async () => {
 		const made = enforceProtection('readOnly', { password: 'pw', salt: 'AAECAwQFBgc=' }).password!;
-		const word = await load(
-			text('A'),
-			`<w:documentProtection w:edit="readOnly" w:enforcement="1" w:cryptProviderType="rsaAES" w:cryptAlgorithmClass="hash" w:cryptAlgorithmType="typeAny" w:cryptAlgorithmSid="14" w:cryptSpinCount="100000" w:hash="${made.hashValue}" w:salt="${made.saltValue}"/>`,
-		);
-		expect(verifyProtectionPassword(word.model.protection, 'pw')).toBe(true);
-		expect(verifyProtectionPassword(word.model.protection, 'no')).toBe(false);
 		const iso = await load(
 			text('A'),
 			`<w:documentProtection w:edit="comments" w:enforcement="1" w:algorithmName="SHA-512" w:hashValue="${made.hashValue}" w:saltValue="${made.saltValue}" w:spinCount="100000"/>`,
 		);
 		expect(iso.model.protection).toMatchObject({ edit: 'comments', enforced: true });
 		expect(verifyProtectionPassword(iso.model.protection, 'pw')).toBe(true);
+		expect(verifyProtectionPassword(iso.model.protection, 'no')).toBe(false);
+		const word = await load(
+			text('A'),
+			`<w:documentProtection w:edit="readOnly" w:enforcement="1" w:cryptProviderType="rsaAES" w:cryptAlgorithmClass="hash" w:cryptAlgorithmType="typeAny" w:cryptAlgorithmSid="14" w:cryptSpinCount="100000" w:hash="${made.hashValue}" w:salt="${made.saltValue}"/>`,
+		);
+		expect(word.model.protection?.password?.word?.algorithmSid).toBe(14);
+		expect(verifyProtectionPassword(word.model.protection, 'pw')).toBeUndefined();
 	});
 
 	it('never unlocks a hash it cannot check', async () => {
@@ -79,6 +77,7 @@ describe('protection round trip', () => {
 		const again = await loadDocx(saved);
 		expect(again.model.protection).toEqual(loaded.model.protection);
 		expect(verifyProtectionPassword(again.model.protection, 'pw')).toBe(true);
+		expect(settings).toContain('w:algorithmName="SHA-512"');
 	});
 
 	it('removes the element when the protection is stopped, and leaves an untouched one alone', async () => {

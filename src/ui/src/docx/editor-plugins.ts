@@ -29,6 +29,7 @@ import { reviewRunMarksPlugin } from './review-run-marks';
 export interface BodyPluginHost {
 	model(): DocumentModel;
 	reviewAuthor(): string;
+	highlightEditableRegions?(): boolean;
 	reviewDisplayMode(): ReviewDisplayMode;
 	insertNote(kind: 'footnote' | 'endnote'): void;
 	showSearch(): void;
@@ -58,6 +59,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		editableRegionViewPlugin(
 			() => host.model().protection,
 			() => host.reviewAuthor(),
+			() => host.highlightEditableRegions?.() ?? true,
 		),
 		formFieldViewPlugin(() => host.model()),
 		symbolFontPlugin(),

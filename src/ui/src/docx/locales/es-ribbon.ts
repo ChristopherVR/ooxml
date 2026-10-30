@@ -473,4 +473,7 @@ export const esRibbon: RibbonStrings = {
 	'Choose the type of editing to allow': 'Elija el tipo de edición que se permite',
 	'Editing is restricted by document protection':
 		'La edición está restringida por la protección del documento',
+	'Highlight the regions I can edit': 'Resaltar las regiones que puedo editar',
+	'Find next region I can edit': 'Buscar la siguiente región que puedo editar',
+	'There are no regions you can edit': 'No hay regiones que pueda editar',
 };

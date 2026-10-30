@@ -186,14 +186,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Protection: forms, read-only, comments-only and tracked-changes-only protection are
       enforced, and Review > Restrict Editing starts and stops them (password checked with the
       ECMA-376 hash, written back on save).
-- [ ] **P2** Restrict Editing leftovers: it is a dialog, not a docked pane; exceptions are only
-      "Everyone" (no per-user exceptions UI, no "Find next region I can edit", no highlight toggle);
-      an exception that continues across paragraphs or sits between blocks, and column-range
-      permissions (`w:colFirst`), are kept and enforced but cannot be edited in the dialog;
-      formatting restrictions (`w:formatting`) are kept but the allowed-styles list is not
-      enforced; the Word 97 four-byte password hash cannot be verified (the protection then
-      cannot be stopped here); the digest of an unknown `w:cryptAlgorithmSid` is likewise not
-      checked.
+- [ ] **P2** Restrict Editing leftovers: passwords Word wrote (`cryptAlgorithmSid` / `w:hash`) are
+      kept and written back but cannot be checked, so such protection cannot be stopped in the
+      editor: Word feeds its spin a legacy 16-bit key from the password (the initial code array and
+      XOR matrix), and the plain spin does not reproduce the hash in fixtures saved by Word 16;
+      the key derivation is not implemented (no verified table or worked values to test it
+      against). Passwords set in the editor use the ISO 29500 attributes, which Word accepts
+      (checked through COM). Also open: only "Everyone" exceptions (no per-user list); an exception
+      that continues across paragraphs or sits between blocks, and column-range permissions
+      (`w:colFirst`), are enforced but cannot be edited in the pane; the allowed-styles list of
+      formatting restrictions is kept but not enforced; the Word 97 four-byte hash is
+      unverifiable too.
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
       detected before an edit.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.

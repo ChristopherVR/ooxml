@@ -24,6 +24,7 @@ export function renderDocument(core: EditorCore): void {
 			plugins: bodyPlugins({
 				model: () => core.model,
 				reviewAuthor: () => core.reviewAuthor,
+				highlightEditableRegions: () => core.highlightEditableRegions,
 				reviewDisplayMode: () => core.reviewDisplayMode,
 				insertNote: (kind) => core.parts.insertNote(kind, canvas, paper),
 				// ProseMirror's Mod-f reaches here before the shortcut registry: honour `find: false`.

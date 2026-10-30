@@ -466,4 +466,7 @@ export const frRibbon: RibbonStrings = {
 	'Choose the type of editing to allow': 'Choisissez le type de modification autorisé',
 	'Editing is restricted by document protection':
 		'La modification est restreinte par la protection du document',
+	'Highlight the regions I can edit': 'Mettre en évidence les zones que je peux modifier',
+	'Find next region I can edit': 'Rechercher la prochaine zone que je peux modifier',
+	'There are no regions you can edit': 'Aucune zone ne peut être modifiée par vous',
 };

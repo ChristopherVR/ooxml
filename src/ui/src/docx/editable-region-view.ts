@@ -10,13 +10,14 @@ const key = new PluginKey('docx-editable-regions');
 export function editableRegionViewPlugin(
 	protection: () => DocumentProtection | undefined,
 	user: () => string,
+	enabled: () => boolean = () => true,
 ): Plugin {
 	return new Plugin({
 		key,
 		props: {
 			decorations(state) {
 				const restriction = editRestrictionOf(protection());
-				if (!restriction || restriction === 'trackedChanges') return null;
+				if (!restriction || restriction === 'trackedChanges' || !enabled()) return null;
 				const decorations = editableRanges(state, user())
 					.filter((range) => range.to > range.from)
 					.map((range) =>

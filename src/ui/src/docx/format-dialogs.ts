@@ -25,7 +25,7 @@ import { createSplitCellsDialog } from './split-cells-dialog';
 import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
 import { createMultilevelListDialog } from './multilevel-list-dialog';
 import { createReviewOptionsDialog } from './review-options-dialog';
-import { createRestrictEditingDialog, type RestrictEditingHost } from './restrict-editing-dialog';
+import { createRestrictEditingPane, type RestrictEditingHost } from './restrict-editing-pane';
 
 export type FormatDialogKind =
 	| 'font'
@@ -149,15 +149,23 @@ export class FormatDialogs {
 			insertChart: createChartTypeDialog(charts, false),
 			changeChartType: createChartTypeDialog(charts, true),
 			chartData: createChartDataDialog(charts),
-			restrictEditing: createRestrictEditingDialog({
+			restrictEditing: createRestrictEditingPane({
 				view: () => (host.reviewView ? host.reviewView() : host.view()),
 				protection: () => host.restrictEditing?.protection(),
 				apply: (protection) => host.restrictEditing?.apply(protection),
+				user: () => host.restrictEditing?.user() ?? 'Author',
+				highlight: () => host.restrictEditing?.highlight() ?? true,
+				setHighlight: (on) => host.restrictEditing?.setHighlight(on),
 			}),
 			tracking: createReviewOptionsDialog(() =>
 				host.reviewView ? host.reviewView() : host.view(),
 			),
 		};
+	}
+
+	/** The Restrict Editing pane docks beside the page; the shell mounts it, not the frame. */
+	get restrictEditingPane(): HTMLElement {
+		return this.dialogs.restrictEditing.element;
 	}
 
 	get elements(): HTMLElement[] {

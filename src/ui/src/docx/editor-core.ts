@@ -221,6 +221,12 @@ export class EditorCore {
 			restrictEditing: {
 				protection: () => this.model.protection,
 				apply: (protection) => this.applyProtection(protection),
+				user: () => this.reviewAuthor,
+				highlight: () => this.highlightEditableRegions,
+				setHighlight: (on) => {
+					this.highlightEditableRegions = on;
+					this.view?.dispatch(this.view.state.tr.setMeta('docx-protection', true));
+				},
 			},
 		});
 		this.imageMedia = new ImageMediaCache(
@@ -272,6 +278,9 @@ export class EditorCore {
 	contentWidth(): number {
 		return this.model.page.width - this.model.page.marginLeft - this.model.page.marginRight;
 	}
+
+	/** Review > Restrict Editing > Highlight the regions I can edit. */
+	highlightEditableRegions = true;
 
 	/** Starts or stops Review > Restrict Editing; saving writes it to settings.xml. */
 	applyProtection(protection: DocumentModel['protection']): void {
