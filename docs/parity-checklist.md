@@ -390,10 +390,17 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).
-- [ ] **P1** PDF text uses the standard fonts (no embedding), so a page with text outside
-      WinAnsi (any non-Latin script, a minus sign) falls back to a picture; shadows, glow and
-      reflections are not drawn and gradients become flat; the dialog has no page-range option
-      and does not show the report; no XPS.
+- [x] **P1** PDF Export has a page range (all, current page, from/to over the foreground pages),
+      shows the per-page report on the Export page, draws linear and radial gradients as PDF
+      shadings, shadows as hard-edged offset copies, glow as a half-strength halo, and embeds
+      host-supplied TrueType fonts as subset Type0/CIDFontType2 fonts with a ToUnicode CMap
+      (`visio-viewer.pdfFonts`; `core/text/truetype`, `export/pdf-embedded-font.ts`,
+      `visio/viewer-pdf-options.ts`, `visio/pdf-svg-gradient.ts`).
+- [ ] **P1** PDF: no font is bundled or looked up, so text outside WinAnsi still becomes a
+      picture page unless the host sets `pdfFonts` with a font that has the glyphs (CFF/OpenType
+      fonts and fonts whose licence forbids embedding are refused and reported); shadow and glow
+      blur, soft edges and reflections are not drawn; gradient transparency is averaged; no
+      pattern fills, no PDF/A and no XPS.
 - [x] **P2** Page tabs drag to reorder, background pages only among themselves
       (`chrome/tab-drag.ts`, shared with Excel's sheet tabs; `e2e/visio/page-tab-drag.spec.ts`).
 - [ ] **P2** No ShapeSheet window or Developer tab; on-shape text editing is a plain text area.

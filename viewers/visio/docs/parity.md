@@ -45,6 +45,26 @@
   Visio data graphic masters, so their placement is this viewer's own.
 - **Still open.** Data Visualizer, Data Graphic Fields and Advanced Data Graphics.
 
+## PDF export options and embedded fonts, 2026-10-30
+
+- **Publish options.** File > Export > PDF has Pages (all, current page, page range over the
+  foreground pages) and keeps the Export page open afterwards with the per-page report: vector or
+  picture (and why), what each page lost, fonts embedded and fonts refused.
+- **Gradients, shadows, glow.** Linear and radial gradients are PDF axial and radial shadings
+  (stitched exponential functions, bounding-box units and `gradientTransform` honoured, painted
+  with `sh` inside the fill's clip). Per-stop transparency is averaged and reported. A shadow is
+  drawn as its offset copy with its opacity (`ExtGState`), hard-edged; a glow is a half-strength
+  halo of the shape stroked as wide as the glow; both report that blur is not applied. Soft edges
+  and reflections are still left out and reported.
+- **Embedded fonts.** `visio-viewer.pdfFonts` takes TrueType files from the host. Text in a
+  matching family (and any text outside WinAnsi that a supplied font covers) is written as a
+  subset Type0/CIDFontType2 font with sequential CIDs, `/W` widths from the font and a ToUnicode
+  CMap, so it stays selectable. The subsetter (`core/text/truetype`) renumbers glyphs, rewrites
+  composite components and drops hinting; fonts with CFF outlines or `fsType` restricted or
+  no-subsetting licences are refused and reported. Checked with `pypdf` text extraction and a
+  `pymupdf` render of an Arial subset (Latin, minus sign, Greek, Cyrillic). Nothing is bundled.
+  Still open: XPS, PDF/A, blur, reflections, pattern fills.
+
 ## Parity wave two, 2026-10-30
 
 The target is now current Microsoft 365 Visio. Open remainders are in `docs/parity-checklist.md`.

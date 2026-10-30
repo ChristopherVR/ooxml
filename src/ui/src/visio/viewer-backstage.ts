@@ -8,6 +8,13 @@ import { wireNewDrawing } from './viewer-new-drawing';
 import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
 import type { VisioRegionContext } from 'ooxml-core/visio/ui';
 import { EMPTY_VISIO_CUSTOMIZATION, type ResolvedVisioCustomization } from './viewer-customization';
+import {
+	readPdfChoice,
+	showPdfReport,
+	syncPdfPanel,
+	type PdfRangeChoice,
+	type PdfReportSummary,
+} from './viewer-pdf-options';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {
@@ -19,8 +26,14 @@ export interface BackstageHost {
 	createFromTemplate(template: VisioTemplateId): Promise<void>;
 	exportVsdx(): { bytes: Uint8Array; dirty: boolean };
 	exportSvg(): { svg: string; pageIndex: number };
-	/** Raster PDF of the foreground pages, or a PNG of the current page (viewer-export). */
-	exportPicture(format: 'pdf' | 'png'): Promise<{ blob: Blob; pageIndex: number }>;
+	/**
+	 * A vector PDF of the chosen foreground pages with its per-page report, or a PNG of the
+	 * current page (viewer-export).
+	 */
+	exportPicture(
+		format: 'pdf' | 'png',
+		pdf?: PdfRangeChoice,
+	): Promise<{ blob: Blob; pageIndex: number; report?: PdfReportSummary }>;
 	closeDocument(): void;
 	showOptions(): void;
 	announce(message: string): void;
@@ -294,14 +307,26 @@ export class ViewerBackstage {
 		}
 	}
 	async #exportPicture(format: 'pdf' | 'png'): Promise<void> {
-		this.hide();
+		// A PDF keeps the Export page open: its options and the per-page report are on it.
+		if (format === 'png') this.hide();
+		else showPdfReport(this.#root, undefined);
 		this.host.announce(`Preparing the ${format.toUpperCase()}...`);
 		try {
-			const { blob, pageIndex } = await this.host.exportPicture(format);
+			const count = this.#state?.document?.pages.filter((page) => !page.isBackground).length ?? 0;
+			const choice = format === 'pdf' ? readPdfChoice(this.#root, count) : undefined;
+			const { blob, pageIndex, report } = await this.host.exportPicture(format, choice);
 			const name = format === 'pdf' ? this.#base() : `${this.#base()}-page-${pageIndex + 1}`;
 			this.#save(blob, `${name}.${format}`);
+			if (report) showPdfReport(this.#root, report);
+			const degraded = report?.pages.filter(
+				(page) => page.mode === 'picture' || page.degraded.length,
+			);
 			this.host.announce(
-				`${format.toUpperCase()} export requested. Pages are pictures of the approximate rendering.`,
+				format === 'png'
+					? 'PNG export requested. Pages are pictures of the approximate rendering.'
+					: degraded?.length
+						? `PDF export requested. ${degraded.length} page(s) lost something; see the report on the Export page.`
+						: 'PDF export requested.',
 			);
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
@@ -349,6 +374,7 @@ export class ViewerBackstage {
 		};
 		set('name', state.document ? this.host.fileName() || 'Untitled drawing' : 'No drawing open');
 		set('pages', String(state.document?.pages.length ?? 0));
+		syncPdfPanel(this.#root, state.document);
 		set('page', page?.name ?? 'None');
 		set('size', page ? `${page.width} × ${page.height} in` : 'None');
 		set('shapes', page ? `${page.shapes.length} top-level` : 'None');
