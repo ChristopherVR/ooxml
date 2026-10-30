@@ -17,5 +17,10 @@ export const UpdatePresentationPropertiesSchema = z.object({
 		.describe('Which slides to show'),
 	showSlidesFrom: z.number().int().min(1).optional().describe('Range start (1-based)'),
 	showSlidesTo: z.number().int().min(1).optional().describe('Range end (1-based)'),
+	showSlidesCustomShowId: z
+		.string()
+		.min(1)
+		.optional()
+		.describe('Existing custom show id to use when showSlidesMode is customShow'),
 	penColor: z.string().optional().describe('Annotation pen color (hex)'),
 });

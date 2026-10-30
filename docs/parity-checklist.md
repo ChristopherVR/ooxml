@@ -218,8 +218,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Word-written passwords (legacy key text, SHA-1/256/384/512 by sid) are checked against
       fixtures saved by Word 16 (SHA-512 only; the other sids are checked against an independent
       implementation).
-- [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
-      detected before an edit.
+- [x] **P1** Digital signatures: Word warns on load that signatures are unverified and saving
+      edits removes them. Unchanged saves keep the original bytes; edited saves remove signature
+      origins, signatures, certificates, relationships and content types through `opc/signature`,
+      including nonstandard part locations (`src/core/docx/signatures.test.ts`). This is metadata
+      detection and cleanup, not certificate verification or signing.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
 - [ ] **P2** Changing the comment list rewrites `comments.xml` from the model, losing comment
       formatting the model does not hold; `commentsIds` and `w16cid` are not maintained.
@@ -306,9 +309,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Remove, two slide lists with Add, Remove, Move Up/Down, Show; the shared
       `createCustomShowsController`) in all five bindings, with unit tests and
       `e2e/pptx/custom-shows-dialog.spec.ts`.
-- [ ] **P1** `manage_sections` and `update_presentation_properties` do not persist through
-      `saveDeckBytes` (the automation save forwards only header/footer, table styles and
-      `saveOptions`), and `update_presentation_properties` cannot set `showSlidesCustomShowId`.
+- [x] **P1** `manage_sections` and `update_presentation_properties` persist through
+      `saveDeckBytes`, including empty section lists, false slideshow flags and selecting an
+      existing custom show with `showSlidesCustomShowId`. Deleting the selected show saves the
+      switch back to all slides. Empty `present`, `browse` and `kiosk` elements also reload with
+      their show type (`src/core/pptx/automation/__tests__/presentation-save.test.ts`).
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media

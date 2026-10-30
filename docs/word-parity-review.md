@@ -9,6 +9,14 @@ the [Office parity checklist](parity-checklist.md).
 
 ## Source state and ownership
 
+Digital signature handling (2026-10-31): loading a signed package warns that signatures have
+not been verified and saving edits removes them. An unchanged save returns the original bytes.
+An edited save removes the signature origins, signatures, certificates, relationships and
+content types through the shared `opc/signature` helper, including parts outside the usual
+`_xmlsignatures/` folder. Synthetic package regressions in `src/core/docx/signatures.test.ts`
+cover body and property edits, multiple signatures and unrelated-part preservation. This does
+not verify certificate trust, sign documents or establish native Word certification.
+
 The consolidated workspace uses `src/core` (`ooxml-core`) and `src/ui`
 (`ooxml-ui`). Keep format logic in `src/core/docx`, format-neutral collaboration
 in `src/core/collab`, reusable controls in `src/ui`, and framework lifecycle/event

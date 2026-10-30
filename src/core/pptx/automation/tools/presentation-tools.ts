@@ -33,6 +33,7 @@ export interface UpdatePresentationPropertiesParams {
 	showSlidesMode?: 'all' | 'customShow' | 'range';
 	showSlidesFrom?: number;
 	showSlidesTo?: number;
+	showSlidesCustomShowId?: string;
 	penColor?: string;
 }
 
@@ -40,6 +41,14 @@ export function updatePresentationProperties(
 	ctx: ToolContext,
 	params: UpdatePresentationPropertiesParams,
 ): ToolResult<{ properties: PptxPresentationProperties }> {
+	const showId =
+		params.showSlidesCustomShowId ?? ctx.pptxData.presentationProperties?.showSlidesCustomShowId;
+	const showMode = params.showSlidesMode ?? ctx.pptxData.presentationProperties?.showSlidesMode;
+	if (
+		(params.showSlidesCustomShowId !== undefined || showMode === 'customShow') &&
+		!ctx.pptxData.customShows?.some((show) => show.id === showId)
+	)
+		throw new Error('showSlidesCustomShowId must identify an existing custom show.');
 	if (!ctx.pptxData.presentationProperties) {
 		(
 			ctx.pptxData as { presentationProperties: PptxPresentationProperties }
@@ -70,6 +79,9 @@ export function updatePresentationProperties(
 	}
 	if (params.showSlidesTo !== undefined) {
 		pp.showSlidesTo = params.showSlidesTo;
+	}
+	if (params.showSlidesCustomShowId !== undefined) {
+		pp.showSlidesCustomShowId = params.showSlidesCustomShowId;
 	}
 	if (params.penColor !== undefined) {
 		pp.penColor = params.penColor;

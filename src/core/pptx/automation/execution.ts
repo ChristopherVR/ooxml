@@ -56,6 +56,9 @@ export async function saveDeckBytes(
 	await handler.load(arrayBufferOf(original));
 	return handler.save(result.pptxData.slides, {
 		headerFooter: result.pptxData.headerFooter,
+		sections: result.pptxData.sections,
+		presentationProperties: result.pptxData.presentationProperties,
+		customShows: result.pptxData.customShows,
 		// `pptxData.tableStyleMap` carries any in-memory table-style edits a tool made (e.g.
 		// `set_table_style_section`, `create_table_style`); without forwarding it here those edits
 		// were silently dropped on save even though the core save pipeline supports them.

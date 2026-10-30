@@ -1,6 +1,7 @@
 import { parseCoreProperties } from './core-properties';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
+import { inspectPackageSignatures } from '../opc/signature/index';
 import { DOCX_ZIP_LIMITS, MAX_DOCUMENT_PART_BYTES } from './package-limits';
 import type { Block, DocumentModel, LoadedDocument } from './model';
 import { children, first, getW, parseXml, type XmlDocument, WORD_NS } from './xml';
@@ -93,6 +94,10 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		},
 		warnings: warningsFor(document),
 	};
+	if ((await inspectPackageSignatures(zip)).hasSignatures)
+		model.warnings.push(
+			'The document contains digital signatures. They have not been verified. Saving edits removes them because changes invalidate signatures; saving an unchanged document preserves the original file.',
+		);
 	const stylesFile = zip.file('word/styles.xml');
 	if (stylesFile) {
 		const stylesXml = await stylesFile.async('string');

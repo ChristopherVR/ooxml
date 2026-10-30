@@ -2,6 +2,7 @@
 import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
 import { dropAddedFolders, entryNames } from '../opc/zip-folders';
+import { stripPackageSignatures } from '../opc/signature/index';
 import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { stampModified } from './save-modified';
@@ -212,6 +213,7 @@ export async function saveDocx(
 		await applyComments(zip, model.comments ?? []);
 	if (binding) await applyDataBindings(zip, model, binding.base, binding.context.sourceXml);
 	if (binding) await stampModified(zip, options?.modified);
+	if (binding) await stripPackageSignatures(zip);
 	dropAddedFolders(zip, sourceEntries);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
