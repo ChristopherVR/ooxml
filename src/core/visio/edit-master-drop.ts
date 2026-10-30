@@ -4,6 +4,7 @@ import { growAutoSizePages } from './edit-page-auto-size';
 import { ensureStencilMaster } from './edit-stencil-master';
 import { importStencilMaster } from './edit-stencil-import';
 import { visioBuiltInMaster } from './stencil-masters';
+import { isVisioPageEdit } from './edit-commands';
 import type { VisioMasterInstanceEdit } from './edit-master-instance';
 import type { EditVsdxOptions, EditVsdxResult, VisioEdit } from './edit';
 
@@ -103,6 +104,10 @@ export async function editVsdxMasterDrops(
 			if (!diagnostics.some((other) => other.code === item.code)) diagnostics.push(item);
 	};
 	const touched = new Set<string>();
+	// Page edits (a page grown to hold what is dropped) are a transaction of their own and run
+	// first: a page with glued connectors cannot be resized.
+	const pageEdits = commands.filter(isVisioPageEdit);
+	if (pageEdits.length) keep(await apply(bytes, pageEdits));
 	for (const drop of commands.filter(isVisioMasterDrop)) {
 		check();
 		let masterId: string;
@@ -165,8 +170,23 @@ export async function editVsdxMasterDrops(
 			}
 		}
 	}
-	const rest = commands.filter((command) => !isVisioMasterDrop(command));
-	if (rest.length) keep(await apply(bytes, rest));
+	const rest = commands.filter(
+		(command) => !isVisioMasterDrop(command) && !isVisioPageEdit(command),
+	);
+	// Deleting a stencil instance changes the page that glue edits are worked out on, so a batch
+	// that glues connectors and deletes shapes (Delete Position in an org chart) runs the
+	// deletions last, in a transaction of their own. The call is still one edit for the caller.
+	const deletions = rest.filter((command) => command.type === 'delete-shape');
+	const split = deletions.length > 0 && rest.some((command) => command.type === 'glue-connector');
+	if (split) {
+		keep(
+			await apply(
+				bytes,
+				rest.filter((command) => command.type !== 'delete-shape'),
+			),
+		);
+		keep(await apply(bytes, deletions));
+	} else if (rest.length) keep(await apply(bytes, rest));
 	const result = {
 		bytes,
 		changedParts: [...changed],

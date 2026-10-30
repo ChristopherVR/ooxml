@@ -240,6 +240,42 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
 - **Observed.** On load Visio adds the shapes under a list to that list's members; harmless to
   list order but not what Visio itself saves.
 
+## Org chart masters, import and data text, 2026-10-30
+
+- **Masters.** A position is an instance of Visio's Executive Belt, Manager Belt, Position Belt or
+  Assistant Belt master and a reporting line an instance of the Organization Chart stencil's Dynamic
+  connector. The five masters (with their styles and the photo placeholder) are copied from
+  ORGCH_M.VSTX into `ui/org-chart-stencil-data.ts` (`scripts/gen-visio-org-stencil.mjs`) and added to
+  the drawing's masters on the first drop, keeping each UniqueID and BaseID, so the document stencil
+  lists them as Visio's does. Read through COM: Visio 16 opened the template, a chart with an
+  assistant and a subordinate added, one with a position deleted and a twelve person import, listed
+  all masters with Visio's UniqueIDs, read Name, Title and ShapeType on every position (0, 1, 2, 5),
+  the text on each and both ends of every connector glued (`Connects.Count` 2). A master that
+  owns a picture is copied with it (one shared `visio/media/image1.jpeg`). The one change to the
+  masters: `DisplayMode` 2 on the root group, the value Visio's Normal style gives it, so the text
+  of a position draws in front of its photo and belt in a drawing whose Normal style is ours.
+- **Assistants.** Beside the manager's line in a band of their own between the manager's row and
+  its subordinates' (the rows below make room); the line drops from the manager and enters the
+  assistant's side. The layout is now a tidy tree (each manager over its subordinates, one row per
+  level, siblings keep their order).
+- **Import.** Org Chart > Import Org Chart (also on the Data tab) reads a CSV or Excel sheet through
+  the Data tab's reader: Name, Title and Reports To columns (the manager's name, or ID when there is
+  an ID column), optional Department, Telephone, E-Mail and Type (Assistant). Tops are Executive
+  Belts, people with subordinates Manager Belts, the rest Position Belts; the chart goes to the
+  right of what the page holds, the page grows when nothing is glued on it, one undo step.
+- **Text and data.** The text of a position is its Name, then its Title; the Define Shape Data
+  dialog rewrites it when either row changes.
+- **Delete.** The Delete key on a lone position is Delete Position: one batch, one undo step
+  (new connectors dropped and glued first, the old connectors and the position deleted last).
+- **Engine changes this needed.** Group instances register as glue targets; the Org Chart
+  connector (no TextPosition control, route style 3) is a Dynamic connector the editor lays out,
+  joining the bottom of the manager to the top of the subordinate; a group master's photo no longer
+  blocks moving the group; masters with pictures are imported; page edits in a drop batch run first.
+- **Not done.** Resizing a position (the master's text-height formula is not evaluated), the type
+  change when a position gains subordinates, directory import, the wizard's options; Visio's own
+  re-routing is not run: its connectors glue to Top and Bottom connection points where ours glue to
+  the whole shape, so Visio re-routes them when a position moves.
+
 ## Org chart and template thumbnails, 2026-10-30
 
 - **Position data.** Organization Chart positions carry Visio's org chart Shape Data rows
@@ -250,10 +286,7 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
 - **Org Chart tab.** Contextual, beside the format tab while a position is selected: Subordinate,
   Coworker and Assistant (a glued connector, the Shape Data rows and a tree re-layout in one undo
   step), Delete Position (its connectors go, its subordinates join its manager) and Layout (the
-  geometry area's hierarchy layout). The positions are rectangles of the Basic Shapes stencil, not
-  Visio's Belt masters, so Visio's own Org Chart tab does not recognise them; assistants are
-  placed like subordinates, not beside the manager; no import from a file or directory; editing
-  Shape Data does not rewrite the text on the shape.
+  geometry area's hierarchy layout). Positions were plain rectangles then; the section above replaced them.
 - **Template thumbnails.** Each New tile shows its template drawn by the viewer's page renderer
   (the template is built, parsed and exported as a static SVG), not a stored picture.
 

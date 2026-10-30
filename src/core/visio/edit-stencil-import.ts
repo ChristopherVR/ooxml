@@ -60,11 +60,28 @@ function styleMapper(stencilDocument: Element, document: Element, touch: () => v
 	};
 }
 
+const IMAGE_RELATIONSHIP =
+	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
+/** The pictures a master part owns; any other related part is refused rather than dropped. */
+async function masterPictures(pkg: VisioPackage, part: string) {
+	const media: { relId: string; extension: string; bytes: Uint8Array }[] = [];
+	for (const rel of (await pkg.relationships(part)).values()) {
+		const extension = /\.([A-Za-z0-9]{1,5})$/.exec(rel.target)?.[1];
+		if (rel.type !== IMAGE_RELATIONSHIP || rel.mode !== 'Internal' || !extension)
+			fail(
+				'UNSUPPORTED_EDIT_PACKAGE',
+				'A stencil master that owns parts other than pictures cannot be copied into a drawing yet.',
+			);
+		media.push({ relId: rel.id, extension, bytes: await pkg.readBytes(rel.target) });
+	}
+	return media;
+}
+
 /**
  * Copy one master of a stencil package (.vssx, .vstx or a drawing) into the drawing's masters
  * part, with its styles, as Visio does when a shape of an opened stencil is first dropped. A copy
  * made earlier is found by its UniqueID and reused. A master that owns other parts (pictures)
- * is refused rather than copied without them.
+ * other than pictures is refused rather than copied without them.
  */
 export async function importStencilMaster(
 	source: Uint8Array,
@@ -93,11 +110,7 @@ export async function importStencilMaster(
 	);
 	if (!entry) fail('EDIT_TARGET_NOT_FOUND', 'The stencil has no such master.');
 	const part = await indexedPart(pkg, mastersPart, entry, 'master');
-	if ((await pkg.relationships(part)).size)
-		fail(
-			'UNSUPPORTED_EDIT_PACKAGE',
-			'A stencil master that owns pictures or other parts cannot be copied into a drawing yet.',
-		);
+	const media = await masterPictures(pkg, part);
 	const contents = await visioXml(pkg, part, 'MasterContents');
 	const name = attribute(entry, 'NameU') ?? attribute(entry, 'Name') ?? `Master ${stencilMasterId}`;
 	return addMasterToDrawing(
@@ -121,6 +134,7 @@ export async function importStencilMaster(
 				for (const rel of children(node, 'Rel')) rel.setAttributeNS(NS.r, 'r:id', relationshipId);
 				masters.appendChild(node);
 			},
+			media,
 			contents(document, touch) {
 				const map = styleMapper(stencilDocument, document, touch);
 				const root = copy(contents);

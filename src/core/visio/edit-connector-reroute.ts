@@ -7,6 +7,7 @@ import { proveLocalLine, sameLineCoordinate } from './edit-line-move';
 import type { VisioConnectorEdit, VisioConnectorRoute } from './edit-connector-commands';
 import { addConnectionPoint, deleteConnectionPoint } from './edit-connection-points';
 import type { VisioGeometryEdit } from './edit-commands';
+import { orgChartSites } from './edit-connector-org';
 import {
 	ENDS,
 	chooseSites,
@@ -127,7 +128,9 @@ export function rerouteConnector(
 			},
 		];
 	};
-	const chosen = chooseSites(sites('begin'), sites('end'));
+	// An org chart reporting line leaves the bottom of the manager and enters the subordinate's top.
+	const org = stencil ? orgChartSites(root, shape, glue, sites) : undefined;
+	const chosen = org ?? chooseSites(sites('begin'), sites('end'));
 	if (isStencilLine(shape)) {
 		// A line master draws one straight run; its style is the master's, not a routing choice.
 		if (options.route && options.route !== 'straight')
@@ -184,7 +187,7 @@ export function rerouteConnector(
 				shape,
 				route,
 				// Visio's own side choice first; the general router when that path is blocked.
-				stencilConnectorPath(walk('begin'), walk('end'), route, obstacles) ??
+				(org ? undefined : stencilConnectorPath(walk('begin'), walk('end'), route, obstacles)) ??
 					routeVertices(route, chosen, obstacles),
 				check,
 			)

@@ -379,10 +379,21 @@ installed Visio 16 build is used to check that saved files open without repair.
       Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
       deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a
       thumbnail rendered from its template; Visio 16 reads the data and glue back.
-- [ ] **P1** Org chart positions are plain rectangles, not Visio's Executive, Manager, Position and
-      Assistant Belt masters, so Visio's own Org Chart tab does not recognise them; assistants are
-      placed as subordinates; no import from a file or directory; the text on a position does not
-      follow its Shape Data.
+- [x] **P1** Org chart positions are instances of Visio's Executive, Manager, Position and
+      Assistant Belt masters joined by instances of the Organization Chart stencil's Dynamic
+      connector (masters copied from ORGCH_M.VSTX with their UniqueIDs, Shape Data, user cells and
+      photo; Visio 16 opens the files and reads the masters, Shape Data and glue); assistants sit
+      beside the manager's line; Org Chart > Import builds a chart from a CSV or Excel sheet (Name,
+      Title, Reports To; optional ID, Department, Telephone, E-Mail, Type); the text of a position
+      is its Name and Title and follows them when the Shape Data changes; Delete on a position is
+      Delete Position in one undo step (`ui/org-chart*.ts`, `viewer-org-chart.ts`).
+- [ ] **P2** Org chart remainders: a position that gains subordinates stays a Position Belt (Visio
+      switches its type), the Belt masters cannot be resized (their text-height formulas are not
+      evaluated), no import from a directory, the Organization Chart Wizard's options or
+      Compare/Update, reporting lines are right-angle connectors glued to the whole shape (Visio
+      glues Top and Bottom connection points and routes them itself when a position moves), the
+      masters' theme-driven colours and line patterns are reported as warnings, and a page that
+      already holds connectors cannot be grown for an imported chart.
 - [x] **P1** Group resize scales nested groups and rotated or flipped members as Visio does
       (`W' = W(cos^2 sx + sin^2 sy)`, checked against Visio 16 in
       `edit-group-resize-native.test.ts`); multi-selection resize takes groups, rotated shapes,

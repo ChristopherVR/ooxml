@@ -5,6 +5,7 @@ import { related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
+import { masterMediaParts, type MasterMedia } from './edit-master-media';
 
 const REL = 'http://schemas.microsoft.com/visio/2010/relationships/';
 const MASTERS_TYPE = 'application/vnd.ms-visio.masters+xml';
@@ -44,6 +45,8 @@ export interface MasterSpec {
 	 * is saved when `touchDocument` was called, so a master can bring its styles.
 	 */
 	contents: (document: Element, touchDocument: () => void) => Element | Promise<Element>;
+	/** Pictures the master part refers to by relationship ID (a master's Foreign shape). */
+	media?: readonly MasterMedia[];
 }
 
 /**
@@ -141,6 +144,10 @@ export async function addMasterToDrawing(
 		['[Content_Types].xml', types],
 	]);
 	if (documentTouched) dirty.set(documentPart, documentCopy);
+	const media = spec.media?.length
+		? masterMediaParts(spec.media, directory, taken, types, parts)
+		: undefined;
+	if (media) dirty.set(relationshipsPartFor(masterPart), media.rels);
 	if (!existingPart) {
 		const documentRelsPart = relationshipsPartFor(documentPart);
 		const documentRels = copy(await pkg.readXml(documentRelsPart, 'Relationships'));
@@ -157,7 +164,10 @@ export async function addMasterToDrawing(
 		override(mastersPart, MASTERS_TYPE);
 		dirty.set(documentRelsPart, documentRels);
 	}
-	if (new Set([...parts.keys(), ...dirty.keys()]).size > limits.maxEntries)
+	if (
+		new Set([...parts.keys(), ...dirty.keys(), ...(media?.parts.keys() ?? [])]).size >
+		limits.maxEntries
+	)
 		fail('LIMIT_ENTRIES', 'Adding the master exceeds the package entry limit.');
 	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0);
 	let nodes = 0;
@@ -170,6 +180,11 @@ export async function addMasterToDrawing(
 		if (total > limits.maxTotalBytes) fail('LIMIT_TOTAL', 'Edited package total exceeds limit.');
 		parts.set(path, serialized.bytes);
 	}
+	for (const [path, data] of media?.parts ?? []) {
+		total += data.length;
+		if (total > limits.maxTotalBytes) fail('LIMIT_TOTAL', 'Edited package total exceeds limit.');
+		parts.set(path, data);
+	}
 	const bytes = await writeEditedPackage(parts, maxOutput, deadline, check);
 	const verified = await openEditablePackage(
 		bytes,
@@ -178,5 +193,5 @@ export async function addMasterToDrawing(
 	);
 	await visioXml(verified.pkg, masterPart, 'MasterContents');
 	check();
-	return { bytes, masterId: id, changedParts: [...dirty.keys()] };
+	return { bytes, masterId: id, changedParts: [...dirty.keys(), ...(media?.parts.keys() ?? [])] };
 }

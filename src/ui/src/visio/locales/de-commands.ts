@@ -326,6 +326,7 @@ export const deCommands: Readonly<Record<string, string>> = {
 	Coworker: 'Kollege',
 	Assistant: 'Assistent',
 	'Delete Position': 'Position löschen',
+	'Import Org Chart': 'Organigramm importieren',
 	None: 'Keine',
 	Narrow: 'Schmal',
 	Normal: 'Normal',

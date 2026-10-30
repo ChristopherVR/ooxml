@@ -15,15 +15,18 @@ const templates = new WeakMap<Element, Element>();
 
 const topShapes = (root: Element): Element[] => children(children(root, 'Shapes')[0], 'Shape');
 const deleted = (node: Element) => ['1', 'true'].includes(attribute(node, 'Del') ?? '');
-const plain = (shape: Element) =>
-	['Shape', undefined].includes(attribute(shape, 'Type')) &&
-	!children(shape, 'Shapes').length &&
+/**
+ * A one-shape instance, or the instance of a group master (an org chart position), which glues
+ * and routes through its master's root cells.
+ */
+const registrable = (shape: Element) =>
+	['Shape', 'Group', undefined].includes(attribute(shape, 'Type')) &&
 	!children(shape, 'ForeignData').length &&
 	!deleted(shape);
 
 /**
- * Resolve the master of every top-level one-shape stencil instance on these pages. Instances
- * whose master cannot be merged exactly (groups, chained masters, pictures) are left out and
+ * Resolve the master of every top-level stencil instance on these pages. Instances
+ * whose master cannot be merged exactly (chained masters, pictures of their own) are left out and
  * stay refused wherever a master is not allowed.
  */
 export async function registerStencilShapes(
@@ -34,11 +37,16 @@ export async function registerStencilShapes(
 	for (const root of roots.values())
 		for (const shape of topShapes(root)) {
 			const master = attribute(shape, 'Master');
-			if (master === undefined || shape.hasAttribute('MasterShape') || !plain(shape)) continue;
+			if (master === undefined || shape.hasAttribute('MasterShape') || !registrable(shape))
+				continue;
 			check();
 			try {
 				const source = await template(master);
-				if (plain(source) && !source.hasAttribute('Master') && !source.hasAttribute('MasterShape'))
+				if (
+					registrable(source) &&
+					!source.hasAttribute('Master') &&
+					!source.hasAttribute('MasterShape')
+				)
 					templates.set(shape, source);
 			} catch (error) {
 				if (!(error instanceof VisioPackageError) || error.code.startsWith('LIMIT_')) throw error;
@@ -118,9 +126,23 @@ const MASTER_FORM: readonly (readonly [string, readonly string[]])[] = [
 	['Height', ['guard(endy-beginy)']],
 	['LocPinX', ['guard(width*0.5)']],
 	['LocPinY', ['guard(height*0.5)']],
+];
+/** The text pin cells of the stock master, which owns a TextPosition control. */
+const CONTROLLED_TEXT_PIN: readonly (readonly [string, readonly string[]])[] = [
 	['TxtPinX', ['setatref(controls.textposition)']],
 	['TxtPinY', ['setatref(controls.textposition.y)']],
 ];
+const textPositionRows = (template: Element) =>
+	children(template, 'Section')
+		.filter((item) => attribute(item, 'N') === 'Control')
+		.flatMap((item) => children(item, 'Row'))
+		.filter((row) => attribute(row, 'N') === 'TextPosition');
+/**
+ * The Dynamic connector of the Organization Chart stencil keeps its text pin as plain values and
+ * has no TextPosition control; its text stays where Visio put it until the connector is laid out.
+ */
+export const hasTextPositionControl = (template: Element): boolean =>
+	textPositionRows(template).length > 0;
 /** Local forms of the cells Visio rewrites when it lays the connector out. */
 const LOCAL_FORM: Readonly<Record<string, readonly string[]>> = {
 	PinX: ['inh'],
@@ -136,10 +158,11 @@ const LOCAL_FORM: Readonly<Record<string, readonly string[]>> = {
 export function isDynamicConnectorMaster(template: Element): boolean {
 	const cells = cellMap(template);
 	if (!END_CELLS.every((name) => cells.has(name))) return false;
+	const controlled = hasTextPositionControl(template);
+	const form = controlled ? [...MASTER_FORM, ...CONTROLLED_TEXT_PIN] : MASTER_FORM;
 	if (
-		!MASTER_FORM.every(([name, forms]) =>
-			forms.includes(normal(attribute(cells.get(name), 'F')) ?? ''),
-		)
+		!form.every(([name, forms]) => forms.includes(normal(attribute(cells.get(name), 'F')) ?? '')) ||
+		(!controlled && ['TxtPinX', 'TxtPinY'].some((name) => cells.get(name)?.hasAttribute('F')))
 	)
 		return false;
 	for (const name of ['Angle', 'FlipX', 'FlipY']) {
@@ -163,9 +186,9 @@ export function isDynamicConnectorMaster(template: Element): boolean {
 		)
 	)
 		return false;
-	const control = sectionRows(template, 'Control').filter(
-		(row) => attribute(row, 'N') === 'TextPosition',
-	);
+	const control = textPositionRows(template);
+	if (!control.length)
+		return !children(template, 'Section').some((node) => attribute(node, 'N') === 'Control');
 	if (control.length !== 1) return false;
 	const position = cellMap(control[0]!);
 	return (
@@ -192,7 +215,10 @@ export function proveStencilConnector(shape: Element): Element {
 	const refuse = (): never => fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR_FORM);
 	if (!template || !isDynamicConnectorMaster(template)) return refuse();
 	const local = cellMap(shape);
-	for (const [name, forms] of Object.entries(LOCAL_FORM)) {
+	const plainText = !hasTextPositionControl(template);
+	for (const [name, listed] of Object.entries(LOCAL_FORM)) {
+		// Without a text control the text pin is a plain value, local or inherited.
+		const forms = plainText && name.startsWith('Txt') ? [...listed, ''] : listed;
 		const node = local.get(name);
 		if (!node) continue;
 		const source = attribute(node, 'F');

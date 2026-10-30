@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { parseVsdx } from '../index';
 import { VISIO_TEMPLATES, createTemplateVsdx, isVisioTemplateId } from './templates';
 
+/**
+ * Visio's own org chart masters drive colours, line patterns and rounding from the theme and
+ * cache the symbolic result, which the viewer reports as a warning instead of resolving.
+ */
+const THEME_DRIVEN = new Set([
+	'missing-cached-value',
+	'unsupported-color',
+	'unresolved-line-pattern',
+	'unresolved-line-cap',
+	'unsupported-image-clipping',
+	'master-resize-cached-values',
+	'unsupported-theme-shadow',
+]);
+
 describe('drawing templates', () => {
 	it('lists Blank Drawing first', () => {
 		expect(VISIO_TEMPLATES[0]).toMatchObject({ id: 'blank', name: 'Blank Drawing' });
@@ -28,7 +42,10 @@ describe('drawing templates', () => {
 	] as const)('round-trips %s with glued connectors', async (id, boxes, links) => {
 		const model = await parseVsdx(await createTemplateVsdx(id));
 		const page = model.pages[0]!;
-		expect(model.diagnostics.filter((d) => d.severity === 'warning')).toEqual([]);
+		const warnings = model.diagnostics.filter(
+			(d) => d.severity === 'warning' && !(id === 'organization-chart' && THEME_DRIVEN.has(d.code)),
+		);
+		expect(warnings).toEqual([]);
 		// Each link is a connector shape with a begin and an end glue.
 		expect(page.connectors).toHaveLength(links * 2);
 		const ids = new Set(page.shapes.map((shape) => shape.id));
