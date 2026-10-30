@@ -85,7 +85,7 @@ it('formats, rotates, moves and resizes a stencil shape, saving local values ove
 	// Resize handles, Size & Position and dragging take the shape too.
 	expect(visioResizeShape(page(), '1')).toBeDefined();
 	expect(visioSizePositionState(page(), '1')).toMatchObject({ width: 2, height: 1 });
-	const drag = visioResizeDrag(page(), '1', 'ne', { x: 0, y: 0 }, { x: 0, y: -1 })!;
+	const drag = visioResizeDrag(page(), '1', 'e', { x: 0, y: 0 }, { x: 0, y: -1 })!;
 	await ui.controller.applyEdits([drag.command]);
 	expect(ui.shape().width).toBeCloseTo(3);
 	await ui.controller.applyEdits(visioSizePositionCommand(page(), '1', 'height', 2)!);

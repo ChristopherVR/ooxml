@@ -40,7 +40,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await page.mouse.up();
 			if (cancel) expect((await inventory(viewer)).bytes).toEqual(before.bytes);
 		}
-		await expect.poll(async () => (await inventory(viewer)).shapes[0]!.width).toBeCloseTo(5, 5);
+		await expect.poll(async () => (await inventory(viewer)).shapes[0]!.width).toBeCloseTo(6, 5);
 		const resized = await inventory(viewer),
 			group = resized.shapes[0]!;
 		expect(group.height).toBeCloseTo(1.5, 5);

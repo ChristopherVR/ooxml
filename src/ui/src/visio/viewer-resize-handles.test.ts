@@ -53,7 +53,8 @@ it('renders eight single-selection handles, previews only a frame and commits an
 	ui.pointer('pointerdown', ui.handle(), 55, 35);
 	ui.pointer('pointermove', ui.svg, 65, 25);
 	expect(rotation.style.visibility).toBe('hidden');
-	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('4');
+	// A corner keeps the proportions: the height doubled, so the width doubles too.
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('6');
 	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('2');
 	expect(ui.group().outerHTML).toBe(original);
 	expect(ui.edits).toHaveLength(0);
@@ -67,14 +68,14 @@ it('renders eight single-selection handles, previews only a frame and commits an
 				type: 'resize-shape',
 				pageId: '1',
 				shapeId: '1',
-				width: 4,
+				width: 6,
 				height: 2,
 				anchor: { x: 0, y: 0 },
 			},
 		],
 	]);
 	const resized = (await parseVsdx(ui.controller.exportVsdx().bytes)).pages[0]!.shapes[0]!;
-	expect(resized).toMatchObject({ width: 4, height: 2, rotation: { pinX: 4.5, pinY: 7.5 } });
+	expect(resized).toMatchObject({ width: 6, height: 2, rotation: { pinX: 5.5, pinY: 7.5 } });
 	expect(resized.transform.slice(4)).toEqual([2.5, 6.5]);
 	expect(ui.controller.state.selectedShapes).toBe(selection);
 	expect(ui.feedback).toContain('Shape resized.');
@@ -160,23 +161,23 @@ it('resizes members and spacing in one history entry, preserving selection after
 	ui.pointer('pointerup', ui.svg, 85, 35);
 	expect(ui.edits).toHaveLength(0);
 	ui.pointer('pointerdown', ui.handle(), 85, 35);
-	ui.pointer('pointermove', ui.svg, 105, 25);
-	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('8');
+	ui.pointer('pointermove', ui.svg, 145, 25);
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('12');
 	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('2');
 	expect(ui.group().outerHTML).toBe(original);
 	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
-	ui.pointer('pointerup', ui.svg, 105, 25);
+	ui.pointer('pointerup', ui.svg, 145, 25);
 	await ui.done();
 	expect(ui.edits).toHaveLength(1);
 	const saved = ui.controller.exportVsdx().bytes;
 	const resized = (await parseVsdx(saved)).pages[0]!.shapes;
 	expect(resized.map((shape) => [shape.width, shape.height])).toEqual([
-		[4, 2],
-		[4, 2],
+		[6, 2],
+		[6, 2],
 	]);
 	expect(resized.map((shape) => shape.transform.slice(4))).toEqual([
 		[2.5, 6.5],
-		[6.5, 6.5],
+		[8.5, 6.5],
 	]);
 	expect(ui.controller.state.selectedShapes).toBe(selection);
 	await ui.controller.undo();
@@ -202,5 +203,31 @@ it('rejects a protected later member without accepting earlier edits or history'
 	expect(ui.controller.state.selectedShapes.map((item) => item.id)).toEqual(['1', '2']);
 	expect(ui.svg.querySelector('[data-resize-frame-preview]')).toBeNull();
 	expect(ui.feedback.join(' ')).toMatch(/LockMoveX|locked/i);
+	ui.dispose();
+});
+
+it('keeps proportions on a side handle while Shift is held', async () => {
+	const ui = await setup();
+	ui.select();
+	ui.pointer('pointerdown', ui.handle('e'), 55, 30);
+	ui.pointer('pointermove', ui.svg, 85, 30);
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('6');
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('1');
+	ui.pointer('pointermove', ui.svg, 85, 30, { shiftKey: true });
+	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('2');
+	ui.pointer('pointerup', ui.svg, 85, 30, { shiftKey: true });
+	await ui.done();
+	expect(ui.edits).toEqual([
+		[
+			{
+				type: 'resize-shape',
+				pageId: '1',
+				shapeId: '1',
+				width: 6,
+				height: 2,
+				anchor: { x: 0, y: 0.5 },
+			},
+		],
+	]);
 	ui.dispose();
 });

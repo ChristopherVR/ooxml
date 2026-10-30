@@ -1,5 +1,27 @@
 # Visio capability ledger
 
+## Proportional resizing, 2026-10-30
+
+Dragging a corner handle now keeps the shape's proportions, and Shift keeps them
+on every handle, as Microsoft's
+[resize guide](https://support.microsoft.com/en-us/visio/resize-a-shape) describes
+for Visio. The axis that changed more sets the scale; a Shift side drag grows the
+other axis about its centre (anchor 0.5). The same rule applies to the surrounding
+rectangle of a multiple selection and to flat local groups. The ratio survives the
+1/16 inch minimum.
+Side handles without Shift still change one dimension. The rule lives in core
+(`visioResizeKeepsProportions`, `visioProportionalSize` in
+`src/core/visio/ui/shape-resize.ts`), so every binding gets it from the shared
+viewer element.
+
+Not established: a native comparison of the gesture itself (COM cannot drive a
+handle drag, and keystrokes into a visible Visio are not allowed here), Ctrl and
+Alt during a resize, and resize alignment or size-match hints.
+
+Verification: the Visio core UI tests (270) and the Visio UI tests (1,329) pass, and
+the resize, selection-resize, group-resize, stencil and mobile browser specs pass in
+all six demos (26 tests).
+
 ## Flat local group resizing, 2026-10-28
 
 A selected flat local group now has eight resize handles. Its ordinary,

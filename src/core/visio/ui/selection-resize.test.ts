@@ -138,12 +138,54 @@ it('clamps by the smallest member without enlarging already tiny untouched dimen
 	const result = visioResizeSelectionDrag(
 		page,
 		['1', '2'],
-		'ne',
+		'n',
 		{ x: 0, y: 0 },
 		{ x: -100, y: 100 },
 	)!;
 	expect(result.frame.width).toBe(original.width);
 	expect(result.frame.height / original.height).toBeCloseTo(1 / 16);
+	// A corner keeps the proportions, so the tiny member's width holds the whole selection.
+	const corner = visioResizeSelectionDrag(
+		page,
+		['1', '2'],
+		'ne',
+		{ x: 0, y: 0 },
+		{ x: -100, y: 100 },
+	)!;
+	expect(corner.frame.width).toBeCloseTo(original.width);
+	expect(corner.frame.height).toBeCloseTo(original.height);
+});
+
+it('scales a multiple selection proportionally from corners and with Shift', async () => {
+	const page = (await parseVsdx(await source())).pages[0]!;
+	const original = visioResizeSelectionFrame(page, ['1', '2'])!;
+	const corner = visioResizeSelectionDrag(page, ['1', '2'], 'sw', { x: 0, y: 0 }, { x: -1, y: 0 })!;
+	const scale = corner.frame.width / original.width;
+	expect(scale).toBeGreaterThan(1);
+	expect(corner.frame.height / original.height).toBeCloseTo(scale);
+	// The north-east corner, opposite the handle, stays fixed.
+	expect(corner.frame.transform[4] + corner.frame.width).toBeCloseTo(
+		original.transform[4] + original.width,
+	);
+	expect(corner.frame.transform[5] + corner.frame.height).toBeCloseTo(
+		original.transform[5] + original.height,
+	);
+	const shift = visioResizeSelectionDrag(
+		page,
+		['1', '2'],
+		's',
+		{ x: 0, y: 0 },
+		{ x: 0, y: 1 },
+		{
+			proportional: true,
+		},
+	)!;
+	const s = shift.frame.height / original.height;
+	expect(shift.frame.width / original.width).toBeCloseTo(s);
+	expect(shift.frame.pinX).toBeCloseTo(original.pinX);
+	expect(shift.frame.transform[5] + shift.frame.height).toBeCloseTo(
+		original.transform[5] + original.height,
+	);
 });
 
 it('declines mixed, rotated, nested, attached and invalid selections as a whole', async () => {

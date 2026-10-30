@@ -68,5 +68,7 @@ export const handlePoint = (viewer: Locator) =>
 			circle.getScreenCTM()!,
 		);
 		const ctm = circle.ownerSVGElement!.getScreenCTM()!;
-		return { x: point.x, y: point.y, dx: ctm.a, dy: -0.5 * ctm.d };
+		// Two inches right and half an inch up scale the 4 x 1 inch frame by 1.5 on both axes, as
+		// Visio keeps the proportions on a corner handle.
+		return { x: point.x, y: point.y, dx: 2 * ctm.a, dy: -0.5 * ctm.d };
 	});

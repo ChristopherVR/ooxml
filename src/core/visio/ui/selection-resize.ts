@@ -8,6 +8,9 @@ import {
 	visioResizeDrag,
 	visioResizeFrame,
 	visioResizeShape,
+	visioProportionalSize,
+	visioResizeKeepsProportions,
+	type VisioResizeDragOptions,
 	type VisioResizeFrame,
 	type VisioResizeHandle,
 } from './shape-resize';
@@ -85,6 +88,7 @@ export function visioResizeSelectionDrag(
 	handle: VisioResizeHandle,
 	start: VisioPagePoint,
 	end: VisioPagePoint,
+	options: VisioResizeDragOptions = {},
 ):
 	| {
 			frame: VisioResizeFrame;
@@ -95,7 +99,7 @@ export function visioResizeSelectionDrag(
 	const shapes = candidates(page, ids);
 	if (!shapes || !VISIO_RESIZE_HANDLES.some((item) => item.id === handle)) return undefined;
 	if (shapes.length === 1) {
-		const result = visioResizeDrag(page, ids[0]!, handle, start, end);
+		const result = visioResizeDrag(page, ids[0]!, handle, start, end, options);
 		return (
 			result && {
 				frame: result.frame,
@@ -109,21 +113,32 @@ export function visioResizeSelectionDrag(
 	const [, , , , left, bottom] = original.transform;
 	// Shared PowerPoint interaction geometry uses downward-positive y. Preserve the per-member
 	// minimum (including already tiny shapes) by constraining each common scale independently.
-	const box = applyResize(
+	const min = {
+		width:
+			original.width *
+			Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.width) / shape.width)),
+		height:
+			original.height *
+			Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.height) / shape.height)),
+	};
+	let box = applyResize(
 		{ x: left, y: -bottom - original.height, width: original.width, height: original.height },
 		handle,
 		end.x - start.x,
 		end.y - start.y,
 		1,
-		{
-			minWidth:
-				original.width *
-				Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.width) / shape.width)),
-			minHeight:
-				original.height *
-				Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.height) / shape.height)),
-		},
+		{ minWidth: min.width, minHeight: min.height },
 	);
+	if (visioResizeKeepsProportions(handle, options)) {
+		// Scale the surrounding rectangle uniformly about the point opposite the handle.
+		const location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle)!;
+		const size = visioProportionalSize(original, box, location, min);
+		const ax = 1 - location.x,
+			ay = 1 - location.y;
+		const nextLeft = left + ax * (original.width - size.width),
+			nextBottomEdge = bottom + ay * (original.height - size.height);
+		box = { ...box, ...size, x: nextLeft, y: -nextBottomEdge - size.height };
+	}
 	const sx = box.width / original.width,
 		sy = box.height / original.height;
 	const nextBottom = -box.y - box.height;

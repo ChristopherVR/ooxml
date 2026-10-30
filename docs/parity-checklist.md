@@ -326,8 +326,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       multi-selection resize excludes groups, rotation, layers and glue.
 - [ ] **P1** Connectors in files saved by Visio are refused for geometry edits; a copy that meets
       another dynamic connector is refused.
-- [ ] **P1** Resize ignores Shift, Ctrl and Alt (aspect, centre-out); no resize alignment or
-      size-match hints.
+- [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
+      (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
+- [ ] **P1** Resize has no alignment or size-match hints, and Ctrl and Alt during a resize are
+      not verified against Visio.
 - [ ] **P1** Link Data and Data Visualizer; Data Graphics Position, Configure and Auto Space.
 - [ ] **P1** PDF export is a picture per page with no selectable text; no XPS.
 - [ ] **P2** No ShapeSheet window or Developer tab; page tabs cannot be dragged to reorder (a

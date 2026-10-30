@@ -63,12 +63,12 @@ it.each([0.5, 1, 2])(
 	(scale) => {
 		const scene = page();
 		scene.drawingToPageScale = scale;
-		expect(visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 1, y: -1 })!.command).toEqual({
+		expect(visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 1, y: -0.5 })!.command).toEqual({
 			type: 'resize-shape',
 			pageId: scene.id,
 			shapeId: '1',
 			width: 3 / scale,
-			height: 2 / scale,
+			height: 1.5 / scale,
 			anchor: { x: 0, y: 0 },
 		});
 	},
@@ -76,8 +76,12 @@ it.each([0.5, 1, 2])(
 it('clamps crossing handles without changing flips and leaves tiny untouched dimensions unchanged', () => {
 	const scene = page();
 	const frame = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: -10, y: 10 })!.frame;
-	expect(frame.width).toBe(1 / 16);
+	// A corner keeps the 2:1 proportions, so the shorter side stops at 1/16 inch.
+	expect(frame.width).toBe(1 / 8);
 	expect(frame.height).toBe(1 / 16);
+	const side = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, { x: -10, y: 10 })!.frame;
+	expect(side.width).toBe(1 / 16);
+	expect(side.height).toBe(1);
 	scene.shapes[0]!.width = 0.01;
 	scene.shapes[0]!.height = 0.01;
 	const tiny = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 0, y: 0 })!.frame;
@@ -117,4 +121,35 @@ it('offers flat group handles with rotated parents and refuses unsupported membe
 	delete member.layerIds;
 	scene.connectors = [{ fromShapeId: '3', toShapeId: '2', fromCell: 'BeginX', toCell: 'PinX' }];
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
+});
+
+it('keeps proportions on corners, and on side handles with Shift about the centre', () => {
+	const scene = page();
+	// The axis that changed more wins: +0.25 in width is 12.5%, +0.5 in height is 50%.
+	const corner = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 0.25, y: -0.5 })!;
+	expect(corner.frame.width).toBeCloseTo(3);
+	expect(corner.frame.height).toBeCloseTo(1.5);
+	expect(corner.command.anchor).toEqual({ x: 0, y: 0 });
+	const free = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, { x: 1, y: 0 })!;
+	expect([free.frame.width, free.frame.height]).toEqual([3, 1]);
+	const shift = visioResizeDrag(
+		scene,
+		'1',
+		'e',
+		{ x: 0, y: 0 },
+		{ x: 1, y: 0 },
+		{
+			proportional: true,
+		},
+	)!;
+	expect(shift.frame.width).toBeCloseTo(3);
+	expect(shift.frame.height).toBeCloseTo(1.5);
+	expect(shift.command.anchor).toEqual({ x: 0, y: 0.5 });
+	const pin = scene.shapes[0]!.rotation!;
+	// The left edge stays put and the vertical centre does not move.
+	expect(shift.frame.transform[4]).toBeCloseTo(scene.shapes[0]!.transform[4]);
+	expect(shift.frame.transform[5] + shift.frame.height / 2).toBeCloseTo(
+		scene.shapes[0]!.transform[5] + scene.shapes[0]!.height / 2,
+	);
+	expect(pin).toEqual(page().shapes[0]!.rotation);
 });

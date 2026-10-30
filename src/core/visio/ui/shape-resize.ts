@@ -90,6 +90,40 @@ export function visioResizeFrame(
 			}
 		: undefined;
 }
+/** How a drag maps onto the shape's size. Visio keeps the proportions when a corner handle is
+ * dragged, and on any handle while Shift is held (`proportional`); side handles otherwise change
+ * one dimension. */
+export interface VisioResizeDragOptions {
+	proportional?: boolean;
+}
+/** True when a drag on `handle` keeps the shape's proportions, as Visio does. */
+export function visioResizeKeepsProportions(
+	handle: VisioResizeHandle,
+	options: VisioResizeDragOptions = {},
+): boolean {
+	return !!options.proportional || handle.length === 2;
+}
+/** Scale a raw resize uniformly. A corner follows the axis that changed more; a side handle
+ * scales the other axis with it about its centre. The ratio survives the minimum-size clamp. */
+export function visioProportionalSize(
+	shape: { width: number; height: number },
+	raw: { width: number; height: number },
+	location: { x: number; y: number },
+	min = { width: Math.min(1 / 16, shape.width), height: Math.min(1 / 16, shape.height) },
+): { width: number; height: number } {
+	const sx = raw.width / shape.width,
+		sy = raw.height / shape.height;
+	let scale =
+		location.x === 0.5
+			? sy
+			: location.y === 0.5
+				? sx
+				: Math.abs(sx - 1) >= Math.abs(sy - 1)
+					? sx
+					: sy;
+	scale = Math.max(scale, min.width / shape.width, min.height / shape.height);
+	return { width: shape.width * scale, height: shape.height * scale };
+}
 /** Drag in physical page coordinates along the saved rotated/reflected local axes.
  * Crossing the opposite handle clamps at 1/16 physical inch; it does not silently change flips.
  */
@@ -99,6 +133,7 @@ export function visioResizeDrag(
 	handle: VisioResizeHandle,
 	start: VisioPagePoint,
 	end: VisioPagePoint,
+	options: VisioResizeDragOptions = {},
 ): { frame: VisioResizeFrame; command: Extract<VisioEdit, { type: 'resize-shape' }> } | undefined {
 	const shape = visioResizeShape(page, id),
 		location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle);
@@ -108,7 +143,7 @@ export function visioResizeDrag(
 		determinant = a * d - b * c;
 	const x = (d * delta.x - c * delta.y) / determinant,
 		y = (-b * delta.x + a * delta.y) / determinant;
-	const size = {
+	const raw = {
 		width:
 			location.x === 0.5
 				? shape.width
@@ -118,6 +153,10 @@ export function visioResizeDrag(
 				? shape.height
 				: Math.max(Math.min(1 / 16, shape.height), shape.height + (location.y === 1 ? y : -y)),
 	};
+	const size = visioResizeKeepsProportions(handle, options)
+		? visioProportionalSize(shape, raw, location)
+		: raw;
+	// The opposite point stays fixed; a proportional side drag grows the other axis about its centre.
 	const anchor: VisioResizeAnchor = {
 		x: (1 - location.x) as VisioResizeAnchor['x'],
 		y: (1 - location.y) as VisioResizeAnchor['y'],

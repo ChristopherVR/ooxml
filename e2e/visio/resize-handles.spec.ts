@@ -137,13 +137,13 @@ for (const [index, framework] of [
 		await page.mouse.up();
 		expect((await inventory(viewer)).bytes).toEqual(before.bytes);
 		const [a, b, c, d] = before.transform;
-		const delta = await clientDelta(viewer, a! * 0.43 + c! * 0.27, -(b! * 0.43 + d! * 0.27));
+		const delta = await clientDelta(viewer, a! * 0.54 + c! * 0.27, -(b! * 0.54 + d! * 0.27));
 		await page.mouse.move(start.x, start.y);
 		await page.mouse.down();
 		await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 5 });
 		await expect(viewer.locator('[data-resize-frame-preview]')).toHaveCount(1);
 		const projected = await preview(viewer);
-		expect(projected.width).toBeCloseTo(2.43, 5);
+		expect(projected.width).toBeCloseTo(2.54, 5);
 		expect(projected.height).toBeCloseTo(1.27, 5);
 		expect((await inventory(viewer)).bytes).toEqual(before.bytes);
 		expect((await inventory(viewer)).transform).toEqual(before.transform);

@@ -39,14 +39,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			.poll(async () =>
 				Number(await viewer.locator('[data-resize-frame-preview]').getAttribute('width')),
 			)
-			.toBeCloseTo(5, 5);
+			.toBeCloseTo(6, 5);
 		await expect
 			.poll(async () =>
 				Number(await viewer.locator('[data-resize-frame-preview]').getAttribute('height')),
 			)
 			.toBeCloseTo(1.5, 5);
 		// Browser pointer/CTM coordinates have finite precision. Compare saved geometry to the
-		// actual preview more strictly than the nominal one-inch, half-inch pointer displacement.
+		// actual preview more strictly than the nominal two-inch, half-inch pointer displacement.
 		const projected = await viewer.locator('[data-resize-frame-preview]').evaluate((node) => ({
 			width: Number(node.getAttribute('width')),
 			height: Number(node.getAttribute('height')),

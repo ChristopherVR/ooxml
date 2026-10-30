@@ -31,7 +31,8 @@ interface Drag {
 	showOverlays?: () => void;
 }
 const pointOptions = { snap: false, bounded: false } as const;
-/** Eight source-backed selection handles; saved content is never speculatively resized. */
+/** Eight source-backed selection handles; saved content is never speculatively resized.
+ * Like Visio, corners keep the proportions and Shift keeps them on every handle. */
 export class ViewerResizeHandles {
 	#drag: Drag | undefined;
 	#frame: ReturnType<typeof createResizeFrame> | undefined;
@@ -175,7 +176,10 @@ export class ViewerResizeHandles {
 		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		const resized =
-			point && visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point);
+			point &&
+			visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point, {
+				proportional: event.shiftKey,
+			});
 		if (resized && this.#current(drag)) drag.frame.update(resized.frame);
 		event.preventDefault();
 		event.stopImmediatePropagation();
@@ -207,7 +211,9 @@ export class ViewerResizeHandles {
 		const resized =
 			point &&
 			this.#current(drag) &&
-			visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point);
+			visioResizeSelectionDrag(drag.page, drag.shapeIds, drag.handle, drag.start, point, {
+				proportional: event.shiftKey,
+			});
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const settle = this.#release();
