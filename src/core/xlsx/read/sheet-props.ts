@@ -12,6 +12,7 @@ import type {
 import type { XmlElement } from '../../xml/index';
 import { readModernHash } from './password-hash';
 import { readFilterColumn } from './filter-columns';
+import { readSortState } from './sort-state';
 import { parseColor } from './style-parts';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
@@ -136,6 +137,8 @@ export function readAutoFilter(
 	const filter: AutoFilter = { range };
 	const columns = xChildren(node, 'filterColumn').map((column) => readFilterColumn(column, dxfs));
 	if (columns.length) filter.columns = columns;
+	const sortState = readSortState(xFirst(node, 'sortState'), dxfs);
+	if (sortState) filter.sortState = sortState;
 	return filter;
 }
 

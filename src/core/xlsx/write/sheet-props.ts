@@ -1,4 +1,4 @@
-import { elements } from '../../xml/index';
+import { elements, type XmlElement } from '../../xml/index';
 import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
 import type { ColumnInfo, Worksheet } from '../model';
@@ -13,6 +13,7 @@ import {
 } from '../read/sheet-props';
 import { outerXml } from '../read/xml-util';
 import { filterColumnXml, unresolvedFilter } from './filter-columns';
+import { sortStateXml } from './sort-state';
 import { mergedAttrs } from './attr-merge';
 import { modernHashValues } from './password-hash';
 import { sameModel, snapshotElement, snapshotXml } from './snapshot';
@@ -190,6 +191,14 @@ export function protectionXml(sheet: Worksheet): string {
 	return el('sheetProtection', values);
 }
 
+const extLstOf = (source: XmlElement | undefined): string =>
+	source
+		? elements(source)
+				.filter((node) => node.localName === 'extLst')
+				.map((node) => outerXml(node))
+				.join('')
+		: '';
+
 export function autoFilterXml(sheet: Worksheet, styles?: StyleWriter): string {
 	const filter = sheet.autoFilter;
 	if (!filter) return '';
@@ -203,8 +212,9 @@ export function autoFilterXml(sheet: Worksheet, styles?: StyleWriter): string {
 		.map((column) => filterColumnXml(column, styles))
 		.join('');
 	// A kept `sortState` (inside the filter) stays only while the range is unchanged.
-	const sort =
-		source && sameModel(readAutoFilter(source)?.range, filter.range)
+	const sort = filter.sortState
+		? sortStateXml(filter.sortState, styles) + extLstOf(source)
+		: source && sameModel(readAutoFilter(source)?.range, filter.range)
 			? elements(source)
 					.filter((node) => node.localName === 'sortState' || node.localName === 'extLst')
 					.map((node) => outerXml(node))

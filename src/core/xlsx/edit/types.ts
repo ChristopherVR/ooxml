@@ -181,8 +181,9 @@ export interface EditSession {
 	sort(
 		sheet: number,
 		range: CellRange,
-		keys: { col: number; descending?: boolean }[],
+		keys: import('./sort-keys').SortKey[],
 		hasHeader: boolean,
+		options?: Pick<import('./sort-keys').SortOptions, 'leftToRight' | 'caseSensitive'>,
 	): void;
 	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;

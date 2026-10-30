@@ -17,6 +17,7 @@ import {
 	writeTables,
 	type SaveContext,
 } from './sheet-parts';
+import { sheetSortStateXml } from './sort-state';
 import {
 	autoFilterXml,
 	colsXml,
@@ -104,6 +105,7 @@ export function writeWorksheet(
 	blocks.set('scenarios', scenariosXml(sheet.scenarios));
 	blocks.set('customSheetViews', customSheetViewsXml(sheet.customViews));
 	blocks.set('autoFilter', autoFilterXml(sheet, ctx.styles));
+	blocks.set('sortState', sheetSortStateXml(sheet, ctx.styles));
 	blocks.set('mergeCells', mergeCellsXml(sheet));
 	blocks.set('conditionalFormatting', conditionalFormatsXml(sheet.conditionalFormats, ctx.styles));
 	blocks.set('dataValidations', dataValidationsXml(sheet.dataValidations));

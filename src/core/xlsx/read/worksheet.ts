@@ -26,6 +26,7 @@ import {
 	readTabColor,
 } from './sheet-props';
 import { readScenarios } from './scenarios';
+import { readSortState } from './sort-state';
 import { readPrintOptions } from './print-options';
 import { parseTable } from './tables';
 import { att, outerXml, selfContainedXml, xChildren } from './xml-util';
@@ -217,6 +218,8 @@ function readWorksheet(
 	if (protection) sheet.protection = protection;
 	const autoFilter = readAutoFilter(byName.get('autoFilter'), ctx.dxfs);
 	if (autoFilter) sheet.autoFilter = autoFilter;
+	const sortState = readSortState(byName.get('sortState'), ctx.dxfs);
+	if (sortState) sheet.sortState = sortState;
 	sheet.merges = xChildren(byName.get('mergeCells') ?? root, 'mergeCell')
 		.map((node) => parseRange(att(node, 'ref') ?? ''))
 		.filter((range) => range !== undefined);

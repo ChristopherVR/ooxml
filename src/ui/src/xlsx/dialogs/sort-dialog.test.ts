@@ -76,4 +76,41 @@ describe('sort dialog', () => {
 		expect(await again).toBeUndefined();
 		expect(column(ctx, 0)).toEqual(['Name', 'b', 'a', 'c']);
 	});
+
+	it('sorts on a custom list with Options for case and orientation', async () => {
+		const ctx = createTestContext(createWorkbook());
+		registerRuleDialogs(ctx);
+		ctx.session()!.setRangeValues(0, { row: 0, col: 0 }, [['Day'], ['Wed'], ['Mon'], ['Sun']]);
+		ctx.select('A1');
+		const result = ctx.dialogs.open('sort');
+		const d = dialogEl(ctx, 'sort');
+		setValue(selects(d, 'Order')[0]!, 'custom');
+		const pick = selects(d, 'Custom List...')[0]!;
+		expect(pick.hidden).toBe(false);
+		setValue(pick, '0');
+		clickButton(d, 'OK');
+		const keys = await result;
+		expect(keys?.[0]?.customList).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+		expect(column(ctx, 0)).toEqual(['Day', 'Sun', 'Mon', 'Wed']);
+	});
+
+	it('offers colours and orders by them, and switches to rows left to right', async () => {
+		const ctx = setup();
+		const result = ctx.dialogs.open('sort');
+		const d = dialogEl(ctx, 'sort');
+		setValue(selects(d, 'Sort On')[0]!, 'cellColor');
+		expect([...selects(d, 'Order')[0]!.options].map((o) => o.value)).toEqual(['top', 'bottom']);
+		clickButton(d, 'Options...');
+		setValue(selects(d, 'Orientation')[0]!, 'lr');
+		expect(selects(d, 'Row')).toHaveLength(1);
+		expect([...selects(d, 'Order')[0]!.options].map((o) => o.textContent)).toEqual([
+			'On Left',
+			'On Right',
+		]);
+		setValue(selects(d, 'Sort On')[0]!, 'value');
+		setValue(selects(d, 'Row')[0]!, '1');
+		clickButton(d, 'OK');
+		await result;
+		expect(ctx.workbook()!.sheets[0]!.sortState?.columnSort).toBe(true);
+	});
 });

@@ -243,7 +243,8 @@ export function createEditSession(
 		setHidden: (s, axis, indices, hidden) => dimensions.setHidden(ctx, s, axis, indices, hidden),
 		merge: (s, range, mode) => merge.merge(ctx, s, range, mode),
 		unmerge: (s, range) => merge.unmerge(ctx, s, range),
-		sort: (s, range, keys, hasHeader) => sort.sortRange(ctx, s, range, keys, hasHeader),
+		sort: (s, range, keys, hasHeader, options) =>
+			sort.sortRange(ctx, s, range, keys, hasHeader, options),
 		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
 		copyAreas: (s, ranges) => copyAreas(workbook, s, ranges),
