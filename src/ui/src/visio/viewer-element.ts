@@ -27,6 +27,7 @@ import { fitZoom } from './viewer-fit';
 import { createShapesStrip, createShapesWindow } from './shapes-window';
 import { createBackstage, type BackstagePage } from './backstage';
 import type { CreateVsdxOptions } from 'ooxml-core/visio';
+import type { VisioTemplateId } from 'ooxml-core/visio/ui';
 import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
@@ -371,6 +372,7 @@ export class VisioViewerElement extends BaseElement {
 			fileName: () => this.#fileName,
 			load: (source) => this.load(source),
 			createBlankDrawing: () => this.createBlankDrawing(),
+			createFromTemplate: (template) => this.createFromTemplate(template),
 			exportVsdx: () => this.controller.exportVsdx(),
 			// A downloaded copy exists as a file: the AutoRecover copy has done its job.
 			downloaded: () => this.#recover.saved(),
@@ -531,10 +533,17 @@ export class VisioViewerElement extends BaseElement {
 	}
 	/** Create a source-backed drawing and name only the accepted request. */
 	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
+		return this.#createDrawing(() => this.controller.createBlankDrawing(options));
+	}
+	/** Create a drawing from a File > New template (Blank Drawing, flowcharts, org chart). */
+	async createFromTemplate(template: VisioTemplateId): Promise<void> {
+		return this.#createDrawing(() => this.controller.createFromTemplate(template));
+	}
+	async #createDrawing(create: () => Promise<void>): Promise<void> {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
 		const generation = this.controller.documentGeneration;
-		await this.controller.createBlankDrawing(options);
+		await create();
 		if (
 			this.#disposed ||
 			token !== this.#loadToken ||

@@ -1,6 +1,6 @@
 import { createVsdx, editVsdx, type VisioEdit } from '../index';
 
-interface SampleBox {
+export interface SampleBox {
 	id: string;
 	text: string;
 	x: number;
@@ -11,12 +11,12 @@ interface SampleBox {
 	/** The built-in stencil master the box is an instance of; Basic Shapes' Rectangle by default. */
 	master?: string;
 }
-interface SampleLink {
+export interface SampleLink {
 	id: string;
 	from: string;
 	to: string;
 }
-interface SamplePage {
+export interface SamplePage {
 	id: string;
 	name: string;
 	width: number;
@@ -115,7 +115,7 @@ const PAGES: readonly SamplePage[] = [
 	},
 ];
 
-function shapeEdits(page: SamplePage): VisioEdit[] {
+export function shapeEdits(page: SamplePage): VisioEdit[] {
 	const pageId = page.id;
 	const box = (id: string) => page.boxes.find((candidate) => candidate.id === id)!;
 	return [

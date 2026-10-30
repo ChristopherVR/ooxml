@@ -1,6 +1,6 @@
 import type { ViewerState } from './controller';
 import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
-import type { VsdxSource } from 'ooxml-core/visio/ui';
+import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
 import { openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { wireNewDrawing } from './viewer-new-drawing';
@@ -15,6 +15,7 @@ export interface BackstageHost {
 	fileName(): string;
 	load(source: VsdxSource): Promise<void>;
 	createBlankDrawing(): Promise<void>;
+	createFromTemplate(template: VisioTemplateId): Promise<void>;
 	exportVsdx(): { bytes: Uint8Array; dirty: boolean };
 	exportSvg(): { svg: string; pageIndex: number };
 	/** Raster PDF of the foreground pages, or a PNG of the current page (viewer-export). */
@@ -101,10 +102,12 @@ export class ViewerBackstage {
 		const options = { signal: events.signal };
 		this.#newDrawing = wireNewDrawing(
 			this.host.root,
-			async () => {
+			async (template) => {
 				// Ctrl+N as well as the button: a host that removed New (`open: false`) gets neither.
 				if (this.#custom().commands.has('new-blank')) return;
-				if (this.#announce('new')) await this.host.createBlankDrawing();
+				if (!this.#announce('new')) return;
+				if (template && template !== 'blank') await this.host.createFromTemplate(template);
+				else await this.host.createBlankDrawing();
 			},
 			() => !!(this.#state?.loading || this.#state?.edit.busy),
 			this.host.announce,
@@ -192,7 +195,10 @@ export class ViewerBackstage {
 		if (this.#custom().commands.has(action)) return;
 		if (action === 'open') this.#open();
 		else if (action === 'new-blank') this.#newDrawing?.run();
-		else if (action === 'download') this.#download();
+		else if (action.startsWith('new-template:')) {
+			const id = action.slice('new-template:'.length);
+			if (isVisioTemplateId(id)) this.#newDrawing?.run(id);
+		} else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
 		else if (action === 'export-pdf' || action === 'export-png')
 			void this.#exportPicture(action === 'export-pdf' ? 'pdf' : 'png');
@@ -360,11 +366,12 @@ export class ViewerBackstage {
 			? `${notes === 1 ? 'One part' : `${notes} parts`} of this drawing ${notes === 1 ? 'is' : 'are'} shown approximately or not at all:`
 			: 'No compatibility notes.';
 		const busy = state.loading || state.edit.busy;
-		const blank = this.#root.querySelector<HTMLButtonElement>(
-			'[data-backstage-action="new-blank"]',
-		)!;
-		blank.disabled = busy;
-		blank.title = busy ? 'Wait for the current document operation.' : '';
+		for (const tile of this.#root.querySelectorAll<HTMLButtonElement>(
+			'[data-backstage-action="new-blank"], [data-backstage-action^="new-template:"]',
+		)) {
+			tile.disabled = busy;
+			tile.title = busy ? 'Wait for the current document operation.' : '';
+		}
 		const saveReason =
 			state.document?.format === 'vsd'
 				? 'Legacy VSD drawings are read only here.'

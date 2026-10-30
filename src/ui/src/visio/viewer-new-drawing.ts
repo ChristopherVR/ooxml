@@ -1,18 +1,18 @@
-import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
+import { editErrorMessage, isEditCancellation, type VisioTemplateId } from 'ooxml-core/visio/ui';
 
 /** File New and its shortcut share the element's source lifecycle. */
 export function wireNewDrawing(
 	root: ShadowRoot,
-	create: () => Promise<void>,
+	create: (template?: VisioTemplateId) => Promise<void>,
 	busy: () => boolean,
 	announce: (message: string) => void,
-): { run(): void; dispose(): void } {
+): { run(template?: VisioTemplateId): void; dispose(): void } {
 	const Abort = root.ownerDocument.defaultView?.AbortController ?? AbortController;
 	const events = new Abort();
 	let disposed = false;
-	const run = () => {
+	const run = (template?: VisioTemplateId) => {
 		if (disposed || busy()) return;
-		void create().catch((error: unknown) => {
+		void create(template).catch((error: unknown) => {
 			if (!disposed && !isEditCancellation(error)) announce(editErrorMessage(error));
 		});
 	};

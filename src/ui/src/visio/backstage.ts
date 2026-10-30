@@ -1,3 +1,4 @@
+import { VISIO_TEMPLATES } from 'ooxml-core/visio/ui';
 import type { OfficeBackstageItem } from '../controls';
 
 /** Visio's File (backstage) pages, in Visio's order. Save and Close act without a page. */
@@ -183,7 +184,16 @@ export function createBackstage(doc: Document): HTMLElement {
 	const templates = el(doc, 'div', 'backstage-templates');
 	const slot = doc.createElement('slot');
 	slot.name = 'templates';
-	templates.append(action(doc, 'new-blank', 'Blank drawing', 'Start an empty drawing.'), slot);
+	for (const template of VISIO_TEMPLATES)
+		templates.append(
+			action(
+				doc,
+				template.id === 'blank' ? 'new-blank' : `new-template:${template.id}`,
+				template.name,
+				template.description,
+			),
+		);
+	templates.append(slot);
 	const input = el(doc, 'input', 'backstage-file-input');
 	input.type = 'file';
 	input.accept = '.vsdx,.vsd';

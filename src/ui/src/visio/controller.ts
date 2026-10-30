@@ -58,7 +58,11 @@ import {
 	visibleSelection,
 	type LayerVisibilityOverride,
 } from './viewer-layers';
-import { assertViewableDocument } from 'ooxml-core/visio/ui';
+import {
+	assertViewableDocument,
+	createTemplateVsdx,
+	type VisioTemplateId,
+} from 'ooxml-core/visio/ui';
 import type { CancellableParser } from './worker-parser';
 import type { DiagramTool } from './diagram-tool';
 import type { ViewerEvents, VisioShapeSelection } from 'ooxml-core/visio/ui';
@@ -494,6 +498,10 @@ export class ViewerController {
 	/** A fresh source-backed drawing shares load replacement and cancellation behavior. */
 	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
 		return this.loadSource(() => createVsdx(options));
+	}
+	/** A starter drawing from File > New shares the blank drawing's load path. */
+	async createFromTemplate(template: VisioTemplateId): Promise<void> {
+		return this.loadSource(() => createTemplateVsdx(template));
 	}
 	/** Reading bytes shares the same request epoch and error state as parsing them. */
 	async loadSource(

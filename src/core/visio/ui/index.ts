@@ -74,3 +74,4 @@ export * from './text-block';
 export * from './text-field-catalog';
 export * from './sample-drawing';
 export * from './master-drop';
+export * from './templates';
