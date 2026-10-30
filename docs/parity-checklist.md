@@ -196,8 +196,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Editing and behaviour
 
 - [ ] **P1** Mail merge: no data source or MERGEFIELD engine.
-- [ ] **P1** Find & Replace is literal with case sensitivity only: no wildcards, whole word,
-      formatting search or special characters (`src/ui/src/docx/search-controller.ts`).
+- [ ] **P1** Find & Replace: formatting search (Format > Font, Paragraph, Style) remains. Wildcards,
+      whole words, prefix and suffix, the ignore options and the Special codes are done
+      (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`).
 - [ ] **P1** Only Draft and Print Layout views: no Read Mode, Web Layout, Outline or Focus.
 - [ ] **P1** Index, citations and bibliography, Table of Authorities.
 - [ ] **P1** Compare and Combine; accessibility checker.

@@ -6,14 +6,24 @@ shortcuts, search, language metadata and document conversion have one implementa
 ## Find and replace
 
 Use **Find and replace** or **Ctrl+F** (**Command+F** on macOS) while the editor is
-focused. Enter a literal search phrase and use **Find next** or **Find previous**
-to move through matches. **Match case** controls case sensitivity. Escape closes
-the panel and returns focus to the document.
+focused. Enter a search phrase and use **Find next** or **Find previous** to move
+through matches. **More >>** shows the other options: **Find whole words only**,
+**Use wildcards**, **Match prefix**, **Match suffix**, **Ignore punctuation
+characters** and **Ignore white-space characters**. **Special characters** inserts
+Word's codes (such as `^p` for a paragraph mark, `^t` for a tab, or `^?` for any
+character) into the focused field. Escape closes the panel and returns focus to the
+document.
 
-Search spans adjacent formatted runs within a paragraph. It does not match across
-paragraphs, table cells or hard line breaks. It avoids matches that split a Unicode
-grapheme, such as part of a combining sequence or joined emoji. Searches are literal;
-regular expressions and locale-specific linguistic matching are not supported.
+Wildcards follow Word's syntax (`?`, `*`, `@`, `<`, `>`, `[abc]`, `[a-z]`, `[!x]`,
+`{n,m}`, `( )` groups and `\` escapes). With wildcards on, the whole-word, prefix,
+suffix and ignore options are disabled, as in Word. In **Replace with**, `\1` to `\9`
+insert the groups of a wildcard pattern and `^&` inserts the found text.
+
+Search spans adjacent formatted runs. A plain search does not match across
+paragraphs, table cells or hard line breaks; `^p` searches across a paragraph mark.
+It avoids matches that split a Unicode grapheme, such as part of a combining sequence
+or joined emoji. Formatting search (Format > Font, Paragraph or Style) is not
+supported.
 
 **Replace** changes the current match; **Replace all** changes the document's
 matches in one undoable operation. Replacement text takes the first matched
