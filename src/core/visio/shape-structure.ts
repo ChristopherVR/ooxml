@@ -1,4 +1,4 @@
-import type { VisioShapeStructure, VisioSwimlaneRole } from './model';
+import type { VisioContainerOptions, VisioShapeStructure, VisioSwimlaneRole } from './model';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	VISIO_CALLOUT_LEADER_ROW,
@@ -16,6 +16,24 @@ export type { VisioShapeStructure } from './model';
 
 /** Strip the quotes Visio writes around string results of formulas. */
 const unquote = (value: string | undefined) => value?.replace(/^"(.*)"$/s, '$1').trim();
+
+/**
+ * Container Format options stored as local User rows (margin, resize mode, lock). Absent rows
+ * mean Visio's defaults, so only the rows that exist are reported.
+ */
+function containerOptions(
+	rows: ReadonlyMap<string, string | undefined>,
+): VisioContainerOptions | undefined {
+	const options: VisioContainerOptions = {};
+	const margin = Number(unquote(rows.get('msvSDContainerMargin')));
+	if (unquote(rows.get('msvSDContainerMargin')) !== undefined && Number.isFinite(margin))
+		options.margin = margin;
+	const resize = Number(unquote(rows.get('msvSDContainerResize')));
+	if (resize === 0 || resize === 1 || resize === 2) options.resize = resize;
+	const locked = unquote(rows.get('msvSDContainerLocked'))?.toUpperCase();
+	if (locked !== undefined) options.locked = locked === '1' || locked === 'TRUE';
+	return Object.keys(options).length ? options : undefined;
+}
 
 /** Container members from the editor's older private User row, else from Relationships text. */
 export function containerMemberIds(
@@ -70,10 +88,12 @@ export function visioShapeStructure(sheet: Sheet): VisioShapeStructure | undefin
 	const relationships = sheet.cells.get('Relationships')?.formula;
 	if (type === 'container') {
 		const swimlane = swimlaneRole(rows);
+		const options = containerOptions(rows);
 		return {
 			type,
 			memberIds: containerMemberIds(rows.get(VISIO_CONTAINER_MEMBERS_ROW), relationships),
 			...(swimlane ? { swimlane } : {}),
+			...(options ? { options } : {}),
 		};
 	}
 	if (type === 'callout') {

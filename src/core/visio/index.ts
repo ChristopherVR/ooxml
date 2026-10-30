@@ -292,6 +292,7 @@ export {
 	type VisioPartBox,
 } from './edit-diagram-parts-commands';
 export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';
+export type { VisioContainerOptions } from './model';
 export type {
 	VisioSwimlaneEdit,
 	VisioCreateSwimlanesEdit,

@@ -1526,6 +1526,29 @@ The stacking scope follows Microsoft's documented
 and refuses dynamic container lookups whose results depend on
 [container z-order](https://learn.microsoft.com/en-us/office/client-developer/visio/containersheetref-function).
 
+## Picture adjust, crop and container options, 2026-10-30
+
+Picture Format > Adjust now sets Brightness and Contrast from Visio's -40% to +40% presets.
+Visio 16 stores both as plain shape cells (`Brightness`, `Contrast`, 0 to 1, 0.5 neutral), not
+in an Image section; the viewer draws them with an SVG colour transfer. Crop to Square and Reset
+Crop write `Width`, `Height`, `PinX/Y`, `ImgOffsetX/Y` and `ImgWidth/Height` (inches) and keep the
+picture's scale. Free-drag cropping is not offered. Compression and Auto Balance stay disabled.
+
+Container Format: Margins write `User.msvSDContainerMargin` (inches), Automatic Resize writes
+`User.msvSDContainerResize` (0 no automatic resize, 1 expand as needed, 2 always fit to contents),
+and Lock Container writes `User.msvSDContainerLocked` (BOOL). Visio 16 reports the same cells
+through `ContainerProperties` (`ResizeAsNeeded`, `LockMembership`, `FitToContents`). A locked
+container refuses membership changes, and shapes that move into or out of it leave it alone.
+Fit to Contents now takes the members' box whatever the resize mode, so it shrinks a container
+that expands as needed; the margin and heading allowance match the expanded fit.
+
+The Width and Height boxes in the Size group (Shape, Picture and Container Format) commit through
+the same core resize as Size & Position.
+
+Not verified against Visio's gallery: the preset percentages and the Margins labels (None,
+Narrow, Normal, Wide) are the editor's choice, and the picture crop was checked by cell round-trip
+only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.

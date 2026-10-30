@@ -262,16 +262,6 @@ export const enCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Edit Chart',
 	'Edit Data': 'Edit Data',
 	'Format Chart': 'Format Chart',
-	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
-		'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.',
-	'Cropping needs the picture clip cells, which the editor does not write yet.':
-		'Cropping needs the picture clip cells, which the editor does not write yet.',
-	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
-		'The container margin (User.msvSDContainerMargin) cannot be edited yet.',
-	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
-		'The container resize mode (User.msvSDContainerResize) cannot be edited yet.',
-	'Locking a container needs the shape protection cells, which are not editable yet.':
-		'Locking a container needs the shape protection cells, which are not editable yet.',
 	'Open a .vsdx file with members to fit.': 'Open a .vsdx file with members to fit.',
 	'Open a .vsdx file to disband a container.': 'Open a .vsdx file to disband a container.',
 	'This container has no members.': 'This container has no members.',
@@ -290,4 +280,38 @@ export const enCommands: Readonly<Record<string, string>> = {
 	Style: 'Style',
 	'Show Title Bar': 'Show Title Bar',
 	'Show Separator Bar': 'Show Separator Bar',
+	None: 'None',
+	Narrow: 'Narrow',
+	Normal: 'Normal',
+	Wide: 'Wide',
+	'No automatic resize': 'No automatic resize',
+	'Expand as needed': 'Expand as needed',
+	'Always fit to contents': 'Always fit to contents',
+	'Crop to Square': 'Crop to Square',
+	'Reset Crop': 'Reset Crop',
+	Width: 'Width',
+	Height: 'Height',
+	'Width (in)': 'Width (in)',
+	'Height (in)': 'Height (in)',
+	'-40%': '-40%',
+	'-20%': '-20%',
+	'0%': '0%',
+	'+20%': '+20%',
+	'+40%': '+40%',
+	'Compressing a picture re-encodes its embedded image, which the editor does not do yet.':
+		'Compressing a picture re-encodes its embedded image, which the editor does not do yet.',
+	'Auto Balance needs the picture histogram, which the editor does not compute yet.':
+		'Auto Balance needs the picture histogram, which the editor does not compute yet.',
+	'Open a .vsdx file to edit a picture.': 'Open a .vsdx file to edit a picture.',
+	'Select one picture to adjust or crop it.': 'Select one picture to adjust or crop it.',
+	'Adjusted the picture.': 'Adjusted the picture.',
+	'Cropped the picture to a square.': 'Cropped the picture to a square.',
+	'Reset the picture crop.': 'Reset the picture crop.',
+	'Select a container to change its options.': 'Select a container to change its options.',
+	'Open a .vsdx file to change the container.': 'Open a .vsdx file to change the container.',
+	'Locked the container.': 'Locked the container.',
+	'Unlocked the container.': 'Unlocked the container.',
+	'Changed the automatic resize of the container.':
+		'Changed the automatic resize of the container.',
+	'Changed the container margin.': 'Changed the container margin.',
 };

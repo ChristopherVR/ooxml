@@ -70,7 +70,11 @@ it('wraps the selection in a container behind it, moves it with its members, one
 		},
 	]);
 	expect(page(view).shapes.map((shape) => shape.id)).toEqual(['1', '4', '2', '3']);
-	expect(page(view).shapes[1]!.structure).toEqual({ type: 'container', memberIds: ['2', '3'] });
+	expect(page(view).shapes[1]!.structure).toEqual({
+		type: 'container',
+		memberIds: ['2', '3'],
+		options: { margin: 0.25, resize: 1 },
+	});
 	expect(view.controller.state.selectedShapes.map((shape) => shape.id)).toEqual(['4']);
 	expect(view.feedback).toContain('Inserted a Banner container.');
 

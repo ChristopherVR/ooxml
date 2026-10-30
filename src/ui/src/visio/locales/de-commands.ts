@@ -262,16 +262,6 @@ export const deCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Diagramm bearbeiten',
 	'Edit Data': 'Daten bearbeiten',
 	'Format Chart': 'Diagramm formatieren',
-	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
-		'Visio speichert ein Bild als eingebettete Grafik, die dieser Editor weder umfärbt noch neu komprimiert; ersetzen Sie es durch ein bearbeitetes Bild.',
-	'Cropping needs the picture clip cells, which the editor does not write yet.':
-		'Zuschneiden benötigt die Bildausschnitt-Zellen, die der Editor noch nicht schreibt.',
-	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
-		'Der Containerrand (User.msvSDContainerMargin) kann noch nicht bearbeitet werden.',
-	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
-		'Der Größenanpassungsmodus des Containers (User.msvSDContainerResize) kann noch nicht bearbeitet werden.',
-	'Locking a container needs the shape protection cells, which are not editable yet.':
-		'Zum Sperren eines Containers werden die Formschutz-Zellen benötigt, die noch nicht bearbeitbar sind.',
 	'Open a .vsdx file with members to fit.':
 		'Öffnen Sie eine .vsdx-Datei mit Mitgliedern zum Anpassen.',
 	'Open a .vsdx file to disband a container.':
@@ -293,4 +283,41 @@ export const deCommands: Readonly<Record<string, string>> = {
 	Style: 'Stil',
 	'Show Title Bar': 'Titelleiste anzeigen',
 	'Show Separator Bar': 'Trennleiste anzeigen',
+	None: 'Keine',
+	Narrow: 'Schmal',
+	Normal: 'Normal',
+	Wide: 'Breit',
+	'No automatic resize': 'Keine automatische Größenänderung',
+	'Expand as needed': 'Bei Bedarf erweitern',
+	'Always fit to contents': 'Immer an Inhalt anpassen',
+	'Crop to Square': 'Auf Quadrat zuschneiden',
+	'Reset Crop': 'Zuschnitt zurücksetzen',
+	Width: 'Breite',
+	Height: 'Höhe',
+	'Width (in)': 'Breite (in)',
+	'Height (in)': 'Höhe (in)',
+	'-40%': '-40%',
+	'-20%': '-20%',
+	'0%': '0%',
+	'+20%': '+20%',
+	'+40%': '+40%',
+	'Compressing a picture re-encodes its embedded image, which the editor does not do yet.':
+		'Beim Komprimieren eines Bildes wird das eingebettete Bild neu kodiert, was der Editor noch nicht unterstützt.',
+	'Auto Balance needs the picture histogram, which the editor does not compute yet.':
+		'Automatische Balance benötigt das Bildhistogramm, das der Editor noch nicht berechnet.',
+	'Open a .vsdx file to edit a picture.': 'Öffnen Sie eine .vsdx-Datei, um ein Bild zu bearbeiten.',
+	'Select one picture to adjust or crop it.':
+		'Wählen Sie ein Bild aus, um es anzupassen oder zuzuschneiden.',
+	'Adjusted the picture.': 'Bild angepasst.',
+	'Cropped the picture to a square.': 'Bild auf Quadrat zugeschnitten.',
+	'Reset the picture crop.': 'Bildzuschnitt zurückgesetzt.',
+	'Select a container to change its options.':
+		'Wählen Sie einen Container aus, um seine Optionen zu ändern.',
+	'Open a .vsdx file to change the container.':
+		'Öffnen Sie eine .vsdx-Datei, um den Container zu ändern.',
+	'Locked the container.': 'Container gesperrt.',
+	'Unlocked the container.': 'Container entsperrt.',
+	'Changed the automatic resize of the container.':
+		'Automatische Größenanpassung des Containers geändert.',
+	'Changed the container margin.': 'Containerrand geändert.',
 };

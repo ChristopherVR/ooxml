@@ -57,6 +57,8 @@ import { isVisioCommentEdit, type VisioCommentEdit } from './edit-comment-comman
 import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
 import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
+import { applyContainerEdit, isVisioContainerEdit } from './edit-container-options';
+import { applyPictureEdit, isVisioPictureEdit } from './edit-picture-adjust';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
 import { applySwimlaneEdit } from './edit-swimlane-ops';
 import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
@@ -416,6 +418,8 @@ async function editVsdxTransaction(
 			command.type !== 'set-shape-data' &&
 			!isVisioGroupEdit(command) &&
 			!isVisioDiagramPartEdit(command) &&
+			!isVisioContainerEdit(command) &&
+			!isVisioPictureEdit(command) &&
 			!isVisioGuideEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
@@ -441,6 +445,8 @@ async function editVsdxTransaction(
 				command.type === 'change-shape' ||
 				isVisioGroupEdit(command) ||
 				isVisioDiagramPartEdit(command) ||
+				isVisioContainerEdit(command) ||
+				isVisioPictureEdit(command) ||
 				isVisioGuideEdit(command),
 		)
 	) {
@@ -678,6 +684,14 @@ async function editVsdxTransaction(
 			} else
 				for (const pageId of insertVisioCallout(roots, document!, command, check))
 					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			partChanged = true;
+		} else if (isVisioContainerEdit(command)) {
+			applyContainerEdit(roots, document!, command, check);
+			dirty.set(pages.get(command.pageId)!, roots.get(command.pageId)!);
+			partChanged = true;
+		} else if (isVisioPictureEdit(command)) {
+			for (const pageId of applyPictureEdit(roots, command, check))
+				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			partChanged = true;
 		} else if (isVisioGuideEdit(command)) {
 			applyGuideEdit(roots, command, check);

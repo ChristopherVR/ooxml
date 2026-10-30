@@ -262,16 +262,6 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Edit Chart': 'Editar gráfico',
 	'Edit Data': 'Editar datos',
 	'Format Chart': 'Dar formato al gráfico',
-	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
-		'Visio guarda una imagen como imagen incrustada que este editor no recolorea ni recomprime; sustitúyala por una imagen editada.',
-	'Cropping needs the picture clip cells, which the editor does not write yet.':
-		'Recortar necesita las celdas de recorte de la imagen, que el editor aún no escribe.',
-	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
-		'El margen del contenedor (User.msvSDContainerMargin) aún no se puede editar.',
-	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
-		'El modo de cambio de tamaño del contenedor (User.msvSDContainerResize) aún no se puede editar.',
-	'Locking a container needs the shape protection cells, which are not editable yet.':
-		'Bloquear un contenedor necesita las celdas de protección de forma, que aún no son editables.',
 	'Open a .vsdx file with members to fit.': 'Abra un archivo .vsdx con miembros que ajustar.',
 	'Open a .vsdx file to disband a container.': 'Abra un archivo .vsdx para disolver un contenedor.',
 	'This container has no members.': 'Este contenedor no tiene miembros.',
@@ -290,4 +280,39 @@ export const esCommands: Readonly<Record<string, string>> = {
 	Style: 'Estilo',
 	'Show Title Bar': 'Mostrar barra de título',
 	'Show Separator Bar': 'Mostrar barra de separación',
+	None: 'Ninguno',
+	Narrow: 'Estrecho',
+	Normal: 'Normal',
+	Wide: 'Ancho',
+	'No automatic resize': 'Sin cambio de tamaño automático',
+	'Expand as needed': 'Expandir según sea necesario',
+	'Always fit to contents': 'Ajustar siempre al contenido',
+	'Crop to Square': 'Recortar a cuadrado',
+	'Reset Crop': 'Restablecer recorte',
+	Width: 'Ancho',
+	Height: 'Alto',
+	'Width (in)': 'Ancho (in)',
+	'Height (in)': 'Alto (in)',
+	'-40%': '-40%',
+	'-20%': '-20%',
+	'0%': '0%',
+	'+20%': '+20%',
+	'+40%': '+40%',
+	'Compressing a picture re-encodes its embedded image, which the editor does not do yet.':
+		'Comprimir una imagen vuelve a codificar la imagen incrustada, algo que el editor aún no hace.',
+	'Auto Balance needs the picture histogram, which the editor does not compute yet.':
+		'El equilibrio automático necesita el histograma de la imagen, que el editor aún no calcula.',
+	'Open a .vsdx file to edit a picture.': 'Abra un archivo .vsdx para editar una imagen.',
+	'Select one picture to adjust or crop it.': 'Seleccione una imagen para ajustarla o recortarla.',
+	'Adjusted the picture.': 'Imagen ajustada.',
+	'Cropped the picture to a square.': 'Imagen recortada a cuadrado.',
+	'Reset the picture crop.': 'Recorte de imagen restablecido.',
+	'Select a container to change its options.':
+		'Seleccione un contenedor para cambiar sus opciones.',
+	'Open a .vsdx file to change the container.': 'Abra un archivo .vsdx para cambiar el contenedor.',
+	'Locked the container.': 'Contenedor bloqueado.',
+	'Unlocked the container.': 'Contenedor desbloqueado.',
+	'Changed the automatic resize of the container.':
+		'Se cambió el cambio de tamaño automático del contenedor.',
+	'Changed the container margin.': 'Se cambió el margen del contenedor.',
 };

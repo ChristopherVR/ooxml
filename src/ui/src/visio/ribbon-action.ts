@@ -89,6 +89,20 @@ export type VisioContainerAction = {
 	type: 'container';
 	command: 'fit' | 'select-contents' | 'disband';
 };
+/**
+ * Container Format > Margins, Automatic Resize and Lock Container: one core option edit each. The
+ * lock is `toggle` on its command; the viewer resolves it from the container's current state.
+ */
+export type VisioContainerOptionAction = {
+	type: 'container-options';
+	margin?: number;
+	resize?: 0 | 1 | 2;
+	locked?: boolean | 'toggle';
+};
+/** Picture Format > Brightness and Contrast presets (0 to 1, 0.5 neutral) and Crop to Square or Reset Crop. */
+export type VisioPictureAction =
+	| { type: 'picture-adjust'; brightness?: number; contrast?: number }
+	| { type: 'picture-crop'; crop: 'square' | 'reset' };
 /** The Cross-Functional Flowchart tab: lanes, separators and the Design and Arrange options. */
 export type VisioSwimlaneAction = {
 	type: 'swimlane';
@@ -168,6 +182,8 @@ export type VisioRibbonAction =
 	| { type: 'change-shape'; shape: VisioChangeShapeTarget | `document:${string}` }
 	| VisioDiagramPartAction
 	| VisioContainerAction
+	| VisioContainerOptionAction
+	| VisioPictureAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }
 	| { type: 'grid' }
