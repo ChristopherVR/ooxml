@@ -163,7 +163,7 @@ test('connector jump overrides are editable in Format Shape with page jumps disa
 	});
 	await viewer
 		.locator(
-			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-ribbon-group[launcher="shape-styles-dialog"] .launcher',
+			'[data-ribbon-tab]:not([data-contextual]) office-ui-ribbon-group[launcher="shape-styles-dialog"] .launcher',
 		)
 		.click();
 	const pane = viewer.locator('.format-pane');

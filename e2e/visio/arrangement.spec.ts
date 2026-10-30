@@ -85,18 +85,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect.poll(() => pins(viewer)).toEqual(original);
 		await selectAll(viewer);
 		await expect(
-			viewer.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="rotate-left"] button',
-			),
+			viewer.locator('[data-ribbon-tab]:not([data-contextual]) [command="rotate-left"] button'),
 		).toBeDisabled();
 		await viewer
-			.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="align"] button')
+			.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="align"] button')
 			.first()
 			.click();
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="align-shapes-left"]',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [command="align-shapes-left"]')
 			.click();
 		const aligned = [
 			[4, 7],
@@ -114,15 +110,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(original);
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="position"] button')
 			.first()
 			.click();
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="distribute-horizontal"]',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [command="distribute-horizontal"]')
 			.click();
 		const horizontal = [
 			[4.25, 7],
@@ -132,15 +124,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect.poll(() => pins(viewer)).toEqual(horizontal);
 		await expectSelection(viewer);
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="position"] button')
 			.first()
 			.click();
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="distribute-vertical"]',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [command="distribute-vertical"]')
 			.click();
 		const distributed = [
 			[4.25, 6],

@@ -82,9 +82,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await pickColor(viewer, 'fill', '#ff0000');
 		await expect(first.locator('path').first()).toHaveAttribute('fill', '#ff0000');
 		await viewer
-			.locator(
-				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="bring-to-front"] button',
-			)
+			.locator('[data-ribbon-tab]:not([data-contextual]) [command="bring-to-front"] button')
 			.first()
 			.click();
 		await expect

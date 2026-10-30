@@ -108,9 +108,7 @@ test('stencil shapes are duplicated, reordered, deleted and changed to another m
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 	await ribbonGroup(viewer, 'Arrange');
 	const front = viewer
-		.locator(
-			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="bring-to-front"] button',
-		)
+		.locator('[data-ribbon-tab]:not([data-contextual]) [command="bring-to-front"] button')
 		.first();
 	await expect(front).toBeEnabled();
 	await front.click();

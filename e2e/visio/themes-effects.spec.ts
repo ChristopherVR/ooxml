@@ -4,7 +4,7 @@ import { openDemo } from './demo-page';
 
 async function menuItem(viewer: Locator, path: readonly string[]): Promise<void> {
 	const effects = viewer.locator(
-		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-menu-button[data-menu="effects"]',
+		'[data-ribbon-tab]:not([data-contextual]) office-ui-menu-button[data-menu="effects"]',
 	);
 	await effects.getByRole('button', { name: 'Effects', exact: true }).click();
 	let scope: Locator = effects;
@@ -41,7 +41,7 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	// A Quick Style, as dropped masters get, so the theme recolours the shape. The ribbon shows a
 	// row of tiles; the More button opens the whole gallery.
 	const quick = viewer.locator(
-		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-gallery[data-menu="quick-styles"]',
+		'[data-ribbon-tab]:not([data-contextual]) office-ui-gallery[data-menu="quick-styles"]',
 	);
 	await quick.locator('.trigger').click();
 	await quick.locator('.popup [data-gallery-item="quick-style-2-4"]').click();
@@ -55,7 +55,11 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await themes.locator('.popup [data-gallery-item="theme-harbor"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#1f78b4');
 	await expect(variants).not.toHaveAttribute('disabled', '');
-	await expect(viewer.locator('[command="theme-fonts"]')).toHaveAttribute('disabled', '');
+	// Variants > More > Fonts applies a theme's fonts alone; with a theme it is available and marks
+	// the page's current font scheme.
+	const fonts = viewer.locator('[data-menu="theme-fonts"]');
+	await expect(fonts).not.toHaveAttribute('disabled', '');
+	await expect(fonts.locator('[command="fonts-harbor"]')).toHaveAttribute('checked', 'true');
 	await variants.locator('.trigger').click();
 	await variants.locator('.popup [data-gallery-item="variant-2"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#1f78b4');
@@ -73,7 +77,7 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await menuItem(viewer, ['Reflection', 'Half Reflection, touching']);
 	await expect(shape.locator('[data-reflection]')).toHaveCount(1);
 	await expect(
-		viewer.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="bevel"]'),
+		viewer.locator('[data-ribbon-tab]:not([data-contextual]) [command="bevel"]'),
 	).toHaveAttribute('disabled', '');
 
 	// Glow Options... opens the Format Shape task pane at Effects; a change applies at once.

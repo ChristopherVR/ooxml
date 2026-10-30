@@ -61,14 +61,10 @@ test('Auto Align & Space and Re-Layout Page move shapes as single undo steps', a
 	const original = await pins(viewer);
 	await selectAll(viewer);
 	await viewer
-		.locator(
-			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
-		)
+		.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="position"] button')
 		.first()
 		.click();
-	await viewer
-		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="auto-align"]')
-		.click();
+	await viewer.locator('[data-ribbon-tab]:not([data-contextual]) [command="auto-align"]').click();
 	await expect(viewer.locator('[data-status]')).toHaveText(/Aligned and spaced 3 shapes/);
 	const aligned = await pins(viewer);
 	// Shapes 2 and 3 now share a row.
@@ -181,7 +177,9 @@ test('File > Export creates a PDF and Help opens the viewer guide', async ({ pag
 	for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
 	const pdf = Buffer.concat(chunks).toString('latin1');
 	expect(pdf.startsWith('%PDF-1.4')).toBe(true);
-	expect(pdf).toContain('/MediaBox [0 0 612.00 792.00]');
+	expect(pdf).toMatch(/\/MediaBox \[0 0 612(\.00)? 792(\.00)?\]/);
+	// Vector pages carry real text, not one picture per page.
+	expect(pdf).toMatch(/\) Tj\b/);
 
 	await context.route('https://christophervr.github.io/**', (route) =>
 		route.fulfill({ body: '<title>Guide</title>', contentType: 'text/html' }),

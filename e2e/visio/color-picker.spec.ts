@@ -44,11 +44,11 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 
 	// Home > Fill shows Office's picker: Theme Colors with tints, Standard Colors, More Colors.
 	await viewer
-		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="fill"] button')
 		.first()
 		.click();
 	const grid = viewer.locator(
-		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-menu-button office-ui-color-grid[data-color-grid="fill"]',
+		'[data-ribbon-tab]:not([data-contextual]) office-ui-menu-button office-ui-color-grid[data-color-grid="fill"]',
 	);
 	await expect(grid.getByText('Theme Colors', { exact: true })).toBeVisible();
 	await expect(grid.getByText('Standard Colors', { exact: true })).toBeVisible();
@@ -71,7 +71,7 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 	expect(xml).toContain('F="THEMEGUARD(MSOTINT(THEMEVAL(&quot;AccentColor2&quot;),40))"');
 	// Visio's own row of variant colours is offered too.
 	await viewer
-		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="fill"] button')
 		.first()
 		.click();
 	await expect(grid.locator('[data-source="extra"]')).toHaveCount(7);
@@ -80,7 +80,7 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 	// The menu closed, and reopening shows the colour as current.
 	await expect(grid.getByText('Theme Colors', { exact: true })).toBeHidden();
 	await viewer
-		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.locator('[data-ribbon-tab]:not([data-contextual]) [data-menu="fill"] button')
 		.first()
 		.click();
 	await expect(tint).toHaveAttribute('aria-checked', 'true');
