@@ -13,12 +13,7 @@ import {
 	type VisioGlowEffect,
 	type VisioReflectionEffect,
 } from './edit-formatting-glow';
-import {
-	isVisioBevelPreset,
-	isVisioRotationPreset,
-	snapshotBevel,
-	snapshotRotation,
-} from './bevel-3d';
+import { snapshotBevel, snapshotRotation } from './bevel-3d';
 import {
 	snapshotTextFormatExtras,
 	type VisioTextFormatExtras,

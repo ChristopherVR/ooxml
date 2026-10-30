@@ -136,7 +136,7 @@ class Recalc {
 	}
 
 	/** The value of `name` on `pair`: its own cache, else the master's formula, else the master's cache. */
-	value(pair: Pair, name: string, page: boolean): VisioFormulaValue {
+	value(pair: Pair, name: string, _page: boolean): VisioFormulaValue {
 		const key = `${attribute(pair.inst, 'ID')}!${lower(name)}`;
 		const known = this.values.get(key);
 		if (known) return known;
@@ -303,7 +303,7 @@ export function recalculateMasterInstances(
 			let result: VisioFormulaValue;
 			try {
 				result = engine.value(pair, name, false);
-			} catch (error) {
+			} catch {
 				continue;
 			}
 			const local = pair.cells.get(name);
