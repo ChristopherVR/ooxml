@@ -102,12 +102,15 @@ export class ViewerDataVisualizer {
 		const extra = [...warnings, ...notes];
 		this.run(
 			async () => {
+				// One batch, so drawing or redrawing is one undo step.
 				for (const batch of batches)
 					try {
 						await this.controller.applyEdits(batch);
 					} catch (error) {
 						// A page that stores no explicit size cannot be enlarged; the drawing still goes in.
-						if (!batch.every((edit) => edit.type === 'set-page-size')) throw error;
+						const sized = batch.filter((edit) => edit.type !== 'set-page-size');
+						if (sized.length === batch.length) throw error;
+						if (sized.length) await this.controller.applyEdits(sized);
 					}
 			},
 			`${refreshing ? 'Redrew' : 'Drew'} ${this.#count} process steps from ${file.name}.${extra.length ? ` ${extra.join(' ')}` : ''}`,

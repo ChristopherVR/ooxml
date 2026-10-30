@@ -203,8 +203,34 @@ export async function editVsdx(
 			? [{ code: 'TEMPLATE_SAVED_AS_DRAWING', message: 'The template was saved as a drawing.' }]
 			: []),
 	];
-	const final = await editVisioPrepared(prepared.bytes, snapshot, options, clock);
+	const final = await editWithDeletionsLast(prepared.bytes, snapshot, options, clock);
 	return notes.length ? { ...final, diagnostics: [...notes, ...final.diagnostics] } : final;
+}
+
+/**
+ * Stencil instances can only be deleted in a transaction of deletions alone. Deletions marked
+ * `deferred` (a refresh that updates, draws and removes in one call) run after the other edits as
+ * a second transaction; the caller still sees one edit.
+ */
+async function editWithDeletionsLast(
+	input: Uint8Array,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
+	clock: Parameters<typeof editVsdxTransaction>[3] & object,
+): Promise<EditVsdxResult> {
+	const deferred = edits.filter((edit) => edit.type === 'delete-shape' && edit.deferred);
+	if (!deferred.length) return editVisioPrepared(input, edits, options, clock);
+	const rest = edits.filter((edit) => !deferred.includes(edit));
+	const first = rest.length
+		? await editVsdx(input, rest, options)
+		: { bytes: input, changedParts: [], diagnostics: [] };
+	const plain = deferred.map((edit): VisioEdit => ({ ...edit, deferred: false }) as VisioEdit);
+	const second = await editVsdx(first.bytes, plain, options);
+	return {
+		bytes: second.bytes,
+		changedParts: [...new Set([...first.changedParts, ...second.changedParts])],
+		diagnostics: [...first.diagnostics, ...second.diagnostics],
+	};
 }
 
 async function editVisioPrepared(

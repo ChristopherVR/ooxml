@@ -477,10 +477,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       selected shape's fields that show as text) and Advanced Data Graphics (the Edit Data Graphic
       item list: add, edit, delete) (`data-visualizer*.ts`, `data-graphic-items.ts`; ledger 2026-10-30).
 - [ ] **P1** Data graphics are still separate marked shapes, not Visio data graphic masters
-      (`DataGraphic` groups that follow their shape and refresh with the data); Data Visualizer
-      does not connect to Visio's online template service, its connector labels are text boxes that
-      do not follow the connector, and a refresh redraws the generated shapes (new IDs, one undo
-      step per stage).
+      (`DataGraphic` groups of callout item instances that follow their shape and refresh with the
+      data; ledger 2026-10-31 records how Visio stores them and why COM could not author one);
+      Data Visualizer does not connect to Visio's online template service. Closed 2026-10-31:
+      Data Visualizer connector labels are the connector's own text, and a refresh keeps the shape
+      and connector IDs of rows that remain and is one undo step.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).
