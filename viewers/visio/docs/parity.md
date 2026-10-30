@@ -240,6 +240,42 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
 - **Observed.** On load Visio adds the shapes under a list to that list's members; harmless to
   list order but not what Visio itself saves.
 
+## Org chart types, connection point glue and Belt resize, 2026-10-31
+
+- **Type change.** Org Chart > Subordinate on a Position Belt that has no subordinates now
+  replaces it with an instance of the Manager Belt master (`ui/org-chart-belt.ts`): the new
+  instance is dropped on the old one's spot, takes its text and the five org Shape Data rows,
+  every connector glued to the old shape is glued to the new one (keeping its connection
+  point), the tree is laid out with the new id, and the old shape is deleted last, all in the
+  one undo step. The shape id of the position changes. A coworker is always a Position Belt (an
+  assistant's coworker an Assistant Belt) and an assistant never promotes its manager.
+- **Not verified.** Whether Visio also turns a Manager Belt back into a Position Belt when its
+  last subordinate goes: its org chart add-in (ORGCHART.DLL) does not run under COM, so the
+  rule cannot be observed from a file check. Nothing reverts here. Read through COM instead:
+  an Executive Belt dropped from ORGCH_M.VSTX and glued to a Position Belt through
+  `Shape.CellsSRC(7, row, 0)` keeps both names and records the glue as FromCell BeginX ToCell
+  `Connections.Bottom.X` and FromCell EndX ToCell `Connections.Top.X` (ShapeRouteStyle 3).
+- **Glue.** Reporting lines now glue to the Bottom (Connection row 3) of the manager and the
+  Top (row 0) of the subordinate, written as `PAR(PNT(Sheet.N!Connections.X4,...))` with
+  ToCell `Connections.X4` / `Connections.X1`, where Visio names the rows
+  (`Connections.Bottom.X`). The Belt masters name their Connection rows (Top, Left, Right,
+  Bottom, Float) and give them no IX; the engine now numbers such rows by position
+  (`edit-stencil-connector.ts`), which glue to those rows needs. A moved position keeps its
+  line on the same points (the existing follow-and-reroute, covered by a test). An assistant's
+  line still glues to the whole shape, since it enters the assistant's side.
+- **Resize.** A Belt master instance can be resized. Instance recalculation keeps the saved
+  value of a cell that measures the shape's own text (`TEXTHEIGHT(TheText,TxtWidth)`) and the
+  text size pass that follows the edit measures it, as for other text-sized shapes; a data cell
+  worked out from such a value keeps its cache. Three unit rules were needed: LineWeight and
+  the Img* cells are lengths, and an untagged User cell whose formula starts with a length
+  literal (`5MM*DropOnPageScale`) is a length. Read through COM: the resized Position Belt
+  (2 x 1.2 in) matches a Position Belt Visio 16 resized the same way on 76 of 80 cells (the
+  other three are the position and the text height, which Visio measured for an empty
+  shape); the fourth, the photo frame's PinY, differs by 0.0035 in, because the style-inherited
+  line weight is read from the saved cache. The font of a position is the theme's, which the
+  editor does not measure, so the text height keeps its saved value (diagnostic
+  `edit-text-size-kept`).
+
 ## Org chart masters, import and data text, 2026-10-30
 
 - **Masters.** A position is an instance of Visio's Executive Belt, Manager Belt, Position Belt or

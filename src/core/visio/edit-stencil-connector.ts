@@ -89,18 +89,27 @@ export function effectiveNumber(
 	return value;
 }
 
+/**
+ * A section's rows with their zero-based index: the IX attribute, or for a named row that has
+ * none (Visio's org chart Belt masters name their Connection rows Top, Left, Right, Bottom) its
+ * position in the section.
+ */
 const sectionRows = (shape: Element | undefined, name: string) =>
 	children(shape, 'Section')
 		.filter((section) => attribute(section, 'N') === name && !deleted(section))
-		.flatMap((section) => children(section, 'Row'));
+		.flatMap((section) =>
+			children(section, 'Row').map((row, position) => ({
+				row,
+				index: attribute(row, 'IX') === undefined ? position : Number(attribute(row, 'IX')),
+			})),
+		);
 
 /** The effective rows of a section by zero-based IX: master cells with local overrides merged in. */
 export function effectiveRows(shape: Element, section: string): Map<number, Map<string, Element>> {
 	const rows = new Map<number, Map<string, Element>>();
 	const gone = new Set<number>();
 	for (const source of [templates.get(shape), shape])
-		for (const row of sectionRows(source, section)) {
-			const index = Number(attribute(row, 'IX') ?? '0');
+		for (const { row, index } of sectionRows(source, section)) {
 			if (deleted(row)) {
 				gone.add(index);
 				continue;
