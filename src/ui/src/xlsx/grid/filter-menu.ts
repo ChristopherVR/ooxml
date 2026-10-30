@@ -94,7 +94,7 @@ export function openFilterMenu(
 				sub.hidden = !show;
 				button.setAttribute('aria-expanded', String(show));
 			};
-			button.addEventListener('click', () => toggle(sub.hidden));
+			button.addEventListener('click', () => toggle(sub.hidden !== false));
 			button.addEventListener('mouseenter', () => !item.disabled && toggle(true));
 			wrap.addEventListener('mouseleave', () => toggle(false));
 			button.addEventListener('keydown', (event) => {
