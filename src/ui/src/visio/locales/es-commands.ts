@@ -357,6 +357,6 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Locked the container.': 'Contenedor bloqueado.',
 	'Unlocked the container.': 'Contenedor desbloqueado.',
 	'Changed the automatic resize of the container.':
-		'Se cambió el cambio de tamaño automático del contenedor.',
+		'Se modificó el cambio de tamaño automático del contenedor.',
 	'Changed the container margin.': 'Se cambió el margen del contenedor.',
 };

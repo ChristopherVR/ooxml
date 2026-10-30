@@ -516,7 +516,8 @@ installed Visio 16 build is used to check that saved files open without repair.
       (`ribbon-contextual-formats.ts`).
 - [ ] **P1** Picture Compression and Auto Balance are disabled (the editor does not re-encode or
       histogram a picture); the de/es/fr/zh-CN strings of the Picture and Container Format tabs are
-      new and need a native review.
+      new and need a native review. A terminology pass (2026-10-31) aligned the command names with
+      Microsoft's localised terms and the terms already used in each locale; it is not a native review.
 - [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
       mark the current one; Visio 16 opens the result and keeps the four scheme cells.
 - [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High as 1, 2, 3,
