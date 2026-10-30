@@ -41,12 +41,13 @@ test('a cross-functional flowchart the editor creates is built from the hidden f
 	for (const name of ['CFF Container', 'Swimlane List', 'Phase List', 'Swimlane', 'Separator'])
 		expect(first.names).toContain(`${name} (hidden)`);
 	expect(first.instances.get('50')).toBe('CFF Container (hidden)');
-	expect(first.instances.get('54')).toBe('Swimlane List (hidden)');
-	expect(first.instances.get('55')).toBe('Phase List (hidden)');
+	expect(first.instances.get('51')).toBe('Swimlane List (hidden)');
+	expect(first.instances.get('52')).toBe('Phase List (hidden)');
 	for (const lane of ['10', '11', '12'])
 		expect(first.instances.get(lane)).toBe('Swimlane (hidden)');
-	// The page is related to the masters it uses, or Visio would not load the instances.
-	expect(first.rels.match(/relationships\/master"/g)!.length).toBeGreaterThanOrEqual(8);
+	// The page is related to the seven masters it uses (no separator yet), or Visio would not load
+	// the instances.
+	expect(first.rels.match(/relationships\/master"/g)!.length).toBe(7);
 
 	// Insert Swimlane After and Separator through the ribbon: the new parts are instances too.
 	await viewer
@@ -59,7 +60,9 @@ test('a cross-functional flowchart the editor creates is built from the hidden f
 	await panel.getByRole('button', { name: 'Separator', exact: true }).click();
 	await expect
 		.poll(async () => {
-			const now = await saved(viewer);
+			// Export is refused while an edit is still applying; poll again.
+			const now = await saved(viewer).catch(() => undefined);
+			if (!now) return undefined;
 			const values = [...now.instances.values()];
 			return [
 				values.filter((name) => name === 'Swimlane (hidden)').length,
