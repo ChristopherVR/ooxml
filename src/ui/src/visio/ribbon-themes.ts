@@ -15,12 +15,14 @@ export const THEMES_HINT =
 export const VARIANTS_HINT = "Pick one of the current theme's four colour variants.";
 export const NO_THEME_VARIANTS = 'Apply a theme to the page first.';
 /**
- * Design > Variants > More: the theme parts that cannot be changed separately yet, with why.
- * Colors, Fonts, Effects and Connectors each apply one built-in theme's scheme (`variantOptions`).
+ * Design > Variants > More > Embellishment: the levels, each writing the page's EmbellishmentIndex.
+ * The decorative geometry is not drawn yet; see `ViewerThemes`.
  */
-export const VARIANT_OPTION_REASONS: readonly [id: string, label: string, reason: string][] = [
-	['theme-embellishment', 'Embellishment', 'Embellishment needs theme-driven shape geometry.'],
-];
+export const VARIANT_EMBELLISHMENTS = [
+	['low', 'Low'],
+	['medium', 'Medium'],
+	['high', 'High'],
+] as const;
 /** The scheme submenus of Variants > More, in Visio's order. */
 export const VARIANT_SCHEME_MENUS = [
 	['colors', 'theme-colors', 'Colors'],
@@ -159,7 +161,7 @@ export const variantsGallery = (doc: Document) =>
 	gallery(doc, variantsGalleryState(true, undefined), 'effects', VARIANTS_HINT);
 /**
  * Variants > More: Colors, Fonts, Effects and Connectors list the built-in themes (the page's
- * current one is checked, see `ViewerThemes`); Embellishment stays disabled with its reason.
+ * current one is checked, see `ViewerThemes`); Embellishment lists its three levels.
  */
 export function variantOptions(doc: Document) {
 	const items: CommandSpec[] = [
@@ -173,7 +175,16 @@ export function variantOptions(doc: Document) {
 				action: { type: 'page-theme', [scheme]: theme.id } as VisioRibbonAction,
 			})),
 		})),
-		...VARIANT_OPTION_REASONS.map(([id, label, unsupported]) => ({ id, label, unsupported })),
+		{
+			id: 'theme-embellishment',
+			label: 'Embellishment',
+			items: VARIANT_EMBELLISHMENTS.map(([level, label]) => ({
+				id: `embellishment-${level}`,
+				label,
+				checked: false,
+				action: { type: 'page-theme', embellishment: level } as VisioRibbonAction,
+			})),
+		},
 	];
 	const element = menu(doc, {
 		id: 'variant-options',

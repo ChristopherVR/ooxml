@@ -130,11 +130,13 @@ export function visioResizeSelectionDrag(
 			original.height *
 			Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.height) / shape.height)),
 	};
+	// A symmetric (Ctrl) drag doubles the pointer travel, then re-centres the box below.
+	const k = options.symmetric ? 2 : 1;
 	let box = applyResize(
 		{ x: left, y: -bottom - original.height, width: original.width, height: original.height },
 		handle,
-		end.x - start.x,
-		end.y - start.y,
+		k * (end.x - start.x),
+		k * (end.y - start.y),
 		1,
 		{ minWidth: min.width, minHeight: min.height },
 	);
@@ -148,6 +150,13 @@ export function visioResizeSelectionDrag(
 			nextBottomEdge = bottom + ay * (original.height - size.height);
 		box = { ...box, ...size, x: nextLeft, y: -nextBottomEdge - size.height };
 	}
+	if (options.symmetric)
+		// The centre of the original selection stays put (y is in the box convention, -page y).
+		box = {
+			...box,
+			x: left + (original.width - box.width) / 2,
+			y: -bottom - original.height / 2 - box.height / 2,
+		};
 	const sx = box.width / original.width,
 		sy = box.height / original.height;
 	const nextBottom = -box.y - box.height;

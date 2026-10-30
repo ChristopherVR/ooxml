@@ -63,8 +63,6 @@ export const deText: Readonly<Record<string, string>> = {
 		'Eingebettete Excel-Diagramme werden nicht unterstützt.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'Eingebettete OLE-Objekte werden nicht unterstützt; es können nur Bilder eingefügt werden.',
-	'Embellishment needs theme-driven shape geometry.':
-		'Verzierungen benötigen designgesteuerte Formgeometrie.',
 	'Feedback is not collected by this viewer.': 'Dieser Viewer sammelt kein Feedback.',
 	'Ink strokes are not supported.': 'Freihandstriche werden nicht unterstützt.',
 	'Macros and add-ons never run in this viewer.':

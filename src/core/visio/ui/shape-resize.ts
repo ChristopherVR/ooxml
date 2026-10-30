@@ -98,6 +98,8 @@ export function visioResizeFrame(
  * one dimension. */
 export interface VisioResizeDragOptions {
 	proportional?: boolean;
+	/** Ctrl: resize about the centre, so each dragged edge moves twice the pointer distance. */
+	symmetric?: boolean;
 }
 /** True when a drag on `handle` keeps the shape's proportions, as Visio does. */
 export function visioResizeKeepsProportions(
@@ -146,24 +148,29 @@ export function visioResizeDrag(
 		determinant = a * d - b * c;
 	const x = (d * delta.x - c * delta.y) / determinant,
 		y = (-b * delta.x + a * delta.y) / determinant;
+	// A symmetric (Ctrl) drag keeps the centre fixed, so each moving edge travels twice as far.
+	const k = options.symmetric ? 2 : 1;
 	const raw = {
 		width:
 			location.x === 0.5
 				? shape.width
-				: Math.max(Math.min(1 / 16, shape.width), shape.width + (location.x === 1 ? x : -x)),
+				: Math.max(Math.min(1 / 16, shape.width), shape.width + k * (location.x === 1 ? x : -x)),
 		height:
 			location.y === 0.5
 				? shape.height
-				: Math.max(Math.min(1 / 16, shape.height), shape.height + (location.y === 1 ? y : -y)),
+				: Math.max(Math.min(1 / 16, shape.height), shape.height + k * (location.y === 1 ? y : -y)),
 	};
 	const size = visioResizeKeepsProportions(handle, options)
 		? visioProportionalSize(shape, raw, location)
 		: raw;
-	// The opposite point stays fixed; a proportional side drag grows the other axis about its centre.
-	const anchor: VisioResizeAnchor = {
-		x: (1 - location.x) as VisioResizeAnchor['x'],
-		y: (1 - location.y) as VisioResizeAnchor['y'],
-	};
+	// The opposite point stays fixed; a proportional side drag grows the other axis about its
+	// centre. A symmetric drag anchors the centre instead.
+	const anchor: VisioResizeAnchor = options.symmetric
+		? { x: 0.5, y: 0.5 }
+		: {
+				x: (1 - location.x) as VisioResizeAnchor['x'],
+				y: (1 - location.y) as VisioResizeAnchor['y'],
+			};
 	const frame = visioResizeFrame(shape, size, anchor);
 	if (!frame) return undefined;
 	try {

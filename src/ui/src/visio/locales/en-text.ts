@@ -58,8 +58,6 @@ export const enText: Readonly<Record<string, string>> = {
 	'Embedded Excel charts are not supported.': 'Embedded Excel charts are not supported.',
 	'Embedded OLE objects are not supported; only pictures can be inserted.':
 		'Embedded OLE objects are not supported; only pictures can be inserted.',
-	'Embellishment needs theme-driven shape geometry.':
-		'Embellishment needs theme-driven shape geometry.',
 	'Feedback is not collected by this viewer.': 'Feedback is not collected by this viewer.',
 	'Ink strokes are not supported.': 'Ink strokes are not supported.',
 	'Macros and add-ons never run in this viewer.': 'Macros and add-ons never run in this viewer.',

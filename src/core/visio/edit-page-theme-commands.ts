@@ -24,10 +24,19 @@ export interface VisioPageThemeEdit {
 	effects?: VisioBuiltInThemeId;
 	/** More > Connectors: only ConnectorSchemeIndex, the theme line styles of connectors. */
 	connectors?: VisioBuiltInThemeId;
+	/**
+	 * Design > Variants > More > Embellishment: the page's EmbellishmentIndex cell. Only the cell is
+	 * written; Visio's decorative embellishment geometry is not drawn by this viewer. Alone in its edit.
+	 */
+	embellishment?: VisioEmbellishment;
 }
 
 /** The scheme parts that can be taken from a built-in theme on their own. */
 export const PAGE_THEME_PARTS = ['colors', 'fonts', 'effects', 'connectors'] as const;
+
+/** The Embellishment levels and the EmbellishmentIndex value each one writes. */
+export const VISIO_EMBELLISHMENT_INDEX = { low: 1, medium: 2, high: 3 } as const;
+export type VisioEmbellishment = keyof typeof VISIO_EMBELLISHMENT_INDEX;
 
 export function snapshotPageTheme(edit: VisioPageThemeEdit): VisioPageThemeEdit {
 	if (typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
@@ -39,6 +48,14 @@ export function snapshotPageTheme(edit: VisioPageThemeEdit): VisioPageThemeEdit 
 		result.theme = edit.theme;
 	}
 	const given = PAGE_THEME_PARTS.filter((part) => edit[part] !== undefined);
+	if (edit.embellishment !== undefined) {
+		if (given.length || edit.theme !== undefined || edit.variant !== undefined)
+			fail('INVALID_EDIT', 'An embellishment is applied on its own.');
+		if (!Object.keys(VISIO_EMBELLISHMENT_INDEX).includes(edit.embellishment))
+			fail('INVALID_EDIT', 'Unknown embellishment.');
+		result.embellishment = edit.embellishment;
+		return result;
+	}
 	if (given.length > 1 || (given.length && edit.theme !== undefined))
 		fail('INVALID_EDIT', 'A theme or one scheme part can be applied at a time.');
 	for (const part of given) {

@@ -377,8 +377,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       grouped connector masters are refused.
 - [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
       (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
-- [ ] **P1** Resize has no alignment or size-match hints, and Ctrl and Alt during a resize are
-      not verified against Visio.
+- [x] **P1** Resize snaps the moving edge to other shapes' edges and centres and to shown guides,
+      with Dynamic Grid alignment lines, outlines a shape whose width or height the frame matches,
+      and Ctrl resizes about the centre (`src/core/visio/ui/resize-snap.ts`; ledger 2026-10-30).
+- [ ] **P2** Ctrl and Alt during a resize are not verified against Visio's gestures (COM cannot
+      drive the pointer); the size-match outline is our drawing, not Visio's.
 - [x] **P1** Link Data (opens the External Data window, or imports first), Data Graphics Position,
       Configure and Auto Space (`data-graphic-config.ts`).
 - [ ] **P1** Data Visualizer (a diagram generated from a table), Data Graphic Fields and the
@@ -410,8 +413,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       need review.
 - [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
       mark the current one; Visio 16 opens the result and keeps the four scheme cells.
-- [ ] **P1** Embellishment is disabled; theme arrowheads are not themed; Visio's own schemes other
-      than our six built-in themes cannot be picked; Visio does not name our scheme IDs.
+- [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High) but its
+      decorative geometry is not drawn, and the level-to-index mapping is not verified against
+      Visio's gallery; theme connector arrowheads are not themed from the connector scheme; Visio's
+      own schemes other than our six built-in themes cannot be picked; Visio does not name our
+      scheme IDs.
 - [ ] **P2** Disabled: Bevel, 3-D Rotation, CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
       SharePoint Workflow, the Window group, Macros and Add-Ons.
 

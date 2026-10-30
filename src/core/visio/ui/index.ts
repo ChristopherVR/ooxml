@@ -43,6 +43,7 @@ export * from './marquee';
 export * from './auto-connect';
 export * from './shape-resize';
 export * from './selection-resize';
+export * from './resize-snap';
 export * from './geometry-expectation';
 export * from './draw-plan';
 export * from './draw-path-plan';

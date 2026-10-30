@@ -1588,6 +1588,24 @@ The stacking scope follows Microsoft's documented
 and refuses dynamic container lookups whose results depend on
 [container z-order](https://learn.microsoft.com/en-us/office/client-developer/visio/containersheetref-function).
 
+## Resize hints and theme embellishment, 2026-10-30
+
+Resize now snaps the moving handle point to the edges and centres of other visible shapes
+(Dynamic Grid) and to shown guides, using the move's threshold; the snapped drag is re-solved
+from the pointer, and Alt leaves snapping out for the drag. Each snapped axis is drawn as an
+alignment line, and a nearby shape whose width or height equals the result's is outlined
+(`src/core/visio/ui/resize-snap.ts`). Ctrl resizes about the centre, both for one shape and for
+a selection; Shift keeps the proportions. The gesture details are not verified against Visio:
+COM cannot drive the pointer, so Ctrl and Alt follow the keyboard behaviour we understand, and the
+outline style is ours.
+
+Design > Variants > More > Embellishment offers Low, Medium and High. Each writes the page's
+`EmbellishmentIndex` cell (Low 1, Medium 2, High 3, the values in
+`VISIO_EMBELLISHMENT_INDEX`), alone in its own edit. Visio 16 accepts the cell and keeps it
+through a save. The level-to-index mapping is not checked against Visio's gallery, and the
+embellishment geometry is not drawn. Theme connector arrowheads are not themed from the connector
+scheme.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.
