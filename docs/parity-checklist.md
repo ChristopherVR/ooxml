@@ -425,6 +425,8 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** Resize snaps the moving edge to other shapes' edges and centres and to shown guides,
       with Dynamic Grid alignment lines, outlines a shape whose width or height the frame matches,
       and Ctrl resizes about the centre (`src/core/visio/ui/resize-snap.ts`; ledger 2026-10-30).
+- [ ] **P1** A resize of a shape with LockWidth, LockHeight or LockAspect is refused as an edit
+      (`edit-geometry-admission.ts`) instead of resizing along the unlocked dimension as Visio does.
 - [ ] **P2** Ctrl and Alt during a resize are not verified against Visio's gestures (COM cannot
       drive the pointer); the size-match outline is our drawing, not Visio's.
 - [x] **P1** Link Data (opens the External Data window, or imports first), Data Graphics Position,
