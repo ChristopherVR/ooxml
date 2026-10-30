@@ -9,6 +9,7 @@ import {
 	inertDoubleClickFormula,
 	shapeDataFormulaSection,
 } from './cell-formula';
+import { isClassifiedVisioFunction } from './formula-analyze';
 import { isNativeGlueCell } from './edit-connector-glue';
 
 export interface VisioCellKey {
@@ -45,10 +46,19 @@ export interface VisioRecalculationOptions {
 	 * reached by every edit on its page. Default `document`: such a cell fails the index.
 	 */
 	scope?: 'document' | 'affected';
+	/**
+	 * Follow what the evaluator cannot prove statically instead of refusing: a computed INDIRECT or
+	 * EVALCELL is resolved while evaluating, a function it cannot run keeps the cached result (and is
+	 * reported in `diagnostics`), and a cell of a grouped, instanced or connected shape that the edit
+	 * does not reach is read as an input. Set by `recalculateVisioCells`; other callers keep refusing.
+	 */
+	follow?: boolean;
 	/** Receives one entry per cell that kept its cache because of a cycle. */
 	diagnostics?: { code: string; message: string }[];
 	/** The plain text of a shape for `TheText` readers; recalculation fills it from the pages. */
 	textOf?: (pageId: string, shapeId: string) => string | undefined;
+	/** `follow` only: the cells the edit reaches; any other cell of an unsafe shape is an input. */
+	affected?: ReadonlySet<string>;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;
@@ -59,6 +69,10 @@ export interface IndexedCell extends VisioCellKey {
 	refusal?: string;
 	/** The formula may read cells it does not name: any edit on its page may reach it. */
 	opaque?: boolean;
+	/** `follow` only: the formula cannot be run here; its cached result stands in. */
+	keepCache?: boolean;
+	/** `follow` only: the cell sits on an unsafe shape but is a plain input when no edit reaches it. */
+	fixedInput?: boolean;
 	unit: VisioFormulaValue['unit'];
 }
 export const key = (cell: VisioCellKey) =>
@@ -198,7 +212,28 @@ export function indexCells(
 							literalIndirect: true,
 						});
 						const analysis = (plain.dynamic && textSizeFormula(item.formula)) || plain;
-						if (analysis.dynamic) {
+						const follows = options.follow === true && lenient;
+						const dynamicCalls = 'dynamicCalls' in analysis ? analysis.dynamicCalls : [];
+						const resolvable = dynamicCalls.every(
+							(name) => name === 'INDIRECT' || name === 'EVALCELL',
+						);
+						if (follows && analysis.unsupportedFunctions.length === 0 && resolvable) {
+							// Resolved per evaluation; the reads the text does not name make it page-wide.
+							if (analysis.dynamic) item.opaque = true;
+						} else if (
+							follows &&
+							(analysis.dynamic || analysis.unsupportedFunctions.length) &&
+							!textSizeFormula(item.formula) &&
+							// Drawn geometry data: a stale copy would draw the wrong outline.
+							!analysis.unsupportedFunctions.some((name) => name === 'POLYLINE' || name === 'NURBS')
+						) {
+							// DEPENDSON names its dependencies; the other dynamic functions may read more.
+							item.keepCache = true;
+							if (
+								dynamicCalls.some((name) => name !== 'DEPENDSON' && isClassifiedVisioFunction(name))
+							)
+								item.opaque = true;
+						} else if (analysis.dynamic) {
 							if (!lenient)
 								fail(
 									'EDIT_DYNAMIC_DEPENDENCY',
@@ -220,6 +255,8 @@ export function indexCells(
 					}
 				}
 				if (source === 'Inh') item.unsafe = true;
+				else if (options.follow && sheet.unsafe && !deleted && !item.refusal)
+					item.fixedInput = true;
 				add(item);
 			};
 			const glue = connectors.has(sheet.shapeId);

@@ -218,7 +218,7 @@ describe('source-backed geometry edit contract', () => {
 			await expect(editVsdx(await source(target), [move()])).rejects.toThrow();
 		},
 	);
-	it.each(['UNKNOWN(Width)', 'INDIRECT("Width")', 'EVALCELL("Width")'])(
+	it.each(['INDIRECT("Width")', 'EVALCELL("Width")'])(
 		'fails safely for affected or dynamic formula %s',
 		async (formula) => {
 			const extra = section(

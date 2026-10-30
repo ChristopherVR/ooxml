@@ -113,7 +113,7 @@ it('refreshes PageSheet caches without putting PageSheet markup in page contents
 	expect(await zip.file('visio/pages/page1.xml')!.async('string')).not.toContain('PageSheet');
 	expect(await zip.file('visio/pages/page3.xml')!.async('string')).not.toContain('PageSheet');
 });
-it.each([user('Unsupported', 1, 'FONT(User.Count)'), user('Cycle', 1, 'User.Count+User.Cycle')])(
+it.each([user('Cycle', 1, 'User.Count+User.Cycle')])(
 	'refuses unprovable affected closures atomically',
 	async (extra) => {
 		const original = await source(extra),

@@ -48,12 +48,21 @@ describe('scoped admission', () => {
 		recalculateVisioCells(new Map([['0', root]]), changed);
 		expect(valueOf(root, 'PinX')).toBe('4');
 	});
-	it('refuses, naming the cell, when an edit reaches an unevaluable formula', () => {
+	it('keeps the cache, naming the cell, when an edit reaches an unevaluable formula', () => {
 		const root = page(
 			shape('1', cell('Width', '8') + cell('PinX', '1', 'Width*0.5')) +
-				shape('2', cell('LocPinX', '0', 'SETATREF(Sheet.1!Width)')),
+				shape('2', cell('LocPinX', '3', 'SETATREF(Sheet.1!Width)')),
 		);
-		expect(() => recalculateVisioCells(new Map([['0', root]]), changed)).toThrow(/LocPinX/);
+		const diagnostics: { code: string; message: string }[] = [];
+		recalculateVisioCells(new Map([['0', root]]), changed, { diagnostics });
+		expect(valueOf(root, 'PinX')).toBe('4');
+		expect(valueOf(root, 'LocPinX')).toBe('3');
+		expect(diagnostics).toEqual([
+			expect.objectContaining({
+				code: 'FORMULA_STALE',
+				message: expect.stringContaining('LocPinX'),
+			}),
+		]);
 	});
 	it('assumes an opaque formula is reached by any edit on its page only', () => {
 		const opaque = shape('2', cell('LocPinX', '0', 'EVALCELL(&quot;Width&quot;)'));

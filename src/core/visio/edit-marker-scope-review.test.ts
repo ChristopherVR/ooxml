@@ -26,10 +26,11 @@ describe('independent marker and inherited scope review', () => {
 			).resolves.toHaveProperty('bytes');
 		},
 	);
-	it('refuses geometry-dependent event expressions instead of treating them as inert', async () => {
-		await refused(
+	it('keeps the cache of a geometry-dependent event expression and saves the edit', async () => {
+		// The expression cannot be run here; it is neither treated as inert nor does it block the edit.
+		await expect(
 			editVsdx(await source(local(cell('EventDblClick', 0, 'OPENTEXTWIN(Width)'))), [resize]),
-		);
+		).resolves.toHaveProperty('bytes');
 	});
 	it('refuses numeric marker cells carrying error metadata', async () => {
 		const bytes = await source(

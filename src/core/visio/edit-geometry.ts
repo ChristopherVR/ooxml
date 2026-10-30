@@ -56,6 +56,7 @@ export function applyGeometryEdit(
 	edit: VisioGeometryEdit,
 	check: () => void,
 	masterMoveProof: MasterMoveProof = emptyMasterMoveProof(),
+	diagnostics?: { code: string; message: string }[],
 ): readonly string[] {
 	const masterMovePins = masterMoveProof.pins,
 		masterDimensions = masterMoveProof.dimensions;
@@ -328,6 +329,7 @@ export function applyGeometryEdit(
 	if (!changed.length) return [];
 	const affectedPages = recalculateVisioCells(roots, changed, {
 		check,
+		...(diagnostics ? { diagnostics } : {}),
 		masterMovePins,
 		lineEditShapes,
 		glueShapes,

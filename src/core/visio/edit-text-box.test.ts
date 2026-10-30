@@ -133,7 +133,7 @@ describe('source-backed fixed text box creation', () => {
 		await expect(editVsdx(bytes, [create])).rejects.toMatchObject({ code: 'INVALID_SHAPE_ID' });
 		expect(bytes).toEqual(copy);
 	});
-	it.each(['Sheet.2!Width', 'SHAPETEXT(Sheet.2!TheText)', 'CONTAINERSHEETREF(1)'])(
+	it.each(['Sheet.2!Width', 'SHAPETEXT(Sheet.2!TheText)'])(
 		'refuses prospective ID or container dependencies: %s',
 		async (formula) => {
 			const bytes = await source('', `<Shapes>${shape('1', cell('PinX', 1, formula))}</Shapes>`);

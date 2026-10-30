@@ -113,6 +113,6 @@ describe('bounded numeric ShapeSheet extension', () => {
 				},
 			}),
 		).toThrow(/aggregate steps/);
-		expect(() => evaluateVisioFormula('EVALCELL(Width)', resolve)).toThrow(/Unsupported function/);
+		expect(() => evaluateVisioFormula('FONT(Width)', resolve)).toThrow(/Unsupported function/);
 	});
 });

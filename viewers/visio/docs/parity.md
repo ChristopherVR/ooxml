@@ -677,10 +677,14 @@ in addition to the arithmetic, `IF`, `AND`/`OR`/`NOT`, `MIN`/`MAX`, `ABS`,
 `SQRT`, trigonometry, `BOUND`, `MODULUS`, `CEILING` and `FLOOR` it handled
 before. Before this, any affected cell using one of them refused the edit
 (`EDIT_UNSUPPORTED_FORMULA`). Units follow the argument (a rounded length stays
-a length; `ASIN`/`ACOS`/`ATAN` return angles). Still refused: `SUM`, `DEG`,
-`RAD`, string, field and document-property functions, reference-building
-functions (`INDIRECT`, `SETATREF`), `ThePage!` references and dependencies on
-inherited or grouped cells. The `ROUND` digits meaning is from the function's
+a length; `ASIN`/`ACOS`/`ATAN` return angles). Update 2026-10-30: recalculation no longer
+refuses what it cannot follow. A computed `INDIRECT` and `EVALCELL` are resolved while evaluating
+(cycle-protected), `DEPENDSON` names its dependencies, a function it cannot run (`SETATREF`, field and
+document-property functions, `FONT`, unknown functions) keeps its cached value and is reported as the
+`FORMULA_STALE` diagnostic (Visio would recompute it, so it can be out of date until it does), and cells
+of grouped, instanced or connected shapes are read as inputs when the edit does not reach them. Still
+refused: formulas that do not parse, `Polyline`/`NURBS` data, an edit that itself reaches a grouped or
+inherited cell, cells only a master defines, and the static admission guards for edits of a dynamic cell. The `ROUND` digits meaning is from the function's
 documentation and is not yet checked against Visio.
 
 ## Right-angle connectors route around placeable shapes, 2026-10-10

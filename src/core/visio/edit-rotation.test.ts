@@ -79,7 +79,6 @@ for (const [name, extra, document] of [
 		'',
 		`<StyleSheets><StyleSheet ID="0">${cell('LockRotate', 1)}</StyleSheet></StyleSheets>`,
 	],
-	['unknown affected dependency', cell('Angle', 0) + cell('TxtAngle', 0, 'NOW()+Angle'), ''],
 ] as const)
 	it(`refuses ${name}`, async () => {
 		const bytes = await fixture({

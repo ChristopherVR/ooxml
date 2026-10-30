@@ -19,7 +19,7 @@ export function recalculateVisioCells(
 	changed: readonly VisioCellKey[],
 	options: VisioRecalculationOptions = {},
 ): readonly string[] {
-	const cells = indexCells(roots, { scope: 'affected', ...options });
+	const cells = indexCells(roots, { scope: 'affected', follow: true, ...options });
 	const reverse = new Map<string, string[]>();
 	for (const [id, item] of cells)
 		for (const dependency of item.dependencies) {
@@ -44,6 +44,8 @@ export function recalculateVisioCells(
 			fail('LIMIT_FORMULA_AFFECTED', 'Affected ShapeSheet cell limit exceeded.');
 	}
 	const evaluate = createVisioCellEvaluator(cells, {
+		follow: true,
+		affected,
 		textOf: (pageId, shapeId) => plainShapeText(roots.get(pageId), shapeId),
 		...options,
 	});
@@ -51,6 +53,15 @@ export function recalculateVisioCells(
 	for (const id of affected) {
 		// The edited text is an input, not a cell with a formula or a cache.
 		if (!cells.has(id) && /,"thetext"]$/.test(id)) continue;
+		// A cell whose formula cannot run keeps its cache; evaluating it only reports it.
+		if (cells.get(id)?.keepCache && (options.follow ?? true)) {
+			try {
+				evaluate(id);
+			} catch {
+				// A cache that is not a number is left as it is.
+			}
+			continue;
+		}
 		try {
 			values.set(id, evaluate(id));
 		} catch (error) {

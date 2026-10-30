@@ -274,11 +274,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and model
 
-- [ ] **P0** Formula dependencies the evaluator cannot follow refuse the edit instead of
-      recalculating: `INDIRECT` is always dynamic, and `EVALCELL`, unknown functions,
-      `DEPENDSON`/`SheetRef` and inherited or grouped reads refuse
-      (`src/core/visio/formula-analyze.ts`, `EDIT_*_DEPENDENCY`). This is the root of most edit
-      refusals below.
+- [x] **P0** Formula dependencies the evaluator cannot follow no longer refuse a recalculation
+      (`recalculateVisioCells`, `follow` mode of `edit-recalculate-index.ts`): a computed `INDIRECT`
+      and `EVALCELL` are resolved while evaluating (cycle-protected, treated as reached by any edit
+      on their page), `DEPENDSON` names its dependencies, a function the evaluator cannot run
+      (unknown functions, `SetAtRef`, `Font`, `ThemeVal`, `ContainerSheetRef`...) keeps the cached
+      value and is reported as `FORMULA_STALE`, and cells of grouped, instanced or connected shapes
+      are read as inputs when the edit does not reach them. Still refused: a formula that does
+      not parse, drawn `Polyline`/`NURBS` data (a stale outline would be drawn), an edit that itself
+      reaches a grouped or inherited cell, a read of a cell that only the master defines
+      (`F="Inh"` or no local cell), and an `INDIRECT` target that does not exist.
+- [ ] **P1** The static admission guards (`analysis.dynamic` in `edit-geometry-admission.ts`,
+      `edit-style-admission.ts`, `edit-scope.ts`, `edit-page-size.ts` and others) still refuse an
+      edit of a cell whose own formula is dynamic, and kept caches are not recomputed: Visio would
+      recompute them, so they can be stale until it recalculates. Master-defined cells are not read
+      through master inheritance. Container `DEPENDSON`/`SheetRef` relationships are still not
+      written.
 - [ ] **P1** `.vsdm`, `.vstx` and `.vssm` cannot be opened as drawings; macro-enabled or signed
       packages refuse every edit (`parser.ts`, `edit-package.ts`).
 - [ ] **P1** Legacy `.vsd` is preview only (no groups, masters, styles, connections, layers or

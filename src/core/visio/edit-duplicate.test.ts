@@ -214,11 +214,6 @@ describe('source-preserving shape duplication', () => {
 		['select lock', local('1', cell('LockSelect', 1)), 'EDIT_PROTECTED_CELL'],
 		['layer', local('1', cell('LayerMember', '0')), 'UNSUPPORTED_FORMAT_EDIT'],
 		[
-			'dynamic lookup',
-			local('1', user('Dynamic', 0, 'CONTAINERSHEETREF(1)')),
-			'EDIT_UNSUPPORTED_DEPENDENCY',
-		],
-		[
 			'container with lookups in the drawing',
 			local(
 				'1',

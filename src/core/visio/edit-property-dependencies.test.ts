@@ -55,15 +55,15 @@ describe('native Property section dependency names', () => {
 		expect(() => recalculateVisioCells(new Map([['0', page]]), changed)).toThrow(/Duplicate/);
 		expect(buildXml(page.ownerDocument!)).toBe(before);
 	});
-	it('retains atomic refusal for unsupported affected Shape Data formulas', () => {
+	it('keeps the cache of an unsupported affected Shape Data formula', () => {
 		const page = root();
 		Array.from(page.getElementsByTagNameNS(VISIO_NS, 'Cell'))
 			.find((c) => c.getAttribute('N') === 'Value')!
 			.setAttribute('F', 'MOD(Width/1IN,0)');
 		const before = buildXml(page.ownerDocument!);
-		expect(() => recalculateVisioCells(new Map([['0', page]]), changed)).toThrow(
-			/unsupported functions/,
-		);
+		const diagnostics: { code: string; message: string }[] = [];
+		recalculateVisioCells(new Map([['0', page]]), changed, { diagnostics });
 		expect(buildXml(page.ownerDocument!)).toBe(before);
+		expect(diagnostics.map((d) => d.code)).toContain('FORMULA_STALE');
 	});
 });

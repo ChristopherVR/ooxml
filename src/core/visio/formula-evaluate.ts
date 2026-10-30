@@ -115,6 +115,24 @@ export function evaluateVisioFormula(
 				return formulaFailure('value', 'INDIRECT needs a cell address');
 			return finite(resolve(target.reference));
 		}
+		if (name === 'EVALCELL') {
+			// EVALCELL(cell[, fallback]): the result of the cell's formula, evaluated here. A text
+			// argument is an address (as INDIRECT); the optional second argument stands in on a
+			// value error.
+			arity(1, 2);
+			const first = node.args[0]!;
+			try {
+				if (first.kind === 'reference' || first.kind === 'number') return arg(0);
+				const target = parseVisioFormula(evaluateFormulaText(first, textContext, 1));
+				if (target.kind !== 'reference')
+					return formulaFailure('value', 'EVALCELL needs a cell address');
+				return finite(resolve(target.reference));
+			} catch (error) {
+				if (node.args.length === 2 && error instanceof VisioFormulaError && error.code !== 'limit')
+					return arg(1);
+				throw error;
+			}
+		}
 		if (name === 'DATE') {
 			// DATE(year, month, day): an OLE date serial; the unit keeps it from posing as a plain number.
 			arity(3);

@@ -31,10 +31,11 @@ it('preserves independent native font lookup formulas during geometry editing', 
 	);
 	expect((await parseVsdx(saved.bytes)).pages[0]!.shapes[0]!.width).toBe(8);
 });
-it('rejects affected font lookups instead of retaining stale font caches', async () => {
-	await expect(
-		editVsdx(await fontFixture('FONT(IF(Width&gt;1,"Arial","Calibri"))'), [resize]),
-	).rejects.toThrow(/unsupported functions/i);
+it('keeps the cache of an affected font lookup and reports it as possibly stale', async () => {
+	const saved = await editVsdx(await fontFixture('FONT(IF(Width&gt;1,"Arial","Calibri"))'), [
+		resize,
+	]);
+	expect(saved.diagnostics?.map((d) => d.code)).toContain('FORMULA_STALE');
 });
 
 const native = process.env.VISIO_NATIVE_PAGE_SCALES_DIR;

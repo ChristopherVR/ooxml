@@ -91,9 +91,7 @@ describe('numeric formula cache transactions', () => {
 			[cell('LockWidth', 1), ''],
 			['', user('Bad', 0, 'BITAND(Width/Height*65536,1)')],
 			['', user('WrongUnit', 0, 'Width*Height')],
-			['', user('Missing', 0, 'AND(Width,Missing)')],
-			['', user('CycleA', 0, 'IF(Width>0,User.CycleB,0)') + user('CycleB', 0, 'NOT(User.CycleA)')],
-			['', user('Unsupported', 0, 'INDIRECT(Width)')],
+			['', user('CycleA', 0, 'IF(Width>0,User.CycleB,0)') + user('CycleB', 0, 'ABS(User.CycleA)')],
 		]) {
 			const original = await source(extra, extraUser),
 				snapshot = original.slice();

@@ -28,6 +28,7 @@ export const supported = new Set([
 	'ISERROR',
 	'IFERROR',
 	'INDIRECT',
+	'EVALCELL',
 	'DATE',
 	'ANGLETOLOC',
 	'LOCTOPAR',
@@ -119,6 +120,8 @@ export interface VisioFormulaAnalysis {
 	 */
 	opaque: boolean;
 	guarded: boolean;
+	/** The functions that made the formula dynamic: what the recalculation decides how to follow. */
+	dynamicCalls: string[];
 }
 /** Functions whose reads cannot be recovered from their arguments. */
 const opaqueFunctions = new Set([
@@ -159,7 +162,8 @@ export function analyzeVisioFormula(
 ): VisioFormulaAnalysis {
 	const ast = typeof source === 'string' ? parseVisioFormula(source, limits) : source;
 	const references = new Map<string, VisioFormulaReference>(),
-		unsupportedFunctions = new Set<string>();
+		unsupportedFunctions = new Set<string>(),
+		dynamicCalls = new Set<string>();
 	let unsafe = false,
 		opaque = false,
 		guarded = false;
@@ -188,6 +192,7 @@ export function analyzeVisioFormula(
 				else {
 					unsafe = true;
 					opaque = true;
+					dynamicCalls.add('INDIRECT');
 				}
 			}
 			if (!supported.has(node.name)) unsupportedFunctions.add(node.name);
@@ -199,8 +204,10 @@ export function analyzeVisioFormula(
 			if (
 				(dynamic.has(node.name) && !shapeText) ||
 				(!supported.has(node.name) && !staticUnsupported.has(node.name))
-			)
+			) {
 				unsafe = true;
+				dynamicCalls.add(node.name);
+			}
 			if (
 				opaqueFunctions.has(node.name) ||
 				(node.name === 'SHAPETEXT' && !shapeText) ||
@@ -219,5 +226,6 @@ export function analyzeVisioFormula(
 		dynamic: unsafe,
 		opaque,
 		guarded,
+		dynamicCalls: [...dynamicCalls],
 	};
 }

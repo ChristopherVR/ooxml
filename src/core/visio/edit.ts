@@ -679,7 +679,7 @@ async function editVsdxTransaction(
 			const changedPages =
 				instanceCommands.has(command) && isInstanceGeometryEdit(roots, command)
 					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)
-					: applyGeometryEdit(roots, document!, command, check, masterMovePins);
+					: applyGeometryEdit(roots, document!, command, check, masterMovePins, formulaDiagnostics);
 			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			// A shape moved, resized or turned onto a right-angle connector's path pushes it aside.
 			if (

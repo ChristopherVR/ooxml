@@ -84,13 +84,13 @@ native ShapeSheet equivalence for this implementation.
 
 ### Next editing work, in priority order
 
-| Priority | Concrete gap and source evidence                                                                                                                                                                             | Completion gate                                                                                                                                                                  |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1        | Local group resizing excludes nested groups, rotated or stencil members and glue; flips and unanchored resizing remain unsupported. Multi-selection excludes groups, rotation, layers and glue.              | Native group/multi-selection fixtures, child transforms and glue preserved, atomic source edits, history and six-demo save/reopen.                                               |
-| 2        | Resize gestures ignore modifiers and resize both corner dimensions independently (`ui/shape-resize.ts`, `viewer-resize-handles.ts`).                                                                         | Record native corner/edge behavior with modifiers, rotation, reflection, local pins and size/aspect locks; adapt the shared geometry to Visio's y-up coordinates and inch units. |
-| 3        | Dependency recalculation remains bounded; STRSAMEEX, ANGLETOLOC/LOCTOPAR (own sheet, unflipped), FORMAT (numeric pictures), DATE and INDIRECT now evaluate, but INDIRECT stays dynamic for every edit guard. | Native formula fixtures plus affected-cache closure and atomic refusal tests, including inherited and cross-shape references.                                                    |
-| 4        | Snapping still uses bounded shape/guide geometry. Resize alignment/size-match hints and a complete saved snap-settings implementation are missing.                                                           | Native snapping matrix for zoom, units, layers, group members, ruler subdivisions, resize and connectors; prevent snapping a container to members moving with it.                |
-| 5        | Size & Position uses fixed inch labels; field rendering and editing state are scattered between product panes.                                                                                               | Unit-aware UI with mixed selections, accessible validation, stable focus and one undo step; keep conversion and source edits in core.                                            |
+| Priority | Concrete gap and source evidence                                                                                                                                                                                                                                                                                                                                                                                                 | Completion gate                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Local group resizing excludes nested groups, rotated or stencil members and glue; flips and unanchored resizing remain unsupported. Multi-selection excludes groups, rotation, layers and glue.                                                                                                                                                                                                                                  | Native group/multi-selection fixtures, child transforms and glue preserved, atomic source edits, history and six-demo save/reopen.                                               |
+| 2        | Resize gestures ignore modifiers and resize both corner dimensions independently (`ui/shape-resize.ts`, `viewer-resize-handles.ts`).                                                                                                                                                                                                                                                                                             | Record native corner/edge behavior with modifiers, rotation, reflection, local pins and size/aspect locks; adapt the shared geometry to Visio's y-up coordinates and inch units. |
+| 3        | Dependency recalculation remains bounded; STRSAMEEX, ANGLETOLOC/LOCTOPAR (own sheet, unflipped), FORMAT (numeric pictures), DATE, INDIRECT and EVALCELL now evaluate; 2026-10-30: recalculation resolves computed INDIRECT/EVALCELL per evaluation and keeps the cache of a function it cannot run (reported `FORMULA_STALE`), but the static admission guards still refuse dynamic cells and master-defined cells are not read. | Native formula fixtures proving kept caches match Visio's recalculation, plus master-inheritance reads and the admission guards.                                                 |
+| 4        | Snapping still uses bounded shape/guide geometry. Resize alignment/size-match hints and a complete saved snap-settings implementation are missing.                                                                                                                                                                                                                                                                               | Native snapping matrix for zoom, units, layers, group members, ruler subdivisions, resize and connectors; prevent snapping a container to members moving with it.                |
+| 5        | Size & Position uses fixed inch labels; field rendering and editing state are scattered between product panes.                                                                                                                                                                                                                                                                                                                   | Unit-aware UI with mixed selections, accessible validation, stable focus and one undo step; keep conversion and source edits in core.                                            |
 
 Native rendering, editing interaction and saved-package compatibility need separate
 acceptance gates. Existing connector, stencil, chart, text and collaboration subsets
@@ -183,8 +183,14 @@ by Visio when opened and remains a live-routing gap. See
   reference-building functions, `ThePage!` / `TheDoc!` references, and dependencies on inherited
   or grouped cells. ROUND's two-argument form is read as decimal places, which is not yet checked
   against Visio. Update 2026-10-30: SUM, DEG, RAD and the string functions (LEFT, MID, LEN,
-  TRIM and others) now evaluate (`formula-*-functions.ts`); INDIRECT stays dynamic for every
-  edit guard, and see priority 3 of the 2026-10-28 review for what else remains.
+  TRIM and others) now evaluate (`formula-*-functions.ts`). Update 2026-10-30 (later): recalculation
+  no longer refuses what it cannot follow. A computed INDIRECT and EVALCELL are resolved per
+  evaluation with cycle protection, DEPENDSON names its dependencies, an unknown or unevaluable
+  function keeps its cached value and is reported as `FORMULA_STALE` (Visio would recompute it, so
+  it may be out of date until it does), and cells of grouped, instanced or connected shapes are read
+  as inputs when the edit does not reach them. Polyline/NURBS data, unparseable formulas, cells
+  that only a master defines and edits that themselves reach a grouped cell still refuse; see
+  priority 3 of the 2026-10-28 review.
 
 ## Round four: straight stencil connectors, string, angle and point functions (2026-10-15)
 
@@ -369,7 +375,9 @@ system/document, rather than an implicit ShapeSheet cell lookup:
 https://learn.microsoft.com/en-us/office/client-developer/visio/font-function.
 The dependency analyzer now admits its explicit AST references while retaining
 unsupported evaluation. An affected FONT formula still rejects recalculation, and
-an INDIRECT argument still rejects dependency proof. Independent font formulas and
+an INDIRECT argument still rejects static dependency proof (since 2026-10-30 a recalculation
+resolves it, and an affected FONT formula keeps its cache with a `FORMULA_STALE` diagnostic).
+Independent font formulas and
 cached identifiers are preserved during geometry editing.
 
 A native acceptance probe resized page ID 6, shape ID 2 to 8 by 4 drawing inches and

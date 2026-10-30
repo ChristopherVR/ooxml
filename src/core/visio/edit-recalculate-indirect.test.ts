@@ -24,10 +24,18 @@ describe('literal INDIRECT in the dependency graph', () => {
 		recalculateVisioCells(new Map([['0', root]]), changed);
 		expect(valueOf(root, 'PinX')).toBe('4');
 	});
-	it('keeps refusing a computed address', () => {
+	it('resolves a computed address while recalculating', () => {
 		const root = page(
 			shape('1', cell('Width', '8')) +
-				shape('2', cell('PinX', '1', 'INDIRECT(&quot;Sheet.&quot;&amp;&quot;1!Width&quot;)')),
+				shape('2', cell('PinX', '1', 'INDIRECT(&quot;Sheet.&quot;&amp;&quot;1!Width&quot;)*0.5')),
+		);
+		recalculateVisioCells(new Map([['0', root]]), changed);
+		expect(valueOf(root, 'PinX')).toBe('4');
+	});
+	it('refuses a computed address that names no cell', () => {
+		const root = page(
+			shape('1', cell('Width', '8')) +
+				shape('2', cell('PinX', '1', 'INDIRECT(&quot;Sheet.&quot;&amp;&quot;9!Width&quot;)')),
 		);
 		expect(() => recalculateVisioCells(new Map([['0', root]]), changed)).toThrow();
 	});

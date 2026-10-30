@@ -19,7 +19,7 @@ const getCell = (root: Element, name: string) =>
 		(node) => node.getAttribute('N') === name,
 	)!;
 describe('dependency-aware ShapeSheet cache writeback', () => {
-	it('preserves independent themed caches and rejects affected implicit theme inputs atomically', () => {
+	it('preserves independent themed caches and keeps the cache of affected implicit theme inputs and reports it', () => {
 		const root = page(
 			shape(
 				'1',
@@ -33,10 +33,12 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 		expect(getCell(root, 'FillForegnd').getAttribute('V')).toBe('#ffffff');
 		getCell(root, 'ColorSchemeIndex').setAttribute('F', 'Width/Height');
 		const before = buildXml(root.ownerDocument!);
-		expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(
-			/unsupported functions/,
-		);
-		expect(buildXml(root.ownerDocument!)).toBe(before);
+		const diagnostics: { code: string; message: string }[] = [];
+		recalculateVisioCells(new Map([['0', root]]), widthChange, { diagnostics });
+		expect(getCell(root, 'ColorSchemeIndex').getAttribute('V')).toBe('2');
+		expect(getCell(root, 'FillForegnd').getAttribute('V')).toBe('#ffffff');
+		expect(diagnostics.map((d) => d.code)).toEqual(['FORMULA_STALE']);
+		expect(buildXml(root.ownerDocument!)).not.toBe(before);
 	});
 	it('rejects affected connected, one-dimensional and foreign shapes', () => {
 		for (const [contents, attrs, extra] of [
@@ -100,7 +102,7 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 		expect(xs[0]!.getAttribute('F')).toBe('GUARD(PinX*0.5)');
 		expect(xs[0]!.getAttribute('U')).toBe('DL');
 	});
-	it('preserves unsupported independent functions while rejecting affected functions atomically', () => {
+	it('keeps the cache of an unsupported function an edit reaches', () => {
 		const root = page(
 			shape(
 				'1',
@@ -114,21 +116,28 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 		expect(getCell(root, 'PinY').getAttribute('V')).toBe('2');
 		getCell(root, 'PinY').setAttribute('F', 'MOD(Width,0)');
 		getCell(root, 'PinX').setAttribute('V', '1');
-		const before = buildXml(root.ownerDocument!);
-		expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(
-			/unsupported functions/,
-		);
-		expect(buildXml(root.ownerDocument!)).toBe(before);
+		const diagnostics: { code: string; message: string }[] = [];
+		recalculateVisioCells(new Map([['0', root]]), widthChange, { diagnostics });
+		expect(getCell(root, 'PinX').getAttribute('V')).toBe('4');
+		expect(getCell(root, 'PinY').getAttribute('V')).toBe('2');
+		expect(diagnostics.map((d) => d.code)).toEqual(['FORMULA_STALE']);
 	});
-	it.each(['DEPENDSON(Width)', 'SETATREF(Width)', 'unparseable@Width'])(
-		'rejects unknown dependency behavior: %s',
+	it.each(['DEPENDSON(Width)', 'SETATREF(Width)'])(
+		'keeps the cache of a function it cannot run: %s',
 		(formula) => {
 			const root = page(shape('1', cell('Width', '8') + cell('User', '1', formula)));
-			expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(
-				/dependency|dependencies/,
-			);
+			const diagnostics: { code: string; message: string }[] = [];
+			recalculateVisioCells(new Map([['0', root]]), widthChange, { diagnostics });
+			expect(getCell(root, 'User').getAttribute('V')).toBe('1');
+			expect(diagnostics.map((d) => d.code)).toEqual(['FORMULA_STALE']);
 		},
 	);
+	it('still rejects a formula it cannot parse', () => {
+		const root = page(shape('1', cell('Width', '8') + cell('User', '1', 'unparseable@Width')));
+		expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(
+			/dependency|dependencies/,
+		);
+	});
 	it('rejects affected cycles and bad units without partial cache writes', () => {
 		const root = page(
 			shape('1', cell('Width', '8') + cell('PinX', '1', 'Width+PinY') + cell('PinY', '1', 'PinX')),
