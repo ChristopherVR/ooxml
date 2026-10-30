@@ -45,7 +45,7 @@ function resize(
 }
 
 /** The page position of the frame's centre, which Ctrl resizing keeps fixed. */
-function centre(frame: { transform: number[]; width: number; height: number }) {
+function centre(frame: { transform: readonly number[]; width: number; height: number }) {
 	const [a, b, c, d, e, f] = frame.transform as [number, number, number, number, number, number];
 	return {
 		x: e + a * (frame.width / 2) + c * (frame.height / 2),

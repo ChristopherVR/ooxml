@@ -31,6 +31,7 @@ function page(angle = 0, locks?: VisioShape['resizeLocks']): VisioPage {
 /** An unrotated shape of the given size whose lower-left corner is at page (x, y). */
 function box(id: string, x: number, y: number, width = 1, height = 1): VisioShape {
 	const shape = structuredClone(demoDocument.pages[0]!.shapes[0]!);
+	delete shape.layerIds;
 	return {
 		...shape,
 		id,
@@ -39,9 +40,8 @@ function box(id: string, x: number, y: number, width = 1, height = 1): VisioShap
 		transform: [1, 0, 0, 1, x, y],
 		hidden: false,
 		children: [],
-		layerIds: undefined,
 		rotation: { pinX: x + width / 2, pinY: y + height / 2, angle: 0 },
-	} as VisioShape;
+	};
 }
 
 /**
