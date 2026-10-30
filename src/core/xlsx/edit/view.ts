@@ -1,5 +1,5 @@
 import { parseAddress } from '../address';
-import type { DefinedName, FreezePane, SheetView } from '../model';
+import type { DefinedName, FreezePane, SheetView, SplitPane } from '../model';
 import { type EditContext, sheetAt } from './context';
 
 /** Freezes the top `rows` and left `cols` (both zero, or undefined, unfreezes). */
@@ -14,8 +14,34 @@ export function setFreeze(ctx: EditContext, s: number, freeze: FreezePane | unde
 		'view',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
+			// Freeze Panes and Split exclude each other, as in Excel.
+			if (next) delete sheet.view.split;
 			if (next) sheet.view.freeze = next;
 			else delete sheet.view.freeze;
+		},
+		{ sheet: s, structural: true },
+	);
+}
+
+/**
+ * Splits the window (sizes in twentieths of a point; both zero, or undefined, removes the split).
+ * A split removes any frozen pane, as in Excel.
+ */
+export function setSplit(ctx: EditContext, s: number, split: SplitPane | undefined): void {
+	const sheet = sheetAt(ctx.workbook, s);
+	const next =
+		split && (split.x > 0 || split.y > 0)
+			? { ...split, x: Math.max(0, Math.round(split.x)), y: Math.max(0, Math.round(split.y)) }
+			: undefined;
+	ctx.run(
+		next ? 'Split window' : 'Remove split',
+		'view',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			if (next) {
+				delete sheet.view.freeze;
+				sheet.view.split = structuredClone(next);
+			} else delete sheet.view.split;
 		},
 		{ sheet: s, structural: true },
 	);
@@ -35,7 +61,7 @@ export function setSheetView(ctx: EditContext, s: number, patch: Partial<SheetVi
 			if (patch.zoom !== undefined) view.zoom = Math.max(10, Math.min(400, Math.round(patch.zoom)));
 			sheet.view = view;
 		},
-		{ sheet: s, structural: patch.zoom !== undefined || 'freeze' in patch },
+		{ sheet: s, structural: patch.zoom !== undefined || 'freeze' in patch || 'split' in patch },
 	);
 }
 

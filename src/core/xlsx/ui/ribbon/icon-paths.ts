@@ -195,4 +195,5 @@ export const ICON_ACCENTS: Record<string, 'blue' | 'green' | 'red' | 'orange'> =
 	protect: 'orange',
 	spelling: 'green',
 	freeze: 'blue',
+	splitWindow: 'blue',
 };

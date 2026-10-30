@@ -420,12 +420,6 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Relleno rápido, Subtotal y Consolidar',
 		'快速填充、分类汇总和合并计算',
 	],
-	'Split panes (Freeze Panes works)': [
-		'Fractionnement des volets (Figer les volets fonctionne)',
-		'Fenster teilen (Fenster fixieren funktioniert)',
-		'Dividir paneles (Inmovilizar paneles funciona)',
-		'拆分窗格(冻结窗格可用)',
-	],
 	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window': [
 		'Audit de formules : repérer les antécédents, repérer les dépendants, évaluer la formule, fenêtre Espion',
 		'Formelüberwachung: Spur zum Vorgänger, Spur zum Nachfolger, Formelauswertung, Überwachungsfenster',

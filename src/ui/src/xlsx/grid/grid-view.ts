@@ -8,7 +8,12 @@ import {
 	getCell,
 	mergeAt,
 	visibleCells,
+	splitToPx,
+	splitVisible,
+	splitAtCell,
+	type CellAddress,
 	type CellRange,
+	type SplitPane,
 	type CellView,
 	type GridMetrics,
 	type Workbook,
@@ -75,8 +80,12 @@ export class GridView {
 	});
 	#cancelFrame: (() => void) | undefined;
 	#zoomOverride = new Map<Worksheet, number>();
-	#freezeH: HTMLDivElement;
-	#freezeV: HTMLDivElement;
+	/** The horizontal and vertical lines: freeze lines, or the draggable split bars. */
+	readonly barH: HTMLDivElement;
+	readonly barV: HTMLDivElement;
+	/** Bar positions (pixels) while a split bar is being dragged. */
+	splitDrag: { x?: number; y?: number } | undefined;
+	#splitScroll = new WeakMap<Worksheet, { left: number; top: number }>();
 	#sheetRef: Worksheet | undefined;
 
 	constructor(ctx: EditorContext, container: HTMLElement) {
@@ -113,9 +122,10 @@ export class GridView {
 		this.colHeaders = { frozen: pane('col'), scroll: pane('col') };
 		this.rowHeaders = { frozen: pane('row'), scroll: pane('row') };
 		this.corner = h(doc, 'div', 'xg-corner', { role: 'button', title: ctx.t('Select All') });
-		this.#freezeH = h(doc, 'div', 'xg-freeze-h');
-		this.#freezeV = h(doc, 'div', 'xg-freeze-v');
-		this.view.append(this.corner, this.#freezeH, this.#freezeV);
+		this.barH = h(doc, 'div', 'xg-freeze-h');
+		this.barV = h(doc, 'div', 'xg-freeze-v');
+		this.view.append(this.corner, this.barH, this.barV);
+		this.view.addEventListener('wheel', (event) => this.#onWheel(event), { passive: false });
 		container.append(this.root);
 		this.scroller.addEventListener('scroll', () => this.schedule(), { passive: true });
 		this.rebuild();
@@ -203,7 +213,78 @@ export class GridView {
 			height,
 			scrollLeft: this.scroller.scrollLeft,
 			scrollTop: this.scroller.scrollTop,
+			split: this.splitState(),
 		});
+	}
+
+	/** The split window in pixels with the scroll of its left and top panes, or undefined. */
+	splitState(): { x: number; y: number; left: number; top: number } | undefined {
+		const sheet = this.sheet();
+		const split = sheet?.view.split;
+		if (!sheet || !split || (split.x <= 0 && split.y <= 0)) {
+			// No split any more: a later one starts from its own top-left cell.
+			if (sheet) this.#splitScroll.delete(sheet);
+			return undefined;
+		}
+		const zoom = this.metrics.zoom;
+		const x = this.splitDrag?.x ?? splitToPx(split.x, zoom);
+		const y = this.splitDrag?.y ?? splitToPx(split.y, zoom);
+		let scroll = this.#splitScroll.get(sheet);
+		if (!scroll) {
+			scroll = {
+				left: split.topLeft ? this.metrics.colLeft(split.topLeft.col) : 0,
+				top: split.topLeft ? this.metrics.rowTop(split.topLeft.row) : 0,
+			};
+			this.#splitScroll.set(sheet, scroll);
+		}
+		return { x, y, left: scroll.left, top: scroll.top };
+	}
+
+	/** The split View > Split makes with `active` selected, from the painted window. */
+	splitAt(active: CellAddress): SplitPane | undefined {
+		const g = this.#geometry();
+		return splitAtCell(
+			this.metrics,
+			active,
+			{ left: g.mainOx, top: g.mainOy },
+			{ width: g.cellsW, height: g.cellsH },
+		);
+	}
+
+	/** Shows `cell` at the top-left of the scrolling pane (a loaded sheet's saved scroll position). */
+	showTopLeft(cell: CellAddress): void {
+		if (!this.sheet()?.view.split) return this.reveal(cell.row, cell.col);
+		this.ensureExtent(cell.row, cell.col);
+		this.scroller.scrollLeft = this.metrics.colLeft(cell.col);
+		this.scroller.scrollTop = this.metrics.rowTop(cell.row);
+		this.schedule();
+	}
+
+	/** Wheel over the top or left panes of a split scrolls that pane, not the native scroller. */
+	#onWheel(event: WheelEvent): void {
+		const sheet = this.sheet();
+		const split = this.splitState();
+		const scroll = sheet && this.#splitScroll.get(sheet);
+		if (!split || !scroll || event.ctrlKey) return;
+		const { x, y } = this.clientToView(event.clientX, event.clientY);
+		const g = this.geometry;
+		const inLeft = split.x > 0 && x >= g.headerW && x < g.headerW + split.x;
+		const inTop = split.y > 0 && y >= g.headerH && y < g.headerH + split.y;
+		if (!inLeft && !inTop) return;
+		const swap = event.shiftKey && !event.deltaX;
+		let dx = swap ? event.deltaY : event.deltaX;
+		let dy = swap ? 0 : event.deltaY;
+		if (event.deltaMode === 1) {
+			dx *= 40;
+			dy *= 40;
+		}
+		// The left panes share columns, the top panes share rows: only the other axis is native.
+		if (inLeft) scroll.left = Math.max(0, scroll.left + dx);
+		else this.scroller.scrollLeft += dx;
+		if (inTop) scroll.top = Math.max(0, scroll.top + dy);
+		else this.scroller.scrollTop += dy;
+		event.preventDefault();
+		this.schedule();
 	}
 
 	schedule(): void {
@@ -258,16 +339,21 @@ export class GridView {
 		if (g.scrollLeft + g.width > this.metrics.totalWidth(this.extentCol) - 300)
 			this.ensureExtent(0, this.extentCol + 10);
 		const freeze = sheet?.view.freeze;
-		const vis = visibleCells(
-			this.metrics,
-			{
-				scrollLeft: g.scrollLeft,
-				scrollTop: g.scrollTop,
-				width: g.cellsW + 40,
-				height: g.cellsH + 30,
-			},
-			freeze,
-		);
+		const viewport = {
+			scrollLeft: g.scrollLeft,
+			scrollTop: g.scrollTop,
+			width: g.cellsW + 40,
+			height: g.cellsH + 30,
+		};
+		const vis = g.split
+			? splitVisible(this.metrics, {
+					...g.split,
+					mainLeft: g.scrollLeft,
+					mainTop: g.scrollTop,
+					width: viewport.width,
+					height: viewport.height,
+				})
+			: visibleCells(this.metrics, viewport, freeze);
 		const zoom = this.metrics.zoom;
 		const selection = this.ctx.selection.get();
 		const editable = !this.ctx.readOnly();
@@ -329,8 +415,8 @@ export class GridView {
 				colHeaders: this.colHeaders,
 				rowHeaders: this.rowHeaders,
 				corner: this.corner,
-				freezeH: this.#freezeH,
-				freezeV: this.#freezeV,
+				freezeH: this.barH,
+				freezeV: this.barV,
 			},
 			g,
 			this.metrics,

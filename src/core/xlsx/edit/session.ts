@@ -263,6 +263,7 @@ export function createEditSession(
 		setSheetState: (i, state) => sheets.setSheetState(ctx, i, state),
 		setTabColor: (i, color) => sheets.setTabColor(ctx, i, color),
 		setFreeze: (s, freeze) => view.setFreeze(ctx, s, freeze),
+		setSplit: (s, split) => view.setSplit(ctx, s, split),
 		setComment: (s, at, text, author) => annotations.setComment(ctx, s, at, text, author),
 		setHyperlink: (s, range, link) => annotations.setHyperlink(ctx, s, range, link),
 		addConditionalFormat: (s, cf) => annotations.addConditionalFormat(ctx, s, cf),

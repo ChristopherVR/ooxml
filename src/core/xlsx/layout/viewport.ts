@@ -26,7 +26,8 @@ export interface VisibleCells {
 const frozenExtent = (count: number, start: (i: number) => number): number =>
 	count > 0 ? start(count) : 0;
 
-function collect(
+/** The visible (non-hidden) indices whose extent starts before `to`, scanning from the one at `from`. */
+export function collectVisible(
 	from: number,
 	to: number,
 	limit: number,
@@ -67,7 +68,7 @@ export function visibleCells(
 	const frozenW = frozenExtent(fCols, metrics.colLeft);
 	const top = frozenH + Math.max(0, viewport.scrollTop);
 	const left = frozenW + Math.max(0, viewport.scrollLeft);
-	const rows = collect(
+	const rows = collectVisible(
 		top,
 		top + Math.max(0, viewport.height - frozenH),
 		MAX_ROW,
@@ -76,7 +77,7 @@ export function visibleCells(
 		metrics.rowHeight,
 		fRows,
 	);
-	const cols = collect(
+	const cols = collectVisible(
 		left,
 		left + Math.max(0, viewport.width - frozenW),
 		MAX_COL,

@@ -8,6 +8,7 @@ import type {
 	SheetFormat,
 	SheetProtection,
 	SheetView,
+	SplitPane,
 } from '../model';
 import type { XmlElement } from '../../xml/index';
 import { readModernHash } from './password-hash';
@@ -41,6 +42,8 @@ export const readTabColor = (
 export const readFitToPage = (sheetPr: XmlElement | undefined): boolean =>
 	boolAttr(xFirst(sheetPr, 'pageSetUpPr'), 'fitToPage') ?? false;
 
+const PANES = new Set(['topLeft', 'topRight', 'bottomLeft', 'bottomRight']);
+
 /** The first `sheetView` (the one Excel shows), with frozen panes and the active selection. */
 export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 	const view = defaultSheetView();
@@ -62,8 +65,21 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 		const cols = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
 		if (rows || cols) view.freeze = { rows, cols };
 	}
+	const split = pane && state === 'split';
+	if (split) {
+		const x = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
+		const y = Math.max(0, Math.round(numAttr(pane, 'ySplit') ?? 0));
+		if (x || y) {
+			view.split = { x, y };
+			const first = parseAddress(att(node, 'topLeftCell') ?? '');
+			if (first) view.split.topLeft = first;
+			const active = att(pane, 'activePane');
+			if (active && PANES.has(active))
+				view.split.activePane = active as NonNullable<SplitPane['activePane']>;
+		}
+	}
 	const topLeft = parseAddress(
-		(frozen ? att(pane, 'topLeftCell') : att(node, 'topLeftCell')) ?? '',
+		(frozen || split ? att(pane, 'topLeftCell') : att(node, 'topLeftCell')) ?? '',
 	);
 	if (topLeft) view.topLeft = topLeft;
 	const selections = xChildren(node, 'selection');

@@ -1,7 +1,7 @@
 import { elements } from '../../xml/index';
 import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
-import type { ColumnInfo, Worksheet } from '../model';
+import type { ColumnInfo, SplitPane, Worksheet } from '../model';
 import {
 	defaultSheetView,
 	readAutoFilter,
@@ -60,6 +60,18 @@ export function dimensionXml(sheet: Worksheet): string {
 	return `<dimension ref="${used ? formatRange(used) : 'A1'}"/>`;
 }
 
+/** The pane holding the selection: the stored one when it exists in this split, else the last. */
+function splitActivePane(split: SplitPane): string {
+	const both = split.x > 0 && split.y > 0;
+	const valid = both
+		? ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
+		: split.y > 0
+			? ['topLeft', 'bottomLeft']
+			: ['topLeft', 'topRight'];
+	if (split.activePane && valid.includes(split.activePane)) return split.activePane;
+	return both ? 'bottomRight' : split.y > 0 ? 'bottomLeft' : 'topRight';
+}
+
 export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 	const source = snapshotElement(sheet, 'sheetViews');
 	if (source && sameModel(readSheetView(source), sheet.view)) {
@@ -89,6 +101,18 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 			state: 'frozen',
 		});
 	}
+	const split = view.split && (view.split.x > 0 || view.split.y > 0) ? view.split : undefined;
+	if (split && !pane) {
+		const { x, y } = split;
+		pane = splitActivePane(split);
+		inner += el('pane', {
+			xSplit: x || undefined,
+			ySplit: y || undefined,
+			topLeftCell: view.topLeft ? formatAddress(view.topLeft) : undefined,
+			activePane: pane,
+			state: 'split',
+		});
+	}
 	if (view.selection) {
 		inner += el('selection', {
 			pane,
@@ -102,7 +126,13 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 		showRowColHeaders: view.showHeaders ? undefined : false,
 		showZeros: view.showZeros ? undefined : false,
 		rightToLeft: view.rightToLeft || undefined,
-		topLeftCell: !view.freeze && view.topLeft ? formatAddress(view.topLeft) : undefined,
+		topLeftCell: split
+			? split.topLeft
+				? formatAddress(split.topLeft)
+				: undefined
+			: !view.freeze && view.topLeft
+				? formatAddress(view.topLeft)
+				: undefined,
 		showFormulas: view.showFormulas || undefined,
 		view: view.mode,
 		zoomScale: view.zoom !== 100 ? view.zoom : undefined,

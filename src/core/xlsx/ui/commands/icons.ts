@@ -133,6 +133,7 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	zoom100: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4M7 6.5l1.5-1V11',
 	zoomSelection: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4M6 6h5v5H6z',
 	freeze: `${GRID}M3 7h14M7 3v14M10 10l4 4M14 10l-4 4`,
+	split: `${GRID}M3 10h14M10 3v14`,
 	keyboard: 'M2 5h16v10H2zM5 8h.1M8 8h.1M11 8h.1M14 8h.1M5 12h10',
 	info: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 9v5M10 6v.1',
 	tableName: `${GRID}M3 7h14M6 11h8M6 14h5`,

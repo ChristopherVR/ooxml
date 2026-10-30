@@ -286,8 +286,8 @@ line/marker swatches and position-authoring controls remain incomplete.
    needed), and CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,
    CUBESETCOUNT, CUBEVALUE, WEBSERVICE, FILTERXML, STOCKHISTORY, RTD, IMAGE, COPILOT,
    TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service).
-10. Data tools and auditing: Flash Fill, Subtotal, Consolidate, Advanced filter, Split panes
-    (only Freeze Panes exists), Trace Precedents and Dependents, Remove Arrows, Evaluate
+10. Data tools and auditing (View > Split is implemented: `layout/split.ts`, `SheetView.split`;
+    the top and left panes' scroll after the user moves them is not saved to the file): Flash Fill, Subtotal, Consolidate, Advanced filter, Trace Precedents and Dependents, Remove Arrows, Evaluate
     Formula, Error Checking and Watch Window have no commands. Text to Columns splits at
     delimiters or typed fixed-width break positions (no per-column data format step), and
     Page Layout > Themes > Colors only reports that changing the
