@@ -19,7 +19,7 @@ const tool = (name: string) => {
 describe('pptx tool catalogue', () => {
 	it('keeps the established names, unique across every format', () => {
 		const names = pptxTools.map((t) => t.name);
-		expect(names).toHaveLength(73);
+		expect(names).toHaveLength(74);
 		const everything = [
 			...names,
 			...Object.values(automationTools).flatMap((l) => l.map((t) => t.name)),

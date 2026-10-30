@@ -54,13 +54,13 @@ export function ToolbarLateTabs({
 					onEnterPresenterView={p.onEnterPresenterView ?? (() => {})}
 					onEnterRehearsalMode={p.onEnterRehearsalMode ?? (() => {})}
 					onOpenSetUpSlideShow={p.onOpenSetUpSlideShow ?? (() => {})}
+					onOpenCustomShows={p.onOpenCustomShows ?? (() => {})}
 					onToggleHideSlide={p.onToggleHideSlide ?? (() => {})}
 					activeSlideHidden={p.activeSlideHidden ?? false}
 					onOpenBroadcastDialog={p.onOpenBroadcastDialog ?? (() => {})}
 					onToggleSubtitles={p.onToggleSubtitles ?? (() => {})}
 					showSubtitles={p.showSubtitles ?? false}
 					onSetMode={p.onSetMode}
-					customShowControls={p}
 					hiddenActions={p.hiddenActions}
 					presentationProperties={p.presentationProperties}
 					onPresentationPropertiesChange={p.onPresentationPropertiesChange}

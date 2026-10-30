@@ -94,13 +94,34 @@ describe('customShowsDialog active-show picker', () => {
 		select.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();
 		allButtons(target)
-			.find((button) => button.textContent === 'Delete')!
+			.find((button) => button.textContent === 'Remove')!
 			.click();
 		flushSync();
 		allButtons(target)
-			.find((button) => button.textContent === 'Save')!
+			.find((button) => button.textContent === 'OK')!
 			.click();
 		flushSync();
 		expect(onsetactive).toHaveBeenLastCalledWith(null);
+	});
+
+	it('copies a show, moves its slides and clears jumps into a removed show', () => {
+		const { target, onsave } = open('show-1');
+		const click = (label: string) => {
+			allButtons(target)
+				.find((button) => button.textContent?.trim() === label)!
+				.click();
+			flushSync();
+		};
+		click('Copy');
+		const rows = () => [
+			...target.querySelectorAll<HTMLElement>('[aria-label="Slides in show"] li'),
+		];
+		rows()[1]!.click();
+		flushSync();
+		click('Move up');
+		click('OK');
+		const [shows] = onsave.mock.calls[0] as [PptxCustomShow[], unknown];
+		expect(shows.map((show) => show.name)).toStrictEqual(['Short', 'Investors', 'Copy of Short']);
+		expect(shows[2]!.slideRIds).toStrictEqual(['rId3', 'rId1']);
 	});
 });

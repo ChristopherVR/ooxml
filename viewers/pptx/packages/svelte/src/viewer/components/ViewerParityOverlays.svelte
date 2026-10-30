@@ -46,6 +46,7 @@
 		onsetlocale,
 		onselectslide,
 		onmoveslide,
+		onrunshow,
 		optionsState,
 		autosaveRecovery,
 		aiEnabled = false,
@@ -72,6 +73,8 @@
 		onsetlocale: (code: string) => void;
 		onselectslide: (index: number) => void;
 		onmoveslide: (from: number, to: number) => void;
+		/** Start the slide show from its first slide (Custom Shows dialog > Show). */
+		onrunshow?: () => void;
 		/** When true, the Options dialog shows an AI section (chat-log export). */
 		aiEnabled?: boolean;
 		/** Live collaboration session state, for the Options > Add-ins status column. */
@@ -116,7 +119,7 @@
 {#if ui.compare.open && customization.isPanelVisible('comparePane')}<ComparePanel compare={ui.compare} onclose={() => (ui.compare.open = false)} />{/if}
 {#if ui.printSettingsOpen && customization.isDialogAvailable('print')}<PrintDialog slideCount={slides.length} {current} onclose={() => (ui.printSettingsOpen = false)} onprint={(options) => exportUi.runPrint(options)} defaultSettings={optionsState.printDefaults} />{/if}
 <RehearseTimings rehearse={ui.rehearse} onsave={() => ui.rehearse.save(editor)} ondiscard={() => ui.rehearse.discard()} />
-{#if ui.customShowsOpen}<CustomShowsDialog shows={editor.customShows} slides={editor.slides} activeShowId={ui.activeCustomShowId} onclose={() => (ui.customShowsOpen = false)} onsave={(shows) => editor.presentationMetadata.updateCustomShows(shows)} onsetactive={(id) => (ui.activeCustomShowId = id)} />{/if}
+{#if ui.customShowsOpen}<CustomShowsDialog shows={editor.customShows} slides={editor.slides} activeShowId={ui.activeCustomShowId} onclose={() => (ui.customShowsOpen = false)} onsave={(shows, cleared) => { editor.presentationMetadata.updateCustomShows(shows); if (cleared) editor.commitSlides(cleared); }} onsetactive={(id) => (ui.activeCustomShowId = id)} onrun={() => onrunshow?.()} />{/if}
 {#if !fullscreen}<ChartFormatPanel {editor} />{/if}
 {#if ui.selectionPaneOpen && customization.isPanelVisible('selectionPane')}<SelectionPane {editor} onclose={() => (ui.selectionPaneOpen = false)} />{/if}
 {#if ui.slideSorterOpen}<SlideSorterOverlay {slides} clipboardSourceSlides={editor.slides} clipboardTemplates={editor.templateElementsBySlideId} {canvasSize} {mediaDataUrls} {current} canEdit={editor.editable} onselect={onselectslide} onmove={onmoveslide} ondelete={(index) => navigateAfterSlideOp(editor.slidesOps.deleteSlideAtIndex(index))} onduplicate={(index) => navigateAfterSlideOp(editor.slidesOps.duplicateSlideAtIndex(index))} oncopysystem={(indexes) => slidePackageClipboard.copy(indexes)} onpastesystem={(insertAt) => slidePackageClipboard.paste(insertAt)} onpaste={(request) => navigateAfterSlideOp(editor.slidesOps.pasteSlides(request))} ontogglehidden={(index) => editor.slidesOps.toggleSlideHidden(index)} onclose={() => (ui.slideSorterOpen = false)} />{/if}

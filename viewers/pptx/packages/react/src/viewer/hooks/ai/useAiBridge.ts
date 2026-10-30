@@ -22,6 +22,7 @@ import type {
 	PptxCustomProperty,
 	PptxHandler,
 	PptxPresentationProperties,
+	PptxCustomShow,
 	PptxSection,
 	PptxSlide,
 	PptxTagCollection,
@@ -76,6 +77,8 @@ export interface UseAiBridgeInput {
 	tagCollections: PptxTagCollection[];
 	setCanvasSize: (size: { width: number; height: number }) => void;
 	setSections: (sections: PptxSection[]) => void;
+	customShows: PptxCustomShow[];
+	setCustomShows: (shows: PptxCustomShow[]) => void;
 	setPresentationProperties: (props: PptxPresentationProperties) => void;
 	setCustomProperties: (props: PptxCustomProperty[]) => void;
 	setCoreProperties: (props: PptxCoreProperties | undefined) => void;
@@ -109,6 +112,8 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 			getHandler: () => live().handlerRef.current,
 			getFileName: () => live().fileName,
 			getSections: () => live().sections,
+			getCustomShows: () => live().customShows,
+			setCustomShows: (shows) => live().setCustomShows(shows),
 			getPresentationProperties: () => live().presentationProperties,
 			getCustomProperties: () => live().customProperties,
 			getCoreProperties: () => live().coreProperties,

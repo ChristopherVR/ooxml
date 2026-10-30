@@ -1,4 +1,5 @@
-import type { PptxSlide } from 'pptx-viewer-core';
+import { generateCustomShowId } from 'ooxml-ui/pptx';
+import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 /**
  * Custom shows dialog handlers: extracted from useViewerDialogs.
  */
@@ -16,9 +17,16 @@ export interface UseDialogCustomShowsInput {
 	>;
 	setActiveCustomShowId: React.Dispatch<React.SetStateAction<string | null>>;
 	history: EditorHistoryResult;
+	/** Replaces the deck's slides (used when removing a show clears jumps into it). */
+	setSlides?: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 }
 
 export interface UseDialogCustomShowsResult {
+	/** OK in the Custom Shows dialog: store the shows, clear jumps into removed ones. */
+	handleCommitCustomShows: (
+		shows: PptxCustomShow[],
+		clearedSlides: PptxSlide[] | undefined,
+	) => void;
 	handleCreateCustomShow: () => void;
 	handleRenameActiveCustomShow: () => void;
 	handleDeleteActiveCustomShow: () => void;
@@ -34,12 +42,28 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		setCustomShows,
 		setActiveCustomShowId,
 		history,
+		setSlides,
 	} = input;
+
+	const handleCommitCustomShows = (
+		shows: PptxCustomShow[],
+		clearedSlides: PptxSlide[] | undefined,
+	) => {
+		setCustomShows(shows);
+		if (clearedSlides) {
+			setSlides?.(clearedSlides);
+		}
+		setActiveCustomShowId((current) =>
+			current !== null && shows.some((show) => show.id === current) ? current : null,
+		);
+		history.markDirty();
+	};
 
 	const handleCreateCustomShow = () => {
 		const name = safePrompt('Custom show name', 'Custom Show');
 		const safeName = name?.trim() || `Custom Show ${customShows.length + 1}`;
-		const id = `custShow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+		// `p:custShow/@id` is an xsd:unsignedInt, so ids are numbers, never random strings.
+		const id = generateCustomShowId(customShows);
 		const initialSlideRIds =
 			activeSlide?.rId && activeSlide.rId.length > 0 ? [activeSlide.rId] : [];
 		setCustomShows((prev) => [...prev, { id, name: safeName, slideRIds: initialSlideRIds }]);
@@ -112,6 +136,7 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 	}, [activeCustomShowId, activeSlide?.rId, customShows]);
 
 	return {
+		handleCommitCustomShows,
 		handleCreateCustomShow,
 		handleRenameActiveCustomShow,
 		handleDeleteActiveCustomShow,

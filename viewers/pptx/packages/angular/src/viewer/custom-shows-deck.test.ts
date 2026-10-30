@@ -139,15 +139,29 @@ describe('customShowsFromDeck / customShowsToDeck', () => {
 // ---------------------------------------------------------------------------
 
 describe('viewerCustomShowsService', () => {
-	it('lists the shows the deck was loaded with', () => {
+	it('lists the shows the deck was loaded with, keyed by relationship id', () => {
 		const { loader } = loaderWithSaveSpy();
 		loader.customShows.set(PARSED_SHOWS);
 		const svc = showsService(loader);
-		expect(svc.shows().map((show) => show.name)).toStrictEqual(['Short Show', 'Reverse']);
-		expect(svc.shows()[0].slideIds).toStrictEqual([
-			'ppt/slides/slide1.xml',
-			'ppt/slides/slide3.xml',
-		]);
+		expect(svc.pptxCustomShows().map((show) => show.name)).toStrictEqual(['Short Show', 'Reverse']);
+		expect(svc.pptxCustomShows()[0].slideRIds).toStrictEqual(['rId2', 'rId4']);
+	});
+
+	it('stores the dialog result, clears jumps through the slide hook and unpins a removed show', () => {
+		const { loader } = loaderWithSaveSpy();
+		loader.customShows.set(PARSED_SHOWS);
+		const svc = showsService(loader);
+		const applied: PptxSlide[][] = [];
+		svc.bind({
+			activeSlideIndex: () => 0,
+			liveSlides: () => DECK,
+			applySlides: (slides) => applied.push(slides),
+		});
+		svc.activeId.set('1');
+		svc.onSaveDialog({ shows: [PARSED_SHOWS[0]!], clearedSlides: [DECK[0]!] });
+		expect(loader.customShows().map((show) => show.id)).toStrictEqual(['0']);
+		expect(applied).toHaveLength(1);
+		expect(svc.activeId()).toBeNull();
 	});
 
 	it('adopts the authored p:showPr custom show, and lets a manual pick win', () => {
@@ -264,10 +278,13 @@ describe('viewerCustomShowsService', () => {
 		expect(svc.showFirstIndex()).toBe(2);
 	});
 
-	it('saves a created show with relationship ids', async () => {
+	it('saves a dialog-created show with relationship ids', async () => {
 		const { loader, lastOptions } = loaderWithSaveSpy();
 		const svc = showsService(loader);
-		svc.onCreate({ name: 'Openers', slideIds: ['ppt/slides/slide1.xml', 'ppt/slides/slide2.xml'] });
+		svc.onSaveDialog({
+			shows: [{ id: '0', name: 'Openers', slideRIds: ['rId2', 'rId3'] }],
+			clearedSlides: undefined,
+		});
 
 		await loader.saveSlides(DECK);
 		const saved = lastOptions()?.customShows;

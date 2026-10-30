@@ -11,7 +11,7 @@ import type { ParsedTableStyleMap, PptxSlide, PptxViewProperties } from 'pptx-vi
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { UseAiBridgeInput } from './useAiBridge';
 import { useAiBridge } from './useAiBridge';
@@ -47,6 +47,7 @@ function baseInput(overrides: Partial<UseAiBridgeInput> = {}): UseAiBridgeInput 
 		pinnedFocus: null,
 		handlerRef: { current: null },
 		sections: [],
+		customShows: [],
 		presentationProperties: {},
 		customProperties: [],
 		coreProperties: undefined,
@@ -59,6 +60,7 @@ function baseInput(overrides: Partial<UseAiBridgeInput> = {}): UseAiBridgeInput 
 		setActiveSlideIndex: () => {},
 		setCanvasSize: () => {},
 		setSections: () => {},
+		setCustomShows: () => {},
 		setPresentationProperties: () => {},
 		setCustomProperties: () => {},
 		setCoreProperties: () => {},
@@ -136,6 +138,23 @@ describe('useAiBridge deck-data metadata parity', () => {
 		expect(setTagsCalls).toStrictEqual([
 			[{ path: 'ppt/tags/tag1.xml', tags: [{ name: 'a', value: 'b' }] }],
 		]);
+	});
+
+	it('applyDeckData commits changed custom shows through the setter', () => {
+		const setCustomShows = vi.fn();
+		let captured: ReturnType<typeof useAiBridge> | null = null;
+		function Probe(): null {
+			captured = useAiBridge(baseInput({ setCustomShows }));
+			return null;
+		}
+		act(() => root.render(<Probe />));
+		act(() => {
+			captured?.applyDeckData?.(
+				(data) => ({ ...data, customShows: [{ id: '0', name: 'Short', slideRIds: ['rId2'] }] }),
+				'custom shows',
+			);
+		});
+		expect(setCustomShows).toHaveBeenCalledWith([{ id: '0', name: 'Short', slideRIds: ['rId2'] }]);
 	});
 
 	it('applyDeckData is a no-op for unchanged metadata fields', () => {

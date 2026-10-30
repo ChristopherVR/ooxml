@@ -1,4 +1,4 @@
-import type { PptxData, PptxSlide, PptxElement } from '../index';
+import type { PptxCustomShow, PptxData, PptxSlide, PptxElement } from '../index';
 import type { Doc as YDoc } from 'yjs';
 
 /**
@@ -28,6 +28,8 @@ export interface TableStyleSaveOptions {
 	tableStylesDefaultId?: string;
 	/** GUIDs to remove from `ppt/tableStyles.xml` entirely. */
 	tableStylesToDelete?: string[];
+	/** Replacement `p:custShowLst` (set by `manage_custom_shows`); omitted keeps the deck's list. */
+	customShows?: PptxCustomShow[];
 }
 
 /**

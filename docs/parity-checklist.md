@@ -300,7 +300,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       placeholders (timing is edited in the Animation Pane).
 - [ ] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay (Pen,
       Highlighter, Eraser and Freeform work).
-- [ ] **P1** Custom shows load and save but have no add or edit API, tool or UI.
+- [x] **P1** Custom shows have editing operations (`editor/render/custom-show-operations`), the
+      `manage_custom_shows` MCP and assistant tool, valid unsigned-int ids on save (with `p:showPr`
+      and `ppaction://customshow` references remapped) and the Custom Shows dialog (New, Copy,
+      Remove, two slide lists with Add, Remove, Move Up/Down, Show; the shared
+      `createCustomShowsController`) in all five bindings, with unit tests and
+      `e2e/pptx/custom-shows-dialog.spec.ts`.
+- [ ] **P1** `manage_sections` and `update_presentation_properties` do not persist through
+      `saveDeckBytes` (the automation save forwards only header/footer, table styles and
+      `saveOptions`), and `update_presentation_properties` cannot set `showSlidesCustomShowId`.
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media

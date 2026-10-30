@@ -1,172 +1,158 @@
-@if (open()) {
-	<!-- Backdrop -->
-	<div class="pptx-ng-cs-backdrop" aria-hidden="true" (click)="close.emit()"></div>
+<div class="pptx-ng-cs-backdrop" aria-hidden="true" (click)="close.emit()"></div>
 
-	<!-- Dialog -->
-	<div class="pptx-ng-cs-dialog" role="dialog" aria-modal="true" aria-labelledby="pptx-cs-title">
-		<header class="pptx-ng-cs-header">
-			<h2 id="pptx-cs-title" class="pptx-ng-cs-title">
-				{{ 'pptx.customShows.title' | translate }}
-			</h2>
-			<button
-				type="button"
-				class="pptx-ng-cs-close"
-				[attr.aria-label]="'pptx.customShows.closeDialog' | translate"
-				(click)="close.emit()"
-			>
-				<svg lucideX class="h-4 w-4"></svg>
-			</button>
-		</header>
+<div class="pptx-ng-cs-dialog" role="dialog" aria-modal="true" aria-labelledby="pptx-cs-title">
+	<header class="pptx-ng-cs-header">
+		<h2 id="pptx-cs-title" class="pptx-ng-cs-title">
+			{{ 'pptx.customShows.title' | translate }}
+		</h2>
+		<button
+			type="button"
+			class="pptx-ng-cs-close"
+			[attr.aria-label]="'pptx.customShows.closeDialog' | translate"
+			(click)="close.emit()"
+		>
+			<svg lucideX class="h-4 w-4"></svg>
+		</button>
+	</header>
 
+	@if (view(); as v) {
 		<div class="pptx-ng-cs-body">
-			<!-- Existing shows list -->
-			<section class="pptx-ng-cs-section">
-				<h3 class="pptx-ng-cs-section-title">
-					{{ 'pptx.customShows.savedShows' | translate }}
-					@if (customShows().length > 0) {
-						<span class="pptx-ng-cs-badge">{{ customShows().length }}</span>
+			<label class="pptx-ng-cs-active">
+				<span>{{ 'pptx.customShows.selectCustomShow' | translate }}</span>
+				<select
+					class="pptx-ng-cs-input"
+					[attr.aria-label]="'pptx.customShows.selectCustomShow' | translate"
+					[value]="pickerValue()"
+					(change)="onPick($event)"
+				>
+					<option value="" [selected]="pickerValue() === ''">
+						{{ 'pptx.customShows.allSlides' | translate }}
+					</option>
+					@for (show of v.shows; track show.id) {
+						<option [value]="show.id" [selected]="pickerValue() === show.id">{{ show.name }}</option>
 					}
-				</h3>
+				</select>
+			</label>
 
-				@if (customShows().length > 0) {
-					<ul class="pptx-ng-cs-show-list">
-						@for (show of customShows(); track show.id) {
+			<div class="pptx-ng-cs-layout">
+				<div class="pptx-ng-cs-shows">
+					<ul role="listbox" class="pptx-ng-cs-list" [attr.aria-label]="'pptx.customShows.savedShows' | translate">
+						@for (show of v.shows; track show.id) {
 							<li
-								class="pptx-ng-cs-show-row"
-								[class.pptx-ng-cs-show-row--active]="show.id === activeCustomShowId()"
+								role="option"
+								tabindex="0"
+								[attr.aria-selected]="show.selected"
+								(click)="ctl.select(show.id)"
+								(keydown.enter)="ctl.select(show.id)"
 							>
-								<!-- Edit mode for this show -->
-								@if (editingShowId() === show.id) {
-									<div class="pptx-ng-cs-edit-row">
-										<input
-											type="text"
-											class="pptx-ng-cs-input"
-											[value]="editDraftName()"
-											[attr.aria-label]="'pptx.customShows.editNameLabel' | translate"
-											(input)="onEditNameInput($event)"
-										/>
-										<button
-											type="button"
-											class="pptx-ng-cs-btn pptx-ng-cs-btn--primary"
-											[disabled]="!canSaveEdit()"
-											(click)="saveEdit(show.id)"
-										>
-											{{ 'pptx.customShows.save' | translate }}
-										</button>
-										<button type="button" class="pptx-ng-cs-btn" (click)="editingShowId.set(null)">
-											{{ 'pptx.customShows.cancel' | translate }}
-										</button>
-									</div>
-									<!-- Slide picker for edit -->
-									<div class="pptx-ng-cs-slide-picker">
-										@for (slide of slides(); track slide.id; let i = $index) {
-											<label class="pptx-ng-cs-slide-option">
-												<pptx-ui-checkbox
-													[checked]="editDraftSlideIds().includes(slide.id)"
-													(change)="toggleEditSlide(slide.id)"
-												></pptx-ui-checkbox>
-												<span>{{ slideLabel(slide, i) }}</span>
-											</label>
-										}
-									</div>
-								} @else {
-									<div class="pptx-ng-cs-show-info">
-										<span class="pptx-ng-cs-show-name">{{ show.name }}</span>
-										<span class="pptx-ng-cs-show-meta">
-											{{
-												'pptx.customShows.slideCount' | translate: { count: show.slideIds.length }
-											}}
-										</span>
-									</div>
-									<div class="pptx-ng-cs-show-actions">
-										<button
-											type="button"
-											class="pptx-ng-cs-btn"
-											[class.pptx-ng-cs-btn--active]="show.id === activeCustomShowId()"
-											[title]="
-												(show.id === activeCustomShowId()
-													? 'pptx.customShows.unsetActive'
-													: 'pptx.customShows.setActive'
-												) | translate
-											"
-											(click)="onToggleActive(show.id)"
-										>
-											{{
-												(show.id === activeCustomShowId()
-													? 'pptx.customShows.active'
-													: 'pptx.customShows.setActiveShort'
-												) | translate
-											}}
-										</button>
-										<button
-											type="button"
-											class="pptx-ng-cs-btn"
-											[title]="'pptx.customShows.editShow' | translate"
-											(click)="startEdit(show)"
-										>
-											{{ 'pptx.customShows.edit' | translate }}
-										</button>
-										<button
-											type="button"
-											class="pptx-ng-cs-btn pptx-ng-cs-btn--danger"
-											[title]="'pptx.customShows.deleteShow' | translate"
-											(click)="remove.emit(show.id)"
-										>
-											{{ 'pptx.customShows.delete' | translate }}
-										</button>
-									</div>
-								}
+								{{ show.name }}
 							</li>
+						} @empty {
+							<li class="pptx-ng-cs-empty">{{ 'pptx.customShows.empty' | translate }}</li>
 						}
 					</ul>
-				} @else {
-					<p class="pptx-ng-cs-empty">{{ 'pptx.customShows.empty' | translate }}</p>
-				}
-			</section>
-
-			<!-- Create new show form -->
-			<section class="pptx-ng-cs-section">
-				<h3 class="pptx-ng-cs-section-title">{{ 'pptx.customShows.createNew' | translate }}</h3>
-				<div class="pptx-ng-cs-create-form">
-					<input
-						type="text"
-						class="pptx-ng-cs-input"
-						[placeholder]="'pptx.customShows.namePlaceholder' | translate"
-						[value]="draftName()"
-						[attr.aria-label]="'pptx.customShows.newNameLabel' | translate"
-						(input)="onDraftNameInput($event)"
-					/>
-
-					@if (slides().length > 0) {
-						<div class="pptx-ng-cs-slide-picker">
-							@for (slide of slides(); track slide.id; let i = $index) {
-								<label class="pptx-ng-cs-slide-option">
-									<pptx-ui-checkbox
-										[checked]="draftSlideIds().includes(slide.id)"
-										(change)="toggleDraftSlide(slide.id)"
-									></pptx-ui-checkbox>
-									<span>{{ slideLabel(slide, i) }}</span>
-								</label>
-							}
-						</div>
-					}
-
-					<button
-						type="button"
-						class="pptx-ng-cs-btn pptx-ng-cs-btn--primary"
-						[disabled]="!canCreate()"
-						(click)="submitCreate()"
-					>
-						{{ 'pptx.customShows.create' | translate }}
+					<button type="button" class="pptx-ng-cs-btn" (click)="ctl.create(newShowName())">
+						{{ 'pptx.customShows.createNew' | translate }}
+					</button>
+					<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canEdit" (click)="ctl.copySelected()">
+						{{ 'pptx.customShows.copy' | translate }}
+					</button>
+					<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canEdit" (click)="ctl.removeSelected()">
+						{{ 'pptx.customShows.remove' | translate }}
 					</button>
 				</div>
-			</section>
-		</div>
 
-		<footer class="pptx-ng-cs-footer">
-			<button type="button" class="pptx-ng-cs-btn" (click)="close.emit()">
-				{{ 'pptx.customShows.close' | translate }}
-			</button>
-		</footer>
-	</div>
-}
+				@if (v.selected; as selected) {
+					<div class="pptx-ng-cs-editor">
+						<label class="pptx-ng-cs-active">
+							<span>{{ 'pptx.customShows.renameNameLabel' | translate }}</span>
+							<input
+								type="text"
+								class="pptx-ng-cs-input"
+								[attr.aria-label]="'pptx.customShows.renameNameLabel' | translate"
+								[value]="selected.name"
+								(change)="onRename($event)"
+							/>
+						</label>
+						<div class="pptx-ng-cs-lists">
+							<div>
+								<strong>{{ 'pptx.customShows.slidesInPresentation' | translate }}</strong>
+								<ul
+									role="listbox"
+									aria-multiselectable="true"
+									class="pptx-ng-cs-list"
+									[attr.aria-label]="'pptx.customShows.slidesInPresentation' | translate"
+								>
+									@for (row of v.presentationSlides; track row.rId) {
+										<li
+											role="option"
+											tabindex="0"
+											[attr.aria-selected]="row.selected"
+											(click)="ctl.toggleLeft(row.rId)"
+											(dblclick)="ctl.addSlide(row.rId)"
+											(keydown.space)="ctl.toggleLeft(row.rId); $event.preventDefault()"
+										>
+											{{ row.number }}. {{ row.title }}
+										</li>
+									}
+								</ul>
+							</div>
+							<div class="pptx-ng-cs-actions">
+								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canAdd" (click)="ctl.addSelected(slides())">
+									{{ 'pptx.customShows.add' | translate }}
+								</button>
+								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canRemoveSlides" (click)="ctl.removeSelectedSlides()">
+									{{ 'pptx.customShows.remove' | translate }}
+								</button>
+							</div>
+							<div>
+								<strong>{{ 'pptx.customShows.slidesInShow' | translate }}</strong>
+								<ul
+									role="listbox"
+									aria-multiselectable="true"
+									class="pptx-ng-cs-list"
+									[attr.aria-label]="'pptx.customShows.slidesInShow' | translate"
+								>
+									@for (row of v.showSlides; track row.position) {
+										<li
+											role="option"
+											tabindex="0"
+											[attr.aria-selected]="row.selected"
+											(click)="ctl.toggleRight(row.position ?? 0)"
+											(keydown.space)="ctl.toggleRight(row.position ?? 0); $event.preventDefault()"
+										>
+											{{ row.number }}. {{ row.title }}
+										</li>
+									} @empty {
+										<li class="pptx-ng-cs-empty">{{ 'pptx.customShows.noSlidesYet' | translate }}</li>
+									}
+								</ul>
+							</div>
+							<div class="pptx-ng-cs-actions">
+								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canMoveUp" (click)="ctl.moveUp()">
+									{{ 'pptx.customShows.moveUp' | translate }}
+								</button>
+								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canMoveDown" (click)="ctl.moveDown()">
+									{{ 'pptx.customShows.moveDown' | translate }}
+								</button>
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+	}
+
+	<footer class="pptx-ng-cs-footer">
+		<button type="button" class="pptx-ng-cs-btn" (click)="showSelected()">
+			{{ 'pptx.customShows.showButton' | translate }}
+		</button>
+		<span class="pptx-ng-cs-spacer"></span>
+		<button type="button" class="pptx-ng-cs-btn" (click)="close.emit()">
+			{{ 'pptx.customShows.cancel' | translate }}
+		</button>
+		<button type="button" class="pptx-ng-cs-btn pptx-ng-cs-btn--primary" (click)="ok()">
+			{{ 'pptx.common.ok' | translate }}
+		</button>
+	</footer>
+</div>

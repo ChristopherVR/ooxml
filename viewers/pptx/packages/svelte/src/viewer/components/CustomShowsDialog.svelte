@@ -1,37 +1,335 @@
 <script lang="ts">
-	import DialogFooter from './DialogFooter.svelte';
-	import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core'; import { untrack } from 'svelte'; import { useTranslator } from '../../i18n/context';
+	import { createCustomShowsController } from 'ooxml-ui/pptx';
+	import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
+	import { untrack } from 'svelte';
 
-	const { shows, slides, activeShowId = null, onclose, onsave, onsetactive }: { shows: PptxCustomShow[]; slides: PptxSlide[];
+	import { useTranslator } from '../../i18n/context';
+	import { controllerState } from '../state/controller-state';
+	import DialogFooter from './DialogFooter.svelte';
+
+	const {
+		shows,
+		slides,
+		activeShowId = null,
+		onclose,
+		onsave,
+		onsetactive,
+		onrun,
+	}: {
+		shows: PptxCustomShow[];
+		slides: PptxSlide[];
 		/** The show playback is currently restricted to, or null for the whole deck. */
 		activeShowId?: string | null;
-		onclose: () => void; onsave: (shows: PptxCustomShow[]) => void;
-		/**
-		 * Restrict (or, with null, stop restricting) the slide show to one show.
-		 * Without this the dialog defined shows nothing could ever select, so a
-		 * custom show had no effect on what actually presented.
-		 */
-		onsetactive?: (id: string | null) => void } = $props(); const t = useTranslator();
-	let draft = $state<PptxCustomShow[]>(structuredClone(untrack(() => shows))); let selected = $state(0); let newName = $state('');
+		onclose: () => void;
+		/** Commit the shows; `clearedSlides` is set when jumps into removed shows were cleared. */
+		onsave: (shows: PptxCustomShow[], clearedSlides: PptxSlide[] | undefined) => void;
+		/** Restrict (or, with null, stop restricting) the slide show to one show. */
+		onsetactive?: (id: string | null) => void;
+		/** Start the show once the dialog has committed and selected it. */
+		onrun?: (show: PptxCustomShow) => void;
+	} = $props();
+	const t = useTranslator();
+
+	// All the dialog's logic is the shared controller; this file only draws it.
+	const controller = createCustomShowsController(
+		untrack(() => shows),
+		untrack(() => activeShowId),
+	);
+	const snapshot = controllerState(controller);
+	const view = $derived.by(() => {
+		void snapshot.current;
+		return controller.view(slides);
+	});
 	/** The picker's value. '' means "All Slides", i.e. no restriction. */
 	let active = $state<string>(untrack(() => activeShowId) ?? '');
-	function setActive(next: string): void { active = next; onsetactive?.(next || null); }
-	/**
-	 * Commit the draft, then re-point the restriction. A show deleted in this
-	 * session must not leave playback pinned to an id nothing resolves.
-	 */
-	function save(): void {
-		// `$state.snapshot`, not the draft itself: `draft` is a deep reactive proxy,
-		// and the editor's `updateCustomShows` `structuredClone`s what it is handed.
-		// Cloning a proxy throws DataCloneError, so Save has never actually saved.
-		onsave($state.snapshot(draft) as PptxCustomShow[]);
-		onsetactive?.(draft.some(({ id }) => id === active) ? active : null);
+	const pickerValue = $derived(view.shows.some(({ id }) => id === active) ? active : '');
+	function setActive(next: string): void {
+		active = next;
+		onsetactive?.(next || null);
+	}
+	function commit(): PptxCustomShow[] {
+		const result = controller.result(slides);
+		onsave(result.shows, result.slides);
+		// A show removed in this session must not leave playback pinned to an id nothing resolves.
+		onsetactive?.(result.shows.some(({ id }) => id === active) ? active : null);
+		return result.shows;
+	}
+	function ok(): void {
+		commit();
 		onclose();
 	}
-	function create(): void { const name = newName.trim(); if (!name) {return;} draft = [...draft, { id: `${Date.now()}`, name, slideRIds: [] }]; selected = draft.length - 1; newName = ''; }
-	function toggle(rId: string): void { const show = draft[selected]; if (!show) {return;} const has = show.slideRIds.includes(rId); draft = draft.map((item, i) => i === selected ? { ...item, slideRIds: has ? item.slideRIds.filter((id) => id !== rId) : [...item.slideRIds, rId] } : item); }
+	function run(): void {
+		const id = controller.getSnapshot().selectedId;
+		const show = commit().find((candidate) => candidate.id === id);
+		if (!show) {
+			return;
+		}
+		onsetactive?.(show.id);
+		onrun?.(show);
+		onclose();
+	}
 </script>
-<div class="backdrop"><!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role --><section role="dialog" tabindex="-1" aria-modal="true" aria-label={t('pptx.customShows.title')}><header><h2>{t('pptx.customShows.title')}</h2><button onclick={onclose}>×</button></header><div class="active-picker"><span>{t('pptx.customShows.selectCustomShow')}</span><pptx-ui-select aria-label={t('pptx.customShows.selectCustomShow')} value={active} onchange={(event) => setActive(event.currentTarget.value)}><option value="">{t('pptx.customShows.allSlides')}</option>{#each draft as show (show.id)}<option value={show.id}>{show.name}</option>{/each}</pptx-ui-select></div><div class="body"><aside>{#each draft as show, index}<button class:active={selected === index} onclick={() => (selected = index)}><span>{show.name}</span><small>{t('pptx.customShows.slideCount', { count: show.slideRIds.length })}</small></button>{:else}<p>{t('pptx.customShows.empty')}</p>{/each}<div class="new"><input placeholder={t('pptx.customShows.namePlaceholder')} bind:value={newName} /><button onclick={create}>+</button></div>{#if draft[selected]}<button class="delete" onclick={() => { draft = draft.filter((_show, index) => index !== selected); selected = Math.max(0, selected - 1); }}>{t('pptx.customShows.delete')}</button>{/if}</aside><main>{#if draft[selected]}<h3>{draft[selected].name}</h3>{#each slides as slide, index}<label><pptx-ui-checkbox checked={draft[selected].slideRIds.includes(slide.rId)} onchange={() => toggle(slide.rId)}></pptx-ui-checkbox><span>{t('pptx.compare.slideNumber', { number: index + 1 })}</span></label>{/each}{:else}<p>{t('pptx.customShows.noSlidesYet')}</p>{/if}</main></div><footer><DialogFooter actions={[{ id: 'cancel', label: t('pptx.customShows.cancel') }, { id: 'save', label: t('pptx.customShows.save'), variant: 'primary' }]} onaction={(id) => (id === 'save' ? save() : onclose())} /></footer></section></div>
+
+<div class="backdrop">
+	<section role="dialog" tabindex="-1" aria-modal="true" aria-label={t('pptx.customShows.title')}>
+		<header>
+			<h2>{t('pptx.customShows.title')}</h2>
+			<button onclick={onclose} aria-label={t('pptx.customShows.close')}>×</button>
+		</header>
+		<div class="active-picker">
+			<span>{t('pptx.customShows.selectCustomShow')}</span>
+			<pptx-ui-select
+				aria-label={t('pptx.customShows.selectCustomShow')}
+				value={pickerValue}
+				onchange={(event) => setActive(event.currentTarget.value)}
+			>
+				<option value="">{t('pptx.customShows.allSlides')}</option>
+				{#each view.shows as show (show.id)}<option value={show.id}>{show.name}</option>{/each}
+			</pptx-ui-select>
+		</div>
+		<div class="body">
+			<aside>
+				<ul role="listbox" aria-label={t('pptx.customShows.savedShows')}>
+					{#each view.shows as show (show.id)}
+						<li
+							role="option"
+							aria-selected={show.selected}
+							tabindex="0"
+							onclick={() => controller.select(show.id)}
+							onkeydown={(event) => event.key === 'Enter' && controller.select(show.id)}
+						>
+							{show.name}
+						</li>
+					{:else}
+						<li class="empty">{t('pptx.customShows.empty')}</li>
+					{/each}
+				</ul>
+				<button onclick={() => controller.create(t('pptx.customShows.newDefaultName'))}>
+					{t('pptx.customShows.createNew')}
+				</button>
+				<button disabled={!view.canEdit} onclick={() => controller.copySelected()}>
+					{t('pptx.customShows.copy')}
+				</button>
+				<button disabled={!view.canEdit} onclick={() => controller.removeSelected()}>
+					{t('pptx.customShows.remove')}
+				</button>
+			</aside>
+			<main>
+				{#if view.selected}
+					<label class="name">
+						<span>{t('pptx.customShows.renameNameLabel')}</span>
+						<input
+							aria-label={t('pptx.customShows.renameNameLabel')}
+							value={view.selected.name}
+							onchange={(event) => controller.rename(event.currentTarget.value)}
+						/>
+					</label>
+					<div class="lists">
+						<div>
+							<strong>{t('pptx.customShows.slidesInPresentation')}</strong>
+							<ul role="listbox" aria-label={t('pptx.customShows.slidesInPresentation')} aria-multiselectable="true">
+								{#each view.presentationSlides as row (row.rId)}
+									<li
+										role="option"
+										aria-selected={row.selected}
+										tabindex="0"
+										onclick={() => controller.toggleLeft(row.rId)}
+										ondblclick={() => controller.addSlide(row.rId)}
+										onkeydown={(event) => event.key === ' ' && controller.toggleLeft(row.rId)}
+									>
+										{row.number}. {row.title}
+									</li>
+								{/each}
+							</ul>
+						</div>
+						<div class="actions">
+							<button disabled={!view.canAdd} onclick={() => controller.addSelected(slides)}>
+								{t('pptx.customShows.add')}
+							</button>
+							<button disabled={!view.canRemoveSlides} onclick={() => controller.removeSelectedSlides()}>
+								{t('pptx.customShows.remove')}
+							</button>
+						</div>
+						<div>
+							<strong>{t('pptx.customShows.slidesInShow')}</strong>
+							<ul role="listbox" aria-label={t('pptx.customShows.slidesInShow')} aria-multiselectable="true">
+								{#each view.showSlides as row (row.position)}
+									<li
+										role="option"
+										aria-selected={row.selected}
+										tabindex="0"
+										onclick={() => controller.toggleRight(row.position ?? 0)}
+										onkeydown={(event) => event.key === ' ' && controller.toggleRight(row.position ?? 0)}
+									>
+										{row.number}. {row.title}
+									</li>
+								{:else}
+									<li class="empty">{t('pptx.customShows.noSlidesYet')}</li>
+								{/each}
+							</ul>
+						</div>
+						<div class="actions">
+							<button disabled={!view.canMoveUp} onclick={() => controller.moveUp()}>
+								{t('pptx.customShows.moveUp')}
+							</button>
+							<button disabled={!view.canMoveDown} onclick={() => controller.moveDown()}>
+								{t('pptx.customShows.moveDown')}
+							</button>
+						</div>
+					</div>
+				{:else}
+					<p>{t('pptx.customShows.noSlidesYet')}</p>
+				{/if}
+			</main>
+		</div>
+		<footer>
+			<DialogFooter
+				actions={[
+					{ id: 'show', label: t('pptx.customShows.showButton') },
+					{ id: 'cancel', label: t('pptx.customShows.cancel') },
+					{ id: 'save', label: t('pptx.common.ok'), variant: 'primary' },
+				]}
+				onaction={(id) => (id === 'save' ? ok() : id === 'show' ? run() : onclose())}
+			/>
+		</footer>
+	</section>
+</div>
+
 <style>
-	.backdrop{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;background:#0009}section{width:min(680px,calc(100vw - 32px));max-height:85vh;overflow:hidden;border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:12px;background:var(--pptx-card, var(--office-surface, #f3f4f6))}header,footer{display:flex;align-items:center;justify-content:space-between;padding:13px 17px;border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db))}h2,h3,p{margin:0}h2{font-size:14px}.active-picker{display:flex;align-items:center;gap:8px;padding:10px 17px;border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db));font-size:12px}.active-picker select{min-width:0;flex:1}.body{display:grid;grid-template-columns:220px 1fr;min-height:360px}.body aside{padding:12px;border-right:1px solid var(--pptx-border, var(--office-border, #d1d5db))}aside>button{display:grid;width:100%;gap:2px;border:0;border-radius:6px;padding:8px;background:transparent;color:inherit;text-align:left}aside>button.active{background:var(--pptx-muted, var(--office-surface, #f3f4f6))}small{color:var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280))}.new{display:flex;margin-top:10px}.new input{min-width:0;flex:1}.delete{margin-top:8px;color:#f87171}.body main{display:grid;align-content:start;gap:7px;overflow:auto;padding:18px}.body main label{display:flex;gap:8px;padding:7px;border-radius:5px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));font-size:12px}button,input{border:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-radius:6px;padding:7px;background:var(--pptx-muted, var(--office-surface, #f3f4f6));color:inherit}header button{border:0;background:transparent;font-size:20px}footer{justify-content:flex-end;gap:8px;border-top:1px solid var(--pptx-border, var(--office-border, #d1d5db));border-bottom:0}@media(max-width:600px){section{position:fixed;inset:auto 0 0;width:100%;max-height:88dvh}.body{grid-template-columns:1fr}.body aside{border-right:0;border-bottom:1px solid var(--pptx-border, var(--office-border, #d1d5db))}}
+	.backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 1200;
+		display: grid;
+		place-items: center;
+		background: #0009;
+	}
+	section {
+		width: min(820px, calc(100vw - 32px));
+		max-height: 88vh;
+		overflow: auto;
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: 12px;
+		background: var(--pptx-card, var(--office-surface, #f3f4f6));
+	}
+	header,
+	footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 13px 17px;
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+	}
+	footer {
+		justify-content: flex-end;
+		border-top: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-bottom: 0;
+	}
+	h2,
+	p {
+		margin: 0;
+	}
+	h2 {
+		font-size: 14px;
+	}
+	.active-picker {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 17px;
+		border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		font-size: 12px;
+	}
+	.body {
+		display: grid;
+		grid-template-columns: 200px 1fr;
+		min-height: 320px;
+	}
+	aside {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 12px;
+		border-right: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+	}
+	main {
+		display: grid;
+		align-content: start;
+		gap: 10px;
+		padding: 14px;
+	}
+	.lists {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr auto;
+		gap: 8px;
+	}
+	.actions {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 6px;
+	}
+	ul {
+		margin: 0;
+		padding: 0;
+		max-height: 240px;
+		overflow: auto;
+		list-style: none;
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: 4px;
+	}
+	li {
+		padding: 5px 8px;
+		cursor: pointer;
+		font-size: 12px;
+	}
+	li[aria-selected='true'] {
+		background: var(--pptx-primary, #2563eb);
+		color: #fff;
+	}
+	li.empty {
+		cursor: default;
+		color: var(--pptx-muted-foreground, var(--office-muted-foreground, #6b7280));
+	}
+	button,
+	input {
+		border: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		border-radius: 6px;
+		padding: 7px;
+		background: var(--pptx-muted, var(--office-surface, #f3f4f6));
+		color: inherit;
+	}
+	button:disabled {
+		opacity: 0.5;
+	}
+	header button {
+		border: 0;
+		background: transparent;
+		font-size: 20px;
+	}
+	.name {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12px;
+	}
+	.name input {
+		flex: 1;
+	}
+	@media (max-width: 600px) {
+		section {
+			position: fixed;
+			inset: auto 0 0;
+			width: 100%;
+			max-height: 88dvh;
+		}
+		.body,
+		.lists {
+			grid-template-columns: 1fr;
+		}
+		aside {
+			border-right: 0;
+			border-bottom: 1px solid var(--pptx-border, var(--office-border, #d1d5db));
+		}
+	}
 </style>

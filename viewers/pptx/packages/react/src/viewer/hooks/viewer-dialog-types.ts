@@ -42,6 +42,8 @@ export interface UseViewerDialogsInput {
 	setCustomShows: React.Dispatch<
 		React.SetStateAction<Array<{ id: string; name: string; slideRIds: string[] }>>
 	>;
+	/** Setter for the deck slides (removing a custom show clears jumps into it). */
+	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 	/** Setter for the active custom show id. */
 	setActiveCustomShowId: React.Dispatch<React.SetStateAction<string | null>>;
 	/** Setter for the slide guides array. */
@@ -129,6 +131,8 @@ export interface ViewerDialogsResult {
 	/** Whether the "Set Up Slide Show" configuration dialog is visible. */
 	isSetUpSlideShowOpen: boolean;
 	setIsSetUpSlideShowOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	isCustomShowsOpen: boolean;
+	setIsCustomShowsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	/** Whether the broadcast (share screen) dialog is visible. */
 	isBroadcastDialogOpen: boolean;
 	setIsBroadcastDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -180,6 +184,10 @@ export interface ViewerDialogsResult {
 	// ── Custom show handlers ──────────────────────────────────────────
 
 	/** Creates a new empty custom show and makes it active. */
+	handleCommitCustomShows: (
+		shows: Array<{ id: string; name: string; slideRIds: string[] }>,
+		clearedSlides: PptxSlide[] | undefined,
+	) => void;
 	handleCreateCustomShow: () => void;
 	/** Prompts to rename the currently active custom show. */
 	handleRenameActiveCustomShow: () => void;

@@ -608,6 +608,13 @@ export {
 } from './custom-show-utils';
 
 export {
+	normalizeCustomShowIds,
+	customShowActionId,
+	mapCustomShowActions,
+} from './custom-show-actions';
+export type { CustomShowActionRewrite } from './custom-show-actions';
+
+export {
 	resolveTableCellStyle,
 	mergeStyleParts,
 	type ParsedTableStylePart,

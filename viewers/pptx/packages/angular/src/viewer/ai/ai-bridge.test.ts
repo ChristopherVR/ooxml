@@ -4,6 +4,7 @@ import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,
 	PptxCoreProperties,
+	PptxCustomShow,
 	PptxCustomProperty,
 	PptxElement,
 	PptxPresentationProperties,
@@ -29,6 +30,7 @@ function slide(id: string, elements: PptxElement[]): PptxSlide {
 interface DeckState {
 	canvas: { width: number; height: number };
 	sections: readonly PptxSection[];
+	customShows: readonly PptxCustomShow[];
 	presentationProperties: PptxPresentationProperties;
 	customProperties: readonly PptxCustomProperty[];
 	coreProperties: PptxCoreProperties | undefined;
@@ -52,6 +54,7 @@ function setup(): {
 	const deck: DeckState = {
 		canvas: { width: 960, height: 540 },
 		sections: [],
+		customShows: [],
 		presentationProperties: {},
 		customProperties: [],
 		coreProperties: undefined,
@@ -81,6 +84,11 @@ function setup(): {
 			/* not exercised here */
 		},
 		getSections: () => deck.sections,
+		getCustomShows: () => deck.customShows,
+		setCustomShows: (shows) => {
+			deck.customShows = shows;
+			editor.dirty.set(true);
+		},
 		getPresentationProperties: () => deck.presentationProperties,
 		getCustomProperties: () => deck.customProperties,
 		getCoreProperties: () => deck.coreProperties,
@@ -234,6 +242,16 @@ describe('createAngularAiBridge', () => {
 		expect(deck.canvas).toStrictEqual({ width: 1280, height: 720 });
 		expect(deck.sections).toStrictEqual([{ id: 'sec1', name: 'Intro', slideIds: ['s1'] }]);
 		expect(deck.coreProperties).toStrictEqual({ title: 'From AI' });
+		expect(editor.dirty()).toBeTruthy();
+	});
+
+	it('applyDeckData commits changed custom shows to the setter', () => {
+		const { editor, bridge, deck } = setup();
+		bridge.applyDeckData?.((data) => {
+			data.customShows = [{ id: '0', name: 'Short', slideRIds: ['s1'] }];
+			return data;
+		}, 'AI custom shows');
+		expect(deck.customShows).toStrictEqual([{ id: '0', name: 'Short', slideRIds: ['s1'] }]);
 		expect(editor.dirty()).toBeTruthy();
 	});
 

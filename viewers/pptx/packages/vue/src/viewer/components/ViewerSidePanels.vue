@@ -36,7 +36,7 @@ import { useResolvedCustomization } from '../composables/useViewerCustomization'
 import AccessibilityPanel from './AccessibilityPanel.vue';
 import { AiChatPanelLazy } from './ai';
 import CommentsPanel from './CommentsPanel.vue';
-import CustomShowsPanel from './CustomShowsPanel.vue';
+import CustomShowsDialog from './CustomShowsDialog.vue';
 import FollowModeBar from './FollowModeBar.vue';
 import SelectionPane from './SelectionPane.vue';
 import SignaturesPanel from './SignaturesPanel.vue';
@@ -198,16 +198,15 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 	/>
 
 	<!-- Custom shows -->
-	<CustomShowsPanel
+	<CustomShowsDialog
 		v-if="canEdit && customShows.showCustomShows.value"
+		open
 		:custom-shows="deck.customShows.value"
 		:slides="deck.slides.value"
 		:active-show-id="customShows.activeCustomShowId.value"
-		@create="customShows.onCreateCustomShow"
-		@rename="customShows.customShowOps.renameCustomShow"
-		@delete="customShows.onDeleteCustomShow"
+		@save="customShows.commitCustomShowsDialog"
 		@select="(id) => (customShows.activeCustomShowId.value = id)"
-		@toggle-slide="customShows.customShowOps.toggleSlideInShow"
-		@move-slide="customShows.customShowOps.moveSlideInShow"
+		@run="customShows.runCustomShow"
+		@close="customShows.showCustomShows.value = false"
 	/>
 </template>

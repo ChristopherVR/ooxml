@@ -6,6 +6,7 @@ import type { RenderController } from './render-controller';
 import { createInitialViewerState, createStore } from './state';
 import type { ViewerState } from './state';
 import { openCustomShowsDialog } from './ui/custom-shows-dialog';
+import { allButtons } from './ui/dialog-footer.test-support';
 import { createViewerControls } from './viewer-controls';
 
 /**
@@ -203,8 +204,8 @@ describe('vanilla custom-shows dialog picker', () => {
 			onSetActive,
 			onRun,
 		});
-		Array.from(document.querySelectorAll('button'))
-			.find((button) => button.textContent === 'From Beginning')!
+		allButtons(document)
+			.find((button) => button.textContent === 'Show')!
 			.click();
 		expect(onSetActive).toHaveBeenCalledWith('show-1');
 		expect(onRun).toHaveBeenCalledWith(SHOW);

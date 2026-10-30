@@ -174,6 +174,12 @@ export type {
 export { getMetadata, updateMetadata } from './metadata-tools';
 export type { MetadataResult, UpdateMetadataParams } from './metadata-tools';
 
+export { manageCustomShows } from './custom-show-tools';
+export type {
+	ManageCustomShowsParams,
+	CustomShowInfo,
+	ManageCustomShowsResult,
+} from './custom-show-tools';
 export { manageSections } from './section-tools';
 export type { ManageSectionsParams, SectionInfo, ManageSectionsResult } from './section-tools';
 

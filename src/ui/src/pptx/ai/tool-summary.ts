@@ -409,6 +409,11 @@ const TOOL_PHRASES: Record<string, ToolPhrase> = {
 		present: () => 'Organising the sections',
 		past: () => 'Organised the sections',
 	},
+	manage_custom_shows: {
+		icon: 'slide',
+		present: () => 'Editing the custom shows',
+		past: () => 'Edited the custom shows',
+	},
 	update_presentation_properties: {
 		icon: 'tool',
 		present: () => 'Updating the slideshow settings',

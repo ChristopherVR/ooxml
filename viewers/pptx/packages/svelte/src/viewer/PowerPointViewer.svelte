@@ -408,7 +408,7 @@
 	{/if}
 	{#if vm.versionHistoryOpen}<VersionHistoryPanel filePath={props.filePath} storage={props.storage} onclose={() => (vm.versionHistoryOpen = false)} onrestore={(bytes) => loader.load(bytes)} />{/if}
 	{#if vm.signatureWarningOpen}<SignatureStrippedDialog signatureCount={loader.digitalSignatureCount} onclose={vm.closeSignatureWarning} />{/if}
-	<ViewerParityOverlays ui={parityUi} {editor} {exportUi} slides={vm.displaySlides} canvasSize={loader.canvasSize} mediaDataUrls={loader.mediaDataUrls} current={viewer.current} fullscreen={viewer.isFullscreen} locale={themeLocale.effectiveLocale} themeKey={themeLocale.themeKey} themeCatalog={themeLocale.catalog} onsetthemekey={(key) => themeLocale.setThemeKey(key)} availableLocales={props.availableLocales} onsetlocale={(code) => themeLocale.setLocale(code)} onselectslide={(index) => viewer.goTo(index)} onmoveslide={vm.deck.moveSlide} optionsState={vm.optionsState} autosaveRecovery={vm.autosaveRecovery} {aiEnabled} collabActive={vm.collab.active} />
+	<ViewerParityOverlays ui={parityUi} {editor} {exportUi} slides={vm.displaySlides} canvasSize={loader.canvasSize} mediaDataUrls={loader.mediaDataUrls} current={viewer.current} fullscreen={viewer.isFullscreen} locale={themeLocale.effectiveLocale} themeKey={themeLocale.themeKey} themeCatalog={themeLocale.catalog} onsetthemekey={(key) => themeLocale.setThemeKey(key)} availableLocales={props.availableLocales} onsetlocale={(code) => themeLocale.setLocale(code)} onselectslide={(index) => viewer.goTo(index)} onmoveslide={vm.deck.moveSlide} onrunshow={() => { vm.presentation.firstSlide(); vm.onFullscreenToggle(); }} optionsState={vm.optionsState} autosaveRecovery={vm.autosaveRecovery} {aiEnabled} collabActive={vm.collab.active} />
 	<ViewerMain
 		{vm}
 		{t}

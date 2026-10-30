@@ -37,6 +37,7 @@ import type { PropertyHandlersResult } from '../hooks/usePropertyHandlers';
 import type { ViewerDialogsResult } from '../hooks/useViewerDialogs';
 import type { CanvasSize } from '../types';
 import { ComparePanel } from './ComparePanel';
+import { CustomShowsDialog } from './CustomShowsDialog';
 import { EquationEditorDialog } from './EquationEditorDialog';
 import { HyperlinkEditDialog } from './HyperlinkEditDialog';
 import { InsertChartDialog, InsertSmartArtDialog } from './InsertDialogs';
@@ -65,6 +66,11 @@ export interface ViewerDialogGroupProps {
 	digitalSignatureCount: number;
 	presentationProperties: PptxPresentationProperties;
 	customShows: Array<{ id: string; name: string; slideRIds: string[] }>;
+	/** The show playback is restricted to, or null for the whole deck. */
+	activeCustomShowId: string | null;
+	onSetActiveCustomShowId: (id: string | null) => void;
+	/** Start the slide show from its first slide (Custom Shows dialog > Show). */
+	onRunCustomShow: () => void;
 	selectedElements: Array<{
 		actionClick?: { url?: string; tooltip?: string; action?: string };
 	}>;
@@ -99,6 +105,9 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 		digitalSignatureCount,
 		presentationProperties,
 		customShows,
+		activeCustomShowId,
+		onSetActiveCustomShowId,
+		onRunCustomShow,
 		selectedElements,
 		isEncryptedDialogOpen,
 		setIsEncryptedDialogOpen,
@@ -233,6 +242,18 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 				customShows={customShows}
 				slideCount={slides.length}
 			/>
+
+			{dialogs.isCustomShowsOpen && (
+				<CustomShowsDialog
+					customShows={customShows}
+					slides={slides}
+					activeCustomShowId={activeCustomShowId}
+					onSave={dialogs.handleCommitCustomShows}
+					onSetActive={onSetActiveCustomShowId}
+					onRun={onRunCustomShow}
+					onClose={() => dialogs.setIsCustomShowsOpen(false)}
+				/>
+			)}
 
 			<PrintDialog
 				open={printHandlers.isPrintDialogOpen && printAvailable}
