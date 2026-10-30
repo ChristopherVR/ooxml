@@ -19,7 +19,7 @@
 		<div class="pptx-ng-cs-body">
 			<label class="pptx-ng-cs-active">
 				<span>{{ 'pptx.customShows.selectCustomShow' | translate }}</span>
-				<select
+				<pptx-ui-select
 					class="pptx-ng-cs-input"
 					[attr.aria-label]="'pptx.customShows.selectCustomShow' | translate"
 					[value]="pickerValue()"
@@ -33,7 +33,7 @@
 							{{ show.name }}
 						</option>
 					}
-				</select>
+				</pptx-ui-select>
 			</label>
 
 			<div class="pptx-ng-cs-layout">
