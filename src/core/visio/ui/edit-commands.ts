@@ -20,6 +20,8 @@ import { snapshotLayerProperties } from '../edit-layer-properties';
 import { snapshotMasterInstance } from '../edit-master-instance';
 import { snapshotStencilMasterDrop } from '../edit-master-drop';
 import { isVisioGuideEdit, snapshotGuideEdit } from '../edit-guide-commands';
+import { isVisioContainerEdit, snapshotContainerEdit } from '../edit-container-options';
+import { isVisioPictureEdit, snapshotPictureEdit } from '../edit-picture-adjust';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import {
 	isVisioConnectorEdit,
@@ -60,6 +62,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'insert-master-instance') return snapshotMasterInstance(command);
 		if (command.type === 'drop-stencil-master') return snapshotStencilMasterDrop(command);
 		if (isVisioGuideEdit(command)) return snapshotGuideEdit(command);
+		if (isVisioContainerEdit(command)) return snapshotContainerEdit(command);
+		if (isVisioPictureEdit(command)) return snapshotPictureEdit(command);
 		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
 		if (isVisioGroupEdit(command)) return snapshotGroupEdit(command);
 		if (isVisioPageSetupEdit(command)) return snapshotPageSetupEdit(command);
