@@ -42,16 +42,17 @@ export class ViewerThemes {
 			type: 'set-page-theme',
 			pageId: page.id,
 			...(action.theme === undefined ? {} : { theme: action.theme }),
+			...(action.colors === undefined ? {} : { colors: action.colors }),
 			...(action.variant === undefined ? {} : { variant: action.variant }),
 		};
 		const name =
 			action.theme === 'none'
 				? 'No Theme'
-				: VISIO_BUILT_IN_THEMES.find((theme) => theme.id === action.theme)?.name;
+				: VISIO_BUILT_IN_THEMES.find((theme) => theme.id === (action.theme ?? action.colors))?.name;
 		this.edit(
 			() => this.controller.applyEdits([edit]),
 			name
-				? `Applied ${name} to ${page.name}.`
+				? `Applied ${name}${action.colors ? ' colors' : ''} to ${page.name}.`
 				: `Applied variant ${(action.variant ?? 0) + 1} to ${page.name}.`,
 		);
 	}
@@ -67,6 +68,8 @@ export class ViewerThemes {
 			themes.toggleAttribute('disabled', !!reason);
 			themes.title = reason ? `Themes: ${reason}` : THEMES_HINT;
 		}
+		const options = this.root.querySelector<HTMLElement>('[data-menu="variant-options"]');
+		if (options) options.toggleAttribute('disabled', !!reason);
 		const variants = this.root.querySelector<OfficeUiGallery>(
 			'office-ui-gallery[data-menu="variants"]',
 		);

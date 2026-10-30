@@ -14,13 +14,11 @@ export const THEMES_HINT =
 	'Apply a theme to the current page. Quick-styled shapes take its colours; text keeps its own font.';
 export const VARIANTS_HINT = "Pick one of the current theme's four colour variants.";
 export const NO_THEME_VARIANTS = 'Apply a theme to the page first.';
-/** Design > Variants > More: which theme parts can be changed separately. */
+/**
+ * Design > Variants > More: the theme parts that cannot be changed separately yet, with why.
+ * Colors is not here: it applies one built-in theme's colour scheme (`variantOptions`).
+ */
 export const VARIANT_OPTION_REASONS: readonly [id: string, label: string, reason: string][] = [
-	[
-		'theme-colors',
-		'Colors',
-		'Custom theme colour sets are not written yet; pick a theme or variant.',
-	],
 	[
 		'theme-fonts',
 		'Fonts',
@@ -159,16 +157,26 @@ export const variantsGallery = (doc: Document) =>
 	gallery(doc, variantsGalleryState(true, undefined), 'effects', VARIANTS_HINT);
 /** Variants > More: Colors, Fonts, Effects, Connectors and Embellishment, disabled with reasons. */
 export function variantOptions(doc: Document) {
-	const items: CommandSpec[] = VARIANT_OPTION_REASONS.map(([id, label, unsupported]) => ({
-		id,
-		label,
-		unsupported,
-	}));
-	return menu(doc, {
+	const items: CommandSpec[] = [
+		{
+			id: 'theme-colors',
+			label: 'Colors',
+			items: VISIO_BUILT_IN_THEMES.map((theme) => ({
+				id: `colors-${theme.id}`,
+				label: theme.name,
+				action: { type: 'page-theme', colors: theme.id },
+			})),
+		},
+		...VARIANT_OPTION_REASONS.map(([id, label, unsupported]) => ({ id, label, unsupported })),
+	];
+	const element = menu(doc, {
 		id: 'variant-options',
 		label: 'More Variants',
 		icon: 'settings',
 		size: 'small',
 		items,
 	});
+	// Like the galleries, enabled by the viewer once a diagram page can take a theme.
+	element.toggleAttribute('disabled', true);
+	return element;
 }

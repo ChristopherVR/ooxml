@@ -172,6 +172,33 @@ describe('page theme edits', () => {
 		expect(custom!.style.fill).toBe('#123456');
 		expect((await parseVsdx(cleared.bytes)).pages[0]!.theme).toBeUndefined();
 	});
+	it('Colors changes only the colour scheme and keeps the other selections', async () => {
+		const themed = await editVsdx(await drawing(), [
+			{ type: 'set-page-theme', pageId: page, theme: 'harbor' },
+		]);
+		const colored = await editVsdx(themed.bytes, [
+			{ type: 'set-page-theme', pageId: page, colors: 'ember' },
+		]);
+		const cells = await pageSheet(colored.bytes);
+		expect(cells.get('ColorSchemeIndex')).toBe(String(visioBuiltInTheme('ember').schemeId));
+		for (const name of ['EffectSchemeIndex', 'ConnectorSchemeIndex', 'FontSchemeIndex'])
+			expect(cells.get(name)).toBe(String(visioBuiltInTheme('harbor').schemeId));
+		const document = await parseVsdx(colored.bytes);
+		expect(document.pages[0]!.shapes[0]!.style.fill).toBe('#d9480f');
+		expect(document.pages[0]!.shapes[1]!.style.fill).toBe('#123456');
+		expect(document.pages[0]!.theme).toMatchObject({ builtIn: 'ember' });
+		// The saved file reopens and edits again.
+		const again = await editVsdx(colored.bytes, [
+			{ type: 'set-page-theme', pageId: page, variant: 1 },
+		]);
+		expect((await parseVsdx(again.bytes)).pages[0]!.theme!.variant).toBe(1);
+		expect(() =>
+			snapshotPageTheme({ type: 'set-page-theme', pageId: page, colors: 'x' as never }),
+		).toThrow();
+		expect(() =>
+			snapshotPageTheme({ type: 'set-page-theme', pageId: page, theme: 'office', colors: 'ember' }),
+		).toThrow();
+	});
 	it('refuses invalid commands, mixed transactions and variants without a theme', async () => {
 		expect(() => snapshotPageTheme({ type: 'set-page-theme', pageId: page })).toThrow();
 		expect(() =>

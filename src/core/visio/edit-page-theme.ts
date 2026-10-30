@@ -95,8 +95,8 @@ export async function editVsdxPageTheme(
 			recolored = recolorQuickStyledShapes(contents, 'fallback', check);
 		// Without a theme the theme-colour formulas resolve to Visio's own colours.
 		recolored = refreshThemeColorCaches(contents, VISIO_UNTHEMED_COLORS, check) || recolored;
-	} else if (edit.theme) {
-		const source = visioBuiltInTheme(edit.theme);
+	} else if (edit.theme || edit.colors) {
+		const source = visioBuiltInTheme((edit.theme ?? edit.colors)!);
 		const matches = themes.filter((theme) =>
 			[theme.colorId, theme.effectId, theme.connectorId].includes(source.schemeId),
 		);
@@ -140,7 +140,8 @@ export async function editVsdxPageTheme(
 			dirty.set('[Content_Types].xml', types);
 			created.set(path, new TextEncoder().encode(visioThemeXml(source)));
 		}
-		for (const name of SCHEME_CELLS) setCell(sheet, name, source.schemeId);
+		for (const name of edit.colors ? ['ColorSchemeIndex'] : SCHEME_CELLS)
+			setCell(sheet, name, source.schemeId);
 		for (const name of ['VariationColorIndex', 'VariationStyleIndex'])
 			setCell(sheet, name, edit.variant ?? 0);
 		recolored = recolorQuickStyledShapes(contents, 'themed', check);

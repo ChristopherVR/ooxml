@@ -126,7 +126,12 @@ export type VisioRibbonAction =
 	| { type: 'text-feature'; feature: VisioTextFeature }
 	/** Opens the Format Shape task pane, at one of its sections when given. */
 	| { type: 'format-shape-pane'; section?: 'fill' | 'line' | 'effects' }
-	| { type: 'page-theme'; theme?: VisioBuiltInThemeId | 'none'; variant?: number }
+	| {
+			type: 'page-theme';
+			theme?: VisioBuiltInThemeId | 'none';
+			variant?: number;
+			colors?: VisioBuiltInThemeId;
+	  }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
 	| { type: 'format-painter'; mode: 'once' | 'sticky' | 'cancel' }

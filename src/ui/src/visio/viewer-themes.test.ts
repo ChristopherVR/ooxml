@@ -60,6 +60,32 @@ it('applies a built-in theme and its variants to the page, recolouring quick-sty
 	ui.controller.destroy();
 });
 
+it('Colors in More Variants applies one theme colour scheme to the page and undoes', async () => {
+	const ui = await setup();
+	const more = ui.root.querySelector<HTMLElement>('[data-menu="variant-options"]')!;
+	expect(more.hasAttribute('disabled')).toBe(false);
+	ui.selection();
+	await pick(ui.root, 'quick-styles', 'quick-style-2-4');
+	await ui.done();
+	await pick(ui.root, 'themes', 'theme-harbor');
+	await ui.done();
+	ui.root
+		.querySelector<HTMLElement>('[data-menu="theme-colors"] [command="colors-ember"]')!
+		.dispatchEvent(
+			new CustomEvent('office-command', { bubbles: true, detail: { command: 'colors-ember' } }),
+		);
+	await ui.done();
+	const page = ui.controller.state.document!.pages[0]!;
+	expect(ui.edits.at(-1)).toEqual([{ type: 'set-page-theme', pageId: page.id, colors: 'ember' }]);
+	expect(page.theme).toMatchObject({ builtIn: 'ember' });
+	expect(ui.shape().style.fill).toBe('#d9480f');
+	ui.press('undo');
+	await ui.done();
+	expect(ui.shape().style.fill).toBe('#1f78b4');
+	ui.dispose();
+	ui.controller.destroy();
+});
+
 it('keeps theme part options it cannot change disabled with reasons', async () => {
 	const ui = await setup();
 	for (const [id, , reason] of VARIANT_OPTION_REASONS) {
