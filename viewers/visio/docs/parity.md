@@ -1,5 +1,21 @@
 # Visio capability ledger
 
+## Tab stop cells, checked against Visio 16, 2026-10-31
+
+Visio 16 saves a paragraph's tab stops in one Tabs row (the row a `tp` marker selects, row 0 by
+default) as numbered cell pairs counted from 0: `Position0` in inches with `Alignment0`, then
+`Position1` and `Alignment1`. The stencil masters Microsoft ships show it (Entity in
+ENTITY_M.VSSX: 0.25 and 0.75 in, left; Pivot Node in DRILLD_M.VSSX: 1 in, alignment 2), and a page
+shape that Visio 16 re-saved after a stop was injected keeps the same names with `U="IN"`. Our
+reader already read these names, so no code changed; the tests now use the Visio-saved XML
+(`tab-stops.test.ts`). The Visio-saved sample is recorded by `scripts/record-visio-tab-stops.ps1`.
+
+Not closed: COM cannot add tab stops. The Tabs section refuses `AddRow` ("Operation not allowed
+for this row type") and cell writes on a text shape are not kept on save or reopen, so no stop
+was written by Visio itself. Alignment codes 1 to 3 (centre, right, decimal) follow the
+documented order and are not compared with Visio's text layout, which COM does not expose.
+Stops in a row above 0 are not seen in any stencil or saved file.
+
 ## Control handles, shape actions, User and Scratch cells and tab stops, 2026-10-30
 
 The model now carries each shape's Controls rows (`controls`: local position, prompt, which axes a
