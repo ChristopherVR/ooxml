@@ -61,8 +61,8 @@ test('the New tiles show thumbnails and the org chart gets its own tab', async (
 
 	// Every template tile shows an image rendered from its template.
 	const tiles = viewer.locator('.backstage-templates .backstage-action');
-	await expect(tiles).toHaveCount(4);
-	await expect(viewer.locator('.backstage-templates img.backstage-thumb')).toHaveCount(4);
+	await expect(tiles).toHaveCount(5);
+	await expect(viewer.locator('.backstage-templates img.backstage-thumb')).toHaveCount(5);
 	for (const image of await viewer.locator('.backstage-templates img.backstage-thumb').all())
 		await expect
 			.poll(() => image.evaluate((node) => (node as HTMLImageElement).naturalWidth))

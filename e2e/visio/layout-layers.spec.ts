@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import JSZip from 'jszip';
+import { inflateSync } from 'node:zlib';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { fileBackstage, ribbonGroup } from './ribbon';
@@ -178,8 +179,15 @@ test('File > Export creates a PDF and Help opens the viewer guide', async ({ pag
 	const pdf = Buffer.concat(chunks).toString('latin1');
 	expect(pdf.startsWith('%PDF-1.4')).toBe(true);
 	expect(pdf).toMatch(/\/MediaBox \[0 0 612(\.00)? 792(\.00)?\]/);
-	// Vector pages carry real text, not one picture per page.
-	expect(pdf).toMatch(/\) Tj\b/);
+	// Vector pages carry real text, not one picture per page (content streams are Flate-compressed).
+	const bytes = Buffer.concat(chunks);
+	const content = [...pdf.matchAll(/\/FlateDecode \/Length (\d+) >>\r?\nstream\r?\n/g)]
+		.map((match) => {
+			const start = match.index + match[0].length;
+			return inflateSync(bytes.subarray(start, start + Number(match[1]))).toString('latin1');
+		})
+		.join('\n');
+	expect(content).toMatch(/\) Tj\b/);
 	// A PDF export keeps the Export page open (its report is there); go back to the drawing.
 	await viewer.getByRole('button', { name: 'Back to the drawing' }).click();
 	await expect(viewer.locator('office-ui-backstage')).not.toHaveAttribute('open', '');
