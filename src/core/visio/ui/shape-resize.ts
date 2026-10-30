@@ -4,33 +4,36 @@ import { visioAnchoredResizeGeometry, type VisioResizeAnchor } from '../resize-a
 import { visioMovementShape, visioPageDragDelta, type VisioPagePoint } from './shape-move';
 import { visioPageEditToDrawing } from './page-edit';
 
-/** A flat local group whose member axes admit independent width/height scaling.
- * Source admission additionally proves resize modes, locks, formulas and geometry. */
+/** A local group tree whose members scale with it: nested groups and rotated or flipped members
+ * are admitted (core scales a rotated member by the squared cosines of its axes). Stencil, layered,
+ * image and foreign members stay out; source admission also proves resize modes, locks, formulas
+ * and geometry. */
 function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
-	if (
-		shape.kind !== 'group' ||
-		shape.masterId ||
-		!shape.children.length ||
-		shape.children.length > 500
-	)
-		return false;
-	const ids = new Set([shape.id]);
-	for (const member of shape.children) {
-		if (
-			ids.has(member.id) ||
-			member.kind !== 'shape' ||
-			member.masterId ||
-			member.children.length ||
-			member.layerIds?.length ||
-			member.image ||
-			member.foreignVector ||
-			!member.rotation ||
-			Math.abs(member.transform[1]) > 1e-10 ||
-			Math.abs(member.transform[2]) > 1e-10 ||
-			!visioResizeFrame(member, member, { x: 0, y: 0 })
-		)
-			return false;
-		ids.add(member.id);
+	if (shape.kind !== 'group' || shape.masterId || !shape.children.length) return false;
+	const ids = new Set<string>();
+	const pending = [shape];
+	while (pending.length) {
+		const group = pending.pop()!;
+		if (group.children.length > 500 || ids.size > 1000) return false;
+		if (ids.has(group.id)) return false;
+		ids.add(group.id);
+		for (const member of group.children) {
+			if (
+				ids.has(member.id) ||
+				member.masterId ||
+				member.layerIds?.length ||
+				member.image ||
+				member.foreignVector ||
+				!member.rotation ||
+				(member.kind === 'group'
+					? !member.children.length
+					: member.kind !== 'shape' || member.children.length) ||
+				!visioResizeFrame(member, member, { x: 0, y: 0 })
+			)
+				return false;
+			if (member.kind === 'group') pending.push(member);
+			else ids.add(member.id);
+		}
 	}
 	return !page.connectors.some(
 		(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
@@ -60,11 +63,11 @@ export function visioResizeShape(page: VisioPage, id: string): VisioShape | unde
 	const shape = visioMovementShape(page, id);
 	// Flat local groups use the core member-scaling proof. A stencil group instead follows
 	// the formulas in its master; the two source paths keep their own admission rules.
-	// Layered local shapes move, but core resize admission still refuses their layer membership;
-	// stencil shapes are resized on their (unlocked) stencil layer.
+	// Layered local shapes resize like they move: visioMovementShape refuses a locked layer.
 	return shape &&
 		(!shape.children.length || !!shape.masterId || resizableLocalGroup(page, shape)) &&
-		(!shape.layerIds?.length || !!shape.masterId) &&
+		// The core proves a group's own layer membership only when it has none.
+		(!shape.children.length || !!shape.masterId || !shape.layerIds?.length) &&
 		visioResizeFrame(shape, { width: shape.width, height: shape.height }, { x: 0, y: 0 })
 		? shape
 		: undefined;

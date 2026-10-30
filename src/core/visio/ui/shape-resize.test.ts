@@ -98,7 +98,7 @@ it('declines unproven affine, grouped, glued, ambiguous and nonfinite candidates
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
 });
 
-it('offers flat group handles with rotated parents and refuses unsupported member trees', () => {
+it('offers group handles with rotated parents and members, and refuses unsupported member trees', () => {
 	const scene = page(Math.PI / 6, true),
 		group = scene.shapes[0]!;
 	const member = structuredClone(page().shapes[0]!);
@@ -108,10 +108,17 @@ it('offers flat group handles with rotated parents and refuses unsupported membe
 	expect(visioResizeShape(scene, '1')).toBe(group);
 	expect(visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 1, y: -1 })).toBeDefined();
 	member.transform = transform(4, 5, 0.25, 0.75, 0.1);
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	member.transform = [2, 0.5, 0, 1, 0, 0];
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
 	member.transform = transform(4, 5, 0.25, 0.75, 0);
+	// A nested group is admitted; a shape that is not a group may not hold children.
 	member.children = [structuredClone(page().shapes[0]!)];
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	member.kind = 'group';
+	member.children[0]!.id = '5';
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	member.kind = 'shape';
 	member.children = [];
 	member.masterId = '0';
 	expect(visioResizeShape(scene, '1')).toBeUndefined();

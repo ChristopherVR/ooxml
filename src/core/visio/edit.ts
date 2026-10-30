@@ -507,6 +507,19 @@ async function editVsdxTransaction(
 					instanceCommands.add(command);
 				else instanceMoves.add(command);
 			}
+		// A local shape on a layer resizes unless one of its layers is locked, as Visio does.
+		for (const command of geometryCommands)
+			if (
+				command.type === 'resize-shape' &&
+				!instanceCommands.has(command) &&
+				!connectorCommands.has(command)
+			)
+				await assertInstanceLayerUnlocked(
+					pkg,
+					roots.get(command.pageId),
+					command.pageId,
+					command.shapeId,
+				);
 		const scope = async () => {
 			const local = geometryCommands.filter(
 				(command) => !instanceCommands.has(command) && !connectorCommands.has(command),

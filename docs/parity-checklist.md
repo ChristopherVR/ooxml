@@ -353,8 +353,13 @@ installed Visio 16 build is used to check that saved files open without repair.
       the frame; deleting a lane with stencil shapes takes two undo steps.
 - [ ] **P1** The org chart has no org-chart masters, ribbon or position data; template tiles have
       no thumbnails.
-- [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;
-      multi-selection resize excludes groups, rotation, layers and glue.
+- [x] **P1** Group resize scales nested groups and rotated or flipped members as Visio does
+      (`W' = W(cos^2 sx + sin^2 sy)`, checked against Visio 16 in
+      `edit-group-resize-native.test.ts`); multi-selection resize takes groups, rotated shapes,
+      layered shapes on unlocked layers and shapes with glued connectors.
+- [ ] **P1** Still refused: resizing or moving a group whose members have glued connectors
+      (connector glue reaches top-level shapes only), a group with stencil (master) or layered
+      members, and a multi-selection that holds stencil instances or connectors.
 - [x] **P1** Dynamic connectors in files saved by Visio follow moved shapes, re-glue and reroute,
       including AutoConnect's PinY glue; end positions match Visio's through COM
       (`edit-connector-visio-native.test.ts`).

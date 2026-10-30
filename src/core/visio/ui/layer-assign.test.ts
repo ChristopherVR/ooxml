@@ -84,12 +84,13 @@ describe('Assign to Layer scene helpers', () => {
 		expect(visioNewLayerNames(scene, 'flow')).toMatch(/already exists/);
 		expect(visioNewLayerNames(scene, 'a;b')).toMatch(/not a valid layer name/);
 	});
-	it('keeps layered shapes movable but not resizable', async () => {
+	it('moves and resizes layered shapes unless a layer is locked', async () => {
 		const scene = await page();
 		expect(visioMoveCommands(scene, ['1', '2'], { x: 1, y: 0 })).toHaveLength(2);
-		expect(visioResizeShape(scene, '1')).toBeUndefined();
+		expect(visioResizeShape(scene, '1')).toBeDefined();
 		const locked = { ...scene, layers: scene.layers!.map((entry) => ({ ...entry, locked: true })) };
 		expect(visioMoveCommands(locked, ['1'], { x: 1, y: 0 })).toBeUndefined();
+		expect(visioResizeShape(locked, '1')).toBeUndefined();
 	});
 });
 

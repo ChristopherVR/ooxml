@@ -1,0 +1,144 @@
+{
+ "outer": "6",
+ "inner": "5",
+ "factor": {
+  "x": 1.5,
+  "y": 2
+ },
+ "before": {
+  "1": {
+   "PinX": 1,
+   "PinY": 0.5,
+   "Width": 2,
+   "Height": 1,
+   "LocPinX": 1,
+   "LocPinY": 0.5,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "2": {
+   "PinX": 0.933012702,
+   "PinY": 3,
+   "Width": 1,
+   "Height": 2,
+   "LocPinX": 0.5,
+   "LocPinY": 1,
+   "Angle": 0.523598776,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "3": {
+   "PinX": 3.433012702,
+   "PinY": 0.5,
+   "Width": 2,
+   "Height": 1,
+   "LocPinX": 1,
+   "LocPinY": 0.5,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 1
+  },
+  "4": {
+   "PinX": 2,
+   "PinY": 5.5,
+   "Width": 2,
+   "Height": 1,
+   "LocPinX": 1,
+   "LocPinY": 0.5,
+   "Angle": 1.570796327,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "5": {
+   "PinX": 4.783493649,
+   "PinY": 2.058012702,
+   "Width": 4.433012702,
+   "Height": 4.116025404,
+   "LocPinX": 2.216506351,
+   "LocPinY": 2.058012702,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "6": {
+   "PinX": 4.5,
+   "PinY": 4.25,
+   "Width": 7,
+   "Height": 6.5,
+   "LocPinX": 3.5,
+   "LocPinY": 3.25,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  }
+ },
+ "after": {
+  "1": {
+   "PinX": 1.5,
+   "PinY": 1,
+   "Width": 3,
+   "Height": 2,
+   "LocPinX": 1.5,
+   "LocPinY": 1,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "2": {
+   "PinX": 1.399519053,
+   "PinY": 6,
+   "Width": 1.625,
+   "Height": 3.75,
+   "LocPinX": 0.8125,
+   "LocPinY": 1.875,
+   "Angle": 0.523598776,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "3": {
+   "PinX": 5.149519053,
+   "PinY": 1,
+   "Width": 3,
+   "Height": 2,
+   "LocPinX": 1.5,
+   "LocPinY": 1,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 1
+  },
+  "4": {
+   "PinX": 3,
+   "PinY": 11,
+   "Width": 4,
+   "Height": 1.5,
+   "LocPinX": 2,
+   "LocPinY": 0.75,
+   "Angle": 1.570796327,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "5": {
+   "PinX": 7.175240474,
+   "PinY": 4.116025404,
+   "Width": 6.649519053,
+   "Height": 8.232050808,
+   "LocPinX": 3.324759526,
+   "LocPinY": 4.116025404,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  },
+  "6": {
+   "PinX": 4.5,
+   "PinY": 4.25,
+   "Width": 10.5,
+   "Height": 13,
+   "LocPinX": 5.25,
+   "LocPinY": 6.5,
+   "Angle": 0,
+   "FlipX": 0,
+   "FlipY": 0
+  }
+ }
+}

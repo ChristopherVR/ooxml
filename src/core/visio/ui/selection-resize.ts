@@ -21,25 +21,25 @@ function candidates(page: VisioPage, ids: readonly string[]): VisioShape[] | und
 	for (const id of ids) {
 		const shape = visioResizeShape(page, id);
 		if (!shape) return undefined;
-		// Anisotropic page scaling would shear rotated shapes. Local groups, stencil instances
-		// and attached connectors need separate selection-resize proofs, even if singly resizable.
-		if (ids.length > 1) {
-			const [a, b, c, d] = shape.transform;
-			if (
-				shape.children.length ||
-				shape.masterId ||
-				shape.kind !== 'shape' ||
-				Math.abs(b) > 1e-10 ||
-				Math.abs(c) > 1e-10 ||
-				Math.abs(Math.abs(a) - 1) > 1e-10 ||
-				Math.abs(Math.abs(d) - 1) > 1e-10 ||
-				page.connectors.some((edge) => edge.fromShapeId === id || edge.toShapeId === id)
-			)
-				return undefined;
-		}
+		// Connectors resize through their end glue, not as selection members; stencil instances
+		// follow master formulas, so a shared page scale cannot prove their pose. Rotated shapes
+		// and groups resize by Visio's rule (see memberSize); glued connectors reroute in core.
+		if (ids.length > 1 && ((shape.kind !== 'shape' && shape.kind !== 'group') || shape.masterId))
+			return undefined;
 		shapes.push(shape);
 	}
 	return shapes;
+}
+
+/** A member's local size after the page-axis selection scales by (sx, sy). Visio scales a rotated
+ * member by the squared direction cosines of its local axes (the group-resize rule it uses for
+ * members, verified through COM): W' = W(a^2 sx + b^2 sy), H' = H(c^2 sx + d^2 sy). */
+function memberSize(shape: VisioShape, sx: number, sy: number): { width: number; height: number } {
+	const [a, b, c, d] = shape.transform;
+	return {
+		width: shape.width * (a * a * sx + b * b * sy),
+		height: shape.height * (c * c * sx + d * d * sy),
+	};
 }
 
 function selectionFrame(shapes: readonly VisioShape[]): VisioResizeFrame | undefined {
@@ -50,11 +50,20 @@ function selectionFrame(shapes: readonly VisioShape[]): VisioResizeFrame | undef
 		right = -Infinity,
 		top = -Infinity;
 	for (const shape of shapes) {
-		const [a, , , d, x, y] = shape.transform;
-		left = Math.min(left, x, x + a * shape.width);
-		right = Math.max(right, x, x + a * shape.width);
-		bottom = Math.min(bottom, y, y + d * shape.height);
-		top = Math.max(top, y, y + d * shape.height);
+		const [a, b, c, d, e, f] = shape.transform;
+		for (const [lx, ly] of [
+			[0, 0],
+			[shape.width, 0],
+			[0, shape.height],
+			[shape.width, shape.height],
+		] as const) {
+			const x = a * lx + c * ly + e,
+				y = b * lx + d * ly + f;
+			left = Math.min(left, x);
+			right = Math.max(right, x);
+			bottom = Math.min(bottom, y);
+			top = Math.max(top, y);
+		}
 	}
 	const width = right - left,
 		height = top - bottom;
@@ -157,8 +166,7 @@ export function visioResizeSelectionDrag(
 	const members: { id: string; frame: VisioResizeFrame }[] = [];
 	try {
 		for (const shape of shapes) {
-			const width = shape.width * sx,
-				height = shape.height * sy;
+			const { width, height } = memberSize(shape, sx, sy);
 			const x = box.x + (shape.rotation!.pinX - left) * sx;
 			const y = nextBottom + (shape.rotation!.pinY - bottom) * sy;
 			// Use the lower-left local anchor, whose resulting pin is proved by the same helper

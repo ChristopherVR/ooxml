@@ -193,7 +193,6 @@ it.each([
 });
 
 it.each([
-	['rotated member', '<Cell N="Angle" V="0"/>', '<Cell N="Angle" V="0.3"/>'],
 	['guarded constant', '<Cell N="Width" V="1"/>', '<Cell N="Width" V="1" F="GUARD(1 in)"/>'],
 	[
 		'non-scaling formula',
@@ -316,4 +315,22 @@ it('does not grant other group members general recalculation permission', async 
 	await expect(
 		editVsdx(await zip.generateAsync({ type: 'uint8array' }), [resize()]).then(() => undefined),
 	).rejects.toThrow(/grouped cells/i);
+});
+
+it('scales a rotated member by the squared direction cosines of its axes', async () => {
+	const zip = await JSZip.loadAsync(await source());
+	let text = await zip.file('visio/pages/page1.xml')!.async('string');
+	const split = text.indexOf('<Shapes>', text.indexOf('ID="9"'));
+	text = text.slice(0, split) + text.slice(split).replace('N="Angle" V="0"', 'N="Angle" V="0.3"');
+	zip.file('visio/pages/page1.xml', text);
+	const result = await editVsdx(await zip.generateAsync({ type: 'uint8array' }), [resize(8, 3)]);
+	const member = (await parseVsdx(result.bytes)).pages[0]!.shapes[0]!.children[0]!;
+	const c2 = Math.cos(0.3) ** 2,
+		s2 = Math.sin(0.3) ** 2;
+	expect(member.width).toBeCloseTo(c2 * 2 + s2, 10);
+	expect(member.height).toBeCloseTo(s2 * 2 + c2, 10);
+	expect(member.rotation).toMatchObject({ pinX: 2, pinY: 1 });
+	expect(await xml(result.bytes)).toMatch(
+		/F="Sheet\.9!Width\*[\d.e-]+\+Sheet\.9!Height\*[\d.e-]+"/,
+	);
 });

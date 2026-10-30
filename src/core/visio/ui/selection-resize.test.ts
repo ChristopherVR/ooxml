@@ -188,7 +188,7 @@ it('scales a multiple selection proportionally from corners and with Shift', asy
 	);
 });
 
-it('declines mixed, rotated, nested, attached and invalid selections as a whole', async () => {
+it('declines mixed, sheared, nested-in-shape and invalid selections as a whole', async () => {
 	const page = (await parseVsdx(await source())).pages[0]!;
 	for (const ids of [
 		[],
@@ -222,8 +222,9 @@ it('declines mixed, rotated, nested, attached and invalid selections as a whole'
 		Object.assign(other, original);
 		delete other.masterId;
 	}
+	// Connectors glued to a member follow it (core reroutes), so they no longer block the selection.
 	page.connectors = [{ fromShapeId: '3', toShapeId: '2' } as (typeof page.connectors)[number]];
-	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeUndefined();
+	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeDefined();
 });
 
 it.each([cell('LockWidth', 1), cell('LockMoveX', 1), cell('LockHeight', 1)])(

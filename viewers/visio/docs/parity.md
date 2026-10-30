@@ -1,5 +1,22 @@
 # Visio capability ledger
 
+## Group and selection resize, 2026-10-30
+
+- **Group resize** scales nested groups (recursively, each group against its own new size) and
+  rotated or flipped members. Visio 16, driven through COM on a group of a plain, a 30 degree, a
+  90 degree and a FlipY rectangle (one pair in a nested group), computes a member's local size as
+  `W' = W(cos^2 sx + sin^2 sy)` and `H' = H(sin^2 sx + cos^2 sy)` with pins scaled by `sx` and `sy`;
+  it saves these as `Sheet.N!Width*a+Sheet.N!Height*b` formulas. The core writes the same formulas
+  and keeps authored ones that already follow the pose. `edit-group-resize-native.test.ts` asserts
+  every member cell Visio read back (`__fixtures__/group-nested-rotated.*`).
+- **Selection resize** takes groups, rotated and flipped shapes (the same squared-cosine rule on the
+  page axes, from the saved transform; angles unchanged), shapes with glued connectors (the core
+  reroutes them per command) and layered shapes on unlocked layers (`edit.ts` refuses a locked layer
+  for any caller). That rule for a free multi-selection is Visio's group rule applied by analogy; it
+  was not separately measured.
+- **Still refused:** groups whose members have glued connectors (glue targets top-level shapes
+  only), groups with stencil or layered members, selections with stencil instances or connectors.
+
 ## Parity wave two, 2026-10-30
 
 The target is now current Microsoft 365 Visio. Open remainders are in `docs/parity-checklist.md`.
