@@ -191,6 +191,7 @@ export function visioOrgImportEdits(
 			ids.positions[node.parent!]!,
 			ids.positions[node.index]!,
 			{ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+			!!node.person.assistant,
 		);
 	});
 	const edits: VisioEdit[] = [

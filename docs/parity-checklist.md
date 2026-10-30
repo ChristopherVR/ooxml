@@ -440,13 +440,20 @@ installed Visio 16 build is used to check that saved files open without repair.
       Title, Reports To; optional ID, Department, Telephone, E-Mail, Type); the text of a position
       is its Name and Title and follows them when the Shape Data changes; Delete on a position is
       Delete Position in one undo step (`ui/org-chart*.ts`, `viewer-org-chart.ts`).
-- [ ] **P2** Org chart remainders: a position that gains subordinates stays a Position Belt (Visio
-      switches its type), the Belt masters cannot be resized (their text-height formulas are not
-      evaluated), no import from a directory, the Organization Chart Wizard's options or
-      Compare/Update, reporting lines are right-angle connectors glued to the whole shape (Visio
-      glues Top and Bottom connection points and routes them itself when a position moves), the
-      masters' theme-driven colours and line patterns are reported as warnings, and a page that
-      already holds connectors cannot be grown for an imported chart.
+- [x] **P2** Org chart types and glue: a Position Belt that gains its first subordinate (Org Chart > Subordinate) becomes a Manager Belt (the position is replaced by an instance of the Manager
+      Belt master with its text, Shape Data and line), reporting lines are glued to the manager's
+      Bottom and the subordinate's Top connection points and follow a moved position, and a Belt
+      master instance can be resized (its text-height formulas keep the saved text extent and the
+      text size pass measures it afterwards).
+- [ ] **P2** Org chart remainders: a Manager Belt that loses its last subordinate does not turn
+      back into a Position Belt (the type change could not be observed through COM, where Visio's
+      org chart add-in does not run), a promoted position's Shape Data rows beyond Name, Title, Department,
+      Telephone and E-Mail are not carried over, a resized Belt's photo frame sits up to 0.004 in
+      from Visio's (the style-inherited line weight is read from the saved cache), no import from a
+      directory, the Organization Chart Wizard's options or Compare/Update, an assistant's line
+      still glues to the whole shape (it enters the assistant's side), the masters' theme-driven
+      colours and line patterns are reported as warnings, and a page that already holds connectors
+      cannot be grown for an imported chart.
 - [x] **P1** Group resize scales nested groups and rotated or flipped members as Visio does
       (`W' = W(cos^2 sx + sin^2 sy)`, checked against Visio 16 in
       `edit-group-resize-native.test.ts`); multi-selection resize takes groups, rotated shapes,

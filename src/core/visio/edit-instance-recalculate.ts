@@ -38,7 +38,7 @@ const PASSIVE = new Set([
 	'Annotation',
 ]);
 const LENGTHS =
-	/^(width|height|pinx|piny|locpinx|locpiny|txtpinx|txtpiny|txtwidth|txtheight|txtlocpinx|txtlocpiny|beginx|beginy|endx|endy)$/;
+	/^(width|height|pinx|piny|locpinx|locpiny|txtpinx|txtpiny|txtwidth|txtheight|txtlocpinx|txtlocpiny|beginx|beginy|endx|endy|lineweight|imgoffsetx|imgoffsety|imgwidth|imgheight)$/;
 
 /** `undefined`: an untagged data cell (User, Scratch, Prop) takes whatever its formula yields. */
 function expectedUnit(cell: InstanceCell): VisioFormulaUnit | undefined {
@@ -66,6 +66,17 @@ function expectedUnit(cell: InstanceCell): VisioFormulaUnit | undefined {
 		: 'scalar';
 }
 
+/**
+ * An untagged User cell whose formula is a length written with a unit (`5MM*DropOnPageScale`)
+ * holds inches, though the file records a bare number: a formula that adds it to a Height must
+ * not be refused as mixing a length with a scalar.
+ */
+function untaggedLength(cell: InstanceCell): VisioFormulaUnit | undefined {
+	if (cell.section?.name !== 'User') return undefined;
+	const formula = effectiveFormula(cell);
+	return formula && /^\s*[\d.]+\s*(?:MM|CM|IN|FT|M)/i.test(formula) ? 'length' : undefined;
+}
+
 interface Dependencies {
 	ast?: VisioFormulaAst;
 	/** The formula was written on the page: its `Sheet.N!` names are page shape IDs. */
@@ -73,6 +84,11 @@ interface Dependencies {
 	references: InstanceCell[];
 	/** The formula measures the shape's text (TEXTWIDTH, TEXTHEIGHT). */
 	text?: boolean;
+	/**
+	 * The formula measures the shape's text and no measurer was given: the cache is kept and the
+	 * text size pass that follows the edit measures it (see `edit-text-size.ts`).
+	 */
+	deferText?: boolean;
 }
 
 export interface InstanceCacheWrite {
@@ -102,6 +118,11 @@ export function recalculateInstanceCaches(
 	 * and so is everything that follows from them.
 	 */
 	text?: NonNullable<VisioFormulaLimits['text']>,
+	/**
+	 * Without a measurer: cells that measure the shape's own text keep their saved value, to be
+	 * measured by the text size pass that follows the edit, instead of refusing it.
+	 */
+	keepTextSize = false,
 ): { writes: InstanceCacheWrite[]; pinned: ReadonlyMap<InstanceCell, number> } {
 	const scope = 'sheets' in target ? target : singleScope(target);
 	const overrides = new Map(changed);
@@ -126,13 +147,13 @@ export function recalculateInstanceCaches(
 			try {
 				const ast = parseVisioFormula(source);
 				const analysis = analyzeVisioFormula(ast);
-				const sized = text && analysis.dynamic ? textSizeFormula(ast) : undefined;
+				const sized = analysis.dynamic && (text || keepTextSize) ? textSizeFormula(ast) : undefined;
 				// A formula with functions this editor cannot follow is never evaluated.
 				result = sized
 					? {
 							ast,
 							local,
-							text: true,
+							...(text ? { text: true } : { deferText: true }),
 							references: sized.references.flatMap((ref) => found(ref.cell, ref.shapeId)),
 						}
 					: analysis.dynamic
@@ -182,22 +203,44 @@ export function recalculateInstanceCaches(
 		if (!node || node.hasAttribute('E')) throw new Unevaluable();
 		try {
 			const value = visioFormulaCachedValue(attribute(node, 'V') ?? '', attribute(node, 'U'));
-			const unit = expectedUnit(cell);
+			const unit = expectedUnit(cell) ?? untaggedLength(cell);
 			return value.unit === 'scalar' && unit && unit !== 'scalar' ? { ...value, unit } : value;
 		} catch {
 			throw new Unevaluable();
 		}
 	};
+	// Cells whose value used a saved text extent (see `deferText`): their own caches stay as saved.
+	const tainted = new Set<InstanceCell>();
+	let sawDeferred = false;
 	const evaluate = (cell: InstanceCell): VisioFormulaValue => {
+		const outer = sawDeferred;
+		sawDeferred = false;
+		try {
+			const result = evaluateCell(cell);
+			if (sawDeferred) tainted.add(cell);
+			return result;
+		} finally {
+			sawDeferred = sawDeferred || outer;
+		}
+	};
+	const evaluateCell = (cell: InstanceCell): VisioFormulaValue => {
 		check();
 		if (--steps < 0)
 			fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
 		const override = overrides.get(cell);
 		if (override !== undefined) return { value: override, unit: expectedUnit(cell) ?? 'scalar' };
 		const known = values.get(cell);
-		if (known) return known;
+		if (known) {
+			if (tainted.has(cell)) sawDeferred = true;
+			return known;
+		}
 		if (!isAffected(cell, new Set())) return cached(cell);
 		const own = dependenciesOf(cell);
+		// Without a measurer the saved text extent stays; the text size pass measures it afterwards.
+		if (own?.deferText) {
+			sawDeferred = true;
+			return cached(cell);
+		}
 		const ast = own?.ast;
 		if (!ast || evaluating.has(cell)) throw new Unevaluable();
 		evaluating.add(cell);
@@ -246,9 +289,12 @@ export function recalculateInstanceCaches(
 		let value: number;
 		let length: boolean;
 		try {
+			sawDeferred = false;
 			const result = evaluate(cell);
 			value = result.value;
 			length = result.unit === 'length';
+			// A data cell worked out from a saved text extent keeps the cache it has.
+			if (tainted.has(cell) && cell.section && PASSIVE.has(cell.section.name)) continue;
 		} catch (error) {
 			if (!(error instanceof Unevaluable)) throw error;
 			if (cell.section && PASSIVE.has(cell.section.name)) continue;
