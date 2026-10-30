@@ -22,12 +22,11 @@ describe('docx-vanilla-viewer entry', () => {
 		expect(typeof globalThis.document).toBe('undefined');
 	});
 
-	it('opens a legacy .doc through the inlined legacy reader and saves it as a docx package', async () => {
+	it('opens a legacy .doc through the inlined legacy reader and keeps a no-op save byte-identical', async () => {
 		const bytes = new Uint8Array(await readFile(legacyFixture));
 		expect(vanilla.detectDocumentFormat(bytes)).toBe('doc');
 		const loaded = await vanilla.loadDocument(bytes);
 		expect(loaded.model.blocks.length).toBeGreaterThan(0);
-		const saved = await loaded.save();
-		expect(Array.from(saved.slice(0, 2))).toEqual([0x50, 0x4b]);
+		expect(await loaded.save()).toEqual(bytes);
 	});
 });

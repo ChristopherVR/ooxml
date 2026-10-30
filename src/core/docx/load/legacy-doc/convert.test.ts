@@ -13,7 +13,7 @@ const open = async (name: string): Promise<LoadedDocument> =>
 
 /** The model of `loaded` after a save to .docx and a read of that package. */
 async function reopened(loaded: LoadedDocument): Promise<LoadedDocument> {
-	return loadDocx(await loaded.save());
+	return loadDocx(await (loaded.saveDocx ? loaded.saveDocx() : loaded.save()));
 }
 
 const paragraphs = (loaded: LoadedDocument): Paragraph[] =>
@@ -27,7 +27,7 @@ describe('legacy .doc conversion', () => {
 		const loaded = await open('formatting-rich');
 		expect(loaded.model.warnings[0]).toBe(LEGACY_DOC_NOTICE);
 		expect(LEGACY_DOC_NOTICE).toMatch(/\.docx/);
-		expect(LEGACY_DOC_NOTICE).toMatch(/not supported/);
+		expect(LEGACY_DOC_NOTICE).toMatch(/paragraph text edits only/);
 	});
 
 	it('maps the stylesheet with inheritance, links and built-in ids', async () => {
@@ -118,7 +118,7 @@ describe('legacy .doc conversion', () => {
 	});
 
 	it('keeps borders, shading, row height, header rows and alignment of a simple table', async () => {
-		const zip = await JSZip.loadAsync(await (await open('structure-table-simple')).save());
+		const zip = await JSZip.loadAsync(await (await open('structure-table-simple')).saveDocx!());
 		const xml = await zip.file('word/document.xml')!.async('string');
 		expect(xml).toContain('<w:tblBorders>');
 		expect(xml).toContain('w:fill="FF0000"');
@@ -280,5 +280,16 @@ describe('legacy .doc conversion', () => {
 			);
 			expect(paragraphs(third).map(text)).toEqual(paragraphs(first).map(text));
 		}
+	});
+
+	it('keeps the binary .doc on save: unchanged bytes, and refuses edits it cannot write', async () => {
+		const bytes = await fixture('structure-table-simple.doc');
+		const loaded = await loadLegacyDoc(bytes);
+		expect(await loaded.save()).toEqual(bytes);
+		const cell = tables(loaded)[0]!.rows[0]![0]!.paragraphs[0]!;
+		cell.runs[0]!.text += ' edited';
+		await expect(loaded.save()).rejects.toThrow(/saveDocx/);
+		const docx = await loaded.saveDocx!();
+		expect(Array.from(docx.slice(0, 2))).toEqual([0x50, 0x4b]);
 	});
 });

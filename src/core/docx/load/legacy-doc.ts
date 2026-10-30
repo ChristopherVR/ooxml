@@ -1,31 +1,29 @@
 // Word 97-2003 binary .doc: the ole2 reader (`readDocModel`) yields the document as a block tree,
 // which is converted to a WordprocessingML package (`legacy-doc/`) and opened by the normal .docx
-// reader. The loaded document is therefore the same model a .docx gives, and saving it writes a
-// .docx through the normal writer; the binary .doc format itself is read-only.
+// reader. The loaded document is therefore the same model a .docx gives. `save()` keeps the
+// binary .doc format (unchanged bytes, or paragraph text edits); `saveDocx()` writes the full
+// model as a .docx through the normal writer.
 import { readDocFib } from '@christophervr/ole2/ole-document-doc-fib';
 import { readDocModel } from '@christophervr/ole2/doc-model';
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
 import { readCompoundFileStream } from '@christophervr/ole2/ole2-stream-edit';
 import type { LoadedDocument } from '../model';
 import { loadDocx } from '../parse';
+import { binaryDocSaver } from './legacy-doc/binary-save';
+import { LegacyDocError } from './legacy-doc/error';
 import { buildDocxPackage } from './legacy-doc/package';
 
-export class LegacyDocError extends Error {
-	constructor(message: string) {
-		super(message);
-		this.name = 'LegacyDocError';
-	}
-}
+export { LegacyDocError };
 
 /** The standing notice every loaded .doc carries. */
 export const LEGACY_DOC_NOTICE =
-	'This Word 97-2003 document was converted when it was opened. Saving writes a Word .docx file; writing back to the binary .doc format is not supported. Revision marks, form-field data, macros, document protection and line numbering are not converted.';
+	'This Word 97-2003 document was converted when it was opened. Save it as a Word .docx file to keep every change; the .doc format itself accepts paragraph text edits only. Revision marks, form-field data, macros, document protection and line numbering are not converted.';
 
 function toBytes(input: Uint8Array | ArrayBuffer): Uint8Array {
 	return input instanceof Uint8Array ? input.slice() : new Uint8Array(input.slice(0));
 }
 
-/** Load Word 97-2003 binary .doc as a document that saves as .docx. */
+/** Load Word 97-2003 binary .doc. `save()` keeps the .doc format; `saveDocx()` saves the full model. */
 export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<LoadedDocument> {
 	const original = toBytes(input);
 	let streams: string[] = [];
@@ -79,5 +77,13 @@ export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<Lo
 	loaded.model.warnings.unshift(LEGACY_DOC_NOTICE);
 	for (const warning of converted.warnings) loaded.model.warnings.push(warning);
 	for (const warning of docModel.warnings) loaded.model.warnings.push(`Legacy .doc: ${warning}`);
-	return loaded;
+	const saveBinary = binaryDocSaver(original, loaded.model);
+	return {
+		...loaded,
+		async save(model = loaded.model) {
+			return saveBinary(model);
+		},
+		saveDocx: (model = loaded.model, pendingMedia, options) =>
+			loaded.save(model, pendingMedia, options),
+	};
 }

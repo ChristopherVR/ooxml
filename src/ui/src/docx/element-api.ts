@@ -234,8 +234,13 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 			...(core.collab.yjs?.media.all() ?? []),
 		]);
 		const media = pending.size ? pending : undefined;
-		if (core.loaded)
-			return core.loaded.save(core.model, media, { modified: modifiedStamp(core.reviewAuthor) });
+		if (core.loaded) {
+			// A converted Word 97-2003 .doc saves as .docx here; its `save()` keeps the binary format.
+			const options = { modified: modifiedStamp(core.reviewAuthor) };
+			return core.loaded.saveDocx
+				? core.loaded.saveDocx(core.model, media, options)
+				: core.loaded.save(core.model, media, options);
+		}
 		return saveDocx(core.model, media);
 	}
 

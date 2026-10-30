@@ -188,6 +188,13 @@ export interface LoadedDocument {
 		pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 		options?: SaveOptions,
 	): Promise<Uint8Array>;
+	/** Present when the document was converted from another format (a Word 97-2003 .doc): saves the
+	 *  full model as a .docx, where `save` keeps the source format and refuses what it cannot write. */
+	saveDocx?(
+		model?: DocumentModel,
+		pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
+		options?: SaveOptions,
+	): Promise<Uint8Array>;
 }
 export function createDocument(): DocumentModel {
 	return {

@@ -774,7 +774,10 @@ stay meaningful; hyperlink fields become hyperlinks and the other fields keep th
 and cached result. The converter reports what it cannot carry through the document's load
 warnings (OLE data, drawing shapes other than pictures and text boxes, comment ranges).
 
-Saving a `.doc` session writes a `.docx`; the binary format is not written back. The editor names
+`loadLegacyDoc().save()` keeps the binary format: it returns the original bytes when nothing
+changed and writes text edits to plain paragraphs, and refuses any other edit with a pointer to
+`saveDocx()`, which saves the full converted model as a `.docx`. The editor saves through
+`saveDocx()`, names
 the document `<name>.docx` when it opens a `.doc`, Save As offers `.docx` only, and the standing
 load warning says so. Twelve Word-generated fixtures (copied from the ole2 repository, see
 PROVENANCE.md) cover styles, lists, tables with merges and nesting, sections, header and footer

@@ -158,8 +158,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       paragraph formatting, tables (spans, merges, borders, shading, nested), sections, headers and
       footers by variant, footnotes, endnotes, comments, pictures (inline and floating), text
       boxes, hyperlinks, fields and bookmarks. The result saves as a full `.docx`.
-- [ ] **P1** Legacy `.doc` is read-only as a format: saving writes `.docx` (the file is renamed on
-      open and the load warnings say so), never the binary format. Not converted: revision marks,
+- [ ] **P1** Legacy `.doc` writes back only paragraph text edits: `save()` keeps the binary format
+      (unchanged bytes, or text edits to plain paragraphs) and refuses anything else; the editor
+      saves `.docx` through `saveDocx()` (the file is renamed on open and the load warnings say so).
+      No full `.doc` writer. Not converted: revision marks,
       form-field data, the commented text range of a comment (it is anchored at its mark), drawing
       shapes other than pictures and text boxes (lines, rectangles, groups), embedded OLE data
       (the preview picture is kept), WordArt, line numbering, footnote numbering settings, macros,
