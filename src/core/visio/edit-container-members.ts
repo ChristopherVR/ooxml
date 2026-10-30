@@ -34,6 +34,9 @@ export function userValue(shape: Element, name: string): string | undefined {
 }
 export const isContainerSheet = (shape: Element): boolean =>
 	userValue(shape, 'msvStructureType')?.toLowerCase() === 'container';
+/** Visio's Lock Container (User.msvSDContainerLocked, a BOOL): membership cannot change. */
+export const isLockedContainer = (shape: Element): boolean =>
+	['1', 'TRUE'].includes((userValue(shape, 'msvSDContainerLocked') ?? '').toUpperCase());
 /** A container's member IDs, from the editor's older private row or its Relationships text. */
 export function containerMembersOf(shape: Element): string[] {
 	const own = userRow(shape, VISIO_CONTAINER_MEMBERS_ROW);
@@ -121,6 +124,11 @@ export function setVisioContainerMembers(
 		if (isContainerSheet(member) && containerClosure(root, member).has(edit.shapeId))
 			fail('UNSUPPORTED_GEOMETRY_EDIT', 'A container cannot become a member of its own member.');
 	}
+	const current = containerMembersOf(container);
+	const same =
+		current.length === edit.memberIds.length && edit.memberIds.every((id) => current.includes(id));
+	if (isLockedContainer(container) && !same)
+		fail('CONTAINER_LOCKED', 'A locked container cannot change its members; unlock it first.');
 	writeContainerMembers(root, container, edit.memberIds);
 }
 

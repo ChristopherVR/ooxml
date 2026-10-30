@@ -32,6 +32,7 @@ import type { VisioTemplateId } from 'ooxml-core/visio/ui';
 import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
+import { ViewerInlineSize } from './viewer-inline-size';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import {
 	applyVisioCommandVisibility,
@@ -192,6 +193,7 @@ export class VisioViewerElement extends BaseElement {
 	#backstage: ViewerBackstage;
 	#pointer: ViewerPointerGestures;
 	#sizePosition: ViewerSizePosition;
+	#inlineSize: ViewerInlineSize;
 	#fileName = '';
 	#storage: DocumentStorage | undefined;
 	#loadToken = 0;
@@ -309,6 +311,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
+		this.#inlineSize = new ViewerInlineSize(this.#root, this.controller);
 		this.#sizePosition = new ViewerSizePosition(this.#root, this.controller, (open) =>
 			this.#root.querySelector('[command="size-position"]')?.setAttribute('checked', String(open)),
 		);
@@ -846,6 +849,7 @@ export class VisioViewerElement extends BaseElement {
 		const keyTips = attachKeyTips(this.#root);
 		const disposePanZoom = this.#panZoom.wire();
 		const disposeSizePosition = this.#sizePosition.wire();
+		const disposeInlineSize = this.#inlineSize.wire();
 		const disposeProfile = this.#profile.wire();
 		// The title bar's Quick Access Toolbar: Save downloads a copy, Undo and Redo use the history.
 		const quickAccess = (event: Event): void => {
@@ -908,6 +912,7 @@ export class VisioViewerElement extends BaseElement {
 			keyTips.dispose();
 			disposePanZoom();
 			disposeSizePosition();
+			disposeInlineSize();
 			disposeProfile();
 			this.#titleBar.removeEventListener('office-command', quickAccess);
 			disposeShare();
@@ -979,6 +984,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#pointer.render(state);
 		this.#panZoom.render();
 		this.#sizePosition.render(state);
+		this.#inlineSize.render(state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

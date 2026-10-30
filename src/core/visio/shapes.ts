@@ -343,6 +343,7 @@ export function normalizeShapes(
 									0,
 									Math.min(1, 1 - number(sheet.cells, 'Transparency', 0, report)),
 								),
+								...pictureAdjustment(sheet, report),
 								x: number(sheet.cells, 'ImgOffsetX', 0, report),
 								y: number(sheet.cells, 'ImgOffsetY', 0, report),
 								width: Math.max(0, number(sheet.cells, 'ImgWidth', width, report)),
@@ -352,6 +353,18 @@ export function normalizeShapes(
 					: {}),
 			};
 		});
+}
+
+/** Picture Format > Adjust: Brightness and Contrast, reported only when they are not neutral. */
+function pictureAdjustment(sheet: Parameters<typeof visioShapeStructure>[0], report: Report) {
+	const fraction = (name: string) =>
+		Math.max(0, Math.min(1, number(sheet.cells, name, 0.5, report)));
+	const brightness = fraction('Brightness');
+	const contrast = fraction('Contrast');
+	return {
+		...(brightness === 0.5 ? {} : { brightness }),
+		...(contrast === 0.5 ? {} : { contrast }),
+	};
 }
 
 function structureOf(sheet: Parameters<typeof visioShapeStructure>[0]) {

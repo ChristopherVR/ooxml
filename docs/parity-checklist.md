@@ -414,10 +414,9 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** Picture Format, Container Format and Chart Design contextual tabs replace Shape Format
       for a lone picture, container or chart; Chart Design opens the chart editor
       (`ribbon-contextual-formats.ts`).
-- [ ] **P1** Picture Adjust (brightness, contrast, compression) and Crop, container Margins,
-      Automatic Resize and Lock are disabled; Fit to Contents does not shrink a container that
-      does not resize tightly; no inline Width/Height; the de/es/fr/zh-CN labels of the new tabs
-      need review.
+- [ ] **P1** Picture Compression and Auto Balance are disabled (the editor does not re-encode or
+      histogram a picture); the de/es/fr/zh-CN strings of the Picture and Container Format tabs are
+      new and need a native review.
 - [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
       mark the current one; Visio 16 opens the result and keeps the four scheme cells.
 - [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High) but its

@@ -229,6 +229,9 @@ export interface VisioImage {
 	pixelWidth: number;
 	pixelHeight: number;
 	opacity?: number;
+	/** Picture Format > Brightness and Contrast, 0 to 1 (0.5 neutral); absent means neutral. */
+	brightness?: number;
+	contrast?: number;
 	/** Optional placement in local y-up inches, defaulting to the shape bounds. */
 	x?: number;
 	y?: number;
@@ -357,12 +360,22 @@ export interface VisioSwimlaneFrameOptions {
 export type VisioSwimlaneRole =
 	| { role: 'frame'; options: VisioSwimlaneFrameOptions }
 	| { role: 'lane' };
+/** The Container Format options a container stores as User rows; absent rows mean Visio's defaults. */
+export interface VisioContainerOptions {
+	/** Visio's margin in inches (User.msvSDContainerMargin). */
+	margin?: number;
+	/** 0 no automatic resize, 1 expand as needed, 2 always fit to contents (User.msvSDContainerResize). */
+	resize?: 0 | 1 | 2;
+	/** Lock Container: membership cannot change (User.msvSDContainerLocked). */
+	locked?: boolean;
+}
 export type VisioShapeStructure =
 	| {
 			type: 'container';
 			memberIds: string[];
 			/** Set on a cross-functional flowchart's frame or one of its lanes. */
 			swimlane?: VisioSwimlaneRole;
+			options?: VisioContainerOptions;
 	  }
 	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {

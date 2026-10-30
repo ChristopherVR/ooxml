@@ -60,7 +60,11 @@ describe('insert-container', () => {
 		const model = await parseVsdx(saved.bytes);
 		const shapes = model.pages[0]!.shapes;
 		expect(shapes.map((shape) => shape.id)).toEqual(['3', '1', '2']);
-		expect(shapes[0]!.structure).toEqual({ type: 'container', memberIds: ['1', '2'] });
+		expect(shapes[0]!.structure).toEqual({
+			type: 'container',
+			memberIds: ['1', '2'],
+			options: { margin: 0.25, resize: 1 },
+		});
 		expect(shapes[0]!.text.plainText ?? '').toContain('Team');
 		// Classic: the framed body plus a divider under the heading.
 		expect(shapes[0]!.geometry.length).toBe(2);
