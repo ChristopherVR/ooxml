@@ -1,5 +1,32 @@
 # Visio capability ledger
 
+## Parity wave two, 2026-10-30
+
+The target is now current Microsoft 365 Visio. Open remainders are in `docs/parity-checklist.md`.
+
+- **Cross-functional flowcharts.** Six swimlane edits (`create-swimlanes`, `insert-swimlane`,
+  `delete-swimlane`, `resize-swimlane`, `insert-separator`, `set-swimlane-options`) on one pure
+  stacking function (`swimlane-stack.ts`) shared by core and the UI planner, and the contextual
+  Cross-Functional Flowchart tab beside the format tab. Visio 16 opened the generated template and
+  an edited file read-only through COM without repair and reported the frame and lanes as
+  containers. Visio's own CFF template (read-only) uses hidden CFF Container, Swimlane List and
+  Phase List masters with `DEPENDSON` list relationships; we write plain containers, so Visio's
+  swimlane commands do not recognise ours. Moving a stencil container member no longer trips the
+  page-dependency guard: a `SUM(DEPENDSON(...))` Relationships formula reads no member cell.
+- **Visio-saved connectors.** Drawings made in Visio through COM (glue, AutoConnect, crossings,
+  a free end) are fixtures; after moving shapes, re-gluing and dragging ends, the core's connector
+  end positions equal Visio's own (`edit-connector-visio-native.test.ts`). AutoConnect's
+  `ToCell="PinY"` whole-shape glue is now accepted.
+- **Contextual tabs.** Picture Format, Container Format (Fit to Contents, Select Contents, Disband)
+  and Chart Design (Edit Chart, Edit Data, Format Chart) share one mechanism with Shape Format.
+- **Theme schemes.** Fonts, Effects and Connectors apply alone and every submenu marks the
+  current scheme. Themed text uses the theme's minor font, as Visio 16 did for a built-in theme
+  through COM. The built-in themes carry a font scheme ID in Visio's own extension, and each now
+  defines one theme effect, so quick-styled shapes on a themed page can show it.
+- **Vector PDF.** Pages are converted from the static SVG export: paths, dashes, arrowheads,
+  rectangle clips, pictures and standard-font text that `pypdf` (strict) parses and
+  `pdftotext` extracts. Degraded effects and picture fallbacks are reported per page.
+
 ## Parity wave, 2026-10-30
 
 Six increments landed together; the open remainder of each is in

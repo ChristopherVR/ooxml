@@ -343,19 +343,36 @@ installed Visio 16 build is used to check that saved files open without repair.
       and a native Visio check of the written relationships (see the P1 item above).
 - [x] **P1** File > New offers Blank Drawing, Basic Flowchart, Cross-Functional Flowchart and Basic
       Organization Chart starters (`ui/templates.ts`); Visio 16 opens all three without repair.
-- [ ] **P1** Swimlanes are plain lanes in a container (no lane insertion, lanes do not resize
-      together, not Visio's swimlane master); the org chart has no org-chart masters, ribbon or
-      position data; template tiles have no thumbnails.
+- [x] **P1** Cross-functional flowcharts: lanes stack and resize together, insert before/after,
+      delete with their shapes, separators, title and separator bars, Style 1-4 and rotated
+      labels, with the contextual Cross-Functional Flowchart tab (`edit-swimlane-*.ts`,
+      `ribbon-swimlane.ts`); Visio 16 opens edited files without repair.
+- [ ] **P1** Lanes are stored as plain containers, not Visio's CFF masters, Swimlane List and
+      Phase List, so Visio's own swimlane commands do not see them; no direction change or
+      vertical template in the UI; separators have no phase label; the page does not grow with
+      the frame; deleting a lane with stencil shapes takes two undo steps.
+- [ ] **P1** The org chart has no org-chart masters, ribbon or position data; template tiles have
+      no thumbnails.
 - [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;
       multi-selection resize excludes groups, rotation, layers and glue.
-- [ ] **P1** Connectors in files saved by Visio are refused for geometry edits; a copy that meets
-      another dynamic connector is refused.
+- [x] **P1** Dynamic connectors in files saved by Visio follow moved shapes, re-glue and reroute,
+      including AutoConnect's PinY glue; end positions match Visio's through COM
+      (`edit-connector-visio-native.test.ts`).
+- [ ] **P1** A copy that meets another dynamic connector is refused; Visio also reroutes unglued
+      connectors whose old path crossed a moved shape, the core does not; non-Dynamic and
+      grouped connector masters are refused.
 - [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
       (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
 - [ ] **P1** Resize has no alignment or size-match hints, and Ctrl and Alt during a resize are
       not verified against Visio.
 - [ ] **P1** Link Data and Data Visualizer; Data Graphics Position, Configure and Auto Space.
-- [ ] **P1** PDF export is a picture per page with no selectable text; no XPS.
+- [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
+      with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
+      `visio/viewer-pdf.ts`).
+- [ ] **P1** PDF text uses the standard fonts (no embedding), so a page with text outside
+      WinAnsi (any non-Latin script, a minus sign) falls back to a picture; shadows, glow and
+      reflections are not drawn and gradients become flat; the dialog has no page-range option
+      and does not show the report; no XPS.
 - [x] **P2** Page tabs drag to reorder, background pages only among themselves
       (`chrome/tab-drag.ts`, shared with Excel's sheet tabs; `e2e/visio/page-tab-drag.spec.ts`).
 - [ ] **P2** No ShapeSheet window or Developer tab; on-shape text editing is a plain text area.
@@ -366,12 +383,17 @@ installed Visio 16 build is used to check that saved files open without repair.
 
 - [x] **P1** A contextual Shape Format tab shows while shapes are selected (Shape Styles, WordArt
       Styles disabled, Arrange, Size), reusing the Home commands (`ribbon-shape-format.ts`).
-- [ ] **P1** No Picture Format, Container or chart contextual tab; chart editing has no ribbon
-      button; Shape Format has no inline Width/Height, and its de/es/fr/zh-CN labels need review.
-- [x] **P1** Design > More Variants > Colors applies one theme's colours alone
-      (`ColorSchemeIndex`); Visio 16 opens the result and keeps the mixed scheme cells.
-- [ ] **P1** More Variants: Fonts, Effects, Connectors and Embellishment are disabled, and Colors
-      does not mark the current scheme (`ribbon-themes.ts`).
+- [x] **P1** Picture Format, Container Format and Chart Design contextual tabs replace Shape Format
+      for a lone picture, container or chart; Chart Design opens the chart editor
+      (`ribbon-contextual-formats.ts`).
+- [ ] **P1** Picture Adjust (brightness, contrast, compression) and Crop, container Margins,
+      Automatic Resize and Lock are disabled; Fit to Contents does not shrink a container that
+      does not resize tightly; no inline Width/Height; the de/es/fr/zh-CN labels of the new tabs
+      need review.
+- [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
+      mark the current one; Visio 16 opens the result and keeps the four scheme cells.
+- [ ] **P1** Embellishment is disabled; theme arrowheads are not themed; Visio's own schemes other
+      than our six built-in themes cannot be picked; Visio does not name our scheme IDs.
 - [ ] **P2** Disabled: Bevel, 3-D Rotation, CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
       SharePoint Workflow, the Window group, Macros and Add-Ons.
 
