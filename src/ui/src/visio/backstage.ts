@@ -1,5 +1,6 @@
 import { VISIO_TEMPLATES } from 'ooxml-core/visio/ui';
 import type { OfficeBackstageItem } from '../controls';
+import { pdfOptionsPanel } from './viewer-pdf-options';
 
 /** Visio's File (backstage) pages, in Visio's order. Save and Close act without a page. */
 export const BACKSTAGE_ITEMS = [
@@ -278,8 +279,9 @@ export function createBackstage(doc: Document): HTMLElement {
 				doc,
 				'export-pdf',
 				'Create PDF/XPS Document',
-				'A vector PDF with one page per foreground page at the page size and selectable text in standard fonts (not embedded). Shadows, glow and gradients are simplified; a page that cannot be drawn as vectors becomes a picture. XPS is not offered.',
+				'A vector PDF with one page per chosen foreground page at the page size and selectable text. Gradients are shadings and shadows are hard-edged offsets; glow is approximated; blur, soft edges and reflections are not drawn. Text uses standard fonts unless the host supplies fonts to embed. A page that cannot be drawn as vectors becomes a picture, and the report below says which. XPS is not offered.',
 			),
+			pdfOptionsPanel(doc),
 			el(doc, 'h2', 'backstage-subheading', 'Change File Type'),
 			action(doc, 'download', 'Visio Drawing (*.vsdx)', 'A copy of the drawing with your edits.'),
 			action(

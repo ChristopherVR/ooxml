@@ -3,6 +3,8 @@ import { demoDocument } from 'ooxml-core/visio/ui';
 import { exportPageSvg } from './export-svg';
 import { buildVectorPdf, PdfVectorPage } from '../export/pdf-vector';
 import { convertSvgPage } from './pdf-svg';
+import { PdfFontSet } from '../export/pdf-embedded-font';
+import { existsSync, readFileSync } from 'node:fs';
 import { exportDocumentPdfDetailed, pdfPageIndexes } from './viewer-pdf';
 
 const latin1 = (bytes: Uint8Array) => String.fromCharCode(...bytes);
@@ -74,9 +76,42 @@ describe('vector page conversion', () => {
 		} as never;
 		const result = convert(model);
 		expect(result.fallback).toEqual([]);
-		expect(result.degraded).toEqual(
-			expect.arrayContaining([expect.stringMatching(/Shadows/), expect.stringMatching(/Gradient/)]),
+		// The gradient is a real shading and the shadow an offset copy; only the blur is lost.
+		expect(result.degraded).toEqual(['Shadow blur is not applied: shadows are drawn hard-edged.']);
+		expect(result.page!.shadings.size).toBeGreaterThan(0);
+		expect(result.page!.content).toMatch(/\/Sh0 sh/);
+	});
+
+	it('writes gradients as axial and radial shadings with a stitching function', () => {
+		const svg = parse(
+			`<svg xmlns="http://www.w3.org/2000/svg"><defs>
+				<linearGradient id="l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff0000"/><stop offset="0.5" stop-color="#00ff00"/><stop offset="1" stop-color="#0000ff"/></linearGradient>
+				<radialGradient id="r" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#000000" stop-opacity="0.5"/></radialGradient>
+			</defs>
+			<path d="M 0 0 L 2 0 L 2 1 L 0 1 Z" fill="url(#l)"/>
+			<path d="M 0 1 L 2 1 L 2 2 L 0 2 Z" fill="url(#r)"/></svg>`,
 		);
+		const result = convertSvgPage(svg, 2, 2, new Map());
+		expect(result.fallback).toEqual([]);
+		expect(result.degraded).toEqual([
+			'Gradient transparency is averaged: a PDF shading has one opacity.',
+		]);
+		const text = latin1(buildVectorPdf([result.page!]));
+		expect(text).toContain('/ShadingType 2');
+		expect(text).toContain('/ShadingType 3');
+		expect(text).toContain('/FunctionType 3');
+		expect(text).toMatch(/\/Shading << \/Sh0 << /);
+		// Bounding-box units map to the path before the shading is painted inside its clip.
+		expect(result.page!.content).toMatch(/W n\n2 0 0 1 0 0 cm\n\/Sh0 sh/);
+	});
+
+	it('approximates glow with a halo and reports it', () => {
+		const model = scene();
+		model.pages[0]!.shapes[0]!.style.glow = { color: '#ffcc00', size: 0.1, opacity: 0.6 } as never;
+		const result = convert(model);
+		expect(result.fallback).toEqual([]);
+		expect(result.degraded.join(' ')).toMatch(/Glow is approximated/);
+		expect(result.page!.content).toMatch(/^0\.115 w 1 J 1 j/m);
 	});
 
 	it('falls back for content the vector path cannot represent', () => {
@@ -95,6 +130,9 @@ describe('vector page conversion', () => {
 			'<svg xmlns="http://www.w3.org/2000/svg"><text><tspan x="0" y="1">Zoom − out</tspan></text></svg>',
 		);
 		expect(convertSvgPage(unicode, 1, 1, new Map()).fallback[0]).toMatch(/WinAnsi/);
+		expect(convertSvgPage(unicode, 1, 1, new Map(), new PdfFontSet([])).fallback[0]).toMatch(
+			/WinAnsi/,
+		);
 	});
 
 	it('embeds decoded pictures', () => {
@@ -153,4 +191,43 @@ describe('PdfVectorPage', () => {
 		const xref = Number(/startxref\n(\d+)/.exec(text)![1]);
 		expect(text.slice(xref, xref + 4)).toBe('xref');
 	});
+});
+
+describe('embedded fonts', () => {
+	const arial = 'C:/Windows/Fonts/arial.ttf';
+	const unicode = parse(
+		'<svg xmlns="http://www.w3.org/2000/svg"><text><tspan x="0" y="1" font-family="Arial" font-size="0.2">Zoom − out 中</tspan></text></svg>',
+	);
+	it('refuses fonts that are not TrueType', async () => {
+		const set = new PdfFontSet([{ family: 'Bad', data: new Uint8Array(64) }]);
+		expect(set.size).toBe(0);
+		const { refusedFonts } = await exportDocumentPdfDetailed(document, scene(), {
+			fonts: [{ family: 'Bad', data: new Uint8Array(64) }],
+		});
+		expect(refusedFonts).toEqual(['Bad']);
+	});
+
+	it.skipIf(!existsSync(arial))(
+		'keeps text outside WinAnsi as selectable text in a subset font',
+		() => {
+			const fonts = new PdfFontSet([
+				{ family: 'Arial', data: new Uint8Array(readFileSync(arial)) },
+			]);
+			// Arial has the minus sign but no CJK ideograph: that run still needs a picture.
+			expect(convertSvgPage(unicode, 1, 1, new Map(), fonts).fallback[0]).toMatch(/WinAnsi/);
+			const minus = parse(
+				'<svg xmlns="http://www.w3.org/2000/svg"><text><tspan x="0" y="1" font-family="Arial" font-size="0.2">Zoom − out</tspan></text></svg>',
+			);
+			const result = convertSvgPage(minus, 1, 1, new Map(), fonts);
+			expect(result.fallback).toEqual([]);
+			expect(result.page!.content).toMatch(/\/E0 [\d.]+ Tf .* TJ ET/);
+			const text = latin1(buildVectorPdf([result.page!]));
+			expect(text).toContain('/Subtype /CIDFontType2');
+			expect(text).toContain('/Encoding /Identity-H');
+			expect(text).toContain('/FontFile2');
+			// ToUnicode maps the minus sign back to U+2212.
+			expect(text).toContain('<2212>');
+			expect(text.length).toBeLessThan(60_000);
+		},
+	);
 });

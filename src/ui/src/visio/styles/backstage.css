@@ -108,3 +108,41 @@
 	min-height: 20px;
 	font-size: 13px;
 }
+/* File > Export > PDF options: the page range and the report of the last export. */
+.pdf-options {
+	max-width: 560px;
+	margin: 8px 0 16px;
+}
+.pdf-field {
+	display: grid;
+	gap: 4px;
+	max-width: 240px;
+	margin: 8px 0;
+	font-size: 13px;
+}
+.pdf-field select,
+.pdf-field input {
+	min-height: 30px;
+	padding: 2px 8px;
+	border: 1px solid var(--_vv-border);
+	border-radius: 3px;
+	background: var(--_vv-surface);
+	color: inherit;
+	font: inherit;
+}
+.pdf-range {
+	display: flex;
+	gap: 12px;
+}
+.pdf-range[hidden],
+.pdf-report[hidden] {
+	display: none;
+}
+.pdf-report {
+	margin-top: 8px;
+	font-size: 13px;
+}
+.pdf-report ul {
+	margin: 4px 0 0;
+	padding-left: 20px;
+}

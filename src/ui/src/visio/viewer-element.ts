@@ -76,7 +76,9 @@ import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
-import { exportDocumentPdf } from './viewer-pdf';
+import { exportDocumentPdfDetailed } from './viewer-pdf';
+import { pdfOptionsFor } from './viewer-pdf-options';
+import type { PdfFontFile } from '../export/pdf-embedded-font';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
@@ -150,6 +152,12 @@ export class VisioViewerElement extends BaseElement {
 	set storage(value: DocumentStorage | null | undefined) {
 		this.#storage = value ?? undefined;
 	}
+	/**
+	 * TrueType fonts File > Export > PDF embeds (as subsets) so text outside the standard fonts'
+	 * character set, or in a particular typeface, stays real text. The host supplies the bytes
+	 * (nothing is bundled); a font whose licence forbids embedding is reported and skipped.
+	 */
+	pdfFonts: readonly PdfFontFile[] = [];
 	/** What `collaboration-change` last reported. */
 	get collaborationState(): VisioCollaborationState {
 		return this.#share.state;
@@ -379,17 +387,17 @@ export class VisioViewerElement extends BaseElement {
 			// A downloaded copy exists as a file: the AutoRecover copy has done its job.
 			downloaded: () => this.#recover.saved(),
 			exportSvg: () => this.exportSvg(),
-			exportPicture: async (format) => {
+			exportPicture: async (format, choice) => {
 				const { document: model, pageIndex } = this.controller.state;
 				if (!model) throw new Error('Open a drawing before exporting.');
 				const doc = this.ownerDocument;
-				return {
-					blob:
-						format === 'pdf'
-							? await exportDocumentPdf(doc, model)
-							: await exportPagePng(doc, model, pageIndex),
-					pageIndex,
-				};
+				if (format === 'png')
+					return { blob: await exportPagePng(doc, model, pageIndex), pageIndex };
+				const result = await exportDocumentPdfDetailed(doc, model, {
+					...pdfOptionsFor(choice ?? { scope: 'all' }, pageIndex),
+					fonts: this.pdfFonts,
+				});
+				return { blob: result.blob, pageIndex, report: result };
 			},
 			closeDocument: () => {
 				this.#fileName = '';
