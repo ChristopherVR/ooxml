@@ -4,6 +4,7 @@ import type {
 	VisioContainerStyle,
 	VisioInsertCalloutEdit,
 	VisioInsertContainerEdit,
+	VisioReconcileContainersEdit,
 	VisioPartBox,
 } from '../edit-diagram-parts-commands';
 import { visioNextShapeId } from './shape-id';
@@ -146,6 +147,37 @@ export function visioWithContainerMembers(page: VisioPage, ids: readonly string[
 			}
 	}
 	return result;
+}
+
+/** Edits that put a shape somewhere new, which a container may need to notice. */
+const PLACING_EDITS = new Set<string>([
+	'move-shape',
+	'resize-shape',
+	'create-rectangle',
+	'create-ellipse',
+	'create-text-box',
+	'create-path',
+	'insert-master-instance',
+	'drop-stencil-master',
+]);
+/**
+ * The edit that keeps containers in step with a placing transaction: shapes dropped fully inside
+ * a container join it, members moved out leave it and containers grow to fit. Appended after the
+ * move, resize or create edits of the same transaction, so one undo reverts all of it. `undefined`
+ * when the page has no container or no edit places a shape.
+ */
+export function visioContainerUpkeep(
+	page: VisioPage,
+	edits: readonly { type: string; pageId?: string; shapeId?: string }[],
+): VisioReconcileContainersEdit | undefined {
+	if (!page.shapes.some((shape) => shape.structure?.type === 'container')) return undefined;
+	const shapeIds = new Set<string>();
+	for (const edit of edits)
+		if (PLACING_EDITS.has(edit.type) && edit.pageId === page.id && edit.shapeId)
+			shapeIds.add(edit.shapeId);
+	return shapeIds.size
+		? { type: 'reconcile-containers', pageId: page.id, shapeIds: [...shapeIds] }
+		: undefined;
 }
 
 /** Shapes that go with the selection on delete: a callout's own leader connector. */

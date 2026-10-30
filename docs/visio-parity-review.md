@@ -140,8 +140,10 @@ ledger lists which ones. Six bindings share one controller and renderer.
 
 The broad blockers are formula/master recalculation, live connector routing and
 glue, accurate text measurement, complete line/fill/theme/foreign-object support,
-general editing and native round-trip validation. Containers and swimlanes and
-legacy formats (`.vsd` is preview only) still have substantial gaps; stencils (Open Stencil in the
+general editing and native round-trip validation. Swimlanes, lists and
+legacy formats (`.vsd` is preview only) still have substantial gaps (containers now keep Visio-form
+membership, move their members, take dropped shapes and grow, but are not yet confirmed against a
+Visio build); stencils (Open Stencil in the
 Shapes pane, `stencil-catalog.ts`), printing (`print-snapshot.ts`) and collaboration
 (`src/core/visio/collab`, per-shape merge with cursors) exist as bounded implementations. There is
 no defensible overall parity percentage or full native visual-equivalence claim.

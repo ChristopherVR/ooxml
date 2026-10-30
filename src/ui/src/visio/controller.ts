@@ -13,6 +13,7 @@ import {
 	MAX_INPUT_BYTES,
 	visioCalloutCommand,
 	visioContainerCommand,
+	visioContainerUpkeep,
 	visioWithContainerMembers,
 } from 'ooxml-core/visio/ui';
 import type { VisioCalloutStyle, VisioContainerStyle } from 'ooxml-core/visio';
@@ -742,6 +743,7 @@ export class ViewerController {
 			)
 		)
 			throw new Error('Selection edits must target selected shapes on the current page.');
+		const upkeep = !preview && page ? visioContainerUpkeep(page, commands) : undefined;
 		if (preview)
 			return this.#preview(commands, (document) => {
 				try {
@@ -753,7 +755,7 @@ export class ViewerController {
 			});
 		return this.#mutate(
 			'edit',
-			commands,
+			[...commands, ...(upkeep ? [upkeep] : [])],
 			undefined,
 			undefined,
 			true,
@@ -809,9 +811,11 @@ export class ViewerController {
 		)
 			throw new Error('Creation edits must create shapes on the captured current page.');
 		const shapeIds = Object.freeze([...created]);
+		const createPage = this.#state.document?.pages.find((item) => item.id === context.pageId);
+		const createUpkeep = createPage ? visioContainerUpkeep(createPage, commands) : undefined;
 		return this.#mutate(
 			'edit',
-			commands,
+			[...commands, ...(createUpkeep ? [createUpkeep] : [])],
 			undefined,
 			{ pageId: context.pageId, shapeIds },
 			true,

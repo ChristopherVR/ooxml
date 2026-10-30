@@ -100,3 +100,56 @@ test('More Shapes, containers and callouts edit the page as single undoable step
 	await expect(shapes).toHaveCount(before + 2);
 	expect(errors).toEqual([]);
 });
+
+test('a shape dropped into a container joins it and then moves with it', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await page.addInitScript(() => localStorage.clear());
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await openDemo(page);
+	const viewer = page.locator('visio-viewer');
+	await page.locator('#file').setInputFiles({
+		name: 'container-membership.vsdx',
+		mimeType: 'application/vnd.ms-visio.drawing',
+		buffer: await createVsdxFixture('Existing shape'),
+	});
+	await expect(viewer.locator('svg.paper')).toContainText('Existing shape');
+	const shapes = viewer.locator('svg.paper > g > [data-shape-id]');
+	const status = viewer.locator('[data-status]');
+	const paper = viewer.locator('svg.paper');
+	const before = await shapes.count();
+
+	// An empty container, selected after insertion.
+	await viewer.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await viewer.locator('office-ui-gallery[command="container"] .trigger').click();
+	await viewer.locator('[data-gallery-popup="container"] [data-gallery-item="plain"]').click();
+	await expect(status).toHaveText('Inserted a Plain container.');
+	await expect(shapes).toHaveCount(before + 1);
+	const frame = viewer.locator('svg.paper [data-shape-id][data-selected="true"]');
+	const box = (await frame.boundingBox())!;
+	const origin = (await paper.boundingBox())!;
+
+	// Dropping a rectangle on its middle makes the rectangle a member.
+	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
+	await expect(status).not.toHaveText('');
+	await viewer.locator('#shapes-stencils [data-master="rectangle"]').dragTo(paper, {
+		targetPosition: {
+			x: box.x + box.width / 2 - origin.x,
+			y: box.y + box.height / 2 - origin.y,
+		},
+	});
+	await expect(shapes).toHaveCount(before + 2);
+	const member = shapes.last();
+	const memberBefore = (await member.boundingBox())!;
+
+	// Dragging the container by its heading takes the new member along.
+	await page.mouse.move(box.x + 12, box.y + 6);
+	await page.mouse.down();
+	await page.mouse.move(box.x + 60, box.y + 46, { steps: 6 });
+	await page.mouse.up();
+	await expect(status).toHaveText('Shapes moved.');
+	await expect
+		.poll(async () => (await member.boundingBox())!.x - memberBefore.x)
+		.toBeGreaterThan(30);
+	expect(errors).toEqual([]);
+});

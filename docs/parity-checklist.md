@@ -299,9 +299,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       ShapeSheets, connection points or Shape Data.
 - [ ] **P1** Controls (control handles), Actions, User-defined and Scratch cells, and tab stops are
       not in the model, so they cannot be shown or edited (they survive saving).
-- [ ] **P1** Containers and lists: membership is a private User row; `DEPENDSON`/`SheetRef`
-      relationships and `msvStructureType` rows are not written, so Visio may not treat the result
-      as a container.
+- [ ] **P1** Containers and lists: containers now write `msvStructureType`, `msvSDContainer*` rows and
+      `DEPENDSON` relationships (container kind 4, member back reference kind 1), but those kinds are
+      not yet confirmed in a Visio build, and lists are not modelled (`edit-container-members.ts`).
 - [ ] **P1** Data linking stores no data connection; refresh matches rows by order, not by key.
 - [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
       pictures are refused on insert.
@@ -313,8 +313,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Editing and behaviour
 
-- [ ] **P0** Containers do nothing after insertion: members do not move with the container, it
-      does not grow to fit, and drops do not change membership (`edit-diagram-parts.ts`).
+- [x] **P0** Containers do nothing after insertion: members move with the container, drops and
+      moves change membership, and it grows to fit (`edit-container-fit.ts`). Open: swimlanes, lists
+      and a native Visio check of the written relationships (see the P1 item above).
 - [ ] **P1** Swimlanes and cross-functional flowcharts, org charts and a New-drawing template
       gallery (New offers only a blank drawing).
 - [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;

@@ -287,6 +287,8 @@ export {
 	isVisioDiagramPartEdit,
 	type VisioContainerStyle,
 	type VisioCalloutStyle,
+	type VisioSetContainerMembersEdit,
+	type VisioReconcileContainersEdit,
 	type VisioPartBox,
 } from './edit-diagram-parts-commands';
 export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';

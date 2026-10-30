@@ -5,6 +5,7 @@ import { assertVisioShapesUnreferenced, freezeVisioCells } from './edit-recalcul
 import { releaseDeletedGlue } from './edit-connector';
 import { releaseStencilGlue } from './edit-instance-delete';
 import { pageShapes, shapeIds } from './edit-instance-shape';
+import { pruneContainerReferences } from './edit-container-members';
 import { attribute, children, VISIO_NS, VISIO_LEGACY_NS } from './sheet';
 
 export type VisioShapeDelete = Extract<VisioGeometryEdit, { type: 'delete-shape' }>;
@@ -62,6 +63,8 @@ export function deleteVisioShapes(
 	// No mutation occurs until every target and every retained dependency has been proved.
 	check();
 	for (const shape of shapes) shape.parentNode!.removeChild(shape);
+	// Containers and members no longer point at what was removed.
+	for (const [pageId, ids] of removed) pruneContainerReferences(roots.get(pageId)!, ids);
 	freezeVisioCells(frozen);
 	// Visio writes no Connects element once the last glue is gone.
 	for (const pageId of removed.keys())

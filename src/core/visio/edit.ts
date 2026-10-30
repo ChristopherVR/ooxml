@@ -57,6 +57,8 @@ import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
 import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
+import { setVisioContainerMembers } from './edit-container-members';
+import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
 import { isVisioDataEdit } from './edit-data-commands';
 import { editVsdxData } from './edit-data';
@@ -627,6 +629,11 @@ async function editVsdxTransaction(
 			if (command.type === 'insert-container') {
 				insertVisioContainer(root, document!, command, check);
 				dirty.set(path, root);
+			} else if (command.type === 'set-container-members') {
+				setVisioContainerMembers(root, command, check);
+				dirty.set(path, root);
+			} else if (command.type === 'reconcile-containers') {
+				if (reconcileVisioContainers(roots, document!, command, check)) dirty.set(path, root);
 			} else
 				for (const pageId of insertVisioCallout(roots, document!, command, check))
 					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
@@ -828,7 +835,7 @@ async function editVsdxTransaction(
 						{
 							code: 'edit-diagram-part-approximate',
 							message:
-								'Containers and callouts record membership and targets in User rows, not in Visio Relationships formulas; Visio reopens them as plain shapes and a glued leader connector.',
+								'Containers record membership in Relationships formulas (DEPENDSON) and msvSDContainer rows, written from the Visio documentation and not yet confirmed against a Visio build; callouts record their target in a User row, and Visio reopens a callout as a plain shape with a glued leader connector.',
 						},
 					]
 				: []),

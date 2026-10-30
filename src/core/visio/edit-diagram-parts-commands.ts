@@ -6,6 +6,10 @@ export const VISIO_CONTAINER_MARGIN = 0.25;
 export const VISIO_CONTAINER_HEADING = 0.35;
 /** Non-native User rows that record membership; Visio keeps it in Relationships formulas. */
 export const VISIO_CONTAINER_MEMBERS_ROW = 'ooxmlContainerMembers';
+/** Visio's container User rows, and the editor's own heading allowance (inches above the members). */
+export const VISIO_CONTAINER_MARGIN_ROW = 'msvSDContainerMargin';
+export const VISIO_CONTAINER_RESIZE_ROW = 'msvSDContainerResize';
+export const VISIO_CONTAINER_HEADING_ROW = 'ooxmlContainerHeading';
 export const VISIO_CALLOUT_TARGET_ROW = 'ooxmlCalloutTarget';
 export const VISIO_CALLOUT_LEADER_ROW = 'ooxmlCalloutLeader';
 
@@ -50,10 +54,35 @@ export interface VisioInsertCalloutEdit {
 	text: string;
 	box: VisioPartBox;
 }
-export type VisioDiagramPartEdit = VisioInsertContainerEdit | VisioInsertCalloutEdit;
+/** Replace a container's members: its Relationships cell and each member's back reference. */
+export interface VisioSetContainerMembersEdit {
+	type: 'set-container-members';
+	pageId: string;
+	/** The container. */
+	shapeId: string;
+	memberIds: readonly string[];
+}
+/**
+ * After shapes moved, resized or were created: a shape fully inside a container joins it, a member
+ * whose centre left leaves it, and containers whose members changed grow to fit (when their
+ * msvSDContainerResize allows). Applied after the move or resize edits of the same transaction.
+ */
+export interface VisioReconcileContainersEdit {
+	type: 'reconcile-containers';
+	pageId: string;
+	shapeIds: readonly string[];
+}
+export type VisioDiagramPartEdit =
+	| VisioInsertContainerEdit
+	| VisioInsertCalloutEdit
+	| VisioSetContainerMembersEdit
+	| VisioReconcileContainersEdit;
 
 export const isVisioDiagramPartEdit = (edit: { type: string }): edit is VisioDiagramPartEdit =>
-	edit.type === 'insert-container' || edit.type === 'insert-callout';
+	edit.type === 'insert-container' ||
+	edit.type === 'insert-callout' ||
+	edit.type === 'set-container-members' ||
+	edit.type === 'reconcile-containers';
 
 const sheetId = (value: unknown): string => {
 	if (typeof value !== 'string' || !/^[1-9]\d{0,9}$/.test(value) || Number(value) > 0xffffffff)
@@ -93,7 +122,24 @@ function partBox(value: unknown): VisioPartBox {
 export function snapshotDiagramPartEdit(edit: VisioDiagramPartEdit): VisioDiagramPartEdit {
 	if (typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 		fail('INVALID_EDIT', 'Invalid edit target.');
+	if (edit.type === 'reconcile-containers') {
+		if (!Array.isArray(edit.shapeIds) || edit.shapeIds.length > 1000)
+			fail('INVALID_EDIT', 'At most 1000 shapes can be reconciled at once.');
+		return {
+			type: edit.type,
+			pageId: edit.pageId,
+			shapeIds: Array.from(new Set(Array.from(edit.shapeIds, sheetId))),
+		};
+	}
 	const shapeId = sheetId(edit.shapeId);
+	if (edit.type === 'set-container-members') {
+		if (!Array.isArray(edit.memberIds) || edit.memberIds.length > 1000)
+			fail('INVALID_EDIT', 'A container holds at most 1000 member shapes.');
+		const memberIds = Array.from(edit.memberIds, sheetId);
+		if (new Set(memberIds).size !== memberIds.length || memberIds.includes(shapeId))
+			fail('INVALID_EDIT', 'Container members must be unique and differ from the container.');
+		return { type: edit.type, pageId: edit.pageId, shapeId, memberIds };
+	}
 	if (edit.type === 'insert-callout') {
 		if (!(VISIO_CALLOUT_STYLES as readonly unknown[]).includes(edit.style))
 			fail('INVALID_EDIT', 'Unknown callout style.');

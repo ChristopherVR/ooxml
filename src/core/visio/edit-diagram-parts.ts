@@ -9,6 +9,7 @@ import {
 import { appendEllipseGeometry } from './edit-ellipse-geometry';
 import { applyGeometryEdit } from './edit-geometry';
 import { visioShapeBounds } from './edit-group';
+import { writeContainerMembers } from './edit-container-members';
 import { encodeVisioPlainText } from './plain-text';
 import type { VisioOutlinePoint } from './basic-shapes';
 import {
@@ -16,7 +17,9 @@ import {
 	VISIO_CALLOUT_TARGET_ROW,
 	VISIO_CONTAINER_HEADING,
 	VISIO_CONTAINER_MARGIN,
-	VISIO_CONTAINER_MEMBERS_ROW,
+	VISIO_CONTAINER_HEADING_ROW,
+	VISIO_CONTAINER_MARGIN_ROW,
+	VISIO_CONTAINER_RESIZE_ROW,
 	type VisioCalloutStyle,
 	type VisioContainerStyle,
 	type VisioInsertCalloutEdit,
@@ -95,8 +98,9 @@ const box: VisioOutlinePoint[] = [
 /**
  * Insert > Container: a local 2D sheet with User.msvStructureType = "Container" framing the
  * members' alignment boxes, placed directly behind the lowest member. Members are untouched and
- * stay on the page (no group). Membership is recorded in a User row; Visio's own Relationships
- * (DEPENDSON) formulas are not written, so Visio opens it as a plain shape. Returns its box.
+ * stay on the page (no group). Membership is written in Visio's form: the container's
+ * Relationships cell (DEPENDSON 4) lists the members, each member points back, and the
+ * msvSDContainer* User rows carry margin and resize behaviour. Returns its box.
  */
 export function insertVisioContainer(
 	root: Element,
@@ -165,14 +169,16 @@ export function insertVisioContainer(
 	shape.appendChild(
 		userSection(shape, [
 			['msvStructureType', 'Container'],
-			['msvSDContainerMargin', String(VISIO_CONTAINER_MARGIN), 'IN'],
-			[VISIO_CONTAINER_MEMBERS_ROW, edit.memberIds.join(',')],
+			[VISIO_CONTAINER_MARGIN_ROW, String(VISIO_CONTAINER_MARGIN), 'IN'],
+			[VISIO_CONTAINER_RESIZE_ROW, '1', 'STR'],
+			[VISIO_CONTAINER_HEADING_ROW, String(VISIO_CONTAINER_HEADING), 'IN'],
 		]),
 	);
 	shape.appendChild(textNode(shape, edit.heading));
 	// Behind every member, as Visio places a container under the shapes it frames.
 	const lowest = members[0];
 	if (lowest) lowest.parentNode!.insertBefore(shape, lowest);
+	writeContainerMembers(root, shape, edit.memberIds);
 	return frame;
 }
 
