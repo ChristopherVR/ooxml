@@ -33,18 +33,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ## Shared layer and every product
 
-| Capability    | Word         | Excel        | PowerPoint                 | Visio              |
-| ------------- | ------------ | ------------ | -------------------------- | ------------------ |
-| Chart render  | 2-D only     | 2-D only     | yes, own renderer with 3-D | 2-D only, embedded |
-| Chart editing | yes          | yes          | yes                        | partial            |
-| ChartEx       | partial      | partial      | partial                    | no                 |
-| SmartArt      | render, edit | render, edit | render, edit               | no (by design)     |
-| Equations     | yes          | no           | yes                        | no                 |
-| Proofing      | browser only | none         | browser only               | browser only       |
+| Capability    | Word         | Excel        | PowerPoint                 | Visio                 |
+| ------------- | ------------ | ------------ | -------------------------- | --------------------- |
+| Chart render  | 2-D and 3-D  | 2-D and 3-D  | yes, own renderer with 3-D | 2-D and 3-D, embedded |
+| Chart editing | yes          | yes          | yes                        | partial               |
+| ChartEx       | partial      | partial      | partial                    | no                    |
+| SmartArt      | render, edit | render, edit | render, edit               | no (by design)        |
+| Equations     | yes          | no           | yes                        | no                    |
+| Proofing      | browser only | none         | browser only               | browser only          |
 
-- [ ] **P0** 3-D charts draw flat in Word, Excel and Visio: the core renderer has no `view3D`,
-      perspective or rotation; the 3-D meshes live only in `src/ui/src/pptx/render`
-      (`chart-3d-bar-mesh.ts`). Move a projection into `src/core/chart/render`.
+- [x] **P0** 3-D charts draw flat in Word, Excel and Visio: `src/core/chart/render/chart-3d-*.ts`
+      now projects `c:view3D` (oblique for right-angle axes, perspective otherwise) and paints
+      bar3D, line3D, area3D, pie3D and surface3D with depth ordering and face shading; PowerPoint's
+      projection and shading code is shared with it.
+- [ ] **P1** 3-D chart detail in the core painter: data labels, floor and wall formatting, bar
+      `c:shape` (cylinder, cone, pyramid), pie explosion, surface wireframe and contour modes, and
+      measurement against Office renders.
 - [ ] **P1** Region map ChartEx (`cx:geography`) is modelled and saved but not drawn by
       `src/core/chart/render`; the Pareto cumulative line is unconfirmed there.
 - [ ] **P1** Visio has no ChartEx path (`src/ui/src/visio/render-embedded-chart.ts`).

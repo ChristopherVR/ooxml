@@ -88,6 +88,7 @@ export function chartObjectFromSpace(
 	if (summary.extraGroups) object.extraGroups = summary.extraGroups;
 	if (summary.bubble) object.bubble = summary.bubble;
 	if (summary.stock) object.stock = summary.stock;
+	if (summary.view3D) object.view3D = summary.view3D;
 	if (frame.name) object.name = frame.name;
 	if (frame.quickLayout !== undefined) object.quickLayout = frame.quickLayout;
 	if (frame.colorPalette !== undefined) object.colorPalette = frame.colorPalette;

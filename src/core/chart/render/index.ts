@@ -23,3 +23,20 @@ export type {
 export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
 export { autoSeriesColor, chartColorScheme, modulateLuminance } from './chart-colors';
 export { THEME_SLOTS, DEFAULT_THEME_COLORS, themeColor } from './theme-palette';
+export {
+	resolveChart3DProjection,
+	type Chart3DViewInput,
+	type Chart3DProjection,
+	type Chart3DObliqueProjection,
+	type Chart3DPerspectiveProjection,
+} from './chart-3d-projection';
+export { shadeChart3DFace, buildChart3DBoxFaceColors, type Chart3DFace } from './chart-3d-shading';
+export { createChart3DCamera, type Chart3DCamera, type Chart3DSize } from './chart-3d-camera';
+export {
+	boxMesh,
+	extrudeMesh,
+	type Chart3DMesh,
+	type Chart3DMeshFace,
+	type Vec3,
+} from './chart-3d-mesh';
+export { chart3DApplies, chart3DSvg } from './chart-3d-svg';

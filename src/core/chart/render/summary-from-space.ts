@@ -208,6 +208,18 @@ export function chartSummaryFromSpace(
 			showNegativeBubbles: group.showNegativeBubbles === true,
 		};
 	}
+	if (group?.is3D) {
+		const v = chartSpace.view3D;
+		summary.view3D = {
+			...(v?.rotX === undefined ? {} : { rotX: v.rotX }),
+			...(v?.rotY === undefined ? {} : { rotY: v.rotY }),
+			...(v?.perspective === undefined ? {} : { perspective: v.perspective }),
+			...(v?.rightAngleAxes === undefined ? {} : { rAngAx: v.rightAngleAxes }),
+			...(v?.depthPercent === undefined ? {} : { depthPercent: v.depthPercent }),
+			...(v?.heightPercent === undefined ? {} : { hPercent: v.heightPercent }),
+			...(group.gapDepth === undefined ? {} : { gapDepth: group.gapDepth }),
+		};
+	}
 	const grouping = group?.grouping;
 	if (grouping && GROUPINGS.has(grouping))
 		summary.grouping = grouping as NonNullable<ChartSummary['grouping']>;

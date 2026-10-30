@@ -2869,3 +2869,14 @@ Source: `ChristopherVR/ooxml`, commit `bf7be3e5c` (the source modules are unchan
 PowerPoint now reuses the validated dimensions for synchronous cropped/tiled SmartArt image
 serialization. The extraction preserves existing validation behavior and adds focused shared
 regressions. Unknown image formats retain the existing product fallback.
+
+## Core 3-D chart painter (2026-10-30)
+
+Source: `ChristopherVR/ooxml`, `src/ui/src/pptx/render/chart-3d-projection.ts` and
+`chart-3d-shading.ts` (this repository, before this change). `resolveChart3DProjection` and the
+per-face shading table moved to `src/core/chart/render/chart-3d-projection.ts` and
+`chart-3d-shading.ts` (input type widened to a neutral `Chart3DViewInput`; face shading keeps
+non-hex paints); the PowerPoint modules re-export them and keep the normal-based shading of
+`c:shape` bars. The camera, prism meshes, depth-ordered SVG scene, walls, bar, line, area, pie and
+surface generators (`chart-3d-camera|mesh|scene|layout|marks|walls|pie|surface|svg.ts`) are new
+implementations; the PowerPoint WebGL meshes were not copied.

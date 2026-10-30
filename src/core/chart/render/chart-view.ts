@@ -143,7 +143,9 @@ export interface ChartViewModel {
 	xAxis?: AxisScale;
 	/** Bars run horizontally (`bar`), not vertically (`column`). */
 	horizontal: boolean;
-	/** False for chart types this painter does not draw (surface). */
+	/** 3-D charts: the view the painter projects (bar3D, line3D, area3D, pie3D, surface3D). */
+	view3D?: import('./chart-3d-projection').Chart3DViewInput;
+	/** False for chart types this painter does not draw (a surface without a 3-D view). */
 	supported: boolean;
 }
 
@@ -243,8 +245,9 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		categories,
 		series: type === 'boxWhisker' ? series.filter((s) => !s.hidden) : series,
 		horizontal: type === 'bar',
-		supported: SUPPORTED.has(type),
+		supported: SUPPORTED.has(type) || (type === 'surface' && chart.view3D !== undefined),
 	};
+	if (chart.view3D) model.view3D = chart.view3D;
 	if (chart.funnelGapWidth !== undefined) model.funnelGapWidth = chart.funnelGapWidth;
 	if (chart.series[0]?.regionMap)
 		model.regionMap = resolveRegionValueColors(chart.series[0].regionMap, ctx.drawingColor);

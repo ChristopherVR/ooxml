@@ -71,7 +71,8 @@ export function chartSpaceKind(space: ChartSpace): {
 } {
 	if (!space.plotArea.groups.length) return { drawn: false };
 	const type = chartSummaryFromSpace(space).chartType;
-	return { type, drawn: DRAWN_CHART_TYPES.has(type) };
+	const summary3D = type === 'surface' && chartSummaryFromSpace(space).view3D !== undefined;
+	return { type, drawn: DRAWN_CHART_TYPES.has(type) || summary3D };
 }
 
 /** A standalone SVG document for a parsed chart part, from its cached values. */

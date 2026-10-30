@@ -16,12 +16,15 @@ and [delivery measurement](evidence/chart-gap-delivery-2026-10-28.json) supersed
 baseline counts for implemented slices: manual-layout ablation is now 10/10 and funnel/box
 ChartEx parts render. Historical tables below remain labelled baseline evidence.
 
-**2026-10-30 code check:** still open in `src/core/chart/render/` are 3-D views (no `view3D`,
-perspective or rotation handling, so Word, Excel and Visio draw 3-D charts flat; the three.js
-meshes stay in `src/ui/src/pptx/render`), region map ChartEx (`cx:geography` is modelled but not
+**2026-10-30 code check:** the core painter now draws 3-D charts (`chart-3d-*.ts`: bar3D, line3D,
+area3D, pie3D and surface3D from `c:view3D`, oblique or perspective projection, painter's-algorithm
+ordering, flat face shading), so Word, Excel and Visio no longer draw them flat. Still open there:
+3-D data labels, floor/wall formatting, bar `c:shape` (cylinder, cone, pyramid), pie explosion and
+surface wireframe or contour modes; the three.js meshes stay in `src/ui/src/pptx/render`. Also open:
+region map ChartEx (`cx:geography` is modelled but not
 drawn), the Pareto cumulative line (unconfirmed), `c:userShapes` (parsed, not drawn) and pivot
-chart field buttons. Surface charts have no dedicated painter; how they draw now was not
-re-measured. The [Office parity checklist](parity-checklist.md) carries these items.
+chart field buttons. Surface charts without a 3-D view still render the labelled frame; the 3-D painter has not been
+measured against Office renders. The [Office parity checklist](parity-checklist.md) carries these items.
 
 ## How the numbers were made
 
@@ -56,7 +59,7 @@ No part throws. Core renders 78 of 82 parts to a chart; funnel, box and whisker 
 | Markers (6 / 5)                                                                                                                                                                                | No: a fixed dot, symbol, size and fill ignored                              | ablation                                       |
 | Manual layout (10 / 4)                                                                                                                                                                         | Title and legend only; plot area and label layouts ignored                  | ablation                                       |
 | `c:txPr` text properties (52 / 12)                                                                                                                                                             | Partly: 34 of 52 change the output                                          | ablation                                       |
-| 3-D view (20 / 4)                                                                                                                                                                              | No: drawn as flat 2-D                                                       | ablation                                       |
+| 3-D view (20 / 4)                                                                                                                                                                              | Yes (core SVG painter, unmeasured)                                          | ablation                                       |
 | Explosion (1 / 1)                                                                                                                                                                              | No                                                                          | ablation                                       |
 | Trendlines (1 / 1)                                                                                                                                                                             | Yes                                                                         | ablation                                       |
 | Picture fills (2 / 2)                                                                                                                                                                          | No                                                                          | code reading (no `blip` handling in `render/`) |

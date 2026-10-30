@@ -189,6 +189,8 @@ export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries>
 	histogram?: HistogramSummaryOptions;
 	/** Stock: the formatting of its `c:stockChart`. */
 	stock?: StockSummaryStyle;
+	/** 3-D charts (`c:view3D` of a bar3D, line3D, area3D, pie3D or surface3D group): the view the painter projects. */
+	view3D?: import('./chart-3d-projection').Chart3DViewInput;
 	/** Bubble: the display options of its `c:bubbleChart`. */
 	bubble?: BubbleSummaryOptions;
 	/** Treemap and sunburst: the category levels of its `cx:strDim`. */
