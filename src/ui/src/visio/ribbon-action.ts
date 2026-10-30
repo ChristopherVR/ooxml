@@ -104,6 +104,11 @@ export type VisioSwimlaneAction = {
 	/** The Style number (1-4) for the style command. */
 	style?: number;
 };
+/** The Org Chart tab: add a position under, beside or for the selected one, delete it, lay out. */
+export type VisioOrgChartAction = {
+	type: 'org-chart';
+	command: 'subordinate' | 'coworker' | 'assistant' | 'delete' | 'layout';
+};
 /** Data-tab commands: import, refresh, data graphics, legend, windows and Shape Data. */
 export type VisioDataCommand =
 	| 'quick-import'
@@ -136,6 +141,7 @@ export type VisioLayoutAction =
 export type VisioRibbonAction =
 	| VisioFormattingAction
 	| VisioSwimlaneAction
+	| VisioOrgChartAction
 	| VisioLayoutAction
 	| { type: 'arrange'; operation: VisioArrangement }
 	| { type: 'selection'; mode: 'all' | 'clear' }

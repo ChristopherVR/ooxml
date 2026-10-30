@@ -13,6 +13,7 @@ import {
 	buildContainerFormatPanel,
 	buildPictureFormatPanel,
 } from './ribbon-contextual-formats';
+import { buildOrgChartPanel } from './ribbon-org-chart';
 import { buildSwimlanePanel } from './ribbon-swimlane';
 import { buildViewPanel } from './ribbon-view';
 import { createTellMe } from './viewer-tell-me';
@@ -36,6 +37,8 @@ export const RIBBON_TABS = [
 	['chart-design', 'Chart Design', buildChartDesignPanel],
 	// Contextual: shown while a cross-functional flowchart is selected.
 	['cross-functional', 'Cross-Functional Flowchart', buildSwimlanePanel],
+	// Contextual: shown while an org chart position is selected.
+	['org-chart', 'Org Chart', buildOrgChartPanel],
 ] as const;
 export type RibbonTab = (typeof RIBBON_TABS)[number][0];
 

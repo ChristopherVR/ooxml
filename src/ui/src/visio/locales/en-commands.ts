@@ -290,4 +290,9 @@ export const enCommands: Readonly<Record<string, string>> = {
 	Style: 'Style',
 	'Show Title Bar': 'Show Title Bar',
 	'Show Separator Bar': 'Show Separator Bar',
+	'Org Chart': 'Org Chart',
+	Subordinate: 'Subordinate',
+	Coworker: 'Coworker',
+	Assistant: 'Assistant',
+	'Delete Position': 'Delete Position',
 };

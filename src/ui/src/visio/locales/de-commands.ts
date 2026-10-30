@@ -293,4 +293,9 @@ export const deCommands: Readonly<Record<string, string>> = {
 	Style: 'Stil',
 	'Show Title Bar': 'Titelleiste anzeigen',
 	'Show Separator Bar': 'Trennleiste anzeigen',
+	'Org Chart': 'Organigramm',
+	Subordinate: 'Untergebener',
+	Coworker: 'Kollege',
+	Assistant: 'Assistent',
+	'Delete Position': 'Position löschen',
 };
