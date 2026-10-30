@@ -1,7 +1,7 @@
 // Split window maths (`pane state="split"`): sizes are stored in twentieths of a point, panes are
 // laid out in pixels, and every pane scrolls on its own. DOM-free.
 import { MAX_COL, MAX_ROW, type CellAddress } from '../address';
-import type { SplitPane } from '../model';
+import type { SplitPane, SplitPaneName } from '../model';
 import type { GridMetrics } from './metrics';
 import { collectVisible, type VisibleCells } from './viewport';
 
@@ -9,6 +9,19 @@ import { collectVisible, type VisibleCells } from './viewport';
 const TWIPS_PER_PX = 15;
 /** Narrowest pane a split bar can leave (pixels, before zoom). */
 export const MIN_SPLIT_PANE = 24;
+
+/** The saved active pane when it exists, otherwise the last scrollable pane. */
+export function splitActivePane(split: Pick<SplitPane, 'x' | 'y' | 'activePane'>): SplitPaneName {
+	const valid: SplitPaneName[] =
+		split.x > 0 && split.y > 0
+			? ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
+			: split.y > 0
+				? ['topLeft', 'bottomLeft']
+				: ['topLeft', 'topRight'];
+	return split.activePane && valid.includes(split.activePane)
+		? split.activePane
+		: valid[valid.length - 1]!;
+}
 
 /** Pixels (at `zoom` percent) of a split size in twentieths of a point. */
 export const splitToPx = (twips: number, zoom: number): number =>

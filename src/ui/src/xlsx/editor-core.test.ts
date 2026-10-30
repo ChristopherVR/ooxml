@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Regression tests for the core's sheet and selection bookkeeping: per-sheet selection memory,
 // one selection formatter, and sheet-change after sheets are inserted, moved or deleted.
-import { createWorkbook } from 'ooxml-core/xlsx';
+import { createWorkbook, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import { allCommands } from './commands/index';
 import { flush, shellFixture } from './test-support/shell';
@@ -20,6 +20,25 @@ const range = (r1: number, c1: number, r2: number, c2: number) => ({
 });
 
 describe('per-sheet selection memory', () => {
+	it('persists cursor movement, each sheet selection and the active tab without adding undo or dirty state', async () => {
+		const { core } = fixture();
+		core.selection.set({ active: { row: 4, col: 3 }, ranges: [range(3, 2, 6, 5)] });
+		core.setActiveSheet(1);
+		core.selection.set({ active: { row: 11, col: 7 } });
+		const reloaded = await loadXlsx(await saveXlsx(core.workbook!));
+		expect(reloaded.activeSheet).toBe(1);
+		expect(reloaded.sheets[0]!.view.selection).toEqual({
+			active: { row: 4, col: 3 },
+			ranges: [range(3, 2, 6, 5)],
+		});
+		expect(reloaded.sheets[1]!.view.selection?.active).toEqual({ row: 11, col: 7 });
+		expect(core.session!.canUndo()).toBe(false);
+		expect(core.dirty.dirty).toBe(false);
+		core.setWorkbook(reloaded);
+		expect(core.selection.get().active).toEqual({ row: 11, col: 7 });
+		core.setActiveSheet(0);
+		expect(core.selection.get().active).toEqual({ row: 4, col: 3 });
+	});
 	it('restores each sheet’s last selection when switching tabs', () => {
 		const { core } = fixture();
 		core.selection.set({ active: { row: 2, col: 1 }, ranges: [range(2, 1, 4, 3)] });

@@ -301,6 +301,7 @@ export class EditorCore {
 		if (!sheet || (index === this.activeSheet && !force)) return;
 		if (this.gridController?.isEditing() && !this.gridController.commitEdit()) return;
 		this.activeSheet = index;
+		if (this.workbook) this.workbook.activeSheet = index;
 		this.shownSheet = sheet;
 		this.selection.set(this.sheetSelections.restore(index, this.workbook));
 		emit(this.host, 'sheet-change', { index, name: sheet.name });
@@ -318,6 +319,7 @@ export class EditorCore {
 		const moved = shown ? workbook.sheets.indexOf(shown) : -1;
 		if (moved >= 0 && shown) {
 			this.activeSheet = moved;
+			workbook.activeSheet = moved;
 			this.selection.set({ ...this.selection.get(), sheet: moved });
 			emit(this.host, 'sheet-change', { index: moved, name: shown.name });
 			return;

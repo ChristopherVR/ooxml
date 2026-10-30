@@ -44,6 +44,18 @@ complete end-to-end Excel comparison.
 
 ## Latest completed increments
 
+2026-10-31: Navigation now saves each sheet's active cell and ranges, the active workbook tab,
+and each split pane's selection, without adding content undo steps or marking the workbook dirty.
+Disjoint selections write `activeCellId` for the range containing the active cell. Frozen panes
+share the sheet selection, matching Excel. Excel 16 COM reopened three generated workbooks with
+the expected second-sheet D6 selection, first-sheet B2:C3/F8:G9 selection with F8 active, frozen
+B2 selection and top-left split B2 selection. Native resaving also exposed omitted default
+`pane/@state` and `pane/@activePane` attributes; the reader now recognises those split panes.
+Core regressions are `xlsx/ui/selection-persistence.test.ts` and `xlsx/write/split-pane.test.ts`;
+`e2e/xlsx/selection-save.spec.ts` checks navigation and pointer selection in all six bindings.
+Fill-handle dragging was already implemented: `e2e/xlsx/fill-handle.spec.ts` now confirms numeric
+series extension, one-step undo and redo in every binding.
+
 | Revision    | Implemented behavior                                                                         | Scope of evidence                                                                                                 |
 | ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `4f3f87ea6` | Import and preserve mixed-format chart-title runs and paragraphs through chart regeneration. | Native character formatting and actual UI type-change/save/reopen comparisons.                                    |

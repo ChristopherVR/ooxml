@@ -12,6 +12,8 @@ import {
 	type Worksheet,
 } from '../index';
 import type { Selection, SelectionModel } from './context';
+import type { SplitPaneName } from '../model';
+import { splitActivePane } from '../layout/split';
 
 const A1: CellAddress = { row: 0, col: 0 };
 const cellRange = (at: CellAddress): CellRange => ({ start: { ...at }, end: { ...at } });
@@ -66,7 +68,13 @@ export class SheetSelections {
 	private readonly saved = new WeakMap<Worksheet, Selection>();
 
 	remember(sheet: Worksheet | undefined, selection: Selection): void {
-		if (sheet) this.saved.set(sheet, selection);
+		if (sheet) {
+			this.saved.set(sheet, selection);
+			sheet.view.selection = structuredClone({
+				active: selection.active,
+				ranges: selection.ranges,
+			});
+		}
 	}
 
 	/** The remembered selection of a sheet, else the one saved in the file, else A1. */
@@ -77,6 +85,21 @@ export class SheetSelections {
 		const { drawing: _drawing, ...cells } = saved;
 		return { ...cells, sheet: index };
 	}
+}
+
+/** Split panes keep separate selections; frozen panes share the sheet's selection in Excel. */
+export function setSelectionPane(
+	sheet: Worksheet | undefined,
+	pane: SplitPaneName | undefined,
+): void {
+	const view = sheet?.view;
+	const window = view?.split;
+	if (!view || !window || !pane) return;
+	const previous = splitActivePane(window);
+	if (previous === pane) return;
+	if (view.selection) (window.paneSelections ??= {})[previous] = structuredClone(view.selection);
+	delete window.paneSelections?.[pane];
+	window.activePane = pane;
 }
 
 export const isWholeRows = (range: CellRange): boolean =>

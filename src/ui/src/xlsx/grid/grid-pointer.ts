@@ -7,7 +7,13 @@ import type { Hit } from 'ooxml-core/xlsx/ui';
 import type { GridSelection } from './grid-selection';
 import type { GridView } from './grid-view';
 import { startHeaderResize, autoFit } from './header-resize';
-import { addRange, extendSelection, selectCell, spanRange } from 'ooxml-core/xlsx/ui';
+import {
+	addRange,
+	extendSelection,
+	selectCell,
+	setSelectionPane,
+	spanRange,
+} from 'ooxml-core/xlsx/ui';
 
 export interface PointerHost {
 	view: GridView;
@@ -111,6 +117,7 @@ export function wirePointer(host: PointerHost): () => void {
 			return;
 		}
 		if (event.button === 2) {
+			if (hit.area === 'cell') setSelectionPane(view.sheet(), g.paneAt(x, y));
 			if (hit.area === 'cell' && !inSelection(selection.get().ranges, hit)) selection.cellAt(hit);
 			editor.focus();
 			return;
@@ -147,6 +154,7 @@ export function wirePointer(host: PointerHost): () => void {
 			if (!editor.commit('none', false)) return;
 		}
 		editor.focus();
+		setSelectionPane(sheet, g.paneAt(x, y));
 		const ctrl = event.ctrlKey || event.metaKey;
 		if (hit.area === 'corner') return selection.all();
 		if (hit.area === 'col-header') {
@@ -197,6 +205,8 @@ export function wirePointer(host: PointerHost): () => void {
 			if (hit.area !== 'cell') return;
 			if (editor.editing && editor.point.pointRange(hit, hit)) return;
 			if (editor.editing && !editor.commit('none', false)) return;
+			const { x, y } = view.clientToView(event.clientX, event.clientY);
+			setSelectionPane(view.sheet(), view.geometry.paneAt(x, y));
 			selection.cellAt(hit);
 			editor.focus();
 			return;

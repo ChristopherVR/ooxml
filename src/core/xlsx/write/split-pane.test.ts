@@ -9,6 +9,23 @@ const SPLIT =
 const book = (views: string) => miniPackage({ sheets: [{ name: 'S', xml: ws(ROWS, views) }] });
 
 describe('split panes', () => {
+	it('reads the omitted split state and top-left active pane that Excel writes', async () => {
+		// Excel 16 omits both default attributes after selecting B2 in the top-left split pane.
+		const native =
+			'<pane xSplit="2000" ySplit="900"/>' +
+			'<selection activeCell="B2" sqref="B2"/>' +
+			'<selection pane="bottomRight" activeCell="G9" sqref="G9"/>';
+		const { wb, again } = await roundTrip(await book(VIEWS(native)), (workbook) => {
+			workbook.sheets[0]!.view.zoom = 125;
+		});
+		for (const workbook of [wb, again]) {
+			const view = workbook.sheets[0]!.view;
+			expect(view.split).toMatchObject({ x: 2000, y: 900, activePane: 'topLeft' });
+			expect(view.selection?.active).toEqual({ row: 1, col: 1 });
+			expect(view.split?.paneSelections?.bottomRight?.active).toEqual({ row: 8, col: 6 });
+		}
+	});
+
 	it('reads xSplit and ySplit as twentieths of a point', async () => {
 		const { wb } = await roundTrip(await book(VIEWS(SPLIT)));
 		const view = wb.sheets[0]!.view;

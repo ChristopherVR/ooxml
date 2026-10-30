@@ -66,7 +66,7 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 		const cols = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
 		if (rows || cols) view.freeze = { rows, cols };
 	}
-	const split = pane && state === 'split';
+	const split = pane && (state === undefined || state === 'split');
 	if (split) {
 		const x = Math.max(0, Math.round(numAttr(pane, 'xSplit') ?? 0));
 		const y = Math.max(0, Math.round(numAttr(pane, 'ySplit') ?? 0));
@@ -74,9 +74,8 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 			view.split = { x, y };
 			const first = parseAddress(att(node, 'topLeftCell') ?? '');
 			if (first) view.split.topLeft = first;
-			const active = att(pane, 'activePane');
-			if (active && PANES.has(active))
-				view.split.activePane = active as NonNullable<SplitPane['activePane']>;
+			const active = att(pane, 'activePane') ?? 'topLeft';
+			if (PANES.has(active)) view.split.activePane = active as NonNullable<SplitPane['activePane']>;
 		}
 	}
 	const topLeft = parseAddress(

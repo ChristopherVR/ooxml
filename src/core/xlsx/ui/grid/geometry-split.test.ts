@@ -19,6 +19,19 @@ const split = (over: Partial<ConstructorParameters<typeof GridGeometry>[0]> = {}
 	});
 
 describe('split window geometry', () => {
+	it('identifies the pointer pane even when cells occur in several panes', () => {
+		const g = split();
+		expect(g.paneAt(31, 21)).toBe('topLeft');
+		expect(g.paneAt(160, 21)).toBe('topRight');
+		expect(g.paneAt(31, 62)).toBe('bottomLeft');
+		expect(g.paneAt(160, 62)).toBe('bottomRight');
+		expect(split({ split: { x: 0, y: 40, left: 0, top: 0 } }).paneAt(300, 62)).toBe('bottomLeft');
+		expect(split({ split: { x: 128, y: 0, left: 0, top: 0 } }).paneAt(160, 90)).toBe('topRight');
+		expect(split({ split: undefined, freeze: { rows: 2, cols: 2 } }).paneAt(31, 21)).toBe(
+			'topLeft',
+		);
+		expect(split({ split: undefined }).paneAt(31, 21)).toBeUndefined();
+	});
 	const scrolled = {
 		scrollLeft: 640,
 		scrollTop: 400,

@@ -130,8 +130,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       green-triangle indicators; the rule toggles in Options are not stored between sessions;
       Evaluate Formula runs IF, IFERROR, IFNA, CHOOSE, IFS and SWITCH in one step once their first
       argument is a value (Excel shows the chosen branch step by step).
-- [ ] **P1** The active cell and selection are not written back to `sheetView/selection` on save
-      (a loaded selection is kept, but moving the cursor never updates it).
+- [x] **P1** Active cells, selections and the active tab are saved after navigation. Split panes
+      retain separate selections; frozen panes share the sheet selection as Excel does. Disjoint
+      ranges write `activeCellId`. Core regression: `xlsx/ui/selection-persistence.test.ts`;
+      all six bindings: `e2e/xlsx/selection-save.spec.ts`. Excel 16 reopened three generated
+      workbooks with the expected active tab, disjoint ranges, frozen selection and split pane.
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
 - [x] **P1** Split panes (only Freeze Panes exists).
       Closed: View > Split splits at the active cell (a cross in the middle for A1), giving two or
@@ -153,8 +156,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Printing goes through the browser; Page Layout view has no copy and paste, per-view
       zoom or native printer metrics.
 - [ ] **P2** Editing threaded comment replies.
-- [ ] **P2** Fill-handle drag autofill: confirm it exists (`grid/grid-pointer.ts`) with a browser
-      test; only Fill > Series was found.
+- [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
+      `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
+      undo and redo in all six bindings.
 - [ ] **P2** Grid accessibility has not been audited (`grid/grid-a11y.ts`).
 
 ### Ribbon

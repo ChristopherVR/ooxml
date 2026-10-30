@@ -1,7 +1,8 @@
 import { elements, type XmlElement } from '../../xml/index';
-import { formatAddress, formatRange, type CellAddress } from '../address';
+import { formatAddress, formatRange, rangeContains, type CellAddress } from '../address';
 import { usedRange } from '../cells';
-import type { ColumnInfo, SplitPane, Worksheet } from '../model';
+import type { ColumnInfo, Worksheet } from '../model';
+import { splitActivePane } from '../layout/split';
 import {
 	defaultSheetView,
 	readAutoFilter,
@@ -61,25 +62,17 @@ export function dimensionXml(sheet: Worksheet): string {
 	return `<dimension ref="${used ? formatRange(used) : 'A1'}"/>`;
 }
 
-/** The pane holding the selection: the stored one when it exists in this split, else the last. */
-function splitActivePane(split: SplitPane): string {
-	const both = split.x > 0 && split.y > 0;
-	const valid = both
-		? ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
-		: split.y > 0
-			? ['topLeft', 'bottomLeft']
-			: ['topLeft', 'topRight'];
-	if (split.activePane && valid.includes(split.activePane)) return split.activePane;
-	return both ? 'bottomRight' : split.y > 0 ? 'bottomLeft' : 'topRight';
-}
-
 function selectionXml(
 	selection: NonNullable<Worksheet['view']['selection']>,
 	pane: string | undefined,
 ): string {
+	const activeCellId = selection.ranges.findIndex((range) =>
+		rangeContains(range, selection.active),
+	);
 	return el('selection', {
 		pane,
 		activeCell: formatAddress(selection.active),
+		activeCellId: activeCellId > 0 ? activeCellId : undefined,
 		sqref: sqref(selection.ranges) || formatAddress(selection.active),
 	});
 }

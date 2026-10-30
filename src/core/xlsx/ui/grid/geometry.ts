@@ -2,6 +2,7 @@
 // pixels and back (hit testing), and header sizes. View coordinates have (0,0) at the top-left of
 // the grid element, headers included. Cell coordinates come from the core's GridMetrics.
 import { revealInSplit, type CellRange, type FreezePane, type GridMetrics } from '../../index';
+import type { SplitPaneName } from '../../model';
 
 export type Quadrant = 'corner' | 'top' | 'left' | 'main';
 export const QUADRANTS: readonly Quadrant[] = ['main', 'top', 'left', 'corner'];
@@ -218,6 +219,14 @@ export class GridGeometry {
 		if (inHeaderY) return { area: 'col-header', row: -1, col: this.colAtX(x) };
 		if (inHeaderX) return { area: 'row-header', row: this.rowAtY(y), col: -1 };
 		return { area: 'cell', row: this.rowAtY(y), col: this.colAtX(x) };
+	}
+
+	/** Pane under the pointer, including frozen panes; independent of overlapping split cells. */
+	paneAt(x: number, y: number): SplitPaneName | undefined {
+		if (this.mode === 'none') return undefined;
+		const right = this.frozenW > 0 && x >= this.headerW + this.frozenW;
+		const bottom = this.frozenH > 0 && y >= this.headerH + this.frozenH;
+		return bottom ? (right ? 'bottomRight' : 'bottomLeft') : right ? 'topRight' : 'topLeft';
 	}
 
 	/**
