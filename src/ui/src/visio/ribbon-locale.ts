@@ -7,15 +7,20 @@
  */
 import { interpolate, normalizeLocale } from 'ooxml-core/i18n';
 import { deCommands } from './locales/de-commands';
+import { deBackstage } from './locales/de-backstage';
 import { deText } from './locales/de-text';
 import { enCommands } from './locales/en-commands';
 import { enText } from './locales/en-text';
+import { enBackstage } from './locales/en-backstage';
 import { esCommands } from './locales/es-commands';
 import { esText } from './locales/es-text';
+import { esBackstage } from './locales/es-backstage';
 import { frCommands } from './locales/fr-commands';
 import { frText } from './locales/fr-text';
+import { frBackstage } from './locales/fr-backstage';
 import { zhCNCommands } from './locales/zh-CN-commands';
 import { zhCNText } from './locales/zh-CN-text';
+import { zhCNBackstage } from './locales/zh-CN-backstage';
 
 export const VISIO_LOCALES = ['en', 'de', 'es', 'fr', 'zh-CN'] as const;
 export type VisioLocale = (typeof VISIO_LOCALES)[number];
@@ -23,11 +28,11 @@ export type VisioLocale = (typeof VISIO_LOCALES)[number];
 /** Every dictionary, English first: its keys are the contract the other locales must meet. */
 export const VISIO_RIBBON_STRINGS: Readonly<Record<VisioLocale, Readonly<Record<string, string>>>> =
 	{
-		en: { ...enCommands, ...enText },
-		de: { ...deCommands, ...deText },
-		es: { ...esCommands, ...esText },
-		fr: { ...frCommands, ...frText },
-		'zh-CN': { ...zhCNCommands, ...zhCNText },
+		en: { ...enCommands, ...enText, ...enBackstage },
+		de: { ...deCommands, ...deText, ...deBackstage },
+		es: { ...esCommands, ...esText, ...esBackstage },
+		fr: { ...frCommands, ...frText, ...frBackstage },
+		'zh-CN': { ...zhCNCommands, ...zhCNText, ...zhCNBackstage },
 	};
 
 /** Maps any BCP 47 tag to a supported locale (`de-AT` is German, `zh-Hans` Chinese), else English. */

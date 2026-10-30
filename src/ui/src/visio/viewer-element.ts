@@ -389,6 +389,7 @@ export class VisioViewerElement extends BaseElement {
 			root: this.#root,
 			viewport: this.#viewport,
 			fileName: () => this.#fileName,
+			locale: () => this.#locale(),
 			load: (source) => this.load(source),
 			createBlankDrawing: () => this.createBlankDrawing(),
 			createFromTemplate: (template) => this.createFromTemplate(template),
@@ -798,6 +799,7 @@ export class VisioViewerElement extends BaseElement {
 		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
+		this.#backstage?.localize();
 		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();
 	}

@@ -4,6 +4,8 @@ import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-
 import { backstageItems, type BackstagePage } from './backstage';
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { fillTemplateThumbnails } from './template-thumbnails';
+import { localizeWording } from './ribbon-localize';
+import { normalizeVisioLocale, translateRibbonText, type VisioLocale } from './ribbon-locale';
 import { wireNewDrawing } from './viewer-new-drawing';
 import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
 import type { VisioRegionContext } from 'ooxml-core/visio/ui';
@@ -21,6 +23,8 @@ export interface BackstageHost {
 	root: ShadowRoot;
 	viewport: HTMLElement;
 	fileName(): string;
+	/** The display language (`locale`, else the Options language, else the page's): see the translator. */
+	locale(): string;
 	load(source: VsdxSource): Promise<void>;
 	createBlankDrawing(): Promise<void>;
 	createFromTemplate(template: VisioTemplateId): Promise<void>;
@@ -69,6 +73,8 @@ type Backstage = HTMLElement & {
 	close(): void;
 };
 type Ribbon = HTMLElement & { focusFile(): void };
+/** The English wording of the backstage's own `back-label`, translated with the rest of the page. */
+const BACK_LABEL = 'Back to the drawing';
 
 export class ViewerBackstage {
 	readonly #root: Backstage;
@@ -95,6 +101,34 @@ export class ViewerBackstage {
 	}
 	#custom(): ResolvedVisioCustomization {
 		return this.host.customization?.() ?? EMPTY_VISIO_CUSTOMIZATION;
+	}
+	#locale(): VisioLocale {
+		return normalizeVisioLocale(this.host.locale());
+	}
+	/** `text` (English) in the display language. */
+	#t(text: string): string {
+		return translateRibbonText(this.#locale(), text);
+	}
+	/** Announces `text` (English) in the display language. */
+	#say(text: string): void {
+		this.host.announce(this.#t(text));
+	}
+	/** Translates the built-in pages in place, the way the ribbon is translated. */
+	#translate(): void {
+		// The built-in pages are the root's own sections; host pages are divs and stay untouched.
+		const sections = [...this.#root.children].filter(
+			(child): child is HTMLElement => child instanceof HTMLElement && child.matches('section'),
+		);
+		localizeWording(
+			sections.flatMap((section) => [section, ...section.querySelectorAll<HTMLElement>('*')]),
+			this.#locale(),
+		);
+		this.#root.setAttribute('back-label', this.#t(BACK_LABEL));
+	}
+	/** Shows the pages in the current display language again (after the locale changes). */
+	localize(): void {
+		if (this.#state) this.render(this.#state);
+		else this.#translate();
 	}
 	/** Re-applies the host customisation: hidden pages, host pages and their contexts. */
 	refreshCustomization(): void {
@@ -267,7 +301,7 @@ export class ViewerBackstage {
 			);
 			this.host.downloaded?.();
 			this.hide();
-			this.host.announce('Downloaded a copy of the drawing.');
+			this.#say('Downloaded a copy of the drawing.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
@@ -284,7 +318,7 @@ export class ViewerBackstage {
 			this.hide();
 			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName());
 			this.host.savedToStorage?.(name, revision);
-			this.host.announce('Saved the drawing.');
+			this.#say('Saved the drawing.');
 		} catch (cause) {
 			const error = cause instanceof Error ? cause : new Error(String(cause));
 			this.host.saveFailed?.(error);
@@ -301,7 +335,7 @@ export class ViewerBackstage {
 				`${this.#base()}-page-${result.pageIndex + 1}.svg`,
 			);
 			this.hide();
-			this.host.announce('SVG export requested. This is an approximate snapshot.');
+			this.#say('SVG export requested. This is an approximate snapshot.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
@@ -310,18 +344,21 @@ export class ViewerBackstage {
 		// A PDF keeps the Export page open: its options and the per-page report are on it.
 		if (format === 'png') this.hide();
 		else showPdfReport(this.#root, undefined);
-		this.host.announce(`Preparing the ${format.toUpperCase()}...`);
+		this.#say(format === 'pdf' ? 'Preparing the PDF...' : 'Preparing the PNG...');
 		try {
 			const count = this.#state?.document?.pages.filter((page) => !page.isBackground).length ?? 0;
 			const choice = format === 'pdf' ? readPdfChoice(this.#root, count) : undefined;
 			const { blob, pageIndex, report } = await this.host.exportPicture(format, choice);
 			const name = format === 'pdf' ? this.#base() : `${this.#base()}-page-${pageIndex + 1}`;
 			this.#save(blob, `${name}.${format}`);
-			if (report) showPdfReport(this.#root, report);
+			if (report) {
+				showPdfReport(this.#root, report);
+				this.#translate();
+			}
 			const degraded = report?.pages.filter(
 				(page) => page.mode === 'picture' || page.degraded.length,
 			);
-			this.host.announce(
+			this.#say(
 				format === 'png'
 					? 'PNG export requested. Pages are pictures of the approximate rendering.'
 					: degraded?.length
@@ -372,10 +409,16 @@ export class ViewerBackstage {
 			const node = this.#root.querySelector(`[data-info="${key}"]`);
 			if (node) node.textContent = value;
 		};
-		set('name', state.document ? this.host.fileName() || 'Untitled drawing' : 'No drawing open');
+		// The name and page are the document's own text (kept as written); their fallbacks are wording.
+		set(
+			'name',
+			state.document
+				? this.host.fileName() || this.#t('Untitled drawing')
+				: this.#t('No drawing open'),
+		);
 		set('pages', String(state.document?.pages.length ?? 0));
 		syncPdfPanel(this.#root, state.document);
-		set('page', page?.name ?? 'None');
+		set('page', page?.name ?? this.#t('None'));
 		set('size', page ? `${page.width} × ${page.height} in` : 'None');
 		set('shapes', page ? `${page.shapes.length} top-level` : 'None');
 		set(
@@ -421,13 +464,20 @@ export class ViewerBackstage {
 		}
 		// Rebuild the navigation only when Save or Close change, so focus stays put.
 		const hidden = this.#custom().backstagePages;
+		// The navigation is shadow-rendered, so its labels are translated here, not by the walk.
 		const items = this.#hostPages.items(
 			backstageItems({
 				save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
 				close: { disabled: !state.document },
-			}).filter((item) => !hidden.has(item.id)),
+			})
+				.filter((item) => !hidden.has(item.id))
+				.map((item) => ({
+					...item,
+					label: this.#t(item.label),
+					...(item.title ? { title: this.#t(item.title) } : {}),
+				})),
 		);
-		const key = JSON.stringify(items);
+		const key = JSON.stringify([this.#locale(), items]);
 		if (key !== this.#items) {
 			this.#items = key;
 			this.#root.items = items;
@@ -436,5 +486,6 @@ export class ViewerBackstage {
 			'[data-backstage-action^="export-"], [data-backstage-action="print"]',
 		))
 			node.disabled = !page || busy;
+		this.#translate();
 	}
 }

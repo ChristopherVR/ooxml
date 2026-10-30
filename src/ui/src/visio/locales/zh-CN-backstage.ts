@@ -1,0 +1,111 @@
+/** Visio File backstage strings for the zh-CN locale (pages, tiles, PDF options and reports), keyed by the English text. Not reviewed by a native speaker. */
+export const zhCNBackstage: Readonly<Record<string, string>> = {
+	Info: '信息',
+	New: '新建',
+	Save: '保存',
+	'Save As': '另存为',
+	Print: '打印',
+	Close: '关闭',
+	Account: '帐户',
+	'Documents stay in this browser; nothing is uploaded.':
+		'文档保存在此浏览器中；不会上传任何内容。',
+	'Recent drawings are not tracked. Documents stay in this browser; nothing is uploaded.':
+		'不记录最近使用的图表。文档保存在此浏览器中；不会上传任何内容。',
+	'Session name': '会话名称',
+	'Start sharing': '开始共享',
+	'Stop sharing': '停止共享',
+	'Share with people': '与他人共享',
+	'Edit this drawing together with other windows of this browser. Open the same session name in another window to join.':
+		'与此浏览器的其他窗口共同编辑此图表。在另一个窗口中打开相同的会话名称即可加入。',
+	'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.':
+		'整个图表都会共享；如果两人同时修改，以最后一次修改为准。内容不会离开此设备。',
+	'People in this session': '此会话中的人员',
+	'Product Information': '产品信息',
+	'Visio viewer (beta). No sign-in or subscription is used.':
+		'Visio 查看器（测试版）。不使用登录或订阅。',
+	'Back to the drawing': '返回图表',
+	'Current page': '当前页面',
+	'Page size': '页面大小',
+	Compatibility: '兼容性',
+	'Add Comment': '添加注释',
+	'Comment on the current page or selected shape.': '对当前页面或所选形状添加注释。',
+	Browse: '浏览',
+	'Open a .vsdx drawing or a legacy .vsd preview from this device.':
+		'从此设备打开 .vsdx 图表或旧版 .vsd 预览。',
+	'Download a copy': '下载副本',
+	'Save the drawing, with your edits, as a .vsdx file.':
+		'将图表（包括您的修改）保存为 .vsdx 文件。',
+	'Export the current page as SVG': '将当前页面导出为 SVG',
+	'An approximate picture with compatibility notes.': '带有兼容性说明的近似图片。',
+	'Print the current page.': '打印当前页面。',
+	'Print preview of the current page': '当前页面的打印预览',
+	'Open a drawing to print it.': '打开图表后即可打印。',
+	'Printer paper, page size, drawing scale and page properties.':
+		'打印机纸张、页面大小、图表比例和页面属性。',
+	Email: '电子邮件',
+	'Send the drawing as an attachment.': '以附件形式发送图表。',
+	'Create PDF/XPS Document': '创建 PDF/XPS 文档',
+	'A vector PDF with one page per chosen foreground page at the page size and selectable text. Gradients are shadings and shadows are hard-edged offsets; glow is approximated; blur, soft edges and reflections are not drawn. Text uses standard fonts unless the host supplies fonts to embed. A page that cannot be drawn as vectors becomes a picture, and the report below says which. XPS is not offered.':
+		'矢量 PDF，每个所选前景页对应一页，页面大小不变，文本可选择。渐变以着色方式绘制，阴影为硬边偏移；发光为近似效果；模糊、柔化边缘和倒影不绘制。除非宿主提供要嵌入的字体，否则文本使用标准字体。无法以矢量绘制的页面会变为图片，下方报告会说明哪些页面。不提供 XPS。',
+	'Change File Type': '更改文件类型',
+	'Visio Drawing (*.vsdx)': 'Visio 图表 (*.vsdx)',
+	'A copy of the drawing with your edits.': '包含您修改内容的图表副本。',
+	'SVG (*.svg)': 'SVG (*.svg)',
+	'The current page as an approximate vector picture.': '当前页面的近似矢量图片。',
+	'PDF (*.pdf)': 'PDF (*.pdf)',
+	'Every foreground page as vector shapes and selectable text.':
+		'每个前景页面以矢量图形和可选文本形式输出。',
+	'PNG picture (*.png)': 'PNG 图片 (*.png)',
+	'The current page at 150 dpi.': '当前页面，150 dpi。',
+	'VSD, VSDM, VDX, stencil, template and XPS formats are not offered: they need conversions this viewer does not have.':
+		'不提供 VSD、VSDM、VDX、模具、模板和 XPS 格式：这些格式需要本查看器不具备的转换功能。',
+	'Choose a Visio drawing': '选择 Visio 图表',
+	'Blank Drawing': '空白图表',
+	'Start an empty drawing.': '新建空白图表。',
+	'Basic Flowchart': '基本流程图',
+	'A short process with a decision, using Basic Flowchart Shapes.':
+		'一个包含决策的简短流程，使用基本流程图形状。',
+	'A process across three horizontal swimlanes that stack and resize together.':
+		'跨三条水平泳道的流程，泳道会一起堆叠和调整大小。',
+	'Basic Organization Chart': '基本组织结构图',
+	'A small reporting hierarchy joined by connectors.': '由连接线相连的小型汇报层级。',
+	'No drawing open': '未打开图表',
+	'Untitled drawing': '未命名图表',
+	'Legacy VSD preview (read only)': '旧版 VSD 预览（只读）',
+	'Preview (read-only)': '预览（只读）',
+	'Edited copy (not saved)': '已编辑的副本（未保存）',
+	Original: '原始',
+	'{width} × {height} in': '{width} × {height} 英寸',
+	'{count} top-level': '{count} 个顶层形状',
+	'One part of this drawing is shown approximately or not at all:':
+		'此图表有 1 个部分仅近似显示或不显示：',
+	'{count} parts of this drawing are shown approximately or not at all:':
+		'此图表有 {count} 个部分仅近似显示或不显示：',
+	'No compatibility notes.': '没有兼容性说明。',
+	'Wait for the current document operation.': '请等待当前文档操作完成。',
+	'Legacy VSD drawings are read only here.': '此处的旧版 VSD 图表为只读。',
+	'Open a .vsdx file to save a copy.': '打开 .vsdx 文件以保存副本。',
+	'Open a .vsdx file to change the page setup.': '打开 .vsdx 文件以更改页面设置。',
+	'Downloaded a copy of the drawing.': '已下载图表副本。',
+	'Saved the drawing.': '已保存图表。',
+	'SVG export requested. This is an approximate snapshot.': '已请求导出 SVG。这是近似快照。',
+	'Preparing the PDF...': '正在准备 PDF...',
+	'Preparing the PNG...': '正在准备 PNG...',
+	'PNG export requested. Pages are pictures of the approximate rendering.':
+		'已请求导出 PNG。页面为近似渲染的图片。',
+	'PDF export requested.': '已请求导出 PDF。',
+	'PDF export requested. {count} page(s) lost something; see the report on the Export page.':
+		'已请求导出 PDF。{count} 个页面丢失了部分内容；请查看“导出”页面上的报告。',
+	'PDF options': 'PDF 选项',
+	'All pages': '所有页面',
+	'Page range': '页面范围',
+	From: '从',
+	To: '到',
+	'{page}: drawn as vectors with selectable text.': '{page}：以矢量绘制，文本可选择。',
+	'{page}: saved as a picture ({reason}).': '{page}：另存为图片（{reason}）。',
+	'it cannot be drawn as vectors': '无法以矢量绘制',
+	'Fonts embedded: {fonts}.': '已嵌入字体：{fonts}。',
+	'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.':
+		'未嵌入的字体（不是 TrueType，或字体许可禁止嵌入）：{fonts}。',
+	'PDF created: {count} page(s)': '已创建 PDF：{count} 页',
+};

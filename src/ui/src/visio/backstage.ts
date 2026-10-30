@@ -170,6 +170,7 @@ export function createBackstage(doc: Document): HTMLElement {
 	] as const) {
 		const value = el(doc, 'dd');
 		value.dataset.info = key;
+		if (key === 'page') value.dataset.userText = '';
 		facts.append(el(doc, 'dt', '', label), value);
 	}
 	const notes = el(doc, 'div', 'backstage-notes');
@@ -181,6 +182,8 @@ export function createBackstage(doc: Document): HTMLElement {
 	);
 	const file = el(doc, 'h2', 'backstage-file');
 	file.dataset.info = 'name';
+	// A document's own names are not wording: the translator leaves them alone.
+	file.dataset.userText = '';
 
 	const templates = el(doc, 'div', 'backstage-templates');
 	const slot = doc.createElement('slot');

@@ -8,6 +8,7 @@ const ATTRIBUTES = [
 	'launcher-label',
 	'more-label',
 	'none-label',
+	'empty-label',
 	'placeholder',
 	'data-label',
 ] as const;
@@ -45,16 +46,13 @@ export function ribbonLocale(ribbon: Element): VisioLocale {
 }
 
 /**
- * Translates the ribbon in place: tab names, group and command labels, tooltips, accessible names
- * and the shared ribbon's own File and collapse labels. Add-in tabs keep the host's wording.
+ * Translates the wording of `elements` in place: their attributes in `ATTRIBUTES` and the text of
+ * their leaf elements. Add-in content and `data-user-text` (a document's own names) are kept.
  * Calling it again with another locale translates from the English originals.
  */
-export function localizeRibbon(ribbon: HTMLElement, value: string | null | undefined): VisioLocale {
-	const locale = normalizeVisioLocale(value);
-	ribbon.dataset.visioLocale = locale;
-	const elements = [ribbon, ...ribbon.querySelectorAll<HTMLElement>('*')];
+export function localizeWording(elements: Iterable<Element>, locale: VisioLocale): void {
 	for (const element of elements) {
-		if (element.closest('[data-add-in]')) continue;
+		if (element.closest('[data-add-in], [data-user-text]')) continue;
 		for (const name of ATTRIBUTES) {
 			const text = element.getAttribute(name);
 			if (text)
@@ -71,6 +69,17 @@ export function localizeRibbon(ribbon: HTMLElement, value: string | null | undef
 			translateSlot(element, '#text', text, locale, (next) => (element.textContent = next));
 		}
 	}
+}
+
+/**
+ * Translates the ribbon in place: tab names, group and command labels, tooltips, accessible names
+ * and the shared ribbon's own File and collapse labels. Add-in tabs keep the host's wording.
+ * Calling it again with another locale translates from the English originals.
+ */
+export function localizeRibbon(ribbon: HTMLElement, value: string | null | undefined): VisioLocale {
+	const locale = normalizeVisioLocale(value);
+	ribbon.dataset.visioLocale = locale;
+	localizeWording([ribbon, ...ribbon.querySelectorAll<HTMLElement>('*')], locale);
 	ribbon.setAttribute('file-label', translateRibbonText(locale, 'File'));
 	ribbon.setAttribute('collapse-label', translateRibbonText(locale, 'Collapse the ribbon'));
 	return locale;
