@@ -106,6 +106,26 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
   `pymupdf` render of an Arial subset (Latin, minus sign, Greek, Cyrillic). Nothing is bundled.
   Still open: XPS, PDF/A, blur, reflections, pattern fills.
 
+## Lane edits on Visio-built charts, 2026-10-30
+
+- **Visio-built charts take lane edits.** The frame, Swimlane List, Phase List, lanes and
+  separators are recognised by their masters (CFF Container, Swimlane List, Phase List, Swimlane,
+  Separator). Insert Swimlane copies the neighbouring lane (new IDs and GUIDs, same master), Delete
+  Swimlane removes it and its connects, Resize restacks. `cff-recalc.ts` recomputes the cached
+  values of master instances from the master's formulas with the editor's interpreter; on the
+  native fixture it reproduces every cache Visio wrote (zero differences), and it keeps the cache
+  of any cell it cannot evaluate (theme, colours, text measures). The title area Visio's frame
+  keeps above the lanes is preserved. Visio 16 opened the edited file and reported the container,
+  both lists and the new lane in the Swimlane List order.
+- **Vertical starter.** File > New offers Cross-Functional Flowchart (Vertical).
+- **Load.** Shapes whose centre lies in a lane join that lane's members in the model; list order
+  is untouched. Saved parts are unchanged.
+- **Still open.** Charts the editor creates are not instances of Visio's hidden masters; phases,
+  options and Direction of a Visio-built chart are refused; the master heading arcs
+  (`_ELLIPSE_*`) and page-level `DEPENDSON` formulas are not evaluated, so their caches stay.
+  Setting a lane height through COM on the fixture hangs Visio's CFF add-in, so no live recalc
+  oracle beyond the saved caches was used.
+
 ## Native cross-functional flowcharts, 2026-10-30
 
 - **Visio's structure.** `create-swimlanes` now writes what Visio 16 builds from its own

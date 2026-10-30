@@ -39,23 +39,69 @@ describe('a cross-functional flowchart Visio built', () => {
 		expect(byId.get('12')!.structure).toMatchObject({ swimlane: { role: 'separator' } });
 	});
 
-	it('is left unedited by the lane commands: its lanes are master groups', async () => {
+	it('takes lane edits: a new lane is a copy of its neighbour, the chart restacks', async () => {
+		const bytes = new Uint8Array(
+			readFileSync(new URL('./__fixtures__/cross-functional-native.vsdx', import.meta.url)),
+		);
+		const result = await editVsdx(bytes, [
+			{
+				type: 'insert-swimlane',
+				pageId: '0',
+				frameId: '1',
+				shapeId: '30',
+				relativeTo: '6',
+				position: 'after',
+				heading: 'New',
+			},
+		]);
+		const page = (await parseVsdx(result.bytes)).pages[0]!;
+		const byId = new Map(page.shapes.map((shape) => [shape.id, shape]));
+		expect(byId.get('4')!.structure).toMatchObject({ type: 'list', memberIds: ['9', '6', '30'] });
+		expect(byId.get('30')!.masterId).toBe(byId.get('6')!.masterId);
+		const info = visioSwimlaneInfo(page, '30');
+		expect(info?.lanes.map((lane) => lane.id)).toEqual(['9', '6', '30']);
+		// Lanes edge to edge, the frame grown by the new lane's height.
+		const tops = info!.lanes.map((lane) => lane.transform[5] + lane.height);
+		const heights = info!.lanes.map((lane) => lane.height);
+		expect(tops[1]! - heights[1]!).toBeCloseTo(tops[2]!, 5);
+		expect(tops[0]! - heights[0]!).toBeCloseTo(tops[1]!, 5);
+	});
+
+	it('resizes and deletes lanes of a chart Visio built', async () => {
+		const bytes = new Uint8Array(
+			readFileSync(new URL('./__fixtures__/cross-functional-native.vsdx', import.meta.url)),
+		);
+		const before = (await parseVsdx(bytes)).pages[0]!;
+		const frameHeight = before.shapes.find((shape) => shape.id === '1')!.height;
+		const laneHeight = before.shapes.find((shape) => shape.id === '6')!.height;
+		const grown = await editVsdx(bytes, [
+			{ type: 'resize-swimlane', pageId: '0', frameId: '1', laneId: '6', size: laneHeight + 1 },
+		]);
+		const page = (await parseVsdx(grown.bytes)).pages[0]!;
+		const byId = new Map(page.shapes.map((shape) => [shape.id, shape]));
+		expect(byId.get('6')!.height).toBeCloseTo(laneHeight + 1, 5);
+		expect(byId.get('1')!.height).toBeCloseTo(frameHeight + 1, 5);
+		expect(byId.get('4')!.height).toBeGreaterThan(before.shapes.find((s) => s.id === '4')!.height);
+		const removed = await editVsdx(bytes, [
+			{ type: 'delete-swimlane', pageId: '0', frameId: '1', laneId: '9' },
+		]);
+		const after = (await parseVsdx(removed.bytes)).pages[0]!;
+		expect(after.shapes.some((shape) => shape.id === '9')).toBe(false);
+		expect(after.shapes.find((shape) => shape.id === '4')!.structure).toMatchObject({
+			memberIds: ['6'],
+		});
+		expect(after.shapes.find((shape) => shape.id === '1')!.height).toBeLessThan(frameHeight);
+	});
+
+	it('keeps phases and options refused: they would rewrite the masters own cells', async () => {
 		const bytes = new Uint8Array(
 			readFileSync(new URL('./__fixtures__/cross-functional-native.vsdx', import.meta.url)),
 		);
 		await expect(
 			editVsdx(bytes, [
-				{
-					type: 'insert-swimlane',
-					pageId: '0',
-					frameId: '1',
-					shapeId: '30',
-					relativeTo: '6',
-					position: 'after',
-					heading: 'New',
-				},
+				{ type: 'insert-separator', pageId: '0', frameId: '1', shapeId: '30', at: 3 },
 			]),
-		).rejects.toThrow();
+		).rejects.toThrow(/not editable/);
 	});
 
 	it('plans edits on it: the lanes come from the Swimlane List, top lane first', async () => {

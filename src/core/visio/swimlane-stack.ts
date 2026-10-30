@@ -110,9 +110,11 @@ export function stackSwimlanes(
 	frame: StackBox,
 	showTitle: boolean,
 	lanes: readonly StackLane[],
+	/** The title area above the lanes; the editor's own bar unless the chart has another (Visio's). */
+	titleSize: number = VISIO_SWIMLANE_TITLE,
 ): Stacking {
 	const horizontal = direction === 'horizontal';
-	const top = frame.maxY - (showTitle ? VISIO_SWIMLANE_TITLE : 0);
+	const top = frame.maxY - (showTitle ? titleSize : 0);
 	const cross = horizontal
 		? frame.maxX - frame.minX
 		: Math.max(0, ...lanes.map(({ box }) => box.maxY - box.minY));
