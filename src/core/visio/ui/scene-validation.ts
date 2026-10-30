@@ -235,6 +235,15 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(glow.opacity, 'glow opacity', 0, 1);
 			finite(glow.size, 'glow size', 0, 10);
 		}
+		const { bevel, rotation3d } = shape.style;
+		if (bevel) {
+			finite(bevel.type, 'bevel type', 1, 12);
+			finite(bevel.width, 'bevel width', 0, 10);
+			finite(bevel.height, 'bevel height', 0, 10);
+		}
+		if (rotation3d)
+			for (const key of ['x', 'y', 'z', 'perspective'] as const)
+				finite(rotation3d[key], '3-D rotation', -7, 7);
 		if (shape.style.softEdges !== undefined) finite(shape.style.softEdges, 'soft edge size', 0, 10);
 		if (shape.style.rounding !== undefined) finite(shape.style.rounding, 'corner rounding', 0, 100);
 		const reflection = shape.style.reflection;

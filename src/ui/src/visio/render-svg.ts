@@ -31,6 +31,7 @@ import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
 import { renderShadow } from './render-shadow';
 import { renderShapeEffects } from './render-effects';
+import { renderBevel, rotation3dWrapper } from './render-bevel';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function svgElement<K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] {
@@ -210,11 +211,15 @@ function drawShape(
 }
 function drawOwn(
 	shape: VisioShape,
-	group: SVGElement,
+	outer: SVGElement,
 	context: RenderContext,
 	world: VisioMatrix,
 ): void {
 	const { warnings, defs, resources } = context;
+	// A 3-D rotation turns the shape's own drawing (and its text, unless kept flat) as one unit.
+	const turned = rotation3dWrapper(shape);
+	if (turned) outer.append(turned);
+	const group = turned ?? outer;
 	const lineStyle = context.static ? visioSvgStrokeStyle(shape.style) : shape.style;
 	// A paint-free text box needs its text bounds as a pointer target, including gaps between glyphs.
 	if (
@@ -288,13 +293,18 @@ function drawOwn(
 		for (const path of paths) path.setAttribute('filter', effects.geometryFilter);
 	const shadow = renderShadow(shape, paths, defs, world);
 	if (shadow) group.insertBefore(shadow, effects.below[0] ?? paths[0]!);
+	const bevel = renderBevel(shape, paths, defs, world);
+	if (bevel) group.append(bevel);
 	const raster = renderImage(shape, resources);
 	if (raster) group.append(raster);
 	const chart = renderEmbeddedChart(shape);
 	if (chart) group.append(chart);
 	const vector = renderForeignVectorShape(shape, context.vectorBudget);
 	if (vector) group.append(vector);
-	if (shape.text.plainText) group.append(renderText(shape.text, warnings, context.textBudget));
+	if (shape.text.plainText)
+		(shape.style.rotation3d?.keepTextFlat ? outer : group).append(
+			renderText(shape.text, warnings, context.textBudget),
+		);
 	if (shape.kind === 'foreign' && !shape.image && !shape.foreignVector && !shape.embeddedObject)
 		warnings.add('Embedded or foreign objects are not rendered in this build.');
 }

@@ -47,9 +47,6 @@ export const frText: Readonly<Record<string, string>> = {
 		'Ouvrez un fichier .vsdx pour ajouter des arrière-plans.',
 	'Open a .vsdx file to lay out its shapes.': 'Ouvrez un fichier .vsdx pour disposer ses formes.',
 	'open a .vsdx file to lay out its shapes.': 'Ouvrez un fichier .vsdx pour disposer ses formes.',
-	'3-D rotation needs a 3-D renderer.': 'La rotation 3D nécessite un moteur de rendu 3D.',
-	'Bevel needs 3-D lighting the SVG renderer does not draw.':
-		'Le biseau nécessite un éclairage 3D que le moteur SVG ne dessine pas.',
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Les jeux de couleurs de thème personnalisés ne sont pas encore écrits ; choisissez un thème ou une variante.',
 	'DWG and DXF import is not supported.': "L'importation de DWG et DXF n'est pas prise en charge.",

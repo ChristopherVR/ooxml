@@ -1,5 +1,7 @@
 import {
+	VISIO_BEVEL_PRESETS,
 	VISIO_GLOW_SIZES,
+	VISIO_ROTATION_PRESETS,
 	VISIO_QUICK_STYLE_COLORS,
 	VISIO_REFLECTION_PRESETS,
 	VISIO_SHADOW_PRESETS,
@@ -112,10 +114,40 @@ export function quickStyleGallery(doc: Document): HTMLElement {
 	return gallery;
 }
 
-const EFFECT_REASONS: readonly [id: string, label: string, reason: string][] = [
-	['bevel', 'Bevel', 'Bevel needs 3-D lighting the SVG renderer does not draw.'],
-	['rotation-3d', '3-D Rotation', '3-D rotation needs a 3-D renderer.'],
-];
+export const bevelItemId = (id: string) => `bevel-${id}`;
+export const rotationItemId = (id: string) => `rotation-3d-${id}`;
+function bevelOptions(): CommandSpec {
+	return {
+		id: 'bevel',
+		label: 'Bevel',
+		items: [
+			{
+				id: bevelItemId('none'),
+				label: 'No Bevel',
+				action: { type: 'shape-format', patch: { bevel: 'none' } },
+				checked: false,
+			},
+			...VISIO_BEVEL_PRESETS.map(({ id, label }) => ({
+				id: bevelItemId(id),
+				label,
+				action: { type: 'shape-format' as const, patch: { bevel: id } },
+				checked: false,
+			})),
+		],
+	};
+}
+function rotationOptions(): CommandSpec {
+	return {
+		id: 'rotation-3d',
+		label: '3-D Rotation',
+		items: VISIO_ROTATION_PRESETS.map(({ id, label }) => ({
+			id: rotationItemId(id),
+			label,
+			action: { type: 'shape-format' as const, patch: { rotation3d: id } },
+			checked: false,
+		})),
+	};
+}
 
 /** Stable menu ids of the effect presets, shared with the selection state sync. */
 export const glowItemId = (size: number, accent: number) => `glow-${size}-${accent}`;
@@ -220,6 +252,7 @@ export function effectsOptions(): CommandSpec[] {
 		reflectionOptions(),
 		glowOptions(),
 		softEdgeOptions(),
-		...EFFECT_REASONS.map(([id, label, unsupported]) => ({ id, label, unsupported })),
+		bevelOptions(),
+		rotationOptions(),
 	];
 }

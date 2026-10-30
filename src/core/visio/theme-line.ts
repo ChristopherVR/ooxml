@@ -24,6 +24,38 @@ export function themeLineWeight(
 	return emu / 914_400;
 }
 
+/** Visio arrowhead codes with measured glyphs for the DrawingML end types (filled, stealth, open). */
+const ARROW_CODES: Readonly<Record<string, number>> = {
+	none: 0,
+	triangle: 4,
+	stealth: 5,
+	arrow: 3,
+};
+const ARROW_SIZES: Readonly<Record<string, number>> = { sm: 1, med: 2, lg: 3 };
+
+/**
+ * A themed BeginArrow or EndArrow: the `a:headEnd` (begin) or `a:tailEnd` (end) of the selected
+ * connector line style. Visio 16's own themes carry none, so the cells they write are literal;
+ * this reads the extension for a theme that does. Diamond and oval ends have no measured glyph
+ * and read as undefined.
+ */
+export function themeArrow(
+	cells: Cells,
+	resources: ThemeResources,
+	side: 'Begin' | 'End',
+): { code: number; size: number } | undefined {
+	if (cells.get(`${side}Arrow`)?.value !== 'Themed') return undefined;
+	const end = themeChildren(
+		themeFormat(cells, 'Line', resources),
+		side === 'Begin' ? 'headEnd' : 'tailEnd',
+	)[0];
+	if (!end) return { code: 0, size: 2 };
+	const code = ARROW_CODES[end.getAttribute('type') ?? 'none'];
+	return code === undefined
+		? undefined
+		: { code, size: ARROW_SIZES[end.getAttribute('w') ?? 'med'] ?? 2 };
+}
+
 /** Report only a selected nonempty effect style when the shape requests themed effects. */
 export function reportThemeEffects(cells: Cells, resources: ThemeResources, report: Report): void {
 	if (

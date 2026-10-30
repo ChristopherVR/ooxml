@@ -65,17 +65,46 @@ it('applies and clears outer shadows, checks the current preset and draws the sh
 	ui.controller.destroy();
 });
 
-it('keeps unsupported effects disabled with their reasons and disables styles for drawn shapes on a layer', async () => {
+it('draws a Bevel and a 3-D Rotation preset and checks it, flat text staying put on request', async () => {
+	const ui = await setup();
+	expect(ui.button('bevel-circle').disabled).toBe(true);
+	ui.selection();
+	for (const id of ['bevel-circle', 'rotation-3d-isometric-right-up'])
+		expect(ui.button(id).disabled).toBe(false);
+	expect(ui.button('bevel-none').getAttribute('checked')).toBe('true');
+	ui.press('bevel-circle');
+	await ui.done();
+	expect(ui.shape().style.bevel).toMatchObject({ type: 1 });
+	expect(ui.button('bevel-circle').getAttribute('checked')).toBe('true');
+	ui.press('rotation-3d-isometric-right-up');
+	await ui.done();
+	expect(ui.shape().style.rotation3d?.perspective).toBe(0);
+	expect(ui.button('rotation-3d-isometric-right-up').getAttribute('checked')).toBe('true');
+	const document = ui.controller.state.document!;
+	const rendered = renderPage(document, document.pages[0]!);
+	const bevel = rendered.svg.querySelector('[data-bevel]')!;
+	expect(bevel.getAttribute('filter')).toMatch(/^url\(#visio-bevel-\d+\)$/);
+	expect(bevel.getAttribute('pointer-events')).toBe('none');
+	expect(rendered.svg.querySelector('filter feDiffuseLighting')).not.toBeNull();
+	const turned = rendered.svg.querySelector('[data-rotation3d]')!;
+	expect(turned.getAttribute('transform')).toMatch(/^matrix\(/);
+	expect(turned.querySelector('[data-geometry]')).not.toBeNull();
+	rendered.dispose();
+	ui.press('bevel-none');
+	await ui.done();
+	expect(ui.shape().style.bevel).toBeUndefined();
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('disables styles for drawn shapes on a layer', async () => {
 	const ui = await setup();
 	ui.selection();
-	for (const id of ['bevel', 'rotation-3d']) {
-		expect(ui.button(id).disabled).toBe(true);
-		expect(ui.button(id).title).toMatch(/not available yet/);
-	}
 	ui.shape().layerIds = ['42'];
 	ui.commands.render(ui.controller.state);
 	expect(gallery(ui.root).hasAttribute('disabled')).toBe(true);
 	expect(ui.button('shadow-bottom').disabled).toBe(true);
+	expect(ui.button('bevel-circle').disabled).toBe(true);
 	ui.dispose();
 	ui.controller.destroy();
 });

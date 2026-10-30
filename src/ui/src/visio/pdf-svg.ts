@@ -138,6 +138,12 @@ class Converter {
 			this.degraded.add('Reflections and masked shapes are not drawn.');
 			return;
 		}
+		if (element.hasAttribute('data-bevel')) {
+			this.degraded.add('Bevel lighting is not drawn.');
+			return;
+		}
+		if (element.hasAttribute('data-perspective'))
+			this.degraded.add('3-D rotation is drawn as a parallel projection without perspective.');
 		if (element.hasAttribute('data-embedded-chart')) throw new PdfFallback('embedded chart');
 		if (element.hasAttribute('filter') && !shadow && !glow)
 			this.degraded.add('Blur and soft-edge filters are not applied.');

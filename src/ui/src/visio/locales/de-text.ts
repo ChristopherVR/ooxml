@@ -49,9 +49,6 @@ export const deText: Readonly<Record<string, string>> = {
 		'Öffnen Sie eine VSDX-Datei, um deren Formen anzuordnen.',
 	'open a .vsdx file to lay out its shapes.':
 		'Öffnen Sie eine VSDX-Datei, um deren Formen anzuordnen.',
-	'3-D rotation needs a 3-D renderer.': 'Die 3D-Drehung benötigt einen 3D-Renderer.',
-	'Bevel needs 3-D lighting the SVG renderer does not draw.':
-		'Abgeschrägte Kanten benötigen 3D-Beleuchtung, die der SVG-Renderer nicht zeichnet.',
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Benutzerdefinierte Designfarbsätze werden noch nicht geschrieben; wählen Sie ein Design oder eine Variante.',
 	'DWG and DXF import is not supported.': 'Der Import von DWG und DXF wird nicht unterstützt.',

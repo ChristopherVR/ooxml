@@ -14,6 +14,12 @@ import {
 	type VisioReflectionEffect,
 } from './edit-formatting-glow';
 import {
+	isVisioBevelPreset,
+	isVisioRotationPreset,
+	snapshotBevel,
+	snapshotRotation,
+} from './bevel-3d';
+import {
 	snapshotTextFormatExtras,
 	type VisioTextFormatExtras,
 } from './edit-formatting-text-commands';
@@ -87,6 +93,10 @@ export interface VisioShapeFormatEdit extends Target {
 	softEdges?: number;
 	/** Reflection; size 0 removes it. */
 	reflection?: VisioReflectionEffect;
+	/** Bevel preset id (`none` removes it); see `VISIO_BEVEL_PRESETS`. */
+	bevel?: string;
+	/** 3-D rotation preset id (`off` removes it); see `VISIO_ROTATION_PRESETS`. */
+	rotation3d?: string;
 }
 export type VisioFormatEdit = VisioTextFormatEdit | VisioShapeFormatEdit;
 export const isVisioFormatEdit = (edit: { type: string }): edit is VisioFormatEdit =>
@@ -207,6 +217,8 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 							'glow',
 							'softEdges',
 							'reflection',
+							'bevel',
+							'rotation3d',
 						].includes(key) && edit[key as keyof VisioShapeFormatEdit] !== undefined,
 				)
 			)
@@ -219,6 +231,8 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 		if (edit.glow !== undefined) result.glow = snapshotGlow(edit.glow);
 		if (edit.softEdges !== undefined) result.softEdges = snapshotSoftEdges(edit.softEdges);
 		if (edit.reflection !== undefined) result.reflection = snapshotReflection(edit.reflection);
+		if (edit.bevel !== undefined) result.bevel = snapshotBevel(edit.bevel);
+		if (edit.rotation3d !== undefined) result.rotation3d = snapshotRotation(edit.rotation3d);
 		if (result.fillColor === 'none' && result.fillPattern !== undefined && result.fillPattern !== 0)
 			fail('INVALID_EDIT', 'No fill conflicts with a visible fill pattern.');
 	}

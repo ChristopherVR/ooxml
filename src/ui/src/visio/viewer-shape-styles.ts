@@ -5,7 +5,9 @@ import {
 	visioShapeFormattingState,
 } from 'ooxml-core/visio/ui';
 import {
+	VISIO_BEVEL_PRESETS,
 	VISIO_GLOW_SIZES,
+	VISIO_ROTATION_PRESETS,
 	VISIO_REFLECTION_PRESETS,
 	VISIO_SOFT_EDGE_SIZES,
 	visioFallbackQuickStyle,
@@ -16,11 +18,13 @@ import {
 import type { OfficeUiGallery } from '../ribbon/gallery';
 import type { RibbonCommand } from './ribbon-parts';
 import {
+	bevelItemId,
 	effectsOptions,
 	glowItemId,
 	QUICK_STYLES_HINT,
 	quickStyleGalleryState,
 	reflectionItemId,
+	rotationItemId,
 	softEdgesItemId,
 } from './ribbon-shape-styles';
 
@@ -34,7 +38,7 @@ export function pageAccentColor(page: VisioPage | undefined, accent: number): st
 
 /**
  * Selection state for Home > Shape Styles: the Quick Styles gallery and the Effects presets follow
- * the same admission as Fill and Line. Bevel and 3-D Rotation keep their reasons.
+ * the same admission as Fill and Line, as do Bevel and 3-D Rotation.
  */
 export function renderShapeStyleControls(
 	root: ShadowRoot,
@@ -73,12 +77,28 @@ export function renderShapeStyleControls(
 		set(element, reason);
 		element?.setAttribute('checked', String(checked));
 	};
-	for (const id of ['shadow', 'glow', 'soft-edges', 'reflection'])
+	for (const id of ['shadow', 'glow', 'soft-edges', 'reflection', 'bevel', 'rotation-3d'])
 		set(root.querySelector(`[data-menu="${id}"]`), reason);
 	for (const size of VISIO_GLOW_SIZES)
 		set(root.querySelector(`[data-menu="glow-size-${size}"]`), reason);
 	for (const id of ['shadow-options', 'glow-options', 'soft-edges-options', 'reflection-options'])
 		set(root.querySelector(`[command="${id}"]`), reason);
+	const bevel = common(shapes.map((shape) => String(shape.style.bevel?.type ?? 0)));
+	check(bevelItemId('none'), bevel === '0');
+	for (const preset of VISIO_BEVEL_PRESETS)
+		check(bevelItemId(preset.id), bevel === String(preset.type));
+	const turn = (shape: VisioShape) => {
+		const r = shape.style.rotation3d;
+		return r
+			? [r.x, r.y, r.z, r.perspective].map((v) => Math.round((v * 180) / Math.PI)).join()
+			: '0,0,0,0';
+	};
+	const rotation = common(shapes.map(turn));
+	for (const preset of VISIO_ROTATION_PRESETS)
+		check(
+			rotationItemId(preset.id),
+			rotation === [preset.x, preset.y, preset.z, preset.perspective].join(),
+		);
 	check('glow-none', glow === 'none');
 	for (const size of VISIO_GLOW_SIZES)
 		for (let accent = 1; accent <= 6; accent++)
