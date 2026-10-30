@@ -3,6 +3,7 @@ import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
 import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
+import { fillTemplateThumbnails } from './template-thumbnails';
 import { wireNewDrawing } from './viewer-new-drawing';
 import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
 import type { VisioRegionContext } from 'ooxml-core/visio/ui';
@@ -92,6 +93,7 @@ export class ViewerBackstage {
 		this.#ribbon.setAttribute('file-expanded', 'true');
 		this.#root.show(page);
 		if (page === 'print') this.#preview();
+		if (page === 'new') void fillTemplateThumbnails(this.#root);
 	}
 	hide(): void {
 		this.#root.close();
@@ -129,6 +131,7 @@ export class ViewerBackstage {
 					this.hide();
 					this.host.showOptions();
 				} else if (id === 'print') this.#preview();
+				else if (id === 'new') void fillTemplateThumbnails(this.#root);
 			},
 			options,
 		);

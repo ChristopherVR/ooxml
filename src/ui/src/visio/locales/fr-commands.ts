@@ -292,4 +292,9 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Style: 'Style',
 	'Show Title Bar': 'Afficher la barre de titre',
 	'Show Separator Bar': 'Afficher la barre de séparation',
+	'Org Chart': 'Organigramme',
+	Subordinate: 'Subordonné',
+	Coworker: 'Collègue',
+	Assistant: 'Assistant',
+	'Delete Position': 'Supprimer la position',
 };

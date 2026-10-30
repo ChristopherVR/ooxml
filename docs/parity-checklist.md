@@ -351,8 +351,14 @@ installed Visio 16 build is used to check that saved files open without repair.
       Phase List, so Visio's own swimlane commands do not see them; no direction change or
       vertical template in the UI; separators have no phase label; the page does not grow with
       the frame; deleting a lane with stencil shapes takes two undo steps.
-- [ ] **P1** The org chart has no org-chart masters, ribbon or position data; template tiles have
-      no thumbnails.
+- [x] **P1** Org chart positions carry Visio's org chart Shape Data (Department, Telephone, Name,
+      Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
+      deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a
+      thumbnail rendered from its template; Visio 16 reads the data and glue back.
+- [ ] **P1** Org chart positions are plain rectangles, not Visio's Executive, Manager, Position and
+      Assistant Belt masters, so Visio's own Org Chart tab does not recognise them; assistants are
+      placed as subordinates; no import from a file or directory; the text on a position does not
+      follow its Shape Data.
 - [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;
       multi-selection resize excludes groups, rotation, layers and glue.
 - [x] **P1** Dynamic connectors in files saved by Visio follow moved shapes, re-glue and reroute,

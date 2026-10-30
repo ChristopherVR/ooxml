@@ -290,4 +290,9 @@ export const esCommands: Readonly<Record<string, string>> = {
 	Style: 'Estilo',
 	'Show Title Bar': 'Mostrar barra de título',
 	'Show Separator Bar': 'Mostrar barra de separación',
+	'Org Chart': 'Organigrama',
+	Subordinate: 'Subordinado',
+	Coworker: 'Compañero',
+	Assistant: 'Asistente',
+	'Delete Position': 'Eliminar puesto',
 };

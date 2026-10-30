@@ -66,6 +66,15 @@
 	width: 200px;
 	min-height: 120px;
 }
+.backstage-thumb {
+	align-self: stretch;
+	width: 100%;
+	height: 72px;
+	margin-bottom: 6px;
+	object-fit: contain;
+	background: #fff;
+	border: 1px solid var(--_vv-border, currentColor);
+}
 /* Account: the shared profile editor, then Visio's product information. */
 .backstage-page office-ui-account {
 	max-width: 560px;

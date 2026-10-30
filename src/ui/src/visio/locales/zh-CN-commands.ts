@@ -289,4 +289,9 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	Style: '样式',
 	'Show Title Bar': '显示标题栏',
 	'Show Separator Bar': '显示分隔栏',
+	'Org Chart': '组织结构图',
+	Subordinate: '下属',
+	Coworker: '同事',
+	Assistant: '助理',
+	'Delete Position': '删除职位',
 };

@@ -36,6 +36,7 @@ import { ViewerColorMenus } from './viewer-color-menus';
 import { ViewerFormatPane } from './viewer-format-pane';
 import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
+import { ViewerOrgChart } from './viewer-org-chart';
 import { ViewerSwimlanes, swimlaneSelection } from './viewer-swimlanes';
 import { ViewerData } from './viewer-data';
 import { ViewerLayoutCommands } from './viewer-layout-commands';
@@ -103,6 +104,7 @@ export class ViewerCommands {
 	#review: ViewerReview;
 	#parts: ViewerDiagramParts;
 	#swimlanes: ViewerSwimlanes;
+	#orgChart: ViewerOrgChart;
 	#data: ViewerData;
 	readonly layoutCommands: ViewerLayoutCommands;
 	#textFeatures: ViewerTextFeatures;
@@ -151,6 +153,11 @@ export class ViewerCommands {
 			() => host.reveal('edit', true),
 		);
 		this.#swimlanes = new ViewerSwimlanes(
+			host.root,
+			host.controller,
+			(run, message) => void this.#edit(run, message),
+		);
+		this.#orgChart = new ViewerOrgChart(
 			host.root,
 			host.controller,
 			(run, message) => void this.#edit(run, message),
@@ -245,6 +252,7 @@ export class ViewerCommands {
 			insertDiagramPart: (action) => this.#parts.run(action),
 			container: (command) => this.#parts.container(command),
 			swimlane: (action) => this.#swimlanes.run(action),
+			orgChart: (action) => this.#orgChart.run(action),
 			formatSelection: (action) => this.#formatting.run(action),
 			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
@@ -643,6 +651,7 @@ export class ViewerCommands {
 		this.#changeShape.render(state);
 		this.#parts.render(state);
 		this.#swimlanes.render(state);
+		this.#orgChart.render(state);
 		this.#painter.render(state);
 		this.#insert.render(state);
 		this.#themes.render(state);

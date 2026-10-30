@@ -1,4 +1,5 @@
 import { createVsdx, editVsdx, type VisioEdit } from '../index';
+import { visioOrgDataEdits } from './org-chart';
 import { shapeEdits, type SampleBox, type SampleLink, type SamplePage } from './sample-drawing';
 
 /** The templates File > New offers, in Visio's order: Blank Drawing first. */
@@ -121,5 +122,12 @@ export async function createTemplateVsdx(id: VisioTemplateId): Promise<Uint8Arra
 		];
 		return (await editVsdx(drawn.bytes, joined)).bytes;
 	}
-	return (await editVsdx(named.bytes, shapeEdits(page))).bytes;
+	const drawn = await editVsdx(named.bytes, shapeEdits(page));
+	if (page !== ORG) return drawn.bytes;
+	// Each box is an org chart position: the title and name in its text are also its Shape Data.
+	const data = page.boxes.flatMap((box) => {
+		const [title = '', name = ''] = box.text.split('\n');
+		return visioOrgDataEdits(page.id, box.id, { Title: title, Name: name });
+	});
+	return (await editVsdx(drawn.bytes, data)).bytes;
 }

@@ -27,6 +27,23 @@ The target is now current Microsoft 365 Visio. Open remainders are in `docs/pari
   rectangle clips, pictures and standard-font text that `pypdf` (strict) parses and
   `pdftotext` extracts. Degraded effects and picture fallbacks are reported per page.
 
+## Org chart and template thumbnails, 2026-10-30
+
+- **Position data.** Organization Chart positions carry Visio's org chart Shape Data rows
+  (Department, Telephone, Name, Title, Email labelled E-Mail), the row names and order of the
+  Executive, Manager, Position and Assistant Belt masters read through COM from ORGCH_M.VSTX.
+  Visio 16 opened a generated chart with a subordinate added and read all 5 rows on every
+  position and both ends of every connector glued to the right positions (read only).
+- **Org Chart tab.** Contextual, beside the format tab while a position is selected: Subordinate,
+  Coworker and Assistant (a glued connector, the Shape Data rows and a tree re-layout in one undo
+  step), Delete Position (its connectors go, its subordinates join its manager) and Layout (the
+  geometry area's hierarchy layout). The positions are rectangles of the Basic Shapes stencil, not
+  Visio's Belt masters, so Visio's own Org Chart tab does not recognise them; assistants are
+  placed like subordinates, not beside the manager; no import from a file or directory; editing
+  Shape Data does not rewrite the text on the shape.
+- **Template thumbnails.** Each New tile shows its template drawn by the viewer's page renderer
+  (the template is built, parsed and exported as a static SVG), not a stored picture.
+
 ## Parity wave, 2026-10-30
 
 Six increments landed together; the open remainder of each is in
