@@ -347,10 +347,13 @@ installed Visio 16 build is used to check that saved files open without repair.
       delete with their shapes, separators, title and separator bars, Style 1-4 and rotated
       labels, with the contextual Cross-Functional Flowchart tab (`edit-swimlane-*.ts`,
       `ribbon-swimlane.ts`); Visio 16 opens edited files without repair.
-- [ ] **P1** Lanes are stored as plain containers, not Visio's CFF masters, Swimlane List and
-      Phase List, so Visio's own swimlane commands do not see them; no direction change or
-      vertical template in the UI; separators have no phase label; the page does not grow with
-      the frame; deleting a lane with stencil shapes takes two undo steps.
+- [x] **P1** Cross-functional flowcharts carry Visio's structure (frame container, Swimlane List,
+      Phase List, `Relationships` kinds 1/4/2/5/11 confirmed through COM), Direction turns an
+      existing chart, separators have phase labels, the page grows with the frame and deleting a
+      lane is one undo step (`edit-swimlane-*.ts`, `ui/swimlane.ts`).
+- [ ] **P1** Visio's hidden CFF master shapes (and its add-in that inserts lanes and handles drops)
+      are not written, and lane edits refuse a chart Visio built from its template; no vertical
+      starter template; Visio adds shapes under a list to the list on load.
 - [ ] **P1** The org chart has no org-chart masters, ribbon or position data; template tiles have
       no thumbnails.
 - [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;

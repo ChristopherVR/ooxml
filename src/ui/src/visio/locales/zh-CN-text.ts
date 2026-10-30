@@ -105,6 +105,4 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	Options: '选项',
 	Share: '共享',
 	'Style {n}': '样式 {n}',
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
-		'方向在创建流程图时选择（文件 > 新建 > 跨职能流程图）；现有流程图尚不能旋转。',
 };

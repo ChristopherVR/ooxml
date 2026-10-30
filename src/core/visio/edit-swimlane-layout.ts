@@ -6,14 +6,23 @@ import { boundsOf, placeVisioBox, type Box } from './edit-container-fit';
 import {
 	containerClosure,
 	containerMembersOf,
+	listMembersOf,
+	setRelation,
 	shapeIdOf,
 	topLevelShapes,
 	userValue,
+	writeContainerMembers,
+	writeListMembers,
 } from './edit-container-members';
-import { VISIO_SWIMLANE_FRAME_ROW, VISIO_SWIMLANE_LANE_ROW } from './shape-structure';
+import {
+	VISIO_SEPARATOR_ROW,
+	VISIO_SWIMLANE_FRAME_ROW,
+	VISIO_SWIMLANE_LANE_ROW,
+} from './shape-structure';
+import { VISIO_RELATIONSHIP_LIST_SIBLING } from './container-relationships';
 import type { VisioSwimlaneDirection } from './edit-swimlane-commands';
 import { stackSwimlanes } from './swimlane-stack';
-import { VISIO_SEPARATOR_ROW, setUserRow } from './edit-swimlane-shapes';
+import { createListShape, setUserRow } from './edit-swimlane-shapes';
 export interface Scope {
 	roots: ReadonlyMap<string, Element>;
 	document: Element;
@@ -51,8 +60,112 @@ export function optionsOf(frame: Element): Options {
 		style: Number.isInteger(style) && style >= 1 && style <= 4 ? style : 1,
 	};
 }
-export const isLane = (shape: Element) => userValue(shape, VISIO_SWIMLANE_LANE_ROW) === '1';
-export const isSeparator = (shape: Element) => userValue(shape, VISIO_SEPARATOR_ROW) === '1';
+const hasCategory = (shape: Element, category: string) =>
+	(userValue(shape, 'msvShapeCategories') ?? '').split(';').includes(category);
+export const isLane = (shape: Element) =>
+	userValue(shape, VISIO_SWIMLANE_LANE_ROW) === '1' || hasCategory(shape, 'Swimlane');
+export const isSeparator = (shape: Element) =>
+	userValue(shape, VISIO_SEPARATOR_ROW) === '1' || hasCategory(shape, 'Phase');
+const isList = (shape: Element) => userValue(shape, 'msvStructureType')?.toLowerCase() === 'list';
+
+/** The flowchart's Swimlane List and Phase List, when it has them (older files do not). */
+export function listsOf(scope: Scope, frame: Element): { swim?: Element; phase?: Element } {
+	const members = new Set(containerMembersOf(frame));
+	const lists = topLevelShapes(scope.root).filter(
+		(shape) => members.has(shapeIdOf(shape)) && isList(shape),
+	);
+	const kind = (name: string) =>
+		lists.find((shape) => userValue(shape, 'msvSDListRequiredCategories') === name);
+	const swim = kind('Swimlane');
+	const phase = kind('Phase');
+	return { ...(swim ? { swim } : {}), ...(phase ? { phase } : {}) };
+}
+/** The frame's members and, through its lists, the lanes and separators. */
+export function frameMemberIds(scope: Scope, frame: Element): Set<string> {
+	const { swim, phase } = listsOf(scope, frame);
+	return new Set([
+		...containerMembersOf(frame),
+		...(swim ? listMembersOf(swim) : []),
+		...(phase ? listMembersOf(phase) : []),
+	]);
+}
+export const separatorsOf = (scope: Scope, frame: Element): Element[] => {
+	const members = frameMemberIds(scope, frame);
+	return topLevelShapes(scope.root).filter(
+		(shape) => isSeparator(shape) && members.has(shapeIdOf(shape)),
+	);
+};
+
+/** The next `count` shape IDs after the page's highest. */
+export function freeShapeIds(root: Element, count: number): string[] {
+	let max = 0;
+	for (const shape of Array.from(root.getElementsByTagName('Shape')))
+		max = Math.max(max, Number(attribute(shape, 'ID')) || 0);
+	return Array.from({ length: count }, (_, index) => String(max + 1 + index));
+}
+
+/**
+ * Give the flowchart Visio's list structure: a Swimlane List and a Phase List that the frame
+ * contains, the lanes and separators as their members. Flowcharts saved as plain containers (the
+ * frame holding lanes and separators directly) are brought over the first time they are edited.
+ */
+export function ensureLists(
+	scope: Scope,
+	frame: Element,
+	ids: { swim?: string; phase?: string } = {},
+): { swim: Element; phase: Element } {
+	const found = listsOf(scope, frame);
+	if (found.swim && found.phase) return { swim: found.swim, phase: found.phase };
+	const options = optionsOf(frame);
+	const lanes = lanesOf(scope, frame, options.direction);
+	const bars = separatorsOf(scope, frame);
+	const area = boundsOf(lanes) ?? boundsOf([frame])!;
+	const fresh = freeShapeIds(scope.root, 2);
+	const box = {
+		x: (area.minX + area.maxX) / 2,
+		y: (area.minY + area.maxY) / 2,
+		width: area.maxX - area.minX,
+		height: area.maxY - area.minY,
+	};
+	const horizontal = options.direction === 'horizontal';
+	const make = (kind: 'swimlane' | 'phase', id: string) => {
+		const list = createListShape(
+			scope.root,
+			scope.document,
+			id,
+			box,
+			kind,
+			(kind === 'swimlane') === horizontal ? 2 : 0,
+			options.style,
+		);
+		frame.parentNode!.insertBefore(list, frame);
+		return list;
+	};
+	const swim = found.swim ?? make('swimlane', ids.swim ?? fresh[0]!);
+	const phase = found.phase ?? make('phase', ids.phase ?? fresh[1]!);
+	const moved = new Set([...lanes, ...bars].map(shapeIdOf));
+	writeContainerMembers(scope.root, frame, [
+		...containerMembersOf(frame).filter((id) => !moved.has(id)),
+		shapeIdOf(phase),
+		shapeIdOf(swim),
+	]);
+	writeListMembers(scope.root, swim, lanes.map(shapeIdOf));
+	writeListMembers(scope.root, phase, orderSeparators(bars, options.direction).map(shapeIdOf));
+	setRelation(swim, VISIO_RELATIONSHIP_LIST_SIBLING, [shapeIdOf(phase)]);
+	setRelation(phase, VISIO_RELATIONSHIP_LIST_SIBLING, [shapeIdOf(swim)]);
+	return { swim, phase };
+}
+/** Separators in phase order: left to right in a horizontal flowchart, top to bottom otherwise. */
+export function orderSeparators(
+	bars: readonly Element[],
+	direction: VisioSwimlaneDirection,
+): Element[] {
+	const key = (bar: Element) => {
+		const box = boundsOf([bar]);
+		return box ? (direction === 'horizontal' ? box.minX : -box.maxY) : 0;
+	};
+	return [...bars].sort((a, b) => key(a) - key(b));
+}
 
 /** The frame's lanes in stacking order: top to bottom, or left to right. */
 export function lanesOf(
@@ -60,7 +173,7 @@ export function lanesOf(
 	frame: Element,
 	direction: VisioSwimlaneDirection,
 ): Element[] {
-	const members = new Set(containerMembersOf(frame));
+	const members = frameMemberIds(scope, frame);
 	const lanes = topLevelShapes(scope.root).filter(
 		(shape) => members.has(shapeIdOf(shape)) && isLane(shape),
 	);
@@ -91,7 +204,7 @@ function gluedConnectors(root: Element): Set<string> {
 		}
 	return ids;
 }
-function shift(scope: Scope, ids: Iterable<string>, dx: number, dy: number): void {
+export function shift(scope: Scope, ids: Iterable<string>, dx: number, dy: number): void {
 	if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return;
 	const glued = gluedConnectors(scope.root);
 	const byId = new Map(topLevelShapes(scope.root).map((shape) => [shapeIdOf(shape), shape]));
@@ -149,8 +262,8 @@ export function relayout(scope: Scope, frame: Element, order?: readonly Element[
 		place(scope, lanes[index]!, entry.target);
 		if (scope.contents === 'move') shift(scope, carried.get(index)!, entry.dx, entry.dy);
 	});
-	for (const shape of topLevelShapes(scope.root)) {
-		if (!isSeparator(shape) || !containerMembersOf(frame).includes(shapeIdOf(shape))) continue;
+	const bars = separatorsOf(scope, frame);
+	for (const shape of bars) {
 		const bar = boundsOf([shape]);
 		if (!bar) continue;
 		place(
@@ -162,11 +275,23 @@ export function relayout(scope: Scope, frame: Element, order?: readonly Element[
 		);
 	}
 	place(scope, frame, stacking.frame);
-	setUserRow(frame, 'numLanes', String(lanes.length), 'STR');
+	setUserRow(frame, 'numLanes', String(lanes.length), '');
+	// Visio's lists follow: the Swimlane List spans the lanes, both name their members in order.
+	const { swim, phase } = listsOf(scope, frame);
+	const area: Box = {
+		minX: stacking.frame.minX,
+		maxX: stacking.frame.maxX,
+		maxY: stacking.top,
+		minY: stacking.end,
+	};
+	for (const list of [swim, phase]) if (list) place(scope, list, area);
+	if (swim) writeListMembers(scope.root, swim, lanes.map(shapeIdOf));
+	if (phase)
+		writeListMembers(scope.root, phase, orderSeparators(bars, options.direction).map(shapeIdOf));
 }
 
 /** Stencil instances move through the asynchronous instance path, so the caller must move them. */
-function assertMovable(root: Element, ids: readonly string[]): void {
+export function assertMovable(root: Element, ids: readonly string[]): void {
 	const byId = new Map(topLevelShapes(root).map((shape) => [shapeIdOf(shape), shape]));
 	for (const id of ids)
 		if (byId.get(id)?.hasAttribute('Master'))

@@ -108,6 +108,4 @@ export const enText: Readonly<Record<string, string>> = {
 	Options: 'Options',
 	Share: 'Share',
 	'Style {n}': 'Style {n}',
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
-		'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.',
 };

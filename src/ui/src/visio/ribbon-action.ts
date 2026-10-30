@@ -100,6 +100,8 @@ export type VisioSwimlaneAction = {
 		| 'title'
 		| 'separators'
 		| 'rotate-labels'
+		| 'direction-horizontal'
+		| 'direction-vertical'
 		| 'style';
 	/** The Style number (1-4) for the style command. */
 	style?: number;

@@ -110,6 +110,4 @@ export const esText: Readonly<Record<string, string>> = {
 	Options: 'Opciones',
 	Share: 'Compartir',
 	'Style {n}': 'Estilo {n}',
-	'The direction is chosen when the flowchart is created (File > New > Cross-Functional Flowchart); an existing flowchart cannot be turned yet.':
-		'La dirección se elige al crear el diagrama de flujo (Archivo > Nuevo > Diagrama de flujo multifuncional); un diagrama existente aún no se puede girar.',
 };

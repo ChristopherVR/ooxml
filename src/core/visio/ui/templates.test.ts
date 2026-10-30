@@ -48,7 +48,16 @@ describe('drawing templates', () => {
 			const found = page.shapes.find((shape) => shape.id === id)?.structure;
 			return found?.type === 'container' ? found.memberIds : [];
 		};
-		expect(members('50')).toEqual(['10', '11', '12']);
+		// The frame holds Visio's Phase List and Swimlane List; the lanes are the latter's members.
+		const lists = members('50').map(
+			(id) => page.shapes.find((shape) => shape.id === id)?.structure,
+		);
+		expect(lists.map((list) => list?.type)).toEqual(['list', 'list']);
+		expect(
+			lists.flatMap((list) =>
+				list?.type === 'list' && list.kind === 'swimlane' ? list.memberIds : [],
+			),
+		).toEqual(['10', '11', '12']);
 		expect(members('10')).toContain('1');
 		expect(members('11')).toEqual(expect.arrayContaining(['2', '3']));
 		expect(members('12')).toContain('4');

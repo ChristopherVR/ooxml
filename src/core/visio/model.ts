@@ -356,14 +356,22 @@ export interface VisioSwimlaneFrameOptions {
 }
 export type VisioSwimlaneRole =
 	| { role: 'frame'; options: VisioSwimlaneFrameOptions }
-	| { role: 'lane' };
+	| { role: 'lane' }
+	/** A phase separator: a member of the frame's Phase List. */
+	| { role: 'separator' };
 export type VisioShapeStructure =
 	| {
 			type: 'container';
 			memberIds: string[];
-			/** Set on a cross-functional flowchart's frame or one of its lanes. */
+			/** Set on a cross-functional flowchart's frame, one of its lanes or a phase separator. */
 			swimlane?: VisioSwimlaneRole;
 	  }
+	/**
+	 * A Visio list (User.msvStructureType = List), in member order: a cross-functional flowchart's
+	 * Swimlane List or Phase List. `direction` is User.msvSDListDirection (0 left to right, 1 right
+	 * to left, 2 top to bottom, 3 bottom to top).
+	 */
+	| { type: 'list'; memberIds: string[]; direction: number; kind?: 'swimlane' | 'phase' }
 	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {
 	fromShapeId: string;
