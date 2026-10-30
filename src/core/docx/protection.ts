@@ -5,6 +5,7 @@
 // `ooxml-core/digest`, the one the Excel sheet protection uses.
 import { hashPassword, verifyPasswordHash } from '../digest/index';
 import type { DocumentProtection, ProtectionPassword } from './form-field-model';
+import { verifyLegacyProtectionPassword } from './protection-legacy';
 import { getW, type XmlElement } from './xml';
 
 /** `w:cryptAlgorithmSid` values and the digest each names (ECMA-376 Part 4, 17.15.1.29). */
@@ -78,10 +79,9 @@ export function verifyProtectionPassword(
 ): boolean | undefined {
 	if (protection?.unverifiablePassword) return undefined;
 	if (!protection?.password) return true;
-	// Word's own `cryptAlgorithmSid` hash is not the plain spin: Word feeds the spin a legacy key
-	// derived from the password (generate-word-protection.ps1 fixtures do not match it), which this
-	// code does not implement. Those documents can be kept but not unlocked here.
-	if (protection.password.word) return undefined;
+	// Word's own `cryptAlgorithmSid` hash spins the old binary formats' key of the password.
+	if (protection.password.word)
+		return verifyLegacyProtectionPassword(password, protection.password);
 	return verifyPasswordHash(password, protection.password);
 }
 

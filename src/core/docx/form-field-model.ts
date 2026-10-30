@@ -42,8 +42,8 @@ export interface ProtectionPassword {
 	/** `w:spinCount` or `w:cryptSpinCount`. */
 	spinCount?: number;
 	/**
-	 * Set for the Word form (`w:crypt*` attributes), which is also how it is written back. Word's
-	 * hash cannot be checked here (see `verifyProtectionPassword`).
+	 * Set for the Word form (`w:crypt*` attributes), which is also how it is written back. It is
+	 * checked with the legacy key step (protection-legacy.ts).
 	 */
 	word?: { algorithmSid: number };
 }

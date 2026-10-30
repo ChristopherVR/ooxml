@@ -186,17 +186,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Protection: forms, read-only, comments-only and tracked-changes-only protection are
       enforced, and Review > Restrict Editing starts and stops them (password checked with the
       ECMA-376 hash, written back on save).
-- [ ] **P2** Restrict Editing leftovers: passwords Word wrote (`cryptAlgorithmSid` / `w:hash`) are
-      kept and written back but cannot be checked, so such protection cannot be stopped in the
-      editor: Word feeds its spin a legacy 16-bit key from the password (the initial code array and
-      XOR matrix), and the plain spin does not reproduce the hash in fixtures saved by Word 16;
-      the key derivation is not implemented (no verified table or worked values to test it
-      against). Passwords set in the editor use the ISO 29500 attributes, which Word accepts
-      (checked through COM). Also open: only "Everyone" exceptions (no per-user list); an exception
-      that continues across paragraphs or sits between blocks, and column-range permissions
-      (`w:colFirst`), are enforced but cannot be edited in the pane; the allowed-styles list of
-      formatting restrictions is kept but not enforced; the Word 97 four-byte hash is
-      unverifiable too.
+- [ ] **P2** Restrict Editing leftovers: only "Everyone" exceptions (no per-user list); an
+      exception that continues across paragraphs or sits between blocks, and column-range
+      permissions (`w:colFirst`), are enforced but cannot be edited in the pane; the allowed-styles
+      list of formatting restrictions is kept but not enforced; the Word 97 four-byte `w:hash`
+      (no `cryptAlgorithmSid`) cannot be verified, so that protection cannot be stopped here.
+      Word-written passwords (legacy key text, SHA-1/256/384/512 by sid) are checked against
+      fixtures saved by Word 16 (SHA-512 only; the other sids are checked against an independent
+      implementation).
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
       detected before an edit.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.

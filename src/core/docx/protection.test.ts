@@ -35,7 +35,7 @@ describe('protection passwords', () => {
 		expect(verifyProtectionPassword(undefined, 'x')).toBe(true);
 	});
 
-	it('reads the ISO spelling and verifies it, and keeps the Word spelling without checking it', async () => {
+	it('reads the ISO spelling and verifies it, and checks Word spelling by the legacy key', async () => {
 		const made = enforceProtection('readOnly', { password: 'pw', salt: 'AAECAwQFBgc=' }).password!;
 		const iso = await load(
 			text('A'),
@@ -49,7 +49,8 @@ describe('protection passwords', () => {
 			`<w:documentProtection w:edit="readOnly" w:enforcement="1" w:cryptProviderType="rsaAES" w:cryptAlgorithmClass="hash" w:cryptAlgorithmType="typeAny" w:cryptAlgorithmSid="14" w:cryptSpinCount="100000" w:hash="${made.hashValue}" w:salt="${made.saltValue}"/>`,
 		);
 		expect(word.model.protection?.password?.word?.algorithmSid).toBe(14);
-		expect(verifyProtectionPassword(word.model.protection, 'pw')).toBeUndefined();
+		// The same hash is not Word's: Word spins the legacy key text, not the password.
+		expect(verifyProtectionPassword(word.model.protection, 'pw')).toBe(false);
 	});
 
 	it('never unlocks a hash it cannot check', async () => {
