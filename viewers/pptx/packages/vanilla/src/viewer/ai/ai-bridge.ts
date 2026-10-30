@@ -66,6 +66,8 @@ export function createVanillaAiBridge(deps: VanillaAiBridgeDeps): PptxAiBridge {
 		},
 		getHandler: () => deps.getHandler(),
 		getSections: () => state().sections,
+		getCustomShows: () => state().customShows,
+		setCustomShows: (shows) => editor.updateCustomShows(shows),
 		getPresentationProperties: () => state().presentationProperties,
 		getCustomProperties: () => state().customProperties,
 		getCoreProperties: () => state().coreProperties,

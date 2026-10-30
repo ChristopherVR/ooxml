@@ -465,6 +465,13 @@ export const MCP_TOOL_ENTRIES: Record<string, McpToolEntry> = {
 		'deck',
 		'Manage sections',
 	),
+	manage_custom_shows: entry(
+		'List, create, rename, copy or delete custom shows, or edit their slide lists.',
+		mcpSchemas.ManageCustomShowsSchema,
+		mcp.manageCustomShows,
+		'deck',
+		'Manage custom shows',
+	),
 	update_presentation_properties: entry(
 		'Update slideshow properties (show type, loop, advance mode, pen colour).',
 		mcpSchemas.UpdatePresentationPropertiesSchema,

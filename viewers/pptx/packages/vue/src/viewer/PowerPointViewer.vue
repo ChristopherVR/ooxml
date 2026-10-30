@@ -1745,6 +1745,7 @@ const aiBridge = useAiBridge({
 	theme: pptxTheme,
 	handler,
 	sections,
+	customShows,
 	presentationProperties,
 	customProperties,
 	coreProperties,

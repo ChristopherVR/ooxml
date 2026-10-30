@@ -20,6 +20,7 @@ import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
+	PptxCustomShow,
 	PptxData,
 	PptxHandler,
 	PptxPresentationProperties,
@@ -59,6 +60,8 @@ export interface PptxAiBridgePort {
 	/** Display name of the document, used as the deck title when present. */
 	getFileName?(): string | undefined;
 	getSections(): readonly PptxSection[] | undefined;
+	/** Custom shows (`p:custShowLst`). Optional: without it manage_custom_shows cannot change the deck. */
+	getCustomShows?(): readonly PptxCustomShow[] | undefined;
 	getPresentationProperties(): PptxPresentationProperties | undefined;
 	getCustomProperties(): readonly PptxCustomProperty[] | undefined;
 	getCoreProperties(): PptxCoreProperties | undefined;
@@ -85,6 +88,7 @@ export interface PptxAiBridgePort {
 	applyTheme(updates: Partial<PptxTheme>): void;
 	setCanvasSize(size: PptxAiCanvasSize): void;
 	setSections(sections: PptxSection[]): void;
+	setCustomShows?(shows: PptxCustomShow[]): void;
 	setPresentationProperties(properties: PptxPresentationProperties): void;
 	/** Core, app and custom document properties, committed as one unit. */
 	setDocumentProperties(
@@ -135,6 +139,7 @@ function readDeckData(port: PptxAiBridgePort): PptxData {
 		height: canvas.height,
 		theme: port.getTheme(),
 		sections: copy(port.getSections()),
+		customShows: copy(port.getCustomShows?.()),
 		presentationProperties: port.getPresentationProperties(),
 		customProperties: copy(port.getCustomProperties()),
 		coreProperties: port.getCoreProperties(),
@@ -194,6 +199,11 @@ function commitDeckData(
 	const sections = after.sections ?? before.sections ?? [];
 	if (differs(before.sections, sections)) {
 		port.setSections(sections);
+		changed = true;
+	}
+	const customShows = after.customShows ?? before.customShows ?? [];
+	if (port.setCustomShows && differs(before.customShows, customShows)) {
+		port.setCustomShows(customShows);
 		changed = true;
 	}
 	const presentation = after.presentationProperties ?? before.presentationProperties ?? {};

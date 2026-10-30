@@ -40,6 +40,8 @@ function makeDeps(overrides: Partial<SvelteAiBridgeDeps> = {}): SvelteAiBridgeDe
 		commitSlides,
 		applyTheme: vi.fn(),
 		getSections: () => [],
+		getCustomShows: () => [],
+		setCustomShows: vi.fn(),
 		getPresentationProperties: () => ({}),
 		getCoreProperties: () => undefined,
 		getAppProperties: () => undefined,
@@ -161,6 +163,16 @@ describe('createSvelteAiBridge', () => {
 		expect(setPresentationProperties).not.toHaveBeenCalled();
 		// Slides did not change either, so no history commit.
 		expect(deps.commitSlides).not.toHaveBeenCalled();
+	});
+
+	it('applyDeckData commits changed custom shows to the setter', () => {
+		const setCustomShows = vi.fn();
+		const bridge = createSvelteAiBridge(makeDeps({ setCustomShows }));
+		bridge.applyDeckData?.((data) => {
+			data.customShows = [{ id: '0', name: 'Short', slideRIds: ['rId2'] }];
+			return data;
+		}, 'AI custom shows');
+		expect(setCustomShows).toHaveBeenCalledWith([{ id: '0', name: 'Short', slideRIds: ['rId2'] }]);
 	});
 
 	// viewProperties/tableStyleMap/tableStylesDefaultId/tags were missing from

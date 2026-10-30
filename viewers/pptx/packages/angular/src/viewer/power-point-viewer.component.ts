@@ -2447,6 +2447,13 @@ export class PowerPointViewerComponent
 		// canvas size + metadata are loader-tracked. Each setter marks the deck
 		// dirty so the change persists on the next save and re-renders.
 		getSections: () => this.editor.sections(),
+		getCustomShows: () => this.loader.customShows(),
+		setCustomShows: (shows) => {
+			this.loader.customShows.set(
+				shows.map((show) => ({ ...show, slideRIds: [...show.slideRIds] })),
+			);
+			this.editor.dirty.set(true);
+		},
 		getPresentationProperties: () => this.loader.presentationProperties(),
 		getCustomProperties: () => this.loader.customProperties(),
 		getCoreProperties: () => this.loader.coreProperties(),

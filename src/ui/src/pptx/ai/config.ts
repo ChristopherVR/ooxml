@@ -83,6 +83,7 @@ export type PptxAiToolName =
 	| 'set_canvas_size'
 	| 'update_metadata'
 	| 'manage_sections'
+	| 'manage_custom_shows'
 	| 'update_presentation_properties'
 	| 'import_from_json'
 	| 'apply_layout';

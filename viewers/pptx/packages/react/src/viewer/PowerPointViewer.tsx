@@ -1254,6 +1254,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			pickedFocus: aiPanel.pickTargets.length > 0 ? aiPanel.pickTargets : null,
 			handlerRef,
 			sections: state.sections,
+			customShows: state.customShows,
+			setCustomShows: state.setCustomShows,
 			presentationProperties: state.presentationProperties,
 			customProperties: state.customProperties,
 			coreProperties: state.coreProperties,

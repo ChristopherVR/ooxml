@@ -32,7 +32,7 @@ ask for one). They are grouped as:
 - Slides: add_slide, duplicate_slide, delete_slides, reorder_slides,
   update_slide_properties (background/notes/visibility), set_slide_transition.
 - Theme + presentation: apply_theme_preset, update_theme_colors,
-  update_theme_fonts, set_canvas_size, update_metadata, manage_sections,
+  update_theme_fonts, set_canvas_size, update_metadata, manage_sections, manage_custom_shows,
   update_presentation_properties, apply_layout, import_from_json (replace the
   whole deck from a pptx-viewer-json document; destructive, confirm first).
 

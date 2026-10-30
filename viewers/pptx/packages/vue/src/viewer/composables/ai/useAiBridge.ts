@@ -32,6 +32,7 @@ import type {
 	PptxCustomProperty,
 	PptxHandler,
 	PptxPresentationProperties,
+	PptxCustomShow,
 	PptxSection,
 	PptxSlide,
 	PptxTagCollection,
@@ -53,6 +54,7 @@ export interface UseAiBridgeInput {
 	// need these; they route through applySlidesUpdate / applyTheme. Each is a
 	// writable ref the bridge assigns `.value` on to fan a changed field out.
 	sections: Ref<PptxSection[]>;
+	customShows: Ref<PptxCustomShow[]>;
 	presentationProperties: Ref<PptxPresentationProperties>;
 	customProperties: Ref<PptxCustomProperty[]>;
 	coreProperties: Ref<PptxCoreProperties | undefined>;
@@ -101,6 +103,10 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 		getHandler: () => input.handler.value,
 		getFileName: () => input.fileName(),
 		getSections: () => input.sections.value,
+		getCustomShows: () => input.customShows.value,
+		setCustomShows: (shows) => {
+			input.customShows.value = shows;
+		},
 		getPresentationProperties: () => input.presentationProperties.value,
 		getCustomProperties: () => input.customProperties.value,
 		getCoreProperties: () => input.coreProperties.value,

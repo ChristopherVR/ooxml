@@ -215,7 +215,7 @@ UI (selection, navigation, the resolved deck overview).
 - **Slide structure** (6): `add_slide`, `duplicate_slide`, `delete_slides`,
   `reorder_slides`, `update_slide_properties`, `set_slide_transition`
 - **Theme** (3): `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
-- **Presentation level** (6): `set_canvas_size`, `update_metadata`, `manage_sections`,
+- **Presentation level** (7): `set_canvas_size`, `update_metadata`, `manage_sections`, `manage_custom_shows`,
   `update_presentation_properties`, `import_from_json`, `apply_layout`
 
 Speaker notes are readable (`get_speaker_notes`) but there is no dedicated write tool for

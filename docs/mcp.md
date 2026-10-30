@@ -85,7 +85,7 @@ and totals rows, column names and cells (at most 10,000, as a range read).
 
 PowerPoint uses the same definitions: `pptxTools` in `ooxml-core/pptx/automation`
 (`src/core/pptx/automation/catalogue/`), registered by `pptx-viewer-mcp` with the same
-`registerAutomationTools` call. It keeps its established 73 tool names (`get_slide`, not
+`registerAutomationTools` call. It keeps its established 74 tool names (`get_slide`, not
 `pptx_get_slide`). Each wraps a core tool function (`(ctx, params) => ToolResult`): the deck is
 loaded from the bytes, the function runs, and an edit that marked the deck dirty returns the
 saved bytes; one that changed nothing (a list action) writes nothing. Reads accept `.pptx` and

@@ -119,6 +119,22 @@ describe('createPptxAiBridge', () => {
 		expect(afterDeckUpdate).toHaveBeenCalledOnce();
 	});
 
+	it('commits changed custom shows only when the port can set them', () => {
+		const setCustomShows = vi.fn();
+		const shows = [{ id: '0', name: 'Short', slideRIds: ['rId2'] }];
+		const { port } = makePort({ getCustomShows: () => [], setCustomShows });
+		createPptxAiBridge(port).applyDeckData?.((data) => ({ ...data, customShows: shows }), 'Shows');
+		expect(setCustomShows).toHaveBeenCalledWith(shows);
+
+		const { port: readOnly } = makePort();
+		expect(() =>
+			createPptxAiBridge(readOnly).applyDeckData?.(
+				(data) => ({ ...data, customShows: shows }),
+				'Shows',
+			),
+		).not.toThrow();
+	});
+
 	it('exposes focus and notify only when the port provides them', () => {
 		const { port } = makePort();
 		expect(createPptxAiBridge(port).getFocusedTargets).toBeUndefined();
