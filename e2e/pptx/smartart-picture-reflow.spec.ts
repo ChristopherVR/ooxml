@@ -42,7 +42,9 @@ for (const layout of ['picture-accent-list--flat3', 'picture-grid--flat3']) {
 		await lines.first().press('Enter');
 		await expect(lines).toHaveCount(4);
 		await lines.nth(1).press('Backspace');
-		await expect(lines).toHaveCount(3);
+		// A grid is a matrix category (exactly four cells), so the text pane refuses to drop below
+		// four items there; the accent list takes the item away again.
+		await expect(lines).toHaveCount(layout.startsWith('picture-grid') ? 4 : 3);
 		await expect(stage.locator('image')).toHaveCount(3);
 		await expect(stage).toContainText('Updated picture caption');
 		const download = await savePptxViaBackstage(page);

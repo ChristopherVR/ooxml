@@ -70,3 +70,21 @@ describe('tab on a chrome control', () => {
 		);
 	});
 });
+
+describe('isEditorTextInputTarget across a shadow root', () => {
+	it('sees the focused field inside a custom element host (SmartArt text pane Backspace)', () => {
+		const host = mount('<div id="pane"></div>');
+		const pane = host.querySelector('#pane') as HTMLElement;
+		const root = pane.attachShadow({ mode: 'open' });
+		root.innerHTML = '<input data-node="n1" />';
+		(root.querySelector('input') as HTMLInputElement).focus();
+		expect(isEditorTextInputTarget(pane)).toBe(true);
+	});
+
+	it('does not treat a shadow host without a focused field as text input', () => {
+		const host = mount('<div id="pane"></div>');
+		const pane = host.querySelector('#pane') as HTMLElement;
+		pane.attachShadow({ mode: 'open' }).innerHTML = '<button>x</button>';
+		expect(isEditorTextInputTarget(pane)).toBe(false);
+	});
+});

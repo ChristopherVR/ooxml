@@ -18,6 +18,7 @@ import type {
 	SmartArtLayout,
 	SmartArtStyle,
 } from 'ooxml-core/pptx';
+import { applySmartArtQuickStyle3d, reflowSmartArtPictures } from 'ooxml-core/pptx';
 
 import { computeSmartArtElementLayout } from './smartart-layout';
 import { flattenNodes } from './smartart-layout-helpers';
@@ -193,6 +194,14 @@ export function rebuildDrawingShapesIfCleared(
 	// - no nodes: nothing to lay out.
 	if (shapes === undefined || shapes.length > 0 || smartArtData.nodes.length === 0) {
 		return smartArtData;
+	}
+
+	// A picture-bearing layout (its placeholders carry image fills) is laid out by the same
+	// native engine the save pipeline uses, so the pictures survive the edit. The algorithmic
+	// engine below knows nothing of picture fills and would drop every image.
+	const pictures = reflowSmartArtPictures(smartArtData, box.width, box.height);
+	if (pictures) {
+		return { ...smartArtData, drawingShapes: applySmartArtQuickStyle3d(pictures, smartArtData) };
 	}
 
 	// shapes is an empty array [] -- a structural edit cleared previously-

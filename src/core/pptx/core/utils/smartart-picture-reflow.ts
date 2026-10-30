@@ -34,6 +34,21 @@ export function reflowSmartArtPictures(
 			resolveColor: (color) =>
 				resolveDrawingColor(color, { scheme: (name) => data.pictureScheme?.[name] }),
 		});
+		// A generated layout carries its caption on the flat `text` summary, not on a cached
+		// `dsp:txBody`, so the resolved view has no text until it is copied over.
+		if (view.text === undefined && shape.text?.text) {
+			view.text = shape.text.text;
+			const run = shape.text.paragraphs.flatMap((paragraph) => paragraph.runs)[0];
+			if (run?.sizePt) view.fontSize = (run.sizePt * 96) / 72;
+			if (run?.typeface) view.fontFamily = run.typeface;
+			if (run?.bold !== undefined) view.fontWeight = run.bold ? 700 : 400;
+			if (run?.italic !== undefined) view.fontStyle = run.italic ? 'italic' : 'normal';
+			const color = run?.color
+				? resolveDrawingColor(run.color, { scheme: (name) => data.pictureScheme?.[name] })
+				: undefined;
+			if (color) view.fontColor = color.hex;
+			if (shape.text.anchor) view.textVerticalAnchor = shape.text.anchor;
+		}
 		if (shape.sourceStyleLabel) view.styleLabel = shape.sourceStyleLabel;
 		if (shape.sourceNodeId) view.id = `sa-interp-${shape.sourceNodeId}`;
 		if (view.pictureFill?.relId) {

@@ -15,6 +15,7 @@ interface KeyTargetElement {
 	tagName?: string;
 	isContentEditable?: boolean;
 	closest?: (selector: string) => unknown;
+	shadowRoot?: { activeElement?: unknown } | null;
 }
 
 function asElement(target: unknown): (KeyTargetElement & { tagName: string }) | null {
@@ -26,12 +27,30 @@ function asElement(target: unknown): (KeyTargetElement & { tagName: string }) | 
 }
 
 /**
+ * The element a key press really came from. A custom element with a shadow root
+ * (the SmartArt text pane) retargets the event to its host, so
+ * a field inside it looks like the host; follow the focused element down through
+ * open shadow roots to the real field.
+ */
+function deepTarget(target: unknown): unknown {
+	let current = target as KeyTargetElement | null;
+	for (let depth = 0; depth < 8; depth++) {
+		const inner = current?.shadowRoot?.activeElement as KeyTargetElement | null | undefined;
+		if (!inner || typeof inner.tagName !== 'string') {
+			break;
+		}
+		current = inner;
+	}
+	return current;
+}
+
+/**
  * True when a key press is the user typing into a field rather than driving the
  * editor. Kept here so every binding classifies the same targets: a binding that
  * forgot `<select>` would swallow the arrow keys of its own dropdowns.
  */
 export function isEditorTextInputTarget(target: unknown): boolean {
-	const element = asElement(target);
+	const element = asElement(deepTarget(target));
 	if (!element) {
 		return false;
 	}

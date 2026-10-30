@@ -22,6 +22,8 @@ it.each(['picture-accent-list--flat3', 'picture-grid--flat3'])(
 		data.drawingShapes = relayoutSmartArt(data, element.width, element.height);
 		data.drawingDirty = true;
 		expect(data.drawingShapes.filter((shape) => shape.fillImageUrl)).toHaveLength(3);
+		// Captions of a regenerated picture layout stay on the resolved shapes.
+		expect(data.drawingShapes.map((shape) => shape.text)).toContain('Updated picture caption');
 		const saved = await handler.save(slides);
 		const again = await new PptxHandler().load(saved);
 		const reopened = again.slides[0]!.elements.find((item) => item.type === 'smartArt');
