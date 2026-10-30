@@ -66,7 +66,34 @@ export function formulasTab(): RibbonTab {
 			{
 				id: 'formula-auditing',
 				label: 'Formula Auditing',
-				controls: [{ kind: 'toggle', command: 'formulas.show-formulas', showLabel: true }],
+				controls: [
+					{
+						kind: 'stack',
+						controls: [
+							{ kind: 'button', command: 'formulas.trace-precedents', showLabel: true },
+							{ kind: 'button', command: 'formulas.trace-dependents', showLabel: true },
+							{
+								kind: 'split',
+								command: 'formulas.remove-arrows',
+								showLabel: true,
+								menu: [
+									{ command: 'formulas.remove-arrows' },
+									{ command: 'formulas.remove-precedent-arrows' },
+									{ command: 'formulas.remove-dependent-arrows' },
+								],
+							},
+						],
+					},
+					{
+						kind: 'stack',
+						controls: [
+							{ kind: 'toggle', command: 'formulas.show-formulas', showLabel: true },
+							{ kind: 'button', command: 'formulas.error-checking', showLabel: true },
+							{ kind: 'button', command: 'formulas.evaluate-formula', showLabel: true },
+						],
+					},
+					{ kind: 'toggle', command: 'formulas.watch-window', size: 'large' },
+				],
 			},
 			{
 				id: 'calculation',

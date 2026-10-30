@@ -426,12 +426,6 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Dividir paneles (Inmovilizar paneles funciona)',
 		'拆分窗格(冻结窗格可用)',
 	],
-	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window': [
-		'Audit de formules : repérer les antécédents, repérer les dépendants, évaluer la formule, fenêtre Espion',
-		'Formelüberwachung: Spur zum Vorgänger, Spur zum Nachfolger, Formelauswertung, Überwachungsfenster',
-		'Auditoría de fórmulas: rastrear precedentes, rastrear dependientes, evaluar fórmula, ventana Inspección',
-		'公式审核:追踪引用单元格、追踪从属单元格、公式求值、监视窗口',
-	],
 	'Opening .xlsb binary workbooks': [
 		'Ouverture des classeurs binaires .xlsb',
 		'Öffnen binärer .xlsb-Arbeitsmappen',
@@ -462,4 +456,18 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Vista Diseño de página',
 		'页面布局视图',
 	],
+	'Formula auditing: Trace Precedents and Dependents, Remove Arrows, Evaluate Formula, Error Checking and Watch Window':
+		[
+			'Audit de formules : repérage des antécédents et dépendants, suppression des flèches, évaluation de formule, vérification des erreurs et fenêtre Espion',
+			'Formelüberwachung: Spuren zu Vorgängern und Nachfolgern, Pfeile entfernen, Formelauswertung, Fehlerüberprüfung und Überwachungsfenster',
+			'Auditoría de fórmulas: rastreo de precedentes y dependientes, quitar flechas, evaluar fórmula, comprobación de errores y ventana Inspección',
+			'公式审核:追踪引用和从属单元格、移去箭头、公式求值、错误检查和监视窗口',
+		],
+	'Tracing precedents and dependents through defined names, structured references and 3D references':
+		[
+			'Repérage des antécédents et dépendants via les noms définis, les références structurées et les références 3D',
+			'Spuren zu Vorgängern und Nachfolgern über definierte Namen, strukturierte Bezüge und 3D-Bezüge',
+			'Rastreo de precedentes y dependientes a través de nombres definidos, referencias estructuradas y referencias 3D',
+			'通过定义的名称、结构化引用和三维引用追踪引用和从属单元格',
+		],
 };

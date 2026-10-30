@@ -48,6 +48,7 @@ export const SUPPORTED_FEATURES = [
 	'Sort and filter',
 	'AutoFilter drop-down: value checklist with search, Text, Number and Date filters, Top 10, Above and Below Average, colour and custom criteria',
 	'Freeze panes',
+	'Formula auditing: Trace Precedents and Dependents, Remove Arrows, Evaluate Formula, Error Checking and Watch Window',
 ] as const;
 
 export const UNSUPPORTED_FEATURES = [
@@ -57,7 +58,7 @@ export const UNSUPPORTED_FEATURES = [
 	'Sorting by cell colour, font colour or icon',
 	'Flash Fill, Subtotal and Consolidate',
 	'Split panes (Freeze Panes works)',
-	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window',
+	'Tracing precedents and dependents through defined names, structured references and 3D references',
 	'Opening .xlsb binary workbooks',
 	'Editing threaded comment replies',
 	'Macros (VBA is kept in the file but never run)',

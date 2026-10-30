@@ -21,6 +21,7 @@ import { GRID_CSS } from './styles';
 import { FilterButtons } from './filter-buttons';
 import { ValidationList } from './validation-list';
 import { installRemoteSelections } from './remote-layer';
+import { AUDIT_CSS, installAuditArrows } from './audit-layer';
 import { installPageBreakPreview, PAGE_BREAK_CSS } from './page-break-layer';
 
 export { editBridge, type EditBridge, type EditMode, type EditState } from 'ooxml-core/xlsx/ui';
@@ -36,6 +37,7 @@ const structuralKinds = new Set(['structure', 'sheets', 'view', 'undo', 'redo', 
 export function mountGrid(ctx: EditorContext, container: HTMLElement): () => void {
 	ensureStyle(ctx.root, 'xg', GRID_CSS);
 	ensureStyle(ctx.root, 'xgpb', PAGE_BREAK_CSS);
+	ensureStyle(ctx.root, 'xga', AUDIT_CSS);
 	const view = new GridView(ctx, container);
 	const selection = new GridSelection(view);
 	const editor = new CellEditor(view, (move) => {
@@ -48,6 +50,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const a11y = new GridA11y(view, sink);
 	const removeRemote = installRemoteSelections(view);
 	const removePageBreaks = installPageBreakPreview(view);
+	const removeAuditArrows = installAuditArrows(view);
 	let marqueeSheet = -1;
 	const clipboard = createGridClipboard({
 		ctx,
@@ -223,6 +226,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		a11y.destroy();
 		removeRemote();
 		removePageBreaks();
+		removeAuditArrows();
 		view.destroy();
 	};
 }

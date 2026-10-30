@@ -5,6 +5,7 @@ import { registerNavigationDialogs } from './register-navigation';
 import { registerRuleDialogs } from './register-rules';
 import { registerSimpleDialogs } from './simple';
 import { registerToolDialogs } from './register-tools';
+import { mountWatchWindow } from './watch-window';
 
 export function registerDialogs(ctx: EditorContext): void {
 	registerSimpleDialogs(ctx);
@@ -12,4 +13,5 @@ export function registerDialogs(ctx: EditorContext): void {
 	registerToolDialogs(ctx);
 	registerFormatCellsDialogs(ctx);
 	registerRuleDialogs(ctx);
+	mountWatchWindow(ctx);
 }

@@ -1,5 +1,6 @@
 // Registers the navigation, names and information dialogs.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { openErrorChecking, openEvaluateFormula } from './audit-dialogs';
 import { openCommentsList } from './comments-list';
 import { openCreateNames } from './create-names';
 import { type DefineNameProps, openDefineName } from './define-name';
@@ -16,6 +17,8 @@ const obj = <T>(props: unknown): T =>
 export function registerNavigationDialogs(ctx: EditorContext): void {
 	const d = ctx.dialogs;
 	d.register('find-replace', (c, p) => openFindReplace(c, obj<FindReplaceProps>(p)));
+	d.register('evaluate-formula', (c) => openEvaluateFormula(c));
+	d.register('error-checking', (c) => openErrorChecking(c));
 	d.register('go-to', (c) => openGoTo(c));
 	d.register('go-to-special', (c) => openGoToSpecial(c));
 	d.register('insert-function', (c, p) => openInsertFunction(c, obj<InsertFunctionProps>(p)));

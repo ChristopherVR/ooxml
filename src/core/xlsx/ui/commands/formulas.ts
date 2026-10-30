@@ -3,6 +3,7 @@
 import { FUNCTION_CATALOG, type FunctionInfo } from '../../index';
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
+import { auditCommands } from './audit';
 import { icon } from './icons';
 import { editing, refresh, target, viewing } from './util';
 
@@ -64,6 +65,7 @@ export function insertFunctionCall(ctx: EditorContext, name: string, args?: stri
 
 export function formulaCommands(): Command[] {
 	return [
+		...auditCommands(),
 		editing({
 			id: 'formulas.insert-function',
 			label: 'Insert Function',
