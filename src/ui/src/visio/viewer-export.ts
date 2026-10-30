@@ -1,8 +1,7 @@
 import type { VisioDocument } from 'ooxml-core/visio';
-import { buildImagePagesPdf, type PdfImagePage } from '../export/pdf-pages';
 import { exportPageSvg } from './export-svg';
 
-/** Raster resolution of PDF and PNG output; large pages are scaled down to the canvas cap. */
+/** Raster resolution of PNG output and of PDF picture-page fallbacks; large pages are scaled down to the canvas cap. */
 export const EXPORT_DPI = 150;
 const MAX_CANVAS_SIDE = 4096;
 
@@ -67,31 +66,4 @@ export async function exportPagePng(
 	pageIndex: number,
 ): Promise<Blob> {
 	return blob(await rasterizePage(doc, model, pageIndex), 'image/png');
-}
-
-/**
- * Every foreground page (with its background pages) as one raster PDF page of the drawing's
- * page size. Text is not selectable: the pages are pictures, not vector PDF.
- */
-export async function exportDocumentPdf(doc: Document, model: VisioDocument): Promise<Blob> {
-	const pages: PdfImagePage[] = [];
-	for (const [index, page] of model.pages.entries()) {
-		if (page.isBackground) continue;
-		const canvas = await rasterizePage(doc, model, index);
-		const jpeg = new Uint8Array(await (await blob(canvas, 'image/jpeg', 0.92)).arrayBuffer());
-		const width = page.width * 72,
-			height = page.height * 72;
-		pages.push({
-			width,
-			height,
-			images: [
-				{
-					image: { bytes: jpeg, width: canvas.width, height: canvas.height },
-					placement: { x: 0, y: 0, width, height },
-				},
-			],
-		});
-	}
-	if (!pages.length) throw new Error('The drawing has no foreground pages to export.');
-	return new Blob([buildImagePagesPdf(pages)], { type: 'application/pdf' });
 }

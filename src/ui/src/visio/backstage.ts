@@ -278,7 +278,7 @@ export function createBackstage(doc: Document): HTMLElement {
 				doc,
 				'export-pdf',
 				'Create PDF/XPS Document',
-				'A PDF with one picture page per foreground page, at the page size. Text is not selectable; XPS is not offered.',
+				'A vector PDF with one page per foreground page at the page size and selectable text in standard fonts (not embedded). Shadows, glow and gradients are simplified; a page that cannot be drawn as vectors becomes a picture. XPS is not offered.',
 			),
 			el(doc, 'h2', 'backstage-subheading', 'Change File Type'),
 			action(doc, 'download', 'Visio Drawing (*.vsdx)', 'A copy of the drawing with your edits.'),
@@ -288,7 +288,12 @@ export function createBackstage(doc: Document): HTMLElement {
 				'SVG (*.svg)',
 				'The current page as an approximate vector picture.',
 			),
-			action(doc, 'export-pdf', 'PDF (*.pdf)', 'Every foreground page as a picture page.'),
+			action(
+				doc,
+				'export-pdf',
+				'PDF (*.pdf)',
+				'Every foreground page as vector shapes and selectable text.',
+			),
 			action(doc, 'export-png', 'PNG picture (*.png)', 'The current page at 150 dpi.'),
 			el(
 				doc,

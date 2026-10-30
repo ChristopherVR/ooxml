@@ -75,7 +75,8 @@ import type { ViewerResizeHandles } from './viewer-resize-handles';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
-import { exportDocumentPdf, exportPagePng } from './viewer-export';
+import { exportPagePng } from './viewer-export';
+import { exportDocumentPdf } from './viewer-pdf';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
