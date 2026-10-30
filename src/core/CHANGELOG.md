@@ -7,6 +7,60 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.34.0) - 2026-10-30
+
+### Features
+
+- **visio:** Keep proportions on corner handles and with shift ([9de0a3d](https://github.com/ChristopherVR/ooxml/commit/9de0a3d6e9a7d7deb9fb67e239c74d00db064991))
+- **visio:** Draw infinite line geometry across the page ([6785af7](https://github.com/ChristopherVR/ooxml/commit/6785af74715a03087c4f9f9d2fd880253a5401ac))
+- **visio:** Apply theme colours separately from Design > Variants > More ([e9e1144](https://github.com/ChristopherVR/ooxml/commit/e9e114426b99ae23d6293872959b53509b1b0d5b))
+- **visio:** Add a New-drawing template gallery ([dd7ea20](https://github.com/ChristopherVR/ooxml/commit/dd7ea200977a83f90e9d0f77c1a4812e9346173a))
+- **visio:** Open and edit vsdm, vstx, vstm and vssm packages ([53054e9](https://github.com/ChristopherVR/ooxml/commit/53054e9fe3cc465ddbb50a6a40e0026f6a884a55))
+- **docx:** Open legacy .doc with tables, headers, notes and formatting ([3ad85e6](https://github.com/ChristopherVR/ooxml/commit/3ad85e653c075e6935e8e2e74d15fa9c59de9181))
+- **visio:** Apply theme fonts, effects and connectors separately ([aae09b5](https://github.com/ChristopherVR/ooxml/commit/aae09b5a74a214ddb93ced67ddc8648ea92ac2e5))
+- **visio:** Add cross-functional flowchart lanes that stack and resize together ([0fe141b](https://github.com/ChristopherVR/ooxml/commit/0fe141bd0a628d16d5db5c2343656e077049ffb4))
+- **docx:** Draw and preserve picture bullets (numPicBullet) ([3206b76](https://github.com/ChristopherVR/ooxml/commit/3206b765bfa8caad2d982ffa498ef680a6271168))
+- **docx:** Measure picture bullets and add a Picture bullet command ([e059a2b](https://github.com/ChristopherVR/ooxml/commit/e059a2b0c0235d6a7a5ffad06d57cb43027c8383))
+- **docx:** Add find options, wildcards and special codes to Find ([ed81d75](https://github.com/ChristopherVR/ooxml/commit/ed81d7524a6cb5380d098f9d6a9360c07f273cd8))
+- **xlsx:** Sort on colour, icon, custom list, case and left to right ([a5fcbc0](https://github.com/ChristopherVR/ooxml/commit/a5fcbc0b20840c08d92f85281800a6fbf014975f))
+- **xlsx:** Save table sort, reapply sorts and keep typed sort lists ([e88ee1e](https://github.com/ChristopherVR/ooxml/commit/e88ee1e783a7a8e636c461573077d3203d01cd19))
+- **xlsx:** Add View > Split with independently scrolling panes ([b66bbd1](https://github.com/ChristopherVR/ooxml/commit/b66bbd184ff2b95bf007b11147704e73cf632ab8))
+- **xlsx:** Save split pane scroll and selections, keep frozen scroll ([bf5bf9d](https://github.com/ChristopherVR/ooxml/commit/bf5bf9d544e03874e2b023076172d7636e71702e))
+- **visio:** Resize with Visio's modifiers, locks and edge snapping ([eb4bc59](https://github.com/ChristopherVR/ooxml/commit/eb4bc597aa286d14aaa26d0f745beedf181275c8))
+- **xlsx:** Add formula auditing with trace arrows, evaluate and watch ([6648d59](https://github.com/ChristopherVR/ooxml/commit/6648d5910d0a40e2faf92d791611061dc268386e))
+- **xlsx:** Trace through names, save ignored errors, add audit rules ([4ffab80](https://github.com/ChristopherVR/ooxml/commit/4ffab80fe0ec464f314b3386b2c21fab712309bd))
+- **docx:** Enforce document protection and add Restrict Editing ([b45d6dc](https://github.com/ChristopherVR/ooxml/commit/b45d6dc1ec109ea7bf97c702a406763c9452d3e6))
+- **docx:** Dock the Restrict Editing pane and check passwords against Word ([6340399](https://github.com/ChristopherVR/ooxml/commit/63403999b204521d6d255eff14d00c0f49484e06))
+- **docx:** Check passwords Word hashed with the legacy key ([8d3d457](https://github.com/ChristopherVR/ooxml/commit/8d3d457ec7c2069b3ac1990eb7a0307b4e56c44e))
+- **pptx:** Add custom show editing operations and manage_custom_shows tool ([2dce987](https://github.com/ChristopherVR/ooxml/commit/2dce987baa2feb12c3fd319953153a9d85d76f57))
+- **pptx:** Add the Custom Shows dialog and write valid custom show ids ([5e4aca6](https://github.com/ChristopherVR/ooxml/commit/5e4aca69a8ca52e249492cd908dba239104538f3))
+- **visio:** Resize nested groups, rotated members and rich selections ([45e5e8c](https://github.com/ChristopherVR/ooxml/commit/45e5e8c26da4b38c5fead77c646ad7a3ff0528cb))
+- **visio:** Add org chart position data, Org Chart tab and template thumbnails ([12240ba](https://github.com/ChristopherVR/ooxml/commit/12240baf20246a80c0a6fa432fb12bb47a3b9f2d))
+- **visio:** Save data connections and primary keys, refresh by key ([d5d968a](https://github.com/ChristopherVR/ooxml/commit/d5d968ae88bcec5519d2d5b7c49a6f7b45bf831d))
+- **visio:** Snap resize to shapes and guides, add Ctrl centre resize and embellishment ([88e5959](https://github.com/ChristopherVR/ooxml/commit/88e5959e90cc89e274a1af65ae7e1a7706a49701))
+- **visio:** Add PDF page range, gradients, shadows and embedded fonts ([f4cec01](https://github.com/ChristopherVR/ooxml/commit/f4cec01b5923e37e6b0bbdc9fab66adaa0339da6))
+- **visio:** Add picture adjust, crop and container options ([67c93ae](https://github.com/ChristopherVR/ooxml/commit/67c93ae3ea5737cb51691575fe9b2088d3fee105))
+- **visio:** Write cross-functional flowcharts in Visio's list structure ([155a625](https://github.com/ChristopherVR/ooxml/commit/155a6259e770f3952ef37c84ca0f940ace632aba))
+
+### Bug Fixes
+
+- **visio:** Bound signature removal and refuse signatures it cannot remove ([2026867](https://github.com/ChristopherVR/ooxml/commit/20268676af0303d34f409628b35c1901f1168763))
+- **docx:** Say why a legacy .doc picture without data is left out ([5d25d8d](https://github.com/ChristopherVR/ooxml/commit/5d25d8d4b80055118348ca058a7ebd729d86f611))
+- **docx:** Keep saving a legacy .doc as .doc and add saveDocx ([2e91700](https://github.com/ChristopherVR/ooxml/commit/2e91700191d72b0116def67da6a328b7344b99f8))
+- **visio:** Edit connectors Visio glued to PinY with native evidence ([9072369](https://github.com/ChristopherVR/ooxml/commit/907236938f9fc37d23ae3427f2848354833cc0b4))
+- **visio:** Keep corner handles proportional and scale selections from the centre ([8df7e8e](https://github.com/ChristopherVR/ooxml/commit/8df7e8ea470e84858ab0ab62e93e250ed1e82cb6))
+- **xlsx:** Refresh public surface and type visio resize tests ([8b662f7](https://github.com/ChristopherVR/ooxml/commit/8b662f7ad87aed9763c17b85fb9b25a9aba3f584))
+- **docx:** Refresh the root entry public surface snapshot ([d7f9b72](https://github.com/ChristopherVR/ooxml/commit/d7f9b729ef889e32b956f7b8f319ee56f401d9f0))
+- **visio:** Accept container and picture edits from the viewer ([fb1bb20](https://github.com/ChristopherVR/ooxml/commit/fb1bb206acb8841f72dd0a9bf9bbcb8c84c30936))
+
+### Build & CI
+
+- **deps:** Pin @christophervr/ole2 0.14.0 for the legacy .doc model ([4bc6209](https://github.com/ChristopherVR/ooxml/commit/4bc62092edec777c2785a17bd7319d105169f412))
+
+### Styling
+
+- Format picture bullet numbering and the custom shows template ([2cdcec1](https://github.com/ChristopherVR/ooxml/commit/2cdcec1c9e79ced33688aa18573002ce77034b0d))
+
 ## [1.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.33.0) - 2026-10-30
 
 ### Features
