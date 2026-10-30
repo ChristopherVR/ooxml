@@ -45,9 +45,6 @@ export const enText: Readonly<Record<string, string>> = {
 	'Open a .vsdx file to add backgrounds.': 'Open a .vsdx file to add backgrounds.',
 	'Open a .vsdx file to lay out its shapes.': 'Open a .vsdx file to lay out its shapes.',
 	'open a .vsdx file to lay out its shapes.': 'open a .vsdx file to lay out its shapes.',
-	'3-D rotation needs a 3-D renderer.': '3-D rotation needs a 3-D renderer.',
-	'Bevel needs 3-D lighting the SVG renderer does not draw.':
-		'Bevel needs 3-D lighting the SVG renderer does not draw.',
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Custom theme colour sets are not written yet; pick a theme or variant.',
 	'DWG and DXF import is not supported.': 'DWG and DXF import is not supported.',

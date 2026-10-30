@@ -193,6 +193,15 @@ export {
 	type VisioShadowPreset,
 } from './edit-formatting-effects';
 export {
+	VISIO_BEVEL_PRESETS,
+	VISIO_BEVEL_TYPES_INSET,
+	VISIO_BEVEL_TYPES_SHARP,
+	VISIO_ROTATION_PRESETS,
+	visioRotation3dMatrix,
+	type VisioBevel,
+	type VisioRotation3d,
+} from './bevel-3d';
+export {
 	VISIO_GLOW_SIZES,
 	VISIO_GLOW_TRANSPARENCY,
 	VISIO_SOFT_EDGE_SIZES,

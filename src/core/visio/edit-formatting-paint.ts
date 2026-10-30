@@ -6,6 +6,7 @@ import type { VisioPackage } from './package';
 import type { FormattingRowContext } from './edit-style-admission';
 import { quickStyleWrites, shadowWrites } from './edit-formatting-effects';
 import { effectWrites } from './edit-formatting-glow';
+import { bevelWrites, rotationWrites } from './bevel-3d';
 
 export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWrite[] {
 	const writes = new Map<string, FormattingWrite>();
@@ -114,6 +115,8 @@ export async function shapeFormattingPlan(
 		: undefined;
 	if (edit.shadow) shadowWrites(edit.shadow, add);
 	effectWrites(edit, add);
+	if (edit.bevel !== undefined) bevelWrites(edit.bevel, add);
+	if (edit.rotation3d !== undefined) rotationWrites(edit.rotation3d, add);
 	return { writes: [...writes.values()], ...(rows ? { rows } : {}) };
 }
 export async function assertShapeFormattingPaintScope(

@@ -76,9 +76,16 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	);
 	await menuItem(viewer, ['Reflection', 'Half Reflection, touching']);
 	await expect(shape.locator('[data-reflection]')).toHaveCount(1);
-	await expect(
-		viewer.locator('[data-ribbon-tab]:not([data-contextual]) [command="bevel"]'),
-	).toHaveAttribute('disabled', '');
+	// Bevel and 3-D Rotation write Visio's cells and are drawn as approximations.
+	await menuItem(viewer, ['Bevel', 'Soft Round']);
+	await expect(shape.locator('[data-bevel]')).toHaveCount(1);
+	await expect(shape.locator('[data-bevel]')).toHaveAttribute(
+		'filter',
+		/^url\(#visio-bevel-\d+\)$/,
+	);
+	await menuItem(viewer, ['3-D Rotation', 'Isometric Right Up']);
+	await expect(shape.locator('[data-rotation3d]')).toHaveAttribute('transform', /^matrix\(/);
+	await expect(shape.locator('[data-rotation3d] [data-geometry]').first()).toBeVisible();
 
 	// Glow Options... opens the Format Shape task pane at Effects; a change applies at once.
 	await menuItem(viewer, ['Glow', 'Glow Options...']);
@@ -90,7 +97,7 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await soft.press('Tab');
 	await expect(shape.locator('[data-geometry]').first()).not.toHaveAttribute('filter', /.+/);
 
-	for (let step = 0; step < 6; step++) await viewer.locator('.qat [data-command="undo"]').click();
+	for (let step = 0; step < 8; step++) await viewer.locator('.qat [data-command="undo"]').click();
 	await expect(shape.locator('[data-glow]')).toHaveCount(0);
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#5b9bd5');
 	expect(errors).toEqual([]);

@@ -332,8 +332,9 @@ installed Visio 16 build is used to check that saved files open without repair.
       source itself: the connection names the file, not its folder.
 - [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
       pictures are refused on insert.
-- [ ] **P1** Bevel, 3-D rotation and full theme effects are not drawn; text has no Visio font
-      metrics.
+- [ ] **P1** Bevel and 3-D rotation are approximations (a lighting overlay and a parallel
+      projection; no perspective foreshortening, extrusion, bevel contour or bottom bevel, themed
+      bevels are not read); text has no Visio font metrics.
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
 - [ ] **P2** Periodic NURBS are missing; stencil previews still omit `InfiniteLine`.
 - [ ] **P2** Visio validation rule-set parts (`validation.xml`) are not modelled; Check Diagram is
@@ -424,12 +425,13 @@ installed Visio 16 build is used to check that saved files open without repair.
       new and need a native review.
 - [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
       mark the current one; Visio 16 opens the result and keeps the four scheme cells.
-- [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High) but its
-      decorative geometry is not drawn, and the level-to-index mapping is not verified against
-      Visio's gallery; theme connector arrowheads are not themed from the connector scheme; Visio's
-      own schemes other than our six built-in themes cannot be picked; Visio does not name our
-      scheme IDs.
-- [ ] **P2** Disabled: Bevel, 3-D Rotation, CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
+- [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High as 1, 2, 3,
+      the `embellishment` values of the theme's variants); Visio 16 resolves no shape cell from it,
+      so there is nothing to draw, but what its Embellishment gallery does to the variant index is
+      unverified. Themed arrowheads are read from the connector line style (Visio 16's own themes
+      carry none). Visio's own schemes other than our six built-in themes cannot be picked; Visio
+      does not name our scheme IDs.
+- [ ] **P2** Disabled: CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
       SharePoint Workflow, the Window group, Macros and Add-Ons.
 
 ## Review history

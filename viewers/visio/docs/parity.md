@@ -1679,6 +1679,48 @@ The stacking scope follows Microsoft's documented
 and refuses dynamic container lookups whose results depend on
 [container z-order](https://learn.microsoft.com/en-us/office/client-developer/visio/containersheetref-function).
 
+## Bevel, 3-D rotation, Embellishment and theme arrowheads, 2026-10-30
+
+Effects > Bevel and Effects > 3-D Rotation are enabled and write Visio's cells. Evidence came from
+Visio 16 over COM (cell names, ranges) and its raster export (what Visio draws); Visio's own SVG
+export ignores both effects.
+
+- Bevel writes `BevelTopType` (1-12), `BevelTopWidth` and `BevelTopHeight` (6 pt, as points with the
+  `PT` unit). The numbering is the gallery order, read from renders of types 1-12: 1 Circle,
+  2 Relaxed Inset, 3 Cross, 4 Cool Slant, 5 Angle, 6 Soft Round, 7 Convex, 8 Slope, 9 Divot,
+  10 Riblet, 11 Hard Edge, 12 Art Deco (identified by eye from the renders; 1, 2 and 5 are
+  certain, the rest follow the gallery order). The renderer approximates it with an SVG
+  diffuse-lighting overlay (`render-bevel.ts`): light from the top left, inverted for the two inset
+  types, a narrower profile for the hard types. It does not reproduce Visio's profiles, materials,
+  contour or the extrusion Visio draws when a bevel is combined with rotation, and the strength
+  changes slightly with zoom. A bottom bevel or a contour is read and reported, not drawn. A
+  `Themed` bevel cell is not read from the theme: the installed Visio 16 themes (Office Theme,
+  Facet, Organic and others) carry `a:sp3d` with extrusion and contour colours only, no
+  `a:bevelT`.
+- 3-D Rotation writes `RotationXAngle`, `RotationYAngle`, `RotationZAngle` and `Perspective`
+  (radians with the `DEG` unit). The nine presets use our own angles named after the Office
+  gallery; Visio's exact preset angles are not verified. The drawing is a parallel projection about
+  the shape centre (`visioRotation3dMatrix`), checked against Visio's raster export: X compresses
+  the width, Y the height, X with Y shears so the right side drops, Z turns counter-clockwise, and
+  `RotationType` 0 to 2 draw alike. Perspective foreshortening and extrusion are not drawn (a
+  perspective preset is drawn parallel and the PDF export says so); `KeepTextFlat` keeps the text
+  out of the transform. Child shapes of a group are not turned with it.
+- PDF export skips the bevel overlay and reports it; the rotation matrix is exported. SVG export
+  carries both approximations.
+- Embellishment: `EmbellishmentIndex` is a page cell that changes no resolved shape cell in Visio 16
+  (set to 0-4 on a themed shape, then read fill, line, shadow, bevel and glow). In the theme part the
+  number is an `embellishment` attribute of each `vt:variationStyleScheme` (values 1, 2 and 3 on
+  the four variants of the Office Theme), so Low, Medium and High as 1, 2 and 3 is consistent with
+  the file. There is no decorative geometry to draw from the cell; what the variants change (fill,
+  line and effect style indices) is already resolved. What Visio does to `VariationStyleIndex` when
+  its Embellishment gallery is used could not be driven headlessly.
+- Theme arrowheads: the installed Visio 16 themes carry no `a:headEnd` or `a:tailEnd` in the
+  connector scheme and the arrow cells of a themed connector are literal numbers. A `Themed`
+  `BeginArrow` or `EndArrow` is now read from the selected connector line style (`themeArrow`:
+  triangle to code 4, stealth 5, arrow 3, sizes sm, med, lg to 1, 2, 3); diamond and oval ends have
+  no measured glyph and stay unthemed. That mapping is unverified against a real theme that
+  carries arrowheads and has no unit test beyond the literal-cell case.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.

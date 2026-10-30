@@ -44,9 +44,6 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	'Open a .vsdx file to add backgrounds.': '打开 .vsdx 文件以添加背景。',
 	'Open a .vsdx file to lay out its shapes.': '打开 .vsdx 文件以布局其形状。',
 	'open a .vsdx file to lay out its shapes.': '打开 .vsdx 文件以布局其形状。',
-	'3-D rotation needs a 3-D renderer.': '三维旋转需要三维渲染器。',
-	'Bevel needs 3-D lighting the SVG renderer does not draw.':
-		'棱台需要 SVG 渲染器无法绘制的三维光照。',
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'尚不能写入自定义主题颜色集；请选择主题或变体。',
 	'DWG and DXF import is not supported.': '不支持导入 DWG 和 DXF。',

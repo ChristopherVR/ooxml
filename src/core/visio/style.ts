@@ -6,12 +6,18 @@ import { clampUnitInterval } from '../color/color-primitives';
 import { themeLinearGradient } from './theme-gradient';
 import { themeEffects } from './theme-effects';
 import { themeFontFamily } from './theme-font';
-import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
+import {
+	themeLineWeight,
+	reportThemeEffects,
+	themeSolidLinePattern,
+	themeArrow,
+} from './theme-line';
 import { lineCap } from './line-style';
 import { linePattern } from './line-pattern';
 import { sourcePaint } from './source-paint';
 import { shapeShadow } from './shadow';
 import { shapeEffects } from './effects';
+import { hasUndrawnBevel, shapeBevel, shapeRotation3d } from './bevel-3d';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { characterExtras } from './text-character';
@@ -161,6 +167,17 @@ export function shapeStyle(
 		report,
 		themedEffects,
 	);
+	const bevel = shapeBevel(cells);
+	const rotation3d = shapeRotation3d(cells);
+	if (bevel || rotation3d)
+		report(
+			'approximated-3d',
+			'Bevel and 3-D rotation are approximated by a lighting overlay and a parallel projection; perspective and extrusion are not drawn.',
+		);
+	if (hasUndrawnBevel(cells))
+		report('unsupported-bevel', 'Bottom bevels and bevel contours are not drawn.');
+	const themedBegin = themeArrow(cells, resources, 'Begin');
+	const themedEnd = themeArrow(cells, resources, 'End');
 	const cap = lineCap(cells, resources, report);
 	// The geometry reader reports a bad value; here it is only shown to the user.
 	const rounding = number(cells, 'Rounding', 0, () => {});
@@ -185,13 +202,15 @@ export function shapeStyle(
 				? 1
 				: opacity(number(cells, 'FillForegndTrans', 0, report)),
 		lineOpacity: lineGradient ? 1 : opacity(number(cells, 'LineColorTrans', 0, report)),
-		startArrow: number(cells, 'BeginArrow', 0, report),
-		endArrow: number(cells, 'EndArrow', 0, report),
-		startArrowSize: number(cells, 'BeginArrowSize', 2, report),
-		endArrowSize: number(cells, 'EndArrowSize', 2, report),
+		startArrow: themedBegin?.code ?? number(cells, 'BeginArrow', 0, report),
+		endArrow: themedEnd?.code ?? number(cells, 'EndArrow', 0, report),
+		startArrowSize: themedBegin?.size ?? number(cells, 'BeginArrowSize', 2, report),
+		endArrowSize: themedEnd?.size ?? number(cells, 'EndArrowSize', 2, report),
 		...(rounding > 0 && rounding <= 100 ? { rounding } : {}),
 		...(shadow ? { shadow } : {}),
 		...effects,
+		...(bevel ? { bevel } : {}),
+		...(rotation3d ? { rotation3d } : {}),
 	};
 }
 const literalFont = (value: string | undefined, resources: Resources): string | undefined =>
