@@ -34,6 +34,11 @@ import {
 } from './edit-connector-layout';
 
 const triggerName = (end: End) => (end === 'begin' ? 'BegTrigger' : 'EndTrigger');
+/**
+ * Whole-shape (dynamic) glue names PinX or PinY with part 3: Visio writes PinY when it glued the
+ * end through AutoConnect or a vertical side, and both mean the same shape-to-shape glue.
+ */
+const WHOLE_SHAPE_CELLS: ReadonlySet<string> = new Set(['PinX', 'PinY']);
 const UNSUPPORTED = 'Glued connections outside owned straight dynamic glue are unsupported.';
 /** Visio's own Dynamic connector is a master instance; its inherited cell form is not written yet. */
 export const STENCIL_CONNECTOR =
@@ -251,7 +256,7 @@ export function proveConnector(root: Element, connectorId: string): ConnectorGlu
 			!target ||
 			ends[end] !== undefined ||
 			(index === undefined
-				? toCell !== 'PinX' || attribute(row, 'ToPart') !== '3'
+				? !WHOLE_SHAPE_CELLS.has(toCell) || attribute(row, 'ToPart') !== '3'
 				: attribute(row, 'ToPart') !== String(100 + index)) ||
 			// A line master has no glue trigger of its own unless Visio wrote one with the glue, and
 			// point glue on a drawn line has none either (native-edit-families-flat-2026-10-29.json).
