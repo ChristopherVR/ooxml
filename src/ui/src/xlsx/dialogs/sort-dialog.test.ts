@@ -90,7 +90,7 @@ describe('sort dialog', () => {
 		expect(pick.hidden).toBe(false);
 		setValue(pick, '0');
 		clickButton(d, 'OK');
-		const keys = await result;
+		const keys = (await result) as readonly { customList?: readonly string[] }[] | undefined;
 		expect(keys?.[0]?.customList).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
 		expect(column(ctx, 0)).toEqual(['Day', 'Sun', 'Mon', 'Wed']);
 	});
@@ -124,7 +124,10 @@ describe('sort dialog', () => {
 		setValue(selects(d, 'Custom List...')[0]!, 'new');
 		setValue(d.querySelector<HTMLInputElement>('input[aria-label="List entries"]')!, 'b, a, c');
 		clickButton(d, 'OK');
-		expect((await result)?.[0]?.customList).toEqual(['b', 'a', 'c']);
+		expect(
+			((await result) as readonly { customList?: readonly string[] }[] | undefined)?.[0]
+				?.customList,
+		).toEqual(['b', 'a', 'c']);
 		expect(userSortLists()).toEqual([['b', 'a', 'c']]);
 		void ctx.dialogs.open('sort');
 		const again = [...selects(dialogEl(ctx, 'sort'), 'Custom List...')[0]!.options];
