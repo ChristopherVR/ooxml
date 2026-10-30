@@ -30,6 +30,19 @@ export const sheetIdList = (value: string | undefined): string[] =>
 		.filter((id) => SHEET_ID.test(id))
 		.slice(0, MAX_RELATED_SHEETS);
 
+const RELATIONSHIPS_CALL = String.raw`DEPENDSON\(\s*\d+(?:\s*,\s*Sheet\.\d+!SheetRef\(\))*\s*\)`;
+const RELATIONSHIPS_ONLY = new RegExp(
+	String.raw`^SUM\(\s*${RELATIONSHIPS_CALL}(?:\s*,\s*${RELATIONSHIPS_CALL})*\s*\)$`,
+	'i',
+);
+/**
+ * Whether a Relationships formula only lists related sheets (`SUM(DEPENDSON(...), ...)`). Such a
+ * formula registers a relationship and reads no cell of the sheets it names, so moving or resizing
+ * one of them never changes its result.
+ */
+export const isRelationshipsOnly = (formula: string): boolean =>
+	formula.length < 100_000 && RELATIONSHIPS_ONLY.test(formula.trim());
+
 /** `SUM(DEPENDSON(kind, Sheet.a!SheetRef(), ...))` for the given sheet IDs. */
 export function relationshipsFormula(kind: number, ids: readonly string[]): string {
 	return `SUM(DEPENDSON(${kind}${ids.map((id) => `,Sheet.${id}!SheetRef()`).join('')}))`;

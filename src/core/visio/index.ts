@@ -292,6 +292,23 @@ export {
 	type VisioPartBox,
 } from './edit-diagram-parts-commands';
 export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';
+export type {
+	VisioSwimlaneEdit,
+	VisioCreateSwimlanesEdit,
+	VisioInsertSwimlaneEdit,
+	VisioDeleteSwimlaneEdit,
+	VisioResizeSwimlaneEdit,
+	VisioInsertSeparatorEdit,
+	VisioSwimlaneOptionsEdit,
+	VisioSwimlaneDirection,
+} from './edit-swimlane-commands';
+export {
+	VISIO_SWIMLANE_HEADER,
+	VISIO_SWIMLANE_MIN,
+	VISIO_SWIMLANE_STYLES,
+	VISIO_SWIMLANE_TITLE,
+} from './edit-swimlane-commands';
+export type { VisioSwimlaneFrameOptions, VisioSwimlaneRole } from './model';
 export {
 	VISIO_TEXT_CASES,
 	VISIO_TEXT_POSITIONS,

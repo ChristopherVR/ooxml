@@ -346,8 +346,24 @@ export interface VisioConnectionPoint extends VisioLocalPoint {
 	/** True when the row comes from the shape's master rather than the shape itself. */
 	inherited: boolean;
 }
+/** The options a cross-functional flowchart frame records (Design and Arrange tabs). */
+export interface VisioSwimlaneFrameOptions {
+	direction: 'horizontal' | 'vertical';
+	showTitle: boolean;
+	showSeparators: boolean;
+	rotateLabels: boolean;
+	style: number;
+}
+export type VisioSwimlaneRole =
+	| { role: 'frame'; options: VisioSwimlaneFrameOptions }
+	| { role: 'lane' };
 export type VisioShapeStructure =
-	| { type: 'container'; memberIds: string[] }
+	| {
+			type: 'container';
+			memberIds: string[];
+			/** Set on a cross-functional flowchart's frame or one of its lanes. */
+			swimlane?: VisioSwimlaneRole;
+	  }
 	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {
 	fromShapeId: string;

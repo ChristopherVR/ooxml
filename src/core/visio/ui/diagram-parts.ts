@@ -17,7 +17,7 @@ const CALLOUT_OFFSET = 0.5;
 
 const topLevel = (page: VisioPage, id: string) => page.shapes.find((shape) => shape.id === id);
 /** The page-space (y-up) bounds of a top-level shape's alignment box. */
-function bounds(shape: VisioShape) {
+export function visioShapePageBounds(shape: VisioShape) {
 	const [a, b, c, d, e, f] = shape.transform;
 	const xs: number[] = [],
 		ys: number[] = [];
@@ -114,7 +114,7 @@ export function visioCalloutCommand(
 		return undefined;
 	}
 	if (Number(shapeId) >= 4294967295) return undefined;
-	const box = bounds(target);
+	const box = visioShapePageBounds(target);
 	const { width, height } = CALLOUT;
 	const x = clamp(box.maxX + CALLOUT_OFFSET + width / 2, width / 2, page.width - width / 2);
 	const y = clamp(box.maxY + CALLOUT_OFFSET + height / 2, height / 2, page.height - height / 2);

@@ -58,6 +58,8 @@ import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
 import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
+import { applySwimlaneEdit } from './edit-swimlane-ops';
+import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
@@ -667,6 +669,9 @@ async function editVsdxTransaction(
 				dirty.set(path, root);
 			} else if (command.type === 'set-container-members') {
 				setVisioContainerMembers(root, command, check);
+				dirty.set(path, root);
+			} else if (isVisioSwimlaneEdit(command)) {
+				applySwimlaneEdit(roots, document!, command, check);
 				dirty.set(path, root);
 			} else if (command.type === 'reconcile-containers') {
 				if (reconcileVisioContainers(roots, document!, command, check)) dirty.set(path, root);

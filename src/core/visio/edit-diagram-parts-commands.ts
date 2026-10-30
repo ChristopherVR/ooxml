@@ -1,4 +1,9 @@
 import { fail } from './package-common';
+import {
+	isVisioSwimlaneEdit,
+	snapshotSwimlaneEdit,
+	type VisioSwimlaneEdit,
+} from './edit-swimlane-commands';
 
 /** Space between the members' bounds and the container frame, in inches. */
 export const VISIO_CONTAINER_MARGIN = 0.25;
@@ -76,13 +81,15 @@ export type VisioDiagramPartEdit =
 	| VisioInsertContainerEdit
 	| VisioInsertCalloutEdit
 	| VisioSetContainerMembersEdit
-	| VisioReconcileContainersEdit;
+	| VisioReconcileContainersEdit
+	| VisioSwimlaneEdit;
 
 export const isVisioDiagramPartEdit = (edit: { type: string }): edit is VisioDiagramPartEdit =>
 	edit.type === 'insert-container' ||
 	edit.type === 'insert-callout' ||
 	edit.type === 'set-container-members' ||
-	edit.type === 'reconcile-containers';
+	edit.type === 'reconcile-containers' ||
+	isVisioSwimlaneEdit(edit);
 
 const sheetId = (value: unknown): string => {
 	if (typeof value !== 'string' || !/^[1-9]\d{0,9}$/.test(value) || Number(value) > 0xffffffff)
@@ -122,6 +129,7 @@ function partBox(value: unknown): VisioPartBox {
 export function snapshotDiagramPartEdit(edit: VisioDiagramPartEdit): VisioDiagramPartEdit {
 	if (typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 		fail('INVALID_EDIT', 'Invalid edit target.');
+	if (isVisioSwimlaneEdit(edit)) return snapshotSwimlaneEdit(edit);
 	if (edit.type === 'reconcile-containers') {
 		if (!Array.isArray(edit.shapeIds) || edit.shapeIds.length > 1000)
 			fail('INVALID_EDIT', 'At most 1000 shapes can be reconciled at once.');

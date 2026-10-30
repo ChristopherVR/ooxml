@@ -61,6 +61,7 @@ export * from './diagram-check';
 export * from './shape-report';
 export * from './subprocess';
 export * from './diagram-parts';
+export * from './swimlane';
 export * from './data-table';
 export * from './data-graphics';
 export * from './auto-layout';

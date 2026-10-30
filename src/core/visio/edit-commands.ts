@@ -95,6 +95,16 @@ export type {
 	VisioInsertContainerEdit,
 	VisioInsertCalloutEdit,
 } from './edit-diagram-parts-commands';
+export type {
+	VisioSwimlaneEdit,
+	VisioCreateSwimlanesEdit,
+	VisioInsertSwimlaneEdit,
+	VisioDeleteSwimlaneEdit,
+	VisioResizeSwimlaneEdit,
+	VisioInsertSeparatorEdit,
+	VisioSwimlaneOptionsEdit,
+	VisioSwimlaneDirection,
+} from './edit-swimlane-commands';
 import { snapshotAssignLayers, type VisioAssignLayersEdit } from './edit-layer-commands';
 export type { VisioAssignLayersEdit } from './edit-layer-commands';
 import { snapshotLayerProperties, type VisioLayerPropertiesEdit } from './edit-layer-properties';

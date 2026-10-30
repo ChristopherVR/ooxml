@@ -6,6 +6,7 @@ import { effectiveFormula } from './edit-instance-sheet';
 import { analyzeVisioFormula } from './formula';
 import { fail } from './package-common';
 import { attribute } from './sheet';
+import { isRelationshipsOnly } from './container-relationships';
 
 /**
  * Formulas of other shapes on the page that read the cells this edit changes are not
@@ -24,6 +25,8 @@ export function assertNoPageDependents(
 		if (own.has(node)) continue;
 		const source = executableCellFormula(attribute(node, 'F'));
 		if (!source || !source.includes('!') || isConnectedGlueCell(node, source)) continue;
+		// A container's member list reads none of its members' cells.
+		if (attribute(node, 'N') === 'Relationships' && isRelationshipsOnly(source)) continue;
 		if (![...source.matchAll(/\bSheet\.(\d+)!/gi)].some((match) => changed.has(match[1]!)))
 			continue;
 		let reads: boolean;

@@ -37,11 +37,11 @@ const CONTAINER_LOOK: Record<
 	dashed: { line: '#7F7F7F', dashed: true },
 };
 
-function node(shape: Element, name: string): Element {
+export function node(shape: Element, name: string): Element {
 	return shape.ownerDocument!.createElementNS(shape.namespaceURI, name);
 }
 /** A string- or unit-typed cell, written after the shape's existing cells. */
-function valueCell(parent: Element, name: string, value: string, unit?: string): void {
+export function valueCell(parent: Element, name: string, value: string, unit?: string): void {
 	const cell = node(parent, 'Cell');
 	cell.setAttribute('N', name);
 	cell.setAttribute('V', value);
@@ -52,7 +52,7 @@ function valueCell(parent: Element, name: string, value: string, unit?: string):
 	parent.insertBefore(cell, before ?? null);
 }
 /** A User section with string rows (Visio's msvStructureType and the editor's own rows). */
-function userSection(shape: Element, rows: readonly [string, string, string?][]): Element {
+export function userSection(shape: Element, rows: readonly [string, string, string?][]): Element {
 	const section = node(shape, 'Section');
 	section.setAttribute('N', 'User');
 	for (const [name, value, unit] of rows) {
@@ -64,13 +64,13 @@ function userSection(shape: Element, rows: readonly [string, string, string?][])
 	}
 	return section;
 }
-function textNode(shape: Element, value: string): Element {
+export function textNode(shape: Element, value: string): Element {
 	const element = node(shape, 'Text');
 	element.appendChild(shape.ownerDocument!.createTextNode(encodeVisioPlainText(value)));
 	return element;
 }
 /** Pin, size and the default local pin of a new unrotated 2D box. */
-function placeBox(shape: Element, box: VisioPartBox): void {
+export function placeBox(shape: Element, box: VisioPartBox): void {
 	for (const [name, value, formula] of [
 		['PinX', box.x],
 		['PinY', box.y],

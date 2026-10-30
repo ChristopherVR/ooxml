@@ -24,7 +24,7 @@ export const CONTAINER_RESIZE_NONE = 0;
 export const CONTAINER_RESIZE_EXPAND = 1;
 export const CONTAINER_RESIZE_TIGHT = 2;
 
-interface Box {
+export interface Box {
 	minX: number;
 	minY: number;
 	maxX: number;
@@ -32,7 +32,7 @@ interface Box {
 }
 const EPSILON = 1e-6;
 
-function boundsOf(shapes: readonly Element[]): Box | undefined {
+export function boundsOf(shapes: readonly Element[]): Box | undefined {
 	try {
 		return shapes.length ? visioShapeBounds(shapes) : undefined;
 	} catch {
@@ -49,6 +49,54 @@ const unrotated = (shape: Element) =>
 	numeric(cells(shape).get('Angle'), 0) === 0 &&
 	numeric(cells(shape).get('FlipX'), 0) === 0 &&
 	numeric(cells(shape).get('FlipY'), 0) === 0;
+
+/**
+ * Give a top-level unrotated sheet the page box `target`: resize with the lower-left corner
+ * fixed, then slide it to the wanted corner. False when the geometry editor does not admit it.
+ */
+export function placeVisioBox(
+	roots: ReadonlyMap<string, Element>,
+	document: Element,
+	pageId: string,
+	container: Element,
+	target: Box,
+	check: () => void,
+): boolean {
+	try {
+		// Resize with the lower-left corner fixed, then slide the sheet to the wanted corner.
+		applyGeometryEdit(
+			roots,
+			document,
+			{
+				type: 'resize-shape',
+				pageId,
+				shapeId: shapeIdOf(container),
+				width: target.maxX - target.minX,
+				height: target.maxY - target.minY,
+				anchor: { x: 0, y: 0 },
+			},
+			check,
+		);
+		const moved = boundsOf([container])!;
+		applyGeometryEdit(
+			roots,
+			document,
+			{
+				type: 'move-shape',
+				pageId,
+				shapeId: shapeIdOf(container),
+				x: numeric(cells(container).get('PinX')) + (target.minX - moved.minX),
+				y: numeric(cells(container).get('PinY')) + (target.minY - moved.minY),
+			},
+			check,
+		);
+	} catch (error) {
+		// A container the geometry editor does not admit keeps its size; membership still stands.
+		if (!(error instanceof VisioPackageError)) throw error;
+		return false;
+	}
+	return true;
+}
 
 /**
  * Grow (or, when always-fit, shrink) a container so it surrounds its members with its margin and
@@ -92,40 +140,7 @@ export function fitVisioContainer(
 		)
 	)
 		return false;
-	try {
-		// Resize with the lower-left corner fixed, then slide the sheet to the wanted corner.
-		applyGeometryEdit(
-			roots,
-			document,
-			{
-				type: 'resize-shape',
-				pageId,
-				shapeId: shapeIdOf(container),
-				width: target.maxX - target.minX,
-				height: target.maxY - target.minY,
-				anchor: { x: 0, y: 0 },
-			},
-			check,
-		);
-		const moved = boundsOf([container])!;
-		applyGeometryEdit(
-			roots,
-			document,
-			{
-				type: 'move-shape',
-				pageId,
-				shapeId: shapeIdOf(container),
-				x: numeric(cells(container).get('PinX')) + (target.minX - moved.minX),
-				y: numeric(cells(container).get('PinY')) + (target.minY - moved.minY),
-			},
-			check,
-		);
-	} catch (error) {
-		// A container the geometry editor does not admit keeps its size; membership still stands.
-		if (!(error instanceof VisioPackageError)) throw error;
-		return false;
-	}
-	return true;
+	return placeVisioBox(roots, document, pageId, container, target, check);
 }
 
 /**

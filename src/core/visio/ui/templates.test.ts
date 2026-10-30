@@ -21,7 +21,7 @@ describe('drawing templates', () => {
 
 	it.each([
 		['basic-flowchart', 5, 4],
-		['cross-functional-flowchart', 10, 3],
+		['cross-functional-flowchart', 8, 3],
 		['organization-chart', 6, 5],
 	] as const)('round-trips %s with glued connectors', async (id, boxes, links) => {
 		const model = await parseVsdx(await createTemplateVsdx(id));
@@ -37,12 +37,21 @@ describe('drawing templates', () => {
 		expect(page.shapes.length).toBeGreaterThanOrEqual(boxes + links);
 	});
 
-	it('frames the swimlanes in a container with three lanes', async () => {
+	it('builds real swimlanes whose shapes belong to their lane', async () => {
 		const page = (await parseVsdx(await createTemplateVsdx('cross-functional-flowchart')))
 			.pages[0]!;
 		const names = page.shapes.map((shape) => shape.text?.plainText);
 		expect(names).toEqual(expect.arrayContaining(['Customer', 'Sales', 'Fulfilment']));
-		expect(page.shapes.find((shape) => shape.id === '50')).toBeDefined();
+		const structure = page.shapes.find((shape) => shape.id === '50')?.structure;
+		expect(structure).toMatchObject({ swimlane: { role: 'frame' } });
+		const members = (id: string) => {
+			const found = page.shapes.find((shape) => shape.id === id)?.structure;
+			return found?.type === 'container' ? found.memberIds : [];
+		};
+		expect(members('50')).toEqual(['10', '11', '12']);
+		expect(members('10')).toContain('1');
+		expect(members('11')).toEqual(expect.arrayContaining(['2', '3']));
+		expect(members('12')).toContain('4');
 	});
 
 	it('rejects unknown ids', async () => {

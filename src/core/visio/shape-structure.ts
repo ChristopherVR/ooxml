@@ -1,4 +1,4 @@
-import type { VisioShapeStructure } from './model';
+import type { VisioShapeStructure, VisioSwimlaneRole } from './model';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	VISIO_CALLOUT_LEADER_ROW,
@@ -31,6 +31,31 @@ export function containerMemberIds(
 	];
 }
 
+/** The editor's swimlane marker rows (non-native: Visio keeps its lists in master formulas). */
+export const VISIO_SWIMLANE_FRAME_ROW = 'ooxmlSwimlaneFrame';
+export const VISIO_SWIMLANE_LANE_ROW = 'ooxmlSwimlane';
+function swimlaneRole(
+	rows: ReadonlyMap<string, string | undefined>,
+): VisioSwimlaneRole | undefined {
+	if (unquote(rows.get(VISIO_SWIMLANE_LANE_ROW)) === '1') return { role: 'lane' };
+	if (unquote(rows.get(VISIO_SWIMLANE_FRAME_ROW)) !== '1') return undefined;
+	const flag = (name: string, fallback: boolean) => {
+		const value = unquote(rows.get(name));
+		return value === undefined ? fallback : value !== '0';
+	};
+	const style = Number(unquote(rows.get('visCFFStyle')));
+	return {
+		role: 'frame',
+		options: {
+			direction: flag('CFFVertical', false) ? 'vertical' : 'horizontal',
+			showTitle: flag('visShowTitle', true),
+			showSeparators: flag('visShowPhase', true),
+			rotateLabels: flag('visRotateLabel', false),
+			style: Number.isInteger(style) && style >= 1 && style <= 4 ? style : 1,
+		},
+	};
+}
+
 /**
  * Read a resolved sheet's User.msvStructureType. Members come from Visio's Relationships cell
  * (DEPENDSON 4 on a container, 6 for a callout's target), read as text only: the formulas are
@@ -43,11 +68,14 @@ export function visioShapeStructure(sheet: Sheet): VisioShapeStructure | undefin
 	);
 	const type = unquote(rows.get('msvStructureType'))?.toLowerCase();
 	const relationships = sheet.cells.get('Relationships')?.formula;
-	if (type === 'container')
+	if (type === 'container') {
+		const swimlane = swimlaneRole(rows);
 		return {
 			type,
 			memberIds: containerMemberIds(rows.get(VISIO_CONTAINER_MEMBERS_ROW), relationships),
+			...(swimlane ? { swimlane } : {}),
 		};
+	}
 	if (type === 'callout') {
 		const target =
 			unquote(rows.get(VISIO_CALLOUT_TARGET_ROW)) ??
