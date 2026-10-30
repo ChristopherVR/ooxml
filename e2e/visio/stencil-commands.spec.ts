@@ -107,7 +107,11 @@ test('stencil shapes are duplicated, reordered, deleted and changed to another m
 	await pick(viewer, 1);
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 	await ribbonGroup(viewer, 'Arrange');
-	const front = viewer.locator('[command="bring-to-front"] button').first();
+	const front = viewer
+		.locator(
+			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="bring-to-front"] button',
+		)
+		.first();
 	await expect(front).toBeEnabled();
 	await front.click();
 	await expect.poll(() => shapes(viewer)).toEqual(['2:2', '3:2', '4:2', '1:2']);

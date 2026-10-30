@@ -43,8 +43,13 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 	await shape.click();
 
 	// Home > Fill shows Office's picker: Theme Colors with tints, Standard Colors, More Colors.
-	await viewer.locator('[data-menu="fill"] button').first().click();
-	const grid = viewer.locator('office-ui-menu-button office-ui-color-grid[data-color-grid="fill"]');
+	await viewer
+		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.first()
+		.click();
+	const grid = viewer.locator(
+		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-menu-button office-ui-color-grid[data-color-grid="fill"]',
+	);
 	await expect(grid.getByText('Theme Colors', { exact: true })).toBeVisible();
 	await expect(grid.getByText('Standard Colors', { exact: true })).toBeVisible();
 	await expect(grid.locator('[data-source="theme"]')).toHaveCount(60);
@@ -65,13 +70,19 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 		.async('string');
 	expect(xml).toContain('F="THEMEGUARD(MSOTINT(THEMEVAL(&quot;AccentColor2&quot;),40))"');
 	// Visio's own row of variant colours is offered too.
-	await viewer.locator('[data-menu="fill"] button').first().click();
+	await viewer
+		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.first()
+		.click();
 	await expect(grid.locator('[data-source="extra"]')).toHaveCount(7);
 	await expect(grid.getByRole('menuitemradio', { name: 'Dark, Lighter 50%' })).toBeVisible();
 	await page.keyboard.press('Escape');
 	// The menu closed, and reopening shows the colour as current.
 	await expect(grid.getByText('Theme Colors', { exact: true })).toBeHidden();
-	await viewer.locator('[data-menu="fill"] button').first().click();
+	await viewer
+		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="fill"] button')
+		.first()
+		.click();
 	await expect(tint).toHaveAttribute('aria-checked', 'true');
 	await page.screenshot({ path: test.info().outputPath('fill-colors.png') });
 	await page.keyboard.press('Escape');

@@ -161,7 +161,11 @@ test('connector jump overrides are editable in Format Shape with page jumps disa
 			}
 		).controller.selectShape({ id: '1', name: 'Horizontal connector', pageId: '0' });
 	});
-	await viewer.locator('office-ui-ribbon-group[launcher="shape-styles-dialog"] .launcher').click();
+	await viewer
+		.locator(
+			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-ribbon-group[launcher="shape-styles-dialog"] .launcher',
+		)
+		.click();
 	const pane = viewer.locator('.format-pane');
 	await pane.getByRole('combobox', { name: 'Add line jumps', exact: true }).selectOption('2');
 	const jumps = viewer.locator('path[data-line-jumps]');

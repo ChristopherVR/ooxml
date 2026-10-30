@@ -60,8 +60,15 @@ test('Auto Align & Space and Re-Layout Page move shapes as single undo steps', a
 	const viewer = await open(page);
 	const original = await pins(viewer);
 	await selectAll(viewer);
-	await viewer.locator('[data-menu="position"] button').first().click();
-	await viewer.locator('[command="auto-align"]').click();
+	await viewer
+		.locator(
+			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
+		)
+		.first()
+		.click();
+	await viewer
+		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="auto-align"]')
+		.click();
 	await expect(viewer.locator('[data-status]')).toHaveText(/Aligned and spaced 3 shapes/);
 	const aligned = await pins(viewer);
 	// Shapes 2 and 3 now share a row.

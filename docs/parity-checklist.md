@@ -294,8 +294,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       recompute them, so they can be stale until it recalculates. Master-defined cells are not read
       through master inheritance. Container `DEPENDSON`/`SheetRef` relationships are still not
       written.
-- [ ] **P1** `.vsdm`, `.vstx` and `.vssm` cannot be opened as drawings; macro-enabled or signed
-      packages refuse every edit (`parser.ts`, `edit-package.ts`).
+- [x] **P1** `.vsdm`, `.vstx` and `.vstm` open as drawings and `.vssm` for its masters; an edit
+      keeps the VBA project byte for byte (never run), saves a template as a drawing and removes a
+      standard signature with a notice (`package-kind.ts`, `package-kinds.test.ts`).
+- [ ] **P1** No Save as template; a signature relationship outside the standard layout, or a VBA
+      project in a package that does not declare macros, still refuses an edit. No native check of
+      an edited `.vsdm` yet.
 - [ ] **P1** Legacy `.vsd` is preview only (no groups, masters, styles, connections, layers or
       text formats; no conversion or editing); `.vdx` is not supported; `.vss` and `.vst` are
       refused.
@@ -311,7 +315,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       pictures are refused on insert.
 - [ ] **P1** Bevel, 3-D rotation and full theme effects are not drawn; text has no Visio font
       metrics.
-- [ ] **P2** `InfiniteLine` geometry is not rendered; periodic NURBS are missing.
+- [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
+- [ ] **P2** Periodic NURBS are missing; stencil previews still omit `InfiniteLine`.
 - [ ] **P2** Visio validation rule-set parts (`validation.xml`) are not modelled; Check Diagram is
       the viewer's own.
 
@@ -320,8 +325,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P0** Containers do nothing after insertion: members move with the container, drops and
       moves change membership, and it grows to fit (`edit-container-fit.ts`). Open: swimlanes, lists
       and a native Visio check of the written relationships (see the P1 item above).
-- [ ] **P1** Swimlanes and cross-functional flowcharts, org charts and a New-drawing template
-      gallery (New offers only a blank drawing).
+- [x] **P1** File > New offers Blank Drawing, Basic Flowchart, Cross-Functional Flowchart and Basic
+      Organization Chart starters (`ui/templates.ts`); Visio 16 opens all three without repair.
+- [ ] **P1** Swimlanes are plain lanes in a container (no lane insertion, lanes do not resize
+      together, not Visio's swimlane master); the org chart has no org-chart masters, ribbon or
+      position data; template tiles have no thumbnails.
 - [ ] **P1** Group edits exclude nested groups, rotated and stencil members, flips and glue;
       multi-selection resize excludes groups, rotation, layers and glue.
 - [ ] **P1** Connectors in files saved by Visio are refused for geometry edits; a copy that meets
@@ -332,17 +340,22 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       not verified against Visio.
 - [ ] **P1** Link Data and Data Visualizer; Data Graphics Position, Configure and Auto Space.
 - [ ] **P1** PDF export is a picture per page with no selectable text; no XPS.
-- [ ] **P2** No ShapeSheet window or Developer tab; page tabs cannot be dragged to reorder (a
-      Reorder Pages dialog exists); on-shape text editing is a plain text area.
+- [x] **P2** Page tabs drag to reorder, background pages only among themselves
+      (`chrome/tab-drag.ts`, shared with Excel's sheet tabs; `e2e/visio/page-tab-drag.spec.ts`).
+- [ ] **P2** No ShapeSheet window or Developer tab; on-shape text editing is a plain text area.
 - [ ] **P2** Stencil drops refuse non-Dynamic connector, picture and multi-root rotated masters
       (`src/core/visio/ui/master-drop.ts`).
 
 ### Ribbon
 
-- [ ] **P1** No contextual tabs at all (Shape Format, Picture Format, Container, chart); chart
-      editing has no ribbon button.
-- [ ] **P1** Design > More Variants: Colors, Fonts, Effects, Connectors and Embellishment are
-      disabled (`ribbon-themes.ts`).
+- [x] **P1** A contextual Shape Format tab shows while shapes are selected (Shape Styles, WordArt
+      Styles disabled, Arrange, Size), reusing the Home commands (`ribbon-shape-format.ts`).
+- [ ] **P1** No Picture Format, Container or chart contextual tab; chart editing has no ribbon
+      button; Shape Format has no inline Width/Height, and its de/es/fr/zh-CN labels need review.
+- [x] **P1** Design > More Variants > Colors applies one theme's colours alone
+      (`ColorSchemeIndex`); Visio 16 opens the result and keeps the mixed scheme cells.
+- [ ] **P1** More Variants: Fonts, Effects, Connectors and Embellishment are disabled, and Colors
+      does not mark the current scheme (`ribbon-themes.ts`).
 - [ ] **P2** Disabled: Bevel, 3-D Rotation, CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
       SharePoint Workflow, the Window group, Macros and Add-Ons.
 

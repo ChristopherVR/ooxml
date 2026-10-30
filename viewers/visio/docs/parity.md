@@ -1,5 +1,35 @@
 # Visio capability ledger
 
+## Parity wave, 2026-10-30
+
+Six increments landed together; the open remainder of each is in
+`docs/parity-checklist.md`.
+
+- **Package kinds.** `.vsdm`, `.vstx` and `.vstm` open as drawings, `.vssm` for its masters. An
+  edit keeps a declared VBA project, its relationship and content type byte for byte and never
+  runs it; a template is saved as a drawing of the same kind (`TEMPLATE_SAVED_AS_DRAWING`); a
+  standard signature (`_xmlsignatures/`, root origin relationship) is removed with
+  `SIGNATURE_REMOVED`. Removal reads parts through the bounded package reader, so the input
+  limits apply first. A signature relationship elsewhere, or an undeclared VBA project, still
+  refuses the edit. No native check of an edited `.vsdm`.
+- **New templates.** Blank Drawing, Basic Flowchart, Cross-Functional Flowchart and Basic
+  Organization Chart are generated with the existing writers and built-in masters. Visio 16
+  opened all three through COM without a repair prompt, with the expected shape counts (9, 14,
+  11). Lanes are plain shapes in a container, not Visio's swimlane master.
+- **Theme colours.** Design > Variants > More > Colors writes `ColorSchemeIndex` (and the
+  variant and colour caches) and leaves the effect, connector and font selections. Visio 16
+  opens a Harbor drawing given Ember colours and keeps 1004/1002/1002/1002; whether Visio then
+  paints Ember on quick-styled shapes was not observed (the sample uses explicit fills).
+- **Shape Format tab.** Contextual, shown while shapes are selected, with Shape Styles, WordArt
+  Styles (disabled with a reason), Arrange and Size. Its controls are the Home builders reused,
+  their state mirrored from Home (`viewer-contextual-tabs.ts`). Browser specs that address a
+  command once now scope to the non-contextual tabs.
+- **Page tab drag.** Pointer drag with a threshold, an insertion marker and Escape, through the
+  existing `reorder-page` edit (one undo step); background pages only move among themselves. The
+  drag is shared with Excel's sheet tabs (`src/ui/src/chrome/tab-drag.ts`).
+- **InfiniteLine.** Drawn as an open stroke clipped to the page through every ancestor
+  transform; stencil previews, which have no page, still omit it.
+
 ## Proportional resizing, 2026-10-30
 
 Dragging a corner handle now keeps the shape's proportions, and Shift keeps them

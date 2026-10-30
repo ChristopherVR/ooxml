@@ -63,7 +63,9 @@ async function selectAll(viewer: Locator) {
 /** Fill > More Options... opens the Format Shape task pane at its Fill section. */
 async function properties(viewer: Locator): Promise<Locator> {
 	await viewer.getByRole('button', { name: 'Fill', exact: true }).click();
-	await viewer.locator('[command="fill-options"]').click();
+	await viewer
+		.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="fill-options"]')
+		.click();
 	const pane = viewer.locator('.format-pane');
 	await expect(pane).toBeVisible();
 	await expect(viewer.locator('#inspector-pane')).toHaveAttribute('label', 'Format Shape');

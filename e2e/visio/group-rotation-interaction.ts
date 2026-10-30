@@ -13,11 +13,17 @@ export async function rotateGroup(
 	await shape.focus();
 	await shape.press('Enter');
 	await expect(shape).toHaveAttribute('data-selected', 'true');
-	await expect(viewer.locator('[command="flip-horizontal"]')).toHaveAttribute('disabled', '');
+	await expect(
+		viewer.locator(
+			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="flip-horizontal"]',
+		),
+	).toHaveAttribute('disabled', '');
 	if (mode === 'control') {
 		await editSelection(viewer, { type: 'rotate-shape', angle });
 	} else if (mode === 'menu') {
-		const position = viewer.locator('[data-menu="position"]');
+		const position = viewer.locator(
+			'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"]',
+		);
 		await position.getByRole('button', { name: 'Position', exact: true }).click();
 		const nested = position.locator('[data-menu="rotate"]');
 		await nested.getByRole('menuitem', { name: 'Rotate Shapes', exact: true }).hover();

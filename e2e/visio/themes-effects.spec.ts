@@ -3,7 +3,9 @@ import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
 
 async function menuItem(viewer: Locator, path: readonly string[]): Promise<void> {
-	const effects = viewer.locator('office-ui-menu-button[data-menu="effects"]');
+	const effects = viewer.locator(
+		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-menu-button[data-menu="effects"]',
+	);
 	await effects.getByRole('button', { name: 'Effects', exact: true }).click();
 	let scope: Locator = effects;
 	for (const [index, name] of path.entries()) {
@@ -38,7 +40,9 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await shape.click();
 	// A Quick Style, as dropped masters get, so the theme recolours the shape. The ribbon shows a
 	// row of tiles; the More button opens the whole gallery.
-	const quick = viewer.locator('office-ui-gallery[data-menu="quick-styles"]');
+	const quick = viewer.locator(
+		'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) office-ui-gallery[data-menu="quick-styles"]',
+	);
 	await quick.locator('.trigger').click();
 	await quick.locator('.popup [data-gallery-item="quick-style-2-4"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#5b9bd5');
@@ -68,7 +72,9 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	);
 	await menuItem(viewer, ['Reflection', 'Half Reflection, touching']);
 	await expect(shape.locator('[data-reflection]')).toHaveCount(1);
-	await expect(viewer.locator('[command="bevel"]')).toHaveAttribute('disabled', '');
+	await expect(
+		viewer.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="bevel"]'),
+	).toHaveAttribute('disabled', '');
 
 	// Glow Options... opens the Format Shape task pane at Effects; a change applies at once.
 	await menuItem(viewer, ['Glow', 'Glow Options...']);

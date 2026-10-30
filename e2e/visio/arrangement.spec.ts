@@ -84,9 +84,20 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		];
 		await expect.poll(() => pins(viewer)).toEqual(original);
 		await selectAll(viewer);
-		await expect(viewer.locator('[command="rotate-left"] button')).toBeDisabled();
-		await viewer.locator('[data-menu="align"] button').first().click();
-		await viewer.locator('[command="align-shapes-left"]').click();
+		await expect(
+			viewer.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="rotate-left"] button',
+			),
+		).toBeDisabled();
+		await viewer
+			.locator('[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="align"] button')
+			.first()
+			.click();
+		await viewer
+			.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="align-shapes-left"]',
+			)
+			.click();
 		const aligned = [
 			[4, 7],
 			[3, 2],
@@ -102,8 +113,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expectSelection(viewer);
 		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(original);
-		await viewer.locator('[data-menu="position"] button').first().click();
-		await viewer.locator('[command="distribute-horizontal"]').click();
+		await viewer
+			.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
+			)
+			.first()
+			.click();
+		await viewer
+			.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="distribute-horizontal"]',
+			)
+			.click();
 		const horizontal = [
 			[4.25, 7],
 			[2, 2],
@@ -111,8 +131,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		];
 		await expect.poll(() => pins(viewer)).toEqual(horizontal);
 		await expectSelection(viewer);
-		await viewer.locator('[data-menu="position"] button').first().click();
-		await viewer.locator('[command="distribute-vertical"]').click();
+		await viewer
+			.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"] button',
+			)
+			.first()
+			.click();
+		await viewer
+			.locator(
+				'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [command="distribute-vertical"]',
+			)
+			.click();
 		const distributed = [
 			[4.25, 6],
 			[2, 2],

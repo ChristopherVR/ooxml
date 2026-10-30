@@ -55,7 +55,9 @@ for (const variable of [
 				await shape.focus();
 				await shape.press('Enter');
 				const before = (await shape.getAttribute('transform'))!;
-				const position = viewer.locator('[data-menu="position"]');
+				const position = viewer.locator(
+					'[data-ribbon-tab]:not([data-ribbon-tab="shape-format"]) [data-menu="position"]',
+				);
 				await position.getByRole('button', { name: 'Position', exact: true }).click();
 				const nested = position.locator('[data-menu="rotate"]');
 				await nested
