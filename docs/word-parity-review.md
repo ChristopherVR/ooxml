@@ -783,3 +783,16 @@ load warning says so. Twelve Word-generated fixtures (copied from the ole2 repos
 PROVENANCE.md) cover styles, lists, tables with merges and nesting, sections, header and footer
 variants, notes, comments, pictures, text boxes, hyperlinks and fields, each through a second
 save and read. These checks do not establish pixel-equivalent rendering of arbitrary `.doc` files.
+
+### Picture bullets
+
+`w:numPicBullet` entries are parsed into `NumberingCatalog.pictureBullets` (image part resolved
+through `word/_rels/numbering.xml.rels`; VML `v:imagedata` and `w:drawing` `a:blip` forms; authored
+size from the VML `style` or the drawing extent). A level's `w:lvlPicBulletId` becomes
+`pictureBulletId`, and `computeListLabels` exposes the picture on the label. The editor draws it in
+place of the marker text, sized to the marker font size unless the shape authors a size
+(`pictureBulletSizePt`); without bytes it falls back to the bullet glyph. Existing `numbering.xml`,
+its relationships and media are preserved on save, and new levels may reference an existing picture
+bullet (`lvlPicBulletId` is written). Not done: Define New Bullet > Picture (no way to add or edit
+picture bullets, so changing `pictureBullets` on save is rejected), and pagination measures the
+fallback glyph width, not the picture.

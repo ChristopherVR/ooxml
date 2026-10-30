@@ -18,6 +18,11 @@ import {
 import { registerNumberingPart } from './numbering-parts';
 import { numberingStartChanges, patchNumberingStarts } from './numbering-start-patch';
 
+const addedAbstractIds = (
+	prior: { abstractNums: Record<string, unknown> } | undefined,
+	next: { abstractNums: Record<string, unknown> },
+): string[] => Object.keys(next.abstractNums).filter((id) => !prior?.abstractNums[id]);
+
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
 }
@@ -46,6 +51,8 @@ function buildLevelElement(doc: XmlDocument, def: NumberingLevelDefinition): Xml
 		),
 	);
 	lvl.appendChild(valueElement(doc, 'lvlText', def.lvlText));
+	if (def.pictureBulletId !== undefined)
+		lvl.appendChild(valueElement(doc, 'lvlPicBulletId', def.pictureBulletId));
 	if (def.lvlJc) lvl.appendChild(valueElement(doc, 'lvlJc', def.lvlJc));
 	if (
 		def.tabStopTwips !== undefined ||
@@ -137,6 +144,17 @@ export async function applyNumberingCatalog(
 		throw new Error(
 			'Removing the numbering catalog is not supported; the source numbering.xml is preserved unchanged.',
 		);
+	if (JSON.stringify(next.pictureBullets ?? null) !== JSON.stringify(prior?.pictureBullets ?? null))
+		throw new Error(
+			'Cannot edit picture bullets (numPicBullet); the original numbering.xml and its images are preserved unchanged.',
+		);
+	for (const level of addedAbstractIds(prior, next).flatMap((id) =>
+		Object.values(next.abstractNums[id]?.levels ?? {}),
+	))
+		if (level.pictureBulletId !== undefined && !next.pictureBullets?.[level.pictureBulletId])
+			throw new Error(
+				`Level ${level.level} references picture bullet "${level.pictureBulletId}", which the numbering part does not define.`,
+			);
 	for (const id of Object.keys(prior?.abstractNums ?? {}))
 		if (JSON.stringify(next.abstractNums[id]) !== JSON.stringify(prior?.abstractNums[id]))
 			throw new Error(

@@ -107,7 +107,12 @@ export function createListDefinition(
 	abstractNums[abstractId] = { id: abstractId, levels: copied };
 	nums[numId] = { id: numId, abstractNumId: abstractId };
 	return {
-		catalog: { abstractNums, nums, warnings: catalog?.warnings ?? [] },
+		catalog: {
+			abstractNums,
+			nums,
+			...(catalog?.pictureBullets ? { pictureBullets: catalog.pictureBullets } : {}),
+			warnings: catalog?.warnings ?? [],
+		},
 		numId: Number(numId),
 	};
 }

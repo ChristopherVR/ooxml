@@ -102,6 +102,14 @@
 	font-style: var(--dve-marker-style);
 	color: var(--dve-marker-color);
 }
+/* A picture bullet replaces the marker text with its image, sized by the list-marker display. */
+.dve-paper p[data-list-marker-picture]::before {
+	content: '';
+	display: block;
+	width: var(--dve-marker-pic-w);
+	height: var(--dve-marker-pic-h);
+	background: var(--dve-marker-image) center / contain no-repeat;
+}
 .multilingual-controls {
 	flex: 1 1 100%;
 	align-items: flex-start;

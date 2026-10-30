@@ -132,11 +132,15 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const numberingFile = zip.file('word/numbering.xml');
 	if (numberingFile) {
 		const numberingXml = await numberingFile.async('string');
+		const numberingRels = zip.file('word/_rels/numbering.xml.rels');
+		const numberingRelationships = parseRelationships(
+			numberingRels ? await numberingRels.async('string') : undefined,
+		);
 		model.numberingCatalog = withParseWarnings(schemaWarnings, () =>
-			parseNumberingCatalog(numberingXml),
+			parseNumberingCatalog(numberingXml, numberingRelationships),
 		);
 		model.warnings.push(
-			'Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering. Picture bullets, style-linked numbering and other custom formats fall back to Decimal Number and are not rendered as Word would.',
+			'Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering. Style-linked numbering and other custom formats fall back to Decimal Number and are not rendered as Word would.',
 			...model.numberingCatalog.warnings,
 		);
 	} else if (document.getElementsByTagNameNS(WORD_NS, 'numPr').length > 0) {
@@ -227,6 +231,8 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			])
 				if (part) imagePartNames.add(part);
 	});
+	for (const bullet of Object.values(model.numberingCatalog?.pictureBullets ?? {}))
+		imagePartNames.add(bullet.partName);
 	const media = new Map<string, Uint8Array>();
 	for (const partName of imagePartNames) {
 		const part = zip.file(partName);

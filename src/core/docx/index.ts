@@ -71,6 +71,7 @@ export {
 } from './validate-model';
 export * from './numbering-model';
 export { parseNumberingCatalog, resolveNumberingLevel } from './numbering-parse';
+export { pictureBulletSizePt } from './numbering-picture';
 export {
 	computeListLabels,
 	displayListLabel,

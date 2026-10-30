@@ -1,5 +1,6 @@
 import {
 	displayListLabel,
+	pictureBulletSizePt,
 	resolveRunFormatting,
 	resolveThemeColorReference,
 	type DocumentModel,
@@ -19,6 +20,7 @@ export function listMarkerDisplay(
 	label: ParagraphListLabel | undefined,
 	model: DocumentModel,
 	measurer: TextMeasurer,
+	pictureUrl?: (partName: string, contentType: string) => string | undefined,
 ): { css: string; attributes: Record<string, string> } {
 	if (!label || paragraph.direction === 'rtl')
 		return { css: '', attributes: { 'data-list-marker': '' } };
@@ -47,7 +49,10 @@ export function listMarkerDisplay(
 			? resolveThemeColorReference(format.colorTheme, model.theme)
 			: undefined);
 	const safeColor = color && /^#[0-9a-f]{6}$/i.test(color) ? color : 'inherit';
-	const width = measurer.widthOf(text, font);
+	const picture = label.picture;
+	const url = picture && pictureUrl?.(picture.partName, picture.contentType);
+	const size = picture && url ? pictureBulletSizePt(picture, (font.sizePx * 3) / 4) : undefined;
+	const width = size ? (size.widthPt * 4) / 3 : measurer.widthOf(text, font);
 	const indent =
 		(paragraph.indentStartTwips ?? paragraph.indentLeftTwips ?? label.indentLeftTwips ?? 0) / 15;
 	const ownFirst = paragraph.hangingTwips !== undefined || paragraph.firstLineTwips !== undefined;
@@ -76,7 +81,10 @@ export function listMarkerDisplay(
 				: (Math.floor(end / 48) + 1) * 48;
 	}
 	return {
-		attributes: { 'data-list-marker': text },
-		css: `position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
+		attributes: {
+			'data-list-marker': text,
+			...(size ? { 'data-list-marker-picture': '' } : {}),
+		},
+		css: `${size && url ? `--dve-marker-image:url("${url.replace(/"/g, '%22')}");--dve-marker-pic-w:${(size.widthPt * 4) / 3}px;--dve-marker-pic-h:${(size.heightPt * 4) / 3}px;` : ''}position:relative;text-indent:${body - indent}px;--dve-marker-left:${anchor - width * factor - indent}px;--dve-marker-family:${cssFontStack(font.family)};--dve-marker-size:${font.sizePx}px;--dve-marker-weight:${font.bold ? 'bold' : 'normal'};--dve-marker-style:${font.italic ? 'italic' : 'normal'};--dve-marker-color:${safeColor}`,
 	};
 }

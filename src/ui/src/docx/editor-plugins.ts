@@ -25,6 +25,8 @@ import { reviewRunMarksPlugin } from './review-run-marks';
 /** What the body editor's plugins read from the editor element. */
 export interface BodyPluginHost {
 	model(): DocumentModel;
+	/** Object URL of a picture bullet's image part, when its bytes are loaded. */
+	pictureUrl?(partName: string, contentType: string): string | undefined;
 	reviewAuthor(): string;
 	reviewDisplayMode(): ReviewDisplayMode;
 	insertNote(kind: 'footnote' | 'endnote'): void;
@@ -64,6 +66,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		paragraphStylesPlugin(
 			() => host.model(),
 			() => host.reviewDisplayMode(),
+			(partName, contentType) => host.pictureUrl?.(partName, contentType),
 		),
 		trackChangesPlugin(
 			() => host.reviewAuthor(),

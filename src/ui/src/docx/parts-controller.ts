@@ -225,7 +225,11 @@ export class PartsController {
 				reviewDisplayPlugin(this.reviewMode),
 				reviewRunMarksPlugin(this.reviewMode),
 				runStylesPlugin(() => this.host.model(), this.reviewMode),
-				paragraphStylesPlugin(() => this.host.model(), this.reviewMode),
+				paragraphStylesPlugin(
+					() => this.host.model(),
+					this.reviewMode,
+					(partName, contentType) => this.host.images().urlFor(partName, contentType),
+				),
 			],
 			keepOpenWithin: () => this.host.keepOpenWithin(),
 			activate: (view) => {
