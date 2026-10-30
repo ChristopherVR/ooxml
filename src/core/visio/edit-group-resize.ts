@@ -8,8 +8,14 @@ import {
 	resizeGeometry,
 	guardedCell,
 } from './edit-geometry-admission';
-import { assertUnlayeredShape } from './edit-style-admission';
-import { proveLocalShapeTree, assertUngluedTree } from './edit-group-rotation';
+import { assertResolvedLayerMember } from './edit-style-admission';
+import {
+	groupMemberInstance,
+	instanceNumber,
+	planInstanceMember,
+} from './edit-group-resize-instances';
+import { effectiveFormula } from './edit-instance-sheet';
+import { proveLocalShapeTree, assertFollowedGlueTree } from './edit-group-rotation';
 import { analyzeVisioFormula, visioFormulaCachedValue, type VisioFormulaValue } from './formula';
 import { executableCellFormula } from './cell-formula';
 import { key } from './edit-recalculate-index';
@@ -58,18 +64,27 @@ export function localGroupResize(
 	}
 	if (
 		[group, ...members].some(
-			(shape) => shape.hasAttribute('Master') || shape.hasAttribute('MasterShape'),
+			(shape) =>
+				(shape.hasAttribute('Master') && !groupMemberInstance(shape)) ||
+				shape.hasAttribute('MasterShape'),
 		)
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Group resizing requires a local group of 2D shapes.');
 	const ids = proveLocalShapeTree(group, check);
-	assertUngluedTree(root, ids, 'Group resizing cannot update glued members or group connections.');
+	assertFollowedGlueTree(
+		root,
+		ids,
+		group,
+		'Group resizing cannot update glued members or group connections.',
+	);
 	const shapes = new Set([group, ...members]);
 	for (const shape of shapes) {
 		check();
 		assertCanonicalResizeCells(shape);
-		protectedShape(shape, document);
-		assertUnlayeredShape(shape, document);
+		// A stencil member's locks come from its master and are read where it is planned.
+		if (!groupMemberInstance(shape)) protectedShape(shape, document);
+		// Layer locks are checked by the caller (edit.ts), which reads the page's layers.
+		assertResolvedLayerMember(shape, document);
 		// Text-measured sizes are refreshed after a transaction, outside this resize proof.
 		for (const node of Array.from(shape.childNodes).filter(
 			(node): node is Element => node.nodeType === 1 && (node as Element).localName !== 'Shapes',
@@ -100,14 +115,30 @@ export function planGroupResize(
 	check: () => void,
 ) {
 	const writes: VisioResizeWrite[] = [];
+	const commits: (() => void)[] = [];
+	const root = roots.get(edit.pageId)!;
 	const expected = new Map<string, number>();
 	const read = (shape: Element, name: string, fallback?: number) => {
+		const inst = groupMemberInstance(shape);
+		if (inst) return instanceNumber(inst, name, fallback);
 		const local = cells(shape);
 		return local.has(name) || ['LocPinX', 'LocPinY'].includes(name)
 			? source(key({ pageId: edit.pageId, shapeId: attribute(shape, 'ID')!, cell: name })).value
 			: numeric(local.get(name), fallback);
 	};
 	const mode = (shape: Element, fallback: number) => {
+		const inst = groupMemberInstance(shape);
+		if (inst) {
+			const item = inst.sheet.byName.get('resizemode');
+			if (!item) return fallback;
+			const formula = effectiveFormula(item);
+			if (formula && analyzeVisioFormula(formula).references.length)
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Group resize needs a constant ResizeMode.');
+			const value = instanceNumber(inst, 'ResizeMode');
+			if (![0, 1, 2].includes(value))
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unsupported group ResizeMode.');
+			return value || fallback;
+		}
 		const cell = cells(shape).get('ResizeMode');
 		if (!cell) return fallback;
 		const formula = executableCellFormula(attribute(cell, 'F'));
@@ -132,8 +163,10 @@ export function planGroupResize(
 			sy = newH / height;
 		for (const shape of children(children(parent, 'Shapes')[0], 'Shape')) {
 			check();
+			const inst = groupMemberInstance(shape);
 			const id = attribute(shape, 'ID')!,
 				local = cells(shape),
+				pose: { name: string; value: number; formula: string }[] = [],
 				scaling = mode(shape, parentMode) === 2;
 			const childW = read(shape, 'Width'),
 				childH = read(shape, 'Height');
@@ -144,10 +177,14 @@ export function planGroupResize(
 				s2 = Math.sin(angle) ** 2;
 			const sizeX = scaling ? c2 * sx + s2 * sy : 1,
 				sizeY = scaling ? s2 * sx + c2 * sy : 1;
-			if (numeric(local.get('LockAspect'), 0) !== 0 && !resizeClose(sizeX, sizeY))
+			const lockAspect = inst
+				? instanceNumber(inst, 'LockAspect', 0)
+				: numeric(local.get('LockAspect'), 0);
+			if (lockAspect !== 0 && !resizeClose(sizeX, sizeY))
 				fail('EDIT_PROTECTED_CELL', 'A group member LockAspect prevents resizing.');
 			const isGroup = attribute(shape, 'Type') === 'Group';
 			if (
+				!inst &&
 				scaling &&
 				(!resizeClose(sx, 1) || !resizeClose(sy, 1)) &&
 				(!isGroup || children(shape, 'Section').some((item) => attribute(item, 'N') === 'Geometry'))
@@ -185,10 +222,14 @@ export function planGroupResize(
 					(['Width', 'Height'].includes(name) && value <= 0)
 				)
 					fail('UNSUPPORTED_GEOMETRY_EDIT', 'Resized group member exceeds coordinate limits.');
-				expected.set(key({ pageId: edit.pageId, shapeId: id, cell: name }), value);
+				if (!inst) expected.set(key({ pageId: edit.pageId, shapeId: id, cell: name }), value);
 				if (resizeClose(value, old)) continue;
-				if (lock && numeric(local.get(lock), 0) !== 0)
+				if (lock && (inst ? instanceNumber(inst, lock, 0) : numeric(local.get(lock), 0)) !== 0)
 					fail('EDIT_PROTECTED_CELL', `A group member ${lock} prevents resizing.`);
+				if (inst) {
+					pose.push({ name, value, formula });
+					continue;
+				}
 				const node = local.get(name);
 				const existing = executableCellFormula(attribute(node, 'F'));
 				// Preserve authored relationships. The final projection must prove that they already
@@ -202,11 +243,22 @@ export function planGroupResize(
 				);
 				writes.push({ shape, name, value, formula });
 			}
+			if (inst && pose.length)
+				commits.push(
+					planInstanceMember(
+						root,
+						shape,
+						inst,
+						{ cells: pose, width: childW, height: childH },
+						check,
+					),
+				);
 			for (const name of ['Angle', 'FlipX', 'FlipY'])
-				expected.set(key({ pageId: edit.pageId, shapeId: id, cell: name }), read(shape, name, 0));
+				if (!inst)
+					expected.set(key({ pageId: edit.pageId, shapeId: id, cell: name }), read(shape, name, 0));
 			if (isGroup) plan(shape, childW * sizeX, childH * sizeY, scaling ? mode(shape, 2) : 1);
 		}
 	};
 	plan(scope.group, edit.width, edit.height, mode(scope.group, 2));
-	return { writes, expected };
+	return { writes, expected, commits };
 }

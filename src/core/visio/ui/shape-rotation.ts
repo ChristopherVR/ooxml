@@ -10,6 +10,8 @@ export function visioLocalRotationShape(
 	page: VisioPage,
 	shapeId: string,
 	includeGroups = true,
+	/** Connectors glued to members of the group follow it (core lays them out again). */
+	followGlue = false,
 ): VisioShape | undefined {
 	const shape = page.shapes.find((shape) => shape.id === shapeId);
 	if (!shape || shape.hidden) return undefined;
@@ -50,7 +52,10 @@ export function visioLocalRotationShape(
 		page.connectors.some(
 			(connection) =>
 				ids.has(connection.fromShapeId) ||
-				(ids.has(connection.toShapeId) && connection.toShapeId !== shapeId),
+				(ids.has(connection.toShapeId) &&
+					(followGlue
+						? shape.kind === 'group' && connection.toShapeId === shapeId
+						: connection.toShapeId !== shapeId)),
 		)
 	)
 		return undefined;
@@ -65,7 +70,7 @@ export function visioRotationShape(
 	shapeId: string,
 	includeGroups = true,
 ): VisioShape | undefined {
-	const local = visioLocalRotationShape(page, shapeId, includeGroups);
+	const local = visioLocalRotationShape(page, shapeId, includeGroups, true);
 	if (local) return local;
 	const shape = visioStencilInstanceShape(page, shapeId);
 	if (

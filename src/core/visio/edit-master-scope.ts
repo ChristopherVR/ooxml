@@ -3,6 +3,7 @@ import type { VisioPackage } from './package';
 import { attribute, children } from './sheet';
 import { related, indexedPart, visioXml } from './parts';
 import { fail } from './package-common';
+import { isPlannedMemberCell } from './edit-group-rotation';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
 import { analyzeVisioMasterFormula } from './formula-master';
 import { createVisioDependencyQuery } from './edit-recalculate';
@@ -259,6 +260,8 @@ export async function assertVisioMasterIndependence(
 			// Text format cells left to the document defaults are never geometry-dependent.
 			else if (!themeCell.test(name) && !/^(char|para)\./.test(name))
 				problem(`Missing effective master reference ${name}.`);
+		} else if (source.kind === 'instance' && isPlannedMemberCell(source.node)) {
+			// A group resize rewrites this stencil member's pose itself and proves its dependents.
 		} else {
 			const formula = executableCellFormula(attribute(source.node, 'F'));
 			if (formula && !inertDoubleClickFormula(attribute(source.node, 'N') ?? '', formula)) {

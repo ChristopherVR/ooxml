@@ -230,6 +230,19 @@ export function assertShapeLocks(
 		}
 }
 
+/**
+ * A shape's layer membership must be a plain cached list: a layered member resizes with its group
+ * (layers do not touch geometry), and whether any of its layers is locked is checked against the
+ * page's layers by the caller.
+ */
+export function assertResolvedLayerMember(shape: Element, document: Element): void {
+	for (const category of ['LineStyle', 'FillStyle', 'TextStyle'] as const) {
+		const cell = effectiveShapeCell(shape, document, 'LayerMember', category);
+		if (cell && (cell.hasAttribute('E') || executableCellFormula(attribute(cell, 'F'))))
+			fail('UNSUPPORTED_FORMAT_EDIT', 'Layer membership computed by a formula is not supported.');
+	}
+}
+
 /** Native ordinary shapes explicitly cache an empty LayerMember string. */
 export function assertUnlayeredShape(shape: Element, document: Element): void {
 	for (const category of ['LineStyle', 'FillStyle', 'TextStyle'] as const) {

@@ -210,9 +210,6 @@ it('declines mixed, sheared, nested-in-shape and invalid selections as a whole',
 			other.children = [structuredClone(page.shapes[0]!)];
 		},
 		() => {
-			other.masterId = '3';
-		},
-		() => {
 			other.hidden = true;
 		},
 	]) {
@@ -222,6 +219,10 @@ it('declines mixed, sheared, nested-in-shape and invalid selections as a whole',
 		Object.assign(other, original);
 		delete other.masterId;
 	}
+	// A stencil instance is admitted; its resulting pose is proved by the caller.
+	other.masterId = '3';
+	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeDefined();
+	delete other.masterId;
 	// Connectors glued to a member follow it (core reroutes), so they no longer block the selection.
 	page.connectors = [{ fromShapeId: '3', toShapeId: '2' } as (typeof page.connectors)[number]];
 	expect(visioResizeSelectionFrame(page, ['1', '2'])).toBeDefined();

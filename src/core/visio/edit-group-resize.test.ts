@@ -28,13 +28,13 @@ const resize = (width = 8, height = 6): Extract<VisioEdit, { type: 'resize-shape
 	height,
 	anchor: { x: 0, y: 0 },
 });
-async function source(memberExtra = '', groupExtra = '', pageExtra = '', scale = 1) {
+async function source(memberExtra = '', groupExtra = '', pageExtra = '', scale = 1, layers = '') {
 	const members = box('1', 1, 1, 1, 1, memberExtra) + box('2', 3, 1.5, 0.5, 0.5, cell('FlipX', 1));
 	return fixture({
 		pages: [
 			{
 				id: '0',
-				pageCells: cell('DrawingScale', 1) + cell('PageScale', scale),
+				pageCells: cell('DrawingScale', 1) + cell('PageScale', scale) + layers,
 				contents: `<Shapes>${shape(
 					'9',
 					cell('Width', 4) +
@@ -182,7 +182,6 @@ it.each([
 	['locked width', cell('LockWidth', 1), ''],
 	['locked position', cell('LockMoveX', 1), ''],
 	['invalid mode', cell('ResizeMode', 3), ''],
-	['layer', cell('LayerMember', 0), ''],
 	['member glue', '', '<Connects><Connect FromSheet="2" ToSheet="1"/></Connects>'],
 	['group glue', '', '<Connects><Connect FromSheet="2" ToSheet="9"/></Connects>'],
 ] as const)('rejects %s without modifying source bytes', async (_name, extra, connections) => {
@@ -333,4 +332,15 @@ it('scales a rotated member by the squared direction cosines of its axes', async
 	expect(await xml(result.bytes)).toMatch(
 		/F="Sheet\.9!Width\*[\d.e-]+\+Sheet\.9!Height\*[\d.e-]+"/,
 	);
+});
+
+const layer = (lock: number) =>
+	`<Section N="Layer"><Row IX="0">${cell('Name', 'Plan')}${cell('Lock', lock)}</Row></Section>`;
+it('resizes a group whose member is on an unlocked layer, and refuses a locked one', async () => {
+	const ok = await source(cell('LayerMember', '0'), '', '', 1, layer(0));
+	const result = await editVsdx(ok, [resize()]);
+	const member = (await parseVsdx(result.bytes)).pages[0]!.shapes[0]!.children[0]!;
+	expect(member.width).toBeCloseTo(2, 10);
+	const locked = await source(cell('LayerMember', '0'), '', '', 1, layer(1));
+	await expect(editVsdx(locked, [resize()])).rejects.toThrow(/locked layer/);
 });

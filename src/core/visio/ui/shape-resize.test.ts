@@ -120,13 +120,30 @@ it('offers group handles with rotated parents and members, and refuses unsupport
 	expect(visioResizeShape(scene, '1')).toBe(group);
 	member.kind = 'shape';
 	member.children = [];
+	// A stencil member is one plain shape of its master; a group instance is not admitted.
 	member.masterId = '0';
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	member.kind = 'group';
+	member.children = [structuredClone(page().shapes[0]!)];
+	member.children[0]!.id = '5';
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	member.kind = 'shape';
+	member.children = [];
 	delete member.masterId;
+	// Layered members resize on unlocked layers; a locked or unknown layer is refused.
 	member.layerIds = ['0'];
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	scene.layers = [{ id: '0', name: 'Plan', visible: true, locked: false } as never];
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	scene.layers = [{ id: '0', name: 'Plan', visible: true, locked: true } as never];
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
 	delete member.layerIds;
+	// A connector glued to a member follows (core reroutes it); one starting in the group does not.
 	scene.connectors = [{ fromShapeId: '3', toShapeId: '2', fromCell: 'BeginX', toCell: 'PinX' }];
+	expect(visioResizeShape(scene, '1')).toBe(group);
+	scene.connectors = [{ fromShapeId: '2', toShapeId: '3', fromCell: 'BeginX', toCell: 'PinX' }];
+	expect(visioResizeShape(scene, '1')).toBeUndefined();
+	scene.connectors = [{ fromShapeId: '3', toShapeId: '1', fromCell: 'BeginX', toCell: 'PinX' }];
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
 });
 

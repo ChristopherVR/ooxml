@@ -259,5 +259,6 @@ export function resizeVisioShapeAtAnchor(
 			dirty.add(item.pageId);
 		}
 	}
+	for (const commit of members?.commits ?? []) commit();
 	return [...dirty];
 }

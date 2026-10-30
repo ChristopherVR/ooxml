@@ -370,9 +370,20 @@ installed Visio 16 build is used to check that saved files open without repair.
       (`W' = W(cos^2 sx + sin^2 sy)`, checked against Visio 16 in
       `edit-group-resize-native.test.ts`); multi-selection resize takes groups, rotated shapes,
       layered shapes on unlocked layers and shapes with glued connectors.
-- [ ] **P1** Still refused: resizing or moving a group whose members have glued connectors
-      (connector glue reaches top-level shapes only), a group with stencil (master) or layered
-      members, and a multi-selection that holds stencil instances or connectors.
+- [x] **P1** Connectors glued to group members follow the group, and group resize takes stencil
+      (master) members and members on unlocked layers: glue reads a nested target through its
+      group chain (PinX/PinY, LocPin, Angle, flips), so moving, resizing or turning the group
+      reroutes the connector (ends checked against Visio 16 in `edit-group-glue-native.test.ts`);
+      stencil members are written as local proportional formulas with refreshed `Inh` caches
+      (`edit-group-stencil-resize-native.test.ts`); a multi-selection may hold stencil instances
+      and connectors whose two ends are glued inside the selection (they reroute with the shapes).
+- [ ] **P1** Still refused: a group member that is a connector or holds a connector end of its own,
+      a group glued directly (its own PinX glue), a group holding an instance of a group master,
+      stencil members whose pose cells carry formulas other than the group's own size, a selected
+      connector with a free end or an end glued outside the selection, and a locked layer on any
+      member. Not modelled: Visio also slides a dynamic end along a turned shape's side to line up
+      with the other end (seen at 1.2 rad), and a selection resize of stencil instances is proved
+      by the caller after the fact, not measured against Visio.
 - [x] **P1** Dynamic connectors in files saved by Visio follow moved shapes, re-glue and reroute,
       including AutoConnect's PinY glue; end positions match Visio's through COM
       (`edit-connector-visio-native.test.ts`).

@@ -55,8 +55,34 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
   reroutes them per command) and layered shapes on unlocked layers (`edit.ts` refuses a locked layer
   for any caller). That rule for a free multi-selection is Visio's group rule applied by analogy; it
   was not separately measured.
-- **Still refused:** groups whose members have glued connectors (glue targets top-level shapes
-  only), groups with stencil or layered members, selections with stencil instances or connectors.
+- **Still refused:** see "Glue through groups and stencil members, 2026-10-31" below.
+
+## Glue through groups and stencil members, 2026-10-31
+
+- **Nested glue.** Visio 16 (COM) on a group of two rectangles with a Dynamic connector glued to
+  one member: group PinX +3 puts the connector begin at (5.5, 4); Width x1.5 and Height x2 about the
+  centre pin at (5.0, 4.5); Angle 0.5 rad at (5.1836, 3.9204); the free end stays at (8, 6.5). The
+  core now composes the group chain's transform for a glue target at any depth, reroutes with the
+  existing router, and gives the same numbers (`edit-group-glue-native.test.ts`,
+  `__fixtures__/group-glued-connector.vsdx`).
+- **Turned glue targets.** COM at 0.5 rad on a 1.5 x 2 box and on a 2 x 0.75 box at 30 degrees
+  (the older recorded case) shows the glued end where the horizontal or vertical line through the
+  centre crosses the facing side, or at the side midpoint when that line leaves through the
+  neighbouring side. The core uses that rule for any shape not on the page axes (it used the turned
+  side's midpoint before, which matched only the 30 degree case). Not modelled: at 1.2 rad Visio also
+  slid the end along the side to the other end's coordinate.
+- **Stencil and layered group members.** Visio 16: a group of a stencil Rectangle instance and a
+  rectangle on layer L1, resized x1.5 by x2, gives the member pins, sizes and the glued connector end
+  in `edit-group-stencil-resize-native.test.ts`. The core writes the stencil member's PinX, PinY,
+  Width and Height as `Sheet.N!Width*k` formulas, refreshes the inherited geometry and connection
+  caches through the instance writer, and refuses a locked layer on any member.
+- **Selections.** A multi-selection may hold stencil instances (each resized and moved by the
+  single-instance path; the resulting pose is proved afterwards, not measured against Visio) and
+  connectors whose two ends are glued inside the selection (they reroute with the shapes; they are
+  not translated).
+- **Still refused:** a connector or glued source inside a group; a group glued directly; a group
+  that holds an instance of a group master; stencil members with pose formulas other than the
+  group's size; a selected connector with a free end or an end glued outside the selection.
 
 ## Data connections, keys and graphic placement, 2026-10-30
 

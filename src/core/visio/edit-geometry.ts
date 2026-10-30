@@ -70,7 +70,11 @@ export function applyGeometryEdit(
 	// Connectors glued to an edited 2D shape follow it; an edited connector is unglued first.
 	const glue = edit.type.startsWith('create-')
 		? { connectors: [] }
-		: glueParticipants(root, edit.shapeId);
+		: glueParticipants(
+				root,
+				edit.shapeId,
+				edit.type === 'move-shape' || edit.type === 'resize-shape' || edit.type === 'rotate-shape',
+			);
 	const glueShapes = new Set<Element>(
 		glue.connector
 			? [glue.connector.shape]

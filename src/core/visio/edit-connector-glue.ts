@@ -62,15 +62,56 @@ export interface VisioGlueBox {
 	transform: VisioMatrix;
 }
 
-/** The four side midpoints of a shape's alignment box, in page coordinates. */
+/** The page directions a dynamic connector leaves a shape by, in side order (bottom, right, top, left). */
+export const VISIO_GLUE_DIRECTIONS = [
+	{ x: 0, y: -1 },
+	{ x: 1, y: 0 },
+	{ x: 0, y: 1 },
+	{ x: -1, y: 0 },
+] as const;
+
+/** Whether the shape's axes are turned off the page axes (a multiple of 90 degrees is not). */
+export function visioGlueTurned(box: VisioGlueBox): boolean {
+	const [a, b, c, d] = box.transform;
+	return Math.min(Math.abs(a * b), Math.abs(c * d)) > 1e-9 || Math.abs(a * c + b * d) > 1e-9;
+}
+
+/**
+ * The four sites of a shape's alignment box, in page coordinates. A shape on the page axes has
+ * its side midpoints. For a turned shape, each page direction belongs to the side it faces most.
+ * Visio 16 glues there at the point where the line through the shape's centre crosses that side
+ * (read back through COM for 0.5 rad on tall and wide boxes), and at the side's midpoint when the
+ * line leaves the shape through the neighbouring side instead.
+ * Not modelled: Visio also slides the point along the side to line up with the other end.
+ */
 export function visioGlueSites(box: VisioGlueBox): VisioGluePoint[] {
 	const [a, b, c, d, e, f] = box.transform;
+	const at = (x: number, y: number) => ({ x: a * x + c * y + e, y: b * x + d * y + f });
+	if (visioGlueTurned(box)) {
+		const hw = box.width / 2,
+			hh = box.height / 2;
+		const centre = at(hw, hh);
+		const det = a * d - b * c;
+		return VISIO_GLUE_DIRECTIONS.map((r) => {
+			// The ray in shape coordinates, and the side it faces most (the larger component).
+			const sx = (d * r.x - c * r.y) / det,
+				sy = (-b * r.x + a * r.y) / det;
+			const tx = Math.abs(sx) > 1e-12 ? hw / Math.abs(sx) : Infinity,
+				ty = Math.abs(sy) > 1e-12 ? hh / Math.abs(sy) : Infinity;
+			const facesX = Math.abs(sx) >= Math.abs(sy);
+			if (facesX === tx <= ty) {
+				const t = Math.min(tx, ty);
+				return { x: centre.x + t * r.x, y: centre.y + t * r.y };
+			}
+			return facesX ? at(sx > 0 ? box.width : 0, hh) : at(hw, sy > 0 ? box.height : 0);
+		});
+	}
 	return [
-		[box.width / 2, 0],
-		[box.width, box.height / 2],
-		[box.width / 2, box.height],
-		[0, box.height / 2],
-	].map(([x, y]) => ({ x: a * x! + c * y! + e, y: b * x! + d * y! + f }));
+		at(box.width / 2, 0),
+		at(box.width, box.height / 2),
+		at(box.width / 2, box.height),
+		at(0, box.height / 2),
+	];
 }
 
 const distance = (p: VisioGluePoint, q: VisioGluePoint) => Math.hypot(p.x - q.x, p.y - q.y);

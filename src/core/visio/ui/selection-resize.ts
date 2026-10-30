@@ -2,6 +2,7 @@ import { applyResize } from '../../geometry/element-transform';
 import type { VisioEdit } from '../edit-commands';
 import type { VisioPage, VisioShape } from '../model';
 import { visioPageEditToDrawing } from './page-edit';
+import { visioSelectionShapes } from './selection-connectors';
 import type { VisioPagePoint } from './shape-move';
 import {
 	VISIO_RESIZE_HANDLES,
@@ -15,17 +16,19 @@ import {
 	type VisioResizeHandle,
 } from './shape-resize';
 
-function candidates(page: VisioPage, ids: readonly string[]): VisioShape[] | undefined {
-	if (!ids.length || ids.length > 500 || new Set(ids).size !== ids.length) return undefined;
+function candidates(page: VisioPage, selected: readonly string[]): VisioShape[] | undefined {
+	// Connectors fully inside the selection follow their shapes (core reroutes them).
+	const ids = visioSelectionShapes(page, selected);
+	if (!ids || !ids.length || ids.length > 500 || new Set(ids).size !== ids.length) return undefined;
 	const shapes: VisioShape[] = [];
 	for (const id of ids) {
 		const shape = visioResizeShape(page, id);
 		if (!shape) return undefined;
-		// Connectors resize through their end glue, not as selection members; stencil instances
-		// follow master formulas, so a shared page scale cannot prove their pose. Rotated shapes
-		// and groups resize by Visio's rule (see memberSize); glued connectors reroute in core.
-		if (ids.length > 1 && ((shape.kind !== 'shape' && shape.kind !== 'group') || shape.masterId))
-			return undefined;
+		// Connectors resize through their end glue, not as selection members. A stencil instance
+		// follows its master's formulas, so the caller proves its resulting pose (as for any member).
+		// Rotated shapes and groups resize by Visio's rule (see memberSize); glued connectors
+		// reroute in core.
+		if (ids.length > 1 && shape.kind !== 'shape' && shape.kind !== 'group') return undefined;
 		shapes.push(shape);
 	}
 	return shapes;

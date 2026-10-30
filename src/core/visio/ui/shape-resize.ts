@@ -4,9 +4,17 @@ import { visioAnchoredResizeGeometry, type VisioResizeAnchor } from '../resize-a
 import { visioMovementShape, visioPageDragDelta, type VisioPagePoint } from './shape-move';
 import { visioPageEditToDrawing } from './page-edit';
 
+/** Layer membership never blocks a resize in core except a locked layer; an unknown layer counts as locked. */
+function unlockedLayers(page: VisioPage, shape: VisioShape): boolean {
+	return (shape.layerIds ?? []).every(
+		(layer) => page.layers?.find((entry) => entry.id === layer)?.locked === false,
+	);
+}
+
 /** A local group tree whose members scale with it: nested groups and rotated or flipped members
- * are admitted (core scales a rotated member by the squared cosines of its axes). Stencil, layered,
- * image and foreign members stay out; source admission also proves resize modes, locks, formulas
+ * are admitted (core scales a rotated member by the squared cosines of its axes), as are stencil
+ * members (single-shape masters) and members on unlocked layers. Group instances, image and foreign
+ * members stay out; source admission also proves resize modes, locks, formulas
  * and geometry. */
 function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
 	if (shape.kind !== 'group' || shape.masterId || !shape.children.length) return false;
@@ -20,8 +28,9 @@ function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
 		for (const member of group.children) {
 			if (
 				ids.has(member.id) ||
-				member.masterId ||
-				member.layerIds?.length ||
+				// A stencil member is one plain shape of its master; a group instance keeps its own scaling.
+				(member.masterId && (member.kind !== 'shape' || member.children.length)) ||
+				!unlockedLayers(page, member) ||
 				member.image ||
 				member.foreignVector ||
 				!member.rotation ||
@@ -35,8 +44,10 @@ function resizableLocalGroup(page: VisioPage, shape: VisioShape): boolean {
 			else ids.add(member.id);
 		}
 	}
+	// Connectors glued to members follow the group (core reroutes them); a connector or glued
+	// member inside the group, or one glued to the group itself, is not supported.
 	return !page.connectors.some(
-		(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
+		(connection) => ids.has(connection.fromShapeId) || connection.toShapeId === shape.id,
 	);
 }
 

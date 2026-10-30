@@ -30,6 +30,7 @@ import {
 	proveConnector,
 	type ConnectorGlue,
 } from './edit-connector';
+import { shapeChain } from './edit-connector-world';
 import type { VisioRoutePoint } from './connector-route';
 import { connectorObstacles } from './edit-connector-obstacles';
 import {
@@ -168,7 +169,11 @@ export function rerouteConnector(
 					root,
 					new Set([
 						attribute(shape, 'ID') ?? '',
-						...ENDS.map((end) => glue.ends[end]?.target ?? ''),
+						...ENDS.flatMap((end) => {
+							const target = glue.ends[end]?.target ?? '';
+							// A target inside a group: the groups around it are not in its way either.
+							return (shapeChain(root, target) ?? []).map((item) => attribute(item, 'ID') ?? '');
+						}),
 					]),
 				)
 			: [];

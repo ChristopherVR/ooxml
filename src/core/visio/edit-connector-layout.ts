@@ -4,7 +4,13 @@ import { cells, numeric, setCell } from './edit-geometry-cells';
 import { sameLineCoordinate } from './edit-line-move';
 import { recalculateVisioCells, type VisioCellKey } from './edit-recalculate';
 import type { VisioConnectorRoute } from './edit-connector-commands';
-import { visioGlueSites, type VisioGlueBox, type VisioGluePoint } from './edit-connector-glue';
+import {
+	VISIO_GLUE_DIRECTIONS,
+	visioGlueSites,
+	visioGlueTurned,
+	type VisioGlueBox,
+	type VisioGluePoint,
+} from './edit-connector-glue';
 import {
 	visioCurvedRoute,
 	visioOrthogonalRoute,
@@ -81,10 +87,11 @@ const sideNormal = (box: VisioGlueBox, side: number): VisioGluePoint => {
 };
 /** The four side midpoints of a dynamic glue target, each with its outward normal. */
 export function dynamicSites(box: VisioGlueBox): ConnectorSite[] {
-	const bounds = routeBox(box);
+	const bounds = routeBox(box),
+		turned = visioGlueTurned(box);
 	return visioGlueSites(box).map((point, side) => ({
 		point,
-		normal: sideNormal(box, side),
+		normal: turned ? VISIO_GLUE_DIRECTIONS[side]! : sideNormal(box, side),
 		box: bounds,
 	}));
 }
