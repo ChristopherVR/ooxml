@@ -117,7 +117,6 @@ it('drops into and out of a container, grows it, and undoes each as one step', a
 
 	// Dragging shape 2 (1 x 1) into the frame around shape 3 makes it a member.
 	select(view, ['2']);
-	const shape2 = page(view).shapes.find((shape) => shape.id === '2')!;
 	const origin = frame().transform;
 	await view.controller.applySelectionEdits([
 		{
