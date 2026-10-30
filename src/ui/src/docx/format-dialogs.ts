@@ -25,6 +25,7 @@ import { createSplitCellsDialog } from './split-cells-dialog';
 import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
 import { createMultilevelListDialog } from './multilevel-list-dialog';
 import { createReviewOptionsDialog } from './review-options-dialog';
+import { createRestrictEditingPane, type RestrictEditingHost } from './restrict-editing-pane';
 
 export type FormatDialogKind =
 	| 'font'
@@ -48,6 +49,7 @@ export type FormatDialogKind =
 	| 'columns'
 	| 'multilevelList'
 	| 'tracking'
+	| 'restrictEditing'
 	| 'insertChart'
 	| 'changeChartType'
 	| 'chartData';
@@ -68,6 +70,8 @@ export interface FormatDialogsHost {
 	pageBorders?: Omit<PageBordersHost, 'restoreFocus'>;
 	watermark?: Omit<WatermarkHost, 'restoreFocus'>;
 	columns?: Omit<ColumnsHost, 'restoreFocus'>;
+	/** Review > Restrict Editing: the document's protection and how to change it. */
+	restrictEditing?: Omit<RestrictEditingHost, 'view'>;
 	/** The document theme, for chart previews. */
 	theme?(): ThemeCatalog | undefined;
 }
@@ -145,10 +149,23 @@ export class FormatDialogs {
 			insertChart: createChartTypeDialog(charts, false),
 			changeChartType: createChartTypeDialog(charts, true),
 			chartData: createChartDataDialog(charts),
+			restrictEditing: createRestrictEditingPane({
+				view: () => (host.reviewView ? host.reviewView() : host.view()),
+				protection: () => host.restrictEditing?.protection(),
+				apply: (protection) => host.restrictEditing?.apply(protection),
+				user: () => host.restrictEditing?.user() ?? 'Author',
+				highlight: () => host.restrictEditing?.highlight() ?? true,
+				setHighlight: (on) => host.restrictEditing?.setHighlight(on),
+			}),
 			tracking: createReviewOptionsDialog(() =>
 				host.reviewView ? host.reviewView() : host.view(),
 			),
 		};
+	}
+
+	/** The Restrict Editing pane docks beside the page; the shell mounts it, not the frame. */
+	get restrictEditingPane(): HTMLElement {
+		return this.dialogs.restrictEditing.element;
 	}
 
 	get elements(): HTMLElement[] {

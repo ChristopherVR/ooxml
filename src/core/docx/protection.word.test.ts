@@ -1,0 +1,135 @@
+// Documents protected by desktop Word itself (generate-word-protection.ps1).
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import JSZip from 'jszip';
+import { describe, expect, it } from 'vitest';
+import { loadDocx } from './index';
+import { verifyProtectionPassword } from './protection';
+import { legacyPasswordKeyText } from './protection-legacy';
+
+const WORD_PASSWORD = 'Word-Pass-1';
+const ISO_PASSWORD = 'Iso-Pass-1';
+const fixture = (name: string) =>
+	new Uint8Array(readFileSync(new URL(`./__fixtures__/protection/${name}.docx`, import.meta.url)));
+
+describe('documents protected by Word', () => {
+	for (const [name, edit] of [
+		['readOnly', 'readOnly'],
+		['comments', 'comments'],
+		['trackedChanges', 'trackedChanges'],
+		['forms', 'forms'],
+		['readOnly-compat12', 'readOnly'],
+	] as const) {
+		it(`${name}: accepts the password Word protected it with, and rejects others`, async () => {
+			const { model } = await loadDocx(fixture(name));
+			expect(model.protection).toMatchObject({ edit, enforced: true });
+			expect(model.protection?.password?.word?.algorithmSid).toBe(14);
+			expect(model.protection?.password?.algorithmName).toBe('SHA-512');
+			expect(verifyProtectionPassword(model.protection, WORD_PASSWORD)).toBe(true);
+			expect(verifyProtectionPassword(model.protection, 'word-pass-1')).toBe(false);
+			expect(verifyProtectionPassword(model.protection, '')).toBe(false);
+		});
+	}
+
+	it('writes Word protection back as Word wrote it', async () => {
+		const loaded = await loadDocx(fixture('readOnly'));
+		const again = await loadDocx(await loaded.save());
+		expect(again.model.protection).toEqual(loaded.model.protection);
+	});
+
+	it('verifies the ISO 29500 form, which Word itself unprotects with the right password', async () => {
+		// readOnly-iso.docx: generate-word-protection.ps1 rewrites Word's element to
+		// algorithmName/hashValue/saltValue/spinCount and checks Document.Unprotect accepts it.
+		const { model } = await loadDocx(fixture('readOnly-iso'));
+		expect(model.protection?.password?.word).toBeUndefined();
+		expect(verifyProtectionPassword(model.protection, ISO_PASSWORD)).toBe(true);
+		expect(verifyProtectionPassword(model.protection, 'iso-pass-1')).toBe(false);
+		expect(verifyProtectionPassword(model.protection, WORD_PASSWORD)).toBe(false);
+	});
+});
+
+describe('ISO 29500 digests', () => {
+	/** The password spin written out with node:crypto, independent of the digest area. */
+	const spin = (algorithm: string, password: string, salt: Buffer, count: number) => {
+		let hash = createHash(algorithm)
+			.update(Buffer.concat([salt, Buffer.from(password, 'utf16le')]))
+			.digest();
+		for (let i = 0; i < count; i++) {
+			const iterator = Buffer.alloc(4);
+			iterator.writeUInt32LE(i);
+			hash = createHash(algorithm)
+				.update(Buffer.concat([hash, iterator]))
+				.digest();
+		}
+		return hash.toString('base64');
+	};
+	const salt = Buffer.from('0123456789abcdef');
+
+	for (const [name, algorithm] of [
+		['SHA-1', 'sha1'],
+		['SHA-256', 'sha256'],
+		['SHA-384', 'sha384'],
+		['SHA-512', 'sha512'],
+	] as const) {
+		it(`checks ${name}`, async () => {
+			const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:p/><w:sectPr/></w:body></w:document>`,
+			);
+			zip.file(
+				'word/settings.xml',
+				`<w:settings xmlns:w="${W}"><w:documentProtection w:edit="readOnly" w:enforcement="1" w:algorithmName="${name}" w:hashValue="${spin(algorithm, 'pässword', salt, 5000)}" w:saltValue="${salt.toString('base64')}" w:spinCount="5000"/></w:settings>`,
+			);
+			const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			expect(verifyProtectionPassword(model.protection, 'pässword')).toBe(true);
+			expect(verifyProtectionPassword(model.protection, 'password')).toBe(false);
+		});
+	}
+});
+
+describe('Word legacy password key', () => {
+	it('derives the key text Word hashed for its fixtures', () => {
+		expect(legacyPasswordKeyText(WORD_PASSWORD)).toBe('A1C24957');
+		expect(legacyPasswordKeyText('')).toBe('00000000');
+		// Only the first 15 characters count.
+		expect(legacyPasswordKeyText('0123456789abcdefXYZ')).toBe(
+			legacyPasswordKeyText('0123456789abcde'),
+		);
+	});
+
+	for (const [sid, algorithm] of [
+		[4, 'sha1'],
+		[12, 'sha256'],
+		[13, 'sha384'],
+		[14, 'sha512'],
+	] as const) {
+		it(`checks cryptAlgorithmSid ${sid} like Word 2007's rsaFull hashes`, async () => {
+			const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+			const salt = Buffer.from('0123456789abcdef');
+			let hash = createHash(algorithm)
+				.update(Buffer.concat([salt, Buffer.from(legacyPasswordKeyText('pw1'), 'utf16le')]))
+				.digest();
+			for (let i = 0; i < 50000; i++) {
+				const iterator = Buffer.alloc(4);
+				iterator.writeUInt32LE(i);
+				hash = createHash(algorithm)
+					.update(Buffer.concat([hash, iterator]))
+					.digest();
+			}
+			const zip = new JSZip();
+			zip.file(
+				'word/document.xml',
+				`<w:document xmlns:w="${W}"><w:body><w:p/><w:sectPr/></w:body></w:document>`,
+			);
+			zip.file(
+				'word/settings.xml',
+				`<w:settings xmlns:w="${W}"><w:documentProtection w:edit="readOnly" w:enforcement="1" w:cryptProviderType="rsaFull" w:cryptAlgorithmClass="hash" w:cryptAlgorithmType="typeAny" w:cryptAlgorithmSid="${sid}" w:cryptSpinCount="50000" w:hash="${hash.toString('base64')}" w:salt="${salt.toString('base64')}"/></w:settings>`,
+			);
+			const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+			expect(verifyProtectionPassword(model.protection, 'pw1')).toBe(true);
+			expect(verifyProtectionPassword(model.protection, 'pw2')).toBe(false);
+		});
+	}
+});

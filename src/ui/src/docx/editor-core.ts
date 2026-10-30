@@ -35,7 +35,7 @@ import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
 import type { HeadingNavigator } from './heading-navigator';
 import type { DocxChartFormatPane } from './chart-format-pane';
-import { HEADER_FOOTER_INPUT, isFormsProtected } from 'ooxml-core/docx/ui';
+import { HEADER_FOOTER_INPUT, locksStories } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
 import { currentSectionIndex } from './section-commands';
@@ -218,6 +218,16 @@ export class EditorCore {
 				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (columns, footnoteColumns) => this.pages.applyColumns(columns, footnoteColumns),
 			},
+			restrictEditing: {
+				protection: () => this.model.protection,
+				apply: (protection) => this.applyProtection(protection),
+				user: () => this.reviewAuthor,
+				highlight: () => this.highlightEditableRegions,
+				setHighlight: (on) => {
+					this.highlightEditableRegions = on;
+					this.view?.dispatch(this.view.state.tr.setMeta('docx-protection', true));
+				},
+			},
 		});
 		this.imageMedia = new ImageMediaCache(
 			(partName) =>
@@ -234,7 +244,7 @@ export class EditorCore {
 			locale: () => this.locale,
 			// A document protected for forms lets only its body's fields change, as in Word.
 			canEditOutsideBody: () =>
-				!this.readOnly && !this.collab.active && !isFormsProtected(this.model.protection),
+				!this.readOnly && !this.collab.active && !locksStories(this.model.protection),
 			edited: () => this.markEditedOutsideBody(),
 			reportError: (cause) => dispatchDocumentError(element, cause),
 		};
@@ -267,6 +277,21 @@ export class EditorCore {
 
 	contentWidth(): number {
 		return this.model.page.width - this.model.page.marginLeft - this.model.page.marginRight;
+	}
+
+	/** Review > Restrict Editing > Highlight the regions I can edit. */
+	highlightEditableRegions = true;
+
+	/** Starts or stops Review > Restrict Editing; saving writes it to settings.xml. */
+	applyProtection(protection: DocumentModel['protection']): void {
+		const { protection: _previous, ...rest } = this.model;
+		this.model = protection ? { ...rest, protection } : rest;
+		if (locksStories(protection) && this.parts.activeView())
+			this.parts.closeHeaderFooter(this.shell.canvas, this.shell.paper);
+		// Redraw the editable regions, and the ribbon's disabled commands.
+		this.view?.dispatch(this.view.state.tr.setMeta('docx-protection', true));
+		this.markEditedOutsideBody();
+		this.refreshControls();
 	}
 
 	canEditBody(): boolean {

@@ -60,6 +60,7 @@ const paths = {
 	firstPage: 'M6 3h9l3 3v15H6z M9 8h6 M9 12h6 M9 16h3',
 	oddEven: 'M3 5h8v14H3z M13 5h8v14h-8z M6 9h2 M16 9h2',
 	track: 'M4 20l4-1 11-11-3-3L5 16z M14 20h7',
+	protect: 'M7 11V8a5 5 0 0 1 10 0v3 M5 11h14v10H5z M12 15v2',
 	previous: 'M6 14l6-6 6 6',
 	next: 'M6 10l6 6 6-6',
 	accept: 'M5 12.5l4.5 4.5L19 7',

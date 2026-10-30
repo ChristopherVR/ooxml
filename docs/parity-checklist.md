@@ -207,8 +207,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       the editor marker at the font size or the authored shape size, measured by the picture width
       in page layout, kept byte-identical on save, and creatable through Bullets > Picture bullet...
       (new entry, media part and `numbering.xml.rels` relationship written on save).
-- [ ] **P1** Protection: forms protection is enforced; read-only, comments-only and
-      tracked-changes-only are kept but not enforced, and there is no Restrict Editing UI.
+- [x] **P1** Protection: forms, read-only, comments-only and tracked-changes-only protection are
+      enforced, and Review > Restrict Editing starts and stops them (password checked with the
+      ECMA-376 hash, written back on save).
+- [ ] **P2** Restrict Editing leftovers: only "Everyone" exceptions (no per-user list); an
+      exception that continues across paragraphs or sits between blocks, and column-range
+      permissions (`w:colFirst`), are enforced but cannot be edited in the pane; the allowed-styles
+      list of formatting restrictions is kept but not enforced; the Word 97 four-byte `w:hash`
+      (no `cryptAlgorithmSid`) cannot be verified, so that protection cannot be stopped here.
+      Word-written passwords (legacy key text, SHA-1/256/384/512 by sid) are checked against
+      fixtures saved by Word 16 (SHA-512 only; the other sids are checked against an independent
+      implementation).
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
       detected before an edit.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
