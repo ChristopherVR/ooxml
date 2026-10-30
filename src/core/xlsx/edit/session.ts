@@ -278,6 +278,7 @@ export function createEditSession(
 		createTable: (s, range, hasHeader, styleName) =>
 			tables.createTable(ctx, s, range, hasHeader, styleName),
 		setSheetView: (s, patch) => view.setSheetView(ctx, s, patch),
+		setIgnoredErrors: (s, list) => view.setIgnoredErrors(ctx, s, list),
 		setDefinedName: (name) => view.setDefinedName(ctx, name),
 		deleteDefinedName: (name, localSheet) => view.deleteDefinedName(ctx, name, localSheet),
 		editPictureEffects: (s, index, patch) => drawings.editPictureEffects(ctx, s, index, patch),

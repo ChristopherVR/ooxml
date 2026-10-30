@@ -25,6 +25,7 @@ import {
 	readSheetView,
 	readTabColor,
 } from './sheet-props';
+import { readIgnoredErrors } from './ignored-errors';
 import { readScenarios } from './scenarios';
 import { readSortState } from './sort-state';
 import { readPrintOptions } from './print-options';
@@ -71,6 +72,7 @@ const MODELLED = new Set([
 	'tableParts',
 	'scenarios',
 	'customSheetViews',
+	'ignoredErrors',
 ]);
 
 /** An element outside the worksheet schema cannot be written back in place, so it is reported. */
@@ -226,6 +228,8 @@ function readWorksheet(
 	sheet.conditionalFormats = readConditionalFormats(cfBlocks, ctx.dxfs, ctx.palette, (m) =>
 		ctx.warn(m),
 	);
+	const ignored = readIgnoredErrors(byName.get('ignoredErrors'));
+	if (ignored.length) sheet.ignoredErrors = ignored;
 	const scenarios = readScenarios(byName.get('scenarios'));
 	if (scenarios) sheet.scenarios = scenarios;
 	sheet.dataValidations = readDataValidations(byName.get('dataValidations'));

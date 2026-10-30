@@ -30,6 +30,7 @@ import {
 } from './sheet-props';
 import { scenariosXml } from './scenarios';
 import { customSheetViewsXml } from './custom-views';
+import { ignoredErrorsXml } from './ignored-errors';
 import { WORKSHEET_CHILD_ORDER as ORDER } from '../read/worksheet-children';
 import { XML_HEADER, attrs, inlineFragment } from './xml-out';
 
@@ -107,6 +108,7 @@ export function writeWorksheet(
 	blocks.set('autoFilter', autoFilterXml(sheet, ctx.styles));
 	blocks.set('sortState', sheetSortStateXml(sheet, ctx.styles));
 	blocks.set('mergeCells', mergeCellsXml(sheet));
+	blocks.set('ignoredErrors', ignoredErrorsXml(sheet.ignoredErrors));
 	blocks.set('conditionalFormatting', conditionalFormatsXml(sheet.conditionalFormats, ctx.styles));
 	blocks.set('dataValidations', dataValidationsXml(sheet.dataValidations));
 	const links = sheet.hyperlinks.map((link) => {

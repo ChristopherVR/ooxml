@@ -162,6 +162,14 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	smartArtDemote: 'M3.5 5h13M8.5 10h8M8.5 15h8M3.5 7.5 6 10l-2.5 2.5',
 	smartArtMoveUp: 'M10 16.5V4M5 9l5-5 5 5',
 	smartArtMoveDown: 'M10 3.5V16M5 11l5 5 5-5',
+	traceArrow: 'M3 15h8M11 15V5M8 8l3-3 3 3M3 5h3M3 5v3',
+	tracePrecedents: 'M4 4h4v4H4zM4 12h4v4H4zM12 8h4v4h-4zM8 6l4 3M8 14l4-3M10.5 9.5l1.5-.5',
+	traceDependents: 'M12 4h4v4h-4zM12 12h4v4h-4zM4 8h4v4H4zM8 9l4-3M8 11l4 3M10.5 6.5 12 6',
+	removeArrows: 'M3 15 14 4M11 4h3v3M3 3l5 5M8 3 3 8',
+	evaluateFormula: 'M3 4h14v12H3zM6 8h8M6 12h5M11 11.5h3',
+	errorChecking: 'M10 2.5 18 16.5H2zM10 7.5v4M10 13.5h.1',
+	watchWindow:
+		'M1.5 10S5 4.5 10 4.5 18.5 10 18.5 10 15 15.5 10 15.5 1.5 10 1.5 10zM10 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',
 	smartArtLayout: 'M2.5 3.5h6v6h-6zM11.5 3.5h6v6h-6zM2.5 12.5h6v4h-6zM11.5 12.5h6v4h-6z',
 };
 

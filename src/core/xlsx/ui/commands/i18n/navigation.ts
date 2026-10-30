@@ -408,23 +408,11 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Autofiltro en los encabezados de tabla, lista jerárquica de fechas, filtros por icono desde el menú',
 		'表格标题上的自动筛选、日期层次列表、菜单中的图标筛选',
 	],
-	'Sorting by cell colour, font colour or icon': [
-		'Tri par couleur de cellule, couleur de police ou icône',
-		'Sortieren nach Zellenfarbe, Schriftfarbe oder Symbol',
-		'Ordenar por color de celda, color de fuente o icono',
-		'按单元格颜色、字体颜色或图标排序',
-	],
 	'Flash Fill, Subtotal and Consolidate': [
 		'Remplissage instantané, Sous-total et Consolider',
 		'Blitzvorschau, Teilergebnis und Konsolidieren',
 		'Relleno rápido, Subtotal y Consolidar',
 		'快速填充、分类汇总和合并计算',
-	],
-	'Formula auditing: Trace Precedents, Trace Dependents, Evaluate Formula, Watch Window': [
-		'Audit de formules : repérer les antécédents, repérer les dépendants, évaluer la formule, fenêtre Espion',
-		'Formelüberwachung: Spur zum Vorgänger, Spur zum Nachfolger, Formelauswertung, Überwachungsfenster',
-		'Auditoría de fórmulas: rastrear precedentes, rastrear dependientes, evaluar fórmula, ventana Inspección',
-		'公式审核:追踪引用单元格、追踪从属单元格、公式求值、监视窗口',
 	],
 	'Opening .xlsb binary workbooks': [
 		'Ouverture des classeurs binaires .xlsb',
@@ -456,4 +444,11 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Vista Diseño de página',
 		'页面布局视图',
 	],
+	'Formula auditing: Trace Precedents and Dependents, Remove Arrows, Evaluate Formula, Error Checking and Watch Window':
+		[
+			'Audit de formules : repérage des antécédents et dépendants, suppression des flèches, évaluation de formule, vérification des erreurs et fenêtre Espion',
+			'Formelüberwachung: Spuren zu Vorgängern und Nachfolgern, Pfeile entfernen, Formelauswertung, Fehlerüberprüfung und Überwachungsfenster',
+			'Auditoría de fórmulas: rastreo de precedentes y dependientes, quitar flechas, evaluar fórmula, comprobación de errores y ventana Inspección',
+			'公式审核:追踪引用和从属单元格、移去箭头、公式求值、错误检查和监视窗口',
+		],
 };

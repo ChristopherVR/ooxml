@@ -883,6 +883,8 @@ export interface Worksheet {
 	pivotTables?: import('./model-pivots').PivotTable[];
 	/** What-if data tables (`{=TABLE()}`); their result cells hold plain values. */
 	dataTables?: import('./model-whatif').DataTable[];
+	/** Error Checking rules the user turned off for ranges (ignoredErrors). */
+	ignoredErrors?: IgnoredError[];
 	/** Scenario Manager scenarios. */
 	scenarios?: import('./model-whatif').ScenarioSet;
 	autoFilter?: AutoFilter;
@@ -941,6 +943,25 @@ export interface WorkbookProperties extends CoreProperties, AppProperties {
 	 * empty) it replaces the part, and an empty list removes it.
 	 */
 	custom?: CustomProperty[];
+}
+
+/** The ignoredError flags: which Error Checking rule is off for a range (evalError is error values). */
+export const IGNORED_ERROR_FLAGS = [
+	'evalError',
+	'twoDigitTextYear',
+	'numberStoredAsText',
+	'formula',
+	'formulaRange',
+	'unlockedFormula',
+	'emptyCellReference',
+	'listDataValidation',
+	'calculatedColumn',
+] as const;
+export type IgnoredErrorFlag = (typeof IGNORED_ERROR_FLAGS)[number];
+
+export interface IgnoredError {
+	ranges: CellRange[];
+	flags: IgnoredErrorFlag[];
 }
 
 export interface Workbook {

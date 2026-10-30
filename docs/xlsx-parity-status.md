@@ -297,8 +297,12 @@ line/marker swatches and position-authoring controls remain incomplete.
    needed), and CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,
    CUBESETCOUNT, CUBEVALUE, WEBSERVICE, FILTERXML, STOCKHISTORY, RTD, IMAGE, COPILOT,
    TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service).
-10. Data tools and auditing (View > Split is implemented: `layout/split.ts`, `SheetView.split`): Flash Fill, Subtotal, Consolidate, Advanced filter, Trace Precedents and Dependents, Remove Arrows, Evaluate
-    Formula, Error Checking and Watch Window have no commands. Text to Columns splits at
+10. Data tools and auditing (View > Split is implemented: `layout/split.ts`, `SheetView.split`):
+    Flash Fill, Subtotal, Consolidate and Advanced filter have no commands. Formula auditing (Trace
+    Precedents and Dependents, Remove Arrows, Evaluate Formula with Step In and Step Out, Error
+    Checking and the Watch Window) exists. Error Checking covers seven rules (not the two-digit-year
+    and list data validation ones) and has no green-triangle indicators; OFFSET and INDIRECT targets
+    are not traced. Text to Columns splits at
     delimiters or typed fixed-width break positions (no per-column data format step), and
     Page Layout > Themes > Colors only reports that changing the
     theme is not supported.

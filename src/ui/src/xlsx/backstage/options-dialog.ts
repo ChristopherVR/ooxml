@@ -12,6 +12,8 @@ import {
 	type OfficeOptionsLabels,
 	type OptionsContext,
 } from '../../controls';
+import { ERROR_RULES, type ErrorRule } from 'ooxml-core/xlsx';
+import { auditState, setErrorRules } from 'ooxml-core/xlsx/ui';
 import { renderCustomizeRibbon } from './options-customize';
 import type { BackstageHost, IterationSettings } from './parts';
 
@@ -25,6 +27,16 @@ const LANGUAGES: ReadonlyArray<readonly [string, string]> = [
 const DEFAULT_ITERATIONS = 100;
 const DEFAULT_MAX_CHANGE = 0.001;
 const DIRECT_KEYS = ['locale', 'theme', 'author', 'calculation'] as const;
+const RULE_LABELS: Readonly<Record<ErrorRule, string>> = {
+	'error-value': 'Cells containing formulas that result in an error',
+	'calculated-column': 'Inconsistent calculated column formula in tables',
+	'number-as-text': 'Numbers formatted as text or preceded by an apostrophe',
+	'inconsistent-formula': 'Formulas inconsistent with other formulas in the region',
+	'omits-adjacent-cells': 'Formulas which omit cells in a region',
+	'unlocked-formula': 'Unlocked cells containing formulas',
+	'empty-cell-reference': 'Formulas referring to empty cells',
+};
+const ruleKey = (rule: ErrorRule): string => 'rule:' + rule;
 const ITERATION_KEYS = ['iterate', 'iterationCount', 'iterationDelta'];
 
 type OptionsDialog = HTMLElement & {
@@ -123,6 +135,15 @@ function excelCategories(context: OptionsContext): OfficeOptionCategory[] {
 					],
 				},
 				{
+					id: 'error-checking',
+					title: t('Error Checking Rules'),
+					controls: ERROR_RULES.map((rule) => ({
+						kind: 'toggle' as const,
+						key: ruleKey(rule),
+						label: t(RULE_LABELS[rule]),
+					})),
+				},
+				{
 					id: 'working',
 					title: t('Working with formulas'),
 					controls: [
@@ -189,6 +210,9 @@ function dialogValues(host: BackstageHost): OfficeOptionValues {
 		iterate: Boolean(current.iteration),
 		iterationCount: current.iteration?.count ?? DEFAULT_ITERATIONS,
 		iterationDelta: current.iteration?.delta ?? DEFAULT_MAX_CHANGE,
+		...Object.fromEntries(
+			ERROR_RULES.map((rule) => [ruleKey(rule), auditState(host.ctx).rules.includes(rule)]),
+		),
 	};
 }
 
@@ -228,6 +252,9 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 			iterate: false,
 			iterationCount: DEFAULT_ITERATIONS,
 			iterationDelta: DEFAULT_MAX_CHANGE,
+			...Object.fromEntries(
+				ERROR_RULES.map((rule) => [ruleKey(rule), rule !== 'empty-cell-reference']),
+			),
 		};
 	};
 	element.addEventListener('office-options-change', (event) => {
@@ -236,6 +263,11 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 		).detail;
 		for (const key of DIRECT_KEYS)
 			if (changed.includes(key)) host.setOption(key, String(values[key]));
+		if (changed.some((key) => key.startsWith('rule:')))
+			setErrorRules(
+				ctx,
+				ERROR_RULES.filter((rule) => values[ruleKey(rule)] === true),
+			);
 		if (changed.some((key) => ITERATION_KEYS.includes(key)))
 			host.setOption('iteration', iterationOf(values));
 		build();

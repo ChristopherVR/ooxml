@@ -1,4 +1,5 @@
 // Every UI-COMMANDS translation table, flattened per locale for `locales/<lang>/commands.ts`.
+import { AUDIT_STRINGS } from './audit';
 import { CORE_FEATURE_STRINGS } from './core-features';
 import { CHART_SERIES_STRINGS } from './chart-series';
 import { FILTER_STRINGS } from './filters';
@@ -34,6 +35,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	WHAT_IF_STRINGS,
 	SMARTART_STRINGS,
 	FILTER_STRINGS,
+	AUDIT_STRINGS,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>
