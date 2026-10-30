@@ -49,7 +49,15 @@ export const WORD_CAPABILITY_ACTIONS: CapabilityActionMap<WordCapabilityId, Ribb
 	print: ['print'],
 	copy: ['cut', 'copy'],
 	comment: ['add-comment', 'delete-comment', 'previous-comment', 'next-comment', 'comments'],
-	review: ['track-changes', 'tracking-options', 'accept', 'reject', 'accept-all', 'reject-all'],
+	review: [
+		'track-changes',
+		'tracking-options',
+		'restrict-editing',
+		'accept',
+		'reject',
+		'accept-all',
+		'reject-all',
+	],
 	find: ['find-and-replace', 'replace', 'find-options'],
 };
 

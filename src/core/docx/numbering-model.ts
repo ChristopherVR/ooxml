@@ -11,6 +11,17 @@ export interface NumberingMarkerFormat {
 	/** `#rrggbb`; automatic colour is represented by omission. */
 	color?: string;
 }
+/** A `w:numPicBullet` picture: the image part resolved through the numbering part's relationships. */
+export interface NumberingPictureBullet {
+	/** `w:numPicBulletId`. */
+	id: string;
+	/** Package part of the image, such as `word/media/image1.png`. Bytes live in the loaded media map. */
+	partName: string;
+	contentType: string;
+	/** Authored shape size in points (VML `style` width/height or the drawing extent), when present. */
+	widthPt?: number;
+	heightPt?: number;
+}
 /** A single `w:lvl` definition, fully resolved from an abstractNum (and any lvlOverride). */
 export interface NumberingLevelDefinition {
 	/** 0-based `w:ilvl`. */
@@ -39,6 +50,8 @@ export interface NumberingLevelDefinition {
 	suffix?: 'tab' | 'space' | 'none';
 	/** Explicit tab stop for the marker's tab suffix (`w:pPr/w:tabs/w:tab`, `w:val="num"`). */
 	tabStopTwips?: Twips;
+	/** `w:lvlPicBulletId`: the `NumberingCatalog.pictureBullets` entry drawn as this level's marker. */
+	pictureBulletId?: string;
 	/** Marker formatting from `w:rPr`. */
 	markerFormat?: NumberingMarkerFormat;
 }
@@ -59,6 +72,8 @@ export interface NumDefinition {
 export interface NumberingCatalog {
 	abstractNums: Record<string, AbstractNumDefinition>;
 	nums: Record<string, NumDefinition>;
+	/** `w:numPicBullet` pictures by id. Existing ones are preserved and may be referenced by new levels. */
+	pictureBullets?: Record<string, NumberingPictureBullet>;
 	warnings: string[];
 }
 /** A computed, render-only list marker for one paragraph. Never written back to the model. */
@@ -75,4 +90,6 @@ export interface ParagraphListLabel {
 	firstLineTwips?: Twips;
 	tabStopTwips?: Twips;
 	markerFormat?: NumberingMarkerFormat;
+	/** Picture bullet drawn in place of the marker text. */
+	picture?: NumberingPictureBullet;
 }

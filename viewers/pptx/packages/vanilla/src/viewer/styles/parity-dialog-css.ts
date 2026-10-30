@@ -52,7 +52,7 @@ export const PARITY_DIALOG_CSS = `
 .pptxv-slide-sorter { position: absolute; z-index: 50; inset: 0; display: flex; flex-direction: column; background: color-mix(in srgb, var(--pptx-background) 96%, transparent); color: var(--pptx-foreground); }
 .pptxv-sorter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; overflow: auto; padding: 18px; } .pptxv-sorter-card { overflow: hidden; border: 2px solid var(--pptx-border); border-radius: 7px; background: var(--pptx-card); } .pptxv-sorter-card.is-current { border-color: var(--pptx-primary); } .pptxv-sorter-card.is-hidden { opacity: .5; } .pptxv-sorter-card > button { display: grid; width: 100%; min-height: 90px; place-items: center; border: 0; background: var(--pptx-muted); color: inherit; font-size: 22px; cursor: pointer; } .pptxv-sorter-card div { display: flex; gap: 3px; padding: 5px; } .pptxv-sorter-card div button { flex: 1; padding: 4px; border: 0; background: transparent; color: inherit; font-size: 9px; cursor: pointer; }
 .pptxv-custom-shows-active { display: flex; align-items: center; gap: 8px; } .pptxv-custom-shows-active select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: inherit; }
-.pptxv-custom-shows article { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; padding: 8px; border: 1px solid var(--pptx-border); border-radius: 6px; } .pptxv-custom-shows article > div { grid-column: 1 / -1; max-height: 140px; overflow: auto; }
+.pptxv-custom-shows { display: grid; grid-template-columns: 180px 1fr; gap: 12px; } .pptxv-custom-shows ul { margin: 0; padding: 0; list-style: none; max-height: 220px; overflow: auto; border: 1px solid var(--pptx-border); border-radius: 4px; } .pptxv-custom-shows li { padding: 5px 8px; cursor: pointer; } .pptxv-custom-shows li[aria-selected="true"] { background: var(--pptx-primary); color: var(--pptx-primary-foreground, #fff); } .pptxv-custom-shows-list, .pptxv-custom-shows-editor { display: flex; flex-direction: column; gap: 6px; } .pptxv-custom-shows-lists { display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 8px; } .pptxv-custom-shows-actions { display: flex; flex-direction: column; justify-content: center; gap: 6px; } .pptxv-custom-shows input { padding: 6px 8px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: inherit; }
 @media (max-width: 767px) {
 	.pptxv-parity-dialog { top: auto; bottom: 0; width: 100%; max-height: 88dvh; transform: translateX(-50%); border-radius: 16px 16px 0 0; }
 	.pptxv-parity-header button { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
@@ -64,6 +64,7 @@ export const PARITY_DIALOG_CSS = `
 	.pptxv-parity-footer button { min-width: 44px; min-height: 44px; }
 	.pptxv-parity-select select, .pptxv-custom-shows-active select { min-height: 44px; }
 	.pptxv-parity-check, .pptxv-parity-range { min-height: 44px; }
+	.pptxv-custom-shows { grid-template-columns: 1fr; } .pptxv-custom-shows-lists { grid-template-columns: 1fr; }
 	.pptxv-parity-tabs button { min-height: 44px; }
 }
 .pptxv-ole-edit-dialog { width: min(600px, calc(100vw - 32px)); }

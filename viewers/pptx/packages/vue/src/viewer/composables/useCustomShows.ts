@@ -1,3 +1,4 @@
+import { generateCustomShowId } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -60,11 +61,6 @@ export interface UseCustomShowsResult {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Generate a collision-resistant custom-show id. */
-function makeCustomShowId(): string {
-	return `custShow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 // ---------------------------------------------------------------------------
 // Composable
 // ---------------------------------------------------------------------------
@@ -79,7 +75,8 @@ export function useCustomShows(input: UseCustomShowsInput): UseCustomShowsResult
 
 	const createCustomShow = (name: string, seedWithActiveSlide = true): string => {
 		pushHistory();
-		const id = makeCustomShowId();
+		// `p:custShow/@id` is an xsd:unsignedInt, so ids are numbers, never random strings.
+		const id = generateCustomShowId(customShows.value);
 		const safeName = name.trim() || `Custom Show ${customShows.value.length + 1}`;
 		const seedRId = activeSlideRId.value;
 		const slideRIds = seedWithActiveSlide && seedRId !== undefined ? [seedRId] : [];

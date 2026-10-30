@@ -54,8 +54,12 @@ export function listSplit(key: 'bullet' | 'number'): HTMLElement {
 		key === 'bullet' ? 'Bullets options' : 'Numbering options',
 		[
 			[key, label],
+			...(key === 'bullet' ? [['picture', 'Picture bullet...'] as [string, string]] : []),
 			['remove', 'Remove list'],
 		],
-		(value) => ({ type: 'list', key: value as 'bullet' | 'number' | 'remove' }),
+		(value) =>
+			value === 'picture'
+				? { type: 'pictureBullet' }
+				: { type: 'list', key: value as 'bullet' | 'number' | 'remove' },
 	);
 }

@@ -1,4 +1,5 @@
 import * as schemas from '../schemas/index';
+import * as customShowTools from '../tools/custom-show-tools';
 import * as exportTools from '../tools/export-tools';
 import * as geometryTools from '../tools/geometry-tools';
 import * as hyperlinkTools from '../tools/hyperlink-tools';
@@ -34,6 +35,14 @@ export const documentTools: readonly AutomationTool[] = [
 		'List, add, remove, reorder sections or move slides between sections',
 		schemas.ManageSectionsSchema,
 		(ctx, params) => sectionTools.manageSections(ctx, params),
+		{ returnsText: true },
+	),
+	deckTool(
+		'edit',
+		'manage_custom_shows',
+		'List, create, rename, copy or delete custom shows, or edit their slide lists (add, remove, reorder)',
+		schemas.ManageCustomShowsSchema,
+		(ctx, params) => customShowTools.manageCustomShows(ctx, params),
 		{ returnsText: true },
 	),
 	deckTool(

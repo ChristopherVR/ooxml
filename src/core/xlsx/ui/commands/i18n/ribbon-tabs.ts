@@ -305,6 +305,7 @@ export const RIBBON_TAB_STRINGS: Translations = {
 		'缩放到选定区域',
 	],
 	Window: ['Fenêtre', 'Fenster', 'Ventana', '窗口'],
+	Split: ['Fractionner', 'Teilen', 'Dividir', '拆分'],
 	'Freeze Panes': ['Figer les volets', 'Fenster fixieren', 'Inmovilizar paneles', '冻结窗格'],
 	'Freeze Top Row': [
 		'Figer la ligne supérieure',

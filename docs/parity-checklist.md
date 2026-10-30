@@ -115,12 +115,33 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       the date checklist as a year/month/day tree, icon filters in the menu (icon criteria in a
       file are evaluated through conditional formats), colour list entries that come only from
       conditional formats.
-- [ ] **P1** Sort has no Sort On cell colour, font colour or icon, custom lists, case sensitivity
-      or left-to-right sorting (`src/ui/src/xlsx/dialogs/sort-dialog.ts`).
-- [ ] **P1** Formula auditing: Trace Precedents, Trace Dependents, Remove Arrows, Evaluate Formula,
-      Error Checking and Watch Window.
+- [ ] **P1** Sort on cell colour, font colour or icon, custom lists, case sensitivity and
+      left-to-right sorting, a table's own saved sort and Data > Reapply are done
+      (`src/ui/src/xlsx/dialogs/sort-dialog.ts`, `src/core/xlsx/edit/sort*.ts`). Still open: user
+      custom lists are kept in the browser's localStorage (session only when it is blocked), not
+      in a roaming profile, and there is no Options > Edit Custom Lists manager to rename, delete
+      or import a list from cells.
+- [ ] **P1** Formula auditing is implemented (`src/core/xlsx/audit/`: Trace Precedents/Dependents through
+      names, tables and 3D references with repeated levels, off-sheet markers and red error arrows,
+      cleared by structural edits; Remove Arrows; Evaluate Formula with Step In/Out; Error Checking
+      with seven rules, Ignore Error saved as `ignoredErrors` and the rules listed in File >
+      Options > Formulas; a live Watch Window). Still open: OFFSET and INDIRECT targets are not traced;
+      Error Checking lacks the two-digit-year and list-data-validation rules and the background
+      green-triangle indicators; the rule toggles in Options are not stored between sessions;
+      Evaluate Formula runs IF, IFERROR, IFNA, CHOOSE, IFS and SWITCH in one step once their first
+      argument is a value (Excel shows the chosen branch step by step).
+- [ ] **P1** The active cell and selection are not written back to `sheetView/selection` on save
+      (a loaded selection is kept, but moving the cursor never updates it).
 - [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
-- [ ] **P1** Split panes (only Freeze Panes exists).
+- [x] **P1** Split panes (only Freeze Panes exists).
+      Closed: View > Split splits at the active cell (a cross in the middle for A1), giving two or
+      four independently scrolling panes with draggable bars and double-click removal; Split and
+      Freeze Panes replace each other, keeping the window where it was. `pane state="split"`
+      (twentieths of a point, `activePane`, each pane's `selection`) is modelled as
+      `SheetView.split`, and both panes' first cells are kept current as the user scrolls and
+      written as `pane/@topLeftCell` and `sheetView/@topLeftCell`. Maths:
+      `src/core/xlsx/layout/split.ts`; painting: `grid/split-bars.ts` and the quadrant painter;
+      browser check: `e2e/xlsx/split-panes.spec.ts`.
 - [x] **P1** Text to Columns refuses fixed-width splitting (`dialogs/text-to-columns.ts`).
       Closed: the dialog offers Fixed width with typed break positions and a preview; the split
       rules are `splitFixedWidth` in `src/core/xlsx/edit/text-columns.ts`. Column-data-format
@@ -182,9 +203,21 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
-- [ ] **P1** Picture bullets (`numPicBullet`) are not drawn or written.
-- [ ] **P1** Protection: forms protection is enforced; read-only, comments-only and
-      tracked-changes-only are kept but not enforced, and there is no Restrict Editing UI.
+- [x] **P1** Picture bullets (`numPicBullet`): resolved (VML `imagedata` and `w:drawing`), drawn as
+      the editor marker at the font size or the authored shape size, measured by the picture width
+      in page layout, kept byte-identical on save, and creatable through Bullets > Picture bullet...
+      (new entry, media part and `numbering.xml.rels` relationship written on save).
+- [x] **P1** Protection: forms, read-only, comments-only and tracked-changes-only protection are
+      enforced, and Review > Restrict Editing starts and stops them (password checked with the
+      ECMA-376 hash, written back on save).
+- [ ] **P2** Restrict Editing leftovers: only "Everyone" exceptions (no per-user list); an
+      exception that continues across paragraphs or sits between blocks, and column-range
+      permissions (`w:colFirst`), are enforced but cannot be edited in the pane; the allowed-styles
+      list of formatting restrictions is kept but not enforced; the Word 97 four-byte `w:hash`
+      (no `cryptAlgorithmSid`) cannot be verified, so that protection cannot be stopped here.
+      Word-written passwords (legacy key text, SHA-1/256/384/512 by sid) are checked against
+      fixtures saved by Word 16 (SHA-512 only; the other sids are checked against an independent
+      implementation).
 - [ ] **P1** Digital signatures: `opc/signature` is not used by docx, so signed documents are not
       detected before an edit.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
@@ -196,8 +229,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Editing and behaviour
 
 - [ ] **P1** Mail merge: no data source or MERGEFIELD engine.
-- [ ] **P1** Find & Replace is literal with case sensitivity only: no wildcards, whole word,
-      formatting search or special characters (`src/ui/src/docx/search-controller.ts`).
+- [ ] **P1** Find & Replace: formatting search (Format > Font, Paragraph, Style) remains. Wildcards,
+      whole words, prefix and suffix, the ignore options and the Special codes are done
+      (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`).
 - [ ] **P1** Only Draft and Print Layout views: no Read Mode, Web Layout, Outline or Focus.
 - [ ] **P1** Index, citations and bibliography, Table of Authorities.
 - [ ] **P1** Compare and Combine; accessibility checker.
@@ -266,7 +300,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       placeholders (timing is edited in the Animation Pane).
 - [ ] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay (Pen,
       Highlighter, Eraser and Freeform work).
-- [ ] **P1** Custom shows load and save but have no add or edit API, tool or UI.
+- [x] **P1** Custom shows have editing operations (`editor/render/custom-show-operations`), the
+      `manage_custom_shows` MCP and assistant tool, valid unsigned-int ids on save (with `p:showPr`
+      and `ppaction://customshow` references remapped) and the Custom Shows dialog (New, Copy,
+      Remove, two slide lists with Add, Remove, Move Up/Down, Show; the shared
+      `createCustomShowsController`) in all five bindings, with unit tests and
+      `e2e/pptx/custom-shows-dialog.spec.ts`.
+- [ ] **P1** `manage_sections` and `update_presentation_properties` do not persist through
+      `saveDeckBytes` (the automation save forwards only header/footer, table styles and
+      `saveOptions`), and `update_presentation_properties` cannot set `showSlidesCustomShowId`.
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
@@ -423,6 +465,8 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** Resize snaps the moving edge to other shapes' edges and centres and to shown guides,
       with Dynamic Grid alignment lines, outlines a shape whose width or height the frame matches,
       and Ctrl resizes about the centre (`src/core/visio/ui/resize-snap.ts`; ledger 2026-10-30).
+- [ ] **P1** A resize of a shape with LockWidth, LockHeight or LockAspect is refused as an edit
+      (`edit-geometry-admission.ts`) instead of resizing along the unlocked dimension as Visio does.
 - [ ] **P2** Ctrl and Alt during a resize are not verified against Visio's gestures (COM cannot
       drive the pointer); the size-match outline is our drawing, not Visio's.
 - [x] **P1** Link Data (opens the External Data window, or imports first), Data Graphics Position,

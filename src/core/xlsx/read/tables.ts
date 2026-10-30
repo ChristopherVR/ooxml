@@ -1,11 +1,16 @@
 import { elements, parseXml, type XmlElement } from '../../xml/index';
 import { parseRange } from '../address';
-import type { Table, TableColumn } from '../model';
+import type { DifferentialStyle, Table, TableColumn } from '../model';
+import { readSortState } from './sort-state';
 import { stripFuturePrefixes } from './formula-text';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
 /** Reads a table part; `undefined` when it has no usable range. */
-export function parseTable(xml: string, partName: string): Table | undefined {
+export function parseTable(
+	xml: string,
+	partName: string,
+	dxfs?: readonly DifferentialStyle[],
+): Table | undefined {
 	const root = parseXml(xml, { label: 'XLSX table' }).documentElement;
 	const range = parseRange(att(root, 'ref') ?? '');
 	if (!range) return undefined;
@@ -34,7 +39,7 @@ export function parseTable(xml: string, partName: string): Table | undefined {
 		columns,
 		partName,
 	};
-	readColumnFilters(root, table);
+	readColumnFilters(root, table, dxfs);
 	const info = xFirst(root, 'tableStyleInfo');
 	if (info) {
 		const style = att(info, 'name');
@@ -48,8 +53,14 @@ export function parseTable(xml: string, partName: string): Table | undefined {
 }
 
 /** Value-list column filters become `TableColumn.filter`; any other criteria stay in the part. */
-function readColumnFilters(root: XmlElement, table: Table): void {
+function readColumnFilters(
+	root: XmlElement,
+	table: Table,
+	dxfs?: readonly DifferentialStyle[],
+): void {
 	const filter = xFirst(root, 'autoFilter');
+	const sortState = readSortState(xFirst(filter, 'sortState') ?? xFirst(root, 'sortState'), dxfs);
+	if (sortState) table.sortState = sortState;
 	for (const node of filter ? xChildren(filter, 'filterColumn') : []) {
 		const column = table.columns[numAttr(node, 'colId') ?? -1];
 		const filters = xChildren(node, 'filters');

@@ -1,9 +1,11 @@
+import { createCustomShowsController } from 'ooxml-ui/pptx';
+import type { CustomShowsSlideRow } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
-import { createInspectorCheckbox, createInspectorSelect } from './inspector/controls-extra';
+import { createInspectorSelect } from './inspector/controls-extra';
 import { createParityDialogShell } from './parity-dialog-shell';
 import type { RegionSet } from './region-set';
 
@@ -12,7 +14,8 @@ export interface CustomShowsDialogOptions {
 	slides: readonly PptxSlide[];
 	/** The show playback is currently restricted to, or null for the whole deck. */
 	activeShowId: string | null;
-	onSave(shows: PptxCustomShow[]): void;
+	/** Commit the edited shows; `slides` is set when jumps into removed shows were cleared. */
+	onSave(shows: PptxCustomShow[], slides: PptxSlide[] | undefined): void;
 	/** Restrict (or, with null, stop restricting) the slide show to one show. */
 	onSetActive(id: string | null): void;
 	/** Start the show, already restricted to `show`. */
@@ -21,33 +24,41 @@ export interface CustomShowsDialogOptions {
 	regions?: RegionSet;
 }
 
+function button(
+	doc: Document,
+	label: string,
+	run: () => void,
+	disabled = false,
+): HTMLButtonElement {
+	const el = createEl(doc, 'button');
+	el.type = 'button';
+	el.textContent = label;
+	el.disabled = disabled;
+	el.addEventListener('click', run);
+	return el;
+}
+
 /**
- * The Custom Shows dialog: define named slide subsets, choose which one the
- * slide show is restricted to, and start it.
- *
- * The picker at the top is the piece that was missing. Shows were definable
- * here and PERSISTED correctly, but nothing in the binding held an active show,
- * so selecting one changed nothing about what presented: every show ran the
- * whole deck. It carries React's labels (`selectCustomShow` / `allSlides`)
- * because it is the same control, just hosted in this dialog rather than in the
- * ribbon's primary row.
+ * The Custom Shows dialog (Slide Show > Custom Slide Show): New, Copy and Remove for the
+ * shows, and for the selected one PowerPoint's two lists (slides in the presentation, slides in
+ * the custom show) with Add, Remove and Move Up/Down. All of its logic is the shared
+ * `createCustomShowsController`; this file only draws it.
  */
 export function openCustomShowsDialog(
 	doc: Document,
 	t: Translator,
 	options: CustomShowsDialogOptions,
 ): void {
-	const { shows, slides, onSave, onSetActive, onRun } = options;
+	const { slides, onSave, onSetActive, onRun } = options;
 	const shell = createParityDialogShell(
 		doc,
 		t,
 		t('pptx.customShows.title'),
 		options.regions && { regions: options.regions },
 	);
-	let draft = structuredClone(shows) as PptxCustomShow[];
+	const controller = createCustomShowsController(options.shows, options.activeShowId);
 	let activeShowId = options.activeShowId;
 
-	// ── Active-show picker ──────────────────────────────────────────────────
 	const picker = createEl(doc, 'label', 'pptxv-custom-shows-active');
 	const pickerLabel = createEl(doc, 'span');
 	pickerLabel.textContent = t('pptx.customShows.selectCustomShow');
@@ -58,96 +69,161 @@ export function openCustomShowsDialog(
 		onSetActive(activeShowId);
 	});
 	picker.append(pickerLabel, select);
-	shell.body.appendChild(picker);
 
-	const list = createEl(doc, 'div', 'pptxv-custom-shows');
-	shell.body.appendChild(list);
+	const layout = createEl(doc, 'div', 'pptxv-custom-shows');
+	const showsColumn = createEl(doc, 'div', 'pptxv-custom-shows-list');
+	const editor = createEl(doc, 'div', 'pptxv-custom-shows-editor');
+	layout.append(showsColumn, editor);
+	shell.body.append(picker, layout);
 
-	const renderPicker = (): void => {
+	const nameLabel = createEl(doc, 'label');
+	const nameText = createEl(doc, 'span');
+	nameText.textContent = t('pptx.customShows.renameNameLabel');
+	const nameInput = createEl(doc, 'input');
+	nameInput.setAttribute('aria-label', t('pptx.customShows.renameNameLabel'));
+	nameInput.addEventListener('change', () => controller.rename(nameInput.value));
+	nameLabel.append(nameText, nameInput);
+	const lists = createEl(doc, 'div', 'pptxv-custom-shows-lists');
+	editor.append(nameLabel, lists);
+
+	const rows = (
+		heading: string,
+		list: readonly CustomShowsSlideRow[],
+		toggle: (row: CustomShowsSlideRow) => void,
+		dbl?: (row: CustomShowsSlideRow) => void,
+	): HTMLElement => {
+		const column = createEl(doc, 'div');
+		const title = createEl(doc, 'strong');
+		title.textContent = heading;
+		const ul = createEl(doc, 'ul');
+		ul.setAttribute('role', 'listbox');
+		ul.setAttribute('aria-label', heading);
+		ul.setAttribute('aria-multiselectable', 'true');
+		for (const row of list) {
+			const li = createEl(doc, 'li');
+			li.setAttribute('role', 'option');
+			li.setAttribute('aria-selected', String(row.selected));
+			li.tabIndex = 0;
+			li.textContent = `${row.number}. ${row.title}`.trim();
+			li.addEventListener('click', () => toggle(row));
+			li.addEventListener('keydown', (event) => {
+				if (event.key === ' ' || event.key === 'Enter') {
+					event.preventDefault();
+					toggle(row);
+				}
+			});
+			if (dbl) {
+				li.addEventListener('dblclick', () => dbl(row));
+			}
+			ul.appendChild(li);
+		}
+		column.append(title, ul);
+		return column;
+	};
+
+	const render = (): void => {
+		const view = controller.view(slides);
+		showsColumn.replaceChildren();
+		const ul = createEl(doc, 'ul');
+		ul.setAttribute('role', 'listbox');
+		ul.setAttribute('aria-label', t('pptx.customShows.savedShows'));
+		for (const show of view.shows) {
+			const li = createEl(doc, 'li');
+			li.setAttribute('role', 'option');
+			li.setAttribute('aria-selected', String(show.selected));
+			li.tabIndex = 0;
+			li.textContent = show.name;
+			li.addEventListener('click', () => controller.select(show.id));
+			ul.appendChild(li);
+		}
+		if (view.shows.length === 0) {
+			const empty = createEl(doc, 'p');
+			empty.textContent = t('pptx.customShows.empty');
+			showsColumn.appendChild(empty);
+		}
+		showsColumn.append(
+			ul,
+			button(doc, t('pptx.customShows.createNew'), () =>
+				controller.create(t('pptx.customShows.newDefaultName')),
+			),
+			button(doc, t('pptx.customShows.copy'), () => controller.copySelected(), !view.canEdit),
+			button(doc, t('pptx.customShows.remove'), () => controller.removeSelected(), !view.canEdit),
+		);
+
+		editor.hidden = !view.selected;
+		if (view.selected && doc.activeElement !== nameInput) {
+			nameInput.value = view.selected.name;
+		}
+		const middle = createEl(doc, 'div', 'pptxv-custom-shows-actions');
+		middle.append(
+			button(doc, t('pptx.customShows.add'), () => controller.addSelected(slides), !view.canAdd),
+			button(
+				doc,
+				t('pptx.customShows.remove'),
+				() => controller.removeSelectedSlides(),
+				!view.canRemoveSlides,
+			),
+		);
+		const order = createEl(doc, 'div', 'pptxv-custom-shows-actions');
+		order.append(
+			button(doc, t('pptx.customShows.moveUp'), () => controller.moveUp(), !view.canMoveUp),
+			button(doc, t('pptx.customShows.moveDown'), () => controller.moveDown(), !view.canMoveDown),
+		);
+		lists.replaceChildren(
+			rows(
+				t('pptx.customShows.slidesInPresentation'),
+				view.presentationSlides,
+				(row) => controller.toggleLeft(row.rId),
+				(row) => controller.addSlide(row.rId),
+			),
+			middle,
+			rows(t('pptx.customShows.slidesInShow'), view.showSlides, (row) =>
+				controller.toggleRight(row.position ?? 0),
+			),
+			order,
+		);
+
 		select.replaceChildren();
 		const all = doc.createElement('option');
 		all.value = '';
 		all.textContent = t('pptx.customShows.allSlides');
 		select.appendChild(all);
-		for (const show of draft) {
+		for (const show of view.shows) {
 			const option = doc.createElement('option');
 			option.value = show.id;
 			option.textContent = show.name;
 			select.appendChild(option);
 		}
-		// A show can be renamed or deleted in this same dialog, so the selection
-		// is re-derived rather than left pointing at a row that no longer exists.
-		select.value = draft.some(({ id }) => id === activeShowId) ? (activeShowId ?? '') : '';
+		// A show can be removed in this same dialog, so the selection is re-derived.
+		select.value = view.shows.some(({ id }) => id === activeShowId) ? (activeShowId ?? '') : '';
 	};
+	controller.subscribe(render);
 
-	const render = (): void => {
-		list.replaceChildren();
-		draft.forEach((show) => {
-			const row = createEl(doc, 'article');
-			const name = createEl(doc, 'input');
-			name.value = show.name;
-			name.setAttribute('aria-label', t('pptx.customShows.editNameLabel'));
-			name.addEventListener('change', () => {
-				show.name = name.value.trim() || show.name;
-				renderPicker();
-			});
-			const count = createEl(doc, 'span');
-			count.textContent = `${show.slideRIds.length}/${slides.length}`;
-			const run = createEl(doc, 'button');
-			run.type = 'button';
-			run.textContent = t('pptx.slideShow.fromBeginning');
-			run.addEventListener('click', () => {
-				// Running a show IS selecting it: the show that starts must be the
-				// one whose membership the navigation rule then honours.
-				activeShowId = show.id;
-				onSetActive(show.id);
-				onRun(show);
-				shell.close();
-			});
-			const remove = createEl(doc, 'button');
-			remove.type = 'button';
-			remove.textContent = t('pptx.customShows.delete');
-			remove.addEventListener('click', () => {
-				draft = draft.filter(({ id }) => id !== show.id);
-				if (activeShowId === show.id) {
-					activeShowId = null;
-					onSetActive(null);
-				}
-				render();
-				renderPicker();
-			});
-			const slideList = createEl(doc, 'div');
-			slides.forEach((slide) => {
-				const label = createEl(doc, 'label', 'pptxv-parity-check');
-				const check = createInspectorCheckbox(doc);
-				check.checked = show.slideRIds.includes(slide.rId);
-				check.addEventListener('change', () => {
-					show.slideRIds = check.checked
-						? [...show.slideRIds, slide.rId]
-						: show.slideRIds.filter((id) => id !== slide.rId);
-					count.textContent = `${show.slideRIds.length}/${slides.length}`;
-				});
-				label.append(check, doc.createTextNode(`${t('pptx.rehearse.slide')} ${slide.slideNumber}`));
-				slideList.appendChild(label);
-			});
-			row.append(name, count, run, remove, slideList);
-			list.appendChild(row);
-		});
+	const commit = (): void => {
+		const result = controller.result(slides);
+		onSave(result.shows, result.slides);
+		// A show removed in this session must not leave the slide show pinned to an id
+		// nothing resolves: that would silently present the whole deck.
+		onSetActive(result.shows.some(({ id }) => id === activeShowId) ? activeShowId : null);
 	};
 
 	appendDialogActions(doc, shell.footer, [
 		{
-			id: 'create',
-			label: t('pptx.customShows.createNew'),
+			id: 'show',
+			label: t('pptx.customShows.showButton'),
 			align: 'start',
 			run: () => {
-				draft.push({
-					id: crypto.randomUUID(),
-					name: t('pptx.customShows.createNew'),
-					slideRIds: slides.map(({ rId }) => rId),
-				});
-				render();
-				renderPicker();
+				const id = controller.getSnapshot().selectedId;
+				const show = controller.getSnapshot().shows.find((s) => s.id === id);
+				if (!show) {
+					return;
+				}
+				commit();
+				// Running a show IS selecting it: the show that starts must be the one whose
+				// membership the navigation rule then honours.
+				onSetActive(show.id);
+				onRun(show);
+				shell.close();
 			},
 		},
 		{ id: 'cancel', label: t('pptx.common.cancel'), run: shell.close },
@@ -156,14 +232,10 @@ export function openCustomShowsDialog(
 			label: t('pptx.common.ok'),
 			variant: 'primary',
 			run: () => {
-				onSave(draft);
-				// A show deleted in this session must not leave the slide show pinned to
-				// an id nothing resolves: that would silently present the whole deck.
-				onSetActive(draft.some(({ id }) => id === activeShowId) ? activeShowId : null);
+				commit();
 				shell.close();
 			},
 		},
 	]);
 	render();
-	renderPicker();
 }

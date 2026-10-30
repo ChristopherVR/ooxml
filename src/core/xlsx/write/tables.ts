@@ -3,6 +3,8 @@ import { formatRange } from '../address';
 import type { Table, Worksheet } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
 import { filterColumnXml } from '../slicer/table-filter';
+import { sortStateXml } from './sort-state';
+import type { StyleWriter } from './styles';
 import { XML_HEADER, attrs, escapeText } from './xml-out';
 
 /** Excel's own text for a header cell value. */
@@ -45,16 +47,22 @@ export function resolveTableColumns(
 	return { names, headerText };
 }
 
-export function tableXml(table: Table, id: number, names: readonly string[]): string {
+export function tableXml(
+	table: Table,
+	id: number,
+	names: readonly string[],
+	styles?: StyleWriter,
+): string {
 	const range = formatRange(table.range);
 	const filterEnd = { ...table.range.end, row: table.range.end.row - (table.totalsRow ? 1 : 0) };
 	const criteria = table.columns
 		.map((column, index) => (column.filter ? filterColumnXml(index, column.filter) : ''))
 		.join('');
 	const filterRef = formatRange({ start: table.range.start, end: filterEnd });
+	const sort = sortStateXml(table.sortState, styles);
 	const filter = table.headerRow
-		? criteria
-			? `<autoFilter ref="${filterRef}">${criteria}</autoFilter>`
+		? criteria || sort
+			? `<autoFilter ref="${filterRef}">${criteria}${sort}</autoFilter>`
 			: `<autoFilter ref="${filterRef}"/>`
 		: '';
 	const columns = names

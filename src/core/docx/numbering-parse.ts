@@ -4,9 +4,11 @@ import type {
 	NumberingCatalog,
 	NumberingLevelDefinition,
 	NumberingMarkerFormat,
+	NumberingPictureBullet,
 	NumDefinition,
 	NumLevelOverride,
 } from './numbering-model';
+import { parseNumberingPictureBullets, type NumberingRelationships } from './numbering-picture';
 import { children, first, getW, named, parseXml, type XmlElement } from './xml';
 import { isStNumberFormat } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
@@ -78,6 +80,8 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 	if (flag(first(lvl, 'isLgl'))) result.isLgl = true;
 	const restart = getW(first(lvl, 'lvlRestart'), 'val');
 	if (restart !== undefined) result.lvlRestart = integer(restart, 0);
+	const pictureBulletId = getW(first(lvl, 'lvlPicBulletId'), 'val');
+	if (pictureBulletId !== undefined) result.pictureBulletId = pictureBulletId;
 	const marker = parseMarkerFormat(first(lvl, 'rPr'));
 	if (marker) result.markerFormat = marker;
 	result.suffix = suffRaw === 'space' ? 'space' : suffRaw === 'nothing' ? 'none' : 'tab';
@@ -117,7 +121,10 @@ function parseNum(element: XmlElement): NumDefinition | undefined {
 }
 
 /** Parses `word/numbering.xml` into a read-only catalog; editing existing entries is not supported. */
-export function parseNumberingCatalog(xml: string): NumberingCatalog {
+export function parseNumberingCatalog(
+	xml: string,
+	relationships?: NumberingRelationships,
+): NumberingCatalog {
 	const document = parseXml(xml);
 	const root = document.documentElement;
 	const abstractNums = dictionary<AbstractNumDefinition>();
@@ -131,17 +138,30 @@ export function parseNumberingCatalog(xml: string): NumberingCatalog {
 			warnings.push(
 				`Numbering definition abstractNum ${parsed.id} links to style "${link}"; style-linked numbering levels are not resolved.`,
 			);
-		if (byName(element, 'lvlPicBulletId').length)
-			warnings.push(
-				`Numbering definition abstractNum ${parsed.id} uses a picture bullet; picture bullets are not rendered.`,
-			);
 	}
+	const pictureBullets: Record<string, NumberingPictureBullet> = parseNumberingPictureBullets(
+		root,
+		relationships,
+	);
+	for (const element of byName(root, 'abstractNum'))
+		for (const ref of byName(element, 'lvlPicBulletId')) {
+			const id = getW(ref, 'val');
+			if (id !== undefined && !own(pictureBullets, id))
+				warnings.push(
+					`Numbering definition abstractNum ${getW(element, 'abstractNumId')} uses picture bullet ${id}, whose image could not be resolved; the level falls back to its bullet glyph.`,
+				);
+		}
 	const nums = dictionary<NumDefinition>();
 	for (const element of byName(root, 'num')) {
 		const parsed = parseNum(element);
 		if (parsed) nums[parsed.id] = parsed;
 	}
-	return { abstractNums, nums, warnings: [...new Set(warnings)] };
+	return {
+		abstractNums,
+		nums,
+		...(Object.keys(pictureBullets).length ? { pictureBullets } : {}),
+		warnings: [...new Set(warnings)],
+	};
 }
 
 /** Resolves the effective level definition for a `numId`, applying any `lvlOverride`. */

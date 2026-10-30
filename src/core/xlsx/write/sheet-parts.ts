@@ -18,6 +18,7 @@ import type { SharedStringTable } from './shared-strings';
 import { sameModel } from './snapshot';
 import type { StyleWriter } from './styles';
 import { stripNoteShapes, vmlAllocatorFor, vmlIdmapBlocks } from './vml-ids';
+import { unresolvedTable } from './sort-state';
 import { patchTableXml } from './table-patch';
 import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } from './tables';
 
@@ -171,7 +172,7 @@ export function writeTables(
 			forced.size === 0 &&
 			totals.size === 0 &&
 			table === original &&
-			sameModel(before, table);
+			sameModel(unresolvedTable(before), unresolvedTable(table));
 		let part: string;
 		if (unchanged && table.partName) {
 			part = table.partName;
@@ -183,8 +184,8 @@ export function writeTables(
 					? table.partName
 					: writer.uniqueName((n) => `xl/tables/table${n}.xml`, ctx.reserved);
 			const xml =
-				(sourceXml && patchTableXml(sourceXml, sheet, table, id, names)) ??
-				tableXml(table, id, names);
+				(sourceXml && patchTableXml(sourceXml, sheet, table, id, names, ctx.styles)) ??
+				tableXml(table, id, names, ctx.styles);
 			writer.add(part, xml, CONTENT_TYPES.table);
 		}
 		ctx.tableIds.add(id);

@@ -21,6 +21,7 @@ import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
+	PptxCustomShow,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -70,6 +71,10 @@ export interface SvelteAiBridgeDeps {
 	// the AI's whole-deck seam read and commit the pptx-viewer-mcp "deck" tools.
 	/** Deck sections (editor-tracked, undoable). */
 	getSections(): PptxSection[];
+	/** Custom shows (`p:custShowLst`, editor-tracked, undoable). */
+	getCustomShows(): PptxCustomShow[];
+	/** Replace the custom shows through the editor's undoable path. */
+	setCustomShows(shows: PptxCustomShow[]): void;
 	/** Deck-wide slide-show / print settings (editor-tracked, undoable). */
 	getPresentationProperties(): PptxPresentationProperties;
 	/** Document core properties (Title / Author / ...), when present. */
@@ -132,6 +137,8 @@ export function createSvelteAiBridge(deps: SvelteAiBridgeDeps): PptxAiBridge {
 		getHandler: () => deps.getHandler(),
 		getFileName: () => deps.getFileName(),
 		getSections: () => deps.getSections(),
+		getCustomShows: () => deps.getCustomShows(),
+		setCustomShows: (shows) => deps.setCustomShows(shows),
 		getPresentationProperties: () => deps.getPresentationProperties(),
 		getCustomProperties: () => deps.getCustomProperties(),
 		getCoreProperties: () => deps.getCoreProperties(),

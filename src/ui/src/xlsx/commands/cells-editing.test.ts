@@ -219,3 +219,21 @@ describe('editing commands', () => {
 		expect(ctx.toasts.at(-1)?.message).toBe('No cells were found.');
 	});
 });
+
+describe('data reapply', () => {
+	it('re-runs the saved sort of the sheet', async () => {
+		const ctx = setup();
+		fill(ctx, [['Item'], ['b'], ['c'], ['a']]);
+		ctx.select('A1');
+		expect(ctx.commands.isEnabled('data.filter-reapply')).toBe(false);
+		ctx
+			.session()!
+			.sort(0, { start: { row: 0, col: 0 }, end: { row: 3, col: 0 } }, [{ col: 0 }], true);
+		expect([1, 2, 3].map((r) => value(ctx, r, 0))).toEqual(['a', 'b', 'c']);
+		ctx.select('A2');
+		expect(ctx.commands.isEnabled('data.filter-reapply')).toBe(true);
+		ctx.session()!.setCellInput(0, 1, 0, 'z');
+		await ctx.commands.run('data.filter-reapply');
+		expect([1, 2, 3].map((r) => value(ctx, r, 0))).toEqual(['b', 'c', 'z']);
+	});
+});

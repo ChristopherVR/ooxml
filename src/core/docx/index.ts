@@ -71,6 +71,7 @@ export {
 } from './validate-model';
 export * from './numbering-model';
 export { parseNumberingCatalog, resolveNumberingLevel } from './numbering-parse';
+export { pictureBulletSizePt } from './numbering-picture';
 export {
 	computeListLabels,
 	displayListLabel,
@@ -82,6 +83,7 @@ export { setListStartOverride } from './numbering-start-edit';
 export {
 	ensureListDefinition,
 	createListDefinition,
+	createPictureBulletList,
 	linkStylesToList,
 	type ListKind,
 } from './numbering-editing';
@@ -136,6 +138,11 @@ export {
 } from './table-of-figures';
 export * from './document-stats';
 export * from './column-settings';
+export {
+	createProtectionPassword,
+	enforceProtection,
+	verifyProtectionPassword,
+} from './protection';
 export * from './line-spacing';
 export * from './section-layout';
 export * from './attr-units';

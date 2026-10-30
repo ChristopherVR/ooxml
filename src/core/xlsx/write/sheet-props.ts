@@ -1,7 +1,7 @@
-import { elements } from '../../xml/index';
+import { elements, type XmlElement } from '../../xml/index';
 import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
-import type { ColumnInfo, Worksheet } from '../model';
+import type { ColumnInfo, SplitPane, Worksheet } from '../model';
 import {
 	defaultSheetView,
 	readAutoFilter,
@@ -13,6 +13,7 @@ import {
 } from '../read/sheet-props';
 import { outerXml } from '../read/xml-util';
 import { filterColumnXml, unresolvedFilter } from './filter-columns';
+import { sortStateXml } from './sort-state';
 import { mergedAttrs } from './attr-merge';
 import { modernHashValues } from './password-hash';
 import { sameModel, snapshotElement, snapshotXml } from './snapshot';
@@ -60,6 +61,29 @@ export function dimensionXml(sheet: Worksheet): string {
 	return `<dimension ref="${used ? formatRange(used) : 'A1'}"/>`;
 }
 
+/** The pane holding the selection: the stored one when it exists in this split, else the last. */
+function splitActivePane(split: SplitPane): string {
+	const both = split.x > 0 && split.y > 0;
+	const valid = both
+		? ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
+		: split.y > 0
+			? ['topLeft', 'bottomLeft']
+			: ['topLeft', 'topRight'];
+	if (split.activePane && valid.includes(split.activePane)) return split.activePane;
+	return both ? 'bottomRight' : split.y > 0 ? 'bottomLeft' : 'topRight';
+}
+
+function selectionXml(
+	selection: NonNullable<Worksheet['view']['selection']>,
+	pane: string | undefined,
+): string {
+	return el('selection', {
+		pane,
+		activeCell: formatAddress(selection.active),
+		sqref: sqref(selection.ranges) || formatAddress(selection.active),
+	});
+}
+
 export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 	const source = snapshotElement(sheet, 'sheetViews');
 	if (source && sameModel(readSheetView(source), sheet.view)) {
@@ -89,20 +113,38 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 			state: 'frozen',
 		});
 	}
-	if (view.selection) {
-		inner += el('selection', {
-			pane,
-			activeCell: formatAddress(view.selection.active),
-			sqref: sqref(view.selection.ranges) || formatAddress(view.selection.active),
+	const split = view.split && (view.split.x > 0 || view.split.y > 0) ? view.split : undefined;
+	if (split && !pane) {
+		const { x, y } = split;
+		pane = splitActivePane(split);
+		inner += el('pane', {
+			xSplit: x || undefined,
+			ySplit: y || undefined,
+			topLeftCell: view.topLeft ? formatAddress(view.topLeft) : undefined,
+			activePane: pane,
+			state: 'split',
 		});
 	}
+	if (split) {
+		// One selection per pane, in the order Excel writes them.
+		for (const name of ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const) {
+			const own = name === pane ? view.selection : split.paneSelections?.[name];
+			if (own) inner += selectionXml(own, name);
+		}
+	} else if (view.selection) inner += selectionXml(view.selection, pane);
 	const attributes = attrs({
 		tabSelected: tabSelected || undefined,
 		showGridLines: view.showGridLines ? undefined : false,
 		showRowColHeaders: view.showHeaders ? undefined : false,
 		showZeros: view.showZeros ? undefined : false,
 		rightToLeft: view.rightToLeft || undefined,
-		topLeftCell: !view.freeze && view.topLeft ? formatAddress(view.topLeft) : undefined,
+		topLeftCell: split
+			? split.topLeft
+				? formatAddress(split.topLeft)
+				: undefined
+			: !view.freeze && view.topLeft
+				? formatAddress(view.topLeft)
+				: undefined,
 		showFormulas: view.showFormulas || undefined,
 		view: view.mode,
 		zoomScale: view.zoom !== 100 ? view.zoom : undefined,
@@ -190,6 +232,14 @@ export function protectionXml(sheet: Worksheet): string {
 	return el('sheetProtection', values);
 }
 
+const extLstOf = (source: XmlElement | undefined): string =>
+	source
+		? elements(source)
+				.filter((node) => node.localName === 'extLst')
+				.map((node) => outerXml(node))
+				.join('')
+		: '';
+
 export function autoFilterXml(sheet: Worksheet, styles?: StyleWriter): string {
 	const filter = sheet.autoFilter;
 	if (!filter) return '';
@@ -203,8 +253,9 @@ export function autoFilterXml(sheet: Worksheet, styles?: StyleWriter): string {
 		.map((column) => filterColumnXml(column, styles))
 		.join('');
 	// A kept `sortState` (inside the filter) stays only while the range is unchanged.
-	const sort =
-		source && sameModel(readAutoFilter(source)?.range, filter.range)
+	const sort = filter.sortState
+		? sortStateXml(filter.sortState, styles) + extLstOf(source)
+		: source && sameModel(readAutoFilter(source)?.range, filter.range)
 			? elements(source)
 					.filter((node) => node.localName === 'sortState' || node.localName === 'extLst')
 					.map((node) => outerXml(node))

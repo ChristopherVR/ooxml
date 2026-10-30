@@ -1,31 +1,40 @@
 /**
- * custom-shows.component.ts: Modal dialog for managing custom PowerPoint shows.
+ * custom-shows.component.ts: Slide Show > Custom Slide Show > Custom Shows dialog.
  *
  * Selector: `pptx-custom-shows`
  *
- * A custom show is a named, ordered subset of slides. This dialog allows the user
- * to list existing shows, create new ones (enter a name + pick slides via
- * checkboxes), delete shows, and set/unset the active show for presentation mode.
- *
- * All state mutations are surfaced via outputs; the component is purely presentational
- * except for draft signals used to track the create-form state.
+ * New, Copy and Remove for the shows and, for the selected one, PowerPoint's two lists (slides in
+ * the presentation, slides in the custom show) with Add, Remove and Move Up/Down. Every decision
+ * is the shared `createCustomShowsController`; this component only draws it. The host renders it
+ * with `@if`, so each open starts from a fresh draft of the deck's shows.
  */
 
 import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
+	DestroyRef,
 	inject,
 	input,
 	output,
 	signal,
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
+import type { OnInit, Signal } from '@angular/core';
 import { LucideX } from '@lucide/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import type { PptxSlide } from 'pptx-viewer-core';
+import { createCustomShowsController } from 'ooxml-ui/pptx';
+import type { CustomShowsController, CustomShowsState } from 'ooxml-ui/pptx';
+import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 
-import type { CustomShow } from './custom-shows-helpers';
+import { controllerSignal } from './controller-signal';
+
+/** What OK commits. */
+export interface CustomShowsSave {
+	shows: PptxCustomShow[];
+	/** Slides with jumps into removed shows cleared, or undefined when none changed. */
+	clearedSlides: PptxSlide[] | undefined;
+}
 
 @Component({
 	selector: 'pptx-custom-shows',
@@ -36,112 +45,92 @@ import type { CustomShow } from './custom-shows-helpers';
 	templateUrl: './custom-shows.component.html',
 	styleUrl: './custom-shows.component.css',
 })
-export class CustomShowsComponent {
+export class CustomShowsComponent implements OnInit {
 	private readonly translate = inject(TranslateService);
+	private readonly destroyRef = inject(DestroyRef);
 
-	/** Whether the dialog is open. */
-	readonly open = input<boolean>(false);
-	/** All slides in the presentation (for slide picker). */
+	/** All slides in the presentation. */
 	readonly slides = input<readonly PptxSlide[]>([]);
-	/** Existing custom shows. */
-	readonly customShows = input<readonly CustomShow[]>([]);
-	/** Id of the currently active custom show, or null. */
+	/** Existing custom shows (the dialog edits a draft of them). */
+	readonly customShows = input<readonly PptxCustomShow[]>([]);
+	/** Id of the show playback is restricted to, or null. */
 	readonly activeCustomShowId = input<string | null>(null);
 
-	/** Emitted when the user creates a new show. */
-	readonly create = output<{ name: string; slideIds: string[] }>();
-	/** Emitted with the id of the show to delete. */
-	readonly remove = output<string>();
-	/** Emitted when the user renames/reorders a show. */
-	readonly update = output<{ id: string; name: string; slideIds: string[] }>();
-	/** Emitted with the id of the show to set as active (null to clear). */
+	/** OK: the shows to keep, plus the slides with jumps into removed shows cleared. */
+	readonly save = output<CustomShowsSave>();
+	/** Restrict (or, with null, stop restricting) the slide show to one show. */
 	readonly setActive = output<string | null>();
-	/** Emitted when the dialog should close. */
+	/** Show: the dialog committed; start the show with this id. */
+	readonly run = output<string>();
+	/** The dialog should close. */
 	readonly close = output<void>();
 
-	// ── Create-form draft state ──────────────────────────────────────────────
-	/** Name typed into the create form. */
-	protected readonly draftName = signal<string>('');
-	/** Slide ids checked in the create form. */
-	protected readonly draftSlideIds = signal<string[]>([]);
-	/** Whether the create form is valid. */
-	protected readonly canCreate = computed<boolean>(
-		() => this.draftName().trim().length > 0 && this.draftSlideIds().length > 0,
-	);
+	/** The id the picker shows; "" is All Slides. */
+	protected readonly active = signal<string>('');
 
-	// ── Edit-mode state ──────────────────────────────────────────────────────
-	/** Id of the show currently being edited inline, or null. */
-	protected readonly editingShowId = signal<string | null>(null);
-	/** Name draft for the show being edited. */
-	protected readonly editDraftName = signal<string>('');
-	/** Slide ids draft for the show being edited. */
-	protected readonly editDraftSlideIds = signal<string[]>([]);
-	/** Whether the edit form has valid data to save. */
-	protected readonly canSaveEdit = computed<boolean>(
-		() => this.editDraftName().trim().length > 0 && this.editDraftSlideIds().length > 0,
-	);
+	private controller: CustomShowsController | undefined;
+	private readonly snapshot = signal<Signal<CustomShowsState> | null>(null);
 
-	// ── Helpers ──────────────────────────────────────────────────────────────
-
-	protected slideLabel(slide: PptxSlide, index: number): string {
-		const name = slide.name ?? '';
-		return name.trim().length > 0
-			? `${index + 1}. ${name}`
-			: this.translate.instant('pptx.compare.slideNumber', { number: index + 1 });
-	}
-
-	// ── Create form handlers ─────────────────────────────────────────────────
-
-	protected onDraftNameInput(event: Event): void {
-		this.draftName.set((event.target as HTMLInputElement).value);
-	}
-
-	protected toggleDraftSlide(slideId: string): void {
-		this.draftSlideIds.update((ids) =>
-			ids.includes(slideId) ? ids.filter((id) => id !== slideId) : [...ids, slideId],
-		);
-	}
-
-	protected submitCreate(): void {
-		const name = this.draftName().trim();
-		if (name.length === 0 || this.draftSlideIds().length === 0) {
-			return;
+	/** The dialog's view model, redrawn on every controller change. */
+	protected readonly view = computed(() => {
+		const snapshot = this.snapshot();
+		if (!snapshot || !this.controller) {
+			return null;
 		}
-		this.create.emit({ name, slideIds: [...this.draftSlideIds()] });
-		this.draftName.set('');
-		this.draftSlideIds.set([]);
+		snapshot();
+		return this.controller.view(this.slides());
+	});
+
+	/** The picker value, re-derived so a removed show cannot stay selected. */
+	protected readonly pickerValue = computed(() => {
+		const view = this.view();
+		const active = this.active();
+		return view?.shows.some(({ id }) => id === active) ? active : '';
+	});
+
+	protected get ctl(): CustomShowsController {
+		return this.controller as CustomShowsController;
 	}
 
-	// ── Edit handlers ────────────────────────────────────────────────────────
-
-	protected startEdit(show: CustomShow): void {
-		this.editingShowId.set(show.id);
-		this.editDraftName.set(show.name);
-		this.editDraftSlideIds.set([...show.slideIds]);
+	ngOnInit(): void {
+		this.active.set(this.activeCustomShowId() ?? '');
+		this.controller = createCustomShowsController(this.customShows(), this.activeCustomShowId());
+		this.snapshot.set(controllerSignal(this.controller, this.destroyRef));
 	}
 
-	protected onEditNameInput(event: Event): void {
-		this.editDraftName.set((event.target as HTMLInputElement).value);
+	protected newShowName(): string {
+		return this.translate.instant('pptx.customShows.newDefaultName');
 	}
 
-	protected toggleEditSlide(slideId: string): void {
-		this.editDraftSlideIds.update((ids) =>
-			ids.includes(slideId) ? ids.filter((id) => id !== slideId) : [...ids, slideId],
-		);
+	protected onPick(event: Event): void {
+		const next = (event.target as HTMLSelectElement).value;
+		this.active.set(next);
+		this.setActive.emit(next || null);
 	}
 
-	protected saveEdit(id: string): void {
-		const name = this.editDraftName().trim();
-		if (name.length === 0 || this.editDraftSlideIds().length === 0) {
-			return;
+	protected onRename(event: Event): void {
+		this.ctl.rename((event.target as HTMLInputElement).value);
+	}
+
+	private commit(): PptxCustomShow[] {
+		const result = this.ctl.result(this.slides());
+		this.save.emit({ shows: result.shows, clearedSlides: result.slides });
+		// A show removed in this session must not leave playback pinned to an id nothing resolves.
+		this.setActive.emit(result.shows.some(({ id }) => id === this.active()) ? this.active() : null);
+		return result.shows;
+	}
+
+	protected ok(): void {
+		this.commit();
+		this.close.emit();
+	}
+
+	protected showSelected(): void {
+		const id = this.ctl.getSnapshot().selectedId;
+		const show = this.commit().find((candidate) => candidate.id === id);
+		if (show) {
+			this.run.emit(show.id);
+			this.close.emit();
 		}
-		this.update.emit({ id, name, slideIds: [...this.editDraftSlideIds()] });
-		this.editingShowId.set(null);
-	}
-
-	// ── Active show ──────────────────────────────────────────────────────────
-
-	protected onToggleActive(id: string): void {
-		this.setActive.emit(this.activeCustomShowId() === id ? null : id);
 	}
 }

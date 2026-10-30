@@ -21,12 +21,14 @@ import type {
 	DefinedName,
 	DrawingAnchor,
 	FreezePane,
+	SplitPane,
 	Hyperlink,
 	PageSetup,
 	PrintOptions,
 	SheetProtection,
 	SheetState,
 	SheetView,
+	IgnoredError,
 	Table,
 	Workbook,
 } from '../model';
@@ -181,8 +183,9 @@ export interface EditSession {
 	sort(
 		sheet: number,
 		range: CellRange,
-		keys: { col: number; descending?: boolean }[],
+		keys: import('./sort-keys').SortKey[],
 		hasHeader: boolean,
+		options?: Pick<import('./sort-keys').SortOptions, 'leftToRight' | 'caseSensitive'>,
 	): void;
 	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
@@ -211,6 +214,8 @@ export interface EditSession {
 	setSheetState(index: number, state: SheetState): void;
 	setTabColor(index: number, color?: Color): void;
 	setFreeze(sheet: number, freeze: FreezePane | undefined): void;
+	/** Splits the window (twentieths of a point); removes any frozen pane. Undefined removes the split. */
+	setSplit(sheet: number, split: SplitPane | undefined, topLeft?: CellAddress): void;
 	setComment(sheet: number, at: CellAddress, text: string | undefined, author: string): void;
 	setHyperlink(sheet: number, range: CellRange, link: Omit<Hyperlink, 'range'> | undefined): void;
 	addConditionalFormat(sheet: number, format: ConditionalFormat): void;
@@ -222,11 +227,13 @@ export interface EditSession {
 	/** Sets any criteria (checklist, custom, top 10, dynamic, colour, icon) of an auto-filter column; undefined clears. */
 	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
 	/** Re-evaluates the auto-filter against the current cell values. */
-	reapplyFilter(sheet: number): void;
+	reapplyFilter(sheet: number, at?: CellAddress): void;
 	/** Sorts the auto-filter (or table) containing `col` by that column, keeping the header. */
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;
 	setSheetView(sheet: number, patch: Partial<SheetView>): void;
+	/** Replaces the sheet's ignored Error Checking rules (Ignore Error). */
+	setIgnoredErrors(sheet: number, list: IgnoredError[]): void;
 	setDefinedName(name: DefinedName): void;
 	deleteDefinedName(name: string, localSheet?: number): void;
 	/** Moves or resizes the picture, chart or shape at `index` of the sheet's drawings. */

@@ -19,6 +19,8 @@ export interface UseCustomShowsWiringInput {
 	 */
 	presentationProperties?: Ref<PptxPresentationProperties>;
 	pushHistory: () => void;
+	/** Start the slide show from its first slide (the dialog's Show button). */
+	startShow?: () => void;
 }
 
 export interface UseCustomShowsWiringResult {
@@ -26,6 +28,13 @@ export interface UseCustomShowsWiringResult {
 	activeCustomShowId: Ref<string | null>;
 	customShowOps: UseCustomShowsResult;
 	isCurrentSlideInActiveShow: ComputedRef<boolean>;
+	/** Commit the Custom Shows dialog: the shows, and slides with jumps into removed shows cleared. */
+	commitCustomShowsDialog: (
+		shows: PptxCustomShow[],
+		clearedSlides: PptxSlide[] | undefined,
+	) => void;
+	/** The dialog's Show button: select the show, then start the slide show. */
+	runCustomShow: (showId: string) => void;
 	onCreateCustomShow: (name: string) => void;
 	onDeleteCustomShow: (showId: string) => void;
 	onRenameActiveCustomShow: () => void;
@@ -69,6 +78,24 @@ export function useCustomShowsWiring(input: UseCustomShowsWiringInput): UseCusto
 		},
 		{ immediate: true },
 	);
+
+	function commitCustomShowsDialog(
+		shows: PptxCustomShow[],
+		clearedSlides: PptxSlide[] | undefined,
+	): void {
+		pushHistory();
+		customShows.value = shows;
+		if (clearedSlides) {
+			slides.value = clearedSlides;
+		}
+		if (!shows.some(({ id }) => id === activeCustomShowId.value)) {
+			activeCustomShowId.value = null;
+		}
+	}
+	function runCustomShow(showId: string): void {
+		activeCustomShowId.value = showId;
+		input.startShow?.();
+	}
 
 	function onCreateCustomShow(name: string): void {
 		activeCustomShowId.value = customShowOps.createCustomShow(name);
@@ -128,6 +155,8 @@ export function useCustomShowsWiring(input: UseCustomShowsWiringInput): UseCusto
 		showCustomShows,
 		activeCustomShowId,
 		customShowOps,
+		commitCustomShowsDialog,
+		runCustomShow,
 		isCurrentSlideInActiveShow,
 		onCreateCustomShow,
 		onDeleteCustomShow,

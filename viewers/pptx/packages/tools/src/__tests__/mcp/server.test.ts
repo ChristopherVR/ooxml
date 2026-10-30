@@ -87,6 +87,7 @@ describe('mcp server tool registration', () => {
 			'get_metadata',
 			'update_metadata',
 			'manage_sections',
+			'manage_custom_shows',
 			'export_to_svg',
 			'export_slide_svg',
 			'export_to_json',

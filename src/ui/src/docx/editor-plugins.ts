@@ -5,7 +5,9 @@ import type { Plugin } from 'prosemirror-state';
 import { editorKeymap } from './editor-commands';
 import {
 	contentControlPlugin,
+	editRestrictionPlugin,
 	fieldGuardPlugin,
+	forcesTrackChanges,
 	formFieldGuardPlugin,
 	positionalTabInputPlugin,
 	symbolFontPlugin,
@@ -13,6 +15,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { contentControlViewPlugin } from './content-control-view';
 import { formFieldViewPlugin } from './form-field-view';
+import { editableRegionViewPlugin } from './editable-region-view';
 import { tabStopsPlugin } from './tab-stops-view';
 import { noteNumberingPlugin } from './note-commands';
 import { paragraphStylesPlugin } from './paragraph-styles';
@@ -25,7 +28,10 @@ import { reviewRunMarksPlugin } from './review-run-marks';
 /** What the body editor's plugins read from the editor element. */
 export interface BodyPluginHost {
 	model(): DocumentModel;
+	/** Object URL of a picture bullet's image part, when its bytes are loaded. */
+	pictureUrl?(partName: string, contentType: string): string | undefined;
 	reviewAuthor(): string;
+	highlightEditableRegions?(): boolean;
 	reviewDisplayMode(): ReviewDisplayMode;
 	insertNote(kind: 'footnote' | 'endnote'): void;
 	showSearch(): void;
@@ -48,6 +54,15 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		contentControlPlugin(),
 		contentControlViewPlugin(),
 		formFieldGuardPlugin(() => host.model().protection),
+		editRestrictionPlugin(
+			() => host.model().protection,
+			() => host.reviewAuthor(),
+		),
+		editableRegionViewPlugin(
+			() => host.model().protection,
+			() => host.reviewAuthor(),
+			() => host.highlightEditableRegions?.() ?? true,
+		),
 		formFieldViewPlugin(() => host.model()),
 		symbolFontPlugin(),
 		positionalTabInputPlugin(),
@@ -64,10 +79,11 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		paragraphStylesPlugin(
 			() => host.model(),
 			() => host.reviewDisplayMode(),
+			(partName, contentType) => host.pictureUrl?.(partName, contentType),
 		),
 		trackChangesPlugin(
 			() => host.reviewAuthor(),
-			() => Boolean(host.model().trackChanges),
+			() => Boolean(host.model().trackChanges) || forcesTrackChanges(host.model().protection),
 			host.revisionIds,
 		),
 		reviewDisplayPlugin(() => host.reviewDisplayMode()),

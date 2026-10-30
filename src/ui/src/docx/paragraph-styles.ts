@@ -18,6 +18,7 @@ import { AttributeCache, DecorationCache } from './decoration-cache';
 export function paragraphStylesPlugin(
 	getModel: () => DocumentModel,
 	getMode: () => ReviewDisplayMode = () => 'all',
+	pictureUrl?: (partName: string, contentType: string) => string | undefined,
 ) {
 	let measurer = scaleMeasurer();
 	const cache = new DecorationCache();
@@ -72,6 +73,7 @@ export function paragraphStylesPlugin(
 						mode,
 						measurer,
 						JSON.stringify(label),
+						pictureUrl,
 						label ? node.firstChild : undefined,
 					];
 					const rendered = attributes.resolve(node.attrs, dependencies, () => {
@@ -88,6 +90,7 @@ export function paragraphStylesPlugin(
 							label,
 							model,
 							measurer,
+							pictureUrl,
 						);
 						const list = label
 							? {

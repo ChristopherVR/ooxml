@@ -33,21 +33,17 @@ export interface PackageContext {
 	base: DocumentModel;
 }
 
-/** What a user may still do under each enforced editing restriction this editor does not apply. */
-const RESTRICTED_TO: Record<string, string | undefined> = {
-	readOnly: 'reading',
-	comments: 'comments',
-	trackedChanges: 'tracked changes',
-};
-
 /** The load warning for an enforced editing restriction (`w:documentProtection`), if any. */
 function protectionWarning(edit: string): string | undefined {
 	if (edit === 'forms')
-		return 'The document is protected for filling in forms: the editor lets only form fields, content controls and sections left unprotected change. The protection password is not checked.';
-	const allowed = RESTRICTED_TO[edit];
-	return allowed
-		? `The document limits editing to ${allowed}; the restriction is kept but not enforced while editing.`
-		: undefined;
+		return 'The document is protected for filling in forms: the editor lets only form fields, content controls and sections left unprotected change. The protection password is checked only when you stop the protection.';
+	if (edit === 'readOnly')
+		return 'The document is protected against changes: the editor lets only its editable regions change. Stop protection (Review > Restrict Editing) to edit the rest.';
+	if (edit === 'comments')
+		return 'The document is protected for comments: the editor lets you add comments and change its editable regions. Stop protection (Review > Restrict Editing) to edit the rest.';
+	if (edit === 'trackedChanges')
+		return 'The document is protected for tracked changes: every change is recorded and cannot be accepted or rejected until the protection is stopped (Review > Restrict Editing).';
+	return undefined;
 }
 
 export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
@@ -132,11 +128,15 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const numberingFile = zip.file('word/numbering.xml');
 	if (numberingFile) {
 		const numberingXml = await numberingFile.async('string');
+		const numberingRels = zip.file('word/_rels/numbering.xml.rels');
+		const numberingRelationships = parseRelationships(
+			numberingRels ? await numberingRels.async('string') : undefined,
+		);
 		model.numberingCatalog = withParseWarnings(schemaWarnings, () =>
-			parseNumberingCatalog(numberingXml),
+			parseNumberingCatalog(numberingXml, numberingRelationships),
 		);
 		model.warnings.push(
-			'Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering. Picture bullets, style-linked numbering and other custom formats fall back to Decimal Number and are not rendered as Word would.',
+			'Numbering is resolved for decimal, Roman numeral, letter, ordinal, cardinal/ordinal text and bullet formats, including multilevel lvlText and legal numbering. Style-linked numbering and other custom formats fall back to Decimal Number and are not rendered as Word would.',
 			...model.numberingCatalog.warnings,
 		);
 	} else if (document.getElementsByTagNameNS(WORD_NS, 'numPr').length > 0) {
@@ -227,6 +227,8 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			])
 				if (part) imagePartNames.add(part);
 	});
+	for (const bullet of Object.values(model.numberingCatalog?.pictureBullets ?? {}))
+		imagePartNames.add(bullet.partName);
 	const media = new Map<string, Uint8Array>();
 	for (const partName of imagePartNames) {
 		const part = zip.file(partName);

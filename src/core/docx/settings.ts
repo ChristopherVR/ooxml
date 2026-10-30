@@ -2,6 +2,7 @@
 import { onOffElement, parseOnOff } from './simple-types';
 import { isStDocProtect } from './generated/wml-simple-types';
 import type { DocumentProtection } from './form-field-model';
+import { readProtectionPassword } from './protection';
 import type JSZip from 'jszip';
 import { buildXml, children, getW, makeW, parseXml, type XmlElement, WORD_NS } from './xml';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
@@ -125,7 +126,7 @@ export function parseTrackChangesSetting(xml: string): boolean {
 
 /**
  * `w:documentProtection` (what a user may change, and whether it is enforced) and
- * `w:doNotShadeFormData`. Both are read only: saving leaves settings.xml's elements as they are.
+ * `w:doNotShadeFormData`. Saving writes the protection back when it changed (`applyDocumentProtection`).
  */
 export function parseFormSettings(xml: string): {
 	protection?: DocumentProtection;
@@ -135,10 +136,14 @@ export function parseFormSettings(xml: string): {
 	if (!root) return {};
 	const protect = children(root, 'documentProtection')[0];
 	const edit = protect && getW(protect, 'edit');
+	const secret = protect && readProtectionPassword(protect);
 	return {
 		...(protect && {
 			protection: {
 				edit: isStDocProtect(edit) ? edit : 'none',
+				...(parseOnOff(getW(protect, 'formatting')) === true && { formatting: true }),
+				...(secret?.password && { password: secret.password }),
+				...(secret?.unverifiable && { unverifiablePassword: true }),
 				// Word enforces the protection unless `w:enforcement` turns it off ([MS-OE376]
 				// 2.1.410), where ECMA-376 would ignore it when the attribute is missing.
 				enforced: parseOnOff(getW(protect, 'enforcement')) !== false,
@@ -242,6 +247,63 @@ export async function applyCompatibilityMode(zip: JSZip, mode: number | undefine
 			setting.setAttributeNS(WORD_NS, 'w:val', String(mode));
 			compat.appendChild(setting);
 		}
+	}
+	zip.file(SETTINGS_PATH, buildXml(doc));
+	if (!file) {
+		await ensureContentTypeOverride(zip, SETTINGS_PATH, SETTINGS_CONTENT_TYPE);
+		await ensureDocumentRelationship(zip, SETTINGS_RELATIONSHIP_TYPE, 'settings.xml');
+	}
+}
+
+/** The `w:documentProtection` element for a protection, attributes in the order Word writes them. */
+function protectionElement(doc: ReturnType<typeof parseXml>, protection: DocumentProtection) {
+	const element = makeW(doc, 'documentProtection');
+	const set = (name: string, value: string | number) =>
+		element.setAttributeNS(WORD_NS, `w:${name}`, String(value));
+	set('edit', protection.edit);
+	if (protection.formatting) set('formatting', 1);
+	set('enforcement', protection.enforced ? 1 : 0);
+	const secret = protection.password;
+	if (secret?.word) {
+		set('cryptProviderType', 'rsaAES');
+		set('cryptAlgorithmClass', 'hash');
+		set('cryptAlgorithmType', 'typeAny');
+		set('cryptAlgorithmSid', secret.word.algorithmSid);
+		if (secret.spinCount !== undefined) set('cryptSpinCount', secret.spinCount);
+		set('hash', secret.hashValue);
+		set('salt', secret.saltValue);
+	} else if (secret) {
+		set('algorithmName', secret.algorithmName);
+		set('hashValue', secret.hashValue);
+		set('saltValue', secret.saltValue);
+		if (secret.spinCount !== undefined) set('spinCount', secret.spinCount);
+	}
+	return element;
+}
+
+/**
+ * Writes Review > Restrict Editing: replaces `w:documentProtection` in settings.xml with the
+ * model's protection, or removes it when the protection was stopped. Call it for a changed one.
+ */
+export async function applyDocumentProtection(
+	zip: JSZip,
+	protection: DocumentProtection | undefined,
+): Promise<void> {
+	const file = zip.file(SETTINGS_PATH);
+	if (!file && !protection) return;
+	const doc = parseXml(
+		(await file?.async('string')) ??
+			`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="${WORD_NS}"></w:settings>`,
+	);
+	const root = doc.documentElement as XmlElement;
+	for (const element of children(root, 'documentProtection')) root.removeChild(element);
+	if (protection) {
+		const rank = SETTINGS_ORDER.indexOf('documentProtection');
+		const after = Array.from(root.childNodes).find((node) => {
+			const index = SETTINGS_ORDER.indexOf((node as XmlElement).localName ?? '');
+			return node.nodeType === 1 && index > rank;
+		});
+		root.insertBefore(protectionElement(doc, protection), after ?? null);
 	}
 	zip.file(SETTINGS_PATH, buildXml(doc));
 	if (!file) {

@@ -23,6 +23,7 @@ import type {
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
+	PptxCustomShow,
 	PptxHandler,
 	PptxPresentationProperties,
 	PptxSection,
@@ -62,6 +63,10 @@ export interface BridgeDeps {
 	// presentation properties) route through. Slide/theme tools do not need these.
 	/** Ordered presentation sections (editor-tracked, saved with the deck). */
 	getSections(): readonly PptxSection[];
+	/** Custom shows (`p:custShowLst`), loader-tracked. */
+	getCustomShows(): readonly PptxCustomShow[];
+	/** Replace the custom shows and mark the deck dirty. */
+	setCustomShows(shows: readonly PptxCustomShow[]): void;
 	/** Presentation-level properties (`p:presentationPr`), loader-tracked. */
 	getPresentationProperties(): PptxPresentationProperties;
 	/** Custom document properties (`docProps/custom.xml`), loader-tracked. */
@@ -125,6 +130,8 @@ export function createAngularAiBridge(deps: BridgeDeps): PptxAiBridge {
 		getHandler: () => deps.getHandler(),
 		getFileName: () => deps.getFileName(),
 		getSections: () => deps.getSections(),
+		getCustomShows: () => deps.getCustomShows(),
+		setCustomShows: (shows) => deps.setCustomShows(shows),
 		getPresentationProperties: () => deps.getPresentationProperties(),
 		getCustomProperties: () => deps.getCustomProperties(),
 		getCoreProperties: () => deps.getCoreProperties(),

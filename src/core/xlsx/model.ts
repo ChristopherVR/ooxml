@@ -494,10 +494,31 @@ export interface FreezePane {
 	cols: number;
 }
 
+/**
+ * A split window (`pane` with `state="split"`). Unlike a frozen pane the sizes are in twentieths of
+ * a point (not rows and columns) and every pane scrolls on its own.
+ */
+export interface SplitPane {
+	/** Width of the left panes (`xSplit`); 0 when the window is split horizontally only. */
+	x: number;
+	/** Height of the top panes (`ySplit`); 0 when the window is split vertically only. */
+	y: number;
+	/** First cell of the top-left pane (`sheetView/@topLeftCell`). */
+	topLeft?: CellAddress;
+	/** The pane holding the selection (`activePane`). */
+	activePane?: SplitPaneName;
+	/** The selection each other pane keeps (`selection pane=...`); the active pane uses `selection`. */
+	paneSelections?: Partial<Record<SplitPaneName, { active: CellAddress; ranges: CellRange[] }>>;
+}
+
+export type SplitPaneName = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
+
 export interface AutoFilter {
 	range: CellRange;
 	/** Per-column filters keyed by zero-based column offset within the range. */
 	columns?: AutoFilterColumn[];
+	/** The sort saved with the filter. */
+	sortState?: import('./model-sort').SortState;
 }
 
 export interface AutoFilterColumn {
@@ -556,6 +577,8 @@ export interface Table {
 	partName?: string;
 	/** The table part filters columns by criteria the model does not hold (custom, top 10, ...). */
 	filterNotModeled?: boolean;
+	/** The sort saved in the table part's `autoFilter`. */
+	sortState?: import('./model-sort').SortState;
 }
 
 /** Where a drawing object sits on the grid (two-cell anchor, offsets in EMU). */
@@ -733,7 +756,9 @@ export interface SheetView {
 	/** Percent. */
 	zoom: number;
 	freeze?: FreezePane;
-	/** Top-left visible cell of the scrollable pane. */
+	/** A split window; never set together with `freeze`. */
+	split?: SplitPane;
+	/** Top-left visible cell of the scrollable (bottom-right) pane. */
 	topLeft?: CellAddress;
 	selection?: { active: CellAddress; ranges: CellRange[] };
 	/** Show formula text instead of results (`showFormulas`, Ctrl+`). */
@@ -858,9 +883,13 @@ export interface Worksheet {
 	pivotTables?: import('./model-pivots').PivotTable[];
 	/** What-if data tables (`{=TABLE()}`); their result cells hold plain values. */
 	dataTables?: import('./model-whatif').DataTable[];
+	/** Error Checking rules the user turned off for ranges (ignoredErrors). */
+	ignoredErrors?: IgnoredError[];
 	/** Scenario Manager scenarios. */
 	scenarios?: import('./model-whatif').ScenarioSet;
 	autoFilter?: AutoFilter;
+	/** The saved sort of the sheet (outside a filter or table). */
+	sortState?: import('./model-sort').SortState;
 	pageSetup?: PageSetup;
 	/**
 	 * Header and footer pictures by their VML id (`LH`, `CH`, `RH`, `LF`... with `FIRST` or `EVEN`
@@ -914,6 +943,25 @@ export interface WorkbookProperties extends CoreProperties, AppProperties {
 	 * empty) it replaces the part, and an empty list removes it.
 	 */
 	custom?: CustomProperty[];
+}
+
+/** The ignoredError flags: which Error Checking rule is off for a range (evalError is error values). */
+export const IGNORED_ERROR_FLAGS = [
+	'evalError',
+	'twoDigitTextYear',
+	'numberStoredAsText',
+	'formula',
+	'formulaRange',
+	'unlockedFormula',
+	'emptyCellReference',
+	'listDataValidation',
+	'calculatedColumn',
+] as const;
+export type IgnoredErrorFlag = (typeof IGNORED_ERROR_FLAGS)[number];
+
+export interface IgnoredError {
+	ranges: CellRange[];
+	flags: IgnoredErrorFlag[];
 }
 
 export interface Workbook {
@@ -1005,6 +1053,7 @@ export type {
 } from '../opc/properties/types';
 export type * from './model-sparklines';
 export type * from './model-filter';
+export type * from './model-sort';
 export type * from './model-pivots';
 export type * from './model-slicers';
 export type * from './model-whatif';

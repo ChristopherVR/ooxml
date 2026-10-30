@@ -42,6 +42,11 @@ export interface CalcEngine {
 	evaluateArray(formula: string, at: CellPosition): CellValue[][];
 	/** The current spill range anchored at a cell. */
 	spillRange(sheet: number, row: number, col: number): CellRange | undefined;
+	/**
+	 * The areas a formula cell reads, resolved through defined names, structured and 3D references
+	 * (OFFSET and INDIRECT targets are not followed). Works without a calculated graph.
+	 */
+	precedents(at: CellPosition): { sheet: number; range: CellRange }[];
 	/** Formula cells found in circular references during the last recalculation. */
 	circularCells(): CellPosition[];
 }

@@ -128,7 +128,7 @@ Run the bundled MCP server so an MCP client (Claude Desktop, Cursor, etc.) can c
 }
 ```
 
-The binary is also installed as **`pptx-tools`** after a global install (`npm i -g pptx-viewer-mcp`). All 73 tools are exposed over stdio under their **snake_case** names - e.g. `get_slide`, `add_slide`, `batch_update_elements`, `convert_to_markdown`. Each MCP tool accepts a `filePath` parameter; the server handles loading and saving internally.
+The binary is also installed as **`pptx-tools`** after a global install (`npm i -g pptx-viewer-mcp`). All 74 tools are exposed over stdio under their **snake_case** names - e.g. `get_slide`, `add_slide`, `batch_update_elements`, `convert_to_markdown`. Each MCP tool accepts a `filePath` parameter; the server handles loading and saving internally.
 
 To embed the server programmatically rather than via the CLI, use the factory from the `/mcp` entry point:
 
@@ -136,7 +136,7 @@ To embed the server programmatically rather than via the CLI, use the factory fr
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer } from 'pptx-viewer-mcp/mcp';
 
-const server = createServer(); // McpServer with all 73 tools registered
+const server = createServer(); // McpServer with all 74 tools registered
 await server.connect(new StdioServerTransport());
 ```
 

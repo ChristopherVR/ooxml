@@ -1,6 +1,6 @@
 import type { EditorCore } from './editor-core';
 import { applyLink, linkAtSelection, removeLink } from './link-commands';
-import { SearchController, type SearchStatus } from './search-controller';
+import { SearchController, type SearchOptions, type SearchStatus } from './search-controller';
 
 /** What a host dialog gets to edit the link at the selection. The host draws the dialog. */
 export interface HyperlinkRequest {
@@ -17,7 +17,7 @@ export interface HyperlinkRequest {
 export interface FindReplaceRequest {
 	readonly status: SearchStatus;
 	readonly canReplace: boolean;
-	search(query: string, caseSensitive?: boolean): SearchStatus;
+	search(query: string, options?: SearchOptions): SearchStatus;
 	findNext(): boolean;
 	findPrevious(): boolean;
 	replaceOne(replacement: string): boolean;
@@ -61,7 +61,7 @@ function findReplaceRequest(core: EditorCore): FindReplaceRequest {
 		get canReplace() {
 			return core.canEditBody();
 		},
-		search: (query, caseSensitive) => controller.search(query, caseSensitive),
+		search: (query, options) => controller.search(query, options),
 		findNext: () => controller.findNext() !== null,
 		findPrevious: () => controller.findPrevious() !== null,
 		replaceOne: (replacement) => core.canEditBody() && controller.replaceOne(replacement),

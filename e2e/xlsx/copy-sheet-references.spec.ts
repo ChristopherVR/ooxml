@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { getCell, loadXlsx, type ChartObject, type Workbook } from 'ooxml-core/xlsx';
-import { editor, FRAMEWORKS, newWorkbook, pageErrors, ribbon, sheetTabs } from './helpers';
+import {
+	clickRibbonControl,
+	editor,
+	FRAMEWORKS,
+	newWorkbook,
+	pageErrors,
+	ribbon,
+	sheetTabs,
+} from './helpers';
 
 interface CopyEditor extends HTMLElement {
 	workbook: Workbook;
@@ -92,7 +100,10 @@ for (const framework of FRAMEWORKS) {
 			element.select("'Source (2)'!A1");
 		});
 		await ribbon(page).getByRole('tab', { name: 'Formulas', exact: true }).click();
-		await ribbon(page).locator('[data-command="formulas.calculate-now"]').first().click();
+		await clickRibbonControl(
+			page,
+			ribbon(page).locator('[data-command="formulas.calculate-now"]').first(),
+		);
 		const bytes = await editor(page).evaluate(async (node) =>
 			Array.from(await (node as CopyEditor).saveBytes()),
 		);

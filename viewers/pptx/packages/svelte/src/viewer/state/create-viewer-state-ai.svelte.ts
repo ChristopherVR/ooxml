@@ -87,6 +87,12 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 		// seam. Reads come off the editor + loader; writes route through the same
 		// undoable editor mutations the inspector Properties tab uses.
 		getSections: () => editor.sections,
+		getCustomShows: () => editor.customShows,
+		setCustomShows: (shows) => {
+			deps.setEditable(true);
+			editor.editable = true;
+			editor.presentationMetadata.updateCustomShows(shows);
+		},
 		getPresentationProperties: () => editor.presentationProperties,
 		getCoreProperties: () => editor.coreProperties,
 		getAppProperties: () => editor.appProperties,

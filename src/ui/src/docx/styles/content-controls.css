@@ -213,3 +213,9 @@ td[data-sdt-cell][data-sdt-kind='date']:is(:hover, .dve-sdt-active)::after {
 	font-size: inherit;
 	cursor: default;
 }
+
+/* Restrict Editing: the regions the document lets the current user edit, highlighted as Word does. */
+.ProseMirror .dve-editable-region {
+	background-color: var(--dve-editable-region, rgba(255, 213, 79, 0.35));
+	box-shadow: inset 0 -1px 0 rgba(191, 144, 0, 0.55);
+}

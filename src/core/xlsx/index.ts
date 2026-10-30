@@ -22,6 +22,7 @@ export * from './layout/index';
 export * from './pivot/index';
 export * from './slicer/index';
 export * from './compare/index';
+export * from './audit/index';
 export * from './embedded-chart-space';
 export * from './embedded-chart-ex-space';
 

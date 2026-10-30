@@ -12,6 +12,7 @@ export * as apiToolsElementTools from './tools/element-tools';
 export * as apiToolsExportTools from './tools/export-tools';
 export * as apiToolsGeometryTools from './tools/geometry-tools';
 export * as apiToolsHelpers from './tools/helpers';
+export * as apiToolsCustomShowTools from './tools/custom-show-tools';
 export * as apiToolsHyperlinkTools from './tools/hyperlink-tools';
 export * as apiToolsJsonTools from './tools/json-tools';
 export * as apiToolsLayoutTools from './tools/layout-tools';

@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
-import type { DocumentModel } from './model';
+import type { DocumentModel, PendingMediaPart } from './model';
+import { addedPictureBullets, writePictureBullets } from './numbering-picture-save';
 import type {
 	AbstractNumDefinition,
 	NumberingLevelDefinition,
@@ -17,6 +18,11 @@ import {
 } from './xml';
 import { registerNumberingPart } from './numbering-parts';
 import { numberingStartChanges, patchNumberingStarts } from './numbering-start-patch';
+
+const addedAbstractIds = (
+	prior: { abstractNums: Record<string, unknown> } | undefined,
+	next: { abstractNums: Record<string, unknown> },
+): string[] => Object.keys(next.abstractNums).filter((id) => !prior?.abstractNums[id]);
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -46,6 +52,8 @@ function buildLevelElement(doc: XmlDocument, def: NumberingLevelDefinition): Xml
 		),
 	);
 	lvl.appendChild(valueElement(doc, 'lvlText', def.lvlText));
+	if (def.pictureBulletId !== undefined)
+		lvl.appendChild(valueElement(doc, 'lvlPicBulletId', def.pictureBulletId));
 	if (def.lvlJc) lvl.appendChild(valueElement(doc, 'lvlJc', def.lvlJc));
 	if (
 		def.tabStopTwips !== undefined ||
@@ -125,6 +133,7 @@ export async function applyNumberingCatalog(
 	zip: JSZip,
 	model: DocumentModel,
 	binding: { base: DocumentModel } | undefined,
+	pendingMedia?: ReadonlyMap<string, PendingMediaPart>,
 ): Promise<void> {
 	const next = model.numberingCatalog;
 	const prior = binding?.base.numberingCatalog;
@@ -137,6 +146,14 @@ export async function applyNumberingCatalog(
 		throw new Error(
 			'Removing the numbering catalog is not supported; the source numbering.xml is preserved unchanged.',
 		);
+	const addedPictures = addedPictureBullets(prior, next);
+	for (const level of addedAbstractIds(prior, next).flatMap((id) =>
+		Object.values(next.abstractNums[id]?.levels ?? {}),
+	))
+		if (level.pictureBulletId !== undefined && !next.pictureBullets?.[level.pictureBulletId])
+			throw new Error(
+				`Level ${level.level} references picture bullet "${level.pictureBulletId}", which the numbering part does not define.`,
+			);
 	for (const id of Object.keys(prior?.abstractNums ?? {}))
 		if (JSON.stringify(next.abstractNums[id]) !== JSON.stringify(prior?.abstractNums[id]))
 			throw new Error(
@@ -145,7 +162,8 @@ export async function applyNumberingCatalog(
 	const startChanges = numberingStartChanges(prior, next);
 	const newAbstractIds = Object.keys(next.abstractNums).filter((id) => !prior?.abstractNums[id]);
 	const newNumIds = Object.keys(next.nums).filter((id) => !prior?.nums[id]);
-	if (!newAbstractIds.length && !newNumIds.length && !startChanges.length) return;
+	if (!newAbstractIds.length && !newNumIds.length && !startChanges.length && !addedPictures.length)
+		return;
 	const existingFile = zip.file('word/numbering.xml');
 	const doc: XmlDocument = existingFile
 		? parseXml(await existingFile.async('string'))
@@ -153,6 +171,14 @@ export async function applyNumberingCatalog(
 	const root = doc.documentElement;
 	patchNumberingStarts(doc, startChanges);
 	const cleanup = children(root, 'numIdMacAtCleanup')[0] ?? null;
+	// CT_Numbering: numPicBullet* come first, then abstractNum*.
+	await writePictureBullets(
+		zip,
+		doc,
+		addedPictures,
+		children(root, 'abstractNum')[0] ?? children(root, 'num')[0] ?? cleanup,
+		pendingMedia,
+	);
 	// CT_Numbering: abstractNum* precede num*, which precede numIdMacAtCleanup.
 	const firstNum = children(root, 'num')[0] ?? cleanup;
 	for (const id of newAbstractIds) {

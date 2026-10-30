@@ -228,6 +228,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		core.inserts.smartArt.pane,
 		review.commentsPanel.element,
 		shell.chartFormat.element,
+		core.formatDialogs.restrictEditingPane,
 	);
 	frame.append(toolbar, shell.searchPanel.element, body);
 	const chrome = createChrome(core, api);
@@ -237,8 +238,9 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		core.inserts.linkDialog.element,
 		core.inserts.pictureDialog.element,
 		core.inserts.smartArt.dialog.element,
-		...core.formatDialogs.elements,
+		...core.formatDialogs.elements.filter((el) => el !== core.formatDialogs.restrictEditingPane),
 		core.inserts.pictureInput,
+		core.inserts.bulletInput,
 	);
 	if (core.pendingFileName) chrome.fileName = core.pendingFileName;
 	root.append(style, frame);

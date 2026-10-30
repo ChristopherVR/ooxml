@@ -139,23 +139,35 @@ describe('slideShowSection', () => {
 	});
 
 	/**
-	 * Custom show used to render disabled with no handler while the picker it
-	 * should open (`CustomShowsControls.vue`) already existed. The popover has
-	 * to start CLOSED or the tab's control inventory changes just by being
-	 * rendered.
+	 * Custom Slide Show is a live command that opens the Custom Shows dialog (the host wires
+	 *  to it); it no longer expands an inline picker.
 	 */
-	it('offers Custom show as a live command whose picker starts closed', async () => {
-		const wrapper = mountSlideShowSection(undefined);
+	it('offers Custom show as a live command that opens the Custom Shows dialog', async () => {
+		const open = vi.fn();
+		const wrapper = mount(SlideShowSection, {
+			props: {
+				onPresent: () => {},
+				onPresentFromBeginning: () => {},
+				onEnterPresenterView: () => {},
+				onEnterRehearsalMode: () => {},
+				onOpenSetUpSlideShow: () => {},
+				onToggleHideSlide: () => {},
+				activeSlideHidden: false,
+				onOpenBroadcastDialog: () => {},
+				onToggleSubtitles: () => {},
+				showSubtitles: false,
+				customShowControls: { ...customShowControls, onCreateCustomShow: open },
+			},
+		});
 		const button = customShowButton(wrapper);
 
 		expect(button?.attributes('disabled')).toBeUndefined();
-		expect(button?.attributes('aria-expanded')).toBe('false');
-		expect(surfaceText(wrapper)).not.toContain('+ Show');
+		expect(button?.attributes('aria-expanded')).toBeUndefined();
 
 		await button?.trigger('click');
 
-		expect(customShowButton(wrapper)?.attributes('aria-expanded')).toBe('true');
-		expect(surfaceText(wrapper)).toContain('+ Show');
+		expect(open).toHaveBeenCalledTimes(1);
+		expect(surfaceText(wrapper)).not.toContain('+ Show');
 	});
 
 	/**

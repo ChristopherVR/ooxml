@@ -130,6 +130,8 @@ export type RibbonAction =
 	| { type: 'reviewDisplay'; value: ReviewDisplayMode }
 	| { type: 'comments'; key: 'toggle' | 'add' | 'delete' | 'previous' | 'next' }
 	| { type: 'insertPicture' }
+	/** Bullets > Picture bullet...: choose an image file and start a list that draws it. */
+	| { type: 'pictureBullet' }
 	| { type: 'shapePicker' }
 	| { type: 'insertSmartArt' }
 	| {

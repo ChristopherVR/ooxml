@@ -300,7 +300,7 @@ function MobileSectionBody({
 						onToggleSubtitles={p.onToggleSubtitles ?? (() => {})}
 						showSubtitles={p.showSubtitles ?? false}
 						onSetMode={p.onSetMode}
-						customShowControls={p}
+						onOpenCustomShows={p.onOpenCustomShows ?? (() => {})}
 						hiddenActions={p.hiddenActions}
 					/>
 				</div>

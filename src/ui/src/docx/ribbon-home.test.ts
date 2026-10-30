@@ -153,6 +153,6 @@ describe('other tabs', () => {
 		const labels = [
 			...createRibbon().querySelectorAll('[data-panel="Review"] > .ribbon-group'),
 		].map((group) => group.getAttribute('data-label'));
-		expect(labels).toEqual(['Proofing', 'Tracking', 'Changes', 'Comments', 'Language']);
+		expect(labels).toEqual(['Proofing', 'Tracking', 'Changes', 'Comments', 'Protect', 'Language']);
 	});
 });

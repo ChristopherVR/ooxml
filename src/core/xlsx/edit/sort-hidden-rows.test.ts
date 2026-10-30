@@ -46,7 +46,11 @@ describe('sorting hidden rows', () => {
 			if (mode === 'column') session.sortByColumn(0, 1, true);
 			else session.sort(0, range('A1:B4'), [{ col: 1, descending: true }], true);
 			expectFilteredSort(workbook);
-			expect(sheet.autoFilter).toEqual(before.autoFilter);
+			// The sort is saved with the filter's `sortState`; the range and criteria stay.
+			expect({ ...sheet.autoFilter, sortState: undefined }).toEqual({
+				...before.autoFilter,
+				sortState: undefined,
+			});
 			const after = structuredClone(sheet);
 			session.undo();
 			expect(workbook.sheets[0]).toEqual(before);

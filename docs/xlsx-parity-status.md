@@ -277,18 +277,32 @@ line/marker swatches and position-authoring controls remain incomplete.
    (`filter-criteria.ts`); icon criteria are evaluated when the sheet's conditional formats
    supply the icon. Not done: drop-downs on table headers (a table keeps value lists only),
    the date checklist as a year / month / day tree (dates list as their displayed text),
-   colours that come only from conditional formats in the menu's colour list, and the Sort On
-   cell colour, font colour or icon, custom lists, case sensitivity or left-to-right sorting.
-   The criteria were checked against the ECMA-376 semantics and unit tests, not against real
+   and colours that come only from conditional formats in the menu's colour list. Data > Sort
+   has Sort On cell values, cell colour, font colour and conditional-format icon (On Top / On
+   Bottom, or On Left / On Right), Order A to Z / Z to A / Custom List (the four built-in
+   weekday and month lists or a list typed in the dialog), and Options for case sensitivity
+   (lower case first) and left-to-right sorting (`edit/sort.ts`, `edit/sort-keys.ts`,
+   `edit/sort-choices.ts`, `sort-lists.ts`). The levels are saved as `sortState` (sheet or
+   auto-filter: `sortBy`, `dxfId`, `iconSet`, `iconId`, `customList`, `caseSensitive`,
+   `columnSort`) and round-trip, a table's sort in its own part (`table.sortState`, patched into
+   `xl/tables/tableN.xml`). Data > Reapply re-runs the saved sort (table, filter or sheet) and
+   the filter criteria (`edit/sort-reapply.ts`). Typed custom lists persist in browser
+   localStorage (`dialogs/custom-lists.ts`). Not done: an Options > Edit Custom Lists manager
+   (rename, delete, import from cells) and a roaming store; hidden columns are skipped but not
+   checked against Excel when sorting left to right.
+   The criteria and sort modes were checked against the ECMA-376 semantics and unit tests, not against real
    Excel row results.
 9. Functions. 501 functions are registered (`viewers/xlsx/docs/functions.md`); these 22
    return `#NAME?`: INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT (no host service
    needed), and CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,
    CUBESETCOUNT, CUBEVALUE, WEBSERVICE, FILTERXML, STOCKHISTORY, RTD, IMAGE, COPILOT,
    TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service).
-10. Data tools and auditing: Flash Fill, Subtotal, Consolidate, Advanced filter, Split panes
-    (only Freeze Panes exists), Trace Precedents and Dependents, Remove Arrows, Evaluate
-    Formula, Error Checking and Watch Window have no commands. Text to Columns splits at
+10. Data tools and auditing (View > Split is implemented: `layout/split.ts`, `SheetView.split`):
+    Flash Fill, Subtotal, Consolidate and Advanced filter have no commands. Formula auditing (Trace
+    Precedents and Dependents, Remove Arrows, Evaluate Formula with Step In and Step Out, Error
+    Checking and the Watch Window) exists. Error Checking covers seven rules (not the two-digit-year
+    and list data validation ones) and has no green-triangle indicators; OFFSET and INDIRECT targets
+    are not traced. Text to Columns splits at
     delimiters or typed fixed-width break positions (no per-column data format step), and
     Page Layout > Themes > Colors only reports that changing the
     theme is not supported.

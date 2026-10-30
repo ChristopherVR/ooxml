@@ -51,5 +51,9 @@ export function createReviewControls(): HTMLElement[] {
 		tool('Next comment', 'next', { type: 'comments', key: 'next' }, big),
 		tool('Comments', 'comments', { type: 'comments', key: 'toggle' }, big),
 	);
-	return [tracking, changes, comments];
+	const protect = group(
+		'Protect',
+		tool('Restrict editing', 'protect', { type: 'formatDialog', kind: 'restrictEditing' }, big),
+	);
+	return [tracking, changes, comments, protect];
 }

@@ -151,6 +151,7 @@ export function useViewerBuildingBlocksState(
 		activeCustomShowId: state.activeCustomShowId,
 		setCustomShows: state.setCustomShows,
 		setActiveCustomShowId: state.setActiveCustomShowId,
+		setSlides: state.setSlides,
 		setGuides: state.setGuides,
 		setPresentationProperties: state.setPresentationProperties,
 		setAccessibilityIssues: state.setAccessibilityIssues as unknown as React.Dispatch<

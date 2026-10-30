@@ -55,3 +55,11 @@ export type {
 	ResolveAiAssistantOptions,
 	ResolvedAiAssistant,
 } from './ai-assistant';
+export { createCustomShowsController } from './custom-shows-controller';
+export type {
+	CustomShowsController,
+	CustomShowsDialogView,
+	CustomShowsResult,
+	CustomShowsSlideRow,
+	CustomShowsState,
+} from './custom-shows-controller';

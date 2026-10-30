@@ -25,7 +25,9 @@ import {
 	readSheetView,
 	readTabColor,
 } from './sheet-props';
+import { readIgnoredErrors } from './ignored-errors';
 import { readScenarios } from './scenarios';
+import { readSortState } from './sort-state';
 import { readPrintOptions } from './print-options';
 import { parseTable } from './tables';
 import { att, outerXml, selfContainedXml, xChildren } from './xml-util';
@@ -70,6 +72,7 @@ const MODELLED = new Set([
 	'tableParts',
 	'scenarios',
 	'customSheetViews',
+	'ignoredErrors',
 ]);
 
 /** An element outside the worksheet schema cannot be written back in place, so it is reported. */
@@ -128,7 +131,7 @@ function readTables(
 		const rel = rels.get(relAttr(part, 'id') ?? '');
 		const target = rel ? ctx.source.target(partName, rel) : undefined;
 		const xml = target ? ctx.source.text(target) : undefined;
-		const table = target && xml ? parseTable(xml, target) : undefined;
+		const table = target && xml ? parseTable(xml, target, ctx.dxfs) : undefined;
 		if (table) sheet.tables.push(table);
 		else ctx.warn('A table part could not be read and was dropped.');
 	}
@@ -217,12 +220,16 @@ function readWorksheet(
 	if (protection) sheet.protection = protection;
 	const autoFilter = readAutoFilter(byName.get('autoFilter'), ctx.dxfs);
 	if (autoFilter) sheet.autoFilter = autoFilter;
+	const sortState = readSortState(byName.get('sortState'), ctx.dxfs);
+	if (sortState) sheet.sortState = sortState;
 	sheet.merges = xChildren(byName.get('mergeCells') ?? root, 'mergeCell')
 		.map((node) => parseRange(att(node, 'ref') ?? ''))
 		.filter((range) => range !== undefined);
 	sheet.conditionalFormats = readConditionalFormats(cfBlocks, ctx.dxfs, ctx.palette, (m) =>
 		ctx.warn(m),
 	);
+	const ignored = readIgnoredErrors(byName.get('ignoredErrors'));
+	if (ignored.length) sheet.ignoredErrors = ignored;
 	const scenarios = readScenarios(byName.get('scenarios'));
 	if (scenarios) sheet.scenarios = scenarios;
 	sheet.dataValidations = readDataValidations(byName.get('dataValidations'));

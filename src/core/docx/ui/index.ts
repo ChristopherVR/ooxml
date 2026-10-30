@@ -67,3 +67,7 @@ export * from './symbol-font';
 export * from './positional-tab-input';
 export * from './form-field-commands';
 export * from './form-field-guard';
+export * from '../find-syntax';
+export * from '../find-pattern';
+export * from '../find-replacement';
+export * from './edit-restriction';

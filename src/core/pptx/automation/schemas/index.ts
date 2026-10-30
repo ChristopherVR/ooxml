@@ -9,6 +9,7 @@ export * from './smartart-schemas';
 export * from './template-schemas';
 export * from './metadata-schemas';
 export * from './section-schemas';
+export * from './custom-show-schemas';
 export * from './export-schemas';
 export * from './json-schemas';
 export * from './hyperlink-schemas';

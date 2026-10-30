@@ -1,4 +1,4 @@
-// View tab: Normal view, Show (formula bar, gridlines, headings), Zoom and Freeze Panes. Also the
+// View tab: Normal view, Show (formula bar, gridlines, headings), Zoom, Split and Freeze Panes. Also the
 // Help tab commands (keyboard shortcuts, feature status).
 import { createGridMetrics, type SheetViewMode } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
@@ -42,6 +42,17 @@ function freeze(ctx: EditorContext, rows: number, cols: number): void {
 	const t = target(ctx);
 	if (!t) return;
 	t.session.setFreeze(t.sheet, rows || cols ? { rows, cols } : undefined);
+}
+
+const split = (ctx: EditorContext): boolean => !!target(ctx)?.ws.view.split;
+
+/** View > Split: splits the window above and left of the active cell, or removes the split. */
+function toggleSplit(ctx: EditorContext): void {
+	const t = target(ctx);
+	if (!t) return;
+	if (split(ctx)) return t.session.setSplit(t.sheet, undefined);
+	const next = ctx.grid()?.splitAt?.(t.active);
+	if (next) t.session.setSplit(t.sheet, next.split, next.topLeft);
 }
 
 interface FormulaBarHost {
@@ -126,6 +137,13 @@ export function viewCommands(): Command[] {
 				setZoom(ctx, zoom);
 				ctx.grid()?.scrollTo(t.range.start);
 			},
+		}),
+		viewing({
+			id: 'view.split',
+			label: 'Split',
+			icon: icon('split'),
+			checked: split,
+			run: toggleSplit,
 		}),
 		viewing({
 			id: 'view.freeze-panes',

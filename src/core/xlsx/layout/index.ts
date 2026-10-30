@@ -21,6 +21,17 @@ export {
 } from './metrics';
 export { visibleCells, type Viewport, type VisibleCells } from './viewport';
 export {
+	MIN_SPLIT_PANE,
+	clampSplitBar,
+	pxToSplit,
+	revealInSplit,
+	splitAtCell,
+	splitToPx,
+	splitVisible,
+	type SplitLayout,
+	type SplitScroll,
+} from './split';
+export {
 	layoutRemoteSelections,
 	type RemoteRange,
 	type RemoteSelectionBox,

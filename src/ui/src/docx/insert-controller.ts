@@ -22,7 +22,14 @@ import {
 	setShapeWrap,
 	type ShapeWrap,
 } from './shape-commands';
-import { insertPicture, PICTURE_TYPES, stagePicture } from './picture-commands';
+import {
+	insertPicture,
+	newPicturePartName,
+	PICTURE_TYPES,
+	readBytes,
+	stagePicture,
+} from './picture-commands';
+import { applyPictureBulletList } from './list-commands';
 import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
@@ -56,6 +63,8 @@ export class InsertController {
 	readonly linkDialog: LinkDialog;
 	readonly pictureDialog: PictureDialog;
 	readonly pictureInput: HTMLInputElement;
+	/** File chooser behind Bullets > Picture bullet. */
+	readonly bulletInput: HTMLInputElement;
 	/** Bytes for pictures inserted since the document was loaded; passed to save. */
 	readonly pendingMedia = new Map<string, PendingMediaPart>();
 	/** The shape Insert > Shapes armed for the next drag on the page. */
@@ -79,6 +88,12 @@ export class InsertController {
 		this.pictureInput.hidden = true;
 		this.pictureInput.className = 'dve-picture-input';
 		this.pictureInput.addEventListener('change', () => void this.insertSelectedPicture());
+		this.bulletInput = document.createElement('input');
+		this.bulletInput.type = 'file';
+		this.bulletInput.accept = Object.keys(PICTURE_TYPES).join(',');
+		this.bulletInput.hidden = true;
+		this.bulletInput.className = 'dve-picture-bullet-input';
+		this.bulletInput.addEventListener('change', () => void this.applySelectedPictureBullet());
 		this.smartArt = new SmartArtController({
 			view: () => host.view(),
 			contentWidth: () => host.contentWidth(),
@@ -98,6 +113,8 @@ export class InsertController {
 		if (this.smartArt.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
+		} else if (action.type === 'pictureBullet') {
+			if (editable) this.bulletInput.click();
 		} else if (action.type === 'insertContentControl') {
 			const tr = view?.editable && insertContentControl(view.state, action.value);
 			if (view && tr) view.dispatch(tr.scrollIntoView());
@@ -217,6 +234,7 @@ export class InsertController {
 		this.pictureDialog.setLocale(locale);
 		this.smartArt.setLocale(locale);
 		this.pictureInput.setAttribute('aria-label', translate(locale, 'Insert picture'));
+		this.bulletInput.setAttribute('aria-label', translate(locale, 'Picture bullet...'));
 	}
 
 	/** Re-applies the hidden-text display state after the paper is rebuilt. */
@@ -281,6 +299,36 @@ export class InsertController {
 		const file = this.pictureInput.files?.[0];
 		this.pictureInput.value = '';
 		if (file) await this.insertPictureFile(file);
+	}
+
+	private async applySelectedPictureBullet(): Promise<void> {
+		const file = this.bulletInput.files?.[0];
+		this.bulletInput.value = '';
+		if (file) await this.applyPictureBulletFile(file);
+	}
+
+	/** Stages `file` as a new picture bullet and starts a list that uses it. */
+	async applyPictureBulletFile(file: File): Promise<boolean> {
+		const view = this.host.view();
+		if (!view?.editable) return false;
+		try {
+			const contentType = file.type.toLowerCase();
+			if (!PICTURE_TYPES[contentType])
+				throw new Error('Choose a PNG, JPEG, GIF or BMP picture for a picture bullet.');
+			const bytes = await readBytes(file);
+			if (this.host.view() !== view || !view.editable) return false;
+			const partName = (this.host.newMediaPartName ?? newPicturePartName)(contentType);
+			const part = { bytes, contentType };
+			this.host.stageMedia?.(partName, part);
+			this.pendingMedia.set(partName, part);
+			applyPictureBulletList(view, this.host.model(), { partName, contentType });
+			this.host.refresh?.();
+			focusView(view);
+			return true;
+		} catch (cause) {
+			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
+			return false;
+		}
 	}
 
 	/** Stages `file` and inserts it at the selection; false when it could not be inserted. */
