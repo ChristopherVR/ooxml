@@ -197,16 +197,16 @@ for (const [index, framework] of [
 		await page.mouse.down();
 		await page.mouse.move(lockedStart.x + delta.x, lockedStart.y + delta.y);
 		await page.mouse.up();
-		// LockWidth holds the width while the height follows the drag, as Visio resizes it.
 		await expect
-			.poll(async () => (await inventory(viewer)).height)
-			.not.toBeCloseTo(locked.height, 6);
-		expect((await inventory(viewer)).width).toBe(locked.width);
-		expect(
-			await viewer.evaluate(
-				(node) => (node as VisioViewerElement).controller.state.edit.error?.message ?? '',
-			),
-		).toBe('');
+			.poll(() =>
+				viewer.evaluate(
+					(node) => (node as VisioViewerElement).controller.state.edit.error?.message ?? '',
+				),
+			)
+			.toBe('');
+		// A corner keeps the proportions, so the LockWidth shape holds still: no edit, no error.
+		expect((await inventory(viewer)).bytes).toEqual(locked.bytes);
+		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		expect(errors).toEqual([]);
 	});
 }

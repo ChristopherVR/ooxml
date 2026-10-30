@@ -51,15 +51,15 @@ it('renders eight single-selection handles, previews only a frame and commits an
 	rotation.className = 'rotation-overlay';
 	ui.viewport.append(rotation);
 	ui.pointer('pointerdown', ui.handle(), 55, 35);
-	ui.pointer('pointermove', ui.svg, 65, 25, { shiftKey: true });
+	ui.pointer('pointermove', ui.svg, 65, 25);
 	expect(rotation.style.visibility).toBe('hidden');
-	// With Shift a corner keeps the proportions: the height doubled, so the width doubles too.
+	// A corner keeps the proportions: the height doubled, so the width doubles too.
 	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('width')).toBe('6');
 	expect(ui.svg.querySelector('[data-resize-frame-preview]')!.getAttribute('height')).toBe('2');
 	expect(ui.group().outerHTML).toBe(original);
 	expect(ui.edits).toHaveLength(0);
 	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
-	ui.pointer('pointerup', ui.svg, 65, 25, { shiftKey: true });
+	ui.pointer('pointerup', ui.svg, 65, 25);
 	await ui.done();
 	expect(rotation.style.visibility).toBe('');
 	expect(ui.edits).toEqual([

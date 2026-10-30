@@ -90,20 +90,23 @@ export function visioResizeFrame(
 			}
 		: undefined;
 }
-/** How a drag maps onto the shape's size, as Visio's modifiers do. A corner resizes freely unless
- * the shape's LockAspect is set; Shift keeps the proportions on any handle (`proportional`); Ctrl
- * resizes about the centre (`centre`), so both opposite edges move. */
+/** How a drag maps onto the shape's size, as Visio's modifiers do. A corner handle keeps the
+ * proportions by default; Shift keeps them on any handle (`proportional`); Ctrl resizes about the
+ * centre (`centre`), so both opposite edges move. A side handle changes one dimension. */
 export interface VisioResizeDragOptions {
-	/** Shift: keep the original aspect ratio. */
+	/** Shift: keep the original aspect ratio on any handle. */
 	proportional?: boolean;
 	/** Ctrl: grow or shrink symmetrically about the shape's centre. */
 	centre?: boolean;
 	/** The shape's LockAspect, which keeps the proportions on every handle. */
 	aspect?: boolean;
 }
-/** True when a drag keeps the shape's proportions: Shift, or a LockAspect protection. */
-export function visioResizeKeepsProportions(options: VisioResizeDragOptions = {}): boolean {
-	return !!options.proportional || !!options.aspect;
+/** True when a drag on `handle` keeps the shape's proportions: a corner, Shift, or LockAspect. */
+export function visioResizeKeepsProportions(
+	handle: VisioResizeHandle,
+	options: VisioResizeDragOptions = {},
+): boolean {
+	return !!options.proportional || !!options.aspect || handle.length === 2;
 }
 /** Scale a raw resize uniformly. A corner follows the axis that changed more; a side handle
  * scales the other axis with it about its centre. The ratio survives the minimum-size clamp. */
@@ -156,7 +159,10 @@ export function visioResizeDrag(
 		width: side(location.x, shape.width, x, locks.width),
 		height: side(location.y, shape.height, y, locks.height),
 	};
-	const proportional = visioResizeKeepsProportions({ ...options, aspect: !!locks.aspect });
+	const proportional = visioResizeKeepsProportions(handle, {
+		...options,
+		aspect: !!locks.aspect,
+	});
 	// A proportional drag cannot leave a locked dimension, so the shape holds still instead.
 	const size =
 		proportional && (locks.width || locks.height)

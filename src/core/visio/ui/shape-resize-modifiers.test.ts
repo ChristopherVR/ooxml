@@ -28,7 +28,7 @@ function page(angle = 0, locks: VisioPage['shapes'][number]['resizeLocks'] = und
 
 /** Page drag in y-up inches, as the viewer converts a pointer move into start and end points. */
 function drag(dx: number, dy: number) {
-	return { start: { x: 0, y: 0 }, end: { x: dx, y: -dy } };
+	return { start: { x: 0, y: 0 }, end: { x: dx, y: 0 - dy } };
 }
 
 function resize(
@@ -53,27 +53,22 @@ function centre(frame: { transform: number[]; width: number; height: number }) {
 	};
 }
 
-describe('corner handles resize freely unless LockAspect is set', () => {
-	it('moves the two edges independently with no modifier', () => {
-		const { frame } = resize(page(), 'ne', 1, 0.25);
-		expect(frame.width).toBeCloseTo(3, 12);
-		expect(frame.height).toBeCloseTo(1.25, 12);
-	});
-
-	it('keeps the original proportions with Shift, scaling by the axis that changed more', () => {
-		const { frame, command } = resize(page(), 'ne', 1, 0.25, { proportional: true });
+describe('corner handles keep the proportions by default', () => {
+	it('scales a corner by the axis that changed more, with no modifier', () => {
+		const { frame, command } = resize(page(), 'ne', 1, 0.25);
+		// +1 in width is 50% and +0.25 in height is 25%, so the width sets the scale.
 		expect(frame.width).toBeCloseTo(3, 12);
 		expect(frame.height).toBeCloseTo(1.5, 12);
 		expect(command.anchor).toEqual({ x: 0, y: 0 });
 	});
 
-	it('keeps the proportions on a LockAspect shape without Shift', () => {
-		const { frame } = resize(page(0, { aspect: true }), 'ne', 1, 0.25);
+	it('keeps the same proportions with Shift', () => {
+		const { frame } = resize(page(), 'ne', 1, 0.25, { proportional: true });
 		expect(frame.width).toBeCloseTo(3, 12);
 		expect(frame.height).toBeCloseTo(1.5, 12);
 	});
 
-	it('keeps the proportions on a LockAspect shape with a side handle, about its centre', () => {
+	it('keeps the proportions on a LockAspect side handle, about the centre', () => {
 		const scene = page(0, { aspect: true });
 		const before = centre(resize(scene, 'e', 0, 0).frame);
 		const { frame } = resize(scene, 'e', 1, 0);
@@ -82,6 +77,12 @@ describe('corner handles resize freely unless LockAspect is set', () => {
 		const after = centre(frame);
 		expect(after.x).toBeCloseTo(before.x + 0.5, 12);
 		expect(after.y).toBeCloseTo(before.y, 12);
+	});
+
+	it('holds a LockAspect corner to the same proportions as Shift', () => {
+		const { frame } = resize(page(0, { aspect: true }), 'ne', 1, 0.25);
+		expect(frame.width).toBeCloseTo(3, 12);
+		expect(frame.height).toBeCloseTo(1.5, 12);
 	});
 });
 
@@ -100,12 +101,13 @@ describe('side handles change one dimension', () => {
 });
 
 describe('Ctrl resizes about the centre', () => {
-	it('grows both edges of a corner by the drag, keeping the centre fixed', () => {
+	it('grows both edges of a corner by the drag, keeping the proportions and the centre', () => {
 		const scene = page();
 		const before = centre(resize(scene, 'ne', 0, 0).frame);
 		const { frame, command } = resize(scene, 'ne', 1, 0.25, { centre: true });
+		// Both edges move, so the width grows by 2 and the height scales by the same factor of 2.
 		expect(frame.width).toBeCloseTo(4, 12);
-		expect(frame.height).toBeCloseTo(1.5, 12);
+		expect(frame.height).toBeCloseTo(2, 12);
 		expect(command.anchor).toEqual({ x: 0.5, y: 0.5 });
 		const after = centre(frame);
 		expect(after.x).toBeCloseTo(before.x, 12);
@@ -126,7 +128,6 @@ describe('Ctrl resizes about the centre', () => {
 		const scene = page();
 		const before = centre(resize(scene, 'ne', 0, 0).frame);
 		const { frame } = resize(scene, 'ne', 1, 0.25, { centre: true, proportional: true });
-		// Both edges move, so the width grows by 2 and the height scales by the same 2.
 		expect(frame.width).toBeCloseTo(4, 12);
 		expect(frame.height).toBeCloseTo(2, 12);
 		const after = centre(frame);
@@ -146,16 +147,22 @@ describe('Ctrl resizes about the centre', () => {
 });
 
 describe('resize locks', () => {
-	it('holds the width of a LockWidth shape on corner drags, leaving the height free', () => {
-		const { frame } = resize(page(0, { width: true }), 'ne', 1, 0.25);
-		expect(frame.width).toBe(2);
-		expect(frame.height).toBeCloseTo(1.25, 12);
-	});
-
-	it('holds a LockWidth dimension against a side drag', () => {
+	it('holds the width of a LockWidth shape on a side drag', () => {
 		const { frame } = resize(page(0, { width: true }), 'e', 1, 0);
 		expect(frame.width).toBe(2);
 		expect(frame.height).toBe(1);
+	});
+
+	it('holds a LockWidth shape still on a corner, which keeps the proportions', () => {
+		const { frame } = resize(page(0, { width: true }), 'ne', 1, 0.25);
+		expect(frame.width).toBe(2);
+		expect(frame.height).toBe(1);
+	});
+
+	it('leaves the height of a LockWidth shape free on its top handle', () => {
+		const { frame } = resize(page(0, { width: true }), 'n', 0, 0.25);
+		expect(frame.width).toBe(2);
+		expect(frame.height).toBeCloseTo(1.25, 12);
 	});
 
 	it('holds the height of a LockHeight shape on a top handle', () => {
@@ -164,7 +171,7 @@ describe('resize locks', () => {
 		expect(frame.height).toBe(1);
 	});
 
-	it('leaves a LockHeight shape free to widen on its side handle', () => {
+	it('leaves the width of a LockHeight shape free on its side handle', () => {
 		const { frame } = resize(page(0, { height: true }), 'e', 1, 0);
 		expect(frame.width).toBeCloseTo(3, 12);
 		expect(frame.height).toBe(1);
@@ -180,25 +187,19 @@ describe('resize locks', () => {
 });
 
 describe('rotated shapes resize in their local frame', () => {
-	// A 90 degree turn: page +x is local -y, so page +y widens the local width.
+	// A 90 degree turn: page +y is local +x, so page +y widens the local width.
 	const angle = Math.PI / 2;
 
-	it('widens the local width on a free corner drag', () => {
+	it('keeps the local proportions on a corner with no modifier', () => {
 		const { frame } = resize(page(angle), 'ne', 0, 0.5);
-		expect(frame.width).toBeCloseTo(2.5, 12);
-		expect(frame.height).toBe(1);
-	});
-
-	it('keeps the local proportions with Shift', () => {
-		const { frame } = resize(page(angle), 'ne', 0, 0.5, { proportional: true });
 		expect(frame.width).toBeCloseTo(2.5, 12);
 		expect(frame.height).toBeCloseTo(1.25, 12);
 	});
 
-	it('resizes about the page-space centre with Ctrl', () => {
+	it('resizes about the page-space centre with Ctrl on a side handle', () => {
 		const scene = page(angle);
-		const before = centre(resize(scene, 'ne', 0, 0).frame);
-		const { frame } = resize(scene, 'ne', 0, 0.5, { centre: true });
+		const before = centre(resize(scene, 'e', 0, 0).frame);
+		const { frame } = resize(scene, 'e', 0, 0.5, { centre: true });
 		expect(frame.width).toBeCloseTo(3, 12);
 		expect(frame.height).toBe(1);
 		const after = centre(frame);
@@ -207,7 +208,7 @@ describe('rotated shapes resize in their local frame', () => {
 	});
 
 	it('applies a LockWidth lock to the local width, not the page width', () => {
-		const { frame } = resize(page(angle, { width: true }), 'ne', 0, 0.5);
+		const { frame } = resize(page(angle, { width: true }), 'e', 0, 0.5);
 		expect(frame.width).toBe(2);
 		expect(frame.height).toBe(1);
 	});

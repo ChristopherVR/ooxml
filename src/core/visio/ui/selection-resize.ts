@@ -121,25 +121,36 @@ export function visioResizeSelectionDrag(
 			original.height *
 			Math.max(...shapes.map((shape) => Math.min(1 / 16, shape.height) / shape.height)),
 	};
+	// Ctrl moves both edges of the surrounding rectangle, so the drag counts twice.
+	const reach = options.centre ? 2 : 1;
 	let box = applyResize(
 		{ x: left, y: -bottom - original.height, width: original.width, height: original.height },
 		handle,
-		end.x - start.x,
-		end.y - start.y,
+		reach * (end.x - start.x),
+		reach * (end.y - start.y),
 		1,
 		{ minWidth: min.width, minHeight: min.height },
 	);
 	// One common scale: any member's LockAspect keeps the whole selection proportional.
 	const aspect = shapes.some((shape) => shape.resizeLocks?.aspect);
-	if (visioResizeKeepsProportions({ ...options, aspect })) {
-		// Scale the surrounding rectangle uniformly about the point opposite the handle.
+	if (visioResizeKeepsProportions(handle, { ...options, aspect })) {
+		// Scale the surrounding rectangle uniformly about the point opposite the handle (or its
+		// centre with Ctrl).
 		const location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle)!;
 		const size = visioProportionalSize(original, box, location, min);
-		const ax = 1 - location.x,
-			ay = 1 - location.y;
+		const ax = options.centre ? 0.5 : 1 - location.x,
+			ay = options.centre ? 0.5 : 1 - location.y;
 		const nextLeft = left + ax * (original.width - size.width),
 			nextBottomEdge = bottom + ay * (original.height - size.height);
 		box = { ...box, ...size, x: nextLeft, y: -nextBottomEdge - size.height };
+	}
+	if (options.centre) {
+		// Ctrl keeps the surrounding rectangle's centre fixed (box y holds the negated top edge).
+		box = {
+			...box,
+			x: left + (original.width - box.width) / 2,
+			y: -(bottom + original.height / 2) - box.height / 2,
+		};
 	}
 	const sx = box.width / original.width,
 		sy = box.height / original.height;

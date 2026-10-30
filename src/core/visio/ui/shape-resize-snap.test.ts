@@ -54,7 +54,7 @@ function sideTarget(id: string, x: number, width = 1): VisioShape {
 
 function snapped(
 	scene: VisioPage,
-	handle: 'ne' | 'e' | 'se' | 'w',
+	handle: 'e' | 'n' | 'ne' | 'w',
 	dx: number,
 	dy: number,
 	options: VisioResizeDragOptions & { snap?: Partial<typeof SNAP> } = {},
@@ -75,11 +75,11 @@ describe('snapping a resize edge to other shapes and guides', () => {
 		const scene = page();
 		scene.shapes.push(sideTarget('2', 6));
 		// The right edge lands at 5.95, 0.05 short of the other shape's left edge at 6.
-		const result = snapped(scene, 'ne', 0.2, 0);
+		const result = snapped(scene, 'e', 0.2, 0);
 		expect(result.end.x).toBeCloseTo(0.25, 12);
 		expect(result.end.y).toBe(0);
 		expect(result.lines).toEqual([expect.objectContaining({ axis: 'x', pos: 6 })]);
-		const { frame } = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, result.end)!;
+		const { frame } = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, result.end)!;
 		expect(frame.width).toBeCloseTo(2.25, 12);
 	});
 
@@ -87,7 +87,7 @@ describe('snapping a resize edge to other shapes and guides', () => {
 		const scene = page();
 		// Its centre is at x 5.8; the right edge is at 5.85 after a drag of 0.1, nearest to 5.8.
 		scene.shapes.push(sideTarget('2', 5.6, 0.4));
-		const result = snapped(scene, 'ne', 0.1, 0);
+		const result = snapped(scene, 'e', 0.1, 0);
 		expect(result.end.x).toBeCloseTo(0.05, 12);
 		expect(result.lines).toEqual([expect.objectContaining({ axis: 'x', pos: 5.8 })]);
 	});
@@ -96,11 +96,11 @@ describe('snapping a resize edge to other shapes and guides', () => {
 		const scene = page(Math.PI / 2);
 		const shape = scene.shapes[0]!;
 		const [, b, , d, , f] = shape.transform;
-		// The top of the turned shape at its 'ne' corner, in page inches with y up.
+		// The top of the turned shape: its local x edge, which the 'e' handle moves.
 		const top = b * shape.width + d * shape.height + f;
-		// A shape whose top is 0.05 above that corner, so the corner lifts onto it.
+		// A shape whose top is 0.05 above that edge, so the edge lifts onto it.
 		scene.shapes.push(box('2', 8, top + 0.05 - 1));
-		const result = snapped(scene, 'ne', 0, 0);
+		const result = snapped(scene, 'e', 0, 0);
 		expect(result.end.y).toBeCloseTo(-0.05, 12);
 		expect(result.end.x).toBe(0);
 		expect(result.lines).toEqual([expect.objectContaining({ axis: 'y' })]);
@@ -113,7 +113,7 @@ describe('snapping a resize edge to other shapes and guides', () => {
 			rotation: { pinX: 6, pinY: 0, angle: Math.PI / 2 },
 			visibility: { layerHidden: false, guide: true, layerPrintSummary: 'unlayered' },
 		});
-		const result = snapped(scene, 'ne', 0.2, 0, { snap: { shapes: false } });
+		const result = snapped(scene, 'e', 0.2, 0, { snap: { shapes: false } });
 		expect(result.end.x).toBeCloseTo(0.25, 12);
 		expect(result.lines).toEqual([expect.objectContaining({ axis: 'x', pos: 6 })]);
 	});
@@ -121,7 +121,7 @@ describe('snapping a resize edge to other shapes and guides', () => {
 	it('leaves the handle alone when nothing is within the snap distance', () => {
 		const scene = page();
 		scene.shapes.push(sideTarget('2', 6));
-		expect(snapped(scene, 'ne', 0.2, 0, { snap: { threshold: 0.01 } })).toEqual({
+		expect(snapped(scene, 'e', 0.2, 0, { snap: { threshold: 0.01 } })).toEqual({
 			end: { x: 0.2, y: 0 },
 			lines: [],
 		});
@@ -130,7 +130,7 @@ describe('snapping a resize edge to other shapes and guides', () => {
 	it('does nothing when neither shapes nor guides are snapped to', () => {
 		const scene = page();
 		scene.shapes.push(sideTarget('2', 6));
-		expect(snapped(scene, 'ne', 0.2, 0, { snap: { shapes: false, guides: false } })).toEqual({
+		expect(snapped(scene, 'e', 0.2, 0, { snap: { shapes: false, guides: false } })).toEqual({
 			end: { x: 0.2, y: 0 },
 			lines: [],
 		});
@@ -139,32 +139,36 @@ describe('snapping a resize edge to other shapes and guides', () => {
 	it('does not snap a proportional drag, which would move the other edge off its line', () => {
 		const scene = page();
 		scene.shapes.push(sideTarget('2', 6));
-		expect(snapped(scene, 'ne', 0.2, 0, { proportional: true }).lines).toEqual([]);
 		expect(snapped(scene, 'e', 0.2, 0, { proportional: true }).lines).toEqual([]);
+		// A corner keeps the proportions by default, so it does not snap either.
+		expect(snapped(scene, 'ne', 0.2, 0).lines).toEqual([]);
 	});
 
 	it('does not snap a LockAspect shape', () => {
 		const scene = page(0, { aspect: true });
 		scene.shapes.push(sideTarget('2', 6));
-		expect(snapped(scene, 'ne', 0.2, 0).lines).toEqual([]);
+		expect(snapped(scene, 'e', 0.2, 0).lines).toEqual([]);
 	});
 
-	it('does not snap the x edge of a LockWidth shape, but still snaps its y edge', () => {
-		const scene = page(0, { width: true });
-		// An x target 0.05 from the right edge, and a y target 0.05 above the top edge.
-		scene.shapes.push(sideTarget('2', 6), box('4', 0, 5.3, 1, 1));
-		const result = snapped(scene, 'ne', 0.2, 0);
+	it('does not snap the x edge of a LockWidth shape, but still snaps a top edge', () => {
+		const locked = page(0, { width: true });
+		locked.shapes.push(sideTarget('2', 6));
+		expect(snapped(locked, 'e', 0.2, 0).lines).toEqual([]);
+		const top = page(0, { width: true });
+		top.shapes.push(box('4', 0, 5.3, 1, 1));
+		const result = snapped(top, 'n', 0, 0.2);
 		expect(result.lines.map((line) => line.axis)).toEqual(['y']);
-		expect(result.end.x).toBe(0.2);
+		expect(result.end.x).toBe(0);
+		// The top would stop at 5.45, so it snaps back down to the target's bottom at 5.3.
 		expect(result.end.y).toBeCloseTo(-0.05, 12);
 	});
 
 	it('keeps the centre fixed with Ctrl and still snaps the handle onto the line', () => {
 		const scene = page();
 		scene.shapes.push(sideTarget('2', 6));
-		const result = snapped(scene, 'ne', 0.2, 0, { centre: true });
+		const result = snapped(scene, 'e', 0.2, 0, { centre: true });
 		expect(result.end.x).toBeCloseTo(0.25, 12);
-		const { frame, command } = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, result.end, {
+		const { frame, command } = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, result.end, {
 			centre: true,
 		})!;
 		// Each edge moves by the snapped drag, so the width grows twice as much.
@@ -175,6 +179,6 @@ describe('snapping a resize edge to other shapes and guides', () => {
 	it('does not snap a rotated edge that is off both page axes', () => {
 		const scene = page(Math.PI / 4);
 		scene.shapes.push(sideTarget('2', 6));
-		expect(snapped(scene, 'ne', 0.2, 0).lines).toEqual([]);
+		expect(snapped(scene, 'e', 0.2, 0).lines).toEqual([]);
 	});
 });

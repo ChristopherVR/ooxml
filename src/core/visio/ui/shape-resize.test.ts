@@ -76,8 +76,8 @@ it.each([0.5, 1, 2])(
 it('clamps crossing handles without changing flips and leaves tiny untouched dimensions unchanged', () => {
 	const scene = page();
 	const frame = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: -10, y: 10 })!.frame;
-	// A corner resizes freely, so each side stops at 1/16 inch when it crosses the opposite one.
-	expect(frame.width).toBe(1 / 16);
+	// A corner keeps the 2:1 proportions, so the shorter side stops at 1/16 inch.
+	expect(frame.width).toBe(1 / 8);
 	expect(frame.height).toBe(1 / 16);
 	const side = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, { x: -10, y: 10 })!.frame;
 	expect(side.width).toBe(1 / 16);
@@ -123,25 +123,15 @@ it('offers flat group handles with rotated parents and refuses unsupported membe
 	expect(visioResizeShape(scene, '1')).toBeUndefined();
 });
 
-it('keeps proportions with Shift on corners, and on side handles, about the centre', () => {
+it('keeps proportions on corners, and on side handles with Shift about the centre', () => {
 	const scene = page();
-	// Without Shift a corner resizes freely; with Shift the axis that changed more wins: +0.25 in
-	// width is 12.5%, +0.5 in height is 50%.
-	const free = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 0.25, y: -0.5 })!;
-	expect([free.frame.width, free.frame.height]).toEqual([2.25, 1.5]);
-	const corner = visioResizeDrag(
-		scene,
-		'1',
-		'ne',
-		{ x: 0, y: 0 },
-		{ x: 0.25, y: -0.5 },
-		{ proportional: true },
-	)!;
+	// The axis that changed more wins: +0.25 in width is 12.5%, +0.5 in height is 50%.
+	const corner = visioResizeDrag(scene, '1', 'ne', { x: 0, y: 0 }, { x: 0.25, y: -0.5 })!;
 	expect(corner.frame.width).toBeCloseTo(3);
 	expect(corner.frame.height).toBeCloseTo(1.5);
 	expect(corner.command.anchor).toEqual({ x: 0, y: 0 });
-	const sideFree = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, { x: 1, y: 0 })!;
-	expect([sideFree.frame.width, sideFree.frame.height]).toEqual([3, 1]);
+	const free = visioResizeDrag(scene, '1', 'e', { x: 0, y: 0 }, { x: 1, y: 0 })!;
+	expect([free.frame.width, free.frame.height]).toEqual([3, 1]);
 	const shift = visioResizeDrag(
 		scene,
 		'1',

@@ -71,7 +71,7 @@ export function visioResizeSnapEnd(
 	if (
 		!shape ||
 		!location ||
-		visioResizeKeepsProportions({ ...options, aspect: !!shape?.resizeLocks?.aspect }) ||
+		visioResizeKeepsProportions(handle, { ...options, aspect: !!shape?.resizeLocks?.aspect }) ||
 		!(snap.shapes || snap.guides) ||
 		!(snap.threshold > 0 && Number.isFinite(snap.threshold))
 	)

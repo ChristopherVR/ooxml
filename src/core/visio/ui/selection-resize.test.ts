@@ -144,14 +144,13 @@ it('clamps by the smallest member without enlarging already tiny untouched dimen
 	)!;
 	expect(result.frame.width).toBe(original.width);
 	expect(result.frame.height / original.height).toBeCloseTo(1 / 16);
-	// With Shift a corner keeps the proportions, so the tiny member's width holds the whole selection.
+	// A corner keeps the proportions, so the tiny member's width holds the whole selection.
 	const corner = visioResizeSelectionDrag(
 		page,
 		['1', '2'],
 		'ne',
 		{ x: 0, y: 0 },
 		{ x: -100, y: 100 },
-		{ proportional: true },
 	)!;
 	expect(corner.frame.width).toBeCloseTo(original.width);
 	expect(corner.frame.height).toBeCloseTo(original.height);
@@ -160,14 +159,7 @@ it('clamps by the smallest member without enlarging already tiny untouched dimen
 it('scales a multiple selection proportionally from corners and with Shift', async () => {
 	const page = (await parseVsdx(await source())).pages[0]!;
 	const original = visioResizeSelectionFrame(page, ['1', '2'])!;
-	const corner = visioResizeSelectionDrag(
-		page,
-		['1', '2'],
-		'sw',
-		{ x: 0, y: 0 },
-		{ x: -1, y: 0 },
-		{ proportional: true },
-	)!;
+	const corner = visioResizeSelectionDrag(page, ['1', '2'], 'sw', { x: 0, y: 0 }, { x: -1, y: 0 })!;
 	const scale = corner.frame.width / original.width;
 	expect(scale).toBeGreaterThan(1);
 	expect(corner.frame.height / original.height).toBeCloseTo(scale);
@@ -253,7 +245,7 @@ it.each([cell('LockMoveX', 1)])(
 );
 
 it.each([cell('LockWidth', 1), cell('LockHeight', 1)])(
-	'refuses a common scale that would change a member locked in that dimension',
+	'holds the whole selection still when a common scale would change a locked member',
 	async (protection) => {
 		const page = (await parseVsdx(await source(1, protection))).pages[0]!;
 		expect(
@@ -261,6 +253,28 @@ it.each([cell('LockWidth', 1), cell('LockHeight', 1)])(
 		).toBeUndefined();
 	},
 );
+
+it('scales a multiple selection about its centre with Ctrl', async () => {
+	const page = (await parseVsdx(await source())).pages[0]!;
+	const original = visioResizeSelectionFrame(page, ['1', '2'])!;
+	const centre = {
+		x: original.transform[4] + original.width / 2,
+		y: original.transform[5] + original.height / 2,
+	};
+	const result = visioResizeSelectionDrag(
+		page,
+		['1', '2'],
+		'e',
+		{ x: 0, y: 0 },
+		{ x: 1, y: 0 },
+		{ centre: true },
+	)!;
+	// Both edges of the surrounding rectangle move by the drag, so its width grows by two.
+	expect(result.frame.width).toBeCloseTo(original.width + 2, 9);
+	expect(result.frame.height).toBeCloseTo(original.height, 9);
+	expect(result.frame.transform[4] + result.frame.width / 2).toBeCloseTo(centre.x, 9);
+	expect(result.frame.transform[5] + result.frame.height / 2).toBeCloseTo(centre.y, 9);
+});
 
 it('detects a later resize recalculating an earlier guarded dimension before accepting the plan', async () => {
 	const zip = await JSZip.loadAsync(await source());
