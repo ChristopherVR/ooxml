@@ -29,14 +29,20 @@
 						{{ 'pptx.customShows.allSlides' | translate }}
 					</option>
 					@for (show of v.shows; track show.id) {
-						<option [value]="show.id" [selected]="pickerValue() === show.id">{{ show.name }}</option>
+						<option [value]="show.id" [selected]="pickerValue() === show.id">
+							{{ show.name }}
+						</option>
 					}
 				</select>
 			</label>
 
 			<div class="pptx-ng-cs-layout">
 				<div class="pptx-ng-cs-shows">
-					<ul role="listbox" class="pptx-ng-cs-list" [attr.aria-label]="'pptx.customShows.savedShows' | translate">
+					<ul
+						role="listbox"
+						class="pptx-ng-cs-list"
+						[attr.aria-label]="'pptx.customShows.savedShows' | translate"
+					>
 						@for (show of v.shows; track show.id) {
 							<li
 								role="option"
@@ -54,10 +60,20 @@
 					<button type="button" class="pptx-ng-cs-btn" (click)="ctl.create(newShowName())">
 						{{ 'pptx.customShows.createNew' | translate }}
 					</button>
-					<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canEdit" (click)="ctl.copySelected()">
+					<button
+						type="button"
+						class="pptx-ng-cs-btn"
+						[disabled]="!v.canEdit"
+						(click)="ctl.copySelected()"
+					>
 						{{ 'pptx.customShows.copy' | translate }}
 					</button>
-					<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canEdit" (click)="ctl.removeSelected()">
+					<button
+						type="button"
+						class="pptx-ng-cs-btn"
+						[disabled]="!v.canEdit"
+						(click)="ctl.removeSelected()"
+					>
 						{{ 'pptx.customShows.remove' | translate }}
 					</button>
 				</div>
@@ -98,10 +114,20 @@
 								</ul>
 							</div>
 							<div class="pptx-ng-cs-actions">
-								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canAdd" (click)="ctl.addSelected(slides())">
+								<button
+									type="button"
+									class="pptx-ng-cs-btn"
+									[disabled]="!v.canAdd"
+									(click)="ctl.addSelected(slides())"
+								>
 									{{ 'pptx.customShows.add' | translate }}
 								</button>
-								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canRemoveSlides" (click)="ctl.removeSelectedSlides()">
+								<button
+									type="button"
+									class="pptx-ng-cs-btn"
+									[disabled]="!v.canRemoveSlides"
+									(click)="ctl.removeSelectedSlides()"
+								>
 									{{ 'pptx.customShows.remove' | translate }}
 								</button>
 							</div>
@@ -124,15 +150,27 @@
 											{{ row.number }}. {{ row.title }}
 										</li>
 									} @empty {
-										<li class="pptx-ng-cs-empty">{{ 'pptx.customShows.noSlidesYet' | translate }}</li>
+										<li class="pptx-ng-cs-empty">
+											{{ 'pptx.customShows.noSlidesYet' | translate }}
+										</li>
 									}
 								</ul>
 							</div>
 							<div class="pptx-ng-cs-actions">
-								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canMoveUp" (click)="ctl.moveUp()">
+								<button
+									type="button"
+									class="pptx-ng-cs-btn"
+									[disabled]="!v.canMoveUp"
+									(click)="ctl.moveUp()"
+								>
 									{{ 'pptx.customShows.moveUp' | translate }}
 								</button>
-								<button type="button" class="pptx-ng-cs-btn" [disabled]="!v.canMoveDown" (click)="ctl.moveDown()">
+								<button
+									type="button"
+									class="pptx-ng-cs-btn"
+									[disabled]="!v.canMoveDown"
+									(click)="ctl.moveDown()"
+								>
 									{{ 'pptx.customShows.moveDown' | translate }}
 								</button>
 							</div>

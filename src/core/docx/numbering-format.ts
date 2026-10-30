@@ -185,9 +185,7 @@ export function computeListLabels(model: DocumentModel): Map<string, ParagraphLi
 				? def.lvlText
 				: substituteLvlText(def.lvlText, numId, level, catalog, counters, Boolean(def.isLgl));
 		const picture =
-			def.pictureBulletId !== undefined
-				? catalog.pictureBullets?.[def.pictureBulletId]
-				: undefined;
+			def.pictureBulletId !== undefined ? catalog.pictureBullets?.[def.pictureBulletId] : undefined;
 		labels.set(paragraph.id, {
 			numId,
 			level,
