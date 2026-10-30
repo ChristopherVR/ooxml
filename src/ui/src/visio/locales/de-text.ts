@@ -55,8 +55,6 @@ export const deText: Readonly<Record<string, string>> = {
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Benutzerdefinierte Designfarbsätze werden noch nicht geschrieben; wählen Sie ein Design oder eine Variante.',
 	'DWG and DXF import is not supported.': 'Der Import von DWG und DXF wird nicht unterstützt.',
-	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
-		'Datengrafiken werden im Menü „Datengrafiken“ ausgewählt; es gibt keinen Feldbereich.',
 	'Data graphics are placed at their default position; this option is not built yet.':
 		'Datengrafiken werden an ihrer Standardposition platziert; diese Option ist noch nicht verfügbar.',
 	'Embedded Excel charts are not supported.':

@@ -144,6 +144,12 @@ export type VisioDataCommand =
 	| 'graphic-configure'
 	| 'graphic-auto-space'
 	| `graphic-position-${VisioDataGraphicPosition}`
+	| 'graphic-fields'
+	| 'graphic-advanced'
+	| 'visualizer-basic'
+	| 'visualizer-cross-functional'
+	| 'visualizer-refresh'
+	| 'visualizer-template'
 	| 'define-shape-data';
 /** Arrangement, layout, layer, selection, view and output commands (viewer-layout and friends). */
 export type VisioLayoutAction =

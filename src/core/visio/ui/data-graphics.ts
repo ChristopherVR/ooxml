@@ -41,12 +41,14 @@ export function visioRemoveDataGraphicEdits(
 	page: VisioPage,
 	shapeIds: readonly string[],
 	kind?: VisioDataGraphicKind,
+	fieldName?: string,
 ): VisioEdit[] {
 	const edits: VisioEdit[] = [];
 	const parts = visioDataGraphicParts(page);
 	for (const owner of shapeIds) {
 		for (const part of parts.get(owner) ?? []) {
 			if (kind && part.kind !== kind) continue;
+			if (fieldName !== undefined && part.field !== fieldName) continue;
 			// Groups (a legend) are ungrouped first; only plain shapes can be deleted.
 			const group = page.shapes.find((item) => item.id === part.id && item.kind === 'group');
 			if (group) edits.push({ type: 'ungroup-shape', pageId: page.id, shapeId: part.id });
@@ -55,7 +57,12 @@ export function visioRemoveDataGraphicEdits(
 		}
 		const shape = page.shapes.find((item) => item.id === owner);
 		const fill = shape && field(shape, VISIO_DATA_GRAPHIC_FILL_ROW);
-		if (shape && fill && (!kind || kind === 'color')) {
+		if (
+			shape &&
+			fill &&
+			(!kind || kind === 'color') &&
+			(fieldName === undefined || fill.label === fieldName)
+		) {
 			const color = String(fill.value ?? '');
 			if (/^#[0-9a-f]{6}$/i.test(color))
 				edits.push({ type: 'format-shape', pageId: page.id, shapeId: owner, fillColor: color });
@@ -87,12 +94,13 @@ export function visioDataGraphicEdits(
 	);
 	// Re-applying replaces the owner's parts of this kind; colour keeps the remembered fill.
 	const edits =
-		options.kind === 'color'
+		options.kind === 'color' || options.replace === 'none'
 			? []
 			: visioRemoveDataGraphicEdits(
 					page,
 					targets.map((shape) => shape.id),
 					options.kind,
+					options.replace === 'field' ? options.field : undefined,
 				);
 	const ratio = page.drawingToPageScale ?? 1;
 	let next = options.idStart ?? Number(visioNextShapeId(page));

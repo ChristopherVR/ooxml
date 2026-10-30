@@ -50,8 +50,6 @@ export const zhCNText: Readonly<Record<string, string>> = {
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'尚不能写入自定义主题颜色集；请选择主题或变体。',
 	'DWG and DXF import is not supported.': '不支持导入 DWG 和 DXF。',
-	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
-		'数据图形在“数据图形”菜单中选择；没有字段窗格。',
 	'Data graphics are placed at their default position; this option is not built yet.':
 		'数据图形放置在默认位置；尚未提供此选项。',
 	'Embedded Excel charts are not supported.': '不支持嵌入的 Excel 图表。',

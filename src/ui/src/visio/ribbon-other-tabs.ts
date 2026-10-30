@@ -8,8 +8,6 @@ import { layoutGroup, reLayoutGallery } from './ribbon-layout';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 
-const GRAPHICS =
-	'Advanced data graphics (editing individual items, rules and callout styles) are not built yet.';
 const POSITIONS: readonly [string, string][] = [
 	['top-left', 'Top Left'],
 	['top', 'Top Center'],
@@ -189,6 +187,35 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					action: data('refresh'),
 				}),
 			]),
+			group(doc, 'Data Visualizer', [
+				menu(doc, {
+					id: 'data-visualizer',
+					label: 'Data Visualizer',
+					icon: 'visioData',
+					items: [
+						{
+							id: 'visualizer-basic',
+							label: 'Basic Flowchart...',
+							action: data('visualizer-basic'),
+						},
+						{
+							id: 'visualizer-cross-functional',
+							label: 'Cross-Functional Flowchart...',
+							action: data('visualizer-cross-functional'),
+						},
+						{
+							id: 'visualizer-refresh',
+							label: 'Refresh Diagram',
+							action: data('visualizer-refresh'),
+						},
+						{
+							id: 'visualizer-template',
+							label: 'Download Table Template',
+							action: data('visualizer-template'),
+						},
+					],
+				}),
+			]),
 			group(doc, 'Data Graphics', [
 				menu(doc, {
 					id: 'data-graphics',
@@ -264,8 +291,7 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					check(doc, {
 						id: 'data-graphic-fields',
 						label: 'Data Graphic Fields',
-						unsupported:
-							'Data graphics are chosen in the Data Graphics menu; there is no fields pane.',
+						action: data('graphic-fields'),
 					}),
 				]),
 			]),
@@ -276,10 +302,12 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					icon: 'visioLink',
 					action: data('link-data'),
 				}),
-				command(
-					doc,
-					unsupported('advanced-data-graphics', 'Advanced Data Graphics', 'visioChart', GRAPHICS),
-				),
+				command(doc, {
+					id: 'advanced-data-graphics',
+					label: 'Advanced Data Graphics',
+					icon: 'visioChart',
+					action: data('graphic-advanced'),
+				}),
 			]),
 		]),
 	);

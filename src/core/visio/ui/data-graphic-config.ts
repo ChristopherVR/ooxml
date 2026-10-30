@@ -104,7 +104,8 @@ export function visioDataGraphicConfigs(
 		const row = marker(shape);
 		if (!row || String(row.value ?? row.rawValue ?? '') !== ownerId) continue;
 		const config = decode(row.label ?? '', row.prompt ?? '', row.format ?? '');
-		if (config && !result.has(config.kind)) result.set(config.kind, config);
+		const key = `${config?.kind}\u0000${config?.field}`;
+		if (config && !result.has(key)) result.set(key, config);
 	}
 	return [...result.values()];
 }
@@ -112,7 +113,7 @@ export function visioDataGraphicConfigs(
 type Regenerate = (
 	page: VisioPage,
 	shapeIds: readonly string[],
-	options: VisioDataGraphicConfig & { slot: number; idStart: number },
+	options: VisioDataGraphicConfig & { slot: number; idStart: number; replace: 'field' },
 ) => VisioEdit[];
 
 const nextAfter = (edits: readonly VisioEdit[], start: number) =>
@@ -141,7 +142,13 @@ export function visioRespaceDataGraphicEdits(
 			const at = position ?? config.position ?? VISIO_DATA_GRAPHIC_DEFAULT_POSITION[config.kind];
 			const slot = used.get(at) ?? 0;
 			used.set(at, slot + 1);
-			const made = regenerate(page, [owner], { ...config, position: at, slot, idStart: next });
+			const made = regenerate(page, [owner], {
+				...config,
+				position: at,
+				slot,
+				idStart: next,
+				replace: 'field',
+			});
 			edits.push(...made);
 			next = nextAfter(made, next);
 		}

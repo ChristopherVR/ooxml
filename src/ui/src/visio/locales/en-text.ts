@@ -51,8 +51,6 @@ export const enText: Readonly<Record<string, string>> = {
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Custom theme colour sets are not written yet; pick a theme or variant.',
 	'DWG and DXF import is not supported.': 'DWG and DXF import is not supported.',
-	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
-		'Data graphics are chosen in the Data Graphics menu; there is no fields pane.',
 	'Data graphics are placed at their default position; this option is not built yet.':
 		'Data graphics are placed at their default position; this option is not built yet.',
 	'Embedded Excel charts are not supported.': 'Embedded Excel charts are not supported.',

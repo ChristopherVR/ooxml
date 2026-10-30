@@ -19,6 +19,12 @@ export interface VisioDataGraphicOptions {
 	slot?: number;
 	/** First shape ID to use, when several graphics are built from one page snapshot. */
 	idStart?: number;
+	/**
+	 * What re-applying replaces on an owner: its graphics of this kind (the Data Graphics menu,
+	 * default), only those of this field (Advanced Data Graphics, which keeps several of a kind),
+	 * or nothing (the caller removed what it wanted replaced).
+	 */
+	replace?: 'kind' | 'field' | 'none';
 }
 /** One Color by Value entry, as the legend lists it. */
 export interface VisioColorRule {
@@ -69,13 +75,16 @@ export function visioDataGraphicFields(page: VisioPage): { name: string; label: 
 /** Graphic parts (marked shapes) on the page, by owner shape ID. */
 export function visioDataGraphicParts(
 	page: VisioPage,
-): Map<string, { id: string; kind: string }[]> {
-	const parts = new Map<string, { id: string; kind: string }[]>();
+): Map<string, { id: string; kind: string; field: string }[]> {
+	const parts = new Map<string, { id: string; kind: string; field: string }[]>();
 	for (const shape of page.shapes) {
 		const row = visioDataGraphicMarker(shape);
 		if (!row) continue;
 		const owner = String(row.value ?? row.rawValue ?? '');
-		parts.set(owner, [...(parts.get(owner) ?? []), { id: shape.id, kind: row.label ?? '' }]);
+		parts.set(owner, [
+			...(parts.get(owner) ?? []),
+			{ id: shape.id, kind: row.label ?? '', field: row.prompt ?? '' },
+		]);
 	}
 	return parts;
 }

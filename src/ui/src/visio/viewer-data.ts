@@ -15,6 +15,8 @@ import {
 	visioRemoveDataGraphicEdits,
 	visioShapeDataRow,
 	type VisioDataGraphicKind,
+	visioSetDataGraphicItemEdits,
+	type VisioDataGraphicItem,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioDataCommand } from './ribbon-action';
@@ -23,25 +25,17 @@ import { InsertDialog } from './viewer-insert-dialog';
 import { ViewerDataSources } from './viewer-data-sources';
 import { ViewerDataLinks } from './viewer-data-links';
 import { ViewerShapeData } from './viewer-shape-data';
+import { ViewerGraphicFields } from './viewer-data-fields';
+import { ViewerAdvancedGraphics } from './viewer-data-advanced';
+import { ViewerDataVisualizer } from './viewer-data-visualizer';
+import {
+	GRAPHIC_KINDS as KINDS,
+	KIND_LABELS,
+	POSITION_LABELS,
+	kindLabel,
+} from './viewer-data-labels';
 
 type Run = (action: () => Promise<void>, success: string) => void;
-const KINDS: Record<string, VisioDataGraphicKind> = {
-	'graphic-text': 'text',
-	'graphic-bar': 'bar',
-	'graphic-icon': 'icon',
-	'graphic-color': 'color',
-};
-const KIND_LABELS = ['Text Callout', 'Data Bar', 'Icon Set', 'Color by Value'];
-const POSITION_LABELS = [
-	'Top left',
-	'Top center',
-	'Top right',
-	'Left',
-	'Right',
-	'Bottom left',
-	'Bottom center',
-	'Bottom right',
-];
 const POSITION_PREFIX = 'graphic-position-';
 
 /**
@@ -54,6 +48,11 @@ export class ViewerData {
 	readonly graphics: InsertDialog;
 	readonly links: ViewerDataLinks;
 	readonly shapeData: ViewerShapeData;
+	readonly fields: ViewerGraphicFields;
+	readonly advanced: ViewerAdvancedGraphics;
+	readonly visualizer: ViewerDataVisualizer;
+	/** Set while the item form edits one item of Advanced Data Graphics (undefined replacing: new). */
+	#item: { replacing: VisioDataGraphicItem | undefined } | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -87,6 +86,33 @@ export class ViewerData {
 		this.sources = new ViewerDataSources(root, controller, announce, run, this.links);
 		this.links.onRefresh = () => void this.sources.refresh();
 		this.shapeData = new ViewerShapeData(root, controller, announce);
+		this.fields = new ViewerGraphicFields(root, controller, run);
+		this.visualizer = new ViewerDataVisualizer(controller, announce, run, this.sources.picker);
+		this.advanced = new ViewerAdvancedGraphics(root, controller, announce, run, (page) =>
+			this.#targets(page),
+		);
+		this.advanced.onEdit = (item) => this.#editItem(item);
+	}
+	/** Open the graphics form for one Advanced Data Graphics item, or a new one. */
+	#editItem(item: VisioDataGraphicItem | undefined): void {
+		const page = this.#page();
+		if (!page) return;
+		const fields = visioDataGraphicFields(page);
+		this.graphics.choices(
+			'field',
+			fields.map((field) => field.name),
+			item?.field ?? fields[0]!.name,
+			{ labels: fields.map((field) => field.label), none: false },
+		);
+		(this.graphics.fields.get('kind') as HTMLSelectElement).value = item?.kind ?? 'text';
+		(this.graphics.fields.get('position') as HTMLSelectElement).value = item?.position ?? '';
+		(this.graphics.fields.get('min') as HTMLInputElement).value = String(item?.min ?? '');
+		(this.graphics.fields.get('max') as HTMLInputElement).value = String(item?.max ?? '');
+		this.graphics.error.textContent = '';
+		this.#item = { replacing: item };
+		this.advanced.dialog.dialog.close();
+		this.graphics.dialog.show();
+		this.graphics.fields.get('field')!.focus();
 	}
 	#editable(state: ViewerState): boolean {
 		return canEditDiagram(state) && !state.loading && !state.edit.busy;
@@ -106,8 +132,17 @@ export class ViewerData {
 	handle(command: VisioDataCommand): void {
 		const state = this.controller.state;
 		if (command === 'external-data-window') return this.links.toggle();
+		if (command === 'graphic-fields') return this.fields.toggle();
+		this.#item = undefined;
 		if (!this.#editable(state)) return;
 		if (command === 'define-shape-data') return this.shapeData.open();
+		if (command === 'graphic-advanced') return this.advanced.open();
+		if (command === 'visualizer-template') return this.visualizer.downloadTemplate();
+		if (command === 'visualizer-refresh') return void this.visualizer.refresh();
+		if (command.startsWith('visualizer-'))
+			return void this.visualizer.create(
+				command === 'visualizer-basic' ? 'basic' : 'cross-functional',
+			);
 		if (command === 'link-data') {
 			this.links.show();
 			if (!state.document?.dataRecordsets?.length) void this.sources.import(false);
@@ -191,7 +226,11 @@ export class ViewerData {
 		);
 	}
 	#applyGraphic(button: string): void {
-		if (button === 'Cancel') return this.graphics.dialog.close();
+		if (button === 'Cancel') {
+			this.graphics.dialog.close();
+			if (this.#item) this.advanced.dialog.dialog.show();
+			return;
+		}
 		const page = this.#page();
 		if (!page) return;
 		const number = (name: string) => {
@@ -203,6 +242,7 @@ export class ViewerData {
 			return void (this.graphics.error.textContent = 'Type numbers for the minimum and maximum.');
 		const kind = this.graphics.value('kind') as VisioDataGraphicKind;
 		const position = this.graphics.value('position') as VisioDataGraphicPosition | '';
+		if (this.#item) return this.#applyItem(page, kind, position, min, max);
 		const edits = visioDataGraphicEdits(page, this.#targets(page), {
 			kind,
 			...(position && kind !== 'color' ? { position } : {}),
@@ -214,9 +254,40 @@ export class ViewerData {
 			return void (this.graphics.error.textContent =
 				'No shapes have a usable value for this field.');
 		this.graphics.dialog.close();
+		this.run(() => this.controller.applyEdits(edits), `Applied ${kindLabel(kind)} data graphics.`);
+	}
+	/** The item form of Advanced Data Graphics: add the item, or change the one being edited. */
+	#applyItem(
+		page: VisioPage,
+		kind: VisioDataGraphicKind,
+		position: VisioDataGraphicPosition | '',
+		min: number | undefined,
+		max: number | undefined,
+	): void {
+		const replacing = this.#item?.replacing;
+		const edits = visioSetDataGraphicItemEdits(
+			page,
+			this.#targets(page),
+			{
+				kind,
+				field: this.graphics.value('field'),
+				...(position && kind !== 'color' ? { position } : {}),
+				...(min === undefined ? {} : { min }),
+				...(max === undefined ? {} : { max }),
+			},
+			replacing,
+		);
+		if (!edits.length)
+			return void (this.graphics.error.textContent =
+				'No shapes have a usable value for this field.');
+		this.graphics.dialog.close();
 		this.run(
-			() => this.controller.applyEdits(edits),
-			`Applied ${KIND_LABELS[Object.values(KINDS).indexOf(kind)]} data graphics.`,
+			async () => {
+				await this.controller.applyEdits(edits);
+				this.advanced.refresh();
+				this.advanced.dialog.dialog.show();
+			},
+			replacing ? 'Changed the data graphic item.' : 'Added the item to the data graphic.',
 		);
 	}
 	#legend(page: VisioPage, orientation: 'vertical' | 'horizontal'): void {
@@ -253,9 +324,33 @@ export class ViewerData {
 		return () => {
 			events.abort();
 			disposeLinks();
-			for (const dialog of [this.sources.importer, this.graphics, this.shapeData.form])
+			for (const dialog of [
+				this.sources.importer,
+				this.graphics,
+				this.advanced.dialog,
+				this.shapeData.form,
+			])
 				dialog.dialog.close();
 		};
+	}
+	#renderVisualizer(state: ViewerState, editing: boolean): void {
+		const page = state.document?.pages[state.pageIndex];
+		const set = (name: string, enabled: boolean, title?: string) => {
+			const control = this.root.querySelector<RibbonCommand>(`[command="${name}"]`);
+			if (!control) return;
+			control.disabled = !enabled;
+			if (title) control.title = title;
+		};
+		for (const id of ['visualizer-basic', 'visualizer-cross-functional'])
+			set(id, editing && !!page);
+		set(
+			'visualizer-refresh',
+			editing && this.visualizer.drawn(page),
+			'Redraw the diagram from the edited table.',
+		);
+		const menu = this.root.querySelector<RibbonCommand>('[data-menu="data-visualizer"]');
+		if (menu) menu.disabled = !editing || !page;
+		set('advanced-data-graphics', editing && !!page && visioDataGraphicFields(page).length > 0);
 	}
 	render(state: ViewerState): void {
 		const editing = this.#editable(state);
@@ -318,7 +413,9 @@ export class ViewerData {
 		}
 		this.links.render(state);
 		this.shapeData.render(state);
-		for (const dialog of [this.sources.importer, this.graphics])
+		this.fields.render(state);
+		this.#renderVisualizer(state, editing);
+		for (const dialog of [this.sources.importer, this.graphics, this.advanced.dialog])
 			if (dialog.dialog.open && (!canEditDiagram(state) || state.loading)) dialog.dialog.close();
 	}
 }
