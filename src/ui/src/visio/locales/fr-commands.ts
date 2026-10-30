@@ -241,4 +241,44 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Text Effects': 'Effets de texte',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
 		'Le remplissage, le contour et les effets du texte ne sont pas encore enregistrés par segment ; utilisez Accueil > Police pour la couleur et le style du texte.',
+	'Picture Format': "Format de l'image",
+	'Container Format': 'Format du conteneur',
+	'Chart Design': 'Création de graphique',
+	Adjust: 'Ajuster',
+	'Picture Styles': "Styles d'image",
+	'Container Styles': 'Styles de conteneur',
+	Membership: 'Appartenance',
+	Brightness: 'Luminosité',
+	Contrast: 'Contraste',
+	'Auto Balance': 'Équilibrage automatique',
+	Compression: 'Compression',
+	Crop: 'Rogner',
+	Margins: 'Marges',
+	'Fit to Contents': 'Ajuster au contenu',
+	'Automatic Resize': 'Redimensionnement automatique',
+	'Lock Container': 'Verrouiller le conteneur',
+	'Select Contents': 'Sélectionner le contenu',
+	'Disband Container': 'Dissocier le conteneur',
+	'Edit Chart': 'Modifier le graphique',
+	'Edit Data': 'Modifier les données',
+	'Format Chart': 'Mettre en forme le graphique',
+	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
+		'Visio stocke une image comme image incorporée que cet éditeur ne recolore ni ne recompresse ; remplacez-la par une image modifiée.',
+	'Cropping needs the picture clip cells, which the editor does not write yet.':
+		"Le rognage nécessite les cellules de découpe de l'image, que l'éditeur n'écrit pas encore.",
+	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
+		'La marge du conteneur (User.msvSDContainerMargin) ne peut pas encore être modifiée.',
+	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
+		'Le mode de redimensionnement du conteneur (User.msvSDContainerResize) ne peut pas encore être modifié.',
+	'Locking a container needs the shape protection cells, which are not editable yet.':
+		'Le verrouillage d’un conteneur nécessite les cellules de protection de forme, qui ne sont pas encore modifiables.',
+	'Open a .vsdx file with members to fit.': 'Ouvrez un fichier .vsdx avec des membres à ajuster.',
+	'Open a .vsdx file to disband a container.':
+		'Ouvrez un fichier .vsdx pour dissocier un conteneur.',
+	'This container has no members.': "Ce conteneur n'a aucun membre.",
+	'Fitted the container to its contents.': 'Le conteneur a été ajusté à son contenu.',
+	'Disbanded the container; its contents stay on the page.':
+		'Le conteneur a été dissocié ; son contenu reste sur la page.',
+	'Select one chart to edit or format it.':
+		'Sélectionnez un graphique pour le modifier ou le mettre en forme.',
 };

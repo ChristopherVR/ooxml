@@ -1,7 +1,7 @@
 import { paintOptions } from './ribbon-style-options';
 import { colorGrid, type ColorTarget } from './ribbon-color-menu';
 import { effectsOptions, quickStyleGallery } from './ribbon-shape-styles';
-import { group, menu, stack } from './ribbon-parts';
+import { group, menu, stack, type RibbonCommand } from './ribbon-parts';
 
 const ARRANGE = 'Select shapes to align, distribute, rotate or flip them.';
 
@@ -18,27 +18,36 @@ function paintMenu(doc: Document, target: Exclude<ColorTarget, 'font'>, label: s
 	return el;
 }
 
-/** Shape Styles: Quick Styles, Fill, Line and Effects (Home and Shape Format). */
-export function shapeStylesGroup(doc: Document): HTMLElement {
-	return group(
+/** Which Shape Styles controls a contextual tab keeps (Quick Styles apply to whole shapes). */
+export interface ShapeStylesOptions {
+	label?: string;
+	parts?: readonly ('quick' | 'fill' | 'line' | 'effects')[];
+}
+
+/** Shape Styles: Quick Styles, Fill, Line and Effects (Home and the Format tabs). */
+export function shapeStylesGroup(doc: Document, options: ShapeStylesOptions = {}): HTMLElement {
+	const parts = new Set(options.parts ?? ['quick', 'fill', 'line', 'effects']);
+	const rows = [
+		parts.has('fill') && paintMenu(doc, 'fill', 'Fill'),
+		parts.has('line') && paintMenu(doc, 'line', 'Line'),
+		parts.has('effects') &&
+			menu(doc, {
+				id: 'effects',
+				label: 'Effects',
+				icon: 'effects',
+				size: 'small',
+				items: effectsOptions(),
+			}),
+	].filter((row): row is RibbonCommand => !!row);
+	const el = group(
 		doc,
-		'Shape Styles',
-		[
-			quickStyleGallery(doc),
-			stack(doc, [
-				paintMenu(doc, 'fill', 'Fill'),
-				paintMenu(doc, 'line', 'Line'),
-				menu(doc, {
-					id: 'effects',
-					label: 'Effects',
-					icon: 'effects',
-					size: 'small',
-					items: effectsOptions(),
-				}),
-			]),
-		],
+		options.label ?? 'Shape Styles',
+		[...(parts.has('quick') ? [quickStyleGallery(doc)] : []), stack(doc, rows)],
 		{ dialog: 'Format Shape' },
 	);
+	// Every variant opens the same Format Shape pane.
+	el.setAttribute('launcher', 'shape-styles-dialog');
+	return el;
 }
 
 /** Arrange: Align, Position, order and Group (Home and Shape Format). */

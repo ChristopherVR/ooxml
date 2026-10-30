@@ -61,6 +61,7 @@ export type VisioInsertItem =
 	| 'chart'
 	| 'chart-data'
 	| 'chart-format'
+	| 'chart-edit'
 	| 'link'
 	| 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
@@ -83,6 +84,11 @@ export type VisioReviewCommand =
 export type VisioDiagramPartAction =
 	| { type: 'diagram-part'; part: 'container'; style: VisioContainerStyle }
 	| { type: 'diagram-part'; part: 'callout'; style: VisioCalloutStyle };
+/** Container Format > Size and Membership: act on the one selected container. */
+export type VisioContainerAction = {
+	type: 'container';
+	command: 'fit' | 'select-contents' | 'disband';
+};
 /** Data-tab commands: import, refresh, data graphics, legend, windows and Shape Data. */
 export type VisioDataCommand =
 	| 'quick-import'
@@ -142,6 +148,7 @@ export type VisioRibbonAction =
 	/** A Basic Shapes outline, or `document:<id>` for a master of the drawing's own stencil. */
 	| { type: 'change-shape'; shape: VisioChangeShapeTarget | `document:${string}` }
 	| VisioDiagramPartAction
+	| VisioContainerAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }
 	| { type: 'grid' }

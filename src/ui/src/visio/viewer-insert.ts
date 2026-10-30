@@ -101,13 +101,16 @@ export class ViewerInsert {
 			if (state.document?.pages[state.pageIndex]) this.chart.open();
 			return;
 		}
-		if (item === 'chart-data' || item === 'chart-format') {
+		if (item === 'chart-edit' || item === 'chart-data' || item === 'chart-format') {
 			const shape = this.#shape(state);
 			if (
 				!shape?.embeddedObject ||
-				!this.editChart(shape.id, item === 'chart-data' ? 'data' : 'format')
+				!this.editChart(
+					shape.id,
+					item === 'chart-edit' ? 'chart' : item === 'chart-data' ? 'data' : 'format',
+				)
 			)
-				this.announce('Select one chart to edit its data or format it.');
+				this.announce('Select one chart to edit or format it.');
 			return;
 		}
 		const shape = this.#shape(state);
@@ -349,6 +352,13 @@ export class ViewerInsert {
 			if (!control) continue;
 			control.disabled = !chartShape;
 			control.hidden = !chartShape;
+		}
+		// The Chart Design tab only shows for a chart, so these just follow editability.
+		for (const name of ['chart-tab-edit', 'chart-tab-data', 'chart-tab-format']) {
+			const control = button(name);
+			if (!control) continue;
+			control.disabled = !chartShape;
+			control.toggleAttribute('disabled', !chartShape);
 		}
 		for (const [name, label] of [
 			['link', 'Link (Ctrl+K)'],

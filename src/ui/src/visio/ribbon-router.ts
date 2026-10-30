@@ -50,6 +50,8 @@ export interface RibbonTargets {
 	review(action: Extract<VisioRibbonAction, { type: 'review' }>): void;
 	/** Layout, layers, selection, guides, explorer, export and help (ViewerLayoutCommands). */
 	layout(action: VisioLayoutAction): void;
+	/** Container Format: fit, select the contents or disband the selected container. */
+	container(command: Extract<VisioRibbonAction, { type: 'container' }>['command']): void;
 }
 
 /** Routes a ribbon, status-bar or shortcut action to the controller that owns it. */
@@ -134,6 +136,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.toggleRuler();
 		case 'panZoom':
 			return targets.togglePanZoom();
+		case 'container':
+			return targets.container(action.command);
 		case 'sizePosition':
 			return targets.toggleSizePosition();
 		case 'fullscreen':

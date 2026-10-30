@@ -241,4 +241,41 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	'Text Effects': '文本效果',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
 		'尚不支持按文本片段保存文本填充、轮廓和效果；请使用“开始”>“字体”设置文本颜色和样式。',
+	'Picture Format': '图片格式',
+	'Container Format': '容器格式',
+	'Chart Design': '图表设计',
+	Adjust: '调整',
+	'Picture Styles': '图片样式',
+	'Container Styles': '容器样式',
+	Membership: '成员',
+	Brightness: '亮度',
+	Contrast: '对比度',
+	'Auto Balance': '自动平衡',
+	Compression: '压缩',
+	Crop: '裁剪',
+	Margins: '边距',
+	'Fit to Contents': '适应内容',
+	'Automatic Resize': '自动调整大小',
+	'Lock Container': '锁定容器',
+	'Select Contents': '选择内容',
+	'Disband Container': '解散容器',
+	'Edit Chart': '编辑图表',
+	'Edit Data': '编辑数据',
+	'Format Chart': '设置图表格式',
+	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
+		'Visio 将图片存储为嵌入图像，此编辑器不会重新着色或重新压缩；请用编辑后的图片替换它。',
+	'Cropping needs the picture clip cells, which the editor does not write yet.':
+		'裁剪需要图片剪裁单元格，编辑器尚不能写入。',
+	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
+		'尚不能编辑容器边距 (User.msvSDContainerMargin)。',
+	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
+		'尚不能编辑容器调整大小模式 (User.msvSDContainerResize)。',
+	'Locking a container needs the shape protection cells, which are not editable yet.':
+		'锁定容器需要形状保护单元格，目前尚不可编辑。',
+	'Open a .vsdx file with members to fit.': '请打开含有成员的 .vsdx 文件以进行适应。',
+	'Open a .vsdx file to disband a container.': '请打开 .vsdx 文件以解散容器。',
+	'This container has no members.': '此容器没有成员。',
+	'Fitted the container to its contents.': '已使容器适应其内容。',
+	'Disbanded the container; its contents stay on the page.': '已解散容器；其内容保留在页面上。',
+	'Select one chart to edit or format it.': '请选择一个图表以编辑或设置其格式。',
 };

@@ -236,6 +236,7 @@ export class ViewerCommands {
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			changeShape: (shape) => this.#changeShape.run(shape),
 			insertDiagramPart: (action) => this.#parts.run(action),
+			container: (command) => this.#parts.container(command),
 			formatSelection: (action) => this.#formatting.run(action),
 			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),

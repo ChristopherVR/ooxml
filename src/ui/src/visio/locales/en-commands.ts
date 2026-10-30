@@ -241,4 +241,42 @@ export const enCommands: Readonly<Record<string, string>> = {
 	'Text Effects': 'Text Effects',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
 		'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.',
+	'Picture Format': 'Picture Format',
+	'Container Format': 'Container Format',
+	'Chart Design': 'Chart Design',
+	Adjust: 'Adjust',
+	'Picture Styles': 'Picture Styles',
+	'Container Styles': 'Container Styles',
+	Membership: 'Membership',
+	Brightness: 'Brightness',
+	Contrast: 'Contrast',
+	'Auto Balance': 'Auto Balance',
+	Compression: 'Compression',
+	Crop: 'Crop',
+	Margins: 'Margins',
+	'Fit to Contents': 'Fit to Contents',
+	'Automatic Resize': 'Automatic Resize',
+	'Lock Container': 'Lock Container',
+	'Select Contents': 'Select Contents',
+	'Disband Container': 'Disband Container',
+	'Edit Chart': 'Edit Chart',
+	'Edit Data': 'Edit Data',
+	'Format Chart': 'Format Chart',
+	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
+		'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.',
+	'Cropping needs the picture clip cells, which the editor does not write yet.':
+		'Cropping needs the picture clip cells, which the editor does not write yet.',
+	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
+		'The container margin (User.msvSDContainerMargin) cannot be edited yet.',
+	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
+		'The container resize mode (User.msvSDContainerResize) cannot be edited yet.',
+	'Locking a container needs the shape protection cells, which are not editable yet.':
+		'Locking a container needs the shape protection cells, which are not editable yet.',
+	'Open a .vsdx file with members to fit.': 'Open a .vsdx file with members to fit.',
+	'Open a .vsdx file to disband a container.': 'Open a .vsdx file to disband a container.',
+	'This container has no members.': 'This container has no members.',
+	'Fitted the container to its contents.': 'Fitted the container to its contents.',
+	'Disbanded the container; its contents stay on the page.':
+		'Disbanded the container; its contents stay on the page.',
+	'Select one chart to edit or format it.': 'Select one chart to edit or format it.',
 };

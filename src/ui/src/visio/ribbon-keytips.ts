@@ -13,6 +13,9 @@ const TABS: Readonly<Record<string, string>> = {
 	view: 'W',
 	help: 'Y',
 	'shape-format': 'JD',
+	'picture-format': 'JP',
+	'container-format': 'JC',
+	'chart-design': 'JA',
 };
 const PANELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 	'home-panel': {

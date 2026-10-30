@@ -241,4 +241,45 @@ export const deCommands: Readonly<Record<string, string>> = {
 	'Text Effects': 'Texteffekte',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':
 		'Textfüllung, Kontur und Effekte werden noch nicht pro Textabschnitt gespeichert; verwenden Sie Start > Schriftart für Textfarbe und Formatierung.',
+	'Picture Format': 'Bildformat',
+	'Container Format': 'Containerformat',
+	'Chart Design': 'Diagrammentwurf',
+	Adjust: 'Anpassen',
+	'Picture Styles': 'Bildformatvorlagen',
+	'Container Styles': 'Containerformatvorlagen',
+	Membership: 'Mitgliedschaft',
+	Brightness: 'Helligkeit',
+	Contrast: 'Kontrast',
+	'Auto Balance': 'Automatisch abgleichen',
+	Compression: 'Komprimierung',
+	Crop: 'Zuschneiden',
+	Margins: 'Ränder',
+	'Fit to Contents': 'An Inhalt anpassen',
+	'Automatic Resize': 'Automatische Größenanpassung',
+	'Lock Container': 'Container sperren',
+	'Select Contents': 'Inhalt auswählen',
+	'Disband Container': 'Container auflösen',
+	'Edit Chart': 'Diagramm bearbeiten',
+	'Edit Data': 'Daten bearbeiten',
+	'Format Chart': 'Diagramm formatieren',
+	'Visio stores a picture as an embedded image that this editor does not recolour or recompress; replace it with an edited picture.':
+		'Visio speichert ein Bild als eingebettete Grafik, die dieser Editor weder umfärbt noch neu komprimiert; ersetzen Sie es durch ein bearbeitetes Bild.',
+	'Cropping needs the picture clip cells, which the editor does not write yet.':
+		'Zuschneiden benötigt die Bildausschnitt-Zellen, die der Editor noch nicht schreibt.',
+	'The container margin (User.msvSDContainerMargin) cannot be edited yet.':
+		'Der Containerrand (User.msvSDContainerMargin) kann noch nicht bearbeitet werden.',
+	'The container resize mode (User.msvSDContainerResize) cannot be edited yet.':
+		'Der Größenanpassungsmodus des Containers (User.msvSDContainerResize) kann noch nicht bearbeitet werden.',
+	'Locking a container needs the shape protection cells, which are not editable yet.':
+		'Zum Sperren eines Containers werden die Formschutz-Zellen benötigt, die noch nicht bearbeitbar sind.',
+	'Open a .vsdx file with members to fit.':
+		'Öffnen Sie eine .vsdx-Datei mit Mitgliedern zum Anpassen.',
+	'Open a .vsdx file to disband a container.':
+		'Öffnen Sie eine .vsdx-Datei, um einen Container aufzulösen.',
+	'This container has no members.': 'Dieser Container hat keine Mitglieder.',
+	'Fitted the container to its contents.': 'Der Container wurde an seinen Inhalt angepasst.',
+	'Disbanded the container; its contents stay on the page.':
+		'Der Container wurde aufgelöst; sein Inhalt bleibt auf der Seite.',
+	'Select one chart to edit or format it.':
+		'Wählen Sie ein Diagramm aus, um es zu bearbeiten oder zu formatieren.',
 };
