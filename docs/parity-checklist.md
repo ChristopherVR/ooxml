@@ -67,8 +67,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (Picture Format); partial in Word and PowerPoint Shape Format (no Arrange, Size or Alt Text).
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
-- [ ] **P2** Possible duplicate equation code in `src/ui/src/pptx/render` (`latex-*`, `omml-*`):
-      confirm each file is a facade over `ooxml-core/math` and delete real copies.
+- [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
+      `src/ui/src/pptx/render` are re-export facades over `ooxml-core/math`; none contains duplicate
+      conversion logic. The shared math suite and four facade regression files pass (192 and
+      170 tests). See `docs/office-shared-parity-delivery.md`.
 
 ## Excel
 

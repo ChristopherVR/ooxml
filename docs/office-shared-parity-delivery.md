@@ -20,6 +20,13 @@ not mean Office parity for the feature. Open gaps in the shared layer (3-D chart
 PowerPoint, region map ChartEx, Visio ChartEx, SmartArt and equations, equations in Excel) are
 tracked in the [Office parity checklist](parity-checklist.md).
 
+Equation ownership audit, 2026-10-31: the 11 non-test `latex-*` and `omml-*` files under
+`src/ui/src/pptx/render` contain only compatibility re-exports from `ooxml-core/math`, including
+the command, construct, environment, symbol, sibling, colour and layout helpers. No copied
+converter remains to delete. The eight core math test files passed (192 tests), as did the
+four PowerPoint facade test files (170 tests). This checks shared ownership and regression
+behavior, not native Office equation rendering parity.
+
 ## 1. Safe chart editing and preservation
 
 - [x] One shared source-backed chart writer and edit-eligibility policy.
