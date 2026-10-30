@@ -65,6 +65,8 @@ import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
+import { applyControlEdit, isVisioControlEdit } from './edit-control';
+import { applyActionEdit, isVisioActionEdit } from './edit-action';
 import { isVisioDataEdit } from './edit-data-commands';
 import { editVsdxData } from './edit-data';
 import { editVsdxLayers } from './edit-layers';
@@ -417,6 +419,8 @@ async function editVsdxTransaction(
 			command.type !== 'set-page-theme' &&
 			!isVisioMetadataEdit(command) &&
 			command.type !== 'set-shape-data' &&
+			!isVisioControlEdit(command) &&
+			!isVisioActionEdit(command) &&
 			!isVisioGroupEdit(command) &&
 			!isVisioDiagramPartEdit(command) &&
 			!isVisioContainerEdit(command) &&
@@ -440,6 +444,8 @@ async function editVsdxTransaction(
 				isVisioFormatEdit(command) ||
 				isVisioMetadataEdit(command) ||
 				command.type === 'set-shape-data' ||
+				isVisioControlEdit(command) ||
+				isVisioActionEdit(command) ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
 				command.type === 'paste-shapes' ||
@@ -653,6 +659,11 @@ async function editVsdxTransaction(
 				dirty.set(path, root);
 				shapeDataChanged = true;
 			}
+		} else if (isVisioControlEdit(command) || isVisioActionEdit(command)) {
+			const changedPages = await (isVisioControlEdit(command)
+				? applyControlEdit(roots, command, masterTemplate(pkg), check)
+				: applyActionEdit(roots, command, masterTemplate(pkg), check));
+			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		} else if (command.type === 'reorder-shape') {
 			const views = await instanceOrderViews(
 				pkg,

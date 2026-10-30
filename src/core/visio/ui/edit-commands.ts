@@ -14,6 +14,8 @@ import { isVisioGroupEdit, snapshotGroupEdit } from '../edit-group-commands';
 import { isVisioPageSetupEdit, snapshotPageSetupEdit } from '../edit-page-setup-commands';
 import { isVisioDiagramPartEdit, snapshotDiagramPartEdit } from '../edit-diagram-parts-commands';
 import { snapshotShapeDataEdit } from '../edit-shape-data-commands';
+import { isVisioControlEdit, snapshotControlEdit } from '../edit-control';
+import { isVisioActionEdit, snapshotActionEdit } from '../edit-action';
 import { isVisioDataEdit, snapshotDataEdit } from '../edit-data-commands';
 import { snapshotAssignLayers } from '../edit-layer-commands';
 import { snapshotLayerProperties } from '../edit-layer-properties';
@@ -71,6 +73,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'create-subprocess') return snapshotSubprocessEdit(command);
 		if (isVisioDiagramPartEdit(command)) return snapshotDiagramPartEdit(command);
 		if (command.type === 'set-shape-data') return snapshotShapeDataEdit(command);
+		if (isVisioControlEdit(command)) return snapshotControlEdit(command);
+		if (isVisioActionEdit(command)) return snapshotActionEdit(command);
 		if (isVisioDataEdit(command)) return snapshotDataEdit(command);
 		if (isVisioConnectorEdit(command)) return snapshotConnectorEdit(command);
 		if (command.type === 'reorder-page') {

@@ -1,5 +1,6 @@
 import type { ViewerController, ViewerState } from './controller';
 import { ViewerInlineText } from './viewer-inline-text';
+import { ViewerControlHandles } from './viewer-control-handles';
 import { ViewerLineEndpoints } from './viewer-line-endpoints';
 import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { ViewerResizeHandles } from './viewer-resize-handles';
@@ -42,6 +43,7 @@ export function createCanvasEditing(
 		...(options.clearSnap ? { clearSnap: options.clearSnap } : {}),
 	});
 	const lineEndpoints = new ViewerLineEndpoints(viewport, controller, gesture);
+	const controls = new ViewerControlHandles(viewport, controller, gesture);
 	const rotation = new ViewerRotationHandle(viewport, controller, gesture);
 	const resize = new ViewerResizeHandles(viewport, controller, {
 		...gesture,
@@ -74,6 +76,7 @@ export function createCanvasEditing(
 	return {
 		pointer,
 		lineEndpoints,
+		controls,
 		rotation,
 		resize,
 		edit,
@@ -89,6 +92,7 @@ export function createCanvasEditing(
 		/** Redraw the selection handles after a state or tool change. */
 		renderHandles(state: ViewerState): void {
 			lineEndpoints.render(state);
+			controls.render(state);
 			rotation.render(state);
 			resize.render(state);
 		},
@@ -104,6 +108,7 @@ export function createCanvasEditing(
 			const stops = [
 				pointer.wire(),
 				lineEndpoints.wire(),
+				controls.wire(),
 				rotation.wire(),
 				resize.wire(),
 				edit.wire(),

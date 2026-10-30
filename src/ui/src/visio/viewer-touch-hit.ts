@@ -14,7 +14,10 @@ export function nearbyShape(
 	for (const probe of hitProbes(hitTolerance(event.pointerType))) {
 		const hits = root.elementsFromPoint(event.clientX + probe.x, event.clientY + probe.y);
 		for (const element of hits) {
-			if (!svg.contains(element) || element.closest('[data-resize-overlay], .rotation-overlay'))
+			if (
+				!svg.contains(element) ||
+				element.closest('[data-resize-overlay], [data-control-overlay], .rotation-overlay')
+			)
 				continue;
 			const shape = pointerShapeTarget(element, selected, true);
 			if (shape) return shape;

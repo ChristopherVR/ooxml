@@ -9,6 +9,7 @@ import type { VisioLayer, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
 import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from '../geometry/affine';
 import { shapeConnections } from './shape-connections';
+import { shapeSections } from './shape-sections';
 import { readConnectorJumps } from './connector-jumps';
 import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
@@ -276,6 +277,7 @@ export function normalizeShapes(
 					oneD,
 					report,
 				),
+				...shapeSections(sheet, original, masterId !== undefined, report),
 				geometry,
 				style: shapeStyle(paintSheet, context.resources, report, width, height, geometry),
 				text: shapeText(

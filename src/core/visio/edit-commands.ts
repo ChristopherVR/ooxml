@@ -50,6 +50,9 @@ export type {
 	VisioScaleUnit,
 } from './edit-page-setup-commands';
 import { snapshotShapeDataEdit, type VisioShapeDataEdit } from './edit-shape-data-commands';
+import { isVisioControlEdit, snapshotControlEdit, type VisioControlEdit } from './edit-control';
+import { isVisioActionEdit, snapshotActionEdit, type VisioActionEdit } from './edit-action';
+export type { VisioControlEdit, VisioActionEdit };
 export type {
 	VisioShapeDataEdit,
 	VisioShapeDataFields,
@@ -280,6 +283,8 @@ export type VisioEdit =
 	| VisioSubprocessEdit
 	| VisioDiagramPartEdit
 	| VisioShapeDataEdit
+	| VisioControlEdit
+	| VisioActionEdit
 	| VisioDataEdit
 	| VisioAssignLayersEdit
 	| VisioLayerPropertiesEdit
@@ -407,6 +412,8 @@ export function snapshotVisioEdits(
 		if (edit.type === 'create-subprocess') return snapshotSubprocessEdit(edit);
 		if (isVisioDiagramPartEdit(edit)) return snapshotDiagramPartEdit(edit);
 		if (edit.type === 'set-shape-data') return snapshotShapeDataEdit(edit);
+		if (isVisioControlEdit(edit)) return snapshotControlEdit(edit);
+		if (isVisioActionEdit(edit)) return snapshotActionEdit(edit);
 		if (isVisioDataEdit(edit)) return snapshotDataEdit(edit);
 		if (isVisioConnectorEdit(edit)) return snapshotConnectorEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };

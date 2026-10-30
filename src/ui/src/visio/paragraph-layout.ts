@@ -1,4 +1,4 @@
-import type { VisioParagraph, VisioText, VisioTextRun } from 'ooxml-core/visio';
+import type { VisioParagraph, VisioTabStop, VisioText, VisioTextRun } from 'ooxml-core/visio';
 import {
 	wrapText,
 	measureBrowserText,
@@ -16,6 +16,8 @@ export interface PositionedLine extends TextLine {
 	direction: 'ltr' | 'rtl';
 	last: boolean;
 	bullet?: NonNullable<VisioParagraph['bullet']> & { x: number };
+	/** The paragraph's tab stops and the edge their positions are measured from. */
+	tabs?: { stops: VisioTabStop[]; origin: number };
 }
 export interface ParagraphLayout {
 	lines: PositionedLine[];
@@ -128,6 +130,7 @@ export function layoutParagraphs(
 				align: paragraph.horizontalAlign,
 				direction: paragraph.direction,
 				last: index === wrapped.length - 1,
+				tabs: { stops: paragraph.tabs ?? [], origin: text.margins.left },
 				...(index === 0 && paragraph.bullet
 					? { bullet: { ...paragraph.bullet, x: left - paragraph.bullet.offset } }
 					: {}),

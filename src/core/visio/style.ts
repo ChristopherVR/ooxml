@@ -277,6 +277,7 @@ export function shapeText(
 	let currentCells = defaultCells;
 	const runs: VisioTextRun[] = [];
 	const paragraphMarkers: ParagraphMarker[] = [];
+	const tabMarkers: ParagraphMarker[] = [];
 	const fields: VisioTextField[] = [];
 	let textOffset = 0,
 		terminalDirectText = false;
@@ -298,6 +299,8 @@ export function shapeText(
 				const element = part as Element;
 				if (element.localName === 'cp')
 					currentCells = characters.get(element.getAttribute('IX') ?? '0') ?? defaultCells;
+				else if (element.localName === 'tp')
+					tabMarkers.push({ offset: textOffset, index: element.getAttribute('IX') ?? '0' });
 				else if (element.localName === 'pp')
 					paragraphMarkers.push({ offset: textOffset, index: element.getAttribute('IX') ?? '0' });
 				else if (element.localName === 'fld') {
@@ -342,6 +345,7 @@ export function shapeText(
 		report,
 		runs,
 		consumeParagraph,
+		tabMarkers,
 	);
 	// Paragraph offsets use the stored final marker; logical runs exclude it.
 	// A field's cached text is content, never a structural paragraph terminator.

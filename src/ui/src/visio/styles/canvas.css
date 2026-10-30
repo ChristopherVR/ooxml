@@ -222,9 +222,30 @@
 .viewport .paper {
 	touch-action: none;
 }
+/* Visio's yellow control handles; a handle that cannot be moved is grey. */
+.paper [data-control-handle] {
+	fill: #ffe14d;
+	stroke: #7a6a00;
+	stroke-width: 1px;
+	cursor: move;
+	touch-action: none;
+	pointer-events: all;
+}
+.paper [data-control-handle]:hover {
+	fill: #fff08a;
+}
+.paper [data-control-handle][data-control-locked] {
+	fill: #d4d4d4;
+	stroke: #8a8a8a;
+	cursor: not-allowed;
+}
+.viewport[data-text-editing] [data-control-handle] {
+	display: none;
+}
 /* Fingers need larger handles: the scale grows both the drawing and the hit area. */
 @media (pointer: coarse) {
 	.paper [data-resize-handle],
+	.paper [data-control-handle],
 	.paper [data-line-endpoint] {
 		transform-box: fill-box;
 		transform-origin: center;
