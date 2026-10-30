@@ -41,7 +41,6 @@ export const zhCNApp: AppStrings = {
 	'Save As': '另存为',
 	'Save a copy of this document to your device.': '将此文档的副本保存到您的设备。',
 	'Word Document (*.docx)': 'Word 文档 (*.docx)',
-	'Word 97-2003 Document (*.doc)': 'Word 97-2003 文档 (*.doc)',
 	'Paper size': '纸张大小',
 	'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.':
 		'打印使用浏览器的打印对话框。分页来自页面视图，它只是近似 Word 的分页。',

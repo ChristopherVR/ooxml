@@ -69,3 +69,11 @@ export function withExtension(fileName: string, extension: string): string {
 	const base = fileName.replace(/\.[^./\\]+$/, '') || 'Document';
 	return `${base}.${extension}`;
 }
+
+/**
+ * The name a document is saved under. The editor writes WordprocessingML only (a Word 97-2003
+ * `.doc` is converted when it is opened), so a `.doc` name becomes `.docx`.
+ */
+export function docxFileName(fileName: string): string {
+	return /\.doc$/i.test(fileName) ? withExtension(fileName, 'docx') : fileName;
+}

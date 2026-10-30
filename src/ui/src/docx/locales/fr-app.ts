@@ -36,7 +36,6 @@ export const frApp: AppStrings = {
 	'Save a copy of this document to your device.':
 		'Enregistrez une copie de ce document sur votre appareil.',
 	'Word Document (*.docx)': 'Document Word (*.docx)',
-	'Word 97-2003 Document (*.doc)': 'Document Word 97-2003 (*.doc)',
 	'Paper size': 'Taille du papier',
 	'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.':
 		'L’impression utilise la boîte de dialogue du navigateur. Les sauts de page viennent de la mise en page Impression, qui approche Word.',

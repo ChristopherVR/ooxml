@@ -34,7 +34,6 @@ export const enApp = {
 	'Save As': 'Save As',
 	'Save a copy of this document to your device.': 'Save a copy of this document to your device.',
 	'Word Document (*.docx)': 'Word Document (*.docx)',
-	'Word 97-2003 Document (*.doc)': 'Word 97-2003 Document (*.doc)',
 	'Paper size': 'Paper size',
 	'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.':
 		'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.',

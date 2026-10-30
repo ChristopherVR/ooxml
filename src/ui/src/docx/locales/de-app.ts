@@ -42,7 +42,6 @@ export const deApp: AppStrings = {
 	'Save a copy of this document to your device.':
 		'Speichern Sie eine Kopie dieses Dokuments auf Ihrem Gerät.',
 	'Word Document (*.docx)': 'Word-Dokument (*.docx)',
-	'Word 97-2003 Document (*.doc)': 'Word 97-2003-Dokument (*.doc)',
 	'Paper size': 'Papierformat',
 	'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.':
 		'Der Druck verwendet den Druckdialog des Browsers. Seitenumbrüche stammen aus dem Seitenlayout, das Word nur annähert.',

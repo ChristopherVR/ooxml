@@ -62,37 +62,35 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(errors).toEqual([]);
 	});
 }
-test('imports and saves legacy DOC as DOC and exports visible text as DOCX', async ({ page }) => {
+test('imports a legacy DOC and saves it as a DOCX with its content', async ({ page }) => {
 	await page.goto('/');
 	await (await fileInput(page)).setInputFiles(LEGACY_DOC);
-	await expect(fileNameLabel(page)).toHaveText('ole-word-97.doc');
-	const original = await readFile(LEGACY_DOC);
-	const pending = page.waitForEvent('download');
-	await saveButton(page).click();
-	const download = await pending;
-	expect(await readFile((await download.path())!)).toEqual(original);
+	// The binary .doc is converted on open, so the document is named for what Save writes.
+	await expect(fileNameLabel(page)).toHaveText('ole-word-97.docx');
 	const editable = page.locator('docx-editor .ProseMirror');
 	await clickInEditor(editable.locator('p').first());
 	await page.keyboard.press('End');
 	await page.keyboard.type(' Legacy edit.');
-	const editedDownload = page.waitForEvent('download');
+	const pending = page.waitForEvent('download');
 	await saveButton(page).click();
-	const editedFile = await editedDownload;
+	const download = await pending;
+	expect(download.suggestedFilename()).toBe('ole-word-97.docx');
+	const saved = await readFile((await download.path())!);
+	const zip = await JSZip.loadAsync(saved);
+	expect(zip.file('word/document.xml')).not.toBeNull();
 	await (
 		await fileInput(page)
 	).setInputFiles({
-		name: 'edited.doc',
-		mimeType: 'application/msword',
-		buffer: await readFile((await editedFile.path())!),
+		name: 'edited.docx',
+		mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		buffer: saved,
 	});
-	await expect(fileNameLabel(page)).toHaveText('edited.doc');
+	await expect(fileNameLabel(page)).toHaveText('edited.docx');
 	await expect(editable).toContainText('Legacy edit.');
 	const exported = page.waitForEvent('download');
 	await saveCopyAsDocx(page);
 	const docx = await exported;
 	expect(docx.suggestedFilename()).toBe('edited.docx');
-	const zip = await JSZip.loadAsync(await readFile((await docx.path())!));
-	expect(zip.file('word/document.xml')).not.toBeNull();
 });
 
 test('ribbon edits preserve font properties and save table and page settings', async ({ page }) => {

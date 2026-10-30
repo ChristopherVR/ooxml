@@ -219,9 +219,8 @@ export function renderSaveAs({ handlers, t, content }: PageContext): void {
 	const format = document.createElement('input');
 	format.type = 'text';
 	format.readOnly = true;
-	format.value = fileName.toLowerCase().endsWith('.doc')
-		? t('Word 97-2003 Document (*.doc)')
-		: t('Word Document (*.docx)');
+	// A Word 97-2003 .doc is converted when it is opened; the editor saves .docx only.
+	format.value = t('Word Document (*.docx)');
 	const save = () => {
 		if (!name.value.trim()) return;
 		handlers.close();

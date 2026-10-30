@@ -12,6 +12,7 @@ import {
 	announceFileCommand,
 	downloadBytes,
 	downloadText,
+	docxFileName,
 	withExtension,
 	type FileCommand,
 } from './file-commands';
@@ -149,7 +150,7 @@ export class EditorChrome {
 		return this._fileName;
 	}
 	set fileName(value: string) {
-		this._fileName = value || DEFAULT_FILE_NAME;
+		this._fileName = docxFileName(value) || DEFAULT_FILE_NAME;
 		this.titleBar.setFileName(this._fileName);
 	}
 	get isDirty(): boolean {
@@ -218,9 +219,8 @@ export class EditorChrome {
 			else if (command === 'saveAs') {
 				const name = (fileName ?? '').trim();
 				if (!name) return;
-				// The bytes are in the format the document was opened in, so the extension follows it.
-				const extension = this._fileName.split('.').pop()?.toLowerCase() === 'doc' ? 'doc' : 'docx';
-				this.fileName = withExtension(name, extension);
+				// The editor saves WordprocessingML only (a .doc is converted when opened).
+				this.fileName = withExtension(name, 'docx');
 				// Save As then saves, announced as its own `save` so a host that takes over Save sees it.
 				// A host that removed Save (`save: false`) gets neither that event nor `storage.save`:
 				// Save As then only downloads, as an export.

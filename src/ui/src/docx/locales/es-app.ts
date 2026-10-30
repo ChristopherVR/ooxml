@@ -42,7 +42,6 @@ export const esApp: AppStrings = {
 	'Save a copy of this document to your device.':
 		'Guarde una copia de este documento en su dispositivo.',
 	'Word Document (*.docx)': 'Documento de Word (*.docx)',
-	'Word 97-2003 Document (*.doc)': 'Documento de Word 97-2003 (*.doc)',
 	'Paper size': 'Tamaño del papel',
 	'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.':
 		'La impresión usa el cuadro de diálogo del navegador. Los saltos de página provienen del diseño de impresión, que aproxima a Word.',

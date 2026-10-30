@@ -11,7 +11,7 @@ import { schema } from './schema';
 import { docToModel } from './model-adapter';
 import type { EditorCore } from './editor-core';
 import { modifiedStamp, reflectAttribute } from './editor-attributes';
-import { downloadBytes, wordBlob } from './file-commands';
+import { docxFileName, downloadBytes, wordBlob } from './file-commands';
 import {
 	normalizeRibbonActions,
 	type RibbonActionId,
@@ -247,7 +247,10 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Saves and starts a browser download, then marks the document clean. */
 	async download(fileName?: string): Promise<void> {
 		const name = fileName || this.fileName;
-		downloadBytes(await this.saveBytes(), /\.[^./\\]+$/.test(name) ? name : `${name}.docx`);
+		downloadBytes(
+			await this.saveBytes(),
+			/\.[^./\\]+$/.test(name) ? docxFileName(name) : `${name}.docx`,
+		);
 		this.markClean();
 	}
 }
