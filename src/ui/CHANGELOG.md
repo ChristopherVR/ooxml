@@ -7,6 +7,55 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.35.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.35.0) - 2026-10-30
+
+### Features
+
+- **drawingml:** Share rich picture effects and tiled fills ([3df41df](https://github.com/ChristopherVR/ooxml/commit/3df41df34f80c851ce45044cd01edd9c1afdf238))
+- **chart:** Share cached region map geometry and rendering ([53531e8](https://github.com/ChristopherVR/ooxml/commit/53531e817fbef4ebe1e013ff95e048828949882d))
+- **visio:** Admit and edit embedded extended charts ([8bb71c7](https://github.com/ChristopherVR/ooxml/commit/8bb71c7be4dfaa23c14fc625bb74b1ea057cd6de))
+- **xlsx:** Split text to columns at fixed-width break positions ([d7fdac5](https://github.com/ChristopherVR/ooxml/commit/d7fdac5f9c0dc6be227e2faaa2fdc648048cafa6))
+- **chart:** Draw 3-D charts in the core painter ([a31f208](https://github.com/ChristopherVR/ooxml/commit/a31f20802bff07e945ca76495de22b57609c7d39))
+- **visio:** Keep container membership in Visio form and maintain it on edits ([db4d741](https://github.com/ChristopherVR/ooxml/commit/db4d741c3046ad397d16071e9cc4bd24f7e94403))
+- **xlsx:** AutoFilter drop-down with custom, top 10, dynamic and colour criteria ([27cba8b](https://github.com/ChristopherVR/ooxml/commit/27cba8b2a7e7f39638eb0a52cf162cf25672691e))
+
+### Bug Fixes
+
+- **xlsx:** List the current gaps in the Feature Status dialog ([f00da37](https://github.com/ChristopherVR/ooxml/commit/f00da37289ffc4130ac18ee23503f5ea2302774f))
+- **chart:** Match native funnel bar spacing ([cdaacaa](https://github.com/ChristopherVR/ooxml/commit/cdaacaa9e810619163ece773f164b2d2d98eb1a2))
+- **drawingml:** Match native cropped tile periods ([431a055](https://github.com/ChristopherVR/ooxml/commit/431a0557eb661ddb20a30b76c917fb74a26d4095))
+- **chart:** Align map paint and sparse values with native source ([5a5aaf9](https://github.com/ChristopherVR/ooxml/commit/5a5aaf9252243bebe006d5ea968630511fab4013))
+- **diagram:** Preserve picture layout roles colors and frame extent ([f31dbb9](https://github.com/ChristopherVR/ooxml/commit/f31dbb9096793368d090f46f5fe00f222785b89d))
+- **chart:** Honor native map labels and formatting defaults ([b5e8607](https://github.com/ChristopherVR/ooxml/commit/b5e8607cd0fed412d15df0124611edf057751f11))
+- **diagram:** Bind native picture fills to presentation roles ([f1ebce2](https://github.com/ChristopherVR/ooxml/commit/f1ebce269c8f98258ff8b28c26e19c501ebb020e))
+- **ui:** Paint cropped smartart pictures across pptx bindings ([7b68314](https://github.com/ChristopherVR/ooxml/commit/7b6831401d095e4b4d3164d96baa48d7872e6da3))
+- **drawingml:** Match native picture effect semantics ([335f911](https://github.com/ChristopherVR/ooxml/commit/335f9113a26ae7f2836314cfd41bf78430e331bd))
+- **pptx:** Label approximate map geometry explicitly ([c629ddd](https://github.com/ChristopherVR/ooxml/commit/c629ddd29550944298ecde14e721489476e1b230))
+- **pptx:** Preserve compact map source index contracts ([4fbf5a0](https://github.com/ChristopherVR/ooxml/commit/4fbf5a0832418fb97dc9e130287eeb93958207b1))
+- **pptx:** Anchor the map approximation notice ([fca8b25](https://github.com/ChristopherVR/ooxml/commit/fca8b25c34668c142ccb35c9bed04495af8a1587))
+- **drawingml:** Blur pictures at native source pixel scale ([d98c333](https://github.com/ChristopherVR/ooxml/commit/d98c333820e6390325beb1b166ce2323b4b1ce5f))
+- **ui:** Refresh smartart pictures after asynchronous pixel paint ([fb87fa9](https://github.com/ChristopherVR/ooxml/commit/fb87fa9f1ef5c2724ed12c2b8e8d12861b0f0511))
+- **ui:** Ignore obsolete asynchronous smartart picture results ([901e1b4](https://github.com/ChristopherVR/ooxml/commit/901e1b41a42c951df5de9957a4562f96a69dca51))
+- **visio:** Target the displayed extended chart part ([fd34b31](https://github.com/ChristopherVR/ooxml/commit/fd34b31c59755fc245e9a8f1a6aa2fdd55f4f9eb))
+- **pptx:** Report approximate maps without untranslated captions ([ed909f5](https://github.com/ChristopherVR/ooxml/commit/ed909f5c9cd365eed7779da43dc8d78d402b24af))
+- **xlsx:** Drop unused filter imports ([14ccbbd](https://github.com/ChristopherVR/ooxml/commit/14ccbbd0b69f7dc7c72ca268d42bb136d2c4c06a))
+- **xlsx:** Refresh the public surface snapshot and menu typing ([ca2cd5d](https://github.com/ChristopherVR/ooxml/commit/ca2cd5d1b812233a738bf9d76dc00082e244d45a))
+- **xlsx:** Keep filter submenus open when their parent is clicked ([105eb00](https://github.com/ChristopherVR/ooxml/commit/105eb0017af1d297b99c5779ddbe853bf5e0e006))
+- **pptx:** Keep SmartArt shapes, pictures and captions through text pane edits ([9cc6fbf](https://github.com/ChristopherVR/ooxml/commit/9cc6fbfa07785555bf8e8e67ee5d895404c2c730))
+
+### Testing
+
+- **drawingml:** Extend native picture effect controls ([6e3ef0d](https://github.com/ChristopherVR/ooxml/commit/6e3ef0d06099704166ba0803d3efced5af519771))
+- **ui:** Compare shared renderers with native office captures ([8bf9556](https://github.com/ChristopherVR/ooxml/commit/8bf955623369ed0de740d1a746a250489fb49bf6))
+- **pptx:** Record native funnel and map rendering corrections ([e9dfb7d](https://github.com/ChristopherVR/ooxml/commit/e9dfb7d042a4098638609bc311e0d036b1cb3188))
+- **ui:** Use neutral picture effect values in async regression ([44db838](https://github.com/ChristopherVR/ooxml/commit/44db838c6ef464ac7f89a9ec6610fbd65f4e123b))
+- **ui:** Finalize native map evidence and integration fixtures ([b2567c3](https://github.com/ChristopherVR/ooxml/commit/b2567c370893bab1db304a79682797d0ad6f9931))
+- **chart:** Finish the SmartArt picture and cached-map browser specs ([e91327e](https://github.com/ChristopherVR/ooxml/commit/e91327e4cbe8aff98700f120c565f138c16368f7))
+
+### Styling
+
+- **visio:** Format parity ledger and drop an unused test variable ([795b138](https://github.com/ChristopherVR/ooxml/commit/795b1388eff0a701caf57df9413aaf85b9132bc6))
+
 ## [1.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.34.0) - 2026-10-29
 
 ### Features

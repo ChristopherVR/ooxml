@@ -7,6 +7,59 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.33.0) - 2026-10-30
+
+### Features
+
+- **diagram:** Preserve node pictures through layout reflow ([95beac5](https://github.com/ChristopherVR/ooxml/commit/95beac591882524670aaa2fa0ace9e65dabcf670))
+- **pptx:** Retain smartart pictures across native reflow and save ([a91af54](https://github.com/ChristopherVR/ooxml/commit/a91af54e9bc20561df0e55f5b23f2f0f28836e6e))
+- **drawingml:** Share rich picture effects and tiled fills ([3df41df](https://github.com/ChristopherVR/ooxml/commit/3df41df34f80c851ce45044cd01edd9c1afdf238))
+- **chart:** Share cached region map geometry and rendering ([53531e8](https://github.com/ChristopherVR/ooxml/commit/53531e817fbef4ebe1e013ff95e048828949882d))
+- **visio:** Admit and edit embedded extended charts ([8bb71c7](https://github.com/ChristopherVR/ooxml/commit/8bb71c7be4dfaa23c14fc625bb74b1ea057cd6de))
+- **chart:** Expose localized map approximation captions ([b003c75](https://github.com/ChristopherVR/ooxml/commit/b003c7549cbdfa6f9a456c9553a699824d6ae4ed))
+- **xlsx:** Keep phonetic guides of shared strings ([0eb17c8](https://github.com/ChristopherVR/ooxml/commit/0eb17c8f27f1e0e7067ddc5fa88b46dc46dc2d2e))
+- **xlsx:** Split text to columns at fixed-width break positions ([d7fdac5](https://github.com/ChristopherVR/ooxml/commit/d7fdac5f9c0dc6be227e2faaa2fdc648048cafa6))
+- **chart:** Draw 3-D charts in the core painter ([a31f208](https://github.com/ChristopherVR/ooxml/commit/a31f20802bff07e945ca76495de22b57609c7d39))
+- **visio:** Recalculate through dynamic and unknown formula dependencies ([c3134ec](https://github.com/ChristopherVR/ooxml/commit/c3134ecbaabe112387eb9db92f599d22aa8ab3b0))
+- **visio:** Keep container membership in Visio form and maintain it on edits ([db4d741](https://github.com/ChristopherVR/ooxml/commit/db4d741c3046ad397d16071e9cc4bd24f7e94403))
+- **xlsx:** AutoFilter drop-down with custom, top 10, dynamic and colour criteria ([27cba8b](https://github.com/ChristopherVR/ooxml/commit/27cba8b2a7e7f39638eb0a52cf162cf25672691e))
+
+### Bug Fixes
+
+- **xlsx:** List the current gaps in the Feature Status dialog ([f00da37](https://github.com/ChristopherVR/ooxml/commit/f00da37289ffc4130ac18ee23503f5ea2302774f))
+- **docx:** Describe formatting revision recording correctly ([a4ba9eb](https://github.com/ChristopherVR/ooxml/commit/a4ba9eb9956ab3c003451e2f6d0b8d18c8fdba7b))
+- **chart:** Match native funnel bar spacing ([cdaacaa](https://github.com/ChristopherVR/ooxml/commit/cdaacaa9e810619163ece773f164b2d2d98eb1a2))
+- **chart:** Align map paint and sparse values with native source ([5a5aaf9](https://github.com/ChristopherVR/ooxml/commit/5a5aaf9252243bebe006d5ea968630511fab4013))
+- **diagram:** Preserve picture layout roles colors and frame extent ([f31dbb9](https://github.com/ChristopherVR/ooxml/commit/f31dbb9096793368d090f46f5fe00f222785b89d))
+- **chart:** Honor native map labels and formatting defaults ([b5e8607](https://github.com/ChristopherVR/ooxml/commit/b5e8607cd0fed412d15df0124611edf057751f11))
+- **chart:** Bound cached geography allocation across rings ([b393fb3](https://github.com/ChristopherVR/ooxml/commit/b393fb32da7f0f444edb13eb79bfd04d3b7a730a))
+- **diagram:** Bind native picture fills to presentation roles ([f1ebce2](https://github.com/ChristopherVR/ooxml/commit/f1ebce269c8f98258ff8b28c26e19c501ebb020e))
+- **visio:** Hydrate uncached embedded chart sources ([bb2ff8d](https://github.com/ChristopherVR/ooxml/commit/bb2ff8d1e6ed881771b6a399267b3f0cb9dbb2a0))
+- **drawingml:** Match native picture effect semantics ([335f911](https://github.com/ChristopherVR/ooxml/commit/335f9113a26ae7f2836314cfd41bf78430e331bd))
+- **diagram:** Keep authored node styling above role colors ([1ce1b6b](https://github.com/ChristopherVR/ooxml/commit/1ce1b6b2a98334de8d6e0a33b5a7375e9981a939))
+- **pptx:** Preserve compact map source index contracts ([4fbf5a0](https://github.com/ChristopherVR/ooxml/commit/4fbf5a0832418fb97dc9e130287eeb93958207b1))
+- **chart:** Parse schema-defined map color breakpoints ([c7e84f1](https://github.com/ChristopherVR/ooxml/commit/c7e84f124d234dc5bb42010371db20f205c5976a))
+- **visio:** Target the displayed extended chart part ([fd34b31](https://github.com/ChristopherVR/ooxml/commit/fd34b31c59755fc245e9a8f1a6aa2fdd55f4f9eb))
+- **chart:** Retain explicit legacy color positions with counts ([9260eeb](https://github.com/ChristopherVR/ooxml/commit/9260eeb1a692966b13aad37b9b79042d8c067da5))
+- **pptx:** Keep SmartArt shapes and exact region-map dimensions after rebase ([7626781](https://github.com/ChristopherVR/ooxml/commit/762678164540d5a35d34cd57261f508d0972a8aa))
+- **xlsx:** Write fullCalcOnLoad only when cached results may be stale ([2fc799a](https://github.com/ChristopherVR/ooxml/commit/2fc799a2a658c77e5e573178c2f186c4aa617564))
+- **xlsx:** Drop unused filter imports ([14ccbbd](https://github.com/ChristopherVR/ooxml/commit/14ccbbd0b69f7dc7c72ca268d42bb136d2c4c06a))
+- **xlsx:** Refresh the public surface snapshot and menu typing ([ca2cd5d](https://github.com/ChristopherVR/ooxml/commit/ca2cd5d1b812233a738bf9d76dc00082e244d45a))
+- **pptx:** Keep SmartArt shapes, pictures and captions through text pane edits ([9cc6fbf](https://github.com/ChristopherVR/ooxml/commit/9cc6fbfa07785555bf8e8e67ee5d895404c2c730))
+
+### Refactor
+
+- **drawingml:** Share validated raster image dimensions ([4fb3c00](https://github.com/ChristopherVR/ooxml/commit/4fb3c0083faa121bf88615ebf39948f27d2848d7))
+
+### Testing
+
+- **xlsx:** Give the defined-name work limit checks a runner-safe budget ([26453c6](https://github.com/ChristopherVR/ooxml/commit/26453c645a72be6013a6414566aef11914952439))
+- **drawingml:** Extend native picture effect controls ([6e3ef0d](https://github.com/ChristopherVR/ooxml/commit/6e3ef0d06099704166ba0803d3efced5af519771))
+- **ui:** Compare shared renderers with native office captures ([8bf9556](https://github.com/ChristopherVR/ooxml/commit/8bf955623369ed0de740d1a746a250489fb49bf6))
+- **chart:** Assert native extended title defaults and overrides ([7f878c8](https://github.com/ChristopherVR/ooxml/commit/7f878c8a45758380264d766302803344284bade7))
+- **ui:** Bind visual measurements to captured source hashes ([fa28a07](https://github.com/ChristopherVR/ooxml/commit/fa28a070063fe93843b7f2c0299aa83225315258))
+- **xlsx:** Give the allocation guard timings a runner-safe budget ([b10907c](https://github.com/ChristopherVR/ooxml/commit/b10907cdea6604629146188831c0c6d43fc0035a))
+
 ## [1.32.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.32.1) - 2026-10-29
 
 ### Bug Fixes
