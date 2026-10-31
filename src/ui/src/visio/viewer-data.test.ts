@@ -204,9 +204,15 @@ it('applies, replaces and removes data graphics and inserts a Color by Value leg
 	).toBe(true);
 	view.data({ type: 'data', command: 'graphic-text' });
 	view.dialogButton('data-graphics-dialog', 'Apply');
-	await vi.waitFor(() => expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2));
+	// A shape without a master gets a native data graphic: it becomes a group of callouts.
+	await vi.waitFor(() =>
+		expect(view.controller.state.document!.pages[0]!.shapes[0]!.children).toHaveLength(1),
+	);
 	await view.done();
-	expect(view.controller.state.document!.pages[0]!.shapes[1]!.text.plainText).toBe('Up');
+	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(1);
+	expect(view.controller.state.document!.pages[0]!.shapes[0]!.children[0]!.text.plainText).toBe(
+		'Status: Up',
+	);
 	view.data({ type: 'data', command: 'graphic-color' });
 	view.dialogButton('data-graphics-dialog', 'Apply');
 	await vi.waitFor(() => expect(view.shape().style.fill).toBe('#5b9bd5'));
@@ -221,7 +227,8 @@ it('applies, replaces and removes data graphics and inserts a Color by Value leg
 	await view.done();
 	expect(view.shape().style.fill).toBe('#daefe6');
 	await view.controller.undo();
-	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(3);
+	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2);
+	expect(view.controller.state.document!.pages[0]!.shapes[0]!.children).toHaveLength(1);
 	view.dispose();
 });
 
@@ -279,11 +286,13 @@ it('positions, configures and auto spaces data graphics', async () => {
 	view.selection();
 	view.data({ type: 'data', command: 'graphic-text' });
 	view.dialogButton('data-graphics-dialog', 'Apply');
-	await vi.waitFor(() => expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2));
+	await vi.waitFor(() =>
+		expect(view.controller.state.document!.pages[0]!.shapes[0]!.children).toHaveLength(1),
+	);
 	await view.done();
 	expect(view.button('graphic-auto-space').disabled).toBe(false);
 	expect(view.button('graphic-configure').disabled).toBe(false);
-	const callout = () => view.controller.state.document!.pages[0]!.shapes.at(-1)!;
+	const callout = () => view.controller.state.document!.pages[0]!.shapes[0]!.children[0]!;
 	const before = callout().rotation!.pinY;
 	view.data({ type: 'data', command: 'graphic-position-top' });
 	await vi.waitFor(() => expect(callout().rotation!.pinY).toBeGreaterThan(before + 0.5));
@@ -298,6 +307,6 @@ it('positions, configures and auto spaces data graphics', async () => {
 	await view.done();
 	view.data({ type: 'data', command: 'graphic-auto-space' });
 	await view.done();
-	expect(view.controller.state.document!.pages[0]!.shapes).toHaveLength(2);
+	expect(view.controller.state.document!.pages[0]!.shapes[0]!.children).toHaveLength(1);
 	view.dispose();
 });

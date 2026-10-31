@@ -83,10 +83,7 @@ describe('data graphic items', () => {
 		bytes = await run(bytes, visioAutoSpaceDataGraphicEdits(await page(bytes), ['1']));
 		const after = await page(bytes);
 		expect(visioDataGraphicItems(after, '1')).toHaveLength(2);
-		const ys = after.shapes
-			.filter((shape) => shape.id !== '1')
-			.map((shape) => shape.rotation!.pinY)
-			.sort();
+		const ys = after.shapes[0]!.children.map((shape) => shape.rotation!.pinY).sort();
 		expect(ys[1]! - ys[0]!).toBeGreaterThan(0.2);
 	});
 

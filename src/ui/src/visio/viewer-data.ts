@@ -7,7 +7,7 @@ import {
 	visioDataGraphicConfigs,
 	visioDataGraphicEdits,
 	visioDataGraphicFields,
-	visioDataGraphicParts,
+	visioDataGraphicOwners,
 	visioPositionDataGraphicEdits,
 	VISIO_DATA_GRAPHIC_POSITIONS,
 	type VisioDataGraphicPosition,
@@ -391,9 +391,7 @@ export class ViewerData {
 		const arranged =
 			editing &&
 			!!page &&
-			[...visioDataGraphicParts(page).keys()].some(
-				(owner) => owner !== 'legend' && visioDataGraphicConfigs(page, owner).length > 0,
-			);
+			visioDataGraphicOwners(page).some((owner) => visioDataGraphicConfigs(page, owner).length > 0);
 		for (const id of ['graphic-configure', 'graphic-auto-space', 'graphic-position'])
 			set(id, arranged);
 		for (const place of VISIO_DATA_GRAPHIC_POSITIONS) set(POSITION_PREFIX + place, arranged);

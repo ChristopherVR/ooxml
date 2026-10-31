@@ -131,6 +131,14 @@ export function parseVisioFormula(
 			left = expression(0, depth + 1);
 			whitespace();
 			if (source[offset++] !== ')') return formulaFailure('syntax', 'Expected closing parenthesis');
+		} else if (char === '{') {
+			// A master's identifier, as `USE({GUID})` names a data graphic: text, never a reference.
+			const guid = /^\{[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\}/.exec(
+				source.slice(offset),
+			);
+			if (!guid) return formulaFailure('syntax', `Unsupported formula token at ${offset}`);
+			offset += guid[0].length;
+			left = node({ kind: 'string', value: guid[0] });
 		} else if (char === '"') {
 			offset++;
 			let value = '',
