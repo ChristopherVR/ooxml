@@ -175,7 +175,8 @@ function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 				options.rotate,
 				options.style,
 			);
-	if (!native) frame.parentNode!.insertBefore(lane, frame.nextSibling);
+	if (!native && frame.nextSibling !== lane)
+		frame.parentNode!.insertBefore(lane, frame.nextSibling);
 	const order = [...lanes];
 	order.splice(order.indexOf(reference) + (edit.position === 'after' ? 1 : 0), 0, lane);
 	relayout(scope, frame, order);
@@ -274,8 +275,10 @@ function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 		options.direction,
 		edit.label ?? `Phase ${separatorsOf(scope, frame).length + 1}`,
 	);
+	// createShape appended the bar, so when the last lane was the last shape the bar already
+	// follows it; inserting a node before itself corrupts xmldom's child list.
 	const last = lanes[lanes.length - 1]!;
-	last.parentNode!.insertBefore(bar, last.nextSibling);
+	if (last.nextSibling !== bar) last.parentNode!.insertBefore(bar, last.nextSibling);
 	writeListMembers(
 		scope.root,
 		phase,
