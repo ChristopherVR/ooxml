@@ -111,8 +111,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Calculation
 
-- [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC, EUROCONVERT and FILTERXML are not implemented
-      (no external service needed; FILTERXML needs local XML/XPath evaluation).
+- [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented
+      (no external service needed).
+- [x] **P2** FILTERXML evaluates XPath locally and spills selected values, with Excel's namespace,
+      whitespace, direct-text and value conversion behavior. Evidence: 35 recorded Excel cases,
+      core edit/undo/save regressions and `e2e/xlsx/filterxml.spec.ts` in all six bindings. Excel 16
+      reopened 35-sheet outputs in both date systems without repair and recalculated matching values.
+- [ ] **P2** Most Insert Function descriptions are English-only. The dialog now translates
+      descriptions through the command dictionary, but the existing catalogue needs locale entries.
 - [x] **P2** Unsupported external formula integrations are documented by name and missing
       capability in the generated function list and Feature Status: CUBE\* (7), WEBSERVICE,
       STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE. They remain unimplemented;

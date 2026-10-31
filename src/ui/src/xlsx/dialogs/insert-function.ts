@@ -56,7 +56,7 @@ export function openInsertFunction(
 	const describe = (name: string): void => {
 		const info = FUNCTION_CATALOG.find((f) => f.name === name);
 		syntax.textContent = info?.syntax ?? '';
-		description.textContent = info?.description ?? '';
+		description.textContent = info ? ctx.t(info.description) : '';
 	};
 	const list = listBox(ctx, 'Select a function:', describe, () => confirm?.());
 	const fill = (items: readonly FunctionInfo[]): void => {

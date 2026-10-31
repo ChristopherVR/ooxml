@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
+import { translator } from 'ooxml-core/xlsx/ui';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	clickButton,
@@ -15,6 +16,18 @@ import { registerNavigationDialogs } from './register-navigation';
 afterEach(() => (document.body.innerHTML = ''));
 
 describe('insert function dialog', () => {
+	it('translates the FILTERXML description in the function picker', async () => {
+		const ctx = createTestContext(createWorkbook());
+		ctx.t = translator(() => 'fr');
+		registerNavigationDialogs(ctx);
+		const done = ctx.dialogs.open('insert-function', { fn: 'FILTERXML' });
+		const dialog = dialogEl(ctx, 'insert-function');
+		expect(dialog.querySelector('.xve-syntax')?.textContent).toBe('FILTERXML(xml, xpath)');
+		expect(dialog.querySelector('.xve-note')?.textContent).toContain('Renvoie dans une colonne');
+		clickButton(dialog, 'Annuler');
+		expect(await done).toBeUndefined();
+	});
+
 	it('searches by name and description', () => {
 		expect(searchFunctions('vlookup')[0]?.name).toBe('VLOOKUP');
 		expect(searchFunctions('').length).toBeGreaterThan(100);

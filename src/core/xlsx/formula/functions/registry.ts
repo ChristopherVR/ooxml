@@ -16,6 +16,7 @@ import { GETPIVOTDATA } from './getpivotdata';
 import { GROUPBY_FUNCTIONS } from './groupby';
 import { MODERN_FUNCTIONS } from './modern';
 import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
+import { FILTERXML } from './filterxml';
 import type { FunctionInfo, FunctionSpec } from './types';
 
 const ALL: readonly FunctionSpec[] = [
@@ -26,6 +27,7 @@ const ALL: readonly FunctionSpec[] = [
 	...LOGICAL_FUNCTIONS,
 	...TEXT_FUNCTIONS,
 	...TEXT_EXTRA_FUNCTIONS,
+	FILTERXML,
 	BAHTTEXT,
 	GETPIVOTDATA,
 	...GROUPBY_FUNCTIONS,

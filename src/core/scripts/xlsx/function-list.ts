@@ -33,6 +33,7 @@ const FIXTURES = [
 	'depreciation-excel.json',
 	'amorlinc-excel.json',
 	'lookup-native.json',
+	'filterxml-native.json',
 	'ets-excel.json',
 ];
 
@@ -93,8 +94,7 @@ export function buildFunctionList(): string {
 		'| `IMAGE` | Formula-driven image retrieval and in-cell image results. |',
 		'| `COPILOT`, `TRANSLATE`, `DETECTLANGUAGE` | AI and language services. |',
 		'',
-		'`FILTERXML` is also unsupported, but it needs local XML/XPath evaluation rather than a web',
-		'service. `INFO`, `ASC`, `DBCS`, `JIS`, `PHONETIC` and `EUROCONVERT` remain unimplemented too.',
+		'`INFO`, `ASC`, `DBCS`, `JIS`, `PHONETIC` and `EUROCONVERT` remain unimplemented too.',
 		'',
 	];
 	for (const [category, fns] of [...byCategory].sort(([a], [b]) => a.localeCompare(b))) {

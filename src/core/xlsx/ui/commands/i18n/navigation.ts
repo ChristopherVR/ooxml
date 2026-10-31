@@ -3,6 +3,13 @@
 import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
+	Web: ['Web', 'Web', 'Web', '网络'],
+	'Returns XML element or attribute values selected by XPath, as a column.': [
+		'Renvoie dans une colonne les valeurs des éléments ou attributs XML sélectionnés par XPath.',
+		'Gibt die mit XPath ausgewählten XML-Element- oder Attributwerte als Spalte zurück.',
+		'Devuelve en una columna los valores de elementos o atributos XML seleccionados mediante XPath.',
+		'将 XPath 选中的 XML 元素或属性值返回为一列。',
+	],
 	'External formula services: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE':
 		[
 			'Services de formules externes : CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE et DETECTLANGUAGE',

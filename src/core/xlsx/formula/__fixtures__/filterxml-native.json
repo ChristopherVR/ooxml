@@ -1,0 +1,387 @@
+[
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//a",
+    "values": [
+      1.0,
+      2.5,
+      true,
+      {
+        "error": "#VALUE!"
+      },
+      "hitail",
+      1234.0,
+      0.12,
+      46326.0
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//a/@id",
+    "values": [
+      "one",
+      "two"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//a/text()",
+    "values": [
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//a[2]",
+    "values": [
+      2.5
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//missing",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "count(//a)",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "string(//a)",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a id=\"one\">001</a><a id=\"two\"> 2.5 </a><a>TRUE</a><a/><a>hi<b>nested</b>tail</a><a>1,234</a><a>12%</a><a>2026-10-31</a></r>",
+    "xpath": "//a[1] | //a[3]",
+    "values": [
+      1.0,
+      true
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>  hi  </a><a> </a><a><![CDATA[  CDATA  ]]></a></r>",
+    "xpath": "//a",
+    "values": [
+      "hi",
+      {
+        "error": "#VALUE!"
+      },
+      "  CDATA  "
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns=\"urn:x\"><a>namespaced</a></r>",
+    "xpath": "//a",
+    "values": [
+      "namespaced"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns:p=\"urn:x\"><p:a>prefixed</p:a></r>",
+    "xpath": "//p:a",
+    "values": [
+      "prefixed"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns:p=\"urn:x\"><p:a>prefixed</p:a></r>",
+    "xpath": "//*[local-name()=\"a\"]",
+    "values": [
+      "prefixed"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>broken</r>",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a></a></r>",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>true</a><a>FALSE</a><a>#N/A</a><a>1E3</a><a>-0.5</a></r>",
+    "xpath": "//a",
+    "values": [
+      true,
+      false,
+      "#N/A",
+      1000.0,
+      -0.5
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<!DOCTYPE r [<!ENTITY t \"expanded\">]><r><a>&t;</a></r>",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><!--comment--><?test data?><a>A</a><a>B</a></r>",
+    "xpath": "//comment() | //processing-instruction()",
+    "values": [
+      {
+        "error": "#VALUE!"
+      },
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>A</a><a>B</a></r>",
+    "xpath": "/",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>A</a><a>B</a></r>",
+    "xpath": "//@*",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r/>",
+    "xpath": "",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a x=\"\"/><a x=\"  hi  \"/><a x=\" TRUE \"/><a x=\"001\"/></r>",
+    "xpath": "//@x",
+    "values": [
+      {
+        "error": "#VALUE!"
+      },
+      "hi",
+      true,
+      1.0
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a> first <b>ignored</b> last </a><a xml:space=\"preserve\">  hi  </a><a> hi   there </a><a>&#32; hi &#32;</a></r>",
+    "xpath": "//a",
+    "values": [
+      "firstlast",
+      "  hi  ",
+      "hi   there",
+      "hi"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns:p=\"urn:x\"><p:a>prefixed</p:a><a>plain</a></r>",
+    "xpath": "//a",
+    "values": [
+      "plain"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns=\"urn:x\"><a>yes</a></r>",
+    "xpath": "//*[namespace-uri()=\"urn:x\"]",
+    "values": [
+      {
+        "error": "#VALUE!"
+      },
+      "yes"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a xmlns:p=\"urn:x\"><p:b>nested binding</p:b></a></r>",
+    "xpath": "//p:b",
+    "values": [
+      "nested binding"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a x=unquoted>invalid</a></r>",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>&unknown;</a></r>",
+    "xpath": "//a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>True</a><a> true </a><a>1,23</a><a>1/2/2026</a><a>12:30</a><a>+5</a><a>(4)</a><a>$2.50</a></r>",
+    "xpath": "//a",
+    "values": [
+      true,
+      true,
+      "1,23",
+      "1/2/2026",
+      0.5208333333333334,
+      5.0,
+      -4.0,
+      2.5
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xmlns:p=\"urn:u\" xmlns:q=\"urn:u\"><p:a>p</p:a><q:a>q</q:a><a xmlns:p=\"urn:v\"><p:a>nested</p:a></a></r>",
+    "xpath": "//p:a",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>  hi  </a><a>hi</a></r>",
+    "xpath": "//a[.=\"  hi  \"]",
+    "values": [
+      "hi"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a x=\"  hi  \"/><a x=\"hi\"/></r>",
+    "xpath": "//a[@x=\"  hi  \"]/@x",
+    "values": [
+      "hi"
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r> <a> hi </a> </r>",
+    "xpath": "//text()",
+    "values": [
+      {
+        "error": "#VALUE!"
+      }
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r xml:space=\"preserve\"><a>  hi  </a><a>  TRUE  </a><a> 2 </a></r>",
+    "xpath": "//a",
+    "values": [
+      "  hi  ",
+      "  TRUE  ",
+      2.0
+    ]
+  },
+  {
+    "formula": "=FILTERXML(A1,B1)",
+    "xml": "<r><a>1/2/2026</a><a>13/2/2026</a><a>2/13/2026</a><a>1-2-2026</a><a>2026/1/2</a><a>2026-01-02</a><a>2-Jan-2026</a><a>Jan 2, 2026</a><a>01/02/26</a><a>2026-01-02T12:30:00</a><a>2026-01-02 12:30</a></r>",
+    "xpath": "//a",
+    "values": [
+      "1/2/2026",
+      "13/2/2026",
+      "2/13/2026",
+      "1-2-2026",
+      46024.0,
+      46024.0,
+      46024.0,
+      46024.0,
+      36948.0,
+      46024.520833333336,
+      46024.520833333336
+    ]
+  }
+]
