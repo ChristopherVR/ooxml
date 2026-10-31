@@ -83,6 +83,10 @@ for (const framework of FRAMEWORKS) {
 						),
 					) as Workbook['sheets'][number]['comments'],
 			);
+		// The grid paints before the editor assigns the loaded workbook.
+		await expect
+			.poll(() => editor(page).evaluate((node) => (node as CommentEditor).workbook != null))
+			.toBe(true);
 		const original = await comments();
 		await goToCell(page, 'B2');
 		await page.keyboard.press('Shift+F2');

@@ -72,7 +72,9 @@ const AREAS = {
 		test: {
 			globals: true,
 			// Editor-mounting tests build a full ProseMirror view; under a parallel run they can take 5s+.
-			testTimeout: 20_000,
+			// A <visio-viewer> mount re-renders every panel through jsdom's selector engine and costs
+			// 4-9s per test even alone, so a loaded CI runner passed 20s (fixture tests then timed out).
+			testTimeout: 60_000,
 			css,
 			setupFiles: ['./vitest.setup.ts', './vitest.dom-hygiene.setup.ts'],
 			// Vitest does not always run the setup files again for each file of a shared worker.

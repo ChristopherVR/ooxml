@@ -36,10 +36,13 @@ async function openTemplate(page: Page): Promise<Locator> {
 	await page.setViewportSize({ width: 1600, height: 1000 });
 	await openDemo(page, '/demo/?sample=1');
 	const viewer = page.locator('visio-viewer');
-	await viewer.locator('office-ui-ribbon .file').click();
-	await viewer.locator('[data-backstage-item="new"]').click();
-	await viewer.locator('[data-backstage-action="new-template:organization-chart"]').click();
-	await expect(viewer.locator('svg.paper')).toContainText('Chief Executive');
+	// The backstage can still be settling after the demo loads, so a click may not take; retry the whole path.
+	await expect(async () => {
+		await viewer.locator('office-ui-ribbon .file').click();
+		await viewer.locator('[data-backstage-item="new"]').click();
+		await viewer.locator('[data-backstage-action="new-template:organization-chart"]').click();
+		await expect(viewer.locator('svg.paper')).toContainText('Chief Executive', { timeout: 3000 });
+	}).toPass({ timeout: 20_000 });
 	return viewer;
 }
 const pick = (viewer: Locator, id: string) =>
