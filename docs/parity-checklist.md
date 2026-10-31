@@ -647,3 +647,9 @@ installed Visio 16 build is used to check that saved files open without repair.
 
 - 2026-10-30: first edition, from a fan-out code review of all four products and the shared
   layer. The stale claims it found were corrected in the product trackers in the same change.
+- 2026-10-31: recorded completed work on signature cleanup, PowerPoint automation saves and
+  equation ownership, Excel selection persistence, x14 validations, threaded comment editing and
+  preservation, and FILTERXML. Added native and browser evidence for Word comment preservation,
+  comment whitespace, solid theme backgrounds and Visio infinite-line stencil previews. Kept
+  remaining work explicit, including new mention authoring, untranslated function descriptions,
+  exact Word tint rounding, rich comments, non-solid backgrounds and periodic NURBS.
