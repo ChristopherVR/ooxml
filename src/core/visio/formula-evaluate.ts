@@ -198,6 +198,16 @@ export function evaluateVisioFormula(
 				name,
 				node.args.map((_, index) => arg(index)),
 			);
+		if (name === 'INT' && node.args.length === 1) {
+			// INT(INDEX(n, "a;b;c")): the whole number a list lookup's text reads as.
+			const inner = node.args[0]!;
+			if (inner.kind === 'call' && textResultFunctions.has(inner.name)) {
+				const read = Number(evaluateFormulaText(inner, textContext, 1).trim());
+				if (!Number.isFinite(read))
+					return formulaFailure('value', 'INT of text that is not a number');
+				return finite({ value: Math.floor(read), unit: 'scalar' });
+			}
+		}
 		if (mathFormulaFunctions.has(name))
 			return evaluateMathFormulaFunction(
 				name,

@@ -13,7 +13,7 @@ function highestId(root: Element): number {
 }
 
 /** The sub-shape of a lane that carries its heading text (the master's text shape). */
-function headingShape(lane: Element): Element | undefined {
+export function headingShape(lane: Element): Element | undefined {
 	const parts = Array.from(lane.getElementsByTagName('Shape')).filter((shape) => shape !== lane);
 	return (
 		parts.find((shape) =>
@@ -27,15 +27,17 @@ function headingShape(lane: Element): Element | undefined {
 }
 
 /**
- * A new lane for a chart Visio built: a copy of the lane it goes beside, with its own IDs and
- * GUIDs, so it is an instance of the same Swimlane master with the same links to the Swimlane
- * List and the frame. Placed right after the reference lane; the caller sizes and orders it.
+ * A new lane or phase separator for a chart Visio built: a copy of the one it goes beside, with
+ * its own IDs and GUIDs, so it is an instance of the same master with the same links to its
+ * list and the frame. Placed right after the reference; the caller sizes and orders it. A
+ * `heading` of undefined leaves the heading without text of its own, as Visio's new separators
+ * are (the master's "Phase" shows).
  */
 export function cloneNativeLane(
 	root: Element,
 	reference: Element,
 	id: string,
-	heading: string,
+	heading: string | undefined,
 ): Element {
 	if (topLevelShapes(root).some((shape) => shapeIdOf(shape) === id))
 		fail('INVALID_EDIT', 'The new lane ID is already used.');
@@ -53,10 +55,12 @@ export function cloneNativeLane(
 	const target = headingShape(copy);
 	if (target) {
 		for (const text of children(target, 'Text')) target.removeChild(text);
-		const text = target.ownerDocument.createElementNS(VISIO_NS, 'Text');
-		text.textContent = heading;
-		const sub = children(target, 'Shapes')[0];
-		target.insertBefore(text, sub ?? null);
+		if (heading !== undefined) {
+			const text = target.ownerDocument.createElementNS(VISIO_NS, 'Text');
+			text.textContent = heading;
+			const sub = children(target, 'Shapes')[0];
+			target.insertBefore(text, sub ?? null);
+		}
 	}
 	reference.parentNode!.insertBefore(copy, reference.nextSibling);
 	return copy;

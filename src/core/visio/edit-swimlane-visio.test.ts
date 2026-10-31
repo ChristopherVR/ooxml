@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { editVsdx } from './edit';
 import { parseVsdx } from './parser';
-import { visioSwimlaneInfo } from './ui/swimlane';
+import { visioSwimlaneInfo, visioSwimlaneOptions } from './ui/swimlane';
 
 /** The cross-functional diagram Visio 16 built from its own template (see the .md next to it). */
 const native = async () =>
@@ -93,15 +93,31 @@ describe('a cross-functional flowchart Visio built', () => {
 		expect(after.shapes.find((shape) => shape.id === '1')!.height).toBeLessThan(frameHeight);
 	});
 
-	it('keeps phases and options refused: they would rewrite the masters own cells', async () => {
+	it('takes a phase and an option (the cell-by-cell checks are in edit-swimlane-cff.test.ts)', async () => {
 		const bytes = new Uint8Array(
 			readFileSync(new URL('./__fixtures__/cross-functional-native.vsdx', import.meta.url)),
 		);
-		await expect(
-			editVsdx(bytes, [
-				{ type: 'insert-separator', pageId: '0', frameId: '1', shapeId: '30', at: 3 },
-			]),
-		).rejects.toThrow(/not editable/);
+		const result = await editVsdx(bytes, [
+			{ type: 'insert-separator', pageId: '0', frameId: '1', shapeId: '30', at: 3 },
+			{ type: 'set-swimlane-options', pageId: '0', frameId: '1', style: 2 },
+		]);
+		const page = (await parseVsdx(result.bytes)).pages[0]!;
+		expect(page.shapes.find((shape) => shape.id === '5')!.structure).toMatchObject({
+			memberIds: ['30', '12'],
+		});
+		expect(page.shapes.find((shape) => shape.id === '1')!.structure).toMatchObject({
+			swimlane: { options: { style: 2 } },
+		});
+	});
+
+	it('is marked native, and its option edits move no lane shapes of their own', async () => {
+		const page = await native();
+		const frame = page.shapes.find((shape) => shape.id === '1')!;
+		expect(frame.structure).toMatchObject({ swimlane: { role: 'frame', native: true } });
+		for (const change of [{ showTitle: false }, { showSeparators: false }, { style: 2 }]) {
+			const edits = visioSwimlaneOptions(page, '1', change);
+			expect(edits?.map((edit) => edit.type)).toEqual(['set-swimlane-options']);
+		}
 	});
 
 	it('plans edits on it: the lanes come from the Swimlane List, top lane first', async () => {
