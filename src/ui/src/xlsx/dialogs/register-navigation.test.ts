@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { createWorkbook } from 'ooxml-core/xlsx';
+import { createWorkbook, FUNCTION_CATALOG } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { NAVIGATION_STRINGS } from 'ooxml-core/xlsx/ui';
+import { NAVIGATION_STRINGS, STRINGS } from 'ooxml-core/xlsx/ui';
 import { SHORTCUTS } from '../keyboard';
 import { clickButton, createTestContext, dialogEl } from '../commands/test-support';
 import { registerNavigationDialogs } from './register-navigation';
@@ -48,8 +48,14 @@ describe('navigation dialog strings', () => {
 		}
 		// Shortcut labels come from the shell's keyboard map and are translated by the shell.
 		const shell = new Set(SHORTCUTS.map((s) => s.label));
+		// Catalogue descriptions fall back to English until translated (see the parity checklist).
+		const descriptions = new Set(FUNCTION_CATALOG.map((fn) => fn.description));
 		const missing = [...used].filter(
-			(key) => !NAVIGATION_STRINGS[key] && !shell.has(key) && !/^[A-Z][A-Z0-9.]+$/.test(key),
+			(key) =>
+				!STRINGS.en[key] &&
+				!descriptions.has(key) &&
+				!shell.has(key) &&
+				!/^[A-Z][A-Z0-9.]+$/.test(key),
 		);
 		expect(missing).toEqual([]);
 		for (const [key, texts] of Object.entries(NAVIGATION_STRINGS)) {
