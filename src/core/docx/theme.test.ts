@@ -63,7 +63,7 @@ describe('theme parsing and color resolution', () => {
 		expect(resolveThemeColorToken('text1', theme)).toBe('000000');
 	});
 
-	it('applies linear-light tint/shade transforms toward white/black', () => {
+	it('applies Word HSL tint/shade transforms toward white/black', () => {
 		expect(applyThemeTint('#4472C4', 1)).toBe('#4472C4');
 		expect(applyThemeTint('#4472C4', 0)).toBe('#FFFFFF');
 		expect(applyThemeShade('#4472C4', 1)).toBe('#4472C4');

@@ -8,9 +8,12 @@ const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/mai
 const CONTENT_TYPES =
 	'<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
 
-async function packageWith(background: string): Promise<Uint8Array> {
+const themeXml =
+	'<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:themeElements><a:clrScheme name="Native"><a:accent2><a:srgbClr val="ED7D31"/></a:accent2></a:clrScheme></a:themeElements></a:theme>';
+async function packageWith(background: string, themed = false): Promise<Uint8Array> {
 	const zip = new JSZip();
 	zip.file('[Content_Types].xml', CONTENT_TYPES);
+	if (themed) zip.file('word/theme/theme1.xml', themeXml);
 	zip.file(
 		'word/document.xml',
 		`<w:document ${NS}>${background}<w:body><w:p><w:r><w:t>Text</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
@@ -21,6 +24,50 @@ const documentXml = async (bytes: Uint8Array) =>
 	(await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string')) as string;
 
 describe('page colour', () => {
+	it('replaces a theme fill when the selected literal equals its stale cached RGB', async () => {
+		const loaded = await loadDocx(
+			await packageWith('<w:background w:color="FF0000" w:themeColor="accent2"/>', true),
+		);
+		const saved = await loaded.save({ ...loaded.model, pageColor: 'FF0000' });
+		expect(await documentXml(saved)).toContain('<w:background w:color="FF0000"/>');
+		expect(await documentXml(saved)).not.toContain('w:themeColor');
+		expect((await loadDocx(saved)).model.pageColor).toBe('FF0000');
+	});
+	it('resolves theme-only fills and ignores a stale literal cache, retaining the source on edits', async () => {
+		for (const cache of ['', 'w:color="FF0000"']) {
+			const source = `<w:background ${cache} w:themeColor="accent2" w:themeTint="7F" w:themeShade="40"/>`;
+			const loaded = await loadDocx(await packageWith(source, true));
+			expect(loaded.model.pageColor).toBe('F6BE98');
+			const blocks = loaded.model.blocks.map((block) =>
+				block.type === 'paragraph' ? { ...block, runs: [{ text: 'Edited text' }] } : block,
+			);
+			const saved = await loaded.save({ ...loaded.model, blocks });
+			expect(await documentXml(saved)).toContain('w:themeTint="7F"');
+			expect(await documentXml(saved)).toContain('w:themeShade="40"');
+			if (cache) expect(await documentXml(saved)).toContain('w:color="FF0000"');
+			expect((await loadDocx(saved)).model.pageColor).toBe('F6BE98');
+		}
+	});
+
+	it('uses the logical background colour mapping and retains a fallback if the theme is incomplete', async () => {
+		const zip = await JSZip.loadAsync(
+			await packageWith('<w:background w:themeColor="background1"/>', true),
+		);
+		zip.file(
+			'word/settings.xml',
+			`<w:settings ${NS}><w:clrSchemeMapping w:bg1="accent2"/></w:settings>`,
+		);
+		expect((await loadDocx(await zip.generateAsync({ type: 'uint8array' }))).model.pageColor).toBe(
+			'ED7D31',
+		);
+		expect(
+			(
+				await loadDocx(
+					await packageWith('<w:background w:color="00FF00" w:themeColor="accent6"/>', true),
+				)
+			).model.pageColor,
+		).toBe('00FF00');
+	});
 	it('reads w:background, ignoring auto and unset fills', async () => {
 		expect(
 			(await loadDocx(await packageWith('<w:background w:color="ffcc00"/>'))).model.pageColor,

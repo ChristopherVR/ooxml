@@ -1,0 +1,475 @@
+{
+  "source": "Microsoft Word 16.0",
+  "theme": {
+    "dk1": "000000",
+    "lt1": "FFFFFF",
+    "dk2": "44546A",
+    "lt2": "E7E6E6",
+    "accent1": "4472C4",
+    "accent2": "ED7D31",
+    "accent3": "A5A5A5",
+    "accent4": "FFC000",
+    "accent5": "5B9BD5",
+    "accent6": "70AD47",
+    "hlink": "0563C1",
+    "folHlink": "954F72"
+  },
+  "colors": [
+    {
+      "themeColor": "dark1",
+      "expected": "000000"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "333333",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "666666",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "808080",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "999999",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "CCCCCC",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "000000",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "000000",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "dark1",
+      "expected": "000000",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "FFFFFF",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "BFBFBF",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "7F7F7F",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "light1",
+      "expected": "3F3F3F",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "44546A"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "5E7492",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "8496B0",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "98A8BD",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "ACB9CA",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "D5DCE4",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "323E4F",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "212934",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "dark2",
+      "expected": "101419",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "E7E6E6"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "EBEAEA",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "F0EFEF",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "F3F2F2",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "F5F4F4",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "FAF9F9",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "AEAAAA",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "747070",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "light2",
+      "expected": "393737",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "4472C4"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "698DCF",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "8EAADB",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "A1B8E1",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "B4C6E7",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "D9E2F3",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "2F5496",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "1F3763",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent1",
+      "expected": "0F1B31",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "ED7D31"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "F0965A",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "F4B083",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "F6BE98",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "F7CAAC",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "FBE4D5",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "C45911",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "823B0B",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "401D05",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "A5A5A5"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "B7B7B7",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "C9C9C9",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "D2D2D2",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "DBDBDB",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "EDEDED",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "7B7B7B",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "525252",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent3",
+      "expected": "282828",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFC000"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFCC33",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFD966",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFDF80",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFE599",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "FFF2CC",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "BF8F00",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "7F5F00",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent4",
+      "expected": "3F2F00",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "5B9BD5"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "7BAEDD",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "9CC2E5",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "ADCCEA",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "BDD6EE",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "DEEAF6",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "2E74B5",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "1F4D78",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent5",
+      "expected": "0F263B",
+      "themeShade": "3F"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "70AD47"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "8BC168",
+      "themeTint": "CC"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "A8D08D",
+      "themeTint": "99"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "B7D8A0",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "C5E0B3",
+      "themeTint": "66"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "E2EFD9",
+      "themeTint": "33"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "538135",
+      "themeShade": "BF"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "375623",
+      "themeShade": "7F"
+    },
+    {
+      "themeColor": "accent6",
+      "expected": "1B2A11",
+      "themeShade": "3F"
+    }
+  ],
+  "backgrounds": [
+    {
+      "themeColor": "accent2",
+      "expected": "ED7D31"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "F6BE98",
+      "themeTint": "7F"
+    },
+    {
+      "themeColor": "accent2",
+      "expected": "823B0B",
+      "themeShade": "7F"
+    }
+  ]
+}

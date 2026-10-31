@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { linearToSrgb255, srgb255ToLinear, toHex } from '../color/index';
+import { applyThemePaletteVariant, toHex } from '../color/index';
 import { DEFAULT_THEME_COLOR_MAP } from '../drawingml/theme-model';
 import type {
 	ThemeCatalog,
@@ -50,34 +50,26 @@ export function resolveThemeColorToken(
 	return slot ? theme.colors[slot] : undefined;
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-	const normalized = hex.replace(/^#/, '');
-	if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null;
-	return {
-		r: Number.parseInt(normalized.slice(0, 2), 16),
-		g: Number.parseInt(normalized.slice(2, 4), 16),
-		b: Number.parseInt(normalized.slice(4, 6), 16),
-	};
-}
 /*
- * Linear-light shade/tint mixing (ECMA-376 Part 1, 20.1.2.3.30/20.1.2.3.32): PowerPoint and Word
- * mix a scheme color toward black/white in linear light rather than gamma-encoded sRGB, with the
- * IEC 61966-2-1 transfer function of the shared `color` area.
+ * WordprocessingML transforms HSL luminance, as the shared Office theme palette does.
+ * This differs from DrawingML's linear-light tint/shade transforms (MS-OI29500 17.3.2.6).
  */
 
 /** Mixes toward black; `fraction` 0 = black, 1 = unchanged, per Word's `themeShade`. */
 export function applyThemeShade(hex: string, fraction: number): string {
-	const rgb = hexToRgb(hex);
-	if (!rgb) return hex;
-	const mix = (channel: number) => linearToSrgb255(srgb255ToLinear(channel) * fraction);
-	return `#${toHex(mix(rgb.r))}${toHex(mix(rgb.g))}${toHex(mix(rgb.b))}`;
+	if (!/^#?[0-9a-fA-F]{6}$/.test(hex)) return hex;
+	return applyThemePaletteVariant(hex, {
+		kind: 'darker',
+		percent: (1 - fraction) * 100,
+	}).toUpperCase();
 }
 /** Mixes toward white; `fraction` 0 = white, 1 = unchanged, per Word's `themeTint`. */
 export function applyThemeTint(hex: string, fraction: number): string {
-	const rgb = hexToRgb(hex);
-	if (!rgb) return hex;
-	const mix = (channel: number) => linearToSrgb255(1 - (1 - srgb255ToLinear(channel)) * fraction);
-	return `#${toHex(mix(rgb.r))}${toHex(mix(rgb.g))}${toHex(mix(rgb.b))}`;
+	if (!/^#?[0-9a-fA-F]{6}$/.test(hex)) return hex;
+	return applyThemePaletteVariant(hex, {
+		kind: 'lighter',
+		percent: (1 - fraction) * 100,
+	}).toUpperCase();
 }
 
 /** Parses Word's two-hex-digit `themeTint`/`themeShade` byte into a [0,1] fraction. */
@@ -98,7 +90,7 @@ export function resolveThemeColorReference(
 	const base = resolveThemeColorToken(ref.token, theme);
 	if (!base) return undefined;
 	let hex = `#${base.replace(/^#/, '')}`;
-	if (ref.shade !== undefined) hex = applyThemeShade(hex, ref.shade);
 	if (ref.tint !== undefined) hex = applyThemeTint(hex, ref.tint);
+	else if (ref.shade !== undefined) hex = applyThemeShade(hex, ref.shade);
 	return hex;
 }

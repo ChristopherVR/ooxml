@@ -257,8 +257,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Evidence: `docx/comment-preservation.test.ts`, `docx/comments.test.ts`, six-binding
       `e2e/docx/comments-pane.spec.ts`, and Word 16 reopen/save checks of five edited variants
       of `docx/__fixtures__/word-comments-native.docx` (2026-10-31).
-- [ ] **P2** Embedded fonts are kept, not used for rendering; `altChunk`, art page borders and
-      theme page backgrounds are kept, not drawn.
+- [ ] **P2** Embedded fonts are kept, not used for rendering; `altChunk` and art page borders
+      are kept, not drawn.
+- [x] **P2** Solid theme page backgrounds resolve their theme colour, logical mapping and
+      tint/shade, taking precedence over stale cached RGB. Text edits preserve the theme reference;
+      an explicit page colour replaces it. Evidence: `docx/page-background.test.ts`, the native
+      Word 16 corpus in `docx/__fixtures__/word-theme-colors.json`, and six browser bindings in
+      `e2e/docx/page-color.spec.ts` (2026-10-31).
+- [ ] **P2** Word theme tint/shade quantization still differs from native cached colours by up
+      to one RGB channel level in the 90-colour corpus (`docx/theme-native.test.ts`). HSL luminance
+      and tint-over-shade precedence are implemented; exact native rounding remains.
+- [ ] **P2** Non-solid page backgrounds (VML gradient, pattern and picture fills) are preserved
+      but not painted (`docx/page-background.ts`).
 
 ### Editing and behaviour
 

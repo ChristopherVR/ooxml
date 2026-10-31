@@ -219,7 +219,8 @@ What each tab offers that Word also has:
   available width, targets the current section and supports undo), page-number format and start,
   different first page, odd and even, section breaks, Page Color (the colour picker; written as
   `w:background` with `displayBackgroundShape`, drawn on the editing surface and in Print Layout, not
-  printed, and undoable; theme and gradient page fills are not modeled), Indent Left/Right (inches) and paragraph
+  printed, and undoable; solid theme colours resolve without flattening their source references,
+  while gradient, pattern and picture page fills are not painted), Indent Left/Right (inches) and paragraph
   Before/After spacing.
 - **References:** Table of Contents (levels 1-3, 1-2 or 1-5, or Remove), Add Text (heading levels
   1-3), Update Table, Insert Caption (a `SEQ` field; every caption of a label is renumbered when

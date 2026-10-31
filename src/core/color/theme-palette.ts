@@ -10,7 +10,7 @@ import { hexToRgbChannels, hslToRgb, rgbToHsl, toHex } from './color-primitives'
 /** A luminance variant of a base theme colour. */
 export interface ThemePaletteVariant {
 	readonly kind: 'lighter' | 'darker';
-	/** Whole percent as Office labels it (80 for "Lighter 80%"). */
+	/** Percentage (80 for "Lighter 80%"); imported colour transforms may use fractional values. */
 	readonly percent: number;
 }
 

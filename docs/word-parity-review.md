@@ -42,6 +42,16 @@ cases do not establish pixel-equivalent output across arbitrary Word documents.
 
 ## Implemented first slice
 
+- Solid theme page backgrounds resolve theme tokens and logical colour mappings, with Word's
+  tint-over-shade precedence. Text edits preserve source theme references; an explicit page colour
+  clears them even when it matches a stale cached RGB. WordprocessingML text and background
+  transforms now share the Office palette's HSL luminance calculation instead of DrawingML's
+  linear-light tint/shade calculation. A Word 16 corpus records 90 text colours and three page
+  backgrounds (`docx/__fixtures__/generate-word-theme-colors.ps1`); the three background cases
+  match exactly, while some text colours still differ by one RGB channel level. That rounding
+  gap and non-solid backgrounds remain open. `e2e/docx/page-color.spec.ts` covers paint, text
+  edits, source preservation and explicit colour replacement in all six bindings.
+
 - Table pagination repeats only the contiguous header group at the start of a
   table. A later isolated `tblHeader` flag is ignored, including its implied
   non-splitting treatment; explicit `cantSplit` remains effective. This follows

@@ -128,7 +128,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			);
 		}
 		model.warnings.push(
-			'Theme colors and fonts resolve for rendering through a separate layer; direct theme references are preserved and never flattened onto runs.',
+			'Theme colors and fonts resolve for rendering through a separate layer; direct theme references are preserved and never flattened onto runs. Theme tint and shade quantization is approximate.',
 		);
 	}
 	const numberingFile = zip.file('word/numbering.xml');
@@ -171,7 +171,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		if (properties) model.properties = properties;
 	}
 	await readPlaceholderTexts(zip, drawings.rels, model);
-	const pageColor = parsePageBackground(document.documentElement);
+	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;
 	model.warnings.push(...parts.warnings);
 	if (
