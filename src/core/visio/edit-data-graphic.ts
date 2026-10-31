@@ -3,7 +3,6 @@ import { NS, parseXml } from '../xml/index';
 import { calloutInstanceMarkup, calloutMasterName } from './data-graphic-instance';
 import {
 	calloutMasterSpec,
-	cell,
 	dataGraphicMasterSpec,
 	importMarkup,
 	userRow,
