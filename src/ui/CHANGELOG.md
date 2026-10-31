@@ -7,6 +7,38 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.0) - 2026-10-31
+
+### Features
+
+- **xlsx:** Edit and preserve x14 data validations ([18bfd10](https://github.com/ChristopherVR/ooxml/commit/18bfd104b4873d5ae2de0f36285100ef46a761f1))
+- **xlsx:** Edit threaded comment replies with undo ([e6448a5](https://github.com/ChristopherVR/ooxml/commit/e6448a5ffce09bd7f98a8a03d3d24008b3314201))
+- **xlsx:** Calculate filterxml with native regression coverage ([3b5f4c7](https://github.com/ChristopherVR/ooxml/commit/3b5f4c74faaa67c76024af81a2773af3bf84f979))
+- **visio:** Lay out aligned tabs on centred lines and edit tab stops ([79132f1](https://github.com/ChristopherVR/ooxml/commit/79132f1fc64763858de95659e580b9c5480191f9))
+- **visio:** Office rotation gallery, profile-lit bevels, projected content ([8248062](https://github.com/ChristopherVR/ooxml/commit/824806234dfa940f5deb896f2cb5584980d67244))
+- **visio:** Write data graphics as callout instances of a data graphic master ([a407aa8](https://github.com/ChristopherVR/ooxml/commit/a407aa8c121ffe1d9675858779ac697b7a20766f))
+
+### Bug Fixes
+
+- **xlsx:** Persist active sheets and selections on save ([0a8f5d7](https://github.com/ChristopherVR/ooxml/commit/0a8f5d79bb319daa1325dd240cfe5f93bd7caba3))
+- **xlsx:** Preserve threaded comment metadata through edits ([fb33d49](https://github.com/ChristopherVR/ooxml/commit/fb33d4940b38c6f970664b7dc35b5be98db36a5e))
+- **visio:** Retry failed template thumbnail renders ([d28af32](https://github.com/ChristopherVR/ooxml/commit/d28af32a0773b9a6c985baa331d64c636f9fab6d))
+- **visio:** Commit inline size fields on enter ([a408ffb](https://github.com/ChristopherVR/ooxml/commit/a408ffb26f74babea78f5627262ff11e2816fd3b))
+
+### Documentation
+
+- **xlsx:** Identify unsupported external formula services ([6eb4449](https://github.com/ChristopherVR/ooxml/commit/6eb44491f83d0b7cf13f5907eebe8b35249bcc18))
+
+### Testing
+
+- **xlsx:** Check dialog translations across shared dictionaries ([52baa33](https://github.com/ChristopherVR/ooxml/commit/52baa33da392fb530d08b6d704aeace7207994d5))
+- **docx:** Verify native reply anchors in editor history ([425aee5](https://github.com/ChristopherVR/ooxml/commit/425aee59614c73a7872f323463081093942e2b64))
+
+### Chores
+
+- Merge latest parity updates from main ([d35e2b8](https://github.com/ChristopherVR/ooxml/commit/d35e2b809a9942e0f66e78b3c30633d6ba485a2d))
+- Merge latest main before parity verification ([0ab8402](https://github.com/ChristopherVR/ooxml/commit/0ab8402cba38fa2cca07746dced32b36e73804f8))
+
 ## [1.38.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.38.0) - 2026-10-31
 
 ### Features

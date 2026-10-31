@@ -7,6 +7,43 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.37.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.37.0) - 2026-10-31
+
+### Features
+
+- **xlsx:** Edit and preserve x14 data validations ([18bfd10](https://github.com/ChristopherVR/ooxml/commit/18bfd104b4873d5ae2de0f36285100ef46a761f1))
+- **xlsx:** Edit threaded comment replies with undo ([e6448a5](https://github.com/ChristopherVR/ooxml/commit/e6448a5ffce09bd7f98a8a03d3d24008b3314201))
+- **xlsx:** Calculate filterxml with native regression coverage ([3b5f4c7](https://github.com/ChristopherVR/ooxml/commit/3b5f4c74faaa67c76024af81a2773af3bf84f979))
+- **visio:** Carry all Shape Data to a promoted Manager Belt ([afab0e7](https://github.com/ChristopherVR/ooxml/commit/afab0e7358b88a82e8940182bf6b84a7304abf38))
+- **visio:** Lay out aligned tabs on centred lines and edit tab stops ([79132f1](https://github.com/ChristopherVR/ooxml/commit/79132f1fc64763858de95659e580b9c5480191f9))
+- **visio:** Office rotation gallery, profile-lit bevels, projected content ([8248062](https://github.com/ChristopherVR/ooxml/commit/824806234dfa940f5deb896f2cb5584980d67244))
+- **visio:** Insert phases and set options on cross-functional charts ([f639460](https://github.com/ChristopherVR/ooxml/commit/f6394602c93d973de6fcb25670a8637084cf8930))
+- **visio:** Write data graphics as callout instances of a data graphic master ([a407aa8](https://github.com/ChristopherVR/ooxml/commit/a407aa8c121ffe1d9675858779ac697b7a20766f))
+
+### Bug Fixes
+
+- Preserve signatures and presentation automation edits ([fa89190](https://github.com/ChristopherVR/ooxml/commit/fa891906e4259f481c494aac85e80c0c3835f05a))
+- **xlsx:** Persist active sheets and selections on save ([0a8f5d7](https://github.com/ChristopherVR/ooxml/commit/0a8f5d79bb319daa1325dd240cfe5f93bd7caba3))
+- **xlsx:** Preserve threaded comment metadata through edits ([fb33d49](https://github.com/ChristopherVR/ooxml/commit/fb33d4940b38c6f970664b7dc35b5be98db36a5e))
+- **docx:** Preserve comment formatting and thread identities ([cc7281d](https://github.com/ChristopherVR/ooxml/commit/cc7281d53be48a7c3ea60acb1a9e02e37e6fb04b))
+- **docx:** Resolve theme page backgrounds and hsl tints ([56c4ab3](https://github.com/ChristopherVR/ooxml/commit/56c4ab36aaa91bf66558902ba17dd0d1ca51412c))
+- **docx:** Preserve comment whitespace and inline characters ([3a257f0](https://github.com/ChristopherVR/ooxml/commit/3a257f05503e76987bbec3824a812d658853017b))
+- **visio:** Draw infinite lines in stencil previews ([44a1712](https://github.com/ChristopherVR/ooxml/commit/44a171246f3e0bf23a32ab07cd7eb46da661e696))
+- **visio:** Stop a separator inserting itself before itself ([df0566a](https://github.com/ChristopherVR/ooxml/commit/df0566a2b3b0d781821d38ae52cbc2915b850fbe))
+
+### Documentation
+
+- **xlsx:** Identify unsupported external formula services ([6eb4449](https://github.com/ChristopherVR/ooxml/commit/6eb44491f83d0b7cf13f5907eebe8b35249bcc18))
+
+### Styling
+
+- **visio:** Drop an unused data graphic import ([e2812dd](https://github.com/ChristopherVR/ooxml/commit/e2812dd15e2ecc3ca17e4d9010701926bad0e31b))
+
+### Chores
+
+- Merge latest parity updates from main ([d35e2b8](https://github.com/ChristopherVR/ooxml/commit/d35e2b809a9942e0f66e78b3c30633d6ba485a2d))
+- Merge latest main before parity verification ([0ab8402](https://github.com/ChristopherVR/ooxml/commit/0ab8402cba38fa2cca07746dced32b36e73804f8))
+
 ## [1.36.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.36.0) - 2026-10-31
 
 ### Features

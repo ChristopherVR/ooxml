@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [Unreleased]
+
+### Features
+
+- **xlsx:** Calculate filterxml with native regression coverage ([3b5f4c7](https://github.com/ChristopherVR/ooxml/commit/3b5f4c74faaa67c76024af81a2773af3bf84f979))
+
+### Bug Fixes
+
+- **docx:** Resolve theme page backgrounds and hsl tints ([56c4ab3](https://github.com/ChristopherVR/ooxml/commit/56c4ab36aaa91bf66558902ba17dd0d1ca51412c))
+
+## [4.61.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.61.0) - 2026-10-31
+
+### Bug Fixes
+
+- Preserve signatures and presentation automation edits ([fa89190](https://github.com/ChristopherVR/ooxml/commit/fa891906e4259f481c494aac85e80c0c3835f05a))
+
 ## [4.60.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.60.0) - 2026-10-30
 
 ### Features
