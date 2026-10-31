@@ -42,6 +42,14 @@ cases do not establish pixel-equivalent output across arbitrary Word documents.
 
 ## Implemented first slice
 
+- Comment text now retains leading/trailing spaces, tabs, soft line breaks and special hyphens.
+  The reader shares the body run character decoder and glossary paragraph text collector; edits
+  preserve surviving break/tab elements and generate new characters through the existing run
+  writer. The `-Whitespace` variant of `docx/__fixtures__/generate-word-comments.ps1` produces
+  a native fixture, checked through edited output reopened and saved by Word 16. The six browser
+  bindings check exact pane text, whitespace painting and save after adding a reply. The pane
+  remains plain text and has no existing-comment edit action.
+
 - Solid theme page backgrounds resolve theme tokens and logical colour mappings, with Word's
   tint-over-shade precedence. Text edits preserve source theme references; an explicit page colour
   clears them even when it matches a stale cached RGB. WordprocessingML text and background

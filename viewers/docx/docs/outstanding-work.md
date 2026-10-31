@@ -24,6 +24,9 @@ warnings identify unsupported imported content.
 - Track Changes mode applied each edit twice; the tracked replacement now replaces the original step.
 - New hyperlink/image relationships could reuse an id declared only in `document.xml.rels` (for example the styles relationship).
 - Comment reference runs were parsed as text and duplicated on every save.
+- Comment plain text retains spaces, tabs, soft breaks and special hyphens, including through
+  core text edits and a native Word reopen/save. The pane displays that whitespace and supports
+  replies, but does not yet edit existing comment text or render/author rich comment bodies.
 - Editing text dropped character styles, caps and theme colors (and then stripped them on save); editing a simple table dropped its grid, borders and style.
 - Pictures had no image source in the editor; imported `javascript:` link targets were rendered as live `href`s.
 

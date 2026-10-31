@@ -7,7 +7,7 @@ import {
 	isStPTabRelativeTo,
 } from './generated/wml-simple-types';
 import type { TextRun } from './model';
-import { getW, makeW, named, type XmlDocument, type XmlElement } from './xml';
+import { getW, makeW, named, textContent, type XmlDocument, type XmlElement } from './xml';
 
 export const SOFT_HYPHEN = '\u00AD';
 export const NON_BREAKING_HYPHEN = '\u2011';
@@ -117,6 +117,14 @@ export function specialCharacterText(child: XmlElement): string | undefined {
 	if (named(child, 'softHyphen')) return SOFT_HYPHEN;
 	if (named(child, 'noBreakHyphen')) return NON_BREAKING_HYPHEN;
 	return undefined;
+}
+
+/** Plain text represented by one Word run child, excluding field instructions and drawings. */
+export function runContentText(child: XmlElement): string | undefined {
+	if (named(child, 't') || named(child, 'delText')) return textContent(child);
+	if (named(child, 'tab')) return '\t';
+	if (named(child, 'br') || named(child, 'cr')) return '\n';
+	return specialCharacterText(child);
 }
 
 function element(doc: XmlDocument, local: string, attributes: Record<string, string | undefined>) {

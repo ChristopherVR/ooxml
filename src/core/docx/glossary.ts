@@ -6,24 +6,11 @@ import type JSZip from 'jszip';
 import type { ContentControl } from './content-control-model';
 import type { Block, DocumentModel } from './model';
 import { resolveInternalTarget, type Relationship } from './package-parts';
-import { children, first, getW, isElement, named, parseXml, type XmlElement } from './xml';
+import { children, first, getW, parseXml } from './xml';
+import { paragraphText } from './paragraph-text';
 
 const GLOSSARY_DOCUMENT =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/glossaryDocument';
-
-/** The text a paragraph shows: its `w:t` text, with `w:tab` as a tab. */
-function paragraphText(paragraph: XmlElement): string {
-	let text = '';
-	const visit = (node: XmlElement) => {
-		for (const child of Array.from(node.childNodes).filter(isElement)) {
-			if (named(child, 't')) text += child.textContent ?? '';
-			else if (named(child, 'tab')) text += '\t';
-			else if (!named(child, 'rPr') && !named(child, 'pPr')) visit(child);
-		}
-	};
-	visit(paragraph);
-	return text;
-}
 
 /** Each glossary entry's text by entry name: the first paragraph of its body. */
 export function parseGlossaryTexts(xml: string): Map<string, string> {

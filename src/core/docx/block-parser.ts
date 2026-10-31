@@ -18,7 +18,7 @@ import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
 import { parseFormField } from './form-fields';
 import { isAnnotationWrapper } from './inline-markers';
-import { runPositionalTab, runSymbol, specialCharacterText } from './special-characters';
+import { runContentText, runPositionalTab, runSymbol } from './special-characters';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
@@ -122,14 +122,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	const text =
 		breakKind || noteReference || noteMark || fieldChar || fieldCode !== undefined
 			? ''
-			: content
-					.map((child) => {
-						if (named(child, 't') || named(child, 'delText')) return textContent(child);
-						if (named(child, 'tab')) return '\t';
-						if (named(child, 'br') || named(child, 'cr')) return '\n';
-						return specialCharacterText(child) ?? '';
-					})
-					.join('');
+			: content.map((child) => runContentText(child) ?? '').join('');
 	const run: TextRun = { text, ...parseDirectRunProperties(props) };
 	const symbol = runSymbol(content);
 	if (symbol) run.symbol = symbol;

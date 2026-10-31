@@ -1,13 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Comment } from './model';
-import { getW, parseXml, textContent, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml';
+import { getW, parseXml, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml';
+import { paragraphText } from './paragraph-text';
 import { W14_NS, W15_NS, W16CID_NS, W16CEX_NS } from './comment-parts';
-
-function paragraphText(paragraph: XmlElement): string {
-	return Array.from(paragraph.getElementsByTagNameNS(WORD_NS, 't'))
-		.map((node) => textContent(node as XmlElement))
-		.join('');
-}
 
 /** The modern metadata parts identify a comment by its last paragraph. */
 export function commentParagraphId(element: XmlElement): string | undefined {
@@ -32,8 +27,7 @@ export function parseComments(
 		const id = getW(element, 'id') ?? '0';
 		const text = Array.from(element.getElementsByTagNameNS(WORD_NS, 'p'))
 			.map((p) => paragraphText(p as XmlElement))
-			.join('\n')
-			.trim();
+			.join('\n');
 		const comment: Comment = { id, author: getW(element, 'author') || 'Unknown', text };
 		const initials = getW(element, 'initials');
 		if (initials) comment.initials = initials;

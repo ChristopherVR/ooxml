@@ -252,11 +252,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       including nonstandard part locations (`src/core/docx/signatures.test.ts`). This is metadata
       detection and cleanup, not certificate verification or signing.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
-- [x] **P2** Comment edits preserve source paragraphs, run formatting and unknown markup;
+- [x] **P2** Comment metadata edits retain source bodies; plain-text edits patch existing runs;
       paragraph and durable IDs, reply anchors, UTC dates and metadata parts stay aligned.
       Evidence: `docx/comment-preservation.test.ts`, `docx/comments.test.ts`, six-binding
       `e2e/docx/comments-pane.spec.ts`, and Word 16 reopen/save checks of five edited variants
       of `docx/__fixtures__/word-comments-native.docx` (2026-10-31).
+- [x] **P2** Comment text includes significant spaces, tabs, soft breaks and special hyphens.
+      Edits retain surviving inline characters and write new tabs as Word elements, with native
+      Word reopen/save evidence (`docx/comment-text.test.ts`, `word-comment-whitespace-native.docx`)
+      and display/save coverage in all six bindings (`e2e/docx/comments-pane.spec.ts`).
+- [ ] **P2** The comments pane cannot edit existing comment text. Rich comment content
+      (formatting, pictures and tables) is retained in source parts, but not rendered or authored.
 - [ ] **P2** Embedded fonts are kept, not used for rendering; `altChunk` and art page borders
       are kept, not drawn.
 - [x] **P2** Solid theme page backgrounds resolve their theme colour, logical mapping and
