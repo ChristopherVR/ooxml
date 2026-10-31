@@ -241,6 +241,16 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(bevel.width, 'bevel width', 0, 10);
 			finite(bevel.height, 'bevel height', 0, 10);
 		}
+		const { extrusion, contour } = shape.style;
+		for (const [item, label, size] of [
+			[extrusion, 'extrusion', extrusion?.depth],
+			[contour, 'contour', contour?.size],
+		] as const) {
+			if (!item) continue;
+			if (typeof item.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(item.color))
+				throw new Error(`The scene has an invalid ${label} color.`);
+			finite(size ?? Number.NaN, `${label} size`, 0, 10);
+		}
 		if (rotation3d)
 			for (const key of ['x', 'y', 'z', 'perspective'] as const)
 				finite(rotation3d[key], '3-D rotation', -7, 7);

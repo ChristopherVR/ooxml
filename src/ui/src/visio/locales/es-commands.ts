@@ -101,6 +101,10 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Perspective Left': 'Perspectiva izquierda',
 	'Perspective Right': 'Perspectiva derecha',
 	'Perspective Relaxed': 'Perspectiva relajada',
+	'Perspective Above': 'Perspectiva superior',
+	'Perspective Below': 'Perspectiva inferior',
+	'Perspective Heroic Left': 'Perspectiva heroica izquierda',
+	'Perspective Heroic Right': 'Perspectiva heroica derecha',
 	Arrange: 'Organizar',
 	Align: 'Alinear',
 	'Align Center': 'Alinear al centro',
@@ -357,6 +361,6 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Locked the container.': 'Contenedor bloqueado.',
 	'Unlocked the container.': 'Contenedor desbloqueado.',
 	'Changed the automatic resize of the container.':
-		'Se cambió el cambio de tamaño automático del contenedor.',
+		'Se modificó el cambio de tamaño automático del contenedor.',
 	'Changed the container margin.': 'Se cambió el margen del contenedor.',
 };

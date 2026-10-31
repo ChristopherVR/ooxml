@@ -127,9 +127,10 @@ export function shapeSections(
 
 const ALIGNMENTS: VisioTabStop['align'][] = ['left', 'center', 'right', 'decimal'];
 /**
- * The tab stops of one Tabs row. A row lists its stops as numbered cell pairs (`Position1`,
- * `Alignment1`, `Position2`, ...). No Visio-authored file with explicit stops was available, so
- * the cell names follow the documented section; a row that names none has none.
+ * The tab stops of one Tabs row. Visio saves a row's stops as numbered cell pairs counted from 0
+ * (`Position0` in inches with `Alignment0`, then `Position1` and `Alignment1`, ...), as the
+ * Visio-saved stencil masters and a page re-saved by Visio 16 show (`tab-stops.test.ts`). A row
+ * that names none has none.
  */
 export function tabStops(cells: Cells, report: Report): VisioTabStop[] {
 	const stops: VisioTabStop[] = [];

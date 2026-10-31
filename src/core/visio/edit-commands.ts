@@ -212,6 +212,8 @@ export type VisioGeometryEdit =
 			connect?: VisioConnectorGlue;
 			/** A connector's route; omitted means straight. */
 			route?: VisioConnectorRoute;
+			/** The line's own text (a connector label); it sits at the middle and follows the line. */
+			text?: string;
 	  })
 	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioOutlineShape })
 	| (BoxCreation & { type: 'create-ellipse' })
@@ -222,7 +224,14 @@ export type VisioGeometryEdit =
 	| (Target & { type: 'rotate-shape'; angle: number })
 	| (Target & { type: 'flip-shape'; axis: 'horizontal' | 'vertical' })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
-	| (Target & { type: 'delete-shape' })
+	| (Target & {
+			type: 'delete-shape';
+			/**
+			 * Run this deletion after the rest of the batch, in a transaction of its own (a stencil
+			 * instance can only be deleted that way), still as one edit for the caller.
+			 */
+			deferred?: boolean;
+	  })
 	| VisioConnectorEdit;
 /** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
 export interface VisioPageInsert {
@@ -504,6 +513,7 @@ export function snapshotVisioEdits(
 					endY,
 					...(connect ? { connect } : {}),
 					...(route ? { route } : {}),
+					...(edit.text !== undefined ? { text: text(edit.text) } : {}),
 				};
 			}
 			case 'create-rectangle':
@@ -552,7 +562,7 @@ export function snapshotVisioEdits(
 				};
 			}
 			case 'delete-shape':
-				return { ...target, type: edit.type };
+				return { ...target, type: edit.type, ...(edit.deferred ? { deferred: true } : {}) };
 			default:
 				return fail('INVALID_EDIT', 'Unsupported edit command.');
 		}

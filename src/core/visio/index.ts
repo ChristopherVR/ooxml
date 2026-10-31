@@ -199,8 +199,22 @@ export {
 	VISIO_ROTATION_PRESETS,
 	visioRotation3dMatrix,
 	type VisioBevel,
+	type VisioContour,
+	type VisioExtrusion,
 	type VisioRotation3d,
 } from './bevel-3d';
+export {
+	createProjection,
+	extrudePaths,
+	extrusionPathData,
+	flattenPath,
+	projectPathData,
+	type Extrusion,
+	type ExtrusionFace,
+	type Point2,
+	type Projection,
+} from './solid-3d';
+export { MAX_PATH_CHARS, MAX_PATH_SEGMENTS, parsePath, type PathSegment } from './path-segments';
 export {
 	VISIO_GLOW_SIZES,
 	VISIO_GLOW_TRANSPARENCY,

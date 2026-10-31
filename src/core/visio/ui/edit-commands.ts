@@ -164,6 +164,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					endY: command.endY,
 					...(connect ? { connect } : {}),
 					...(route ? { route } : {}),
+					...(command.text !== undefined ? { text: text(command.text) } : {}),
 				};
 			}
 			case 'replace-plain-text':
@@ -175,7 +176,11 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			case 'update-text-field':
 				return snapshotTextFieldUpdate(command);
 			case 'delete-shape':
-				return { type: command.type, ...target };
+				return {
+					type: command.type,
+					...target,
+					...(command.deferred ? { deferred: true } : {}),
+				};
 			case 'rotate-shape':
 				numbers(command.angle);
 				return { type: command.type, ...target, angle: command.angle };

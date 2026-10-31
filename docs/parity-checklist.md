@@ -406,8 +406,12 @@ installed Visio 16 build is used to check that saved files open without repair.
       are shown disabled with the reason; a Menu text is refreshed after a run only when it is an
       `IF`/`&` of strings; handles locked by XCon/YCon or driven by a formula such as
       `Width*0.5+User.Offset` cannot be moved; geometry updates on release, not during the drag;
-      tab stops follow the documented Tabs cell names without a Visio-authored sample and lay out
-      for left-aligned text only, from the text block's left margin, with a 0.5 in default.
+      tab stops read the `Position<n>`/`Alignment<n>` cells that Visio 16 saves (checked against
+      Visio-saved stencil masters and a page Visio re-saved), but COM cannot add stops (the Tabs
+      section refuses new rows and cell writes are not kept), so the alignment codes 1 to 3 and
+      how Visio lays out centred, right and decimal stops are not compared with Visio's text, and a
+      `tp` row above 0 is not seen in any Visio file. Layout is for left-aligned text only, from the
+      text block's left margin, with a 0.5 in default.
 - [ ] **P1** Containers and lists: containers now write `msvStructureType`, `msvSDContainer*` rows and
       `DEPENDSON` relationships (container kind 4, member back reference kind 1), but those kinds are
       not yet confirmed in a Visio build, and lists are not modelled (`edit-container-members.ts`).
@@ -417,9 +421,17 @@ installed Visio 16 build is used to check that saved files open without repair.
       source itself: the connection names the file, not its folder.
 - [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
       pictures are refused on insert.
-- [ ] **P1** Bevel and 3-D rotation are approximations (a lighting overlay and a parallel
-      projection; no perspective foreshortening, extrusion, bevel contour or bottom bevel, themed
-      bevels are not read); text has no Visio font metrics.
+- [ ] **P1** Bevel and 3-D rotation are approximations, not Visio's renderer. Perspective
+      foreshortening (camera distance fitted to Visio 16 renders), extrusion (flat-shaded side
+      faces) and the contour are drawn (`solid-3d.ts`, `render-solid.ts`), and a themed top bevel
+      or contour is read from the effect style's `a:sp3d` (`theme-solid.ts`). Still open: the
+      bevel profiles and lighting are a blurred diffuse overlay, side-face shading is fitted to a
+      few renders, materials and lighting cells (`BevelMaterialType`, `BevelLightingType`) are
+      not read, a bottom bevel is read and reported (Visio 16 shows no change on the front),
+      text and pictures use a parallel projection, child shapes of a group are not turned, the
+      perspective gallery presets other than three are unverified angles, and the shipped Visio
+      themes carry no `a:bevelT`, so the themed bevel path has no real-file evidence. Text has
+      no Visio font metrics.
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
 - [ ] **P2** Periodic NURBS are missing; stencil previews still omit `InfiniteLine`.
 - [ ] **P2** Visio validation rule-set parts (`validation.xml`) are not modelled; Check Diagram is
@@ -446,10 +458,17 @@ installed Visio 16 build is used to check that saved files open without repair.
       formulas (`cff-recalc.ts`, `edit-swimlane-clone.ts`). A vertical Cross-Functional Flowchart
       starter is on the New page, and shapes lying in a lane join its members on load, as Visio
       does (`swimlane-membership.ts`).
-- [ ] **P1** Charts the editor creates still use plain shapes with direct cells, not Visio's hidden
-      CFF master instances (so Visio's add-in that inserts lanes and handles drops does not act on
-      them); phases, options (title, style, labels) and Direction of a chart Visio built are
-      refused.
+- [x] **P1** Charts the editor creates (File > New starters, Insert swimlane commands) are built
+      from Visio's five hidden masters (CFF Container, Swimlane List, Phase List, Swimlane,
+      Separator): the frame, lists, lanes and separators are instances of them, the page is
+      related to the masters, and Visio 16 loads them as `CFF Container.50`, `Swimlane.10` and so
+      on with the container, list and lane structure intact (`cff-author.ts`,
+      `edit-swimlane-stamp.ts`). The masters are authored here: they carry Visio's names and
+      structure rows but not its formulas, geometry or heading shapes, so the instances keep every
+      cell they carry.
+- [ ] **P1** Phases, options (title, style, labels) and Direction of a chart Visio built are
+      refused, and Visio's own add-in behaviour on a chart the editor built (its Insert Swimlane
+      and drop handling) is unverified: Visio's UI cannot be driven here.
 - [x] **P1** Org chart positions carry Visio's org chart Shape Data (Department, Telephone, Name,
       Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
       deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a
@@ -462,13 +481,20 @@ installed Visio 16 build is used to check that saved files open without repair.
       Title, Reports To; optional ID, Department, Telephone, E-Mail, Type); the text of a position
       is its Name and Title and follows them when the Shape Data changes; Delete on a position is
       Delete Position in one undo step (`ui/org-chart*.ts`, `viewer-org-chart.ts`).
-- [ ] **P2** Org chart remainders: a position that gains subordinates stays a Position Belt (Visio
-      switches its type), the Belt masters cannot be resized (their text-height formulas are not
-      evaluated), no import from a directory, the Organization Chart Wizard's options or
-      Compare/Update, reporting lines are right-angle connectors glued to the whole shape (Visio
-      glues Top and Bottom connection points and routes them itself when a position moves), the
-      masters' theme-driven colours and line patterns are reported as warnings, and a page that
-      already holds connectors cannot be grown for an imported chart.
+- [x] **P2** Org chart types and glue: a Position Belt that gains its first subordinate (Org Chart > Subordinate) becomes a Manager Belt (the position is replaced by an instance of the Manager
+      Belt master with its text, Shape Data and line), reporting lines are glued to the manager's
+      Bottom and the subordinate's Top connection points and follow a moved position, and a Belt
+      master instance can be resized (its text-height formulas keep the saved text extent and the
+      text size pass measures it afterwards).
+- [ ] **P2** Org chart remainders: a Manager Belt that loses its last subordinate does not turn
+      back into a Position Belt (the type change could not be observed through COM, where Visio's
+      org chart add-in does not run), a promoted position's Shape Data rows beyond Name, Title, Department,
+      Telephone and E-Mail are not carried over, a resized Belt's photo frame sits up to 0.004 in
+      from Visio's (the style-inherited line weight is read from the saved cache), no import from a
+      directory, the Organization Chart Wizard's options or Compare/Update, an assistant's line
+      still glues to the whole shape (it enters the assistant's side), the masters' theme-driven
+      colours and line patterns are reported as warnings, and a page that already holds connectors
+      cannot be grown for an imported chart.
 - [x] **P1** Group resize scales nested groups and rotated or flipped members as Visio does
       (`W' = W(cos^2 sx + sin^2 sy)`, checked against Visio 16 in
       `edit-group-resize-native.test.ts`); multi-selection resize takes groups, rotated shapes,
@@ -510,10 +536,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       selected shape's fields that show as text) and Advanced Data Graphics (the Edit Data Graphic
       item list: add, edit, delete) (`data-visualizer*.ts`, `data-graphic-items.ts`; ledger 2026-10-30).
 - [ ] **P1** Data graphics are still separate marked shapes, not Visio data graphic masters
-      (`DataGraphic` groups that follow their shape and refresh with the data); Data Visualizer
-      does not connect to Visio's online template service, its connector labels are text boxes that
-      do not follow the connector, and a refresh redraws the generated shapes (new IDs, one undo
-      step per stage).
+      (`DataGraphic` groups of callout item instances that follow their shape and refresh with the
+      data; ledger 2026-10-31 records how Visio stores them and why COM could not author one);
+      Data Visualizer does not connect to Visio's online template service. Closed 2026-10-31:
+      Data Visualizer connector labels are the connector's own text, and a refresh keeps the shape
+      and connector IDs of rows that remain and is one undo step.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).
@@ -545,7 +572,8 @@ installed Visio 16 build is used to check that saved files open without repair.
       (`ribbon-contextual-formats.ts`).
 - [ ] **P1** Picture Compression and Auto Balance are disabled (the editor does not re-encode or
       histogram a picture); the de/es/fr/zh-CN strings of the Picture and Container Format tabs are
-      new and need a native review.
+      new and need a native review. A terminology pass (2026-10-31) aligned the command names with
+      Microsoft's localised terms and the terms already used in each locale; it is not a native review.
 - [x] **P1** Design > More Variants: Colors, Fonts, Effects and Connectors apply one scheme each and
       mark the current one; Visio 16 opens the result and keeps the four scheme cells.
 - [ ] **P1** Embellishment writes the page's EmbellishmentIndex (Low, Medium, High as 1, 2, 3,

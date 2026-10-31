@@ -27,8 +27,8 @@ export const zhCNBackstage: Readonly<Record<string, string>> = {
 	'Current page': '当前页面',
 	'Page size': '页面大小',
 	Compatibility: '兼容性',
-	'Add Comment': '添加注释',
-	'Comment on the current page or selected shape.': '对当前页面或所选形状添加注释。',
+	'Add Comment': '添加批注',
+	'Comment on the current page or selected shape.': '对当前页面或所选形状添加批注。',
 	Browse: '浏览',
 	'Open a .vsdx drawing or a legacy .vsd preview from this device.':
 		'从此设备打开 .vsdx 图表或旧版 .vsd 预览。',

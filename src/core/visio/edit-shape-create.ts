@@ -206,6 +206,30 @@ export function createLine(
 		setCell(row, 'Y', 0);
 		section.appendChild(row);
 	}
+	if (edit.text !== undefined) appendLineTextCells(shape, width);
 	shape.appendChild(section);
+	if (edit.text !== undefined) {
+		const text = root.ownerDocument!.createElementNS(root.namespaceURI, 'Text');
+		text.appendChild(root.ownerDocument!.createTextNode(encodeVisioPlainText(edit.text)));
+		shape.appendChild(text);
+	}
 	return shape;
+}
+
+/**
+ * A line's own text block: centred on the line and kept level (TxtAngle undoes the line's
+ * angle), the way Visio draws a connector label. The text moves with the line.
+ */
+function appendLineTextCells(shape: Element, width: number): void {
+	const box = Math.max(0.5, Math.min(width, 1.2));
+	const entries: [string, number, string?][] = [
+		['TxtPinX', width / 2, 'Width*0.5'],
+		['TxtPinY', 0, 'Height*0.5'],
+		['TxtWidth', box],
+		['TxtHeight', 0.25],
+		['TxtLocPinX', box / 2, 'TxtWidth*0.5'],
+		['TxtLocPinY', 0.125, 'TxtHeight*0.5'],
+		['TxtAngle', 0, '-Angle'],
+	];
+	for (const [name, value, formula] of entries) setCell(shape, name, value, formula);
 }

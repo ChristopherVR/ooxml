@@ -1,5 +1,64 @@
 # Visio capability ledger
 
+## Tab stop cells, checked against Visio 16, 2026-10-31
+
+Visio 16 saves a paragraph's tab stops in one Tabs row (the row a `tp` marker selects, row 0 by
+default) as numbered cell pairs counted from 0: `Position0` in inches with `Alignment0`, then
+`Position1` and `Alignment1`. The stencil masters Microsoft ships show it (Entity in
+ENTITY_M.VSSX: 0.25 and 0.75 in, left; Pivot Node in DRILLD_M.VSSX: 1 in, alignment 2), and a page
+shape that Visio 16 re-saved after a stop was injected keeps the same names with `U="IN"`. Our
+reader already read these names, so no code changed; the tests now use the Visio-saved XML
+(`tab-stops.test.ts`). The Visio-saved sample is recorded by `scripts/record-visio-tab-stops.ps1`.
+
+Not closed: COM cannot add tab stops. The Tabs section refuses `AddRow` ("Operation not allowed
+for this row type") and cell writes on a text shape are not kept on save or reopen, so no stop
+was written by Visio itself. Alignment codes 1 to 3 (centre, right, decimal) follow the
+documented order and are not compared with Visio's text layout, which COM does not expose.
+Stops in a row above 0 are not seen in any stencil or saved file.
+
+## Locale terminology pass, 2026-10-31
+
+The de, es, fr and zh-CN strings added for the Picture Format, Container Format, Org Chart,
+Data Visualizer, Data Graphic Fields, Bevel and 3-D Rotation, Cross-Functional Flowchart tabs and
+the File backstage were checked for terminology consistency, not by a native speaker. Changes:
+de Bevel `Abschrägung` (matching "No Bevel"), `Container-Format` and `Container-Formatvorlagen`,
+backstage "Swimlanes" and "Verbindungslinien", and `.vsdx-Datei` in the text strings; es container
+resize message wording; fr Crop `Recadrer` (matching Crop to Square and Reset Crop); zh-CN
+Add Comment `添加批注` (matching Comments). The Picture Format names (de, es, fr, zh-CN) already
+matched the expected terms. The strings still need a native review.
+
+## Data Visualizer refresh and connector labels, 2026-10-31
+
+- **Connector labels are the connector's own text.** `create-line` takes an optional `text`; the
+  line gets a text block (`TxtPinX` at `Width*0.5`, `TxtAngle` of `-Angle` so the label stays level)
+  and a `Text` element, so a label moves, reroutes and is deleted with its connector. Visio 16 opened
+  a Data Visualizer file through COM and read `Yes` and `No` as the connectors' `Text`. Files drawn by
+  the earlier version keep their separate label text boxes until the next refresh, which removes
+  them.
+- **A refresh keeps shapes whose row key matches.** A step whose Process Step ID and Shape Type
+  are unchanged keeps its shape ID, formatting and glued connectors: only its text, Shape Data and
+  (in a cross-functional chart, when its Function changed) its lane are updated. A connector whose
+  `from>to` key remains and whose ends were kept keeps its ID and only its label text is updated.
+  Steps whose Shape Type changed, new rows and new links are drawn; rows and links no longer in the
+  table are deleted. Shapes the user added are untouched.
+- **One undo step.** A draw or refresh is one `applyEdits` call. A stencil instance can only be
+  deleted in a transaction of deletions alone, so `delete-shape` takes `deferred: true`: the editor
+  runs those deletions after the rest of the batch in a transaction of their own, still one call for
+  the caller. Other mixed delete batches keep refusing atomically.
+- **Still open: data graphic masters.** Data graphics stay separate marked shapes. Findings for
+  whoever continues: `Shape.DataGraphic = master` through Visio 16's `InvisibleApp` imports the
+  graphic's masters into the document but does not bind it to the shape (reading `DataGraphic` back
+  is empty and the page gets no callouts), so applying one could not be captured through COM here.
+  What Visio itself writes was read from its shipped PivotDiagram templates: the owner becomes a
+  `Group` whose children include an inheriting copy of the original shape (`MasterShape`) and one
+  instance per callout item (`Border rectangle`, `Text callout`, ...), each a stencil master
+  instance whose cells are formulas on the owner's `Prop` rows (`visDGCalloutItem`,
+  `visDGDefaultPos`, `visDGMinBorderSize`, `visDGCBVFill` User rows), plus an `msvDGPosition`
+  control on the owner, a `Data Graphic` layer, and the graphic itself as a hidden master of the
+  data graphic kind carrying `visDGNextItemID` and `msvDGCalloutGap`. Writing that needs the callout
+  item masters (Microsoft's, from the `DVCALL` stencil) and an owner-to-group conversion, which was
+  not attempted. Data Visualizer still does not use Visio's online template service.
+
 ## Control handles, shape actions, User and Scratch cells and tab stops, 2026-10-30
 
 The model now carries each shape's Controls rows (`controls`: local position, prompt, which axes a
@@ -239,6 +298,42 @@ only, not by rendering. The de/es/fr/zh-CN strings are unreviewed.
   Plain-container flowcharts are brought over to lists on their first edit.
 - **Observed.** On load Visio adds the shapes under a list to that list's members; harmless to
   list order but not what Visio itself saves.
+
+## Org chart types, connection point glue and Belt resize, 2026-10-31
+
+- **Type change.** Org Chart > Subordinate on a Position Belt that has no subordinates now
+  replaces it with an instance of the Manager Belt master (`ui/org-chart-belt.ts`): the new
+  instance is dropped on the old one's spot, takes its text and the five org Shape Data rows,
+  every connector glued to the old shape is glued to the new one (keeping its connection
+  point), the tree is laid out with the new id, and the old shape is deleted last, all in the
+  one undo step. The shape id of the position changes. A coworker is always a Position Belt (an
+  assistant's coworker an Assistant Belt) and an assistant never promotes its manager.
+- **Not verified.** Whether Visio also turns a Manager Belt back into a Position Belt when its
+  last subordinate goes: its org chart add-in (ORGCHART.DLL) does not run under COM, so the
+  rule cannot be observed from a file check. Nothing reverts here. Read through COM instead:
+  an Executive Belt dropped from ORGCH_M.VSTX and glued to a Position Belt through
+  `Shape.CellsSRC(7, row, 0)` keeps both names and records the glue as FromCell BeginX ToCell
+  `Connections.Bottom.X` and FromCell EndX ToCell `Connections.Top.X` (ShapeRouteStyle 3).
+- **Glue.** Reporting lines now glue to the Bottom (Connection row 3) of the manager and the
+  Top (row 0) of the subordinate, written as `PAR(PNT(Sheet.N!Connections.X4,...))` with
+  ToCell `Connections.X4` / `Connections.X1`, where Visio names the rows
+  (`Connections.Bottom.X`). The Belt masters name their Connection rows (Top, Left, Right,
+  Bottom, Float) and give them no IX; the engine now numbers such rows by position
+  (`edit-stencil-connector.ts`), which glue to those rows needs. A moved position keeps its
+  line on the same points (the existing follow-and-reroute, covered by a test). An assistant's
+  line still glues to the whole shape, since it enters the assistant's side.
+- **Resize.** A Belt master instance can be resized. Instance recalculation keeps the saved
+  value of a cell that measures the shape's own text (`TEXTHEIGHT(TheText,TxtWidth)`) and the
+  text size pass that follows the edit measures it, as for other text-sized shapes; a data cell
+  worked out from such a value keeps its cache. Three unit rules were needed: LineWeight and
+  the Img* cells are lengths, and an untagged User cell whose formula starts with a length
+  literal (`5MM*DropOnPageScale`) is a length. Read through COM: the resized Position Belt
+  (2 x 1.2 in) matches a Position Belt Visio 16 resized the same way on 76 of 80 cells (the
+  other three are the position and the text height, which Visio measured for an empty
+  shape); the fourth, the photo frame's PinY, differs by 0.0035 in, because the style-inherited
+  line weight is read from the saved cache. The font of a position is the theme's, which the
+  editor does not measure, so the text height keeps its saved value (diagnostic
+  `edit-text-size-kept`).
 
 ## Org chart masters, import and data text, 2026-10-30
 
@@ -1858,6 +1953,48 @@ export ignores both effects.
   no measured glyph and stay unthemed. That mapping is unverified against a real theme that
   carries arrowheads and has no unit test beyond the literal-cell case.
 
+## Perspective, extrusion, contour and themed bevels, 2026-10-31
+
+Evidence came from Visio 16 over COM (cell names, value semantics) and its raster export. Rendering
+is still not pixel-identical to Visio: the numbers below are fits to a handful of renders.
+
+- Cells: `BevelDepthSize` (length, PT) and `BevelDepthColor` (extrusion), `BevelContourSize` and
+  `BevelContourColor`, besides the cells of the previous entry. `BevelBottomType/Width/Height` also
+  exist. `RotationType` 0, 1 and 2 render alike. Visio draws depth and contour only when
+  `BevelTopType` is 1-12 (a depth on a shape with no top bevel, or a contour alone, changed nothing
+  in the export), even with a bevel of zero size, so the reader keeps a zero-size bevel as the
+  "solid" marker. A bottom bevel alone, or with the top bevel, changed nothing on a face-on shape.
+- Perspective: `Perspective` is a field of view, clamped at 120 degrees. Measured on 3x2 in, 6x2 in,
+  1.5x1 in and 3x6 in shapes at 30, 60 and 100 degrees, the near and far edge scales follow
+  `f / (f - z)` with `f = 6.36 in / tan(fov / 2)`, independent of the shape size, with the shape
+  centre fixed. RotationXAngle is a turn about the vertical axis (positive brings the right side
+  nearer) and RotationYAngle about the horizontal axis (positive brings the top nearer), then
+  RotationZAngle in the page plane. This is a rigid rotation, so the old parallel matrix is its
+  `f -> infinity` case (unit-tested). A shape with perspective or an extrusion is drawn from its
+  projected, flattened outline (`solid-3d.ts`, `render-solid.ts`), so the outline is polylines.
+- Extrusion: runs away from the viewer; the back outline is the same shape at `z = -depth`, and the
+  visible side faces are back-face culled and painted far to near. Offsets match Visio at the angles
+  measured (depth 30 pt, 35 degrees: 0.4 in * sin 35 in picture). Side brightness is a fit to four
+  renders (right dark, top slightly dark, bottom light), not Visio's lighting; Visio shades the
+  faces with a gradient and honours `BevelLightingType`/`BevelMaterialType`, which are not read.
+- Contour: drawn as the extruded silhouette stroked at twice the contour size beneath the faces.
+- Themed bevels: a `Themed` `BevelTopType`, `BevelTopWidth`, `BevelTopHeight`, `BevelContourSize`
+  or `BevelContourColor` is read from the selected effect style's `a:sp3d` (`bevelT` preset names
+  map to types 1-12 by gallery order, `contourW`, `contourClr` with `phClr` as the shape fill). The
+  themes shipped with Visio 16 (Facet checked) have `a:sp3d` with only `extrusionClr` and
+  `contourClr`, so for them nothing is drawn; a theme with `bevelT` is unit-tested on a generated
+  theme, with no real-file evidence.
+- UI: the 3-D Rotation gallery gains Perspective Above, Below, Heroic Left and Heroic Right with
+  our own angles (unverified against Visio's gallery); the Format Shape pane's Effects section has
+  3-D depth and contour size fields (colours are settable through the edit but have no pane
+  control yet).
+- PDF export draws the projected outline, extrusion and contour as ordinary paths and reports that
+  text and pictures use a parallel projection; the bevel lighting overlay is still skipped and
+  reported.
+- Still open: bevel profiles and lighting, materials, side-face gradients, a bottom bevel's
+  effect (none visible from the front), turning child shapes with a group, perspective for text
+  and pictures.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.
@@ -2186,3 +2323,32 @@ Warnings are useful but not comprehensive. Absence of diagnostics is not a fidel
 - [Introduction to VSDX](https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
 - [MS-VSDX](https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/50c23601-c943-4ff2-b4a1-02445f52daf0)
 - [Engine](https://github.com/ChristopherVR/ooxml), implemented in this repository under `src/core/visio` (the viewer UI is `src/ui/src/visio`).
+
+## Created charts as master instances, 2026-10-31
+
+- **Instances of Visio's hidden masters.** `create-swimlanes` (File > New starters and the Insert
+  swimlane commands) now adds CFF Container, Swimlane List, Phase List, Swimlane and Separator to
+  the drawing (hidden, `MasterType` 34, `cff-author.ts`) and every edit that touches a
+  cross-functional page stamps the frame, lists, lanes and separators with those masters
+  (`edit-swimlane-stamp.ts`), including lanes and separators inserted later. The page is related
+  to each master it uses.
+- **Why the page relationship matters.** Found with Visio 16 through COM: an instance of a master
+  the page has no relationship to is silently dropped when Visio loads the page (the whole chart
+  vanished). Bisected over fifteen variants of the masters part, entry, IDs, names and instance
+  cells; only the page relationship mattered. `edit-master-instance.ts` already did this for
+  stencil drops.
+- **Verified with Visio 16 (COM, read-only).** Both starters open without repair; the masters are
+  listed hidden; shapes are named `CFF Container.50`, `Swimlane List.51`, `Swimlane.10`, each with
+  the master; the container reports the two lists as members, the Swimlane List reports the lanes
+  in order, and `User.numLanes`, `visCFFStyle`, `CFFVertical` and `msvSDListDirection` read back.
+- **How the editor treats them.** The masters are authored here, not copied from Visio: they hold
+  Visio's names and the structure User rows, but none of its formulas, geometry or heading
+  sub-shapes. Every instance keeps all its cells, so the existing plain-shape edit paths are
+  unchanged: the stamp is lifted when a transaction loads the pages and put back before they are
+  saved, and the masters this package wrote answer no role to the Visio-built-chart paths
+  (`CffMasterSet.roleOf`), so only `authoredId` and `authoredPart` see them.
+- **Still open.** Visio's own add-in (Insert Swimlane, drop handling) acting on a chart the editor
+  built was not exercised: it needs Visio's UI, which is not driven here, and the authored
+  masters lack the formulas that add-in may rely on. Charts saved before this change gain the
+  masters only when they are re-created. Phases (Insert Phase), options (title, style, labels)
+  and Direction of a chart Visio built are still refused, as before.
