@@ -373,12 +373,14 @@ installed Visio 16 build is used to check that saved files open without repair.
       are shown disabled with the reason; a Menu text is refreshed after a run only when it is an
       `IF`/`&` of strings; handles locked by XCon/YCon or driven by a formula such as
       `Width*0.5+User.Offset` cannot be moved; geometry updates on release, not during the drag;
-      tab stops read the `Position<n>`/`Alignment<n>` cells that Visio 16 saves (checked against
-      Visio-saved stencil masters and a page Visio re-saved), but COM cannot add stops (the Tabs
-      section refuses new rows and cell writes are not kept), so the alignment codes 1 to 3 and
-      how Visio lays out centred, right and decimal stops are not compared with Visio's text, and a
-      `tp` row above 0 is not seen in any Visio file. Layout is for left-aligned text only, from the
-      text block's left margin, with a 0.5 in default.
+      tab stops read the `Position<n>`/`Alignment<n>` cells that Visio 16 saves; the alignment
+      codes (0 left, 1 centre, 2 right, 3 decimal), the 0.5 in default steps and the stop origin
+      were measured against Visio 16's SVG export of injected Tabs rows, and the layout (left,
+      centred and right-aligned lines; the PDF export too) and a Text dialog Tabs tab that writes
+      the stops match them. Still open: justified, distributed and right-to-left lines with tabs,
+      stops relative to a paragraph's left indent, `tp` rows above 0 (not seen in any Visio file)
+      and what Visio writes for a single stop (it ignored the alignment of a one-pair row we
+      injected, so the editor writes two pairs).
 - [ ] **P1** Containers and lists: containers now write `msvStructureType`, `msvSDContainer*` rows and
       `DEPENDSON` relationships (container kind 4, member back reference kind 1), but those kinds are
       not yet confirmed in a Visio build, and lists are not modelled (`edit-container-members.ts`).

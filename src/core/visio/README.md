@@ -51,7 +51,7 @@ The Text dialog properties extend `format-text`: `fontTransparency` (percent),
 (one character), `margins`, `textBackground` (hex or `none`, saved with Visio's `RGB()+1`
 formula), `textBackgroundTransparency` and `textBlock` (the Text Block tool: centre, size
 as fractions of Width/Height and an angle, written as `Width*k`/`Height*k` formulas so
-the block follows later resizes). Tab stops are not written.
+the block follows later resizes) and `tabStops` (`{ position, align }` in points from the text block, written as Visio 16's `Position<n>`/`Alignment<n>` pairs, padded to two pairs).
 
 ## Layer properties
 

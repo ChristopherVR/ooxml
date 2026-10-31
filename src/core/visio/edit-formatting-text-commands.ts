@@ -52,6 +52,11 @@ export interface VisioTextFormatExtras {
 	/** Paragraph.BulletStr: a custom bullet character; empty clears it. */
 	bulletText?: string;
 	margins?: VisioTextMargins;
+	/**
+	 * The shape's tab stops (Tabs row 0), replacing the existing ones. Positions are points from the
+	 * text block's left edge; at most 64, in ascending order. An empty list clears them.
+	 */
+	tabStops?: { position: number; align: 'left' | 'center' | 'right' | 'decimal' }[];
 	/** TextBkgnd: an opaque colour or `none`. */
 	textBackground?: string;
 	textBackgroundTransparency?: number;
@@ -142,6 +147,19 @@ export function snapshotTextFormatExtras(edit: VisioTextFormatExtras): VisioText
 				margins[side] = range(edit.margins[side], 0, 7200, 'Text margin');
 		if (!Object.keys(margins).length) fail('INVALID_EDIT', 'Text margins require a side.');
 		result.margins = margins;
+	}
+	if (edit.tabStops !== undefined) {
+		if (!Array.isArray(edit.tabStops) || edit.tabStops.length > 64)
+			fail('INVALID_EDIT', 'Tab stops are a list of at most 64.');
+		let previous = -1;
+		result.tabStops = edit.tabStops.map((stop) => {
+			const position = range(stop?.position, 0.5, 7200, 'Tab stop position');
+			if (position <= previous) fail('INVALID_EDIT', 'Tab stops must ascend without repeats.');
+			previous = position;
+			if (!['left', 'center', 'right', 'decimal'].includes(stop.align))
+				fail('INVALID_EDIT', 'Unknown tab stop alignment.');
+			return { position: Math.round(position * 100) / 100, align: stop.align };
+		});
 	}
 	if (edit.textBackground !== undefined) {
 		if (

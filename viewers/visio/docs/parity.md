@@ -26,6 +26,39 @@
   application (`Addons` lists Organization Chart, but no command to Subordinate or Delete is
   reachable without the UI). Nothing observed shows whether Visio reverts a Manager Belt or
   what it does for a shape glued under a Position Belt, so neither is implemented.
+## Tab stop alignment and the Tabs editor, checked against Visio 16, 2026-10-31
+
+Measured in Visio 16 (installed, through COM): shapes whose Tabs rows were injected into the page
+XML (the `Position<n>`/`Alignment<n>` pairs of the entry below), opened, and the page exported with
+`Page.Export` to SVG, whose `dx` offsets give the text positions (Calibri 12 pt, left margin 0).
+Alignment codes are 0 left, 1 centre, 2 right and 3 decimal: a 12.50 after one tab sat centred
+(`dx` 4.281em), ending (3.142em) or with its point (4.408em) on the 1 in stop, and on 0 it started
+there (5.421em). A decimal stop on text without a decimal point ends the text on the stop, as a
+right stop does. With no stops, tabs step to the next multiple of 0.5 in; past the last stop the
+same 0.5 in steps continue from that stop; a tab always moves to a stop strictly to the right of
+the text so far; text that cannot fit before a right stop follows the previous text directly.
+Stops are measured from the text block's left edge inside the margin (a 0.25 in margin moved the
+stop with it). In a centred or right-aligned paragraph the line is laid out from its own start
+and the whole line is then moved to its anchor, so the stops are measured from that start.
+
+Visio 16 ignored the alignment of a Tabs row that held a single Position/Alignment pair in the
+injected XML (the stop worked as left, and the re-saved row held the alignment value as a second
+position); with a second pair, even a `0`/`0` one, every code was honoured. The editor therefore
+always writes at least two pairs, padded with the 0/0 pair Visio itself adds on a re-save.
+
+Changed: `visioTabStarts` already handled all four alignments and now has unit tests built from
+these positions (`tab-stops-visio.test.ts`); the renderer (and the PDF export, which draws its
+rows) now lays out centred and right-aligned lines with tabs instead of keeping one run. The
+Text dialog's Tabs tab writes the stops (`tabStops` on `format-text`, a list such as
+`36, 108 center, 180 decimal` in points), covered by `edit-text-tabs.test.ts` and
+`e2e/visio/text-tab-stops.spec.ts`. The dialog fields are English only, as the dialog's other
+fields are today.
+
+Still open: justified and distributed lines keep one run; right-to-left lines are untouched;
+stops are measured from the text block margin, not from a paragraph's left indent (not checked);
+the editor writes Tabs row 0 for the whole shape, so a text with `tp` markers pointing at other
+Tabs rows keeps those rows; the shortened list zeroes surplus pairs rather than removing cells;
+the file Visio itself would write for a single stop is unknown.
 
 ## Tab stop cells, checked against Visio 16, 2026-10-31
 

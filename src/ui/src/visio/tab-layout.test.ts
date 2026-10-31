@@ -17,6 +17,7 @@ const run = (text: string) => ({
 const text = (
 	plain: string,
 	tabs: NonNullable<VisioText['paragraphs']>[number]['tabs'],
+	align: 'left' | 'center' | 'right' | 'justify' = 'left',
 ): VisioText =>
 	({
 		plainText: plain,
@@ -25,7 +26,7 @@ const text = (
 			{
 				start: 0,
 				end: plain.length,
-				horizontalAlign: 'left',
+				horizontalAlign: align,
 				indentLeft: 0,
 				indentRight: 0,
 				indentFirst: 0,
@@ -66,6 +67,23 @@ describe('tab stops in drawn text', () => {
 		expect(parts[0]!.x).toBeCloseTo(0.1);
 		expect(parts[1]!.x).toBeCloseTo(1.1);
 		expect(parts[2]!.x).toBeCloseTo(3.1 - 0.2);
+	});
+
+	it('lays a centred or right-aligned line out from its own start, then moves it (Visio 16)', () => {
+		const stops = [{ position: 1, align: 'left' as const }];
+		const place = (align: 'center' | 'right') => {
+			const layout = layoutParagraphs(text('ab\tcd', stops, align), measure);
+			return layoutTabbedLine(layout.lines[0]!, measure)!.map((item) => item.x);
+		};
+		// The line is 1 in of stop plus "cd" (0.2 in) wide; the stop is 1 in from the line start.
+		const centred = place('center');
+		expect(centred[0]).toBeCloseTo(3 - 0.6);
+		expect(centred[1]! - centred[0]!).toBeCloseTo(1);
+		const right = place('right');
+		expect(right[1]! + 0.2).toBeCloseTo(5.9);
+		expect(right[1]! - right[0]!).toBeCloseTo(1);
+		const justified = layoutParagraphs(text('ab\tcd', stops, 'justify'), measure);
+		expect(layoutTabbedLine(justified.lines[0]!, measure)).toBeUndefined();
 	});
 
 	it('draws one positioned row per part and leaves lines without tabs alone', () => {

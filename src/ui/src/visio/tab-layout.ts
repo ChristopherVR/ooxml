@@ -24,14 +24,18 @@ const widthOf = (runs: readonly VisioTextRun[], measure: MeasureText, stop?: str
 
 /**
  * Splits a left-aligned line at its tab characters and places each part at the tab stop it
- * reaches (see `visioTabStarts`). The tab characters themselves are not drawn. Lines of other
- * alignments keep their single run of text, as before.
+ * reaches (see `visioTabStarts`). The tab characters themselves are not drawn. A centred or
+ * right-aligned line is laid out from its own start (Visio 16 measures the stops from there) and
+ * the whole line then moves to its anchor; justified and distributed lines keep their single run
+ * of text, as before.
  */
 export function layoutTabbedLine(
 	line: PositionedLine,
 	measure: MeasureText = measureBrowserText,
 ): TabbedSegment[] | undefined {
-	if (line.align !== 'left' || line.direction !== 'ltr' || !lineHasTab(line)) return undefined;
+	const anchored = line.align === 'center' || line.align === 'right';
+	if ((line.align !== 'left' && !anchored) || line.direction !== 'ltr' || !lineHasTab(line))
+		return undefined;
 	const parts: VisioTextRun[][] = [[]];
 	for (const run of line.runs) {
 		const pieces = run.text.split('\t');
@@ -47,6 +51,14 @@ export function layoutTabbedLine(
 			: width;
 		return { width, decimal };
 	});
-	const starts = visioTabStarts(segments, line.tabs?.stops ?? [], line.tabs?.origin ?? 0, line.x);
+	const stops = line.tabs?.stops ?? [];
+	let starts: number[];
+	if (anchored) {
+		starts = visioTabStarts(segments, stops);
+		const last = segments.length - 1;
+		const width = starts[last]! + segments[last]!.width;
+		const shift = line.x - (line.align === 'center' ? width / 2 : width);
+		starts = starts.map((at) => at + shift);
+	} else starts = visioTabStarts(segments, stops, line.tabs?.origin ?? 0, line.x);
 	return parts.map((runs, index) => ({ runs, x: starts[index]! }));
 }
