@@ -23,6 +23,11 @@ export function templateThumbnail(id: VisioTemplateId): Promise<string | undefin
 			}
 		})();
 		cache.set(id, found);
+		// A transient renderer/DOM failure must not permanently remove the tile's preview.
+		const pending = found;
+		void pending.then((source) => {
+			if (!source && cache.get(id) === pending) cache.delete(id);
+		});
 	}
 	return found;
 }
