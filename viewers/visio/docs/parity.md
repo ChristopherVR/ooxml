@@ -15,6 +15,7 @@ for this row type") and cell writes on a text shape are not kept on save or reop
 was written by Visio itself. Alignment codes 1 to 3 (centre, right, decimal) follow the
 documented order and are not compared with Visio's text layout, which COM does not expose.
 Stops in a row above 0 are not seen in any stencil or saved file.
+
 ## Locale terminology pass, 2026-10-31
 
 The de, es, fr and zh-CN strings added for the Picture Format, Container Format, Org Chart,
@@ -25,6 +26,7 @@ backstage "Swimlanes" and "Verbindungslinien", and `.vsdx-Datei` in the text str
 resize message wording; fr Crop `Recadrer` (matching Crop to Square and Reset Crop); zh-CN
 Add Comment `添加批注` (matching Comments). The Picture Format names (de, es, fr, zh-CN) already
 matched the expected terms. The strings still need a native review.
+
 ## Data Visualizer refresh and connector labels, 2026-10-31
 
 - **Connector labels are the connector's own text.** `create-line` takes an optional `text`; the
