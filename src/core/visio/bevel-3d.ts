@@ -10,6 +10,7 @@
 import { fail } from './package-common';
 import type { FormattingWrite } from './edit-formatting';
 import { number, type Cells } from './sheet';
+import { VISIO_ROTATION_PRESETS } from './rotation-presets';
 import type { ThemeSolid } from './theme-solid';
 
 /** A top bevel: Visio type 1-12 and its width and height in inches. */
@@ -17,6 +18,10 @@ export interface VisioBevel {
 	type: number;
 	width: number;
 	height: number;
+	/** `BevelLightingType` 1-15, when the shape saves a non-default one (see `bevel-shading.ts`). */
+	lighting?: number;
+	/** `BevelMaterialType` 1-12, when saved and not the default. */
+	material?: number;
 }
 /** Extrusion (Format Shape > 3-D Format > Depth): `BevelDepthSize` in inches and its colour. */
 export interface VisioExtrusion {
@@ -62,36 +67,7 @@ export type VisioBevelPreset = string;
 export const isVisioBevelPreset = (value: unknown): value is VisioBevelPreset =>
 	value === 'none' || VISIO_BEVEL_PRESETS.some((preset) => preset.id === value);
 
-/** Rotation presets in degrees. Positive X turns the right side away and positive Y the top. */
-export const VISIO_ROTATION_PRESETS: readonly {
-	id: string;
-	label: string;
-	x: number;
-	y: number;
-	z: number;
-	perspective: number;
-}[] = [
-	['off', 'No Rotation', 0, 0, 0, 0],
-	['isometric-left-down', 'Isometric Left Down', -45, -35, 0, 0],
-	['isometric-right-up', 'Isometric Right Up', 45, 35, 0, 0],
-	['isometric-top-up', 'Isometric Top Up', 0, 45, 0, 0],
-	['off-axis-left', 'Off Axis Left', -30, 20, 0, 0],
-	['off-axis-right', 'Off Axis Right', 30, 20, 0, 0],
-	['perspective-left', 'Perspective Left', -35, 0, 0, 60],
-	['perspective-right', 'Perspective Right', 35, 0, 0, 60],
-	['perspective-relaxed', 'Perspective Relaxed', 20, 10, 0, 60],
-	['perspective-above', 'Perspective Above', 0, -25, 0, 60],
-	['perspective-below', 'Perspective Below', 0, 25, 0, 60],
-	['perspective-heroic-left', 'Perspective Heroic Left', -45, -20, 0, 90],
-	['perspective-heroic-right', 'Perspective Heroic Right', 45, -20, 0, 90],
-].map(([id, label, x, y, z, perspective]) => ({
-	id: id as string,
-	label: label as string,
-	x: x as number,
-	y: y as number,
-	z: z as number,
-	perspective: perspective as number,
-}));
+export { VISIO_ROTATION_PRESETS };
 export type VisioRotationPreset = string;
 export const isVisioRotationPreset = (value: unknown): value is VisioRotationPreset =>
 	VISIO_ROTATION_PRESETS.some((preset) => preset.id === value);
@@ -186,7 +162,16 @@ export function shapeBevel(cells: Cells, themed?: ThemeSolid): VisioBevel | unde
 	const type = Math.trunc(read('BevelTopType', themed?.bevel?.type));
 	const width = clamp(read('BevelTopWidth', themed?.bevel?.width), 2);
 	const height = clamp(read('BevelTopHeight', themed?.bevel?.height), 2);
-	return type >= 1 && type <= 12 ? { type, width, height } : undefined;
+	if (type < 1 || type > 12) return undefined;
+	const lighting = Math.trunc(saved(cells, 'BevelLightingType'));
+	const material = Math.trunc(saved(cells, 'BevelMaterialType'));
+	return {
+		type,
+		width,
+		height,
+		...(lighting >= 1 && lighting <= 15 ? { lighting } : {}),
+		...(material >= 1 && material <= 12 ? { material } : {}),
+	};
 }
 /** The extrusion, only on a shape with a top bevel (a depth alone is not drawn by Visio 16). */
 export function shapeExtrusion(

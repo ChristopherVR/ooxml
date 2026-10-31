@@ -139,12 +139,16 @@ class Converter {
 			return;
 		}
 		if (element.hasAttribute('data-bevel')) {
-			this.degraded.add('Bevel lighting is not drawn.');
+			this.degraded.add('Bevel profiles and lighting are not drawn.');
 			return;
 		}
+		if (element.hasAttribute('data-group3d-perspective'))
+			this.degraded.add(
+				'The children of a group turned with perspective use one affine fit of the projection.',
+			);
 		if (element.hasAttribute('data-solid3d'))
 			this.degraded.add(
-				'Perspective and extrusion are drawn from the projected outline with flat shading; text and pictures use a parallel projection.',
+				'Perspective and extrusion are drawn from the projected outline with flat shading; text and pictures use one affine fit of the projection (no convergence).',
 			);
 		else if (element.hasAttribute('data-perspective'))
 			this.degraded.add('3-D rotation is drawn as a parallel projection without perspective.');

@@ -32,7 +32,7 @@ import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
 import { renderShadow } from './render-shadow';
 import { renderShapeEffects } from './render-effects';
-import { flatContent, renderBevel, rotation3dWrapper } from './render-bevel';
+import { flatContent, groupChildrenWrapper, renderBevel, rotation3dWrapper } from './render-bevel';
 import { renderSolid, solidRender } from './render-solid';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -197,7 +197,10 @@ function drawShape(
 	const world = composeVisioTransform(parentTransform, shape.transform);
 	const own = () => drawOwn(shape, group, context, world);
 	const children = () => {
-		for (const child of shape.children) drawShape(child, group, context, pageId, world);
+		// A turned group turns its children with it.
+		const host = groupChildrenWrapper(shape, world);
+		if (host) group.append(host);
+		for (const child of shape.children) drawShape(child, host ?? group, context, pageId, world);
 	};
 	if (shape.kind === 'group' && shape.groupDisplayMode === 0) {
 		children();
@@ -224,7 +227,7 @@ function drawOwn(
 	if (turned) outer.append(turned);
 	const group = turned ?? outer;
 	// With projected outlines, text and pictures sit in a parallel-projected container.
-	const flat = solid && !shape.style.rotation3d?.keepTextFlat ? flatContent(shape) : group;
+	const flat = solid && !shape.style.rotation3d?.keepTextFlat ? flatContent(shape, world) : group;
 	const lineStyle = context.static ? visioSvgStrokeStyle(shape.style) : shape.style;
 	// A paint-free text box needs its text bounds as a pointer target, including gaps between glyphs.
 	if (
