@@ -62,3 +62,8 @@ export {
 export { normalizePartPath, resolveReferenceUriToPart } from './reference-utils';
 export { computeDigestBase64 } from './digest';
 export { computeDetailStatus, computeVerificationStatus } from './inspection-status';
+export {
+	inspectPackageSignatures,
+	stripPackageSignatures,
+	type PackageSignatures,
+} from './package';

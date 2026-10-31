@@ -25,6 +25,15 @@ An effect authored in the animation panel is reconciled into the slide's existin
 
 ### Detecting gaps at runtime
 
+The automation save path now forwards sections, slideshow properties and custom shows to the
+core writer. `manage_sections` changes and `update_presentation_properties` settings survive
+reload, including `showSlidesCustomShowId`; deleting the selected custom show restores all-slide
+playback. Registered-tool round-trip coverage is in
+`src/core/pptx/automation/__tests__/presentation-save.test.ts` in the workspace. This closes the
+automation persistence gap, not the remaining slide-show and authoring gaps in the parity checklist.
+The reader also recognises empty `present`, `browse` and `kiosk` elements, so those slideshow
+modes survive a save and reload without requiring extra attributes.
+
 You do not have to guess whether a file hit a limitation. The load pipeline reports many unsupported or approximated constructs (not all: animation substitutes, for example, raise no warning) on `data.warnings`, typed as `PptxCompatibilityWarning`:
 
 ```ts

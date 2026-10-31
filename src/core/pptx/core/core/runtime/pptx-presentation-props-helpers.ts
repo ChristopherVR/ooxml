@@ -42,9 +42,9 @@ export function parseShowProperties(
 	const props: Partial<PptxPresentationProperties> = {};
 
 	// Show type
-	if (showPr['p:present']) {
+	if (showPr['p:present'] !== undefined) {
 		props.showType = 'presented';
-	} else if (showPr['p:browse']) {
+	} else if (showPr['p:browse'] !== undefined) {
 		props.showType = 'browsed';
 		const browseNode = showPr['p:browse'] as XmlObject;
 		// P1-G1: `p:browse/@showScrollbar` (schema default true). Only read the
@@ -54,7 +54,7 @@ export function parseShowProperties(
 		if (browseNode?.['@_showScrollbar'] !== undefined) {
 			props.showScrollbar = parseXmlBoolean(browseNode['@_showScrollbar'], true);
 		}
-	} else if (showPr['p:kiosk']) {
+	} else if (showPr['p:kiosk'] !== undefined) {
 		props.showType = 'kiosk';
 		// Parse kiosk restart interval (in ms)
 		const kioskNode = showPr['p:kiosk'] as XmlObject;

@@ -4358,6 +4358,11 @@
 					"minimum": 1,
 					"maximum": 9007199254740991
 				},
+				"showSlidesCustomShowId": {
+					"description": "Existing custom show id to use when showSlidesMode is customShow",
+					"type": "string",
+					"minLength": 1
+				},
 				"penColor": {
 					"description": "Annotation pen color (hex)",
 					"type": "string"
