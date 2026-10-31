@@ -57,6 +57,10 @@ export function shapeDataOwner(root: Element, shapeId: string): Element {
 	return shape;
 }
 
+const isCalloutFieldCell = (cell: Element): boolean =>
+	attribute(cell, 'N') === 'Value' &&
+	attribute(cell.parentNode as Element, 'N') === 'msvCalloutField';
+
 /** Refuse when a ShapeSheet formula anywhere reads one of the rows being changed. */
 export function assertShapeDataUnreferenced(
 	roots: Iterable<Element>,
@@ -70,6 +74,8 @@ export function assertShapeDataUnreferenced(
 		for (const cell of Array.from(root.getElementsByTagNameNS(root.namespaceURI, 'Cell'))) {
 			check();
 			const formula = executableCellFormula(attribute(cell, 'F'));
+			// A data graphic callout reads its row to show it; the edit rewrites the callout after.
+			if (isCalloutFieldCell(cell)) continue;
 			if (formula && pattern.test(formula))
 				fail(
 					'UNSUPPORTED_SHAPE_DATA_EDIT',

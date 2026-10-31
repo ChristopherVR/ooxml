@@ -116,6 +116,12 @@ import { snapshotMasterInstance, type VisioMasterInstanceEdit } from './edit-mas
 export type { VisioMasterInstanceEdit } from './edit-master-instance';
 import { snapshotStencilMasterDrop, type VisioStencilMasterDropEdit } from './edit-master-drop';
 export type { VisioStencilMasterDropEdit } from './edit-master-drop';
+import {
+	isVisioDataGraphicEdit,
+	snapshotDataGraphicEdit,
+	type VisioSetDataGraphicEdit,
+} from './edit-data-graphic';
+export type { VisioDataGraphicItemSpec, VisioSetDataGraphicEdit } from './edit-data-graphic';
 import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
 import {
 	isVisioContainerEdit,
@@ -299,6 +305,7 @@ export type VisioEdit =
 	| VisioLayerPropertiesEdit
 	| VisioMasterInstanceEdit
 	| VisioStencilMasterDropEdit
+	| VisioSetDataGraphicEdit
 	| VisioGuideEdit
 	| VisioContainerEdit
 	| VisioPictureEdit;
@@ -411,6 +418,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'set-layer-properties') return snapshotLayerProperties(edit);
 		if (edit.type === 'insert-master-instance') return snapshotMasterInstance(edit);
 		if (edit.type === 'drop-stencil-master') return snapshotStencilMasterDrop(edit);
+		if (isVisioDataGraphicEdit(edit)) return snapshotDataGraphicEdit(edit);
 		if (isVisioGuideEdit(edit)) return snapshotGuideEdit(edit);
 		if (isVisioContainerEdit(edit)) return snapshotContainerEdit(edit);
 		if (isVisioPictureEdit(edit)) return snapshotPictureEdit(edit);

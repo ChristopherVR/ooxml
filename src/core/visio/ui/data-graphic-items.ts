@@ -12,6 +12,11 @@ import {
 	type VisioDataGraphicPosition,
 } from './data-graphic-config';
 import { visioDataGraphicEdits, visioRemoveDataGraphicEdits } from './data-graphics';
+import {
+	visioNativeGraphicAccepts,
+	visioNativeGraphicItems,
+	visioSetNativeGraphicEdit,
+} from './data-graphic-native';
 import { visioNextShapeId } from './shape-id';
 
 /** One entry of a shape's data graphic, as the Edit Data Graphic dialog lists it. */
@@ -62,6 +67,28 @@ export function visioSetDataGraphicItemEdits(
 	const edits: VisioEdit[] = [];
 	let next = Number(visioNextShapeId(page));
 	for (const owner of owners) {
+		if (item.kind !== 'color' && visioNativeGraphicAccepts(page, owner)) {
+			const kept = visioNativeGraphicItems(page, owner.id).filter(
+				(config) =>
+					!(config.kind === item.kind && config.field === item.field) &&
+					!(config.kind === replacing?.kind && config.field === replacing?.field),
+			);
+			edits.push(
+				...(replacing?.kind === 'color'
+					? visioRemoveDataGraphicEdits(page, [owner.id], 'color', replacing.field)
+					: []),
+				visioSetNativeGraphicEdit(page, owner.id, [
+					...kept,
+					{
+						kind: item.kind,
+						field: item.field,
+						...(item.position ? { position: item.position } : {}),
+						...(item.kind === 'text' ? {} : { min, max }),
+					},
+				]),
+			);
+			continue;
+		}
 		const others = visioDataGraphicConfigs(page, owner.id).filter(
 			(config) =>
 				!(config.kind === item.kind && config.field === item.field) &&

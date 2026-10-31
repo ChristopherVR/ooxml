@@ -2,32 +2,24 @@ import type { VisioPage } from '../model';
 import type { VisioEdit } from '../edit-commands';
 import { visioNextShapeId } from './shape-id';
 import { visioDataGraphicMarker as marker, type VisioDataGraphicKind } from './data-graphic-rules';
+import {
+	visioNativeGraphicItems,
+	visioNativeGraphicOwners,
+	visioSetNativeGraphicEdit,
+} from './data-graphic-native';
 
-/** Where a data graphic sits around its shape, as the nine-cell Position gallery lists them. */
-export type VisioDataGraphicPosition =
-	| 'top-left'
-	| 'top'
-	| 'top-right'
-	| 'left'
-	| 'right'
-	| 'bottom-left'
-	| 'bottom'
-	| 'bottom-right';
-export const VISIO_DATA_GRAPHIC_POSITIONS: readonly VisioDataGraphicPosition[] = [
-	'top-left',
-	'top',
-	'top-right',
-	'left',
-	'right',
-	'bottom-left',
-	'bottom',
-	'bottom-right',
-];
-/** The position each kind takes when none was chosen, matching where they were first drawn. */
-export const VISIO_DATA_GRAPHIC_DEFAULT_POSITION: Record<
-	Exclude<VisioDataGraphicKind, 'color'>,
-	VisioDataGraphicPosition
-> = { text: 'bottom', bar: 'bottom', icon: 'top-right' };
+import {
+	VISIO_DATA_GRAPHIC_DEFAULT_POSITION,
+	VISIO_DATA_GRAPHIC_POSITIONS,
+	visioDataGraphicCenter,
+	type VisioDataGraphicPosition,
+} from '../data-graphic-place';
+export {
+	VISIO_DATA_GRAPHIC_DEFAULT_POSITION,
+	VISIO_DATA_GRAPHIC_POSITIONS,
+	visioDataGraphicCenter,
+	type VisioDataGraphicPosition,
+};
 
 /** What a generated graphic remembers so Position, Configure and Auto Space can redo it. */
 export interface VisioDataGraphicConfig {
@@ -36,27 +28,6 @@ export interface VisioDataGraphicConfig {
 	position?: VisioDataGraphicPosition;
 	min?: number;
 	max?: number;
-}
-
-const GAP = 0.05;
-/** Centre of a graphic part around its owner; `slot` stacks several graphics at one position. */
-export function visioDataGraphicCenter(
-	owner: { x: number; y: number; width: number; height: number },
-	part: { width: number; height: number },
-	position: VisioDataGraphicPosition,
-	slot: number,
-): { x: number; y: number } {
-	const ax = position.endsWith('left') ? -1 : position.endsWith('right') ? 1 : 0;
-	const ay = position.startsWith('top') ? 1 : position.startsWith('bottom') ? -1 : 0;
-	const step = 0.3 + GAP;
-	return {
-		x: owner.x + ax * (owner.width / 2 + part.width / 2 + GAP),
-		// Above and below stack away from the shape; beside it they stack downward.
-		y:
-			owner.y +
-			ay * (owner.height / 2 + part.height / 2 + GAP + slot * step) -
-			(ay === 0 ? slot * step : 0),
-	};
 }
 
 /** The marker text a graphic part stores: position and the resolved range. */
@@ -99,6 +70,8 @@ export function visioDataGraphicConfigs(
 	page: VisioPage,
 	ownerId: string,
 ): VisioDataGraphicConfig[] {
+	const native = visioNativeGraphicItems(page, ownerId);
+	if (native.length) return native;
 	const result = new Map<string, VisioDataGraphicConfig>();
 	for (const shape of page.shapes) {
 		const row = marker(shape);
@@ -136,6 +109,18 @@ export function visioRespaceDataGraphicEdits(
 	const edits: VisioEdit[] = [];
 	let next = Number(visioNextShapeId(page));
 	for (const owner of ownerIds) {
+		const native = visioNativeGraphicItems(page, owner);
+		if (native.length) {
+			// The callouts stack themselves in order at each position.
+			edits.push(
+				visioSetNativeGraphicEdit(
+					page,
+					owner,
+					native.map((item) => ({ ...item, ...(position ? { position } : {}) })),
+				),
+			);
+			continue;
+		}
 		if (!page.shapes.some((shape) => shape.id === owner && !marker(shape))) continue;
 		const used = new Map<string, number>();
 		for (const config of visioDataGraphicConfigs(page, owner)) {
@@ -154,4 +139,15 @@ export function visioRespaceDataGraphicEdits(
 		}
 	}
 	return edits;
+}
+
+/** Every shape that has a data graphic of text callouts, bars or icon sets, native or drawn. */
+export function visioDataGraphicOwners(page: VisioPage): string[] {
+	const owners = new Set(visioNativeGraphicOwners(page));
+	for (const shape of page.shapes) {
+		const row = marker(shape);
+		const owner = row && String(row.value ?? row.rawValue ?? '');
+		if (owner && owner !== 'legend') owners.add(owner);
+	}
+	return [...owners];
 }

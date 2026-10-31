@@ -1,5 +1,74 @@
 # Visio capability ledger
 
+## Data graphics as Visio data graphic masters, 2026-10-31 (wave 6)
+
+**How the sample was obtained.** Wave 5 could not bind a graphic through `Visio.InvisibleApp`.
+`Visio.Application` with `Visible = $false` binds it, but only for a shape that is linked to a
+data row: link a shape to a recordset (`DataRecordsets.AddFromXML` with an ADO XML string,
+then `Shape.LinkToData`), open a stencil with `Documents.OpenEx(DVCALL_U.VSSX, 64)` and assign
+`Shape.DataGraphic = Masters.ItemU("Data Table 1")`. Visio then built its own graphic for the
+columns (`Data - Test`, a Progress bar and a Flags icon set) and saved it; reading
+`Shape.DataGraphic` back names it. The structure Visio saved (recorded under the scratchpad, not
+committed): the owner stays shape 1 but becomes `Type="Group"` with its own geometry and text
+kept (`DisplayMode` 1 draws it behind the members); its User section gains
+`visDGDisplayFormat` (`F="USE({UniqueID of the graphic})"`), `msvLayoutIncludeSubshapes` and
+`visDGDefaultPos`; its Controls gain `msvDGPosition`; the page gains a `Data Graphic` layer and
+`User.msvDGCalloutGap`; the document sheet gains `User.msvLastAppliedDataGraphic`. Each callout
+is a child instance of the callout master whose `Prop.msvCalloutField` is a formula on the owner's
+Shape Data row (`Sheet.1!Prop._VisDM_Sales`), whose `visDGDefaultPos` is a PNT point and whose
+pin is a formula of that point and the owner's size. The graphic itself is a hidden master of
+kind 2 whose page sheet holds `visDGNextItemID` and `msvDGCalloutGap` and whose shapes list the
+items (`visDGUseMaster` = `USE("Progress bar")`, `visDGField0` = `{Sales}`). The only shipped
+files with data graphic instances are the PivotDiagram-style templates (PBASLN, PCRTSK, PCSHFL,
+PRSAVL, PRSSTS, PTSKST and SOCIAL_DISTANCING); no sample or other template has one.
+
+**What is written (`data-graphic-masters.ts`, `data-graphic-instance.ts`,
+`edit-data-graphic.ts`).** A new edit `set-data-graphic` makes a local shape's graphic exactly a
+list of items (text, bar or icon over a Shape Data row, with a position and a range); an empty
+list removes it. It adds this package's own callout masters, authored as the wave-5 CFF masters
+were: Visio's names (`Text callout`, `Data bar 1`, `Status icons`), its `msvCalloutType`,
+`msvCalloutField` and `visDG*` cells, and shapes drawn here (a bordered text field, a frame with a
+second path as wide as the share of the range, a circle whose fill is a formula of the share:
+red, amber, green). Microsoft's DVCALL masters are not copied. The hidden data graphic master
+carries the items; the owner's `visDGDisplayFormat` names it by GUID. The owner becomes a group,
+the callouts are children whose value cells are formulas on the owner's row, and each caches
+what Visio would compute. Positions are the eight of the Position gallery stored as
+`visDGDefaultPos` points (`PNT(5,5)`: beyond the far edge on each axis, `-1` beyond the near
+edge, 2 centred); items at one position stack by `visDGStackHeight`. Reading, Position,
+Auto Space, Configure and the Advanced Data Graphics list work from those cells
+(`ui/data-graphic-native.ts`); a shape that is a local shape with geometry and no marked
+parts takes the native graphic, anything else keeps the marked shapes.
+
+**What keeps it true.** The callouts' value cells are formulas, but the file also caches them,
+and the viewer draws the cache. After Shape Data, data refresh, link, unlink or resize edits every
+native graphic on the touched pages is written again from its own cells with the same shape IDs
+(`edit-data-graphic-refresh.ts`). Resizing, deleting and duplicating the owner run with the
+graphic taken off and written again afterwards (the group edits refuse stencil members that
+carry their own pose formulas): a resize lays the callouts out for the new size, a copy has its
+own graphic. Formatting an owner formats the shape's own cells and not the callouts. Three small
+changes to shared code were needed: the formula parser reads a braced GUID as text, `USE` is a
+function that reads no cell, and a Shape Data edit does not refuse because a callout reads the
+row.
+
+**Checked in Visio 16 over COM (`Visio.InvisibleApp`, a file from `set-data-graphic`).** The
+shape's `DataGraphic` reads `Data Graphic`; the three callouts report `IsDataGraphicCallout`
+True and name their masters; their pins are below, below and above-right of the shape as
+written. Setting `Prop.Sales` to 10 and `Prop.Region` to `South` through COM changes the text
+callout's field to `South`, the bar's and the icon's `Prop.msvCalloutField` to 10, their
+`PercentFilled` to 0.2 and the icon's fill to red, and the exported page reads `Region: South`.
+So the callouts follow the data in Visio itself, not only in our viewer.
+
+**Not done.** An instance of a stencil master (every Data Visualizer shape) and an ordinary
+group still get the marked shapes: Visio makes a group holding an inheriting copy there, and the
+member and pose-formula rules of the group edits refuse it. The callout masters are ours: the
+gallery of Visio's data bar styles, icon sets and callout shapes (DVCALL) is not offered, and a
+graphic Visio built from them reads back but is edited through the same three kinds. The
+`msvDGPosition` handle, the `Data Graphic` layer, `msvDGCalloutGap` on the page and
+`msvLastAppliedDataGraphic` are not written (the gap is a literal 0.05 in the formulas). Visio's
+Edit Data Graphic dialog was not opened on our file (COM cannot drive a dialog); a bar and an
+icon callout are drawn here, but their look was checked in the viewer, not compared pixel by
+pixel with Visio's. Grouping an owner, ungrouping it and change-shape on it are not supported.
+
 ## Tab stop cells, checked against Visio 16, 2026-10-31
 
 Visio 16 saves a paragraph's tab stops in one Tabs row (the row a `tp` marker selects, row 0 by

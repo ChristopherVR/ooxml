@@ -502,12 +502,26 @@ installed Visio 16 build is used to check that saved files open without repair.
       Function columns, Refresh Diagram from the edited table), Data Graphic Fields (a pane of the
       selected shape's fields that show as text) and Advanced Data Graphics (the Edit Data Graphic
       item list: add, edit, delete) (`data-visualizer*.ts`, `data-graphic-items.ts`; ledger 2026-10-30).
-- [ ] **P1** Data graphics are still separate marked shapes, not Visio data graphic masters
-      (`DataGraphic` groups of callout item instances that follow their shape and refresh with the
-      data; ledger 2026-10-31 records how Visio stores them and why COM could not author one);
-      Data Visualizer does not connect to Visio's online template service. Closed 2026-10-31:
-      Data Visualizer connector labels are the connector's own text, and a refresh keeps the shape
-      and connector IDs of rows that remain and is one undo step.
+- [x] **P1** Data graphics of a local shape are Visio data graphics: the shape becomes a group,
+      each text callout, data bar or icon set an instance of a callout master that reads the
+      shape's Shape Data by formula (`Sheet.N!Prop.Row`), the graphic a hidden data graphic master
+      named by `User.visDGDisplayFormat`. Visio 16 reads the shape's `DataGraphic` back by that
+      master's name, flags the callouts with `IsDataGraphicCallout` and recalculates them when a
+      Shape Data cell changes through COM; our editor rewrites their caches on every Shape Data
+      or data refresh edit and keeps their IDs. Position, Auto Space, Configure, the item list,
+      resize, copy, delete and formatting work on such a shape (`data-graphic-masters.ts`,
+      `edit-data-graphic*.ts`; ledger 2026-10-31, wave 6).
+- [ ] **P1** Data graphics still fall back to separate marked shapes for an instance of a stencil
+      master (so every Data Visualizer shape) and for ordinary groups: Visio's own structure there
+      is a group holding an inheriting copy of the shape plus the callouts, not written yet. The
+      callout masters are this package's own minimal ones with Visio's names (Text callout, Data
+      bar 1, Status icons), not the DVCALL stencil's, so Visio's gallery of icon sets, data bar
+      styles and callout shapes is not offered; the `msvDGPosition` drag handle, the Data
+      Graphic layer and the document's last-applied graphic are not written; Visio's own Edit
+      Data Graphic dialog has not been driven on our file. Data Visualizer does not connect to
+      Visio's online template service. Closed 2026-10-31: Data Visualizer connector labels are
+      the connector's own text, and a refresh keeps the shape and connector IDs of rows that
+      remain and is one undo step.
 - [x] **P1** PDF export writes vector paths, arrowheads, pictures and selectable text per page,
       with a per-page report of what degraded (`src/ui/src/export/pdf-vector.ts`,
       `visio/viewer-pdf.ts`).

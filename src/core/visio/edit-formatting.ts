@@ -13,6 +13,7 @@ import {
 	type FormattingInstance,
 } from './edit-instance-format';
 import { masterTemplate } from './edit-text-scope';
+import { isDataGraphicOwner } from './edit-data-graphic-owner';
 import {
 	assertEditableFormattingCell,
 	assertShapeLocks,
@@ -37,10 +38,12 @@ function targetShape(root: Element, shapeId: string): Element {
 		shape.hasAttribute('Master') ||
 		shape.hasAttribute('MasterShape') ||
 		shape.hasAttribute('Del') ||
-		children(shape, 'Shapes').length ||
+		// A shape with a data graphic is a group of callouts, formatted as the shape it was.
+		(!isDataGraphicOwner(shape) &&
+			(children(shape, 'Shapes').length ||
+				!['Shape', undefined].includes(attribute(shape, 'Type')))) ||
 		children(shape, 'ForeignData').length ||
-		children(shape, 'Rel').length ||
-		!['Shape', undefined].includes(attribute(shape, 'Type'))
+		children(shape, 'Rel').length
 	)
 		fail(
 			'UNSUPPORTED_FORMAT_EDIT',
