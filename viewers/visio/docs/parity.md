@@ -2055,6 +2055,51 @@ is still not pixel-identical to Visio: the numbers below are fits to a handful o
   effect (none visible from the front), turning child shapes with a group, perspective for text
   and pictures.
 
+## Bevel profiles, lighting, the Office rotation gallery and projected content, 2026-10-31
+
+Evidence came from Visio 16 over COM (cells, raster export) and PowerPoint over COM (the Office
+preset cameras). Rendering is still not pixel-identical to Visio.
+
+- 3-D Rotation gallery: Visio's gallery is not reachable through COM, so it follows the Office
+  gallery. PowerPoint's `ThreeD` object gives each ECMA-376 `presetCameraType` as X, Y, Z and a
+  field of view (45 degrees for the perspective cameras, 80 for the extreme heroic ones, none for
+  the parallel ones). Rendering the same triangle in both products with the same numbers showed
+  that Visio's `RotationXAngle` and `RotationZAngle` are the negatives of PowerPoint's
+  `RotationX` and `RotationZ` and `RotationYAngle` is the same, so the presets are stored as
+  (-X, Y, -Z) with `Perspective` as the field of view (`rotation-presets.ts`). The list is now
+  No Rotation, Isometric Left Down, Right Up, Top Up and Bottom Down, Off Axis 1 and 2 (Left,
+  Right, Top), and the Perspective set (Above, Below, Left, Right, Relaxed, Relaxed Moderately,
+  Contrasting Left and Right, Heroic Left and Right, Heroic Extreme Left and Right). The earlier
+  invented angles (Off Axis Left and Right, 60 and 90 degree perspectives) are gone. The oblique
+  cameras read 0, 0, 0 and have no rotation-cell form, so they are not offered. Not verified: the
+  values Visio writes when its own gallery is clicked, and the exact gallery order.
+- Bevel lighting: `BevelLightingType` takes 0 to 16 in Visio 16; 0, 1 and 16 render alike and
+  2 to 15 are the other gallery lights. For each, the face and the four facets of an Angle bevel
+  were measured against the unlit fill, and `bevelLight` fits one directional light and an
+  ambient term to them (`bevel-shading.ts`). The lights' colours (warm, cool) are ignored;
+  entries that clip to white in Visio are capped. `BevelMaterialType` 7 is flat (no shading),
+  9 to 11 lift the face towards white and soften the shading, 8 renders white (reported, drawn as
+  the default), the rest are close to the default. `BevelLightingAngle` did not change the export.
+- Bevel profiles: each of the 12 types has a height profile h(t) shaped by eye from exports of a
+  0.3 in bevel (convex, concave, stepped, grooved characters). The SVG filter blurs the shape's
+  alpha, maps it through a table that undoes the blur's S-curve into the profile height
+  (`bevelHeightTable`), and lights that with `feDiffuseLighting`; only the departure from the
+  face is drawn. This replaces the fixed blurred overlay. Corners are rounded, not mitred, and the
+  strength still depends a little on zoom (SVG lighting works on device pixels, a nominal 96 per
+  inch is assumed).
+- Text and pictures under perspective: one affine matrix fitted by least squares to the projection
+  of the shape's box, anchored at the centre (`projectionMatrix`). It follows the foreshortening and
+  shear but not the convergence, so content can sit slightly off the projected outline at the
+  corners. A parallel rotation stays exact. The PDF report names this.
+- Groups: the children of a group with 3-D rotation are wrapped in the same fitted matrix, so they
+  turn with it (exact for a parallel rotation, an approximation under perspective). A child's own
+  rotation composes inside. Nested groups compose by nesting.
+- PDF export still skips bevel shading (the report now says profiles and lighting) and exports the
+  fitted matrices and projected outlines.
+- Still open: Visio's own gallery values, oblique presets, exact bevel profiles and mitred corners,
+  light colours, material 8, point-by-point projection of text, pictures and group children,
+  zoom-independent strength.
+
 ## Capability inventory
 
 Full Microsoft Visio parity is a target, not a current claim. Snapshot: first written 2026-10-09 and updated through 2026-10-28 (Stencils and callouts 2026-10-15, Editing and history 2026-10-28; Collaboration and comments re-verified 2026-10-22). Rows not named were not re-checked after 2026-10-09.

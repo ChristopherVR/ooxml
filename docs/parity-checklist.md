@@ -393,14 +393,20 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [ ] **P1** Bevel and 3-D rotation are approximations, not Visio's renderer. Perspective
       foreshortening (camera distance fitted to Visio 16 renders), extrusion (flat-shaded side
       faces) and the contour are drawn (`solid-3d.ts`, `render-solid.ts`), and a themed top bevel
-      or contour is read from the effect style's `a:sp3d` (`theme-solid.ts`). Still open: the
-      bevel profiles and lighting are a blurred diffuse overlay, side-face shading is fitted to a
-      few renders, materials and lighting cells (`BevelMaterialType`, `BevelLightingType`) are
-      not read, a bottom bevel is read and reported (Visio 16 shows no change on the front),
-      text and pictures use a parallel projection, child shapes of a group are not turned, the
-      perspective gallery presets other than three are unverified angles, and the shipped Visio
-      themes carry no `a:bevelT`, so the themed bevel path has no real-file evidence. Text has
-      no Visio font metrics.
+      or contour is read from the effect style's `a:sp3d` (`theme-solid.ts`). The 3-D Rotation
+      gallery holds the Office preset cameras (values read from PowerPoint over COM, signs fitted
+      to Visio 16 renders; `rotation-presets.ts`), bevels are a height profile per type lit by
+      the shape's `BevelLightingType` (15 types fitted to Visio exports) and `BevelMaterialType`
+      (flat and powder), text and pictures under perspective follow one affine fit of the
+      projection, and the children of a turned group turn with it (the same fit;
+      `bevel-shading.ts`, `render-bevel.ts`). Still open: the profiles are shaped by eye and
+      corners are rounded where Visio mitres them, strength varies with zoom, the oblique
+      gallery presets (no rotation cells) and Visio's own gallery values were not read, material 8
+      and the lighting colour tints are not drawn, `BevelLightingAngle` changed nothing in the
+      export and is not read, side-face shading is fitted to a few renders, a bottom bevel is read
+      and reported (Visio 16 shows no change on the front), perspective text and group children are
+      not projected point by point, and the shipped Visio themes carry no `a:bevelT`, so the
+      themed bevel path has no real-file evidence. Text has no Visio font metrics.
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
 - [ ] **P2** Periodic NURBS are missing; stencil previews still omit `InfiniteLine`.
 - [ ] **P2** Visio validation rule-set parts (`validation.xml`) are not modelled; Check Diagram is

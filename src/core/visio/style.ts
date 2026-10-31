@@ -24,6 +24,7 @@ import {
 	shapeExtrusion,
 	shapeRotation3d,
 } from './bevel-3d';
+import { isUndrawnBevelMaterial } from './bevel-shading';
 import { themeSolid } from './theme-solid';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
@@ -188,7 +189,12 @@ export function shapeStyle(
 	if ((bevel && (bevel.width > 0 || bevel.height > 0)) || rotation3d || extrusion || contour)
 		report(
 			'approximated-3d',
-			"Bevel, 3-D rotation, perspective, extrusion and contour are approximations: a lighting overlay, a projection and flat-shaded side faces, not Visio's renderer.",
+			"Bevel, 3-D rotation, perspective, extrusion and contour are approximations: a shaded height profile, a projection and flat-shaded side faces, not Visio's renderer.",
+		);
+	if (bevel && isUndrawnBevelMaterial(bevel.material ?? 0))
+		report(
+			'unsupported-bevel',
+			'Bevel material 8 (an opaque white surface in Visio 16) is drawn as the default material.',
 		);
 	if (hasUndrawnBevel(cells))
 		report(
