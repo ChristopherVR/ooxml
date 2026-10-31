@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.38.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.38.0) - 2026-10-31
+
+### Features
+
+- **visio:** Data visualizer connector labels and id-keeping refresh ([f82b7c2](https://github.com/ChristopherVR/ooxml/commit/f82b7c230327ae38a7995b2f02c11f67cb4321d6))
+- **visio:** Draw perspective, extrusion, contour and themed bevels ([5c3b3f4](https://github.com/ChristopherVR/ooxml/commit/5c3b3f4d0a6845053204bf724adbfcfa86616ea3))
+
+### Bug Fixes
+
+- **ui:** Align visio locale terms with Office and within each locale ([72036a0](https://github.com/ChristopherVR/ooxml/commit/72036a0e94726388399315f05f95823fe138c58f))
+
 ## [1.37.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.37.0) - 2026-10-30
 
 ### Features
