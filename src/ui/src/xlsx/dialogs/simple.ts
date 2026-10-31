@@ -12,6 +12,7 @@ import { UNSET, colsOf, rowsOf, target } from 'ooxml-core/xlsx/ui';
 import { activeChart, activeTable, editChart } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { type ConfirmProps, confirmDialog, numberPrompt, pickDialog, textPrompt } from './prompts';
+import { openCommentEditor } from './comment-editor';
 
 const columnWidth = (ctx: EditorContext): number => {
 	const t = target(ctx);
@@ -136,23 +137,7 @@ export function registerSimpleDialogs(ctx: EditorContext): void {
 			apply: (value) => editChart(c, () => ({ title: value.trim() || UNSET })),
 		});
 	});
-	d.register('comment', (c) => {
-		const t = target(c);
-		if (!t) return Promise.resolve(undefined);
-		const at = t.active;
-		const existing = t.ws.comments.find(
-			(x) => x.address.row === at.row && x.address.col === at.col,
-		);
-		return textPrompt(c, {
-			name: 'comment',
-			heading: existing ? 'Edit Comment' : 'New Comment',
-			label: 'Comment',
-			value: existing?.text ?? '',
-			multiline: true,
-			validate: (value) => (value.trim() ? undefined : 'Type a comment first.'),
-			apply: (value) => t.session.setComment(t.sheet, at, value, c.authorName()),
-		});
-	});
+	d.register('comment', openCommentEditor);
 	d.register('unhide-sheet', (c) => {
 		const session = c.session();
 		if (!session) return Promise.resolve(undefined);

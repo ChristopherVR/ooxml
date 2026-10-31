@@ -18,7 +18,12 @@ export function excelCommentThreads(comments: readonly Comment[]): OfficeComment
 				anchorLabel: id,
 				resolved: false,
 				comments: [
-					{ id: `${id}:0`, author: comment.author, text: comment.text },
+					{
+						id: `${id}:0`,
+						author: comment.author,
+						text: comment.text,
+						...(comment.date ? { created: comment.date } : {}),
+					},
 					...(comment.replies ?? []).map((reply, index) => ({
 						id: `${id}:${index + 1}`,
 						author: reply.author,

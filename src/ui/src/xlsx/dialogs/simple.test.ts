@@ -108,6 +108,57 @@ describe('number prompts', () => {
 });
 
 describe('comment and unhide dialogs', () => {
+	it('edits a root and its replies in one undo step, preserving authors and dates', async () => {
+		const ctx = setup();
+		ctx.select('B2');
+		const original = [
+			{
+				address: { row: 1, col: 1 },
+				author: 'Root author',
+				text: 'Root',
+				replies: [{ author: 'Reply author', text: 'Reply', date: '2026-01-02T03:04:05Z' }],
+			},
+		];
+		ctx.workbook()!.sheets[0]!.comments = structuredClone(original);
+		const result = ctx.dialogs.open('comment');
+		const dialog = dialogEl(ctx, 'comment');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Comment'), 'Edited root');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Reply 1 (Reply author)'), 'Edited reply');
+		clickButton(dialog, 'OK');
+		await result;
+		expect(ctx.workbook()!.sheets[0]!.comments[0]).toMatchObject({
+			author: 'Root author',
+			text: 'Edited root',
+			replies: [{ author: 'Reply author', text: 'Edited reply', date: '2026-01-02T03:04:05Z' }],
+		});
+		ctx.session()!.undo();
+		expect(ctx.workbook()!.sheets[0]!.comments).toEqual(original);
+		expect(ctx.session()!.canUndo()).toBe(false);
+	});
+
+	it('validates all replies before editing and Cancel leaves the thread intact', async () => {
+		const ctx = setup();
+		const original = [
+			{
+				address: { row: 0, col: 0 },
+				author: 'A',
+				text: 'Root',
+				replies: [{ author: 'B', text: 'Reply' }],
+			},
+		];
+		ctx.workbook()!.sheets[0]!.comments = structuredClone(original);
+		const result = ctx.dialogs.open('comment');
+		const dialog = dialogEl(ctx, 'comment');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Comment'), 'Edited root');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Reply 1 (B)'), ' ');
+		clickButton(dialog, 'OK');
+		await tick();
+		expect(ctx.workbook()!.sheets[0]!.comments).toEqual(original);
+		clickButton(dialog, 'Cancel');
+		await result;
+		expect(ctx.session()!.canUndo()).toBe(false);
+	});
+
 	it('adds a comment by the author', async () => {
 		const ctx = setup();
 		ctx.select('B2');

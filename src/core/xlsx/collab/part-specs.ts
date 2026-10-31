@@ -42,12 +42,25 @@ const rangeList = (raw: unknown): boolean =>
 	Array.isArray(raw) && raw.length <= 4096 && raw.every(isRange);
 
 export const commentSpec: PartSpec<Comment> = {
-	encode: (c) => ({ a: formatAddress(c.address), author: c.author, text: c.text }),
+	encode: (c) => ({
+		a: formatAddress(c.address),
+		author: c.author,
+		text: c.text,
+		...(c.date !== undefined ? { date: c.date } : {}),
+	}),
 	decode: (raw) => {
 		if (!isRecord(raw) || !isText(raw.a, 12) || !isText(raw.author, 1024) || !isText(raw.text))
 			return undefined;
+		if (raw.date !== undefined && !isText(raw.date, 64)) return undefined;
 		const address = parseAddress(raw.a);
-		return address ? { address, author: raw.author, text: raw.text } : undefined;
+		return address
+			? {
+					address,
+					author: raw.author,
+					text: raw.text,
+					...(raw.date !== undefined ? { date: raw.date } : {}),
+				}
+			: undefined;
 	},
 	fixedKey: (e) => String((e as { a?: unknown }).a),
 	adopt: (decoded, local) => {

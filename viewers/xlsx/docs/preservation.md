@@ -38,6 +38,11 @@ so.
 
 ## What is kept unchanged through an edit and a save
 
+Threaded comment text, authors and root/reply creation dates survive reply edits. Thread and reply
+identities are currently regenerated when comments change; resolved state, mentions and unknown
+comment markup are then lost. Person records are also rebuilt on save. These are open preservation
+gaps, so edited threaded comments are not lossless.
+
 The writer copies a part of the source package byte for byte (with its relationships and every
 part they reach) when nothing in the model regenerates it. The source for this is
 `PackageWriter.carry` in `src/core/xlsx/write/package-writer.ts`, driven by `saveXlsx`

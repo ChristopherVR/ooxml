@@ -217,6 +217,8 @@ export interface EditSession {
 	/** Splits the window (twentieths of a point); removes any frozen pane. Undefined removes the split. */
 	setSplit(sheet: number, split: SplitPane | undefined, topLeft?: CellAddress): void;
 	setComment(sheet: number, at: CellAddress, text: string | undefined, author: string): void;
+	/** Edits the zero-based reply, preserving its author and timestamp. */
+	setCommentReply(sheet: number, at: CellAddress, replyIndex: number, text: string): void;
 	setHyperlink(sheet: number, range: CellRange, link: Omit<Hyperlink, 'range'> | undefined): void;
 	addConditionalFormat(sheet: number, format: ConditionalFormat): void;
 	clearConditionalFormats(sheet: number, range?: CellRange): void;

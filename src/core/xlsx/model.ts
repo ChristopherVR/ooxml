@@ -303,6 +303,8 @@ export interface Comment {
 	address: CellAddress;
 	author: string;
 	text: string;
+	/** Creation timestamp of a threaded root comment. */
+	date?: string;
 	/** Threaded-comment replies, oldest first (read from `threadedComments` when present). */
 	replies?: { author: string; text: string; date?: string }[];
 }

@@ -92,6 +92,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       linked data types) have no model.
 - [ ] **P1** Connections, query tables and Power Query are carried verbatim only; external links
       use cached values and cannot be refreshed or edited.
+- [ ] **P1** Threaded comment saves rebuild person records; editing a thread also regenerates
+      its identities and drops resolved state, mentions and unknown comment markup. Preserve
+      that metadata and keep the edited text and mention ranges consistent.
 - [ ] **P1** Pivots outside the bounded profile are read-only: label and value filters, shared
       caches, calculated fields and items, date-group filters (`pivot/admission.ts`).
 - [x] **P2** Phonetic runs (`rPh`) are dropped from shared strings (`read/shared-strings.ts`).
@@ -160,7 +163,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       effects, 3-D, pattern or picture fills, and gradients are linear only.
 - [ ] **P1** Printing goes through the browser; Page Layout view has no copy and paste, per-view
       zoom or native printer metrics.
-- [ ] **P2** Editing threaded comment replies.
+- [x] **P2** Review > New Comment (Shift+F2) edits an existing thread's root and replies in one
+      undo step, retaining authors and creation timestamps. Core round-trip and collaboration
+      regressions cover reply edits; `e2e/xlsx/comment-replies.spec.ts` checks undo, redo and
+      save/reopen in all six bindings. Excel 16 reopened the edited native fixture without repair,
+      with the expected reply text, author and root/reply timestamps. Metadata limitations are above.
 - [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.

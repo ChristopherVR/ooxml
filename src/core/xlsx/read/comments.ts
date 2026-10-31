@@ -58,6 +58,7 @@ export function parseThreadedComments(
 			continue;
 		}
 		const comment: Comment = { address, author, text, replies: [] };
+		if (date) comment.date = date;
 		roots.set(att(node, 'id') ?? `${order.length}`, comment);
 		order.push(comment);
 	}

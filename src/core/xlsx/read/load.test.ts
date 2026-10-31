@@ -148,6 +148,7 @@ describe('loadXlsx with an Excel-authored workbook', () => {
 				address: { row: 2, col: 0 },
 				author: 'Fixture Person',
 				text: 'Threaded root',
+				date: '2026-10-02T21:29:04.91',
 				replies: [{ author: 'Fixture Person', text: 'A reply', date: expect.any(String) }],
 			},
 		]);

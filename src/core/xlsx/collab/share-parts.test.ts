@@ -95,6 +95,30 @@ async function parts(wb: Workbook): Promise<Map<string, string>> {
 }
 
 describe('sharing comments, rules, links, tables and charts', () => {
+	it('shares native reply edits independently and keeps root and reply timestamps through undo', async () => {
+		const bytes = new Uint8Array(
+			readFileSync(new URL('../__fixtures__/excel-threaded-comments.xlsx', import.meta.url)),
+		);
+		const workbook = await loadXlsx(bytes);
+		const original = structuredClone(workbook.sheets[0]!.comments);
+		const a = peer(workbook);
+		const b = peer(await loadXlsx(bytes), false);
+		sync(a, b);
+		b.open();
+		sync(a, b);
+		a.edit.setCommentReply(0, at(1, 1), 0, 'First from a');
+		b.edit.setCommentReply(0, at(1, 1), 1, 'Second from b');
+		sync(a, b);
+		const expected = structuredClone(original);
+		expected[0]!.replies![0]!.text = 'First from a';
+		expected[0]!.replies![1]!.text = 'Second from b';
+		for (const p of [a, b]) expect(p.edit.workbook.sheets[0]!.comments).toEqual(expected);
+		expect(a.binding.undo()).toBe(true);
+		sync(a, b);
+		expected[0]!.replies![0]!.text = 'First reply';
+		for (const p of [a, b]) expect(p.edit.workbook.sheets[0]!.comments).toEqual(expected);
+	});
+
 	it('adopting a room built from the same file changes nothing and saves identically', async () => {
 		const [a, b] = await pair();
 		expect(await parts(b.edit.workbook)).toEqual(await parts(a.edit.workbook));

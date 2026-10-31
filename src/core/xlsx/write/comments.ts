@@ -138,7 +138,8 @@ export function commentParts(
 			if (comment.replies) {
 				const id = guidFrom(`${sheetName}!${ref}:${comment.text}`);
 				const personId = persons.id(comment.author);
-				threaded += `<threadedComment ref="${ref}" personId="${personId}" id="${id}"><text>${escapeText(comment.text)}</text></threadedComment>`;
+				const dT = comment.date ? ` dT="${escapeAttr(comment.date)}"` : '';
+				threaded += `<threadedComment ref="${ref}"${dT} personId="${personId}" id="${id}"><text>${escapeText(comment.text)}</text></threadedComment>`;
 				comment.replies.forEach((reply, index) => {
 					const replyId = guidFrom(`${id}:reply:${index}:${reply.text}`);
 					const dT = reply.date ? ` dT="${escapeAttr(reply.date)}"` : '';

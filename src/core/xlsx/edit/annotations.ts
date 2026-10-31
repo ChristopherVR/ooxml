@@ -40,6 +40,30 @@ export function setComment(
 	);
 }
 
+/** Edits a threaded reply without changing its author, timestamp or sibling replies. */
+export function setCommentReply(
+	ctx: EditContext,
+	s: number,
+	at: CellAddress,
+	replyIndex: number,
+	text: string,
+): void {
+	const sheet = sheetAt(ctx.workbook, s);
+	const comment = sheet.comments.find((c) => c.address.row === at.row && c.address.col === at.col);
+	const reply = Number.isInteger(replyIndex) ? comment?.replies?.[replyIndex] : undefined;
+	if (!reply) throw new RangeError('Comment reply not found.');
+	if (reply.text === text) return;
+	ctx.run(
+		'Edit comment',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			reply.text = text;
+		},
+		{ sheet: s, ranges: [{ start: at, end: at }] },
+	);
+}
+
 /**
  * Sets (or removes) the hyperlink on a range. Links overlapping the range are replaced; an empty
  * anchor cell gets the link's display text and the cells get the hyperlink look.

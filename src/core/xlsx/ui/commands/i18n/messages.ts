@@ -167,6 +167,12 @@ export const MESSAGE_STRINGS: Translations = {
 		'Escriba primero un comentario.',
 		'请先键入批注。',
 	],
+	'Reply {number} ({author})': [
+		'Réponse {number} ({author})',
+		'Antwort {number} ({author})',
+		'Respuesta {number} ({author})',
+		'回复 {number}（{author}）',
+	],
 	Unhide: ['Afficher', 'Einblenden', 'Mostrar', '取消隐藏'],
 	'Unhide sheet:': [
 		'Afficher la feuille :',

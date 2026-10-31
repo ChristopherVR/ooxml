@@ -43,6 +43,7 @@ export const SUPPORTED_FEATURES = [
 	'Sparklines (create, format and clear)',
 	'Worksheet-range PivotTables (up to two row fields and sixteen values, one optional column field and one cached report filter)',
 	'Comments and notes',
+	'Editing threaded comment replies',
 	'Hyperlinks',
 	'Data validation',
 	'Sort and filter',
@@ -57,7 +58,7 @@ export const UNSUPPORTED_FEATURES = [
 	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Flash Fill, Subtotal and Consolidate',
 	'Opening .xlsb binary workbooks',
-	'Editing threaded comment replies',
+	'Resolved comments and @mentions',
 	'Macros (VBA is kept in the file but never run)',
 	'Changing the workbook theme',
 ] as const;
