@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.39.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.1) - 2026-10-31
+
+### Testing
+
+- **ui:** Give viewer mounts timeout headroom and steady two e2e specs ([010fe0a](https://github.com/ChristopherVR/ooxml/commit/010fe0a941530074e9b50ee55b66e713ebf8ba55))
+
 ## [1.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.0) - 2026-10-31
 
 ### Features

@@ -492,7 +492,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "1.39.0",
+      "version": "1.39.1",
       "dependencies": {
         "dompurify": "^3.4.17",
         "emf-converter": "4.23.1",
