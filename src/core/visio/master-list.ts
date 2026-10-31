@@ -22,9 +22,9 @@ class PreviewLimit extends Error {}
 /**
  * The document stencil: each visible master with its name, its master page size and its shapes
  * drawn alone, for a preview. Previews are best effort and never fail the drawing: a master whose
- * preview is too large or cannot be resolved is listed without shapes. They are resolved without a
- * page, so page theme selections do not apply, and they do not count toward the page limits or
- * the drawing's diagnostics.
+ * preview is too large or cannot be resolved is listed without shapes. Their master page bounds
+ * clip infinite lines, but drawing-page theme selections do not apply. They do not count toward
+ * the page limits or the drawing's diagnostics.
  */
 export function listVisioMasters(
 	records: readonly MasterRecord[],
@@ -50,6 +50,7 @@ export function listVisioMasters(
 			geometry += units;
 			if (geometry > PREVIEW_GEOMETRY) throw new PreviewLimit();
 		},
+		clipToShape: true,
 		consumeText: () => undefined,
 		consumeParagraph: () => undefined,
 	};
@@ -71,6 +72,17 @@ export function listVisioMasters(
 		const roots = record.shapes.filter((shape) => !shape.deleted);
 		const root = roots[0];
 		const cells = readSheet(child(record.node, 'PageSheet')).cells;
+		const pageWidth = number(cells, 'PageWidth', NaN);
+		const pageHeight = number(cells, 'PageHeight', NaN);
+		// Each master has its own page. Never clip its infinite lines to the drawing's last page.
+		if (
+			Number.isFinite(pageWidth) &&
+			pageWidth > 0 &&
+			Number.isFinite(pageHeight) &&
+			pageHeight > 0
+		)
+			preview.pageSize = { width: pageWidth, height: pageHeight };
+		else delete preview.pageSize;
 		let resolved: VisioMaster['shapes'] = [];
 		try {
 			resolved = normalizeShapes(record.shapes, preview);

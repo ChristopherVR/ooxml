@@ -33,6 +33,8 @@ export interface ShapeContext extends StyleContext {
 	maxShapeDepth: number;
 	/** Current page size in pre-scale geometry units; infinite lines are clipped to it. */
 	pageSize?: { width: number; height: number };
+	/** A master without page dimensions uses its local box for infinite-line thumbnails. */
+	clipToShape?: boolean;
 	shapeCount: number;
 	consumeExpansion: () => void;
 	consumeGeometry: () => void;
@@ -232,7 +234,15 @@ export function normalizeShapes(
 				report,
 				context.consumeGeometry,
 				context.consumeCurveWork,
-				context.pageSize ? { toPage, ...context.pageSize } : undefined,
+				context.pageSize
+					? { toPage, ...context.pageSize }
+					: context.clipToShape
+						? {
+								toPage: IDENTITY_AFFINE,
+								width: width > 0 ? width : 1,
+								height: height > 0 ? height : 1,
+							}
+						: undefined,
 			);
 			if (
 				!geometry.length &&

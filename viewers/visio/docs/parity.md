@@ -440,7 +440,10 @@ Six increments landed together; the open remainder of each is in
   existing `reorder-page` edit (one undo step); background pages only move among themselves. The
   drag is shared with Excel's sheet tabs (`src/ui/src/chrome/tab-drag.ts`).
 - **InfiniteLine.** Drawn as an open stroke clipped to the page through every ancestor
-  transform; stencil previews, which have no page, still omit it.
+  transform. Stencil previews use the master's own page bounds, or a local shape box when page
+  dimensions are missing. A synthetic Visio 16 fixture covers diagonal, horizontal and vertical
+  lines; core tests also cover transformed groups and independent master bounds, and all six
+  browser bindings check the drawn previews (`stencil-infinite-line.spec.ts`).
 
 ## Proportional resizing, 2026-10-30
 
