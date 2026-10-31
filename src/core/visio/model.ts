@@ -384,7 +384,8 @@ export interface VisioSwimlaneFrameOptions {
 	style: number;
 }
 export type VisioSwimlaneRole =
-	| { role: 'frame'; options: VisioSwimlaneFrameOptions }
+	/** `native`: Visio's own frame (no marker row of this editor), whose masters lay the chart out. */
+	| { role: 'frame'; options: VisioSwimlaneFrameOptions; native?: true }
 	| { role: 'lane' }
 	/** A phase separator: a member of the frame's Phase List. */
 	| { role: 'separator' };
@@ -410,7 +411,14 @@ export type VisioShapeStructure =
 	 * Swimlane List or Phase List. `direction` is User.msvSDListDirection (0 left to right, 1 right
 	 * to left, 2 top to bottom, 3 bottom to top).
 	 */
-	| { type: 'list'; memberIds: string[]; direction: number; kind?: 'swimlane' | 'phase' }
+	| {
+			type: 'list';
+			memberIds: string[];
+			direction: number;
+			kind?: 'swimlane' | 'phase';
+			/** A Swimlane List's Rotate Lane Labels flag (User.visRotateLabel), when it has one. */
+			rotateLabels?: boolean;
+	  }
 	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {
 	fromShapeId: string;

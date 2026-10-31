@@ -204,11 +204,27 @@ export {
 	type VisioRotation3d,
 } from './bevel-3d';
 export {
+	BEVEL_BLUR_WIDTHS,
+	BEVEL_LIGHTING_TYPES,
+	bevelHeightAt,
+	bevelHeightTable,
+	bevelLight,
+	bevelMaterial,
+	bevelProfile,
+	isUndrawnBevelMaterial,
+	normalBevelLighting,
+	type BevelHeightTable,
+	type BevelLight,
+	type BevelMaterial,
+	type BevelPoint,
+} from './bevel-shading';
+export {
 	createProjection,
 	extrudePaths,
 	extrusionPathData,
 	flattenPath,
 	projectPathData,
+	projectionMatrix,
 	type Extrusion,
 	type ExtrusionFace,
 	type Point2,

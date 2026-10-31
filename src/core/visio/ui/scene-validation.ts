@@ -240,6 +240,8 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(bevel.type, 'bevel type', 1, 12);
 			finite(bevel.width, 'bevel width', 0, 10);
 			finite(bevel.height, 'bevel height', 0, 10);
+			if (bevel.lighting !== undefined) finite(bevel.lighting, 'bevel lighting', 1, 15);
+			if (bevel.material !== undefined) finite(bevel.material, 'bevel material', 1, 12);
 		}
 		const { extrusion, contour } = shape.style;
 		for (const [item, label, size] of [

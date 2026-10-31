@@ -24,6 +24,11 @@ import {
 	VISIO_DATA_GRAPHIC_DEFAULT_POSITION,
 	type VisioDataGraphicPosition,
 } from './data-graphic-config';
+import {
+	visioNativeGraphicAccepts,
+	visioNativeGraphicItems,
+	visioSetNativeGraphicEdit,
+} from './data-graphic-native';
 export * from './data-graphic-rules';
 export * from './data-graphic-config';
 
@@ -46,6 +51,14 @@ export function visioRemoveDataGraphicEdits(
 	const edits: VisioEdit[] = [];
 	const parts = visioDataGraphicParts(page);
 	for (const owner of shapeIds) {
+		if (kind !== 'color') {
+			const items = visioNativeGraphicItems(page, owner);
+			const keep = items.filter(
+				(item) =>
+					!((!kind || item.kind === kind) && (fieldName === undefined || item.field === fieldName)),
+			);
+			if (keep.length !== items.length) edits.push(visioSetNativeGraphicEdit(page, owner, keep));
+		}
 		for (const part of parts.get(owner) ?? []) {
 			if (kind && part.kind !== kind) continue;
 			if (fieldName !== undefined && part.field !== fieldName) continue;
@@ -92,13 +105,19 @@ export function visioDataGraphicEdits(
 	const targets = page.shapes.filter(
 		(shape) => shapeIds.includes(shape.id) && !marker(shape) && field(shape, options.field),
 	);
+	// Local shapes get a native data graphic; the others keep the marked-shape drawing.
+	const native = new Set(
+		options.kind === 'color'
+			? []
+			: targets.filter((shape) => visioNativeGraphicAccepts(page, shape)).map((shape) => shape.id),
+	);
 	// Re-applying replaces the owner's parts of this kind; colour keeps the remembered fill.
 	const edits =
 		options.kind === 'color' || options.replace === 'none'
 			? []
 			: visioRemoveDataGraphicEdits(
 					page,
-					targets.map((shape) => shape.id),
+					targets.filter((shape) => !native.has(shape.id)).map((shape) => shape.id),
 					options.kind,
 					options.replace === 'field' ? options.field : undefined,
 				);
@@ -154,6 +173,24 @@ export function visioDataGraphicEdits(
 				)
 			: undefined;
 	for (const [index, shape] of targets.entries()) {
+		if (native.has(shape.id)) {
+			const kept = visioNativeGraphicItems(page, shape.id).filter(
+				(item) =>
+					options.replace === 'none' ||
+					!(
+						item.kind === options.kind &&
+						(options.replace !== 'field' || item.field === options.field)
+					),
+			);
+			const item = {
+				kind: options.kind as 'text' | 'bar' | 'icon',
+				field: options.field,
+				...(options.position ? { position: options.position } : {}),
+				...(options.kind === 'text' ? {} : { min, max }),
+			};
+			edits.push(visioSetNativeGraphicEdit(page, shape.id, [...kept, item]));
+			continue;
+		}
 		const box = visioShapePageBox(page, shape);
 		if (!box) continue;
 		const centreX = (box.x + box.width / 2) / ratio;

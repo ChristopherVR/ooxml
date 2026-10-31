@@ -85,6 +85,7 @@ function swimlaneRole(
 	const style = Number(unquote(rows.get('visCFFStyle')));
 	return {
 		role: 'frame',
+		...(unquote(rows.get(VISIO_SWIMLANE_FRAME_ROW)) === '1' ? {} : { native: true as const }),
 		options: {
 			direction: flag('CFFVertical', false) ? 'vertical' : 'horizontal',
 			showTitle: flag('visShowTitle', true),
@@ -125,6 +126,9 @@ export function visioShapeStructure(sheet: Sheet): VisioShapeStructure | undefin
 			memberIds: [...new Set(dependsOn(relationships, VISIO_RELATIONSHIP_LIST_MEMBERS))],
 			direction: Number.isInteger(direction) ? direction : 0,
 			...(required === 'Swimlane' ? { kind: 'swimlane' as const } : {}),
+			...(required === 'Swimlane' && unquote(rows.get('visRotateLabel')) !== undefined
+				? { rotateLabels: unquote(rows.get('visRotateLabel')) !== '0' }
+				: {}),
 			...(required === 'Phase' ? { kind: 'phase' as const } : {}),
 		};
 	}

@@ -44,6 +44,8 @@ const staticUnsupported = new Set([
 	// Keep evaluation unsupported: identifiers depend on the document/system.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/font-function
 	'FONT',
+	// USE names a master (a data graphic's, by name or GUID) and reads no ShapeSheet cell.
+	'USE',
 	// Page-name lookup has explicit arguments but returns a string, outside numeric evaluation.
 	'PAGENAME',
 	// Text-field functions read document properties or the clock, never ShapeSheet cells.

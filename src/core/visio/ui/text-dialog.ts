@@ -35,6 +35,8 @@ export interface VisioTextDialogValues {
 	textBackgroundTransparency: number;
 	bulletStyle: number;
 	bulletText: string;
+	/** The paragraph's tab stops as `36 left, 108 center`: points from the text block's left edge. */
+	tabStops: string;
 }
 export type VisioTextDialogPatch = Omit<VisioTextFormatEdit, 'type' | 'pageId' | 'shapeId'>;
 
@@ -80,6 +82,40 @@ export const VISIO_TEXT_LANGUAGES: readonly { id: number; label: string }[] = [
 	{ id: 1028, label: 'Chinese (Traditional)' },
 ];
 const points = (inches: number) => Number((inches * 72).toFixed(2));
+type TabStops = NonNullable<VisioTextFormatEdit['tabStops']>;
+const TAB_ALIGNS: readonly TabStops[number]['align'][] = ['left', 'center', 'right', 'decimal'];
+
+/** `36 left, 108 center` for stops in points; stops at 0 (Visio's padding pair) are not listed. */
+export function formatVisioTabStops(stops: TabStops): string {
+	return stops
+		.filter((stop) => stop.position > 0)
+		.map((stop) => `${Number(stop.position.toFixed(2))} ${stop.align}`)
+		.join(', ');
+}
+
+/**
+ * Parses `36, 108 center, 180 decimal` (points, optional alignment, left by default) into
+ * ascending stops; `undefined` when an entry is not a position of 1 to 7200 pt followed by an
+ * optional alignment, or when there are more than 64 or a position repeats.
+ */
+export function parseVisioTabStops(text: string): TabStops | undefined {
+	const stops: TabStops = [];
+	for (const entry of text.split(/[,;]/)) {
+		if (!entry.trim()) continue;
+		const match = /^\s*(\d+(?:\.\d+)?)\s*(?:pt)?\s*([a-z]+)?\s*$/i.exec(entry);
+		const align = (match?.[2]?.toLowerCase() ?? 'left') as TabStops[number]['align'];
+		const position = Number(match?.[1]);
+		if (!match || !TAB_ALIGNS.includes(align) || position < 1 || position > 7200) return undefined;
+		stops.push({ position: Math.round(position * 100) / 100, align });
+	}
+	stops.sort((a, b) => a.position - b.position);
+	if (
+		stops.length > 64 ||
+		stops.some((stop, index) => index && stop.position === stops[index - 1]!.position)
+	)
+		return undefined;
+	return stops;
+}
 
 /** The dialog's starting values from a shape's default character and first paragraph. */
 export function visioTextDialogValues(shape: VisioShape): VisioTextDialogValues {
@@ -126,6 +162,12 @@ export function visioTextDialogValues(shape: VisioShape): VisioTextDialogValues 
 		textBackgroundTransparency: Math.round((1 - (text.backgroundOpacity ?? 1)) * 100),
 		bulletStyle: bullet ? (builtin?.value ?? 1) : 0,
 		bulletText: bullet && !builtin ? bullet.text : '',
+		tabStops: formatVisioTabStops(
+			(paragraph?.tabs ?? []).map((stop) => ({
+				position: points(stop.position),
+				align: stop.align,
+			})),
+		),
 	};
 }
 
@@ -170,6 +212,11 @@ export function visioTextDialogPatch(
 		patch.margins = Object.fromEntries(
 			margins.map((side) => [side.toLowerCase(), next[`margin${side}`]]),
 		);
+	if (changed('tabStops')) {
+		// Text that does not parse keeps the shape's stops, as an invalid number keeps its value.
+		const stops = parseVisioTabStops(next.tabStops);
+		if (stops && formatVisioTabStops(stops) !== initial.tabStops) patch.tabStops = stops;
+	}
 	if (changed('bulletText')) {
 		patch.bulletText = next.bulletText;
 		// A custom character needs a visible bullet style to show.

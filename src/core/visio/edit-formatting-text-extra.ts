@@ -68,6 +68,30 @@ export function paragraphExtraWrites(
 		add(name('BulletStr'), edit.bulletText, undefined, quoted(edit.bulletText));
 }
 
+const TAB_ALIGNMENTS = ['left', 'center', 'right', 'decimal'] as const;
+
+/**
+ * Tabs row 0 as Visio 16 saves it: `Position<n>` (inches) and `Alignment<n>` pairs counted from 0.
+ * Visio 16 ignored the alignment of a row that held a single pair, so at least two pairs are
+ * always written, padded (like the pair Visio adds itself) with a stop at 0 that never matches.
+ * Pairs the shape already had beyond the new list are zeroed, since a cell cannot be removed here.
+ */
+export function tabStopWrites(
+	stops: readonly { position: number; align: (typeof TAB_ALIGNMENTS)[number] }[],
+	context: { source: ReadonlyMap<string, ReadonlyMap<string, unknown>> },
+	add: AddTextWrite,
+): void {
+	const existing = [...(context.source.get('0')?.keys() ?? [])]
+		.map((key) => /^Position(\d+)$/.exec(key))
+		.reduce((count, match) => (match ? Math.max(count, Number(match[1]) + 1) : count), 0);
+	const count = Math.max(2, stops.length, existing);
+	for (let index = 0; index < count; index++) {
+		const stop = stops[index];
+		add(`Tabs.0.Position${index}`, stop ? inches(stop.position / 72) : 0, 'IN');
+		add(`Tabs.0.Alignment${index}`, stop ? TAB_ALIGNMENTS.indexOf(stop.align) : 0);
+	}
+}
+
 function shapeDimension(shape: Element, cell: 'Width' | 'Height'): number {
 	const source = formattingCell(shape, cell);
 	let value: number | undefined;

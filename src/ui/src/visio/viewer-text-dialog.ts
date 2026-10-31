@@ -7,7 +7,7 @@ import {
 type Dialog = HTMLElement & { open: boolean; show(): void; close(): void };
 type Button = HTMLElement & { disabled: boolean };
 export type TextDialogTab = 'font' | 'character' | 'paragraph' | 'text-block' | 'tabs' | 'bullets';
-type Kind = 'number' | 'select' | 'check' | 'color' | 'text';
+type Kind = 'number' | 'select' | 'check' | 'color' | 'text' | 'list';
 type Key = keyof VisioTextDialogValues | 'fontStyle' | 'backgroundOn' | 'backgroundColor';
 interface Field {
 	key: Key;
@@ -157,7 +157,7 @@ const TABS: readonly [TextDialogTab, string, readonly Field[]][] = [
 			},
 		],
 	],
-	['tabs', 'Tabs', []],
+	['tabs', 'Tabs', [{ key: 'tabStops', label: 'Tab stops (pt)', kind: 'list' }]],
 	[
 		'bullets',
 		'Bullets',
@@ -178,7 +178,7 @@ const TABS: readonly [TextDialogTab, string, readonly Field[]][] = [
 const NOTES: Partial<Record<TextDialogTab, string>> = {
 	character:
 		'Character scale and position offsets are not supported. Positive spacing expands and negative spacing condenses.',
-	tabs: 'Tab stops are not written by this editor: the Tabs section layout is not verified against Visio and the renderer does not lay out tab stops. Existing tab stops are kept.',
+	tabs: "List tab stops in points from the text block, each with left, center, right or decimal (left by default), for example 36, 108 center, 180 decimal. The stops replace the shape's Tabs row; with none, tabs step 0.5 in.",
 	bullets: 'A custom character replaces the style glyph. Bullet fonts and sizes are kept.',
 };
 type Input = HTMLInputElement | HTMLSelectElement;
@@ -233,7 +233,13 @@ export function createTextDialog(root: ShadowRoot, press: (button: string) => vo
 			input.setAttribute('aria-label', field.label);
 			if (input instanceof HTMLInputElement) {
 				input.type =
-					field.kind === 'check' ? 'checkbox' : field.kind === 'color' ? 'color' : field.kind;
+					field.kind === 'check'
+						? 'checkbox'
+						: field.kind === 'color'
+							? 'color'
+							: field.kind === 'list'
+								? 'text'
+								: field.kind;
 				if (field.kind === 'number') {
 					input.min = String(field.min);
 					input.max = String(field.max);

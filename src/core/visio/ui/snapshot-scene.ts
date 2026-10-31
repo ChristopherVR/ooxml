@@ -165,7 +165,9 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...(source.glow ? { glow: fields(source.glow, ['color', 'opacity', 'size']) } : {}),
 			...(source.softEdges === undefined ? {} : { softEdges: source.softEdges }),
 			...(source.rounding === undefined ? {} : { rounding: source.rounding }),
-			...(source.bevel ? { bevel: fields(source.bevel, ['type', 'width', 'height']) } : {}),
+			...(source.bevel
+				? { bevel: fields(source.bevel, ['type', 'width', 'height', 'lighting', 'material']) }
+				: {}),
 			...(source.extrusion ? { extrusion: fields(source.extrusion, ['depth', 'color']) } : {}),
 			...(source.contour ? { contour: fields(source.contour, ['size', 'color']) } : {}),
 			...(source.rotation3d

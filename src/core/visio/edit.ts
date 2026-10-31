@@ -69,6 +69,9 @@ import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
 import { loadCffMasters } from './cff-masters';
 import { relateCffMasters, stampCffMasters, unstampCffMasters } from './edit-swimlane-stamp';
 import { ensureCffMasters } from './cff-author';
+import { editVsdxDataGraphics, isVisioDataGraphicEdit } from './edit-data-graphic';
+import { changesDataGraphicValues, refreshDataGraphics } from './edit-data-graphic-refresh';
+import { stripDataGraphics } from './edit-data-graphic-guard';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
@@ -241,9 +244,36 @@ async function editVisioPrepared(
 	options: EditVsdxOptions,
 	clock: Parameters<typeof editVsdxTransaction>[3] & object,
 ): Promise<EditVsdxResult> {
+	const limits = { ...DEFAULTS, ...options.limits };
+	// Resizing, deleting or copying a shape with a data graphic: the graphic is off while the edit
+	// runs and written again for the shape afterwards.
+	const guarded = await stripDataGraphics(
+		input,
+		edits,
+		limits,
+		positive(options.maxOutputBytes ?? limits.maxInputBytes),
+		Date.now() + limits.maxRuntimeMs,
+	);
+	if (guarded) {
+		const done = await editVisioPrepared(guarded.bytes, edits, options, clock);
+		const restored = guarded.restore.length
+			? await editVsdxDataGraphics(
+					done.bytes,
+					guarded.restore,
+					limits,
+					positive(options.maxOutputBytes ?? limits.maxInputBytes),
+					Date.now() + limits.maxRuntimeMs,
+					() => undefined,
+				)
+			: done;
+		return {
+			...done,
+			bytes: restored.bytes,
+			changedParts: [...new Set([...done.changedParts, ...restored.changedParts])],
+		};
+	}
 	// A new cross-functional flowchart is built from Visio's hidden flowchart masters, which the
 	// drawing gets first (and keeps), so the chart's parts can be instances of them.
-	const limits = { ...DEFAULTS, ...options.limits };
 	const cff = edits.some((edit) => edit.type === 'create-swimlanes')
 		? await ensureCffMasters(
 				input,
@@ -266,11 +296,22 @@ async function editVisioPrepared(
 		options,
 		clock.deadline,
 	);
-	return growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
+	const grown = await growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
 		editVsdxTransaction(bytes, growth, {
 			...options,
 			limits: { ...options.limits, maxRuntimeMs: Math.max(1, clock.deadline - Date.now()) },
 		}),
+	);
+	// Data graphic callouts follow the Shape Data they show.
+	if (!edits.some((edit) => changesDataGraphicValues(edit.type))) return grown;
+	return refreshDataGraphics(
+		grown,
+		edits.some((edit) => isVisioDataEdit(edit))
+			? 'all'
+			: new Set(edits.flatMap((edit) => ('pageId' in edit ? [edit.pageId] : []))),
+		limits,
+		positive(options.maxOutputBytes ?? limits.maxInputBytes),
+		Date.now() + limits.maxRuntimeMs,
 	);
 }
 
@@ -336,6 +377,24 @@ async function editVsdxTransaction(
 			},
 			(bytes, rest) => editVsdx(bytes, rest, options),
 		);
+	if (allCommands.some(isVisioDataGraphicEdit)) {
+		// The graphic is written first, as a transaction of its own; the other edits follow it.
+		const graphic = await editVsdxDataGraphics(
+			original,
+			allCommands.filter(isVisioDataGraphicEdit),
+			limits,
+			maxOutput,
+			deadline,
+			check,
+		);
+		const rest = allCommands.filter((command) => !isVisioDataGraphicEdit(command));
+		if (!rest.length) return graphic;
+		const after = await editVsdx(graphic.bytes, rest, options);
+		return {
+			...after,
+			changedParts: [...new Set([...graphic.changedParts, ...after.changedParts])],
+		};
+	}
 	const { pkg, parts, pages } = await openEditablePackage(original, limits, check);
 	const builtIn = await changeStencilShapeToBuiltIn(
 		original,
@@ -817,7 +876,8 @@ async function editVsdxTransaction(
 			!isVisioDataEdit(command) &&
 			command.type !== 'assign-layers' &&
 			command.type !== 'set-layer-properties' &&
-			!isVisioMasterDrop(command)
+			!isVisioMasterDrop(command) &&
+			!isVisioDataGraphicEdit(command)
 		) {
 			// A group may have been created or pasted earlier in this transaction. Its member
 			// writes were not visible to the initial package proof; check the current tree too.

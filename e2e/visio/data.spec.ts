@@ -61,12 +61,9 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 			Array.from((node as VisioViewerElement).exportVsdx().bytes),
 		);
 		const shapes = (await parseVsdx(new Uint8Array(bytes))).pages[0]!.shapes;
-		return {
-			owner: shapes.find((item) => item.id === '1')!.rotation!.pinX,
-			graphic: shapes.find((item) =>
-				item.shapeData?.some((row) => row.name === '_ooxmlDataGraphic'),
-			)!.rotation!.pinX,
-		};
+		const owner = shapes.find((item) => item.id === '1')!;
+		// The callout is a member of the shape's group: its pin is inside the group.
+		return { owner: owner.rotation!.pinX, graphic: owner.children[0]!.rotation!.pinX };
 	};
 	const beforeMove = await positions();
 	await shape.click();
@@ -75,7 +72,8 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 		expect((await positions()).owner).toBeGreaterThan(beforeMove.owner),
 	).toPass();
 	const afterMove = await positions();
-	expect(afterMove.graphic - beforeMove.graphic).toBeCloseTo(afterMove.owner - beforeMove.owner);
+	// The callout moves with the shape by staying where it is inside the group.
+	expect(afterMove.graphic).toBeCloseTo(beforeMove.graphic);
 	await viewer.locator('.viewport').press('Control+z');
 	await expect(async () =>
 		expect((await positions()).owner).toBeCloseTo(beforeMove.owner),
@@ -182,10 +180,8 @@ test('Link Data, a saved connection and Data Graphics Position and Auto Space', 
 	};
 	const gap = async () => {
 		const shapes = (await saved()).pages[0]!.shapes;
-		const graphic = shapes.find((item) =>
-			item.shapeData?.some((row) => row.name === '_ooxmlDataGraphic'),
-		)!;
-		return graphic.rotation!.pinY - shapes.find((item) => item.id === '1')!.rotation!.pinY;
+		const owner = shapes.find((item) => item.id === '1')!;
+		return owner.children[0]!.rotation!.pinY - owner.height / 2;
 	};
 	await expect(async () => expect(await gap()).toBeLessThan(0)).toPass();
 	await viewer.getByRole('button', { name: 'Position', exact: true }).click();

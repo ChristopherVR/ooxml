@@ -17,6 +17,7 @@ import {
 	hasParagraphExtras,
 	paragraphExtraWrites,
 	textBlockWrites,
+	tabStopWrites,
 } from './edit-formatting-text-extra';
 
 export function textFormattingWrites(
@@ -40,6 +41,7 @@ export function textFormattingWrites(
 		hasParagraphExtras(edit)
 	)
 		rows.set('Paragraph', formattingRowContext(shape, document, 'Paragraph'));
+	if (edit.tabStops !== undefined) rows.set('Tabs', formattingRowContext(shape, document, 'Tabs'));
 	const characters = rows.get('Character')?.source;
 	const paragraphs = rows.get('Paragraph')?.source;
 	if (rows.size) assertFormattingText(shape, characters, paragraphs);
@@ -124,6 +126,7 @@ export function textFormattingWrites(
 			add(name('HorzAlign'), ['left', 'center', 'right', 'justify'].indexOf(edit.horizontalAlign));
 		paragraphExtraWrites(edit, name, add);
 	}
+	if (edit.tabStops !== undefined) tabStopWrites(edit.tabStops, rows.get('Tabs')!, add);
 	if (edit.verticalAlign !== undefined)
 		add('VerticalAlign', ['top', 'middle', 'bottom'].indexOf(edit.verticalAlign));
 	textBlockWrites(shape, edit, add);

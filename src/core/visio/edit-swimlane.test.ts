@@ -238,4 +238,18 @@ describe('cross-functional flowchart', () => {
 			run(await built(), [{ type: 'delete-swimlane', pageId: '0', frameId: '1', laneId: '51' }]),
 		).rejects.toThrow();
 	});
+
+	it('adds separators when the lanes are the last shapes on the page', async () => {
+		// The separator used to be inserted before itself there, which corrupted the page's XML.
+		let bytes = await fixture({ pages: [{ id: '0', contents: '' }] });
+		for (const edit of [
+			create(),
+			{ type: 'insert-separator', pageId: '0', frameId: '50', shapeId: '70', at: 5, label: 'P1' },
+			{ type: 'insert-separator', pageId: '0', frameId: '50', shapeId: '71', at: 8, label: 'P2' },
+		] as VisioEdit[])
+			bytes = await run(bytes, [edit]);
+		const all = await shapes(bytes);
+		expect(all.has('70')).toBe(true);
+		expect(all.has('71')).toBe(true);
+	});
 });

@@ -50,12 +50,12 @@ describe('Bevel and 3-D rotation', () => {
 		const written = await cells(saved.bytes);
 		expect(attribute(written.get('RotationXAngle'), 'U')).toBe('DEG');
 		expect(Number(attribute(written.get('RotationXAngle'), 'V'))).toBeCloseTo(
-			(-35 * Math.PI) / 180,
+			(20 * Math.PI) / 180,
 			6,
 		);
 		const rotation = (await read(saved.bytes)).style.rotation3d!;
-		expect(rotation.x).toBeCloseTo((-35 * Math.PI) / 180, 6);
-		expect(rotation.perspective).toBeCloseTo(Math.PI / 3, 6);
+		expect(rotation.x).toBeCloseTo((20 * Math.PI) / 180, 6);
+		expect(rotation.perspective).toBeCloseTo((45 * Math.PI) / 180, 6);
 		const document = await parseVsdx(saved.bytes);
 		expect(() => assertViewableDocument(document)).not.toThrow();
 		expect(copySnapshotScene(document).pages[0]!.shapes[0]!.style.rotation3d).toMatchObject({

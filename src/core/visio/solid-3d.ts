@@ -201,3 +201,41 @@ export function extrudePaths(
 }
 export const extrusionPathData = (polygons: readonly (readonly Point2[])[]): string =>
 	polygons.map((points) => polygonData(points, true)).join(' ');
+
+/**
+ * The affine map that best fits the projection of a `width` x `height` box, as an SVG matrix over
+ * local y-up coordinates [a, b, c, d, e, f] (x' = a*x + c*y + e, y' = b*x + d*y + f). A pinhole
+ * projection is not affine, so this is the least-squares fit over the four corners: exact for a
+ * parallel projection. For perspective, text and pictures stay upright inside the projected
+ * outline but do not converge with it: the box centre is exact and the corners are off by the
+ * fit's residual. Used where an SVG element can only take a matrix.
+ */
+export function projectionMatrix(
+	projection: Projection,
+	width: number,
+	height: number,
+): [number, number, number, number, number, number] {
+	const [hw, hh] = [width / 2, height / 2];
+	const corners = [
+		[-1, -1],
+		[1, -1],
+		[1, 1],
+		[-1, 1],
+	] as const;
+	const mapped = corners.map(([sx, sy]) => projection.point(hw + sx * hw, hh + sy * hh));
+	// The box centre is the turning point, so the fit is anchored there.
+	const mean = projection.point(hw, hh);
+	// The corners are symmetric about the centre, so the x and y terms are uncorrelated.
+	const fit = (pick: (p: Point2) => number) => {
+		let [ax, ay] = [0, 0];
+		corners.forEach(([sx, sy], i) => {
+			const value = pick(mapped[i]!) - pick(mean);
+			ax += sx * value;
+			ay += sy * value;
+		});
+		return [ax / (4 * hw || 1), ay / (4 * hh || 1)] as const;
+	};
+	const [a, c] = fit((p) => p.x);
+	const [b, d] = fit((p) => p.y);
+	return [a, b, c, d, mean.x - a * hw - c * hh, mean.y - b * hw - d * hh];
+}

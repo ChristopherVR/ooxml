@@ -15,6 +15,7 @@ import {
 } from './edit-container-members';
 import { noCffMasters, type CffMasterSet } from './cff-masters';
 import { turnFlowchart } from './edit-swimlane-turn';
+import { insertNativePhase, isNativeFrame, setNativeOptions } from './edit-swimlane-cff';
 import {
 	VISIO_CONTAINER_MARGIN_ROW,
 	VISIO_CONTAINER_RESIZE_ROW,
@@ -48,6 +49,7 @@ import {
 	frameOf,
 	laneOf,
 	lanesOf,
+	listsOf,
 	masterRole,
 	optionsOf,
 	orderSeparators,
@@ -173,7 +175,8 @@ function insertSwimlane(scope: Scope, edit: VisioInsertSwimlaneEdit): void {
 				options.rotate,
 				options.style,
 			);
-	if (!native) frame.parentNode!.insertBefore(lane, frame.nextSibling);
+	if (!native && frame.nextSibling !== lane)
+		frame.parentNode!.insertBefore(lane, frame.nextSibling);
 	const order = [...lanes];
 	order.splice(order.indexOf(reference) + (edit.position === 'after' ? 1 : 0), 0, lane);
 	relayout(scope, frame, order);
@@ -239,6 +242,7 @@ function resizeSwimlane(scope: Scope, edit: VisioResizeSwimlaneEdit): void {
 
 function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 	const frame = frameOf(scope, edit.frameId);
+	if (isNativeFrame(scope, frame)) return insertNativePhase(scope, frame, edit);
 	const { phase } = ensureLists(scope, frame);
 	const options = optionsOf(frame);
 	const lanes = lanesOf(scope, frame, options.direction);
@@ -271,8 +275,10 @@ function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 		options.direction,
 		edit.label ?? `Phase ${separatorsOf(scope, frame).length + 1}`,
 	);
+	// createShape appended the bar, so when the last lane was the last shape the bar already
+	// follows it; inserting a node before itself corrupts xmldom's child list.
 	const last = lanes[lanes.length - 1]!;
-	last.parentNode!.insertBefore(bar, last.nextSibling);
+	if (last.nextSibling !== bar) last.parentNode!.insertBefore(bar, last.nextSibling);
 	writeListMembers(
 		scope.root,
 		phase,
@@ -282,13 +288,18 @@ function insertSeparator(scope: Scope, edit: VisioInsertSeparatorEdit): void {
 
 function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
 	const frame = frameOf(scope, edit.frameId);
+	if (isNativeFrame(scope, frame)) return setNativeOptions(scope, frame, edit);
 	const before = optionsOf(frame);
-	if (edit.showTitle !== undefined) setUserRow(frame, 'visShowTitle', flagText(edit.showTitle));
+	// Visio's flowchart rows are plain numbers (no unit); the Swimlane List holds the label flag.
+	if (edit.showTitle !== undefined) setUserRow(frame, 'visShowTitle', flagText(edit.showTitle), '');
 	if (edit.showSeparators !== undefined)
-		setUserRow(frame, 'visShowPhase', flagText(edit.showSeparators));
-	if (edit.rotateLabels !== undefined)
-		setUserRow(frame, 'visRotateLabel', flagText(edit.rotateLabels));
-	if (edit.style !== undefined) setUserRow(frame, 'visCFFStyle', String(edit.style));
+		setUserRow(frame, 'visShowPhase', flagText(edit.showSeparators), '');
+	if (edit.rotateLabels !== undefined) {
+		setUserRow(frame, 'visRotateLabel', flagText(edit.rotateLabels), '');
+		const { swim } = listsOf(scope, frame);
+		if (swim) setUserRow(swim, 'visRotateLabel', flagText(edit.rotateLabels), '');
+	}
+	if (edit.style !== undefined) setUserRow(frame, 'visCFFStyle', String(edit.style), '');
 	if (edit.direction !== undefined && edit.direction !== before.direction)
 		turnFlowchart(scope, frame, edit.direction);
 	const options = optionsOf(frame);
@@ -320,18 +331,6 @@ function setOptions(scope: Scope, edit: VisioSwimlaneOptionsEdit): void {
 const styleLine = (style: number) =>
 	['#C99A55', '#5B9BD5', '#7F7F7F', '#6AA84F'][style - 1] ?? '#C99A55';
 
-/** The commands a chart Visio built does not take yet: they would rewrite the masters' own cells. */
-function refuseBuiltByVisio(scope: Scope, edit: VisioSwimlaneEdit): void {
-	if (edit.type === 'create-swimlanes' || scope.masters.empty) return;
-	const frame = topLevelShapes(scope.root).find((shape) => shapeIdOf(shape) === edit.frameId);
-	if (!frame || masterRole(scope, frame) !== 'frame') return;
-	if (edit.type === 'insert-separator' || edit.type === 'set-swimlane-options')
-		fail(
-			'UNSUPPORTED_GEOMETRY_EDIT',
-			'Phases, flowchart options and direction of a chart Visio built are not editable yet; lanes are.',
-		);
-}
-
 /** Apply a cross-functional flowchart command to its page; throws a VisioPackageError on refusal. */
 export function applySwimlaneEdit(
 	roots: ReadonlyMap<string, Element>,
@@ -346,7 +345,6 @@ export function applySwimlaneEdit(
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const contents = 'contents' in edit && edit.contents === 'leave' ? 'leave' : 'move';
 	const scope: Scope = { roots, document, root, pageId: edit.pageId, check, contents, masters };
-	refuseBuiltByVisio(scope, edit);
 	if (edit.type === 'create-swimlanes') createSwimlanes(scope, edit);
 	else if (edit.type === 'insert-swimlane') insertSwimlane(scope, edit);
 	else if (edit.type === 'delete-swimlane') deleteSwimlane(scope, edit, instances);
