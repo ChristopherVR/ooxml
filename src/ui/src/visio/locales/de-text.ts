@@ -37,18 +37,18 @@ export const deText: Readonly<Record<string, string>> = {
 		'Formatvorlagen aus dem Design der Zeichnung. Eine Zeichnung ohne Design erhält die hier gezeigten festen Office-Farben.',
 	'Select one shape to change.': 'Wählen Sie eine zu ändernde Form aus.',
 	'Open a .vsdx file to insert diagram parts.':
-		'Öffnen Sie eine VSDX-Datei, um Diagrammteile einzufügen.',
+		'Öffnen Sie eine .vsdx-Datei, um Diagrammteile einzufügen.',
 	'Apply a theme to the current page.': 'Auf die aktuelle Seite ein Design anwenden.',
 	'Quick-styled shapes take its colours; text keeps its own font.':
 		'Formen mit Schnellformatvorlage übernehmen die Farben; der Text behält seine Schriftart.',
 	"Pick one of the current theme's four colour variants.":
 		'Wählen Sie eine der vier Farbvarianten des aktuellen Designs.',
 	'Open a .vsdx file to add backgrounds.':
-		'Öffnen Sie eine VSDX-Datei, um Hintergründe hinzuzufügen.',
+		'Öffnen Sie eine .vsdx-Datei, um Hintergründe hinzuzufügen.',
 	'Open a .vsdx file to lay out its shapes.':
-		'Öffnen Sie eine VSDX-Datei, um deren Formen anzuordnen.',
+		'Öffnen Sie eine .vsdx-Datei, um deren Formen anzuordnen.',
 	'open a .vsdx file to lay out its shapes.':
-		'Öffnen Sie eine VSDX-Datei, um deren Formen anzuordnen.',
+		'Öffnen Sie eine .vsdx-Datei, um deren Formen anzuordnen.',
 	'Custom theme colour sets are not written yet; pick a theme or variant.':
 		'Benutzerdefinierte Designfarbsätze werden noch nicht geschrieben; wählen Sie ein Design oder eine Variante.',
 	'DWG and DXF import is not supported.': 'Der Import von DWG und DXF wird nicht unterstützt.',

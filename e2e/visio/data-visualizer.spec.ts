@@ -53,6 +53,25 @@ test('Data Visualizer draws a flowchart from a table and redraws it from the edi
 	await expect(paper).toContainText('Order complete');
 	await expect(paper).toContainText('Yes');
 	await page.screenshot({ path: test.info().outputPath('data-visualizer-basic.png') });
+	const saved = async () => {
+		const bytes = await viewer.evaluate((node) =>
+			Array.from((node as VisioViewerElement).exportVsdx().bytes),
+		);
+		return (await parseVsdx(new Uint8Array(bytes))).pages[0]!;
+	};
+	const stepIds = (drawing: Awaited<ReturnType<typeof saved>>) =>
+		new Map(
+			drawing.shapes.flatMap((shape) => {
+				const row = shape.shapeData?.find((item) => item.name === '_ooxmlVisualizer');
+				return row?.label === 'step' ? [[String(row.value), shape.id] as const] : [];
+			}),
+		);
+	const first = await saved();
+	const firstIds = stepIds(first);
+	// Connector labels are the connectors' own text, not separate text boxes.
+	const labelled = first.shapes.filter((shape) => shape.text.plainText === 'Yes');
+	expect(labelled).toHaveLength(1);
+	expect(labelled[0]!.kind).toBe('connector');
 
 	// Edit the table: rename a step, add one, and redraw.
 	await page.evaluate(() => {
@@ -70,18 +89,20 @@ test('Data Visualizer draws a flowchart from a table and redraws it from the edi
 	await expect(paper).toContainText('Dispatch order');
 	await expect(paper).toContainText('Archive');
 	await expect(paper).not.toContainText('Ship order');
-	const saved = async () => {
-		const bytes = await viewer.evaluate((node) =>
-			Array.from((node as VisioViewerElement).exportVsdx().bytes),
-		);
-		return (await parseVsdx(new Uint8Array(bytes))).pages[0]!;
-	};
-	const marked = (await saved()).shapes.filter((shape) =>
+	const after = await saved();
+	// Rows that stayed keep their shapes (same IDs); only the new row adds one.
+	const afterIds = stepIds(after);
+	for (const key of ['1', '2', '3', '4', '5']) expect(afterIds.get(key)).toBe(firstIds.get(key));
+	const marked = after.shapes.filter((shape) =>
 		shape.shapeData?.some((row) => row.name === '_ooxmlVisualizer' && row.label === 'step'),
 	);
 	expect(marked).toHaveLength(6);
 	expect(marked[0]!.shapeData!.find((row) => row.name === 'ProcessStepID')?.value).toBeDefined();
 	await page.screenshot({ path: test.info().outputPath('data-visualizer-refreshed.png') });
+	// The whole redraw is one undo step.
+	await viewer.locator('.qat [data-command="undo"]').click();
+	await expect(paper).toContainText('Ship order');
+	await expect(paper).not.toContainText('Archive');
 	expect(errors).toEqual([]);
 });
 

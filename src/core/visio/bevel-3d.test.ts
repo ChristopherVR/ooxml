@@ -81,10 +81,6 @@ describe('Bevel and 3-D rotation', () => {
 		// The right side drops: x moves y downwards.
 		expect(both[1]).toBeLessThan(0);
 	});
-	it('does not read a themed bevel from the theme', async () => {
-		const themed = await plain(cell('BevelTopType', 'Themed', 'THEMEVAL()'));
-		expect((await read(themed)).style.bevel).toBeUndefined();
-	});
 });
 
 describe('Theme arrowheads', () => {

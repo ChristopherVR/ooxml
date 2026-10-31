@@ -154,6 +154,56 @@ test('an assistant sits beside its manager and the Delete key deletes the positi
 	expect(errors).toEqual([]);
 });
 
+test('a Position Belt that gains a subordinate becomes a Manager Belt glued at Top and Bottom', async ({
+	page,
+}) => {
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	const viewer = await openTemplate(page);
+	// Every reporting line joins the manager's Bottom point (row 4) to the subordinate's Top (row 1).
+	const glue = () =>
+		viewer.evaluate((node) =>
+			(node as VisioViewerElement).controller.state
+				.document!.pages[0]!.connectors.filter((row) => /^(Begin|End)X$/.test(row.fromCell))
+				.map((row) => `${row.fromCell}:${row.toCell}`),
+		);
+	expect(new Set(await glue())).toEqual(new Set(['BeginX:Connections.X4', 'EndX:Connections.X1']));
+
+	await pick(viewer, LEAF);
+	await viewer.locator('office-ui-ribbon #tab-org-chart').click();
+	await viewer.locator(`${TAB} [command="org-subordinate"]`).click();
+	await expect.poll(async () => (await chart(viewer)).positions.length).toBe(7);
+	const state = await chart(viewer);
+	// The leaf was replaced by a Manager Belt (same text, new id) and keeps its place and line.
+	expect(state.positions.some((item) => item.id === LEAF)).toBe(false);
+	const kinds = state.positions.map((item) => item.name.replace(/\.\d+$/, ''));
+	expect(kinds.filter((name) => name === 'Manager Belt')).toHaveLength(4);
+	expect(kinds.filter((name) => name === 'Position Belt')).toHaveLength(2);
+	const promoted = state.positions.find(
+		(item) => item.name.startsWith('Manager Belt') && !['17', '33', '49'].includes(item.id),
+	)!;
+	expect(promoted.text).toBe('Name\nPosition');
+	expect(state.connectors).toBe(6);
+	expect(new Set(await glue())).toEqual(new Set(['BeginX:Connections.X4', 'EndX:Connections.X1']));
+
+	// Moving the promoted manager keeps its lines on the same connection points.
+	await viewer.evaluate(
+		(node, id) =>
+			(node as VisioViewerElement).controller.applyEdits([
+				{ type: 'move-shape', pageId: '0', shapeId: id, x: 9, y: 2.5 },
+			]),
+		promoted.id,
+	);
+	expect(new Set(await glue())).toEqual(new Set(['BeginX:Connections.X4', 'EndX:Connections.X1']));
+
+	// One undo step per command: both the move and the type change step back.
+	await undo(viewer);
+	await undo(viewer);
+	await expect.poll(async () => (await chart(viewer)).positions.length).toBe(6);
+	expect((await chart(viewer)).positions.some((item) => item.id === LEAF)).toBe(true);
+	expect(errors).toEqual([]);
+});
+
 test('the text of a position follows its Shape Data', async ({ page }) => {
 	const viewer = await openTemplate(page);
 	await pick(viewer, LEAF);

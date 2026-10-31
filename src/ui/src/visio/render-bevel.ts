@@ -27,10 +27,13 @@ export function renderBevel(
 	paths: readonly SVGPathElement[],
 	defs: SVGDefsElement,
 	world: VisioMatrix,
+	/** The filter region when the paths were projected beyond the flat shape's box. */
+	box?: { x: number; y: number; width: number; height: number },
 ): SVGGElement | undefined {
 	const bevel = shape.style.bevel;
 	const filled = paths.filter((path) => path.getAttribute('fill') !== 'none');
-	if (!bevel || !filled.length) return undefined;
+	// A bevel with no size only makes the shape solid for the extrusion and contour.
+	if (!bevel || !filled.length || (bevel.width <= 0 && bevel.height <= 0)) return undefined;
 	const unit = scale(world);
 	const width = Math.max(bevel.width, bevel.height) / unit;
 	const sharp = VISIO_BEVEL_TYPES_SHARP.includes(bevel.type);
@@ -39,10 +42,16 @@ export function renderBevel(
 	const filter = svgElement('filter');
 	filter.id = `visio-bevel-${++bevelId}`;
 	filter.setAttribute('filterUnits', 'userSpaceOnUse');
-	filter.setAttribute('x', String(Math.min(0, shape.width) - width));
-	filter.setAttribute('y', String(Math.min(0, shape.height) - width));
-	filter.setAttribute('width', String(Math.abs(shape.width) + width * 2));
-	filter.setAttribute('height', String(Math.abs(shape.height) + width * 2));
+	const region = box ?? {
+		x: Math.min(0, shape.width),
+		y: Math.min(0, shape.height),
+		width: Math.abs(shape.width),
+		height: Math.abs(shape.height),
+	};
+	filter.setAttribute('x', String(region.x - width));
+	filter.setAttribute('y', String(region.y - width));
+	filter.setAttribute('width', String(region.width + width * 2));
+	filter.setAttribute('height', String(region.height + width * 2));
 	const add = (name: keyof SVGElementTagNameMap, attributes: Record<string, string | number>) => {
 		const node = svgElement(name);
 		for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, String(value));
@@ -103,10 +112,12 @@ export function renderBevel(
 
 /**
  * 3-D rotation: a parallel projection of the flat shape about its centre, as a matrix on a wrapper
- * group. Perspective foreshortening and extrusion are not drawn; Visio's own SVG export ignores
- * the rotation, its raster export draws it.
+ * group. A shape with perspective or an extrusion is drawn through `solidRender` instead: its
+ * outline is projected point by point, and this wrapper (`projected`) then carries only what stays
+ * flat in that mode (text, pictures), parallel-projected. Visio's own SVG export ignores the
+ * rotation, its raster export draws it.
  */
-export function rotation3dWrapper(shape: VisioShape): SVGGElement | undefined {
+export function rotation3dWrapper(shape: VisioShape, projected = false): SVGGElement | undefined {
 	const rotation = shape.style.rotation3d;
 	if (!rotation) return undefined;
 	const [a, b, c, d] = visioRotation3dMatrix(rotation);
@@ -115,9 +126,19 @@ export function rotation3dWrapper(shape: VisioShape): SVGGElement | undefined {
 	const wrapper = svgElement('g');
 	wrapper.dataset.rotation3d = '';
 	if (rotation.perspective > 0) wrapper.dataset.perspective = '';
-	wrapper.setAttribute(
-		'transform',
-		`matrix(${a} ${b} ${c} ${d} ${cx - a * cx - c * cy} ${cy - b * cx - d * cy})`,
-	);
+	if (projected) wrapper.dataset.solid3d = '';
+	if (!projected)
+		wrapper.setAttribute(
+			'transform',
+			`matrix(${a} ${b} ${c} ${d} ${cx - a * cx - c * cy} ${cy - b * cx - d * cy})`,
+		);
+	return wrapper;
+}
+/** The parallel-projected container for text and pictures of a shape drawn from projected paths. */
+export function flatContent(shape: VisioShape): SVGGElement {
+	const wrapper = rotation3dWrapper(shape)!;
+	delete wrapper.dataset.rotation3d;
+	delete wrapper.dataset.perspective;
+	wrapper.dataset.solidFlat = '';
 	return wrapper;
 }

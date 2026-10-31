@@ -277,6 +277,8 @@ export async function applyInstanceGeometryEdit(
 		overrides,
 		check,
 		new Map(pins.map((item) => [item, item === cell('Width') ? width : height])),
+		undefined,
+		true,
 	);
 	for (const [item, value] of pinned) {
 		assertOverridable(item, 'The size');

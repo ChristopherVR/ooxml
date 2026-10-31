@@ -69,10 +69,10 @@ export const deBackstage: Readonly<Record<string, string>> = {
 	'A short process with a decision, using Basic Flowchart Shapes.':
 		'Ein kurzer Prozess mit einer Entscheidung, mit Formen des einfachen Flussdiagramms.',
 	'A process across three horizontal swimlanes that stack and resize together.':
-		'Ein Prozess über drei horizontale Schwimmbahnen, die sich gemeinsam stapeln und skalieren.',
+		'Ein Prozess über drei horizontale Swimlanes, die sich gemeinsam stapeln und skalieren.',
 	'Basic Organization Chart': 'Einfaches Organigramm',
 	'A small reporting hierarchy joined by connectors.':
-		'Eine kleine Berichtshierarchie, verbunden durch Verbinder.',
+		'Eine kleine Berichtshierarchie, verbunden durch Verbindungslinien.',
 	'No drawing open': 'Keine Zeichnung geöffnet',
 	'Untitled drawing': 'Unbenannte Zeichnung',
 	'Legacy VSD preview (read only)': 'Vorschau einer älteren VSD-Datei (nur lesbar)',

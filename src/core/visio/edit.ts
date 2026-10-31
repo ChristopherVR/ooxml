@@ -66,7 +66,9 @@ import { applyPictureEdit, isVisioPictureEdit } from './edit-picture-adjust';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
 import { applySwimlaneEdit, swimlaneDeleteTargets } from './edit-swimlane-ops';
 import { isVisioSwimlaneEdit } from './edit-swimlane-commands';
-import { loadCffMasters, noCffMasters } from './cff-masters';
+import { loadCffMasters } from './cff-masters';
+import { relateCffMasters, stampCffMasters, unstampCffMasters } from './edit-swimlane-stamp';
+import { ensureCffMasters } from './cff-author';
 import { setVisioContainerMembers } from './edit-container-members';
 import { reconcileVisioContainers } from './edit-container-fit';
 import { applyShapeDataEdit } from './edit-shape-data';
@@ -203,8 +205,34 @@ export async function editVsdx(
 			? [{ code: 'TEMPLATE_SAVED_AS_DRAWING', message: 'The template was saved as a drawing.' }]
 			: []),
 	];
-	const final = await editVisioPrepared(prepared.bytes, snapshot, options, clock);
+	const final = await editWithDeletionsLast(prepared.bytes, snapshot, options, clock);
 	return notes.length ? { ...final, diagnostics: [...notes, ...final.diagnostics] } : final;
+}
+
+/**
+ * Stencil instances can only be deleted in a transaction of deletions alone. Deletions marked
+ * `deferred` (a refresh that updates, draws and removes in one call) run after the other edits as
+ * a second transaction; the caller still sees one edit.
+ */
+async function editWithDeletionsLast(
+	input: Uint8Array,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
+	clock: Parameters<typeof editVsdxTransaction>[3] & object,
+): Promise<EditVsdxResult> {
+	const deferred = edits.filter((edit) => edit.type === 'delete-shape' && edit.deferred);
+	if (!deferred.length) return editVisioPrepared(input, edits, options, clock);
+	const rest = edits.filter((edit) => !deferred.includes(edit));
+	const first = rest.length
+		? await editVsdx(input, rest, options)
+		: { bytes: input, changedParts: [], diagnostics: [] };
+	const plain = deferred.map((edit): VisioEdit => ({ ...edit, deferred: false }) as VisioEdit);
+	const second = await editVsdx(first.bytes, plain, options);
+	return {
+		bytes: second.bytes,
+		changedParts: [...new Set([...first.changedParts, ...second.changedParts])],
+		diagnostics: [...first.diagnostics, ...second.diagnostics],
+	};
 }
 
 async function editVisioPrepared(
@@ -213,7 +241,22 @@ async function editVisioPrepared(
 	options: EditVsdxOptions,
 	clock: Parameters<typeof editVsdxTransaction>[3] & object,
 ): Promise<EditVsdxResult> {
-	const edited = await editVsdxTransaction(input, edits, options, clock);
+	// A new cross-functional flowchart is built from Visio's hidden flowchart masters, which the
+	// drawing gets first (and keeps), so the chart's parts can be instances of them.
+	const limits = { ...DEFAULTS, ...options.limits };
+	const cff = edits.some((edit) => edit.type === 'create-swimlanes')
+		? await ensureCffMasters(
+				input,
+				limits,
+				positive(options.maxOutputBytes ?? limits.maxInputBytes),
+				Date.now() + limits.maxRuntimeMs,
+				() => undefined,
+			)
+		: undefined;
+	const first = await editVsdxTransaction(cff?.bytes ?? input, edits, options, clock);
+	const edited = cff
+		? { ...first, changedParts: [...new Set([...cff.changedParts, ...first.changedParts])] }
+		: first;
 	// Shapes that size themselves from their text follow it, as far as it can be measured.
 	const resized = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
 	const result = await refreshLineJumpCaches(
@@ -435,7 +478,7 @@ async function editVsdxTransaction(
 	);
 	let document: Element | undefined;
 	// Lane commands also run on charts Visio built, whose frame, lists and lanes are master instances.
-	const cffMasters = commands.some(isVisioSwimlaneEdit) ? await loadCffMasters(pkg) : noCffMasters;
+	const cffMasters = await loadCffMasters(pkg);
 	let masterMovePins = emptyMasterMoveProof();
 	const instanceCommands = new Set<VisioGeometryEdit>();
 	let instanceDeletes: ReadonlySet<Element> = new Set();
@@ -467,7 +510,11 @@ async function editVsdxTransaction(
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
 		for (const [pageId, path] of pages) {
 			const sourceRoot = await visioXml(pkg, path, 'PageContents');
-			roots.set(pageId, (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement);
+			const root = (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement;
+			// The edits below work on the shapes of a flowchart this package built as on any plain
+			// shape; they are made instances of the flowchart masters again before the page is saved.
+			unstampCffMasters(root, cffMasters);
+			roots.set(pageId, root);
 		}
 		for (const [pageId, root] of roots) {
 			const ids = new Set(
@@ -805,12 +852,20 @@ async function editVsdxTransaction(
 		for (const shapeId of takeDeferredTextSizes(root)) clock.textSizes.push({ pageId, shapeId });
 	let totalBytes = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0);
 	let nodes = 0;
+	for (const [path, root] of [...dirty]) {
+		if (![...pages.values()].includes(path)) continue;
+		const used = stampCffMasters(root, cffMasters);
+		const related = used.size
+			? await relateCffMasters(pkg, parts, path, used, cffMasters)
+			: undefined;
+		if (related) dirty.set(related.part, related.rels);
+	}
 	for (const [path, root] of dirty) {
 		const serialized = serializeEditedXml(root, limits, check);
 		nodes += serialized.nodes;
 		if (nodes > limits.maxTotalXmlNodes)
 			fail('LIMIT_XML_TOTAL', 'Edited XML node total exceeds limit.');
-		totalBytes += serialized.bytes.length - parts.get(path)!.length;
+		totalBytes += serialized.bytes.length - (parts.get(path)?.length ?? 0);
 		if (totalBytes > limits.maxTotalBytes)
 			fail('LIMIT_TOTAL', 'Edited package total exceeds limit.');
 		parts.set(path, serialized.bytes);
@@ -828,7 +883,8 @@ async function editVsdxTransaction(
 			{ ...limits, maxInputBytes: maxOutput, maxRuntimeMs: Math.max(1, deadline - Date.now()) },
 			check,
 		);
-		for (const path of dirty.keys()) await visioXml(verified.pkg, path, 'PageContents');
+		for (const path of dirty.keys())
+			if (!path.endsWith('.rels')) await visioXml(verified.pkg, path, 'PageContents');
 		check();
 	}
 	return {

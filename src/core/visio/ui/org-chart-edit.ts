@@ -2,6 +2,7 @@ import type { VisioEdit } from '../edit-commands';
 import type { VisioPage, VisioShape } from '../model';
 import { visioShapePageBounds } from './diagram-parts';
 import { layoutOrgPage } from './org-chart-layout';
+import { visioOrgSwapMaster } from './org-chart-belt';
 import { ORG_STENCIL_MASTER_IDS, orgStencilBytes } from './org-chart-stencil-data';
 import {
 	visioIsOrgAssistant,
@@ -82,6 +83,9 @@ export function visioOrgDropPosition(
 	};
 }
 
+/** Rows of the Belt masters' Connection section (Top, Left, Right, Bottom, Float). */
+export const ORG_POINT = { top: 0, bottom: 3 } as const;
+
 /**
  * A reporting line as Visio draws one: an instance of the Organization Chart stencil's Dynamic
  * connector, dropped between the two positions and then glued to both, so it follows them. The
@@ -94,6 +98,8 @@ export function visioOrgReportingLine(
 	manager: string,
 	subordinate: string,
 	between: { x: number; y: number },
+	/** An assistant's line enters its side, so it stays glued to the whole shape. */
+	assistant = false,
 ): { drop: VisioEdit; glue: VisioEdit[] } {
 	return {
 		drop: {
@@ -106,8 +112,24 @@ export function visioOrgReportingLine(
 			y: between.y,
 		},
 		glue: [
-			{ type: 'glue-connector', pageId, shapeId: lineId, endpoint: 'begin', target: manager },
-			{ type: 'glue-connector', pageId, shapeId: lineId, endpoint: 'end', target: subordinate },
+			// Visio's org chart glues the line to the manager's Bottom and the subordinate's Top
+			// connection points, so the line keeps those points when a position moves.
+			{
+				type: 'glue-connector',
+				pageId,
+				shapeId: lineId,
+				endpoint: 'begin',
+				target: manager,
+				...(assistant ? {} : { point: ORG_POINT.bottom }),
+			},
+			{
+				type: 'glue-connector',
+				pageId,
+				shapeId: lineId,
+				endpoint: 'end',
+				target: subordinate,
+				...(assistant ? {} : { point: ORG_POINT.top }),
+			},
 		],
 	};
 }
@@ -136,15 +158,19 @@ export function visioOrgAddPosition(
 	if (!selected) return undefined;
 	const managerId = kind === 'peer' ? hierarchy.parentOf(shapeId) : shapeId;
 	const manager = hierarchy.positions.find((shape) => shape.id === managerId);
-	const ids = visioOrgFreeIds(page, 1, 1);
+	// A Position Belt that gains its first subordinate becomes a Manager Belt, as in Visio.
+	const promote =
+		!!manager &&
+		kind !== 'assistant' &&
+		masterOf(manager) === 'Position Belt' &&
+		!hierarchy.childrenOf(manager.id).length;
+	const ids = visioOrgFreeIds(page, promote ? 2 : 1, 1);
 	if (!manager || !ids) return undefined;
 	const newId = ids.positions[0]!;
 	const master: VisioOrgMaster =
-		kind === 'assistant'
+		kind === 'assistant' || (kind === 'peer' && visioIsOrgAssistant(selected))
 			? 'Assistant Belt'
-			: kind === 'peer'
-				? masterOf(selected)
-				: 'Position Belt';
+			: 'Position Belt';
 	const assistant = master === 'Assistant Belt';
 	const planned = layoutOrgPage(page, [
 		{ id: newId, ...VISIO_ORG_SIZE, parent: manager.id, ...(assistant ? { assistant } : {}) },
@@ -153,20 +179,43 @@ export function visioOrgAddPosition(
 	if (!planned || !centre) return undefined;
 	const data: VisioOrgPositionData = { Name: 'Name', Title: assistant ? 'Assistant' : 'Position' };
 	const managerBox = drawingBox(page, manager);
-	const line = visioOrgReportingLine(page.id, ids.lines[0]!, manager.id, newId, {
-		x: (managerBox.minX + managerBox.maxX + centre.x * 2) / 4,
-		y: (managerBox.minY + centre.y) / 2,
-	});
+	const promotedId = ids.positions[1];
+	const swap =
+		promote && promotedId
+			? visioOrgSwapMaster(page, manager, promotedId, (at) =>
+					visioOrgDropPosition(page.id, promotedId, 'Manager Belt', at),
+				)
+			: undefined;
+	const line = visioOrgReportingLine(
+		page.id,
+		ids.lines[0]!,
+		swap ? promotedId! : manager.id,
+		newId,
+		{
+			x: (managerBox.minX + managerBox.maxX + centre.x * 2) / 4,
+			y: (managerBox.minY + centre.y) / 2,
+		},
+		assistant,
+	);
 	const pageId = page.id;
+	// The promoted manager is a new shape: the moves planned for the old one go to it.
+	const moves = planned.moves.map((move) =>
+		swap && 'shapeId' in move && move.shapeId === manager.id
+			? { ...move, shapeId: promotedId! }
+			: move,
+	);
 	return {
 		newId,
 		edits: [
+			...(swap ? [swap.drop] : []),
 			visioOrgDropPosition(pageId, newId, master, centre),
 			line.drop,
 			{ type: 'replace-plain-text', pageId, shapeId: newId, text: visioOrgText(data) },
 			...visioOrgDataEdits(pageId, newId, data),
-			...planned.moves,
+			...moves,
+			...(swap ? swap.rest : []),
 			...line.glue,
+			...(swap ? [swap.removal] : []),
 		],
 	};
 }
@@ -194,10 +243,17 @@ export function visioOrgDeletePosition(page: VisioPage, shapeId: string): VisioE
 		? children.map((child, index) => {
 				const a = drawingBox(page, manager);
 				const b = drawingBox(page, child);
-				return visioOrgReportingLine(page.id, ids.lines[index]!, manager.id, child.id, {
-					x: (a.minX + a.maxX + b.minX + b.maxX) / 4,
-					y: (a.minY + b.maxY) / 2,
-				});
+				return visioOrgReportingLine(
+					page.id,
+					ids.lines[index]!,
+					manager.id,
+					child.id,
+					{
+						x: (a.minX + a.maxX + b.minX + b.maxX) / 4,
+						y: (a.minY + b.maxY) / 2,
+					},
+					visioIsOrgAssistant(child),
+				);
 			})
 		: [];
 	const removal = [...connectors, shapeId].map((id): VisioEdit => ({
