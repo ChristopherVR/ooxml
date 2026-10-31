@@ -433,9 +433,22 @@ installed Visio 16 build is used to check that saved files open without repair.
       `edit-swimlane-stamp.ts`). The masters are authored here: they carry Visio's names and
       structure rows but not its formulas, geometry or heading shapes, so the instances keep every
       cell they carry.
-- [ ] **P1** Phases, options (title, style, labels) and Direction of a chart Visio built are
-      refused, and Visio's own add-in behaviour on a chart the editor built (its Insert Swimlane
-      and drop handling) is unverified: Visio's UI cannot be driven here.
+- [x] **P1** Phases and options of a horizontal chart Visio built: Insert Separator splits the
+      phase it lands in (the new separator first in the Phase List, edge to edge, only the first
+      phase extended over the lane headings), and Style, Show Title Bar, Show Separator Bar and
+      Rotate Lane Labels write Visio's cells (`visCFFStyle`, `visShowTitle`, `visShowPhase` on the
+      frame, `visRotateLabel` on the Swimlane List) and recalculate every instance from the
+      masters' formulas. Checked cell by cell against files Visio 16 saved after the same changes
+      (`cross-functional-native-*.vsdx`, `edit-swimlane-cff.ts`, `cff-recalc.ts`); charts the
+      editor creates take the same commands, with the flowchart rows as plain numbers.
+- [ ] **P1** Direction of a chart Visio built is refused (Visio swaps in "Swimlane (vertical)"
+      and "Separator (vertical)" masters that are not copied here), as are phases, title bar and
+      phase headings of a vertical chart Visio built (no Visio-made vertical chart to confirm the
+      list layout). Hiding the phase headings or title bar was confirmed against Visio's formula
+      cascade only, not its ribbon command, and measured-text caches (`visHeadingHeight` of a
+      heading) are not recomputed. Visio's own add-in (Insert Swimlane, drop handling) acting on
+      a chart the editor built is unverified: its Direction command opens a dialog that hangs an
+      automated Visio.
 - [x] **P1** Org chart positions carry Visio's org chart Shape Data (Department, Telephone, Name,
       Title, E-Mail), the Org Chart contextual tab adds subordinates, coworkers and assistants,
       deletes a position and lays the tree out (`ui/org-chart.ts`), and every New tile shows a

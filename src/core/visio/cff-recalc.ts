@@ -23,6 +23,8 @@ interface Pair {
 }
 interface Group {
 	byMasterShape: Map<string, Pair>;
+	/** The instance's top-level shape, whose own cells carry the values its parts share. */
+	top?: Pair;
 }
 export interface CffMasters {
 	/** Master id to the master's top-level shape. */
@@ -72,6 +74,7 @@ function pairUp(inst: Element, master: Element, group: Group, out: Pair[]): void
 		group,
 	};
 	out.push(pair);
+	group.top ??= pair;
 	const masterId = attribute(inst, 'MasterShape');
 	if (masterId) group.byMasterShape.set(masterId, pair);
 	else if (attribute(inst, 'Master')) group.byMasterShape.set(attribute(master, 'ID') ?? '', pair);
@@ -164,8 +167,9 @@ class Recalc {
 					// A formula this interpreter cannot run: the instance's cache, else the master's.
 					if (!local && !inherited) throw error;
 				}
-				result ??= numberOf((local ?? inherited)!, name);
+				result ??= this.themedLineWeight(pair, name) ?? numberOf((local ?? inherited)!, name);
 			} else if (local) result = numberOf(local, name);
+			result ??= this.themedLineWeight(pair, name);
 			if (!result) throw new Error(`no cell ${name}`);
 			this.values.set(key, result);
 			return result;
@@ -174,9 +178,45 @@ class Recalc {
 		}
 	}
 
+	/**
+	 * A part's `LineWeight` is `THEMEVAL()`, which the sheet cannot evaluate. The group's top
+	 * shape keeps the weight it resolved to in `User.LineWeight`, the same theme lookup.
+	 */
+	private themedLineWeight(pair: Pair, name: string): VisioFormulaValue | undefined {
+		if (lower(name) !== 'lineweight') return undefined;
+		const cell = pair.group.top?.cells.get('user.lineweight');
+		return cell ? numberOf(cell, 'user.lineweight') : undefined;
+	}
+
+	/** The page shape a shape depends on with a `DEPENDSON(kind, Sheet.N!SheetRef())` relationship. */
+	private related(pair: Pair, kind: number): string | undefined {
+		const formula = attribute(pair.cells.get('relationships'), 'F') ?? '';
+		return new RegExp(`DEPENDSON\\(${kind},Sheet\\.(\\d+)!SheetRef\\(\\)`, 'i').exec(formula)?.[1];
+	}
+
+	/**
+	 * Page formulas read the flowchart through `CONTAINERSHEETREF(...)!` and `LISTSHEETREF()!`;
+	 * the shape's own relationships say which page shapes those are (its Swimlane or Phase List
+	 * is the kind-5 relation, the frame the kind-4 relation of the list).
+	 */
+	private resolveSheets(pair: Pair, formula: string): string {
+		if (!/SHEETREF\(/i.test(formula)) return formula;
+		const list = this.related(pair, 5);
+		const listPair = list ? this.pageShapes.get(list) : undefined;
+		const frame = this.related(pair, 4) ?? (listPair ? this.related(listPair, 4) : undefined);
+		return formula
+			.replace(/CONTAINERSHEETREF\(LISTSHEETREF\(\),\s*1,\s*"CFF Container"\)!/gi, () =>
+				frame ? `Sheet.${frame}!` : 'CONTAINERSHEETREF(LISTSHEETREF(),1,"CFF Container")!',
+			)
+			.replace(/CONTAINERSHEETREF\(1\)!/gi, () =>
+				frame ? `Sheet.${frame}!` : 'CONTAINERSHEETREF(1)!',
+			)
+			.replace(/LISTSHEETREF\(\)!/gi, () => (list ? `Sheet.${list}!` : 'LISTSHEETREF()!'));
+	}
+
 	private run(pair: Pair, formula: string, page: boolean): VisioFormulaValue {
 		const out = evaluateVisioFormula(
-			parseVisioFormula(formula),
+			parseVisioFormula(page ? this.resolveSheets(pair, formula) : formula),
 			(ref: VisioFormulaReference) => {
 				const lowered = ref.cell.toLowerCase();
 				if (lowered === 'droponpagescale' || lowered === 'true')
@@ -300,6 +340,8 @@ export function recalculateMasterInstances(
 			if (attribute(cell, 'F') && attribute(cell, 'F') !== 'Inh') names.add(name);
 		for (const [name, cell] of pair.cells) if (attribute(cell, 'F')) names.add(name);
 		for (const name of names) {
+			// A theme lookup: read by other formulas (themedLineWeight), never written back.
+			if (name === 'lineweight') continue;
 			let result: VisioFormulaValue;
 			try {
 				result = engine.value(pair, name, false);

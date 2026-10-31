@@ -2352,3 +2352,48 @@ Warnings are useful but not comprehensive. Absence of diagnostics is not a fidel
   masters lack the formulas that add-in may rely on. Charts saved before this change gain the
   masters only when they are re-created. Phases (Insert Phase), options (title, style, labels)
   and Direction of a chart Visio built are still refused, as before.
+
+## Phases and chart options, 2026-10-31
+
+- **Insert Separator on a chart Visio built.** The new separator is a copy of the one whose phase
+  it lands in (new IDs and GUIDs, same master, same `Relationships` to the Phase List) and takes
+  the part of that phase up to the drop point; the separator that was there keeps the rest. The
+  Phase List names them in order, new first. The copy came from watching Visio 16: with
+  `Application.EventsEnabled` set, dropping a Separator master through COM makes the
+  Cross-Functional add-in (`CFF14`, `/cmd=20001`) lay the Phase List out, and the saved files are
+  in `__fixtures__/cross-functional-native-*.vsdx`. Phases are edge to edge, each as wide as its
+  phase with the dividing line at its right edge; only the first carries `FirstHeadingExtend`
+  over the lane headings. `edit-swimlane-cff.test.ts` replays the drop and every cell Visio
+  changed matches (the one difference is the theme fill the drop took). Without a drop point the
+  widest phase is split in the middle; a phase never gets narrower than 0.4 in.
+- **Options.** Style, Show Title Bar, Show Separator Bar and Rotate Lane Labels set Visio's own
+  cells (`visCFFStyle`, `visShowTitle`, `visShowPhase` on the frame, `visRotateLabel` on the
+  Swimlane List, as plain numbers) and the instances are recalculated from the masters'
+  formulas. `cff-recalc.ts` now resolves `CONTAINERSHEETREF(...)!` and `LISTSHEETREF()!` through
+  the shape's relationships, reads `INT(INDEX(n,"a;b;c"))` and takes a part's themed
+  `LineWeight` from its group, which is what reproduces the style cascade. Compared with
+  Visio's saved files for each option: style, phase headings and the phase insert match every
+  cell; the title bar and rotated labels match except heading caches that hold a measured text
+  height (`visHeadingHeight`) and one arc parameter.
+- **Geometry as Visio's formulas do it.** Hiding the title bar lowers the frame's top by the bar
+  and nothing else moves; hiding the phase headings raises the lanes (and their shapes), the
+  lists and the separators under the frame's top by the band and shrinks the frame and Phase
+  List from below. The Phase List and separators of a native chart keep standing one band above
+  the lanes and the Phase List keeps starting after the lane headings when lanes are inserted,
+  deleted or resized (before, `relayout` flattened both). The planner treats a frame without
+  this editor's marker row as Visio's (`swimlane.native`).
+- **Editor-made charts.** The same commands work and now write the flowchart rows as plain
+  numbers, and the Swimlane List carries `visRotateLabel`.
+- **Verified with Visio 16 (COM).** A Visio chart with three phases, a style, rotated labels and
+  both bars hidden opens without repair; the Phase List reports its separators in order, the
+  container its two lists, and `visCFFStyle`, `visShowTitle` and `visShowPhase` read back. An
+  editor-made starter with two named phases, a style and the title hidden opens too and reports
+  the phases in order.
+- **Still open.** Direction of a chart Visio built stays refused: Visio swaps in "Swimlane
+  (vertical)" and "Separator (vertical)" masters (the add-in's `USE("Swimlane (vertical)")`) that
+  this editor does not copy, and setting the list direction cells alone only scrambles the lanes
+  (tried through COM). Phases, title bar and phase headings of a vertical chart Visio built are
+  refused too: no Visio-made vertical chart was available to confirm the list layout. The title
+  and phase-heading geometry was taken from Visio's formula cascade after setting the cells, not
+  from the ribbon command, whose Direction/Orientation dialog hangs an automated Visio (one
+  instance was left waiting on it). Measured-text caches are not recomputed.

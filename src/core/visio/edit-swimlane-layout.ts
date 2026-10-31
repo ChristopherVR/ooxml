@@ -44,6 +44,16 @@ export interface Options {
 	style: number;
 }
 
+/** Visio's title band and phase heading band (its masters' `visHeadingHeight`), 10 mm and 5 mm. */
+export const TITLE_BAND = 10 / 25.4;
+export const PHASE_BAND = 5 / 25.4;
+/** The master's own heading height for a list or frame (a User row cache), else the default. */
+export function headingBand(scope: Scope, shape: Element | undefined, fallback: number): number {
+	const master = shape && scope.masters.get(attribute(shape, 'Master') ?? '');
+	const value = master ? Number(userValue(master, 'visHeadingHeight')) : NaN;
+	return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 const flag = (shape: Element, name: string, fallback: boolean): boolean => {
 	const value = userValue(shape, name);
 	return value === undefined ? fallback : value !== '0';
@@ -302,7 +312,12 @@ export function place(scope: Scope, shape: Element, target: Box): void {
  * phase separators to span the lanes and fit the frame. 'order' overrides the geometric order
  * (a lane just inserted).
  */
-export function relayout(scope: Scope, frame: Element, order?: readonly Element[]): void {
+export function relayout(
+	scope: Scope,
+	frame: Element,
+	order?: readonly Element[],
+	gapOverride?: number,
+): void {
 	const options = optionsOf(frame);
 	const horizontal = options.direction === 'horizontal';
 	const frameBox = boundsOf([frame]);
@@ -314,11 +329,17 @@ export function relayout(scope: Scope, frame: Element, order?: readonly Element[
 	// A chart Visio built keeps the title area it has: the space between the frame and its lanes.
 	const native = masterRole(scope, frame) === 'frame';
 	const laneTop = Math.max(...boxes.map(({ box }) => box.maxY));
+	// (with the title or the phase headings hidden the gap is the band that is left, if any).
 	const titleSize =
-		native && options.title && Number.isFinite(laneTop)
-			? Math.max(0, frameBox.maxY - laneTop)
-			: undefined;
-	const stacking = stackSwimlanes(options.direction, frameBox, options.title, boxes, titleSize);
+		gapOverride ??
+		(native && Number.isFinite(laneTop) ? Math.max(0, frameBox.maxY - laneTop) : undefined);
+	const stacking = stackSwimlanes(
+		options.direction,
+		frameBox,
+		titleSize === undefined ? options.title : true,
+		boxes,
+		titleSize,
+	);
 	const carried = new Map(
 		stacking.lanes.map((entry, index) => [index, [...containerClosure(scope.root, lanes[index]!)]]),
 	);
@@ -329,6 +350,12 @@ export function relayout(scope: Scope, frame: Element, order?: readonly Element[
 		if (scope.contents === 'move') shift(scope, carried.get(index)!, entry.dx, entry.dy);
 	});
 	const bars = separatorsOf(scope, frame);
+	// In a horizontal chart Visio built the phase headings sit above the lanes, on the Phase
+	// List and its separators.
+	const { swim, phase } = listsOf(scope, frame);
+	const phaseTop =
+		stacking.top +
+		(native && horizontal && options.separators ? headingBand(scope, phase, PHASE_BAND) : 0);
 	for (const shape of bars) {
 		const bar = boundsOf([shape]);
 		if (!bar) continue;
@@ -336,21 +363,24 @@ export function relayout(scope: Scope, frame: Element, order?: readonly Element[
 			scope,
 			shape,
 			horizontal
-				? { ...bar, minY: stacking.end, maxY: stacking.top }
+				? { ...bar, minY: stacking.end, maxY: phaseTop }
 				: { ...bar, minX: frameBox.minX, maxX: stacking.frame.maxX },
 		);
 	}
 	place(scope, frame, stacking.frame);
 	setUserRow(frame, 'numLanes', String(lanes.length), '');
 	// Visio's lists follow: the Swimlane List spans the lanes, both name their members in order.
-	const { swim, phase } = listsOf(scope, frame);
 	const area: Box = {
 		minX: stacking.frame.minX,
 		maxX: stacking.frame.maxX,
 		maxY: stacking.top,
 		minY: stacking.end,
 	};
-	for (const list of [swim, phase]) if (list) place(scope, list, area);
+	if (swim) place(scope, swim, area);
+	if (phase) {
+		const own = native && horizontal ? boundsOf([phase]) : undefined;
+		place(scope, phase, own ? { ...own, minY: stacking.end, maxY: phaseTop } : area);
+	}
 	if (swim) writeListMembers(scope.root, swim, lanes.map(shapeIdOf));
 	if (phase)
 		writeListMembers(scope.root, phase, orderSeparators(bars, options.direction).map(shapeIdOf));

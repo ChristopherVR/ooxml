@@ -70,7 +70,16 @@ export function visioSwimlaneInfo(page: VisioPage, shapeId: string): VisioSwimla
 		const box = visioShapePageBounds(lane);
 		return horizontal ? -box.maxY : box.minX;
 	};
-	return { frame, options: role.options, lanes: lanes.sort((a, b) => key(a) - key(b)) };
+	// Visio keeps the Rotate Lane Labels flag on the Swimlane List (the frame only mirrors it).
+	const swimList = membersOf(frame)
+		.map((id) => topLevel(page, id)?.structure)
+		.find((structure) => structure?.type === 'list' && structure.kind === 'swimlane');
+	const rotate = swimList?.type === 'list' ? swimList.rotateLabels : undefined;
+	return {
+		frame,
+		options: rotate === undefined ? role.options : { ...role.options, rotateLabels: rotate },
+		lanes: lanes.sort((a, b) => key(a) - key(b)),
+	};
 }
 /** Whether a selected shape is the frame or a lane (what the contextual tab keys on). */
 export const visioIsSwimlaneShape = (page: VisioPage, shapeId: string): boolean =>
@@ -81,10 +90,40 @@ export const visioIsSwimlaneShape = (page: VisioPage, shapeId: string): boolean 
  * chart whose frame is an instance of Visio's master keeps the space it has between frame and lanes.
  */
 function titleSize(page: VisioPage, info: VisioSwimlaneInfo): number | undefined {
-	if (!info.frame.masterId || !info.options.showTitle || !info.lanes.length) return undefined;
+	if (!info.frame.masterId || !info.lanes.length) return undefined;
 	const frame = drawingBox(page, info.frame);
 	const top = Math.max(...info.lanes.map((lane) => drawingBox(page, lane).maxY));
 	return Number.isFinite(top) ? Math.max(0, frame.maxY - top) : undefined;
+}
+/** Stack `lanes` under the frame as the chart is laid out now (the gap above the lanes, if any). */
+function stackFor(page: VisioPage, info: VisioSwimlaneInfo, lanes: readonly StackLane[]) {
+	const size = titleSize(page, info);
+	return stackSwimlanes(
+		info.options.direction,
+		drawingBox(page, info.frame),
+		size === undefined ? info.options.showTitle : true,
+		lanes,
+		size,
+	);
+}
+/** Whether Visio's own add-in laid the chart out (its frame carries none of this editor's markers). */
+const isNative = (info: VisioSwimlaneInfo): boolean =>
+	info.frame.structure?.type === 'container' &&
+	info.frame.structure.swimlane?.role === 'frame' &&
+	info.frame.structure.swimlane.native === true;
+/** Visio's phase heading band when the chart shows none, 5 mm. */
+const PHASE_BAND = 5 / 25.4;
+/**
+ * The band the phase headings take above the lanes: the Phase List stands this far over them.
+ * A chart that hides them keeps no trace of it, so Visio's 5 mm stands in.
+ */
+function phaseBand(page: VisioPage, info: VisioSwimlaneInfo): number {
+	const top = Math.max(...info.lanes.map((lane) => drawingBox(page, lane).maxY));
+	const list = membersOf(info.frame)
+		.map((id) => topLevel(page, id))
+		.find((shape) => shape?.structure?.type === 'list' && shape.structure.kind === 'phase');
+	const gap = list ? drawingBox(page, list).maxY - top : 0;
+	return info.options.showSeparators && gap > 1e-6 ? gap : PHASE_BAND;
 }
 
 /** Direct members of a lane that are not lanes themselves; nested ones move with their container. */
@@ -182,13 +221,7 @@ export function visioInsertSwimlane(
 	const index = order.indexOf(reference) + (position === 'after' ? 1 : 0);
 	const inputs = stackInput(page, order);
 	inputs.splice(index, 0, { id: shapeId, box: drawingBox(page, reference) });
-	const stacking = stackSwimlanes(
-		info.options.direction,
-		drawingBox(page, info.frame),
-		info.options.showTitle,
-		inputs,
-		titleSize(page, info),
-	);
+	const stacking = stackFor(page, info, inputs);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
 	return withGrowth(page, stacking.frame, [
@@ -215,13 +248,7 @@ export function visioDeleteSwimlane(page: VisioPage, laneId: string): VisioEdit[
 	const lane = info?.lanes.find((item) => item.id === laneId);
 	if (!info || !lane || info.lanes.length < 2) return undefined;
 	const remaining = info.lanes.filter((item) => item !== lane);
-	const stacking = stackSwimlanes(
-		info.options.direction,
-		drawingBox(page, info.frame),
-		info.options.showTitle,
-		stackInput(page, remaining),
-		titleSize(page, info),
-	);
+	const stacking = stackFor(page, info, stackInput(page, remaining));
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
 	// One batch: the edit deletes the lane's shapes with it (stencil instances included) and
@@ -261,13 +288,7 @@ export function visioResizeSwimlane(
 				: { ...box, maxX: box.minX + drawingSize },
 		};
 	});
-	const stacking = stackSwimlanes(
-		info.options.direction,
-		drawingBox(page, info.frame),
-		info.options.showTitle,
-		inputs,
-		titleSize(page, info),
-	);
+	const stacking = stackFor(page, info, inputs);
 	const moves = carryContents(page, stacking.lanes);
 	if (!moves) return undefined;
 	return withGrowth(page, stacking.frame, [
@@ -371,7 +392,22 @@ export function visioSwimlaneOptions(
 			: turnEdits(page, info, change.direction);
 	}
 	let moves: VisioEdit[] = [];
-	if (change.showTitle !== undefined && change.showTitle !== info.options.showTitle) {
+	if (isNative(info)) {
+		// Visio's chart: hiding the title bar moves no lane; hiding the phase headings raises
+		// every lane (and what is in it) by their band, showing them lowers it again.
+		if (
+			change.showSeparators !== undefined &&
+			change.showSeparators !== info.options.showSeparators
+		) {
+			const dy = (change.showSeparators ? -1 : 1) * phaseBand(page, info);
+			for (const lane of info.lanes)
+				for (const id of contentClosure(page, lane)) {
+					const move = moveBy(page, id, 0, dy);
+					if (!move) return undefined;
+					moves.push(move);
+				}
+		}
+	} else if (change.showTitle !== undefined && change.showTitle !== info.options.showTitle) {
 		const frame = drawingBox(page, info.frame);
 		const stacking = stackSwimlanes(
 			info.options.direction,
