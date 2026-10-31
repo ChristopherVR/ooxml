@@ -26,6 +26,7 @@
   application (`Addons` lists Organization Chart, but no command to Subordinate or Delete is
   reachable without the UI). Nothing observed shows whether Visio reverts a Manager Belt or
   what it does for a shape glued under a Position Belt, so neither is implemented.
+
 ## Tab stop alignment and the Tabs editor, checked against Visio 16, 2026-10-31
 
 Measured in Visio 16 (installed, through COM): shapes whose Tabs rows were injected into the page
@@ -59,6 +60,7 @@ stops are measured from the text block margin, not from a paragraph's left inden
 the editor writes Tabs row 0 for the whole shape, so a text with `tp` markers pointing at other
 Tabs rows keeps those rows; the shortened list zeroes surplus pairs rather than removing cells;
 the file Visio itself would write for a single stop is unknown.
+
 ## Data graphics as Visio data graphic masters, 2026-10-31 (wave 6)
 
 **How the sample was obtained.** Wave 5 could not bind a graphic through `Visio.InvisibleApp`.
