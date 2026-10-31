@@ -46,8 +46,9 @@ it('undoes pane threads, replies, resolution and deletion with their exported an
 	expect(pane().textContent).toContain('Reply review');
 	const restored = (await loadDocx(await editor.saveBytes())).model;
 	expect(restored.comments).toHaveLength(2);
+	expect(restored.comments![1]!.parentId).toBe(restored.comments![0]!.id);
 	expect(restored.blocks[0]).toMatchObject({
-		runs: [{ text: 'Alpha', commentIds: [restored.comments![0]!.id] }],
+		runs: [{ text: 'Alpha', commentIds: restored.comments!.map((comment) => comment.id) }],
 	});
 	button('Undo').click();
 	expect(editor.documentModel!.comments![0]!.resolved).toBe(false);

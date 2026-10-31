@@ -218,9 +218,12 @@ for (const name of [
 			expect(bb.comments.reply('a', 'Bob', 'Remote reply', () => 'reply')).toBe(true);
 			const detached = (await loadDocx(await a!.saveBytes())).model;
 			expect(detached.comments).toHaveLength(2);
-			expect(runsOf(detached).flatMap((run) => run.commentIds ?? [])).toHaveLength(
-				name === 'field' ? 5 : 1,
-			);
+			expect(detached.comments![1]!.parentId).toBe(detached.comments![0]!.id);
+			// Native Word needs a reference for the reply as well as its parent thread.
+			const anchored = runsOf(detached).filter((run) => run.commentIds?.length);
+			expect(anchored).toHaveLength(name === 'field' ? 5 : 1);
+			for (const run of anchored)
+				expect(run.commentIds).toEqual(detached.comments!.map((comment) => comment.id));
 		},
 		CASE_TIMEOUT_MS,
 	);
