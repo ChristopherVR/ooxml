@@ -5,11 +5,28 @@
 The calculation engine implements 501 functions. 379 of them appear in tests whose
 expected values were recorded from real Excel (`src/core/xlsx/formula/__fixtures__`); the rest are
 covered by unit tests only, with expected values worked out by hand or from documentation.
-A function missing from this list returns `#NAME?`.
+A newly entered unsupported function returns `#NAME?`. On initial loading, the engine keeps
+cached results of unsupported formulas when available; it cannot refresh those results.
 
 Verification: **Excel** means at least one recorded Excel result uses the function (it may be
 nested in a larger formula, and one case does not prove every argument combination);
 **Unit** means unit tests only.
+
+## Unsupported integrations
+
+These functions are not calculated. No network request, external process or AI call is made.
+
+| Functions | Missing capability |
+| --- | --- |
+| `CUBEKPIMEMBER`, `CUBEMEMBER`, `CUBEMEMBERPROPERTY`, `CUBERANKEDMEMBER`, `CUBESET`, `CUBESETCOUNT`, `CUBEVALUE` | OLAP connection and query execution. |
+| `WEBSERVICE` | HTTP retrieval. |
+| `STOCKHISTORY` | Historical market data service. |
+| `RTD` | Real-time data provider. |
+| `IMAGE` | Formula-driven image retrieval and in-cell image results. |
+| `COPILOT`, `TRANSLATE`, `DETECTLANGUAGE` | AI and language services. |
+
+`FILTERXML` is also unsupported, but it needs local XML/XPath evaluation rather than a web
+service. `INFO`, `ASC`, `DBCS`, `JIS`, `PHONETIC` and `EUROCONVERT` remain unimplemented too.
 
 ## Database
 

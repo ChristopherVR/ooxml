@@ -59,6 +59,7 @@ export const UNSUPPORTED_FEATURES = [
 	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Flash Fill, Subtotal and Consolidate',
 	'Opening .xlsb binary workbooks',
+	'External formula services: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE',
 	'Creating @mentions',
 	'Macros (VBA is kept in the file but never run)',
 	'Changing the workbook theme',

@@ -3,6 +3,13 @@
 import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
+	'External formula services: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE':
+		[
+			'Services de formules externes : CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE et DETECTLANGUAGE',
+			'Externe Formeldienste: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE und DETECTLANGUAGE',
+			'Servicios de fórmulas externos: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE y DETECTLANGUAGE',
+			'外部公式服务：CUBE*、WEBSERVICE、STOCKHISTORY、RTD、IMAGE、COPILOT、TRANSLATE 和 DETECTLANGUAGE',
+		],
 	'Sparklines (create, format and clear)': [
 		'Graphiques sparkline (création, mise en forme et suppression)',
 		'Sparklines (erstellen, formatieren und löschen)',

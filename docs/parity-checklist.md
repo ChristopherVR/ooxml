@@ -111,11 +111,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Calculation
 
-- [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented (no host service
-      needed).
-- [ ] **P2** CUBE\* (7), WEBSERVICE, FILTERXML, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and
-      DETECTLANGUAGE are not implemented (need an OLAP, web or AI service; document them as
-      unsupported).
+- [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC, EUROCONVERT and FILTERXML are not implemented
+      (no external service needed; FILTERXML needs local XML/XPath evaluation).
+- [x] **P2** Unsupported external formula integrations are documented by name and missing
+      capability in the generated function list and Feature Status: CUBE\* (7), WEBSERVICE,
+      STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE. They remain unimplemented;
+      initial cached results can be retained but cannot be refreshed. Existing engine regressions
+      cover cached imports and `#NAME?` for newly entered unsupported formulas.
 
 ### Editing and behaviour
 
