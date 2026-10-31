@@ -5,6 +5,10 @@ import { saveXlsx } from '../write/index';
 import { createEditSession } from './session';
 
 const at = { row: 1, col: 1 };
+const semantic = (value: unknown): unknown =>
+	JSON.parse(
+		JSON.stringify(value, (key, item: unknown) => (key === 'threadedXml' ? undefined : item)),
+	);
 const load = () =>
 	loadXlsx(
 		new Uint8Array(
@@ -23,12 +27,18 @@ describe('threaded comment reply edits', () => {
 		const expected = structuredClone(original);
 		expected[0]!.replies![1]!.text = 'Edited second reply < & >';
 		expect(workbook.sheets[0]!.comments).toEqual(expected);
-		expect((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments).toEqual(expected);
+		expect(semantic((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments)).toEqual(
+			semantic(expected),
+		);
 		session.undo();
 		expect(workbook.sheets[0]!.comments).toEqual(original);
-		expect((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments).toEqual(original);
+		expect(semantic((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments)).toEqual(
+			semantic(original),
+		);
 		session.redo();
-		expect((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments).toEqual(expected);
+		expect(semantic((await loadXlsx(await saveXlsx(workbook))).sheets[0]!.comments)).toEqual(
+			semantic(expected),
+		);
 	});
 
 	it.each([-1, 2, 0.5, NaN])(

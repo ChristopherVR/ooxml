@@ -36,6 +36,12 @@ export function comparable(value: unknown): unknown {
 						fullCalcOnLoad: undefined,
 					},
 			(key, value) => {
+				if (
+					['threadedXml', 'threadedPersons', 'threadedCommentsXml', 'regenerateThreadIds'].includes(
+						key,
+					)
+				)
+					return undefined;
 				// Sheet titles in app.xml are derived from the sheets on save (openpyxl omits them).
 				if (key === 'headingPairs' || key === 'titlesOfParts') return undefined;
 				// Table-column ids record read provenance; newly created columns have none.

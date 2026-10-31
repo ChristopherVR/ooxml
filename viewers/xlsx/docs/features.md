@@ -29,8 +29,8 @@ The browser tests (`e2e/xlsx/*.spec.ts`) cover opening `.xlsx`, `.xls` and `.csv
 - Merged cells, column widths and row heights, hidden rows and columns, frozen panes, zoom, gridlines.
 - Conditional formatting: cell rules, text rules, "A Date Occurring" (today, last 7 days, this month, ...), top and bottom, above average, duplicates, colour scales, data bars, icon sets, with a Rules Manager that edits, reorders and deletes rules.
 - Data validation, with the list drop-down offered in the grid.
-- Comments and threaded replies (shown and edited with undo), hyperlinks. Resolved state and
-  @mentions are not supported; see the preservation limits.
+- Comments and threaded replies (shown, edited, resolved and reopened with undo), hyperlinks.
+  Imported @mentions are preserved; creating new @mentions is not supported.
 
 ## Formulas
 

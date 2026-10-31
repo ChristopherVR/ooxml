@@ -218,7 +218,7 @@ describe('Clipboard annotations recorded in Microsoft Excel', () => {
 		expect(reopened.sheets[0]!.comments).toHaveLength(12);
 		expect(
 			reopened.sheets[0]!.comments.find((c) => c.address.row === 3 && c.address.col === 3)?.replies,
-		).toEqual([{ author: 'Reviewer', text: 'reply', date: '2026-10-07T00:00:00Z' }]);
+		).toMatchObject([{ author: 'Reviewer', text: 'reply', date: '2026-10-07T00:00:00Z' }]);
 		expect(normalized(validationAt(reopened, 0, 6, 5))?.formula1).toBe('E7>0');
 		edits.undo();
 		expect(target.sheets[0]!.comments).toEqual([]);

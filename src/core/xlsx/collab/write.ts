@@ -112,6 +112,7 @@ function writeProps(map: Y.Map<unknown>, sheet: Worksheet): void {
 	setIfChanged(props, 'tab', sheet.tabColor ? structuredClone(sheet.tabColor) : undefined);
 	setIfChanged(props, 'rh', sheet.defaultRowHeight);
 	setIfChanged(props, 'cw', sheet.defaultColWidth);
+	setIfChanged(props, 'threadedCommentsXml', sheet.threadedCommentsXml);
 }
 
 function writeOrder(sheets: Y.Map<unknown>, keyList: string[], entries: SheetEntry[]): void {

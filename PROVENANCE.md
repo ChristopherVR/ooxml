@@ -2907,3 +2907,12 @@ windows, the other ten masters and the theme are left out), and the root group o
 masters carries `DisplayMode` 2, the value Visio's Normal style gives it. The code that adds,
 instances and edits them is new: `edit-master-media.ts`, `edit-connector-org.ts`,
 `ui/org-chart*.ts`.
+
+## Excel threaded comment writers (2026-10-31)
+
+Source: `ChristopherVR/ooxml`, `src/core/xlsx/write/comments.ts`, commit `e6448a5ff`.
+The deterministic GUID helper moved unchanged to `write/comment-ids.ts`; the person registry
+moved to `write/comment-persons.ts` and now preserves source account XML and distinct identities
+with the same display name. Both paths are relative to `src/core/xlsx`. The threaded-message
+writer and mention-offset adapter are new implementations; the latter reuses the existing
+shared `src/core/text/text-diff.ts` algorithm.

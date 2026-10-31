@@ -41,17 +41,39 @@ function isRange(raw: unknown): raw is CellRange {
 const rangeList = (raw: unknown): boolean =>
 	Array.isArray(raw) && raw.length <= 4096 && raw.every(isRange);
 
+function isPersonRecords(raw: unknown): raw is Record<string, string> {
+	if (!isRecord(raw)) return false;
+	const entries = Object.entries(raw);
+	let size = 0;
+	return (
+		entries.length <= 1024 &&
+		entries.every(
+			([id, xml]) => isText(id, 64) && isText(xml, 1_048_576) && (size += xml.length) <= 1_048_576,
+		)
+	);
+}
+
 export const commentSpec: PartSpec<Comment> = {
 	encode: (c) => ({
 		a: formatAddress(c.address),
 		author: c.author,
 		text: c.text,
 		...(c.date !== undefined ? { date: c.date } : {}),
+		...(c.threadedXml !== undefined ? { threadedXml: c.threadedXml } : {}),
+		...(c.resolved !== undefined ? { resolved: c.resolved } : {}),
+		...(c.regenerateThreadIds !== undefined ? { regenerateThreadIds: c.regenerateThreadIds } : {}),
+		...(c.threadedPersons !== undefined ? { threadedPersons: clone(c.threadedPersons) } : {}),
 	}),
 	decode: (raw) => {
 		if (!isRecord(raw) || !isText(raw.a, 12) || !isText(raw.author, 1024) || !isText(raw.text))
 			return undefined;
 		if (raw.date !== undefined && !isText(raw.date, 64)) return undefined;
+		if (raw.threadedXml !== undefined && !isText(raw.threadedXml, 1_048_576)) return undefined;
+		if (raw.resolved !== undefined && typeof raw.resolved !== 'boolean') return undefined;
+		if (raw.regenerateThreadIds !== undefined && typeof raw.regenerateThreadIds !== 'boolean')
+			return undefined;
+		if (raw.threadedPersons !== undefined && !isPersonRecords(raw.threadedPersons))
+			return undefined;
 		const address = parseAddress(raw.a);
 		return address
 			? {
@@ -59,6 +81,14 @@ export const commentSpec: PartSpec<Comment> = {
 					author: raw.author,
 					text: raw.text,
 					...(raw.date !== undefined ? { date: raw.date } : {}),
+					...(raw.threadedXml !== undefined ? { threadedXml: raw.threadedXml } : {}),
+					...(raw.resolved !== undefined ? { resolved: raw.resolved } : {}),
+					...(raw.regenerateThreadIds !== undefined
+						? { regenerateThreadIds: raw.regenerateThreadIds }
+						: {}),
+					...(raw.threadedPersons !== undefined
+						? { threadedPersons: clone(raw.threadedPersons) }
+						: {}),
 				}
 			: undefined;
 	},
@@ -79,14 +109,17 @@ export function replySpec(
 			if (c === undefined) return undefined;
 			const out: Record<string, unknown> = { c, author: r.author, text: r.text };
 			if (r.date !== undefined) out.date = r.date;
+			if (r.threadedXml !== undefined) out.threadedXml = r.threadedXml;
 			return out;
 		},
 		decode: (raw) => {
 			if (!isRecord(raw) || !isText(raw.c, 12) || !isText(raw.author, 1024) || !isText(raw.text))
 				return undefined;
 			if (raw.date !== undefined && !isText(raw.date, 64)) return undefined;
+			if (raw.threadedXml !== undefined && !isText(raw.threadedXml, 1_048_576)) return undefined;
 			const reply: Reply = { author: raw.author, text: raw.text };
 			if (raw.date !== undefined) reply.date = raw.date;
+			if (raw.threadedXml !== undefined) reply.threadedXml = raw.threadedXml;
 			decodedOwner.set(reply, raw.c);
 			return reply;
 		},

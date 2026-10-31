@@ -426,11 +426,17 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Edición de respuestas de comentarios en hilo',
 		'编辑线程批注回复',
 	],
-	'Resolved comments and @mentions': [
-		'Commentaires résolus et @mentions',
-		'Erledigte Kommentare und @Erwähnungen',
-		'Comentarios resueltos y @menciones',
-		'已解决的批注和 @提及',
+	'Creating @mentions': [
+		'Création de @mentions',
+		'Erstellen von @Erwähnungen',
+		'Creación de @menciones',
+		'创建 @提及',
+	],
+	'Resolving and reopening comments': [
+		'Résolution et réouverture des commentaires',
+		'Erledigen und erneutes Öffnen von Kommentaren',
+		'Resolver y reabrir comentarios',
+		'解决和重新打开批注',
 	],
 	'Macros (VBA is kept in the file but never run)': [
 		'Macros (le code VBA est conservé dans le fichier mais jamais exécuté)',

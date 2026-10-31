@@ -44,6 +44,7 @@ export const SUPPORTED_FEATURES = [
 	'Worksheet-range PivotTables (up to two row fields and sixteen values, one optional column field and one cached report filter)',
 	'Comments and notes',
 	'Editing threaded comment replies',
+	'Resolving and reopening comments',
 	'Hyperlinks',
 	'Data validation',
 	'Sort and filter',
@@ -58,7 +59,7 @@ export const UNSUPPORTED_FEATURES = [
 	'AutoFilter on table headers, the date-hierarchy checklist and icon filters from the menu',
 	'Flash Fill, Subtotal and Consolidate',
 	'Opening .xlsb binary workbooks',
-	'Resolved comments and @mentions',
+	'Creating @mentions',
 	'Macros (VBA is kept in the file but never run)',
 	'Changing the workbook theme',
 ] as const;

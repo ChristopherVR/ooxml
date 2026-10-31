@@ -16,7 +16,7 @@ export function excelCommentThreads(comments: readonly Comment[]): OfficeComment
 			return {
 				id,
 				anchorLabel: id,
-				resolved: false,
+				resolved: comment.resolved ?? false,
 				comments: [
 					{
 						id: `${id}:0`,
@@ -50,6 +50,7 @@ export function openCommentsList(ctx: EditorContext): Promise<string | undefined
 	pane.labels = {
 		heading: '',
 		list: ctx.t('Comments'),
+		resolved: ctx.t('Resolved'),
 		empty: ctx.t('There are no comments on this sheet.'),
 	};
 	pane.threads = threads;

@@ -1,24 +1,11 @@
 import { NS } from '../../xml/index';
 import { formatAddress } from '../address';
 import type { Comment } from '../model';
-import { XML_HEADER, escapeAttr, escapeText, tElement } from './xml-out';
-
-/** A deterministic GUID-shaped id (`{XXXXXXXX-XXXX-...}`) from a seed string. */
-export function guidFrom(seed: string): string {
-	let h1 = 0x811c9dc5;
-	let h2 = 0x01000193;
-	const hex: string[] = [];
-	for (let round = 0; round < 4; round++) {
-		for (let i = 0; i < seed.length; i++) {
-			h1 = Math.imul(h1 ^ seed.charCodeAt(i), 0x01000193) >>> 0;
-			h2 = Math.imul(h2 ^ (seed.charCodeAt(i) + round), 0x5bd1e995) >>> 0;
-		}
-		h1 = Math.imul(h1 ^ round, 0x27d4eb2d) >>> 0;
-		hex.push(((h1 ^ h2) >>> 0).toString(16).toUpperCase().padStart(8, '0'));
-	}
-	const s = hex.join('');
-	return `{${s.slice(0, 8)}-${s.slice(8, 12)}-4${s.slice(13, 16)}-8${s.slice(17, 20)}-${s.slice(20, 32)}}`;
-}
+import { XML_HEADER, escapeText, tElement } from './xml-out';
+import type { PersonRegistry } from './comment-persons';
+import { ThreadedCommentsWriter, type ThreadedCommentOptions } from './threaded-comments';
+export { PersonRegistry } from './comment-persons';
+export { guidFrom } from './comment-ids';
 
 const THREADED_NOTE =
 	'[Threaded comment]\n\nYour version of Excel allows you to read this threaded comment; however, any edits to it will get removed if the file is opened in a newer version of Excel. Learn more: https://go.microsoft.com/fwlink/?linkid=870924\n\nComment:\n    ';
@@ -28,36 +15,6 @@ export interface CommentParts {
 	vml: string;
 	/** Present when at least one comment is threaded (has a `replies` array). */
 	threaded?: string;
-}
-
-/** Persons referenced by threaded comments: display name to person id. */
-export class PersonRegistry {
-	private readonly names = new Map<string, string>();
-	private readonly byName = new Map<string, string>();
-	constructor(existing?: ReadonlyMap<string, string>) {
-		for (const [id, name] of existing ?? []) {
-			this.names.set(id, name);
-			if (!this.byName.has(name)) this.byName.set(name, id);
-		}
-	}
-	id(name: string): string {
-		let id = this.byName.get(name);
-		if (!id) {
-			id = guidFrom(`person:${name}`);
-			this.byName.set(name, id);
-			this.names.set(id, name);
-		}
-		return id;
-	}
-	xml(): string {
-		const people = [...this.names]
-			.map(
-				([id, name]) =>
-					`<person displayName="${escapeAttr(name)}" id="${id}" userId="${escapeAttr(name)}" providerId="None"/>`,
-			)
-			.join('');
-		return `${XML_HEADER}<personList xmlns="${NS.tc}" xmlns:x="${NS.x}">${people}</personList>`;
-	}
 }
 
 function vmlShape(comment: Comment, index: number, id: number): string {
@@ -121,6 +78,7 @@ export function commentParts(
 	persons: PersonRegistry,
 	sheetName: string,
 	layout?: VmlLayout,
+	threadOptions?: ThreadedCommentOptions,
 ): CommentParts {
 	const authors: string[] = [];
 	const authorId = (name: string) => {
@@ -131,20 +89,12 @@ export function commentParts(
 	const sorted = [...comments].sort(
 		(a, b) => a.address.row - b.address.row || a.address.col - b.address.col,
 	);
-	let threaded = '';
+	const threads = new ThreadedCommentsWriter(persons, threadOptions);
 	const list = sorted
 		.map((comment) => {
 			const ref = formatAddress(comment.address);
 			if (comment.replies) {
-				const id = guidFrom(`${sheetName}!${ref}:${comment.text}`);
-				const personId = persons.id(comment.author);
-				const dT = comment.date ? ` dT="${escapeAttr(comment.date)}"` : '';
-				threaded += `<threadedComment ref="${ref}"${dT} personId="${personId}" id="${id}"><text>${escapeText(comment.text)}</text></threadedComment>`;
-				comment.replies.forEach((reply, index) => {
-					const replyId = guidFrom(`${id}:reply:${index}:${reply.text}`);
-					const dT = reply.date ? ` dT="${escapeAttr(reply.date)}"` : '';
-					threaded += `<threadedComment ref="${ref}"${dT} personId="${persons.id(reply.author)}" id="${replyId}" parentId="${id}"><text>${escapeText(reply.text)}</text></threadedComment>`;
-				});
+				const id = threads.add(comment, ref, sheetName);
 				const fallback = `${THREADED_NOTE}${comment.text}${comment.replies.map((r) => `\nReply:\n    ${r.text}`).join('')}`;
 				return `<comment ref="${ref}" authorId="${authorId(`tc=${id}`)}" shapeId="0" xr:uid="${id}"><text>${tElement(fallback)}</text></comment>`;
 			}
@@ -161,7 +111,7 @@ export function commentParts(
 		},
 	);
 	const parts: CommentParts = { comments: commentsXml, vml };
-	if (threaded)
-		parts.threaded = `${XML_HEADER}<ThreadedComments xmlns="${NS.tc}" xmlns:x="${NS.x}">${threaded}</ThreadedComments>`;
+	const threaded = threads.xml();
+	if (threaded) parts.threaded = threaded;
 	return parts;
 }

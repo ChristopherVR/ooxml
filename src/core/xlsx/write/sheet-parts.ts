@@ -5,12 +5,14 @@ import {
 	parseLegacyComments,
 	parsePersons,
 	parseThreadedComments,
+	threadedCommentEnvelope,
 } from '../read/comments';
 import { parseDrawing } from '../read/drawing';
 import { CONTENT_TYPES, type SourceIndex } from '../read/package';
 import { parseTable } from '../read/tables';
 import { chartWithCurrentCaches } from './chart-cache';
 import { commentParts, type PersonRegistry } from './comments';
+import { CommentIds } from './comment-ids';
 import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing';
 import type { MetadataPlan } from './metadata';
 import type { PackageWriter, RelationshipSet } from './package-writer';
@@ -32,6 +34,7 @@ export interface SaveContext {
 	styles: StyleWriter;
 	strings: SharedStringTable;
 	persons: PersonRegistry;
+	commentIds?: CommentIds;
 	/** Part names of the source package, avoided when naming new parts. */
 	reserved: ReadonlySet<string>;
 	tableIds: Set<number>;
@@ -71,6 +74,12 @@ export function writeComments(
 	const { writer, source } = ctx;
 	const name = (pattern: (n: number) => string) => writer.uniqueName(pattern, ctx.reserved);
 	const fromSource = source && sheet.partName && source.has(sheet.partName);
+	const sourceThreaded = fromSource
+		? source.targetOfType(sheet.partName ?? '', RELATIONSHIP_TYPES.threadedComment)
+		: undefined;
+	const threadEnvelope =
+		sheet.threadedCommentsXml ??
+		threadedCommentEnvelope(sourceThreaded ? source?.text(sourceThreaded) : undefined);
 	const sourceVml = fromSource ? sourceVmlPart(source, sheet.partName ?? '') : undefined;
 	// Form controls and other non-comment shapes of the source drawing survive a regeneration.
 	const kept =
@@ -102,10 +111,18 @@ export function writeComments(
 			parseThreadedComments(
 				threadedPart ? source.text(threadedPart) : undefined,
 				parsePersons(personsPart ? source.text(personsPart) : undefined),
+				personsPart ? source.text(personsPart) : undefined,
 			),
 		);
 		const free = [legacyPart, threadedPart, vmlPart].every((p) => !p || !writer.has(p));
-		if (legacyPart && vmlPart && free && sameModel(before, sheet.comments)) {
+		const envelope = threadedCommentEnvelope(threadedPart ? source.text(threadedPart) : undefined);
+		if (
+			legacyPart &&
+			vmlPart &&
+			free &&
+			sameModel(before, sheet.comments) &&
+			(sheet.threadedCommentsXml === undefined || sheet.threadedCommentsXml === envelope)
+		) {
 			writer.carry(legacyPart);
 			writer.carry(vmlPart);
 			rels.add(RELATIONSHIP_TYPES.comments, relativeTarget(partName, legacyPart));
@@ -119,10 +136,20 @@ export function writeComments(
 	}
 	const own = base ? vmlIdmapBlocks(base) : [];
 	const layout = vmlAllocatorFor(ctx, source).allocate(sheet.comments.length, index + 1, own);
-	const parts = commentParts(sheet.comments, index + 1, ctx.persons, sheet.name, {
-		...layout,
-		...(base ? { base } : {}),
-	});
+	const parts = commentParts(
+		sheet.comments,
+		index + 1,
+		ctx.persons,
+		sheet.name,
+		{
+			...layout,
+			...(base ? { base } : {}),
+		},
+		{
+			...(threadEnvelope ? { envelope: threadEnvelope } : {}),
+			ids: (ctx.commentIds ??= new CommentIds(ctx.workbook)),
+		},
+	);
 	const commentsPart = name((n) => `xl/comments${n}.xml`);
 	writer.add(commentsPart, parts.comments, CONTENT_TYPES.comments);
 	rels.add(RELATIONSHIP_TYPES.comments, relativeTarget(partName, commentsPart));

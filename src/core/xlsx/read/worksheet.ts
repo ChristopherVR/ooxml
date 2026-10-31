@@ -4,7 +4,12 @@ import { LiteDeclinedError, elements, relAttr, type XmlElement } from '../../xml
 import { parseRange } from '../address';
 import type { DifferentialStyle, Hyperlink, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
-import { mergeComments, parseLegacyComments, parseThreadedComments } from './comments';
+import {
+	mergeComments,
+	parseLegacyComments,
+	parseThreadedComments,
+	threadedCommentEnvelope,
+} from './comments';
 import { readConditionalFormats } from './conditional';
 import { readDataValidations } from './data-validations';
 import { readValidationExtensions } from '../validation-extensions';
@@ -142,12 +147,21 @@ function readTables(
 function readComments(ctx: SheetContext, partName: string, sheet: Worksheet): void {
 	const legacyPart = ctx.source.targetOfType(partName, RELATIONSHIP_TYPES.comments);
 	const threadedPart = ctx.source.targetOfType(partName, RELATIONSHIP_TYPES.threadedComment);
+	const personsPart = ctx.source.targetOfType(
+		ctx.source.workbookPart() ?? '',
+		RELATIONSHIP_TYPES.person,
+	);
 	const legacy = parseLegacyComments(legacyPart ? ctx.source.text(legacyPart) : undefined);
 	const threaded = parseThreadedComments(
 		threadedPart ? ctx.source.text(threadedPart) : undefined,
 		ctx.persons,
+		personsPart ? ctx.source.text(personsPart) : undefined,
 	);
 	sheet.comments = mergeComments(legacy, threaded);
+	const envelope = threadedCommentEnvelope(
+		threadedPart ? ctx.source.text(threadedPart) : undefined,
+	);
+	if (envelope) sheet.threadedCommentsXml = envelope;
 }
 
 /** Reads one worksheet part. */

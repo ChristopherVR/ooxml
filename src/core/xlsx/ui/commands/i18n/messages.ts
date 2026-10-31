@@ -173,6 +173,13 @@ export const MESSAGE_STRINGS: Translations = {
 		'Respuesta {number} ({author})',
 		'回复 {number}（{author}）',
 	],
+	Resolved: ['Résolu', 'Erledigt', 'Resuelto', '已解决'],
+	'The comment changed. Reopen it and try again.': [
+		'Le commentaire a changé. Rouvrez-le et réessayez.',
+		'Der Kommentar wurde geändert. Öffnen Sie ihn erneut und versuchen Sie es noch einmal.',
+		'El comentario ha cambiado. Vuelva a abrirlo e inténtelo de nuevo.',
+		'批注已更改。请重新打开后重试。',
+	],
 	Unhide: ['Afficher', 'Einblenden', 'Mostrar', '取消隐藏'],
 	'Unhide sheet:': [
 		'Afficher la feuille :',

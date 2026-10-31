@@ -64,6 +64,28 @@ export function setCommentReply(
 	);
 }
 
+/** Resolve or reopen an existing threaded comment. */
+export function setCommentResolved(
+	ctx: EditContext,
+	s: number,
+	at: CellAddress,
+	resolved: boolean,
+): void {
+	const sheet = sheetAt(ctx.workbook, s);
+	const comment = sheet.comments.find((c) => c.address.row === at.row && c.address.col === at.col);
+	if (!comment?.replies) throw new RangeError('Threaded comment not found.');
+	if ((comment.resolved ?? false) === resolved) return;
+	ctx.run(
+		'Edit comment',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			comment.resolved = resolved;
+		},
+		{ sheet: s, ranges: [{ start: at, end: at }] },
+	);
+}
+
 /**
  * Sets (or removes) the hyperlink on a range. Links overlapping the range are replaced; an empty
  * anchor cell gets the link's display text and the cells get the hyperlink look.

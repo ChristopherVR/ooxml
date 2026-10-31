@@ -10,6 +10,7 @@ import { type EditContext, sheetAt } from './context';
 import { deleteSheetInFormula, renameSheetInFormula, renameTableInFormula } from './deps';
 import { rewriteFormulas, rewriteSheetFormulas } from './shift-formulas';
 import { reservedPivotNames } from './pivots';
+import { resetCommentIdentities } from './comment-identities';
 
 function assertUnlocked(workbook: Workbook): void {
 	if (workbook.structureLocked) throw new Error('The workbook structure is protected.');
@@ -201,6 +202,7 @@ export function duplicateSheet(ctx: EditContext, index: number): number {
 			copy.name = copyName(workbook, sheet.name);
 			copy.sheetId = nextSheetId(workbook);
 			delete copy.partName;
+			for (const comment of copy.comments) resetCommentIdentities(comment);
 			const pivotNames = reservedPivotNames(workbook);
 			for (const pivot of copy.pivotTables ?? []) {
 				let suffix = 2;

@@ -18,6 +18,7 @@ export interface SheetEntry {
 	tabColor?: Color;
 	defaultRowHeight?: number;
 	defaultColWidth?: number;
+	threadedCommentsXml?: string;
 }
 
 const STATES: readonly SheetState[] = ['visible', 'hidden', 'veryHidden'];
@@ -48,6 +49,9 @@ export function sheetEntries(sheets: Y.Map<unknown>): SheetEntry[] {
 		if (isNumber(rh) && rh > 0) entry.defaultRowHeight = rh;
 		const cw = props.get('cw');
 		if (isNumber(cw) && cw > 0) entry.defaultColWidth = cw;
+		const commentsXml = props.get('threadedCommentsXml');
+		if (typeof commentsXml === 'string' && commentsXml.length <= 1_048_576)
+			entry.threadedCommentsXml = commentsXml;
 		out.push(entry);
 	}
 	// Collisions are resolved in key order so a later move or rename never flips who wins.

@@ -299,14 +299,25 @@ export interface Hyperlink {
 	display?: string;
 }
 
-export interface Comment {
-	address: CellAddress;
+export interface CommentMessage {
 	author: string;
 	text: string;
-	/** Creation timestamp of a threaded root comment. */
+	/** Creation timestamp of a threaded message. */
 	date?: string;
+	/** Source message markup; edited fields are patched over this on save. */
+	threadedXml?: string;
+}
+
+export interface Comment extends CommentMessage {
+	address: CellAddress;
+	/** Source person records needed by this thread, also carried by clipboard and collaboration. */
+	threadedPersons?: Record<string, string>;
+	/** A copied thread needs new ids; its source ids still describe parent and mention links. */
+	regenerateThreadIds?: boolean;
+	/** Resolution state of a threaded comment. */
+	resolved?: boolean;
 	/** Threaded-comment replies, oldest first (read from `threadedComments` when present). */
-	replies?: { author: string; text: string; date?: string }[];
+	replies?: CommentMessage[];
 }
 
 export type ConditionalOperator =
@@ -879,6 +890,8 @@ export interface Worksheet {
 	view: SheetView;
 	hyperlinks: Hyperlink[];
 	comments: Comment[];
+	/** Threaded-comments container attributes and extensions, without its message elements. */
+	threadedCommentsXml?: string;
 	conditionalFormats: ConditionalFormat[];
 	dataValidations: DataValidation[];
 	tables: Table[];

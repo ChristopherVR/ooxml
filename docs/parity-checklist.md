@@ -92,9 +92,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       linked data types) have no model.
 - [ ] **P1** Connections, query tables and Power Query are carried verbatim only; external links
       use cached values and cannot be refreshed or edited.
-- [ ] **P1** Threaded comment saves rebuild person records; editing a thread also regenerates
-      its identities and drops resolved state, mentions and unknown comment markup. Preserve
-      that metadata and keep the edited text and mention ranges consistent.
+- [x] **P1** Threaded comment edits preserve person records, message identities, resolved state,
+      mentions and unknown markup. Mention ranges follow edits around their unchanged text;
+      copies receive fresh identities. Evidence: `xlsx/write/threaded-comments.test.ts`,
+      collaboration regressions and twelve browser cases across all six bindings. Excel 16
+      reopened and resaved edited, reopened, duplicated and pasted threads without repair.
+- [ ] **P2** Creating new @mentions in threaded comments has no editor or host people-directory
+      integration. Imported mentions are preserved; editing their label removes the mention.
 - [ ] **P1** Pivots outside the bounded profile are read-only: label and value filters, shared
       caches, calculated fields and items, date-group filters (`pivot/admission.ts`).
 - [x] **P2** Phonetic runs (`rPh`) are dropped from shared strings (`read/shared-strings.ts`).

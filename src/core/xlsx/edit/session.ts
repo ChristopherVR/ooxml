@@ -267,6 +267,7 @@ export function createEditSession(
 		setSplit: (s, split, topLeft) => view.setSplit(ctx, s, split, topLeft),
 		setComment: (s, at, text, author) => annotations.setComment(ctx, s, at, text, author),
 		setCommentReply: (s, at, index, text) => annotations.setCommentReply(ctx, s, at, index, text),
+		setCommentResolved: (s, at, resolved) => annotations.setCommentResolved(ctx, s, at, resolved),
 		setHyperlink: (s, range, link) => annotations.setHyperlink(ctx, s, range, link),
 		addConditionalFormat: (s, cf) => annotations.addConditionalFormat(ctx, s, cf),
 		clearConditionalFormats: (s, range) => annotations.clearConditionalFormats(ctx, s, range),

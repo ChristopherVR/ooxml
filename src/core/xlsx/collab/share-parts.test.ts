@@ -8,6 +8,9 @@ import type { EditSession } from '../edit/types';
 import type { ChartObject, ConditionalFormat, Workbook } from '../model';
 import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
+import { createWorkbook } from '../workbook';
+import { parseXml } from '../../xml/index';
+import { metadataFixture } from '../__fixtures__/threaded-comment-metadata';
 import { type WorkbookBinding, type WorkbookCollabHost, bindWorkbookSession } from './bind';
 
 interface Peer {
@@ -95,6 +98,37 @@ async function parts(wb: Workbook): Promise<Map<string, string>> {
 }
 
 describe('sharing comments, rules, links, tables and charts', () => {
+	it('keeps comment identities and accounts when a peer joins without the source package', async () => {
+		const a = peer(await loadXlsx(await metadataFixture()));
+		const b = peer(createWorkbook(), false);
+		try {
+			sync(a, b);
+			b.open();
+			sync(a, b);
+			const source = a.edit.workbook.sheets[0]!.comments[0]!;
+			const saved = (await loadXlsx(await saveXlsx(b.edit.workbook))).sheets[0]!.comments[0]!;
+			const ids = (comment: typeof source) =>
+				[comment, ...comment.replies!].map((message) =>
+					parseXml(message.threadedXml!).documentElement.getAttribute('id'),
+				);
+			expect(ids(saved)).toEqual(ids(source));
+			expect(saved.resolved).toBe(true);
+			expect(Object.keys(saved.threadedPersons!).sort()).toEqual(
+				Object.keys(source.threadedPersons!).sort(),
+			);
+			expect(Object.values(saved.threadedPersons!).join('')).toContain('original-account');
+			expect(Object.values(saved.threadedPersons!).join('')).toContain('second-account');
+			expect(b.edit.workbook.sheets[0]!.threadedCommentsXml).toBe(
+				a.edit.workbook.sheets[0]!.threadedCommentsXml,
+			);
+		} finally {
+			for (const p of [a, b]) {
+				p.binding.dispose();
+				p.doc.destroy();
+			}
+		}
+	});
+
 	it('shares native reply edits independently and keeps root and reply timestamps through undo', async () => {
 		const bytes = new Uint8Array(
 			readFileSync(new URL('../__fixtures__/excel-threaded-comments.xlsx', import.meta.url)),

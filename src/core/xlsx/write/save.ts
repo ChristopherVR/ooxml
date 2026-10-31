@@ -71,6 +71,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		strings: new SharedStringTable(),
 		persons: new PersonRegistry(
 			parsePersons(personsSource ? source?.text(personsSource) : undefined),
+			personsSource ? source?.text(personsSource) : undefined,
 		),
 		reserved,
 		tableIds: new Set(),
@@ -156,7 +157,9 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 	rels.add(RELATIONSHIP_TYPES.theme, relativeTarget(bookPart, outTheme));
 	if (ctx.threaded.used) {
 		const personsPart = personsSource ?? 'xl/persons/person.xml';
-		writer.add(personsPart, ctx.persons.xml(), CONTENT_TYPES.persons);
+		if (personsSource) writer.carry(personsSource);
+		if (!personsSource || ctx.persons.changed)
+			writer.add(personsPart, ctx.persons.xml(), CONTENT_TYPES.persons);
 		rels.add(RELATIONSHIP_TYPES.person, relativeTarget(bookPart, personsPart));
 	}
 

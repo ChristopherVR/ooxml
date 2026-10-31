@@ -108,6 +108,61 @@ describe('number prompts', () => {
 });
 
 describe('comment and unhide dialogs', () => {
+	it('keeps untouched remote edits and empty source text when editing another reply', async () => {
+		const ctx = setup();
+		ctx.workbook()!.sheets[0]!.comments = [
+			{
+				address: { row: 0, col: 0 },
+				author: 'A',
+				text: '',
+				replies: [
+					{ author: 'B', text: '' },
+					{ author: 'C', text: 'Second' },
+				],
+			},
+		];
+		const result = ctx.dialogs.open('comment');
+		const dialog = dialogEl(ctx, 'comment');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Reply 2 (C)'), 'Local edit');
+		ctx.session()!.setCommentReply(0, { row: 0, col: 0 }, 0, 'Remote edit');
+		clickButton(dialog, 'OK');
+		await result;
+		expect(ctx.workbook()!.sheets[0]!.comments[0]!.replies!.map((reply) => reply.text)).toEqual([
+			'Remote edit',
+			'Local edit',
+		]);
+		ctx.session()!.undo();
+		expect(ctx.workbook()!.sheets[0]!.comments[0]!.replies!.map((reply) => reply.text)).toEqual([
+			'Remote edit',
+			'Second',
+		]);
+	});
+
+	it('refuses a conflicting reply edit before applying any other draft changes', async () => {
+		const ctx = setup();
+		ctx.workbook()!.sheets[0]!.comments = [
+			{
+				address: { row: 0, col: 0 },
+				author: 'A',
+				text: 'Root',
+				replies: [{ author: 'B', text: 'Original' }],
+			},
+		];
+		const result = ctx.dialogs.open('comment');
+		const dialog = dialogEl(ctx, 'comment');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Comment'), 'Draft root');
+		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Reply 1 (B)'), 'Draft reply');
+		ctx.session()!.setCommentReply(0, { row: 0, col: 0 }, 0, 'Remote reply');
+		clickButton(dialog, 'OK');
+		await tick();
+		expect(ctx.workbook()!.sheets[0]!.comments[0]).toMatchObject({
+			text: 'Root',
+			replies: [{ text: 'Remote reply' }],
+		});
+		clickButton(dialog, 'Cancel');
+		await result;
+	});
+
 	it('edits a root and its replies in one undo step, preserving authors and dates', async () => {
 		const ctx = setup();
 		ctx.select('B2');
@@ -124,11 +179,13 @@ describe('comment and unhide dialogs', () => {
 		const dialog = dialogEl(ctx, 'comment');
 		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Comment'), 'Edited root');
 		setValue(inputByLabel<HTMLTextAreaElement>(dialog, 'Reply 1 (Reply author)'), 'Edited reply');
+		inputByLabel<HTMLInputElement>(dialog, 'Resolved').click();
 		clickButton(dialog, 'OK');
 		await result;
 		expect(ctx.workbook()!.sheets[0]!.comments[0]).toMatchObject({
 			author: 'Root author',
 			text: 'Edited root',
+			resolved: true,
 			replies: [{ author: 'Reply author', text: 'Edited reply', date: '2026-01-02T03:04:05Z' }],
 		});
 		ctx.session()!.undo();

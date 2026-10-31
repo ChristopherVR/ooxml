@@ -45,13 +45,18 @@ complete end-to-end Excel comparison.
 ## Latest completed increments
 
 2026-10-31: The existing comment dialog now edits imported threaded replies as well as the root.
-Edits keep authors and timestamps, and one submission is one undo step. Independent reply edits
-from two collaborators merge and per-person undo retains the other reply. The native fixture
+Edits keep authors, timestamps, message identities, person accounts, imported mentions and unknown
+markup. The dialog also resolves and reopens threads; one submission is one undo step. Mention
+offsets follow edits around unchanged labels, and editing a label removes that mention. Copies
+receive fresh message and mention identities. Independent reply edits from two collaborators
+merge, per-person undo retains the other reply, and an open dialog detects conflicting edits.
+Thread metadata also reaches peers without the source package. The native fixture
 `excel-threaded-comments.xlsx` and its COM generator accompany the round-trip regressions.
-All six bindings pass `e2e/xlsx/comment-replies.spec.ts`; Excel 16 reopened the output normally
-with the edited reply and unchanged author and root/reply dates. This is text editing support:
-thread identities, resolved state, mentions and person/unknown metadata still need preservation
-work, recorded in the central checklist and reflected in Feature Status.
+All twelve cases across six bindings pass `e2e/xlsx/comment-replies.spec.ts`. Excel 16 reopened
+and resaved edited, reopened, duplicated and pasted threads without repair, retaining their
+identities, mention ranges and unknown extensions. Core coverage includes
+`xlsx/write/threaded-comments.test.ts` and collaboration regressions. Creating new @mentions and
+host people-directory integration remain open and are reflected in Feature Status.
 
 2026-10-31: Excel 2010 (`x14`) data validations now use the same model, list drop-down,
 restriction checks and Data Validation dialog as ordinary rules. Cross-sheet references are

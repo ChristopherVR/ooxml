@@ -219,6 +219,7 @@ export interface EditSession {
 	setComment(sheet: number, at: CellAddress, text: string | undefined, author: string): void;
 	/** Edits the zero-based reply, preserving its author and timestamp. */
 	setCommentReply(sheet: number, at: CellAddress, replyIndex: number, text: string): void;
+	setCommentResolved(sheet: number, at: CellAddress, resolved: boolean): void;
 	setHyperlink(sheet: number, range: CellRange, link: Omit<Hyperlink, 'range'> | undefined): void;
 	addConditionalFormat(sheet: number, format: ConditionalFormat): void;
 	clearConditionalFormats(sheet: number, range?: CellRange): void;

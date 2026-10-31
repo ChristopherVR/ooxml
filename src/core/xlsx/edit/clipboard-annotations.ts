@@ -7,6 +7,7 @@ import {
 	moveValidationFormula,
 } from './validation-ranges';
 import type { ClipboardCells, PasteMode } from './types';
+import { resetCommentIdentities } from './comment-identities';
 
 export function copyAnnotations(
 	sheet: Worksheet,
@@ -71,7 +72,9 @@ export function pasteAnnotations(
 		for (const comment of cells.comments) {
 			const address = point(comment.address);
 			comments.delete(key(address));
-			comments.set(key(address), { ...structuredClone(comment), address });
+			const pasted = { ...structuredClone(comment), address };
+			if (!cutFormula) resetCommentIdentities(pasted);
+			comments.set(key(address), pasted);
 		}
 		sheet.comments = [...comments.values()];
 	}

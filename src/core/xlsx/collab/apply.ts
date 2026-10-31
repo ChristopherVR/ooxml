@@ -141,6 +141,9 @@ function applyList(workbook: Workbook, keys: SheetKeys, entries: SheetEntry[]): 
 		if (entry.defaultRowHeight !== undefined) sheet.defaultRowHeight = entry.defaultRowHeight;
 		if (entry.defaultColWidth !== undefined) sheet.defaultColWidth = entry.defaultColWidth;
 		else delete sheet.defaultColWidth;
+		if (entry.threadedCommentsXml !== undefined)
+			sheet.threadedCommentsXml = entry.threadedCommentsXml;
+		else delete sheet.threadedCommentsXml;
 		return sheet;
 	});
 	workbook.sheets.splice(0, workbook.sheets.length, ...next);
