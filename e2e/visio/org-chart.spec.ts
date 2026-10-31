@@ -169,6 +169,20 @@ test('a Position Belt that gains a subordinate becomes a Manager Belt glued at T
 		);
 	expect(new Set(await glue())).toEqual(new Set(['BeginX:Connections.X4', 'EndX:Connections.X1']));
 
+	// A Shape Data row beyond the five org ones travels with the position when it is promoted.
+	await viewer.evaluate(
+		(node, id) =>
+			(node as VisioViewerElement).controller.applyEdits([
+				{
+					type: 'set-shape-data',
+					pageId: '0',
+					shapeId: id,
+					row: 'Cost_Center',
+					data: { label: 'Cost Center', prompt: '', type: 'string', format: '', value: 'CC-42' },
+				},
+			]),
+		LEAF,
+	);
 	await pick(viewer, LEAF);
 	await viewer.locator('office-ui-ribbon #tab-org-chart').click();
 	await viewer.locator(`${TAB} [command="org-subordinate"]`).click();
@@ -183,6 +197,14 @@ test('a Position Belt that gains a subordinate becomes a Manager Belt glued at T
 		(item) => item.name.startsWith('Manager Belt') && !['17', '33', '49'].includes(item.id),
 	)!;
 	expect(promoted.text).toBe('Name\nPosition');
+	const carried = await viewer.evaluate(
+		(node, id) =>
+			(node as VisioViewerElement).controller.state
+				.document!.pages[0]!.shapes.find((shape) => shape.id === id)
+				?.shapeData?.find((row) => row.name === 'Cost_Center')?.rawValue,
+		promoted.id,
+	);
+	expect(carried).toBe('CC-42');
 	expect(state.connectors).toBe(6);
 	expect(new Set(await glue())).toEqual(new Set(['BeginX:Connections.X4', 'EndX:Connections.X1']));
 

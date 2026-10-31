@@ -454,10 +454,9 @@ installed Visio 16 build is used to check that saved files open without repair.
       master instance can be resized (its text-height formulas keep the saved text extent and the
       text size pass measures it afterwards).
 - [ ] **P2** Org chart remainders: a Manager Belt that loses its last subordinate does not turn
-      back into a Position Belt (the type change could not be observed through COM, where Visio's
-      org chart add-in does not run), a promoted position's Shape Data rows beyond Name, Title, Department,
-      Telephone and E-Mail are not carried over, a resized Belt's photo frame sits up to 0.004 in
-      from Visio's (the style-inherited line weight is read from the saved cache), no import from a
+      back into a Position Belt, and a shape glued under a Position Belt does not promote it
+      (neither could be observed through COM, where Visio's org chart add-in does not run; the
+      Belt masters only show `User.ShapeType` and `msvReplaceClass`), no import from a
       directory, the Organization Chart Wizard's options or Compare/Update, an assistant's line
       still glues to the whole shape (it enters the assistant's side), the masters' theme-driven
       colours and line patterns are reported as warnings, and a page that already holds connectors

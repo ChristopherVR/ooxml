@@ -93,6 +93,84 @@ describe('org chart Belt masters and reporting-line glue', () => {
 		expect(page.shapes.find((item) => item.id === plan.newId)?.name).toMatch(/^Position Belt/);
 	});
 
+	it('carries every Shape Data row of the position to the Manager Belt', async () => {
+		const bytes = await createTemplateVsdx('organization-chart');
+		const custom = await apply(bytes, [
+			{
+				type: 'set-shape-data',
+				pageId: '0',
+				shapeId: T(4),
+				row: 'Cost_Center',
+				data: {
+					label: 'Cost Center',
+					prompt: 'Which one',
+					type: 'number',
+					format: '0.0',
+					value: '42',
+					invisible: true,
+				},
+			},
+			{
+				type: 'set-shape-data',
+				pageId: '0',
+				shapeId: T(4),
+				row: 'Started',
+				data: {
+					label: 'Started',
+					prompt: '',
+					type: 'date',
+					format: '',
+					value: '2024-03-05',
+				},
+			},
+			{
+				type: 'set-shape-data',
+				pageId: '0',
+				shapeId: T(4),
+				row: 'Email',
+				data: { label: 'E-Mail', prompt: '', type: 'string', format: '', value: 'a@b.test' },
+			},
+		]);
+		const plan = visioOrgAddPosition(await pageOf(custom), T(4), 'subordinate')!;
+		const page = await pageOf(await apply(custom, plan.edits));
+		const promoted = page.shapes.find(
+			(item) => item.id === visioOrgHierarchy(page).parentOf(plan.newId),
+		)!;
+		const row = (name: string) => promoted.shapeData?.find((item) => item.name === name);
+		expect(row('Cost_Center')).toMatchObject({
+			label: 'Cost Center',
+			prompt: 'Which one',
+			valueKind: 'number',
+			value: 42,
+			invisible: true,
+		});
+		expect(row('Started')?.valueKind).toBe('date');
+		expect(row('Started')?.rawValue).toBe('2024-03-05T00:00:00');
+		expect(row('Email')?.rawValue).toBe('a@b.test');
+	});
+
+	it('keeps the glued point of a line recorded with Visio named Connection rows', async () => {
+		const bytes = await createTemplateVsdx('organization-chart');
+		const zip = await JSZip.loadAsync(bytes);
+		const path = 'visio/pages/page1.xml';
+		const named = (await zip.file(path)!.async('string'))
+			.replaceAll('ToCell="Connections.X4"', 'ToCell="Connections.Bottom.X"')
+			.replaceAll('ToCell="Connections.X1"', 'ToCell="Connections.Top.X"');
+		zip.file(path, named);
+		const edited = await zip.generateAsync({ type: 'uint8array' });
+		const before = await pageOf(edited);
+		const plan = visioOrgAddPosition(before, T(4), 'subordinate')!;
+		const drop = plan.edits.find((edit) => edit.type === 'drop-stencil-master')!;
+		const onManager = plan.edits.filter(
+			(edit) => edit.type === 'glue-connector' && edit.target === drop.shapeId,
+		);
+		// The line that entered the leaf's Top point enters the Manager Belt's Top point (row 0),
+		// and the new line leaves its Bottom point (row 3).
+		expect(
+			onManager.map((edit) => (edit.type === 'glue-connector' ? edit.point : -1)).sort(),
+		).toEqual([0, 3]);
+	});
+
 	it('leaves a Manager Belt a Manager Belt and an added coworker a Position Belt', async () => {
 		const bytes = await createTemplateVsdx('organization-chart');
 		const before = await pageOf(bytes);
@@ -130,6 +208,15 @@ describe('org chart Belt masters and reporting-line glue', () => {
 			});
 		walk(shape.children);
 		expect(widths.some((width) => Math.abs(width - 2) < 1e-6)).toBe(true);
+		// The photo frame's PinY is the value Visio 16 computes for a 2 x 1.2 in Position Belt
+		// (read over COM: MAX(Height*0.5, BeltSize*1.5 + frame/2 + LineWeight/2) = 0.6338172572).
+		const xml = await (
+			await JSZip.loadAsync(result.bytes)
+		)
+			.file('visio/pages/page1.xml')!
+			.async('string');
+		const frameXml = xml.slice(xml.indexOf('<Shape ID="74"'));
+		expect(Number(/N="PinY" V="([^"]+)"/.exec(frameXml)![1])).toBeCloseTo(0.6338172572, 9);
 		expect(result.diagnostics.map((item) => item.code)).toContain('edit-text-size-kept');
 		// The glued reporting line still ends on the resized position's Top point.
 		const line = await lineEnds(result.bytes, T(4));
