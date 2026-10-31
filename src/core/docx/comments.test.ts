@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './parse';
 import { expectParagraph } from './test-support/access';
+import { WORD_DATE_UTC_NS } from './xml';
 
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
 const W14 = 'xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"';
@@ -25,6 +26,27 @@ async function fixture(): Promise<Uint8Array> {
 }
 
 describe('comments', () => {
+	it('reads and updates modern UTC comment timestamps', async () => {
+		const zip = await JSZip.loadAsync(await fixture());
+		const path = 'word/comments.xml';
+		zip.file(
+			path,
+			(await zip.file(path)!.async('string')).replace(
+				'<w:comment ',
+				`<w:comment xmlns:u="${WORD_DATE_UTC_NS}" u:dateUtc="2026-10-31T01:00:00Z" `,
+			),
+		);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		expect(loaded.model.comments?.[0]?.date).toBe('2026-10-31T01:00:00Z');
+		const date = '2026-11-01T02:00:00Z';
+		const saved = await loaded.save({
+			...loaded.model,
+			comments: loaded.model.comments!.map((comment) => ({ ...comment, date })),
+		});
+		const updated = await JSZip.loadAsync(saved);
+		expect(await updated.file(path)!.async('string')).toContain(`u:dateUtc="${date}"`);
+		expect((await loadDocx(saved)).model.comments?.[0]?.date).toBe(date);
+	});
 	it('parses comment text/author and anchors the range onto the covered run', async () => {
 		const loaded = await loadDocx(await fixture());
 		expect(loaded.model.comments).toMatchObject([

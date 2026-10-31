@@ -11,6 +11,7 @@ import { parseBlocksFromContainer } from './block-parser';
 import { parseDocumentParts } from './document-parts';
 import { parseNumberingCatalog } from './numbering-parse';
 import { parseComments } from './comments';
+import { readCommentParts } from './comment-parts';
 import { parseFormSettings, parseReviewPreferences, parseTrackChangesSetting } from './settings';
 import { parsePageBackground } from './page-background';
 import { parseRunStyleCatalog } from './character-styles';
@@ -181,12 +182,13 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		model.warnings.push(
 			'Merged, nested, or complex tables can be read, but their row and column structure cannot be edited safely.',
 		);
-	const commentsFile = zip.file('word/comments.xml');
-	if (commentsFile) {
-		const extendedFile = zip.file('word/commentsExtended.xml');
+	const commentParts = await readCommentParts(zip);
+	if (commentParts.comments.xml) {
 		model.comments = parseComments(
-			await commentsFile.async('string'),
-			await extendedFile?.async('string'),
+			commentParts.comments.xml,
+			commentParts.extended.xml,
+			commentParts.ids.xml,
+			commentParts.extensible.xml,
 		);
 		model.warnings.push(
 			'Comment ranges are modeled at run granularity (they may span paragraphs); a range edge outside any run, such as around an empty paragraph or a table, moves to the nearest commented text when that paragraph is edited.',

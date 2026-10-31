@@ -252,8 +252,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       including nonstandard part locations (`src/core/docx/signatures.test.ts`). This is metadata
       detection and cleanup, not certificate verification or signing.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
-- [ ] **P2** Changing the comment list rewrites `comments.xml` from the model, losing comment
-      formatting the model does not hold; `commentsIds` and `w16cid` are not maintained.
+- [x] **P2** Comment edits preserve source paragraphs, run formatting and unknown markup;
+      paragraph and durable IDs, reply anchors, UTC dates and metadata parts stay aligned.
+      Evidence: `docx/comment-preservation.test.ts`, `docx/comments.test.ts`, six-binding
+      `e2e/docx/comments-pane.spec.ts`, and Word 16 reopen/save checks of five edited variants
+      of `docx/__fixtures__/word-comments-native.docx` (2026-10-31).
 - [ ] **P2** Embedded fonts are kept, not used for rendering; `altChunk`, art page borders and
       theme page backgrounds are kept, not drawn.
 

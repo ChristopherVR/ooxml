@@ -1,101 +1,112 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
 import type { Comment } from './model';
-import { buildXml, makeW, parseXml, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import {
+	buildXml,
+	getW,
+	makeW,
+	parseXml,
+	type XmlDocument,
+	type XmlElement,
+	WORD_NS,
+	WORD_DATE_UTC_NS,
+} from './xml';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
-
-const COMMENTS_PATH = 'word/comments.xml';
-const COMMENTS_EXTENDED_PATH = 'word/commentsExtended.xml';
-const W14_NS = 'http://schemas.microsoft.com/office/word/2010/wordml';
-const W15_NS = 'http://schemas.microsoft.com/office/word/2012/wordml';
+import { COMMENT_PARTS, readCommentParts, W14_NS, type CommentPartKind } from './comment-parts';
+import { commentParagraphId, parseComments } from './comments';
+import { commentHexIds, commentNumericIds, patchCommentAnchors } from './write-comment-identities';
+import {
+	existingDurableIds,
+	patchCommentMetadata,
+	type CommentIdentity,
+} from './write-comment-metadata';
+import { patchCommentText } from './write-comment-text';
+import { declareIgnorableExtension } from './ligatures';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
 }
-/** Deterministic 8-hex-digit paragraph id, matching a comment to its own commentsExtended entry. */
-function paraIdFor(id: string, index: number): string {
-	let hash = (index + 1) >>> 0;
-	for (let i = 0; i < id.length; i++) hash = (Math.imul(hash, 31) + id.charCodeAt(i)) >>> 0;
-	return hash.toString(16).padStart(8, '0').toUpperCase();
-}
 
-function buildCommentsDocument(comments: Comment[]): XmlDocument {
-	const doc = parseXml(
-		`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:comments xmlns:w="${WORD_NS}" xmlns:w14="${W14_NS}" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="w14"></w:comments>`,
-	);
-	const root = doc.documentElement as XmlElement;
-	comments.forEach((comment, index) => {
-		const el = makeW(doc, 'comment');
-		setAttribute(el, 'id', comment.id);
-		setAttribute(el, 'author', comment.author);
-		if (comment.date) setAttribute(el, 'date', comment.date);
-		if (comment.initials) setAttribute(el, 'initials', comment.initials);
-		const p = makeW(doc, 'p');
-		p.setAttributeNS(W14_NS, 'w14:paraId', paraIdFor(comment.id, index));
-		const r = makeW(doc, 'r');
-		const t = makeW(doc, 't');
-		t.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-		t.appendChild(doc.createTextNode(comment.text));
-		r.appendChild(t);
-		p.appendChild(r);
-		el.appendChild(p);
-		root.appendChild(el);
-	});
-	return doc;
-}
-
-function buildCommentsExtendedDocument(comments: Comment[]): XmlDocument | null {
-	if (!comments.some((comment) => comment.resolved || comment.parentId)) return null;
-	const doc = parseXml(
-		`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w15:commentsEx xmlns:w15="${W15_NS}"></w15:commentsEx>`,
-	);
-	const root = doc.documentElement as XmlElement;
-	comments.forEach((comment, index) => {
-		const entry = doc.createElementNS(W15_NS, 'w15:commentEx');
-		entry.setAttributeNS(W15_NS, 'w15:paraId', paraIdFor(comment.id, index));
-		if (comment.resolved) entry.setAttributeNS(W15_NS, 'w15:done', '1');
-		const parentIndex = comments.findIndex((c) => c.id === comment.parentId);
-		if (parentIndex >= 0)
-			entry.setAttributeNS(W15_NS, 'w15:paraIdParent', paraIdFor(comment.parentId!, parentIndex));
-		root.appendChild(entry);
-	});
-	return doc;
-}
-
-/**
- * Regenerates comments.xml/commentsExtended.xml from the model's comment list. Any comment text,
- * formatting or extended metadata not represented by `Comment` is not preserved once the list changes.
- */
+/** Edit comment bodies and metadata in their source parts, retaining unchanged formatting and IDs. */
 export async function applyComments(zip: JSZip, comments: Comment[]): Promise<void> {
-	const existed = Boolean(zip.file(COMMENTS_PATH));
-	zip.file(COMMENTS_PATH, buildXml(buildCommentsDocument(comments)));
-	const extended = buildCommentsExtendedDocument(comments);
-	if (extended) zip.file(COMMENTS_EXTENDED_PATH, buildXml(extended));
-	else zip.remove(COMMENTS_EXTENDED_PATH);
-	if (!existed) {
+	const parts = await readCommentParts(zip);
+	const previous = parts.comments.xml
+		? parseComments(parts.comments.xml, parts.extended.xml, parts.ids.xml, parts.extensible.xml)
+		: [];
+	const byId = new Map(previous.map((comment) => [comment.id, comment]));
+	const ids = commentNumericIds(comments, previous);
+	const nextHexId = await commentHexIds(zip);
+	const durableIds = existingDurableIds(parts);
+	const doc = parseXml(
+		parts.comments.xml ??
+			`<w:comments xmlns:w="${WORD_NS}" xmlns:w14="${W14_NS}" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="w14"/>`,
+	);
+	const before = buildXml(doc);
+	const w14 = declareIgnorableExtension(doc, W14_NS, 'w14');
+	const elements = Array.from(doc.getElementsByTagNameNS(WORD_NS, 'comment')) as XmlElement[];
+	const sourceElements = new Map(elements.map((element) => [getW(element, 'id'), element]));
+	const retained = new Set<XmlElement>();
+	const identities: CommentIdentity[] = [];
+	for (const comment of comments) {
+		const old = byId.get(comment.id);
+		const element = sourceElements.get(comment.id) ?? makeW(doc, 'comment');
+		const paraId = commentParagraphId(element) ?? nextHexId();
+		setAttribute(element, 'id', ids.get(comment.id)!);
+		for (const key of ['author', 'initials', 'date'] as const) {
+			if (old && comment[key] === old[key]) continue;
+			const value = comment[key];
+			if (value === undefined) element.removeAttributeNS(WORD_NS, key);
+			else setAttribute(element, key, value);
+			if (key === 'date') {
+				const utc = element.getAttributeNodeNS(WORD_DATE_UTC_NS, 'dateUtc');
+				if (utc && value === undefined) element.removeAttributeNode(utc);
+				else if (utc) utc.value = value!;
+			}
+		}
+		if (!old || old.text !== comment.text) patchCommentText(element, comment.text);
+		const paragraphs = Array.from(element.getElementsByTagNameNS(WORD_NS, 'p'));
+		if (!paragraphs.length) {
+			const paragraph = makeW(doc, 'p');
+			element.appendChild(paragraph);
+			paragraphs.push(paragraph);
+		}
+		for (const paragraph of paragraphs) {
+			const oldId = paragraph.getAttributeNS(W14_NS, 'paraId');
+			if (paragraph === paragraphs.at(-1))
+				paragraph.setAttributeNS(W14_NS, `${w14}:paraId`, paraId);
+			else if (!oldId || oldId.toUpperCase() === paraId.toUpperCase())
+				paragraph.setAttributeNS(W14_NS, `${w14}:paraId`, nextHexId());
+		}
+		if (!element.parentNode) doc.documentElement!.appendChild(element);
+		retained.add(element);
+		identities.push({
+			comment,
+			previous: old,
+			paraId,
+			durableId: durableIds.get(paraId.toUpperCase()) ?? nextHexId(),
+		});
+	}
+	for (const element of elements)
+		if (!retained.has(element)) element.parentNode?.removeChild(element);
+	const after = buildXml(doc);
+	zip.file(
+		parts.comments.path,
+		parts.comments.xml && before === after ? parts.comments.xml : after,
+	);
+	const metadata = patchCommentMetadata(parts, identities);
+	for (const [path, xml] of metadata) zip.file(path, xml);
+	for (const kind of Object.keys(COMMENT_PARTS) as CommentPartKind[]) {
+		const part = parts[kind];
+		if (kind !== 'comments' && !metadata.has(part.path)) continue;
 		await ensureContentTypeOverride(
 			zip,
-			COMMENTS_PATH,
-			'application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml',
+			part.path,
+			`application/vnd.openxmlformats-officedocument.wordprocessingml.${COMMENT_PARTS[kind].name}+xml`,
 		);
-		await ensureDocumentRelationship(
-			zip,
-			'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments',
-			'comments.xml',
-		);
+		if (!part.related)
+			await ensureDocumentRelationship(zip, COMMENT_PARTS[kind].relationship, `/${part.path}`);
 	}
-	if (extended) {
-		await ensureContentTypeOverride(
-			zip,
-			COMMENTS_EXTENDED_PATH,
-			'application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml',
-		);
-		await ensureDocumentRelationship(
-			zip,
-			'http://schemas.microsoft.com/office/2011/relationships/commentsExtended',
-			'commentsExtended.xml',
-		);
-	}
+	await patchCommentAnchors(zip, ids, comments);
 }
 
 export function commentRangeStartNode(doc: XmlDocument, id: string): XmlElement {

@@ -17,7 +17,7 @@ only the parts the edits reach:
   the model does not hold inside a changed one (unknown elements, extension attributes, `mc:`
   alternate content, bookmarks, tracked-change wrappers) stays where it was.
 - A part is rewritten only when the model changed what it holds: a header, footer, footnote or
-  endnote part, `word/comments.xml` (and `commentsExtended.xml`), `word/numbering.xml`, the style
+  endnote part, the comments and their extended/identity metadata parts, `word/numbering.xml`, the style
   parts for edited paragraph style formatting, `docProps/core.xml`, `word/settings.xml` flags the
   editor owns, the chart and SmartArt parts that were edited, and the bound `customXml` item of an
   edited data-bound control.
@@ -34,20 +34,34 @@ model with the built-in default styles.
 The round-trip test [`preservation.test.ts`](../../../src/core/docx/preservation.test.ts) loads a
 package carrying these, edits text, a table cell and the comments, saves, and asserts that every
 entry the edit did not own is byte-identical (the entry list is also unchanged apart from a created
-`comments.xml`):
+comment parts):
 
 | Kept                                                                                                                                                                                                            | Notes                                                                                                                       |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `customXml/*` items, their properties and relationships                                                                                                                                                         | Rewritten only for a data-bound control the user edited.                                                                    |
 | `word/glossary/document.xml` and its parts (building blocks)                                                                                                                                                    | Read only to show content control placeholder text.                                                                         |
 | `word/vbaProject.bin` and the macro-enabled content type                                                                                                                                                        | Kept, never run. The extension of the saved file is the host's concern.                                                     |
-| `word/people.xml`, `word/commentsIds.xml`, `word/commentsExtensible.xml`                                                                                                                                        | See "Comments" below.                                                                                                       |
+| `word/people.xml`                                                                                                                                                                                               | See "Comments" below.                                                                                                       |
 | `word/fontTable.xml` and embedded fonts (`word/fonts/*.odttf`)                                                                                                                                                  | Not used for rendering; kept with their relationships.                                                                      |
 | `word/settings.xml` (zoom, `w:extLst`, compatibility and protection elements)                                                                                                                                   | Only the flags the editor owns are patched (track changes, even/odd headers, hyphenation, ...).                             |
 | `word/theme/theme1.xml`, `word/webSettings.xml`, `docProps/custom.xml`, thumbnails                                                                                                                              | Theme editing is refused (below).                                                                                           |
 | Pictures and other media that are not replaced                                                                                                                                                                  | A picture the user replaces gets a new part.                                                                                |
 | Unknown parts and relationships of any type                                                                                                                                                                     | Anything the package holds that the editor has no reader for.                                                               |
 | Inside `document.xml`: `mc:AlternateContent`, extension lists (`w:extLst`), `w14:`/`w15:` markup, `w:tblPrChange`, `w:trPrChange`, `w:tcPrChange`, bookmarks, field codes, unknown run and paragraph properties | In paragraphs and tables the user did not restructure. Edited paragraphs keep their unmodeled `w:pPr` and `w:rPr` children. |
+
+## Comments
+
+Comment edits patch the original bodies and metadata at their relationship targets. An unchanged
+comment keeps its paragraphs, run formatting and unknown markup. Text edits retain surviving
+styled runs. The last paragraph ID and durable ID keep replies, resolution and UTC date metadata
+aligned across `commentsExtended.xml`, `commentsIds.xml` and `commentsExtensible.xml`. Deleted
+comments lose their anchors and metadata; new replies receive references at their parent's scope.
+Opaque editor IDs are mapped to decimal package IDs consistently with their document anchors.
+The people part remains verbatim. This does not provide rich-text comment authoring controls.
+
+Regression coverage uses a formatted native Word fixture in `comment-preservation.test.ts`.
+Word 16 reopen/save checks cover resolving, editing, deleting and adding comments, including
+replies and nonstandard part locations. Six browser bindings check saved reply anchors.
 
 ## Modeled and editable
 
@@ -121,10 +135,6 @@ style-linked numbering, and editing restrictions that are kept but not enforced.
 
 ## Known limits of the guarantee
 
-- **Comments.** When the comment list changes, `comments.xml` and `commentsExtended.xml` are written
-  again from the model. Formatting inside a comment that the model does not hold is not carried over,
-  and the kept `commentsIds.xml` / `commentsExtensible.xml` / `people.xml` can then describe comments
-  by their old ids. Word ignores entries it cannot match.
 - **Inline markup in table cells** blocks structural edits of that table (above) but not text edits.
 - **Layout is not preserved information.** Cached page-break hints (`w:lastRenderedPageBreak`) in
   edited paragraphs are dropped; Word recomputes them.

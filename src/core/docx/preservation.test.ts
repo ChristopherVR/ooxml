@@ -178,11 +178,11 @@ describe('preservation of parts and XML the editor does not model', () => {
 		expect(xml).toContain('w:tcPrChange');
 	});
 
-	it('keeps the people, comment id and font parts when comments are edited', async () => {
+	it('keeps the people and font parts while maintaining comment identity metadata', async () => {
 		const source = await buildPackage();
 		const loaded = await loadDocx(source);
 		const model = structuredClone(loaded.model);
-		model.comments = [{ id: '0', author: 'Ada', text: 'Note', paragraphId: undefined } as never];
+		model.comments = [{ id: '0', author: 'Ada', text: 'Note' }];
 		const saved = await loaded.save(model);
 		await expectKept(
 			source,
@@ -191,10 +191,17 @@ describe('preservation of parts and XML the editor does not model', () => {
 				'word/document.xml',
 				'word/comments.xml',
 				'word/commentsExtended.xml',
+				'word/commentsIds.xml',
+				'word/commentsExtensible.xml',
 				'[Content_Types].xml',
 				'word/_rels/document.xml.rels',
 			],
-			['word/comments.xml'],
+			['word/comments.xml', 'word/commentsExtended.xml'],
+		);
+		const zip = await JSZip.loadAsync(saved);
+		expect(await zip.file('word/commentsIds.xml')!.async('string')).toContain('<w16cid:commentId ');
+		expect(await zip.file('word/commentsExtensible.xml')!.async('string')).toContain(
+			'<w16cex:commentExtensible ',
 		);
 	});
 

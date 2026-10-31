@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { EditorView } from 'prosemirror-view';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import { loadDocx } from '../../viewers/docx/packages/core/src';
+import JSZip from 'jszip';
 import { newDocument, waitForEditorFocus } from './helpers';
 
 // Word's comments pane is the shared `office-ui-comments-pane`; its controls live in the
@@ -143,6 +145,18 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect
 			.poll(async () => (await comments(page)).map((comment) => comment.text))
 			.toEqual(['First note', 'A reply']);
+		const bytes = await editor.evaluate(async (element) =>
+			Array.from(new Uint8Array(await (await (element as DocxEditorElement).save()).arrayBuffer())),
+		);
+		const exported = await loadDocx(new Uint8Array(bytes));
+		const thread = exported.model.comments!;
+		expect(thread.map((comment) => comment.text)).toEqual(['First note', 'A reply']);
+		expect(thread.every((comment) => /^\d+$/.test(comment.id))).toBe(true);
+		expect(thread[1]!.parentId).toBe(thread[0]!.id);
+		const zip = await JSZip.loadAsync(new Uint8Array(bytes));
+		const xml = await zip.file('word/document.xml')!.async('string');
+		for (const comment of thread) expect(xml).toContain(`<w:commentReference w:id="${comment.id}"`);
+		expect(zip.file('word/commentsIds.xml')).not.toBeNull();
 		expect(errors).toEqual([]);
 	});
 }

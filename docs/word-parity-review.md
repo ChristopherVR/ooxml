@@ -101,6 +101,17 @@ editing disabled. Tests cover partitioned edits, imported threads, author undo,
 read-only peers and detached DOCX export, plus the review pane in six browser
 bindings. This does not implement M365 mentions, notifications or assigned tasks.
 
+Comment saves now patch source bodies rather than regenerating them. Unchanged comments retain
+their formatting; text edits retain surviving run properties. Multi-paragraph threads use the last
+paragraph ID, preserve durable IDs and unknown metadata, and maintain `commentsExtended`,
+`commentsIds` and `commentsExtensible` at their relationship targets. New editor IDs become valid
+decimal package IDs, with matching anchors; new replies inherit the parent scope so Word retains
+them. UTC dates are read from modern metadata and updated consistently. Deleted comments lose
+their anchors and metadata. `comment-preservation.test.ts` covers the native formatted fixture,
+and six browser bindings check exported reply anchors. Word 16 opened and resaved resolved,
+text-edited, deleted, added and relocated-part variants with the expected threads and formatting
+(2026-10-31). This preserves existing formatting; it does not add rich-text comment controls.
+
 The Track Changes recording setting now uses document transactions, shares
 through Yjs, supports local undo/redo and exports `w:trackRevisions`. Recording
 and revision resolution live in core and use the caller's schema. Revision IDs
