@@ -66,8 +66,8 @@
 	},
 	"devDependencies": {
 		"esbuild": "^0.28.2",
-		"oxfmt": "^0.74.0",
-		"oxlint": "^1.88.0"
+		"oxfmt": "^0.75.0",
+		"oxlint": "^1.90.0"
 	},
 	"overrides": {
 		"argparse": "^2.0.1",
