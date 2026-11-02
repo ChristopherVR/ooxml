@@ -9,17 +9,17 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.77",
-		"@ai-sdk/svelte": "^5.0.150",
-		"@lucide/svelte": "^1.61.0",
-		"ai": "^7.0.150",
-		"emf-converter": "4.23.1",
+		"@ai-sdk/openai-compatible": "^3.0.81",
+		"@ai-sdk/svelte": "^5.0.157",
+		"@lucide/svelte": "^1.64.0",
+		"ai": "^7.0.157",
+		"emf-converter": "4.24.0",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"pptx-svelte-viewer": "workspace:*",
 		"pptx-viewer-core": "workspace:*",
 		"pptx-viewer-locales": "workspace:*",
-		"svelte": "^5.57.2",
+		"svelte": "^5.57.3",
 		"y-webrtc": "^10.3.0",
 		"y-websocket": "^3.1.0",
 		"yjs": "^13.6.33"
