@@ -262,6 +262,7 @@ export type {
 	AnimationInput,
 	PresentationOptions,
 	PresentationThemeInput,
+	TextBodyInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';
