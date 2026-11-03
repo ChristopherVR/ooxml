@@ -34,6 +34,8 @@ export interface PptxDocumentPropertiesSaveOptions {
 	coreProperties?: PptxCoreProperties;
 	appProperties?: PptxAppProperties;
 	customProperties?: PptxCustomProperty[];
+	/** A reproducible save: `created` / `modified` are this date, the revision is not counted up. */
+	fixedDate?: Date;
 }
 
 export interface PptxDocumentPropertiesUpdaterContext {
@@ -70,12 +72,15 @@ export class PptxDocumentPropertiesUpdater {
 		slides: PptxSlide[],
 		options?: PptxDocumentPropertiesSaveOptions,
 	): Promise<void> {
-		await this.updateCoreProperties(options?.coreProperties);
+		await this.updateCoreProperties(options?.coreProperties, options?.fixedDate);
 		await this.updateAppProperties(slides, options?.appProperties);
 		await this.updateCustomProperties(options?.customProperties);
 	}
 
-	private async updateCoreProperties(overrides: PptxCoreProperties | undefined): Promise<void> {
+	private async updateCoreProperties(
+		overrides: PptxCoreProperties | undefined,
+		fixedDate: Date | undefined,
+	): Promise<void> {
 		const coreFile = this.context.zip.file('docProps/core.xml');
 		if (!coreFile) {
 			return;
@@ -86,11 +91,21 @@ export class PptxDocumentPropertiesUpdater {
 			const revision = Number.parseInt(core.revision?.trim() ?? '', 10);
 			// `cp:lastModifiedBy` is a real author identity, not a value this engine has any basis
 			// to invent, so it is only written when the caller overrides it.
-			const next = {
-				...core,
-				revision: String(Number.isFinite(revision) && revision >= 0 ? revision + 1 : 1),
-				modified: formatW3cdtf(new Date()),
-			};
+			// A reproducible save (`fixedDate`) dates the package from that date and
+			// keeps the revision the caller gives (or 1), so two saves of the same
+			// input are the same bytes.
+			const next = fixedDate
+				? {
+						...core,
+						revision: overrides?.revision ?? '1',
+						created: overrides?.created ?? formatW3cdtf(fixedDate),
+						modified: overrides?.modified ?? formatW3cdtf(fixedDate),
+					}
+				: {
+						...core,
+						revision: String(Number.isFinite(revision) && revision >= 0 ? revision + 1 : 1),
+						modified: formatW3cdtf(new Date()),
+					};
 			this.context.zip.file('docProps/core.xml', writeCoreProperties(next, coreXml));
 		} catch (error) {
 			console.warn('Failed to update core document properties:', error);
