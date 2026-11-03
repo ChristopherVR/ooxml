@@ -34,6 +34,11 @@ export class PptxSaveState {
 	private readonly usedSlideNumbers = new Set<number>();
 
 	private readonly usedMediaPaths = new Set<string>();
+	/** New pictures' media parts in this save, by content (see `mediaPathForContent`). */
+	private readonly newMediaByContent = new Map<
+		string,
+		Array<{ bytes: Uint8Array; path: string }>
+	>();
 	private readonly usedInkPaths = new Set<string>();
 	private maxInkPartIndex = 0;
 
@@ -85,6 +90,27 @@ export class PptxSaveState {
 		}
 		this.usedMediaPaths.add(filePath);
 		return filePath;
+	}
+
+	/**
+	 * The media part for a NEW picture's bytes: the part an identical picture
+	 * already got in this save, or a fresh one. Pictures loaded from the deck
+	 * keep their own parts and never come through here.
+	 */
+	public mediaPathForContent(
+		bytes: Uint8Array,
+		extension: string,
+	): { path: string; reused: boolean } {
+		const key = `${extension.toLowerCase()}:${bytes.length}:${fnv1a(bytes)}`;
+		const candidates = this.newMediaByContent.get(key) ?? [];
+		const same = candidates.find((candidate) => sameBytes(candidate.bytes, bytes));
+		if (same) {
+			return { path: same.path, reused: true };
+		}
+		const path = this.nextMediaPath(extension);
+		candidates.push({ bytes, path });
+		this.newMediaByContent.set(key, candidates);
+		return { path, reused: false };
 	}
 
 	public getUsedMediaPaths(): Set<string> {
@@ -335,3 +361,24 @@ export class PptxSaveStateBuilder {
 }
 
 export { PptxSaveState as PptxSaveSession, PptxSaveStateBuilder as PptxSaveSessionBuilder };
+
+function fnv1a(bytes: Uint8Array): number {
+	let hash = 0x811c9dc5;
+	for (const byte of bytes) {
+		hash ^= byte;
+		hash = Math.imul(hash, 0x01000193) >>> 0;
+	}
+	return hash;
+}
+
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+	if (a.length !== b.length) {
+		return false;
+	}
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+}

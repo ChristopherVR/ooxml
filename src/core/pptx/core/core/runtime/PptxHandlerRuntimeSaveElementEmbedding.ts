@@ -206,15 +206,33 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (parsedImage) {
 			let targetImagePath = el.imagePath;
 			if (!targetImagePath) {
-				targetImagePath = ctx.saveSession.nextMediaPath(parsedImage.extension);
-				const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
+				// A new picture: identical bytes share one media part (and, on one
+				// slide, one relationship) instead of a copy per picture.
+				const media = ctx.saveSession.mediaPathForContent(parsedImage.bytes, parsedImage.extension);
+				targetImagePath = media.path;
 				const relativeMediaPath = targetImagePath.replace(/^ppt\//u, '../');
-				ctx.slideRelationships.push({
-					'@_Id': relationshipId,
-					'@_Type': ctx.slideImageRelationshipType,
-					'@_Target': relativeMediaPath,
-				});
+				const existingRelationshipId = media.reused
+					? ctx.slideRelationships.find(
+							(rel) =>
+								rel['@_Type'] === ctx.slideImageRelationshipType &&
+								rel['@_Target'] === relativeMediaPath,
+						)?.['@_Id']
+					: undefined;
+				const relationshipId =
+					typeof existingRelationshipId === 'string'
+						? existingRelationshipId
+						: ctx.slideRelationshipRegistry.nextRelationshipId();
+				if (relationshipId !== existingRelationshipId) {
+					ctx.slideRelationships.push({
+						'@_Id': relationshipId,
+						'@_Type': ctx.slideImageRelationshipType,
+						'@_Target': relativeMediaPath,
+					});
+				}
 				shape = this.createPictureXml(el, relationshipId);
+				if (media.reused) {
+					return shape;
+				}
 			}
 			if (targetImagePath) {
 				// Never write bytes of one format into a file with a different
