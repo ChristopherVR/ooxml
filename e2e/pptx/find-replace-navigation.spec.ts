@@ -90,7 +90,10 @@ test('next selects the second match, replace changes only that match, closing cl
 	await expect.poll(() => selection(page)).toEqual({ active: 2, selected: [before[1]!.text] });
 
 	await page.locator('input[placeholder*="Replace with" i]').first().fill('Annual');
-	await page.getByRole('button', { name: /^Replace(?: current match)?$/u }).click();
+	await page
+		.getByRole('button', { name: /^Replace(?: current match)?$/u })
+		.and(page.locator(':not([data-ribbon-control])'))
+		.click();
 	await expect
 		.poll(async () => {
 			const slides = await page.evaluate(() =>
