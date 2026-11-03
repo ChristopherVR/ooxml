@@ -717,6 +717,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				el,
 				ctx.resolveHyperlinkRelationshipId,
 				ctx.getSlideRelationshipMap,
+				ctx.slideTargetAt,
 			);
 		}
 

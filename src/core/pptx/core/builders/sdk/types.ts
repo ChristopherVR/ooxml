@@ -170,6 +170,19 @@ export interface ShadowInput {
 	opacity?: number;
 }
 
+/**
+ * Where a click goes: an address (`a:hlinkClick` with an external
+ * relationship) or a slide of this deck by 0-based position (`action=
+ * "ppaction://hlinksldjump"` with a `…/relationships/slide` relationship,
+ * added on save). An empty `url` or a `slideIndex` that is not a whole
+ * number from 0 throws a `RangeError`; an index past the last saved slide is
+ * written without a target and reported as `SAVE_SLIDE_JUMP_TARGET_MISSING`
+ * in `getCompatibilityWarnings()`.
+ */
+export type LinkInput =
+	| { url: string; tooltip?: string }
+	| { slideIndex: number; tooltip?: string };
+
 // ---------------------------------------------------------------------------
 // Text input
 // ---------------------------------------------------------------------------
@@ -189,6 +202,8 @@ export interface TextStyleInput {
 	lineSpacing?: number;
 	spaceBefore?: number;
 	spaceAfter?: number;
+	/** A hyperlink on the run (`a:rPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 export interface TextSegmentInput {
@@ -216,6 +231,8 @@ export interface TextOptions extends Partial<ElementPosition> {
 	softEdge?: number;
 	reflection?: ReflectionInput;
 	opacity?: number;
+	/** What clicking the text box does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +252,8 @@ export interface ShapeOptions extends Partial<ElementPosition> {
 	softEdge?: number;
 	reflection?: ReflectionInput;
 	opacity?: number;
+	/** What clicking the shape does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 // ---------------------------------------------------------------------------
@@ -248,6 +267,8 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	cropRight?: number;
 	cropBottom?: number;
 	opacity?: number;
+	/** What clicking the picture does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 // ---------------------------------------------------------------------------

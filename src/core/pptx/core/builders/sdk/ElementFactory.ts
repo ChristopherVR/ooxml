@@ -22,11 +22,13 @@ import type {
 	GroupPptxElement,
 	PptxElement,
 } from '../../types/elements';
+import type { PptxAction } from '../../types/actions';
 import type { ShapeStyle } from '../../types/shape-style';
 import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { mapLinkToAction, mapLinkToRunStyle } from './link-input';
 import { elementStyleForSegments } from './text-segment-style';
 import {
 	buildShapeStyle,
@@ -47,6 +49,7 @@ import type {
 	MediaOptions,
 	GroupOptions,
 	TextStyleInput,
+	LinkInput,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -129,6 +132,9 @@ function mapTextStyleInput(opts?: Partial<TextStyleInput>): Partial<TextStyle> {
 	if (opts.spaceAfter !== undefined) {
 		ts.paragraphSpacingAfter = opts.spaceAfter;
 	}
+	if (opts.link !== undefined) {
+		Object.assign(ts, mapLinkToRunStyle(opts.link));
+	}
 	return ts;
 }
 
@@ -156,6 +162,12 @@ function buildTextSegments(
 		text: seg.text,
 		style: { ...base, ...mapTextStyleInput(seg.style) } as TextStyle,
 	}));
+}
+
+/** `{ actionClick }` for an element link, or nothing. */
+function withAction(link: LinkInput | undefined): { actionClick?: PptxAction } {
+	const actionClick = mapLinkToAction(link);
+	return actionClick ? { actionClick } : {};
 }
 
 // ---------------------------------------------------------------------------
@@ -232,6 +244,7 @@ export function createTextElement(
 		textStyle: elementStyleForSegments(mapTextStyleInput(textStyleBase), textSegments) as TextStyle,
 		textSegments,
 		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
+		...withAction(options?.link),
 	};
 }
 
@@ -263,6 +276,7 @@ export function createShapeElement(shapeType: string, options?: ShapeOptions): S
 		shapeStyle: buildShapeStyle(
 			effectInputs(options, options?.fill ?? { type: 'solid', color: '#4472C4' }),
 		),
+		...withAction(options?.link),
 	};
 	if (options?.text) {
 		el.text = options.text;
@@ -350,6 +364,7 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 		cropTop: options?.cropTop,
 		cropRight: options?.cropRight,
 		cropBottom: options?.cropBottom,
+		...withAction(options?.link),
 	};
 }
 
@@ -599,6 +614,7 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 			...effectInputs(options, options?.fill ?? { type: 'none' }),
 			stroke: options?.stroke ?? { color: '#000000', width: 2 },
 		}),
+		...withAction(options?.link),
 	};
 	if (options?.text) {
 		el.text = options.text;

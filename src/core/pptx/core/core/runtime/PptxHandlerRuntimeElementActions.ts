@@ -23,6 +23,21 @@ export interface ActionRelationshipContext {
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
+	 * Report a slide jump whose index names no slide of the deck being saved.
+	 * It is not written: PowerPoint does not open a file with a slide jump that
+	 * has no slide relationship.
+	 */
+	protected reportMissingSlideJumpTarget(elementId: string | undefined, index: number): void {
+		this.compatibilityService?.reportWarning({
+			code: 'SAVE_SLIDE_JUMP_TARGET_MISSING',
+			message: `A slide jump to slide index ${index} has no such slide in the saved deck; the link was not written.`,
+			severity: 'warning',
+			scope: 'element',
+			...(elementId ? { elementId } : {}),
+		});
+	}
+
+	/**
 	 * Write or remove a single `a:hlinkClick` / `a:hlinkHover` node on
 	 * a `p:cNvPr` parent.
 	 */
@@ -31,6 +46,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		nodeName: string,
 		action: PptxAction | undefined,
 		links: ActionRelationshipContext,
+		elementId?: string,
 	): void {
 		if (!action) {
 			delete cNvPr[nodeName];
@@ -39,12 +55,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const node: XmlObject = {};
 		// Where the action points: its address, or for a slide jump made in the editor (no address
 		// yet) the slide at its index.
+		const slideJumpIndex =
+			/^ppaction:\/\/hlinksldjump\b/iu.test(action.action ?? '') &&
+			typeof action.targetSlideIndex === 'number'
+				? action.targetSlideIndex
+				: undefined;
 		const url =
 			action.url?.trim() ||
-			(/^ppaction:\/\/hlinksldjump\b/iu.test(action.action ?? '') &&
-			typeof action.targetSlideIndex === 'number'
-				? links.slideTargetAt?.(action.targetSlideIndex)
-				: undefined);
+			(slideJumpIndex !== undefined ? links.slideTargetAt?.(slideJumpIndex) : undefined);
+		if (!url && slideJumpIndex !== undefined && links.slideTargetAt) {
+			// `r:id=""` on a slide jump makes PowerPoint refuse the file (unlike the
+			// relationship-less actions below), so the action is left out and reported.
+			this.reportMissingSlideJumpTarget(elementId, slideJumpIndex);
+			delete cNvPr[nodeName];
+			return;
+		}
 		let rId = action.rId;
 		// A relationship kept from load stands only while it still points there: an address edited
 		// since, or an element moved from another slide, carries an `rId` that names another target
@@ -172,8 +197,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const actionHover =
 			'actionHover' in el ? (el.actionHover as PptxAction | undefined) : undefined;
 
-		this.serializeSingleAction(cNvPr, 'a:hlinkClick', actionClick, links);
-		this.serializeSingleAction(cNvPr, 'a:hlinkHover', actionHover, links);
+		this.serializeSingleAction(cNvPr, 'a:hlinkClick', actionClick, links, el.id);
+		this.serializeSingleAction(cNvPr, 'a:hlinkHover', actionHover, links, el.id);
 
 		// "Mark as decorative" (issue G16): piggybacks on this call site so the
 		// existing p:cNvPr resolution above is reused rather than requiring a

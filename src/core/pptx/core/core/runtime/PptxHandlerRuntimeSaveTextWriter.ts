@@ -16,6 +16,8 @@ import {
 } from './element-paragraph-geometry';
 import { preserveParagraphScopedState } from './paragraph-scoped-segment-state';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveEffectsWriter';
+import { withRunSlideJumpTarget, withSegmentSlideJumpTargets } from './run-slide-jump-targets';
+import type { SlideTargetAt } from './run-slide-jump-targets';
 import { buildParagraphPropertiesXml } from './PptxHandlerRuntimeSaveParagraphHelpers';
 
 /** The presets whose first guide is `adj1` (the two-guide waves and pours); every other preset names it `adj`. */
@@ -49,6 +51,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		el: PptxElementWithText,
 		resolveHyperlinkRelationshipId: (target: string) => string | undefined,
 		getSlideRelationshipMap: () => Map<string, string>,
+		slideTargetAt?: SlideTargetAt,
 	): void {
 		const hasEditableTextContent =
 			typeof el.text === 'string' || (el.textSegments?.length ?? 0) > 0;
@@ -243,10 +246,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		txBody['a:bodyPr'] = bodyPr;
+		// A run slide jump made in code names its slide by index only; point it
+		// at the slide part so the run writer adds the relationship.
+		const onMissing = (index: number) => this.reportMissingSlideJumpTarget(el.id, index);
 		txBody['a:p'] = this.createParagraphsFromTextContent(
 			textValueForSave,
-			this.routeElementParagraphGeometry(txBody, el.textStyle),
-			textSegmentsForSave,
+			withRunSlideJumpTarget(
+				this.routeElementParagraphGeometry(txBody, el.textStyle),
+				slideTargetAt,
+				onMissing,
+			),
+			withSegmentSlideJumpTargets(textSegmentsForSave, slideTargetAt, onMissing),
 			resolveHyperlinkRelationshipId,
 		);
 	}
