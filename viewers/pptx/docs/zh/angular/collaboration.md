@@ -279,7 +279,7 @@ export class CustomSlidesComponent {
 
 节相关输出（`addSectionAt`、`renameSection`、`deleteSection`、`moveSectionUp`、`moveSectionDown`、`toggleSectionCollapse`）和 `addSlideAfter`（菜单中的“新建幻灯片”和 Enter 键）对应同名命令。缩略图的绘制内容与画布一致：它们的字段上下文（幻灯片编号，包括编号从 `firstSlideNum` 开始的演示文稿、页眉页脚文本、文档属性）和表格样式来自 `[headerFooter]`、`[customProperties]`、`[firstSlideNumber]`、`[locale]`、`[theme]` 和 `[tableStyleMap]`，未设置时各自回退到外层的 `LoadContentService`。幻灯片右键菜单中的“版式”项会先为该幻灯片发出 `select`，再发出 `openLayoutGallery({ slideIndex, x, y })`，因为自定义外壳会渲染自己的版式库。只读模式（`[canEdit]="false"`）不显示页脚，也没有菜单。缩略图栏没有折叠控件，请用 `@if` 显示或隐藏它。未设置 `[slides]` 时，缩略图栏自行读取并编辑外层的 `EditorStateService`，与在 `PowerPointViewerComponent` 内部时相同。
 
-缩略图栏的布局位于其自身的组件样式中；请导入一次 `pptx-angular-viewer/styles`（与其他构建块相同），以获取其缩略图使用的主题令牌和作用域内的样式重置。
+缩略图栏的布局位于其自身的组件样式中；请通过全局样式加载一次 `pptx-angular-viewer/styles.css`（与其他构建块相同，参见[快速上手](/zh/angular/getting-started#styling-required-css)），以获取其缩略图使用的主题令牌和作用域内的样式重置。
 
 协作服务和组件由包根入口导出，没有像 `pptx-react-viewer/viewer` 那样的独立子路径。需要自行驱动同步或渲染在线状态界面时可以使用：
 

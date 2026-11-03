@@ -339,8 +339,10 @@ renders its own Layout gallery. Read-only (`[canEdit]="false"`) shows no footer 
 rail has no collapse control; show or hide it with `@if`. Without `[slides]` the rail reads and
 edits the enclosing `EditorStateService` itself, as it does inside `PowerPointViewerComponent`.
 
-The rail's layout is in its own component styles; import `pptx-angular-viewer/styles` once (as for
-any building block) for the theme tokens and the scoped reset its thumbnails use.
+The rail's layout is in its own component styles; load `pptx-angular-viewer/styles.css` once
+through your global styles (as for any building block, see
+[Getting Started](/angular/getting-started#styling-required-css)) for the theme tokens and the
+scoped reset its thumbnails use.
 
 The collaboration service and components are exported from the package root (there is no separate
 subpath the way `pptx-react-viewer/viewer` has one) if you want to drive sync or render your own

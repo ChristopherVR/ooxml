@@ -11,13 +11,15 @@ few ways, in increasing order of control.
 
 ## Bundled stylesheet
 
-Import the self-contained stylesheet once at your app's entry point. It ships all required utility
-classes plus dark-theme defaults.
+Load the self-contained stylesheet once through your global styles. It ships all required utility
+classes plus dark-theme defaults. Add it to the `styles` array in `angular.json`:
 
-```ts
-import 'pptx-angular-viewer/styles';
-// or: import 'pptx-angular-viewer/styles.css';
+```json
+"styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
 ```
+
+or `@import 'pptx-angular-viewer/styles.css';` at the top of `src/styles.css`. Do not import it from
+TypeScript: see [Getting Started](/angular/getting-started#styling-required-css).
 
 ## The `theme` input
 

@@ -16,13 +16,12 @@ Install the package and its peer deps first - see [Overview › Installation](/a
 
 `PowerPointViewerComponent` is a **standalone component** with the `pptx-viewer` selector. It takes
 its slide data through the `content` input as a `Uint8Array` or `ArrayBuffer` of raw `.pptx` bytes.
-The component fills its parent, so give the parent an explicit height.
+The component fills its parent, so give the parent an explicit height. Load the viewer's stylesheet
+once through your global styles first ([Styling / required CSS](#styling-required-css)).
 
 ```ts
 import { Component, signal } from '@angular/core';
 import { PowerPointViewerComponent } from 'pptx-angular-viewer';
-// Base chrome styles (toolbar, thumbnails, layout). Import once, e.g. in styles.css or main.ts.
-import 'pptx-angular-viewer/styles';
 
 @Component({
 	selector: 'app-viewer-only',
@@ -143,11 +142,24 @@ edits happen.
 
 ## Styling / required CSS
 
-Import the bundled stylesheet once at your app's entry point (or in your global `styles.css`):
+Load the bundled stylesheet once, through your global styles. With the Angular CLI, add it to the
+`styles` array of the build target in `angular.json`, before your own stylesheet:
 
-```ts
-import 'pptx-angular-viewer/styles'; // or 'pptx-angular-viewer/styles.css'
+```json
+"styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
 ```
+
+Or import it at the top of your global `src/styles.css`:
+
+```css
+@import 'pptx-angular-viewer/styles.css';
+```
+
+Both resolve the package's `./styles.css` export. `angular.json` accepts only a path that ends in
+`.css`; the `@import` also accepts `pptx-angular-viewer/styles`. Do not import the stylesheet from a
+TypeScript file (`import 'pptx-angular-viewer/styles'`): the Angular CLI's application builder
+writes CSS imported from TypeScript to a separate file that `index.html` never links, so the viewer
+renders unstyled.
 
 The stylesheet's base reset (Tailwind's preflight) is scoped to the viewer: it applies only inside
 the viewer's root, a canvas viewport and any element carrying `data-pptx-scope` (the viewer adds it

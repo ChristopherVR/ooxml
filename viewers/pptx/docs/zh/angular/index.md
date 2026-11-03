@@ -68,7 +68,7 @@ import { createAiAssistant } from 'pptx-angular-viewer/ai';
 | `pptx-angular-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
 | `pptx-angular-viewer/internals`                                      | 包根产物的别名，用于内部构建模块（参见[完整服务参考](/zh/angular/services-reference)），不受语义化版本兼容承诺保障。                                  |
 | `pptx-angular-viewer/i18n/fr`、`/i18n/es`、`/i18n/de`、`/i18n/zh-CN` | 随包提供的语言字典（`translationsFr` 等）。                                                                                                           |
-| `pptx-angular-viewer/styles`（或 `/styles.css`）                     | 打包好的样式表（参见[快速上手](/zh/angular/getting-started)）。                                                                                       |
+| `pptx-angular-viewer/styles.css`（或 `/styles`）                     | 打包好的样式表，从全局样式加载，不要从 TypeScript 导入（参见[快速上手](/zh/angular/getting-started#styling-required-css)）。                          |
 
 没有 React 和 Vue 那样独立的 `/viewer` 或 `/i18n` 子路径：`translationsEn`、`keyToLabel` 和其他国际化导出都位于包根入口。国际化细节请参见[本地化](/zh/guide/localization)。
 

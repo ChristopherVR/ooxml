@@ -197,7 +197,9 @@ Docs: https://www.npmjs.com/package/pptx-vue-viewer`,
 		group: 'framework',
 		packages: ['pptx-angular-viewer', '@angular/core', '@angular/common', 'rxjs'],
 		nextSteps: `import { PowerPointViewerComponent } from 'pptx-angular-viewer';
-import 'pptx-angular-viewer/styles.css';
+
+/* src/styles.css (or add "pptx-angular-viewer/styles.css" to "styles" in angular.json) */
+@import 'pptx-angular-viewer/styles.css';
 
 <pptx-power-point-viewer [content]="content" />
 

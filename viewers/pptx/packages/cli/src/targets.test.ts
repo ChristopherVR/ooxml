@@ -121,12 +121,24 @@ describe('targets', () => {
 			expect(target?.nextSteps).toContain(cssImport);
 		}
 
-		// React and Vue wire the style import into the scaffolded entry file itself;
-		// Angular's starter component has no direct style import to patch.
+		// React and Vue wire the style import into the scaffolded entry file itself.
 		for (const id of ['react', 'vue']) {
 			const target = TARGETS.find((t) => t.id === id);
 			expect(target?.scaffold?.entryContent).toContain(`${target?.packages[0]}/styles.css';`);
 		}
+	});
+
+	it('the Angular starter loads the viewer stylesheet from its global styles', () => {
+		// The Angular CLI's application builder writes CSS imported from TypeScript
+		// to a separate file that index.html never links, so the viewer rendered
+		// unstyled. The stylesheet belongs in src/styles.css (or angular.json).
+		const angular = TARGETS.find((t) => t.id === 'angular');
+		const globalCss = angular?.scaffold?.extraFiles?.['src/styles.css'];
+
+		expect(globalCss).toMatch(/^@import 'pptx-angular-viewer\/styles\.css';\n/u);
+		expect(angular?.scaffold?.entryContent).not.toMatch(/import 'pptx-angular-viewer\/styles/u);
+		expect(angular?.nextSteps).not.toMatch(/^import 'pptx-angular-viewer\/styles/mu);
+		expect(angular?.nextSteps).toContain("@import 'pptx-angular-viewer/styles.css';");
 	});
 
 	it('only the vanilla scaffold prompts for three, since it is the only binding without it as an optional dependency', () => {

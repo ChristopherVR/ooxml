@@ -9,12 +9,13 @@ description: 使用 ViewerTheme 类型、defaultThemeColors、themeToCssVars、p
 
 ## 打包的样式表 {#bundled-stylesheet}
 
-在应用入口处导入一次独立样式表。它包含所需的全部工具类和深色主题默认值。
+通过全局样式加载一次独立样式表。它包含所需的全部工具类和深色主题默认值。将其加入 `angular.json` 的 `styles` 数组：
 
-```ts
-import 'pptx-angular-viewer/styles';
-// or: import 'pptx-angular-viewer/styles.css';
+```json
+"styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
 ```
+
+或在 `src/styles.css` 开头写入 `@import 'pptx-angular-viewer/styles.css';`。不要在 TypeScript 中导入它：参见[快速上手](/zh/angular/getting-started#styling-required-css)。
 
 ## `theme` 输入 {#the-theme-input}
 

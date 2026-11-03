@@ -121,7 +121,7 @@ export class AppComponent {
 }
 ```
 
-Add `pptx-angular-viewer/styles` to your global styles.
+Add `pptx-angular-viewer/styles.css` to the `styles` array in `angular.json` (or `@import` it in `src/styles.css`). Do not import it from TypeScript: the Angular CLI's application builder never links CSS imported that way.
 
 </details>
 
