@@ -26,6 +26,12 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 	wireMediaBookmarkSteps(group, ctx);
 
 	const ownedAnimations = new Map<string, string[]>();
+	interface AnimationComponent {
+		animation: string;
+		properties: Set<string>;
+		colorTargets?: TimelineStep['colorTargets'];
+	}
+	const componentsByElement = new Map<string, AnimationComponent[]>();
 	const owner = Symbol('animation group');
 	const owners = playbackOwners.get(ctx.setStates) ?? new Map<string, symbol>();
 	playbackOwners.set(ctx.setStates, owners);
@@ -81,12 +87,6 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 	ctx.setStates((previous) => {
 		const next = new Map(previous);
 		// Accumulate disjoint properties only within this invocation.
-		interface AnimationComponent {
-			animation: string;
-			properties: Set<string>;
-			colorTargets?: TimelineStep['colorTargets'];
-		}
-		const componentsByElement = new Map<string, AnimationComponent[]>();
 		for (const step of group.steps) {
 			if (step.command || !step.elementId || step.opacitySet) {
 				continue;
@@ -183,8 +183,22 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 						...carried,
 						visible: visibleAfter,
 						cssAnimation: remaining.join(', ') || undefined,
-						animatesFill: step.colorTargets ? undefined : current?.animatesFill,
-						animatesStroke: step.colorTargets ? undefined : current?.animatesStroke,
+						animatesFill:
+							componentsByElement
+								.get(step.elementId)
+								?.some(
+									(component) =>
+										remaining.includes(component.animation) &&
+										component.colorTargets?.includes('fill'),
+								) || undefined,
+						animatesStroke:
+							componentsByElement
+								.get(step.elementId)
+								?.some(
+									(component) =>
+										remaining.includes(component.animation) &&
+										component.colorTargets?.includes('stroke'),
+								) || undefined,
 						textStyle: resolveTextStyleOnCleanup(
 							carried.textStyle,
 							step.textStyle,
