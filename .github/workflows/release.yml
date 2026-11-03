@@ -137,6 +137,7 @@ jobs:
           bun run build
           bun run test:package
           node scripts/build-released.mjs --smoke
+          node scripts/publish-released.mjs --plan release-plan.json --entry-points
 
       # Prepend the new release section to CHANGELOG.md. Prepend (rather than regeneration) means
       # shipped sections are never rewritten, so old tags can be culled by prune-releases without

@@ -19,7 +19,6 @@ import {
 	CHART_PART_SERIES_ATTR,
 	chartPartToAttrs,
 } from 'ooxml-ui/pptx';
-
 import type {
 	ChartPartRef,
 	SvgCircle,
@@ -30,7 +29,7 @@ import type {
 	SvgPrimitive,
 	SvgRect,
 	SvgText,
-} from './chart-renderer-helpers';
+} from 'ooxml-ui/pptx/render/chart-view-model';
 
 @Component({
 	selector: 'g[pptx-chart-primitives]',

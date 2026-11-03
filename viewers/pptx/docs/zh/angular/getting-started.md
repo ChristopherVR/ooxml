@@ -13,13 +13,11 @@ description: 将 .pptx ArrayBuffer 加载到 pptx-viewer，先以只读方式渲
 
 ## 1. 只读预览 {#_1-read-only-viewer}
 
-`PowerPointViewerComponent` 是一个**独立组件**，选择器为 `pptx-viewer`。它通过 `content` 输入接收幻灯片数据，类型为包含原始 `.pptx` 字节的 `Uint8Array` 或 `ArrayBuffer`。组件会填满父容器，因此请为父容器设置明确的高度。
+`PowerPointViewerComponent` 是一个**独立组件**，选择器为 `pptx-viewer`。它通过 `content` 输入接收幻灯片数据，类型为包含原始 `.pptx` 字节的 `Uint8Array` 或 `ArrayBuffer`。组件会填满父容器，因此请为父容器设置明确的高度。请先通过全局样式加载一次查看器样式表（参见[样式与所需 CSS](#styling-required-css)）。
 
 ```ts
 import { Component, signal } from '@angular/core';
 import { PowerPointViewerComponent } from 'pptx-angular-viewer';
-// Base chrome styles (toolbar, thumbnails, layout). Import once, e.g. in styles.css or main.ts.
-import 'pptx-angular-viewer/styles';
 
 @Component({
 	selector: 'app-viewer-only',
@@ -137,11 +135,19 @@ export class EditorComponent {
 
 ## 样式与所需 CSS {#styling-required-css}
 
-在应用入口处或全局 `styles.css` 中导入一次打包的样式表：
+通过全局样式加载一次打包的样式表。使用 Angular CLI 时，将其加入 `angular.json` 中构建目标的 `styles` 数组，并放在你自己的样式表之前：
 
-```ts
-import 'pptx-angular-viewer/styles'; // or 'pptx-angular-viewer/styles.css'
+```json
+"styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
 ```
+
+或者在全局 `src/styles.css` 的开头导入：
+
+```css
+@import 'pptx-angular-viewer/styles.css';
+```
+
+两种方式都解析到包的 `./styles.css` 导出。`angular.json` 只接受以 `.css` 结尾的路径；`@import` 也接受 `pptx-angular-viewer/styles`。不要在 TypeScript 文件中导入样式表（`import 'pptx-angular-viewer/styles'`）：Angular CLI 的 application 构建器会把从 TypeScript 导入的 CSS 写入一个 `index.html` 从不链接的单独文件，查看器因此没有样式。
 
 样式表的基础重置（Tailwind preflight）仅作用于查看器根元素、画布视口及带有 `data-pptx-scope` 的元素。查看器会为根元素外的对话框和菜单添加该属性，因此宿主页面的标题、列表、边距和图片保持原样。单独渲染导出的组件时，请将其放在带有该属性的普通元素（如 `div`）中，不要将属性放在 `pptx-ui-*` 控件上：最外层作用域从页面基础文本样式开始，会覆盖控件自身的文本样式。
 

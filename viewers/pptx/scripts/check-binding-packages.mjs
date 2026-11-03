@@ -1,5 +1,6 @@
 /**
- * Install the npm-packed UI bindings without workspace links and import each
+ * Parse every declaration file the UI bindings and their dependencies pack, install
+ * the npm-packed bindings without workspace links and import each
  * public entry from an isolated Node consumer, then bundle every browser entry
  * of the bindings for the browser and fail if one reaches a Node-only module.
  * Run after all package builds.
@@ -13,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.mjs';
 import { walkModuleGraph } from '../../../scripts/module-graph.mjs';
+import { declarationSyntaxErrors } from './declaration-syntax.mjs';
 import { toPublishManifest, readWorkspacePackages } from './publish-manifest.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -107,6 +109,11 @@ try {
 			),
 		)[0];
 		const packedPaths = new Set(packed.files.map((file) => file.path));
+		// A consumer's `tsc` parses every declaration it reaches, even with `skipLibCheck`.
+		for (const path of [...packedPaths].filter((file) => /\.d\.[cm]?ts$/u.test(file))) {
+			const errors = declarationSyntaxErrors(path, readFileSync(join(packDir, path), 'utf8'));
+			assert.deepEqual(errors, [], `${target.name} ships ${path}, which TypeScript cannot parse`);
+		}
 		const shippedManifest = JSON.parse(readFileSync(join(packDir, 'package.json'), 'utf8'));
 		const rootExport = shippedManifest.exports?.['.'];
 		const entryFile =

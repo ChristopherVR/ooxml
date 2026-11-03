@@ -68,11 +68,21 @@ degrade gracefully (poster images, no live session).
 
 ## Usage
 
+Load the base chrome styles (toolbar, thumbnails, layout) once, through the
+`styles` array of your build target in `angular.json`:
+
+```json
+"styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
+```
+
+or with `@import 'pptx-angular-viewer/styles.css';` at the top of
+`src/styles.css`. Do not import the stylesheet from a TypeScript file: the
+Angular CLI's application builder writes CSS imported from TypeScript to a
+separate file that `index.html` never links, so the viewer renders unstyled.
+
 ```ts
 import { Component, signal } from '@angular/core';
 import { PowerPointViewerComponent } from 'pptx-angular-viewer';
-// Base chrome styles (toolbar, thumbnails, layout). Import once.
-import 'pptx-angular-viewer/styles';
 
 @Component({
 	selector: 'app-root',

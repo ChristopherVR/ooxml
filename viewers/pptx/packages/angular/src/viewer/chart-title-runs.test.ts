@@ -6,7 +6,8 @@
  * Angular components can't be mounted here (`connector-renderer.component.test.ts`
  * notes TestBed needs `@analogjs/vite-plugin-angular`, a follow-up), so this
  * exercises the exact data the template reads: `buildChartViewModel` (via the
- * `chart-renderer-helpers` shim the component itself imports) for
+ * `chart-renderer-helpers` shim, which re-exports the
+ * `ooxml-ui/pptx/render/chart-view-model` module the component imports) for
  * `vm.titleRunSpans`, which is exactly what the `@if (vm().titleRunSpans; as
  * titleRunSpans)` / `<tspan>` block in `chart-renderer.component.ts` renders.
  */

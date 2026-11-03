@@ -96,7 +96,7 @@ export {
 	copyFormatFromElement,
 	hasCopyableFormat,
 	type CopiedFormat,
-} from './format-painter';
+} from 'ooxml-ui/pptx/render/format-painter';
 // The slide thumbnail rail: a building block a custom shell places beside its canvas.
 export { SlidesPanelComponent } from './slides-panel.component';
 export type { SlidesPanelMoveSlide, SlidesPanelRenameSection } from './slides-panel.component';

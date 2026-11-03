@@ -115,9 +115,13 @@ body {
 /**
  * Global stylesheet for Angular scaffolds. Angular uses `<app-root>` instead
  * of `#app`, so this is kept separate from `MINIMAL_APP_CSS`. Placed at
- * `src/styles.css` (Angular CLI's default global stylesheet path).
+ * `src/styles.css` (Angular CLI's default global stylesheet path). It loads
+ * the viewer stylesheet: the Angular CLI's application builder never links CSS
+ * imported from TypeScript, so the starter component cannot import it.
  */
-export const ANGULAR_GLOBAL_CSS = `:root {
+export const ANGULAR_GLOBAL_CSS = `@import 'pptx-angular-viewer/styles.css';
+
+:root {
   color-scheme: dark;
 }
 

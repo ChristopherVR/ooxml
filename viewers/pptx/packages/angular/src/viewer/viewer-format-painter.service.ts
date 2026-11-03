@@ -15,13 +15,17 @@
  */
 
 import { computed, inject, Injectable, signal } from '@angular/core';
+import {
+	applyFormatToElement,
+	copyFormatFromElement,
+	hasCopyableFormat,
+} from 'ooxml-ui/pptx/render/format-painter';
+import type { CopiedFormat } from 'ooxml-ui/pptx/render/format-painter';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
 import { eyedropperAvailable, openNativeEyeDropper, pickColorByClickFallback } from './eyedropper';
-import { applyFormatToElement, copyFormatFromElement, hasCopyableFormat } from './format-painter';
-import type { CopiedFormat } from './format-painter';
 
 /** Live selection/slide accessors the painter needs from the host component. */
 interface FormatPainterHost {

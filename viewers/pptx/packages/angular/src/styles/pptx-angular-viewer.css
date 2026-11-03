@@ -16,8 +16,10 @@
  * The hand-written `.pptx-ng-*` chrome rules below remain during the ribbon
  * migration and are removed per area as each is converted to utilities.
  *
- * Import once in your app:
- *   import 'pptx-angular-viewer/styles';
+ * Load once through the app's global styles, not from TypeScript (the Angular
+ * CLI's application builder never links CSS imported from TypeScript):
+ *   angular.json: "styles": ["pptx-angular-viewer/styles.css", "src/styles.css"]
+ *   or in src/styles.css: @import 'pptx-angular-viewer/styles.css';
  */
 
 /*

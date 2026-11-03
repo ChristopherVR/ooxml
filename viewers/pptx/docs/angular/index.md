@@ -82,7 +82,7 @@ The package's export map has these entries:
 | `pptx-angular-viewer/ai`                                             | `createAiAssistant`, the `PptxAiAssistant` handle type and the `PptxAi*` config types: the recommended way to pass `ai` ([The `/ai` entry](/guide/ai-assistant#ai-entry)). |
 | `pptx-angular-viewer/internals`                                      | An alias of the root bundle, for the internal building blocks ([Complete Services Reference](/angular/services-reference)). Not covered by semver.                         |
 | `pptx-angular-viewer/i18n/fr`, `/i18n/es`, `/i18n/de`, `/i18n/zh-CN` | The bundled locale dictionaries (`translationsFr` and so on).                                                                                                              |
-| `pptx-angular-viewer/styles` (or `/styles.css`)                      | The bundled stylesheet ([Getting Started](/angular/getting-started)).                                                                                                      |
+| `pptx-angular-viewer/styles.css` (or `/styles`)                      | The bundled stylesheet, loaded from global styles, not TypeScript ([Getting Started](/angular/getting-started#styling-required-css)).                                      |
 
 There is no separate `/viewer` or `/i18n` subpath the way React and Vue have: `translationsEn`,
 `keyToLabel` and the other i18n exports live at the package root; see
