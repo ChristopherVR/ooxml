@@ -17,6 +17,8 @@ for (const framework of FRAMEWORKS) {
 		await editor(page).evaluate((node) => (node as FillEditor).select('A1:A2'));
 		const handle = editor(page).locator('.xg-q-main [data-handle="fill"]');
 		await expect(handle).toBeVisible();
+		// Selection paints on the next frame; wait for its handle to stop moving before dragging.
+		await handle.hover();
 		const box = (await handle.boundingBox())!;
 		const rowHeight = await editor(page).evaluate((node) => {
 			const sheet = (node as FillEditor).workbook.sheets[0]!;

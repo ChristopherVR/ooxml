@@ -201,10 +201,13 @@ test.describe('touch targets', () => {
 	test('the read-only banner and its password form are at least 44px', async ({ page }) => {
 		await loadDeck(page, MODIFY_DECK);
 		const edit = page.getByTestId('pptx-readonly-edit-anyway');
+		await expect(edit).toBeVisible();
 		expect((await edit.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 		await edit.tap();
 		for (const id of ['pptx-readonly-password-input', 'pptx-readonly-unlock']) {
-			expect((await page.getByTestId(id).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+			const control = page.getByTestId(id);
+			await expect(control).toBeVisible();
+			expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 		}
 	});
 

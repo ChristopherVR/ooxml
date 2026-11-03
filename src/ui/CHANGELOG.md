@@ -7,6 +7,26 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.39.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.2) - 2026-11-03
+
+### Bug Fixes
+
+- **pptx:** Retain paint ownership for held animation frames ([#241](https://github.com/ChristopherVR/ooxml/issues/241)) ([1801c7d](https://github.com/ChristopherVR/ooxml/commit/1801c7d4bd5f2ba54e72a3c137f9bc53c383253e))
+
+### Styling
+
+- **ui:** Apply updated formatter to color dialog ([0883f83](https://github.com/ChristopherVR/ooxml/commit/0883f83174792ad62d0897ed98b51085e5d593d2))
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 22 updates ([8e60b14](https://github.com/ChristopherVR/ooxml/commit/8e60b14e1d8ee3a1cb507670caa15a611632ef26))
+- **deps:** Merge production dependency updates ([#236](https://github.com/ChristopherVR/ooxml/issues/236)) ([7eb137b](https://github.com/ChristopherVR/ooxml/commit/7eb137b03906ded043ce0e4adf83e01fcdaa44a9))
+- **deps:** Merge development dependency updates ([#237](https://github.com/ChristopherVR/ooxml/issues/237)) ([448c68d](https://github.com/ChristopherVR/ooxml/commit/448c68db3783efcd646de6258e59f28a971c2170))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group with 7 updates ([e6e7a5e](https://github.com/ChristopherVR/ooxml/commit/e6e7a5e8075087159d1df4608212bea6a98b03ad))
+
 ## [1.39.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.1) - 2026-10-31
 
 ### Testing

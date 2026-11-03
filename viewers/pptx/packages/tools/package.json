@@ -1,6 +1,6 @@
 {
 	"name": "pptx-viewer-mcp",
-	"version": "2.9.0",
+	"version": "2.9.1",
 	"description": "pptx-viewer MCP server and tools: manipulate, convert, and collaborate on PowerPoint .pptx files from AI agents.",
 	"keywords": [
 		"ai",
@@ -70,15 +70,15 @@
 		"pack": "bun run build && bun pm pack"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.32.1",
+		"@modelcontextprotocol/sdk": "^1.32.2",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"ooxml-core": "workspace:*",
 		"zod": "^4.6.7"
 	},
 	"devDependencies": {
-		"@types/node": "^26.6.5",
-		"tsdown": "^0.23.1",
+		"@types/node": "^26.6.6",
+		"tsdown": "^0.23.4",
 		"tsup": "^9.0.0",
 		"typescript": "^7.0.2",
 		"vitest": "^5.0.5",

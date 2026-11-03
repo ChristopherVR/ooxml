@@ -10,15 +10,15 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.77",
-		"@angular/common": "^22.2.3",
-		"@angular/core": "^22.2.3",
-		"@angular/platform-browser": "^22.2.3",
-		"@ngx-translate/core": "^18.0.0",
-		"ai": "^7.0.150",
-		"emf-converter": "4.23.1",
+		"@ai-sdk/openai-compatible": "^3.0.81",
+		"@angular/common": "^22.2.4",
+		"@angular/core": "^22.2.4",
+		"@angular/platform-browser": "^22.2.4",
+		"@ngx-translate/core": "^18.1.0",
+		"ai": "^7.0.157",
+		"emf-converter": "4.24.0",
 		"fast-xml-parser": "^5.11.2",
-		"html2canvas-pro": "^2.5.2",
+		"html2canvas-pro": "^2.5.4",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
 		"pptx-angular-viewer": "workspace:*",
@@ -29,9 +29,9 @@
 	},
 	"devDependencies": {
 		"@analogjs/vite-plugin-angular": "^2.9.2",
-		"@angular/build": "^22.2.4",
-		"@angular/compiler": "^22.2.3",
-		"@angular/compiler-cli": "^22.2.3",
+		"@angular/build": "^22.2.5",
+		"@angular/compiler": "^22.2.4",
+		"@angular/compiler-cli": "^22.2.4",
 		"typescript": "6.0.3",
 		"vite": "^8.3.5"
 	}

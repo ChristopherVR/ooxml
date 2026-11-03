@@ -55,7 +55,7 @@ export function OverflowMenu(p: OverflowMenuProps): React.ReactElement {
 	const ovAct = (k: string) => {
 		p.onSetOverflowMenuOpen(false);
 		(
-			({
+			{
 				png: p.onExportPng,
 				pdf: p.onExportPdf,
 				video: p.onExportVideo,
@@ -73,7 +73,7 @@ export function OverflowMenu(p: OverflowMenuProps): React.ReactElement {
 				passwordProtection: p.onOpenPasswordProtection,
 				fontEmbedding: p.onOpenFontEmbedding,
 				digitalSignatures: p.onOpenDigitalSignatures,
-			}) as Record<string, (() => void) | undefined>
+			} as Record<string, (() => void) | undefined>
 		)[k]?.();
 	};
 

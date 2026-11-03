@@ -5,21 +5,21 @@
 	"description": "The docx demo app. It builds with the vite config of viewers/docx; these are the packages its own files import.",
 	"type": "module",
 	"dependencies": {
-		"@angular/common": "^22.2.3",
-		"@angular/compiler": "^22.2.3",
-		"@angular/core": "^22.2.3",
-		"@angular/platform-browser": "^22.2.3",
+		"@angular/common": "^22.2.4",
+		"@angular/compiler": "^22.2.4",
+		"@angular/core": "^22.2.4",
+		"@angular/platform-browser": "^22.2.4",
 		"ooxml-core": "workspace:*",
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"rxjs": "^7.8.2",
-		"solid-js": "^1.9.17",
-		"svelte": "^5.57.2",
+		"solid-js": "^1.9.18",
+		"svelte": "^5.57.3",
 		"tailwindcss": "^4.3.3",
 		"vue": "^3.5.44"
 	},
 	"devDependencies": {
-		"@types/node": "^26.6.5",
+		"@types/node": "^26.6.6",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0"
 	}
