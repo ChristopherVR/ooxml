@@ -39,6 +39,7 @@ import type {
 	BackgroundInput,
 	TransitionInput,
 	AnimationInput,
+	ShapeDefaultsInput,
 } from './types';
 
 /**
@@ -62,12 +63,15 @@ export class SlideBuilder {
 	 * @param layoutPath - Optional layout archive path.
 	 * @param layoutName - Optional layout display name.
 	 * @param handler - Loaded deck context for placeholder geometry and text styles.
+	 * @param shapeDefaults - What `addShape` uses for an omitted option
+	 *   (`PresentationOptions.shapeDefaults`).
 	 */
 	constructor(
 		slideNumber: number,
 		layoutPath?: string,
 		layoutName?: string,
 		private readonly handler?: PptxHandlerCore,
+		private readonly shapeDefaults?: ShapeDefaultsInput,
 	) {
 		this.slide = {
 			id: `slide${slideNumber}`,
@@ -131,7 +135,7 @@ export class SlideBuilder {
 
 	/** Add a shape to the slide. */
 	addShape(shapeType: string, options?: ShapeOptions): this {
-		this.slide.elements.push(createShapeElement(shapeType, options));
+		this.slide.elements.push(createShapeElement(shapeType, options, this.shapeDefaults));
 		return this;
 	}
 

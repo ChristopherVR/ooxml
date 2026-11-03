@@ -559,7 +559,7 @@ export class PresentationBuilder {
 			const layoutIdx = STANDARD_LAYOUTS.findIndex((l) => l.name === layoutName) + 1 || 7; // default: Blank
 			const layoutPath = `ppt/slideLayouts/slideLayout${layoutIdx}.xml`;
 			const resolvedName = layoutName ?? STANDARD_LAYOUTS[layoutIdx - 1]?.name ?? 'Blank';
-			return new SlideBuilder(slideNum, layoutPath, resolvedName, handler);
+			return new SlideBuilder(slideNum, layoutPath, resolvedName, handler, options?.shapeDefaults);
 		};
 
 		return { handler, data, createSlide };

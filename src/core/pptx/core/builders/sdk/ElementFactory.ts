@@ -46,6 +46,8 @@ import type {
 	MediaOptions,
 	GroupOptions,
 	TextStyleInput,
+	ShapeDefaultsInput,
+	FillInput,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -233,11 +235,16 @@ export function createTextElement(
 	};
 }
 
+/** The fill a new shape gets when neither its options nor the defaults give one. */
+export const DEFAULT_SHAPE_FILL: FillInput = { type: 'solid', color: '#4472C4' };
+
 /**
  * Create a shape element with optional text overlay.
  *
  * @param shapeType - Preset geometry name (e.g. "rect", "ellipse", "roundRect").
  * @param options - Position, styling, and optional text.
+ * @param defaults - What an omitted option falls back to (an omitted `fill`
+ *   is {@link DEFAULT_SHAPE_FILL} unless `defaults.fill` says otherwise).
  * @returns A valid {@link ShapePptxElement}.
  *
  * @example
@@ -248,7 +255,11 @@ export function createTextElement(
  * });
  * ```
  */
-export function createShapeElement(shapeType: string, options?: ShapeOptions): ShapePptxElement {
+export function createShapeElement(
+	shapeType: string,
+	options?: ShapeOptions,
+	defaults?: ShapeDefaultsInput,
+): ShapePptxElement {
 	const p = pos('shape', options);
 	const el: ShapePptxElement = {
 		type: 'shape',
@@ -259,7 +270,7 @@ export function createShapeElement(shapeType: string, options?: ShapeOptions): S
 		shapeType,
 		shapeAdjustments: options?.adjustments,
 		shapeStyle: buildShapeStyle(
-			effectInputs(options, options?.fill ?? { type: 'solid', color: '#4472C4' }),
+			effectInputs(options, options?.fill ?? defaults?.fill ?? DEFAULT_SHAPE_FILL),
 		),
 	};
 	if (options?.text) {

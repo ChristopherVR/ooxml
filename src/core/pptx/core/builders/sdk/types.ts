@@ -426,6 +426,19 @@ export interface PresentationOptions {
 	 * the spec default (`1`) applies.
 	 */
 	firstSlideNumber?: number;
+	/**
+	 * Defaults for the shapes that `createSlide(...).addShape` adds. Opt-in:
+	 * without it a shape with no `fill` keeps the solid `#4472C4` fill the SDK
+	 * has always given it. Pass `{ fill: { type: 'none' } }` so that an omitted
+	 * `fill` means no fill (`a:noFill`).
+	 */
+	shapeDefaults?: ShapeDefaultsInput;
+}
+
+/** What an omitted shape option falls back to; see {@link PresentationOptions.shapeDefaults}. */
+export interface ShapeDefaultsInput {
+	/** The fill of a shape whose options give none. Default: solid `#4472C4`. */
+	fill?: FillInput;
 }
 
 export interface PresentationThemeInput {
