@@ -26,6 +26,7 @@ import {
 import { ensureXmlChild } from '../../utils/xml-access';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
+import { addSvgBlipExtension } from './picture-svg-blip';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
 
@@ -230,6 +231,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					});
 				}
 				shape = this.createPictureXml(el, relationshipId);
+				this.embedNewSvgVariant(el, shape, ctx);
 				if (media.reused) {
 					return shape;
 				}
@@ -270,6 +272,46 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			});
 		}
 		return shape;
+	}
+
+	/**
+	 * For a new SVG picture (`svgData` without a part yet), write the SVG part
+	 * and point the blip's `asvg:svgBlip` extension at it; the blip itself
+	 * embeds the raster (`imageData`).
+	 */
+	private embedNewSvgVariant(
+		el: PptxImageLikeElement,
+		picture: XmlObject,
+		ctx: SaveSlideContext,
+	): void {
+		const svgData = (el as { svgData?: string; svgPath?: string }).svgData;
+		if (!svgData || (el as { svgPath?: string }).svgPath) {
+			return;
+		}
+		const parsed = this.parseDataUrlToBytes(svgData);
+		if (!parsed || parsed.extension.toLowerCase() !== 'svg') {
+			return;
+		}
+		const media = ctx.saveSession.mediaPathForContent(parsed.bytes, 'svg');
+		const target = media.path.replace(/^ppt\//u, '../');
+		const existing = media.reused
+			? ctx.slideRelationships.find(
+					(rel) => rel['@_Type'] === ctx.slideImageRelationshipType && rel['@_Target'] === target,
+				)?.['@_Id']
+			: undefined;
+		const relationshipId =
+			typeof existing === 'string' ? existing : ctx.slideRelationshipRegistry.nextRelationshipId();
+		if (relationshipId !== existing) {
+			ctx.slideRelationships.push({
+				'@_Id': relationshipId,
+				'@_Type': ctx.slideImageRelationshipType,
+				'@_Target': target,
+			});
+		}
+		if (!media.reused) {
+			this.zip.file(media.path, parsed.bytes);
+		}
+		addSvgBlipExtension(picture, relationshipId);
 	}
 
 	/** Embed media data and manage relationships for media elements. */

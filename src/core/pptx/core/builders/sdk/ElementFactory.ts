@@ -27,6 +27,7 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { svgPictureSource } from './svg-picture-input';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -334,6 +335,15 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
  */
 export function createImageElement(source: string, options?: ImageOptions): ImagePptxElement {
 	const p = pos('image', options);
+	const svg = svgPictureSource(source, options?.svgFallback);
+	if (svg) {
+		// The Office form of an SVG picture: a raster in the blip, the SVG in its
+		// `asvg:svgBlip` extension (written on save). Renderers prefer `svgData`.
+		const { svgFallback: _raster, ...rest } = options ?? {};
+		const svgPicture = createImageElement(svg.raster, rest);
+		svgPicture.svgData = svg.svgData;
+		return svgPicture;
+	}
 	const isDataUrl = source.startsWith('data:');
 	return {
 		type: 'image',

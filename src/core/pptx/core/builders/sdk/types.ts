@@ -248,6 +248,12 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	cropRight?: number;
 	cropBottom?: number;
 	opacity?: number;
+	/**
+	 * For an SVG source: the raster (data URL) that readers without SVG
+	 * support show. The SVG is saved as the blip's `asvg:svgBlip` extension;
+	 * without a fallback the raster is a 1x1 transparent PNG.
+	 */
+	svgFallback?: string;
 }
 
 // ---------------------------------------------------------------------------
