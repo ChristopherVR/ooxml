@@ -47,6 +47,11 @@ import type {
 	ElementAnimationState,
 	ThreeViewDragDetail,
 } from 'ooxml-ui/pptx';
+import {
+	buildChartViewModel,
+	formatAxisValue,
+	resolveChartKind,
+} from 'ooxml-ui/pptx/render/chart-view-model';
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 
 import {
@@ -58,7 +63,6 @@ import {
 } from './chart-element-view-helpers';
 import { ChartFormatPaneService } from './chart-format-pane.service';
 import { ChartPartSelectionService } from './chart-part-selection.service';
-import { buildChartViewModel, formatAxisValue, resolveChartKind } from './chart-renderer-helpers';
 import { ChartRendererComponent } from './chart-renderer.component';
 import { EditorStateService } from './editor-state.service';
 import { Rendering3DService } from './rendering-3d.service';

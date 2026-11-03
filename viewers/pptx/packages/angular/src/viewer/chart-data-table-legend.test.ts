@@ -7,7 +7,8 @@ import { computeChartLegendLayout } from 'ooxml-ui/pptx';
  * Angular components can't be mounted here (`connector-renderer.component.test.ts`
  * notes TestBed needs `@analogjs/vite-plugin-angular`, a follow-up), so this
  * exercises the exact data the template reads: `buildChartViewModel` (via the
- * `chart-renderer-helpers` shim the component itself imports) for
+ * `chart-renderer-helpers` shim, which re-exports the
+ * `ooxml-ui/pptx/render/chart-view-model` module the component imports) for
  * `vm.dataTable` / `vm.primitives`, and `computeChartLegendLayout` (via the
  * `../internal/shared` barrel the component imports) for the legend the
  * `@for (item of legendItems(); ...)` block in `chart-renderer.component.ts`

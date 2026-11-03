@@ -39,11 +39,11 @@ import {
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
 } from 'ooxml-ui/pptx';
+import { buildChartViewModel } from 'ooxml-ui/pptx/render/chart-view-model';
+import type { ChartViewModel } from 'ooxml-ui/pptx/render/chart-view-model';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { ChartPrimitivesComponent } from './chart-primitives.component';
-import { buildChartViewModel } from './chart-renderer-helpers';
-import type { ChartViewModel } from './chart-renderer-helpers';
 
 export type { ChartViewModel };
 
