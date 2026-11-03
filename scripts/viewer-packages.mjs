@@ -11,6 +11,10 @@
  * The pptx bindings import `ooxml-core` as a dependency (inlining it would duplicate the copy
  * `ooxml-ui` brings), but `inlinedCore` still lists the core paths they reach, relative to the
  * repository root, as triggers of every bundled package, so a core release also releases them.
+ *
+ * `publishDir` (relative to the package's `dir`) names the directory a package is packed and
+ * published from when that is not `dir` itself: ng-packagr writes the publishable Angular package,
+ * with its own manifest, to `dist`. The version is still stamped into `dir`'s manifest.
  */
 
 const FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'];
@@ -36,6 +40,7 @@ function viewer(name, { bundled, inlinedCore = [], globals, packages }) {
 			{
 				dir: at(meta.dir),
 				npm: meta.npm,
+				...(meta.publishDir ? { publishDir: meta.publishDir } : {}),
 				...(meta.bundled ? { triggers: [...bundled.map(at), ...inlinedCore] } : {}),
 				...(meta.global === false ? {} : { globals: globals.map(at) }),
 			},
@@ -110,7 +115,12 @@ export const VIEWER_PACKAGES = {
 			...Object.fromEntries(
 				PPTX_FRAMEWORKS.map((framework) => [
 					framework,
-					{ dir: `packages/${framework}`, npm: `pptx-${framework}-viewer`, bundled: true },
+					{
+						dir: `packages/${framework}`,
+						npm: `pptx-${framework}-viewer`,
+						bundled: true,
+						...(framework === 'angular' ? { publishDir: 'dist' } : {}),
+					},
 				]),
 			),
 		},

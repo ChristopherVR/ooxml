@@ -14,6 +14,7 @@
 		"zod"
 	],
 	"assets": [
+		"CHANGELOG.md",
 		"NOTICE",
 		"README.md",
 		{ "glob": "pptx-angular-viewer.css", "input": "src/styles", "output": "." }

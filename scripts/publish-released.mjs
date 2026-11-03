@@ -21,7 +21,15 @@
  *   - every other range on a sibling is satisfied by the version that sibling ships with,
  *   - a version that already exists on the registry is skipped, so a re-run is idempotent,
  *   - a version older than the registry's `latest` is published under the `old` dist-tag so it
- *     cannot move `latest` backwards.
+ *     cannot move `latest` backwards,
+ *   - the files `npm pack` would ship contain every entry point the manifest names (`main`,
+ *     `module`, `types`, `typings`, `svelte`, every `bin` and `exports` target) and `exports` has
+ *     a "." entry.
+ *
+ * A package is packed and published from its `dir`, or from `<dir>/<publishDir>` when its table
+ * entry sets `publishDir` (the pptx Angular binding: ng-packagr writes the package, with its own
+ * manifest, to `dist`). That manifest is the one checked, rewritten and restored; `--verify` runs
+ * before the build and checks the manifest in `dir`, where the version is stamped.
  *
  * `--groups` prints the release's parallel publish groups as JSON (the workflow matrix) and
  * `--group <name>` publishes only that group: a viewer's packages go together (they are built
@@ -39,13 +47,15 @@
  * (the manifest rewrite and every check still run).
  * `--dry-run` runs all the checks and prints the `npm publish` commands without running them.
  * `--verify` checks all selected manifests without registry queries or uploads, before tagging.
+ * `--entry-points` runs the manifest and entry point checks on the built packages (after the
+ * release job's build, still before tagging), also without registry queries or uploads.
  * Node >= 22, npm >= 11.5.1 (trusted publishing) on the publishing runner.
  */
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -68,7 +78,17 @@ const npm = (args, options = {}) =>
 		...options,
 	});
 
-/** `{ key, npm, dir, version }` targets, in dependency order, from a plan or a tag. */
+/** A target with the `publishDir` of its table entry, when it has one. */
+const withPublishDir = (target) => {
+	const publishDir = PACKAGES[target.key]?.publishDir;
+	return publishDir ? { ...target, publishDir } : target;
+};
+
+/** Directory, relative to the repository root, that `target` is packed and published from. */
+export const publishDirOf = (target) =>
+	target.publishDir ? posix.join(target.dir, target.publishDir) : target.dir;
+
+/** `{ key, npm, dir, version, publishDir? }` targets, in dependency order, from a plan or a tag. */
 export function resolveTargets({ plan, tag }) {
 	if (tag) {
 		if (/[^A-Za-z0-9.@/_-]/u.test(tag) || !tag.includes('@', 1)) {
@@ -78,11 +98,11 @@ export function resolveTargets({ plan, tag }) {
 		const [name, version] = [tag.slice(0, at), tag.slice(at + 1)];
 		const key = Object.keys(packages()).find((k) => PACKAGES[k].npm === name);
 		if (!key) throw new Error(`Unknown package '${name}' (from tag ${tag}).`);
-		return [{ key, npm: name, dir: PACKAGES[key].dir, version }];
+		return [withPublishDir({ key, npm: name, dir: PACKAGES[key].dir, version })];
 	}
 	return plan.order
 		.filter((key) => plan.packages[key].release)
-		.map((key) => ({ key, ...pick(plan.packages[key]) }));
+		.map((key) => withPublishDir({ key, ...pick(plan.packages[key]) }));
 }
 /** The parallel publish group of a package: its viewer folder, else the package key. */
 export const groupOf = (target) => viewerOf(target.dir) ?? target.key;
@@ -94,12 +114,21 @@ const pick = ({ npm: name, dir, version }) => ({ npm: name, dir, version });
 
 /**
  * The manifest as it must be published: `workspace:` ranges on siblings become `^<version>`.
- * Throws when the manifest on disk is not publishable as `target`.
+ * Throws when the manifest on disk is not publishable as `target`. `dir` is the directory whose
+ * manifest is read, relative to `root` or absolute: by default the one `target` is published from.
  */
-export function publishManifest(target, versions = workspaceVersions(), root = ROOT) {
-	const manifest = JSON.parse(readFileSync(join(root, target.dir, 'package.json'), 'utf8'));
+export function publishManifest(
+	target,
+	versions = workspaceVersions(),
+	root = ROOT,
+	dir = publishDirOf(target),
+) {
+	const path = resolve(root, dir, 'package.json');
+	if (!existsSync(path))
+		throw new Error(`${dir}/package.json does not exist: build ${target.npm} first.`);
+	const manifest = JSON.parse(readFileSync(path, 'utf8'));
 	if (manifest.name !== target.npm)
-		throw new Error(`${target.dir} is ${manifest.name}, not ${target.npm}.`);
+		throw new Error(`${dir} is ${manifest.name}, not ${target.npm}.`);
 	if (manifest.version !== target.version) {
 		throw new Error(`${target.npm} is ${manifest.version} on disk, release is ${target.version}.`);
 	}
@@ -125,9 +154,99 @@ export function publishManifest(target, versions = workspaceVersions(), root = R
 	return manifest;
 }
 
-/** Throws when the manifest on disk is not publishable as `target`. */
+/**
+ * Throws when the source manifest of `target` (in `dir`, where the version is stamped) is not
+ * publishable. It runs before the build, so a `publishDir` may not exist yet.
+ */
 export const verifyManifest = (target, versions, root) =>
-	void publishManifest(target, versions, root);
+	void publishManifest(target, versions, root, target.dir);
+
+const packagePath = (path) => posix.normalize(path).replace(/^\.\//u, '');
+
+/** Every string target of an `exports` value, through conditions and fallback arrays. */
+const exportTargets = (value) =>
+	typeof value === 'string'
+		? [value]
+		: value && typeof value === 'object'
+			? Object.values(value).flatMap(exportTargets)
+			: [];
+
+/** True when `files` has `target`, or a file matching it when it is a `*` or folder (`/`) pattern. */
+function ships(files, target) {
+	const pattern = target.endsWith('/') ? `${target}*` : target;
+	if (!pattern.includes('*')) return files.has(packagePath(target));
+	const source = packagePath(pattern)
+		.split('*')
+		.map((part) => part.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'))
+		.join('.+');
+	const regex = new RegExp(`^${source}$`, 'u');
+	return [...files].some((file) => regex.test(file));
+}
+
+/**
+ * The entry points of `manifest` that `files` (package-relative paths) does not contain: `main`,
+ * `module`, `types`, `typings`, `svelte`, every `bin` and every `exports` target, plus a missing
+ * "." entry when the package has `exports`. Empty when the package is complete.
+ */
+export function missingEntryPoints(manifest, files) {
+	const shipped = new Set(files.map(packagePath));
+	const missing = [];
+	const bins =
+		typeof manifest.bin === 'string' ? [manifest.bin] : Object.values(manifest.bin ?? {});
+	for (const path of bins) {
+		if (typeof path === 'string' && !shipped.has(packagePath(path))) missing.push(`bin ${path}`);
+	}
+	for (const field of ['main', 'module', 'types', 'typings', 'svelte']) {
+		const path = manifest[field];
+		if (typeof path !== 'string') continue;
+		// Node also resolves an extensionless `main` (`index` to `index.js`, a folder to its index).
+		const candidates = field === 'main' ? [path, `${path}.js`, `${path}/index.js`] : [path];
+		if (!candidates.some((candidate) => shipped.has(packagePath(candidate)))) {
+			missing.push(`${field} ${path}`);
+		}
+	}
+	const { exports } = manifest;
+	if (typeof exports === 'string' || (exports && typeof exports === 'object')) {
+		const sugar =
+			typeof exports === 'string' ||
+			Array.isArray(exports) ||
+			Object.keys(exports).every((key) => !key.startsWith('.'));
+		const subpaths = sugar ? { '.': exports } : exports;
+		if (!('.' in subpaths)) missing.push('exports "."');
+		for (const [subpath, value] of Object.entries(subpaths)) {
+			for (const target of exportTargets(value)) {
+				if (!ships(shipped, target)) missing.push(`exports["${subpath}"] ${target}`);
+			}
+		}
+	}
+	return missing;
+}
+
+/** The package-relative paths `npm pack` would ship from `dir` (lifecycle scripts not run). */
+function packedFiles(dir) {
+	// The JSON lists every file, about 116 bytes each: ooxml-core's 5,327 files already take 600 KB,
+	// over half of spawnSync's default 1 MiB buffer, past which the call fails with ENOBUFS. 16 MiB
+	// (as for `tar` below) holds about 140,000 files.
+	const result = npm(['pack', '--dry-run', '--json', '--ignore-scripts'], {
+		cwd: dir,
+		maxBuffer: 16 * 1024 * 1024,
+	});
+	if (result.error || result.status !== 0) {
+		const reason = [result.error?.message, result.stderr?.trim()].filter(Boolean).join(': ');
+		throw new Error(`npm pack --dry-run failed in ${dir}: ${reason}`);
+	}
+	return JSON.parse(result.stdout)[0].files.map((file) => file.path);
+}
+
+/** Throws when the package `npm pack` would build from `dir` lacks an entry point of `manifest`. */
+export function assertEntryPoints(dir, manifest) {
+	const missing = missingEntryPoints(manifest, packedFiles(dir));
+	if (missing.length > 0) {
+		throw new Error(
+			`${manifest.name}@${manifest.version} packed from ${dir} is missing ${missing.join(', ')}.`,
+		);
+	}
+}
 
 function workspaceVersions() {
 	return new Map(
@@ -155,13 +274,15 @@ const sha256 = (file) => createHash('sha256').update(readFileSync(file)).digest(
  * manifest on disk is restored afterwards, as for a publish.
  */
 function packTarget(target, manifest, outDir) {
-	const manifestPath = join(ROOT, target.dir, 'package.json');
+	const dir = resolve(ROOT, publishDirOf(target));
+	const manifestPath = join(dir, 'package.json');
 	const original = readFileSync(manifestPath, 'utf8');
 	let result;
 	try {
 		writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
+		assertEntryPoints(dir, manifest);
 		result = npm(['pack', '--pack-destination', outDir], {
-			cwd: join(ROOT, target.dir),
+			cwd: dir,
 			stdio: ['ignore', 'pipe', 'inherit'],
 		});
 	} finally {
@@ -248,6 +369,13 @@ function main() {
 		console.log(`Verified ${mine.length} release manifests.`);
 		return;
 	}
+	if (argv.includes('--entry-points')) {
+		for (const target of mine) {
+			assertEntryPoints(resolve(ROOT, publishDirOf(target)), publishManifest(target));
+		}
+		console.log(`Checked the entry points of ${mine.length} built packages.`);
+		return;
+	}
 	const packDir = argv.includes('--pack') ? resolve(value('--pack')) : null;
 	const fromDir = argv.includes('--from-dir') ? resolve(value('--from-dir')) : null;
 	if (packDir) {
@@ -272,6 +400,8 @@ function main() {
 			console.log('already published, skipping');
 			continue;
 		}
+		// A tarball from `--from-dir` was checked when `--pack` built it.
+		if (!entry) assertEntryPoints(resolve(ROOT, publishDirOf(target)), manifest);
 		// A sibling this package requires must already be installable (core is published first).
 		for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
 			for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
@@ -296,7 +426,7 @@ function main() {
 			distTag(target.npm, target.version),
 		];
 		if (dryRun) {
-			console.log(`dry run: (cd ${target.dir} && npm ${args.join(' ')})`);
+			console.log(`dry run: (cd ${publishDirOf(target)} && npm ${args.join(' ')})`);
 			continue;
 		}
 		if (entry) {
@@ -307,13 +437,14 @@ function main() {
 			}
 			continue;
 		}
-		// Publish from the package's own directory with the rewritten manifest, then restore it.
-		const manifestPath = join(ROOT, target.dir, 'package.json');
+		// Publish from the package's publish directory with the rewritten manifest, then restore it.
+		const dir = resolve(ROOT, publishDirOf(target));
+		const manifestPath = join(dir, 'package.json');
 		const original = readFileSync(manifestPath, 'utf8');
 		let result;
 		try {
 			writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
-			result = npm(args, { cwd: join(ROOT, target.dir), stdio: 'inherit' });
+			result = npm(args, { cwd: dir, stdio: 'inherit' });
 		} finally {
 			writeFileSync(manifestPath, original);
 		}
