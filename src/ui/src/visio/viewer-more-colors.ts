@@ -12,12 +12,8 @@ export class ViewerMoreColors {
 	readonly picker: OfficeUiColorCustom;
 	#pick: ((color: string) => void) | undefined;
 	constructor(root: ShadowRoot) {
-		this.dialog = new ViewerDialog(
-			root,
-			'more-colors-dialog',
-			'Colors',
-			['OK', 'Cancel'],
-			(name) => (name === 'OK' ? this.#accept() : this.dialog.close()),
+		this.dialog = new ViewerDialog(root, 'more-colors-dialog', 'Colors', ['OK', 'Cancel'], (name) =>
+			name === 'OK' ? this.#accept() : this.dialog.close(),
 		);
 		this.picker = root.ownerDocument.createElement('office-ui-color-custom') as OfficeUiColorCustom;
 		this.dialog.body.append(this.picker);
