@@ -128,7 +128,7 @@ console.log(result.elements);
 }
 ```
 
-全局安装（`npm i -g pptx-viewer-mcp`）后，也会安装名为 **`pptx-tools`** 的可执行命令。全部 73 个工具都以 **snake_case** 名称通过 stdio 暴露，例如 `get_slide`、`add_slide`、`batch_update_elements`、`convert_to_markdown`。每个 MCP 工具接受 `filePath` 参数，服务器在内部处理加载和保存。
+全局安装（`npm i -g pptx-viewer-mcp`）后，也会安装名为 **`pptx-tools`** 的可执行命令。全部 74 个工具都以 **snake_case** 名称通过 stdio 暴露，例如 `get_slide`、`add_slide`、`batch_update_elements`、`convert_to_markdown`。每个 MCP 工具接受 `filePath` 参数，服务器在内部处理加载和保存。
 
 如需通过代码嵌入服务器，而非使用 CLI，可以使用 `/mcp` 入口的工厂函数：
 
@@ -136,7 +136,7 @@ console.log(result.elements);
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer } from 'pptx-viewer-mcp/mcp';
 
-const server = createServer(); // McpServer with all 73 tools registered
+const server = createServer(); // McpServer with all 74 tools registered
 await server.connect(new StdioServerTransport());
 ```
 

@@ -167,7 +167,7 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 - **文本、表格、图表和 SmartArt 工具**（11 个）：`replace_text`、`manage_comments`、`update_table_cells`、`manage_table_structure`、`create_chart`、`update_chart`、`add_chart_series`、`remove_chart_series`、`update_chart_series_data`、`manage_smart_art`、`apply_template`
 - **幻灯片结构工具**（6 个）：`add_slide`、`duplicate_slide`、`delete_slides`、`reorder_slides`、`update_slide_properties`、`set_slide_transition`
 - **主题工具**（3 个）：`apply_theme_preset`、`update_theme_colors`、`update_theme_fonts`
-- **演示文稿级工具**（6 个）：`set_canvas_size`、`update_metadata`、`manage_sections`、`update_presentation_properties`、`import_from_json`、`apply_layout`
+- **演示文稿级工具**（7 个）：`set_canvas_size`、`update_metadata`、`manage_sections`、`manage_custom_shows`、`update_presentation_properties`、`import_from_json`、`apply_layout`
 
 演讲者备注可以通过 `get_speaker_notes` 读取，没有单独的写入工具；助手通过 `update_slide_properties` 修改备注。
 

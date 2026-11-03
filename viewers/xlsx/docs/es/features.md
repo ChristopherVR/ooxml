@@ -35,7 +35,8 @@ El motor de libros de `ooxml-core` y el componente `<xlsx-editor>` son jóvenes.
 - Celdas combinadas, anchuras de columna y alturas de fila, filas y columnas ocultas, paneles inmovilizados, zoom, líneas de cuadrícula.
 - Formato condicional: reglas de celda, reglas de texto, "Una fecha que ocurra" (hoy, últimos 7 días, este mes, ...), superiores e inferiores, por encima del promedio, duplicados, escalas de color, barras de datos, conjuntos de iconos, con un Administrador de reglas que edita, reordena y elimina reglas.
 - Validación de datos, con la lista desplegable ofrecida en la cuadrícula.
-- Comentarios (se muestran y se editan; las respuestas en hilo se muestran como notas), hipervínculos.
+- Comentarios y respuestas en hilo (se muestran, se editan, se resuelven y se vuelven a abrir, con opción de deshacer), hipervínculos.
+  Se conservan las @menciones importadas; no se admite crear nuevas @menciones.
 
 ## Fórmulas
 

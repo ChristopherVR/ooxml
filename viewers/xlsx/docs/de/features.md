@@ -35,7 +35,8 @@ Die Arbeitsmappen-Engine in `ooxml-core` und die Komponente `<xlsx-editor>` sind
 - Verbundene Zellen, Spaltenbreiten und Zeilenhöhen, ausgeblendete Zeilen und Spalten, fixierte Bereiche, Zoom, Gitternetzlinien.
 - Bedingte Formatierung: Zellregeln, Textregeln, „Ein Datum, das eintritt“ (heute, letzte 7 Tage, dieser Monat, ...), Oberste und Unterste, über dem Durchschnitt, Duplikate, Farbskalen, Datenbalken, Symbolsätze, mit einem Regel-Manager, der Regeln bearbeitet, neu ordnet und löscht.
 - Datenüberprüfung, wobei die Dropdown-Liste im Raster angeboten wird.
-- Kommentare (angezeigt, bearbeitet; Antworten in Unterhaltungen werden als Notizen angezeigt), Hyperlinks.
+- Kommentare und Antworten in Unterhaltungen (angezeigt, bearbeitet, gelöst und wieder geöffnet, mit Rückgängig-Unterstützung), Hyperlinks.
+  Importierte @Erwähnungen bleiben erhalten; das Erstellen neuer @Erwähnungen wird nicht unterstützt.
 
 ## Formeln
 

@@ -35,7 +35,8 @@ Le moteur de classeur de `ooxml-core` et le composant `<xlsx-editor>` sont jeune
 - Cellules fusionnées, largeurs de colonne et hauteurs de ligne, lignes et colonnes masquées, volets figés, zoom, quadrillage.
 - Mise en forme conditionnelle : règles de cellule, règles de texte, « Une date se produisant » (aujourd’hui, les 7 derniers jours, ce mois-ci, ...), valeurs hautes et basses, supérieur à la moyenne, doublons, échelles de couleurs, barres de données, jeux d’icônes, avec un Gestionnaire de règles qui modifie, réordonne et supprime les règles.
 - Validation des données, avec la liste déroulante proposée dans la grille.
-- Commentaires (affichés, modifiés ; les réponses en fil s’affichent comme des notes), liens hypertexte.
+- Commentaires et réponses en fil (affichés, modifiés, résolus et rouverts, avec annulation), liens hypertexte.
+  Les @mentions importées sont préservées ; la création de nouvelles @mentions n’est pas prise en charge.
 
 ## Formules
 
