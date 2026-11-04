@@ -75,15 +75,30 @@ export interface OneDriveConflict {
 	base: OneDriveOpened;
 	local: Uint8Array;
 	remote: OneDriveOpened;
+	/** Unresolved merge diagnostics. These never contain a caught provider exception. */
+	issues?: readonly string[];
 }
 export class OneDriveConflictError extends OneDriveError {
 	constructor(public readonly conflict: OneDriveConflict) {
 		super(
 			'conflict',
-			'This file changed on OneDrive. Keep your edits, save a separate copy, or explicitly load the latest version.',
+			'The changes could not be combined automatically. Your edits are retained for resolution.',
 		);
 		this.name = 'OneDriveConflictError';
 	}
+}
+export interface OneDriveMergeInput extends OneDriveConflict {
+	kind: OneDriveKind;
+	signal?: AbortSignal;
+}
+export type OneDriveMergeResult =
+	| { status: 'merged'; bytes: Uint8Array }
+	| { status: 'unresolved'; issues: readonly string[] };
+export interface OneDriveSessionOptions {
+	/** A format-aware three-way merger. No generic ZIP or last-writer fallback is provided. */
+	merge?: (input: OneDriveMergeInput) => OneDriveMergeResult | Promise<OneDriveMergeResult>;
+	/** Maximum fresh-remote rebases per save when merge is supplied. Default 3, maximum 10. */
+	maxMergeAttempts?: number;
 }
 export interface OneDriveSessionSnapshot {
 	file: OneDriveFile;

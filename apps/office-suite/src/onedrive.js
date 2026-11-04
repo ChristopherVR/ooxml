@@ -1,5 +1,6 @@
 import { createOneDriveClient, createOneDriveSession } from 'ooxml-core/embedding/onedrive';
 import { SuiteOneDrive } from './cloud-files.js';
+import { mergeOneDriveChanges } from './onedrive-merge.js';
 import { $, choose, download, escape, notify, task } from './ui.js';
 
 /** Shared shell controls for Word, Excel, PowerPoint and Visio, including standalone apps. */
@@ -9,6 +10,7 @@ export function mountOneDrive({ store, sessions, open, refresh }) {
 		store,
 		client: options ? createOneDriveClient(options) : undefined,
 		createSession: createOneDriveSession,
+		merge: mergeOneDriveChanges,
 		changed: () => {
 			void refresh();
 		},
@@ -18,10 +20,17 @@ export function mountOneDrive({ store, sessions, open, refresh }) {
 			new Promise((resolve) => {
 				const content = document.createElement('div');
 				content.id = 'onedrive-conflict';
-				content.innerHTML = `<p><strong>${escape(doc.name)}</strong> changed on OneDrive. Your edits are saved on this device. Choose which version to continue with.</p>
+				content.innerHTML = `<p>Some edits in <strong>${escape(doc.name)}</strong> could not be combined automatically. Independent changes are merged during Save; the remaining changes overlap or cannot be matched safely. Your edits are saved on this device.</p>
 				<p>The OneDrive version is ${escape(conflict.remote.file.name)}. Saving a copy keeps the original unchanged. Opening the latest first keeps your edits as a separate file in your library.</p>
 				<div class="cloud-recovery-actions"><button data-cloud-recovery="copy" class="primary">Save my edits as a OneDrive copy</button><button data-cloud-recovery="latest">Keep local copy and open latest</button><button data-cloud-recovery="download">Download my edits</button><button data-cloud-recovery="download-latest">Download latest OneDrive version</button><button data-cloud-recovery="cancel">Keep editing</button></div>`;
-				const dialog = choose('Resolve OneDrive changes', content);
+				if (conflict.remote.file.kind !== doc.kind) {
+					content.querySelector('[data-cloud-recovery="latest"]').disabled = true;
+					const note = document.createElement('p');
+					note.textContent =
+						'The cloud file changed format. Save your edits as a separate cloud copy before reopening that link.';
+					content.append(note);
+				}
+				const dialog = choose('Resolve overlapping edits', content);
 				let done = false;
 				const finish = (action) => {
 					if (done) return;

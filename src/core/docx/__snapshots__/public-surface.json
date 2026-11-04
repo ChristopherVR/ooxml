@@ -322,6 +322,7 @@
 	"listFormFields",
 	"listRevisions",
 	"loadDocx",
+	"mergeDocxSnapshots",
 	"newChartImage",
 	"newDocxChart",
 	"newShape",

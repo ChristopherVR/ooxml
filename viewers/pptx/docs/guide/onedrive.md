@@ -55,7 +55,9 @@ A revision-only change can be retried once when the downloaded cloud bytes still
 loaded baseline. A genuine content conflict retains baseline, local and remote versions in
 `OneDriveConflictError`. Offer **Save my edits as a OneDrive copy**, **Keep local copy and open
 latest**, **Download my edits**, and **Keep editing**. Do not silently overwrite or reload.
-The session does not merge slide decks or lock the file through the final upload commit.
+Register `mergePptxSnapshots` as the session's `merge` callback to combine supported independent
+slide edits automatically. The suite does this by default. Unsupported overlaps still require
+recovery; the session does not lock the file through the final upload commit.
 
 Save As to a compatible native PPTX creates a separate cloud copy through session storage.
 Exports to PPT/PPTM/PPSX or another format must not replace the original PPTX; keep them as an

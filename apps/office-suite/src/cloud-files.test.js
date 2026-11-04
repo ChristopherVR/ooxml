@@ -81,6 +81,31 @@ for (const kind of ['docx', 'xlsx', 'pptx', 'vsdx']) {
 	});
 }
 
+test('adopts combined saved bytes and reloads the editor after a semantic merge', async () => {
+	const merge = async () => ({ status: 'merged', bytes: bytes('local and remote') });
+	const adopted = [];
+	const { cloud, library } = harness('docx', {
+		merge,
+		adopted: async (doc) => adopted.push(doc),
+		createSession: (_client, _opened, settings) => {
+			assert.equal(settings.merge, merge);
+			return {
+				save: async () => ({ ...file(), eTag: 'merged' }),
+				getSnapshot: () => ({ baseBytes: bytes('local and remote') }),
+			};
+		},
+	});
+	const doc = await cloud.open('link');
+	const pending = { ...doc, bytes: bytes('local'), cloud: { ...doc.cloud, pending: true } };
+	await library.commit([{ document: pending, expected: doc.revision }]);
+	const saved = await cloud.save(pending);
+	assert.deepEqual(saved.bytes, bytes('local and remote'));
+	assert.deepEqual(saved.cloud.baseline, bytes('local and remote'));
+	assert.equal(saved.cloud.pending, false);
+	assert.equal(saved.revision, doc.revision + 1);
+	assert.equal(adopted.at(-1), saved);
+});
+
 test('reopening a pending or live-dirty file preserves local work', async () => {
 	const { cloud, library, opened } = harness();
 	const original = await cloud.open('link');

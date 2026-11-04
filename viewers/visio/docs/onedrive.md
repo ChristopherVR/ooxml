@@ -27,5 +27,7 @@ for package wiring, auth, permission-aware sharing and conflict recovery that pr
 versions. See [testing](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
 for test-local transports and live service acceptance. No simulation UI or service is shipped.
 
-Cloud storage does not provide automatic diagram merging, Microsoft coauthoring or locks.
+Register `mergeDrawingSnapshots` from `ooxml-core/visio/collab` as the session's `merge` callback
+to combine supported independent shape and property edits during Save. The suite does so automatically.
+Overlapping or ambiguous changes still require recovery. This is not Microsoft coauthoring or a file lock.
 Existing [Visio limits](/parity) and export diagnostics remain applicable.

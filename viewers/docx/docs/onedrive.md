@@ -27,5 +27,7 @@ contains the package matrix, auth setup, sharing scopes and actionable conflict 
 [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md) separates
 test-local transports from live Microsoft acceptance. No simulation UI or service is shipped.
 
-OneDrive storage does not merge independently edited DOCX files or connect Word collaboration
-rooms to Microsoft Office coauthoring. Existing [preservation limits](/preservation) still apply.
+Register `mergeDocxSnapshots` from `ooxml-core/docx` as the session's `merge` callback to combine
+independent text and property edits during Save. The suite enables this automatically. Ambiguous
+structure or incompatible replacements retain both versions for recovery. This does not connect
+Word collaboration rooms to Microsoft Office coauthoring. Existing [preservation limits](/preservation) still apply.

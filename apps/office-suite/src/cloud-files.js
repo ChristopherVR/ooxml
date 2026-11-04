@@ -18,8 +18,8 @@ export const cloudSaveLabel = (doc, edited = false) =>
 				: 'Saved to this device';
 
 export class SuiteOneDrive {
-	constructor({ store, client, createSession, conflict, adopted, changed, dirty }) {
-		Object.assign(this, { store, client, createSession, conflict, adopted, changed, dirty });
+	constructor({ store, client, createSession, merge, conflict, adopted, changed, dirty }) {
+		Object.assign(this, { store, client, createSession, merge, conflict, adopted, changed, dirty });
 	}
 	configured() {
 		return Boolean(this.client);
@@ -27,7 +27,11 @@ export class SuiteOneDrive {
 	connection(doc) {
 		if (!this.client)
 			throw new Error('OneDrive sign-in is not configured. Your local copy is kept.');
-		return this.createSession(this.client, { file: doc.cloud.file, bytes: doc.cloud.baseline });
+		return this.createSession(
+			this.client,
+			{ file: doc.cloud.file, bytes: doc.cloud.baseline },
+			this.merge ? { merge: this.merge } : undefined,
+		);
 	}
 	async open(link) {
 		if (!this.client) throw new Error('OneDrive sign-in is not configured by this host.');
@@ -80,7 +84,10 @@ export class SuiteOneDrive {
 		const connection = this.connection(doc);
 		try {
 			const file = await connection.save(doc.bytes);
-			return await this.persist(doc, { file, bytes: doc.bytes });
+			const bytes = connection.getSnapshot?.().baseBytes ?? doc.bytes;
+			const combined =
+				bytes.length !== doc.bytes.length || bytes.some((value, i) => value !== doc.bytes[i]);
+			return await this.persist(doc, { file, bytes }, combined);
 		} catch (error) {
 			if (!error?.conflict) {
 				const messages = {
@@ -102,6 +109,11 @@ export class SuiteOneDrive {
 			const action = await this.conflict?.({ doc, conflict: error.conflict });
 			if (action === 'copy') return this.persist(doc, await connection.saveCopy(doc.bytes));
 			if (action === 'latest') {
+				if (error.conflict.remote.file.kind !== doc.kind)
+					// oxlint-disable-next-line eslint/preserve-caught-error -- Conflict causes include private document bytes.
+					throw new Error(
+						'The OneDrive file changed format. Save a separate copy of your edits before reopening it.',
+					);
 				// Keep an independent library copy before replacing the working document.
 				await this.store.create(
 					doc.name.replace(/(\.[^.]+)$/u, ' (local edits)$1'),

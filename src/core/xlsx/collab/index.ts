@@ -28,3 +28,4 @@ export { META, NAMES, SCHEMA_VERSION, SHEETS, STYLES, sharedWorkbook } from './s
 export type { SharedWorkbook } from './schema';
 export { sharedStyleKey } from './styles';
 export type { WriteScope } from './write';
+export { mergeWorkbookSnapshots } from './merge-snapshots';

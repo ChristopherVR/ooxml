@@ -111,7 +111,8 @@ Every row below remains a live acceptance requirement until run against the conf
 | SharePoint-backed links                            | Correct item resolves under tenant and cross-tenant access policy.                                                 |
 | Unknown/read-only access                           | Viewer restrictions apply; cloud Save is unavailable; original is not modified.                                    |
 | Same content, newer eTag                           | Session refreshes baseline identity and retries once without inventing a binary merge.                             |
-| Independently changed content                      | Both versions retained; explicit cloud-copy/latest/local recovery available.                                       |
+| Independently changed supported content            | Local and remote changes combine into one saved file and the editor adopts the result.                             |
+| Overlapping or unsupported changes                 | Both versions retained; explicit cloud-copy/latest/local recovery remains available.                               |
 | Cloud-copy recovery                                | Separate item created; original remote version unchanged; continued edits target the copy.                         |
 | Revoked access, expired token or wrong account     | Honest failure, recoverable local bytes and pending state retained.                                                |
 | Interrupted or canceled upload                     | No false saved state; latest revision inspected before any deliberate retry.                                       |
@@ -121,5 +122,5 @@ Every row below remains a live acceptance requirement until run against the conf
 | App reload and profile switch                      | Safe cloud identity/baseline/pending state retained appropriately; tokens and capability URLs absent from storage. |
 | Representative charts, fonts, media and embeddings | Review native export diagnostics and compare in the relevant Microsoft application.                                |
 
-These checks do not claim Microsoft coauthoring, automatic merging, durable server locks or
+These checks do not claim Microsoft coauthoring, merging of every Office feature, durable server locks or
 universally lossless Office round trips. See [the integration contract](onedrive-integration.md).

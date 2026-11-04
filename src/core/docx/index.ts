@@ -1,4 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+export { mergeDocxSnapshots } from './merge-snapshots';
 export * from './model';
 export * from './highlight';
 export { LIGATURE_VALUES, isLigatures, type Ligatures } from './ligatures';

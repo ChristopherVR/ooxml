@@ -26,6 +26,8 @@ for authentication, sharing and recovery that retains both local and remote vers
 [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md) explains
 credential-free test fixtures and live account acceptance; no simulation UI or service is shipped.
 
-Independent workbook versions are not automatically merged. OneDrive file storage does not
-connect workbook collaboration sessions to Microsoft Excel coauthoring, refresh external data
-or change the [feature limitations](/features).
+Register `mergeWorkbookSnapshots` from `ooxml-core/xlsx/collab` as the session's `merge` callback
+to combine supported independent workbook edits during Save. The suite enables it automatically;
+overlapping cell edits and unsupported changes still require recovery. This does not connect
+workbook collaboration sessions to Microsoft Excel coauthoring, refresh external data or change
+the [feature limitations](/features).

@@ -235,12 +235,55 @@ Legacy `.vsd` previews are not supported native cloud editing targets.
 
 See [Visio integration](../viewers/visio/docs/onedrive.md).
 
-## Handle a save conflict without losing either version
+## Automatically combine concurrent edits during Save
 
-Prefer `createOneDriveSession` over a bare `drive.save` callback. When a revision conflicts,
-the session reads the latest cloud bytes and compares them with the loaded baseline. If those
-bytes are unchanged, it can refresh the revision and retry once. If the content changed, it keeps
-the baseline, local bytes and latest remote bytes in a structured `OneDriveConflictError`.
+Prefer `createOneDriveSession` over a bare `drive.save` callback. The suite registers a
+format-aware merger for every Office product. When a revision conflicts, it reads the latest
+OneDrive file and combines changes from the opened baseline, local edits and remote version.
+Independent changes are saved together against the latest revision, and the combined document
+is loaded back into the editor. Copy/version recovery is used only when changes cannot be combined.
+
+Embedded package consumers opt into the same behavior through the session's `merge` callback:
+
+```ts
+import { mergeDocxSnapshots } from 'ooxml-core/docx';
+
+const session = createOneDriveSession(drive, opened, {
+	merge: ({ base, local, remote }) => mergeDocxSnapshots(base.bytes, local, remote.bytes),
+	maxMergeAttempts: 3,
+});
+```
+
+| Product    | Merger                   | Import                    |
+| ---------- | ------------------------ | ------------------------- |
+| Word       | `mergeDocxSnapshots`     | `ooxml-core/docx`         |
+| Excel      | `mergeWorkbookSnapshots` | `ooxml-core/xlsx/collab`  |
+| PowerPoint | `mergePptxSnapshots`     | `ooxml-core/pptx`         |
+| Visio      | `mergeDrawingSnapshots`  | `ooxml-core/visio/collab` |
+
+Each merger takes `(baseBytes, localBytes, remoteBytes)` and returns either
+`{ status: 'merged', bytes }` or `{ status: 'unresolved', issues }`. The storage client keeps
+Office engines out of its own bundle; hosts load the current format's merger as needed.
+See [the suite's format router](../apps/office-suite/src/onedrive-merge.js).
+
+After success, `session.getSnapshot().baseBytes` contains the actual saved document, including
+remote edits. An embedding host must adopt those bytes, rather than leave its older local
+snapshot visible. Reload only if the editor has no edits newer than the exported snapshot;
+otherwise rebase those newer edits too. The suite locks the editor during Save and reloads the
+combined result before enabling edits. A bare `session.storage` has no access to the editor:
+hosts using native Save must wrap its save callback to adopt the acknowledged bytes safely.
+
+Word and PowerPoint combine independent source text/property edits and stable identified nodes;
+same-position text insertions retain both strings in a deterministic order. Ambiguous run/list
+restructuring, incompatible replacements, colliding new relationship IDs and conflicting opaque
+parts stay unresolved. Excel and Visio reuse their collaboration mappings, with additional
+three-way checks for overlapping fields and unsupported content. These files contain snapshots,
+so this process does not reconstruct a missing real-time CRDT operation history.
+
+Remote changes during a merge trigger a fresh rebase, bounded by `maxMergeAttempts` (default 3).
+If the content cannot be combined, the session retains the baseline, local bytes and latest
+remote bytes in a structured `OneDriveConflictError`, including optional diagnostic `issues`.
+If no merger is supplied, only unchanged-content revision refresh is automatic.
 If the remote bytes already equal the local save snapshot, the session acknowledges the existing
 cloud result instead of creating a needless conflict, for example after a lost save response.
 An HTTP 423 lock is reported as `OneDriveError` with code `locked`; it is not retried as a content conflict.
@@ -271,9 +314,9 @@ The suite also offers **Download latest OneDrive version**, with a distinct file
 user can inspect both files before choosing a recovery action. Downloading either version keeps
 the recovery dialog open. Read-only cloud files show that state and disable the suite Save button.
 
-Do not clear dirty state on a failed save. Do not automatically reload, remove `If-Match`, or
-silently retry against new content. Format-specific comparison tools can help a person review
-both versions; the storage adapter does not provide a generally safe DOCX/XLSX/PPTX/VSDX merge.
+Do not clear dirty state on a failed save, remove `If-Match`, or retry an unmerged local snapshot
+against a newer revision. Unsupported or overlapping edits require explicit recovery; the format
+mergers do not claim that arbitrary independently changed Office files always merge safely.
 
 The revision condition is checked when Graph creates the upload session. It is not an exclusive
 lock through final commit, and a lost response can leave the outcome uncertain. Check the latest

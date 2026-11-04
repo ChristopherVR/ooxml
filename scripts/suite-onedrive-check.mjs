@@ -3,20 +3,20 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
 import { interceptOneDrive } from './test-support/onedrive-http.mjs';
+import { checkConcurrentMerges } from './test-support/onedrive-merge-checks.mjs';
 
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 const { createDocx, createXlsx, inspectDocx, readXlsxRange, setXlsxCells } =
 	await import('../src/core/dist/automation/index.mjs');
-const { PresentationBuilder } = await import('../src/core/dist/pptx/index.mjs');
+const { createPresentationFromOutline } = await import('../src/core/dist/pptx/index.mjs');
 const { parseVsdx } = await import('../src/core/dist/visio/index.mjs');
 const JSZip = require('jszip');
 const { fixture, shape, cell, rectangle } = await import('../src/core/visio/test-fixtures.ts');
-const { handler, data } = await PresentationBuilder.create({ initialSlideCount: 1 });
 const fixtures = {
 	docx: await createDocx(['Shared Word document.']),
 	xlsx: await createXlsx(['Sheet1']),
-	pptx: await handler.save(data.slides),
+	pptx: await createPresentationFromOutline([{ title: 'Shared PowerPoint' }]),
 	vsdx: await fixture({
 		pages: [
 			{
@@ -26,7 +26,6 @@ const fixtures = {
 		],
 	}),
 };
-handler.dispose();
 const drawing = await parseVsdx(fixtures.vsdx);
 const drawingPage = drawing.pages.find((p) => p.shapes.some((s) => s.text?.plainText?.trim()));
 const drawingShape = drawingPage?.shapes.find((s) => s.text?.plainText?.trim());
@@ -151,8 +150,14 @@ try {
 		2,
 	);
 	assert.match(JSON.stringify(await parseVsdx(cloud.files.get('vsdx').bytes)), /Cloud edit/u);
+	await checkConcurrentMerges({ page, cloud, openCloud, edit });
 	await openCloud('docx');
-	await edit('docx', 'Local version retained');
+	await page
+		.locator('.document-host:not([hidden]) docx-editor [contenteditable=true]')
+		.first()
+		.click();
+	await page.keyboard.press('Control+A');
+	await page.keyboard.type('Local version retained.');
 	const remote = cloud.files.get('docx');
 	remote.bytes = Buffer.from(await createDocx(['Remote version retained.']));
 	remote.revision++;

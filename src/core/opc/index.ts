@@ -2,6 +2,7 @@ export * from './relationship-types';
 export * from './relationships';
 export * from './content-types';
 export * from './package';
+export * from './merge-snapshots';
 export * from './clone-part-graph';
 export * from './safe-href';
 export * from './embedded-packages';

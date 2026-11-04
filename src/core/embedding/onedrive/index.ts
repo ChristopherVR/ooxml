@@ -14,4 +14,7 @@ export type {
 	OneDriveConflict,
 	OneDriveSession,
 	OneDriveSessionSnapshot,
+	OneDriveMergeInput,
+	OneDriveMergeResult,
+	OneDriveSessionOptions,
 } from './types';

@@ -42,3 +42,4 @@ export {
 } from './schema';
 export { snapshotDrawing, type DrawingSnapshot } from './snapshot';
 export { writeSharedDrawing } from './write';
+export { mergeDrawingSnapshots } from './merge-snapshots';

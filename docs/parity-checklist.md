@@ -33,6 +33,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ## Shared layer and every product
 
+- [x] **P1** OneDrive save recovery only offered choosing/copying versions: format-aware three-way
+      mergers now combine supported independent DOCX/XLSX/PPTX/VSDX edits automatically and rebase
+      against the latest revision. The suite reloads the acknowledged combined file. Evidence:
+      `src/core/embedding/onedrive/merge-session.test.ts`, each format's `merge-snapshots.test.ts`
+      and `scripts/test-support/onedrive-merge-checks.mjs`.
+- [ ] **P1** Snapshot merging cannot resolve every structural or same-content overlap, nor provide
+      a live Microsoft Office operation stream. Ambiguous edits require retained-version recovery;
+      see `docs/onedrive-integration.md#automatically-combine-concurrent-edits-during-save`.
+
 | Capability    | Word         | Excel        | PowerPoint                 | Visio                 |
 | ------------- | ------------ | ------------ | -------------------------- | --------------------- |
 | Chart render  | 2-D and 3-D  | 2-D and 3-D  | yes, own renderer with 3-D | 2-D and 3-D, embedded |
