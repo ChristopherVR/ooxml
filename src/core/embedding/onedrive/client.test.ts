@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { describe, expect, it } from 'vitest';
 import { createOneDriveClient, encodeOneDriveSharingUrl } from './index';
 import { createTestDrive } from './__fixtures__/graph';
@@ -152,7 +153,15 @@ describe('OneDrive host adapter', () => {
 		const mock = createTestDrive({ bytes });
 		const opened = await mock.client.open(mock.shareUrl);
 		await mock.client.save(opened.file, large);
-		expect(mock.getBytes()).toEqual(large);
+		// Native byte comparison avoids millions of deep-equality checks on busy CI workers.
+		expect(Buffer.from(mock.getBytes()).equals(Buffer.from(large))).toBe(true);
+		const fragments = mock.requests.filter(({ url }) => url.includes('/upload/'));
+		expect(fragments.length).toBeGreaterThan(1);
+		for (const fragment of fragments.slice(0, -1)) {
+			const body = fragment.init?.body;
+			if (!(body instanceof Uint8Array)) throw new Error('Expected an upload fragment');
+			expect(body.length % (320 * 1024)).toBe(0);
+		}
 	});
 
 	it('bounds streamed downloads even without Content-Length', async () => {
