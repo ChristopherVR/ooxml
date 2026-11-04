@@ -52,11 +52,12 @@ export function shapeDataRowName(value: unknown): string {
 /** A row name derived from a label, as Visio's Define Shape Data dialog does. */
 export function visioShapeDataRowName(label: string, taken: Iterable<string> = []): string {
 	const used = new Set([...taken].map((name) => name.toLowerCase()));
-	let base = label
-		.normalize('NFKD')
-		.replace(/[^\w]+/g, '_')
-		.replace(/^_+|_+$/g, '')
-		.slice(0, 48);
+	let base = label.normalize('NFKD').replace(/[^\w]+/g, '_');
+	let start = 0;
+	let end = base.length;
+	while (start < end && base[start] === '_') start++;
+	while (end > start && base[end - 1] === '_') end--;
+	base = base.slice(start, end).slice(0, 48);
 	if (!base) base = 'Property';
 	if (/^\d/.test(base)) base = `_${base}`;
 	let name = base;
