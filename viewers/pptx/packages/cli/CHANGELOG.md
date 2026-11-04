@@ -7,6 +7,28 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.41.7](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.41.7) - 2026-11-04
+
+### Bug Fixes
+
+- **release:** Publish pptx-angular-viewer from its built dist ([#240](https://github.com/ChristopherVR/ooxml/issues/240)) ([8015762](https://github.com/ChristopherVR/ooxml/commit/8015762a9eb2852cbaa4bc57bd0e7d6912802bd3))
+
+### Dependencies
+
+- **deps:** Merge dependency update ([#92](https://github.com/ChristopherVR/ooxml/issues/92)) ([ce1b012](https://github.com/ChristopherVR/ooxml/commit/ce1b01215261b162443f903e1a2086ed4110ae28))
+- **deps:** Merge dependency update ([#95](https://github.com/ChristopherVR/ooxml/issues/95)) ([0926eac](https://github.com/ChristopherVR/ooxml/commit/0926eac231cb49749433fb7a9eac870cc7996e52))
+- **deps:** Merge dependency update ([#96](https://github.com/ChristopherVR/ooxml/issues/96)) ([33b0ebb](https://github.com/ChristopherVR/ooxml/commit/33b0ebb6a16b4448d577c169c79187466d4148a3))
+- **deps:** Merge node type updates ([#235](https://github.com/ChristopherVR/ooxml/issues/235)) ([ab34b75](https://github.com/ChristopherVR/ooxml/commit/ab34b754d451f73e51b1aa7833de628776ac3726))
+- **deps:** Merge development dependency updates ([#237](https://github.com/ChristopherVR/ooxml/issues/237)) ([448c68d](https://github.com/ChristopherVR/ooxml/commit/448c68db3783efcd646de6258e59f28a971c2170))
+
+### Chores
+
+- **deps-dev:** Bump @types/node ([df60cd7](https://github.com/ChristopherVR/ooxml/commit/df60cd7aff4efb7006ac0a6cfd1c69b08230a011))
+- **deps-dev:** Bump tsup from 8.5.1 to 9.0.0 ([9835e80](https://github.com/ChristopherVR/ooxml/commit/9835e8038a9a271e37e286e524496513910553a6))
+- **deps-dev:** Bump the development-minor-and-patch group with 14 updates ([1cdc60b](https://github.com/ChristopherVR/ooxml/commit/1cdc60b0f0a591304a2240ffcb550eccfd8d2487))
+- **deps-dev:** Bump @types/node ([8dfb9a2](https://github.com/ChristopherVR/ooxml/commit/8dfb9a2a7b40aac3641f927de3ab7fcebc9a42ec))
+- **deps-dev:** Bump the development-minor-and-patch group with 7 updates ([e6e7a5e](https://github.com/ChristopherVR/ooxml/commit/e6e7a5e8075087159d1df4608212bea6a98b03ad))
+
 ## [2.41.6](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.41.6) - 2026-10-11
 
 ### Styling
