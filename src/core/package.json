@@ -89,6 +89,11 @@
 			"import": "./dist/embedding/index.mjs",
 			"require": "./dist/embedding/index.cjs"
 		},
+		"./embedding/onedrive": {
+			"types": "./dist/embedding/onedrive/index.d.ts",
+			"import": "./dist/embedding/onedrive/index.mjs",
+			"require": "./dist/embedding/onedrive/index.cjs"
+		},
 		"./diagram": {
 			"types": "./dist/diagram/index.d.ts",
 			"import": "./dist/diagram/index.mjs",

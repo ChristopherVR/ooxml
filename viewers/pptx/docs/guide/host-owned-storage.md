@@ -1,5 +1,8 @@
 # Host-owned storage
 
+For an existing-file Microsoft Graph provider with a registration-free demo, see
+[OneDrive integration](/guide/onedrive) and [testing OneDrive](/guide/onedrive-testing).
+
 Every binding takes a `storage` prop (Angular: input, Vanilla: option) that hands the viewer's file
 I/O to the host. It is the `DocumentStorage` contract from `ooxml-core/embedding`, the same one the
 Word, Excel and Visio editors accept, and is re-exported as a type from `ooxml-ui/pptx`.

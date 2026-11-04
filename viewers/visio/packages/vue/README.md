@@ -95,3 +95,12 @@ Vue also emits the shared kebab-case events, such as `@document-change`.
 ## License
 
 Apache-2.0.
+
+## OneDrive integration
+
+Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
+sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#visio-vsdx)
+for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
+The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
+separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
+OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.

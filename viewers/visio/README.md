@@ -28,7 +28,7 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 - **One viewer, every framework.** A `<visio-viewer>` custom element owns the SVG renderer, ribbon, page tabs, status bar, selection, search, layers and editing controls. React, Vue, Angular, Svelte, Solid and vanilla adapters only handle lifecycle, properties and events.
 - **One document model.** Package loading, XML, the model, ShapeSheet interpretation, editing and serialization live in the `visio` area of [`ooxml-core`](https://github.com/ChristopherVR/ooxml). The viewer packages here are the UI and framework-binding layer only.
-- **Local-first.** Files stay in the browser: no uploads, telemetry, external fonts or document URL fetches. Document XML is never injected into the DOM, and the custom element parses in a dedicated worker with cancellation and a time limit.
+- **Local-first by default.** The viewer does not upload files on its own. A host may explicitly connect storage such as OneDrive; that host owns authentication and network access. Document XML is never injected into the DOM, and the custom element parses in a dedicated worker with cancellation and a time limit.
 - **Honest limits.** Unsupported features are reported, not hidden. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality, and the [verification record](docs/verification.md) holds the current evidence.
 
 ## Features and limitations
@@ -278,3 +278,12 @@ The `ooxml` repository is trunk-based and uses [Conventional Commits](https://ww
 ## License
 
 [Apache License 2.0](LICENSE). See [`NOTICE`](NOTICE) for attributions.
+
+## OneDrive integration
+
+Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
+sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#visio-vsdx)
+for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
+The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
+separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
+OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.

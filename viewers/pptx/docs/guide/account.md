@@ -5,6 +5,10 @@ description: What File > Account shows by default, and how to wire a sign-in flo
 
 # Account & Sign-in
 
+Opening and saving Microsoft-hosted presentations is an optional host integration. See
+[OneDrive integration](/guide/onedrive) for the storage adapter, authentication responsibilities,
+and [test fixtures versus real-account acceptance](/guide/onedrive-testing).
+
 File > Account contains a local profile editor, a storage/privacy panel showing live local-storage figures, an About section, and an optional sign-in section that stays hidden until a host explicitly wires it up.
 
 ## What ships by default

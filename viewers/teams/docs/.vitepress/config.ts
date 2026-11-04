@@ -83,6 +83,7 @@ export default defineConfig({
 				text: 'Reference',
 				items: [
 					{ text: 'Element API and events', link: '/api' },
+					{ text: 'OneDrive links', link: '/onedrive' },
 					{ text: 'Theming', link: '/theming' },
 				],
 			},

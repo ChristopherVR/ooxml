@@ -241,6 +241,8 @@ export default defineConfig({
 						{ text: 'Shared UI migration log', link: '/guide/ui-migration' },
 						{ text: 'Host-owned Collaboration', link: '/guide/host-owned-collaboration' },
 						{ text: 'Host-owned Storage', link: '/guide/host-owned-storage' },
+						{ text: 'OneDrive Integration', link: '/guide/onedrive' },
+						{ text: 'Testing OneDrive', link: '/guide/onedrive-testing' },
 						{ text: 'Review Inside Your Application', link: '/guide/review-workflow' },
 						{ text: 'Localization (i18n)', link: '/guide/localization' },
 						{ text: 'AI Assistant', link: '/guide/ai-assistant' },

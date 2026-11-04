@@ -209,3 +209,12 @@ See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the details
 ## License
 
 [Apache-2.0](LICENSE). Please keep the [`NOTICE`](NOTICE) file with redistributions.
+
+## OneDrive integration
+
+Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
+sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#powerpoint-pptx)
+for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
+The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
+separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
+OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.

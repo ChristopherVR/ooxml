@@ -12,6 +12,15 @@ Local profiles are organizational conveniences, not authentication or authorizat
 
 ## Implemented workflows
 
+- Open native DOCX, XLSX, PPTX and VSDX from OneDrive sharing links through one host-configured
+  connection. Native and suite Save checkpoint local edits before updating the connected cloud
+  item. Pending cloud state survives failed saves and reloads. Content conflicts retain both
+  versions and offer a cloud copy, a local backup followed by opening latest, download, or keeping
+  the current editor. Connected-file Share uses explicit OneDrive link permissions. Microsoft
+  authentication must be provided by the host; there is no bundled registration or simulation.
+  See [OneDrive integration and package reference](onedrive-integration.md) and
+  [testing and real-account acceptance](onedrive-testing.md).
+
 - Import native DOCX, XLSX, PPTX and VSDX files into one IndexedDB library. One persistent document id maps to one live editor tab. Tabs preserve edits while switching applications. Save and Download serialize the current editor model.
 - Create blank documents, workbooks and presentations using the existing engines.
 - Share a local document reference in Teams, reopen it in its existing editor and return to the captured channel. Local channel links point to the same saved document. Download actions are intercepted by the host so they return file bytes, not the launcher HTML. Pinned file tabs use the same opening contract.
@@ -42,7 +51,12 @@ Run `bun run test:suite` against the preview URL (default localhost:8128, overri
 
 ## Boundaries
 
-Files are local to the current browser/WebView profile. This is not a Microsoft 365 account integration or cloud drive. Multi-device chat/calls require a configured Teams sync/signaling server and appropriate TURN configuration. Office document coauthoring is not wired to suite file identities yet. The suite has conflict detection, not live concurrent document merging.
+Ordinary imported files are local to the current browser/WebView profile. A host-configured OneDrive
+connection can explicitly open and save native Office files to their cloud item; local profiles
+still do not imply Microsoft account access. Multi-device chat/calls require a configured Teams
+sync/signaling server and appropriate TURN configuration. Office document coauthoring is not wired
+to suite cloud identities. The suite preserves conflicting versions and offers recovery choices;
+it does not provide live concurrent document merging.
 
 The assistant is governed by deployment configuration: `ai-config.json` beside the app (or `globalThis.ooxmlAiConfig` from a host) chooses the providers and models (Anthropic, OpenAI, GitHub Models, Azure OpenAI, Gemini, Mistral, Groq, DeepSeek, xAI, Together, Fireworks, Perplexity, OpenRouter, Ollama, LM Studio, an organisation gateway or any OpenAI-compatible endpoint), whether users may add their own, which features are on, the context and history limits and the instructions every request carries; the UI only offers what it allows. See [configuring the assistant](suite-ai-config.md). Replies stream and can be stopped; regenerating keeps the earlier reply as a version. Users reference open tabs and library files with `@` or Attach. Proposed edits show a before-and-after diff and can be applied one by one; every save and assistant edit keeps the replaced bytes as a version (Versions in the command bar, or the file menu), which can be restored or downloaded. Keys a user enters stay in the tab's session storage unless they choose to remember them. Until a model is connected, an **offline preview** answers from simple rules on the device; it says so in every reply, describes attached files from their real content, drafts sample files and can title-case an attached document or deck, so the whole flow can be tried without a key. Context is bounded (Word: 500 paragraphs; Excel: A1:AD100 on the first four sheets; Teams: 50 current-channel messages; the policy's context limit). The application never executes model-generated code or silently posts AI output to channels; nothing is written until the user presses a card's button.
 

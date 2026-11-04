@@ -19,6 +19,8 @@ import { mountResources, mountStart } from './start.js';
 import { mountShell } from './shell.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
+import { mountOneDrive } from './onedrive.js';
+import { cloudSaveLabel } from './cloud-files.js';
 
 // Every write keeps the bytes it replaces as a version, unless the AI policy turns history off.
 const store = withVersions(
@@ -36,16 +38,42 @@ let files = [],
 	assistant;
 const origins = new Map();
 let disk;
-const sessions = new SuiteSessions(store, $('editors'), renderTabs, (command, id) =>
-	task(async () => {
+const sessions = new SuiteSessions(store, $('editors'), renderTabs, async (command, id) => {
+	try {
 		if (command === 'save') {
 			await sessions.save(id);
 			await refresh();
-			notify('Saved to this device');
-		} else if (command === 'open') $('file-input').click();
+			notify(cloudSaveLabel(await store.get(id)));
+		} else if (command === 'open') chooseOpen();
+		else if (command === 'share') await share(id);
 		else await create((await store.get(id)).kind);
-	}),
-);
+	} catch (error) {
+		notify(error);
+		throw error;
+	}
+});
+const cloud = mountOneDrive({ store, sessions, open, refresh });
+sessions.remote = cloud;
+function chooseOpen() {
+	const content = document.createElement('div');
+	content.className = 'cloud-recovery-actions';
+	for (const [label, action] of [
+		[
+			'From this device',
+			() => {
+				$('dialog').close();
+				$('file-input').click();
+			},
+		],
+		['From OneDrive', () => cloud.showOpen()],
+	]) {
+		const button = document.createElement('button');
+		button.textContent = label;
+		button.onclick = action;
+		content.append(button);
+	}
+	choose('Open a file', content);
+}
 
 async function refresh() {
 	files = await store.list();
@@ -93,8 +121,13 @@ function renderTabs() {
 					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
-	$('save-state').textContent =
-		active && sessions.isDirty(active) ? 'Unsaved changes' : 'Saved to this device';
+	const activeSession = sessions.sessions.get(active);
+	const activeDoc = activeSession?.doc;
+	$('save').disabled = !activeSession || activeSession.cloudReadOnly;
+	$('save-state').textContent = activeSession?.cloudReadOnly
+		? 'OneDrive: read-only'
+		: cloudSaveLabel(activeDoc, active && sessions.isEdited(active));
+	$('share').textContent = activeDoc?.cloud ? 'Share in OneDrive' : 'Share in Teams';
 	for (const s of sessions.sessions.values()) {
 		const hide = view !== 'editor' || s.doc.id !== active;
 		// A hidden editor must not keep a full-screen layer (a Visio presentation) over the next tab.
@@ -147,11 +180,15 @@ async function open(id, origin, { focus = false } = {}) {
 	renderTabs();
 	await refresh();
 	notify(
-		doc.parent
-			? 'Embedded document: Save updates its parent package.'
-			: origin?.remote
-				? 'Local copy of a Teams attachment. Share in Teams uploads a new copy.'
-				: 'Ready',
+		doc.cloud
+			? doc.cloud.pending
+				? 'Local changes are waiting to save to OneDrive.'
+				: 'Connected to OneDrive. Save updates the original file.'
+			: doc.parent
+				? 'Embedded document: Save updates its parent package.'
+				: origin?.remote
+					? 'Local copy of a Teams attachment. Share in Teams uploads a new copy.'
+					: 'Ready',
 	);
 	history.replaceState(null, '', `#/file/${id}`);
 	if (focus && active === id && view === 'editor' && !matchMedia('(pointer: coarse)').matches)
@@ -279,8 +316,12 @@ async function embeddings() {
 	}
 	choose('Embedded documents', content);
 }
-async function share() {
-	const doc = await sessions.save(active);
+async function share(id = active) {
+	const doc = await sessions.save(id);
+	if (doc.cloud) {
+		cloud.showShare(doc);
+		return;
+	}
 	if (!teams) {
 		teams = await mountTeams($('teams-host'), store, open, refresh);
 	}
@@ -366,7 +407,7 @@ document.addEventListener('click', (event) => {
 	// A tab keeps the focus (arrow keys move along the tab strip); a file in the list moves it in.
 	if (b.dataset.open)
 		task(() => open(b.dataset.open, undefined, { focus: b.getAttribute('role') !== 'tab' }));
-	if (b.dataset.download) task(async () => download(await sessions.save(b.dataset.download)));
+	if (b.dataset.download) task(async () => download(await sessions.export(b.dataset.download)));
 	if (b.dataset.close) task(() => fileActions.closeTabs([b.dataset.close]));
 });
 $('upload').onclick = () => $('file-input').click();
@@ -393,9 +434,9 @@ $('save').onclick = () =>
 	task(async () => {
 		await sessions.save(active);
 		await refresh();
-		notify('Saved to this device');
+		notify(cloudSaveLabel(await store.get(active)));
 	});
-$('download').onclick = () => task(async () => download(await sessions.save(active)));
+$('download').onclick = () => task(async () => download(await sessions.export(active)));
 $('embedded').onclick = () => task(embeddings);
 $('versions').onclick = () => aiDeps.showVersions(active);
 $('share').onclick = () => task(share);

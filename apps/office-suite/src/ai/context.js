@@ -21,7 +21,7 @@ export async function gatherContext({
 	if (left < 1000 * list.length && list.length)
 		throw new Error('The attached notes leave no room for the files. Attach fewer files.');
 	for (const [i, id] of list.entries()) {
-		const doc = await sessions.save(id);
+		const doc = await sessions.save(id, { cloud: false });
 		if (!doc) continue;
 		const { name, kind, revision, parent } = doc;
 		docs.push({ id, name, kind, revision, parent });

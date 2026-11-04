@@ -2,6 +2,8 @@
 import { onTheme, currentTheme, setThemeMode } from './themes.js';
 import { editorColors, applyOfficeTheme } from './theme-tokens.js';
 import { setEditorReadOnly } from './editor-read-only.js';
+import { cloudReadOnly } from './cloud-files.js';
+import { download } from './ui.js';
 export function preloadEditor(kind) {
 	const loaders = {
 		pptx: () => import('pptx-vanilla-viewer'),
@@ -12,16 +14,31 @@ export function preloadEditor(kind) {
 	return loaders[kind]?.();
 }
 /** File commands the suite handles itself, for every editor (Visio raises only these). */
-export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open']);
+export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open', 'share']);
 
 export async function mountEditor(host, doc, changed, command) {
+	let accessReadOnly = cloudReadOnly(doc);
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
+		let loading = true;
+		let loadFailed = false;
 		const viewer = createPptxViewer(host, {
 			fileName: doc.name,
-			editable: true,
+			editable: !accessReadOnly,
+			// The suite owns cloud/Teams sharing; the viewer's separate collaboration invite is not cloud sync.
+			hiddenActions: ['share'],
+			onOpenFile: () => command('open'),
+			storage: {
+				async save(bytes, meta) {
+					if (meta.reason === 'saveAs') download({ bytes, name: meta.fileName });
+					else await command('save');
+				},
+			},
 			onChange: changed,
 			autosave: false,
+			onError: () => {
+				if (loading) loadFailed = true;
+			},
 			availableThemes: [
 				{ key: 'default', labelKey: 'pptx.settings.theme.default', theme: undefined },
 			],
@@ -32,10 +49,29 @@ export async function mountEditor(host, doc, changed, command) {
 			viewer.setTheme({ colors: editorColors(theme), radius: '0.25rem' });
 		});
 		await viewer.loadFile(doc.bytes);
+		loading = false;
+		if (loadFailed) {
+			stopTheme();
+			viewer.destroy();
+			throw new Error('The presentation could not be opened.');
+		}
 		return {
 			save: () => viewer.save(),
-			load: (bytes) => viewer.loadFile(bytes),
-			readOnly: (on) => viewer.setEditable(!on),
+			load: async (bytes) => {
+				loading = true;
+				loadFailed = false;
+				try {
+					await viewer.loadFile(bytes);
+				} finally {
+					loading = false;
+				}
+				if (loadFailed) throw new Error('The presentation could not be opened.');
+			},
+			readOnly: (on) => viewer.setEditable(!(on || accessReadOnly)),
+			setCloudReadOnly: (on) => {
+				accessReadOnly = on;
+				viewer.setEditable(!on);
+			},
 			/** Shows where a proposed change lands: its slide, with its shape selected. */
 			reveal(change) {
 				viewer.goToSlide(change.slideIndex);
@@ -78,6 +114,7 @@ export async function mountEditor(host, doc, changed, command) {
 	});
 	observer.observe(element, { attributes: true, attributeFilter: ['theme'] });
 	host.append(element);
+	setEditorReadOnly(element, doc.kind, accessReadOnly);
 	// Visio opens at 100%; fit the page to the canvas once it has a layout, as the Visio demo does.
 	const fit = () =>
 		doc.kind === 'vsdx' && requestAnimationFrame(() => element.isConnected && element.fit());
@@ -100,7 +137,10 @@ export async function mountEditor(host, doc, changed, command) {
 	element.addEventListener('file-command', (event) => {
 		if (SUITE_FILE_COMMANDS.has(event.detail.command)) {
 			event.preventDefault();
-			command(event.detail.command);
+			// Native custom-element events are fire-and-forget; the suite callback reports failures.
+			void Promise.resolve()
+				.then(() => command(event.detail.command))
+				.catch(() => {});
 		}
 	});
 	return {
@@ -120,7 +160,11 @@ export async function mountEditor(host, doc, changed, command) {
 		},
 		// While the assistant previews a change the drawing is read-only (Visio's canEdit is off), so
 		// nothing is edited during a review; Discard reloads the stored file and Apply saves the preview.
-		readOnly: (on) => setEditorReadOnly(element, doc.kind, on),
+		readOnly: (on) => setEditorReadOnly(element, doc.kind, on || accessReadOnly),
+		setCloudReadOnly: (on) => {
+			accessReadOnly = on;
+			setEditorReadOnly(element, doc.kind, on);
+		},
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {
 			if (change.type === 'cells') {

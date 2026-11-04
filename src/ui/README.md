@@ -6,6 +6,11 @@
 
 > Shared Office controls, styles and custom elements for browser applications.
 
+For host-owned OneDrive storage, all four document editors use
+[`ooxml-core/embedding/onedrive`](../../docs/onedrive-integration.md). The reference covers
+`ooxml-ui/docx`, `/xlsx`, `/pptx`, `/visio`, every framework binding, OpenTeams sharing and
+conflict recovery. Microsoft authentication belongs to the host. No simulation service is shipped.
+
 [Try the apps](https://christophervr.github.io/ooxml/) | [npm](https://www.npmjs.com/package/ooxml-ui) | [Full docs](https://christophervr.github.io/ooxml/) | [Source](https://github.com/ChristopherVR/ooxml)
 
 Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): **[Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app)** &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)

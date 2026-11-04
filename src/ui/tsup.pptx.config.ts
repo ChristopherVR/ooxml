@@ -7,6 +7,7 @@ export default defineConfig({
 		index: 'src/pptx/index.ts',
 		'theme/index': 'src/pptx/theme/index.ts',
 		'loader/index': 'src/pptx/loader/index.ts',
+		'onedrive/index': 'src/pptx/onedrive/index.ts',
 		'i18n/index': 'src/pptx/i18n/index.ts',
 		'ai/index': 'src/pptx/ai/index.ts',
 		// The SDK-free helpers the viewers' main entries import (ooxml-ui/pptx/ai/host, through

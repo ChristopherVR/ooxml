@@ -24,6 +24,13 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Why ooxml-core?
 
+Hosts can connect native DOCX, XLSX, PPTX and VSDX storage through the optional
+[`ooxml-core/embedding/onedrive`](../../docs/onedrive-integration.md) subpath. It exposes the
+shared Graph client, session storage adapter, cloud copies, sharing and retained conflict versions;
+the host supplies Microsoft authentication and item permissions. See the
+[package reference](../../docs/onedrive-integration.md#package-reference) and
+[test/acceptance guide](../../docs/onedrive-testing.md). No public mock service or simulation UI ships.
+
 - **No UI, no framework.** Everything runs in browsers, Node.js, Bun, workers and serverless functions. The viewer apps ([docx](https://christophervr.github.io/ooxml/docx/), [xlsx](https://christophervr.github.io/ooxml/xlsx/), [visio](https://christophervr.github.io/ooxml/visio/), [teams](https://christophervr.github.io/ooxml/teams/) and [pptx](https://christophervr.github.io/ooxml/pptx/)) are thin interfaces on top of it, and so can your application be.
 - **One package, one structure.** All formats share the same XML model, packaging layer, units, colours and geometry. Each format is an _area_ of this one package, not a separate dependency to keep in step.
 - **Round-trips without losing what it does not understand.** Documents are loaded into a model, edited, and written back. Untouched parts stay byte-for-byte, unknown markup is preserved, and edits that would damage unsupported content are rejected instead of silently dropped.

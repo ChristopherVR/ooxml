@@ -14,6 +14,7 @@ export default defineConfig({
 		'i18n/index': 'i18n/index.ts',
 		'ribbon/index': 'ribbon/index.ts',
 		'embedding/index': 'embedding/index.ts',
+		'embedding/onedrive/index': 'embedding/onedrive/index.ts',
 		'geometry/index': 'geometry/index.ts',
 		'xml/index': 'xml/index.ts',
 		'opc/index': 'opc/index.ts',

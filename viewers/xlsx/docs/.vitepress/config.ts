@@ -72,6 +72,7 @@ export default defineConfig({
 				text: 'Reference',
 				items: [
 					{ text: 'Element API', link: '/api' },
+					{ text: 'OneDrive integration', link: '/onedrive' },
 					{ text: 'Theming', link: '/theming' },
 					{ text: 'Localization', link: '/localization' },
 				],

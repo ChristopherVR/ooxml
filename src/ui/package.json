@@ -124,6 +124,11 @@
 			"import": "./dist/pptx/index.mjs",
 			"require": "./dist/pptx/index.cjs"
 		},
+		"./pptx/onedrive": {
+			"types": "./dist/pptx/onedrive/index.d.ts",
+			"import": "./dist/pptx/onedrive/index.mjs",
+			"require": "./dist/pptx/onedrive/index.cjs"
+		},
 		"./pptx/theme": {
 			"types": "./dist/pptx/theme/index.d.ts",
 			"import": "./dist/pptx/theme/index.mjs",

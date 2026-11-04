@@ -199,3 +199,12 @@ npx @christophervr/pptx-viewer --pm pnpm                           # force a pac
 - Any unrecognised flag, unknown target id, or invalid `--pm` value exits with a one-line error (`✘ Error: ...`) and a non-zero status instead of a stack trace.
 - Interrupting the interactive checklist with Ctrl-C exits with status `130`.
 - Requires Node.js 18+ to run at all; see the Angular note above for its own, stricter minimum.
+
+## OneDrive integration
+
+Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
+sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#powerpoint-pptx)
+for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
+The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
+separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
+OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.

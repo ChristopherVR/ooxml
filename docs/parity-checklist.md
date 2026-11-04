@@ -323,6 +323,23 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ## PowerPoint
 
+### Cloud storage integration
+
+- [x] **P2** Optional shared host OneDrive connection resolves sharing links and saves native DOCX,
+      XLSX, PPTX and VSDX through Graph and each editor's byte/storage contract. Sessions retain
+      baseline/local/remote versions on content conflicts and support separate cloud-copy recovery;
+      revision-only changes are retried once when the remote content is unchanged. The suite tracks
+      pending cloud saves separately from local checkpoints and exposes explicit sharing scopes.
+      Test transports are test-local; no public mock service or simulation UI ships.
+      See [integration and package reference](onedrive-integration.md) and
+      [acceptance matrix](onedrive-testing.md).
+- [ ] **P1** Real OneDrive personal/work and SharePoint tenant acceptance, including consent,
+      deployed-browser CORS, permission revocation, cross-tenant and policy-restricted links.
+      The adapter requires host authentication and an item-specific permission resolver; unknown
+      access is read-only. Mock tests do not close this acceptance gap.
+- [ ] **P1** Microsoft Office live coauthoring and locks are not provided by the OneDrive storage
+      adapter. Revision checking at upload-session creation is not a lock through final commit.
+
 ### File format and preservation
 
 - [ ] **P1** 40 coverage-manifest constructs are `preserve: unassessed` and 30 `edit: unassessed`

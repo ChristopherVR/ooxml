@@ -34,6 +34,12 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Feature tour
 
+For **OneDrive sharing links**, use the optional host adapter with any binding:
+[integration guide](docs/guide/onedrive.md) and
+[testing and real-account acceptance](docs/guide/onedrive-testing.md). Microsoft sign-in remains
+host-owned. The shared Office connection retains conflicting versions and supports separate
+cloud copies; no simulation UI or service is shipped.
+
 |                   |                                                                                                                                                                                                                                                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Rendering**     | 187 preset shapes, custom geometry, gradients, pattern and picture fills, shadows, glow, reflections, soft edges, 3-D bevels and camera scenes, WordArt warps, tables with built-in styles, SVG charts, SmartArt, EMF/WMF metafiles, embedded fonts, digital ink, audio, video and GLB/GLTF 3-D models.           |

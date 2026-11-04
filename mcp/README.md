@@ -63,3 +63,12 @@ This package ships JavaScript source and needs no separate build.
 ## License
 
 Apache-2.0.
+
+## OneDrive host integration
+
+This package does not acquire Microsoft credentials or synchronize OneDrive automatically.
+An authorized application can use `ooxml-core/embedding/onedrive` to retrieve or persist Office
+bytes and provide them to its normal document/tool workflow. See the
+[package reference and conflict recovery guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
+and [live acceptance requirements](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md).
+OpenTeams server attachments remain independent copies; no simulation service is shipped.

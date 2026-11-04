@@ -95,7 +95,7 @@ export function mountFileActions({
 						item('Close all documents', () => closeTabs(ids)),
 					]
 				: []),
-			item('Download a copy', async () => download(await sessions.save(id))),
+			item('Download a copy', async () => download(await sessions.export(id))),
 			item('Version history', () => showVersions({ id, store, sessions, refresh })),
 			item('File location', () => locate(id)),
 			item('Remove from workspace…', () => remove(id)),

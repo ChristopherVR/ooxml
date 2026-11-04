@@ -1,4 +1,18 @@
 export type SuiteFileKind = 'docx' | 'xlsx' | 'pptx' | 'vsdx';
+/** Stable identifiers only. Capability links and authentication tokens must never be persisted. */
+export interface SuiteCloudSource {
+	file: {
+		driveId: string;
+		itemId: string;
+		parentId?: string;
+		name: string;
+		eTag: string;
+		kind: SuiteFileKind;
+		access: 'read' | 'write' | 'unknown';
+	};
+	baseline: Uint8Array;
+	pending: boolean;
+}
 export interface SuiteDocument {
 	id: string;
 	name: string;
@@ -8,12 +22,27 @@ export interface SuiteDocument {
 	modified: number;
 	parent?: { id: string; path: string; revision: number };
 	sourceUrl?: string;
+	cloud?: SuiteCloudSource;
 }
 
 export function suiteFileKind(name: string): SuiteFileKind {
 	const ext = name.split('.').pop()?.toLowerCase();
 	if (ext === 'docx' || ext === 'xlsx' || ext === 'pptx' || ext === 'vsdx') return ext;
 	throw new Error('Choose a .docx, .xlsx, .pptx or .vsdx file');
+}
+
+/** Derive synchronization state for every writer, including assistant edits and version restores. */
+function cloudSource(source: SuiteCloudSource, bytes: Uint8Array): SuiteCloudSource {
+	const { driveId, itemId, parentId, name, eTag, kind, access } = source.file;
+	const pending =
+		bytes.length !== source.baseline.length ||
+		bytes.some((value, i) => value !== source.baseline[i]);
+	if (pending && access !== 'write') throw new Error('This OneDrive document is read-only.');
+	return {
+		file: { driveId, itemId, name, eTag, kind, access, ...(parentId ? { parentId } : {}) },
+		baseline: source.baseline.slice(),
+		pending,
+	};
 }
 
 /** Browser persistence with transactional revision checks, shared by tabs and Teams attachments. */
@@ -50,7 +79,7 @@ export class SuiteDocumentStore {
 	async create(
 		name: string,
 		bytes: Uint8Array,
-		extra: Pick<SuiteDocument, 'parent' | 'sourceUrl'> = {},
+		extra: Pick<SuiteDocument, 'parent' | 'sourceUrl' | 'cloud'> = {},
 	): Promise<SuiteDocument> {
 		const doc: SuiteDocument = {
 			id: crypto.randomUUID(),
@@ -96,6 +125,12 @@ export class SuiteDocumentStore {
 
 	/** All replacements succeed together, including child and parent when saving an embedding. */
 	async commit(changes: { document: SuiteDocument; expected: number }[]): Promise<void> {
+		changes = changes.map(({ document, expected }) => ({
+			document: document.cloud
+				? { ...document, cloud: cloudSource(document.cloud, document.bytes) }
+				: document,
+			expected,
+		}));
 		const db = await this.db;
 		return new Promise((resolve, reject) => {
 			const tx = db.transaction('documents', 'readwrite');

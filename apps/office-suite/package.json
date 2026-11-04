@@ -10,7 +10,8 @@
 		"test": "node ../../scripts/suite-browser-check.mjs",
 		"test:profile": "node ../../scripts/suite-profile-check.mjs",
 		"test:regressions": "node ../../scripts/suite-regression-check.mjs",
-		"test:files": "node ../../scripts/suite-files-check.mjs"
+		"test:files": "node ../../scripts/suite-files-check.mjs",
+		"test:onedrive": "node --test src/cloud-files.test.js"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.12.4",

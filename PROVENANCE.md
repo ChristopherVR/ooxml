@@ -1,5 +1,17 @@
 # Provenance
 
+## Shared OneDrive connection (2026-11-04)
+
+Source repository: ChristopherVR/ooxml, unpublished local checkpoint `eae89e8c4`. The modules
+`src/ui/src/pptx/onedrive/{client,requests,types}.ts` moved into
+`src/core/embedding/onedrive/`, with strict TypeScript settings and a dedicated
+`ooxml-core/embedding/onedrive` package subpath. The PowerPoint UI path is a compatibility
+facade. The core implementation generalizes file identities and native type admission to DOCX,
+XLSX, PPTX and VSDX; adds identity-based reads, separate cloud copies and explicit sharing;
+and adds sessions that retain baseline/local/remote versions for conflict recovery.
+Test-local Graph transports replace the draft's mock service and demo before publication.
+No Office parsing or document merging was extracted into the connection.
+
 ## Further shared Office capabilities (2026-10-28)
 
 Source repository: ChristopherVR/ooxml. Baseline `b36e9472a`, unless a later
