@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.2.0) - 2026-11-04
+
+### Features
+
+- **docx:** Name and save an opened .doc as .docx in the editor ([ac29dc4](https://github.com/ChristopherVR/ooxml/commit/ac29dc49f2762ea480a3d0655a4fe0d63325b752))
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+
+### Bug Fixes
+
+- **docx:** Keep saving a legacy .doc as .doc and add saveDocx ([2e91700](https://github.com/ChristopherVR/ooxml/commit/2e91700191d72b0116def67da6a328b7344b99f8))
+
 ## [1.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.1.2) - 2026-10-29
 
 ## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@1.1.1) - 2026-10-23

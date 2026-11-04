@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.62.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.62.0) - 2026-11-04
+
+### Features
+
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+- **collab:** Merge concurrent onedrive document edits ([194529b](https://github.com/ChristopherVR/ooxml/commit/194529b06c63f994eed5d1d4b7e82759e17a704b))
+
 ## [4.61.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.61.2) - 2026-11-04
 
 ### Bug Fixes

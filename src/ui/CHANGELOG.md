@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.40.0) - 2026-11-04
+
+### Features
+
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+- **embedding:** Support custom storage providers and merge policies ([ea0dfc7](https://github.com/ChristopherVR/ooxml/commit/ea0dfc79cf08e11d9c9b3ffb52afa9b1b542bc13))
+
+### Bug Fixes
+
+- **ui:** Name onedrive compatibility exports for tree shaking ([b9b7727](https://github.com/ChristopherVR/ooxml/commit/b9b7727930d1d41ca519290649084d8bef9c62e8))
+
 ## [1.39.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.39.2) - 2026-11-03
 
 ### Bug Fixes

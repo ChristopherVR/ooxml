@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.42.0](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.42.0) - 2026-11-04
+
+### Features
+
+- **embedding:** Connect office products to shared onedrive storage ([b8620c1](https://github.com/ChristopherVR/ooxml/commit/b8620c13a4903aa27fed365d113153cad76ed29f))
+
 ## [2.41.7](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.41.7) - 2026-11-04
 
 ### Bug Fixes
