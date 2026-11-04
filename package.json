@@ -27,6 +27,7 @@
 		"e2e/visio",
 		"e2e/teams",
 		"demos/teams/*",
+		"demos/onedrive",
 		"demos/pptx",
 		"demos/pptx/demo-*",
 		"e2e/pptx"

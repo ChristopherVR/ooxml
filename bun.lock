@@ -46,6 +46,17 @@
         "@types/react-dom": "^19.3.0",
       },
     },
+    "demos/onedrive": {
+      "name": "ooxml-demo-onedrive",
+      "version": "0.0.0",
+      "dependencies": {
+        "@azure/msal-browser": "5.25.1",
+        "ooxml-core": "workspace:*",
+      },
+      "devDependencies": {
+        "vite": "^8.3.5",
+      },
+    },
     "demos/pptx": {
       "name": "pptx-demos",
       "version": "0.0.0",
@@ -3242,6 +3253,8 @@
     "oniguruma-to-es": ["oniguruma-to-es@4.3.6", "", { "dependencies": { "oniguruma-parser": "^0.12.2", "regex": "^6.1.0", "regex-recursion": "^6.0.2" } }, "sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA=="],
 
     "ooxml-core": ["ooxml-core@workspace:src/core"],
+
+    "ooxml-demo-onedrive": ["ooxml-demo-onedrive@workspace:demos/onedrive"],
 
     "ooxml-mcp": ["ooxml-mcp@workspace:mcp"],
 

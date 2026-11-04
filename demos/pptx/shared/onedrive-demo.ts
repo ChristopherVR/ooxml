@@ -11,7 +11,7 @@ import {
 	signInWithToken,
 	type OneDriveAuthority,
 	type OneDriveSignIn,
-} from './onedrive-demo-auth';
+} from '../../onedrive/auth';
 import { createOneDriveDemoSession, type OneDriveDemoDeck } from './onedrive-demo-session';
 
 import './onedrive-demo.css';

@@ -14,7 +14,7 @@ import {
 } from 'ooxml-core/embedding/onedrive';
 import { mergePptxSnapshots } from 'ooxml-core/pptx';
 
-import type { OneDriveSignIn } from './onedrive-demo-auth';
+import type { OneDriveSignIn } from '../../onedrive/auth';
 
 /** What the viewer shows: load `bytes` whenever `revision` changes. */
 export interface OneDriveDemoDeck {
