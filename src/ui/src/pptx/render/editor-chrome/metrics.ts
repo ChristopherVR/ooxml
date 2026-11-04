@@ -38,6 +38,31 @@ export function editorThumbnailHeight(
 	return Math.max(1, canvasHeight) * (width / Math.max(1, canvasWidth));
 }
 
+/** Size of a slide thumbnail and the scale its slide stage is drawn at. */
+export interface SlideThumbnailLayout {
+	width: number;
+	height: number;
+	scale: number;
+}
+
+/**
+ * Lay out a slide thumbnail `width` pixels wide at the deck's aspect ratio. Every binding's
+ * `SlideThumbnail` draws the full-size slide stage scaled by `scale` inside a `width` by `height`
+ * box, so a thumbnail matches the slide at any width a host picks.
+ */
+export function slideThumbnailLayout(
+	canvasWidth: number,
+	canvasHeight: number,
+	width = EDITOR_THUMBNAIL_WIDTH,
+): SlideThumbnailLayout {
+	const safeWidth = Math.max(1, width);
+	return {
+		width: safeWidth,
+		height: editorThumbnailHeight(canvasWidth, canvasHeight, safeWidth),
+		scale: safeWidth / Math.max(1, canvasWidth),
+	};
+}
+
 export function editorThumbnailStep(
 	canvasWidth: number,
 	canvasHeight: number,

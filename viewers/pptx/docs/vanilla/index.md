@@ -105,6 +105,7 @@ import { createAiAssistant } from 'pptx-vanilla-viewer/ai';
 | `ElementRenderer`, `ElementRendererRegistry`                     | type     | Renderer extension surface. See [Element Renderers](/vanilla/renderers).                   |
 | `createDefaultRegistry`                                          | function | The default renderer registry (all built-in renderers pre-registered).                     |
 | `createSlidesPane`                                               | function | Slide thumbnail rail for a custom shell. See [API](/vanilla/api#slide-thumbnail-rail).     |
+| `renderSlideThumbnail`                                           | function | One slide drawn as the rail draws it. See [API](/vanilla/api#slide-thumbnail).             |
 | `getViewerCss`                                                   | function | The full stylesheet as a string, for CSP-strict hosts.                                     |
 | `ViewerTheme`, `ViewerThemeColors`                               | type     | Theme configuration types. See [Theming](/vanilla/theming).                                |
 | `vermilionLightTheme`, `vermilionDarkTheme`                      | const    | Built-in vermilion light/dark presets.                                                     |
