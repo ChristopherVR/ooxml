@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.62.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.62.2) - 2026-11-03
+
+### Bug Fixes
+
+- **release:** Publish pptx-angular-viewer from its built dist ([#240](https://github.com/ChristopherVR/ooxml/issues/240)) ([8015762](https://github.com/ChristopherVR/ooxml/commit/8015762a9eb2852cbaa4bc57bd0e7d6912802bd3))
+
 ## [4.62.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.62.1) - 2026-11-03
 
 ### Styling
