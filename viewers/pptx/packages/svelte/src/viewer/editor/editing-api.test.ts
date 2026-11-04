@@ -4,10 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditingApi } from './editing-api';
 import type { EditorState } from './editor-state.svelte';
 
-/** A stub `EditorState` whose `save` just echoes back the requested format. */
+/** A stub `EditorState` whose `save` and `serialize` return fixed bytes. */
 function stubEditor(): EditorState {
 	return {
+		dirty: true,
+		slides: [],
+		templateElementsBySlideId: {},
+		sections: [],
 		save: (_format?: PptxSaveFormat) => Promise.resolve(new Uint8Array([1, 2, 3])),
+		serialize: (_format?: PptxSaveFormat) => Promise.resolve(new Uint8Array([1, 2, 3])),
 	} as unknown as EditorState;
 }
 
@@ -79,5 +84,49 @@ describe('createEditingApi with host-owned storage', () => {
 		} finally {
 			clickSpy.mockRestore();
 		}
+	});
+});
+
+describe('createEditingApi dirty state after a save', () => {
+	it('marks the document clean once the host storage has stored it', async () => {
+		const editor = stubEditor();
+		const onSavedClean = vi.fn();
+		await createEditingApi(
+			editor,
+			() => ({ save: async () => undefined }),
+			onSavedClean,
+		).downloadPptx('deck.pptx');
+		expect(editor.dirty).toBe(false);
+		expect(onSavedClean).toHaveBeenCalledOnce();
+	});
+
+	it('stays unsaved when the host storage rejects', async () => {
+		const editor = stubEditor();
+		const onSavedClean = vi.fn();
+		const api = createEditingApi(
+			editor,
+			() => ({ save: () => Promise.reject(new Error('offline')) }),
+			onSavedClean,
+		);
+		await expect(api.downloadPptx('deck.pptx')).rejects.toThrow('offline');
+		expect(editor.dirty).toBe(true);
+		expect(onSavedClean).not.toHaveBeenCalled();
+	});
+
+	it('stays unsaved when an edit lands while the upload is in flight', async () => {
+		const editor = stubEditor();
+		const onSavedClean = vi.fn();
+		const api = createEditingApi(
+			editor,
+			() => ({
+				save: async () => {
+					(editor as { slides: unknown[] }).slides = [{ id: 'edited during upload' }];
+				},
+			}),
+			onSavedClean,
+		);
+		await api.downloadPptx('deck.pptx');
+		expect(editor.dirty).toBe(true);
+		expect(onSavedClean).not.toHaveBeenCalled();
 	});
 });

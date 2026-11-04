@@ -115,6 +115,12 @@ export interface EditorHistoryResult {
 	holdTracking: (held: boolean) => void;
 	markDirty: () => void;
 	/**
+	 * A save landed and left the document clean: the deck as it is now is the baseline. Saving
+	 * writes the saved identity (slide numbers, relationship ids) back onto the slides, which the
+	 * tracker must not later report as an edit.
+	 */
+	markSaved: () => void;
+	/**
 	 * Run `apply` without arming the undo tracker: the edits it makes show at
 	 * once but are no undo step and leave the dirty flag alone, and the next
 	 * committed edit records the state from before them. A colour picker drag
@@ -518,6 +524,12 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		trackingHeldRef.current = held;
 	}, []);
 
+	const markSaved = useCallback(() => {
+		const snapshot = buildHistorySnapshot();
+		lastHistorySnapshotRef.current = snapshot;
+		lastHistorySerializedRef.current = serializeDocument(snapshot);
+	}, [buildHistorySnapshot]);
+
 	return {
 		commitSlides,
 		holdTracking,
@@ -531,6 +543,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		forgetHistory: history.forget,
 		attachCollaboration: history.attachCollaboration,
 		markDirty,
+		markSaved,
 		withoutUndoStep,
 		buildHistorySnapshot,
 	};

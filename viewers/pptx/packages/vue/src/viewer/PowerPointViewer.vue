@@ -890,6 +890,11 @@ const exporter = useExportWiring({
 		emit('error', saveFailureMessage(saveError));
 		compatToasts.notify(SAVE_FAILED_TOAST);
 	},
+	// The stores autosave watches; `autosave` is declared further down and only read once a save runs.
+	changeSources: () => [slides.value, templateElementsBySlideId.value],
+	onSavedClean: () => {
+		autosave.isDirty.value = false;
+	},
 });
 const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExportPdf } = exporter;
 

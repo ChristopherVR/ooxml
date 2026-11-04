@@ -14,6 +14,8 @@ import { ViewerFileIOService } from './viewer-file-io.service';
 const bytes = new Uint8Array([0x50, 0x4b]);
 
 function harness(storage: DocumentStorage | undefined) {
+	let sources: unknown[] = [[]];
+	const markSaved = vi.fn();
 	const savePresentation = vi.fn();
 	const afterSuccessfulSave = vi.fn();
 	const onSaveError = vi.fn();
@@ -38,8 +40,13 @@ function harness(storage: DocumentStorage | undefined) {
 		onSaveError,
 		storage: () => storage,
 		fileName: () => 'Quarterly.pptx',
+		changeSources: () => sources,
+		markSaved,
 	});
-	return { service, savePresentation, afterSuccessfulSave, onSaveError };
+	const edit = () => {
+		sources = [[]];
+	};
+	return { service, savePresentation, afterSuccessfulSave, onSaveError, markSaved, edit };
 }
 
 describe('ViewerFileIOService host storage', () => {
@@ -83,5 +90,29 @@ describe('ViewerFileIOService host storage', () => {
 		const { service, savePresentation } = harness(undefined);
 		await service.saveAs('ppsx');
 		expect(savePresentation).toHaveBeenCalledWith(bytes, 'Quarterly.ppsx', 'ppsx');
+	});
+});
+
+describe('ViewerFileIOService dirty state after a save', () => {
+	it('marks the document clean once the host storage has stored it', async () => {
+		const { service, markSaved } = harness({ save: async () => undefined });
+		await service.save();
+		expect(markSaved).toHaveBeenCalledOnce();
+	});
+
+	it('stays unsaved when the host storage rejects', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const { service, markSaved } = harness({ save: () => Promise.reject(new Error('offline')) });
+		await service.save();
+		expect(markSaved).not.toHaveBeenCalled();
+		vi.restoreAllMocks();
+	});
+
+	it('stays unsaved when an edit lands while the upload is in flight', async () => {
+		let edit = () => {};
+		const wired = harness({ save: async () => edit() });
+		edit = wired.edit;
+		await wired.service.save();
+		expect(wired.markSaved).not.toHaveBeenCalled();
 	});
 });

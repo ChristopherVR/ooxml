@@ -10,9 +10,11 @@ import {
 	deleteAutosaveSnapshot,
 	deliverSavedPresentation,
 	exportDeckJson,
+	isCleanAfterSave,
 	playFeedbackSound,
 	rasterResultToPngBlob,
 	savedPresentationFileName,
+	savedPresentationRevision,
 	shouldDiscardAutosaveOnSuccessfulSave,
 } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSaveFormat, PptxSlide } from 'pptx-viewer-core';
@@ -60,6 +62,13 @@ export interface UseExportWiringInput {
 	storage?: () => DocumentStorage | undefined;
 	/** A Save / Save As failed (serialising, or the host's storage rejected). */
 	onSaveError?: (error: unknown) => void;
+	/**
+	 * The values a save is built from (the ones autosave watches), read when a save starts and
+	 * when it lands: an edit in between keeps the document unsaved.
+	 */
+	changeSources?: () => readonly unknown[];
+	/** A Save / Save As landed with no edit while it was in flight: the document is clean. */
+	onSavedClean?: () => void;
 }
 
 export interface UseExportWiringResult {
@@ -163,6 +172,7 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		reason: DocumentSaveReason = 'saveAs',
 	): Promise<void> {
 		const storage = input.storage?.();
+		const revision = savedPresentationRevision(input.changeSources?.() ?? []);
 		try {
 			const bytes = await saveAs(format);
 			await deliverSavedPresentation({
@@ -172,6 +182,9 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 				fileName: savedPresentationFileName(input.fileName?.(), format),
 				reason,
 			});
+			if (input.changeSources && isCleanAfterSave(revision, input.changeSources())) {
+				input.onSavedClean?.();
+			}
 			// Options > Accessibility > "feedback with sound", and Options > Save >
 			// "keep the last AutoRecover version": once a `.pptx` save lands, the
 			// crash-recovery snapshot for this file is stale (the real file already

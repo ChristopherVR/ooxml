@@ -64,4 +64,33 @@ describe('PptxViewer host-owned storage', () => {
 		expect(onError).toHaveBeenCalledWith('Save failed: offline', expect.any(Error));
 		expect(viewer.store.get().compatToasts.map((toast) => toast.id)).toContain('save-failed');
 	});
+
+	it('marks the document clean once the host storage has stored it', async () => {
+		const viewer = await mount({ storage: { save: async () => undefined } });
+		viewer.store.set({ dirty: true });
+		await viewer.downloadPptx();
+		expect(viewer.store.get().dirty).toBe(false);
+	});
+
+	it('keeps the document unsaved when the host storage rejects', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const viewer = await mount({ storage: { save: () => Promise.reject(new Error('offline')) } });
+		viewer.store.set({ dirty: true });
+		await viewer.downloadPptx();
+		expect(viewer.store.get().dirty).toBe(true);
+	});
+
+	it('keeps the document unsaved when an edit lands while the upload is in flight', async () => {
+		let viewer: PptxViewer | undefined;
+		viewer = await mount({
+			storage: {
+				save: async () => {
+					viewer?.store.set({ slides: [...(viewer?.store.get().slides ?? [])], dirty: true });
+				},
+			},
+		});
+		viewer.store.set({ dirty: true });
+		await viewer.downloadPptx();
+		expect(viewer.store.get().dirty).toBe(true);
+	});
 });

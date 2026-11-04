@@ -36,6 +36,7 @@ import {
 	applyPreferenceToOptions,
 	buildUserFontFaceStyles,
 	deleteAutosaveSnapshot,
+	isCleanAfterSave,
 	isDialogAvailable,
 	isEditingAllowed,
 	isFeatureEnabled,
@@ -45,6 +46,7 @@ import {
 	RIBBON_SCOPE_ATTR,
 	readBackstageRecentFile,
 	saveFailureMessage,
+	savedPresentationRevision,
 	withSaveFailureToast,
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
@@ -978,6 +980,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			handleEnterPresenterView,
 			handleEnterRehearsalMode,
 			autosaveStatus,
+			getChangeSources,
 			recovery,
 			isEncryptedDialogOpen,
 			setIsEncryptedDialogOpen,
@@ -1159,6 +1162,11 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// actually lands, play the completion cue and, unless the user asked to
 		// keep it, discard the crash-recovery snapshot for this file (the real
 		// file on disk already has the work).
+		// Read at the moment a save starts and when it lands, so they must be this render's.
+		const changeSourcesRef = useRef(getChangeSources);
+		changeSourcesRef.current = getChangeSources;
+		const markSavedRef = useRef(history.markSaved);
+		markSavedRef.current = history.markSaved;
 		const exportHandlers = useMemo(() => {
 			const afterSuccessfulSave = (format: PptxSaveFormat): void => {
 				playFeedbackSound(viewerOptions);
@@ -1172,9 +1180,16 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				format: PptxSaveFormat,
 				reason: DocumentSaveReason = 'saveAs',
 			): Promise<boolean> => {
-				// A failed save (or host storage rejection) must not discard the recovery copy.
+				const revision = savedPresentationRevision(changeSourcesRef.current());
+				// A failed save (or host storage rejection) must not discard the recovery copy, and
+				// leaves the document unsaved.
 				if ((await rawExportHandlers.handleSaveAsFormat(format, reason)) === false) {
 					return false;
+				}
+				// Clean only when nothing was edited while the save was in flight.
+				if (isCleanAfterSave(revision, changeSourcesRef.current())) {
+					markSavedRef.current();
+					setIsDirty(false);
 				}
 				afterSuccessfulSave(format);
 				return true;
@@ -1187,7 +1202,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				handleSaveAsPpsx: () => void handleSaveAsFormat('ppsx'),
 				handleSaveAsPptm: () => void handleSaveAsFormat('pptm'),
 			};
-		}, [rawExportHandlers, viewerOptions, filePath, storage]);
+		}, [rawExportHandlers, viewerOptions, filePath, storage, setIsDirty]);
 
 		// Route keyboard/end-of-show exits (Escape, the timed advance past the
 		// last slide) through the same keep/discard-ink-annotations dialog as the

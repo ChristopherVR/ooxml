@@ -87,3 +87,59 @@ describe('useExportWiring downloadAs', () => {
 		stop();
 	});
 });
+
+describe('useExportWiring dirty state after a save', () => {
+	function tracked(storage: DocumentStorage) {
+		let sources: unknown[] = [[]];
+		const onSavedClean = vi.fn();
+		const scope = effectScope();
+		const result = scope.run(() =>
+			useExportWiring({
+				mergedSlides: ref([]),
+				slides: ref([]),
+				slideCount: computed(() => 0),
+				canvasSize: ref({ width: 960, height: 540 }),
+				activeSlideIndex: ref(0),
+				saveAs: vi.fn(async (_format: PptxSaveFormat) => bytes),
+				fileName: () => 'deck.pptx',
+				getDeckData: () => ({}) as PptxData,
+				storage: () => storage,
+				onSaveError: () => undefined,
+				changeSources: () => sources,
+				onSavedClean,
+			}),
+		)!;
+		return {
+			...result,
+			onSavedClean,
+			edit: () => {
+				sources = [[]];
+			},
+			stop: () => scope.stop(),
+		};
+	}
+
+	it('marks the document clean once the host storage has stored it', async () => {
+		const wired = tracked({ save: async () => undefined });
+		await wired.save();
+		expect(wired.onSavedClean).toHaveBeenCalledOnce();
+		wired.stop();
+	});
+
+	it('stays unsaved when the host storage rejects', async () => {
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+		const wired = tracked({ save: () => Promise.reject(new Error('offline')) });
+		await wired.save();
+		expect(wired.onSavedClean).not.toHaveBeenCalled();
+		wired.stop();
+	});
+
+	it('stays unsaved when an edit lands while the upload is in flight', async () => {
+		let edit = () => {};
+		const wired = tracked({ save: async () => edit() });
+		edit = wired.edit;
+		await wired.save();
+		expect(wired.onSavedClean).not.toHaveBeenCalled();
+		wired.stop();
+	});
+});

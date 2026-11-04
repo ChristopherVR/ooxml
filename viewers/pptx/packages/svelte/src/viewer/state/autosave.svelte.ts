@@ -225,6 +225,11 @@ export class AutosaveController {
 		this.#engine.noteInlineDraft(draft);
 	}
 
+	/** File > Save landed with no edit in flight: the document is clean (and saved, if autosave runs). */
+	markSaved(): void {
+		this.#engine.markClean({ saved: true });
+	}
+
 	/** Force an immediate save, bypassing the interval. */
 	save(): Promise<void> {
 		return this.#engine.saveNow();

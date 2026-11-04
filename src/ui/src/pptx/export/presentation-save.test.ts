@@ -2,7 +2,12 @@
 import type { DocumentStorage } from 'ooxml-core/embedding';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { deliverSavedPresentation, presentationSaveMimeType } from './presentation-save';
+import {
+	deliverSavedPresentation,
+	isCleanAfterSave,
+	presentationSaveMimeType,
+	savedPresentationRevision,
+} from './presentation-save';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -86,5 +91,22 @@ describe('save failure notice', () => {
 		expect(withSaveFailureToast([other, SAVE_FAILED_TOAST])).toEqual([SAVE_FAILED_TOAST, other]);
 		expect(SAVE_FAILED_TOAST.messageKey).toBe('pptx.autosave.saveFailed');
 		expect(saveFailureMessage(new Error('offline'))).toBe('Save failed: offline');
+	});
+});
+
+describe('isCleanAfterSave', () => {
+	it('is clean when nothing was edited while the save was in flight', () => {
+		const slides = [{ id: 'a' }];
+		const templates = new Map();
+		const revision = savedPresentationRevision([slides, templates]);
+		expect(isCleanAfterSave(revision, [slides, templates])).toBe(true);
+	});
+
+	it('stays unsaved when an edit replaced a source during the save', () => {
+		const slides = [{ id: 'a' }];
+		const templates = new Map();
+		const revision = savedPresentationRevision([slides, templates]);
+		expect(isCleanAfterSave(revision, [[...slides, { id: 'b' }], templates])).toBe(false);
+		expect(isCleanAfterSave(revision, [slides, new Map()])).toBe(false);
 	});
 });

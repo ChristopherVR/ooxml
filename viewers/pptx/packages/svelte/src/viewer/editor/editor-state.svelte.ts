@@ -59,6 +59,7 @@ import {
 	resetEditorSession,
 	restoreEditorSnapshot,
 	saveEditorState,
+	serializeEditorState,
 	updateEditorDocumentProperties,
 	updateEditorTagCollections,
 } from './editor-document-lifecycle';
@@ -667,5 +668,10 @@ export class EditorState {
 
 	save(format: PptxSaveFormat = 'pptx'): Promise<Uint8Array> {
 		return saveEditorState(this, format);
+	}
+
+	/** Serialise without touching the dirty flag: File > Save decides once the bytes are stored. */
+	serialize(format: PptxSaveFormat = 'pptx'): Promise<Uint8Array> {
+		return serializeEditorState(this, format);
 	}
 }

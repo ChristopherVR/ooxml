@@ -132,7 +132,10 @@ export interface EditorOps {
 	clearHistory(): void;
 	/** File > Options > Advanced > "Maximum number of undos". */
 	setHistoryDepth(depth: number): void;
+	/** Serialise and mark the document clean (`getContent`). */
 	save(format?: PptxSaveFormat): Promise<Uint8Array>;
+	/** Serialise without touching the dirty flag: File > Save decides once the bytes are stored. */
+	serialize(format?: PptxSaveFormat): Promise<Uint8Array>;
 }
 
 export interface EditorSnapshot {
@@ -254,7 +257,7 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		transformCommittedText: deps.transformCommittedText,
 	});
 
-	return {
+	const ops: EditorOps = {
 		readInlineList: deps.readInlineList,
 		formatInlineList: deps.formatInlineList,
 		cancelInlineList: deps.cancelInlineList,
@@ -494,6 +497,12 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 		},
 
 		async save(format: PptxSaveFormat = 'pptx') {
+			const bytes = await ops.serialize(format);
+			store.set({ dirty: false });
+			return bytes;
+		},
+
+		async serialize(format: PptxSaveFormat = 'pptx') {
 			const handler = deps.getHandler();
 			if (!handler) {
 				throw new Error('No presentation is loaded.');
@@ -574,8 +583,8 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 					passwordProtected: state.presentationPassword !== null,
 				},
 			);
-			store.set({ dirty: false });
 			return bytes;
 		},
 	};
+	return ops;
 }

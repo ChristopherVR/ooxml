@@ -11,6 +11,11 @@ import {
 	type DocumentStorage,
 } from 'ooxml-core/embedding';
 
+import {
+	autosaveSnapshotMark,
+	autosaveSourcesChanged,
+	type AutosaveSnapshotMark,
+} from '../render/autosave-tick';
 import type { CompatibilityWarningToast } from '../render/compatibility-warning-toasts';
 import { downloadBlob } from './download-helpers';
 
@@ -77,4 +82,28 @@ export function withSaveFailureToast(
 	toasts: readonly CompatibilityWarningToast[],
 ): CompatibilityWarningToast[] {
 	return [SAVE_FAILED_TOAST, ...toasts.filter((toast) => toast.id !== SAVE_FAILED_TOAST.id)];
+}
+
+/**
+ * The document a Save serialised, captured from the same values a binding's autosave watches (the
+ * slides array, the template-element map and whatever else its serializer reads; each is
+ * reassigned, never mutated, on an edit).
+ */
+export type SavedPresentationRevision = AutosaveSnapshotMark;
+
+/** Capture the revision a Save is about to write. Call it right before serialising. */
+export function savedPresentationRevision(sources: readonly unknown[]): SavedPresentationRevision {
+	return autosaveSnapshotMark('', sources);
+}
+
+/**
+ * Whether a Save that has just landed (the host's storage resolved, or the download started)
+ * leaves the editor clean: true only when nothing was edited while it was in flight. An edit made
+ * during a slow upload stays unsaved, and a failed save never reaches this, so it stays unsaved too.
+ */
+export function isCleanAfterSave(
+	revision: SavedPresentationRevision,
+	sources: readonly unknown[],
+): boolean {
+	return !autosaveSourcesChanged(revision, sources);
 }

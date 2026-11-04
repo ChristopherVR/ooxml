@@ -2,6 +2,7 @@ import {
 	armEditorKeyboard,
 	cycleSelectableElement,
 	deliverSavedPresentation,
+	isCleanAfterSave,
 	isDialogAvailable,
 	mapCustomizedEditorKey,
 	mapInlineTextFormatKey,
@@ -9,6 +10,7 @@ import {
 	parentSelection,
 	removeGuide,
 	savedPresentationFileName,
+	savedPresentationRevision,
 } from 'ooxml-ui/pptx';
 import type {
 	CollaborationHistoryTarget,
@@ -697,6 +699,31 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		syncOverlay();
 	});
 
+	// Serialise without clearing the dirty flag, deliver, and only then decide: a rejected upload
+	// keeps the document unsaved, and so does an edit made while it was in flight.
+	const saveChangeSources = (): readonly unknown[] => {
+		const state = store.get();
+		return [state.slides, state.templateElementsBySlideId, state.slideMasters, state.sections];
+	};
+	const deliverSave = async (
+		format: PptxSaveFormat,
+		fileName: string,
+		reason: 'save' | 'saveAs',
+	): Promise<void> => {
+		const revision = savedPresentationRevision(saveChangeSources());
+		const bytes = await ops.serialize(format);
+		await deliverSavedPresentation({
+			storage: deps.getStorage?.(),
+			bytes,
+			format,
+			fileName,
+			reason,
+		});
+		if (isCleanAfterSave(revision, saveChangeSources())) {
+			store.set({ dirty: false });
+		}
+	};
+
 	return {
 		attachChrome() {
 			detachChrome();
@@ -853,27 +880,10 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		// that passes the deck it opened (`report.ppt`) gets `report.pptx` back
 		// rather than a `.ppt` whose bytes are an OpenXML package. With a host
 		// `storage` the bytes go to `storage.save()` instead of a download.
-		async downloadAs(format, fileName) {
-			const bytes = await ops.save(format);
-			await deliverSavedPresentation({
-				storage: deps.getStorage?.(),
-				bytes,
-				format,
-				fileName: savedPresentationFileName(fileName, format),
-				reason: 'saveAs',
-			});
-		},
+		downloadAs: (format, fileName) =>
+			deliverSave(format, savedPresentationFileName(fileName, format), 'saveAs'),
 		// File > Save: `.pptx`, reported to the host's storage as `save` (Save As is `downloadAs`).
-		async downloadPptx(fileName) {
-			const bytes = await ops.save('pptx');
-			await deliverSavedPresentation({
-				storage: deps.getStorage?.(),
-				bytes,
-				format: 'pptx',
-				fileName: savedPresentationFileName(fileName),
-				reason: 'save',
-			});
-		},
+		downloadPptx: (fileName) => deliverSave('pptx', savedPresentationFileName(fileName), 'save'),
 		destroy() {
 			unsubscribe();
 			cropMode.destroy();

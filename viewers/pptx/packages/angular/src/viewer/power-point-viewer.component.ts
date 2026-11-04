@@ -3108,6 +3108,9 @@ export class PowerPointViewerComponent
 				this.error.emit(saveFailureMessage(saveError));
 				this.loadNotices.notify(SAVE_FAILED_TOAST);
 			},
+			// A save that lands with no edit in flight leaves the document clean.
+			changeSources: () => this.saveChangeSources(),
+			markSaved: () => this.editor.dirty.set(false),
 			afterSuccessfulSave: (format) => {
 				this.viewerOpts.playFeedback();
 				const filePath = this.filePath();
@@ -3268,17 +3271,9 @@ export class PowerPointViewerComponent
 					hostIntervalMs: this.autosaveIntervalMs(),
 					optionsIntervalSeconds: this.viewerOpts.autosaveIntervalSeconds(),
 				}),
-			// Everything `serializeForAutosave` reads that changes by
-			// REASSIGNMENT, so a tick that finds all of them unchanged can skip
-			// re-serializing a deck it has already snapshotted.
-			changeSources: () => [
-				this.editor.slides(),
-				this.editor.templateElementsBySlideId(),
-				this.editor.sections(),
-				this.canEdit(),
-				this.dialogs.presentationPassword(),
-				this.dialogs.isPasswordProtected(),
-			],
+			// A tick that finds all of these unchanged skips re-serializing a deck it has already
+			// snapshotted.
+			changeSources: () => this.saveChangeSources(),
 		});
 
 		// Host events that describe a transition. Registered last so they see the settled
@@ -3719,6 +3714,22 @@ export class PowerPointViewerComponent
 		return this.slideCount();
 	}
 	/** Whether the document has unsaved changes. */
+	/**
+	 * Everything the serializers read that changes by REASSIGNMENT (plus the edit revision): what
+	 * autosave compares between ticks, and what File > Save compares before and after it lands.
+	 */
+	private saveChangeSources(): readonly unknown[] {
+		return [
+			this.editor.slides(),
+			this.editor.templateElementsBySlideId(),
+			this.editor.sections(),
+			this.editor.editRevision(),
+			this.canEdit(),
+			this.dialogs.presentationPassword(),
+			this.dialogs.isPasswordProtected(),
+		];
+	}
+
 	isDirty(): boolean {
 		return this.editor.dirty();
 	}

@@ -71,6 +71,7 @@ function fakeOps(): EditorOps {
 		clearHistory: vi.fn(),
 		setHistoryDepth: vi.fn(),
 		save: vi.fn(),
+		serialize: vi.fn(),
 	};
 }
 

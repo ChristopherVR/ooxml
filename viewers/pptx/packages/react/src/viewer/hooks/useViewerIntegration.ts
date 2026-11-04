@@ -174,6 +174,8 @@ export interface ViewerIntegrationResult {
 	handleEnterPresenterView: AnnotationHandlersResult['handleEnterPresenterView'];
 	handleEnterRehearsalMode: AnnotationHandlersResult['handleEnterRehearsalMode'];
 	autosaveStatus: AutosaveStatus;
+	/** The values a save is built from, read fresh (File > Save compares them before and after). */
+	getChangeSources: () => readonly unknown[];
 	/** The crash-recovery prompt (shared descriptor) plus its accept/decline actions. */
 	recovery: UseRecoveryDetectionResult;
 	isEncryptedDialogOpen: boolean;
@@ -284,7 +286,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 	// ── Content lifecycle (load, font, serialize, autosave) ───────
 	const [isEncryptedDialogOpen, setIsEncryptedDialogOpen] = useState(false);
 	const [loadVersion, setLoadVersion] = useState(0);
-	const { handlerRef, serializeSlides, autosaveStatus } = useContentLifecycle({
+	const { handlerRef, serializeSlides, autosaveStatus, getChangeSources } = useContentLifecycle({
 		content,
 		filePath,
 		storage,
@@ -648,6 +650,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		handleEnterPresenterView,
 		handleEnterRehearsalMode,
 		autosaveStatus,
+		getChangeSources,
 		recovery,
 		isEncryptedDialogOpen,
 		setIsEncryptedDialogOpen,

@@ -329,7 +329,11 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	});
 
 	provideViewerStorage(() => options.getStorage?.());
-	const rawEditingApi = createEditingApi(editor, () => options.getStorage?.());
+	const rawEditingApi = createEditingApi(
+		editor,
+		() => options.getStorage?.(),
+		() => collabCluster.autosaveCtl.markSaved(),
+	);
 	// Options > Accessibility > "feedback with sound", and Options > Save >
 	// "keep the last AutoRecover version": once a `.pptx` Save/Save-As download
 	// actually lands, play the completion cue and, unless the user asked to

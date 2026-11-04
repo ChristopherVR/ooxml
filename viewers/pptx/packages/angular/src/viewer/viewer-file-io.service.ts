@@ -20,6 +20,8 @@ import { inject, Injectable, signal } from '@angular/core';
 import type { DeckSaveIntent, DocumentSaveReason, DocumentStorage } from 'ooxml-ui/pptx';
 import {
 	deliverSavedPresentation,
+	isCleanAfterSave,
+	savedPresentationRevision,
 	exportDeckJson,
 	openPptxFile,
 	savedPresentationFileName,
@@ -58,6 +60,13 @@ interface FileIOHost {
 	readonly fileName?: () => string | undefined;
 	/** A Save / Save As failed (serialising, or the host's storage rejected). */
 	readonly onSaveError?: (error: unknown) => void;
+	/**
+	 * The values a save is built from (the ones autosave watches), read when a save starts and
+	 * when it lands: an edit in between keeps the document unsaved.
+	 */
+	readonly changeSources?: () => readonly unknown[];
+	/** A Save / Save As landed with no edit while it was in flight: the document is clean. */
+	readonly markSaved?: () => void;
 }
 
 @Injectable()
@@ -151,6 +160,7 @@ export class ViewerFileIOService {
 
 	private async writeSave(format: PptxSaveFormat, reason: DocumentSaveReason): Promise<void> {
 		const host = this.requireHost();
+		const revision = savedPresentationRevision(host.changeSources?.() ?? []);
 		const intent = host.saveIntent();
 		const slides = buildSaveSlides(host.slides(), host.templateElementsBySlideId());
 		const bytes = host.canEdit()
@@ -164,6 +174,9 @@ export class ViewerFileIOService {
 			await deliverSavedPresentation({ storage, bytes, format, fileName, reason });
 		} else {
 			this.exportSvc.savePresentation(bytes, fileName, format);
+		}
+		if (host.changeSources && isCleanAfterSave(revision, host.changeSources())) {
+			host.markSaved?.();
 		}
 		host.afterSuccessfulSave(format);
 	}

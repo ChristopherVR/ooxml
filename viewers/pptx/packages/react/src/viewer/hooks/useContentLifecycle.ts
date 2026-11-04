@@ -88,6 +88,8 @@ export interface ContentLifecycleResult {
 	 * optional output container (`ppsx`/`pptm`/...) so Save As shares it.
 	 */
 	serializeSlides: SerializeSlides;
+	/** The values a save is built from, read fresh (see `savedPresentationRevision`). */
+	getChangeSources: () => readonly unknown[];
 	/**
 	 * Serialise for bytes the viewer reads back itself (autosave snapshot,
 	 * re-serialise-then-reload). Always plaintext, so recovery - which has no
@@ -237,6 +239,32 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 	// the crash-recovery data was destroyed the moment protection was enabled.
 	const serializeForRecovery = useSerialize({ ...serializeInput, purpose: 'recovery-snapshot' });
 
+	// Everything the serializers read that changes by REASSIGNMENT: autosave skips a deck it has
+	// already snapshotted, and File > Save tells whether an edit landed while it was in flight.
+	// The refs are read by `.current` because an inline edit in progress lives there and nowhere
+	// else yet.
+	const getChangeSources = (): readonly unknown[] => [
+		slides,
+		state.templateElementsBySlideId,
+		state.guides,
+		state.headerFooter,
+		state.presentationProperties,
+		state.customShows,
+		state.sections,
+		state.coreProperties,
+		state.appProperties,
+		state.customProperties,
+		state.tagCollections,
+		state.notesMaster,
+		state.handoutMaster,
+		state.embeddedFonts,
+		embedFonts,
+		password,
+		state.inlineEditingElementIdRef.current,
+		state.inlineEditingTextRef.current,
+		state.inlineEditingSnapshotRef.current,
+	];
+
 	const { autosaveStatus } = useAutosave({
 		isDirty: state.isDirty,
 		filePath,
@@ -244,35 +272,11 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		serializeSlides: serializeForRecovery,
 		enabled: autosaveEnabled,
 		...(autosaveIntervalMs === undefined ? {} : { intervalMs: autosaveIntervalMs }),
-		// Everything `serializeForRecovery` reads that changes by REASSIGNMENT,
-		// so a poll that finds all of them unchanged can skip re-serializing a
-		// deck it has already snapshotted. The two refs are read by `.current`
-		// because an inline edit in progress lives there and nowhere else yet.
 		onSaved: input.onAutosave,
 		inlineDraftSinkRef: state.autosaveDraftSinkRef,
 		getInlineEditingId: () => state.inlineEditingElementIdRef.current,
-		getChangeSources: () => [
-			slides,
-			state.templateElementsBySlideId,
-			state.guides,
-			state.headerFooter,
-			state.presentationProperties,
-			state.customShows,
-			state.sections,
-			state.coreProperties,
-			state.appProperties,
-			state.customProperties,
-			state.tagCollections,
-			state.notesMaster,
-			state.handoutMaster,
-			state.embeddedFonts,
-			embedFonts,
-			password,
-			state.inlineEditingElementIdRef.current,
-			state.inlineEditingTextRef.current,
-			state.inlineEditingSnapshotRef.current,
-		],
+		getChangeSources,
 	});
 
-	return { handlerRef, serializeSlides, serializeForRecovery, autosaveStatus };
+	return { handlerRef, serializeSlides, serializeForRecovery, autosaveStatus, getChangeSources };
 }
