@@ -88,3 +88,36 @@ describe('three-way XML merge', () => {
 		).toBe('unresolved');
 	});
 });
+
+describe('XML child sequence constraints', () => {
+	it('declines incomparable unkeyed additions without an explicit sequence', () => {
+		expect(mergeXmlThreeWay('<root/>', '<root><fill/></root>', '<root><line/></root>').status).toBe(
+			'unresolved',
+		);
+	});
+
+	it('uses schema positions for independently added singleton children in either peer order', () => {
+		const ordered: XmlMergeOptions = {
+			childOrder: (element) => ({ fill: 0, line: 1 })[element.localName as 'fill' | 'line'],
+		};
+		for (const [left, right] of [
+			['<root><fill/></root>', '<root><line/></root>'],
+			['<root><line/></root>', '<root><fill/></root>'],
+		]) {
+			const result = mergeXmlThreeWay('<root/>', left!, right!, ordered);
+			expect(result.status).toBe('merged');
+			expect(Array.from(content(result)?.childNodes ?? []).map((node) => node.nodeName)).toEqual([
+				'fill',
+				'line',
+			]);
+		}
+	});
+
+	it('declines concurrent alternatives that share one singleton position', () => {
+		expect(
+			mergeXmlThreeWay('<root/>', '<root><solid/></root>', '<root><gradient/></root>', {
+				childOrder: () => 0,
+			}).status,
+		).toBe('unresolved');
+	});
+});

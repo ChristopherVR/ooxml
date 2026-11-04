@@ -3,6 +3,8 @@ import { buildXml, elements, parseXml } from './xml';
 
 export interface XmlMergeOptions {
 	keyElement?: (element: Element, parent: Element) => string | undefined;
+	/** Singleton child position; equal positions are mutually exclusive alternatives. */
+	childOrder?: (element: Element, parent: Element) => number | undefined;
 	allowPositional?: (parent: Element) => boolean;
 	allowText?: (element: Element) => boolean;
 	resolveText?: (base: Element, local: Element, remote: Element) => string | undefined;
@@ -34,10 +36,13 @@ function childrenByKey(
 	return result;
 }
 
+/** Combines peer and schema constraints; only keyed collections admit unconstrained ties. */
 function orderKeys(
 	base: readonly string[],
 	local: readonly string[],
 	remote: readonly string[],
+	isKeyed: (key: string) => boolean,
+	childOrder: (key: string) => number | undefined,
 ): string[] | undefined {
 	const same = (a: readonly string[], b: readonly string[]) =>
 		a.length === b.length && a.every((key, index) => key === b[index]);
@@ -47,7 +52,7 @@ function orderKeys(
 	const keys = [...new Set([...remote, ...local])].sort();
 	const edges = new Map(keys.map((key) => [key, new Set<string>()]));
 	const degree = new Map(keys.map((key) => [key, 0]));
-	for (const sequence of [local, remote])
+	const addSequence = (sequence: readonly string[]) => {
 		for (let i = 1; i < sequence.length; i++) {
 			const previous = sequence[i - 1]!,
 				next = sequence[i]!;
@@ -56,9 +61,23 @@ function orderKeys(
 				degree.set(next, degree.get(next)! + 1);
 			}
 		}
+	};
+	for (const sequence of [local, remote]) addSequence(sequence);
+	const ranked = keys.flatMap((key) => {
+		const rank = childOrder(key);
+		return rank === undefined ? [] : [{ key, rank }];
+	});
+	if (
+		ranked.some(({ rank }) => !Number.isFinite(rank)) ||
+		new Set(ranked.map(({ rank }) => rank)).size !== ranked.length
+	)
+		return undefined;
+	addSequence(ranked.sort((a, b) => a.rank - b.rank).map(({ key }) => key));
 	const out: string[] = [];
 	const ready = keys.filter((key) => degree.get(key) === 0);
 	while (ready.length) {
+		// A keyed collection admits deterministic insert order. An unkeyed sequence does not.
+		if (ready.length > 1 && ready.some((key) => !isKeyed(key))) return undefined;
 		const next = ready.sort().shift()!;
 		out.push(next);
 		for (const key of edges.get(next)!) {
@@ -221,7 +240,13 @@ export function mergeXmlThreeWay(
 			}
 			const surviving = (map: Map<string, Element>) =>
 				[...map.keys()].filter((key) => merged.has(key));
-			const order = orderKeys(surviving(bm), surviving(lm), surviving(rm));
+			const order = orderKeys(
+				surviving(bm),
+				surviving(lm),
+				surviving(rm),
+				(key) => Boolean(options.keyElement?.(merged.get(key)!, out)),
+				(key) => options.childOrder?.(merged.get(key)!, out),
+			);
 			if (!order) {
 				issues.push(`${path}: incompatible element order`);
 				return undefined;
