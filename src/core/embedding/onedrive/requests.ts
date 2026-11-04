@@ -53,15 +53,25 @@ export function checkResponse(response: Response): Response {
 	throw new OneDriveError('network', 'The OneDrive request failed. Try again.', status);
 }
 
-/** Bound streamed bodies even if the server omits or misreports Content-Length. */
-export async function readBytes(response: Response, limit: number): Promise<Uint8Array> {
-	if (Number(response.headers.get('Content-Length')) > limit) {
+/**
+ * Bound streamed bodies even if the server omits or misreports Content-Length. The buffer is
+ * preallocated from a trusted-looking Content-Length and grows geometrically otherwise, so each
+ * byte is copied once (no chunk list and no final concatenation pass).
+ */
+export async function readBytes(
+	response: Response,
+	limit: number,
+	onProgress?: (loaded: number, total?: number) => void,
+): Promise<Uint8Array> {
+	const declared = Number(response.headers.get('Content-Length'));
+	if (declared > limit) {
 		await response.body?.cancel();
 		throw new OneDriveError('too-large', 'The file exceeds the configured size limit.');
 	}
 	const reader = response.body?.getReader();
 	if (!reader) throw new OneDriveError('invalid-response', 'OneDrive returned an empty response.');
-	const chunks: Uint8Array[] = [];
+	const total = Number.isFinite(declared) && declared > 0 ? declared : undefined;
+	let buffer = new Uint8Array(total ?? 64 * 1024);
 	let size = 0;
 	try {
 		while (true) {
@@ -72,18 +82,18 @@ export async function readBytes(response: Response, limit: number): Promise<Uint
 				await reader.cancel();
 				throw new OneDriveError('too-large', 'The file exceeds the configured size limit.');
 			}
-			chunks.push(value);
+			if (size > buffer.length) {
+				const grown = new Uint8Array(Math.min(Math.max(size, buffer.length * 2), limit));
+				grown.set(buffer.subarray(0, size - value.byteLength));
+				buffer = grown;
+			}
+			buffer.set(value, size - value.byteLength);
+			onProgress?.(size, total);
 		}
 	} finally {
 		reader.releaseLock();
 	}
-	const result = new Uint8Array(size);
-	let offset = 0;
-	for (const chunk of chunks) {
-		result.set(chunk, offset);
-		offset += chunk.length;
-	}
-	return result;
+	return size === buffer.length ? buffer : buffer.slice(0, size);
 }
 
 export async function readJson(response: Response): Promise<Record<string, unknown>> {

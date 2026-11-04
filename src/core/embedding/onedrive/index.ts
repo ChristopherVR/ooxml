@@ -1,8 +1,13 @@
 export { createOneDriveClient } from './client';
+export { createOneDriveFileProvider } from './provider';
 export { createOneDriveSession } from './session';
 export { encodeOneDriveSharingUrl } from './requests';
 export { OneDriveError, OneDriveConflictError } from './types';
+export type { OneDriveFileProviderOptions, OneDriveMerger } from './provider';
 export type {
+	OneDriveItemRef,
+	OneDriveListOptions,
+	OneDriveOpenOptions,
 	OneDriveClient,
 	OneDriveClientOptions,
 	OneDriveFile,

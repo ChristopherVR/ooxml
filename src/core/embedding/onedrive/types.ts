@@ -1,3 +1,4 @@
+import type { CloudListing } from '../cloud-files';
 import type { DocumentStorage } from '../storage';
 
 export type OneDriveKind = 'docx' | 'xlsx' | 'pptx' | 'vsdx';
@@ -19,13 +20,36 @@ export interface OneDriveOpened {
 export interface OneDriveRequestOptions {
 	signal?: AbortSignal;
 }
+/** Identity of an item for browsing and opening without a sharing link. */
+export interface OneDriveItemRef {
+	driveId: string;
+	itemId: string;
+}
+export interface OneDriveOpenOptions extends OneDriveRequestOptions {
+	/** Download progress in bytes (`total` when Content-Length is known). */
+	onProgress?: (loaded: number, total?: number) => void;
+}
+export interface OneDriveListOptions extends OneDriveRequestOptions {
+	/** The `next` of the previous page: a validated Graph paging link. */
+	page?: string;
+	/** Page size, 1 to 200. Default 100. */
+	top?: number;
+}
 export interface OneDriveShareOptions {
 	type: 'view' | 'edit';
 	scope: 'anonymous' | 'organization' | 'users';
 }
 export interface OneDriveClient {
-	open(shareUrl: string, options?: OneDriveRequestOptions): Promise<OneDriveOpened>;
-	read(file: OneDriveFile, options?: OneDriveRequestOptions): Promise<OneDriveOpened>;
+	open(shareUrl: string, options?: OneDriveOpenOptions): Promise<OneDriveOpened>;
+	read(file: OneDriveFile, options?: OneDriveOpenOptions): Promise<OneDriveOpened>;
+	/** Open by identity (from a listing) with one metadata request and one download. */
+	openItem(item: OneDriveItemRef, options?: OneDriveOpenOptions): Promise<OneDriveOpened>;
+	/** Current identity and ETag of a file without downloading its content. */
+	metadata(file: OneDriveFile, options?: OneDriveRequestOptions): Promise<OneDriveFile>;
+	/** Children of a folder; the drive root when `folder` is omitted. */
+	list(folder?: OneDriveItemRef, options?: OneDriveListOptions): Promise<CloudListing>;
+	recent(options?: OneDriveListOptions): Promise<CloudListing>;
+	search(query: string, options?: OneDriveListOptions): Promise<CloudListing>;
 	save(
 		file: OneDriveFile,
 		bytes: Uint8Array,

@@ -20,7 +20,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string }) {
 		if (url.includes('/shares/')) return json(metadata(first));
 		const downloaded = /\/download\/([^/]+)$/u.exec(url)?.[1];
 		if (downloaded) return new Response(items.get(downloaded)!.bytes.slice());
-		const id = /\/items\/([^/:]+)(?:\/|$)/u.exec(url)?.[1];
+		const id = /\/items\/([^/:?]+)(?:\/|\?|$)/u.exec(url)?.[1];
 		const found = id ? items.get(decodeURIComponent(id)) : undefined;
 		if (url.endsWith('/createLink')) return json({ link: { webUrl: shareUrl } });
 		if (url.endsWith('/createUploadSession')) {

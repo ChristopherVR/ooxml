@@ -327,6 +327,36 @@ file before deliberately retrying an interrupted upload. The current adapter doe
 abandoned upload sessions. These limits follow the implemented request flow, not a guarantee of
 Microsoft Office coauthoring. See the [upload-session reference](https://learn.microsoft.com/en-us/graph/api/driveitem-createuploadsession?view=graph-rest-1.0).
 
+## Browse files
+
+`createOneDriveFileProvider` (`ooxml-core/embedding/onedrive`) implements `CloudFileProvider`, so File > Open can browse the signed-in user's files instead of asking for a sharing link. The host still owns sign-in and tokens:
+
+```ts
+const provider = createOneDriveFileProvider({
+	getAccessToken, // as for the client; called once per operation
+	canWrite, // the host's write policy, unchanged
+	signIn: async () => ({ name, email }), // show your sign-in UI; resolve when getAccessToken works
+	signOut, // optional
+	account, // optional: already signed in
+	mergers: { docx: mergeDocxSnapshots, xlsx: mergeXlsxSnapshots }, // optional, by kind
+});
+```
+
+- `list(folderId?)`, `recent()` and `search(query)` return `CloudListing` pages; `next` is a Graph `@odata.nextLink` that the client accepts only if it is an `https://graph.microsoft.com/` URL (the bearer token goes nowhere else). Requests use `$select` and `$top` (default 100, maximum 200).
+- Entry ids are `${driveId}!${itemId}` with any `!` inside a part percent-encoded, so SharePoint drive ids and personal item ids round-trip. Recent items that arrive as `remoteItem` resolve to the target's drive and item id. OneNote packages and non-Office files are listed without a `kind`.
+- `open(entry)` makes one metadata request and one download (no sharing link); `openLink(link)` keeps the sharing-link flow. Both return a `storage` backed by a `createOneDriveSession`, so Save, Save As and conflict merging behave as before. `canEdit` is true only when `canWrite` approved the file. A kind without a merger reports conflicts instead of merging; core never imports a format to supply one.
+- While signed out, every call rejects with `OneDriveError('authentication')`. `subscribe` notifies on sign-in and sign-out.
+- Tokens, download URLs and sharing links are never logged or stored by the provider.
+
+### Performance notes
+
+- The write policy (`canWrite`) runs while the bytes download, not before. Metadata requests ask only for the fields needed (`$select`), including `@microsoft.graph.downloadUrl`.
+- The sharing-link request sends `Prefer: redeemSharingLink`, so a plain `Files.Read` token can open a link without a separate redemption call. Redemption can add the item to the user's "Shared with me", which is why it is limited to links the user opens explicitly.
+- `getAccessToken` is called once per client operation; the pending promise is shared by that operation's requests and is never kept afterwards.
+- The body is read into one buffer, preallocated from `Content-Length` when present (grown geometrically otherwise), with `onProgress(loaded, total)` per chunk.
+- `client.metadata(file)` returns the current eTag and identity without downloading the content. `share()` never downloaded the file; only `read()` does, because a conflict needs the remote bytes.
+- Not measured against live Graph; the tests assert request counts, ordering and concurrency, not wall-clock time.
+
 ## Sharing and OpenTeams
 
 Opening a file does not grant additional people access. To create a link, make the scope and role

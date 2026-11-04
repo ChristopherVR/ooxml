@@ -3,6 +3,23 @@ import { OneDriveError } from './types';
 import type { OneDriveClientOptions, OneDriveRequestOptions } from './types';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
+/** Only Graph itself ever receives the bearer token, including for paging links. */
+export function graphUrl(value: unknown): string {
+	try {
+		const url = new URL(String(value));
+		if (
+			url.protocol === 'https:' &&
+			url.hostname === 'graph.microsoft.com' &&
+			!url.username &&
+			!url.password &&
+			!url.port
+		)
+			return url.href;
+	} catch {
+		// Fall through without echoing the link.
+	}
+	throw new OneDriveError('invalid-response', 'OneDrive returned an invalid paging link.');
+}
 export function createTransport(options: OneDriveClientOptions) {
 	// Transfer calls go through the transport object; browser fetch requires its Window receiver.
 	const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
@@ -45,20 +62,41 @@ export function createTransport(options: OneDriveClientOptions) {
 			signal.removeEventListener('abort', abort);
 		}
 	}
+	// One token request per operation: parallel and sequential Graph calls of the same operation
+	// share it. Keyed by the operation's signal, so nothing outlives the operation or is stored.
+	const tokens = new WeakMap<AbortSignal, Promise<string>>();
+	function token(signal: AbortSignal): Promise<string> {
+		let pending = tokens.get(signal);
+		if (!pending) {
+			pending = Promise.resolve()
+				.then(() => options.getAccessToken())
+				.then(
+					(value) => {
+						if (!value) throw new Error('empty');
+						return value;
+					},
+					() => {
+						throw new Error('failed');
+					},
+				);
+			tokens.set(signal, pending);
+		}
+		return pending;
+	}
+	/** `path` is a v1.0 path, or an absolute Graph URL (a validated `@odata.nextLink`). */
 	async function graph(path: string, signal: AbortSignal, init: RequestInit = {}) {
-		let token: string;
+		const url = path.startsWith('/') ? GRAPH + path : graphUrl(path);
+		let token_: string;
 		try {
-			token = await options.getAccessToken();
+			token_ = await token(signal);
 		} catch {
 			throw new OneDriveError('authentication', 'Sign in to Microsoft to access this file.');
 		}
 		signal.throwIfAborted();
-		if (!token)
-			throw new OneDriveError('authentication', 'Sign in to Microsoft to access this file.');
 		const headers = new Headers(init.headers);
-		headers.set('Authorization', `Bearer ${token}`);
+		headers.set('Authorization', `Bearer ${token_}`);
 		return checkResponse(
-			await fetcher(GRAPH + path, {
+			await fetcher(url, {
 				...init,
 				headers,
 				signal,
