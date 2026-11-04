@@ -1,5 +1,10 @@
 # OneDrive integration
 
+The same storage contract also supports custom providers. See
+[provider-neutral storage and merge configuration](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md)
+for `createStorageSession`, per-format merge overrides and suite bootstrap settings.
+Use these extension points with every Excel framework package.
+
 Excel uses the shared `ooxml-core/embedding/onedrive` connection. Resolve the sharing link in the
 host, verify item-specific permissions and give the existing editor the downloaded XLSX bytes:
 

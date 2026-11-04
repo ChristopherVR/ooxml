@@ -1,5 +1,13 @@
 # Provenance
 
+## Provider-neutral storage sessions (2026-11-04)
+
+Source repository: ChristopherVR/ooxml, commit `194529b06`. The serialized session and
+abortable merge runner from `src/core/embedding/onedrive/{session,merge}.ts` moved into
+`src/core/embedding/{storage-session,storage-merge}.ts`. Provider-owned identity/revision
+types, conflict classification, cloning and validation hooks replace OneDrive assumptions.
+The public OneDrive session remains as an adapter over this shared implementation.
+
 ## Shared OneDrive connection (2026-11-04)
 
 Source repository: ChristopherVR/ooxml, unpublished local checkpoint `eae89e8c4`. The modules

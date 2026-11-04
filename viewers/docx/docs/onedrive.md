@@ -1,5 +1,10 @@
 # OneDrive integration
 
+For other services or custom OneDrive flows, use the same `storage` property with
+[`createStorageSession` and the provider-neutral integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md).
+Hosts can replace authentication, transport, merge handlers, conflict UI and sharing policy
+without changing any Word framework binding.
+
 All Word packages use the shared `ooxml-core/embedding/onedrive` connection. The host resolves
 the sharing link, supplies Microsoft authentication and verified write permission, and connects
 the resulting session to the existing editor storage contract.

@@ -1,5 +1,10 @@
 # OneDrive integration
 
+For another service or a custom OneDrive implementation, see
+[provider-neutral storage integrations](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md).
+`createStorageSession` connects to the same `storage` property across all Visio packages,
+with host-owned revision checks, merge handlers, conflict UI and sharing policies.
+
 Visio uses the shared `ooxml-core/embedding/onedrive` connection for native VSDX files. The host
 owns Microsoft sign-in, link resolution and item-specific permission verification. Give the
 downloaded bytes to the existing viewer, with a host read-only restriction when access is unknown:

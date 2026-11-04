@@ -1,15 +1,21 @@
 export type SuiteFileKind = 'docx' | 'xlsx' | 'pptx' | 'vsdx';
+/** Host-serialized safe identity/revision fields for a connected provider. */
+export interface SuiteCloudFile {
+	[key: string]: unknown;
+	name: string;
+	kind: SuiteFileKind;
+	access: 'read' | 'write' | 'unknown';
+	driveId?: string;
+	itemId?: string;
+	parentId?: string;
+	eTag?: string;
+}
 /** Stable identifiers only. Capability links and authentication tokens must never be persisted. */
 export interface SuiteCloudSource {
-	file: {
-		driveId: string;
-		itemId: string;
-		parentId?: string;
-		name: string;
-		eTag: string;
-		kind: SuiteFileKind;
-		access: 'read' | 'write' | 'unknown';
-	};
+	/** Missing on legacy records, which belong to OneDrive. Use a stable provider/account namespace. */
+	providerId?: string;
+	providerLabel?: string;
+	file: SuiteCloudFile;
 	baseline: Uint8Array;
 	pending: boolean;
 }
@@ -37,9 +43,25 @@ function cloudSource(source: SuiteCloudSource, bytes: Uint8Array): SuiteCloudSou
 	const pending =
 		bytes.length !== source.baseline.length ||
 		bytes.some((value, i) => value !== source.baseline[i]);
-	if (pending && access !== 'write') throw new Error('This OneDrive document is read-only.');
+	if (pending && access !== 'write') throw new Error('This connected document is read-only.');
+	const file: SuiteCloudFile =
+		source.providerId && source.providerId !== 'onedrive'
+			? structuredClone(source.file)
+			: {
+					name,
+					kind,
+					access,
+					...(driveId ? { driveId } : {}),
+					...(itemId ? { itemId } : {}),
+					...(eTag ? { eTag } : {}),
+					...(parentId ? { parentId } : {}),
+				};
+	// A custom provider must serialize safe metadata; also strip known credential/link fields here.
+	for (const key of ['webUrl', 'accessToken', 'refreshToken', 'downloadUrl']) delete file[key];
 	return {
-		file: { driveId, itemId, name, eTag, kind, access, ...(parentId ? { parentId } : {}) },
+		...(source.providerId ? { providerId: source.providerId } : {}),
+		...(source.providerLabel ? { providerLabel: source.providerLabel } : {}),
+		file,
 		baseline: source.baseline.slice(),
 		pending,
 	};

@@ -53,7 +53,9 @@ export class SuiteSessions {
 			}
 			const version = s.version;
 			if (await this.readOnly(s.doc))
-				throw new Error('This OneDrive document is read-only. Download a copy to edit separately.');
+				throw new Error(
+					'This connected document is read-only. Download a copy to edit separately.',
+				);
 			const bytes = await s.editor.save();
 			if (s.version !== version)
 				throw new Error('The document changed during save. Please save again.');
@@ -150,7 +152,7 @@ export class SuiteSessions {
 	async saveRemote(doc) {
 		if (!doc.cloud?.pending) return doc;
 		if (!this.remote)
-			throw new Error('OneDrive is not configured. Changes are kept on this device.');
+			throw new Error('Cloud storage is not configured. Changes are kept on this device.');
 		const unlock = this.lock([doc.id]);
 		try {
 			const next = await this.remote.save(doc);

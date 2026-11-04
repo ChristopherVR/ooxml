@@ -20,7 +20,7 @@ import { mountShell } from './shell.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 import { mountOneDrive } from './onedrive.js';
-import { cloudSaveLabel } from './cloud-files.js';
+import { cloudSaveLabel, cloudProviderLabel } from './cloud-files.js';
 
 // Every write keeps the bytes it replaces as a version, unless the AI policy turns history off.
 const store = withVersions(
@@ -65,7 +65,7 @@ function chooseOpen() {
 				$('file-input').click();
 			},
 		],
-		['From OneDrive', () => cloud.showOpen()],
+		[`From ${cloud.label}`, () => cloud.showOpen()],
 	]) {
 		const button = document.createElement('button');
 		button.textContent = label;
@@ -125,9 +125,11 @@ function renderTabs() {
 	const activeDoc = activeSession?.doc;
 	$('save').disabled = !activeSession || activeSession.cloudReadOnly;
 	$('save-state').textContent = activeSession?.cloudReadOnly
-		? 'OneDrive: read-only'
+		? `${cloudProviderLabel(activeDoc)}: read-only`
 		: cloudSaveLabel(activeDoc, active && sessions.isEdited(active));
-	$('share').textContent = activeDoc?.cloud ? 'Share in OneDrive' : 'Share in Teams';
+	$('share').textContent = activeDoc?.cloud
+		? `Share in ${cloudProviderLabel(activeDoc)}`
+		: 'Share in Teams';
 	for (const s of sessions.sessions.values()) {
 		const hide = view !== 'editor' || s.doc.id !== active;
 		// A hidden editor must not keep a full-screen layer (a Visio presentation) over the next tab.
@@ -182,8 +184,8 @@ async function open(id, origin, { focus = false } = {}) {
 	notify(
 		doc.cloud
 			? doc.cloud.pending
-				? 'Local changes are waiting to save to OneDrive.'
-				: 'Connected to OneDrive. Save updates the original file.'
+				? `Local changes are waiting to save to ${cloudProviderLabel(doc)}.`
+				: `Connected to ${cloudProviderLabel(doc)}. Save updates the original file.`
 			: doc.parent
 				? 'Embedded document: Save updates its parent package.'
 				: origin?.remote

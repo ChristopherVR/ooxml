@@ -5,6 +5,11 @@ description: Connect every PowerPoint viewer binding to shared Office OneDrive s
 
 # OneDrive integration
 
+Every PowerPoint framework package also accepts a custom storage provider through its
+existing `storage` prop. See [provider-neutral integration and configuration](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md)
+for `createStorageSession`, authentication/transport overrides, per-format merge handlers,
+host conflict dialogs and explicit sharing choices.
+
 PowerPoint uses the same optional `ooxml-core/embedding/onedrive` connection as Word, Excel and
 Visio. The host supplies Microsoft authentication and verified item permissions. There is no
 bundled Microsoft app registration, simulation service or simulated OneDrive demo.

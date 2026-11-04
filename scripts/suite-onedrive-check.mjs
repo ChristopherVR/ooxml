@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
 import { interceptOneDrive } from './test-support/onedrive-http.mjs';
 import { checkConcurrentMerges } from './test-support/onedrive-merge-checks.mjs';
+import { checkCustomStorage } from './test-support/custom-storage-checks.mjs';
 
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
@@ -261,6 +262,7 @@ try {
 	}
 	console.log('Read-only permissions disable the editor and cloud Save for all four products');
 	assert.deepEqual(errors, []);
+	await checkCustomStorage({ browser, base, bytes: fixtures.docx });
 } finally {
 	await context.close();
 	await browser.close();

@@ -62,6 +62,36 @@ it('does not persist cloud capabilities or allow direct edits of read-only conne
 });
 
 describe('suite document identity', () => {
+	it('retains safe custom provider metadata across store instances and direct commits', async () => {
+		const name = `custom-${crypto.randomUUID()}`;
+		const store = new SuiteDocumentStore(name);
+		const cloud: SuiteCloudSource = {
+			providerId: 'company/account-1',
+			providerLabel: 'Company Files',
+			file: {
+				key: 'report',
+				revision: 9,
+				name: 'File.docx',
+				kind: 'docx',
+				access: 'write',
+				webUrl: 'private-link',
+				accessToken: 'secret',
+			},
+			baseline: new Uint8Array([1]),
+			pending: false,
+		};
+		const doc = await store.create('File.docx', cloud.baseline, { cloud });
+		await store.commit([
+			{ document: { ...doc, bytes: new Uint8Array([2]), revision: 2 }, expected: 1 },
+		]);
+		const restored = await new SuiteDocumentStore(name).get(doc.id);
+		expect(restored.cloud?.providerId).toBe(cloud.providerId);
+		expect(restored.cloud?.providerLabel).toBe(cloud.providerLabel);
+		expect(restored.cloud?.file.key).toBe('report');
+		expect(restored.cloud?.file.revision).toBe(9);
+		expect(restored.cloud?.pending).toBe(true);
+		expect(JSON.stringify(restored.cloud)).not.toMatch(/private-link|secret/u);
+	});
 	it('persists the same id across store instances and rejects stale writes', async () => {
 		const name = `suite-${crypto.randomUUID()}`;
 		const first = new SuiteDocumentStore(name),

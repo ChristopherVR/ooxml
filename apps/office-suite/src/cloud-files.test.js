@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SuiteOneDrive, cloudIdentity, cloudReadOnly, cloudSaveLabel } from './cloud-files.js';
+import {
+	SuiteOneDrive,
+	SuiteCloudStorage,
+	cloudIdentity,
+	cloudReadOnly,
+	cloudSaveLabel,
+} from './cloud-files.js';
 
 const bytes = (text) => new TextEncoder().encode(text);
 const file = (kind = 'docx') => ({
@@ -213,4 +219,54 @@ test('unconfigured hosts fail honestly and identity serialization excludes capab
 	assert.equal(cloud.configured(), false);
 	assert.equal('webUrl' in cloudIdentity(file()), false);
 	assert.equal('accessToken' in cloudIdentity({ ...file(), accessToken: 'secret' }), false);
+});
+
+test('custom providers persist their identity, isolate connections and receive session policies', async () => {
+	const library = store();
+	const safe = { key: 'report', revision: 1, name: 'Report.xlsx', kind: 'xlsx', access: 'write' };
+	const opened = { file: { ...safe, temporaryToken: 'never persist' }, bytes: bytes('base') };
+	let settings;
+	const cloud = new SuiteCloudStorage({
+		id: 'company-files',
+		label: 'Company Files',
+		store: library,
+		client: { open: async () => opened, read: async () => opened },
+		keyOf: (file) => file.key,
+		serializeFile: ({ key, revision, name, kind, access }) => ({
+			key,
+			revision,
+			name,
+			kind,
+			access,
+		}),
+		sessionOptions: { maxMergeAttempts: 2 },
+		createSession: (_client, _opened, options) => {
+			settings = options;
+			return { save: async () => safe };
+		},
+	});
+	let first = await cloud.open('company:report');
+	assert.equal(first.cloud.providerId, 'company-files');
+	assert.deepEqual(first.cloud.file, safe);
+	assert.equal(cloudSaveLabel(first), 'Saved to Company Files');
+	assert.equal((await cloud.open('company:report')).id, first.id);
+	first = await library.get(first.id);
+	first.cloud.pending = true;
+	await cloud.save(first);
+	assert.equal(settings.maxMergeAttempts, 2);
+	assert.equal(cloudSaveLabel(first), 'Saved on this device; Company Files save pending');
+	const other = new SuiteCloudStorage({
+		id: 'different-provider',
+		store: library,
+		client: {},
+		createSession: () => {
+			throw new Error('must not connect');
+		},
+	});
+	await assert.rejects(other.save(first), /provider that owns/);
+	await assert.rejects(other.share(first, { type: 'existing' }), /provider that owns/);
+	await assert.rejects(
+		cloud.share({ ...first, cloud: { ...first.cloud, pending: false } }, { type: 'view' }),
+		/does not support/,
+	);
 });

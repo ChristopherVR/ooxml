@@ -88,6 +88,12 @@ PowerPoint's plain DOM and body-mounted dialogs inherit one suite palette. Globa
 
 ## Workspace, storage and tab actions
 
+Hosts can replace the suite's cloud connection with `ooxmlCloudOptions`, or customize the
+existing `ooxmlOneDriveOptions` client, per-format mergers, sharing choices and conflict UI.
+The same `DocumentStorage` and provider-neutral save session work with all four editors and
+their framework packages. See [custom storage integrations](storage-integrations.md) for the
+provider contract, a REST adapter example, configuration options and acceptance checks.
+
 The account avatar opens profile and appearance controls. The workspace switcher selects a local workspace; the sidebar ellipsis manages storage and connected folders. Phone and standalone layouts expose the same storage controls above the file list.
 
 Search waits briefly after typing and searches connected folders asynchronously. Aborted/stale requests cannot replace newer results. Searches match filenames and relative paths, not file contents. Traversal is capped at 5,000 files, 20,000 entries and 40 levels per connected folder, with truncation/access issues shown in the UI. At most 100 disk matches render at a time. There is no unrestricted disk crawler or OS-wide index.

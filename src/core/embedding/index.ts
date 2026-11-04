@@ -6,3 +6,6 @@ export * from './capabilities';
 export * from './customization';
 export * from './menu-commands';
 export * from './regions';
+export * from './versioned-storage';
+export { createStorageSession } from './storage-session';
+export { createStorageMerger } from './storage-merge';

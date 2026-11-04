@@ -6,7 +6,11 @@
 
 > Shared Office controls, styles and custom elements for browser applications.
 
-For host-owned OneDrive storage, all four document editors use
+For host-owned storage or custom merge/sharing policies, use the provider-neutral
+[`DocumentStorage` and `createStorageSession` integration](../../docs/storage-integrations.md),
+shared across all editor elements and framework bindings.
+
+For the built-in OneDrive transport, use
 [`ooxml-core/embedding/onedrive`](../../docs/onedrive-integration.md). The reference covers
 `ooxml-ui/docx`, `/xlsx`, `/pptx`, `/visio`, every framework binding, OpenTeams sharing and
 conflict recovery. Microsoft authentication belongs to the host. No simulation service is shipped.

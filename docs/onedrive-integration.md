@@ -351,6 +351,9 @@ See [OpenTeams integration](../viewers/teams/docs/onedrive.md).
 
 ## Integrated Office Suite
 
+For custom providers, authentication/transport overrides, per-format merge policies,
+sharing choices and host conflict dialogs, see [Custom storage integrations](storage-integrations.md).
+
 Before the suite entry runs, supply the same client options through the host bootstrap:
 
 ```ts
