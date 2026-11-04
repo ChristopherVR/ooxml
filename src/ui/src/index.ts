@@ -45,6 +45,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-find-bar',
 	'office-ui-ruler',
 	'office-ui-backstage',
+	'office-ui-cloud-files',
 	'office-ui-print-preview',
 	'office-ui-radio',
 	'office-ui-search',

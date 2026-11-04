@@ -1385,6 +1385,110 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "files/cloud-files.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCloudFiles",
+					"tagName": "office-ui-cloud-files",
+					"customElement": true,
+					"description": "`<office-ui-cloud-files>`: browse and open files from one or more `CloudFileProvider`s (OneDrive, or a host's own). Properties: `providers`, `accept` (default all four Office kinds; a file of another kind is listed but `aria-disabled`, folders are always enterable), `labels` (partial, English defaults), `searchDelay` (ms, default 300) and `locale` (dates). Opening a file emits the bubbling, composed `office-cloud-file-open` event with `{ providerId, file }`; a failure shows inline and emits nothing. In-flight listings are aborted when the user navigates away.",
+					"attributes": [
+						{
+							"name": "locale"
+						},
+						{
+							"name": "search-delay"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "accept"
+						},
+						{
+							"kind": "field",
+							"name": "active"
+						},
+						{
+							"kind": "field",
+							"name": "entries"
+						},
+						{
+							"kind": "field",
+							"name": "error"
+						},
+						{
+							"kind": "field",
+							"name": "focusIndex"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "loading"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "next"
+						},
+						{
+							"kind": "field",
+							"name": "opening"
+						},
+						{
+							"kind": "field",
+							"name": "path"
+						},
+						{
+							"kind": "field",
+							"name": "progress"
+						},
+						{
+							"kind": "field",
+							"name": "providers"
+						},
+						{
+							"kind": "field",
+							"name": "query"
+						},
+						{
+							"kind": "field",
+							"name": "searchDelay",
+							"type": {
+								"text": "number"
+							},
+							"attribute": "search-delay"
+						},
+						{
+							"kind": "field",
+							"name": "view"
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-cloud-files",
+					"declaration": {
+						"name": "OfficeUiCloudFiles"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "form/color-custom.ts",
 			"declarations": [
 				{

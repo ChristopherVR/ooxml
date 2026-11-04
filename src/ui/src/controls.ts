@@ -11,6 +11,7 @@ export {
 import { defineRibbonToggle } from './ribbon/ribbon-toggle';
 import { defineSearchField } from './form/search-field';
 import { defineBackstage } from './chrome/backstage';
+import { defineCloudFiles } from './files/cloud-files';
 import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
 import { defineChartFormatPane } from './chart/format-pane';
@@ -100,6 +101,7 @@ export {
 	defineChartPicker,
 	defineChartDataSheet,
 	defineProgressDialog,
+	defineCloudFiles,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -133,6 +135,13 @@ export {
 	type OfficeTitleBarTone,
 } from './chrome/title-bar';
 export { attachKeyTips, type KeyTipsHandle } from './keytips';
+export {
+	OfficeUiCloudFiles,
+	DEFAULT_CLOUD_FILES_LABELS,
+	type OfficeCloudFileOpenDetail,
+	type OfficeCloudFileOpenEvent,
+	type OfficeCloudFilesLabels,
+} from './files/cloud-files';
 export type {
 	OfficeBackstageCloseEvent,
 	OfficeBackstageItem,
@@ -298,6 +307,7 @@ export const CONTROL_DEFINERS = [
 	defineChartPicker,
 	defineChartDataSheet,
 	defineProgressDialog,
+	defineCloudFiles,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */
