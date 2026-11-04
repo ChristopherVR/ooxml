@@ -302,6 +302,46 @@ blocks do not render the Layout gallery. The rail has no collapse control of its
 conditionally to hide it. `SlidesPane` is also exported from the package root, and needs
 `pptx-svelte-viewer/styles.css`.
 
+### Single slide thumbnail
+
+`SlideThumbnail` (exported, with its `SlideThumbnailProps` type, from the package root and
+`pptx-svelte-viewer/viewer`) draws one slide the way `SlidesPane` draws it, for a host that keeps
+its own thumbnail strip. It renders from the slide model, so it follows unsaved edits, and it is
+static: no selection, editing, pointer handlers, focus stops or element ids. Its props are
+`slide`, `templateElements` (layout and master elements drawn beneath the slide's own; default
+none), `canvasSize` and `previewWidth` (pixels; default the rail thumbnail width; the height
+follows the deck's aspect ratio), plus the `SlidesPane` props it shares: `mediaDataUrls`,
+`fieldContext` and `tableStyleContext`. Feed it from the same `createSlidesPaneProps` result.
+Those `slides` already carry their layout and master elements, so leave `templateElements` empty
+for them.
+
+```svelte
+<script lang="ts">
+	import { createSlidesPaneProps, createViewerState, SlideThumbnail } from 'pptx-svelte-viewer/viewer';
+
+	const state = createViewerState(viewerOptions);
+	const paneProps = createSlidesPaneProps(state);
+</script>
+
+<ul class="my-strip">
+	{#each paneProps.slides as slide (slide.id)}
+		<li style="width: 120px">
+			<SlideThumbnail
+				{slide}
+				canvasSize={paneProps.canvasSize}
+				previewWidth={120}
+				mediaDataUrls={paneProps.mediaDataUrls}
+				fieldContext={paneProps.fieldContext}
+				tableStyleContext={paneProps.tableStyleContext}
+			/>
+		</li>
+	{/each}
+</ul>
+```
+
+The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
+ratio, so give the container that width. It needs the same `pptx-svelte-viewer/styles.css`.
+
 ### `pptx-svelte-viewer/internals`: slide-transition helpers
 
 The framework-agnostic logic every binding uses lives in `ooxml-ui/pptx`; the private

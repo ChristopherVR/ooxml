@@ -6,6 +6,7 @@ import {
 	editorThumbnailHeight,
 	editorThumbnailStep,
 	editorThumbnailWidth,
+	slideThumbnailLayout,
 } from './metrics';
 
 describe('editor layout geometry', () => {
@@ -48,5 +49,23 @@ describe('editor layout geometry', () => {
 	it('reserves the page-number line height for panoramic slides', () => {
 		expect(editorThumbnailHeight(10000, 1)).toBeCloseTo(0.0132);
 		expect(editorThumbnailStep(10000, 1)).toBe(23);
+	});
+});
+
+describe('slideThumbnailLayout', () => {
+	it('keeps the deck aspect ratio at the width a host picks', () => {
+		expect(slideThumbnailLayout(960, 540, 120)).toEqual({ width: 120, height: 67.5, scale: 0.125 });
+		expect(slideThumbnailLayout(720, 540, 96)).toEqual({ width: 96, height: 72, scale: 96 / 720 });
+	});
+
+	it('defaults to the rail thumbnail width', () => {
+		expect(slideThumbnailLayout(960, 540).width).toBe(132);
+	});
+
+	it('never returns an empty box for a zero-sized deck or width', () => {
+		const layout = slideThumbnailLayout(0, 0, 0);
+		expect(layout.width).toBe(1);
+		expect(layout.height).toBeGreaterThan(0);
+		expect(layout.scale).toBeGreaterThan(0);
 	});
 });

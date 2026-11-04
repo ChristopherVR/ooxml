@@ -13,37 +13,13 @@
 	 */
 	import { openSlidesPaneLayoutGallery } from 'ooxml-ui/pptx';
 
-	import { getFieldContextGetter, provideFieldContext } from '../state/field-context';
-	import { getRenderContextSource, provideRenderContext } from '../state/render-context';
+	import { provideSlidesPaneContexts } from './slides-pane-contexts';
 	import type { SlidesPaneProps } from './slides-pane-props';
 	import ThumbnailRail from './ThumbnailRail.svelte';
 
 	const props: SlidesPaneProps = $props();
 
-	// Svelte context is captured once at init, so the provided values are
-	// getters over the live props, falling back to the enclosing context.
-	const inheritedFieldContext = getFieldContextGetter();
-	provideFieldContext(() => props.fieldContext ?? inheritedFieldContext?.());
-	const inheritedRenderContext = getRenderContextSource();
-	provideRenderContext({
-		getColorScheme: () =>
-			props.tableStyleContext
-				? props.tableStyleContext.theme?.colorScheme
-				: inheritedRenderContext?.getColorScheme(),
-		getTableStyleMap: () =>
-			props.tableStyleContext
-				? props.tableStyleContext.tableStyleMap
-				: inheritedRenderContext?.getTableStyleMap(),
-		getFontScheme: () =>
-			props.tableStyleContext
-				? props.tableStyleContext.theme?.fontScheme
-				: inheritedRenderContext?.getFontScheme?.(),
-		getFormatScheme: () =>
-			props.tableStyleContext
-				? props.tableStyleContext.theme?.formatScheme
-				: inheritedRenderContext?.getFormatScheme?.(),
-		getCanvasSize: () => props.canvasSize,
-	});
+	provideSlidesPaneContexts(() => props);
 
 	function openLayoutForSlide(slideIndex: number, x: number, y: number): void {
 		openSlidesPaneLayoutGallery({ slideIndex, x, y }, props.onselectslide, props.onopenlayoutgallery);
