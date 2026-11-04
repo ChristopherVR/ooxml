@@ -7,6 +7,9 @@
  *
  * The React shots need the guide's example served by a Vite app whose OneDrive client returns
  * 'test-only-token' from getAccessToken: REACT_URL=http://localhost:4190 node scripts/onedrive-doc-shots.mjs react
+ *
+ * The PowerPoint demo's OneDrive mode (`?onedrive=1`), from a running React demo:
+ *   DEMO_URL=http://localhost:4173 node scripts/onedrive-doc-shots.mjs demo
  */
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +22,7 @@ const { createPresentationFromOutline } = await import('../src/core/dist/pptx/in
 
 const SUITE = process.env.SUITE_URL ?? 'http://127.0.0.1:8151';
 const REACT = process.env.REACT_URL;
+const DEMO = process.env.DEMO_URL;
 const out = (name) => fileURLToPath(new URL(`../docs/images/onedrive/${name}`, import.meta.url));
 const link = (kind) => `https://contoso-my.sharepoint.com/:p:/g/personal/${kind}`;
 const only = process.argv[2];
@@ -131,6 +135,40 @@ try {
 		// The status bar still reads "Unsaved changes" here (a binding bug), so no screenshot.
 		await context.close();
 		console.log('react screenshots written; File > Save uploaded to the same item');
+	}
+	if (only === 'demo' || (!only && DEMO)) {
+		if (!DEMO) throw new Error('Set DEMO_URL to the running React demo.');
+		const { context, page, cloud } = await newPage({ configured: false });
+		await page.goto(`${DEMO}/?onedrive=1`);
+		const bar = page.locator('.od-bar');
+		await bar.getByLabel('How to sign in').selectOption('token');
+		await bar.getByLabel('Access token').fill('test-only-token');
+		await bar.getByRole('button', { name: 'Use token', exact: true }).click();
+		await bar.getByLabel('OneDrive sharing link').fill(link('pptx'));
+		await bar.getByRole('button', { name: 'Open', exact: true }).click();
+		await expect(bar.getByRole('status')).toContainText('Opened');
+		await expect(
+			page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first(),
+		).toBeVisible({ timeout: 30000 });
+		await page
+			.getByRole('button', { name: /new slide/iu })
+			.first()
+			.click();
+		await page
+			.getByRole('toolbar', { name: 'Presentation toolbar' })
+			.getByRole('tab', { name: 'File', exact: true })
+			.click();
+		await page
+			.getByRole('dialog', { name: 'File' })
+			.getByRole('button', { name: 'Save', exact: true })
+			.click();
+		await expect(bar.getByRole('status')).toContainText('Saved to OneDrive');
+		await expect.poll(() => cloud.writes.filter((id) => id === 'pptx').length).toBe(1);
+		await page.getByText('Quarterly review').first().click();
+		await page.waitForTimeout(1500);
+		await page.screenshot({ path: out('demo-onedrive-saved.png') });
+		await context.close();
+		console.log('demo screenshot written; File > Save uploaded to the same item');
 	}
 } finally {
 	if (errors.length) console.log('page errors:', errors);

@@ -330,13 +330,47 @@ The integrated Office app offers the same choices, plus downloads of both versio
 
 ![The conflict dialog with save-a-copy, open-latest and download choices](images/onedrive/suite-conflict.png)
 
-Known issue: after a successful save through `storage`, the PowerPoint viewer's status bar can
-keep showing **Unsaved changes**. The file is saved; the example's own status text reports it.
+The viewer marks the deck saved (**All saved** in its status bar) only once `storage.save` has
+resolved, and only if nothing was edited while the upload was in flight. A failed upload, or an
+edit made during it, keeps **Unsaved changes**.
 
 Word, Excel and Visio use the same client and session; only the editor wiring differs. See
 [Word](../viewers/docx/docs/onedrive.md), [Excel](../viewers/xlsx/docs/onedrive.md),
 [Visio](../viewers/visio/docs/onedrive.md) and the other
 [PowerPoint bindings](../viewers/pptx/docs/guide/onedrive.md).
+
+## Try it in the PowerPoint demos
+
+Every PowerPoint framework demo (React, Vue, Angular, vanilla and Svelte) has a OneDrive mode that
+runs the code above against your own OneDrive. From the repository root:
+
+```sh
+bun install
+bun run build && bun run --cwd src/ui build
+cd viewers/pptx && bun run demo   # React on http://localhost:4173
+```
+
+Open `http://localhost:4173/?onedrive=1`. The other demos use the same parameter on their own
+ports: `bun run demo:vue` (4175), `demo:angular` (4174, build `packages/angular` first),
+`demo:vanilla` (4176) and `demo:svelte` (4177).
+
+A bar above the viewer signs you in and asks for a sharing link:
+
+- **My app registration**: enter the Application (client) ID from step 1 and choose **Sign in**.
+  Register each demo origin you use as a single-page application redirect URI
+  (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash). The client ID
+  is remembered in that demo's browser storage; you can also set `VITE_ONEDRIVE_CLIENT_ID` in an
+  untracked `.env.local` next to the demo.
+- **Graph Explorer token**: paste a token as described in the next section. Nothing is registered,
+  and the token is kept only in memory.
+
+![The React demo in OneDrive mode after a save: the bar reports Saved to OneDrive and the status bar All saved](images/onedrive/demo-onedrive-saved.png)
+
+Then paste a sharing link to a `.pptx` on your own OneDrive and choose **Open**. Edit, then save
+with the viewer's own Save (or Ctrl+S): the bar reports **Saved to OneDrive**, and the file in
+OneDrive is updated. Files on someone else's drive open read-only, because the demo uses the
+own-drive `canWrite` policy from step 3. If someone else saved overlapping edits, the bar offers
+**Save my edits as a copy** and **Discard mine, open latest**.
 
 ## Test without your own registration
 

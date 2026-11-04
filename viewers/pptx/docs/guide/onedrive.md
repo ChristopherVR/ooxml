@@ -16,6 +16,8 @@ bundled Microsoft app registration, simulation service or simulated OneDrive dem
 
 For a step-by-step setup with screenshots (app registration, sign-in, a sharing-link box and a
 complete React example), start with the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+Every framework demo also has a OneDrive mode (`?onedrive=1`) for trying it against your own
+OneDrive; the quick start's "Try it in the PowerPoint demos" section explains the setup.
 
 The [complete Office integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
 documents authentication, session storage, safe cloud copies, sharing roles/scopes, conflict
@@ -52,7 +54,9 @@ accepts `storage` as its existing prop/input/option. Assign `session.storage` to
 File Save to OneDrive. `onOpenFile` can open the host's sharing-link chooser; do not pass the
 Microsoft sharing-page URL to a generic document source loader.
 
-For a host-owned Save button, export the current PPTX and call `session.save(bytes)`. Keep the
+The viewer marks the deck saved only after `storage.save` resolves, and only when nothing was
+edited while the upload was in flight; a rejected save keeps it unsaved. For a host-owned Save
+button, export the current PPTX and call `session.save(bytes)`. Keep the
 editor mounted and preserve undo history. Track edits made during upload separately from the
 uploaded snapshot. Do not treat a native save method resolving as proof of success: some methods
 report failures through `onError` and the notice stack. See [host-owned storage](/guide/host-owned-storage).

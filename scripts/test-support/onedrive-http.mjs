@@ -31,6 +31,8 @@ export async function interceptOneDrive(context, fixtures) {
 		assert.equal(request.headers().authorization, 'Bearer test-only-token');
 		const path = new URL(request.url()).pathname.slice('/v1.0'.length);
 		const json = (body, status = 200) => route.fulfill({ status, json: body });
+		// The signed-in user's own drive (the PowerPoint demo's edit policy reads it).
+		if (path === '/me/drive') return json({ id: 'test-drive' });
 		if (path.startsWith('/shares/')) {
 			const token = path.split('/')[2];
 			const shared = new URL(Buffer.from(token.slice(2), 'base64url').toString());
