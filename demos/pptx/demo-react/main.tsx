@@ -42,11 +42,13 @@ import { installDevViewerHandle } from '../dev-viewer-handle';
 import { currentDemoCustomization } from '../shared/demo-customization';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';
+import { oneDriveDemoRequested } from '../shared/onedrive-demo';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../shared/same-browser-collaboration';
 import { useDemoAiAssistant } from './ai-config';
 import { HostOwnedDemoApp } from './HostOwnedDemo';
 import i18nInstance from './i18n'; // Initialises i18next before any component renders
+import { OneDriveDemoApp } from './OneDriveDemo';
 import { SameBrowserDemoApp } from './SameBrowserDemo';
 
 import './app.css';
@@ -1109,7 +1111,9 @@ if (rootEl) {
 		hot.data.root = root;
 	}
 	root.render(
-		externalSessionRequested() ? (
+		oneDriveDemoRequested() ? (
+			<OneDriveDemoApp />
+		) : externalSessionRequested() ? (
 			<HostOwnedDemoApp />
 		) : sameBrowserRoom() ? (
 			<SameBrowserDemoApp />
