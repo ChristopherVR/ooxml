@@ -36,7 +36,8 @@ not validate OAuth, tenant policy, real service permissions, deployed browser CO
 labels or interoperability with Microsoft Office.
 
 For manual API exploration, Microsoft Graph Explorer uses Microsoft's existing application
-registration. Sign in with a test account and consent to permitted scopes. Anonymous sample data
+registration. The [quick start](onedrive-quickstart.md#test-without-your-own-registration) shows
+how to use its token to try a personal OneDrive file during development. Sign in with a test account and consent to permitted scopes. Anonymous sample data
 does not represent your OneDrive. Follow [Microsoft's Graph Explorer guide](https://learn.microsoft.com/en-us/graph/graph-explorer/graph-explorer-overview).
 
 Start with a disposable native Office file. Resolve its sharing link through

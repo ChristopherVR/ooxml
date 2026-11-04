@@ -14,6 +14,9 @@ PowerPoint uses the same optional `ooxml-core/embedding/onedrive` connection as 
 Visio. The host supplies Microsoft authentication and verified item permissions. There is no
 bundled Microsoft app registration, simulation service or simulated OneDrive demo.
 
+For a step-by-step setup with screenshots (app registration, sign-in, a sharing-link box and a
+complete React example), start with the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+
 The [complete Office integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
 documents authentication, session storage, safe cloud copies, sharing roles/scopes, conflict
 recovery and the reference for every package type.

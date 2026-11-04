@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" width="960" height="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" role="img" aria-labelledby="t d">
+	<title id="t">OneDrive connection flow</title>
+	<desc id="d">The host signs the user in and supplies a token and a sharing link. createOneDriveClient opens the file through Microsoft Graph, createOneDriveSession hands the bytes and a storage object to the editor, and Save uploads back to the same item.</desc>
+	<defs>
+		<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+			<path d="M0 0L10 5L0 10z" fill="#3b3a39"/>
+		</marker>
+	</defs>
+	<rect width="960" height="470" fill="#ffffff"/>
+
+	<!-- Host application -->
+	<rect x="20" y="20" width="600" height="430" rx="10" fill="#f3f2f1" stroke="#8a8886"/>
+	<text x="40" y="48" font-weight="600" font-size="16" fill="#201f1e">Your application (the host)</text>
+
+	<rect x="40" y="70" width="250" height="92" rx="8" fill="#ffffff" stroke="#0f6cbd" stroke-width="2"/>
+	<text x="56" y="96" font-weight="600" fill="#0f6cbd">2. Pick a file (you add this)</text>
+	<text x="56" y="120" fill="#201f1e">A link box, your own picker,</text>
+	<text x="56" y="140" fill="#201f1e">or the Office app's dialog</text>
+
+	<rect x="330" y="70" width="270" height="92" rx="8" fill="#ffffff" stroke="#0f6cbd" stroke-width="2"/>
+	<text x="346" y="96" font-weight="600" fill="#0f6cbd">1. Sign-in (you add this)</text>
+	<text x="346" y="120" fill="#201f1e">MSAL or any PKCE library,</text>
+	<text x="346" y="140" fill="#201f1e">your Entra app's client ID</text>
+
+	<rect x="40" y="200" width="560" height="100" rx="8" fill="#ffffff" stroke="#5c2e91" stroke-width="2"/>
+	<text x="56" y="226" font-weight="600" fill="#5c2e91">3. ooxml-core/embedding/onedrive</text>
+	<text x="56" y="252" fill="#201f1e">createOneDriveClient({ getAccessToken, canWrite })</text>
+	<text x="56" y="276" fill="#201f1e">drive.open(link)  then  createOneDriveSession(drive, opened)</text>
+
+	<rect x="40" y="340" width="560" height="90" rx="8" fill="#ffffff" stroke="#c43e1c" stroke-width="2"/>
+	<text x="56" y="366" font-weight="600" fill="#c43e1c">4. Editor (PowerPointViewer, docx-editor, ...)</text>
+	<text x="56" y="392" fill="#201f1e">content = opened.bytes,  canEdit = access === 'write'</text>
+	<text x="56" y="414" fill="#201f1e">storage = session.storage  (File &gt; Save uploads)</text>
+
+	<path d="M165 162V198" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
+	<text x="174" y="186" font-size="12" fill="#3b3a39">sharing link</text>
+	<path d="M465 162V198" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
+	<text x="474" y="186" font-size="12" fill="#3b3a39">getAccessToken()</text>
+	<path d="M240 300V338" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
+	<text x="250" y="324" font-size="12" fill="#3b3a39">bytes + storage</text>
+	<path d="M420 338V302" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
+	<text x="430" y="324" font-size="12" fill="#3b3a39">Save: session.save(bytes)</text>
+
+	<!-- Microsoft -->
+	<rect x="680" y="70" width="260" height="92" rx="8" fill="#ffffff" stroke="#8a8886" stroke-dasharray="6 4"/>
+	<text x="696" y="96" font-weight="600" fill="#201f1e">Microsoft identity platform</text>
+	<text x="696" y="120" fill="#201f1e">login.microsoftonline.com</text>
+	<text x="696" y="140" fill="#201f1e">issues a Graph token</text>
+
+	<rect x="680" y="200" width="260" height="100" rx="8" fill="#ffffff" stroke="#8a8886" stroke-dasharray="6 4"/>
+	<text x="696" y="226" font-weight="600" fill="#201f1e">Microsoft Graph</text>
+	<text x="696" y="250" fill="#201f1e">/shares/{link}/driveItem</text>
+	<text x="696" y="272" fill="#201f1e">download, upload session</text>
+	<text x="696" y="292" fill="#201f1e">(If-Match on the eTag)</text>
+
+	<path d="M600 116H678" stroke="#3b3a39" stroke-width="2" fill="none" marker-start="url(#a)" marker-end="url(#a)"/>
+	<text x="639" y="108" font-size="12" fill="#3b3a39" text-anchor="middle">PKCE</text>
+	<path d="M600 250H678" stroke="#3b3a39" stroke-width="2" fill="none" marker-start="url(#a)" marker-end="url(#a)"/>
+	<text x="639" y="242" font-size="12" fill="#3b3a39" text-anchor="middle">HTTPS</text>
+</svg>

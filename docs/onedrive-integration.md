@@ -9,6 +9,9 @@ This is explicit file storage and sharing. It does not connect Microsoft Office 
 the viewers' collaboration rooms, merge independently edited Office packages, or continuously
 refresh an open document when another person saves it.
 
+New to this? The [OneDrive quick start](onedrive-quickstart.md) walks through app registration,
+sign-in, choosing a file and a complete React PowerPoint example, with screenshots.
+
 ## Package reference
 
 Install `ooxml-core` as a direct dependency of a host that imports the adapter. Do not rely on
