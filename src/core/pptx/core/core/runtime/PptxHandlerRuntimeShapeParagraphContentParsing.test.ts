@@ -1089,3 +1089,42 @@ describe('endParaRPr survives a real-deck load (anatidae-animation.pptx)', () =>
 		});
 	});
 });
+
+describe('collectShapeParagraphContent - percentage paragraph spacing (real runtime)', () => {
+	// PowerPoint 16 exports: a 40pt and a 20pt paragraph with `spcBef` 50% opened
+	// 24pt and 12pt above themselves, half of each one's own 1.2 x size line,
+	// whatever the level default size.
+	it.each([
+		{ sz: '4000', expectedPt: 24 },
+		{ sz: '2000', expectedPt: 12 },
+	])('measures spcPct against the paragraph text size ($sz)', ({ sz, expectedPt }) => {
+		const { segments } = new ParagraphContentRuntime().collect(
+			{
+				'a:pPr': { 'a:spcBef': { 'a:spcPct': { '@_val': '50000' } } },
+				'a:r': { 'a:rPr': { '@_sz': sz }, 'a:t': 'Text' },
+			},
+			1,
+			3,
+			undefined,
+			{ fontSize: 24 },
+		);
+		expect(segments[0].paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(
+			(expectedPt * 96) / 72,
+			5,
+		);
+	});
+
+	it('falls back to the level default size for a paragraph without sized text', () => {
+		const { segments } = new ParagraphContentRuntime().collect(
+			{
+				'a:pPr': { 'a:spcBef': { 'a:spcPct': { '@_val': '100000' } } },
+				'a:r': { 'a:t': 'Text' },
+			},
+			1,
+			3,
+			undefined,
+			{ fontSize: 24 },
+		);
+		expect(segments[0].paragraphProperties?.paragraphSpacingBefore).toBeCloseTo(24 * 1.2, 5);
+	});
+});

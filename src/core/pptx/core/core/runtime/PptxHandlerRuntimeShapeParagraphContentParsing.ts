@@ -569,10 +569,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// #69: capture this paragraph's own pPr geometry so per-paragraph
 			// alignment / spacing / margins / indent / tabs round-trip instead
 			// of being flattened to one shape-level pPr on save.
+			// `a:spcPct` spacing is a share of the paragraph's own line, so its
+			// basis is the paragraph's text size, not the level default: on
+			// PowerPoint 16 exports a 40pt and a 20pt paragraph with `spcBef`
+			// 50% opened 24pt and 12pt above themselves.
+			const runSizes = segments.flatMap((segment) =>
+				segment.text && segment.text !== '\n' && !segment.bulletInfo && segment.style?.fontSize
+					? [segment.style.fontSize]
+					: [],
+			);
 			const basisFontSize =
-				typeof mergedDefaultRunStyle.fontSize === 'number'
-					? mergedDefaultRunStyle.fontSize
-					: undefined;
+				runSizes.length > 0
+					? Math.max(...runSizes)
+					: typeof mergedDefaultRunStyle.fontSize === 'number'
+						? mergedDefaultRunStyle.fontSize
+						: undefined;
 			const paragraphOwnProps = this.extractParagraphOwnProperties(p, basisFontSize);
 			if (paragraphOwnProps) {
 				segments[firstSegmentIndex].paragraphProperties = paragraphOwnProps;
