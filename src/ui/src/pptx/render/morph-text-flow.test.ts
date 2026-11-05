@@ -110,6 +110,72 @@ describe('morph text flow (issue #141, slides 17 -> 18)', () => {
 	});
 });
 
+// Issue #141, slides 9 -> 10: the heading is parked above the slide as shape 24
+// and lands as shape 27, while the outgoing slide's label on the right is
+// ALSO shape 27. Pairing by native id first carried the label's box into the
+// heading, so the heading flew in from the right instead of dropping from the
+// top. The words are the heading's identity, so the twin pass runs first.
+// The footer repeats the heading's line, so that line is not distinctive on
+// the outgoing slide and the paragraph-flow guard cannot refuse the id pair
+// on its own: only the order of the passes keeps the heading whole.
+describe('a text twin outranks a shape id it shares with another box', () => {
+	const words = 'Quarterly results at a glance';
+	const parkedHeading = text('h9', words, {
+		x: 200,
+		y: -260,
+		width: 880,
+		height: 120,
+		shapeId: '24',
+		name: 'Title 23',
+	});
+	const label = text('label9', 'Region notes', {
+		x: 1000,
+		y: 420,
+		width: 240,
+		height: 60,
+		shapeId: '27',
+		name: 'TextBox 26',
+	});
+	const footer = text('footer9', `${words}\nPage 9`, {
+		x: 40,
+		y: 680,
+		width: 400,
+		height: 30,
+		shapeId: '31',
+		name: 'Footer 30',
+	});
+	const heading = text('h10', words, {
+		x: 200,
+		y: 60,
+		width: 880,
+		height: 120,
+		shapeId: '27',
+		name: 'Title 26',
+	});
+
+	it('pairs the heading with the heading, not with the label holding its id', () => {
+		const result = matchMorphElementsFull(slide([parkedHeading, label, footer]), slide([heading]));
+		expect(ids(result.pairs)).toEqual(['h9>h10']);
+		expect(result.unmatchedFrom.map((element) => element.id)).toEqual(['label9', 'footer9']);
+	});
+
+	it('drops the heading straight down from the top', () => {
+		const plan = buildMorphTransitionPlan(
+			slide([parkedHeading, label, footer]),
+			slide([heading]),
+			1000,
+		)!;
+		const name = plan.incomingAnimations.get('h10')?.split(' ')[0];
+		expect(name).toBeDefined();
+		const block = plan.keyframesCss.split(`@keyframes ${name} {`)[1]?.split('@keyframes')[0];
+		const [, dx, dy] = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/u.exec(block ?? '') ?? [];
+		// The 'from' stop puts the heading back where it was parked: 320px above,
+		// with no sideways travel at all.
+		expect(Number(dx)).toBe(0);
+		expect(Number(dy)).toBe(-320);
+	});
+});
+
 // Issue #141, slides 6 -> 7: two "L" text boxes stacked 2px apart fade in.
 describe('stacked incoming copies', () => {
 	const lower = text('lower', 'L', { x: 428, y: 273, width: 46, height: 87 });
