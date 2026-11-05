@@ -17,6 +17,8 @@ import type { OfficeCloudFilesLabels } from '../../files/cloud-files-labels';
 import { createControllerStore } from './controller/controller';
 import type { PptxController } from './controller/controller';
 
+export type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
+
 /** The kinds a PowerPoint File > Open cloud place offers. */
 export const CLOUD_OPEN_ACCEPT = ['pptx'] as const;
 
