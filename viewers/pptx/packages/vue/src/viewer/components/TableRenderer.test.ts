@@ -397,6 +397,18 @@ describe('tableRenderer', () => {
 		expect((wrapper.get('td').element as HTMLTableCellElement).style.paddingRight).toBe('5px');
 	});
 
+	it('takes half of the border width out of the default cell margins too', () => {
+		const data: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { borderTopWidth: 2, borderLeftWidth: 2 } }] }],
+		};
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		const td = wrapper.get('td').element as HTMLTableCellElement;
+		expect(td.style.paddingTop).toBe('3.8px');
+		expect(td.style.paddingLeft).toBe('8.6px');
+		expect(td.style.paddingBottom).toBe('4.8px');
+	});
+
 	it('renders strikethrough run with text-decoration: line-through', () => {
 		const runs: CellTextRun[] = [{ text: 'Strike', strikethrough: true }];
 		const data: PptxTableData = {

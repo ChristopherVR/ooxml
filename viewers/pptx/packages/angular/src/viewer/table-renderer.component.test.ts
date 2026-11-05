@@ -163,9 +163,7 @@ describe('cellStyleToStyleMap', () => {
 			borderTopColor: '#FF0000',
 			borderTopDash: 'dot',
 		});
-		expect(map['border-top']).toBe(
-			'max(2px, var(--pptx-device-px, 0px)) dotted #FF0000',
-		);
+		expect(map['border-top']).toBe('max(2px, var(--pptx-device-px, 0px)) dotted #FF0000');
 	});
 
 	it('falls back to borderColor when per-edge color is absent', () => {
@@ -173,9 +171,7 @@ describe('cellStyleToStyleMap', () => {
 			borderColor: '#123456',
 			borderBottomWidth: 1,
 		});
-		expect(map['border-bottom']).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid #123456',
-		);
+		expect(map['border-bottom']).toBe('max(1px, var(--pptx-device-px, 0px)) solid #123456');
 	});
 
 	it('maps cell margins to padding', () => {
@@ -267,6 +263,17 @@ describe('cellTdStyle', () => {
 	it('takes half of the border width out of the cell padding', () => {
 		const cell: PptxTableCell = { text: '42', style: { marginRight: 6, borderRightWidth: 2 } };
 		expect(cellTdStyle(cell)['padding-right']).toBe('5px');
+	});
+
+	it('takes half of the border width out of the default cell margins too', () => {
+		const el = tableElement(
+			[{ cells: [{ text: '42', style: { borderTopWidth: 2, borderLeftWidth: 2 } }] }],
+			[1],
+		);
+		const style = buildTableViewModel(el)[0].cells[0].tdStyle;
+		expect(style['padding-top']).toBe('3.8px');
+		expect(style['padding-left']).toBe('8.6px');
+		expect(style['padding-bottom']).toBe('4.8px');
 	});
 });
 

@@ -249,6 +249,17 @@ describe('renderTableElement', () => {
 		expect(td.style.paddingRight).toBe('5px');
 	});
 
+	it('takes half of the border width out of the default cell margins too', () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { borderTopWidth: 2, borderLeftWidth: 2 } }] }],
+		};
+		const td = renderTable(buildTableElement(tableData)).querySelector('td') as HTMLElement;
+		expect(td.style.paddingTop).toBe('3.8px');
+		expect(td.style.paddingLeft).toBe('8.6px');
+		expect(td.style.paddingBottom).toBe('4.8px');
+	});
+
 	it('lowers and shrinks a subscript run', () => {
 		const tableData: PptxTableData = {
 			columnWidths: [1],

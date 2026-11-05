@@ -54,4 +54,17 @@ describe('table cell text', () => {
 		);
 		expect(firstCellStyle(markup)).toContain('padding-right:5px');
 	});
+
+	it('takes half of the border width out of the default cell margins too', () => {
+		const markup = renderToStaticMarkup(
+			renderTableElement(
+				tableWith({ text: '42', style: { borderTopWidth: 2, borderLeftWidth: 2 } }),
+				{},
+			),
+		);
+		const style = firstCellStyle(markup);
+		expect(style).toContain('padding-top:3.8px');
+		expect(style).toContain('padding-left:8.6px');
+		expect(style).toContain('padding-bottom:4.8px');
+	});
 });

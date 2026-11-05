@@ -42,6 +42,7 @@ import {
 	getTableCellBandStyle,
 	recordTableCellBold,
 } from './table-style';
+import { insetPaddingForBorders } from './table-cell-border-inset';
 import { DEFAULT_LINE_HEIGHT } from './text-line-height';
 
 /** Where a cell sits in its table, which is what the band cascade keys on. */
@@ -106,6 +107,7 @@ export function tableCellCss(
 		css.color = DEFAULT_TEXT_COLOR;
 	}
 	const result: TableCellCss = { ...TABLE_CELL_TEXT_DEFAULTS, ...css };
+	insetPaddingForBorders(result, cell?.style);
 	applyTableCellFontWeight(result);
 	return result;
 }
