@@ -18,8 +18,15 @@
 /** Scale added or removed by one press of zoom in / zoom out. */
 export const ZOOM_STEP = 0.1;
 
-/** Smallest user zoom the controls will step down to (20%). */
-export const MIN_ZOOM_SCALE = 0.2;
+/**
+ * Smallest user zoom: fit (100%).
+ *
+ * The scale is relative to fit, and fit already shows the whole slide, so a
+ * smaller factor only shrinks the slide into empty viewport space. Every zoom
+ * entry point (the buttons, Ctrl+wheel, pinch, `setZoom`) clamps here, so the
+ * slide can never be made smaller than the viewport it fits in.
+ */
+export const MIN_ZOOM_SCALE = 1;
 
 /** Largest user zoom the controls will step up to (500%). */
 export const MAX_ZOOM_SCALE = 5;

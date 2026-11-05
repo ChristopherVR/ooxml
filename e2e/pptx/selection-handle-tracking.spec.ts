@@ -371,6 +371,7 @@ test.describe('selection handles track the live gesture', () => {
 			.toBeGreaterThan(initialWidth * 1.1);
 		for (const direction of ['in', 'out'] as const) {
 			if (direction === 'out') {
+				// One press more than the two zoom-ins: zoom out stops at fit.
 				for (let index = 0; index < 3; index++) {
 					await page
 						.getByRole('button', { name: /^zoom out$/iu })
@@ -378,8 +379,8 @@ test.describe('selection handles track the live gesture', () => {
 						.click();
 				}
 				await expect
-					.poll(async () => (await target.boundingBox())!.width)
-					.toBeLessThan(initialWidth);
+					.poll(async () => Math.abs((await target.boundingBox())!.width - initialWidth))
+					.toBeLessThan(1);
 			}
 			const after = await sizes();
 			expect(after).toHaveLength(before.length);
@@ -503,13 +504,8 @@ test.describe('rotation keeps the initial grab offset', () => {
 								.getByRole('button', { name: zoom === 'in' ? /^zoom in$/iu : /^zoom out$/iu })
 								.first()
 								.click();
-							if (zoom === 'out') {
-								// Undo the zoom-in step, then exercise a scale below fit.
-								await page
-									.getByRole('button', { name: /^zoom out$/iu })
-									.first()
-									.click();
-							}
+							// 'out' undoes the zoom-in step: zoom out stops at fit, so the
+							// handles are measured again after zooming back down.
 							await page.waitForTimeout(150);
 						}
 						// Undo may clear selection; reselect before measuring the next zoom.

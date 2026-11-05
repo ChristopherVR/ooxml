@@ -74,7 +74,7 @@ import type { ViewerMode, PowerPointViewerAPI } from 'pptx-react-viewer';
 | Method      | Signature                 | Description                                |
 | ----------- | ------------------------- | ------------------------------------------ |
 | `getZoom`   | `() => number`            | Get the current zoom level (1 = 100%).     |
-| `setZoom`   | `(level: number) => void` | Set the zoom level (clamped to 0.2 - 5.0). |
+| `setZoom`   | `(level: number) => void` | Set the zoom level (clamped to 1.0 - 5.0). |
 | `zoomIn`    | `() => void`              | Zoom in by one step (10%).                 |
 | `zoomOut`   | `() => void`              | Zoom out by one step (10%).                |
 | `zoomReset` | `() => void`              | Reset zoom to 100%.                        |

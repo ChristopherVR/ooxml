@@ -24,6 +24,8 @@ import {
 	getTouchDistance,
 	LONG_PRESS_DURATION_MS,
 	LONG_PRESS_MOVE_TOLERANCE_PX,
+	MAX_ZOOM_SCALE,
+	MIN_ZOOM_SCALE,
 	SWIPE_MAX_VERTICAL_PX,
 	SWIPE_THRESHOLD_PX,
 } from 'ooxml-ui/pptx';
@@ -43,12 +45,10 @@ export {
 export type { TouchGestureCallbacks };
 
 /**
- * Viewer zoom bounds. The Angular viewer clamps zoom to [0.2, 3] (see
- * `ZOOM_MIN` / `ZOOM_MAX` in `power-point-viewer.component.ts`); the pinch path
- * must clamp to the same range so a pinch can never exceed the buttons.
+ * Viewer zoom bounds: the shared ones, which the zoom store also clamps the
+ * buttons, Ctrl+wheel and `setZoom` to, so a pinch can never leave their range.
  */
-export const MIN_ZOOM_SCALE = 0.2;
-export const MAX_ZOOM_SCALE = 3;
+export { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE };
 
 /** Clamp a scale value to the Angular viewer's allowed zoom range. */
 export function clampScale(value: number): number {

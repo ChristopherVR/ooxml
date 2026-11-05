@@ -123,8 +123,8 @@ describe('table defaults', () => {
 });
 
 describe('zoom constraints', () => {
-	it('mIN_ZOOM_SCALE is less than 1 (allows zoom out)', () => {
-		expect(MIN_ZOOM_SCALE).toBeLessThan(1);
+	it('mIN_ZOOM_SCALE is fit (zoom out stops at the whole slide)', () => {
+		expect(MIN_ZOOM_SCALE).toBe(1);
 	});
 
 	it('mAX_ZOOM_SCALE is greater than 1 (allows zoom in)', () => {

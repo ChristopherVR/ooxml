@@ -42,6 +42,35 @@ describe('createStore', () => {
 		expect(listener).not.toHaveBeenCalled();
 	});
 
+	it('delivers a set made by a listener once, in order, to every listener', () => {
+		const store = createStore({ slide: 0, zoom: 2 });
+		const first: string[] = [];
+		const later: string[] = [];
+		const change = (state: { slide: number; zoom: number }, previous: typeof state) =>
+			`slide ${previous.slide}->${state.slide}, zoom ${previous.zoom}->${state.zoom}`;
+		store.subscribe((state, previous) => {
+			first.push(change(state, previous));
+			if (state.slide !== previous.slide) {
+				store.set({ zoom: 1 });
+			}
+		});
+		store.subscribe((state, previous) => later.push(change(state, previous)));
+
+		store.set({ slide: 1 });
+
+		// The listener after the one that set sees both changes as one; the one
+		// that set sees its own change after it returns. Nobody sees one twice.
+		expect(later).toStrictEqual(['slide 0->1, zoom 2->1']);
+		expect(first).toStrictEqual(['slide 0->1, zoom 2->2', 'slide 1->1, zoom 2->1']);
+		expect(store.get()).toStrictEqual({ slide: 1, zoom: 1 });
+	});
+
+	it('throws, rather than spinning, when a listener never stops changing the state', () => {
+		const store = createStore({ n: 0 });
+		store.subscribe((state) => store.set({ n: state.n + 1 }));
+		expect(() => store.set({ n: 1 })).toThrow(/never settles/u);
+	});
+
 	it('supports multiple subscribers', () => {
 		const store = createStore({ a: 1 });
 		const first = vi.fn();

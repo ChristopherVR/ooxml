@@ -19,7 +19,16 @@ describe('zoom stepping', () => {
 		// must scale the stage by 1.1x in every binding.
 		expect(ZOOM_STEP).toBe(0.1);
 		expect(zoomInScale(1)).toBe(1.1);
-		expect(zoomOutScale(1)).toBe(0.9);
+		expect(zoomOutScale(1.5)).toBe(1.4);
+	});
+
+	it('never zooms out past fit', () => {
+		// The scale is relative to fit, and fit already shows the whole slide.
+		expect(MIN_ZOOM_SCALE).toBe(1);
+		expect(zoomOutScale(1)).toBe(1);
+		expect(zoomOutPercent(100)).toBe(100);
+		expect(ZOOM_MIN_PERCENT).toBe(100);
+		expect(clampZoomScale(0.2)).toBe(1);
 	});
 
 	it('does not accumulate float dust across presses', () => {

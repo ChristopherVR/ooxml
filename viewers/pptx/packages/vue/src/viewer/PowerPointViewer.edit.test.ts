@@ -287,7 +287,7 @@ describe('powerPointViewer editing wiring', () => {
 		}
 	});
 
-	it('matches the React 20% to 500% imperative zoom range', async () => {
+	it('matches the React fit to 500% imperative zoom range', async () => {
 		const wrapper = mount(PowerPointViewer);
 		await flushPromises();
 		const viewer = wrapper.vm as unknown as {
@@ -298,6 +298,34 @@ describe('powerPointViewer editing wiring', () => {
 		viewer.setZoom(10);
 		expect(viewer.getZoom()).toBe(5);
 		viewer.setZoom(0);
-		expect(viewer.getZoom()).toBe(0.2);
+		expect(viewer.getZoom()).toBe(1);
+	});
+
+	it('opens another slide at fit, and keeps a zoom the host sets right after goTo', async () => {
+		const wrapper = mount(PowerPointViewer, { props: { canEdit: true } });
+		try {
+			await flushPromises();
+			const viewer = wrapper.vm as unknown as PowerPointViewerExpose;
+			for (let index = 0; index < 3; index++) {
+				viewer.addSlide();
+				await flushPromises();
+			}
+			viewer.goTo(0);
+			await flushPromises();
+			viewer.setZoom(2);
+			viewer.goNext();
+			await flushPromises();
+			expect(viewer.getActiveSlideIndex()).toBe(1);
+			expect(viewer.getZoom()).toBe(1);
+
+			// Both calls in one task, before the watcher sees slide 3.
+			viewer.goTo(2);
+			viewer.setZoom(1.5);
+			await flushPromises();
+			expect(viewer.getActiveSlideIndex()).toBe(2);
+			expect(viewer.getZoom()).toBe(1.5);
+		} finally {
+			wrapper.unmount();
+		}
 	});
 });

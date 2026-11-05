@@ -402,20 +402,26 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 						}
 						return data ?? new Uint8Array(0);
 					},
+					// Each reports the slide to the zoom at once, so a `setZoom` the host
+					// calls right after applies to the new slide instead of being reset
+					// to fit when the render shows it.
 					goTo(index: number) {
 						if (index >= 0 && index < slides.length) {
+							zoom.showSlide(slides[index]?.id);
 							state.setActiveSlideIndex(index);
 						}
 					},
 					goPrev() {
 						const next = activeSlideIndex - 1;
 						if (next >= 0) {
+							zoom.showSlide(slides[next]?.id);
 							state.setActiveSlideIndex(next);
 						}
 					},
 					goNext() {
 						const next = activeSlideIndex + 1;
 						if (next < slides.length) {
+							zoom.showSlide(slides[next]?.id);
 							state.setActiveSlideIndex(next);
 						}
 					},
@@ -475,6 +481,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 					// -- Active slide (alias) --
 					setActiveSlideIndex(index: number) {
 						if (index >= 0 && index < slides.length) {
+							zoom.showSlide(slides[index]?.id);
 							state.setActiveSlideIndex(index);
 						}
 					},

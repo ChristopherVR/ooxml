@@ -15,7 +15,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { PowerPointViewerAPI } from 'pptx-viewer-shared';
 
-import { loadDeck, slideStage } from './support/deck';
+import { loadDeck, slideStage, zoomFitButton } from './support/deck';
 
 declare global {
 	interface Window {
@@ -158,6 +158,41 @@ test.describe('viewport navigation', () => {
 		expect(await elementPositions(page)).toBe(positions);
 	});
 
+	test('Space+drag pans with focus in the viewer, and stays on the slide', async ({ page }) => {
+		await zoomIn(page);
+		await scrollTo(page, { left: 300, top: 200 });
+		const centre = await slidePoint(page, 0.5, 0.5);
+		// A click puts focus in the viewer, where a bare Space also means "next slide".
+		await page.mouse.click(centre.x, centre.y);
+		const start = await scrollOf(page);
+		await page.keyboard.down('Space');
+		await page.mouse.down();
+		await page.mouse.move(centre.x - 100, centre.y - 60, { steps: 6 });
+		await page.mouse.up();
+		await page.keyboard.up('Space');
+		await expect
+			.poll(() => scrollOf(page))
+			.toEqual({ left: start.left + 100, top: start.top + 60 });
+		expect(await page.evaluate(() => window.__pptxViewer.getActiveSlideIndex())).toBe(0);
+	});
+
+	test('Space presses a focused zoom button while the pointer is over the slide', async ({
+		page,
+	}) => {
+		await zoomIn(page);
+		const centre = await slidePoint(page, 0.5, 0.5);
+		await page.mouse.move(centre.x, centre.y);
+		const before = (await slideStage(page).boundingBox())!.width;
+		await page
+			.getByRole('button', { name: /^zoom in$/iu })
+			.first()
+			.focus();
+		await page.keyboard.press('Space');
+		await expect
+			.poll(async () => (await slideStage(page).boundingBox())!.width)
+			.toBeGreaterThan(before + 1);
+	});
+
 	test('a plain drag pans only in a read-only view', async ({ page }) => {
 		await zoomIn(page);
 		await scrollTo(page, { left: 300, top: 200 });
@@ -184,5 +219,51 @@ test.describe('viewport navigation', () => {
 		await drag();
 		await page.waitForTimeout(200);
 		expect(await scrollOf(page)).toEqual(editStart);
+	});
+
+	test('zooming out stops at fit', async ({ page }) => {
+		const fitted = (await slideStage(page).boundingBox())!.width;
+		const zoomOut = page.getByRole('button', { name: /^zoom out$/iu }).first();
+		for (let i = 0; i < 3; i++) {
+			await zoomOut.click();
+		}
+		const centre = await slidePoint(page, 0.5, 0.5);
+		await ctrlWheel(page, centre.x, centre.y, 100, 6);
+		await page.waitForTimeout(200);
+		expect(Math.abs((await slideStage(page).boundingBox())!.width - fitted)).toBeLessThan(1);
+	});
+
+	test('another slide opens at fit', async ({ page }) => {
+		const fitted = (await slideStage(page).boundingBox())!.width;
+		await zoomIn(page);
+		await scrollTo(page, { left: 300, top: 200 });
+
+		const second = page.locator('[aria-label="Go to slide 2"]').first();
+		await second.click();
+		await expect(second).toHaveAttribute('aria-current', /^(true|page)$/);
+		await expect
+			.poll(async () => Math.abs((await slideStage(page).boundingBox())!.width - fitted))
+			.toBeLessThan(1);
+		expect(await scrollOf(page)).toEqual({ left: 0, top: 0 });
+
+		// Zoom-to-fit after zooming in lands on the same fit.
+		await zoomIn(page);
+		await zoomFitButton(page).click();
+		await expect
+			.poll(async () => Math.abs((await slideStage(page).boundingBox())!.width - fitted))
+			.toBeLessThan(1);
+
+		// A zoom the host sets right after going to a slide applies to that slide.
+		const width = async () => (await slideStage(page).boundingBox())!.width;
+		await page.evaluate(() => window.__pptxViewer.setZoom(2));
+		await expect.poll(width).toBeGreaterThan(fitted * 1.2);
+		const zoomed = await width();
+		await page.evaluate(() => {
+			window.__pptxViewer.goTo(0);
+			window.__pptxViewer.setZoom(2);
+		});
+		await expect.poll(() => page.evaluate(() => window.__pptxViewer.getActiveSlideIndex())).toBe(0);
+		await page.waitForTimeout(300);
+		expect(Math.abs((await width()) - zoomed)).toBeLessThan(1);
 	});
 });

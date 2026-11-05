@@ -40,6 +40,60 @@ describe('viewer zoom commands', () => {
 		expect(store.getState().manual).toBeTruthy();
 	});
 
+	it('reaching the fit floor is fit, not a manual 100%', () => {
+		const store = createViewerZoomStore();
+		const listener = vi.fn();
+		store.subscribe(listener);
+
+		// Zoom out at fit: nothing to do, and nothing re-renders (issue #145).
+		store.dispatch({ type: 'zoom-out' });
+		expect(store.getState()).toStrictEqual(DEFAULT_VIEWER_ZOOM_STATE);
+		expect(listener).not.toHaveBeenCalled();
+
+		// Stepping back down to 1, or asking for it, gives control back to the viewport.
+		store.dispatch({ type: 'zoom-in' }, { type: 'zoom-out' });
+		expect(store.getState()).toMatchObject({ zoom: 1, manual: false });
+		store.dispatch({ type: 'set-zoom', zoom: 2 }, { type: 'set-zoom', zoom: 0.5 });
+		expect(store.getState()).toMatchObject({ zoom: 1, manual: false });
+	});
+
+	it('another slide opens at fit; the same slide again keeps the zoom', () => {
+		const store = createViewerZoomStore({ fitScale: 0.6 });
+		store.dispatch({ type: 'slide-shown', slideId: 's1' }, { type: 'set-zoom', zoom: 1.9 });
+
+		const listener = vi.fn();
+		store.subscribe(listener);
+		store.dispatch({ type: 'slide-shown', slideId: 's1' });
+		expect(listener).not.toHaveBeenCalled();
+
+		store.dispatch({ type: 'slide-shown', slideId: 's2' });
+		expect(store.getState()).toStrictEqual({
+			zoom: 1,
+			fitScale: 0.6,
+			manual: false,
+			slideId: 's2',
+		});
+	});
+
+	it('keys the slide change on the slide, not its index or the order of reports', () => {
+		const store = createViewerZoomStore();
+		// Nothing shown yet, then the first slide a deck shows: a zoom set before
+		// either (the host's setZoom before load) is kept.
+		store.dispatch({ type: 'set-zoom', zoom: 2 }, { type: 'slide-shown', slideId: undefined });
+		store.dispatch({ type: 'slide-shown', slideId: 's3' });
+		expect(store.getState()).toMatchObject({ zoom: 2, manual: true, slideId: 's3' });
+
+		// A host going to a slide reports it at once and zooms; the binding's later
+		// report of the same slide must not undo that zoom.
+		store.dispatch({ type: 'slide-shown', slideId: 's4' }, { type: 'set-zoom', zoom: 3 });
+		store.dispatch({ type: 'slide-shown', slideId: 's4' });
+		expect(store.getState()).toMatchObject({ zoom: 3, manual: true, slideId: 's4' });
+
+		// Closing the deck (no slide) is not a slide change either.
+		store.dispatch({ type: 'slide-shown', slideId: undefined });
+		expect(store.getState()).toMatchObject({ zoom: 3, slideId: 's4' });
+	});
+
 	it('zoom-to-fit returns to 1x and gives up manual control', () => {
 		const store = createViewerZoomStore();
 		store.dispatch({ type: 'set-zoom', zoom: 2 });

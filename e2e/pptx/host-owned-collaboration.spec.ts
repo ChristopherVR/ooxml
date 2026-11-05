@@ -531,7 +531,7 @@ test.describe('host-owned collaboration', () => {
 		try {
 			await open(page, room, { sample: '1' });
 			await open(peer, room, { name: 'Peer' });
-			await page.getByLabel('Custom shell zoom', { exact: true }).selectOption('0.5');
+			await page.getByLabel('Custom shell zoom', { exact: true }).selectOption('1.5');
 			const target = elements(page).filter({ hasText: 'Product Overview' });
 			const id = await target.getAttribute('data-element-id');
 			expect(id).toBeTruthy();
@@ -547,7 +547,7 @@ test.describe('host-owned collaboration', () => {
 			await expect(selection).toBeVisible();
 			await expect(cursor).toBeVisible();
 			let previousWidth: number | undefined;
-			for (const scale of [0.5, 1, 1.5]) {
+			for (const scale of [1, 1.25, 1.5]) {
 				await peer.getByLabel('Custom shell zoom', { exact: true }).selectOption(String(scale));
 				await expect
 					.poll(async () => {

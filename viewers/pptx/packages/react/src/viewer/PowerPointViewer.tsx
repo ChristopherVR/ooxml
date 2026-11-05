@@ -743,6 +743,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			maxFitScale: props.maxFitScale,
 			// Nothing to select in a read-only view, so a plain drag pans instead.
 			dragPans: mode === 'preview',
+			activeSlideId: activeSlide?.id,
 		});
 
 		// Every local edit commit funnels through the history hook, so this is the

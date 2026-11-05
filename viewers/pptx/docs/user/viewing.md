@@ -51,6 +51,8 @@ You can also:
 
 To move around a slide that is larger than the canvas, scroll, drag with the middle mouse button, or hold **Space** and drag. In a read-only view, where there is nothing to select, you can also drag the slide with the left mouse button.
 
+Zooming out stops at fit, where the whole slide is in view. Going to another slide opens it at fit again.
+
 ## View modes
 
 The status bar has three view buttons:

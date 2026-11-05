@@ -31,6 +31,8 @@ interface UseZoomViewportInput extends ViewportFitOptions {
 	selectedElements: PptxElement[];
 	/** True when a plain drag on the slide has nothing to select and should pan (read-only view). */
 	dragPans?: boolean;
+	/** Id of the slide on the canvas. Going to another slide returns the zoom to fit. */
+	activeSlideId?: string;
 }
 
 export interface UseZoomViewportResult {
@@ -56,6 +58,11 @@ export interface UseZoomViewportResult {
 	handleZoomToFit: () => void;
 	handleZoomToSelection: () => void;
 	handleWheel: (e: WheelEvent) => void;
+	/**
+	 * Report the slide about to be shown, before the render that shows it, so a
+	 * zoom set right after (the handle's `goTo` then `setZoom`) is not undone.
+	 */
+	showSlide: (slideId: string | undefined) => void;
 	centerBoundsInViewport: (bounds: SelectionBounds, nextScale: number) => void;
 	getCanvasPointFromClient: (clientX: number, clientY: number) => { x: number; y: number } | null;
 }
@@ -66,6 +73,7 @@ export function useZoomViewport({
 	fitPadding,
 	maxFitScale,
 	dragPans = false,
+	activeSlideId,
 }: UseZoomViewportInput): UseZoomViewportResult {
 	// ── Refs ──────────────────────────────────────────────────────────────
 	const editWrapperRef = useRef<HTMLDivElement>(null);
@@ -104,6 +112,14 @@ export function useZoomViewport({
 	useEffect(() => {
 		store.dispatch({ type: 'set-fit-scale', fitScale });
 	}, [store, fitScale]);
+
+	// The shared store decides what showing another slide does to the zoom; this
+	// only reports the slide on the canvas, whichever path changed it.
+	const showSlide = useCallback(
+		(slideId: string | undefined) => store.dispatch({ type: 'slide-shown', slideId }),
+		[store],
+	);
+	useEffect(() => showSlide(activeSlideId), [showSlide, activeSlideId]);
 
 	// ── Actions ───────────────────────────────────────────────────────────
 
@@ -310,6 +326,7 @@ export function useZoomViewport({
 		handleZoomToFit,
 		handleZoomToSelection,
 		handleWheel,
+		showSlide,
 		centerBoundsInViewport,
 		getCanvasPointFromClient,
 	};

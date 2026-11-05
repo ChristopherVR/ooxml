@@ -14,6 +14,11 @@ export class ViewerState {
 	/** Active slide index (0-based). */
 	current = $state(0);
 	/**
+	 * Id of the slide at an index, so {@link goTo} can report it to the zoom at
+	 * once; the viewer sets it once its slides exist.
+	 */
+	slideIdAt: (index: number) => string | undefined = () => undefined;
+	/**
 	 * The zoom itself lives in the shared `createViewerZoomStore`, so the model
 	 * is one definition across all five bindings rather than this binding's own
 	 * "percent, or null for fit" encoding. That encoding is kept at THIS
@@ -59,6 +64,17 @@ export class ViewerState {
 
 	goTo(index: number): void {
 		this.current = clampSlideIndex(index, this.slideCount);
+		// Reported at once, not only by the viewer's effect, so a `setZoom` the host
+		// calls right after applies to the new slide instead of being reset to fit.
+		this.showSlide(this.slideIdAt(this.current));
+	}
+
+	/**
+	 * Report the slide on the canvas (its id). The shared zoom store returns the
+	 * zoom to fit for another slide; the same slide again changes nothing.
+	 */
+	showSlide(slideId: string | undefined): void {
+		this.#zoom.dispatch({ type: 'slide-shown', slideId });
 	}
 
 	/**

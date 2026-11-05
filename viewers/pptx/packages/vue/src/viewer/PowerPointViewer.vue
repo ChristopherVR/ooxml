@@ -554,8 +554,16 @@ const {
 	zoomIn,
 	zoomOut,
 	zoomReset,
+	showSlide,
 	store: zoomStore,
-} = useViewerZoom();
+} = useViewerZoom(() => activeSlide.value?.id);
+// The handle reports the slide to the zoom at once, so a `setZoom` the host
+// calls right after applies to the new slide instead of being reset to fit
+// when the watcher sees it.
+const hostGoTo = (index: number): void => {
+	showSlide(slides.value[index]?.id);
+	goTo(index);
+};
 
 // Reset view state only when a NEW document is loaded, keyed off the `content`
 // input, not `slides`. Editing reassigns `slides.value` (so watching it here
@@ -2004,9 +2012,9 @@ const exposedHandle: PowerPointViewerExpose = {
 			Boolean(canvasOverlaysRef.value?.hasActivePointerInteraction()),
 		commitPendingText: inlineEdit.commitInlineEdit,
 		getContent,
-		goTo,
-		goPrev,
-		goNext,
+		goTo: hostGoTo,
+		goPrev: () => hostGoTo(activeSlideIndex.value - 1),
+		goNext: () => hostGoTo(activeSlideIndex.value + 1),
 		zoomIn,
 		zoomOut,
 		zoomReset,

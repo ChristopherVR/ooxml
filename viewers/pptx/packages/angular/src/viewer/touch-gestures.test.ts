@@ -57,7 +57,7 @@ function dispatchTouch(
 }
 
 // ---------------------------------------------------------------------------
-// clampScale (Angular viewer zoom range = [0.2, 3])
+// clampScale (the shared viewer zoom range, fit to 5x)
 // ---------------------------------------------------------------------------
 
 describe('clampScale (angular)', () => {
@@ -69,17 +69,18 @@ describe('clampScale (angular)', () => {
 	it('clamps below the minimum to MIN_ZOOM_SCALE', () => {
 		expect(clampScale(0.1)).toBe(MIN_ZOOM_SCALE);
 		expect(clampScale(-5)).toBe(MIN_ZOOM_SCALE);
-		expect(MIN_ZOOM_SCALE).toBe(0.2);
+		// A pinch never shrinks the slide below fit, as the buttons do not.
+		expect(MIN_ZOOM_SCALE).toBe(1);
 	});
 
 	it('clamps above the maximum to MAX_ZOOM_SCALE', () => {
 		expect(clampScale(99)).toBe(MAX_ZOOM_SCALE);
-		expect(MAX_ZOOM_SCALE).toBe(3);
+		expect(MAX_ZOOM_SCALE).toBe(5);
 	});
 
 	it('returns the boundary values exactly', () => {
-		expect(clampScale(0.2)).toBe(0.2);
-		expect(clampScale(3)).toBe(3);
+		expect(clampScale(1)).toBe(1);
+		expect(clampScale(5)).toBe(5);
 	});
 });
 
@@ -152,7 +153,7 @@ describe('attachTouchGestures', () => {
 			{ clientX: 0, clientY: 0 },
 			{ clientX: 100, clientY: 0 },
 		]);
-		// Spread to 10x → 1 * 10 = 10 → clamped to MAX_ZOOM_SCALE (3).
+		// Spread to 10x → 1 * 10 = 10 → clamped to MAX_ZOOM_SCALE (5).
 		dispatchTouch(el, 'touchmove', [
 			{ clientX: 0, clientY: 0 },
 			{ clientX: 1000, clientY: 0 },

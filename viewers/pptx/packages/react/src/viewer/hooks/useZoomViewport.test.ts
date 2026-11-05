@@ -46,6 +46,7 @@ describe('useZoomViewport measured fit', () => {
 		notifyNode?: boolean;
 		nodeKey?: string;
 		dragPans?: boolean;
+		activeSlideId?: string;
 	}) {
 		zoom = useZoomViewport({ canvasSize, selectedElements: [], ...props });
 		const objectRef = zoom.canvasViewportRef;
@@ -218,6 +219,30 @@ describe('useZoomViewport measured fit', () => {
 		render(false);
 		expect(zoom.canvasViewportRef.current).toBe(node);
 		expect(drag()).toBe(100);
+	});
+
+	it('opens another slide at fit and keeps the zoom on the same slide', () => {
+		const render = (activeSlideId: string) =>
+			act(() => root.render(createElement(Harness, { activeSlideId, fitPadding: 0 })));
+		render('s1');
+		act(() => zoom.setScale(1.9));
+		expect(zoom.scale).toBe(1.9);
+		render('s1');
+		expect(zoom.scale).toBe(1.9);
+		render('s2');
+		expect(zoom.scale).toBe(1);
+	});
+
+	it('keeps a zoom set right after reporting the next slide (the handle goTo then setZoom)', () => {
+		const render = (activeSlideId: string) =>
+			act(() => root.render(createElement(Harness, { activeSlideId, fitPadding: 0 })));
+		render('s1');
+		act(() => {
+			zoom.showSlide('s2');
+			zoom.setScale(2);
+		});
+		render('s2');
+		expect(zoom.scale).toBe(2);
 	});
 
 	it('still retries an initially null object ref assigned after the owner commits', () => {
@@ -508,7 +533,11 @@ describe('useZoomViewport: pure logic', () => {
 		});
 
 		it('zoomOut should decrement by 0.1', () => {
-			expect(zoomOut(1)).toBeCloseTo(0.9, 5);
+			expect(zoomOut(1.5)).toBeCloseTo(1.4, 5);
+		});
+
+		it('zoomOut stops at fit', () => {
+			expect(zoomOut(1)).toBe(1);
 		});
 
 		it('zoomOut should not go below MIN_ZOOM_SCALE', () => {

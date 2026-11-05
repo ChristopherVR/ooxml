@@ -42,7 +42,8 @@ export function createHostOwnedShellControls(
 	label.textContent = 'Zoom ';
 	const zoom = document.createElement('select');
 	zoom.setAttribute('aria-label', 'Custom shell zoom');
-	for (const scale of [0.5, 1, 1.5, 2]) {
+	// Fit (1) is the smallest zoom every viewer allows.
+	for (const scale of [1, 1.25, 1.5, 2]) {
 		const option = document.createElement('option');
 		option.value = String(scale);
 		option.textContent = `${scale * 100}%`;
