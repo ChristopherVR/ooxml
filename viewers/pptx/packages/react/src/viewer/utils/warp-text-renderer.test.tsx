@@ -174,12 +174,24 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 		},
 	);
 
-	it.each(['textSlantUp', 'textFadeLeft', 'textFadeRight', 'textCascadeDown'])(
-		'renders an <svg><textPath> for the former "simple" preset %s',
+	it.each([
+		'textSlantUp',
+		'textFadeLeft',
+		'textFadeRight',
+		'textCascadeDown',
+		'textStop',
+		'textTriangle',
+		'textChevron',
+		'textCurveUp',
+		'textWave1',
+		'textDoubleWave1',
+	])(
+		'renders one <text> per glyph (measured two-path envelope) for the former "simple"/path preset %s',
 		(preset) => {
 			const el = renderWarped(preset);
 			expect(el.querySelector('svg')).not.toBeNull();
-			expect(el.querySelector('textPath')).not.toBeNull();
+			expect(el.querySelector('textPath')).toBeNull();
+			expect(logicalGlyphNodes(el)).toHaveLength('Hello'.length);
 		},
 	);
 

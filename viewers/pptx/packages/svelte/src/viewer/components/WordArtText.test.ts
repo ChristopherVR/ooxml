@@ -240,9 +240,10 @@ describe('wordArtText (Svelte)', () => {
 		expect(bareGlyphs.length + glyphGroups.length).toBe('MMM'.length);
 	});
 
-	it('keeps using a textPath for a former "simple" preset', () => {
+	it('renders the per-glyph envelope for a former "simple" preset', () => {
 		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textSlantUp' } }));
-		expect(svg?.querySelector('textPath')).not.toBeNull();
+		expect(svg?.querySelector('textPath')).toBeNull();
+		expect(svg?.querySelectorAll(':scope > text').length).toBeGreaterThan(0);
 	});
 
 	it('repaints mounted glyphs as warped <path> outlines once the outline font is ready', async () => {

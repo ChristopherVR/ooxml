@@ -43,6 +43,8 @@
  */
 import type { GeometryGuide } from 'ooxml-core/pptx';
 
+import { WARP_PRESET_DEFINITIONS_EXTRA } from './text-warp-preset-definitions-extra';
+
 /** A single curve segment of a preset's top or bottom path, `x` always spanning `l..r`. */
 export type WarpCurveSegment =
 	| { readonly type: 'line'; readonly startY: string; readonly endY: string }
@@ -67,7 +69,24 @@ export type WarpCurveSegment =
 			readonly hR: string;
 			readonly stAng: string;
 			readonly swAng: string;
+	  }
+	| {
+			/**
+			 * A path made of several pieces side by side along x: each part
+			 * covers `x0..x1` (guide names) and is sampled with its own local
+			 * `0..1` position. Quadratic and cubic parts keep the control
+			 * points at their usual even x spacing inside that span.
+			 */
+			readonly type: 'chain';
+			readonly parts: readonly WarpChainPart[];
 	  };
+
+/** One piece of a `chain` curve. */
+export interface WarpChainPart {
+	readonly x0: string;
+	readonly x1: string;
+	readonly seg: Exclude<WarpCurveSegment, { readonly type: 'chain' }>;
+}
 
 /** Guide names for where a path starts and ends horizontally. */
 export interface WarpCurveXExtent {
@@ -106,6 +125,7 @@ function arc(penY: string, wR: string, hR: string, stAng: string, swAng: string)
 
 /** Spec-transcribed definitions, keyed by `prstTxWarp` preset name. */
 export const WARP_PRESET_DEFINITIONS: Readonly<Record<string, WarpPresetDefinition>> = {
+	...WARP_PRESET_DEFINITIONS_EXTRA,
 	textCanDown: {
 		defaultAdj: 14286,
 		gdLst: [

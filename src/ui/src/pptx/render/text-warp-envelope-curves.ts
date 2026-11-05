@@ -52,6 +52,27 @@ export const GLYPH_ENVELOPE_PRESETS: ReadonlySet<string> = new Set([
 	'textDeflateInflateDeflate',
 	'textCanUp',
 	'textCanDown',
+	// Presets whose two paths are plain functions of x (measured against
+	// PowerPoint; see `text-warp-preset-definitions-extra.ts`).
+	'textStop',
+	'textTriangle',
+	'textTriangleInverted',
+	'textChevron',
+	'textChevronInverted',
+	'textCurveUp',
+	'textCurveDown',
+	'textFadeRight',
+	'textFadeLeft',
+	'textFadeUp',
+	'textFadeDown',
+	'textSlantUp',
+	'textSlantDown',
+	'textCascadeUp',
+	'textCascadeDown',
+	'textWave1',
+	'textWave2',
+	'textWave4',
+	'textDoubleWave1',
 ]);
 
 /** True when `preset` should be rendered with a per-glyph two-curve envelope. */

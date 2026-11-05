@@ -317,7 +317,7 @@ describe('getTextWarp - strategy: path', () => {
 			{ text: '', style: {}, isParagraphBreak: true },
 			{ text: 'b', style: {} },
 		];
-		const multiEl = makeTextElement('textWave1', { textSegments: segs });
+		const multiEl = makeTextElement('textArchDown', { textSegments: segs });
 		const def = getTextWarp(multiEl) as TextWarpPathDef;
 		const ids = def.pathLines.map((l) => l.pathId);
 		expect(new Set(ids).size).toBe(ids.length);
@@ -344,7 +344,7 @@ describe('getTextWarp - strategy: path', () => {
 	});
 
 	it('works for shape elements with text warp', () => {
-		const sh = makeShapeElement('textChevron');
+		const sh = makeShapeElement('textArchUp');
 		const def = getTextWarp(sh) as TextWarpPathDef;
 		expect(def).toBeDefined();
 		expect(def.strategy).toBe('path');
@@ -376,12 +376,12 @@ describe('getTextWarp - envelope/former-simple presets render as true SVG path',
 		'textSlantDown',
 		'textFadeLeft',
 		'textCascadeDown',
-	])('returns a TextWarpPathDef (not css) for %s', (preset) => {
+	])('returns a TextWarpGlyphDef (measured two-path envelope, not css) for %s', (preset) => {
 		const el = makeTextElement(preset, { text: 'hi' });
-		const def = getTextWarp(el) as TextWarpPathDef;
+		const def = getTextWarp(el) as TextWarpGlyphDef;
 		expect(def).toBeDefined();
-		expect(def.strategy).toBe('path');
-		expect(def.pathLines[0].d).toMatch(/^M /u);
+		expect(def.strategy).toBe('glyph');
+		expect(def.glyphs).toHaveLength('hi'.length);
 	});
 });
 

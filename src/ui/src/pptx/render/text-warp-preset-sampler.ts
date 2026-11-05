@@ -14,7 +14,11 @@
  */
 import { evaluateGuides } from 'ooxml-core/pptx';
 
-import type { WarpCurveSegment, WarpCurveXExtent } from './text-warp-preset-definitions';
+import type {
+	WarpChainPart,
+	WarpCurveSegment,
+	WarpCurveXExtent,
+} from './text-warp-preset-definitions';
 import { WARP_PRESET_DEFINITIONS } from './text-warp-preset-definitions';
 
 /** OOXML angles are stored in 60,000ths of a degree. */
@@ -115,9 +119,34 @@ function sampleArc(
 	return cy + hR * Math.sin(angle);
 }
 
+function sampleChain(
+	parts: readonly WarpChainPart[],
+	u: number,
+	vars: Map<string, number>,
+): number {
+	const x = u * BOX;
+	const last = parts.length - 1;
+	for (let i = 0; i <= last; i++) {
+		const part = parts[i];
+		if (!part) {
+			continue;
+		}
+		const x0 = vars.get(part.x0) ?? 0;
+		const x1 = vars.get(part.x1) ?? BOX;
+		if (x <= x1 || i === last) {
+			const span = x1 - x0;
+			const local = span > 0 ? Math.max(0, Math.min(1, (x - x0) / span)) : 0;
+			return sampleSegment(part.seg, local, vars);
+		}
+	}
+	return 0;
+}
+
 function sampleSegment(seg: WarpCurveSegment, u: number, vars: Map<string, number>): number {
 	const g = (name: string): number => vars.get(name) ?? 0;
 	switch (seg.type) {
+		case 'chain':
+			return sampleChain(seg.parts, u, vars);
 		case 'line':
 			return sampleLine(g(seg.startY), g(seg.endY), u);
 		case 'quad':

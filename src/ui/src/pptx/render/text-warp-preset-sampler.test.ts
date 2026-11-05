@@ -156,7 +156,10 @@ describe('textPlain', () => {
 	});
 
 	it('gives every other preset the full width', () => {
-		for (const preset of ALL_PRESETS.filter((p) => p !== 'textPlain')) {
+		// Presets with their own horizontal extents (plain, the fade up/down
+		// plateau and the waves' adj2 shift) are covered by their own tests.
+		const own = /^(textPlain|textFadeUp|textFadeDown|textWave\d|textDoubleWave1)$/;
+		for (const preset of ALL_PRESETS.filter((p) => !own.test(p))) {
 			expect(sampleWarpPresetXExtent(preset, undefined, undefined)).toStrictEqual({
 				top: [0, 1],
 				bottom: [0, 1],

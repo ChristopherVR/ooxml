@@ -130,14 +130,15 @@ describe('elementRenderer dispatch', () => {
 		expect(target.querySelector('.pptx-svelte-wordart-css')).toBeNull();
 	});
 
-	it('renders a true SVG textPath for a former "simple" preset (slant)', () => {
+	it('renders the per-glyph envelope for a former "simple" preset (slant)', () => {
 		const target = mountEl({
 			...base,
 			type: 'shape',
 			textSegments: [{ text: 'Slanted' }],
 			textStyle: { textWarpPreset: 'textSlantUp' },
 		} as PptxElement);
-		expect(target.querySelector('.pptx-svelte-wordart textPath')).not.toBeNull();
+		expect(target.querySelector('.pptx-svelte-wordart textPath')).toBeNull();
+		expect(target.querySelectorAll('.pptx-svelte-wordart > text').length).toBeGreaterThan(0);
 		expect(target.querySelector('.pptx-svelte-wordart-css')).toBeNull();
 	});
 

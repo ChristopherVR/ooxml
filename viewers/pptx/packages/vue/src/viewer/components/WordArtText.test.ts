@@ -353,10 +353,10 @@ describe('wordArtText', () => {
 		expect(bareGlyphs.length + glyphGroups.length).toBe('MMM'.length);
 	});
 
-	it('renders a true SVG textPath (not a CSS transform) for a former "simple" preset', () => {
+	it('renders the per-glyph envelope (not a CSS transform) for a former "simple" preset', () => {
 		// textSlantUp/textFadeRight/textCascadeUp etc. moved from the CSS-transform
-		// `simple` family to true SVG textPath once their generators became
-		// single-line-safe.
+		// `simple` family to a shared textPath, and then to the measured two-path
+		// glyph envelope (PowerPoint draws them as a top and bottom path).
 		const wrapper = mount(WordArtText, {
 			props: {
 				element: warpedText({ textStyle: { textWarpPreset: 'textSlantUp' } }),
@@ -364,7 +364,8 @@ describe('wordArtText', () => {
 			},
 		});
 		expect(wrapper.find('svg.pptx-vue-wordart').exists()).toBeTruthy();
-		expect(wrapper.find('textPath').exists()).toBeTruthy();
+		expect(wrapper.find('textPath').exists()).toBeFalsy();
+		expect(wrapper.findAll('svg > text').length).toBeGreaterThan(0);
 		expect(wrapper.find('.pptx-vue-wordart-css').exists()).toBeFalsy();
 	});
 
