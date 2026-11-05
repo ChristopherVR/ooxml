@@ -1,4 +1,4 @@
-import { resolveAuthoredCustomShowId } from 'ooxml-ui/pptx';
+import { confirmDeleteDialog, promptNameDialog, resolveAuthoredCustomShowId } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
 import { computed, ref, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -119,25 +119,31 @@ export function useCustomShowsWiring(input: UseCustomShowsWiringInput): UseCusto
 		return customShows.value.find((s) => s.id === id)?.slideRIds.includes(rId) ?? false;
 	});
 	/** Rename the active custom show (Slide Show ribbon). */
-	function onRenameActiveCustomShow(): void {
+	async function onRenameActiveCustomShow(): Promise<void> {
 		const id = activeCustomShowId.value;
 		if (id === null) {
 			return;
 		}
 		const show = customShows.value.find((s) => s.id === id);
-		const next = window.prompt(t('pptx.customShows.renamePrompt'), show?.name ?? '')?.trim();
+		const next = (
+			await promptNameDialog(t('pptx.customShows.renamePrompt'), show?.name ?? '', { t })
+		)?.trim();
 		if (next) {
 			customShowOps.renameCustomShow(id, next);
 		}
 	}
 	/** Delete the active custom show after confirmation (Slide Show ribbon). */
-	function onDeleteActiveCustomShow(): void {
+	async function onDeleteActiveCustomShow(): Promise<void> {
 		const id = activeCustomShowId.value;
 		if (id === null) {
 			return;
 		}
 		const show = customShows.value.find((s) => s.id === id);
-		if (window.confirm(t('pptx.customShows.deleteConfirm', { name: show?.name ?? '' }))) {
+		if (
+			await confirmDeleteDialog(t('pptx.customShows.deleteConfirm', { name: show?.name ?? '' }), {
+				t,
+			})
+		) {
 			onDeleteCustomShow(id);
 		}
 	}

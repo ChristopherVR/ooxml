@@ -23,21 +23,21 @@ function styleMap(): ParsedTableStyleMap {
 	};
 }
 
-let originalPrompt: typeof window.prompt;
-let originalConfirm: typeof window.confirm;
-
-beforeEach(() => {
-	originalPrompt = window.prompt;
-	originalConfirm = window.confirm;
-	// happy-dom does not implement window.prompt/confirm; stub them first so
-	// vi.spyOn has an existing function to wrap.
-	window.prompt = () => null;
-	window.confirm = () => false;
-});
+/** Answer the in-app dialog the component opened: type into its input, then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<void> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found) throw new Error('no dialog yet');
+		return found;
+	});
+	const input = dialog.shadowRoot?.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	(dialog.shadowRoot?.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 afterEach(() => {
-	window.prompt = originalPrompt;
-	window.confirm = originalConfirm;
+	document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
 });
 
 describe('tableStyleEditor.vue', () => {
@@ -67,7 +67,6 @@ describe('tableStyleEditor.vue', () => {
 	});
 
 	it('creates a new style from the current one, based on a prompt', async () => {
-		vi.spyOn(window, 'prompt').mockReturnValue('My Custom Style');
 		const wrapper = mount(TableStyleEditor, {
 			props: { styleMap: styleMap(), styleId: STYLE_ID, canEdit: true },
 		});
@@ -75,6 +74,7 @@ describe('tableStyleEditor.vue', () => {
 			.findAll('button')
 			.find((b) => b.text() === 'New style from current');
 		await createButton!.trigger('click');
+		await answerDialog('confirm', 'My Custom Style');
 
 		const emitted = wrapper.emitted('styleMapChange');
 		expect(emitted).toBeTruthy();
@@ -87,7 +87,6 @@ describe('tableStyleEditor.vue', () => {
 	});
 
 	it('creates a brand-new style with no current style selected and assigns it', async () => {
-		vi.spyOn(window, 'prompt').mockReturnValue('Brand New Style');
 		const wrapper = mount(TableStyleEditor, {
 			props: { styleMap: undefined, styleId: undefined, canEdit: true },
 		});
@@ -96,6 +95,7 @@ describe('tableStyleEditor.vue', () => {
 		expect(createButton).toBeTruthy();
 		expect(createButton!.attributes('disabled')).toBeUndefined();
 		await createButton!.trigger('click');
+		await answerDialog('confirm', 'Brand New Style');
 
 		const emitted = wrapper.emitted('styleMapChange');
 		expect(emitted).toBeTruthy();
@@ -107,17 +107,27 @@ describe('tableStyleEditor.vue', () => {
 	});
 
 	it('deletes the style after confirmation and reports both the map and the id', async () => {
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
 		const wrapper = mount(TableStyleEditor, {
 			props: { styleMap: styleMap(), styleId: STYLE_ID, canEdit: true },
 		});
 		const deleteButton = wrapper.findAll('button').find((b) => b.text() === 'Delete style');
 		await deleteButton!.trigger('click');
+		await answerDialog('confirm');
 
 		expect(wrapper.emitted('deleteStyle')?.[0]).toStrictEqual([STYLE_ID]);
 		const nextMap = wrapper.emitted('styleMapChange')![0][0] as ParsedTableStyleMap;
 		expect(Object.keys(nextMap)).toHaveLength(0);
 		expect(wrapper.emitted('close')).toBeTruthy();
+	});
+
+	it('keeps the style when the delete dialog is cancelled', async () => {
+		const wrapper = mount(TableStyleEditor, {
+			props: { styleMap: styleMap(), styleId: STYLE_ID, canEdit: true },
+		});
+		const deleteButton = wrapper.findAll('button').find((b) => b.text() === 'Delete style');
+		await deleteButton!.trigger('click');
+		await answerDialog('cancel');
+		expect(wrapper.emitted('deleteStyle')).toBeUndefined();
 	});
 
 	it('disables field controls when canEdit is false', () => {

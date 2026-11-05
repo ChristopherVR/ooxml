@@ -2,7 +2,9 @@
 import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleFieldEdit,
+	confirmDeleteDialog,
 	describeTableStyleEditor,
+	promptNameDialog,
 	TABLE_STYLE_EDITOR_PARTS,
 } from 'ooxml-ui/pptx';
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
@@ -69,10 +71,11 @@ function onFieldEdit(fieldEdit: TableStyleEditorFieldEdit): void {
 	emit('styleMapChange', { ...rawStyleMap.value, [nextEntry.styleId]: nextEntry });
 }
 
-function createFromCurrent(): void {
-	const name = window.prompt(
+async function createFromCurrent(): Promise<void> {
+	const name = await promptNameDialog(
 		t('pptx.tableStyleEditor.newStyleNamePrompt'),
 		entry.value ? `${entry.value.styleName ?? ''} Copy`.trim() : '',
+		{ t },
 	);
 	if (!name) {
 		return;
@@ -85,11 +88,11 @@ function createFromCurrent(): void {
 	emit('assignStyle', created.styleId);
 }
 
-function handleDelete(): void {
+async function handleDelete(): Promise<void> {
 	if (
 		!entry.value ||
 		!rawStyleMap.value ||
-		!window.confirm(t('pptx.tableStyleEditor.deleteConfirm'))
+		!(await confirmDeleteDialog(t('pptx.tableStyleEditor.deleteConfirm'), { t }))
 	) {
 		return;
 	}

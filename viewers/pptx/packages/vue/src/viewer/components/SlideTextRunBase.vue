@@ -14,6 +14,7 @@ import type { ParagraphRun } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_OPTIONS,
 	isRunHyperlinkClickable,
+	openExternalHyperlinkConfirmed,
 	runEquationMathMl,
 	shouldConfirmExternalHyperlink,
 } from 'ooxml-ui/pptx';
@@ -46,11 +47,15 @@ function onLinkClick(event: MouseEvent): void {
 		return;
 	}
 	const options = viewerOptions?.value ?? DEFAULT_VIEWER_OPTIONS;
-	if (
-		shouldConfirmExternalHyperlink(options, href) &&
-		!window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${href}`)
-	) {
+	if (shouldConfirmExternalHyperlink(options, href)) {
+		// The in-app question is asynchronous, so the browser must not follow the link now.
 		event.preventDefault();
+		void openExternalHyperlinkConfirmed(
+			options,
+			href,
+			{ t, host: event.currentTarget as Element },
+			props.run.hyperlink?.target ?? '_blank',
+		);
 	}
 }
 </script>

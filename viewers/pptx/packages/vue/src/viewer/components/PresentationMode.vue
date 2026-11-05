@@ -8,6 +8,7 @@ import {
 	ANIMATION_KEYFRAMES_CSS,
 	applyHighlightClickStyle,
 	attachViewerHyperlinks,
+	confirmExternalHyperlinkDialog,
 	DEFAULT_VIEWER_OPTIONS,
 	endAudienceDisplay,
 	findHighlightClickTarget,
@@ -537,7 +538,7 @@ const actionRunner = {
 		if (!shouldConfirmExternalHyperlink(options, url)) {
 			return true;
 		}
-		return window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`);
+		return confirmExternalHyperlinkDialog(url, { t });
 	},
 	lastViewed: () => actionExtras?.lastViewed(),
 	customShow: (customShowId: string, returnAfter: boolean) =>
