@@ -17,6 +17,7 @@ import { hasTextProperties, hasShapeProperties } from 'ooxml-core/pptx';
 import { generateMorphCarryAnimations } from './morph-carry';
 import { parseHexColor, lerpColor } from './morph-color';
 import { morphEffectsDiffer } from './morph-effect-carry';
+import { morphSoftEdgeBlends } from './morph-soft-edge-blend';
 import { flattenMorphElements } from './morph-flatten';
 import type { MorphViewSize } from './morph-flip-turn';
 import { buildMorphFlipTurn, morphFlipTurns } from './morph-flip-turn';
@@ -234,7 +235,8 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 export function morphPairNeedsCrossfade(fromElement: PptxElement, toElement: PptxElement): boolean {
 	return (
 		!morphOffstageTextSizeChange(fromElement, toElement) &&
-		appearanceSignature(fromElement) !== appearanceSignature(toElement)
+		(appearanceSignature(fromElement) !== appearanceSignature(toElement) ||
+			morphSoftEdgeBlends(fromElement, toElement))
 	);
 }
 
@@ -384,7 +386,9 @@ export function morphPairIncomingFadesIn(
 	return (
 		!(ghosted && isInertMorphPair(fromElement, toElement)) &&
 		morphPairNeedsCrossfade(fromElement, toElement) &&
-		crossfadeIncomingMayFadeIn(toElement)
+		// A soft-edged pair's feather IS its alpha, and its two ends dissolve
+		// additively in a crossfade group (see `morph-soft-edge-blend`).
+		(crossfadeIncomingMayFadeIn(toElement) || morphSoftEdgeBlends(fromElement, toElement))
 	);
 }
 

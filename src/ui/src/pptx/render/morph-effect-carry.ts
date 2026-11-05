@@ -36,11 +36,10 @@
  * when the overlay lifts it (`morph-crossfade-group`), which is the measured
  * blend already.
  *
- * Not carried: a soft edge. It is an SVG filter fixed in the element's own
- * frame, which no keyframe can reach, so a half painting alone keeps the
- * incoming feather riding the box throughout (0.01-0.07 coverage off
- * PowerPoint mid-morph); only a pair dissolving in an additive group gets the
- * measured blend. Several drop-shadows on one end (a glow and a line glow)
+ * Not carried here: a soft edge. It is an SVG filter fixed in the element's own
+ * frame, which no keyframe can reach, so a soft-edged pair dissolves its two
+ * renders additively in a crossfade group instead (`morph-soft-edge-blend`).
+ * Several drop-shadows on one end (a glow and a line glow)
  * have no chain to fit and run each one's radius and colour across instead.
  *
  * @module render/morph-effect-carry

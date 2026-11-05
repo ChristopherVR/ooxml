@@ -55,6 +55,7 @@ import type { MorphOverlayLayer } from './morph-overlay-layers';
 import type { MorphOverlayStackEntry } from './morph-overlay-stack';
 import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
+import { resolveMorphSoftEdgeLifts } from './morph-soft-edge-blend';
 import { resolveMorphTextBlendLifts } from './morph-text-blend';
 import type { MorphCopyPart } from './morph-text-body';
 import { addMorphBodyCopyCarry } from './morph-body-carry';
@@ -513,6 +514,20 @@ export function buildMorphTransitionPlan(
 		)) {
 			lifted.add(id);
 		}
+	}
+	// A soft-edged pair dissolves its two feathers additively as well.
+	for (const id of resolveMorphSoftEdgeLifts(
+		{
+			outgoing: flattenedOutgoing,
+			incoming: flattenedIncoming,
+			pairs: wholePairs,
+			ghostIds,
+			overlaid: new Set([...lifted, ...pieceToIds]),
+			animated: (id) => incomingAnimations.has(id),
+		},
+		dissolvingInIds,
+	)) {
+		lifted.add(id);
 	}
 	for (const id of bodies.rising) {
 		lifted.add(id);
