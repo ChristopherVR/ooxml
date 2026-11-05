@@ -20,7 +20,12 @@
  */
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties, ooxmlGradientAngleToCssDegrees } from 'ooxml-core/pptx';
-import { clampUnitInterval, colorWithOpacity, normalizeHexColor } from 'ooxml-core/color';
+import {
+	clampUnitInterval,
+	colorWithOpacity,
+	normalizeHexColor,
+	straightAlphaGradientStops,
+} from 'ooxml-core/color';
 
 import { DEFAULT_FILL_COLOR } from '../constants';
 import { buildRectPathGradientImage } from './path-gradient-rect';
@@ -464,10 +469,13 @@ export function buildGradientCss(
 		return undefined;
 	}
 
-	const stops = sanitizeGradientStops(gradient.fillGradientStops);
-	if (stops.length === 0) {
+	const sanitized = sanitizeGradientStops(gradient.fillGradientStops);
+	if (sanitized.length === 0) {
 		return gradient.fillGradient;
 	}
+	// CSS gradients interpolate premultiplied; Office blends colour and alpha
+	// straight, so translucent ramps are re-sampled to paint the same colours.
+	const stops: SanitizedStop[] = straightAlphaGradientStops(sanitized);
 
 	const gradientType = gradient.fillGradientType || 'linear';
 	if (gradientType === 'radial') {

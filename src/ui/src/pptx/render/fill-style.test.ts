@@ -162,6 +162,35 @@ describe('buildGradientCss', () => {
 		expect(css).toBe('linear-gradient(225deg, #ff0000 0%, #0000ff 100%)');
 	});
 
+	it('re-samples a ramp to a transparent stop so its colour still tints the blend', () => {
+		// Issue #141 slide 13: CSS interpolates premultiplied, which hides the
+		// colour of the alpha-0 stop; PowerPoint blends colour and alpha straight.
+		const css = buildGradientCss({
+			fillMode: 'gradient',
+			fillGradientType: 'linear',
+			fillGradientAngle: 0,
+			fillGradientStops: [
+				{ color: '#00405E', position: 0 },
+				{ color: '#33667E', position: 95, opacity: 0 },
+			],
+		});
+		expect(css).toContain('rgba(26, 83, 110, 0.5) 47.5%');
+		expect(css).toMatch(
+			/^linear-gradient\(90deg, #00405E 0%, (rgba\([^)]+\) [\d.]+%, ){7}rgba\(51, 102, 126, 0\) 95%\)$/u,
+		);
+		// A same-colour fade is already exact premultiplied and stays two stops.
+		expect(
+			buildGradientCss({
+				fillMode: 'gradient',
+				fillGradientAngle: 0,
+				fillGradientStops: [
+					{ color: '#FFFFFF', position: 0 },
+					{ color: '#FFFFFF', position: 95, opacity: 0 },
+				],
+			}),
+		).toBe('linear-gradient(90deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 95%)');
+	});
+
 	it('defaults the OOXML angle to 90 (CSS 180deg, top to bottom)', () => {
 		const css = buildGradientCss({
 			fillMode: 'gradient',
