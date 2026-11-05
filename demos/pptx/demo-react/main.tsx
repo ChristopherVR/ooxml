@@ -1,3 +1,4 @@
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import type { PowerPointViewerHandle, ViewerCustomization } from 'pptx-react-viewer';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per hook/handler, several separated
@@ -40,15 +41,14 @@ import {
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
 import { installDevViewerHandle } from '../dev-viewer-handle';
 import { currentDemoCustomization } from '../shared/demo-customization';
+import { demoFileProviders } from '../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';
-import { oneDriveDemoRequested } from '../shared/onedrive-demo';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../shared/same-browser-collaboration';
 import { useDemoAiAssistant } from './ai-config';
 import { HostOwnedDemoApp } from './HostOwnedDemo';
 import i18nInstance from './i18n'; // Initialises i18next before any component renders
-import { OneDriveDemoApp } from './OneDriveDemo';
 import { SameBrowserDemoApp } from './SameBrowserDemo';
 
 import './app.css';
@@ -964,6 +964,7 @@ function App() {
 					fileName={fileName}
 					filePath={fileName}
 					canEdit
+					fileProviders={demoFileProviders}
 					autosaveIntervalMs={2000}
 					customization={customization}
 					{...rootOptions}
@@ -1088,7 +1089,8 @@ function App() {
 	);
 }
 
-const rootEl = document.getElementById('app-root');
+// The MSAL sign-in popup loads this page too: hand the response back and do not boot the app.
+const rootEl = completeDemoSignInPopup() ? null : document.getElementById('app-root');
 if (rootEl) {
 	// HMR guard: this module mixes the `App` component with this top-level
 	// mount call, so `@vitejs/plugin-react`'s Fast Refresh can never treat it
@@ -1111,9 +1113,7 @@ if (rootEl) {
 		hot.data.root = root;
 	}
 	root.render(
-		oneDriveDemoRequested() ? (
-			<OneDriveDemoApp />
-		) : externalSessionRequested() ? (
+		externalSessionRequested() ? (
 			<HostOwnedDemoApp />
 		) : sameBrowserRoom() ? (
 			<SameBrowserDemoApp />

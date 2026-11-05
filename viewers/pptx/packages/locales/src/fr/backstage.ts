@@ -18,6 +18,8 @@ export const translations = {
 	'pptx.backstage.newHeading': 'Nouveau',
 	'pptx.backstage.searchPlaceholder': 'Rechercher des présentations récentes',
 	'pptx.backstage.browseDevice': 'Parcourir cet appareil',
+	'pptx.backstage.thisDevice': 'Cet appareil',
+	'pptx.backstage.places': 'Emplacements',
 	'pptx.backstage.recentHeading': 'Récent',
 	'pptx.backstage.columnName': 'Nom',
 	'pptx.backstage.columnModified': 'Date de modification',

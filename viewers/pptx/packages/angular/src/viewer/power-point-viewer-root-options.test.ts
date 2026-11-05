@@ -30,8 +30,11 @@ describe('powerPointViewerComponent readOnly input', () => {
 		expect(source).toContain(
 			"readonly readOnlyInput = input<boolean>(false, { alias: 'readOnly' });",
 		);
+		// The host's right reaches the edit permission through `documentView`, which also applies
+		// the edit right of a file opened from a File > Open cloud place.
+		expect(source).toMatch(/canEdit: this\.canEditInput\(\) && !this\.readOnlyInput\(\),/u);
 		expect(source).toMatch(
-			/hasEditPermission = computed\(\s*\(\) =>\s*this\.canEditInput\(\) &&\s*!this\.readOnlyInput\(\) &&/u,
+			/hasEditPermission = computed\(\s*\(\) =>\s*(?:\/\/[^\n]*\s*)?this\.documentView\(\)\.canEdit &&/u,
 		);
 		expect(source).toMatch(
 			/protectedViewActive = computed\(\s*\(\) =>\s*this\.canEditInput\(\) &&\s*!this\.readOnlyInput\(\) &&/u,

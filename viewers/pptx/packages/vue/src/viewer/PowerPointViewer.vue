@@ -28,6 +28,7 @@ import {
 	autosaveStatusKind,
 	createCollaborationStateReporter,
 	createSlidePackageClipboard,
+	resolveCloudDocumentView,
 	resolveCollaborationConfig,
 } from 'ooxml-ui/pptx';
 import {
@@ -39,6 +40,7 @@ import {
 	canInteractWithElement,
 	computeGridSpacingPx,
 	createBackstagePresentation,
+	createCloudDocumentController,
 	clearAutosaveSnapshots,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	pruneExpiredAutosaveSnapshots,
@@ -67,7 +69,7 @@ import {
 	shouldConfirmExternalHyperlink,
 	shouldShowAutosaveRecoveryPrompt,
 } from 'ooxml-ui/pptx';
-import type { ViewerAddinStatus } from 'ooxml-ui/pptx';
+import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
 import type {
 	PptxElement,
@@ -141,6 +143,7 @@ import { useCommentsWiring } from './composables/useCommentsWiring';
 import { useCompatibilityToasts } from './composables/useCompatibilityToasts';
 import { useContentSource } from './composables/useContentSource';
 import { useContextMenu } from './composables/useContextMenu';
+import { useController } from './composables/useController';
 import { useCustomShowsWiring } from './composables/useCustomShowsWiring';
 import { useDeckStyleHost } from './composables/useDeckStyleHost';
 import { useDeckViewPreferencesSync } from './composables/useDeckViewPreferencesSync';
@@ -215,6 +218,7 @@ import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
+import { ViewerCloudFilesKey } from './composables/viewer-cloud-files';
 import { ViewerStorageKey } from './composables/viewer-storage';
 import { provideZoomTargetLookup, toZoomTargetInfo } from './composables/zoom-target';
 import type { PowerPointViewerEmits, PowerPointViewerExpose, PowerPointViewerProps } from './types';
@@ -266,13 +270,43 @@ provide(AccountAuthKey, props.accountAuth);
 // The host's ribbon tabs reach the ribbon the same way, as a getter so it follows the prop.
 provide(RibbonAddInsKey, () => props.ribbonAddIns);
 
+// -- File > Open cloud places -----------------------------------------
+// A file opened from a place brings its own storage, name and edit right until
+// another document is loaded (shared `render/cloud-open`). `cloudView` is what
+// the save, autosave, recovery and edit paths below read instead of the props.
+const cloudDocument = createCloudDocumentController();
+const cloudState = useController(cloudDocument);
+const cloudView = computed(() =>
+	resolveCloudDocumentView(cloudState.value.file, {
+		storage: props.storage,
+		// `readOnly` takes editing away from a host that also allows it.
+		canEdit: props.canEdit && !props.readOnly,
+		fileName: props.fileName,
+		filePath: props.filePath,
+	}),
+);
+const documentPath = () =>
+	cloudView.value.filePath ?? cloudView.value.fileName ?? 'Untitled Presentation';
+
 // -- Load + parse content ----------------------------------------------
 const source = useContentSource({
 	content: () => props.content,
 	onOpenFile: () => props.onOpenFile,
+	// File > Recent lists the host's recovery store, so it reads from it too.
 	storage: () => props.storage,
+	onDocumentReplaced: cloudDocument.clear,
 });
 provide(ViewerStorageKey, () => props.storage);
+const NO_FILE_PROVIDERS: readonly CloudFileProvider[] = [];
+provide(ViewerCloudFilesKey, {
+	providers: () => props.fileProviders ?? NO_FILE_PROVIDERS,
+	// Load the bytes like any open, then let the file's storage, name and edit right apply.
+	open: (file: CloudOpenedFile) => {
+		source.openBytes(file.bytes);
+		cloudDocument.open(file);
+	},
+	clear: cloudDocument.clear,
+});
 const activeContent = source.activeContent;
 
 // Bumped each time the load pipeline finishes applying a parsed deck; the
@@ -414,8 +448,7 @@ const collaborationReadOnly = ref(false);
 const canEditEffective = computed(
 	() =>
 		editingRequested.value &&
-		props.canEdit &&
-		!props.readOnly &&
+		cloudView.value.canEdit &&
 		isEditingAllowed(customization.resolved.value) &&
 		!collaborationReadOnly.value &&
 		!protectedViewActive.value &&
@@ -873,7 +906,7 @@ const exporter = useExportWiring({
 	canvasSize,
 	activeSlideIndex,
 	saveAs: deck.saveAs,
-	fileName: () => props.fileName,
+	fileName: () => cloudView.value.fileName,
 	getDeckData: () => readDeckData(deck),
 	// `viewerOptions` is declared further down (see file-level forward-reference
 	// note); the getter is only invoked once an export actually runs. The raw
@@ -883,8 +916,8 @@ const exporter = useExportWiring({
 	// Same forward-reference pattern as `imageExportScale` above: only invoked
 	// once a Save-As download actually completes.
 	getOptions: () => viewerOptions.value,
-	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
-	storage: () => props.storage,
+	filePath: documentPath,
+	storage: () => cloudView.value.storage,
 	// A failed Save / Save As: the host's `error` event, and the save-failed notice for the user.
 	onSaveError: (saveError) => {
 		emit('error', saveFailureMessage(saveError));
@@ -1112,8 +1145,8 @@ const {
 	// File > Options > Save > "Save AutoRecover information every N minutes",
 	// used whenever the host did not state a cadence of its own.
 	optionsIntervalSeconds: () => resolveAutosaveIntervalSeconds(viewerOptions.value),
-	snapshotName: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
-	storage: () => props.storage,
+	snapshotName: documentPath,
+	storage: () => cloudView.value.storage,
 	getRecoverySnapshot,
 	getInlineEditingId: () => inlineEdit.inlineEditingElementId.value,
 	emitAutosave: (bytes) => emit('autosave', bytes),
@@ -1124,9 +1157,9 @@ const {
 // Vue wrote snapshots and never offered one back; the decision and the copy are
 // the shared ones every binding now renders.
 const autosaveRecovery = useAutosaveRecovery({
-	filePath: () => props.filePath ?? props.fileName ?? 'Untitled Presentation',
-	fileName: () => props.fileName,
-	storage: () => props.storage,
+	filePath: documentPath,
+	fileName: () => cloudView.value.fileName,
+	storage: () => cloudView.value.storage,
 	loading,
 	error,
 	slideCount: () => slides.value.length,
@@ -1657,7 +1690,7 @@ watch(
 /** File > Options > Save > "Delete cached files". */
 function onOptionsClearCache(): void {
 	// With a host recovery store this sweeps it only when it lists its copies.
-	void clearAutosaveSnapshots(props.storage).catch(() => {
+	void clearAutosaveSnapshots(cloudView.value.storage).catch(() => {
 		// Browser lifecycle cleanup cannot report a storage failure.
 	});
 }
@@ -1665,7 +1698,7 @@ function onOptionsClearCache(): void {
 // File > Options > Save > "cache retention": a one-time sweep per mount is
 // enough, since a fresh snapshot only ever lands with a fresh timestamp.
 onMounted(() => {
-	void pruneExpiredAutosaveSnapshots(viewerOptions.value, props.storage).catch(() => {
+	void pruneExpiredAutosaveSnapshots(viewerOptions.value, cloudView.value.storage).catch(() => {
 		// Best-effort background maintenance; a blocked store skips it.
 	});
 });
@@ -1760,7 +1793,7 @@ const aiBridge = useAiBridge({
 	tableStyleMap,
 	tableStylesDefaultId: deck.tableStylesDefaultId,
 	tagCollections,
-	fileName: () => props.fileName,
+	fileName: () => cloudView.value.fileName,
 	pushHistory: history.pushHistory,
 	markDirty: () => {
 		autosave.isDirty.value = true;
@@ -2053,7 +2086,9 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     opened read-only never shows this (there is nothing to enable). -->
 				<div
 					v-if="
-						props.canEdit && isEditingAllowed(customization.resolved.value) && protectedViewActive
+						cloudView.canEdit &&
+						isEditingAllowed(customization.resolved.value) &&
+						protectedViewActive
 					"
 					class="pptx-vue-protected-view-banner flex items-center gap-3 border-b border-amber-700/30 bg-amber-900/20 px-4 py-2"
 					role="status"
@@ -2096,7 +2131,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					v-if="!isMobile && panelVisible('titleBar')"
 					:mode="ribbonMode"
 					:can-edit="canEditEffective"
-					:file-name="props.fileName"
+					:file-name="cloudView.fileName"
 					:is-dirty="autosave.isDirty.value"
 					:autosave-status="autosaveDisabledReason ? 'disabled' : autosave.status.value"
 					:autosave-enabled="autosaveActive"

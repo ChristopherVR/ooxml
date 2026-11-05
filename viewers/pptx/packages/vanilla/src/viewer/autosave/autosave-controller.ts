@@ -55,6 +55,11 @@ export interface AutosaveControllerDeps {
 	filePath: string;
 	/** Public document name rendered in the recovery message. */
 	fileName?: string;
+	/**
+	 * The live key and name, read at every snapshot and recovery probe so a file opened from a
+	 * File > Open cloud place gets its own (win over {@link filePath} and {@link fileName}).
+	 */
+	getDocument?: () => { filePath: string; fileName: string | undefined };
 	/** Host `storage` option: recovery snapshots go to its recovery methods when it has them. */
 	getStorage?: () => DocumentStorage | undefined;
 	/**
@@ -110,10 +115,12 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 	const activation = (): AutosaveActivation => deps.getActivation?.() ?? ALWAYS_ACTIVE;
 	let disposed = false;
 	let loadKey = 0;
+	const currentDocument = (): { filePath: string; fileName: string | undefined } =>
+		deps.getDocument?.() ?? { filePath: deps.filePath, fileName: deps.fileName };
 
 	const engine = createSharedAutosaveController({
 		getActivation: activation,
-		getFilePath: () => deps.filePath,
+		getFilePath: () => currentDocument().filePath,
 		getIntervalMs: deps.getIntervalMs,
 		serialize: async (draft) => {
 			const handler = deps.getHandler();
@@ -161,8 +168,8 @@ export function createAutosaveController(deps: AutosaveControllerDeps): Autosave
 	const checkRecovery = (state: ViewerState): void => {
 		recovery.check({
 			loadKey,
-			filePath: deps.filePath,
-			fileName: deps.fileName,
+			filePath: currentDocument().filePath,
+			fileName: currentDocument().fileName,
 			loading: state.loading,
 			error: state.error,
 			slideCount: state.slides.length,

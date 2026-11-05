@@ -24,6 +24,10 @@ import { createLazyActions } from './editor/editor-lazy-actions';
 import type { DrawTool } from './state';
 import type { ChromeOptions } from './ui';
 import type { RegionSet } from './ui/region-set';
+import type { BackstageCloudFiles } from './ui/ribbon/ribbon-types';
+
+/** No File > Open cloud places (the host passed no `fileProviders`). */
+const NO_CLOUD_FILES: BackstageCloudFiles = { providers: [], locale: undefined, open: () => {} };
 
 /**
  * The subset of {@link PptxViewer} behaviour the chrome (ribbon + notes
@@ -111,6 +115,8 @@ export interface ChromeCallbackDeps {
 	openFile(): void;
 	openRecentFile(key: string): void;
 	createPresentation(templateId: string): void;
+	/** The host's `fileProviders` as File > Open places. */
+	getCloudFiles?(): BackstageCloudFiles | undefined;
 	/** Lazily resolve the editor's edit actions (editor is built after chrome). */
 	getEditActions(): EditActions;
 	/**
@@ -221,6 +227,7 @@ export function buildChromeCallbacks(
 			openFile: () => deps.openFile(),
 			openRecentFile: (key) => deps.openRecentFile(key),
 			createPresentation: (templateId) => deps.createPresentation(templateId),
+			getCloudFiles: () => deps.getCloudFiles?.() ?? NO_CLOUD_FILES,
 			openSettings: () => deps.openSettings('general'),
 			getCustomization: deps.getCustomization,
 			getRegionSet: deps.getRegionSet,

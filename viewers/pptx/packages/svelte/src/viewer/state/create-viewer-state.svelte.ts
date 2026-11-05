@@ -2,6 +2,7 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isEditingAllowed,
 	buildFieldSubstitutionContext,
+	createCloudDocumentController,
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
 	resolve3DRenderingFlags,
@@ -12,8 +13,9 @@ import {
 	saveFailureMessage,
 	tableStyleSaveOptions,
 } from 'ooxml-ui/pptx';
-import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import type { CloudOpenedFile, FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import type { PptxSaveFormat } from 'pptx-viewer-core';
+import { untrack } from 'svelte';
 
 import { provideTranslator } from '../../i18n/context';
 import { provideChartFormat } from '../editor/chart-format-state.svelte';
@@ -40,6 +42,7 @@ import { runQuickAccessCommand } from './quick-access-commands';
 import { provideRenderContext, renderContextSourceFor } from './render-context';
 import { provideRendering3DFlags } from './rendering-3d-flags-context';
 import { provideTableCellSelection } from './table-cell-selection-context';
+import { provideViewerCloudFiles } from './viewer-cloud-files-context';
 import { ViewerState } from './viewer-state.svelte';
 import { provideViewerStorage } from './viewer-storage-context';
 
@@ -328,7 +331,27 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		onnotesupdate: options.onnotesupdate,
 	});
 
-	provideViewerStorage(() => options.getStorage?.());
+	// File > Open > Recent and the cache sweep list the HOST's store even while a cloud file
+	// (with its own storage) is open.
+	const getHostStorage = () => (options.getHostStorage ?? options.getStorage)?.();
+	provideViewerStorage(getHostStorage);
+	// File > Open > a cloud place: the file's storage, name and edit right apply from now on (the
+	// option getters resolve through `cloudDocument`), and its bytes load like any open.
+	const cloudDocument = options.cloudDocument ?? createCloudDocumentController();
+	const openCloudFile = (file: CloudOpenedFile): void => {
+		cloudDocument.open(file);
+		void loader.load(file.bytes);
+	};
+	provideViewerCloudFiles(() => ({
+		providers: options.getFileProviders?.() ?? [],
+		open: openCloudFile,
+		clear: cloudDocument.clear,
+	}));
+	// A host content change replaces the cloud document (the first read is a no-op clear).
+	$effect(() => {
+		options.getSource();
+		untrack(() => cloudDocument.clear());
+	});
 	const rawEditingApi = createEditingApi(
 		editor,
 		() => options.getStorage?.(),
@@ -400,7 +423,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	// File > Options > Save > "cache retention": a one-time sweep per mount is
 	// enough, since a fresh snapshot only ever lands with a fresh timestamp.
 	// With a host recovery store it sweeps that store, only when it lists its copies.
-	editorUi.optionsState.bindStorage(() => options.getStorage?.());
+	editorUi.optionsState.bindStorage(getHostStorage);
 	void editorUi.optionsState.pruneExpiredCache().catch(() => {
 		// Best-effort background maintenance; a blocked store skips it.
 	});
@@ -544,7 +567,8 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		},
 		enterPresenterView: presenter.enterPresenterView,
 		closeSignatureWarning: collabCluster.closeSignatureWarning,
-		openFile: createOpenFile(loader, () => options.onopenfile),
+		openFile: createOpenFile(loader, () => options.onopenfile, cloudDocument.clear),
+		cloudDocument,
 		runQuickAccessCommand: (id) =>
 			runQuickAccessCommand(id, {
 				deck,

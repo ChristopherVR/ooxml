@@ -2,6 +2,8 @@ import { installOfficeUiTheme } from '../../theme';
 import { withOfficeThemeCss } from '../theme/office-css';
 import { definePptxSlideClipboard } from './slide-clipboard';
 export { slideClipboardLabels } from './slide-clipboard';
+export { mountCloudFilesPlace } from './cloud-files-place';
+export type { CloudFilesPlace, CloudFilesPlaceOptions } from './cloud-files-place';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
 import { HOST_STYLES } from './host-styles';
 import { definePptxMobileBar } from './mobile-bar';
@@ -20,6 +22,7 @@ import {
 	definePptxRibbonCommand,
 	definePptxRibbonGroup,
 	definePptxRibbonToggle,
+	definePptxCloudFiles,
 	definePptxSearchField,
 	definePptxColorGrid,
 	definePptxSelect,
@@ -180,6 +183,7 @@ export type {
 
 const controls = [
 	['pptx-ui-search', definePptxSearchField],
+	['pptx-ui-cloud-files', definePptxCloudFiles],
 	['pptx-ui-color-grid', definePptxColorGrid],
 	['pptx-ui-chart-data-sheet', definePptxChartDataSheet],
 	['pptx-ui-smartart-text-pane', definePptxSmartArtTextPane],

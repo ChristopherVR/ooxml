@@ -54,6 +54,11 @@ export interface AutosaveSessionDeps {
 	filePath: string;
 	/** Public document name rendered in the recovery message. */
 	fileName?: string;
+	/**
+	 * The live key and name, read at every snapshot and recovery probe so a file opened from a
+	 * File > Open cloud place gets its own (win over {@link filePath} and {@link fileName}).
+	 */
+	getDocument?: () => { filePath: string; fileName: string | undefined };
 	/** Host `storage` option: recovery snapshots go to its recovery methods when it has them. */
 	getStorage?: () => DocumentStorage | undefined;
 	/** Protect-Presentation state, forwarded to the shared save decision. */
@@ -100,7 +105,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 			hostAutosave: deps.hostAutosave,
 			userEnabled,
 			canEdit: deps.store.get().editable,
-			filePath: deps.filePath,
+			filePath: deps.getDocument?.().filePath ?? deps.filePath,
 		});
 
 	// A running slide show has no editor chrome, and this prompt is modal: left
@@ -164,6 +169,7 @@ export function createAutosaveSession(deps: AutosaveSessionDeps): AutosaveSessio
 		getHandler: deps.getHandler,
 		filePath: deps.filePath,
 		fileName: deps.fileName,
+		...(deps.getDocument ? { getDocument: deps.getDocument } : {}),
 		...(deps.getStorage ? { getStorage: deps.getStorage } : {}),
 		getIntervalMs: () =>
 			resolveAutosaveIntervalMs({

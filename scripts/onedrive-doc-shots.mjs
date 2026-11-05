@@ -8,7 +8,7 @@
  * The React shots need the guide's example served by a Vite app whose OneDrive client returns
  * 'test-only-token' from getAccessToken: REACT_URL=http://localhost:4190 node scripts/onedrive-doc-shots.mjs react
  *
- * The PowerPoint demo's OneDrive mode (`?onedrive=1`), from a running React demo:
+ * The PowerPoint demo's OneDrive place under File > Open, from a running React demo:
  *   DEMO_URL=http://localhost:4173 node scripts/onedrive-doc-shots.mjs demo
  */
 import { createRequire } from 'node:module';
@@ -139,14 +139,23 @@ try {
 	if (only === 'demo' || (!only && DEMO)) {
 		if (!DEMO) throw new Error('Set DEMO_URL to the running React demo.');
 		const { context, page, cloud } = await newPage({ configured: false });
-		await page.goto(`${DEMO}/?onedrive=1`);
-		const bar = page.locator('.od-bar');
-		await bar.getByLabel('How to sign in').selectOption('token');
-		await bar.getByLabel('Access token').fill('test-only-token');
-		await bar.getByRole('button', { name: 'Use token', exact: true }).click();
-		await bar.getByLabel('OneDrive sharing link').fill(link('pptx'));
-		await bar.getByRole('button', { name: 'Open', exact: true }).click();
-		await expect(bar.getByRole('status')).toContainText('Opened');
+		await page.goto(`${DEMO}/`);
+		await page
+			.locator('#file-input')
+			.setInputFiles(
+				fileURLToPath(new URL('../e2e/pptx/fixtures/sample-deck.pptx', import.meta.url)),
+			);
+		const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
+		await toolbar.getByRole('tab', { name: 'File', exact: true }).click();
+		const backstage = page.getByRole('dialog', { name: 'File' });
+		await backstage.getByRole('button', { name: 'Open', exact: true }).click();
+		await backstage.locator('[data-pptx-open-place="cloud:onedrive"]').click();
+		const place = backstage.locator('[data-pptx-cloud-place="onedrive"]');
+		await place.getByRole('button', { name: 'Sign in', exact: true }).click();
+		const signIn = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
+		await signIn.getByLabel('Access token').fill('test-only-token');
+		await signIn.getByRole('button', { name: 'Continue', exact: true }).click();
+		await place.getByRole('option', { name: /Quarterly review/iu }).click();
 		await expect(
 			page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first(),
 		).toBeVisible({ timeout: 30000 });
@@ -154,15 +163,9 @@ try {
 			.getByRole('button', { name: /new slide/iu })
 			.first()
 			.click();
-		await page
-			.getByRole('toolbar', { name: 'Presentation toolbar' })
-			.getByRole('tab', { name: 'File', exact: true })
-			.click();
-		await page
-			.getByRole('dialog', { name: 'File' })
-			.getByRole('button', { name: 'Save', exact: true })
-			.click();
-		await expect(bar.getByRole('status')).toContainText('Saved to OneDrive');
+		await toolbar.getByRole('tab', { name: 'File', exact: true }).click();
+		await backstage.getByRole('button', { name: 'Save', exact: true }).click();
+		await expect(page.getByText('All saved', { exact: true }).first()).toBeVisible();
 		await expect.poll(() => cloud.writes.filter((id) => id === 'pptx').length).toBe(1);
 		await page.getByText('Quarterly review').first().click();
 		await page.waitForTimeout(1500);

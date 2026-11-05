@@ -19,6 +19,11 @@ export interface UseContentSourceOptions {
 	onOpenFile: () => (() => void) | undefined;
 	/** Getter for the host's `storage` prop: Recent files read from its recovery store. */
 	storage?: () => DocumentStorage | undefined;
+	/**
+	 * Another document replaced the open one (a host `content` change, a device
+	 * open or a recent open): a file opened from a cloud place stops applying.
+	 */
+	onDocumentReplaced?: () => void;
 }
 
 export interface UseContentSourceResult {
@@ -30,6 +35,8 @@ export interface UseContentSourceResult {
 	handleOpenFile: () => void;
 	/** File > Recent: load a previously-opened deck back out of the backstage store. */
 	handleOpenRecentFile: (key: string) => void;
+	/** Load `bytes` in place like a device open (a File > Open cloud place). */
+	openBytes: (bytes: Uint8Array) => void;
 	/**
 	 * Whether the deck now loading is the host's (`bootstrap`) or one the user
 	 * opened during the session (`user`). A collaboration room may replace the
@@ -42,6 +49,7 @@ export function useContentSource(options: UseContentSourceOptions): UseContentSo
 	const internalContent = ref<Uint8Array | ArrayBuffer | null>(null);
 	watch(options.content, () => {
 		internalContent.value = null;
+		options.onDocumentReplaced?.();
 	});
 	const activeContent = computed(() => internalContent.value ?? options.content());
 
@@ -54,6 +62,7 @@ export function useContentSource(options: UseContentSourceOptions): UseContentSo
 		void (async () => {
 			const picked = await openPptxFile();
 			if (picked) {
+				options.onDocumentReplaced?.();
 				internalContent.value = new Uint8Array(picked.buffer);
 			}
 		})();
@@ -63,14 +72,26 @@ export function useContentSource(options: UseContentSourceOptions): UseContentSo
 		void (async () => {
 			const bytes = await readBackstageRecentFile(key, options.storage?.());
 			if (bytes) {
+				options.onDocumentReplaced?.();
 				internalContent.value = bytes;
 			}
 		})();
+	}
+
+	function openBytes(bytes: Uint8Array): void {
+		internalContent.value = bytes;
 	}
 
 	const loadOrigin = computed<CollabLoadOrigin>(() =>
 		internalContent.value === null ? 'bootstrap' : 'user',
 	);
 
-	return { internalContent, activeContent, handleOpenFile, handleOpenRecentFile, loadOrigin };
+	return {
+		internalContent,
+		activeContent,
+		handleOpenFile,
+		handleOpenRecentFile,
+		openBytes,
+		loadOrigin,
+	};
 }

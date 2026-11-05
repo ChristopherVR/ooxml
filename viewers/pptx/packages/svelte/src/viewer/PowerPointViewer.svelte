@@ -15,6 +15,7 @@
 	import {
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
+		createCloudDocumentController,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
 		resolveCollaborationConfig,
 		resolveViewerRootOptions,
@@ -41,7 +42,8 @@
 	import { presentationSwipe } from './presentation-swipe';
 	import { createViewerState } from './state/create-viewer-state.svelte';
 	import { ThemeLocaleState } from './state/theme-locale.svelte';
-	import { toViewerStateOptions } from './state/viewer-state-options';
+	import { controllerState } from './state/controller-state';
+	import { resolveViewerDocument, toViewerStateOptions } from './state/viewer-state-options';
 	import { provideRibbonAddIns } from './state/ribbon-add-ins';
 	import { provideRegionBase } from './state/viewer-regions';
 	import { effectiveHiddenActions, nextRibbonScopeToken, useCustomizationConstraints, useViewerCustomizationRoot } from './state/viewer-customization.svelte';
@@ -107,6 +109,11 @@
 	);
 	provideRibbonAddIns(() => props.ribbonAddIns);
 	const ribbonScope = nextRibbonScopeToken();
+	// A file opened from a File > Open cloud place brings its own storage, name and edit right
+	// until another document is loaded (shared `render/cloud-open`).
+	const cloudDocument = createCloudDocumentController();
+	const cloudFile = controllerState(cloudDocument);
+	const documentView = $derived(resolveViewerDocument(props, cloudFile.current.file));
 	const vm = createViewerState(
 		toViewerStateOptions(() => props, {
 			t,
@@ -116,7 +123,7 @@
 			getViewportHeight: () => viewportHeight,
 			getMasterScale: () => masterScale,
 			getCustomization: () => customization.resolved,
-		}),
+		}, cloudDocument),
 	);
 	onDestroy(() => vm.destroy());
 	$effect(() => {
@@ -378,7 +385,7 @@
 	{#if showToolbar && vm.chromeVisible}
 		<ViewerChrome
 			{vm}
-			fileName={props.fileName}
+			fileName={documentView.fileName}
 			{showNotes}
 			{hiddenActions}
 			accountAuth={props.accountAuth}
@@ -406,7 +413,7 @@
 			ondismissall={() => compatToasts.dismissAll()}
 		/>
 	{/if}
-	{#if vm.versionHistoryOpen}<VersionHistoryPanel filePath={props.filePath} storage={props.storage} onclose={() => (vm.versionHistoryOpen = false)} onrestore={(bytes) => loader.load(bytes)} />{/if}
+	{#if vm.versionHistoryOpen}<VersionHistoryPanel filePath={documentView.filePath} storage={documentView.storage} onclose={() => (vm.versionHistoryOpen = false)} onrestore={(bytes) => loader.load(bytes)} />{/if}
 	{#if vm.signatureWarningOpen}<SignatureStrippedDialog signatureCount={loader.digitalSignatureCount} onclose={vm.closeSignatureWarning} />{/if}
 	<ViewerParityOverlays ui={parityUi} {editor} {exportUi} slides={vm.displaySlides} canvasSize={loader.canvasSize} mediaDataUrls={loader.mediaDataUrls} current={viewer.current} fullscreen={viewer.isFullscreen} locale={themeLocale.effectiveLocale} themeKey={themeLocale.themeKey} themeCatalog={themeLocale.catalog} onsetthemekey={(key) => themeLocale.setThemeKey(key)} availableLocales={props.availableLocales} onsetlocale={(code) => themeLocale.setLocale(code)} onselectslide={(index) => viewer.goTo(index)} onmoveslide={vm.deck.moveSlide} onrunshow={() => { vm.presentation.firstSlide(); vm.onFullscreenToggle(); }} optionsState={vm.optionsState} autosaveRecovery={vm.autosaveRecovery} {aiEnabled} collabActive={vm.collab.active} />
 	<ViewerMain

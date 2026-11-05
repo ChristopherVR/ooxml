@@ -72,6 +72,8 @@ export interface TitleBar {
 	setDirty(dirty: boolean): void;
 	/** Synchronize the AutoSave switch with a host-driven runtime change. */
 	setAutosaveEnabled(enabled: boolean): void;
+	/** Show another document's name (a file opened from a File > Open cloud place, or back). */
+	setFileName(fileName: string | undefined): void;
 	/** Re-render the Quick Access strip from the current options state. */
 	refreshQuickAccess(): void;
 	/**
@@ -107,6 +109,7 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 	strip.placement = 'belowRibbon';
 
 	let autosaveEnabled = deps.autosaveEnabled;
+	let fileName = deps.fileName;
 	let autosaveState: TitleBarAutosaveKind = 'idle';
 	let dirty = false;
 	let detached = false;
@@ -116,7 +119,7 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 		const qa = deps.quickAccess?.getState() ?? DEFAULT_QUICK_ACCESS;
 		const state = buildTitleBarState({
 			editing: edit.editable,
-			fileName: deps.fileName,
+			fileName,
 			isDirty: dirty,
 			autosaveState,
 			autosaveEnabled,
@@ -180,6 +183,10 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 		},
 		setAutosaveEnabled(enabled) {
 			autosaveEnabled = enabled;
+			sync();
+		},
+		setFileName(next) {
+			fileName = next;
 			sync();
 		},
 		refreshQuickAccess: sync,

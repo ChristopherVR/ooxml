@@ -1,4 +1,6 @@
 import type {
+	CloudFileProvider,
+	CloudOpenedFile,
 	FreeformToolKind,
 	ResolvedCustomization,
 	ReviewCommentsHost,
@@ -88,11 +90,22 @@ export interface RibbonPrimaryHandlers {
 	save(): void;
 }
 
+/** The host's `fileProviders` as File > Open places, and how a file opened in one is loaded. */
+export interface BackstageCloudFiles {
+	providers: readonly CloudFileProvider[];
+	/** The viewer's language, for the places' dates. */
+	locale: string | undefined;
+	/** Load a file the user opened in a place (closes the backstage like any open). */
+	open(file: CloudOpenedFile): void;
+}
+
 /** File tab handlers: save + export actions already implemented by the viewer's export lifecycle. */
 export interface RibbonFileHandlers {
 	openFile(): void;
 	openRecentFile(key: string): void;
 	createPresentation(templateId: string): void;
+	/** The host's cloud places for File > Open (omitted or empty: no places, as before). */
+	getCloudFiles?(): BackstageCloudFiles;
 	openSettings(): void;
 	/** The host's resolved UI customisation (omitted: nothing customised). */
 	getCustomization?(): ResolvedCustomization;

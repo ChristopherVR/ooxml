@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { demoFileProviders } from '../../shared/demo-file-providers';
 	/**
 	 * Demo shell for `pptx-svelte-viewer`, mirroring demos/demo-vue/src/App.vue:
 	 * the viewer fills the screen and a landing dropzone handles file open /
@@ -298,6 +299,10 @@
 	}
 
 	function onViewerError(message: string): void {
+		// An error in an open deck (a failed save, say) is the viewer's notice, not a load failure.
+		if ((viewerRef?.getSlideCount() ?? 0) > 0) {
+			return;
+		}
 		errorMessage = message || t('demo.viewer.loadError');
 		bytes = null;
 		document.title = 'pptx-svelte-viewer demo';
@@ -323,6 +328,7 @@
 			{customization}
 			{...rootOptions}
 			editable
+			fileProviders={demoFileProviders}
 			autosave
 			autosaveIntervalMs={2000}
 			fileName={fileName || undefined}

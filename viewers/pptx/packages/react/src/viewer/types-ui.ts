@@ -1,5 +1,6 @@
 import type { CollaborationState } from 'ooxml-core/collab';
 import type {
+	CloudFileProvider,
 	DocumentStorage,
 	GoogleFontsOption,
 	ListConversionScope,
@@ -354,6 +355,15 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * when it provides them.
 	 */
 	storage?: DocumentStorage;
+	/**
+	 * Cloud places for File > Open (OneDrive through `createOneDriveFileProvider` from
+	 * `ooxml-core/embedding/onedrive`, or a provider of your own). When non-empty, the Open page
+	 * lists "This device" and one place per provider. A file opened from a place loads like a
+	 * normal open (read-only when the service does not allow editing, or when `canEdit` /
+	 * `readOnly` already forbid it); File > Save, Save As and recovery of that document go to the
+	 * file's own storage instead of `storage`, until another document is loaded.
+	 */
+	fileProviders?: readonly CloudFileProvider[];
 	/** Fired with the serialised deck each time a recovery autosave snapshot is written. */
 	onAutosave?: (content: Uint8Array) => void;
 	/** Fired when the user enables or disables autosave (title bar or File > Options). */

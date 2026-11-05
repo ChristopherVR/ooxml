@@ -37,6 +37,7 @@ import 'pptx-angular-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { buildDemoAi, readStoredAiFields } from './ai-config';
@@ -92,6 +93,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 				<pptx-viewer
 					[content]="content()!"
 					[canEdit]="true"
+					[fileProviders]="fileProviders"
 					[fileName]="fileName()"
 					[filePath]="fileName() || undefined"
 					[autosaveIntervalMs]="2000"
@@ -132,6 +134,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 	`,
 })
 export class AppComponent {
+	protected readonly fileProviders = demoFileProviders;
 	readonly viewerRef = viewChild(PowerPointViewerComponent);
 	readonly content = signal<DemoContent | null>(null);
 	readonly fileName = signal<string>('');

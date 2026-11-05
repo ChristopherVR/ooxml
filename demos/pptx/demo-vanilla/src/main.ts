@@ -1,3 +1,4 @@
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import type {
 	CollaborationConfig,
 	PptxViewerInstance,
@@ -17,9 +18,9 @@ import { PptxHandler } from 'pptx-viewer-core';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
-import { oneDriveDemoRequested } from '../../shared/onedrive-demo';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { buildViewerAi } from './ai-config';
@@ -27,7 +28,6 @@ import { buildRoomConfig, readRoomFromUrl, resolveAutoName } from './collab';
 import { getLanguage, onLanguageChange, t, viewerMessages } from './demo-i18n';
 import { createDropzone } from './dropzone';
 import { mountHostOwnedDemo } from './host-owned-demo';
-import { mountOneDriveDemoApp } from './onedrive-demo';
 import { mountSameBrowserDemo } from './same-browser-demo';
 import { readStoredTheme, themes } from './themes';
 
@@ -164,6 +164,7 @@ function openViewer(
 		locale: getLanguage(),
 		messages: viewerMessages,
 		editable: true,
+		fileProviders: demoFileProviders,
 		autosave: true,
 		// A demo wants snappy crash recovery, and an explicit interval is a host
 		// policy that outranks the File > Options AutoRecover cadence.
@@ -183,6 +184,11 @@ function openViewer(
 		// (demos/shared/demo-root-options.ts), for e2e.
 		...currentDemoRootOptions(),
 		onError: (message, error) => {
+			if ((viewer?.getSlideCount() ?? 0) > 0) {
+				// An error in an open deck (a failed save, say) is the viewer's notice, not a load failure.
+				console.error('pptx-vanilla-viewer error', message, error);
+				return;
+			}
 			console.error('pptx-vanilla-viewer failed to load', message, error);
 			// A deck the viewer cannot load must not be reopened on every refresh.
 			void forgetSessionDeck();
@@ -244,8 +250,8 @@ async function fetchSampleDeck(): Promise<Uint8Array | null> {
 const audienceSession = parsePresentationSessionId(window.location.hash);
 const joinRoom = readRoomFromUrl();
 const wantSample = new URLSearchParams(window.location.search).get('sample') === '1';
-if (oneDriveDemoRequested()) {
-	mountOneDriveDemoApp(app);
+if (completeDemoSignInPopup()) {
+	// The MSAL sign-in popup: the response is handed back, the app does not boot here.
 } else if (externalSessionRequested()) {
 	void mountHostOwnedDemo(app).catch((error: unknown) => {
 		app.textContent = String(error);

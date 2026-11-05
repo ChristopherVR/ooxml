@@ -1,13 +1,21 @@
 import {
+	createCloudDocumentController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isFeatureEnabled,
+	resolveCloudDocumentView,
 	resolveCollaborationConfig,
 	resolveViewerRootOptions,
 } from 'ooxml-ui/pptx';
-import type { ResolvedCustomization } from 'ooxml-ui/pptx';
+import type {
+	CloudDocumentController,
+	CloudDocumentHostValues,
+	CloudOpenedFile,
+	ResolvedCustomization,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
 import type { PowerPointViewerProps } from '../types';
+import { controllerState } from './controller-state';
 import type { CreateViewerStateOptions } from './create-viewer-state-types';
 
 /**
@@ -27,6 +35,23 @@ export interface ViewerDomAccessors {
 }
 
 /**
+ * The storage, edit right, file name and recovery key the viewer uses: the host props, or those
+ * of the file opened from a File > Open cloud place (shared `render/cloud-open`). `readOnly`
+ * takes editing away from a host that also allows it.
+ */
+export function resolveViewerDocument(
+	props: PowerPointViewerProps,
+	cloudFile: CloudOpenedFile | null,
+): CloudDocumentHostValues {
+	return resolveCloudDocumentView(cloudFile, {
+		storage: props.storage,
+		canEdit: (props.editable ?? false) && !props.readOnly,
+		fileName: props.fileName,
+		filePath: props.filePath,
+	});
+}
+
+/**
  * Map `PowerPointViewer`'s host props onto {@link CreateViewerStateOptions}.
  *
  * EVERY field is a getter or a closure over `getProps()`, never a snapshot:
@@ -42,17 +67,26 @@ export interface ViewerDomAccessors {
 export function toViewerStateOptions(
 	getProps: () => PowerPointViewerProps,
 	dom: ViewerDomAccessors,
+	cloudDocument: CloudDocumentController = createCloudDocumentController(),
 ): CreateViewerStateOptions {
+	const cloudFile = controllerState(cloudDocument);
+	const view = (): CloudDocumentHostValues =>
+		resolveViewerDocument(getProps(), cloudFile.current.file);
 	return {
 		...dom,
+		cloudDocument,
 		inspectorInitiallyOpen: getProps().inspectorInitiallyOpen,
 		getSource: () => getProps().source,
 		// Deliberately NOT defaulted: the host prop is a ceiling, and `undefined`
 		// ("the host said nothing") permits autosave, which is not the same answer
 		// as an explicit `false`. See `resolveAutosaveActivation` in shared.
 		getAutosave: () => getProps().autosave,
-		getFilePath: () => getProps().filePath,
-		getStorage: () => getProps().storage,
+		// Storage, recovery key, name and edit right follow a File > Open cloud file while one is
+		// open; the recent list and cache maintenance keep the host's own storage.
+		getFilePath: () => view().filePath,
+		getStorage: () => view().storage,
+		getHostStorage: () => getProps().storage,
+		getFileProviders: () => getProps().fileProviders,
 		getAuthorName: () => getProps().authorName,
 		getInitialSlide: () => resolveViewerRootOptions(getProps()).initialSlide,
 		getGoogleFonts: () => getProps().googleFonts,
@@ -65,10 +99,10 @@ export function toViewerStateOptions(
 		getLineChart3D: () => getProps().lineChart3D ?? false,
 		getAreaChart3D: () => getProps().areaChart3D ?? false,
 		getPieChart3D: () => getProps().pieChart3D ?? false,
-		getEditable: () => (getProps().editable ?? false) && !getProps().readOnly,
+		getEditable: () => view().canEdit,
 		getFitPadding: () => getProps().fitPadding,
 		getMaxFitScale: () => getProps().maxFitScale,
-		getFileName: () => getProps().fileName,
+		getFileName: () => view().fileName,
 		// The host's `ai` prop AND the customisation's `ai` feature switch.
 		getAiEnabled: () =>
 			Boolean(getProps().ai) &&

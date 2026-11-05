@@ -15,6 +15,7 @@
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
 		"lucide-react": "^1.64.0",
+		"ooxml-demo-onedrive": "workspace:*",
 		"pptx-react-viewer": "workspace:*",
 		"pptx-viewer-core": "workspace:*",
 		"pptx-viewer-locales": "workspace:*",

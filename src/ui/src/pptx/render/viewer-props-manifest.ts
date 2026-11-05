@@ -62,6 +62,8 @@ export const VIEWER_PROPS: readonly ViewerSurfaceEntry[] = [
 	// Host-owned storage (`ooxml-core/embedding`): Save goes to `storage.save`, recovery copies
 	// to its recovery methods instead of IndexedDB.
 	{ id: 'storage' },
+	// File > Open cloud places (OneDrive, or a host's own provider): see render/cloud-open.ts.
+	{ id: 'fileProviders' },
 	{
 		id: 'className',
 		names: CLASS_NAMES,

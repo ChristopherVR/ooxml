@@ -9,6 +9,7 @@ import { translations as backstage } from './backstage';
 import { translations as chart_format } from './chart-format';
 import { translations as charts } from './charts';
 import { translations as charts_2 } from './charts-2';
+import { translations as cloudFiles } from './cloud-files';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
 import { translations as compare_and_waterfall } from './compare-and-waterfall';
 import { translations as design_galleries } from './design-galleries';
@@ -71,6 +72,7 @@ export const translationsZhCN: Record<string, string> = {
 	...viewer_options,
 	...viewer_options_2,
 	...backstage,
+	...cloudFiles,
 	...ribbon_galleries,
 	...ribbon_galleries_effects,
 	...ribbon_galleries_picture,

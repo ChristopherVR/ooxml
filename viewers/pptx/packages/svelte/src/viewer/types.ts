@@ -2,6 +2,7 @@ import type {
 	AccountAuthConfig,
 	AutosaveRecord,
 	CanvasSize,
+	CloudFileProvider,
 	CollaborationConfig,
 	CollaborationInput,
 	CollaborationRole,
@@ -380,6 +381,15 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * when it provides them.
 	 */
 	storage?: DocumentStorage;
+	/**
+	 * Cloud places for File > Open (OneDrive through `createOneDriveFileProvider` from
+	 * `ooxml-core/embedding/onedrive`, or a provider of your own). When non-empty, the Open page
+	 * lists "This device" and one place per provider. A file opened from a place loads like a
+	 * normal open (read-only when the service does not allow editing, or when `editable` /
+	 * `readOnly` already forbid it); File > Save, Save As and recovery of that document go to the
+	 * file's own storage instead of `storage`, until another document is loaded.
+	 */
+	fileProviders?: readonly CloudFileProvider[];
 	/** Fired with the serialized `.pptx` bytes after each successful autosave. */
 	onautosave?: (bytes: Uint8Array) => void;
 	/** Fired on every autosave lifecycle transition (`idle`, `saving`, `saved`, `error`). */
