@@ -1,7 +1,39 @@
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildMorphCrossfadeGroups, buildMorphOverlayLayers } from './morph-transition-layers';
+import {
+	buildMorphCrossfadeGroups,
+	buildMorphOverlayLayers,
+	restyleMorphTextCopy,
+} from './morph-transition-layers';
+
+describe('restyleMorphTextCopy', () => {
+	// PowerPoint 16: a filled shape gaining flipV turns its text half way round,
+	// never mirrored. The text copy stands for the source painted unflipped (its
+	// rotation + 180), so the source's flip compensation on the cloned text
+	// block has to go, or vanilla alone painted the carried text mirrored.
+	it('replaces the source flip compensation with the copy own (none)', () => {
+		const clone = document.createElement('div');
+		const block = document.createElement('div');
+		block.className = 'pptxv-text';
+		block.style.transform = 'scaleX(-1)';
+		clone.appendChild(block);
+		const copy = {
+			id: 'c',
+			type: 'shape',
+			x: 0,
+			y: 0,
+			width: 200,
+			height: 100,
+			rotation: 180,
+			text: 'Lorem',
+			textStyle: {},
+		} as PptxElement;
+		restyleMorphTextCopy(clone, copy);
+		expect(block.style.transform).toBe('');
+	});
+});
 
 function stage(ids: string[]): HTMLElement {
 	const root = document.createElement('div');

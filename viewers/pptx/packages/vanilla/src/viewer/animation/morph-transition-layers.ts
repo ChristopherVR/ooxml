@@ -4,7 +4,9 @@ import {
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	morphOverlayStackSlots,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 
+import { getTextBlockStyle } from '../render';
 import { buildLayer } from './transition-layer';
 
 /**
@@ -99,9 +101,27 @@ export function materializeMorphCopy(
 		clone.dataset.elementId = id;
 		clone.style.height = `${copy.height}px`;
 		keepMorphCopyPart(clone, parts?.get(id));
+		if (parts?.get(id) === 'text' && 'type' in copy) {
+			restyleMorphTextCopy(clone, copy as PptxElement);
+		}
 		node.after(clone);
 	}
 	return stage;
+}
+
+/**
+ * A text copy stands for its source painted UNFLIPPED, a vertical flip turned
+ * into a half turn (`morphUprightText`), and its frames state no flips. The
+ * clone still carries the source's flip compensation on its text block (the
+ * mirror that un-mirrors a flipped shape's text), so the copy's own
+ * compensation (none) replaces it, or the carried text would paint mirrored.
+ */
+export function restyleMorphTextCopy(clone: HTMLElement, copy: PptxElement): void {
+	const style = getTextBlockStyle(copy);
+	for (const block of clone.querySelectorAll<HTMLElement>('.pptxv-text')) {
+		block.style.transform = String(style.transform ?? '');
+		block.style.transformOrigin = String(style.transformOrigin ?? '');
+	}
 }
 
 /**
