@@ -1,4 +1,6 @@
 import { mount } from '@vue/test-utils';
+import { createSaveProgressController } from 'ooxml-ui/pptx';
+import type { DocumentSaveMeta } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 
@@ -84,5 +86,35 @@ describe('statusBar adapter', () => {
 	it('projects the collaboration slot', () => {
 		const { wrapper } = open({}, { collaboration: () => h('span', { id: 'collab' }, 'live') });
 		expect(wrapper.find('[slot="collaboration"] #collab').exists()).toBeTruthy();
+	});
+});
+
+describe('statusBar save progress', () => {
+	it('shows each step of a save to the host storage, then All saved again', async () => {
+		const wrapper = mount(StatusBar, {
+			props: { slideCount: 7, activeSlideIndex: 0, isDirty: false, scale: 1 },
+		});
+		const save = () =>
+			wrapper.get('pptx-ui-status-bar').element.shadowRoot!.querySelector('[data-item="save"]')!
+				.textContent;
+		const controller = createSaveProgressController();
+		controller.subscribe(() => {
+			void wrapper.setProps({ saveProgress: controller.getSnapshot() });
+		});
+		const seen: (string | null)[] = [];
+		const storage = controller.wrap({
+			async save(_bytes: Uint8Array, meta: DocumentSaveMeta) {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				await wrapper.vm.$nextTick();
+				seen.push(save());
+				meta.onProgress?.({ phase: 'merging' });
+				await wrapper.vm.$nextTick();
+				seen.push(save());
+			},
+		});
+		await storage.save(new Uint8Array(), { fileName: 'a.pptx', mimeType: 'x', reason: 'save' });
+		await wrapper.vm.$nextTick();
+		expect(seen).toStrictEqual(['Saving… 45%', 'Combining edits…']);
+		expect(save()).toBe('All saved');
 	});
 });

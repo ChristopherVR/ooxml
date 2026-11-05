@@ -6,8 +6,13 @@
  * cluster live in the shared view. This component maps viewer state onto the
  * element's controlled state and re-emits its typed intents.
  */
-import { dispatchStatusBarIntent, statusBarState, statusBarViewMode } from 'ooxml-ui/pptx';
-import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import {
+	dispatchStatusBarIntent,
+	saveProgressStatus,
+	statusBarState,
+	statusBarViewMode,
+} from 'ooxml-ui/pptx';
+import type { SaveProgressState, ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -24,6 +29,8 @@ const props = defineProps<{
 	autosaveStatus?: AutosaveStatus;
 	/** Epoch ms of the last successful autosave, for the "Saved <time>" label. */
 	lastSavedAt?: number | null;
+	/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
+	saveProgress?: SaveProgressState;
 	/** Current zoom scale (1 = 100%). */
 	scale?: number;
 	/** Whether the notes panel is expanded. */
@@ -58,6 +65,9 @@ const state = computed(() =>
 		dirty: props.isDirty,
 		autosave: props.autosaveStatus
 			? { state: props.autosaveStatus, timestamp: props.lastSavedAt ?? undefined }
+			: undefined,
+		saveProgress: props.saveProgress
+			? saveProgressStatus(props.saveProgress, (key) => t(key, { percent: '{percent}' }))
 			: undefined,
 		zoomPercent: props.scale === undefined ? undefined : props.scale * 100,
 		notesExpanded: props.isNotesExpanded,

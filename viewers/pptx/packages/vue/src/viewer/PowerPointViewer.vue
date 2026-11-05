@@ -27,6 +27,7 @@ import { ShieldAlert } from 'lucide-vue-next';
 import {
 	autosaveStatusKind,
 	createCollaborationStateReporter,
+	createSaveProgressController,
 	createSlidePackageClipboard,
 	resolveCloudDocumentView,
 	resolveCollaborationConfig,
@@ -277,15 +278,19 @@ provide(RibbonAddInsKey, () => props.ribbonAddIns);
 // the save, autosave, recovery and edit paths below read instead of the props.
 const cloudDocument = createCloudDocumentController();
 const cloudState = useController(cloudDocument);
-const cloudView = computed(() =>
-	resolveCloudDocumentView(cloudState.value.file, {
+// Saves to the host's storage report their steps (upload, merge) to the status bar.
+const saveProgress = createSaveProgressController();
+const saveProgressState = useController(saveProgress);
+const cloudView = computed(() => {
+	const view = resolveCloudDocumentView(cloudState.value.file, {
 		storage: props.storage,
 		// `readOnly` takes editing away from a host that also allows it.
 		canEdit: props.canEdit && !props.readOnly,
 		fileName: props.fileName,
 		filePath: props.filePath,
-	}),
-);
+	});
+	return view.storage ? { ...view, storage: saveProgress.wrap(view.storage) } : view;
+});
 const documentPath = () =>
 	cloudView.value.filePath ?? cloudView.value.fileName ?? 'Untitled Presentation';
 
@@ -2426,6 +2431,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					autosaveDisabledReason ? 'disabled' : autosaveEnabled ? autosave.status.value : undefined
 				"
 				:last-saved-at="autosave.lastSavedAt.value"
+				:save-progress="saveProgressState"
 				:scale="zoom"
 				:mode="chromeMode"
 				:is-notes-expanded="notesExpanded"
