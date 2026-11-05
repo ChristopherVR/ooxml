@@ -13,12 +13,14 @@ export function drawingPathData(path: DrawingPath, width: number, height: number
 	for (const command of path.commands) {
 		if (command.op === 'A') {
 			const arc = ooxmlArcToSvg(
-				command.wR * sx,
-				command.hR * sy,
+				command.wR,
+				command.hR,
 				command.startAngle * 60000,
 				command.swingAngle * 60000,
 				px,
 				py,
+				sx,
+				sy,
 			);
 			if (arc) {
 				out.push(arc.svg);

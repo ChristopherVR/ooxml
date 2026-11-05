@@ -238,14 +238,24 @@ export function evaluatePresetShape(
 					break;
 				}
 				case 'arcTo': {
-					// Radii scale with their own axis; the OOXML sweep angles are
-					// parametric on that same axis-aligned ellipse, so they are
-					// carried through unchanged.
-					const wR = sx(resolveToken(cmd.wR, vars));
-					const hR = sy(resolveToken(cmd.hR, vars));
+					// Radii stay in the path's own space: the visual sweep angles are
+					// converted there (a `cloud` lobe is a circle in its 43200 space),
+					// then the engine scales the finished arc onto the shape box.
+					const wR = resolveToken(cmd.wR, vars);
+					const hR = resolveToken(cmd.hR, vars);
 					const stAng = resolveToken(cmd.stAng, vars);
 					const swAng = resolveToken(cmd.swAng, vars);
-					const result = ooxmlArcToSvg(wR, hR, stAng, swAng, penX, penY);
+					const result = ooxmlArcToSvg(
+						wR,
+						hR,
+						stAng,
+						swAng,
+						penX,
+						penY,
+						scaleX,
+						scaleY,
+						def.parametricArcs === true,
+					);
 					if (result) {
 						parts.push(result.svg);
 						penX = result.endX;

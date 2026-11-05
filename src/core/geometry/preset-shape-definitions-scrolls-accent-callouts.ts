@@ -362,7 +362,7 @@ const accentCallout1: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		// Accent bar: vertical stroke flush with the body's left edge.
 		{
 			stroke: true,
@@ -407,7 +407,7 @@ const accentCallout2: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		{
 			stroke: true,
 			fill: 'none',
@@ -455,7 +455,7 @@ const accentCallout3: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		{
 			stroke: true,
 			fill: 'none',

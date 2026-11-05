@@ -2937,3 +2937,15 @@ moved to `write/comment-persons.ts` and now preserves source account XML and dis
 with the same display name. Both paths are relative to `src/core/xlsx`. The threaded-message
 writer and mention-offset adapter are new implementations; the latter reuses the existing
 shared `src/core/text/text-diff.ts` algorithm.
+
+## Spec-exact preset geometry (2026-11-06)
+
+Source: none copied. `src/core/geometry/preset-shape-definitions-exact-*.ts` rewrite presets
+whose hand-written entries disagreed with PowerPoint 16 (star4-star10, pentagon, heptagon,
+decagon, dodecagon, math operators, tabs, braces, brackets, moon, heart, cloud, lightningBolt,
+wave, doubleWave, arc, pie, chord, blockArc, pieWedge, noSmoking, halfFrame, five block arrows,
+smileyFace, can, cube, bevel, diagStripe, nonIsoscelesTrapezoid, three flowchart shapes). The
+formulas follow the ECMA-376 `presetShapeDefinitions` layout as published in ISO/IEC 29500-1
+and were checked against PowerPoint's own `Slide.Export` raster at a non-square aspect with
+default and adjusted values. `ooxml-arc.ts` now treats `arcTo` angles as visual angles
+(ECMA-376 section 20.1.9.3) and converts them in the path's own space.

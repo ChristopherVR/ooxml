@@ -428,6 +428,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** A text-bearing shape painted by the silhouette filter hit-tests its whole box
       (a textless one hit-tests its geometry only, `passesClicksThroughBox`): a click-through
       container would also disable its in-place text editing.
+- [ ] **P2** Preset geometry that still differs from PowerPoint 16 (measured with
+      `Slide.Export` of every preset at a non-square aspect, default and adjusted, against
+      `evaluatePresetShape`): `circularArrow`, `leftCircularArrow` and `leftRightCircularArrow`
+      (the hand-written guides are not the ECMA chain), `ribbon`, `ribbon2`, `ellipseRibbon`,
+      `ellipseRibbon2`, `leftRightRibbon`, `verticalScroll`, `horizontalScroll`, `funnel`,
+      `swooshArrow`, `irregularSeal2`, `flowChartMultidocument` and `flowChartMagneticDisk`
+      (outline paths), the `actionButton*` detail strokes, and the leader line of the line
+      callouts whose COM default adjustments differ from the saved XML. Closed in
+      `fix(geometry)`: star4-star10, pentagon, heptagon, decagon, dodecagon, the math operators,
+      the three tab shapes, braces and brackets, moon, heart, cloud, lightningBolt, wave,
+      doubleWave, the arc family (visual arc angles), five multi-headed block arrows,
+      smileyFace, can, cube, bevel, diagStripe and nonIsoscelesTrapezoid.
 
 ### Ribbon
 

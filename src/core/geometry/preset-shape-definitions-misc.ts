@@ -120,12 +120,23 @@ function starTrigTable(n: number): StarTrig[] {
  *  - star24 → 37500
  *  - star32 → 37500
  */
-function buildStarN(n: number, defaultAdj: number): PresetShapeGeometryDefinition {
+function buildStarN(
+	n: number,
+	defaultAdj: number,
+	hf?: number,
+	vf?: number,
+): PresetShapeGeometryDefinition {
 	const trig = starTrigTable(n);
+	// `hf` / `vf` stretch the outer ellipse so the tips touch the box edges
+	// when the tip layout is not symmetric about the box (ECMA-376 star6/7/10).
+	// `svc` is the stretched vertical centre, only moved when `vf` is present.
 	const gdLst: ReturnType<typeof gd>[] = [
 		gd('a', `pin 0 adj 50000`),
-		gd('iwd2', '*/ wd2 a 50000'),
-		gd('ihd2', '*/ hd2 a 50000'),
+		gd('swd2', hf === undefined ? '*/ wd2 1 1' : '*/ wd2 hf 100000'),
+		gd('shd2', vf === undefined ? '*/ hd2 1 1' : '*/ hd2 vf 100000'),
+		gd('svc', vf === undefined ? '*/ vc 1 1' : '*/ vc vf 100000'),
+		gd('iwd2', '*/ swd2 a 50000'),
+		gd('ihd2', '*/ shd2 a 50000'),
 	];
 
 	// For each vertex i, emit dx/dy guides (px / py for "point", sx/sy unused).
@@ -133,14 +144,14 @@ function buildStarN(n: number, defaultAdj: number): PresetShapeGeometryDefinitio
 	for (let i = 0; i < trig.length; i++) {
 		const t = trig[i]!;
 		const isOuter = i % 2 === 0;
-		const radiusW = isOuter ? 'wd2' : 'iwd2';
-		const radiusH = isOuter ? 'hd2' : 'ihd2';
+		const radiusW = isOuter ? 'swd2' : 'iwd2';
+		const radiusH = isOuter ? 'shd2' : 'ihd2';
 		// dx_i = radiusW * sin / 100000; dy_i = radiusH * cos / 100000 (cos is the
 		// vertical component because we already pre-rotated by -90°).
 		gdLst.push(gd(`dx${i}`, `*/ ${radiusW} ${t.sin} 100000`));
 		gdLst.push(gd(`dy${i}`, `*/ ${radiusH} ${t.cos} 100000`));
 		gdLst.push(gd(`x${i}`, `+- hc dx${i} 0`));
-		gdLst.push(gd(`y${i}`, `+- vc dy${i} 0`));
+		gdLst.push(gd(`y${i}`, `+- svc dy${i} 0`));
 	}
 
 	const commands: PresetPathCommand[] = [{ kind: 'moveTo', x: 'x0', y: 'y0' }];
@@ -151,7 +162,11 @@ function buildStarN(n: number, defaultAdj: number): PresetShapeGeometryDefinitio
 
 	return {
 		name: `star${n}`,
-		avLst: { adj: defaultAdj },
+		avLst: {
+			adj: defaultAdj,
+			...(hf === undefined ? {} : { hf }),
+			...(vf === undefined ? {} : { vf }),
+		},
 		gdLst,
 		rect: FULL_RECT,
 		pathLst: [{ commands }],
@@ -162,10 +177,10 @@ function buildStarN(n: number, defaultAdj: number): PresetShapeGeometryDefinitio
 // Stars
 // ---------------------------------------------------------------------------
 
-const star6 = buildStarN(6, 28868);
-const star7 = buildStarN(7, 34601);
+const star6 = buildStarN(6, 28868, 115470);
+const star7 = buildStarN(7, 34601, 102572, 105210);
 const star8 = buildStarN(8, 37500);
-const star10 = buildStarN(10, 42533);
+const star10 = buildStarN(10, 42533, 105146);
 const star12 = buildStarN(12, 37500);
 const star16 = buildStarN(16, 37500);
 const star24 = buildStarN(24, 37500);
@@ -446,7 +461,7 @@ const callout1: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		{
 			stroke: true,
 			fill: 'none',
@@ -478,7 +493,7 @@ const callout2: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		{
 			stroke: true,
 			fill: 'none',
@@ -515,7 +530,7 @@ const callout3: PresetShapeGeometryDefinition = {
 	],
 	rect: FULL_RECT,
 	pathLst: [
-		{ commands: calloutBody() },
+		{ stroke: false, commands: calloutBody() },
 		{
 			stroke: true,
 			fill: 'none',

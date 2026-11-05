@@ -11,8 +11,8 @@ describe('evaluatePresetShape', () => {
 			(command) => command.kind === 'arcTo',
 		).length;
 
-		expect(officialArcCount).toBe(8);
-		expect(evaluated?.svgPath.match(/A /gu)).toHaveLength(8);
+		expect(officialArcCount).toBe(11);
+		expect(evaluated?.svgPath.match(/A /gu)).toHaveLength(11);
 	});
 
 	it('returns undefined for unknown shape names', () => {
@@ -80,9 +80,10 @@ describe('evaluatePresetShape', () => {
 		expect(coords.length).toBeGreaterThan(0);
 		// Every coordinate must stay near the element box (control points may
 		// overshoot slightly to round the humps, but never by grid-space orders
-		// of magnitude). A generous 1.4x bound catches the old 100x+ blow-up.
+		// of magnitude). The ECMA control points reach 49/48 of the width past the
+		// centre (about 1.52x the box); a 1.6x bound catches the old 100x+ blow-up.
 		const maxAbs = Math.max(...coords.map((n) => Math.abs(n)));
-		expect(maxAbs).toBeLessThan(Math.max(W, H) * 1.4);
+		expect(maxAbs).toBeLessThan(Math.max(W, H) * 1.6);
 	});
 
 	it('roundRect with default adj produces ~1/3 corner radius', () => {
@@ -143,15 +144,18 @@ describe('evaluatePresetShape', () => {
 		expect(thin!.svgPath).not.toBe(thick!.svgPath);
 	});
 
-	it('flags an open stroke-only preset (arc) as fillNone with per-path flags', () => {
+	it('arc paints a filled pie sector plus a stroked, unfilled arc (as PowerPoint does)', () => {
 		const result = evaluatePresetShape('arc', 200, 200);
 		expect(result).toBeDefined();
-		expect(result!.fillNone).toBeTruthy();
-		expect(result!.paths).toHaveLength(1);
-		expect(result!.paths[0].fill).toBe('none');
-		expect(result!.paths[0].stroke).toBeTruthy();
+		// The sector closes through the centre and is not stroked; the arc itself
+		// is the open, stroke-only path, so the shape as a whole keeps its fill.
+		expect(result!.fillNone).toBe(false);
+		expect(result!.paths).toHaveLength(2);
+		expect(result!.paths[0]!.stroke).toBe(false);
+		expect(result!.paths[1]!.fill).toBe('none');
+		expect(result!.paths[1]!.stroke).toBeUndefined();
 		// The per-path `d` recomposes into the merged svgPath.
-		expect(result!.svgPath).toBe(result!.paths[0].d);
+		expect(result!.svgPath).toBe(result!.paths.map((x) => x.d).join(' '));
 	});
 
 	it('leaves a normal filled preset (rect) as fillNone=false', () => {
@@ -244,23 +248,24 @@ describe('at2 operand order in preset geometry', () => {
 	}
 
 	// noSmoking's bar runs along `ang = at2 iwd2 ihd2`, the angle of the inner
-	// ellipse's (half-width, half-height) vector. On a 320x120 shape that is a
-	// shallow diagonal; the inverted operator produced |dx| === |dy| instead,
-	// i.e. a 45-degree bar on every aspect ratio.
+	// ellipse's (half-width, half-height) vector. The two band edges are the
+	// closing chords of the two holes; on a 320x120 shape they are shallow
+	// diagonals, and the inverted operator produced a 45-degree bar everywhere.
 	it('noSmoking slashes along the shape aspect, not a fixed 45 degrees', () => {
-		const wide = evaluatePresetShape('noSmoking', 320, 120)!;
-		const barPoints = points(wide.svgPath).slice(-4);
-		const dx = Math.abs(barPoints[1]![0] - barPoints[0]![0]);
-		const dy = Math.abs(barPoints[1]![1] - barPoints[0]![1]);
-		expect(dx).toBeGreaterThan(dy * 3);
+		/** Chord (end minus start) of the first hole, which runs along the bar edge. */
+		function holeChord(svg: string): [number, number] {
+			const m = /M (-?[\d.]+) (-?[\d.]+) A [\d.]+ [\d.]+ 0 \d \d (-?[\d.]+) (-?[\d.]+) Z/.exec(
+				svg.slice(svg.indexOf('Z') + 1),
+			)!;
+			return [Number(m[3]) - Number(m[1]), Number(m[4]) - Number(m[2])];
+		}
+		const [wdx, wdy] = holeChord(evaluatePresetShape('noSmoking', 320, 120)!.svgPath);
+		// iwd2 / ihd2 = (160 - 22.5) / (60 - 22.5) = 3.67
+		expect(Math.abs(wdx) / Math.abs(wdy)).toBeGreaterThan(3);
 
 		// A square shape is the degenerate case where both conventions agree.
-		const square = evaluatePresetShape('noSmoking', 200, 200)!;
-		const squarePoints = points(square.svgPath).slice(-4);
-		expect(Math.abs(squarePoints[1]![0] - squarePoints[0]![0])).toBeCloseTo(
-			Math.abs(squarePoints[1]![1] - squarePoints[0]![1]),
-			6,
-		);
+		const [sdx, sdy] = holeChord(evaluatePresetShape('noSmoking', 200, 200)!.svgPath);
+		expect(Math.abs(sdx)).toBeCloseTo(Math.abs(sdy), 1);
 	});
 
 	// mathMultiply's bar thickness comes from `a = at2 w h`, so the diagonal

@@ -368,6 +368,8 @@ const circularArrow: PresetShapeGeometryDefinition = {
 // ---------------------------------------------------------------------------
 const leftCircularArrow: PresetShapeGeometryDefinition = {
 	name: 'leftCircularArrow',
+	// Approximation tuned with parametric arc angles; no spec-exact version yet.
+	parametricArcs: true,
 	avLst: { adj1: 12500, adj2: 18900000, adj3: 1142319, adj4: 10800000, adj5: 12500 },
 	gdLst: [
 		gd('a1', 'pin 0 adj1 25000'),

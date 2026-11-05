@@ -140,7 +140,7 @@ function subpathSegmentsToSvg(path: CustomGeometryPath, sx: number, sy: number):
 				penY = seg.pts[1].y * sy;
 				break;
 			case 'arcTo': {
-				const result = ooxmlArcToSvg(seg.wR * sx, seg.hR * sy, seg.stAng, seg.swAng, penX, penY);
+				const result = ooxmlArcToSvg(seg.wR, seg.hR, seg.stAng, seg.swAng, penX, penY, sx, sy);
 				if (result) {
 					parts.push(result.svg);
 					penX = result.endX;

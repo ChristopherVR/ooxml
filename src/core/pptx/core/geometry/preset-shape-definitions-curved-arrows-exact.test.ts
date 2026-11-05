@@ -161,14 +161,13 @@ describe('spec-exact curved arrows', () => {
 	// A pinned path is the cheapest "visual" regression available: it fails if
 	// EITHER half of the at2 correction lands without the other, because the two
 	// halves cancel out exactly and any single-sided edit moves the arcs.
-	it('curvedRightArrow renders the same path after the at2 correction', () => {
+	it('curvedRightArrow renders the spec path with visual arc angles', () => {
+		// Arc angles are visual angles (PowerPoint measured: the head base sits on
+		// the arc end at x = 170, the head tip at y = 90).
 		expect(evaluatePresetShape('curvedRightArrow', W, H)!.svgPath).toBe(
-			'M 0 37.5 A 200 37.5 0 0 0 74.195 66.652 L 170 59.575724874909724 L 200 90 ' +
-				'L 170 119.57572487490972 L 170 104.57572487490972 A 200 37.5 0 0 1 95.805 75.424 Z ' +
-				'M 200 30 A 200 37.5 0 0 0 0.666 64.442 A 200 37.5 0 0 1 200 23.883 Z ' +
-				'M 0 37.5 A 200 37.5 0 0 0 74.195 66.652 L 170 59.575724874909724 L 200 90 ' +
-				'L 170 119.57572487490972 L 170 104.57572487490972 A 200 37.5 0 0 1 95.805 75.424 ' +
-				'L 0 37.5 A 200 37.5 0 0 1 200 0 L 200 30 A 200 37.5 0 0 0 0.666 64.442',
+			'M 0 37.5 A 200 37.5 0 0 0 170 74.576 L 170 59.575724874909724 L 200 90 L 170 119.57572487490972 L 170 104.57572487490972 A 200 37.5 0 0 1 0 67.5 Z ' +
+				'M 200 30 A 200 37.5 0 0 0 16.697 52.5 A 200 37.5 0 0 1 200 0 Z ' +
+				'M 0 37.5 A 200 37.5 0 0 0 170 74.576 L 170 59.575724874909724 L 200 90 L 170 119.57572487490972 L 170 104.57572487490972 A 200 37.5 0 0 1 0 67.5 L 0 37.5 A 200 37.5 0 0 1 200 0 L 200 30 A 200 37.5 0 0 0 16.697 52.5',
 		);
 	});
 });

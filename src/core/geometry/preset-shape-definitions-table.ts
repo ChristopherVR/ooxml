@@ -52,6 +52,11 @@ import { CLOUD_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-clo
 import { CONNECTORS_BRACKETS_PRESET_DEFINITIONS } from './preset-shape-definitions-connectors-brackets';
 import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-connectors';
 import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-exact';
+import { EXACT_ARC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-arcs';
+import { EXACT_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-arrows';
+import { EXACT_BASIC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-basic';
+import { EXACT_MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-misc';
+import { EXACT_MATH_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-math';
 import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart';
 import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc';
 import { RECTS_SNIPS_PRESET_DEFINITIONS } from './preset-shape-definitions-rects-snips';
@@ -107,6 +112,12 @@ export interface PresetShapeGeometryDefinition {
 	rect?: { l: string; t: string; r: string; b: string };
 	/** `pathLst` — at least one path. */
 	pathLst: PresetPath[];
+	/**
+	 * Treat every `arcTo` angle as parametric rather than visual. Set only on
+	 * approximate hand-written entries that were tuned that way and have no
+	 * spec-exact replacement yet (see `ooxmlArcToSvg`).
+	 */
+	parametricArcs?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -360,9 +371,8 @@ const diamond: PresetShapeGeometryDefinition = {
 // or -90deg for upward-pointing odd-sided shapes (pentagon, heptagon, etc).
 const pentagon: PresetShapeGeometryDefinition = {
 	name: 'pentagon',
+	avLst: { hf: 105146, vf: 110557 },
 	gdLst: [
-		gd('hf', 'val 105146'),
-		gd('vf', 'val 110557'),
 		gd('swd2', '*/ wd2 hf 100000'),
 		gd('shd2', '*/ hd2 vf 100000'),
 		// The vertices sit on an ellipse centred `svc` (below `vc` by `vf`), as
@@ -465,11 +475,11 @@ const hexagon: PresetShapeGeometryDefinition = {
 
 const heptagon: PresetShapeGeometryDefinition = {
 	name: 'heptagon',
+	avLst: { hf: 102572, vf: 105210 },
 	gdLst: [
-		gd('hf', 'val 102572'),
-		gd('vf', 'val 105210'),
 		gd('swd2', '*/ wd2 hf 100000'),
 		gd('shd2', '*/ hd2 vf 100000'),
+		gd('svc', '*/ vc vf 100000'),
 		gd('dx1', '*/ swd2 97493 100000'),
 		gd('dx2', '*/ swd2 78183 100000'),
 		gd('dx3', '*/ swd2 43388 100000'),
@@ -482,21 +492,21 @@ const heptagon: PresetShapeGeometryDefinition = {
 		gd('x4', '+- hc dx3 0'),
 		gd('x5', '+- hc dx2 0'),
 		gd('x6', '+- hc dx1 0'),
-		gd('y1', '+- vc 0 dy1'),
-		gd('y2', '+- vc dy2 0'),
-		gd('y3', '+- vc dy3 0'),
+		gd('y1', '+- svc 0 dy1'),
+		gd('y2', '+- svc dy2 0'),
+		gd('y3', '+- svc dy3 0'),
 	],
 	rect: { l: 'x1', t: 'y1', r: 'x6', b: 'y3' },
 	pathLst: [
 		{
 			commands: [
 				{ kind: 'moveTo', x: 'hc', y: 't' },
-				{ kind: 'lnTo', x: 'x6', y: 'y1' },
-				{ kind: 'lnTo', x: 'x5', y: 'y2' },
+				{ kind: 'lnTo', x: 'x5', y: 'y1' },
+				{ kind: 'lnTo', x: 'x6', y: 'y2' },
 				{ kind: 'lnTo', x: 'x4', y: 'y3' },
 				{ kind: 'lnTo', x: 'x3', y: 'y3' },
-				{ kind: 'lnTo', x: 'x2', y: 'y2' },
-				{ kind: 'lnTo', x: 'x1', y: 'y1' },
+				{ kind: 'lnTo', x: 'x1', y: 'y2' },
+				{ kind: 'lnTo', x: 'x2', y: 'y1' },
 				{ kind: 'close' },
 			],
 		},
@@ -537,12 +547,15 @@ const octagon: PresetShapeGeometryDefinition = {
 const decagon: PresetShapeGeometryDefinition = {
 	name: 'decagon',
 	avLst: { vf: 105146 },
+	// Regular decagon with vertices at 0, 36, 72 ... degrees (points on the left
+	// and right edges, flat top and bottom). `vf` stretches the vertical radius
+	// so the flat edges land on the box.
 	gdLst: [
 		gd('shd2', '*/ hd2 vf 100000'),
-		gd('dx1', '*/ wd2 95106 100000'),
-		gd('dx2', '*/ wd2 58779 100000'),
-		gd('dy1', '*/ shd2 80902 100000'),
-		gd('dy2', '*/ shd2 30902 100000'),
+		gd('dx1', '*/ wd2 80902 100000'),
+		gd('dx2', '*/ wd2 30902 100000'),
+		gd('dy1', '*/ shd2 95106 100000'),
+		gd('dy2', '*/ shd2 58779 100000'),
 		gd('x1', '+- hc 0 dx1'),
 		gd('x2', '+- hc 0 dx2'),
 		gd('x3', '+- hc dx2 0'),
@@ -556,18 +569,16 @@ const decagon: PresetShapeGeometryDefinition = {
 	pathLst: [
 		{
 			commands: [
-				{ kind: 'moveTo', x: 'x1', y: 'y1' },
-				{ kind: 'lnTo', x: 'x2', y: 't' },
-				{ kind: 'lnTo', x: 'x3', y: 't' },
-				{ kind: 'lnTo', x: 'x4', y: 'y1' },
-				{ kind: 'lnTo', x: 'r', y: 'y2' },
-				{ kind: 'lnTo', x: 'r', y: 'y3' },
-				{ kind: 'lnTo', x: 'x4', y: 'y4' },
-				{ kind: 'lnTo', x: 'x3', y: 'b' },
-				{ kind: 'lnTo', x: 'x2', y: 'b' },
-				{ kind: 'lnTo', x: 'x1', y: 'y4' },
-				{ kind: 'lnTo', x: 'l', y: 'y3' },
-				{ kind: 'lnTo', x: 'l', y: 'y2' },
+				{ kind: 'moveTo', x: 'l', y: 'vc' },
+				{ kind: 'lnTo', x: 'x1', y: 'y2' },
+				{ kind: 'lnTo', x: 'x2', y: 'y1' },
+				{ kind: 'lnTo', x: 'x3', y: 'y1' },
+				{ kind: 'lnTo', x: 'x4', y: 'y2' },
+				{ kind: 'lnTo', x: 'r', y: 'vc' },
+				{ kind: 'lnTo', x: 'x4', y: 'y3' },
+				{ kind: 'lnTo', x: 'x3', y: 'y4' },
+				{ kind: 'lnTo', x: 'x2', y: 'y4' },
+				{ kind: 'lnTo', x: 'x1', y: 'y3' },
 				{ kind: 'close' },
 			],
 		},
@@ -1110,8 +1121,8 @@ const wedgeEllipseCallout: PresetShapeGeometryDefinition = {
 	],
 };
 
-// 4-point and 5-point stars. ECMA preset uses fixed proportions; star4/star5
-// have no avLst (their inner radius is encoded in the geometry).
+// 4-point and 5-point stars. Outer vertices sit on the ellipse (wd2, hd2), inner
+// ones on the same-shaped ellipse scaled by `adj / 50000`, half a step round.
 const star4: PresetShapeGeometryDefinition = {
 	name: 'star4',
 	avLst: { adj: 12500 },
@@ -1119,13 +1130,12 @@ const star4: PresetShapeGeometryDefinition = {
 		gd('a', 'pin 0 adj 50000'),
 		gd('iwd2', '*/ wd2 a 50000'),
 		gd('ihd2', '*/ hd2 a 50000'),
-		gd('sdx', '*/ iwd2 92388 100000'),
-		gd('sdy', '*/ ihd2 92388 100000'),
+		gd('sdx', 'cos iwd2 2700000'),
+		gd('sdy', 'sin ihd2 2700000'),
 		gd('sx1', '+- hc 0 sdx'),
 		gd('sx2', '+- hc sdx 0'),
 		gd('sy1', '+- vc 0 sdy'),
 		gd('sy2', '+- vc sdy 0'),
-		gd('yAdj', '+- vc 0 ihd2'),
 	],
 	rect: { l: 'sx1', t: 'sy1', r: 'sx2', b: 'sy2' },
 	pathLst: [
@@ -1153,10 +1163,10 @@ const star5: PresetShapeGeometryDefinition = {
 		gd('swd2', '*/ wd2 hf 100000'),
 		gd('shd2', '*/ hd2 vf 100000'),
 		gd('svc', '*/ vc vf 100000'),
-		gd('dx1', '*/ swd2 95106 100000'),
-		gd('dx2', '*/ swd2 58779 100000'),
-		gd('dy1', '*/ shd2 80902 100000'),
-		gd('dy2', '*/ shd2 30902 100000'),
+		gd('dx1', 'cos swd2 1080000'),
+		gd('dx2', 'cos swd2 18360000'),
+		gd('dy1', 'sin shd2 1080000'),
+		gd('dy2', 'sin shd2 18360000'),
 		gd('x1', '+- hc 0 dx1'),
 		gd('x2', '+- hc 0 dx2'),
 		gd('x3', '+- hc dx2 0'),
@@ -1165,10 +1175,10 @@ const star5: PresetShapeGeometryDefinition = {
 		gd('y2', '+- svc 0 dy2'),
 		gd('iwd2', '*/ swd2 a 50000'),
 		gd('ihd2', '*/ shd2 a 50000'),
-		gd('sdx1', '*/ iwd2 95106 100000'),
-		gd('sdx2', '*/ iwd2 58779 100000'),
-		gd('sdy1', '*/ ihd2 80902 100000'),
-		gd('sdy2', '*/ ihd2 30902 100000'),
+		gd('sdx1', 'cos iwd2 20520000'),
+		gd('sdx2', 'cos iwd2 3240000'),
+		gd('sdy1', 'sin ihd2 3240000'),
+		gd('sdy2', 'sin ihd2 20520000'),
 		gd('sx1', '+- hc 0 sdx1'),
 		gd('sx2', '+- hc 0 sdx2'),
 		gd('sx3', '+- hc sdx2 0'),
@@ -1176,22 +1186,21 @@ const star5: PresetShapeGeometryDefinition = {
 		gd('sy1', '+- svc 0 sdy1'),
 		gd('sy2', '+- svc 0 sdy2'),
 		gd('sy3', '+- svc ihd2 0'),
-		gd('yc', '+- svc 0 ihd2'),
 	],
-	rect: { l: 'sx1', t: 'y1', r: 'sx4', b: 'sy3' },
+	rect: { l: 'sx1', t: 'sy1', r: 'sx4', b: 'sy2' },
 	pathLst: [
 		{
 			commands: [
-				{ kind: 'moveTo', x: 'x1', y: 'y2' },
-				{ kind: 'lnTo', x: 'sx2', y: 'sy2' },
+				{ kind: 'moveTo', x: 'x1', y: 'y1' },
+				{ kind: 'lnTo', x: 'sx2', y: 'sy1' },
 				{ kind: 'lnTo', x: 'hc', y: 't' },
-				{ kind: 'lnTo', x: 'sx3', y: 'sy2' },
-				{ kind: 'lnTo', x: 'x4', y: 'y2' },
-				{ kind: 'lnTo', x: 'sx4', y: 'sy3' },
-				{ kind: 'lnTo', x: 'x3', y: 'b' },
+				{ kind: 'lnTo', x: 'sx3', y: 'sy1' },
+				{ kind: 'lnTo', x: 'x4', y: 'y1' },
+				{ kind: 'lnTo', x: 'sx4', y: 'sy2' },
+				{ kind: 'lnTo', x: 'x3', y: 'y2' },
 				{ kind: 'lnTo', x: 'hc', y: 'sy3' },
-				{ kind: 'lnTo', x: 'x2', y: 'b' },
-				{ kind: 'lnTo', x: 'sx1', y: 'sy3' },
+				{ kind: 'lnTo', x: 'x2', y: 'y2' },
+				{ kind: 'lnTo', x: 'sx1', y: 'sy2' },
 				{ kind: 'close' },
 			],
 		},
@@ -1264,4 +1273,10 @@ export const PRESET_SHAPE_GEOMETRY_TABLE: Record<string, PresetShapeGeometryDefi
 	// Spec-exact curved arrows override BOTH the simplified connector-batch
 	// entries and the refined curvedRightArrow approximation.
 	...EXACT_CURVED_ARROW_PRESET_DEFINITIONS,
+	// Spec-exact math operators override the hand-written misc entries.
+	...EXACT_MATH_PRESET_DEFINITIONS,
+	...EXACT_BASIC_PRESET_DEFINITIONS,
+	...EXACT_ARROW_PRESET_DEFINITIONS,
+	...EXACT_ARC_PRESET_DEFINITIONS,
+	...EXACT_MISC_PRESET_DEFINITIONS,
 };
