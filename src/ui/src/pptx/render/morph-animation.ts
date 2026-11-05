@@ -39,7 +39,10 @@ import { coveredStackedCopyIds } from './morph-stacked-copies';
 import type { MorphTextAlignment, MorphTextMeasure } from './morph-text-frame';
 import {
 	morphTextGhostEnd,
+	morphTextGhostStart,
+	morphTextIncomingEnd,
 	morphTextIncomingStart,
+	morphTextTail,
 	resolveMorphTextAlignment,
 } from './morph-text-frame';
 import { morphOffstageTextSizeChange, morphTextReplacedInSlot } from './morph-text-slot';
@@ -492,9 +495,11 @@ export function generateMorphAnimations(
 		// A text box whose TEXT is unchanged carries its lines rather than its
 		// box, so the restyled glyphs of both halves stay on top of each other
 		// (see `morph-text-frame`).
-		const textStart = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) =>
-			morphTextIncomingStart(a, toElement),
-		);
+		const textFrames = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) => ({
+			start: morphTextIncomingStart(a, toElement),
+			end: morphTextIncomingEnd(a, toElement),
+		}));
+		const textStart = textFrames?.start;
 		const dx = inSlot
 			? 0
 			: (textStart?.dx ??
@@ -540,8 +545,16 @@ export function generateMorphAnimations(
 		// decomposition.
 		const toRot = toElement.rotation ?? 0;
 		const fromRot = inSlot ? toRot : shortestRotationTarget(toRot, fromElement.rotation ?? 0);
-		const fromFlips = flipFactors(fromElement);
+		// Carried text keeps its own flips: a flipped box paints its text
+		// unmirrored, and PowerPoint never mirrors it through zero.
+		const fromFlips = flipFactors(textFrames ? toElement : fromElement);
 		const toFlips = flipFactors(toElement);
+		// A turning pair's text turns about its middle (see `morph-text-transform`).
+		const startTail = textFrames ? morphTextTail(textFrames.start, toElement) : '';
+		const endTail = textFrames ? morphTextTail(textFrames.end, toElement) : '';
+		const endShift = textFrames?.end.tail
+			? `translate(${textFrames.end.dx}px, ${textFrames.end.dy}px)`
+			: 'translate(0, 0)';
 
 		// A GHOSTED inert pair is painted twice: its ghost is a pixel-identical
 		// copy sitting in the overlay directly above it. For an opaque element
@@ -569,10 +582,10 @@ export function generateMorphAnimations(
 		// out of this block and rides a second animation, so the journey and the
 		// dissolve can follow their own measured curves (see the ghost half).
 		const fromProps: string[] = [
-			`\t\ttransform: translate(${dx}px, ${dy}px) rotate(${fromRot}deg) scale(${sx}, ${sy})${fromFlips};`,
+			`\t\ttransform: translate(${dx}px, ${dy}px) rotate(${fromRot}deg) scale(${sx}, ${sy})${fromFlips}${startTail};`,
 		];
 		const toProps: string[] = [
-			`\t\ttransform: translate(0, 0) rotate(${toRot}deg) scale(1, 1)${toFlips};`,
+			`\t\ttransform: ${endShift} rotate(${toRot}deg) scale(1, 1)${toFlips}${endTail};`,
 		];
 		// A stacking-order swap rides the same journey: z-index interpolates as
 		// an integer and rounds on the EASED progress, so the browser steps
@@ -720,9 +733,11 @@ export function generateMorphGhostAnimations(
 		const offstageText = morphOffstageTextSizeChange(fromElement, toElement);
 		// Mirror of the incoming half: unchanged text lands its lines on the
 		// incoming lines, not its box on the incoming box.
-		const textEnd = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) =>
-			morphTextGhostEnd(a, fromElement),
-		);
+		const textFrames = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) => ({
+			start: morphTextGhostStart(a, fromElement),
+			end: morphTextGhostEnd(a, fromElement),
+		}));
+		const textEnd = textFrames?.end;
 		const dx = inSlot
 			? 0
 			: offstageText
@@ -748,8 +763,15 @@ export function generateMorphGhostAnimations(
 		// half). Flips are per-frame, as in {@link generateMorphAnimations}.
 		const fromRot = fromElement.rotation ?? 0;
 		const toRot = inSlot ? fromRot : shortestRotationTarget(fromRot, toElement.rotation ?? 0);
+		// Mirror of the incoming half: carried text keeps its own flips, and a
+		// turning pair's frames carry its pivot.
 		const fromFlips = flipFactors(fromElement);
-		const toFlips = flipFactors(toElement);
+		const toFlips = flipFactors(textFrames ? fromElement : toElement);
+		const startTail = textFrames ? morphTextTail(textFrames.start, fromElement) : '';
+		const endTail = textFrames ? morphTextTail(textFrames.end, fromElement) : '';
+		const startShift = textFrames?.start.tail
+			? `translate(${textFrames.start.dx}px, ${textFrames.start.dy}px)`
+			: 'translate(0, 0)';
 		// A dissolve and a journey are two different curves, so when the ghost does
 		// both they ride two animations: the transform keeps {@link MORPH_EASING},
 		// which its live counterpart also travels on (a single easing for both
@@ -760,13 +782,13 @@ export function generateMorphGhostAnimations(
 @keyframes ${safeName} {
 \tfrom {
 \t\ttransform-origin: center;
-\t\ttransform: translate(0, 0) rotate(${fromRot}deg) scale(1, 1)${fromFlips};${
+\t\ttransform: ${startShift} rotate(${fromRot}deg) scale(1, 1)${fromFlips}${startTail};${
 			fadesOut ? '' : `\n\t\topacity: ${opacity};`
 		}
 \t}
 \tto {
 \t\ttransform-origin: center;
-\t\ttransform: translate(${dx}px, ${dy}px) rotate(${toRot}deg) scale(${sx}, ${sy})${toFlips};${
+\t\ttransform: translate(${dx}px, ${dy}px) rotate(${toRot}deg) scale(${sx}, ${sy})${toFlips}${endTail};${
 			fadesOut ? '' : `\n\t\topacity: ${opacity};`
 		}
 \t}

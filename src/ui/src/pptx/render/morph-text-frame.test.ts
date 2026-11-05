@@ -349,9 +349,11 @@ describe('carried text geometry', () => {
 		const incoming = turn(to, still, alignment.to.x, alignment.to.y);
 		expect(ghost.x).toBeCloseTo(incoming.x, 6);
 		expect(ghost.y).toBeCloseTo(incoming.y, 6);
+		// Another angle turns the text about its middle instead (see
+		// `morph-text-turn.test`).
 		expect(
-			resolveMorphTextAlignment(from, { ...to, rotation: 25 } as PptxElement, measure),
-		).toBeUndefined();
+			resolveMorphTextAlignment(from, { ...to, rotation: 25 } as PptxElement, measure)?.turn,
+		).toMatchObject({ from: 20, to: 25 });
 	});
 
 	// PowerPoint 16, a 36 pt line changing Calibri -> Arial: mid-morph its "L"
@@ -412,7 +414,7 @@ describe('carried text geometry', () => {
 		);
 		const filled = { ...to, shapeStyle: { fillColor: '#ff0000' } } as PptxElement;
 		expect(resolveMorphTextAlignment(from, filled, measure)).toBeUndefined();
-		const rotated = { ...to, rotation: 30 } as PptxElement;
-		expect(resolveMorphTextAlignment(from, rotated, measure)).toBeUndefined();
+		const flipped = { ...to, flipVertical: true } as PptxElement;
+		expect(resolveMorphTextAlignment(from, flipped, measure)).toBeUndefined();
 	});
 });

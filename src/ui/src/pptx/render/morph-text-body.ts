@@ -23,31 +23,50 @@
  *   - the brightest stroke of the text stays at 255 for every frame, the
  *     additive blend `morph-text-blend` describes.
  *
+ * The same holds while the body does more than resize: with an outer shadow
+ * (cast by the body alone), with corners whose adjustment changes, and with a
+ * horizontal or vertical flip that changes between the slides (the body
+ * flips edge-on, the text never mirrors or squashes: it travels upright).
+ *
  * So the pair is painted as two crossfade groups of copies, the way
  * `morph-text-piece-plan` paints the pieces of a rewrapped text: a BODY group
  * (both halves without their text, interpolating the box as the pair always
- * has, dissolving into each other) and above it a TEXT group (both halves
- * without their body, carried glyph over glyph on the text mapping). The
- * pair's own ghost is not painted and its stage copy is held invisible.
+ * has, its outline tween included, dissolving into each other) and above it a
+ * TEXT group (both halves without their body, carried glyph over glyph on the
+ * text mapping). The pair's own ghost is not painted and its stage copy is
+ * held invisible.
  *
- * Only what the copies can paint faithfully is split: the same text in the
- * same geometry and adjustments, no effects (a shadow or glow would be painted
- * by both copies, or by neither), and only where the text mapping differs from
- * the box's (a box that only moves already carries its text exactly). The
- * outline still scales with the box, as it did before the split.
+ * Only what the copies can paint faithfully is split: the same text, no effect
+ * but a shadow under an opaque fill (a glow, say, would be painted by both
+ * copies or by neither), and only where the text mapping differs from the
+ * box's (a box that only moves already carries its text exactly). The outline
+ * still scales with the box, as it did before the split.
  *
  * @module render/morph-text-body
  */
 import type { PptxElement } from 'ooxml-core/pptx';
-import { hasShapeProperties } from 'ooxml-core/pptx';
 
+import { shortestRotationTarget } from './morph-animation';
 import type { MorphCrossfadeGroup } from './morph-crossfade-group';
-import { serializeShapeAdjustments } from './morph-geometry-keyframes';
+import { generateGeometryMorphAnimation } from './morph-geometry-keyframes';
 import type { MorphLiftContext } from './morph-text-blend';
 import { resolveMorphLiftCrossers } from './morph-text-blend';
+import {
+	morphBodyCopy,
+	morphBoxEnd,
+	morphBoxStart,
+	morphCopiesCannotSplitEffects,
+	morphCopyKeyframes,
+	morphCopyTransform,
+	morphTextCopy,
+	morphUprightText,
+	sameMorphTransform,
+} from './morph-text-body-copies';
 import type { MorphTextMeasure, MorphTextTransform } from './morph-text-frame';
 import {
 	morphTextGhostEnd,
+	morphTextGhostStart,
+	morphTextIncomingEnd,
 	morphTextIncomingStart,
 	resolveMorphTextAlignment,
 } from './morph-text-frame';
@@ -78,76 +97,9 @@ export function morphCopyId(sourceId: string, part: MorphCopyPart): string {
 	return `${sourceId}-morph-${part}`;
 }
 
-/** Style keys of an effect a copy could not paint once and only once. */
-const EFFECT_KEYS =
-	/^(shadow|innerShadow|glow|softEdge|reflection|effectList|effectDag|outerShadow|presetShadow|blur|scene3d|shape3d|dag|lineShadow|lineGlow|shapeFillOverlay|fillOverlay)/u;
-/** Style keys that paint the body: fills, outlines and their theme references. */
-const BODY_KEYS =
-	/^(fill|stroke|useBackgroundFill|inheritedFillStyle|inheritedLineStyle|lnRef|compoundLine|lineAlignment|customDash)/u;
-
-function hasEffects(element: PptxElement): boolean {
-	const style = hasShapeProperties(element) ? element.shapeStyle : undefined;
-	const inherited = style?.inheritedEffectStyle as object | undefined;
-	return (
-		Object.keys(inherited ?? {}).length > 0 ||
-		Object.entries(style ?? {}).some(
-			([key, value]) => EFFECT_KEYS.test(key) && value !== undefined && value !== null,
-		)
-	);
-}
-
-/** `element` under `id` with its text taken out. */
-function bodyCopy(element: PptxElement, id: string): PptxElement {
-	return { ...element, id, text: '', textSegments: [] } as PptxElement;
-}
-
-/** `element` under `id` with its fill and outline taken out. */
-function textCopy(element: PptxElement, id: string): PptxElement {
-	const style = hasShapeProperties(element) ? (element.shapeStyle ?? {}) : {};
-	const kept = Object.fromEntries(Object.entries(style).filter(([key]) => !BODY_KEYS.test(key)));
-	return {
-		...element,
-		id,
-		shapeStyle: { ...kept, fillMode: 'none', strokeWidth: 0 },
-	} as PptxElement;
-}
-
-function round(value: number): number {
-	return Math.round(value * 1000) / 1000;
-}
-
-function transformOf(t: MorphTextTransform, rotation: number): string {
-	return `translate(${round(t.dx)}px, ${round(t.dy)}px) rotate(${round(rotation)}deg) scale(${round(t.sx)}, ${round(t.sy)})`;
-}
-
-/** The box interpolation's incoming start: the incoming box laid over the outgoing one. */
-function boxStart(from: PptxElement, to: PptxElement): MorphTextTransform {
-	return {
-		dx: from.x + from.width / 2 - (to.x + to.width / 2),
-		dy: from.y + from.height / 2 - (to.y + to.height / 2),
-		sx: Math.max(from.width, 1) / Math.max(to.width, 1),
-		sy: Math.max(from.height, 1) / Math.max(to.height, 1),
-	};
-}
-
-/** The box interpolation's ghost end: the outgoing box laid over the incoming one. */
-function boxEnd(from: PptxElement, to: PptxElement): MorphTextTransform {
-	return {
-		dx: to.x + to.width / 2 - (from.x + from.width / 2),
-		dy: to.y + to.height / 2 - (from.y + from.height / 2),
-		sx: Math.max(to.width, 1) / Math.max(from.width, 1),
-		sy: Math.max(to.height, 1) / Math.max(from.height, 1),
-	};
-}
-
-/** Whether two transforms place the same box within a fraction of a pixel. */
-function sameTransform(a: MorphTextTransform, b: MorphTextTransform): boolean {
-	return (
-		Math.abs(a.dx - b.dx) < 0.5 &&
-		Math.abs(a.dy - b.dy) < 0.5 &&
-		Math.abs(a.sx - b.sx) < 1e-3 &&
-		Math.abs(a.sy - b.sy) < 1e-3
-	);
+/** Whether either half is flipped, so every frame has to state its flips. */
+function flipped(from: PptxElement, to: PptxElement): boolean {
+	return Boolean(from.flipHorizontal || from.flipVertical || to.flipHorizontal || to.flipVertical);
 }
 
 function splittable(pair: MorphPair, ghostIds: ReadonlySet<string>, measure?: MorphTextMeasure) {
@@ -155,38 +107,36 @@ function splittable(pair: MorphPair, ghostIds: ReadonlySet<string>, measure?: Mo
 	if (
 		!ghostIds.has(from.id) ||
 		!(paintsBody(from) || paintsBody(to)) ||
-		hasEffects(from) ||
-		hasEffects(to) ||
-		serializeShapeAdjustments(from) !== serializeShapeAdjustments(to) ||
+		morphCopiesCannotSplitEffects(from) ||
+		morphCopiesCannotSplitEffects(to) ||
 		morphTextReplacedInSlot(from, to) ||
 		morphOffstageTextSizeChange(from, to) ||
 		morphOffstageTextAdoptsTarget(from, to)
 	) {
 		return undefined;
 	}
-	const alignment = resolveMorphTextAlignment(from, to, measure, { withBody: true });
-	if (!alignment || sameTransform(morphTextIncomingStart(alignment, to), boxStart(from, to))) {
+	// A flipped shape paints its text unflipped, so its text copy is read and
+	// painted unflipped (see `morphUprightText`).
+	const a = morphUprightText(from);
+	const b = morphUprightText(to);
+	const alignment = a && b && resolveMorphTextAlignment(a, b, measure, { withBody: true });
+	if (
+		!alignment ||
+		(!flipped(from, to) &&
+			sameMorphTransform(morphTextIncomingStart(alignment, to), morphBoxStart(from, to)))
+	) {
 		return undefined;
 	}
 	return alignment;
 }
 
-function keyframesOf(
-	name: string,
-	from: { transform: string; opacity: number },
-	to: { transform: string; opacity: number },
-): string {
-	return `
-@keyframes ${name} {
-\tfrom {
-\t\ttransform: ${from.transform};
-\t\topacity: ${from.opacity};
-\t}
-\tto {
-\t\ttransform: ${to.transform};
-\t\topacity: ${to.opacity};
-\t}
-}`;
+/** One copy's two frames. */
+interface Leg {
+	part: MorphCopyPart;
+	outgoing: [string, string];
+	incoming: [string, string];
+	extra?: string | undefined;
+	extraKeyframes?: string | undefined;
 }
 
 /**
@@ -214,7 +164,7 @@ export function buildMorphTextBodyPlan(
 		parts: new Map(),
 		rising: new Set(),
 	};
-	for (const pair of pairs) {
+	for (const [pairIndex, pair] of pairs.entries()) {
 		const alignment = splittable(pair, context.ghostIds, measure);
 		const { fromElement: from, toElement: to } = pair;
 		const rising =
@@ -234,28 +184,62 @@ export function buildMorphTextBodyPlan(
 		}
 		const fromRotation = from.rotation ?? 0;
 		const toRotation = to.rotation ?? 0;
-		const fromOpacity = from.opacity ?? 1;
-		const toOpacity = to.opacity ?? 1;
-		const still = { dx: 0, dy: 0, sx: 1, sy: 1 };
-		const legs: [MorphCopyPart, MorphTextTransform, MorphTextTransform][] = [
-			['body', boxEnd(from, to), boxStart(from, to)],
-			['text', morphTextGhostEnd(alignment, from), morphTextIncomingStart(alignment, to)],
+		// The copies turn the short way round, as the pair's own halves do.
+		const ghostTurnsTo = shortestRotationTarget(fromRotation, toRotation);
+		const incomingTurnsFrom = shortestRotationTarget(toRotation, fromRotation);
+		const flips = flipped(from, to);
+		const still: MorphTextTransform = { dx: 0, dy: 0, sx: 1, sy: 1 };
+		// The body flips edge-on through zero; the text copies are painted
+		// unflipped (see `morphTextCopy`), so they state no flips at all.
+		const own = (element: PptxElement) => (flips ? element : undefined);
+		const incomingBodyId = morphCopyId(to.id, 'body');
+		const outline = generateGeometryMorphAnimation(
+			{ fromElement: from, toElement: { ...to, id: incomingBodyId } as PptxElement },
+			durationMs,
+			pairIndex,
+		);
+		const legs: Leg[] = [
+			{
+				part: 'body',
+				outgoing: [
+					morphCopyTransform(still, fromRotation, own(from)),
+					morphCopyTransform(morphBoxEnd(from, to), ghostTurnsTo, own(to)),
+				],
+				incoming: [
+					morphCopyTransform(morphBoxStart(from, to), incomingTurnsFrom, own(from)),
+					morphCopyTransform(still, toRotation, own(to)),
+				],
+				extra: outline?.animation,
+				extraKeyframes: outline?.keyframes,
+			},
+			{
+				part: 'text',
+				outgoing: [
+					morphCopyTransform(morphTextGhostStart(alignment, from), fromRotation),
+					morphCopyTransform(morphTextGhostEnd(alignment, from), ghostTurnsTo),
+				],
+				incoming: [
+					morphCopyTransform(morphTextIncomingStart(alignment, to), incomingTurnsFrom),
+					morphCopyTransform(morphTextIncomingEnd(alignment, to), toRotation),
+				],
+			},
 		];
-		for (const [part, ghostEnd, incomingStart] of legs) {
+		for (const { part, outgoing, incoming, extra, extraKeyframes } of legs) {
 			const outgoingId = morphCopyId(from.id, part);
 			const incomingId = morphCopyId(to.id, part);
 			const safe = (id: string) => `pptx-morph-${part}-${id.replace(/[^a-zA-Z0-9]/gu, '')}`;
 			plan.keyframes.push(
-				keyframesOf(
+				morphCopyKeyframes(
 					safe(outgoingId),
-					{ transform: transformOf(still, fromRotation), opacity: fromOpacity },
-					{ transform: transformOf(ghostEnd, fromRotation), opacity: 0 },
+					{ transform: outgoing[0], opacity: from.opacity ?? 1 },
+					{ transform: outgoing[1], opacity: 0 },
 				),
-				keyframesOf(
+				morphCopyKeyframes(
 					safe(incomingId),
-					{ transform: transformOf(incomingStart, toRotation), opacity: 0 },
-					{ transform: transformOf(still, toRotation), opacity: toOpacity },
+					{ transform: incoming[0], opacity: 0 },
+					{ transform: incoming[1], opacity: to.opacity ?? 1 },
 				),
+				...(extraKeyframes ? [extraKeyframes] : []),
 			);
 			plan.outgoingAnimations.set(
 				outgoingId,
@@ -263,13 +247,13 @@ export function buildMorphTextBodyPlan(
 			);
 			plan.incomingAnimations.set(
 				incomingId,
-				`${safe(incomingId)} ${durationMs}ms ${MORPH_EASING} forwards`,
+				`${safe(incomingId)} ${durationMs}ms ${MORPH_EASING} forwards${extra ? `, ${extra}` : ''}`,
 			);
 			plan.sources.set(outgoingId, from.id);
 			plan.sources.set(incomingId, to.id);
 			plan.parts.set(outgoingId, part);
 			plan.parts.set(incomingId, part);
-			const copy = part === 'body' ? bodyCopy : textCopy;
+			const copy = part === 'body' ? morphBodyCopy : morphTextCopy;
 			plan.groups.push({
 				outgoing: copy(from, outgoingId),
 				incoming: copy(to, incomingId),

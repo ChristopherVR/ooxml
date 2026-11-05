@@ -152,6 +152,19 @@ export interface ReadFrameOptions {
 	rotated?: boolean;
 	/** Accept a box that paints a fill or an outline, reading only its text. */
 	withBody?: boolean;
+	/**
+	 * Accept a horizontally flipped box. Its text is painted unmirrored (see
+	 * `getTextCompensationTransform`), so it reads like an unflipped box's as
+	 * long as its left and right insets match and it is not turned past 90
+	 * degrees (where the compensation swaps axes).
+	 */
+	flippedH?: boolean;
+}
+
+/** Whether a horizontal flip leaves `element`'s text where an unflipped box puts it. */
+function flipReadsUnflipped(element: PptxElement, left: number, right: number): boolean {
+	const rotation = (((element.rotation ?? 0) % 360) + 360) % 360;
+	return Math.abs(left - right) <= 0.5 && (rotation <= 90 || rotation >= 270);
 }
 
 export function readFrame(
@@ -162,7 +175,7 @@ export function readFrame(
 		!hasTextProperties(element) ||
 		!element.text ||
 		(!options.rotated && (element.rotation ?? 0) !== 0) ||
-		element.flipHorizontal ||
+		(element.flipHorizontal && !options.flippedH) ||
 		element.flipVertical ||
 		(options.withBody ? paintsPicture(element) : paintsBody(element))
 	) {
@@ -190,6 +203,9 @@ export function readFrame(
 	const right = (ts?.bodyInsetRight ?? DEFAULT_BODY_INSET_LR_PX) + rect.right;
 	const top = (ts?.bodyInsetTop ?? DEFAULT_BODY_INSET_TB_PX) + rect.top;
 	const bottom = (ts?.bodyInsetBottom ?? DEFAULT_BODY_INSET_TB_PX) + rect.bottom;
+	if (element.flipHorizontal && !flipReadsUnflipped(element, left, right)) {
+		return undefined;
+	}
 	const bodyAlign = resolveCssTextAlign(ts?.align, false);
 	const bodyLineHeight = resolveLineHeight(ts, false);
 	let align: string | undefined;

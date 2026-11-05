@@ -103,14 +103,14 @@ describe('a shape whose text changes while its box moves', () => {
 	});
 
 	it('refuses a shape with an effect it could not paint once', () => {
-		const shadowed = (element: PptxElement) =>
+		const glowing = (element: PptxElement) =>
 			({
 				...element,
-				shapeStyle: { ...(element as { shapeStyle?: object }).shapeStyle, shadowColor: '#000' },
+				shapeStyle: { ...(element as { shapeStyle?: object }).shapeStyle, glowColor: '#fff' },
 			}) as PptxElement;
 		const refused = buildMorphTransitionPlan(
-			slide([shadowed(from)]),
-			slide([shadowed(to)]),
+			slide([glowing(from)]),
+			slide([glowing(to)]),
 			2000,
 			'object',
 			{ measureText: measure },
@@ -123,5 +123,67 @@ describe('a shape whose text changes while its box moves', () => {
 			measureText: measure,
 		})!;
 		expect(word.morphCopyParts).toBeUndefined();
+	});
+});
+
+// PowerPoint 16 (`CreateVideo`, 720p), the same card while its body does more:
+// a shadow stays under the body, rounder corners round the body only, and a
+// flip turns the body edge-on while the text travels upright, glyph over glyph.
+describe('a shape whose body does more than resize', () => {
+	const from = card('a', { fontFamily: 'Calibri', fontSize: 37.33 }, {});
+	const target = { x: 613, y: 400, width: 560, height: 240 };
+	const to = card('b', { fontFamily: 'Arial', fontSize: 53.33 }, target);
+	const plan = (a: PptxElement, b: PptxElement) =>
+		buildMorphTransitionPlan(slide([a]), slide([b]), 2000, 'object', { measureText: measure })!;
+	const block = (css: string, name: string) =>
+		css.split(`@keyframes ${name}`)[1]?.split('@keyframes')[0] ?? '';
+
+	it('leaves an outer shadow under an opaque fill to the body', () => {
+		const shadow = { shadowColor: '#000000', shadowBlur: 8, shadowOffsetX: 10 };
+		const split = plan(
+			card('a', { fontFamily: 'Calibri', fontSize: 37.33 }, {}, shadow),
+			card('b', { fontFamily: 'Arial', fontSize: 53.33 }, target, shadow),
+		);
+		const [body, text] = split.crossfadeGroups as [MorphCrossfadeGroup, MorphCrossfadeGroup];
+		const styleOf = (element: PptxElement) =>
+			(element as { shapeStyle?: Record<string, unknown> }).shapeStyle;
+		expect(styleOf(body.incoming)?.shadowColor).toBe('#000000');
+		expect(styleOf(text.incoming)?.shadowColor).toBeUndefined();
+		// Over a see-through fill the text would cast it too: kept whole.
+		const faint = { ...shadow, fillOpacity: 0.5 };
+		const whole = plan(
+			card('a', { fontFamily: 'Calibri', fontSize: 37.33 }, {}, faint),
+			card('b', { fontFamily: 'Arial', fontSize: 53.33 }, target, faint),
+		);
+		expect(whole.morphCopyParts).toBeUndefined();
+	});
+
+	it('tweens the outline of a body whose adjustments change', () => {
+		const rounded = (element: PptxElement, adj: number) =>
+			({ ...element, shapeType: 'roundRect', shapeAdjustments: { adj } }) as PptxElement;
+		const split = plan(rounded(from, 10000), rounded(to, 40000));
+		expect(split.morphCopyParts?.get(morphCopyId('b', 'text'))).toBe('text');
+		const animation = split.overlayIncomingAnimations.get(morphCopyId('b', 'body')) ?? '';
+		expect(animation).toContain('pptx-morph-geo-');
+		expect(split.overlayIncomingAnimations.get(morphCopyId('b', 'text'))).not.toContain('geo');
+	});
+
+	it('flips the body edge-on and keeps the text upright', () => {
+		const split = plan(from, { ...to, flipHorizontal: true } as PptxElement);
+		const css = split.keyframesCss;
+		const body = block(css, 'pptx-morph-body-bmorphbody');
+		expect(body).toMatch(/from \{[^}]*scaleX\(1\)[^}]*\}\s*to \{[^}]*scaleX\(-1\)/u);
+		expect(block(css, 'pptx-morph-text-bmorphtext')).not.toContain('scaleX');
+		const text = (split.crossfadeGroups[1] as MorphCrossfadeGroup).incoming;
+		expect(text.flipHorizontal).toBe(false);
+	});
+
+	it('turns the body with the box and the text about its middle', () => {
+		const split = plan(from, { ...to, rotation: 30 } as PptxElement);
+		const css = split.keyframesCss;
+		expect(block(css, 'pptx-morph-body-bmorphbody')).toContain('rotate(0deg)');
+		expect(block(css, 'pptx-morph-body-bmorphbody')).toContain('rotate(30deg)');
+		const text = block(css, 'pptx-morph-text-bmorphtext');
+		expect(text.match(/\) translate\(/gu)).toHaveLength(2);
 	});
 });
