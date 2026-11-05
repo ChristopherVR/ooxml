@@ -155,11 +155,11 @@ export function renderHollowHitOutline(doc: Document, element: PptxElement): SVG
 	svg.setAttribute('style', OUTLINE_SVG_STYLE);
 	const path = createSvgEl(doc, 'path', {
 		d: hit.d,
-		fill: 'none',
-		stroke: 'transparent',
+		fill: hit.fill,
+		stroke: hit.stroke,
 		'stroke-width': hit.strokeWidth,
 	});
-	path.setAttribute('style', 'pointer-events:stroke');
+	path.setAttribute('style', `pointer-events:${hit.pointerEvents}`);
 	svg.appendChild(path);
 	return svg;
 }

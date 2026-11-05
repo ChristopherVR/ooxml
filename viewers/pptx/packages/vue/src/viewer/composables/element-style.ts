@@ -8,7 +8,7 @@ import {
 	getContainerStyle as sharedGetContainerStyle,
 	getCssBorderDashStyle,
 	getImageSrc as sharedGetImageSrc,
-	isHollowShapeElement,
+	passesClicksThroughBox,
 	resolveShapeGeometry,
 	screenBorder,
 } from 'ooxml-ui/pptx';
@@ -195,7 +195,7 @@ export function getShapeFillStrokeStyle(
 	// outline only, so its interior must not swallow clicks meant for what it is
 	// drawn over. ShapeEffectOverlay paints a transparent pointer-events:stroke
 	// band that opts the outline back in.
-	if (isHollowShapeElement(el)) {
+	if (passesClicksThroughBox(el)) {
 		style.pointerEvents = 'none';
 	}
 

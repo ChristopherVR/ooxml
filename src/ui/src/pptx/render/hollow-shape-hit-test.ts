@@ -26,6 +26,7 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { getElementTextContent, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { getResolvedShapeClipPath } from './shape-geometry';
+import { usesSilhouetteEffects } from './silhouette-effects';
 import { outlinePathData } from './stroke-outline';
 
 /**
@@ -41,8 +42,17 @@ export const HOLLOW_HIT_MIN_WIDTH = 10;
 export interface HollowHitOutline {
 	/** SVG path data for the shape's own outline. */
 	readonly d: string;
-	/** Width of the transparent stroke painted along it. */
+	/** Width of the transparent stroke painted along it (0 for a filled target). */
 	readonly strokeWidth: number;
+	/** The `fill` of the transparent target path (`transparent` hits its interior). */
+	readonly fill: 'none' | 'transparent';
+	/** The `stroke` of the target path. */
+	readonly stroke: 'none' | 'transparent';
+	/**
+	 * `stroke` for a frame (outline only); `fill` for a silhouette shape, whose
+	 * whole geometry (but not the rest of its box) is the click target.
+	 */
+	readonly pointerEvents: 'stroke' | 'fill';
 }
 
 /**
@@ -81,12 +91,48 @@ export function isHollowShapeElement(element: PptxElement): boolean {
  */
 export function buildHollowHitOutline(element: PptxElement): HollowHitOutline | undefined {
 	if (!isHollowShapeElement(element)) {
-		return undefined;
+		return buildSilhouetteHitArea(element);
 	}
 	const d = outlinePathData(getResolvedShapeClipPath(element), element.width, element.height);
 	if (!d) {
 		return undefined;
 	}
 	const strokeWidth = hasShapeProperties(element) ? (element.shapeStyle?.strokeWidth ?? 0) : 0;
-	return { d, strokeWidth: Math.max(strokeWidth * 3, HOLLOW_HIT_MIN_WIDTH) };
+	return {
+		d,
+		strokeWidth: Math.max(strokeWidth * 3, HOLLOW_HIT_MIN_WIDTH),
+		fill: 'none',
+		stroke: 'transparent',
+		pointerEvents: 'stroke',
+	};
+}
+
+/**
+ * Whether a shape's container must let clicks through its box and hit-test only
+ * its geometry: a frame (outline only) or a silhouette shape (a shape whose
+ * shadow and glow are an SVG filter, so it carries no clip-path any more and its
+ * box corners would otherwise capture clicks outside the geometry).
+ */
+export function passesClicksThroughBox(element: PptxElement): boolean {
+	return isHollowShapeElement(element) || buildSilhouetteHitArea(element) !== undefined;
+}
+
+/**
+ * The geometry of a silhouette shape as a transparent click target. The fill
+ * used to be a clip-path, which clipped hit testing to the geometry too.
+ */
+function buildSilhouetteHitArea(element: PptxElement): HollowHitOutline | undefined {
+	// Textless only: a text body under a pointer-events:none container could not
+	// take the caret while editing, which is a larger change than this needs.
+	if (
+		element.type !== 'shape' ||
+		getElementTextContent(element).trim() !== '' ||
+		!usesSilhouetteEffects(element)
+	) {
+		return undefined;
+	}
+	const d = outlinePathData(getResolvedShapeClipPath(element), element.width, element.height);
+	return d
+		? { d, strokeWidth: 0, fill: 'transparent', stroke: 'none', pointerEvents: 'fill' }
+		: undefined;
 }

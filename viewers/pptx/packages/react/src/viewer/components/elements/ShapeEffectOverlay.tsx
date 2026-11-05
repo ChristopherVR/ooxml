@@ -297,10 +297,10 @@ export function ShapeEffectOverlay({
 				>
 					<path
 						d={hollowHit.d}
-						fill='none'
-						stroke='transparent'
+						fill={hollowHit.fill}
+						stroke={hollowHit.stroke}
 						strokeWidth={hollowHit.strokeWidth}
-						style={{ pointerEvents: 'stroke' }}
+						style={{ pointerEvents: hollowHit.pointerEvents }}
 					/>
 				</svg>
 			) : null}

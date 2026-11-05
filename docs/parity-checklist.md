@@ -416,6 +416,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       solid and unfilled shapes paint them as a shape-following filter
       (`src/ui/src/pptx/render/silhouette-effects.ts`). A morphing non-rectangular shape also
       keeps the clipped effects.
+- [ ] **P2** A text-bearing shape painted by the silhouette filter hit-tests its whole box
+      (a textless one hit-tests its geometry only, `passesClicksThroughBox`): a click-through
+      container would also disable its in-place text editing.
 
 ### Ribbon
 

@@ -3,7 +3,11 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { getShapeFillStrokeStyle } from '../element-styles';
-import { renderShapeFilterDefs, renderShapeSubpathFillOverlay } from './shape-filter-defs';
+import {
+	renderHollowHitOutline,
+	renderShapeFilterDefs,
+	renderShapeSubpathFillOverlay,
+} from './shape-filter-defs';
 
 /**
  * A non-rectangular preset paints its fill as a clip-path, which also clipped
@@ -47,5 +51,13 @@ describe('shape-following shadow (vanilla)', () => {
 		expect(
 			[...(svg?.querySelectorAll('path') ?? [])].some((p) => p.getAttribute('fill') === '#2070C0'),
 		).toBe(true);
+	});
+
+	it('hit-tests the geometry, not the box corners', () => {
+		expect(getShapeFillStrokeStyle(triangle())['pointerEvents']).toBe('none');
+		const svg = renderHollowHitOutline(document, triangle());
+		const path = svg?.querySelector('path');
+		expect(path?.getAttribute('fill')).toBe('transparent');
+		expect(path?.getAttribute('style')).toContain('pointer-events:fill');
 	});
 });

@@ -77,10 +77,10 @@
 			>
 				<path
 					[attr.d]="hit.d"
-					fill="none"
-					stroke="transparent"
+					[attr.fill]="hit.fill"
+					[attr.stroke]="hit.stroke"
 					[attr.stroke-width]="hit.strokeWidth"
-					style="pointer-events: stroke"
+					[style.pointer-events]="hit.pointerEvents"
 				/>
 			</svg>
 		}

@@ -172,10 +172,10 @@
 	>
 		<path
 			d={hollowHit.d}
-			fill="none"
-			stroke="transparent"
+			fill={hollowHit.fill}
+			stroke={hollowHit.stroke}
 			stroke-width={hollowHit.strokeWidth}
-			style="pointer-events:stroke"
+			style="pointer-events:{hollowHit.pointerEvents}"
 		/>
 	</svg>
 {/if}

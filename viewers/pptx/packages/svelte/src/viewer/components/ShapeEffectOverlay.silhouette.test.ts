@@ -63,4 +63,16 @@ describe('shape-following shadow (svelte)', () => {
 		expect(html).toContain('pptx-svelte-subpath-fill');
 		expect(html).toContain('fill="#2070C0"');
 	});
+
+	it('hit-tests the geometry, not the box corners', () => {
+		expect(getShapeFillStrokeStyle(triangle()).pointerEvents).toBe('none');
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		mounted = mount(ShapeEffectOverlay, {
+			target,
+			props: { element: triangle(), mediaDataUrls: new Map<string, string>(), zIndex: 1 },
+		});
+		flushSync();
+		expect(target.innerHTML).toMatch(/<path[^>]*fill="transparent"[^>]*pointer-events: ?fill/u);
+	});
 });

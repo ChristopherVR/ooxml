@@ -1,7 +1,11 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { buildHollowHitOutline, isHollowShapeElement } from './hollow-shape-hit-test';
+import {
+	buildHollowHitOutline,
+	isHollowShapeElement,
+	passesClicksThroughBox,
+} from './hollow-shape-hit-test';
 
 function shape(overrides: Record<string, unknown> = {}): PptxElement {
 	return {
@@ -67,5 +71,33 @@ describe('buildHollowHitOutline', () => {
 
 	it('returns undefined for a filled shape, so its box hit-tests normally', () => {
 		expect(buildHollowHitOutline(shape({ shapeStyle: { fillColor: '#abc' } }))).toBeUndefined();
+	});
+});
+
+describe('silhouette shape hit area', () => {
+	const triangle = shape({
+		shapeType: 'triangle',
+		shapeStyle: {
+			fillColor: '#2070C0',
+			fillMode: 'solid',
+			shadowColor: '#000000',
+			shadowOpacity: 0.5,
+			shadowBlur: 10,
+			shadowAngle: 45,
+			shadowDistance: 8,
+			outerShadowXml: {},
+		},
+	});
+
+	it('hit-tests the geometry of a shape painted by the silhouette filter', () => {
+		expect(passesClicksThroughBox(triangle)).toBe(true);
+		const hit = buildHollowHitOutline(triangle);
+		expect(hit?.pointerEvents).toBe('fill');
+		expect(hit?.fill).toBe('transparent');
+		expect(hit?.d).toBeTruthy();
+	});
+
+	it('leaves a plain filled shape to its box', () => {
+		expect(passesClicksThroughBox(shape({ shapeStyle: { fillColor: '#f00' } }))).toBe(false);
 	});
 });

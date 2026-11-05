@@ -48,4 +48,11 @@ describe('shape-following shadow (vue)', () => {
 		expect(html).toContain('fill="#2070C0"');
 		wrapper.unmount();
 	});
+
+	it('hit-tests the geometry, not the box corners', () => {
+		expect(getShapeFillStrokeStyle(triangle()).pointerEvents).toBe('none');
+		const wrapper = mount(ShapeEffectOverlay, { props: { element: triangle() } });
+		expect(wrapper.html()).toMatch(/<path[^>]*fill="transparent"[^>]*pointer-events: ?fill/u);
+		wrapper.unmount();
+	});
 });

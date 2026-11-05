@@ -5,7 +5,7 @@ import {
 	getShapeEffectLayerPlacement,
 	getShapeEffectAnimationLayerStyle,
 	getBackgroundAnimationState,
-	isHollowShapeElement,
+	passesClicksThroughBox,
 	isMediaFullscreenActive,
 	resolveElementAriaAttributes,
 	isElementRendered,
@@ -323,7 +323,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ R
 					// outline only, so its interior must not swallow clicks meant for what it
 					// is drawn over. ShapeEffectOverlay paints a transparent
 					// pointer-events:stroke band that opts the outline back in.
-					isHollowShapeElement(el) ? 'pointer-events-none' : '',
+					passesClicksThroughBox(el) ? 'pointer-events-none' : '',
 					isFullscreenMedia ? 'pointer-events-auto' : '',
 					selB,
 					// Shared class the tooltip's `:hover` rule keys off (see

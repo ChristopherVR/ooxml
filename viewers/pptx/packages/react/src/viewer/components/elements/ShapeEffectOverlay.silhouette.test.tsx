@@ -1,3 +1,4 @@
+import { passesClicksThroughBox } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -48,5 +49,13 @@ describe('shape-following shadow (react)', () => {
 		expect(html).toContain('id="shape-fx-tri-1"');
 		expect(html).toContain('pptx-react-subpath-fill');
 		expect(html).toContain('fill="#2070C0"');
+	});
+
+	it('hit-tests the geometry, not the box corners', () => {
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={triangle()} />);
+		// The container is pointer-events:none (ElementRenderer, via
+		// passesClicksThroughBox); this transparent path opts the triangle back in.
+		expect(passesClicksThroughBox(triangle())).toBe(true);
+		expect(html).toMatch(/<path[^>]*fill="transparent"[^>]*pointer-events:fill/u);
 	});
 });

@@ -4,6 +4,7 @@
  * the style map carries the `filter` reference, the renderer injects the
  * markup (`getSilhouetteFilterDef`) and the SVG fill overlay paints the shape.
  */
+import { buildHollowHitOutline } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -47,5 +48,12 @@ describe('shape-following shadow (angular)', () => {
 		expect(def?.filterMarkup).toContain('<filter id="shape-fx-tri-1"');
 		const overlay = getSubpathFillOverlay(triangle());
 		expect(overlay?.paints.some((p) => p.fill === '#2070C0')).toBeTruthy();
+	});
+
+	it('hit-tests the geometry, not the box corners', () => {
+		expect(getShapeFillStrokeStyle(triangle())['pointer-events']).toBe('none');
+		const hit = buildHollowHitOutline(triangle());
+		expect(hit?.pointerEvents).toBe('fill');
+		expect(hit?.fill).toBe('transparent');
 	});
 });
