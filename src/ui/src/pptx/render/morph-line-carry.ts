@@ -37,18 +37,18 @@ export interface MorphLineCarry {
 }
 
 /** `[a, b, c, d, e, f]`: CSS `matrix()` order (`x' = a x + c y + e`, `y' = b x + d y + f`). */
-type Matrix = readonly [number, number, number, number, number, number];
-type Vec = readonly [number, number];
+export type Matrix = readonly [number, number, number, number, number, number];
+export type Vec = readonly [number, number];
 
 /** A matrix entry to five places: a rotation's sine is a long lever over a long line. */
-const precise = (value: number): number => Math.round(value * 1e5) / 1e5;
+export const precise = (value: number): number => Math.round(value * 1e5) / 1e5;
 
-const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
-const STOPS = 24;
-const EPSILON = 0.5;
-const DEG = Math.PI / 180;
+export const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+export const STOPS = 24;
+export const EPSILON = 0.5;
+export const DEG = Math.PI / 180;
 
-function mul(m: Matrix, n: Matrix): Matrix {
+export function mul(m: Matrix, n: Matrix): Matrix {
 	return [
 		m[0] * n[0] + m[2] * n[1],
 		m[1] * n[0] + m[3] * n[1],
@@ -59,7 +59,7 @@ function mul(m: Matrix, n: Matrix): Matrix {
 	];
 }
 
-function invert(m: Matrix): Matrix | undefined {
+export function invert(m: Matrix): Matrix | undefined {
 	const det = m[0] * m[3] - m[1] * m[2];
 	if (Math.abs(det) < 1e-9) return undefined;
 	const a = m[3] / det;
@@ -69,30 +69,30 @@ function invert(m: Matrix): Matrix | undefined {
 	return [a, b, c, d, -(a * m[4] + c * m[5]), -(b * m[4] + d * m[5])];
 }
 
-const translate = (x: number, y: number): Matrix => [1, 0, 0, 1, x, y];
-const scale = (x: number, y: number): Matrix => [x, 0, 0, y, 0, 0];
-function rotate(deg: number): Matrix {
+export const translate = (x: number, y: number): Matrix => [1, 0, 0, 1, x, y];
+export const scale = (x: number, y: number): Matrix => [x, 0, 0, y, 0, 0];
+export function rotate(deg: number): Matrix {
 	const s = Math.sin(deg * DEG);
 	const c = Math.cos(deg * DEG);
 	return [c, s, -s, c, 0, 0];
 }
-function apply(m: Matrix, v: Vec): Vec {
+export function apply(m: Matrix, v: Vec): Vec {
 	return [m[0] * v[0] + m[2] * v[1] + m[4], m[1] * v[0] + m[3] * v[1] + m[5]];
 }
 
 /** The journey of one half's wrapper: its own box, and the keyframe values at each end. */
-interface Journey {
+export interface Journey {
 	readonly local: PptxElement;
 	readonly shift: readonly [Vec, Vec];
 	readonly turn: readonly [number, number];
 	readonly stretch: readonly [Vec, Vec];
 }
 
-function centre(el: PptxElement): Vec {
+export function centre(el: PptxElement): Vec {
 	return [el.x + el.width / 2, el.y + el.height / 2];
 }
 
-function journeyOf(from: PptxElement, to: PptxElement, half: MorphLineHalf): Journey {
+export function journeyOf(from: PptxElement, to: PptxElement, half: MorphLineHalf): Journey {
 	const [fcx, fcy] = centre(from);
 	const [tcx, tcy] = centre(to);
 	const fromRot = from.rotation ?? 0;
@@ -128,7 +128,7 @@ function journeyOf(from: PptxElement, to: PptxElement, half: MorphLineHalf): Jou
 }
 
 /** The wrapper's local-to-slide matrix at eased progress `p`. */
-function wrapperAt(journey: Journey, p: number): Matrix {
+export function wrapperAt(journey: Journey, p: number): Matrix {
 	const { local } = journey;
 	const [cx, cy] = [local.width / 2, local.height / 2];
 	const [tx, ty] = [
@@ -176,7 +176,7 @@ function slideEnds(el: PptxElement): [Vec, Vec] {
 	];
 }
 
-function lineWidth(el: PptxElement): number {
+export function lineWidth(el: PptxElement): number {
 	return hasShapeProperties(el) ? Math.max(0, el.shapeStyle?.strokeWidth ?? 2) : 2;
 }
 

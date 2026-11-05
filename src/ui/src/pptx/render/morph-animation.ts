@@ -15,6 +15,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import { hasTextProperties, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { generateMorphCarryAnimations } from './morph-carry';
+import { isCarriedPathConnector } from './morph-connector-carry';
 import { parseHexColor, lerpColor } from './morph-color';
 import { morphArrowSignature } from './morph-line-ends';
 import { morphEffectsDiffer } from './morph-effect-carry';
@@ -185,7 +186,9 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 			// old outline (issue #161) while the live half, held invisible beneath
 			// it, tweened its `clip-path` where nobody could see it, and the new
 			// outline appeared in one frame when the overlay came down.
-			serializeShapeAdjustments(element),
+			// A carried elbow or curved connector re-paths its route per frame
+			// (`morph-connector-carry`), so its handles are not a look to dissolve.
+			isCarriedPathConnector(element) ? '' : serializeShapeAdjustments(element),
 			style?.fillMode ?? '',
 			style?.fillColor ?? '',
 			style?.fillGradient ?? '',
@@ -282,6 +285,7 @@ export function isInertMorphPair(fromElement: PptxElement, toElement: PptxElemen
 		Boolean(fromElement.flipHorizontal) === Boolean(toElement.flipHorizontal) &&
 		Boolean(fromElement.flipVertical) === Boolean(toElement.flipVertical) &&
 		(fromElement.opacity ?? 1) === (toElement.opacity ?? 1) &&
+		serializeShapeAdjustments(fromElement) === serializeShapeAdjustments(toElement) &&
 		!morphPairNeedsCrossfade(fromElement, toElement)
 	);
 }

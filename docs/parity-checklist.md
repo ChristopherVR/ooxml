@@ -397,6 +397,16 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       group children and elements inside a rotated or scaled group are not snapped (their
       coordinates are group-local), and rotated, rounded and gradient outlines, compound strands
       and CSS borders are not snapped.
+- [x] **P1** Morph of elbow and curved connectors: the route is re-evaluated per frame from the
+      interpolated box, signed flips and `adj` values at a constant stroke width, with no outline
+      dissolve (`src/ui/src/pptx/render/morph-connector-carry.ts`); `curvedConnector3` to `5`
+      follow the ECMA-376 definitions PowerPoint draws (a static export differs by under 0.05 %
+      of the pixels, the earlier approximations by about 0.5 %).
+- [ ] **P2** Morph of a connector or line whose size changes a lot: PowerPoint grows its box
+      ahead of its centre (size progress minus eased progress is about `c * p * (1 - p)`, with c
+      measured at 0.45 for a 3x and 0.57 for a 4x growth, and about -0.2 for a shrink), where this
+      viewer keeps one progress for both, so the ends sit up to 25 px from PowerPoint's at the
+      middle of a large resize. Rectangles do not show it.
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media

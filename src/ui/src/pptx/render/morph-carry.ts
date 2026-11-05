@@ -12,6 +12,7 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import { buildMorphConnectorAnimations, isCarriedPathConnector } from './morph-connector-carry';
 import { buildMorphLineAnimations, isCarriedLine } from './morph-line-carry';
 import type { MorphEffectPainter } from './morph-effect-carry';
 import { buildMorphEffectCarry } from './morph-effect-carry';
@@ -172,6 +173,26 @@ export function generateMorphCarryAnimations(
 				if (ghostIds.has(from.id)) {
 					animations.push(
 						...buildMorphLineAnimations(pair, from.id, 'from', durationMs, `g${index}`),
+					);
+				}
+			}
+			return;
+		}
+		if (isCarriedPathConnector(from) && isCarriedPathConnector(to)) {
+			if (!inert(from, to) && morphPairRidesBox(from, to, mode, measure)) {
+				const incoming = buildMorphConnectorAnimations(
+					pair,
+					to.id,
+					'to',
+					durationMs,
+					String(index),
+				);
+				// Its route is re-evaluated per frame: no outline tween on top.
+				if (incoming.length > 0) carried.add(pair);
+				animations.push(...incoming);
+				if (ghostIds.has(from.id)) {
+					animations.push(
+						...buildMorphConnectorAnimations(pair, from.id, 'from', durationMs, `g${index}`),
 					);
 				}
 			}
