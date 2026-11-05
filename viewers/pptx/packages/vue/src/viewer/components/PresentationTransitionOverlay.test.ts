@@ -386,12 +386,53 @@ function mountOverlay(transition: PptxSlideTransition | undefined, scale = 1) {
 	});
 }
 
+/**
+ * Mounts that `afterEach` unmounts, so a failing assertion never leaves an
+ * overlay (and its document-level listeners) behind for the next test.
+ */
+const tracked: { unmount: () => void }[] = [];
+
+/** Mount the overlay between two slides as a morph, tracked for cleanup. */
+function mountMorph(from: PptxSlide, to: PptxSlide, durationMs: number) {
+	const wrapper = mount(PresentationTransitionOverlay, {
+		props: {
+			outgoingSlide: from,
+			incomingSlide: to,
+			canvasSize,
+			mediaDataUrls: new Map<string, string>(),
+			scale: 1,
+			transition: { type: 'morph', durationMs } as PptxSlideTransition,
+		},
+	});
+	tracked.push(wrapper);
+	return wrapper;
+}
+
+/**
+ * The selectors of every rendered rule that animates a picture's `<img>`,
+ * parsed out of the overlay's own stylesheets.
+ */
+function imgAnimationSelectors(root: Element): string[] {
+	const css = [...root.querySelectorAll('style')].map((node) => node.textContent ?? '').join('\n');
+	const selectors: string[] = [];
+	for (const [, selector = '', body = ''] of css.matchAll(/([^{}@]+)\{([^{}]*)\}/gu)) {
+		const trimmed = selector.trim();
+		if (/\bimg$/u.test(trimmed) && /\banimation\s*:/u.test(body)) {
+			selectors.push(trimmed);
+		}
+	}
+	return selectors;
+}
+
 describe('presentationTransitionOverlay', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 	});
 
 	afterEach(() => {
+		for (const wrapper of tracked.splice(0)) {
+			wrapper.unmount();
+		}
 		vi.useRealTimers();
 	});
 
@@ -639,16 +680,8 @@ describe('presentationTransitionOverlay', () => {
 	// across the top band the incoming slide stacks above it, then vanished
 	// from it in one frame when the overlay came down.
 	it('stacks a dissolving column under the band above it and over the strip below it', () => {
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: columnUnderBand().from,
-				incomingSlide: columnUnderBand().to,
-				canvasSize,
-				mediaDataUrls: new Map<string, string>(),
-				scale: 1,
-				transition: { type: 'morph', durationMs: 2000 } as PptxSlideTransition,
-			},
-		});
+		const { from, to } = columnUnderBand();
+		const wrapper = mountMorph(from, to, 2000);
 
 		const zOfStyle = (style: string | undefined): number =>
 			Number(/z-index:\s*(\d+)/u.exec(style ?? '')?.[1]);
@@ -668,7 +701,6 @@ describe('presentationTransitionOverlay', () => {
 		const groupZ = zOfStyle(group.attributes('style'));
 		expect(layerOf('band6')).toBeGreaterThan(groupZ);
 		expect(layerOf('strip6')).toBeLessThan(groupZ);
-		wrapper.unmount();
 	});
 
 	// Regression (issue #141, slides 17 -> 18 and back): a paragraph parked off
@@ -686,22 +718,12 @@ describe('presentationTransitionOverlay', () => {
 			makeSlide('17', [parkedParagraph('t17', -400, 14)]),
 		],
 	])('paints an off-stage paragraph whose run size changes once (%s)', (_, from, to) => {
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: from,
-				incomingSlide: to,
-				canvasSize,
-				mediaDataUrls: new Map<string, string>(),
-				scale: 1,
-				transition: { type: 'morph', durationMs: 1000 } as PptxSlideTransition,
-			},
-		});
+		const wrapper = mountMorph(from, to, 1000);
 
 		const copies = copiesOf(wrapper.element, 'Second paragraph', 0.5);
 		// The ghost travels and the stage copy is held invisible behind it.
 		expect(copies.painted).toHaveLength(2);
 		expect(copies.visible).toHaveLength(1);
-		wrapper.unmount();
 	});
 
 	// Regression (issue #141, slides 8 -> 9): a picture faded in through its
@@ -720,27 +742,41 @@ describe('presentationTransitionOverlay', () => {
 			imageData: 'data:image/png;base64,faded',
 			imageEffects: { alphaModFix },
 		});
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: makeSlide('8', [picture('s8-faded', 0)]),
-				incomingSlide: makeSlide('9', [picture('s9-faded', 100)]),
-				canvasSize,
-				mediaDataUrls: new Map<string, string>(),
-				scale: 1,
-				transition: { type: 'morph', durationMs: 2000 } as PptxSlideTransition,
-			},
-		});
+		// A band with no counterpart departs beneath the picture, so the
+		// picture's own ghost is painted too and has to fade with it.
+		const departingBand = {
+			id: 's8-band',
+			name: 'Band',
+			type: 'picture',
+			x: 0,
+			y: 340,
+			width: 960,
+			height: 200,
+			imagePath: 'ppt/media/band.png',
+			imageData: 'data:image/png;base64,band',
+		};
+		const wrapper = mountMorph(
+			makeSlide('8', [departingBand, picture('s8-faded', 0)]),
+			makeSlide('9', [picture('s9-faded', 100)]),
+			2000,
+		);
 
-		const css = wrapper
-			.findAll('style')
-			.map((node) => node.text())
-			.join('\n');
-		expect(css).toMatch(/\[data-element-id="s9-faded"\] img \{ animation: pptx-morph-alpha-/u);
-		expect(
-			wrapper.find('[data-pptx-morph-incoming] [data-element-id="s9-faded"] img').exists(),
-			'the alpha rule targets the <img> inside the element container',
-		).toBeTruthy();
-		wrapper.unmount();
+		const selectors = imgAnimationSelectors(wrapper.element);
+		const reaches = (scope: string, id: string): void => {
+			const selector = selectors.find(
+				(candidate) =>
+					candidate.startsWith(`[${scope}]`) && candidate.includes(`[data-element-id="${id}"]`),
+			);
+			expect(selector, `an alpha rule for ${id} in ${scope}`).toBeDefined();
+			const images = wrapper.element.querySelectorAll(selector!);
+			expect(images.length, `${selector} must reach the <img> it animates`).toBeGreaterThan(0);
+			for (const image of images) {
+				expect(image.tagName).toBe('IMG');
+			}
+		};
+		// The arriving picture on the incoming layer, and the departing one's ghost.
+		reaches('data-pptx-morph-incoming', 's9-faded');
+		reaches('data-pptx-morph-outgoing', 's8-faded');
 	});
 
 	// Mirrors React's `PresentationTransitionOverlay.test.tsx` coverage for the
