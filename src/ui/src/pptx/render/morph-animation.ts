@@ -14,7 +14,9 @@
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import { hasTextProperties, hasShapeProperties } from 'ooxml-core/pptx';
 
+import { generateMorphCarryAnimations } from './morph-carry';
 import { parseHexColor, lerpColor } from './morph-color';
+import { morphEffectsDiffer } from './morph-effect-carry';
 import { flattenMorphElements } from './morph-flatten';
 import {
 	generateGeometryMorphAnimation,
@@ -252,11 +254,14 @@ const GEOMETRY_EPSILON = 0.5;
  * (`a:alphaModFix`) counts for the same reason: the same picture faded from
  * invisible to opaque between two slides is a staple of Morph authoring, and
  * treating it as inert held it at the old transparency until the overlay came
- * down, when it popped in (issue #141).
+ * down, when it popped in (issue #141). A shape's SHADOW or GLOW counts too:
+ * PowerPoint fades a shadow whose distance or blur changed in place (see
+ * `morph-effect-carry`), where an inert pair showed the new one from frame 1.
  */
 export function isInertMorphPair(fromElement: PptxElement, toElement: PptxElement): boolean {
 	return (
 		!morphImageCropChanged(fromElement, toElement) &&
+		!morphEffectsDiffer(fromElement, toElement) &&
 		!morphImageAlphaChanged(fromElement, toElement) &&
 		Math.abs(fromElement.x - toElement.x) <= GEOMETRY_EPSILON &&
 		Math.abs(fromElement.y - toElement.y) <= GEOMETRY_EPSILON &&
@@ -1138,10 +1143,26 @@ export function generateFullMorphTransition(
 	);
 	allAnimations.push(...pairAnims);
 
+	// A resizing or re-handled preset shape keeps PowerPoint's geometry and
+	// effects on the way (see `morph-carry`); its outline needs no other tween.
+	const carry = generateMorphCarryAnimations(
+		matchResult.pairs,
+		durationMs,
+		ghostIds,
+		morphPairNeedsCrossfade,
+		isInertMorphPair,
+		mode,
+		measure,
+	);
+	allAnimations.push(...carry.animations);
+
 	// Shape-geometry morph: for matched pairs whose shape outline changes
 	// (different shape type or adjustment outline), interpolate the resolved
 	// outlines instead of relying on a plain crossfade.
 	for (let i = 0; i < matchResult.pairs.length; i++) {
+		if (carry.carried.has(matchResult.pairs[i])) {
+			continue;
+		}
 		const geo = generateGeometryMorphAnimation(matchResult.pairs[i], durationMs, i);
 		if (geo) {
 			allAnimations.push(geo);

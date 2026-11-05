@@ -56,6 +56,7 @@ import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
 import { resolveMorphTextBlendLifts } from './morph-text-blend';
 import type { MorphCopyPart } from './morph-text-body';
+import { addMorphBodyCopyCarry } from './morph-body-carry';
 import { buildMorphTextBodyPlan, mergeMorphTextBodyPlan } from './morph-text-body';
 import { buildMorphTextPiecePlan } from './morph-text-piece-plan';
 import type { MorphTextMeasure } from './morph-text-frame';
@@ -102,6 +103,15 @@ export interface MorphTransitionPlan {
 	incomingImageAnimations: Map<string, string>;
 	/** Outgoing (ghost) counterpart of {@link MorphTransitionPlan.incomingImageAnimations}. */
 	outgoingImageAnimations: Map<string, string>;
+	/**
+	 * Element id -> CSS `animation` shorthand for the PATH of the element's
+	 * outline overlay (the `<svg data-pptx-outline>` every binding paints a
+	 * centred or gradient outline with), present only when a shape's outline is
+	 * re-pathed per frame (see `morph-shape-carry`). Like the image channel it is
+	 * a descendant rule, emitted by {@link buildMorphScopedCss}; the ids may be
+	 * incoming, outgoing or copy ids, so each half's rules carry all of them.
+	 */
+	outlineAnimations?: Map<string, string>;
 	/**
 	 * Incoming-slide element id -> CSS `animation` shorthand for the copy the
 	 * overlay paints, above every ghost.
@@ -316,6 +326,7 @@ export function buildMorphTransitionPlan(
 	const outgoingAnimations = new Map<string, string>();
 	const incomingImageAnimations = new Map<string, string>();
 	const outgoingImageAnimations = new Map<string, string>();
+	const outlineAnimations = new Map<string, string>();
 	const keyframes: string[] = [];
 
 	for (const animation of animations) {
@@ -324,6 +335,10 @@ export function buildMorphTransitionPlan(
 		// An `image`-targeted animation rides the `<img>` inside the element, so
 		// it goes in its own map: it shares an element id with the container
 		// animation and would otherwise overwrite it.
+		if (animation.target === 'outline') {
+			outlineAnimations.set(animation.elementId, animation.animation);
+			continue;
+		}
 		const target =
 			animation.target === 'image'
 				? isOutgoing
@@ -393,6 +408,7 @@ export function buildMorphTransitionPlan(
 		options.measureText,
 	);
 	mergeMorphTextBodyPlan(pieces, bodies);
+	addMorphBodyCopyCarry(bodies.pairs, durationMs, pieces, outlineAnimations);
 	const piecePairs = new Set(pieces.pairs);
 	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
 	const pieceToIds = new Set(pieces.pairs.map((pair) => pair.toElement.id));
@@ -493,6 +509,10 @@ export function buildMorphTransitionPlan(
 	}
 	for (const id of pieceFromIds) {
 		outgoingAnimations.delete(id);
+		outlineAnimations.delete(id);
+	}
+	for (const id of pieceToIds) {
+		outlineAnimations.delete(id);
 	}
 	if (overlayIncomingAnimations.size > 0 || pieceToIds.size > 0) {
 		keyframes.push(LIFTED_HIDDEN_KEYFRAMES);
@@ -553,6 +573,7 @@ export function buildMorphTransitionPlan(
 		crossfadeGroups,
 		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
 		...(bodies.parts.size > 0 ? { morphCopyParts: bodies.parts } : {}),
+		...(outlineAnimations.size > 0 ? { outlineAnimations } : {}),
 		durationMs,
 	};
 }
@@ -786,5 +807,37 @@ export function buildMorphAnimationRules(
 	// The picture-crop channel targets the `<img>` the element renders, which
 	// every binding draws inside the `data-element-id` container.
 	emit(which === 'outgoing' ? plan.outgoingImageAnimations : plan.incomingImageAnimations, ' img');
+	const outline = buildMorphOutlineRules(plan, 'data-element-id', prefix);
+	if (outline) {
+		rules.push(outline);
+	}
 	return rules.join('\n');
+}
+
+/**
+ * The outline-path rules of a plan (see
+ * {@link MorphTransitionPlan.outlineAnimations}), keyed on `keyAttribute`.
+ *
+ * {@link buildMorphAnimationRules} keys them on `data-element-id`; a binding
+ * whose overlay paints its halves without that attribute (React's overlay
+ * wraps each one in a `data-pptx-morph-outgoing` / `data-pptx-morph-lifted`
+ * element named after its id instead) passes that attribute. A re-pathed
+ * outline animates the CSS `d` property, so the rules sit behind a support
+ * check; without it the static path stays, scaled with its box as before.
+ *
+ * @returns The rules, or `''` when the plan re-paths no outline.
+ */
+export function buildMorphOutlineRules(
+	plan: MorphTransitionPlan,
+	keyAttribute: string,
+	prefix = '',
+): string {
+	if (!plan.outlineAnimations || plan.outlineAnimations.size === 0) {
+		return '';
+	}
+	const rules = [...plan.outlineAnimations].map(
+		([elementId, animation]) =>
+			`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
+	);
+	return `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}`;
 }

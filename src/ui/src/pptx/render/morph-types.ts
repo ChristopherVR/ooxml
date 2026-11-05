@@ -45,12 +45,15 @@ export interface MorphAnimationStyle {
 	 * (`a:srcRect`) is painted by transforming the img within its frame, so
 	 * morphing a crop change has to animate that node and not the frame - the
 	 * frame is usually exactly the same size on both slides (issue #148).
+	 * `outline` is the `<path>` of the outline overlay every binding stamps
+	 * `data-pptx-outline` on, which a resizing shape re-paths per frame (see
+	 * `morph-shape-carry`).
 	 */
 	target?: MorphAnimationTarget;
 }
 
 /** @see MorphAnimationStyle.target */
-export type MorphAnimationTarget = 'element' | 'image';
+export type MorphAnimationTarget = 'element' | 'image' | 'outline';
 
 /** Morph granularity mode matching PowerPoint's morph effect options. */
 export type MorphMode = 'object' | 'word' | 'character';

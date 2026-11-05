@@ -200,6 +200,7 @@ export function renderStrokeOutline(doc: Document, element: PptxElement): SVGSVG
 	}
 	const svg = createSvgEl(doc, 'svg', {
 		class: 'pptx-vanilla-gradient-outline',
+		'data-pptx-outline': '',
 		'aria-hidden': 'true',
 		viewBox: strokeOutlineViewBox(element),
 		preserveAspectRatio: 'none',
