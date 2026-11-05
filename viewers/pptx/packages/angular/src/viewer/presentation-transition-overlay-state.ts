@@ -126,6 +126,8 @@ export function createTransitionOverlayState(inputs: {
 					inputs.incomingSlide(),
 					resolvedDurationMs(),
 					morphOptionToMode(inputs.transition().morphOption),
+					// A turning flip is seen from the slide's centre (shared `morph-flip-turn`).
+					{ slideSize: inputs.canvasSize() },
 				)
 			: undefined,
 	);
