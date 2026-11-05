@@ -1,6 +1,7 @@
 import {
 	defineButton,
 	defineCheckbox,
+	defineCloudFiles,
 	defineColorGrid,
 	defineContextMenu,
 	defineDialogFooter,
@@ -103,6 +104,19 @@ export function definePptxRadio(registry: CustomElementRegistry): void {
 	registry.define(
 		'pptx-ui-radio',
 		class extends bridged(base(registry, defineRadio, 'office-ui-radio'), 'pptx-ui-radio') {},
+	);
+}
+/** PowerPoint's name for the shared cloud file browser of File > Open (see `cloud-files-place`). */
+export function definePptxCloudFiles(registry: CustomElementRegistry): void {
+	if (registry.get('pptx-ui-cloud-files')) {
+		return;
+	}
+	registry.define(
+		'pptx-ui-cloud-files',
+		class extends bridged(
+			base(registry, defineCloudFiles, 'office-ui-cloud-files'),
+			'pptx-ui-cloud-files',
+		) {},
 	);
 }
 export function definePptxSearchField(registry: CustomElementRegistry): void {

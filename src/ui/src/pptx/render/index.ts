@@ -1590,6 +1590,7 @@ export * from './autosave-recovery-acknowledgement';
 // In-progress inline text counts as an autosave edit and reaches the snapshot.
 export * from './autosave-inline-draft';
 export * from './backstage';
+export * from './cloud-open';
 export * from './backstage-cards';
 export * from './master-page-layout';
 export * from './master-view';
