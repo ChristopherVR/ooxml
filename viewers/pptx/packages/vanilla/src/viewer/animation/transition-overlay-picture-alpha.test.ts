@@ -51,6 +51,8 @@ function stageOf(model: PptxSlide): HTMLElement {
 
 describe('vanilla: a picture faded in through its transparency', () => {
 	let stageWrap: HTMLElement;
+	/** Every overlay a test started, cancelled even when an assertion throws first. */
+	const overlays: (() => void)[] = [];
 
 	beforeEach(() => {
 		vi.useFakeTimers();
@@ -59,6 +61,9 @@ describe('vanilla: a picture faded in through its transparency', () => {
 	});
 
 	afterEach(() => {
+		for (const cancel of overlays.splice(0)) {
+			cancel();
+		}
 		vi.useRealTimers();
 		stageWrap.remove();
 	});
@@ -81,6 +86,7 @@ describe('vanilla: a picture faded in through its transparency', () => {
 			incomingSlide: to,
 			onDone: vi.fn(),
 		});
+		overlays.push(cancel);
 
 		const css = [...stageWrap.querySelectorAll('style')].map((node) => node.textContent).join('\n');
 		for (const [scope, id] of [

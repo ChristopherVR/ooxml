@@ -554,6 +554,8 @@ describe('playTransitionOverlay', () => {
 /** What a morph actually paints, read back from the overlay's DOM and `<style>` (issue #141). */
 describe('playTransitionOverlay: what a morph paints (issue #141)', () => {
 	let stageWrap: HTMLElement;
+	/** Every overlay a test started, cancelled even when an assertion throws first. */
+	const overlays: (() => void)[] = [];
 
 	beforeEach(() => {
 		vi.useFakeTimers();
@@ -562,6 +564,9 @@ describe('playTransitionOverlay: what a morph paints (issue #141)', () => {
 	});
 
 	afterEach(() => {
+		for (const cancel of overlays.splice(0)) {
+			cancel();
+		}
 		vi.useRealTimers();
 		stageWrap.remove();
 	});
@@ -585,7 +590,7 @@ describe('playTransitionOverlay: what a morph paints (issue #141)', () => {
 		outgoing: HTMLElement,
 		incoming: HTMLElement,
 	): () => void {
-		return playTransitionOverlay({
+		const cancel = playTransitionOverlay({
 			doc: document,
 			stageWrap,
 			outgoing,
@@ -595,6 +600,8 @@ describe('playTransitionOverlay: what a morph paints (issue #141)', () => {
 			incomingSlide: to,
 			onDone: vi.fn(),
 		});
+		overlays.push(cancel);
+		return cancel;
 	}
 
 	const overlayCss = (): string =>
