@@ -126,7 +126,7 @@ function turnFrame(
 }
 
 /** Where a turning half's pivot stands on the slide, at its own rotation. */
-function pivotOnSlide(centre: MorphPoint, pivot: MorphPoint, rotation: number): MorphPoint {
+export function pivotOnSlide(centre: MorphPoint, pivot: MorphPoint, rotation: number): MorphPoint {
 	const v = turned({ x: pivot.x - centre.x, y: pivot.y - centre.y }, rotation);
 	return { x: centre.x + v.x, y: centre.y + v.y };
 }

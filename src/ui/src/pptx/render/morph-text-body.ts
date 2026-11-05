@@ -294,7 +294,7 @@ export function buildMorphTextBodyPlan(
  * Add `body`'s copies to the piece plan the overlay already paints copies
  * from, so both are hidden, stacked and painted by the same code.
  */
-export function mergeMorphTextBodyPlan(into: MorphTextPiecePlan, body: MorphTextBodyPlan): void {
+export function mergeMorphTextBodyPlan(into: MorphTextPiecePlan, body: MorphTextPiecePlan): void {
 	into.pairs.push(...body.pairs);
 	into.groups.push(...body.groups);
 	into.keyframes.push(...body.keyframes);

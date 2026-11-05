@@ -60,6 +60,7 @@ import { resolveMorphTextBlendLifts } from './morph-text-blend';
 import type { MorphCopyPart } from './morph-text-body';
 import { addMorphBodyCopyCarry } from './morph-body-carry';
 import { buildMorphTextBodyPlan, mergeMorphTextBodyPlan } from './morph-text-body';
+import { buildMorphTextGlyphPlan } from './morph-text-glyph-plan';
 import { buildMorphTextPiecePlan } from './morph-text-piece-plan';
 import type { MorphTextMeasure } from './morph-text-frame';
 import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
@@ -437,6 +438,15 @@ export function buildMorphTransitionPlan(
 		durationMs,
 		options.measureText,
 	);
+	// A text box that turns while its type changes is carried glyph by glyph
+	// (see `morph-text-glyph-plan`), through the same copies.
+	const glyphs = buildMorphTextGlyphPlan(
+		mode === 'object' ? match.pairs.filter((pair) => !pieces.pairs.includes(pair)) : [],
+		ghostIds,
+		durationMs,
+		options.measureText,
+	);
+	mergeMorphTextBodyPlan(pieces, glyphs);
 	// A shape whose text changes face or size while its box moves carries the
 	// text apart from its body (see `morph-text-body`), through the same copies.
 	const bodies = buildMorphTextBodyPlan(
