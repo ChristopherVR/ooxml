@@ -58,6 +58,9 @@ import type { MorphTextBand } from './morph-text-bands';
 import { morphTextBandOf, morphTextBoundaries } from './morph-text-bands';
 import type { MorphTextLayout, MorphTextWord } from './morph-text-lines';
 import { layoutMorphTextWords } from './morph-text-lines';
+import type { MorphFontMetrics } from './morph-text-baseline';
+import { measureMorphFontWithCanvas } from './morph-text-baseline';
+import { faceOf, pieceCapMapping, wordFont } from './morph-text-piece-caps';
 
 export type { MorphTextBand } from './morph-text-bands';
 
@@ -103,6 +106,11 @@ export function resolveMorphTextPieces(
 	ink: MorphTextInkMeasure | undefined = measure === measureMorphTextWithCanvas
 		? measureMorphTextInkWithCanvas
 		: undefined,
+	options: {
+		metrics?: MorphFontMetrics;
+		/** Refuse unless every piece whose face changes can be scaled about its baseline. */
+		requireCaps?: boolean;
+	} = {},
 ): MorphTextPieceSplit | undefined {
 	if (
 		(from as { shapeType?: string }).shapeType !== (to as { shapeType?: string }).shapeType ||
@@ -129,6 +137,11 @@ export function resolveMorphTextPieces(
 	}
 	const boundariesA = morphTextBoundaries(a);
 	const boundariesB = morphTextBoundaries(b);
+	const metrics = options.metrics ?? measureMorphFontWithCanvas;
+	// Words in another face start a piece of their own: each stretches onto its
+	// own counterpart's capitals (see `morph-text-piece-caps`).
+	const faceAt = (frame: typeof frameA, layout: typeof a, word: number) =>
+		faceOf(wordFont(frame, layout.words[word] as MorphTextWord) ?? '');
 	const pieces: MorphTextPiece[] = [];
 	let first = 0;
 	for (let index = 0; index < a.words.length; index++) {
@@ -142,7 +155,9 @@ export function resolveMorphTextPieces(
 			a.words[next]?.line !== lineA ||
 			b.words[next]?.line !== lineB ||
 			a.lines[lineA]?.justified === true ||
-			b.lines[lineB]?.justified === true;
+			b.lines[lineB]?.justified === true ||
+			faceAt(frameA, a, next) !== faceAt(frameA, a, index) ||
+			faceAt(frameB, b, next) !== faceAt(frameB, b, index);
 		if (!breaks) {
 			continue;
 		}
@@ -155,12 +170,26 @@ export function resolveMorphTextPieces(
 		if (!(widthA > 0) || !(widthB > 0) || !(heightA > 0) || !(heightB > 0)) {
 			return undefined;
 		}
+		const caps = pieceCapMapping(
+			{ frame: frameA, layout: a, head: headA },
+			{ frame: frameB, layout: b, head: headB },
+			metrics,
+		);
+		if (options.requireCaps && !caps && faceAt(frameA, a, first) !== faceAt(frameB, b, first)) {
+			return undefined;
+		}
 		pieces.push({
 			alignment: {
-				from: { x: from.x + headA.x0, y: from.y + (a.lines[headA.line]?.top ?? 0) },
-				to: { x: to.x + headB.x0, y: to.y + (b.lines[headB.line]?.top ?? 0) },
+				from: {
+					x: from.x + headA.x0,
+					y: from.y + (caps?.baselines[0] ?? a.lines[headA.line]?.top ?? 0),
+				},
+				to: {
+					x: to.x + headB.x0,
+					y: to.y + (caps?.baselines[1] ?? b.lines[headB.line]?.top ?? 0),
+				},
 				scaleX: widthB / widthA,
-				scaleY: heightB / heightA,
+				scaleY: caps?.scaleY ?? heightB / heightA,
 			},
 			fromBand: morphTextBandOf(a, first, index, boundariesA),
 			toBand: morphTextBandOf(b, first, index, boundariesB),

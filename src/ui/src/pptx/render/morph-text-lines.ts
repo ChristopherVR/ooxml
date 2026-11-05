@@ -45,6 +45,8 @@ export interface MorphTextWord {
 	/** Left and right advance extent of the word. */
 	x0: number;
 	x1: number;
+	/** The word's `[start, end)` offsets in its paragraph's text. */
+	chars?: [number, number];
 	/** Where its glyphs paint, when an ink measurer was given: all of them, and each. */
 	ink?: MorphTextRect;
 	glyphs?: MorphTextRect[];
@@ -59,6 +61,8 @@ export interface MorphTextLine {
 	x1: number;
 	/** Whether `justify` spread the line's words apart. */
 	justified: boolean;
+	/** Where the line's baseline sits below its top, when ink was measured. */
+	baseline?: number;
 }
 
 /** A frame's words, in reading order, and its lines. */
@@ -290,11 +294,19 @@ export function layoutMorphTextWords(
 					line: lines.length,
 					x0,
 					x1: left + through + shift,
+					chars: [start, end],
 					...(glyphs && box ? { ink: box, glyphs } : {}),
 				});
 			}
 			const x1 = left + width + gaps * extra;
-			lines.push({ top, height, x0: left, x1, justified: extra > 0 });
+			lines.push({
+				top,
+				height,
+				x0: left,
+				x1,
+				justified: extra > 0,
+				...(baseline === undefined ? {} : { baseline }),
+			});
 			top += height;
 		}
 		top += paragraph.spaceAfterPx;

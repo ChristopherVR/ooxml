@@ -55,6 +55,8 @@ import {
 import type { MorphTextMeasure, ReadFrameOptions, TextFrame } from './morph-text-frame-read';
 import { measureMorphTextWithCanvas, paragraphWidth, readFrame } from './morph-text-frame-read';
 import { morphTextUpright } from './morph-text-flip';
+import type { MorphTextInkMeasure } from './morph-text-ink';
+import { resolveMorphTextPieces } from './morph-text-pieces';
 import type { MorphPoint, MorphTextAlignment } from './morph-text-transform';
 
 export type { MorphTextMeasure } from './morph-text-frame-read';
@@ -141,7 +143,10 @@ export function resolveMorphTextAlignment(
 	fromHalf: PptxElement,
 	toHalf: PptxElement,
 	measure: MorphTextMeasure = measureMorphTextWithCanvas,
-	options: Pick<ReadFrameOptions, 'withBody'> & { metrics?: MorphFontMetrics } = {},
+	options: Pick<ReadFrameOptions, 'withBody'> & {
+		metrics?: MorphFontMetrics;
+		ink?: MorphTextInkMeasure;
+	} = {},
 ): MorphTextAlignment | undefined {
 	// A flipped half's text is an unflipped half's, turned 180 degrees per
 	// vertical flip (see `morph-text-flip`).
@@ -246,6 +251,20 @@ export function resolveMorphTextAlignment(
 			paragraph.fonts.map(faceOf).join('|') === b.paragraphs[index]?.fonts.map(faceOf).join('|'),
 	);
 	const metrics = options.metrics ?? measureMorphFontWithCanvas;
+	// A change of face over several lines or in several faces stretches every
+	// line and run onto its own capitals (see `morph-text-piece-caps`): no
+	// one transform does that, so the pair is carried piece by piece.
+	if (
+		!sameFace &&
+		!options.withBody &&
+		!turning &&
+		fromRotation === 0 &&
+		(morphTextCapHeight(a, metrics) === undefined ||
+			morphTextCapHeight(b, metrics) === undefined) &&
+		resolveMorphTextPieces(from, to, measure, options.ink, { metrics, requireCaps: true })
+	) {
+		return undefined;
+	}
 	const baseA = sameFace ? undefined : morphTextFirstBaseline(a, metrics);
 	const baseB = sameFace ? undefined : morphTextFirstBaseline(b, metrics);
 	if (baseA === undefined || baseB === undefined) {
@@ -262,8 +281,9 @@ export function resolveMorphTextAlignment(
 	// several lines or faces it stretches every run onto its own counterpart's
 	// capitals and every line onto its own baseline (two lines Calibri ->
 	// Arial 32 pt: each "L" grows 27 -> 31 px, the baselines stay 51-52 px
-	// apart), which no one transform can; a least-squares compromise between
-	// the two measured no closer than the line extents, which stay.
+	// apart), which no one transform can: such a pair is carried piece by
+	// piece above, and only where that cannot be (a turning pair, a body
+	// copy, no ink) do the line extents below stand as the compromise.
 	const capA = morphTextCapHeight(a, metrics);
 	const capB = morphTextCapHeight(b, metrics);
 	return turnAbout(
