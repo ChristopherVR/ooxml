@@ -36,6 +36,7 @@ import {
 	createSlidePackageClipboard,
 	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
+	confirmExternalHyperlinkDialog,
 	applyPreferenceToOptions,
 	buildUserFontFaceStyles,
 	deleteAutosaveSnapshot,
@@ -866,7 +867,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				onHyperlinkClick: props.onHyperlinkClick,
 				confirmExternalHyperlink: (url) =>
 					!shouldConfirmExternalHyperlink(viewerOptions, url) ||
-					window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`),
+					confirmExternalHyperlinkDialog(url, { t, host: root }),
 			});
 		}, [
 			containerRef,

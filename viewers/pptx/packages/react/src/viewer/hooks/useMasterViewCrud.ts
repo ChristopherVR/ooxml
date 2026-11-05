@@ -10,6 +10,7 @@ import {
 	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	promptNameDialog,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxData,
@@ -21,7 +22,6 @@ import type {
 import { useCallback, useMemo } from 'react';
 
 import { useTranslation } from '../i18n/use-translation';
-import { safePrompt } from '../utils/dom-helpers';
 
 /**
  * useMasterViewCrud: Slide Master view sidebar CRUD (Insert/Duplicate/
@@ -103,7 +103,9 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 					id === 'renameLayout'
 						? (master?.layouts?.[target.layoutIndex ?? -1]?.name ?? '')
 						: (master?.name ?? '');
-				const next = safePrompt(t('pptx.masterView.renamePrompt'), current)?.trim();
+				const next = (
+					await promptNameDialog(t('pptx.masterView.renamePrompt'), current, { t })
+				)?.trim();
 				if (!next) {
 					return;
 				}

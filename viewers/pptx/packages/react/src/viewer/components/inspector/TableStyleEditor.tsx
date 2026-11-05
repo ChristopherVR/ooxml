@@ -1,7 +1,9 @@
 import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleFieldEdit,
+	confirmDeleteDialog,
 	describeTableStyleEditor,
+	promptNameDialog,
 	TABLE_STYLE_EDITOR_PARTS,
 } from 'ooxml-ui/pptx';
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
@@ -66,10 +68,11 @@ export function TableStyleEditor({
 		onStyleMapChange({ ...styleMap, [nextEntry.styleId]: nextEntry });
 	}
 
-	function createFromCurrent(): void {
-		const name = window.prompt(
+	async function createFromCurrent(): Promise<void> {
+		const name = await promptNameDialog(
 			t('pptx.tableStyleEditor.newStyleNamePrompt'),
 			entry ? `${entry.styleName ?? ''} Copy`.trim() : '',
+			{ t },
 		);
 		if (!name) {
 			return;
@@ -82,8 +85,12 @@ export function TableStyleEditor({
 		onAssignStyle?.(created.styleId);
 	}
 
-	function handleDelete(): void {
-		if (!entry || !styleMap || !window.confirm(t('pptx.tableStyleEditor.deleteConfirm'))) {
+	async function handleDelete(): Promise<void> {
+		if (
+			!entry ||
+			!styleMap ||
+			!(await confirmDeleteDialog(t('pptx.tableStyleEditor.deleteConfirm'), { t }))
+		) {
 			return;
 		}
 		const nextMap: ParsedTableStyleMap = { ...styleMap };
@@ -129,11 +136,21 @@ export function TableStyleEditor({
 			)}
 
 			<div className='flex gap-1.5 pt-1 border-t border-border'>
-				<button type='button' className={BTN} disabled={!canEdit} onClick={createFromCurrent}>
+				<button
+					type='button'
+					className={BTN}
+					disabled={!canEdit}
+					onClick={() => void createFromCurrent()}
+				>
 					{entry ? t('pptx.tableStyleEditor.newFromCurrent') : t('pptx.tableStyleEditor.newStyle')}
 				</button>
 				{entry && (
-					<button type='button' className={BTN} disabled={!canEdit} onClick={handleDelete}>
+					<button
+						type='button'
+						className={BTN}
+						disabled={!canEdit}
+						onClick={() => void handleDelete()}
+					>
 						{t('pptx.tableStyleEditor.deleteStyle')}
 					</button>
 				)}

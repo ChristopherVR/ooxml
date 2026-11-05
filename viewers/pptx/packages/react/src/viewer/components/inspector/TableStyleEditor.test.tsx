@@ -36,6 +36,20 @@ function styleMap(): ParsedTableStyleMap {
 	};
 }
 
+/** Answer the in-app dialog the editor opened: type into its input, then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<void> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found) throw new Error('no dialog yet');
+		return found;
+	});
+	const input = dialog.shadowRoot?.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	await act(async () => {
+		(dialog.shadowRoot?.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	});
+}
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -43,14 +57,11 @@ beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);
-	// happy-dom does not implement window.prompt/confirm; stub them first so
-	// vi.spyOn has an existing function to wrap.
-	window.prompt = () => null;
-	window.confirm = () => false;
 });
 
 afterEach(() => {
 	act(() => root.unmount());
+	document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
 	container.remove();
 });
 
@@ -102,10 +113,9 @@ describe('tableStyleEditor', () => {
 		expect(nextMap[STYLE_ID].wholeTblFill).toStrictEqual({ schemeColor: '', color: '#ff0000' });
 	});
 
-	it('creates a new style from the current one, based on a prompt', () => {
+	it('creates a new style from the current one, based on a prompt', async () => {
 		const onStyleMapChange = vi.fn();
 		const onAssignStyle = vi.fn();
-		vi.spyOn(window, 'prompt').mockReturnValue('My Custom Style');
 		act(() => {
 			root.render(
 				<TableStyleEditor
@@ -125,6 +135,7 @@ describe('tableStyleEditor', () => {
 		act(() => {
 			createButton.click();
 		});
+		await answerDialog('confirm', 'My Custom Style');
 		expect(onStyleMapChange).toHaveBeenCalledOnce();
 		const nextMap = onStyleMapChange.mock.calls[0][0] as ParsedTableStyleMap;
 		const ids = Object.keys(nextMap);
@@ -138,10 +149,9 @@ describe('tableStyleEditor', () => {
 		expect(onAssignStyle).toHaveBeenCalledWith(newId);
 	});
 
-	it('creates a brand-new style with no current style selected and assigns it', () => {
+	it('creates a brand-new style with no current style selected and assigns it', async () => {
 		const onStyleMapChange = vi.fn();
 		const onAssignStyle = vi.fn();
-		vi.spyOn(window, 'prompt').mockReturnValue('Brand New Style');
 		act(() => {
 			root.render(
 				<TableStyleEditor
@@ -164,6 +174,7 @@ describe('tableStyleEditor', () => {
 		act(() => {
 			createButton.click();
 		});
+		await answerDialog('confirm', 'Brand New Style');
 		expect(onStyleMapChange).toHaveBeenCalledOnce();
 		const nextMap = onStyleMapChange.mock.calls[0][0] as ParsedTableStyleMap;
 		const ids = Object.keys(nextMap);
@@ -172,11 +183,10 @@ describe('tableStyleEditor', () => {
 		expect(onAssignStyle).toHaveBeenCalledWith(ids[0]);
 	});
 
-	it('deletes the style after confirmation and reports both the map and the id', () => {
+	it('deletes the style after confirmation and reports both the map and the id', async () => {
 		const onStyleMapChange = vi.fn();
 		const onDeleteStyle = vi.fn();
 		const onClose = vi.fn();
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
 		act(() => {
 			root.render(
 				<ThemeColorMapProvider value={{}}>
@@ -197,10 +207,37 @@ describe('tableStyleEditor', () => {
 		act(() => {
 			deleteButton.click();
 		});
+		await answerDialog('confirm');
 		expect(onDeleteStyle).toHaveBeenCalledWith(STYLE_ID);
 		const nextMap = onStyleMapChange.mock.calls[0][0] as ParsedTableStyleMap;
 		expect(Object.keys(nextMap)).toHaveLength(0);
 		expect(onClose).toHaveBeenCalledOnce();
+	});
+
+	it('keeps the style when the delete dialog is cancelled', async () => {
+		const onDeleteStyle = vi.fn();
+		act(() => {
+			root.render(
+				<ThemeColorMapProvider value={{}}>
+					<TableStyleEditor
+						styleMap={styleMap()}
+						styleId={STYLE_ID}
+						canEdit
+						onStyleMapChange={vi.fn()}
+						onDeleteStyle={onDeleteStyle}
+						onClose={vi.fn()}
+					/>
+				</ThemeColorMapProvider>,
+			);
+		});
+		const deleteButton = Array.from(container.querySelectorAll('button')).find((b) =>
+			b.textContent?.includes('pptx.tableStyleEditor.deleteStyle'),
+		) as HTMLButtonElement;
+		act(() => {
+			deleteButton.click();
+		});
+		await answerDialog('cancel');
+		expect(onDeleteStyle).not.toHaveBeenCalled();
 	});
 
 	it('disables every control when canEdit is false', () => {

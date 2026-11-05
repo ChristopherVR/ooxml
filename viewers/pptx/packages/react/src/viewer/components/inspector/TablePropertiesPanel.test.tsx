@@ -318,8 +318,7 @@ describe('tablePropertiesPanel', () => {
 		expect(splitData.rows[0].cells[1].textRuns).toBeUndefined();
 	});
 
-	it('enables "Edit style..." with no tableStyleId, and assigns a created style to the table', () => {
-		window.prompt = () => 'Brand New Style';
+	it('enables "Edit style..." with no tableStyleId, and assigns a created style to the table', async () => {
 		const onUpdate = vi.fn();
 		const onTableStyleMapChange = vi.fn();
 		const el = table();
@@ -346,6 +345,15 @@ describe('tablePropertiesPanel', () => {
 		) as HTMLButtonElement;
 		expect(createButton).toBeTruthy();
 		act(() => createButton.click());
+		const dialog = await vi.waitFor(() => {
+			const found = document.querySelector('office-ui-message-dialog');
+			if (!found) throw new Error('no dialog yet');
+			return found;
+		});
+		(dialog.shadowRoot?.querySelector('input') as HTMLInputElement).value = 'Brand New Style';
+		await act(async () => {
+			(dialog.shadowRoot?.querySelector('button.confirm') as HTMLButtonElement).click();
+		});
 
 		expect(onTableStyleMapChange).toHaveBeenCalledOnce();
 		const nextMap = onTableStyleMapChange.mock.calls[0][0] as ParsedTableStyleMap;

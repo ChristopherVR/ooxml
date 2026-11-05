@@ -2,7 +2,7 @@ import type { ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	buildFieldSubstitutionContext,
 	resolvePresentationAction,
-	shouldConfirmExternalHyperlink,
+	openExternalHyperlinkConfirmed,
 } from 'ooxml-ui/pptx';
 import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
 
@@ -49,13 +49,8 @@ export interface BuildCanvasPropsInput {
 	findResultIndex?: number;
 	/** Live File > Options snapshot, for the Trust Center hyperlink-confirm gate. */
 	viewerOptions: ViewerOptions;
-	/**
-	 * Confirmation prompt text for `window.confirm`, pre-built by the caller
-	 * (a hook, so it can call `useTranslation`) as
-	 * `` `${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}` ``. Only
-	 * invoked when `shouldConfirmExternalHyperlink` says the gate applies.
-	 */
-	buildHyperlinkConfirmMessage: (url: string) => string;
+	/** Translator for the in-app hyperlink confirmation (shown when the Trust Center gate applies). */
+	t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +78,7 @@ export function buildCanvasProps(input: BuildCanvasPropsInput): SlideCanvasProps
 		findResults,
 		findResultIndex,
 		viewerOptions,
-		buildHyperlinkConfirmMessage,
+		t,
 	} = input;
 
 	const effectiveSlide = mode === 'master' ? masterPseudoSlide : activeSlide;
@@ -112,13 +107,7 @@ export function buildCanvasProps(input: BuildCanvasPropsInput): SlideCanvasProps
 	// before opening (Options > Trust Center > confirm external hyperlinks),
 	// same as `ViewerCanvasArea`'s wiring for the packaged `PowerPointViewer`.
 	const openExternalUrl = (url: string, target?: string) => {
-		if (
-			shouldConfirmExternalHyperlink(viewerOptions, url) &&
-			!window.confirm(buildHyperlinkConfirmMessage(url))
-		) {
-			return;
-		}
-		safeOpenUrl(url, target);
+		void openExternalHyperlinkConfirmed(viewerOptions, url, { t }, target);
 	};
 
 	const handleActionClick = (elementId: string, action: PptxAction) => {

@@ -256,7 +256,7 @@ export function useViewerBuildingBlocks(
 		findResults: editorOps.findReplace.findResults,
 		findResultIndex: editorOps.findReplace.findResultIndex,
 		viewerOptions,
-		buildHyperlinkConfirmMessage: (url) => `${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`,
+		t,
 	});
 
 	canvasProps.collaborationOverlay = overlay;
