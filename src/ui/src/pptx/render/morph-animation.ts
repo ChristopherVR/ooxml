@@ -16,6 +16,7 @@ import { hasTextProperties, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { generateMorphCarryAnimations } from './morph-carry';
 import { parseHexColor, lerpColor } from './morph-color';
+import { morphArrowSignature } from './morph-line-ends';
 import { morphEffectsDiffer } from './morph-effect-carry';
 import { morphSoftEdgeBlends } from './morph-soft-edge-blend';
 import { flattenMorphElements } from './morph-flatten';
@@ -191,6 +192,10 @@ function appearanceSignature(element: PptxElement, depth = 0): string {
 			String(style?.fillOpacity ?? ''),
 			style?.strokeColor ?? '',
 			String(style?.strokeWidth ?? ''),
+			// A line's dash pattern and arrowheads are part of how it looks: PowerPoint
+			// dissolves one into the other (see `morph-line-ends`).
+			String(style?.strokeDash ?? ''),
+			element.type === 'connector' ? morphArrowSignature(style) : '',
 		);
 	}
 	const image = element as { imagePath?: string; svgPath?: string };

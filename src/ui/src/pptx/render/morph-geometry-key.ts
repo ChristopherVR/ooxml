@@ -22,6 +22,8 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
+import { morphLineEndsBreakPair } from './morph-line-ends';
+
 /** A shape's geometry family: its preset, or `custom` for an authored path. */
 export function morphGeometryKey(element: PptxElement): string | undefined {
 	if (element.type !== 'shape' || !hasShapeProperties(element)) return undefined;
@@ -35,5 +37,5 @@ export function morphGeometryKey(element: PptxElement): string | undefined {
 export function morphGeometryBreaksPair(from: PptxElement, to: PptxElement): boolean {
 	const a = morphGeometryKey(from);
 	const b = morphGeometryKey(to);
-	return a !== undefined && b !== undefined && a !== b;
+	return (a !== undefined && b !== undefined && a !== b) || morphLineEndsBreakPair(from, to);
 }

@@ -15,6 +15,7 @@
 
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import { morphArrowSignature } from './morph-line-ends';
 import { morphGeometryBreaksPair } from './morph-geometry-key';
 import { getElementMorphName } from './morph-name';
 import { PROXIMITY_SIZE_RATIO_LIMIT, PROXIMITY_THRESHOLD } from './morph-types';
@@ -167,6 +168,9 @@ export function appearanceSignature(el: PptxElement): string {
 	if (style) {
 		for (const key of APPEARANCE_KEYS) {
 			parts.push(style[key] === undefined ? '' : String(style[key]));
+		}
+		if (el.type === 'connector') {
+			parts.push(morphArrowSignature(style));
 		}
 	}
 	parts.push(mediaIdentity(el) ?? '');

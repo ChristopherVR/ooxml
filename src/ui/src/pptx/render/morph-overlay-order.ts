@@ -190,6 +190,13 @@ export function resolveMorphOverlayArrivals(
 		if (matched.has(element.id) && !dissolvingInIds.has(element.id)) {
 			continue;
 		}
+		// A dissolving line blends additively with its ghost even where nothing
+		// stacks above it: layered by plain alpha its body would dip to 75 % at
+		// the midpoint, where PowerPoint holds it (see `morph-line-ends`).
+		if (matched.has(element.id) && element.type === 'connector') {
+			lifted.add(element.id);
+			continue;
+		}
 		const mine = rank.get(element.id) ?? 0;
 		const mineIncoming = incomingIndex.get(element.id) ?? Number.NEGATIVE_INFINITY;
 		const box = travelledBox(element);
