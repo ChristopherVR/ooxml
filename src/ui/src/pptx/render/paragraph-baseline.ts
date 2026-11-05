@@ -5,11 +5,16 @@
  * CSS centres the line height on the font's own ascent and descent (half the
  * leading above, half below), so changing `line-height` by some amount moves
  * every baseline by half of it. PowerPoint does not. Measured on PowerPoint 16
- * slide exports (three one-line paragraphs at 40pt, Calibri, Georgia, Arial
- * and Segoe UI, `a:spcPct` 70% to 200% and `a:spcPts` 30 to 60pt, read at
+ * slide exports (one-line paragraphs, 49 font and size pairs at single spacing
+ * and four fonts at `a:spcPct` 70% to 200% and `a:spcPts` 30 to 60pt, read at
  * 4px per point), with `p` the line pitch, `s` the font size and `D` the
- * font's descent:
+ * descent PowerPoint keeps below the baseline:
  *
+ * - Single spacing is a pitch of exactly `1.2 s` for every font, with the
+ *   font's own ascent and descent (the Windows metrics, `winAscent` and
+ *   `winDescent`) scaled to fill it: the baseline sits `1.2 s a / (a + d)`
+ *   from the top of the line, so `D = 1.2 s d / (a + d)`. Calibri measured
+ *   0.940 em, Arial 0.975, Georgia 0.969, Segoe UI 0.975, Verdana 0.994.
  * - A line taller than single spacing (`p > 1.2 s`) sits its baseline at
  *   exactly 75% of the pitch, whatever the font: 102% to 200% and every exact
  *   pitch above single all measured `0.75 p` (plus the glyph overshoot).
@@ -20,13 +25,10 @@
  * So `baseline = p > 1.2 s ? 0.75 p : max(0.75 p, p - D)`. The jump at single
  * spacing is real: 102% put the Calibri baseline 0.75pt HIGHER than 100% did.
  *
- * The move is taken relative to single spacing, which is left exactly as the
- * renderer already draws it. The descent PowerPoint keeps at single spacing
- * is close to, not equal to, the one the browser reports (0.261 em against
- * Calibri's 0.269, 0.225 against Segoe UI's 0.251), so placing single-spaced
- * lines from the browser's metrics moved the most common text, Calibri at
- * 100%, by a fraction of a pixel the wrong way; only the change the spacing
- * makes is applied.
+ * The move is the whole difference between that baseline and the one CSS
+ * gives the line (see {@link cssBaseline}), single spacing included: fonts
+ * differ in where CSS puts their single line (Arial and Georgia sat 1.5pt
+ * high at 40pt, Segoe UI 1.4pt low), so no font is left to the flow.
  *
  * @module render/paragraph-baseline
  */
@@ -50,6 +52,8 @@ const SINGLE_PITCH = 1.2;
 const BASELINE_SHARE = 0.75;
 /** A pitch this close to single spacing counts as single. */
 const SINGLE_EPSILON = 0.001;
+/** The font size (px) the ascent and descent proportions are measured at. */
+const REFERENCE_SIZE = 1000;
 /** Moves smaller than this (px) are left alone. */
 const MIN_SHIFT_PX = 0.05;
 
@@ -61,16 +65,35 @@ export function powerPointBaseline(pitch: number, size: number, descent: number)
 		: Math.max(share, pitch - descent);
 }
 
+/**
+ * The descent (px) PowerPoint keeps below the baseline of a single line of
+ * `size` px text: the font's ascent and descent scaled to fill its 1.2 pitch.
+ * `box` is the font's ascent and descent at any one size.
+ */
+export function powerPointDescent(size: number, box: FontBox): number {
+	const total = box.ascent + box.descent;
+	return total > 0 ? (SINGLE_PITCH * size * box.descent) / total : box.descent;
+}
+
 /** One inline box CSS puts on a line: its `line-height` in px and its font's box. */
 export interface CssLineBox {
 	lineHeight: number;
 	font: FontBox;
 }
 
-/** The baseline CSS gives a line holding `boxes`, in px from the line's top. */
+/**
+ * The baseline CSS gives a line holding `boxes`, in px from the line's top.
+ * Layout works on whole-pixel ascents and descents and floors the leading it
+ * puts above a box (`ascent + floor((lineHeight - ascent - descent) / 2)`),
+ * which moves a line by up to half a pixel against the unrounded centring.
+ */
 export function cssBaseline(boxes: readonly CssLineBox[]): number {
 	return Math.max(
-		...boxes.map(({ lineHeight, font }) => (lineHeight + font.ascent - font.descent) / 2),
+		...boxes.map(({ lineHeight, font }) => {
+			const ascent = Math.round(font.ascent);
+			const descent = Math.round(font.descent);
+			return ascent + Math.floor((lineHeight - ascent - descent) / 2);
+		}),
 	);
 }
 
@@ -167,6 +190,10 @@ export function resolveParagraphBaselineShift(input: BaselineShiftInput): number
 	}
 	const strut = measure(`normal ${strutSizePx}px ${strutFamily}`);
 	const text = measure(runFont(first, size, family));
+	// The browser rounds a font's ascent and descent to whole px at the size it
+	// lays a line out in, which is right for the CSS baseline but too coarse for
+	// the proportions PowerPoint scales to its pitch: those come from a large size.
+	const referenceBox = measure(runFont(first, REFERENCE_SIZE, family));
 	if (!strut || !text) {
 		return undefined;
 	}
@@ -185,16 +212,9 @@ export function resolveParagraphBaselineShift(input: BaselineShiftInput): number
 			{ lineHeight: pxOf(first.style.lineHeight) ?? pitch, font: text },
 		];
 	}
-	// Measured from single spacing, which the renderer already places (see the
-	// module comment): only what the spacing changes is moved.
-	const single = SINGLE_PITCH * size;
-	const singleBoxes = [
-		{ lineHeight: SINGLE_PITCH * strutSizePx, font: strut },
-		{ lineHeight: single, font: text },
-	];
-	const powerPoint =
-		powerPointBaseline(pitch, size, text.descent) - powerPointBaseline(single, size, text.descent);
-	const shift = powerPoint - (cssBaseline(boxes) - cssBaseline(singleBoxes));
+	const shift =
+		powerPointBaseline(pitch, size, powerPointDescent(size, referenceBox ?? text)) -
+		cssBaseline(boxes);
 	return Math.abs(shift) < MIN_SHIFT_PX ? undefined : Math.round(shift * 100) / 100;
 }
 

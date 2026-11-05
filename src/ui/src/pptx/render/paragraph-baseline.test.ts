@@ -6,24 +6,33 @@ import {
 	cssBaseline,
 	type FontBoxMeasure,
 	powerPointBaseline,
+	powerPointDescent,
 	resolveParagraphBaselineShift,
 } from './paragraph-baseline';
 import type { ParagraphRun, RenderParagraph } from './paragraph-types';
 
-// Calibri's Windows metrics (the ones Chromium lays lines out with): ascent
-// 0.952 em, descent 0.269 em.
-const calibri: FontBoxMeasure = (font) => {
-	const size = Number(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1]);
-	return { ascent: 0.952 * size, descent: 0.269 * size };
+// Windows ascent and descent in em (the ones Chromium lays lines out with).
+const metrics = (ascent: number, descent: number): FontBoxMeasure => {
+	return (font) => {
+		const size = Number(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1]);
+		return { ascent: ascent * size, descent: descent * size };
+	};
 };
+const calibri = metrics(0.952, 0.269);
+const arial = metrics(0.905, 0.212);
+const segoe = metrics(1.079, 0.251);
 const run = (text: string, style: ParagraphRun['style'] = {}): ParagraphRun => ({ text, style });
-const shiftOf = (lineHeight: number | string, runs = [run('Hxlb')]) =>
+const shiftOf = (
+	lineHeight: number | string,
+	runs = [run('Hxlb')],
+	measure: FontBoxMeasure = calibri,
+) =>
 	resolveParagraphBaselineShift({
 		runs,
 		lineHeight,
 		strutSizePx: 40,
 		strutFamily: 'Calibri',
-		measure: calibri,
+		measure,
 	});
 
 describe('powerPointBaseline', () => {
@@ -42,6 +51,20 @@ describe('powerPointBaseline', () => {
 	});
 });
 
+describe('powerPointDescent', () => {
+	// PowerPoint 16 single spacing at 40pt: baselines 0.940 em (Calibri), 0.975
+	// (Arial), 0.975 (Segoe UI) of the 1.2 em pitch scale the font's own box.
+	it('scales the font ascent and descent to fill the 1.2 pitch', () => {
+		expect(powerPointDescent(40, { ascent: 0.952, descent: 0.269 })).toBeCloseTo(10.57, 2);
+		expect(powerPointDescent(40, { ascent: 0.905, descent: 0.212 })).toBeCloseTo(9.11, 2);
+		expect(powerPointDescent(40, { ascent: 1.079, descent: 0.251 })).toBeCloseTo(9.06, 2);
+	});
+
+	it('falls back to the font descent for an empty box', () => {
+		expect(powerPointDescent(40, { ascent: 0, descent: 0 })).toBe(0);
+	});
+});
+
 describe('cssBaseline', () => {
 	it('centres each line height on its font and takes the lowest baseline', () => {
 		const font = { ascent: 38, descent: 10 };
@@ -53,30 +76,37 @@ describe('cssBaseline', () => {
 			]),
 		).toBe(62);
 	});
+
+	it('rounds the font box to whole px and floors the leading above it', () => {
+		// Calibri at 53.33px in a 64px line: 51 + floor((64 - 51 - 14) / 2) = 50.
+		expect(cssBaseline([{ lineHeight: 64, font: { ascent: 50.77, descent: 14.35 } }])).toBe(50);
+	});
 });
 
 describe('resolveParagraphBaselineShift', () => {
-	// From single spacing (48 px pitch), where CSS puts the baseline at
-	// (48 + 27.32) / 2 = 37.66 and PowerPoint at 48 - 10.76 = 37.24.
+	// Calibri at 40 px: CSS rounds the box to 38 + 11 and floors the leading.
 	it('moves a 200% paragraph down to 75% of its pitch (measured 61.5pt -> 72.3pt, PowerPoint 72.5pt)', () => {
-		// CSS moves (96 - 48) / 2 = 24; PowerPoint 0.75 x 96 - 37.24 = 34.76.
-		expect(shiftOf(2.4)).toBeCloseTo(10.76, 2);
+		// CSS 38 + floor((96 - 49) / 2) = 61; PowerPoint 0.75 x 96 = 72.
+		expect(shiftOf(2.4)).toBeCloseTo(11, 2);
 	});
 
-	it('moves a 75% paragraph up (measured 31.8pt -> 27.6pt, PowerPoint 27.5pt)', () => {
-		// CSS moves (36 - 48) / 2 = -6; PowerPoint max(27, 36 - 10.76) - 37.24 = -10.24.
-		expect(shiftOf(0.9)).toBeCloseTo(-4.24, 2);
+	it('moves a 90% paragraph up (measured 31.8pt -> 27.6pt, PowerPoint 27.5pt)', () => {
+		// CSS 38 + floor((36 - 49) / 2) = 31; PowerPoint max(27, 36 - 10.57) = 27.
+		expect(shiftOf(0.9)).toBeCloseTo(-4, 2);
 	});
 
-	it('leaves single spacing where the renderer already puts it', () => {
-		expect(shiftOf(1.2)).toBeUndefined();
+	it('places single spacing on the font own proportions, whatever CSS gives it', () => {
+		// PowerPoint 48 - 10.57 = 37.43 in every case; CSS differs per font.
+		expect(shiftOf(1.2)).toBeCloseTo(0.43, 2); // Calibri: CSS 38 + floor(-0.5) = 37
+		expect(shiftOf(1.2, [run('Hxlb')], arial)).toBeCloseTo(0.89, 2); // Arial sat high: CSS 38
+		expect(shiftOf(1.2, [run('Hxlb')], segoe)).toBeCloseTo(-1.06, 2); // Segoe UI sat low: CSS 40
 	});
 
 	it('places an exactly spaced line on its strut alone', () => {
 		const runs = [run('Hxlb', { lineHeight: 0 })];
-		// 40 px pitch: CSS (40 + 27.32) / 2 = 33.66, -4 from single; PowerPoint
-		// max(30, 29.24) = 30, -7.24.
-		expect(shiftOf('30pt', runs)).toBeCloseTo(-3.24, 2);
+		// 40 px pitch: the strut puts CSS at 38 + floor((40 - 49) / 2) = 33;
+		// PowerPoint max(30, 40 - 10.57) = 30.
+		expect(shiftOf('30pt', runs)).toBeCloseTo(-3, 2);
 	});
 
 	it('leaves alone what it cannot model', () => {
@@ -109,8 +139,8 @@ describe('applyParagraphBaselineShift', () => {
 	it('moves the paragraph with a relative top every binding spreads', () => {
 		const para = paragraph();
 		applyParagraphBaselineShift(para, {} as TextStyle, block, calibri);
-		expect(para.baselineShiftPx).toBeCloseTo(10.76, 2);
-		expect(para.paragraphStyle).toStrictEqual({ position: 'relative', top: '10.76px' });
+		expect(para.baselineShiftPx).toBeCloseTo(11, 2);
+		expect(para.paragraphStyle).toStrictEqual({ position: 'relative', top: '11px' });
 	});
 
 	it('leaves vertical text, compatLnSpc and shrink-on-overflow bodies alone', () => {
