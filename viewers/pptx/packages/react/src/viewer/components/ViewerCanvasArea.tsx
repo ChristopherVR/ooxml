@@ -1,7 +1,7 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { isPanelVisible } from 'ooxml-ui/pptx';
 import {
 	buildFieldSubstitutionContext,
+	isPanelVisible,
 	isPresentationAdvanceClick,
 	PRESENT_TOOLBAR_CLASSES,
 	resolvePresentationAction,
@@ -38,7 +38,7 @@ import type { UseZoomViewportResult } from '../hooks/useZoomViewport';
 import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize, TableCellEditorState } from '../types';
 import type { ViewerMode } from '../types-core';
-import { safeOpenUrl, isPpactionUrl, parsePpactionUrl } from '../utils/hyperlink-security';
+import { isPpactionUrl, parsePpactionUrl } from '../utils/hyperlink-security';
 import type { TableStyleContext } from '../utils/table-parse';
 import type { FieldSubstitutionContext } from '../utils/text-field-substitution';
 import { CollaborationCursorOverlay, RemoteSelectionOverlay } from './collaboration';

@@ -8,7 +8,7 @@ import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import type { SlideCanvasProps, ZoomViewport } from '../components/canvas/canvas-types';
 import type { CanvasSize, TableCellEditorState, ViewerMode } from '../types';
-import { safeOpenUrl, isPpactionUrl, parsePpactionUrl } from '../utils/hyperlink-security';
+import { isPpactionUrl, parsePpactionUrl } from '../utils/hyperlink-security';
 import type { TableStyleContext } from '../utils/table-parse';
 import type { FieldSubstitutionContext } from '../utils/text-field-substitution';
 import type { CanvasInteractionHandlers } from './useCanvasInteractions';
