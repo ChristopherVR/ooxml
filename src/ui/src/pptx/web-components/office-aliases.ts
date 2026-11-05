@@ -2,6 +2,7 @@ import {
 	defineButton,
 	defineCheckbox,
 	defineOpenPlaces,
+	defineConnectedServices,
 	defineColorGrid,
 	defineContextMenu,
 	defineDialogFooter,
@@ -116,6 +117,19 @@ export function definePptxOpenPlaces(registry: CustomElementRegistry): void {
 		class extends bridged(
 			base(registry, defineOpenPlaces, 'office-ui-open-places'),
 			'pptx-ui-open-places',
+		) {},
+	);
+}
+/** PowerPoint's name for File > Account's connected storage list (`<office-ui-connected-services>`). */
+export function definePptxConnectedServices(registry: CustomElementRegistry): void {
+	if (registry.get('pptx-ui-connected-services')) {
+		return;
+	}
+	registry.define(
+		'pptx-ui-connected-services',
+		class extends bridged(
+			base(registry, defineConnectedServices, 'office-ui-connected-services'),
+			'pptx-ui-connected-services',
 		) {},
 	);
 }

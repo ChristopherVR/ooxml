@@ -21,6 +21,7 @@ import {
 	definePptxRibbonGroup,
 	definePptxRibbonToggle,
 	definePptxOpenPlaces,
+	definePptxConnectedServices,
 	definePptxSearchField,
 	definePptxColorGrid,
 	definePptxSelect,
@@ -182,6 +183,7 @@ export type {
 const controls = [
 	['pptx-ui-search', definePptxSearchField],
 	['pptx-ui-open-places', definePptxOpenPlaces],
+	['pptx-ui-connected-services', definePptxConnectedServices],
 	['pptx-ui-color-grid', definePptxColorGrid],
 	['pptx-ui-chart-data-sheet', definePptxChartDataSheet],
 	['pptx-ui-smartart-text-pane', definePptxSmartArtTextPane],

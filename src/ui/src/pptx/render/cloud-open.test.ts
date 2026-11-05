@@ -2,10 +2,12 @@ import type { CloudOpenedFile } from 'ooxml-core/embedding';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_CLOUD_FILES_LABELS } from '../../files/cloud-files-labels';
+import { DEFAULT_CONNECTED_SERVICES_LABELS } from '../../files/connected-services';
 import { translationsEn } from '../i18n';
 import {
 	cloudFilesLabels,
 	createCloudDocumentController,
+	connectedServicesLabels,
 	resolveCloudDocumentView,
 	openPlacesLabels,
 } from './cloud-open';
@@ -32,6 +34,36 @@ describe('open places labels', () => {
 		expect(labels.thisDevice).toBe('Dieses Geraet');
 		expect(labels.places).toBe('Orte');
 		expect(labels.signIn).toBe('Sign in');
+	});
+});
+
+describe('connected services labels', () => {
+	const translate = (key: string, params?: Record<string, string | number>): string =>
+		(translationsEn[key as keyof typeof translationsEn] ?? key).replace(
+			/\{\{(\w+)\}\}/g,
+			(_, name: string) => String(params?.[name] ?? ''),
+		);
+
+	it('has a dictionary entry for every label of the element', () => {
+		for (const name of Object.keys(DEFAULT_CONNECTED_SERVICES_LABELS)) {
+			const key = `pptx.cloudFiles.connected${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+			expect(translationsEn).toHaveProperty(key);
+		}
+	});
+
+	it('translates the labels and hands the element its {provider} placeholder back', () => {
+		const labels = connectedServicesLabels(translate);
+		expect(labels).toEqual(DEFAULT_CONNECTED_SERVICES_LABELS);
+		expect(labels.failed).toContain('{provider}');
+	});
+
+	it('translates a label and falls back to English for a missing key', () => {
+		expect(connectedServicesLabels((key) => key)).toEqual(DEFAULT_CONNECTED_SERVICES_LABELS);
+		const german = connectedServicesLabels((key) =>
+			key.endsWith('connectedHeading') ? 'Dienste' : key,
+		);
+		expect(german.heading).toBe('Dienste');
+		expect(german.connect).toBe('Connect');
 	});
 });
 

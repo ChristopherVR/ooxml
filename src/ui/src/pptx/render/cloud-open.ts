@@ -15,11 +15,14 @@ import type { CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import { DEFAULT_CLOUD_FILES_LABELS } from '../../files/cloud-files-labels';
 import type { OfficeCloudFilesLabels } from '../../files/cloud-files-labels';
 import type { OfficeOpenPlacesLabels } from '../../files/open-places';
+import { DEFAULT_CONNECTED_SERVICES_LABELS } from '../../files/connected-services';
+import type { OfficeConnectedServicesLabels } from '../../files/connected-services';
 import { createControllerStore } from './controller/controller';
 import type { PptxController } from './controller/controller';
 
 export type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
 export type { OfficeOpenPlacesLabels } from '../../files/open-places';
+export type { OfficeConnectedServicesLabels } from '../../files/connected-services';
 
 /** The kinds a PowerPoint File > Open cloud place offers. */
 export const CLOUD_OPEN_ACCEPT = ['pptx'] as const;
@@ -52,6 +55,22 @@ export function openPlacesLabels(translate: Translate): OfficeOpenPlacesLabels {
 		thisDevice: translate('pptx.backstage.thisDevice'),
 		places: translate('pptx.backstage.places'),
 	};
+}
+
+/**
+ * The labels of File > Account's `<pptx-ui-connected-services>` from the viewer dictionary
+ * (`pptx.cloudFiles.connected<Label>`), English fallback. `{provider}` is filled by the element.
+ */
+export function connectedServicesLabels(translate: Translate): OfficeConnectedServicesLabels {
+	const labels = { ...DEFAULT_CONNECTED_SERVICES_LABELS };
+	for (const name of Object.keys(labels) as (keyof OfficeConnectedServicesLabels)[]) {
+		const key = `pptx.cloudFiles.connected${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+		const text = translate(key, { provider: '{provider}' });
+		if (text && text !== key) {
+			labels[name] = text;
+		}
+	}
+	return labels;
 }
 
 export interface CloudDocumentState {
