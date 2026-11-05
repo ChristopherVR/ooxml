@@ -4,6 +4,8 @@ import {
 	BACKSTAGE_NAV_CLASSES,
 	backstageNavEntries,
 	listBackstageRecentFiles,
+	resolveOpenPlaces,
+	selectOpenPlace,
 } from 'ooxml-ui/pptx';
 import type {
 	BackstagePage,
@@ -16,11 +18,13 @@ import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useTranslation } from '../../i18n/use-translation';
+import { useViewerCloudFiles } from '../viewer-cloud-files-context';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { useViewerStorage } from '../viewer-storage-context';
 import { ViewerRegion, useRegionRenderer } from '../ViewerRegion';
 import { WebSearch } from '../WebControls';
 import { AccountPage } from './AccountPage';
+import { CloudFilesPlaceView } from './CloudFilesPlace';
 import { BackstageCards } from './file-backstage-cards';
 import { BackstageNavIcon } from './file-backstage-icons';
 import { BackstageNewGallery, BackstageRecentList } from './file-backstage-parts';
@@ -44,6 +48,11 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	const { isHidden } = useToolbarVisibility(p.hiddenActions);
 	const exportHidden = isHidden('export');
 	const storage = useViewerStorage();
+	const cloud = useViewerCloudFiles();
+	const places = useMemo(() => resolveOpenPlaces(cloud.providers, t), [cloud.providers, t]);
+	const [placeId, setPlaceId] = useState<string>();
+	const place = selectOpenPlace(places, placeId);
+	const cloudPlace = page === 'open' ? place?.provider : undefined;
 	useEffect(() => {
 		void listBackstageRecentFiles(t, p.recentPresentationsCount, storage).then(setRecent);
 	}, [t, p.recentPresentationsCount, storage]);
@@ -154,38 +163,79 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 					<>
 						{(page === 'home' || page === 'new') && (
 							<BackstageNewGallery
-								onCreate={(templateId) => run(() => p.onCreatePresentation(templateId))}
+								onCreate={(templateId) =>
+									run(() => {
+										cloud.clear();
+										p.onCreatePresentation(templateId);
+									})
+								}
 							/>
 						)}
 						{(page === 'home' || page === 'open') && (
 							<>
-								<WebSearch
-									data-pptx-search-surface
-									data-pptx-search-input
-									className='mt-8 w-full max-w-[540px]'
-									value={query}
-									onInput={(event) =>
-										setQuery((event.currentTarget as HTMLElement & { value: string }).value)
-									}
-									placeholder={t('pptx.backstage.searchPlaceholder')}
-									aria-label={t('pptx.backstage.searchPlaceholder')}
-								/>
-								{page === 'open' && (
-									<button
-										type='button'
-										className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
-										onClick={() => run(p.onOpenFile)}
+								{page === 'open' && places.length > 0 && (
+									<div
+										role='tablist'
+										aria-label={t('pptx.backstage.places')}
+										className='mt-6 flex flex-wrap gap-2'
 									>
-										<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
-									</button>
+										{places.map((item) => (
+											<button
+												key={item.id}
+												type='button'
+												role='tab'
+												data-pptx-open-place={item.id}
+												aria-selected={place?.id === item.id}
+												onClick={() => setPlaceId(item.id)}
+												className={`border px-4 py-1.5 text-[13px] ${
+													place?.id === item.id
+														? 'border-primary bg-card text-primary'
+														: 'border-border hover:bg-accent'
+												}`}
+											>
+												{item.label}
+											</button>
+										))}
+									</div>
 								)}
-								<h2 className='mt-6 text-[16px] font-semibold'>
-									{t('pptx.backstage.recentHeading')}
-								</h2>
-								<BackstageRecentList
-									files={visibleRecent}
-									onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
-								/>
+								{cloudPlace && (
+									<CloudFilesPlaceView
+										key={cloudPlace.id}
+										provider={cloudPlace}
+										onOpen={(file) => run(() => cloud.open(file))}
+									/>
+								)}
+								{!cloudPlace && (
+									<>
+										<WebSearch
+											data-pptx-search-surface
+											data-pptx-search-input
+											className='mt-8 w-full max-w-[540px]'
+											value={query}
+											onInput={(event) =>
+												setQuery((event.currentTarget as HTMLElement & { value: string }).value)
+											}
+											placeholder={t('pptx.backstage.searchPlaceholder')}
+											aria-label={t('pptx.backstage.searchPlaceholder')}
+										/>
+										{page === 'open' && (
+											<button
+												type='button'
+												className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
+												onClick={() => run(p.onOpenFile)}
+											>
+												<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
+											</button>
+										)}
+										<h2 className='mt-6 text-[16px] font-semibold'>
+											{t('pptx.backstage.recentHeading')}
+										</h2>
+										<BackstageRecentList
+											files={visibleRecent}
+											onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
+										/>
+									</>
+								)}
 							</>
 						)}
 						{!(page === 'export' && exportHidden) && (

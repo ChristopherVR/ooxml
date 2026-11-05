@@ -20,6 +20,8 @@
  */
 import type {
 	SlidePackageClipboard,
+	CloudFileProvider,
+	CloudOpenedFile,
 	CollabLoadOrigin,
 	CollaborationHistoryTarget,
 	CollaborationLivePatcher,
@@ -30,6 +32,7 @@ import type {
 	ViewerSettings,
 } from 'ooxml-ui/pptx';
 import {
+	createCloudDocumentController,
 	createSlidePackageClipboard,
 	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
@@ -62,6 +65,7 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 	shouldConfirmExternalHyperlink,
 	resolveAutosaveIntervalSeconds,
+	resolveCloudDocumentView,
 	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
@@ -115,6 +119,8 @@ import { SettingsDialog } from './components/SettingsDialog';
 import { ShapeFormatContext } from './components/shape-format-context';
 import { AccountAuthContext } from './components/toolbar/account-auth-context';
 import { RibbonAddInsContext } from './components/toolbar/ribbon-add-ins';
+import { ViewerCloudFilesContext } from './components/viewer-cloud-files-context';
+import type { ViewerCloudFiles } from './components/viewer-cloud-files-context';
 import { ViewerCustomizationContext } from './components/viewer-customization-context';
 import { ViewerStorageContext } from './components/viewer-storage-context';
 import { ViewerDialogGroup } from './components/ViewerDialogGroup';
@@ -132,6 +138,7 @@ import { useCollaborationStateReport } from './hooks/collaboration/useCollaborat
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
 import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
+import { useController } from './hooks/useController';
 import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
@@ -174,6 +181,7 @@ export { getAnimationInitialStyle } from './utils/animation';
 
 /** Stable empty list, so a viewer without host tabs never re-renders its ribbon for them. */
 const NO_RIBBON_ADD_INS: readonly RibbonAddInTab[] = [];
+const NO_FILE_PROVIDERS: readonly CloudFileProvider[] = [];
 
 /**
  * The viewer component before its display name is set; see {@link PowerPointViewer}. It only
@@ -208,13 +216,14 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		const {
 			content: incomingContent,
 			fonts = [],
-			filePath,
-			fileName,
+			filePath: hostFilePath,
+			fileName: hostFileName,
 			canEdit: canEditProp = false,
 			readOnly = false,
 			autosave: hostAutosave,
 			autosaveIntervalMs: hostAutosaveIntervalMs,
-			storage,
+			storage: hostStorage,
+			fileProviders,
 			onContentChange,
 			onDirtyChange,
 			onActiveSlideChange,
@@ -261,8 +270,22 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			allowExternalContent,
 			limits,
 		} = props;
-		// `readOnly` takes editing away from a host that also allows it.
-		const hostCanEdit = canEditProp && !readOnly;
+		// A file opened from a File > Open cloud place brings its own storage, name and edit right
+		// until another document is loaded (shared `render/cloud-open`).
+		const cloudDocument = useMemo(() => createCloudDocumentController(), []);
+		const cloudFile = useController(cloudDocument).file;
+		const {
+			storage,
+			fileName,
+			filePath,
+			// `readOnly` takes editing away from a host that also allows it.
+			canEdit: hostCanEdit,
+		} = resolveCloudDocumentView(cloudFile, {
+			storage: hostStorage,
+			canEdit: canEditProp && !readOnly,
+			fileName: hostFileName,
+			filePath: hostFilePath,
+		});
 		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.
@@ -340,7 +363,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		useEffect(() => {
 			setContent(incomingContent);
 			setLoadOrigin('bootstrap');
-		}, [incomingContent]);
+			cloudDocument.clear();
+		}, [incomingContent, cloudDocument]);
 
 		// File ▸ Open: let the host override (`onOpenFile` prop); otherwise fall
 		// back to a built-in native picker that loads the chosen deck in place.
@@ -352,22 +376,42 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			void (async () => {
 				const picked = await openPptxFile();
 				if (picked) {
+					cloudDocument.clear();
 					setLoadOrigin('user');
 					setContent(picked.buffer);
 				}
 			})();
-		}, [hostOpenFile]);
+		}, [hostOpenFile, cloudDocument]);
+		// File > Open > a cloud place: load the bytes like any open, then let the file's storage,
+		// name and edit right apply.
+		const handleOpenCloudFile = useCallback(
+			(file: CloudOpenedFile) => {
+				setLoadOrigin('user');
+				setContent(file.bytes);
+				cloudDocument.open(file);
+			},
+			[cloudDocument],
+		);
+		const cloudFiles = useMemo<ViewerCloudFiles>(
+			() => ({
+				providers: fileProviders ?? NO_FILE_PROVIDERS,
+				open: handleOpenCloudFile,
+				clear: cloudDocument.clear,
+			}),
+			[fileProviders, handleOpenCloudFile, cloudDocument],
+		);
 		const handleOpenRecentFile = useCallback(
 			(key: string) => {
 				void (async () => {
-					const bytes = await readBackstageRecentFile(key, storage);
+					const bytes = await readBackstageRecentFile(key, hostStorage);
 					if (bytes) {
+						cloudDocument.clear();
 						setLoadOrigin('user');
 						setContent(bytes);
 					}
 				})();
 			},
-			[storage],
+			[hostStorage, cloudDocument],
 		);
 
 		// ── File > Options store ─────────────────────────────────────
@@ -1826,75 +1870,77 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// the user changed in the Options dialog.
 			<ViewerOptionsProvider options={viewerOptions} store={optionsStore}>
 				<ViewerCustomizationContext.Provider value={customizationResolved}>
-					<ViewerStorageContext.Provider value={storage}>
-						<ViewerRegionBaseContext.Provider value={regionBase}>
-							<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
-								<AccountAuthContext.Provider value={accountAuth}>
-									<Rendering3DFlagsContext.Provider value={effective3D}>
-										<ViewerThemeProvider theme={effectiveTheme}>
-											<CollaborationProvider
-												config={collaboration}
-												canvasWidth={canvasSize.width}
-												canvasHeight={canvasSize.height}
-											>
-												<CollaborationStateReporter
-													onChange={onCollaborationChange}
-													onStatus={onCollaborationStatus}
-												/>
-												<CollaborationDocumentSync
-													history={history}
-													slides={galleryDeckStyle.held()?.slides ?? slides}
-													templateElementsBySlideId={
-														galleryDeckStyle.held()?.templateElementsBySlideId ??
-														templateElementsBySlideId
-													}
-													setSlides={state.setSlides}
-													content={content}
-													loadVersion={loadVersion}
-													loadOrigin={loadOrigin}
-													livePatcher={state.livePatcher}
-													onReadOnlyChange={setCollaborationReadOnly}
-													deckSaveState={{
-														headerFooter: state.headerFooter,
-														presentationProperties: state.presentationProperties,
-														viewProperties: state.viewProperties,
-														customShows: state.customShows,
-														sections: state.sections,
-														coreProperties: state.coreProperties,
-														appProperties: state.appProperties,
-														customProperties: state.customProperties,
-														tagCollections: state.tagCollections,
-														slideMasters: state.slideMasters,
-														notesMaster: state.notesMaster,
-														handoutMaster: state.handoutMaster,
-														slideSize: resolveSlideSizeSelection({
-															current: state.slideSizeEmu,
-															canvas: canvasSize,
-														}).size,
-														tableStyleMap: state.tableStyleMap,
-														tableStylesDefaultId: state.tableStylesDefaultId,
-														tableStylesToDelete: state.tableStylesToDelete,
-														embedFonts: dialogs.embedFontsEnabled,
-													}}
-												/>
-												<CollaborationFollowLayer
-													activeSlideIndex={activeSlideIndex}
-													setActiveSlideIndex={state.setActiveSlideIndex}
-													slideCount={slides.length}
-												/>
-												<ShapeFormatContext.Provider value={shapeFormat}>
-													<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-														<ChartFormatContext.Provider value={chartFormat}>
-															{viewerContent}
-														</ChartFormatContext.Provider>
-													</RibbonGalleryCommandsContext.Provider>
-												</ShapeFormatContext.Provider>
-											</CollaborationProvider>
-										</ViewerThemeProvider>
-									</Rendering3DFlagsContext.Provider>
-								</AccountAuthContext.Provider>
-							</RibbonAddInsContext.Provider>
-						</ViewerRegionBaseContext.Provider>
+					<ViewerStorageContext.Provider value={hostStorage}>
+						<ViewerCloudFilesContext.Provider value={cloudFiles}>
+							<ViewerRegionBaseContext.Provider value={regionBase}>
+								<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
+									<AccountAuthContext.Provider value={accountAuth}>
+										<Rendering3DFlagsContext.Provider value={effective3D}>
+											<ViewerThemeProvider theme={effectiveTheme}>
+												<CollaborationProvider
+													config={collaboration}
+													canvasWidth={canvasSize.width}
+													canvasHeight={canvasSize.height}
+												>
+													<CollaborationStateReporter
+														onChange={onCollaborationChange}
+														onStatus={onCollaborationStatus}
+													/>
+													<CollaborationDocumentSync
+														history={history}
+														slides={galleryDeckStyle.held()?.slides ?? slides}
+														templateElementsBySlideId={
+															galleryDeckStyle.held()?.templateElementsBySlideId ??
+															templateElementsBySlideId
+														}
+														setSlides={state.setSlides}
+														content={content}
+														loadVersion={loadVersion}
+														loadOrigin={loadOrigin}
+														livePatcher={state.livePatcher}
+														onReadOnlyChange={setCollaborationReadOnly}
+														deckSaveState={{
+															headerFooter: state.headerFooter,
+															presentationProperties: state.presentationProperties,
+															viewProperties: state.viewProperties,
+															customShows: state.customShows,
+															sections: state.sections,
+															coreProperties: state.coreProperties,
+															appProperties: state.appProperties,
+															customProperties: state.customProperties,
+															tagCollections: state.tagCollections,
+															slideMasters: state.slideMasters,
+															notesMaster: state.notesMaster,
+															handoutMaster: state.handoutMaster,
+															slideSize: resolveSlideSizeSelection({
+																current: state.slideSizeEmu,
+																canvas: canvasSize,
+															}).size,
+															tableStyleMap: state.tableStyleMap,
+															tableStylesDefaultId: state.tableStylesDefaultId,
+															tableStylesToDelete: state.tableStylesToDelete,
+															embedFonts: dialogs.embedFontsEnabled,
+														}}
+													/>
+													<CollaborationFollowLayer
+														activeSlideIndex={activeSlideIndex}
+														setActiveSlideIndex={state.setActiveSlideIndex}
+														slideCount={slides.length}
+													/>
+													<ShapeFormatContext.Provider value={shapeFormat}>
+														<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
+															<ChartFormatContext.Provider value={chartFormat}>
+																{viewerContent}
+															</ChartFormatContext.Provider>
+														</RibbonGalleryCommandsContext.Provider>
+													</ShapeFormatContext.Provider>
+												</CollaborationProvider>
+											</ViewerThemeProvider>
+										</Rendering3DFlagsContext.Provider>
+									</AccountAuthContext.Provider>
+								</RibbonAddInsContext.Provider>
+							</ViewerRegionBaseContext.Provider>
+						</ViewerCloudFilesContext.Provider>
 					</ViewerStorageContext.Provider>
 				</ViewerCustomizationContext.Provider>
 			</ViewerOptionsProvider>
