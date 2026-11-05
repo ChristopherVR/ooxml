@@ -22,16 +22,14 @@ import { applyGeneratedChartSpaceFormat } from './chart-space-format';
 import { applyChartUpDownBars } from './chart-up-down-bars';
 import { buildGeneratedChartAxis } from './chart-xml-axis-generator';
 import type { ChartFamily } from './chart-xml-container-map';
-import { resolveChartContainerType } from './chart-xml-container-map';
+import { GENERATED_CHART_AXIS_IDS, resolveChartContainerType } from './chart-xml-container-map';
 import { buildGeneratedSeriesSpPr, isLineDrawnChartFamily } from './chart-xml-series-fill';
 
 const NS_C = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
-const CAT_AX_ID = 111111111;
-const VAL_AX_ID = 222222222;
-const SER_AX_ID = 333333333;
+const { cat: CAT_AX_ID, val: VAL_AX_ID, ser: SER_AX_ID } = GENERATED_CHART_AXIS_IDS;
 
 const SCATTER_LIKE = new Set<PptxChartType>(['scatter', 'bubble']);
 

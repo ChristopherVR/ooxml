@@ -92,16 +92,26 @@ export function applyGeneratedChartGroupOptions(
 	containerLocal: string,
 	chartData: PptxChartData,
 ): void {
-	for (const spec of CHART_GROUP_OPTIONS) {
-		if (!chartContainerAllows(containerLocal, spec.element)) {
-			continue;
-		}
-		const value = modelValue(chartData, spec) ?? spec.generatedDefault;
-		if (value !== undefined) {
-			container[`c:${spec.element}`] = { '@_val': chartGroupOptionVal(spec, value) };
-		}
+	for (const [element, value] of generatedChartGroupOptions(containerLocal, chartData)) {
+		container[`c:${element}`] = { '@_val': value };
 	}
 	orderChartContainerChildren(container, containerLocal, localNameOf);
+}
+
+/**
+ * The options a freshly generated `containerLocal` carries, as `[element, @val]` pairs: the
+ * model's value (rounded and clamped into the schema range) or the constant a generated chart
+ * always wrote. The legacy generator and the shared-core creation path both write these.
+ */
+export function generatedChartGroupOptions(
+	containerLocal: string,
+	chartData: PptxChartData,
+): [ChartGroupOptionSpec['element'], string][] {
+	return CHART_GROUP_OPTIONS.flatMap((spec) => {
+		if (!chartContainerAllows(containerLocal, spec.element)) return [];
+		const value = modelValue(chartData, spec) ?? spec.generatedDefault;
+		return value === undefined ? [] : [[spec.element, chartGroupOptionVal(spec, value)]];
+	});
 }
 
 function authoredValue(node: unknown): number | undefined {

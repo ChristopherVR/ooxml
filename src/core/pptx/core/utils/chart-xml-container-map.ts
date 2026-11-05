@@ -62,3 +62,9 @@ const CONTAINER_MAP: Partial<Record<PptxChartType, ChartContainerType>> = {
 export function resolveChartContainerType(type: PptxChartType): ChartContainerType {
 	return CONTAINER_MAP[type] ?? { tag: 'c:barChart', family: 'bar' };
 }
+
+/**
+ * The ids a generated classic chart part gives its category (or X value), value (or Y value) and
+ * series axes; the legacy generator and the shared-core creation path use the same three.
+ */
+export const GENERATED_CHART_AXIS_IDS = { cat: 111111111, val: 222222222, ser: 333333333 } as const;

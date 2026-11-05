@@ -716,7 +716,9 @@ export interface PptxChartSeries {
 	 * normal case for measurement data). Reading the x values off the first
 	 * series and reusing them everywhere plotted every series against series 1's
 	 * x axis. Absent for category-axis chart kinds, where
-	 * {@link PptxChartData.categories} is the x axis.
+	 * {@link PptxChartData.categories} is the x axis. A NEW chart without them
+	 * plots each category read as a number, or its 1-based position when the
+	 * category is not a number.
 	 */
 	xValues?: number[];
 	/**
@@ -724,7 +726,8 @@ export interface PptxChartSeries {
 	 * aligned index-for-index with {@link values}.
 	 *
 	 * `CT_BubbleSer` carries x, y AND size, so a one-series bubble chart is fully
-	 * specified. Absent when the source omits `c:bubbleSize`.
+	 * specified. Absent when the source omits `c:bubbleSize`. A NEW bubble chart
+	 * without them draws every bubble at size 1.
 	 */
 	bubbleSizes?: number[];
 	/**

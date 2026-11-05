@@ -146,6 +146,32 @@ export function planNeutralChartSave(
 	before: PptxChartData,
 	after: PptxChartData,
 ): NeutralChartSavePlan | undefined {
+	return planWithLeftovers(before, after).plan;
+}
+
+/** The fields under `value` that differ from `reference`, as paths (`style.legendOverlay`). */
+function differingPaths(reference: unknown, value: unknown, path: string): string[] {
+	if (same(reference, value)) return [];
+	const isObject = (item: unknown): item is Record<string, unknown> =>
+		!!item && typeof item === 'object';
+	if (!isObject(reference) || !isObject(value) || Array.isArray(reference) !== Array.isArray(value))
+		return [path];
+	if (Array.isArray(value) && (reference as unknown as unknown[]).length !== value.length)
+		return [path];
+	const keys = new Set([...Object.keys(reference), ...Object.keys(value)]);
+	return [...keys].flatMap((key) =>
+		differingPaths(reference[key], value[key], path ? `${path}.${key}` : key),
+	);
+}
+
+/**
+ * {@link planNeutralChartSave}, with the paths of the fields of `after` no family claimed (empty
+ * when the plan is defined).
+ */
+export function planWithLeftovers(
+	before: PptxChartData,
+	after: PptxChartData,
+): { plan: NeutralChartSavePlan | undefined; unclaimed: string[] } {
 	const probe = structuredClone(after);
 	const edits: NeutralChartEdit[] = [];
 	const original = before;
@@ -170,11 +196,14 @@ export function planNeutralChartSave(
 	planNeutralChartDecorations(before, probe, edits);
 	planNeutralFlatPaint(before, probe, edits);
 	planNeutralChartSeriesColors(before, probe, edits);
-	return same(probe, before)
-		? {
-				edits,
-				seriesData,
-				...(before !== original || vectors.rebuildWorkbook ? { rebuildWorkbook: true } : {}),
-			}
-		: undefined;
+	if (!same(probe, before))
+		return { plan: undefined, unclaimed: differingPaths(before, probe, '') };
+	return {
+		plan: {
+			edits,
+			seriesData,
+			...(before !== original || vectors.rebuildWorkbook ? { rebuildWorkbook: true } : {}),
+		},
+		unclaimed: [],
+	};
 }

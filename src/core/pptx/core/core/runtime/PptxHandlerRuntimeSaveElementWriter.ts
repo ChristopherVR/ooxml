@@ -16,6 +16,8 @@ import type {
 } from '../../types';
 import { buildChartColorStyleXml } from '../../utils/chart-color-style-writer';
 import { buildChartExSpaceXml, canGenerateChartEx } from '../../utils/chart-cx-generator';
+import { writeNewChartPart } from '../../utils/chart-new-part';
+import { orderedXmlObject } from '../../utils/xml-ordered-object';
 import { buildChartSpaceXml } from '../../utils/chart-xml-generator';
 import { findOleObjNode } from '../../utils/ole-alternate-content';
 import { ensureXmlChild } from '../../utils/xml-access';
@@ -119,13 +121,32 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Generate a self-contained chart part for an SDK-created chart, register a
 	 * slide relationship to it, and return the `p:graphicFrame` envelope. The
 	 * content-type override is added later from {@link pendingChartPartPaths}.
+	 * A classic chart is written through the shared chart core
+	 * (`writeNewChartPart`), else by the legacy generator; model fields the part
+	 * leaves out are reported as a save warning.
 	 */
 	protected createChartElementXml(el: ChartPptxElement, ctx: SaveSlideContext): XmlObject {
 		const extended = canGenerateChartEx(el.chartData!);
 		const partPath = extended ? this.nextExtendedChartPartPath() : this.nextChartPartPath();
+		const part = extended ? undefined : writeNewChartPart(el.chartData!);
 		const chartXml = extended
 			? buildChartExSpaceXml(el.chartData!)
-			: buildChartSpaceXml(el.chartData!);
+			: part?.xml !== undefined
+				? orderedXmlObject(part.xml)
+				: buildChartSpaceXml(el.chartData!);
+		if (part && part.unwritten.length > 0) {
+			this.compatibilityService.reportWarning({
+				code:
+					part.xml === undefined ? 'CHART_WRITTEN_BY_LEGACY_GENERATOR' : 'CHART_FIELDS_NOT_WRITTEN',
+				message:
+					part.xml === undefined
+						? `Chart '${el.id}' was written by the legacy chart generator, which may drop: ${part.unwritten.join(', ')}.`
+						: `Chart '${el.id}' was saved without: ${part.unwritten.join(', ')}.`,
+				scope: 'save',
+				slideId: ctx.slide.id,
+				elementId: el.id,
+			});
+		}
 		this.zip.file(partPath, this.builder.build(chartXml));
 		if (extended) {
 			(this.pendingExtendedChartPartPaths ??= []).push(partPath);

@@ -447,6 +447,13 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   not a native rendering oracle. The 300-test classic corpus and five sequential native PowerPoint
   edit/reopen/workbook checks pass. See [the delivery ledger](office-shared-parity-delivery.md) for evidence;
   no claim is made that every object-tree serializer can already be deleted.
+  New classic charts (`addChart`, `createChartElement`, `ChartBuilder`, Insert Chart) are written the
+  same way (`chart-new-part.ts`): `newChartSpace` builds a minimal part with literal data, and the
+  planner turns the rest of the model into operations. A part it cannot write keeps the legacy
+  generator (`chart-xml-generator.ts`), and the save reports `CHART_WRITTEN_BY_LEGACY_GENERATOR`
+  with the fields it may drop; fields a new part cannot hold are reported as
+  `CHART_FIELDS_NOT_WRITTEN`. `chart-new-part-parity.test.ts` compares both writers over the 24
+  classic type variants; native opening of fresh SDK decks is not claimed.
 - **C4, `PptxChartData` as a compatibility adapter (shared projections implemented).** Classic
   facts and supported formatting come from `ChartSpace` through `chart-from-neutral*.ts`; saved
   parts refresh compatibility views with scoped host theme and relationship context. Remaining
