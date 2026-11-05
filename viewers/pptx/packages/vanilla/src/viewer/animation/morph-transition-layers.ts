@@ -1,4 +1,4 @@
-import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
+import type { MorphCopyPart, MorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
 	MORPH_CROSSFADE_GROUP_CSS_TEXT,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
@@ -86,6 +86,7 @@ export function materializeMorphCopy(
 	stage: HTMLElement,
 	copy: { id: string; height: number },
 	sources: ReadonlyMap<string, string> | undefined,
+	parts?: ReadonlyMap<string, MorphCopyPart>,
 ): HTMLElement {
 	const id = copy.id;
 	const sourceId = sources?.get(id);
@@ -97,9 +98,34 @@ export function materializeMorphCopy(
 		const clone = node.cloneNode(true) as HTMLElement;
 		clone.dataset.elementId = id;
 		clone.style.height = `${copy.height}px`;
+		keepMorphCopyPart(clone, parts?.get(id));
 		node.after(clone);
 	}
 	return stage;
+}
+
+/**
+ * Strip a cloned shape down to the part its copy paints (`morphCopyParts`):
+ * a shape whose text is carried apart from its body is painted as a copy
+ * without its text and a copy without its fill and outline. The other
+ * bindings render each copy from its element, which already lacks the part.
+ */
+export function keepMorphCopyPart(clone: HTMLElement, part: MorphCopyPart | undefined): void {
+	if (part === 'body') {
+		for (const text of [...clone.querySelectorAll(':scope > .pptxv-text')]) {
+			text.remove();
+		}
+	} else if (part === 'text') {
+		for (const child of [...clone.children]) {
+			if (!child.classList.contains('pptxv-text')) {
+				child.remove();
+			}
+		}
+		clone.style.background = 'none';
+		clone.style.border = 'none';
+		clone.style.outline = 'none';
+		clone.style.boxShadow = 'none';
+	}
 }
 
 /** A stage clone must use the plan's destination text layout for these ghosts. */
@@ -213,9 +239,15 @@ export function buildMorphCrossfadeGroups(
 		): HTMLElement => {
 			const layer = buildLayer(
 				doc,
-				keepOnlyElements(materializeMorphCopy(stage, element, morphPlan.textPieceSources), [
-					element.id,
-				]),
+				keepOnlyElements(
+					materializeMorphCopy(
+						stage,
+						element,
+						morphPlan.textPieceSources,
+						morphPlan.morphCopyParts,
+					),
+					[element.id],
+				),
 				zIndex,
 				animation ?? 'none',
 				state,

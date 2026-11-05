@@ -63,6 +63,7 @@ import {
 	type StatusBarTheme,
 } from './viewer-options';
 import { ViewerShare } from './viewer-share';
+import { attachVisioShare, type VisioShareUi } from './viewer-share-ui';
 import type { VisioCollaborationOptions, VisioCollaborationState } from './collaboration-types';
 import { wireStencil } from './viewer-stencil';
 import { createRulers, type Rulers } from './viewer-ruler';
@@ -209,6 +210,7 @@ export class VisioViewerElement extends BaseElement {
 	#panZoom: ViewerPanZoom;
 	#profile: ViewerProfile;
 	#share: ViewerShare;
+	#shareUi: VisioShareUi;
 	#backstage: ViewerBackstage;
 	#pointer: ViewerPointerGestures;
 	#sizePosition: ViewerSizePosition;
@@ -401,10 +403,20 @@ export class VisioViewerElement extends BaseElement {
 			},
 		);
 		this.#share = new ViewerShare(this.#root, this.controller, () => this.#profile.profile);
-		this.#share.onChange = (detail) =>
+		this.#share.onChange = (detail) => {
+			this.#shareUi?.refresh();
 			this.dispatchEvent(
 				new CustomEvent('collaboration-change', { detail, bubbles: true, composed: true }),
 			);
+		};
+		this.#shareUi = attachVisioShare({
+			element: this,
+			root: this.#root,
+			ribbon: this.#toolbar,
+			share: this.#share,
+			profile: () => this.#profile.profile,
+			locale: () => this.#locale(),
+		});
 		this.#share.onError = (error) =>
 			this.dispatchEvent(
 				new CustomEvent('document-error', { detail: error, bubbles: true, composed: true }),
@@ -795,6 +807,7 @@ export class VisioViewerElement extends BaseElement {
 		if (this.#disposed) return;
 		this.#disposed = true;
 		this.#share.stop();
+		this.#shareUi.destroy();
 		this.#disposeInputs();
 		this.#fontEvents?.removeEventListener('loadingdone', this.#fontsChanged);
 		this.#fontEvents = undefined;
@@ -856,6 +869,7 @@ export class VisioViewerElement extends BaseElement {
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
 		this.#backstage?.localize();
+		this.#shareUi.relocalize();
 		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();
 	}

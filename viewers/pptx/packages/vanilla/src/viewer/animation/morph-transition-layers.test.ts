@@ -110,4 +110,53 @@ describe('buildMorphCrossfadeGroups', () => {
 		// The source stages are cloned, never modified.
 		expect(outgoing.querySelectorAll('[data-element-id]')).toHaveLength(1);
 	});
+
+	// A shape whose text is carried apart from its body (`morphCopyParts`) is
+	// painted as a copy without its text and a copy without its fill and outline.
+	it('strips a body or text copy down to its part', () => {
+		const shape = (id: string) => {
+			const root = stage([id]);
+			const node = root.querySelector<HTMLElement>(`[data-element-id="${id}"]`)!;
+			node.style.backgroundColor = 'rgb(32, 112, 192)';
+			node.innerHTML =
+				'<svg class="outline"></svg><div class="pptxv-text"><p>Lorem ipsum</p></div>';
+			return root;
+		};
+		const plan = {
+			overlayLayers: [],
+			crossfadeGroups: [
+				{
+					outgoing: { id: 'a-morph-body', height: 160 },
+					incoming: { id: 'b-morph-body', height: 240 },
+				},
+				{
+					outgoing: { id: 'a-morph-text', height: 160 },
+					incoming: { id: 'b-morph-text', height: 240 },
+				},
+			],
+			textPieceSources: new Map([
+				['a-morph-body', 'a'],
+				['a-morph-text', 'a'],
+				['b-morph-body', 'b'],
+				['b-morph-text', 'b'],
+			]),
+			morphCopyParts: new Map([
+				['a-morph-body', 'body'],
+				['a-morph-text', 'text'],
+				['b-morph-body', 'body'],
+				['b-morph-text', 'text'],
+			]),
+		} as unknown as MorphTransitionPlan;
+		const [body, text] = buildMorphCrossfadeGroups(document, shape('a'), shape('b'), plan);
+		const copy = (group: HTMLElement | undefined, id: string) =>
+			group!.querySelector<HTMLElement>(`[data-element-id="${id}"]`)!;
+		const bodyCopy = copy(body, 'b-morph-body');
+		expect(bodyCopy.querySelector('.pptxv-text')).toBeNull();
+		expect(bodyCopy.querySelector('svg')).not.toBeNull();
+		expect(bodyCopy.style.backgroundColor).toBe('rgb(32, 112, 192)');
+		const textCopy = copy(text, 'a-morph-text');
+		expect(textCopy.textContent).toBe('Lorem ipsum');
+		expect(textCopy.querySelector('svg')).toBeNull();
+		expect(textCopy.style.backgroundColor).not.toBe('rgb(32, 112, 192)');
+	});
 });

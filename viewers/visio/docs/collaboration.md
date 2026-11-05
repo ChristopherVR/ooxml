@@ -1,9 +1,9 @@
 # Collaboration
 
-File > Share starts a live session between windows of one browser. A host application can share across devices by setting the `collaboration` property, which takes the same options as every other Office editor.
+The Share button (or File > Share > Share with people) opens the Share dialog every Office editor uses: start a session (session name, your name and an optional server) or join one from an invitation link or session name, then copy the invitation link, see who is in the session and stop sharing. Without a server the session runs between windows of one browser; with a server URL (typed in the dialog or set by the host) it runs across devices. A host can also set the `collaboration` property, which takes the same options as every other Office editor, or cancel the `share` `file-command` to share its own way.
 
 ::: warning Partial
-There is no hosted service in this build. With File > Share nothing leaves your browser. Across devices you bring your own server (a y-websocket compatible URL), provider or Yjs session; pages and shapes merge item by item, everything else is shared whole (see below).
+There is no hosted service in this build. Without a server nothing leaves your browser. Across devices you bring your own server (a y-websocket compatible URL), provider or Yjs session; pages and shapes merge item by item, everything else is shared whole (see below).
 :::
 
 ## Embedding: the `collaboration` property
@@ -27,7 +27,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **Declarative**: while `collaboration` is set the open drawing is shared, and a drawing loaded later is shared too. Setting it to `null` leaves the room. A session the viewer opened itself is destroyed on leave; a host `session` is not.
 - **Intent**: with `join` an empty room is not seeded with the local drawing, so a late joiner cannot overwrite a room that has not loaded yet. A drawing loaded or edited afterwards is still published. Default `create`.
 - **Roles**: `role: 'viewer'` makes the viewer read-only while it is in the room (`canEdit` is restored when it leaves). The role is advisory; a server must enforce it.
-- **Events**: `collaboration-change` carries a `CollaborationState` when sharing starts or stops and when the connection status, first sync or people change. A failed join is reported as `document-error`. File > Share uses the same controller, so starting from the panel reports state and the event too.
+- **Events**: `collaboration-change` carries a `CollaborationState` when sharing starts or stops and when the connection status, first sync or people change. A failed join is reported as `document-error`. The Share dialog uses the same controller, so starting from it reports state and the event too.
 - **Bindings**: every binding forwards a `collaboration` prop (React, Vue, Solid, Svelte, vanilla `mountViewer`/`update`, Angular `[collaboration]`) and relays `collaboration-change` (`events['collaboration-change']`, Vue `@collaboration-change`, Angular `(collaborationChange)`). Unmounting leaves the room.
 - **Types**: `VisioCollaborationOptions` (the shared options plus `onWriteBack`, `writeBackDebounceMs` and `writeBackRetry`) and `VisioCollaborationState` are exported from `ooxml-ui/visio`, and every binding's `collaboration` prop is typed with the same options.
 
@@ -127,11 +127,11 @@ A sharing session is just a name. Both panes below are separate playgrounds, bui
 
 ### Pair any two frameworks
 
-Every playground accepts `?share=<session>`, which fills in File > Share and starts it. Only the session name matters, so any pairing works: the home page [live demo](/#live-demo) has a framework picker for each window, and in two tabs you can open, for example, `/demo-vue/?sample=1&share=my-room` and `/demo-angular/?share=my-room`. You can also do it by hand in any two windows: File, then Share, then the same session name.
+Every playground accepts `?share=<session>`, which joins that session on load. Only the session name matters, so any pairing works: the home page [live demo](/#live-demo) has a framework picker for each window, and in two tabs you can open, for example, `/demo-vue/?sample=1&share=my-room` and `/demo-angular/?share=my-room`. You can also do it by hand in any two windows: Share in one, then Join a session with its invitation link or session name in the other.
 
-### Why File > Share is same-browser only
+### Why sharing without a server is same-browser only
 
-The panel uses a `BroadcastChannel`, which connects windows, tabs and frames of one browser profile on one origin, whichever framework they were built with, and nothing else. Two different machines cannot meet this way; a host sets `collaboration` with a `serverUrl`, `provider` or `session` for that, and this build ships no server.
+Without a server the session uses a `BroadcastChannel`, which connects windows, tabs and frames of one browser profile on one origin, whichever framework they were built with, and nothing else. Two different machines cannot meet this way; type a server URL in the Share dialog or let the host set `collaboration` with a `serverUrl`, `provider` or `session` for that; this build ships no server.
 
 ## What is and is not supported
 

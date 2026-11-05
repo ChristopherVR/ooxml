@@ -526,3 +526,73 @@ describe('presentationTransitionOverlay', () => {
 		});
 	});
 });
+
+// PowerPoint 16 morphs a filled, outlined shape whose box moves while its text
+// changes face and size as two things: the body on the box, and the text glyph
+// over glyph on its own mapping. The plan paints them as two groups of copies.
+describe('shape text carried apart from its body', () => {
+	it('paints the body copies without text and the text copies without a fill', () => {
+		const card = (id: string, font: string, size: number, box: object): PptxElement =>
+			({
+				id,
+				type: 'shape',
+				name: '!!Card',
+				shapeType: 'rect',
+				x: 80,
+				y: 100,
+				width: 300,
+				height: 120,
+				text: 'Lorem ipsum',
+				textSegments: [
+					{ text: 'Lorem ipsum', style: { fontFamily: font, fontSize: size, color: '#FFFFFF' } },
+				],
+				textStyle: { fontFamily: font, fontSize: size, align: 'center', vAlign: 'middle' },
+				shapeStyle: {
+					fillMode: 'solid',
+					fillColor: '#2070C0',
+					strokeColor: '#FFFFFF',
+					strokeWidth: 3,
+				},
+				...box,
+			}) as unknown as PptxElement;
+		const outgoing = { id: 'out', elements: [card('out-card', 'Calibri', 28, {})] } as PptxSlide;
+		const incoming = {
+			id: 'in',
+			elements: [card('in-card', 'Arial', 40, { x: 460, y: 300, width: 420, height: 180 })],
+		} as PptxSlide;
+		const plan = buildMorphTransitionPlan(outgoing, incoming, 500, 'object', {
+			measureText: (text, font) => text.length * (/Arial/u.test(font) ? 0.52 : 0.47) * 40,
+		})!;
+		expect(plan.crossfadeGroups.map((group) => group.incoming.id)).toStrictEqual([
+			'in-card-morph-body',
+			'in-card-morph-text',
+		]);
+		const html = renderToStaticMarkup(
+			<PresentationTransitionOverlay
+				outgoingSlide={outgoing}
+				templateElements={[]}
+				canvasSize={{ width: 960, height: 540 }}
+				transition={{ type: 'morph', durationMs: 500 }}
+				durationMs={500}
+				morphPlan={plan}
+				incomingSlide={incoming}
+				onComplete={vi.fn()}
+			/>,
+		);
+		const group = (id: string) =>
+			new RegExp(
+				`<div data-pptx-morph-crossfade="${id}"[^>]*>(.*?)(?=<div data-pptx-morph-crossfade=|$)`,
+				'su',
+			).exec(html)?.[1] ?? '';
+		const body = group('in-card-morph-body');
+		const text = group('in-card-morph-text');
+		expect(body).toContain('data-pptx-morph-lifted="in-card-morph-body"');
+		expect(body).not.toContain('Lorem ipsum');
+		expect(text.match(/Lorem ipsum/gu)).toHaveLength(2);
+		const fill = /background-color:\s*(#2070C0|rgb\(32, ?112, ?192\))/iu;
+		expect(body).toMatch(fill);
+		expect(text).not.toMatch(fill);
+		// The pair itself is not painted besides its copies.
+		expect(html.match(/Lorem ipsum/gu)).toHaveLength(2);
+	});
+});

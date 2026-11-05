@@ -86,19 +86,19 @@ Excel, PowerPoint and Visio editors. No add-in tab ships with the editor.
 
 Every adapter exposes the same handle: React through `ref`, Vue through the template ref, Angular through the component instance, Solid through `editorRef`, Svelte through the component's exports and vanilla as the return value of `mountEditor`.
 
-| Member                          | Effect                                                              |
-| ------------------------------- | ------------------------------------------------------------------- |
-| `element`                       | The mounted `<xlsx-editor>`.                                        |
-| `load(bytes, fileName?)`        | Opens `.xlsx`, `.xlsm`, `.xls` or `.csv` bytes; rejects on failure. |
-| `newWorkbook()`                 | Replaces the workbook with a blank one.                             |
-| `save()`                        | Resolves to an `.xlsx` Blob. Does not clear `dirty`.                |
-| `saveBytes(format?)`            | `'xlsx'` (default) or `'csv'` (active sheet) bytes.                 |
-| `download(fileName?)`           | Saves, downloads in the browser and marks the workbook clean.       |
-| `markClean()`                   | Clears `dirty` after you persisted a saved Blob yourself.           |
-| `select(ref)`, `getSelection()` | Selection as an A1 reference (`'B2:D8'`).                           |
-| `setActiveSheet(index)`         | Switches sheet.                                                     |
-| `share()`                       | Opens File > Share. Unmounting the editor leaves any shared room.   |
-| `dirty`                         | Unsaved edits (Svelte: `isDirty()`).                                |
+| Member                          | Effect                                                                |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `element`                       | The mounted `<xlsx-editor>`.                                          |
+| `load(bytes, fileName?)`        | Opens `.xlsx`, `.xlsm`, `.xls` or `.csv` bytes; rejects on failure.   |
+| `newWorkbook()`                 | Replaces the workbook with a blank one.                               |
+| `save()`                        | Resolves to an `.xlsx` Blob. Does not clear `dirty`.                  |
+| `saveBytes(format?)`            | `'xlsx'` (default) or `'csv'` (active sheet) bytes.                   |
+| `download(fileName?)`           | Saves, downloads in the browser and marks the workbook clean.         |
+| `markClean()`                   | Clears `dirty` after you persisted a saved Blob yourself.             |
+| `select(ref)`, `getSelection()` | Selection as an A1 reference (`'B2:D8'`).                             |
+| `setActiveSheet(index)`         | Switches sheet.                                                       |
+| `share()`                       | Opens the Share dialog. Unmounting the editor leaves any shared room. |
+| `dirty`                         | Unsaved edits (Svelte: `isDirty()`).                                  |
 
 Calling a handle method before the editor is mounted throws `Editor is not mounted`.
 

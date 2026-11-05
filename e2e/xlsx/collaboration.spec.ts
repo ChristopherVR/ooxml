@@ -12,7 +12,7 @@ import {
 } from './helpers';
 
 /**
- * Two windows of one browser share a workbook through File > Share. Without a server the editor
+ * Two windows of one browser share a workbook through the Share dialog. Without a server the editor
  * joins the room over a BroadcastChannel, which connects pages of one browser context, so each
  * pairing runs two pages built from different framework adapters in the same context.
  */
@@ -21,13 +21,14 @@ async function startSharing(page: Page, name: string, room: string) {
 		(node as unknown as { authorName: string }).authorName = author;
 	}, name);
 	await part(page, 'ribbon').locator('office-ui-ribbon-actions [part="share"]').click();
-	const share = editor(page).locator('[data-backstage-page="share"]');
-	await expect(share).toBeVisible();
-	await share.locator('.xve-share-room').fill(room);
-	await share.getByRole('button', { name: 'Start sharing', exact: true }).click();
-	await expect(share.getByRole('button', { name: 'Stop sharing', exact: true })).toBeVisible();
-	await part(page, 'backstage').locator('[data-backstage="back"]').click();
-	await expect(share).toBeHidden();
+	// The Share dialog every product uses; Excel's author name is the suggested display name.
+	const dialog = editor(page).locator('office-ui-share-dialog');
+	await expect(dialog.getByLabel('Your name')).toHaveValue(name);
+	await dialog.getByLabel('Session name').fill(room);
+	await dialog.getByRole('button', { name: 'Start sharing', exact: true }).click();
+	await expect(dialog.getByRole('button', { name: 'Stop sharing', exact: true })).toBeVisible();
+	await dialog.locator('.actions').getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(dialog.getByRole('button', { name: 'Stop sharing', exact: true })).toBeHidden();
 }
 
 /**

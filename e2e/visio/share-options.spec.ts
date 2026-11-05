@@ -7,8 +7,15 @@ async function startSharing(page: Page, room: string): Promise<void> {
 	const viewer = page.locator('visio-viewer');
 	await fileBackstage(viewer, 'share');
 	const panel = viewer.locator('.share-panel');
-	await panel.getByLabel('Session name').fill(room);
-	await panel.getByRole('button', { name: 'Start sharing' }).click();
+	await panel.getByRole('button', { name: 'Share with people' }).click();
+	// The Share dialog every product uses: the name comes from the Office profile.
+	const dialog = viewer.locator('office-ui-share-dialog');
+	await expect(dialog.getByLabel('Your name')).toHaveValue('Ada Lovelace');
+	await dialog.getByLabel('Session name').fill(room);
+	await dialog.getByRole('button', { name: 'Start sharing' }).click();
+	await expect(dialog.locator('.status')).toHaveAttribute('data-status', 'connected');
+	await expect(dialog.getByLabel('Invitation link')).toHaveValue(new RegExp(`[?&]room=${room}`));
+	await dialog.locator('.actions').getByRole('button', { name: 'Close' }).click();
 	await expect(panel.getByRole('status')).toContainText(`in session ${room}`);
 }
 
@@ -35,7 +42,7 @@ test('File > Share keeps two windows of this browser on the same drawing', async
 
 	const grace = await context.newPage();
 	await grace.setViewportSize({ width: 1440, height: 900 });
-	// The second window joins with nothing of its own open (`?share=` starts File > Share on load),
+	// The second window joins with nothing of its own open (`?share=` joins the session on load),
 	// so it adopts the session's drawing rather than racing it with the sample.
 	await grace.goto(`/demo/?embed=1&share=${room}`);
 	const graceViewer = grace.locator('visio-viewer');

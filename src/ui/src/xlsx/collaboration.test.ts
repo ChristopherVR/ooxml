@@ -13,6 +13,7 @@ import { getCell } from 'ooxml-core/xlsx';
 import { sanitizeXlsxPresence, type XlsxPresence } from 'ooxml-core/xlsx/collab';
 import type { EditorCore } from './editor-core';
 import { defineXlsxEditor, type XlsxEditorElement } from './index';
+import type { OfficeUiShareDialog } from '../dialog/share-dialog';
 
 const wait = (ms = 20) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const sessions: CollabSession<XlsxPresence>[] = [];
@@ -222,18 +223,40 @@ describe('<xlsx-editor> collaboration', () => {
 		);
 	});
 
-	it('shares from File > Share', async () => {
+	it('shares from the Share dialog, and File > Share opens it', async () => {
 		const a = editor();
+		a.element.authorName = 'Ada';
 		a.element.share();
-		const page = a.element.shadowRoot!.querySelector<HTMLElement>('[data-backstage-page="share"]')!;
-		expect(page.hidden).toBe(false);
-		const room = page.querySelector<HTMLInputElement>('.xve-share-room')!;
-		expect(room.value).toMatch(/^book-[a-z0-9]+$/);
-		room.value = 'bad room';
-		page.querySelector<HTMLButtonElement>('[data-share="start"]')!.click();
+		const root = a.element.shadowRoot!;
+		const dialog = root.querySelector<OfficeUiShareDialog>('office-ui-share-dialog')!;
+		expect(dialog.open).toBe(true);
+		dialog.ensureRendered();
+		expect(dialog.formOptions()).toEqual({
+			roomId: expect.stringMatching(/^book-[a-z0-9]{8}$/),
+			user: { name: 'Ada' },
+			intent: 'create',
+		});
+		// A failed start is shown in the dialog, and nothing is shared.
+		dialog.dispatchEvent(
+			new CustomEvent('office-share-start', { detail: { options: { roomId: 'bad room' } } }),
+		);
 		await wait();
-		expect(page.querySelector('.xve-share-status')?.textContent).toMatch(/128 letters/);
+		expect(dialog.error).toMatch(/128 letters/);
 		expect(a.element.collaborationState.active).toBe(false);
+		dialog.open = false;
+		// File > Share's "Share with people" runs the same command.
+		const announced: string[] = [];
+		a.element.addEventListener('file-command', (event) =>
+			announced.push((event as CustomEvent<{ command: string }>).detail.command),
+		);
+		const shell = a.element as unknown as { shell: { backstage: { open(page: string): void } } };
+		shell.shell.backstage.open('share');
+		root
+			.querySelector<HTMLButtonElement>('[data-backstage-page="share"] [data-share="open"]')!
+			.click();
+		await wait();
+		expect(announced).toEqual(['share']);
+		expect(dialog.open).toBe(true);
 	});
 });
 

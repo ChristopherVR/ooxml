@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { buildMorphTransitionPlan } from './morph-plan';
 import type { MorphTextMeasure, MorphTextTransform } from './morph-text-frame';
 import { morphTextGhostEnd, morphTextIncomingStart } from './morph-text-frame';
+import type { MorphTextInkMeasure } from './morph-text-ink';
 import { readFrame } from './morph-text-frame-read';
 import { layoutMorphTextWords } from './morph-text-lines';
 import { morphTextPieceId } from './morph-text-piece-plan';
@@ -101,6 +102,78 @@ describe('rewrapped text carried piece by piece', () => {
 		expect(consectetur.toBand.bottom).toBeCloseTo(52.8, 6);
 	});
 
+	it('flies each word of a justified line on its own', () => {
+		// Justification spaces a line's words by the room it has left, which the
+		// other layout does not share, so no run of them keeps its proportions.
+		const justified = (id: string, size: number) => {
+			const box = textBox(id, size);
+			(box as { textStyle: Record<string, unknown> }).textStyle.align = 'justify';
+			return box;
+		};
+		const pieces = resolveMorphTextPieces(
+			justified('j1', 20),
+			justified('j2', 22),
+			measure,
+		)!.pieces;
+		expect(pieces).toHaveLength(13);
+		// "sit" on the first 400 px line of "Lorem ipsum dolor sit amet consectetur":
+		// 380 px of text, 20 px spread over five spaces.
+		expect(pieces[3]!.alignment.from.x).toBeCloseTo(80 + 180 + 12, 6);
+	});
+
+	it('moves a band edge off its line box to keep a hanging glyph whole', () => {
+		// A face whose descenders hang 10 px below a baseline 18 px down its
+		// 24 px line, past the line box, and whose ascenders reach `rise` em up.
+		const inkWith =
+			(rise: number): MorphTextInkMeasure =>
+			(text, font) => {
+				const size = Number(/([\d.]+)px/u.exec(font)?.[1] ?? 0);
+				return {
+					left: 0,
+					right: [...text].length * size * 0.5,
+					ascent: size * rise,
+					descent: size * 0.5,
+					fontAscent: size * 0.8,
+					fontDescent: size * 0.2,
+				};
+			};
+		// The next line's ink starts 32 px down: under "consectetur" the edge
+		// drops to 29 px, clear of both, and the next line's piece shares it.
+		const clear = resolveMorphTextPieces(from, to, measure, inkWith(0.5))!.pieces;
+		expect(clear[1]!.fromBand.bottom).toBeCloseTo(29, 6);
+		expect(clear[2]!.fromBand.topEdge).toContainEqual(
+			expect.objectContaining({ y: expect.closeTo(29, 6) }),
+		);
+		// Its ink starts at 28 px, inside the hanging glyph: no edge clears both,
+		// so it cuts halfway through the overlap.
+		const tight = resolveMorphTextPieces(from, to, measure, inkWith(0.7))!.pieces[1]!;
+		expect(tight.fromBand.bottomEdge![1]).toMatchObject({ x0: 269, y: expect.closeTo(28, 6) });
+	});
+
+	it('clips a piece to its stepped band', () => {
+		const ink: MorphTextInkMeasure = (text, font) => {
+			const size = Number(/([\d.]+)px/u.exec(font)?.[1] ?? 0);
+			return {
+				left: 0,
+				right: [...text].length * size * 0.5,
+				ascent: size * 0.5,
+				descent: text === 'p' ? size * 0.5 : 0,
+				fontAscent: size * 0.8,
+				fontDescent: size * 0.2,
+			};
+		};
+		const pieces = resolveMorphTextPieces(from, to, measure, ink)!.pieces;
+		// "Lorem ipsum ...": only the "p" of "ipsum" hangs below line 1, so the
+		// first piece's bottom edge steps down under it alone.
+		const steps = pieces[0]!.fromBand.bottomEdge!;
+		const deep = steps.filter((step) => step.y > 24.5);
+		expect(deep).toHaveLength(1);
+		// "Lorem i" is 70 px: the step starts a pixel's clearance before the "p".
+		expect(deep[0]!.x0).toBeCloseTo(69, 6);
+		expect(deep[0]!.x1).toBeCloseTo(81, 6);
+		expect(deep[0]!.y).toBeCloseTo(29, 6);
+	});
+
 	it('lays each piece of one half exactly over the same words of the other', () => {
 		for (const piece of resolveMorphTextPieces(from, to, measure)!.pieces) {
 			const { from: a, to: b } = piece.alignment;
@@ -126,16 +199,34 @@ describe('rewrapped text carried piece by piece', () => {
 		expect(
 			resolveMorphTextPieces(textBox('edge-1', 21, { width: 399.5 }), to, measure),
 		).toBeUndefined();
-		// Different text, centred-anchored text and a word wider than its column.
+		// Different text, a block shrink-wrapped by `anchorCtr`, a middle-anchored
+		// block that overflows its box and a word wider than its column.
 		expect(resolveMorphTextPieces(from, { ...to, text: 'Other' } as PptxElement, measure)).toBe(
 			undefined,
 		);
-		const middle = textBox('mid', 22);
-		(middle as { textStyle: Record<string, unknown> }).textStyle.vAlign = 'middle';
-		expect(resolveMorphTextPieces(from, middle, measure)).toBeUndefined();
+		const centred = textBox('ctr', 22);
+		(centred as { textStyle: Record<string, unknown> }).textStyle.anchorCenter = true;
+		expect(resolveMorphTextPieces(from, centred, measure)).toBeUndefined();
+		const overflowing = textBox('over', 22, { height: 60 });
+		(overflowing as { textStyle: Record<string, unknown> }).textStyle.vAlign = 'middle';
+		expect(resolveMorphTextPieces(from, overflowing, measure)).toBeUndefined();
 		expect(
 			resolveMorphTextPieces(from, textBox('narrow', 22, { width: 100 }), measure),
 		).toBeUndefined();
+	});
+
+	it('moves the lines of a middle or bottom anchored box to its anchor', () => {
+		const anchored = (id: string, vAlign: string) => {
+			const box = textBox(id, 22);
+			(box as { textStyle: Record<string, unknown> }).textStyle.vAlign = vAlign;
+			return box;
+		};
+		// Three 26.4 px lines in a 120 px box: 40.8 px of free space.
+		const middle = resolveMorphTextPieces(from, anchored('mid', 'middle'), measure)!.pieces;
+		expect(middle[0]!.alignment.to.y).toBeCloseTo(133 + 20.4, 6);
+		expect(middle[0]!.toBand.bottom).toBeCloseTo(20.4 + 26.4, 6);
+		const bottom = resolveMorphTextPieces(from, anchored('bot', 'bottom'), measure)!.pieces;
+		expect(bottom[4]!.alignment.to.y).toBeCloseTo(133 + 40.8 + 52.8, 6);
 	});
 
 	it('paints the pieces as crossfade groups in place of the pair', () => {

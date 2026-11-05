@@ -250,6 +250,8 @@ async function saveDownload(
 export interface FileCommandOptions {
 	chrome?: FileChrome;
 	openBackstage?(page: 'saveAs'): void;
+	/** Share's default: the Share dialog. */
+	openShare?(): void;
 }
 
 /** The command id (`hiddenActions` / capability id) of each File command. */
@@ -261,6 +263,7 @@ const FILE_COMMAND_IDS: Record<FileCommand, string> = {
 	export: 'file.export',
 	exportCsv: 'file.export-csv',
 	print: 'file.print',
+	share: 'file.share',
 };
 
 /** Runs a File command unless a host cancels the `file-command` event to handle it itself. */
@@ -323,6 +326,8 @@ export async function runFileCommand(
 					core.shell?.toast(t('Only the current sheet was saved as CSV.'), 'info');
 				return;
 			}
+			case 'share':
+				return options.openShare?.();
 			case 'print':
 				if (!core.workbook) return;
 				return printWorkbook(

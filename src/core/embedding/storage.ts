@@ -33,9 +33,9 @@ export type FileCommand =
 /** The File commands `<docx-editor>` announces. */
 export type WordFileCommand = Exclude<FileCommand, 'exportCsv'>;
 /** The File commands `<xlsx-editor>` announces. */
-export type ExcelFileCommand = Exclude<FileCommand, 'exportText' | 'share'>;
+export type ExcelFileCommand = Exclude<FileCommand, 'exportText'>;
 /** The File commands `<visio-viewer>` announces. */
-export type VisioFileCommand = Extract<FileCommand, 'new' | 'open' | 'save'>;
+export type VisioFileCommand = Extract<FileCommand, 'new' | 'open' | 'save' | 'share'>;
 
 /** The detail of a `file-command` event. */
 export interface FileCommandDetail<C extends string = FileCommand> {

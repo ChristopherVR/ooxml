@@ -6,6 +6,7 @@ export const collab: Record<string, string> = {
 	'Session name': 'Sitzungsname',
 	'Start sharing': 'Freigabe starten',
 	'Stop sharing': 'Freigabe beenden',
+	'Share with people': 'Für Personen freigeben',
 	'People in this session': 'Personen in dieser Sitzung',
 	'Session: {room}': 'Sitzung: {room}',
 	'Not sharing.': 'Keine Freigabe aktiv.',

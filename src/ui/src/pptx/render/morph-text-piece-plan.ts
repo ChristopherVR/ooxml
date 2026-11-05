@@ -27,7 +27,8 @@ import {
 	morphTextIncomingStart,
 	resolveMorphTextAlignment,
 } from './morph-text-frame';
-import type { MorphTextBand } from './morph-text-pieces';
+import type { MorphTextBand } from './morph-text-bands';
+import { morphTextBandOutline } from './morph-text-bands';
 import { resolveMorphTextPieces } from './morph-text-pieces';
 import {
 	morphOffstageTextAdoptsTarget,
@@ -65,11 +66,8 @@ function round(value: number): number {
 }
 
 function clipOf(band: MorphTextBand): string {
-	const l = round(band.left);
-	const r = round(band.right);
-	const t = round(band.top);
-	const b = round(band.bottom);
-	return `polygon(${l}px ${t}px, ${r}px ${t}px, ${r}px ${b}px, ${l}px ${b}px)`;
+	const points = morphTextBandOutline(band).map(([x, y]) => `${round(x)}px ${round(y)}px`);
+	return `polygon(${points.join(', ')})`;
 }
 
 function transformOf(t: { dx: number; dy: number; sx: number; sy: number }): string {

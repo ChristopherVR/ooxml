@@ -89,8 +89,8 @@ Set `element.fileName` to name the open document. File commands are announced fi
 cancelable `file-command` event whose `detail.command` is `new`, `open`, `save`, `export`,
 `print` or `share`. Call `preventDefault()` to handle it in your application (for example to save
 to your own storage); otherwise the editor uses its browser-only default: a file picker, a
-download, or the print dialog. `share` (the Share button) has no default: starting a session needs
-your transport and authority, so handle it and call `startCollaboration`. Choosing **Viewing** raises `readonly-change`.
+download, or the print dialog. `share` (the Share button) opens the Share dialog every Office editor uses: start a session (session name, your name and an optional server) or join one from an invitation link or session name, then copy the invitation link, see who is in the session and stop sharing, which sets the
+`collaboration` property; cancel it to share your own way. Choosing **Viewing** raises `readonly-change`.
 
 ```ts
 editor.fileName = 'Quarterly report.docx';

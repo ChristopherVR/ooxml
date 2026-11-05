@@ -24,6 +24,11 @@ import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
 import type { ResolvedWordCustomization, WordRegionContext } from './customization';
 import { confirmDialog } from '../dialog/message-dialogs';
+import {
+	attachShareDialog,
+	type ShareDialogController,
+	type ShareDialogHost,
+} from '../dialog/share-controller';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -49,6 +54,10 @@ export interface ChromeHost {
 	toggleComments(): void;
 	/** Whether a collaboration session is live (Share then reads pressed). */
 	collaborating(): boolean;
+	/** The session the Share dialog starts, joins and stops (the element's `collaboration`). */
+	share(): ShareDialogHost;
+	/** The name the Share dialog suggests (the review author). */
+	userName(): string;
 	setViewMode(mode: 'draft' | 'print'): void;
 	setZoom(percent: number): void;
 	reportError(error: Error): void;
@@ -78,6 +87,7 @@ export class EditorChrome {
 	readonly statusBar: StatusBar;
 	readonly fileInput: HTMLInputElement;
 	private ribbon: RibbonElement | undefined;
+	private shareDialog: ShareDialogController | undefined;
 	private _fileName = DEFAULT_FILE_NAME;
 	private state: SaveState = 'saved';
 
@@ -154,6 +164,18 @@ export class EditorChrome {
 		ribbon.append(this.ribbonActions.element);
 		// The File button belongs to the shared ribbon; it asks for the File view with this event.
 		ribbon.addEventListener('office-ribbon-file', () => this.backstage.open('home'));
+		// Share opens the dialog every product uses, unless a host takes the `share` command.
+		this.shareDialog = attachShareDialog({
+			container: frame,
+			host: this.host.share(),
+			roomPrefix: 'doc',
+			defaults: () => ({ userName: this.host.userName() }),
+			locale: () => this.host.locale(),
+		});
+		this.host.element.addEventListener('collaboration-change', () => {
+			this.shareDialog?.refresh();
+			this.ribbonActions.setSharing(this.host.collaborating());
+		});
 	}
 
 	get fileName(): string {
@@ -182,6 +204,7 @@ export class EditorChrome {
 		this.backstage.relocalize();
 		this.titleBar.relocalize();
 		this.ribbonActions.relocalize(locale);
+		this.shareDialog?.relocalize();
 		const fileTab = this.host.ribbon()?.querySelector('.dve-file-tab');
 		if (fileTab) fileTab.textContent = translate(locale, 'File');
 		this.fileInput.setAttribute('aria-label', translate(locale, 'Open'));
@@ -222,8 +245,8 @@ export class EditorChrome {
 			if (command === 'new') await this.newDocument();
 			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
-			// Sharing needs the host's transport and authority, so there is no browser default.
-			else if (command === 'share') return;
+			// A host that cancels `file-command` shares its own way; otherwise the Share dialog.
+			else if (command === 'share') this.shareDialog?.open();
 			else if (command === 'exportText')
 				downloadText(plainText(this.host.model()), withExtension(this._fileName, 'txt'));
 			else if (command === 'saveAs') {

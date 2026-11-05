@@ -84,52 +84,45 @@ function page(doc: Document, id: BackstagePage, title: string, ...content: Node[
 }
 
 /**
- * Share with people: a live session (Yjs) between tabs and windows of this browser. The room name
- * is all a second window needs; nothing is uploaded.
+ * File > Share: whether the drawing is shared, who is in the session, and "Share with people",
+ * which opens the Share dialog every product uses (start, join, invitation link, Stop). Excel's
+ * page is the same.
  */
 function share(doc: Document): HTMLElement {
 	const panel = el(doc, 'section', 'share-panel');
 	panel.setAttribute('aria-labelledby', 'share-title');
 	const title = el(doc, 'h2', '', 'Share with people');
 	title.id = 'share-title';
-	const field = el(doc, 'label', 'share-field');
-	const room = el(doc, 'input', 'share-room');
-	room.type = 'text';
-	room.maxLength = 64;
-	room.autocomplete = 'off';
-	room.spellcheck = false;
-	field.append(el(doc, 'span', '', 'Session name'), room);
-	const buttons = el(doc, 'div', 'share-buttons');
-	const start = el(doc, 'button', 'share-start', 'Start sharing');
-	start.type = 'button';
-	start.dataset.share = 'start';
-	const stop = el(doc, 'button', 'share-stop', 'Stop sharing');
-	stop.type = 'button';
-	stop.dataset.share = 'stop';
-	stop.hidden = true;
-	buttons.append(start, stop);
 	const status = el(doc, 'p', 'share-status');
 	status.setAttribute('role', 'status');
 	const people = doc.createElement('office-ui-presence');
 	people.className = 'share-people';
 	people.setAttribute('label', 'People in this session');
+	const buttons = el(doc, 'div', 'share-buttons');
+	const open = el(doc, 'button', 'share-start', 'Share with people');
+	open.type = 'button';
+	open.dataset.share = 'open';
+	const stop = el(doc, 'button', 'share-stop', 'Stop sharing');
+	stop.type = 'button';
+	stop.dataset.share = 'stop';
+	stop.hidden = true;
+	buttons.append(open, stop);
 	panel.append(
 		title,
 		el(
 			doc,
 			'p',
 			'',
-			'Edit this drawing together with other windows of this browser. Open the same session name in another window to join.',
+			'Edit this drawing together with other people. Everyone who joins the same session sees changes as they are made.',
 		),
-		field,
-		buttons,
 		status,
 		people,
+		buttons,
 		el(
 			doc,
 			'p',
 			'backstage-muted',
-			'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.',
+			'The whole drawing is shared; when two people change it at once, the last change wins.',
 		),
 	);
 	return panel;
