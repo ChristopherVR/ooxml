@@ -1,6 +1,6 @@
 /**
  * Issue #141's morph facts, on the slides of the reporter's deck rebuilt as
- * the plan sees them (`morph-issue-141-fixtures`): what pairs, what fades,
+ * the plan sees them (`__fixtures__/morph-issue-141`): what pairs, what fades,
  * how the overlay stacks a dissolving column between the picture bands, which
  * way the 9 -> 10 heading travels, and that the parked paragraph of 17 -> 18
  * is painted once in either direction. The narrower tests next to each fix
@@ -17,7 +17,7 @@ import {
 	SLIDE_6,
 	SLIDE_7,
 	SLIDE_9,
-} from './morph-issue-141-fixtures';
+} from './__fixtures__/morph-issue-141';
 import { morphOverlayElementSlots } from './morph-overlay-stack';
 import type { MorphTransitionPlan } from './morph-plan';
 import { buildMorphTransitionPlan } from './morph-plan';

@@ -22,6 +22,6 @@
 		}
 	},
 	"include": ["src/pptx/**/*.ts"],
-	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"],
+	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx", "**/__fixtures__/**"],
 	"files": ["src/raw.d.ts"]
 }

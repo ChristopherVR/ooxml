@@ -12,7 +12,7 @@
  * with filler (one filler per distinct paragraph, so repeats still repeat),
  * media paths are renumbered, and no picture carries image data.
  *
- * @module render/morph-issue-141-fixtures
+ * @module render/__fixtures__/morph-issue-141
  */
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
