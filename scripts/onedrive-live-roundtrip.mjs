@@ -93,9 +93,46 @@ async function main() {
 		await checkToken(token);
 		const lib = await import('../src/core/dist/embedding/onedrive/index.mjs');
 		const pptx = await import('../src/core/dist/pptx/index.mjs');
+		// Every request, by kind only (never its URL): where the time of a save goes.
+		const log = [];
+		const traced = async (input, init) => {
+			const url = new URL(String(input instanceof Request ? input.url : input));
+			const kind = url.pathname.endsWith('/createUploadSession')
+				? 'create upload session'
+				: url.hostname === 'graph.microsoft.com'
+					? `graph ${init?.method ?? 'GET'}`
+					: init?.method === 'PUT'
+						? 'upload fragment'
+						: init?.method === 'DELETE'
+							? 'cancel upload'
+							: 'download';
+			const t = performance.now();
+			const response = await fetch(input, init);
+			log.push({
+				kind,
+				ms: performance.now() - t,
+				status: response.status,
+				sent: init?.body?.length ?? 0,
+			});
+			return response;
+		};
+		const requests = (from) => {
+			const parts = new Map();
+			for (const entry of log.slice(from)) {
+				const part = parts.get(entry.kind) ?? { n: 0, ms: 0, statuses: new Set() };
+				part.n++;
+				part.ms += entry.ms;
+				part.statuses.add(entry.status);
+				parts.set(entry.kind, part);
+			}
+			return [...parts]
+				.map(([kind, p]) => `${kind} x${p.n} ${fmtMs(p.ms)} (${[...p.statuses].join('/')})`)
+				.join('; ');
+		};
 		const client = lib.createOneDriveClient({
 			getAccessToken: async () => token,
 			canWrite: () => true,
+			fetch: traced,
 		});
 		const mergeStats = { calls: 0, ms: 0 };
 		const sessionOptions = {
@@ -147,12 +184,39 @@ async function main() {
 		add('2b edit A + serialize', a.ms, `${fmtBytes(a.value.bytes.length)}, slide ${a.value.slide}`);
 
 		const s0 = lib.createOneDriveSession(client, opened.value, sessionOptions);
-		const saveA = await timed('3 save A', () => s0.save(a.value.bytes));
+		let mark = log.length;
+		const phases = [];
+		const onSaveProgress = (p) => {
+			if (phases.at(-1) !== p.phase) phases.push(p.phase);
+		};
+		const saveA = await timed('3 save A', () => s0.save(a.value.bytes, { onSaveProgress }));
 		add('3a upload A', saveA.ms, fmtRate(throughput(a.value.bytes.length, saveA.ms)));
+		console.log(`  3a requests: ${requests(mark)}; progress: ${phases.join(' > ')}`);
+
+		// The everyday case: the same person saves again in the same session. It must not conflict.
+		const markerA2 = `${MARK} A2 ${stamp}`;
+		const a2 = await timed('3 edit A2', () => edit(a.value.bytes, 'first', markerA2));
+		mark = log.length;
+		phases.length = 0;
+		const mergesBefore = mergeStats.calls;
+		const saveA2 = await timed('3 save A2 (same session)', () =>
+			s0.save(a2.value.bytes, { onSaveProgress }),
+		);
+		const conflicts = log.slice(mark).filter((e) => e.status === 412 || e.status === 409).length;
+		add(
+			'3c second save, same session',
+			saveA2.ms,
+			conflicts
+				? `${conflicts} revision conflict(s), ${mergeStats.calls - mergesBefore} merge(s)`
+				: 'no conflict',
+		);
+		console.log(`  3c requests: ${requests(mark)}; progress: ${phases.join(' > ')}`);
+		if (mergeStats.calls > mergesBefore)
+			throw new Error('A second save by the only editor needed a merge.');
 		const fresh = await timed('3 re-download', () => client.open(shareUrl));
 		add('3b re-download', fresh.ms, fmtBytes(fresh.value.bytes.length));
-		if (!(await text(fresh.value.bytes)).includes(markerA))
-			throw new Error('Edit A is missing after re-download.');
+		if (!(await text(fresh.value.bytes)).includes(markerA2))
+			throw new Error('Edit A2 is missing after re-download.');
 		if (fresh.value.file.eTag === opened.value.file.eTag)
 			throw new Error('The eTag did not change after saving.');
 		console.log('Verified: edit A present, eTag changed.');
@@ -165,8 +229,11 @@ async function main() {
 		const b = await timed('4 edit B', () => edit(base.bytes, 'first', markerB));
 		const c = await timed('4 edit C', () => edit(base.bytes, 'other', markerC));
 		add('4a edit B / C', b.ms + c.ms, `B slide ${b.value.slide}, C slide ${c.value.slide}`);
+		mark = log.length;
 		const saveB = await timed('4 save B', () => s1.save(b.value.bytes));
 		add('4b session 1 save B', saveB.ms);
+		console.log(`  4b requests: ${requests(mark)}`);
+		mark = log.length;
 		let saveC;
 		try {
 			saveC = await timed('4 save C (conflict, merge)', () => s2.save(c.value.bytes));
@@ -177,6 +244,7 @@ async function main() {
 				);
 			throw error;
 		}
+		console.log(`  4c requests: ${requests(mark)}`);
 		add(
 			'4c session 2 save C (conflict+merge)',
 			saveC.ms,
