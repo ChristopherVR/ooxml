@@ -60,6 +60,7 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 		>
 			<pptx-ribbon-primary-row
 				[slideCount]="slideCount()"
+				[canEdit]="canEdit()"
 				[sidebarCollapsed]="sidebarCollapsed()"
 				[inspectorOpen]="inspectorOpen()"
 				[hiddenActions]="hiddenActions()"

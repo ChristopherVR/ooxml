@@ -1,5 +1,10 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { EMPTY_RESOLVED_CUSTOMIZATION, isDialogAvailable } from 'ooxml-ui/pptx';
+import {
+	EMPTY_RESOLVED_CUSTOMIZATION,
+	isDialogAvailable,
+	READ_ONLY_BADGE_ATTR,
+	resolveReadOnlyBadge,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -97,6 +102,15 @@ export function createRibbonPrimaryRow(
 		el.appendChild(settings.btn);
 	}
 
+	// -- Read-only badge (shared decision; shown while the deck cannot be edited) --
+	const badgeView = resolveReadOnlyBadge({ editable: true });
+	const readOnlyBadge = createEl(doc, 'span', 'pptxv-read-only-badge');
+	readOnlyBadge.setAttribute(READ_ONLY_BADGE_ATTR, '');
+	readOnlyBadge.setAttribute('role', badgeView.role);
+	readOnlyBadge.textContent = t(badgeView.textKey);
+	readOnlyBadge.hidden = true;
+	el.appendChild(readOnlyBadge);
+
 	// -- "..." overflow menu -------------------------------------------------
 	const overflowHost = createEl(doc, 'div', 'pptxv-primary-menu-host');
 	const overflowMenu = makePrimaryMenu(
@@ -117,6 +131,7 @@ export function createRibbonPrimaryRow(
 	return {
 		el,
 		setEditState({ editable }) {
+			readOnlyBadge.hidden = !resolveReadOnlyBadge({ editable }).visible;
 			// Shown once the document is known, read-only too: Present and Share live here.
 			el.hidden = false;
 			if (!editable) {

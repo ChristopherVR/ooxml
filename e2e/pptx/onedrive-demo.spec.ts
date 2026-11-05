@@ -213,6 +213,11 @@ test.describe('OneDrive under File > Open', () => {
 			shared: { name: 'Shared with me.pptx', bytes: await deck(), driveId: 'colleague-drive' },
 		});
 		await openFromOneDrive(page, 'Shared with me');
+		// Every binding flags the read-only deck in the quick-access row.
+		const badge = page.locator('[data-pptx-read-only-badge]');
+		await expect(badge).toBeVisible();
+		await expect(badge).toHaveText('Read-only');
+		await expect(badge).toHaveAttribute('role', 'status');
 		const handle = await tryHandleEdits(page);
 		// The public handle refuses every edit and leaves the deck as it was loaded.
 		expect(handle.inserted).toBeUndefined();
@@ -259,6 +264,7 @@ test.describe('OneDrive under File > Open', () => {
 		});
 
 		await openInBackstage(page, 'Quarterly review');
+		await expect(page.locator('[data-pptx-read-only-badge]')).toBeHidden();
 		const ui = await tryUiEdits(page);
 		expect(ui.editing).toBe(true);
 		expect(ui.slides).toBeGreaterThan(readOnly.slides);

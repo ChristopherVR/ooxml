@@ -14,7 +14,12 @@
  * ribbon-level context), so that purely-decorative avatar cluster is omitted.
  */
 import { PanelLeft, PanelRight, Settings, Sparkles } from 'lucide-vue-next';
-import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
+import {
+	isDialogAvailable,
+	isPanelVisible,
+	READ_ONLY_BADGE_ATTR,
+	resolveReadOnlyBadge,
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -29,6 +34,7 @@ import type { RibbonProps } from './ribbon-types';
 interface Props extends RibbonProps {}
 
 const props = defineProps<Props>();
+const readOnlyBadge = computed(() => resolveReadOnlyBadge({ editable: props.canEdit }));
 const { t } = useI18n();
 // Host UI customisation: hidden panels drop their toggles, a hidden Options
 // dialog drops the gear.
@@ -124,10 +130,12 @@ const qab =
 		</button>
 
 		<span
-			v-if="!props.canEdit"
+			v-if="readOnlyBadge.visible"
+			v-bind="{ [READ_ONLY_BADGE_ATTR]: '' }"
+			:role="readOnlyBadge.role"
 			class="inline-flex items-center px-2 py-0.5 rounded-sm bg-amber-600/90 text-[10px] text-amber-50"
 		>
-			{{ t('pptx.toolbar.readOnly') }}
+			{{ t(readOnlyBadge.textKey) }}
 		</span>
 		<OverflowMenu v-bind="props" />
 	</div>

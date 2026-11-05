@@ -8,7 +8,7 @@
 	 */
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import { isActionHidden } from 'ooxml-ui/pptx';
+	import { isActionHidden, READ_ONLY_BADGE_ATTR, resolveReadOnlyBadge } from 'ooxml-ui/pptx';
 	import type { ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
@@ -73,6 +73,7 @@
 	} = $props();
 
 	const t = useTranslator();
+	const readOnlyBadge = $derived(resolveReadOnlyBadge({ editable: !readOnly }));
 </script>
 
 <div class="pptx-svelte-ribbon-primary" data-pptx-chrome="ribbon-primary" role="group" aria-label={t('pptx.toolbar.presentationToolbarAria')}>
@@ -160,8 +161,12 @@
 			{onsignatures}
 		/>
 	{/if}
-	{#if readOnly}
-		<span class="pptx-svelte-ribbon-primary-readonly">{t('pptx.toolbar.readOnly')}</span>
+	{#if readOnlyBadge.visible}
+		<span
+			{...{ [READ_ONLY_BADGE_ATTR]: '' }}
+			role={readOnlyBadge.role}
+			class="pptx-svelte-ribbon-primary-readonly">{t(readOnlyBadge.textKey)}</span
+		>
 	{/if}
 </div>
 

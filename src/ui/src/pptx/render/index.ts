@@ -1592,6 +1592,7 @@ export * from './autosave-recovery-acknowledgement';
 export * from './autosave-inline-draft';
 export * from './backstage';
 export * from './cloud-open';
+export * from './read-only-badge';
 export * from './backstage-cards';
 export * from './master-page-layout';
 export * from './master-view';

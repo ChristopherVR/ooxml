@@ -1,4 +1,9 @@
-import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
+import {
+	isDialogAvailable,
+	isPanelVisible,
+	READ_ONLY_BADGE_ATTR,
+	resolveReadOnlyBadge,
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { LuPanelLeft, LuPanelRight, LuSettings, LuSparkles } from 'react-icons/lu';
 
@@ -31,6 +36,9 @@ export function ToolbarPrimaryRow(p: ToolbarProps): React.ReactElement {
 	const showInspectorToggle = isPanelVisible(customization, 'inspector');
 	const showShare = isDialogAvailable(customization, 'share');
 	const showSettings = isDialogAvailable(customization, 'options');
+
+	const enableEditingAvailable = !canEdit && Boolean(p.isProtectedView && p.onEnableEditing);
+	const readOnlyBadge = resolveReadOnlyBadge({ editable: canEdit, enableEditingAvailable });
 
 	const qab =
 		'p-1 max-md:p-2 max-md:min-h-[40px] max-md:min-w-[40px] rounded-sm transition-colors hover:bg-accent/60 disabled:opacity-40 disabled:cursor-not-allowed active:scale-90 active:opacity-70';
@@ -142,7 +150,7 @@ export function ToolbarPrimaryRow(p: ToolbarProps): React.ReactElement {
 				</button>
 			)}
 
-			{!canEdit && p.isProtectedView && p.onEnableEditing ? (
+			{enableEditingAvailable ? (
 				<button
 					type='button'
 					onClick={p.onEnableEditing}
@@ -152,9 +160,13 @@ export function ToolbarPrimaryRow(p: ToolbarProps): React.ReactElement {
 					{t('pptx.security.enableEditing')}
 				</button>
 			) : (
-				!canEdit && (
-					<span className='inline-flex items-center px-2 py-0.5 rounded-sm bg-amber-600/90 text-[10px] text-amber-50'>
-						{t('pptx.toolbar.readOnly')}
+				readOnlyBadge.visible && (
+					<span
+						{...{ [READ_ONLY_BADGE_ATTR]: '' }}
+						role={readOnlyBadge.role}
+						className='inline-flex items-center px-2 py-0.5 rounded-sm bg-amber-600/90 text-[10px] text-amber-50'
+					>
+						{t(readOnlyBadge.textKey)}
 					</span>
 				)
 			)}

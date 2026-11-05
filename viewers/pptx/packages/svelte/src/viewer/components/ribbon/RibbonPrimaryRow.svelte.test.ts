@@ -22,6 +22,16 @@ function mountRow(props: Record<string, unknown>): HTMLElement {
 }
 
 describe('ribbonPrimaryRow', () => {
+	it('shows the Read-only badge for a read-only deck and omits it when editable', () => {
+		const readOnly = mountRow({ readOnly: true });
+		const badge = readOnly.querySelector('[data-pptx-read-only-badge]');
+		expect(badge?.textContent?.trim()).toBe('Read-only');
+		expect(badge?.getAttribute('role')).toBe('status');
+		cleanup?.();
+		const editable = mountRow({ readOnly: false });
+		expect(editable.querySelector('[data-pptx-read-only-badge]')).toBeNull();
+	});
+
 	it('renders the Present split button (main action + options chevron)', () => {
 		const onpresent = vi.fn();
 		const target = mountRow({ onpresent });

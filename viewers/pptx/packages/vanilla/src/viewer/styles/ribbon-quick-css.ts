@@ -79,6 +79,17 @@ export const RIBBON_QUICK_CSS = `
 	cursor: pointer;
 }
 .pptxv-show-btn:hover { background: var(--pptx-accent); }
+.pptxv-read-only-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 8px;
+	border-radius: 3px;
+	background: color-mix(in srgb, #d97706 90%, transparent);
+	color: #fffbeb;
+	font-size: 10px;
+	white-space: nowrap;
+}
+.pptxv-read-only-badge[hidden] { display: none; }
 /* ── Tab-row right-side actions ── */
 /* Right side of the tab row: Record + Share, matching React's TabRowActions. */
 .pptxv-tabrow-spacer { flex: 1; }

@@ -40,7 +40,7 @@ import {
 	LucideSparkles,
 } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import { isActionHidden } from 'ooxml-ui/pptx';
+import { isActionHidden, resolveReadOnlyBadge } from 'ooxml-ui/pptx';
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 import { toolbarVisibility } from './toolbar-visibility';
@@ -226,6 +226,16 @@ export function visibleOverflowItems(
 				</button>
 			}
 
+			<!-- Read-only badge (same decision, key and role as the other bindings) -->
+			@if (readOnlyBadge().visible) {
+				<span
+					[attr.data-pptx-read-only-badge]="''"
+					[attr.role]="readOnlyBadge().role"
+					class="inline-flex items-center rounded-sm bg-amber-600/90 px-2 py-0.5 text-[10px] text-amber-50"
+					>{{ readOnlyBadge().textKey | translate }}</span
+				>
+			}
+
 			<!-- Overflow menu -->
 			<div class="relative inline-flex items-center" #overflowRoot>
 				<button
@@ -264,6 +274,8 @@ export function visibleOverflowItems(
 })
 export class RibbonPrimaryRowComponent {
 	readonly slideCount = input<number>(0);
+	/** Whether editing is active for the open deck; false shows the Read-only badge. */
+	readonly canEdit = input<boolean>(true);
 	readonly sidebarCollapsed = input<boolean>(false);
 	readonly inspectorOpen = input<boolean>(false);
 	/** Toolbar buttons the host wants hidden (gates Broadcast + the export overflow items). */
@@ -301,6 +313,9 @@ export class RibbonPrimaryRowComponent {
 	readonly fontEmbedding = output<void>();
 	readonly digitalSignatures = output<void>();
 
+	protected readonly readOnlyBadge = computed(() =>
+		resolveReadOnlyBadge({ editable: this.canEdit() }),
+	);
 	protected readonly presentMenuOpen = signal(false);
 	protected readonly overflowOpen = signal(false);
 	protected readonly toolbar = toolbarVisibility(this.hiddenActions);

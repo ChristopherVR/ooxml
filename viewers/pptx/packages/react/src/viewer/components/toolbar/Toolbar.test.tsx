@@ -1010,6 +1010,8 @@ describe('toolbar - Quick Access Bar (ToolbarPrimaryRow)', () => {
 			React.createElement(ToolbarPrimaryRow, createMockToolbarProps({ canEdit: false })),
 		);
 		expect(html).toContain('Read-only');
+		expect(html).toContain('data-pptx-read-only-badge');
+		expect(html).toContain('role="status"');
 	});
 
 	it('does not show Read-only badge when canEdit is true', () => {

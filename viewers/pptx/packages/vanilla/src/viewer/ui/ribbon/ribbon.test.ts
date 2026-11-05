@@ -155,6 +155,17 @@ describe('createRibbon', () => {
 		expect(handlers.slideShow.openCustomShows).toHaveBeenCalledOnce();
 	});
 
+	it('shows the Read-only badge while the deck cannot be edited and clears it after', () => {
+		const row = createRibbonPrimaryRow(document, createTranslator(), buildHandlers());
+		const badge = row.el.querySelector<HTMLElement>('[data-pptx-read-only-badge]')!;
+		expect(badge.textContent).toBe('Read-only');
+		expect(badge.getAttribute('role')).toBe('status');
+		row.setEditState({ editable: false, canUndo: false, canRedo: false });
+		expect(badge.hidden).toBe(false);
+		row.setEditState({ editable: true, canUndo: false, canRedo: false });
+		expect(badge.hidden).toBe(true);
+	});
+
 	it('defaults to the Home tab visible, others hidden', () => {
 		const t = createTranslator();
 		const ribbon = createRibbon(document, t, buildHandlers());
