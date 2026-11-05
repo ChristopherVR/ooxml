@@ -7,14 +7,14 @@ handling and sharing in detail.
 
 ![How the pieces connect](images/onedrive/flow.svg)
 
-The library does the OneDrive part: it resolves a sharing link, downloads the file, and uploads
-saved bytes back to the same file. **Your application does two things the library deliberately
-does not:**
+The library does the OneDrive part: it browses the user's drive (recent files, folders, search),
+resolves sharing links, downloads the file, uploads saved bytes back to the same file and combines
+concurrent edits where it safely can. Every product's **File > Open** shows the same OneDrive place
+and file browser. **Your application does one thing the library deliberately does not:** sign the
+user in to Microsoft and hand the library a Microsoft Graph access token.
 
-1. **Sign the user in to Microsoft** and hand the library a Microsoft Graph access token.
-2. **Ask which file to open.** There is no built-in file browser. The user pastes a OneDrive sharing
-   link (the integrated Office app has a dialog for this; in your own app you add a link box or your
-   own picker).
+Everything else has a default you can change or replace: see
+[Configure or replace anything](#configure-or-replace-anything).
 
 ## 1. Register an application in Microsoft Entra
 
@@ -143,6 +143,25 @@ OneDrive** gives you a link without saving first; when your latest edits are onl
 the share dialog says so.
 
 ![PowerPoint in the Office app, with Saved to OneDrive in the status bar](images/onedrive/suite-powerpoint-saved.png)
+
+When an upload meets a newer OneDrive version, Save first combines both sets of edits. When they
+cannot be combined, the conflict dialog keeps both versions and offers the recovery choices; its
+**Details** section lists why combining stopped and which parts of the file changed in OneDrive and
+on this device since you opened it (useful to tell another editor or AutoSave apart from your own
+change).
+
+![The OneDrive conflict dialog with its recovery choices](images/onedrive/suite-conflict.png)
+
+Reopening a file whose edits on this device never reached OneDrive asks first when OneDrive has a
+newer version meanwhile: **Keep my edits** carries on where you left off (Save then combines them
+with the newer version where possible), and **Open the OneDrive version** loads the newer file and
+keeps your edits as a separate " (local edits)" file in your library. When OneDrive has not changed,
+your edits are kept and a notice says they are not saved yet.
+
+The installed app (PWA) also opens OneDrive links: a link shared to the app, a
+`web+ooxml:<link>` address, or `?open=<link>` on the app's address shows the Open dialog with the
+link filled in, for the user to confirm. Set `launchLinks: false` to turn this off, or
+`launchLinks: { param, accept }` to rename the parameter or choose which links are accepted.
 
 Without `ooxmlOneDriveOptions`, the app explains that sign-in has not been connected:
 
@@ -368,6 +387,27 @@ Word, Excel and Visio use the same client and session; only the editor wiring di
 [Word](../viewers/docx/docs/onedrive.md), [Excel](../viewers/xlsx/docs/onedrive.md),
 [Visio](../viewers/visio/docs/onedrive.md) and the other
 [PowerPoint bindings](../viewers/pptx/docs/guide/onedrive.md).
+
+## Configure or replace anything
+
+Every piece above is a default you can change, or replace with your own:
+
+| You want to change                              | Set                                                                                       | Reference                                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Sign-in, the account shown, sign-out            | `getAccessToken`, `signIn`, `signOut`, `account`                                          | [Authentication](onedrive-integration.md#authentication-and-item-permissions)                          |
+| Which files open editable                       | `canWrite(file)`                                                                          | [Authentication](onedrive-integration.md#authentication-and-item-permissions)                          |
+| Requests (proxy, retries, headers)              | `fetch`                                                                                   | [Package reference](onedrive-integration.md#package-reference)                                         |
+| How concurrent edits combine                    | `mergers` per format, your own `merge` for all formats, or `merge: false` to always ask   | [Combine concurrent edits](onedrive-integration.md#automatically-combine-concurrent-edits-during-save) |
+| How often Save rebases on a newer version       | `maxMergeAttempts` (default 3)                                                            | [Combine concurrent edits](onedrive-integration.md#automatically-combine-concurrent-edits-during-save) |
+| The conflict dialog (Office app)                | `resolveConflict`                                                                         | [Custom storage integrations](storage-integrations.md)                                                 |
+| Sharing choices (Office app)                    | `shareChoices`                                                                            | [Custom storage integrations](storage-integrations.md)                                                 |
+| Opening links in the installed app              | `launchLinks: false` or `{ param, accept }`                                               | [Integrated Office Suite](onedrive-integration.md#integrated-office-suite)                             |
+| Another cloud (SharePoint library, your server) | your own `CloudFileProvider` in `fileProviders`, or `ooxmlCloudOptions` in the Office app | [Custom storage integrations](storage-integrations.md)                                                 |
+| Saving somewhere else entirely                  | your own `DocumentStorage`                                                                | [Custom storage integrations](storage-integrations.md)                                                 |
+
+The provider and the editors meet only through two small contracts in `ooxml-core/embedding`:
+`CloudFileProvider` (browse and open) and `DocumentStorage` (save). Implement either and the same
+File > Open place, file browser, Save, conflict and read-only handling work with your backend.
 
 ## Try it in the PowerPoint demos
 

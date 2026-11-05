@@ -261,6 +261,24 @@ const session = createOneDriveSession(drive, opened, {
 });
 ```
 
+The file provider takes the same choice, so File > Open in every product combines edits the way
+you decide:
+
+```ts
+createOneDriveFileProvider({
+	getAccessToken,
+	signIn,
+	mergers: { docx: wordMerge, pptx: slidesMerge }, // per format; a format without one asks
+	// merge: myMerge, // your own merge for every format, in place of `mergers`
+	// merge: false, // never merge: a newer OneDrive version always opens the conflict choices
+	maxMergeAttempts: 3,
+});
+```
+
+The Office app reads `merge` (`false` or your own function), `mergers` (replace a format's merger,
+or disable it with `{ xlsx: undefined }`) and `maxMergeAttempts` from `ooxmlOneDriveOptions` the
+same way.
+
 | Product    | Merger                   | Import                    |
 | ---------- | ------------------------ | ------------------------- |
 | Word       | `mergeDocxSnapshots`     | `ooxml-core/docx`         |
@@ -438,6 +456,36 @@ and a pending-cloud state, including after a reload. The pending label is **Save
 OneDrive save pending**. Local document commits derive pending state from content versus the
 cloud baseline, including edits from assistant operations and version restoration. Changed cloud
 content cannot be committed as editable content while its host permission is read-only.
+
+The conflict dialog's **Details** section, computed when first expanded, lists the merge issues
+and which package parts changed in OneDrive and on this device since the file was opened
+(`diffOpcPackages` from `ooxml-core/opc`). **Share in OneDrive** never saves first: it creates or
+copies the link of the OneDrive file as it is, and says so when the latest edits are only on this
+device. Reopening a document with edits that never reached OneDrive compares the stored eTag with
+OneDrive's: unchanged, the edits are kept with a notice; changed, the user chooses between keeping
+the edits (Save combines them) and opening the OneDrive version, which keeps the edits as a separate
+" (local edits)" library file. Nothing is replaced silently.
+
+The installed app opens `?open=<link>` launches: its manifest declares a share target (a link
+shared to the app) and a `web+ooxml:` protocol handler (suite only), both of which fill that
+parameter. The Open dialog is shown with the link filled in; the user confirms, which also gives a
+sign-in popup the click browsers require. Only OneDrive and SharePoint https links are accepted by
+default. Configure it in `ooxmlOneDriveOptions` (or `ooxmlCloudOptions`, where a custom provider
+must supply `accept` to opt in):
+
+```ts
+globalThis.ooxmlOneDriveOptions = {
+	getAccessToken,
+	launchLinks: {
+		param: 'open',
+		accept: (link) => link.startsWith('https://contoso.sharepoint.com/'),
+	},
+	// launchLinks: false, // never open launch links
+};
+```
+
+The manifest's share target and protocol handler always fill `open`; a host that renames the
+parameter serves its own manifest.
 
 The suite's native Save As downloads a separate copy; explicit cloud-copy recovery is available
 from the conflict dialog. That dialog preserves both versions and offers the recovery choices
