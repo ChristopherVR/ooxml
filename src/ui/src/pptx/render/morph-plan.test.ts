@@ -180,14 +180,14 @@ describe('buildMorphTransitionPlan', () => {
 	});
 
 	it('keeps a pair travelling when its outline is tweened too', () => {
-		// A shape-type change emits a baked `clip-path` tween keyed on the SAME
-		// incoming id as the pair's own `transform` journey. Both have to survive:
-		// while the map overwrote instead of composing, whichever was generated
-		// first was dropped, so a shape gliding across the slide stopped
-		// travelling and sat at its destination re-cutting its own outline while
-		// its ghost flew the path alone.
+		// A `!!`-named shape-type change emits a baked `clip-path` tween keyed on
+		// the SAME incoming id as the pair's own `transform` journey. Both have
+		// to survive: while the map overwrote instead of composing, whichever was
+		// generated first was dropped, so a shape gliding across the slide
+		// stopped travelling and sat at its destination re-cutting its own
+		// outline while its ghost flew the path alone.
 		const preset = (id: string, shapeType: string, x: number): PptxElement =>
-			({ ...shape(id, 'Badge', x, 0), shapeType }) as PptxElement;
+			({ ...shape(id, '!!Badge', x, 0), shapeType }) as PptxElement;
 		const from = slide('a', [preset('a-1', 'triangle', 0)]);
 		const to = slide('b', [preset('b-1', 'hexagon', 200)]);
 
@@ -195,10 +195,48 @@ describe('buildMorphTransitionPlan', () => {
 		const incoming = plan?.incomingAnimations.get('b-1') ?? '';
 
 		expect(incoming).toContain('pptx-morph-0-b1 ');
-		expect(incoming).toContain('pptx-morph-geo-0-b1 ');
+		expect(incoming).toContain('pptx-morph-carry-0-b1-clip ');
 		// The journey itself, not just its name.
 		expect(plan?.keyframesCss).toContain('translate(-200px, 0px)');
 		expect(plan?.keyframesCss).toContain('clip-path: path(');
+	});
+
+	it('re-paths a reshaping freeform painted as a vector, in its own path units', () => {
+		const freeform = (id: string, d: string, x: number): PptxElement =>
+			({
+				...shape(id, '!!Free', x, 0),
+				shapeType: 'custom',
+				pathData: d,
+				pathWidth: 1000,
+				pathHeight: 500,
+				shapeStyle: { fillColor: '#C07020', strokeColor: '#FFFFFF', strokeWidth: 4 },
+			}) as PptxElement;
+		const plan = buildMorphTransitionPlan(
+			slide('a', [freeform('a-1', 'M 0 0 L 1000 0 L 500 500 Z', 0)]),
+			slide('b', [freeform('b-1', 'M 0 0 L 1000 0 L 1000 500 L 0 500 Z', 300)]),
+			500,
+		);
+		const css = buildMorphAnimationRules(plan!, 'data-pptx-morph-incoming', 'incoming');
+
+		expect(plan?.customGeometryAnimations?.get('b-1')).toContain('pptx-morph-carry-0-b1-custom');
+		expect(css).toContain('[data-element-id="b-1"] [data-pptx-custom-geometry] path {');
+		// The custom track is in the vector's path units (1000 x 500 for 100 x 50 px).
+		expect(plan?.keyframesCss).toMatch(/d: path\('M0 0 L1000 0 L/u);
+	});
+
+	it('dissolves a shape whose preset changes when nothing but identity pairs it', () => {
+		// PowerPoint 16: a duplicated slide's rectangle turned into an ellipse
+		// (same creationId) fades out where it stood and the ellipse fades in.
+		const preset = (id: string, shapeType: string): PptxElement =>
+			({ ...shape(id, 'Badge', 0, 0), shapeType, shapeId: '4' }) as PptxElement;
+		const plan = buildMorphTransitionPlan(
+			slide('a', [preset('a-1', 'rect')]),
+			slide('b', [preset('b-1', 'ellipse')]),
+			500,
+		);
+
+		expect(plan?.incomingAnimations.get('b-1') ?? '').toContain('pptx-morph-fadein');
+		expect(plan?.keyframesCss).not.toContain('clip-path: path(');
 	});
 
 	it('emits one keyframes block per animation it hands out', () => {

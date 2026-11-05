@@ -106,6 +106,14 @@ ${effects.keyframes}
 			target: 'outline',
 		});
 	}
+	if (shape?.customKeyframes) {
+		animations.push({
+			elementId: target.id,
+			animation: `${base}-custom ${durationMs}ms linear forwards`,
+			keyframes: `\n@keyframes ${base}-custom {\n${shape.customKeyframes}\n}`,
+			target: 'custom',
+		});
+	}
 	return animations;
 }
 

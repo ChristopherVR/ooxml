@@ -41,9 +41,11 @@ describe('morph shape carry', () => {
 				shapeAdjustments: { adj: 50000 },
 			} as unknown as PptxElement),
 		).toBe(true);
+		// Another preset reaches the carry only as a `!!`-named pair, whose
+		// outline PowerPoint morphs (see `morph-outline-blend`).
 		expect(
 			morphShapeCarryApplies(small, { ...large, shapeType: 'ellipse' } as unknown as PptxElement),
-		).toBe(false);
+		).toBe(true);
 		expect(morphShapeCarryApplies(small, { ...large, flipHorizontal: true } as PptxElement)).toBe(
 			false,
 		);

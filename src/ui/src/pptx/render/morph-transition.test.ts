@@ -904,14 +904,14 @@ describe('generateMorphAnimations', () => {
 		expect(anims[0].keyframes).not.toContain('rotate(315deg)');
 	});
 
-	it('animates a flip change through edge-on instead of snapping it', () => {
+	it('turns a flip change over in 3D instead of snapping it', () => {
 		// A small photo is mirror-flipped and upside down; its grown counterpart
 		// on the next slide is upright. Stating one endpoint's flips on BOTH
 		// frames either flew an upright copy (losing the authored mirror) or
-		// snapped it at landing. Per-frame factors with a constant function
-		// list let CSS interpolate scaleX -1 -> 1 through 0, which is the
-		// edge-on card flip PowerPoint plays, while rotation runs its own arc
-		// alongside.
+		// snapped it at landing. PowerPoint turns the body over about its own
+		// axis under a perspective camera (see `morph-flip-turn`): the outgoing
+		// mirror on both frames, plus a half turn that ends on the incoming
+		// mirror, while rotation runs its own arc alongside.
 		const pairs: MorphPair[] = [
 			{
 				fromElement: makeElement({
@@ -930,18 +930,21 @@ describe('generateMorphAnimations', () => {
 		];
 		const anims = generateMorphAnimations(pairs, 1000);
 		const frames = anims[0].keyframes;
-		expect(frames).toContain('scaleX(-1)');
-		expect(frames).toContain('scaleX(1)');
-		// The unflipped axis stays explicit on both frames too, so the transform
-		// lists pair up and interpolate numerically rather than by matrix.
+		expect(frames.match(/scaleX\(-1\)/gu)?.length).toBe(2);
+		// The turn that brings the shape's own +x side forward: +180 from a
+		// mirrored start.
+		expect(frames).toContain('rotateY(0deg)');
+		expect(frames).toContain('rotateY(180deg)');
+		expect(frames.match(/perspective\(/gu)?.length).toBe(2);
+		// Both frames state every function, so they interpolate numerically.
 		expect(frames.match(/scaleY\(1\)/gu)?.length).toBe(2);
 		expect(frames).toContain('rotate(-176.5deg)');
 		expect(frames).toContain('rotate(0deg)');
 
 		// The ghost mirrors the same journey in reverse.
 		const ghosts = generateMorphGhostAnimations(pairs, 1000, 0);
-		expect(ghosts[0].keyframes).toContain('scaleX(-1)');
-		expect(ghosts[0].keyframes).toContain('scaleX(1)');
+		expect(ghosts[0].keyframes).toContain('rotateY(180deg)');
+		expect(ghosts[0].keyframes.match(/scaleX\(-1\)/gu)?.length).toBe(2);
 	});
 
 	it('keeps a shared flip stated on every frame', () => {

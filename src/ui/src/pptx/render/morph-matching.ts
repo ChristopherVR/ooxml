@@ -19,6 +19,7 @@ import {
 	matchNamedTextTwins,
 	matchSameMedia,
 } from './morph-heuristics';
+import { morphGeometryBreaksPair } from './morph-geometry-key';
 import { getElementMorphName } from './morph-name';
 import { centreDistance, conflictingMorphNames, proximityAccepts } from './morph-predicates';
 import { matchTextTwins, morphTextFlow, splitsTextFlow } from './morph-text-flow';
@@ -184,7 +185,9 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 				continue;
 			}
 			if (creationIdOf(toEl) === fromGuid) {
-				if (splitsTextFlow(textFlow, fromEl, toEl)) {
+				// Another preset (or a preset edited into a freeform) is another
+				// shape to PowerPoint, whatever its id (see `morph-geometry-key`).
+				if (splitsTextFlow(textFlow, fromEl, toEl) || morphGeometryBreaksPair(fromEl, toEl)) {
 					break;
 				}
 				pairs.push({ fromElement: fromEl, toElement: toEl });
@@ -215,7 +218,12 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 			}
 			const toId = groupChildPairs.get(fromEl.id);
 			const toEl = toId === undefined ? undefined : toById.get(toId);
-			if (!toEl || usedTo.has(toEl.id) || fromEl.type !== toEl.type) {
+			if (
+				!toEl ||
+				usedTo.has(toEl.id) ||
+				fromEl.type !== toEl.type ||
+				morphGeometryBreaksPair(fromEl, toEl)
+			) {
 				continue;
 			}
 			pairs.push({ fromElement: fromEl, toElement: toEl });
@@ -306,7 +314,11 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 				if (creationIdOf(fromEl) && creationIdOf(toEl)) {
 					continue;
 				}
-				if (conflictingMorphNames(fromEl, toEl) || splitsTextFlow(textFlow, fromEl, toEl)) {
+				if (
+					conflictingMorphNames(fromEl, toEl) ||
+					splitsTextFlow(textFlow, fromEl, toEl) ||
+					morphGeometryBreaksPair(fromEl, toEl)
+				) {
 					continue;
 				}
 				pairs.push({ fromElement: fromEl, toElement: toEl });

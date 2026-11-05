@@ -44,13 +44,14 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { getRoundRectRadiusPx, getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
+import { morphGeometryKey } from './morph-geometry-key';
 import {
 	bakeStops,
 	geometryAt,
 	lerp,
-	outlineCommands,
+	pairOutlines,
 	round,
-	sameStructure,
+	sameRelativeGeometry,
 	scalePath,
 	stopProgress,
 } from './morph-shape-carry-path';
@@ -70,42 +71,56 @@ export interface MorphShapeCarry {
 	readonly clipKeyframes?: string;
 	/** Baked keyframes body for the outline path, when the outline is carried. */
 	readonly outlineKeyframes?: string;
+	/**
+	 * Baked keyframes body for the paths of a freeform painted as a vector in
+	 * its own path units (`[data-pptx-custom-geometry]`): the geometry per stop.
+	 */
+	readonly customKeyframes?: string;
 }
 
 const EPSILON = 0.5;
 
-/** Whether a pair is one preset shape whose box or handles changed. */
+/** Whether a shape paints no closed region (a connector, line or open preset). */
+function openGeometry(element: PptxElement): boolean {
+	const kind = resolveShapeGeometry(element).kind;
+	return kind === 'bare' || kind === 'strokeOnly' || kind === 'lineEdge';
+}
+
+/**
+ * Whether a pair is one shape whose geometry changes: its box, its handles,
+ * its custom path, or (for a `!!`-named pair, the only kind the matcher lets
+ * through, see `morphGeometryBreaksPair`) its preset.
+ */
 export function morphShapeCarryApplies(from: PptxElement, to: PptxElement): boolean {
 	if (
 		from.type !== 'shape' ||
 		to.type !== 'shape' ||
 		!hasShapeProperties(from) ||
 		!hasShapeProperties(to) ||
-		from.pathData ||
-		to.pathData ||
 		Boolean(from.flipHorizontal) !== Boolean(to.flipHorizontal) ||
 		Boolean(from.flipVertical) !== Boolean(to.flipVertical)
 	) {
 		return false;
 	}
-	const type = getShapeType(from.shapeType);
-	if (!type || type !== getShapeType(to.shapeType)) {
+	const key = morphGeometryKey(from);
+	if (!key || !morphGeometryKey(to) || openGeometry(from) || openGeometry(to)) {
 		return false;
 	}
-	const kind = resolveShapeGeometry(from).kind;
-	if (kind === 'bare' || kind === 'strokeOnly' || kind === 'lineEdge') {
+	const outlines = pairOutlines(from, to);
+	if (!outlines) {
 		return false;
 	}
 	const resized =
 		Math.abs(from.width - to.width) > EPSILON || Math.abs(from.height - to.height) > EPSILON;
 	const handles =
 		JSON.stringify(from.shapeAdjustments ?? {}) !== JSON.stringify(to.shapeAdjustments ?? {});
-	if (!resized && !handles) {
-		return false;
-	}
-	const a = outlineCommands(from);
-	const b = outlineCommands(to);
-	return Boolean(a && b && sameStructure(a, b));
+	return (
+		resized ||
+		handles ||
+		outlines.blended ||
+		key !== morphGeometryKey(to) ||
+		!sameRelativeGeometry(outlines.a, outlines.b, from, to)
+	);
 }
 
 /** The authored outline width of a shape, 0 when it has none. */
@@ -140,17 +155,20 @@ export function buildMorphShapeCarry(
 	if (!morphShapeCarryApplies(from, to) || !hasShapeProperties(from) || !hasShapeProperties(to)) {
 		return undefined;
 	}
-	const a = outlineCommands(from);
-	const b = outlineCommands(to);
-	if (!a || !b) {
+	const outlines = pairOutlines(from, to);
+	if (!outlines) {
 		return undefined;
 	}
+	const { a, b } = outlines;
+	// An outline that is not one preset's own (blended, or another preset's)
+	// is clipped to on every stop, whatever the half paints statically.
+	const reshaped = outlines.blended || morphGeometryKey(from) !== morphGeometryKey(to);
 	const local = half === 'to' ? to : from;
 	const W = Math.max(local.width, 1);
 	const H = Math.max(local.height, 1);
 	const startDeclarations: string[] = [];
 	const endDeclarations: string[] = [];
-	if (getShapeType(to.shapeType) === 'roundRect') {
+	if (!reshaped && getShapeType(to.shapeType) === 'roundRect') {
 		const r0 = getRoundRectRadiusPx(from);
 		const r1 = getRoundRectRadiusPx(to);
 		const radius = (p: number) =>
@@ -184,8 +202,12 @@ export function buildMorphShapeCarry(
 		: spread(w0 / from.width, w1 / to.width) >= spread(w0 / from.height, w1 / to.height)
 			? stopProgress(w0 / from.width, w1 / to.width)
 			: stopProgress(w0 / from.height, w1 / to.height);
+	if (reshaped && decision.kind === 'borderRadius') {
+		startDeclarations.push('border-radius: 0');
+		endDeclarations.push('border-radius: 0');
+	}
 	const clipKeyframes =
-		decision.kind === 'clipPath'
+		decision.kind === 'clipPath' || reshaped
 			? bakeStops(progress, (p) => {
 					const [ax, ay] = scaleAt(p);
 					const user = geometryAt(a, b, from, to, p, W / ax, H / ay);
@@ -213,6 +235,18 @@ export function buildMorphShapeCarry(
 				];
 			})
 		: undefined;
+	const vector = local.type === 'shape' ? local : undefined;
+	const pathUnits =
+		vector?.pathData && vector.pathWidth && vector.pathHeight
+			? [vector.pathWidth / W, vector.pathHeight / H]
+			: undefined;
+	// Its own line stays: the vector paints its fill over the outline overlay's
+	// inner half, and only its own line (at its static width) covers that.
+	const customKeyframes = pathUnits
+		? bakeStops(progress, (p) => [
+				`d: path('${scalePath(geometryAt(a, b, from, to, p, W, H), pathUnits[0] ?? 1, pathUnits[1] ?? 1)}')`,
+			])
+		: undefined;
 	if (!startDeclarations.length && !clipKeyframes && !outlineKeyframes) {
 		return undefined;
 	}
@@ -221,5 +255,6 @@ export function buildMorphShapeCarry(
 		endDeclarations,
 		...(clipKeyframes ? { clipKeyframes } : {}),
 		...(outlineKeyframes ? { outlineKeyframes } : {}),
+		...(customKeyframes ? { customKeyframes } : {}),
 	};
 }

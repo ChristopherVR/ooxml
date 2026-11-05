@@ -15,6 +15,7 @@
 
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import { morphGeometryBreaksPair } from './morph-geometry-key';
 import { getElementMorphName } from './morph-name';
 import { PROXIMITY_SIZE_RATIO_LIMIT, PROXIMITY_THRESHOLD } from './morph-types';
 
@@ -184,7 +185,8 @@ export function proximityAccepts(a: PptxElement, b: PptxElement): boolean {
 		a.type !== b.type ||
 		differentText(a, b) ||
 		conflictingMorphNames(a, b) ||
-		differentMedia(a, b)
+		differentMedia(a, b) ||
+		morphGeometryBreaksPair(a, b)
 	) {
 		return false;
 	}

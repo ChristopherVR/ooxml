@@ -7,6 +7,7 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 
 import { easingSegment, timeAtProgress } from './morph-easing';
+import { blendOutlineCommands } from './morph-outline-blend';
 import { parseSvgPath, serializeSvgPath } from './morph-svg-path';
 import type { SvgPathCommand } from './morph-types';
 import { MORPH_EASING_POINTS } from './morph-types';
@@ -59,6 +60,41 @@ export function sameStructure(a: SvgPathCommand[], b: SvgPathCommand[]): boolean
 				)
 			);
 		})
+	);
+}
+
+/**
+ * The two outlines of a pair with one structure, so their vertices pair up:
+ * as authored when they already share one, else blended (see
+ * `morph-outline-blend`). `blended` says which.
+ */
+export function pairOutlines(
+	from: PptxElement,
+	to: PptxElement,
+): { a: SvgPathCommand[]; b: SvgPathCommand[]; blended: boolean } | undefined {
+	const a = outlineCommands(from);
+	const b = outlineCommands(to);
+	if (!a || !b) return undefined;
+	if (sameStructure(a, b)) return { a, b, blended: false };
+	const rings = blendOutlineCommands(a, b);
+	return rings ? { a: rings[0], b: rings[1], blended: true } : undefined;
+}
+
+/** Whether two same-structure outlines are the same shape relative to their boxes. */
+export function sameRelativeGeometry(
+	a: SvgPathCommand[],
+	b: SvgPathCommand[],
+	from: PptxElement,
+	to: PptxElement,
+): boolean {
+	return a.every((command, index) =>
+		command.values.every((value, k) => {
+			const other = b[index]?.values[k] ?? value;
+			const axis = axisOf(command.type, k);
+			if (axis === 'keep') return true;
+			const [u, v] = axis === 'x' ? [from.width, to.width] : [from.height, to.height];
+			return Math.abs(value / Math.max(u, 1) - other / Math.max(v, 1)) < 1e-4;
+		}),
 	);
 }
 

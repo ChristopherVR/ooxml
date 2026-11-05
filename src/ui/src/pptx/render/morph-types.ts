@@ -47,13 +47,15 @@ export interface MorphAnimationStyle {
 	 * frame is usually exactly the same size on both slides (issue #148).
 	 * `outline` is the `<path>` of the outline overlay every binding stamps
 	 * `data-pptx-outline` on, which a resizing shape re-paths per frame (see
-	 * `morph-shape-carry`).
+	 * `morph-shape-carry`). `custom` is the paths of the custom-geometry
+	 * `<svg data-pptx-custom-geometry>` a binding paints a freeform with (in
+	 * path units), which a reshaping freeform re-paths per frame too.
 	 */
 	target?: MorphAnimationTarget;
 }
 
 /** @see MorphAnimationStyle.target */
-export type MorphAnimationTarget = 'element' | 'image' | 'outline';
+export type MorphAnimationTarget = 'element' | 'image' | 'outline' | 'custom';
 
 /** Morph granularity mode matching PowerPoint's morph effect options. */
 export type MorphMode = 'object' | 'word' | 'character';

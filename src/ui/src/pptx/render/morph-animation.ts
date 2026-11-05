@@ -18,6 +18,8 @@ import { generateMorphCarryAnimations } from './morph-carry';
 import { parseHexColor, lerpColor } from './morph-color';
 import { morphEffectsDiffer } from './morph-effect-carry';
 import { flattenMorphElements } from './morph-flatten';
+import type { MorphViewSize } from './morph-flip-turn';
+import { buildMorphFlipTurn, morphFlipTurns } from './morph-flip-turn';
 import {
 	generateGeometryMorphAnimation,
 	serializeShapeAdjustments,
@@ -447,6 +449,7 @@ export function generateMorphAnimations(
 	ghostIds?: ReadonlySet<string>,
 	zSwaps?: ReadonlyMap<string, ZOrderJourney>,
 	measure?: MorphTextMeasure,
+	view?: MorphViewSize,
 ): MorphAnimationStyle[] {
 	const animations: MorphAnimationStyle[] = [];
 
@@ -586,11 +589,16 @@ export function generateMorphAnimations(
 		// Build from/to property blocks. A half that dissolves IN keeps its opacity
 		// out of this block and rides a second animation, so the journey and the
 		// dissolve can follow their own measured curves (see the ghost half).
+		// A flip that changes turns the body over in 3D (see `morph-flip-turn`).
+		const turn =
+			!textFrames && !inSlot && morphFlipTurns(fromElement, toElement)
+				? buildMorphFlipTurn(toElement, fromElement, toElement, fromRot, toRot, view)
+				: undefined;
 		const fromProps: string[] = [
-			`\t\ttransform: translate(${dx}px, ${dy}px) rotate(${fromRot}deg) scale(${sx}, ${sy})${fromFlips}${startTail};`,
+			`\t\ttransform: ${turn?.start ?? `translate(${dx}px, ${dy}px) rotate(${fromRot}deg) scale(${sx}, ${sy})${fromFlips}${startTail}`};`,
 		];
 		const toProps: string[] = [
-			`\t\ttransform: ${endShift} rotate(${toRot}deg) scale(1, 1)${toFlips}${endTail};`,
+			`\t\ttransform: ${turn?.end ?? `${endShift} rotate(${toRot}deg) scale(1, 1)${toFlips}${endTail}`};`,
 		];
 		// A stacking-order swap rides the same journey: z-index interpolates as
 		// an integer and rounds on the EASED progress, so the browser steps
@@ -706,6 +714,7 @@ export function generateMorphGhostAnimations(
 	ghostIds?: ReadonlySet<string>,
 	mode: MorphMode = 'object',
 	measure?: MorphTextMeasure,
+	view?: MorphViewSize,
 ): MorphAnimationStyle[] {
 	const animations: MorphAnimationStyle[] = [];
 	for (let index = 0; index < pairs.length; index++) {
@@ -783,17 +792,22 @@ export function generateMorphGhostAnimations(
 		// halves is what keeps them on the same path), and the opacity gets the
 		// measured {@link MORPH_CROSSFADE_EASING}.
 		const opacity = fromElement.opacity ?? 1;
+		// Mirror of the incoming half's 3D turn (see `morph-flip-turn`).
+		const turn =
+			!textFrames && !inSlot && !offstageText && morphFlipTurns(fromElement, toElement)
+				? buildMorphFlipTurn(fromElement, fromElement, toElement, fromRot, toRot, view)
+				: undefined;
 		const keyframes = `
 @keyframes ${safeName} {
 \tfrom {
 \t\ttransform-origin: center;
-\t\ttransform: ${startShift} rotate(${fromRot}deg) scale(1, 1)${fromFlips}${startTail};${
+\t\ttransform: ${turn?.start ?? `${startShift} rotate(${fromRot}deg) scale(1, 1)${fromFlips}${startTail}`};${
 			fadesOut ? '' : `\n\t\topacity: ${opacity};`
 		}
 \t}
 \tto {
 \t\ttransform-origin: center;
-\t\ttransform: translate(${dx}px, ${dy}px) rotate(${toRot}deg) scale(${sx}, ${sy})${toFlips}${endTail};${
+\t\ttransform: ${turn?.end ?? `translate(${dx}px, ${dy}px) rotate(${toRot}deg) scale(${sx}, ${sy})${toFlips}${endTail}`};${
 			fadesOut ? '' : `\n\t\topacity: ${opacity};`
 		}
 \t}
@@ -1104,6 +1118,7 @@ export function generateFullMorphTransition(
 	mode: MorphMode = 'object',
 	zIndexBase = 0,
 	measure?: MorphTextMeasure,
+	view?: MorphViewSize,
 ): MorphAnimationStyle[] {
 	const matchResult = matchMorphElementsFull(fromSlide, toSlide);
 	const allAnimations: MorphAnimationStyle[] = [];
@@ -1140,6 +1155,7 @@ export function generateFullMorphTransition(
 		ghostIds,
 		zSwaps,
 		measure,
+		view,
 	);
 	allAnimations.push(...pairAnims);
 
@@ -1195,6 +1211,7 @@ export function generateFullMorphTransition(
 		ghostIds,
 		mode,
 		measure,
+		view,
 	);
 	allAnimations.push(...ghosts);
 

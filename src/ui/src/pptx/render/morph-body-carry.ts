@@ -25,6 +25,7 @@ export function addMorphBodyCopyCarry(
 	durationMs: number,
 	pieces: MorphTextPiecePlan,
 	outlineAnimations: Map<string, string>,
+	customGeometryAnimations?: Map<string, string>,
 ): void {
 	pairs.forEach((pair, index) => {
 		const halves = [
@@ -50,6 +51,8 @@ export function addMorphBodyCopyCarry(
 				pieces.keyframes.push(animation.keyframes);
 				if (animation.target === 'outline') {
 					outlineAnimations.set(id, animation.animation);
+				} else if (animation.target === 'custom') {
+					customGeometryAnimations?.set(id, animation.animation);
 				} else {
 					composed = `${composed}, ${animation.animation}`;
 				}

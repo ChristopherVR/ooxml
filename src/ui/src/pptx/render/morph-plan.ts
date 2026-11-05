@@ -48,6 +48,7 @@ import {
 } from './morph-animation';
 import { resolveMorphCrossfadeGroups } from './morph-crossfade-group';
 import type { MorphCrossfadeGroup } from './morph-crossfade-group';
+import type { MorphViewSize } from './morph-flip-turn';
 import { flattenMorphElements } from './morph-flatten';
 import { matchMorphElementsFull } from './morph-matching';
 import type { MorphOverlayLayer } from './morph-overlay-layers';
@@ -112,6 +113,13 @@ export interface MorphTransitionPlan {
 	 * incoming, outgoing or copy ids, so each half's rules carry all of them.
 	 */
 	outlineAnimations?: Map<string, string>;
+	/**
+	 * Element id -> CSS `animation` shorthand for the paths of a freeform's
+	 * custom-geometry `<svg data-pptx-custom-geometry>`, which a binding that
+	 * paints custom geometry as a vector (rather than a clipped box) stamps;
+	 * emitted next to {@link MorphTransitionPlan.outlineAnimations}.
+	 */
+	customGeometryAnimations?: Map<string, string>;
 	/**
 	 * Incoming-slide element id -> CSS `animation` shorthand for the copy the
 	 * overlay paints, above every ghost.
@@ -256,6 +264,12 @@ export interface MorphPlanOptions {
 	 * line (see `morph-text-frame`). Defaults to a canvas; tests pass their own.
 	 */
 	readonly measureText?: MorphTextMeasure;
+	/**
+	 * The slide's size in element pixels: the camera a turning flip is seen
+	 * through sits over its centre (see `morph-flip-turn`). Defaults to the
+	 * 16:9 slide, 1280 x 720.
+	 */
+	readonly slideSize?: MorphViewSize;
 }
 
 /**
@@ -290,6 +304,7 @@ export function buildMorphTransitionPlan(
 		mode,
 		options.zIndexBase ?? 0,
 		options.measureText,
+		options.slideSize,
 	);
 
 	// The overlay paints the outgoing slide as a moving copy of itself, in the
@@ -327,6 +342,7 @@ export function buildMorphTransitionPlan(
 	const incomingImageAnimations = new Map<string, string>();
 	const outgoingImageAnimations = new Map<string, string>();
 	const outlineAnimations = new Map<string, string>();
+	const customGeometryAnimations = new Map<string, string>();
 	const keyframes: string[] = [];
 
 	for (const animation of animations) {
@@ -335,8 +351,11 @@ export function buildMorphTransitionPlan(
 		// An `image`-targeted animation rides the `<img>` inside the element, so
 		// it goes in its own map: it shares an element id with the container
 		// animation and would otherwise overwrite it.
-		if (animation.target === 'outline') {
-			outlineAnimations.set(animation.elementId, animation.animation);
+		if (animation.target === 'outline' || animation.target === 'custom') {
+			(animation.target === 'outline' ? outlineAnimations : customGeometryAnimations).set(
+				animation.elementId,
+				animation.animation,
+			);
 			continue;
 		}
 		const target =
@@ -408,7 +427,13 @@ export function buildMorphTransitionPlan(
 		options.measureText,
 	);
 	mergeMorphTextBodyPlan(pieces, bodies);
-	addMorphBodyCopyCarry(bodies.pairs, durationMs, pieces, outlineAnimations);
+	addMorphBodyCopyCarry(
+		bodies.pairs,
+		durationMs,
+		pieces,
+		outlineAnimations,
+		customGeometryAnimations,
+	);
 	const piecePairs = new Set(pieces.pairs);
 	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
 	const pieceToIds = new Set(pieces.pairs.map((pair) => pair.toElement.id));
@@ -510,9 +535,11 @@ export function buildMorphTransitionPlan(
 	for (const id of pieceFromIds) {
 		outgoingAnimations.delete(id);
 		outlineAnimations.delete(id);
+		customGeometryAnimations.delete(id);
 	}
 	for (const id of pieceToIds) {
 		outlineAnimations.delete(id);
+		customGeometryAnimations.delete(id);
 	}
 	if (overlayIncomingAnimations.size > 0 || pieceToIds.size > 0) {
 		keyframes.push(LIFTED_HIDDEN_KEYFRAMES);
@@ -574,6 +601,7 @@ export function buildMorphTransitionPlan(
 		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
 		...(bodies.parts.size > 0 ? { morphCopyParts: bodies.parts } : {}),
 		...(outlineAnimations.size > 0 ? { outlineAnimations } : {}),
+		...(customGeometryAnimations.size > 0 ? { customGeometryAnimations } : {}),
 		durationMs,
 	};
 }
@@ -832,12 +860,15 @@ export function buildMorphOutlineRules(
 	keyAttribute: string,
 	prefix = '',
 ): string {
-	if (!plan.outlineAnimations || plan.outlineAnimations.size === 0) {
-		return '';
-	}
-	const rules = [...plan.outlineAnimations].map(
-		([elementId, animation]) =>
-			`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
-	);
-	return `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}`;
+	const rules = [
+		...[...(plan.outlineAnimations ?? [])].map(
+			([elementId, animation]) =>
+				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
+		),
+		...[...(plan.customGeometryAnimations ?? [])].map(
+			([elementId, animation]) =>
+				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-custom-geometry] path { animation: ${animation}; }`,
+		),
+	];
+	return rules.length > 0 ? `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}` : '';
 }
