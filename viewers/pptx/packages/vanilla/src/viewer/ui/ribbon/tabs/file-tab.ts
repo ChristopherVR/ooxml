@@ -317,7 +317,14 @@ export function createFileTab(
 			renderOptionsCard();
 		}
 		if (page === 'account') {
-			renderAccountPage(doc, t, main, accountAuth, handlers.getStorage?.());
+			renderAccountPage(
+				doc,
+				t,
+				main,
+				accountAuth,
+				handlers.getStorage?.(),
+				handlers.getCloudFiles?.().providers,
+			);
 		}
 		const footer = doc.createElement('footer');
 		footer.textContent = `${t('pptx.backstage.untitled')} · ${t('pptx.backstage.savedToBrowser')}`;

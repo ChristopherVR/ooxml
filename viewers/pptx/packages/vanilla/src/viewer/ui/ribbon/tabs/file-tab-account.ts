@@ -1,6 +1,7 @@
 import {
 	AVATAR_COLOR_SWATCHES,
 	clearAllLocalViewerData,
+	connectedServicesLabels,
 	confirmDeleteDialog,
 	DEFAULT_VIEWER_PROFILE,
 	formatBackstageSize,
@@ -9,7 +10,12 @@ import {
 	resolveProfileInitial,
 	saveViewerProfile,
 } from 'ooxml-ui/pptx';
-import type { AccountAuthConfig, DocumentStorage, ViewerProfile } from 'ooxml-ui/pptx';
+import type {
+	AccountAuthConfig,
+	CloudFileProvider,
+	DocumentStorage,
+	ViewerProfile,
+} from 'ooxml-ui/pptx';
 
 import { version as vanillaViewerVersion } from '../../../../../package.json';
 import type { Translator } from '../../../i18n';
@@ -28,6 +34,8 @@ export function renderAccountPage(
 	accountAuth: AccountAuthConfig | undefined,
 	/** The host `storage` option: usage and Clear read its recovery store when it has one. */
 	storage?: DocumentStorage,
+	/** The host `fileProviders`: File > Account lists them as connected services (none: no section). */
+	providers: readonly CloudFileProvider[] = [],
 ): void {
 	const root = createEl(doc, 'div', 'pptxv-account');
 	main.appendChild(root);
@@ -48,6 +56,18 @@ export function renderAccountPage(
 
 	if (accountAuth?.enabled) {
 		root.appendChild(renderSignInSection(doc, t, accountAuth));
+	}
+
+	if (providers.length > 0) {
+		const section = createEl(doc, 'section', 'pptxv-account-section');
+		const services = doc.createElement('pptx-ui-connected-services') as HTMLElement & {
+			providers: readonly CloudFileProvider[];
+			labels: ReturnType<typeof connectedServicesLabels>;
+		};
+		services.providers = providers;
+		services.labels = connectedServicesLabels(t);
+		section.appendChild(services);
+		root.appendChild(section);
 	}
 }
 
