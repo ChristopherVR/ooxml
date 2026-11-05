@@ -1,0 +1,31 @@
+// File > Open places (OneDrive and other cloud providers). English key -> zh-CN text.
+
+export const cloud: Record<string, string> = {
+	'This device': '此设备',
+	Places: '位置',
+	'Sign in to {provider}': '登录到 {provider}',
+	'Sign in to open and save your files in {provider}.': '登录以在 {provider} 中打开和保存文件。',
+	'Sign in': '登录',
+	'Sign out': '注销',
+	Recent: '最近',
+	'My files': '我的文件',
+	Location: '位置',
+	'Search files': '搜索文件',
+	'Open from a link': '从链接打开',
+	'Paste a sharing link': '粘贴共享链接',
+	Files: '文件',
+	Name: '名称',
+	Modified: '修改时间',
+	Size: '大小',
+	'Load more': '加载更多',
+	Loading: '正在加载',
+	'There are no files here.': '此处没有文件。',
+	'No files match your search.': '没有与搜索匹配的文件。',
+	'This file cannot be opened here': '此文件无法在此处打开',
+	'Opening {name}': '正在打开 {name}',
+	'Opening {name} ({percent}%)': '正在打开 {name} ({percent}%)',
+	Folder: '文件夹',
+	'Something went wrong.': '出了点问题。',
+	'This workbook is read-only because the file cannot be edited.':
+		'此工作簿为只读，因为该文件无法编辑。',
+};

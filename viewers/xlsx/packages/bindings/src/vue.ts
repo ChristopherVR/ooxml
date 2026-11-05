@@ -1,6 +1,6 @@
 import type { PropType } from 'vue';
 import type { Workbook } from '@christophervr/xlsx-core';
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	EditorThemeMode,
 	RibbonAddInTab,
@@ -32,6 +32,7 @@ export const SpreadsheetEditor = defineVueBinding({
 		themeColors: Object as PropType<XlsxThemeColors>,
 		collaboration: Object as PropType<XlsxCollaborationOptions | null>,
 		storage: Object as PropType<DocumentStorage | null>,
+		fileProviders: Array as PropType<readonly CloudFileProvider[] | null>,
 		customization: Object as PropType<ExcelCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	contract: EDITOR_CONTRACT,

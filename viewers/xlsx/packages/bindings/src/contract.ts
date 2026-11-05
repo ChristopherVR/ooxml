@@ -16,7 +16,7 @@ import type {
 	ExcelCustomization,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	contractOptions,
 	deferredHandle as kitDeferredHandle,
@@ -68,6 +68,12 @@ export interface EditorProps {
 	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
 	 */
 	storage?: DocumentStorage | null | undefined;
+	/**
+	 * Cloud places (OneDrive, or a host's own `CloudFileProvider`) File > Open offers next to "This
+	 * device". A workbook opened from one saves back to that file; empty or omitted keeps Open as it
+	 * was. Forwarded when the array changes, so keep it stable.
+	 */
+	fileProviders?: readonly CloudFileProvider[] | null | undefined;
 	/**
 	 * Host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
 	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
@@ -132,6 +138,7 @@ export const EDITOR_PROP_KEYS = [
 	'themeColors',
 	'collaboration',
 	'storage',
+	'fileProviders',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -228,6 +235,10 @@ export const EDITOR_CONTRACT: BindingContract<
 		storage: {
 			forward: 'changed',
 			apply: (element, value) => (element.storage = value ?? undefined),
+		},
+		fileProviders: {
+			forward: 'changed',
+			apply: (element, value) => (element.fileProviders = value ?? []),
 		},
 		themeColors: {
 			forward: 'changed',

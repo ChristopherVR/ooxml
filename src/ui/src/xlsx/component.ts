@@ -16,6 +16,7 @@ import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
 import { buildSurface } from './surface-shell';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
 import type { XlsxEditorEventMap } from './events';
 import type { XlsxCollaborationOptions } from './collaboration-types';
 import type { EditorLocale, EditorLocaleInput, ExcelCustomization } from 'ooxml-core/xlsx/ui';
@@ -131,6 +132,19 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	}
 	set customization(value: ExcelCustomization | null | undefined) {
 		if (this.core.setCustomization(value ?? null)) this.shell?.backstage.applyCustomization();
+	}
+
+	/**
+	 * Cloud places (OneDrive, or a host's own) File > Open offers next to "This device". A workbook
+	 * opened from one saves back to its file through the provider's storage until another
+	 * workbook is shown. Empty (the default) keeps File > Open as it was.
+	 */
+	get fileProviders(): readonly CloudFileProvider[] {
+		return this.core.fileProviders;
+	}
+	set fileProviders(value: readonly CloudFileProvider[] | null | undefined) {
+		this.core.fileProviders = value ?? [];
+		this.shell?.backstage.refresh('open');
 	}
 
 	/** Shown in the title bar and used by Save and Download. Default `Book1.xlsx`. */
