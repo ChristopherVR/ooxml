@@ -8,6 +8,7 @@ import type {
 	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
 import type {
+	AbuttingEdgeBleed,
 	CanvasSize,
 	ChartPartRef,
 	CssStyleMap,
@@ -178,6 +179,13 @@ export interface ElementRenderContext {
 	 * `onChartPointChange`.
 	 */
 	readonly selectedElementIds?: ReadonlySet<string>;
+	/**
+	 * The elements of this stage that grow under an abutting opaque box to
+	 * close the anti-aliasing seam between them (`resolveAbuttingEdgeBleeds`),
+	 * keyed by element id. A shape renderer merges `abuttingEdgeBleedStyle`
+	 * last over its box style. Empty or absent for nearly every slide.
+	 */
+	readonly edgeBleeds?: ReadonlyMap<string, AbuttingEdgeBleed>;
 	/**
 	 * Per-element native-animation playback state, keyed by element id, present
 	 * only during a running presentation. Chart / SmartArt renderers read their

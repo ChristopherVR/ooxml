@@ -26,6 +26,7 @@ import {
 	getSlideBackgroundStyle,
 	isElementRendered,
 	isTemplateElementId,
+	resolveStageEdgeBleeds,
 	shouldRenderHitTarget,
 } from '../index';
 
@@ -201,6 +202,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		chartPartSelection: options.chartPartSelection,
 		onChartPartSelect: options.onChartPartSelect,
 		selectedElementIds: options.selectedElementIds,
+		edgeBleeds: resolveStageEdgeBleeds(undefined, slide, options.selectedElementIds),
 		registry,
 		renderElement(element: PptxElement, zIndex: number) {
 			// Hidden via the Selection Pane: build no node at all, exactly as

@@ -1,4 +1,5 @@
 import {
+	abuttingEdgeBleedStyle,
 	buildParagraphs,
 	elementHitTargetStyle,
 	getContainerStyle,
@@ -47,6 +48,12 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 	// The shape style may carry a 3D transform; compose it with the container's
 	// rotation/flip transform instead of letting the merge clobber it.
 	const merged = { ...container, ...shape };
+	// Close the seam with an abutting opaque box above (issue #141): empty for
+	// nearly every element, so the box style is untouched.
+	Object.assign(
+		merged,
+		abuttingEdgeBleedStyle(element, context.edgeBleeds?.get(element.id), merged),
+	);
 	const transform = composeTransforms(container['transform'], shape['transform']);
 	if (transform !== undefined) {
 		merged['transform'] = transform;

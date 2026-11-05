@@ -603,6 +603,8 @@ export * from './selection-transform';
 // binding's element renderer. Each binding casts the neutral CSS map to its
 // framework's style type.
 export * from './element-style';
+export * from './abutting-edge-bleed';
+export * from './abutting-edge-bleed-style';
 // Pure, immutable group/ungroup tree operations (union bbox, slide-absolute <->
 // group-relative coordinate conversion) for the editor.
 export * from './group-ops';
