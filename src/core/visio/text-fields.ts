@@ -1,3 +1,4 @@
+import { formatDatePicture } from '../text/date-picture';
 import {
 	evaluateVisioFormula,
 	parseVisioFormula,
@@ -133,75 +134,8 @@ export function evaluateVisioTextField(
 	}
 }
 
-const MONTHS = [
-	'January',
-	'February',
-	'March',
-	'April',
-	'May',
-	'June',
-	'July',
-	'August',
-	'September',
-	'October',
-	'November',
-	'December',
-];
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const pad = (value: number, length = 2) => String(value).padStart(length, '0');
-
-/** The text of one date-picture token, or `undefined` when `token` is not one. */
-function dateToken(date: Date, token: string): string | undefined {
-	const hours = date.getUTCHours();
-	switch (token) {
-		case 'yyyy':
-			return pad(date.getUTCFullYear(), 4);
-		case 'yy':
-			return pad(date.getUTCFullYear() % 100);
-		case 'MMMM':
-			return MONTHS[date.getUTCMonth()]!;
-		case 'MMM':
-			return MONTHS[date.getUTCMonth()]!.slice(0, 3);
-		case 'MM':
-			return pad(date.getUTCMonth() + 1);
-		case 'M':
-			return String(date.getUTCMonth() + 1);
-		case 'dddd':
-			return DAYS[date.getUTCDay()]!;
-		case 'ddd':
-			return DAYS[date.getUTCDay()]!.slice(0, 3);
-		case 'dd':
-			return pad(date.getUTCDate());
-		case 'd':
-			return String(date.getUTCDate());
-		case 'HH':
-			return pad(hours);
-		case 'H':
-			return String(hours);
-		case 'hh':
-			return pad(hours % 12 || 12);
-		case 'h':
-			return String(hours % 12 || 12);
-		case 'mm':
-			return pad(date.getUTCMinutes());
-		case 'ss':
-			return pad(date.getUTCSeconds());
-		case 'tt':
-			return hours < 12 ? 'AM' : 'PM';
-		default:
-			return undefined;
-	}
-}
-
-function formatDate(date: Date, picture: string): string {
-	return picture.replace(
-		/yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|ss|tt|"[^"]*"/g,
-		(token) => {
-			if (token.startsWith('"')) return token.slice(1, -1);
-			return dateToken(date, token) ?? token;
-		},
-	);
-}
+const formatDate = (date: Date, picture: string): string =>
+	formatDatePicture(date, picture, { utc: true });
 
 function formatNumber(value: number, picture: string): string | undefined {
 	const match = /^(#,##)?0(?:\.(0+|#+))?$/.exec(picture);

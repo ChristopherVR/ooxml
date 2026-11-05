@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveFieldDateText, substituteFieldText } from './text-field-substitution';
 
@@ -131,5 +131,31 @@ describe('resolveFieldDateText', () => {
 				/^\d{1,2}\/\d{1,2}\/\d{4}$/u,
 			);
 		});
+	});
+});
+
+// Issue 248: PowerPoint writes the chosen "Available format" into the field type itself.
+describe('format-encoded datetime field types', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('renders datetimeyyyy as the year only, not the default date', () => {
+		vi.useFakeTimers({ now: new Date(2027, 2, 4, 9, 30) });
+		expect(substituteFieldText('2026', 'datetimeyyyy', { dateFormat: 'datetime1' }, 'en-GB')).toBe(
+			'2027',
+		);
+		expect(substituteFieldText('2026', 'datetimeyyyy', {})).toBe('2027');
+	});
+
+	it('keeps the case of the picture and the locale names', () => {
+		vi.useFakeTimers({ now: new Date(2027, 2, 4, 9, 30) });
+		expect(substituteFieldText('', 'datetimeMMMMyyyy', {})).toBe('March2027');
+		expect(substituteFieldText('', 'datetimeyyyy-MM-dd', {})).toBe('2027-03-04');
+		expect(substituteFieldText('', 'datetimeMMMM', {}, 'de-DE')).toBe('März');
+	});
+
+	it('shows the cached text for a type that names no picture', () => {
+		expect(substituteFieldText('4 March 2027', 'datetimeFigureOut', {})).toBe('4 March 2027');
 	});
 });

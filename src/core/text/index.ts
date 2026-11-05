@@ -7,6 +7,7 @@ export {
 	type FontScriptCategory,
 	type ScriptRun,
 } from './unicode-script-detection';
+export * from './date-picture';
 export * from './tab-leader';
 export * from './decimal-tab';
 export * from './wrap-styled-runs';
