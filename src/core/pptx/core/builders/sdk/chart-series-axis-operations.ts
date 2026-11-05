@@ -12,6 +12,7 @@
  *
  * @module sdk/chart-series-axis-operations
  */
+import { withGeneratedAxisIds } from '../../utils/chart-new-part-axes';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartData,
@@ -29,11 +30,14 @@ const SECONDARY_TYPES = new Set<PptxChartType>([
 	'combo',
 ]);
 
-/** Whether `data` can plot a series on a secondary axis. */
+/**
+ * Whether `data` can plot a series on a secondary axis. A new chart (no
+ * `chartPartPath`) is judged by the axes its first save gives it.
+ */
 export function chartSupportsSecondaryAxis(data: PptxChartData): boolean {
+	const axes = (data.chartPartPath === undefined ? withGeneratedAxisIds(data) : data).axes;
 	return (
-		SECONDARY_TYPES.has(data.chartType) &&
-		(data.axes ?? []).some((axis) => axis.axisType === 'valAx')
+		SECONDARY_TYPES.has(data.chartType) && (axes ?? []).some((axis) => axis.axisType === 'valAx')
 	);
 }
 
@@ -99,23 +103,33 @@ function reindexAxisFormats(
  * value axis. Returns `data` unchanged when the chart cannot have a
  * secondary axis or the series is already there.
  *
+ * A new chart (no `chartPartPath`) first gets the axis ids its part is saved
+ * with (`withGeneratedAxisIds`), so the new axes can be paired with them. Its
+ * part holds the secondary axis for a later series of a vertical 2-D column,
+ * line or area chart (not the first series, horizontal bars, 3-D charts or a
+ * series inside a stacked group of several); any other case is saved by the
+ * legacy generator without it, with a `CHART_WRITTEN_BY_LEGACY_GENERATOR`
+ * save warning.
+ *
  * @example
  * ```ts
  * const next = withChartSeriesOnSecondaryAxis(chart.chartData, 1, true);
  * ```
  */
 export function withChartSeriesOnSecondaryAxis(
-	data: PptxChartData,
+	chart: PptxChartData,
 	seriesIndex: number,
 	secondary: boolean,
 ): PptxChartData {
+	// A new chart's axes have no ids before its first save; give them the ones its part will have.
+	const data = chart.chartPartPath === undefined ? withGeneratedAxisIds(chart) : chart;
 	const series = data.series[seriesIndex];
-	if (!series || !chartSupportsSecondaryAxis(data)) return data;
-	if (isChartSeriesOnSecondaryAxis(data, seriesIndex) === secondary) return data;
+	if (!series || !chartSupportsSecondaryAxis(data)) return chart;
+	if (isChartSeriesOnSecondaryAxis(data, seriesIndex) === secondary) return chart;
 	const axes = [...(data.axes ?? [])];
 	const pair = valueAxisPair(data);
 	const primary = pair.primary;
-	if (!primary || primary.axisId === undefined) return data;
+	if (!primary || primary.axisId === undefined) return chart;
 	if (!secondary) {
 		const nextSeries = data.series.map((s, i) =>
 			i === seriesIndex ? { ...s, axisId: primary.axisId } : s,

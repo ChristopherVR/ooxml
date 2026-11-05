@@ -386,7 +386,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   switch. It found two type-switch differences, fixed in the neutral op (series colour moving to the line,
   `crossBetween` kept). The data sheet maps onto the series operations (`chart/edit/data-sheet.ts`), and
   `chart/edit/new-chart.ts` builds a new chart part through `setChartType`.
-  **Remains:** the operations have no per-series combination type (`setChartSeriesChartType`), no trendline or
+  The per-series combination type (`setChartSeriesType`) joins a converted series to a neighbouring group of its type,
+  so a combination built series by series keeps one group per type and axis pair, as Office writes it.
+  **Remains:** no trendline or
   error-bar setters, no marker or point-label edits, and no axis title font styling or user shapes; the type switch
   does not build stock, surface or 3-D line charts and makes a combination chart one group; the neutral ops edit only
   the chart part's caches, never an embedded workbook (`chart/workbook` writes that, see C6); the colour style part

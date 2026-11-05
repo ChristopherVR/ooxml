@@ -155,6 +155,39 @@ function movedFormats(
 	return out;
 }
 
+/**
+ * `chart`'s axes with the ids the new part gives them, before its first save: each model axis
+ * the part matches by type and order takes the generated id, crossing and position it lacks, and
+ * a generated axis no model axis stands for is appended. The order of the model's axes is kept, so
+ * axis-indexed element formats still name the same axes. A chart whose axes already have ids, or
+ * whose type has no axes, is returned as it is.
+ */
+export function withGeneratedAxisIds(chart: PptxChartData): PptxChartData {
+	const model = chart.axes ?? [];
+	if (model.some((axis) => axis.axisId !== undefined)) return chart;
+	const slots = slotsOf(chart, model);
+	if (slots.length === 0) return chart;
+	const axes = model.map((axis) => structuredClone(axis));
+	const taken = new Set<PptxChartAxisFormatting>();
+	for (const slot of slots) {
+		const own = axes.filter((axis) => axis.axisType === slot.type)[slot.typeIndex];
+		if (own && !taken.has(own)) {
+			taken.add(own);
+			own.axisId = slot.id;
+			own.crossAxisId ??= slot.cross;
+			own.axPos ??= slot.position;
+			continue;
+		}
+		axes.push({
+			axisType: slot.type,
+			axisId: slot.id,
+			crossAxisId: slot.cross,
+			axPos: slot.position,
+		});
+	}
+	return { ...chart, axes };
+}
+
 /** The axes of the new part for `chart`. */
 export function newChartAxes(chart: PptxChartData): NewChartAxes {
 	const model = chart.axes ?? [];

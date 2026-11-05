@@ -43,4 +43,26 @@ describe('one series combo type changes', () => {
 		source.plotArea.groups[0]!.extLst = '<c:extLst/>';
 		expect(() => setChartSeriesType(source, 1, { kind: 'line' })).toThrow('unknown group');
 	});
+	it('joins a neighbouring group of the new type, and only a neighbour', () => {
+		const source = columnChart();
+		source.plotArea.groups[0]!.series.push(structuredClone(source.plotArea.groups[0]!.series[1]!));
+		source.plotArea.groups[0]!.series[2]!.index = 2;
+		source.plotArea.groups[0]!.series[2]!.order = 2;
+		const twoLines = setChartSeriesType(setChartSeriesType(source, 1, { kind: 'line' }), 2, {
+			kind: 'line',
+		});
+		expect(twoLines.plotArea.groups.map((group) => [group.kind, group.series.length])).toEqual([
+			['bar', 1],
+			['line', 2],
+		]);
+		const between = setChartSeriesType(setChartSeriesType(source, 0, { kind: 'line' }), 2, {
+			kind: 'line',
+		});
+		expect(between.plotArea.groups.map((group) => [group.kind, group.series.length])).toEqual([
+			['line', 1],
+			['bar', 1],
+			['line', 1],
+		]);
+		expect(chartSeriesEntries(between).map((entry) => entry.series.index)).toEqual([0, 1, 2]);
+	});
 });

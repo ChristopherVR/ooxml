@@ -769,7 +769,13 @@ export function setChartSeriesMarker(
  * `bar` chart). Pass `null` to clear it so the series uses the chart-level type.
  *
  * Setting a per-series type also promotes the chart to `combo` so that the save
- * pipeline emits multiple chart-type containers.
+ * pipeline emits multiple chart-type containers; the other series then keep
+ * the chart's former type as their own, so a line chart with one column
+ * series stays a line chart for the rest. In a combination chart a series
+ * with no type of its own is drawn as columns. A new chart's part holds the
+ * combinations of 2-D column, line and area series; other mixes are saved by
+ * the legacy generator as a single chart type, with a
+ * `CHART_WRITTEN_BY_LEGACY_GENERATOR` save warning.
  *
  * @example
  * ```ts
@@ -789,7 +795,9 @@ export function setChartSeriesChartType(
 	const effective = new Set(
 		data.series.map((s) => s.seriesChartType ?? data.chartType).filter((t) => t !== 'combo'),
 	);
-	if (effective.size > 1) {
+	if (effective.size > 1 && data.chartType !== 'combo') {
+		const former = data.chartType;
+		for (const series of data.series) series.seriesChartType ??= former;
 		data.chartType = 'combo';
 	}
 }
