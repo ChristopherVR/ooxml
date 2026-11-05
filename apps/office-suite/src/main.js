@@ -336,11 +336,15 @@ async function embeddings() {
 	choose('Embedded documents', content);
 }
 async function share(id = active) {
-	const doc = await sessions.save(id);
-	if (doc.cloud) {
-		cloud.showShare(doc);
+	// A connected file is shared where it lives: the link needs no save, and saving first turned
+	// Share into a sync that could stop at a conflict dialog. The dialog says when local edits are
+	// not in OneDrive yet.
+	const stored = await store.get(id);
+	if (stored?.cloud) {
+		cloud.showShare(stored, { unsaved: stored.cloud.pending || sessions.isDirty(id) });
 		return;
 	}
+	const doc = await sessions.save(id);
 	if (!teams) {
 		teams = await mountTeams($('teams-host'), store, open, refresh);
 	}

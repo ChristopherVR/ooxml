@@ -209,8 +209,43 @@ test('existing-link sharing keeps grants unchanged; new access requires explicit
 	assert.equal(grants, 0);
 	assert.equal(await cloud.share(doc, { type: 'view', scope: 'organization' }), 'new-link');
 	assert.equal(grants, 1);
+	// Unsaved local edits do not block sharing: the link is to the file as it is in OneDrive.
 	doc.cloud.pending = true;
-	await assert.rejects(cloud.share(doc, { type: 'edit', scope: 'anonymous' }), /resolve/);
+	assert.equal(await cloud.share(doc, { type: 'view', scope: 'organization' }), 'new-link');
+	assert.equal(grants, 2);
+});
+
+test('reopening a file with unsaved local edits keeps them when OneDrive has not changed', async () => {
+	const notices = [];
+	const stale = [];
+	const { cloud, library } = harness('docx', {
+		notice: (text) => notices.push(text),
+		stale: async (input) => (stale.push(input), 'latest'),
+	});
+	const doc = await cloud.open('link');
+	const edited = { ...doc, bytes: bytes('edited'), cloud: { ...doc.cloud, pending: true } };
+	await library.commit([{ document: edited, expected: doc.revision }]);
+	const again = await cloud.open('link');
+	assert.equal(again.id, doc.id);
+	assert.deepEqual(again.bytes, bytes('edited'));
+	assert.equal(stale.length, 0);
+	assert.match(notices[0], /Reopened your edits/u);
+});
+
+test('reopening with unsaved edits asks when OneDrive changed, and keeps edits as a copy', async () => {
+	const { cloud, library, opened } = harness('docx', { stale: async () => 'latest' });
+	const doc = await cloud.open('link');
+	const edited = { ...doc, bytes: bytes('edited'), cloud: { ...doc.cloud, pending: true } };
+	await library.commit([{ document: edited, expected: doc.revision }]);
+	opened.file = { ...opened.file, eTag: 'v9' };
+	opened.bytes = bytes('newer');
+	const again = await cloud.open('link');
+	assert.equal(again.id, doc.id);
+	assert.deepEqual(again.bytes, bytes('newer'));
+	assert.equal(again.cloud.pending, false);
+	const copies = (await library.list()).filter((item) => /local edits/u.test(item.name));
+	assert.equal(copies.length, 1);
+	assert.deepEqual(copies[0].bytes, bytes('edited'));
 });
 
 test('unconfigured hosts fail honestly and identity serialization excludes capabilities', async () => {

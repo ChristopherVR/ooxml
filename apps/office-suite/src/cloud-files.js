@@ -28,6 +28,8 @@ export class SuiteCloudStorage {
 		adopted,
 		changed,
 		dirty,
+		stale,
+		notice,
 		id = 'onedrive',
 		label = 'OneDrive',
 		serializeFile = cloudIdentity,
@@ -43,6 +45,8 @@ export class SuiteCloudStorage {
 			adopted,
 			changed,
 			dirty,
+			stale,
+			notice,
 			id,
 			label,
 			serializeFile,
@@ -83,8 +87,26 @@ export class SuiteCloudStorage {
 	/** Adds an opened cloud file ({ file, bytes }) to the library, or reuses its existing document. */
 	async adopt(opened) {
 		const existing = await this.find(opened.file);
-		// A repeated link must never replace an unsynchronized local document.
-		if (existing && (existing.cloud.pending || this.dirty?.(existing.id))) return existing;
+		// Edits on this device that OneDrive does not have yet are never replaced silently.
+		if (existing && (existing.cloud.pending || this.dirty?.(existing.id))) {
+			const unchanged = existing.cloud.file?.eTag === opened.file.eTag;
+			const choice = unchanged
+				? 'keep'
+				: ((await this.stale?.({ doc: existing, remote: opened })) ?? 'keep');
+			if (choice === 'keep') {
+				this.notice?.(
+					unchanged
+						? `Reopened your edits from this device. Save to update ${this.label}.`
+						: `Kept your edits from this device. ${this.label} has a newer version; Save combines them where possible.`,
+				);
+				return existing;
+			}
+			// Open the newer cloud version, keeping the local edits as a separate library file.
+			await this.store.create(
+				existing.name.replace(/(\.[^.]+)$/u, ' (local edits)$1'),
+				existing.bytes,
+			);
+		}
 		const cloud = {
 			providerId: this.id,
 			providerLabel: this.label,
@@ -178,7 +200,6 @@ export class SuiteCloudStorage {
 	async share(doc, options) {
 		this.checkProvider(doc);
 		if (!doc.cloud) throw this.error('This document is not connected to OneDrive.');
-		if (doc.cloud.pending) throw this.error('Save or resolve the OneDrive changes before sharing.');
 		if (!this.client) throw this.error('OneDrive sign-in is not configured.');
 		if (options.type === 'existing') {
 			// Only the link is needed: ask for the item's metadata, not its whole content.

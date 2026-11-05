@@ -17,6 +17,33 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 		},
 		adopted: (doc) => sessions.reload(doc),
 		dirty: (id) => sessions.isDirty(id),
+		notice: (text) => notify(message(text)),
+		// Reopening a file whose edits on this device never reached OneDrive, while OneDrive has a
+		// newer version: the user chooses; nothing is replaced silently.
+		stale: ({ doc }) =>
+			new Promise((resolve) => {
+				const content = document.createElement('div');
+				content.id = 'onedrive-stale';
+				content.innerHTML =
+					html(`<p><strong>${escape(doc.name)}</strong> has edits on this device that were never saved to OneDrive, and OneDrive now has a newer version.</p>
+				<p>Keep your edits to go on where you left off (Save combines them with the newer version where possible), or open the OneDrive version; your edits are then kept as a separate file in your library.</p>
+				<div class="cloud-recovery-actions"><button data-stale="keep" class="primary">Keep my edits</button><button data-stale="latest">Open the OneDrive version</button></div>`);
+				const dialog = choose(message('Edits on this device'), content);
+				let done = false;
+				const finish = (choice) => {
+					if (done) return;
+					done = true;
+					dialog.removeEventListener('close', closed);
+					dialog.close();
+					resolve(choice);
+				};
+				const closed = () => finish('keep');
+				dialog.addEventListener('close', closed);
+				content.addEventListener('click', (event) => {
+					const choice = event.target.closest('[data-stale]')?.dataset.stale;
+					if (choice) finish(choice);
+				});
+			}),
 		conflict:
 			options.resolveConflict ??
 			(({ doc, conflict }) =>
@@ -90,7 +117,7 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 		};
 		choose(message('Open from OneDrive'), content);
 	};
-	cloud.showShare = (doc) => {
+	cloud.showShare = (doc, { unsaved = false } = {}) => {
 		const content = document.createElement('form');
 		content.id = 'onedrive-share-form';
 		content.innerHTML = `<p>Share the connected OneDrive file. The existing link keeps current permissions. Creating a new view or edit link grants the access you select; tenant policy may restrict it. This does not upload another Teams attachment or enable Microsoft coauthoring.</p><label>Access<select name="type"><option value="existing">Existing link, keep current permissions</option><option value="view">Create view link</option><option value="edit">Create edit link</option></select></label><label>New link scope<select name="scope"><option value="organization">People in your organization</option><option value="anonymous">Anyone with the link</option></select></label><button class="primary">Get OneDrive link</button><label>Link<input id="onedrive-share-link" readonly /></label>`;
@@ -103,6 +130,11 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 			content.innerHTML = `<p>Choose who can access this file.</p><label>Access<select name="choice">${choices.map((choice, index) => `<option value="${index}">${escape(choice.label)}</option>`).join('')}</select></label><button class="primary">Get link</button><label>Link<input id="onedrive-share-link" readonly /></label>`;
 			content.querySelector('button').disabled = choices.length === 0;
 		}
+		if (unsaved)
+			content.insertAdjacentHTML(
+				'afterbegin',
+				'<p class="cloud-share-unsaved" role="note">Your latest edits are only on this device. People with the link see the version in OneDrive until you save.</p>',
+			);
 		content.innerHTML = html(content.innerHTML);
 		content.onsubmit = (event) => {
 			event.preventDefault();
