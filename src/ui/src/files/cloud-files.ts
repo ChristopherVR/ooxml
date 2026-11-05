@@ -1,7 +1,5 @@
-import { html, nothing } from 'lit';
-import { ifDefined } from 'lit/directives/if-defined.js';
+import { nothing } from 'lit';
 import type {
-	CloudAccount,
 	CloudEntry,
 	CloudFileKind,
 	CloudFileProvider,
@@ -14,13 +12,16 @@ import { definer } from '../registry';
 import css from './cloud-files.css?raw';
 import {
 	DEFAULT_CLOUD_FILES_LABELS,
-	entryBadge,
-	fillLabel,
-	formatModified,
-	formatSize,
 	messageOf,
 	type OfficeCloudFilesLabels,
 } from './cloud-files-labels';
+import {
+	renderBrowser,
+	renderSignedOut,
+	type CloudFilesCrumb,
+	type CloudFilesView,
+	type CloudFilesViewModel,
+} from './cloud-files-view';
 
 export { DEFAULT_CLOUD_FILES_LABELS, type OfficeCloudFilesLabels } from './cloud-files-labels';
 
@@ -31,11 +32,8 @@ export interface OfficeCloudFileOpenDetail {
 }
 export type OfficeCloudFileOpenEvent = CustomEvent<OfficeCloudFileOpenDetail>;
 
-type View = 'recent' | 'files' | 'search';
-interface Crumb {
-	id: string | undefined;
-	name: string;
-}
+type View = CloudFilesView;
+type Crumb = CloudFilesCrumb;
 
 const ALL_KINDS: readonly CloudFileKind[] = ['docx', 'xlsx', 'pptx', 'vsdx'];
 const LINK_ID = '\u0000link';
@@ -327,203 +325,52 @@ export class OfficeUiCloudFiles extends OfficeElement {
 		}
 	}
 
-	private row(entry: CloudEntry, index: number) {
-		const { text } = this;
-		const ok = this.accepted(entry);
-		const busy = this.opening === entry.id;
-		const blocked = entry.type === 'file' && (!ok || (this.opening !== undefined && !busy));
-		const badge = entryBadge(entry);
-		const place = this.view === 'files' ? undefined : entry.location;
-		return html`<li
-			class="row"
-			role="option"
-			data-index=${index}
-			data-entry=${entry.id}
-			tabindex=${index === this.focusIndex ? 0 : -1}
-			aria-selected=${index === this.focusIndex ? 'true' : 'false'}
-			aria-disabled=${blocked ? 'true' : 'false'}
-			aria-busy=${busy ? 'true' : 'false'}
-			title=${ifDefined(entry.type === 'file' && !ok ? text.unsupported : undefined)}
-			@click=${() => {
+	/** The template's view of this element: its state and bound actions. */
+	private viewModel(): CloudFilesViewModel {
+		return {
+			text: this.text,
+			providers: this.providers,
+			locale: this.locale,
+			view: this.view,
+			path: this.path,
+			entries: this.entries,
+			next: this.next,
+			loading: this.loading,
+			error: this.error,
+			query: this.query,
+			opening: this.opening,
+			progress: this.progress,
+			focusIndex: this.focusIndex,
+			accepted: (entry) => this.accepted(entry),
+			select: (index, entry) => {
 				this.focusIndex = index;
 				this.activate(entry);
-			}}
-			><span class="name"
-				><span
-					class="icon ${entry.type === 'folder' ? 'folder' : entry.kind ? entry.kind : 'other'}"
-					aria-hidden="true"
-					>${badge}</span
-				><span class="title"
-					><b>${entry.name}</b>${place ? html`<small>${place}</small>` : nothing}</span
-				></span
-			><span class="cell">${formatModified(entry.modified, this.locale)}</span
-			><span class="cell size">${entry.type === 'folder' ? '' : formatSize(entry.size)}</span></li
-		>`;
-	}
-
-	private list() {
-		const { text } = this;
-		if (this.loading && this.entries.length === 0)
-			return html`<div aria-hidden="true"
-				><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div
-			></div>`;
-		if (this.entries.length === 0 && !this.error)
-			return html`<div class="empty"
-				>${this.view === 'search' ? text.emptySearch : text.empty}</div
-			>`;
-		return html`
-			<div class="head" aria-hidden="true"
-				><span>${text.name}</span><span>${text.modified}</span
-				><span class="size">${text.size}</span></div
-			>
-			<ul role="listbox" aria-label=${text.files} @keydown=${this.onKeydown}
-				>${this.entries.map((entry, index) => this.row(entry, index))}</ul
-			>
-			${
-				this.next
-					? html`<button
-							class="more"
-							type="button"
-							?disabled=${this.loading}
-							@click=${() => void this.load(true)}
-							>${text.loadMore}</button
-						>`
-					: nothing
-			}
-		`;
-	}
-
-	private signedOut(p: CloudFileProvider) {
-		const { text } = this;
-		const values = { provider: p.label };
-		return html`<div class="signin"
-			><h2>${fillLabel(text.signInHeading, values)}</h2><p>${fillLabel(text.signInText, values)}</p
-			><button type="button" class="primary" @click=${() => void this.signIn()}
-				>${text.signIn}</button
-			><div class="error" role="alert">${this.error}</div></div
-		>`;
-	}
-
-	private toolbar(p: CloudFileProvider, account: CloudAccount) {
-		const { text } = this;
-		const tab = (view: View, label: string) =>
-			html`<button
-				type="button"
-				data-view=${view}
-				aria-pressed=${this.view === view ? 'true' : 'false'}
-				@click=${() => this.show(view)}
-				>${label}</button
-			>`;
-		return html`<div class="bar"
-			>${
-				this.providers.length > 1
-					? html`<div class="tabs" role="group" aria-label=${text.providers}
-							>${this.providers.map(
-								(other) =>
-									html`<button
-										type="button"
-										data-provider=${other.id}
-										aria-pressed=${other === p ? 'true' : 'false'}
-										@click=${() => (this.active = other.id)}
-										>${other.label}</button
-									>`,
-							)}</div
-						>`
-					: nothing
-			}
-			<div class="tabs"
-				>${p.recent ? tab('recent', text.recent) : nothing}${tab('files', text.myFiles)}</div
-			>
-			${
-				p.search
-					? html`<office-ui-search
-							placeholder=${text.searchPlaceholder}
-							.value=${this.query}
-							@input=${this.onSearchInput}
-						></office-ui-search>`
-					: nothing
-			}
-			<span class="grow"></span><span class="account">${account.name}</span> ${
-				p.signOut
-					? html`<button type="button" data-action="sign-out" @click=${() => void this.signOut()}
-							>${text.signOut}</button
-						>`
-					: nothing
-			}</div
-		>`;
-	}
-
-	private linkField() {
-		const { text } = this;
-		const submit = (event: Event) => {
-			event.preventDefault();
-			const input = this.renderRoot.querySelector<HTMLInputElement>('.link input');
-			if (input) void this.openLink(input.value);
+			},
+			show: (view) => this.show(view),
+			enter: (index) => this.enter(index),
+			loadMore: () => void this.load(true),
+			choose: (id) => {
+				this.active = id;
+			},
+			signIn: () => void this.signIn(),
+			signOut: () => void this.signOut(),
+			search: (event) => this.onSearchInput(event),
+			openLink: (event) => {
+				event.preventDefault();
+				const input = (event.currentTarget as HTMLFormElement).querySelector('input');
+				if (input) void this.openLink(input.value);
+			},
+			cancel: () => this.openAbort?.abort(),
+			keydown: (event) => this.onKeydown(event),
 		};
-		return html`<form class="bar link" @submit=${submit}
-			><input
-				type="text"
-				aria-label=${text.openLink}
-				placeholder=${text.openLinkPlaceholder}
-			/><button type="submit" ?disabled=${this.opening !== undefined}
-				>${text.openLinkButton}</button
-			></form
-		>`;
-	}
-
-	private statusLine() {
-		const { text } = this;
-		if (!this.opening) return nothing;
-		const entry = this.entries.find((candidate) => candidate.id === this.opening);
-		const name = entry?.name ?? text.openLink;
-		const { progress } = this;
-		const percent =
-			progress?.total && progress.total > 0
-				? Math.min(100, Math.round((progress.loaded / progress.total) * 100))
-				: undefined;
-		const message =
-			percent === undefined
-				? fillLabel(text.opening, { name })
-				: fillLabel(text.openingPercent, { name, percent: String(percent) });
-		return html`<div class="status"
-			><span role="status" data-progress=${ifDefined(percent)}>${message}</span
-			><button type="button" data-action="cancel" @click=${() => this.openAbort?.abort()}
-				>${text.cancel}</button
-			></div
-		>`;
-	}
-
-	private crumbs() {
-		return html`<nav aria-label=${this.text.location}
-			><ol
-				>${this.path.map(
-					(crumb, index) =>
-						html`<li
-							><button
-								type="button"
-								data-crumb=${index}
-								aria-current=${ifDefined(
-									this.view === 'files' && index === this.path.length - 1 ? 'page' : undefined,
-								)}
-								@click=${() => this.enter(index)}
-								>${index === 0 ? this.text.myFiles : crumb.name}</button
-							></li
-						>`,
-				)}</ol
-			></nav
-		>`;
 	}
 
 	protected override render() {
 		const p = this.provider;
 		if (!p) return nothing;
 		const account = p.account();
-		if (!account) return this.signedOut(p);
-		return html`<div aria-busy=${this.loading ? 'true' : 'false'}
-			>${this.toolbar(p, account)}${p.openLink ? this.linkField() : nothing}${
-				this.view === 'files' ? this.crumbs() : nothing
-			}${this.list()}${this.statusLine()} <div class="error" role="alert">${this.error}</div></div
-		>`;
+		const vm = this.viewModel();
+		return account ? renderBrowser(vm, p, account) : renderSignedOut(vm, p);
 	}
 }
 

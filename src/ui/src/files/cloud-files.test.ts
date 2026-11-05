@@ -71,7 +71,11 @@ function fakeProvider(overrides: Partial<CloudFileProvider> = {}): Fake {
 		},
 		notify: () => listeners.forEach((listener) => listener()),
 		list: async (id, options) => {
-			provider.lists.push({ folder: id, page: options?.page, signal: options?.signal! });
+			provider.lists.push({
+				folder: id,
+				page: options?.page,
+				signal: options?.signal as AbortSignal,
+			});
 			return tree[id ?? 'root'] ?? { entries: [] };
 		},
 		search: async (query) => {
