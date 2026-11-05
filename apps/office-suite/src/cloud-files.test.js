@@ -270,3 +270,25 @@ test('custom providers persist their identity, isolate connections and receive s
 		/does not support/,
 	);
 });
+
+test('a cloud file is found through the bytes-free index and reuses its library document', async () => {
+	const { library, cloud } = harness('docx');
+	let listed = 0;
+	const index = library.list;
+	library.list = async () => {
+		listed++;
+		return index();
+	};
+	library.listCloud = async () =>
+		(await index()).map(({ id, name, kind, revision, cloud }) => ({
+			id,
+			name,
+			kind,
+			revision,
+			cloud,
+		}));
+	const first = await cloud.open('link');
+	const second = await cloud.open('link');
+	assert.equal(second.id, first.id);
+	assert.equal(listed, 0, 'opening never loads every stored document');
+});
