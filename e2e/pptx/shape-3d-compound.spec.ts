@@ -256,9 +256,10 @@ test.describe('compound outlines (a:ln/@cmpd)', () => {
 		// stays one. A binding that ignores `@cmpd` emits a single strand for both.
 		expect(compound?.strandCount).toBe(2);
 		expect(single?.strandCount).toBe(1);
-		// Same authored `a:ln/@w`, so the compound line's strands must sum back to
-		// the control's whole width rather than being drawn thinner overall.
-		expect(compound?.totalStrokeWidth).toBeCloseTo(single?.totalStrokeWidth ?? 0, 0);
+		// Same authored `a:ln/@w`. PowerPoint cuts a `dbl` line into thirds (strand,
+		// gap, strand), so its two strands paint two thirds of the control's width:
+		// neither the whole width twice over nor thinner strands.
+		expect(compound?.totalStrokeWidth).toBeCloseTo(((single?.totalStrokeWidth ?? 0) * 2) / 3, 0);
 		expect(compound?.stroke).toBe(single?.stroke);
 	});
 });

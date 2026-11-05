@@ -14,9 +14,11 @@
  * for a geometry morph at all, which is why the defect survived every existing
  * morph spec.
  *
- * The two shapes are 280 slide-pixels apart, inside the matcher's 300px
- * proximity threshold, so they pair on position alone and the spec does not
- * depend on how the SDK numbers `p:cNvPr/@id` across slides.
+ * A triangle and a hexagon are different geometry families, which PowerPoint
+ * never pairs on identity or position alone (they dissolve; see
+ * `morph-geometry-key`), so both copies carry the same `!!` name, the one
+ * thing that makes PowerPoint morph one preset into another. The name also
+ * keeps the spec independent of how the SDK numbers `p:cNvPr/@id`.
  *
  * Re-runnable; `global-setup.ts` invokes it on every Playwright run.
  */
@@ -40,6 +42,9 @@ export const MORPH_SHAPE_SIZE = 200;
 export const MORPH_SHAPE_FROM_TYPE = 'triangle';
 export const MORPH_SHAPE_TO_TYPE = 'hexagon';
 
+/** The `!!` morph name both copies share, so the preset change still pairs them. */
+export const MORPH_SHAPE_NAME = '!!Badge';
+
 /** Duration authored on the incoming slide; the spec scrubs, so it only has to be sane. */
 export const MORPH_DURATION_MS = 1000;
 
@@ -62,20 +67,19 @@ export async function generateMorphShapeSwapFixture(): Promise<string> {
 
 	// The morphing shape is added FIRST on both slides, so it is `-shape-0` and
 	// the spec can address it without guessing at element numbering.
-	data.slides.push(
-		createSlide('Blank')
-			.addShape(MORPH_SHAPE_FROM_TYPE, badgeOptions(MORPH_SHAPE_FROM_X))
-			.addText('Morph Start', { x: 60, y: 40, width: 600, height: 60, fontSize: 28, bold: true })
-			.build(),
-	);
-
-	data.slides.push(
-		createSlide('Blank')
-			.addShape(MORPH_SHAPE_TO_TYPE, badgeOptions(MORPH_SHAPE_TO_X))
-			.addText('Morph End', { x: 60, y: 40, width: 600, height: 60, fontSize: 28, bold: true })
-			.setTransition({ type: 'morph', duration: MORPH_DURATION_MS })
-			.build(),
-	);
+	const start = createSlide('Blank')
+		.addShape(MORPH_SHAPE_FROM_TYPE, badgeOptions(MORPH_SHAPE_FROM_X))
+		.addText('Morph Start', { x: 60, y: 40, width: 600, height: 60, fontSize: 28, bold: true })
+		.build();
+	const end = createSlide('Blank')
+		.addShape(MORPH_SHAPE_TO_TYPE, badgeOptions(MORPH_SHAPE_TO_X))
+		.addText('Morph End', { x: 60, y: 40, width: 600, height: 60, fontSize: 28, bold: true })
+		.setTransition({ type: 'morph', duration: MORPH_DURATION_MS })
+		.build();
+	for (const slide of [start, end]) {
+		slide.elements[0]!.name = MORPH_SHAPE_NAME;
+	}
+	data.slides.push(start, end);
 
 	const bytes = await handler.save(data.slides);
 

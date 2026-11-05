@@ -72,9 +72,13 @@ interface ElementFacts {
 	/** The deepest text run's paint: `color | -webkit-text-fill-color | stroke`. */
 	runPaint: string;
 	/**
-	 * `stroke-width` (px) of each `<path>` in the shared stroke-outline overlay
+	 * The `stroke-width` ATTRIBUTE (slide px, rounded to 4 places) of each
+	 * `<path>` in the shared stroke-outline overlay
 	 * (`svg[class*="gradient-outline"]`), in DOM order; `[]` when the element
-	 * has no overlay, i.e. its outline (if any) is a plain CSS border.
+	 * has no overlay, i.e. its outline (if any) is a plain CSS border. The
+	 * attribute is the model's width; the inline CSS width on top of it is
+	 * snapped to whole device pixels of the stage, so it depends on the
+	 * stage's scale, which each binding's chrome sets a little differently.
 	 */
 	strokeOverlayWidths: number[];
 	/** Computed `stroke` of the overlay's first `<path>`, or `''` with no overlay. */
@@ -158,8 +162,10 @@ test.describe('cross-binding a:ln and a:blipFill/a:tile', () => {
 							runPaint: runCs
 								? `${runCs.color} | ${runCs.webkitTextFillColor} | ${runCs.webkitTextStrokeWidth} ${runCs.webkitTextStrokeColor}`
 								: '-',
-							strokeOverlayWidths: overlayPaths.map((path) =>
-								Number.parseFloat(getComputedStyle(path).strokeWidth),
+							strokeOverlayWidths: overlayPaths.map(
+								(path) =>
+									Math.round(Number.parseFloat(path.getAttribute('stroke-width') ?? '') * 1e4) /
+									1e4,
 							),
 							strokeOverlayColor: overlayPathCs?.stroke ?? '',
 							strokeOverlayDash: overlayPathCs?.strokeDasharray ?? '',
@@ -210,14 +216,14 @@ test.describe('cross-binding a:ln and a:blipFill/a:tile', () => {
 			expect(sng.borderTopWidth).toBe('0px');
 
 			// `sng` -> one overlay strand at the FULL authored width (6 pt = 8 px).
-			// `dbl` / `tri` split that same width into two / three parallel strands
-			// that sum back to it (the compound line divides the weight, it does not
-			// add to it), all painted the outline's own colour with no dash.
+			// `dbl` / `tri` cut that same width into strands and gaps the way
+			// PowerPoint 16 paints them (`COMPOUND_BANDS` in `connector-style`):
+			// `dbl` is thirds (strand, gap, strand), `tri` 1 : 1 : 2 : 1 : 1, so the
+			// strands are narrower than the line and never add to its weight. All
+			// are painted the outline's own colour with no dash.
 			expect(sng.strokeOverlayWidths).toStrictEqual([8]);
-			expect(dbl.strokeOverlayWidths).toStrictEqual([4, 4]);
-			expect(tri.strokeOverlayWidths).toStrictEqual([2.4, 3.2, 2.4]);
-			expect(dbl.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
-			expect(tri.strokeOverlayWidths.reduce((a, b) => a + b, 0)).toBe(sng.strokeOverlayWidths[0]);
+			expect(dbl.strokeOverlayWidths).toStrictEqual([2.6667, 2.6667]);
+			expect(tri.strokeOverlayWidths).toStrictEqual([1.3333, 2.6667, 1.3333]);
 			expect(sng.strokeOverlayColor).toBe('rgb(192, 0, 0)');
 			expect(dbl.strokeOverlayColor).toBe(sng.strokeOverlayColor);
 			expect(tri.strokeOverlayColor).toBe(sng.strokeOverlayColor);

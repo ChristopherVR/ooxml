@@ -6,9 +6,10 @@
  * thin a sub-pixel stroke further until it faded or vanished.
  *
  * Every binding's stage now publishes one device pixel in slide px and paints
- * strokes as `max(<authored>, <one device pixel>)`, so this measures the
- * painted width of each line in DEVICE pixels: never under one, and a line
- * that is already wider keeps its authored width.
+ * a stroke a WHOLE number of device pixels wide, `max(1, round(<authored>))`,
+ * as PowerPoint's own exports do. This measures the painted width of each line
+ * in DEVICE pixels: never under one, and a wider line keeps its authored width
+ * rounded to the nearest device pixel.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -96,13 +97,11 @@ test.describe('thin strokes stay at least one device pixel on screen (issue #23)
 		for (const [idx, { scale, width }] of lines.entries()) {
 			expect(scale).toBeGreaterThan(0);
 			const authoredDevice = WIDTHS[idx]! * scale * dpr;
-			// Never thinner than one device pixel...
+			// Never thinner than one device pixel, and otherwise the authored width
+			// rounded to whole device pixels (ties round up, as CSS round() does).
+			const expected = Math.max(1, Math.round(authoredDevice));
 			expect(width, `line ${idx}`).toBeGreaterThanOrEqual(0.99);
-			// ...and never wider than the larger of the two.
-			expect(width, `line ${idx}`).toBeLessThanOrEqual(Math.max(authoredDevice, 1) + 0.01);
-			if (authoredDevice > 1) {
-				expect(width, `line ${idx} keeps its authored width`).toBeCloseTo(authoredDevice, 1);
-			}
+			expect(Math.abs(width - expected), `line ${idx} is ${expected} device px`).toBeLessThan(0.02);
 		}
 	});
 });
