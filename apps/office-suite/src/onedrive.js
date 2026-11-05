@@ -1,6 +1,7 @@
 import { SuiteOneDrive } from './cloud-files.js';
 import { mountCloudBrowser } from './cloud-browser.js';
 import { resolveCloudOptions } from './cloud-options.js';
+import { takeLaunchLink } from './launch-link.js';
 import { $, choose, download, escape, notify, task } from './ui.js';
 
 /** Shared shell controls for Word, Excel, PowerPoint and Visio, including standalone apps. */
@@ -88,16 +89,18 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 					});
 				})),
 	});
-	cloud.showOpen = () => {
+	cloud.showOpen = ({ link = '' } = {}) => {
 		const content = document.createElement('form');
 		content.id = 'onedrive-open-form';
 		content.innerHTML = cloud.configured()
 			? '<p>Open a Word, Excel, PowerPoint or Visio file using your Microsoft access. Save updates the connected file. Live Microsoft coauthoring is not enabled.</p><label>OneDrive sharing link<input id="onedrive-link" name="link" type="url" required autocomplete="off" spellcheck="false" /></label><button id="onedrive-open-submit" class="primary">Open from OneDrive</button>'
-			: '<p>Microsoft sign-in has not been connected by your host or administrator. Ask them to enable OneDrive access. You can continue opening files from this device.</p><p><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#integrated-office-suite" target="_blank" rel="noopener noreferrer">Integration documentation</a></p>';
+			: '<p>Microsoft sign-in has not been connected by your host or administrator. Ask them to enable OneDrive access. You can continue opening files from this device.</p>';
 		if (options.id !== 'onedrive' && cloud.configured())
 			content.innerHTML =
 				'<p>Open a connected Office document. Save updates the same file.</p><label>File link or reference<input id="onedrive-link" name="link" required autocomplete="off" spellcheck="false" /></label><button class="primary">Open</button>';
 		content.innerHTML = html(content.innerHTML);
+		const input = content.querySelector('#onedrive-link');
+		if (input && link) input.value = link;
 		content.onsubmit = (event) => {
 			event.preventDefault();
 			const button = content.querySelector('button');
@@ -177,7 +180,20 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 	cloud.hasBrowser = Boolean(browser);
 	$('open-onedrive').textContent = message(browser ? 'Browse OneDrive' : 'Open from OneDrive');
 	$('open-onedrive').onclick = () => void task(cloud.showFiles);
+	openLaunchLink(options, cloud, message);
 	return cloud;
+}
+
+/**
+ * A launch with `?open=<link>` (the installed app's share target or web+ooxml: handler): show the
+ * Open dialog with the link filled in. The user confirms, which also gives sign-in its click.
+ */
+function openLaunchLink(options, cloud, message) {
+	const taken = takeLaunchLink(options.launchLinks, location.href);
+	if (!taken) return;
+	history.replaceState(history.state, '', taken.href);
+	if (taken.link) cloud.showOpen({ link: taken.link });
+	else notify(message('This link cannot be opened from OneDrive here.'));
 }
 
 /**

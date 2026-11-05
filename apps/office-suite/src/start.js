@@ -44,6 +44,12 @@ export function needsChooser() {
 	if (product || !/^https?:$/.test(location.protocol) || globalThis.ooxmlSkipStart) return false;
 	if (matchMedia('(display-mode: standalone)').matches) return false;
 	const url = new URL(location.href);
+	// A link to open (?open=, the share target's text) goes straight to the workspace.
+	const param =
+		globalThis.ooxmlCloudOptions?.launchLinks?.param ??
+		globalThis.ooxmlOneDriveOptions?.launchLinks?.param ??
+		'open';
+	if (url.searchParams.has(param) || url.searchParams.has('text')) return false;
 	if (url.searchParams.has('suite')) {
 		url.searchParams.delete('suite');
 		history.replaceState(null, '', url);

@@ -7,6 +7,7 @@ import {
 } from 'ooxml-core/embedding/onedrive';
 import { officeMergeHandlers } from './onedrive-merge.js';
 import { cloudIdentity } from './cloud-files.js';
+import { resolveLaunchLinks } from './launch-link.js';
 
 export const MICROSOFT_ACCOUNT = Object.freeze({ name: 'Microsoft account' });
 
@@ -93,8 +94,9 @@ export function resolveCloudOptions(host = globalThis) {
 		(!custom && options && !options.client && client
 			? oneDriveFileProvider(options, client, transfers)
 			: undefined);
+	const id = custom?.id ?? 'onedrive';
 	return {
-		id: custom?.id ?? 'onedrive',
+		id,
 		label: custom?.label ?? 'OneDrive',
 		client,
 		fileProvider,
@@ -113,5 +115,7 @@ export function resolveCloudOptions(host = globalThis) {
 		},
 		resolveConflict: options?.resolveConflict,
 		shareChoices: options?.shareChoices,
+		/** Opening `?open=<link>` launches (share target, web+ooxml:); null when off or unset. */
+		launchLinks: options && client ? resolveLaunchLinks(options.launchLinks, id) : null,
 	};
 }

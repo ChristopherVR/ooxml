@@ -69,6 +69,14 @@ export async function buildPwa(out) {
 			display: 'standalone',
 			background_color: '#ffffff',
 			theme_color: color,
+			// Opening a OneDrive link in the installed app (apps/office-suite/src/launch-link.js): a
+			// link shared to the app, or a web+ooxml:<link> address (the suite only).
+			share_target: {
+				action: './',
+				method: 'GET',
+				params: { title: 'title', text: 'text', url: 'open' },
+			},
+			...(product ? {} : { protocol_handlers: [{ protocol: 'web+ooxml', url: './?open=%s' }] }),
 			icons: [192, 512].map((size) => ({
 				src: `${prefix}icons/${slug}-${size}.png`,
 				sizes: `${size}x${size}`,
