@@ -11,99 +11,57 @@
  * outer one's alpha reads 0.90, 0.80, 0.67, 0.54, 0.44, 0.35, 0.27, 0.20, 0.14,
  * 0.08 and the inner one's 0.16, 0.27, 0.40, 0.53, 0.61, 0.71, 0.80, 0.85,
  * 0.92, 0.95: `1 - p` and `p` of the morph's eased progress within 0.05, and
- * where the two overlap the shadow stays fully opaque. A glow (20 pt) and a blurred shadow widen mid-morph the same
- * way; a shadow whose distance and blur change in place (10 -> 50 pt, 0 -> 30
- * pt) fades its new extent in on `p`.
+ * where the two overlap the shadow stays fully opaque (at 50 % transparency
+ * it holds 0.52; with a fill change too, the same). A glow and a soft edge
+ * dissolve the same way, two renders each riding the box: a 20 pt soft edge's
+ * profile across the right edge is fitted within 0.002-0.005 coverage at every
+ * frame by `(1 - p) F(x / k0) + p F(x / k1)`, against 0.02-0.07 for one
+ * feather of either end riding the box. A shadow whose
+ * distance and blur change in place (10 -> 50 pt, 0 -> 30 pt) fades its new
+ * extent in on `p`. PowerPoint cross-dissolves the two ends' effects; the body
+ * is ONE shape mid-morph (see `morph-shape-carry`).
  *
- * The body is ONE shape mid-morph (see `morph-shape-carry`), so only the
- * effects dissolve. A CSS `box-shadow` list can paint both: the outgoing
- * layers scaled into the half's local frame fading out and the incoming ones
- * fading in, on the journey's own two frames, so the alphas run linearly in
- * eased progress like the measurement. Layers of one `box-shadow` composite
- * over each other rather than adding, so the overlap dips to 0.75 at the
- * midpoint where PowerPoint holds 1.
+ * A CSS `box-shadow` list paints both shadows on the half's own container, in
+ * its local frame, plus the layers `morph-effect-shadow` adds where they
+ * overlap so the stack sums like a dissolve instead of dipping. A glow is a
+ * `drop-shadow()` chain fitted by `morph-effect-glow`. Both are baked as
+ * keyframes on the morph's eased progress, since the overlap's alpha is not
+ * linear in it.
  *
- * A glow is also painted by a `drop-shadow()` filter; its radius is lerped
- * between the two ends' radii in the local frame (one widening glow rather
- * than two). Soft edges (an SVG filter) are not carried.
+ * Under a ghost: when the outgoing ghost dissolves over a half that stays at
+ * full strength (an opaque body whose fill changed), the ghost paints the
+ * outgoing effects itself, fading on `1 - p`, so the incoming half only fades
+ * its own in, with the overlap solved for the ghost on top. A half that fades
+ * in as well is left alone: it dissolves with its ghost in one additive group
+ * when the overlay lifts it (`morph-crossfade-group`), which is the measured
+ * blend already.
+ *
+ * Not carried: a soft edge. It is an SVG filter fixed in the element's own
+ * frame, which no keyframe can reach, so a half painting alone keeps the
+ * incoming feather riding the box throughout (0.01-0.07 coverage off
+ * PowerPoint mid-morph); only a pair dissolving in an additive group gets the
+ * measured blend. Several drop-shadows on one end (a glow and a line glow)
+ * have no chain to fit and run each one's radius and colour across instead.
  *
  * @module render/morph-effect-carry
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 
-import { splitCssList, splitCssTokens } from './css-top-level-split';
+import { fitGlowChain, fitGlowUnderGhost } from './morph-effect-glow';
+import { parseDropShadows, parseShadows, scaleLayer, withAlpha } from './morph-effect-parse';
+import type { ShadowLayer, ShadowOverlap } from './morph-effect-shadow';
+import {
+	overlapColor,
+	serializeOverlap,
+	serializeShadow,
+	shadowOverlap,
+} from './morph-effect-shadow';
 import type { MorphCarryHalf } from './morph-shape-carry';
+import { bakeStops } from './morph-shape-carry-path';
 import { getComputedEffectStyle } from './visual-effects';
 
-interface ShadowLayer {
-	inset: boolean;
-	lengths: number[];
-	color: [number, number, number, number];
-}
-
-const LENGTH = /^-?(?:\d+\.?\d*|\.\d+)(?:px)?$/u;
-
-/** Parse a CSS colour this module can fade: `rgb()`, `rgba()` or hex. */
-function parseColor(token: string): [number, number, number, number] | undefined {
-	const fn = /^rgba?\(([^)]*)\)$/u.exec(token);
-	if (fn) {
-		const parts = (fn[1] ?? '')
-			.split(/[\s,/]+/u)
-			.filter(Boolean)
-			.map(Number);
-		if (parts.length < 3 || parts.some((part) => !Number.isFinite(part))) return undefined;
-		return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0, parts[3] ?? 1];
-	}
-	const hex = /^#([0-9a-f]{3,8})$/iu.exec(token)?.[1];
-	if (!hex || ![3, 4, 6, 8].includes(hex.length)) return undefined;
-	const full = hex.length <= 4 ? [...hex].map((c) => c + c).join('') : hex;
-	const at = (i: number) => Number.parseInt(full.slice(i, i + 2), 16);
-	return [at(0), at(2), at(4), full.length === 8 ? at(6) / 255 : 1];
-}
-
-function parseShadows(value: string | undefined): ShadowLayer[] | undefined {
-	if (!value || value === 'none') return [];
-	const layers: ShadowLayer[] = [];
-	for (const layer of splitCssList(value)) {
-		let inset = false;
-		const lengths: number[] = [];
-		let color: ShadowLayer['color'] | undefined;
-		for (const token of splitCssTokens(layer.trim())) {
-			if (token === 'inset') inset = true;
-			else if (LENGTH.test(token)) lengths.push(Number.parseFloat(token));
-			else color = parseColor(token);
-		}
-		if (!color || lengths.length < 2) return undefined;
-		layers.push({ inset, lengths, color });
-	}
-	return layers;
-}
-
-function round(value: number): number {
-	return Math.round(value * 1000) / 1000;
-}
-
-function serialize(layer: ShadowLayer, kx: number, ky: number, alpha: number): string {
-	const mean = Math.sqrt(kx * ky);
-	const lengths = layer.lengths.map(
-		(value, index) => `${round(value * (index === 0 ? kx : index === 1 ? ky : mean))}px`,
-	);
-	const [r, g, b, a] = layer.color;
-	return `${layer.inset ? 'inset ' : ''}${lengths.join(' ')} rgba(${r}, ${g}, ${b}, ${round(a * alpha)})`;
-}
-
-/** `drop-shadow()` functions of a filter, or `undefined` when it has anything else. */
-function parseDropShadows(value: string | undefined): ShadowLayer[] | undefined {
-	if (!value || value === 'none') return [];
-	const layers: ShadowLayer[] = [];
-	for (const fn of value.match(/[a-z-]+\([^()]*(?:\([^()]*\)[^()]*)*\)/gu) ?? []) {
-		const inner = /^drop-shadow\((.*)\)$/u.exec(fn)?.[1];
-		const parsed = inner === undefined ? undefined : parseShadows(inner);
-		if (!parsed || parsed.length !== 1 || !parsed[0]) return undefined;
-		layers.push(parsed[0]);
-	}
-	return layers;
-}
+/** Stops the effect keyframes are baked at (eased progress). */
+const EFFECT_STOPS = 10;
 
 /**
  * Whether two shapes paint different container effects (shadow, glow), so a
@@ -119,56 +77,173 @@ export function morphEffectsDiffer(from: PptxElement, to: PptxElement): boolean 
 	return (a.boxShadow ?? '') !== (b.boxShadow ?? '') || (a.filter ?? '') !== (b.filter ?? '');
 }
 
-/** What an effect carry adds to one half's container, on the journey's two frames. */
+/** What an effect carry adds to one half's container. */
 export interface MorphEffectCarry {
-	readonly startDeclarations: readonly string[];
-	readonly endDeclarations: readonly string[];
+	/** A keyframes body (stops on the morph's eased progress), run with `linear` timing. */
+	readonly keyframes: string;
 }
 
 /**
- * The effect carry for one half of a pair that is the ONLY painter of its
- * pair's effects (no ghost dissolving over it), or `undefined` when both ends'
+ * Who paints the outgoing effects: the half itself (`alone`), or the ghost
+ * dissolving over a half that stays at full strength (`underGhost`).
+ */
+export type MorphEffectPainter = 'alone' | 'underGhost';
+
+function progressStops(): number[] {
+	return Array.from({ length: EFFECT_STOPS + 1 }, (_, i) => i / EFFECT_STOPS);
+}
+
+/** The `box-shadow` value at progress `p`, or `undefined` when there is nothing to carry. */
+function shadowTrack(
+	outA: ShadowLayer[],
+	inB: ShadowLayer[],
+	painter: MorphEffectPainter,
+	width: number,
+	height: number,
+): ((p: number) => string) | undefined {
+	if (painter === 'alone') {
+		const still = (alpha: number, layers: ShadowLayer[]) =>
+			layers.map((layer) => serializeShadow(layer, alpha)).join(', ');
+		if (still(1, outA) === still(1, inB)) {
+			return undefined;
+		}
+	} else if (inB.length === 0) {
+		return undefined;
+	}
+	// Layer i of one end overlaps layer i of the other; lists of different
+	// lengths pair nothing and fall back to the two plain fades.
+	const overlaps: Array<{ overlap: ShadowOverlap; a: ShadowLayer; b: ShadowLayer }> = [];
+	if (outA.length === inB.length) {
+		outA.forEach((a, i) => {
+			const b = inB[i];
+			const overlap = b ? shadowOverlap(a, b, width, height) : undefined;
+			if (b && overlap) overlaps.push({ overlap, a, b });
+		});
+	}
+	return (p) => {
+		const top = overlaps.flatMap(({ overlap, a, b }) => {
+			const color = overlapColor(a.color, b.color, p, painter) ?? [0, 0, 0, 0];
+			return serializeOverlap(overlap, color);
+		});
+		const fadeIn = inB.map((layer) => serializeShadow(layer, p));
+		const fadeOut = painter === 'alone' ? outA.map((layer) => serializeShadow(layer, 1 - p)) : [];
+		return [...top, ...fadeIn, ...fadeOut].join(', ');
+	};
+}
+
+/** The glow `filter` at progress `p`, or `undefined` when there is nothing to carry. */
+function glowTrack(
+	glowA: ShadowLayer[],
+	glowB: ShadowLayer[],
+	painter: MorphEffectPainter,
+): ((p: number) => string) | undefined {
+	const radius = (layer: ShadowLayer | undefined) => layer?.lengths[2] ?? 0;
+	const drop = (layer: ShadowLayer, alpha: number) =>
+		`drop-shadow(${serializeShadow(withAlpha(layer, 1), alpha)})`;
+	const a = glowA[0];
+	const b = glowB[0];
+	if (glowA.length > 1 || glowB.length > 1) {
+		// Several drop-shadows (a glow and a line glow): no chain to fit, so each
+		// one's radius and colour run from one end to the other.
+		if (painter === 'underGhost' || glowA.length !== glowB.length) return undefined;
+		const list = (layers: ShadowLayer[]) =>
+			layers.map((layer) => `drop-shadow(${serializeShadow(layer, 1)})`);
+		const start = list(glowA);
+		const end = list(glowB);
+		if (start.join(' ') === end.join(' ')) return undefined;
+		return (p) =>
+			glowA
+				.map((layer, i) => {
+					const other = glowB[i] ?? layer;
+					const mix = (x: number, y: number) => x + (y - x) * p;
+					return `drop-shadow(${serializeShadow(
+						{
+							inset: false,
+							lengths: layer.lengths.map((v, k) => mix(v, other.lengths[k] ?? v)),
+							color: layer.color.map((v, k) => mix(v, other.color[k] ?? v)) as ShadowLayer['color'],
+						},
+						1,
+					)})`;
+				})
+				.join(' ');
+	}
+	if (!a && !b) {
+		return undefined;
+	}
+	if (painter === 'underGhost') {
+		if (!b) return undefined;
+		const endA = { radius: radius(a), alpha: a?.color[3] ?? 0 };
+		const endB = { radius: radius(b), alpha: b.color[3] };
+		return (p) => drop(b, fitGlowUnderGhost(endA, endB, p));
+	}
+	// A glow on one end only dissolves against an invisible one of the same size.
+	const layerA = a ?? withAlpha(b as ShadowLayer, 0);
+	const layerB = b ?? withAlpha(layerA, 0);
+	if (drop(layerA, layerA.color[3]) === drop(layerB, layerB.color[3])) {
+		return undefined;
+	}
+	const endA = { radius: radius(layerA), alpha: layerA.color[3] };
+	const endB = { radius: radius(layerB), alpha: layerB.color[3] };
+	const aFirst = endA.radius <= endB.radius;
+	return (p) => {
+		const [narrow, wide] = fitGlowChain(endA, endB, p);
+		return aFirst
+			? `${drop(layerA, narrow)} ${drop(layerB, wide)}`
+			: `${drop(layerB, narrow)} ${drop(layerA, wide)}`;
+	};
+}
+
+/**
+ * The effect carry for one half of a pair, or `undefined` when both ends'
  * effects land identically in that half's frame.
+ *
+ * @param painter - `alone` when this half is the only painter of the pair's
+ *   effects; `underGhost` when the outgoing ghost dissolves over this
+ *   (incoming, full-strength) half and paints the outgoing effects itself.
  */
 export function buildMorphEffectCarry(
 	from: PptxElement,
 	to: PptxElement,
 	half: MorphCarryHalf,
+	painter: MorphEffectPainter = 'alone',
 ): MorphEffectCarry | undefined {
 	const a = getComputedEffectStyle(from);
 	const b = getComputedEffectStyle(to);
 	const local = half === 'to' ? to : from;
+	const width = Math.max(local.width, 1);
+	const height = Math.max(local.height, 1);
 	const fromK: [number, number] = [
-		Math.max(local.width, 1) / Math.max(from.width, 1),
-		Math.max(local.height, 1) / Math.max(from.height, 1),
+		width / Math.max(from.width, 1),
+		height / Math.max(from.height, 1),
 	];
-	const toK: [number, number] = [
-		Math.max(local.width, 1) / Math.max(to.width, 1),
-		Math.max(local.height, 1) / Math.max(to.height, 1),
-	];
-	const startDeclarations: string[] = [];
-	const endDeclarations: string[] = [];
+	const toK: [number, number] = [width / Math.max(to.width, 1), height / Math.max(to.height, 1)];
+	const tracks: Array<(p: number) => string> = [];
 
 	const shadowsA = parseShadows(a.boxShadow);
 	const shadowsB = parseShadows(b.boxShadow);
 	if (shadowsA && shadowsB && shadowsA.length + shadowsB.length > 0) {
-		const outA = (alpha: number) => shadowsA.map((l) => serialize(l, ...fromK, alpha));
-		const inB = (alpha: number) => shadowsB.map((l) => serialize(l, ...toK, alpha));
-		if (outA(1).join(', ') !== inB(1).join(', ')) {
-			startDeclarations.push(`box-shadow: ${[...inB(0), ...outA(1)].join(', ')}`);
-			endDeclarations.push(`box-shadow: ${[...inB(1), ...outA(0)].join(', ')}`);
-		}
+		const track = shadowTrack(
+			shadowsA.map((layer) => scaleLayer(layer, ...fromK)),
+			shadowsB.map((layer) => scaleLayer(layer, ...toK)),
+			painter,
+			width,
+			height,
+		);
+		if (track) tracks.push((p) => `box-shadow: ${track(p)}`);
 	}
 
 	const glowA = parseDropShadows(a.filter);
 	const glowB = parseDropShadows(b.filter);
-	if (glowA && glowB && glowA.length === glowB.length && glowA.length > 0) {
-		const start = glowA.map((l) => `drop-shadow(${serialize(l, ...fromK, 1)})`).join(' ');
-		const end = glowB.map((l) => `drop-shadow(${serialize(l, ...toK, 1)})`).join(' ');
-		if (start !== end) {
-			startDeclarations.push(`filter: ${start}`);
-			endDeclarations.push(`filter: ${end}`);
-		}
+	if (glowA && glowB) {
+		const track = glowTrack(
+			glowA.map((layer) => scaleLayer(layer, ...fromK)),
+			glowB.map((layer) => scaleLayer(layer, ...toK)),
+			painter,
+		);
+		if (track) tracks.push((p) => `filter: ${track(p)}`);
 	}
-	return startDeclarations.length > 0 ? { startDeclarations, endDeclarations } : undefined;
+	if (tracks.length === 0) {
+		return undefined;
+	}
+	return { keyframes: bakeStops(progressStops(), (p) => tracks.map((track) => track(p))) };
 }

@@ -1153,6 +1153,7 @@ export function generateFullMorphTransition(
 		isInertMorphPair,
 		mode,
 		measure,
+		morphPairIncomingFadesIn,
 	);
 	allAnimations.push(...carry.animations);
 

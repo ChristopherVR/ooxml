@@ -12,6 +12,7 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import type { MorphEffectPainter } from './morph-effect-carry';
 import { buildMorphEffectCarry } from './morph-effect-carry';
 import type { MorphCarryHalf } from './morph-shape-carry';
 import { buildMorphShapeCarry } from './morph-shape-carry';
@@ -41,6 +42,11 @@ export interface MorphCarryTarget {
 	readonly half: MorphCarryHalf;
 	/** Whether this half is the only painter of the pair's effects. */
 	readonly effects: boolean;
+	/**
+	 * `underGhost` when the outgoing ghost dissolves over this half and paints
+	 * the outgoing effects itself (see `morph-effect-carry`). Defaults to `alone`.
+	 */
+	readonly effectPainter?: MorphEffectPainter;
 }
 
 function safe(id: string): string {
@@ -61,10 +67,10 @@ export function buildMorphCarryAnimations(
 	const shape = buildMorphShapeCarry(from, to, target.half);
 	const effects =
 		target.effects && from.type === 'shape' && to.type === 'shape'
-			? buildMorphEffectCarry(from, to, target.half)
+			? buildMorphEffectCarry(from, to, target.half, target.effectPainter)
 			: undefined;
-	const start = [...(shape?.startDeclarations ?? []), ...(effects?.startDeclarations ?? [])];
-	const end = [...(shape?.endDeclarations ?? []), ...(effects?.endDeclarations ?? [])];
+	const start = [...(shape?.startDeclarations ?? [])];
+	const end = [...(shape?.endDeclarations ?? [])];
 	const base = `pptx-morph-carry-${tag}-${safe(target.id)}`;
 	const animations: MorphAnimationStyle[] = [];
 	if (start.length > 0) {
@@ -73,6 +79,16 @@ export function buildMorphCarryAnimations(
 			elementId: target.id,
 			animation: `${base} ${durationMs}ms ${MORPH_EASING} forwards`,
 			keyframes: `\n@keyframes ${base} {\n\tfrom {\n${lines(start)}\n\t}\n\tto {\n${lines(end)}\n\t}\n}`,
+		});
+	}
+	if (effects) {
+		animations.push({
+			elementId: target.id,
+			animation: `${base}-fx ${durationMs}ms linear forwards`,
+			keyframes: `
+@keyframes ${base}-fx {
+${effects.keyframes}
+}`,
 		});
 	}
 	if (shape?.clipKeyframes) {
@@ -110,6 +126,10 @@ export interface MorphCarryResult {
  * @param inert - Whether a pair is inert (it is then not animated at all).
  * @param mode - Morph granularity.
  * @param measure - Text measurement for the text-alignment check.
+ * @param incomingFadesIn - Whether a ghosted pair's incoming half fades in (see
+ *   `morphPairIncomingFadesIn`). When it does not, the ghost dissolves over a
+ *   full-strength half, which then fades the incoming effects in under it.
+ *   Without it such a half carries no effects, as before.
  */
 export function generateMorphCarryAnimations(
 	pairs: readonly MorphPair[],
@@ -119,6 +139,7 @@ export function generateMorphCarryAnimations(
 	inert: (from: PptxElement, to: PptxElement) => boolean,
 	mode: MorphMode,
 	measure?: MorphTextMeasure,
+	incomingFadesIn?: (from: PptxElement, to: PptxElement, ghosted: boolean) => boolean,
 ): MorphCarryResult {
 	const animations: MorphAnimationStyle[] = [];
 	const carried = new Set<MorphPair>();
@@ -134,9 +155,16 @@ export function generateMorphCarryAnimations(
 		}
 		const ghosted = ghostIds.has(from.id);
 		const fades = needsCrossfade(from, to);
+		const underGhost =
+			ghosted && fades && incomingFadesIn !== undefined && !incomingFadesIn(from, to, true);
 		const incoming = buildMorphCarryAnimations(
 			pair,
-			{ id: to.id, half: 'to', effects: !(ghosted && fades) },
+			{
+				id: to.id,
+				half: 'to',
+				effects: !(ghosted && fades) || underGhost,
+				...(underGhost ? { effectPainter: 'underGhost' as const } : {}),
+			},
 			durationMs,
 			String(index),
 		);
