@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { componentSource } from './component-source.test-support';
 import {
+	armSlideEntryAutoAdvance,
 	attachShowVisibilityPause,
 	clampIndex,
 	endShowMediaCleanup,
@@ -131,13 +132,64 @@ describe('resolveSlideEntryAutoAdvanceMs', () => {
 		expect(resolveSlideEntryAutoAdvanceMs(timed(0, 700), false, false)).toBeUndefined();
 		expect(resolveSlideEntryAutoAdvanceMs(timed(0, 700), true, true)).toBeUndefined();
 	});
+});
 
-	it('is what the overlay arms on entry', () => {
-		const overlay = componentSource(
-			dirname(fileURLToPath(import.meta.url)),
-			'presentation-overlay.component.ts',
-		);
-		expect(overlay).toMatch(/armAutoAdvance\(\s*resolveSlideEntryAutoAdvanceMs\(/u);
+// The overlay's slide-change effect calls `armSlideEntryAutoAdvance` with its
+// navigator and the current slide, timings and end-of-show signals. A fake
+// navigator that schedules like the real one shows when the show moves on.
+describe('armSlideEntryAutoAdvance', () => {
+	function fakeNavigator() {
+		const advanced: number[] = [];
+		const armed: (number | undefined)[] = [];
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		return {
+			advanced,
+			armed,
+			armAutoAdvance(delayMs: number | undefined): void {
+				armed.push(delayMs);
+				clearTimeout(timer);
+				timer =
+					delayMs === undefined ? undefined : setTimeout(() => advanced.push(Date.now()), delayMs);
+			},
+		};
+	}
+
+	beforeEach(() => {
+		vi.useFakeTimers({ now: 0 });
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	const timed = (advanceAfterMs: number, durationMs: number): PptxSlide =>
+		slide({ transition: { type: 'fade', advanceAfterMs, durationMs } });
+
+	it('holds a 0 s slide for its whole entry transition', () => {
+		const navigator = fakeNavigator();
+		armSlideEntryAutoAdvance(navigator, timed(0, 700), true, false);
+		vi.advanceTimersByTime(699);
+		expect(navigator.advanced).toStrictEqual([]);
+		vi.advanceTimersByTime(1);
+		expect(navigator.advanced).toStrictEqual([700]);
+	});
+
+	it('advances after the transition plus the authored time', () => {
+		const navigator = fakeNavigator();
+		armSlideEntryAutoAdvance(navigator, timed(2500, 700), true, false);
+		vi.advanceTimersByTime(3199);
+		expect(navigator.advanced).toStrictEqual([]);
+		vi.advanceTimersByTime(1);
+		expect(navigator.advanced).toStrictEqual([3200]);
+	});
+
+	it('cancels the timer where the show is manual or over', () => {
+		const navigator = fakeNavigator();
+		armSlideEntryAutoAdvance(navigator, timed(0, 700), false, false);
+		armSlideEntryAutoAdvance(navigator, timed(0, 700), true, true);
+		vi.advanceTimersByTime(5000);
+		expect(navigator.armed).toStrictEqual([undefined, undefined]);
+		expect(navigator.advanced).toStrictEqual([]);
 	});
 });
 

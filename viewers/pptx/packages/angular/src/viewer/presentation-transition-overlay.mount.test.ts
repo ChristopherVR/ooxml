@@ -13,6 +13,9 @@
  * real template's bindings are asserted as source in
  * `presentation-transition-overlay.component.test.ts`.
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { NgStyle } from '@angular/common';
 import type { InputSignal } from '@angular/core';
 import { SIGNAL } from '@angular/core/primitives/signals';
@@ -81,6 +84,10 @@ interface OverlayInputs {
 /**
  * Write a value straight into one of the component's signal inputs, which the
  * component's derived state reads. `setInput` cannot reach them under plain JIT.
+ *
+ * `SIGNAL` and `applyValueToInputSignal` are Angular internals, written against
+ * `@angular/core` 22.2.4. If an upgrade renames them, this helper is what breaks
+ * (with a TypeError here, not a wrong assertion further down).
  */
 function setSignalInput(
 	component: PresentationTransitionOverlayComponent,
@@ -141,6 +148,40 @@ function slide(id: string, elements: PptxElement[]): PptxSlide {
 function rect(id: string, x: number): PptxElement {
 	return { id, type: 'shape', name: 'Rect', x, y: 10, width: 100, height: 50 } as PptxElement;
 }
+
+// The stand-in is only worth its assertions while the real layers carry the
+// same scope attributes: the morph rules the overlay injects select on them.
+describe('the stand-in template mirrors MorphExtraLayersComponent', () => {
+	const squash = (source: string): string => source.replace(/\s+/gu, ' ');
+	const real = squash(
+		readFileSync(path.join(import.meta.dirname, 'morph-extra-layers.component.ts'), 'utf8'),
+	);
+	const standIn = squash(STAND_IN_TEMPLATE);
+
+	it.each([
+		`@for (layer of overlayLayers(); track layer.key)`,
+		`[attr.data-pptx-morph-outgoing]="layer.side === 'outgoing' ? 'true' : null"`,
+		`[attr.data-pptx-morph-lifted]="layer.side === 'incoming' ? 'true' : null"`,
+		`[ngStyle]="layer.style"`,
+		`@for (group of crossfadeGroups(); track group.key)`,
+		`<div [attr.data-pptx-morph-crossfade]="group.key" [ngStyle]="group.style">`,
+		`data-pptx-morph-outgoing="true"`,
+		`[ngStyle]="group.outgoingStyle"`,
+		`data-pptx-morph-lifted="true"`,
+		`[ngStyle]="group.incomingStyle"`,
+	])('both bind %s', (binding) => {
+		expect(standIn).toContain(binding);
+		expect(real).toContain(binding);
+	});
+
+	it('is what the real overlay template mounts', () => {
+		const overlay = readFileSync(
+			path.join(import.meta.dirname, 'presentation-transition-overlay.component.html'),
+			'utf8',
+		);
+		expect(overlay).toContain('<pptx-morph-extra-layers');
+	});
+});
 
 // Issue #141: the overlay is reused from one transition to the next, so a
 // fade's completion timer must not survive into the morph that replaces it.
