@@ -23,6 +23,7 @@ export const shell: Record<string, string> = {
 	Viewing: '查看',
 	Saved: '已保存',
 	'Unsaved changes': '未保存的更改',
+	Discard: '放弃',
 	'Saving...': '正在保存...',
 	'Saved to this device': '已保存到此设备',
 	'Tell me what you want to do': '告诉我你想要做什么',

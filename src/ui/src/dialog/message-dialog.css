@@ -1,0 +1,151 @@
+/* The box is a native modal <dialog>, so it enters the top layer and sits above any other modal
+   dialog on the page. The host's own overlay only stands in where showModal is unavailable. */
+:host {
+	position: fixed;
+	inset: 0;
+	z-index: calc(var(--office-z-popover) + 200);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--office-overlay);
+}
+:host([data-modal]) {
+	position: static;
+	display: contents;
+	background: none;
+}
+:host([hidden]) {
+	display: none !important;
+}
+dialog.box {
+	box-sizing: border-box;
+	width: min(calc(100vw - 2 * var(--office-space-4)), 26rem);
+	max-width: none;
+	max-height: var(--office-dialog-max-height);
+	margin: auto;
+	padding: 0;
+	overflow: auto;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-popover);
+	color: var(--office-popover-foreground);
+	box-shadow: var(--office-shadow-lg);
+	font-family: var(--office-font);
+	font-size: var(--office-font-size);
+}
+dialog.box:not([open]) {
+	display: none;
+}
+:host(:not([data-modal])) dialog.box {
+	position: relative;
+	inset: auto;
+}
+dialog.box::backdrop {
+	background: var(--office-overlay);
+}
+dialog.box:focus {
+	outline: none;
+}
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-3);
+	padding: var(--office-space-5);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+	font-weight: 600;
+}
+.message {
+	margin: 0;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+label {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-1);
+}
+input {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: var(--office-control-height-lg);
+	padding: var(--office-space-1) var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+	color: var(--office-foreground);
+	font: inherit;
+}
+input:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: var(--office-space-2);
+}
+button {
+	box-sizing: border-box;
+	min-width: var(--office-dialog-button-min-width);
+	min-height: var(--office-control-height-lg);
+	padding: var(--office-space-1-5) var(--office-space-3-5);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: 500 var(--office-font-size) / 1.2 var(--office-font);
+	cursor: pointer;
+	touch-action: manipulation;
+}
+button:hover {
+	background: var(--office-selected);
+}
+button.primary {
+	border-color: var(--office-accent);
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+}
+button.danger {
+	border-color: var(--office-danger);
+	background: var(--office-danger);
+	color: var(--office-danger-foreground);
+}
+button.primary:hover,
+button.danger:hover {
+	opacity: 0.9;
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+@media (pointer: coarse), (max-width: 767px) {
+	button {
+		min-height: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	dialog.box {
+		border-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+	dialog.box::backdrop {
+		background: transparent;
+	}
+	button,
+	button.primary,
+	button.danger {
+		border-color: ButtonText;
+		background: ButtonFace;
+		color: ButtonText;
+	}
+	button:hover {
+		background: Highlight;
+		color: HighlightText;
+	}
+}

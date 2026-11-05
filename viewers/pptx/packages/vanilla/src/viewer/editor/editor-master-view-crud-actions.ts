@@ -5,6 +5,8 @@ import {
 	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	alertNoticeDialog,
+	promptNameDialog,
 } from 'ooxml-ui/pptx';
 import type { MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
 /**
@@ -167,9 +169,10 @@ export function createMasterViewCrudActions(
 
 			let name: string | undefined;
 			if (id === 'renameLayout' || id === 'renameMaster') {
-				const entered = doc.defaultView?.prompt(
+				const entered = await promptNameDialog(
 					t('pptx.masterView.renamePrompt'),
 					currentName(state.slideMasters, target),
+					{ t, host: doc },
 				);
 				if (!entered) {
 					return;
@@ -179,7 +182,7 @@ export function createMasterViewCrudActions(
 
 			const result = await applyMasterViewCrudAction(handler, data, id, target, { name });
 			if (!result.ok) {
-				doc.defaultView?.alert(t(masterViewCrudFailureKey(id, result.reason)));
+				await alertNoticeDialog(t(masterViewCrudFailureKey(id, result.reason)), { t, host: doc });
 				return;
 			}
 

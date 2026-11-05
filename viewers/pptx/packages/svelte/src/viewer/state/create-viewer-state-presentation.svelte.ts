@@ -106,8 +106,7 @@ export function usePresentationCluster(deps: PresentationClusterDeps): Presentat
 		// Trust Center > "Confirm before opening external hyperlinks": gates an
 		// on-slide Action Setting's `openUrl` intent the same way a text-run
 		// hyperlink click already is (`TextRunBase.svelte`).
-		confirmUrl: (url: string) =>
-			optionsState.confirmHyperlink(url, t('pptx.options.trust.confirmHyperlinks')),
+		confirmUrl: (url: string) => optionsState.confirmHyperlink(url, t),
 		// Resolve a native-animation `p:stSnd` action sound's archive path to
 		// its pre-resolved Blob/data URL and play it. Without this,
 		// `onPlayActionSound` was never passed at all and every animation

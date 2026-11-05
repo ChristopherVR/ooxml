@@ -31,8 +31,6 @@ function harness(overrides: Partial<ViewerState> = {}): {
 	store: Store<ViewerState>;
 	setHandler: ReturnType<typeof vi.fn>;
 	handler: PptxHandler;
-	prompt: ReturnType<typeof vi.fn>;
-	alert: ReturnType<typeof vi.fn>;
 	run: (id: MasterViewCrudActionId) => Promise<void>;
 	ops: EditorOps;
 } {
@@ -47,18 +45,36 @@ function harness(overrides: Partial<ViewerState> = {}): {
 	const setHandler = vi.fn();
 	const handler = { getImageData: vi.fn() } as unknown as PptxHandler;
 	const ops = createEditorOps({ store, getHandler: () => handler, onHistoryChange: vi.fn() });
-	const prompt = vi.fn();
-	const alert = vi.fn();
-	const doc = { defaultView: { prompt, alert } } as unknown as Document;
 	const actions = createMasterViewCrudActions({
-		doc,
+		doc: document,
 		getTranslator: () => createTranslator(),
 		store,
 		ops,
 		getHandler: () => handler,
 		setHandler,
 	});
-	return { store, setHandler, handler, prompt, alert, run: actions.runMasterViewCrudAction, ops };
+	return { store, setHandler, handler, run: actions.runMasterViewCrudAction, ops };
+}
+
+/** The in-app dialog the code under test opened; waits for it to appear. */
+async function openDialog(): Promise<ShadowRoot> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found?.shadowRoot) throw new Error('no dialog yet');
+		return found;
+	});
+	return dialog.shadowRoot as ShadowRoot;
+}
+
+/** Type into the open dialog's input (when given), then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<string> {
+	const root = await openDialog();
+	const message = root.querySelector('.message')?.textContent ?? '';
+	const input = root.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	(root.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	return message;
 }
 
 function stubActionList(id: string, enabled = true): void {
@@ -73,6 +89,7 @@ describe('vanilla master-view CRUD action wiring', () => {
 		masterViewCrudActions.mockReset();
 	});
 	afterEach(() => {
+		document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
 		vi.restoreAllMocks();
 	});
 
@@ -139,23 +156,28 @@ describe('vanilla master-view CRUD action wiring', () => {
 	});
 
 	it('prompts for a name on rename and cancels without calling apply when dismissed', async () => {
-		const { run, prompt } = harness();
+		const { run } = harness();
 		stubActionList('renameMaster');
-		prompt.mockReturnValue(null);
 
-		await run('renameMaster');
+		const running = run('renameMaster');
+		expect(await answerDialog('cancel')).toBe('New name');
+		await running;
 
-		expect(prompt).toHaveBeenCalledOnce();
 		expect(applyMasterViewCrudAction).not.toHaveBeenCalled();
 	});
 
 	it('passes the entered name through to applyMasterViewCrudAction', async () => {
-		const { run, prompt, handler } = harness();
+		const { run, handler } = harness();
 		stubActionList('renameMaster');
-		prompt.mockReturnValue('Renamed Master');
 		applyMasterViewCrudAction.mockResolvedValue({ ok: false, reason: 'notFound' });
 
-		await run('renameMaster');
+		const running = run('renameMaster');
+		const openRoot = await openDialog();
+		expect((openRoot.querySelector('input') as HTMLInputElement).value).toBe('Corporate');
+		await answerDialog('confirm', 'Renamed Master');
+		// The rejection notice follows; dismiss it.
+		await answerDialog('confirm');
+		await running;
 
 		expect(applyMasterViewCrudAction).toHaveBeenCalledWith(
 			handler,
@@ -167,26 +189,27 @@ describe('vanilla master-view CRUD action wiring', () => {
 	});
 
 	it('alerts the mapped reason on rejection and leaves the store untouched', async () => {
-		const { run, store, alert, setHandler } = harness();
+		const { run, store, setHandler } = harness();
 		stubActionList('deleteMaster');
 		applyMasterViewCrudAction.mockResolvedValue({ ok: false, reason: 'lastMaster' });
 		const before = store.get().slideMasters;
 
-		await run('deleteMaster');
+		const running = run('deleteMaster');
+		expect(await answerDialog('confirm')).toBe('The last slide master cannot be deleted.');
+		await running;
 
-		expect(alert).toHaveBeenCalledWith('The last slide master cannot be deleted.');
 		expect(setHandler).not.toHaveBeenCalled();
 		expect(store.get().slideMasters).toBe(before);
 	});
 
 	it('alerts the notFound copy when the target vanished under the click', async () => {
-		const { run, alert } = harness();
+		const { run } = harness();
 		stubActionList('deleteLayout');
 		applyMasterViewCrudAction.mockResolvedValue({ ok: false, reason: 'notFound' });
 
-		await run('deleteLayout');
-
-		expect(alert).toHaveBeenCalledOnce();
+		const running = run('deleteLayout');
+		expect(await answerDialog('confirm')).not.toBe('');
+		await running;
 	});
 
 	it('leaves no undo or redo step that brings a deleted layout back', async () => {

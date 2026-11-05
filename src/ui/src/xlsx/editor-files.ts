@@ -22,6 +22,7 @@ import {
 	withExtension,
 } from './file-commands';
 import { sheetBaseName } from 'ooxml-core/xlsx/ui';
+import { confirmDialog } from '../dialog/message-dialogs';
 import { printWorkbook } from './print';
 import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';
@@ -113,6 +114,19 @@ export async function loadInto(
 	}
 }
 
+/** Ask, in an in-app dialog, whether unsaved changes may be discarded. */
+function confirmDiscard(core: EditorCore, message: string): Promise<boolean> {
+	const t = core.ctx.t;
+	return confirmDialog({
+		title: t('Unsaved changes'),
+		message: t(message),
+		confirmLabel: t('Discard'),
+		cancelLabel: t('Cancel'),
+		tone: 'danger',
+		host: core.host,
+	});
+}
+
 /**
  * Opens a file the user picked in a cloud place: the usual discard confirmation, then the normal
  * load path. The workbook keeps `file.storage` for Save and Save As until another one is shown,
@@ -124,11 +138,9 @@ export async function openCloudFile(
 	chrome?: FileChrome,
 	confirmed?: () => void,
 ): Promise<boolean> {
-	const t = core.ctx.t;
 	if (
 		core.dirty.dirty &&
-		typeof confirm === 'function' &&
-		!confirm(t('Discard unsaved changes and open another workbook?'))
+		!(await confirmDiscard(core, 'Discard unsaved changes and open another workbook?'))
 	)
 		return false;
 	confirmed?.();
@@ -270,16 +282,14 @@ export async function runFileCommand(
 			case 'new':
 				if (
 					core.dirty.dirty &&
-					typeof confirm === 'function' &&
-					!confirm(t('Discard unsaved changes and start a new workbook?'))
+					!(await confirmDiscard(core, 'Discard unsaved changes and start a new workbook?'))
 				)
 					return;
 				return newInto(core, chrome);
 			case 'open': {
 				if (
 					core.dirty.dirty &&
-					typeof confirm === 'function' &&
-					!confirm(t('Discard unsaved changes and open another workbook?'))
+					!(await confirmDiscard(core, 'Discard unsaved changes and open another workbook?'))
 				)
 					return;
 				const storage = core.storage;

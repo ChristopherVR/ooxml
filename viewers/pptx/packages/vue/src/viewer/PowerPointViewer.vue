@@ -30,6 +30,7 @@ import {
 	createSlidePackageClipboard,
 	resolveCloudDocumentView,
 	resolveCollaborationConfig,
+	confirmExternalHyperlinkDialog,
 } from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrectToEdit,
@@ -1443,7 +1444,7 @@ watchEffect(
 				onHyperlinkClick: (link) => props.onHyperlinkClick?.(link),
 				confirmExternalHyperlink: (url) =>
 					!shouldConfirmExternalHyperlink(viewerOptions.value, url) ||
-					window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`),
+					confirmExternalHyperlinkDialog(url, { t, host: root }),
 			}),
 		);
 	},

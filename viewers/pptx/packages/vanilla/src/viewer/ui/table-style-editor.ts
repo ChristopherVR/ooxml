@@ -1,7 +1,9 @@
 import type { TableStyleEditorPartId } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleFieldEdit,
+	confirmDeleteDialog,
 	describeTableStyleEditor,
+	promptNameDialog,
 	TABLE_STYLE_EDITOR_PARTS,
 } from 'ooxml-ui/pptx';
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
@@ -99,12 +101,13 @@ export function createTableStyleEditor(
 	const newBtn = doc.createElement('button');
 	newBtn.type = 'button';
 	newBtn.textContent = t('pptx.tableStyleEditor.newFromCurrent');
-	newBtn.addEventListener('click', () => {
+	newBtn.addEventListener('click', async () => {
 		const map = deps.getTableStyleMap();
 		const entry = map?.[normalizeTableStyleGuid(currentStyleId)];
-		const name = doc.defaultView?.prompt(
+		const name = await promptNameDialog(
 			t('pptx.tableStyleEditor.newStyleNamePrompt'),
 			entry ? `${entry.styleName ?? ''} Copy`.trim() : '',
+			{ t, host: newBtn },
 		);
 		if (!name) {
 			return;
@@ -120,10 +123,14 @@ export function createTableStyleEditor(
 	const deleteBtn = doc.createElement('button');
 	deleteBtn.type = 'button';
 	deleteBtn.textContent = t('pptx.tableStyleEditor.deleteStyle');
-	deleteBtn.addEventListener('click', () => {
+	deleteBtn.addEventListener('click', async () => {
 		const map = deps.getTableStyleMap();
 		const entry = map?.[normalizeTableStyleGuid(currentStyleId)];
-		if (!map || !entry || !doc.defaultView?.confirm(t('pptx.tableStyleEditor.deleteConfirm'))) {
+		if (
+			!map ||
+			!entry ||
+			!(await confirmDeleteDialog(t('pptx.tableStyleEditor.deleteConfirm'), { t, host: deleteBtn }))
+		) {
 			return;
 		}
 		const nextMap: ParsedTableStyleMap = { ...map };

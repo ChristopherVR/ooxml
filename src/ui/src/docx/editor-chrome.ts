@@ -23,6 +23,7 @@ import { localizeElement, translate, type EditorLocale } from './localization';
 import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
 import type { ResolvedWordCustomization, WordRegionContext } from './customization';
+import { confirmDialog } from '../dialog/message-dialogs';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -218,7 +219,7 @@ export class EditorChrome {
 		if ((command === 'save' || command === 'saveAs') && this.saving) return;
 		if (!announceFileCommand(this.host.element, command, fileName)) return;
 		try {
-			if (command === 'new') this.newDocument();
+			if (command === 'new') await this.newDocument();
 			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
 			// Sharing needs the host's transport and authority, so there is no browser default.
@@ -306,12 +307,20 @@ export class EditorChrome {
 		}
 	}
 
-	private newDocument(): void {
-		const prompt = translate(
-			this.host.locale(),
-			'Discard unsaved changes and start a new document?',
-		);
-		if (this.isDirty && typeof confirm === 'function' && !confirm(prompt)) return;
+	private async newDocument(): Promise<void> {
+		const locale = this.host.locale();
+		if (
+			this.isDirty &&
+			!(await confirmDialog({
+				title: translate(locale, 'Unsaved changes'),
+				message: translate(locale, 'Discard unsaved changes and start a new document?'),
+				confirmLabel: translate(locale, 'Discard'),
+				cancelLabel: translate(locale, 'Cancel'),
+				tone: 'danger',
+				host: this.host.element,
+			}))
+		)
+			return;
 		this.host.newDocument();
 		this.fileName = DEFAULT_FILE_NAME;
 		this.setSaveState('saved');

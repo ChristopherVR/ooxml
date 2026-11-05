@@ -38,12 +38,13 @@ test('channel website tabs synchronize while selection and open copies stay loca
 	await expect(peer.locator('iframe')).toHaveAttribute('src', 'https://example.com/project');
 	await expect(peer.getByRole('button', { name: 'Tab options', exact: true })).toHaveCount(0);
 	await page.getByRole('button', { name: 'Tab options', exact: true }).click();
-	page.once('dialog', (dialog) => dialog.accept('Project dashboard'));
 	await page.getByRole('menuitem', { name: 'Rename tab', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('textbox').fill('Project dashboard');
+	await page.getByRole('alertdialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(peer.getByRole('tab', { name: 'Project dashboard', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Tab options', exact: true }).click();
-	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByRole('menuitem', { name: 'Remove tab', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(page.getByRole('tab', { name: 'Posts', exact: true })).toHaveAttribute(
 		'aria-selected',
 		'true',

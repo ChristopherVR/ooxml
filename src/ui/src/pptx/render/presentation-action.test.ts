@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
 	findPresentationActionTarget,
@@ -406,5 +406,43 @@ describe('handlePresentationStageClick: playMedia elementId threading', () => {
 		};
 		handlePresentationStageClick(node, slide, { slideCount: 1 }, runner);
 		expect(calls).toStrictEqual(['video1']);
+	});
+});
+
+describe('runPresentationAction: URL confirmation', () => {
+	const runner = (confirmUrl: (url: string) => boolean | Promise<boolean>) =>
+		({
+			goToSlide: () => undefined,
+			move: () => undefined,
+			endShow: () => undefined,
+			confirmUrl,
+		}) satisfies PresentationActionRunner;
+	const link = { url: 'https://example.com/x' };
+
+	it('opens the URL only after an asynchronous confirmation resolves true', async () => {
+		const open = vi.spyOn(window, 'open').mockReturnValue(null);
+		try {
+			expect(
+				runPresentationAction(
+					link,
+					{ slideCount: 3 },
+					runner(() => Promise.resolve(false)),
+				),
+			).toBe(true);
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(open).not.toHaveBeenCalled();
+			expect(
+				runPresentationAction(
+					link,
+					{ slideCount: 3 },
+					runner(() => Promise.resolve(true)),
+				),
+			).toBe(true);
+			expect(open).not.toHaveBeenCalled();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(open).toHaveBeenCalledOnce();
+		} finally {
+			open.mockRestore();
+		}
 	});
 });

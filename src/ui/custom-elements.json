@@ -2698,6 +2698,130 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "dialog/message-dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiMessageDialog",
+					"tagName": "office-ui-message-dialog",
+					"customElement": true,
+					"description": "`<office-ui-message-dialog>`: the in-app replacement for `alert`, `confirm` and `prompt`. Use the promise API (`confirmDialog`, `promptDialog`, `alertDialog`) instead of creating it by hand. It is modal and always open while connected: `role=\"alertdialog\"`, `aria-modal`, labelled by the heading and described by the message. Focus moves in (to the input of a prompt, the confirm button, or Cancel for the `danger` tone), is trapped with Tab and returns to the invoker when the element is removed. Escape and the backdrop cancel, Enter confirms (a focused button keeps its own meaning). It emits `office-message-dialog-result` once; removing it while open reports a cancel. All text arrives translated from the caller.",
+					"attributes": [
+						{
+							"name": "cancel-label"
+						},
+						{
+							"name": "confirm-label"
+						},
+						{
+							"name": "heading"
+						},
+						{
+							"name": "input-label"
+						},
+						{
+							"name": "kind"
+						},
+						{
+							"name": "message"
+						},
+						{
+							"name": "placeholder"
+						},
+						{
+							"name": "tone"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "cancelLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "cancel-label"
+						},
+						{
+							"kind": "field",
+							"name": "confirmLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "confirm-label"
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "inputLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "input-label"
+						},
+						{
+							"kind": "field",
+							"name": "kind",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "message",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "placeholder",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "tone",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-message-dialog-result"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-message-dialog",
+					"declaration": {
+						"name": "OfficeUiMessageDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "dialog/options-dialog.ts",
 			"declarations": [
 				{

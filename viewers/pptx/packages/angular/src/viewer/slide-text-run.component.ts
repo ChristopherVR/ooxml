@@ -1,6 +1,6 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { isRunHyperlinkClickable } from 'ooxml-ui/pptx';
+import { isRunHyperlinkClickable, safeOpenUrl } from 'ooxml-ui/pptx';
 
 import { EquationRendererComponent } from './equation-renderer.component';
 import { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
@@ -154,7 +154,12 @@ export class SlideTextRunComponent {
 
 	protected onHyperlinkClick(event: MouseEvent, href: string | undefined): void {
 		const confirm = this.viewerOpts?.confirmExternalHyperlink.bind(this.viewerOpts);
-		if (href && shouldPreventHyperlinkNavigation(confirm, href)) {
+		if (
+			href &&
+			shouldPreventHyperlinkNavigation(confirm, href, (url) =>
+				safeOpenUrl(url, this.run().hyperlink?.target ?? '_blank'),
+			)
+		) {
 			event.preventDefault();
 		}
 	}

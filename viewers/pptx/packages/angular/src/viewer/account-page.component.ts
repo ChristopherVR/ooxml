@@ -16,6 +16,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	AVATAR_COLOR_SWATCHES,
 	clearAllLocalViewerData,
+	confirmDeleteDialog,
 	DEFAULT_VIEWER_PROFILE,
 	formatBackstageSize,
 	getLocalStorageUsageSummary,
@@ -77,7 +78,10 @@ export class AccountPageComponent {
 	}
 
 	protected async clearData(): Promise<void> {
-		const confirmed = window.confirm(this.translate.instant('pptx.account.storage.clearConfirm'));
+		const confirmed = await confirmDeleteDialog(
+			this.translate.instant('pptx.account.storage.clearConfirm'),
+			{ t: (key) => this.translate.instant(key) },
+		);
 		if (!confirmed) {
 			return;
 		}

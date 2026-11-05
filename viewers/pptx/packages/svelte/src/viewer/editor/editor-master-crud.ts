@@ -23,7 +23,7 @@ import type { EditorState } from './editor-state.svelte';
 
 export interface MasterViewCrudPrompts {
 	/** Ask for the new layout/master name; null/empty cancels the rename. */
-	promptName(currentName: string): string | null;
+	promptName(currentName: string): string | null | Promise<string | null>;
 	/** Surface a rejection (`notFound` / `inUse` / `lastMaster`) as translated copy. */
 	notify(message: string): void;
 	translate(key: string): string;
@@ -80,7 +80,7 @@ export class EditorMasterCrudController {
 
 		let name: string | undefined;
 		if (id === 'renameLayout' || id === 'renameMaster') {
-			const entered = prompts.promptName(currentName(this.editor))?.trim();
+			const entered = (await prompts.promptName(currentName(this.editor)))?.trim();
 			if (!entered) {
 				return false;
 			}

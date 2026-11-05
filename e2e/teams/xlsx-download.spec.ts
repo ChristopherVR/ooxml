@@ -89,10 +89,10 @@ test('edits and downloads an XLSX copy without storage or publishing another att
 			.locator('xlsx-editor')
 			.evaluate((element) => (element as HTMLElement & { dirty: boolean }).dirty),
 	).toBe(true);
-	page.once('dialog', (dialog) => dialog.dismiss());
 	await page.getByRole('button', { name: 'Close preview', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(page.locator('xlsx-editor')).toBeVisible();
-	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByRole('button', { name: 'Close preview', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Discard', exact: true }).click();
 	await expect(page.locator('xlsx-editor')).toHaveCount(0);
 });

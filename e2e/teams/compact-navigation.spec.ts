@@ -91,16 +91,16 @@ test('keeps an edited workbook mounted when compact navigation is cancelled', as
 		.getByRole('navigation', { name: 'App bar', exact: true })
 		.getByRole('button', { name: 'Teams', exact: true });
 	const list = page.locator('teams-app office-ui-channel-list');
-	page.once('dialog', (dialog) => dialog.dismiss());
 	await teamsTab.click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(list).toBeHidden();
 	await expect(formula).toHaveValue('Keep this workbook edit');
 	await page.setViewportSize({ width: 1280, height: 844 });
 	await expect(formula).toBeVisible();
 	await expect(formula).toHaveValue('Keep this workbook edit');
 	await page.setViewportSize({ width: 390, height: 844 });
-	page.once('dialog', (dialog) => dialog.accept());
 	await teamsTab.click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Discard', exact: true }).click();
 	await expect(list).toBeVisible();
 	await expect(formula).not.toBeVisible();
 });

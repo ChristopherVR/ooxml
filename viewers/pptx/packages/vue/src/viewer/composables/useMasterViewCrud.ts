@@ -3,6 +3,7 @@ import {
 	forgetStepsUsingRemovedParts,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
+	promptNameDialog,
 } from 'ooxml-ui/pptx';
 import type {
 	MasterViewCrudAction,
@@ -86,8 +87,10 @@ export function useMasterViewCrud(input: UseMasterViewCrudInput): UseMasterViewC
 		let name: string | undefined;
 		if (RENAME_ACTIONS.has(id)) {
 			// Mirrors the Custom Shows rename flow (`useCustomShowsWiring`), the
-			// only other rename affordance in this binding: `window.prompt`.
-			const next = window.prompt(t('pptx.masterView.renamePrompt'), currentName())?.trim();
+			// only other rename affordance in this binding: an in-app name dialog.
+			const next = (
+				await promptNameDialog(t('pptx.masterView.renamePrompt'), currentName(), { t })
+			)?.trim();
 			if (!next) {
 				return;
 			}

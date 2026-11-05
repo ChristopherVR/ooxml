@@ -1,6 +1,7 @@
 import {
 	AVATAR_COLOR_SWATCHES,
 	clearAllLocalViewerData,
+	confirmDeleteDialog,
 	DEFAULT_VIEWER_PROFILE,
 	formatBackstageSize,
 	getLocalStorageUsageSummary,
@@ -159,10 +160,15 @@ function renderStorageSection(
 	void refresh();
 
 	clearButton.addEventListener('click', () => {
-		if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
-			return;
-		}
 		void (async () => {
+			if (
+				!(await confirmDeleteDialog(t('pptx.account.storage.clearConfirm'), {
+					t,
+					host: clearButton,
+				}))
+			) {
+				return;
+			}
 			await clearAllLocalViewerData(storage);
 			notice.hidden = false;
 			notice.textContent = t('pptx.account.storage.clearedNotice');

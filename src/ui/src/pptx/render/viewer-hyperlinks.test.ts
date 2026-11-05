@@ -136,6 +136,28 @@ describe('viewer hyperlink navigation', () => {
 		expect(view.open).toHaveBeenCalledOnce();
 	});
 
+	it('opens an external link only after an asynchronous confirmation resolves true', async () => {
+		const view = mount();
+		view.text.setAttribute('data-pptx-hyperlink', 'https://example.com');
+		view.confirmExternalHyperlink.mockReturnValueOnce(Promise.resolve(false) as never);
+		const declined = new MouseEvent('click', { bubbles: true, cancelable: true });
+		view.text.dispatchEvent(declined);
+		expect(declined.defaultPrevented).toBe(true);
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(view.open).not.toHaveBeenCalled();
+		view.confirmExternalHyperlink.mockReturnValueOnce(Promise.resolve(true) as never);
+		view.text.click();
+		expect(view.open).not.toHaveBeenCalled();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(view.open).toHaveBeenCalledExactlyOnceWith(
+			'https://example.com',
+			'_blank',
+			'noopener,noreferrer',
+		);
+	});
+
 	it('blocks unsafe external run URLs even when the host allows the click', () => {
 		const view = mount();
 		view.text.setAttribute('data-pptx-hyperlink', `${'javascript'}:alert(1)`);

@@ -16,7 +16,23 @@ import TableSection from './TableSection.svelte';
 
 let cleanup: (() => void) | undefined;
 
+/** Answer the in-app dialog the component opened: type into its input, then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<void> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found) throw new Error('no dialog yet');
+		return found;
+	});
+	const input = dialog.shadowRoot?.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	(dialog.shadowRoot!.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	flushSync();
+}
+
 afterEach(() => {
+	document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
+
 	cleanup?.();
 	cleanup = undefined;
 });
@@ -218,8 +234,7 @@ describe('tableSection', () => {
 		expect(data?.rows.some((row) => row.cells.some((cell) => cell.style))).toBeTruthy();
 	});
 
-	it('enables "Edit style..." with no tableStyleId, and assigns a created style to the table', () => {
-		vi.stubGlobal('prompt', vi.fn().mockReturnValue('Brand New Style'));
+	it('enables "Edit style..." with no tableStyleId, and assigns a created style to the table', async () => {
 		let styleMapChanges = 0;
 		let lastMap: ParsedTableStyleMap | undefined;
 		const editor = makeEditor(tableEl());
@@ -244,13 +259,13 @@ describe('tableSection', () => {
 		expect(createButton).toBeTruthy();
 		createButton.click();
 		flushSync();
+		await answerDialog('confirm', 'Brand New Style');
 
 		expect(styleMapChanges).toBe(1);
 		const newId = Object.keys(lastMap ?? {})[0];
 		const data = (currentEl(editor) as TableShape & { tableData?: { tableStyleId?: string } })
 			.tableData;
 		expect(data?.tableStyleId).toBe(newId);
-		vi.unstubAllGlobals();
 	});
 
 	it('formats an individual selected cell', () => {

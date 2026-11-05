@@ -333,10 +333,11 @@ export interface PresentationActionRunner {
 	 * Trust Center gate for an on-slide action that opens an external URL
 	 * (Options > Trust Center > "Confirm before opening external hyperlinks").
 	 * Called with the resolved URL before it is opened; returning `false`
-	 * blocks the navigation. Omitted (or unset) opens unconditionally, matching
+	 * blocks the navigation. It may answer later (an in-app dialog): the URL
+	 * then opens once the promise resolves true. Omitted (or unset) opens unconditionally, matching
 	 * the pre-existing behavior for a binding that has not wired the gate yet.
 	 */
-	confirmUrl?: (url: string) => boolean;
+	confirmUrl?: (url: string) => boolean | Promise<boolean>;
 	/**
 	 * `ppaction://hlinkshowjump?jump=lastslideviewed`: jump back to the last
 	 * slide the audience actually saw (not necessarily the previous slide in
@@ -427,12 +428,18 @@ export function runPresentationAction(
 			runner.endShow();
 			return true;
 		case 'openUrl':
-			// A declined confirmation still counts as "the click was spent on an
-			// action", the same as an opened link: the show must not also advance.
-			if (runner.confirmUrl && !runner.confirmUrl(intent.url)) {
-				return true;
+		// A declined confirmation still counts as "the click was spent on an
+		// action", the same as an opened link: the show must not also advance.
+		{
+			const answer = runner.confirmUrl?.(intent.url) ?? true;
+			if (answer === true) return safeOpenUrl(intent.url);
+			if (answer !== false) {
+				void answer.then((confirmed) => {
+					if (confirmed) safeOpenUrl(intent.url);
+				});
 			}
-			return safeOpenUrl(intent.url);
+			return true;
+		}
 		case 'lastViewed':
 			runner.lastViewed?.();
 			return true;

@@ -12,7 +12,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { OutputEmitterRef } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoadContentService } from './load-content.service';
 import { TableStyleEditorComponent } from './table-style-editor.component';
@@ -44,21 +44,21 @@ function harness(map: ParsedTableStyleMap | undefined, id: string | undefined, c
 	return component;
 }
 
-let originalPrompt: typeof window.prompt;
-let originalConfirm: typeof window.confirm;
-
-beforeEach(() => {
-	originalPrompt = window.prompt;
-	originalConfirm = window.confirm;
-	// happy-dom does not implement window.prompt/confirm; stub them first so
-	// vi.spyOn has an existing function to wrap.
-	window.prompt = () => null;
-	window.confirm = () => false;
-});
+/** Answer the in-app dialog the component opened: type into its input, then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<void> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found) throw new Error('no dialog yet');
+		return found;
+	});
+	const input = dialog.shadowRoot?.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	(dialog.shadowRoot!.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 afterEach(() => {
-	window.prompt = originalPrompt;
-	window.confirm = originalConfirm;
+	document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
 });
 
 describe('tableStyleEditorComponent', () => {
@@ -85,8 +85,7 @@ describe('tableStyleEditorComponent', () => {
 		expect(emitted?.[STYLE_ID].wholeTblFill).toStrictEqual({ schemeColor: '', color: '#ff0000' });
 	});
 
-	it('creates a new style from the current one and assigns it', () => {
-		vi.spyOn(window, 'prompt').mockReturnValue('My Custom Style');
+	it('creates a new style from the current one and assigns it', async () => {
 		const component = harness(styleMap(), STYLE_ID);
 		let emittedMap: ParsedTableStyleMap | undefined;
 		let assignedId: string | undefined;
@@ -101,15 +100,16 @@ describe('tableStyleEditorComponent', () => {
 				assignedId = value;
 			},
 		);
-		component['createFromCurrent']();
+		const creating = component['createFromCurrent']();
+		await answerDialog('confirm', 'My Custom Style');
+		await creating;
 		expect(Object.keys(emittedMap ?? {})).toHaveLength(2);
 		const newId = Object.keys(emittedMap ?? {}).find((id) => id !== STYLE_ID);
 		expect(emittedMap?.[newId as string].styleName).toBe('My Custom Style');
 		expect(assignedId).toBe(newId);
 	});
 
-	it('creates a brand-new style with no current style selected and assigns it', () => {
-		vi.spyOn(window, 'prompt').mockReturnValue('Brand New Style');
+	it('creates a brand-new style with no current style selected and assigns it', async () => {
 		const component = harness(undefined, undefined);
 		let emittedMap: ParsedTableStyleMap | undefined;
 		let assignedId: string | undefined;
@@ -124,15 +124,16 @@ describe('tableStyleEditorComponent', () => {
 				assignedId = value;
 			},
 		);
-		component['createFromCurrent']();
+		const creating = component['createFromCurrent']();
+		await answerDialog('confirm', 'Brand New Style');
+		await creating;
 		const ids = Object.keys(emittedMap ?? {});
 		expect(ids).toHaveLength(1);
 		expect(emittedMap?.[ids[0]].styleName).toBe('Brand New Style');
 		expect(assignedId).toBe(ids[0]);
 	});
 
-	it('deletes the style after confirmation', () => {
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
+	it('deletes the style after confirmation', async () => {
 		const component = harness(styleMap(), STYLE_ID);
 		let emittedMap: ParsedTableStyleMap | undefined;
 		let deletedId: string | undefined;
@@ -151,20 +152,23 @@ describe('tableStyleEditorComponent', () => {
 		vi.spyOn(component.close as OutputEmitterRef<void>, 'emit').mockImplementation(() => {
 			closed = true;
 		});
-		component['handleDelete']();
+		const deleting = component['handleDelete']();
+		await answerDialog('confirm');
+		await deleting;
 		expect(Object.keys(emittedMap ?? {})).toHaveLength(0);
 		expect(deletedId).toBe(STYLE_ID);
 		expect(closed).toBeTruthy();
 	});
 
-	it('does not delete without confirmation', () => {
-		vi.spyOn(window, 'confirm').mockReturnValue(false);
+	it('does not delete without confirmation', async () => {
 		const component = harness(styleMap(), STYLE_ID);
 		const emitSpy = vi.spyOn(
 			component.styleMapChange as OutputEmitterRef<ParsedTableStyleMap>,
 			'emit',
 		);
-		component['handleDelete']();
+		const deleting = component['handleDelete']();
+		await answerDialog('cancel');
+		await deleting;
 		expect(emitSpy).not.toHaveBeenCalled();
 	});
 });

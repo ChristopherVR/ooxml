@@ -32,7 +32,8 @@ export interface ViewerHyperlinkNavigation {
 	getState(): ViewerHyperlinkState;
 	goToSlide(index: number): void;
 	onHyperlinkClick?: HyperlinkClickHandler;
-	confirmExternalHyperlink?(url: string): boolean;
+	/** Ask before an external link opens; may answer later (an in-app dialog), the link then opens on true. */
+	confirmExternalHyperlink?(url: string): boolean | Promise<boolean>;
 }
 
 /** The same marker is emitted by every binding's linked text-run renderer. */
@@ -139,14 +140,14 @@ export function attachViewerHyperlinks(
 			const index = clampSlideIndex(state.currentSlideIndex + intent.direction, state.slideCount);
 			if (index !== null) navigation.goToSlide(index);
 		} else if (intent.kind === 'openUrl' && !internal) {
-			if (navigation.confirmExternalHyperlink?.(intent.url) ?? true) {
-				safeOpenUrl(
-					intent.url,
-					run?.getAttribute('target') ??
-						run?.getAttribute('data-pptx-hyperlink-target') ??
-						'_blank',
-				);
-			}
+			const target =
+				run?.getAttribute('target') ?? run?.getAttribute('data-pptx-hyperlink-target') ?? '_blank';
+			const answer = navigation.confirmExternalHyperlink?.(intent.url) ?? true;
+			if (answer === true) safeOpenUrl(intent.url, target);
+			else if (answer !== false)
+				void answer.then((confirmed) => {
+					if (confirmed) safeOpenUrl(intent.url, target);
+				});
 		}
 	};
 	root.addEventListener('click', follow, true);

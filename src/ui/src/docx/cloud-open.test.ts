@@ -155,3 +155,34 @@ describe('cloud file labels', () => {
 		expect(cloudFileLabels('de').signIn).toBe('Anmelden');
 	});
 });
+
+describe('<docx-editor> New with unsaved changes', () => {
+	const dialogIn = (editor: DocxEditorElement) =>
+		editor.shadowRoot?.querySelector('office-ui-message-dialog') ?? null;
+
+	it('asks in an in-app dialog and starts the new document only after Discard', async () => {
+		const editor = mount();
+		chrome(editor).setSaveState('dirty');
+		const running = chrome(editor).run('new');
+		const dialog = dialogIn(editor) as HTMLElement;
+		expect(dialog.shadowRoot?.querySelector('[role="alertdialog"]')).not.toBeNull();
+		expect(dialog.shadowRoot?.querySelector('.message')?.textContent).toBe(
+			'Discard unsaved changes and start a new document?',
+		);
+		expect(dialog.shadowRoot?.querySelector('button.confirm')?.textContent).toBe('Discard');
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
+		await running;
+		expect(editor.fileName).toBe('Report.docx');
+		expect(dialogIn(editor)).toBeNull();
+
+		const again = chrome(editor).run('new');
+		(
+			(dialogIn(editor) as HTMLElement).shadowRoot!.querySelector(
+				'button.confirm',
+			) as HTMLButtonElement
+		).click();
+		await again;
+		expect(editor.fileName).not.toBe('Report.docx');
+		expect(editor.dirty).toBe(false);
+	});
+});

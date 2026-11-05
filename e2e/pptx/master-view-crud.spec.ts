@@ -189,8 +189,12 @@ test.describe('slide master view CRUD', () => {
 		await expect(crudButton(page, 'deleteLayout')).toBeEnabled();
 		await expect(crudButton(page, 'renameLayout')).toBeEnabled();
 
-		page.once('dialog', (dialog) => void dialog.accept(RENAMED_LAYOUT));
 		await crudButton(page, 'renameLayout').click();
+		// The name comes from the in-app dialog, not the browser's prompt.
+		const nameField = page.getByRole('alertdialog').getByRole('textbox');
+		await nameField.fill(RENAMED_LAYOUT);
+		await nameField.press('Enter');
+		await expect(page.getByRole('alertdialog')).toHaveCount(0);
 		await expect(sidebar(page).getByRole('button', { name: RENAMED_LAYOUT })).toBeVisible();
 
 		await crudButton(page, 'deleteLayout').click();

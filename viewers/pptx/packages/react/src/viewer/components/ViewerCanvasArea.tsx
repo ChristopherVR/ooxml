@@ -5,7 +5,7 @@ import {
 	isPresentationAdvanceClick,
 	PRESENT_TOOLBAR_CLASSES,
 	resolvePresentationAction,
-	shouldConfirmExternalHyperlink,
+	openExternalHyperlinkConfirmed,
 	toggleBlackboard,
 } from 'ooxml-ui/pptx';
 import type { PptxAction, PptxElement, PptxElementAnimation, PptxSlide } from 'pptx-viewer-core';
@@ -204,13 +204,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 	// before opening (Options > Trust Center > confirm external hyperlinks).
 	const openExternalUrl = useCallback(
 		(url: string) => {
-			if (
-				shouldConfirmExternalHyperlink(viewerOptions, url) &&
-				!window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`)
-			) {
-				return;
-			}
-			safeOpenUrl(url);
+			void openExternalHyperlinkConfirmed(viewerOptions, url, { t });
 		},
 		[viewerOptions, t],
 	);

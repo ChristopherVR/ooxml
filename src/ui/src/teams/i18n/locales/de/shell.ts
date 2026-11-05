@@ -9,7 +9,11 @@ export const deShell: Record<keyof typeof enShell, string> = {
 	'common.done': 'Fertig',
 	'common.edit': 'Bearbeiten',
 	'common.nameYou': '{name} (Sie)',
+	'common.ok': 'OK',
+	'common.discard': 'Verwerfen',
 	'common.retry': 'Wiederholen',
+	'dialog.confirmTitle': 'Bitte bestätigen',
+	'dialog.inputTitle': 'Namen eingeben',
 	'common.save': 'Speichern',
 
 	'time.today': 'Heute',

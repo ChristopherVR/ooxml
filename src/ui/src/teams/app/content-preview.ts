@@ -15,6 +15,7 @@ import css from './content-preview.css?raw';
 import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands';
 import { workbookActions } from './workbook-actions';
 import { markdownPreview } from './markdown-preview';
+import { confirmTeams } from './dialogs';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
@@ -99,7 +100,7 @@ export class TeamsContentPreview extends TeamsLitElement {
 	}
 
 	/** Called by the workspace before replacing this pane. */
-	canLeave(): boolean {
+	canLeave(retry?: () => void): boolean {
 		if (this.saving) {
 			this.saveError = this.t('preview.waitSave');
 			return false;
@@ -108,7 +109,22 @@ export class TeamsContentPreview extends TeamsLitElement {
 			this.saveError = this.t('preview.finishEditLeave');
 			return false;
 		}
-		return !this.dirty || globalThis.confirm?.(this.t('preview.discardEdits')) === true;
+		if (!this.dirty) return true;
+		// The question is asked in an in-app dialog, so it cannot answer now: the navigation is
+		// held back, and once the edits are discarded `retry` (the same navigation) runs.
+		void confirmTeams(
+			{ t: (key, params) => this.t(key, params), host: this },
+			this.t('preview.discardEdits'),
+			{
+				confirmKey: 'common.discard',
+				danger: true,
+			},
+		).then((discard) => {
+			if (!discard) return;
+			this.dirty = false;
+			retry?.();
+		});
+		return false;
 	}
 
 	private commitPendingEdit(): boolean {

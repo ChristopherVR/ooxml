@@ -1,11 +1,11 @@
-import { generateCustomShowId } from 'ooxml-ui/pptx';
+import { confirmDeleteDialog, generateCustomShowId, promptNameDialog } from 'ooxml-ui/pptx';
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 /**
  * Custom shows dialog handlers: extracted from useViewerDialogs.
  */
 import { useMemo } from 'react';
 
-import { safePrompt, safeConfirm } from '../utils/dom-helpers';
+import { useTranslation } from '../i18n/use-translation';
 import type { EditorHistoryResult } from './useEditorHistory';
 
 export interface UseDialogCustomShowsInput {
@@ -35,6 +35,7 @@ export interface UseDialogCustomShowsResult {
 }
 
 export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialogCustomShowsResult {
+	const { t } = useTranslation();
 	const {
 		activeSlide,
 		customShows,
@@ -59,9 +60,14 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		history.markDirty();
 	};
 
-	const handleCreateCustomShow = () => {
-		const name = safePrompt('Custom show name', 'Custom Show');
-		const safeName = name?.trim() || `Custom Show ${customShows.length + 1}`;
+	const handleCreateCustomShow = async () => {
+		const name = await promptNameDialog(
+			t('pptx.customShows.newNameLabel'),
+			t('pptx.customShows.newDefaultName'),
+			{ t },
+		);
+		const safeName =
+			name?.trim() || `${t('pptx.customShows.newDefaultName')} ${customShows.length + 1}`;
 		// `p:custShow/@id` is an xsd:unsignedInt, so ids are numbers, never random strings.
 		const id = generateCustomShowId(customShows);
 		const initialSlideRIds =
@@ -71,7 +77,7 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		history.markDirty();
 	};
 
-	const handleRenameActiveCustomShow = () => {
+	const handleRenameActiveCustomShow = async () => {
 		if (!activeCustomShowId) {
 			return;
 		}
@@ -79,7 +85,9 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		if (!show) {
 			return;
 		}
-		const nextName = safePrompt('Rename custom show', show.name)?.trim();
+		const nextName = (
+			await promptNameDialog(t('pptx.customShows.renamePrompt'), show.name, { t })
+		)?.trim();
 		if (!nextName) {
 			return;
 		}
@@ -87,7 +95,7 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		history.markDirty();
 	};
 
-	const handleDeleteActiveCustomShow = () => {
+	const handleDeleteActiveCustomShow = async () => {
 		const showId = activeCustomShowId;
 		if (!showId) {
 			return;
@@ -96,7 +104,9 @@ export function useDialogCustomShows(input: UseDialogCustomShowsInput): UseDialo
 		if (!show) {
 			return;
 		}
-		if (!safeConfirm(`Delete custom show "${show.name}"?`)) {
+		if (
+			!(await confirmDeleteDialog(t('pptx.customShows.deleteConfirm', { name: show.name }), { t }))
+		) {
 			return;
 		}
 		setCustomShows((prev) => prev.filter((s) => s.id !== showId));

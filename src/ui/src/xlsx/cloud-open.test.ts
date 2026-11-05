@@ -93,16 +93,29 @@ describe('File > Open from a cloud place', () => {
 	it('asks before discarding unsaved changes and does nothing when declined', async () => {
 		const { core } = shellFixture();
 		core.dirty.set(true);
-		vi.stubGlobal(
-			'confirm',
-			vi.fn(() => false),
-		);
 		const { file } = await cloudFile();
 		const closed = vi.fn();
-		expect(await openCloudFile(core, file, chrome(), closed)).toBe(false);
+		const opened = openCloudFile(core, file, chrome(), closed);
+		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
+		expect(dialog.shadowRoot?.querySelector('[role="alertdialog"]')).not.toBeNull();
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
+		expect(await opened).toBe(false);
 		expect(closed).not.toHaveBeenCalled();
 		expect(core.fileName).not.toBe('Cloud.xlsx');
-		vi.unstubAllGlobals();
+		expect(core.host.shadowRoot!.querySelector('office-ui-message-dialog')).toBeNull();
+	});
+
+	it('opens the file once the discard dialog is confirmed', async () => {
+		const { core } = shellFixture();
+		core.dirty.set(true);
+		const { file } = await cloudFile();
+		const closed = vi.fn();
+		const opened = openCloudFile(core, file, chrome(), closed);
+		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
+		(dialog.shadowRoot!.querySelector('button.confirm') as HTMLButtonElement).click();
+		await opened;
+		expect(closed).toHaveBeenCalledOnce();
+		expect(core.fileName).toBe('Cloud.xlsx');
 	});
 });
 

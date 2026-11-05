@@ -107,8 +107,8 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 			.locator('xlsx-editor')
 			.evaluate((element) => (element as HTMLElement & { dirty: boolean }).dirty),
 	).toBe(true);
-	page.once('dialog', (dialog) => dialog.dismiss());
 	await page.getByRole('tab', { name: 'Posts', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(page.locator('xlsx-editor')).toBeVisible();
 	await page.getByRole('button', { name: 'Save copy to channel', exact: true }).click();
 	await expect(page.getByRole('status').filter({ hasText: 'Workbook copy shared' })).toBeVisible();

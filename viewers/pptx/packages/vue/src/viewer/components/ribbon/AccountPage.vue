@@ -11,6 +11,7 @@
 import {
 	AVATAR_COLOR_SWATCHES,
 	clearAllLocalViewerData,
+	confirmDeleteDialog,
 	DEFAULT_VIEWER_PROFILE,
 	formatBackstageSize,
 	getLocalStorageUsageSummary,
@@ -64,7 +65,7 @@ async function refreshUsage(): Promise<void> {
 }
 
 async function clearLocalData(): Promise<void> {
-	if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
+	if (!(await confirmDeleteDialog(t('pptx.account.storage.clearConfirm'), { t }))) {
 		return;
 	}
 	await clearAllLocalViewerData(storage());

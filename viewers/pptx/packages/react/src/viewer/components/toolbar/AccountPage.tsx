@@ -2,6 +2,7 @@ import {
 	AVATAR_COLOR_SWATCHES,
 	DEFAULT_VIEWER_PROFILE,
 	clearAllLocalViewerData,
+	confirmDeleteDialog,
 	formatBackstageSize,
 	getLocalStorageUsageSummary,
 	readStoredViewerPrefs,
@@ -45,16 +46,14 @@ export function AccountPage(): React.ReactElement {
 	// eslint-disable-next-line react-hooks/exhaustive-deps -- refreshUsage reads the current storage
 	useEffect(refreshUsage, [storage]);
 
-	const handleClear = () => {
-		if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
+	const handleClear = async () => {
+		if (!(await confirmDeleteDialog(t('pptx.account.storage.clearConfirm'), { t }))) {
 			return;
 		}
-		void clearAllLocalViewerData(storage).then(() => {
-			setCleared(true);
-			refreshUsage();
-			setTimeout(() => setCleared(false), 4000);
-			return undefined;
-		});
+		await clearAllLocalViewerData(storage);
+		setCleared(true);
+		refreshUsage();
+		setTimeout(() => setCleared(false), 4000);
 	};
 
 	const version =
@@ -129,7 +128,7 @@ export function AccountPage(): React.ReactElement {
 				</p>
 				<button
 					type='button'
-					onClick={handleClear}
+					onClick={() => void handleClear()}
 					className='mt-4 border border-destructive/40 px-4 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10'
 				>
 					{t('pptx.account.storage.clear')}

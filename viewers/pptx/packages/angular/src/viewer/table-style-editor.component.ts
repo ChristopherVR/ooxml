@@ -19,6 +19,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleFieldEdit,
+	confirmDeleteDialog,
+	promptNameDialog,
 	describeTableStyleEditor,
 	TABLE_STYLE_EDITOR_PARTS,
 } from 'ooxml-ui/pptx';
@@ -192,11 +194,12 @@ export class TableStyleEditorComponent {
 		this.styleMapChange.emit({ ...map, [nextEntry.styleId]: nextEntry });
 	}
 
-	protected createFromCurrent(): void {
+	protected async createFromCurrent(): Promise<void> {
 		const entry = this.entry();
-		const name = window.prompt(
+		const name = await promptNameDialog(
 			this.translate.instant('pptx.tableStyleEditor.newStyleNamePrompt'),
 			entry ? `${entry.styleName ?? ''} Copy`.trim() : '',
+			{ t: (key) => this.translate.instant(key) },
 		);
 		if (!name) {
 			return;
@@ -209,13 +212,15 @@ export class TableStyleEditorComponent {
 		this.assignStyle.emit(created.styleId);
 	}
 
-	protected handleDelete(): void {
+	protected async handleDelete(): Promise<void> {
 		const entry = this.entry();
 		const map = this.styleMap();
 		if (
 			!entry ||
 			!map ||
-			!window.confirm(this.translate.instant('pptx.tableStyleEditor.deleteConfirm'))
+			!(await confirmDeleteDialog(this.translate.instant('pptx.tableStyleEditor.deleteConfirm'), {
+				t: (key) => this.translate.instant(key),
+			}))
 		) {
 			return;
 		}

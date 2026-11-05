@@ -18,6 +18,7 @@
 		resolveProfileInitial,
 		saveViewerProfile,
 	} from 'ooxml-ui/pptx';
+	import { confirmDeleteDialog } from 'ooxml-ui/pptx';
 	import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerStorage } from '../../../state/viewer-storage-context';
@@ -58,7 +59,7 @@
 	}
 
 	async function onClearData(): Promise<void> {
-		if (!window.confirm(t('pptx.account.storage.clearConfirm'))) {
+		if (!(await confirmDeleteDialog(t('pptx.account.storage.clearConfirm'), { t }))) {
 			return;
 		}
 		await clearAllLocalViewerData(storage());

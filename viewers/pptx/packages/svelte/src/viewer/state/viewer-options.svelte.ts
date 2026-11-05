@@ -13,6 +13,7 @@ import type {
 import {
 	applyPreferenceToOptions,
 	clearAutosaveSnapshots,
+	confirmExternalHyperlinkDialog,
 	createViewerOptionsStore,
 	playFeedbackSound,
 	resolveAutosaveIntervalSeconds,
@@ -131,13 +132,18 @@ export class ViewerOptionsState {
 
 	/**
 	 * Trust Center gate for following an external hyperlink. Returns true when
-	 * navigation may proceed (gate off, non-http(s) target, or confirmed).
+	 * navigation may proceed (gate off, non-http(s) target), or a promise of the
+	 * user's answer to the in-app confirmation dialog.
 	 */
-	confirmHyperlink(href: string, message: string): boolean {
+	confirmHyperlink(
+		href: string,
+		t: (key: string) => string,
+		host?: Node | null,
+	): boolean | Promise<boolean> {
 		if (!shouldConfirmExternalHyperlink(this.options, href)) {
 			return true;
 		}
-		return typeof window === 'undefined' ? true : window.confirm(`${message}\n\n${href}`);
+		return typeof window === 'undefined' ? true : confirmExternalHyperlinkDialog(href, { t, host });
 	}
 
 	/** Accessibility > "feedback with sound" cue for a completed action. */

@@ -149,7 +149,6 @@ test('group chat: name, people dialog, system notices, leave', async ({ browser 
 	await people.getByRole('button', { name: 'Done', exact: true }).click();
 
 	// Cy and Bob each leave on their own.
-	cy.once('dialog', (dialog) => void dialog.accept());
 	await sidebar(cy)
 		.getByRole('button', { name: /Launch crew/u })
 		.click();
@@ -158,13 +157,14 @@ test('group chat: name, people dialog, system notices, leave', async ({ browser 
 		.getByRole('dialog', { name: 'People', exact: true })
 		.getByRole('button', { name: 'Leave chat' })
 		.click();
+	await cy.getByRole('alertdialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await expect.poll(() => client(cy, (c) => c.getState().chats.length)).toBe(0);
-	bob.once('dialog', (dialog) => void dialog.accept());
 	await bob.getByRole('button', { name: 'People', exact: true }).click();
 	await bob
 		.getByRole('dialog', { name: 'People', exact: true })
 		.getByRole('button', { name: 'Leave chat' })
 		.click();
+	await bob.getByRole('alertdialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await expect.poll(() => client(bob, (c) => c.getState().chats.length)).toBe(0);
 	await expect(
 		ada.locator('office-ui-chat-list .system', { hasText: 'Bob left the chat' }),

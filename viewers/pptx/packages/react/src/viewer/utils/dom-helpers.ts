@@ -1,5 +1,5 @@
 /**
- * DOM utility helpers: escapeHtml, safePrompt, safeConfirm, downloadBlob.
+ * DOM utility helpers: escapeHtml, downloadBlob.
  *
  * `sanitizeDownloadFilename` and `downloadBlob` now live once in
  * `pptx-viewer-shared` (`export/download-helpers`), which sanitizes every
@@ -10,19 +10,3 @@ export { downloadBlob, sanitizeDownloadFilename } from 'ooxml-ui/pptx';
 
 // HTML entity escaping is shared (see `export/print-document`).
 export { escapeHtml } from 'ooxml-ui/pptx';
-
-export function safePrompt(message: string, defaultValue?: string): string | null {
-	try {
-		return window.prompt(message, defaultValue);
-	} catch {
-		return null;
-	}
-}
-
-export function safeConfirm(message: string): boolean {
-	try {
-		return window.confirm(message);
-	} catch {
-		return false;
-	}
-}

@@ -69,7 +69,7 @@ export interface PresentationInputDeps {
 	 * absent) means "always allow", matching `shouldConfirmExternalHyperlink`
 	 * with the option off.
 	 */
-	confirmExternalHyperlink?: (href: string) => boolean;
+	confirmExternalHyperlink?: (href: string) => boolean | Promise<boolean>;
 	/**
 	 * `ppaction://customshow?id=<id>[&return=true]`: run the named custom show.
 	 * The host resolves `customShowId` against its own custom-show registry (an
@@ -254,15 +254,9 @@ export class PresentationInputController {
 			slideCount: this.deps.slides().length,
 			elementId: closestElementId(target),
 		};
-		const { intent } = resolvePresentationAction(outcome.action, options);
-		if (
-			intent.kind === 'openUrl' &&
-			this.deps.confirmExternalHyperlink &&
-			!this.deps.confirmExternalHyperlink(intent.url)
-		) {
-			return 'action';
-		}
 		runPresentationAction(outcome.action, options, {
+			// A declined (or still pending) confirmation still consumes the click.
+			confirmUrl: this.deps.confirmExternalHyperlink,
 			goToSlide: (index) => this.deps.navigator.goToSlide(index),
 			move: (direction) => this.deps.navigator.navigate(direction > 0 ? 'next' : 'prev'),
 			endShow: () => this.deps.requestClose(),

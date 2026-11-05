@@ -186,21 +186,26 @@ describe('useMasterViewCrud', () => {
 	});
 
 	it('prompts for a name before renaming, and skips the call when the prompt is cancelled', async () => {
-		// happy-dom does not implement `window.prompt` at all, so there is no
-		// existing method for `vi.spyOn` to wrap; `vi.stubGlobal` installs one.
-		const promptSpy = vi.fn().mockReturnValue(null);
-		vi.stubGlobal('prompt', promptSpy);
 		const { crud } = setup([master('ppt/slideMasters/slideMaster1.xml')], {
 			tab: 'slides',
 			masterIndex: 0,
 			layoutIndex: null,
 		});
 
-		await crud.run('renameMaster');
+		const running = crud.run('renameMaster');
+		const dialog = await vi.waitFor(() => {
+			const found = document.querySelector('office-ui-message-dialog');
+			if (!found) throw new Error('no dialog yet');
+			return found;
+		});
+		expect(dialog.shadowRoot?.querySelector('.message')?.textContent).toBe('New name');
+		expect((dialog.shadowRoot!.querySelector('input') as HTMLInputElement).value).toBe(
+			'Office Theme',
+		);
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
+		await running;
 
-		expect(promptSpy).toHaveBeenCalledWith('New name', 'Office Theme');
 		expect(applyMasterViewCrudActionMock).not.toHaveBeenCalled();
-		vi.unstubAllGlobals();
 	});
 
 	it('leaves no undo or redo step that puts a slide back on a deleted layout', async () => {
