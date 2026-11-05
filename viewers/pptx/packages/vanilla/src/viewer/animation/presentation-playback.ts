@@ -459,6 +459,7 @@ export function createPresentationPlayback(): PresentationPlayback {
 					transition,
 					outgoingSlide,
 					incomingSlide: params.slide,
+					...(params.canvasSize ? { slideSize: params.canvasSize } : {}),
 					onDone: () => {
 						cancelTransition = null;
 					},

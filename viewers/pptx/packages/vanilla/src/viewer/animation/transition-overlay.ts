@@ -27,6 +27,8 @@ export interface TransitionOverlayParams {
 	outgoingSlide?: PptxSlide;
 	/** The incoming slide model. Required to play a Morph transition. */
 	incomingSlide?: PptxSlide;
+	/** The slide's size (px): a turning flip is seen from its centre (shared `morph-flip-turn`). */
+	slideSize?: { width: number; height: number };
 	/** Called once the transition duration elapses (or the overlay is cancelled). */
 	onDone: () => void;
 }
@@ -87,6 +89,7 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 					params.incomingSlide,
 					durationMs,
 					morphOptionToMode(transition.morphOption),
+					params.slideSize ? { slideSize: params.slideSize } : {},
 				)
 			: undefined;
 

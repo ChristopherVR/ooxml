@@ -230,6 +230,42 @@ describe('playTransitionOverlay', () => {
 		return { outgoing, incoming, cancel };
 	}
 
+	it('sees a turning flip from the centre of the slide it is given', () => {
+		// Shared `morph-flip-turn`: the eye is (width / 2) / tan(30 deg) away,
+		// 831.384 px for a 960 px slide (the 16:9 default is 1108.513 px).
+		const tri = (id: string, flipHorizontal: boolean): PptxSlide =>
+			({
+				id,
+				elements: [
+					{
+						id: `${id}-tri`,
+						type: 'shape',
+						name: '!!Tri',
+						shapeType: 'rtTriangle',
+						x: 100,
+						y: 100,
+						width: 300,
+						height: 200,
+						flipHorizontal,
+					},
+				],
+			}) as unknown as PptxSlide;
+		const cancel = playTransitionOverlay({
+			doc,
+			stageWrap,
+			outgoing: buildStage(doc, ['out-tri']),
+			incoming: buildStage(doc, ['in-tri']),
+			transition: { type: 'morph', durationMs: 800 } as PptxSlideTransition,
+			outgoingSlide: tri('out', false),
+			incomingSlide: tri('in', true),
+			slideSize: { width: 960, height: 540 },
+			onDone: vi.fn(),
+		});
+		const css = [...doc.querySelectorAll('style')].map((node) => node.textContent).join('\n');
+		expect(css).toContain('perspective(831.384px)');
+		cancel();
+	});
+
 	it('stretches each layer to the overlay instead of shrink-wrapping its content', () => {
 		// The stage inside a layer scales with a CSS `transform`, which never
 		// changes its laid-out box: an auto-sized `top`/`left` layer therefore
