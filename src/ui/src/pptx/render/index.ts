@@ -1520,6 +1520,7 @@ export * from './header-footer-dialog';
 export * from './media-file-type';
 export * from './template-background-rows';
 export * from './template-editing';
+export * from './transition-template-elements';
 // Ordered + capped element composition for slide previews / sidebar thumbnails,
 // mirroring `buildSaveSlides` (template elements first, then slide-owned).
 export * from './preview-elements';
