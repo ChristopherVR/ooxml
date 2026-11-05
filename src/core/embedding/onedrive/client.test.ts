@@ -168,9 +168,19 @@ describe('OneDrive host adapter', () => {
 		expect(new Headers(requests[3]?.headers).get('Content-Range')).toBe('bytes 0-3/4');
 	});
 
+	it('uploads a file in one request by default: each extra fragment costs OneDrive seconds', async () => {
+		const large = new Uint8Array(12 * 1024 * 1024).fill(3);
+		const mock = createTestDrive({ bytes });
+		const opened = await mock.client.open(mock.shareUrl);
+		await mock.client.save(opened.file, large);
+		expect(mock.requests.filter(({ url }) => url.includes('/upload/'))).toHaveLength(1);
+		expect(() => client(fetch, { uploadFragmentBytes: 1000 })).toThrow(RangeError);
+		expect(() => client(fetch, { uploadFragmentBytes: 192 * 320 * 1024 })).toThrow(RangeError);
+	});
+
 	it('uploads sequential 320 KiB aligned fragments', async () => {
 		const large = new Uint8Array(5 * 1024 * 1024 + 7).fill(7);
-		const mock = createTestDrive({ bytes });
+		const mock = createTestDrive({ bytes, uploadFragmentBytes: 5 * 1024 * 1024 });
 		const opened = await mock.client.open(mock.shareUrl);
 		await mock.client.save(opened.file, large);
 		// Native byte comparison avoids millions of deep-equality checks on busy CI workers.
@@ -202,7 +212,7 @@ describe('OneDrive host adapter', () => {
 				}
 				return new Response(bytes);
 			},
-			{ canWrite: () => true },
+			{ canWrite: () => true, uploadFragmentBytes: 5 * 1024 * 1024 },
 		);
 		const opened = await connection.open(link);
 		await expect(connection.save(opened.file, large)).resolves.toMatchObject({ eTag: '"v2"' });

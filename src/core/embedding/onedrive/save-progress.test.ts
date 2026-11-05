@@ -49,8 +49,11 @@ describe('OneDrive save progress and metadata-only changes', () => {
 	});
 
 	it('reports upload progress per fragment, then checking, downloading and merging on a real change', async () => {
-		const size = 6 * 1024 * 1024; // two fragments
-		const drive = createTestDrive({ bytes: new Uint8Array(size) });
+		const size = 6 * 1024 * 1024; // two 5 MiB fragments
+		const drive = createTestDrive({
+			bytes: new Uint8Array(size),
+			uploadFragmentBytes: 5 * 1024 * 1024,
+		});
 		const session = createOneDriveSession(drive.client, await drive.client.open(drive.shareUrl), {
 			merge: ({ local }) => ({ status: 'merged', bytes: local }),
 		});

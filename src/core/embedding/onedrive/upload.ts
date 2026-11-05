@@ -2,8 +2,6 @@ import { checkResponse, readJson, secureTransferUrl } from './requests';
 import { OneDriveError } from './types';
 import type { OneDriveTransport } from './transport';
 
-// Every non-final fragment is a multiple of Graph's required 320 KiB.
-const CHUNK_SIZE = 5 * 1024 * 1024;
 export async function uploadBytes(
 	transport: OneDriveTransport,
 	path: string,
@@ -52,8 +50,9 @@ async function sendFragments(
 	onProgress?: (sent: number, total: number) => void,
 ): Promise<Record<string, unknown>> {
 	onProgress?.(0, bytes.length);
-	for (let start = 0; start < bytes.length; start += CHUNK_SIZE) {
-		const end = Math.min(start + CHUNK_SIZE, bytes.length);
+	// One request per fragment (`uploadFragmentBytes`, 320 KiB aligned; a single one by default).
+	for (let start = 0; start < bytes.length; start += transport.fragmentBytes) {
+		const end = Math.min(start + transport.fragmentBytes, bytes.length);
 		const response = checkResponse(
 			await transport.fetcher(uploadUrl, {
 				method: 'PUT',

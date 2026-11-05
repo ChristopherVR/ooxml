@@ -1,7 +1,7 @@
 import { createOneDriveClient } from '../client';
 
 /** Test-only HTTP fixture. Excluded from declarations and every published bundle. */
-export function createTestDrive(options: { bytes: Uint8Array; name?: string; omitDownloadUrl?: number }) {
+export function createTestDrive(options: { bytes: Uint8Array; name?: string; omitDownloadUrl?: number; uploadFragmentBytes?: number }) {
 	type Item = { id: string; bytes: Uint8Array; name: string; revision: number; content?: number };
 	const first: Item = { id: 'item', bytes: options.bytes.slice(), name: options.name ?? 'Deck.pptx', revision: 1 };
 	const items = new Map<string, Item>([['item', first]]);
@@ -64,7 +64,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 		return json({}, 404);
 	};
 	return {
-		client: createOneDriveClient({ fetch, getAccessToken: async () => 'test-token', canWrite: () => access === 'write' }),
+		client: createOneDriveClient({ fetch, getAccessToken: async () => 'test-token', canWrite: () => access === 'write', ...(options.uploadFragmentBytes ? { uploadFragmentBytes: options.uploadFragmentBytes } : {}) }),
 		shareUrl, requests, fetch,
 		changeRemotely(bytes = first.bytes) { first.bytes = bytes.slice(); first.revision++; first.content = (first.content ?? 0) + 1; },
 		/** Like OneDrive after an upload: a new eTag, the same content (cTag). */

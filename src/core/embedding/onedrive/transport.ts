@@ -20,11 +20,15 @@ export function graphUrl(value: unknown): string {
 	}
 	throw new OneDriveError('invalid-response', 'OneDrive returned an invalid paging link.');
 }
+/** Graph requires upload fragments in multiples of 320 KiB, each request below 60 MiB. */
+const UPLOAD_FRAGMENT_UNIT = 320 * 1024;
+const UPLOAD_FRAGMENT_MAX = 191 * UPLOAD_FRAGMENT_UNIT;
 export function createTransport(options: OneDriveClientOptions) {
 	// Transfer calls go through the transport object; browser fetch requires its Window receiver.
 	const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
 	const maxBytes = options.maxBytes ?? 32 * 1024 * 1024;
 	const timeoutMs = options.timeoutMs ?? 60000;
+	const fragmentBytes = options.uploadFragmentBytes ?? UPLOAD_FRAGMENT_MAX;
 	if (
 		!Number.isSafeInteger(maxBytes) ||
 		maxBytes <= 0 ||
@@ -32,6 +36,13 @@ export function createTransport(options: OneDriveClientOptions) {
 		timeoutMs <= 0
 	)
 		throw new RangeError('OneDrive limits must be positive.');
+	if (
+		!Number.isSafeInteger(fragmentBytes) ||
+		fragmentBytes <= 0 ||
+		fragmentBytes % UPLOAD_FRAGMENT_UNIT !== 0 ||
+		fragmentBytes > UPLOAD_FRAGMENT_MAX
+	)
+		throw new RangeError('OneDrive upload fragments must be a multiple of 320 KiB below 60 MiB.');
 	async function operation<T>(
 		input: OneDriveRequestOptions | undefined,
 		run: (signal: AbortSignal) => Promise<T>,
@@ -106,6 +117,6 @@ export function createTransport(options: OneDriveClientOptions) {
 			}),
 		);
 	}
-	return { operation, graph, maxBytes, fetcher };
+	return { operation, graph, maxBytes, fetcher, fragmentBytes };
 }
 export type OneDriveTransport = ReturnType<typeof createTransport>;

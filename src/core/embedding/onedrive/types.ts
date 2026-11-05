@@ -74,6 +74,12 @@ export interface OneDriveClientOptions {
 	fetch?: typeof globalThis.fetch;
 	maxBytes?: number;
 	timeoutMs?: number;
+	/**
+	 * Bytes per upload request: a multiple of 320 KiB below 60 MiB. Default is the largest allowed
+	 * (59.6875 MiB), so a file up to that size uploads in one request; each extra request costs
+	 * OneDrive seconds of server time. Smaller fragments only help a host that resumes uploads.
+	 */
+	uploadFragmentBytes?: number;
 	/** Trusted host policy; token scopes or a sharing link alone do not establish edit access. */
 	canWrite?: (file: Readonly<OneDriveFile>) => boolean | Promise<boolean>;
 }
