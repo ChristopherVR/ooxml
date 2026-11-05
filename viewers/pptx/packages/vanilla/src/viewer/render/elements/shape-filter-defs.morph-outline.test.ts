@@ -9,7 +9,7 @@ import { renderStrokeOutline } from './shape-filter-defs';
  * outline overlay has to carry that marker in every binding or the outline
  * scales with the box instead.
  */
-const card = {
+const cardData = {
 	id: 'ppt/slides/slide2.xml-shape-0',
 	type: 'shape',
 	x: 0,
@@ -18,11 +18,12 @@ const card = {
 	height: 160,
 	shapeType: 'roundRect',
 	shapeStyle: { fillColor: '#C07020', strokeColor: '#FFFFFF', strokeWidth: 8 },
-} as unknown as PptxElement;
+};
+const card = cardData as unknown as PptxElement;
 
 const tri = {
-	...card,
-	shapeStyle: { ...card.shapeStyle, strokeWidth: 12, compoundLine: 'tri' },
+	...cardData,
+	shapeStyle: { ...cardData.shapeStyle, strokeWidth: 12, compoundLine: 'tri' },
 } as unknown as PptxElement;
 
 describe('vanilla stroke outline morph marker', () => {
