@@ -273,11 +273,10 @@ describe('getCompoundLineOffsets', () => {
 		expect(getCompoundLineOffsets('unknown', 4)).toStrictEqual([0]);
 	});
 
-	it('enforces minimum gap of 1.5 for very thin strokes', () => {
-		const offsets = getCompoundLineOffsets('dbl', 0.5);
-		// gap = max(0.5 * 0.6, 1.5) = 1.5
-		expect(Math.abs(offsets[0])).toBeCloseTo(1.5, 1);
-		expect(Math.abs(offsets[1])).toBeCloseTo(1.5, 1);
+	it('keeps the strands inside the line width, a third off centre for dbl', () => {
+		const offsets = getCompoundLineOffsets('dbl', 6);
+		expect(offsets[0]).toBeCloseTo(-2);
+		expect(offsets[1]).toBeCloseTo(2);
 	});
 });
 
@@ -294,33 +293,36 @@ describe('getCompoundLineWidths', () => {
 		expect(getCompoundLineWidths(undefined, 4)).toStrictEqual([4]);
 	});
 
+	// PowerPoint 16 cuts a compound line into bands that fill its width: dbl in
+	// thirds, thickThin 3:1:1, thinThick 1:1:3, tri 1:1:2:1:1 (shared
+	// `connector-style`).
 	it('returns equal widths for double line (dbl)', () => {
-		const widths = getCompoundLineWidths('dbl', 4);
+		const widths = getCompoundLineWidths('dbl', 6);
 		expect(widths).toHaveLength(2);
-		expect(widths[0]).toBe(2); // 4 * 0.5
-		expect(widths[1]).toBe(2); // 4 * 0.5
+		expect(widths[0]).toBeCloseTo(2); // a third of 6
+		expect(widths[1]).toBeCloseTo(2);
 	});
 
 	it('returns thick-then-thin widths for thickThin', () => {
 		const widths = getCompoundLineWidths('thickThin', 10);
 		expect(widths).toHaveLength(2);
-		expect(widths[0]).toBe(7); // 10 * 0.7
-		expect(widths[1]).toBe(3); // 10 * 0.3
+		expect(widths[0]).toBeCloseTo(6); // 3/5 of 10
+		expect(widths[1]).toBeCloseTo(2); // 1/5 of 10
 	});
 
 	it('returns thin-then-thick widths for thinThick', () => {
 		const widths = getCompoundLineWidths('thinThick', 10);
 		expect(widths).toHaveLength(2);
-		expect(widths[0]).toBe(3); // 10 * 0.3
-		expect(widths[1]).toBe(7); // 10 * 0.7
+		expect(widths[0]).toBeCloseTo(2);
+		expect(widths[1]).toBeCloseTo(6);
 	});
 
 	it('returns three widths for triple line (tri)', () => {
-		const widths = getCompoundLineWidths('tri', 10);
+		const widths = getCompoundLineWidths('tri', 12);
 		expect(widths).toHaveLength(3);
-		expect(widths[0]).toBe(3); // 10 * 0.3
-		expect(widths[1]).toBe(4); // 10 * 0.4
-		expect(widths[2]).toBe(3); // 10 * 0.3
+		expect(widths[0]).toBeCloseTo(2); // 1/6 of 12
+		expect(widths[1]).toBeCloseTo(4); // 2/6 of 12
+		expect(widths[2]).toBeCloseTo(2);
 	});
 
 	it('enforces minimum width of 1', () => {

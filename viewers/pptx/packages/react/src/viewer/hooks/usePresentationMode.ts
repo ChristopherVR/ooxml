@@ -590,9 +590,13 @@ export function usePresentationMode(input: UsePresentationModeInput): UsePresent
 			// `PresentationStage` stacks the incoming slide's elements above its
 			// template shapes (`zIndex = templateElements.length + index`), so a
 			// z-index journey has to start counting where the stage does.
-			{ zIndexBase: incoming ? (templateElementsBySlideId?.[incoming.id]?.length ?? 0) : 0 },
+			// A turning flip is seen from the slide's centre (shared `morph-flip-turn`).
+			{
+				zIndexBase: incoming ? (templateElementsBySlideId?.[incoming.id]?.length ?? 0) : 0,
+				...(canvasSize ? { slideSize: canvasSize } : {}),
+			},
 		);
-	}, [transitionOverlay, slides, templateElementsBySlideId]);
+	}, [transitionOverlay, slides, templateElementsBySlideId, canvasSize]);
 
 	const morphedElementStates = useMemo(() => {
 		if (!morphPlan || morphPlan.incomingAnimations.size === 0) {

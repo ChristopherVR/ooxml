@@ -95,4 +95,35 @@ describe('usePresentationMode morph z-index base', () => {
 			{ zIndexBase: 3 },
 		);
 	});
+
+	it('hands the slide size to the morph plan, the camera a turning flip is seen through', () => {
+		function Sized(): React.ReactElement {
+			const containerRef = useRef<HTMLDivElement | null>(null);
+			latest = usePresentationMode({
+				mode: 'present',
+				slides,
+				templateElementsBySlideId,
+				visibleSlideIndexes: [0, 1],
+				activeSlideIndex: 0,
+				canvasSize: { width: 960, height: 720 },
+				containerRef,
+				onSetMode: () => {},
+				onSetActiveSlideIndex: () => {},
+			});
+			return <div ref={containerRef} />;
+		}
+		act(() => {
+			root.render(<Sized />);
+		});
+		act(() => {
+			latest?.movePresentationSlide(1);
+		});
+		expect(buildMorphTransitionPlan).toHaveBeenLastCalledWith(
+			expect.objectContaining({ id: 's1' }),
+			expect.objectContaining({ id: 's2' }),
+			500,
+			'object',
+			{ zIndexBase: 3, slideSize: { width: 960, height: 720 } },
+		);
+	});
 });

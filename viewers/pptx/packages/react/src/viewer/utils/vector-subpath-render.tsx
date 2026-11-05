@@ -200,8 +200,11 @@ export function renderCustomGeometryVector(
 
 	// Absolutely positioned: in normal flow this full-height svg pushed a
 	// freeform's text body down by the shape's own height, below the outline.
+	// `data-pptx-custom-geometry` lets a morph re-path these paths per frame
+	// (shared `customGeometryAnimations`), as it re-paths the outline overlay.
 	return (
 		<svg
+			data-pptx-custom-geometry=''
 			viewBox={`0 0 ${pathWidth} ${pathHeight}`}
 			className='absolute inset-0 w-full h-full pointer-events-none'
 			preserveAspectRatio='none'
