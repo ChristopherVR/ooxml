@@ -134,7 +134,7 @@ function renderTabs() {
 		[...sessions.sessions.values()]
 			.map(
 				(s) =>
-					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
+					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}<span class="tab-name">${escape(s.doc.name)}</span>${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
 	const activeSession = sessions.sessions.get(active);

@@ -792,6 +792,17 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	height: 16px;
 	font-size: 9px;
 }
+/* A long file name truncates; the app badge before it never shrinks or clips. */
+.file-tab > button:first-child {
+	justify-content: flex-start;
+	min-width: 0;
+}
+.file-tab .tab-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 .file-tab {
 	display: flex;
 	flex: none;
