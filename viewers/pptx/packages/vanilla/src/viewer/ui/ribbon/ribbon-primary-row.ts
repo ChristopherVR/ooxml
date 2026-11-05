@@ -117,7 +117,8 @@ export function createRibbonPrimaryRow(
 	return {
 		el,
 		setEditState({ editable }) {
-			el.hidden = !editable;
+			// Shown once the document is known, read-only too: Present and Share live here.
+			el.hidden = false;
 			if (!editable) {
 				presentMenu.close();
 				overflowMenu.close();

@@ -3952,12 +3952,21 @@ export class PowerPointViewerComponent
 
 	/** Add a blank slide after the given index (or after the active slide). */
 	addSlide(afterIndex?: number): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too,
+		// except the first slide of an empty deck (host-side deck creation).
+		if (!this.canEdit() && this.displaySlides().length > 0) {
+			return;
+		}
 		const idx = afterIndex ?? this.activeSlideIndex();
 		this.editor.addSlide(idx);
 	}
 
 	/** Delete slides at the given zero-based indexes. */
 	deleteSlides(indexes: number[]): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		for (const i of [...indexes].sort((a, b) => b - a)) {
 			this.editor.deleteSlide(i);
 		}
@@ -3965,6 +3974,10 @@ export class PowerPointViewerComponent
 
 	/** Duplicate slides at the given zero-based indexes. */
 	duplicateSlides(indexes: number[]): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		for (const i of indexes) {
 			this.editor.duplicateSlide(i);
 		}
@@ -3972,11 +3985,19 @@ export class PowerPointViewerComponent
 
 	/** Move a slide from one position to another. */
 	moveSlide(fromIndex: number, toIndex: number): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		this.editor.moveSlide(fromIndex, toIndex);
 	}
 
 	/** Toggle the hidden flag on slides at the given indexes. */
 	toggleHideSlides(indexes: number[]): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		for (const i of indexes) {
 			const s = this.displaySlides()[i];
 			if (s) {
@@ -4043,17 +4064,29 @@ export class PowerPointViewerComponent
 
 	/** Update one or more properties of an element by ID. */
 	updateElement(elementId: string, updates: Partial<PptxElement>): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		this.editor.updateElement(this.activeSlideIndex(), elementId, updates);
 	}
 
 	/** Delete elements by their IDs from the active slide. */
 	deleteElements(elementIds: string[]): void {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return;
+		}
 		this.editor.selectedIds.set(elementIds);
 		this.editor.deleteSelected(this.activeSlideIndex());
 	}
 
 	/** Duplicate an element. Returns the new element's ID. */
 	duplicateElement(elementId: string): string | undefined {
+		// A read-only viewer (host, cloud file, Protected View, preview) refuses handle edits too.
+		if (!this.canEdit()) {
+			return undefined;
+		}
 		this.editor.selectedIds.set([elementId]);
 		this.editor.duplicateSelected(this.activeSlideIndex());
 		return this.editor.selectedIds()[0];

@@ -397,7 +397,8 @@ export function createRibbon(
 		},
 		setEditState(state) {
 			primary.setEditState(state);
-			tabBar.el.hidden = !state.editable;
+			// Read-only too: the File tab is how another (editable) file is opened.
+			tabBar.el.hidden = false;
 		},
 		setNotesExpanded() {},
 		setAutosaveStatus: (label, kind) => primary.setAutosaveStatus(label, kind),

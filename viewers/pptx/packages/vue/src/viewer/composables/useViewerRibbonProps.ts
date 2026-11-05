@@ -1,3 +1,4 @@
+import type { ViewerMode } from 'ooxml-ui/pptx';
 /**
  * useViewerRibbonProps: bridge the viewer's FEATURE CONTROLLERS to the flat
  * `UseRibbonPropsInput` contract.
@@ -137,6 +138,8 @@ export interface UseViewerRibbonPropsOptions {
 	/** Deck presentation properties, for the Slide Show tab's Options checkboxes. */
 	presentationProperties: Ref<PptxPresentationProperties>;
 	ribbonActions: UseRibbonActionsResult;
+	/** The mode the chrome shows (see `chromeMode` in the viewer), over the ribbon actions' own. */
+	chromeMode: ComputedRef<ViewerMode>;
 	drag: UseElementDragResult;
 	insertion: UseElementInsertionResult;
 	templateInsertion: UseSlideTemplateInsertionResult;
@@ -167,7 +170,7 @@ export interface UseViewerRibbonPropsOptions {
 export function useViewerRibbonProps(o: UseViewerRibbonPropsOptions): ComputedRef<RibbonProps> {
 	return useRibbonProps({
 		// -- State --
-		ribbonMode: o.ribbonActions.ribbonMode,
+		ribbonMode: o.chromeMode,
 		canEdit: o.canEdit,
 		isMobile: o.isMobile,
 		sidebarCollapsed: o.ui.sidebarCollapsed,

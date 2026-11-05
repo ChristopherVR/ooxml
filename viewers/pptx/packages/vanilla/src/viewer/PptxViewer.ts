@@ -1184,7 +1184,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTarget: () => {
 				const state = this.store.get();
 				return {
-					canEdit: state.editable && !state.protectedView && !isReadOnlyLocked(state),
+					canEdit: this.canMutate(),
 					mode: this.getMode(),
 					loaded: !state.loading && !state.error,
 					editTemplateMode: state.editTemplateMode,
@@ -1197,12 +1197,20 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			commitSlides: (next, label) => this.editor.commitElementUpdates(next, label),
 		});
 	};
-	updateElement = (id: string, updates: Partial<PptxElement>): void =>
-		this.editor.applyElementPatch(id, updates);
+	/** The effective edit right: host, cloud file, Protected View and a read-only lock together. */
+	private canMutate(): boolean {
+		const state = this.store.get();
+		return state.editable && !state.protectedView && !isReadOnlyLocked(state);
+	}
+	updateElement = (id: string, updates: Partial<PptxElement>): void => {
+		if (this.canMutate()) {
+			this.editor.applyElementPatch(id, updates);
+		}
+	};
 	addElement = (element: PptxElement): string | undefined => {
 		const state = this.store.get();
 		const prepared = prepareElementForInsertion(element, {
-			canEdit: state.editable && !state.protectedView && !isReadOnlyLocked(state),
+			canEdit: this.canMutate(),
 			mode: this.getMode(),
 			hasActiveSlide: !state.loading && !state.error && Boolean(state.slides[state.currentSlide]),
 			editTemplateMode: state.editTemplateMode,
@@ -1215,10 +1223,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return prepared.id;
 	};
 	deleteElements = (ids: string[]): void => {
+		if (!this.canMutate()) {
+			return;
+		}
 		this.editor.selectElements(ids);
 		this.editor.deleteSelected();
 	};
 	duplicateElement = (id: string): string | undefined => {
+		if (!this.canMutate()) {
+			return undefined;
+		}
 		this.editor.selectElements([id]);
 		return this.editor.duplicateSelected() ?? undefined;
 	};
@@ -1226,12 +1240,19 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	selectElements = (ids: string[]): void => this.editor.selectElements(ids);
 	clearSelection = (): void => this.editor.selectElements([]);
 	addSlide = (afterIndex = this.store.get().slides.length - 1): void => {
+		// Refused read-only, except the first slide of an empty deck (host-side deck creation).
+		if (!this.canMutate() && this.store.get().slides.length > 0) {
+			return;
+		}
 		const next = [...this.store.get().slides];
 		const index = Math.min(Math.max(afterIndex + 1, 0), next.length);
 		next.splice(index, 0, createBlankSlide(index + 1, makeSlideId));
 		this.editor.commitSlides(this.renumber(next), index);
 	};
 	deleteSlides = (indexes: number[]): void => {
+		if (!this.canMutate()) {
+			return;
+		}
 		const remove = new Set(indexes);
 		const next = this.store.get().slides.filter((_, index) => !remove.has(index));
 		if (next.length > 0) {
@@ -1249,6 +1270,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		});
 	};
 	duplicateSlides = (indexes: number[]): void => {
+		if (!this.canMutate()) {
+			return;
+		}
 		const selected = new Set(indexes);
 		const next = this.store
 			.get()
@@ -1260,6 +1284,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.editor.commitSlides(this.renumber(next));
 	};
 	moveSlide = (fromIndex: number, toIndex: number): void => {
+		if (!this.canMutate()) {
+			return;
+		}
 		const next = [...this.store.get().slides];
 		if (!next[fromIndex] || toIndex < 0 || toIndex >= next.length || fromIndex === toIndex) {
 			return;
@@ -1269,6 +1296,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.editor.commitSlides(this.renumber(next), toIndex);
 	};
 	toggleHideSlides = (indexes: number[]): void => {
+		if (!this.canMutate()) {
+			return;
+		}
 		const selected = new Set(indexes);
 		this.editor.commitSlides(
 			this.store

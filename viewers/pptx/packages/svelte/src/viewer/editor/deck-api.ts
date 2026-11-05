@@ -2,6 +2,7 @@ import {
 	commitElementUpdateBatch,
 	clampZoomScale,
 	createBlankSlide,
+	gateViewerEdits,
 	makeSlideId,
 	prepareElementForInsertion,
 	slideSpaceElement,
@@ -61,141 +62,144 @@ export function createDeckApi(deps: DeckApiDeps): DeckApi {
 	const getElements = (slideIndex = viewer.current): readonly PptxElement[] =>
 		editor.renderedSlides[slideIndex]?.elements ?? [];
 
-	return {
-		goTo,
-		goPrev: () => viewer.prev(),
-		goNext: () => viewer.next(),
+	return gateViewerEdits(
+		{
+			goTo,
+			goPrev: () => viewer.prev(),
+			goNext: () => viewer.next(),
 
-		getZoom: () => deps.getZoomPercent() / 100,
-		// The shared clamp, not a hand-rolled one, so every binding refuses the
-		// same out-of-range zoom.
-		setZoom: (level) => {
-			viewer.zoomPercent = clampZoomScale(level) * 100;
-		},
-		zoomIn: () => viewer.zoomIn(deps.getZoomPercent()),
-		zoomOut: () => viewer.zoomOut(deps.getZoomPercent()),
-		zoomReset: () => {
-			viewer.zoomPercent = 100;
-		},
+			getZoom: () => deps.getZoomPercent() / 100,
+			// The shared clamp, not a hand-rolled one, so every binding refuses the
+			// same out-of-range zoom.
+			setZoom: (level) => {
+				viewer.zoomPercent = clampZoomScale(level) * 100;
+			},
+			zoomIn: () => viewer.zoomIn(deps.getZoomPercent()),
+			zoomOut: () => viewer.zoomOut(deps.getZoomPercent()),
+			zoomReset: () => {
+				viewer.zoomPercent = 100;
+			},
 
-		getMode: () => deps.getMode(),
-		setMode: (mode) => {
-			if (mode === 'present') {
-				if (!viewer.isFullscreen) {
+			getMode: () => deps.getMode(),
+			setMode: (mode) => {
+				if (mode === 'present') {
+					if (!viewer.isFullscreen) {
+						deps.toggleFullscreen();
+					}
+					return;
+				}
+				if (viewer.isFullscreen) {
 					deps.toggleFullscreen();
 				}
-				return;
-			}
-			if (viewer.isFullscreen) {
-				deps.toggleFullscreen();
-			}
-			deps.setEditable(mode === 'edit' || mode === 'master');
-			if (mode === 'master') {
-				editor.masterOps.enter();
-			} else if (editor.masterViewTarget) {
-				editor.masterOps.exit();
-			}
-		},
+				deps.setEditable(mode === 'edit' || mode === 'master');
+				if (mode === 'master') {
+					editor.masterOps.enter();
+				} else if (editor.masterViewTarget) {
+					editor.masterOps.exit();
+				}
+			},
 
-		getActiveSlideIndex: () => viewer.current,
-		setActiveSlideIndex: goTo,
-		getSlideCount: () => editor.renderedSlides.length,
-		isDirty: () => editor.dirty,
+			getActiveSlideIndex: () => viewer.current,
+			setActiveSlideIndex: goTo,
+			getSlideCount: () => editor.renderedSlides.length,
+			isDirty: () => editor.dirty,
 
-		getSlides: () => editor.renderedSlides,
-		getSlide: (index) => editor.renderedSlides[index],
-		getActiveSlide: () => editor.renderedSlides[viewer.current],
+			getSlides: () => editor.renderedSlides,
+			getSlide: (index) => editor.renderedSlides[index],
+			getActiveSlide: () => editor.renderedSlides[viewer.current],
 
-		addSlide: (afterIndex = editor.slides.length - 1) => {
-			const next = [...editor.slides];
-			const index = Math.min(Math.max(afterIndex + 1, 0), next.length);
-			next.splice(index, 0, createBlankSlide(index + 1, makeSlideId));
-			editor.commitSlides(renumbered(next));
-			viewer.goTo(index);
-		},
-		deleteSlides: (indexes) => {
-			if (editor.slides.length <= 1) {
-				return;
-			}
-			const remove = new Set(indexes);
-			const next = editor.slides.filter((_, index) => !remove.has(index));
-			if (next.length === 0) {
-				return;
-			}
-			editor.commitSlides(renumbered(next));
-			viewer.goTo(Math.min(viewer.current, next.length - 1));
-		},
-		duplicateSlides: (indexes) => {
-			const selected = new Set(indexes);
-			const next = editor.slides.flatMap((slide, index) =>
-				selected.has(index) ? [slide, { ...cloneSlide(slide), id: makeSlideId() }] : [slide],
-			);
-			editor.commitSlides(renumbered(next));
-		},
-		moveSlide: (fromIndex, toIndex) => {
-			const next = [...editor.slides];
-			if (!next[fromIndex] || toIndex < 0 || toIndex >= next.length || fromIndex === toIndex) {
-				return;
-			}
-			const [slide] = next.splice(fromIndex, 1);
-			next.splice(toIndex, 0, slide);
-			editor.commitSlides(renumbered(next));
-			viewer.goTo(toIndex);
-		},
-		toggleHideSlides: (indexes) => {
-			const selected = new Set(indexes);
-			editor.commitSlides(
-				editor.slides.map((slide, index) =>
-					selected.has(index) ? { ...slide, hidden: !slide.hidden } : slide,
-				),
-			);
-		},
+			addSlide: (afterIndex = editor.slides.length - 1) => {
+				const next = [...editor.slides];
+				const index = Math.min(Math.max(afterIndex + 1, 0), next.length);
+				next.splice(index, 0, createBlankSlide(index + 1, makeSlideId));
+				editor.commitSlides(renumbered(next));
+				viewer.goTo(index);
+			},
+			deleteSlides: (indexes) => {
+				if (editor.slides.length <= 1) {
+					return;
+				}
+				const remove = new Set(indexes);
+				const next = editor.slides.filter((_, index) => !remove.has(index));
+				if (next.length === 0) {
+					return;
+				}
+				editor.commitSlides(renumbered(next));
+				viewer.goTo(Math.min(viewer.current, next.length - 1));
+			},
+			duplicateSlides: (indexes) => {
+				const selected = new Set(indexes);
+				const next = editor.slides.flatMap((slide, index) =>
+					selected.has(index) ? [slide, { ...cloneSlide(slide), id: makeSlideId() }] : [slide],
+				);
+				editor.commitSlides(renumbered(next));
+			},
+			moveSlide: (fromIndex, toIndex) => {
+				const next = [...editor.slides];
+				if (!next[fromIndex] || toIndex < 0 || toIndex >= next.length || fromIndex === toIndex) {
+					return;
+				}
+				const [slide] = next.splice(fromIndex, 1);
+				next.splice(toIndex, 0, slide);
+				editor.commitSlides(renumbered(next));
+				viewer.goTo(toIndex);
+			},
+			toggleHideSlides: (indexes) => {
+				const selected = new Set(indexes);
+				editor.commitSlides(
+					editor.slides.map((slide, index) =>
+						selected.has(index) ? { ...slide, hidden: !slide.hidden } : slide,
+					),
+				);
+			},
 
-		getElements,
-		// A group member too (selected by drilling into its group), in slide
-		// space like the editor shows it (shared `slideSpaceElement`).
-		getElementById: (id, slideIndex = viewer.current) =>
-			slideSpaceElement(getElements(slideIndex), id) ?? undefined,
+			getElements,
+			// A group member too (selected by drilling into its group), in slide
+			// space like the editor shows it (shared `slideSpaceElement`).
+			getElementById: (id, slideIndex = viewer.current) =>
+				slideSpaceElement(getElements(slideIndex), id) ?? undefined,
 
-		updateElements: async (updates, options) => {
-			commitElementUpdateBatch(updates, options, {
-				getTarget: () => ({
+			updateElements: async (updates, options) => {
+				commitElementUpdateBatch(updates, options, {
+					getTarget: () => ({
+						canEdit: deps.canEdit(),
+						mode: deps.getMode(),
+						loaded: deps.isLoaded(),
+						editTemplateMode: editor.editTemplateMode,
+					}),
+					getSlides: () => editor.slides,
+					hasActivePointerInteraction: deps.hasActivePointerInteraction,
+					commitPendingText: deps.commitPendingText,
+					commitSlides: (next, label) => editor.commitSlides(next, label),
+				});
+			},
+			updateElement: (id, updates) => editor.applyElementPatch(id, updates),
+			addElement: (element) => {
+				const prepared = prepareElementForInsertion(element, {
 					canEdit: deps.canEdit(),
-					mode: deps.getMode(),
-					loaded: deps.isLoaded(),
+					mode: editor.masterViewTarget ? 'master' : deps.getMode(),
+					hasActiveSlide: deps.isLoaded() && Boolean(editor.slides[viewer.current]),
 					editTemplateMode: editor.editTemplateMode,
-				}),
-				getSlides: () => editor.slides,
-				hasActivePointerInteraction: deps.hasActivePointerInteraction,
-				commitPendingText: deps.commitPendingText,
-				commitSlides: (next, label) => editor.commitSlides(next, label),
-			});
-		},
-		updateElement: (id, updates) => editor.applyElementPatch(id, updates),
-		addElement: (element) => {
-			const prepared = prepareElementForInsertion(element, {
-				canEdit: deps.canEdit(),
-				mode: editor.masterViewTarget ? 'master' : deps.getMode(),
-				hasActiveSlide: deps.isLoaded() && Boolean(editor.slides[viewer.current]),
-				editTemplateMode: editor.editTemplateMode,
-			});
-			if (!prepared) {
-				return undefined;
-			}
-			deps.commitPendingText();
-			return editor.insertElement(prepared) ?? undefined;
-		},
-		deleteElements: (ids) => {
-			editor.selection.setAll(ids);
-			editor.deleteSelected();
-		},
-		duplicateElement: (id) => {
-			editor.selection.set(id);
-			return editor.duplicateSelected() ?? undefined;
-		},
+				});
+				if (!prepared) {
+					return undefined;
+				}
+				deps.commitPendingText();
+				return editor.insertElement(prepared) ?? undefined;
+			},
+			deleteElements: (ids) => {
+				editor.selection.setAll(ids);
+				editor.deleteSelected();
+			},
+			duplicateElement: (id) => {
+				editor.selection.set(id);
+				return editor.duplicateSelected() ?? undefined;
+			},
 
-		getSelectedElementIds: () => [...editor.selection.ids],
-		selectElements: (ids) => editor.selection.setAll(ids),
-		clearSelection: () => editor.selection.clear(),
-	};
+			getSelectedElementIds: () => [...editor.selection.ids],
+			selectElements: (ids) => editor.selection.setAll(ids),
+			clearSelection: () => editor.selection.clear(),
+		},
+		() => deps.canEdit(),
+	);
 }

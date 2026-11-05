@@ -203,6 +203,7 @@ describe('an ordinary edit marks the document dirty', () => {
 				<PowerPointViewer
 					ref={ref}
 					content={content}
+					canEdit
 					filePath='dirty-wiring.pptx'
 					onDirtyChange={(dirty) => dirtyChanges.push(dirty)}
 				/>,
