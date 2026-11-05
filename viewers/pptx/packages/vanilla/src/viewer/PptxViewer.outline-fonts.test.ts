@@ -35,3 +35,30 @@ describe('embedded fonts in the glyph-outline cache', () => {
 		expect(retained.has(second)).toBeFalsy();
 	});
 });
+
+describe('embedded fonts as @font-face', () => {
+	it('are registered for the deck and removed with the viewer', () => {
+		const container = document.createElement('div');
+		document.body.appendChild(container);
+		const viewer = createPptxViewer(container) as PptxViewer;
+		try {
+			viewer.store.set({
+				embeddedFonts: [
+					{
+						name: 'Zzz Embedded Face',
+						dataUrl: 'data:font/ttf;base64,AAEAAAAA',
+						format: 'truetype',
+						bold: false,
+						italic: false,
+					} as never,
+				],
+			});
+			expect(document.getElementById('pptx-vanilla-embedded-fonts')?.textContent).toContain(
+				'font-family: "Zzz Embedded Face"',
+			);
+		} finally {
+			viewer.destroy();
+		}
+		expect(document.getElementById('pptx-vanilla-embedded-fonts')).toBeNull();
+	});
+});

@@ -10,6 +10,7 @@ import {
 	createBackstagePresentation,
 	createBlankSlide,
 	createCloudDocumentController,
+	createEmbeddedFontsSheet,
 	createEmbeddedOutlineFontsSlot,
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
@@ -71,6 +72,7 @@ import type {
 	CloudDocumentHostValues,
 	CloudOpenedFile,
 	DocumentStorage,
+	EmbeddedFontsSheet,
 	ReadOnlySessionActions,
 	SlidePackageClipboard,
 	SlidePasteRequest,
@@ -231,6 +233,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 */
 	private readonly presenterShowGuard = createPresenterShowGuard();
 	private userFontsStyle: HTMLStyleElement | null = null;
+	/** The deck's embedded fonts as `@font-face` rules (shared with the other bindings). */
+	private embeddedFontsSheet: EmbeddedFontsSheet | null = null;
 	private signatureWarningAcknowledged = false;
 	private detachSignatureWarning: (() => void) | null = null;
 	/** Stops repainting when the outline cache fills in deferred glyph outlines. */
@@ -732,6 +736,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// cache subscription above repaints then). A new list releases the
 			// previous deck's fonts.
 			this.outlineFonts.set(state.embeddedFonts);
+			this.embeddedFontsSheet ??= createEmbeddedFontsSheet(this.doc, 'pptx-vanilla-embedded-fonts');
+			this.embeddedFontsSheet.set(state.embeddedFonts);
 			const token = ++this.webfontsToken;
 			void resolveGoogleWebfontHref(
 				state.slides,
@@ -2368,6 +2374,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.annotations.dispose();
 		this.exporter.destroy();
 		this.userFontsStyle?.remove();
+		this.embeddedFontsSheet?.dispose();
+		this.embeddedFontsSheet = null;
 		this.webfontsToken++;
 		this.outlineFonts.release();
 		removeGoogleWebfontsLink(this.doc);

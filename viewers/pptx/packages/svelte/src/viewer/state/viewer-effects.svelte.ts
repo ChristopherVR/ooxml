@@ -1,5 +1,6 @@
 import {
 	collectReferencedFontFamilies,
+	createEmbeddedFontsSheet,
 	fetchGoogleWebfontOutlineBytes,
 	selectGoogleWebfontFamilies,
 	selectTrustedEmbeddedFonts,
@@ -182,6 +183,12 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 	// nor embedded (Microsoft 365 "cloud fonts" have no browser equivalent);
 	// the probe is session-cached, so only unseen families hit the network.
 	if (typeof document !== 'undefined') {
+		// The deck's embedded fonts as `@font-face` rules, like the other bindings.
+		$effect(() => {
+			const sheet = createEmbeddedFontsSheet(document, 'pptx-svelte-embedded-fonts');
+			sheet.set(deps.loader.embeddedFonts);
+			return () => sheet.dispose();
+		});
 		$effect(() => {
 			let cancelled = false;
 			void resolveWebfontHref(

@@ -1141,6 +1141,7 @@ export * from './inspector';
 // fallback, and the resolved-variant -> stylesheet/family-list build (the
 // managed <style> id + object-URL minting stay per-binding).
 export * from './embedded-fonts';
+export * from './embedded-fonts-sheet';
 // Pure Google Fonts webfont-fallback helpers: referenced-family collection,
 // known-family selection, and CSS2 href building (the managed <link> id +
 // injection stay per-binding).
