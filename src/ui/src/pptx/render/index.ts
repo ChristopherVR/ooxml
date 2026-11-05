@@ -1849,6 +1849,7 @@ export * from './inserted-slide-layout';
 
 export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
+export * from './viewer-dialogs';
 export * from './slide-package-clipboard';
 export * from './custom-path-markers';
 
