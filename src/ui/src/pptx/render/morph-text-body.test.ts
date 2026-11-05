@@ -168,14 +168,26 @@ describe('a shape whose body does more than resize', () => {
 		expect(split.overlayIncomingAnimations.get(morphCopyId('b', 'text'))).not.toContain('geo');
 	});
 
-	it('flips the body edge-on and keeps the text upright', () => {
-		const split = plan(from, { ...to, flipHorizontal: true } as PptxElement);
-		const css = split.keyframesCss;
-		const body = block(css, 'pptx-morph-body-bmorphbody');
-		expect(body).toMatch(/from \{[^}]*scaleX\(1\)[^}]*\}\s*to \{[^}]*scaleX\(-1\)/u);
-		expect(block(css, 'pptx-morph-text-bmorphtext')).not.toContain('scaleX');
-		const text = (split.crossfadeGroups[1] as MorphCrossfadeGroup).incoming;
-		expect(text.flipHorizontal).toBe(false);
+	it('turns the body over in 3D and keeps the text upright', () => {
+		for (const flip of ['flipHorizontal', 'flipVertical'] as const) {
+			const split = plan(from, { ...to, [flip]: true } as PptxElement);
+			const css = split.keyframesCss;
+			const body = block(css, 'pptx-morph-body-bmorphbody');
+			const turn = flip === 'flipHorizontal' ? 'rotateY' : 'rotateX';
+			expect(body).toMatch(/from \{[^}]*perspective\([^}]*\}\s*to \{[^}]*perspective/u);
+			expect(body).toContain(`${turn}(0deg)`);
+			expect(body).toMatch(new RegExp(`${turn}[(]-?180deg`, 'u'));
+			expect(block(css, 'pptx-morph-body-amorphbody')).toContain('perspective(');
+			expect(block(css, 'pptx-morph-text-bmorphtext')).not.toContain('perspective');
+			expect(block(css, 'pptx-morph-text-bmorphtext')).not.toContain('scaleX');
+			const text = (split.crossfadeGroups[1] as MorphCrossfadeGroup).incoming;
+			expect(text.flipHorizontal).toBe(false);
+		}
+	});
+
+	it('does not turn the body of a pair whose flips are unchanged', () => {
+		const split = plan(from, to);
+		expect(split.keyframesCss).not.toContain('perspective');
 	});
 
 	it('turns the body with the box and the text about its middle', () => {

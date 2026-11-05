@@ -48,6 +48,7 @@ import type { PptxElement } from 'ooxml-core/pptx';
 
 import { shortestRotationTarget } from './morph-animation';
 import type { MorphCrossfadeGroup } from './morph-crossfade-group';
+import { buildMorphFlipTurn, morphFlipTurns } from './morph-flip-turn';
 import { generateGeometryMorphAnimation } from './morph-geometry-keyframes';
 import type { MorphLiftContext } from './morph-text-blend';
 import { resolveMorphLiftCrossers } from './morph-text-blend';
@@ -207,16 +208,26 @@ export function buildMorphTextBodyPlan(
 			durationMs,
 			pairIndex,
 		);
+		// A flip that changes turns the body over in 3D, as a shape without text
+		// does (see `morph-flip-turn`); the text copies above it stay upright.
+		const turns = morphFlipTurns(from, to);
+		const outTurn = turns
+			? buildMorphFlipTurn(from, from, to, fromRotation, ghostTurnsTo)
+			: undefined;
+		const inTurn = turns
+			? buildMorphFlipTurn(to, from, to, incomingTurnsFrom, toRotation)
+			: undefined;
 		const legs: Leg[] = [
 			{
 				part: 'body',
 				outgoing: [
-					morphCopyTransform(still, fromRotation, own(from)),
-					morphCopyTransform(morphBoxEnd(from, to), ghostTurnsTo, own(to)),
+					outTurn?.start ?? morphCopyTransform(still, fromRotation, own(from)),
+					outTurn?.end ?? morphCopyTransform(morphBoxEnd(from, to), ghostTurnsTo, own(to)),
 				],
 				incoming: [
-					morphCopyTransform(morphBoxStart(from, to), incomingTurnsFrom, own(from)),
-					morphCopyTransform(still, toRotation, own(to)),
+					inTurn?.start ??
+						morphCopyTransform(morphBoxStart(from, to), incomingTurnsFrom, own(from)),
+					inTurn?.end ?? morphCopyTransform(still, toRotation, own(to)),
 				],
 				extra: outline?.animation,
 				extraKeyframes: outline?.keyframes,
