@@ -7,8 +7,9 @@ import {
 } from './message-dialog';
 
 /**
- * Where to mount a dialog so it inherits the host's tokens: an element (the dialog goes to its
- * nearest `[data-office-theme]` ancestor, else to the shadow root or document it lives in), a
+ * Where to mount a dialog so it inherits the host's tokens: an element (the dialog goes into its own
+ * shadow root when it has one, else to its nearest `[data-office-theme]` ancestor, else to the shadow
+ * root or document it lives in), a
  * shadow root, or a document. Omit it to use the page's `document.body`.
  */
 export type MessageDialogHost = Node | null | undefined;
@@ -50,8 +51,11 @@ function mountPoint(host: MessageDialogHost): Node | null {
 	if (host instanceof ShadowRoot) return host;
 	if (host instanceof Document) return host.body;
 	if (host instanceof Element) {
+		// An app that renders into its own shadow root hosts the dialog there, so it shares the
+		// app's stacking and tokens (light children of such an element would not be rendered).
+		if (host.shadowRoot) return host.shadowRoot;
 		const themed = host.closest('[data-office-theme]');
-		if (themed) return themed;
+		if (themed) return themed.shadowRoot ?? themed;
 		const root = host.getRootNode();
 		return root instanceof ShadowRoot ? root : (host.ownerDocument.body ?? null);
 	}

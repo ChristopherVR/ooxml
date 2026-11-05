@@ -89,8 +89,26 @@ export class OfficeUiMessageDialog extends OfficeElement {
 		return this.renderRoot.querySelector('input');
 	}
 
+	/**
+	 * Show the box as a native modal `<dialog>`: it enters the top layer, so it sits above (and
+	 * takes over from) any other modal dialog the page has open, and the rest of the page goes
+	 * inert. Where `showModal` is missing the host's fixed overlay styling stands in.
+	 */
+	private openModal(): void {
+		const box = this.renderRoot.querySelector<HTMLDialogElement>('dialog.box');
+		if (!box || box.open) return;
+		try {
+			box.showModal();
+			this.setAttribute('data-modal', '');
+		} catch {
+			box.setAttribute('open', '');
+			this.removeAttribute('data-modal');
+		}
+	}
+
 	private focusInitial(): void {
 		this.ensureRendered();
+		this.openModal();
 		const root = this.renderRoot;
 		const target =
 			this.kind === 'prompt'
@@ -142,42 +160,51 @@ export class OfficeUiMessageDialog extends OfficeElement {
 		const body = `${this.uid}-body`;
 		const confirmClass = this.tone === 'danger' ? 'confirm danger' : 'confirm primary';
 		return html`
-			<div class="backdrop" @click=${() => this.finish(false)}></div>
-			<div
+			<dialog
 				class="box"
 				role="alertdialog"
 				aria-modal="true"
 				aria-labelledby=${title}
 				aria-describedby=${body}
 				tabindex="-1"
+				@click=${(event: Event) => {
+					// A press on the dim area outside the box lands on the dialog element itself.
+					if (event.target === event.currentTarget) this.finish(false);
+				}}
+				@cancel=${(event: Event) => {
+					event.preventDefault();
+					this.finish(false);
+				}}
 			>
-				<h2 id=${title}>${this.heading}</h2>
-				<p class="message" id=${body}>${this.message}</p>
-				${
-					this.kind === 'prompt'
-						? html`<label
-								>${this.inputLabel ? html`<span>${this.inputLabel}</span>` : nothing}<input
-									type="text"
-									.value=${this.value}
-									placeholder=${this.placeholder}
-									aria-label=${this.inputLabel || this.heading}
-									aria-describedby=${body}
-									autocomplete="off"
-							/></label>`
-						: nothing
-				}
-				<div class="actions">
+				<div class="content">
+					<h2 id=${title}>${this.heading}</h2>
+					<p class="message" id=${body}>${this.message}</p>
 					${
-						this.kind === 'alert'
-							? nothing
-							: html`<button class="cancel" type="button" @click=${() => this.finish(false)}
-									>${this.cancelLabel}</button
-								>`
-					}<button class=${confirmClass} type="button" @click=${() => this.finish(true)}
-						>${this.confirmLabel}</button
-					>
+						this.kind === 'prompt'
+							? html`<label
+									>${this.inputLabel ? html`<span>${this.inputLabel}</span>` : nothing}<input
+										type="text"
+										.value=${this.value}
+										placeholder=${this.placeholder}
+										aria-label=${this.inputLabel || this.heading}
+										aria-describedby=${body}
+										autocomplete="off"
+								/></label>`
+							: nothing
+					}
+					<div class="actions">
+						${
+							this.kind === 'alert'
+								? nothing
+								: html`<button class="cancel" type="button" @click=${() => this.finish(false)}
+										>${this.cancelLabel}</button
+									>`
+						}<button class=${confirmClass} type="button" @click=${() => this.finish(true)}
+							>${this.confirmLabel}</button
+						>
+					</div>
 				</div>
-			</div>
+			</dialog>
 		`;
 	}
 }

@@ -96,13 +96,13 @@ describe('File > Open from a cloud place', () => {
 		const { file } = await cloudFile();
 		const closed = vi.fn();
 		const opened = openCloudFile(core, file, chrome(), closed);
-		const dialog = document.querySelector('office-ui-message-dialog') as HTMLElement;
+		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
 		expect(dialog.shadowRoot?.querySelector('[role="alertdialog"]')).not.toBeNull();
 		(dialog.shadowRoot?.querySelector('button.cancel') as HTMLButtonElement).click();
 		expect(await opened).toBe(false);
 		expect(closed).not.toHaveBeenCalled();
 		expect(core.fileName).not.toBe('Cloud.xlsx');
-		expect(document.querySelector('office-ui-message-dialog')).toBeNull();
+		expect(core.host.shadowRoot!.querySelector('office-ui-message-dialog')).toBeNull();
 	});
 
 	it('opens the file once the discard dialog is confirmed', async () => {
@@ -111,7 +111,7 @@ describe('File > Open from a cloud place', () => {
 		const { file } = await cloudFile();
 		const closed = vi.fn();
 		const opened = openCloudFile(core, file, chrome(), closed);
-		const dialog = document.querySelector('office-ui-message-dialog') as HTMLElement;
+		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
 		(dialog.shadowRoot?.querySelector('button.confirm') as HTMLButtonElement).click();
 		await opened;
 		expect(closed).toHaveBeenCalledOnce();

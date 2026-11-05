@@ -1,29 +1,30 @@
+/* The box is a native modal <dialog>, so it enters the top layer and sits above any other modal
+   dialog on the page. The host's own overlay only stands in where showModal is unavailable. */
 :host {
 	position: fixed;
 	inset: 0;
-	/* Above popovers, the File backstage and ordinary dialogs it is asked from. */
 	z-index: calc(var(--office-z-popover) + 200);
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	background: var(--office-overlay);
+}
+:host([data-modal]) {
+	position: static;
+	display: contents;
+	background: none;
 }
 :host([hidden]) {
 	display: none !important;
 }
-.backdrop {
-	position: absolute;
-	inset: 0;
-	background: var(--office-overlay);
-}
-.box {
-	position: relative;
+dialog.box {
 	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	gap: var(--office-space-3);
 	width: min(calc(100vw - 2 * var(--office-space-4)), 26rem);
+	max-width: none;
 	max-height: var(--office-dialog-max-height);
-	padding: var(--office-space-5);
+	margin: auto;
+	padding: 0;
+	overflow: auto;
 	border: var(--office-border-width) solid var(--office-border);
 	border-radius: var(--office-radius-lg);
 	background: var(--office-popover);
@@ -32,8 +33,24 @@
 	font-family: var(--office-font);
 	font-size: var(--office-font-size);
 }
-.box:focus {
+dialog.box:not([open]) {
+	display: none;
+}
+:host(:not([data-modal])) dialog.box {
+	position: relative;
+	inset: auto;
+}
+dialog.box::backdrop {
+	background: var(--office-overlay);
+}
+dialog.box:focus {
 	outline: none;
+}
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-3);
+	padding: var(--office-space-5);
 }
 h2 {
 	margin: 0;
@@ -112,12 +129,12 @@ button:focus-visible {
 	}
 }
 @media (forced-colors: active) {
-	.box {
+	dialog.box {
 		border-color: CanvasText;
 		background: Canvas;
 		color: CanvasText;
 	}
-	.backdrop {
+	dialog.box::backdrop {
 		background: transparent;
 	}
 	button,

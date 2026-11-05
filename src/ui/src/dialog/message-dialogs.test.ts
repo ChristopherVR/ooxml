@@ -62,7 +62,7 @@ describe('message dialogs', () => {
 		expect(await enter).toBe(true);
 
 		const backdrop = confirmDialog({ title: 't', message: 'm' });
-		(shadowOf(dialogs()[0]!).querySelector('.backdrop') as HTMLElement).click();
+		(shadowOf(dialogs()[0]!).querySelector('.box') as HTMLElement).click();
 		expect(await backdrop).toBe(false);
 	});
 
@@ -191,5 +191,16 @@ describe('message dialogs', () => {
 		key(dialogs(shadow)[0]!, 'Escape');
 		await shadowed;
 		expect(dialogs(shadow)).toHaveLength(0);
+	});
+
+	it('mounts into the shadow root of a host element that renders one', async () => {
+		const app = document.createElement('div');
+		app.attachShadow({ mode: 'open' });
+		document.body.append(app);
+		const result = confirmDialog({ title: 't', message: 'm', host: app });
+		expect(dialogs(app.shadowRoot!)).toHaveLength(1);
+		expect(dialogs()).toHaveLength(0);
+		key(dialogs(app.shadowRoot!)[0]!, 'Escape');
+		expect(await result).toBe(false);
 	});
 });
