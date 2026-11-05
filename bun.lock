@@ -84,7 +84,7 @@
         "@angular/platform-browser": "^22.2.4",
         "@ngx-translate/core": "^18.1.0",
         "ai": "^7.0.157",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "html2canvas-pro": "^2.5.4",
         "jspdf": "^4.2.1",
@@ -110,7 +110,7 @@
       "dependencies": {
         "@ai-sdk/openai-compatible": "^3.0.81",
         "ai": "^7.0.157",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
         "ooxml-ui": "workspace:*",
@@ -135,7 +135,7 @@
     "demos/pptx/demo-react": {
       "name": "pptx-react-demo",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "framer-motion": "^14.8.0",
         "html2canvas-pro": "^2.5.4",
@@ -173,7 +173,7 @@
         "@ai-sdk/svelte": "^5.0.157",
         "@lucide/svelte": "^1.64.0",
         "ai": "^7.0.157",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
         "ooxml-demo-onedrive": "workspace:*",
@@ -213,7 +213,7 @@
       "dependencies": {
         "@ai-sdk/openai-compatible": "^3.0.81",
         "ai": "^7.0.157",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
         "ooxml-demo-onedrive": "workspace:*",
@@ -241,7 +241,7 @@
         "@ai-sdk/openai-compatible": "^3.0.81",
         "@ai-sdk/vue": "^4.0.157",
         "ai": "^7.0.157",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "fast-xml-parser": "^5.11.2",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
@@ -270,7 +270,7 @@
       },
       "devDependencies": {
         "@types/node": "^26.6.6",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "vite": "^8.3.5",
       },
     },
@@ -464,7 +464,7 @@
       },
       "dependencies": {
         "@xmldom/xmldom": "^0.9.12",
-        "emf-converter": "^4.24.0",
+        "emf-converter": "^4.25.3",
         "fast-xml-parser": "^5.11.2",
         "fflate": "^0.8.3",
         "jszip": "^3.10.2",
@@ -518,7 +518,7 @@
       "version": "1.40.0",
       "dependencies": {
         "dompurify": "^3.4.17",
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "lit": "^3.3.3",
         "ooxml-core": "*",
         "opentype.js": "^2.0.0",
@@ -929,7 +929,7 @@
         "@types/node": "^26.6.6",
         "@types/node-forge": "^1.3.14",
         "@xmldom/xmldom": "^0.9.12",
-        "emf-converter": "^4.24.0",
+        "emf-converter": "^4.25.3",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
         "node-forge": "^1.4.2",
@@ -1058,7 +1058,7 @@
         "html2canvas-pro": "^2.5.4",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
-        "ooxml-core": "^1.38.0",
+        "ooxml-core": "^1.38.1",
         "ooxml-ui": "^1.40.0",
         "opentype.js": "^2.0.0",
       },
@@ -1138,7 +1138,7 @@
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
         "lucide": "^1.64.0",
-        "ooxml-core": "^1.38.0",
+        "ooxml-core": "^1.38.1",
         "ooxml-ui": "^1.40.0",
         "opentype.js": "^2.0.0",
       },
@@ -1178,7 +1178,7 @@
         "html2canvas-pro": "^2.5.4",
         "jspdf": "^4.2.1",
         "lucide-vue-next": "^1.0.0",
-        "ooxml-core": "^1.38.0",
+        "ooxml-core": "^1.38.1",
         "ooxml-ui": "^1.40.0",
         "opentype.js": "^2.0.0",
         "tailwind-merge": "^3.7.0",
@@ -1377,7 +1377,7 @@
       "name": "@christophervr/visio-viewer",
       "version": "0.0.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
       },
@@ -1418,10 +1418,10 @@
       "name": "visio-angular-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
       "devDependencies": {
         "@angular/compiler": "^22.2.4",
@@ -1468,10 +1468,10 @@
       "name": "visio-react-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
       "devDependencies": {
         "@types/react": "^19.3.0",
@@ -1486,10 +1486,10 @@
       "name": "visio-solid-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
       "peerDependencies": {
         "solid-js": "^1.9.0",
@@ -1499,10 +1499,10 @@
       "name": "visio-svelte-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
       "peerDependencies": {
         "svelte": "^5.0.0",
@@ -1512,20 +1512,20 @@
       "name": "visio-vanilla-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
     },
     "viewers/visio/packages/vue": {
       "name": "visio-vue-viewer",
       "version": "1.2.0",
       "dependencies": {
-        "emf-converter": "4.24.0",
+        "emf-converter": "4.25.3",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^1.0.1",
+        "visio-core": "^1.1.0",
       },
       "peerDependencies": {
         "vue": "^3.5.0",
@@ -2822,7 +2822,7 @@
 
     "electron-to-chromium": ["electron-to-chromium@1.5.444", "", {}, "sha512-5ss/uJfoDYDHT0lfJzT6FbcskIzROIOPf0BbbFkGcvDzoJU7i//9GDrwwIHQVmIsrAGiF3ihpADBRIsrEFt1rQ=="],
 
-    "emf-converter": ["emf-converter@4.24.0", "", { "peerDependencies": { "@napi-rs/canvas": "^1.0.9" }, "optionalPeers": ["@napi-rs/canvas"], "bin": { "emf-converter": "dist/cli.mjs" } }, "sha512-U5WloUx6B9+RysfsOxftPNwfqzm4YhP7E7YCd/4iDf+W425E3QO49MFD/9aDu2aJljSp4Z22GbTHbPp+VywXlQ=="],
+    "emf-converter": ["emf-converter@4.25.3", "", { "peerDependencies": { "@napi-rs/canvas": "^1.0.9" }, "optionalPeers": ["@napi-rs/canvas"], "bin": { "emf-converter": "dist/cli.mjs" } }, "sha512-ah8/BKBvpe4xcfyZGAxSoboako0FgV+voT9EqigDtiwjyMpFyFvjnBwSab2bzYGtU0hAmNOFMNp4Eh5veFfryg=="],
 
     "emoji-regex": ["emoji-regex@10.6.0", "", {}, "sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A=="],
 

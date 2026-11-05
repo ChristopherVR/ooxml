@@ -44,7 +44,7 @@
 		"test:browser:building-blocks": "playwright test --config native-blocks.playwright.config.ts"
 	},
 	"dependencies": {
-		"emf-converter": "4.24.0",
+		"emf-converter": "4.25.3",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
