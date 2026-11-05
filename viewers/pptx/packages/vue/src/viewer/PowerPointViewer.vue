@@ -1509,6 +1509,12 @@ const ribbonActions = useRibbonActions({
 	ops,
 });
 const { ribbonMode, ribbonUpdateTextStyle, ribbonMoveToEdge } = ribbonActions;
+// What the chrome shows. A viewer that may not edit (host, cloud file, Protected View) keeps the
+// editing chrome with its commands disabled, like the other bindings, so File stays reachable to
+// open an editable document. Only a requested preview (`setMode('preview')`) hides the ribbon.
+const chromeMode = computed(() =>
+	ribbonMode.value === 'preview' && editingRequested.value ? 'edit' : ribbonMode.value,
+);
 
 watch(ribbonMode, (mode) => {
 	emit('mode-change', mode);
@@ -1868,6 +1874,7 @@ const baseRibbonProps = useViewerRibbonProps({
 	},
 	presentationProperties,
 	ribbonActions,
+	chromeMode,
 	drag,
 	insertion,
 	templateInsertion,
@@ -2129,7 +2136,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     parity), gated like React on desktop + non-present. -->
 				<TitleBar
 					v-if="!isMobile && panelVisible('titleBar')"
-					:mode="ribbonMode"
+					:mode="chromeMode"
 					:can-edit="canEditEffective"
 					:file-name="cloudView.fileName"
 					:is-dirty="autosave.isDirty.value"
@@ -2172,7 +2179,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					<!-- Options > Quick Access Toolbar > "below the Ribbon" -->
 					<TitleBar
 						placement="belowRibbon"
-						:mode="ribbonMode"
+						:mode="chromeMode"
 						:can-edit="canEditEffective"
 						:is-dirty="autosave.isDirty.value"
 						:autosave-enabled="autosaveActive"
@@ -2369,7 +2376,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:on-close-ai-panel="() => (aiPanelOpen = false)"
 					:ai-panel="aiPanel"
 					:ai-bridge="aiBridge"
-					:ribbon-mode="ribbonMode"
+					:ribbon-mode="chromeMode"
 					:go-to="goTo"
 					:on-inspector-update="inspector.onInspectorUpdate"
 					:on-update-slide-animations="inspector.writeSlideAnimations"
@@ -2418,7 +2425,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				"
 				:last-saved-at="autosave.lastSavedAt.value"
 				:scale="zoom"
-				:mode="ribbonMode"
+				:mode="chromeMode"
 				:is-notes-expanded="notesExpanded"
 				:show-notes="canEditEffective && panelVisible('notes')"
 				:hidden-actions="effectiveHiddenActions"

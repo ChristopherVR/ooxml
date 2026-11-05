@@ -258,12 +258,12 @@ describe('createRibbon', () => {
 		expect(handlers.nav.toggleInspector).toHaveBeenCalledOnce();
 	});
 
-	it('setEditState hides the primary row and tab bar when not editable', () => {
+	it('setEditState keeps the primary row and tab bar when not editable, so File stays reachable', () => {
 		const t = createTranslator();
 		const ribbon = createRibbon(document, t, buildHandlers());
 		ribbon.setEditState({ editable: false, canUndo: false, canRedo: false });
-		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-primary')?.hidden).toBeTruthy();
-		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-tabs')?.hidden).toBeTruthy();
+		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-primary')?.hidden).toBeFalsy();
+		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-tabs')?.hidden).toBeFalsy();
 
 		ribbon.setEditState({ editable: true, canUndo: true, canRedo: false });
 		expect(ribbon.el.querySelector<HTMLElement>('.pptxv-ribbon-primary')?.hidden).toBeFalsy();

@@ -1859,3 +1859,4 @@ export * from './viewer-event-payloads';
 // The Find and Replace bar's session (matches, cursor, replace plans) and its actions.
 export * from './find-replace-session';
 export * from './find-replace-session-actions';
+export * from './viewer-api-guard';

@@ -1,6 +1,7 @@
 import {
 	commitElementUpdateBatch,
 	clampZoomScale,
+	gateViewerEdits,
 	prepareElementForInsertion,
 	slideSpaceElement,
 } from 'ooxml-ui/pptx';
@@ -91,137 +92,140 @@ export function useViewerApi(options: UseViewerApiOptions): ViewerApiHandle {
 	const slideAt = (index?: number): PptxSlide | undefined =>
 		slides.value[index ?? activeSlideIndex.value];
 
-	return {
-		getContent: options.getContent,
-		goTo: options.goTo,
-		goPrev: options.goPrev,
-		goNext: options.goNext,
-		undo: () => history.undo(),
-		redo: () => history.redo(),
-		canUndo: () => history.canUndo.value,
-		canRedo: () => history.canRedo.value,
-		getZoom: () => zoom.value,
-		setZoom: (level: number) => {
-			// Shared clamp, not a hand-rolled one, so every binding refuses the same
-			// out-of-range zoom.
-			zoom.value = clampZoomScale(level);
-		},
-		zoomIn: options.zoomIn,
-		zoomOut: options.zoomOut,
-		zoomReset: options.zoomReset,
-		getMode: () => options.mode.value,
-		setMode: (newMode) => {
-			if (
-				newMode === 'preview' &&
-				(options.mode.value === 'edit' || options.mode.value === 'master')
-			) {
-				options.commitPendingText();
-			}
-			if (newMode !== 'present') {
-				options.setEditingRequested(newMode !== 'preview');
-			}
-			if (newMode === 'present') {
-				options.startPresenting();
-			} else if (newMode === 'master') {
-				options.showMasterView.value = true;
-			} else {
-				options.presenting.value = false;
-				options.showMasterView.value = false;
-			}
-		},
-		getActiveSlideIndex: () => activeSlideIndex.value,
-		setActiveSlideIndex: (index: number) => options.goTo(index),
-		getSlideCount: () => slideCount.value,
-		isDirty: () => options.isDirty.value,
-		// -- Slide access --
-		getSlides: () => slides.value,
-		getSlide: (index: number) => slides.value[index],
-		getActiveSlide: () => activeSlide.value,
-		// -- Slide manipulation --
-		addSlide: (afterIndex?: number) => slideOps.addSlide(afterIndex),
-		deleteSlides: (indexes: number[]) => {
-			// Descending, so each removal cannot shift the index of one still pending.
-			for (const i of [...indexes].sort((a, b) => b - a)) {
-				slideOps.deleteSlide(i);
-			}
-		},
-		duplicateSlides: (indexes: number[]) => {
-			for (const i of indexes) {
-				slideOps.duplicateSlide(i);
-			}
-		},
-		moveSlide: (from: number, to: number) => slideOps.moveSlide(from, to),
-		toggleHideSlides: (indexes: number[]) => {
-			for (const i of indexes) {
-				options.toggleSlideHidden(i);
-			}
-		},
-		// -- Element access --
-		getElements: (slideIndex?: number) => slideAt(slideIndex)?.elements ?? [],
-		// A group member too (selected by drilling into its group), in slide space
-		// like the editor shows it (shared `slideSpaceElement`).
-		getElementById: (elementId: string, slideIndex?: number) => {
-			const slide = slideAt(slideIndex);
-			return slide ? (slideSpaceElement(slide.elements, elementId) ?? undefined) : undefined;
-		},
-		// -- Element manipulation --
-		addElement: (element: PptxElement) => {
-			const prepared = prepareElementForInsertion(element, {
-				canEdit: options.canEdit.value,
-				mode: options.presenting.value
-					? 'present'
-					: options.showMasterView.value
-						? 'master'
-						: options.mode.value,
-				hasActiveSlide:
-					!options.loading.value && !options.error.value && Boolean(activeSlide.value),
-				editTemplateMode: options.editTemplateMode.value,
-			});
-			if (!prepared) {
-				return undefined;
-			}
-			options.commitPendingText();
-			elementOps.addElement(prepared);
-			return prepared.id;
-		},
-		updateElements: async (updates, batchOptions) => {
-			commitElementUpdateBatch(updates, batchOptions, {
-				getTarget: () => ({
+	return gateViewerEdits(
+		{
+			getContent: options.getContent,
+			goTo: options.goTo,
+			goPrev: options.goPrev,
+			goNext: options.goNext,
+			undo: () => history.undo(),
+			redo: () => history.redo(),
+			canUndo: () => history.canUndo.value,
+			canRedo: () => history.canRedo.value,
+			getZoom: () => zoom.value,
+			setZoom: (level: number) => {
+				// Shared clamp, not a hand-rolled one, so every binding refuses the same
+				// out-of-range zoom.
+				zoom.value = clampZoomScale(level);
+			},
+			zoomIn: options.zoomIn,
+			zoomOut: options.zoomOut,
+			zoomReset: options.zoomReset,
+			getMode: () => options.mode.value,
+			setMode: (newMode) => {
+				if (
+					newMode === 'preview' &&
+					(options.mode.value === 'edit' || options.mode.value === 'master')
+				) {
+					options.commitPendingText();
+				}
+				if (newMode !== 'present') {
+					options.setEditingRequested(newMode !== 'preview');
+				}
+				if (newMode === 'present') {
+					options.startPresenting();
+				} else if (newMode === 'master') {
+					options.showMasterView.value = true;
+				} else {
+					options.presenting.value = false;
+					options.showMasterView.value = false;
+				}
+			},
+			getActiveSlideIndex: () => activeSlideIndex.value,
+			setActiveSlideIndex: (index: number) => options.goTo(index),
+			getSlideCount: () => slideCount.value,
+			isDirty: () => options.isDirty.value,
+			// -- Slide access --
+			getSlides: () => slides.value,
+			getSlide: (index: number) => slides.value[index],
+			getActiveSlide: () => activeSlide.value,
+			// -- Slide manipulation --
+			addSlide: (afterIndex?: number) => slideOps.addSlide(afterIndex),
+			deleteSlides: (indexes: number[]) => {
+				// Descending, so each removal cannot shift the index of one still pending.
+				for (const i of [...indexes].sort((a, b) => b - a)) {
+					slideOps.deleteSlide(i);
+				}
+			},
+			duplicateSlides: (indexes: number[]) => {
+				for (const i of indexes) {
+					slideOps.duplicateSlide(i);
+				}
+			},
+			moveSlide: (from: number, to: number) => slideOps.moveSlide(from, to),
+			toggleHideSlides: (indexes: number[]) => {
+				for (const i of indexes) {
+					options.toggleSlideHidden(i);
+				}
+			},
+			// -- Element access --
+			getElements: (slideIndex?: number) => slideAt(slideIndex)?.elements ?? [],
+			// A group member too (selected by drilling into its group), in slide space
+			// like the editor shows it (shared `slideSpaceElement`).
+			getElementById: (elementId: string, slideIndex?: number) => {
+				const slide = slideAt(slideIndex);
+				return slide ? (slideSpaceElement(slide.elements, elementId) ?? undefined) : undefined;
+			},
+			// -- Element manipulation --
+			addElement: (element: PptxElement) => {
+				const prepared = prepareElementForInsertion(element, {
 					canEdit: options.canEdit.value,
 					mode: options.presenting.value
 						? 'present'
 						: options.showMasterView.value
 							? 'master'
 							: options.mode.value,
-					loaded: !options.loading.value && !options.error.value,
+					hasActiveSlide:
+						!options.loading.value && !options.error.value && Boolean(activeSlide.value),
 					editTemplateMode: options.editTemplateMode.value,
-				}),
-				getSlides: () => slides.value,
-				hasActivePointerInteraction: () => options.hasActivePointerInteraction(),
-				commitPendingText: options.commitPendingText,
-				commitSlides: (next, label) => {
-					history.pushHistory(label);
-					slides.value = next;
-					options.isDirty.value = true;
-				},
-			});
+				});
+				if (!prepared) {
+					return undefined;
+				}
+				options.commitPendingText();
+				elementOps.addElement(prepared);
+				return prepared.id;
+			},
+			updateElements: async (updates, batchOptions) => {
+				commitElementUpdateBatch(updates, batchOptions, {
+					getTarget: () => ({
+						canEdit: options.canEdit.value,
+						mode: options.presenting.value
+							? 'present'
+							: options.showMasterView.value
+								? 'master'
+								: options.mode.value,
+						loaded: !options.loading.value && !options.error.value,
+						editTemplateMode: options.editTemplateMode.value,
+					}),
+					getSlides: () => slides.value,
+					hasActivePointerInteraction: () => options.hasActivePointerInteraction(),
+					commitPendingText: options.commitPendingText,
+					commitSlides: (next, label) => {
+						history.pushHistory(label);
+						slides.value = next;
+						options.isDirty.value = true;
+					},
+				});
+			},
+			updateElement: (elementId: string, updates: Partial<PptxElement>) => {
+				elementOps.updateElement(elementId, updates);
+			},
+			deleteElements: (elementIds: string[]) => {
+				for (const id of elementIds) {
+					elementOps.removeElement(id);
+				}
+			},
+			duplicateElement: (elementId: string) => elementOps.duplicateElement(elementId),
+			// -- Selection --
+			getSelectedElementIds: () => selectedElementIds.value,
+			selectElements: (ids: string[]) => {
+				selectedElementIds.value = ids;
+			},
+			clearSelection: () => {
+				selectedElementIds.value = [];
+			},
 		},
-		updateElement: (elementId: string, updates: Partial<PptxElement>) => {
-			elementOps.updateElement(elementId, updates);
-		},
-		deleteElements: (elementIds: string[]) => {
-			for (const id of elementIds) {
-				elementOps.removeElement(id);
-			}
-		},
-		duplicateElement: (elementId: string) => elementOps.duplicateElement(elementId),
-		// -- Selection --
-		getSelectedElementIds: () => selectedElementIds.value,
-		selectElements: (ids: string[]) => {
-			selectedElementIds.value = ids;
-		},
-		clearSelection: () => {
-			selectedElementIds.value = [];
-		},
-	};
+		() => options.canEdit.value,
+	);
 }
