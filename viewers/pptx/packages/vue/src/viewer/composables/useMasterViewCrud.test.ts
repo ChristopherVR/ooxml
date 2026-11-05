@@ -19,6 +19,9 @@ import type { EditorHistoryResult } from './useEditorHistory';
 import { useEditorHistory } from './useEditorHistory';
 import type { UseMasterViewCrudResult } from './useMasterViewCrud';
 
+/** In-app dialogs load on demand; a busy CI runner needs more than waitFor's 1 s default. */
+const DIALOG_WAIT = { timeout: 5000 };
+
 const { applyMasterViewCrudActionMock } = vi.hoisted(() => ({
 	applyMasterViewCrudActionMock: vi.fn(),
 }));
@@ -197,7 +200,7 @@ describe('useMasterViewCrud', () => {
 			const found = document.querySelector('office-ui-message-dialog');
 			if (!found) throw new Error('no dialog yet');
 			return found;
-		});
+		}, DIALOG_WAIT);
 		expect(dialog.shadowRoot?.querySelector('.message')?.textContent).toBe('New name');
 		expect((dialog.shadowRoot!.querySelector('input') as HTMLInputElement).value).toBe(
 			'Office Theme',

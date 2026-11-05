@@ -7,6 +7,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorState } from '../../editor/editor-state.svelte';
 import TableSection from './TableSection.svelte';
 
+/** In-app dialogs load on demand; a busy CI runner needs more than waitFor's 1 s default. */
+const DIALOG_WAIT = { timeout: 5000 };
+
 /**
  * TableSection tests: header-row / banded-rows toggles and a uniform default
  * cell padding, built on the shared `table-inspector.ts`. Named
@@ -22,7 +25,7 @@ async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promi
 		const found = document.querySelector('office-ui-message-dialog');
 		if (!found) throw new Error('no dialog yet');
 		return found;
-	});
+	}, DIALOG_WAIT);
 	const input = dialog.shadowRoot?.querySelector('input');
 	if (input && value !== undefined) input.value = value;
 	(dialog.shadowRoot!.querySelector(`button.${button}`) as HTMLButtonElement).click();

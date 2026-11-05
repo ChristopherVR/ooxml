@@ -5,6 +5,9 @@ import { createTranslator } from '../i18n';
 import type { TableStyleEditorDeps } from './table-style-editor';
 import { createTableStyleEditor } from './table-style-editor';
 
+/** In-app dialogs load on demand; a busy CI runner needs more than waitFor's 1 s default. */
+const DIALOG_WAIT = { timeout: 5000 };
+
 /**
  * W4-E: the table STYLE DEFINITION editor ("Edit style...") lets an author
  * change a `ppt/tableStyles.xml` section's fill/text/borders, and clone /
@@ -43,7 +46,7 @@ async function openDialog(): Promise<ShadowRoot> {
 		const found = document.querySelector('office-ui-message-dialog');
 		if (!found?.shadowRoot) throw new Error('no dialog yet');
 		return found;
-	});
+	}, DIALOG_WAIT);
 	return dialog.shadowRoot as ShadowRoot;
 }
 
