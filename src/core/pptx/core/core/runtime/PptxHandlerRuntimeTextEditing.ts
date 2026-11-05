@@ -1,5 +1,8 @@
 import { TextSegment, TextStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeTextRunStyleExtraction';
+import { paragraphContentEntries } from './paragraph-sibling-order';
+
+const REWRITE_CONTENT_TAGS: ReadonlySet<string> = new Set(['a:r', 'a:fld', 'a:br']);
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected extractTextSegmentsFromTxBodyForRewrite(
@@ -77,16 +80,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				});
 			};
 
-			const runs = this.ensureArray(paragraph['a:r']) as XmlObject[];
-			runs.forEach((run) => {
-				if (!run) {
-					return;
-				}
-				appendRunSegment(run['a:t'], run['a:rPr'] as XmlObject | undefined);
-			});
-
-			const fields = this.ensureArray(paragraph['a:fld']) as XmlObject[];
-			fields.forEach((field) => {
+			const appendField = (field: XmlObject | undefined): void => {
 				if (!field) {
 					return;
 				}
@@ -112,19 +106,29 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					fieldType,
 					fieldGuid,
 				});
-			});
+			};
+
+			// Replay runs, fields and breaks in authored order: grouping them by tag
+			// moved every soft break to the end of its paragraph.
+			for (const [tag, item] of paragraphContentEntries(paragraph, REWRITE_CONTENT_TAGS).entries) {
+				if (tag === 'a:br') {
+					segments.push({
+						text: '\n',
+						style: this.cloneTextStyleValue(paragraphDefaultStyle),
+					});
+				} else if (tag === 'a:fld') {
+					appendField(item as XmlObject | undefined);
+				} else {
+					const run = item as XmlObject | undefined;
+					if (run) {
+						appendRunSegment(run['a:t'], run['a:rPr'] as XmlObject | undefined);
+					}
+				}
+			}
 
 			if (paragraph['a:t'] !== undefined) {
 				appendRunSegment(paragraph['a:t'], paragraph['a:rPr'] as XmlObject | undefined);
 			}
-
-			const lineBreaks = this.ensureArray(paragraph['a:br']);
-			lineBreaks.forEach(() => {
-				segments.push({
-					text: '\n',
-					style: this.cloneTextStyleValue(paragraphDefaultStyle),
-				});
-			});
 
 			if (paragraphIndex < paragraphs.length - 1) {
 				segments.push({

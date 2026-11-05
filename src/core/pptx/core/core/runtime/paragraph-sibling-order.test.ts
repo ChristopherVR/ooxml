@@ -61,13 +61,23 @@ describe('paragraph sibling order', () => {
 		expect(contentSequence(txBody).map(([tag]) => tag)).toStrictEqual(['a:r', 'a:br', 'a:r']);
 	});
 
-	it('reports a grouped paragraph as unauthored so callers keep their fallback', () => {
+	it('reports a source-scanned grouped paragraph as authored so no break is spread', () => {
 		const txBody = parseParagraph(`<a:p>${RUN('a')}${RUN('b')}${FLD('slidenum', '#')}</a:p>`);
 		const paragraph = txBody['a:p'] as XmlObject;
 		const { entries, authored } = paragraphContentEntries(paragraph, CONTENT_TAGS);
-		// Grouped by tag already: key iteration is correct, nothing recorded.
-		expect(authored).toBeFalsy();
+		// Grouped by tag already: key iteration IS the authored order (issue 249).
+		expect(authored).toBe(true);
 		expect(entries.map(([tag]) => tag)).toStrictEqual(['a:r', 'a:r', 'a:fld']);
+	});
+
+	it('replays segments for a rewrite in authored order', () => {
+		const txBody = parseParagraph(`<a:p>${RUN('one')}<a:br/>${RUN('two')}<a:br/></a:p>`);
+		expect(contentSequence(txBody).map(([tag]) => tag)).toStrictEqual([
+			'a:r',
+			'a:br',
+			'a:r',
+			'a:br',
+		]);
 	});
 
 	it('resolves each paragraph against its own order when several are mixed', () => {

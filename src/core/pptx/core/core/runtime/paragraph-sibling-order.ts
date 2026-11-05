@@ -51,6 +51,14 @@ import {
 const childOrder = new WeakMap<XmlObject, readonly string[]>();
 
 /**
+ * Parsed `a:p` objects whose source was scanned and found already grouped by
+ * tag. Their key order IS the authored order (`<a:r/><a:r/><a:br/>`), so the
+ * legacy collapsed-break repair must not run for them: it would spread the
+ * trailing break into a phantom line break after the first run.
+ */
+const groupedParagraphs = new WeakSet<XmlObject>();
+
+/**
  * Whether `node` (a run's own `a:rPr`, or a field's own `a:rPr`) authors a
  * Latin, East Asian, or complex-script typeface of ITS OWN.
  *
@@ -175,7 +183,12 @@ export function annotateParagraphSiblingOrder(xml: string, parsed: unknown): voi
 
 	for (const paragraph of collectParsedParagraphs(parsed)) {
 		const order = bySignature.get(parsedParagraphSignature(paragraph))?.shift();
-		if (order && !isGroupedByTag(order)) {
+		if (!order) {
+			continue;
+		}
+		if (isGroupedByTag(order)) {
+			groupedParagraphs.add(paragraph);
+		} else {
 			childOrder.set(paragraph, order);
 		}
 	}
@@ -213,7 +226,7 @@ export function paragraphContentEntries(
 				? ensureItems(paragraph[key]).map((item) => [key, item] as [string, unknown])
 				: [],
 		);
-		return { entries, authored: false };
+		return { entries, authored: groupedParagraphs.has(paragraph) };
 	}
 
 	const consumed = new Map<string, number>();
