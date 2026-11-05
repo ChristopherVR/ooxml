@@ -74,9 +74,21 @@ function window(name: string) {
 }
 
 describe('File > Share', () => {
+	it('opens the Share dialog from Share with people, and refuses a second session', async () => {
+		const a = window('Ada');
+		const opened = vi.fn();
+		a.share.onOpen = opened;
+		a.root.querySelector<HTMLButtonElement>('[data-share="open"]')!.click();
+		expect(opened).toHaveBeenCalledTimes(1);
+		const room = `test-${Math.random().toString(36).slice(2, 8)}`;
+		await a.share.start({ roomId: room });
+		await expect(a.share.start({ roomId: room })).rejects.toThrow(/Stop the current/);
+		a.share.stop();
+	});
+
 	it('rejects session names the core would refuse', async () => {
 		const a = window('Ada');
-		await a.share.start('no spaces');
+		await expect(a.share.start({ roomId: 'no spaces' })).rejects.toThrow(/letters, digits/);
 		expect(a.share.active).toBe(false);
 		expect(a.root.querySelector('.share-status')!.textContent).toMatch(/letters, digits/);
 	});
@@ -86,12 +98,12 @@ describe('File > Share', () => {
 		const a = window('Ada');
 		await a.controller.load(await createVsdx());
 		await a.controller.applyEdits([rect('1', 1), rect('2', 3)]);
-		await a.share.start(room);
+		await a.share.start({ roomId: room });
 		expect(a.share.active).toBe(true);
 		expect(a.root.querySelector<HTMLElement>('[data-share="stop"]')!.hidden).toBe(false);
 
 		const b = window('Grace');
-		await b.share.start(room);
+		await b.share.start({ roomId: room });
 		// The joiner had nothing open: it loads the room's drawing.
 		await until(() => pins(b).length === 2);
 		await until(() => b.people().includes('Ada') && a.people().includes('Grace'));
@@ -123,9 +135,9 @@ describe('File > Share', () => {
 		a.controller.onEvent((name) => {
 			if (name === 'document-load') a.controller.setZoom(2);
 		});
-		await a.share.start(room);
+		await a.share.start({ roomId: room });
 		const b = window('Grace');
-		await b.share.start(room);
+		await b.share.start({ roomId: room });
 		await until(() => b.people().includes('Ada') && a.people().includes('Grace'));
 
 		const source = await createVsdx();
@@ -187,7 +199,7 @@ describe('the collaboration contract on the share controller', () => {
 		const states: CollaborationState[] = [];
 		a.share.onChange = (state) => states.push(state);
 		const room = `panel-${Math.random().toString(36).slice(2, 8)}`;
-		await a.share.start(room);
+		await a.share.start({ roomId: room });
 		expect(a.share.state).toMatchObject({ active: true, roomId: room });
 		expect(a.share.wanted).toBeNull();
 		expect(states.at(-1)?.active).toBe(true);

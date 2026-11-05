@@ -37,6 +37,7 @@ import { editorStyleText } from './theme';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
+import { attachShareDialog, type ShareDialogController } from '../dialog/share-controller';
 import { createChartFormatPane } from './chart-format-pane';
 import { createChartExPane } from './chart-ex-pane';
 import { createSmartArtController } from './smartart-controller';
@@ -58,6 +59,8 @@ export interface Shell {
 	readonly chrome: FileChrome;
 	saveState(): SaveState;
 	fileCommand(command: FileCommand, fileName?: string): Promise<void>;
+	/** The Share dialog (Share button, File > Share, `element.share()`). */
+	readonly share: ShareDialogController;
 }
 
 function safeMount(name: string, mount: () => unknown): void {
@@ -89,6 +92,8 @@ export function buildShell(core: EditorCore): Shell {
 		runFileCommand(core, command, fileName, {
 			chrome,
 			openBackstage: (page) => backstage.open(page),
+			// Over File > Share when it is open, as in Office; its summary follows the session.
+			openShare: () => share.open(),
 		});
 	const closeBackstage = () => {
 		backstage.close();
@@ -145,7 +150,7 @@ export function buildShell(core: EditorCore): Shell {
 		},
 		share: {
 			state: () => core.collab.state(),
-			start: (roomId) => core.collab.start({ roomId }),
+			open: () => void fileCommand('share'),
 			stop: () => core.collab.stop(),
 		},
 		hiddenActions: () => core.hiddenActions,
@@ -292,7 +297,25 @@ export function buildShell(core: EditorCore): Shell {
 		focusRegion(next);
 	};
 	installKeyboard(ctx, actions);
-	element.addEventListener('collaboration-change', () => backstage.refresh('share'));
+	const share = attachShareDialog({
+		container: root,
+		host: {
+			state: () => core.collab.state(),
+			start: (options) => core.collab.start(options),
+			stop: () => core.collab.stop(),
+		},
+		roomPrefix: 'book',
+		defaults: () => ({ userName: core.authorName }),
+		locale: () => core.locale,
+		note: () =>
+			ctx.t(
+				'Cell values, formulas, formats, sheets, rows, columns, merges and names are shared. Charts, pictures, comments, conditional formats, data validation, tables and page setup stay in this window.',
+			),
+	});
+	element.addEventListener('collaboration-change', () => {
+		backstage.refresh('share');
+		share.refresh();
+	});
 
 	core.shell = {
 		render() {
@@ -319,6 +342,7 @@ export function buildShell(core: EditorCore): Shell {
 			ribbonActions.relocalize();
 			statusBar.relocalize();
 			backstage.relocalize();
+			share.relocalize();
 			chartFormatPane.relocalize();
 			chartExPane.relocalize();
 			smartArt.relocalize();
@@ -334,5 +358,6 @@ export function buildShell(core: EditorCore): Shell {
 		chrome,
 		saveState: () => saveState,
 		fileCommand,
+		share,
 	};
 }

@@ -19,6 +19,10 @@ export const enBackstage: Readonly<Record<string, string>> = {
 		'Edit this drawing together with other windows of this browser. Open the same session name in another window to join.',
 	'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.':
 		'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.',
+	'Edit this drawing together with other people. Everyone who joins the same session sees changes as they are made.':
+		'Edit this drawing together with other people. Everyone who joins the same session sees changes as they are made.',
+	'The whole drawing is shared; when two people change it at once, the last change wins.':
+		'The whole drawing is shared; when two people change it at once, the last change wins.',
 	'People in this session': 'People in this session',
 	'Product Information': 'Product Information',
 	'Visio viewer (beta). No sign-in or subscription is used.':

@@ -6,6 +6,7 @@ export const collab: Record<string, string> = {
 	'Session name': '会话名称',
 	'Start sharing': '开始共享',
 	'Stop sharing': '停止共享',
+	'Share with people': '与他人共享',
 	'People in this session': '此会话中的人员',
 	'Session: {room}': '会话：{room}',
 	'Not sharing.': '未在共享。',

@@ -67,6 +67,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-chart-data-sheet',
 	'office-ui-progress-dialog',
 	'office-ui-message-dialog',
+	'office-ui-share-dialog',
 	'office-ui-presence',
 	'office-ui-smartart',
 	'office-ui-smartart-picker',

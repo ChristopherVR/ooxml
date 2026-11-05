@@ -61,7 +61,8 @@ export function shellCommands(handlers: ShellCommandHandlers): Command[] {
 			id: 'file.share',
 			label: 'Share',
 			icon: 'share',
-			run: () => handlers.openBackstage('share'),
+			// Announced as `file-command` first, so a host with its own sharing takes it over.
+			run: () => handlers.fileCommand('share'),
 		},
 		{
 			id: 'file.options',

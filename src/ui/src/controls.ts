@@ -56,6 +56,7 @@ import { defineChartPicker } from './dialog/chart-picker';
 import { defineChartDataSheet } from './chart/data-sheet';
 import { defineProgressDialog } from './dialog/progress-dialog';
 import { defineMessageDialog } from './dialog/message-dialog';
+import { defineShareDialog } from './dialog/share-dialog';
 
 export {
 	defineAccount,
@@ -104,6 +105,7 @@ export {
 	defineChartDataSheet,
 	defineProgressDialog,
 	defineMessageDialog,
+	defineShareDialog,
 	defineCloudFiles,
 	defineOpenPlaces,
 };
@@ -125,6 +127,14 @@ export type {
 	OfficeMessageDialogTone,
 } from './dialog/message-dialog';
 export { alertDialog, confirmDialog, promptDialog } from './dialog/message-dialogs';
+export { OfficeUiShareDialog, type OfficeShareStartEvent } from './dialog/share-dialog';
+export {
+	SHARE_DIALOG_LABELS,
+	SHARE_DIALOG_LOCALES,
+	shareDialogLabels,
+	type OfficeShareDialogLabels,
+	type ShareDialogLocale,
+} from './dialog/share-dialog-locales';
 export type {
 	MessageDialogHost,
 	MessageDialogOptions,
@@ -331,6 +341,7 @@ export const CONTROL_DEFINERS = [
 	defineChartDataSheet,
 	defineProgressDialog,
 	defineMessageDialog,
+	defineShareDialog,
 	defineCloudFiles,
 	defineOpenPlaces,
 ] as const;

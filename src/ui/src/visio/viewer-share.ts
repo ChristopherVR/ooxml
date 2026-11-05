@@ -42,8 +42,7 @@ interface Joined {
  */
 export class ViewerShare {
 	readonly #panel: HTMLElement;
-	readonly #room: HTMLInputElement;
-	readonly #start: HTMLButtonElement;
+	readonly #open: HTMLButtonElement;
 	readonly #stop: HTMLButtonElement;
 	readonly #status: HTMLElement;
 	readonly #people: Presence;
@@ -57,6 +56,8 @@ export class ViewerShare {
 	onChange: (state: CollaborationState) => void = () => {};
 	/** Called with the failure of a declarative join. */
 	onError: (error: Error) => void = () => {};
+	/** File > Share > Share with people: the element opens the Share dialog. */
+	onOpen: () => void = () => {};
 	constructor(
 		root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -66,13 +67,11 @@ export class ViewerShare {
 			import('ooxml-core/visio/collab'),
 	) {
 		this.#panel = root.querySelector('.share-panel')!;
-		this.#room = this.#panel.querySelector('.share-room')!;
-		this.#start = this.#panel.querySelector('[data-share="start"]')!;
+		this.#open = this.#panel.querySelector('[data-share="open"]')!;
 		this.#stop = this.#panel.querySelector('[data-share="stop"]')!;
 		this.#status = this.#panel.querySelector('.share-status')!;
 		this.#people = this.#panel.querySelector<Presence>('office-ui-presence')!;
 		this.#viewport = root.querySelector<HTMLElement>('.viewport');
-		this.#room.value = `visio-${Math.random().toString(36).slice(2, 8)}`;
 	}
 	get active(): boolean {
 		return this.#joined !== null;
@@ -111,7 +110,7 @@ export class ViewerShare {
 			'click',
 			(event) => {
 				const action = (event.target as Element).closest?.<HTMLElement>('[data-share]');
-				if (action?.dataset.share === 'start') void this.start(this.#room.value.trim());
+				if (action?.dataset.share === 'open') this.onOpen();
 				if (action?.dataset.share === 'stop') this.stop();
 			},
 			{ signal: events.signal },
@@ -124,25 +123,30 @@ export class ViewerShare {
 			this.#leave();
 		};
 	}
-	/** The panel's Start: a room of this browser's own. */
-	async start(roomId: string): Promise<void> {
-		if (this.#joined || this.#starting) return;
+	/**
+	 * The Share dialog's Start or Join. Rejects (and says why on File > Share) when a session is
+	 * already open or the room cannot be opened.
+	 */
+	async start(options: VisioCollaborationOptions): Promise<void> {
+		if (this.#joined || this.#starting)
+			throw new Error('Stop the current collaboration session first.');
 		try {
-			await this.#open({ roomId });
+			await this.#connect(options);
 		} catch (error) {
 			this.#say(error instanceof Error ? error.message : String(error));
+			throw error;
 		}
 	}
 	#resume(): void {
 		const wanted = this.#wanted;
 		if (!wanted || this.#joined || this.#starting) return;
-		this.#open(wanted).catch((error: unknown) => {
+		this.#connect(wanted).catch((error: unknown) => {
 			const failure = error instanceof Error ? error : new Error(String(error));
 			this.#say(failure.message);
 			this.onError(failure);
 		});
 	}
-	async #open(options: VisioCollaborationOptions): Promise<void> {
+	async #connect(options: VisioCollaborationOptions): Promise<void> {
 		const epoch = this.#epoch;
 		this.#starting = true;
 		this.#render();
@@ -253,9 +257,7 @@ export class ViewerShare {
 	}
 	#render(): void {
 		const active = this.active;
-		this.#start.hidden = active;
 		this.#stop.hidden = !active;
-		this.#start.disabled = this.#starting;
-		this.#room.disabled = active || this.#starting;
+		this.#open.disabled = this.#starting;
 	}
 }

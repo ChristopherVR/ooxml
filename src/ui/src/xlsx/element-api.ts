@@ -64,7 +64,7 @@ export class XlsxEditorApi extends HTMLElementBase {
 	protected readonly core: EditorCore = new EditorCore(this);
 	/** Set by the shell once connected. */
 	protected chrome: FileChrome | undefined;
-	/** Set by the shell once connected: opens File > Share. */
+	/** Set by the shell once connected: opens the Share dialog. */
 	protected openShare: (() => void) | undefined;
 	/** Set by the shell once connected: leaves the File backstage. */
 	protected closeBackstage: (() => void) | undefined;
@@ -168,9 +168,9 @@ export class XlsxEditorApi extends HTMLElementBase {
 	}
 
 	/**
-	 * Opens File > Share, where the user starts or stops sharing and sees who is in the room. Without
-	 * application UI (`surfaceOnly`) it calls the host's `onOpenShareDialog` instead, and does
-	 * nothing when there is none (`getToolbarProps().enabled.openShareDialog` tells which).
+	 * Opens the Share dialog, where the user starts, joins or stops sharing, copies the invitation
+	 * link and sees who is in the room. Without application UI (`surfaceOnly`) it calls the host's
+	 * `onOpenShareDialog` instead, and does nothing when there is none (`getToolbarProps().enabled.openShareDialog` tells which).
 	 */
 	share(): void {
 		if (this.surfaceOnly) void this.getToolbarProps().onOpenShareDialog();

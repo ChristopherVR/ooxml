@@ -19,6 +19,10 @@ export const zhCNBackstage: Readonly<Record<string, string>> = {
 		'与此浏览器的其他窗口共同编辑此图表。在另一个窗口中打开相同的会话名称即可加入。',
 	'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.':
 		'整个图表都会共享；如果两人同时修改，以最后一次修改为准。内容不会离开此设备。',
+	'Edit this drawing together with other people. Everyone who joins the same session sees changes as they are made.':
+		'与他人一起编辑此绘图。加入同一会话的每个人都会实时看到更改。',
+	'The whole drawing is shared; when two people change it at once, the last change wins.':
+		'共享整个绘图；如果两人同时更改，以最后一次更改为准。',
 	'People in this session': '此会话中的人员',
 	'Product Information': '产品信息',
 	'Visio viewer (beta). No sign-in or subscription is used.':

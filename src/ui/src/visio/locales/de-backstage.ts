@@ -19,6 +19,10 @@ export const deBackstage: Readonly<Record<string, string>> = {
 		'Bearbeiten Sie diese Zeichnung gemeinsam mit anderen Fenstern dieses Browsers. Öffnen Sie in einem anderen Fenster denselben Sitzungsnamen, um beizutreten.',
 	'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.':
 		'Die gesamte Zeichnung wird geteilt; ändern zwei Personen sie gleichzeitig, gewinnt die letzte Änderung. Nichts verlässt dieses Gerät.',
+	'Edit this drawing together with other people. Everyone who joins the same session sees changes as they are made.':
+		'Bearbeiten Sie diese Zeichnung gemeinsam mit anderen. Alle, die derselben Sitzung beitreten, sehen Änderungen, sobald sie entstehen.',
+	'The whole drawing is shared; when two people change it at once, the last change wins.':
+		'Die ganze Zeichnung wird freigegeben; ändern zwei Personen sie gleichzeitig, gilt die letzte Änderung.',
 	'People in this session': 'Personen in dieser Sitzung',
 	'Product Information': 'Produktinformationen',
 	'Visio viewer (beta). No sign-in or subscription is used.':

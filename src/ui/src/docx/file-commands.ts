@@ -2,8 +2,8 @@
  * File commands raised by the editor chrome (title bar, ribbon tab row and File backstage). Each
  * command is first announced as a cancelable `file-command` event so hosts can take over file
  * I/O; when no host cancels it, the editor performs a browser-only default (file picker, download,
- * print). `share` (the tab row's Share button) has no default: starting a session needs the host's
- * transport and authority (`startCollaboration`), so only a host that handles it does anything.
+ * print). `share` (the tab row's Share button) opens the shared Share dialog, which sets the
+ * element's `collaboration`; a host with its own sharing cancels the event instead.
  */
 import {
 	fileCommandDetail,

@@ -172,4 +172,36 @@ describe('Word window chrome', () => {
 			'Anzeigen',
 		]);
 	});
+
+	it('opens the shared Share dialog unless a host takes the share command', async () => {
+		const editor = mount();
+		editor.reviewAuthor = 'Ada';
+		const actions = root(editor).querySelector<Updating>('office-ui-ribbon-actions')!;
+		await actions.updateComplete;
+		const share = actions.shadowRoot!.querySelector<HTMLButtonElement>('[part="share"]')!;
+		const dialog = root(editor).querySelector<
+			HTMLElement & { open: boolean; formOptions(): unknown; ensureRendered(): void }
+		>('office-ui-share-dialog')!;
+		expect(dialog.open).toBe(false);
+		share.click();
+		await Promise.resolve();
+		expect(dialog.open).toBe(true);
+		dialog.ensureRendered();
+		expect(dialog.formOptions()).toEqual({
+			roomId: expect.stringMatching(/^doc-[a-z0-9]{8}$/),
+			user: { name: 'Ada' },
+			intent: 'create',
+		});
+		dialog.open = false;
+		// A host with its own sharing cancels the command: no dialog.
+		editor.addEventListener('file-command', (event) => event.preventDefault());
+		share.click();
+		await Promise.resolve();
+		expect(dialog.open).toBe(false);
+		editor.locale = 'fr';
+		dialog.ensureRendered();
+		expect(dialog.shadowRoot!.querySelector('[data-share="start"]')?.textContent).toBe(
+			'Commencer le partage',
+		);
+	});
 });

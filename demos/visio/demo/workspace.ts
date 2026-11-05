@@ -203,15 +203,13 @@ export function createWorkspace(doc: Document = document): Workspace {
 		});
 		wireDrop((file) => void openFile(file));
 		const view = doc.defaultView!;
-		// `?share=<session>` presses File > Share > Start sharing on load, so frames built from different
-		// framework demos can join one session by name. The panel is the viewer's own; this only fills
-		// in the session name and starts it. Same-browser only: the session runs over a BroadcastChannel.
+		// `?share=<session>` joins that session on load, so frames built from different framework demos
+		// can share one drawing by name. Same-browser only: without a server the session runs over a
+		// BroadcastChannel. (The viewer's Share dialog does the same from an invitation link.)
 		const shareRoom = new URL(view.location.href).searchParams.get('share');
-		const shareRoot = mounted.element.shadowRoot;
-		const shareField = shareRoot?.querySelector<HTMLInputElement>('.share-room');
-		if (shareRoom && shareField) {
-			shareField.value = shareRoom;
-			shareRoot?.querySelector<HTMLButtonElement>('[data-share="start"]')?.click();
+		if (shareRoom) {
+			const viewer = mounted.element as HTMLElement & { collaboration: { roomId: string } | null };
+			viewer.collaboration = { roomId: shareRoom };
 		}
 		view.addEventListener('pagehide', (event) => {
 			if (event.persisted) {

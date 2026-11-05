@@ -77,7 +77,7 @@ editor.customization = {
 | `startCollaboration(options)` | `Promise<void>`       | Joins a room; rejects when already sharing or no workbook is open.                                                              |
 | `stopCollaboration()`         | `void`                | Leaves the room and clears `collaboration`; the workbook stays as it is.                                                        |
 | `reconnectCollaboration()`    | `void`                | Restarts the connection, keeping changes made offline.                                                                          |
-| `share()`                     | `void`                | Opens File > Share.                                                                                                             |
+| `share()`                     | `void`                | Opens the Share dialog.                                                                                                         |
 | `focusGrid()`                 | `void`                | Moves keyboard focus to the grid so typing edits the active cell.                                                               |
 
 ## Events

@@ -4,7 +4,7 @@ Several people can edit one workbook at the same time. The editor maps the workb
 
 ## Start sharing
 
-From the editor: **File > Share** (or the Share button at the right end of the ribbon tab row), type a session name and choose **Start sharing**. Another window or tab of the same browser that has a workbook open and starts sharing with the same session name joins it. Without a server set by the page, nothing leaves the browser: the session runs over a `BroadcastChannel`.
+From the editor: the Share button at the right end of the ribbon tab row (or **File > Share > Share with people**) opens the Share dialog every Office editor uses: start a session (session name, your name and an optional server) or join one from an invitation link or session name, then copy the invitation link, see who is in the session and stop sharing. Another window or tab that has a workbook open and starts or joins the same session joins it. Without a server, nothing leaves the browser: the session runs over a `BroadcastChannel`. The Share button is announced as the `share` `file-command` first, so a host with its own sharing can cancel it.
 
 From code, set the `collaboration` property (or prop, in every binding):
 
@@ -26,7 +26,7 @@ editor.addEventListener('collaboration-change', (event) => console.log(event.det
 | `session`   | An existing `CollabSession` created with `sanitizePayload: sanitizeXlsxPresence`. The editor never destroys a session it was given. |
 | `user`      | `name` (defaults to `authorName`), `color` (defaults to a palette colour), `role` (`viewer` makes the editor read-only).            |
 
-While `collaboration` is set, a workbook opened later joins the same room; when the room already has a workbook, the room's content replaces the opened one. Setting it to `null` leaves the room. The imperative forms are `startCollaboration(options)` (resolves once joined), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` and `share()` (opens File > Share). Every binding forwards `collaboration`, reports `collaboration-change` (`onCollaborationChange`, Vue `collaboration-change`, Angular `collaborationChange`, Svelte `oncollaborationchange`) and exposes `share()` on its handle; unmounting the editor leaves the room.
+While `collaboration` is set, a workbook opened later joins the same room; when the room already has a workbook, the room's content replaces the opened one. Setting it to `null` leaves the room. The imperative forms are `startCollaboration(options)` (resolves once joined), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` and `share()` (opens the Share dialog). Every binding forwards `collaboration`, reports `collaboration-change` (`onCollaborationChange`, Vue `collaboration-change`, Angular `collaborationChange`, Svelte `oncollaborationchange`) and exposes `share()` on its handle; unmounting the editor leaves the room.
 
 ## What is shared
 

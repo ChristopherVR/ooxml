@@ -1,6 +1,7 @@
 import { syncRibbonAddIns } from '../ribbon/add-in-tabs';
 import { refitRibbon } from './ribbon-overflow';
 import { applyShellLabels } from './shell-labels';
+import type { CollaborativeEditor } from 'ooxml-core/collab';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
 import type { EditorCore } from './editor-core';
@@ -75,6 +76,17 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		},
 		toggleComments: () => shell.review?.handleComments('toggle'),
 		collaborating: () => core.collab.active,
+		share: () => {
+			const editor = element as unknown as CollaborativeEditor;
+			return {
+				state: () => editor.collaborationState,
+				start: (options) => {
+					editor.collaboration = options;
+				},
+				stop: () => editor.stopCollaboration(),
+			};
+		},
+		userName: () => core.reviewAuthor,
 		setViewMode: (mode) => core.pages.setViewMode(mode),
 		setZoom: (percent) => core.pages.setZoom(percent),
 		options: () => ({
