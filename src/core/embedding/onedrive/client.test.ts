@@ -84,11 +84,15 @@ describe('OneDrive host adapter', () => {
 		});
 	});
 
-	it('asks for the full item when a selected response has no download URL', async () => {
-		const drive = createTestDrive({
-			bytes: new Uint8Array([1, 2, 3]),
-			selectDropsDownloadUrl: true,
-		});
+	it('opens with one unselected request, and asks again when the download URL is missing', async () => {
+		const plain = createTestDrive({ bytes: new Uint8Array([1, 2, 3]) });
+		await plain.client.open(plain.shareUrl);
+		const plainCalls = plain.requests.filter((request) =>
+			request.url.includes('graph.microsoft.com'),
+		);
+		expect(plainCalls).toHaveLength(1);
+		expect(plainCalls[0]!.url).not.toContain('$select');
+		const drive = createTestDrive({ bytes: new Uint8Array([1, 2, 3]), omitDownloadUrl: 1 });
 		const opened = await drive.client.open(drive.shareUrl);
 		expect([...opened.bytes]).toEqual([1, 2, 3]);
 		const graphCalls = drive.requests.filter((request) =>

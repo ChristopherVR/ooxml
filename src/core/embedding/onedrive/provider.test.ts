@@ -85,7 +85,7 @@ describe('OneDrive download speed', () => {
 		expect(order.filter((step) => step === 'graph')).toHaveLength(1);
 	});
 
-	it('sends $select and Prefer: redeemSharingLink on the shares request, token once', async () => {
+	it('opens a link with one unselected shares request, Prefer: redeemSharingLink, token once', async () => {
 		const calls: Array<{ url: string; prefer: string | null }> = [];
 		const getAccessToken = vi.fn(async () => 't');
 		const client = createOneDriveClient({
@@ -96,7 +96,7 @@ describe('OneDrive download speed', () => {
 			},
 		});
 		await client.open(link);
-		expect(calls[0]?.url).toMatch(/\/shares\/u![^/]+\/driveItem\?\$select=.*downloadUrl$/u);
+		expect(calls[0]?.url).toMatch(/\/shares\/u![^/]+\/driveItem$/u);
 		expect(calls[0]?.prefer).toBe('redeemSharingLink');
 		expect(calls[1]?.prefer).toBeNull();
 		expect(getAccessToken).toHaveBeenCalledTimes(1);

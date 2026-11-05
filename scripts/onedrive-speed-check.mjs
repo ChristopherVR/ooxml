@@ -20,9 +20,7 @@ import {
 import { checkToken, normalizeToken } from './onedrive-token-check.mjs';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
-// Same field list as the library's open request, so the metadata payload is comparable.
-const OPEN_SELECT =
-	'id,name,size,eTag,webUrl,folder,file,package,remoteItem,parentReference,@microsoft.graph.downloadUrl';
+// Like the library, open requests ask for the whole item (no $select), so the times compare.
 const LIST_SELECT = 'id,name,size,folder,file,lastModifiedDateTime,parentReference';
 const now = () => performance.now();
 
@@ -75,7 +73,7 @@ async function main() {
 			const enc = lib.encodeOneDriveSharingUrl(shareUrl);
 			targets.push({
 				label: 'sharing link',
-				meta: `/shares/${enc}/driveItem?$select=${OPEN_SELECT}`,
+				meta: `/shares/${enc}/driveItem`,
 				content: `/shares/${enc}/driveItem/content`,
 				headers: { Prefer: 'redeemSharingLink' },
 				openLibrary: (client, input) => client.open(shareUrl, input),
@@ -85,7 +83,7 @@ async function main() {
 			const enc = encodeDrivePath(drivePath);
 			targets.push({
 				label: 'drive path',
-				meta: `/me/drive/root:/${enc}?$select=${OPEN_SELECT}`,
+				meta: `/me/drive/root:/${enc}`,
 				content: `/me/drive/root:/${enc}:/content`,
 				headers: {},
 				openLibrary: (client, input, ref) => client.openItem(ref, input),

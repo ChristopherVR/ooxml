@@ -7,9 +7,6 @@ import { OneDriveError } from './types';
 /** The fields a listing needs; keeps Graph responses small. */
 export const LIST_SELECT =
 	'id,name,size,folder,file,package,remoteItem,lastModifiedDateTime,lastModifiedBy,parentReference';
-/** The fields an open needs, including the short-lived pre-authenticated download URL. */
-export const OPEN_SELECT =
-	'id,name,size,eTag,webUrl,folder,file,package,remoteItem,parentReference,@microsoft.graph.downloadUrl';
 
 /**
  * Entry ids are `${driveId}!${itemId}` with `!` percent-encoded inside each part (SharePoint drive

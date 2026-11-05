@@ -1,4 +1,4 @@
-import { OPEN_SELECT, itemUrl, listingFromPage, pagePath, searchPath } from './browse';
+import { itemUrl, listingFromPage, pagePath, searchPath } from './browse';
 import { copyName, fileFromMetadata, validateFile } from './metadata';
 import {
 	checkResponse,
@@ -19,8 +19,10 @@ import type {
 } from './types';
 
 const itemPath = (file: OneDriveFile) => itemUrl(file);
-const openPath = (file: { driveId: string; itemId: string }) =>
-	`${itemUrl(file)}?$select=${OPEN_SELECT}`;
+// Opens ask for the whole item, without $select: the response is only a few KB, and with
+// $select some responses (personal OneDrive sharing links among them) drop the download URL,
+// which costs a second round trip (measured live: about 440 ms).
+const openPath = (file: { driveId: string; itemId: string }) => itemUrl(file);
 /** A DOM-free host-owned Graph connection for every Office editor. */
 export function createOneDriveClient(options: OneDriveClientOptions): OneDriveClient {
 	const transport = createTransport(options);
@@ -47,8 +49,8 @@ export function createOneDriveClient(options: OneDriveClientOptions): OneDriveCl
 		if (typeof data.size === 'number' && data.size > transport.maxBytes)
 			throw new OneDriveError('too-large', 'The file exceeds the configured size limit.');
 		let transfer = data['@microsoft.graph.downloadUrl'];
-		// Some responses (personal OneDrive sharing links among them) drop the download URL when
-		// fields are selected. Ask for the full item once; the token still never leaves Graph.
+		// Should a response still lack the download URL, ask for the item once more; the token
+		// never leaves Graph.
 		if (transfer === undefined) {
 			const full = await readJson(await graph(itemPath(file), signal));
 			transfer = full['@microsoft.graph.downloadUrl'];
@@ -79,7 +81,7 @@ export function createOneDriveClient(options: OneDriveClientOptions): OneDriveCl
 			return operation(input, async (signal) =>
 				download(
 					await readJson(
-						await graph(`/shares/${encoded}/driveItem?$select=${OPEN_SELECT}`, signal, {
+						await graph(`/shares/${encoded}/driveItem`, signal, {
 							// Lets a Files.Read token open a link without a separate redemption call.
 							headers: { Prefer: 'redeemSharingLink' },
 						}),
