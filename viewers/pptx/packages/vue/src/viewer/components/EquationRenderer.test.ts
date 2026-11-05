@@ -104,4 +104,14 @@ describe('equationRenderer', () => {
 		// wrapper itself still mounts (caller decides whether to render it)
 		expect(wrapper.find('[data-element-id="plain"]').exists()).toBeTruthy();
 	});
+
+	it('anchors the maths with the shape text body instead of centring it vertically', () => {
+		const wrapper = mountEq({
+			...equationElement({ 'm:oMath': { 'm:r': { 'm:t': 'x' } } }),
+			textStyle: { textAnchor: 'top' },
+		} as PptxElement);
+		const style = wrapper.get('[data-element-id="eq1"]').attributes('style') ?? '';
+		expect(style).toContain('flex-direction: column');
+		expect(style).toContain('justify-content: flex-start');
+	});
 });

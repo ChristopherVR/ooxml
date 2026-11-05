@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { OmmlNode } from 'ooxml-ui/pptx';
-import { convertOmmlToMathMl, sanitizeMathMl } from 'ooxml-ui/pptx';
+import { buildEquationBlockStyle, convertOmmlToMathMl, sanitizeMathMl } from 'ooxml-ui/pptx';
 import type { PptxElement, TextSegment } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 
 import { useElementHitTargetStyle } from '../composables/element-hit-target';
-import { getContainerStyle } from '../composables/element-style';
+import { getContainerStyle, getTextBlockStyle } from '../composables/element-style';
 
 /**
  * EquationRenderer: renders an element's math equation(s) as inline MathML.
@@ -32,9 +32,11 @@ const props = defineProps<{
 	presenting?: boolean;
 }>();
 
-const containerStyle = computed<CSSProperties>(() =>
-	getContainerStyle(props.element, props.zIndex),
-);
+const containerStyle = computed<CSSProperties>(() => ({
+	...buildEquationBlockStyle(getTextBlockStyle(props.element)),
+	// Positioning stays the container's.
+	...getContainerStyle(props.element, props.zIndex),
+}));
 
 /**
  * Interaction-only affordance for a degenerate (sub-MIN_ELEMENT_SIZE)

@@ -1,6 +1,11 @@
 import { hasTextProperties } from 'ooxml-core/pptx';
 import type { OmmlNode } from '../../index';
-import { convertOmmlToMathMl, isEquationOnlyText, sanitizeMathMl } from '../../index';
+import {
+	buildEquationBlockStyle,
+	convertOmmlToMathMl,
+	isEquationOnlyText,
+	sanitizeMathMl,
+} from '../../index';
 
 import { createEl } from '../dom';
 import { getTextBlockStyle } from '../element-styles';
@@ -25,12 +30,7 @@ export function renderEquations(
 	if (equations.length === 0) {
 		return null;
 	}
-	const wrapper = createEl(context.document, 'div', 'pptxv-equations', {
-		...getTextBlockStyle(element),
-		alignItems: 'center',
-		gap: '0.25em',
-		fontFamily: "'Cambria Math', 'STIX Two Math', serif",
-	});
+	const wrapper = createEl(context.document, 'div', 'pptxv-equations', buildEquationBlockStyle(getTextBlockStyle(element)));
 	for (const segment of equations) {
 		const mathml = convertOmmlToMathMl(segment.equationXml as OmmlNode);
 		if (!mathml) {

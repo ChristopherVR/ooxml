@@ -118,6 +118,7 @@ export * from './equation-templates';
 // LaTeX -> OMML -> sanitised MathML, the pipeline every binding's equation
 // editor drives its live preview and insert payload from.
 export * from './equation-compile';
+export * from './equation-box-style';
 export * from './chart-helpers';
 export * from './chart-area-fill';
 export * from './chart-font';

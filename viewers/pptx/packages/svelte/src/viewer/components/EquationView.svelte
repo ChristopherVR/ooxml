@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { hasTextProperties } from 'pptx-viewer-core';
 	import type { OmmlNode } from 'ooxml-ui/pptx';
-	import { convertOmmlToMathMl, sanitizeMathMl, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import { buildEquationBlockStyle, convertOmmlToMathMl, sanitizeMathMl, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
-	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
+	import { getContainerStyle, getElementHitTargetStyle, getTextBlockStyle, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';
 
 	const {
@@ -36,7 +36,13 @@
 				: [];
 		});
 	});
-	const containerStyle = $derived(styleToString(getContainerStyle(element, zIndex)));
+	const containerStyle = $derived(
+		styleToString({
+			...buildEquationBlockStyle(getTextBlockStyle(element)),
+			// Positioning stays the container's.
+			...getContainerStyle(element, zIndex),
+		}),
+	);
 </script>
 
 <div class="pptx-svelte-element pptx-svelte-equation-wrapper" style={containerStyle} data-element-id={element.id} data-pptx-element={interactive || marked ? 'true' : undefined}>
