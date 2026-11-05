@@ -6,11 +6,12 @@ import {
 	normalizeHexColor,
 	resolveFontItalic,
 	resolveFontWeight,
+	resolveWarpRunPaint,
 	shouldUseSvgWarp,
 	substituteFieldText,
 } from 'ooxml-ui/pptx';
 import type { EnvelopeGlyphPlacement, WarpParagraph } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxElementWithText, TextSegment, TextStyle } from 'pptx-viewer-core';
+import type { PptxElement, PptxElementWithText, TextSegment } from 'pptx-viewer-core';
 import { getSubstituteFontFamily, hasTextProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
 
@@ -51,7 +52,6 @@ const props = defineProps<{
 // fallback font is the same string (see the shared `constants.ts` doc comment).
 const DEFAULT_TEXT_COLOR = '#111827';
 const DEFAULT_TEXT_FONT_SIZE = 24;
-const HYPERLINK_COLOR = '#0563C1';
 
 // Paragraph splitting now uses the shared pure helper
 // (pptx-viewer-shared render/text-warp `groupIntoParagraphs`), shared with the
@@ -136,34 +136,27 @@ const baseFontStyle = computed(() =>
 interface TspanProps {
 	fill: string;
 	fontSize: number;
-	fontWeight: number;
+	fontWeight: string;
 	fontStyle: 'italic' | 'normal';
 	fontFamily: string;
 	textDecoration?: string;
 }
 
-/** Resolve per-segment `<tspan>` attributes from a run's style. */
+/** Resolve per-segment `<tspan>` attributes from the shared warped-run paint. */
 function tspanProps(segment: TextSegment): TspanProps {
-	const s: TextStyle = segment.style ?? {};
-	const decos: string[] = [];
-	if (s.underline || s.hyperlink) {
-		decos.push('underline');
-	}
-	if (s.strikethrough) {
-		decos.push('line-through');
-	}
-	const elStyle = textEl.value?.textStyle;
-	const fill = s.hyperlink
-		? normalizeHexColor(s.color ?? elStyle?.color, HYPERLINK_COLOR)
-		: normalizeHexColor(s.color ?? elStyle?.color, DEFAULT_TEXT_COLOR);
-	const family = s.fontFamily ?? elStyle?.fontFamily;
+	const paint = resolveWarpRunPaint(
+		segment,
+		textEl.value?.textStyle,
+		DEFAULT_TEXT_COLOR,
+		DEFAULT_TEXT_FONT_SIZE,
+	);
 	return {
-		fill,
-		fontSize: s.fontSize ?? elStyle?.fontSize ?? DEFAULT_TEXT_FONT_SIZE,
-		fontWeight: resolveFontWeight(family, s.bold),
-		fontStyle: resolveFontItalic(family, s.italic) ? 'italic' : 'normal',
-		fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
-		textDecoration: decos.length > 0 ? decos.join(' ') : undefined,
+		fill: paint.fill,
+		fontSize: paint.fontSizePx,
+		fontWeight: paint.fontWeight ?? 'normal',
+		fontStyle: paint.fontStyle ?? 'normal',
+		fontFamily: paint.fontFamily,
+		...(paint.textDecoration ? { textDecoration: paint.textDecoration } : {}),
 	};
 }
 

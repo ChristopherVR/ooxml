@@ -4,6 +4,7 @@ import {
 	groupIntoParagraphs as sharedGroupIntoParagraphs,
 	hasGlyphEnvelope,
 	resolveFontItalic,
+	resolveWarpRunPaint,
 	resolveFontWeight,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxElementWithText, TextSegment, TextStyle } from 'pptx-viewer-core';
@@ -20,7 +21,7 @@ import { hasTextProperties, getSubstituteFontFamily } from 'pptx-viewer-core';
  */
 import React, { useSyncExternalStore } from 'react';
 
-import { DEFAULT_TEXT_FONT_SIZE, DEFAULT_FONT_FAMILY, HYPERLINK_COLOR } from '../constants';
+import { DEFAULT_TEXT_FONT_SIZE, DEFAULT_FONT_FAMILY } from '../constants';
 import { normalizeHexColor } from './color';
 import { getGlyphOutline, glyphOutlineFontCache } from './glyph-outline-cache';
 import type { FieldSubstitutionContext } from './text-field-substitution';
@@ -86,33 +87,20 @@ function getSegmentTspanProps(
 	element: PptxElementWithText,
 	fallbackColor: string,
 ): React.SVGProps<SVGTSpanElement> {
-	const s = segment.style || ({} as TextStyle);
-	const decos: string[] = [];
-	if (s.underline || s.hyperlink) {
-		decos.push('underline');
-	}
-	if (s.strikethrough) {
-		decos.push('line-through');
-	}
-
-	const fill = s.hyperlink
-		? normalizeHexColor(s.color || element.textStyle?.color, HYPERLINK_COLOR)
-		: normalizeHexColor(s.color || element.textStyle?.color, fallbackColor);
-
+	// The run paint is the shared descriptor every binding maps onto its template.
+	const paint = resolveWarpRunPaint(
+		segment,
+		element.textStyle,
+		fallbackColor,
+		DEFAULT_TEXT_FONT_SIZE,
+	);
 	return {
-		fill,
-		fontSize: (s.fontSize ?? element.textStyle?.fontSize ?? DEFAULT_TEXT_FONT_SIZE) as
-			| number
-			| undefined,
-		fontWeight: resolveFontWeight(s.fontFamily || element.textStyle?.fontFamily, s.bold),
-		fontStyle: resolveFontItalic(s.fontFamily || element.textStyle?.fontFamily, s.italic)
-			? 'italic'
-			: undefined,
-		fontFamily:
-			s.fontFamily || element.textStyle?.fontFamily
-				? getSubstituteFontFamily(s.fontFamily || element.textStyle?.fontFamily || '')
-				: DEFAULT_FONT_FAMILY,
-		textDecoration: decos.length > 0 ? decos.join(' ') : undefined,
+		fill: paint.fill,
+		fontSize: paint.fontSizePx,
+		fontWeight: paint.fontWeight ?? 'normal',
+		fontStyle: paint.fontStyle ?? 'normal',
+		fontFamily: paint.fontFamily,
+		textDecoration: paint.textDecoration,
 	};
 }
 

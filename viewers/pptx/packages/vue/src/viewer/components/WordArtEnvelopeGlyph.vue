@@ -19,7 +19,7 @@ import type { EnvelopeGlyphPlacement } from 'ooxml-ui/pptx';
 interface TspanProps {
 	fill: string;
 	fontSize: number;
-	fontWeight: number;
+	fontWeight: number | string;
 	fontStyle: 'italic' | 'normal';
 	fontFamily: string;
 	textDecoration?: string;

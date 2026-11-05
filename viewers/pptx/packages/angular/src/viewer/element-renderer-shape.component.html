@@ -113,7 +113,13 @@
 	     (issue #182). -->
 	</div>
 	@if (!isBeingInlineEdited()) {
-		@if (glyphWarp(); as gwarp) {
+		@if (equationBox(); as eq) {
+			<div class="pptx-ng-text pptx-ng-equation-box" [ngStyle]="eq.style">
+				@for (e of eq.equations; track $index) {
+					<pptx-equation-renderer [equationXml]="e.xml" [equationNumber]="e.number" />
+				}
+			</div>
+		} @else if (glyphWarp(); as gwarp) {
 			<svg
 				[attr.width]="gwarp.width"
 				[attr.height]="gwarp.height"
@@ -135,6 +141,7 @@
 							[attr.fill]="g.fill"
 							[attr.font-size]="g.fontSize"
 							[attr.font-weight]="g.fontWeight"
+									[attr.text-decoration]="g.textDecoration ?? null"
 							[attr.font-style]="g.fontStyle"
 							[attr.font-family]="g.fontFamily"
 						>
@@ -165,6 +172,7 @@
 									[attr.fill]="g.fill"
 									[attr.font-size]="g.fontSize"
 									[attr.font-weight]="g.fontWeight"
+									[attr.text-decoration]="g.textDecoration ?? null"
 									[attr.font-style]="g.fontStyle"
 									[attr.font-family]="g.fontFamily"
 								>
@@ -199,13 +207,16 @@
 							[attr.startOffset]="warp.startOffset"
 							[attr.text-anchor]="warp.textAnchor"
 						>
-							@for (seg of line.segments; track $index) {
+							@for (run of line.runs; track $index) {
 								<tspan
-									[attr.fill]="seg.style?.color ?? warp.baseColor"
-									[attr.font-weight]="seg.style?.bold ? 700 : 400"
-									[attr.font-style]="seg.style?.italic ? 'italic' : 'normal'"
+									[attr.fill]="run.paint.fill"
+									[attr.font-size]="run.paint.fontSizePx"
+									[attr.font-family]="run.paint.fontFamily"
+									[attr.font-weight]="run.paint.fontWeight ?? 'normal'"
+									[attr.font-style]="run.paint.fontStyle ?? 'normal'"
+									[attr.text-decoration]="run.paint.textDecoration ?? null"
 								>
-									{{ seg.text }}
+									{{ run.text }}
 								</tspan>
 							}
 						</textPath>

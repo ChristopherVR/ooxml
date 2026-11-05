@@ -21,4 +21,12 @@ describe('resolveWarpRunPaint', () => {
 		expect(paint.textDecoration).toBe('underline');
 		expect(paint.fontSizePx).toBe(30);
 	});
+
+	it('uses the caller default size and colour only when nothing declares one', () => {
+		expect(resolveWarpRunPaint({ text: 'a' }, {}, '#111827', 24)).toMatchObject({
+			fill: '#111827',
+			fontSizePx: 24,
+		});
+		expect(resolveWarpRunPaint({ text: 'a' }, { fontSize: 40 }, '#111827', 24).fontSizePx).toBe(40);
+	});
 });

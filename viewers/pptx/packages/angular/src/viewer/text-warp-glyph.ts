@@ -1,9 +1,4 @@
-import {
-	buildGlyphEnvelopeBlock,
-	DEFAULT_FONT_FAMILY,
-	resolveFontItalic,
-	resolveFontWeight,
-} from 'ooxml-ui/pptx';
+import { buildGlyphEnvelopeBlock, DEFAULT_FONT_FAMILY, resolveWarpRunPaint } from 'ooxml-ui/pptx';
 import type { EnvelopeGlyphSlice, EnvelopeSegmentInput, WarpParagraph } from 'ooxml-ui/pptx';
 /**
  * True two-curve WordArt envelope descriptor (inflate/deflate/can) for the
@@ -31,7 +26,8 @@ export interface WarpGlyph {
 	/** SVG `matrix(a b c d e f)` fit of the envelope mapping over the glyph (fallback only). */
 	readonly transform: string;
 	readonly fill: string;
-	readonly fontWeight: number;
+	readonly fontWeight: number | string;
+	readonly textDecoration?: string;
 	readonly fontStyle: 'italic' | 'normal';
 	readonly fontFamily: string;
 	readonly fontSize: number;
@@ -137,20 +133,23 @@ export function buildGlyphWarpDef(
 		const segments = paragraph.segments;
 		const placements = perLine[lineIndex] ?? [];
 		return placements.map((p, glyphIndex) => {
-			const s = segments[p.segmentIndex]?.style ?? {};
-			const family = s.fontFamily ?? elementStyle?.fontFamily;
+			const paint = resolveWarpRunPaint(
+				segments[p.segmentIndex],
+				elementStyle,
+				DEFAULT_COLOR,
+				DEFAULT_FONT_SIZE,
+			);
 			return {
 				char: p.char,
 				x: p.x,
 				y: p.y,
 				transform: p.transform,
-				fill: s.color ?? elementStyle?.color ?? DEFAULT_COLOR,
-				fontWeight: resolveFontWeight(family, s.bold ?? elementStyle?.bold),
-				fontStyle: resolveFontItalic(family, s.italic ?? elementStyle?.italic)
-					? 'italic'
-					: 'normal',
-				fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
-				fontSize: (s.fontSize ?? elementStyle?.fontSize ?? DEFAULT_FONT_SIZE) as number,
+				fill: paint.fill,
+				fontWeight: paint.fontWeight ?? 'normal',
+				fontStyle: paint.fontStyle ?? 'normal',
+				fontFamily: paint.fontFamily,
+				fontSize: paint.fontSizePx,
+				...(paint.textDecoration ? { textDecoration: paint.textDecoration } : {}),
 				slices: p.slices,
 				clipIdPrefix: `${idPrefix}-l${lineIndex}-g${glyphIndex}`,
 				outlinePath: p.outlinePath,

@@ -8,6 +8,7 @@ import {
 	fontWeightAttribute,
 	getWarpCssTransform,
 	resolveFontItalic,
+	resolveWarpRunPaint,
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
 	shouldUseSvgWarp,
@@ -136,19 +137,15 @@ function renderGlyphWarp(
 		const segments = paragraph.segments;
 		const glyphs = perLine[lineIndex] ?? [];
 		glyphs.forEach((g, glyphIndex) => {
-			const s = segments[g.segmentIndex]?.style ?? {};
-			const fill = s.color ?? style.color ?? '#000000';
-			const renderedFamily = s.fontFamily || style.fontFamily;
+			const paint = resolveWarpRunPaint(segments[g.segmentIndex], style);
+			const fill = paint.fill;
 			const textAttrs = {
 				fill,
-				'font-family': renderedFamily
-					? getSubstituteFontFamily(renderedFamily)
-					: DEFAULT_FONT_FAMILY,
-				'font-size': s.fontSize ?? style.fontSize ?? 18,
-				'font-weight': fontWeightAttribute(renderedFamily, s.bold ?? style.bold),
-				'font-style': resolveFontItalic(renderedFamily, s.italic ?? style.italic)
-					? 'italic'
-					: undefined,
+				'font-family': paint.fontFamily,
+				'font-size': paint.fontSizePx,
+				'font-weight': paint.fontWeight,
+				'font-style': paint.fontStyle,
+				'text-decoration': paint.textDecoration,
 			};
 			if (g.outlinePath) {
 				// The glyph's real outline, already warped point-by-point (see
@@ -255,7 +252,20 @@ function renderPathWarp(
 			startOffset: '50%',
 			'text-anchor': 'middle',
 		});
-		textPath.textContent = paragraph.segments.map((segment) => segment.text).join('');
+		// Each run keeps its own paint, the shared descriptor every binding maps.
+		for (const segment of paragraph.segments) {
+			const paint = resolveWarpRunPaint(segment, style);
+			const tspan = createSvgEl(context.document, 'tspan', {
+				fill: paint.fill,
+				'font-family': paint.fontFamily,
+				'font-size': paint.fontSizePx,
+				'font-weight': paint.fontWeight ?? 'normal',
+				'font-style': paint.fontStyle ?? 'normal',
+				'text-decoration': paint.textDecoration,
+			});
+			tspan.textContent = segment.text;
+			textPath.appendChild(tspan);
+		}
 		text.appendChild(textPath);
 		svg.appendChild(text);
 	});

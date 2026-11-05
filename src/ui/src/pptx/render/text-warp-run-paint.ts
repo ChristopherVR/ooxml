@@ -19,11 +19,16 @@ export interface WarpRunPaint {
 
 const HYPERLINK_COLOR = '#0563C1';
 
-/** Resolve a segment's SVG paint, falling back to the element's text style. */
+/**
+ * Resolve a segment's SVG paint, falling back to the element's text style.
+ * `fallbackColor` and `defaultFontSizePx` apply only when neither the run nor
+ * the element declares one.
+ */
 export function resolveWarpRunPaint(
 	segment: TextSegment | undefined,
 	elementStyle: TextStyle | undefined,
 	fallbackColor = '#000000',
+	defaultFontSizePx = 18,
 ): WarpRunPaint {
 	const s: TextStyle = segment?.style ?? {};
 	const family = s.fontFamily || elementStyle?.fontFamily;
@@ -37,7 +42,7 @@ export function resolveWarpRunPaint(
 			s.hyperlink ? HYPERLINK_COLOR : fallbackColor,
 		),
 		fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
-		fontSizePx: s.fontSize ?? elementStyle?.fontSize ?? 18,
+		fontSizePx: s.fontSize ?? elementStyle?.fontSize ?? defaultFontSizePx,
 		fontWeight: fontWeightAttribute(family, s.bold ?? elementStyle?.bold),
 		fontStyle: resolveFontItalic(family, s.italic ?? elementStyle?.italic) ? 'italic' : undefined,
 		textDecoration: decorations.length > 0 ? decorations.join(' ') : undefined,

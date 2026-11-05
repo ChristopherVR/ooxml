@@ -4,12 +4,14 @@ import {
 	DEFAULT_FONT_FAMILY,
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
+	resolveWarpRunPaint,
 	substituteFieldText,
 } from 'ooxml-ui/pptx';
 import type {
 	FieldSubstitutionContext,
 	WarpCategory as SharedWarpCategory,
 	WarpParagraph,
+	WarpRunPaint,
 } from 'ooxml-ui/pptx';
 /**
  * Text-warp (WordArt) descriptor resolver for the Angular viewer.
@@ -91,6 +93,14 @@ export interface WarpPathLine {
 	d: string;
 	/** The text segments that flow along this path. */
 	segments: TextSegment[];
+	/** The same segments with their shared SVG paint, one per `<tspan>`. */
+	runs: WarpPathRun[];
+}
+
+/** One `<tspan>` of a path line: its text and the shared warped-run paint. */
+export interface WarpPathRun {
+	readonly text: string;
+	readonly paint: WarpRunPaint;
 }
 
 /**
@@ -248,6 +258,10 @@ export function getTextWarp(
 		pathId: `${pathIdPrefix}-${i}`,
 		d: getWarpPath(preset, width, height, i, lineCount, adj1, adj2),
 		segments: para.segments,
+		runs: para.segments.map((seg) => ({
+			text: seg.text,
+			paint: resolveWarpRunPaint(seg, ts, DEFAULT_COLOR, DEFAULT_FONT_SIZE),
+		})),
 	}));
 
 	return {
