@@ -1,6 +1,6 @@
 import {
 	defineMessageDialog,
-	OfficeUiMessageDialog,
+	type OfficeUiMessageDialog,
 	type OfficeMessageDialogKind,
 	type OfficeMessageDialogResult,
 	type OfficeMessageDialogTone,
@@ -62,6 +62,25 @@ function mountPoint(host: MessageDialogHost): Node | null {
 	return doc?.body ?? null;
 }
 
+const MESSAGE_DIALOG_TAG = 'office-ui-message-dialog';
+
+/**
+ * A message dialog element for `parent`'s document, or null when the tag is not an upgraded
+ * custom element there. The tag can be registered to another copy of this module's class (two
+ * bundles of `ooxml-ui` on one page, or a test runner that re-imports modules into one DOM), which
+ * `instanceof OfficeUiMessageDialog` would reject; that copy has the same API, so the class the
+ * registry holds is the one checked.
+ */
+function createMessageDialog(parent: Node): OfficeUiMessageDialog | null {
+	const doc = parent.ownerDocument ?? (parent instanceof Document ? parent : null);
+	const registered = doc?.defaultView?.customElements?.get(MESSAGE_DIALOG_TAG);
+	const dialog = doc?.createElement(MESSAGE_DIALOG_TAG) ?? null;
+	if (!dialog || !registered || !(dialog instanceof registered)) {
+		return null;
+	}
+	return dialog as OfficeUiMessageDialog;
+}
+
 function run(pending: Pending): void {
 	const { options, kind } = pending;
 	const parent = mountPoint(options.host);
@@ -70,8 +89,8 @@ function run(pending: Pending): void {
 		return;
 	}
 	defineMessageDialog();
-	const dialog = parent.ownerDocument?.createElement('office-ui-message-dialog') ?? null;
-	if (!(dialog instanceof OfficeUiMessageDialog)) {
+	const dialog = createMessageDialog(parent);
+	if (!dialog) {
 		pending.settle({ confirmed: false, value: '' });
 		return;
 	}
@@ -84,7 +103,7 @@ function run(pending: Pending): void {
 	if (options.label) dialog.inputLabel = options.label;
 	dialog.value = options.defaultValue ?? '';
 	dialog.placeholder = options.placeholder ?? '';
-	const { resultEvent } = OfficeUiMessageDialog;
+	const { resultEvent } = dialog.constructor as typeof OfficeUiMessageDialog;
 	const onResult = (event: Event): void => {
 		event.stopPropagation();
 		dialog.removeEventListener(resultEvent, onResult);

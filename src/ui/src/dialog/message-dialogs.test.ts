@@ -163,6 +163,22 @@ describe('message dialogs', () => {
 		expect(dialogs()).toHaveLength(0);
 	});
 
+	it('still opens when the tag is registered to another copy of the module', async () => {
+		// A page with two bundles of the library, or a test runner that re-imports modules into
+		// one DOM, registers the tag to the FIRST copy's class; a later copy must still use it.
+		const first = alertDialog({ title: 'First copy', message: 'Defines the tag.' });
+		button(dialogs()[0]!, 'confirm').click();
+		await first;
+		vi.resetModules();
+		const copy = await import('./message-dialogs');
+		const result = copy.confirmDialog({ title: 'Second copy', message: 'Still shown?' });
+		const [dialog] = dialogs();
+		expect(dialog, 'the dialog is mounted, not cancelled unseen').toBeDefined();
+		button(dialog!, 'confirm').click();
+		expect(await result).toBe(true);
+		expect(dialogs()).toHaveLength(0);
+	});
+
 	it('cancels when the dialog is removed from the page', async () => {
 		const result = confirmDialog({ title: 't', message: 'm' });
 		dialogs()[0]!.remove();
