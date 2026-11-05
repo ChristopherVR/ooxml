@@ -95,6 +95,39 @@ that copy; the original file is not replaced. The copy remains on the service so
 in the native Office application and removed when the test is complete. The script does not
 print access tokens, sharing URLs or temporary transfer URLs.
 
+### Measure download speed
+
+`scripts/onedrive-speed-check.mjs` times the same download in layers: the Graph metadata call, the
+download host (first byte, total, throughput, chunks), `client.open` / `openItem` with
+`onProgress`, `createOneDriveFileProvider(...).open`, optionally Graph `/content` (302 redirect)
+against metadata plus download URL, and `list()`, `recent()` and an optional folder. It prints
+per-run values, median/min/max and a short reading, for example the library overhead over a raw
+`fetch` of a fresh download URL. Tokens, links, paths and download URLs are never printed. The
+token is static, so "token acquisition" is a function call, not a sign-in.
+
+```powershell
+bun run build
+node scripts/onedrive-speed-check.mjs --help
+$env:OOXML_ONEDRIVE_ACCESS_TOKEN = Read-Host 'Graph access token' -MaskInput
+$env:OOXML_ONEDRIVE_PATH = Read-Host 'Path in your drive, e.g. Documents/deck.pptx' -MaskInput
+try {
+	node scripts/onedrive-speed-check.mjs --runs=5
+} finally {
+	Remove-Item Env:\OOXML_ONEDRIVE_ACCESS_TOKEN -ErrorAction SilentlyContinue
+	Remove-Item Env:\OOXML_ONEDRIVE_PATH -ErrorAction SilentlyContinue
+}
+```
+
+`OOXML_ONEDRIVE_SHARE_URL` (a sharing link) works instead of or together with the path, and
+`OOXML_ONEDRIVE_FOLDER` adds a folder listing. Add `--json` for machine-readable output,
+`--warmup` to discard a cold first run, `--no-content` to skip the `/content` comparison.
+
+`bun run test:onedrive:speed` runs `--mock`: a local server imitates Graph and the download host
+(`--size=MB`, `--latency=ms`, `--bandwidth=MBs`), needs no Microsoft access and gives a regression
+baseline for the library's own overhead. It says nothing about Microsoft's network. Live numbers
+depend on your connection, region, file size and time of day; compare medians over several runs,
+and treat a library overhead within about 10% (or a few tens of milliseconds) as noise.
+
 This smoke check is real service evidence for the supplied account, token and document. It still
 does not validate the suite's browser sign-in integration, redirect URI, deployed CORS behavior,
 every sharing policy or simultaneous Microsoft Office coauthoring.
