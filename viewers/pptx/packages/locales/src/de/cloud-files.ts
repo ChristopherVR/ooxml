@@ -1,6 +1,4 @@
 export const translations = {
-	'pptx.backstage.thisDevice': 'Dieses Gerät',
-	'pptx.backstage.places': 'Orte',
 	'pptx.cloudFiles.signInHeading': 'Bei {{provider}} anmelden',
 	'pptx.cloudFiles.signInText':
 		'Melden Sie sich an, um Ihre Dateien in {{provider}} zu öffnen und zu speichern.',

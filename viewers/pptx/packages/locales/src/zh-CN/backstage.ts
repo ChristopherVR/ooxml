@@ -17,6 +17,8 @@ export const translations = {
 	'pptx.backstage.newHeading': '新建',
 	'pptx.backstage.searchPlaceholder': '搜索最近的演示文稿',
 	'pptx.backstage.browseDevice': '浏览此设备',
+	'pptx.backstage.thisDevice': '此设备',
+	'pptx.backstage.places': '位置',
 	'pptx.backstage.recentHeading': '最近使用',
 	'pptx.backstage.columnName': '名称',
 	'pptx.backstage.columnModified': '修改日期',
