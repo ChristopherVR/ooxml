@@ -136,6 +136,12 @@ export interface RenderParagraph {
 	 */
 	baselineShiftPx?: number;
 	/**
+	 * Set when the baseline was placed from a stand-in font's metrics because
+	 * the paragraph's web font had not loaded; `paragraphStyle` then carries
+	 * the `--pptx-baseline-pending` marker `settleBaselines` places it again by.
+	 */
+	baselineProvisional?: boolean;
+	/**
 	 * `font-size` in px to set on the paragraph element so its CSS line boxes
 	 * are built from its OWN runs rather than the text body's default size.
 	 * Undefined when the paragraph already matches the body default.

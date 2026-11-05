@@ -34,6 +34,7 @@
  */
 import type { TextStyle } from 'ooxml-core/pptx';
 
+import { fontState } from './font-settled';
 import type { ParagraphRun, RenderParagraph } from './paragraph-types';
 import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './text-line-height';
 
@@ -41,6 +42,15 @@ import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './tex
 export interface FontBox {
 	ascent: number;
 	descent: number;
+	/**
+	 * Set when the box describes a stand-in: the font is a web font that has
+	 * not loaded yet (or is missing), so the browser measured a fallback face.
+	 * Such a box is never cached, and a paragraph placed from it is settled
+	 * again once the fonts have loaded (see `paragraph-baseline-settle`).
+	 */
+	provisional?: boolean;
+	/** Of a provisional box: the font is a web font that is still loading, so its own box is about to be known. */
+	loading?: boolean;
 }
 
 /** Ascent and descent of a CSS `font` shorthand, or `undefined` when they cannot be measured. */
@@ -60,8 +70,15 @@ const MIN_SHIFT_PX = 0.05;
 /** PowerPoint's baseline, in px from the top of a line `pitch` tall of text `size` px. */
 export function powerPointBaseline(pitch: number, size: number, descent: number): number {
 	const share = BASELINE_SHARE * pitch;
-	return pitch > size * SINGLE_PITCH * (1 + SINGLE_EPSILON)
-		? share
+	const single = size * SINGLE_PITCH;
+	if (pitch > single * (1 + SINGLE_EPSILON)) {
+		return share;
+	}
+	// Exactly single spacing keeps the font's own descent below the baseline,
+	// however deep (Segoe Script's 0.375 em would otherwise be lifted to 75%);
+	// the 75% floor only holds the tighter spacings.
+	return pitch >= single * (1 - SINGLE_EPSILON)
+		? pitch - descent
 		: Math.max(share, pitch - descent);
 }
 
@@ -103,8 +120,11 @@ const cache = new Map<string, FontBox>();
 /**
  * {@link FontBoxMeasure} on a 2D canvas (`fontBoundingBoxAscent` /
  * `fontBoundingBoxDescent`, the metrics the browser lays a line box out
- * with). Answers `undefined` outside a browser and for a web font that has
- * not loaded yet, and caches only fonts that are ready.
+ * with). Answers `undefined` outside a browser. A font that has not settled
+ * (see `isFontSettled`: a web font still loading, or one that is missing)
+ * is measured on the stand-in the browser paints it with, flagged
+ * `provisional` and left out of the cache, so a stand-in's box is never
+ * mistaken for the font's own once it has loaded.
  */
 export const measureFontBoxWithCanvas: FontBoxMeasure = (font) => {
 	const known = cache.get(font);
@@ -115,15 +135,21 @@ export const measureFontBoxWithCanvas: FontBoxMeasure = (font) => {
 		context =
 			typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
 	}
-	const fonts = typeof document === 'undefined' ? undefined : document.fonts;
-	if (!context || (fonts && !fonts.check(font))) {
+	if (!context) {
 		return undefined;
 	}
+	const state = fontState(font);
 	context.font = font;
 	const metrics = context.measureText('x');
-	const box = { ascent: metrics.fontBoundingBoxAscent, descent: metrics.fontBoundingBoxDescent };
+	const box: FontBox = {
+		ascent: metrics.fontBoundingBoxAscent,
+		descent: metrics.fontBoundingBoxDescent,
+	};
 	if (!Number.isFinite(box.ascent) || !Number.isFinite(box.descent)) {
 		return undefined;
+	}
+	if (state !== 'settled') {
+		return { ...box, provisional: true, ...(state === 'loading' ? { loading: true } : {}) };
 	}
 	cache.set(font, box);
 	return box;
@@ -175,6 +201,69 @@ function plainRun(run: ParagraphRun): boolean {
  * same baseline offset, so one move fixes them all and leaves the flow alone.
  */
 export function resolveParagraphBaselineShift(input: BaselineShiftInput): number | undefined {
+	return resolveParagraphBaseline(input)?.shift;
+}
+
+/** What {@link baselineShiftOf} reads: one line's size, pitch and font boxes. */
+export interface BaselineGeometry {
+	/** Font size (px) of the text and its line pitch (px). */
+	size: number;
+	pitch: number;
+	/** The inline boxes on the line: the paragraph strut, then the text run. */
+	boxes: readonly [CssLineBox, CssLineBox];
+	/** The text's font box at a large size, whose proportions PowerPoint scales to its pitch. */
+	reference: FontBox;
+	/** The paragraph strut's font size (px). */
+	strutSizePx: number;
+	/**
+	 * The boxes are those of a stand-in for a web font that is still loading.
+	 * Its own proportions are not known yet, so the move is only what the
+	 * spacing changes from single spacing, which the renderer leaves where the
+	 * browser puts it; the paragraph is placed again when the font has loaded.
+	 */
+	loading?: boolean;
+}
+
+/** The baseline model of PowerPoint's tighter spacings before per-font proportions (see `loading`). */
+function standInBaseline(pitch: number, size: number, descent: number): number {
+	const share = BASELINE_SHARE * pitch;
+	return pitch > size * SINGLE_PITCH * (1 + SINGLE_EPSILON)
+		? share
+		: Math.max(share, pitch - descent);
+}
+
+/** How far (px) to move a line so its baseline is PowerPoint's, or `undefined` for no move. */
+export function baselineShiftOf(geometry: BaselineGeometry): number | undefined {
+	const { size, pitch, boxes, reference, strutSizePx } = geometry;
+	let shift: number;
+	if (geometry.loading) {
+		const [strut, text] = boxes;
+		const single = SINGLE_PITCH * size;
+		const singleBoxes = [
+			{ ...strut, lineHeight: SINGLE_PITCH * strutSizePx },
+			{ ...text, lineHeight: single },
+		];
+		shift =
+			standInBaseline(pitch, size, text.font.descent) -
+			standInBaseline(single, size, text.font.descent) -
+			(cssBaseline(boxes) - cssBaseline(singleBoxes));
+	} else {
+		shift =
+			powerPointBaseline(pitch, size, powerPointDescent(size, reference)) - cssBaseline(boxes);
+	}
+	return Math.abs(shift) < MIN_SHIFT_PX ? undefined : Math.round(shift * 100) / 100;
+}
+
+/** The font a paragraph's text is measured at for the proportions PowerPoint scales to its pitch. */
+export function referenceFont(style: ParagraphRun['style'], family: string): string {
+	const italic = style.fontStyle === 'italic' ? 'italic ' : '';
+	return `${italic}${String(style.fontWeight ?? 'normal')} ${REFERENCE_SIZE}px ${family}`;
+}
+
+/** {@link resolveParagraphBaselineShift} that also says whether a stand-in font was measured. */
+export function resolveParagraphBaseline(
+	input: BaselineShiftInput,
+): { shift: number | undefined; provisional: boolean } | undefined {
 	const { lineHeight, strutSizePx, strutFamily, measure = measureFontBoxWithCanvas } = input;
 	const runs = input.runs.filter((run) => run.text.length > 0);
 	const first = runs[0];
@@ -193,12 +282,12 @@ export function resolveParagraphBaselineShift(input: BaselineShiftInput): number
 	// The browser rounds a font's ascent and descent to whole px at the size it
 	// lays a line out in, which is right for the CSS baseline but too coarse for
 	// the proportions PowerPoint scales to its pitch: those come from a large size.
-	const referenceBox = measure(runFont(first, REFERENCE_SIZE, family));
-	if (!strut || !text) {
+	const reference = measure(referenceFont(first.style, family)) ?? text;
+	if (!strut || !text || !reference) {
 		return undefined;
 	}
 	let pitch: number;
-	let boxes: CssLineBox[];
+	let boxes: [CssLineBox, CssLineBox];
 	if (typeof lineHeight === 'number') {
 		pitch = lineHeight * size;
 		boxes = [
@@ -212,10 +301,12 @@ export function resolveParagraphBaselineShift(input: BaselineShiftInput): number
 			{ lineHeight: pxOf(first.style.lineHeight) ?? pitch, font: text },
 		];
 	}
-	const shift =
-		powerPointBaseline(pitch, size, powerPointDescent(size, referenceBox ?? text)) -
-		cssBaseline(boxes);
-	return Math.abs(shift) < MIN_SHIFT_PX ? undefined : Math.round(shift * 100) / 100;
+	const provisional = Boolean(strut.provisional || text.provisional || reference.provisional);
+	const loading = Boolean(strut.loading || text.loading || reference.loading);
+	return {
+		shift: baselineShiftOf({ size, pitch, boxes, reference, strutSizePx, loading }),
+		provisional,
+	};
 }
 
 /** A run's own `font-family`, when it sets one. */
@@ -253,20 +344,78 @@ export function applyParagraphBaselineShift(
 	) {
 		return;
 	}
-	const shift = resolveParagraphBaselineShift({
+	const input: BaselineShiftInput = {
 		runs: paragraph.runs,
 		lineHeight: paragraph.lineHeight ?? bodyLineHeight(body),
 		strutSizePx: paragraph.strutFontSizePx ?? block.fontSizePx,
 		strutFamily: block.fontFamily,
 		...(measure ? { measure } : {}),
-	});
-	if (shift === undefined) {
+	};
+	const resolved = resolveParagraphBaseline(input);
+	if (!resolved) {
 		return;
 	}
-	paragraph.baselineShiftPx = shift;
-	paragraph.paragraphStyle = {
-		...paragraph.paragraphStyle,
-		position: 'relative',
-		top: `${shift}px`,
-	};
+	const { shift, provisional } = resolved;
+	if (shift === undefined && !provisional) {
+		return;
+	}
+	const style: Record<string, string | number> = { ...paragraph.paragraphStyle };
+	if (shift !== undefined) {
+		paragraph.baselineShiftPx = shift;
+		style.position = 'relative';
+		style.top = `${shift}px`;
+	}
+	if (provisional) {
+		// The font is a stand-in until it loads: say what to place again then.
+		paragraph.baselineProvisional = true;
+		style[BASELINE_PENDING_VAR] = encodePendingBaseline(input);
+	}
+	paragraph.paragraphStyle = style;
+}
+
+/** The custom property that marks a paragraph placed from a stand-in font's box. */
+export const BASELINE_PENDING_VAR = '--pptx-baseline-pending';
+
+/**
+ * What a placement needs to be redone once its font has loaded, as a value a
+ * style declaration can carry in every binding: the first text run's font and
+ * the paragraph's line height and strut, URI-encoded JSON.
+ */
+export function encodePendingBaseline(input: BaselineShiftInput): string {
+	const first = input.runs.find((run) => run.text.length > 0);
+	const style: Record<string, unknown> = {};
+	for (const key of ['fontSize', 'fontFamily', 'fontStyle', 'fontWeight', 'lineHeight'] as const) {
+		const value = first?.style[key];
+		if (value !== undefined) {
+			style[key] = value;
+		}
+	}
+	return encodeURIComponent(
+		JSON.stringify({
+			style,
+			lineHeight: input.lineHeight,
+			strutSizePx: input.strutSizePx,
+			strutFamily: input.strutFamily,
+		}),
+	);
+}
+
+/** The input {@link encodePendingBaseline} recorded, or `undefined` when the value is not one. */
+export function decodePendingBaseline(value: string): BaselineShiftInput | undefined {
+	try {
+		const data = JSON.parse(decodeURIComponent(value.trim())) as {
+			style: ParagraphRun['style'];
+			lineHeight: number | string;
+			strutSizePx: number;
+			strutFamily: string;
+		};
+		return {
+			runs: [{ text: 'x', style: data.style }],
+			lineHeight: data.lineHeight,
+			strutSizePx: data.strutSizePx,
+			strutFamily: data.strutFamily,
+		};
+	} catch {
+		return undefined;
+	}
 }
