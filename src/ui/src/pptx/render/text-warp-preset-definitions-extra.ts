@@ -114,7 +114,52 @@ const cascadeGuides = [
 	{ name: 'yq', formula: '*/ dy2 1 4' },
 ] as const;
 
+const arcPiece = (penX: string, wR: string, hR: string, swAng: string): Piece => ({
+	type: 'arc',
+	penX,
+	penY: 'vc',
+	wR,
+	hR,
+	stAng: 'cd2',
+	swAng,
+});
+
+/**
+ * The pour arches: the outer path is the box's own half ellipse, the inner one
+ * the same half ellipse scaled by `adj2` (default 50%) around the centre, so
+ * it only spans the middle of the width. `adj` (the start angle) is not
+ * modelled and reads as its default of 180 degrees.
+ */
+const pourGuides = [
+	{ name: 'a2', formula: 'pin 0 adj2 99000' },
+	{ name: 'rw2', formula: '*/ wd2 a2 100000' },
+	{ name: 'rh2', formula: '*/ hd2 a2 100000' },
+	{ name: 'bsx', formula: '+- hc 0 rw2' },
+	{ name: 'bex', formula: '+- hc rw2 0' },
+	{ name: 'ncd2', formula: '*/ cd2 -1 1' },
+] as const;
+
+const archUpPour: WarpPresetDefinition = {
+	defaultAdj: 10800000,
+	defaultAdj2: 50000,
+	gdLst: pourGuides,
+	top: arcPiece('l', 'wd2', 'hd2', 'cd2'),
+	bottom: arcPiece('bsx', 'rw2', 'rh2', 'cd2'),
+	bottomX: { startX: 'bsx', endX: 'bex' },
+};
+
 export const WARP_PRESET_DEFINITIONS_EXTRA: Readonly<Record<string, WarpPresetDefinition>> = {
+	textArchUpPour: archUpPour,
+	// At the default angle a single line of Button Pour is drawn exactly like Arch Up Pour.
+	textButtonPour: archUpPour,
+	textArchDownPour: {
+		defaultAdj: 10800000,
+		defaultAdj2: 25000,
+		gdLst: pourGuides,
+		top: arcPiece('bsx', 'rw2', 'rh2', 'ncd2'),
+		bottom: arcPiece('l', 'wd2', 'hd2', 'ncd2'),
+		topX: { startX: 'bsx', endX: 'bex' },
+	},
 	textStop: {
 		defaultAdj: 25000,
 		gdLst: [

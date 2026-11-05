@@ -97,6 +97,8 @@ export interface WarpCurveXExtent {
 /** One preset's transcribed guide list plus its top/bottom curve segments. */
 export interface WarpPresetDefinition {
 	readonly defaultAdj: number;
+	/** Value `adj2` takes when absent (0 when omitted). */
+	readonly defaultAdj2?: number;
 	readonly gdLst: readonly GeometryGuide[];
 	readonly top: WarpCurveSegment;
 	readonly bottom: WarpCurveSegment;

@@ -15,6 +15,7 @@ import type { PptxElement, PptxTextWarpPreset, TextSegment } from 'ooxml-core/pp
 import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
+import { archEllipsePath } from './text-warp-arch';
 
 // ── Classifier ──────────────────────────────────────────────────────────
 
@@ -284,6 +285,10 @@ const clamp4 = (n: number): number => Math.max(0, Math.min(n, 4));
 
 /** Concentric upward arcs. t=0 is the tallest arch. */
 function archUpPath(w: number, h: number, t: number, adj?: number): string {
+	const arch = archEllipsePath(w, h, t, adj, 'up');
+	if (arch) {
+		return arch;
+	}
 	const adjNorm = adj !== undefined ? Math.max(0, Math.min(adj / 21600000, 1)) : 0.5;
 	const maxArch = (0.85 * adjNorm) / 0.5;
 	const archH = h * Math.max(0, maxArch - t * 0.7);
@@ -295,6 +300,10 @@ function archUpPath(w: number, h: number, t: number, adj?: number): string {
 
 /** Concentric downward arcs. t=1 is the deepest. */
 function archDownPath(w: number, h: number, t: number, adj?: number): string {
+	const arch = archEllipsePath(w, h, t, adj, 'down');
+	if (arch) {
+		return arch;
+	}
 	const adjNorm = adj !== undefined ? Math.max(0, Math.min(adj / 21600000, 1)) : 0.5;
 	const baseDepth = (0.15 * adjNorm) / 0.5;
 	const archH = h * (baseDepth + t * 0.7);
@@ -448,6 +457,11 @@ function canDownPath(w: number, h: number, t: number, adj?: number): string {
  * flat at `t=0.5`.
  */
 function buttonPath(w: number, h: number, t: number, adj?: number): string {
+	// At the default angle a single line of Button lies on the same arc as Arch Up.
+	const arch = archEllipsePath(w, h, t, adj, 'up');
+	if (arch) {
+		return arch;
+	}
 	const yBase = h * (0.1 + t * 0.8);
 	const intensity = adj !== undefined ? clamp4(adj / 18750) : 1;
 	const bulge = h * 0.11 * intensity + h * 0.08 * intensity * (0.5 - t);

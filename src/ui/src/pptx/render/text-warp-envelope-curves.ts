@@ -54,6 +54,9 @@ export const GLYPH_ENVELOPE_PRESETS: ReadonlySet<string> = new Set([
 	'textCanDown',
 	// Presets whose two paths are plain functions of x (measured against
 	// PowerPoint; see `text-warp-preset-definitions-extra.ts`).
+	'textArchUpPour',
+	'textArchDownPour',
+	'textButtonPour',
 	'textStop',
 	'textTriangle',
 	'textTriangleInverted',

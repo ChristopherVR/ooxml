@@ -77,6 +77,7 @@ function sampleArc(
 	stAngDeg: number,
 	swAngDeg: number,
 	u: number,
+	xRange: readonly [number, number] = [0, BOX],
 ): number {
 	if (wR === 0 || hR === 0) {
 		return penY;
@@ -85,7 +86,7 @@ function sampleArc(
 	const swAng = angleToRadians(swAngDeg);
 	const cx = penX - wR * Math.cos(stAng);
 	const cy = penY - hR * Math.sin(stAng);
-	const targetX = u * BOX;
+	const targetX = xRange[0] + u * (xRange[1] - xRange[0]);
 	const cosVal = Math.max(-1, Math.min(1, (targetX - cx) / wR));
 
 	const sign = swAng < 0 ? -1 : 1;
@@ -142,7 +143,17 @@ function sampleChain(
 	return 0;
 }
 
-function sampleSegment(seg: WarpCurveSegment, u: number, vars: Map<string, number>): number {
+/**
+ * `xRange` is the box-unit span the path covers: an arc is placed at its own
+ * absolute x, so a path that only spans part of the width (the inner ellipse
+ * of a pour preset) needs it. Other segment kinds are relative to their path.
+ */
+function sampleSegment(
+	seg: WarpCurveSegment,
+	u: number,
+	vars: Map<string, number>,
+	xRange?: readonly [number, number],
+): number {
 	const g = (name: string): number => vars.get(name) ?? 0;
 	switch (seg.type) {
 		case 'chain':
@@ -162,6 +173,7 @@ function sampleSegment(seg: WarpCurveSegment, u: number, vars: Map<string, numbe
 				g(seg.stAng),
 				g(seg.swAng),
 				u,
+				xRange,
 			);
 		default:
 			return 0;
@@ -192,13 +204,17 @@ export function sampleWarpPresetCurve(
 	}
 	const adjustments = new Map<string, number>([
 		['adj', adj ?? def.defaultAdj],
-		['adj2', adj2 ?? 0],
+		['adj2', adj2 ?? def.defaultAdj2 ?? 0],
 	]);
 	const vars = evaluateGuides([...def.gdLst], { w: BOX, h: BOX }, adjustments);
 	const clampedU = Math.max(0, Math.min(1, u));
+	const range = (extent: WarpCurveXExtent | undefined): readonly [number, number] => {
+		const [start, end] = resolveXExtent(extent, vars);
+		return [start * BOX, end * BOX];
+	};
 	return {
-		top: sampleSegment(def.top, clampedU, vars) / BOX,
-		bottom: sampleSegment(def.bottom, clampedU, vars) / BOX,
+		top: sampleSegment(def.top, clampedU, vars, range(def.topX)) / BOX,
+		bottom: sampleSegment(def.bottom, clampedU, vars, range(def.bottomX)) / BOX,
 	};
 }
 
@@ -245,7 +261,7 @@ export function sampleWarpPresetXExtent(
 	}
 	const adjustments = new Map<string, number>([
 		['adj', adj ?? def.defaultAdj],
-		['adj2', adj2 ?? 0],
+		['adj2', adj2 ?? def.defaultAdj2 ?? 0],
 	]);
 	const vars = evaluateGuides([...def.gdLst], { w: BOX, h: BOX }, adjustments);
 	return { top: resolveXExtent(def.topX, vars), bottom: resolveXExtent(def.bottomX, vars) };

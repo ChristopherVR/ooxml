@@ -12,6 +12,46 @@ const MEASURED: ReadonlyArray<
 	readonly [string, number | undefined, number | undefined, number[][]]
 > = [
 	[
+		'textArchUpPour',
+		undefined,
+		undefined,
+		[
+			[0.066, 0.502],
+			[0.002, 0.248],
+			[0.073, 0.495],
+		],
+	],
+	[
+		'textArchDownPour',
+		undefined,
+		undefined,
+		[
+			[0.502, 0.938],
+			[0.628, 1.001],
+			[0.516, 0.93],
+		],
+	],
+	[
+		'textButtonPour',
+		undefined,
+		undefined,
+		[
+			[0.071, 0.5],
+			[0.001, 0.247],
+			[0.071, 0.5],
+		],
+	],
+	[
+		'textArchUpPour',
+		10800000,
+		30000,
+		[
+			[0.064, 0.5],
+			[0.001, 0.352],
+			[0.071, 0.5],
+		],
+	],
+	[
 		'textStop',
 		undefined,
 		undefined,
@@ -478,6 +518,13 @@ describe('measured envelope presets (path families)', () => {
 			0.66667,
 			4,
 		);
+	});
+
+	it('limits the inner pour ellipse to the middle of the width', () => {
+		const extent = sampleWarpPresetXExtent('textArchUpPour', undefined, undefined)!;
+		expect(extent.top).toStrictEqual([0, 1]);
+		expect(extent.bottom[0]).toBeCloseTo(0.25, 4);
+		expect(extent.bottom[1]).toBeCloseTo(0.75, 4);
 	});
 
 	it('slides the wave paths against each other with adj2', () => {

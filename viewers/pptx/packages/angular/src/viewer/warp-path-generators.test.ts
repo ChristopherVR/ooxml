@@ -51,15 +51,20 @@ describe('getWarpPath', () => {
 		expect(d).toContain('L 400,');
 	});
 
-	it('textArchUp starts with M 0,<h> and contains an arc', () => {
+	it('textArchUp is the box half ellipse, ending at mid height plus the frame offset', () => {
 		const d = getWarpPath('textArchUp', W, H, 0, 1);
+		expect(d).toBe(`M 0,${H / 2 + 6.3} A ${W / 2},${H / 2} 0 0,1 ${W},${H / 2 + 6.3}`);
+	});
+
+	it('textArchUp keeps the previous arc for another start angle', () => {
+		const d = getWarpPath('textArchUp', W, H, 0, 1, 5400000);
 		expect(d).toMatch(/^M 0,200/u);
 		expect(d).toContain('A ');
 	});
 
 	it('textArchDown starts with M 0,0 and contains an arc for t>0', () => {
 		// At lineIndex 0, lineCount 2 → t = 0 → baseDepth gives a small archH
-		const d = getWarpPath('textArchDown', W, H, 1, 2);
+		const d = getWarpPath('textArchDown', W, H, 1, 2, 5400000);
 		expect(d).toMatch(/^M 0,0/u);
 		expect(d).toContain('A ');
 	});
