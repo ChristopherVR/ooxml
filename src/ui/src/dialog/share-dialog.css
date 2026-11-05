@@ -38,7 +38,7 @@ p {
 	margin-bottom: calc(-1 * var(--office-border-width));
 	padding: var(--office-space-1) var(--office-space-3);
 	border: 0;
-	border-bottom: 2px solid transparent;
+	border-bottom: var(--office-border-width-thick) solid transparent;
 	border-radius: 0;
 	background: none;
 	color: var(--office-muted-foreground);
@@ -147,7 +147,7 @@ button:focus-visible {
 	height: 1.75rem;
 	border-radius: 50%;
 	background: var(--share-person);
-	color: #fff;
+	color: var(--office-app-brand-foreground);
 	font-size: var(--office-font-size-xs);
 	font-weight: 600;
 }

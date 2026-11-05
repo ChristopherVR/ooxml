@@ -4229,6 +4229,137 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "dialog/share-dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiShareDialog",
+					"tagName": "office-ui-share-dialog",
+					"customElement": true,
+					"description": "`<office-ui-share-dialog>`: the Share dialog of every product. Not sharing, it offers two tabs: start a session (session name, your name, an optional server) or join one (an invitation link or a session name). Sharing, it shows the connection, the invitation link with Copy, the session's server and the people in it, and Stop sharing. The form logic is `ooxml-core/collab`'s share helpers; the session belongs to the host editor, which sets `state` from its `collaborationState` after every `collaboration-change`. Properties: `open`, `state`, `defaults` (`{ roomId, userName, serverUrl }`; a missing room gets a fresh `room-prefix` name), `invitation` (opens on the join tab with it filled in), `location` (the page invitation links point at; `window.location` by default), `labels` (translated, see `shareDialogLabels`), `error` (shown under the form, e.g. a failed start), `note` (what the product shares) and `no-server` (hides the server field: the host decides it). Events: `office-share-start` `{ options }`, `office-share-stop` and `office-share-close`.",
+					"attributes": [
+						{
+							"name": "error"
+						},
+						{
+							"name": "invitation"
+						},
+						{
+							"name": "no-server"
+						},
+						{
+							"name": "note"
+						},
+						{
+							"name": "open"
+						},
+						{
+							"name": "room-prefix"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "copied"
+						},
+						{
+							"kind": "field",
+							"name": "defaults"
+						},
+						{
+							"kind": "field",
+							"name": "error",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "fields"
+						},
+						{
+							"kind": "field",
+							"name": "invitation",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "joinText"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "location"
+						},
+						{
+							"kind": "field",
+							"name": "noServer",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "no-server"
+						},
+						{
+							"kind": "field",
+							"name": "note",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "roomPrefix",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "room-prefix"
+						},
+						{
+							"kind": "field",
+							"name": "state"
+						},
+						{
+							"kind": "field",
+							"name": "view"
+						}
+					],
+					"events": [
+						{
+							"name": "office-share-close"
+						},
+						{
+							"name": "office-share-start"
+						},
+						{
+							"name": "office-share-stop"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-share-dialog",
+					"declaration": {
+						"name": "OfficeUiShareDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "smartart/smartart.ts",
 			"declarations": [
 				{
