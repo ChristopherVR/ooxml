@@ -1954,6 +1954,64 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "files/connected-services.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiConnectedServices",
+					"tagName": "office-ui-connected-services",
+					"customElement": true,
+					"description": "`<office-ui-connected-services>`: the Account page's list of linked storage, the same in every product and the Office app. One row per `CloudFileProvider` with its account (name and email) and Connect or Disconnect, which call the provider's own `signIn` and `signOut`: the host's sign-in, never one of the element's. A provider without `signOut` shows that its session is managed by the host. It follows `subscribe`, so signing in from File > Open updates it too. Properties: `providers`, `labels` (see `DEFAULT_CONNECTED_SERVICES_LABELS`), `heading-level`. Event: `office-connected-service-change` `{ providerId, connected }` after a change made here. Without providers it renders nothing.",
+					"attributes": [
+						{
+							"name": "heading-level"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "busy"
+						},
+						{
+							"kind": "field",
+							"name": "failed"
+						},
+						{
+							"kind": "field",
+							"name": "headingLevel",
+							"type": {
+								"text": "number"
+							},
+							"attribute": "heading-level"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "providers"
+						}
+					],
+					"events": [
+						{
+							"name": "office-connected-service-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-connected-services",
+					"declaration": {
+						"name": "OfficeUiConnectedServices"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "menu/context-menu.ts",
 			"declarations": [
 				{

@@ -13,6 +13,7 @@ import { defineSearchField } from './form/search-field';
 import { defineBackstage } from './chrome/backstage';
 import { defineCloudFiles } from './files/cloud-files';
 import { defineOpenPlaces } from './files/open-places';
+import { defineConnectedServices } from './files/connected-services';
 import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
 import { defineChartFormatPane } from './chart/format-pane';
@@ -108,6 +109,7 @@ export {
 	defineShareDialog,
 	defineCloudFiles,
 	defineOpenPlaces,
+	defineConnectedServices,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -175,6 +177,12 @@ export {
 	type OfficeOpenPlacesLabels,
 	type OfficeOpenPlaceChangeEvent,
 } from './files/open-places';
+export {
+	OfficeUiConnectedServices,
+	DEFAULT_CONNECTED_SERVICES_LABELS,
+	type OfficeConnectedServicesLabels,
+	type OfficeConnectedServiceChangeEvent,
+} from './files/connected-services';
 export type {
 	OfficeBackstageCloseEvent,
 	OfficeBackstageItem,
@@ -344,6 +352,7 @@ export const CONTROL_DEFINERS = [
 	defineShareDialog,
 	defineCloudFiles,
 	defineOpenPlaces,
+	defineConnectedServices,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

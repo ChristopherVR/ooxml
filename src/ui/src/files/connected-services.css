@@ -1,0 +1,98 @@
+:host {
+	display: block;
+	min-width: 0;
+	color: var(--office-foreground);
+}
+.heading {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+	font-weight: var(--office-font-weight-bold);
+}
+.description {
+	margin: var(--office-space-1) 0 var(--office-space-3);
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-md);
+}
+.services {
+	display: grid;
+	gap: var(--office-space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.service {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-surface);
+}
+.badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: var(--office-control-height);
+	height: var(--office-control-height);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.details {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+}
+.name {
+	font-weight: var(--office-font-weight-bold);
+}
+.account,
+.managed {
+	overflow: hidden;
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-sm);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.error {
+	color: var(--office-danger);
+	font-size: var(--office-font-size-sm);
+}
+button {
+	flex: none;
+	min-height: var(--office-control-height);
+	padding: 0 var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: inherit;
+	cursor: pointer;
+}
+button.primary {
+	border-color: var(--office-accent);
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+}
+button:hover:not(:disabled) {
+	background: var(--office-backstage-item-hover);
+}
+button.primary:hover:not(:disabled) {
+	background: var(--office-accent-hover);
+}
+button:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+@media (max-width: 30rem) {
+	.service {
+		flex-wrap: wrap;
+	}
+}

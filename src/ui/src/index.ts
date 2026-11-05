@@ -47,6 +47,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-backstage',
 	'office-ui-cloud-files',
 	'office-ui-open-places',
+	'office-ui-connected-services',
 	'office-ui-print-preview',
 	'office-ui-radio',
 	'office-ui-search',
