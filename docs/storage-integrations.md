@@ -182,6 +182,7 @@ globalThis.ooxmlCloudOptions = {
 	maxMergeAttempts: 2,
 	shareChoices: [
 		{ label: 'Existing link, keep permissions', options: { type: 'existing' } },
+		// `options` go to your client.share(file, options) unchanged; their shape is yours.
 		{ label: 'Project members can view', options: { audience: 'project', role: 'reader' } },
 	],
 };
@@ -190,7 +191,8 @@ globalThis.ooxmlCloudOptions = {
 `companyProvider` implements `VersionedStorageProvider` plus `open(reference, options?)`
 returning `{ file, bytes }`. Its files use native suite `kind` values (`docx`, `xlsx`,
 `pptx`, `vsdx`) and `access: 'read' | 'write' | 'unknown'`. Only `write` enables editing.
-To support Share, provide `read` with a current `file.webUrl`; optionally add
+To support Share, provide `metadata(file)` (or `read(file)`) returning the current
+`file.webUrl`; optionally add
 `share(file, options)` to create a link. The suite gives custom providers only an
 existing-link choice by default, unless the host explicitly supplies other choices.
 Copy recovery is disabled when `client.saveCopy` is absent.

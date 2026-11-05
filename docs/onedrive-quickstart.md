@@ -16,22 +16,53 @@ user in to Microsoft and hand the library a Microsoft Graph access token.
 Everything else has a default you can change or replace: see
 [Configure or replace anything](#configure-or-replace-anything).
 
+## Choose your path
+
+| You want to                                            | Follow                                                                                                          |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Add OneDrive to an editor embedded in your application | Steps 1 to 4, then the [React PowerPoint example](#5-react-powerpoint-example) if you use React                 |
+| Connect the integrated Office app (the suite)          | Steps 1 and 3, then [Connect the integrated Office app](#connect-the-integrated-office-app)                     |
+| Just see it working first, without writing code        | [Try it in the demos](#try-it-in-the-demos), with a [Graph Explorer token](#test-without-your-own-registration) |
+
+**Before you start** you need: a Microsoft account (personal, or work or school) that can sign in to
+the [Azure portal](https://portal.azure.com); Node.js 20 or later (or Bun); and the address your
+application runs on during development, for example `http://localhost:5173`.
+
 ## 1. Register an application in Microsoft Entra
 
 Microsoft only issues Graph tokens to registered applications, so you need your own registration.
-It costs nothing. In the [Azure portal](https://portal.azure.com), open **Microsoft Entra ID >
-App registrations > New registration** and set:
+It costs nothing and takes a few minutes. An app registration lives in an Entra tenant; if the
+portal asks you to create one first, a free tenant is enough.
 
-| Setting                 | Value                                                                                     |
-| ----------------------- | ----------------------------------------------------------------------------------------- |
-| Supported account types | Personal accounts only, or "any organizational directory and personal Microsoft accounts" |
-| Redirect URI            | Platform **Single-page application (SPA)**, for example `http://localhost:5173`           |
-| API permissions         | Microsoft Graph > **Delegated** > `Files.ReadWrite` (plus `openid` and `profile`)         |
-| Client secret           | None. A browser app uses the authorization code flow with PKCE and keeps no secret        |
+1. Open the [Azure portal](https://portal.azure.com) and go to **Microsoft Entra ID > App
+   registrations > New registration**.
+2. **Name**: anything, for example `My editor (development)`.
+3. **Supported account types**: pick who may sign in. This choice decides the `authority` you use
+   in step 3:
 
-Copy the **Application (client) ID** from the overview page. Add your deployed origin as a second
-redirect URI when you publish. A personal Microsoft account with no work directory may be asked to
-create one before it can register an application; follow the portal's prompts.
+   | Choice in the portal                                           | `authority` in step 3                           |
+   | -------------------------------------------------------------- | ----------------------------------------------- |
+   | Personal Microsoft accounts only                               | `https://login.microsoftonline.com/consumers`   |
+   | Accounts in any organizational directory and personal accounts | `https://login.microsoftonline.com/common`      |
+   | Accounts in this organizational directory only                 | `https://login.microsoftonline.com/<tenant id>` |
+
+4. **Redirect URI**: platform **Single-page application (SPA)**, value exactly the address your app
+   runs on, for example `http://localhost:5173`. Microsoft compares it character for character:
+   the scheme, host, port and trailing slash must match what your code sends (step 3 sends
+   `window.location.origin`, which has no trailing slash). Every development port needs its own
+   entry, and so does your deployed origin later (**Authentication > Add URI**).
+5. Select **Register**. On the **Overview** page, copy the **Application (client) ID**: it replaces
+   `YOUR_APPLICATION_CLIENT_ID` in step 3.
+6. Open **API permissions > Add a permission > Microsoft Graph > Delegated permissions**, add
+   `Files.ReadWrite`, and select **Add permissions**. That is the only scope the library needs: it
+   covers the user's own files and the files shared with them by link. `Files.ReadWrite.All` is not
+   needed, and MSAL adds `openid` and `profile` itself.
+7. Consent: a personal account is asked to consent the first time it signs in. A work or school
+   tenant may require an administrator to grant consent (**Grant admin consent** on the same page,
+   or ask your administrator).
+8. Leave **Certificates & secrets** alone and leave the implicit-grant boxes under
+   **Authentication** unchecked: a browser application uses the authorization code flow with PKCE
+   and keeps no secret.
 
 To try the API before registering, see [Test without your own registration](#test-without-your-own-registration).
 
@@ -39,7 +70,7 @@ To try the API before registering, see [Test without your own registration](#tes
 
 ```sh
 npm install ooxml-core @azure/msal-browser
-# PowerPoint in React:
+# PowerPoint in React (step 5):
 npm install pptx-react-viewer react react-dom i18next react-i18next
 ```
 
@@ -48,23 +79,36 @@ library; any library that performs the PKCE flow and returns a Graph token works
 
 ## 3. Sign in and create the client
 
-```ts
-import { PublicClientApplication } from '@azure/msal-browser';
-import { createOneDriveClient } from 'ooxml-core/embedding/onedrive';
+Keep the sign-in in one module, here `onedrive.ts`, so every later step imports the same pieces:
 
-const msal = new PublicClientApplication({
+```ts
+// onedrive.ts
+import { PublicClientApplication, type AccountInfo } from '@azure/msal-browser';
+import { createOneDriveClient, type OneDriveFile } from 'ooxml-core/embedding/onedrive';
+
+export const msal = new PublicClientApplication({
 	auth: {
-		clientId: 'YOUR_APPLICATION_CLIENT_ID',
-		// `consumers` for personal accounts only, `common` for work/school and personal.
-		authority: 'https://login.microsoftonline.com/consumers',
-		redirectUri: window.location.origin,
+		clientId: 'YOUR_APPLICATION_CLIENT_ID', // step 1.5
+		authority: 'https://login.microsoftonline.com/consumers', // step 1.3
+		redirectUri: window.location.origin, // registered exactly in step 1.4
 	},
 });
 await msal.initialize();
 
-const scopes = ['Files.ReadWrite'];
-async function getAccessToken(): Promise<string> {
-	const account = msal.getAllAccounts()[0] ?? (await msal.loginPopup({ scopes })).account;
+export const scopes = ['Files.ReadWrite'];
+
+/** Opens Microsoft's sign-in popup. Call it from a click: browsers block popups at page load. */
+export async function signIn(): Promise<AccountInfo> {
+	const { account } = await msal.loginPopup({ scopes });
+	if (!account) throw new Error('Sign-in did not return an account.');
+	msal.setActiveAccount(account);
+	return account;
+}
+
+/** A Graph token for the library. It never opens a popup unless the cached sign-in has expired. */
+export async function getAccessToken(): Promise<string> {
+	const account = msal.getActiveAccount() ?? msal.getAllAccounts()[0];
+	if (!account) throw new Error('Sign in to OneDrive first.');
 	try {
 		return (await msal.acquireTokenSilent({ scopes, account })).accessToken;
 	} catch {
@@ -72,105 +116,91 @@ async function getAccessToken(): Promise<string> {
 	}
 }
 
-// Who may edit: here, only files on the signed-in user's own drive.
-const ownDrive = await fetch('https://graph.microsoft.com/v1.0/me/drive?$select=id', {
-	headers: { Authorization: `Bearer ${await getAccessToken()}` },
-}).then((response) => response.json());
+// Who may edit: here, only files on the signed-in user's own drive. Looked up once, after sign-in.
+let ownDriveId: Promise<string> | undefined;
+async function ownDrive(): Promise<string> {
+	ownDriveId ??= fetch('https://graph.microsoft.com/v1.0/me/drive?$select=id', {
+		headers: { Authorization: `Bearer ${await getAccessToken()}` },
+		credentials: 'omit',
+	})
+		.then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+		.then((drive: { id: string }) => drive.id);
+	return ownDriveId;
+}
+export const canWrite = async (file: OneDriveFile) => file.driveId === (await ownDrive());
 
-export const drive = createOneDriveClient({
-	getAccessToken,
-	canWrite: (file) => file.driveId === ownDrive.id,
-});
+export const drive = createOneDriveClient({ getAccessToken, canWrite });
 ```
 
 `canWrite` decides whether a file opens editable. A `Files.ReadWrite` token alone does not prove
 that the user may edit a particular file, so anything the policy does not allow opens read-only.
 The own-drive rule above is the simplest safe policy; files shared from someone else's drive stay
-read-only under it.
+read-only under it. Replace it with your own rule (your permission service, a list of drives)
+whenever you like.
 
-## 4. Let the user choose a file
+## 4. Add OneDrive to File > Open
 
-Users browse their OneDrive: recent files, their folders and search, with a sharing link as a
-secondary path. Supported files are `.docx`, `.xlsx`, `.pptx` and `.vsdx`. Create a provider from
-the client of step 3 and your sign-in, then hand it to the editors:
+A **file provider** lets users browse their OneDrive inside the editor: **Recent**, **My files**
+with folders, search, and a field to paste a sharing link. Supported files are `.docx`, `.xlsx`,
+`.pptx` and `.vsdx`. Create it from the same `getAccessToken`, `canWrite` and `signIn` as step 3:
 
 ```ts
-import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+// onedrive.ts, continued
+import { createOneDriveFileProvider, type OneDriveMerger } from 'ooxml-core/embedding/onedrive';
 import { mergeDocxSnapshots } from 'ooxml-core/docx';
+import { mergePptxSnapshots } from 'ooxml-core/pptx';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+import { mergeDrawingSnapshots } from 'ooxml-core/visio/collab';
 
-const oneDrive = createOneDriveFileProvider({
+// Combines edits someone else saved meanwhile with yours, per format (see "Configure" below).
+const merge = (
+	format: (base: Uint8Array, local: Uint8Array, remote: Uint8Array) => Promise<unknown>,
+) => (({ base, local, remote }) => format(base.bytes, local, remote.bytes)) as OneDriveMerger;
+
+export const oneDrive = createOneDriveFileProvider({
 	getAccessToken,
-	canWrite: (file) => file.driveId === ownDrive.id,
-	signIn: async () => ({ name: (await msal.loginPopup({ scopes })).account!.username }),
+	canWrite,
+	signIn: async () => ({ name: (await signIn()).username }),
+	signOut: () => msal.logoutPopup(),
 	mergers: {
-		docx: ({ base, local, remote }) => mergeDocxSnapshots(base.bytes, local, remote.bytes),
+		docx: merge(mergeDocxSnapshots),
+		pptx: merge(mergePptxSnapshots),
+		xlsx: merge(mergeWorkbookSnapshots),
+		vsdx: merge(mergeDrawingSnapshots),
 	},
 });
 ```
 
-### In File > Open
+Pass it as `fileProviders` to Word (`<docx-editor>`), Excel (`<xlsx-editor>`), Visio
+(`<visio-viewer>`) or any PowerPoint binding:
 
-Pass the provider as `fileProviders` to Word (`<docx-editor>`), Excel (`<xlsx-editor>`), Visio
-(`<visio-viewer>`) or any PowerPoint binding, and **File > Open** gains a **OneDrive** place next to
-**This device**. Every product renders the same shared places element and file browser. Choosing a
-file opens it in the editor; **Save** writes back to that file, and a file the `canWrite` policy
-does not allow opens read-only.
+```tsx
+<PowerPointViewer content={bytes} canEdit fileProviders={[oneDrive]} />
+```
+
+```ts
+document.querySelector('docx-editor')!.fileProviders = [oneDrive]; // Word, Excel and Visio elements
+```
+
+That is all the wiring. What the user then gets:
+
+- **File > Open** gains a **OneDrive** place next to **This device**. The first visit shows **Sign
+  in**, which calls your `signIn` (a click, so the popup is allowed). Every product renders the
+  same places element and file browser.
+- Choosing a file opens it in the editor. **Save** (the button, File > Save, Ctrl+S) writes back to
+  that OneDrive file; a file `canWrite` does not allow opens read-only.
+- When someone else saved the file meanwhile, Save combines both sets of edits where they do not
+  overlap, and asks the user what to do when they do.
+- **File > Account > Connected services** shows the signed-in account with **Connect** and
+  **Disconnect**, calling the same `signIn` and `signOut`. Without `signOut` the session shows as
+  managed by your organization.
 
 ![File > Open > OneDrive in the PowerPoint demo, listing a folder](images/onedrive/demo-file-open-onedrive.png)
 
-To open a file from your own UI instead (a start page, your own picker), call the editor's
-`openCloudFile(file)` with what `provider.open(entry)` returned.
-
-### In the integrated Office app
-
-Configure the token provider (and optionally `signIn`, `signOut` and `account`) before its entry
-script loads:
-
-```ts
-globalThis.ooxmlOneDriveOptions = { getAccessToken, canWrite };
-```
-
-**OneDrive** then appears in the left rail, and **Browse OneDrive** on the home page:
-
-![The Office app home page with the Browse OneDrive button](images/onedrive/suite-home.png)
-
-Users link or unlink OneDrive from **Account > Connected services** (the account menu in the Office
-app, the Account page in File of every product): it shows the signed-in account and calls your
-`signIn` and `signOut`, so it is the same sign-in as File > Open. A host without `signOut` shows the
-session as managed by the organization.
-
-It shows the same file browser:
-
-![The OneDrive view of the Office app listing folders and files](images/onedrive/suite-onedrive-browser.png)
-
-The file opens in the matching editor, and **Save** updates the same OneDrive file. **Share in
-OneDrive** gives you a link without saving first; when your latest edits are only on this device,
-the share dialog says so.
-
-![PowerPoint in the Office app, with Saved to OneDrive in the status bar](images/onedrive/suite-powerpoint-saved.png)
-
-When an upload meets a newer OneDrive version, Save first combines both sets of edits. When they
-cannot be combined, the conflict dialog keeps both versions and offers the recovery choices; its
-**Details** section lists why combining stopped and which parts of the file changed in OneDrive and
-on this device since you opened it (useful to tell another editor or AutoSave apart from your own
-change).
-
-![The OneDrive conflict dialog with its recovery choices](images/onedrive/suite-conflict.png)
-
-Reopening a file whose edits on this device never reached OneDrive asks first when OneDrive has a
-newer version meanwhile: **Keep my edits** carries on where you left off (Save then combines them
-with the newer version where possible), and **Open the OneDrive version** loads the newer file and
-keeps your edits as a separate " (local edits)" file in your library. When OneDrive has not changed,
-your edits are kept and a notice says they are not saved yet.
-
-The installed app (PWA) also opens OneDrive links: a link shared to the app, a
-`web+ooxml:<link>` address, or `?open=<link>` on the app's address shows the Open dialog with the
-link filled in, for the user to confirm. Set `launchLinks: false` to turn this off, or
-`launchLinks: { param, accept }` to rename the parameter or choose which links are accepted.
-
-Without `ooxmlOneDriveOptions`, the app explains that sign-in has not been connected:
-
-![The OneDrive notice when no sign-in is configured](images/onedrive/suite-not-configured.png)
+To open a file from your own UI instead (a start page, your own picker), Word, Excel and Visio
+(the elements and every binding's handle) take `openCloudFile(file)` with what
+`oneDrive.open(entry)` returned. PowerPoint has no equivalent yet: use `fileProviders` and
+File > Open.
 
 ### From a sharing link
 
@@ -202,7 +232,18 @@ void i18n.use(initReactI18next).init({
 });
 ```
 
-Then render `<OneDriveApp drive={drive} />` with the `drive` from step 3:
+Then render `<OneDriveApp drive={drive} />` with the `drive` from step 3. This example opens a file
+from a pasted sharing link, so you can see the session and conflict handling in full; with
+`fileProviders` (step 4) the viewer's own File > Open does the browsing for you.
+
+```tsx
+// main.tsx, continued
+import { createRoot } from 'react-dom/client';
+import { drive } from './onedrive';
+import { OneDriveApp } from './OneDrivePowerPoint';
+
+createRoot(document.getElementById('root')!).render(<OneDriveApp drive={drive} />);
+```
 
 ```tsx
 // OneDrivePowerPoint.tsx
@@ -225,7 +266,7 @@ export function OneDriveApp({ drive }: { drive: OneDriveClient }) {
 	return <OneDrivePowerPoint key={opened.file.itemId} drive={drive} opened={opened} />;
 }
 
-/** The library has no file picker: the host asks for a sharing link. */
+/** A link box; step 4's `fileProviders` gives the viewer a full file browser instead. */
 export function OpenFromOneDrive({
 	drive,
 	onOpened,
@@ -393,6 +434,76 @@ Word, Excel and Visio use the same client and session; only the editor wiring di
 [Visio](../viewers/visio/docs/onedrive.md) and the other
 [PowerPoint bindings](../viewers/pptx/docs/guide/onedrive.md).
 
+## Connect the integrated Office app
+
+The Office app (the suite, `apps/office-suite`) reads its OneDrive settings from
+`globalThis.ooxmlOneDriveOptions`, which must be set before the app's own entry script runs. Put a
+module script first in the page's `<head>`, ahead of the app's entry:
+
+```html
+<head>
+	<script type="module" src="./onedrive-setup.js"></script>
+	<!-- ...the Office app's own scripts follow... -->
+</head>
+```
+
+```ts
+// onedrive-setup.ts (built to onedrive-setup.js), using the module from step 3
+import { canWrite, getAccessToken, msal, signIn } from './onedrive';
+
+globalThis.ooxmlOneDriveOptions = {
+	getAccessToken,
+	canWrite,
+	signIn: async () => ({ name: (await signIn()).username }),
+	signOut: () => msal.logoutPopup(),
+	account: () => {
+		const account = msal.getActiveAccount() ?? msal.getAllAccounts()[0];
+		return account ? { name: account.name ?? account.username, email: account.username } : null;
+	},
+};
+```
+
+Module scripts run in document order, so the options are in place when the app reads them.
+`scripts/preview-suite-onedrive.mjs` does exactly this to serve the app with the demos' sign-in,
+and is a working reference. The app then shows **OneDrive** in its left rail and **Browse
+OneDrive** on the home page:
+
+![The Office app home page with the Browse OneDrive button](images/onedrive/suite-home.png)
+
+It shows the same file browser as the products:
+
+![The OneDrive view of the Office app listing folders and files](images/onedrive/suite-onedrive-browser.png)
+
+- **Opening** a file opens it in the matching editor; **Save** updates the same OneDrive file.
+- **Connected services** in the account menu links or unlinks OneDrive with your `signIn` and
+  `signOut`.
+- **Share in OneDrive** gives you a link without saving first; when your latest edits are only on
+  this device, the share dialog says so.
+
+![PowerPoint in the Office app, with Saved to OneDrive in the status bar](images/onedrive/suite-powerpoint-saved.png)
+
+- **Conflicts.** When an upload meets a newer OneDrive version, Save first combines both sets of
+  edits. When they cannot be combined, the conflict dialog keeps both versions and offers the
+  recovery choices. Its **Details** section lists why combining stopped and which parts of the file
+  changed in OneDrive and on this device since you opened it (useful to tell another editor or
+  AutoSave apart from your own change).
+
+![The OneDrive conflict dialog with its recovery choices](images/onedrive/suite-conflict.png)
+
+- **Edits that never reached OneDrive.** Reopening such a file asks first when OneDrive has a newer
+  version meanwhile: **Keep my edits** carries on where you left off (Save then combines them with
+  the newer version where possible), and **Open the OneDrive version** loads the newer file and
+  keeps your edits as a separate " (local edits)" file in your library. When OneDrive has not
+  changed, your edits are kept and a notice says they are not saved yet.
+- **Links opened in the installed app.** A link shared to the installed app (PWA), a
+  `web+ooxml:<link>` address, or `?open=<link>` on the app's address shows the Open dialog with the
+  link filled in, for the user to confirm. Set `launchLinks: false` to turn this off, or
+  `launchLinks: { param, accept }` to rename the parameter or choose which links are accepted.
+
+Without `ooxmlOneDriveOptions`, the app explains that sign-in has not been connected:
+
+![The OneDrive notice when no sign-in is configured](images/onedrive/suite-not-configured.png)
+
 ## Configure or replace anything
 
 Every piece above is a default you can change, or replace with your own:
@@ -401,9 +512,9 @@ Every piece above is a default you can change, or replace with your own:
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Sign-in, the account shown, sign-out            | `getAccessToken`, `signIn`, `signOut`, `account`                                          | [Authentication](onedrive-integration.md#authentication-and-item-permissions)                          |
 | Which files open editable                       | `canWrite(file)`                                                                          | [Authentication](onedrive-integration.md#authentication-and-item-permissions)                          |
-| Requests (proxy, retries, headers)              | `fetch`                                                                                   | [Package reference](onedrive-integration.md#package-reference)                                         |
+| Requests (proxy, headers, timeouts, size limit) | `fetch`, `timeoutMs` (default 60 s), `maxBytes` (default 32 MiB)                          | [Package reference](onedrive-integration.md#package-reference)                                         |
 | How concurrent edits combine                    | `mergers` per format, your own `merge` for all formats, or `merge: false` to always ask   | [Combine concurrent edits](onedrive-integration.md#automatically-combine-concurrent-edits-during-save) |
-| How often Save rebases on a newer version       | `maxMergeAttempts` (default 3)                                                            | [Combine concurrent edits](onedrive-integration.md#automatically-combine-concurrent-edits-during-save) |
+| How often Save rebases on a newer version       | `maxMergeAttempts` (default 3 when a merge applies, else 1)                               | [Combine concurrent edits](onedrive-integration.md#automatically-combine-concurrent-edits-during-save) |
 | The conflict dialog (Office app)                | `resolveConflict`                                                                         | [Custom storage integrations](storage-integrations.md)                                                 |
 | Sharing choices (Office app)                    | `shareChoices`                                                                            | [Custom storage integrations](storage-integrations.md)                                                 |
 | Opening links in the installed app              | `launchLinks: false` or `{ param, accept }`                                               | [Integrated Office Suite](onedrive-integration.md#integrated-office-suite)                             |
@@ -414,39 +525,62 @@ The provider and the editors meet only through two small contracts in `ooxml-cor
 `CloudFileProvider` (browse and open) and `DocumentStorage` (save). Implement either and the same
 File > Open place, file browser, Save, conflict and read-only handling work with your backend.
 
-## Try it in the PowerPoint demos
+## Troubleshooting
 
-Every PowerPoint framework demo (React, Vue, Angular, vanilla and Svelte) offers OneDrive under
-**File > Open**, through the viewer's `fileProviders` prop. From the repository root:
+| What you see                                                  | Cause and fix                                                                                                                                                                    |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AADSTS50011` (redirect URI does not match)                   | The redirect URI your code sends is not registered exactly. Add it under **Authentication** with the same scheme, host, port and trailing slash (step 1.4).                      |
+| `AADSTS700016` (application not found in the directory)       | The client ID is wrong, or the `authority` does not match the supported account types (step 1.3). A personal account needs `consumers` or `common`.                              |
+| `AADSTS65001` or a consent prompt that never completes        | Consent is missing. Sign in again and accept, or ask a tenant administrator to grant consent for `Files.ReadWrite` (step 1.7).                                                   |
+| The sign-in popup does not appear                             | It was opened outside a click and the browser blocked it. Start sign-in from a button (**Sign in** in File > Open does this for you).                                            |
+| `OneDriveError` with code `authentication` (HTTP 401)         | The token is missing, expired or for another API. `getAccessToken` must return a Microsoft Graph token with `Files.ReadWrite`; Graph Explorer tokens expire after about an hour. |
+| Code `access-denied` (HTTP 403), or `network` with status 404 | The signed-in account cannot see the file: the link belongs to another account, was revoked, or points to a folder. Open it in OneDrive with the same account to check.          |
+| The file opens read-only                                      | Your `canWrite` policy returned false (with the step 3 policy: the file is on someone else's drive).                                                                             |
+| Code `locked` (HTTP 423)                                      | Another application holds a lock on the file (often desktop Office with the file open). Close it there and save again.                                                           |
+| The conflict dialog appears although nobody else edited       | Something else saved the file: OneDrive version history, desktop Office AutoSave, or another tab. The dialog's **Details** list what changed in OneDrive since you opened it.    |
+| Downloads feel slow                                           | Measure with `bun run test:onedrive:speed` (see [Testing OneDrive](onedrive-testing.md)); large decks are limited by the link to OneDrive, not by parsing.                       |
+
+## Try it in the demos
+
+Every demo offers OneDrive under **File > Open**, through the viewer's `fileProviders` prop. Build
+once from the repository root, then start the demo you want:
 
 ```sh
 bun install
 bun run build && bun run --cwd src/ui build
-cd viewers/pptx && bun run demo   # React on http://localhost:4173
 ```
 
-The other demos use their own ports: `bun run demo:vue` (4175), `demo:angular` (4174, build
-`packages/angular` first), `demo:vanilla` (4176) and `demo:svelte` (4177).
+| Demo                | Start it                                                                   | Address (register it as a redirect URI) |
+| ------------------- | -------------------------------------------------------------------------- | --------------------------------------- |
+| PowerPoint, React   | `cd viewers/pptx && bun run demo`                                          | `http://localhost:4173/`                |
+| PowerPoint, Angular | `cd viewers/pptx && bun run demo:angular` (build `packages/angular` first) | `http://localhost:4174/`                |
+| PowerPoint, Vue     | `cd viewers/pptx && bun run demo:vue`                                      | `http://localhost:4175/`                |
+| PowerPoint, vanilla | `cd viewers/pptx && bun run demo:vanilla`                                  | `http://localhost:4176/`                |
+| PowerPoint, Svelte  | `cd viewers/pptx && bun run demo:svelte`                                   | `http://localhost:4177/`                |
+| Word                | `cd viewers/docx && bun run demo`                                          | `http://127.0.0.1:5173/`                |
+| Excel               | `cd viewers/xlsx && bun run demo`                                          | `http://127.0.0.1:5173/`                |
+| Visio               | `cd viewers/visio && bun run dev`                                          | `http://127.0.0.1:5173/`                |
+| The Office app      | `bun run build:suite && bun run preview:suite:onedrive`                    | `http://localhost:8123/`                |
+
+The Word, Excel and Visio demos use Vite's default port, so the next free port (5174, ...) when
+5173 is taken; register the address the terminal prints.
 
 Open a deck, choose **File > Open**, then **OneDrive** and **Sign in**. The demo has to be told how
 to sign in, which a real application does itself:
 
-- **Your app registration**: set `VITE_ONEDRIVE_CLIENT_ID` (and optionally
-  `VITE_ONEDRIVE_AUTHORITY=common`) in an untracked `.env.local` next to the demo to sign in
-  without a dialog, or enter the Application (client) ID from step 1 in the demo's sign-in dialog.
-  The dialog then asks every time, pre-filled with the last client ID that signed in successfully;
-  a failed sign-in forgets it. Register each demo origin you use as a single-page application
-  redirect URI (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash).
+- **Your app registration**: enter the Application (client) ID from step 1 in the demo's sign-in
+  dialog. The dialog asks every time, pre-filled with the last client ID that signed in
+  successfully; a failed sign-in forgets it. To skip the dialog, set `VITE_ONEDRIVE_CLIENT_ID` (and
+  optionally `VITE_ONEDRIVE_AUTHORITY=common`) in an untracked `.env.local` in the demo's folder
+  (`demos/pptx/demo-react`, `demos/docx/demo-vanilla`, `demos/xlsx/demo-vanilla`, `demos/visio`).
+  Register each address you use from the table as a single-page application redirect URI, with the
+  trailing slash: the demos send `location.origin + '/'`.
 - **A Graph Explorer token**: the same dialog accepts a token as described in the next section.
   Nothing is registered, and the token is kept only in memory.
 
-The Word, Excel and Visio demos offer the same under **File > Open**, and their start pages have
-an **Open from OneDrive** button.
-
-To try the Office app the same way, run `bun run build:suite`, then `bun run
-preview:suite:onedrive` (http://localhost:8123/): it serves a copy of the app with this demo
-sign-in, so **OneDrive** in the left rail asks for a client ID or a Graph Explorer token like the
-demos do.
+The Word, Excel and Visio demos' start pages also have an **Open from OneDrive** button. The
+Office app preview serves a copy of the app with this demo sign-in, so **OneDrive** in its left
+rail asks for a client ID or a Graph Explorer token like the demos do.
 
 After signing in the place lists your recent files, your files and a search box. Choose a `.pptx`
 to open it, edit, then save with the viewer's own Save (or Ctrl+S): the file in OneDrive is
@@ -455,16 +589,6 @@ someone else's drive open read-only, because the demo uses the own-drive `canWri
 step 3; the ribbon then shows **Read-only**.
 
 ![The PowerPoint demo after saving a deck opened from OneDrive: the status bar reads All saved](images/onedrive/demo-onedrive-saved.png)
-
-In your own application the wiring is one prop:
-
-```tsx
-<PowerPointViewer content={bytes} canEdit fileProviders={[oneDriveProvider]} />
-```
-
-where `oneDriveProvider` comes from `createOneDriveFileProvider` in
-`ooxml-core/embedding/onedrive`; it owns your sign-in. A file opened from a place saves to that
-file (not to the `storage` prop) until another document is loaded.
 
 ## Test without your own registration
 
@@ -485,17 +609,20 @@ your own account, personal OneDrive included. That is enough for development tes
    node scripts/onedrive-live-check.mjs --help
    ```
 
-   It reads the token and link from environment variables;
-   [Testing OneDrive](onedrive-testing.md#run-the-real-service-smoke-check) shows how to set them
-   without leaving them in your shell history.
+   It reads the token from `OOXML_ONEDRIVE_ACCESS_TOKEN` and the sharing link from
+   `OOXML_ONEDRIVE_SHARE_URL`; [Testing OneDrive](onedrive-testing.md#run-the-real-service-smoke-check)
+   shows how to set them without leaving them in your shell history. (`--help` works without the
+   build.)
 
 5. Or, in a local development copy of your application, have `getAccessToken` return the pasted
    token instead of signing in, for example from an untracked `.env.local` file:
 
    ```ts
+   import { createOneDriveClient } from 'ooxml-core/embedding/onedrive';
+
    const drive = createOneDriveClient({
    	getAccessToken: async () => import.meta.env.VITE_DEV_GRAPH_TOKEN, // development only
-   	canWrite: (file) => file.driveId === ownDrive.id, // as in step 3
+   	canWrite, // as in step 3
    });
    ```
 

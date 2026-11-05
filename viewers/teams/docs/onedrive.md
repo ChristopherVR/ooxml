@@ -1,5 +1,8 @@
 # OneDrive links and Office documents
 
+For a step-by-step setup (Microsoft Entra registration, sign-in and a complete example), start with
+the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+
 OpenTeams can carry a OneDrive link to a DOCX, XLSX, PPTX or VSDX file. The integrated Office
 Suite opens that file through the matching document editor and the shared
 `ooxml-core/embedding/onedrive` connection. OpenTeams itself is a workspace, not a fifth Office

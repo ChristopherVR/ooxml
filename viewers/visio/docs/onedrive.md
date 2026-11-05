@@ -1,5 +1,8 @@
 # OneDrive integration
 
+For a step-by-step setup (Microsoft Entra registration, sign-in and a complete example), start with
+the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+
 For another service or a custom OneDrive implementation, see
 [provider-neutral storage integrations](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md).
 `createStorageSession` connects to the same `storage` property across all Visio packages,
@@ -42,7 +45,9 @@ A drawing chosen there loads through the normal `.vsdx` path and takes the file'
 
 The demos pass a OneDrive place by default, signed in through the demo-only dialog (a client ID, or
 a Graph Explorer token pasted into **Access token**). That dialog is demo configuration, not
-product UI; see `demos/onedrive`.
+product UI; see `demos/onedrive`. To skip the dialog, set `VITE_ONEDRIVE_CLIENT_ID` (and optionally
+`VITE_ONEDRIVE_AUTHORITY`) in `demos/visio/.env.local`, run `bun run dev` in `viewers/visio`, and
+register the address it prints (with a trailing slash) as a single-page application redirect URI.
 
 ## Account > Connected services
 

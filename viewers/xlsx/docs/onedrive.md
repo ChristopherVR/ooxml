@@ -1,5 +1,8 @@
 # OneDrive integration
 
+For a step-by-step setup (Microsoft Entra registration, sign-in and a complete example), start with
+the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+
 ## File > Open > OneDrive
 
 Pass a provider as `fileProviders` and File > Open shows a OneDrive place next to "This device":
@@ -26,7 +29,7 @@ clean only after the upload resolved; a failed upload keeps it unsaved. A file `
 (another drive, a shared file) opens read-only. `fileProviders` is a prop of every framework
 binding (`fileProviders` in React, Vue, Solid, Svelte, Angular and Vanilla). The demo app
 (`demos/xlsx`) passes the demo OneDrive provider by default; configure it with
-`VITE_ONEDRIVE_CLIENT_ID` or paste a Graph Explorer token in its sign-in dialog. The lower-level
+`VITE_ONEDRIVE_CLIENT_ID` in `demos/xlsx/demo-vanilla/.env.local` or paste a Graph Explorer token in its sign-in dialog. The lower-level
 `storage` wiring below is for hosts that build their own Open UI.
 
 The same storage contract also supports custom providers. See

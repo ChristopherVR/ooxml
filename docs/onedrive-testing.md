@@ -121,6 +121,8 @@ try {
 `OOXML_ONEDRIVE_SHARE_URL` (a sharing link) works instead of or together with the path, and
 `OOXML_ONEDRIVE_FOLDER` adds a folder listing. Add `--json` for machine-readable output,
 `--warmup` to discard a cold first run, `--no-content` to skip the `/content` comparison.
+`--list` prints the names in your OneDrive root (or `OOXML_ONEDRIVE_FOLDER`) and exits, so you
+can find the exact `OOXML_ONEDRIVE_PATH`.
 
 `bun run test:onedrive:speed` runs `--mock`: a local server imitates Graph and the download host
 (`--size=MB`, `--latency=ms`, `--bandwidth=MBs`), needs no Microsoft access and gives a regression

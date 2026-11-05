@@ -30,6 +30,24 @@ Svelte, vanilla option) and `:file-providers` (Vue).
 <PowerPointViewer content={bytes} canEdit fileProviders={[oneDriveProvider]} />
 ```
 
+To combine edits someone else saved meanwhile, give the provider a PowerPoint merger. Without one,
+a newer OneDrive version always opens the conflict choices; `merge: false` asks the same way for
+every format, and `maxMergeAttempts` (default 3 when a merge applies) bounds the retries:
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergePptxSnapshots } from 'ooxml-core/pptx';
+
+const oneDriveProvider = createOneDriveFileProvider({
+	getAccessToken,
+	canWrite,
+	signIn,
+	mergers: {
+		pptx: ({ base, local, remote }) => mergePptxSnapshots(base.bytes, local, remote.bytes),
+	},
+});
+```
+
 A file opened from a place loads like any open (undo history reset, `onLoad` fires). The viewer then
 uses that file's own storage for File > Save, Save As and recovery copies, instead of the `storage`
 prop, and opens it read-only when the service does not allow editing; a `canEdit={false}` or
@@ -74,10 +92,10 @@ compatibility surface for the earlier PowerPoint-specific import.
 | React, `pptx-react-viewer`     | `content={opened.bytes}`              | `canEdit={canEdit}`           | `await ref.current.getContent()`  |
 | Vue, `pptx-vue-viewer`         | `:content="opened.bytes"`             | `:can-edit="canEdit"`         | `await viewer.value.getContent()` |
 | Angular, `pptx-angular-viewer` | `[content]="opened.bytes"`            | `[canEdit]="canEdit"`         | `await viewer.getContent()`       |
-| Svelte, `pptx-svelte-viewer`   | `source={opened.bytes}`               | `canEdit={canEdit}`           | `await viewer.getContent()`       |
+| Svelte, `pptx-svelte-viewer`   | `source={opened.bytes}`               | `editable={canEdit}`          | `await viewer.getContent()`       |
 | Vanilla, `pptx-vanilla-viewer` | `await viewer.loadFile(opened.bytes)` | `viewer.setEditable(canEdit)` | `await viewer.save()`             |
 
-`canEdit` means `opened.file.access === 'write'`. Unknown access remains read-only. Every binding
+`canEdit` (`editable` in Svelte) means `opened.file.access === 'write'`. Unknown access remains read-only. Every binding
 accepts `storage` as its existing prop/input/option. Assign `session.storage` to connect native
 File Save to OneDrive. `onOpenFile` can open the host's sharing-link chooser; do not pass the
 Microsoft sharing-page URL to a generic document source loader.

@@ -147,7 +147,7 @@ returned bytes to the matching editor and reject a mismatched type before replac
 | `drive.read(file, { signal })`                   | Read the latest file by drive/item identity without retaining its original sharing link. |
 | `drive.save(file, bytes, { signal })`            | Conditional update of an existing item; callers retain the returned revision.            |
 | `drive.saveCopy(file, bytes, name, { signal })`  | Create a separate sibling file rather than replacing the original.                       |
-| `drive.share(file, { type, scope }, { signal })` | Create or reuse an explicitly selected view/edit sharing link.                           |
+| `drive.share(file, { type, scope }, { signal })` | Create an explicitly selected view/edit sharing link (Graph may return an existing one). |
 | `session.save(bytes)`                            | Serialize saves and retain the loaded baseline for meaningful conflict handling.         |
 | `session.reload()`                               | Explicitly adopt the latest cloud revision; reload the returned bytes into the editor.   |
 | `session.saveCopy(bytes, name)`                  | Save a separate cloud copy and continue the session against that copy.                   |
@@ -265,13 +265,23 @@ The file provider takes the same choice, so File > Open in every product combine
 you decide:
 
 ```ts
+import type { OneDriveMerger } from 'ooxml-core/embedding/onedrive';
+import { mergeDocxSnapshots } from 'ooxml-core/docx';
+import { mergePptxSnapshots } from 'ooxml-core/pptx';
+
+// A provider merger receives { base, local, remote, kind, signal }; wrap the format function.
+const wordMerge: OneDriveMerger = ({ base, local, remote }) =>
+	mergeDocxSnapshots(base.bytes, local, remote.bytes);
+const slidesMerge: OneDriveMerger = ({ base, local, remote }) =>
+	mergePptxSnapshots(base.bytes, local, remote.bytes);
+
 createOneDriveFileProvider({
 	getAccessToken,
 	signIn,
 	mergers: { docx: wordMerge, pptx: slidesMerge }, // per format; a format without one asks
 	// merge: myMerge, // your own merge for every format, in place of `mergers`
 	// merge: false, // never merge: a newer OneDrive version always opens the conflict choices
-	maxMergeAttempts: 3,
+	maxMergeAttempts: 3, // default 3 when a merge applies, otherwise 1
 });
 ```
 
@@ -286,8 +296,10 @@ same way.
 | PowerPoint | `mergePptxSnapshots`     | `ooxml-core/pptx`         |
 | Visio      | `mergeDrawingSnapshots`  | `ooxml-core/visio/collab` |
 
-Each merger takes `(baseBytes, localBytes, remoteBytes)` and returns either
-`{ status: 'merged', bytes }` or `{ status: 'unresolved', issues }`. The storage client keeps
+Each format function takes `(baseBytes, localBytes, remoteBytes)` and returns either
+`{ status: 'merged', bytes }` or `{ status: 'unresolved', issues }`. A `mergers` or `merge` entry
+(an `OneDriveMerger`, also the session's `merge`) receives `{ base, local, remote, kind, signal }`
+instead, so wrap the format function as shown above. The storage client keeps
 Office engines out of its own bundle; hosts load the current format's merger as needed.
 See [the suite's format router](../apps/office-suite/src/onedrive-merge.js).
 
@@ -360,7 +372,7 @@ const provider = createOneDriveFileProvider({
 	signIn: async () => ({ name, email }), // show your sign-in UI; resolve when getAccessToken works
 	signOut, // optional
 	account, // optional: already signed in
-	mergers: { docx: mergeDocxSnapshots, xlsx: mergeXlsxSnapshots }, // optional, by kind
+	mergers: { docx: wordMerge, pptx: slidesMerge }, // optional, by kind: OneDriveMerger wrappers as above
 });
 ```
 
@@ -372,7 +384,7 @@ const provider = createOneDriveFileProvider({
 
 ### Performance notes
 
-- The write policy (`canWrite`) runs while the bytes download, not before. Metadata requests ask only for the fields needed (`$select`), including `@microsoft.graph.downloadUrl`.
+- The write policy (`canWrite`) runs while the bytes download, not before. `client.metadata(file)` asks only for identity fields (`$select`). Open and read requests omit `$select` on purpose: some personal sharing-link responses otherwise drop `@microsoft.graph.downloadUrl`, which costs a second round trip.
 - The sharing-link request sends `Prefer: redeemSharingLink`, so a plain `Files.Read` token can open a link without a separate redemption call. Redemption can add the item to the user's "Shared with me", which is why it is limited to links the user opens explicitly.
 - `getAccessToken` is called once per client operation; the pending promise is shared by that operation's requests and is never kept afterwards.
 - The body is read into one buffer, preallocated from `Content-Length` when present (grown geometrically otherwise), with `onProgress(loaded, total)` per chunk.
@@ -390,6 +402,10 @@ const link = await drive.share(session.getSnapshot().file, {
 	scope: 'organization',
 });
 ```
+
+`share` and `saveCopy` apply the same `canWrite` check as `save`: for a file the host does not
+allow to write, only the existing link (`webUrl`) is available. `saveCopy` also needs the file's
+`parentId`, which a file from `open`, `read` or `metadata` provides.
 
 Organization links require an account and tenant that support them. Anonymous links grant access
 to anyone possessing the URL and may be disabled by policy. Never silently fall back to anonymous
@@ -484,13 +500,20 @@ globalThis.ooxmlOneDriveOptions = {
 };
 ```
 
-The manifest's share target and protocol handler always fill `open`; a host that renames the
-parameter serves its own manifest.
+The share target maps a shared link to `open`, and a link in shared text is read from `text`;
+the `web+ooxml:` handler (suite only) fills `open`. A host that renames the parameter must serve
+its own manifest.
+
+**Account > Connected services** lists the linked storage in the Office app's account menu and on
+the Account page of each product's File menu, through the shared `<office-ui-connected-services>`
+element. It uses the same `signIn` and `signOut` as File > Open; without `signOut` the connection
+shows as managed by your organization.
 
 The suite's native Save As downloads a separate copy; explicit cloud-copy recovery is available
 from the conflict dialog. That dialog preserves both versions and offers the recovery choices
 described above. Connected-file Share can copy an existing item URL without granting access or
-request an explicit organization/anonymous view/edit link. A named-recipient (`users`) sharing
+request an explicit organization/anonymous view/edit link; for a read-only file only the
+existing link is offered. A named-recipient (`users`) sharing
 flow is not implemented in the suite. The suite's local profile does not replace Microsoft sign-in.
 Native Open offers the host's device/OneDrive choice; native Word Share enters the suite's
 sharing flow. The suite hides PowerPoint's separate collaboration Share entry so it cannot be

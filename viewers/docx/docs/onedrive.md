@@ -1,5 +1,8 @@
 # OneDrive integration
 
+For a step-by-step setup (Microsoft Entra registration, sign-in and a complete example), start with
+the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
+
 For other services or custom OneDrive flows, use the same `storage` property with
 [`createStorageSession` and the provider-neutral integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md).
 Hosts can replace authentication, transport, merge handlers, conflict UI and sharing policy
@@ -57,7 +60,7 @@ them itself. A host that removes the `open` capability hides the page and the pl
 
 The Word demo passes `createDemoOneDriveProvider` from `demos/onedrive` by default. Sign in from
 File > Open > OneDrive: set `VITE_ONEDRIVE_CLIENT_ID` (and optionally `VITE_ONEDRIVE_AUTHORITY`) in
-`demos/docx/.env.local` to use your own Entra app registration through MSAL, enter a client ID in the
+`demos/docx/demo-vanilla/.env.local` to use your own Entra app registration through MSAL, enter a client ID in the
 demo dialog, or paste a Graph Explorer token into its "Access token" field. Register the demo's origin
 (with a trailing slash) as a single-page application redirect URI. The demo edits only files on the
 signed-in user's own drive; other files open read-only.
