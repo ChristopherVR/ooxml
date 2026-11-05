@@ -137,6 +137,24 @@ describe('<docx-editor> cloud file places', () => {
 		expect(editor.readOnly).toBe(true);
 	});
 
+	it('opens a file from host code through the element, with its storage and read-only state', async () => {
+		const editor = mount();
+		const host: DocumentStorage = { save: vi.fn(async () => undefined) };
+		editor.storage = host;
+		const cloud: DocumentStorage = { save: vi.fn(async () => undefined) };
+		await editor.openCloudFile(await opened(false, cloud));
+		expect(editor.fileName).toBe('Plan.docx');
+		expect(editor.readOnly).toBe(true);
+		await editor.load(await saveDocx(createDocument()));
+		await chrome(editor).run('save');
+		expect(host.save).toHaveBeenCalledTimes(1);
+		expect(cloud.save).not.toHaveBeenCalled();
+		const editable = await opened(true, cloud);
+		await editor.openCloudFile(editable);
+		await chrome(editor).run('save');
+		expect(cloud.save).toHaveBeenCalledTimes(1);
+	});
+
 	it('does not open when the host removed the Open command', async () => {
 		const editor = mount();
 		const load = vi.spyOn(editor, 'load');

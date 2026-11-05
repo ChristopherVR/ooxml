@@ -210,6 +210,20 @@ describe('File > Open with cloud file providers', () => {
 		viewer.destroy();
 	});
 
+	it('opens a file handed to openCloudFile by host code, without the backstage', async () => {
+		const cloudSave = vi.fn(async () => undefined);
+		const { viewer } = await setup();
+		await viewer.element.openCloudFile(
+			await cloudFile({ canEdit: false, storage: { save: cloudSave } }),
+		);
+		expect(viewer.element.fileName).toBe('Plan.vsdx');
+		expect(viewer.element.canEdit).toBe(false);
+		await expect(viewer.applyEdits([rectangle('20')])).rejects.toThrow('read-only');
+		await viewer.element.openCloudFile(await cloudFile({ storage: { save: cloudSave } }));
+		expect(viewer.element.canEdit).toBe(true);
+		viewer.destroy();
+	});
+
 	it('keeps a host read-only viewer read-only for an editable file', async () => {
 		const { viewer, root } = await setup({ readOnly: true });
 		viewer.element.openBackstage('open');
