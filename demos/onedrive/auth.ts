@@ -1,5 +1,5 @@
 /**
- * Sign-in for the OneDrive demo (`?onedrive=1`). Two ways to get a Microsoft Graph token:
+ * Sign-in for the OneDrive demos (File > Open > OneDrive). Two ways to get a Microsoft Graph token:
  *
  * - your own Entra app registration, through MSAL (the client ID is public, not a secret);
  * - a token pasted from Microsoft Graph Explorer, for a quick personal test without registering.

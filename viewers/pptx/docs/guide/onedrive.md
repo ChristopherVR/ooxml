@@ -16,8 +16,26 @@ bundled Microsoft app registration, simulation service or simulated OneDrive dem
 
 For a step-by-step setup with screenshots (app registration, sign-in, a sharing-link box and a
 complete React example), start with the [OneDrive quick start](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-quickstart.md).
-Every framework demo also has a OneDrive mode (`?onedrive=1`) for trying it against your own
-OneDrive; the quick start's "Try it in the PowerPoint demos" section explains the setup.
+Every framework demo offers OneDrive under File > Open for trying it against your own OneDrive;
+the quick start's "Try it in the PowerPoint demos" section explains the setup.
+
+## File > Open places: `fileProviders`
+
+Pass `fileProviders` (a list of `CloudFileProvider`, for example from `createOneDriveFileProvider`
+in `ooxml-core/embedding/onedrive`) and the Open page lists **This device** plus one place per
+provider. The prop is spelled the same in every binding: `fileProviders` (React, Angular input,
+Svelte, vanilla option) and `:file-providers` (Vue).
+
+```tsx
+<PowerPointViewer content={bytes} canEdit fileProviders={[oneDriveProvider]} />
+```
+
+A file opened from a place loads like any open (undo history reset, `onLoad` fires). The viewer then
+uses that file's own storage for File > Save, Save As and recovery copies, instead of the `storage`
+prop, and opens it read-only when the service does not allow editing; a `canEdit={false}` or
+`readOnly` host stays read-only. This lasts until another document is loaded: a new presentation,
+an open from this device or Recent, or new `content` from the host. A failed save shows the save
+failed notice and the status bar keeps **Unsaved changes**.
 
 The [complete Office integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
 documents authentication, session storage, safe cloud copies, sharing roles/scopes, conflict

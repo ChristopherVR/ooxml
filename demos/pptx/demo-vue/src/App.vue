@@ -21,11 +21,12 @@ import type {
 	ViewerCustomization,
 } from 'pptx-vue-viewer';
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watchEffect } from 'vue';
-import 'pptx-vue-viewer/styles';
 import { useI18n } from 'vue-i18n';
+import 'pptx-vue-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { useDemoAiAssistant } from './ai-config';
@@ -547,6 +548,7 @@ function onZoneClick(e: MouseEvent): void {
 			autosave
 			:autosave-interval-ms="2000"
 			can-edit
+			:file-providers="demoFileProviders"
 			:smartArt3D="smartArt3D"
 			:surfaceChart3D="surfaceChart3D"
 			:barChart3D="barChart3D"

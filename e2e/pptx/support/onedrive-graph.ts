@@ -66,6 +66,24 @@ export async function routeOneDriveGraph(
 				? route.fulfill({ json: metadata(file) })
 				: route.fulfill({ status: 404, json: {} });
 		}
+		const listing = (matching: (file: CloudFile) => boolean) => ({
+			value: [...files.values()].filter(matching).map(metadata),
+		});
+		if (path === '/me/drive/root/children') {
+			return route.fulfill({ json: listing((file) => file.driveId === OWN_DRIVE) });
+		}
+		if (path === '/me/drive/recent') {
+			return route.fulfill({ json: listing(() => true) });
+		}
+		const search = /^\/me\/drive\/root\/search\(q='(.*)'\)$/u.exec(decodeURIComponent(path));
+		if (search) {
+			const query = search[1]!.toLowerCase();
+			return route.fulfill({ json: listing((file) => file.name.toLowerCase().includes(query)) });
+		}
+		// A folder's children: the double has no folders, so every folder is empty.
+		if (/^\/drives\/[^/]+\/items\/[^/]+\/children$/u.test(path)) {
+			return route.fulfill({ json: { value: [] } });
+		}
 		const match = /^\/drives\/([^/]+)\/items\/([^/]+)(.*)$/u.exec(path);
 		const file = match ? files.get(decodeURIComponent(match[2]!)) : undefined;
 		if (!match || !file) {

@@ -1,3 +1,4 @@
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import { mount } from 'svelte';
 
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
@@ -15,6 +16,8 @@ if (!appRoot) {
 	throw new Error('missing #app root');
 }
 
-mount(externalSessionRequested() ? HostOwnedDemo : sameBrowserRoom() ? SameBrowserDemo : App, {
-	target: appRoot,
-});
+if (!completeDemoSignInPopup()) {
+	mount(externalSessionRequested() ? HostOwnedDemo : sameBrowserRoom() ? SameBrowserDemo : App, {
+		target: appRoot,
+	});
+}

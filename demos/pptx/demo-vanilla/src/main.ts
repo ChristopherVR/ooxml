@@ -1,3 +1,4 @@
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import type {
 	CollaborationConfig,
 	PptxViewerInstance,
@@ -17,6 +18,7 @@ import { PptxHandler } from 'pptx-viewer-core';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
@@ -162,6 +164,7 @@ function openViewer(
 		locale: getLanguage(),
 		messages: viewerMessages,
 		editable: true,
+		fileProviders: demoFileProviders,
 		autosave: true,
 		// A demo wants snappy crash recovery, and an explicit interval is a host
 		// policy that outranks the File > Options AutoRecover cadence.
@@ -242,7 +245,9 @@ async function fetchSampleDeck(): Promise<Uint8Array | null> {
 const audienceSession = parsePresentationSessionId(window.location.hash);
 const joinRoom = readRoomFromUrl();
 const wantSample = new URLSearchParams(window.location.search).get('sample') === '1';
-if (externalSessionRequested()) {
+if (completeDemoSignInPopup()) {
+	// The MSAL sign-in popup: the response is handed back, the app does not boot here.
+} else if (externalSessionRequested()) {
 	void mountHostOwnedDemo(app).catch((error: unknown) => {
 		app.textContent = String(error);
 	});

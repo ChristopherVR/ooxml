@@ -1,3 +1,4 @@
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 import { createApp } from 'vue';
 
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
@@ -9,6 +10,8 @@ import SameBrowserDemo from './SameBrowserDemo.vue';
 
 import '../../shared/dropzone.css';
 
-createApp(externalSessionRequested() ? HostOwnedDemo : sameBrowserRoom() ? SameBrowserDemo : App)
-	.use(i18n)
-	.mount('#app');
+if (!completeDemoSignInPopup()) {
+	createApp(externalSessionRequested() ? HostOwnedDemo : sameBrowserRoom() ? SameBrowserDemo : App)
+		.use(i18n)
+		.mount('#app');
+}

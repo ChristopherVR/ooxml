@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { demoFileProviders } from '../../shared/demo-file-providers';
 	/**
 	 * Demo shell for `pptx-svelte-viewer`, mirroring demos/demo-vue/src/App.vue:
 	 * the viewer fills the screen and a landing dropzone handles file open /
@@ -323,6 +324,7 @@
 			{customization}
 			{...rootOptions}
 			editable
+			fileProviders={demoFileProviders}
 			autosave
 			autosaveIntervalMs={2000}
 			fileName={fileName || undefined}

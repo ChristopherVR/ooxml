@@ -16,6 +16,7 @@
 		"fast-xml-parser": "^5.11.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
+		"ooxml-demo-onedrive": "workspace:*",
 		"pptx-viewer-core": "workspace:*",
 		"pptx-viewer-locales": "workspace:*",
 		"pptx-vue-viewer": "workspace:*",

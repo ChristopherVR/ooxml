@@ -341,8 +341,8 @@ Word, Excel and Visio use the same client and session; only the editor wiring di
 
 ## Try it in the PowerPoint demos
 
-Every PowerPoint framework demo (React, Vue, Angular, vanilla and Svelte) has a OneDrive mode that
-runs the code above against your own OneDrive. From the repository root:
+Every PowerPoint framework demo (React, Vue, Angular, vanilla and Svelte) offers OneDrive under
+**File > Open**, through the viewer's `fileProviders` prop. From the repository root:
 
 ```sh
 bun install
@@ -350,27 +350,35 @@ bun run build && bun run --cwd src/ui build
 cd viewers/pptx && bun run demo   # React on http://localhost:4173
 ```
 
-Open `http://localhost:4173/?onedrive=1`. The other demos use the same parameter on their own
-ports: `bun run demo:vue` (4175), `demo:angular` (4174, build `packages/angular` first),
-`demo:vanilla` (4176) and `demo:svelte` (4177).
+The other demos use their own ports: `bun run demo:vue` (4175), `demo:angular` (4174, build
+`packages/angular` first), `demo:vanilla` (4176) and `demo:svelte` (4177).
 
-A bar above the viewer signs you in and asks for a sharing link:
+Open a deck, choose **File > Open**, then **OneDrive** and **Sign in**. The demo has to be told how
+to sign in, which a real application does itself:
 
-- **My app registration**: enter the Application (client) ID from step 1 and choose **Sign in**.
-  Register each demo origin you use as a single-page application redirect URI
-  (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash). The client ID
-  is remembered in that demo's browser storage; you can also set `VITE_ONEDRIVE_CLIENT_ID` in an
-  untracked `.env.local` next to the demo.
-- **Graph Explorer token**: paste a token as described in the next section. Nothing is registered,
-  and the token is kept only in memory.
+- **Your app registration**: set `VITE_ONEDRIVE_CLIENT_ID` (and optionally
+  `VITE_ONEDRIVE_AUTHORITY=common`) in an untracked `.env.local` next to the demo, or enter the
+  Application (client) ID from step 1 in the demo's sign-in dialog (it is remembered in that
+  browser). Register each demo origin you use as a single-page application redirect URI
+  (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash).
+- **A Graph Explorer token**: the same dialog accepts a token as described in the next section.
+  Nothing is registered, and the token is kept only in memory.
 
-![The React demo in OneDrive mode after a save: the bar reports Saved to OneDrive and the status bar All saved](images/onedrive/demo-onedrive-saved.png)
+After signing in the place lists your recent files, your files and a search box. Choose a `.pptx`
+to open it, edit, then save with the viewer's own Save (or Ctrl+S): the file in OneDrive is
+updated and the status bar reads **All saved**. A failed upload keeps **Unsaved changes**. Files on
+someone else's drive open read-only, because the demo uses the own-drive `canWrite` policy from
+step 3.
 
-Then paste a sharing link to a `.pptx` on your own OneDrive and choose **Open**. Edit, then save
-with the viewer's own Save (or Ctrl+S): the bar reports **Saved to OneDrive**, and the file in
-OneDrive is updated. Files on someone else's drive open read-only, because the demo uses the
-own-drive `canWrite` policy from step 3. If someone else saved overlapping edits, the bar offers
-**Save my edits as a copy** and **Discard mine, open latest**.
+In your own application the wiring is one prop:
+
+```tsx
+<PowerPointViewer content={bytes} canEdit fileProviders={[oneDriveProvider]} />
+```
+
+where `oneDriveProvider` comes from `createOneDriveFileProvider` in
+`ooxml-core/embedding/onedrive`; it owns your sign-in. A file opened from a place saves to that
+file (not to the `storage` prop) until another document is loaded.
 
 ## Test without your own registration
 

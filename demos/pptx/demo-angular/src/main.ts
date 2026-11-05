@@ -11,6 +11,7 @@ import 'zone.js';
 // depends on this.
 import '@angular/compiler';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
@@ -21,11 +22,13 @@ import { SameBrowserDemoComponent } from './same-browser-demo.component';
 
 import '../../shared/dropzone.css';
 
-bootstrapApplication(
-	externalSessionRequested()
-		? HostOwnedDemoComponent
-		: sameBrowserRoom()
-			? SameBrowserDemoComponent
-			: AppComponent,
-	{ providers: [i18nProviders] },
-).catch((err) => console.error(err));
+if (!completeDemoSignInPopup()) {
+	bootstrapApplication(
+		externalSessionRequested()
+			? HostOwnedDemoComponent
+			: sameBrowserRoom()
+				? SameBrowserDemoComponent
+				: AppComponent,
+		{ providers: [i18nProviders] },
+	).catch((err) => console.error(err));
+}
