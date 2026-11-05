@@ -365,16 +365,22 @@ const pentagon: PresetShapeGeometryDefinition = {
 		gd('vf', 'val 110557'),
 		gd('swd2', '*/ wd2 hf 100000'),
 		gd('shd2', '*/ hd2 vf 100000'),
+		// The vertices sit on an ellipse centred `svc` (below `vc` by `vf`), as
+		// ECMA-376 writes it: the side pair `sin(18deg) * shd2` above it, the
+		// bottom pair `sin(54deg) * shd2` below (on `b`). The old guides put the
+		// side pair BELOW `vc` (at 67% of the height where PowerPoint 16 paints
+		// 38%), which squashed every pentagon into a house shape.
+		gd('svc', '*/ vc vf 100000'),
 		gd('dx1', '*/ swd2 95106 100000'),
 		gd('dx2', '*/ swd2 58779 100000'),
-		gd('dy1', '*/ shd2 80902 100000'),
-		gd('dy2', '*/ shd2 30902 100000'),
+		gd('dy1', '*/ shd2 30902 100000'),
+		gd('dy2', '*/ shd2 80902 100000'),
 		gd('x1', '+- hc 0 dx1'),
 		gd('x2', '+- hc 0 dx2'),
 		gd('x3', '+- hc dx2 0'),
 		gd('x4', '+- hc dx1 0'),
-		gd('y1', '+- vc 0 dy1'),
-		gd('y2', '+- vc dy2 0'),
+		gd('y1', '+- svc 0 dy1'),
+		gd('y2', '+- svc dy2 0'),
 		// The old `ir`/`ib` ("*/ y2 dx1 dy1") evaluates to ~150 at 200x100 (over
 		// the box height of 100), so `ib = b - ir` went NEGATIVE - the pentagon's
 		// text rect was flipped inside-out. COM-measured at 200x100pt instead:
@@ -391,11 +397,11 @@ const pentagon: PresetShapeGeometryDefinition = {
 	pathLst: [
 		{
 			commands: [
-				{ kind: 'moveTo', x: 'hc', y: 't' },
-				{ kind: 'lnTo', x: 'x4', y: 'y2' },
-				{ kind: 'lnTo', x: 'x3', y: 'b' },
-				{ kind: 'lnTo', x: 'x2', y: 'b' },
-				{ kind: 'lnTo', x: 'x1', y: 'y2' },
+				{ kind: 'moveTo', x: 'x1', y: 'y1' },
+				{ kind: 'lnTo', x: 'hc', y: 't' },
+				{ kind: 'lnTo', x: 'x4', y: 'y1' },
+				{ kind: 'lnTo', x: 'x3', y: 'y2' },
+				{ kind: 'lnTo', x: 'x2', y: 'y2' },
 				{ kind: 'close' },
 			],
 		},
