@@ -8,6 +8,7 @@ import {
 	previousShowSlideIndex,
 	resolveAutoAdvanceDelayMs,
 	resolveShowSlideIndexes,
+	resolveTransitionDurationMs,
 	stopAllPersistentAudio,
 } from 'ooxml-ui/pptx';
 import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'ooxml-ui/pptx';
@@ -73,6 +74,23 @@ export function resolveSlideAutoAdvanceMs(
 		return undefined;
 	}
 	return resolveAutoAdvanceDelayMs(slide, { useTimings });
+}
+
+/**
+ * The auto-advance delay to arm when the show ENTERS a slide: the authored
+ * {@link resolveSlideAutoAdvanceMs} counted from the end of the slide's own
+ * entry transition, as PowerPoint counts `After`. Arming the bare authored
+ * time cut a 0 s slide's entry transition short (issue #141). Re-arming later
+ * (after an animation build, or when a hidden tab returns) uses the authored
+ * time alone.
+ */
+export function resolveSlideEntryAutoAdvanceMs(
+	slide: PptxSlide | undefined,
+	useTimings: boolean,
+	endOfShow: boolean,
+): number | undefined {
+	const after = resolveSlideAutoAdvanceMs(slide, useTimings, endOfShow);
+	return after === undefined ? undefined : after + resolveTransitionDurationMs(slide?.transition);
 }
 
 /**
