@@ -9,7 +9,6 @@ import {
 	mapPresentationWheel,
 	openUrlInNewTab,
 	resolveOleVerbTarget,
-	resolvePresentationAction,
 	resolvePresentationClick,
 	runPresentationAction,
 	safeOpenUrl,
