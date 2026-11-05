@@ -68,6 +68,7 @@ import type {
 	AutosaveRecord,
 	InlineTextDraft,
 	CollaborationState,
+	CloudFileProvider,
 	DocumentStorage,
 	ConnectionStatus,
 	ElementUpdate,
@@ -1538,13 +1539,13 @@ export class PowerPointViewerComponent
 	 * the version-history panel shows its empty state. Mirrors React's
 	 * `filePath` prop.
 	 */
-	readonly filePath = input<string | undefined>(undefined);
+	readonly hostFilePath = input<string | undefined>(undefined, { alias: 'filePath' });
 	/**
 	 * Display name of the open document, shown in the title bar next to the
 	 * save-location status. Falls back to a localised "Presentation" when omitted.
 	 * Mirrors React's `fileName` prop.
 	 */
-	readonly fileName = input<string | undefined>(undefined);
+	readonly hostFileName = input<string | undefined>(undefined, { alias: 'fileName' });
 	/** Unscaled decorative viewport padding per side; omission preserves defaults. */
 	readonly fitPadding = input<ViewportFitPadding | undefined>(undefined);
 	/** Fit-factor ceiling, independent of user zoom; null permits enlargement. */
@@ -1579,7 +1580,34 @@ export class PowerPointViewerComponent
 	 * (`readRecovery` / `writeRecovery` / `clearRecovery`) instead of IndexedDB
 	 * when it provides them.
 	 */
-	readonly storage = input<DocumentStorage | undefined>(undefined);
+	readonly hostStorage = input<DocumentStorage | undefined>(undefined, { alias: 'storage' });
+	/**
+	 * Cloud places for File > Open (OneDrive through `createOneDriveFileProvider` from
+	 * `ooxml-core/embedding/onedrive`, or a provider of your own). When non-empty, the Open page
+	 * lists "This device" and one place per provider. A file opened from a place loads like a
+	 * normal open (read-only when the service does not allow editing, or when `canEdit` /
+	 * `readOnly` already forbid it); File > Save, Save As and recovery of that document go to the
+	 * file's own storage instead of `storage`, until another document is loaded.
+	 */
+	readonly fileProviders = input<readonly CloudFileProvider[] | undefined>(undefined);
+	/**
+	 * The open document's storage, edit right, name and recovery key: the host's inputs, or those
+	 * of a file opened from a File > Open cloud place (shared `resolveCloudDocumentView`).
+	 */
+	private readonly documentView = computed(() =>
+		this.fileIO.documentView({
+			storage: this.hostStorage(),
+			canEdit: this.canEditInput() && !this.readOnlyInput(),
+			fileName: this.hostFileName(),
+			filePath: this.hostFilePath(),
+		}),
+	);
+	/** The open document's storage: the host `storage` input, or a cloud file's own. */
+	readonly storage = computed(() => this.documentView().storage);
+	/** The open document's name: the host `fileName` input, or a cloud file's. */
+	readonly fileName = computed(() => this.documentView().fileName);
+	/** The open document's recovery and version-history key (host `filePath`, or the cloud file's). */
+	readonly filePath = computed(() => this.documentView().filePath);
 	/** Optional real-time collaboration config; when set, connects and shows remote cursors. */
 	readonly collaboration = input<CollaborationInput | undefined>(undefined);
 	/**
@@ -2029,8 +2057,8 @@ export class PowerPointViewerComponent
 	 */
 	protected readonly hasEditPermission = computed(
 		() =>
-			this.canEditInput() &&
-			!this.readOnlyInput() &&
+			// The host's `canEdit` / `readOnly`, and a cloud file's own edit right.
+			this.documentView().canEdit &&
 			this.customizationService.editingAllowed() &&
 			(!this.viewerOpts.options().trust.openInProtectedView || this.protectedViewDismissed()) &&
 			!this.loadNotices.lockActive(),
@@ -2647,6 +2675,7 @@ export class PowerPointViewerComponent
 		effect(() => {
 			this.content();
 			this.fileIO.contentOverride.set(null);
+			this.fileIO.clearCloudFile();
 		});
 
 		// Load whenever the active content (picked override, else input) changes,
@@ -3102,6 +3131,9 @@ export class PowerPointViewerComponent
 				passwordProtected: this.dialogs.isPasswordProtected(),
 			}),
 			storage: () => this.storage(),
+			// Recent and Account list the HOST storage's recovery copies, not a cloud file's.
+			hostStorage: () => this.hostStorage(),
+			fileProviders: () => this.fileProviders(),
 			fileName: () => this.fileName(),
 			// A failed Save / Save As: the host's `error` output, and the save-failed notice.
 			onSaveError: (saveError) => {
@@ -3569,6 +3601,8 @@ export class PowerPointViewerComponent
 	}
 
 	protected onCreatePresentation(templateId: string): void {
+		// A new presentation is not the cloud file: it saves to the host storage again.
+		this.fileIO.clearCloudFile();
 		this.editor.setSlides(createBackstagePresentation(templateId));
 		this.activeSlideIndex.set(0);
 	}
@@ -3628,8 +3662,9 @@ export class PowerPointViewerComponent
 
 	protected onOpenRecentFile(key: string): void {
 		void (async () => {
-			const bytes = await readBackstageRecentFile(key, this.storage());
+			const bytes = await readBackstageRecentFile(key, this.hostStorage());
 			if (bytes) {
+				this.fileIO.clearCloudFile();
 				this.fileIO.contentOverride.set(bytes);
 			}
 		})();

@@ -17,8 +17,17 @@
  */
 
 import { inject, Injectable, signal } from '@angular/core';
-import type { DeckSaveIntent, DocumentSaveReason, DocumentStorage } from 'ooxml-ui/pptx';
+import type {
+	CloudDocumentHostValues,
+	CloudFileProvider,
+	CloudOpenedFile,
+	DeckSaveIntent,
+	DocumentSaveReason,
+	DocumentStorage,
+} from 'ooxml-ui/pptx';
 import {
+	createCloudDocumentController,
+	resolveCloudDocumentView,
 	deliverSavedPresentation,
 	isCleanAfterSave,
 	savedPresentationRevision,
@@ -54,9 +63,19 @@ interface FileIOHost {
 	 * actually completes.
 	 */
 	readonly afterSuccessfulSave: (format: PptxSaveFormat) => void;
-	/** Host `storage` input: when set, Save / Save As go to `storage.save()`, not a download. */
+	/**
+	 * The open document's storage (the host `storage` input, or a cloud file's own): when set,
+	 * Save / Save As go to `storage.save()`, not a download.
+	 */
 	readonly storage?: () => DocumentStorage | undefined;
-	/** Host `fileName` input: the stem the saved copy is named after. */
+	/**
+	 * The host `storage` input itself, for chrome that lists recovery copies (Recent, Account);
+	 * defaults to {@link storage}.
+	 */
+	readonly hostStorage?: () => DocumentStorage | undefined;
+	/** Host `fileProviders` input: the File > Open cloud places. */
+	readonly fileProviders?: () => readonly CloudFileProvider[] | undefined;
+	/** The open document's name (host `fileName`, or a cloud file's): the saved copy's stem. */
 	readonly fileName?: () => string | undefined;
 	/** A Save / Save As failed (serialising, or the host's storage rejected). */
 	readonly onSaveError?: (error: unknown) => void;
@@ -82,6 +101,17 @@ export class ViewerFileIOService {
 	readonly contentOverride = signal<Uint8Array | ArrayBuffer | null>(null);
 
 	private host: FileIOHost | null = null;
+
+	/**
+	 * The file opened from a File > Open cloud place (shared `render/cloud-open`), mirrored into a
+	 * signal: its storage, name and edit right apply until another document is loaded.
+	 */
+	private readonly cloudDocument = createCloudDocumentController();
+	readonly cloudFile = signal<CloudOpenedFile | null>(null);
+
+	constructor() {
+		this.cloudDocument.subscribe(() => this.cloudFile.set(this.cloudDocument.getSnapshot().file));
+	}
 
 	/** Wire the host accessors (called once from the component constructor). */
 	bind(host: FileIOHost): void {
@@ -137,7 +167,34 @@ export class ViewerFileIOService {
 	 */
 	/** The host `storage` input, for chrome that lists recovery copies (Recent, Account). */
 	storage(): DocumentStorage | undefined {
-		return this.host?.storage?.();
+		return this.host?.hostStorage ? this.host.hostStorage() : this.host?.storage?.();
+	}
+
+	/** The host's File > Open cloud places (empty when it passed none). */
+	fileProviders(): readonly CloudFileProvider[] {
+		return this.host?.fileProviders?.() ?? [];
+	}
+
+	/**
+	 * What the viewer uses for storage, edit right, name and recovery key: the host's own, or the
+	 * open cloud file's (shared {@link resolveCloudDocumentView}).
+	 */
+	documentView(host: CloudDocumentHostValues): CloudDocumentHostValues {
+		return resolveCloudDocumentView(this.cloudFile(), host);
+	}
+
+	/**
+	 * File > Open > a cloud place: load the bytes like any open (a user load, history reset), then
+	 * let the file's storage, name and edit right apply.
+	 */
+	openCloudFile(file: CloudOpenedFile): void {
+		this.contentOverride.set(file.bytes);
+		this.cloudDocument.open(file);
+	}
+
+	/** Another document was loaded (new, device, recent or a host content change). */
+	clearCloudFile(): void {
+		this.cloudDocument.clear();
 	}
 
 	/** File > Save: `.pptx`, reported to host storage as `save`. */
@@ -241,6 +298,7 @@ export class ViewerFileIOService {
 		void (async () => {
 			const picked = await openPptxFile();
 			if (picked) {
+				this.clearCloudFile();
 				this.contentOverride.set(new Uint8Array(picked.buffer));
 			}
 		})();

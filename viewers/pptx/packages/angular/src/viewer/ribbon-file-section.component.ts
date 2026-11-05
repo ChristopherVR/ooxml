@@ -19,9 +19,12 @@ import {
 	formatBackstageSize,
 	isActionHidden,
 	listBackstageRecentFiles,
+	resolveOpenPlaces,
+	selectOpenPlace,
 } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
+	CloudOpenedFile,
 	BackstageCardId,
 	BackstageNavEntry,
 	BackstagePage,
@@ -33,6 +36,7 @@ import type {
 
 import { AccountPageComponent } from './account-page.component';
 import { BackstageNavIconComponent } from './backstage-nav-icon.component';
+import { CloudFilesPlaceComponent } from './cloud-files-place.component';
 import { injectResolvedCustomization } from './viewer-customization.service';
 import { ViewerFileIOService } from './viewer-file-io.service';
 import { ViewerRegionHostComponent } from './viewer-region-host.component';
@@ -87,6 +91,7 @@ export function visibleMainNav(
 	imports: [
 		BackstageNavIconComponent,
 		AccountPageComponent,
+		CloudFilesPlaceComponent,
 		TranslatePipe,
 		ViewerRegionHostComponent,
 	],
@@ -215,6 +220,20 @@ export class RibbonFileSectionComponent {
 			? this.recent().filter((file) => `${file.name} ${file.location}`.toLowerCase().includes(q))
 			: this.recent();
 	});
+	/**
+	 * File > Open places: empty without host `fileProviders` (the page stays as it was), else
+	 * "This device" and one place per provider (shared `resolveOpenPlaces`).
+	 */
+	protected readonly places = computed(() =>
+		resolveOpenPlaces(this.fileIO?.fileProviders(), this.t ?? ((key: string) => key)),
+	);
+	/** The place the user picked; see {@link place} for the one shown. */
+	protected readonly placeId = signal<string | undefined>(undefined);
+	protected readonly place = computed(() => selectOpenPlace(this.places(), this.placeId()));
+	/** The provider whose browser the Open page shows, or undefined for "This device". */
+	protected readonly cloudPlace = computed(() =>
+		this.currentPage() === 'open' ? this.place()?.provider : undefined,
+	);
 	protected readonly size = formatBackstageSize;
 	protected readonly actions = computed(() =>
 		this.pageActions(this.currentPage() as BackstagePage),
@@ -258,6 +277,12 @@ export class RibbonFileSectionComponent {
 
 	protected create(templateId: string): void {
 		this.createPresentation.emit(templateId);
+		this.close.emit();
+	}
+
+	/** A file opened in a cloud place: load it with its own storage, then close the backstage. */
+	protected openCloudFile(file: CloudOpenedFile): void {
+		this.fileIO?.openCloudFile(file);
 		this.close.emit();
 	}
 
