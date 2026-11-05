@@ -14,6 +14,11 @@ import { defineBackstage } from './chrome/backstage';
 import { defineCloudFiles } from './files/cloud-files';
 import { defineOpenPlaces } from './files/open-places';
 import { defineConnectedServices } from './files/connected-services';
+export {
+	saveProgressLabel,
+	saveProgressStepChanged,
+	SAVE_PROGRESS_TEXT,
+} from './files/save-progress-label';
 import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
 import { defineChartFormatPane } from './chart/format-pane';
