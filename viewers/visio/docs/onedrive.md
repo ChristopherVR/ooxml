@@ -5,6 +5,47 @@ For another service or a custom OneDrive implementation, see
 `createStorageSession` connects to the same `storage` property across all Visio packages,
 with host-owned revision checks, merge handlers, conflict UI and sharing policies.
 
+## File > Open with cloud places
+
+Pass `fileProviders` (a property of the element and a prop of every binding) to add cloud places
+to File > Open. When the list is not empty, Open shows **This device** (the usual Browse tile) and
+one place per provider, which renders the shared `<office-ui-cloud-files>` browser for `.vsdx`
+drawings: sign in, Recent, My files, search and open from a sharing link. The words come from
+Visio's display language in every locale.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeDrawingSnapshots } from 'ooxml-core/visio/collab';
+
+const oneDrive = createOneDriveFileProvider({
+	getAccessToken, // the host's own sign-in
+	signIn, // opens the host's sign-in UI and resolves with the account
+	canWrite: async (file) => file.driveId === (await myDriveId()),
+	mergers: {
+		vsdx: ({ base, local, remote }) => mergeDrawingSnapshots(base.bytes, local, remote.bytes),
+	},
+});
+// <VisioViewer fileProviders={[oneDrive]} /> (React); [fileProviders] in Angular; :file-providers in Vue.
+```
+
+A drawing chosen there loads through the normal `.vsdx` path and takes the file's name, then:
+
+- It is read-only when the file is (`canEdit` false). A host that already made the viewer read-only
+  (`canEdit`, `readOnly`, a collaboration `viewer` role or `capabilities.edit`) stays read-only
+  for an editable file: the stricter of the two wins.
+- File > Save and Save As use that file's own storage instead of the host `storage`, until another
+  drawing loads (Open, New, `load` or `document`). Save resolves only after the provider stored the
+  bytes: the drawing reads clean then, and stays unsaved with a `document-error` when the upload fails.
+- The cancelable `file-command` event still fires first (`open`, `save`); cancelling `open`
+  leaves the current drawing in place. The backstage closes once the drawing is open.
+- Export diagnostics are reported as for any other save. Legacy `.vsd` is not a cloud editing target.
+
+The demos pass a OneDrive place by default, signed in through the demo-only dialog (a client ID, or
+a Graph Explorer token pasted into **Access token**). That dialog is demo configuration, not
+product UI; see `demos/onedrive`.
+
+## Using a session directly
+
 Visio uses the shared `ooxml-core/embedding/onedrive` connection for native VSDX files. The host
 owns Microsoft sign-in, link resolution and item-specific permission verification. Give the
 downloaded bytes to the existing viewer, with a host read-only restriction when access is unknown:
