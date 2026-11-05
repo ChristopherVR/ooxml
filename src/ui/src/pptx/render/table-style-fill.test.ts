@@ -24,8 +24,19 @@ describe('resolveStyleFillColor - tint/shade (ECMA-376 20.1.2.3.32)', () => {
 
 	it('a low tint value mixes mostly toward white', () => {
 		const fill: ParsedTableStyleFill = { schemeColor: '', color: '#000000', tint: 20_000 };
-		// 20% tint = 20% input + 80% white: 255 - 255*0.2 = 204 = 0xCC
-		expect(resolveStyleFillColor(fill, undefined)).toBe('#CCCCCC');
+		// 20% tint = 20% input + 80% white mixed in linear light (as PowerPoint
+		// does): 1 - 0.2 = 0.8 linear = 0xE7 in sRGB, not the gamma-space 0xCC.
+		expect(resolveStyleFillColor(fill, undefined)).toBe('#E7E7E7');
+	});
+
+	it('mixes a theme colour in linear light like PowerPoint (accent1 156082, tint 20%)', () => {
+		const fill: ParsedTableStyleFill = { schemeColor: '', color: '#156082', tint: 20_000 };
+		expect(resolveStyleFillColor(fill, undefined)).toBe('#E7EAED');
+	});
+
+	it('shade mixes toward black in linear light', () => {
+		const fill: ParsedTableStyleFill = { schemeColor: '', color: '#FFFFFF', shade: 50_000 };
+		expect(resolveStyleFillColor(fill, undefined)).toBe('#BCBCBC');
 	});
 
 	it('shade=100000 (100%) leaves an explicit colour unchanged', () => {

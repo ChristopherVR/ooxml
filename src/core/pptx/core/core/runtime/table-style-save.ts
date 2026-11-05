@@ -79,7 +79,18 @@ export function applyTableStyleEntryToNode(
 		// not a diff, so without this every save after one fill edit would
 		// re-emit (and round) every border, text colour and gradient of every
 		// section of that style.
-		const fill = unchanged(sectionFill(entry, name), parseTableStyleSectionFill(existingSection));
+		let fill = unchanged(sectionFill(entry, name), parseTableStyleSectionFill(existingSection));
+		if (existingTcStyle?.['a:fillRef']) {
+			// The entry's fill came from `a:tcStyle/a:fillRef`: an untouched one
+			// keeps the reference; an edited one replaces it with an explicit fill.
+			const candidate = sectionFill(entry, name);
+			const { fillRefSnapshot, ...rest } = candidate ?? { schemeColor: '' };
+			if (candidate && fillRefSnapshot !== undefined && fillRefSnapshot === JSON.stringify(rest)) {
+				fill = undefined;
+			} else if (candidate) {
+				fill = candidate;
+			}
+		}
 		const text = unchanged(sectionText(entry, name), parseTableStyleSectionText(existingSection));
 		const borders = unchanged(sectionBorders(entry, name), parseTableStyleBorders(existingTcStyle));
 		const cell3D = unchanged(

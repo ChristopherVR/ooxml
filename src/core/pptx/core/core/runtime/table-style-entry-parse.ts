@@ -255,6 +255,26 @@ function parseTableBackgroundFillRef(
 }
 
 /**
+ * A section's `a:tcStyle/a:fillRef` (CT_TableStyleCellStyle's style-matrix
+ * choice beside `a:fill`, used by the built-in Light Style 2 header row)
+ * resolved against the theme's format scheme like `a:tblBg/a:fillRef`.
+ */
+function resolveTcStyleFillRef(
+	section: XmlObject | undefined,
+	themeContext: TableStyleThemeContext | undefined,
+): ParsedTableStyleFill | undefined {
+	const tcStyle = section?.['a:tcStyle'] as XmlObject | undefined;
+	if (!tcStyle || tcStyle['a:fill']) {
+		return undefined;
+	}
+	const fillRef = parseTableBackgroundFillRef(tcStyle['a:fillRef'] as XmlObject | undefined);
+	const fill = fillRef
+		? resolveTableBackgroundFillRef(fillRef, themeContext?.formatScheme, themeContext?.colorMap)
+		: undefined;
+	return fill ? { ...fill, fillRefSnapshot: JSON.stringify(fill) } : undefined;
+}
+
+/**
  * Theme context needed to resolve a `a:tblBg/a:fillRef` style-matrix
  * reference into a concrete fill. Optional everywhere it's threaded through:
  * callers with no theme in scope (tests, the built-in-style-catalogue
@@ -287,7 +307,9 @@ export function parseTableStyleEntry(
 	const cell3DProps: Partial<Record<`${TableStylePartName}Cell3D`, PptxTableCell3D>> = {};
 	for (const name of TABLE_STYLE_PART_SEQUENCE) {
 		const node = section(name);
-		const fill = parseTableStyleSectionFill(node, resolveImagePath);
+		const fill =
+			parseTableStyleSectionFill(node, resolveImagePath) ??
+			resolveTcStyleFillRef(node, themeContext);
 		if (fill) {
 			fills[`${name}Fill`] = fill;
 		}

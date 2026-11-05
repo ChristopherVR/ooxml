@@ -37,6 +37,7 @@ import { fontWeightAttribute, resolveFontItalic, resolveFontWeight } from './fon
 import { cellPaddingCss } from './table-cell-padding';
 import type { CellBorderPosition } from './table-style-borders';
 import { resolveCellBorderCss, resolveStyleDiagonalBorders } from './table-style-borders';
+import { spanTableBackground } from './table-style-bg-span';
 import { getBuiltinTableStyle } from './table-style-builtins';
 import { resolveTableStyleCell3D } from './table-style-cell3d';
 import {
@@ -693,12 +694,16 @@ export function getTableCellBandStyle(
 		return painted;
 	};
 
+	let tableBackgroundCss: string | undefined;
 	// ── Table STYLE's own background (`a:tblBg`), the lowest-priority
 	// background layer of all: even `a:tblPr`'s own fill and the style's
 	// wholeTbl fill can sit above it. ──
 	if (styleEntry?.tableBackground?.fill) {
 		if (paintFill(styleEntry.tableBackground.fill)) {
 			applied = true;
+			if (typeof style.background === 'string') {
+				tableBackgroundCss = style.background;
+			}
 		}
 	}
 
@@ -826,7 +831,9 @@ export function getTableCellBandStyle(
 		const headerPainted = authoredFills
 			? Boolean(styleEntry?.firstRowFill && !styleEntry.firstRowFill.noFill)
 			: !styleEntry?.firstRowFill?.noFill;
-		if (headerPainted) {
+		// An authored style names its own header text colour (or leaves the
+		// whole-table colour): Medium Style 4's header stays dark on its pale fill.
+		if (headerPainted && !authoredFills) {
 			style.color = '#ffffff';
 		}
 		applyStyleText(styleEntry?.firstRowText, colorScheme, style, fontScheme);
@@ -868,5 +875,6 @@ export function getTableCellBandStyle(
 		applied = true;
 	}
 
+	spanTableBackground(style, tableBackgroundCss, tableData, rowIndex, cellIndex);
 	return applied ? style : undefined;
 }

@@ -111,13 +111,10 @@ describe('table-style part precedence (F4)', () => {
 
 	it('still paints the first column in a body row', () => {
 		// accent1 #156082 shaded 60% -> the firstCol fill, distinct from the
-		// wholeTbl fill. PowerPoint renders #0E4B66 here; we produce #0D3A4E
-		// because our shade math is done in sRGB rather than linear RGB. That
-		// gap is a separate colour-transform issue; what this asserts is that
-		// the FIRST-COLUMN part is the one being applied at all.
+		// wholeTbl fill. PowerPoint renders #0E4B66 here (shade is mixed in linear RGB).
 		const cell = at(1, 0);
 		expect(cell?.backgroundColor).not.toBe('#156082');
-		expect(cell?.backgroundColor).toBe('#0D3A4E');
+		expect(cell?.backgroundColor).toBe('#0E4B66');
 	});
 
 	it('paints an ordinary body cell with the whole-table fill', () => {
@@ -142,9 +139,7 @@ describe('table-style part precedence (F4)', () => {
 			resolve,
 		);
 		expect(topLeft?.borderRight).toBe('none');
-		expect(topLeft?.borderBottom).toBe(
-			'max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF',
-		);
+		expect(topLeft?.borderBottom).toBe('max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF');
 		// One row down there is no corner, so the first column's rule survives.
 		const bodyLeft = resolveCellBorderCss(
 			entry,
@@ -152,8 +147,27 @@ describe('table-style part precedence (F4)', () => {
 			{ rowIndex: 1, cellIndex: 0, rowCount: 4, columnCount: 4 },
 			resolve,
 		);
-		expect(bodyLeft?.borderRight).toBe(
-			'max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF',
+		expect(bodyLeft?.borderRight).toBe('max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF');
+	});
+});
+
+describe('header text colour of an authored style', () => {
+	it('keeps the whole-table text colour for a pale header (Medium Style 4)', () => {
+		// PowerPoint renders Medium Style 4's header text dark: the style gives
+		// the firstRow no text colour, so the header is not forced to white.
+		const css = getTableCellBandStyle(
+			{
+				rows: [],
+				columnWidths: [0.5, 0.5],
+				tableStyleId: '{69CF1AB2-1976-4502-BF36-3FF5EA218861}',
+				firstRowHeader: true,
+			},
+			0,
+			1,
+			3,
+			2,
+			{ colorScheme },
 		);
+		expect(css?.color).not.toBe('#ffffff');
 	});
 });

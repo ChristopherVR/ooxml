@@ -525,6 +525,12 @@ export interface ParsedTableStyleFill {
 	pattern?: ParsedTableStylePattern;
 	/** Image texture fill parsed from `a:blipFill`. */
 	image?: ParsedTableStyleImage;
+	/**
+	 * Set when the fill was resolved from `a:tcStyle/a:fillRef`: a JSON snapshot
+	 * of the resolved fill (without this field). The save path compares it to
+	 * tell an untouched reference from an edited fill.
+	 */
+	fillRefSnapshot?: string;
 }
 
 /**
@@ -635,6 +641,8 @@ export interface ParsedTableStyleBorder {
 	width?: number;
 	/** OOXML `a:prstDash@val` (e.g. `solid`, `dash`, `sysDot`). */
 	dash?: string;
+	/** Compound line type from `a:ln@cmpd` (`sng`, `dbl`, `thickThin`, ...). */
+	compound?: string;
 	/** Border colour as a theme scheme fill (from `a:ln/a:solidFill/a:schemeClr`). */
 	fill?: ParsedTableStyleFill;
 	/** Explicit hex colour when the line used `a:srgbClr` (e.g. `#808080`). */

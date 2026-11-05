@@ -83,7 +83,9 @@ function borderToCss(
 		return 'none';
 	}
 	const width = border.width ?? 1;
-	const dash = ooxmlDashToCssBorderStyle(border.dash);
+	// A double compound line (`cmpd="dbl"`) is two thin strokes with a gap.
+	const dash =
+		border.compound === 'dbl' && width >= 3 ? 'double' : ooxmlDashToCssBorderStyle(border.dash);
 	const color = border.color ?? resolve(border.fill) ?? '#000000';
 	return screenBorder(width, dash, color);
 }

@@ -22,6 +22,7 @@ import type {
 } from 'ooxml-core/pptx';
 
 import { buildGradientCss, colorWithOpacity, getPatternSvg, normalizeHexColor } from './fill-style';
+import { linearToSrgb255, srgb255ToLinear } from 'ooxml-core/color';
 import type { TableCellCss } from './table-style';
 import { isDisplayableImageUrl } from './table-style-image';
 import { tableSchemeColor } from './table-style-scheme';
@@ -52,18 +53,17 @@ function rgbToHex(r: number, g: number, b: number): string {
  * `a:tint` value in 0-1 (1 = unchanged/100% input, 0 = pure white).
  */
 function tintColor(hex: string, tintFactor: number): string {
+	// PowerPoint mixes in linear light (matches core's applyDrawingColorTransforms).
 	const { r, g, b } = hexToRgb(hex);
-	return rgbToHex(
-		255 - (255 - r) * tintFactor,
-		255 - (255 - g) * tintFactor,
-		255 - (255 - b) * tintFactor,
-	);
+	const mix = (c: number): number => linearToSrgb255(1 - (1 - srgb255ToLinear(c)) * tintFactor);
+	return rgbToHex(mix(r), mix(g), mix(b));
 }
 
-/** Compute a shaded (darker) colour. `shadeFactor` in 0-1 (1 = black). */
+/** Compute a shaded (darker) colour. `shadeFactor` in 0-1 (1 = black), mixed in linear light. */
 function shadeColor(hex: string, shadeFactor: number): string {
 	const { r, g, b } = hexToRgb(hex);
-	return rgbToHex(r * (1 - shadeFactor), g * (1 - shadeFactor), b * (1 - shadeFactor));
+	const mix = (c: number): number => linearToSrgb255(srgb255ToLinear(c) * (1 - shadeFactor));
+	return rgbToHex(mix(r), mix(g), mix(b));
 }
 
 /** Apply a fill's tint/shade to a resolved base hex colour. */

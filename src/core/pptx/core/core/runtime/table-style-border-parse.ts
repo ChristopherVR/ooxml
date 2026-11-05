@@ -154,6 +154,12 @@ function parseBorderSide(side: XmlObject | undefined): ParsedTableStyleBorder | 
 		has = true;
 	}
 
+	const cmpd = String(ln['@_cmpd'] || '').trim();
+	if (cmpd && cmpd !== 'sng') {
+		border.compound = cmpd;
+		has = true;
+	}
+
 	const solidFill = ln['a:solidFill'] as XmlObject | undefined;
 	const fill = parseSolidFillStyle(solidFill);
 	if (fill) {
