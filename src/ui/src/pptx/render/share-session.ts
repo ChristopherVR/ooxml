@@ -2,6 +2,7 @@
  * Framework-neutral Share dialog form, invitation-link, and join parsing.
  * Every UI binding emits the same CollaborationConfig shape from these helpers.
  */
+import { parseShareInvitation, shareInvitation } from 'ooxml-core/collab';
 import type { CollaborationConfig } from '../types';
 import { resolveTransportForServerUrl } from './broadcast-helpers';
 import { isValidRoomId } from './collaboration-presence';
@@ -55,50 +56,31 @@ export function buildCreateCollaborationConfig(
 	};
 }
 
-function parseInvitationUrl(value: string): URL | null {
-	try {
-		return new URL(value);
-	} catch {
-		return null;
-	}
-}
-
 /**
- * Parse an invitation produced by any framework binding. Complete links carry
- * the standard `room`, `server`, `transport`, and optional `signaling` query
- * parameters. A bare room ID uses the supplied fallback server.
+ * Parse an invitation produced by any framework binding (or any product: the links are the
+ * shared `ooxml-core/collab` format). Complete links carry the standard `room`, `server`,
+ * `transport`, and optional `signaling` query parameters. A bare room ID uses the supplied
+ * fallback server.
  */
 export function buildJoinCollaborationConfig(
 	fields: JoinSessionFields,
 ): CollaborationConfig | null {
-	const invitation = fields.invitation.trim();
 	const userName = fields.userName.trim();
-	if (!invitation || !userName) {
+	if (!userName) {
 		return null;
 	}
-
-	const url = parseInvitationUrl(invitation);
-	const roomId = (url?.searchParams.get('room') ?? (url ? '' : invitation)).trim();
-	if (!isValidRoomId(roomId)) {
+	const target = parseShareInvitation(fields.invitation, fields.serverUrl);
+	if (!target) {
 		return null;
 	}
-
-	const requestedTransport = url?.searchParams.get('transport');
-	const serverUrl = (url?.searchParams.get('server') ?? fields.serverUrl).trim();
 	const transport =
-		requestedTransport === 'webrtc' ? 'webrtc' : resolveTransportForServerUrl(serverUrl);
-	const signalingValue = url?.searchParams.get('signaling');
-	const signaling = signalingValue
-		?.split(',')
-		.map((entry) => entry.trim())
-		.filter((entry) => entry.length > 0);
-
+		target.transport === 'webrtc' ? 'webrtc' : resolveTransportForServerUrl(target.serverUrl);
 	return {
-		roomId,
+		roomId: target.roomId,
 		userName,
-		serverUrl: transport === 'webrtc' ? '' : serverUrl,
+		serverUrl: transport === 'webrtc' ? '' : target.serverUrl,
 		transport,
-		...(signaling?.length ? { signaling } : {}),
+		...(target.signaling?.length ? { signaling: target.signaling } : {}),
 		role: 'collaborator',
 		sessionIntent: 'join',
 	};
@@ -112,21 +94,17 @@ export function buildCollaborationShareUrl(
 	config: Pick<CollaborationConfig, 'roomId' | 'serverUrl' | 'transport' | 'signaling'>,
 	location?: { origin: string; pathname: string },
 ): string {
-	if (!location || location.origin === 'null' || location.origin === '') {
-		// Opaque origins (file:, about:blank or sandboxed hosts) cannot carry
-		// an absolute invitation. As for an absent location, use a joinable room code.
-		// Room codes use the recipient's fallback server and cannot carry custom signaling.
-		return config.roomId;
-	}
-	const url = new URL(location.pathname, location.origin);
-	url.searchParams.set('room', config.roomId);
-	if (config.transport === 'webrtc' || !config.serverUrl.trim()) {
-		url.searchParams.set('transport', 'webrtc');
-		if (config.signaling?.length) {
-			url.searchParams.set('signaling', config.signaling.join(','));
-		}
-	} else {
-		url.searchParams.set('server', config.serverUrl.trim());
-	}
-	return url.toString();
+	// A session without a server is peer-to-peer in PowerPoint, so its link says so.
+	const webrtc = config.transport === 'webrtc' || !config.serverUrl.trim();
+	return shareInvitation(
+		webrtc
+			? {
+					roomId: config.roomId,
+					serverUrl: '',
+					transport: 'webrtc',
+					...(config.signaling?.length ? { signaling: config.signaling } : {}),
+				}
+			: { roomId: config.roomId, serverUrl: config.serverUrl },
+		location,
+	);
 }

@@ -19,6 +19,7 @@ export * from './policy';
 export * from './presence';
 export * from './provider';
 export * from './session';
+export * from './share';
 export * from './transport-provider';
 export * from './validation';
 export * from './webrtc-provider';
