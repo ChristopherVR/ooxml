@@ -96,6 +96,14 @@ The package exports the typed event map (`DocxEditorEventMap`) and the runtime l
 
 The framework bindings forward the props `fileName`, `reviewAuthor` and `themeColors`, and the events `file-command`, `document-warning`, `readonly-change`, `ribbon-action` and `ribbon-customize`, under their framework names (for example `onFileCommand`, `fileCommand` and `onfilecommand`). The table is in [framework bindings](/bindings#binding-props-and-events).
 
+## Cloud places in File > Open
+
+`fileProviders` (a property of the element and a prop of every binding) takes
+`CloudFileProvider`s from `ooxml-core/embedding`, for example `createOneDriveFileProvider`. File >
+Open then lists "This device" and one place per provider. A file opened from a place saves through
+its own storage and is read-only when the provider says it cannot be edited; see
+[OneDrive integration](/onedrive#open-from-onedrive-in-file-open).
+
 ## Host-owned storage
 
 `storage` (a property of the element and a prop of every binding) takes a `DocumentStorage` from

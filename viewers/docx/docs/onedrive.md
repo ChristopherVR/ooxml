@@ -23,6 +23,45 @@ convert the Blob to bytes and call `session.save(bytes)`; mark clean only when p
 succeeds and no newer edit intervened. Native Save goes through `storage` automatically unless
 the host prevents the cancelable `file-command` event.
 
+## Open from OneDrive in File > Open
+
+Set `fileProviders` (a property of the element and a prop of every binding) to a list of
+`CloudFileProvider`s and File > Open shows places: "This device" (the Browse button) and one place
+per provider, each rendering the shared `<office-ui-cloud-files>` browser (Recent, My files, search,
+open from a sharing link) filtered to `.docx`. Its labels come from the Word dictionaries in every
+display language.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeDocxSnapshots } from 'ooxml-core/docx';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken, // your Microsoft authentication
+		signIn, // opens your sign-in UI and resolves with the account
+		canWrite: async (file) => file.driveId === (await myDriveId()),
+		mergers: {
+			docx: ({ base, local, remote }) => mergeDocxSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
+```
+
+A file chosen in a place loads like any other document, takes its file name, and is read-only when
+the provider reports `canEdit: false` (the stricter of the host's `readOnly` and the file wins).
+File > Save and Save As go to that file's own storage instead of the host `storage` until another
+document loads, and the title bar reads saved only after the upload resolved; a failed upload
+stays unsaved and raises `document-error`. Opening from a place does not fire `file-command`
+(the host chose the providers); Save and Save As still do, and a host that cancels them handles
+them itself. A host that removes the `open` capability hides the page and the places with it.
+
+The Word demo passes `createDemoOneDriveProvider` from `demos/onedrive` by default. Sign in from
+File > Open > OneDrive: set `VITE_ONEDRIVE_CLIENT_ID` (and optionally `VITE_ONEDRIVE_AUTHORITY`) in
+`demos/docx/.env.local` to use your own Entra app registration through MSAL, enter a client ID in the
+demo dialog, or paste a Graph Explorer token into its "Access token" field. Register the demo's origin
+(with a trailing slash) as a single-page application redirect URI. The demo edits only files on the
+signed-in user's own drive; other files open read-only.
+
 This applies to `docx-react-viewer`, `docx-vue-viewer`, `docx-angular-viewer`, `docx-svelte-viewer`,
 `docx-solid-viewer` and `docx-vanilla-viewer`. Each forwards the same `storage` and `readOnly`
 props/options. `docx-core` is a model facade and does not implement Microsoft sign-in.

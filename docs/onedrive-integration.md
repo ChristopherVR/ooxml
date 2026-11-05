@@ -190,6 +190,10 @@ await session.save(await editor.saveBytes());
 // Call markClean() only if no edit occurred after the exported snapshot.
 ```
 
+To browse OneDrive from File > Open instead, pass the provider as `fileProviders` (a property of
+the element and a prop of every binding): File > Open then lists "This device" and the provider, and
+a chosen file loads, saves through its own storage and is read-only when `canEdit` is false.
+
 Do not feed a OneDrive sharing-page URL to a generic `src` loader. Resolve the link first.
 The Word connection is documented beside the [Word viewer](../viewers/docx/docs/onedrive.md).
 

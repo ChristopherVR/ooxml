@@ -63,6 +63,7 @@ export async function mountFramework(
 					...(options.documentModel && { documentModel: options.documentModel }),
 					...(options.readOnly !== undefined && { readOnly: options.readOnly }),
 					...(options.locale !== undefined && { locale: options.locale }),
+					...(options.fileProviders && { fileProviders: options.fileProviders }),
 					...(options.onDocumentChange && { 'onDocument-change': options.onDocumentChange }),
 					...(options.onDocumentError && { 'onDocument-error': options.onDocumentError }),
 				}),
@@ -78,6 +79,7 @@ export async function mountFramework(
 				documentModel: options.documentModel,
 				readOnly: options.readOnly,
 				locale: options.locale,
+				fileProviders: options.fileProviders,
 				ondocumentchange: options.onDocumentChange,
 				ondocumenterror: options.onDocumentError,
 			},
@@ -101,6 +103,7 @@ export async function mountFramework(
 		component.setInput('documentModel', options.documentModel);
 		component.setInput('readOnly', options.readOnly ?? false);
 		component.setInput('locale', options.locale ?? 'en');
+		component.setInput('fileProviders', options.fileProviders ?? null);
 		component.instance.documentChange.subscribe(options.onDocumentChange);
 		component.instance.documentError.subscribe(options.onDocumentError);
 		app.attachView(component.hostView);
