@@ -238,7 +238,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					this.zip.file(targetImagePath, parsedImage.bytes);
 				}
 			}
-		} else {
+		} else if (!(el.imagePath && this.blobUrlCache.has(el.imageData!))) {
+			// In browsers a loaded image is shown through a blob: URL this handler minted for its
+			// own package part (`createImageUrl`). Its bytes are unchanged and already in the
+			// package at `imagePath`, so there is nothing to embed and nothing to warn about.
 			this.compatibilityService.reportWarning({
 				code: 'SAVE_IMAGE_PAYLOAD_UNSUPPORTED',
 				message:
