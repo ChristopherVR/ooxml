@@ -763,6 +763,7 @@ export * from './shape-autofit-resize';
 export * from './text-autofit-shrink';
 export * from './text-autofit-shrink-measure';
 export * from './morph-plan';
+export type { MorphCopyPart } from './morph-text-body';
 export * from './text-advanced';
 export * from './text-theme';
 export * from './kinsoku-styles';

@@ -125,19 +125,56 @@ describe('carried text lines (issue #141, slides 6 -> 7)', () => {
 		expect(plan.crossfadeGroups[0]?.incomingAnimation).toBeUndefined();
 	});
 
-	it('keeps the stacking when a shape above it shares its path', () => {
-		const cover = {
-			id: 'cover',
-			type: 'shape',
-			x: 0,
-			y: 250,
-			width: 600,
-			height: 150,
-			shapeStyle: { fillColor: '#336699' },
-		} as PptxElement;
+	// PowerPoint 16, a 36 pt line changing Calibri -> Arial under an opaque bar
+	// stacked above it: the bar covers it on every frame and the uncovered text
+	// keeps its brightest stroke at 255 through the dissolve.
+	const cover = {
+		id: 'cover',
+		type: 'shape',
+		x: 0,
+		y: 250,
+		width: 600,
+		height: 150,
+		shapeStyle: { fillColor: '#336699' },
+	} as PptxElement;
+
+	it('stays additive under a shape above it whose ghost holds, which stays on top', () => {
 		const plan = buildMorphTransitionPlan(
 			slide([from, cover]),
 			slide([to, { ...cover, id: 'cover-7' }]),
+			2000,
+			'object',
+			{ measureText: measure },
+		)!;
+		expect(plan.crossfadeGroups.map((group) => group.incoming.id)).toEqual(['o6-7']);
+		const groupSlot = plan.overlayStack.findIndex((entry) => entry.kind === 'crossfade');
+		const coverSlot = plan.overlayStack.findIndex(
+			(entry) =>
+				entry.kind === 'layer' &&
+				plan.overlayLayers[entry.index]?.elements.some((element) => element.id === 'cover'),
+		);
+		expect(coverSlot).toBeGreaterThan(groupSlot);
+	});
+
+	it('lifts a shape above it that is only painted on the stage along with it', () => {
+		const arriving = { ...cover, id: 'arrival' } as PptxElement;
+		const plan = buildMorphTransitionPlan(slide([from]), slide([to, arriving]), 2000, 'object', {
+			measureText: measure,
+		})!;
+		expect(plan.crossfadeGroups.map((group) => group.incoming.id)).toEqual(['o6-7']);
+		expect(plan.overlayIncomingElements.map((element) => element.id)).toEqual(['arrival']);
+		expect(plan.incomingAnimations.get('arrival')).toContain('pptx-morph-lifted-hidden');
+		const groupSlot = plan.overlayStack.findIndex((entry) => entry.kind === 'crossfade');
+		const arrivalSlot = plan.overlayStack.findIndex((entry) => entry.kind === 'layer');
+		expect(arrivalSlot).toBeGreaterThan(groupSlot);
+	});
+
+	it('keeps the stacking when a shape above it cannot rise with it', () => {
+		// The cover's ghost dissolves over its incoming half held at full
+		// strength; summing the two would paint it too bright.
+		const plan = buildMorphTransitionPlan(
+			slide([from, cover]),
+			slide([to, { ...cover, id: 'cover-7', shapeStyle: { fillColor: '#993366' } } as PptxElement]),
 			2000,
 			'object',
 			{ measureText: measure },
@@ -269,6 +306,74 @@ describe('carried text geometry', () => {
 		expect(start.sx).toBe(1);
 		expect(start.sy).toBe(1);
 		expect(apply(start, to, 300, 200)).toEqual({ x: 100, y: 100 });
+	});
+
+	// PowerPoint 16: a text box standing at 20 degrees on both slides, moving
+	// while it changes Calibri -> Arial 32 pt, dissolves glyph over glyph (its
+	// brightest stroke 255 on every frame) and keeps its angle.
+	it('carries a rotated line in the box frame, turned with the box', () => {
+		const from = textBox(
+			'a',
+			['Lorem ipsum dolor'],
+			{ fontFamily: 'Calibri', fontSize: 42.67 },
+			{ x: 107, y: 160, width: 480, height: 80, rotation: 20 },
+		);
+		const to = textBox(
+			'b',
+			['Lorem ipsum dolor'],
+			{ fontFamily: 'Arial', fontSize: 42.67 },
+			{ x: 560, y: 427, width: 480, height: 80, rotation: 20 },
+		);
+		const alignment = resolveMorphTextAlignment(from, to, measure)!;
+		expect(alignment.rotation).toBe(20);
+		const start = morphTextIncomingStart(alignment, to);
+		// CSS `translate(d) rotate(20deg) scale(s)` about the box centre.
+		const turn = (element: PptxElement, t: MorphTextTransform, x: number, y: number) => {
+			const cx = element.x + element.width / 2;
+			const cy = element.y + element.height / 2;
+			const r = (20 * Math.PI) / 180;
+			const vx = t.sx * (x - cx);
+			const vy = t.sy * (y - cy);
+			return {
+				x: cx + t.dx + vx * Math.cos(r) - vy * Math.sin(r),
+				y: cy + t.dy + vx * Math.sin(r) + vy * Math.cos(r),
+			};
+		};
+		const still = { dx: 0, dy: 0, sx: 1, sy: 1 };
+		const target = turn(from, still, alignment.from.x, alignment.from.y);
+		const landed = turn(to, start, alignment.to.x, alignment.to.y);
+		expect(landed.x).toBeCloseTo(target.x, 6);
+		expect(landed.y).toBeCloseTo(target.y, 6);
+		const end = morphTextGhostEnd(alignment, from);
+		const ghost = turn(from, end, alignment.from.x, alignment.from.y);
+		const incoming = turn(to, still, alignment.to.x, alignment.to.y);
+		expect(ghost.x).toBeCloseTo(incoming.x, 6);
+		expect(ghost.y).toBeCloseTo(incoming.y, 6);
+		expect(
+			resolveMorphTextAlignment(from, { ...to, rotation: 25 } as PptxElement, measure),
+		).toBeUndefined();
+	});
+
+	// PowerPoint 16, a 36 pt line changing Calibri -> Arial: mid-morph its "L"
+	// is one stem growing 30 -> 35 px on one baseline, never two stems.
+	it('lays two faces baseline on baseline and cap on cap', () => {
+		const metrics = (font: string) => {
+			const size = Number(/([\d.]+)px/u.exec(font)?.[1]);
+			return /px\s+"?Arial/u.test(font)
+				? { ascent: 0.905 * size, descent: 0.212 * size, capHeight: 0.716 * size }
+				: { ascent: 0.75 * size, descent: 0.25 * size, capHeight: 0.644 * size };
+		};
+		const geometry = { x: 80, y: 160, width: 800, height: 80 };
+		const from = textBox('a', ['Lorem ipsum'], { fontFamily: 'Calibri', fontSize: 48 }, geometry);
+		const to = textBox('b', ['Lorem ipsum'], { fontFamily: 'Arial', fontSize: 48 }, geometry);
+		const alignment = resolveMorphTextAlignment(from, to, measure, { metrics })!;
+		// Line height 1.2: (57.6 - 48) / 2 + 36 against (57.6 - 53.616) / 2 + 43.44.
+		expect(alignment.from.y).toBeCloseTo(160 + 40.8, 6);
+		expect(alignment.to.y).toBeCloseTo(160 + 45.432, 6);
+		// One line in one face: stretched onto the other face's capitals.
+		expect(alignment.scaleY).toBeCloseTo(0.716 / 0.644, 6);
+		// Without metrics the line tops are laid together, as before.
+		expect(resolveMorphTextAlignment(from, to, measure)!.from.y).toBe(160);
 	});
 
 	it('falls back to the box when a layout may wrap differently', () => {

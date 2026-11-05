@@ -37,7 +37,13 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
-import type { MorphTextMeasure, TextFrame } from './morph-text-frame-read';
+import type { MorphFontMetrics } from './morph-text-baseline';
+import {
+	measureMorphFontWithCanvas,
+	morphTextCapHeight,
+	morphTextFirstBaseline,
+} from './morph-text-baseline';
+import type { MorphTextMeasure, ReadFrameOptions, TextFrame } from './morph-text-frame-read';
 import { measureMorphTextWithCanvas, paragraphWidth, readFrame } from './morph-text-frame-read';
 
 export type { MorphTextMeasure } from './morph-text-frame-read';
@@ -52,6 +58,13 @@ export interface MorphTextAlignment {
 	to: { x: number; y: number };
 	scaleX: number;
 	scaleY: number;
+	/**
+	 * The rotation (degrees) BOTH halves stand at, when it is not zero. The
+	 * anchors and scales are then in the boxes' own, unrotated coordinates, and
+	 * `centres` holds the two boxes' centres the rotation turns them about.
+	 */
+	rotation?: number;
+	centres?: { from: { x: number; y: number }; to: { x: number; y: number } };
 }
 
 /** A `translate(dx, dy) scale(sx, sy)` about the element's own centre. */
@@ -66,6 +79,8 @@ export interface MorphTextTransform {
 const LINE_DRIFT_PX = 3;
 /** Sub-pixel noise allowed when comparing column widths or a line against its column. */
 const FIT_EPSILON_PX = 0.5;
+/** Two halves within this many degrees of each other stand at the same rotation. */
+const ROTATION_EPSILON_DEG = 0.01;
 
 /** Whether every paragraph of `frame` is laid out on one line at `widths`. */
 function singleLines(frame: TextFrame, widths: number[]): boolean {
@@ -95,17 +110,21 @@ export function resolveMorphTextAlignment(
 	from: PptxElement,
 	to: PptxElement,
 	measure: MorphTextMeasure = measureMorphTextWithCanvas,
+	options: Pick<ReadFrameOptions, 'withBody'> & { metrics?: MorphFontMetrics } = {},
 ): MorphTextAlignment | undefined {
+	const rotation = normalDegrees(from.rotation ?? 0);
 	if (
 		(from as { shapeType?: string }).shapeType !== (to as { shapeType?: string }).shapeType ||
 		!hasTextProperties(from) ||
 		!hasTextProperties(to) ||
-		from.text !== to.text
+		from.text !== to.text ||
+		Math.abs(rotation - normalDegrees(to.rotation ?? 0)) > ROTATION_EPSILON_DEG
 	) {
 		return undefined;
 	}
-	const a = readFrame(from);
-	const b = readFrame(to);
+	const read = { rotated: true, ...(options.withBody ? { withBody: true } : {}) };
+	const a = readFrame(from, read);
+	const b = readFrame(to, read);
 	if (
 		!a ||
 		!b ||
@@ -116,7 +135,19 @@ export function resolveMorphTextAlignment(
 	) {
 		return undefined;
 	}
-	const anchors = { from: { x: a.anchorX, y: a.anchorY }, to: { x: b.anchorX, y: b.anchorY } };
+	const anchors = {
+		from: { x: a.anchorX, y: a.anchorY },
+		to: { x: b.anchorX, y: b.anchorY },
+		...(rotation === 0
+			? {}
+			: {
+					rotation,
+					centres: {
+						from: { x: from.x + from.width / 2, y: from.y + from.height / 2 },
+						to: { x: to.x + to.width / 2, y: to.y + to.height / 2 },
+					},
+				}),
+	};
 	const sameFonts = a.paragraphs.every(
 		(paragraph, index) =>
 			paragraph.fonts.join('|') === b.paragraphs[index]?.fonts.join('|') &&
@@ -155,7 +186,59 @@ export function resolveMorphTextAlignment(
 	) {
 		return undefined;
 	}
-	return { ...anchors, scaleX, scaleY };
+	// Two faces put their baselines at different depths in a line, so the
+	// halves are laid baseline on baseline (see `morph-text-baseline`).
+	// One face at another size scales uniformly, which the line extents
+	// already say exactly; only a change of face needs the face's metrics.
+	const faceOf = (font: string) => font.replace(/[\d.]+px/gu, '');
+	const sameFace = a.paragraphs.every(
+		(paragraph, index) =>
+			paragraph.fonts.map(faceOf).join('|') === b.paragraphs[index]?.fonts.map(faceOf).join('|'),
+	);
+	const metrics = options.metrics ?? measureMorphFontWithCanvas;
+	const baseA = sameFace ? undefined : morphTextFirstBaseline(a, metrics);
+	const baseB = sameFace ? undefined : morphTextFirstBaseline(b, metrics);
+	if (baseA === undefined || baseB === undefined) {
+		return { ...anchors, scaleX, scaleY };
+	}
+	anchors.from.y += baseA;
+	anchors.to.y += baseB;
+	// One line in one face each: PowerPoint stretches the glyphs onto the
+	// other face's capital height (a Calibri -> Arial "L" grows 30 -> 33 -> 35
+	// px through the morph, one stem, never two), about the baseline.
+	const capA = morphTextCapHeight(a, metrics);
+	const capB = morphTextCapHeight(b, metrics);
+	return {
+		...anchors,
+		scaleX,
+		scaleY: capA !== undefined && capB !== undefined ? capB / capA : scaleY,
+	};
+}
+
+/**
+ * The translation that, about a box centred on `pivot`, lays the local anchor
+ * `own` (scaled by `scale`) onto the slide point `target`. `own` and `target`
+ * are both read unrotated; `rotation` turns the offset the way the rendered
+ * boxes are turned, which is how a rotated pair's text stays glyph over glyph.
+ */
+function translationOnto(
+	target: { x: number; y: number },
+	targetPivot: { x: number; y: number },
+	own: { x: number; y: number },
+	pivot: { x: number; y: number },
+	sx: number,
+	sy: number,
+	rotation: number,
+): { dx: number; dy: number } {
+	const vx = target.x - targetPivot.x - sx * (own.x - pivot.x);
+	const vy = target.y - targetPivot.y - sy * (own.y - pivot.y);
+	const radians = (rotation * Math.PI) / 180;
+	const cos = Math.cos(radians);
+	const sin = Math.sin(radians);
+	return {
+		dx: targetPivot.x - pivot.x + vx * cos - vy * sin,
+		dy: targetPivot.y - pivot.y + vx * sin + vy * cos,
+	};
 }
 
 /**
@@ -168,11 +251,18 @@ export function morphTextIncomingStart(
 ): MorphTextTransform {
 	const sx = 1 / alignment.scaleX;
 	const sy = 1 / alignment.scaleY;
-	const cx = to.x + to.width / 2;
-	const cy = to.y + to.height / 2;
+	const pivot = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
+	const targetPivot = alignment.rotation ? (alignment.centres?.from ?? pivot) : pivot;
 	return {
-		dx: alignment.from.x - cx - sx * (alignment.to.x - cx),
-		dy: alignment.from.y - cy - sy * (alignment.to.y - cy),
+		...translationOnto(
+			alignment.from,
+			targetPivot,
+			alignment.to,
+			pivot,
+			sx,
+			sy,
+			alignment.rotation ?? 0,
+		),
 		sx,
 		sy,
 	};
@@ -186,12 +276,24 @@ export function morphTextGhostEnd(
 	alignment: MorphTextAlignment,
 	from: PptxElement,
 ): MorphTextTransform {
-	const cx = from.x + from.width / 2;
-	const cy = from.y + from.height / 2;
+	const pivot = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+	const targetPivot = alignment.rotation ? (alignment.centres?.to ?? pivot) : pivot;
 	return {
-		dx: alignment.to.x - cx - alignment.scaleX * (alignment.from.x - cx),
-		dy: alignment.to.y - cy - alignment.scaleY * (alignment.from.y - cy),
+		...translationOnto(
+			alignment.to,
+			targetPivot,
+			alignment.from,
+			pivot,
+			alignment.scaleX,
+			alignment.scaleY,
+			alignment.rotation ?? 0,
+		),
 		sx: alignment.scaleX,
 		sy: alignment.scaleY,
 	};
+}
+
+/** `degrees` in [0, 360). */
+function normalDegrees(degrees: number): number {
+	return ((degrees % 360) + 360) % 360;
 }

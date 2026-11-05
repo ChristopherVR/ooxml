@@ -14,6 +14,7 @@ import {
 	DEFAULT_TEXT_FONT_SIZE,
 } from '../constants';
 import type { RenderParagraph } from './paragraph-types';
+import { resolveTextBodyRectPadding } from './text-body-rect';
 import { buildParagraphs } from './text-paragraphs';
 import { resolveLineHeight } from './text-line-height';
 import { resolveCssTextAlign } from './text-paragraph-style';
@@ -71,6 +72,8 @@ export interface FrameParagraph {
 	runs: RenderParagraph['runs'];
 	/** Font size (px) of the paragraph's own strut: its line boxes are at least this tall. */
 	strut: number;
+	/** The canvas font of the paragraph's strut (the body's face at its strut size). */
+	strutFont: string;
 	/** The CSS `line-height` the paragraph lays out with. */
 	lineHeight: number | string;
 	/** `margin-bottom` (px) after the paragraph. */
@@ -85,9 +88,19 @@ export interface FrameParagraph {
 	textAlignLast: string | undefined;
 }
 
-function paintsBody(element: PptxElement): boolean {
+/** Whether `element` is (or holds) a picture or a group, never carried by its text. */
+function paintsPicture(element: PptxElement): boolean {
 	const image = element as { imagePath?: string; svgPath?: string; children?: unknown[] };
-	if (image.imagePath || image.svgPath || image.children) {
+	return Boolean(image.imagePath || image.svgPath || image.children);
+}
+
+/**
+ * Whether `element` paints anything besides its text: a picture, a group, a
+ * fill or an outline. Such a pair's text can only be carried apart from its
+ * body (see `morph-text-body`).
+ */
+export function paintsBody(element: PptxElement): boolean {
+	if (paintsPicture(element)) {
 		return true;
 	}
 	if (!hasShapeProperties(element) || !element.shapeStyle) {
@@ -128,14 +141,28 @@ function runFont(
 	return `${italic}${weight} ${size}px ${family}`;
 }
 
-export function readFrame(element: PptxElement): TextFrame | undefined {
+/** What {@link readFrame} may accept beyond a plain, upright, body-less text box. */
+export interface ReadFrameOptions {
+	/**
+	 * Accept a rotated box. Its frame is read in the box's own, unrotated
+	 * coordinates, so the caller has to rotate whatever it derives from it.
+	 */
+	rotated?: boolean;
+	/** Accept a box that paints a fill or an outline, reading only its text. */
+	withBody?: boolean;
+}
+
+export function readFrame(
+	element: PptxElement,
+	options: ReadFrameOptions = {},
+): TextFrame | undefined {
 	if (
 		!hasTextProperties(element) ||
 		!element.text ||
-		(element.rotation ?? 0) !== 0 ||
+		(!options.rotated && (element.rotation ?? 0) !== 0) ||
 		element.flipHorizontal ||
 		element.flipVertical ||
-		paintsBody(element)
+		(options.withBody ? paintsPicture(element) : paintsBody(element))
 	) {
 		return undefined;
 	}
@@ -153,10 +180,14 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 		family: ts?.fontFamily ? getSubstituteFontFamily(ts.fontFamily) : DEFAULT_FONT_FAMILY,
 		size: (ts?.fontSize || DEFAULT_TEXT_FONT_SIZE) * fontScale,
 	};
-	const left = ts?.bodyInsetLeft ?? DEFAULT_BODY_INSET_LR_PX;
-	const right = ts?.bodyInsetRight ?? DEFAULT_BODY_INSET_LR_PX;
-	const top = ts?.bodyInsetTop ?? DEFAULT_BODY_INSET_TB_PX;
-	const bottom = ts?.bodyInsetBottom ?? DEFAULT_BODY_INSET_TB_PX;
+	// The geometry's own text rectangle insets the body further, as the
+	// renderer lays it out (`text-body-rect`): a rounded rectangle's text sits
+	// inside its corners.
+	const rect = resolveTextBodyRectPadding(element);
+	const left = (ts?.bodyInsetLeft ?? DEFAULT_BODY_INSET_LR_PX) + rect.left;
+	const right = (ts?.bodyInsetRight ?? DEFAULT_BODY_INSET_LR_PX) + rect.right;
+	const top = (ts?.bodyInsetTop ?? DEFAULT_BODY_INSET_TB_PX) + rect.top;
+	const bottom = (ts?.bodyInsetBottom ?? DEFAULT_BODY_INSET_TB_PX) + rect.bottom;
 	const bodyAlign = resolveCssTextAlign(ts?.align, false);
 	const bodyLineHeight = resolveLineHeight(ts, false);
 	let align: string | undefined;
@@ -180,6 +211,10 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 			size,
 			runs: paragraph.runs,
 			strut: Math.max(paragraph.strutFontSizePx ?? block.size, ...sizes, 0),
+			strutFont: runFont(
+				{},
+				{ family: block.family, size: paragraph.strutFontSizePx ?? block.size },
+			),
 			lineHeight: paragraph.lineHeight ?? bodyLineHeight,
 			spaceAfterPx: paragraph.spaceAfterPx ?? 0,
 			marginLeftPx: paragraph.marginLeftPx ?? 0,

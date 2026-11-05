@@ -55,6 +55,8 @@ import type { MorphOverlayStackEntry } from './morph-overlay-stack';
 import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
 import { resolveMorphTextBlendLifts } from './morph-text-blend';
+import type { MorphCopyPart } from './morph-text-body';
+import { buildMorphTextBodyPlan, mergeMorphTextBodyPlan } from './morph-text-body';
 import { buildMorphTextPiecePlan } from './morph-text-piece-plan';
 import type { MorphTextMeasure } from './morph-text-frame';
 import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
@@ -207,6 +209,13 @@ export interface MorphTransitionPlan {
 	 * clones the source's node under the copy's id.
 	 */
 	textPieceSources?: ReadonlyMap<string, string>;
+	/**
+	 * Copy id -> the part of its source a copy paints, for a shape whose text is
+	 * carried apart from its body (see `morph-text-body`): `'body'` without the
+	 * text, `'text'` without the fill and outline. The copy's element already
+	 * says so; a binding that clones the source's node strips the other part.
+	 */
+	morphCopyParts?: ReadonlyMap<string, MorphCopyPart>;
 	/** Animation duration in ms, echoed for convenience. */
 	durationMs: number;
 }
@@ -368,6 +377,22 @@ export function buildMorphTransitionPlan(
 		durationMs,
 		options.measureText,
 	);
+	// A shape whose text changes face or size while its box moves carries the
+	// text apart from its body (see `morph-text-body`), through the same copies.
+	const bodies = buildMorphTextBodyPlan(
+		mode === 'object' ? match.pairs.filter((pair) => !pieces.pairs.includes(pair)) : [],
+		{
+			outgoing: flattenedOutgoing,
+			incoming: flattenedIncoming,
+			pairs: match.pairs,
+			ghostIds,
+			overlaid: new Set(pieces.pairs.map((pair) => pair.toElement.id)),
+			animated: (id) => incomingAnimations.has(id),
+		},
+		durationMs,
+		options.measureText,
+	);
+	mergeMorphTextBodyPlan(pieces, bodies);
 	const piecePairs = new Set(pieces.pairs);
 	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
 	const pieceToIds = new Set(pieces.pairs.map((pair) => pair.toElement.id));
@@ -430,18 +455,26 @@ export function buildMorphTransitionPlan(
 		dissolvingInIds,
 	);
 	// Restyled text whose two halves are carried glyph over glyph dissolves
-	// additively, as PowerPoint's does, wherever lifting it changes no stacking.
+	// additively, as PowerPoint's does, with whatever the incoming slide stacks
+	// above it raised along with it (see `morph-text-blend`).
 	if (mode === 'object') {
 		for (const id of resolveMorphTextBlendLifts(
-			flattenedOutgoing,
-			flattenedIncoming,
-			match.pairs,
-			ghostIds,
+			{
+				outgoing: flattenedOutgoing,
+				incoming: flattenedIncoming,
+				pairs: match.pairs,
+				ghostIds,
+				overlaid: new Set([...lifted, ...pieceToIds]),
+				animated: (id) => incomingAnimations.has(id),
+			},
 			dissolvingInIds,
 			options.measureText,
 		)) {
 			lifted.add(id);
 		}
+	}
+	for (const id of bodies.rising) {
+		lifted.add(id);
 	}
 	for (const id of pieceToIds) {
 		lifted.delete(id);
@@ -519,6 +552,7 @@ export function buildMorphTransitionPlan(
 		overlayStack,
 		crossfadeGroups,
 		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
+		...(bodies.parts.size > 0 ? { morphCopyParts: bodies.parts } : {}),
 		durationMs,
 	};
 }
