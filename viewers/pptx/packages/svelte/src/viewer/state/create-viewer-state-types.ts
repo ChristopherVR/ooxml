@@ -3,6 +3,7 @@ import type {
 	AutosaveRecord,
 	CanvasSize,
 	CloudDocumentController,
+	SaveProgressController,
 	CloudFileProvider,
 	CollaborationConfig,
 	CollaborationShellState,
@@ -89,6 +90,8 @@ export interface CreateViewerStateOptions {
 	 * and clears it. Omitted, the factory makes its own.
 	 */
 	cloudDocument?: CloudDocumentController;
+	/** The progress of a save to the storage, shown by the status bar. Omitted, the factory makes its own. */
+	saveProgress?: SaveProgressController;
 	/** Host `authorName` prop: comment/reply author and the broadcast presenter name. */
 	getAuthorName?: () => string | undefined;
 	getInitialSlide: () => number;
@@ -268,6 +271,8 @@ export interface ViewerStateBag {
 	openFile(): void;
 	/** The File > Open cloud file now open; cleared when another document is loaded. */
 	cloudDocument: CloudDocumentController;
+	/** Progress of a save to the host's storage (upload, merge), read by the status bar. */
+	saveProgress: SaveProgressController;
 	/** Run a Quick Access Toolbar command by catalog id (unknown ids no-op). */
 	runQuickAccessCommand(id: string): void;
 	/**

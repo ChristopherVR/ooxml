@@ -5,7 +5,8 @@
 	 * typed intents to the callbacks. Kept independent from the top toolbar so
 	 * read-only viewers retain PowerPoint's navigation and zoom chrome.
 	 */
-	import { dispatchStatusBarIntent, statusBarState } from 'ooxml-ui/pptx';
+	import { dispatchStatusBarIntent, saveProgressStatus, statusBarState } from 'ooxml-ui/pptx';
+	import type { SaveProgressState } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
 	import type { AutosaveStatus } from '../state/autosave.svelte';
@@ -17,6 +18,7 @@
 		isDirty,
 		autosaveStatus,
 		lastSavedAt,
+		saveProgress,
 		showNotes = false,
 		notesExpanded = false,
 		isFullscreen = false,
@@ -39,6 +41,8 @@
 		autosaveStatus?: AutosaveStatus;
 		/** Epoch ms of the last successful autosave, for "Saved n minutes ago". */
 		lastSavedAt?: number | null;
+		/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
+		saveProgress?: SaveProgressState;
 		showNotes?: boolean;
 		notesExpanded?: boolean;
 		isFullscreen?: boolean;
@@ -66,6 +70,7 @@
 			autosave: autosaveStatus
 				? { state: autosaveStatus, timestamp: lastSavedAt ?? undefined }
 				: undefined,
+			saveProgress: saveProgress ? saveProgressStatus(saveProgress, t) : undefined,
 			zoomPercent: hideZoom ? undefined : zoomPercent,
 			notesExpanded,
 			// "Normal" is active whenever neither the slide sorter nor the slideshow is up.

@@ -15,7 +15,8 @@
 	import {
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
-		createCloudDocumentController,
+	createCloudDocumentController,
+	createSaveProgressController,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
 		resolveCollaborationConfig,
 		resolveViewerRootOptions,
@@ -112,6 +113,7 @@
 	// A file opened from a File > Open cloud place brings its own storage, name and edit right
 	// until another document is loaded (shared `render/cloud-open`).
 	const cloudDocument = createCloudDocumentController();
+	const saveProgress = createSaveProgressController();
 	const cloudFile = controllerState(cloudDocument);
 	const documentView = $derived(resolveViewerDocument(props, cloudFile.current.file));
 	const vm = createViewerState(
@@ -123,7 +125,7 @@
 			getViewportHeight: () => viewportHeight,
 			getMasterScale: () => masterScale,
 			getCustomization: () => customization.resolved,
-		}, cloudDocument),
+		}, cloudDocument, saveProgress),
 	);
 	onDestroy(() => vm.destroy());
 	$effect(() => {

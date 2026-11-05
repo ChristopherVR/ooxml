@@ -3,6 +3,7 @@ import {
 	isEditingAllowed,
 	buildFieldSubstitutionContext,
 	createCloudDocumentController,
+	createSaveProgressController,
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
 	resolve3DRenderingFlags,
@@ -338,6 +339,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	// File > Open > a cloud place: the file's storage, name and edit right apply from now on (the
 	// option getters resolve through `cloudDocument`), and its bytes load like any open.
 	const cloudDocument = options.cloudDocument ?? createCloudDocumentController();
+	const saveProgress = options.saveProgress ?? createSaveProgressController();
 	const openCloudFile = (file: CloudOpenedFile): void => {
 		cloudDocument.open(file);
 		void loader.load(file.bytes);
@@ -569,6 +571,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		closeSignatureWarning: collabCluster.closeSignatureWarning,
 		openFile: createOpenFile(loader, () => options.onopenfile, cloudDocument.clear),
 		cloudDocument,
+		saveProgress,
 		runQuickAccessCommand: (id) =>
 			runQuickAccessCommand(id, {
 				deck,

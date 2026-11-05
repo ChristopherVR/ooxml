@@ -1,5 +1,6 @@
 import {
 	createCloudDocumentController,
+	createSaveProgressController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isFeatureEnabled,
 	resolveCloudDocumentView,
@@ -11,6 +12,7 @@ import type {
 	CloudDocumentHostValues,
 	CloudOpenedFile,
 	ResolvedCustomization,
+	SaveProgressController,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
@@ -68,6 +70,7 @@ export function toViewerStateOptions(
 	getProps: () => PowerPointViewerProps,
 	dom: ViewerDomAccessors,
 	cloudDocument: CloudDocumentController = createCloudDocumentController(),
+	saveProgress: SaveProgressController = createSaveProgressController(),
 ): CreateViewerStateOptions {
 	const cloudFile = controllerState(cloudDocument);
 	const view = (): CloudDocumentHostValues =>
@@ -75,6 +78,7 @@ export function toViewerStateOptions(
 	return {
 		...dom,
 		cloudDocument,
+		saveProgress,
 		inspectorInitiallyOpen: getProps().inspectorInitiallyOpen,
 		getSource: () => getProps().source,
 		// Deliberately NOT defaulted: the host prop is a ceiling, and `undefined`
@@ -84,7 +88,11 @@ export function toViewerStateOptions(
 		// Storage, recovery key, name and edit right follow a File > Open cloud file while one is
 		// open; the recent list and cache maintenance keep the host's own storage.
 		getFilePath: () => view().filePath,
-		getStorage: () => view().storage,
+		// Saves through it report their steps (upload, merge) to the status bar.
+		getStorage: () => {
+			const storage = view().storage;
+			return storage ? saveProgress.wrap(storage) : storage;
+		},
 		getHostStorage: () => getProps().storage,
 		getFileProviders: () => getProps().fileProviders,
 		getAuthorName: () => getProps().authorName,
