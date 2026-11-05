@@ -140,3 +140,12 @@ describe('connectorView pointer hit target', () => {
 		expect(path.closest('[data-element-id]')?.getAttribute('data-element-id')).toBe('conn-1');
 	});
 });
+
+describe('ConnectorView morph strand', () => {
+	it('marks the painted strand a morph keeps at its width', () => {
+		const target = render(connector({ strokeWidth: 3 }));
+		const strands = target.querySelectorAll('[data-pptx-line]');
+		expect(strands).toHaveLength(1);
+		expect(strands[0]?.tagName.toLowerCase()).toBe('line');
+	});
+});

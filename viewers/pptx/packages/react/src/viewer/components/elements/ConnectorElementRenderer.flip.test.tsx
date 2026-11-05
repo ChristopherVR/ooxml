@@ -83,3 +83,10 @@ describe('flipped connector wrapper transform', () => {
 		expect(markup).not.toContain('rotate(');
 	});
 });
+
+describe('connector morph strand', () => {
+	it('marks the painted strand a morph keeps at its width', () => {
+		const markup = render(flippedBentConnector());
+		expect(markup.match(/data-pptx-line/gu)).toHaveLength(1);
+	});
+});

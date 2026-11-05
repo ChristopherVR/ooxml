@@ -127,6 +127,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 				@for (strand of strands(); track strand.key) {
 					@if (geo().pathD) {
 						<path
+							data-pptx-line=""
 							[attr.d]="geo().pathD"
 							fill="none"
 							[attr.stroke]="strokeColor()"
@@ -143,6 +144,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 						/>
 					} @else {
 						<line
+							data-pptx-line=""
 							[attr.x1]="geo().x1"
 							[attr.y1]="geo().y1"
 							[attr.x2]="geo().x2"

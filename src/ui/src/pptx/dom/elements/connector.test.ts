@@ -123,3 +123,12 @@ describe('connector arrowhead markers', () => {
 		expect(markerPath?.hasAttribute('stroke')).toBeFalsy();
 	});
 });
+
+describe('connector morph strand', () => {
+	it('marks the painted strand a morph keeps at its width', () => {
+		const wrapper = renderConnectorElement(connector(), 0, makeContext()) as HTMLElement;
+		const strands = wrapper.querySelectorAll('[data-pptx-line]');
+		expect(strands).toHaveLength(1);
+		expect(strands[0]?.tagName.toLowerCase()).toBe('line');
+	});
+});

@@ -128,6 +128,13 @@ export interface MorphTransitionPlan {
 	 */
 	customGeometryAnimations?: Map<string, string>;
 	/**
+	 * Element id -> CSS `animation` shorthand for the painted strand
+	 * (`[data-pptx-line]`) of a straight connector, which keeps its width while
+	 * the wrapper's journey scales (see `morph-line-carry`); emitted next to
+	 * {@link MorphTransitionPlan.outlineAnimations}.
+	 */
+	lineAnimations?: Map<string, string>;
+	/**
 	 * Incoming-slide element id -> CSS `animation` shorthand for the copy the
 	 * overlay paints, above every ghost.
 	 *
@@ -351,6 +358,7 @@ export function buildMorphTransitionPlan(
 	const outlineAnimations = new Map<string, string>();
 	const outlineStrandAnimations = new Map<string, string[]>();
 	const customGeometryAnimations = new Map<string, string>();
+	const lineAnimations = new Map<string, string>();
 	const keyframes: string[] = [];
 
 	for (const animation of animations) {
@@ -370,6 +378,10 @@ export function buildMorphTransitionPlan(
 				animation.elementId,
 				animation.animation,
 			);
+			continue;
+		}
+		if (animation.target === 'line') {
+			lineAnimations.set(animation.elementId, animation.animation);
 			continue;
 		}
 		const target =
@@ -634,6 +646,7 @@ export function buildMorphTransitionPlan(
 		...(outlineAnimations.size > 0 ? { outlineAnimations } : {}),
 		...(outlineStrandAnimations.size > 0 ? { outlineStrandAnimations } : {}),
 		...(customGeometryAnimations.size > 0 ? { customGeometryAnimations } : {}),
+		...(lineAnimations.size > 0 ? { lineAnimations } : {}),
 		durationMs,
 	};
 }
@@ -908,5 +921,10 @@ export function buildMorphOutlineRules(
 				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-custom-geometry] path { animation: ${animation}; }`,
 		),
 	];
-	return rules.length > 0 ? `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}` : '';
+	const lines = [...(plan.lineAnimations ?? [])].map(
+		([elementId, animation]) =>
+			`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-line] { animation: ${animation}; }`,
+	);
+	const supported = rules.length > 0 ? `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}` : '';
+	return [supported, ...lines].filter(Boolean).join('\n');
 }

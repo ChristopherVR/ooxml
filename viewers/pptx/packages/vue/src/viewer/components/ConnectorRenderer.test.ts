@@ -518,3 +518,11 @@ describe('connectorRenderer - dash array', () => {
 		expect(wrapper.find('.pptx-vue-connector-text').exists()).toBeFalsy();
 	});
 });
+
+describe('connectorRenderer morph strand', () => {
+	it('marks the painted strand a morph keeps at its width', () => {
+		const wrapper = mount(ConnectorRenderer, { props: { element: connector(), zIndex: 1 } });
+		expect(wrapper.findAll('[data-pptx-line]')).toHaveLength(1);
+		expect(wrapper.get('line').attributes('data-pptx-line')).toBe('');
+	});
+});

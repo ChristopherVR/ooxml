@@ -126,6 +126,7 @@
 		{#each geometry.compoundOffsets as offset, idx (idx)}
 			{#if geometry.pathD}
 				<path
+					data-pptx-line=""
 					d={geometry.pathD}
 					fill="none"
 					stroke={strokeColor}
@@ -146,6 +147,7 @@
 				/>
 			{:else}
 				<line
+					data-pptx-line=""
 					x1={geometry.x1}
 					y1={geometry.y1 + offset}
 					x2={geometry.x2}

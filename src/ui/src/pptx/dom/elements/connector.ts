@@ -191,6 +191,8 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 				...stroke,
 			});
 		}
+		// The strand a morph keeps at its width (see `morph-line-carry`).
+		node.setAttribute('data-pptx-line', '');
 		// On screen, never thinner than one device pixel (`device-pixel-stroke`).
 		node.style.setProperty('stroke-width', screenStrokeWidth(strandWidth));
 		svg.appendChild(node);

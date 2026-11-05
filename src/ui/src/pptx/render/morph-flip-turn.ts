@@ -49,6 +49,10 @@ const round = (value: number): number => Math.round(value * 1000) / 1000;
 
 /** Whether a pair's horizontal or vertical flip changes, so its body turns over. */
 export function morphFlipTurns(from: PptxElement, to: PptxElement): boolean {
+	// A connector's flip is part of its geometry, not a body that turns over.
+	if (from.type === 'connector' || to.type === 'connector') {
+		return false;
+	}
 	return (
 		Boolean(from.flipHorizontal) !== Boolean(to.flipHorizontal) ||
 		Boolean(from.flipVertical) !== Boolean(to.flipVertical)

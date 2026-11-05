@@ -49,7 +49,10 @@ export interface MorphAnimationStyle {
 	 * `data-pptx-outline` on, which a resizing shape re-paths per frame (see
 	 * `morph-shape-carry`). `custom` is the paths of the custom-geometry
 	 * `<svg data-pptx-custom-geometry>` a binding paints a freeform with (in
-	 * path units), which a reshaping freeform re-paths per frame too.
+	 * path units), which a reshaping freeform re-paths per frame too. `line` is
+	 * the painted strand a binding stamps `data-pptx-line` on in a straight
+	 * connector, which keeps its width while the wrapper's journey scales
+	 * (see `morph-line-carry`).
 	 */
 	target?: MorphAnimationTarget;
 	/**
@@ -61,7 +64,7 @@ export interface MorphAnimationStyle {
 }
 
 /** @see MorphAnimationStyle.target */
-export type MorphAnimationTarget = 'element' | 'image' | 'outline' | 'custom';
+export type MorphAnimationTarget = 'element' | 'image' | 'outline' | 'custom' | 'line';
 
 /** Morph granularity mode matching PowerPoint's morph effect options. */
 export type MorphMode = 'object' | 'word' | 'character';

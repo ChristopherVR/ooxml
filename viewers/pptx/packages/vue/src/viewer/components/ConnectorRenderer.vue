@@ -351,6 +351,7 @@ function strandStyle(idx: number, offset: number): CSSProperties {
 				<path
 					v-for="(offset, idx) in compoundOffsets"
 					:key="idx"
+					data-pptx-line=""
 					:d="pathGeometry.pathData"
 					fill="none"
 					:stroke="strokeColor"
@@ -373,6 +374,7 @@ function strandStyle(idx: number, offset: number): CSSProperties {
 				<line
 					v-for="(offset, idx) in compoundOffsets"
 					:key="idx"
+					data-pptx-line=""
 					:x1="x1"
 					:y1="y1 + offset"
 					:x2="x2"

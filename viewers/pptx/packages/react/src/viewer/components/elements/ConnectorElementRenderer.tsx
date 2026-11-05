@@ -229,6 +229,7 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 					{compoundOffsets.map((offset, idx) => (
 						<path
 							key={idx}
+							data-pptx-line=''
 							d={pathGeometry.pathData}
 							fill='none'
 							stroke={strokePaint}

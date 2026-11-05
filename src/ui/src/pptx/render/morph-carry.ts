@@ -12,6 +12,7 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import { buildMorphLineAnimations, isCarriedLine } from './morph-line-carry';
 import type { MorphEffectPainter } from './morph-effect-carry';
 import { buildMorphEffectCarry } from './morph-effect-carry';
 import type { MorphCarryHalf } from './morph-shape-carry';
@@ -165,6 +166,17 @@ export function generateMorphCarryAnimations(
 	const carried = new Set<MorphPair>();
 	pairs.forEach((pair, index) => {
 		const { fromElement: from, toElement: to } = pair;
+		if (isCarriedLine(from) && isCarriedLine(to)) {
+			if (!inert(from, to) && morphPairRidesBox(from, to, mode, measure)) {
+				animations.push(...buildMorphLineAnimations(pair, to.id, 'to', durationMs, String(index)));
+				if (ghostIds.has(from.id)) {
+					animations.push(
+						...buildMorphLineAnimations(pair, from.id, 'from', durationMs, `g${index}`),
+					);
+				}
+			}
+			return;
+		}
 		if (
 			from.type !== 'shape' ||
 			to.type !== 'shape' ||
