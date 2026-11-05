@@ -8,7 +8,11 @@ export const enShell = {
 	'common.done': 'Done',
 	'common.edit': 'Edit',
 	'common.nameYou': '{name} (you)',
+	'common.ok': 'OK',
+	'common.discard': 'Discard',
 	'common.retry': 'Retry',
+	'dialog.confirmTitle': 'Please confirm',
+	'dialog.inputTitle': 'Enter a name',
 	'common.save': 'Save',
 
 	'time.today': 'Today',

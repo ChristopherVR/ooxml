@@ -9,7 +9,11 @@ export const zhCNShell: Record<keyof typeof enShell, string> = {
 	'common.done': '完成',
 	'common.edit': '编辑',
 	'common.nameYou': '{name}（你）',
+	'common.ok': '确定',
+	'common.discard': '放弃',
 	'common.retry': '重试',
+	'dialog.confirmTitle': '请确认',
+	'dialog.inputTitle': '输入名称',
 	'common.save': '保存',
 
 	'time.today': '今天',

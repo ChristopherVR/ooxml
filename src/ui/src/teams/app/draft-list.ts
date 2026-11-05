@@ -1,6 +1,7 @@
 import { html } from 'lit';
 import type { DraftContext, TeamsClient, TeamsState } from 'ooxml-core/teams';
 import { teamsI18n, type TeamsI18n } from '../i18n/translator';
+import { confirmTeams } from './dialogs';
 
 export function draftList(
 	state: TeamsState,
@@ -35,10 +36,13 @@ export function draftList(
 									></button
 								><button
 									type="button"
-									@click=${() => {
-										if (globalThis.confirm?.(t('drafts.confirmDiscard')) !== false)
-											client.discardDraft(draft.context);
-									}}
+									@click=${(event: Event) =>
+										void confirmTeams({ t, host: event.currentTarget as Element }, t('drafts.confirmDiscard'), {
+											confirmKey: 'common.discard',
+											danger: true,
+										}).then((discard) => {
+											if (discard) client.discardDraft(draft.context);
+										})}
 								>
 									${t('drafts.discard')}
 								</button>

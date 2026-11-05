@@ -61,13 +61,30 @@ describe('channel tab workspace', () => {
 		await app.updateComplete;
 		const preview = app.shadowRoot!.querySelector('teams-content-preview') as TeamsContentPreview;
 		preview.dirty = true;
-		vi.spyOn(globalThis, 'confirm').mockReturnValue(false);
+		const answer = async (button: 'confirm' | 'cancel') => {
+			const dialog = await vi.waitFor(() => {
+				const found = (preview.getRootNode() as ParentNode).querySelector(
+					'office-ui-message-dialog',
+				);
+				if (!found) throw new Error('no dialog yet');
+				return found;
+			});
+			(dialog.shadowRoot!.querySelector(`button.${button}`) as HTMLButtonElement).click();
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		};
 		app
 			.shadowRoot!.querySelector('office-ui-app-rail')!
 			.dispatchEvent(new CustomEvent('office-rail-select', { detail: { id: 'files' } }));
+		await answer('cancel');
 		expect(app.preview).not.toBeNull();
 		expect(app.rail).toBe('teams');
-		vi.mocked(globalThis.confirm).mockReturnValue(true);
+		app
+			.shadowRoot!.querySelector('office-ui-app-rail')!
+			.dispatchEvent(new CustomEvent('office-rail-select', { detail: { id: 'files' } }));
+		// Discarding clears the edits; the navigation the user asked for goes through on the next try.
+		await answer('confirm');
+		expect(preview.dirty).toBe(false);
+		expect(app.preview).not.toBeNull();
 		app
 			.shadowRoot!.querySelector('office-ui-app-rail')!
 			.dispatchEvent(new CustomEvent('office-rail-select', { detail: { id: 'files' } }));

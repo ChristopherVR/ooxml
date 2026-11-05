@@ -9,7 +9,11 @@ export const frShell: Record<keyof typeof enShell, string> = {
 	'common.done': 'Terminé',
 	'common.edit': 'Modifier',
 	'common.nameYou': '{name} (vous)',
+	'common.ok': 'OK',
+	'common.discard': 'Abandonner',
 	'common.retry': 'Réessayer',
+	'dialog.confirmTitle': 'Veuillez confirmer',
+	'dialog.inputTitle': 'Saisir un nom',
 	'common.save': 'Enregistrer',
 
 	'time.today': "Aujourd'hui",

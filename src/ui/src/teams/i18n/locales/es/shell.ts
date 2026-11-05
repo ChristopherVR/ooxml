@@ -9,7 +9,11 @@ export const esShell: Record<keyof typeof enShell, string> = {
 	'common.done': 'Listo',
 	'common.edit': 'Editar',
 	'common.nameYou': '{name} (tú)',
+	'common.ok': 'Aceptar',
+	'common.discard': 'Descartar',
 	'common.retry': 'Reintentar',
+	'dialog.confirmTitle': 'Confirme la acción',
+	'dialog.inputTitle': 'Escriba un nombre',
 	'common.save': 'Guardar',
 
 	'time.today': 'Hoy',
