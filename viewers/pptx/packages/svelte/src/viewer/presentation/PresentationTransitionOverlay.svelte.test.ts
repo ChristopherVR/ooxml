@@ -502,3 +502,251 @@ describe('multi-fragment cinematic transitions', () => {
 		expect(target.querySelectorAll('[data-pptx-transition-fragment]')).toHaveLength(0);
 	});
 });
+
+const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+function bandPicture(id: string, name: string, y: number, height: number): unknown {
+	return {
+		id,
+		name,
+		type: 'picture',
+		x: 0,
+		y,
+		width: 1280,
+		height,
+		imagePath: `ppt/media/${name}.png`,
+		imageData: PIXEL,
+	};
+}
+
+/** One of issue #141's "L" columns: the same runs, another font, another place. */
+function letterColumn(id: string, y: number, fontFamily: string): unknown {
+	return {
+		id,
+		name: 'Object 14',
+		type: 'text',
+		x: 284,
+		y,
+		width: 51,
+		height: 1066,
+		text: 'L\nL\nL',
+		textStyle: { color: '#FFFFFF', fontFamily },
+		textSegments: [{ text: 'L\nL\nL', style: { fontFamily, color: '#FFFFFF' } }],
+	};
+}
+
+// Regression (issue #141, slides 6 -> 7): a column of "L"s changes font, so it
+// dissolves as a crossfade group, while it slides under the top band the
+// incoming slide stacks ABOVE it. Every group used to be painted above every
+// overlay layer, so the column showed across the band for the whole morph and
+// vanished from it in one frame when the overlay came down.
+describe('morph crossfade groups in the overlay stack', () => {
+	it('stacks the band above the dissolving column and the strip below it', () => {
+		const target = mountOverlay({ type: 'morph', durationMs: 2000 } as PptxSlideTransition, {
+			from: makeSlide('6', [
+				bandPicture('bg6', 'backdrop', 0, 720),
+				letterColumn('col6', -916, 'Calibri Light'),
+				bandPicture('strip6', 'strip', -1, 720),
+				bandPicture('band6', 'band', -1, 196),
+			]),
+			to: makeSlide('7', [
+				bandPicture('bg7', 'backdrop', 0, 720),
+				bandPicture('strip7', 'strip', -3, 720),
+				letterColumn('col7', -158, 'Calibri'),
+				bandPicture('band7', 'band', -2, 196),
+			]),
+		});
+
+		const zOf = (node: Element | null | undefined): number =>
+			Number(/z-index:\s*(\d+)/u.exec(node?.getAttribute('style') ?? '')?.[1]);
+		const layerOf = (id: string): Element | null | undefined =>
+			target
+				.querySelector(`[data-pptx-morph-outgoing] [data-element-id="${id}"]`)
+				?.closest('[data-pptx-morph-outgoing]');
+		const group = target.querySelector('[data-pptx-morph-crossfade="col7"]');
+		expect(group, 'the column must dissolve as its own group').not.toBeNull();
+		expect(zOf(layerOf('band6'))).toBeGreaterThan(zOf(group));
+		expect(zOf(layerOf('strip6'))).toBeLessThan(zOf(group));
+	});
+});
+
+/** The `@keyframes` block `name` names in `css`, or undefined. */
+function keyframesBlock(css: string, name: string): string | undefined {
+	const start = css.indexOf(`@keyframes ${name} {`);
+	if (start < 0) {
+		return undefined;
+	}
+	const end = css.indexOf('@keyframes', start + 1);
+	return css.slice(start, end < 0 ? undefined : end);
+}
+
+/** The opacity a keyframes block reaches at `progress` (0..1), linear between stops. */
+function opacityAt(block: string, progress: number): number {
+	const stops: { at: number; opacity: number }[] = [];
+	for (const match of block.matchAll(/([\w%.,\s]+)\{([^{}]*)\}/gu)) {
+		const opacity = /opacity:\s*([\d.]+)/u.exec(match[2] ?? '')?.[1];
+		if (opacity === undefined) {
+			continue;
+		}
+		for (const raw of (match[1] ?? '').split(',')) {
+			const key = raw.trim();
+			const at = key === 'from' ? 0 : key === 'to' ? 1 : Number.parseFloat(key) / 100;
+			if (Number.isFinite(at)) {
+				stops.push({ at, opacity: Number(opacity) });
+			}
+		}
+	}
+	stops.sort((a, b) => a.at - b.at);
+	if (stops.length === 0) {
+		return 1;
+	}
+	const after = stops.findIndex((stop) => stop.at >= progress);
+	if (after <= 0) {
+		return stops[after < 0 ? stops.length - 1 : 0]!.opacity;
+	}
+	const a = stops[after - 1]!;
+	const b = stops[after]!;
+	return a.opacity + ((b.opacity - a.opacity) * (progress - a.at)) / (b.at - a.at || 1);
+}
+
+const MORPH_SCOPES = [
+	'data-pptx-morph-incoming',
+	'data-pptx-morph-outgoing',
+	'data-pptx-morph-lifted',
+] as const;
+
+/**
+ * The opacity at `progress` of a painted element: the one the overlay's scoped
+ * stylesheet gives the element, times the animation on any wrapper up to the
+ * overlay (a crossfade half carries its dissolve inline).
+ */
+function paintedOpacity(target: HTMLElement, node: HTMLElement, progress: number): number {
+	const css = target.querySelector('style')?.textContent ?? '';
+	const id = node.dataset.elementId ?? '';
+	let opacity = 1;
+	for (const scope of MORPH_SCOPES) {
+		if (!node.closest(`[${scope}]`)) {
+			continue;
+		}
+		const rule = `[${scope}] [data-element-id="${id}"] { animation: `;
+		const start = css.indexOf(rule);
+		if (start >= 0) {
+			const name = css.slice(start + rule.length).split(/\s/u)[0] ?? '';
+			const block = keyframesBlock(css, name);
+			if (block) {
+				opacity *= opacityAt(block, progress);
+			}
+		}
+	}
+	for (let wrapper = node.parentElement; wrapper && wrapper !== target;) {
+		const name = /animation:\s*([\w-]+)/u.exec(wrapper.getAttribute('style') ?? '')?.[1];
+		const block = name ? keyframesBlock(css, name) : undefined;
+		if (block) {
+			opacity *= opacityAt(block, progress);
+		}
+		wrapper = wrapper.parentElement;
+	}
+	return opacity;
+}
+
+/** A 17 -> 18-shaped paragraph box: three paragraphs, the second one resized. */
+function parkedParagraphs(id: string, x: number, secondSize?: number): unknown {
+	return {
+		id,
+		type: 'text',
+		name: 'TextBox 9',
+		x,
+		y: 120,
+		width: 300,
+		height: 240,
+		text: 'Parked opener\nSecond paragraph\nClosing line',
+		textSegments: [
+			{ text: 'Parked opener', style: { fontFamily: 'Arial', fontSize: 18 } },
+			{ text: '\n' },
+			{
+				text: 'Second paragraph',
+				style: {
+					fontFamily: 'Arial',
+					...(secondSize === undefined ? {} : { fontSize: secondSize }),
+				},
+			},
+			{ text: '\n' },
+			{ text: 'Closing line', style: { fontFamily: 'Arial', fontSize: 18 } },
+		],
+	};
+}
+
+const panel = (id: string): unknown => ({
+	id,
+	type: 'shape',
+	name: 'Panel',
+	x: -600,
+	y: 0,
+	width: 1200,
+	height: 720,
+	shapeStyle: { fillMode: 'solid', fillColor: '#123456' },
+});
+
+// Regression (issue #141, slides 17 -> 18 and back): a paragraph box parked off
+// the left edge whose second paragraph changes size glides onto the slide.
+// Cross-dissolving its two layouts painted the paragraph twice, a ghost of one
+// layout over the other, for the whole flight.
+describe('off-stage paragraph flight paints its text once', () => {
+	it.each([
+		[
+			'forward',
+			makeSlide('17', [panel('p17'), parkedParagraphs('t17', -400, 14)]),
+			makeSlide('18', [parkedParagraphs('t18', 875)]),
+		],
+		[
+			'backward',
+			makeSlide('18', [panel('p18'), parkedParagraphs('t18', 875)]),
+			makeSlide('17', [parkedParagraphs('t17', -400, 14)]),
+		],
+	])('%s', (_direction, from, to) => {
+		const target = mountOverlay({ type: 'morph', durationMs: 1000 } as PptxSlideTransition, {
+			from,
+			to,
+		});
+		const copies = [...target.querySelectorAll<HTMLElement>('[data-element-id]')].filter(
+			(node) =>
+				/^t1[78]$/u.test(node.dataset.elementId ?? '') &&
+				Boolean(node.textContent?.includes('Second paragraph')),
+		);
+		expect(copies.length, 'the stage copy and the ghost are both painted').toBeGreaterThan(1);
+		const visible = copies.filter((node) => paintedOpacity(target, node, 0.5) > 0.01);
+		expect(visible).toHaveLength(1);
+	});
+});
+
+// Regression (issue #141, slides 8 -> 9): a picture faded in through its
+// transparency tweens its `<img>`. The shared rule is a DESCENDANT selector
+// (`[data-element-id] img`), so it only plays while the picture renders its
+// `<img>` inside the node carrying the element id.
+describe('picture transparency morph', () => {
+	it('renders the `<img>` the alpha keyframes target', () => {
+		const faded = (id: string, alphaModFix: number): unknown => ({
+			...(bandPicture(id, 'faded', 0, 720) as object),
+			imageEffects: { alphaModFix },
+		});
+		const target = mountOverlay({ type: 'morph', durationMs: 2000 } as PptxSlideTransition, {
+			from: makeSlide('8', [bandPicture('back8', 'backdrop', 0, 720), faded('faded8', 0)]),
+			to: makeSlide('9', [bandPicture('back9', 'backdrop', 0, 720), faded('faded9', 100)]),
+		});
+		const css = target.querySelector('style')?.textContent ?? '';
+		const selectors = [...css.matchAll(/^(\[[^{\n]*\] img) \{ animation: /gmu)].map(
+			(match) => match[1]!,
+		);
+		// The stage copy tweens in through the incoming layer's rule.
+		expect(selectors).toContain('[data-pptx-morph-incoming] [data-element-id="faded9"] img');
+		expect(
+			target.querySelector('[data-pptx-morph-incoming] [data-element-id="faded9"] img'),
+		).toBeInstanceOf(HTMLImageElement);
+		// Every rule whose element is painted in that scope reaches its `<img>`.
+		for (const selector of selectors) {
+			if (target.querySelector(selector.replace(/ img$/u, ''))) {
+				expect(target.querySelector(selector), selector).toBeInstanceOf(HTMLImageElement);
+			}
+		}
+	});
+});
