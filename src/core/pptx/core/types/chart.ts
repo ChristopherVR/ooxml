@@ -1457,6 +1457,17 @@ export interface PptxChartData {
 	embeddedWorkbookData?: PptxEmbeddedWorkbookData;
 
 	/**
+	 * Creation hint for a chart that has no chart part yet (SDK `addChart`): when
+	 * `true`, the first save writes its data to a new embedded workbook
+	 * (`ppt/embeddings/Microsoft_Excel_Worksheet{N}.xlsx`) and the chart reads it
+	 * through cell references, so PowerPoint's Edit Data opens it. A chart the
+	 * shared chart core cannot write that way fails the save instead of losing
+	 * the workbook. Never set by the loader; a reloaded chart carries
+	 * {@link externalData} instead.
+	 */
+	embedWorkbook?: boolean;
+
+	/**
 	 * Pivot table data source reference (c:pivotSource).
 	 *
 	 * When present, the chart's data originates from a PivotTable.

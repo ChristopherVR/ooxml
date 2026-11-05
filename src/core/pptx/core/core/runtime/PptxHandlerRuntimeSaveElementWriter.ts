@@ -3,6 +3,7 @@ import { hasShapeProperties, hasTextProperties } from '../../types';
 import type {
 	XmlObject,
 	PptxElement,
+	PptxChartData,
 	ChartPptxElement,
 	GroupPptxElement,
 	InkPptxElement,
@@ -14,7 +15,10 @@ import type {
 	TablePptxElement,
 	ZoomPptxElement,
 } from '../../types';
+import { CHART_WORKBOOK_CONTENT_TYPE, stageChartPartWithWorkbook } from '../../../../chart/index';
+import type { RelationshipInput } from '../../../../opc/relationships';
 import { buildChartColorStyleXml } from '../../utils/chart-color-style-writer';
+import { requireEmbeddedWorkbookChart } from '../../utils/chart-new-part-workbook';
 import { buildChartExSpaceXml, canGenerateChartEx } from '../../utils/chart-cx-generator';
 import { writeNewChartPart } from '../../utils/chart-new-part';
 import { orderedXmlObject } from '../../utils/xml-ordered-object';
@@ -83,6 +87,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected pendingChartPartPaths?: string[];
 	protected pendingExtendedChartPartPaths?: string[];
 	protected pendingChartColorPartPaths?: string[];
+	/** Embedded workbooks of SDK-created charts written this save (`embedWorkbook`). */
+	protected pendingChartWorkbookPartPaths?: string[];
 
 	/** Pick the next free `ppt/charts/chartN.xml` path (reads the zip + pending writes). */
 	protected nextChartPartPath(): string {
@@ -123,48 +129,80 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * content-type override is added later from {@link pendingChartPartPaths}.
 	 * A classic chart is written through the shared chart core
 	 * (`writeNewChartPart`), else by the legacy generator; model fields the part
-	 * leaves out are reported as a save warning.
+	 * leaves out are reported as a save warning. A chart asking for an embedded
+	 * workbook (`embedWorkbook`) gets that part with cell references and the
+	 * workbook (`stageChartPartWithWorkbook`), its relationships file also naming
+	 * the colour-style part, or the save throws when it cannot.
 	 */
 	protected createChartElementXml(el: ChartPptxElement, ctx: SaveSlideContext): XmlObject {
-		const extended = canGenerateChartEx(el.chartData!);
+		const chartData = el.chartData!;
+		const extended = canGenerateChartEx(chartData);
+		if (chartData.embedWorkbook && extended) {
+			throw new Error(
+				`Chart "${el.id}" asks for an embedded workbook (embedWorkbook), but "${chartData.chartType}" is an extended chart.`,
+			);
+		}
+		const embedded = chartData.embedWorkbook
+			? requireEmbeddedWorkbookChart(chartData, el.id)
+			: undefined;
 		const partPath = extended ? this.nextExtendedChartPartPath() : this.nextChartPartPath();
-		const part = extended ? undefined : writeNewChartPart(el.chartData!);
-		const chartXml = extended
-			? buildChartExSpaceXml(el.chartData!)
-			: part?.xml !== undefined
-				? orderedXmlObject(part.xml)
-				: buildChartSpaceXml(part?.legacyModel ?? el.chartData!);
-		if (part && part.unwritten.length > 0) {
+		const part = extended || embedded ? undefined : writeNewChartPart(chartData);
+		const unwritten = embedded?.unwritten ?? part?.unwritten ?? [];
+		if (unwritten.length > 0) {
+			const legacy = part !== undefined && part.xml === undefined;
 			this.compatibilityService.reportWarning({
-				code:
-					part.xml === undefined ? 'CHART_WRITTEN_BY_LEGACY_GENERATOR' : 'CHART_FIELDS_NOT_WRITTEN',
-				message:
-					part.xml === undefined
-						? `Chart '${el.id}' was written by the legacy chart generator, which may drop: ${part.unwritten.join(', ')}.`
-						: `Chart '${el.id}' was saved without: ${part.unwritten.join(', ')}.`,
+				code: legacy ? 'CHART_WRITTEN_BY_LEGACY_GENERATOR' : 'CHART_FIELDS_NOT_WRITTEN',
+				message: legacy
+					? `Chart '${el.id}' was written by the legacy chart generator, which may drop: ${unwritten.join(', ')}.`
+					: `Chart '${el.id}' was saved without: ${unwritten.join(', ')}.`,
 				scope: 'save',
 				slideId: ctx.slide.id,
 				elementId: el.id,
 			});
 		}
-		this.zip.file(partPath, this.builder.build(chartXml));
+		if (!embedded) {
+			const chartXml = extended
+				? buildChartExSpaceXml(chartData)
+				: part?.xml !== undefined
+					? orderedXmlObject(part.xml)
+					: buildChartSpaceXml(part?.legacyModel ?? chartData);
+			this.zip.file(partPath, this.builder.build(chartXml));
+		}
 		if (extended) {
 			(this.pendingExtendedChartPartPaths ??= []).push(partPath);
 		} else {
 			(this.pendingChartPartPaths ??= []).push(partPath);
 		}
-		if (el.chartData?.colorPalette?.length) {
-			const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
-			const index = /\d+/u.exec(fileName)?.[0] ?? '1';
-			const directory = partPath.slice(0, partPath.lastIndexOf('/'));
-			const colorPath = `${directory}/colors${index}.xml`;
-			this.zip.file(
-				colorPath,
-				this.builder.build(
-					buildChartColorStyleXml(el.chartData.colorPalette, el.chartData.colorMethod ?? 'cycle'),
-				),
+		const colorTarget = chartData.colorPalette?.length
+			? this.writeChartColorPart(partPath, chartData.colorPalette, chartData.colorMethod)
+			: undefined;
+		if (embedded) {
+			// The workbook takes rId1 (`c:externalData`); the colour-style part follows it.
+			const colorRels = new Map<string, RelationshipInput>(
+				colorTarget
+					? [
+							[
+								'rId2',
+								{
+									type: PptxHandlerRuntime.CHART_COLOR_REL_TYPE,
+									target: colorTarget,
+									mode: 'Internal',
+								},
+							],
+						]
+					: [],
 			);
-			(this.pendingChartColorPartPaths ??= []).push(colorPath);
+			const parts = stageChartPartWithWorkbook(this.zip, embedded.space, {
+				chartFolder: 'ppt/charts/',
+				embeddingsFolder: 'ppt/embeddings/',
+				partName: partPath,
+				relationships: colorRels,
+				rows: embedded.rows,
+			});
+			(this.pendingChartWorkbookPartPaths ??= []).push(parts.workbookPartName);
+		} else if (colorTarget) {
+			const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
+			const directory = partPath.slice(0, partPath.lastIndexOf('/'));
 			this.zip.file(
 				`${directory}/_rels/${fileName}.rels`,
 				this.builder.build({
@@ -173,7 +211,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						Relationship: {
 							'@_Id': 'rId1',
 							'@_Type': PptxHandlerRuntime.CHART_COLOR_REL_TYPE,
-							'@_Target': `colors${index}.xml`,
+							'@_Target': colorTarget,
 						},
 					},
 				}),
@@ -189,6 +227,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return this.createChartGraphicFrameXml(el, relId, extended);
 	}
 
+	/** Writes `colorsN.xml` next to the chart part; returns its target relative to the chart. */
+	private writeChartColorPart(
+		partPath: string,
+		palette: string[],
+		method: PptxChartData['colorMethod'],
+	): string {
+		const fileName = partPath.slice(partPath.lastIndexOf('/') + 1);
+		const index = /\d+/u.exec(fileName)?.[0] ?? '1';
+		const directory = partPath.slice(0, partPath.lastIndexOf('/'));
+		const colorPath = `${directory}/colors${index}.xml`;
+		this.zip.file(
+			colorPath,
+			this.builder.build(buildChartColorStyleXml(palette, method ?? 'cycle')),
+		);
+		(this.pendingChartColorPartPaths ??= []).push(colorPath);
+		return `colors${index}.xml`;
+	}
+
 	/**
 	 * Add `[Content_Types].xml` Override entries for any chart parts generated
 	 * for SDK-created charts this save. Called from the save pipeline after
@@ -198,13 +254,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const paths = this.pendingChartPartPaths;
 		const extendedPaths = this.pendingExtendedChartPartPaths;
 		const colorPaths = this.pendingChartColorPartPaths;
+		const workbookPaths = this.pendingChartWorkbookPartPaths;
 		this.pendingChartPartPaths = undefined;
 		this.pendingExtendedChartPartPaths = undefined;
 		this.pendingChartColorPartPaths = undefined;
+		this.pendingChartWorkbookPartPaths = undefined;
 		if (
 			(!paths || paths.length === 0) &&
 			(!extendedPaths || extendedPaths.length === 0) &&
-			(!colorPaths || colorPaths.length === 0)
+			(!colorPaths || colorPaths.length === 0) &&
+			(!workbookPaths || workbookPaths.length === 0)
 		) {
 			return;
 		}
@@ -228,6 +287,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...(colorPaths ?? []).map(
 				(path) => [path, PptxHandlerRuntime.CHART_COLOR_CONTENT_TYPE] as const,
 			),
+			...(workbookPaths ?? []).map((path) => [path, CHART_WORKBOOK_CONTENT_TYPE] as const),
 		]) {
 			const partName = `/${p}`;
 			if (!have.has(partName)) {

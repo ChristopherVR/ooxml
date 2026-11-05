@@ -486,7 +486,9 @@ is the acceptance bar), and the area has its own tests and real parts from `src/
   `chart-external-workbook-save`), ported to the shared DOM; pptx forwards to it. Beside it: the standard data layout
   (`layout.ts`), the writes a `ChartSpace` implies (`space-writes.ts`) and a new embedded workbook (`create.ts`).
   `chart/edit/data-sheet.ts` maps the data sheet onto the series operations (formulas follow the table in the standard
-  layout) and `chart/edit/new-chart.ts` builds a new chart part. Word inserts, edits, formats, resizes and saves charts
+  layout) and `chart/edit/new-chart.ts` builds a new chart part. `new-part.ts` writes a new chart part with its
+  embedded workbook (`writeChartPartWithWorkbook`, used by Word's insert and by PowerPoint's `embedWorkbook`), and
+  `new-layout.ts` turns a part's literal data into sheet references. Word inserts, edits, formats, resizes and saves charts
   (`docx/chart-edit.ts`, `docx/chart-save.ts`, `docx/ui/chart-commands.ts`); its Format pane is the shared pane (U2) and
   its charts can be resized with the shared drawing handle. Desktop Word checks the results in the acceptance script. Visio
   edits the data and format of an inserted chart object (`src/ui/src/visio/viewer-chart-editor.ts`) through the embedded

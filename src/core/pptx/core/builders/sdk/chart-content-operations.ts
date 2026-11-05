@@ -18,6 +18,7 @@ import type {
 	PptxChartType,
 } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
+import { canGenerateChartEx } from '../../utils/chart-cx-generator';
 import { GENERATED_CHART_AXIS_IDS } from '../../utils/chart-xml-container-map';
 import type { ChartSeriesContentInput, ChartSeriesMarkerInput } from './chart-content-input';
 import { applyChartDataLabelsInput, applyChartFontsInput } from './chart-content-labels';
@@ -267,6 +268,14 @@ export function applyChartContentInput(element: ChartPptxElement, input: ChartIn
 	if (input.scatterStyle !== undefined) {
 		requireType(new Set<PptxChartType>(['scatter']), data.chartType, 'scatterStyle');
 		data.scatterStyle = input.scatterStyle;
+	}
+	if (input.embedWorkbook) {
+		if (canGenerateChartEx(data)) {
+			throw new Error(
+				`embedWorkbook applies to classic charts; "${data.chartType}" is an extended chart.`,
+			);
+		}
+		data.embedWorkbook = true;
 	}
 	applySeriesTypes(element, input.series);
 	input.series.forEach((series, index) => applySeriesShape(element, index, series));

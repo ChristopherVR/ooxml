@@ -47,6 +47,8 @@ import { GENERATED_CHART_AXIS_IDS } from './chart-xml-container-map';
 export interface NewChartPart {
 	/** The `c:chartSpace` part written through the shared core; absent for the legacy generator. */
 	xml?: string;
+	/** The shared-core model `xml` was written from (with `xml`). */
+	space?: ChartSpace;
 	/**
 	 * Model fields, as paths, the written part leaves out (with `xml`), or that need the legacy
 	 * generator, which may drop them (without `xml`).
@@ -140,6 +142,7 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 		return { unwritten: lost.map((issue) => `part.${issue.element ?? issue.code}`) };
 	return {
 		xml,
+		space,
 		unwritten: [
 			...unwritten,
 			...axes.unwritten,

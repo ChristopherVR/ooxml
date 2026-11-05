@@ -542,6 +542,15 @@ export interface ChartInput extends ChartContentInput {
 	plotArea?: ChartAreaFormatInput;
 	/** Axis edits by axis type, as `setChartAxis` takes them (e.g. `{ valAx: { visible: false } }`). */
 	axes?: Partial<Record<PptxChartAxisType, ChartAxisEdit>>;
+	/**
+	 * Writes the chart's data to an embedded workbook (`ppt/embeddings/*.xlsx`)
+	 * that the chart reads through cell references, so PowerPoint's Edit Data
+	 * opens it; blank (`null`) values are empty cells. Classic charts only: an
+	 * extended chart type throws here, and a chart the shared chart core cannot
+	 * write with references fails the save with the reason. Default: literal
+	 * data, no workbook.
+	 */
+	embedWorkbook?: boolean;
 }
 
 export interface ChartOptions extends Partial<ElementPosition> {}

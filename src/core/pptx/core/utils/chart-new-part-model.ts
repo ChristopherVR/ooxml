@@ -60,6 +60,8 @@ const CARRIED = [
 	'userShapesXml',
 	'externalData',
 	'embeddedWorkbookData',
+	// A creation hint: the save moves the written part's data into a workbook (`chart-new-part-workbook.ts`).
+	'embedWorkbook',
 ] as const satisfies readonly (keyof PptxChartData)[];
 
 /** Style fields the starting part holds; `hasGridlines` is read on load and never written. */
