@@ -1,5 +1,34 @@
 # OneDrive integration
 
+## File > Open > OneDrive
+
+Pass a provider as `fileProviders` and File > Open shows a OneDrive place next to "This device":
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken, // your sign-in owns the token
+		signIn,
+		canWrite: async (file) => file.driveId === (await myDriveId()),
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
+```
+
+The place lists recent files and My files, searches, and opens a sharing link. A picked workbook
+loads like any other, saves back to the same item with Save (a copy with Save As), and is marked
+clean only after the upload resolved; a failed upload keeps it unsaved. A file `canWrite` rejects
+(another drive, a shared file) opens read-only. `fileProviders` is a prop of every framework
+binding (`fileProviders` in React, Vue, Solid, Svelte, Angular and Vanilla). The demo app
+(`demos/xlsx`) passes the demo OneDrive provider by default; configure it with
+`VITE_ONEDRIVE_CLIENT_ID` or paste a Graph Explorer token in its sign-in dialog. The lower-level
+`storage` wiring below is for hosts that build their own Open UI.
+
 The same storage contract also supports custom providers. See
 [provider-neutral storage and merge configuration](https://github.com/ChristopherVR/ooxml/blob/main/docs/storage-integrations.md)
 for `createStorageSession`, per-format merge overrides and suite bootstrap settings.
