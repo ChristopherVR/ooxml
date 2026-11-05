@@ -1,4 +1,10 @@
-import { dispatchStatusBarIntent, statusBarState, statusBarViewMode } from 'ooxml-ui/pptx';
+import {
+	dispatchStatusBarIntent,
+	saveProgressStatus,
+	statusBarState,
+	statusBarViewMode,
+} from 'ooxml-ui/pptx';
+import type { SaveProgressState } from 'ooxml-ui/pptx';
 import type { PptxUiStatusBarElement } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 
@@ -10,6 +16,8 @@ export interface StatusBarProps {
 	activeSlideIndex: number;
 	isDirty: boolean;
 	autosaveStatus?: AutosaveStatus;
+	/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
+	saveProgress?: SaveProgressState | undefined;
 	/** Current zoom scale (0-1+ range, e.g. 1.0 = 100%). */
 	scale?: number;
 	/** Callback to zoom in. */
@@ -55,6 +63,7 @@ export function StatusBar(p: StatusBarProps): React.ReactElement {
 			activeSlideIndex: p.activeSlideIndex,
 			dirty: p.isDirty,
 			autosave: p.autosaveStatus,
+			saveProgress: p.saveProgress ? saveProgressStatus(p.saveProgress, t) : undefined,
 			zoomPercent: p.scale !== undefined && !p.hideZoomControls ? p.scale * 100 : undefined,
 			notesExpanded: p.isNotesExpanded,
 			viewMode: statusBarViewMode(p.mode),

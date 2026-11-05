@@ -33,6 +33,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	createCloudDocumentController,
+	createSaveProgressController,
 	createSlidePackageClipboard,
 	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
@@ -276,7 +277,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		const cloudDocument = useMemo(() => createCloudDocumentController(), []);
 		const cloudFile = useController(cloudDocument).file;
 		const {
-			storage,
+			storage: viewerStorage,
 			fileName,
 			filePath,
 			// `readOnly` takes editing away from a host that also allows it.
@@ -287,6 +288,13 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			fileName: hostFileName,
 			filePath: hostFilePath,
 		});
+		// Saves to the host's storage report their steps (upload, merge) to the status bar.
+		const saveProgress = useMemo(() => createSaveProgressController(), []);
+		const saveProgressState = useController(saveProgress);
+		const storage = useMemo(
+			() => (viewerStorage ? saveProgress.wrap(viewerStorage) : viewerStorage),
+			[viewerStorage, saveProgress],
+		);
 		const collaboration = resolveCollaborationConfig(collaborationInput);
 		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
 		// shared with every binding.
@@ -1587,6 +1595,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 										activeSlideIndex={activeSlideIndex}
 										isDirty={state.isDirty}
 										autosaveStatus={autosaveStatus}
+										saveProgress={saveProgressState}
 										onToggleNotes={() => state.setIsSlideNotesCollapsed((p) => !p)}
 										onUpdateNotes={propertyHandlers.handleUpdateNotes}
 										collaborationSlot={

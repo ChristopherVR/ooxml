@@ -1,5 +1,6 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import { isPanelVisible, observeElementHeight } from 'ooxml-ui/pptx';
+import type { SaveProgressState } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
 /**
  * ViewerBottomPanels: SlideNotesPanel + StatusBar wrapper.
@@ -31,6 +32,8 @@ export interface ViewerBottomPanelsProps {
 	activeSlideIndex: number;
 	isDirty: boolean;
 	autosaveStatus?: AutosaveStatus;
+	/** The progress of a save to the host's storage, see `createSaveProgressController`. */
+	saveProgress?: SaveProgressState;
 	onToggleNotes: () => void;
 	onUpdateNotes: (text: string, segments?: TextSegment[]) => void;
 	/** Optional collaboration status indicator rendered in the status bar row. */
@@ -81,6 +84,7 @@ export function ViewerBottomPanels({
 	activeSlideIndex,
 	isDirty,
 	autosaveStatus,
+	saveProgress,
 	onToggleNotes,
 	onUpdateNotes,
 	collaborationSlot,
@@ -161,6 +165,7 @@ export function ViewerBottomPanels({
 					activeSlideIndex={activeSlideIndex}
 					isDirty={isDirty}
 					autosaveStatus={autosaveStatus}
+					saveProgress={saveProgress}
 					scale={scale}
 					onZoomIn={onZoomIn}
 					onZoomOut={onZoomOut}

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import { createSaveProgressController, registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { DocumentSaveMeta } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -182,5 +183,26 @@ describe('react StatusBar adapter', () => {
 	it('projects the collaboration indicator into the named slot', () => {
 		const { host } = mount({ collaborationSlot: <span id='collab'>live</span> });
 		expect(host.querySelector('[slot="collaboration"] #collab')).not.toBeNull();
+	});
+});
+
+describe('react StatusBar save progress', () => {
+	it('shows each step of a save to the host storage, then All saved again', async () => {
+		const { q, render } = mount();
+		const controller = createSaveProgressController();
+		controller.subscribe(() => render({ saveProgress: controller.getSnapshot() }));
+		const save = () => q('[data-item="save"]').textContent;
+		const seen: (string | null)[] = [];
+		const storage = controller.wrap({
+			async save(_bytes: Uint8Array, meta: DocumentSaveMeta) {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				seen.push(save());
+				meta.onProgress?.({ phase: 'merging' });
+				seen.push(save());
+			},
+		});
+		await storage.save(new Uint8Array(), { fileName: 'a.pptx', mimeType: 'x', reason: 'save' });
+		expect(seen).toStrictEqual(['Saving… 45%', 'Combining edits…']);
+		expect(save()).toBe('All saved');
 	});
 });
