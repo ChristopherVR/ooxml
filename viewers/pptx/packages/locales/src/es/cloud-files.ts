@@ -25,4 +25,12 @@ export const translations = {
 	'pptx.cloudFiles.cancel': 'Cancelar',
 	'pptx.cloudFiles.folder': 'Carpeta',
 	'pptx.cloudFiles.failed': 'Se produjo un error.',
+	'pptx.cloudFiles.connectedHeading': 'Servicios conectados',
+	'pptx.cloudFiles.connectedDescription':
+		'Vincula tu almacenamiento para abrir y guardar archivos desde todas las aplicaciones.',
+	'pptx.cloudFiles.connectedNotConnected': 'No conectado',
+	'pptx.cloudFiles.connectedConnect': 'Conectar',
+	'pptx.cloudFiles.connectedDisconnect': 'Desconectar',
+	'pptx.cloudFiles.connectedManaged': 'Administrado por tu organización',
+	'pptx.cloudFiles.connectedFailed': 'No se pudo actualizar {{provider}}. Inténtalo de nuevo.',
 };

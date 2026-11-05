@@ -25,4 +25,11 @@ export const translations = {
 	'pptx.cloudFiles.cancel': '取消',
 	'pptx.cloudFiles.folder': '文件夹',
 	'pptx.cloudFiles.failed': '出了点问题。',
+	'pptx.cloudFiles.connectedHeading': '已连接的服务',
+	'pptx.cloudFiles.connectedDescription': '链接你的存储，以便在所有应用中打开和保存文件。',
+	'pptx.cloudFiles.connectedNotConnected': '未连接',
+	'pptx.cloudFiles.connectedConnect': '连接',
+	'pptx.cloudFiles.connectedDisconnect': '断开连接',
+	'pptx.cloudFiles.connectedManaged': '由你的组织管理',
+	'pptx.cloudFiles.connectedFailed': '无法更新 {{provider}}。请重试。',
 };
