@@ -196,7 +196,18 @@ export interface TextSegmentInput {
 	style?: Partial<TextStyleInput>;
 }
 
-export interface TextOptions extends Partial<ElementPosition> {
+/**
+ * Mirroring of an element (`a:xfrm/@flipH`, `@flipV`), applied before its
+ * rotation. Omitted or `false`: not mirrored.
+ */
+export interface ElementFlipInput {
+	/** Mirror left to right (`a:xfrm/@flipH`). */
+	flipHorizontal?: boolean;
+	/** Mirror top to bottom (`a:xfrm/@flipV`); not the same as a 180 degree rotation. */
+	flipVertical?: boolean;
+}
+
+export interface TextOptions extends Partial<ElementPosition>, ElementFlipInput {
 	fontSize?: number;
 	fontFamily?: string;
 	bold?: boolean;
@@ -222,7 +233,7 @@ export interface TextOptions extends Partial<ElementPosition> {
 // Shape input
 // ---------------------------------------------------------------------------
 
-export interface ShapeOptions extends Partial<ElementPosition> {
+export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput {
 	fill?: FillInput;
 	stroke?: StrokeInput;
 	text?: string;
@@ -241,7 +252,7 @@ export interface ShapeOptions extends Partial<ElementPosition> {
 // Image input
 // ---------------------------------------------------------------------------
 
-export interface ImageOptions extends Partial<ElementPosition> {
+export interface ImageOptions extends Partial<ElementPosition>, ElementFlipInput {
 	altText?: string;
 	cropLeft?: number;
 	cropTop?: number;
@@ -336,7 +347,7 @@ export interface ChartOptions extends Partial<ElementPosition> {}
 // Connector input
 // ---------------------------------------------------------------------------
 
-export interface ConnectorOptions extends Partial<ElementPosition> {
+export interface ConnectorOptions extends Partial<ElementPosition>, ElementFlipInput {
 	type?: 'straight' | 'bent' | 'curved';
 	/** The outline; an omitted `color` is black and an omitted `width` 1 px. */
 	stroke?: StrokeInput;
@@ -352,7 +363,7 @@ export interface ConnectorOptions extends Partial<ElementPosition> {
 // Media input
 // ---------------------------------------------------------------------------
 
-export interface MediaOptions extends Partial<ElementPosition> {
+export interface MediaOptions extends Partial<ElementPosition>, ElementFlipInput {
 	autoPlay?: boolean;
 	loop?: boolean;
 	volume?: number;
@@ -365,7 +376,7 @@ export interface MediaOptions extends Partial<ElementPosition> {
 // Group input
 // ---------------------------------------------------------------------------
 
-export interface GroupOptions extends Partial<ElementPosition> {}
+export interface GroupOptions extends Partial<ElementPosition>, ElementFlipInput {}
 
 // ---------------------------------------------------------------------------
 // Slide-level inputs

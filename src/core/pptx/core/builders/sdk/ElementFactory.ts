@@ -48,6 +48,7 @@ import type {
 	TextStyleInput,
 	ShapeDefaultsInput,
 	FillInput,
+	ElementFlipInput,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -159,6 +160,16 @@ function buildTextSegments(
 	}));
 }
 
+/** The element's flips (`a:xfrm/@flipH`, `@flipV`), only when set. */
+function flipsOf(
+	options: ElementFlipInput | undefined,
+): Pick<PptxElement, 'flipHorizontal' | 'flipVertical'> {
+	return {
+		...(options?.flipHorizontal ? { flipHorizontal: true } : {}),
+		...(options?.flipVertical ? { flipVertical: true } : {}),
+	};
+}
+
 // ---------------------------------------------------------------------------
 // Default positions
 // ---------------------------------------------------------------------------
@@ -227,6 +238,7 @@ export function createTextElement(
 		id: generateId('txt'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		text: plainText,
 		textStyle: mapTextStyleInput(textStyleBase) as TextStyle,
@@ -266,6 +278,7 @@ export function createShapeElement(
 		id: generateId('shp'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		shapeType,
 		shapeAdjustments: options?.adjustments,
@@ -331,6 +344,7 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
 		id: generateId('cxn'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		shapeType: connType,
 		shapeStyle: style,
 	};
@@ -351,6 +365,7 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 		id: generateId('img'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		imagePath: isDataUrl ? undefined : source,
 		imageData: isDataUrl ? source : undefined,
@@ -536,6 +551,7 @@ export function createMediaElement(
 		id: generateId('med'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		mediaType,
 		mediaPath: isDataUrl ? undefined : source,
 		mediaData: isDataUrl ? source : undefined,
@@ -565,6 +581,7 @@ export function createGroupElement(
 		id: generateId('grp'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		children,
 	};
 }
@@ -598,6 +615,7 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 		id: generateId('frm'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		shapeType: 'custom',
 		pathData,

@@ -263,6 +263,7 @@ export type {
 	PresentationOptions,
 	PresentationThemeInput,
 	ShapeDefaultsInput,
+	ElementFlipInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';
