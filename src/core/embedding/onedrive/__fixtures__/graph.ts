@@ -63,7 +63,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 	};
 	return {
 		client: createOneDriveClient({ fetch, getAccessToken: async () => 'test-token', canWrite: () => access === 'write' }),
-		shareUrl, requests,
+		shareUrl, requests, fetch,
 		changeRemotely(bytes = first.bytes) { first.bytes = bytes.slice(); first.revision++; },
 		setAccess(value: 'read' | 'write') { access = value; },
 		getBytes(id = first.id) { return items.get(id)!.bytes.slice(); },

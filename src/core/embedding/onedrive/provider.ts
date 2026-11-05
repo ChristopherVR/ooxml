@@ -36,6 +36,13 @@ export interface OneDriveFileProviderOptions extends OneDriveClientOptions {
 	 * edits to a file are combined on save. A kind without one reports a conflict instead.
 	 */
 	mergers?: Partial<Record<CloudFileKind, OneDriveMerger>>;
+	/**
+	 * Your own merge for every kind, which replaces `mergers`, or `false` to never merge: a save
+	 * that meets a newer OneDrive copy then always reports a conflict for the host to resolve.
+	 */
+	merge?: OneDriveMerger | false;
+	/** Maximum fresh-remote rebases per save when a merge applies. Default 3, maximum 10. */
+	maxMergeAttempts?: number;
 }
 
 /** Lists, searches and opens a user's OneDrive files for File > Open (see `CloudFileProvider`). */
@@ -62,8 +69,14 @@ export function createOneDriveFileProvider(
 		}
 	};
 	const sessionFor = (opened: OneDriveOpened, entry: CloudEntry): CloudOpenedFile => {
-		const merger = options.mergers?.[opened.file.kind];
-		const session = createOneDriveSession(client, opened, merger ? { merge: merger } : {});
+		const merger =
+			options.merge === false ? undefined : (options.merge ?? options.mergers?.[opened.file.kind]);
+		const session = createOneDriveSession(client, opened, {
+			...(merger ? { merge: merger } : {}),
+			...(options.maxMergeAttempts === undefined
+				? {}
+				: { maxMergeAttempts: options.maxMergeAttempts }),
+		});
 		return {
 			entry,
 			kind: opened.file.kind,

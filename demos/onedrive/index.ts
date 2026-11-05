@@ -39,9 +39,12 @@ export function completeDemoSignInPopup(): boolean {
 	return true;
 }
 
-/** The demo's OneDrive place for File > Open. Pass format mergers to combine concurrent edits. */
+/**
+ * The demo's OneDrive place for File > Open. Pass format `mergers` to combine concurrent edits,
+ * your own `merge`, or `merge: false` to always ask.
+ */
 export function createDemoOneDriveProvider(
-	options: Pick<OneDriveFileProviderOptions, 'mergers'> = {},
+	options: Pick<OneDriveFileProviderOptions, 'mergers' | 'merge' | 'maxMergeAttempts'> = {},
 ): CloudFileProvider {
 	const { account, ...signIn } = createDemoOneDriveSignIn();
 	return createOneDriveFileProvider({ ...options, ...signIn, account: account() });
