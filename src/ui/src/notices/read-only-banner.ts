@@ -120,6 +120,7 @@ export class OfficeUiReadOnlyBanner extends OfficeElement {
 					<input
 						id="password"
 						type="password"
+						autocomplete="off"
 						data-testid="${p}-password-input"
 						placeholder=${l.passwordPlaceholder ?? 'Password'}
 						aria-invalid=${String(failed !== null)}
