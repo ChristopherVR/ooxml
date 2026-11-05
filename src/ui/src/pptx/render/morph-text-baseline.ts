@@ -116,8 +116,12 @@ export function morphTextFirstBaseline(
 	if (!first || boxes.some((box) => !box)) {
 		return undefined;
 	}
+	// Non-single line spacing puts the glyphs on PowerPoint's baseline with a
+	// relative `top` on the paragraph (`paragraph-baseline`): it moves the
+	// glyphs, never the line boxes the block is anchored by.
+	const shift = frame.paragraphs[0]?.baselineShiftPx ?? 0;
 	if (frame.vAlign === 'top') {
-		return frame.paragraphs[0]?.indented ? undefined : first.above;
+		return frame.paragraphs[0]?.indented ? undefined : first.above + shift;
 	}
 	if (frame.paragraphs.some((paragraph) => paragraph.indented)) {
 		return undefined;
@@ -127,7 +131,7 @@ export function morphTextFirstBaseline(
 			sum + (boxes[index]!.above + boxes[index]!.below) + paragraph.spaceAfterPx,
 		0,
 	);
-	return first.above - (frame.vAlign === 'bottom' ? height : height / 2);
+	return first.above + shift - (frame.vAlign === 'bottom' ? height : height / 2);
 }
 
 /**
