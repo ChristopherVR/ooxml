@@ -146,6 +146,7 @@
 {/if}
 {#if subpathFill}
 	<svg
+		data-pptx-silhouette-fill={subpathFill.silhouette ? "" : undefined}
 		class="pptx-svelte-subpath-fill"
 		aria-hidden="true"
 		viewBox={subpathFillViewBox}

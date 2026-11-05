@@ -137,4 +137,9 @@ describe('shape-following shadow (vanilla)', () => {
 		const defs = renderShapeFilterDefs(document, innerShadow('triangle'));
 		expect(defs?.innerHTML).toContain('innerLayer');
 	});
+
+	it('marks the silhouette fill path so a morph can re-path it', () => {
+		const svg = renderShapeSubpathFillOverlay(document, triangle());
+		expect(svg?.hasAttribute('data-pptx-silhouette-fill')).toBe(true);
+	});
 });

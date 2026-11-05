@@ -165,4 +165,15 @@ describe('shape-following shadow (svelte)', () => {
 		expect(triStyle.boxShadow).toBeUndefined();
 		expect(getShapeFillStrokeStyle(innerShadow('rect')).boxShadow).toContain('inset -8px');
 	});
+
+	it('marks the silhouette fill path so a morph can re-path it', () => {
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		mounted = mount(ShapeEffectOverlay, {
+			target,
+			props: { element: triangle(), mediaDataUrls: new Map<string, string>(), zIndex: 1 },
+		});
+		flushSync();
+		expect(target.innerHTML).toContain('data-pptx-silhouette-fill');
+	});
 });

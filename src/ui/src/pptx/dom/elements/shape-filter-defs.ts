@@ -208,6 +208,9 @@ export function renderShapeSubpathFillOverlay(
 		preserveAspectRatio: 'none',
 	});
 	svg.setAttribute('style', 'position:absolute;inset:0;width:100%;height:100%');
+	if (overlay.silhouette) {
+		svg.setAttribute('data-pptx-silhouette-fill', '');
+	}
 	for (const paint of overlay.paints) {
 		const path = createSvgEl(doc, 'path', { d: paint.d, fill: paint.fill, stroke: 'none' });
 		svg.appendChild(path);

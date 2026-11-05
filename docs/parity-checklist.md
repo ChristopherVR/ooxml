@@ -420,12 +420,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
       Controls are disabled.
-- [ ] **P2** A non-rectangular shape with an inner shadow, a line effect or a 3-D bevel still loses
-      its outer shadow and glow (a clip-path cuts them off); solid, unfilled, gradient, pattern and
-      picture shapes paint them as a shape-following filter
+- [ ] **P2** A non-rectangular shape with a line effect or a 3-D bevel still loses its outer shadow
+      and glow (a clip-path cuts them off); solid, unfilled, gradient, pattern and picture shapes
+      (and their inner shadow) paint them as a shape-following filter
       (`src/ui/src/pptx/render/silhouette-effects.ts`; the fill of a gradient, pattern or picture
-      is a clipped child layer, `silhouette-fill-layer.ts`). A morphing non-rectangular shape also
-      keeps the clipped effects. In-place text editing under the click-through container of a
+      is a clipped child layer, `silhouette-fill-layer.ts`). A morphing shape of that kind keeps
+      its shadow and glow (its fill path morphs, `morph-shape-carry`), but they are not yet carried
+      the way PowerPoint carries them (scaled offsets, `1 - p` / `p` dissolve of the two ends'
+      effects, `morph-effect-carry`): they stay at full strength. In-place text editing under the click-through container of a
       text-bearing silhouette shape is untested (its text spans and `contenteditable` stay
       hit-testable).
 - [ ] **P2** Preset geometry that still differs from PowerPoint 16 (measured with

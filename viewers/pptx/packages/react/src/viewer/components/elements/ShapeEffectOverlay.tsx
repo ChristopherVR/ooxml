@@ -191,6 +191,7 @@ export function ShapeEffectOverlay({
 			{subpathFill ? (
 				<svg
 					className='pptx-react-subpath-fill'
+					data-pptx-silhouette-fill={subpathFill.silhouette ? '' : undefined}
 					aria-hidden='true'
 					viewBox={`0 0 ${subpathFill.viewBoxWidth} ${subpathFill.viewBoxHeight}`}
 					preserveAspectRatio='none'

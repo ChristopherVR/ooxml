@@ -139,4 +139,9 @@ describe('shape-following shadow (react)', () => {
 		const r = shapeParams(rect);
 		expect(getShapeVisualStyle(rect, r.hf, r.fc, r.sw, r.sc).boxShadow).toContain('inset -8px');
 	});
+
+	it('marks the silhouette fill path so a morph can re-path it', () => {
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={triangle()} />);
+		expect(html).toContain('data-pptx-silhouette-fill');
+	});
 });

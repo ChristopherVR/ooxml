@@ -165,6 +165,7 @@ const reflection = computed<CSSProperties | undefined>(() =>
 	></div>
 	<svg
 		v-if="subpathFill"
+		:data-pptx-silhouette-fill="subpathFill.silhouette ? '' : undefined"
 		class="pptx-vue-subpath-fill"
 		aria-hidden="true"
 		:viewBox="subpathFillViewBox"

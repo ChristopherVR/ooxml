@@ -142,10 +142,14 @@ export function buildMorphOutlineRules(
 					`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path:nth-of-type(${strand + 1}) { animation: ${animation}; }`,
 			),
 		),
-		...[...(plan.customGeometryAnimations ?? [])].map(
-			([elementId, animation]) =>
-				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-custom-geometry] path { animation: ${animation}; }`,
-		),
+		...[...(plan.customGeometryAnimations ?? [])].flatMap(([elementId, animation]) => {
+			const scope = `${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"]`;
+			return [
+				`${scope} [data-pptx-custom-geometry] path { animation: ${animation}; }`,
+				// The fill path of a shape painted by the silhouette filter.
+				`${scope} [data-pptx-silhouette-fill] path { animation: ${animation}; }`,
+			];
+		}),
 	];
 	const lines = [...(plan.lineAnimations ?? [])].map(
 		([elementId, animation]) =>

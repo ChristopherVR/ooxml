@@ -131,4 +131,10 @@ describe('shape-following shadow (vue)', () => {
 		expect(triStyle.boxShadow).toBeUndefined();
 		expect(getShapeFillStrokeStyle(innerShadow('rect')).boxShadow).toContain('inset -8px');
 	});
+
+	it('marks the silhouette fill path so a morph can re-path it', () => {
+		const wrapper = mount(ShapeEffectOverlay, { props: { element: triangle() } });
+		expect(wrapper.html()).toContain('data-pptx-silhouette-fill');
+		wrapper.unmount();
+	});
 });

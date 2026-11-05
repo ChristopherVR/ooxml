@@ -61,6 +61,8 @@ import {
 	tracedCompoundOffsets,
 } from './morph-shape-carry-strands';
 import { resolveShapeGeometry } from './shape-geometry-cascade';
+import { silhouetteFillsOverlay, usesSilhouetteEffects } from './silhouette-effects';
+import { buildSubpathFillOverlay } from './subpath-fill-overlay';
 import { outsetClipPathForStroke } from './stroke-clip-outset';
 import { buildStrokeOutline, outlineStrokeJoin, straddlingStrokeWidth } from './stroke-outline';
 
@@ -218,8 +220,12 @@ export function buildMorphShapeCarry(
 		startDeclarations.push('border-radius: 0');
 		endDeclarations.push('border-radius: 0');
 	}
+	// A shape whose shadow and glow are one filter on its container (see
+	// `silhouette-effects`) must not be clipped there: the clip would cut the
+	// effects to a strip. Its fill is the SVG overlay's path, which morphs instead.
+	const silhouette = usesSilhouetteEffects(local);
 	const clipKeyframes =
-		decision.kind === 'clipPath' || reshaped
+		!silhouette && (decision.kind === 'clipPath' || reshaped)
 			? bakeStops(progress, (p) => {
 					const [ax, ay] = scaleAt(p);
 					const user = geometryAt(a, b, from, to, p, W / ax, H / ay);
@@ -265,12 +271,23 @@ export function buildMorphShapeCarry(
 			: undefined;
 	// Its own line stays: the vector paints its fill over the outline overlay's
 	// inner half, and only its own line (at its static width) covers that.
-	const customKeyframes = pathUnits
+	const silhouetteFill =
+		silhouette &&
+		silhouetteFillsOverlay(local) &&
+		buildSubpathFillOverlay(local)?.paints.length === 1;
+	const units = pathUnits ?? (silhouetteFill ? [1, 1] : undefined);
+	const customKeyframes = units
 		? bakeStops(progress, (p) => [
-				`d: path('${scalePath(geometryAt(a, b, from, to, p, W, H), pathUnits[0] ?? 1, pathUnits[1] ?? 1)}')`,
+				`d: path('${scalePath(geometryAt(a, b, from, to, p, W, H), units[0] ?? 1, units[1] ?? 1)}')`,
 			])
 		: undefined;
-	if (!startDeclarations.length && !clipKeyframes && !outlineKeyframes && !outlineStrandKeyframes) {
+	if (
+		!startDeclarations.length &&
+		!clipKeyframes &&
+		!outlineKeyframes &&
+		!outlineStrandKeyframes &&
+		!(silhouetteFill && customKeyframes)
+	) {
 		return undefined;
 	}
 	return {

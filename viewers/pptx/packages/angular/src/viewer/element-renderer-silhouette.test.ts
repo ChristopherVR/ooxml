@@ -136,4 +136,13 @@ describe('shape-following shadow (angular)', () => {
 		expect(getShapeFillStrokeStyle(innerShadow('rect'))['box-shadow']).toContain('inset -8px');
 		expect(getSilhouetteFilterDef(innerShadow('triangle'))?.filterMarkup).toContain('innerLayer');
 	});
+
+	it('marks the silhouette fill path so a morph can re-path it', () => {
+		expect(getSubpathFillOverlay(triangle())?.silhouette).toBe(true);
+		const html = readFileSync(
+			path.join(__dirname, 'element-renderer-shape.component.html'),
+			'utf8',
+		);
+		expect(html).toContain('data-pptx-silhouette-fill');
+	});
 });

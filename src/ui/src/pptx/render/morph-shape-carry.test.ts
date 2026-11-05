@@ -224,3 +224,53 @@ describe('morph shape carry', () => {
 		});
 	});
 });
+
+describe('morph shape carry of a shape painted by the silhouette filter', () => {
+	const shadow = {
+		shadowColor: '#000000',
+		shadowOpacity: 0.5,
+		shadowBlur: 10,
+		shadowAngle: 45,
+		shadowDistance: 8,
+		outerShadowXml: {},
+	};
+	const tri = (id: string, box: { x: number; y: number; width: number; height: number }) =>
+		({
+			id,
+			type: 'shape',
+			shapeType: 'triangle',
+			...box,
+			shapeStyle: { fillColor: '#2070C0', fillMode: 'solid', ...shadow },
+		}) as unknown as PptxElement;
+	const small = tri('a', { x: 80, y: 80, width: 80, height: 80 });
+	const large = tri('b', { x: 400, y: 260, width: 640, height: 320 });
+
+	it('does not clip the container, which would cut its shadow to a strip', () => {
+		for (const half of ['from', 'to'] as const) {
+			expect(buildMorphShapeCarry(small, large, half)?.clipKeyframes).toBeUndefined();
+		}
+	});
+
+	it('morphs the fill path of the SVG overlay instead', () => {
+		const carry = buildMorphShapeCarry(small, large, 'to');
+		expect(carry?.customKeyframes).toContain('d: path(');
+	});
+
+	it('still clips a plain triangle without effects', () => {
+		const plain = (el: PptxElement) =>
+			({
+				...el,
+				shapeStyle: { fillColor: '#2070C0', fillMode: 'solid' },
+			}) as unknown as PptxElement;
+		expect(buildMorphShapeCarry(plain(small), plain(large), 'to')?.clipKeyframes).toBeDefined();
+	});
+
+	it('targets the overlay path in the plan rules', () => {
+		const plan = {
+			customGeometryAnimations: new Map([['b', 'carry 1s']]),
+		} as unknown as MorphTransitionPlan;
+		expect(buildMorphOutlineRules(plan, 'data-element-id')).toContain(
+			'[data-pptx-silhouette-fill] path',
+		);
+	});
+});
