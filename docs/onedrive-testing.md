@@ -134,6 +134,27 @@ This smoke check is real service evidence for the supplied account, token and do
 does not validate the suite's browser sign-in integration, redirect URI, deployed CORS behavior,
 every sharing policy or simultaneous Microsoft Office coauthoring.
 
+## Live save and merge round trip
+
+`scripts/onedrive-live-roundtrip.mjs` exercises the whole save path against your own OneDrive file
+(a `.pptx` you can change): it opens the file from its sharing link, edits and saves it through a
+session, downloads it again to verify the edit and the new eTag, then opens two sessions from the
+same version, saves a different edit from each, and checks that the second save meets the eTag
+conflict, merges with `mergePptxSnapshots` and keeps both edits. Every step is timed.
+
+```sh
+bun run build
+# GRAPH_TOKEN=<Graph Explorer token> in an untracked .env file (the root .env is git-ignored)
+OOXML_ONEDRIVE_SHARE_URL='<sharing link>' node scripts/onedrive-live-roundtrip.mjs --env .env
+```
+
+It changes the file and keeps the edits; add `--restore` to upload the original bytes at the end.
+The token and link are never printed, and without a token it skips (it never runs in CI). Its
+first run against real Graph found three upload bugs that the test doubles hid (an overwrite sent
+`conflictBehavior: 'fail'`, which Graph rejects next to `If-Match`; the next-range check expected
+`start-` where Graph sends `start-end`; and a failed upload left its session open). The doubles now
+behave like Graph in both respects.
+
 ## Real-account acceptance
 
 Record account type, browser, authorized application, scopes, disposable document, observed
