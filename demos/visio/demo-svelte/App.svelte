@@ -13,4 +13,4 @@
   });
 </script>
 
-<VisioViewer bind:this={viewer} {document} events={workspace.events} aria-label="Visio diagram" />
+<VisioViewer bind:this={viewer} {document} fileProviders={workspace.fileProviders} events={workspace.events} aria-label="Visio diagram" />

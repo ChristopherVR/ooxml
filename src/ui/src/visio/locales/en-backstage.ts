@@ -114,4 +114,7 @@ export const enBackstage: Readonly<Record<string, string>> = {
 	'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.':
 		'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.',
 	'PDF created: {count} page(s)': 'PDF created: {count} page(s)',
+	'This device': 'This device',
+	Places: 'Places',
+	'Opened {name} read-only.': 'Opened {name} read-only.',
 };

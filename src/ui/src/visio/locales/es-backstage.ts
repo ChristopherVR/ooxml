@@ -116,4 +116,7 @@ export const esBackstage: Readonly<Record<string, string>> = {
 	'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.':
 		'Fuentes no incrustadas (no son TrueType, o la licencia de la fuente prohíbe incrustarlas): {fonts}.',
 	'PDF created: {count} page(s)': 'PDF creado: {count} página(s)',
+	'This device': 'Este dispositivo',
+	Places: 'Ubicaciones',
+	'Opened {name} read-only.': '{name} se abrió como solo lectura.',
 };

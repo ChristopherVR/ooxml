@@ -84,6 +84,8 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 				element.collaboration = options.collaboration;
 			else if (key === 'storage' && options.storage !== undefined)
 				element.storage = options.storage;
+			else if (key === 'fileProviders' && options.fileProviders !== undefined)
+				element.fileProviders = options.fileProviders;
 			else if (key === 'customization' && options.customization !== undefined)
 				element.customization = options.customization;
 		}

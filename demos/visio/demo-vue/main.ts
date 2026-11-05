@@ -1,25 +1,30 @@
-import { createApp, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { createApp, defineComponent, h, onMounted, shallowRef, type PropType } from 'vue';
 import { VisioViewer } from '../../../viewers/visio/packages/bindings/src/vue';
 import type { ViewerHandle } from '../../../viewers/visio/packages/bindings/src/common';
-import { createWorkspace } from '../demo/workspace';
+import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
+import { createWorkspace, type Workspace } from '../demo/workspace';
 
 // The Vue demo: the VisioViewer component with its exposed handle.
-const workspace = createWorkspace();
+const popup = completeDemoSignInPopup();
+// In the MSAL sign-in popup the page only hands the response back to the opener.
+const workspace = popup ? undefined : createWorkspace();
 
 const App = defineComponent({
-	setup() {
+	props: { workspace: { type: Object as PropType<Workspace>, required: true } },
+	setup(props) {
 		const viewer = shallowRef<ViewerHandle | null>(null);
 		onMounted(() => {
-			if (viewer.value) workspace.attach(viewer.value);
+			if (viewer.value) props.workspace.attach(viewer.value);
 		});
 		return () =>
 			h(VisioViewer, {
 				ref: viewer,
-				document: workspace.initialDocument,
-				events: workspace.events,
+				document: props.workspace.initialDocument,
+				fileProviders: props.workspace.fileProviders,
+				events: props.workspace.events,
 				'aria-label': 'Visio diagram',
 			});
 	},
 });
 
-createApp(App).mount(window.document.getElementById('viewer')!);
+if (workspace) createApp(App, { workspace }).mount(window.document.getElementById('viewer')!);

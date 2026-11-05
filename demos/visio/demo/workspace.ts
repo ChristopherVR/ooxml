@@ -1,8 +1,10 @@
 import { compatibilityNotes, compatibilityText } from '../../../viewers/visio/src/index';
 import type { ViewerCallbacks } from 'ooxml-ui/visio';
 import type { MountedViewer } from 'ooxml-ui/visio';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { createSampleVsdx, demoDocument } from 'ooxml-core/visio/ui';
+import { createDemoFileProviders } from './cloud';
 import { wireWorkspaceShell } from './workspace-shell';
 import { wireWorkspaceTheme } from './workspace-theme';
 
@@ -15,6 +17,8 @@ export type WorkspaceViewer = Pick<
 export interface Workspace {
 	/** Pass these to the viewer, through the binding's own event API. */
 	readonly events: ViewerCallbacks;
+	/** The File > Open cloud places every demo binding passes as `fileProviders`. */
+	readonly fileProviders: readonly CloudFileProvider[];
 	/** What the binding mounts with; `attach` replaces it with the editable sample package. */
 	readonly initialDocument: VisioDocument;
 	/**
@@ -31,6 +35,7 @@ export interface Workspace {
  * the viewer with its own binding and attaches it here, so all six demos behave the same.
  */
 export function createWorkspace(doc: Document = document): Workspace {
+	const fileProviders = createDemoFileProviders();
 	const get = <T extends HTMLElement>(id: string): T => doc.getElementById(id) as T;
 	const fileName = get('file-name'),
 		fileState = get('file-state'),
@@ -243,5 +248,5 @@ export function createWorkspace(doc: Document = document): Workspace {
 		});
 	}
 
-	return { events, initialDocument: demoDocument, attach };
+	return { events, fileProviders, initialDocument: demoDocument, attach };
 }

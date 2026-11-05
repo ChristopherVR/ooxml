@@ -145,6 +145,9 @@ const mounts: Record<string, NativeMount> = {
 					get storage() {
 						return props().storage;
 					},
+					get fileProviders() {
+						return props().fileProviders;
+					},
 					get customization() {
 						return props().customization;
 					},
@@ -444,6 +447,32 @@ describe('native adapters against the real shared custom element', () => {
 				expect(command.defaultPrevented).toBe(true);
 				await mounted.update({ document: null, storage: null, events });
 				expect(element.storage).toBeNull();
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
+		it(`${framework}: forwards file providers and clears them`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const provider = {
+				id: 'cloud',
+				label: 'Cloud',
+				account: () => null,
+				signIn: async () => ({ name: 'A' }),
+				list: async () => ({ entries: [] }),
+				open: async () => {
+					throw new Error('unused');
+				},
+			};
+			const mounted = await mountNative(host, { document: null, fileProviders: [provider] });
+			const element = mounted.handle.element;
+			try {
+				expect(element.fileProviders).toEqual([provider]);
+				expect(element.shadowRoot!.querySelectorAll('[data-backstage-place]')).toHaveLength(2);
+				await mounted.update({ document: null, fileProviders: [] });
+				expect(element.fileProviders).toEqual([]);
+				expect(element.shadowRoot!.querySelectorAll('[data-backstage-place]')).toHaveLength(0);
 			} finally {
 				await mounted.destroy();
 				host.remove();

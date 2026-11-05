@@ -1,6 +1,11 @@
 import type { RibbonAddInCommandDetail, RibbonAddInTab } from '../../ribbon/index';
 import type { CollaborationState } from '../../collab/index';
-import type { DocumentStorage, FileCommandDetail, VisioFileCommand } from '../../embedding/index';
+import type {
+	CloudFileProvider,
+	DocumentStorage,
+	FileCommandDetail,
+	VisioFileCommand,
+} from '../../embedding/index';
 import type { VisioCollaborationOptions } from './collab-options';
 import type { VisioDocument } from '../index';
 import type { VisioCustomization } from './customization';
@@ -24,6 +29,13 @@ export interface ViewerProperties {
 	 * through the storage's recovery methods instead of IndexedDB. null restores the defaults.
 	 */
 	storage: DocumentStorage | null;
+	/**
+	 * Cloud places for File > Open (OneDrive, or a host's own): This device plus one place per
+	 * provider listing `.vsdx` drawings. A drawing opened there is read-only when the file is, and
+	 * saves through its own storage until another drawing loads. An empty array restores the plain
+	 * Open page.
+	 */
+	fileProviders: readonly CloudFileProvider[];
 	/**
 	 * Capabilities, host File tab pages and host menu commands (the shared embedding contract of
 	 * `ooxml-core/embedding`); null restores the defaults.
@@ -76,6 +88,7 @@ export const propertyKeys = [
 	'ribbonAddIns',
 	'collaboration',
 	'storage',
+	'fileProviders',
 	'customization',
 ] as const satisfies readonly (keyof ViewerProperties)[];
 export const eventKeys = [

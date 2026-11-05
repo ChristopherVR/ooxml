@@ -155,3 +155,28 @@
 	margin: 4px 0 0;
 	padding-left: 20px;
 }
+.backstage-places {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 14px;
+}
+.backstage-place {
+	min-height: 32px;
+	padding: 4px 14px;
+	background: var(--_vv-surface);
+}
+.backstage-place[aria-pressed='true'] {
+	font-weight: 600;
+	border-color: var(--office-accent, currentColor);
+}
+.backstage-cloud {
+	min-height: 320px;
+}
+.backstage-cloud[hidden],
+.backstage-places[hidden] {
+	display: none;
+}
+[data-place][hidden] {
+	display: none;
+}
