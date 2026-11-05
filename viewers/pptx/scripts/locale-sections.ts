@@ -225,6 +225,7 @@ const SECTION_DEFINITIONS = [
 	{ name: 'ai-assistant', prefixes: ['ai'] },
 	{ name: 'backstage', prefixes: ['backstage'] },
 	{ name: 'cloud-files', prefixes: ['cloudFiles'] },
+	{ name: 'dialogs', prefixes: ['dialog'] },
 	{ name: 'viewer-options', prefixes: ['options'] },
 	{ name: 'slide-templates', prefixes: ['slideTemplates'] },
 	{ name: 'ribbon', prefixes: ['ribbon', 'home', 'insert', 'insertChart'] },

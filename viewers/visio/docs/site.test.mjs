@@ -90,10 +90,7 @@ describe('documentation site build', () => {
 		assert.doesNotMatch(home + start, /private and unpublished|MIT license/i);
 		assert.match(text('parity'), /parity is a target, not a current claim/i);
 		assert.match(text('collaboration'), /same-browser only/i);
-		assert.match(
-			text('collaboration'),
-			/share across devices by setting the collaboration property/,
-		);
+		assert.match(text('collaboration'), /A host can also set the collaboration property/);
 	});
 
 	it('lists every demo route and every framework package', () => {

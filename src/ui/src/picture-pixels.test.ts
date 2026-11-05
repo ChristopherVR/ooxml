@@ -31,7 +31,11 @@ describe('probePicturePixels', () => {
 				const image = { naturalWidth: 2, naturalHeight: 2 } as unknown as HTMLImageElement & {
 					onload?: () => void;
 				};
-				Object.defineProperty(image, 'src', { set: () => queueMicrotask(() => image.onload?.()) });
+				Object.defineProperty(image, 'src', {
+					set: () => {
+						queueMicrotask(() => image.onload?.());
+					},
+				});
 				return image;
 			}
 			return realCreate(tag);
