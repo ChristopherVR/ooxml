@@ -29,20 +29,49 @@ function ownText(element: PptxElement): string {
 	return ((element as { text?: string }).text ?? '').replace(/\s+/gu, ' ').trim();
 }
 
+/** An unrotated box entirely outside the slide's top or left edge. */
+function offstageTopLeft(element: PptxElement): boolean {
+	return (
+		(element.rotation ?? 0) === 0 &&
+		(element.x + element.width <= 0 || element.y + element.height <= 0)
+	);
+}
+
 /**
- * A text box entirely outside the top or left edge can adopt its destination
- * font size before it enters the slide. This avoids superimposing two layouts
- * of the same text during its flight. Restrict this to size-only run changes:
- * a change in wording, font, colour or emphasis still needs a cross-dissolve.
+ * A size-only text change that can fly as ONE copy, because one end of the
+ * flight is entirely outside the top or left edge where the switch between
+ * the two layouts cannot be seen. This avoids superimposing two layouts of the
+ * same text during its flight. Restrict this to size-only run changes: a
+ * change in wording, font, colour or emphasis still needs a cross-dissolve.
+ *
+ * Either end qualifies. Issue #141's slides 17 -> 18 bring a parked paragraph
+ * IN from off the left edge; played backwards (18 -> 17) the same paragraph
+ * flies OUT to that parking spot, and checking only the source left the
+ * reverse cross-dissolving two layouts across the slide.
+ *
+ * @see morphOffstageTextAdoptsTarget for which layout the single copy paints.
  */
 export function morphOffstageTextSizeChange(from: PptxElement, to: PptxElement): boolean {
+	return (offstageTopLeft(from) || offstageTopLeft(to)) && sizeOnlyTextChange(from, to);
+}
+
+/**
+ * Whether the single travelling copy of {@link morphOffstageTextSizeChange}
+ * paints the DESTINATION layout: only when the source is the off-stage end,
+ * so the switch happens before the text enters. When the destination is the
+ * off-stage end the copy keeps its own layout until it has left the slide.
+ */
+export function morphOffstageTextAdoptsTarget(from: PptxElement, to: PptxElement): boolean {
+	return offstageTopLeft(from) && sizeOnlyTextChange(from, to);
+}
+
+/** The same words in the same runs, differing only in some run's font size. */
+function sizeOnlyTextChange(from: PptxElement, to: PptxElement): boolean {
 	if (
 		from.type !== 'text' ||
 		to.type !== 'text' ||
 		!hasTextProperties(from) ||
 		!hasTextProperties(to) ||
-		(from.rotation ?? 0) !== 0 ||
-		(from.x + from.width > 0 && from.y + from.height > 0) ||
 		JSON.stringify(from.shapeStyle ?? {}) !== JSON.stringify(to.shapeStyle ?? {}) ||
 		!from.text ||
 		from.text !== to.text

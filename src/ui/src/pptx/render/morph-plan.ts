@@ -50,10 +50,11 @@ import { resolveMorphCrossfadeGroups } from './morph-crossfade-group';
 import type { MorphCrossfadeGroup } from './morph-crossfade-group';
 import { flattenMorphElements } from './morph-flatten';
 import { matchMorphElementsFull } from './morph-matching';
-import { resolveMorphOverlayLayers } from './morph-overlay-layers';
 import type { MorphOverlayLayer } from './morph-overlay-layers';
+import type { MorphOverlayStackEntry } from './morph-overlay-stack';
+import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
-import { morphOffstageTextSizeChange } from './morph-text-slot';
+import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
 import type { MorphMode } from './morph-types';
 
 /**
@@ -180,9 +181,21 @@ export interface MorphTransitionPlan {
 	 * slide inside a `data-pptx-morph-lifted` scope. Painting every ghost below
 	 * every lifted arrival instead let a full-slide picture fading in veil the
 	 * title travelling above it (issue #141).
-	 * {@link MorphTransitionPlan.crossfadeGroups} still go above all of these.
+	 *
+	 * A run is split wherever a crossfade group belongs inside it, and
+	 * {@link MorphTransitionPlan.overlayStack} says where each group goes.
 	 */
 	overlayLayers: MorphOverlayLayer[];
+	/**
+	 * Every run of {@link MorphTransitionPlan.overlayLayers} and every
+	 * {@link MorphTransitionPlan.crossfadeGroups} group, back to front. Read it
+	 * through `morphOverlayStackSlots` or `morphOverlayElementSlots` (see
+	 * `morph-overlay-stack`). Painting every group above every run let three
+	 * dissolving text columns show through the picture bands the incoming slide
+	 * stacks above them, then vanish from them when the overlay came down
+	 * (issue #141, slides 6 to 7).
+	 */
+	overlayStack: MorphOverlayStackEntry[];
 	/** Animation duration in ms, echoed for convenience. */
 	durationMs: number;
 }
@@ -326,7 +339,7 @@ export function buildMorphTransitionPlan(
 	// the ghost set directly rather than reading it off the animation map.
 	const offstageRestyles = new Map(
 		match.pairs
-			.filter(({ fromElement, toElement }) => morphOffstageTextSizeChange(fromElement, toElement))
+			.filter(({ fromElement, toElement }) => morphOffstageTextAdoptsTarget(fromElement, toElement))
 			.map(({ fromElement, toElement }) => [fromElement.id, toElement] as const),
 	);
 	const ghostElements = flattenedOutgoing
@@ -417,9 +430,10 @@ export function buildMorphTransitionPlan(
 	const overlayIncomingElements = flattenedIncoming.filter(
 		(element) => overlayIncomingAnimations.has(element.id) && !groupedIncomingIds.has(element.id),
 	);
-	const overlayLayers = resolveMorphOverlayLayers(
+	const { layers: overlayLayers, stack: overlayStack } = resolveMorphOverlayStack(
 		outgoingElements,
 		overlayIncomingElements,
+		crossfadeGroups,
 		flattenedOutgoing,
 		flattenedIncoming,
 		match.pairs,
@@ -440,6 +454,7 @@ export function buildMorphTransitionPlan(
 		),
 		overlayIncomingElements,
 		overlayLayers,
+		overlayStack,
 		crossfadeGroups,
 		durationMs,
 	};
