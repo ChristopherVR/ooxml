@@ -261,12 +261,14 @@ describe('events and handle methods', () => {
 		await binding.load(new Uint8Array([1]), 'a.xlsx');
 		await binding.download('b.xlsx');
 		binding.newWorkbook();
+		await binding.openCloudFile({ fileName: 'c.xlsx' } as never);
 		expect(calls.map((call) => call.method)).toEqual([
 			'save',
 			'saveBytes',
 			'load',
 			'download',
 			'newWorkbook',
+			'openCloudFile',
 		]);
 		expect(calls[1]?.args).toEqual(['csv']);
 		expect(calls[2]?.args).toEqual([new Uint8Array([1]), 'a.xlsx']);

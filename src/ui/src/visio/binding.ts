@@ -1,3 +1,4 @@
+import type { CloudOpenedFile } from 'ooxml-core/embedding';
 import type { VisioEdit, CreateVsdxOptions } from 'ooxml-core/visio';
 import type {
 	ViewerOptions,
@@ -19,6 +20,8 @@ export interface MountedViewer {
 	load(source: VsdxSource): Promise<void>;
 	createBlankDrawing(options?: CreateVsdxOptions): Promise<void>;
 	createFromTemplate(template: VisioTemplateId): Promise<void>;
+	/** Opens a file from a `CloudFileProvider`, as File > Open > OneDrive does (storage, read-only). */
+	openCloudFile(file: CloudOpenedFile): Promise<void>;
 	applyEdits(edits: readonly VisioEdit[]): Promise<void>;
 	selectShapes(shapes: readonly VisioShapeSelection[]): void;
 	selectAll(): void;
@@ -103,6 +106,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async createBlankDrawing(options) {
 			assertAlive();
 			await element.createBlankDrawing(options);
+		},
+		async openCloudFile(file) {
+			assertAlive();
+			await element.openCloudFile(file);
 		},
 		async createFromTemplate(template) {
 			assertAlive();

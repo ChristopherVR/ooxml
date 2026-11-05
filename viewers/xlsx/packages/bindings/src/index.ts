@@ -73,6 +73,7 @@ export function mountEditor(
 		saveBytes: (format) => element.saveBytes(format),
 		download: (fileName) => element.download(fileName),
 		markClean: () => element.markClean(),
+		openCloudFile: (file) => element.openCloudFile(file),
 		select: (ref) => element.select(ref),
 		getSelection: () => element.getSelection(),
 		setActiveSheet: (index) => element.setActiveSheet(index),

@@ -1,11 +1,18 @@
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The public methods of `<xlsx-editor>` (load, newWorkbook, save, saveBytes, download, markClean,
  * select, getSelection, setActiveSheet, collaboration, share, undo, redo, focusGrid). The properties and lifecycle are
  * in component.ts; the state is the EditorCore.
  */
 import { EditorCore } from './editor-core';
-import { loadInto, newInto, saveBlob, saveBytes, type FileChrome } from './editor-files';
+import {
+	loadInto,
+	newInto,
+	openCloudFile,
+	saveBlob,
+	saveBytes,
+	type FileChrome,
+} from './editor-files';
 import { downloadBytes, saveExtension, withExtension } from './file-commands';
 import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
@@ -59,10 +66,22 @@ export class XlsxEditorApi extends HTMLElementBase {
 	protected chrome: FileChrome | undefined;
 	/** Set by the shell once connected: opens File > Share. */
 	protected openShare: (() => void) | undefined;
+	/** Set by the shell once connected: leaves the File backstage. */
+	protected closeBackstage: (() => void) | undefined;
 
 	/** Opens .xlsx, .xlsm, .xltx, .xls or .csv bytes; `fileName` helps detection and names the file. */
 	async load(bytes: Uint8Array | ArrayBuffer, fileName?: string): Promise<void> {
 		await loadInto(this.core, bytes, fileName, this.chrome);
+	}
+
+	/**
+	 * Opens a file a host got from a `CloudFileProvider` (its own picker or a start page), exactly as
+	 * File > Open > OneDrive does: the discard confirmation when there are unsaved changes, the file's
+	 * name, read-only when `file.canEdit` is false, and Save and Save As routed to `file.storage`.
+	 * Resolves once open (or when the user declines to discard); rejects when the load fails.
+	 */
+	async openCloudFile(file: CloudOpenedFile): Promise<void> {
+		await openCloudFile(this.core, file, this.chrome, () => this.closeBackstage?.());
 	}
 
 	/** Starts a blank workbook named Book1.xlsx. */

@@ -88,6 +88,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		this.shell = buildShell(this.core);
 		this.chrome = this.shell.chrome;
 		this.openShare = () => this.shell?.backstage.open('share');
+		this.closeBackstage = () => this.shell?.backstage.close();
 		if (this.addIns.length) this.shell.ribbon.setAddIns(this.addIns);
 		this.core.requestRender();
 	}

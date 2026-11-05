@@ -273,6 +273,18 @@ describe('native adapters against the real shared custom element', () => {
 			expect(create).toHaveBeenCalledOnce();
 			host.remove();
 		});
+		it(`${framework}: forwards openCloudFile and rejects after disposal`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument });
+			const open = vi.spyOn(mounted.handle.element, 'openCloudFile').mockResolvedValue();
+			const file = { fileName: 'Plan.vsdx' } as never;
+			await act(async () => mounted.handle.openCloudFile(file));
+			expect(open).toHaveBeenCalledExactlyOnceWith(file);
+			await mounted.destroy();
+			await expect(mounted.handle.openCloudFile(file)).rejects.toThrow(/not mounted|destroyed/);
+			host.remove();
+		});
 		it(`${framework}: forwards clipboard handles and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

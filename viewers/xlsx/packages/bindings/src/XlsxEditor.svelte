@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { CloudOpenedFile } from 'ooxml-core/embedding';
   import { deferredHandle, mountEditor, svelteEditorOptions, type EditorBinding, type EditorEventHandlers, type EditorOptions, type EditorProps, type EditorHandle } from './index';
   type Props = EditorProps & {
     onworkbookchange?: EditorEventHandlers['workbook-change'];
@@ -36,6 +37,7 @@
   export function save() { return handle.save(); }
   export function saveBytes(format?: 'xlsx' | 'csv') { return handle.saveBytes(format); }
   export function download(name?: string) { return handle.download(name); }
+  export function openCloudFile(file: CloudOpenedFile) { return handle.openCloudFile(file); }
   export function markClean() { handle.markClean(); dirtyState = handle.dirty; }
   export function select(ref: string) { handle.select(ref); }
   export function getSelection() { return handle.getSelection(); }

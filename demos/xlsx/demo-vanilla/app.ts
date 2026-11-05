@@ -2,7 +2,7 @@ import { initTheme } from './theme';
 import './style.css';
 import { normalizeEditorLocale, type XlsxEditorElement } from 'xlsx-web-component';
 import type { EditorHandle } from '../../../viewers/xlsx/packages/bindings/src/index';
-import { createDemoOneDriveProvider } from 'ooxml-demo-onedrive';
+import { createDemoOneDriveProvider, pickCloudFile } from 'ooxml-demo-onedrive';
 import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
 import { mountFramework } from './framework';
 
@@ -118,6 +118,19 @@ get('browse').addEventListener('click', (event) => {
 get('blank').addEventListener('click', (event) => {
 	event.stopPropagation();
 	void openNew();
+});
+/** Start page: pick a file in the shared OneDrive browser, then hand it to the editor. */
+get('onedrive').addEventListener('click', (event) => {
+	event.stopPropagation();
+	void (async () => {
+		const file = await pickCloudFile(oneDrive, ['xlsx']);
+		if (!file) return;
+		try {
+			await (await showEditor()).openCloudFile(file);
+		} catch (error) {
+			showLandingError(error);
+		}
+	})();
 });
 get('sample').addEventListener('click', (event) => {
 	event.stopPropagation();

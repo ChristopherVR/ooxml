@@ -62,6 +62,7 @@ describe('EDITOR_CONTRACT', () => {
 			sorted([
 				'dirty',
 				'download',
+				'openCloudFile',
 				'element',
 				'getSelection',
 				'load',

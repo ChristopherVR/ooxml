@@ -259,6 +259,26 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.shadowRoot!.activeElement).not.toBeNull();
 	});
 
+	it('opens a cloud file from host code: name, storage routing and read-only', async () => {
+		const { element, of } = editor();
+		const save = vi.fn(async () => undefined);
+		const host = vi.fn(async () => undefined);
+		element.storage = { save: host };
+		await element.openCloudFile({
+			entry: { id: 'd!1', name: 'Cloud.xlsx', type: 'file', kind: 'xlsx' },
+			kind: 'xlsx',
+			fileName: 'Cloud.xlsx',
+			bytes: await xlsxBytes(['Cloud']),
+			canEdit: false,
+			storage: { save },
+		});
+		expect((element as unknown as { core: EditorCore }).core.fileName).toBe('Cloud.xlsx');
+		expect(of('workbook-change').length).toBeGreaterThan(0);
+		expect(of('readonly-change').at(-1)?.detail).toMatchObject({ readOnly: true });
+		expect((element as unknown as { core: EditorCore }).core.fileStorage?.save).toBe(save);
+		element.remove();
+	});
+
 	it('opens the backstage from the File tab and closes it with Escape', async () => {
 		const { element } = editor();
 		element.newWorkbook();

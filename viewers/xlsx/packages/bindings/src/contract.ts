@@ -16,7 +16,7 @@ import type {
 	ExcelCustomization,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
-import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	contractOptions,
 	deferredHandle as kitDeferredHandle,
@@ -190,6 +190,11 @@ export interface EditorHandle {
 	/** Saves and downloads in the browser, then marks the workbook clean. */
 	download(fileName?: string): Promise<void>;
 	markClean(): void;
+	/**
+	 * Opens a file got from a `CloudFileProvider` (the host's own picker or a start page) the way File >
+	 * Open > OneDrive does: its name, read-only state and storage for Save.
+	 */
+	openCloudFile(file: CloudOpenedFile): Promise<void>;
 	select(ref: string): void;
 	getSelection(): string;
 	setActiveSheet(index: number): void;
@@ -282,6 +287,7 @@ export const EDITOR_CONTRACT: BindingContract<
 		saveBytes: 'async',
 		download: 'async',
 		markClean: 'optional-call',
+		openCloudFile: 'async',
 		select: 'call',
 		getSelection: 'call',
 		setActiveSheet: 'call',
@@ -334,6 +340,7 @@ export const EDITOR_HANDLE_KEYS = [
 	'saveBytes',
 	'download',
 	'markClean',
+	'openCloudFile',
 	'select',
 	'getSelection',
 	'setActiveSheet',

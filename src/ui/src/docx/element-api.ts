@@ -1,4 +1,4 @@
-import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
@@ -229,6 +229,16 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** True after an edit until the document is saved through File > Save, `download()`, loaded or `markClean()`. */
 	get dirty(): boolean {
 		return this.core.dirtyState.dirty;
+	}
+
+	/**
+	 * Opens a file a host got from a `CloudFileProvider` (its own picker or a start page), exactly as
+	 * File > Open > OneDrive does: the file's name, read-only when `file.canEdit` is false, and Save
+	 * routed to `file.storage` until another document loads. A load failure is reported through
+	 * `document-error`. Does nothing when the host removed the Open command.
+	 */
+	async openCloudFile(file: CloudOpenedFile): Promise<void> {
+		await this.core.shell.chrome?.openCloudFile(file);
 	}
 
 	/** Declares the current content saved, for hosts that persist the result of `save()` themselves. */

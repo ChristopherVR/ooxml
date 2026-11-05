@@ -75,3 +75,11 @@ Register `mergeDocxSnapshots` from `ooxml-core/docx` as the session's `merge` ca
 independent text and property edits during Save. The suite enables this automatically. Ambiguous
 structure or incompatible replacements retain both versions for recovery. This does not connect
 Word collaboration rooms to Microsoft Office coauthoring. Existing [preservation limits](/preservation) still apply.
+
+## Open a cloud file from your own UI
+
+File > Open is only reachable once a document is open. To open a file from a start page or your own
+picker, get a `CloudOpenedFile` from any `CloudFileProvider` (the shared `<office-ui-cloud-files>`
+browser emits it in `office-cloud-file-open`) and pass it to `editor.openCloudFile(file)` on `<docx-editor>` (every binding's handle exposes it too). It runs the
+same path as File > Open > OneDrive: the file's name, read-only when `canEdit` is false, and Save routed
+to the file's own storage until another document loads.

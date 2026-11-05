@@ -448,7 +448,7 @@ export class VisioViewerElement extends BaseElement {
 				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
 			fileCommand: (command) => announceFileCommand(this, command),
 			storage: () => this.#openedStorage ?? this.#storage,
-			openCloudFile: (file) => this.#openCloudFile(file),
+			openCloudFile: (file) => this.openCloudFile(file),
 			revision: () => this.controller.state.document,
 			savedToStorage: (name, revision) => {
 				this.#fileName = name;
@@ -583,8 +583,12 @@ export class VisioViewerElement extends BaseElement {
 		this.#openedStorage = undefined;
 		this.controller.setFileReadOnly(false);
 	}
-	/** Loads a drawing chosen in a cloud place and routes this drawing's Save to its storage. */
-	async #openCloudFile(file: CloudOpenedFile): Promise<void> {
+	/**
+	 * Opens a file a host got from a `CloudFileProvider` (its own picker or a start page), exactly as
+	 * File > Open > OneDrive does: the drawing loads, is read-only when `file.canEdit` is false, and
+	 * Save routes to `file.storage` until another drawing loads. Rejects when the load fails.
+	 */
+	async openCloudFile(file: CloudOpenedFile): Promise<void> {
 		this.#assertAlive();
 		const FileType = this.ownerDocument.defaultView?.File ?? File;
 		const expected = this.#loadToken + 1;

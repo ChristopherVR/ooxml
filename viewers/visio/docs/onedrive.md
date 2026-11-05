@@ -77,3 +77,11 @@ Register `mergeDrawingSnapshots` from `ooxml-core/visio/collab` as the session's
 to combine supported independent shape and property edits during Save. The suite does so automatically.
 Overlapping or ambiguous changes still require recovery. This is not Microsoft coauthoring or a file lock.
 Existing [Visio limits](/parity) and export diagnostics remain applicable.
+
+## Open a cloud file from your own UI
+
+File > Open is only reachable once a document is open. To open a file from a start page or your own
+picker, get a `CloudOpenedFile` from any `CloudFileProvider` (the shared `<office-ui-cloud-files>`
+browser emits it in `office-cloud-file-open`) and pass it to `viewer.openCloudFile(file)` on `<visio-viewer>` (every binding's handle exposes it too). It runs the
+same path as File > Open > OneDrive: the file's name, read-only when `canEdit` is false, and Save routed
+to the file's own storage until another document loads.

@@ -25,6 +25,7 @@ export function stubElementMethods(element: XlsxEditorElement) {
 		saveBytes: record('saveBytes', Promise.resolve(new Uint8Array([1, 2, 3]))),
 		download: record('download', Promise.resolve()),
 		newWorkbook: record('newWorkbook', undefined),
+		openCloudFile: record('openCloudFile', Promise.resolve()),
 	});
 	return calls;
 }

@@ -9,7 +9,8 @@
 	},
 	"dependencies": {
 		"@azure/msal-browser": "5.25.1",
-		"ooxml-core": "workspace:*"
+		"ooxml-core": "workspace:*",
+		"ooxml-ui": "workspace:*"
 	},
 	"devDependencies": {
 		"vite": "^8.3.5"
