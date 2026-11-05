@@ -282,9 +282,9 @@ describe('buildConnectorGeometry', () => {
 		expect(geo.pathD).toContain('C');
 	});
 
-	it('defaults to a single strand with a round cap', () => {
+	it('defaults to a single strand with a flat cap', () => {
 		const geo = buildConnectorGeometry(connector(), 0);
-		expect(geo.strokeLinecap).toBe('round');
+		expect(geo.strokeLinecap).toBe('butt');
 		expect(geo.compoundOffsets).toStrictEqual([0]);
 		expect(geo.compoundWidths).toHaveLength(1);
 	});

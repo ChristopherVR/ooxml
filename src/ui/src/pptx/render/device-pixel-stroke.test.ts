@@ -214,6 +214,17 @@ describe('PowerPoint thin-line rule (measured on PowerPoint 16 exports)', () => 
 		expect(box).toContain('calc(round(20px,');
 	});
 
+	it('snaps the far edges of a box on their own: translate to the near edge, scale to the far', () => {
+		const box = snappedStrokeTransform('box', 10, 20, 1, { width: 100, height: 40 }) ?? '';
+		expect(box).toMatch(/^translate\(.*\) scale\(calc\(\(100px \+ calc\(round\(110px,/u);
+		expect(box).toContain('calc((40px + calc(round(60px,');
+		// Without a size only the near edges move, as before.
+		expect(snappedStrokeTransform('box', 10, 20, 1)).not.toContain('scale');
+		expect(snappedStrokeTransform('h', 10, 20, 1, { width: 100, height: 40 })).not.toContain(
+			'scale',
+		);
+	});
+
 	it('shifts nothing for a missing, zero or non-finite width or position', () => {
 		expect(snappedStrokeTransform('h', 1, 1, 0)).toBeUndefined();
 		expect(snappedStrokeTransform('h', 1, 1, undefined)).toBeUndefined();

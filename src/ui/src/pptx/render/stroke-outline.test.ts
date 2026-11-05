@@ -402,12 +402,18 @@ describe('buildStrokeOutline pattern outlines', () => {
 describe('buildStrokeOutline device-grid snap', () => {
 	const flat: ShapeStyle = { strokeColor: '#000000', strokeWidth: 1.3333 };
 
-	it('shifts the outline of a plain rectangle, top and left edges', () => {
+	it('shifts the outline of a plain rectangle, every edge on its own', () => {
 		const strands = buildStrokeOutline(shape(flat, { x: 454, y: 387 }))!.strands;
 		expect(strands).toHaveLength(1);
 		expect(strands[0]!.cssTransform).toMatch(
 			/^translate\(calc\(round\(454px,.*calc\(round\(387px,/u,
 		);
+		// The right and bottom edges round on their own: the width of the
+		// element (200 by 100 here) is scaled to land them on their device pixels.
+		const transform = strands[0]!.cssTransform ?? '';
+		expect(transform).toMatch(/scale\(calc\(\(\d+px \+ calc\(round\(\d+(\.\d+)?px,/u);
+		expect(transform).toContain(`round(${454 + 200}px,`);
+		expect(transform).toContain(`round(${387 + 100}px,`);
 	});
 
 	it('leaves rounded, rotated and gradient outlines alone', () => {

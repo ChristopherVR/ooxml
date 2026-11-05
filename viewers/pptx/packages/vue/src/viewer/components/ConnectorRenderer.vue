@@ -5,6 +5,7 @@ import {
 	getLineGlowFilterCss,
 	getLineShadowParams,
 	markerPath,
+	svgLineCap,
 } from 'ooxml-ui/pptx';
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { ConnectorArrowType, PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
@@ -85,6 +86,9 @@ const dashArray = computed<string | undefined>(() => {
 	}
 	return `${w * 3} ${w}`;
 });
+
+/** SVG cap of the painted strands: the line's own `cap`, flat when it declares none. */
+const strokeLinecap = computed(() => svgLineCap(ss.value?.lineCap));
 
 const w = computed(() => Math.max(props.element.width, 1));
 const h = computed(() => Math.max(props.element.height, 1));
@@ -375,7 +379,7 @@ function strandStyle(idx: number, offset: number): CSSProperties {
 					:stroke-width="strandWidth(idx)"
 					:stroke-opacity="strokeOpacity"
 					:stroke-dasharray="dashArray"
-					stroke-linecap="round"
+					:stroke-linecap="strokeLinecap"
 					stroke-linejoin="round"
 					:filter="idx === 0 && lineShadow ? `url(#${shadowFilterId})` : undefined"
 					:style="strandStyle(idx, offset)"
@@ -401,7 +405,7 @@ function strandStyle(idx: number, offset: number): CSSProperties {
 					:style="strandStyle(idx, 0)"
 					:stroke-opacity="strokeOpacity"
 					:stroke-dasharray="dashArray"
-					stroke-linecap="round"
+					:stroke-linecap="strokeLinecap"
 					:filter="idx === 0 && lineShadow ? `url(#${shadowFilterId})` : undefined"
 					:marker-start="idx === 0 && startMarker ? `url(#${startMarkerId})` : undefined"
 					:marker-end="

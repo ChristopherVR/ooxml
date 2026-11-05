@@ -388,11 +388,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       switch back to all slides. Empty `present`, `browse` and `kiosk` elements also reload with
       their show type (`src/core/pptx/automation/__tests__/presentation-save.test.ts`).
 - [ ] **P2** Thin strokes: widths round to whole device pixels and horizontal, vertical and
-      plain-rectangle strokes snap to the device grid like PowerPoint's export
-      (`src/ui/src/pptx/render/device-pixel-stroke.ts`), but the model keeps slide coordinates in
-      whole pixels, so a stroke can land one device pixel from PowerPoint's; the far edges of a
-      rectangle, group children, rotated, rounded and gradient outlines and CSS borders are not
-      snapped.
+      plain-rectangle strokes snap to the device grid like PowerPoint's export, every edge of a
+      rectangle on its own, positioned from the file's exact EMU rounded to PowerPoint's 1/576
+      inch master unit (`src/ui/src/pptx/render/device-pixel-stroke.ts`, `device-pixel-exact.ts`);
+      measured exact against PowerPoint at 1280 and 1920 px wide. Lines without an `a:ln/@cap`
+      now end flat like PowerPoint's (they were round). Open: at 1366 px wide PowerPoint places
+      some edges a pixel from where any rounding of the exact position puts them (not explained),
+      group children and elements inside a rotated or scaled group are not snapped (their
+      coordinates are group-local), and rotated, rounded and gradient outlines, compound strands
+      and CSS borders are not snapped.
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media

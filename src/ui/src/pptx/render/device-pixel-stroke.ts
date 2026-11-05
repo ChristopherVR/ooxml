@@ -35,6 +35,8 @@
  * @module render/device-pixel-stroke
  */
 
+import type { DeviceBox } from './device-pixel-exact';
+
 /** One device pixel in the enclosing stage's unscaled slide pixels. */
 export const DEVICE_PX_VAR = '--pptx-device-px';
 /** `window.devicePixelRatio`, mirrored onto the root element as a plain number. */
@@ -127,21 +129,75 @@ export function snappedStrokeShift(coord: number, width: number | undefined): st
  * The `transform` that snaps an axis-aligned stroke of `width` to the device
  * grid (see {@link snappedStrokeShift}): `axis` is the direction the stroke
  * RUNS in, so a horizontal line (`'h'`) shifts in y only, a vertical one
- * (`'v'`) in x only, and an outline whose top and left edges both need it
- * (`'box'`) in both. `x`/`y` are the stroke's position in the stage.
+ * (`'v'`) in x only, and an outline whose edges all need it (`'box'`) in both.
+ * `x`/`y` are the stroke's position in the stage.
+ *
+ * A `'box'` given its `size` snaps the far edges too: PowerPoint rounds every
+ * edge on its own, so the right and bottom edges land on `round(x + w)` and
+ * `round(y + h)`, not at the near edge's shift plus the authored size. That is
+ * a translate to the near edge and a scale by `(w + farShift - nearShift) / w`:
+ * a fraction of a device pixel over the whole rectangle, so the stroke width
+ * stays within a fraction of a percent. Without a size only the top and left
+ * edges are snapped.
+ *
+ * `x`, `y` and `size` are the element's box as the model lays it out (whole
+ * pixels). `exact` is the box PowerPoint positions it at (see
+ * {@link exactDeviceBox}); the snap rounds THAT, so a stroke lands on the same
+ * device pixel as in PowerPoint instead of one off whenever the model's whole
+ * pixel differs from the real position.
  */
 export function snappedStrokeTransform(
 	axis: 'h' | 'v' | 'box',
 	x: number,
 	y: number,
 	width: number | undefined,
+	size?: { width: number; height: number },
+	exact?: DeviceBox,
 ): string | undefined {
 	if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
 		return undefined;
 	}
-	const dx = axis === 'h' ? '0px' : snappedStrokeShift(x, width);
-	const dy = axis === 'v' ? '0px' : snappedStrokeShift(y, width);
-	return `translate(${dx}, ${dy})`;
+	const ex = exact?.x ?? x;
+	const ey = exact?.y ?? y;
+	const dx = axis === 'h' ? '0px' : nearEdgeShift(x, ex, width);
+	const dy = axis === 'v' ? '0px' : nearEdgeShift(y, ey, width);
+	const translate = `translate(${dx}, ${dy})`;
+	if (axis !== 'box' || !size) {
+		return translate;
+	}
+	const sx = farEdgeScale(ex, exact?.width ?? size.width, size.width, width);
+	const sy = farEdgeScale(ey, exact?.height ?? size.height, size.height, width);
+	return sx === '1' && sy === '1' ? translate : `${translate} scale(${sx}, ${sy})`;
+}
+
+/** The shift from the model's `coord` to where the stroke at `exact` snaps to. */
+function nearEdgeShift(coord: number, exact: number, width: number): string {
+	const shift = snappedStrokeShift(exact, width);
+	const offset = Number((exact - coord).toFixed(4));
+	return offset === 0 ? shift : `calc(${shift} + ${offset}px)`;
+}
+
+/**
+ * The scale that moves a box's far edge, laid out `modelExtent` from its near
+ * edge, onto the device pixel PowerPoint snaps `exact + exactExtent` to.
+ */
+function farEdgeScale(
+	exact: number,
+	exactExtent: number,
+	modelExtent: number,
+	width: number,
+): string {
+	if (
+		!Number.isFinite(exact) ||
+		!Number.isFinite(exactExtent) ||
+		!Number.isFinite(modelExtent) ||
+		modelExtent <= 0
+	) {
+		return '1';
+	}
+	const near = snappedStrokeShift(exact, width);
+	const far = snappedStrokeShift(exact + exactExtent, width);
+	return `calc((${Number(exactExtent.toFixed(4))}px + ${far} - ${near}) / ${Number(modelExtent.toFixed(4))}px)`;
 }
 
 /**

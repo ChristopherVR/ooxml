@@ -124,4 +124,55 @@ describe('react: thin strokes stay one device pixel on screen', () => {
 		expect(render(0)).toContain('transform:translate(0px, calc(round(27px');
 		expect(render(40)).not.toContain('calc(round(27px');
 	});
+
+	it('snaps every edge of a plain rectangle outline, from its exact EMU position', () => {
+		const rect = {
+			id: 'rect-1',
+			type: 'shape',
+			shapeType: 'rect',
+			x: 454,
+			y: 387,
+			width: 80,
+			height: 67,
+			xEmu: 4321810,
+			yEmu: 3688080,
+			widthEmu: 762000,
+			heightEmu: 641350,
+			shapeStyle: { strokeColor: '#000000', strokeWidth: 1 },
+		} as unknown as PptxElement;
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={rect} />);
+		expect(html).toContain('scale(calc((80px');
+		expect(html).toContain('(67.3333px');
+	});
+
+	it('ends a connector with a flat cap unless the line declares another', () => {
+		const render = (shapeStyle: Record<string, unknown>) => {
+			const el = {
+				id: 'conn-3',
+				type: 'connector',
+				shapeType: 'straightConnector1',
+				x: 27,
+				y: 27,
+				width: 400,
+				height: 0,
+				shapeStyle,
+			} as unknown as PptxElement;
+			const props = {
+				el,
+				isSelected: false,
+				canInteract: false,
+				showResizeHandles: false,
+				showHoverBorder: false,
+				selectionColorClass: 'blue-500',
+				opacity: 1,
+				zIndex: 0,
+			} as unknown as ConnectorRendererProps;
+			const html = renderToStaticMarkup(<ConnectorElementRenderer {...props} />);
+			return /<(?:line|path)[^>]*data-pptx-line[^>]*>/u.exec(html)?.[0] ?? '';
+		};
+		expect(render({ strokeColor: '#000000', strokeWidth: 12 })).toContain('stroke-linecap="butt"');
+		expect(render({ strokeColor: '#000000', strokeWidth: 12, lineCap: 'rnd' })).toContain(
+			'stroke-linecap="round"',
+		);
+	});
 });

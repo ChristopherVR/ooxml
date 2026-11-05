@@ -14,6 +14,7 @@ import {
 	getLineShadowParams,
 	markerPath,
 	normalizeArrow,
+	svgLineCap,
 } from '../../index';
 
 import { createEl, createSvgEl } from '../dom';
@@ -181,7 +182,7 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 			'stroke-width': strandWidth,
 			'stroke-opacity': strokeOpacity,
 			'stroke-dasharray': dashArray,
-			'stroke-linecap': 'round',
+			'stroke-linecap': svgLineCap(ss?.lineCap),
 			'marker-start': idx === 0 && startMarkerId ? `url(#${startMarkerId})` : undefined,
 			'marker-end': idx === offsets.length - 1 && endMarkerId ? `url(#${endMarkerId})` : undefined,
 			filter: shadowId ? `url(#${shadowId})` : undefined,

@@ -103,7 +103,9 @@ export function connectorStrandScreenWidth(
  * Map an OOXML line-cap token (`a:ln/@cap`) to its SVG `stroke-linecap` value.
  *
  * `flat` -> `butt`, `sq` -> `square`, `rnd` -> `round`. Anything absent or
- * unrecognised falls back to `round`, matching the viewer's historical default.
+ * unrecognised falls back to `butt`: PowerPoint draws a flat cap when a line
+ * declares no `cap` and no theme line style supplies one (measured on a 12 pt line:
+ * it ends exactly at its endpoints, where `rnd` and `sq` overshoot by half the width).
  */
 export function svgLineCap(
 	lineCap: 'flat' | 'rnd' | 'sq' | undefined,
@@ -113,8 +115,10 @@ export function svgLineCap(
 			return 'butt';
 		case 'sq':
 			return 'square';
-		default:
+		case 'rnd':
 			return 'round';
+		default:
+			return 'butt';
 	}
 }
 

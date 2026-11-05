@@ -37,8 +37,13 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
-import { DEVICE_PX_VAR, screenBorderWidth,
-	screenStrokeWidth, snappedStrokeTransform } from './device-pixel-stroke';
+import { exactDeviceBox } from './device-pixel-exact';
+import {
+	DEVICE_PX_VAR,
+	screenBorderWidth,
+	screenStrokeWidth,
+	snappedStrokeTransform,
+} from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
@@ -423,8 +428,8 @@ export function outlineStrokeJoin(element: PptxElement): StrokeClipJoin {
 
 /**
  * The device-grid snap for an outline that is axis-aligned in the stage: a
- * plain, unrotated rectangle (its top and left edges; the far edges keep the
- * authored size) or an unrotated horizontal / vertical `line` preset. Anything
+ * plain, unrotated rectangle (every edge rounds on its own, so the far edges are
+ * snapped too) or an unrotated horizontal / vertical `line` preset. Anything
  * else (rounded corners, diagonals, rotation) is anti-aliased in PowerPoint's
  * export too and stays unshifted.
  */
@@ -442,10 +447,26 @@ function snapTransform(
 			return undefined;
 		}
 		const axis = element.height === 0 ? 'h' : element.width === 0 ? 'v' : undefined;
-		return axis ? snappedStrokeTransform(axis, element.x, element.y, strokeWidth) : undefined;
+		return axis
+			? snappedStrokeTransform(
+					axis,
+					element.x,
+					element.y,
+					strokeWidth,
+					undefined,
+					exactDeviceBox(element),
+				)
+			: undefined;
 	}
 	return shapeType === 'rect'
-		? snappedStrokeTransform('box', element.x, element.y, strokeWidth)
+		? snappedStrokeTransform(
+				'box',
+				element.x,
+				element.y,
+				strokeWidth,
+				{ width: element.width, height: element.height },
+				exactDeviceBox(element),
+			)
 		: undefined;
 }
 

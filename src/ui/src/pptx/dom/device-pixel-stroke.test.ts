@@ -135,4 +135,28 @@ describe('one device pixel minimum (vanilla DOM renderer)', () => {
 		expect(diagonal?.getAttribute('stroke-width')).toBe('0.5');
 		expect(diagonal?.style.getPropertyValue('stroke-width')).toBe(screenWidth('0.5'));
 	});
+
+	it('ends a connector with a flat cap unless the line declares another', () => {
+		const node = stage([
+			el({
+				type: 'connector',
+				id: 'plain',
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 12 },
+			}),
+			el({
+				type: 'connector',
+				id: 'round',
+				y: 60,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 12, lineCap: 'rnd' },
+			}),
+		]);
+		const cap = (id: string) =>
+			node
+				.querySelector(`[data-element-id="${id}"] svg line[data-pptx-line]`)
+				?.getAttribute('stroke-linecap');
+		expect(cap('plain')).toBe('butt');
+		expect(cap('round')).toBe('round');
+	});
 });

@@ -137,4 +137,54 @@ describe('svelte: thin strokes stay one device pixel on screen', () => {
 		const diag = root.querySelector<SVGElement>('[data-element-id="diag"] svg line');
 		expect(diag?.style.getPropertyValue('transform')).toBe('');
 	});
+
+	it('snaps every edge of a plain rectangle outline, from its exact EMU position', () => {
+		const root = mountStage([
+			el({
+				type: 'shape',
+				id: 'rect',
+				shapeType: 'rect',
+				x: 454,
+				y: 387,
+				width: 80,
+				height: 67,
+				xEmu: 4321810,
+				yEmu: 3688080,
+				widthEmu: 762000,
+				heightEmu: 641350,
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 1 },
+			}),
+		]);
+		const path = root.querySelector<SVGElement>('[data-element-id="rect"] svg[data-pptx-outline] path');
+		const transform = path?.getAttribute('style') ?? '';
+		expect(transform).toContain('scale(calc((80px');
+		expect(transform).toContain('(67.3333px');
+	});
+
+	it('ends a connector with a flat cap unless the line declares another', () => {
+		const root = mountStage([
+			el({
+				type: 'connector',
+				id: 'plain',
+				x: 27,
+				y: 27,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 12 },
+			}),
+			el({
+				type: 'connector',
+				id: 'round',
+				x: 27,
+				y: 127,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 12, lineCap: 'rnd' },
+			}),
+		]);
+		const cap = (id: string) =>
+			root
+				.querySelector<SVGElement>(`[data-element-id="${id}"] svg line[data-pptx-line]`)
+				?.getAttribute('stroke-linecap');
+		expect(cap('plain')).toBe('butt');
+		expect(cap('round')).toBe('round');
+	});
 });

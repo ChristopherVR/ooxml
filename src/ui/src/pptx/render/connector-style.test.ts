@@ -132,7 +132,7 @@ describe('svgLineCap', () => {
 		expect(svgLineCap('rnd')).toBe('round');
 	});
 
-	it('falls back to round for an unset cap', () => {
-		expect(svgLineCap(undefined)).toBe('round');
+	it('falls back to flat for an unset cap, like PowerPoint', () => {
+		expect(svgLineCap(undefined)).toBe('butt');
 	});
 });
