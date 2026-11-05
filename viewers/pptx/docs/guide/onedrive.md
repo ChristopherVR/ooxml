@@ -37,6 +37,16 @@ prop, and opens it read-only when the service does not allow editing; a `canEdit
 an open from this device or Recent, or new `content` from the host. A failed save shows the save
 failed notice and the status bar keeps **Unsaved changes**.
 
+## Account > Connected services
+
+The same `fileProviders` also fill a **Connected services** section on **File > Account**, below the
+profile, storage and sign-in cards. Each provider is a row with its account (name and email) and
+**Connect** or **Disconnect**, which call the provider's own `signIn` and `signOut`; a provider
+without `signOut` shows that its session is managed by your organization. The list follows the
+provider's `subscribe`, so signing in from File > Open updates it. Without `fileProviders` nothing
+extra appears, and the existing `accountAuth` sign-in card is unchanged. All five bindings render the
+shared `office-ui-connected-services` element (as `pptx-ui-connected-services`) with translated labels.
+
 The [complete Office integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
 documents authentication, session storage, safe cloud copies, sharing roles/scopes, conflict
 recovery and the reference for every package type.
