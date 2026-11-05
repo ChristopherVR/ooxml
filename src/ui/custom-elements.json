@@ -2822,6 +2822,69 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "files/open-places.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiOpenPlaces",
+					"tagName": "office-ui-open-places",
+					"customElement": true,
+					"description": "`<office-ui-open-places>`: the places of File > Open, the same in every product. A tab per place: \"This device\" shows the element's light-DOM children (the product's Browse button and recent list, unchanged), and each `CloudFileProvider` shows `<office-ui-cloud-files>` for it. Without providers it shows only its children, with no tabs. Properties: `providers`, `accept`, `labels` (`thisDevice`, `places` and every cloud browser label), `locale`, `selected` (a place id: `device` or a provider id). Choosing a tab emits `office-open-place-change` `{ place }`; opening a file bubbles the browser's `office-cloud-file-open` `{ providerId, file }` unchanged.",
+					"attributes": [
+						{
+							"name": "locale"
+						},
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "accept"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "providers"
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-open-place-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-open-places",
+					"declaration": {
+						"name": "OfficeUiOpenPlaces"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "dialog/options-dialog.ts",
 			"declarations": [
 				{

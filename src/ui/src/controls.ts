@@ -12,6 +12,7 @@ import { defineRibbonToggle } from './ribbon/ribbon-toggle';
 import { defineSearchField } from './form/search-field';
 import { defineBackstage } from './chrome/backstage';
 import { defineCloudFiles } from './files/cloud-files';
+import { defineOpenPlaces } from './files/open-places';
 import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
 import { defineChartFormatPane } from './chart/format-pane';
@@ -104,6 +105,7 @@ export {
 	defineProgressDialog,
 	defineMessageDialog,
 	defineCloudFiles,
+	defineOpenPlaces,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -156,6 +158,13 @@ export {
 	type OfficeCloudFileOpenEvent,
 	type OfficeCloudFilesLabels,
 } from './files/cloud-files';
+export {
+	OfficeUiOpenPlaces,
+	DEFAULT_OPEN_PLACES_LABELS,
+	DEVICE_PLACE,
+	type OfficeOpenPlacesLabels,
+	type OfficeOpenPlaceChangeEvent,
+} from './files/open-places';
 export type {
 	OfficeBackstageCloseEvent,
 	OfficeBackstageItem,
@@ -323,6 +332,7 @@ export const CONTROL_DEFINERS = [
 	defineProgressDialog,
 	defineMessageDialog,
 	defineCloudFiles,
+	defineOpenPlaces,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */
