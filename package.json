@@ -39,6 +39,7 @@
 		"preview:suite": "node scripts/preview-site.mjs",
 		"test:suite": "node scripts/suite-browser-check.mjs",
 		"test:suite:onedrive": "bun scripts/suite-onedrive-check.mjs",
+		"test:onedrive:speed": "node scripts/onedrive-speed-check.mjs --mock",
 		"test:demos": "node scripts/demo-browser-check.mjs",
 		"test:suite:profile": "node scripts/suite-profile-check.mjs",
 		"build:visio": "bun run --cwd src/core build:visio",
