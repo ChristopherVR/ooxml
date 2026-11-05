@@ -115,4 +115,12 @@ export const zhCNBackstage: Readonly<Record<string, string>> = {
 	'This device': '此设备',
 	Places: '位置',
 	'Opened {name} read-only.': '已以只读方式打开 {name}。',
+	'Connected services': '已连接的服务',
+	'Link your storage to open and save files from every app.':
+		'链接你的存储，以便在所有应用中打开和保存文件。',
+	'Not connected': '未连接',
+	Connect: '连接',
+	Disconnect: '断开连接',
+	'Managed by your organization': '由你的组织管理',
+	'Could not update {provider}. Try again.': '无法更新 {provider}。请重试。',
 };

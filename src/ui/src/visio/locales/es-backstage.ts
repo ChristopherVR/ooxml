@@ -123,4 +123,13 @@ export const esBackstage: Readonly<Record<string, string>> = {
 	'This device': 'Este dispositivo',
 	Places: 'Ubicaciones',
 	'Opened {name} read-only.': '{name} se abrió como solo lectura.',
+	'Connected services': 'Servicios conectados',
+	'Link your storage to open and save files from every app.':
+		'Vincula tu almacenamiento para abrir y guardar archivos desde todas las aplicaciones.',
+	'Not connected': 'No conectado',
+	Connect: 'Conectar',
+	Disconnect: 'Desconectar',
+	'Managed by your organization': 'Administrado por tu organización',
+	'Could not update {provider}. Try again.':
+		'No se pudo actualizar {provider}. Inténtalo de nuevo.',
 };

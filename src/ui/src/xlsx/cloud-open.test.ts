@@ -167,6 +167,25 @@ describe('File > Open page places', () => {
 		expect(el.textContent).toContain('Browse...');
 	});
 
+	it('shows Account > Connected services only with providers', async () => {
+		const without = backstageFor([]);
+		without.backstage.open('account');
+		expect(without.el.querySelector('office-ui-connected-services')).toBeNull();
+		expect(without.el.shadowRoot!.textContent).not.toContain('Account');
+
+		const { backstage, el } = backstageFor([provider()]);
+		backstage.open('account');
+		const list = el.querySelector('office-ui-connected-services') as HTMLElement & {
+			updateComplete: Promise<unknown>;
+		};
+		await list.updateComplete;
+		expect(list.shadowRoot!.querySelector('.service')?.getAttribute('data-provider')).toBe(
+			'onedrive',
+		);
+		expect(list.shadowRoot!.textContent).toContain('Connected services');
+		expect(el.shadowRoot!.textContent).toContain('Account');
+	});
+
 	it('offers This device and one place per provider, and forwards the opened file', async () => {
 		const { backstage, el, opened } = backstageFor([provider()]);
 		backstage.open('open');

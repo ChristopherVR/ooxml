@@ -291,4 +291,13 @@ export const frApp: AppStrings = {
 	'cloud.cancel': 'Annuler',
 	'cloud.folder': 'Dossier',
 	'cloud.failed': 'Une erreur s’est produite.',
+	Account: 'Compte',
+	'Connected services': 'Services connectés',
+	'Link your storage to open and save files from every app.':
+		'Liez votre stockage pour ouvrir et enregistrer des fichiers depuis toutes les applications.',
+	'Not connected': 'Non connecté',
+	Connect: 'Se connecter',
+	Disconnect: 'Se déconnecter',
+	'Managed by your organization': 'Géré par votre organisation',
+	'Could not update {provider}. Try again.': 'Impossible de mettre à jour {provider}. Réessayez.',
 };

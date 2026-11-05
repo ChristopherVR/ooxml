@@ -122,4 +122,13 @@ export const deBackstage: Readonly<Record<string, string>> = {
 	'This device': 'Dieses Gerät',
 	Places: 'Orte',
 	'Opened {name} read-only.': '{name} wurde schreibgeschützt geöffnet.',
+	'Connected services': 'Verbundene Dienste',
+	'Link your storage to open and save files from every app.':
+		'Verknüpfen Sie Ihren Speicher, um Dateien in allen Apps zu öffnen und zu speichern.',
+	'Not connected': 'Nicht verbunden',
+	Connect: 'Verbinden',
+	Disconnect: 'Trennen',
+	'Managed by your organization': 'Von Ihrer Organisation verwaltet',
+	'Could not update {provider}. Try again.':
+		'{provider} konnte nicht aktualisiert werden. Versuchen Sie es erneut.',
 };

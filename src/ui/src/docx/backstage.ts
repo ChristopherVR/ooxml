@@ -3,6 +3,7 @@ import type { OfficeBackstageItem } from '../controls';
 import type { FileCommand } from './file-commands';
 import { normalizeEditorLocale, translate, translateUiText } from './localization';
 import { renderHome } from './backstage-home';
+import { renderAccount } from './backstage-account';
 import { backstageFocus } from 'ooxml-core/docx/ui';
 import {
 	renderExport,
@@ -28,6 +29,7 @@ export type BackstagePage =
 	| 'saveAs'
 	| 'print'
 	| 'export'
+	| 'account'
 	| 'options'
 	| 'customize';
 type ContentPage = Exclude<BackstagePage, 'options' | 'customize'>;
@@ -66,6 +68,7 @@ const NAV: Array<{ id: BackstagePage | 'save'; label: string; footer?: boolean }
 	{ id: 'saveAs', label: 'Save As' },
 	{ id: 'print', label: 'Print' },
 	{ id: 'export', label: 'Export' },
+	{ id: 'account', label: 'Account' },
 	{ id: 'options', label: 'Options', footer: true },
 ];
 
@@ -77,6 +80,7 @@ const RENDERERS: Record<ContentPage, (context: PageContext) => void> = {
 	saveAs: renderSaveAs,
 	print: renderPrint,
 	export: renderExport,
+	account: renderAccount,
 };
 
 /**
@@ -107,7 +111,10 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		pageClass: 'dve-backstage-content',
 		label: '[docx-editor]',
 	});
-	const hidden = (id: string) => handlers.customization().backstagePages.has(id as never);
+	/** Account lists the host's `fileProviders`: without any there is nothing to show. */
+	const hidden = (id: string) =>
+		(id === 'account' && !handlers.fileProviders().length) ||
+		handlers.customization().backstagePages.has(id as never);
 
 	let current: ContentPage = 'info';
 	const options = createWordOptions(handlers, t);

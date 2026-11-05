@@ -299,4 +299,14 @@ export const esApp: AppStrings = {
 	'cloud.cancel': 'Cancelar',
 	'cloud.folder': 'Carpeta',
 	'cloud.failed': 'Algo salió mal.',
+	Account: 'Cuenta',
+	'Connected services': 'Servicios conectados',
+	'Link your storage to open and save files from every app.':
+		'Vincula tu almacenamiento para abrir y guardar archivos desde todas las aplicaciones.',
+	'Not connected': 'No conectado',
+	Connect: 'Conectar',
+	Disconnect: 'Desconectar',
+	'Managed by your organization': 'Administrado por tu organización',
+	'Could not update {provider}. Try again.':
+		'No se pudo actualizar {provider}. Inténtalo de nuevo.',
 };

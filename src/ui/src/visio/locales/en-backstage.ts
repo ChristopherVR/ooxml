@@ -121,4 +121,12 @@ export const enBackstage: Readonly<Record<string, string>> = {
 	'This device': 'This device',
 	Places: 'Places',
 	'Opened {name} read-only.': 'Opened {name} read-only.',
+	'Connected services': 'Connected services',
+	'Link your storage to open and save files from every app.':
+		'Link your storage to open and save files from every app.',
+	'Not connected': 'Not connected',
+	Connect: 'Connect',
+	Disconnect: 'Disconnect',
+	'Managed by your organization': 'Managed by your organization',
+	'Could not update {provider}. Try again.': 'Could not update {provider}. Try again.',
 };

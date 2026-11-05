@@ -123,4 +123,12 @@ export const frBackstage: Readonly<Record<string, string>> = {
 	'This device': 'Cet appareil',
 	Places: 'Emplacements',
 	'Opened {name} read-only.': '{name} a été ouvert en lecture seule.',
+	'Connected services': 'Services connectés',
+	'Link your storage to open and save files from every app.':
+		'Liez votre stockage pour ouvrir et enregistrer des fichiers depuis toutes les applications.',
+	'Not connected': 'Non connecté',
+	Connect: 'Se connecter',
+	Disconnect: 'Se déconnecter',
+	'Managed by your organization': 'Géré par votre organisation',
+	'Could not update {provider}. Try again.': 'Impossible de mettre à jour {provider}. Réessayez.',
 };

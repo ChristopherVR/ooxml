@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { createDocument } from 'ooxml-core/docx';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRibbon } from './ribbon';
 import { createBackstage, type BackstageHandlers } from './backstage';
@@ -103,6 +104,40 @@ describe('File backstage', () => {
 			'Export',
 			'Options',
 		]);
+	});
+
+	it('adds Account with Connected services only when fileProviders is set', async () => {
+		const provider: CloudFileProvider = {
+			id: 'cloud',
+			label: 'Cloud',
+			account: () => ({ name: 'Ada' }),
+			signIn: async () => ({ name: 'Ada' }),
+			list: async () => ({ entries: [] }),
+			open: async () => {
+				throw new Error('unused');
+			},
+		};
+		const without = setup();
+		expect(await nav(without.backstage.element)).not.toContain('Account');
+		without.backstage.open('account');
+		expect(without.backstage.element.querySelector('office-ui-connected-services')).toBeNull();
+		document.body.innerHTML = '';
+
+		const { backstage } = setup({ fileProviders: () => [provider] });
+		const labels = await nav(backstage.element);
+		expect(labels.indexOf('Account')).toBe(labels.indexOf('Export') + 1);
+		backstage.open('account');
+		const list = backstage.element.querySelector<HTMLElement>('office-ui-connected-services')!;
+		await (list as Updating).updateComplete;
+		expect([...list.shadowRoot!.querySelectorAll('.service')].map((r) => r.textContent)).toEqual([
+			expect.stringContaining('Cloud'),
+		]);
+		expect(list.shadowRoot!.textContent).toContain('Connected services');
+		backstage.element.dataset.editorLocale = 'de';
+		backstage.relocalize();
+		const german = backstage.element.querySelector<HTMLElement>('office-ui-connected-services')!;
+		await (german as Updating).updateComplete;
+		expect(german.shadowRoot!.textContent).toContain('Verbundene Dienste');
 	});
 
 	it('Info shows the file, its state and the properties panel', () => {

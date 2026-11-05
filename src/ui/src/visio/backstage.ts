@@ -137,7 +137,8 @@ function account(doc: Document): HTMLElement {
 		el(doc, 'p', '', 'Visio viewer (beta). No sign-in or subscription is used.'),
 		el(doc, 'p', 'backstage-muted', LOCAL),
 	);
-	profile.append(product);
+	// Linked storage: the viewer fills it from `fileProviders`; without providers it is empty.
+	profile.append(doc.createElement('office-ui-connected-services'), product);
 	return profile;
 }
 

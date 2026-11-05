@@ -9,6 +9,7 @@ import type { BackstageHost, PageContext } from './parts';
 import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderPrint, renderSaveAs } from './pages-file';
 import { renderOpen } from './pages-open';
+import { renderAccount } from './pages-account';
 import { createExcelOptions } from './options-dialog';
 import { renderShare } from './pages-share';
 import { createHostBackstagePages } from '../../embedding/host-backstage';
@@ -29,6 +30,7 @@ export type BackstagePage =
 	| 'print'
 	| 'share'
 	| 'export'
+	| 'account'
 	| 'options'
 	| 'customize';
 type ContentPage = Exclude<BackstagePage, 'options' | 'customize'>;
@@ -66,6 +68,7 @@ const PAGES: Array<[ContentPage, string]> = [
 	['print', 'Print'],
 	['share', 'Share'],
 	['export', 'Export'],
+	['account', 'Account'],
 ];
 const RENDERERS: Record<ContentPage, (page: PageContext) => void> = {
 	info: renderInfo,
@@ -75,6 +78,7 @@ const RENDERERS: Record<ContentPage, (page: PageContext) => void> = {
 	print: renderPrint,
 	share: renderShare,
 	export: renderExport,
+	account: renderAccount,
 };
 
 export function createBackstage(host: BackstageHost): Backstage {
@@ -136,6 +140,8 @@ export function createBackstage(host: BackstageHost): Backstage {
 		const page = (id: ContentPage) => item(id, label.get(id)!);
 		hostPages.setPages(custom().extraPages);
 		const hidden = custom().backstagePages;
+		// Account lists the host's `fileProviders`: without any there is nothing to show.
+		const noAccount = !host.fileProviders?.().length;
 		element.items = hostPages.items(
 			[
 				page('info'),
@@ -146,8 +152,9 @@ export function createBackstage(host: BackstageHost): Backstage {
 				page('print'),
 				page('share'),
 				page('export'),
+				page('account'),
 				item('options', 'Options', 'footer'),
-			].filter((entry) => !hidden.has(entry.id)),
+			].filter((entry) => !hidden.has(entry.id) && !(noAccount && entry.id === 'account')),
 		);
 		options.relocalize();
 		if (element.open) show(current);
@@ -158,9 +165,11 @@ export function createBackstage(host: BackstageHost): Backstage {
 		optionsDialog: options.element,
 		open(requested = 'info') {
 			const hidden = custom().backstagePages;
-			const page = hidden.has(requested === 'customize' ? 'options' : requested)
-				? 'info'
-				: requested;
+			const page =
+				hidden.has(requested === 'customize' ? 'options' : requested) ||
+				(requested === 'account' && !host.fileProviders?.().length)
+					? 'info'
+					: requested;
 			if (page === 'options' || page === 'customize') {
 				showOptions(page === 'customize' ? 'ribbon' : undefined);
 				return;

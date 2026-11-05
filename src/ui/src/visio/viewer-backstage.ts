@@ -6,6 +6,7 @@ import type {
 	VisioFileCommand,
 } from 'ooxml-core/embedding';
 import { CloudPlaces } from './viewer-cloud-places';
+import { ConnectedServices } from './viewer-connected-services';
 import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
@@ -94,6 +95,7 @@ export class ViewerBackstage {
 	#saving = false;
 	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
 	#places: CloudPlaces | undefined;
+	#services: ConnectedServices | undefined;
 	#providers: readonly CloudFileProvider[] = [];
 	readonly #hostPages: HostBackstagePages<VisioRegionContext>;
 	constructor(private readonly host: BackstageHost) {
@@ -139,10 +141,12 @@ export class ViewerBackstage {
 	setFileProviders(providers: readonly CloudFileProvider[]): void {
 		this.#providers = providers;
 		this.#places?.setProviders(providers);
+		this.#services?.setProviders(providers);
 	}
 	/** Shows the pages in the current display language again (after the locale changes). */
 	localize(): void {
 		this.#places?.setLocale(this.#locale());
+		this.#services?.setLocale(this.#locale());
 		if (this.#state) this.render(this.#state);
 		else this.#translate();
 	}
@@ -177,6 +181,9 @@ export class ViewerBackstage {
 			() => !!(this.#state?.loading || this.#state?.edit.busy),
 			this.host.announce,
 		);
+		this.#services = new ConnectedServices(this.#root);
+		this.#services.setLocale(this.#locale());
+		this.#services.setProviders(this.#providers);
 		const openSection = this.#root.querySelector<HTMLElement>('[data-backstage-page="open"]');
 		if (openSection) {
 			this.#places = new CloudPlaces(openSection, (file) => this.#openCloud(file), events.signal);

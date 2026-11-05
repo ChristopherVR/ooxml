@@ -145,7 +145,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	}
 	set fileProviders(value: readonly CloudFileProvider[] | null | undefined) {
 		this.core.fileProviders = value ?? [];
-		this.shell?.backstage.refresh('open');
+		this.shell?.backstage.applyCustomization();
 	}
 
 	/** Shown in the title bar and used by Save and Download. Default `Book1.xlsx`. */

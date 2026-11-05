@@ -29,4 +29,14 @@ export const cloud: Record<string, string> = {
 	'Something went wrong.': 'Algo salió mal.',
 	'This workbook is read-only because the file cannot be edited.':
 		'Este libro es de solo lectura porque el archivo no se puede editar.',
+	Account: 'Cuenta',
+	'Connected services': 'Servicios conectados',
+	'Link your storage to open and save files from every app.':
+		'Vincula tu almacenamiento para abrir y guardar archivos desde todas las aplicaciones.',
+	'Not connected': 'No conectado',
+	Connect: 'Conectar',
+	Disconnect: 'Desconectar',
+	'Managed by your organization': 'Administrado por tu organización',
+	'Could not update {provider}. Try again.':
+		'No se pudo actualizar {provider}. Inténtalo de nuevo.',
 };
