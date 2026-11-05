@@ -230,6 +230,7 @@ export function ShapeEffectOverlay({
 			{strokeOutline ? (
 				<svg
 					className='pptx-react-gradient-outline'
+					data-pptx-outline=''
 					aria-hidden='true'
 					viewBox={strokeOutlineViewBox(element)}
 					preserveAspectRatio='none'

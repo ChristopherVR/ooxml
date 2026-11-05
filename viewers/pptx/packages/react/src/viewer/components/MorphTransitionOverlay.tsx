@@ -10,6 +10,7 @@
  */
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
+	buildMorphOutlineRules,
 	deviceStrokeStageStyle,
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_STYLE,
@@ -76,7 +77,18 @@ export function MorphTransitionOverlay({
 			className='pptx-react-transition-overlay absolute inset-0 pointer-events-none overflow-hidden'
 			style={{ zIndex: 40 }}
 		>
-			<style>{morphPlan.keyframesCss}</style>
+			{/* A resizing shape's outline is re-pathed per frame by a descendant rule
+			    (see `buildMorphOutlineRules`); the halves here are named by their
+			    wrappers rather than by `data-element-id`. */}
+			<style>
+				{[
+					morphPlan.keyframesCss,
+					buildMorphOutlineRules(morphPlan, 'data-pptx-morph-outgoing'),
+					buildMorphOutlineRules(morphPlan, 'data-pptx-morph-lifted'),
+				]
+					.filter(Boolean)
+					.join('\n')}
+			</style>
 			<div className='absolute inset-0 flex items-center justify-center'>
 				<div
 					style={{
