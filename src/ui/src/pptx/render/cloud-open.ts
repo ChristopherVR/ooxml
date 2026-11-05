@@ -10,7 +10,7 @@
  *
  * @module render/cloud-open
  */
-import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 
 import { DEFAULT_CLOUD_FILES_LABELS } from '../../files/cloud-files-labels';
 import type { OfficeCloudFilesLabels } from '../../files/cloud-files-labels';

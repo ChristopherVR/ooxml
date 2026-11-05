@@ -1,4 +1,4 @@
-import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
+import type { CloudOpenedFile } from 'ooxml-core/embedding';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_CLOUD_FILES_LABELS } from '../../files/cloud-files-labels';
@@ -10,7 +10,6 @@ import {
 	openPlacesLabels,
 } from './cloud-open';
 
-const provider = { id: 'onedrive', label: 'OneDrive' } as CloudFileProvider;
 const storage = { save: vi.fn() };
 const file = (canEdit: boolean): CloudOpenedFile => ({
 	entry: { id: 'd!1', name: 'Deck.pptx', type: 'file', kind: 'pptx' },
