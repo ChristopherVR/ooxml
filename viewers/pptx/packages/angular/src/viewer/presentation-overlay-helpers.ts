@@ -93,6 +93,33 @@ export function resolveSlideEntryAutoAdvanceMs(
 	return after === undefined ? undefined : after + resolveTransitionDurationMs(slide?.transition);
 }
 
+/** The part of the show navigator the entry auto-advance schedules on. */
+export interface AutoAdvanceScheduler {
+	armAutoAdvance(delayMs: number | undefined): void;
+}
+
+/**
+ * Arm the timed auto-advance for the slide the show just entered: the body of
+ * the overlay's slide-change effect, kept outside the component so it can be
+ * driven with a fake navigator. Re-armed on every slide change; the navigator
+ * cancels the previous slide's pending timer first, so a manual advance can
+ * never leave a stale timer running that skips the slide the presenter just
+ * moved to.
+ *
+ * Without this the show is not merely missing an auto-advance: a slide
+ * authored `advClick="0" advTm="…"` (PowerPoint's "on click OFF, after N")
+ * is advanced ONLY by this timer, and `shouldBlockClickAdvance` swallows every
+ * click on it, so the show would sit on that slide for ever.
+ */
+export function armSlideEntryAutoAdvance(
+	navigator: AutoAdvanceScheduler,
+	slide: PptxSlide | undefined,
+	useTimings: boolean,
+	endOfShow: boolean,
+): void {
+	navigator.armAutoAdvance(resolveSlideEntryAutoAdvanceMs(slide, useTimings, endOfShow));
+}
+
 /**
  * Attach the show's visibility pause: while the tab is hidden the shared
  * handler pauses the stage's playing media and the cross-slide persistent

@@ -54,12 +54,12 @@ import {
 	OVERLAY_PREV_BUTTON_STYLE,
 } from './presentation-overlay-chrome-styles';
 import {
+	armSlideEntryAutoAdvance,
 	attachShowVisibilityPause,
 	clampIndex,
 	fitZoom,
 	presentationStageStyle,
 	resolveSlideAutoAdvanceMs,
-	resolveSlideEntryAutoAdvanceMs,
 } from './presentation-overlay-helpers';
 import {
 	setupPresentationFullscreen,
@@ -406,22 +406,15 @@ export class PresentationOverlayComponent implements OnInit {
 		// `endOfShowChange`'s doc comment).
 		effect(() => this.endOfShowChange.emit(this.endOfShow()));
 
-		// PowerPoint's "Advance slide: After <n>" timing (`p:transition/@advTm`).
-		// Re-armed on every slide change; the previous slide's pending timer is
-		// always cancelled first so a manual advance can never leave a stale timer
-		// running that skips the slide the presenter just moved to.
-		//
-		// Without this the show is not merely missing an auto-advance: a slide
-		// authored `advClick="0" advTm="…"` (PowerPoint's "on click OFF, after N")
-		// is advanced ONLY by this timer, and `shouldBlockClickAdvance` correctly
-		// swallows every click on it. The show then sits on that slide for ever
-		// with no visible response to input, which reads as "presentation mode
-		// does nothing at all".
+		// PowerPoint's "Advance slide: After <n>" timing (`p:transition/@advTm`),
+		// counted from the end of the slide's own entry transition. See
+		// `armSlideEntryAutoAdvance`.
 		effect(() => {
-			// PowerPoint counts `After` from the end of the slide's own transition; arming at the
-			// start of a 0s timer cut every timed slide's entry transition short.
-			this.navigator.armAutoAdvance(
-				resolveSlideEntryAutoAdvanceMs(this.currentSlide(), this.useTimings(), this.endOfShow()),
+			armSlideEntryAutoAdvance(
+				this.navigator,
+				this.currentSlide(),
+				this.useTimings(),
+				this.endOfShow(),
 			);
 		});
 
