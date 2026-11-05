@@ -26,6 +26,7 @@
  */
 import {
 	chartIssuesLostOnWrite,
+	joinChartGroups,
 	newChartSpace,
 	parseChartSpace,
 	setChartSeriesSecondaryAxis,
@@ -131,6 +132,8 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 	if (!plan) return legacy(unclaimed);
 	let space = startingPart(after, axes);
 	for (const edit of plan.edits) space = edit(space);
+	// One group per type and axis pair, once no edit addresses series by position any more.
+	space = joinChartGroups(space);
 	const xml = writeChartSpace(space);
 	const lost = chartIssuesLostOnWrite(parseChartSpace(xml).issues);
 	if (lost.length > 0)

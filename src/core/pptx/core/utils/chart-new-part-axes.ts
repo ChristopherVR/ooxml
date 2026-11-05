@@ -228,6 +228,8 @@ export function newChartAxes(chart: PptxChartData): NewChartAxes {
 			after.push(structuredClone(own));
 		});
 	}
+	// With no axis entries of its own, an axis-indexed format names the part's axes in order.
+	if (model.length === 0) after.forEach((_, index) => moved.set(index, index));
 	const unwritten = model.flatMap((axis, index) =>
 		moved.has(index) ? [] : [`axes.${index}.${axis.axisType}`],
 	);

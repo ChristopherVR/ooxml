@@ -142,7 +142,9 @@ function buildChartTypeContainer(
 		};
 		container['c:varyColors'] = { '@_val': '0' };
 	} else if (family === 'line' || family === 'area') {
-		container['c:grouping'] = { '@_val': chartData.grouping ?? 'standard' };
+		// ST_Grouping has no `clustered` (a bar grouping); its lowest grouping is `standard`.
+		const grouping = chartData.grouping === 'clustered' ? undefined : chartData.grouping;
+		container['c:grouping'] = { '@_val': grouping ?? 'standard' };
 		container['c:varyColors'] = { '@_val': '0' };
 	} else if (family === 'radar') {
 		container['c:radarStyle'] = { '@_val': chartData.radarStyle ?? 'marker' };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { columnChart } from './test-support/column-chart';
-import { setChartSeriesType } from './series-type';
+import { joinChartGroups, setChartSeriesType } from './series-type';
+import { setChartSeriesSecondaryAxis } from './secondary-axis';
 import { chartSeriesEntries } from './draft';
 import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
@@ -42,6 +43,26 @@ describe('one series combo type changes', () => {
 		);
 		source.plotArea.groups[0]!.extLst = '<c:extLst/>';
 		expect(() => setChartSeriesType(source, 1, { kind: 'line' })).toThrow('unknown group');
+	});
+	it('joins equal groups anywhere in the plot area before writing, keeping other groups apart', () => {
+		const source = columnChart();
+		source.plotArea.groups[0]!.series.push(structuredClone(source.plotArea.groups[0]!.series[1]!));
+		source.plotArea.groups[0]!.series[2]!.index = 2;
+		source.plotArea.groups[0]!.series[2]!.order = 2;
+		const split = setChartSeriesType(source, 1, { kind: 'line' });
+		expect(split.plotArea.groups.map((group) => group.kind)).toEqual(['bar', 'line', 'bar']);
+		const joined = joinChartGroups(split);
+		expect(joined.plotArea.groups.map((group) => [group.kind, group.series.length])).toEqual([
+			['bar', 2],
+			['line', 1],
+		]);
+		expect(chartSeriesEntries(joined).map((entry) => entry.series.order)).toEqual([0, 2, 1]);
+		const secondary = joinChartGroups(setChartSeriesSecondaryAxis(source, 1, true));
+		expect(secondary.plotArea.groups.map((group) => group.series.length)).toEqual([2, 1]);
+		expect(secondary.plotArea.groups[1]!.axisIds).not.toEqual(
+			secondary.plotArea.groups[0]!.axisIds,
+		);
+		expect(joinChartGroups(source)).toEqual(source);
 	});
 	it('joins a neighbouring group of the new type, and only a neighbour', () => {
 		const source = columnChart();

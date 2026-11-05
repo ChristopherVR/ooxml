@@ -100,16 +100,23 @@ export function applyGeneratedChartGroupOptions(
 
 /**
  * The options a freshly generated `containerLocal` carries, as `[element, @val]` pairs: the
- * model's value (rounded and clamped into the schema range) or the constant a generated chart
- * always wrote. The legacy generator and the shared-core creation path both write these.
+ * model's value (rounded and clamped into the schema range) or the default a generated chart
+ * writes (gap width 150, hole size 50, a full overlap of stacked bars). The legacy generator and
+ * the shared-core creation path both write these.
  */
 export function generatedChartGroupOptions(
 	containerLocal: string,
 	chartData: PptxChartData,
 ): [ChartGroupOptionSpec['element'], string][] {
+	// PowerPoint staggers stacked bars that write no overlap; Office overlaps them fully.
+	const stacked = chartData.grouping === 'stacked' || chartData.grouping === 'percentStacked';
 	return CHART_GROUP_OPTIONS.flatMap((spec) => {
 		if (!chartContainerAllows(containerLocal, spec.element)) return [];
-		const value = modelValue(chartData, spec) ?? spec.generatedDefault;
+		const fallback =
+			spec.element === 'overlap' && stacked && containerLocal === 'barChart'
+				? 100
+				: spec.generatedDefault;
+		const value = modelValue(chartData, spec) ?? fallback;
 		return value === undefined ? [] : [[spec.element, chartGroupOptionVal(spec, value)]];
 	});
 }

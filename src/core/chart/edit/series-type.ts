@@ -10,6 +10,26 @@ function sameGroupSettings(a: ChartPlotGroup, b: ChartPlotGroup): boolean {
 }
 
 /**
+ * The plot area with every group that differs from an earlier one only in its series joined into
+ * it. Office writes one group per type, settings and axis pair, and PowerPoint draws two column
+ * groups on the same axes over each other, so a combination built series by series
+ * (`setChartSeriesType`, `setChartSeriesSecondaryAxis`, which split groups to keep flattened series
+ * positions) is joined before it is written. The flattened series order changes when groups that
+ * were not neighbours join, so this runs after the edits that address series by position.
+ */
+export function joinChartGroups(space: ChartSpace): ChartSpace {
+	return editChartSpace(space, (draft) => {
+		const groups: ChartPlotGroup[] = [];
+		for (const group of draft.plotArea.groups) {
+			const same = groups.find((kept) => sameGroupSettings(kept, group));
+			if (same) same.series.push(...group.series);
+			else groups.push(group);
+		}
+		draft.plotArea.groups = groups;
+	});
+}
+
+/**
  * Changes one category-axis combo series without changing document-order selections or axis ids.
  * The series joins a neighbouring group of the type it takes when the two would differ only in
  * their series, as Office keeps one group per type and axis pair.

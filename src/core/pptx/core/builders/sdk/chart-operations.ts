@@ -388,9 +388,14 @@ export interface ChartAxisEdit {
  * `c:tickLblPos`, `c:delete` via `visible`).
  *
  * Finds the first axis of `axisType` in `chartData.axes`, creating an entry
- * if none exists. Note that newly created axes only serialize for charts that
- * already contain a matching axis in the source XML (the save pipeline links
- * edits by the parsed axis id), which is the normal case for loaded charts.
+ * (with no `axisId`) if none exists. A loaded chart links the entry to its
+ * axis by the parsed axis id. A new chart's part is written with fixed axis
+ * ids, and an entry without one is matched to the written axis of its type
+ * (the first `catAx`, `valAx`, `dateAx` or `serAx`; for scatter and bubble
+ * charts the first and second `valAx`), so every edit, the title and number
+ * format included, is saved. An entry the chart type has no axis for (a pie
+ * chart's) is not written and is reported as a `CHART_FIELDS_NOT_WRITTEN`
+ * save warning.
  *
  * @example
  * ```ts

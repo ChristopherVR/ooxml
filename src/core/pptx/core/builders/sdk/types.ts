@@ -515,7 +515,11 @@ export interface ChartInput {
 	barDirection?: 'col' | 'bar';
 	/** Bar cluster gap, % of bar width (`c:gapWidth`, 0..500; default 150). Bar, bar3D, ofPie. */
 	gapWidth?: number;
-	/** Bar overlap within a cluster, % (`c:overlap`, -100..100). 2-D bar only. */
+	/**
+	 * Bar overlap within a cluster, % (`c:overlap`, -100..100). 2-D bar only. When omitted,
+	 * stacked and 100% stacked bars overlap fully (100, as PowerPoint draws them) and other bars
+	 * write none.
+	 */
 	overlap?: number;
 	/** First slice angle in degrees (`c:firstSliceAng`, 0..360). Pie, doughnut. */
 	firstSliceAngle?: number;

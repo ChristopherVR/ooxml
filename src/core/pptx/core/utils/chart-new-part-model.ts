@@ -91,6 +91,7 @@ function pick<T extends object>(source: T, keys: readonly (keyof T)[]): Partial<
 }
 
 const HEX = /^#?[\da-f]{6}$/iu;
+const LINE_DRAWN = new Set<string>(['line', 'stock']);
 
 /**
  * Label positions the chart type does not offer are left out (and reported): PowerPoint repairs a
@@ -130,6 +131,14 @@ export function normalizedNewChart(
 	// The generator wrote hex colours upper-case (`a:srgbClr/@val`).
 	for (const series of after.series)
 		if (series.color && HEX.test(series.color)) series.color = series.color.toUpperCase();
+	// A 2-D line or stock series with no smoothing of its own is straight: PowerPoint smooths one
+	// that writes no `c:smooth`, so the part says so (a 3-D line has no smoothing).
+	for (const series of after.series)
+		if (LINE_DRAWN.has(series.seriesChartType ?? after.chartType)) series.smooth ??= false;
+	// A scatter series without its own smoothing follows the style: smoothed for `smoothMarker`.
+	if (after.chartType === 'scatter')
+		for (const series of after.series)
+			series.smooth ??= (after.scatterStyle ?? 'lineMarker') === 'smoothMarker';
 	// The documented x values and bubble sizes of a new scatter or bubble chart without its own.
 	if (after.chartType === 'scatter' || after.chartType === 'bubble') {
 		const xs = after.categories.map((category, index) => {

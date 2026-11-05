@@ -21,18 +21,22 @@ const groups = (xml: string) =>
 describe.each(['addChart', 'builder'] as NewChartPath[])(
 	'combination charts through %s',
 	(path) => {
-		it('writes a line series between two column series in series order', async () => {
+		it('writes the column series around a line series as one column group', async () => {
 			const { element, save } = await newChartDeck('bar', {}, path);
 			setChartSeriesChartType(element, 1, 'line');
 			expect(element.chartData!.chartType).toBe('combo');
 			const { xml, chart, warnings } = await save();
-			expect(groups(xml)).toStrictEqual(['barChart', 'lineChart', 'barChart']);
+			// PowerPoint draws two column groups on the same axes over each other.
+			expect(groups(xml)).toStrictEqual(['barChart', 'lineChart']);
 			expect(chart.chartType).toBe('combo');
+			// Reloaded group by group; every series keeps its own c:order.
 			expect(chart.series.map((series) => [series.name, series.seriesChartType])).toStrictEqual([
 				['Revenue', 'bar'],
-				['Margin', 'line'],
 				['Cost', 'bar'],
+				['Margin', 'line'],
 			]);
+			expect(firstElement(xml, 'c:lineChart')).toContain('<c:order val="1"></c:order>');
+			expect(firstElement(xml, 'c:lineChart')).toContain('<c:smooth val="0"></c:smooth>');
 			expect(warnings).toStrictEqual([]);
 		});
 
@@ -92,8 +96,11 @@ describe('secondary value axes', () => {
 		const secondary = chart.axes!.find((axis) => axis.axisId === 222222223)!;
 		expect(secondary).toMatchObject({ axisType: 'valAx', axPos: 'r', crosses: 'max' });
 		expect(chart.axes!.find((axis) => axis.axisId === 222222224)).toMatchObject({ deleted: true });
-		expect(chart.series[1]!.axisId).toBe(222222223);
-		expect(isChartSeriesOnSecondaryAxis(chart, 1)).toBe(true);
+		// The two primary column series form one group; the moved series follows in its own.
+		expect(xml.match(/<c:barChart>/gu)).toHaveLength(2);
+		expect(chart.series.map((series) => series.name)).toStrictEqual(['Revenue', 'Cost', 'Margin']);
+		expect(chart.series[2]!.axisId).toBe(222222223);
+		expect(isChartSeriesOnSecondaryAxis(chart, 2)).toBe(true);
 		expect(isChartSeriesOnSecondaryAxis(chart, 0)).toBe(false);
 	});
 
