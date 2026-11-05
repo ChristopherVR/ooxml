@@ -54,6 +54,8 @@ import type { MorphOverlayLayer } from './morph-overlay-layers';
 import type { MorphOverlayStackEntry } from './morph-overlay-stack';
 import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
+import { resolveMorphTextBlendLifts } from './morph-text-blend';
+import type { MorphTextMeasure } from './morph-text-frame';
 import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
 import type { MorphMode } from './morph-types';
 
@@ -221,6 +223,11 @@ export interface MorphPlanOptions {
 	 * a stage that starts the slide at 0 leaves it out.
 	 */
 	readonly zIndexBase?: number;
+	/**
+	 * How text is measured when a pair's unchanged text is carried line for
+	 * line (see `morph-text-frame`). Defaults to a canvas; tests pass their own.
+	 */
+	readonly measureText?: MorphTextMeasure;
 }
 
 /**
@@ -254,6 +261,7 @@ export function buildMorphTransitionPlan(
 		durationMs,
 		mode,
 		options.zIndexBase ?? 0,
+		options.measureText,
 	);
 
 	// The overlay paints the outgoing slide as a moving copy of itself, in the
@@ -399,6 +407,20 @@ export function buildMorphTransitionPlan(
 		holdingGhostIds,
 		dissolvingInIds,
 	);
+	// Restyled text whose two halves are carried glyph over glyph dissolves
+	// additively, as PowerPoint's does, wherever lifting it changes no stacking.
+	if (mode === 'object') {
+		for (const id of resolveMorphTextBlendLifts(
+			flattenedOutgoing,
+			flattenedIncoming,
+			match.pairs,
+			ghostIds,
+			dissolvingInIds,
+			options.measureText,
+		)) {
+			lifted.add(id);
+		}
+	}
 	const overlayIncomingAnimations = new Map<string, string>();
 	for (const id of lifted) {
 		const animation = incomingAnimations.get(id);
