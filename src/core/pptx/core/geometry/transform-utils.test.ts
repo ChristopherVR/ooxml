@@ -229,16 +229,16 @@ describe('getTextCompensationTransform', () => {
 		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
-	it('returns scaleY(-1) for flipVertical only', () => {
+	it('turns flipVertical text upside down: scaleY(-1) scaleX(-1) is a half turn', () => {
 		const el = makeElement({ flipVertical: true });
-		expect(getTextCompensationTransform(el)).toBe('scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
 	// -- Both flips --
 
-	it('combines flipHorizontal and flipVertical', () => {
+	it('leaves both flips alone: the shape is already a half turn, as PowerPoint paints it', () => {
 		const el = makeElement({ flipHorizontal: true, flipVertical: true });
-		expect(getTextCompensationTransform(el)).toBe('scaleX(-1) scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBeUndefined();
 	});
 
 	// -- Rotation is explicitly ignored --
@@ -250,7 +250,7 @@ describe('getTextCompensationTransform', () => {
 
 	it('ignores rotation when flipVertical is set', () => {
 		const el = makeElement({ flipVertical: true, rotation: 90 });
-		expect(getTextCompensationTransform(el)).toBe('scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
 	it('ignores rotation when both flips are set', () => {
@@ -259,7 +259,7 @@ describe('getTextCompensationTransform', () => {
 			flipVertical: true,
 			rotation: 180,
 		});
-		expect(getTextCompensationTransform(el)).toBe('scaleX(-1) scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBeUndefined();
 	});
 
 	it('ignores negative rotation', () => {
@@ -267,22 +267,11 @@ describe('getTextCompensationTransform', () => {
 		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
-	// -- Order verification --
-
-	it('applies flipH before flipV in the output string', () => {
-		const el = makeElement({ flipHorizontal: true, flipVertical: true });
-		const result = getTextCompensationTransform(el)!;
-		const parts = result.split(' ');
-		expect(parts).toHaveLength(2);
-		expect(parts[0]).toBe('scaleX(-1)');
-		expect(parts[1]).toBe('scaleY(-1)');
-	});
-
 	// -- Falsy flip values --
 
 	it('does not include flipHorizontal when explicitly false', () => {
 		const el = makeElement({ flipHorizontal: false, flipVertical: true });
-		expect(getTextCompensationTransform(el)).toBe('scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
 	it('does not include flipVertical when explicitly false', () => {
@@ -296,15 +285,14 @@ describe('getTextCompensationTransform', () => {
 // ---------------------------------------------------------------------------
 
 describe('getElementTransform vs getTextCompensationTransform relationship', () => {
-	it('both produce identical output when only flips are present (no rotation)', () => {
-		const el = makeElement({ flipHorizontal: true, flipVertical: true });
+	it('both produce identical output for a horizontal flip alone (no rotation)', () => {
+		const el = makeElement({ flipHorizontal: true });
 		expect(getElementTransform(el)).toBe(getTextCompensationTransform(el));
 	});
 
 	it('element transform includes rotation while text compensation does not', () => {
 		const el = makeElement({
 			flipHorizontal: true,
-			flipVertical: true,
 			rotation: 90,
 		});
 		const elementT = getElementTransform(el)!;
@@ -326,19 +314,14 @@ describe('getElementTransform vs getTextCompensationTransform relationship', () 
 		expect(getTextCompensationTransform(el)).toBeUndefined();
 	});
 
-	it('swaps the compensation axis for a single mirror rotated past 90 degrees', () => {
-		const el = makeElement({
-			flipHorizontal: true,
-			rotation: 120,
-		});
-		const elementT = getElementTransform(el)!;
-		const textT = getTextCompensationTransform(el)!;
-
-		// Element transform is rotation followed by the flip (OOXML order).
-		expect(elementT).toBe('rotate(120deg) scaleX(-1)');
-		// In screen coordinates, a 120-degree rotation turns the authored
-		// horizontal mirror into the vertical compensation that keeps glyphs upright.
-		expect(textT).toBe('scaleY(-1)');
+	it('keeps the same compensation for a single mirror rotated past 90 degrees', () => {
+		// PowerPoint 16 paints a shape at rot=240 flipH with its text at 240
+		// degrees (reading up and to the left), and one at rot=240 flipV at 60.
+		const flippedH = makeElement({ flipHorizontal: true, rotation: 240 });
+		expect(getElementTransform(flippedH)).toBe('rotate(240deg) scaleX(-1)');
+		expect(getTextCompensationTransform(flippedH)).toBe('scaleX(-1)');
+		const flippedV = makeElement({ flipVertical: true, rotation: 240 });
+		expect(getTextCompensationTransform(flippedV)).toBe('scaleX(-1)');
 	});
 
 	it('compensates an inherited group mirror after local rotation', () => {
