@@ -53,6 +53,16 @@ function configured(): { clientId: string; authority: OneDriveAuthority; fromEnv
 	}
 }
 
+const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+function forget(): void {
+	try {
+		localStorage.removeItem(SETTINGS_KEY);
+	} catch {
+		// Nothing was stored.
+	}
+}
+
 function remember(clientId: string, authority: string): void {
 	try {
 		localStorage.setItem(SETTINGS_KEY, JSON.stringify({ clientId, authority }));
@@ -101,24 +111,43 @@ export function createDemoOneDriveProvider(
 			)
 			.catch(() => null));
 
+	let lastError: string | undefined;
 	async function signIn(): Promise<CloudAccount> {
 		const config = configured();
-		if (config.clientId) {
-			session = await signInWithMsal(config.clientId, config.authority);
-		} else {
-			const choice = await askDemoSignIn(config);
-			if (!choice) {
-				throw new Error('Sign-in was cancelled.');
-			}
-			if (choice.kind === 'clientId') {
-				remember(choice.clientId, choice.authority);
-				session = await signInWithMsal(
-					choice.clientId,
-					choice.authority === 'common' ? 'common' : 'consumers',
-				);
+		try {
+			if (config.fromEnv) {
+				// Configured by the developer (.env.local): no dialog.
+				session = await signInWithMsal(config.clientId, config.authority);
 			} else {
-				session = signInWithToken(choice.token);
+				// Always ask, pre-filled with the client ID remembered from the last success, so a
+				// wrong one can be corrected or cleared instead of being reused silently.
+				const choice = await askDemoSignIn({
+					clientId: config.clientId,
+					authority: config.authority,
+					...(lastError ? { error: lastError } : {}),
+				});
+				if (!choice) throw new Error('Sign-in was cancelled.');
+				if (choice.kind === 'clientId') {
+					const authority = choice.authority === 'common' ? 'common' : 'consumers';
+					try {
+						session = await signInWithMsal(choice.clientId, authority);
+					} catch (error) {
+						forget();
+						throw new Error(
+							`Sign-in with that client ID failed, so it was not remembered: ${messageOf(error)}`,
+						);
+					}
+					remember(choice.clientId, authority);
+				} else {
+					// A cleared client ID field means: forget the remembered one.
+					if (!choice.clientId) forget();
+					session = signInWithToken(choice.token);
+				}
 			}
+			lastError = undefined;
+		} catch (error) {
+			lastError = messageOf(error);
+			throw error;
 		}
 		ownDrive = null;
 		return { name: session.account };
