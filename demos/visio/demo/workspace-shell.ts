@@ -4,7 +4,7 @@
  */
 export function wireWorkspaceShell(
 	doc: Document,
-	actions: { browse(): void; sample(): void },
+	actions: { browse(): void; sample(): void; onedrive(): void },
 ): () => void {
 	const get = (id: string) => doc.getElementById(id)!;
 	const start = get('start-screen');
@@ -15,6 +15,7 @@ export function wireWorkspaceShell(
 	};
 	get('start-browse').addEventListener('click', () => actions.browse());
 	get('start-sample').addEventListener('click', () => actions.sample());
+	get('start-onedrive').addEventListener('click', () => actions.onedrive());
 	dropzone.addEventListener('click', (event) => {
 		if (!(event.target as Element).closest('button')) actions.browse();
 	});

@@ -235,3 +235,28 @@ for (const framework of FRAMEWORKS)
 		await places.getByRole('tab', { name: 'OneDrive' }).click();
 		await expect(editor(page).locator('office-ui-cloud-files')).toBeVisible();
 	});
+
+for (const framework of FRAMEWORKS)
+	test(`Open from OneDrive on the start page opens a file and saves to the same item in ${framework}`, async ({
+		page,
+	}) => {
+		const graph = await graphDouble(page);
+		await openLanding(page, framework);
+		await page.locator('#onedrive').click();
+		const dialog = page.getByRole('dialog', { name: 'Open from OneDrive' });
+		await dialog.getByRole('button', { name: 'Sign in', exact: true }).click();
+		await page.getByLabel('Access token').fill('test-token');
+		await page.getByRole('button', { name: 'Continue' }).click();
+		await dialog.locator('[data-view="files"]').click();
+		await dialog.locator('[data-entry]', { hasText: 'Plan.xlsx' }).click();
+		await expect(dialog).toBeHidden();
+		await expect.poll(() => editorProperty<string>(page, 'fileName')).toBe('Plan.xlsx');
+		await expect(editor(page).locator('[part="sheet-tabs"]')).toContainText('Cloud plan');
+		expect(await editorProperty<boolean>(page, 'readOnly')).toBe(false);
+		await goToCell(page, 'B2');
+		await typeInActiveCell(page, '42');
+		await page.keyboard.press('Control+s');
+		await expect.poll(() => graph.uploads.length).toBe(1);
+		expect(graph.uploads[0]).toMatchObject({ drive: OWN, id: 'item-plan' });
+		await expect.poll(() => editorProperty<boolean>(page, 'dirty')).toBe(false);
+	});

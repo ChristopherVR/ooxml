@@ -28,6 +28,7 @@ import {
 import { askDemoSignIn } from './token-dialog';
 
 export { isSignInPopup as isDemoSignInPopup } from './auth';
+export { pickCloudFile } from './start-dialog';
 
 const SETTINGS_KEY = 'ooxml-demo-onedrive';
 

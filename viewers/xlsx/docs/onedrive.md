@@ -65,3 +65,11 @@ to combine supported independent workbook edits during Save. The suite enables i
 overlapping cell edits and unsupported changes still require recovery. This does not connect
 workbook collaboration sessions to Microsoft Excel coauthoring, refresh external data or change
 the [feature limitations](/features).
+
+## Open a cloud file from your own UI
+
+File > Open is only reachable once a document is open. To open a file from a start page or your own
+picker, get a `CloudOpenedFile` from any `CloudFileProvider` (the shared `<office-ui-cloud-files>`
+browser emits it in `office-cloud-file-open`) and pass it to `editor.openCloudFile(file)` on `<xlsx-editor>` (every binding's handle exposes it too). It runs the
+same path as File > Open > OneDrive: the file's name, read-only when `canEdit` is false, and Save routed
+to the file's own storage until another document loads.

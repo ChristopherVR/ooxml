@@ -4,6 +4,7 @@ import type { MountedViewer } from 'ooxml-ui/visio';
 import type { CloudFileProvider } from 'ooxml-core/embedding';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { createSampleVsdx, demoDocument } from 'ooxml-core/visio/ui';
+import { pickCloudFile } from 'ooxml-demo-onedrive';
 import { createDemoFileProviders } from './cloud';
 import { wireWorkspaceShell } from './workspace-shell';
 import { wireWorkspaceTheme } from './workspace-theme';
@@ -47,6 +48,7 @@ export function createWorkspace(doc: Document = document): Workspace {
 	const revealWorkspace = wireWorkspaceShell(doc, {
 		browse: () => get<HTMLInputElement>('file').click(),
 		sample: () => void loadSample(),
+		onedrive: () => void openFromOneDrive(),
 	});
 
 	function refreshEditState(): void {
@@ -100,6 +102,26 @@ export function createWorkspace(doc: Document = document): Workspace {
 			revealWorkspace();
 			refreshEditState();
 			get('selection').textContent = 'Select a shape on the canvas to inspect it.';
+		} catch (cause) {
+			if (request !== requestId) return;
+			errorBox.hidden = false;
+			errorBox.textContent = cause instanceof Error ? cause.message : String(cause);
+		}
+	}
+	/** Start screen: pick a drawing in the shared OneDrive browser, then hand it to the viewer. */
+	async function openFromOneDrive(): Promise<void> {
+		const provider = fileProviders[0];
+		if (!provider) return;
+		const file = await pickCloudFile(provider, ['vsdx']);
+		if (!file || !viewer) return;
+		const request = ++requestId;
+		errorBox.hidden = true;
+		try {
+			await viewer.element.openCloudFile(file);
+			if (request !== requestId) return;
+			fileName.textContent = file.fileName;
+			revealWorkspace();
+			refreshEditState();
 		} catch (cause) {
 			if (request !== requestId) return;
 			errorBox.hidden = false;

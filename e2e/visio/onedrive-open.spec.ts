@@ -157,3 +157,36 @@ test('This device keeps the plain file chooser next to the cloud place', async (
 		viewer.locator('[data-backstage-page="open"] [data-backstage-action="open"]'),
 	).toBeHidden();
 });
+
+for (const [framework, path] of Object.entries(paths))
+	test(`${framework}: Open from OneDrive on the start screen opens a drawing and saves to the same item`, async ({
+		page,
+	}) => {
+		const cloud = await routeOneDriveGraph(page, await seeds());
+		await page.goto(path.replace('?sample=1', ''));
+		await page.locator('#start-onedrive').click();
+		const dialog = page.getByRole('dialog', { name: 'Open from OneDrive' });
+		await dialog.getByRole('button', { name: 'Sign in', exact: true }).click();
+		await page.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
+		await page.getByRole('button', { name: 'Continue', exact: true }).click();
+		await dialog.getByRole('button', { name: 'My files', exact: true }).click();
+		await dialog.getByRole('option', { name: /Reports/u }).click();
+		await dialog.getByRole('option', { name: /Plan\.vsdx/u }).click();
+		await expect(dialog).toBeHidden();
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() => (document.querySelector('visio-viewer') as VisioViewerElement).fileName,
+					),
+				{ timeout: 30_000 },
+			)
+			.toBe('Plan.vsdx');
+		await expect(page.locator('visio-viewer').locator('svg.paper text')).toContainText(
+			'Cloud drawing',
+		);
+		await edit(page);
+		await save(page);
+		await expect.poll(() => cloud.writes).toStrictEqual(['mine']);
+		await expect.poll(() => dirty(page)).toBe(false);
+	});

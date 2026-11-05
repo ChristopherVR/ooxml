@@ -60,7 +60,7 @@ async function prepare(
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: opens from OneDrive, edits and saves to the same item`, async ({ page }) => {
-		let original = Buffer.alloc(0);
+		let original: Buffer = Buffer.alloc(0);
 		const graph = await prepare(page, framework, (bytes) => {
 			original = bytes;
 			return { mine: { name: 'Plan.docx', bytes } };
@@ -78,6 +78,37 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(graph.files.get('mine')!.bytes.equals(original)).toBe(false);
 	});
 }
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	test(`${framework}: opens from OneDrive on the start page and saves to the same item`, async ({
+		page,
+	}) => {
+		let original: Buffer = Buffer.alloc(0);
+		const graph = await prepare(page, framework, (bytes) => {
+			original = bytes;
+			return { mine: { name: 'Plan.docx', bytes } };
+		});
+		await page.goto(`/?framework=${framework}`);
+		await page.locator('html[data-demo-ready="true"]').waitFor({ state: 'attached' });
+		await page.locator('#onedrive').click();
+		const dialog = page.getByRole('dialog', { name: 'Open from OneDrive' });
+		await dialog.getByRole('button', { name: 'Sign in', exact: true }).click();
+		const signInDialog = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
+		await signInDialog.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
+		await signInDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+		await dialog.locator('[data-view="recent"]').click();
+		await dialog.getByRole('option', { name: /Plan\.docx/ }).click();
+		await expect(dialog).toBeHidden();
+		await expect(fileNameLabel(page)).toHaveText('Plan.docx', { timeout: 30_000 });
+		await expect(editor(page).locator('.ProseMirror')).toContainText('Document title');
+		await clickInEditor(editor(page).locator('.ProseMirror p').last());
+		await page.keyboard.press('End');
+		await page.keyboard.type(' Edited from the start page.');
+		await saveButton(page).click();
+		await expect(saveStateLabel(page)).toHaveText('Saved', { timeout: 30_000 });
+		expect(graph.writes).toStrictEqual(['mine']);
+		expect(graph.files.get('mine')!.bytes.equals(original)).toBe(false);
+	});
 
 test('a failed upload keeps the document unsaved', async ({ page }) => {
 	const graph = await prepare(page, 'vanilla', (bytes) => ({ mine: { name: 'Plan.docx', bytes } }));
