@@ -264,6 +264,12 @@ export class ViewerController {
 		this.#capabilityReadOnly = locked;
 		this.#applyEditPermission();
 	}
+	/** Set while a drawing opened from a cloud place is read-only (the service or host policy). */
+	setFileReadOnly(locked: boolean): void {
+		this.#fileReadOnly = locked;
+		this.#applyEditPermission();
+	}
+	#fileReadOnly = false;
 	#hostCanEdit = true;
 	#hostReadOnly = false;
 	#roleReadOnly = false;
@@ -271,7 +277,11 @@ export class ViewerController {
 	#applyEditPermission(): void {
 		this.#assertAlive();
 		const value =
-			this.#hostCanEdit && !this.#hostReadOnly && !this.#roleReadOnly && !this.#capabilityReadOnly;
+			this.#hostCanEdit &&
+			!this.#hostReadOnly &&
+			!this.#roleReadOnly &&
+			!this.#capabilityReadOnly &&
+			!this.#fileReadOnly;
 		if (value === this.#state.canEdit) return;
 		if (!value) {
 			this.cancelEdit();

@@ -23,6 +23,7 @@ describe('complete shared adapter contract', () => {
 			ribbonAddIns: [],
 			collaboration: null,
 			storage: null,
+			fileProviders: [],
 			customization: null,
 			events: { 'zoom-change': vi.fn() },
 		};

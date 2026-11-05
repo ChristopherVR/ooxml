@@ -1,5 +1,11 @@
 import type { ViewerState } from './controller';
-import type { DocumentStorage, VisioFileCommand } from 'ooxml-core/embedding';
+import type {
+	CloudFileProvider,
+	CloudOpenedFile,
+	DocumentStorage,
+	VisioFileCommand,
+} from 'ooxml-core/embedding';
+import { CloudPlaces } from './viewer-cloud-places';
 import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
@@ -48,6 +54,8 @@ export interface BackstageHost {
 	fileCommand?(command: VisioFileCommand): boolean;
 	/** Host-owned storage for Save and Open (the element's `storage`), when set. */
 	storage?(): DocumentStorage | undefined;
+	/** Loads a drawing chosen in a cloud place; resolves once it is open (or rejects). */
+	openCloudFile?(file: CloudOpenedFile): Promise<void>;
 	/** What the drawing is now; compared after an awaited save to see whether it changed. */
 	revision?(): unknown;
 	/** The drawing (as it was at `revision`) was saved to host storage under `fileName`. */
@@ -85,6 +93,8 @@ export class ViewerBackstage {
 	#urls = new Set<string>();
 	#saving = false;
 	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
+	#places: CloudPlaces | undefined;
+	#providers: readonly CloudFileProvider[] = [];
 	readonly #hostPages: HostBackstagePages<VisioRegionContext>;
 	constructor(private readonly host: BackstageHost) {
 		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
@@ -125,8 +135,14 @@ export class ViewerBackstage {
 		);
 		this.#root.setAttribute('back-label', this.#t(BACK_LABEL));
 	}
+	/** The cloud places File > Open offers next to This device (the element's `fileProviders`). */
+	setFileProviders(providers: readonly CloudFileProvider[]): void {
+		this.#providers = providers;
+		this.#places?.setProviders(providers);
+	}
 	/** Shows the pages in the current display language again (after the locale changes). */
 	localize(): void {
+		this.#places?.setLocale(this.#locale());
 		if (this.#state) this.render(this.#state);
 		else this.#translate();
 	}
@@ -161,6 +177,12 @@ export class ViewerBackstage {
 			() => !!(this.#state?.loading || this.#state?.edit.busy),
 			this.host.announce,
 		);
+		const openSection = this.#root.querySelector<HTMLElement>('[data-backstage-page="open"]');
+		if (openSection) {
+			this.#places = new CloudPlaces(openSection, (file) => this.#openCloud(file), events.signal);
+			this.#places.setLocale(this.#locale());
+			this.#places.setProviders(this.#providers);
+		}
 		this.#ribbon.addEventListener(
 			'office-ribbon-file',
 			() => (this.open ? this.hide() : this.show()),
@@ -237,6 +259,16 @@ export class ViewerBackstage {
 				this.hide();
 				return this.host.load(file);
 			})
+			.catch((error: unknown) =>
+				this.host.announce(error instanceof Error ? error.message : String(error)),
+			);
+	}
+	#openCloud(file: CloudOpenedFile): void {
+		if (this.#custom().commands.has('open') || !this.#announce('open')) return;
+		if (!this.host.openCloudFile) return;
+		this.host
+			.openCloudFile(file)
+			.then(() => this.hide())
 			.catch((error: unknown) =>
 				this.host.announce(error instanceof Error ? error.message : String(error)),
 			);

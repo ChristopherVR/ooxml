@@ -108,4 +108,7 @@ export const zhCNBackstage: Readonly<Record<string, string>> = {
 	'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.':
 		'未嵌入的字体（不是 TrueType，或字体许可禁止嵌入）：{fonts}。',
 	'PDF created: {count} page(s)': '已创建 PDF：{count} 页',
+	'This device': '此设备',
+	Places: '位置',
+	'Opened {name} read-only.': '已以只读方式打开 {name}。',
 };

@@ -115,4 +115,7 @@ export const deBackstage: Readonly<Record<string, string>> = {
 	'Fonts not embedded (not TrueType, or the font licence forbids embedding): {fonts}.':
 		'Nicht eingebettete Schriftarten (kein TrueType, oder die Schriftlizenz verbietet das Einbetten): {fonts}.',
 	'PDF created: {count} page(s)': 'PDF erstellt: {count} Seite(n)',
+	'This device': 'Dieses Gerät',
+	Places: 'Orte',
+	'Opened {name} read-only.': '{name} wurde schreibgeschützt geöffnet.',
 };

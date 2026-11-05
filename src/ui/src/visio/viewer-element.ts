@@ -50,7 +50,8 @@ import {
 	indexedDbRecoveryStore,
 	storageRecoveryStore,
 } from './viewer-autorecover';
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import { normalizeVisioLocale, translateRibbonText } from './ribbon-locale';
+import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import { announceFileCommand } from './viewer-file-commands';
 import { RecoverDialog } from './viewer-recover-dialog';
 import { wireTellMe } from './viewer-tell-me';
@@ -156,6 +157,21 @@ export class VisioViewerElement extends BaseElement {
 		this.#storage = value ?? undefined;
 	}
 	/**
+	 * Cloud places for File > Open (`ooxml-core/embedding` `CloudFileProvider`, for example
+	 * OneDrive). When non-empty, Open shows This device and one place per provider that lists
+	 * `.vsdx` drawings. A drawing opened there loads like any other, is read-only when the file
+	 * is (or the host already made the viewer read-only), and saves through its own storage until
+	 * another drawing loads. An empty list restores the plain Open page.
+	 */
+	get fileProviders(): readonly CloudFileProvider[] {
+		return this.#fileProviders;
+	}
+	set fileProviders(value: readonly CloudFileProvider[] | null | undefined) {
+		this.#assertAlive();
+		this.#fileProviders = [...(value ?? [])];
+		this.#backstage.setFileProviders(this.#fileProviders);
+	}
+	/**
 	 * TrueType fonts File > Export > PDF embeds (as subsets) so text outside the standard fonts'
 	 * character set, or in a particular typeface, stays real text. The host supplies the bytes
 	 * (nothing is bundled); a font whose licence forbids embedding is reported and skipped.
@@ -199,6 +215,9 @@ export class VisioViewerElement extends BaseElement {
 	#inlineSize: ViewerInlineSize;
 	#fileName = '';
 	#storage: DocumentStorage | undefined;
+	#fileProviders: readonly CloudFileProvider[] = [];
+	/** The storage of the drawing opened from a cloud place; it wins over `storage` until another loads. */
+	#openedStorage: DocumentStorage | undefined;
 	#loadToken = 0;
 	#findBar: FindBar;
 	#replace: ViewerReplace;
@@ -416,6 +435,7 @@ export class VisioViewerElement extends BaseElement {
 			},
 			closeDocument: () => {
 				this.#fileName = '';
+				this.#forgetOpenedFile();
 				this.controller.setDocument(null);
 			},
 			showOptions: () => this.#profile.showOptions(),
@@ -427,7 +447,8 @@ export class VisioViewerElement extends BaseElement {
 			pageSetup: () =>
 				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
 			fileCommand: (command) => announceFileCommand(this, command),
-			storage: () => this.#storage,
+			storage: () => this.#openedStorage ?? this.#storage,
+			openCloudFile: (file) => this.#openCloudFile(file),
 			revision: () => this.controller.state.document,
 			savedToStorage: (name, revision) => {
 				this.#fileName = name;
@@ -467,6 +488,7 @@ export class VisioViewerElement extends BaseElement {
 	set document(value: VisioDocument | null) {
 		++this.#loadToken;
 		this.#fileName = '';
+		this.#forgetOpenedFile();
 		this.controller.setDocument(value);
 	}
 	get pageIndex(): number {
@@ -542,6 +564,7 @@ export class VisioViewerElement extends BaseElement {
 	async load(source: VsdxSource): Promise<void> {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
+		this.#forgetOpenedFile();
 		if (source instanceof Blob) {
 			await this.controller.loadSource(() => {
 				if (source.size > MAX_INPUT_BYTES)
@@ -556,6 +579,29 @@ export class VisioViewerElement extends BaseElement {
 		// Now the drawing has its name: offer back a copy kept from an earlier, unsaved session.
 		this.#recover.opened();
 	}
+	#forgetOpenedFile(): void {
+		this.#openedStorage = undefined;
+		this.controller.setFileReadOnly(false);
+	}
+	/** Loads a drawing chosen in a cloud place and routes this drawing's Save to its storage. */
+	async #openCloudFile(file: CloudOpenedFile): Promise<void> {
+		this.#assertAlive();
+		const FileType = this.ownerDocument.defaultView?.File ?? File;
+		const expected = this.#loadToken + 1;
+		await this.load(new FileType([new Uint8Array(file.bytes)], file.fileName));
+		// A destroyed viewer or a newer load owns the drawing now; this file is no longer open.
+		if (this.#disposed || this.#loadToken !== expected) return;
+		this.#openedStorage = file.storage;
+		this.controller.setFileReadOnly(!file.canEdit);
+		if (!file.canEdit) {
+			const message = translateRibbonText(
+				normalizeVisioLocale(this.#locale()),
+				`Opened ${file.fileName} read-only.`,
+			);
+			this.#announcement = message;
+			this.#status.textContent = message;
+		}
+	}
 	/** Create a source-backed drawing and name only the accepted request. */
 	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
 		return this.#createDrawing(() => this.controller.createBlankDrawing(options));
@@ -567,6 +613,7 @@ export class VisioViewerElement extends BaseElement {
 	async #createDrawing(create: () => Promise<void>): Promise<void> {
 		this.#assertAlive();
 		const token = ++this.#loadToken;
+		this.#forgetOpenedFile();
 		const generation = this.controller.documentGeneration;
 		await create();
 		if (

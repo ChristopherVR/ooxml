@@ -35,6 +35,10 @@ export const VisioViewer = defineVueBinding({
 			type: Object as PropType<ViewerProperties['storage']>,
 			default: undefined,
 		},
+		fileProviders: {
+			type: Array as PropType<ViewerProperties['fileProviders']>,
+			default: undefined,
+		},
 		customization: {
 			type: Object as PropType<ViewerProperties['customization']>,
 			default: undefined,
