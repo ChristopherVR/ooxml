@@ -3,6 +3,7 @@ import {
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	visibleTemplateElements as filterVisibleTemplateElements,
+	morphOverlayStackSlots,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
@@ -87,6 +88,7 @@ export function morphOverlayLayerSlides(
 	if (!plan || !outgoingSlide) {
 		return [];
 	}
+	const slots = morphOverlayStackSlots(plan);
 	return plan.overlayLayers.flatMap((layer, index) => {
 		const slide = layer.side === 'outgoing' ? outgoingSlide : incomingSlide;
 		if (!slide) {
@@ -96,7 +98,7 @@ export function morphOverlayLayerSlides(
 			{
 				key: `${layer.side}-${layer.elements[0]?.id ?? index}`,
 				side: layer.side,
-				style: { 'z-index': String(MORPH_LAYER_Z_BASE + index) },
+				style: { 'z-index': String(MORPH_LAYER_Z_BASE + (slots.layers[index] ?? index)) },
 				slide: { ...slide, elements: [...layer.elements] },
 			},
 		];
@@ -144,13 +146,16 @@ export function morphCrossfadeGroupSlides(
 		'mix-blend-mode': MORPH_CROSSFADE_HALF_BLEND_MODE,
 		...(animation === undefined ? {} : { animation }),
 	});
+	const slots = morphOverlayStackSlots(plan);
 	return plan.crossfadeGroups.map((group, index) => ({
 		key: group.incoming.id,
 		style: {
 			...MORPH_CROSSFADE_GROUP_STYLE,
 			// `isolation` makes the group a stacking context, so it carries a
-			// z-index of its own to stay above every overlay layer.
-			'z-index': String(MORPH_LAYER_Z_BASE + plan.overlayLayers.length + index),
+			// z-index of its own: its slot in the plan's one back-to-front stack.
+			'z-index': String(
+				MORPH_LAYER_Z_BASE + (slots.groups[index] ?? plan.overlayLayers.length + index),
+			),
 		},
 		outgoingStyle: half(group.outgoingAnimation),
 		incomingStyle: half(group.incomingAnimation),

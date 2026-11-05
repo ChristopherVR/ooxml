@@ -204,7 +204,7 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 	// flattening threw the grouping away. Without it the wheel deck's three
 	// centre text boxes fell through to pass 3, which refuses two text boxes that
 	// sit in the same place and say different things, and every topic-to-topic
-	// morph played them as an unmatched pair: gone by 23%, back from 42%, with an
+	// morph played them as an unmatched pair: gone by about 25%, back from about 45%, with an
 	// empty panel in between (issue #160).
 	const groupChildPairs = morphGroupChildPairs(fromSlide.elements, toSlide.elements);
 	if (groupChildPairs.size > 0) {

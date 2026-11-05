@@ -1,7 +1,7 @@
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { buildMorphOverlayLayers } from './morph-transition-layers';
+import { buildMorphCrossfadeGroups, buildMorphOverlayLayers } from './morph-transition-layers';
 
 function stage(ids: string[]): HTMLElement {
 	const root = document.createElement('div');
@@ -62,5 +62,52 @@ describe('buildMorphOverlayLayers', () => {
 		]);
 		expect(old.textContent).toBe('old layout');
 		expect(target.dataset.elementId).toBe('new');
+	});
+});
+
+describe('buildMorphCrossfadeGroups', () => {
+	// A rewrapped text pair is painted as one copy of each half per piece
+	// (`textPieceSources`). The slide never rendered those copies, so the
+	// stage clone has to grow them from the element each one copies.
+	it('paints a text piece as a clone of the element it copies', () => {
+		const outgoing = stage(['old']);
+		outgoing.querySelector<HTMLElement>('[data-element-id="old"]')!.textContent = 'old words';
+		const incoming = stage(['new']);
+		incoming.querySelector<HTMLElement>('[data-element-id="new"]')!.textContent = 'new words';
+		const plan = {
+			overlayLayers: [],
+			crossfadeGroups: [
+				{
+					outgoing: { id: 'old-morph-piece-0', height: 40 },
+					incoming: { id: 'new-morph-piece-0', height: 60 },
+				},
+				{
+					outgoing: { id: 'old-morph-piece-1', height: 40 },
+					incoming: { id: 'new-morph-piece-1', height: 60 },
+				},
+			],
+			textPieceSources: new Map([
+				['old-morph-piece-0', 'old'],
+				['old-morph-piece-1', 'old'],
+				['new-morph-piece-0', 'new'],
+				['new-morph-piece-1', 'new'],
+			]),
+		} as unknown as MorphTransitionPlan;
+		const groups = buildMorphCrossfadeGroups(document, outgoing, incoming, plan);
+		expect(groups).toHaveLength(2);
+		const ids = (group: HTMLElement) =>
+			[...group.querySelectorAll<HTMLElement>('[data-element-id]')].map((node) => [
+				node.dataset.elementId,
+				node.textContent,
+			]);
+		expect(ids(groups[1]!)).toEqual([
+			['old-morph-piece-1', 'old words'],
+			['new-morph-piece-1', 'new words'],
+		]);
+		// Grown to the copy's box, whose centre its keyframes pivot on.
+		const copy = groups[1]!.querySelector<HTMLElement>('[data-element-id="new-morph-piece-1"]')!;
+		expect(copy.style.height).toBe('60px');
+		// The source stages are cloned, never modified.
+		expect(outgoing.querySelectorAll('[data-element-id]')).toHaveLength(1);
 	});
 });

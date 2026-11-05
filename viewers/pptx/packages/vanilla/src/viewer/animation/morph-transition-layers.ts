@@ -1,5 +1,9 @@
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
-import { MORPH_CROSSFADE_GROUP_CSS_TEXT, MORPH_CROSSFADE_HALF_BLEND_MODE } from 'ooxml-ui/pptx';
+import {
+	MORPH_CROSSFADE_GROUP_CSS_TEXT,
+	MORPH_CROSSFADE_HALF_BLEND_MODE,
+	morphOverlayStackSlots,
+} from 'ooxml-ui/pptx';
 
 import { buildLayer } from './transition-layer';
 
@@ -68,6 +72,36 @@ export function stackInRunOrder(stage: HTMLElement, ids: readonly string[]): HTM
 	return stage;
 }
 
+/**
+ * Clone the node a morph copy stands for under the copy's own id, beside it.
+ *
+ * A text pair carried piece by piece (`textPieceSources`) is painted as one
+ * copy of each half per piece, which the slide never rendered; the other
+ * bindings render the copy's element, this one clones the stage it was given.
+ * The copy can be taller than its source (its box grown to hold overflowing
+ * lines), and its keyframes pivot on that box's centre, so the clone takes the
+ * copy's height.
+ */
+export function materializeMorphCopy(
+	stage: HTMLElement,
+	copy: { id: string; height: number },
+	sources: ReadonlyMap<string, string> | undefined,
+): HTMLElement {
+	const id = copy.id;
+	const sourceId = sources?.get(id);
+	if (sourceId === undefined) {
+		return stage;
+	}
+	const node = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(sourceId)}"]`);
+	if (node) {
+		const clone = node.cloneNode(true) as HTMLElement;
+		clone.dataset.elementId = id;
+		clone.style.height = `${copy.height}px`;
+		node.after(clone);
+	}
+	return stage;
+}
+
 /** A stage clone must use the plan's destination text layout for these ghosts. */
 function replaceOutgoingTextLayouts(
 	stage: HTMLElement,
@@ -111,6 +145,7 @@ export function buildMorphOverlayLayers(
 	incoming: HTMLElement,
 	morphPlan: MorphTransitionPlan | undefined,
 ): HTMLElement[] {
+	const slots = morphPlan ? morphOverlayStackSlots(morphPlan) : undefined;
 	return (morphPlan?.overlayLayers ?? []).map((run, index) => {
 		const source = run.side === 'outgoing' ? outgoing : incoming;
 		const ids = run.elements.map((element) => element.id);
@@ -121,7 +156,7 @@ export function buildMorphOverlayLayers(
 		const layer = buildLayer(
 			doc,
 			stackInRunOrder(keepOnlyElements(snapshot, ids), ids),
-			MORPH_LAYER_Z_BASE + index,
+			MORPH_LAYER_Z_BASE + (slots?.layers[index] ?? index),
 			'none',
 			run.side === 'outgoing' ? 'outgoing' : 'lifted',
 		);
@@ -155,27 +190,32 @@ export function buildMorphCrossfadeGroups(
 	if (!morphPlan) {
 		return [];
 	}
+	const slots = morphOverlayStackSlots(morphPlan);
 	return morphPlan.crossfadeGroups.map((group, index) => {
 		const wrapper = doc.createElement('div');
 		wrapper.dataset.pptxMorphCrossfade = group.incoming.id;
 		wrapper.style.cssText = MORPH_CROSSFADE_GROUP_CSS_TEXT;
 		// `isolation` makes the wrapper a stacking context, so it needs a z-index
-		// of its own to stay above every overlay layer.
-		wrapper.style.zIndex = String(MORPH_LAYER_Z_BASE + morphPlan.overlayLayers.length + index);
+		// of its own: its slot in the plan's one back-to-front stack.
+		wrapper.style.zIndex = String(
+			MORPH_LAYER_Z_BASE + (slots.groups[index] ?? morphPlan.overlayLayers.length + index),
+		);
 		// The dissolve rides these WRAPPERS, not the elements: a pair dissolving in
 		// place never moves, and an animation on the small element box gives it a
 		// compositing layer whose raster snaps to whole device pixels, painting the
 		// wording a fraction of a pixel off the live stage.
 		const half = (
 			stage: HTMLElement,
-			id: string,
+			element: { id: string; height: number },
 			state: 'outgoing' | 'lifted',
 			zIndex: number,
 			animation: string | undefined,
 		): HTMLElement => {
 			const layer = buildLayer(
 				doc,
-				keepOnlyElements(stage, [id]),
+				keepOnlyElements(materializeMorphCopy(stage, element, morphPlan.textPieceSources), [
+					element.id,
+				]),
 				zIndex,
 				animation ?? 'none',
 				state,
@@ -191,14 +231,14 @@ export function buildMorphCrossfadeGroups(
 		wrapper.append(
 			half(
 				outgoing.cloneNode(true) as HTMLElement,
-				group.outgoing.id,
+				group.outgoing,
 				'outgoing',
 				0,
 				group.outgoingAnimation,
 			),
 			half(
 				incoming.cloneNode(true) as HTMLElement,
-				group.incoming.id,
+				group.incoming,
 				'lifted',
 				1,
 				group.incomingAnimation,

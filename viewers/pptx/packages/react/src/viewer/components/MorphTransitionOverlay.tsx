@@ -13,6 +13,7 @@ import {
 	deviceStrokeStageStyle,
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_STYLE,
+	morphOverlayElementSlots,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
@@ -49,10 +50,11 @@ function overlayEntries(
 	plan: MorphTransitionPlan,
 	incomingSlide: PptxSlide | undefined,
 ): { element: PptxElement; side: 'outgoing' | 'incoming'; zIndex: number }[] {
+	const slots = morphOverlayElementSlots(plan);
 	return plan.overlayLayers
 		.filter((layer) => layer.side === 'outgoing' || incomingSlide !== undefined)
 		.flatMap((layer) => layer.elements.map((element) => ({ element, side: layer.side })))
-		.map((entry, zIndex) => ({ ...entry, zIndex }));
+		.map((entry, index) => ({ ...entry, zIndex: slots.elements.get(entry.element.id) ?? index }));
 }
 
 export function MorphTransitionOverlay({
@@ -63,6 +65,9 @@ export function MorphTransitionOverlay({
 	incomingSlide,
 	containerRef,
 }: MorphTransitionOverlayProps): React.ReactElement {
+	// Each group's slot in the plan's one back-to-front stack, so a dissolving
+	// pair stays under whatever the incoming slide stacks above it.
+	const groupSlots = morphOverlayElementSlots(morphPlan).groups;
 	return (
 		<div
 			ref={containerRef}
@@ -153,9 +158,10 @@ export function MorphTransitionOverlay({
 								style={{
 									...MORPH_CROSSFADE_GROUP_STYLE,
 									zIndex:
+										groupSlots[index] ??
 										morphPlan.outgoingElements.length +
-										morphPlan.overlayIncomingElements.length +
-										index,
+											morphPlan.overlayIncomingElements.length +
+											index,
 								}}
 							>
 								{/* The dissolve rides the WRAPPER, not the element: a pair that

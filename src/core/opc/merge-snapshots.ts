@@ -20,6 +20,7 @@ export interface OpcMergeOptions {
 const equal = (a: Uint8Array | undefined, b: Uint8Array | undefined) =>
 	a === b ||
 	Boolean(a && b && a.length === b.length && a.every((value, index) => value === b[index]));
+const CORE_PROPERTIES = 'http://schemas.openxmlformats.org/package/2006/metadata/core-properties';
 const decoder = new TextDecoder('utf-8', { fatal: true });
 const encoder = new TextEncoder();
 
@@ -34,7 +35,15 @@ function mergeManifest(input: PartMergeInput): PartMergeResult | undefined {
 			decoder.decode(local),
 			decoder.decode(remote),
 			{
-				keyElement: (element) => {
+				keyElement: (element, parent) => {
+					// Core properties are an unordered set of singletons (xsd:all), so each is keyed by
+					// its name and concurrent additions of different properties can merge in any order.
+					if (
+						path === 'docProps/core.xml' &&
+						parent.namespaceURI === CORE_PROPERTIES &&
+						parent.localName === 'coreProperties'
+					)
+						return `${element.namespaceURI ?? ''}|${element.localName}`;
 					const attribute =
 						element.localName === 'Relationship'
 							? 'Id'
@@ -48,9 +57,7 @@ function mergeManifest(input: PartMergeInput): PartMergeResult | undefined {
 				resolveText: (_b, _l, r) =>
 					path === 'docProps/core.xml' &&
 					((r.namespaceURI === 'http://purl.org/dc/terms/' && r.localName === 'modified') ||
-						(r.namespaceURI ===
-							'http://schemas.openxmlformats.org/package/2006/metadata/core-properties' &&
-							r.localName === 'lastModifiedBy'))
+						(r.namespaceURI === CORE_PROPERTIES && r.localName === 'lastModifiedBy'))
 						? (r.textContent ?? '')
 						: undefined,
 			},

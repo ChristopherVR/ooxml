@@ -759,9 +759,13 @@ useTouchGestures({
 					@laser-leave="annotations.handleLaserLeave"
 					@erase="annotations.eraseAtPoint"
 				/>
-				<!-- Slide-transition animation (covers the frame until `done`). -->
+				<!-- Slide-transition animation (covers the frame until `done`). Keyed
+				     per transition: the overlay arms its completion timer on mount, so a
+				     reused instance let a fade's timer end the morph a timed slide
+				     started before it finished (issue #141, slides 6 to 7). -->
 				<PresentationTransitionOverlay
 					v-if="nav.transitionState.value"
+					:key="`${nav.transitionState.value.outgoing?.id ?? ''}>${nav.transitionState.value.incoming?.id ?? ''}`"
 					:outgoing-slide="nav.transitionState.value.outgoing"
 					:incoming-slide="nav.transitionState.value.incoming"
 					:canvas-size="canvasSize"

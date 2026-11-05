@@ -8,6 +8,7 @@ import {
 	morphOptionToMode,
 	type MorphTransitionPlan,
 } from './morph-plan';
+import { MORPH_CROSSFADE_EASING } from './morph-types';
 
 function shape(id: string, name: string, x: number, y: number): PptxElement {
 	return {
@@ -258,11 +259,11 @@ describe('buildMorphTransitionPlan', () => {
 		// One object each side, not one departure and four arrivals.
 		expect(plan?.outgoingElements.map((e) => e.id)).toStrictEqual(['a-panel']);
 		expect(plan?.overlayIncomingElements).toStrictEqual([]);
-		expect(plan?.outgoingAnimations.get('a-panel')).toContain('cubic-bezier(0.2, 0, 0.4, 1)');
-		// The live half holds its own opacity: no second fade to dip through.
-		expect(plan?.incomingAnimations.get('b-panel') ?? '').not.toContain(
-			'cubic-bezier(0.2, 0, 0.4, 1)',
+		expect(plan?.outgoingAnimations.get('a-panel')).toContain(
+			`-fade 1000ms ${MORPH_CROSSFADE_EASING}`,
 		);
+		// The live half holds its own opacity: no second fade to dip through.
+		expect(plan?.incomingAnimations.get('b-panel') ?? '').not.toContain('-fade');
 	});
 
 	describe('an arrival a ghost would hide (issue #146)', () => {

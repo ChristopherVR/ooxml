@@ -110,13 +110,18 @@
 	<CollaborationCursors cursors={collabCursors} zoom={scale} />
 {/if}
 {#if presenting && presentationTransition}
-	<PresentationTransitionOverlay
-		outgoingSlide={presentationTransition.outgoing}
-		incomingSlide={presentationTransition.incoming}
-		{canvasSize}
-		{mediaDataUrls}
-		{scale}
-		transition={presentationTransition.transition}
-		ondone={onTransitionDone}
-	/>
+	<!-- Keyed per transition: the overlay arms its completion timer on mount, so a
+	     reused instance let a fade's timer end the morph a timed slide started
+	     before it finished (issue #141, slides 6 to 7). -->
+	{#key presentationTransition}
+		<PresentationTransitionOverlay
+			outgoingSlide={presentationTransition.outgoing}
+			incomingSlide={presentationTransition.incoming}
+			{canvasSize}
+			{mediaDataUrls}
+			{scale}
+			transition={presentationTransition.transition}
+			ondone={onTransitionDone}
+		/>
+	{/key}
 {/if}

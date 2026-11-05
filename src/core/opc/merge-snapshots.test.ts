@@ -40,6 +40,37 @@ describe('three-way OPC merge', () => {
 		);
 		expect(result.status).toBe('merged');
 	});
+	it('merges different core properties added by each peer, in either order', async () => {
+		const core = (value: string) =>
+			`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:creator>A</dc:creator>${value}</cp:coreProperties>`;
+		const title = core('<dc:title>T</dc:title>');
+		const subject = core('<dc:subject>S</dc:subject>');
+		for (const [local, remote] of [
+			[title, subject],
+			[subject, title],
+		]) {
+			const result = await mergeOpcSnapshots(
+				await zip({ 'docProps/core.xml': core('') }),
+				await zip({ 'docProps/core.xml': local! }),
+				await zip({ 'docProps/core.xml': remote! }),
+			);
+			expect(result.status).toBe('merged');
+			if (result.status !== 'merged') continue;
+			const merged = await JSZip.loadAsync(result.bytes);
+			const xml = await merged.file('docProps/core.xml')!.async('string');
+			expect(xml).toContain('<dc:title>T</dc:title>');
+			expect(xml).toContain('<dc:subject>S</dc:subject>');
+		}
+		expect(
+			(
+				await mergeOpcSnapshots(
+					await zip({ 'docProps/core.xml': core('') }),
+					await zip({ 'docProps/core.xml': core('<dc:title>A</dc:title>') }),
+					await zip({ 'docProps/core.xml': core('<dc:title>B</dc:title>') }),
+				)
+			).status,
+		).toBe('unresolved');
+	});
 	it('merges newly added volatile timestamps but rejects dangling relationship targets', async () => {
 		const core = (modified: string) =>
 			`<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dcterms="http://purl.org/dc/terms/">${modified ? `<dcterms:modified>${modified}</dcterms:modified>` : ''}</cp:coreProperties>`;

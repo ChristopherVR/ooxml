@@ -58,3 +58,83 @@ describe('mapCustomShowActions', () => {
 		});
 	});
 });
+
+describe('custom show text-link mirrors', () => {
+	const jump = 'ppaction://customshow?id=7&return=true';
+	const textSlide = (
+		textStyle: Record<string, unknown>,
+		styles: Record<string, unknown>[],
+	): PptxSlide =>
+		({
+			rId: 'r',
+			elements: [
+				{
+					id: 'text',
+					type: 'text',
+					textStyle,
+					textSegments: styles.map((style) => ({ text: 'x', style })),
+				},
+			],
+		}) as unknown as PptxSlide;
+	const clear = (id: string) => (id === '7' ? null : id);
+
+	it('clears run links and their default style without counting the mirror twice', () => {
+		const linked = {
+			hyperlink: jump,
+			hyperlinkAction: jump,
+			hyperlinkTooltip: 'show',
+			hyperlinkRId: '',
+			hyperlinkSoundXml: { '@_r:embed': 'sound' },
+			bold: true,
+		};
+		const external = { hyperlink: 'https://example.com', italic: true };
+		const input = textSlide(linked, [linked, external]);
+		const result = mapCustomShowActions([input], clear);
+		const text = result.slides[0]!.elements[0]!;
+		expect(result.changed).toBe(1);
+		expect(text.textStyle?.hyperlink).toBeUndefined();
+		expect(text.textStyle?.hyperlinkSoundXml).toBeUndefined();
+		expect(text.textSegments?.[0]?.style.hyperlink).toBeUndefined();
+		expect(text.textSegments?.[1]?.style).toBe(external);
+		expect(input.elements[0]!.textStyle).toBe(linked);
+		expect(linked.hyperlink).toBe(jump);
+	});
+
+	it.each([true, false])(
+		'rewrites the canonical link with optional action metadata (%s)',
+		(withAction) => {
+			const linked = {
+				hyperlink: jump,
+				...(withAction ? { hyperlinkAction: jump } : {}),
+				bold: true,
+			};
+			const input = textSlide(linked, [linked]);
+			const result = mapCustomShowActions([input], () => '12');
+			expect(result.changed).toBe(1);
+			expect(result.slides[0]!.elements[0]!.textStyle?.hyperlink).toBe(
+				'ppaction://customshow?id=12&return=true',
+			);
+			expect(result.slides[0]!.elements[0]!.textSegments?.[0]?.style.hyperlink).toBe(
+				'ppaction://customshow?id=12&return=true',
+			);
+			expect(linked.hyperlink).toBe(jump);
+		},
+	);
+
+	it('handles a default-only text link and leaves unrelated links identical', () => {
+		const input = textSlide({ hyperlink: jump }, []);
+		expect(mapCustomShowActions([input], clear).changed).toBe(1);
+		const external = textSlide({ hyperlink: 'https://example.com' }, []);
+		const result = mapCustomShowActions([external], clear);
+		expect(result.changed).toBe(0);
+		expect(result.slides[0]).toBe(external);
+	});
+
+	it('ignores an external URL containing the action text and malformed percent escapes', () => {
+		expect(
+			customShowActionId('https://example.com/?next=ppaction://customshow?id=7'),
+		).toBeUndefined();
+		expect(customShowActionId('ppaction://customshowcase?id=7')).toBeUndefined();
+		expect(customShowActionId('ppaction://customshow?id=%E0%A4%A')).toBeUndefined();
+	});
+});

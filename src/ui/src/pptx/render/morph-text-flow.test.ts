@@ -5,7 +5,7 @@ import { generateUnmatchedFadeInAnimations } from './morph-animation';
 import { matchMorphElementsFull } from './morph-matching';
 import { coveredStackedCopyIds } from './morph-stacked-copies';
 import { buildMorphTransitionPlan } from './morph-plan';
-import { morphOffstageTextSizeChange } from './morph-text-slot';
+import { morphOffstageTextAdoptsTarget, morphOffstageTextSizeChange } from './morph-text-slot';
 
 function text(
 	id: string,
@@ -187,6 +187,36 @@ describe('offstage text with a changed run size', () => {
 		expect(ghostBlock).toContain('translate(800px, 0px) rotate(0deg) scale(1, 1)');
 		const name = plan.incomingAnimations.get(to.id)?.split(' ')[0];
 		expect(name).toBeDefined();
+		const block = plan.keyframesCss.split(`@keyframes ${name} {`)[1]?.split('@keyframes')[0];
+		expect(block?.match(/opacity: 0;/gu)).toHaveLength(2);
+	});
+
+	it('flies one copy in its own layout when played backwards to the parking spot', () => {
+		// Issue #141, slides 18 -> 17: the paragraph leaves the slide for its
+		// spot off the left edge. Checking only the source cross-dissolved the
+		// two layouts all the way across the slide.
+		expect(morphOffstageTextSizeChange(to, from)).toBe(true);
+		expect(morphOffstageTextAdoptsTarget(to, from)).toBe(false);
+		const backdrop = {
+			id: 'backdrop',
+			type: 'shape',
+			x: -600,
+			y: 0,
+			width: 1200,
+			height: 300,
+		} as PptxElement;
+		const plan = buildMorphTransitionPlan(slide([backdrop, to]), slide([from]), 1000)!;
+		const ghost = plan.outgoingElements.find((element) => element.id === to.id);
+		expect(ghost).toBeDefined();
+		expect(plan.outgoingTextReplacements?.has(to.id)).toBe(false);
+		expect(ghost && 'textSegments' in ghost && ghost.textSegments).toEqual(to.textSegments);
+		const ghostName = plan.outgoingAnimations.get(to.id)?.split(' ')[0];
+		const ghostBlock = plan.keyframesCss
+			.split(`@keyframes ${ghostName} {`)[1]
+			?.split('@keyframes')[0];
+		expect(ghostBlock).toContain('translate(-800px, 0px) rotate(0deg) scale(1, 1)');
+		expect(plan.outgoingAnimations.get(to.id)).not.toContain('-fade');
+		const name = plan.incomingAnimations.get(from.id)?.split(' ')[0];
 		const block = plan.keyframesCss.split(`@keyframes ${name} {`)[1]?.split('@keyframes')[0];
 		expect(block?.match(/opacity: 0;/gu)).toHaveLength(2);
 	});

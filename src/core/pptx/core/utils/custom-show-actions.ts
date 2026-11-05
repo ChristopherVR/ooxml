@@ -10,6 +10,15 @@
  */
 
 import type { PptxCustomShow, PptxElement, PptxSlide } from '../types';
+import {
+	rewriteCustomShowAction as rewriteAction,
+	type CustomShowActionRewrite,
+} from './custom-show-link';
+import { mapCustomShowTextLinks } from './custom-show-text-links';
+import { mapCustomShowTableLinks } from './custom-show-table-links';
+
+export { customShowActionId } from './custom-show-link';
+export type { CustomShowActionRewrite } from './custom-show-link';
 
 const UNSIGNED_INT_MAX = 4294967295;
 
@@ -54,36 +63,7 @@ export function normalizeCustomShowIds(shows: readonly PptxCustomShow[]): {
 	};
 }
 
-/** Reads the `id` query value of a `ppaction://customshow?...` action, else undefined. */
-export function customShowActionId(action: string | undefined): string | undefined {
-	if (!action || !action.toLowerCase().includes('ppaction://customshow')) {
-		return undefined;
-	}
-	const match = action.match(/[?&]id=([^&]*)/i);
-	return match ? decodeURIComponent(match[1] as string) : undefined;
-}
-
-/** What to do with an action that jumps into custom show `id`: a new id, or null to remove it. */
-export type CustomShowActionRewrite = (id: string) => string | null;
-
-function rewriteAction(action: string | undefined, rewrite: CustomShowActionRewrite) {
-	const id = customShowActionId(action);
-	if (id === undefined) {
-		return { changed: false, action };
-	}
-	const next = rewrite(id);
-	if (next === id) {
-		return { changed: false, action };
-	}
-	return {
-		changed: true,
-		action:
-			next === null
-				? undefined
-				: (action as string).replace(/([?&]id=)[^&]*/i, `$1${encodeURIComponent(next)}`),
-	};
-}
-
+/** Updates each element once while keeping default/run link mirrors consistent. */
 function mapElement(
 	element: PptxElement,
 	rewrite: CustomShowActionRewrite,
@@ -108,27 +88,32 @@ function mapElement(
 			}
 		}
 	}
+	let clicks = 0;
+	let hovers = 0;
 	const segments = 'textSegments' in element ? element.textSegments : undefined;
-	if (segments?.some((s) => customShowActionId(s.style?.hyperlinkAction) !== undefined)) {
-		edit().textSegments = segments.map((segment) => {
-			const result = rewriteAction(segment.style?.hyperlinkAction, rewrite);
-			if (!result.changed) {
-				return segment;
-			}
-			changed++;
-			if (result.action !== undefined) {
-				return { ...segment, style: { ...segment.style, hyperlinkAction: result.action } };
-			}
-			const {
-				hyperlink: _h,
-				hyperlinkRId: _r,
-				hyperlinkTooltip: _t,
-				hyperlinkAction: _a,
-				hyperlinkTargetSlideIndex: _i,
-				...style
-			} = segment.style;
-			return { ...segment, style };
+	if (segments) {
+		const mapped = segments.map((segment) => {
+			if (!segment.style) return segment;
+			const result = mapCustomShowTextLinks(segment.style, rewrite);
+			clicks += Number(result.click);
+			hovers += Number(result.hover);
+			return result.style === segment.style ? segment : { ...segment, style: result.style };
 		});
+		if (clicks || hovers) edit().textSegments = mapped;
+	}
+	changed += clicks + hovers;
+	const textStyle = 'textStyle' in element ? element.textStyle : undefined;
+	if (textStyle) {
+		const result = mapCustomShowTextLinks(textStyle, rewrite);
+		if (result.style !== textStyle) edit().textStyle = result.style;
+		// The default text style mirrors run metadata; do not count that copy twice.
+		if (result.click && clicks === 0) changed++;
+		if (result.hover && hovers === 0) changed++;
+	}
+	if (element.type === 'table' && element.rawXml) {
+		const result = mapCustomShowTableLinks(element.rawXml, rewrite);
+		if (result.changed) edit().rawXml = result.rawXml;
+		changed += result.changed;
 	}
 	if (element.type === 'group') {
 		const children = element.children.map((child) => mapElement(child, rewrite));

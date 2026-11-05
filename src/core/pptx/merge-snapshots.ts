@@ -1,6 +1,7 @@
 import { mergeOpcSnapshots, type SnapshotMergeResult } from '../opc/merge-snapshots';
 import { mergeXmlThreeWay } from '../xml/merge-three-way';
 import { NS } from '../xml/namespaces';
+import { pptxChildOrder } from './merge-child-order';
 
 const SLIDE_PART = /^ppt\/(?:slides\/slide\d+|notesSlides\/notesSlide\d+)\.xml$/u;
 const SHAPES = new Set(['sp', 'pic', 'cxnSp', 'graphicFrame', 'grpSp']);
@@ -43,6 +44,7 @@ export function mergePptxSnapshots(
 				decoder.decode(input.remote),
 				{
 					keyElement,
+					childOrder: pptxChildOrder,
 					allowPositional: (parent) =>
 						(parent.namespaceURI === NS.a || parent.namespaceURI === NS.p) &&
 						POSITIONAL.has(parent.localName),

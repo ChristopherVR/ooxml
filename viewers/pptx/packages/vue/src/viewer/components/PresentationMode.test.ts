@@ -256,6 +256,40 @@ describe('presentationMode', () => {
 		wrapper.unmount();
 	});
 
+	// Issue #141, slides 6 -> 7: slide 6 fades in and advances after 0 s, so its
+	// timer fires as its fade ends, while that overlay is still mounted. The
+	// reused overlay kept the fade's completion timer, which then tore down
+	// slide 7's morph 50 ms in: slide 7 appeared in one frame.
+	it("plays a timed slide's next transition in full", async () => {
+		const timed = {
+			id: 's2',
+			elements: [],
+			backgroundColor: '#ffffff',
+			transition: { type: 'fade', durationMs: 200, advanceOnClick: false, advanceAfterMs: 0 },
+		} as unknown as PptxSlide;
+		const next = {
+			id: 's3',
+			elements: [],
+			backgroundColor: '#ffffff',
+			transition: { type: 'fade', durationMs: 400 },
+		} as unknown as PptxSlide;
+		const wrapper = mountMode([makeSlide('s1'), timed, next]);
+		await settle();
+		pressKey('ArrowRight');
+		const wait = (ms: number): Promise<void> =>
+			new Promise((resolve) => {
+				setTimeout(resolve, ms);
+			});
+		// Slide 2's fade (200 ms) ends, its 0 s timing moves on to slide 3, and
+		// slide 2's leftover completion timer (250 ms) passes.
+		await wait(340);
+		await nextTick();
+		expect(wrapper.emitted('slide-change')?.at(-1)).toStrictEqual([2]);
+		// Slide 3's 400 ms transition is still on screen.
+		expect(document.querySelector('[data-pptx-transition-layer="incoming"]')).not.toBeNull();
+		wrapper.unmount();
+	});
+
 	it('does not keep advancing a slide with no timing of its own', async () => {
 		const wrapper = mountMode([makeTimedSlide('s1'), makeSlide('s2'), makeSlide('s3')]);
 		await settle();

@@ -101,8 +101,10 @@ export function formatVisioTabStops(stops: TabStops): string {
 export function parseVisioTabStops(text: string): TabStops | undefined {
 	const stops: TabStops = [];
 	for (const entry of text.split(/[,;]/)) {
-		if (!entry.trim()) continue;
-		const match = /^\s*(\d+(?:\.\d+)?)\s*(?:pt)?\s*([a-z]+)?\s*$/i.exec(entry);
+		const trimmed = entry.trim().replace(/\s+/g, ' ');
+		if (!trimmed) continue;
+		if (trimmed.length > 64) return undefined;
+		const match = /^(\d+(?:\.\d+)?)\s?(?:pt)?\s?([a-z]+)?$/i.exec(trimmed);
 		const align = (match?.[2]?.toLowerCase() ?? 'left') as TabStops[number]['align'];
 		const position = Number(match?.[1]);
 		if (!match || !TAB_ALIGNS.includes(align) || position < 1 || position > 7200) return undefined;

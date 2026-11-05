@@ -36,6 +36,12 @@ import type { MorphBox } from './morph-overlay-order';
 import { boxesOverlap, travelledBox } from './morph-overlay-order';
 import { tokenizeText } from './morph-text';
 import { coveredStackedCopyIds } from './morph-stacked-copies';
+import type { MorphTextAlignment, MorphTextMeasure } from './morph-text-frame';
+import {
+	morphTextGhostEnd,
+	morphTextIncomingStart,
+	resolveMorphTextAlignment,
+} from './morph-text-frame';
 import { morphOffstageTextSizeChange, morphTextReplacedInSlot } from './morph-text-slot';
 import { buildTokenMorphAnimations, diffTokens } from './morph-text-tokens';
 import type { MorphAnimationStyle, MorphMode, MorphPair } from './morph-types';
@@ -44,6 +50,7 @@ import {
 	MORPH_EASING,
 	MORPH_FADE_IN_EASING,
 	MORPH_FADE_IN_START_PERCENT,
+	MORPH_FADE_OUT_EASING,
 	MORPH_FADE_OUT_END_PERCENT,
 	MORPH_FADE_OUT_HOLD_PERCENT,
 } from './morph-types';
@@ -421,14 +428,17 @@ function crossfadeIncomingMayFadeIn(element: PptxElement): boolean {
  *   behaviour before the ghost set existed.
  * @param zSwaps - Incoming id -> z-index journey for stacking-order swaps (see
  *   {@link computeZOrderSwaps}). The track rides the same shorthand.
+ * @param measure - Text measurement for `resolveMorphTextAlignment`; defaults
+ *   to a canvas.
  * @returns An array of animation style descriptors for each pair.
  */
 export function generateMorphAnimations(
 	pairs: MorphPair[],
 	durationMs: number,
-	_mode: MorphMode = 'object',
+	mode: MorphMode = 'object',
 	ghostIds?: ReadonlySet<string>,
 	zSwaps?: ReadonlyMap<string, ZOrderJourney>,
+	measure?: MorphTextMeasure,
 ): MorphAnimationStyle[] {
 	const animations: MorphAnimationStyle[] = [];
 
@@ -479,14 +489,26 @@ export function generateMorphAnimations(
 		// moved, and interpolating it would stretch the type by however much the
 		// text changed length. See {@link morphTextReplacedInSlot}.
 		const inSlot = morphTextReplacedInSlot(fromElement, toElement);
+		// A text box whose TEXT is unchanged carries its lines rather than its
+		// box, so the restyled glyphs of both halves stay on top of each other
+		// (see `morph-text-frame`).
+		const textStart = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) =>
+			morphTextIncomingStart(a, toElement),
+		);
 		const dx = inSlot
 			? 0
-			: fromElement.x + fromElement.width / 2 - (toElement.x + toElement.width / 2);
+			: (textStart?.dx ??
+				fromElement.x + fromElement.width / 2 - (toElement.x + toElement.width / 2));
 		const dy = inSlot
 			? 0
-			: fromElement.y + fromElement.height / 2 - (toElement.y + toElement.height / 2);
-		const sx = inSlot ? 1 : Math.max(fromElement.width, 1) / Math.max(toElement.width, 1);
-		const sy = inSlot ? 1 : Math.max(fromElement.height, 1) / Math.max(toElement.height, 1);
+			: (textStart?.dy ??
+				fromElement.y + fromElement.height / 2 - (toElement.y + toElement.height / 2));
+		const sx = inSlot
+			? 1
+			: (textStart?.sx ?? Math.max(fromElement.width, 1) / Math.max(toElement.width, 1));
+		const sy = inSlot
+			? 1
+			: (textStart?.sy ?? Math.max(fromElement.height, 1) / Math.max(toElement.height, 1));
 		const fromOpacity = fromElement.opacity ?? 1;
 		const toOpacity = toElement.opacity ?? 1;
 
@@ -569,15 +591,24 @@ export function generateMorphAnimations(
 			toProps.push(`\t\topacity: ${inert ? 0 : toOpacity};`);
 		}
 
-		// Fill color interpolation
-		const colorInterp = buildColorInterpolationProps(fromElement, toElement);
+		// Fill and stroke interpolation, only where no ghost dissolves over this
+		// half. A ghost fading out on the morph curve over a half painted in its
+		// final look already IS the linear colour blend PowerPoint shows (its
+		// fill colour runs on the travel curve, issue #141). Tweening the colour
+		// underneath as well applied the curve twice: the blend ran at the
+		// square of the progress, 0.11 where PowerPoint is at 0.33.
+		const blendedByGhost = ghosted && morphPairNeedsCrossfade(fromElement, toElement);
+		const colorInterp = blendedByGhost
+			? null
+			: buildColorInterpolationProps(fromElement, toElement);
 		if (colorInterp) {
 			fromProps.push(`\t\tbackground-color: ${colorInterp.fromBg};`);
 			toProps.push(`\t\tbackground-color: ${colorInterp.toBg};`);
 		}
 
-		// Stroke interpolation via outline
-		const strokeInterp = buildStrokeInterpolationProps(fromElement, toElement);
+		const strokeInterp = blendedByGhost
+			? null
+			: buildStrokeInterpolationProps(fromElement, toElement);
 		if (strokeInterp) {
 			fromProps.push(`\t\toutline: ${strokeInterp.fromWidth}px solid ${strokeInterp.fromStroke};`);
 			toProps.push(`\t\toutline: ${strokeInterp.toWidth}px solid ${strokeInterp.toStroke};`);
@@ -646,6 +677,8 @@ ${toProps.join('\n')}
  * @param ghostIds - Outgoing ids the overlay will paint (see
  *   {@link resolveMorphGhostIds}); pairs outside it get no ghost. Defaults to
  *   "all", the behaviour before the ghost set existed.
+ * @param mode - Morph granularity; only `object` carries text lines.
+ * @param measure - Text measurement for `resolveMorphTextAlignment`.
  * @returns Ghost animation descriptors keyed by the OUTGOING element id.
  */
 export function generateMorphGhostAnimations(
@@ -653,6 +686,8 @@ export function generateMorphGhostAnimations(
 	durationMs: number,
 	startIndex: number,
 	ghostIds?: ReadonlySet<string>,
+	mode: MorphMode = 'object',
+	measure?: MorphTextMeasure,
 ): MorphAnimationStyle[] {
 	const animations: MorphAnimationStyle[] = [];
 	for (let index = 0; index < pairs.length; index++) {
@@ -683,20 +718,31 @@ export function generateMorphGhostAnimations(
 		// two halves would cross-dissolve out of register.
 		const inSlot = morphTextReplacedInSlot(fromElement, toElement);
 		const offstageText = morphOffstageTextSizeChange(fromElement, toElement);
+		// Mirror of the incoming half: unchanged text lands its lines on the
+		// incoming lines, not its box on the incoming box.
+		const textEnd = textAlignmentFor(fromElement, toElement, inSlot, mode, measure, (a) =>
+			morphTextGhostEnd(a, fromElement),
+		);
 		const dx = inSlot
 			? 0
 			: offstageText
 				? toElement.x - fromElement.x
-				: toElement.x + toElement.width / 2 - (fromElement.x + fromElement.width / 2);
+				: (textEnd?.dx ??
+					toElement.x + toElement.width / 2 - (fromElement.x + fromElement.width / 2));
 		const dy = inSlot
 			? 0
 			: offstageText
 				? toElement.y - fromElement.y
-				: toElement.y + toElement.height / 2 - (fromElement.y + fromElement.height / 2);
+				: (textEnd?.dy ??
+					toElement.y + toElement.height / 2 - (fromElement.y + fromElement.height / 2));
 		const sx =
-			inSlot || offstageText ? 1 : Math.max(toElement.width, 1) / Math.max(fromElement.width, 1);
+			inSlot || offstageText
+				? 1
+				: (textEnd?.sx ?? Math.max(toElement.width, 1) / Math.max(fromElement.width, 1));
 		const sy =
-			inSlot || offstageText ? 1 : Math.max(toElement.height, 1) / Math.max(fromElement.height, 1);
+			inSlot || offstageText
+				? 1
+				: (textEnd?.sy ?? Math.max(toElement.height, 1) / Math.max(fromElement.height, 1));
 		// The ghost starts on its own authored rotation, so the SHORTEST-arc
 		// adjustment goes on the target angle here (mirror of the incoming
 		// half). Flips are per-frame, as in {@link generateMorphAnimations}.
@@ -746,6 +792,27 @@ export function generateMorphGhostAnimations(
 		});
 	}
 	return animations;
+}
+
+/**
+ * The text-line transform for a pair whose text can be carried (see
+ * `morph-text-frame`). Never for an in-slot rewrite, the off-stage single-copy
+ * flight (its ghost already paints the incoming layout) or a word/character
+ * morph, whose tokens move on their own.
+ */
+function textAlignmentFor<T>(
+	fromElement: PptxElement,
+	toElement: PptxElement,
+	inSlot: boolean,
+	mode: MorphMode,
+	measure: MorphTextMeasure | undefined,
+	select: (alignment: MorphTextAlignment) => T,
+): T | undefined {
+	if (inSlot || mode !== 'object' || morphOffstageTextSizeChange(fromElement, toElement)) {
+		return undefined;
+	}
+	const alignment = resolveMorphTextAlignment(fromElement, toElement, measure);
+	return alignment ? select(alignment) : undefined;
 }
 
 /**
@@ -816,10 +883,11 @@ function flipFactors(el: PptxElement): string {
 /**
  * Generate fade-out animations for elements that only exist on the outgoing slide.
  *
- * The shape dissolves in the FIRST quarter of the morph rather than across the
- * whole of it, and holds at zero from there (see
- * {@link MORPH_FADE_OUT_END_PERCENT} for the frames that were measured). Fading
- * it over the full duration left it half-visible at the midpoint, on top of an
+ * The shape dissolves over the first third of the morph's eased progress (the
+ * first quarter of its time) rather than across the whole of it, and holds at
+ * zero from there (see `MORPH_FADE_OUT_END_PROGRESS` for the frames that were
+ * measured). Fading it over the full duration left it half-visible at the
+ * midpoint, on top of an
  * incoming replacement that was itself half-visible, so the middle of every
  * morph read as a double exposure where PowerPoint shows a clean gap.
  *
@@ -847,7 +915,7 @@ export function generateUnmatchedFadeOutAnimations(
 		const keyframes = covered.has(el.id)
 			? `
 @keyframes ${safeName} {
-\t0%, ${MORPH_FADE_OUT_HOLD_PERCENT}% {
+\t0% {
 \t\topacity: ${el.opacity ?? 1};
 ${transform}
 \t}
@@ -860,10 +928,7 @@ ${transform}
 @keyframes ${safeName} {
 \t0% {
 \t\topacity: ${el.opacity ?? 1};
-${transform}
-\t}
-\t${MORPH_FADE_OUT_HOLD_PERCENT}% {
-\t\topacity: ${el.opacity ?? 1};
+\t\tanimation-timing-function: ${MORPH_FADE_OUT_EASING};
 ${transform}
 \t}
 \t${MORPH_FADE_OUT_END_PERCENT}% {
@@ -886,9 +951,10 @@ ${transform}
 /**
  * Generate fade-in animations for elements that only exist on the incoming slide.
  *
- * The shape stays completely invisible until the morph is
- * {@link MORPH_FADE_IN_START_PERCENT}% through, then dissolves in on a
- * decelerating curve. See that constant for the frames that were measured.
+ * The shape stays completely invisible until the morph's eased progress is two
+ * thirds of the way (about {@link MORPH_FADE_IN_START_PERCENT}% of its time),
+ * then dissolves in linearly in that progress, which decelerates hard into the
+ * end. See `MORPH_FADE_IN_START_PROGRESS` for the frames that were measured.
  *
  * Nothing scales: PowerPoint's dissolve keeps the box exactly where it is.
  *
@@ -1000,6 +1066,8 @@ export function generateTextMorphAnimations(
  * @param zIndexBase - The z-index the live stage gives the incoming slide's
  *   first top-level element (see {@link computeZOrderSwaps}); a binding that
  *   paints master/layout shapes beneath the slide passes their count.
+ * @param measure - Text measurement for carrying unchanged text lines (see
+ *   `morph-text-frame`); defaults to a canvas.
  * @returns A complete array of animation style descriptors for the transition.
  */
 export function generateFullMorphTransition(
@@ -1008,6 +1076,7 @@ export function generateFullMorphTransition(
 	durationMs: number,
 	mode: MorphMode = 'object',
 	zIndexBase = 0,
+	measure?: MorphTextMeasure,
 ): MorphAnimationStyle[] {
 	const matchResult = matchMorphElementsFull(fromSlide, toSlide);
 	const allAnimations: MorphAnimationStyle[] = [];
@@ -1037,7 +1106,14 @@ export function generateFullMorphTransition(
 	);
 
 	// Generate main element morph animations
-	const pairAnims = generateMorphAnimations(matchResult.pairs, durationMs, mode, ghostIds, zSwaps);
+	const pairAnims = generateMorphAnimations(
+		matchResult.pairs,
+		durationMs,
+		mode,
+		ghostIds,
+		zSwaps,
+		measure,
+	);
 	allAnimations.push(...pairAnims);
 
 	// Shape-geometry morph: for matched pairs whose shape outline changes
@@ -1073,6 +1149,8 @@ export function generateFullMorphTransition(
 		durationMs,
 		pairAnims.length,
 		ghostIds,
+		mode,
+		measure,
 	);
 	allAnimations.push(...ghosts);
 

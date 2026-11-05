@@ -7,6 +7,14 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.62.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.62.1) - 2026-11-05
+
+### Bug Fixes
+
+- **pptx:** Preserve schema order in snapshot merges ([#245](https://github.com/ChristopherVR/ooxml/issues/245)) ([ad90b70](https://github.com/ChristopherVR/ooxml/commit/ad90b70b7a9024c3e54ec01a7b50ac2e3a2af677))
+- **pptx:** Keep custom show hyperlinks in sync ([#246](https://github.com/ChristopherVR/ooxml/issues/246)) ([ce77eb7](https://github.com/ChristopherVR/ooxml/commit/ce77eb7fe06d5d8df08d79cf2016da8f811aaba3))
+- **opc:** Merge concurrent core property additions in any order ([2789389](https://github.com/ChristopherVR/ooxml/commit/2789389fa2b26cf4dc84f02e7d231ee0a4d58224))
+
 ## [4.62.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.62.0) - 2026-11-04
 
 ### Features
