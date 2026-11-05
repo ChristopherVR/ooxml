@@ -12,8 +12,10 @@ Local profiles are organizational conveniences, not authentication or authorizat
 
 ## Implemented workflows
 
-- Open native DOCX, XLSX, PPTX and VSDX from OneDrive sharing links through one host-configured
-  connection. Native and suite Save checkpoint local edits before updating the connected cloud
+- Browse a OneDrive (Recent, My files with folders, search) from the **OneDrive** workspace view
+  and open native DOCX, XLSX, PPTX and VSDX from it or from sharing links through one
+  host-configured connection (optional `signIn`, `signOut` and `account` hooks in
+  `ooxmlOneDriveOptions`; see [OneDrive integration](onedrive-integration.md#integrated-office-suite)). Native and suite Save checkpoint local edits before updating the connected cloud
   item. Pending cloud state survives failed saves and reloads. Concurrent independent edits are
   combined automatically using the common baseline and latest cloud file, then the editor adopts
   the saved combined result. Unsupported overlaps retain both versions and offer explicit recovery.

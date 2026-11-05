@@ -397,8 +397,38 @@ globalThis.ooxmlOneDriveOptions = {
 // Load the Office Suite entry after this configuration is installed.
 ```
 
-The suite shows **Open from OneDrive** and explains when sign-in has not been configured.
-It routes DOCX, XLSX, PPTX and VSDX through the matching real editor. Save first checkpoints
+Optional sign-in hooks connect the browser to the host's own sign-in:
+
+```ts
+globalThis.ooxmlOneDriveOptions = {
+	getAccessToken: () => microsoftSession.getGraphAccessToken(),
+	signIn: async () => ({ name: session.name, email: session.email }), // host sign-in UI
+	signOut: async () => session.signOut(),
+	account: () => session.current, // the account when the suite starts; omit when signed out
+};
+```
+
+With `signIn` the browser starts signed out when `account` returns nothing, shows the host's
+**Sign in** button and calls the hook; `signOut` and `account` are optional. With no `signIn`
+the host is treated as already signed in (its `getAccessToken` works) and the account reads
+"Microsoft account". The suite builds its provider with `createOneDriveFileProvider` (browsing,
+search, sign-in state) and opens files through its own client, so the connected document keeps
+the item's identity and eTag. A host that supplies its own `client` in `ooxmlOneDriveOptions`
+keeps the link dialog only. A custom provider in `ooxmlCloudOptions` may add `fileProvider` (a
+`CloudFileProvider`) to get the same browsing: each `CloudOpenedFile` it returns must also carry
+`cloudFile: { file, bytes }`, the value its `client.open` returns, which the suite stores through
+`serializeFile` and `keyOf`. Browsing against live Microsoft Graph has not been verified; the
+automated check uses a Graph test double.
+
+The suite adds a **OneDrive** entry to its workspace navigation (and a **Browse OneDrive**
+button on Home). It shows the shared `<office-ui-cloud-files>` element: **Recent**, **My files**
+with folders, search across the drive and a sharing-link field as the secondary path, for all four
+Office formats; other files are listed but cannot be opened. The element downloads with progress
+and cancel. Opening a file adds it to the library as a connected document, or reuses the library
+document of the same drive item (matched by drive and item id, never duplicated). Without any
+`ooxmlOneDriveOptions` the entry shows the plain "sign-in has not been connected by your host"
+message. The browser lists the signed-in user's own drive; files shared with the user and other
+drives open from their sharing link. It routes DOCX, XLSX, PPTX and VSDX through the matching real editor. Save first checkpoints
 the current bytes locally, then uploads the connected item. A cloud failure retains the checkpoint
 and a pending-cloud state, including after a reload. The pending label is **Saved on this device;
 OneDrive save pending**. Local document commits derive pending state from content versus the
