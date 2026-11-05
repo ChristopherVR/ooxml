@@ -14,6 +14,7 @@
 		deriveSlideFieldContext,
 		deviceStrokeStageStyle,
 		getSlideBackgroundStyle,
+		resolveStageEdgeBleeds,
 	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
@@ -48,6 +49,12 @@
 	}: SlideStageProps = $props();
 
 	const t = useTranslator();
+
+	// Boxes that grow under an abutting opaque box to close the anti-aliasing
+	// seam (issue #141); the selection keeps its exact box while it is edited.
+	const edgeBleeds = $derived(
+		resolveStageEdgeBleeds(undefined, slide, selectedElementIds?.length ? new Set(selectedElementIds) : undefined),
+	);
 
 	// Re-point the deck-wide field context at THIS stage's slide before the
 	// element renderers read it: the date / header / footer / document-property
@@ -150,7 +157,7 @@
 	aria-label={interactive ? t('pptx.canvas.slide') : undefined}
 >
 	{#each slide?.elements ?? [] as element, index (element.id)}
-		<ElementRenderer {element} {mediaDataUrls} zIndex={index} {presenting} {interactive} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+		<ElementRenderer {element} {mediaDataUrls} zIndex={index} edgeBleed={edgeBleeds.get(element.id)} {presenting} {interactive} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
 	{/each}
 	{#if slide?.activeXControls && slide.activeXControls.length > 0}
 		<ActiveXOverlay controls={slide.activeXControls} {canvasSize} />

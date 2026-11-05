@@ -41,7 +41,7 @@
 	import WordArtText from './WordArtText.svelte';
 	import type { ElementRendererProps } from './props';
 
-	const { element, mediaDataUrls, zIndex, presenting = false, interactive = false, marked = false, editTemplateMode = false, editingElementId = null, editable = false, selectedElementIds, parentGroupFill, ontablecellcommit, onsmartartnodecommit, onsmartartnodefill, onchartpointcommit, ontableresizecolumns, ontableresizerow }: ElementRendererProps =
+	const { element, mediaDataUrls, zIndex, edgeBleed, presenting = false, interactive = false, marked = false, editTemplateMode = false, editingElementId = null, editable = false, selectedElementIds, parentGroupFill, ontablecellcommit, onsmartartnodecommit, onsmartartnodefill, onchartpointcommit, ontableresizecolumns, ontableresizerow }: ElementRendererProps =
 		$props();
 	/** Whether THIS element is part of the current selection; see `ElementRendererProps.selectedElementIds`. */
 	const isSelected = $derived(selectedElementIds?.includes(element.id) ?? false);
@@ -120,7 +120,7 @@
 	const allAnimStates = $derived(getAllAnimStates?.());
 	const backgroundState = $derived(getBackgroundAnimationState(element, allAnimStates));
 	const visualState = $derived(backgroundState ?? animationState);
-	const backgroundLayers = $derived(getBackgroundAnimationLayers(element, getShapeBoxStyle(element, zIndex, parentGroupFill, visualState?.animatesFill, visualState?.animatesStroke), backgroundState));
+	const backgroundLayers = $derived(getBackgroundAnimationLayers(element, getShapeBoxStyle(element, zIndex, parentGroupFill, visualState?.animatesFill, visualState?.animatesStroke, edgeBleed), backgroundState));
 
 	/**
 	 * The host's resolved 3D flags (provided by PowerPointViewer). Charts

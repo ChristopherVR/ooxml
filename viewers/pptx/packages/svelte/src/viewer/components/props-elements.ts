@@ -1,4 +1,4 @@
-import type { ElementAnimationState, RenderParagraph } from 'ooxml-ui/pptx';
+import type { AbuttingEdgeBleed, ElementAnimationState, RenderParagraph } from 'ooxml-ui/pptx';
 import type { PptxChartData, PptxElement, ShapeStyle } from 'pptx-viewer-core';
 
 import type { SmartArtView } from '../render';
@@ -15,6 +15,11 @@ export interface ElementRendererProps {
 	element: PptxElement;
 	mediaDataUrls: Map<string, string>;
 	zIndex: number;
+	/**
+	 * Grow this box under an abutting opaque box above it, closing the
+	 * anti-aliasing seam between the two (shared `resolveAbuttingEdgeBleeds`).
+	 */
+	edgeBleed?: AbuttingEdgeBleed;
 	/**
 	 * True only on the live presentation stage (the viewer's fullscreen
 	 * surface): media elements should then autoplay, as PowerPoint does when a

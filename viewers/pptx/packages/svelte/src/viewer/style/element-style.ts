@@ -1,5 +1,6 @@
-import type { CssStyleMap } from 'ooxml-ui/pptx';
+import type { AbuttingEdgeBleed, CssStyleMap } from 'ooxml-ui/pptx';
 import {
+	abuttingEdgeBleedStyle,
 	DEFAULT_STROKE_COLOR,
 	elementHitTargetStyle as sharedElementHitTargetStyle,
 	getComputed3dStyle,
@@ -218,6 +219,7 @@ export function getShapeBoxStyle(
 	parentGroupFill?: ShapeStyle,
 	animatesFill?: boolean,
 	animatesStroke?: boolean,
+	edgeBleed?: AbuttingEdgeBleed,
 ): CssStyleMap {
 	const container = getContainerStyle(el, zIndex);
 	const shape = getShapeFillStrokeStyle(el, parentGroupFill, animatesFill, animatesStroke);
@@ -225,7 +227,9 @@ export function getShapeBoxStyle(
 	if (container.transform && shape.transform) {
 		merged.transform = `${String(container.transform)} ${String(shape.transform)}`;
 	}
-	return merged;
+	// Close the seam with an abutting opaque box above (issue #141): empty for
+	// nearly every element, so the box style is untouched.
+	return { ...merged, ...abuttingEdgeBleedStyle(el, edgeBleed, merged) };
 }
 
 /** Resolve a displayable image source for picture/image/media poster frames. */
