@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { CloudOpenedFile } from 'ooxml-core/embedding';
   import { deferredHandle, mountEditor, svelteEditorOptions, type EditorBinding, type EditorEventHandlers, type EditorHandle, type EditorOptions, type EditorProps } from './index';
   type Props = EditorProps & {
     ondocumentchange?: EditorEventHandlers['document-change'];
@@ -32,6 +33,7 @@
   export function load(input: Uint8Array | ArrayBuffer) { return handle.load(input); }
   export function save() { return handle.save(); }
   export function download(fileName?: string) { return handle.download(fileName); }
+  export function openCloudFile(file: CloudOpenedFile) { return handle.openCloudFile(file); }
   export function markClean() { handle.markClean(); dirtyState = handle.dirty; }
   /** @deprecated Read the dirty property instead; kept so existing callers keep working. */
   export function isDirty() { return handle.dirty; }

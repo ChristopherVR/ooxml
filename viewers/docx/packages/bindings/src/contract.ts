@@ -20,7 +20,7 @@ import {
 	type WordCustomization,
 } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
-import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	contractOptions,
 	deferredHandle as kitDeferredHandle,
@@ -128,6 +128,11 @@ export interface EditorHandle {
 	/** Saves and downloads in the browser, then marks the document clean. */
 	download(fileName?: string): Promise<void>;
 	markClean(): void;
+	/**
+	 * Opens a file got from a `CloudFileProvider` (the host's own picker or a start page) the way File >
+	 * Open > OneDrive does: its name, read-only state and storage for Save.
+	 */
+	openCloudFile(file: CloudOpenedFile): Promise<void>;
 	readonly dirty: boolean;
 }
 
@@ -244,6 +249,7 @@ export const EDITOR_CONTRACT: BindingContract<
 		save: 'async',
 		download: 'async',
 		markClean: 'optional-call',
+		openCloudFile: 'async',
 		dirty: { fallback: false },
 	},
 };
@@ -293,6 +299,7 @@ export const EDITOR_HANDLE_KEYS = [
 	'save',
 	'download',
 	'markClean',
+	'openCloudFile',
 	'dirty',
 ] as const satisfies readonly (keyof EditorHandle)[];
 export type EditorHandleKey = (typeof EDITOR_HANDLE_KEYS)[number];

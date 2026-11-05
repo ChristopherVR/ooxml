@@ -121,6 +121,7 @@ export function createBuildingBlockSession(initial: BuildingBlockOptions = {}) {
 		save: () => requireBinding().save(),
 		download: (name) => requireBinding().download(name),
 		markClean: () => requireBinding().markClean(),
+		openCloudFile: (file) => requireBinding().openCloudFile(file),
 		get dirty() {
 			return binding?.dirty ?? false;
 		},

@@ -55,7 +55,7 @@ describe('EDITOR_CONTRACT', () => {
 		expect(sorted(Object.keys(EDITOR_CONTRACT.events))).toEqual(sorted(EDITOR_EVENT_NAMES));
 		expect(handleKeys(EDITOR_CONTRACT.handle)).toEqual([...EDITOR_HANDLE_KEYS]);
 		expect(sorted(EDITOR_HANDLE_KEYS)).toEqual(
-			sorted(['dirty', 'download', 'element', 'load', 'markClean', 'save']),
+			sorted(['dirty', 'download', 'element', 'load', 'markClean', 'openCloudFile', 'save']),
 		);
 	});
 });

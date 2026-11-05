@@ -169,6 +169,10 @@ describe('customisation, page and save bindings', () => {
 		binding.markClean();
 		expect(binding.dirty).toBe(false);
 		expect(typeof binding.download).toBe('function');
+		const open = vi.spyOn(binding.element, 'openCloudFile').mockResolvedValue();
+		const file = { fileName: 'c.docx' } as never;
+		await binding.openCloudFile(file);
+		expect(open).toHaveBeenCalledWith(file);
 		binding.destroy();
 		binding.element.dispatchEvent(new CustomEvent('dirty-change', { detail: false }));
 		expect(onDirtyChange).toHaveBeenCalledTimes(1);

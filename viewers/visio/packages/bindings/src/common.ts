@@ -19,6 +19,7 @@ export type ViewerHandle = Pick<
 	| 'controller'
 	| 'load'
 	| 'createBlankDrawing'
+	| 'openCloudFile'
 	| 'applyEdits'
 	| 'selectShapes'
 	| 'selectAll'
@@ -54,6 +55,7 @@ export const VIEWER_CONTRACT: BindingContract<never, ViewerProperties, ViewerHan
 		controller: 'get',
 		load: 'async',
 		createBlankDrawing: 'async',
+		openCloudFile: 'async',
 		applyEdits: 'async',
 		selectShapes: 'call',
 		selectAll: 'call',

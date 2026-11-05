@@ -55,6 +55,7 @@ export function mountEditor(
 		save: () => element.save(),
 		download: (fileName) => element.download(fileName),
 		markClean: () => element.markClean(),
+		openCloudFile: (file) => element.openCloudFile(file),
 		get dirty() {
 			return element.dirty;
 		},
