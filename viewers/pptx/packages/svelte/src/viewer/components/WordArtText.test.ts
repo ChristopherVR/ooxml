@@ -119,6 +119,20 @@ describe('wordArtText (Svelte)', () => {
 		expect(svg?.querySelector('textPath')).not.toBeNull();
 	});
 
+	it('paints textPath runs with SVG fill (a CSS color leaves SVG text black)', () => {
+		const svg = mountWarped(warpedText());
+		const style = svg?.querySelector('textPath tspan')?.getAttribute('style') ?? '';
+		expect(style).toMatch(/fill:\s*(#ff0000|rgb\(255,\s*0,\s*0\))/iu);
+	});
+
+	it('paints a non-outline envelope glyph with SVG fill', () => {
+		const svg = mountWarped(
+			warpedText({ textStyle: { textWarpPreset: 'textPlain', color: '#ff0000' } }),
+		);
+		const style = svg?.querySelector('svg > text')?.getAttribute('style') ?? '';
+		expect(style).toMatch(/fill:\s*(#ff0000|rgb\(255,\s*0,\s*0\))/iu);
+	});
+
 	it('renders nothing for a non-warped preset', () => {
 		const svg = mountWarped(warpedText({ textStyle: { textWarpPreset: 'textNoShape' } }));
 		expect(svg).toBeNull();

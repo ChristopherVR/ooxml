@@ -94,6 +94,7 @@ export * from './image-effect-filter-values';
 export * from './image-fill-overlay';
 export * from './text-segment-paragraph-break';
 export * from './text-warp';
+export * from './text-warp-run-paint';
 export * from './text-warp-envelope-curves';
 export * from './text-warp-envelope-block';
 export * from './text-warp-envelope-layout';

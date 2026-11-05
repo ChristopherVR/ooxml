@@ -8,7 +8,7 @@
 		DEFAULT_FONT_FAMILY,
 		groupIntoParagraphs,
 		hasGlyphEnvelope,
-		normalizeHexColor,
+		resolveWarpRunPaint,
 		shouldUseSvgWarp,
 		substituteFieldText,
 	} from 'ooxml-ui/pptx';
@@ -63,19 +63,18 @@
 	});
 
 	function runStyle(segment: TextSegment): Record<string, string | number> {
-		const style: TextStyle = segment.style ?? {};
-		const inherited = textElement?.textStyle;
-		const decorations = [style.underline || style.hyperlink ? 'underline' : '', style.strikethrough ? 'line-through' : ''].filter(Boolean);
-		const family = style.fontFamily ?? inherited?.fontFamily;
+		// An SVG `<text>` is painted by `fill`; a CSS `color` is ignored (the
+		// glyphs rendered black). The shared descriptor keeps all bindings equal.
+		const paint = resolveWarpRunPaint(segment, textElement?.textStyle);
 		const result: Record<string, string | number> = {
-			color: normalizeHexColor(style.color ?? inherited?.color, style.hyperlink ? '#0563C1' : '#111827'),
-			fontSize: `${style.fontSize ?? inherited?.fontSize ?? 24}px`,
-			fontWeight: style.bold || inherited?.bold ? 700 : 400,
-			fontStyle: style.italic || inherited?.italic ? 'italic' : 'normal',
-			fontFamily: family ? getSubstituteFontFamily(family) : DEFAULT_FONT_FAMILY,
+			fill: paint.fill,
+			fontSize: `${paint.fontSizePx}px`,
+			fontFamily: paint.fontFamily,
+			fontStyle: paint.fontStyle ?? 'normal',
+			fontWeight: paint.fontWeight ?? 'normal',
 		};
-		if (decorations.length) {
-			result.textDecoration = decorations.join(' ');
+		if (paint.textDecoration) {
+			result.textDecoration = paint.textDecoration;
 		}
 		return result;
 	}
@@ -133,7 +132,7 @@
 			const placements = perLine[lineIndex] ?? [];
 			return placements.map((p) => {
 				const s = runStyle(paragraph.segments[p.segmentIndex]);
-				return { ...p, styleStr: styleToString(s), fillColor: String(s.color) };
+				return { ...p, styleStr: styleToString(s), fillColor: String(s.fill) };
 			});
 		});
 	});
