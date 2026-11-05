@@ -37,7 +37,7 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
-import { exactDeviceBox } from './device-pixel-exact';
+import { snapPlacement } from './device-pixel-group';
 import {
 	DEVICE_PX_VAR,
 	screenBorderWidth,
@@ -442,6 +442,10 @@ function snapTransform(
 	if (element.rotation) {
 		return undefined;
 	}
+	const place = snapPlacement(element);
+	if (!place) {
+		return undefined;
+	}
 	const shapeType = getShapeType((element as { shapeType?: string }).shapeType);
 	if (isOpenPreset) {
 		if (shapeType !== 'line') {
@@ -449,24 +453,17 @@ function snapTransform(
 		}
 		const axis = element.height === 0 ? 'h' : element.width === 0 ? 'v' : undefined;
 		return axis
-			? snappedStrokeTransform(
-					axis,
-					element.x,
-					element.y,
-					strokeWidth,
-					undefined,
-					exactDeviceBox(element),
-				)
+			? snappedStrokeTransform(axis, place.x, place.y, strokeWidth, undefined, place.exact)
 			: undefined;
 	}
 	return shapeType === 'rect'
 		? snappedStrokeTransform(
 				'box',
-				element.x,
-				element.y,
+				place.x,
+				place.y,
 				strokeWidth,
 				{ width: element.width, height: element.height },
-				exactDeviceBox(element),
+				place.exact,
 			)
 		: undefined;
 }

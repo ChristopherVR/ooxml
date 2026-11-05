@@ -15,6 +15,7 @@
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
+import { registerGroupChildren } from './device-pixel-group';
 import type { ComputedFillStyle } from './fill-style';
 import { getComputedFillStyle } from './fill-style';
 
@@ -53,6 +54,9 @@ export function getGroupChildParentFill(
 	if (group.type !== 'group') {
 		return undefined;
 	}
+	// Every binding calls this where it renders a group's children: the one
+	// place that learns the child to group links the device-pixel snap needs.
+	registerGroupChildren(group);
 	const own = group.groupFill;
 	return own && own.fillMode !== 'group' ? own : inheritedFill;
 }

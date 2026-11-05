@@ -60,6 +60,7 @@ export * from './subpath-fill-overlay';
 export * from './stroke-style';
 // On-screen strokes and borders never thinner than one device pixel (issue #23):
 // the stage publishes the device pixel, widths are written as `max()` against it.
+export * from './device-pixel-group';
 export * from './device-pixel-stroke';
 // `a:blipFill/a:tile`: scale, offset, alignment and mirror-flip of a tiled
 // picture, which four of five bindings used to render as one stretched copy.

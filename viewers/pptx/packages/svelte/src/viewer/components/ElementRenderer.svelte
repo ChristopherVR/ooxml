@@ -242,7 +242,11 @@
 		{/if}
 		<ShapeEffectOverlay {element} {mediaDataUrls} {zIndex} />
 		{#each element.children ?? [] as child, i (child.id)}
-			<ElementRenderer element={child} {mediaDataUrls} zIndex={i} {presenting} {interactive} {marked} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} parentGroupFill={childParentGroupFill} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
+			<!-- Read here, before the child exists: `getGroupChildParentFill` also links the
+			     children to this group for the device-pixel stroke snap, and a child that never
+			     reads its `parentGroupFill` prop (a connector) would otherwise never trigger it. -->
+			{@const parentFill = childParentGroupFill}
+			<ElementRenderer element={child} {mediaDataUrls} zIndex={i} {presenting} {interactive} {marked} {editTemplateMode} {editingElementId} {editable} {selectedElementIds} parentGroupFill={parentFill} {ontablecellcommit} {onsmartartnodecommit} {onsmartartnodefill} {onchartpointcommit} {ontableresizecolumns} {ontableresizerow} />
 		{/each}
 	</div>
 {:else if isImageLike}

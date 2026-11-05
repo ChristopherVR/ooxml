@@ -1,10 +1,12 @@
 import {
 	buildStrokeOutline,
+	connectorNeedsPath,
+	connectorSnapTransform,
+	connectorStrandScreenWidth,
 	isArrowedCustomPath,
 	buildSvgGradientDef,
 	getPresetShapeVectorGeometry,
 	isWedgeCalloutPresetShape,
-	screenBorderWidth,
 	screenStrokeWidth,
 	svgGradientFillRef,
 	svgLineCap,
@@ -311,6 +313,14 @@ export function renderVectorShape(
 		const hitTargetWidth = Math.max(strokeWidth * 3, 12);
 		const offsets = getCompoundLineOffsets(compoundLine, strokeWidth);
 		const widths = getCompoundLineWidths(compoundLine, strokeWidth);
+		// Snapped to the device grid like the interactive connector (shared
+		// `device-pixel-stroke`): a group's children render through this path.
+		const snapTransform = connectorSnapTransform(
+			element,
+			!connectorNeedsPath(element.shapeType),
+			offsets.length,
+			strokeWidth,
+		);
 
 		return (
 			<svg
@@ -357,8 +367,12 @@ export function renderVectorShape(
 						vectorEffect='non-scaling-stroke'
 						style={{
 							pointerEvents: 'none',
-							strokeWidth: screenBorderWidth(Math.max(widths[idx] ?? strokeWidth, 1)),
-							...(offset !== 0 ? { transform: `translate(0, ${offset}px)` } : {}),
+							strokeWidth: connectorStrandScreenWidth(widths, strokeWidth, idx),
+							...(offset !== 0
+								? { transform: `translate(0, ${offset}px)` }
+								: snapTransform
+									? { transform: snapTransform }
+									: {}),
 						}}
 					/>
 				))}

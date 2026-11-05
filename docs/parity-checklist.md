@@ -392,11 +392,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       rectangle on its own, positioned from the file's exact EMU rounded to PowerPoint's 1/576
       inch master unit (`src/ui/src/pptx/render/device-pixel-stroke.ts`, `device-pixel-exact.ts`);
       measured exact against PowerPoint at 1280 and 1920 px wide. Lines without an `a:ln/@cap`
-      now end flat like PowerPoint's (they were round). Open: at 1366 px wide PowerPoint places
-      some edges a pixel from where any rounding of the exact position puts them (not explained),
-      group children and elements inside a rotated or scaled group are not snapped (their
-      coordinates are group-local), and rotated, rounded and gradient outlines, compound strands
-      and CSS borders are not snapped.
+      now end flat like PowerPoint's (they were round). Group children snap too, by their absolute
+      position (ancestor group origins from the exact EMU; `device-pixel-group.ts`; inside a
+      rotated or flipped group they are not snapped); a group's connectors in React's static
+      renderer now share the interactive connector's width and snap. Checked against PowerPoint on
+      a synthetic group deck: 21 differing pixels at 1280 px and 144 at 1920 px (exact-tie rows),
+      all five demos identical. Open: PowerPoint's export at other widths is not a function of
+      the position (measured with 110 probe lines per axis: 1024 px wide is anti-aliased, 1366 px
+      wide leaves about 24% of lines on a different pixel under the best fit, at 16:9 and other
+      aspect ratios alike, so the 768/540 vertical scale is not the cause); we keep the 1280 and
+      1920 rule there. Rotated, rounded and gradient outlines, compound strands and CSS borders
+      are not snapped.
 - [x] **P1** Morph of elbow and curved connectors: the route is re-evaluated per frame from the
       interpolated box, signed flips and `adj` values at a constant stroke width, with no outline
       dissolve (`src/ui/src/pptx/render/morph-connector-carry.ts`); `curvedConnector3` to `5`

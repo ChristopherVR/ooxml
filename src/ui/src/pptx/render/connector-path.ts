@@ -20,7 +20,8 @@ import { curvedElbowPathD, elbowSegmentCount, elbowWaypoints } from './connector
 import { connectorHitStrokeWidth } from './connector-hit-target';
 import { markerPath, normalizeArrow } from './connector-markers';
 import type { MarkerShape } from './connector-markers';
-import { exactDeviceBox } from './device-pixel-exact';
+import type { ExactBoxSource } from './device-pixel-exact';
+import { snapPlacement } from './device-pixel-group';
 import { snappedStrokeTransform } from './device-pixel-stroke';
 import { routeOrthogonalConnector, waypointsToPathD } from './connector-router';
 import type { RouterRect } from './connector-router';
@@ -128,15 +129,9 @@ export function connectorSnapTransform(
 		return undefined;
 	}
 	const axis = element.height <= 0 ? 'h' : element.width <= 0 ? 'v' : undefined;
-	return axis
-		? snappedStrokeTransform(
-				axis,
-				element.x,
-				element.y,
-				strokeWidth,
-				undefined,
-				exactDeviceBox(element),
-			)
+	const place = axis ? snapPlacement(element as PptxElement & ExactBoxSource) : undefined;
+	return axis && place
+		? snappedStrokeTransform(axis, place.x, place.y, strokeWidth, undefined, place.exact)
 		: undefined;
 }
 
