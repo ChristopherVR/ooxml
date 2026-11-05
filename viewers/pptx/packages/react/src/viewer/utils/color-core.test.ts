@@ -388,30 +388,16 @@ describe('buildGlowBoxShadow', () => {
 		expect(buildGlowBoxShadow('#FF0000', undefined, 0.75)).toBeUndefined();
 	});
 
-	it('should produce 3 layered shadows', () => {
+	it('should produce one layer at the glow alpha', () => {
 		const result = buildGlowBoxShadow('#FF0000', 30, 0.75);
 		expect(result).toBeDefined();
-		// Should have 3 "0 0 Npx" occurrences (3 layered shadows)
-		const shadowCount = (result!.match(/0 0 \d+px/g) || []).length;
-		expect(shadowCount).toBe(3);
+		expect((result!.match(/0 0 [\d.]+px/g) || []).length).toBe(1);
+		expect(result).toContain('rgba(255, 0, 0, 0.75)');
 	});
 
-	it('should use decreasing opacity across layers', () => {
-		const result = buildGlowBoxShadow('#FF0000', 30, 1);
-		expect(result).toBeDefined();
-		// The three layers use full, 60%, and 30% of base opacity
-		expect(result).toContain('rgba(255, 0, 0, 1)');
-		expect(result).toContain('rgba(255, 0, 0, 0.6)');
-		expect(result).toContain('rgba(255, 0, 0, 0.3)');
-	});
-
-	it('should use increasing blur radius across layers', () => {
-		const result = buildGlowBoxShadow('#FF0000', 30, 0.75);
-		expect(result).toBeDefined();
-		// r1 = 10, r2 = 20, r3 = 30
-		expect(result).toContain('0 0 10px');
-		expect(result).toContain('0 0 20px');
-		expect(result).toContain('0 0 30px');
+	it('should grow the silhouette by 0.417 R and blur it by R / 3', () => {
+		// PowerPoint 16: erfc edge centred 0.417 R out with a deviation of R / 6.
+		expect(buildGlowBoxShadow('#FF0000', 30, 1)).toBe('0 0 10px 12.5px rgba(255, 0, 0, 1)');
 	});
 
 	it('should default opacity to 0.75 when undefined', () => {

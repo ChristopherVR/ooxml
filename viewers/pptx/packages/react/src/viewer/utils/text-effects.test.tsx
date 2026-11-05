@@ -72,7 +72,7 @@ describe('buildTextShadowCss', () => {
 		};
 		const result = buildTextShadowCss(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('2px 3px 4px rgba(0,0,0,0.5)');
+		expect(result).toContain('2px 3px 2.9px rgba(0,0,0,0.5)');
 	});
 
 	it('generates preset shadow from name and color', () => {
@@ -107,7 +107,7 @@ describe('buildTextShadowCss', () => {
 		};
 		const result = buildTextShadowCss(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('6px');
+		expect(result).toContain('4.3px');
 	});
 
 	it('uses default offset values when not provided', () => {
@@ -283,7 +283,7 @@ describe('buildTextGlowFilter', () => {
 		};
 		const result = buildTextGlowFilter(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('drop-shadow(0 0 8px');
+		expect(result).toContain('drop-shadow(0 0 3.04px');
 		expect(result).toContain('rgba(255,255,0,0.6)');
 	});
 
@@ -291,13 +291,13 @@ describe('buildTextGlowFilter', () => {
 		const style: TextStyle = { textGlowColor: '#00FF00' };
 		const result = buildTextGlowFilter(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('6px'); // default radius
+		expect(result).toContain('2.28px'); // default radius 6, layers of 0.38 R
 	});
 
 	it('triggers on radius > 0 even without explicit color', () => {
 		const style: TextStyle = { textGlowRadius: 10 };
 		const result = buildTextGlowFilter(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('10px');
+		expect(result).toContain('3.8px');
 	});
 });

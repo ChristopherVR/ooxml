@@ -163,12 +163,10 @@ describe('getGlowBoxShadowCss', () => {
 		expect(getGlowBoxShadowCss('#ff0', 0, 0.5)).toBeUndefined();
 	});
 
-	it('produces three layered shadows', () => {
+	it('produces one spread layer', () => {
 		const css = getGlowBoxShadowCss('#ffff00', 9, 1);
-		// r1 = 3, r2 = 6, r3 = 9
-		expect(css).toContain('0 0 3px rgba(255, 255, 0, 1)');
-		expect(css).toContain('0 0 6px rgba(255, 255, 0, 0.6)');
-		expect(css).toContain('0 0 9px');
+		// one layer grown by 0.417 R and blurred by R / 3
+		expect(css).toBe('0 0 3px 3.8px rgba(255, 255, 0, 1)');
 	});
 });
 
@@ -235,7 +233,8 @@ describe('getEffectFilterCss', () => {
 	it('glow produces a drop-shadow filter', () => {
 		const css = getEffectFilterCss({ glowColor: '#ffff00', glowRadius: 12, glowOpacity: 0.75 });
 		expect(css).toBeDefined();
-		expect(css).toContain('drop-shadow(0 0 6px rgba(255, 255, 0, 0.75))');
+		// three chained layers of 0.38 R stand in for the grown silhouette
+		expect(css).toBe(Array(3).fill('drop-shadow(0 0 4.56px rgba(255, 255, 0, 0.75))').join(' '));
 	});
 
 	it('soft edge without an element id falls back to a capped blur filter', () => {
@@ -350,7 +349,9 @@ describe('getComputedEffectStyle', () => {
 			}),
 		);
 		expect(result.boxShadow).toContain('rgba(0, 0, 0,');
-		expect(result.filter).toContain('drop-shadow');
+		// a shape's glow is a spread box-shadow layer, not a filter
+		expect(result.boxShadow).toContain('4.2px rgba(0, 255, 0,');
+		expect(result.filter).not.toContain('drop-shadow');
 		// Soft edge now emits an SVG alpha-feather filter reference when an
 		// element id is present, instead of a whole-element blur().
 		expect(result.filter).toContain('url(#soft-edge-');

@@ -178,13 +178,8 @@ describe('buildGlowBoxShadow', () => {
 		expect(buildGlowBoxShadow('#FF0000', 0, 0.75)).toBeUndefined();
 	});
 
-	it('produces 3 layered shadows with decreasing opacity', () => {
-		const result = buildGlowBoxShadow('#FF0000', 30, 1);
-		const shadowCount = (result?.match(/0 0 \d+px/gu) ?? []).length;
-		expect(shadowCount).toBe(3);
-		expect(result).toContain('rgba(255, 0, 0, 1)');
-		expect(result).toContain('rgba(255, 0, 0, 0.6)');
-		expect(result).toContain('rgba(255, 0, 0, 0.3)');
+	it('produces one spread layer: grown by 0.417 R, blurred by a deviation of R / 6', () => {
+		expect(buildGlowBoxShadow('#FF0000', 30, 1)).toBe('0 0 10px 12.5px rgba(255, 0, 0, 1)');
 	});
 
 	it('defaults opacity to 0.75 when undefined', () => {

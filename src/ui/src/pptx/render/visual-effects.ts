@@ -32,6 +32,7 @@ import { getShapeType, isImageLikeElement } from 'ooxml-core/pptx';
 
 import { chartAreaEffectStyle } from './chart-format/chart-area-outer-effects';
 import { hexToRgbUnit } from './color-units';
+import { glowCssLengths, glowFilterLengths, shadowBlurToCss } from './effect-profile';
 import type { ReflectionWrapperStyle } from './reflection';
 import { getReflectionWrapperStyle } from './reflection';
 
@@ -180,10 +181,10 @@ export function getOuterShadowCss(
 			: usesOoxmlDefaults
 				? 0
 				: 6;
-	// DrawingML `blurRad` is a radius while CSS shadows take a Gaussian
-	// standard deviation. Halving authored OOXML radii matches PowerPoint's
-	// falloff; host-authored CSS-style values retain their historical meaning.
-	const blur = usesOoxmlDefaults ? rawBlur / 2 : rawBlur;
+	// DrawingML `blurRad` is not a CSS blur length: PowerPoint paints a Gaussian
+	// of deviation 0.326 * blurRad (see effect-profile.ts), a CSS length of
+	// 0.654 * blurRad. Host-authored CSS-style values retain their meaning.
+	const blur = usesOoxmlDefaults ? shadowBlurToCss(rawBlur) : rawBlur;
 	const opacity =
 		typeof style.shadowOpacity === 'number' && Number.isFinite(style.shadowOpacity)
 			? clampUnitInterval(style.shadowOpacity)
@@ -279,7 +280,7 @@ export function getCompositeOuterShadowFilterCss(
 				: usesOoxmlDefaults
 					? 0
 					: 6;
-		const blur = usesOoxmlDefaults ? rawBlur / 2 : rawBlur;
+		const blur = usesOoxmlDefaults ? shadowBlurToCss(rawBlur) : rawBlur;
 		const opacity =
 			typeof shadow.opacity === 'number' && Number.isFinite(shadow.opacity)
 				? clampUnitInterval(shadow.opacity)
@@ -388,14 +389,10 @@ export function getGlowBoxShadowCss(
 	const baseOpacity = typeof opacity === 'number' ? clampUnitInterval(opacity) : 0.75;
 	const normalizedColor = normalizeHexColor(color, DEFAULT_GLOW_COLOR);
 
-	const r1 = Math.round(radius * 0.33);
-	const c1 = colorWithOpacity(normalizedColor, baseOpacity);
-	const r2 = Math.round(radius * 0.66);
-	const c2 = colorWithOpacity(normalizedColor, baseOpacity * 0.6);
-	const r3 = Math.round(radius);
-	const c3 = colorWithOpacity(normalizedColor, baseOpacity * 0.3);
-
-	return `0 0 ${r1}px ${c1}, 0 0 ${r2}px ${c2}, 0 0 ${r3}px ${c3}`;
+	// One layer: the silhouette grown and blurred the way PowerPoint's glow is.
+	const { spread, blur } = glowCssLengths(radius);
+	const glowColor = colorWithOpacity(normalizedColor, baseOpacity);
+	return `0 0 ${Math.round(blur * 10) / 10}px ${Math.round(spread * 10) / 10}px ${glowColor}`;
 }
 
 /**
@@ -639,21 +636,30 @@ export function hasEffectDagProperties(style: ShapeStyle | undefined): boolean {
 export function getEffectFilterCss(
 	style: ShapeStyle | undefined,
 	elementId?: string,
+	options: { glow?: boolean } = {},
 ): string | undefined {
 	if (!style) {
 		return undefined;
 	}
 	const parts: string[] = [];
 
-	// Outer glow → drop-shadow
-	if (style.glowColor && style.glowColor !== 'transparent' && style.glowRadius) {
+	// Outer glow → a chain of drop-shadows. A shape paints its glow as a
+	// spread `box-shadow` instead ({@link getGlowBoxShadowCss}), which takes
+	// the exact profile; this chain is for what has no box (pictures, groups).
+	if (
+		options.glow !== false &&
+		style.glowColor &&
+		style.glowColor !== 'transparent' &&
+		style.glowRadius
+	) {
 		const glowOpacity = typeof style.glowOpacity === 'number' ? style.glowOpacity : 0.75;
-		const glowRad = Math.max(0, style.glowRadius / 2);
 		const glowCol = colorWithOpacity(
 			normalizeHexColor(style.glowColor, DEFAULT_GLOW_COLOR),
 			glowOpacity,
 		);
-		parts.push(`drop-shadow(0 0 ${glowRad}px ${glowCol})`);
+		for (const blur of glowFilterLengths(style.glowRadius)) {
+			parts.push(`drop-shadow(0 0 ${blur}px ${glowCol})`);
+		}
 	}
 
 	// Soft edges → feather only the alpha edge (SVG filter), not the whole
@@ -1083,7 +1089,9 @@ export function getComputedEffectStyle(
 		result.boxShadow = shadowParts.join(', ');
 	}
 
-	const filter = getEffectFilterCss(style, element.id);
+	// A shape's glow is in its box-shadow; the filter chain is for the rest.
+	const glowInBoxShadow = !shadowsCompositePixels && options.includeGlowBoxShadow !== false;
+	const filter = getEffectFilterCss(style, element.id, { glow: !glowInBoxShadow });
 	// As above for `a:ln/a:effectLst/a:glow`, which is a `drop-shadow` filter.
 	const lineGlow = paintsLineEffectsItself ? undefined : getLineGlowFilterCss(style);
 	const filterParts = [compositeShadow, filter, lineGlow].filter(

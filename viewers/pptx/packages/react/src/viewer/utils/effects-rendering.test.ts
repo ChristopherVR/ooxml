@@ -55,7 +55,7 @@ describe('text effect CSS output', () => {
 		expect(result).toBeDefined();
 		expect(result).toContain('2px');
 		expect(result).toContain('3px');
-		expect(result).toContain('4px');
+		expect(result).toContain('2.9px');
 		expect(result).toContain('rgba(255,0,0,0.5)');
 	});
 
@@ -156,7 +156,8 @@ describe('text effect CSS output', () => {
 		};
 		const result = buildTextGlowFilter(style);
 		expect(result).toBeDefined();
-		expect(result).toContain('drop-shadow(0 0 8px');
+		// three chained layers of 0.38 R (see effect-profile.ts)
+		expect(result).toContain('drop-shadow(0 0 3.04px');
 		expect(result).toContain('rgba(0,255,0,0.7)');
 	});
 });

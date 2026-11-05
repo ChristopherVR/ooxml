@@ -158,7 +158,7 @@ describe('text outline / stroke rendering', () => {
 		expect(style.WebkitTextStroke).toBe('1px #000000');
 		expect(style.paintOrder).toBe('stroke fill');
 		expect(style.textShadow).toBeDefined();
-		expect(style.textShadow).toContain('2px 2px 4px');
+		expect(style.textShadow).toContain('2px 2px 2.9px');
 	});
 
 	it('applies outline to hyperlink text segments', () => {

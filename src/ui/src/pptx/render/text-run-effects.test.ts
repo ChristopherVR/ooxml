@@ -24,7 +24,7 @@ describe('buildTextRunFilterChain', () => {
 			textHslHue: 30,
 		} as TextStyle);
 		expect(out).toBe(
-			'drop-shadow(0 0 2px rgba(255,0,0,0.6)) drop-shadow(0 0 4px rgba(255,0,0,0.36)) drop-shadow(0 0 6px rgba(255,0,0,0.18)) blur(2px) blur(4px) hue-rotate(30deg)',
+			'drop-shadow(0 0 2.28px rgba(255,0,0,0.6)) drop-shadow(0 0 2.28px rgba(255,0,0,0.6)) drop-shadow(0 0 2.28px rgba(255,0,0,0.6)) blur(2px) blur(4px) hue-rotate(30deg)',
 		);
 	});
 });
@@ -54,7 +54,7 @@ describe('buildRunEffectStyle', () => {
 			textShadowOffsetY: 3,
 			textShadowOpacity: 0.5,
 		} as TextStyle);
-		expect(css.textShadow).toBe('2px 3px 4px rgba(0,0,0,0.5)');
+		expect(css.textShadow).toBe('2px 3px 2.9px rgba(0,0,0,0.5)');
 	});
 
 	it('sets an inset boxShadow from inner shadow props (never filter/drop-shadow)', () => {
@@ -73,7 +73,7 @@ describe('buildRunEffectStyle', () => {
 			textGlowRadius: 5,
 			textBlurRadius: 1,
 		} as TextStyle);
-		expect(css.filter).toContain('drop-shadow(0 0 5px');
+		expect(css.filter).toContain('drop-shadow(0 0 1.9px');
 		expect(css.filter).toContain('blur(1px)');
 	});
 

@@ -94,25 +94,21 @@ describe('morph effect carry', () => {
 		).toBe(undefined);
 	});
 
-	it('dissolves two glows, each riding the box, as a chain narrow glow first', () => {
+	it('dissolves two glows, each riding the box, as spread box-shadow layers', () => {
+		// A shape's glow is one `box-shadow` layer (grown by 0.417 R, blurred by R / 3), so
+		// it crosses over like a shadow: the outgoing glow rides the box at twice its
+		// size in the incoming frame, and an overlap layer holds where both lie.
 		const glow = { glowColor: '#FFFF00', glowRadius: 20, glowOpacity: 0.75 };
 		const carry = buildMorphEffectCarry(rect('a', 200, 100, glow), rect('b', 400, 200, glow), 'to');
-		const radii = (value: string | undefined) =>
-			[
-				...(value ?? '').matchAll(
-					/drop-shadow\(0px 0px ([\d.]+)px rgba\(255, 255, 0, ([\d.]+)\)\)/gu,
-				),
-			].map((m) => [Number(m[1]), Number(m[2])]);
-		// In the incoming frame the outgoing glow rides at twice its radius, so
-		// the incoming (narrower) one is painted first.
-		expect(radii(at(carry?.keyframes, 0, 'filter'))).toEqual([
-			[10, 0],
-			[20, 0.75],
-		]);
-		expect(radii(at(carry?.keyframes, 100, 'filter'))).toEqual([
-			[10, 0.75],
-			[20, 0],
-		]);
+		const start = at(carry?.keyframes, 0, 'box-shadow');
+		const end = at(carry?.keyframes, 100, 'box-shadow');
+		// incoming glow: blur 6.7, spread 8.3; the outgoing one rides at 2x (13.4, 16.6)
+		expect(start).toContain('0px 0px 6.7px 8.3px rgba(255, 255, 0, 0)');
+		expect(start).toContain('0px 0px 13.4px 16.6px rgba(255, 255, 0, 0.75)');
+		expect(end).toContain('0px 0px 6.7px 8.3px rgba(255, 255, 0, 0.75)');
+		expect(end).toContain('0px 0px 13.4px 16.6px rgba(255, 255, 0, 0)');
+		// nothing is left to carry in a filter any more
+		expect(at(carry?.keyframes, 50, 'filter')).toBeUndefined();
 	});
 
 	it('fades only the incoming effects in under a ghost that paints the outgoing ones', () => {

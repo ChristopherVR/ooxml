@@ -135,10 +135,10 @@ describe('chart area outer shadow and glow on the chart container', () => {
 		} as unknown as PptxElement;
 	}
 
-	it('casts the shadow as a box-shadow and the glow as a drop-shadow, outside the frame', () => {
+	it('casts the shadow and the glow as box-shadows, outside the frame', () => {
 		const style = getShapeFillStrokeStyle(chart(SHADOW)) as Record<string, unknown>;
 		expect(String(style['boxShadow'])).toContain('rgba(0, 0, 0, 0.4)');
-		expect(String(style['filter'])).toContain('drop-shadow');
+		expect(String(style['boxShadow'])).toMatch(/0 0 [\d.]+px [\d.]+px rgba\(/);
 	});
 
 	it('leaves a chart without chart-area effects plain', () => {
@@ -169,5 +169,31 @@ describe('svelte getShapeFillStrokeStyle: centred outline is not clipped to half
 		expect(bare).toContain('path(');
 		expect(stroked.length).toBeGreaterThan(bare.length);
 		expect(stroked.startsWith(bare.slice(0, bare.length - 2))).toBe(true);
+	});
+});
+
+describe('PowerPoint edge profiles of a shape shadow and glow', () => {
+	// Measured on PowerPoint 16 (see src/ui/src/pptx/render/effect-profile.ts): the
+	// blurred shadow is a Gaussian of 0.326 blurRad (CSS length 0.654 blurRad), the
+	// glow one box-shadow layer grown by 0.417 R and blurred by R / 3.
+	it('paints a blurRad 30 shadow at 20px and a rad 30 glow as one spread layer', () => {
+		const style = getShapeFillStrokeStyle(
+			shape({
+				shapeStyle: {
+					fillColor: '#C07020',
+					shadowColor: '#000000',
+					shadowBlur: 30,
+					shadowOpacity: 1,
+					outerShadowXml: {},
+					glowColor: '#FF0000',
+					glowRadius: 30,
+					glowOpacity: 0.6,
+				},
+			}),
+		);
+		expect(String(style['boxShadow'])).toBe(
+			'0px 0px 20px rgba(0, 0, 0, 1), 0 0 10px 12.5px rgba(255, 0, 0, 0.6)',
+		);
+		expect(String(style['filter'] ?? '')).not.toContain('drop-shadow');
 	});
 });

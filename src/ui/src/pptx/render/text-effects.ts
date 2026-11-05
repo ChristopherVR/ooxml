@@ -12,6 +12,7 @@
  */
 import type { TextStyle } from 'ooxml-core/pptx';
 
+import { glowFilterLengths, TEXT_SHADOW_BLUR_TO_CSS } from './effect-profile';
 import { normalizeHexColor } from './fill-style';
 
 /** Build a CSS `text-shadow` value from text shadow properties. */
@@ -30,7 +31,8 @@ export function buildTextShadowCss(style: TextStyle): string | undefined {
 		const r = parseInt(color.slice(1, 3), 16);
 		const g = parseInt(color.slice(3, 5), 16);
 		const b = parseInt(color.slice(5, 7), 16);
-		shadows.push(`${ox}px ${oy}px ${blur}px rgba(${r},${g},${b},${opacity})`);
+		const cssBlur = Math.round(blur * TEXT_SHADOW_BLUR_TO_CSS * 10) / 10;
+		shadows.push(`${ox}px ${oy}px ${cssBlur}px rgba(${r},${g},${b},${opacity})`);
 	}
 
 	// Preset shadow (approximate as outer shadow with preset-derived offsets)
@@ -145,17 +147,12 @@ export function getTextAlphaOpacity(style: TextStyle): number | undefined {
 /**
  * Build a CSS `filter` value for a text run's glow (`a:glow`).
  *
- * A single `drop-shadow(0 0 <radius>px ...)` is one Gaussian blur pass, which
- * spreads the colour into a soft, low-opacity cloud reaching all the way out
- * to `radius` - visibly more diffuse than PowerPoint's glow, which reads as a
- * fairly solid, uniform-width halo hugging the glyph before fading out only
- * near the outer edge (COM-verified against `audit-text` slide 14's "GLOW"
- * run). Stacking three `drop-shadow()`s at increasing radius and decreasing
- * opacity - the same 0.33/0.66/1.0 radius and opacity falloff
- * {@link getGlowBoxShadowCss} already uses for a SHAPE's glow (`box-shadow`
- * layers) - builds up a denser core near the glyph with a shorter actual
- * fade tail, matching PowerPoint's tighter halo far more closely than one
- * wide blur.
+ * PowerPoint's glow grows the glyph by about 0.42 of its radius and then blurs
+ * it (see `effect-profile.ts`); a single `drop-shadow()` only blurs, so it
+ * paints a thin, pale cloud. Three equal `drop-shadow()`s chained (each shadows
+ * the previous one's output) build the solid halo: mean abs diff outside the
+ * glyphs against PowerPoint's export of an 80 pt bold run, 0.36 where the
+ * 0.33/0.66/1.0 stack read 0.77.
  */
 export function buildTextGlowFilter(style: TextStyle): string | undefined {
 	const hasGlow =
@@ -169,16 +166,7 @@ export function buildTextGlowFilter(style: TextStyle): string | undefined {
 	const r = parseInt(color.slice(1, 3), 16);
 	const g = parseInt(color.slice(3, 5), 16);
 	const b = parseInt(color.slice(5, 7), 16);
-	const layers = [
-		{ fraction: 0.33, opacityScale: 1 },
-		{ fraction: 0.66, opacityScale: 0.6 },
-		{ fraction: 1, opacityScale: 0.3 },
-	];
-	return layers
-		.map(({ fraction, opacityScale }) => {
-			const layerRadius = Math.max(0, Math.round(radius * fraction));
-			const layerOpacity = Math.min(1, opacity * opacityScale);
-			return `drop-shadow(0 0 ${layerRadius}px rgba(${r},${g},${b},${layerOpacity}))`;
-		})
+	return glowFilterLengths(radius)
+		.map((blur) => `drop-shadow(0 0 ${blur}px rgba(${r},${g},${b},${Math.min(1, opacity)}))`)
 		.join(' ');
 }

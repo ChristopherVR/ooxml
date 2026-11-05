@@ -194,7 +194,8 @@ describe('chart element fills, lines, 3-D and text on the slide', () => {
 		expect(style.glowRadius).toBeCloseTo(20 / 3);
 		const fx = getComputedEffectStyle(element(data));
 		expect(fx.boxShadow).toContain('rgba(0, 0, 0, 0.4)');
-		expect(fx.filter).toContain('drop-shadow');
+		// the glow is a spread box-shadow layer beside the shadow (radius 20 / 3 px)
+		expect(fx.boxShadow).toContain('0 0 2.2px 2.8px');
 		const noFill = { ...data, style: { ...data.style, chartAreaFill: 'none' } };
 		expect(chartAreaEffectStyle(noFill)).toBeUndefined();
 	});

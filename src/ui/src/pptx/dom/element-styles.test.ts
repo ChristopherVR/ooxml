@@ -267,10 +267,10 @@ describe('chart area outer shadow and glow on the chart container', () => {
 		} as unknown as PptxElement;
 	}
 
-	it('casts the shadow as a box-shadow and the glow as a drop-shadow, outside the frame', () => {
+	it('casts the shadow and the glow as box-shadows, outside the frame', () => {
 		const style = getShapeFillStrokeStyle(chart(SHADOW)) as Record<string, unknown>;
 		expect(String(style['boxShadow'])).toContain('rgba(0, 0, 0, 0.4)');
-		expect(String(style['filter'])).toContain('drop-shadow');
+		expect(String(style['boxShadow'])).toMatch(/0 0 [\d.]+px [\d.]+px rgba\(/);
 	});
 
 	it('leaves a chart without chart-area effects plain', () => {

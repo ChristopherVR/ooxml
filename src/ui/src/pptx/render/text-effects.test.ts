@@ -78,7 +78,8 @@ describe('text effect css builders', () => {
 			textShadowOffsetY: 3,
 			textShadowOpacity: 0.5,
 		} as TextStyle);
-		expect(out).toBe('2px 3px 4px rgba(0,0,0,0.5)');
+		// blurRad 4 px paints a deviation of about 0.72 * 4 / 2 px (see effect-profile.ts)
+		expect(out).toBe('2px 3px 2.9px rgba(0,0,0,0.5)');
 	});
 
 	it('builds an inset box-shadow, never an outer drop-shadow', () => {
@@ -121,11 +122,15 @@ describe('text effect css builders', () => {
 		// (COM-verified against `audit-text` slide 14's "GLOW" run). Three
 		// stacked layers at increasing radius / decreasing opacity build a
 		// denser near-glyph core, matching a shape's `getGlowBoxShadowCss`.
-		const out = buildTextGlowFilter({ textGlowColor: '#ffff00', textGlowRadius: 6 } as TextStyle);
-		expect(out).toContain('drop-shadow(0 0 2px');
-		expect(out).toContain('drop-shadow(0 0 4px');
-		expect(out).toContain('drop-shadow(0 0 6px');
-		expect(out?.match(/drop-shadow\(/gu)?.length).toBe(3);
+		// Fitted against PowerPoint's export of a glowing run: three equal layers
+		// of 0.38 of the radius, each at the glow's alpha, widen the halo like the
+		// dilation PowerPoint applies before blurring.
+		const out = buildTextGlowFilter({
+			textGlowColor: '#ffff00',
+			textGlowRadius: 20,
+			textGlowOpacity: 0.6,
+		} as TextStyle);
+		expect(out).toBe(Array(3).fill('drop-shadow(0 0 7.6px rgba(255,255,0,0.6))').join(' '));
 	});
 
 	it('builds a soft-edge blur filter only for a positive radius', () => {

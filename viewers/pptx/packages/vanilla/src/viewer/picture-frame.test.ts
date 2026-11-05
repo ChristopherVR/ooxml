@@ -90,3 +90,34 @@ describe('vanilla: a picture paints its own frame and outer shadow', () => {
 		expect(box?.querySelector('.pptxv-image-surface')).toBeNull();
 	});
 });
+
+describe('vanilla: a shape paints the shadow and glow profiles of PowerPoint', () => {
+	// Measured on PowerPoint 16 (see src/ui/src/pptx/render/effect-profile.ts): the
+	// blurred shadow is a Gaussian of 0.326 blurRad (CSS length 0.654 blurRad), the
+	// glow one box-shadow layer grown by 0.417 R and blurred by R / 3.
+	it('paints a blurRad 30 shadow at 20px and a rad 30 glow as one spread layer', () => {
+		const box = stageWith({
+			id: 'fx',
+			type: 'shape',
+			shapeType: 'rect',
+			x: 100,
+			y: 75,
+			width: 200,
+			height: 150,
+			shapeStyle: {
+				fillColor: '#C07020',
+				shadowColor: '#000000',
+				shadowBlur: 30,
+				shadowOpacity: 1,
+				outerShadowXml: {},
+				glowColor: '#FF0000',
+				glowRadius: 30,
+				glowOpacity: 0.6,
+			},
+		} as PptxElement).querySelector<HTMLElement>('[data-element-id="fx"]');
+		expect(box?.style.boxShadow).toBe(
+			'0px 0px 20px rgba(0, 0, 0, 1), 0 0 10px 12.5px rgba(255, 0, 0, 0.6)',
+		);
+		expect(box?.style.filter ?? '').not.toContain('drop-shadow');
+	});
+});
