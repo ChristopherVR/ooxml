@@ -113,7 +113,7 @@ export interface PresentationControllerDeps {
 	 * hyperlinks"). Forwarded to `PresentationActionRunner.confirmUrl`;
 	 * omitted opens unconditionally.
 	 */
-	confirmUrl?(url: string): boolean;
+	confirmUrl?(url: string): boolean | Promise<boolean>;
 	/**
 	 * The `p:showPr/p:sldRg` authored slide-range restriction (deck opens into
 	 * slides `fromIndex..toIndex` rather than the whole deck), when no custom

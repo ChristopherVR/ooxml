@@ -11,7 +11,7 @@
 	 * as ordinary text, an inline `m:oMath` as nothing, and furigana vanished.
 	 */
 	import type { ParagraphRun } from 'ooxml-ui/pptx';
-	import { isRunHyperlinkClickable, runEquationMathMl } from 'ooxml-ui/pptx';
+	import { isRunHyperlinkClickable, runEquationMathMl, safeOpenUrl } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerOptions } from '../state/viewer-options-context';
@@ -34,8 +34,22 @@
 	 */
 	function onHyperlinkClick(event: MouseEvent): void {
 		const href = run.hyperlink?.href;
-		if (href && !optionsState.confirmHyperlink(href, t('pptx.options.trust.confirmHyperlinks'))) {
-			event.preventDefault();
+		if (!href) {
+			return;
+		}
+		const answer = optionsState.confirmHyperlink(href, t, event.currentTarget as Element);
+		if (answer === true) {
+			return;
+		}
+		// The in-app question is asynchronous, so the browser must not follow the link now.
+		event.preventDefault();
+		if (answer !== false) {
+			const target = run.hyperlink?.target ?? '_blank';
+			void answer.then((confirmed) => {
+				if (confirmed) {
+					safeOpenUrl(href, target);
+				}
+			});
 		}
 	}
 </script>

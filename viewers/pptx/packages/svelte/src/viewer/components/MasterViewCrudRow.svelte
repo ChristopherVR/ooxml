@@ -7,6 +7,7 @@
 	 * `editor.masterCrud`; this component only paints it and forwards clicks.
 	 */
 	import type { MasterViewCrudActionId } from 'ooxml-ui/pptx';
+	import { promptNameDialog } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';
@@ -25,7 +26,8 @@
 		error = null;
 		try {
 			await editor.masterCrud.run(id, {
-				promptName: (current: string) => window.prompt(t('pptx.masterView.renamePrompt'), current),
+				promptName: (current: string) =>
+					promptNameDialog(t('pptx.masterView.renamePrompt'), current, { t }),
 				notify: (message: string) => {
 					error = message;
 				},

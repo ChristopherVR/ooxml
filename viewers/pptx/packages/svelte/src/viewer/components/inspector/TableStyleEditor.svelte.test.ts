@@ -24,7 +24,23 @@ function styleMap(): ParsedTableStyleMap {
 
 let cleanup: (() => void) | undefined;
 
+/** Answer the in-app dialog the component opened: type into its input, then press a button. */
+async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promise<void> {
+	const dialog = await vi.waitFor(() => {
+		const found = document.querySelector('office-ui-message-dialog');
+		if (!found) throw new Error('no dialog yet');
+		return found;
+	});
+	const input = dialog.shadowRoot?.querySelector('input');
+	if (input && value !== undefined) input.value = value;
+	(dialog.shadowRoot?.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	flushSync();
+}
+
 afterEach(() => {
+	document.querySelectorAll('office-ui-message-dialog').forEach((node) => node.remove());
+
 	cleanup?.();
 	cleanup = undefined;
 	vi.unstubAllGlobals();
@@ -88,8 +104,7 @@ describe('tableStyleEditor', () => {
 		expect(emitted?.[STYLE_ID].wholeTblFill).toStrictEqual({ schemeColor: '', color: '#ff0000' });
 	});
 
-	it('creates a new style from the current one, based on a prompt', () => {
-		vi.stubGlobal('prompt', vi.fn().mockReturnValue('My Custom Style'));
+	it('creates a new style from the current one, based on a prompt', async () => {
 		let emitted: ParsedTableStyleMap | undefined;
 		let assignedId: string | undefined;
 		const target = mountEditor({
@@ -105,6 +120,7 @@ describe('tableStyleEditor', () => {
 		) as HTMLButtonElement;
 		createButton.click();
 		flushSync();
+		await answerDialog('confirm', 'My Custom Style');
 
 		const ids = Object.keys(emitted ?? {});
 		expect(ids).toHaveLength(2);
@@ -113,8 +129,7 @@ describe('tableStyleEditor', () => {
 		expect(assignedId).toBe(newId);
 	});
 
-	it('creates a brand-new style with no current style selected and assigns it', () => {
-		vi.stubGlobal('prompt', vi.fn().mockReturnValue('Brand New Style'));
+	it('creates a brand-new style with no current style selected and assigns it', async () => {
 		let emitted: ParsedTableStyleMap | undefined;
 		let assignedId: string | undefined;
 		const target = mountEditor({
@@ -133,6 +148,7 @@ describe('tableStyleEditor', () => {
 		expect(createButton.disabled).toBeFalsy();
 		createButton.click();
 		flushSync();
+		await answerDialog('confirm', 'Brand New Style');
 
 		const ids = Object.keys(emitted ?? {});
 		expect(ids).toHaveLength(1);
@@ -140,8 +156,7 @@ describe('tableStyleEditor', () => {
 		expect(assignedId).toBe(ids[0]);
 	});
 
-	it('deletes the style after confirmation and reports both the map and the id', () => {
-		vi.stubGlobal('confirm', vi.fn().mockReturnValue(true));
+	it('deletes the style after confirmation and reports both the map and the id', async () => {
 		let emitted: ParsedTableStyleMap | undefined;
 		let deletedId: string | undefined;
 		let closed = false;
@@ -157,10 +172,29 @@ describe('tableStyleEditor', () => {
 		) as HTMLButtonElement;
 		deleteButton.click();
 		flushSync();
+		await answerDialog('confirm');
 
 		expect(deletedId).toBe(STYLE_ID);
 		expect(Object.keys(emitted ?? {})).toHaveLength(0);
 		expect(closed).toBeTruthy();
+	});
+
+	it('keeps the style when the delete dialog is cancelled', async () => {
+		const onDeleteStyle = vi.fn();
+		const target = mountEditor({
+			styleMap: styleMap(),
+			styleId: STYLE_ID,
+			onStyleMapChange: vi.fn(),
+			onDeleteStyle,
+			onClose: vi.fn(),
+		});
+		const deleteButton = Array.from(target.querySelectorAll('.actions button')).find((b) =>
+			b.textContent?.includes('Delete style'),
+		) as HTMLButtonElement;
+		deleteButton.click();
+		flushSync();
+		await answerDialog('cancel');
+		expect(onDeleteStyle).not.toHaveBeenCalled();
 	});
 
 	it('disables field controls when canEdit is false', () => {

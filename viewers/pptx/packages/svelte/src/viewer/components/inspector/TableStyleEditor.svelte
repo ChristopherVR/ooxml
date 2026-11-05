@@ -14,7 +14,13 @@
 		normalizeTableStyleGuid,
 	} from 'pptx-viewer-core';
 	import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
-	import { applyTableStyleFieldEdit, describeTableStyleEditor, TABLE_STYLE_EDITOR_PARTS } from 'ooxml-ui/pptx';
+	import {
+		applyTableStyleFieldEdit,
+		confirmDeleteDialog,
+		describeTableStyleEditor,
+		promptNameDialog,
+		TABLE_STYLE_EDITOR_PARTS,
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import TableStyleEditorFields from './TableStyleEditorFields.svelte';
@@ -60,10 +66,11 @@
 		onStyleMapChange({ ...styleMap, [nextEntry.styleId]: nextEntry });
 	}
 
-	function createFromCurrent(): void {
-		const name = window.prompt(
+	async function createFromCurrent(): Promise<void> {
+		const name = await promptNameDialog(
 			t('pptx.tableStyleEditor.newStyleNamePrompt'),
 			entry ? `${entry.styleName ?? ''} Copy`.trim() : '',
+			{ t },
 		);
 		if (!name) {
 			return;
@@ -76,8 +83,12 @@
 		onAssignStyle?.(created.styleId);
 	}
 
-	function handleDelete(): void {
-		if (!entry || !styleMap || !window.confirm(t('pptx.tableStyleEditor.deleteConfirm'))) {
+	async function handleDelete(): Promise<void> {
+		if (
+			!entry ||
+			!styleMap ||
+			!(await confirmDeleteDialog(t('pptx.tableStyleEditor.deleteConfirm'), { t }))
+		) {
 			return;
 		}
 		const nextMap: ParsedTableStyleMap = { ...styleMap };

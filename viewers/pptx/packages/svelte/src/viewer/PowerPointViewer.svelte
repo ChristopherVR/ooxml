@@ -142,7 +142,7 @@
 			goToSlide: (index) => vm.viewer.goTo(index),
 			onHyperlinkClick: (link) => props.onhyperlinkclick?.(link),
 			confirmExternalHyperlink: (url) =>
-				vm.optionsState.confirmHyperlink(url, t('pptx.options.trust.confirmHyperlinks')),
+				vm.optionsState.confirmHyperlink(url, t, rootEl),
 		});
 	});
 	useCustomizationConstraints(customization, vm.optionsState);
