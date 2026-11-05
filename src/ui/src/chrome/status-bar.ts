@@ -18,6 +18,8 @@ export interface OfficeStatusText {
 	live?: boolean | undefined;
 	/** Hide on phone widths. */
 	narrowHide?: boolean | undefined;
+	/** Visually hidden, still read by assistive technology (a live announcement). */
+	srOnly?: boolean | undefined;
 }
 
 /** A status-bar button (Notes, Comments, a view switch). `label` is its name and ScreenTip. */
@@ -157,7 +159,7 @@ export class OfficeUiStatusBar extends OfficeElement {
 							html`<span
 								class="item${spec.tone === 'saving' ? ' saving' : ''}${
 									spec.tone === 'error' ? ' error' : ''
-								}${spec.narrowHide ? ' narrow-hide' : ''}"
+								}${spec.narrowHide ? ' narrow-hide' : ''}${spec.srOnly ? ' sr' : ''}"
 								data-item=${spec.id}
 								title=${ifDefined(spec.title)}
 								aria-live=${ifDefined(spec.live ? 'polite' : undefined)}

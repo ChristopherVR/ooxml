@@ -52,6 +52,11 @@ export const translationsEn: Record<string, string> = {
 
 	// Autosave
 	'pptx.autosave.saving': 'Saving…',
+	'pptx.autosave.progress.uploading': 'Saving… {percent}%',
+	'pptx.autosave.progress.checking': 'Checking for changes…',
+	'pptx.autosave.progress.downloading': 'Getting the latest version… {percent}%',
+	'pptx.autosave.progress.downloadingUnknown': 'Getting the latest version…',
+	'pptx.autosave.progress.merging': 'Combining edits…',
 	'pptx.autosave.saved': 'Saved {{time}}',
 	'pptx.autosave.error': 'Autosave error',
 	'pptx.autosave.disabled': 'AutoSave unavailable',

@@ -47,6 +47,8 @@ export function officeStatusBarState(state: StatusBarViewState): OfficeStatusBar
 			},
 			{ id: 'language', text: t('pptx.statusBar.language'), narrowHide: true },
 			{ id: 'save', text: state.saveText, tone: state.saveKind, narrowHide: true },
+			// Announced politely and only on steps worth hearing; the visible text above is not live.
+			{ id: 'save-live', text: state.saveAnnouncement ?? '', live: true, srOnly: true },
 		],
 		toggles: [
 			{

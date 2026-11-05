@@ -10,6 +10,7 @@
  */
 import { isActionHidden } from './toolbar-actions';
 import type { ToolbarActionId } from './toolbar-actions';
+import type { SaveProgressStatus } from './controller/save-progress-controller';
 
 export type StatusBarTranslate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -33,6 +34,8 @@ export interface StatusBarViewState {
 	/** Already-translated save indicator, see {@link resolveStatusBarSave}. */
 	saveText: string;
 	saveKind?: StatusBarSaveKind;
+	/** Polite announcement of a save in progress, throttled; empty when none runs. */
+	saveAnnouncement?: string;
 	/** Omit to hide the whole zoom cluster. */
 	zoomPercent?: number;
 	showNotes?: boolean;
@@ -73,7 +76,11 @@ export function resolveStatusBarSave(
 	autosave: StatusBarAutosave | undefined,
 	dirty: boolean,
 	now: number = Date.now(),
-): { text: string; kind: StatusBarSaveKind } {
+	progress?: SaveProgressStatus,
+): { text: string; kind: StatusBarSaveKind; announcement?: string } {
+	if (progress) {
+		return { text: progress.text, kind: 'saving', announcement: progress.announcement };
+	}
 	if (autosave?.state === 'saving') {
 		return { text: t('pptx.autosave.saving'), kind: 'saving' };
 	}
@@ -127,13 +134,21 @@ export interface StatusBarHostState {
 	/** The host's `hiddenActions`: `zoom`, `notes` and `fullscreen` (the Slide Show button). */
 	hiddenActions?: readonly ToolbarActionId[] | undefined;
 	translate: StatusBarTranslate;
+	/** A save to the host's storage in progress, see `saveProgressStatus`. */
+	saveProgress?: SaveProgressStatus | undefined;
 	/** Clock for the "Saved n minutes ago" text; defaults to now. */
 	now?: number;
 }
 
 /** The status bar's state for a host: save text, gating and translation in one place. */
 export function statusBarState(host: StatusBarHostState): StatusBarViewState {
-	const save = resolveStatusBarSave(host.translate, host.autosave, host.dirty, host.now);
+	const save = resolveStatusBarSave(
+		host.translate,
+		host.autosave,
+		host.dirty,
+		host.now,
+		host.saveProgress,
+	);
 	const handles = (id: keyof NonNullable<StatusBarHostState['handles']>) =>
 		host.handles?.[id] !== false;
 	const hidden = (id: ToolbarActionId) => isActionHidden(id, host.hiddenActions);
@@ -143,6 +158,7 @@ export function statusBarState(host: StatusBarHostState): StatusBarViewState {
 		activeSlideIndex: host.activeSlideIndex,
 		saveText: save.text,
 		saveKind: save.kind,
+		...(save.announcement ? { saveAnnouncement: save.announcement } : {}),
 		...(zoom === undefined ? {} : { zoomPercent: zoom }),
 		showNotes: handles('notes') && !hidden('notes'),
 		notesExpanded: host.notesExpanded === true,
