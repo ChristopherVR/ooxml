@@ -78,6 +78,7 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 			dashType,
 			Math.max(strokeWidth, 1),
 			ss?.customDashSegments,
+			ss?.lineCap,
 		);
 		const startArrow = ss?.connectorStartArrow;
 		const endArrow = ss?.connectorEndArrow;
@@ -88,7 +89,7 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 
 		const compoundOffsets = getCompoundLineOffsets(compoundLine, strokeWidth);
 		const compoundWidths = getCompoundLineWidths(compoundLine, strokeWidth);
-		const strokeCap = svgLineCap(ss?.lineCap);
+		const strokeCap = svgLineCap(ss?.lineCap, dashArray !== undefined);
 
 		const textEl = hasTextProperties(el) ? el : undefined;
 		const connectorText = textEl?.text?.trim() ?? '';

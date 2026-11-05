@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+	buildDashArray,
 	connectorSnapTransform,
 	connectorStrandScreenWidth,
 	getLineGlowFilterCss,
@@ -75,20 +76,18 @@ const strokeColor = computed(() =>
 );
 const strokeOpacity = computed(() => ss.value?.strokeOpacity ?? 1);
 
-const dashArray = computed<string | undefined>(() => {
-	const dash = ss.value?.strokeDash;
-	const w = Math.max(strokeWidth.value, 1);
-	if (!dash || dash === 'solid') {
-		return undefined;
-	}
-	if (dash === 'dot' || dash === 'sysDot') {
-		return `${w} ${w}`;
-	}
-	return `${w * 3} ${w}`;
-});
+// The shared dash builder: PowerPoint's own pattern per preset and `custDash`.
+const dashArray = computed<string | undefined>(() =>
+	buildDashArray(
+		ss.value?.strokeDash,
+		strokeWidth.value,
+		ss.value?.customDashSegments,
+		ss.value?.lineCap,
+	),
+);
 
 /** SVG cap of the painted strands: the line's own `cap`, flat when it declares none. */
-const strokeLinecap = computed(() => svgLineCap(ss.value?.lineCap));
+const strokeLinecap = computed(() => svgLineCap(ss.value?.lineCap, dashArray.value !== undefined));
 
 const w = computed(() => Math.max(props.element.width, 1));
 const h = computed(() => Math.max(props.element.height, 1));

@@ -46,6 +46,7 @@ import {
 } from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
+import { isDashedStroke } from './dash-pattern';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
 import {
@@ -540,8 +541,9 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 			normalizeStrokeDashType(style?.strokeDash),
 			Math.max(lineWidth, 1),
 			style?.customDashSegments,
+			style?.lineCap,
 		),
-		lineCap: svgLineCap(style?.lineCap),
+		lineCap: svgLineCap(style?.lineCap, isDashedStroke(style?.strokeDash)),
 		lineJoin: outlineStrokeJoin(element).join,
 	};
 }

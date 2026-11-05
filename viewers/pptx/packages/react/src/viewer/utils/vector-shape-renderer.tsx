@@ -60,6 +60,7 @@ export function renderVectorShape(
 		dashType,
 		Math.max(strokeWidth, 1),
 		element.shapeStyle?.customDashSegments,
+		element.shapeStyle?.lineCap,
 	);
 	if (normalizedType === 'can' || normalizedType === 'cylinder') {
 		const width = Math.max(element.width, 1);
@@ -305,7 +306,7 @@ export function renderVectorShape(
 		const endArrowL = element.shapeStyle?.connectorEndArrowLength;
 		const compoundLine = element.shapeStyle?.compoundLine;
 		// Line cap from a:ln/@cap (flat -> butt, sq -> square, rnd -> round).
-		const connectorLineCap = svgLineCap(element.shapeStyle?.lineCap);
+		const connectorLineCap = svgLineCap(element.shapeStyle?.lineCap, dashArray !== undefined);
 		// Hit target width: wide invisible stroke so thin lines are easy to click
 		const hitTargetWidth = Math.max(strokeWidth * 3, 12);
 		const offsets = getCompoundLineOffsets(compoundLine, strokeWidth);

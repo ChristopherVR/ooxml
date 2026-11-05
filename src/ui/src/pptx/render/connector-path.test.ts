@@ -21,28 +21,30 @@ describe('buildDashArray', () => {
 
 	it('produces a distinct pattern per preset (not a single 3w/w approximation)', () => {
 		// Aligned with the shape/border `getSvgStrokeDasharray` output.
-		expect(buildDashArray('dot', 2)).toBe('2 4');
-		expect(buildDashArray('sysDot', 2)).toBe('2 4');
-		expect(buildDashArray('dash', 2)).toBe('8 4');
-		expect(buildDashArray('lgDash', 4)).toBe('28 10');
+		// Lengths measured from PowerPoint's own exports (see dash-pattern.ts).
+		expect(buildDashArray('dot', 2)).toBe('2 6');
+		expect(buildDashArray('sysDot', 2)).toBe('2 2');
+		expect(buildDashArray('dash', 2)).toBe('8 6');
+		expect(buildDashArray('sysDash', 2)).toBe('6 2');
+		expect(buildDashArray('lgDash', 4)).toBe('32 12');
 	});
 
 	it('emits multi-part patterns for dash-dot families', () => {
-		expect(buildDashArray('dashDot', 2)).toBe('8 4 2 4');
-		expect(buildDashArray('lgDashDotDot', 2)).toBe('14 5 2 4 2 4');
+		expect(buildDashArray('dashDot', 2)).toBe('8 6 2 6');
+		expect(buildDashArray('lgDashDotDot', 2)).toBe('16 6 2 6 2 6');
 	});
 
 	it('honours custDash segments (percent-of-width, 1000ths of a percent)', () => {
 		const segments = [
-			{ dash: 400, space: 300 },
-			{ dash: 100, space: 300 },
+			{ dash: 400000, space: 300000 },
+			{ dash: 100000, space: 300000 },
 		];
 		// custDash implies the custom family even without a prstDash token.
-		expect(buildDashArray(undefined, 2, segments)).toBe('0.8 0.6 0.2 0.6');
+		expect(buildDashArray(undefined, 2, segments)).toBe('8 6 2 6');
 	});
 
 	it('clamps sub-1px stroke widths to 1 before scaling', () => {
-		expect(buildDashArray('dot', 0)).toBe('1 2');
+		expect(buildDashArray('dot', 0)).toBe('1 3');
 	});
 });
 

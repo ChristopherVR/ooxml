@@ -76,7 +76,7 @@ function strokeContext(
 		strokePaint,
 		strokeWidth,
 		dashArray,
-		lineCap: svgLineCap(shapeStyle?.lineCap),
+		lineCap: svgLineCap(shapeStyle?.lineCap, dashArray !== undefined),
 		lineJoin,
 		miterLimit,
 		offsets: getCompoundLineOffsets(shapeStyle?.compoundLine, strokeWidth),

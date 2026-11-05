@@ -156,8 +156,13 @@ export function buildConnectorGeometry(
 	const strokeWidth = Math.max(0, ss?.strokeWidth ?? 2);
 	const strokeColor = ss?.strokeColor ?? DEFAULT_STROKE_COLOR;
 	const strokeOpacity = ss?.strokeOpacity ?? 1;
-	const dashArray = buildDashArray(ss?.strokeDash, strokeWidth, ss?.customDashSegments);
-	const strokeLinecap = svgLineCap(ss?.lineCap);
+	const dashArray = buildDashArray(
+		ss?.strokeDash,
+		strokeWidth,
+		ss?.customDashSegments,
+		ss?.lineCap,
+	);
+	const strokeLinecap = svgLineCap(ss?.lineCap, dashArray !== undefined);
 	const compoundOffsets = getCompoundLineOffsets(ss?.compoundLine, strokeWidth);
 	const compoundWidths = getCompoundLineWidths(ss?.compoundLine, strokeWidth);
 

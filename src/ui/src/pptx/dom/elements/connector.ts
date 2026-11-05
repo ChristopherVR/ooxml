@@ -45,7 +45,12 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 	// Shared dash builder: honours every `prstDash` preset (dash/lgDash/dashDot/
 	// sysDashDotDot, etc.) plus a `custDash` segment list, instead of the old
 	// local `3w/w` approximation that collapsed every non-dot preset to one shape.
-	const dashArray = buildDashArray(ss?.strokeDash, strokeWidth, ss?.customDashSegments);
+	const dashArray = buildDashArray(
+		ss?.strokeDash,
+		strokeWidth,
+		ss?.customDashSegments,
+		ss?.lineCap,
+	);
 
 	const w = Math.max(element.width, 1);
 	const h = Math.max(element.height, 1);
@@ -182,7 +187,7 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 			'stroke-width': strandWidth,
 			'stroke-opacity': strokeOpacity,
 			'stroke-dasharray': dashArray,
-			'stroke-linecap': svgLineCap(ss?.lineCap),
+			'stroke-linecap': svgLineCap(ss?.lineCap, dashArray !== undefined),
 			'marker-start': idx === 0 && startMarkerId ? `url(#${startMarkerId})` : undefined,
 			'marker-end': idx === offsets.length - 1 && endMarkerId ? `url(#${endMarkerId})` : undefined,
 			filter: shadowId ? `url(#${shadowId})` : undefined,

@@ -435,7 +435,24 @@ describe('connectorRenderer - dash array', () => {
 				zIndex: 0,
 			},
 		});
-		expect(wrapper.get('line').attributes('stroke-dasharray')).toBe('2 2');
+		expect(wrapper.get('line').attributes('stroke-dasharray')).toBe('2 6');
+	});
+
+	it('uses the shared PowerPoint dash lengths, not a private approximation', () => {
+		const line = (strokeDash: string, lineCap?: 'flat' | 'rnd' | 'sq') =>
+			mount(ConnectorRenderer, {
+				props: {
+					element: connector({
+						shapeStyle: { strokeColor: '#000', strokeWidth: 6, strokeDash, lineCap },
+					} as never),
+					zIndex: 0,
+				},
+			}).get('line');
+		expect(line('dash').attributes('stroke-dasharray')).toBe('24 18');
+		expect(line('sysDash').attributes('stroke-dasharray')).toBe('18 6');
+		// A round cap is part of the dash; a square cap does not extend interior dashes.
+		expect(line('dash', 'rnd').attributes('stroke-dasharray')).toBe('18 24');
+		expect(line('dash', 'sq').attributes('stroke-linecap')).toBe('butt');
 	});
 
 	it('omits stroke-dasharray for solid', () => {

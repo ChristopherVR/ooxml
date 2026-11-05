@@ -109,12 +109,14 @@ export function connectorStrandScreenWidth(
  */
 export function svgLineCap(
 	lineCap: 'flat' | 'rnd' | 'sq' | undefined,
+	dashed = false,
 ): 'butt' | 'round' | 'square' {
 	switch (lineCap) {
 		case 'flat':
 			return 'butt';
 		case 'sq':
-			return 'square';
+			// PowerPoint leaves interior dashes flat; only the line's own ends overshoot.
+			return dashed ? 'butt' : 'square';
 		case 'rnd':
 			return 'round';
 		default:

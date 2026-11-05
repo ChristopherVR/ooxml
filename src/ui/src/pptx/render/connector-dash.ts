@@ -30,11 +30,13 @@ export interface DashSegment {
  * @param strokeWidth        Resolved stroke width in px.
  * @param customDashSegments Optional `custDash` segments; when present they take
  *                           precedence and are rendered as an explicit pattern.
+ * @param lineCap            `a:ln/@cap`: a round cap is part of each dash.
  */
 export function buildDashArray(
 	dash: string | undefined,
 	strokeWidth: number,
 	customDashSegments?: ReadonlyArray<DashSegment>,
+	lineCap?: 'flat' | 'rnd' | 'sq',
 ): string | undefined {
 	const segments =
 		customDashSegments && customDashSegments.length > 0
@@ -43,5 +45,5 @@ export function buildDashArray(
 	// A `custDash` implies the `custom` dash family even when no `@prstDash`
 	// token was authored alongside it.
 	const dashType = segments ? 'custom' : normalizeStrokeDashType(dash);
-	return getSvgStrokeDasharray(dashType, strokeWidth, segments);
+	return getSvgStrokeDasharray(dashType, strokeWidth, segments, lineCap);
 }
