@@ -2310,6 +2310,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 						:template-elements="activeTemplateElements"
 						:edit-template-mode="editTemplateMode && !presentation.presenting.value"
 						:inline-editing-element-id="inlineEdit.inlineEditingElementId.value"
+						:selected-element-ids="selection.selectedElementIds.value"
 						@update:fit-scale="fitScale = $event"
 						@create-guide="drag.addGuide"
 					>

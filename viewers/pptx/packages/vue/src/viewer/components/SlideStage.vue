@@ -5,6 +5,7 @@ import {
 	applyRenderedElementAccessibility,
 	deviceStrokeStageStyle,
 	getSlideBackgroundStyle,
+	resolveStageEdgeBleeds,
 	visibleTemplateElements,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
@@ -91,6 +92,11 @@ const props = withDefaults(
 		 * instead of duplicating it underneath the editor (issue #182).
 		 */
 		inlineEditingElementId?: string | null;
+		/**
+		 * The selection: its boxes never grow under a neighbour (see
+		 * `edgeBleeds`), so a drag never uncovers a grown strip.
+		 */
+		selectedElementIds?: readonly string[];
 	}>(),
 	{ scale: 1 },
 );
@@ -117,6 +123,20 @@ const templateElements = computed<PptxElement[]>(() => [
 // find the rest of its chain and render only its own slice of the overflow.
 // Template elements are included because a chain may be authored on a layout.
 provideSlideElements(() => [...templateElements.value, ...(props.slide?.elements ?? [])]);
+
+/**
+ * Boxes that grow under an abutting opaque box to close the anti-aliasing seam
+ * (issue #141). Not on a Morph layer, whose copies animate independently.
+ */
+const edgeBleeds = computed(() =>
+	props.preserveElementIds
+		? new Map()
+		: resolveStageEdgeBleeds(
+				templateElements.value,
+				props.slide,
+				props.selectedElementIds?.length ? new Set(props.selectedElementIds) : undefined,
+			),
+);
 
 /** Number of template elements, used to offset the main layer's z-index above them. */
 const templateCount = computed(() => templateElements.value.length);
@@ -223,6 +243,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 			:element="element"
 			:media-data-urls="mediaDataUrls"
 			:z-index="index"
+			:edge-bleed="edgeBleeds.get(element.id)"
 			:interactive="templateLayerInteractive"
 			:marked="interactive ?? false"
 			:template-editing="editTemplateMode ?? false"
@@ -235,6 +256,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 			:element="element"
 			:media-data-urls="mediaDataUrls"
 			:z-index="index + templateCount"
+			:edge-bleed="edgeBleeds.get(element.id)"
 			:interactive="interactive ?? false"
 			:presenting="presenting ?? false"
 			:inline-editing-element-id="inlineEditingElementId"

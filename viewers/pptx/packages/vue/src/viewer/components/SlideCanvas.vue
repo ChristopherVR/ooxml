@@ -66,6 +66,8 @@ const props = defineProps<{
 	 * static text render while the editor overlay draws it instead.
 	 */
 	inlineEditingElementId?: string | null;
+	/** The selection, whose boxes {@link SlideStage} keeps exact while it is edited. */
+	selectedElementIds?: readonly string[];
 }>();
 
 const emit = defineEmits<{
@@ -207,6 +209,7 @@ watch(
 				:template-elements="templateElements"
 				:edit-template-mode="editTemplateMode"
 				:inline-editing-element-id="inlineEditingElementId"
+				:selected-element-ids="selectedElementIds"
 				interactive
 			>
 				<slot />

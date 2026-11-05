@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { AbuttingEdgeBleed } from 'ooxml-ui/pptx';
 import {
+	abuttingEdgeBleedStyle,
 	buildParagraphs,
 	buildTextBody3DSceneStyle,
 	buildTextStyleOverrideCss,
@@ -61,6 +63,11 @@ const props = defineProps<{
 	element: PptxElement;
 	mediaDataUrls: Map<string, string>;
 	zIndex: number;
+	/**
+	 * Grow this box under an abutting opaque box above it, closing the
+	 * anti-aliasing seam between the two (shared `resolveAbuttingEdgeBleeds`).
+	 */
+	edgeBleed?: AbuttingEdgeBleed;
 	/**
 	 * When true, emit the `data-pptx-element` test/interaction hook. Only the
 	 * primary editable canvas sets this; thumbnails, the sorter, the export
@@ -170,7 +177,16 @@ const shapeDivStyle = computed<CSSProperties>(() => {
 	if (c.transform && s.transform) {
 		merged.transform = `${c.transform} ${s.transform}`;
 	}
-	return merged;
+	// Close the seam with an abutting opaque box above (issue #141): empty for
+	// nearly every element, so the box style is untouched.
+	return {
+		...merged,
+		...(abuttingEdgeBleedStyle(
+			props.element,
+			props.edgeBleed,
+			merged as Readonly<Record<string, unknown>>,
+		) as CSSProperties),
+	};
 });
 const backgroundLayers = computed(() =>
 	getBackgroundAnimationLayers(props.element, shapeDivStyle.value, backgroundState.value),
