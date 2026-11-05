@@ -248,7 +248,15 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	cropTop?: number;
 	cropRight?: number;
 	cropBottom?: number;
+	/**
+	 * Opacity from 0 (transparent) to 1 (opaque, the default), saved as the
+	 * picture's transparency (`a:blip/a:alphaModFix`).
+	 */
 	opacity?: number;
+	/** Brightness change in percent, -100 to 100 (`a:blip/a:lum/@bright`). */
+	brightness?: number;
+	/** Contrast change in percent, -100 to 100 (`a:blip/a:lum/@contrast`). */
+	contrast?: number;
 }
 
 // ---------------------------------------------------------------------------
