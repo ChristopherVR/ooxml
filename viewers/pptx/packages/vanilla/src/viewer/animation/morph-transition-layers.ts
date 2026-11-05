@@ -72,6 +72,36 @@ export function stackInRunOrder(stage: HTMLElement, ids: readonly string[]): HTM
 	return stage;
 }
 
+/**
+ * Clone the node a morph copy stands for under the copy's own id, beside it.
+ *
+ * A text pair carried piece by piece (`textPieceSources`) is painted as one
+ * copy of each half per piece, which the slide never rendered; the other
+ * bindings render the copy's element, this one clones the stage it was given.
+ * The copy can be taller than its source (its box grown to hold overflowing
+ * lines), and its keyframes pivot on that box's centre, so the clone takes the
+ * copy's height.
+ */
+export function materializeMorphCopy(
+	stage: HTMLElement,
+	copy: { id: string; height: number },
+	sources: ReadonlyMap<string, string> | undefined,
+): HTMLElement {
+	const id = copy.id;
+	const sourceId = sources?.get(id);
+	if (sourceId === undefined) {
+		return stage;
+	}
+	const node = stage.querySelector<HTMLElement>(`[data-element-id="${CSS.escape(sourceId)}"]`);
+	if (node) {
+		const clone = node.cloneNode(true) as HTMLElement;
+		clone.dataset.elementId = id;
+		clone.style.height = `${copy.height}px`;
+		node.after(clone);
+	}
+	return stage;
+}
+
 /** A stage clone must use the plan's destination text layout for these ghosts. */
 function replaceOutgoingTextLayouts(
 	stage: HTMLElement,
@@ -176,14 +206,16 @@ export function buildMorphCrossfadeGroups(
 		// wording a fraction of a pixel off the live stage.
 		const half = (
 			stage: HTMLElement,
-			id: string,
+			element: { id: string; height: number },
 			state: 'outgoing' | 'lifted',
 			zIndex: number,
 			animation: string | undefined,
 		): HTMLElement => {
 			const layer = buildLayer(
 				doc,
-				keepOnlyElements(stage, [id]),
+				keepOnlyElements(materializeMorphCopy(stage, element, morphPlan.textPieceSources), [
+					element.id,
+				]),
 				zIndex,
 				animation ?? 'none',
 				state,
@@ -199,14 +231,14 @@ export function buildMorphCrossfadeGroups(
 		wrapper.append(
 			half(
 				outgoing.cloneNode(true) as HTMLElement,
-				group.outgoing.id,
+				group.outgoing,
 				'outgoing',
 				0,
 				group.outgoingAnimation,
 			),
 			half(
 				incoming.cloneNode(true) as HTMLElement,
-				group.incoming.id,
+				group.incoming,
 				'lifted',
 				1,
 				group.incomingAnimation,
