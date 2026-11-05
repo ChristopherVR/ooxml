@@ -76,10 +76,12 @@ export function getStaticElementVisualState(
 		element.type === 'shape' && hasFill ? defaultTextColorForFill(fill) : DEFAULT_TEXT_COLOR,
 	);
 	const isImage = element.type === 'picture' || element.type === 'image';
-	const letsTextOverflow =
-		hasTextProperties(element) &&
-		element.textStyle?.autoFitMode === 'shrink' &&
-		(element.type === 'text' || element.locks?.txBox === true);
+	// PowerPoint draws text past its box (a 44 pt line overflowing a fixed
+	// `wrap="none"` box runs on to the slide edge, also through a morph),
+	// unless the body itself clips, which the text body's own `overflow`
+	// carries. Clipping the wrapper cut the morph copies' overflow off
+	// ("Lorem ipsurr") where the other four bindings drew it.
+	const letsTextOverflow = hasTextProperties(element) && Boolean(element.text?.trim());
 	const shapeType = hasShapeProperties(element) ? element.shapeType : undefined;
 	const isCallout =
 		isWedgeCalloutPresetShape(shapeType) ||
