@@ -1,4 +1,10 @@
-import { elementHitTargetStyle, getFrameEffectStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+import type { AbuttingEdgeBleed } from 'ooxml-ui/pptx';
+import {
+	abuttingEdgeBleedStyle,
+	elementHitTargetStyle,
+	getFrameEffectStyle,
+	shouldRenderHitTarget,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 
 import { getContainerStyle, getShapeFillStrokeStyle } from './element-style';
@@ -74,6 +80,7 @@ export function buildShapeContainerStyle(
 	animatesFill: boolean | undefined,
 	animatesStroke: boolean | undefined,
 	editTemplateMode: boolean,
+	edgeBleed?: AbuttingEdgeBleed,
 ): StyleMap {
 	const container = getContainerStyle(element, zIndex);
 	const shape = getShapeFillStrokeStyle(element, parentGroupFill, animatesFill, animatesStroke);
@@ -85,7 +92,9 @@ export function buildShapeContainerStyle(
 	if (container['transform'] && shape['transform']) {
 		merged['transform'] = `${String(container['transform'])} ${String(shape['transform'])}`;
 	}
-	return merged;
+	// Close the seam with an abutting opaque box above (issue #141): empty for
+	// nearly every element, so the box style is untouched.
+	return { ...merged, ...abuttingEdgeBleedStyle(element, edgeBleed, merged) };
 }
 
 /**

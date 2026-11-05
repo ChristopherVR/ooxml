@@ -41,23 +41,24 @@ import {
 	collectConnectorSiteCandidates,
 	createInlineListSeed,
 	deviceStrokeStageStyle,
-	inlineListBodyText,
 	editorNudgeDelta,
 	findConnectorSiteNear,
 	getConnectorEndpointHandles,
 	getResizeHandleHitAreaStyle,
+	inlineListBodyText,
 	isTemplateElement,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	resolveConnectorEndpointUpdate,
 	resolveGroupDoubleClickTarget,
 	resolveGroupPressTarget,
-	setPendingCaretPoint,
-	takePendingCaretPoint,
-	withConnectorEndpointUpdate,
+	resolveStageEdgeBleeds,
 	RULER_FONT_SIZE,
 	RULER_THICKNESS,
+	setPendingCaretPoint,
+	takePendingCaretPoint,
 	visibleTemplateElements as filterVisibleTemplateElements,
+	withConnectorEndpointUpdate,
 } from 'ooxml-ui/pptx';
 import type { AiCanvasHighlight, AiChangeBatch } from 'ooxml-ui/pptx/ai';
 import { resolveContextMenuElementId } from 'ooxml-ui/pptx/render/context-menu-target';
@@ -700,6 +701,19 @@ export class SlideCanvasComponent implements SlideContext {
 		...this.visibleTemplateElements(),
 		...this.elements(),
 	]);
+
+	/**
+	 * Boxes that grow under an abutting opaque box to close the anti-aliasing
+	 * seam (issue #141); the selection keeps its exact box while it is edited.
+	 */
+	readonly edgeBleeds = computed(() => {
+		const selected = this.selectedIds();
+		return resolveStageEdgeBleeds(
+			this.visibleTemplateElements(),
+			this.slide(),
+			selected.length > 0 ? new Set(selected) : undefined,
+		);
+	});
 
 	/**
 	 * OOXML field-substitution context for the slide being rendered. Built from

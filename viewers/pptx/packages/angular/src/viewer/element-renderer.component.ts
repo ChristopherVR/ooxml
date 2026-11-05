@@ -9,7 +9,11 @@ import {
 	isElementHidden,
 	inlineElementPointerEvents,
 } from 'ooxml-ui/pptx';
-import type { ElementAnimationState, FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import type {
+	AbuttingEdgeBleed,
+	ElementAnimationState,
+	FieldSubstitutionContext,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTableData, ShapeStyle } from 'pptx-viewer-core';
 
 import { AnimationPlaybackService } from './animation-playback.service';
@@ -66,6 +70,8 @@ export class ElementRendererComponent {
 	readonly element = input.required<PptxElement>();
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
 	readonly zIndex = input<number>(0);
+	/** Grow under an abutting opaque box (shared `resolveAbuttingEdgeBleeds`). */
+	readonly edgeBleed = input<AbuttingEdgeBleed | undefined>(undefined);
 
 	/**
 	 * Host opt-in to the Three.js SmartArt renderer. Optional so renderers used
@@ -264,6 +270,7 @@ export class ElementRendererComponent {
 			state?.animatesFill,
 			state?.animatesStroke,
 			this.editTemplateMode(),
+			this.edgeBleed(),
 		);
 	});
 	readonly children = computed<PptxElement[]>(() => {
