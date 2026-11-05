@@ -25,6 +25,8 @@ import { renderAccountPage } from './file-tab-account';
 import { createFileActionGrid } from './file-tab-actions';
 import { button, iconButton, labeledIconButton } from './file-tab-dom';
 import { createLucideIcon } from './file-tab-icons';
+import { renderOpenPlaces } from './file-tab-places';
+import type { OpenPlacesView } from './file-tab-places';
 
 export interface FileTab {
 	el: HTMLElement;
@@ -77,6 +79,9 @@ export function createFileTab(
 	let regionHandle: RegionHandle | null = null;
 	let hasMacros = false;
 	let query = '';
+	// File > Open's selected place and the mounted cloud place (shared `render/cloud-open`).
+	let placeId: string | undefined;
+	let places: OpenPlacesView | null = null;
 	let recent: BackstageRecentFile[] = [];
 	void (async () => {
 		recent = await listBackstageRecentFiles(
@@ -112,6 +117,8 @@ export function createFileTab(
 	function releaseRegion(): void {
 		regionHandle?.destroy();
 		regionHandle = null;
+		places?.destroy();
+		places = null;
 	}
 	function renderNav(): void {
 		nav.replaceChildren();
@@ -289,7 +296,19 @@ export function createFileTab(
 		if (page === 'home' || page === 'new') {
 			renderTemplates();
 		}
-		if (page === 'home' || page === 'open') {
+		if (page === 'open') {
+			places = renderOpenPlaces(doc, t, main, {
+				cloud: handlers.getCloudFiles?.() ?? { providers: [], locale: undefined, open: () => {} },
+				selectedId: placeId,
+				onSelect: (id) => {
+					placeId = id;
+					render();
+				},
+				onOpen: (file) => run(() => handlers.getCloudFiles?.().open(file)),
+			});
+		}
+		// A cloud place replaces the device search, Browse button and recent list.
+		if ((page === 'home' || page === 'open') && !places?.provider) {
 			renderRecent();
 		}
 		if (['info', 'saveAs', 'print', 'share', 'export'].includes(page)) {

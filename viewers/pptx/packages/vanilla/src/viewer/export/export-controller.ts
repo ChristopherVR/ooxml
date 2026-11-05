@@ -50,6 +50,11 @@ export interface ExportControllerDeps {
 	rasterizeSlideToTiles?: RasterizeSlideToTiles;
 	/** Base file name (without extension) for downloads. Defaults to `presentation`. */
 	fileName?: string;
+	/**
+	 * The open document's name, read on every export so a file opened from a cloud place names
+	 * its downloads (wins over {@link fileName}).
+	 */
+	getFileName?: () => string | undefined;
 	/** Live translator (host-supplied), for the print path's own UI text. */
 	getTranslator?: ExportCaptureDeps['getTranslator'];
 	/** Options > Advanced > "Print hidden slides". */
@@ -129,12 +134,16 @@ function deckDataFromState(state: ViewerState): PptxData {
  */
 export function createExportController(deps: ExportControllerDeps): ExportController {
 	let exporting = false;
+	const fileName = (): string | undefined =>
+		deps.getFileName ? deps.getFileName() : deps.fileName;
 
 	const capture: ExportCaptureDeps = {
 		store: deps.store,
 		rasterizeSlide: deps.rasterizeSlide,
 		rasterizeSlideToRaster: deps.rasterizeSlideToRaster,
-		baseName: resolveExportBaseName(deps.fileName),
+		get baseName() {
+			return resolveExportBaseName(fileName());
+		},
 		getTranslator: deps.getTranslator,
 		getIncludeHiddenSlides: deps.getIncludeHiddenSlides,
 		getPrintHighQuality: deps.getPrintHighQuality,
@@ -265,7 +274,7 @@ export function createExportController(deps: ExportControllerDeps): ExportContro
 	 * The shared helper derives `deck.json` from the raw source file name.
 	 */
 	function exportJson(): void {
-		exportDeckJson(deckDataFromState(deps.store.get()), deps.fileName);
+		exportDeckJson(deckDataFromState(deps.store.get()), fileName());
 	}
 
 	return {

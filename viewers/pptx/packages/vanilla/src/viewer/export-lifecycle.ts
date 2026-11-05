@@ -54,6 +54,8 @@ export interface ExportLifecycleDeps {
 	getPrintHighQuality?(): boolean;
 	/** Source file name (title-bar name); drives export download names. */
 	fileName?: string;
+	/** The open document's name, read on every export (wins over {@link fileName}). */
+	getFileName?(): string | undefined;
 }
 
 /** The export slice of the public viewer API (see `PptxViewerInstance`). */
@@ -136,6 +138,7 @@ export function createExportLifecycle(deps: ExportLifecycleDeps): ExportLifecycl
 		rasterizeSlideToRaster: rasterizer.rasterizeSlideToRaster,
 		rasterizeSlideToTiles: rasterizer.rasterizeSlideToTiles,
 		fileName: deps.fileName,
+		...(deps.getFileName ? { getFileName: () => deps.getFileName?.() } : {}),
 		getTranslator: deps.getTranslator,
 		getIncludeHiddenSlides: deps.getIncludeHiddenSlides,
 		getPrintHighQuality: deps.getPrintHighQuality,

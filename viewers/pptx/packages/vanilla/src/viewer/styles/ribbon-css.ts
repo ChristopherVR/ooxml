@@ -342,6 +342,8 @@ export const RIBBON_CSS = `
 .pptxv-bs-back-row{display:flex;height:40px;flex:none;border-bottom:1px solid var(--pptx-border,#ddd)}
 .pptxv-bs-back{width:100%;height:40px;border-bottom:0}
 .pptxv-backstage nav{padding:0 0 8px}
+/* File > Open places ("This device" and the host's cloud providers). */
+.pptxv-bs-places{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.pptxv-bs-places button{padding:6px 16px;border:1px solid var(--pptx-border,#d7d7d7);background:none;color:inherit;font-size:13px}.pptxv-bs-places button:not(.active):hover{background:var(--pptx-accent,#eadfd8)}.pptxv-bs-places button.active{border-color:var(--pptx-primary,#c43e1c);background:var(--pptx-card,#fff);color:var(--pptx-primary,#c43e1c)}.pptxv-bs-cloud-place{max-width:900px;margin-top:24px}
 /* Mobile: stack the backstage and turn the vertical rail into a horizontal,
    scrollable tab bar with a bottom indicator, and compact the content pane.
    Same breakpoint as the rest of the mobile chrome (mobile-sheet-css.ts). */

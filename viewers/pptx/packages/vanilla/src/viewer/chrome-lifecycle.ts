@@ -50,6 +50,7 @@ import {
 } from './ui';
 import type { RegionSet, RegionSupport } from './ui/region-set';
 import { createRegionSet } from './ui/region-set';
+import type { BackstageCloudFiles } from './ui/ribbon/ribbon-types';
 
 /** The mutable pieces `PptxViewer` owns for one chrome mount lifecycle. */
 export interface ChromeLifecycle {
@@ -80,6 +81,11 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	 * tests) working without this field.
 	 */
 	initialTheme?: ViewerTheme;
+	/**
+	 * The open document's name for the title bar: a file opened from a cloud place brings its own.
+	 * Omitted (direct construction in tests) falls back to the `fileName` option.
+	 */
+	getFileName?(): string | undefined;
 	/**
 	 * The title-bar AutoSave switch state: the user's preference inside the
 	 * host's `autosave` ceiling. Omitted (direct construction in tests) falls
@@ -204,7 +210,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		editable: (options.editable ?? false) && !options.readOnly && isEditingAllowed(customization()),
 		hiddenActions: options.hiddenActions,
 		titleBar: {
-			fileName: options.fileName,
+			fileName: deps.getFileName ? deps.getFileName() : options.fileName,
 			// The host option is a policy CEILING, not the preference: it only
 			// forces the switch off (and inert) when it is explicitly `false`.
 			autosaveEnabled: deps.isAutosaveSwitchOn?.() ?? options.autosave !== false,
@@ -812,6 +818,10 @@ export interface ChromeHost {
 	openFile(): void;
 	openRecentFile(key: string): void;
 	createPresentation(templateId: string): void;
+	/** The host's `fileProviders` as File > Open places. */
+	getCloudFiles?(): BackstageCloudFiles;
+	/** The open document's name (a cloud file's, or the `fileName` option). */
+	getFileName?(): string | undefined;
 	setTheme(theme: ViewerTheme | undefined): void;
 	applyPresentationTheme(presetId: string): void;
 }
@@ -978,6 +988,8 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		openFile: () => host.openFile(),
 		openRecentFile: (key) => host.openRecentFile(key),
 		createPresentation: (templateId) => host.createPresentation(templateId),
+		getCloudFiles: () => host.getCloudFiles?.(),
+		getFileName: () => (host.getFileName ? host.getFileName() : host.options.fileName),
 		getEditActions: () => host.editor.getEditActions(),
 		getFindReplaceActions: () => host.editor.getFindReplaceActions(),
 		applyPresentationTheme: (presetId) => host.applyPresentationTheme(presetId),

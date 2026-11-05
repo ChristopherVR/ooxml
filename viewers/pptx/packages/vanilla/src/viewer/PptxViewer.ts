@@ -9,6 +9,7 @@ import {
 	commitElementUpdateBatch,
 	createBackstagePresentation,
 	createBlankSlide,
+	createCloudDocumentController,
 	createEmbeddedOutlineFontsSlot,
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
@@ -44,6 +45,7 @@ import {
 	resolveAllowExternalContent,
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
+	resolveCloudDocumentView,
 	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
@@ -65,6 +67,8 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type {
+	CloudDocumentHostValues,
+	CloudOpenedFile,
 	DocumentStorage,
 	ReadOnlySessionActions,
 	SlidePackageClipboard,
@@ -168,6 +172,7 @@ import type { PasteOptionsToolbarHandle } from './ui/paste-options-toolbar';
 import { mountPasteOptionsToolbar } from './ui/paste-options-toolbar';
 import type { RegionSet, RegionSupport } from './ui/region-set';
 import { createRegionSet } from './ui/region-set';
+import type { BackstageCloudFiles } from './ui/ribbon/ribbon-types';
 import { openSignatureStrippedDialog } from './ui/signature-stripped-dialog';
 import { openVersionHistoryPanel } from './ui/version-history-panel';
 import type { ViewerControls } from './viewer-controls';
@@ -197,6 +202,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private readonly availableLocales: readonly LocaleCatalogEntry[];
 	private currentThemeKey: string;
 	private currentLocale: string;
+	/**
+	 * The file opened from a File > Open cloud place: its storage, name, recovery key and edit
+	 * right apply until another document is loaded (shared `render/cloud-open`).
+	 */
+	private readonly cloudDocument = createCloudDocumentController();
 	lifecycle!: ChromeLifecycle;
 	editor!: EditorController;
 	protected readonly exporter: ExportLifecycle;
@@ -452,7 +462,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getTranslator: () => this.t,
 			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
-			getStorage: () => this.options.storage,
+			getStorage: () => this.documentView().storage,
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler, keepPrevious) => this.loading.setHandler(handler, keepPrevious),
 			getUserName: () =>
@@ -511,7 +521,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				resolveImageResolutionScale(this.optionsController.getOptions()),
 			getIncludeHiddenSlides: () => this.optionsController.getOptions().advanced.printHiddenSlides,
 			getPrintHighQuality: () => this.optionsController.getOptions().advanced.printHighQuality,
-			fileName: options.fileName,
+			getFileName: () => this.documentView().fileName,
 		});
 		// File > Options controller: owns the persisted options store and turns
 		// option values into behavior. Created before the parity workflows (which
@@ -781,7 +791,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// exactly as `openRecentFile` does, except it is the SAME document the
 			// user was already editing (not a new one), so Protected View does not
 			// apply to it.
-			loadFile: (bytes) => this.loadFile(bytes, { skipProtectedView: true }),
+			loadFile: (bytes) => this.loadDocument(bytes, { skipProtectedView: true }),
+			// A file opened from a cloud place recovers to its own storage and key.
+			getDocument: () => {
+				const view = this.documentView();
+				return {
+					storage: view.storage,
+					filePath: this.autosaveFilePath(),
+					fileName: view.fileName,
+				};
+			},
 			// Options > General > "Initials": explicit override for the Share
 			// dialog's local-user avatar-circle fallback (see `getUserInitials`
 			// in `collaboration-active-session.ts`).
@@ -985,12 +1004,73 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.renderer.renderAll();
 	}
 
+	/**
+	 * Load another document (the host's, a device file or a recent one): a file opened from a
+	 * cloud place no longer applies.
+	 */
 	async loadFile(
+		file: Blob | ArrayBuffer | Uint8Array,
+		options?: { skipProtectedView?: boolean },
+	): Promise<void> {
+		this.clearCloudFile();
+		await this.loadDocument(file, options);
+	}
+
+	/** The load path itself; a recovery or version restore of the SAME document keeps its origin. */
+	private async loadDocument(
 		file: Blob | ArrayBuffer | Uint8Array,
 		options?: { skipProtectedView?: boolean },
 	): Promise<void> {
 		this.signatureWarningAcknowledged = false;
 		await this.loading.load(file, 'user', options);
+	}
+
+	/**
+	 * File > Open > a cloud place: load the bytes like any open, then save, recover and gate
+	 * editing through the file's own storage and edit right.
+	 */
+	async openCloudFile(file: CloudOpenedFile): Promise<void> {
+		this.cloudDocument.open(file);
+		this.applyCloudDocument();
+		await this.loadDocument(file.bytes);
+	}
+
+	/** Another document replaces the cloud file: the host's storage, name and edit right return. */
+	private clearCloudFile(): void {
+		if (this.cloudDocument.getSnapshot().file) {
+			this.cloudDocument.clear();
+			this.applyCloudDocument();
+		}
+	}
+
+	/** Push the document's name and edit right to the chrome after a cloud open or clear. */
+	private applyCloudDocument(): void {
+		this.lifecycle?.chrome.titleBar?.setFileName(this.documentView().fileName);
+		this.applyEditable(this.effectiveEditable());
+	}
+
+	/** The storage, edit right, name and recovery key of the open document (host's or cloud file's). */
+	private documentView(): CloudDocumentHostValues {
+		return resolveCloudDocumentView(this.cloudDocument.getSnapshot().file, {
+			storage: this.options.storage,
+			canEdit: true,
+			fileName: this.options.fileName,
+			filePath: this.options.filePath ?? this.options.autosaveFilePath,
+		});
+	}
+
+	/** The open document's name, for the title bar (chrome rebuilds read it again). */
+	getFileName(): string | undefined {
+		return this.documentView().fileName;
+	}
+
+	/** The host's `fileProviders` as File > Open places (empty: the Open page has none). */
+	getCloudFiles(): BackstageCloudFiles {
+		return {
+			providers: this.options.fileProviders ?? [],
+			locale: this.currentLocale,
+			open: (file) => void this.openCloudFile(file),
+		};
 	}
 
 	/**
@@ -1020,10 +1100,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	createPresentation(templateId: string): void {
+		this.clearCloudFile();
 		this.editor.commitSlides(createBackstagePresentation(templateId), 0);
 	}
 
 	async loadUrl(url: string): Promise<void> {
+		this.clearCloudFile();
 		this.signatureWarningAcknowledged = false;
 		await this.loading.load(url);
 	}
@@ -1400,10 +1482,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	openVersionHistory(): void {
 		openVersionHistoryPanel(this.doc, this.lifecycle.chrome.root, this.t, {
 			filePath: this.autosaveFilePath(),
-			storage: this.options.storage,
+			storage: this.documentView().storage,
 			// A prior local AutoRecover snapshot of the SAME document, not a new
 			// file being opened, so Protected View does not apply.
-			onRestore: (bytes) => this.loadFile(bytes, { skipProtectedView: true }),
+			onRestore: (bytes) => this.loadDocument(bytes, { skipProtectedView: true }),
 		});
 	}
 
@@ -1837,7 +1919,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			!this.requestedReadOnly &&
 			!this.sessions?.isCollaborationReadOnly() &&
 			isEditingAllowed(this.customization.getResolved()) &&
-			!isReadOnlyLocked(this.store.get())
+			!isReadOnlyLocked(this.store.get()) &&
+			// A file the cloud service leaves read-only stays read-only.
+			this.documentView().canEdit
 		);
 	}
 
@@ -2110,9 +2194,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			format === 'pptx' &&
 			shouldDiscardAutosaveOnSuccessfulSave(this.optionsController.getOptions())
 		) {
-			void deleteAutosaveSnapshot(this.autosaveFilePath(), this.options.storage).catch(() => {
-				// Saving succeeded; recovery cleanup is best-effort here.
-			});
+			void deleteAutosaveSnapshot(this.autosaveFilePath(), this.documentView().storage).catch(
+				() => {
+					// Saving succeeded; recovery cleanup is best-effort here.
+				},
+			);
 		}
 	}
 
@@ -2132,10 +2218,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** IndexedDB key for this deck's AutoRecover snapshot. */
 	private autosaveFilePath(): string {
-		return resolveAutosaveFileKey(
-			this.options.filePath ?? this.options.autosaveFilePath,
-			this.options.fileName,
-		);
+		const view = this.documentView();
+		return resolveAutosaveFileKey(view.filePath, view.fileName);
 	}
 
 	/** File > Options > Save > "cache retention": a one-time sweep on mount. */

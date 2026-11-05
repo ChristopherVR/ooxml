@@ -5,6 +5,7 @@ import type {
 	CollaborationInput,
 	CollaborationState,
 	ConnectionStatus,
+	DocumentStorage,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 import { reportInlineTextDraft, resolveAutosaveFileKey } from 'ooxml-ui/pptx';
@@ -47,6 +48,15 @@ export interface SessionControllersDeps {
 	goToSlide: (index: number) => void;
 	/** Load bytes through the viewer's normal pipeline (recovery restore). */
 	loadFile: (bytes: Uint8Array) => Promise<void>;
+	/**
+	 * The open document's storage, recovery key and name: a file opened from a File > Open cloud
+	 * place brings its own. Omitted: the `storage`, `filePath` and `fileName` options.
+	 */
+	getDocument?: () => {
+		storage: DocumentStorage | undefined;
+		filePath: string;
+		fileName: string | undefined;
+	};
 	/** Options > General > "Initials" override for the Share dialog's local-user avatar. */
 	getUserInitials?: () => string | undefined;
 	/** Effective hidden actions (host list + customisation); defaults to `options.hiddenActions`. */
@@ -167,7 +177,8 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			options.fileName,
 		),
 		fileName: options.fileName,
-		getStorage: () => options.storage,
+		...(deps.getDocument ? { getDocument: deps.getDocument } : {}),
+		getStorage: () => (deps.getDocument ? deps.getDocument().storage : options.storage),
 		// Threaded through only so the snapshot uses the shared save decision;
 		// a recovery snapshot stays plaintext whatever the protection state is.
 		getSaveIntent: () => ({
