@@ -4,6 +4,7 @@ import {
 	editChartShapeProperties,
 	type ChartPointOptionsEdit,
 	type ChartMarker,
+	type ChartShapeProperties,
 } from '../../../chart';
 import { fillAppearancePatch } from '../../../chart/edit/appearance-fill';
 import type { PptxChartData, PptxChartDataPoint } from '../types';
@@ -11,6 +12,15 @@ import type { NeutralChartEdit } from './chart-neutral-save-plan';
 import { same } from './chart-neutral-save-common';
 import { neutralShapeEdit } from './chart-neutral-save-shape';
 import { isLineDrawnChartType } from './chart-container-type-map';
+
+/** Whether a shape part holds nothing but the source it was read from. */
+const emptied = (part: object): boolean => Object.keys(part).every((key) => key === 'sourceXml');
+
+/** A point's shape without an emptied line, or `null` when nothing is left of it. */
+function pointShape(shape: ChartShapeProperties): ChartShapeProperties | null {
+	if (shape.line && emptied(shape.line)) delete shape.line;
+	return emptied(shape) ? null : shape;
+}
 
 function pointEdit(
 	edits: NeutralChartEdit[],
@@ -46,6 +56,8 @@ function pointEdit(
 					) ?? null,
 			});
 		}
+		// An empty c:spPr draws the point in the automatic colour, not the series colour.
+		if (edit.spPr) edit.spPr = pointShape(edit.spPr);
 		if (!same(old?.marker, next.marker)) {
 			if (!next.marker) edit.marker = null;
 			else {
