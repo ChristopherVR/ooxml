@@ -199,20 +199,29 @@ describe('rewrapped text carried piece by piece', () => {
 		expect(
 			resolveMorphTextPieces(textBox('edge-1', 21, { width: 399.5 }), to, measure),
 		).toBeUndefined();
-		// Different text, a block shrink-wrapped by `anchorCtr`, a middle-anchored
+		// Different text, a middle-anchored
 		// block that overflows its box and a word wider than its column.
 		expect(resolveMorphTextPieces(from, { ...to, text: 'Other' } as PptxElement, measure)).toBe(
 			undefined,
 		);
-		const centred = textBox('ctr', 22);
-		(centred as { textStyle: Record<string, unknown> }).textStyle.anchorCenter = true;
-		expect(resolveMorphTextPieces(from, centred, measure)).toBeUndefined();
 		const overflowing = textBox('over', 22, { height: 60 });
 		(overflowing as { textStyle: Record<string, unknown> }).textStyle.vAlign = 'middle';
 		expect(resolveMorphTextPieces(from, overflowing, measure)).toBeUndefined();
 		expect(
 			resolveMorphTextPieces(from, textBox('narrow', 22, { width: 100 }), measure),
 		).toBeUndefined();
+	});
+
+	it('lays a wrapped anchorCtr block out at its shrink-wrapped, centred lines', () => {
+		const centred = textBox('ctr', 22);
+		(centred as { textStyle: Record<string, unknown> }).textStyle.anchorCenter = true;
+		const plain = resolveMorphTextPieces(from, textBox('plain', 22), measure)!;
+		const split = resolveMorphTextPieces(from, centred, measure)!;
+		expect(split).toBeDefined();
+		const toLeft = (result: typeof split) =>
+			Math.min(...result.pieces.map((p) => p.toBand.left).filter((x) => x > -1000));
+		// The widest line is narrower than the column, so the block moves right.
+		expect(toLeft(split)).toBeGreaterThan(toLeft(plain));
 	});
 
 	it('moves the lines of a middle or bottom anchored box to its anchor', () => {

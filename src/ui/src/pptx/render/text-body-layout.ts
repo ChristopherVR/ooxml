@@ -29,6 +29,7 @@ import type { PptxElement, TextStyle } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { getKinsokuLineBreakStyles } from './kinsoku-styles';
+import { shrinkBlockOffset } from './text-shrink-block';
 import { resolveVerticalAnchorJustifyContent } from './text-style-helpers';
 
 /**
@@ -257,10 +258,21 @@ export function buildTextBodyLayoutStyle(element: PptxElement): TextBodyLayoutSt
 	// of `@algn`) to position text inside the now-shared, shrink-wrapped box.
 	// A no-op on the multi-column block, where there is no flex box to shrink.
 	if (ts?.anchorCenter === true && columns.count <= 1) {
-		style.width = 'fit-content';
-		style.maxWidth = '100%';
-		style.marginLeft = 'auto';
-		style.marginRight = 'auto';
+		// A WRAPPED block shrinks to its longest line, which `fit-content` cannot
+		// do (it keeps the full column): the lines are measured and the whole
+		// column moved by the one offset that centres their bounding box. Where
+		// they cannot be measured, `fit-content` still centres a single line.
+		const offset = shrinkBlockOffset(element);
+		if (offset !== undefined) {
+			if (offset !== 0) {
+				style.marginLeft = `${offset}px`;
+			}
+		} else {
+			style.width = 'fit-content';
+			style.maxWidth = '100%';
+			style.marginLeft = 'auto';
+			style.marginRight = 'auto';
+		}
 	}
 
 	const tabSize = computeTabSize(ts?.tabStops, ts?.defaultTabSize);

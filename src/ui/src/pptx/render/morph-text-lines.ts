@@ -12,17 +12,15 @@
  * the flex column centres or bottom-aligns the whole block for a middle or bottom
  * anchor.
  *
- * A shrink-wrapped (`anchorCtr`) block that fits on one line per paragraph is
- * as wide as its widest paragraph (`width: fit-content`), centred in the box,
- * as PowerPoint draws it.
+ * A shrink-wrapped (`anchorCtr`) block is as wide as its longest line, centred
+ * in the box, as PowerPoint draws it (see `centreBlock`).
  *
  * It refuses anything it cannot reproduce with confidence: mixed font sizes in
  * different faces or under exact line spacing, distributed alignment,
  * transformed or shifted text, a non-breaking space in justified text, a
  * word wider than its column, a break within a pixel of the column edge
- * (where rounding could move it), a shrink-wrapped block that wraps, holds a
- * line break or nearly fills the column (PowerPoint shrinks a wrapped one to
- * its longest line, `fit-content` does not), several paragraphs spread over a
+ * (where rounding could move it), a shrink-wrapped block that holds a
+ * line break, several paragraphs spread over a
  * distributed anchor, and text overflowing a box not anchored at its top
  * (both lay it out alike, but a piece, a copy of the box, loses what spills
  * past its edge, which measured worse than carrying the box).
@@ -30,7 +28,6 @@
  * @module render/morph-text-lines
  */
 import type { FrameParagraph, MorphTextMeasure, TextFrame } from './morph-text-frame-read';
-import { paragraphWidth } from './morph-text-frame-read';
 import type { MorphTextInkMeasure } from './morph-text-ink';
 import { glyphInk, lineBaseline, union } from './morph-text-ink';
 import type { MorphTextRect } from './morph-text-spans';
@@ -76,6 +73,8 @@ export interface MorphTextLayout {
 const OVERFLOW_EPSILON_PX = 0.5;
 /** How close (px) a break may sit to the column edge and still be trusted. */
 const BREAK_MARGIN_PX = 1;
+/** A line break inside a paragraph. */
+const LINE_BREAK = /[\n\v\u2028]/u;
 /** Upper bound on the words laid out; longer bodies keep the box interpolation. */
 const MAX_WORDS = 400;
 
@@ -138,30 +137,50 @@ function spaces(text: string, start: number, end: number): number {
 }
 
 /**
- * The column the paragraphs lay out in: the whole width, or for a
- * shrink-wrapped (`anchorCtr`) block its widest paragraph's own width, centred.
- * `undefined` when that width cannot be trusted.
+ * The column the paragraphs lay out in. A shrink-wrapped (`anchorCtr`) block
+ * wraps at the full column like any other, then {@link centreBlock} moves it;
+ * `undefined` when a line break inside a paragraph makes its lines unknown.
  */
 function blockColumn(
 	frame: TextFrame,
-	measure: MorphTextMeasure,
 ): { left: number; width: number; wraps: boolean } | undefined {
-	if (!frame.anchorCenter) {
-		return { left: 0, width: frame.available, wraps: frame.wraps };
-	}
-	let widest = 0;
-	for (const paragraph of frame.paragraphs) {
-		const width = paragraphWidth(paragraph, measure);
-		if (width === undefined || /[\n\v\u2028]/u.test(paragraph.text)) {
-			return undefined;
-		}
-		widest = Math.max(widest, paragraph.marginLeftPx + paragraph.textIndentPx + width);
-	}
-	if (widest > frame.available - BREAK_MARGIN_PX) {
+	if (frame.anchorCenter && frame.paragraphs.some((p) => LINE_BREAK.test(p.text))) {
 		return undefined;
 	}
-	// Narrower than the column, every paragraph sits on one line.
-	return { left: (frame.available - widest) / 2, width: widest, wraps: false };
+	return { left: 0, width: frame.available, wraps: frame.wraps };
+}
+
+/**
+ * PowerPoint shrinks an `anchorCtr` block to its longest line, as wide as the
+ * bounding box of every line, and centres THAT box in the column; each line
+ * keeps its alignment inside it, so the whole layout moves by one offset.
+ */
+function centreBlock(frame: TextFrame, layout: MorphTextLayout): MorphTextLayout {
+	const ruled = layout.lines.filter((line) => line.x1 > line.x0);
+	if (!frame.anchorCenter || !ruled.length) {
+		return layout;
+	}
+	const left = Math.min(...ruled.map((line) => line.x0));
+	const right = Math.max(...ruled.map((line) => line.x1));
+	const dx = frame.insetLeft + frame.available / 2 - (left + right) / 2;
+	if (Math.abs(dx) < 1e-6) {
+		return layout;
+	}
+	const move = (rect: MorphTextRect): MorphTextRect => ({
+		...rect,
+		left: rect.left + dx,
+		right: rect.right + dx,
+	});
+	return {
+		...layout,
+		words: layout.words.map((word) => ({
+			...word,
+			x0: word.x0 + dx,
+			x1: word.x1 + dx,
+			...(word.ink && word.glyphs ? { ink: move(word.ink), glyphs: word.glyphs.map(move) } : {}),
+		})),
+		lines: layout.lines.map((line) => ({ ...line, x0: line.x0 + dx, x1: line.x1 + dx })),
+	};
 }
 
 /** Whether the paragraph's text paints as measured and its lines can be sized. */
@@ -209,7 +228,7 @@ export function layoutMorphTextWords(
 	measure: MorphTextMeasure,
 	ink?: MorphTextInkMeasure,
 ): MorphTextLayout | undefined {
-	const block = blockColumn(frame, measure);
+	const block = blockColumn(frame);
 	if (!block || (frame.anchorSpread && frame.paragraphs.length > 1)) {
 		return undefined;
 	}
@@ -280,7 +299,7 @@ export function layoutMorphTextWords(
 		}
 		top += paragraph.spaceAfterPx;
 	}
-	return anchored(frame, { words, lines, bottom: top });
+	return anchored(frame, centreBlock(frame, { words, lines, bottom: top }));
 }
 
 /** Move a laid-out block to its vertical anchor, or `undefined` if it overflows one. */

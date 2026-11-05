@@ -188,6 +188,28 @@ describe('laying out a morphing text box word by word', () => {
 		expect(right.words.map((word) => word.x0)).toEqual([105, 55, 105]);
 	});
 
+	// PowerPoint 16 exports: a wrapped `anchorCtr` block shrinks to its longest
+	// line and that box is centred, whatever the alignment.
+	it('shrinks a wrapped anchorCtr block to its longest line and centres it', () => {
+		const left = layoutMorphTextWords(
+			frame([paragraph(TEXT, 20)], { available: 150, anchorCenter: true }),
+			measure,
+		)!;
+		// "aaaa bbbb cccc" is 140 px of a 150 px column: 5 px either side.
+		expect(left.words.map((word) => word.line)).toEqual([0, 0, 0, 1, 1, 1]);
+		expect(left.words.map((word) => word.x0)).toEqual([5, 55, 105, 5, 55, 105]);
+		const right = layoutMorphTextWords(
+			frame([paragraph('aaaa bbbb cccc dddd eeee ffff gg', 20)], {
+				available: 150,
+				align: 'right',
+				anchorCenter: true,
+			}),
+			measure,
+		)!;
+		// Lines of 140, 140 and 20 px: the block is 140 px, every line ends at 145.
+		expect(right.lines.map((line) => line.x1)).toEqual([145, 145, 145]);
+	});
+
 	it('spreads a justified line over every space, a doubled one twice', () => {
 		const layout = layoutMorphTextWords(
 			frame([paragraph('aaaa  bbbb ccc ddddddd', 20, { textAlign: 'justify' })]),
@@ -245,12 +267,7 @@ describe('laying out a morphing text box word by word', () => {
 		for (const p of refused) {
 			expect(layoutMorphTextWords(frame([p]), measure)).toBeUndefined();
 		}
-		// A shrink-wrapped block that wraps (PowerPoint shrinks it to its longest
-		// line, the renderer keeps the column), comes within a pixel of the
-		// column, or holds a line break.
-		expect(
-			layoutMorphTextWords(frame([paragraph(TEXT, 20)], { anchorCenter: true }), measure),
-		).toBe(undefined);
+		// A shrink-wrapped block with a word as wide as the column, or a line break.
 		expect(
 			layoutMorphTextWords(frame([paragraph('a'.repeat(20), 20)], { anchorCenter: true }), measure),
 		).toBe(undefined);
