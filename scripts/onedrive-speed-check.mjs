@@ -11,6 +11,7 @@ import {
 	fmtMs,
 	fmtRate,
 	interpret,
+	notFoundHint,
 	parseArgs,
 	renderTable,
 	stats,
@@ -50,6 +51,14 @@ async function main() {
 		shareUrl = process.env.OOXML_ONEDRIVE_SHARE_URL || undefined;
 		drivePath = process.env.OOXML_ONEDRIVE_PATH || undefined;
 		folderPath = process.env.OOXML_ONEDRIVE_FOLDER || undefined;
+		if (token && options.list) {
+			try {
+				await checkToken(token);
+			} catch (error) {
+				throw new SafeError(error.message);
+			}
+			return await listNames({ token, baseFetch, folderPath });
+		}
 		if (!token || (!shareUrl && !drivePath))
 			throw new SafeError(
 				'Set OOXML_ONEDRIVE_ACCESS_TOKEN and OOXML_ONEDRIVE_SHARE_URL and/or OOXML_ONEDRIVE_PATH (see --help).',
@@ -92,8 +101,32 @@ async function main() {
 	}
 }
 
+/** --list: the names in the drive root (or the folder), to find the exact path to measure. */
+async function listNames(ctx) {
+	const select = '$select=name,folder,file,size&$top=200';
+	const path = ctx.folderPath
+		? `/me/drive/root:/${encodeDrivePath(ctx.folderPath)}:/children?${select}`
+		: `/me/drive/root/children?${select}`;
+	const { data } = await rawGraph(ctx, path, { what: ctx.folderPath ? 'folder' : undefined });
+	const items = Array.isArray(data?.value) ? data.value : [];
+	console.log(ctx.folderPath ? 'Items in OOXML_ONEDRIVE_FOLDER:' : 'Items in your OneDrive root:');
+	console.log(
+		renderTable([
+			['name', 'type', 'size'],
+			...items.map((item) => [
+				String(item.name ?? ''),
+				item.folder ? 'folder' : 'file',
+				item.folder ? `${item.folder.childCount ?? 0} items` : fmtBytes(Number(item.size ?? 0)),
+			]),
+		]),
+	);
+	console.log(
+		'Use a file as OOXML_ONEDRIVE_PATH (folder/file.pptx), or a folder as OOXML_ONEDRIVE_FOLDER with --list to look inside it.',
+	);
+}
+
 /** Raw Graph call: time to response headers, total time and body size. */
-async function rawGraph(ctx, path, { headers = {}, redirect = 'error' } = {}) {
+async function rawGraph(ctx, path, { headers = {}, redirect = 'error', what } = {}) {
 	const started = now();
 	const response = await ctx.baseFetch(GRAPH + path, {
 		headers: { Authorization: `Bearer ${ctx.token}`, ...headers },
@@ -109,7 +142,20 @@ async function rawGraph(ctx, path, { headers = {}, redirect = 'error' } = {}) {
 		if (!location) throw new SafeError('Graph redirected without a download location.');
 		return { location, headersMs, totalMs: now() - started };
 	}
-	if (!response.ok) throw new SafeError(`A Graph request failed with HTTP ${response.status}.`);
+	if (!response.ok) {
+		let code = '';
+		try {
+			code = String((await response.json())?.error?.code ?? '');
+		} catch {
+			// No JSON body.
+		}
+		const lines = [
+			`${what ? `Looking up the ${what}` : 'A Graph request'} failed with HTTP ${response.status}${code ? ` (${code})` : ''}.`,
+		];
+		const hint = notFoundHint(what, response.status);
+		if (hint) lines.push(hint);
+		throw new SafeError(lines.join(String.fromCharCode(10)));
+	}
 	const body = new Uint8Array(await response.arrayBuffer());
 	const totalMs = now() - started;
 	return {
@@ -178,7 +224,7 @@ async function measureTarget(ctx, target) {
 		const t0 = now();
 		await Promise.resolve(ctx.token);
 		run.tokenMs = now() - t0;
-		const meta = await rawGraph(ctx, target.meta, { headers: target.headers });
+		const meta = await rawGraph(ctx, target.meta, { headers: target.headers, what: target.label });
 		run.meta = { headersMs: meta.headersMs, totalMs: meta.totalMs, bytes: meta.bytes };
 		const item = meta.data;
 		const downloadUrl = item['@microsoft.graph.downloadUrl'];
@@ -265,6 +311,7 @@ async function measureListing(ctx) {
 		const folder = await rawGraph(
 			ctx,
 			`/me/drive/root:/${encodeDrivePath(ctx.folderPath)}?$select=${LIST_SELECT}`,
+			{ what: 'folder' },
 		);
 		const ref = { driveId: folder.data.parentReference?.driveId, itemId: folder.data.id };
 		steps.push(['list(folder)', () => client.list(ref)]);

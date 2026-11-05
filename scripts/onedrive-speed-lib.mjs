@@ -85,6 +85,8 @@ Options:
   --size=MB        mock file size in MB (default 10)
   --latency=ms     mock latency added to every response (default 30)
   --bandwidth=MBs  mock download host throughput cap in MB/s (default 0 = unlimited)
+  --list           print the names in your OneDrive root (or OOXML_ONEDRIVE_FOLDER) and exit,
+                   to find the exact OOXML_ONEDRIVE_PATH; needs only the token
   --help           show this text`;
 
 /** Parses the flags; throws a safe message for anything unknown or out of range. */
@@ -94,6 +96,7 @@ export function parseArgs(argv) {
 		json: false,
 		mock: false,
 		warmup: false,
+		list: false,
 		content: true,
 		help: false,
 		size: 10,
@@ -119,6 +122,7 @@ export function parseArgs(argv) {
 		else if (flag === '--json' && value === undefined) options.json = true;
 		else if (flag === '--mock' && value === undefined) options.mock = true;
 		else if (flag === '--warmup' && value === undefined) options.warmup = true;
+		else if (flag === '--list' && value === undefined) options.list = true;
 		else if (flag === '--no-content' && value === undefined) options.content = false;
 		else if (flag === '--runs' && value !== undefined)
 			options.runs = number('runs', value, { min: 1, integer: true });
@@ -180,4 +184,16 @@ export function interpret({ rawMeta, rawDownload, rawTtfb, library, provider, co
 				: `Metadata + downloadUrl is as fast or faster than /content (${fmtMs(raw)} vs ${fmtMs(content)}).`,
 		);
 	return lines;
+}
+
+/** Why a Graph lookup failed, by what was looked up. Never includes the path, link or token. */
+export function notFoundHint(what, status) {
+	if (status !== 404 && status !== 400) return '';
+	if (what === 'drive path')
+		return 'No file was found at OOXML_ONEDRIVE_PATH. The path is relative to your OneDrive root, with exact folder names and the file extension, for example Documents/Deck.pptx. In a work or school OneDrive the root is already the Documents library, so leave "Documents/" out. Run with --list to see the names in your root.';
+	if (what === 'sharing link')
+		return 'The sharing link could not be resolved for this account: it may be mistyped, revoked, or for a file this account cannot open. Copy it again from OneDrive (Share, Copy link).';
+	if (what === 'folder')
+		return 'No folder was found at OOXML_ONEDRIVE_FOLDER. It is relative to your OneDrive root, like OOXML_ONEDRIVE_PATH. Run with --list to see the names in your root.';
+	return '';
 }

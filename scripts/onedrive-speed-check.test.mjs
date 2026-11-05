@@ -100,3 +100,12 @@ test('the mock serves metadata, a 302 and sized, throttled downloads', async () 
 		await mock.close();
 	}
 });
+
+test('--list is a flag and the not-found hints name what was looked up', async () => {
+	const { parseArgs, notFoundHint } = await import('./onedrive-speed-lib.mjs');
+	assert.equal(parseArgs(['--list']).list, true);
+	assert.match(notFoundHint('drive path', 404), /OOXML_ONEDRIVE_PATH/u);
+	assert.match(notFoundHint('sharing link', 404), /sharing link/u);
+	assert.match(notFoundHint('folder', 404), /OOXML_ONEDRIVE_FOLDER/u);
+	assert.equal(notFoundHint('drive path', 500), '');
+});
