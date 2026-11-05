@@ -54,6 +54,7 @@ import { defineColorCustom } from './form/color-custom';
 import { defineChartPicker } from './dialog/chart-picker';
 import { defineChartDataSheet } from './chart/data-sheet';
 import { defineProgressDialog } from './dialog/progress-dialog';
+import { defineMessageDialog } from './dialog/message-dialog';
 
 export {
 	defineAccount,
@@ -101,6 +102,7 @@ export {
 	defineChartPicker,
 	defineChartDataSheet,
 	defineProgressDialog,
+	defineMessageDialog,
 	defineCloudFiles,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
@@ -114,6 +116,18 @@ export type {
 export type { OfficeCommandEvent } from './ribbon/button';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog';
 export type { OfficeProgressDialogState } from './dialog/progress-dialog';
+export { OfficeUiMessageDialog } from './dialog/message-dialog';
+export type {
+	OfficeMessageDialogKind,
+	OfficeMessageDialogResult,
+	OfficeMessageDialogTone,
+} from './dialog/message-dialog';
+export { alertDialog, confirmDialog, promptDialog } from './dialog/message-dialogs';
+export type {
+	MessageDialogHost,
+	MessageDialogOptions,
+	PromptDialogOptions,
+} from './dialog/message-dialogs';
 export type { OfficeSelectOption } from './form/select';
 export type {
 	OfficeStatusActivateEvent,
@@ -307,6 +321,7 @@ export const CONTROL_DEFINERS = [
 	defineChartPicker,
 	defineChartDataSheet,
 	defineProgressDialog,
+	defineMessageDialog,
 	defineCloudFiles,
 ] as const;
 
