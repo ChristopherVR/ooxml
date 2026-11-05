@@ -21,6 +21,9 @@ import { getTextBlockStyle } from '../element-styles';
 import type { ElementRenderContext, ElementRenderer } from '../types';
 import { renderTextBlock } from './text-block';
 
+/** Counts connector renders so every one gets its own marker ids. */
+let markerSerial = 0;
+
 /**
  * Renderer for `connector` elements: straight, bent, and curved connectors as
  * an inline SVG spanning the element's bounding box, with stroke
@@ -79,7 +82,10 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 	svg.setAttribute('style', 'overflow:visible;display:block');
 
 	// Arrow markers (distinct, DOM-id-safe ids per element + side).
-	const seed = element.id.replace(/[^a-zA-Z0-9_-]/gu, '_');
+	// Unique per render: the editor, its thumbnails and the slide show paint the
+	// same element, and `url(#id)` resolves to the FIRST marker with the id, which
+	// may sit in a hidden subtree where a marker does not paint.
+	const seed = `${element.id.replace(/[^a-zA-Z0-9_-]/gu, '_')}-${++markerSerial}`;
 	const defs = createSvgEl(doc, 'defs');
 	const lineShadow = getLineShadowParams(ss);
 	const shadowId = lineShadow ? `${seed}-line-shadow` : undefined;
