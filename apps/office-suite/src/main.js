@@ -57,6 +57,7 @@ const cloud = mountOneDrive({
 	sessions,
 	open,
 	refresh,
+	isActive: (id) => id === active,
 	showView: () => {
 		view = 'cloud';
 		renderTabs();

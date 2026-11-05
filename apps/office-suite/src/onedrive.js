@@ -2,10 +2,15 @@ import { SuiteOneDrive } from './cloud-files.js';
 import { mountCloudBrowser } from './cloud-browser.js';
 import { resolveCloudOptions } from './cloud-options.js';
 import { takeLaunchLink } from './launch-link.js';
+
+let labels;
+/** The shared save progress text (the same as in every product), loaded with the file browser. */
+const saveProgressText = async (step) =>
+	(await (labels ??= import('ooxml-ui/controls'))).saveProgressLabel(step);
 import { $, choose, download, escape, notify, task } from './ui.js';
 
 /** Shared shell controls for Word, Excel, PowerPoint and Visio, including standalone apps. */
-export function mountOneDrive({ store, sessions, open, refresh, showView }) {
+export function mountOneDrive({ store, sessions, open, refresh, showView, isActive }) {
 	const options = resolveCloudOptions();
 	const label = options.label;
 	const message = (text) => text.replaceAll('OneDrive', () => label);
@@ -19,6 +24,20 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 		adopted: (doc) => sessions.reload(doc),
 		dirty: (id) => sessions.isDirty(id),
 		notice: (text) => notify(message(text)),
+		// A save to OneDrive can take a while: show each step in the status bar of the open file.
+		progress: (doc, step) => {
+			if (!isActive?.(doc.id)) return;
+			const state = $('save-state');
+			if (!step) {
+				state.removeAttribute('aria-busy');
+				void refresh();
+				return;
+			}
+			state.setAttribute('aria-busy', 'true');
+			void saveProgressText(step).then((text) => {
+				if (state.getAttribute('aria-busy')) state.textContent = message(text);
+			});
+		},
 		// Reopening a file whose edits on this device never reached OneDrive, while OneDrive has a
 		// newer version: the user chooses; nothing is replaced silently.
 		stale: ({ doc }) =>

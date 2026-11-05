@@ -30,6 +30,7 @@ export class SuiteCloudStorage {
 		dirty,
 		stale,
 		notice,
+		progress,
 		id = 'onedrive',
 		label = 'OneDrive',
 		serializeFile = cloudIdentity,
@@ -47,6 +48,7 @@ export class SuiteCloudStorage {
 			dirty,
 			stale,
 			notice,
+			progress,
 			id,
 			label,
 			serializeFile,
@@ -154,9 +156,18 @@ export class SuiteCloudStorage {
 	}
 	async save(doc) {
 		if (!doc.cloud?.pending) return doc;
-		const connection = this.connection(doc);
 		try {
-			const file = await connection.save(doc.bytes);
+			return await this.upload(doc);
+		} finally {
+			this.progress?.(doc, null);
+		}
+	}
+	async upload(doc) {
+		const connection = this.connection(doc);
+		// Each step of the upload (and of a merge) for the host's status; null when it ends.
+		const onSaveProgress = (step) => this.progress?.(doc, step);
+		try {
+			const file = await connection.save(doc.bytes, { onSaveProgress });
 			const bytes = connection.getSnapshot?.().baseBytes ?? doc.bytes;
 			const combined =
 				bytes.length !== doc.bytes.length || bytes.some((value, i) => value !== doc.bytes[i]);

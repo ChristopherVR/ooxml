@@ -87,6 +87,42 @@ for (const kind of ['docx', 'xlsx', 'pptx', 'vsdx']) {
 	});
 }
 
+test('reports each save step to the host, then the end, also when the save fails', async () => {
+	const steps = [];
+	const progress = (doc, step) => steps.push([doc.name, step]);
+	const uploading = { phase: 'uploading', loaded: 5, total: 10 };
+	const { cloud, library } = harness('pptx', {
+		progress,
+		createSession: () => ({
+			save: async (_bytes, options) => {
+				options.onSaveProgress(uploading);
+				return { ...file('pptx'), eTag: 'v2' };
+			},
+		}),
+	});
+	const opened = await cloud.open('https://1drv.ms/input');
+	const pending = { ...opened, bytes: bytes('edited'), cloud: { ...opened.cloud, pending: true } };
+	await library.commit([{ document: pending, expected: opened.revision }]);
+	await cloud.save(pending);
+	assert.deepEqual(steps, [
+		['Example.pptx', uploading],
+		['Example.pptx', null],
+	]);
+
+	steps.length = 0;
+	const failing = harness('pptx', {
+		progress,
+		createSession: () => ({
+			save: async () => {
+				throw Object.assign(new Error('offline'), { code: 'network' });
+			},
+		}),
+	});
+	const doc = await failing.cloud.open('https://1drv.ms/input');
+	await assert.rejects(failing.cloud.save({ ...doc, cloud: { ...doc.cloud, pending: true } }));
+	assert.deepEqual(steps, [['Example.pptx', null]]);
+});
+
 test('adopts combined saved bytes and reloads the editor after a semantic merge', async () => {
 	const merge = async () => ({ status: 'merged', bytes: bytes('local and remote') });
 	const adopted = [];
