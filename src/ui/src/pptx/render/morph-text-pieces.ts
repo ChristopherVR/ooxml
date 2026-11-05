@@ -24,8 +24,26 @@
  * 1280 x 720 by-object render to a mean pixel difference of 0.8-1.6/255 at
  * 10-90% (5.5/255 when the box was interpolated whole).
  *
+ * The same pair rendered again with one property changed (right and centre
+ * alignment, a middle or bottom anchor, a first-line or hanging indent, two
+ * paragraphs with space before and after, one word at a larger size, Georgia
+ * italic, and Calibri -> Cambria or 28 -> 32 pt with the box widened so the
+ * breaks stay the same) flies the same runs the same way: a middle or bottom
+ * anchored box flies them between its anchored lines, an indented line
+ * between its indented positions, and a pair whose breaks stay the same
+ * carries each line on its own scale (Calibri -> Cambria stretches its lines
+ * by 1.050, 1.047 and 1.079, which no one scale of the box matches). A
+ * justified paragraph is the exception: its words are spaced by however much
+ * room their line has left, and mid-morph each word is sharp at its own
+ * interpolated place, so every word of a justified line is a piece of its own.
+ * Painted by the React demo these match PowerPoint to a mean of 1.1-1.3/255
+ * at 10-90% (4.4-4.8/255 while the anchored, indented and mixed-size pairs
+ * kept their box interpolation, 2.7/255 while the justified pair was laid out
+ * as left-aligned).
+ *
  * A piece is described by the same mapping `morph-text-frame` uses for a whole
- * box (`MorphTextAlignment`), plus the band of each half it shows.
+ * box (`MorphTextAlignment`), plus the band of each half it shows
+ * (`morph-text-bands`).
  *
  * @module render/morph-text-pieces
  */
@@ -34,16 +52,14 @@ import { hasTextProperties } from 'ooxml-core/pptx';
 
 import type { MorphTextAlignment, MorphTextMeasure } from './morph-text-frame';
 import { measureMorphTextWithCanvas, readFrame } from './morph-text-frame-read';
+import type { MorphTextInkMeasure } from './morph-text-ink';
+import { measureMorphTextInkWithCanvas } from './morph-text-ink';
+import type { MorphTextBand } from './morph-text-bands';
+import { morphTextBandOf, morphTextBoundaries } from './morph-text-bands';
 import type { MorphTextLayout, MorphTextWord } from './morph-text-lines';
 import { layoutMorphTextWords } from './morph-text-lines';
 
-/** A rectangle in px from an element's own top-left corner. */
-export interface MorphTextBand {
-	left: number;
-	top: number;
-	right: number;
-	bottom: number;
-}
+export type { MorphTextBand } from './morph-text-bands';
 
 /** One piece: how it maps across, and the part of each half it shows. */
 export interface MorphTextPiece {
@@ -69,28 +85,6 @@ export interface MorphTextPieceSplit {
 
 /** Most pieces a pair may split into before it keeps its box interpolation. */
 const MAX_PIECES = 40;
-/** How far an open band edge (a line's outer end, the first or last line) reaches. */
-const OPEN_EDGE_PX = 2000;
-
-/** The part of `layout` a run of words `[first, last]` owns, open at the outer edges. */
-function bandOf(layout: MorphTextLayout, first: number, last: number): MorphTextBand {
-	const words = layout.words;
-	const head = words[first] as MorphTextWord;
-	const tail = words[last] as MorphTextWord;
-	const before = words[first - 1];
-	const after = words[last + 1];
-	const line = layout.lines[head.line];
-	const sameLine = (word: MorphTextWord | undefined): boolean =>
-		word !== undefined && word.line === head.line;
-	return {
-		left: sameLine(before) ? ((before as MorphTextWord).x1 + head.x0) / 2 : -OPEN_EDGE_PX,
-		right: sameLine(after) ? (tail.x1 + (after as MorphTextWord).x0) / 2 : OPEN_EDGE_PX,
-		top: head.line === 0 ? -OPEN_EDGE_PX : (line?.top ?? 0),
-		bottom:
-			head.line === layout.lines.length - 1 ? OPEN_EDGE_PX : (line?.top ?? 0) + (line?.height ?? 0),
-	};
-}
-
 /**
  * Split a matched text pair into the pieces PowerPoint carries, or `undefined`
  * when it cannot be laid out with confidence (the pair then keeps its box
@@ -99,11 +93,16 @@ function bandOf(layout: MorphTextLayout, first: number, last: number): MorphText
  * @param from - The outgoing half.
  * @param to - The incoming half.
  * @param measure - Text measurement; defaults to a canvas.
+ * @param ink - Ink measurement for the bands' edges; defaults to a canvas
+ *   when `measure` does, and to none (line-box edges) otherwise.
  */
 export function resolveMorphTextPieces(
 	from: PptxElement,
 	to: PptxElement,
 	measure: MorphTextMeasure = measureMorphTextWithCanvas,
+	ink: MorphTextInkMeasure | undefined = measure === measureMorphTextWithCanvas
+		? measureMorphTextInkWithCanvas
+		: undefined,
 ): MorphTextPieceSplit | undefined {
 	if (
 		(from as { shapeType?: string }).shapeType !== (to as { shapeType?: string }).shapeType ||
@@ -123,19 +122,27 @@ export function resolveMorphTextPieces(
 	) {
 		return undefined;
 	}
-	const a = layoutMorphTextWords(frameA, measure);
-	const b = layoutMorphTextWords(frameB, measure);
+	const a = layoutMorphTextWords(frameA, measure, ink);
+	const b = layoutMorphTextWords(frameB, measure, ink);
 	if (!a || !b || a.words.length === 0 || a.words.length !== b.words.length) {
 		return undefined;
 	}
+	const boundariesA = morphTextBoundaries(a);
+	const boundariesB = morphTextBoundaries(b);
 	const pieces: MorphTextPiece[] = [];
 	let first = 0;
 	for (let index = 0; index < a.words.length; index++) {
 		const next = index + 1;
+		// A justified line spaces its words apart by however much room it has
+		// left, which the other layout does not share: each word goes alone.
+		const lineA = a.words[index]?.line ?? 0;
+		const lineB = b.words[index]?.line ?? 0;
 		const breaks =
 			next >= a.words.length ||
-			a.words[next]?.line !== a.words[index]?.line ||
-			b.words[next]?.line !== b.words[index]?.line;
+			a.words[next]?.line !== lineA ||
+			b.words[next]?.line !== lineB ||
+			a.lines[lineA]?.justified === true ||
+			b.lines[lineB]?.justified === true;
 		if (!breaks) {
 			continue;
 		}
@@ -155,8 +162,8 @@ export function resolveMorphTextPieces(
 				scaleX: widthB / widthA,
 				scaleY: heightB / heightA,
 			},
-			fromBand: bandOf(a, first, index),
-			toBand: bandOf(b, first, index),
+			fromBand: morphTextBandOf(a, first, index, boundariesA),
+			toBand: morphTextBandOf(b, first, index, boundariesB),
 		});
 		if (pieces.length > MAX_PIECES) {
 			return undefined;

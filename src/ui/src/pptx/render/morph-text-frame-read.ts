@@ -54,6 +54,11 @@ export interface TextFrame {
 	/** Left and top body insets, in px from the element's own box. */
 	insetLeft: number;
 	insetTop: number;
+	/** Bottom body inset and the element's height, for middle and bottom anchors. */
+	insetBottom: number;
+	boxHeight: number;
+	/** `a:bodyPr/@anchorCtr`: the paragraphs are centred as one shrink-wrapped block. */
+	anchorCenter: boolean;
 	paragraphs: FrameParagraph[];
 }
 
@@ -70,8 +75,14 @@ export interface FrameParagraph {
 	lineHeight: number | string;
 	/** `margin-bottom` (px) after the paragraph. */
 	spaceAfterPx: number;
-	/** Whether a margin, indent or space before moves its lines off the plain column. */
-	indented: boolean;
+	/** `margin-left` and `text-indent` (px) the paragraph is laid out with. */
+	marginLeftPx: number;
+	textIndentPx: number;
+	/** Font size (px) of the paragraph element itself, before its runs. */
+	ownStrut: number;
+	/** The paragraph's own `text-align` and `text-align-last`, as painted. */
+	textAlign: string;
+	textAlignLast: string | undefined;
 }
 
 function paintsBody(element: PptxElement): boolean {
@@ -171,9 +182,11 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 			strut: Math.max(paragraph.strutFontSizePx ?? block.size, ...sizes, 0),
 			lineHeight: paragraph.lineHeight ?? bodyLineHeight,
 			spaceAfterPx: paragraph.spaceAfterPx ?? 0,
-			indented: Boolean(
-				paragraph.marginLeftPx || paragraph.textIndentPx || paragraph.spaceBeforePx,
-			),
+			marginLeftPx: paragraph.marginLeftPx ?? 0,
+			textIndentPx: paragraph.textIndentPx ?? 0,
+			ownStrut: paragraph.strutFontSizePx ?? block.size,
+			textAlign: (paragraph.paragraphStyle?.textAlign as string | undefined) ?? bodyAlign ?? 'left',
+			textAlignLast: paragraph.paragraphStyle?.textAlignLast as string | undefined,
 		});
 		if (text.trim() === '') {
 			continue;
@@ -212,6 +225,9 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 		wraps: ts?.textWrap !== 'none',
 		insetLeft: left,
 		insetTop: top,
+		insetBottom: bottom,
+		boxHeight: element.height,
+		anchorCenter: ts?.anchorCenter === true,
 		paragraphs,
 	};
 }
