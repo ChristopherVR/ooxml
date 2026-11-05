@@ -254,6 +254,12 @@ export const OFFICE_TOKENS = {
 	'--office-title-bar-name-max-width-narrow': '140px',
 	'--office-title-bar-search-max-width': '448px',
 	'--office-title-bar-results-max-height': '256px',
+	// Office app brand colours (file-type badges, app tiles); kept in dark themes like Office icons
+	'--office-word-brand': '#185abd',
+	'--office-excel-brand': '#107c41',
+	'--office-powerpoint-brand': '#c43e1c',
+	'--office-visio-brand': '#3955a3',
+	'--office-app-brand-foreground': '#ffffff',
 	// Component: team workspace (a Teams-like surface)
 	'--office-teams-brand': '#5b5fc7',
 	'--office-teams-brand-hover': '#4f52b2',

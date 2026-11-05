@@ -192,6 +192,22 @@ ul {
 	font-size: var(--office-font-size-xs);
 	font-weight: var(--office-font-weight-bold);
 }
+.icon.docx {
+	background: var(--office-word-brand);
+	color: var(--office-app-brand-foreground);
+}
+.icon.xlsx {
+	background: var(--office-excel-brand);
+	color: var(--office-app-brand-foreground);
+}
+.icon.pptx {
+	background: var(--office-powerpoint-brand);
+	color: var(--office-app-brand-foreground);
+}
+.icon.vsdx {
+	background: var(--office-visio-brand);
+	color: var(--office-app-brand-foreground);
+}
 .icon.folder {
 	background: var(--office-warning);
 	color: var(--office-warning-foreground);
