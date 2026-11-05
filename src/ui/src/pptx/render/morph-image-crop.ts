@@ -30,6 +30,7 @@ import { isImageLikeElement } from 'ooxml-core/pptx';
 import { buildImageFitTransform, fitTransformsFromInsets } from './element-style';
 import type { ImageFitInsets } from './element-style';
 import type { MorphAnimationStyle, MorphPair } from './morph-types';
+import { easedProgress } from './morph-easing';
 import { MORPH_EASING, MORPH_EASING_POINTS } from './morph-types';
 
 /** Crop/placement insets are fractions of the source; 0.0001 is ~0.01%. */
@@ -97,53 +98,6 @@ function frameChanged(fromElement: PptxElement, toElement: PptxElement): boolean
 		Math.abs(fromElement.width / Math.max(toElement.width, 1) - 1) > FRAME_EPSILON ||
 		Math.abs(fromElement.height / Math.max(toElement.height, 1) - 1) > FRAME_EPSILON
 	);
-}
-
-/**
- * Progress along a CSS cubic-bezier easing at normalized time `t` (0..1).
- *
- * Standard solver: Newton where the x-curve's derivative is usable, bisection
- * where it is not (the x curve is monotone for valid CSS control points). The
- * stepped crop track samples this so its baked keyframe percentages advance
- * exactly like the element journey's eased progress.
- */
-function easedProgress(t: number, x1: number, y1: number, x2: number, y2: number): number {
-	// B(u) = 3a·u(1-u)² + 3b·u²(1-u) + u³ for the axis whose control points
-	// are 0, a, b, 1.
-	const axisAt = (a: number, b: number, u: number): number =>
-		3 * a * u * (1 - u) * (1 - u) + 3 * b * u * u * (1 - u) + u * u * u;
-	const axisDerivative = (a: number, b: number, u: number): number =>
-		3 * (1 - u) * (1 - u) * a + 6 * (1 - u) * u * (b - a) + 3 * u * u * (1 - b);
-	const xAt = (u: number): number => axisAt(x1, x2, u);
-	const yAt = (u: number): number => axisAt(y1, y2, u);
-
-	let u = t;
-	for (let i = 0; i < 8; i++) {
-		const err = xAt(u) - t;
-		if (Math.abs(err) < 1e-6) {
-			return yAt(u);
-		}
-		const slope = axisDerivative(x1, x2, u);
-		if (Math.abs(slope) < 1e-6) {
-			break;
-		}
-		u -= err / slope;
-		if (u <= 0 || u >= 1) {
-			break;
-		}
-	}
-	let lo = 0;
-	let hi = 1;
-	u = t;
-	for (let i = 0; i < 24; i++) {
-		if (xAt(u) < t) {
-			lo = u;
-		} else {
-			hi = u;
-		}
-		u = (lo + hi) / 2;
-	}
-	return yAt(u);
 }
 
 /** Time samples the stepped track takes across the flight. */

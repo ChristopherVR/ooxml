@@ -73,7 +73,7 @@ describe('flattenMorphElements', () => {
 		// dissolves one whole panel into the other: exported at 62.5fps with
 		// `CreateVideo`, every frame of that morph is a clean linear blend of the
 		// two end states. Decomposing instead leaves one departure and four
-		// arrivals, which fade out by 23% and in from 42% and so leave the middle
+		// arrivals, which fade out by about 25% and in from about 45% and so leave the middle
 		// of the transition empty (issue #146).
 		const hub = [circle('a', [el({ id: 'disc', name: '!!Content' }), el({ id: 'select' })])];
 		const topic = [

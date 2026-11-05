@@ -172,7 +172,7 @@ function childrenPair(a: PptxElement, b: PptxElement): boolean {
  *     two end states, residual < 1/255, with the arriving title AND the
  *     departing wording both following the same curve. That is one object
  *     dissolving into another, not four shapes appearing and one leaving:
- *     unmatched shapes hold, then fade out by 23% and in from 42%, which would
+ *     unmatched shapes hold, then fade out by about 25% and in from about 45%, which would
  *     leave the middle of the transition empty (issue #146).
  *   - topic -> topic (five children against five, same boxes): also a clean
  *     blend, so decomposing there is harmless - each child simply crossfades
@@ -364,7 +364,7 @@ function flattenMorphLevel(
  * That refusal is exactly wrong here. The wheel deck's topic slides each hold
  * the same panel with the challenge's own wording, so every topic-to-topic morph
  * left its three text boxes unpaired: the old wording faded out inside the first
- * quarter, the new one only began at 42%, and the middle of the transition was
+ * quarter, the new one only began at about 45%, and the middle of the transition was
  * empty. PowerPoint crossfades them - measured on its own render of slides 5->6
  * (`CreateVideo`, 62.5fps), where every frame of that panel is a blend of the
  * two end states whose weights sum to 1.000 for the whole transition (issue

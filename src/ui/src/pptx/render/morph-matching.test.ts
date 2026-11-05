@@ -1119,7 +1119,7 @@ describe('children of two corresponding groups', () => {
 		// Taking the two panels apart is itself a statement that these four
 		// shapes are those four shapes; the flat list has lost that, and pass 3
 		// vetoes "same place, different words". Left unpaired, the old wording
-		// was gone by 23% and the new one only began at 42%, so the middle of
+		// was gone by about 25% and the new one only began at 45%, so the middle of
 		// every topic-to-topic morph was an empty panel (issue #160).
 		const result = matchMorphElementsFull(
 			makeSlide([panel('a', 'Cyber and EM Spectrum', 172)]),

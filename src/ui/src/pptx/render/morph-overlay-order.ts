@@ -121,7 +121,7 @@ export function buildMorphMergedOrder(
  *
  * A ghost that DISSOLVES is deliberately not counted, which is why the caller
  * passes only the holding ones. It stops hiding anything within the first
- * quarter of the morph, well before an arrival starts to appear at 42% (see
+ * quarter of the morph, well before an arrival starts to appear at about 45% (see
  * `MORPH_FADE_OUT_END_PERCENT` / `MORPH_FADE_IN_START_PERCENT`), so lifting for
  * it buys nothing and moves an animation the live stage should own: issue
  * #131's overview-to-topic hop dissolves the whole centre out and the arriving

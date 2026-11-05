@@ -222,7 +222,7 @@ describe('a pair whose frame grows WITH its crop', () => {
 		// Regression: a swapped-exponent bezier evaluation made the early
 		// samples race ahead (progress 0.097 at time 0.021), so the img track
 		// desynced from the container journey in the live transition even
-		// though a per-sample invariant still held. cubic-bezier(0.4, 0, 0.2, 1)
+		// though a per-sample invariant still held. The morph curve (MORPH_EASING)
 		// stays well below the diagonal early on and is monotone.
 		const samples = sampleImageCropMorphSteps(from, to);
 		expect(samples[1].percent).toBe('2.0833%');

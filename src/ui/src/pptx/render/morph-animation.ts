@@ -50,6 +50,7 @@ import {
 	MORPH_EASING,
 	MORPH_FADE_IN_EASING,
 	MORPH_FADE_IN_START_PERCENT,
+	MORPH_FADE_OUT_EASING,
 	MORPH_FADE_OUT_END_PERCENT,
 	MORPH_FADE_OUT_HOLD_PERCENT,
 } from './morph-types';
@@ -590,15 +591,24 @@ export function generateMorphAnimations(
 			toProps.push(`\t\topacity: ${inert ? 0 : toOpacity};`);
 		}
 
-		// Fill color interpolation
-		const colorInterp = buildColorInterpolationProps(fromElement, toElement);
+		// Fill and stroke interpolation, only where no ghost dissolves over this
+		// half. A ghost fading out on the morph curve over a half painted in its
+		// final look already IS the linear colour blend PowerPoint shows (its
+		// fill colour runs on the travel curve, issue #141). Tweening the colour
+		// underneath as well applied the curve twice: the blend ran at the
+		// square of the progress, 0.11 where PowerPoint is at 0.33.
+		const blendedByGhost = ghosted && morphPairNeedsCrossfade(fromElement, toElement);
+		const colorInterp = blendedByGhost
+			? null
+			: buildColorInterpolationProps(fromElement, toElement);
 		if (colorInterp) {
 			fromProps.push(`\t\tbackground-color: ${colorInterp.fromBg};`);
 			toProps.push(`\t\tbackground-color: ${colorInterp.toBg};`);
 		}
 
-		// Stroke interpolation via outline
-		const strokeInterp = buildStrokeInterpolationProps(fromElement, toElement);
+		const strokeInterp = blendedByGhost
+			? null
+			: buildStrokeInterpolationProps(fromElement, toElement);
 		if (strokeInterp) {
 			fromProps.push(`\t\toutline: ${strokeInterp.fromWidth}px solid ${strokeInterp.fromStroke};`);
 			toProps.push(`\t\toutline: ${strokeInterp.toWidth}px solid ${strokeInterp.toStroke};`);
@@ -873,10 +883,11 @@ function flipFactors(el: PptxElement): string {
 /**
  * Generate fade-out animations for elements that only exist on the outgoing slide.
  *
- * The shape dissolves in the FIRST quarter of the morph rather than across the
- * whole of it, and holds at zero from there (see
- * {@link MORPH_FADE_OUT_END_PERCENT} for the frames that were measured). Fading
- * it over the full duration left it half-visible at the midpoint, on top of an
+ * The shape dissolves over the first third of the morph's eased progress (the
+ * first quarter of its time) rather than across the whole of it, and holds at
+ * zero from there (see `MORPH_FADE_OUT_END_PROGRESS` for the frames that were
+ * measured). Fading it over the full duration left it half-visible at the
+ * midpoint, on top of an
  * incoming replacement that was itself half-visible, so the middle of every
  * morph read as a double exposure where PowerPoint shows a clean gap.
  *
@@ -904,7 +915,7 @@ export function generateUnmatchedFadeOutAnimations(
 		const keyframes = covered.has(el.id)
 			? `
 @keyframes ${safeName} {
-\t0%, ${MORPH_FADE_OUT_HOLD_PERCENT}% {
+\t0% {
 \t\topacity: ${el.opacity ?? 1};
 ${transform}
 \t}
@@ -917,10 +928,7 @@ ${transform}
 @keyframes ${safeName} {
 \t0% {
 \t\topacity: ${el.opacity ?? 1};
-${transform}
-\t}
-\t${MORPH_FADE_OUT_HOLD_PERCENT}% {
-\t\topacity: ${el.opacity ?? 1};
+\t\tanimation-timing-function: ${MORPH_FADE_OUT_EASING};
 ${transform}
 \t}
 \t${MORPH_FADE_OUT_END_PERCENT}% {
@@ -943,9 +951,10 @@ ${transform}
 /**
  * Generate fade-in animations for elements that only exist on the incoming slide.
  *
- * The shape stays completely invisible until the morph is
- * {@link MORPH_FADE_IN_START_PERCENT}% through, then dissolves in on a
- * decelerating curve. See that constant for the frames that were measured.
+ * The shape stays completely invisible until the morph's eased progress is two
+ * thirds of the way (about {@link MORPH_FADE_IN_START_PERCENT}% of its time),
+ * then dissolves in linearly in that progress, which decelerates hard into the
+ * end. See `MORPH_FADE_IN_START_PROGRESS` for the frames that were measured.
  *
  * Nothing scales: PowerPoint's dissolve keeps the box exactly where it is.
  *
