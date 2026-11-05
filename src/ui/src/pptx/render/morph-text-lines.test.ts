@@ -155,12 +155,48 @@ describe('laying out a morphing text box word by word', () => {
 			measure,
 		)!;
 		expect(bottom.lines[1]!.top).toBeCloseTo(76, 6);
-		expect(
-			layoutMorphTextWords(
-				frame([paragraph(TEXT, 20)], { vAlign: 'bottom', boxHeight: 40 }),
-				measure,
-			),
-		).toBeUndefined();
+	});
+
+	// A piece is a copy of its box and loses what spills past the box's edge:
+	// on PowerPoint 16 morph renders carrying an overflowing anchored box piece
+	// by piece measured worse than the box (middle 4.27 -> 5.35 mean abs diff).
+	it('refuses an anchored block that overflows its box', () => {
+		for (const vAlign of ['bottom', 'middle']) {
+			expect(
+				layoutMorphTextWords(frame([paragraph(TEXT, 20)], { vAlign, boxHeight: 40 }), measure),
+			).toBeUndefined();
+		}
+	});
+
+	// PowerPoint 16 exports: `anchorCtr` centres the paragraphs as one block as
+	// wide as the longest, each aligned inside it ("Short line" starts where
+	// the longer line below it starts).
+	it('centres a shrink-wrapped block as wide as its widest paragraph', () => {
+		const layout = layoutMorphTextWords(
+			frame([paragraph('aaaa', 20), paragraph('bbbb cccc', 20)], { anchorCenter: true }),
+			measure,
+		)!;
+		// 90 px wide in a 200 px column: 55 px either side.
+		expect(layout.words.map((word) => word.x0)).toEqual([55, 55, 105]);
+		const right = layoutMorphTextWords(
+			frame([paragraph('aaaa', 20), paragraph('bbbb cccc', 20)], {
+				anchorCenter: true,
+				align: 'right',
+			}),
+			measure,
+		)!;
+		expect(right.words.map((word) => word.x0)).toEqual([105, 55, 105]);
+	});
+
+	it('spreads a justified line over every space, a doubled one twice', () => {
+		const layout = layoutMorphTextWords(
+			frame([paragraph('aaaa  bbbb ccc ddddddd', 20, { textAlign: 'justify' })]),
+			measure,
+		)!;
+		// Line 1 "aaaa  bbbb ccc" is 140 px with 3 spaces: 60 px slack, 20 each.
+		expect(layout.words[1]!.x0).toBeCloseTo(60 + 2 * 20, 6);
+		expect(layout.words[2]!.x0).toBeCloseTo(110 + 3 * 20, 6);
+		expect(layout.lines[0]!.x1).toBeCloseTo(200, 6);
 	});
 
 	it('places each word ink on its line baseline', () => {
@@ -202,15 +238,34 @@ describe('laying out a morphing text box word by word', () => {
 			// Mixed sizes in different faces, and under exact spacing.
 			paragraph('aaaa bbbb', 20, {}, mixed),
 			paragraph('aaaa bbbb', 20, { lineHeight: '20pt' }, [mixed[0]!, { text: 'bbbb', size: 30 }]),
-			// Distributed alignment, and doubled spaces a justified line spreads.
+			// Distributed alignment, and a non-breaking space a justified line spreads.
 			paragraph(TEXT, 20, { textAlign: 'justify', textAlignLast: 'justify' }),
-			paragraph('aaaa  bbbb', 20, { textAlign: 'justify' }),
+			paragraph('aaaa\u00a0bbbb', 20, { textAlign: 'justify' }),
 		];
 		for (const p of refused) {
 			expect(layoutMorphTextWords(frame([p]), measure)).toBeUndefined();
 		}
+		// A shrink-wrapped block that wraps (PowerPoint shrinks it to its longest
+		// line, the renderer keeps the column), comes within a pixel of the
+		// column, or holds a line break.
 		expect(
 			layoutMorphTextWords(frame([paragraph(TEXT, 20)], { anchorCenter: true }), measure),
+		).toBe(undefined);
+		expect(
+			layoutMorphTextWords(frame([paragraph('a'.repeat(20), 20)], { anchorCenter: true }), measure),
+		).toBe(undefined);
+		expect(
+			layoutMorphTextWords(frame([paragraph('aaaa\nbbbb', 20)], { anchorCenter: true }), measure),
+		).toBe(undefined);
+		// Several paragraphs spread over a distributed anchor.
+		expect(
+			layoutMorphTextWords(
+				frame([paragraph('aaaa', 20), paragraph('bbbb', 20)], {
+					vAlign: 'middle',
+					anchorSpread: true,
+				}),
+				measure,
+			),
 		).toBe(undefined);
 	});
 });

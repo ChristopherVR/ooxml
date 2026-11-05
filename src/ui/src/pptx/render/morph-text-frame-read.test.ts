@@ -62,4 +62,9 @@ describe('reading a morphing text frame', () => {
 		expect(first.spaceBeforePx).toBe(10);
 		expect(first.indented).toBe(true);
 	});
+
+	it('flags a distributed or justified vertical anchor', () => {
+		expect(readFrame(box([{ text: 'one' }]))!.anchorSpread).toBeUndefined();
+		expect(readFrame(box([{ text: 'one' }], { vAlign: 'distributed' }))!.anchorSpread).toBe(true);
+	});
 });

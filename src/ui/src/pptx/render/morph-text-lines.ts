@@ -12,17 +12,25 @@
  * the flex column centres or bottom-aligns the whole block for a middle or bottom
  * anchor.
  *
+ * A shrink-wrapped (`anchorCtr`) block that fits on one line per paragraph is
+ * as wide as its widest paragraph (`width: fit-content`), centred in the box,
+ * as PowerPoint draws it.
+ *
  * It refuses anything it cannot reproduce with confidence: mixed font sizes in
  * different faces or under exact line spacing, distributed alignment,
- * transformed, shifted or doubled-space text, a word wider than its column,
- * any line whose break sits within a pixel of the column edge (where a
- * rounding difference could make the browser break it elsewhere), a
- * shrink-wrapped (`anchorCtr`) block, and text that overflows a box it is not
- * anchored to the top of.
+ * transformed or shifted text, a non-breaking space in justified text, a
+ * word wider than its column, a break within a pixel of the column edge
+ * (where rounding could move it), a shrink-wrapped block that wraps, holds a
+ * line break or nearly fills the column (PowerPoint shrinks a wrapped one to
+ * its longest line, `fit-content` does not), several paragraphs spread over a
+ * distributed anchor, and text overflowing a box not anchored at its top
+ * (both lay it out alike, but a piece, a copy of the box, loses what spills
+ * past its edge, which measured worse than carrying the box).
  *
  * @module render/morph-text-lines
  */
 import type { FrameParagraph, MorphTextMeasure, TextFrame } from './morph-text-frame-read';
+import { paragraphWidth } from './morph-text-frame-read';
 import type { MorphTextInkMeasure } from './morph-text-ink';
 import { glyphInk, lineBaseline, union } from './morph-text-ink';
 import type { MorphTextRect } from './morph-text-spans';
@@ -64,12 +72,12 @@ export interface MorphTextLayout {
 	bottom: number;
 }
 
+/** Sub-pixel overflow a middle or bottom anchored block may have. */
+const OVERFLOW_EPSILON_PX = 0.5;
 /** How close (px) a break may sit to the column edge and still be trusted. */
 const BREAK_MARGIN_PX = 1;
 /** Upper bound on the words laid out; longer bodies keep the box interpolation. */
 const MAX_WORDS = 400;
-/** Sub-pixel overflow a middle or bottom anchored block may have. */
-const OVERFLOW_EPSILON_PX = 0.5;
 
 /** The words of one paragraph as `[start, end)` offsets; only a plain space separates them. */
 function wordSpans(text: string): [number, number][] {
@@ -118,6 +126,44 @@ function breakParagraph(
 	return lines;
 }
 
+/** How many spaces `text` holds in `[start, end)`. */
+function spaces(text: string, start: number, end: number): number {
+	let count = 0;
+	for (let index = start; index < end; index++) {
+		if (text[index] === ' ') {
+			count += 1;
+		}
+	}
+	return count;
+}
+
+/**
+ * The column the paragraphs lay out in: the whole width, or for a
+ * shrink-wrapped (`anchorCtr`) block its widest paragraph's own width, centred.
+ * `undefined` when that width cannot be trusted.
+ */
+function blockColumn(
+	frame: TextFrame,
+	measure: MorphTextMeasure,
+): { left: number; width: number; wraps: boolean } | undefined {
+	if (!frame.anchorCenter) {
+		return { left: 0, width: frame.available, wraps: frame.wraps };
+	}
+	let widest = 0;
+	for (const paragraph of frame.paragraphs) {
+		const width = paragraphWidth(paragraph, measure);
+		if (width === undefined || /[\n\v\u2028]/u.test(paragraph.text)) {
+			return undefined;
+		}
+		widest = Math.max(widest, paragraph.marginLeftPx + paragraph.textIndentPx + width);
+	}
+	if (widest > frame.available - BREAK_MARGIN_PX) {
+		return undefined;
+	}
+	// Narrower than the column, every paragraph sits on one line.
+	return { left: (frame.available - widest) / 2, width: widest, wraps: false };
+}
+
 /** Whether the paragraph's text paints as measured and its lines can be sized. */
 function layoutable(paragraph: FrameParagraph): boolean {
 	const sizes = new Set(paragraph.runs.map((run) => pxOf(run.style.fontSize) ?? paragraph.size));
@@ -132,7 +178,7 @@ function layoutable(paragraph: FrameParagraph): boolean {
 	return (
 		plain &&
 		(sizes.size <= 1 || (typeof paragraph.lineHeight === 'number' && families.size === 1)) &&
-		(!justified || (paragraph.textAlignLast === undefined && !/ {2}| /u.test(paragraph.text)))
+		(!justified || (paragraph.textAlignLast === undefined && !paragraph.text.includes('\u00a0')))
 	);
 }
 
@@ -163,7 +209,8 @@ export function layoutMorphTextWords(
 	measure: MorphTextMeasure,
 	ink?: MorphTextInkMeasure,
 ): MorphTextLayout | undefined {
-	if (frame.anchorCenter) {
+	const block = blockColumn(frame, measure);
+	if (!block || (frame.anchorSpread && frame.paragraphs.length > 1)) {
 		return undefined;
 	}
 	const words: MorphTextWord[] = [];
@@ -174,10 +221,10 @@ export function layoutMorphTextWords(
 		if (!layoutable(paragraph) || words.length + spans.length > MAX_WORDS) {
 			return undefined;
 		}
-		const column = frame.available - paragraph.marginLeftPx;
+		const column = block.width - paragraph.marginLeftPx;
 		const indentOf = (line: number) => (line === 0 ? paragraph.textIndentPx : 0);
 		const broken = spans.length
-			? breakParagraph(paragraph, spans, (line) => column - indentOf(line), frame.wraps, measure)
+			? breakParagraph(paragraph, spans, (line) => column - indentOf(line), block.wraps, measure)
 			: [];
 		if (!broken || !(column > 0)) {
 			return undefined;
@@ -191,11 +238,13 @@ export function layoutMorphTextWords(
 			if (width === undefined || !(height > 0)) {
 				return undefined;
 			}
-			const origin = frame.insetLeft + paragraph.marginLeftPx + indentOf(lineIndex);
+			const origin = frame.insetLeft + block.left + paragraph.marginLeftPx + indentOf(lineIndex);
 			const room = column - indentOf(lineIndex);
 			const last = lineIndex === broken.length - 1;
-			const gaps = indices.length - 1;
-			const spread = paragraph.textAlign === 'justify' && frame.wraps && !last && gaps > 0;
+			// Justification widens every space between the line's words, so a
+			// doubled space takes twice the extra.
+			const gaps = spaces(paragraph.text, lineStart, lineEnd);
+			const spread = paragraph.textAlign === 'justify' && block.wraps && !last && gaps > 0;
 			const extra = spread ? Math.max(0, room - width) / gaps : 0;
 			const left =
 				spread || frame.align === 'left'
@@ -203,14 +252,15 @@ export function layoutMorphTextWords(
 					: frame.align === 'right'
 						? origin + room - width
 						: origin + (room - width) / 2;
-			for (const [k, word] of indices.entries()) {
+			for (const word of indices) {
 				const [start, end] = spans[word] ?? [0, 0];
 				const before = spanWidth(paragraph, lineStart, start, measure);
 				const through = spanWidth(paragraph, lineStart, end, measure);
 				if (before === undefined || through === undefined) {
 					return undefined;
 				}
-				const x0 = left + before + k * extra;
+				const shift = spaces(paragraph.text, lineStart, start) * extra;
+				const x0 = left + before + shift;
 				const glyphs =
 					ink && baseline !== undefined
 						? glyphInk(paragraph, start, end, x0, top + baseline, measure, ink)
@@ -220,7 +270,7 @@ export function layoutMorphTextWords(
 					paragraph: index,
 					line: lines.length,
 					x0,
-					x1: left + through + k * extra,
+					x1: left + through + shift,
 					...(glyphs && box ? { ink: box, glyphs } : {}),
 				});
 			}

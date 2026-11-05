@@ -60,6 +60,11 @@ export interface TextFrame {
 	boxHeight: number;
 	/** `a:bodyPr/@anchorCtr`: the paragraphs are centred as one shrink-wrapped block. */
 	anchorCenter: boolean;
+	/**
+	 * A distributed or justified vertical anchor: the column spreads several
+	 * paragraphs over the box (`space-between`) rather than centring them.
+	 */
+	anchorSpread?: boolean;
 	paragraphs: FrameParagraph[];
 }
 
@@ -300,6 +305,7 @@ export function readFrame(
 		insetBottom: bottom,
 		boxHeight: element.height,
 		anchorCenter: ts?.anchorCenter === true,
+		...(ts?.vAlign === 'distributed' || ts?.vAlign === 'justified' ? { anchorSpread: true } : {}),
 		paragraphs,
 	};
 }
