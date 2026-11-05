@@ -28,4 +28,20 @@ describe('shouldPreventHyperlinkNavigation', () => {
 		const confirm = vi.fn().mockReturnValue(true);
 		expect(shouldPreventHyperlinkNavigation(confirm, 'https://example.com')).toBeFalsy();
 	});
+
+	it('cancels the click now and opens the link only after an in-app confirmation resolves true', async () => {
+		const open = vi.fn();
+		expect(
+			shouldPreventHyperlinkNavigation(() => Promise.resolve(false), 'https://example.com', open),
+		).toBeTruthy();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(open).not.toHaveBeenCalled();
+		expect(
+			shouldPreventHyperlinkNavigation(() => Promise.resolve(true), 'https://example.com', open),
+		).toBeTruthy();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(open).toHaveBeenCalledExactlyOnceWith('https://example.com');
+	});
 });

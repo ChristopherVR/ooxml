@@ -29,6 +29,7 @@ import {
 	resolveOptionRootClasses,
 	resolveScreenTip,
 	shouldClearAutosaveCacheOnClose,
+	confirmExternalHyperlinkDialog,
 	shouldConfirmExternalHyperlink,
 	shouldDiscardAutosaveOnSuccessfulSave,
 	shouldOpenInProtectedView,
@@ -177,17 +178,16 @@ export class ViewerOptionsService {
 	 * Gate an external hyperlink activation. Returns `true` when navigation may
 	 * proceed (no confirmation required, or the user confirmed the prompt).
 	 */
-	confirmExternalHyperlink(href: string): boolean {
+	confirmExternalHyperlink(href: string): boolean | Promise<boolean> {
 		if (!shouldConfirmExternalHyperlink(this.options(), href)) {
 			return true;
 		}
-		if (typeof window === 'undefined' || typeof window.confirm !== 'function') {
+		if (typeof window === 'undefined') {
 			return true;
 		}
-		const label =
-			this.translate?.instant('pptx.options.trust.confirmHyperlinks') ??
-			'Confirm before opening external hyperlinks';
-		return window.confirm(`${label}\n\n${href}`);
+		return confirmExternalHyperlinkDialog(href, {
+			t: (key) => this.translate?.instant(key) ?? key,
+		});
 	}
 
 	/**

@@ -58,6 +58,8 @@ import {
 	THEME_CATALOG,
 	createCollaborationStateReporter,
 	resolveCollaborationConfig,
+	alertNoticeDialog,
+	promptNameDialog,
 	viewerOptionsToPreferences,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
@@ -3457,11 +3459,11 @@ export class PowerPointViewerComponent
 	/**
 	 * Run one Slide Master view sidebar CRUD command.
 	 *
-	 * rename* prompts for a name first (`window.prompt`, matching the pattern
+	 * rename* prompts for a name first (an in-app name dialog, matching the pattern
 	 * `SlidesPanelComponent`'s section-rename already uses); every command then
 	 * runs through `runMasterViewCrud` (`master-view-crud-session.ts`, which
 	 * adopts the rebuilt deck) and, on success, moves the sidebar selection to
-	 * the returned target. A failure is surfaced with `window.alert`: Angular has
+	 * the returned target. A failure is surfaced with an in-app notice dialog: Angular has
 	 * no generic toast/notice channel for an arbitrary action failure (the
 	 * compat-toast stack is load-diagnostics only).
 	 */
@@ -3482,9 +3484,10 @@ export class PowerPointViewerComponent
 					: target.layoutIndex === null
 						? ''
 						: (masters[target.masterIndex]?.layouts?.[target.layoutIndex]?.name ?? '');
-			const typed = window.prompt(
+			const typed = await promptNameDialog(
 				this.translateService.instant('pptx.masterView.renamePrompt'),
 				current,
+				{ t: (key) => this.translateService.instant(key) },
 			);
 			if (typed === null || typed.trim().length === 0) {
 				return;
@@ -3503,7 +3506,10 @@ export class PowerPointViewerComponent
 			return;
 		}
 		if (!result.ok) {
-			window.alert(this.translateService.instant(masterViewCrudFailureKey(id, result.reason)));
+			await alertNoticeDialog(
+				this.translateService.instant(masterViewCrudFailureKey(id, result.reason)),
+				{ t: (key) => this.translateService.instant(key) },
+			);
 			return;
 		}
 		this.activeMasterIndex.set(result.target.masterIndex);
