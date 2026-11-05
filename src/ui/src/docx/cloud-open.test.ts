@@ -63,7 +63,7 @@ describe('<docx-editor> cloud file places', () => {
 		const page = (n: string) =>
 			chrome(editor).backstage.element.querySelector(`[data-backstage-page="${n}"]`);
 		chrome(editor).backstage.open('open');
-		expect(page('open')?.querySelector('.dve-open-places')).toBeNull();
+		expect(page('open')?.querySelector('office-ui-open-places')).toBeNull();
 		expect(page('open')?.textContent).toContain('Browse');
 	});
 
@@ -72,10 +72,11 @@ describe('<docx-editor> cloud file places', () => {
 		editor.fileProviders = [provider()];
 		chrome(editor).backstage.open('open');
 		const page = chrome(editor).backstage.element.querySelector('[data-backstage-page="open"]')!;
-		const places = [...page.querySelectorAll('.dve-open-place')].map((b) => b.textContent);
-		expect(places).toEqual(['This device', 'Fake Drive']);
-		(page.querySelectorAll('.dve-open-place')[1] as HTMLButtonElement).click();
-		const files = page.querySelector('office-ui-cloud-files') as Updating & {
+		const switcher = page.querySelector('office-ui-open-places') as HTMLElement;
+		const tabs = () => [...switcher.shadowRoot!.querySelectorAll<HTMLElement>('[role="tab"]')];
+		expect(tabs().map((b) => b.textContent)).toEqual(['This device', 'Fake Drive']);
+		tabs()[1]!.click();
+		const files = switcher.shadowRoot!.querySelector('office-ui-cloud-files') as Updating & {
 			accept: string[];
 			labels: Record<string, string>;
 		};

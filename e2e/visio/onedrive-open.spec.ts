@@ -34,7 +34,7 @@ async function seeds(extra: Record<string, GraphSeed> = {}): Promise<Record<stri
 async function showCloud(page: Page): Promise<void> {
 	const viewer = page.locator('visio-viewer');
 	await fileBackstage(viewer, 'open');
-	await viewer.locator('[data-backstage-place="onedrive"]').click();
+	await viewer.locator('office-ui-open-places').getByRole('tab', { name: 'OneDrive' }).click();
 	await viewer.getByRole('button', { name: 'Sign in', exact: true }).click();
 	await page.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
 	await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -146,14 +146,13 @@ test('This device keeps the plain file chooser next to the cloud place', async (
 	await openDemo(page, paths.vanilla);
 	const viewer = page.locator('visio-viewer');
 	await fileBackstage(viewer, 'open');
-	await expect(viewer.locator('[data-backstage-place="device"]')).toHaveAttribute(
-		'aria-pressed',
-		'true',
-	);
+	await expect(
+		viewer.locator('office-ui-open-places').getByRole('tab', { name: 'This device' }),
+	).toHaveAttribute('aria-selected', 'true');
 	await expect(
 		viewer.locator('[data-backstage-page="open"] [data-backstage-action="open"]'),
 	).toBeVisible();
-	await viewer.locator('[data-backstage-place="onedrive"]').click();
+	await viewer.locator('office-ui-open-places').getByRole('tab', { name: 'OneDrive' }).click();
 	await expect(
 		viewer.locator('[data-backstage-page="open"] [data-backstage-action="open"]'),
 	).toBeHidden();

@@ -220,29 +220,3 @@
 		border-left: 0;
 	}
 }
-
-/* File > Open places: This device and the cloud providers. */
-.xve-backstage-places {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	margin-bottom: 14px;
-	border-bottom: 1px solid var(--line);
-}
-.xve-backstage-place-tab {
-	padding: 8px 14px;
-	border: 0;
-	border-bottom: 2px solid transparent;
-	background: none;
-	color: var(--muted);
-	font: inherit;
-	cursor: pointer;
-}
-.xve-backstage-place-tab[aria-selected='true'] {
-	border-bottom-color: var(--xl);
-	color: var(--ink);
-}
-.xve-backstage-cloud {
-	display: block;
-	min-height: 360px;
-}
