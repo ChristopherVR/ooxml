@@ -17,12 +17,13 @@
 	background: transparent;
 	color: var(--office-muted-foreground);
 	font: inherit;
+	font-size: var(--office-font-size-md);
 	font-weight: var(--office-font-weight-medium);
 	cursor: pointer;
 }
 .places button:hover {
-	background: var(--office-backstage-item-hover);
 	color: var(--office-foreground);
+	box-shadow: inset 0 calc(-1 * var(--office-border-width-thick)) 0 var(--office-border);
 }
 .places button[aria-selected='true'] {
 	color: var(--office-foreground);
