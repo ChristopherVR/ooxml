@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { createSaveProgressController } from 'ooxml-ui/pptx';
+import type { DocumentSaveMeta } from 'ooxml-ui/pptx';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
@@ -37,7 +39,7 @@ function open(inputs: Record<string, unknown> = {}) {
 	const root = host.shadowRoot!;
 	const button = (key: string) =>
 		root.querySelector<HTMLButtonElement>(`button[aria-label="${key}"]`)!;
-	return { fixture, root, button };
+	return { fixture, root, button, saveProgress: values.saveProgress };
 }
 
 describe('statusBarComponent adapter', () => {
@@ -86,5 +88,31 @@ describe('statusBarComponent adapter', () => {
 		expect(button('Slide show').hidden).toBeTruthy();
 		expect(button('Zoom in').closest('.group')).toHaveProperty('hidden', true);
 		expect(button('Normal view').hidden).toBeFalsy();
+	});
+});
+
+describe('statusBarComponent save progress', () => {
+	it('shows each step of a save to the host storage, then All saved again', async () => {
+		const progress = signal<unknown>(undefined);
+		const { fixture, root } = open({ saveProgress: undefined });
+		fixture.componentRef.setInput('saveProgress', progress);
+		const controller = createSaveProgressController();
+		controller.subscribe(() => {
+			progress.set(controller.getSnapshot());
+			fixture.detectChanges();
+		});
+		const save = () => root.querySelector('[data-item="save"]')!.textContent;
+		const seen: (string | null)[] = [];
+		const storage = controller.wrap({
+			async save(_bytes: Uint8Array, meta: DocumentSaveMeta) {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				seen.push(save());
+				meta.onProgress?.({ phase: 'merging' });
+				seen.push(save());
+			},
+		});
+		await storage.save(new Uint8Array(), { fileName: 'a.pptx', mimeType: 'x', reason: 'save' });
+		expect(seen).toStrictEqual(['Saving… 45%', 'Combining edits…']);
+		expect(save()).toBe('All saved');
 	});
 });

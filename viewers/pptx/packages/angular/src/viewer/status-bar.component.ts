@@ -20,8 +20,13 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
-import { dispatchStatusBarIntent, statusBarState } from 'ooxml-ui/pptx';
-import type { StatusBarIntentHandlers, StatusBarViewState, ToolbarActionId } from 'ooxml-ui/pptx';
+import { dispatchStatusBarIntent, saveProgressStatus, statusBarState } from 'ooxml-ui/pptx';
+import type {
+	SaveProgressState,
+	StatusBarIntentHandlers,
+	StatusBarViewState,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import { map, merge, startWith } from 'rxjs';
 
 import type { AutosaveStatus } from './autosave.service';
@@ -45,6 +50,8 @@ export class StatusBarComponent {
 	readonly dirty = input<boolean>(false);
 	/** Current autosave engine status; drives the save-state text + colour. */
 	readonly autosaveStatus = input<AutosaveStatus | undefined>(undefined);
+	/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
+	readonly saveProgress = input<SaveProgressState | undefined>(undefined);
 	readonly notesOpen = input<boolean>(false);
 	readonly zoomPercent = input<number>(100);
 	/** True when the slide-sorter overlay is open (active-state styling). */
@@ -82,6 +89,11 @@ export class StatusBarComponent {
 		zoomIn: () => this.zoomIn.emit(),
 	};
 
+	private saveProgressView() {
+		const state = this.saveProgress();
+		return state ? saveProgressStatus(state, (key) => this.translate.instant(key)) : undefined;
+	}
+
 	protected view(): StatusBarViewState {
 		this.translations();
 		return statusBarState({
@@ -89,6 +101,7 @@ export class StatusBarComponent {
 			activeSlideIndex: this.slideIndex(),
 			dirty: this.dirty(),
 			autosave: this.autosaveStatus(),
+			saveProgress: this.saveProgressView(),
 			zoomPercent: this.zoomPercent(),
 			notesExpanded: this.notesOpen(),
 			viewMode: this.presenting() ? 'slideShow' : this.sorterActive() ? 'sorter' : 'normal',

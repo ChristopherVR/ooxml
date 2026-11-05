@@ -57,6 +57,7 @@ import {
 	templateSchemeFromTheme,
 	THEME_CATALOG,
 	createCollaborationStateReporter,
+	createSaveProgressController,
 	resolveCollaborationConfig,
 	alertNoticeDialog,
 	promptNameDialog,
@@ -138,6 +139,7 @@ import {
 import type { CommentSubmission } from './comments-panel.component';
 import { CommentsPanelComponent } from './comments-panel.component';
 import { CompatToastsComponent } from './compat-toasts.component';
+import { controllerSignal } from './controller-signal';
 import { CustomShowsComponent } from './custom-shows.component';
 import { EditorChromeStyleDirective } from './editor-chrome-style.directive';
 import { EditorContextMenuComponent } from './editor-context-menu.component';
@@ -930,6 +932,7 @@ const noopClose = (): void => undefined;
 						[canEdit]="canEdit()"
 						[dirty]="editor.dirty()"
 						[autosaveStatus]="autosave.status()"
+						[saveProgress]="saveProgressState()"
 						[notesOpen]="mobileSheetSvc.showNotes()"
 						[zoomPercent]="zoomSvc.zoomPercent()"
 						[sorterActive]="showSorter()"
@@ -1596,6 +1599,9 @@ export class PowerPointViewerComponent
 	 * The open document's storage, edit right, name and recovery key: the host's inputs, or those
 	 * of a file opened from a File > Open cloud place (shared `resolveCloudDocumentView`).
 	 */
+	private readonly saveProgress = createSaveProgressController();
+	/** The progress of a save to the open document's storage, shown by the status bar. */
+	protected readonly saveProgressState = controllerSignal(this.saveProgress);
 	private readonly documentView = computed(() =>
 		this.fileIO.documentView({
 			storage: this.hostStorage(),
@@ -1605,7 +1611,11 @@ export class PowerPointViewerComponent
 		}),
 	);
 	/** The open document's storage: the host `storage` input, or a cloud file's own. */
-	readonly storage = computed(() => this.documentView().storage);
+	readonly storage = computed(() => {
+		const storage = this.documentView().storage;
+		// Saves through it report their steps (upload, merge) to the status bar.
+		return storage ? this.saveProgress.wrap(storage) : storage;
+	});
 	/** The open document's name: the host `fileName` input, or a cloud file's. */
 	readonly fileName = computed(() => this.documentView().fileName);
 	/** The open document's recovery and version-history key (host `filePath`, or the cloud file's). */
