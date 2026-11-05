@@ -96,4 +96,13 @@ describe('localizeRibbon', () => {
 		localizeRibbon(ribbon, 'de');
 		expect(addIn.dataset.label).toBe('Design');
 	});
+
+	it('stays fast on long crafted text (code scanning: polynomial patterns)', () => {
+		const started = performance.now();
+		translateRibbonText('de', `${'-'.repeat(20000)}: x`);
+		translateRibbonText('de', `a${'		'.repeat(20000)}`);
+		translateRibbonText('de', `${'a. '.repeat(5000)}b`);
+		expect(performance.now() - started).toBeLessThan(500);
+		expect(translateRibbonText('de', 'Bold: Bold')).toBe('Fett: Fett');
+	});
 });

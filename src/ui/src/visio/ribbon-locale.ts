@@ -102,13 +102,15 @@ export function translateRibbonText(locale: VisioLocale, text: string): string {
 		const label = exact(locale, shortcut[1] ?? '');
 		if (label !== undefined) return `${label} ${shortcut[2]}`;
 	}
-	const reason = /^(.+?): (.+)$/s.exec(text);
-	if (reason) {
-		const label = exact(locale, reason[1] ?? '');
-		const rest = translateRibbonText(locale, reason[2] ?? '');
+	// "Label: reason" split at the first ": " (a string search: no backtracking on crafted text).
+	const colon = text.indexOf(': ');
+	if (colon > 0 && colon + 2 < text.length) {
+		const label = exact(locale, text.slice(0, colon));
+		const rest = translateRibbonText(locale, text.slice(colon + 2));
 		if (label !== undefined) return `${label}: ${rest}`;
 	}
-	const sentences = text.match(/[^.]+\.(?:\s+|$)/g);
+	// Each sentence starts with a non-space, so the spaces after a full stop belong to one match.
+	const sentences = text.match(/[^.\s][^.]*\.(?:\s+|$)/g);
 	if (sentences && sentences.length > 1 && sentences.join('') === text) {
 		const parts = sentences.map((sentence) => exact(locale, sentence.trim()));
 		if (parts.every((part) => part !== undefined)) return parts.join(' ');

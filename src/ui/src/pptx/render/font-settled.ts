@@ -37,7 +37,20 @@ const installedCache = new Map<string, boolean>();
 
 /** The first family of a `font` shorthand (`italic 700 40px "A B", C`), unquoted. */
 export function firstFontFamily(font: string): string | undefined {
-	const list = /\d(?:px|pt|em|rem|%)(?:\s*\/\s*[^\s]+)?\s+(.+)$/u.exec(font)?.[1];
+	// Scanned step by step rather than with one backtracking pattern, so a crafted string stays
+	// linear: the size, an optional `/line-height`, then whitespace and the family list.
+	const size = /\d(?:px|pt|em|rem|%)/u.exec(font);
+	if (!size) return undefined;
+	let rest = font.slice(size.index + size[0].length);
+	const slash = /^\s*\//u.exec(rest);
+	if (slash) {
+		rest = rest.slice(slash[0].length).trimStart();
+		const end = rest.search(/\s/u);
+		if (end <= 0) return undefined;
+		rest = rest.slice(end);
+	}
+	if (!/^\s/u.test(rest)) return undefined;
+	const list = rest.trim() || undefined;
 	const first = list
 		?.split(',')[0]
 		?.trim()
