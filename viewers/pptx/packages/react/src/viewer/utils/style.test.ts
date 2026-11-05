@@ -336,7 +336,7 @@ describe('getTextCompensationTransform', () => {
 		expect(getTextCompensationTransform(element)).toBe('scaleX(-1)');
 	});
 
-	it('should compensate vertical flip', () => {
+	it('should turn vertically flipped text upside down (PowerPoint never mirrors it)', () => {
 		const element = {
 			id: '1',
 			type: 'shape',
@@ -346,10 +346,11 @@ describe('getTextCompensationTransform', () => {
 			height: 100,
 			flipVertical: true,
 		} as PptxElement;
-		expect(getTextCompensationTransform(element)).toBe('scaleY(-1)');
+		// The container's scaleY(-1) and this scaleX(-1) make a half turn.
+		expect(getTextCompensationTransform(element)).toBe('scaleX(-1)');
 	});
 
-	it('should compensate both flips', () => {
+	it('should leave both flips alone: the shape is a half turn and its text turns with it', () => {
 		const element = {
 			id: '1',
 			type: 'shape',
@@ -360,7 +361,7 @@ describe('getTextCompensationTransform', () => {
 			flipHorizontal: true,
 			flipVertical: true,
 		} as PptxElement;
-		expect(getTextCompensationTransform(element)).toBe('scaleX(-1) scaleY(-1)');
+		expect(getTextCompensationTransform(element)).toBeUndefined();
 	});
 
 	it('should not include rotation (only flips are compensated)', () => {

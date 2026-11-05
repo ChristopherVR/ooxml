@@ -432,7 +432,7 @@ describe('inlineTextEditor: transform merging', () => {
 		expect(style.transform).toBeUndefined();
 	});
 
-	it('should combine both flips with warp transform', () => {
+	it('should keep only the warp transform when both flips make a half turn', () => {
 		const textStyle: TextStyle = { textWarpPreset: 'textInflate' };
 		const el = makeTextElement({
 			flipHorizontal: true,
@@ -441,8 +441,8 @@ describe('inlineTextEditor: transform merging', () => {
 		});
 		const style = computeEditorWrapperStyle(el, textStyle);
 
-		expect(style.transform).toContain('scaleX(-1)');
-		expect(style.transform).toContain('scaleY(-1)');
+		expect(style.transform).not.toContain('scaleX(-1)');
+		expect(style.transform).not.toContain('scaleY(-1)');
 		expect(style.transform).toContain('scaleY(1.15)');
 	});
 });
@@ -935,14 +935,14 @@ describe('getTextCompensationTransform (edit mode integration)', () => {
 		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
-	it('should compensate for vertical flip', () => {
+	it('should turn vertically flipped text upside down, as PowerPoint paints it', () => {
 		const el = makeTextElement({ flipVertical: true });
-		expect(getTextCompensationTransform(el)).toBe('scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBe('scaleX(-1)');
 	});
 
-	it('should compensate for both flips', () => {
+	it('should leave both flips alone (the shape is a half turn)', () => {
 		const el = makeTextElement({ flipHorizontal: true, flipVertical: true });
-		expect(getTextCompensationTransform(el)).toBe('scaleX(-1) scaleY(-1)');
+		expect(getTextCompensationTransform(el)).toBeUndefined();
 	});
 
 	it('should NOT include rotation in compensation', () => {

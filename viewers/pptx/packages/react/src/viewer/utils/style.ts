@@ -21,6 +21,7 @@ export {
 	getSvgStrokeDasharray,
 	getElementTransform,
 	getElementTransformWithoutRotation,
+	getTextCompensationOrigin,
 	getTextCompensationTransform,
 	parseDrawingPercent,
 } from 'ooxml-ui/pptx';

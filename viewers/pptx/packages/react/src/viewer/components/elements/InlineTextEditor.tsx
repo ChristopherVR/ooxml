@@ -13,7 +13,12 @@ import { hasTextProperties } from 'pptx-viewer-core';
 import React, { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 
 import { DEFAULT_TEXT_COLOR } from '../../constants';
-import { getTextCompensationTransform, getTextWarpStyle, renderTextSegments } from '../../utils';
+import {
+	getTextCompensationOrigin,
+	getTextCompensationTransform,
+	getTextWarpStyle,
+	renderTextSegments,
+} from '../../utils';
 import {
 	getPendingSelectionRestore,
 	restoreSegmentSelection,
@@ -189,7 +194,9 @@ export function InlineTextEditor({
 		...textStyle,
 		...warpStyle,
 		transform: mergedTransform,
-		transformOrigin: warpStyle?.transformOrigin || 'center',
+		transformOrigin:
+			warpStyle?.transformOrigin ||
+			(compensationTransform ? getTextCompensationOrigin(element) : 'center'),
 	};
 
 	const nextInlineStyleValue = (property: 'bold' | 'italic' | 'underline'): boolean | undefined => {

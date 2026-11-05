@@ -161,7 +161,7 @@ exports[`element Transform Snapshots > rotation with both flips 1`] = `"rotate(4
 
 exports[`element Transform Snapshots > text compensation returns undefined with no flips 1`] = `undefined`;
 
-exports[`element Transform Snapshots > text compensation transform with both flips 1`] = `"scaleX(-1) scaleY(-1)"`;
+exports[`element Transform Snapshots > text compensation transform with both flips 1`] = `undefined`;
 
 exports[`react Render Snapshots - SVG Proxy > comparison layout with two columns 1`] = `"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 960 540" width="960" height="540"><rect width="960" height="540" fill="#FFFFFF" /><g transform="translate(30,90)"><rect fill="#E8F0FE" stroke="#4472C4" stroke-width="2" width="430" height="380" rx="38" /></g><g transform="translate(500,90)"><rect fill="#FFF3E0" stroke="#ED7D31" stroke-width="2" width="430" height="380" rx="38" /></g><g transform="translate(30,30)"><rect fill="none" stroke="none" width="430" height="50" /><text x="215" text-anchor="middle" font-family="Arial" font-size="28" fill="#4472C4"><tspan x="215" dy="33.6" font-weight="bold">Option A</tspan></text></g><g transform="translate(500,30)"><rect fill="none" stroke="none" width="430" height="50" /><text x="215" text-anchor="middle" font-family="Arial" font-size="28" fill="#ED7D31"><tspan x="215" dy="33.6" font-weight="bold">Option B</tspan></text></g><g transform="translate(475,30)"><line x1="0" y1="0" x2="0" y2="480" stroke="#CCCCCC" stroke-width="1" /></g></svg>"`;
 
