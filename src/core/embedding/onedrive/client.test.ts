@@ -184,6 +184,36 @@ describe('OneDrive host adapter', () => {
 		}
 	});
 
+	it('accepts Graph next ranges that carry an end, and cancels a failed session', async () => {
+		const large = new Uint8Array(5 * 1024 * 1024 + 7).fill(7);
+		const methods: string[] = [];
+		let puts = 0;
+		const connection = client(
+			async (url, init = {}) => {
+				if (String(url).includes('/shares/')) return json(item);
+				if (String(url).includes('/createUploadSession'))
+					return json({ uploadUrl: 'https://upload.example/file' });
+				if (String(url).startsWith('https://upload.example')) {
+					methods.push(String(init.method));
+					if (init.method === 'DELETE') return new Response(null, { status: 204 });
+					return ++puts === 1
+						? json({ nextExpectedRanges: [`${5 * 1024 * 1024}-${large.length - 1}`] }, 202)
+						: json({ ...item, eTag: '"v2"' });
+				}
+				return new Response(bytes);
+			},
+			{ canWrite: () => true },
+		);
+		const opened = await connection.open(link);
+		await expect(connection.save(opened.file, large)).resolves.toMatchObject({ eTag: '"v2"' });
+		expect(methods).toEqual(['PUT', 'PUT']);
+		puts = -1;
+		await expect(connection.save(opened.file, large)).rejects.toMatchObject({
+			code: 'invalid-response',
+		});
+		expect(methods.at(-1)).toBe('DELETE');
+	});
+
 	it('bounds streamed downloads even without Content-Length', async () => {
 		const connection = client(
 			async (url) =>
@@ -290,6 +320,28 @@ describe('OneDrive host adapter', () => {
 		await pending;
 		expect(postedPath).toContain('/items/item/createUploadSession');
 		expect(uploaded).toEqual(bytes);
+	});
+
+	it('guards an overwrite with If-Match and replace (fail rejects every existing item)', async () => {
+		let headers: Headers | undefined;
+		let body = '';
+		const connection = client(
+			async (url, init) => {
+				if (String(url).includes('/shares/')) return json(item);
+				if (String(url).includes('/createUploadSession')) {
+					headers = new Headers(init?.headers);
+					body = String(init?.body);
+					return json({ uploadUrl: 'https://upload.example/file' });
+				}
+				if (init?.method === 'PUT') return json({ ...item, eTag: '"v2"' });
+				return new Response(bytes);
+			},
+			{ canWrite: () => true },
+		);
+		const opened = await connection.open(link);
+		await connection.save(opened.file, bytes);
+		expect(headers?.get('If-Match')).toBe(opened.file.eTag);
+		expect(JSON.parse(body).item['@microsoft.graph.conflictBehavior']).toBe('replace');
 	});
 
 	it('validates save file metadata before making an upload request', async () => {

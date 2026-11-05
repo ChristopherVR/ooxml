@@ -120,7 +120,10 @@ export async function routeOneDriveGraph(
 		upload.chunks.push(request.postDataBuffer() ?? Buffer.alloc(0));
 		const received = upload.chunks.reduce((total, chunk) => total + chunk.length, 0);
 		if (received < Number(range[3])) {
-			return route.fulfill({ status: 202, json: { nextExpectedRanges: [`${received}-`] } });
+			return route.fulfill({
+				status: 202,
+				json: { nextExpectedRanges: [`${received}-${Number(range[3]) - 1}`] },
+			});
 		}
 		upload.file.bytes = Buffer.concat(upload.chunks);
 		upload.file.revision += 1;

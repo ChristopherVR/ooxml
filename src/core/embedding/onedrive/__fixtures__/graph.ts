@@ -40,6 +40,8 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 				const name = decodeURIComponent(/:\/([^/]+):\/createUploadSession$/u.exec(url)![1]!);
 				item = { id: `copy-${++sequence}`, name, bytes: new Uint8Array(), revision: 1 };
 			} else if (new Headers(init?.headers).get('If-Match') !== metadata(item!).eTag) return json({}, 412);
+			// Like Graph: `fail` on an existing item is rejected even when If-Match matches.
+			else if (String(init?.body).includes('"fail"')) return json({ error: { code: 'nameAlreadyExists' } }, 409);
 			const uploadUrl = `https://transfer.test/upload/${++sequence}`;
 			uploads.set(uploadUrl, { item: item!, revision: item!.revision, offset: 0 });
 			return json({ uploadUrl });
@@ -53,7 +55,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 			if (start !== upload.offset || end - start + 1 !== init.body.length) return json({}, 416);
 			upload.bytes ??= new Uint8Array(total);
 			upload.bytes.set(init.body, start); upload.offset = end + 1;
-			if (upload.offset < total) return json({ nextExpectedRanges: [`${upload.offset}-`] }, 202);
+			if (upload.offset < total) return json({ nextExpectedRanges: [`${upload.offset}-${total - 1}`] }, 202); // as Graph sends it
 			upload.item.bytes = new Uint8Array(upload.bytes); upload.item.revision++;
 			items.set(upload.item.id, upload.item);
 			return json(metadata(upload.item));

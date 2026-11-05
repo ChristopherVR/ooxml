@@ -80,7 +80,8 @@ export async function routeOneDriveGraph(
 		}
 		const path = new URL(request.url()).pathname.slice('/v1.0'.length);
 		if (path === '/me/drive') return route.fulfill({ json: { id: OWN_DRIVE } });
-		if (path === '/me/drive/root/children') return route.fulfill({ json: page(children(undefined)) });
+		if (path === '/me/drive/root/children')
+			return route.fulfill({ json: page(children(undefined)) });
 		if (path === '/me/drive/recent') {
 			// Recent items point at the real item through `remoteItem`, on whichever drive holds it.
 			const recent = [...items.values()].filter((i) => !i.folder);
@@ -124,7 +125,10 @@ export async function routeOneDriveGraph(
 		upload.chunks.push(request.postDataBuffer() ?? Buffer.alloc(0));
 		const received = upload.chunks.reduce((total, chunk) => total + chunk.length, 0);
 		if (received < Number(range[3])) {
-			return route.fulfill({ status: 202, json: { nextExpectedRanges: [`${received}-`] } });
+			return route.fulfill({
+				status: 202,
+				json: { nextExpectedRanges: [`${received}-${Number(range[3]) - 1}`] },
+			});
 		}
 		upload.item.bytes = Buffer.concat(upload.chunks);
 		upload.item.revision += 1;

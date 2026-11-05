@@ -80,9 +80,7 @@ export async function routeOneDriveGraph(
 		const path = new URL(request.url()).pathname.slice('/v1.0'.length);
 		if (path === '/me/drive') return route.fulfill({ json: { id: OWN_DRIVE } });
 		if (path === '/me/drive/root/children') {
-			const root = [...files.values()].filter(
-				(file) => file.driveId === OWN_DRIVE && !file.folder,
-			);
+			const root = [...files.values()].filter((file) => file.driveId === OWN_DRIVE && !file.folder);
 			return route.fulfill({
 				json: { value: [...Object.keys(folders).map(folderItem), ...root.map(item)] },
 			});
@@ -124,7 +122,10 @@ export async function routeOneDriveGraph(
 		upload.chunks.push(request.postDataBuffer() ?? Buffer.alloc(0));
 		const received = upload.chunks.reduce((total, chunk) => total + chunk.length, 0);
 		if (received < Number(range[3])) {
-			return route.fulfill({ status: 202, json: { nextExpectedRanges: [`${received}-`] } });
+			return route.fulfill({
+				status: 202,
+				json: { nextExpectedRanges: [`${received}-${Number(range[3]) - 1}`] },
+			});
 		}
 		upload.file.bytes = Buffer.concat(upload.chunks);
 		upload.file.revision += 1;

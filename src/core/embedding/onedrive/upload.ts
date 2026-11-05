@@ -21,11 +21,34 @@ export async function uploadBytes(
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', ...(eTag ? { 'If-Match': eTag } : {}) },
 			body: JSON.stringify({
-				item: { '@microsoft.graph.conflictBehavior': eTag ? 'fail' : 'rename' },
+				item: { '@microsoft.graph.conflictBehavior': eTag ? 'replace' : 'rename' },
 			}),
 		}),
 	);
 	const uploadUrl = secureTransferUrl(session.uploadUrl);
+	try {
+		return await sendFragments(transport, uploadUrl, bytes, signal);
+	} catch (error) {
+		// An abandoned session blocks the next one for this item (nameAlreadyExists), so cancel it.
+		await transport
+			.fetcher(uploadUrl, { method: 'DELETE', credentials: 'omit', referrerPolicy: 'no-referrer' })
+			.catch(() => undefined);
+		throw error;
+	}
+}
+
+/** Graph reports the next range as `start-` or `start-end`; only the start matters. */
+function nextRangeStart(value: unknown): number | undefined {
+	const match = typeof value === 'string' ? /^(\d+)-/u.exec(value) : null;
+	return match ? Number(match[1]) : undefined;
+}
+
+async function sendFragments(
+	transport: OneDriveTransport,
+	uploadUrl: string,
+	bytes: Uint8Array,
+	signal: AbortSignal,
+): Promise<Record<string, unknown>> {
 	for (let start = 0; start < bytes.length; start += CHUNK_SIZE) {
 		const end = Math.min(start + CHUNK_SIZE, bytes.length);
 		const response = checkResponse(
@@ -46,7 +69,7 @@ export async function uploadBytes(
 		if (
 			response.status !== 202 ||
 			!Array.isArray(data.nextExpectedRanges) ||
-			data.nextExpectedRanges[0] !== `${end}-`
+			nextRangeStart(data.nextExpectedRanges[0]) !== end
 		)
 			throw new OneDriveError('invalid-response', 'OneDrive requested an unexpected upload range.');
 	}

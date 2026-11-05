@@ -103,6 +103,9 @@ export async function interceptOneDrive(context, fixtures) {
 		}
 		if (action === '/createUploadSession') {
 			if (request.headers()['if-match'] !== metadata(file).eTag) return json({}, 412);
+			// Like Graph: `fail` on an existing item is rejected even when If-Match matches.
+			if (request.postData()?.includes('"fail"'))
+				return json({ error: { code: 'nameAlreadyExists' } }, 409);
 			uploads.set(id, { file, chunks: [], position: 0 });
 			return json({ uploadUrl: `https://transfer.onedrive-test.invalid/upload/${id}` });
 		}
@@ -122,7 +125,10 @@ export async function interceptOneDrive(context, fixtures) {
 		upload.chunks.push(body);
 		upload.position += body.length;
 		if (upload.position < Number(range[3]))
-			return route.fulfill({ status: 202, json: { nextExpectedRanges: [`${upload.position}-`] } });
+			return route.fulfill({
+				status: 202,
+				json: { nextExpectedRanges: [`${upload.position}-${Number(range[3]) - 1}`] },
+			});
 		upload.file.bytes = Buffer.concat(upload.chunks);
 		upload.file.revision++;
 		writes.push(id);
