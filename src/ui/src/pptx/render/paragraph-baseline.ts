@@ -33,6 +33,7 @@
  * @module render/paragraph-baseline
  */
 import type { TextStyle } from 'ooxml-core/pptx';
+import { namedFontVerticalMetrics } from 'ooxml-core/text';
 
 import { typoLineGapEm } from './font-line-gap';
 import { firstFontFamily, fontState } from './font-settled';
@@ -272,6 +273,25 @@ export function referenceFont(style: ParagraphRun['style'], family: string): str
 	return `${italic}${String(style.fontWeight ?? 'normal')} ${REFERENCE_SIZE}px ${family}`;
 }
 
+/**
+ * The box PowerPoint scales to its pitch. A legacy East Asian Office font that
+ * is missing here is laid out by PowerPoint on its own named metrics, not on
+ * the stand-in the browser measured; a web font still loading keeps its path.
+ */
+export function referenceBox(
+	measured: FontBox | undefined,
+	family: string | undefined,
+): FontBox | undefined {
+	const named = measured?.provisional && !measured.loading && namedFontVerticalMetrics(family);
+	return named
+		? {
+				ascent: named.ascent * REFERENCE_SIZE,
+				descent: named.descent * REFERENCE_SIZE,
+				provisional: true,
+			}
+		: measured;
+}
+
 /** {@link resolveParagraphBaselineShift} that also says whether a stand-in font was measured. */
 export function resolveParagraphBaseline(
 	input: BaselineShiftInput,
@@ -294,7 +314,10 @@ export function resolveParagraphBaseline(
 	// The browser rounds a font's ascent and descent to whole px at the size it
 	// lays a line out in, which is right for the CSS baseline but too coarse for
 	// the proportions PowerPoint scales to its pitch: those come from a large size.
-	const reference = measure(referenceFont(first.style, family)) ?? text;
+	const reference = referenceBox(
+		measure(referenceFont(first.style, family)) ?? text,
+		firstFontFamily(`1px ${family}`),
+	);
 	if (!strut || !text || !reference) {
 		return undefined;
 	}

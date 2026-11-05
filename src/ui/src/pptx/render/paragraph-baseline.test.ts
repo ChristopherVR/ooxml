@@ -183,3 +183,49 @@ describe('applyParagraphBaselineShift', () => {
 		}
 	});
 });
+
+describe('a missing legacy East Asian Office font', () => {
+	// The browser paints a stand-in (Times New Roman here); PowerPoint lays the
+	// line out on the named font's own 0.859 / 0.141 em box.
+	const times = (provisional: boolean, loading = false): FontBoxMeasure => {
+		return (font) => {
+			const px = Number(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1]);
+			return {
+				ascent: 0.891 * px,
+				descent: 0.216 * px,
+				...(provisional ? { provisional: true } : {}),
+				...(loading ? { loading: true } : {}),
+			};
+		};
+	};
+	const size = 106.67;
+	const shiftFor = (family: string, measure: FontBoxMeasure) =>
+		resolveParagraphBaselineShift({
+			runs: [run('Hxlb', { fontFamily: family, fontSize: size })],
+			lineHeight: 0.75,
+			strutSizePx: size,
+			strutFamily: 'Times New Roman',
+			measure,
+		});
+	const stand = { ascent: 0.891 * size, descent: 0.216 * size };
+	const named = { ascent: 0.859375 * 1000, descent: 0.140625 * 1000 };
+	const expected =
+		powerPointBaseline(0.75 * size, size, powerPointDescent(size, named)) -
+		cssBaseline([
+			{ lineHeight: 0.75 * size, font: stand },
+			{ lineHeight: 0.75 * size, font: stand },
+		]);
+
+	it('places the line on the named font box, not the stand-in', () => {
+		const shift = shiftFor('MS PMincho', times(true));
+		expect(shift).toBeCloseTo(expected, 1);
+		expect(shift).not.toBeCloseTo(shiftFor('Times New Roman', times(false)) ?? 0, 1);
+	});
+
+	it('keeps a loading web font and other missing fonts on their own path', () => {
+		expect(shiftFor('MS PMincho', times(true, true))).toBe(
+			shiftFor('Times New Roman', times(true, true)),
+		);
+		expect(shiftFor('Foo Sans', times(true))).toBe(shiftFor('Times New Roman', times(true)));
+	});
+});

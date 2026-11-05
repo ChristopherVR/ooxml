@@ -14,6 +14,7 @@ export * from './wrap-styled-runs';
 export * from './change-case';
 export * from './merge-three-way';
 export * from './font-metrics/advance-width';
+export * from './font-metrics/vertical-metrics';
 export { parseTsv, toTsv } from './tsv';
 export * from './locale-number';
 export * from './realign-runs';
