@@ -115,6 +115,12 @@ export interface MorphTransitionPlan {
 	 */
 	outlineAnimations?: Map<string, string>;
 	/**
+	 * Element id -> the `animation` shorthand of each strand path of a compound
+	 * outline, in paint order (each strand is re-pathed on its own); emitted
+	 * next to {@link MorphTransitionPlan.outlineAnimations}.
+	 */
+	outlineStrandAnimations?: Map<string, string[]>;
+	/**
 	 * Element id -> CSS `animation` shorthand for the paths of a freeform's
 	 * custom-geometry `<svg data-pptx-custom-geometry>`, which a binding that
 	 * paints custom geometry as a vector (rather than a clipped box) stamps;
@@ -343,6 +349,7 @@ export function buildMorphTransitionPlan(
 	const incomingImageAnimations = new Map<string, string>();
 	const outgoingImageAnimations = new Map<string, string>();
 	const outlineAnimations = new Map<string, string>();
+	const outlineStrandAnimations = new Map<string, string[]>();
 	const customGeometryAnimations = new Map<string, string>();
 	const keyframes: string[] = [];
 
@@ -352,6 +359,12 @@ export function buildMorphTransitionPlan(
 		// An `image`-targeted animation rides the `<img>` inside the element, so
 		// it goes in its own map: it shares an element id with the container
 		// animation and would otherwise overwrite it.
+		if (animation.target === 'outline' && animation.strand !== undefined) {
+			const strands = outlineStrandAnimations.get(animation.elementId) ?? [];
+			strands[animation.strand] = animation.animation;
+			outlineStrandAnimations.set(animation.elementId, strands);
+			continue;
+		}
 		if (animation.target === 'outline' || animation.target === 'custom') {
 			(animation.target === 'outline' ? outlineAnimations : customGeometryAnimations).set(
 				animation.elementId,
@@ -434,6 +447,7 @@ export function buildMorphTransitionPlan(
 		pieces,
 		outlineAnimations,
 		customGeometryAnimations,
+		outlineStrandAnimations,
 	);
 	const piecePairs = new Set(pieces.pairs);
 	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
@@ -550,10 +564,12 @@ export function buildMorphTransitionPlan(
 	for (const id of pieceFromIds) {
 		outgoingAnimations.delete(id);
 		outlineAnimations.delete(id);
+		outlineStrandAnimations.delete(id);
 		customGeometryAnimations.delete(id);
 	}
 	for (const id of pieceToIds) {
 		outlineAnimations.delete(id);
+		outlineStrandAnimations.delete(id);
 		customGeometryAnimations.delete(id);
 	}
 	if (overlayIncomingAnimations.size > 0 || pieceToIds.size > 0) {
@@ -616,6 +632,7 @@ export function buildMorphTransitionPlan(
 		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
 		...(bodies.parts.size > 0 ? { morphCopyParts: bodies.parts } : {}),
 		...(outlineAnimations.size > 0 ? { outlineAnimations } : {}),
+		...(outlineStrandAnimations.size > 0 ? { outlineStrandAnimations } : {}),
 		...(customGeometryAnimations.size > 0 ? { customGeometryAnimations } : {}),
 		durationMs,
 	};
@@ -879,6 +896,12 @@ export function buildMorphOutlineRules(
 		...[...(plan.outlineAnimations ?? [])].map(
 			([elementId, animation]) =>
 				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
+		),
+		...[...(plan.outlineStrandAnimations ?? [])].flatMap(([elementId, animations]) =>
+			animations.map(
+				(animation, strand) =>
+					`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path:nth-of-type(${strand + 1}) { animation: ${animation}; }`,
+			),
 		),
 		...[...(plan.customGeometryAnimations ?? [])].map(
 			([elementId, animation]) =>

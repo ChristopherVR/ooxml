@@ -106,6 +106,18 @@ ${effects.keyframes}
 			target: 'outline',
 		});
 	}
+	shape?.outlineStrandKeyframes?.forEach((keyframes, strand) => {
+		animations.push({
+			elementId: target.id,
+			animation: `${base}-outline${strand} ${durationMs}ms linear forwards`,
+			keyframes: `
+@keyframes ${base}-outline${strand} {
+${keyframes}
+}`,
+			target: 'outline',
+			strand,
+		});
+	});
 	if (shape?.customKeyframes) {
 		animations.push({
 			elementId: target.id,

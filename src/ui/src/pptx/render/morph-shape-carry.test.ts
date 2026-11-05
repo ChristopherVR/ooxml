@@ -2,6 +2,9 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { buildMorphShapeCarry, morphShapeCarryApplies } from './morph-shape-carry';
+import { buildMorphOutlineRules } from './morph-plan';
+import type { MorphTransitionPlan } from './morph-plan';
+import { buildStrokeOutline } from './stroke-outline';
 
 function card(
 	id: string,
@@ -136,5 +139,88 @@ describe('morph shape carry', () => {
 		const count = (body: string | undefined) => body?.match(/% \{/gu)?.length ?? 0;
 		expect(count(plain?.outlineKeyframes)).toBeLessThanOrEqual(17);
 		expect(count(carry?.outlineKeyframes)).toBeGreaterThan(30);
+	});
+
+	describe('compound outlines', () => {
+		const compound = (id: string, kind: string, box: { width: number; height: number }) =>
+			card(
+				id,
+				{ x: 0, y: 0, ...box },
+				{
+					shapeStyle: {
+						fillColor: '#C07020',
+						strokeColor: '#FFFFFF',
+						strokeWidth: 16,
+						compoundLine: kind,
+					},
+				},
+			);
+		const fromBox = { width: 160, height: 107 };
+		const toBox = { width: 640, height: 320 };
+
+		it.each([
+			['dbl', 2],
+			['thickThin', 2],
+			['thinThick', 2],
+			['tri', 3],
+		])('carries every strand of a %s line as its own track', (kind, strands) => {
+			const from = compound('a', kind, fromBox);
+			const to = compound('b', kind, toBox);
+			const carry = buildMorphShapeCarry(from, to, 'to');
+			expect(carry?.outlineKeyframes).toBeUndefined();
+			const tracks = carry?.outlineStrandKeyframes ?? [];
+			expect(tracks).toHaveLength(strands);
+			// Every strand follows the plain line's measured scale on each axis.
+			const plain = buildMorphShapeCarry(
+				card(
+					'a',
+					{ x: 0, y: 0, ...fromBox },
+					{ shapeStyle: { strokeWidth: 16, strokeColor: '#FFF' } },
+				),
+				card(
+					'b',
+					{ x: 0, y: 0, ...toBox },
+					{ shapeStyle: { strokeWidth: 16, strokeColor: '#FFF' } },
+				),
+				'to',
+			);
+			const expected = stops(plain?.outlineKeyframes ?? '', 'transform');
+			for (const track of tracks) {
+				expect(stops(track, 'transform')).toEqual(expected);
+			}
+			// At the end each strand is the static strand of the incoming shape.
+			const staticStrands = buildStrokeOutline(to)?.strands ?? [];
+			tracks.forEach((track, i) => {
+				const last = stops(track, 'd').at(-1) ?? '';
+				const numbers = (d: string) => (d.match(/-?\d+\.?\d*/gu) ?? []).map(Number);
+				// The centre strand of a `tri` line is the outline itself (no traced path).
+				if (staticStrands[i]?.d === undefined) return;
+				const want = numbers(staticStrands[i]?.d ?? '');
+				const got = numbers(last);
+				expect(got).toHaveLength(want.length);
+				got.forEach((value, k) => expect(value).toBeCloseTo(want[k] ?? 0, 1));
+				// A strand keeps its number of points, so CSS can tween it.
+				const counts = new Set(stops(track, 'd').map((d) => d.split('L').length));
+				expect(counts.size).toBe(1);
+			});
+		});
+
+		it('leaves a pair whose line kind changes to the box journey', () => {
+			const carry = buildMorphShapeCarry(
+				compound('a', 'dbl', fromBox),
+				compound('b', 'tri', toBox),
+				'to',
+			);
+			expect(carry?.outlineStrandKeyframes).toBeUndefined();
+		});
+
+		it('addresses each strand path by position in the plan rules', () => {
+			const plan = {
+				outlineStrandAnimations: new Map([['a-1', ['t0 1s', 't1 1s']]]),
+			} as unknown as MorphTransitionPlan;
+			const rules = buildMorphOutlineRules(plan, 'data-element-id');
+			expect(rules).toContain('[data-pptx-outline] path:nth-of-type(1) { animation: t0 1s; }');
+			expect(rules).toContain('[data-pptx-outline] path:nth-of-type(2) { animation: t1 1s; }');
+		});
 	});
 });

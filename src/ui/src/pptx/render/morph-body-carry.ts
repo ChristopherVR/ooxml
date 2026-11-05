@@ -26,6 +26,7 @@ export function addMorphBodyCopyCarry(
 	pieces: MorphTextPiecePlan,
 	outlineAnimations: Map<string, string>,
 	customGeometryAnimations?: Map<string, string>,
+	outlineStrandAnimations?: Map<string, string[]>,
 ): void {
 	pairs.forEach((pair, index) => {
 		const halves = [
@@ -49,7 +50,11 @@ export function addMorphBodyCopyCarry(
 				`b${half}${index}`,
 			)) {
 				pieces.keyframes.push(animation.keyframes);
-				if (animation.target === 'outline') {
+				if (animation.target === 'outline' && animation.strand !== undefined) {
+					const strands = outlineStrandAnimations?.get(id) ?? [];
+					strands[animation.strand] = animation.animation;
+					outlineStrandAnimations?.set(id, strands);
+				} else if (animation.target === 'outline') {
 					outlineAnimations.set(id, animation.animation);
 				} else if (animation.target === 'custom') {
 					customGeometryAnimations?.set(id, animation.animation);

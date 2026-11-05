@@ -55,6 +55,11 @@ import {
 	scalePath,
 	stopProgress,
 } from './morph-shape-carry-path';
+import {
+	bakeStrandStops,
+	compoundLineOf,
+	tracedCompoundOffsets,
+} from './morph-shape-carry-strands';
 import { resolveShapeGeometry } from './shape-geometry-cascade';
 import { outsetClipPathForStroke } from './stroke-clip-outset';
 import { buildStrokeOutline, outlineStrokeJoin, straddlingStrokeWidth } from './stroke-outline';
@@ -71,6 +76,11 @@ export interface MorphShapeCarry {
 	readonly clipKeyframes?: string;
 	/** Baked keyframes body for the outline path, when the outline is carried. */
 	readonly outlineKeyframes?: string;
+	/**
+	 * Baked keyframes bodies for the strands of a compound outline, one per
+	 * strand in paint order (each strand is a `<path>` of the overlay).
+	 */
+	readonly outlineStrandKeyframes?: readonly string[];
 	/**
 	 * Baked keyframes body for the paths of a freeform painted as a vector in
 	 * its own path units (`[data-pptx-custom-geometry]`): the geometry per stop.
@@ -182,7 +192,9 @@ export function buildMorphShapeCarry(
 	const w0 = lineWidth(from);
 	const w1 = lineWidth(to);
 	const wl = lineWidth(local);
-	const stroked = w0 > 0 && w1 > 0 && carriesOutline(local);
+	const strandOffsets =
+		compoundLineOf(from) === compoundLineOf(to) ? tracedCompoundOffsets(local) : undefined;
+	const stroked = w0 > 0 && w1 > 0 && (carriesOutline(local) || strandOffsets !== undefined);
 	// The path's own scale: the journey maps local px onto the box, this maps
 	// the path's user units onto local px so its stroke lands at the measured
 	// width. `1` leaves the stroke to the journey, as before.
@@ -225,16 +237,27 @@ export function buildMorphShapeCarry(
 					return [`clip-path: path('${scalePath(inner, ax, ay)}')`];
 				})
 			: undefined;
-	const outlineKeyframes = stroked
-		? bakeStops(progress, (p) => {
-				const [ax, ay] = scaleAt(p);
-				return [
-					`d: path('${geometryAt(a, b, from, to, p, W / ax, H / ay)}')`,
-					'transform-origin: 0px 0px',
-					`transform: scale(${round(ax)}, ${round(ay)})`,
-				];
-			})
-		: undefined;
+	const outlineStrandKeyframes =
+		stroked && strandOffsets
+			? bakeStrandStops(progress, strandOffsets, outlineStrokeJoin(local), (p) => {
+					const [ax, ay] = scaleAt(p);
+					return {
+						d: geometryAt(a, b, from, to, p, W / ax, H / ay),
+						scale: `scale(${round(ax)}, ${round(ay)})`,
+					};
+				})
+			: undefined;
+	const outlineKeyframes =
+		stroked && !strandOffsets
+			? bakeStops(progress, (p) => {
+					const [ax, ay] = scaleAt(p);
+					return [
+						`d: path('${geometryAt(a, b, from, to, p, W / ax, H / ay)}')`,
+						'transform-origin: 0px 0px',
+						`transform: scale(${round(ax)}, ${round(ay)})`,
+					];
+				})
+			: undefined;
 	const vector = local.type === 'shape' ? local : undefined;
 	const pathUnits =
 		vector?.pathData && vector.pathWidth && vector.pathHeight
@@ -247,7 +270,7 @@ export function buildMorphShapeCarry(
 				`d: path('${scalePath(geometryAt(a, b, from, to, p, W, H), pathUnits[0] ?? 1, pathUnits[1] ?? 1)}')`,
 			])
 		: undefined;
-	if (!startDeclarations.length && !clipKeyframes && !outlineKeyframes) {
+	if (!startDeclarations.length && !clipKeyframes && !outlineKeyframes && !outlineStrandKeyframes) {
 		return undefined;
 	}
 	return {
@@ -255,6 +278,7 @@ export function buildMorphShapeCarry(
 		endDeclarations,
 		...(clipKeyframes ? { clipKeyframes } : {}),
 		...(outlineKeyframes ? { outlineKeyframes } : {}),
+		...(outlineStrandKeyframes ? { outlineStrandKeyframes } : {}),
 		...(customKeyframes ? { customKeyframes } : {}),
 	};
 }

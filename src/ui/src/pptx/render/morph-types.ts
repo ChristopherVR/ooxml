@@ -52,6 +52,12 @@ export interface MorphAnimationStyle {
 	 * path units), which a reshaping freeform re-paths per frame too.
 	 */
 	target?: MorphAnimationTarget;
+	/**
+	 * With `target: 'outline'`: the position (from 0) of the overlay path the
+	 * animation belongs on, for a compound outline whose strands are separate
+	 * paths with their own geometry. Absent, it animates every path.
+	 */
+	strand?: number;
 }
 
 /** @see MorphAnimationStyle.target */
