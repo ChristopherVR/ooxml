@@ -23,6 +23,7 @@ import type { StrokeDashType, ConnectorArrowType } from '../../types/common';
 import type { CustomGeometrySegment } from '../../types/geometry';
 import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
+import type { ChartContentInput, ChartSeriesContentInput } from './chart-content-input';
 import type { ChartAreaFormatInput } from './chart-layout-input';
 import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
 import type { PresentationAppPropertiesInput } from './presentation-app-properties';
@@ -45,6 +46,14 @@ export type {
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
+export type {
+	ChartComboSeriesType,
+	ChartDataLabelsInput,
+	ChartDisplayBlanksAs,
+	ChartFontInput,
+	ChartSeriesLineInput,
+	ChartSeriesMarkerInput,
+} from './chart-content-input';
 
 // ---------------------------------------------------------------------------
 // Position & layout
@@ -484,9 +493,11 @@ export interface TableOptions extends Partial<ElementPosition> {}
 // Chart input
 // ---------------------------------------------------------------------------
 
-export interface ChartSeriesInput {
+export interface ChartSeriesInput extends ChartSeriesContentInput {
 	name: string;
-	values: number[];
+	/** One value per category; `null` is a blank point, drawn as `ChartInput.dispBlanksAs` says. */
+	values: (number | null)[];
+	/** Series colour, a hex colour (`#RRGGBB` or `RRGGBB`). */
 	color?: string;
 	/**
 	 * Gradient fill for the whole series, written as `c:ser/c:spPr/a:gradFill`.
@@ -502,7 +513,7 @@ export interface ChartSeriesInput {
 	treemapOptions?: PptxChartTreemapOptions;
 }
 
-export interface ChartInput {
+export interface ChartInput extends ChartContentInput {
 	series: ChartSeriesInput[];
 	categories: string[];
 	/** ChartEx hierarchy levels in leaf-to-root XML order. */

@@ -3,7 +3,8 @@
 // group that holds the series (flattened index, see `draft.ts`). Ranges follow the schema types
 // PowerPoint's and Excel's panes enforce (ST_GapAmount 0..500, ST_Overlap -100..100,
 // ST_FirstSliceAng 0..360, ST_HoleSize 1..90); a setting the group element does not
-// allow (`type-schema.ts`) is refused rather than written into a part Office would repair.
+// allow (`type-schema.ts`) is refused rather than written into a part Office would repair. A scatter
+// chart's style (ST_ScatterStyle, required by CT_ScatterChart) has its own operation.
 import type { ChartSpace } from '../model';
 import { chartSeriesEntryAt, editChartSpace } from './draft';
 import { GROUP_FIELDS } from './type-schema';
@@ -57,5 +58,42 @@ export function setChartGroupOptions(
 			assertChartGroupOption(key, value);
 			group[key] = value;
 		}
+	});
+}
+
+/** ST_ScatterStyle. */
+export type ChartScatterStyle =
+	| 'none'
+	| 'line'
+	| 'lineMarker'
+	| 'marker'
+	| 'smooth'
+	| 'smoothMarker';
+
+export const CHART_SCATTER_STYLES: readonly ChartScatterStyle[] = [
+	'none',
+	'line',
+	'lineMarker',
+	'marker',
+	'smooth',
+	'smoothMarker',
+];
+
+/**
+ * Sets `c:scatterStyle` of the scatter group holding series `seriesIndex`. Only the group setting
+ * changes: each series keeps its own `c:smooth` and `c:marker`, which decide how Office draws it.
+ */
+export function setChartScatterStyle(
+	space: ChartSpace,
+	seriesIndex: number,
+	style: ChartScatterStyle,
+): ChartSpace {
+	if (!(CHART_SCATTER_STYLES as readonly string[]).includes(style))
+		throw new RangeError(`Invalid chart scatter style: ${String(style)}`);
+	return editChartSpace(space, (draft) => {
+		const { group } = chartSeriesEntryAt(draft, seriesIndex);
+		if (!(GROUP_FIELDS[group.element] ?? []).includes('scatterStyle'))
+			throw new RangeError(`A ${group.element} has no scatterStyle setting`);
+		group.scatterStyle = style;
 	});
 }

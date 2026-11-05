@@ -23,6 +23,10 @@ import type {
 	PptxChartType,
 } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
+import type { ChartAxisLineInput } from './chart-axis-input';
+import { withChartAxisAppearance } from './chart-axis-input';
+import type { ChartFontInput } from './chart-content-input';
+import { chartFontInput } from './chart-input-values';
 import { clearChartSeriesPointPaint } from './chart-series-point-paint';
 
 // ---------------------------------------------------------------------------
@@ -380,6 +384,16 @@ export interface ChartAxisEdit {
 	displayUnitsLabel?: PptxChartAxisFormatting['displayUnitsLabel'];
 	/** Show or hide (`c:delete`) the axis. */
 	visible?: boolean;
+	/**
+	 * Axis font, sizes in points. The model keeps one font per axis, so `family`,
+	 * `size`, `bold` and `color` style the tick labels and the axis title together
+	 * (as {@link setChartAxisTitleStyle}); `italic` styles the tick labels.
+	 */
+	font?: ChartFontInput;
+	/** Tick label angle in degrees, -90..90 (`c:txPr/a:bodyPr/@rot`); `null` clears it. */
+	rotation?: number | null;
+	/** Axis line (`c:spPr/a:ln`): a colour and width in points, or `'none'` to hide it. */
+	line?: ChartAxisLineInput;
 }
 
 /**
@@ -460,6 +474,23 @@ export function setChartAxis(
 	}
 	if (edit.visible !== undefined) {
 		axis.deleted = !edit.visible;
+	}
+	if (edit.font) {
+		const font = chartFontInput(edit.font, 'Axis font');
+		setChartAxisTitleStyle(element, axisType, {
+			...(font.fontFamily !== undefined ? { fontFamily: font.fontFamily } : {}),
+			...(font.fontSize !== undefined ? { fontSize: font.fontSize } : {}),
+			...(font.bold !== undefined ? { fontBold: font.bold } : {}),
+			...(font.color !== undefined ? { fontColor: font.color } : {}),
+		});
+	}
+	const italic = edit.font?.italic;
+	if (edit.rotation !== undefined || italic !== undefined || edit.line !== undefined) {
+		element.chartData = withChartAxisAppearance(element.chartData, axes.indexOf(axis), {
+			...(edit.rotation !== undefined ? { rotation: edit.rotation } : {}),
+			...(italic !== undefined ? { italic } : {}),
+			...(edit.line !== undefined ? { line: edit.line } : {}),
+		});
 	}
 }
 

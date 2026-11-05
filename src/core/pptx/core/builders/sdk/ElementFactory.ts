@@ -32,6 +32,7 @@ import type {
 } from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
+import { applyChartContentInput, chartSeriesValuesFromInput } from './chart-content-operations';
 import { applyChartInputLayout } from './chart-layout-operations';
 import { mapPictureLayoutInput } from './picture-layout-input';
 import { mapLinkToAction, mapLinkToRunStyle } from './link-input';
@@ -599,7 +600,7 @@ export function createChartElement(
 
 	const series: PptxChartSeries[] = input.series.map((s, index) => ({
 		name: s.name,
-		values: s.values,
+		...chartSeriesValuesFromInput(s.values),
 		color: s.color,
 		...chartSeriesGradientFromInput(chartType, s.gradientFill, index),
 		...(s.boxWhiskerOptions ? { boxWhiskerOptions: { ...s.boxWhiskerOptions } } : {}),
@@ -648,6 +649,7 @@ export function createChartElement(
 		chartData,
 	};
 	applyChartInputLayout(element, input);
+	applyChartContentInput(element, input);
 	return element;
 }
 

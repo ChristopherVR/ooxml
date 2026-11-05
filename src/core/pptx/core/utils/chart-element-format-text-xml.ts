@@ -92,6 +92,7 @@ function applyRunProps(rPr: XmlObject, text: PptxChartElementText, localName: Lo
 	if (text.outline) applyOutline(rPr, text.outline, localName);
 	if (text.fill) applyChartPaint(rPr, text.fill, FILL_CHOICE, RPR_ORDER, localName);
 	if (text.effects) applyChartEffects(rPr, text.effects, RPR_ORDER, localName);
+	if (text.italic !== undefined) rPr['@_i'] = text.italic ? '1' : '0';
 }
 
 function applyBodyProps(bodyPr: XmlObject, text: PptxChartElementText): void {
@@ -107,10 +108,14 @@ function applyBodyProps(bodyPr: XmlObject, text: PptxChartElementText): void {
 		if (text.anchor === null) delete bodyPr['@_anchor'];
 		else bodyPr['@_anchor'] = text.anchor;
 	}
+	if (text.wrap !== undefined) {
+		if (text.wrap === null) delete bodyPr['@_wrap'];
+		else bodyPr['@_wrap'] = text.wrap ? 'square' : 'none';
+	}
 }
 
 const hasRunProps = (text: PptxChartElementText) =>
-	Boolean(text.fill || text.outline || text.effects);
+	Boolean(text.fill || text.outline || text.effects || text.italic !== undefined);
 
 /** Apply `text` to a text body (`c:txPr` or `c:rich`) in place. */
 function applyToBody(body: XmlObject, text: PptxChartElementText, localName: LocalName): void {
@@ -243,6 +248,8 @@ export function readChartTextFormat(
 		out.direction = vert;
 	const anchor = bodyPr['@_anchor'];
 	if (anchor === 't' || anchor === 'ctr' || anchor === 'b') out.anchor = anchor;
+	// Only the non-default `none` is a custom setting; PowerPoint writes `square` everywhere.
+	if (bodyPr['@_wrap'] === 'none') out.wrap = false;
 	const rPr = firstRunProps(body, localName);
 	if (rPr) {
 		const fill = readPaint(rPr);

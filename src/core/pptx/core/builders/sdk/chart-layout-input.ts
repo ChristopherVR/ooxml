@@ -149,7 +149,8 @@ export function documentedChartGroupOptionDefaults(
 	return defaults;
 }
 
-function toPaint(value: string, name: string): string {
+/** A 6-digit hex colour as `#RRGGBB`, or `'none'`. @throws {Error} Anything else. */
+export function toPaint(value: string, name: string): string {
 	const trimmed = value.trim();
 	if (trimmed === 'none') {
 		return 'none';

@@ -119,10 +119,10 @@ export class ChartBuilder {
 	 * Add a data series to the chart.
 	 *
 	 * @param name - The series name (shown in the legend).
-	 * @param values - The numeric data values for this series.
+	 * @param values - The numeric data values for this series; `null` is a blank point.
 	 * @param color - Optional color hex string for the series.
 	 */
-	addSeries(name: string, values: number[], color?: string): this {
+	addSeries(name: string, values: (number | null)[], color?: string): this {
 		this._input.series.push({ name, values, color });
 		return this;
 	}

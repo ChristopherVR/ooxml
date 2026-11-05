@@ -221,6 +221,10 @@ export interface PptxChartElementText {
 	direction?: 'horz' | 'vert' | 'vert270' | 'wordArtVert' | null;
 	/** Vertical alignment (`a:bodyPr/@anchor`). */
 	anchor?: 't' | 'ctr' | 'b' | null;
+	/** `true` wraps text in its box (`a:bodyPr/@wrap="square"`), `false` never wraps (`none`). */
+	wrap?: boolean | null;
+	/** Italic text (`a:defRPr/@i`, and a title's runs). */
+	italic?: boolean;
 }
 
 /**
