@@ -1,4 +1,6 @@
+import type { AbuttingEdgeBleed } from 'ooxml-ui/pptx';
 import {
+	abuttingEdgeBleedStyle,
 	elementContainerHeightStyle,
 	getAnimationOpacity,
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
@@ -64,6 +66,8 @@ interface ContainerStyleParams {
 	has3DExtrusion?: boolean;
 	/** Draw the editable-template affordance (amber dashed ring + transparency). */
 	templateEditing?: boolean;
+	/** Grow under an abutting opaque box (shared `abuttingEdgeBleedStyle`). */
+	edgeBleed?: AbuttingEdgeBleed | undefined;
 }
 
 /** Builds the `style` object for the outermost element container `<div>`. */
@@ -77,6 +81,7 @@ export function getContainerStyle({
 	shapeVisualStyle,
 	has3DExtrusion,
 	templateEditing,
+	edgeBleed,
 }: ContainerStyleParams): CSSProperties {
 	// For 3D-extruded shapes the side panels extend beyond the element bounds,
 	// so overflow must be visible and the container needs `perspective` to
@@ -113,7 +118,7 @@ export function getContainerStyle({
 		: el.type === 'table'
 			? elementContainerHeightStyle(el, painted.height)
 			: { height: painted.height };
-	return {
+	const style: CSSProperties = {
 		left: isFullscreenMedia ? fs.left : el.x,
 		top: isFullscreenMedia ? fs.top : el.y,
 		width: isFullscreenMedia ? fs.width : painted.width,
@@ -163,6 +168,16 @@ export function getContainerStyle({
 		...(templateEditing
 			? { outline: '2px dashed rgb(217, 119, 6)', outlineOffset: '1px', opacity: opacity ?? 0.95 }
 			: {}),
+	};
+	// Close the seam with an abutting opaque box above (issue #141): empty for
+	// nearly every element, so the style is untouched.
+	return {
+		...style,
+		...(abuttingEdgeBleedStyle(
+			el,
+			edgeBleed,
+			style as Readonly<Record<string, unknown>>,
+		) as CSSProperties),
 	};
 }
 

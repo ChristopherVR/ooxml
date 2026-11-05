@@ -68,6 +68,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ R
 		opacity,
 		templateEditing,
 		zIndex,
+		edgeBleed,
 		imageAltText,
 		showResizeHandles,
 		renderInk: doInk,
@@ -269,6 +270,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ R
 			shapeVisualStyle: backgroundAnimationState ? {} : ss,
 			has3DExtrusion: extrusionData.hasExtrusion,
 			templateEditing,
+			edgeBleed,
 		});
 		const interactionProps = getElementInteractionProps({
 			element: el,

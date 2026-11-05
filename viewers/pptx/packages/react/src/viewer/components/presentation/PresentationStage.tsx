@@ -2,6 +2,7 @@ import {
 	deviceStrokeStageStyle,
 	PRESENTATION_HIT_TEST_CSS,
 	PRESENTATION_STAGE_ATTRIBUTE,
+	resolveStageEdgeBleeds,
 } from 'ooxml-ui/pptx';
 import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
@@ -107,6 +108,11 @@ export function PresentationStage({
 		onStageClick,
 	);
 	const [box, setBox] = useState<CanvasSize | null>(null);
+	// Boxes that grow under an abutting opaque box to close the AA seam (issue #141).
+	const edgeBleeds = useMemo(
+		() => resolveStageEdgeBleeds(templateElements, activeSlide),
+		[templateElements, activeSlide],
+	);
 
 	// Measure the show surface. The container is the fullscreen element in a
 	// real slide show and a plain panel in windowed/presenter use, so measuring
@@ -225,6 +231,7 @@ export function PresentationStage({
 							selectionColorClass='blue-400'
 							showHoverBorder={false}
 							zIndex={index}
+							edgeBleed={edgeBleeds.get(element.id)}
 							imageAltText='Template element'
 							showResizeHandles={false}
 							renderInk={false}
@@ -264,6 +271,7 @@ export function PresentationStage({
 							selectionColorClass='blue-500'
 							showHoverBorder={false}
 							zIndex={templateElements.length + index}
+							edgeBleed={edgeBleeds.get(element.id)}
 							imageAltText='Slide element'
 							showResizeHandles={false}
 							renderInk

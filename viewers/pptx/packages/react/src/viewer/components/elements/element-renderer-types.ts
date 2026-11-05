@@ -1,4 +1,8 @@
-import type { InlineTextEditSnapshot, ZoomNavigationTarget } from 'ooxml-ui/pptx';
+import type {
+	AbuttingEdgeBleed,
+	InlineTextEditSnapshot,
+	ZoomNavigationTarget,
+} from 'ooxml-ui/pptx';
 import type { PptxAction, PptxElement, PptxSlide, TextStyle } from 'pptx-viewer-core';
 
 import type { ShapeAdjustmentHandleDescriptor, TableCellEditorState } from '../../types';
@@ -65,6 +69,11 @@ export interface ElementRendererProps {
 	templateEditing?: boolean;
 	/** Explicit z-index for document-order stacking (painter's algorithm). */
 	zIndex?: number;
+	/**
+	 * Grow this box under an abutting opaque box above it, closing the
+	 * anti-aliasing seam between the two (shared `resolveAbuttingEdgeBleeds`).
+	 */
+	edgeBleed?: AbuttingEdgeBleed;
 	imageAltText: string;
 	showResizeHandles: boolean;
 	renderInk: boolean;

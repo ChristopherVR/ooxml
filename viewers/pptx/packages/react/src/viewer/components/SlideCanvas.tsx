@@ -3,6 +3,7 @@ import {
 	isGroupMember,
 	motionPathFor,
 	parentSelection,
+	resolveStageEdgeBleeds,
 	setMotionPath,
 	shouldShowElementHandles,
 	slideSpaceElement,
@@ -246,6 +247,12 @@ function SlideCanvasContent({
 	// dashed frame, and a member being text-edited is drawn once more in slide
 	// space, where the regular inline editor can run, over its hidden static copy.
 	const slideElements = activeSlide?.elements;
+	// Boxes that grow under an abutting opaque box to close the AA seam
+	// (issue #141); the selection keeps its exact box while it is edited.
+	const edgeBleeds = useMemo(
+		() => resolveStageEdgeBleeds(templateElements, activeSlide, selectedElementIdSet),
+		[templateElements, activeSlide, selectedElementIdSet],
+	);
 	const enteredGroup = useMemo(() => {
 		if (!slideElements || !selectedElement) {
 			return null;
@@ -405,6 +412,7 @@ function SlideCanvasContent({
 							// affordance below, only while edit-template mode is on.
 							templateEditing={editTemplateMode}
 							zIndex={index}
+							edgeBleed={edgeBleeds.get(element.id)}
 							imageAltText='Template element'
 							showResizeHandles={shouldShowElementHandles(
 								isEditableCanvas,
@@ -454,6 +462,7 @@ function SlideCanvasContent({
 							selectionColorClass='blue-500'
 							showHoverBorder
 							zIndex={templateElements.length + index}
+							edgeBleed={edgeBleeds.get(element.id)}
 							imageAltText='Slide element'
 							showResizeHandles={shouldShowElementHandles(
 								isEditableCanvas,
