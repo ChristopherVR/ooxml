@@ -30,6 +30,8 @@ import {
 import type { ReflectionOverlay } from './element-effect-defs';
 import { getTextBlockStyle } from './element-style';
 import type { StyleMap } from './element-style';
+import { resolveEquationBox } from './equation-box';
+import { EquationRendererComponent } from './equation-renderer.component';
 import { Extrusion3DOverlayComponent } from './extrusion-3d-overlay.component';
 import { buildAngularParagraphs } from './paragraph-view';
 import type { Paragraph } from './paragraph-view';
@@ -62,6 +64,7 @@ import type { TextWarpGlyphDef, TextWarpPathDef } from './text-warp';
 	imports: [
 		NgStyle,
 		DynamicStyleComponent,
+		EquationRendererComponent,
 		Extrusion3DOverlayComponent,
 		ReflectionMirrorContentComponent,
 		SlideTextBlockComponent,
@@ -173,6 +176,8 @@ export class ElementRendererShapeComponent {
 	readonly hollowHit = computed(() => buildHollowHitOutline(this.element()));
 
 	readonly textStyle = computed<StyleMap>(() => getTextBlockStyle(this.element()));
+	/** A pure equation box, laid out by the shared equation block descriptor. */
+	readonly equationBox = computed(() => resolveEquationBox(this.element()));
 	/** Text-warp (WordArt) descriptor for the element, if any. */
 	readonly textWarp = computed(() => getTextWarp(this.element(), this.fieldContext()));
 	/** Only the SVG-textPath warp variant (for the `<svg>` overlay branch). */

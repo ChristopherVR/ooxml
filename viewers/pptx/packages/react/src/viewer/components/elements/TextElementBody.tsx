@@ -14,6 +14,7 @@ import { buildTextBody3DSceneStyle } from '../../utils/text-effects';
 import { shouldUseSvgWarp, WarpedText } from '../../utils/text-warp';
 import { ActionButtonGlyphOverlay, isActionButtonShape } from './ActionButtonGlyphOverlay';
 import type { RenderBodyOptions } from './element-body-types';
+import { renderEquationBox } from './EquationBox';
 
 export function renderTextElementBody(options: RenderBodyOptions): React.ReactNode {
 	const {
@@ -82,12 +83,16 @@ export function renderTextElementBody(options: RenderBodyOptions): React.ReactNo
 	// carries nothing but the hint still needs a text body to show it in.
 	const placeholderPrompt = placeholderPromptDescriptor(el, placeholderPromptMode);
 	const shouldRenderText = isTxtEl || placeholderPrompt !== null;
+	// A pure equation box is laid out by the shared equation block descriptor.
+	const equationBox = shouldRenderText ? renderEquationBox(el, Boolean(onHyperlinkClick)) : null;
 
 	return (
 		<>
 			{vecShape}
 			{isActionButtonShape(shapeType) && <ActionButtonGlyphOverlay element={el} />}
+			{equationBox}
 			{shouldRenderText &&
+				!equationBox &&
 				(useSvgWarp ? (
 					<div
 						className={cn(
