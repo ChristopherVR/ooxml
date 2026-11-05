@@ -199,6 +199,7 @@ const reflection = computed<CSSProperties | undefined>(() =>
 	<svg
 		v-if="strokeOutline"
 		class="pptx-vue-gradient-outline"
+		data-pptx-outline=""
 		aria-hidden="true"
 		:viewBox="outlineViewBox"
 		preserveAspectRatio="none"
