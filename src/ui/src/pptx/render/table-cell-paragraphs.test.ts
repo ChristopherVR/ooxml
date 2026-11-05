@@ -87,6 +87,7 @@ describe('cellParagraphBlocks', () => {
 				css: {
 					textAlign: 'justify',
 					textAlignLast: 'justify',
+					textJustify: 'inter-character',
 					lineHeight: 0.9 * 1.2,
 					fontSize: '10pt',
 				},

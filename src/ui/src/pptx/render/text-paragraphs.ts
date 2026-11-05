@@ -37,6 +37,7 @@ import {
 	resolveParagraphAlign,
 	resolveParagraphRtl,
 	resolveTextAlignLast,
+	DISTRIBUTED_TEXT_JUSTIFY,
 } from './text-paragraph-style';
 import type { RunStyle } from './text-run-style';
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
@@ -246,6 +247,8 @@ export function buildParagraphs(
 			const textAlignLast = resolveTextAlignLast(align);
 			if (textAlignLast !== undefined) {
 				paragraphStyle.textAlignLast = textAlignLast;
+				// PowerPoint spreads letters, not words, on every line of `dist`.
+				paragraphStyle.textJustify = DISTRIBUTED_TEXT_JUSTIFY;
 			}
 			if (rtl !== undefined) {
 				paragraphStyle.direction = rtl ? 'rtl' : 'ltr';

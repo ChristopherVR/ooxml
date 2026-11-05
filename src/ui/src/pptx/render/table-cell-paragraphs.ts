@@ -13,7 +13,11 @@ import { resolveParagraphIndent } from './bullet-list';
 import { resolveParagraphSpacing } from './paragraph-spacing';
 import type { CellTextRun, TableCellCss } from './table-style';
 import { DEFAULT_LINE_HEIGHT } from './text-line-height';
-import { resolveCssTextAlign, resolveTextAlignLast } from './text-paragraph-style';
+import {
+	resolveCssTextAlign,
+	resolveTextAlignLast,
+	DISTRIBUTED_TEXT_JUSTIFY,
+} from './text-paragraph-style';
 
 /** One paragraph of a cell: its block CSS and the runs inside it. */
 export interface CellParagraphBlock {
@@ -85,6 +89,7 @@ function paragraphLayoutCss(
 		const textAlignLast = resolveTextAlignLast(paragraph?.align);
 		if (textAlignLast !== undefined) {
 			css.textAlignLast = textAlignLast;
+			css.textJustify = DISTRIBUTED_TEXT_JUSTIFY;
 		}
 	}
 	if (paragraph?.rtl !== undefined) {

@@ -122,3 +122,17 @@ export function resolveCssTextAlign(
 export function resolveTextAlignLast(align: TextStyle['align'] | undefined): 'justify' | undefined {
 	return align === 'dist' ? 'justify' : undefined;
 }
+
+/**
+ * The `text-justify` of `algn="dist"`, set beside its `text-align-last`. PowerPoint distributes LETTERS,
+ * not words: on every line of a distributed paragraph (the last line, a
+ * single-line paragraph, and the full lines above it) the slack is spread
+ * evenly after each character, spaces included, leaving the last character
+ * flush with the right edge. COM-measured on static exports: "Hello" in a
+ * 6 in box becomes "H e l l o" edge to edge, "Hello world" keeps a wider gap
+ * only because the space takes its own share, and "aa bb cc ..." on a full
+ * line spreads its letters too. CSS `text-justify: inter-character` does the
+ * same under `text-align: justify` (Chromium and Firefox); WebKit ignores it
+ * and keeps spreading words, which is the best it can do.
+ */
+export const DISTRIBUTED_TEXT_JUSTIFY = 'inter-character';

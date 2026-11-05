@@ -583,6 +583,8 @@ describe('algn="dist" last-line distribution', () => {
 		const dist = buildParagraphs(textEl([{ text: 'Dist one line', style: { align: 'dist' } }]));
 		expect(dist[0].paragraphStyle?.textAlign).toBe('justify');
 		expect(dist[0].paragraphStyle?.textAlignLast).toBe('justify');
+		// PowerPoint spreads letters, not words, on every line of `dist`.
+		expect(dist[0].paragraphStyle?.textJustify).toBe('inter-character');
 
 		// Core normalises `a:pPr/@algn="just"` to `align: 'justify'` at parse
 		// time (see `ALIGN_MAP` in `paragraph-properties-parser.ts`); a bare
@@ -590,6 +592,7 @@ describe('algn="dist" last-line distribution', () => {
 		const just = buildParagraphs(textEl([{ text: 'Justified text', style: { align: 'justify' } }]));
 		expect(just[0].paragraphStyle?.textAlign).toBe('justify');
 		expect(just[0].paragraphStyle?.textAlignLast).toBeUndefined();
+		expect(just[0].paragraphStyle?.textJustify).toBeUndefined();
 	});
 });
 
