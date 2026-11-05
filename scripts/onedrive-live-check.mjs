@@ -1,4 +1,6 @@
 /** Manual real-service acceptance. No account, client ID, token or sharing URL is embedded. */
+import { checkToken, normalizeToken } from './onedrive-token-check.mjs';
+
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
 	console.log(`Usage: node scripts/onedrive-live-check.mjs [--write-copy]
@@ -14,10 +16,11 @@ Tokens and sharing URLs are never printed. This command does not implement OAuth
 	try {
 		if (args.some((arg) => arg !== '--write-copy'))
 			throw new Error('Use --help for supported options.');
-		const token = process.env.OOXML_ONEDRIVE_ACCESS_TOKEN;
+		const token = normalizeToken(process.env.OOXML_ONEDRIVE_ACCESS_TOKEN);
 		const shareUrl = process.env.OOXML_ONEDRIVE_SHARE_URL;
 		if (!token || !shareUrl)
 			throw new Error('Set the two process-local environment variables described by --help.');
+		await checkToken(token);
 		const { createOneDriveClient, OneDriveError } =
 			await import('../src/core/dist/embedding/onedrive/index.mjs');
 		const writeCopy = args.includes('--write-copy');

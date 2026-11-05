@@ -16,6 +16,7 @@ import {
 	stats,
 	throughput,
 } from './onedrive-speed-lib.mjs';
+import { checkToken, normalizeToken } from './onedrive-token-check.mjs';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 // Same field list as the library's open request, so the metadata payload is comparable.
@@ -45,7 +46,7 @@ async function main() {
 		drivePath = mock.path;
 		folderPath = mock.folder;
 	} else {
-		token = process.env.OOXML_ONEDRIVE_ACCESS_TOKEN;
+		token = normalizeToken(process.env.OOXML_ONEDRIVE_ACCESS_TOKEN);
 		shareUrl = process.env.OOXML_ONEDRIVE_SHARE_URL || undefined;
 		drivePath = process.env.OOXML_ONEDRIVE_PATH || undefined;
 		folderPath = process.env.OOXML_ONEDRIVE_FOLDER || undefined;
@@ -53,6 +54,11 @@ async function main() {
 			throw new SafeError(
 				'Set OOXML_ONEDRIVE_ACCESS_TOKEN and OOXML_ONEDRIVE_SHARE_URL and/or OOXML_ONEDRIVE_PATH (see --help).',
 			);
+		try {
+			await checkToken(token);
+		} catch (error) {
+			throw new SafeError(error.message);
+		}
 	}
 	try {
 		const targets = [];
