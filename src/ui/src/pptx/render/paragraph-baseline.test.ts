@@ -9,6 +9,7 @@ import {
 	powerPointDescent,
 	resolveParagraphBaselineShift,
 } from './paragraph-baseline';
+import { typoLineGapEm } from './font-line-gap';
 import type { ParagraphRun, RenderParagraph } from './paragraph-types';
 
 // Windows ascent and descent in em (the ones Chromium lays lines out with).
@@ -48,6 +49,33 @@ describe('powerPointBaseline', () => {
 		expect(powerPointBaseline(43.2, 40, 10.75)).toBeCloseTo(32.45, 10); // 90%: 33.25
 		expect(powerPointBaseline(36, 40, 10.75)).toBe(27); // 75%: 27.5
 		expect(powerPointBaseline(30, 40, 10.75)).toBe(22.5); // exact 30pt: 23.0
+	});
+});
+
+describe('powerPointDescent with a line gap', () => {
+	// Gabriola (typo ascent 0.684, descent 0.316, gap 0.70 em), PowerPoint 16 at 72pt:
+	// single-spaced baseline 0.977 em of a 1.2 em pitch (95px of 96px measured).
+	it('counts the typo line gap above the ascent when scaling to the pitch', () => {
+		const box = { ascent: 684, descent: 316, lineGap: 700 };
+		const size = 96;
+		const baseline = powerPointBaseline(1.2 * size, size, powerPointDescent(size, box));
+		expect(baseline / size).toBeCloseTo(0.977, 2);
+		// Without the gap the same box would put it at 0.82 em, 15px high.
+		const bare = powerPointBaseline(
+			1.2 * size,
+			size,
+			powerPointDescent(size, { ...box, lineGap: 0 }),
+		);
+		expect(bare / size).toBeCloseTo(0.82, 2);
+	});
+});
+
+describe('typoLineGapEm', () => {
+	it('knows the flagged fonts that have a gap and nothing else', () => {
+		expect(typoLineGapEm('Gabriola')).toBe(0.7);
+		expect(typoLineGapEm(' gabriola ')).toBe(0.7);
+		expect(typoLineGapEm('Calibri')).toBe(0);
+		expect(typoLineGapEm(undefined)).toBe(0);
 	});
 });
 

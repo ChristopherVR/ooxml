@@ -34,7 +34,8 @@
  */
 import type { TextStyle } from 'ooxml-core/pptx';
 
-import { fontState } from './font-settled';
+import { typoLineGapEm } from './font-line-gap';
+import { firstFontFamily, fontState } from './font-settled';
 import type { ParagraphRun, RenderParagraph } from './paragraph-types';
 import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './text-line-height';
 
@@ -42,6 +43,12 @@ import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './tex
 export interface FontBox {
 	ascent: number;
 	descent: number;
+	/**
+	 * The line gap (same unit as `ascent`) PowerPoint adds above the ascent
+	 * before scaling the box to its pitch; browsers do not expose it (see
+	 * `font-line-gap`). Absent means none.
+	 */
+	lineGap?: number;
 	/**
 	 * Set when the box describes a stand-in: the font is a web font that has
 	 * not loaded yet (or is missing), so the browser measured a fallback face.
@@ -88,7 +95,7 @@ export function powerPointBaseline(pitch: number, size: number, descent: number)
  * `box` is the font's ascent and descent at any one size.
  */
 export function powerPointDescent(size: number, box: FontBox): number {
-	const total = box.ascent + box.descent;
+	const total = box.ascent + box.descent + (box.lineGap ?? 0);
 	return total > 0 ? (SINGLE_PITCH * size * box.descent) / total : box.descent;
 }
 
@@ -150,6 +157,11 @@ export const measureFontBoxWithCanvas: FontBoxMeasure = (font) => {
 	}
 	if (state !== 'settled') {
 		return { ...box, provisional: true, ...(state === 'loading' ? { loading: true } : {}) };
+	}
+	const size = Number.parseFloat(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1] ?? '');
+	const gap = typoLineGapEm(firstFontFamily(font)) * size;
+	if (gap > 0) {
+		box.lineGap = gap;
 	}
 	cache.set(font, box);
 	return box;
