@@ -38,6 +38,7 @@ import {
 	resolveVertOverflowEllipsisStyle,
 } from './text-body-layout';
 import { resolveTextBodyRectPadding } from './text-body-rect';
+import { getTextCompensationStyle } from './text-flip-compensation';
 import { lineHeightToPx, resolveLineHeight } from './text-line-height';
 import { resolveVertOverflowClipLines } from './text-overflow-lines';
 import { resolveCssTextAlign } from './text-paragraph-style';
@@ -206,10 +207,15 @@ export function buildTextBlockStyle(
 		// it here too would just be overwritten; these four either have no other
 		// transform on the block (svelte, vanilla) or already compose onto
 		// whatever this returns (vue, angular).
+		// The flip compensation joins it: a flipped shape's text is never
+		// mirrored and a vertical flip turns it upside down (see
+		// `text-flip-compensation`); these four painted it mirrored.
 		const rotation = getTextBodyRotationTransform(element);
-		if (rotation) {
-			style.transform = rotation;
-			style.transformOrigin = 'center';
+		const compensation = getTextCompensationStyle(element);
+		const transform = [rotation, compensation?.transform].filter(Boolean).join(' ');
+		if (transform) {
+			style.transform = transform;
+			style.transformOrigin = compensation?.transformOrigin ?? 'center';
 		}
 	}
 

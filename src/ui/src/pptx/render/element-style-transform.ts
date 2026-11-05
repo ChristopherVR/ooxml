@@ -322,36 +322,30 @@ export function getElementTransformWithoutRotation(element: PptxElement): string
 }
 
 /**
- * Builds a CSS transform that compensates for element flips so that text
- * inside a flipped shape renders in its natural reading direction.
- * Only includes `scaleX(-1)` / `scaleY(-1)`; rotation is not compensated.
+ * Builds the CSS transform that un-mirrors the text of a flipped shape.
+ *
+ * PowerPoint never mirrors text, and a vertical flip turns it upside down
+ * (PowerPoint 16 exports, `Slide.Export`): the text of a shape at rotation
+ * `r` reads at `r` with `flipH`, at `r + 180` with `flipV` and at `r + 180`
+ * with both (the shape's own transform is then a half turn). Inside the
+ * container's `rotate(r) scaleX(fh) scaleY(fv)` that is one horizontal
+ * mirror whenever exactly one flip is set, at any rotation: `flipV` composes
+ * to `rotate(r + 180)`, `flipH` to `rotate(r)`. The text rectangle itself
+ * flips with the shape, so the mirror pivots on its centre (see
+ * `getTextCompensationOrigin`).
  * @param element - The element whose flips are checked.
  * @returns A CSS transform string, or `undefined` if no flips are active.
  */
 export function getTextCompensationTransform(element: PptxElement): string | undefined {
 	const transforms: string[] = [];
-	const normalizedRotation = (((Number(element.rotation) || 0) % 360) + 360) % 360;
-	const swapFlipAxis =
-		normalizedRotation > 90 &&
-		normalizedRotation < 270 &&
-		element.flipHorizontal !== element.flipVertical;
-	const compensateHorizontal = swapFlipAxis ? element.flipVertical : element.flipHorizontal;
-	const compensateVertical = swapFlipAxis ? element.flipHorizontal : element.flipVertical;
-	if (compensateHorizontal) {
+	const mirrored = Boolean(element.flipHorizontal) !== Boolean(element.flipVertical);
+	if (mirrored) {
 		transforms.push('scaleX(-1)');
-	}
-	if (compensateVertical) {
-		transforms.push('scaleY(-1)');
 	}
 	const ancestorGroupTransform =
 		'textStyle' in element ? element.textStyle?.ancestorGroupTransform : undefined;
 	if (isTextOrientationMatrix(ancestorGroupTransform)) {
-		const localCompensation: TextOrientationMatrix = [
-			compensateHorizontal ? -1 : 1,
-			0,
-			0,
-			compensateVertical ? -1 : 1,
-		];
+		const localCompensation: TextOrientationMatrix = [mirrored ? -1 : 1, 0, 0, 1];
 		const visibleTransform = multiplyTextOrientationMatrices(
 			multiplyTextOrientationMatrices(ancestorGroupTransform, getElementOrientationMatrix(element)),
 			localCompensation,
