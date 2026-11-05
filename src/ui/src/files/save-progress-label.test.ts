@@ -19,9 +19,7 @@ describe('saveProgressLabel', () => {
 		expect(saveProgressLabel({ phase: 'uploading', loaded: 150, total: 100 }, t)).toBe(
 			'Speichern… 100 %',
 		);
-		expect(saveProgressLabel({ phase: 'uploading', loaded: 0, total: 0 }, t)).toBe(
-			'Speichern… 0 %',
-		);
+		expect(saveProgressLabel({ phase: 'uploading', loaded: 0, total: 10 })).toBe('Saving…');
 	});
 });
 

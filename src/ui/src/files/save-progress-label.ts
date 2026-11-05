@@ -2,6 +2,8 @@ import type { DocumentSaveProgress } from 'ooxml-core/embedding';
 
 /** The English texts of a save in progress; `{percent}` is replaced with a whole number. */
 export const SAVE_PROGRESS_TEXT = {
+	/** Before any fragment is confirmed; most files upload in one request, so this is common. */
+	uploadingStart: 'Saving…',
 	uploading: 'Saving… {percent}%',
 	checking: 'Checking for changes…',
 	downloading: 'Getting the latest version… {percent}%',
@@ -23,10 +25,12 @@ export function saveProgressLabel(
 ): string {
 	switch (progress.phase) {
 		case 'uploading':
-			return t(SAVE_PROGRESS_TEXT.uploading).replace(
-				'{percent}',
-				progress.total > 0 ? percent(progress.loaded, progress.total) : '0',
-			);
+			return progress.loaded > 0 && progress.total > 0
+				? t(SAVE_PROGRESS_TEXT.uploading).replace(
+						'{percent}',
+						percent(progress.loaded, progress.total),
+					)
+				: t(SAVE_PROGRESS_TEXT.uploadingStart);
 		case 'checking':
 			return t(SAVE_PROGRESS_TEXT.checking);
 		case 'downloading':
