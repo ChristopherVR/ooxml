@@ -2,6 +2,7 @@ import {
 	AVATAR_COLOR_SWATCHES,
 	DEFAULT_VIEWER_PROFILE,
 	clearAllLocalViewerData,
+	connectedServicesLabels,
 	confirmDeleteDialog,
 	formatBackstageSize,
 	getLocalStorageUsageSummary,
@@ -10,12 +11,14 @@ import {
 	saveViewerProfile,
 } from 'ooxml-ui/pptx';
 import type { LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { LuHardDrive, LuInfo, LuLogIn, LuUser } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { cn } from '../../utils';
+import { useViewerCloudFiles } from '../viewer-cloud-files-context';
 import { useViewerStorage } from '../viewer-storage-context';
+import { WebConnectedServices } from '../WebControls';
 import { AccountAuthContext } from './account-auth-context';
 
 const cardClass = 'border border-border bg-card p-6 text-card-foreground';
@@ -28,6 +31,8 @@ export function AccountPage(): React.ReactElement {
 	const { t } = useTranslation();
 	const accountAuth = useContext(AccountAuthContext);
 	const storage = useViewerStorage();
+	const cloud = useViewerCloudFiles();
+	const connectedLabels = useMemo(() => connectedServicesLabels(t), [t]);
 
 	const [profile, setProfile] = useState<ViewerProfile>(
 		() => readStoredViewerPrefs().profile ?? DEFAULT_VIEWER_PROFILE,
@@ -172,6 +177,13 @@ export function AccountPage(): React.ReactElement {
 							</button>
 						</>
 					)}
+				</section>
+			)}
+
+			{/* Connected services (only with host `fileProviders`) */}
+			{cloud.providers.length > 0 && (
+				<section className={cardClass}>
+					<WebConnectedServices providers={cloud.providers} labels={connectedLabels} />
 				</section>
 			)}
 		</div>

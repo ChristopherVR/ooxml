@@ -1,4 +1,9 @@
-import type { CloudFileProvider, CloudOpenedFile, OfficeOpenPlacesLabels } from 'ooxml-ui/pptx';
+import type {
+	CloudFileProvider,
+	CloudOpenedFile,
+	OfficeConnectedServicesLabels,
+	OfficeOpenPlacesLabels,
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
 type Host = HTMLElement & { value: string; checked: boolean; disabled: boolean };
@@ -115,6 +120,29 @@ export function WebOpenPlaces({
 			{children}
 		</pptx-ui-open-places>
 	);
+}
+
+/**
+ * File > Account's linked storage (`<pptx-ui-connected-services>`): one row per provider with its
+ * own Connect and Disconnect. It renders nothing without providers.
+ */
+export function WebConnectedServices({
+	providers,
+	labels,
+	...rest
+}: CommonProps & {
+	providers: readonly CloudFileProvider[];
+	labels: OfficeConnectedServicesLabels;
+}): React.ReactElement {
+	const ref = useRef<HTMLElement & Record<string, unknown>>(null);
+	useLayoutEffect(() => {
+		const host = ref.current;
+		if (host) {
+			host.providers = providers;
+			host.labels = labels;
+		}
+	}, [providers, labels]);
+	return <pptx-ui-connected-services ref={ref} {...rest} />;
 }
 
 export function WebSelect({
