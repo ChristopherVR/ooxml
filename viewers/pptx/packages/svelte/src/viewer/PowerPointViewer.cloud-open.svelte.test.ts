@@ -22,7 +22,14 @@ const FIXTURE = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-dec
 
 type ViewerInstance = Pick<
 	PowerPointViewerAPI,
-	'getSlideCount' | 'addSlide' | 'isDirty' | 'addElement'
+	| 'getSlideCount'
+	| 'addSlide'
+	| 'isDirty'
+	| 'addElement'
+	| 'updateElement'
+	| 'deleteElements'
+	| 'getElements'
+	| 'getMode'
 >;
 
 let cleanup: (() => void) | undefined;
@@ -74,6 +81,11 @@ async function cloudFile(
 	slides: number,
 ): Promise<CloudOpenedFile> {
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: slides });
+	// One element to try to change, move and delete.
+	data.slides[0]!.elements = [
+		{ id: 'title-0', type: 'text', text: 'Quarterly report', x: 67, y: 40, width: 400, height: 60 },
+	];
+	data.slides[0]!.isDirty = true;
 	const bytes = await handler.save(data.slides);
 	handler.dispose();
 	return {
@@ -165,11 +177,63 @@ describe('PowerPointViewer opening from a cloud place', () => {
 		expect(instance.isDirty()).toBe(true);
 	});
 
-	it('opens a file the service leaves read-only without letting it be edited', async () => {
+	/** The Home tab's New Slide command (a button in the ribbon). */
+	function newSlideButton(target: HTMLElement): HTMLButtonElement {
+		const button = [...target.querySelectorAll<HTMLButtonElement>('button')].find(
+			(candidate) => candidate.getAttribute('aria-label') === 'New Slide',
+		);
+		if (!button) {
+			throw new Error('no New Slide command rendered');
+		}
+		return button;
+	}
+
+	/** Every edit the public handle offers, tried on the active slide. */
+	async function tryHandleEdits(instance: ViewerInstance): Promise<void> {
+		instance.addElement({ type: 'shape', id: 'probe', x: 0, y: 0, width: 50, height: 50 } as never);
+		instance.addSlide(0);
+		instance.updateElement('title-0', { x: 500 } as never);
+		instance.deleteElements(['title-0']);
+		flushSync();
+		await new Promise((resolve) => {
+			setTimeout(resolve, 50);
+		});
+		flushSync();
+	}
+
+	it('opens a file the service leaves read-only: no edit through the handle or the ribbon', async () => {
 		const { target, instance } = await mountViewer({ save: vi.fn(async () => undefined) });
-		const shape = { type: 'shape', id: 'probe', x: 0, y: 0, width: 50, height: 50 } as never;
-		expect(instance.addElement(shape)).toBeDefined();
 		await openFromCloud(target, instance, await cloudFile({ save: vi.fn() }, false, 3), 3);
-		expect(instance.addElement(shape)).toBeUndefined();
+		expect(instance.getMode()).toBe('preview');
+		const before = instance.getElements(0);
+		expect(before).toHaveLength(1);
+		expect(
+			instance.addElement({ type: 'shape', id: 'p', x: 0, y: 0, width: 5, height: 5 } as never),
+		).toBeUndefined();
+		await tryHandleEdits(instance);
+		expect(instance.getSlideCount()).toBe(3);
+		expect(instance.getElements(0)).toStrictEqual(before);
+		expect(instance.isDirty()).toBe(false);
+		// The ribbon: New Slide is disabled, and clicking it changes nothing.
+		expect(newSlideButton(target).disabled).toBe(true);
+		click(newSlideButton(target));
+		expect(instance.getSlideCount()).toBe(3);
+		expect(instance.isDirty()).toBe(false);
+	});
+
+	it('edits again when a later cloud file is editable', async () => {
+		const { target, instance } = await mountViewer({ save: vi.fn(async () => undefined) });
+		await openFromCloud(target, instance, await cloudFile({ save: vi.fn() }, false, 3), 3);
+		await tryHandleEdits(instance);
+		expect(instance.getSlideCount()).toBe(3);
+
+		await openFromCloud(target, instance, await cloudFile({ save: vi.fn() }, true, 4), 4);
+		expect(instance.getMode()).toBe('edit');
+		expect(newSlideButton(target).disabled).toBe(false);
+		click(newSlideButton(target));
+		await vi.waitFor(() => expect(instance.getSlideCount()).toBe(5));
+		await tryHandleEdits(instance);
+		expect(instance.getSlideCount()).toBe(6);
+		expect(instance.isDirty()).toBe(true);
 	});
 });

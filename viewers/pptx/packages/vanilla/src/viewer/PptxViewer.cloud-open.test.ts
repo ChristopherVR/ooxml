@@ -15,6 +15,11 @@ let active: PptxViewerInstance[] = [];
 async function deck(slides: number): Promise<Uint8Array> {
 	const { PptxHandler } = await import('pptx-viewer-core');
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: slides });
+	// One element to try to change, move and delete.
+	data.slides[0]!.elements = [
+		{ id: 'title-0', type: 'text', text: 'Quarterly report', x: 67, y: 40, width: 400, height: 60 },
+	];
+	data.slides[0]!.isDirty = true;
 	const bytes = await handler.save(data.slides);
 	handler.dispose();
 	return bytes;
@@ -147,5 +152,64 @@ describe('PptxViewer opening from a cloud place', () => {
 		expect(viewer.addElement(shape)).toBeDefined();
 		await viewer.downloadPptx();
 		expect(hostSave).toHaveBeenCalledOnce();
+	});
+
+	/** The Home tab's New Slide command (a ribbon command element wrapping a button). */
+	function newSlideButton(root: HTMLElement): HTMLButtonElement {
+		const direct = [...root.querySelectorAll<HTMLButtonElement>('button')].find(
+			(candidate) => candidate.getAttribute('aria-label') === 'New Slide',
+		);
+		const command = [...root.querySelectorAll('pptx-ui-ribbon-command')]
+			.filter((host) => host.getAttribute('label') === 'New Slide')
+			.map((host) => host.shadowRoot?.querySelector<HTMLButtonElement>('button'))[0];
+		const button = direct ?? command;
+		if (!button) {
+			throw new Error('no New Slide command rendered');
+		}
+		return button;
+	}
+
+	/** Every edit the public handle offers, tried on the active slide. */
+	function tryHandleEdits(viewer: PptxViewer): void {
+		viewer.addElement({ type: 'shape', id: 'probe', x: 0, y: 0, width: 50, height: 50 } as never);
+		viewer.addSlide(0);
+		viewer.updateElement('title-0', { x: 500 } as never);
+		viewer.deleteElements(['title-0']);
+	}
+
+	it('opens a file the service leaves read-only: no edit through the handle or the ribbon', async () => {
+		const { viewer, root } = await mount({ save: vi.fn(async () => undefined) });
+		await openFromCloud(viewer, root, await cloudFile({ save: vi.fn() }, false, 3), 3);
+		expect(viewer.getMode()).toBe('preview');
+		const before = viewer.getElements(0);
+		expect(before).toHaveLength(1);
+		expect(
+			viewer.addElement({ type: 'shape', id: 'p', x: 0, y: 0, width: 5, height: 5 } as never),
+		).toBeUndefined();
+		tryHandleEdits(viewer);
+		expect(viewer.getSlideCount()).toBe(3);
+		expect(viewer.getElements(0)).toStrictEqual(before);
+		expect(viewer.isDirty()).toBe(false);
+		// The ribbon: New Slide is disabled, and clicking it changes nothing.
+		expect(newSlideButton(root).disabled).toBe(true);
+		newSlideButton(root).click();
+		expect(viewer.getSlideCount()).toBe(3);
+		expect(viewer.isDirty()).toBe(false);
+	});
+
+	it('edits again when a later cloud file is editable', async () => {
+		const { viewer, root } = await mount({ save: vi.fn(async () => undefined) });
+		await openFromCloud(viewer, root, await cloudFile({ save: vi.fn() }, false, 3), 3);
+		tryHandleEdits(viewer);
+		expect(viewer.getSlideCount()).toBe(3);
+
+		await openFromCloud(viewer, root, await cloudFile({ save: vi.fn() }, true, 4), 4);
+		expect(viewer.getMode()).toBe('edit');
+		expect(newSlideButton(root).disabled).toBe(false);
+		newSlideButton(root).click();
+		expect(viewer.getSlideCount()).toBe(5);
+		tryHandleEdits(viewer);
+		expect(viewer.getSlideCount()).toBe(6);
+		expect(viewer.isDirty()).toBe(true);
 	});
 });

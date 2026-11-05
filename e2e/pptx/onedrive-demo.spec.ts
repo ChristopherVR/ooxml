@@ -9,9 +9,18 @@ import { readFile } from 'node:fs/promises';
 
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import type { PowerPointViewerAPI } from 'pptx-viewer-shared';
 
-import { loadDeck, openRibbonTab, thumbnail } from './support/deck';
+import { loadDeck, openRibbonTab, slideElements, thumbnail } from './support/deck';
+import { pressShortcut } from './support/keyboard';
 import { ONEDRIVE_TEST_TOKEN, routeOneDriveGraph } from './support/onedrive-graph';
+
+declare global {
+	interface Window {
+		/** Public component handle exposed by each development demo. */
+		__pptxViewer: PowerPointViewerAPI;
+	}
+}
 
 const deck = () => readFile(new URL('./fixtures/sample-deck.pptx', import.meta.url));
 const unsaved = (page: Page) => page.getByText('Unsaved changes', { exact: true });
@@ -22,43 +31,130 @@ async function openBackstage(page: Page) {
 	return page.getByRole('dialog', { name: 'File' });
 }
 
-/** File > Open > OneDrive > Sign in (demo dialog with the test token) > open `name`. */
-async function openFromOneDrive(page: Page, name: string): Promise<void> {
-	// The viewer (and its File tab) needs a document first.
-	await loadDeck(page);
+/**
+ * File > Open > OneDrive (signing in first if the place asks) > open `name`, on a viewer that
+ * already has a document.
+ */
+async function openInBackstage(page: Page, name: string): Promise<void> {
 	const backstage = await openBackstage(page);
 	await backstage.getByRole('button', { name: 'Open', exact: true }).click();
 	await backstage.locator('[data-pptx-open-place="cloud:onedrive"]').click();
 	const place = backstage.locator('[data-pptx-cloud-place="onedrive"]');
-	await place.getByRole('button', { name: 'Sign in', exact: true }).click();
-	const dialog = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
-	await dialog.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
-	await dialog.getByRole('button', { name: 'Continue', exact: true }).click();
+	const signIn = place.getByRole('button', { name: 'Sign in', exact: true });
+	const options = place.getByRole('option').first();
+	await expect(signIn.or(options)).toBeVisible();
+	if (await signIn.isVisible()) {
+		await signIn.click();
+		const dialog = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
+		await dialog.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
+		await dialog.getByRole('button', { name: 'Continue', exact: true }).click();
+	}
 	await place.getByRole('option', { name: new RegExp(name, 'iu') }).click();
-	// The title bar names the opened file once it has replaced the deck that was showing.
-	await expect(page.getByText(new RegExp(`${name}\.pptx`, 'iu')).first()).toBeVisible({
-		timeout: 30_000,
-	});
+	// Opening closes File and replaces the deck that was showing (the title bar names the file).
+	await expect(backstage).toBeHidden({ timeout: 30_000 });
+	await expect(page.getByText(new RegExp(`${name}\\.pptx`, 'iu')).first()).toBeVisible();
 	await expect(page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first()).toBeVisible(
 		{ timeout: 30_000 },
 	);
 }
 
-/** The edit `addSlide` makes, tried on a deck that may refuse it (a read-only ribbon, a no-op). */
-async function tryAddSlide(page: Page): Promise<void> {
-	try {
-		await page
-			.getByRole('toolbar', { name: 'Presentation toolbar' })
-			.getByRole('tab', { name: 'Home', exact: true })
-			.click({ timeout: 3000 });
-		await page
-			.getByRole('button', { name: /new slide/iu })
-			.first()
-			.click({ timeout: 3000 });
-	} catch {
-		// A read-only deck may not offer the command at all.
+/** Load a device deck, then File > Open > OneDrive > `name`. */
+async function openFromOneDrive(page: Page, name: string): Promise<void> {
+	// The viewer (and its File tab) needs a document first.
+	await loadDeck(page);
+	await openInBackstage(page, name);
+}
+
+interface HandleEdits {
+	/** The deck as it was before any attempt. */
+	slides: number;
+	elements: number;
+	firstX: number;
+	/** `addElement`'s result: the new id, or undefined when it refused. */
+	inserted: string | undefined;
+	insertedElements: number;
+	/** What each attempt changed on the active slide (and the slide count for `addSlide`). */
+	updated: boolean;
+	duplicated: number;
+	deleted: number;
+	slidesAdded: number;
+}
+
+/**
+ * Every edit the public handle offers, tried in turn on the active slide, and what each did. Each
+ * call gets a paint before it is read back: some bindings publish a handle that reads the last
+ * render, so a read in the same tick as the write sees the old deck.
+ */
+async function tryHandleEdits(page: Page): Promise<HandleEdits> {
+	const settle = () => page.waitForTimeout(400);
+	const read = () =>
+		page.evaluate(() => {
+			const api = window.__pptxViewer;
+			return {
+				slides: api.getSlideCount(),
+				elements: api.getElements(),
+				active: api.getActiveSlideIndex(),
+			};
+		});
+	const before = await read();
+	const first = before.elements[0]!;
+	const inserted = await page.evaluate(() =>
+		window.__pptxViewer.addElement({
+			type: 'shape',
+			id: 'probe',
+			x: 10,
+			y: 10,
+			width: 80,
+			height: 80,
+		} as never),
+	);
+	await settle();
+	const afterInsert = await read();
+	await page.evaluate((id) => window.__pptxViewer.updateElement(id, { x: 555 } as never), first.id);
+	await settle();
+	const afterUpdate = await read();
+	await page.evaluate((id) => window.__pptxViewer.duplicateElement(id), first.id);
+	await settle();
+	const afterDuplicate = await read();
+	await page.evaluate((id) => window.__pptxViewer.deleteElements([id]), first.id);
+	await settle();
+	const afterDelete = await read();
+	await page.evaluate(() => window.__pptxViewer.addSlide(0));
+	await settle();
+	const afterAddSlide = await read();
+	return {
+		slides: before.slides,
+		elements: before.elements.length,
+		firstX: first.x,
+		inserted,
+		insertedElements: afterInsert.elements.length - before.elements.length,
+		updated: afterUpdate.elements.find((e) => e.id === first.id)?.x !== first.x,
+		duplicated: afterDuplicate.elements.length - afterUpdate.elements.length,
+		deleted: afterDuplicate.elements.length - afterDelete.elements.length,
+		slidesAdded: afterAddSlide.slides - afterDelete.slides,
+	};
+}
+
+/** The same edits through the UI: ribbon New Slide, Ctrl+M, and the inline text editor. */
+async function tryUiEdits(page: Page): Promise<{ slides: number; editing: boolean }> {
+	const text = slideElements(page).filter({ hasText: /\w{3}/u }).first();
+	await text.dblclick({ timeout: 3000 }).catch(() =>
+		// A read-only deck does not take pointer events on its elements, so aim at the slide itself.
+		text.dblclick({ force: true }),
+	);
+	await page.waitForTimeout(500);
+	const editing = (await page.locator('[data-inline-editor]').count()) > 0;
+	await page.keyboard.press('Escape');
+	await openRibbonTab(page, 'Home');
+	const newSlide = page.getByRole('button', { name: /new slide/iu }).first();
+	if (await newSlide.isEnabled().catch(() => false)) {
+		await newSlide.click({ timeout: 3000 }).catch(() => undefined);
 	}
-	await page.waitForTimeout(1000);
+	await pressShortcut(page, 'Control+m');
+	// Back to the first slide, where the handle edits expect the deck's own elements.
+	await page.evaluate(() => window.__pptxViewer.setActiveSlideIndex(0));
+	await page.waitForTimeout(300);
+	return { slides: await page.evaluate(() => window.__pptxViewer.getSlideCount()), editing };
 }
 
 async function addSlide(page: Page): Promise<void> {
@@ -110,13 +206,74 @@ test.describe('OneDrive under File > Open', () => {
 		await expect(unsaved(page).first()).toBeVisible();
 	});
 
-	test('a file on another drive opens read-only', async ({ page }) => {
-		await routeOneDriveGraph(page, {
+	test('a file on another drive opens read-only: no edit from the handle or the UI, no upload', async ({
+		page,
+	}) => {
+		const cloud = await routeOneDriveGraph(page, {
 			shared: { name: 'Shared with me.pptx', bytes: await deck(), driveId: 'colleague-drive' },
 		});
 		await openFromOneDrive(page, 'Shared with me');
-		// The edit that marks an own-drive deck unsaved leaves this one untouched.
-		await tryAddSlide(page);
+		const handle = await tryHandleEdits(page);
+		// The public handle refuses every edit and leaves the deck as it was loaded.
+		expect(handle.inserted).toBeUndefined();
+		expect(handle).toMatchObject({
+			insertedElements: 0,
+			updated: false,
+			duplicated: 0,
+			deleted: 0,
+			slidesAdded: 0,
+		});
+		// So do the ribbon, the keyboard and the inline text editor.
+		const ui = await tryUiEdits(page);
+		expect(ui.slides).toBe(handle.slides);
+		expect(ui.editing).toBe(false);
+		// Nothing became unsaved, and Save (the quick-access command and File > Save) uploads nothing.
 		await expect(unsaved(page)).toHaveCount(0);
+		await pressShortcut(page, 'Control+s');
+		const backstage = await openBackstage(page);
+		const save = backstage.getByRole('button', { name: 'Save', exact: true });
+		if (await save.isEnabled()) {
+			await save.click();
+		}
+		await page.waitForTimeout(1500);
+		expect(cloud.writes).toStrictEqual([]);
+		await expect(unsaved(page)).toHaveCount(0);
+	});
+
+	test('editing returns when an editable file is opened after a read-only one', async ({
+		page,
+	}) => {
+		const cloud = await routeOneDriveGraph(page, {
+			shared: { name: 'Shared with me.pptx', bytes: await deck(), driveId: 'colleague-drive' },
+			mine: { name: 'Quarterly review.pptx', bytes: await deck() },
+		});
+		await openFromOneDrive(page, 'Shared with me');
+		const readOnly = await tryHandleEdits(page);
+		expect(readOnly.inserted).toBeUndefined();
+		expect(readOnly).toMatchObject({
+			insertedElements: 0,
+			updated: false,
+			duplicated: 0,
+			deleted: 0,
+			slidesAdded: 0,
+		});
+
+		await openInBackstage(page, 'Quarterly review');
+		const ui = await tryUiEdits(page);
+		expect(ui.editing).toBe(true);
+		expect(ui.slides).toBeGreaterThan(readOnly.slides);
+		const editable = await tryHandleEdits(page);
+		expect(editable.inserted).toBeDefined();
+		expect(editable).toMatchObject({
+			insertedElements: 1,
+			updated: true,
+			duplicated: 1,
+			deleted: 1,
+			slidesAdded: 1,
+		});
+		await expect(unsaved(page).first()).toBeVisible();
+		await fileSave(page);
+		await expect(unsaved(page)).toHaveCount(0, { timeout: 30_000 });
+		expect(cloud.writes).toStrictEqual(['mine']);
 	});
 });
