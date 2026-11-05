@@ -186,6 +186,7 @@
 {#if strokeOutline}
 	<svg
 		class="pptx-svelte-gradient-outline"
+		data-pptx-outline=""
 		aria-hidden="true"
 		viewBox={outlineViewBox}
 		preserveAspectRatio="none"
