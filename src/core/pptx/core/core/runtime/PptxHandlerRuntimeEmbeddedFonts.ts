@@ -183,6 +183,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 					return stack.join('/');
 				}
+				if (target.startsWith('/')) {
+					return target.substring(1);
+				}
 				return `ppt/${stripParentDirSegments(target)}`;
 			}
 		}
