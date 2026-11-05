@@ -46,6 +46,7 @@
 	import {
 		buildStrokeOutline,
 		buildSubpathFillOverlay,
+		getSilhouetteFillLayer,
 		getBevelLightingSvgFilter,
 		getComputedEffectStyle,
 		getShapeEffectFilterDefs,
@@ -75,6 +76,7 @@
 	 * Per-sub-path fill overlay for a multi-sub-path preset or custom geometry,
 	 * or `undefined` when a single merged fill is correct (the ordinary case).
 	 */
+	const fillLayer = $derived(getSilhouetteFillLayer(element));
 	const subpathFill = $derived(buildSubpathFillOverlay(element));
 
 	/** `viewBox` for the sub-path fill overlay, in its own coordinate space. */
@@ -139,6 +141,9 @@
 	);
 </script>
 
+{#if fillLayer}
+	<div class="pptx-svelte-silhouette-fill" aria-hidden="true" style={fillLayer.cssText}></div>
+{/if}
 {#if subpathFill}
 	<svg
 		class="pptx-svelte-subpath-fill"
@@ -163,6 +168,9 @@
 	</svg>
 {/if}
 
+{#if hollowHit?.textCss}
+	{@html `<style>${hollowHit.textCss}</style>`}
+{/if}
 {#if hollowHit}
 	<svg
 		aria-hidden="true"

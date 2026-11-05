@@ -53,6 +53,12 @@ export interface HollowHitOutline {
 	 * whole geometry (but not the rest of its box) is the click target.
 	 */
 	readonly pointerEvents: 'stroke' | 'fill';
+	/**
+	 * Scoped CSS a binding injects next to the target: the text of a text-bearing
+	 * silhouette shape stays hit-testable (and editable) under its click-through
+	 * container.
+	 */
+	readonly textCss?: string;
 }
 
 /**
@@ -122,17 +128,29 @@ export function passesClicksThroughBox(element: PptxElement): boolean {
  * used to be a clip-path, which clipped hit testing to the geometry too.
  */
 function buildSilhouetteHitArea(element: PptxElement): HollowHitOutline | undefined {
-	// Textless only: a text body under a pointer-events:none container could not
-	// take the caret while editing, which is a larger change than this needs.
-	if (
-		element.type !== 'shape' ||
-		getElementTextContent(element).trim() !== '' ||
-		!usesSilhouetteEffects(element)
-	) {
+	if (element.type !== 'shape' || !usesSilhouetteEffects(element)) {
 		return undefined;
 	}
 	const d = outlinePathData(getResolvedShapeClipPath(element), element.width, element.height);
-	return d
-		? { d, strokeWidth: 0, fill: 'transparent', stroke: 'none', pointerEvents: 'fill' }
-		: undefined;
+	if (!d) {
+		return undefined;
+	}
+	const hit: HollowHitOutline = {
+		d,
+		strokeWidth: 0,
+		fill: 'transparent',
+		stroke: 'none',
+		pointerEvents: 'fill',
+	};
+	if (getElementTextContent(element).trim() === '') {
+		return hit;
+	}
+	// A pointer-events:none container passes that to its text body, whose caret
+	// and links then could not be reached: re-enable the text itself (spans and
+	// the editable surface, not the box around them).
+	const scope = `[data-element-id="${element.id.replace(/["\\]/gu, '\\$&')}"]`;
+	return {
+		...hit,
+		textCss: `${scope} span,${scope} [contenteditable],${scope} [contenteditable] *{pointer-events:auto}`,
+	};
 }

@@ -16,6 +16,7 @@ import { getShapeFillStrokeStyle, getTextBlockStyle } from '../element-styles';
 import {
 	renderShapeFillOverlay,
 	renderShapeFilterDefs,
+	renderShapeFillLayer,
 	renderShapeSubpathFillOverlay,
 	renderStrokeOutline,
 } from './shape-filter-defs';
@@ -147,6 +148,10 @@ export function buildReflectionMirrorContent(
 		applyInheritedFill(box, inheritedFill);
 	}
 
+	const fillLayer = renderShapeFillLayer(doc, element);
+	if (fillLayer) {
+		box.appendChild(fillLayer);
+	}
 	const subpathFill = renderShapeSubpathFillOverlay(doc, element);
 	if (subpathFill) {
 		box.appendChild(subpathFill);

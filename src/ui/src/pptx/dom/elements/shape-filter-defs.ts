@@ -9,6 +9,7 @@ import {
 	getDuotoneSvgFilter,
 	getEffectStyleSource,
 	getShapeEffectFilterDefs,
+	getSilhouetteFillLayer,
 	isPatternPaint,
 	strokeOutlineViewBox,
 	svgGradientMarkup,
@@ -161,7 +162,26 @@ export function renderHollowHitOutline(doc: Document, element: PptxElement): SVG
 	});
 	path.setAttribute('style', `pointer-events:${hit.pointerEvents}`);
 	svg.appendChild(path);
+	if (hit.textCss) {
+		const style = createSvgEl(doc, 'style', {});
+		style.textContent = hit.textCss;
+		svg.appendChild(style);
+	}
 	return svg;
+}
+
+/**
+ * The clipped child layer that paints a gradient, pattern or picture fill of a
+ * silhouette shape (see `silhouette-fill-layer`), or `null`.
+ */
+export function renderShapeFillLayer(doc: Document, element: PptxElement): HTMLElement | null {
+	const layer = getSilhouetteFillLayer(element);
+	if (!layer) {
+		return null;
+	}
+	const div = createEl(doc, 'div', 'pptx-vanilla-silhouette-fill', { ...layer.style });
+	div.setAttribute('aria-hidden', 'true');
+	return div;
 }
 
 /**

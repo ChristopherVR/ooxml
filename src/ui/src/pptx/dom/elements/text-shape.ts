@@ -21,6 +21,7 @@ import {
 	renderShapeFillOverlay,
 	renderShapeFilterDefs,
 	renderReflectionOverlay,
+	renderShapeFillLayer,
 	renderShapeSubpathFillOverlay,
 } from './shape-filter-defs';
 import { renderTextBlock } from './text-block';
@@ -88,6 +89,10 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 	// Per-sub-path fill overlay: a multi-sub-path preset or custom geometry whose
 	// sub-paths cannot share one CSS background-color. Painted first (bottom-most)
 	// since it substitutes for the container's own (now suppressed) fill.
+	const fillLayer = renderShapeFillLayer(context.document, element);
+	if (fillLayer) {
+		paint.appendChild(fillLayer);
+	}
 	const subpathFill = renderShapeSubpathFillOverlay(context.document, element);
 	if (subpathFill) {
 		paint.appendChild(subpathFill);

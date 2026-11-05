@@ -4,6 +4,7 @@ import {
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
 	getEffectStyleSource,
+	getSilhouetteFillLayer,
 	getSilhouetteEffects,
 	getSoftEdgeSvgFilter,
 } from 'ooxml-ui/pptx';
@@ -144,6 +145,11 @@ export function getReflectionOverlay(el: PptxElement): ReflectionOverlay | undef
  */
 export function getStrokeOutline(el: PptxElement): StrokeOutline | undefined {
 	return buildStrokeOutline(el);
+}
+
+/** The clipped child layer that paints a gradient, pattern or picture silhouette fill. */
+export function getFillLayer(el: PptxElement): { cssText: string } | undefined {
+	return getSilhouetteFillLayer(el);
 }
 
 /**

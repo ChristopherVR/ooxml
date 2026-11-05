@@ -183,6 +183,12 @@ function overlayCanPaintFill(style: ShapeStyle | undefined): boolean {
 	return mode === undefined || mode === 'solid' || mode === 'none';
 }
 
+/** Fill modes painted by a clipped child layer (gradient, pattern, picture). */
+function isLayerFillMode(style: ShapeStyle | undefined): boolean {
+	const mode = style?.fillMode;
+	return mode === 'gradient' || mode === 'pattern' || mode === 'image';
+}
+
 /** The effect parameters of a shape that paints them as a silhouette, or `undefined`. */
 export function getSilhouetteEffectParams(
 	element: PptxElement,
@@ -210,10 +216,16 @@ export function getSilhouetteEffectParams(
 	) {
 		return undefined;
 	}
-	if (!overlayCanPaintFill(style)) {
+	const layerFill = isLayerFillMode(style);
+	if (!layerFill && !overlayCanPaintFill(style)) {
 		return undefined;
 	}
 	const geometry = resolveBaseShapeGeometry(element);
+	// A gradient, pattern or picture fill moves to a clipped child layer, which
+	// only a clipped shape needs; the others keep their box-shadow.
+	if (layerFill && geometry.kind !== 'clipPath') {
+		return undefined;
+	}
 	if (geometry.kind === 'bare' || geometry.kind === 'strokeOnly' || geometry.kind === 'lineEdge') {
 		return undefined;
 	}
@@ -227,7 +239,12 @@ export function getSilhouetteEffectParams(
 		return undefined;
 	}
 	// The fill of a clipped shape moves to the SVG overlay, which needs geometry.
-	if (geometry.kind === 'clipPath' && !paintsNoFill(style) && !getSubpathGeometry(element, true)) {
+	if (
+		geometry.kind === 'clipPath' &&
+		!layerFill &&
+		!paintsNoFill(style) &&
+		!getSubpathGeometry(element, true)
+	) {
 		return undefined;
 	}
 	return { shadows, ...(glow ? { glow } : {}) };
@@ -340,7 +357,25 @@ export function silhouetteFillsOverlay(element: PptxElement): boolean {
 	if (!usesSilhouetteEffects(element) || !hasShapeProperties(element)) {
 		return false;
 	}
-	return resolveBaseShapeGeometry(element).kind === 'clipPath' && !paintsNoFill(element.shapeStyle);
+	return (
+		resolveBaseShapeGeometry(element).kind === 'clipPath' &&
+		!paintsNoFill(element.shapeStyle) &&
+		!isLayerFillMode(element.shapeStyle)
+	);
+}
+
+/**
+ * Whether the fill of a shape with silhouette effects is a CSS background on a
+ * clipped child layer (`silhouette-fill-layer`): a gradient, pattern or picture
+ * fill, which an SVG path cannot paint. The clip applies to the layer before the
+ * container's filter, so the filter still sees the silhouette.
+ */
+export function silhouetteFillsLayer(element: PptxElement): boolean {
+	return (
+		hasShapeProperties(element) &&
+		isLayerFillMode(element.shapeStyle) &&
+		usesSilhouetteEffects(element)
+	);
 }
 
 /** Whether a shape paints its outer shadow and glow as a silhouette. */

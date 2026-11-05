@@ -5,6 +5,7 @@ import {
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
 	getShapeEffectFilterDefs,
+	getSilhouetteFillLayer,
 	strokeOutlineViewBox,
 } from 'ooxml-ui/pptx';
 import type { StrokeOutlinePaint } from 'ooxml-ui/pptx';
@@ -147,6 +148,7 @@ export function ShapeEffectOverlay({
 	const hollowHit = buildHollowHitOutline(element);
 	// A silhouette shape's fill is painted here, except where React already paints
 	// the whole fill as an inline vector path (custom geometry, wedge callouts).
+	const fillLayer = getSilhouetteFillLayer(element);
 	const overlayFill = buildSubpathFillOverlay(element);
 	const subpathFill =
 		overlayFill?.silhouette &&
@@ -160,6 +162,7 @@ export function ShapeEffectOverlay({
 		!strokeOutline &&
 		!hollowHit &&
 		!subpathFill &&
+		!fillLayer &&
 		!reflection
 	) {
 		return null;
@@ -178,6 +181,13 @@ export function ShapeEffectOverlay({
 
 	return (
 		<>
+			{fillLayer ? (
+				<div
+					className='pptx-react-silhouette-fill'
+					aria-hidden='true'
+					style={fillLayer.style as CSSProperties}
+				/>
+			) : null}
 			{subpathFill ? (
 				<svg
 					className='pptx-react-subpath-fill'
@@ -279,6 +289,7 @@ export function ShapeEffectOverlay({
 					))}
 				</svg>
 			) : null}
+			{hollowHit?.textCss ? <style>{hollowHit.textCss}</style> : null}
 			{hollowHit ? (
 				<svg
 					aria-hidden='true'

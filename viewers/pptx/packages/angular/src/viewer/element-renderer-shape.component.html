@@ -22,6 +22,9 @@
 		[attr.data-anim-id]="backgroundLayers().targetId"
 		[attr.data-pptx-animation-layer]="backgroundState() ? 'background' : null"
 	>
+		@if (fillLayer(); as fl) {
+			<div class="pptx-ng-silhouette-fill" aria-hidden="true" [attr.style]="fl.cssText"></div>
+		}
 		@if (subpathFill(); as sf) {
 			<svg
 				class="pptx-ng-subpath-fill"
@@ -60,6 +63,9 @@
 		<!-- Hollow frame hit target: an unfilled, textless shape is hit-tested
 	     on its outline only, so its interior lets clicks through. -->
 		@if (hollowHit(); as hit) {
+			@if (hit.textCss) {
+				<pptx-dynamic-style [css]="hit.textCss" />
+			}
 			<svg
 				aria-hidden="true"
 				[attr.viewBox]="outlineViewBox()"

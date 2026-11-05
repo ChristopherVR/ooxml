@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getShapeFillStrokeStyle } from '../element-styles';
 import {
+	renderShapeFillLayer,
 	renderHollowHitOutline,
 	renderShapeFilterDefs,
 	renderShapeSubpathFillOverlay,
@@ -25,6 +26,34 @@ function triangle(): PptxElement {
 		shapeStyle: {
 			fillColor: '#2070C0',
 			fillMode: 'solid',
+			shadowColor: '#000000',
+			shadowOpacity: 0.5,
+			shadowBlur: 10,
+			shadowAngle: 45,
+			shadowDistance: 8,
+			outerShadowXml: {},
+		},
+	} as unknown as PptxElement;
+}
+
+function gradientTriangle(): PptxElement {
+	return {
+		id: 'tri-g',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 160,
+		height: 130,
+		shapeType: 'triangle',
+		shapeStyle: {
+			fillColor: '#2070C0',
+			fillMode: 'gradient',
+			fillGradientType: 'linear',
+			fillGradientAngle: 90,
+			fillGradientStops: [
+				{ color: '#FF0000', position: 0 },
+				{ color: '#0000FF', position: 100 },
+			],
 			shadowColor: '#000000',
 			shadowOpacity: 0.5,
 			shadowBlur: 10,
@@ -59,5 +88,21 @@ describe('shape-following shadow (vanilla)', () => {
 		const path = svg?.querySelector('path');
 		expect(path?.getAttribute('fill')).toBe('transparent');
 		expect(path?.getAttribute('style')).toContain('pointer-events:fill');
+	});
+
+	it('keeps a gradient fill and its shadow: the fill is a clipped child layer', () => {
+		const style = getShapeFillStrokeStyle(gradientTriangle());
+		expect(style['clipPath']).toBeUndefined();
+		expect(style['backgroundImage']).toBeUndefined();
+		expect(String(style['filter'])).toContain('url(#shape-fx-tri-g)');
+		const layer = renderShapeFillLayer(document, gradientTriangle());
+		expect(layer?.style.backgroundImage).toContain('linear-gradient');
+		expect(layer?.style.clipPath).toBeTruthy();
+	});
+
+	it('re-enables the text of a text-bearing silhouette shape', () => {
+		const text = { ...triangle(), text: 'hello' } as unknown as PptxElement;
+		const svg = renderHollowHitOutline(document, text);
+		expect(svg?.querySelector('style')?.textContent).toContain('pointer-events:auto');
 	});
 });

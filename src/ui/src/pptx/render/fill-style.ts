@@ -29,6 +29,7 @@ import {
 
 import { DEFAULT_FILL_COLOR } from '../constants';
 import { buildRectPathGradientImage } from './path-gradient-rect';
+import { silhouetteFillsLayer } from './silhouette-effects';
 import { suppressesCssFill } from './subpath-fill-overlay';
 
 export {
@@ -1162,7 +1163,7 @@ export function getComputedFillStyle(
 	// `background-color` here would show through underneath it, and for a
 	// `fill="none"` sub-path (the smiley's eyes) it would paint a solid dot
 	// where PowerPoint draws nothing.
-	if (suppressesCssFill(element)) {
+	if (suppressesCssFill(element) || silhouetteFillsLayer(element)) {
 		return { backgroundColor: 'transparent' };
 	}
 
@@ -1181,7 +1182,7 @@ export function getComputedFillStyle(
  * `@scaled`/`@rotWithShape` corrections). Split out so grpFill children can
  * resolve the parent group's style through the identical pipeline.
  */
-function resolveComputedFill(ss: ShapeStyle, element: PptxElement): ComputedFillStyle {
+export function resolveComputedFill(ss: ShapeStyle, element: PptxElement): ComputedFillStyle {
 	// 1. Image fill  -  highest priority.
 	const imageFillUrl = ss.fillMode === 'image' && ss.fillImageUrl ? ss.fillImageUrl : undefined;
 	if (imageFillUrl) {

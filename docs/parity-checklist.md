@@ -420,14 +420,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
       Controls are disabled.
-- [ ] **P2** A non-rectangular shape with a gradient, pattern or picture fill, an inner shadow, a
-      line effect or a 3-D bevel still loses its outer shadow and glow (a clip-path cuts them off);
-      solid and unfilled shapes paint them as a shape-following filter
-      (`src/ui/src/pptx/render/silhouette-effects.ts`). A morphing non-rectangular shape also
-      keeps the clipped effects.
-- [ ] **P2** A text-bearing shape painted by the silhouette filter hit-tests its whole box
-      (a textless one hit-tests its geometry only, `passesClicksThroughBox`): a click-through
-      container would also disable its in-place text editing.
+- [ ] **P2** A non-rectangular shape with an inner shadow, a line effect or a 3-D bevel still loses
+      its outer shadow and glow (a clip-path cuts them off); solid, unfilled, gradient, pattern and
+      picture shapes paint them as a shape-following filter
+      (`src/ui/src/pptx/render/silhouette-effects.ts`; the fill of a gradient, pattern or picture
+      is a clipped child layer, `silhouette-fill-layer.ts`). A morphing non-rectangular shape also
+      keeps the clipped effects. In-place text editing under the click-through container of a
+      text-bearing silhouette shape is untested (its text spans and `contenteditable` stay
+      hit-testable).
 - [ ] **P2** Preset geometry that still differs from PowerPoint 16 (measured with
       `Slide.Export` of every preset at a non-square aspect, default and adjusted, against
       `evaluatePresetShape`): `circularArrow`, `leftCircularArrow` and `leftRightCircularArrow`

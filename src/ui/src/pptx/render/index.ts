@@ -26,6 +26,7 @@ export * from './shape-geometry';
 export * from './wheel-intent';
 export * from './shape-geometry-cascade';
 export * from './silhouette-effects';
+export * from './silhouette-fill-layer';
 export * from './fill-style';
 // `a:gradFill/a:path@type="rect"`: nested-rectangle SVG data-URI approximation
 // (PowerPoint's own rect path gradient has square corners, which no native

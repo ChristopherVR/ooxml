@@ -2,6 +2,7 @@
 import {
 	buildStrokeOutline,
 	buildSubpathFillOverlay,
+	getSilhouetteFillLayer,
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
 	getShapeEffectFilterDefs,
@@ -78,6 +79,7 @@ const props = defineProps<{
  * Per-sub-path fill overlay for a multi-sub-path preset or custom geometry, or
  * `undefined` when a single merged fill is correct (the ordinary case).
  */
+const fillLayer = computed(() => getSilhouetteFillLayer(props.element));
 const subpathFill = computed(() => buildSubpathFillOverlay(props.element));
 
 /** `viewBox` for the sub-path fill overlay, in its own coordinate space. */
@@ -155,6 +157,12 @@ const reflection = computed<CSSProperties | undefined>(() =>
 </script>
 
 <template>
+	<div
+		v-if="fillLayer"
+		class="pptx-vue-silhouette-fill"
+		aria-hidden="true"
+		:style="fillLayer.cssText"
+	></div>
 	<svg
 		v-if="subpathFill"
 		class="pptx-vue-subpath-fill"
@@ -296,6 +304,8 @@ const reflection = computed<CSSProperties | undefined>(() =>
 			}"
 		/>
 	</svg>
+	<!-- `<style>` is a forbidden side-effect tag in an SFC template. -->
+	<component :is="'style'" v-if="hollowHit?.textCss">{{ hollowHit.textCss }}</component>
 	<svg
 		v-if="hollowHit"
 		aria-hidden="true"

@@ -100,4 +100,14 @@ describe('silhouette shape hit area', () => {
 	it('leaves a plain filled shape to its box', () => {
 		expect(passesClicksThroughBox(shape({ shapeStyle: { fillColor: '#f00' } }))).toBe(false);
 	});
+
+	it('keeps the text of a text-bearing silhouette shape reachable', () => {
+		const withText = { ...triangle, text: 'hello' } as unknown as PptxElement;
+		const hit = buildHollowHitOutline(withText);
+		expect(passesClicksThroughBox(withText)).toBe(true);
+		expect(hit?.pointerEvents).toBe('fill');
+		expect(hit?.textCss).toContain('[data-element-id="e1"] span');
+		expect(hit?.textCss).toContain('pointer-events:auto');
+		expect(buildHollowHitOutline(triangle)?.textCss).toBeUndefined();
+	});
 });

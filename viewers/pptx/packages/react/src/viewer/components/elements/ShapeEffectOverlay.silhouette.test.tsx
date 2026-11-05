@@ -33,6 +33,34 @@ function triangle(): PptxElement {
 	} as unknown as PptxElement;
 }
 
+function gradientTriangle(): PptxElement {
+	return {
+		id: 'tri-g',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 160,
+		height: 130,
+		shapeType: 'triangle',
+		shapeStyle: {
+			fillColor: '#2070C0',
+			fillMode: 'gradient',
+			fillGradientType: 'linear',
+			fillGradientAngle: 90,
+			fillGradientStops: [
+				{ color: '#FF0000', position: 0 },
+				{ color: '#0000FF', position: 100 },
+			],
+			shadowColor: '#000000',
+			shadowOpacity: 0.5,
+			shadowBlur: 10,
+			shadowAngle: 45,
+			shadowDistance: 8,
+			outerShadowXml: {},
+		},
+	} as unknown as PptxElement;
+}
+
 describe('shape-following shadow (react)', () => {
 	it('does not clip the container and puts the shadow in a filter', () => {
 		const element = triangle();
@@ -57,5 +85,26 @@ describe('shape-following shadow (react)', () => {
 		// passesClicksThroughBox); this transparent path opts the triangle back in.
 		expect(passesClicksThroughBox(triangle())).toBe(true);
 		expect(html).toMatch(/<path[^>]*fill="transparent"[^>]*pointer-events:fill/u);
+	});
+
+	it('keeps a gradient fill and its shadow: the fill is a clipped child layer', () => {
+		const element = gradientTriangle();
+		const { hf, fc, sw, sc } = shapeParams(element);
+		const style = getShapeVisualStyle(element, hf, fc, sw, sc);
+		expect(style.clipPath).toBeUndefined();
+		expect(style.backgroundImage).toBeUndefined();
+		expect(style.filter).toContain('url(#shape-fx-tri-g)');
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={element} />);
+		expect(html).toContain('pptx-react-silhouette-fill');
+		expect(html).toContain('linear-gradient');
+		expect(html).toContain('clip-path');
+	});
+
+	it('re-enables the text of a text-bearing silhouette shape', () => {
+		const text = { ...triangle(), text: 'hello' } as unknown as PptxElement;
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={text} />);
+		expect(html).toContain('<style>');
+		expect(html).toContain('span');
+		expect(html).toContain('pointer-events:auto');
 	});
 });

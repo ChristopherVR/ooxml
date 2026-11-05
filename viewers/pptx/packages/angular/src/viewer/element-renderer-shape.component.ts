@@ -25,6 +25,7 @@ import {
 	getEffectFillOverlay,
 	getReflectionOverlay,
 	getStrokeOutline,
+	getFillLayer,
 	getSubpathFillOverlay,
 } from './element-effect-defs';
 import type { ReflectionOverlay } from './element-effect-defs';
@@ -116,6 +117,7 @@ export class ElementRendererShapeComponent {
 	 * Per-sub-path fill overlay for a multi-sub-path preset or custom geometry,
 	 * or `undefined` when a single merged fill is correct (the ordinary case).
 	 */
+	readonly fillLayer = computed(() => getFillLayer(this.element()));
 	readonly subpathFill = computed(() => getSubpathFillOverlay(this.element()));
 
 	/** `viewBox` for the sub-path fill overlay, in its own coordinate space. */
