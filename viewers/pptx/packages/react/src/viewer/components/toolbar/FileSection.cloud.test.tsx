@@ -69,15 +69,24 @@ function openPage(): void {
 	act(() => open!.click());
 }
 
+type PlacesElement = HTMLElement & {
+	providers: readonly CloudFileProvider[];
+	accept: readonly string[];
+	labels: Record<string, string>;
+	locale: string;
+};
+
 describe('FileSection open places', () => {
 	it('keeps the Open page as it was without providers', () => {
 		act(() => root.render(<FileSection {...props({})} />));
 		openPage();
-		expect(container.querySelector('[data-pptx-open-place]')).toBeNull();
+		const places = container.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(places.providers).toEqual([]);
+		expect(places.querySelector('[data-pptx-search-input]')).not.toBeNull();
 		expect(container.textContent).toContain('pptx.backstage.browseDevice');
 	});
 
-	it('lists this device and the provider, and opens a provider file', () => {
+	it('hands the providers to the shared places element and opens a provider file', () => {
 		const open = vi.fn();
 		const onClose = vi.fn();
 		act(() =>
@@ -88,21 +97,17 @@ describe('FileSection open places', () => {
 			),
 		);
 		openPage();
-		const places = [...container.querySelectorAll<HTMLButtonElement>('[data-pptx-open-place]')];
-		expect(places.map((place) => place.textContent)).toEqual([
-			'pptx.backstage.thisDevice',
-			'OneDrive',
-		]);
-		expect(container.querySelector('pptx-ui-cloud-files')).toBeNull();
-		act(() => places[1]!.click());
-		expect(container.textContent).not.toContain('pptx.backstage.browseDevice');
+		const places = container.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(places.providers).toEqual([provider]);
+		expect(places.accept).toEqual(['pptx']);
+		expect(places.labels.thisDevice).toBe('pptx.backstage.thisDevice');
+		expect(places.labels.places).toBe('pptx.backstage.places');
+		expect(places.locale).toBe('en');
 		const file = { fileName: 'Deck.pptx' } as CloudOpenedFile;
 		act(() => {
-			container
-				.querySelector('pptx-ui-cloud-files')!
-				.dispatchEvent(
-					new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
-				);
+			places.dispatchEvent(
+				new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
+			);
 		});
 		expect(open).toHaveBeenCalledWith(file);
 		expect(onClose).toHaveBeenCalled();

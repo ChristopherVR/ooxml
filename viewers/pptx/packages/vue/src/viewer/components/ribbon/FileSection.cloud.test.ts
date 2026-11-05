@@ -1,6 +1,6 @@
 /**
- * File > Open with cloud places: the Open page lists "This device" and one place per provider,
- * shows the provider's file browser, and hands a file opened there to the viewer.
+ * File > Open with cloud places: the Open page renders the shared places element with the
+ * providers and the translated labels, and hands a file opened there to the viewer.
  */
 import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
@@ -55,11 +55,15 @@ describe('fileSection open places', () => {
 	it('keeps the Open page as it was without providers', async () => {
 		wrapper = mount(FileSection, { props: BASE_PROPS, attachTo: document.body });
 		await openPage(wrapper);
-		expect(wrapper.find('[data-pptx-open-place]').exists()).toBe(false);
+		const places = wrapper.get('pptx-ui-open-places').element as unknown as {
+			providers: unknown[];
+		};
+		expect(places.providers).toStrictEqual([]);
+		expect(wrapper.find('[data-pptx-search-input]').exists()).toBe(true);
 		expect(wrapper.text()).toContain('Browse');
 	});
 
-	it('lists this device and the provider, and opens a provider file', async () => {
+	it('hands the providers to the places element and opens a provider file', async () => {
 		const cloud: ViewerCloudFiles = {
 			providers: () => [provider],
 			open: vi.fn(),
@@ -72,21 +76,19 @@ describe('fileSection open places', () => {
 			global: { provide: { [ViewerCloudFilesKey as symbol]: cloud } },
 		});
 		await openPage(wrapper);
-		const tablist = wrapper.get('[role="tablist"]');
-		expect(tablist.attributes('aria-label')).toBe('Places');
-		const places = wrapper.findAll('[data-pptx-open-place]');
-		expect(places.map((place) => place.text().trim())).toStrictEqual(['This device', 'OneDrive']);
-		expect(places[0]!.attributes('aria-selected')).toBe('true');
-		expect(wrapper.find('pptx-ui-cloud-files').exists()).toBe(false);
-		await places[1]!.trigger('click');
-		expect(wrapper.find('[data-pptx-cloud-place="onedrive"]').exists()).toBe(true);
-		expect(wrapper.find('[data-pptx-search-input]').exists()).toBe(false);
+		const element = wrapper.get('pptx-ui-open-places').element as unknown as {
+			providers: unknown[];
+			accept: string[];
+			labels: Record<string, string>;
+		};
+		expect(element.providers).toStrictEqual([provider]);
+		expect(element.accept).toStrictEqual(['pptx']);
+		expect(element.labels.thisDevice).toBe('This device');
+		expect(element.labels.places).toBe('Places');
 		const file = { fileName: 'Deck.pptx' } as CloudOpenedFile;
-		wrapper
-			.get('pptx-ui-cloud-files')
-			.element.dispatchEvent(
-				new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
-			);
+		element.dispatchEvent(
+			new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
+		);
 		expect(cloud.open).toHaveBeenCalledWith(file);
 		expect(onClose).toHaveBeenCalled();
 	});

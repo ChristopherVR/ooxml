@@ -37,11 +37,11 @@ async function openBackstage(page: Page) {
  */
 async function openInBackstage(page: Page, name: string): Promise<void> {
 	const backstage = await openBackstage(page);
-	await backstage.getByRole('button', { name: 'Open', exact: true }).click();
-	await backstage.locator('[data-pptx-open-place="cloud:onedrive"]').click();
-	const place = backstage.locator('[data-pptx-cloud-place="onedrive"]');
-	const signIn = place.getByRole('button', { name: 'Sign in', exact: true });
-	const options = place.getByRole('option').first();
+	// The nav entry, not the cloud browser's own Open button (a place can stay selected).
+	await backstage.locator('[data-pptx-backstage-nav-item]', { hasText: /^\s*Open\s*$/u }).click();
+	await backstage.getByRole('tab', { name: 'OneDrive', exact: true }).click();
+	const signIn = backstage.getByRole('button', { name: 'Sign in', exact: true });
+	const options = backstage.getByRole('option').first();
 	await expect(signIn.or(options)).toBeVisible();
 	if (await signIn.isVisible()) {
 		await signIn.click();
@@ -49,7 +49,7 @@ async function openInBackstage(page: Page, name: string): Promise<void> {
 		await dialog.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
 		await dialog.getByRole('button', { name: 'Continue', exact: true }).click();
 	}
-	await place.getByRole('option', { name: new RegExp(name, 'iu') }).click();
+	await backstage.getByRole('option', { name: new RegExp(name, 'iu') }).click();
 	// Opening closes File and replaces the deck that was showing (the title bar names the file).
 	await expect(backstage).toBeHidden({ timeout: 30_000 });
 	await expect(page.getByText(new RegExp(`${name}\\.pptx`, 'iu')).first()).toBeVisible();

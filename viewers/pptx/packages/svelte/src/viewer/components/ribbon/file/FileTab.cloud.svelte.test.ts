@@ -1,6 +1,6 @@
 /**
- * File > Open with cloud places: the Open page lists "This device" and one place per provider,
- * shows the provider's file browser, and hands a file opened there to the viewer.
+ * File > Open with cloud places: the Open page renders the shared places element with the
+ * providers and the translated labels, and hands a file opened there to the viewer.
  */
 import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
@@ -56,41 +56,36 @@ function openPage(target: HTMLElement): void {
 	flushSync();
 }
 
+interface PlacesElement extends HTMLElement {
+	providers: unknown[];
+	accept: string[];
+	labels: Record<string, string>;
+}
+
 describe('FileTab open places', () => {
 	it('keeps the Open page as it was without providers', () => {
 		const target = render(undefined);
 		openPage(target);
-		expect(target.querySelector('[data-pptx-open-place]')).toBeNull();
+		const element = target.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(element.providers).toEqual([]);
+		expect(target.querySelector('[data-pptx-search-input]')).not.toBeNull();
 		expect(target.textContent).toContain('Browse');
 	});
 
-	it('lists this device and the provider, and opens a provider file', () => {
+	it('hands the providers to the places element and opens a provider file', () => {
 		const open = vi.fn();
 		const onclose = vi.fn();
 		const target = render({ providers: [provider], open, clear: vi.fn() }, { onclose });
 		openPage(target);
-		const tablist = target.querySelector('[role="tablist"]');
-		expect(tablist?.getAttribute('aria-label')).toBe('Places');
-		const places = [...target.querySelectorAll<HTMLButtonElement>('[data-pptx-open-place]')];
-		expect(places.map((place) => place.textContent?.trim())).toEqual(['This device', 'OneDrive']);
-		expect(places.map((place) => place.dataset.pptxOpenPlace)).toEqual([
-			'device',
-			'cloud:onedrive',
-		]);
-		expect(target.querySelector('pptx-ui-cloud-files')).toBeNull();
-		places[1]!.click();
-		flushSync();
-		expect(places[1]!.getAttribute('aria-selected')).toBe('true');
-		expect(
-			target.querySelector('[data-pptx-cloud-place="onedrive"] pptx-ui-cloud-files'),
-		).not.toBeNull();
-		expect(target.querySelector('[data-pptx-search-surface]')).toBeNull();
+		const element = target.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(element.providers).toEqual([provider]);
+		expect(element.accept).toEqual(['pptx']);
+		expect(element.labels.thisDevice).toBe('This device');
+		expect(element.labels.places).toBe('Places');
 		const file = { fileName: 'Deck.pptx' } as CloudOpenedFile;
-		target
-			.querySelector('pptx-ui-cloud-files')!
-			.dispatchEvent(
-				new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
-			);
+		element.dispatchEvent(
+			new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
+		);
 		expect(open).toHaveBeenCalledWith(file);
 		expect(onclose).toHaveBeenCalled();
 	});

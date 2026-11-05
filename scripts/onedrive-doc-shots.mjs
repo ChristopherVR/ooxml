@@ -149,13 +149,12 @@ try {
 		await toolbar.getByRole('tab', { name: 'File', exact: true }).click();
 		const backstage = page.getByRole('dialog', { name: 'File' });
 		await backstage.getByRole('button', { name: 'Open', exact: true }).click();
-		await backstage.locator('[data-pptx-open-place="cloud:onedrive"]').click();
-		const place = backstage.locator('[data-pptx-cloud-place="onedrive"]');
-		await place.getByRole('button', { name: 'Sign in', exact: true }).click();
+		await backstage.getByRole('tab', { name: 'OneDrive', exact: true }).click();
+		await backstage.getByRole('button', { name: 'Sign in', exact: true }).click();
 		const signIn = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
 		await signIn.getByLabel('Access token').fill('test-only-token');
 		await signIn.getByRole('button', { name: 'Continue', exact: true }).click();
-		await place.getByRole('option', { name: /Quarterly review/iu }).click();
+		await backstage.getByRole('option', { name: /Quarterly review/iu }).click();
 		await expect(
 			page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first(),
 		).toBeVisible({ timeout: 30000 });

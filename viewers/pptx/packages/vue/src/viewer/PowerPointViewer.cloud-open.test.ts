@@ -90,9 +90,8 @@ async function openFromCloud(file: CloudOpenedFile): Promise<void> {
 			(item) => item.textContent?.trim() === 'Open',
 		),
 	);
-	await click(document.querySelector('[data-pptx-open-place="cloud:onedrive"]'));
 	document
-		.querySelector('pptx-ui-cloud-files')!
+		.querySelector('pptx-ui-open-places')!
 		.dispatchEvent(
 			new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
 		);
@@ -134,7 +133,7 @@ describe('powerPointViewer opening from a cloud place', () => {
 		await openFromCloud(await cloudFile({ save: cloudSave }, true, 4));
 		await settle(() => viewer.getSlideCount() === 4, 100);
 		expect(viewer.getSlideCount()).toBe(4);
-		expect(document.querySelector('[data-pptx-open-place]')).toBeNull();
+		expect(document.querySelector('pptx-ui-open-places')).toBeNull();
 		viewer.addSlide(0);
 		await flushPromises();
 		expect(viewer.isDirty()).toBe(true);

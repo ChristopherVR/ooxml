@@ -1,10 +1,8 @@
-import { mountCloudFilesPlace, resolveOpenPlaces, selectOpenPlace } from 'ooxml-ui/pptx';
-import type { CloudFileProvider, CloudFilesPlace, CloudOpenedFile } from 'ooxml-ui/pptx';
+import { CLOUD_OPEN_ACCEPT, openPlacesLabels } from 'ooxml-ui/pptx';
+import type { CloudOpenedFile, OfficeOpenPlacesLabels } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
-import { createEl } from '../../../render';
 import type { BackstageCloudFiles } from '../ribbon-types';
-import { button } from './file-tab-dom';
 
 export interface OpenPlacesOptions {
 	cloud: BackstageCloudFiles;
@@ -15,54 +13,38 @@ export interface OpenPlacesOptions {
 	onOpen(file: CloudOpenedFile): void;
 }
 
-export interface OpenPlacesView {
-	/** The cloud provider whose place is shown, or undefined for "This device" (or no places). */
-	provider: CloudFileProvider | undefined;
-	/** Unmount the place's file browser. */
-	destroy(): void;
+/** The shared places element's properties the binding sets. */
+interface OpenPlacesElement extends HTMLElement {
+	providers: BackstageCloudFiles['providers'];
+	accept: readonly string[];
+	labels: OfficeOpenPlacesLabels;
+	locale: string | undefined;
+	selected: string;
 }
 
 /**
- * File > Open's places (shared `render/cloud-open`): a tablist of "This device" plus one place per
- * host provider, and the selected cloud place's `pptx-ui-cloud-files` browser. Appends nothing
- * when the host passed no providers.
+ * The container of File > Open's device content (search, Browse, recent files): the shared
+ * `<pptx-ui-open-places>`, which adds a tab per host provider (none without `fileProviders`)
+ * and shows the provider's file browser for the chosen one. Home passes no providers, so it is
+ * a plain wrapper there.
  */
-export function renderOpenPlaces(
+export function createOpenPlaces(
 	doc: Document,
 	t: Translator,
-	main: HTMLElement,
 	options: OpenPlacesOptions,
-): OpenPlacesView {
-	const places = resolveOpenPlaces(options.cloud.providers, t);
-	const place = selectOpenPlace(places, options.selectedId);
-	if (!place) {
-		return { provider: undefined, destroy: () => {} };
-	}
-	const tablist = createEl(doc, 'div', 'pptxv-bs-places');
-	tablist.setAttribute('role', 'tablist');
-	tablist.setAttribute('aria-label', t('pptx.backstage.places'));
-	for (const item of places) {
-		const selected = item.id === place.id;
-		const tab = button(doc, item.label, () => options.onSelect(item.id));
-		tab.setAttribute('role', 'tab');
-		tab.setAttribute('data-pptx-open-place', item.id);
-		tab.setAttribute('aria-selected', String(selected));
-		tab.classList.toggle('active', selected);
-		tablist.appendChild(tab);
-	}
-	main.appendChild(tablist);
-	const provider = place.provider;
-	if (!provider) {
-		return { provider: undefined, destroy: () => {} };
-	}
-	const host = createEl(doc, 'div', 'pptxv-bs-cloud-place');
-	host.setAttribute('data-pptx-cloud-place', provider.id);
-	main.appendChild(host);
-	const mounted: CloudFilesPlace = mountCloudFilesPlace(host, {
-		provider,
-		translate: t,
-		locale: options.cloud.locale,
-		onOpen: options.onOpen,
-	});
-	return { provider, destroy: () => mounted.destroy() };
+): HTMLElement {
+	const element = doc.createElement('pptx-ui-open-places') as OpenPlacesElement;
+	element.className = 'pptxv-bs-places';
+	element.providers = options.cloud.providers;
+	element.accept = CLOUD_OPEN_ACCEPT;
+	element.labels = openPlacesLabels(t);
+	element.locale = options.cloud.locale;
+	element.selected = options.selectedId ?? 'device';
+	element.addEventListener('office-open-place-change', (event) =>
+		options.onSelect((event as CustomEvent<{ place: string }>).detail.place),
+	);
+	element.addEventListener('office-cloud-file-open', (event) =>
+		options.onOpen((event as CustomEvent<{ file: CloudOpenedFile }>).detail.file),
+	);
+	return element;
 }

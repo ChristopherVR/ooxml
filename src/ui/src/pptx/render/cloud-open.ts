@@ -1,8 +1,8 @@
 /**
  * File > Open > cloud places (OneDrive, or a host's own provider), shared by all five bindings.
  *
- * A host passes `fileProviders`; the Open page then lists "This device" plus one place per
- * provider, each provider place rendered by `<pptx-ui-cloud-files>`. A file opened there is loaded
+ * A host passes `fileProviders`; the Open page then renders `<pptx-ui-open-places>` (the shared
+ * `<office-ui-open-places>`), which lists "This device" plus one place per provider. A file opened there is loaded
  * through the viewer's normal open path, and this controller remembers it so File > Save, Save As
  * and recovery of THIS document go to `file.storage` (and a file the service leaves read-only
  * stays read-only) until another document is loaded. The bindings only render the places and map
@@ -14,56 +14,18 @@ import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-
 
 import { DEFAULT_CLOUD_FILES_LABELS } from '../../files/cloud-files-labels';
 import type { OfficeCloudFilesLabels } from '../../files/cloud-files-labels';
+import type { OfficeOpenPlacesLabels } from '../../files/open-places';
 import { createControllerStore } from './controller/controller';
 import type { PptxController } from './controller/controller';
 
 export type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
+export type { OfficeOpenPlacesLabels } from '../../files/open-places';
 
 /** The kinds a PowerPoint File > Open cloud place offers. */
 export const CLOUD_OPEN_ACCEPT = ['pptx'] as const;
 
-/** The id of the always-present "This device" place. */
-export const DEVICE_OPEN_PLACE_ID = 'device';
-
 /** Matches every binding's translate function (see `BackstageTranslate`). */
 type Translate = (key: string, params?: Record<string, string | number>) => string;
-
-export interface OpenPlace {
-	/** `device`, or `cloud:<provider id>`. */
-	readonly id: string;
-	readonly label: string;
-	/** Present for a cloud place. */
-	readonly provider?: CloudFileProvider;
-}
-
-/**
- * The places of File > Open: empty when the host passed no providers (the page stays as it was),
- * otherwise "This device" first and one place per provider.
- */
-export function resolveOpenPlaces(
-	providers: readonly CloudFileProvider[] | undefined,
-	translate: Translate,
-): readonly OpenPlace[] {
-	if (!providers || providers.length === 0) {
-		return [];
-	}
-	return [
-		{ id: DEVICE_OPEN_PLACE_ID, label: translate('pptx.backstage.thisDevice') },
-		...providers.map((provider) => ({
-			id: `cloud:${provider.id}`,
-			label: provider.label,
-			provider,
-		})),
-	];
-}
-
-/** The place to show: the selected one, else "This device" (a provider may have been removed). */
-export function selectOpenPlace(
-	places: readonly OpenPlace[],
-	selectedId: string | undefined,
-): OpenPlace | undefined {
-	return places.find((place) => place.id === selectedId) ?? places[0];
-}
 
 /** The element's labels from the viewer dictionary (`pptx.cloudFiles.<label>`), English fallback. */
 export function cloudFilesLabels(translate: Translate): OfficeCloudFilesLabels {
@@ -81,6 +43,15 @@ export function cloudFilesLabels(translate: Translate): OfficeCloudFilesLabels {
 		}
 	}
 	return labels;
+}
+
+/** The labels of `<pptx-ui-open-places>`: the place tabs plus the cloud browser's own. */
+export function openPlacesLabels(translate: Translate): OfficeOpenPlacesLabels {
+	return {
+		...cloudFilesLabels(translate),
+		thisDevice: translate('pptx.backstage.thisDevice'),
+		places: translate('pptx.backstage.places'),
+	};
 }
 
 export interface CloudDocumentState {

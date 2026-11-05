@@ -82,8 +82,7 @@ async function openFromCloud(
 	[...backstage.querySelectorAll<HTMLButtonElement>('[data-pptx-backstage-nav-item]')]
 		.find((item) => item.textContent === translationsEn['pptx.backstage.nav.open'])
 		?.click();
-	backstage.querySelector<HTMLButtonElement>('[data-pptx-open-place="cloud:onedrive"]')?.click();
-	const browser = backstage.querySelector('[data-pptx-cloud-place] pptx-ui-cloud-files');
+	const browser = backstage.querySelector('pptx-ui-open-places');
 	expect(browser).not.toBeNull();
 	browser?.dispatchEvent(
 		new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),

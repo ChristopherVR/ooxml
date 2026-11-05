@@ -123,15 +123,14 @@ async function openFromCloud(
 			(item) => item.textContent?.trim() === 'Open',
 		),
 	);
-	click(target.querySelector('[data-pptx-open-place="cloud:onedrive"]'));
 	target
-		.querySelector('[data-pptx-cloud-place] pptx-ui-cloud-files')!
+		.querySelector('pptx-ui-open-places')!
 		.dispatchEvent(
 			new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
 		);
 	flushSync();
 	// The backstage closed and the cloud deck replaced the host's.
-	expect(target.querySelector('[data-pptx-cloud-place]')).toBeNull();
+	expect(target.querySelector('pptx-ui-open-places')).toBeNull();
 	await vi.waitFor(() => expect(instance.getSlideCount()).toBe(slides), { timeout: 15000 });
 	flushSync();
 }
