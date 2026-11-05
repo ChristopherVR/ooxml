@@ -18,6 +18,12 @@ import { buildEmbeddedFontStyles, type ObjectUrlFactory } from './embedded-fonts
 export interface EmbeddedFontsSheet {
 	/** Replace the registered fonts; an empty list removes the element. */
 	set(fonts: readonly PptxEmbeddedFont[] | null | undefined): void;
+	/** Host-supplied `@font-face` text appended after the deck's own rules. */
+	setExtraCss(css: string): void;
+	/** The deck's `@font-face` text from the last `set` (without the extra CSS). */
+	readonly fontFaceCss: string;
+	/** Distinct substitution-resolved family strings of the last `set`. */
+	readonly fontFamilies: readonly string[];
 	/** Remove the element and revoke every object URL minted for it. */
 	dispose(): void;
 }
@@ -48,6 +54,9 @@ const mintObjectUrl: ObjectUrlFactory = (bytes, mime) => {
 export function createEmbeddedFontsSheet(doc: Document, styleId: string): EmbeddedFontsSheet {
 	let liveUrls: string[] = [];
 	let lastFonts: readonly PptxEmbeddedFont[] | null | undefined;
+	let embeddedCss = '';
+	let extraCss = '';
+	let families: string[] = [];
 
 	const revoke = (urls: readonly string[]): void => {
 		if (hasObjectUrlSupport()) {
@@ -60,7 +69,32 @@ export function createEmbeddedFontsSheet(doc: Document, styleId: string): Embedd
 		doc.getElementById(styleId)?.remove();
 	};
 
+	const paint = (): void => {
+		const css = [embeddedCss, extraCss].filter(Boolean).join('\n');
+		if (css.length === 0) {
+			remove();
+			return;
+		}
+		let style = doc.getElementById(styleId) as HTMLStyleElement | null;
+		if (!style) {
+			style = doc.createElement('style');
+			style.id = styleId;
+			doc.head.appendChild(style);
+		}
+		style.textContent = css;
+	};
+
 	return {
+		get fontFaceCss() {
+			return embeddedCss;
+		},
+		get fontFamilies() {
+			return families;
+		},
+		setExtraCss(css) {
+			extraCss = css;
+			paint();
+		},
 		set(fonts) {
 			// The same list again changes nothing (the store re-emits on other fields).
 			if (fonts === lastFonts) {
@@ -68,19 +102,14 @@ export function createEmbeddedFontsSheet(doc: Document, styleId: string): Embedd
 			}
 			lastFonts = fonts;
 			const previous = liveUrls;
-			const { fontFaceCss, objectUrls } = buildEmbeddedFontStyles(fonts, mintObjectUrl);
+			const { fontFaceCss, fontFamilies, objectUrls } = buildEmbeddedFontStyles(
+				fonts,
+				mintObjectUrl,
+			);
 			liveUrls = objectUrls;
-			if (fontFaceCss.length === 0) {
-				remove();
-			} else {
-				let style = doc.getElementById(styleId) as HTMLStyleElement | null;
-				if (!style) {
-					style = doc.createElement('style');
-					style.id = styleId;
-					doc.head.appendChild(style);
-				}
-				style.textContent = fontFaceCss;
-			}
+			embeddedCss = fontFaceCss;
+			families = fontFamilies;
+			paint();
 			revoke(previous);
 		},
 		dispose() {
@@ -88,6 +117,9 @@ export function createEmbeddedFontsSheet(doc: Document, styleId: string): Embedd
 			revoke(liveUrls);
 			liveUrls = [];
 			lastFonts = undefined;
+			embeddedCss = '';
+			extraCss = '';
+			families = [];
 		},
 	};
 }

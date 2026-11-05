@@ -1,8 +1,7 @@
 import {
 	collectReferencedFontFamilies,
+	createEmbeddedFontsSheet,
 	fetchGoogleWebfontOutlineBytes,
-	resolveFontItalic,
-	resolveFontWeight,
 	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
@@ -62,25 +61,6 @@ export interface UseFontInjectionInput {
 // a hostile PPTX can break out of the @font-face rule via `"; }` and inject
 // global selectors that exfiltrate data via `url()` or deface the page.
 const FONT_NAME_UNSAFE_CHARS = /["\\\n\r;}<>]/u;
-const FONT_FORMAT_ALLOWED = new Set([
-	'truetype',
-	'opentype',
-	'woff',
-	'woff2',
-	'svg',
-	'embedded-opentype',
-]);
-const FONT_DATA_URL_PATTERN =
-	/^data:font\/[a-z0-9+.-]+(?:;charset=[a-z0-9-]+)?;base64,[A-Za-z0-9+/=]+$/iu;
-function isFontDataUrlSafe(url: string): boolean {
-	if (typeof url !== 'string' || url.length === 0) {
-		return false;
-	}
-	if (url.startsWith('blob:')) {
-		return true;
-	}
-	return FONT_DATA_URL_PATTERN.test(url);
-}
 
 export function useFontInjection({
 	embeddedFonts,
@@ -94,53 +74,11 @@ export function useFontInjection({
 		if (!embeddedFonts.length) {
 			return;
 		}
-
-		const styleEl = document.createElement('style');
-		styleEl.id = EMBEDDED_FONTS_STYLE_ID;
-
-		// Only typefaces whose files match them; the rest are requested from
-		// Google Fonts by the effect below (see `selectTrustedEmbeddedFonts`).
-		const cssRules = selectTrustedEmbeddedFonts(embeddedFonts)
-			.flatMap((font) => {
-				// Reject fonts whose name, dataUrl, or format would let the value
-				// escape the @font-face block and inject arbitrary CSS rules.
-				if (
-					typeof font.name !== 'string' ||
-					font.name.length === 0 ||
-					FONT_NAME_UNSAFE_CHARS.test(font.name)
-				) {
-					return [];
-				}
-				if (!isFontDataUrlSafe(font.dataUrl)) {
-					return [];
-				}
-				const fontFormat = font.format ?? 'truetype';
-				if (!FONT_FORMAT_ALLOWED.has(fontFormat)) {
-					return [];
-				}
-				const fontWeight = String(resolveFontWeight(font.name, font.bold));
-				const fontStyleCss = resolveFontItalic(font.name, font.italic) ? 'italic' : 'normal';
-				return [
-					`@font-face {
-	font-family: "${font.name}";
-	src: url("${font.dataUrl}") format("${fontFormat}");
-	font-weight: ${fontWeight};
-	font-style: ${fontStyleCss};
-	font-display: swap;
-}`,
-				];
-			})
-			.join('\n');
-
-		styleEl.textContent = cssRules;
-		document.head.appendChild(styleEl);
-
-		return () => {
-			const existing = document.getElementById(EMBEDDED_FONTS_STYLE_ID);
-			if (existing) {
-				document.head.removeChild(existing);
-			}
-		};
+		// Only typefaces whose files match them are registered; the rest are
+		// requested from Google Fonts by the effect below.
+		const sheet = createEmbeddedFontsSheet(document, EMBEDDED_FONTS_STYLE_ID);
+		sheet.set(embeddedFonts);
+		return () => sheet.dispose();
 	}, [embeddedFonts]);
 
 	// ── Inject Google Fonts fallback <link> for missing fonts ────────

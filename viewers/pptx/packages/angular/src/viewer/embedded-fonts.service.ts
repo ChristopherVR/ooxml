@@ -19,15 +19,12 @@
  */
 
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { createEmbeddedOutlineFontsSlot } from 'ooxml-ui/pptx';
+import { createEmbeddedFontsSheet, createEmbeddedOutlineFontsSlot } from 'ooxml-ui/pptx';
+import type { EmbeddedFontsSheet } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont } from 'pptx-viewer-core';
 
-import {
-	EMBEDDED_FONTS_STYLE_ID,
-	buildEmbeddedFontStyles,
-	buildUserFontFaceStyles,
-} from './embedded-fonts-helpers';
-import type { ObjectUrlFactory, ViewerFontSource } from './embedded-fonts-helpers';
+import { EMBEDDED_FONTS_STYLE_ID, buildUserFontFaceStyles } from './embedded-fonts-helpers';
+import type { ViewerFontSource } from './embedded-fonts-helpers';
 import { glyphOutlineFontCache } from './glyph-outline-cache';
 
 /** True when the runtime exposes the DOM APIs we need to inject a `<style>`. */
@@ -36,16 +33,6 @@ function hasDomSupport(): boolean {
 		typeof document !== 'undefined' &&
 		typeof document.createElement === 'function' &&
 		typeof document.head !== 'undefined'
-	);
-}
-
-/** True when the runtime exposes the object-URL + `Blob` APIs we need. */
-function hasObjectUrlSupport(): boolean {
-	return (
-		typeof URL !== 'undefined' &&
-		typeof URL.createObjectURL === 'function' &&
-		typeof URL.revokeObjectURL === 'function' &&
-		typeof Blob !== 'undefined'
 	);
 }
 
@@ -59,27 +46,12 @@ export class EmbeddedFontsService {
 	 */
 	readonly fontFamilies = signal<string[]>([]);
 
-	private styleEl: HTMLStyleElement | null = null;
-	private embeddedCss = '';
-	private userCss = '';
-	/** Object URLs minted on the most recent `setFonts`; revoked when superseded. */
-	private liveObjectUrls: string[] = [];
+	/** The shared managed `<style>` element; owns the rule text and object URLs. */
+	private readonly sheet: EmbeddedFontsSheet | null = hasDomSupport()
+		? createEmbeddedFontsSheet(document, EMBEDDED_FONTS_STYLE_ID)
+		: null;
 	/** The current deck's fonts in the module-wide glyph-outline cache. */
 	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
-
-	/** Mints a Blob object URL for de-obfuscated font bytes (impure side effect). */
-	private readonly mintObjectUrl: ObjectUrlFactory = (bytes, mime) => {
-		if (!hasObjectUrlSupport()) {
-			return null;
-		}
-		// Copy into a fresh, plain-`ArrayBuffer`-backed view so the `Blob` part
-		// type is satisfied (a `Uint8Array` over a `SharedArrayBuffer` is not a
-		// `BlobPart`).
-		const blobBytes = new Uint8Array(bytes.length);
-		blobBytes.set(bytes);
-		const blob = new Blob([blobBytes], { type: mime });
-		return URL.createObjectURL(blob);
-	};
 
 	constructor() {
 		inject(DestroyRef).onDestroy(() => {
@@ -90,35 +62,23 @@ export class EmbeddedFontsService {
 	/**
 	 * Resolve the supplied embedded fonts into `@font-face` rules, inject them
 	 * into the managed `<style>` element, and update the exposed signals.
-	 *
-	 * Object URLs minted on the *previous* call are revoked here so they don't
-	 * leak across re-parses. Pass an empty list (or `null`) to clear everything.
+	 * Pass an empty list (or `null`) to clear everything.
 	 */
 	setFonts(fonts: readonly PptxEmbeddedFont[] | null | undefined): void {
 		// Register this deck's embedded fonts' real outlines (see
 		// glyph-outline-cache.ts) for WordArt envelope glyph-outline warping.
-		// Synchronous; the same list again changes nothing, another list
-		// releases the previous deck's fonts. The font parser loads on demand;
-		// glyph-outline-cache.ts repaints then.
 		this.outlineFonts.set(fonts);
-		const previousUrls = this.liveObjectUrls;
-		const { fontFaceCss, fontFamilies, objectUrls } = buildEmbeddedFontStyles(
-			fonts,
-			this.mintObjectUrl,
-		);
-		this.liveObjectUrls = objectUrls;
-		this.revokeObjectUrls(previousUrls);
-
-		this.embeddedCss = fontFaceCss;
-		this.fontFaceCss.set(fontFaceCss);
-		this.fontFamilies.set(fontFamilies);
-		this.syncStyleElement();
+		if (!this.sheet) {
+			return;
+		}
+		this.sheet.set(fonts);
+		this.fontFaceCss.set(this.sheet.fontFaceCss);
+		this.fontFamilies.set([...this.sheet.fontFamilies]);
 	}
 
 	/** Replace the licensed font sources supplied by the host application. */
 	setHostFonts(fonts: readonly ViewerFontSource[] | null | undefined): void {
-		this.userCss = buildUserFontFaceStyles(fonts ?? []);
-		this.syncStyleElement();
+		this.sheet?.setExtraCss(buildUserFontFaceStyles(fonts ?? []));
 	}
 
 	/**
@@ -127,46 +87,8 @@ export class EmbeddedFontsService {
 	 */
 	dispose(): void {
 		this.outlineFonts.release();
-		this.removeStyleElement();
-		this.revokeObjectUrls(this.liveObjectUrls);
-		this.liveObjectUrls = [];
+		this.sheet?.dispose();
 		this.fontFaceCss.set('');
 		this.fontFamilies.set([]);
-		this.embeddedCss = '';
-		this.userCss = '';
-	}
-
-	/** Create / update / remove the managed `<style>` element to match `css`. */
-	private syncStyleElement(): void {
-		if (!hasDomSupport()) {
-			return;
-		}
-		const css = [this.embeddedCss, this.userCss].filter(Boolean).join('\n');
-		if (css.length === 0) {
-			this.removeStyleElement();
-			return;
-		}
-		if (!this.styleEl) {
-			this.styleEl = document.createElement('style');
-			this.styleEl.id = EMBEDDED_FONTS_STYLE_ID;
-			document.head.appendChild(this.styleEl);
-		}
-		this.styleEl.textContent = css;
-	}
-
-	private removeStyleElement(): void {
-		if (this.styleEl && this.styleEl.parentNode) {
-			this.styleEl.parentNode.removeChild(this.styleEl);
-		}
-		this.styleEl = null;
-	}
-
-	private revokeObjectUrls(urls: readonly string[]): void {
-		if (!hasObjectUrlSupport()) {
-			return;
-		}
-		for (const url of urls) {
-			URL.revokeObjectURL(url);
-		}
 	}
 }

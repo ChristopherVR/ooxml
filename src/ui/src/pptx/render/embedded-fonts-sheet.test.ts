@@ -37,4 +37,20 @@ describe('createEmbeddedFontsSheet', () => {
 		sheet.dispose();
 		expect(document.getElementById('test-embedded-fonts')).toBeNull();
 	});
+
+	it('exposes the rule text and families, and appends host CSS after the deck rules', () => {
+		const sheet = createEmbeddedFontsSheet(document, 'test-embedded-fonts');
+		sheet.set([font('Zzz Face')]);
+		expect(sheet.fontFaceCss).toContain('font-family: "Zzz Face"');
+		expect(sheet.fontFamilies).toHaveLength(1);
+		sheet.setExtraCss('@font-face { font-family: "Host"; }');
+		const css = document.getElementById('test-embedded-fonts')?.textContent ?? '';
+		expect(css.indexOf('Zzz Face')).toBeLessThan(css.indexOf('Host'));
+		// Host CSS alone keeps the element; clearing both removes it.
+		sheet.set([]);
+		expect(document.getElementById('test-embedded-fonts')?.textContent).toContain('Host');
+		sheet.setExtraCss('');
+		expect(document.getElementById('test-embedded-fonts')).toBeNull();
+		sheet.dispose();
+	});
 });
