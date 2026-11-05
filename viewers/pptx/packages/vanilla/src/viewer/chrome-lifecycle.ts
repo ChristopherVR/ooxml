@@ -1,6 +1,7 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
+	attachViewportNavigation,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isEditingAllowed,
 	isFeatureEnabled,
@@ -58,6 +59,8 @@ export interface ChromeLifecycle {
 	presentation: PresentationController;
 	detachKeyboard: () => void;
 	detachTouchGestures: () => void;
+	/** Remove Ctrl+wheel / pinch zoom at the pointer and drag-to-pan from the viewport. */
+	detachViewportNavigation: () => void;
 	/** Remove the presenting click-to-advance listener. */
 	detachPresentationClick: () => void;
 	/** Refits the slide when the viewport's content box changes size. */
@@ -332,6 +335,28 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		startFromBeginning: () => deps.startPresentationFromBeginning(),
 		startFromCurrent: () => deps.startPresentationFromCurrent(),
 		isSlideShowStartEnabled: () => isFeatureEnabled(customization(), 'presentMode'),
+	});
+	// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
+	// other bindings. The controller works in the fit-relative factor (as the
+	// zoom buttons do), and the store holds an absolute scale, so convert here;
+	// `setZoom` divides the same fit back out. A plain drag pans only in a
+	// read-only view (`getMode()` 'preview'), where it has nothing to select.
+	const fitRelativeZoom = (): number => {
+		const { zoom } = store.get();
+		const fit = renderer.fitScale();
+		if (zoom === 'fit') {
+			return 1;
+		}
+		return fit > Number.EPSILON ? zoom / fit : zoom;
+	};
+	const detachViewportNavigation = attachViewportNavigation(chrome.viewport, {
+		getZoom: fitRelativeZoom,
+		setZoom: (zoom) => deps.setZoom(zoom * renderer.fitScale()),
+		dragPans: () => {
+			const state = store.get();
+			return !state.editable && !state.presenting && !state.masterViewTarget;
+		},
+		isActive: () => !store.get().presenting,
 	});
 	const detachTouchGestures = attachTouchGestures(chrome.root, {
 		getScale: () => renderer.effectiveScale(),
@@ -627,6 +652,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		presentation,
 		detachKeyboard,
 		detachTouchGestures,
+		detachViewportNavigation,
 		detachPresentationClick,
 		resizeObserver,
 		stopObservingViewport,
@@ -644,6 +670,7 @@ export function unmountChrome(
 	lifecycle.detachKeyboard();
 	lifecycle.detachPresentationClick();
 	lifecycle.detachTouchGestures();
+	lifecycle.detachViewportNavigation();
 	lifecycle.stopObservingViewport();
 	lifecycle.presentation.dispose();
 	// The ribbon registered window/document listeners (group overflow): without this a destroyed

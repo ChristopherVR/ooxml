@@ -49,6 +49,8 @@ You can also:
 - Use **View tab > Zoom to Fit** in the ribbon.
 - Pinch to zoom on touch devices.
 
+To move around a slide that is larger than the canvas, scroll, drag with the middle mouse button, or hold **Space** and drag. In a read-only view, where there is nothing to select, you can also drag the slide with the left mouse button.
+
 ## View modes
 
 The status bar has three view buttons:

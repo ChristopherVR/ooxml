@@ -1,4 +1,5 @@
 import {
+	attachViewportNavigation,
 	clampZoomScale,
 	createViewerZoomStore,
 	createWheelStepBuffer,
@@ -28,6 +29,8 @@ interface SelectionBounds {
 interface UseZoomViewportInput extends ViewportFitOptions {
 	canvasSize: CanvasSize;
 	selectedElements: PptxElement[];
+	/** True when a plain drag on the slide has nothing to select and should pan (read-only view). */
+	dragPans?: boolean;
 }
 
 export interface UseZoomViewportResult {
@@ -62,6 +65,7 @@ export function useZoomViewport({
 	selectedElements,
 	fitPadding,
 	maxFitScale,
+	dragPans = false,
 }: UseZoomViewportInput): UseZoomViewportResult {
 	// ── Refs ──────────────────────────────────────────────────────────────
 	const editWrapperRef = useRef<HTMLDivElement>(null);
@@ -207,6 +211,9 @@ export function useZoomViewport({
 		setScale,
 	]);
 
+	// Unanchored zoom for a caller that forwards its own wheel events. The
+	// viewport no longer needs it: `attachViewportNavigation` below handles the
+	// wheel there, zooming at the pointer.
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
 			// `canScrollFurther: true` keeps a plain wheel scrolling the viewport
@@ -228,8 +235,14 @@ export function useZoomViewport({
 		[store],
 	);
 
-	// Attach the wheel listener natively with { passive: false } so that
-	// preventDefault() works. React's onWheel is passive since React 17+.
+	// Read live by the viewport controller, so a mode change does not re-attach it.
+	const dragPansRef = useRef(dragPans);
+	useEffect(() => {
+		dragPansRef.current = dragPans;
+	}, [dragPans]);
+
+	// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, in the
+	// viewport. Shared with the other bindings so the gestures match.
 	//
 	// Follow remounted canvases; retain initial frame retries for object-ref users.
 	useEffect(() => {
@@ -237,22 +250,25 @@ export function useZoomViewport({
 			return;
 		}
 		let raf = 0;
-		let attached: HTMLDivElement | null = null;
+		let detach: (() => void) | null = null;
 		const attach = (): void => {
 			const viewport = viewportNode ?? canvasViewportRef.current;
 			if (!viewport) {
 				raf = requestAnimationFrame(attach);
 				return;
 			}
-			attached = viewport;
-			viewport.addEventListener('wheel', handleWheel, { passive: false });
+			detach = attachViewportNavigation(viewport, {
+				getZoom: () => store.getState().zoom,
+				setZoom: (zoom) => store.dispatch({ type: 'set-zoom', zoom }),
+				dragPans: () => dragPansRef.current,
+			});
 		};
 		attach();
 		return () => {
 			cancelAnimationFrame(raf);
-			attached?.removeEventListener('wheel', handleWheel);
+			detach?.();
 		};
-	}, [canvasViewportRef, viewportNode, handleWheel]);
+	}, [canvasViewportRef, viewportNode, store]);
 
 	const getCanvasPointFromClient = useCallback(
 		(clientX: number, clientY: number): { x: number; y: number } | null => {

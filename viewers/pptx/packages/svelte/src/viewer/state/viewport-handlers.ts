@@ -242,9 +242,11 @@ export function createViewportHandlers(deps: ViewportHandlersDeps): ViewportHand
 			if (isEditorTextInputTarget(event.target)) {
 				return;
 			}
-			// A focused control owns Space (it toggles a checkbox in File > Options); the paging
-			// keys still reach the slide list.
-			const spaceOnControl = event.key === ' ' && isEditorControlTarget(event.target);
+			// A focused control owns Space (it toggles a checkbox in File > Options), and so does a
+			// zoomed slide that took it to pan (`attachViewportNavigation` prevents its default);
+			// the paging keys still reach the slide list.
+			const spaceOnControl =
+				event.key === ' ' && (event.defaultPrevented || isEditorControlTarget(event.target));
 			if (!spaceOnControl && deps.viewer.handleNavigationKey(event.key)) {
 				event.preventDefault();
 			}

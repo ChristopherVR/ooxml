@@ -138,6 +138,7 @@
 		spellCheck={parityUi.preferences.spellCheck}
 		getzoomscale={() => vm.deck.getZoom()}
 		onpinchzoom={(scale) => vm.deck.setZoom(scale)}
+		dragpans={vm.deck.getMode() === 'preview'}
 		{onstageresize}
 		onstageholder={(el) => onstageholder(el)}
 		notesExpanded={vm.notesExpanded}
