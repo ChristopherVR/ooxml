@@ -64,6 +64,27 @@ function gradientTriangle(): PptxElement {
 	} as unknown as PptxElement;
 }
 
+function innerShadow(shapeType: string): PptxElement {
+	return {
+		id: 'in-1',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 160,
+		height: 130,
+		shapeType,
+		shapeStyle: {
+			fillColor: '#2070C0',
+			fillMode: 'solid',
+			innerShadowColor: '#000000',
+			innerShadowOpacity: 0.7,
+			innerShadowBlur: 8,
+			innerShadowOffsetX: 8,
+			innerShadowOffsetY: 0,
+		},
+	} as unknown as PptxElement;
+}
+
 describe('shape-following shadow (vanilla)', () => {
 	it('does not clip the container and puts the shadow in a filter', () => {
 		const style = getShapeFillStrokeStyle(triangle());
@@ -104,5 +125,16 @@ describe('shape-following shadow (vanilla)', () => {
 		const text = { ...triangle(), text: 'hello' } as unknown as PptxElement;
 		const svg = renderHollowHitOutline(document, text);
 		expect(svg?.querySelector('style')?.textContent).toContain('pointer-events:auto');
+	});
+
+	it('paints the inner shadow of a clipped shape in the filter, PowerPoint side up', () => {
+		const triStyle = getShapeFillStrokeStyle(innerShadow('triangle'));
+		expect(String(triStyle['filter'])).toContain('url(#shape-fx-in-1)');
+		expect(triStyle['boxShadow']).toBeUndefined();
+		expect(String(getShapeFillStrokeStyle(innerShadow('rect'))['boxShadow'])).toContain(
+			'inset -8px',
+		);
+		const defs = renderShapeFilterDefs(document, innerShadow('triangle'));
+		expect(defs?.innerHTML).toContain('innerLayer');
 	});
 });

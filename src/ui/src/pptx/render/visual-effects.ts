@@ -342,7 +342,10 @@ export function getInnerShadowCss(style: ShapeStyle | undefined): string | undef
 			? clampUnitInterval(style.innerShadowOpacity)
 			: 0.5;
 
-	return `inset ${Math.round(offsetX)}px ${Math.round(offsetY)}px ${Math.round(blur)}px ${colorWithOpacity(
+	// PowerPoint draws an inner shadow against the edge the offset points to (a
+	// positive x offset darkens the RIGHT inner edge); a CSS inset shadow moves
+	// the other way, so the offset is negated.
+	return `inset ${Math.round(-offsetX) + 0}px ${Math.round(-offsetY) + 0}px ${Math.round(blur)}px ${colorWithOpacity(
 		normalizeHexColor(style.innerShadowColor, DEFAULT_SHADOW_COLOR),
 		opacity,
 	)}`;
@@ -407,7 +410,7 @@ export function getGlowBoxShadowCss(
  */
 export function getBoxShadowCss(
 	style: ShapeStyle | undefined,
-	options: { includeGlow?: boolean; includeOuter?: boolean } = {},
+	options: { includeGlow?: boolean; includeOuter?: boolean; includeInner?: boolean } = {},
 	context?: ShadowRenderContext,
 ): string | undefined {
 	if (!style) {
@@ -425,7 +428,7 @@ export function getBoxShadowCss(
 		}
 	}
 
-	const inner = getInnerShadowCss(style);
+	const inner = options.includeInner === false ? undefined : getInnerShadowCss(style);
 	if (inner) {
 		parts.push(inner);
 	}
@@ -1105,6 +1108,7 @@ export function getComputedEffectStyle(
 				{
 					includeGlow: silhouette ? false : options.includeGlowBoxShadow,
 					includeOuter: !silhouette,
+					includeInner: !silhouette?.paintsInnerShadow,
 				},
 				{ rotation: element.rotation },
 			);

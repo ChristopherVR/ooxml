@@ -132,7 +132,8 @@ describe('getInnerShadowCss', () => {
 			innerShadowBlur: 5,
 			innerShadowOpacity: 0.5,
 		});
-		expect(css).toBe('inset 2px 3px 5px rgba(0, 0, 0, 0.5)');
+		// PowerPoint hugs the edge the offset points to: the CSS inset offset is negated.
+		expect(css).toBe('inset -2px -3px 5px rgba(0, 0, 0, 0.5)');
 	});
 });
 

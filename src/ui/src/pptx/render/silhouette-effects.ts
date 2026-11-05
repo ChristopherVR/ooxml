@@ -56,10 +56,21 @@ export interface SilhouetteGlow {
 	readonly opacity: number;
 }
 
+/** An inner shadow: the offset points to the edge it hugs (as in PowerPoint). */
+export interface SilhouetteInnerShadow {
+	readonly offsetX: number;
+	readonly offsetY: number;
+	/** The CSS blur length (twice the Gaussian's deviation). */
+	readonly blur: number;
+	readonly color: string;
+	readonly opacity: number;
+}
+
 /** The effects a silhouette filter paints. */
 export interface SilhouetteEffectParams {
 	readonly shadows: readonly SilhouetteShadowLayer[];
 	readonly glow?: SilhouetteGlow;
+	readonly inner?: SilhouetteInnerShadow;
 }
 
 /** What a binding needs to apply the effects of one shape. */
@@ -69,6 +80,8 @@ export interface SilhouetteEffects {
 	readonly cssReference: string;
 	/** The `<filter>` markup, to inject next to the soft-edge filter. */
 	readonly filterMarkup: string;
+	/** The filter also paints the inner shadow, so the box-shadow must not. */
+	readonly paintsInnerShadow: boolean;
 }
 
 const DEFAULT_SHADOW = '#000000';
@@ -170,6 +183,20 @@ export function resolveGlow(style: ShapeStyle): SilhouetteGlow | undefined {
 	};
 }
 
+/** The inner shadow of a style, with the numbers `getInnerShadowCss` uses. */
+export function resolveInnerShadow(style: ShapeStyle): SilhouetteInnerShadow | undefined {
+	if (!style.innerShadowColor || style.innerShadowColor === 'transparent') {
+		return undefined;
+	}
+	return {
+		offsetX: finite(style.innerShadowOffsetX) ? style.innerShadowOffsetX : 0,
+		offsetY: finite(style.innerShadowOffsetY) ? style.innerShadowOffsetY : 0,
+		blur: finite(style.innerShadowBlur) ? Math.max(0, style.innerShadowBlur) : 6,
+		color: hex(style.innerShadowColor, DEFAULT_SHADOW),
+		opacity: finite(style.innerShadowOpacity) ? unit(style.innerShadowOpacity) : 0.5,
+	};
+}
+
 /** Whether a style paints no fill (the fill overlay would paint nothing either). */
 function paintsNoFill(style: ShapeStyle | undefined): boolean {
 	return (
@@ -202,18 +229,13 @@ export function getSilhouetteEffectParams(
 	}
 	const shadows = resolveOuterShadowLayers(style, element.rotation);
 	const glow = resolveGlow(style);
-	if (shadows.length === 0 && !glow) {
+	const innerShadow = resolveInnerShadow(style);
+	if (shadows.length === 0 && !glow && !innerShadow) {
 		return undefined;
 	}
 	// Anything else that rides on the container's box-shadow would draw across
 	// the whole box once the clip is gone.
-	if (
-		style.innerShadowColor ||
-		style.lineShadowColor ||
-		style.lineGlowColor ||
-		style.shape3d ||
-		style.scene3d
-	) {
+	if (style.lineShadowColor || style.lineGlowColor || style.shape3d || style.scene3d) {
 		return undefined;
 	}
 	const layerFill = isLayerFillMode(style);
@@ -247,7 +269,15 @@ export function getSilhouetteEffectParams(
 	) {
 		return undefined;
 	}
-	return { shadows, ...(glow ? { glow } : {}) };
+	// An inner shadow rides on the silhouette only where the clip-path removed the
+	// box it was painted in (a clipped shape with a fill to shade).
+	const inner =
+		innerShadow && geometry.kind === 'clipPath' && !paintsNoFill(style) ? innerShadow : undefined;
+	// Nothing left that the box-shadow cannot paint.
+	if (shadows.length === 0 && !glow && !inner) {
+		return undefined;
+	}
+	return { shadows, ...(glow ? { glow } : {}), ...(inner ? { inner } : {}) };
 }
 
 function px(value: number): string {
@@ -300,6 +330,12 @@ export function buildSilhouetteFilterMarkup(
 	if (params.glow) {
 		reach = Math.max(reach, params.glow.spread + 1.5 * params.glow.blur);
 	}
+	if (params.inner) {
+		reach = Math.max(
+			reach,
+			Math.hypot(params.inner.offsetX, params.inner.offsetY) + 1.5 * params.inner.blur,
+		);
+	}
 	const pad = Math.ceil(reach) + 4;
 	const parts: string[] = [
 		`<filter id="${filterId}" filterUnits="userSpaceOnUse" x="${-pad}" y="${-pad}" width="${px(Math.max(width, 1) + 2 * pad)}" height="${px(Math.max(height, 1) + 2 * pad)}" color-interpolation-filters="sRGB">`,
@@ -325,8 +361,21 @@ export function buildSilhouetteFilterMarkup(
 		...layers.slice(0, params.glow ? 1 : 0),
 		...layers.slice(params.glow ? 1 : 0).reverse(),
 	];
+	const top: string[] = [];
+	if (params.inner) {
+		const i = params.inner;
+		parts.push(
+			'<feComponentTransfer in="SourceAlpha" result="innerInv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>',
+			`<feOffset in="innerInv" dx="${px(-i.offsetX)}" dy="${px(-i.offsetY)}" result="innerOff"/>`,
+			`<feGaussianBlur in="innerOff" stdDeviation="${px(i.blur / 2)}" result="innerBlur"/>`,
+			`<feFlood flood-color="${i.color}" flood-opacity="${px(i.opacity)}" result="innerFlood"/>`,
+			'<feComposite in="innerFlood" in2="innerBlur" operator="in" result="innerColor"/>',
+			'<feComposite in="innerColor" in2="SourceAlpha" operator="in" result="innerLayer"/>',
+		);
+		top.push('innerLayer');
+	}
 	parts.push(
-		`<feMerge>${[...stack, 'SourceGraphic'].map((n) => `<feMergeNode in="${n}"/>`).join('')}</feMerge>`,
+		`<feMerge>${[...stack, 'SourceGraphic', ...top].map((n) => `<feMergeNode in="${n}"/>`).join('')}</feMerge>`,
 		'</filter>',
 	);
 	return parts.join('');
@@ -346,6 +395,7 @@ export function getSilhouetteEffects(element: PptxElement): SilhouetteEffects | 
 		filterId,
 		cssReference: `url(#${filterId})`,
 		filterMarkup: buildSilhouetteFilterMarkup(filterId, element.width, element.height, params),
+		paintsInnerShadow: params.inner !== undefined,
 	};
 }
 

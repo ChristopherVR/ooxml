@@ -86,8 +86,33 @@ describe('silhouette effects', () => {
 	});
 
 	it('keeps the old paint when other effects share the box-shadow', () => {
-		expect(usesSilhouetteEffects(shape('triangle', { innerShadowColor: '#000000' }))).toBe(false);
+		expect(usesSilhouetteEffects(shape('triangle', { lineShadowColor: '#000000' }))).toBe(false);
 		expect(usesSilhouetteEffects(shape('triangle', { fillMode: 'gradient' }))).toBe(true);
+	});
+
+	it('paints the inner shadow of a clipped shape in the filter, not the box-shadow', () => {
+		const inner = {
+			innerShadowColor: '#000000',
+			innerShadowOffsetX: 8,
+			innerShadowOffsetY: 0,
+			innerShadowBlur: 10,
+		};
+		const triangle = shape('triangle', inner);
+		const fx = getSilhouetteEffects(triangle);
+		expect(fx?.paintsInnerShadow).toBe(true);
+		expect(fx?.filterMarkup).toContain('innerLayer');
+		// The offset points at the edge it darkens: the inverse alpha moves the other way.
+		expect(fx?.filterMarkup).toContain('dx="-8"');
+		expect(getComputedEffectStyle(triangle).boxShadow).toBeUndefined();
+		// A rectangle keeps its inset box-shadow.
+		const rect = shape('rect', inner);
+		expect(usesSilhouetteEffects(rect)).toBe(false);
+		expect(getComputedEffectStyle(rect).boxShadow).toContain('inset -8px 0px');
+	});
+
+	it('shades a clipped shape by its inner shadow alone', () => {
+		const only = shape('triangle', { shadowColor: undefined, innerShadowColor: '#000000' });
+		expect(getSilhouetteEffects(only)?.paintsInnerShadow).toBe(true);
 	});
 });
 
