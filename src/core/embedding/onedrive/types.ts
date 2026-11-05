@@ -10,6 +10,8 @@ export interface OneDriveFile {
 	name: string;
 	kind: OneDriveKind;
 	eTag: string;
+	/** Changes only when the content changes (not the name or other metadata). */
+	cTag?: string;
 	webUrl?: string;
 	access: 'read' | 'write' | 'unknown';
 }
@@ -19,6 +21,10 @@ export interface OneDriveOpened {
 }
 export interface OneDriveRequestOptions {
 	signal?: AbortSignal;
+}
+export interface OneDriveSaveOptions extends OneDriveRequestOptions {
+	/** Upload progress in bytes, reported once before the first fragment and after each one. */
+	onProgress?: (sent: number, total: number) => void;
 }
 /** Identity of an item for browsing and opening without a sharing link. */
 export interface OneDriveItemRef {
@@ -50,11 +56,7 @@ export interface OneDriveClient {
 	list(folder?: OneDriveItemRef, options?: OneDriveListOptions): Promise<CloudListing>;
 	recent(options?: OneDriveListOptions): Promise<CloudListing>;
 	search(query: string, options?: OneDriveListOptions): Promise<CloudListing>;
-	save(
-		file: OneDriveFile,
-		bytes: Uint8Array,
-		options?: OneDriveRequestOptions,
-	): Promise<OneDriveFile>;
+	save(file: OneDriveFile, bytes: Uint8Array, options?: OneDriveSaveOptions): Promise<OneDriveFile>;
 	saveCopy(
 		file: OneDriveFile,
 		bytes: Uint8Array,

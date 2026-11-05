@@ -112,7 +112,7 @@ export function createOneDriveClient(options: OneDriveClientOptions): OneDriveCl
 				validateFile(target);
 				const data = await readJson(
 					await graph(
-						`${itemPath(target)}?$select=id,name,eTag,webUrl,parentReference,file`,
+						`${itemPath(target)}?$select=id,name,eTag,cTag,webUrl,parentReference,file`,
 						signal,
 					),
 				);
@@ -155,7 +155,14 @@ export function createOneDriveClient(options: OneDriveClientOptions): OneDriveCl
 			return operation(input, async (signal) => {
 				await writable(target);
 				const updated = fileFromMetadata(
-					await uploadBytes(transport, itemPath(target), snapshot, signal, target.eTag),
+					await uploadBytes(
+						transport,
+						itemPath(target),
+						snapshot,
+						signal,
+						target.eTag,
+						input?.onProgress,
+					),
 					target,
 				);
 				if (

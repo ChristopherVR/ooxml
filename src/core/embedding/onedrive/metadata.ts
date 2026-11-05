@@ -17,6 +17,7 @@ export function fileFromMetadata(
 	const parentId = parent?.id ?? previous?.parentId;
 	const { id: itemId, name, eTag } = data;
 	const webUrl = data.webUrl ?? previous?.webUrl;
+	const cTag = typeof data.cTag === 'string' && data.cTag ? data.cTag : undefined;
 	if (
 		![driveId, itemId, name, eTag].every((value) => typeof value === 'string' && value.length > 0)
 	)
@@ -45,6 +46,7 @@ export function fileFromMetadata(
 		name: name as string,
 		kind: officeKind(name as string),
 		eTag: eTag as string,
+		...(cTag ? { cTag } : {}),
 		access: 'unknown',
 		...(url ? { webUrl: url.href } : {}),
 		...(typeof parentId === 'string' && parentId ? { parentId } : {}),

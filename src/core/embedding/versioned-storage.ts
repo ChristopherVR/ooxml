@@ -1,4 +1,4 @@
-import type { DocumentSaveMeta, DocumentStorage } from './storage';
+import type { DocumentSaveMeta, DocumentSaveProgress, DocumentStorage } from './storage';
 
 /** Minimal metadata shared by editors. Provider identity and revision fields remain host-owned. */
 export interface VersionedFile {
@@ -7,6 +7,8 @@ export interface VersionedFile {
 }
 export interface StorageRequestOptions {
 	signal?: AbortSignal;
+	/** Save progress for the host's status (see `DocumentSaveMeta.onProgress`). */
+	onSaveProgress?: (progress: DocumentSaveProgress) => void;
 }
 export interface StoredDocument<F extends VersionedFile = VersionedFile> {
 	file: F;
@@ -17,6 +19,13 @@ export interface VersionedStorageProvider<F extends VersionedFile> {
 	read(file: F, options?: StorageRequestOptions): Promise<StoredDocument<F>>;
 	save(file: F, bytes: Uint8Array, options?: StorageRequestOptions): Promise<F>;
 	isConflict(error: unknown): boolean;
+	/**
+	 * Optional pair: the current revision without its bytes, and whether its content is the same as
+	 * a known revision's. A save that met a metadata-only change (the service touched the file
+	 * after the last upload) then retries with the new revision instead of downloading the file.
+	 */
+	latest?(file: F, options?: StorageRequestOptions): Promise<F>;
+	sameContent?(known: F, current: F): boolean;
 	saveCopy?(
 		file: F,
 		bytes: Uint8Array,

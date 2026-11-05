@@ -10,6 +10,7 @@ export async function uploadBytes(
 	bytes: Uint8Array,
 	signal: AbortSignal,
 	eTag?: string,
+	onProgress?: (sent: number, total: number) => void,
 ): Promise<Record<string, unknown>> {
 	if (!bytes.length || bytes.length > transport.maxBytes)
 		throw new OneDriveError(
@@ -27,7 +28,7 @@ export async function uploadBytes(
 	);
 	const uploadUrl = secureTransferUrl(session.uploadUrl);
 	try {
-		return await sendFragments(transport, uploadUrl, bytes, signal);
+		return await sendFragments(transport, uploadUrl, bytes, signal, onProgress);
 	} catch (error) {
 		// An abandoned session blocks the next one for this item (nameAlreadyExists), so cancel it.
 		await transport
@@ -48,7 +49,9 @@ async function sendFragments(
 	uploadUrl: string,
 	bytes: Uint8Array,
 	signal: AbortSignal,
+	onProgress?: (sent: number, total: number) => void,
 ): Promise<Record<string, unknown>> {
+	onProgress?.(0, bytes.length);
 	for (let start = 0; start < bytes.length; start += CHUNK_SIZE) {
 		const end = Math.min(start + CHUNK_SIZE, bytes.length);
 		const response = checkResponse(
@@ -62,6 +65,7 @@ async function sendFragments(
 			}),
 		);
 		const data = await readJson(response);
+		onProgress?.(end, bytes.length);
 		if (end === bytes.length) {
 			if (response.status === 200 || response.status === 201) return data;
 			throw new OneDriveError('invalid-response', 'OneDrive did not confirm the completed upload.');

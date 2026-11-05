@@ -16,8 +16,34 @@ export function createOneDriveSession(
 ): OneDriveSession {
 	return createStorageSession(
 		{
-			read: (file, options) => client.read(file, options),
-			save: (file, bytes, options) => client.save(file, bytes, options),
+			read: (file, options) =>
+				client.read(file, {
+					...(options?.signal ? { signal: options.signal } : {}),
+					...(options?.onSaveProgress
+						? {
+								onProgress: (loaded: number, total?: number) =>
+									options.onSaveProgress?.({
+										phase: 'downloading',
+										loaded,
+										...(total === undefined ? {} : { total }),
+									}),
+							}
+						: {}),
+				}),
+			save: (file, bytes, options) =>
+				client.save(file, bytes, {
+					...(options?.signal ? { signal: options.signal } : {}),
+					...(options?.onSaveProgress
+						? {
+								onProgress: (loaded: number, total: number) =>
+									options.onSaveProgress?.({ phase: 'uploading', loaded, total }),
+							}
+						: {}),
+				}),
+			latest: (file, options) =>
+				client.metadata(file, options?.signal ? { signal: options.signal } : {}),
+			// cTag changes only with the content, so an equal one means only metadata moved.
+			sameContent: (known, current) => Boolean(known.cTag) && known.cTag === current.cTag,
 			saveCopy: (file, bytes, name, options) => client.saveCopy(file, bytes, name, options),
 			isConflict: (error) => error instanceof OneDriveError && error.code === 'conflict',
 		},

@@ -15,6 +15,7 @@ export type {
 	OneDriveKind,
 	OneDriveOpened,
 	OneDriveRequestOptions,
+	OneDriveSaveOptions,
 	OneDriveShareOptions,
 	OneDriveErrorCode,
 	OneDriveConflict,

@@ -65,7 +65,23 @@ export interface DocumentSaveMeta {
 	/** The MIME type of the bytes. */
 	mimeType: string;
 	reason: DocumentSaveReason;
+	/**
+	 * Set by an editor that shows save progress: a storage that uploads reports each step here, so
+	 * a long upload is never silent. Optional on both sides.
+	 */
+	onProgress?: (progress: DocumentSaveProgress) => void;
 }
+
+/**
+ * One step of a save in progress. `uploading` and `downloading` carry bytes (`total` when known);
+ * `checking` means the save met a newer version and is looking at what changed; `merging` that it
+ * is combining both sets of edits.
+ */
+export type DocumentSaveProgress =
+	| { phase: 'uploading'; loaded: number; total: number }
+	| { phase: 'checking' }
+	| { phase: 'downloading'; loaded: number; total?: number }
+	| { phase: 'merging' };
 
 /** What {@link DocumentStorage.save} may report back. */
 export interface DocumentSaveResult {

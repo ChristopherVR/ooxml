@@ -78,6 +78,27 @@ export function createStorageSession<F extends VersionedFile>(
 			} catch (error) {
 				if (!client.isConflict(error)) throw error;
 			}
+			options?.onSaveProgress?.({ phase: 'checking' });
+			if (client.latest && client.sameContent) {
+				const current = await client.latest(ancestor.file, options);
+				if (client.sameContent(ancestor.file, current)) {
+					// Only the revision moved (the service touched the file): retry, nothing to merge.
+					if (rebases >= maxRebases) {
+						conflict = {
+							base: clone(ancestor),
+							local: candidate.slice(),
+							remote: clone(ancestor),
+							issues: ['remote-keeps-changing'],
+						};
+						throw (settings.conflictError ?? ((value) => new StorageConflictError(value)))(
+							cloneConflict(conflict),
+						);
+					}
+					rebases++;
+					ancestor = { file: cloneFile(current), bytes: ancestor.bytes.slice() };
+					continue;
+				}
+			}
 			const remote = await client.read(ancestor.file, options);
 			if (remote.file.kind !== ancestor.file.kind) {
 				conflict = {
@@ -107,6 +128,7 @@ export function createStorageSession<F extends VersionedFile>(
 					throw (settings.conflictError ?? ((value) => new StorageConflictError(value)))(
 						cloneConflict(conflict),
 					);
+				options?.onSaveProgress?.({ phase: 'merging' });
 				candidate = await mergeConflict(conflict, options);
 				local = candidate.slice();
 			}
@@ -179,7 +201,10 @@ export function createStorageSession<F extends VersionedFile>(
 					const result = await session.saveCopy(bytes, meta.fileName);
 					return { fileName: result.file.name };
 				}
-				const result = await session.save(bytes);
+				const result = await session.save(
+					bytes,
+					meta.onProgress ? { onSaveProgress: meta.onProgress } : undefined,
+				);
 				return { fileName: result.name };
 			},
 		},

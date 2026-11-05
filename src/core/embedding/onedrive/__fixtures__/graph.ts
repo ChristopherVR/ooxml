@@ -2,7 +2,7 @@ import { createOneDriveClient } from '../client';
 
 /** Test-only HTTP fixture. Excluded from declarations and every published bundle. */
 export function createTestDrive(options: { bytes: Uint8Array; name?: string; omitDownloadUrl?: number }) {
-	type Item = { id: string; bytes: Uint8Array; name: string; revision: number };
+	type Item = { id: string; bytes: Uint8Array; name: string; revision: number; content?: number };
 	const first: Item = { id: 'item', bytes: options.bytes.slice(), name: options.name ?? 'Deck.pptx', revision: 1 };
 	const items = new Map<string, Item>([['item', first]]);
 	const uploads = new Map<string, { item: Item; revision: number; bytes?: Uint8Array; offset: number }>();
@@ -11,7 +11,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 	let access: 'read' | 'write' = 'write';
 	const shareUrl = 'https://1drv.ms/p/test-fixture';
 	const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status });
-	const metadata = (item: Item) => ({ id: item.id, name: item.name, eTag: `"v${item.revision}"`,
+	const metadata = (item: Item) => ({ id: item.id, name: item.name, eTag: `"v${item.revision}"`, cTag: `"c${item.content ?? 0}"`,
 		parentReference: { driveId: 'drive', id: 'parent' }, file: {}, webUrl: shareUrl,
 		'@microsoft.graph.downloadUrl': `https://transfer.test/download/${item.id}` });
 	const requests: Array<{ url: string; init: RequestInit | undefined }> = [];
@@ -56,7 +56,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 			upload.bytes ??= new Uint8Array(total);
 			upload.bytes.set(init.body, start); upload.offset = end + 1;
 			if (upload.offset < total) return json({ nextExpectedRanges: [`${upload.offset}-${total - 1}`] }, 202); // as Graph sends it
-			upload.item.bytes = new Uint8Array(upload.bytes); upload.item.revision++;
+			upload.item.bytes = new Uint8Array(upload.bytes); upload.item.revision++; upload.item.content = (upload.item.content ?? 0) + 1;
 			items.set(upload.item.id, upload.item);
 			return json(metadata(upload.item));
 		}
@@ -66,7 +66,9 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string; omi
 	return {
 		client: createOneDriveClient({ fetch, getAccessToken: async () => 'test-token', canWrite: () => access === 'write' }),
 		shareUrl, requests, fetch,
-		changeRemotely(bytes = first.bytes) { first.bytes = bytes.slice(); first.revision++; },
+		changeRemotely(bytes = first.bytes) { first.bytes = bytes.slice(); first.revision++; first.content = (first.content ?? 0) + 1; },
+		/** Like OneDrive after an upload: a new eTag, the same content (cTag). */
+		touch() { first.revision++; },
 		setAccess(value: 'read' | 'write') { access = value; },
 		getBytes(id = first.id) { return items.get(id)!.bytes.slice(); },
 	};
