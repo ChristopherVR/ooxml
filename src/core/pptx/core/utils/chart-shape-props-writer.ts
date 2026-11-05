@@ -89,7 +89,14 @@ export function writeChartShapeProps(
 	resolveColor?: ResolveChartColor,
 ): XmlObject {
 	const spPr: XmlObject = { ...(existing ?? {}) };
-	if (style.fillColor) {
+	if (style.fillColor === 'none') {
+		// `'none'` is no fill (`a:noFill`), never a colour.
+		for (const name of ['solidFill', 'gradFill', 'pattFill', 'blipFill']) {
+			const key = findChildKey(spPr, name, localName);
+			if (key) delete spPr[key];
+		}
+		setDrawingChild(spPr, 'noFill', {}, SP_PR_ORDER, localName);
+	} else if (style.fillColor) {
 		const noFill = findChildKey(spPr, 'noFill', localName);
 		if (noFill) {
 			delete spPr[noFill];

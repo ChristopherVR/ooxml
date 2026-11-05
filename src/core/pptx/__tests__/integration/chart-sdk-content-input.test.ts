@@ -264,6 +264,112 @@ describe('declarative chart inputs', () => {
 	});
 });
 
+describe('declarative chart inputs for generated report charts', () => {
+	it('writes one series label group with every flag, one line, centred and turned', async () => {
+		const { xml } = await save('bar', {
+			categories: CATEGORIES,
+			series: [
+				{
+					name: 'A',
+					values: [1, 2, 3],
+					dataLabels: { showValue: true, wrap: false, anchor: 'ctr', rotation: -90 },
+				},
+			],
+		});
+		const labels = element(element(xml, 'ser'), 'dLbls');
+		expect(labels).not.toContain('<c:dLbl>');
+		for (const flag of [
+			'showLegendKey',
+			'showCatName',
+			'showSerName',
+			'showPercent',
+			'showBubbleSize',
+		])
+			expect(labels).toContain(`<c:${flag} val="0">`);
+		expect(labels).toContain('<c:showVal val="1">');
+		const bodyPr = /<a:bodyPr[^>]*>/u.exec(labels)?.[0] ?? '';
+		expect(bodyPr).toContain('wrap="none"');
+		expect(bodyPr).toContain('anchor="ctr"');
+		expect(bodyPr).toContain('rot="-5400000"');
+	});
+
+	it('writes a point with no fill as a:noFill', async () => {
+		const { xml } = await save('doughnut', {
+			categories: CATEGORIES,
+			series: [{ name: 'D', values: [1, 2, 3], pointColors: ['#112233', 'none', null] }],
+		});
+		const points = elements(xml, 'dPt');
+		expect(points).toHaveLength(2);
+		expect(points[0]).toContain('<a:srgbClr val="112233">');
+		expect(element(points[1]!, 'spPr')).toMatch(/^<c:spPr><a:noFill/u);
+	});
+
+	it('writes axis line dash, gridline lines, tick marks and crossing', async () => {
+		const { xml, chart } = await save('bar', {
+			categories: CATEGORIES,
+			series: [{ name: 'A', values: [1, 2, 3] }],
+			axes: {
+				valAx: {
+					line: { color: '#808080', width: 0.75, dash: 'sysDash' },
+					majorGridlinesLine: { color: '#D9D9D9', width: 0.5, dash: 'dash' },
+					majorTickMark: 'none',
+					minorTickMark: 'none',
+					crosses: 'max',
+					crossBetween: 'midCat',
+				},
+				catAx: { majorTickMark: 'out', line: 'none' },
+			},
+		});
+		const value = element(xml, 'valAx');
+		const axisLine = /<c:spPr>((?!<\/c:spPr>).)*<\/c:spPr>/su.exec(
+			value.replace(/<c:majorGridlines>.*?<\/c:majorGridlines>/su, ''),
+		)![0];
+		expect(axisLine).toContain('<a:ln w="9525">');
+		expect(axisLine).toContain('<a:srgbClr val="808080">');
+		expect(axisLine).toContain('<a:prstDash val="sysDash">');
+		const grid = element(value, 'majorGridlines');
+		expect(grid).toContain('<a:ln w="6350">');
+		expect(grid).toContain('<a:srgbClr val="D9D9D9">');
+		expect(grid).toContain('<a:prstDash val="dash">');
+		expect(value).toContain('<c:majorTickMark val="none">');
+		expect(value).toContain('<c:minorTickMark val="none">');
+		expect(value).toContain('<c:crosses val="max">');
+		expect(value).toContain('<c:crossBetween val="midCat">');
+		const category = element(xml, 'catAx');
+		expect(category).toContain('<c:majorTickMark val="out">');
+		expect(category).toMatch(/<c:spPr><a:ln><a:noFill/u);
+		const reloaded = chart.axes?.find((axis) => axis.axisType === 'valAx');
+		expect(reloaded).toMatchObject({
+			crosses: 'max',
+			crossBetween: 'midCat',
+			majorGridlines: true,
+		});
+	});
+
+	it('writes title runs with their own fonts', async () => {
+		const { xml, chart } = await save('bar', {
+			categories: CATEGORIES,
+			titleRuns: [
+				{ text: 'Sales ', bold: true, size: 14 },
+				{ text: '2026', italic: true, size: 10, color: '#C00000' },
+			],
+			titleFont: { family: 'Georgia' },
+			series: [{ name: 'A', values: [1, 2, 3] }],
+		});
+		const title = element(xml, 'title');
+		const runs = title.match(/<a:r>.*?<\/a:r>/gsu) ?? [];
+		expect(runs).toHaveLength(2);
+		expect(runs[0]).toMatch(/sz="1400"/u);
+		expect(runs[0]).toMatch(/ b="1"/u);
+		expect(runs[0]).toContain('<a:t>Sales </a:t>');
+		expect(runs[1]).toMatch(/sz="1000"/u);
+		expect(runs[1]).toMatch(/ i="1"/u);
+		expect(runs[1]).toContain('<a:srgbClr val="C00000">');
+		expect(title).toContain('typeface="Georgia"');
+		expect(chart.titleRuns?.map((run) => run.text)).toStrictEqual(['Sales ', '2026']);
+	});
+});
+
 describe('declarative chart input validation', () => {
 	const input = (dataLabels: ChartInput['dataLabels'], grouping?: ChartInput['grouping']) => ({
 		categories: CATEGORIES,

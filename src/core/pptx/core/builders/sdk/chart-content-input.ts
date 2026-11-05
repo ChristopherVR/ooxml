@@ -63,6 +63,8 @@ export interface ChartDataLabelsInput {
 	rotation?: number;
 	/** `false` keeps each label on one line (`a:bodyPr/@wrap="none"`), `true` wraps it. */
 	wrap?: boolean;
+	/** Vertical anchor of the label text in its box (`a:bodyPr/@anchor`). */
+	anchor?: 't' | 'ctr' | 'b';
 	/** Label box fill: a hex colour or `'none'` (`c:dLbls/c:spPr`). */
 	fill?: string;
 }
@@ -86,6 +88,20 @@ export interface ChartSeriesMarkerInput {
 	line?: { color?: string; width?: number } | 'none';
 }
 
+/**
+ * One run of a chart title (`c:title/c:tx/c:rich` `a:r`), with its own font. The title's
+ * typeface is `ChartInput.titleFont.family` (the model keeps one per title).
+ */
+export interface ChartTitleRunInput {
+	text: string;
+	/** Font size in points. */
+	size?: number;
+	bold?: boolean;
+	italic?: boolean;
+	/** Hex colour. */
+	color?: string;
+}
+
 /** Series chart types a combination chart can mix. */
 export type ChartComboSeriesType = 'bar' | 'line' | 'area';
 
@@ -102,6 +118,12 @@ export interface ChartContentInput {
 	dataLabels?: ChartDataLabelsInput;
 	/** Chart title font (`c:title`). */
 	titleFont?: ChartFontInput;
+	/**
+	 * The title as runs, each with its own font (`c:title/c:tx/c:rich`). Replaces `title`
+	 * (which, when given too, must equal the runs' joined text). The chart model's `title` is the
+	 * first run's text, as a loaded chart's is.
+	 */
+	titleRuns?: ChartTitleRunInput[];
 	/** Legend font (`c:legend/c:txPr`). */
 	legendFont?: ChartFontInput;
 	/**
@@ -137,10 +159,11 @@ export interface ChartSeriesContentInput {
 	/** `'none'` leaves the series unfilled (`a:noFill`). Area-filled chart types only. */
 	fill?: 'none';
 	/**
-	 * One fill colour per point (`c:dPt`), in category order, at most one per value; `null` keeps
-	 * the point's colour. On a series drawn with markers (line, scatter, stock, unfilled radar) it
-	 * fills the point's marker (`c:dPt/c:marker`), which keeps the series marker's symbol, size and
-	 * outline; such a series whose marker symbol is `'none'` refuses it.
+	 * One fill per point (`c:dPt`), in category order, at most one per value: a hex colour,
+	 * `'none'` for no fill (`a:noFill`), or `null` to keep the point's colour. On a series drawn
+	 * with markers (line, scatter, stock, unfilled radar) it fills the point's marker
+	 * (`c:dPt/c:marker`), which keeps the series marker's symbol, size and outline; such a series
+	 * whose marker symbol is `'none'` refuses it.
 	 */
 	pointColors?: (string | null)[];
 }

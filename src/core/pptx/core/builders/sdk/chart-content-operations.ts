@@ -193,7 +193,11 @@ function applySeriesPaint(element: ChartPptxElement, input: ChartInput): void {
 			);
 		}
 		const own = pointColors?.map((color) =>
-			color === null ? undefined : chartColorInput(color, 'Point colour'),
+			color === null
+				? undefined
+				: color.trim() === 'none'
+					? 'none'
+					: chartColorInput(color, 'Point colour'),
 		);
 		const varied = VARIED.has(drawnSeriesType(data, series));
 		// The series colour first: setChartSeriesColor clears the points' own paint.

@@ -1,23 +1,26 @@
 /**
  * The appearance fields of a `ChartAxisEdit` (`setChartAxis`, `ChartInput.axes`)
  * that the chart model records as Format-pane edits of the axis: tick label
- * rotation, italic labels and the axis line. Mapped through
+ * rotation, italic labels, the axis line and the gridline lines. Mapped through
  * `withChartElementFormat`, so a new chart and a loaded one save them the same
- * way (`c:txPr/a:bodyPr/@rot`, `a:defRPr/@i`, `c:spPr/a:ln`).
+ * way (`c:txPr/a:bodyPr/@rot`, `a:defRPr/@i`, `c:spPr/a:ln`, `c:majorGridlines/c:spPr/a:ln`).
  *
  * @module sdk/chart-axis-input
  */
 
 import type { PptxChartData, PptxChartElementLine } from '../../types';
+import type { StrokeDashType } from '../../types/common';
 import { withChartElementFormat } from './chart-element-format-operations';
 import type { ChartElementFormatPatch } from './chart-element-format-operations';
 import { chartColorInput, chartLineWidthInput, chartTextRotationInput } from './chart-input-values';
 
 /**
- * Axis line: a colour and width in points, or `'none'` to hide the line. A width without a
- * colour keeps the line's colour.
+ * An axis or gridline line: a colour, width in points and preset dash (`a:prstDash`), or
+ * `'none'` to hide the line. A width or dash without a colour keeps the line's colour.
  */
-export type ChartAxisLineInput = { color?: string; width?: number } | 'none';
+export type ChartAxisLineInput =
+	| { color?: string; width?: number; dash?: Exclude<StrokeDashType, 'custom'> }
+	| 'none';
 
 /** The axis appearance fields `withChartAxisAppearance` writes. */
 export interface ChartAxisAppearanceEdit {
@@ -26,16 +29,25 @@ export interface ChartAxisAppearanceEdit {
 	/** Italic tick labels. */
 	italic?: boolean;
 	line?: ChartAxisLineInput;
+	/** Major gridline line (`c:majorGridlines/c:spPr/a:ln`). */
+	majorGridlinesLine?: ChartAxisLineInput;
+	/** Minor gridline line (`c:minorGridlines/c:spPr/a:ln`). */
+	minorGridlinesLine?: ChartAxisLineInput;
 }
 
 function axisLine(line: ChartAxisLineInput): Partial<PptxChartElementLine> {
 	if (line === 'none') {
 		return { kind: 'none' };
 	}
-	// A width without a colour keeps the line's paint (automatic on a new chart).
+	// A width or dash without a colour keeps the line's paint (automatic on a new chart).
 	const out: Partial<PptxChartElementLine> = line.color !== undefined ? { kind: 'solid' } : {};
 	if (line.color !== undefined) out.color = chartColorInput(line.color, 'axis line color');
 	if (line.width !== undefined) out.width = chartLineWidthInput(line.width, 'axis line width');
+	if (line.dash !== undefined) {
+		if ((line.dash as string) === 'custom')
+			throw new Error('An axis line dash must be a preset dash.');
+		out.dash = line.dash;
+	}
 	return out;
 }
 
@@ -62,8 +74,14 @@ export function withChartAxisAppearance(
 	if (edit.line !== undefined) {
 		patch.line = axisLine(edit.line);
 	}
-	if (!patch.text && !patch.line) {
-		return data;
+	let next = data;
+	if (patch.text || patch.line) {
+		next = withChartElementFormat(next, { kind: 'axis', axisIndex }, patch);
 	}
-	return withChartElementFormat(data, { kind: 'axis', axisIndex }, patch);
+	for (const kind of ['majorGridlines', 'minorGridlines'] as const) {
+		const gridline = edit[`${kind}Line`];
+		if (gridline !== undefined)
+			next = withChartElementFormat(next, { kind, axisIndex }, { line: axisLine(gridline) });
+	}
+	return next;
 }

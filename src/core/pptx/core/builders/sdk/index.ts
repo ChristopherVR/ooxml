@@ -86,6 +86,7 @@ export type {
 	ChartSeriesContentInput,
 	ChartSeriesLineInput,
 	ChartSeriesMarkerInput,
+	ChartTitleRunInput,
 } from './chart-content-input';
 export type { ChartAxisLineInput } from './chart-axis-input';
 export {

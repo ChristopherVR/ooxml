@@ -22,9 +22,11 @@ import type {
 	PptxChartTrendline,
 	PptxChartType,
 } from '../../types/chart';
+import type { PptxChartTickMark } from '../../types/chart-axis';
 import type { ChartPptxElement } from '../../types/elements';
 import type { ChartAxisLineInput } from './chart-axis-input';
 import { withChartAxisAppearance } from './chart-axis-input';
+import { applyChartAxisPlacement, chartGridlinesLine } from './chart-axis-placement';
 import type { ChartFontInput } from './chart-content-input';
 import { chartFontInput } from './chart-input-values';
 import { clearChartSeriesPointPaint } from './chart-series-point-paint';
@@ -392,8 +394,29 @@ export interface ChartAxisEdit {
 	font?: ChartFontInput;
 	/** Tick label angle in degrees, -90..90 (`c:txPr/a:bodyPr/@rot`); `null` clears it. */
 	rotation?: number | null;
-	/** Axis line (`c:spPr/a:ln`): a colour and width in points, or `'none'` to hide it. */
+	/** Axis line (`c:spPr/a:ln`): a colour, width in points and dash, or `'none'` to hide it. */
 	line?: ChartAxisLineInput;
+	/**
+	 * Major gridline line (`c:majorGridlines/c:spPr/a:ln`). A line shows the major gridlines
+	 * unless `majorGridlines` is `false`; `'none'` hides them unless `majorGridlines` is `true`.
+	 */
+	majorGridlinesLine?: ChartAxisLineInput;
+	/**
+	 * Minor gridline line (`c:minorGridlines/c:spPr/a:ln`). A line shows the minor gridlines
+	 * unless `minorGridlines` is `false`; `'none'` hides them unless `minorGridlines` is `true`.
+	 */
+	minorGridlinesLine?: ChartAxisLineInput;
+	/** Major tick marks (`c:majorTickMark`). */
+	majorTickMark?: PptxChartTickMark;
+	/** Minor tick marks (`c:minorTickMark`). */
+	minorTickMark?: PptxChartTickMark;
+	/**
+	 * Where the crossing axis meets this one (`c:crosses`), or the value it crosses at
+	 * (`c:crossesAt`).
+	 */
+	crosses?: 'autoZero' | 'min' | 'max' | number;
+	/** Whether a value axis crosses between categories or on them (`c:crossBetween`). */
+	crossBetween?: 'between' | 'midCat';
 }
 
 /**
@@ -484,12 +507,23 @@ export function setChartAxis(
 			...(font.color !== undefined ? { fontColor: font.color } : {}),
 		});
 	}
+	applyChartAxisPlacement(axis, edit);
+	const majorGridlinesLine = chartGridlinesLine(axis, edit, 'majorGridlines');
+	const minorGridlinesLine = chartGridlinesLine(axis, edit, 'minorGridlines');
 	const italic = edit.font?.italic;
-	if (edit.rotation !== undefined || italic !== undefined || edit.line !== undefined) {
+	if (
+		edit.rotation !== undefined ||
+		italic !== undefined ||
+		edit.line !== undefined ||
+		majorGridlinesLine !== undefined ||
+		minorGridlinesLine !== undefined
+	) {
 		element.chartData = withChartAxisAppearance(element.chartData, axes.indexOf(axis), {
 			...(edit.rotation !== undefined ? { rotation: edit.rotation } : {}),
 			...(italic !== undefined ? { italic } : {}),
 			...(edit.line !== undefined ? { line: edit.line } : {}),
+			...(majorGridlinesLine !== undefined ? { majorGridlinesLine } : {}),
+			...(minorGridlinesLine !== undefined ? { minorGridlinesLine } : {}),
 		});
 	}
 }

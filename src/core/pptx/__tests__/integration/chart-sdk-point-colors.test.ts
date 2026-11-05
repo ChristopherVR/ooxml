@@ -1,13 +1,17 @@
 /**
  * `ChartSeriesInput.pointColors` on new charts, saved and reloaded: a filled point (bar, the bar
  * series of a combination chart, a doughnut slice) is written as `c:dPt/c:spPr`, beside a series
- * colour, and a point of a series drawn with markers as its marker's fill (`c:dPt/c:marker`).
+ * colour, and a point of a series drawn with markers as its marker's fill (`c:dPt/c:marker`);
+ * `'none'` is written and reloaded as no fill.
  */
+import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
 import { createChartElement } from '../../core/builders/sdk/ElementFactory';
 import type { ChartInput } from '../../core/builders/sdk/types';
-import type { PptxChartType } from '../../core/types';
+import { PptxHandler } from '../../core/PptxHandler';
+import type { ChartPptxElement, PptxChartType } from '../../core/types';
+import { writeChartShapeProps } from '../../core/utils/chart-shape-props-writer';
 import { firstElement, newChartDeck } from '../helpers/new-chart-deck';
 
 const CATEGORIES = ['a', 'b', 'c'];
@@ -175,5 +179,80 @@ describe('point colours of new charts', () => {
 				one({ name: 'L', values: [1, 2, 3], marker: { symbol: 'none' }, pointColors: ['#111111'] }),
 			),
 		).toThrow(/markers/u);
+	});
+});
+
+describe("'none' point colours of new charts", () => {
+	it('writes and reloads a bar point and a doughnut slice without fill', async () => {
+		for (const type of ['bar', 'doughnut'] as const) {
+			const { xml, chart } = await saved(type, {
+				series: [
+					{
+						name: 'A',
+						values: [1, 2, 3],
+						color: '#3B5BDB',
+						pointColors: ['none', null, '#DBE4FF'],
+					},
+				],
+			});
+			const points = pointsXml(xml);
+			expect(points).toHaveLength(2);
+			expect(firstElement(points[0]!, 'c:spPr')).toBe('<c:spPr><a:noFill></a:noFill></c:spPr>');
+			expect(points[1]).toContain('<a:srgbClr val="DBE4FF">');
+			expect(chart.series[0]!.dataPoints!.map((point) => point.spPr)).toStrictEqual([
+				{ fillColor: 'none' },
+				{ fillColor: '#DBE4FF' },
+			]);
+		}
+	});
+
+	it('writes and reloads a line point marker without fill', async () => {
+		const { xml, chart } = await saved('line', {
+			series: [
+				{
+					name: 'L',
+					values: [1, 2, 3],
+					marker: { symbol: 'circle', size: 7, line: { color: '#3B5BDB' } },
+					pointColors: [null, 'none'],
+				},
+			],
+		});
+		expect(firstElement(pointsXml(xml)[0]!, 'c:marker')).toContain(
+			'<c:spPr><a:noFill></a:noFill><a:ln><a:solidFill><a:srgbClr val="3B5BDB">',
+		);
+		expect(chart.series[0]!.dataPoints).toStrictEqual([
+			{
+				idx: 1,
+				marker: { symbol: 'circle', size: 7, spPr: { fillColor: 'none', strokeColor: '#3B5BDB' } },
+			},
+		]);
+	});
+
+	it('keeps the reloaded none fill through a save that edits something else', async () => {
+		const { bytes } = await saved('bar', {
+			series: [{ name: 'A', values: [1, 2, 3], pointColors: ['none'] }],
+		});
+		const handler = new PptxHandler();
+		const loaded = await handler.load(bytes.buffer as ArrayBuffer);
+		const element = loaded.slides[0]!.elements.find(
+			(item) => item.type === 'chart',
+		) as ChartPptxElement;
+		element.chartData!.title = 'Edited';
+		const again = await handler.save(loaded.slides);
+		const xml = await (await JSZip.loadAsync(again)).file('ppt/charts/chart1.xml')!.async('string');
+		expect(xml).toContain('Edited');
+		expect(pointsXml(xml)).toStrictEqual([
+			expect.stringMatching(/<c:idx val="0"\/>.*<c:spPr><a:noFill\/><\/c:spPr>/su),
+		]);
+		expect(xml).not.toContain('val="none"');
+	});
+
+	it('writes a none point fill through the object-tree writer as a:noFill', () => {
+		const spPr = writeChartShapeProps(
+			{ 'a:solidFill': { 'a:srgbClr': { '@_val': 'FF0000' } } },
+			{ fillColor: 'none' },
+			(key) => key.replace(/^a:/u, ''),
+		);
+		expect(spPr).toStrictEqual({ 'a:noFill': {} });
 	});
 });

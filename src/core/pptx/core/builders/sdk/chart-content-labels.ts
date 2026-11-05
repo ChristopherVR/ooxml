@@ -2,7 +2,7 @@
  * The data-label and font fields of a {@link ChartInput}: series labels
  * through `withChartDataLabelOptions` (flags and position, checked against
  * the positions the series' chart type allows), their number format and font
- * on the series' label options, their angle, wrapping and box fill through
+ * on the series' label options, their angle, wrapping, anchor and box fill through
  * `withChartElementFormat`; the title and legend fonts on the chart style.
  *
  * @module sdk/chart-content-labels
@@ -51,12 +51,15 @@ function checkPosition(data: PptxChartData, index: number, position: string): vo
 
 function labelFormat(labels: ChartDataLabelsInput): ChartElementFormatPatch {
 	const patch: ChartElementFormatPatch = {};
-	if (labels.rotation !== undefined || labels.wrap !== undefined) {
+	if (labels.rotation !== undefined || labels.wrap !== undefined || labels.anchor !== undefined) {
+		if (labels.anchor !== undefined && !['t', 'ctr', 'b'].includes(labels.anchor))
+			throw new RangeError(`Data label anchor must be t, ctr or b, got "${labels.anchor}".`);
 		patch.text = {
 			...(labels.rotation !== undefined
 				? { rotation: chartTextRotationInput(labels.rotation) }
 				: {}),
 			...(labels.wrap !== undefined ? { wrap: labels.wrap } : {}),
+			...(labels.anchor !== undefined ? { anchor: labels.anchor } : {}),
 		};
 	}
 	if (labels.fill !== undefined) {
@@ -104,9 +107,36 @@ export function applyChartDataLabelsInput(element: ChartPptxElement, input: Char
 	});
 }
 
-/** Apply `ChartInput.titleFont` and `ChartInput.legendFont`. */
+/** `ChartInput.titleRuns` as the model's title runs; `title` is the first run's text, as on load. */
+function applyTitleRuns(data: PptxChartData, input: ChartInput): void {
+	const runs = input.titleRuns;
+	if (!runs) return;
+	if (runs.length === 0 || runs.some((run) => typeof run.text !== 'string'))
+		throw new Error('titleRuns must be one or more runs, each with its text.');
+	const text = runs.map((run) => run.text).join('');
+	if (input.title !== undefined && input.title !== text)
+		throw new Error('title and titleRuns name different titles; give titleRuns only.');
+	// A loaded chart's title is its first run's text; the runs hold the rest.
+	data.title = runs[0]!.text;
+	data.titleRuns = runs.map((run, index) => {
+		const font = chartFontInput(
+			{ size: run.size, bold: run.bold, italic: run.italic, color: run.color },
+			`Title run ${index + 1} font`,
+		);
+		return {
+			text: run.text,
+			...(font.bold !== undefined ? { bold: font.bold } : {}),
+			...(font.italic !== undefined ? { italic: font.italic } : {}),
+			...(font.fontSize !== undefined ? { fontSize: font.fontSize } : {}),
+			...(font.color !== undefined ? { color: font.color } : {}),
+		};
+	});
+}
+
+/** Apply `ChartInput.titleRuns`, `ChartInput.titleFont` and `ChartInput.legendFont`. */
 export function applyChartFontsInput(element: ChartPptxElement, input: ChartInput): void {
 	const data = element.chartData!;
+	applyTitleRuns(data, input);
 	const style = (data.style ??= {});
 	if (input.legendFont) {
 		style.legendTextStyle = {
