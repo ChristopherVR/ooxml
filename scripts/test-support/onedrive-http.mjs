@@ -16,6 +16,10 @@ export async function interceptOneDrive(context, fixtures) {
 	const uploads = new Map();
 	const writes = [];
 	const shares = [];
+	/** Graph paths (with their query) the application requested. */
+	const requests = [];
+	/** Which files each folder lists: the drive root, or the Projects folder inside it. */
+	const folders = { root: ['docx', 'xlsx'], projects: ['pptx', 'vsdx'] };
 	const metadata = (file) => ({
 		id: file.id,
 		name: file.name,
@@ -26,13 +30,49 @@ export async function interceptOneDrive(context, fixtures) {
 		size: file.bytes.length,
 		'@microsoft.graph.downloadUrl': `https://transfer.onedrive-test.invalid/download/${file.id}`,
 	});
+	const listed = (file, path = '/drive/root:') => ({
+		...metadata(file),
+		parentReference: { driveId: 'test-drive', id: 'test-folder', path },
+		lastModifiedDateTime: '2026-06-01T10:00:00Z',
+		lastModifiedBy: { user: { displayName: 'Test User' } },
+	});
+	const projects = {
+		id: 'projects',
+		name: 'Projects',
+		folder: { childCount: folders.projects.length },
+		parentReference: { driveId: 'test-drive', id: 'root', path: '/drive/root:' },
+		lastModifiedDateTime: '2026-05-30T09:00:00Z',
+	};
+	const notes = {
+		id: 'notes',
+		name: 'Notes.txt',
+		file: {},
+		size: 12,
+		parentReference: { driveId: 'test-drive', id: 'root', path: '/drive/root:' },
+	};
+	const inFolder = (names, path) => names.map((kind) => listed(files.get(kind), path));
 	await context.route('https://graph.microsoft.com/v1.0/**', async (route) => {
 		const request = route.request();
 		assert.equal(request.headers().authorization, 'Bearer test-only-token');
-		const path = new URL(request.url()).pathname.slice('/v1.0'.length);
+		const url = new URL(request.url());
+		const path = decodeURIComponent(url.pathname.slice('/v1.0'.length));
+		requests.push(`${request.method()} ${path}${url.search}`);
 		const json = (body, status = 200) => route.fulfill({ status, json: body });
 		// The signed-in user's own drive (the PowerPoint demo's edit policy reads it).
 		if (path === '/me/drive') return json({ id: 'test-drive' });
+		if (path === '/me/drive/root/children')
+			return json({
+				value: [projects, ...inFolder(folders.root, '/drive/root:'), notes],
+			});
+		if (path === '/me/drive/recent')
+			return json({
+				value: [{ ...listed(files.get('docx')), remoteItem: listed(files.get('docx')) }],
+			});
+		if (path.startsWith('/me/drive/root/search(')) {
+			const query = /q='(.*)'\)$/u.exec(path)?.[1]?.toLowerCase() ?? '';
+			const hits = [...files.values()].filter((file) => file.name.toLowerCase().includes(query));
+			return json({ value: hits.map((file) => listed(file, '/drive/root:/Projects')) });
+		}
 		if (path.startsWith('/shares/')) {
 			const token = path.split('/')[2];
 			const shared = new URL(Buffer.from(token.slice(2), 'base64url').toString());
@@ -41,10 +81,12 @@ export async function interceptOneDrive(context, fixtures) {
 		}
 		const match = /^\/drives\/test-drive\/items\/([^/]+)(.*)$/u.exec(path);
 		if (!match) return json({}, 404);
-		const id = decodeURIComponent(match[1]);
+		const id = match[1];
 		const action = match[2];
+		if (id === 'projects' && action === '/children')
+			return json({ value: inFolder(folders.projects, '/drive/root:/Projects') });
 		if (id.startsWith('test-folder:') && action.endsWith(':/createUploadSession')) {
-			const name = decodeURIComponent(action.slice(1, -':/createUploadSession'.length));
+			const name = action.slice(1, -':/createUploadSession'.length);
 			const copy = { id: `copy-${files.size}`, name, bytes: Buffer.alloc(0), revision: 1 };
 			files.set(copy.id, copy);
 			uploads.set(copy.id, { file: copy, chunks: [], position: 0 });
@@ -86,5 +128,5 @@ export async function interceptOneDrive(context, fixtures) {
 		writes.push(id);
 		return route.fulfill({ status: 200, json: metadata(upload.file) });
 	});
-	return { files, writes, shares };
+	return { files, writes, shares, requests };
 }
