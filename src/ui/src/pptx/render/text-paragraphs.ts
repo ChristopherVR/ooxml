@@ -17,8 +17,8 @@
  * React's `text-paragraph-render` is now a view layer over this descriptor.
  */
 
-import type { PptxElement, TextSegment } from 'ooxml-core/pptx';
-import { getSubstituteFontFamily, hasTextProperties } from 'ooxml-core/pptx';
+import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
+import { getSubstituteFontFamily, hasTextProperties, parsePanoseString } from 'ooxml-core/pptx';
 
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
 import { resolveParagraphBullet, resolveParagraphIndent } from './bullet-list';
@@ -61,6 +61,24 @@ function withRunLineHeight(runs: ParagraphRun[], lineHeight: number | undefined)
 		return runs;
 	}
 	return runs.map((run) => (run.equation ? run : { ...run, style: { ...run.style, lineHeight } }));
+}
+
+/**
+ * The font a text body declares on its block (family with its substitution
+ * chain, size in px), which a paragraph's strut inherits. The family carries
+ * the body's PANOSE class like `buildTextBlockStyle` does, so a fixed-pitch
+ * face that is missing gets the same monospace stand-in here as on the block.
+ */
+export function resolveBlockFont(
+	textStyle: TextStyle | undefined,
+	fontScale: number,
+): { fontFamily: string; fontSizePx: number } {
+	return {
+		fontFamily: textStyle?.fontFamily
+			? getSubstituteFontFamily(textStyle.fontFamily, parsePanoseString(textStyle.latinFontPanose))
+			: DEFAULT_FONT_FAMILY,
+		fontSizePx: (textStyle?.fontSize || DEFAULT_TEXT_FONT_SIZE) * fontScale,
+	};
 }
 
 /**
@@ -115,12 +133,7 @@ export function buildParagraphs(
 	// What a run that declares no font of its own inherits from the text body.
 	// Only used to measure the run for its PowerPoint metric compensation, so it
 	// mirrors what `buildTextBlockStyle` declares on the block itself.
-	const blockFont = {
-		fontFamily: element.textStyle?.fontFamily
-			? getSubstituteFontFamily(element.textStyle.fontFamily)
-			: DEFAULT_FONT_FAMILY,
-		fontSizePx: (element.textStyle?.fontSize || DEFAULT_TEXT_FONT_SIZE) * fontScale,
-	};
+	const blockFont = resolveBlockFont(element.textStyle, fontScale);
 	// The body's own `a:ea`/`a:cs`/`a:sym` faces and `a:tabLst`, for a run that
 	// declares none of its own (see `paragraph-run-enrich`).
 	const blockScriptStyle = element.textStyle;

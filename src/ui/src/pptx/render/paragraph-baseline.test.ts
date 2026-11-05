@@ -75,6 +75,8 @@ describe('typoLineGapEm', () => {
 		expect(typoLineGapEm('Gabriola')).toBe(0.7);
 		expect(typoLineGapEm(' gabriola ')).toBe(0.7);
 		expect(typoLineGapEm('Calibri')).toBe(0);
+		// From the Windows and Office table: measured 4px low at 72pt without it.
+		expect(typoLineGapEm('Liberation Sans Narrow')).toBeCloseTo(0.131, 3);
 		expect(typoLineGapEm(undefined)).toBe(0);
 	});
 });
@@ -220,6 +222,34 @@ describe('a missing legacy East Asian Office font', () => {
 		const shift = shiftFor('MS PMincho', times(true));
 		expect(shift).toBeCloseTo(expected, 1);
 		expect(shift).not.toBeCloseTo(shiftFor('Times New Roman', times(false)) ?? 0, 1);
+	});
+
+	it('places a missing Office font on its own metrics, line gap included', () => {
+		// OCR A Extended (Windows ascent 0.858, descent 0.177, no gap) is an Office
+		// cloud font the browser may not have: PowerPoint puts its single-spaced
+		// baseline at 0.995 em of the 1.2 em line, 20px under the stand-in's.
+		const shift = shiftFor('OCR A Extended', times(true));
+		const office = { ascent: 0.8579 * 1000, descent: 0.1768 * 1000 };
+		const want =
+			powerPointBaseline(0.75 * size, size, powerPointDescent(size, office)) -
+			cssBaseline([
+				{ lineHeight: 0.75 * size, font: stand },
+				{ lineHeight: 0.75 * size, font: stand },
+			]);
+		expect(shift).toBeCloseTo(want, 1);
+		// At single spacing the descent decides, and it differs from the stand-in's.
+		const single = (family: string) =>
+			resolveParagraphBaselineShift({
+				runs: [run('Hxlb', { fontFamily: family, fontSize: size })],
+				lineHeight: 1.2,
+				strutSizePx: size,
+				strutFamily: 'Times New Roman',
+				measure: times(true),
+			});
+		expect(single('OCR A Extended')).not.toBe(single('Foo Sans'));
+		// Nirmala Text Semilight keeps its typographic gap (0.862 em) above the ascent.
+		const withGap = { ...office, lineGap: 0.8623 * 1000 };
+		expect(powerPointDescent(size, withGap)).toBeLessThan(powerPointDescent(size, office));
 	});
 
 	it('keeps a loading web font and other missing fonts on their own path', () => {

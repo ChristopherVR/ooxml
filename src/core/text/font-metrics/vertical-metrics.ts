@@ -12,10 +12,14 @@
  * @module text/font-metrics/vertical-metrics
  */
 
+import { OFFICE_FONT_METRICS } from './office-font-metrics.generated';
+
 /** A font's ascent and descent as fractions of the em. */
 export interface VerticalMetrics {
 	ascent: number;
 	descent: number;
+	/** The line gap PowerPoint adds above the ascent (em), when the font has one. */
+	lineGap?: number;
 }
 
 const EAST_ASIAN_OFFICE_METRICS: VerticalMetrics = { ascent: 220 / 256, descent: 36 / 256 };
@@ -32,4 +36,21 @@ const NAMED_METRICS: ReadonlyMap<string, VerticalMetrics> = new Map(
  */
 export function namedFontVerticalMetrics(family: string | undefined): VerticalMetrics | undefined {
 	return family ? NAMED_METRICS.get(family.trim().toLowerCase()) : undefined;
+}
+
+/**
+ * The vertical metrics PowerPoint lays `family` out on, when it is one of the
+ * fonts that ship with Windows and Office (see `office-font-metrics.generated`),
+ * else `undefined`. Matching ignores case. Unlike {@link namedFontVerticalMetrics}
+ * this is the table for every such font, installed or not: a renderer uses it
+ * for the line gap of the ones whose browser box leaves it out, and for the
+ * ascent and descent of the ones the browser does not have.
+ */
+export function officeFontVerticalMetrics(family: string | undefined): VerticalMetrics | undefined {
+	const known = family ? OFFICE_FONT_METRICS.get(family.trim().toLowerCase()) : undefined;
+	if (!known) {
+		return undefined;
+	}
+	const [ascent, descent, lineGap] = known;
+	return lineGap > 0 ? { ascent, descent, lineGap } : { ascent, descent };
 }

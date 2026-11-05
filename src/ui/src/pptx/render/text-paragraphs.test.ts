@@ -1,7 +1,7 @@
 import type { PptxElement, TextSegment } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { buildParagraphs } from './text-paragraphs';
+import { buildParagraphs, resolveBlockFont } from './text-paragraphs';
 import { segmentStyleToCss } from './text-run-style';
 
 function textEl(segments: TextSegment[], extra: Record<string, unknown> = {}): PptxElement {
@@ -679,5 +679,20 @@ describe('inline equation font size', () => {
 			}),
 		);
 		expect(paras[0].runs[0].style.fontSize).toBe('40px');
+	});
+});
+
+describe('resolveBlockFont', () => {
+	it('substitutes a fixed-pitch face by its panose class, as the block does', () => {
+		// OCR A Extended (panose proportion 9) is declared on the block with the
+		// monospace chain; the strut was measured on `"OCR A Extended", sans-serif`
+		// instead and the line sat 9px high at 72pt.
+		const font = resolveBlockFont(
+			{ fontFamily: 'OCR A Extended', latinFontPanose: '02000509000000000000', fontSize: 72 },
+			1,
+		);
+		expect(font.fontFamily).toContain('"Courier New"');
+		expect(font.fontFamily).not.toContain('sans-serif');
+		expect(font.fontSizePx).toBe(72);
 	});
 });

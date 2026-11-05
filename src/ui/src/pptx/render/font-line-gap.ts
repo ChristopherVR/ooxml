@@ -14,8 +14,13 @@
  * descent but leave the gap out, so the gaps of the flagged fonts that have one
  * are listed here (em of `sTypoLineGap`, read from the font files).
  *
+ * The table of Windows and Office fonts (`officeFontVerticalMetrics`) carries
+ * the gap of every such font it knows (Liberation Sans Narrow among them); the
+ * list below adds the ones the Windows font folder does not hold.
+ *
  * @module render/font-line-gap
  */
+import { officeFontVerticalMetrics } from 'ooxml-core/text';
 
 /** `sTypoLineGap` (em) of the installed and Office fonts with `USE_TYPO_METRICS` and a gap. */
 const TYPO_LINE_GAP: ReadonlyMap<string, number> = new Map([
@@ -35,5 +40,6 @@ const TYPO_LINE_GAP: ReadonlyMap<string, number> = new Map([
 
 /** The line gap (em) PowerPoint adds above the ascent of `family`, or 0. */
 export function typoLineGapEm(family: string | undefined): number {
-	return (family && TYPO_LINE_GAP.get(family.trim().toLowerCase())) || 0;
+	const own = family ? TYPO_LINE_GAP.get(family.trim().toLowerCase()) : undefined;
+	return own ?? officeFontVerticalMetrics(family)?.lineGap ?? 0;
 }
