@@ -12,6 +12,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect, vi } from 'vitest';
 
+import { PresentationTransitionMount } from './PresentationTransitionMount';
 import { PresentationTransitionOverlay } from './PresentationTransitionOverlay';
 
 function makeSlide(): PptxSlide {
@@ -571,16 +572,27 @@ describe('presentationTransitionOverlay', () => {
 			],
 		} as PptxSlide;
 
+		// Mounted the way the show mounts it (`ViewerCanvasArea` renders this
+		// component): the mount picks each layer's template from the slide map.
 		const html = renderToStaticMarkup(
-			<PresentationTransitionOverlay
-				outgoingSlide={leaving}
-				templateElements={[layoutPicture('title-layout-bg', 'ppt/media/title.png')]}
-				incomingSlide={arriving}
-				incomingTemplateElements={[layoutPicture('content-layout-bg', 'ppt/media/content.png')]}
+			<PresentationTransitionMount
+				presentation={{
+					transitionOverlay: {
+						outgoingSlideIndex: 0,
+						incomingSlideIndex: 1,
+						transition: { type: 'cover', durationMs: 700, direction: 'l' },
+						durationMs: 700,
+					},
+					morphPlan: undefined,
+					handleTransitionOverlayComplete: vi.fn(),
+				}}
+				slides={[leaving, arriving]}
+				templateElementsBySlideId={{
+					'slide-1': [layoutPicture('title-layout-bg', 'ppt/media/title.png')],
+					'slide-2': [layoutPicture('content-layout-bg', 'ppt/media/content.png')],
+				}}
 				canvasSize={{ width: 960, height: 540 }}
-				transition={{ type: 'cover', durationMs: 700, direction: 'l' }}
-				durationMs={700}
-				onComplete={vi.fn()}
+				scale={1}
 			/>,
 		);
 

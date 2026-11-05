@@ -1,5 +1,5 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { isPanelVisible, visibleTemplateElements } from 'ooxml-ui/pptx';
+import { isPanelVisible } from 'ooxml-ui/pptx';
 import {
 	buildFieldSubstitutionContext,
 	isPresentationAdvanceClick,
@@ -22,7 +22,6 @@ import {
 	SlideCanvas,
 	PresentationAnnotationOverlay,
 	PresentationSubtitleBar,
-	PresentationTransitionOverlay,
 	PresentationToolbar,
 	PresentationTouchControls,
 } from '.';
@@ -48,6 +47,7 @@ import { PresentationAudienceEffects } from './PresentationAudienceEffects';
 import type { PresentationContextMenuState } from './PresentationContextMenu';
 import { PresentationContextMenu } from './PresentationContextMenu';
 import { PresentationEndOverlay } from './PresentationEndOverlay';
+import { PresentationTransitionMount } from './PresentationTransitionMount';
 import { PresenterSlideNavigator } from './PresenterSlideNavigator';
 import { useViewerCustomizationContext } from './viewer-customization-context';
 import { useViewerOptionsContext } from './viewer-options-context';
@@ -451,33 +451,15 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 							    transition plays, then tears itself down on completion.
 							    Parented to the scaled slide box so it matches the live
 							    slide instead of stretching across the whole display. */}
-							{presentation.transitionOverlay &&
-								slides[presentation.transitionOverlay.outgoingSlideIndex] && (
-									<PresentationTransitionOverlay
-										key={`${presentation.transitionOverlay.outgoingSlideIndex}-${presentation.transitionOverlay.incomingSlideIndex}`}
-										outgoingSlide={slides[presentation.transitionOverlay.outgoingSlideIndex]}
-										// Each slide behind its OWN layout: the active slide's
-										// template is the incoming one's, and painting the leaving
-										// slide over it dropped a layout background the moment
-										// the transition began (issue #141).
-										templateElements={[
-											...visibleTemplateElements(
-												slides[presentation.transitionOverlay.outgoingSlideIndex],
-												s.templateElementsBySlideId[
-													slides[presentation.transitionOverlay.outgoingSlideIndex].id
-												] ?? [],
-											),
-										]}
-										incomingTemplateElements={templateElements}
-										canvasSize={canvasSize}
-										transition={presentation.transitionOverlay.transition}
-										durationMs={presentation.transitionOverlay.durationMs}
-										scale={stageScale}
-										morphPlan={presentation.morphPlan}
-										incomingSlide={slides[presentation.transitionOverlay.incomingSlideIndex]}
-										onComplete={presentation.handleTransitionOverlayComplete}
-									/>
-								)}
+							{/* One overlay per transition, each slide behind its own
+							    layout; see `PresentationTransitionMount`. */}
+							<PresentationTransitionMount
+								presentation={presentation}
+								slides={slides}
+								templateElementsBySlideId={s.templateElementsBySlideId}
+								canvasSize={canvasSize}
+								scale={stageScale}
+							/>
 
 							{/* Ink/laser overlay, sharing the slide box origin so strokes
 							    land under the cursor rather than offset by the letterbox.

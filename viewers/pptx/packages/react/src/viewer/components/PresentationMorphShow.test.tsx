@@ -3,10 +3,9 @@
  * Issue #141 regressions, rendered the way a running React show paints them:
  * `usePresentationMode` drives the navigation, `PresentationStage` paints the
  * arriving slide with the stylesheet and element states the hook hands it,
- * and `PresentationTransitionOverlay` is mounted over it under the same key
- * `ViewerCanvasArea` gives it (`<outgoing>-<incoming>`). `ViewerCanvasArea`
- * itself needs the whole viewer state, so this harness mirrors only its
- * overlay mount.
+ * and `PresentationTransitionMount`, the component `ViewerCanvasArea` renders
+ * for the transition overlay (its key and each layer's template included), is
+ * mounted over it. `ViewerCanvasArea` itself needs the whole viewer state.
  */
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import React, { act, useRef } from 'react';
@@ -17,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePresentationMode } from '../hooks/usePresentationMode';
 import type { UsePresentationModeResult } from '../hooks/usePresentationMode';
 import { PresentationStage } from './presentation/PresentationStage';
-import { PresentationTransitionOverlay } from './PresentationTransitionOverlay';
+import { PresentationTransitionMount } from './PresentationTransitionMount';
 
 const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const canvasSize = { width: 1280, height: 720 };
@@ -46,11 +45,9 @@ afterEach(() => {
 
 interface HarnessProps {
 	slides: PptxSlide[];
-	/** Drop the overlay's key, to show what the key is there for. */
-	unkeyed?: boolean;
 }
 
-function Harness({ slides, unkeyed = false }: HarnessProps): React.ReactElement {
+function Harness({ slides }: HarnessProps): React.ReactElement {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const presentation = usePresentationMode({
 		mode: 'present',
@@ -63,8 +60,6 @@ function Harness({ slides, unkeyed = false }: HarnessProps): React.ReactElement 
 		onSetActiveSlideIndex: () => {},
 	});
 	latest = presentation;
-	const overlay = presentation.transitionOverlay;
-	const outgoing = overlay ? slides[overlay.outgoingSlideIndex] : undefined;
 	return (
 		<div ref={containerRef}>
 			<PresentationStage
@@ -75,32 +70,23 @@ function Harness({ slides, unkeyed = false }: HarnessProps): React.ReactElement 
 				presentationElementStates={presentation.presentationElementStates}
 				presentationKeyframesCss={presentation.presentationKeyframesCss}
 			>
-				{(scale) =>
-					overlay && outgoing ? (
-						<PresentationTransitionOverlay
-							key={
-								unkeyed ? 'overlay' : `${overlay.outgoingSlideIndex}-${overlay.incomingSlideIndex}`
-							}
-							outgoingSlide={outgoing}
-							templateElements={[]}
-							canvasSize={canvasSize}
-							transition={overlay.transition}
-							durationMs={overlay.durationMs}
-							scale={scale}
-							morphPlan={presentation.morphPlan}
-							incomingSlide={slides[overlay.incomingSlideIndex]}
-							onComplete={presentation.handleTransitionOverlayComplete}
-						/>
-					) : null
-				}
+				{(scale) => (
+					<PresentationTransitionMount
+						presentation={presentation}
+						slides={slides}
+						templateElementsBySlideId={{}}
+						canvasSize={canvasSize}
+						scale={scale}
+					/>
+				)}
 			</PresentationStage>
 		</div>
 	);
 }
 
-function show(slides: PptxSlide[], unkeyed = false): void {
+function show(slides: PptxSlide[]): void {
 	act(() => {
-		root.render(<Harness slides={slides} unkeyed={unkeyed} />);
+		root.render(<Harness slides={slides} />);
 	});
 }
 
@@ -356,7 +342,15 @@ describe('issue #141: a picture fading in through its transparency (slides 8 -> 
 
 		// The stage copy: the shared descendant rule has to find an <img>.
 		const css = paintedCss();
-		expect(css).toContain(`[data-element-id="s9-faded"] img { animation: ${stageTrack}; }`);
+		const stageName = stageTrack!.split(' ')[0]!;
+		const imgRules = [...css.matchAll(/([^{}]+)\{\s*animation:\s*([^;}]+);?\s*\}/gu)].filter(
+			([, selector]) => /\[data-element-id="s9-faded"\]\s+img\s*$/u.test(selector!.trim()),
+		);
+		expect(
+			imgRules.map(([, , animation]) => animation!.trim().split(/\s+/u)[0]),
+			'the stylesheet must give the picture element an img rule',
+		).toContain(stageName);
+		expect(keyframeBlocks(css).has(stageName), 'its keyframes must be painted too').toBeTruthy();
 		const stageImg = container.querySelector<HTMLElement>(
 			'[data-pptx-presentation-stage] [data-element-id="s9-faded"] img',
 		);
@@ -377,7 +371,10 @@ describe('issue #141: a picture fading in through its transparency (slides 8 -> 
 describe('consecutive transitions', () => {
 	// A fade still running when the presenter moves on must not take the next
 	// transition's overlay down with its own completion timer: the morph would
-	// then cut to its end state partway through.
+	// then cut to its end state partway through. Both last 1000 ms and the
+	// show's `onComplete` is stable, so the overlay's timer effect has nothing
+	// to re-run on: only the mount's per-transition key gives the morph a fresh
+	// overlay and timer.
 	it('plays the next transition in full when it starts during the previous one', () => {
 		const fade: PptxSlideTransition = { type: 'fade', durationMs: 1000 };
 		show([
