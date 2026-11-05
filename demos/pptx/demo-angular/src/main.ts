@@ -13,23 +13,19 @@ import '@angular/compiler';
 import { bootstrapApplication } from '@angular/platform-browser';
 
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
-import { oneDriveDemoRequested } from '../../shared/onedrive-demo';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { AppComponent } from './app.component';
 import { HostOwnedDemoComponent } from './host-owned-demo.component';
 import { i18nProviders } from './i18n';
-import { OneDriveDemoComponent } from './onedrive-demo.component';
 import { SameBrowserDemoComponent } from './same-browser-demo.component';
 
 import '../../shared/dropzone.css';
 
 bootstrapApplication(
-	oneDriveDemoRequested()
-		? OneDriveDemoComponent
-		: externalSessionRequested()
-			? HostOwnedDemoComponent
-			: sameBrowserRoom()
-				? SameBrowserDemoComponent
-				: AppComponent,
+	externalSessionRequested()
+		? HostOwnedDemoComponent
+		: sameBrowserRoom()
+			? SameBrowserDemoComponent
+			: AppComponent,
 	{ providers: [i18nProviders] },
 ).catch((err) => console.error(err));
