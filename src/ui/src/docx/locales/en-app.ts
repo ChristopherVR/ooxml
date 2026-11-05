@@ -11,6 +11,7 @@ export const enApp = {
 	'Show comments': 'Show comments',
 	Share: 'Share',
 	'Unsaved changes': 'Unsaved changes',
+	Discard: 'Discard',
 	Saved: 'Saved',
 	'Saving…': 'Saving…',
 	'Saved to this PC': 'Saved to this PC',

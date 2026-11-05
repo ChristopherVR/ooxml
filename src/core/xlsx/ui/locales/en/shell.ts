@@ -23,6 +23,7 @@ export const shell: Record<string, string> = {
 	Viewing: 'Viewing',
 	Saved: 'Saved',
 	'Unsaved changes': 'Unsaved changes',
+	Discard: 'Discard',
 	'Saving...': 'Saving...',
 	'Saved to this device': 'Saved to this device',
 	'Tell me what you want to do': 'Tell me what you want to do',

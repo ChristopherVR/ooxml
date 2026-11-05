@@ -12,6 +12,7 @@ export const frApp: AppStrings = {
 	'Show comments': 'Afficher les commentaires',
 	Share: 'Partager',
 	'Unsaved changes': 'Modifications non enregistrées',
+	Discard: 'Abandonner',
 	Saved: 'Enregistré',
 	'Saving…': 'Enregistrement…',
 	'Saved to this PC': 'Enregistré sur ce PC',

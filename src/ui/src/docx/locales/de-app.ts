@@ -18,6 +18,7 @@ export const deApp: AppStrings = {
 	'Show comments': 'Kommentare anzeigen',
 	Share: 'Freigeben',
 	'Unsaved changes': 'Nicht gespeicherte Änderungen',
+	Discard: 'Verwerfen',
 	Saved: 'Gespeichert',
 	'Saving…': 'Speichern…',
 	'Saved to this PC': 'Auf diesem PC gespeichert',

@@ -18,6 +18,7 @@ export const esApp: AppStrings = {
 	'Show comments': 'Mostrar comentarios',
 	Share: 'Compartir',
 	'Unsaved changes': 'Cambios sin guardar',
+	Discard: 'Descartar',
 	Saved: 'Guardado',
 	'Saving…': 'Guardando…',
 	'Saved to this PC': 'Guardado en este equipo',

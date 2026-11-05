@@ -24,6 +24,7 @@ export const shell: Record<string, string> = {
 	Viewing: 'Anzeigen',
 	Saved: 'Gespeichert',
 	'Unsaved changes': 'Nicht gespeicherte Änderungen',
+	Discard: 'Verwerfen',
 	'Saving...': 'Wird gespeichert...',
 	'Saved to this device': 'Auf diesem Gerät gespeichert',
 	'Tell me what you want to do': 'Was möchten Sie tun?',
