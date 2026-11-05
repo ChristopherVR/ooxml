@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { screenStrokeWidth } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +16,8 @@ import TableRenderer from './TableRenderer.vue';
  * as the attribute. Shared helpers decide the value; these pin the Vue wiring.
  */
 const HAIRLINE = 0.1 * (96 / 72);
-const screen = (px: string) => `max(${px}px, var(--pptx-device-px, 0px))`;
+const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
+const screen = (px: string) => `max(${STEP}, round(${px}px, ${STEP}))`;
 
 function el(overrides: Record<string, unknown>): PptxElement {
 	return { id: 'el-1', x: 0, y: 0, width: 400, height: 0, ...overrides } as unknown as PptxElement;
@@ -66,7 +68,7 @@ describe('vue: thin strokes stay one device pixel on screen', () => {
 		});
 		const line = wrapper.get('line').element as SVGLineElement;
 		expect(line.getAttribute('stroke-width')).toBe('1');
-		expect(line.style.getPropertyValue('stroke-width')).toBe(screen('1'));
+		expect(line.style.getPropertyValue('stroke-width')).toBe(screenStrokeWidth(HAIRLINE, 1));
 	});
 
 	it('holds a table diagonal border at one device pixel', () => {
@@ -106,5 +108,26 @@ describe('vue: thin strokes stay one device pixel on screen', () => {
 			}),
 		);
 		expect(style.border).toBe(`${screen('0.5')} solid #000`);
+	});
+
+	it('snaps a horizontal connector to the device grid and ends it at its real y', () => {
+		const mountLine = (height: number) =>
+			mount(ConnectorRenderer, {
+				props: {
+					element: el({
+						type: 'connector',
+						shapeType: 'straightConnector1',
+						x: 27,
+						y: 27,
+						height,
+						shapeStyle: { strokeColor: '#000000', strokeWidth: 1.3333 },
+					}),
+					zIndex: 0,
+				},
+			}).get('line').element as SVGLineElement;
+		const flat = mountLine(0);
+		expect(flat.getAttribute('y2')).toBe('0');
+		expect(flat.style.getPropertyValue('transform')).toContain('round(27px');
+		expect(mountLine(40).style.getPropertyValue('transform')).toBe('');
 	});
 });

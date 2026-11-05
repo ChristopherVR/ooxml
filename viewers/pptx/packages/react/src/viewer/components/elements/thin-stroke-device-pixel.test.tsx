@@ -1,3 +1,4 @@
+import { screenStrokeWidth } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -17,7 +18,8 @@ import { ShapeEffectOverlay } from './ShapeEffectOverlay';
  * the value; these pin the React wiring of each surface.
  */
 const HAIRLINE = 0.1 * (96 / 72);
-const screen = (px: string) => `max(${px}px, var(--pptx-device-px, 0px))`;
+const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
+const screen = (px: string) => `max(${STEP}, round(${px}px, ${STEP}))`;
 
 function line(): PptxElement {
 	return {
@@ -84,7 +86,7 @@ describe('react: thin strokes stay one device pixel on screen', () => {
 			zIndex: 0,
 		} as unknown as ConnectorRendererProps;
 		const html = renderToStaticMarkup(<ConnectorElementRenderer {...props} />);
-		expect(html).toContain(`stroke-width:${screen('1')}`);
+		expect(html).toContain(`stroke-width:${screenStrokeWidth(HAIRLINE, 1)}`);
 	});
 
 	it('holds a table diagonal border at one device pixel', () => {
@@ -93,5 +95,33 @@ describe('react: thin strokes stay one device pixel on screen', () => {
 		);
 		expect(html).toContain('stroke-width="0.5"');
 		expect(html).toContain(`stroke-width:${screen('0.5')}`);
+	});
+
+	it('snaps a horizontal connector to the device grid, but not a diagonal one', () => {
+		const render = (height: number) => {
+			const el = {
+				id: 'conn-2',
+				type: 'connector',
+				shapeType: 'straightConnector1',
+				x: 27,
+				y: 27,
+				width: 400,
+				height,
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 1.3333 },
+			} as unknown as PptxElement;
+			const props = {
+				el,
+				isSelected: false,
+				canInteract: false,
+				showResizeHandles: false,
+				showHoverBorder: false,
+				selectionColorClass: 'blue-500',
+				opacity: 1,
+				zIndex: 0,
+			} as unknown as ConnectorRendererProps;
+			return renderToStaticMarkup(<ConnectorElementRenderer {...props} />);
+		};
+		expect(render(0)).toContain('transform:translate(0px, calc(round(27px');
+		expect(render(40)).not.toContain('calc(round(27px');
 	});
 });

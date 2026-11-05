@@ -1,7 +1,9 @@
 import {
+	connectorNeedsPath,
+	connectorSnapTransform,
+	connectorStrandScreenWidth,
 	connectorWrapperTransform,
 	getSelectionOutlineColor,
-	screenStrokeWidth,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
@@ -104,6 +106,14 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 				};
 
 		const hitTargetWidth = Math.max(strokeWidth * 3, 14);
+		// A single horizontal / vertical straight line is snapped to the device grid
+		// the way PowerPoint's export does it (shared `device-pixel-stroke`).
+		const snapTransform = connectorSnapTransform(
+			el,
+			!connectorNeedsPath(shapeEl?.shapeType),
+			compoundOffsets.length,
+			strokeWidth,
+		);
 		const selColor = selClr === 'blue-400' ? '#60a5fa' : '#3b82f6';
 		const lineShadow = buildLineShadowCss(el);
 		const lineGlow = buildLineGlowFilter(el);
@@ -252,12 +262,14 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 							style={{
 								pointerEvents: 'none',
 								// Never under one device pixel on screen (shared `device-pixel-stroke`).
-								strokeWidth: screenStrokeWidth(Math.max(compoundWidths[idx] ?? strokeWidth, 1)),
+								strokeWidth: connectorStrandScreenWidth(compoundWidths, strokeWidth, idx),
 								...(offset !== 0
 									? {
 											transform: `translate(0, ${offset}px)`,
 										}
-									: {}),
+									: snapTransform
+										? { transform: snapTransform }
+										: {}),
 							}}
 						/>
 					))}

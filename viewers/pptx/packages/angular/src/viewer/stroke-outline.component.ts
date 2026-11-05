@@ -92,7 +92,10 @@ import type { StrokeOutline } from 'ooxml-ui/pptx';
 				[attr.stroke-dasharray]="o.dashArray"
 				[attr.stroke-linecap]="o.lineCap"
 				[attr.stroke-linejoin]="o.lineJoin"
-				[style.transform]="strand.offset !== 0 ? 'translate(0, ' + strand.offset + 'px)' : null"
+				[style.transform]="
+					strand.cssTransform ??
+					(strand.offset !== 0 ? 'translate(0, ' + strand.offset + 'px)' : null)
+				"
 			/>
 		}
 	`,

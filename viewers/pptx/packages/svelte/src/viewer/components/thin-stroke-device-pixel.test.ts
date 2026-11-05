@@ -1,3 +1,4 @@
+import { screenStrokeWidth } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -12,7 +13,8 @@ import SlideStage from './SlideStage.svelte';
  * as the attribute. Shared helpers decide the value; these pin the Svelte wiring.
  */
 const HAIRLINE = 0.1 * (96 / 72);
-const screen = (px: string) => `max(${px}px, var(--pptx-device-px, 0px))`;
+const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
+const screen = (px: string) => `max(${STEP}, round(${px}px, ${STEP}))`;
 
 function el(overrides: Record<string, unknown>): PptxElement {
 	return { x: 0, y: 0, width: 400, height: 0, ...overrides } as unknown as PptxElement;
@@ -91,7 +93,7 @@ describe('svelte: thin strokes stay one device pixel on screen', () => {
 
 		const strand = root.querySelector<SVGLineElement>('[data-element-id="conn"] svg line');
 		expect(strand?.getAttribute('stroke-width')).toBe('1');
-		expect(strand?.style.getPropertyValue('stroke-width')).toBe(screen('1'));
+		expect(strand?.style.getPropertyValue('stroke-width')).toBe(screenStrokeWidth(HAIRLINE, 1));
 
 		const diagonal = root.querySelector<SVGLineElement>('[data-element-id="tbl"] td svg line');
 		expect(diagonal?.style.getPropertyValue('stroke-width')).toBe(screen('0.5'));
@@ -108,5 +110,31 @@ describe('svelte: thin strokes stay one device pixel on screen', () => {
 			}),
 		);
 		expect(style.border).toBe(`${screen('0.5')} solid #000`);
+	});
+
+	it('snaps a horizontal connector to the device grid and ends it at its real y', () => {
+		const root = mountStage([
+			el({
+				type: 'connector',
+				id: 'flat',
+				x: 27,
+				y: 27,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 1.3333 },
+			}),
+			el({
+				type: 'connector',
+				id: 'diag',
+				y: 100,
+				height: 40,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 1.3333 },
+			}),
+		]);
+		const flat = root.querySelector<SVGElement>('[data-element-id="flat"] svg line');
+		expect(flat?.getAttribute('y2')).toBe('0');
+		expect(flat?.style.getPropertyValue('transform')).toContain('round(27px');
+		const diag = root.querySelector<SVGElement>('[data-element-id="diag"] svg line');
+		expect(diag?.style.getPropertyValue('transform')).toBe('');
 	});
 });

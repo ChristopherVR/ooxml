@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { getLineGlowFilterCss, getLineShadowParams, screenStrokeWidth } from 'ooxml-ui/pptx';
+import {
+	connectorStrandScreenWidth,
+	getLineGlowFilterCss,
+	getLineShadowParams,
+} from 'ooxml-ui/pptx';
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
@@ -155,6 +159,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 							[attr.stroke-opacity]="geo().strokeOpacity"
 							[attr.stroke-dasharray]="geo().dashArray ?? null"
 							[attr.stroke-linecap]="geo().strokeLinecap"
+							[style.transform]="geo().snapTransform"
 							[attr.transform]="strand.transform"
 							[attr.filter]="strand.shadowFilter"
 							[attr.marker-start]="strand.markerStart"
@@ -257,7 +262,7 @@ export class ConnectorRendererComponent {
 		return offsets.map((offset, idx) => ({
 			key: idx,
 			width: Math.max(g.compoundWidths[idx] ?? g.strokeWidth, 1),
-			cssWidth: screenStrokeWidth(Math.max(g.compoundWidths[idx] ?? g.strokeWidth, 1)),
+			cssWidth: connectorStrandScreenWidth(g.compoundWidths, g.strokeWidth, idx),
 			transform: offset !== 0 ? `translate(0 ${offset})` : null,
 			shadowFilter: idx === 0 && this.lineShadow() ? `url(#${this.shadowFilterId()})` : null,
 			markerStart: idx === 0 ? g.startMarkerRef : null,

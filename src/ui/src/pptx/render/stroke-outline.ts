@@ -37,7 +37,7 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
-import { DEVICE_PX_VAR, screenStrokeWidth } from './device-pixel-stroke';
+import { DEVICE_PX_VAR, screenStrokeWidth, snappedStrokeTransform } from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
@@ -84,6 +84,13 @@ export interface StrokeOutlineStrand {
 	 */
 	cssStrokeWidth: string;
 	offset: number;
+	/**
+	 * An inline CSS `transform` that snaps this strand to the device grid the way
+	 * PowerPoint's export does (see `snappedStrokeTransform`), set only for the
+	 * axis-aligned outline of a plain rectangle or a horizontal / vertical line.
+	 * Write it as a style property next to {@link cssStrokeWidth}.
+	 */
+	cssTransform?: string;
 	/**
 	 * Path data for this strand when it is not the outline's own `d`: the
 	 * edge bleed (see {@link buildStrokeOutline}) traces the widened clip's edge.
@@ -414,6 +421,34 @@ export function outlineStrokeJoin(element: PptxElement): StrokeClipJoin {
 }
 
 /**
+ * The device-grid snap for an outline that is axis-aligned in the stage: a
+ * plain, unrotated rectangle (its top and left edges; the far edges keep the
+ * authored size) or an unrotated horizontal / vertical `line` preset. Anything
+ * else (rounded corners, diagonals, rotation) is anti-aliased in PowerPoint's
+ * export too and stays unshifted.
+ */
+function snapTransform(
+	element: PptxElement,
+	isOpenPreset: boolean,
+	strokeWidth: number,
+): string | undefined {
+	if (element.rotation) {
+		return undefined;
+	}
+	const shapeType = getShapeType((element as { shapeType?: string }).shapeType);
+	if (isOpenPreset) {
+		if (shapeType !== 'line') {
+			return undefined;
+		}
+		const axis = element.height === 0 ? 'h' : element.width === 0 ? 'v' : undefined;
+		return axis ? snappedStrokeTransform(axis, element.x, element.y, strokeWidth) : undefined;
+	}
+	return shapeType === 'rect'
+		? snappedStrokeTransform('box', element.x, element.y, strokeWidth)
+		: undefined;
+}
+
+/**
  * Resolve the SVG overlay that paints an element's outline, or `undefined` when
  * the binding's CSS border is correct and cheaper (a closed shape whose line is
  * explicitly inset, `a:ln/@algn="in"`).
@@ -469,13 +504,16 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 		outlineStrokeJoin(element),
 	);
 	const bleed = !openPresetD ? clipEdgeBleed(element, d, style) : undefined;
+	const snap =
+		paint || strands.length !== 1 ? undefined : snapTransform(element, !!openPresetD, strokeWidth);
+	const snapped = snap ? strands.map((strand) => ({ ...strand, cssTransform: snap })) : strands;
 	return {
 		markers: buildCustomPathMarkers(element, stroke),
 		d,
 		paint,
 		stroke,
 		strokeWidth,
-		strands: bleed ? [...strands, bleed] : strands,
+		strands: bleed ? [...snapped, bleed] : snapped,
 		dashArray: getSvgStrokeDasharray(
 			normalizeStrokeDashType(style?.strokeDash),
 			Math.max(lineWidth, 1),

@@ -154,7 +154,12 @@ describe('elementRenderer stroke outline (stroke-only preset)', () => {
 		expect(outline!.stroke).toBe('#000000');
 		expect(outline!.d).toBe('M 0 0 L 400 0');
 		expect(outline!.strands).toStrictEqual([
-			{ strokeWidth: 2, cssStrokeWidth: 'max(2px, var(--pptx-device-px, 0px))', offset: 0 },
+			{
+				strokeWidth: 2,
+				cssStrokeWidth:
+					'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px)))',
+				offset: 0,
+			},
 		]);
 	});
 

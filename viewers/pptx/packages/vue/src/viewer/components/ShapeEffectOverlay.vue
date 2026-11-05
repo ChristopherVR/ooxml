@@ -291,7 +291,9 @@ const reflection = computed<CSSProperties | undefined>(() =>
 			:stroke-linejoin="strokeOutline.lineJoin"
 			:style="{
 				strokeWidth: strand.cssStrokeWidth,
-				transform: strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined,
+				transform:
+					strand.cssTransform ??
+					(strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined),
 			}"
 		/>
 	</svg>

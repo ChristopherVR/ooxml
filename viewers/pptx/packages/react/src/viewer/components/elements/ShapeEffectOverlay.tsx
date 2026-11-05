@@ -264,7 +264,9 @@ export function ShapeEffectOverlay({
 							style={{
 								// Never under one device pixel on screen (shared `device-pixel-stroke`).
 								strokeWidth: strand.cssStrokeWidth,
-								transform: strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined,
+								transform:
+									strand.cssTransform ??
+									(strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined),
 							}}
 						/>
 					))}

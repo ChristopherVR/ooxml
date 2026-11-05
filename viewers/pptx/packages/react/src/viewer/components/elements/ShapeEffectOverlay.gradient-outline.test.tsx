@@ -96,7 +96,7 @@ describe('shapeEffectOverlay gradient outline', () => {
 		expect(markup(element)).not.toContain('linearGradient');
 		const { hf, fc, sw, sc } = shapeParams(element);
 		expect(getShapeVisualStyle(element, hf, fc, sw, sc).borderWidth).toBe(
-			'max(3px, var(--pptx-device-px, 0px))',
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px)))',
 		);
 	});
 
@@ -190,7 +190,7 @@ describe('shapeEffectOverlay pattern outline', () => {
 		expect(markup(element)).not.toContain('<pattern');
 		const { hf, fc, sw, sc } = shapeParams(element);
 		expect(getShapeVisualStyle(element, hf, fc, sw, sc).borderWidth).toBe(
-			'max(3px, var(--pptx-device-px, 0px))',
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px)))',
 		);
 	});
 });

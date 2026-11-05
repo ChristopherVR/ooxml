@@ -42,7 +42,41 @@ describe('vanilla: thin strokes stay one device pixel on screen', () => {
 		const path = stage.querySelector<SVGPathElement>('[data-element-id="line"] svg path');
 		expect(path?.getAttribute('stroke-width')).toBe(String(HAIRLINE));
 		expect(path?.style.getPropertyValue('stroke-width')).toBe(
-			'max(0.1333px, var(--pptx-device-px, 0px))',
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.1333px, max(var(--pptx-device-px, 0px), 0.001px)))',
 		);
+	});
+
+	it('snaps a horizontal connector to the device grid and ends it at its real y', () => {
+		const conn = (id: string, height: number) =>
+			({
+				type: 'connector',
+				id,
+				x: 27,
+				y: 27,
+				width: 400,
+				height,
+				shapeType: 'straightConnector1',
+				shapeStyle: { strokeColor: '#000000', strokeWidth: 1.3333 },
+			}) as PptxElement;
+		const stage = renderSlideStage({
+			document,
+			slide: {
+				id: 's1',
+				rId: 'r1',
+				slideNumber: 1,
+				elements: [conn('flat', 0), conn('diag', 40)],
+			} as PptxSlide,
+			canvasSize: { width: 960, height: 540 },
+			mediaDataUrls: new Map(),
+			registry: createDefaultRegistry(),
+			t: createTranslator('en'),
+			scale: 1,
+			interactive: true,
+		});
+		const flat = stage.querySelector<SVGLineElement>('[data-element-id="flat"] svg line');
+		expect(flat?.getAttribute('y2')).toBe('0');
+		expect(flat?.style.getPropertyValue('transform')).toContain('round(27px');
+		const diag = stage.querySelector<SVGLineElement>('[data-element-id="diag"] svg line');
+		expect(diag?.style.getPropertyValue('transform')).toBe('');
 	});
 });

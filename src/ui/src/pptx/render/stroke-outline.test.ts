@@ -276,7 +276,14 @@ describe('buildStrokeOutline stroke-only ("open") presets', () => {
 
 	it('paints one strand for a single line and several for a compound one', () => {
 		expect(buildStrokeOutline(line())!.strands).toStrictEqual([
-			{ strokeWidth: 2, cssStrokeWidth: 'max(2px, var(--pptx-device-px, 0px))', offset: 0 },
+			{
+				strokeWidth: 2,
+				cssStrokeWidth:
+					'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px)))',
+				offset: 0,
+				// A horizontal, unrotated line is snapped to the device grid.
+				cssTransform: expect.stringContaining('translate(0px, calc(round('),
+			},
 		]);
 		const compound = buildStrokeOutline(line({}, { strokeWidth: 6, compoundLine: 'dbl' }))!;
 		expect(compound.strands).toHaveLength(2);
@@ -389,5 +396,27 @@ describe('buildStrokeOutline pattern outlines', () => {
 			shape({ ...gradientStroke, strokePatternPreset: 'dkDnDiag' }),
 		);
 		expect(outline!.paint!.kind).toBe('linear');
+	});
+});
+
+describe('buildStrokeOutline device-grid snap', () => {
+	const flat: ShapeStyle = { strokeColor: '#000000', strokeWidth: 1.3333 };
+
+	it('shifts the outline of a plain rectangle, top and left edges', () => {
+		const strands = buildStrokeOutline(shape(flat, { x: 454, y: 387 }))!.strands;
+		expect(strands).toHaveLength(1);
+		expect(strands[0]!.cssTransform).toMatch(
+			/^translate\(calc\(round\(454px,.*calc\(round\(387px,/u,
+		);
+	});
+
+	it('leaves rounded, rotated and gradient outlines alone', () => {
+		expect(
+			buildStrokeOutline(shape(flat, { shapeType: 'roundRect' }))?.strands[0]?.cssTransform,
+		).toBeUndefined();
+		expect(
+			buildStrokeOutline(shape(flat, { rotation: 20 }))?.strands[0]?.cssTransform,
+		).toBeUndefined();
+		expect(buildStrokeOutline(shape(gradientStroke))!.strands[0]!.cssTransform).toBeUndefined();
 	});
 });

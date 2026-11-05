@@ -3,6 +3,7 @@ import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../i18n/translator';
+import { screenStrokeWidth } from '../render/device-pixel-stroke';
 import { createDefaultRegistry } from './elements';
 import { renderSlideStage } from './slide-stage';
 
@@ -31,7 +32,8 @@ function stage(elements: PptxElement[], scale = 0.5): HTMLElement {
 	});
 }
 
-const screenWidth = (authored: string): string => `max(${authored}px, var(--pptx-device-px, 0px))`;
+const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
+const screenWidth = (authored: string): string => `max(${STEP}, round(${authored}px, ${STEP}))`;
 
 describe('one device pixel minimum (vanilla DOM renderer)', () => {
 	it('publishes the device pixel on the stage for its scale', () => {
@@ -84,7 +86,7 @@ describe('one device pixel minimum (vanilla DOM renderer)', () => {
 		expect(box?.getAttribute('style')).toContain(screenWidth('0.5'));
 	});
 
-	it('holds a connector strand at one device pixel, never under its 1px floor', () => {
+	it('holds a connector strand at one device pixel, and at 1px off screen', () => {
 		const node = stage([
 			el({
 				type: 'connector',
@@ -96,7 +98,7 @@ describe('one device pixel minimum (vanilla DOM renderer)', () => {
 		]);
 		const line = node.querySelector<SVGLineElement>('[data-element-id="conn"] svg line');
 		expect(line?.getAttribute('stroke-width')).toBe('1');
-		expect(line?.style.getPropertyValue('stroke-width')).toBe(screenWidth('1'));
+		expect(line?.style.getPropertyValue('stroke-width')).toBe(screenStrokeWidth(HAIRLINE, 1));
 	});
 
 	it('holds table cell borders and diagonals at one device pixel', () => {

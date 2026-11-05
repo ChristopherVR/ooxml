@@ -7,6 +7,7 @@ import {
 	buildDashArray,
 	buildWrapperStyle,
 	connectorHitStrokeWidth,
+	connectorSnapTransform,
 	connectorWrapperTransform,
 	markerPath,
 } from './connector-path';
@@ -267,5 +268,43 @@ describe('buildWrapperStyle', () => {
 		const style = buildWrapperStyle(el, 2);
 		expect(style).toContain('transform:rotate(45deg)');
 		expect(style).not.toContain('scale');
+	});
+});
+
+describe('connectorSnapTransform', () => {
+	const line = (over: Partial<PptxElement> = {}): PptxElement =>
+		({
+			type: 'connector',
+			id: 'c',
+			x: 27,
+			y: 27,
+			width: 373,
+			height: 0,
+			shapeType: 'straightConnector1',
+			shapeStyle: { strokeColor: '#000', strokeWidth: 1.3333 },
+			...over,
+		}) as PptxElement;
+
+	it('snaps a horizontal line in y and a vertical line in x', () => {
+		expect(buildConnectorGeometry(line(), 0).snapTransform).toMatch(/^translate\(0px, calc\(/u);
+		const vertical = buildConnectorGeometry(line({ width: 0, height: 200 }), 0);
+		expect(vertical.snapTransform).toMatch(/^translate\(calc\(.*\), 0px\)$/u);
+	});
+
+	it('ends a horizontal line at its real y, not at the 1px-floored SVG box', () => {
+		const geo = buildConnectorGeometry(line(), 0);
+		expect([geo.y1, geo.y2]).toEqual([0, 0]);
+	});
+
+	it('leaves diagonal, rotated, compound and bent lines unsnapped', () => {
+		expect(buildConnectorGeometry(line({ height: 80 }), 0).snapTransform).toBeUndefined();
+		expect(buildConnectorGeometry(line({ rotation: 30 }), 0).snapTransform).toBeUndefined();
+		expect(
+			buildConnectorGeometry(
+				line({ shapeStyle: { strokeColor: '#000', strokeWidth: 6, compoundLine: 'dbl' } }),
+				0,
+			).snapTransform,
+		).toBeUndefined();
+		expect(connectorSnapTransform(line(), false, 1, 1.3333)).toBeUndefined();
 	});
 });

@@ -9,9 +9,9 @@
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 	import {
 		buildConnectorGeometry,
+		connectorStrandScreenWidth,
 		getLineGlowFilterCss,
 		getLineShadowParams,
-		screenStrokeWidth,
 	} from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
@@ -131,9 +131,7 @@
 					fill="none"
 					stroke={strokeColor}
 					stroke-width={Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1)}
-					style:stroke-width={screenStrokeWidth(
-						Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1),
-					)}
+					style:stroke-width={connectorStrandScreenWidth(geometry.compoundWidths, geometry.strokeWidth, idx)}
 					stroke-opacity={geometry.strokeOpacity}
 					stroke-dasharray={geometry.dashArray}
 					stroke-linecap={geometry.strokeLinecap}
@@ -154,12 +152,11 @@
 					y2={geometry.y2 + offset}
 					stroke={strokeColor}
 					stroke-width={Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1)}
-					style:stroke-width={screenStrokeWidth(
-						Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1),
-					)}
+					style:stroke-width={connectorStrandScreenWidth(geometry.compoundWidths, geometry.strokeWidth, idx)}
 					stroke-opacity={geometry.strokeOpacity}
 					stroke-dasharray={geometry.dashArray}
 					stroke-linecap={geometry.strokeLinecap}
+					style:transform={geometry.snapTransform}
 					filter={idx === 0 && lineShadow ? `url(#${shadowFilterId})` : undefined}
 					marker-start={idx === 0 ? (geometry.startMarkerRef ?? undefined) : undefined}
 					marker-end={idx === geometry.compoundOffsets.length - 1

@@ -243,6 +243,9 @@ export function renderStrokeOutline(doc: Document, element: PptxElement): SVGSVG
 			path.setAttribute('stroke-dasharray', outline.dashArray);
 		}
 		path.style.setProperty('stroke-width', strand.cssStrokeWidth);
+		if (strand.cssTransform) {
+			path.style.setProperty('transform', strand.cssTransform);
+		}
 		if (strand.offset !== 0) {
 			path.style.setProperty('transform', `translate(0, ${strand.offset}px)`);
 		}

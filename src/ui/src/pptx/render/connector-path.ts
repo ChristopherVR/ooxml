@@ -20,6 +20,7 @@ import { curvedElbowPathD, elbowSegmentCount, elbowWaypoints } from './connector
 import { connectorHitStrokeWidth } from './connector-hit-target';
 import { markerPath, normalizeArrow } from './connector-markers';
 import type { MarkerShape } from './connector-markers';
+import { snappedStrokeTransform } from './device-pixel-stroke';
 import { routeOrthogonalConnector, waypointsToPathD } from './connector-router';
 import type { RouterRect } from './connector-router';
 import {
@@ -99,6 +100,33 @@ export interface ConnectorGeometry {
 	hitStrokeWidth: number;
 	/** Inline `style` string for the wrapper `<div>`. */
 	wrapperStyle: string;
+	/**
+	 * A CSS `transform` that snaps a horizontal or vertical single-strand
+	 * straight line to the device grid like PowerPoint's export, or `undefined`
+	 * (see {@link connectorSnapTransform}). Apply it to the painted line only,
+	 * never to the hit target.
+	 */
+	snapTransform: string | undefined;
+}
+
+/**
+ * The device-grid snap for a straight connector that runs exactly horizontally
+ * or vertically with one strand and no rotation: its stroke then fills whole
+ * device pixels the way PowerPoint's export draws it, instead of straddling two
+ * rows. `undefined` for anything else (bent, curved, diagonal, rotated or
+ * compound lines), which PowerPoint anti-aliases as well.
+ */
+export function connectorSnapTransform(
+	element: Pick<PptxElement, 'x' | 'y' | 'width' | 'height' | 'rotation'>,
+	straight: boolean,
+	strandCount: number,
+	strokeWidth: number,
+): string | undefined {
+	if (!straight || strandCount !== 1 || element.rotation) {
+		return undefined;
+	}
+	const axis = element.height <= 0 ? 'h' : element.width <= 0 ? 'v' : undefined;
+	return axis ? snappedStrokeTransform(axis, element.x, element.y, strokeWidth) : undefined;
 }
 
 /**
@@ -201,6 +229,12 @@ export function buildConnectorGeometry(
 		hitPathD: pathD ?? `M${x1},${y1} L${x2},${y2}`,
 		hitStrokeWidth: connectorHitStrokeWidth(strokeWidth),
 		wrapperStyle,
+		snapTransform: connectorSnapTransform(
+			element,
+			pathD === undefined,
+			compoundOffsets.length,
+			strokeWidth,
+		),
 	};
 }
 

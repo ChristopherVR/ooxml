@@ -8,6 +8,8 @@ import {
 	neutralizeDeviceStrokes,
 	screenBorder,
 	screenStrokeWidth,
+	snappedStrokeShift,
+	snappedStrokeTransform,
 	watchDevicePixelRatio,
 	withAuthoredStrokeWidths,
 } from './device-pixel-stroke';
@@ -15,8 +17,12 @@ import { prepareExportClone } from './export-clone';
 
 describe('screenStrokeWidth', () => {
 	it('holds a painted width at one device pixel or more, authored where the var is unset', () => {
-		expect(screenStrokeWidth(0.13)).toBe('max(0.13px, var(--pptx-device-px, 0px))');
-		expect(screenStrokeWidth(2)).toBe('max(2px, var(--pptx-device-px, 0px))');
+		expect(screenStrokeWidth(0.13)).toBe(
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.13px, max(var(--pptx-device-px, 0px), 0.001px)))',
+		);
+		expect(screenStrokeWidth(2)).toBe(
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px)))',
+		);
 	});
 
 	it('keeps a zero, negative, missing or non-finite width at 0px (no invented hairline)', () => {
@@ -26,16 +32,20 @@ describe('screenStrokeWidth', () => {
 	});
 
 	it('never emits exponent notation, which CSS rejects', () => {
-		expect(screenStrokeWidth(1e-7)).toBe('max(0.0001px, var(--pptx-device-px, 0px))');
-		expect(screenStrokeWidth(1 / 3)).toBe('max(0.3333px, var(--pptx-device-px, 0px))');
+		expect(screenStrokeWidth(1e-7)).toBe(
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.0001px, max(var(--pptx-device-px, 0px), 0.001px)))',
+		);
+		expect(screenStrokeWidth(1 / 3)).toBe(
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.3333px, max(var(--pptx-device-px, 0px), 0.001px)))',
+		);
 	});
 
 	it('builds a border shorthand from the same width', () => {
 		expect(screenBorder(0.5, 'dashed', '#000')).toBe(
-			'max(0.5px, var(--pptx-device-px, 0px)) dashed #000',
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.5px, max(var(--pptx-device-px, 0px), 0.001px))) dashed #000',
 		);
 		expect(screenBorder(1, undefined, 'red')).toBe(
-			'max(1px, var(--pptx-device-px, 0px)) solid red',
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(1px, max(var(--pptx-device-px, 0px), 0.001px))) solid red',
 		);
 		expect(screenBorder(0, 'solid', 'red')).toBe('0px solid red');
 	});
@@ -168,5 +178,44 @@ describe('export keeps authored widths', () => {
 		expect(stage.style.getPropertyValue(DEVICE_PX_VAR)).toBe(
 			'calc(1px / (0.5 * var(--pptx-dpr, 1)))',
 		);
+	});
+});
+
+describe('PowerPoint thin-line rule (measured on PowerPoint 16 exports)', () => {
+	const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
+
+	it('quantizes a width to whole device pixels instead of keeping the authored fraction', () => {
+		expect(screenStrokeWidth(1.3333)).toBe(`max(${STEP}, round(1.3333px, ${STEP}))`);
+		expect(screenStrokeWidth(1.3333)).not.toBe('max(1.3333px, var(--pptx-device-px, 0px))');
+	});
+
+	it('floors a width off screen only when asked, and never inside a stage', () => {
+		expect(screenStrokeWidth(0.5)).not.toContain('clamp(');
+		const floored = screenStrokeWidth(0.5, 1);
+		expect(floored).toContain('clamp(0px, calc(var(--pptx-device-px, 1000px) - 100px), 1px)');
+		expect(floored).toContain(`round(0.5px, ${STEP})`);
+	});
+
+	it('snaps an axis-aligned stroke by round(centre) - floor(n / 2) device pixels', () => {
+		const shift = snappedStrokeShift(27, 0.3333);
+		expect(shift).toContain(`round(27px, ${STEP})`);
+		expect(shift).toContain('round(down, calc(');
+		expect(shift).toMatch(/- 27px\)$/u);
+	});
+
+	it('shifts a horizontal line in y only, a vertical one in x only, a box in both', () => {
+		expect(snappedStrokeTransform('h', 10, 20, 1)).toMatch(/^translate\(0px, calc\(round\(20px,/u);
+		expect(snappedStrokeTransform('v', 10, 20, 1)).toMatch(
+			/^translate\(calc\(round\(10px,.*\), 0px\)$/u,
+		);
+		const box = snappedStrokeTransform('box', 10, 20, 1) ?? '';
+		expect(box).toContain('calc(round(10px,');
+		expect(box).toContain('calc(round(20px,');
+	});
+
+	it('shifts nothing for a missing, zero or non-finite width or position', () => {
+		expect(snappedStrokeTransform('h', 1, 1, 0)).toBeUndefined();
+		expect(snappedStrokeTransform('h', 1, 1, undefined)).toBeUndefined();
+		expect(snappedStrokeShift(Number.NaN, 1)).toBe('0px');
 	});
 });

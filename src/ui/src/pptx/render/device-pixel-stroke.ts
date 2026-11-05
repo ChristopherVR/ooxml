@@ -47,19 +47,101 @@ function cssPx(width: number): string {
 }
 
 /**
+ * One device pixel as a CSS step that is never zero. `round()` with a zero step
+ * is NaN, which would invalidate the whole declaration, so a missing variable
+ * (outside a stage) and the exporters' `0px` pin both resolve to a 1/1000 px
+ * step: authored widths survive to well below anything visible.
+ */
+const STEP = `max(var(${DEVICE_PX_VAR}, 0px), 0.001px)`;
+
+/** The on-screen width {@link screenStrokeWidth} resolves a `px` literal to (CSS expression). */
+function quantizedWidth(widthExpr: string): string {
+	return `max(${STEP}, round(${widthExpr}, ${STEP}))`;
+}
+
+/**
  * The on-screen CSS width of a stroke or border authored `width` slide pixels
- * wide: never under one device pixel inside a stage, the authored width
- * anywhere else. `'0px'` for a missing, zero, negative or non-finite width.
+ * wide, the way PowerPoint paints it: a WHOLE number of device pixels, at least
+ * one. PowerPoint's own exports (measured at 1280, 1366 and 1920 px wide) draw
+ * a line `max(1, round(width_pt * px_per_pt))` pixels thick with no
+ * anti-aliased fringe: 0.25 to 1 pt at 1280 px are all 1 px, 1.5 pt is 2 px,
+ * 2 pt is 3 px; 2.25 pt at 1920 px is 5 px (ties round up). Outside a stage the
+ * authored width is used as is, or `minOutsideStage` when that is larger. `'0px'` for a missing, zero, negative or
+ * non-finite width.
  *
  * Must be written as a CSS PROPERTY (an inline `style`), not an SVG
- * presentation attribute: attributes cannot hold `var()` or `max()`. Keep the
- * plain numeric attribute next to it for consumers that read attributes.
+ * presentation attribute: attributes cannot hold `var()`, `max()` or `round()`.
+ * Keep the plain numeric attribute next to it for consumers that read
+ * attributes.
  */
-export function screenStrokeWidth(width: number | undefined): string {
+export function screenStrokeWidth(width: number | undefined, minOutsideStage = 0): string {
 	if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
 		return '0px';
 	}
-	return `max(${cssPx(width)}, var(${DEVICE_PX_VAR}, 0px))`;
+	const quantized = quantizedWidth(cssPx(width));
+	return minOutsideStage > 0
+		? `max(${quantized}, ${outsideStageFloor(minOutsideStage)})`
+		: quantized;
+}
+
+/**
+ * `min` px where no stage is publishing a device pixel (the variable is unset,
+ * or an exporter pinned it to `0px`), nothing inside a stage, where the device
+ * pixel itself is the floor. For lines that have always been at least one slide
+ * pixel wide off screen (connectors): the 1000px / 0.001px thresholds sit far
+ * outside any real device pixel.
+ */
+function outsideStageFloor(min: number): string {
+	const dp = `var(${DEVICE_PX_VAR}, 1000px)`;
+	const px = cssPx(min);
+	return `max(clamp(0px, calc(${dp} - 100px), ${px}), clamp(0px, calc((0.001px - ${dp}) * 1000), ${px}))`;
+}
+
+/**
+ * The shift (a CSS length) that puts a stroke of authored `width`, centred on
+ * `coord` (slide px, along the axis the stroke is thin in), where PowerPoint's
+ * export puts it: the stroke's near edge on the device pixel
+ * `round(coord) - floor(n / 2)` for an `n` device pixel wide stroke, so a 1 px
+ * line fills exactly one pixel row instead of straddling two. Add it as a
+ * `translate` to an axis-aligned stroke only; diagonals stay anti-aliased in
+ * PowerPoint too.
+ *
+ * `coord` is the stroke's position in the STAGE (the scaled element's own
+ * coordinate space), which is where the device-pixel step is defined.
+ */
+export function snappedStrokeShift(coord: number, width: number | undefined): string {
+	if (
+		typeof width !== 'number' ||
+		!Number.isFinite(width) ||
+		width <= 0 ||
+		!Number.isFinite(coord)
+	) {
+		return '0px';
+	}
+	const at = `${Number(coord.toFixed(4))}px`;
+	const full = quantizedWidth(cssPx(width));
+	return `calc(round(${at}, ${STEP}) - round(down, calc(${full} / 2), ${STEP}) + ${full} / 2 - ${at})`;
+}
+
+/**
+ * The `transform` that snaps an axis-aligned stroke of `width` to the device
+ * grid (see {@link snappedStrokeShift}): `axis` is the direction the stroke
+ * RUNS in, so a horizontal line (`'h'`) shifts in y only, a vertical one
+ * (`'v'`) in x only, and an outline whose top and left edges both need it
+ * (`'box'`) in both. `x`/`y` are the stroke's position in the stage.
+ */
+export function snappedStrokeTransform(
+	axis: 'h' | 'v' | 'box',
+	x: number,
+	y: number,
+	width: number | undefined,
+): string | undefined {
+	if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
+		return undefined;
+	}
+	const dx = axis === 'h' ? '0px' : snappedStrokeShift(x, width);
+	const dy = axis === 'v' ? '0px' : snappedStrokeShift(y, width);
+	return `translate(${dx}, ${dy})`;
 }
 
 /**

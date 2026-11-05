@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {
+	connectorSnapTransform,
+	connectorStrandScreenWidth,
 	getLineGlowFilterCss,
 	getLineShadowParams,
 	markerPath,
-	screenStrokeWidth,
 } from 'ooxml-ui/pptx';
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { ConnectorArrowType, PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
@@ -124,10 +125,23 @@ const pathGeometry = computed(() => {
 });
 
 // Straight connector endpoints (used when !usePathRouting), mirrored by flips.
-const x1 = computed(() => (props.element.flipHorizontal ? w.value : 0));
-const y1 = computed(() => (props.element.flipVertical ? h.value : 0));
-const x2 = computed(() => (props.element.flipHorizontal ? 0 : w.value));
-const y2 = computed(() => (props.element.flipVertical ? 0 : h.value));
+// The REAL extents, not the 1px-floored SVG box: a horizontal line is 0 high,
+// and ending it at y = 1 tilted it a pixel across its whole length.
+const realW = computed(() => Math.max(props.element.width, 0));
+const realH = computed(() => Math.max(props.element.height, 0));
+const x1 = computed(() => (props.element.flipHorizontal ? realW.value : 0));
+const y1 = computed(() => (props.element.flipVertical ? realH.value : 0));
+const x2 = computed(() => (props.element.flipHorizontal ? 0 : realW.value));
+const y2 = computed(() => (props.element.flipVertical ? 0 : realH.value));
+// A single horizontal / vertical straight line is snapped to the device grid.
+const snapTransform = computed(() =>
+	connectorSnapTransform(
+		props.element,
+		!usePathRouting.value,
+		compoundOffsets.value.length,
+		strokeWidth.value,
+	),
+);
 
 // ── Pointer hit target ────────────────────────────────────────────────────────
 
@@ -260,7 +274,10 @@ function strandWidth(idx: number): number {
 
 /** Inline style of strand `idx` (shared `device-pixel-stroke`, plus its offset). */
 function strandStyle(idx: number, offset: number): CSSProperties {
-	return { strokeWidth: screenStrokeWidth(strandWidth(idx)), transform: offsetTransform(offset) };
+	return {
+		strokeWidth: connectorStrandScreenWidth(compoundWidths.value, strokeWidth.value, idx),
+		transform: offsetTransform(offset) ?? snapTransform.value,
+	};
 }
 </script>
 

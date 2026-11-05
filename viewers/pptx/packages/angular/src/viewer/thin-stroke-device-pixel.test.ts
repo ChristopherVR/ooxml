@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
+import { buildConnectorGeometry } from './connector-path';
 import { getShapeFillStrokeStyle } from './element-style';
 
 /**
@@ -55,8 +56,31 @@ describe('angular: thin strokes stay one device pixel on screen', () => {
 		const inset = getShapeFillStrokeStyle(
 			shape({ strokeColor: '#000', strokeWidth: 0.5, lineAlignment: 'in' }),
 		);
-		expect(inset['border']).toBe('max(0.5px, var(--pptx-device-px, 0px)) solid #000');
+		expect(inset['border']).toBe(
+			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.5px, max(var(--pptx-device-px, 0px), 0.001px))) solid #000',
+		);
 		const bare = getShapeFillStrokeStyle(shape({ fillColor: '#ff0000' }));
 		expect(String(bare['border'] ?? '')).not.toContain('max(');
+	});
+
+	it('snaps a horizontal connector and a plain rectangle outline to the device grid', () => {
+		const flat = {
+			type: 'connector',
+			id: 'c',
+			x: 27,
+			y: 27,
+			width: 400,
+			height: 0,
+			shapeType: 'straightConnector1',
+			shapeStyle: { strokeColor: '#000', strokeWidth: 1.3333 },
+		} as unknown as PptxElement;
+		const geo = buildConnectorGeometry(flat, 0);
+		expect(geo.y2).toBe(0);
+		expect(geo.snapTransform).toContain('round(27px');
+		expect(read('connector-renderer.component.ts')).toContain(
+			'[style.transform]="geo().snapTransform"',
+		);
+		expect(read('connector-renderer.component.ts')).toContain('connectorStrandScreenWidth(');
+		expect(read('stroke-outline.component.ts')).toContain('strand.cssTransform');
 	});
 });

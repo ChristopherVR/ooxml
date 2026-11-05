@@ -47,7 +47,9 @@ describe('table cell default border', () => {
 			expect(attributes).not.toMatch(/class="[^"]*\bborder\b/u);
 			expect(attributes).not.toContain('border-white');
 		}
-		expect(cells[1]).toContain('border-left:max(2px, var(--pptx-device-px, 0px)) solid #ff0000');
+		expect(cells[1]).toContain(
+			'border-left:max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px))) solid #ff0000',
+		);
 		expect(cells[0]).not.toContain('border-left');
 	});
 });

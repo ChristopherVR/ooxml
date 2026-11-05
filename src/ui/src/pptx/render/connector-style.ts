@@ -6,6 +6,8 @@
  * emission stays in each binding's view layer.
  */
 
+import { screenStrokeWidth } from './device-pixel-stroke';
+
 /** OOXML compound line token type (`a:ln/@cmpd`). */
 export type CompoundLineType = 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri';
 
@@ -74,6 +76,36 @@ export function getCompoundLineWidths(
 ): number[] {
 	const base = Math.max(strokeWidth, 1);
 	return compoundStrands(compoundLine)?.map(([, width]) => width * base) ?? [base];
+}
+
+/**
+ * The width strand `idx` is painted at on screen (before the device-pixel
+ * step, see `screenStrokeWidth`). A single line keeps its REAL width, however
+ * thin: {@link getCompoundLineWidths} floors it at one slide pixel for the
+ * numeric attribute, and that floor would round a 0.25 pt line up to two
+ * device pixels where PowerPoint paints one. A compound line keeps its strand
+ * widths, whose floor keeps the strands apart.
+ */
+export function connectorStrandCssWidth(
+	widths: readonly number[],
+	strokeWidth: number,
+	idx: number,
+): number {
+	return widths.length > 1 ? (widths[idx] ?? strokeWidth) : strokeWidth;
+}
+
+/**
+ * {@link connectorStrandCssWidth} as the on-screen CSS width: whole device
+ * pixels inside a stage (see `screenStrokeWidth`), and still at least one slide
+ * pixel anywhere a stage is not publishing a device pixel (exports, thumbnails
+ * of detached DOM), where a connector has always been floored at 1px.
+ */
+export function connectorStrandScreenWidth(
+	widths: readonly number[],
+	strokeWidth: number,
+	idx: number,
+): string {
+	return screenStrokeWidth(connectorStrandCssWidth(widths, strokeWidth, idx), 1);
 }
 
 /**

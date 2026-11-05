@@ -250,7 +250,11 @@
 				stroke-dasharray={strokeOutline.dashArray}
 				stroke-linecap={strokeOutline.lineCap}
 				stroke-linejoin={strokeOutline.lineJoin}
-				style={strand.offset !== 0 ? `transform:translate(0, ${strand.offset}px)` : undefined}
+				style={strand.cssTransform
+					? `transform:${strand.cssTransform}`
+					: strand.offset !== 0
+						? `transform:translate(0, ${strand.offset}px)`
+						: undefined}
 			/>
 		{/each}
 	</svg>

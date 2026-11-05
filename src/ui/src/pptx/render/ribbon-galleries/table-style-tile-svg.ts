@@ -58,7 +58,7 @@ function cellFill(css: TableCellCss): string {
 /**
  * A CSS border -> a stroke, or null for `none` / an unknown value. The
  * resolver writes widths through `screenBorder`, so a border reads
- * `max(1px, var(--...)) solid #FFFFFF`; a plain `1px solid #FFFFFF` is read too.
+ * `max(<step>, round(1px, <step>)) solid #FFFFFF`; a plain `1px solid #FFFFFF` is read too.
  */
 export function tileBorderStroke(
 	value: string | number | undefined,
@@ -66,7 +66,9 @@ export function tileBorderStroke(
 	if (typeof value !== 'string' || value === 'none') {
 		return null;
 	}
-	const match = /^(?:max\()?([\d.]+)px(?:,\s*var\([^)]*\)\))?\s+\w+\s+(.+)$/u.exec(value.trim());
+	// `max(<step>, round(<w>px, <step>)) solid <colour>`: collapse the step first.
+	const flat = value.replace(/max\(var\([^)]*\), 0\.001px\)/gu, 'S');
+	const match = /^(?:max\(S, round\()?([\d.]+)px(?:, S\)\))?\s+\w+\s+(.+)$/u.exec(flat.trim());
 	if (!match) {
 		return null;
 	}
