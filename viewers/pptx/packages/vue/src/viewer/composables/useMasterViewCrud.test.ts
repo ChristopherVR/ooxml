@@ -199,10 +199,10 @@ describe('useMasterViewCrud', () => {
 			return found;
 		});
 		expect(dialog.shadowRoot?.querySelector('.message')?.textContent).toBe('New name');
-		expect((dialog.shadowRoot?.querySelector('input') as HTMLInputElement).value).toBe(
+		expect((dialog.shadowRoot!.querySelector('input') as HTMLInputElement).value).toBe(
 			'Office Theme',
 		);
-		(dialog.shadowRoot?.querySelector('button.cancel') as HTMLButtonElement).click();
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
 		await running;
 
 		expect(applyMasterViewCrudActionMock).not.toHaveBeenCalled();

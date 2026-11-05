@@ -98,7 +98,7 @@ describe('File > Open from a cloud place', () => {
 		const opened = openCloudFile(core, file, chrome(), closed);
 		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
 		expect(dialog.shadowRoot?.querySelector('[role="alertdialog"]')).not.toBeNull();
-		(dialog.shadowRoot?.querySelector('button.cancel') as HTMLButtonElement).click();
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
 		expect(await opened).toBe(false);
 		expect(closed).not.toHaveBeenCalled();
 		expect(core.fileName).not.toBe('Cloud.xlsx');
@@ -112,7 +112,7 @@ describe('File > Open from a cloud place', () => {
 		const closed = vi.fn();
 		const opened = openCloudFile(core, file, chrome(), closed);
 		const dialog = core.host.shadowRoot!.querySelector('office-ui-message-dialog') as HTMLElement;
-		(dialog.shadowRoot?.querySelector('button.confirm') as HTMLButtonElement).click();
+		(dialog.shadowRoot!.querySelector('button.confirm') as HTMLButtonElement).click();
 		await opened;
 		expect(closed).toHaveBeenCalledOnce();
 		expect(core.fileName).toBe('Cloud.xlsx');

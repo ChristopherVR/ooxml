@@ -170,14 +170,14 @@ describe('<docx-editor> New with unsaved changes', () => {
 			'Discard unsaved changes and start a new document?',
 		);
 		expect(dialog.shadowRoot?.querySelector('button.confirm')?.textContent).toBe('Discard');
-		(dialog.shadowRoot?.querySelector('button.cancel') as HTMLButtonElement).click();
+		(dialog.shadowRoot!.querySelector('button.cancel') as HTMLButtonElement).click();
 		await running;
 		expect(editor.fileName).toBe('Report.docx');
 		expect(dialogIn(editor)).toBeNull();
 
 		const again = chrome(editor).run('new');
 		(
-			(dialogIn(editor) as HTMLElement).shadowRoot?.querySelector(
+			(dialogIn(editor) as HTMLElement).shadowRoot!.querySelector(
 				'button.confirm',
 			) as HTMLButtonElement
 		).click();

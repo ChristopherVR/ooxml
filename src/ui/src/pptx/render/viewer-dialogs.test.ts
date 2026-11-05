@@ -13,7 +13,7 @@ const t = (key: string) => `[${key}]`;
 const context = { t };
 const dialog = () => document.querySelector('office-ui-message-dialog') as HTMLElement;
 const press = (cls: string) =>
-	(dialog().shadowRoot?.querySelector(`button.${cls}`) as HTMLButtonElement).click();
+	(dialog().shadowRoot!.querySelector(`button.${cls}`) as HTMLButtonElement).click();
 
 afterEach(() => {
 	document.body.replaceChildren();

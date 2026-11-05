@@ -350,9 +350,9 @@ describe('tablePropertiesPanel', () => {
 			if (!found) throw new Error('no dialog yet');
 			return found;
 		});
-		(dialog.shadowRoot?.querySelector('input') as HTMLInputElement).value = 'Brand New Style';
+		(dialog.shadowRoot!.querySelector('input') as HTMLInputElement).value = 'Brand New Style';
 		await act(async () => {
-			(dialog.shadowRoot?.querySelector('button.confirm') as HTMLButtonElement).click();
+			(dialog.shadowRoot!.querySelector('button.confirm') as HTMLButtonElement).click();
 		});
 
 		expect(onTableStyleMapChange).toHaveBeenCalledOnce();

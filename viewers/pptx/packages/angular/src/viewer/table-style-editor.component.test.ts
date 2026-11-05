@@ -53,7 +53,7 @@ async function answerDialog(button: 'confirm' | 'cancel', value?: string): Promi
 	});
 	const input = dialog.shadowRoot?.querySelector('input');
 	if (input && value !== undefined) input.value = value;
-	(dialog.shadowRoot?.querySelector(`button.${button}`) as HTMLButtonElement).click();
+	(dialog.shadowRoot!.querySelector(`button.${button}`) as HTMLButtonElement).click();
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 

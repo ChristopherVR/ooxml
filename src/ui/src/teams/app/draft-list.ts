@@ -37,10 +37,14 @@ export function draftList(
 								><button
 									type="button"
 									@click=${(event: Event) =>
-										void confirmTeams({ t, host: event.currentTarget as Element }, t('drafts.confirmDiscard'), {
-											confirmKey: 'common.discard',
-											danger: true,
-										}).then((discard) => {
+										void confirmTeams(
+											{ t, host: event.currentTarget as Element },
+											t('drafts.confirmDiscard'),
+											{
+												confirmKey: 'common.discard',
+												danger: true,
+											},
+										).then((discard) => {
 											if (discard) client.discardDraft(draft.context);
 										})}
 								>
