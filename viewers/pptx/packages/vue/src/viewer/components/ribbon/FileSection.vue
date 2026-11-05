@@ -9,8 +9,8 @@ import {
 	formatBackstageDate,
 	formatBackstageSize,
 	listBackstageRecentFiles,
-	resolveOpenPlaces,
-	selectOpenPlace,
+	CLOUD_OPEN_ACCEPT,
+	openPlacesLabels,
 } from 'ooxml-ui/pptx';
 import type {
 	BackstageNavEntry,
@@ -30,23 +30,25 @@ import { useViewerCloudFiles } from '../../composables/viewer-cloud-files';
 import { useViewerStorage } from '../../composables/viewer-storage';
 import ViewerRegion from '../ViewerRegion.vue';
 import AccountPage from './AccountPage.vue';
-import CloudFilesPlace from './CloudFilesPlace.vue';
 import { buildFileSectionActions } from './file-section-actions';
 import { backstageIcon } from './file-section-icons';
 import type { FileSectionProps } from './file-section-types';
 
 const props = defineProps<FileSectionProps>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const page = ref<string>('home');
 const query = ref('');
 const recent = ref<BackstageRecentFile[]>([]);
 const storage = useViewerStorage();
 // File > Open places: "This device" plus one per host `fileProviders` entry (none without them).
 const cloud = useViewerCloudFiles();
-const places = computed(() => resolveOpenPlaces(cloud.providers(), t));
+const openAccept = CLOUD_OPEN_ACCEPT;
+const placeLabels = computed(() =>
+	openPlacesLabels((key, params) => (params ? t(key, params) : t(key))),
+);
+// The place tabs belong to File > Open; Home lists the device files alone.
+const placeProviders = computed(() => (page.value === 'open' ? cloud.providers() : []));
 const placeId = ref<string>();
-const place = computed(() => selectOpenPlace(places.value, placeId.value));
-const cloudPlace = computed(() => (page.value === 'open' ? place.value?.provider : undefined));
 function createPresentation(templateId: string): void {
 	cloud.clear();
 	props.onCreatePresentation(templateId);
@@ -232,37 +234,18 @@ function selectPage(id: string): void {
 					</div>
 				</template>
 				<template v-if="page === 'home' || page === 'open'">
-					<div
-						v-if="page === 'open' && places.length > 0"
-						role="tablist"
-						:aria-label="t('pptx.backstage.places')"
-						class="mt-6 flex flex-wrap gap-2"
+					<pptx-ui-open-places
+						class="block max-w-[900px]"
+						:providers.prop="placeProviders"
+						:accept.prop="openAccept"
+						:labels.prop="placeLabels"
+						:locale.prop="locale"
+						:selected.prop="placeId ?? 'device'"
+						@office-open-place-change="placeId = ($event as CustomEvent<{ place: string }>).detail.place"
+						@office-cloud-file-open="
+							openCloudFile(($event as CustomEvent<{ file: CloudOpenedFile }>).detail.file)
+						"
 					>
-						<button
-							v-for="item in places"
-							:key="item.id"
-							type="button"
-							role="tab"
-							:data-pptx-open-place="item.id"
-							:aria-selected="place?.id === item.id"
-							:class="[
-								'border px-4 py-1.5 text-[13px]',
-								place?.id === item.id
-									? 'border-primary bg-card text-primary'
-									: 'border-border hover:bg-accent',
-							]"
-							@click="placeId = item.id"
-						>
-							{{ item.label }}
-						</button>
-					</div>
-					<CloudFilesPlace
-						v-if="cloudPlace"
-						:key="cloudPlace.id"
-						:provider="cloudPlace"
-						:on-open="openCloudFile"
-					/>
-					<template v-else>
 						<pptx-ui-search
 							:value="query"
 							@input="query = ($event.target as HTMLElement & { value: string }).value"
@@ -320,7 +303,7 @@ function selectPage(id: string): void {
 								{{ t('pptx.backstage.noRecent') }}
 							</div>
 						</div>
-					</template>
+					</pptx-ui-open-places>
 				</template>
 				<div v-if="actions.length" class="mt-8 grid max-w-[900px] grid-cols-2 gap-5">
 					<button

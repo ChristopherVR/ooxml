@@ -6,10 +6,8 @@ import { translationsEn } from '../i18n';
 import {
 	cloudFilesLabels,
 	createCloudDocumentController,
-	DEVICE_OPEN_PLACE_ID,
 	resolveCloudDocumentView,
-	resolveOpenPlaces,
-	selectOpenPlace,
+	openPlacesLabels,
 } from './cloud-open';
 
 const provider = { id: 'onedrive', label: 'OneDrive' } as CloudFileProvider;
@@ -22,22 +20,19 @@ const file = (canEdit: boolean): CloudOpenedFile => ({
 	canEdit,
 	storage,
 });
-const t = (key: string): string => (key === 'pptx.backstage.thisDevice' ? 'This device' : key);
 
-describe('open places', () => {
-	it('stays empty without providers', () => {
-		expect(resolveOpenPlaces(undefined, t)).toEqual([]);
-		expect(resolveOpenPlaces([], t)).toEqual([]);
-	});
-
-	it('lists this device first, then one place per provider', () => {
-		const places = resolveOpenPlaces([provider], t);
-		expect(places.map((p) => [p.id, p.label])).toEqual([
-			[DEVICE_OPEN_PLACE_ID, 'This device'],
-			['cloud:onedrive', 'OneDrive'],
-		]);
-		expect(selectOpenPlace(places, 'cloud:onedrive')?.provider).toBe(provider);
-		expect(selectOpenPlace(places, 'cloud:gone')?.id).toBe(DEVICE_OPEN_PLACE_ID);
+describe('open places labels', () => {
+	it('adds the place tab labels to the cloud browser labels', () => {
+		const labels = openPlacesLabels((key) =>
+			key === 'pptx.backstage.thisDevice'
+				? 'Dieses Geraet'
+				: key === 'pptx.backstage.places'
+					? 'Orte'
+					: key,
+		);
+		expect(labels.thisDevice).toBe('Dieses Geraet');
+		expect(labels.places).toBe('Orte');
+		expect(labels.signIn).toBe('Sign in');
 	});
 });
 

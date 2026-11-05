@@ -1,3 +1,4 @@
+import type { CloudFileProvider, CloudOpenedFile, OfficeOpenPlacesLabels } from 'ooxml-ui/pptx';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
 type Host = HTMLElement & { value: string; checked: boolean; disabled: boolean };
@@ -56,6 +57,64 @@ export function WebSearch({
 	useHostEvent(ref, 'focusout', onBlur);
 	useHostEvent(ref, 'keydown', onKeyDown as NativeEventHandler | undefined);
 	return <pptx-ui-search ref={ref} value={value} disabled={disabled || undefined} {...rest} />;
+}
+
+/**
+ * The places of File > Open (`<pptx-ui-open-places>`): its children are "This device", each
+ * provider is a tab with the shared cloud file browser. A file opened there reaches `onOpen`.
+ */
+export function WebOpenPlaces({
+	providers,
+	accept,
+	labels,
+	locale,
+	selected,
+	onPlaceChange,
+	onOpen,
+	children,
+	...rest
+}: CommonProps & {
+	providers: readonly CloudFileProvider[];
+	accept: readonly string[];
+	labels: OfficeOpenPlacesLabels;
+	locale: string | undefined;
+	selected: string | undefined;
+	onPlaceChange: (place: string) => void;
+	onOpen: (file: CloudOpenedFile) => void;
+	children?: React.ReactNode;
+}): React.ReactElement {
+	const ref = useRef<HTMLElement & Record<string, unknown>>(null);
+	useLayoutEffect(() => {
+		const host = ref.current;
+		if (host) {
+			host.providers = providers;
+			host.accept = accept;
+			host.labels = labels;
+			host.locale = locale;
+			host.selected = selected ?? 'device';
+		}
+	}, [providers, accept, labels, locale, selected]);
+	useEffect(() => {
+		const host = ref.current;
+		if (!host) {
+			return;
+		}
+		const change = (event: Event): void =>
+			onPlaceChange((event as CustomEvent<{ place: string }>).detail.place);
+		const open = (event: Event): void =>
+			onOpen((event as CustomEvent<{ file: CloudOpenedFile }>).detail.file);
+		host.addEventListener('office-open-place-change', change);
+		host.addEventListener('office-cloud-file-open', open);
+		return () => {
+			host.removeEventListener('office-open-place-change', change);
+			host.removeEventListener('office-cloud-file-open', open);
+		};
+	}, [onPlaceChange, onOpen]);
+	return (
+		<pptx-ui-open-places ref={ref} {...rest}>
+			{children}
+		</pptx-ui-open-places>
+	);
 }
 
 export function WebSelect({

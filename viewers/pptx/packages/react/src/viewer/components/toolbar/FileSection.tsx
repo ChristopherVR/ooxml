@@ -4,8 +4,8 @@ import {
 	BACKSTAGE_NAV_CLASSES,
 	backstageNavEntries,
 	listBackstageRecentFiles,
-	resolveOpenPlaces,
-	selectOpenPlace,
+	CLOUD_OPEN_ACCEPT,
+	openPlacesLabels,
 } from 'ooxml-ui/pptx';
 import type {
 	BackstagePage,
@@ -22,16 +22,15 @@ import { useViewerCloudFiles } from '../viewer-cloud-files-context';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { useViewerStorage } from '../viewer-storage-context';
 import { ViewerRegion, useRegionRenderer } from '../ViewerRegion';
-import { WebSearch } from '../WebControls';
+import { WebOpenPlaces, WebSearch } from '../WebControls';
 import { AccountPage } from './AccountPage';
-import { CloudFilesPlaceView } from './CloudFilesPlace';
 import { BackstageCards } from './file-backstage-cards';
 import { BackstageNavIcon } from './file-backstage-icons';
 import { BackstageNewGallery, BackstageRecentList } from './file-backstage-parts';
 import type { FileSectionProps } from './file-backstage-parts';
 
 export function FileSection(p: FileSectionProps): React.ReactElement {
-	const { t } = useTranslation();
+	const { t, locale } = useTranslation();
 	const [requestedPage, setRequestedPage] = useState<string>('home');
 	// Host customisation hides nav pages; a hidden current page falls back to
 	// Home (or, when Home is hidden too, the first page still offered).
@@ -49,10 +48,8 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 	const exportHidden = isHidden('export');
 	const storage = useViewerStorage();
 	const cloud = useViewerCloudFiles();
-	const places = useMemo(() => resolveOpenPlaces(cloud.providers, t), [cloud.providers, t]);
+	const placeLabels = useMemo(() => openPlacesLabels(t), [t]);
 	const [placeId, setPlaceId] = useState<string>();
-	const place = selectOpenPlace(places, placeId);
-	const cloudPlace = page === 'open' ? place?.provider : undefined;
 	useEffect(() => {
 		void listBackstageRecentFiles(t, p.recentPresentationsCount, storage).then(setRecent);
 	}, [t, p.recentPresentationsCount, storage]);
@@ -83,6 +80,36 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 		| HostBackstageRegionId;
 	const builtInRegionRenderer = useRegionRenderer(regionId as ViewerRegionId);
 	const regionRenderer = hostPage ? hostPage.render : builtInRegionRenderer;
+	// The device half of File > Open (and the whole of Home's list): Browse and recent files.
+	const device = (
+		<>
+			<WebSearch
+				data-pptx-search-surface
+				data-pptx-search-input
+				className='mt-8 w-full max-w-[540px]'
+				value={query}
+				onInput={(event) =>
+					setQuery((event.currentTarget as HTMLElement & { value: string }).value)
+				}
+				placeholder={t('pptx.backstage.searchPlaceholder')}
+				aria-label={t('pptx.backstage.searchPlaceholder')}
+			/>
+			{page === 'open' && (
+				<button
+					type='button'
+					className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
+					onClick={() => run(p.onOpenFile)}
+				>
+					<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
+				</button>
+			)}
+			<h2 className='mt-6 text-[16px] font-semibold'>{t('pptx.backstage.recentHeading')}</h2>
+			<BackstageRecentList
+				files={visibleRecent}
+				onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
+			/>
+		</>
+	);
 	return (
 		<div
 			className='fixed inset-0 z-[200] flex bg-background font-[Aptos,Segoe_UI,sans-serif] text-foreground max-md:flex-col'
@@ -171,73 +198,23 @@ export function FileSection(p: FileSectionProps): React.ReactElement {
 								}
 							/>
 						)}
-						{(page === 'home' || page === 'open') && (
-							<>
-								{page === 'open' && places.length > 0 && (
-									<div
-										role='tablist'
-										aria-label={t('pptx.backstage.places')}
-										className='mt-6 flex flex-wrap gap-2'
-									>
-										{places.map((item) => (
-											<button
-												key={item.id}
-												type='button'
-												role='tab'
-												data-pptx-open-place={item.id}
-												aria-selected={place?.id === item.id}
-												onClick={() => setPlaceId(item.id)}
-												className={`border px-4 py-1.5 text-[13px] ${
-													place?.id === item.id
-														? 'border-primary bg-card text-primary'
-														: 'border-border hover:bg-accent'
-												}`}
-											>
-												{item.label}
-											</button>
-										))}
-									</div>
-								)}
-								{cloudPlace && (
-									<CloudFilesPlaceView
-										key={cloudPlace.id}
-										provider={cloudPlace}
-										onOpen={(file) => run(() => cloud.open(file))}
-									/>
-								)}
-								{!cloudPlace && (
-									<>
-										<WebSearch
-											data-pptx-search-surface
-											data-pptx-search-input
-											className='mt-8 w-full max-w-[540px]'
-											value={query}
-											onInput={(event) =>
-												setQuery((event.currentTarget as HTMLElement & { value: string }).value)
-											}
-											placeholder={t('pptx.backstage.searchPlaceholder')}
-											aria-label={t('pptx.backstage.searchPlaceholder')}
-										/>
-										{page === 'open' && (
-											<button
-												type='button'
-												className='mt-4 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90'
-												onClick={() => run(p.onOpenFile)}
-											>
-												<LuFolderOpen /> {t('pptx.backstage.browseDevice')}
-											</button>
-										)}
-										<h2 className='mt-6 text-[16px] font-semibold'>
-											{t('pptx.backstage.recentHeading')}
-										</h2>
-										<BackstageRecentList
-											files={visibleRecent}
-											onOpen={(key) => run(() => p.onOpenRecentFile?.(key))}
-										/>
-									</>
-								)}
-							</>
-						)}
+						{(page === 'home' || page === 'open') &&
+							(page === 'open' ? (
+								<WebOpenPlaces
+									className='block max-w-[900px]'
+									providers={cloud.providers}
+									accept={CLOUD_OPEN_ACCEPT}
+									labels={placeLabels}
+									locale={locale}
+									selected={placeId}
+									onPlaceChange={setPlaceId}
+									onOpen={(file) => run(() => cloud.open(file))}
+								>
+									{device}
+								</WebOpenPlaces>
+							) : (
+								device
+							))}
 						{!(page === 'export' && exportHidden) && (
 							<BackstageCards page={page as BackstagePage} props={p} run={run} />
 						)}

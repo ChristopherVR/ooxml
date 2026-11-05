@@ -71,29 +71,16 @@
 				</div>
 			}
 			@if (currentPage() === 'home' || currentPage() === 'open') {
-				@if (currentPage() === 'open' && places().length > 0) {
-					<div
-						class="places"
-						role="tablist"
-						[attr.aria-label]="'pptx.backstage.places' | translate"
-					>
-						@for (item of places(); track item.id) {
-							<button
-								type="button"
-								role="tab"
-								[attr.data-pptx-open-place]="item.id"
-								[attr.aria-selected]="place()?.id === item.id"
-								[class.selected]="place()?.id === item.id"
-								(click)="placeId.set(item.id)"
-							>
-								{{ item.provider ? item.label : ('pptx.backstage.thisDevice' | translate) }}
-							</button>
-						}
-					</div>
-				}
-				@if (cloudPlace(); as provider) {
-					<pptx-cloud-files-place [provider]="provider" (open)="openCloudFile($event)" />
-				} @else {
+				<pptx-ui-open-places
+					class="open-places"
+					[providers]="placeProviders()"
+					[accept]="openAccept"
+					[labels]="placeLabels()"
+					[locale]="locale()"
+					[selected]="placeId() ?? 'device'"
+					(office-open-place-change)="placeId.set($any($event).detail.place)"
+					(office-cloud-file-open)="openCloudFile($any($event).detail.file)"
+				>
 					<pptx-ui-search
 						data-pptx-search-surface
 						class="search"
@@ -131,7 +118,7 @@
 							<p>{{ 'pptx.backstage.noRecent' | translate }}</p>
 						}
 					</div>
-				}
+				</pptx-ui-open-places>
 			}
 			@if (actions().length) {
 				<div class="actions">

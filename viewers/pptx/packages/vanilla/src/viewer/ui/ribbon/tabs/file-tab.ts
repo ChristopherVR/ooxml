@@ -25,8 +25,7 @@ import { renderAccountPage } from './file-tab-account';
 import { createFileActionGrid } from './file-tab-actions';
 import { button, iconButton, labeledIconButton } from './file-tab-dom';
 import { createLucideIcon } from './file-tab-icons';
-import { renderOpenPlaces } from './file-tab-places';
-import type { OpenPlacesView } from './file-tab-places';
+import { createOpenPlaces } from './file-tab-places';
 
 export interface FileTab {
 	el: HTMLElement;
@@ -79,9 +78,8 @@ export function createFileTab(
 	let regionHandle: RegionHandle | null = null;
 	let hasMacros = false;
 	let query = '';
-	// File > Open's selected place and the mounted cloud place (shared `render/cloud-open`).
+	// File > Open's selected place (the shared `<pptx-ui-open-places>` draws the tabs).
 	let placeId: string | undefined;
-	let places: OpenPlacesView | null = null;
 	let recent: BackstageRecentFile[] = [];
 	void (async () => {
 		recent = await listBackstageRecentFiles(
@@ -117,8 +115,6 @@ export function createFileTab(
 	function releaseRegion(): void {
 		regionHandle?.destroy();
 		regionHandle = null;
-		places?.destroy();
-		places = null;
 	}
 	function renderNav(): void {
 		nav.replaceChildren();
@@ -159,7 +155,7 @@ export function createFileTab(
 		}
 		main.append(heading, grid);
 	}
-	function renderRecent(): void {
+	function renderRecent(target: HTMLElement): void {
 		const list = createEl(doc, 'div', 'pptxv-bs-recent');
 		const search = doc.createElement('pptx-ui-search') as HTMLElement & {
 			value: string;
@@ -175,9 +171,9 @@ export function createFileTab(
 			query = search.value;
 			renderRecentItems(list);
 		});
-		main.appendChild(search);
+		target.appendChild(search);
 		if (page === 'open') {
-			main.appendChild(
+			target.appendChild(
 				button(
 					doc,
 					t('pptx.backstage.browseDevice'),
@@ -189,7 +185,7 @@ export function createFileTab(
 		const heading = doc.createElement('h2');
 		heading.textContent = t('pptx.backstage.recentHeading');
 		renderRecentItems(list);
-		main.append(heading, list);
+		target.append(heading, list);
 	}
 	function renderRecentItems(list: HTMLElement): void {
 		const header = doc.createElement('header');
@@ -296,20 +292,23 @@ export function createFileTab(
 		if (page === 'home' || page === 'new') {
 			renderTemplates();
 		}
-		if (page === 'open') {
-			places = renderOpenPlaces(doc, t, main, {
-				cloud: handlers.getCloudFiles?.() ?? { providers: [], locale: undefined, open: () => {} },
+		if (page === 'home' || page === 'open') {
+			// Home lists the device files alone; Open adds a tab per host cloud provider.
+			const cloud = handlers.getCloudFiles?.() ?? {
+				providers: [],
+				locale: undefined,
+				open: () => {},
+			};
+			const places = createOpenPlaces(doc, t, {
+				cloud: page === 'open' ? cloud : { ...cloud, providers: [] },
 				selectedId: placeId,
 				onSelect: (id) => {
 					placeId = id;
-					render();
 				},
 				onOpen: (file) => run(() => handlers.getCloudFiles?.().open(file)),
 			});
-		}
-		// A cloud place replaces the device search, Browse button and recent list.
-		if ((page === 'home' || page === 'open') && !places?.provider) {
-			renderRecent();
+			main.appendChild(places);
+			renderRecent(places);
 		}
 		if (['info', 'saveAs', 'print', 'share', 'export'].includes(page)) {
 			renderActions();

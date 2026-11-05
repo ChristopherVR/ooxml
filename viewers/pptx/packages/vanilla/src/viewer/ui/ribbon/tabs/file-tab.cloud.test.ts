@@ -1,6 +1,6 @@
 /**
- * File > Open with cloud places: the Open page lists "This device" and one place per provider,
- * shows the provider's file browser, and hands a file opened there to the viewer.
+ * File > Open with cloud places: the Open page renders the shared places element with the
+ * providers and the translated labels, and hands a file opened there to the viewer.
  */
 import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -46,16 +46,24 @@ afterEach(() => {
 	document.body.replaceChildren();
 });
 
+interface PlacesElement extends HTMLElement {
+	providers: unknown[];
+	accept: string[];
+	labels: Record<string, string>;
+	locale: string | undefined;
+}
+
 describe('File > Open cloud places', () => {
 	it('keeps the Open page as it was without providers', () => {
 		const tab = createFileTab(document, t, handlers(), vi.fn());
 		document.body.appendChild(tab.el);
 		openPage(tab.el);
-		expect(tab.el.querySelector('[data-pptx-open-place]')).toBeNull();
+		const places = tab.el.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(places.providers).toEqual([]);
 		expect(tab.el.textContent).toContain(t('pptx.backstage.browseDevice'));
 	});
 
-	it('lists this device and the provider, and opens a provider file', () => {
+	it('hands the providers to the places element and opens a provider file', () => {
 		const open = vi.fn();
 		const onClose = vi.fn();
 		const tab = createFileTab(
@@ -66,35 +74,23 @@ describe('File > Open cloud places', () => {
 		);
 		document.body.appendChild(tab.el);
 		openPage(tab.el);
-		const tablist = tab.el.querySelector('[role="tablist"]');
-		expect(tablist?.getAttribute('aria-label')).toBe(t('pptx.backstage.places'));
-		const places = [...tab.el.querySelectorAll<HTMLButtonElement>('[data-pptx-open-place]')];
-		expect(places.map((place) => place.textContent)).toStrictEqual([
-			t('pptx.backstage.thisDevice'),
-			'OneDrive',
-		]);
-		expect(places[0]?.getAttribute('aria-selected')).toBe('true');
-		expect(tab.el.querySelector('pptx-ui-cloud-files')).toBeNull();
-		places[1]?.click();
-		const place = tab.el.querySelector('[data-pptx-cloud-place="onedrive"]');
-		expect(place?.querySelector('pptx-ui-cloud-files')).not.toBeNull();
-		expect(tab.el.textContent).not.toContain(t('pptx.backstage.browseDevice'));
-		expect(
-			tab.el
-				.querySelector('[data-pptx-open-place="cloud:onedrive"]')
-				?.getAttribute('aria-selected'),
-		).toBe('true');
+		const places = tab.el.querySelector<PlacesElement>('pptx-ui-open-places')!;
+		expect(places.providers).toEqual([provider]);
+		expect(places.accept).toEqual(['pptx']);
+		expect(places.labels.thisDevice).toBe(t('pptx.backstage.thisDevice'));
+		expect(places.labels.places).toBe(t('pptx.backstage.places'));
+		expect(places.locale).toBe('en');
+		// The device content is the element's light DOM, so the element can show or hide it.
+		expect(places.textContent).toContain(t('pptx.backstage.browseDevice'));
 		const file = { fileName: 'Cloud.pptx' } as CloudOpenedFile;
-		place
-			?.querySelector('pptx-ui-cloud-files')
-			?.dispatchEvent(
-				new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
-			);
+		places.dispatchEvent(
+			new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
+		);
 		expect(open).toHaveBeenCalledWith(file);
 		expect(onClose).toHaveBeenCalled();
 	});
 
-	it('returns to the device search and recent list from a cloud place', () => {
+	it('offers the providers on the Open page only', () => {
 		const tab = createFileTab(
 			document,
 			t,
@@ -102,10 +98,10 @@ describe('File > Open cloud places', () => {
 			vi.fn(),
 		);
 		document.body.appendChild(tab.el);
+		expect(tab.el.querySelector<PlacesElement>('pptx-ui-open-places')?.providers).toEqual([]);
 		openPage(tab.el);
-		tab.el.querySelector<HTMLButtonElement>('[data-pptx-open-place="cloud:onedrive"]')?.click();
-		tab.el.querySelector<HTMLButtonElement>('[data-pptx-open-place="device"]')?.click();
-		expect(tab.el.querySelector('pptx-ui-cloud-files')).toBeNull();
-		expect(tab.el.textContent).toContain(t('pptx.backstage.browseDevice'));
+		expect(tab.el.querySelector<PlacesElement>('pptx-ui-open-places')?.providers).toEqual([
+			provider,
+		]);
 	});
 });

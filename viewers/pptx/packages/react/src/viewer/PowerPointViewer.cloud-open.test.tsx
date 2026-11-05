@@ -121,7 +121,7 @@ function click(element: Element | null | undefined): void {
 	act(() => (element as HTMLElement).click());
 }
 
-/** File tab, Open, the OneDrive place; then the place reports `file` as opened. */
+/** File tab, Open; then the place reports `file` as opened. */
 async function openFromCloud(file: CloudOpenedFile): Promise<void> {
 	click([...container.querySelectorAll('[role="tab"]')].find((tab) => tab.textContent === 'File'));
 	click(
@@ -129,10 +129,9 @@ async function openFromCloud(file: CloudOpenedFile): Promise<void> {
 			(item) => item.textContent === translationsEn['pptx.backstage.nav.open'],
 		),
 	);
-	click(container.querySelector('[data-pptx-open-place="cloud:onedrive"]'));
 	await act(async () => {
 		container
-			.querySelector('pptx-ui-cloud-files')!
+			.querySelector('pptx-ui-open-places')!
 			.dispatchEvent(
 				new CustomEvent('office-cloud-file-open', { detail: { providerId: 'onedrive', file } }),
 			);

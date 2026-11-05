@@ -340,28 +340,8 @@ footer {
 	min-height: 16rem;
 }
 
-/* File > Open places ("This device" and one per cloud provider). */
-.places {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	margin-top: 24px;
-}
-
-.places button {
-	padding: 6px 16px;
-	border: 1px solid var(--pptx-border, #d7d7d7);
-	background: none;
-	color: inherit;
-	font-size: 13px;
-}
-
-.places button:not(.selected):hover {
-	background: var(--pptx-accent, #eadfd8);
-}
-
-.places button.selected {
-	border-color: var(--pptx-primary, #c43e1c);
-	background: var(--pptx-card, #fff);
-	color: var(--pptx-primary, #c43e1c);
+/* File > Open places: the shared `<pptx-ui-open-places>` draws the tabs. */
+.open-places {
+	display: block;
+	max-width: 900px;
 }

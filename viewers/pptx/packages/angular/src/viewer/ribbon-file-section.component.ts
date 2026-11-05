@@ -8,6 +8,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	BACKSTAGE_NAV,
@@ -19,8 +20,8 @@ import {
 	formatBackstageSize,
 	isActionHidden,
 	listBackstageRecentFiles,
-	resolveOpenPlaces,
-	selectOpenPlace,
+	CLOUD_OPEN_ACCEPT,
+	openPlacesLabels,
 } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
@@ -33,10 +34,10 @@ import type {
 	ViewerRegionId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
+import { map, merge, of, startWith } from 'rxjs';
 
 import { AccountPageComponent } from './account-page.component';
 import { BackstageNavIconComponent } from './backstage-nav-icon.component';
-import { CloudFilesPlaceComponent } from './cloud-files-place.component';
 import { injectResolvedCustomization } from './viewer-customization.service';
 import { ViewerFileIOService } from './viewer-file-io.service';
 import { ViewerRegionHostComponent } from './viewer-region-host.component';
@@ -91,7 +92,6 @@ export function visibleMainNav(
 	imports: [
 		BackstageNavIconComponent,
 		AccountPageComponent,
-		CloudFilesPlaceComponent,
 		TranslatePipe,
 		ViewerRegionHostComponent,
 	],
@@ -220,20 +220,32 @@ export class RibbonFileSectionComponent {
 			? this.recent().filter((file) => `${file.name} ${file.location}`.toLowerCase().includes(q))
 			: this.recent();
 	});
-	/**
-	 * File > Open places: empty without host `fileProviders` (the page stays as it was), else
-	 * "This device" and one place per provider (shared `resolveOpenPlaces`).
-	 */
-	protected readonly places = computed(() =>
-		resolveOpenPlaces(this.fileIO?.fileProviders(), this.t ?? ((key: string) => key)),
+	/** Changes on language or dictionary updates so the place labels follow the viewer. */
+	private readonly translations = toSignal(
+		this.translate
+			? merge(this.translate.onLangChange, this.translate.onTranslationChange).pipe(
+					map(() => Date.now()),
+					startWith(0),
+				)
+			: of(0),
+		{ initialValue: 0 },
 	);
-	/** The place the user picked; see {@link place} for the one shown. */
+	/** The shared places element: "This device" is its content, each `fileProviders` entry a tab. */
+	protected readonly openAccept = CLOUD_OPEN_ACCEPT;
+	protected readonly placeLabels = computed(() => {
+		this.translations();
+		return openPlacesLabels(this.t ?? ((key: string) => key));
+	});
+	protected readonly locale = computed(() => {
+		this.translations();
+		return this.translate?.currentLang() ?? undefined;
+	});
+	/** The tabs belong to File > Open; Home lists the device files alone. */
+	protected readonly placeProviders = computed(() =>
+		this.currentPage() === 'open' ? (this.fileIO?.fileProviders() ?? []) : [],
+	);
+	/** The place the user picked. */
 	protected readonly placeId = signal<string | undefined>(undefined);
-	protected readonly place = computed(() => selectOpenPlace(this.places(), this.placeId()));
-	/** The provider whose browser the Open page shows, or undefined for "This device". */
-	protected readonly cloudPlace = computed(() =>
-		this.currentPage() === 'open' ? this.place()?.provider : undefined,
-	);
 	protected readonly size = formatBackstageSize;
 	protected readonly actions = computed(() =>
 		this.pageActions(this.currentPage() as BackstagePage),
