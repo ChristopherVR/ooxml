@@ -101,15 +101,17 @@ test('configures tabs from shared workbooks, Markdown and sites while rejecting 
 	await dialog.getByRole('button', { name: 'Choose Markdown', exact: true }).click();
 	await dialog.getByRole('radio', { name: /Notes.md/ }).check();
 	await dialog.getByRole('textbox', { name: 'Tab name', exact: true }).fill('Project notes');
-	page.once('dialog', (prompt) => prompt.dismiss());
 	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(dialog).toBeVisible();
 	expect(
 		await page
 			.locator('teams-app')
 			.evaluate((element) => (element as TeamsApp).client!.getState().tabs.length),
 	).toBe(1);
-	page.once('dialog', (prompt) => prompt.accept());
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+	await page.getByRole('alertdialog').getByRole('button', { name: 'Discard', exact: true }).click();
+	// The dialog stays open after the question, so Save is pressed again with the edits gone.
 	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'Project notes', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Add tab', exact: true }).click();

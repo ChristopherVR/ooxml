@@ -63,9 +63,7 @@ describe('channel tab workspace', () => {
 		preview.dirty = true;
 		const answer = async (button: 'confirm' | 'cancel') => {
 			const dialog = await vi.waitFor(() => {
-				const found = (preview.getRootNode() as ParentNode).querySelector(
-					'office-ui-message-dialog',
-				);
+				const found = preview.shadowRoot!.querySelector('office-ui-message-dialog');
 				if (!found) throw new Error('no dialog yet');
 				return found;
 			});
@@ -81,13 +79,8 @@ describe('channel tab workspace', () => {
 		app
 			.shadowRoot!.querySelector('office-ui-app-rail')!
 			.dispatchEvent(new CustomEvent('office-rail-select', { detail: { id: 'files' } }));
-		// Discarding clears the edits; the navigation the user asked for goes through on the next try.
+		// Discarding clears the edits and carries on with the navigation that was held back.
 		await answer('confirm');
-		expect(preview.dirty).toBe(false);
-		expect(app.preview).not.toBeNull();
-		app
-			.shadowRoot!.querySelector('office-ui-app-rail')!
-			.dispatchEvent(new CustomEvent('office-rail-select', { detail: { id: 'files' } }));
 		expect(app.preview).toBeNull();
 		expect(app.rail).toBe('files');
 	});

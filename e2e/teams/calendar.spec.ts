@@ -160,7 +160,6 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 	await form.getByRole('textbox', { name: 'Title', exact: true }).fill('Design sync v2');
 	await form.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(agenda(bob)).toContainText('Design sync v2');
-	ada.once('dialog', (dialog) => void dialog.accept());
 	await agenda(ada)
 		.getByRole('button', { name: /^Design sync v2/u })
 		.first()
@@ -169,6 +168,7 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 	await cancelling.getByRole('button', { name: 'Cancel meeting' }).click();
 	await cancelling.getByRole('radio', { name: 'All events in the series', exact: true }).check();
 	await cancelling.getByRole('button', { name: 'Cancel meeting' }).click();
+	await ada.getByRole('alertdialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await expect.poll(() => count(bob, 'meetings')).toBe(0);
 	await context.close();
 });
