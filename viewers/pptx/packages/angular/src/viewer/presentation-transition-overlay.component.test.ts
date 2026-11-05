@@ -431,6 +431,64 @@ describe('morphCrossfadeGroupSlides', () => {
 		expect(MORPH_EXTRA_LAYERS_SOURCE).toContain('[ngStyle]="group.outgoingStyle"');
 		expect(MORPH_EXTRA_LAYERS_SOURCE).toContain('[ngStyle]="group.incomingStyle"');
 	});
+
+	// Regression (issue #141, slides 6 -> 7): a column of "L"s changes font, so
+	// it dissolves as a group, while it slides under a picture band the incoming
+	// slide stacks ABOVE it. Painted above every overlay layer, the column showed
+	// across the band for the whole morph and vanished from it in one frame when
+	// the overlay came down.
+	it('stacks a dissolving group under the band above it and over the strip below it', () => {
+		const picture = (id: string, name: string, y: number, height: number): PptxElement =>
+			({
+				id,
+				name,
+				type: 'picture',
+				x: 0,
+				y,
+				width: 1280,
+				height,
+				imagePath: `ppt/media/${name}.png`,
+			}) as unknown as PptxElement;
+		const column = (id: string, y: number, fontFamily: string): PptxElement =>
+			({
+				id,
+				name: 'Object 14',
+				type: 'text',
+				x: 284,
+				y,
+				width: 51,
+				height: 1066,
+				text: 'L\nL\nL',
+				textStyle: { color: '#FFFFFF', fontFamily },
+				textSegments: [{ text: 'L\nL\nL', style: { fontFamily, color: '#FFFFFF' } }],
+			}) as unknown as PptxElement;
+		const from = slide('6', [
+			picture('bg6', 'backdrop', 0, 720),
+			column('col6', -916, 'Calibri Light'),
+			picture('strip6', 'strip', -1, 720),
+			picture('band6', 'band', -1, 196),
+		]);
+		const to = slide('7', [
+			picture('bg7', 'backdrop', 0, 720),
+			picture('strip7', 'strip', -3, 720),
+			column('col7', -158, 'Calibri'),
+			picture('band7', 'band', -2, 196),
+		]);
+		const plan = buildMorphTransitionPlan(from, to, 2000);
+
+		const groups = morphCrossfadeGroupSlides(plan, from, to);
+		const layers = morphOverlayLayerSlides(plan, from, to);
+		expect(groups.map((group) => group.key)).toStrictEqual(['col7']);
+		const zOf = (id: string): number =>
+			Number(
+				layers.find((layer) => layer.slide.elements.some((element) => element.id === id))!.style[
+					'z-index'
+				],
+			);
+		const groupZ = Number(groups[0].style['z-index']);
+		expect(zOf('band6')).toBeGreaterThan(groupZ);
+		expect(zOf('strip6')).toBeLessThan(groupZ);
+	});
 });
 
 describe('presentationTransitionOverlayComponent transition sound (p:sndAc)', () => {

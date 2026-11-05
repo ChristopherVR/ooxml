@@ -14,6 +14,7 @@ import {
 	nextVisibleIndex,
 	prevVisibleIndex,
 	resolveSlideAutoAdvanceMs,
+	resolveSlideEntryAutoAdvanceMs,
 	shouldBlockClickAdvance,
 } from './presentation-overlay-helpers';
 
@@ -102,6 +103,41 @@ describe('resolveSlideAutoAdvanceMs', () => {
 
 	it('schedules nothing once the end-of-show screen is up', () => {
 		expect(resolveSlideAutoAdvanceMs(timed(2500), true, true)).toBeUndefined();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// resolveSlideEntryAutoAdvanceMs
+// ---------------------------------------------------------------------------
+
+// Regression (issue #141): PowerPoint counts `After` from the END of a slide's
+// own transition. Armed on entry with the bare authored time, a slide set to
+// advance after 0 s moved on at once and the next transition replaced its
+// 700 ms fade, which then appeared in a single frame.
+describe('resolveSlideEntryAutoAdvanceMs', () => {
+	const timed = (advanceAfterMs: number, durationMs?: number): PptxSlide =>
+		slide({ transition: { type: 'fade', advanceAfterMs, durationMs } });
+
+	it('waits out the entry transition before a 0 s timer fires', () => {
+		expect(resolveSlideEntryAutoAdvanceMs(timed(0, 700), true, false)).toBe(700);
+	});
+
+	it('adds the transition to the authored time', () => {
+		expect(resolveSlideEntryAutoAdvanceMs(timed(2500, 700), true, false)).toBe(3200);
+	});
+
+	it('schedules nothing where the authored timer is off', () => {
+		expect(resolveSlideEntryAutoAdvanceMs(slide(), true, false)).toBeUndefined();
+		expect(resolveSlideEntryAutoAdvanceMs(timed(0, 700), false, false)).toBeUndefined();
+		expect(resolveSlideEntryAutoAdvanceMs(timed(0, 700), true, true)).toBeUndefined();
+	});
+
+	it('is what the overlay arms on entry', () => {
+		const overlay = componentSource(
+			dirname(fileURLToPath(import.meta.url)),
+			'presentation-overlay.component.ts',
+		);
+		expect(overlay).toMatch(/armAutoAdvance\(\s*resolveSlideEntryAutoAdvanceMs\(/u);
 	});
 });
 
