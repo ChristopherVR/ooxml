@@ -299,6 +299,10 @@
 	}
 
 	function onViewerError(message: string): void {
+		// An error in an open deck (a failed save, say) is the viewer's notice, not a load failure.
+		if ((viewerRef?.getSlideCount() ?? 0) > 0) {
+			return;
+		}
 		errorMessage = message || t('demo.viewer.loadError');
 		bytes = null;
 		document.title = 'pptx-svelte-viewer demo';

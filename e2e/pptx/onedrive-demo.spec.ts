@@ -35,9 +35,30 @@ async function openFromOneDrive(page: Page, name: string): Promise<void> {
 	await dialog.getByLabel('Access token').fill(ONEDRIVE_TEST_TOKEN);
 	await dialog.getByRole('button', { name: 'Continue', exact: true }).click();
 	await place.getByRole('option', { name: new RegExp(name, 'iu') }).click();
+	// The title bar names the opened file once it has replaced the deck that was showing.
+	await expect(page.getByText(new RegExp(`${name}\.pptx`, 'iu')).first()).toBeVisible({
+		timeout: 30_000,
+	});
 	await expect(page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first()).toBeVisible(
 		{ timeout: 30_000 },
 	);
+}
+
+/** The edit `addSlide` makes, tried on a deck that may refuse it (a read-only ribbon, a no-op). */
+async function tryAddSlide(page: Page): Promise<void> {
+	try {
+		await page
+			.getByRole('toolbar', { name: 'Presentation toolbar' })
+			.getByRole('tab', { name: 'Home', exact: true })
+			.click({ timeout: 3000 });
+		await page
+			.getByRole('button', { name: /new slide/iu })
+			.first()
+			.click({ timeout: 3000 });
+	} catch {
+		// A read-only deck may not offer the command at all.
+	}
+	await page.waitForTimeout(1000);
 }
 
 async function addSlide(page: Page): Promise<void> {
@@ -64,7 +85,8 @@ test.describe('OneDrive under File > Open', () => {
 		await openFromOneDrive(page, 'Quarterly review');
 		await addSlide(page);
 		await fileSave(page);
-		await expect(page.getByText('All saved', { exact: true }).first()).toBeVisible({
+		// "All saved", or the autosave line once its recovery copy landed (it takes precedence).
+		await expect(page.getByText(/^(All saved|Saved (just now|\d+ min.*))$/u).first()).toBeVisible({
 			timeout: 30_000,
 		});
 		expect(cloud.writes).toStrictEqual(['mine']);
@@ -93,6 +115,8 @@ test.describe('OneDrive under File > Open', () => {
 			shared: { name: 'Shared with me.pptx', bytes: await deck(), driveId: 'colleague-drive' },
 		});
 		await openFromOneDrive(page, 'Shared with me');
-		await expect(page.getByText('Read-only', { exact: false }).first()).toBeVisible();
+		// The edit that marks an own-drive deck unsaved leaves this one untouched.
+		await tryAddSlide(page);
+		await expect(unsaved(page)).toHaveCount(0);
 	});
 });

@@ -184,6 +184,11 @@ function openViewer(
 		// (demos/shared/demo-root-options.ts), for e2e.
 		...currentDemoRootOptions(),
 		onError: (message, error) => {
+			if ((viewer?.getSlideCount() ?? 0) > 0) {
+				// An error in an open deck (a failed save, say) is the viewer's notice, not a load failure.
+				console.error('pptx-vanilla-viewer error', message, error);
+				return;
+			}
 			console.error('pptx-vanilla-viewer failed to load', message, error);
 			// A deck the viewer cannot load must not be reopened on every refresh.
 			void forgetSessionDeck();
