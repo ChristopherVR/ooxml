@@ -256,8 +256,27 @@ export interface ImageOptions extends Partial<ElementPosition> {
 
 export interface TableInput {
 	rows: TableRowInput[];
+	/**
+	 * Column widths, relative to each other (fractions, or px that add up to
+	 * the table's width), one per column. Omitted: equal columns. Widths that
+	 * are not one finite value of 0 or more per column, or that add up to 0,
+	 * throw a `RangeError`.
+	 */
 	columnWidths?: number[];
+	/**
+	 * Table style id (`a:tableStyleId`). Omitted: PowerPoint's default
+	 * (Medium Style 2 - Accent 1). `'none'` (or `''`): no table style, so only
+	 * the cells' own formatting shows.
+	 */
 	style?: string;
+	/**
+	 * Opt-in: `rows[].cells` list only the real cells, and the slots that a
+	 * `gridSpan` / `rowSpan` covers are added as empty `hMerge` / `vMerge`
+	 * cells. Without it the cells are taken as given, one per grid slot. A
+	 * span that is not a whole number from 1, reaches past the last row or
+	 * overlaps another merge throws a `RangeError`.
+	 */
+	fillMergedCells?: boolean;
 	bandRows?: boolean;
 	bandColumns?: boolean;
 	firstRow?: boolean;
