@@ -550,3 +550,266 @@ describe('playTransitionOverlay', () => {
 		});
 	});
 });
+
+/** What a morph actually paints, read back from the overlay's DOM and `<style>` (issue #141). */
+describe('playTransitionOverlay: what a morph paints (issue #141)', () => {
+	let stageWrap: HTMLElement;
+
+	beforeEach(() => {
+		vi.useFakeTimers();
+		stageWrap = document.createElement('div');
+		document.body.appendChild(stageWrap);
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+		stageWrap.remove();
+	});
+
+	function stageOf(elements: readonly { id: string; text?: string }[]): HTMLElement {
+		const stage = buildStage(document, []);
+		for (const element of elements) {
+			const box = document.createElement('div');
+			box.dataset.elementId = element.id;
+			if (element.text !== undefined) {
+				box.textContent = element.text;
+			}
+			stage.appendChild(box);
+		}
+		return stage;
+	}
+
+	function playMorph(
+		from: PptxSlide,
+		to: PptxSlide,
+		outgoing: HTMLElement,
+		incoming: HTMLElement,
+	): () => void {
+		return playTransitionOverlay({
+			doc: document,
+			stageWrap,
+			outgoing,
+			incoming,
+			transition: { type: 'morph', durationMs: 1000 } as PptxSlideTransition,
+			outgoingSlide: from,
+			incomingSlide: to,
+			onDone: vi.fn(),
+		});
+	}
+
+	const overlayCss = (): string =>
+		[...stageWrap.querySelectorAll('style')].map((node) => node.textContent).join('\n');
+
+	/** The opacity an animation shorthand holds at `progress` (0-100), from its keyframes. */
+	function opacityAt(css: string, animation: string, progress: number): number {
+		const name = animation.trim().split(/\s+/u)[0] ?? '';
+		const start = css.indexOf(`@keyframes ${name} {`);
+		if (start < 0) {
+			return 1;
+		}
+		const block = css.slice(start, css.indexOf('\n}', start));
+		const stops: { at: number; opacity: number }[] = [];
+		for (const match of block.matchAll(
+			/((?:from|to|[\d.]+%)(?:\s*,\s*(?:from|to|[\d.]+%))*)\s*\{([^}]*)\}/gu,
+		)) {
+			const opacity = /opacity:\s*([\d.]+)/u.exec(match[2] ?? '')?.[1];
+			if (opacity === undefined) {
+				continue;
+			}
+			for (const key of (match[1] ?? '').split(',')) {
+				const stop = key.trim();
+				const at = stop === 'from' ? 0 : stop === 'to' ? 100 : Number.parseFloat(stop);
+				stops.push({ at, opacity: Number(opacity) });
+			}
+		}
+		stops.sort((a, b) => a.at - b.at);
+		const before = stops.filter((stop) => stop.at <= progress).at(-1);
+		const after = stops.find((stop) => stop.at >= progress);
+		if (!before || !after) {
+			return (before ?? after)?.opacity ?? 1;
+		}
+		if (after.at === before.at) {
+			return after.opacity;
+		}
+		return (
+			before.opacity +
+			((after.opacity - before.opacity) * (progress - before.at)) / (after.at - before.at)
+		);
+	}
+
+	/**
+	 * How opaque the overlay paints `node` at `progress`: the product of every
+	 * animation reaching it, inline on it or an ancestor (a layer, a crossfade
+	 * half) or through a scoped `[data-pptx-morph-*] [data-element-id]` rule.
+	 */
+	function paintedOpacity(node: HTMLElement, progress: number): number {
+		const css = overlayCss();
+		const id = node.dataset.elementId ?? '';
+		let opacity = 1;
+		for (let at: HTMLElement | null = node; at && at !== stageWrap; at = at.parentElement) {
+			if (at.style.animation) {
+				opacity *= opacityAt(css, at.style.animation, progress);
+			}
+			for (const scope of ['incoming', 'outgoing', 'lifted']) {
+				if (!at.hasAttribute(`data-pptx-morph-${scope}`)) {
+					continue;
+				}
+				const rule = css
+					.split('\n')
+					.find((line) =>
+						line.startsWith(`[data-pptx-morph-${scope}] [data-element-id="${id}"] { animation:`),
+					);
+				const animation = rule ? /animation: ([^;]+);/u.exec(rule)?.[1] : undefined;
+				if (animation !== undefined) {
+					opacity *= opacityAt(css, animation, progress);
+				}
+			}
+		}
+		return opacity;
+	}
+
+	// Issue #141, slides 6 -> 7: the "L" column changes font, so it dissolves as
+	// a crossfade group, while it slides under the top band the incoming slide
+	// stacks ABOVE it. Painted above every overlay layer, the column showed
+	// across the band for the whole morph and vanished from it in one frame.
+	it('stacks a dissolving column between the band above it and the strip below it', () => {
+		const picture = (id: string, name: string, y: number, height: number) => ({
+			id,
+			name,
+			type: 'picture',
+			x: 0,
+			y,
+			width: 1280,
+			height,
+			imagePath: `ppt/media/${name}.png`,
+		});
+		const column = (id: string, y: number, fontFamily: string) => ({
+			id,
+			name: 'Object 14',
+			type: 'text',
+			x: 284,
+			y,
+			width: 51,
+			height: 1066,
+			text: 'L\nL\nL',
+			textStyle: { color: '#FFFFFF', fontFamily },
+			textSegments: [{ text: 'L\nL\nL', style: { fontFamily, color: '#FFFFFF' } }],
+		});
+		const from = {
+			id: '6',
+			slideNumber: 1,
+			elements: [
+				picture('bg6', 'backdrop', 0, 720),
+				column('col6', -916, 'Calibri Light'),
+				picture('strip6', 'strip', -1, 720),
+				picture('band6', 'band', -1, 196),
+			],
+		} as unknown as PptxSlide;
+		const to = {
+			id: '7',
+			slideNumber: 2,
+			elements: [
+				picture('bg7', 'backdrop', 0, 720),
+				picture('strip7', 'strip', -3, 720),
+				column('col7', -158, 'Calibri'),
+				picture('band7', 'band', -2, 196),
+			],
+		} as unknown as PptxSlide;
+		const cancel = playMorph(from, to, stageOf(from.elements), stageOf(to.elements));
+
+		const group = stageWrap.querySelector<HTMLElement>('[data-pptx-morph-crossfade="col7"]');
+		expect(group, 'the column must dissolve as a group').not.toBeNull();
+		const layerZ = (id: string): number => {
+			const layer = [
+				...stageWrap.querySelectorAll<HTMLElement>(
+					'[data-pptx-transition-layer="outgoing"][data-pptx-morph-outgoing], [data-pptx-transition-layer="lifted"][data-pptx-morph-lifted]',
+				),
+			].find(
+				(candidate) =>
+					!candidate.closest('[data-pptx-morph-crossfade]') &&
+					candidate.querySelector(`[data-element-id="${id}"]`) !== null,
+			);
+			expect(layer, `${id} must be painted in an overlay layer`).toBeDefined();
+			return Number(layer!.style.zIndex);
+		};
+		const groupZ = Number(group!.style.zIndex);
+		expect(layerZ('band6')).toBeGreaterThan(groupZ);
+		expect(layerZ('strip6')).toBeLessThan(groupZ);
+		cancel();
+	});
+
+	// Issue #141, slides 17 -> 18 and back: a three-paragraph text box parked off
+	// the left edge whose second paragraph changes size flies onto the slide (or
+	// back off it). Cross-dissolving the two layouts painted the paragraph twice
+	// for the whole flight; one travelling copy must be the only one seen.
+	describe('paints a size-changed paragraph flying from off-stage exactly once', () => {
+		const TEXT = 'Parked opener\nSecond paragraph\nClosing line';
+		const box = (id: string, x: number, fontSize?: number) => ({
+			id,
+			type: 'text',
+			name: 'TextBox 9',
+			x,
+			y: 120,
+			width: 300,
+			height: 240,
+			text: TEXT,
+			textSegments: [
+				{ text: 'Parked opener', style: { fontFamily: 'Arial', fontSize: 18 } },
+				{ text: '\n' },
+				{
+					text: 'Second paragraph',
+					style: { fontFamily: 'Arial', ...(fontSize === undefined ? {} : { fontSize }) },
+				},
+				{ text: '\n' },
+				{ text: 'Closing line', style: { fontFamily: 'Arial', fontSize: 18 } },
+			],
+		});
+		// Only on the source slide, so the travelling copy is painted as a ghost.
+		const panel = (id: string) => ({
+			id,
+			type: 'shape',
+			name: 'Panel',
+			x: -600,
+			y: 0,
+			width: 1200,
+			height: 720,
+			shapeStyle: { fillMode: 'solid', fillColor: '#123456' },
+		});
+		const slideOf = (id: string, elements: unknown[]): PptxSlide =>
+			({ id, slideNumber: 1, elements }) as unknown as PptxSlide;
+
+		it.each([
+			[
+				'forward, 17 -> 18',
+				slideOf('17', [panel('p17'), box('t17', -400, 14)]),
+				slideOf('18', [box('t18', 875)]),
+			],
+			[
+				'backward, 18 -> 17',
+				slideOf('18', [panel('p18'), box('t18', 875)]),
+				slideOf('17', [box('t17', -400, 14)]),
+			],
+		])('%s', (_, from, to) => {
+			const withText = (slide: PptxSlide) =>
+				slide.elements.map((element) => ({
+					id: element.id,
+					...(element.type === 'text' ? { text: TEXT } : {}),
+				}));
+			const cancel = playMorph(from, to, stageOf(withText(from)), stageOf(withText(to)));
+
+			const copies = [...stageWrap.querySelectorAll<HTMLElement>('[data-element-id]')].filter(
+				(node) => node.textContent === TEXT,
+			);
+			// The travelling ghost and the incoming layer's own copy are both in the DOM...
+			expect(copies.length).toBeGreaterThanOrEqual(2);
+			expect(
+				copies.some((node) => node.closest('[data-pptx-morph-outgoing]') !== null),
+				'the ghost carries the text',
+			).toBeTruthy();
+			// ...but only one of them can be seen halfway through the flight.
+			const visible = copies.filter((node) => paintedOpacity(node, 50) > 0.01);
+			expect(visible).toHaveLength(1);
+			cancel();
+		});
+	});
+});
