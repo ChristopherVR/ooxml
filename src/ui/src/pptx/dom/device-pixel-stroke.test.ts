@@ -34,6 +34,7 @@ function stage(elements: PptxElement[], scale = 0.5): HTMLElement {
 
 const STEP = 'max(var(--pptx-device-px, 0px), 0.001px)';
 const screenWidth = (authored: string): string => `max(${STEP}, round(${authored}px, ${STEP}))`;
+const borderWidth = (authored: string): string => `max(${authored}px, var(--pptx-device-px, 0px))`;
 
 describe('one device pixel minimum (vanilla DOM renderer)', () => {
 	it('publishes the device pixel on the stage for its scale', () => {
@@ -83,7 +84,7 @@ describe('one device pixel minimum (vanilla DOM renderer)', () => {
 			}),
 		]);
 		const box = node.querySelector<HTMLElement>('[data-element-id="inset"]');
-		expect(box?.getAttribute('style')).toContain(screenWidth('0.5'));
+		expect(box?.getAttribute('style')).toContain(borderWidth('0.5'));
 	});
 
 	it('holds a connector strand at one device pixel, and at 1px off screen', () => {
@@ -129,7 +130,7 @@ describe('one device pixel minimum (vanilla DOM renderer)', () => {
 			} as Partial<PptxElement> & Pick<PptxElement, 'type' | 'id'>),
 		]);
 		const td = node.querySelector<HTMLElement>('[data-element-id="tbl"] td');
-		expect(td?.getAttribute('style')).toContain(`border-top: ${screenWidth('0.5')} solid`);
+		expect(td?.getAttribute('style')).toContain(`border-top: ${borderWidth('0.5')} solid`);
 		const diagonal = td?.querySelector<SVGLineElement>('svg line');
 		expect(diagonal?.getAttribute('stroke-width')).toBe('0.5');
 		expect(diagonal?.style.getPropertyValue('stroke-width')).toBe(screenWidth('0.5'));

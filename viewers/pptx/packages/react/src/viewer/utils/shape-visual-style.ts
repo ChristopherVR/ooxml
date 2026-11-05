@@ -7,7 +7,7 @@ import {
 	isWedgeCalloutPresetShape,
 	isStrokeOnlyPresetElement,
 	resolveShapeGeometry,
-	screenStrokeWidth,
+	screenBorderWidth,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
@@ -248,7 +248,7 @@ export function getShapeVisualStyle(
 				...base,
 				backgroundColor: 'transparent',
 				borderWidth: 0,
-				borderTopWidth: screenStrokeWidth(geometry.strokeWidth),
+				borderTopWidth: screenBorderWidth(geometry.strokeWidth),
 				borderTopColor: stroke.borderColor,
 				borderTopStyle: (stroke.borderStyle ?? 'solid') as React.CSSProperties['borderTopStyle'],
 			};

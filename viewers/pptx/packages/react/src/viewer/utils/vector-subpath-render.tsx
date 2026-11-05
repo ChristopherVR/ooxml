@@ -1,6 +1,6 @@
 import {
 	buildSubpathPaints,
-	screenStrokeWidth,
+	screenBorderWidth,
 	svgGradientFillRef,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
@@ -100,7 +100,7 @@ function strokeStrands(d: string, keyBase: string, ctx: StrokeStyleContext): Rea
 			vectorEffect='non-scaling-stroke'
 			style={{
 				// Never under one device pixel on screen (shared `device-pixel-stroke`).
-				strokeWidth: screenStrokeWidth(Math.max(ctx.widths[idx] ?? ctx.strokeWidth, 1)),
+				strokeWidth: screenBorderWidth(Math.max(ctx.widths[idx] ?? ctx.strokeWidth, 1)),
 				transform: offset !== 0 ? `translate(0, ${offset}px)` : undefined,
 			}}
 		/>

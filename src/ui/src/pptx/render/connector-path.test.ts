@@ -11,6 +11,7 @@ import {
 	connectorWrapperTransform,
 	markerPath,
 } from './connector-path';
+import { connectorStrandScreenWidth } from './connector-style';
 
 describe('buildDashArray', () => {
 	it('returns undefined for solid / missing dashes', () => {
@@ -306,5 +307,12 @@ describe('connectorSnapTransform', () => {
 			).snapTransform,
 		).toBeUndefined();
 		expect(connectorSnapTransform(line(), false, 1, 1.3333)).toBeUndefined();
+	});
+
+	it('snaps a single strand but leaves compound strand widths unrounded', () => {
+		expect(connectorStrandScreenWidth([1.3333], 0.3333, 0)).toContain('round(0.3333px,');
+		expect(connectorStrandScreenWidth([1.3333], 0.3333, 0)).toContain('clamp(');
+		const compound = connectorStrandScreenWidth([2, 2, 2], 6, 1);
+		expect(compound).toBe('max(2px, var(--pptx-device-px, 0px))');
 	});
 });

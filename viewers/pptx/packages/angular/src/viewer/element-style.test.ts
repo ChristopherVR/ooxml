@@ -379,7 +379,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 			} as unknown as Partial<PptxElement>),
 		);
 		expect(style['border']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(8px, max(var(--pptx-device-px, 0px), 0.001px))) double #FF0000',
+			'max(8px, var(--pptx-device-px, 0px)) double #FF0000',
 		);
 	});
 
@@ -412,7 +412,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 			} as unknown as Partial<PptxElement>),
 		);
 		expect(style['border']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px))) solid rgba(255, 0, 0, 0.5)',
+			'max(2px, var(--pptx-device-px, 0px)) solid rgba(255, 0, 0, 0.5)',
 		);
 	});
 
@@ -445,7 +445,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 			} as unknown as Partial<PptxElement>),
 		);
 		expect(style['border']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(4px, max(var(--pptx-device-px, 0px), 0.001px))) dashed #FF0000',
+			'max(4px, var(--pptx-device-px, 0px)) dashed #FF0000',
 		);
 	});
 

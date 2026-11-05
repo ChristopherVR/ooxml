@@ -52,7 +52,7 @@ describe('react: thin strokes stay one device pixel on screen', () => {
 		expect(
 			getShapeVisualStyle(inset, insetParams.hf, insetParams.fc, insetParams.sw, insetParams.sc)
 				.borderWidth,
-		).toBe(screen('0.5'));
+		).toBe('max(0.5px, var(--pptx-device-px, 0px))');
 		const bare = {
 			...inset,
 			shapeStyle: { fillColor: '#ff0000' },

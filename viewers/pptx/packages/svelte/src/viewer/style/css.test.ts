@@ -105,7 +105,7 @@ describe('element styles (shared render helpers)', () => {
 			shapeStyle: { strokeColor: '#00ff00', strokeWidth: 2, lineAlignment: 'in' },
 		} as PptxElement);
 		expect(style.border).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px))) solid #00ff00',
+			'max(2px, var(--pptx-device-px, 0px)) solid #00ff00',
 		);
 	});
 

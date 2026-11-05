@@ -145,11 +145,27 @@ export function snappedStrokeTransform(
 }
 
 /**
- * A CSS `border` shorthand whose width is {@link screenStrokeWidth}; a missing
+ * The on-screen CSS width of a `border-width`: never under one device pixel
+ * inside a stage, the authored width anywhere else. Unlike
+ * {@link screenStrokeWidth} it is NOT rounded to whole device pixels: Chromium
+ * snaps a CSS border to whole pixels in the element's own (unscaled) layout
+ * space, and a width rounded to a device pixel of a scaled stage (0.94 px at a
+ * scale of 1.0667, say) lands under one layout pixel there and can drop out or
+ * move a row, where `max()` leaves the snap to the browser.
+ */
+export function screenBorderWidth(width: number | undefined): string {
+	if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
+		return '0px';
+	}
+	return `max(${cssPx(width)}, var(${DEVICE_PX_VAR}, 0px))`;
+}
+
+/**
+ * A CSS `border` shorthand whose width is {@link screenBorderWidth}; a missing
  * `style` is `solid`.
  */
 export function screenBorder(width: number, style: string | undefined, color: string): string {
-	return `${screenStrokeWidth(width)} ${style ?? 'solid'} ${color}`;
+	return `${screenBorderWidth(width)} ${style ?? 'solid'} ${color}`;
 }
 
 interface DevicePixelRatioWindow {

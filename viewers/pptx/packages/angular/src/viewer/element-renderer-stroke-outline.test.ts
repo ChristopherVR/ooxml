@@ -159,6 +159,8 @@ describe('elementRenderer stroke outline (stroke-only preset)', () => {
 				cssStrokeWidth:
 					'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px)))',
 				offset: 0,
+				// A horizontal rule is snapped to the device grid.
+				cssTransform: expect.stringContaining('translate(0px, calc(round('),
 			},
 		]);
 	});

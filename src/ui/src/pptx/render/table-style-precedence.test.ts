@@ -143,7 +143,7 @@ describe('table-style part precedence (F4)', () => {
 		);
 		expect(topLeft?.borderRight).toBe('none');
 		expect(topLeft?.borderBottom).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px))) solid #FFFFFF',
+			'max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF',
 		);
 		// One row down there is no corner, so the first column's rule survives.
 		const bodyLeft = resolveCellBorderCss(
@@ -153,7 +153,7 @@ describe('table-style part precedence (F4)', () => {
 			resolve,
 		);
 		expect(bodyLeft?.borderRight).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px))) solid #FFFFFF',
+			'max(3px, var(--pptx-device-px, 0px)) solid #FFFFFF',
 		);
 	});
 });

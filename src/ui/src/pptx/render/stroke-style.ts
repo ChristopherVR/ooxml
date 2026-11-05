@@ -27,7 +27,7 @@ import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
-import { screenBorder, screenStrokeWidth } from './device-pixel-stroke';
+import { screenBorder, screenBorderWidth } from './device-pixel-stroke';
 import type { CssBorderStyle } from './element-style-transform';
 import { getCssBorderDashStyle, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity, normalizeHexColor } from './fill-style';
@@ -177,7 +177,7 @@ export function getComputedStrokeStyle(element: PptxElement): ComputedStrokeStyl
 			: colorWithOpacity(normalizeHexColor(rawColor, DEFAULT_STROKE_COLOR), style.strokeOpacity);
 	return {
 		borderWidth,
-		cssBorderWidth: screenStrokeWidth(borderWidth),
+		cssBorderWidth: screenBorderWidth(borderWidth),
 		borderStyle,
 		borderColor,
 		border: screenBorder(borderWidth, borderStyle ?? 'solid', borderColor),

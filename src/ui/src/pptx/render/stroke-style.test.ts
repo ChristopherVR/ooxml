@@ -42,14 +42,10 @@ describe('getComputedStrokeStyle', () => {
 		);
 		expect(stroke.borderWidth).toBe(3);
 		// On screen the painted width never drops under one device pixel (issue #23).
-		expect(stroke.cssBorderWidth).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px)))',
-		);
+		expect(stroke.cssBorderWidth).toBe('max(3px, var(--pptx-device-px, 0px))');
 		expect(stroke.borderStyle).toBe('solid');
 		expect(stroke.borderColor).toBe('#ff0000');
-		expect(stroke.border).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(3px, max(var(--pptx-device-px, 0px), 0.001px))) solid #ff0000',
-		);
+		expect(stroke.border).toBe('max(3px, var(--pptx-device-px, 0px)) solid #ff0000');
 	});
 
 	it('suppresses the CSS border at the default (omitted / ctr) alignment', () => {

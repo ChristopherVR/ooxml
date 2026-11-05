@@ -37,7 +37,8 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
-import { DEVICE_PX_VAR, screenStrokeWidth, snappedStrokeTransform } from './device-pixel-stroke';
+import { DEVICE_PX_VAR, screenBorderWidth,
+	screenStrokeWidth, snappedStrokeTransform } from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
@@ -272,7 +273,7 @@ function outlineStrands(
 	const widths = getCompoundLineWidths(compoundLine, strokeWidth);
 	return offsets.map((offset, idx) => {
 		const width = widths[idx] ?? strokeWidth;
-		return { strokeWidth: width, cssStrokeWidth: screenStrokeWidth(width), offset };
+		return { strokeWidth: width, cssStrokeWidth: screenBorderWidth(width), offset };
 	});
 }
 

@@ -7,6 +7,7 @@ import {
 	deviceStrokeStageStyle,
 	neutralizeDeviceStrokes,
 	screenBorder,
+	screenBorderWidth,
 	screenStrokeWidth,
 	snappedStrokeShift,
 	snappedStrokeTransform,
@@ -42,10 +43,10 @@ describe('screenStrokeWidth', () => {
 
 	it('builds a border shorthand from the same width', () => {
 		expect(screenBorder(0.5, 'dashed', '#000')).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.5px, max(var(--pptx-device-px, 0px), 0.001px))) dashed #000',
+			'max(0.5px, var(--pptx-device-px, 0px)) dashed #000',
 		);
 		expect(screenBorder(1, undefined, 'red')).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(1px, max(var(--pptx-device-px, 0px), 0.001px))) solid red',
+			'max(1px, var(--pptx-device-px, 0px)) solid red',
 		);
 		expect(screenBorder(0, 'solid', 'red')).toBe('0px solid red');
 	});
@@ -217,5 +218,11 @@ describe('PowerPoint thin-line rule (measured on PowerPoint 16 exports)', () => 
 		expect(snappedStrokeTransform('h', 1, 1, 0)).toBeUndefined();
 		expect(snappedStrokeTransform('h', 1, 1, undefined)).toBeUndefined();
 		expect(snappedStrokeShift(Number.NaN, 1)).toBe('0px');
+	});
+
+	it('leaves a CSS border width unrounded: Chromium snaps borders in layout space', () => {
+		expect(screenBorderWidth(0.9375)).toBe('max(0.9375px, var(--pptx-device-px, 0px))');
+		expect(screenBorderWidth(0)).toBe('0px');
+		expect(screenBorder(1, 'solid', '#000')).not.toContain('round(');
 	});
 });

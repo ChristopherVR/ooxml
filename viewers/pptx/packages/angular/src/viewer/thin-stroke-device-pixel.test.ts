@@ -57,7 +57,7 @@ describe('angular: thin strokes stay one device pixel on screen', () => {
 			shape({ strokeColor: '#000', strokeWidth: 0.5, lineAlignment: 'in' }),
 		);
 		expect(inset['border']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(0.5px, max(var(--pptx-device-px, 0px), 0.001px))) solid #000',
+			'max(0.5px, var(--pptx-device-px, 0px)) solid #000',
 		);
 		const bare = getShapeFillStrokeStyle(shape({ fillColor: '#ff0000' }));
 		expect(String(bare['border'] ?? '')).not.toContain('max(');

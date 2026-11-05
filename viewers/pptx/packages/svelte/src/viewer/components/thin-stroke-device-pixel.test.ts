@@ -109,7 +109,7 @@ describe('svelte: thin strokes stay one device pixel on screen', () => {
 				shapeStyle: { strokeColor: '#000', strokeWidth: 0.5, lineAlignment: 'in' },
 			}),
 		);
-		expect(style.border).toBe(`${screen('0.5')} solid #000`);
+		expect(style.border).toBe('max(0.5px, var(--pptx-device-px, 0px)) solid #000');
 	});
 
 	it('snaps a horizontal connector to the device grid and ends it at its real y', () => {

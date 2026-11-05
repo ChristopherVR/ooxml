@@ -164,7 +164,7 @@ describe('cellStyleToStyleMap', () => {
 			borderTopDash: 'dot',
 		});
 		expect(map['border-top']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(2px, max(var(--pptx-device-px, 0px), 0.001px))) dotted #FF0000',
+			'max(2px, var(--pptx-device-px, 0px)) dotted #FF0000',
 		);
 	});
 
@@ -174,7 +174,7 @@ describe('cellStyleToStyleMap', () => {
 			borderBottomWidth: 1,
 		});
 		expect(map['border-bottom']).toBe(
-			'max(max(var(--pptx-device-px, 0px), 0.001px), round(1px, max(var(--pptx-device-px, 0px), 0.001px))) solid #123456',
+			'max(1px, var(--pptx-device-px, 0px)) solid #123456',
 		);
 	});
 

@@ -4,6 +4,7 @@ import {
 	buildSvgGradientDef,
 	getPresetShapeVectorGeometry,
 	isWedgeCalloutPresetShape,
+	screenBorderWidth,
 	screenStrokeWidth,
 	svgGradientFillRef,
 	svgLineCap,
@@ -355,7 +356,7 @@ export function renderVectorShape(
 						vectorEffect='non-scaling-stroke'
 						style={{
 							pointerEvents: 'none',
-							strokeWidth: screenStrokeWidth(Math.max(widths[idx] ?? strokeWidth, 1)),
+							strokeWidth: screenBorderWidth(Math.max(widths[idx] ?? strokeWidth, 1)),
 							...(offset !== 0 ? { transform: `translate(0, ${offset}px)` } : {}),
 						}}
 					/>
