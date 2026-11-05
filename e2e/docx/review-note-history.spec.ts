@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
-import { newDocument, waitForEditorFocus } from './helpers';
+import { demoReady, newDocument, waitForEditorFocus } from './helpers';
 
 const fixture = fileURLToPath(
 	new URL(
@@ -15,6 +15,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	}) => {
 		await page.setViewportSize({ width: 2400, height: 1000 });
 		await page.goto(`/?framework=${framework}`);
+		await demoReady(page);
 		await page.locator('input[type=file]').first().setInputFiles(fixture);
 		const editor = page.locator('docx-editor');
 		const body = editor.locator('.dve-paper > .ProseMirror');

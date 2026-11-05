@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { clickInEditor, openSample, saveStateLabel } from './helpers';
+import { clickInEditor, demoReady, openSample, saveStateLabel } from './helpers';
 
 test('appearance changes from another window preserve the open document', async ({
 	page,
@@ -13,6 +13,7 @@ test('appearance changes from another window preserve the open document', async 
 	await page.keyboard.type(' Theme synchronization keeps this edit.');
 	const controls = await context.newPage();
 	await controls.goto('/');
+	await demoReady(controls);
 	const themeBefore = await controls.locator('html').getAttribute('data-theme');
 	await controls.locator('#theme-toggle').click();
 	await expect(page.locator('html')).toHaveAttribute(

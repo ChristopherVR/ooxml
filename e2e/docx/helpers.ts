@@ -5,7 +5,7 @@ import type { EditorView } from 'prosemirror-view';
 const editor = (page: Page) => page.locator('docx-editor');
 const landingVisible = (page: Page) => page.locator('#landing').isVisible();
 /** Waits until the demo script has wired the landing page's buttons. */
-const demoReady = (page: Page) =>
+export const demoReady = (page: Page) =>
 	page.locator('html[data-demo-ready="true"]').waitFor({ state: 'attached' });
 
 /** Opens the demo in `framework` and loads the sample document from the landing page. */
