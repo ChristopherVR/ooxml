@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { demoReady } from './helpers';
 import type { NativeHarness } from '../../demos/xlsx/demo-vanilla/native-building-blocks';
 for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla']) {
 	test(`${framework}: native composed controls retain drafts, permission and saved edits`, async ({
@@ -7,6 +8,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		const pageErrors: string[] = [];
 		page.on('pageerror', (error) => pageErrors.push(error.message));
 		await page.goto(`/?framework=${framework}&blocks=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 		const canvas = page.locator('xlsx-editor');
@@ -76,6 +78,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		const errors: string[] = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await page.goto(`/?framework=${framework}&blocks=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 		await page.evaluate(() => {
@@ -145,6 +148,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		const errors: string[] = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await page.goto(`/?framework=${framework}&blocks=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 		await page.evaluate(() => {
@@ -230,6 +234,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid', 'vanilla'
 		const errors: string[] = [];
 		page.on('pageerror', (e) => errors.push(e.message));
 		await page.goto(`/?framework=${framework}&blocks=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		await expect(page.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 		await page.getByRole('button', { name: 'Center', exact: true }).click();

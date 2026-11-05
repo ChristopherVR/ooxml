@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { demoReady } from './helpers';
 type XlsxEditorElement = HTMLElementTagNameMap['xlsx-editor'];
 
 async function colours(page: Page) {
@@ -55,6 +56,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto(`/?framework=${framework}&blocks=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		await expect(page.locator('[data-office-block="toolbar"]')).toBeVisible();
 		await expect(page.locator('[data-office-block]')).toHaveCount(3);
@@ -146,6 +148,7 @@ for (const framework of ['react', 'angular', 'vue', 'svelte', 'solid']) {
 	}) => {
 		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto(`/?framework=${framework}&blocks=1&shadow=1`);
+		await demoReady(page);
 		await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 		const toolbar = page.locator('[data-office-block="toolbar"]');
 		await expect(toolbar).toBeVisible();
@@ -167,6 +170,7 @@ test('full Excel chrome keeps theme and themeColors compatibility without changi
 	page,
 }) => {
 	await page.goto('/?framework=vanilla');
+	await demoReady(page);
 	await page.getByRole('button', { name: 'or create a New Workbook', exact: true }).click();
 	const editor = page.locator('xlsx-editor');
 	await expect(editor.locator('.xve-frame')).toBeVisible();

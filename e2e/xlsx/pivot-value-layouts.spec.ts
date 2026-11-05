@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { resolve } from 'node:path';
-import { editor, formulaBarValue, goToCell, ribbon } from './helpers';
+import { demoReady, editor, formulaBarValue, goToCell, ribbon } from './helpers';
 
 test('switches native multiple measures across compact, outline and tabular layouts, undoes and reopens', async ({
 	page,
 }, info) => {
 	await page.goto('/');
+	await demoReady(page);
 	await page
 		.locator('#landing-file')
 		.setInputFiles(
