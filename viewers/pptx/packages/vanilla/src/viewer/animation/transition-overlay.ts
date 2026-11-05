@@ -6,6 +6,7 @@ import {
 	resolveSlideTransition,
 	resolveTransitionDurationMs,
 } from 'ooxml-ui/pptx';
+import { stripAbuttingEdgeBleeds } from 'ooxml-ui/pptx/dom';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
 import { ensurePresentationKeyframes } from './animation-dom';
@@ -92,6 +93,13 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 					params.slideSize ? { slideSize: params.slideSize } : {},
 				)
 			: undefined;
+
+	// A morph moves shapes out from under their covers, so no copy of a stage may
+	// keep the 2 px an abutting rectangle grows under its cover (abutting-edge-bleed).
+	if (morphPlan) {
+		stripAbuttingEdgeBleeds(outgoing);
+		stripAbuttingEdgeBleeds(incoming);
+	}
 
 	const outgoingZIndex = resolved.outgoingOnTop ? 2 : 1;
 	const incomingZIndex = morphPlan ? 1 : resolved.outgoingOnTop ? 1 : 2;

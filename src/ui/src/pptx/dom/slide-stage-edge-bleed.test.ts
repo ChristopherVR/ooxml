@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../i18n/translator';
 import { createDefaultRegistry } from './elements';
+import { stripAbuttingEdgeBleeds } from './elements/edge-bleed-restore';
 import { renderSlideStage } from './slide-stage';
 
 /**
@@ -78,6 +79,27 @@ describe('vanilla stage abutting-edge bleed', () => {
 		const upper = box('object-2');
 		expect(upper.style.left).toBe('0px');
 		expect(upper.style.width).toBe('581px');
+	});
+
+	it('puts the authored box and fill back on a clone a morph transition animates', () => {
+		const stage = renderSlideStage({
+			document,
+			slide,
+			canvasSize: { width: 1280, height: 720 },
+			mediaDataUrls: new Map(),
+			registry: createDefaultRegistry(),
+			t: createTranslator(),
+		});
+		const grown = stage.querySelector<HTMLElement>('[data-element-id="object-8"]')!;
+		const authored = box('object-8', new Set(['object-2']));
+		expect(grown.style.width).toBe('352px');
+		stripAbuttingEdgeBleeds(stage);
+		expect(grown.style.left).toBe(authored.style.left);
+		expect(grown.style.width).toBe('350px');
+		expect(grown.style.backgroundSize).toBe(authored.style.backgroundSize);
+		expect(grown.style.backgroundPosition).toBe(authored.style.backgroundPosition);
+		expect(grown.style.backgroundImage).toBe(authored.style.backgroundImage);
+		expect(stage.querySelector('[data-pptx-edge-bleed]')).toBeNull();
 	});
 
 	it('keeps the exact box while either panel is selected', () => {

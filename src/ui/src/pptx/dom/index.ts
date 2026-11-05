@@ -11,6 +11,7 @@ export * from './elements/chart-svg';
 export * from './elements/chart-title-editor';
 export * from './elements/chart';
 export * from './elements/connector';
+export * from './elements/edge-bleed-restore';
 export * from './elements/contentpart';
 export * from './elements/equation';
 export * from './elements/extrusion-overlay';
