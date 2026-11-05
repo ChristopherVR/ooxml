@@ -135,10 +135,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (shdwColor) {
 				style.textShadowColor = shdwColor;
 			}
-			const shdwOpacity = this.extractColorOpacity(outerShdw);
-			if (shdwOpacity !== undefined) {
-				style.textShadowOpacity = shdwOpacity;
-			}
+			// No `a:alpha` is an opaque shadow (ECMA-376), not the renderer's 0.5.
+			style.textShadowOpacity = this.extractColorOpacity(outerShdw) ?? 1;
 			const blurRaw = Number.parseInt(String(outerShdw['@_blurRad'] || ''), 10);
 			if (Number.isFinite(blurRaw) && blurRaw >= 0) {
 				style.textShadowBlur = blurRaw / PptxHandlerRuntimeBase.EMU_PER_PX;
