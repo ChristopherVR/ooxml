@@ -158,7 +158,10 @@ async function graphDouble(page: Page) {
 async function openCloudPlace(page: Page) {
 	await editor(page).getByRole('button', { name: 'File', exact: true }).click();
 	await editor(page).locator('[data-backstage-item="open"]').click();
-	await editor(page).locator('.xve-backstage-place-tab', { hasText: 'OneDrive' }).click();
+	await editor(page)
+		.locator('office-ui-open-places')
+		.getByRole('tab', { name: 'OneDrive' })
+		.click();
 }
 
 async function signIn(page: Page) {
@@ -227,8 +230,8 @@ for (const framework of FRAMEWORKS)
 		await page.locator('#blank').click();
 		await editor(page).getByRole('button', { name: 'File', exact: true }).click();
 		await editor(page).locator('[data-backstage-item="open"]').click();
-		const tabs = editor(page).locator('.xve-backstage-place-tab');
-		await expect(tabs).toHaveText(['This device', 'OneDrive']);
-		await tabs.nth(1).click();
+		const places = editor(page).locator('office-ui-open-places');
+		await expect(places.getByRole('tab')).toHaveText(['This device', 'OneDrive']);
+		await places.getByRole('tab', { name: 'OneDrive' }).click();
 		await expect(editor(page).locator('office-ui-cloud-files')).toBeVisible();
 	});

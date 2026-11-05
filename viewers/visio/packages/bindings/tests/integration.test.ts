@@ -469,10 +469,11 @@ describe('native adapters against the real shared custom element', () => {
 			const element = mounted.handle.element;
 			try {
 				expect(element.fileProviders).toEqual([provider]);
-				expect(element.shadowRoot!.querySelectorAll('[data-backstage-place]')).toHaveLength(2);
+				const places = element.shadowRoot!.querySelector('office-ui-open-places')!;
+				expect(places.shadowRoot!.querySelectorAll('[role="tab"]')).toHaveLength(2);
 				await mounted.update({ document: null, fileProviders: [] });
 				expect(element.fileProviders).toEqual([]);
-				expect(element.shadowRoot!.querySelectorAll('[data-backstage-place]')).toHaveLength(0);
+				expect(places.shadowRoot!.querySelectorAll('[role="tab"]')).toHaveLength(0);
 			} finally {
 				await mounted.destroy();
 				host.remove();

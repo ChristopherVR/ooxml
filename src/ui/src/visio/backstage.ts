@@ -203,17 +203,18 @@ export function createBackstage(doc: Document): HTMLElement {
 	input.accept = '.vsdx,.vsdm,.vstx,.vstm,.vsd';
 	input.hidden = true;
 	input.setAttribute('aria-label', 'Choose a Visio drawing');
-	// File > Open places: filled in when the host passes `fileProviders`.
-	const places = el(doc, 'div', 'backstage-places');
-	places.hidden = true;
-	places.setAttribute('role', 'group');
-	places.setAttribute('aria-label', 'Places');
-	const cloud = el(doc, 'div', 'backstage-cloud');
-	cloud.hidden = true;
-	const device = <T extends HTMLElement>(node: T): T => {
-		node.dataset.place = 'device';
-		return node;
-	};
+	// File > Open places: the shared switcher; it shows only its children without providers.
+	const places = doc.createElement('office-ui-open-places');
+	places.append(
+		action(
+			doc,
+			'open',
+			'Browse',
+			'Open a .vsdx drawing or a legacy .vsd preview from this device.',
+		),
+		input,
+		el(doc, 'p', 'backstage-muted', `Recent drawings are not tracked. ${LOCAL}`),
+	);
 	const preview = doc.createElement('office-ui-print-preview');
 	preview.className = 'backstage-print-preview';
 	preview.setAttribute('label', 'Print preview of the current page');
@@ -229,23 +230,7 @@ export function createBackstage(doc: Document): HTMLElement {
 			notes,
 		),
 		page(doc, 'new', 'New', templates),
-		page(
-			doc,
-			'open',
-			'Open',
-			places,
-			cloud,
-			device(
-				action(
-					doc,
-					'open',
-					'Browse',
-					'Open a .vsdx drawing or a legacy .vsd preview from this device.',
-				),
-			),
-			device(input),
-			device(el(doc, 'p', 'backstage-muted', `Recent drawings are not tracked. ${LOCAL}`)),
-		),
+		page(doc, 'open', 'Open', places),
 		page(
 			doc,
 			'save-as',

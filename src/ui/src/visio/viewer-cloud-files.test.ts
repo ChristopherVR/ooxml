@@ -64,15 +64,24 @@ async function cloudFile(
 	};
 }
 
+const switcher = (root: ShadowRoot) =>
+	root.querySelector('office-ui-open-places') as HTMLElement & { shadowRoot: ShadowRoot };
+const tab = (root: ShadowRoot, place: string) =>
+	switcher(root).shadowRoot.querySelector<HTMLButtonElement>(
+		`[role="tab"][data-place="${place}"]`,
+	)!;
+
 function choose(root: ShadowRoot, file: CloudOpenedFile): void {
-	root.querySelector<HTMLButtonElement>('[data-backstage-place="cloud"]')!.click();
-	root.querySelector('.backstage-cloud')!.dispatchEvent(
-		new CustomEvent('office-cloud-file-open', {
-			detail: { providerId: 'cloud', file },
-			bubbles: true,
-			composed: true,
-		}),
-	);
+	tab(root, 'cloud').click();
+	switcher(root)
+		.shadowRoot.querySelector('office-ui-cloud-files')!
+		.dispatchEvent(
+			new CustomEvent('office-cloud-file-open', {
+				detail: { providerId: 'cloud', file },
+				bubbles: true,
+				composed: true,
+			}),
+		);
 }
 
 const backstageOpen = (root: ShadowRoot) =>
@@ -83,20 +92,26 @@ describe('File > Open with cloud file providers', () => {
 		const { viewer, root } = await setup();
 		viewer.element.openBackstage('open');
 		const places = () =>
-			[...root.querySelectorAll<HTMLElement>('[data-backstage-place]')].map((b) => b.textContent);
+			[...(switcher(root).shadowRoot.querySelectorAll('[role="tab"]') ?? [])].map(
+				(b) => b.textContent,
+			);
 		expect(places()).toEqual(['This device', 'Cloud']);
-		const browse = root.querySelector<HTMLElement>('[data-place="device"][data-backstage-action]')!;
-		expect(browse.hidden).toBe(false);
-		root.querySelector<HTMLButtonElement>('[data-backstage-place="cloud"]')!.click();
-		const browser = root.querySelector<HTMLElement & { accept: string[]; providers: unknown[] }>(
-			'office-ui-cloud-files',
+		const browse = root.querySelector<HTMLElement>(
+			'office-ui-open-places [data-backstage-action="open"]',
 		)!;
+		const browseHidden = () => switcher(root).shadowRoot.querySelector('slot')!.hidden;
+		expect(browse).not.toBeNull();
+		expect(browseHidden()).toBe(false);
+		tab(root, 'cloud').click();
+		const browser = switcher(root).shadowRoot.querySelector<
+			HTMLElement & { accept: string[]; providers: unknown[] }
+		>('office-ui-cloud-files')!;
 		expect(browser.accept).toEqual(['vsdx']);
 		expect(browser.providers).toEqual([provider]);
-		expect(browse.hidden).toBe(true);
-		root.querySelector<HTMLButtonElement>('[data-backstage-place="device"]')!.click();
-		expect(browse.hidden).toBe(false);
-		expect(root.querySelector('office-ui-cloud-files')).toBeNull();
+		expect(browseHidden()).toBe(true);
+		tab(root, 'device').click();
+		expect(browseHidden()).toBe(false);
+		expect(switcher(root).shadowRoot.querySelector('office-ui-cloud-files')).toBeNull();
 		viewer.update({ fileProviders: [] });
 		expect(places()).toEqual([]);
 		viewer.destroy();
@@ -106,11 +121,11 @@ describe('File > Open with cloud file providers', () => {
 		const { viewer, root } = await setup();
 		viewer.element.setAttribute('lang', 'de');
 		viewer.element.openBackstage('open');
-		expect(root.querySelector('[data-backstage-place="device"]')!.textContent).toBe('Dieses Gerät');
-		root.querySelector<HTMLButtonElement>('[data-backstage-place="cloud"]')!.click();
-		const browser = root.querySelector<HTMLElement & { labels: { signIn: string } }>(
-			'office-ui-cloud-files',
-		)!;
+		expect(tab(root, 'device').textContent).toBe('Dieses Gerät');
+		tab(root, 'cloud').click();
+		const browser = switcher(root).shadowRoot.querySelector<
+			HTMLElement & { labels: { signIn: string } }
+		>('office-ui-cloud-files')!;
 		expect(browser.labels.signIn).toBe('Anmelden');
 		viewer.destroy();
 	});

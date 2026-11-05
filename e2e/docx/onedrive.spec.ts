@@ -19,9 +19,12 @@ async function sampleBytes(page: Page): Promise<Buffer> {
 
 async function openOneDrivePlace(page: Page): Promise<void> {
 	await editor(page).locator('.dve-ribbon .file').click();
-	await editor(page).locator('.dve-backstage .item', { hasText: /^Open$/ }).click();
-	await expect(editor(page).locator('.dve-open-place')).toHaveText(['This device', 'OneDrive']);
-	await editor(page).locator('.dve-open-place', { hasText: 'OneDrive' }).click();
+	await editor(page)
+		.locator('.dve-backstage .item', { hasText: /^Open$/ })
+		.click();
+	const places = editor(page).locator('office-ui-open-places');
+	await expect(places.getByRole('tab')).toHaveText(['This device', 'OneDrive']);
+	await places.getByRole('tab', { name: 'OneDrive' }).click();
 }
 
 async function signIn(page: Page): Promise<void> {
@@ -36,7 +39,9 @@ async function openFromRecent(page: Page, name: string): Promise<void> {
 	await openOneDrivePlace(page);
 	await signIn(page);
 	await cloud(page).locator('[data-view="recent"]').click();
-	await cloud(page).getByRole('option', { name: new RegExp(name) }).click();
+	await cloud(page)
+		.getByRole('option', { name: new RegExp(name) })
+		.click();
 	await expect(fileNameLabel(page)).toHaveText(name, { timeout: 30_000 });
 	await expect(editor(page).locator('.dve-backstage')).toBeHidden();
 }
@@ -105,14 +110,20 @@ test('browses into a folder and opens a file there', async ({ page }) => {
 	await openOneDrivePlace(page);
 	await signIn(page);
 	await cloud(page).locator('[data-view="files"]').click();
-	await cloud(page).getByRole('option', { name: /Reports/ }).click();
-	await cloud(page).getByRole('option', { name: /Nested\.docx/ }).click();
+	await cloud(page)
+		.getByRole('option', { name: /Reports/ })
+		.click();
+	await cloud(page)
+		.getByRole('option', { name: /Nested\.docx/ })
+		.click();
 	await expect(fileNameLabel(page)).toHaveText('Nested.docx', { timeout: 30_000 });
 });
 
 test('This device keeps the Browse button', async ({ page }) => {
 	await openSample(page, 'vanilla');
 	await editor(page).locator('.dve-ribbon .file').click();
-	await editor(page).locator('.dve-backstage .item', { hasText: /^Open$/ }).click();
+	await editor(page)
+		.locator('.dve-backstage .item', { hasText: /^Open$/ })
+		.click();
 	await expect(editor(page).getByRole('button', { name: 'Browse…' })).toBeVisible();
 });

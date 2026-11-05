@@ -163,18 +163,19 @@ describe('File > Open page places', () => {
 	it('shows only Browse without providers', () => {
 		const { backstage, el } = backstageFor([]);
 		backstage.open('open');
-		expect(el.querySelector('.xve-backstage-place-tab')).toBeNull();
+		expect(el.querySelector('office-ui-open-places')).toBeNull();
 		expect(el.textContent).toContain('Browse...');
 	});
 
 	it('offers This device and one place per provider, and forwards the opened file', async () => {
 		const { backstage, el, opened } = backstageFor([provider()]);
 		backstage.open('open');
-		const tabs = [...el.querySelectorAll<HTMLButtonElement>('.xve-backstage-place-tab')];
+		const places = el.querySelector('office-ui-open-places') as HTMLElement;
+		const tabs = [...places.shadowRoot!.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
 		expect(tabs.map((tab) => tab.textContent)).toEqual(['This device', 'OneDrive']);
 		expect(el.textContent).toContain('Browse...');
 		tabs[1]!.click();
-		const cloud = el.querySelector('office-ui-cloud-files') as HTMLElement & {
+		const cloud = places.shadowRoot!.querySelector('office-ui-cloud-files') as HTMLElement & {
 			accept: string[];
 			labels: { signIn: string };
 		};
