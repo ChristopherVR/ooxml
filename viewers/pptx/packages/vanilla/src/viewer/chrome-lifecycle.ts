@@ -157,7 +157,7 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	 * unconditionally, matching the pre-existing behavior for a binding that
 	 * has not wired the gate.
 	 */
-	confirmExternalHyperlink?(url: string): boolean;
+	confirmExternalHyperlink?(url: string): boolean | Promise<boolean>;
 	/** What the region hosts need from the viewer (omitted: no region is replaced). */
 	getRegionSupport?(): RegionSupport;
 	/** The chrome's region set, kept across rebuilds (default: one per mount). */
@@ -488,8 +488,15 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			return;
 		}
 		event.preventDefault();
-		if (deps.confirmExternalHyperlink?.(href) ?? true) {
+		const answer = deps.confirmExternalHyperlink?.(href) ?? true;
+		if (answer === true) {
 			safeOpenUrl(href);
+		} else if (answer !== false) {
+			void answer.then((confirmed) => {
+				if (confirmed) {
+					safeOpenUrl(href);
+				}
+			});
 		}
 	};
 	chrome.root.addEventListener('click', onHyperlinkClick);
@@ -715,7 +722,7 @@ export interface ChromeHost {
 	/** One run-program notice's own dismiss button. */
 	dismissRunProgramNotice(id: string): void;
 	/** Trust Center > "Confirm before opening external hyperlinks" gate + prompt. */
-	confirmExternalHyperlink(url: string): boolean;
+	confirmExternalHyperlink(url: string): boolean | Promise<boolean>;
 	toggleAutosave(): boolean;
 	/** The AutoSave switch's state (the user preference within the host ceiling). */
 	isAutosaveSwitchOn(): boolean;

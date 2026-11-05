@@ -26,7 +26,7 @@ export interface PresentationActionRunnerDeps {
 	prev(): void;
 	exitPresentation(): void;
 	/** Trust Center > "Confirm before opening external hyperlinks". */
-	confirmExternalHyperlink?(url: string): boolean;
+	confirmExternalHyperlink?(url: string): boolean | Promise<boolean>;
 	/** The live stage host, for `playMedia`'s element lookup. */
 	getStageRoot(): HTMLElement;
 	/** The deck index the show was on immediately before the current one. */

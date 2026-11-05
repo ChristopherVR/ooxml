@@ -65,6 +65,7 @@ import {
 	THEME_CATALOG,
 	withSaveFailureToast,
 	writeStoredViewerPrefs,
+	confirmExternalHyperlinkDialog,
 } from 'ooxml-ui/pptx';
 import type {
 	CloudDocumentHostValues,
@@ -2016,11 +2017,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * run-level text hyperlink click and an on-slide Action Setting's
 	 * "Hyperlink to a URL" clear this same gate before the URL opens.
 	 */
-	confirmExternalHyperlink(url: string): boolean {
+	confirmExternalHyperlink(url: string): boolean | Promise<boolean> {
 		if (!shouldConfirmExternalHyperlink(this.optionsController.getOptions(), url)) {
 			return true;
 		}
-		return window.confirm(`${this.t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`);
+		return confirmExternalHyperlinkDialog(url, {
+			t: (key) => this.t(key),
+			host: this.container,
+		});
 	}
 
 	setEditTemplateMode(enabled: boolean): void {
