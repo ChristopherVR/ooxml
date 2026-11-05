@@ -129,6 +129,13 @@ export interface RenderParagraph {
 	/** `margin-bottom` in px from this paragraph's `a:pPr > a:spcAft` (space after). */
 	spaceAfterPx?: number;
 	/**
+	 * How far (px) `paragraphStyle` moves the paragraph down (a relative `top`)
+	 * so its baselines sit where PowerPoint puts them in their line pitch. See
+	 * `resolveParagraphBaselineShift`. Already applied through
+	 * `paragraphStyle`; carried for code that models the layout (morph).
+	 */
+	baselineShiftPx?: number;
+	/**
 	 * `font-size` in px to set on the paragraph element so its CSS line boxes
 	 * are built from its OWN runs rather than the text body's default size.
 	 * Undefined when the paragraph already matches the body default.

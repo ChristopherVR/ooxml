@@ -750,6 +750,7 @@ export * from './text-paragraphs';
 // Per-paragraph spacing resolver (`a:spcBef`/`a:spcAft`/`a:lnSpc`), consumed by
 // `buildParagraphs` and exported directly rather than via a `./text-paragraphs`
 // re-export shim.
+export * from './paragraph-baseline';
 export * from './paragraph-spacing';
 export * from './paragraph-strut';
 // `a:spAutoFit` editor-time shape resize: the pure height decision plus the

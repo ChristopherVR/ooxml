@@ -83,6 +83,8 @@ export interface FrameParagraph {
 	spaceAfterPx: number;
 	/** `margin-top` (px) above the paragraph; only the first one's moves the block. */
 	spaceBeforePx?: number;
+	/** The relative `top` (px) that puts the paragraph on PowerPoint's baselines. */
+	baselineShiftPx?: number;
 	/** `margin-left` and `text-indent` (px) the paragraph is laid out with. */
 	marginLeftPx: number;
 	textIndentPx: number;
@@ -241,6 +243,7 @@ export function readFrame(
 			lineHeight: paragraph.lineHeight ?? bodyLineHeight,
 			spaceAfterPx: paragraph.spaceAfterPx ?? 0,
 			...(paragraph.spaceBeforePx ? { spaceBeforePx: paragraph.spaceBeforePx } : {}),
+			...(paragraph.baselineShiftPx ? { baselineShiftPx: paragraph.baselineShiftPx } : {}),
 			marginLeftPx: paragraph.marginLeftPx ?? 0,
 			textIndentPx: paragraph.textIndentPx ?? 0,
 			ownStrut: paragraph.strutFontSizePx ?? block.size,

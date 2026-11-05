@@ -89,7 +89,8 @@ export function lineBaseline(
 		const own = typeof paragraph.lineHeight === 'number' ? box.size * paragraph.lineHeight : height;
 		baseline = Math.max(baseline, (own + metrics.fontAscent - metrics.fontDescent) / 2);
 	}
-	return baseline;
+	// The paragraph's relative `top` moves its glyphs, not its line boxes.
+	return baseline + (paragraph.baselineShiftPx ?? 0);
 }
 
 /** Where each glyph of `[start, end)`, advancing from `x` on `baseline`, paints ink. */

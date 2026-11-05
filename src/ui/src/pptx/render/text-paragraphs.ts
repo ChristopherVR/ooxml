@@ -22,6 +22,7 @@ import { getSubstituteFontFamily, hasTextProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
 import { resolveParagraphBullet, resolveParagraphIndent } from './bullet-list';
+import { applyParagraphBaselineShift } from './paragraph-baseline';
 import { getKinsokuLineBreakStyles } from './kinsoku-styles';
 import { resolveParagraphGeometryOverrides } from './paragraph-geometry-overrides';
 import { buildBulletMarkerStyle, buildParagraphRuns } from './paragraph-run-build';
@@ -279,6 +280,7 @@ export function buildParagraphs(
 			if (Object.keys(paragraphStyle).length > 0) {
 				para.paragraphStyle = paragraphStyle;
 			}
+			applyParagraphBaselineShift(para, bodyStyle, blockFont);
 			return para;
 		},
 	);
