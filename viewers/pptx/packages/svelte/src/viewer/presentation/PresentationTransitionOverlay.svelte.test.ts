@@ -616,12 +616,21 @@ const MORPH_SCOPES = [
 ] as const;
 
 /**
+ * Every stylesheet the overlay rendered, joined. The morph rules are one of
+ * possibly several `<style>` elements (a painted element may carry its own),
+ * so reading only the first can miss the rule that hides or fades a copy.
+ */
+function overlayCss(target: HTMLElement): string {
+	return [...target.querySelectorAll('style')].map((node) => node.textContent ?? '').join('\n');
+}
+
+/**
  * The opacity at `progress` of a painted element: the one the overlay's scoped
  * stylesheet gives the element, times the animation on any wrapper up to the
  * overlay (a crossfade half carries its dissolve inline).
  */
 function paintedOpacity(target: HTMLElement, node: HTMLElement, progress: number): number {
-	const css = target.querySelector('style')?.textContent ?? '';
+	const css = overlayCss(target);
 	const id = node.dataset.elementId ?? '';
 	let opacity = 1;
 	for (const scope of MORPH_SCOPES) {
@@ -733,7 +742,7 @@ describe('picture transparency morph', () => {
 			from: makeSlide('8', [bandPicture('back8', 'backdrop', 0, 720), faded('faded8', 0)]),
 			to: makeSlide('9', [bandPicture('back9', 'backdrop', 0, 720), faded('faded9', 100)]),
 		});
-		const css = target.querySelector('style')?.textContent ?? '';
+		const css = overlayCss(target);
 		const selectors = [...css.matchAll(/^(\[[^{\n]*\] img) \{ animation: /gmu)].map(
 			(match) => match[1]!,
 		);
