@@ -7,6 +7,29 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.42.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.42.0) - 2026-11-05
+
+### Features
+
+- **ui:** Turn the body of a flip-changing text shape in 3D ([048eb43](https://github.com/ChristopherVR/ooxml/commit/048eb4365725d1d453a609f5ae89c9863cc3f74e))
+- **ui:** Carry a face change over several lines per line ([9019304](https://github.com/ChristopherVR/ooxml/commit/90193046366e3a41d3c3159a42f544f6aecf2d56))
+- **ui:** Carry a turning text box glyph by glyph while its type changes ([3ace3fc](https://github.com/ChristopherVR/ooxml/commit/3ace3fce30db7dc144ef15582097ff852dade638))
+
+### Bug Fixes
+
+- **ui:** Spread letters, not words, in distributed text ([5057eda](https://github.com/ChristopherVR/ooxml/commit/5057eda180dfa20a83b539401a70d24cecfe1048))
+- **ui:** Dissolve a morphing soft edge as two feathers ([a9647d5](https://github.com/ChristopherVR/ooxml/commit/a9647d53cda1673d051d0630c4040e4667802731))
+- **ui:** Shrink a wrapped anchorCtr text block to its longest line ([00d107e](https://github.com/ChristopherVR/ooxml/commit/00d107ea1712002c7ca3a2b9b7b0bca1ab0f18e3))
+- **vanilla:** Drop the abutting-edge bleed from morph overlay copies ([e826d90](https://github.com/ChristopherVR/ooxml/commit/e826d90be4410129f048cd703b3fc9032a3fdf98))
+- **ui:** Stack compatLnSpc line spacing on the 1.2 pitch like PowerPoint ([24a1647](https://github.com/ChristopherVR/ooxml/commit/24a16474c2c1f33db0af61f52c75f26fd23632be))
+- **ui:** Carry compound outline strands through a resizing morph ([1b230a3](https://github.com/ChristopherVR/ooxml/commit/1b230a3b032db0c4de047dab987a9f8376f48f8e))
+- **ui:** Keep a morphing line at its width and fix flipped connectors ([8b42576](https://github.com/ChristopherVR/ooxml/commit/8b42576c1282c1eb2be04c811f1c8ea0485444dd))
+- **ui:** Place single-spaced text on PowerPoint's per-font baseline ([320d953](https://github.com/ChristopherVR/ooxml/commit/320d953d3dbb70c5b8184ef46e32dc6a1ff7e512))
+- **ui:** Paint blurred shadows and glows with powerpoint's profiles ([78e5a22](https://github.com/ChristopherVR/ooxml/commit/78e5a226675b0cd1437de66f70f2a404811888ba))
+- **ui:** Snap thin pptx strokes to whole device pixels like PowerPoint ([78436fb](https://github.com/ChristopherVR/ooxml/commit/78436fb1a8519aecb966ff221fd18d8f72928e6a))
+- **ui:** Keep css borders and compound strands unrounded ([c57a5e3](https://github.com/ChristopherVR/ooxml/commit/c57a5e37712c0286946c8f40364851a371d5ea76))
+- **ui:** Place web-font paragraphs on their loaded font's baseline ([7d10a65](https://github.com/ChristopherVR/ooxml/commit/7d10a65ffc5e2f86e402f561e82042da0189b34a))
+
 ## [1.41.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.41.0) - 2026-11-05
 
 ### Features

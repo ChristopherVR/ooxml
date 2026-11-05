@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.63.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.63.1) - 2026-11-05
+
+### Bug Fixes
+
+- **ui:** Keep a morphing line at its width and fix flipped connectors ([8b42576](https://github.com/ChristopherVR/ooxml/commit/8b42576c1282c1eb2be04c811f1c8ea0485444dd))
+- **pptx:** Read a text shadow without alpha as opaque ([2bd02f4](https://github.com/ChristopherVR/ooxml/commit/2bd02f4a0af3dd94728b0598885c05be6b59b73f))
+- **ui:** Paint blurred shadows and glows with powerpoint's profiles ([78e5a22](https://github.com/ChristopherVR/ooxml/commit/78e5a226675b0cd1437de66f70f2a404811888ba))
+- **ui:** Snap thin pptx strokes to whole device pixels like PowerPoint ([78436fb](https://github.com/ChristopherVR/ooxml/commit/78436fb1a8519aecb966ff221fd18d8f72928e6a))
+- **ui:** Keep css borders and compound strands unrounded ([c57a5e3](https://github.com/ChristopherVR/ooxml/commit/c57a5e37712c0286946c8f40364851a371d5ea76))
+
+### Testing
+
+- **pptx:** Pin sibling strand paths of a compound outline per binding ([328a94a](https://github.com/ChristopherVR/ooxml/commit/328a94a9dfa0cd20d22d993fc88faa8b76bfa55e))
+
 ## [4.63.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.63.0) - 2026-11-05
 
 ### Features

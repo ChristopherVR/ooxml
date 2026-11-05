@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.39.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.39.1) - 2026-11-05
+
+### Bug Fixes
+
+- **pptx:** Read a text shadow without alpha as opaque ([2bd02f4](https://github.com/ChristopherVR/ooxml/commit/2bd02f4a0af3dd94728b0598885c05be6b59b73f))
+
 ## [1.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.39.0) - 2026-11-05
 
 ### Features
