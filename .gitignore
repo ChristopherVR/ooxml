@@ -55,3 +55,4 @@ desktop/src-tauri/gen/
 /docs-health.md
 /.browser-timings/
 /office-acceptance-results/
+.suite-preview-onedrive/

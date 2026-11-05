@@ -37,6 +37,7 @@
 		"build": "bun run --cwd src/core build",
 		"build:suite": "bun run build && bun run --cwd src/ui build && node scripts/build-suite.mjs",
 		"preview:suite": "node scripts/preview-site.mjs",
+		"preview:suite:onedrive": "bun scripts/preview-suite-onedrive.mjs",
 		"test:suite": "node scripts/suite-browser-check.mjs",
 		"test:suite:onedrive": "bun scripts/suite-onedrive-check.mjs",
 		"test:onedrive:speed": "node scripts/onedrive-speed-check.mjs --mock",

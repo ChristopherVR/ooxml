@@ -5,72 +5,24 @@
  * Configuration, first match wins:
  * - `VITE_ONEDRIVE_CLIENT_ID` (and optionally `VITE_ONEDRIVE_AUTHORITY`) in the demo's untracked
  *   `.env.local`: sign in with your app registration through MSAL.
- * - a client ID entered once in the demo sign-in dialog (remembered in this browser);
- * - otherwise the demo dialog accepts a pasted Graph Explorer token (kept in memory only).
+ * - otherwise the demo sign-in dialog asks every time: a client ID (pre-filled with the last one
+ *   that signed in) or a pasted Graph Explorer token (kept in memory only). See `sign-in.ts`.
  *
  * Register each demo origin you use (with a trailing slash) as a single-page application redirect
  * URI. Edits are allowed only on files on the signed-in user's own drive.
  */
-import type { CloudAccount, CloudFileProvider } from 'ooxml-core/embedding';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
 import {
 	createOneDriveFileProvider,
 	type OneDriveFileProviderOptions,
 } from 'ooxml-core/embedding/onedrive';
 
-import {
-	completeSignInPopup,
-	isSignInPopup,
-	signInWithMsal,
-	signInWithToken,
-	type OneDriveAuthority,
-	type OneDriveSignIn,
-} from './auth';
-import { askDemoSignIn } from './token-dialog';
+import { completeSignInPopup, isSignInPopup } from './auth';
+import { createDemoOneDriveSignIn } from './sign-in';
 
 export { isSignInPopup as isDemoSignInPopup } from './auth';
+export { createDemoOneDriveSignIn, type DemoOneDriveSignIn } from './sign-in';
 export { pickCloudFile } from './start-dialog';
-
-const SETTINGS_KEY = 'ooxml-demo-onedrive';
-
-function configured(): { clientId: string; authority: OneDriveAuthority; fromEnv: boolean } {
-	const envId = import.meta.env.VITE_ONEDRIVE_CLIENT_ID?.trim() ?? '';
-	const envAuthority =
-		import.meta.env.VITE_ONEDRIVE_AUTHORITY === 'common' ? 'common' : 'consumers';
-	if (envId) {
-		return { clientId: envId, authority: envAuthority, fromEnv: true };
-	}
-	try {
-		const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null') as {
-			clientId?: string;
-			authority?: string;
-		} | null;
-		return {
-			clientId: stored?.clientId ?? '',
-			authority: stored?.authority === 'common' ? 'common' : 'consumers',
-			fromEnv: false,
-		};
-	} catch {
-		return { clientId: '', authority: 'consumers', fromEnv: false };
-	}
-}
-
-const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
-function forget(): void {
-	try {
-		localStorage.removeItem(SETTINGS_KEY);
-	} catch {
-		// Nothing was stored.
-	}
-}
-
-function remember(clientId: string, authority: string): void {
-	try {
-		localStorage.setItem(SETTINGS_KEY, JSON.stringify({ clientId, authority }));
-	} catch {
-		// The demo asks again next time.
-	}
-}
 
 /**
  * In the MSAL sign-in popup: hand the response back to the opener and return true, so the demo
@@ -91,78 +43,6 @@ export function completeDemoSignInPopup(): boolean {
 export function createDemoOneDriveProvider(
 	options: Pick<OneDriveFileProviderOptions, 'mergers'> = {},
 ): CloudFileProvider {
-	let session: OneDriveSignIn | null = null;
-	let ownDrive: Promise<string | null> | null = null;
-	const getAccessToken = () => {
-		if (!session) {
-			return Promise.reject(new Error('Not signed in'));
-		}
-		return session.getAccessToken();
-	};
-	const ownDriveId = () =>
-		(ownDrive ??= getAccessToken()
-			.then((token) =>
-				fetch('https://graph.microsoft.com/v1.0/me/drive?$select=id', {
-					headers: { Authorization: `Bearer ${token}` },
-					credentials: 'omit',
-				}),
-			)
-			.then(async (response) =>
-				response.ok ? (((await response.json()) as { id?: string }).id ?? null) : null,
-			)
-			.catch(() => null));
-
-	let lastError: string | undefined;
-	async function signIn(): Promise<CloudAccount> {
-		const config = configured();
-		try {
-			if (config.fromEnv) {
-				// Configured by the developer (.env.local): no dialog.
-				session = await signInWithMsal(config.clientId, config.authority);
-			} else {
-				// Always ask, pre-filled with the client ID remembered from the last success, so a
-				// wrong one can be corrected or cleared instead of being reused silently.
-				const choice = await askDemoSignIn({
-					clientId: config.clientId,
-					authority: config.authority,
-					...(lastError ? { error: lastError } : {}),
-				});
-				if (!choice) throw new Error('Sign-in was cancelled.');
-				if (choice.kind === 'clientId') {
-					const authority = choice.authority === 'common' ? 'common' : 'consumers';
-					try {
-						session = await signInWithMsal(choice.clientId, authority);
-					} catch (error) {
-						forget();
-						throw new Error(
-							`Sign-in with that client ID failed, so it was not remembered: ${messageOf(error)}`,
-						);
-					}
-					remember(choice.clientId, authority);
-				} else {
-					// A cleared client ID field means: forget the remembered one.
-					if (!choice.clientId) forget();
-					session = signInWithToken(choice.token);
-				}
-			}
-			lastError = undefined;
-		} catch (error) {
-			lastError = messageOf(error);
-			throw error;
-		}
-		ownDrive = null;
-		return { name: session.account };
-	}
-
-	return createOneDriveFileProvider({
-		...options,
-		getAccessToken,
-		canWrite: async (file) => file.driveId === (await ownDriveId()),
-		signIn,
-		async signOut() {
-			await session?.signOut();
-			session = null;
-			ownDrive = null;
-		},
-	});
+	const { account, ...signIn } = createDemoOneDriveSignIn();
+	return createOneDriveFileProvider({ ...options, ...signIn, account: account() });
 }

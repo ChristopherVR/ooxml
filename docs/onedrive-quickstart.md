@@ -398,6 +398,11 @@ to sign in, which a real application does itself:
 The Word, Excel and Visio demos offer the same under **File > Open**, and their start pages have
 an **Open from OneDrive** button.
 
+To try the Office app the same way, run `bun run build:suite`, then `bun run
+preview:suite:onedrive` (http://localhost:8123/): it serves a copy of the app with this demo
+sign-in, so **OneDrive** in the left rail asks for a client ID or a Graph Explorer token like the
+demos do.
+
 After signing in the place lists your recent files, your files and a search box. Choose a `.pptx`
 to open it, edit, then save with the viewer's own Save (or Ctrl+S): the file in OneDrive is
 updated and the status bar reads **All saved**. A failed upload keeps **Unsaved changes**. Files on
