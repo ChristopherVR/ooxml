@@ -1,6 +1,6 @@
 import type { PropType } from 'vue';
 import type { DocumentModel } from 'docx-core';
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	DocxCollaborationOptions,
 	EditorTheme,
@@ -31,6 +31,7 @@ export const WordEditor = defineVueBinding({
 		ribbonAddIns: Array as unknown as PropType<readonly RibbonAddInTab[]>,
 		collaboration: Object as PropType<DocxCollaborationOptions | null>,
 		storage: Object as PropType<DocumentStorage | null>,
+		fileProviders: Array as unknown as PropType<readonly CloudFileProvider[] | null>,
 		customization: Object as PropType<WordCustomization | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	contract: EDITOR_CONTRACT,

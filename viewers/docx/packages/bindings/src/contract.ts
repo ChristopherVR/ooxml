@@ -20,7 +20,7 @@ import {
 	type WordCustomization,
 } from 'docx-web-component';
 import type { DocumentModel } from 'docx-core';
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	contractOptions,
 	deferredHandle as kitDeferredHandle,
@@ -70,6 +70,13 @@ export interface EditorProps {
 	 * File > Open to `storage.open()` when it has one. `file-command` still fires first.
 	 */
 	storage?: DocumentStorage | null | undefined;
+	/**
+	 * Cloud places for File > Open (OneDrive and the like): "This device" plus one place per
+	 * provider. A file opened from a place saves through its own storage until another document
+	 * loads, and is read-only when the provider says it cannot be edited. Forwarded when the array
+	 * changes, so keep it stable; `null` or omitted removes the places.
+	 */
+	fileProviders?: readonly CloudFileProvider[] | null | undefined;
 	/**
 	 * Host customisation (`WordCustomization`): `capabilities`, `backstage.extraPages` and
 	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
@@ -139,6 +146,7 @@ export const EDITOR_PROP_KEYS = [
 	'ribbonAddIns',
 	'collaboration',
 	'storage',
+	'fileProviders',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -207,6 +215,11 @@ export const EDITOR_CONTRACT: BindingContract<
 			forward: 'changed',
 			fallback: null,
 			apply: (element, value) => (element.storage = value ?? undefined),
+		},
+		fileProviders: {
+			forward: 'changed',
+			fallback: null,
+			apply: (element, value) => (element.fileProviders = value ?? []),
 		},
 		collaboration: { forward: 'changed', fallback: null, initial: null },
 		documentModel: { forward: 'manual' },
