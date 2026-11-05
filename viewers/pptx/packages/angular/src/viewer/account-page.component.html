@@ -77,4 +77,10 @@
 			</section>
 		}
 	}
+
+	@if (providers().length > 0) {
+		<section class="acct-card">
+			<pptx-ui-connected-services [providers]="providers()" [labels]="connectedLabels()" />
+		</section>
+	}
 </div>

@@ -11,11 +11,21 @@
  * `enabled: true`; it's absent by default, so hosts that don't wire it see no
  * visible change from before this feature landed.
  */
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	CUSTOM_ELEMENTS_SCHEMA,
+	Component,
+	computed,
+	inject,
+	input,
+	signal,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	AVATAR_COLOR_SWATCHES,
 	clearAllLocalViewerData,
+	connectedServicesLabels,
 	confirmDeleteDialog,
 	DEFAULT_VIEWER_PROFILE,
 	formatBackstageSize,
@@ -25,6 +35,7 @@ import {
 	saveViewerProfile,
 } from 'ooxml-ui/pptx';
 import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
+import { map, merge, startWith } from 'rxjs';
 
 import { PPTX_ANGULAR_VIEWER_VERSION } from '../internal/version';
 import { ViewerFileIOService } from './viewer-file-io.service';
@@ -34,6 +45,7 @@ import { ViewerFileIOService } from './viewer-file-io.service';
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [TranslatePipe],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	templateUrl: './account-page.component.html',
 	styleUrl: './account-page.component.css',
 })
@@ -58,6 +70,23 @@ export class AccountPageComponent {
 	protected readonly formattedSize = computed(() =>
 		formatBackstageSize(this.usage()?.totalBytes ?? 0),
 	);
+
+	/** Changes on language or dictionary updates so the labels follow the viewer. */
+	private readonly translations = toSignal(
+		merge(this.translate.onLangChange, this.translate.onTranslationChange).pipe(
+			map(() => Date.now()),
+			startWith(0),
+		),
+		{ initialValue: 0 },
+	);
+	/** The host's `fileProviders` for the connected services list (none: nothing renders). */
+	protected readonly providers = computed(() => this.fileIO?.fileProviders() ?? []);
+	protected readonly connectedLabels = computed(() => {
+		this.translations();
+		return connectedServicesLabels((key, params) =>
+			this.translate.instant(key, params as Record<string, unknown> | undefined),
+		);
+	});
 
 	constructor() {
 		void this.refreshUsage();
