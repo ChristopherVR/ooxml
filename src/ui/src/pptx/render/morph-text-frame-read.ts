@@ -86,6 +86,8 @@ export interface FrameParagraph {
 	/** The paragraph's own `text-align` and `text-align-last`, as painted. */
 	textAlign: string;
 	textAlignLast: string | undefined;
+	/** Whether a margin, indent or space before moves its lines off the plain column. */
+	indented: boolean;
 }
 
 /** Whether `element` is (or holds) a picture or a group, never carried by its text. */
@@ -222,6 +224,9 @@ export function readFrame(
 			ownStrut: paragraph.strutFontSizePx ?? block.size,
 			textAlign: (paragraph.paragraphStyle?.textAlign as string | undefined) ?? bodyAlign ?? 'left',
 			textAlignLast: paragraph.paragraphStyle?.textAlignLast as string | undefined,
+			indented: Boolean(
+				paragraph.marginLeftPx || paragraph.textIndentPx || paragraph.spaceBeforePx,
+			),
 		});
 		if (text.trim() === '') {
 			continue;
