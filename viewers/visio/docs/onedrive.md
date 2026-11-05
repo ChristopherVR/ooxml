@@ -44,6 +44,15 @@ The demos pass a OneDrive place by default, signed in through the demo-only dial
 a Graph Explorer token pasted into **Access token**). That dialog is demo configuration, not
 product UI; see `demos/onedrive`.
 
+## Account > Connected services
+
+The same `fileProviders` also fill the **Account** page of the File view with a "Connected services"
+list (the shared `<office-ui-connected-services>`): one row per provider with the signed-in account
+and Connect or Disconnect, which call the provider's own `signIn` and `signOut`. A provider without
+`signOut` shows that the host manages its session. The list follows the providers' `subscribe`, so
+signing in from File > Open updates it, and its words come from the Visio dictionaries in every
+language. Without `fileProviders` the Account page shows only the profile and product information.
+
 ## Using a session directly
 
 Visio uses the shared `ooxml-core/embedding/onedrive` connection for native VSDX files. The host

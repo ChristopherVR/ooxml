@@ -66,6 +66,15 @@ overlapping cell edits and unsupported changes still require recovery. This does
 workbook collaboration sessions to Microsoft Excel coauthoring, refresh external data or change
 the [feature limitations](/features).
 
+## Account > Connected services
+
+The same `fileProviders` also fill the **Account** page of the File view with a "Connected services"
+list (the shared `<office-ui-connected-services>`): one row per provider with the signed-in account
+and Connect or Disconnect, which call the provider's own `signIn` and `signOut`. A provider without
+`signOut` shows that the host manages its session. The list follows the providers' `subscribe`, so
+signing in from File > Open updates it, and its words come from the Excel dictionaries in every
+language. Without `fileProviders` there is no Account page.
+
 ## Open a cloud file from your own UI
 
 File > Open is only reachable once a document is open. To open a file from a start page or your own
