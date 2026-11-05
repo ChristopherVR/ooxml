@@ -175,6 +175,14 @@ describe('laying out a morphing text box word by word', () => {
 		expect(layout.words[4]!.ink!.top).toBeCloseTo(24 + 4, 6);
 	});
 
+	it('starts below the first paragraph own space before', () => {
+		const layout = layoutMorphTextWords(
+			frame([paragraph('aaaa', 20, { spaceBeforePx: 10, spaceAfterPx: 6 }), paragraph('bbbb', 20)]),
+			measure,
+		)!;
+		expect(layout.lines.map((line) => line.top)).toEqual([10, 40]);
+	});
+
 	it('refuses what it cannot reproduce', () => {
 		const mixed = [
 			{ text: 'aaaa ', size: 20 },

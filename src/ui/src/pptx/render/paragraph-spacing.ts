@@ -17,17 +17,17 @@ export interface ParagraphSpacing {
 	/** Unitless multiplier (`a:spcPct`) or a `"<n>pt"` / `"<n>px"` string (`a:spcPts`). */
 	lineHeight?: number | string;
 	/**
-	 * `margin-top` in px. Always `undefined`: PowerPoint never renders a
-	 * paragraph's own `a:spcBef` as space above it - see
-	 * {@link resolveParagraphSpacing}'s doc comment. Kept on the type for API
-	 * stability (every binding's paragraph renderer already reads it and maps
-	 * it to `margin-top`, so removing the field is unnecessary churn); it is
-	 * simply never populated any more.
+	 * `margin-top` in px: this paragraph's own `a:spcBef`. Suppressed on the
+	 * first paragraph unless `spaceFirstLast` (see
+	 * {@link ParagraphSpacingInput.spaceFirstLast}).
 	 */
 	spaceBeforePx?: number;
 	/**
-	 * `margin-bottom` in px, from BOTH this paragraph's own `a:spcAft` AND its
-	 * own `a:spcBef` combined - see {@link resolveParagraphSpacing}.
+	 * `margin-bottom` in px: this paragraph's own `a:spcAft`. Suppressed on the
+	 * last paragraph unless `spaceFirstLast`. The text body lays its paragraphs
+	 * out in a flex column, so the two margins never collapse: the gap between
+	 * two paragraphs is the first one's `spcAft` PLUS the next one's `spcBef`,
+	 * as PowerPoint adds them.
 	 */
 	spaceAfterPx?: number;
 	/**
@@ -71,38 +71,13 @@ export interface ParagraphSpacingInput {
 	 * paragraph only: the very first paragraph's own `spcBef`, and the very
 	 * last paragraph's own `spcAft`. Off (the default, including omitted)
 	 * suppresses both; every other paragraph's own spacing is unaffected by
-	 * this flag either way. See {@link resolveParagraphSpacing} for how a
-	 * paragraph's own `spcBef` and `spcAft` combine once resolved - that part
-	 * is NOT what this flag controls, and is where the real complexity in
-	 * this area actually lives.
+	 * this flag either way.
 	 *
-	 * Measured over PowerPoint COM (`TextRange2.Paragraphs(n).BoundTop` /
-	 * `.BoundHeight`) on bodies of N=1, 2, 3 and 4 paragraphs, both with
-	 * uniform `spcBef=40pt`/`spcAft=30pt` and with every paragraph carrying a
-	 * DISTINCT `spcBef`/`spcAft` pair (11/21, 32/42, 53/63, 74/84 pt) so a
-	 * measured number can be traced to exactly one paragraph's authored value
-	 * rather than several candidates that happen to sum the same:
-	 *
-	 * - The first paragraph's own `BoundHeight` grows by exactly ITS OWN
-	 *   `spcBef` when the flag is on (e.g. 42.6pt -> 53.6pt on the distinct-
-	 *   value deck, a +11pt delta matching p1's own 11pt `spcBef` exactly);
-	 *   its `BoundTop` never moves either way. The last paragraph's own
-	 *   `BoundHeight` mirrors it for `spcAft` (95.6pt -> 179.6pt, +84pt,
-	 *   matching p4's own 84pt `spcAft` exactly).
-	 * - Every paragraph strictly between the first and last is completely
-	 *   unaffected by the flag in every N tested: its own gap to the next
-	 *   paragraph is identical whether the flag is omitted, `"0"` or `"1"`.
-	 *
-	 * This confirms an earlier reading of the ORIGINAL 3-paragraph,
-	 * `BoundTop`-only measurement (`project_spcfirstlastpara_com_measurement`
-	 * memory), which concluded the flag "governs the SECOND paragraph's
-	 * before-spacing": with only 3 paragraphs and uniform spacing, "p1's own
-	 * spcBef, rendered after p1 instead of before it" and "p2's own spcBef"
-	 * are numerically indistinguishable (both predict the exact same gap).
-	 * The distinct-value deck (which paragraph's specific number shows up)
-	 * and the `BoundHeight` reads (which paragraph's box the change lives in)
-	 * together rule that reading out: it is the edge paragraph's OWN value,
-	 * not its neighbour's.
+	 * Measured on PowerPoint 16 slide exports (`Slide.Export` PNG, Calibri 28pt,
+	 * zero insets): a first paragraph's `spcBef` of 24pt moves its first line
+	 * down by exactly 24pt only with the flag on, and a bottom-anchored body's
+	 * last paragraph `spcAft` of 24pt lifts the block by exactly 24pt only with
+	 * the flag on.
 	 */
 	spaceFirstLast?: boolean;
 	/**
@@ -129,34 +104,22 @@ export interface ParagraphSpacingInput {
  * from the same level; a paragraph's own multiplier is never mixed with an
  * exact value inherited from the body.
  *
- * **A paragraph's own `spcBef` is never rendered as space above it.** This
- * function used to (and every other rendering engine's intuition says it
- * should) emit the resolved `spcBef` as THIS paragraph's own `margin-top` and
- * `spcAft` as its own `margin-bottom`, so the visible gap between paragraph i
- * and i+1 came out as `spcAft(i) + spcBef(i+1)` (two independent, adjacent,
- * non-collapsing flex-item margins). Measured over PowerPoint COM with a
- * DISTINCT `spcBef`/`spcAft` pair on every paragraph (so a measured gap can be
- * traced to exactly one paragraph's authored value, unlike a uniform deck
- * where every hypothesis predicts the same total): that is wrong. An isolation
- * deck makes it unambiguous - three paragraphs, only the MIDDLE one authoring
- * a `spcBef` of 100pt (everything else 0) - measured `BoundTop` gaps:
+ * A paragraph's own `spcBef` is space ABOVE it and its own `spcAft` space
+ * BELOW it, and PowerPoint adds the two across a paragraph boundary. Measured
+ * on PowerPoint 16 slide exports (Calibri 28pt, single spacing, a 33.6pt
+ * pitch): `spcAft` 6pt on the first paragraph and `spcBef` 12pt on the second
+ * put the second line 51.75pt below the first (33.6 + 6 + 12), and a lone
+ * `spcBef` of 30pt on a middle paragraph opens the gap ABOVE it (63.75pt)
+ * while the gap below it stays one pitch. Percentage spacing (`spcPct`) is a
+ * fraction of the paragraph's 1.2 x font-size line (core resolves it to px):
+ * `spcAft` 100% plus the next paragraph's `spcBef` 50% at 28pt measured
+ * 84pt between the lines (33.6 + 33.6 + 16.8). Autofit's `lnSpcReduction`
+ * shrinks the line pitch only, never this spacing (with a 20% reduction a
+ * 6pt `spcAft` and a 12pt `spcBef` still added 18pt to the gap).
  *
- * | gap    | measured  |
- * | ------ | --------- |
- * | p1->p2 | line only (21.6pt); p2's 100pt `spcBef` contributes NOTHING |
- * | p2->p3 | line + 100pt; ALL of it lands here, after p2, not before    |
- *
- * A paragraph's own `spcBef` and its own `spcAft` are both folded into the
- * SAME trailing gap (the one after that paragraph), never the leading one;
- * `spcBef` behaves as a second `spcAft` contribution, not as its mirror image.
- * The one exception is the two paragraphs `spaceFirstLast` gates (see that
- * field's doc comment): the very first paragraph's own `spcBef` and the very
- * last paragraph's own `spcAft`, each defaulting to suppressed. Cross-checked
- * against a 4-paragraph deck with four distinct `spcBef`/`spcAft` pairs (own
- * `BoundHeight` per paragraph matches `line + effective(spcBef) +
- * effective(spcAft)` to 0.1pt on every paragraph, in every `spaceFirstLast`
- * state) and against the original 3-paragraph uniform-value deck (which this
- * model reproduces exactly - see the test file).
+ * (`TextRange2.Paragraphs(n).BoundTop` reads cannot tell these apart: a
+ * paragraph's bound box already includes its own `spcBef`, which once led
+ * this function to fold `spcBef` below the paragraph instead.)
  *
  * `paragraphSpacingBefore` / `paragraphSpacingAfter` are already px from core.
  */
@@ -196,11 +159,11 @@ export function resolveParagraphSpacing(input: ParagraphSpacingInput): Paragraph
 	const effectiveAfter =
 		typeof after === 'number' && after > 0 && (!isLast || spaceFirstLast) ? after : 0;
 
-	// Both fold into the TRAILING margin (never the leading one) - see the
-	// doc comment above for the COM measurement behind this.
-	const combinedAfter = effectiveBefore + effectiveAfter;
-	if (combinedAfter > 0) {
-		out.spaceAfterPx = combinedAfter;
+	if (effectiveBefore > 0) {
+		out.spaceBeforePx = effectiveBefore;
+	}
+	if (effectiveAfter > 0) {
+		out.spaceAfterPx = effectiveAfter;
 	}
 
 	const hasOwnLineSpacing =

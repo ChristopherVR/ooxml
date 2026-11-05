@@ -142,12 +142,14 @@ describe('cellParagraphBlocks', () => {
 				{ paragraphSpacingBefore: 3, paragraphSpacingAfter: 5 },
 			],
 		};
-		// Both land below the paragraph; the first paragraph's space before and
-		// the last one's space after are dropped.
+		// PowerPoint adds a paragraph's space after to the next one's space
+		// before; the sum sits on one block so normal flow cannot collapse it.
+		// The first paragraph's space before and the last one's space after are
+		// dropped.
 		expect(cellParagraphBlocks(cell)?.map((block) => block.css)).toStrictEqual([
-			{ marginBlockEnd: '6px' },
-			{ marginBlockEnd: '10px' },
-			{ marginBlockEnd: '3px' },
+			{ marginBlockEnd: '14px' },
+			{ marginBlockEnd: '5px' },
+			{},
 		]);
 	});
 

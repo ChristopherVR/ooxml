@@ -8,8 +8,8 @@
  * the CSS the renderer paints with: `margin-left` and `text-indent` narrow
  * and shift a paragraph's lines, `text-align` places each line (`justify`
  * spreads every line but a paragraph's last over its spaces), a line is as
- * tall as its largest run, `margin-bottom` follows each paragraph, and the
- * flex column centres or bottom-aligns the whole block for a middle or bottom
+ * tall as its largest run, paragraph margins open the gaps between them, and
+ * the flex column centres or bottom-aligns the whole block for a middle or bottom
  * anchor.
  *
  * It refuses anything it cannot reproduce with confidence: mixed font sizes in
@@ -168,7 +168,7 @@ export function layoutMorphTextWords(
 	}
 	const words: MorphTextWord[] = [];
 	const lines: MorphTextLine[] = [];
-	let top = frame.insetTop;
+	let top = frame.insetTop + (frame.paragraphs[0]?.spaceBeforePx ?? 0);
 	for (const [index, paragraph] of frame.paragraphs.entries()) {
 		const spans = wordSpans(paragraph.text);
 		if (!layoutable(paragraph) || words.length + spans.length > MAX_WORDS) {

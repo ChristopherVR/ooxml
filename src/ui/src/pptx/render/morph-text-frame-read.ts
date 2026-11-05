@@ -76,8 +76,13 @@ export interface FrameParagraph {
 	strutFont: string;
 	/** The CSS `line-height` the paragraph lays out with. */
 	lineHeight: number | string;
-	/** `margin-bottom` (px) after the paragraph. */
+	/**
+	 * The gap (px) below the paragraph: its own `margin-bottom` plus the next
+	 * paragraph's `margin-top`, which the flex column adds.
+	 */
 	spaceAfterPx: number;
+	/** `margin-top` (px) above the paragraph; only the first one's moves the block. */
+	spaceBeforePx?: number;
 	/** `margin-left` and `text-indent` (px) the paragraph is laid out with. */
 	marginLeftPx: number;
 	textIndentPx: number;
@@ -235,13 +240,16 @@ export function readFrame(
 			),
 			lineHeight: paragraph.lineHeight ?? bodyLineHeight,
 			spaceAfterPx: paragraph.spaceAfterPx ?? 0,
+			...(paragraph.spaceBeforePx ? { spaceBeforePx: paragraph.spaceBeforePx } : {}),
 			marginLeftPx: paragraph.marginLeftPx ?? 0,
 			textIndentPx: paragraph.textIndentPx ?? 0,
 			ownStrut: paragraph.strutFontSizePx ?? block.size,
 			textAlign: (paragraph.paragraphStyle?.textAlign as string | undefined) ?? bodyAlign ?? 'left',
 			textAlignLast: paragraph.paragraphStyle?.textAlignLast as string | undefined,
 			indented: Boolean(
-				paragraph.marginLeftPx || paragraph.textIndentPx || paragraph.spaceBeforePx,
+				paragraph.marginLeftPx ||
+				paragraph.textIndentPx ||
+				(paragraphs.length === 0 && paragraph.spaceBeforePx),
 			),
 		});
 		if (text.trim() === '') {
@@ -258,6 +266,11 @@ export function readFrame(
 	}
 	if (align === undefined || !['left', 'center', 'right'].includes(align)) {
 		return undefined;
+	}
+	// A paragraph's space before opens the gap above it, so it joins the gap
+	// below the paragraph before it.
+	for (const [index, paragraph] of paragraphs.entries()) {
+		paragraph.spaceAfterPx += paragraphs[index + 1]?.spaceBeforePx ?? 0;
 	}
 	const available = element.width - left - right;
 	const vAlign =

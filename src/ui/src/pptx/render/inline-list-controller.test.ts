@@ -308,6 +308,32 @@ describe('native list presentation controller', () => {
 		expect(rules).toContain('> :is(div,p):nth-child(1)::before');
 	});
 
+	it('puts the space after a paragraph and the next one space before on one side, as their sum', () => {
+		const paragraph = (spaceBeforePx?: number, spaceAfterPx?: number) => ({
+			runs: [],
+			segmentIndices: [],
+			bulletStyle: {},
+			...(spaceBeforePx === undefined ? {} : { spaceBeforePx }),
+			...(spaceAfterPx === undefined ? {} : { spaceAfterPx }),
+		});
+		const rules = inlineListPresentationCss(
+			document,
+			'test',
+			[paragraph(4, 8), paragraph(16, 2), paragraph(10)],
+			[],
+		).split('\n');
+		// Normal flow would collapse 8 and 16 to 16; PowerPoint adds them.
+		expect(rules.find((rule) => rule.includes('nth-child(1) {'))).toContain(
+			'margin: 4px 0px 24px !important',
+		);
+		expect(rules.find((rule) => rule.includes('nth-child(2) {'))).toContain(
+			'margin: 0px 0px 12px !important',
+		);
+		expect(rules.find((rule) => rule.includes('nth-child(3) {'))).toContain(
+			'margin: 0px !important',
+		);
+	});
+
 	it('escapes custom marker CSS and preserves resolved fallback markers', () => {
 		const rules = inlineListPresentationCss(
 			document,

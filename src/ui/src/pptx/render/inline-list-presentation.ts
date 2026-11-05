@@ -47,10 +47,14 @@ export function inlineListPresentationCss(
 	for (const [index, paragraph] of paragraphs.entries()) {
 		const block = `${selector} > :is(div,p):nth-child(${index + 1})`;
 		const px = (value: number | undefined) => `${value ?? 0}px`;
+		// An editable block stacks its paragraphs in normal flow, where adjacent
+		// margins collapse; PowerPoint adds a paragraph's space after to the next
+		// one's space before, so the gap goes on one side as their sum.
+		const next = paragraphs[index + 1]?.spaceBeforePx ?? 0;
 		const style: RunStyle = {
 			...paragraph.paragraphStyle,
-			marginTop: px(paragraph.spaceBeforePx),
-			marginBottom: px(paragraph.spaceAfterPx),
+			marginTop: px(index === 0 ? paragraph.spaceBeforePx : 0),
+			marginBottom: px((paragraph.spaceAfterPx ?? 0) + next),
 			marginLeft: paragraph.rtl ? '0px' : px(paragraph.marginLeftPx),
 			marginRight: paragraph.rtl ? px(paragraph.marginLeftPx) : '0px',
 			textIndent: px(paragraph.textIndentPx),

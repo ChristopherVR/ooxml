@@ -77,19 +77,14 @@ describe('resolveParagraphSpacing', () => {
 		expect(proportional.runLineHeight).toBeUndefined();
 	});
 
-	// A paragraph's own spcBef NEVER becomes its own margin-top (spaceBeforePx
-	// is always undefined): both its own spcBef and spcAft fold into
-	// spaceAfterPx, the paragraph's trailing margin only. See
-	// `resolveParagraphSpacing`'s doc comment for the COM measurement behind
-	// this, in `paragraph-spacing.ts`.
-	it('combines per-paragraph before/after margins from paraProps into the trailing margin', () => {
+	it('maps a paragraphs own before/after spacing to its top and bottom margins', () => {
 		const result = resolveParagraphSpacing({
 			...base,
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		expect(result.spaceBeforePx).toBeUndefined();
-		expect(result.spaceAfterPx).toBe(20);
+		expect(result.spaceBeforePx).toBe(12);
+		expect(result.spaceAfterPx).toBe(8);
 	});
 
 	it('falls back to body-level spacing when the paragraph has none', () => {
@@ -98,8 +93,8 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: undefined,
 			bodyStyle: { paragraphSpacingBefore: 5, paragraphSpacingAfter: 7 } as TextStyle,
 		});
-		expect(result.spaceBeforePx).toBeUndefined();
-		expect(result.spaceAfterPx).toBe(12);
+		expect(result.spaceBeforePx).toBe(5);
+		expect(result.spaceAfterPx).toBe(7);
 	});
 
 	it('prefers paragraph spacing over the body fallback', () => {
@@ -108,10 +103,8 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: { paragraphSpacingBefore: 20 } as TextStyle,
 			bodyStyle: { paragraphSpacingBefore: 5 } as TextStyle,
 		});
-		// Still lands in spaceAfterPx, not spaceBeforePx: it is the resolved
-		// VALUE that prefers paragraph over body, not which margin it becomes.
-		expect(result.spaceBeforePx).toBeUndefined();
-		expect(result.spaceAfterPx).toBe(20);
+		expect(result.spaceBeforePx).toBe(20);
+		expect(result.spaceAfterPx).toBeUndefined();
 	});
 
 	it('maps a line-spacing multiplier to a unitless line-height', () => {
@@ -151,7 +144,7 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		// Before suppressed (0) + after (8, unconditional: not last) = 8.
+		expect(result.spaceBeforePx).toBeUndefined();
 		expect(result.spaceAfterPx).toBe(8);
 	});
 
@@ -163,21 +156,20 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		// Before (12, unconditional: not first) + after suppressed (0) = 12.
-		expect(result.spaceAfterPx).toBe(12);
+		expect(result.spaceBeforePx).toBe(12);
+		expect(result.spaceAfterPx).toBeUndefined();
 	});
 
 	it('suppresses first/last edge spacing by default when spaceFirstLast is omitted', () => {
 		// ECMA-376's default for `a:bodyPr/@spcFirstLastPara` is false, confirmed
-		// by PowerPoint COM measurement (TextRange2.Paragraphs(n).BoundTop):
-		// an omitted attribute behaves as "0", not "1".
+		// on PowerPoint slide exports: an omitted attribute behaves as "0".
 		const firstResult = resolveParagraphSpacing({
 			isFirst: true,
 			isLast: false,
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		expect(firstResult.spaceAfterPx).toBe(8);
+		expect(firstResult).toStrictEqual({ spaceAfterPx: 8 });
 
 		const lastResult = resolveParagraphSpacing({
 			isFirst: false,
@@ -185,10 +177,10 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		expect(lastResult.spaceAfterPx).toBe(12);
+		expect(lastResult).toStrictEqual({ spaceBeforePx: 12 });
 	});
 
-	it('applies first/last edge spacing when spaceFirstLast is true, still as one trailing margin', () => {
+	it('applies first/last edge spacing when spaceFirstLast is true', () => {
 		const result = resolveParagraphSpacing({
 			...base,
 			isFirst: true,
@@ -197,8 +189,8 @@ describe('resolveParagraphSpacing', () => {
 			paraProps: { paragraphSpacingBefore: 12, paragraphSpacingAfter: 8 } as TextStyle,
 			bodyStyle: undefined,
 		});
-		expect(result.spaceBeforePx).toBeUndefined();
-		expect(result.spaceAfterPx).toBe(20);
+		expect(result.spaceBeforePx).toBe(12);
+		expect(result.spaceAfterPx).toBe(8);
 	});
 
 	it('leaves an interior paragraph fully unaffected by spaceFirstLast either way', () => {
@@ -210,13 +202,13 @@ describe('resolveParagraphSpacing', () => {
 		};
 		const withFlagOff = resolveParagraphSpacing({ ...interior, spaceFirstLast: false });
 		const withFlagOn = resolveParagraphSpacing({ ...interior, spaceFirstLast: true });
-		expect(withFlagOff).toStrictEqual({ spaceAfterPx: 70 });
-		expect(withFlagOn).toStrictEqual({ spaceAfterPx: 70 });
+		expect(withFlagOff).toStrictEqual({ spaceBeforePx: 40, spaceAfterPx: 30 });
+		expect(withFlagOn).toStrictEqual({ spaceBeforePx: 40, spaceAfterPx: 30 });
 	});
 
 	it('gates only the first paragraph before-spacing and last paragraph after-spacing independently', () => {
 		// p1 in a body of >= 3 paragraphs: own before gated, own after always on
-		// (it is not the last paragraph). Both fold into spaceAfterPx.
+		// (it is not the last paragraph).
 		const p1 = {
 			isFirst: true,
 			isLast: false,
@@ -227,11 +219,12 @@ describe('resolveParagraphSpacing', () => {
 			spaceAfterPx: 30,
 		});
 		expect(resolveParagraphSpacing({ ...p1, spaceFirstLast: true })).toStrictEqual({
-			spaceAfterPx: 70,
+			spaceBeforePx: 40,
+			spaceAfterPx: 30,
 		});
 
 		// pN in a body of >= 3 paragraphs: own after gated, own before always on
-		// (it is not the first paragraph). Both fold into spaceAfterPx.
+		// (it is not the first paragraph).
 		const pN = {
 			isFirst: false,
 			isLast: true,
@@ -239,10 +232,11 @@ describe('resolveParagraphSpacing', () => {
 			bodyStyle: undefined,
 		};
 		expect(resolveParagraphSpacing({ ...pN, spaceFirstLast: false })).toStrictEqual({
-			spaceAfterPx: 40,
+			spaceBeforePx: 40,
 		});
 		expect(resolveParagraphSpacing({ ...pN, spaceFirstLast: true })).toStrictEqual({
-			spaceAfterPx: 70,
+			spaceBeforePx: 40,
+			spaceAfterPx: 30,
 		});
 	});
 
@@ -288,86 +282,58 @@ describe('resolveParagraphSpacing', () => {
 	});
 });
 
-// ---------------------------------------------------------------------------
-// Direct pins of the raw PowerPoint COM measurements behind the doc comment
-// above `resolveParagraphSpacing`. Both decks use DISTINCT spcBef/spcAft per
-// paragraph specifically so a measured number can only be explained by ONE
-// paragraph's own authored value, unlike a uniform deck (spcBef/spcAft equal
-// across paragraphs) where "spcAft(i) + spcBef(i+1)" and "spcBef(i) +
-// spcAft(i)" predict the same total and cannot be told apart. Units here are
-// the raw COM point values, used directly as the "already px" input
-// `resolveParagraphSpacing` expects: what is being pinned is the ARITHMETIC
-// relationship (which paragraph's numbers combine, and how), not a px/pt
-// conversion (covered separately by the line-height tests above).
-// ---------------------------------------------------------------------------
-describe('resolveParagraphSpacing - measured multi-paragraph gaps', () => {
-	// 4-paragraph deck, spcBef/spcAft distinct per paragraph:
-	// p1 11/21, p2 32/42, p3 53/63, p4 74/84 (points). Own BoundHeight per
-	// paragraph, read over COM, was (line = 21.6pt in both variants):
-	//   spaceFirstLast off:  p1 42.6  p2 95.6  p3 137.6  p4 95.6
-	//   spaceFirstLast on:   p1 53.6  p2 95.6  p3 137.6  p4 179.6
-	// (only p1 and p4, the edges, move between variants; p2 and p3 do not.)
-	const distinctParas = [
-		{ paragraphSpacingBefore: 11, paragraphSpacingAfter: 21 },
-		{ paragraphSpacingBefore: 32, paragraphSpacingAfter: 42 },
-		{ paragraphSpacingBefore: 53, paragraphSpacingAfter: 63 },
-		{ paragraphSpacingBefore: 74, paragraphSpacingAfter: 84 },
-	] as TextStyle[];
-
-	function ownAfterPx(paraIndex: number, spaceFirstLast: boolean): number | undefined {
-		return resolveParagraphSpacing({
-			paraProps: distinctParas[paraIndex],
-			bodyStyle: undefined,
-			isFirst: paraIndex === 0,
-			isLast: paraIndex === distinctParas.length - 1,
-			spaceFirstLast,
-		}).spaceAfterPx;
+// Measured on PowerPoint 16 slide exports (`Slide.Export` PNG at 1280x720,
+// Calibri 28pt, zero insets, single spacing: a 33.6pt pitch). The line tops
+// a measured gap puts between consecutive paragraphs is the pitch plus the
+// first one's spcAft PLUS the next one's spcBef. Units are used as px.
+describe('resolveParagraphSpacing - measured paragraph gaps', () => {
+	const PITCH = 33.6;
+	function gaps(paras: TextStyle[], spaceFirstLast = false): number[] {
+		const resolved = paras.map((paraProps, index) =>
+			resolveParagraphSpacing({
+				paraProps,
+				isFirst: index === 0,
+				isLast: index === paras.length - 1,
+				spaceFirstLast,
+			}),
+		);
+		return resolved
+			.slice(1)
+			.map(
+				(next, index) => PITCH + (resolved[index]!.spaceAfterPx ?? 0) + (next.spaceBeforePx ?? 0),
+			);
 	}
 
-	it('matches the measured own-margin for every paragraph with spaceFirstLast off', () => {
-		expect(ownAfterPx(0, false)).toBe(21); // p1: before suppressed, after 21
-		expect(ownAfterPx(1, false)).toBe(74); // p2: 32 + 42
-		expect(ownAfterPx(2, false)).toBe(116); // p3: 53 + 63
-		expect(ownAfterPx(3, false)).toBe(74); // p4: before 74, after suppressed
+	it('adds the space after one paragraph to the space before the next (51.75pt measured)', () => {
+		const result = gaps([
+			{ paragraphSpacingAfter: 6 },
+			{ paragraphSpacingBefore: 12 },
+			{},
+		] as TextStyle[]);
+		expect(result[0]).toBeCloseTo(51.6, 5);
+		expect(result[1]).toBeCloseTo(PITCH, 5);
 	});
 
-	it('matches the measured own-margin for every paragraph with spaceFirstLast on', () => {
-		expect(ownAfterPx(0, true)).toBe(32); // p1: 11 + 21, both now applied
-		expect(ownAfterPx(1, true)).toBe(74); // p2: unaffected by the flag
-		expect(ownAfterPx(2, true)).toBe(116); // p3: unaffected by the flag
-		expect(ownAfterPx(3, true)).toBe(158); // p4: 74 + 84, both now applied
+	it('opens a middle paragraphs space before above it, not below (63.75pt, then one pitch)', () => {
+		const result = gaps([{}, { paragraphSpacingBefore: 30 }, {}] as TextStyle[]);
+		expect(result).toEqual([PITCH + 30, PITCH]);
 	});
 
-	// Isolation deck: only the MIDDLE paragraph authors a spcBef (100pt);
-	// everything else is 0. Measured over COM: the gap BEFORE it is
-	// unaffected (line height only), and the gap AFTER it carries the full
-	// 100pt - proof spcBef never manifests as space above its own paragraph,
-	// for an INTERIOR paragraph specifically (not just the documented first/
-	// last edge cases).
-	it('matches the isolation deck: a middle paragraphs spcBef lands entirely after it, never before', () => {
-		const p1 = resolveParagraphSpacing({
-			paraProps: { paragraphSpacingBefore: 0, paragraphSpacingAfter: 0 } as TextStyle,
-			bodyStyle: undefined,
+	it('adds before and after on every boundary when all paragraphs set both (51.75pt twice)', () => {
+		const both = { paragraphSpacingBefore: 12, paragraphSpacingAfter: 6 } as TextStyle;
+		expect(gaps([both, both, both])).toEqual([PITCH + 18, PITCH + 18]);
+	});
+
+	it('moves the first line down by its own space before only with spcFirstLastPara', () => {
+		const first = { paragraphSpacingBefore: 24 } as TextStyle;
+		const off = resolveParagraphSpacing({ paraProps: first, isFirst: true, isLast: false });
+		const on = resolveParagraphSpacing({
+			paraProps: first,
 			isFirst: true,
 			isLast: false,
-			spaceFirstLast: false,
+			spaceFirstLast: true,
 		});
-		const p2 = resolveParagraphSpacing({
-			paraProps: { paragraphSpacingBefore: 100, paragraphSpacingAfter: 0 } as TextStyle,
-			bodyStyle: undefined,
-			isFirst: false,
-			isLast: false,
-			spaceFirstLast: false,
-		});
-		const p3 = resolveParagraphSpacing({
-			paraProps: { paragraphSpacingBefore: 0, paragraphSpacingAfter: 0 } as TextStyle,
-			bodyStyle: undefined,
-			isFirst: false,
-			isLast: true,
-			spaceFirstLast: false,
-		});
-		expect(p1.spaceAfterPx).toBeUndefined(); // gap p1->p2: line only
-		expect(p2.spaceAfterPx).toBe(100); // gap p2->p3: line + all 100pt
-		expect(p3.spaceAfterPx).toBeUndefined();
+		expect(off.spaceBeforePx).toBeUndefined();
+		expect(on.spaceBeforePx).toBe(24);
 	});
 });

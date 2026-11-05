@@ -276,11 +276,9 @@ describe('buildParagraphs', () => {
 		expect(paras[0].runs.map((run) => run.style.lineHeight)).toStrictEqual([0, 0]);
 	});
 
-	it('folds the first paragraph own before-spacing into spaceAfterPx when spcFirstLastPara is explicitly true', () => {
+	it('keeps the first paragraph own before-spacing above it when spcFirstLastPara is explicitly true', () => {
 		// A single paragraph is both first and last, so both its own before and
-		// after apply once the flag opts back in - but PowerPoint never renders
-		// a paragraph's own spcBef as space above it (see paragraph-spacing.ts),
-		// so both fold into ONE trailing margin (12 + 6 = 18), not spaceBeforePx.
+		// after apply once the flag opts back in, each on its own side.
 		const paras = buildParagraphs(
 			textEl(
 				[
@@ -293,7 +291,7 @@ describe('buildParagraphs', () => {
 				{ textStyle: { spaceFirstLastParagraph: true } },
 			),
 		);
-		expect(paras[0]).toMatchObject({ spaceBeforePx: undefined, spaceAfterPx: 18 });
+		expect(paras[0]).toMatchObject({ spaceBeforePx: 12, spaceAfterPx: 6 });
 	});
 
 	it('leaves spacing undefined when a paragraph has no pPr overrides', () => {

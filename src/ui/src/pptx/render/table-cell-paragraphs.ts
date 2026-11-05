@@ -25,6 +25,8 @@ export interface CellParagraphBlock {
 interface ParagraphLayout {
 	css: TableCellCss;
 	runLineHeight?: number;
+	/** The paragraph's own space before (px), which the PREVIOUS block's margin carries. */
+	spaceBeforePx?: number;
 }
 
 /** An empty paragraph still takes a line, as it does in PowerPoint. */
@@ -114,9 +116,32 @@ function paragraphLayoutCss(
 	if (spacing.spaceAfterPx !== undefined) {
 		css.marginBlockEnd = `${spacing.spaceAfterPx}px`;
 	}
-	return spacing.runLineHeight === undefined
-		? { css }
-		: { css, runLineHeight: spacing.runLineHeight };
+	const layout: ParagraphLayout = { css };
+	if (spacing.runLineHeight !== undefined) {
+		layout.runLineHeight = spacing.runLineHeight;
+	}
+	if (spacing.spaceBeforePx !== undefined) {
+		layout.spaceBeforePx = spacing.spaceBeforePx;
+	}
+	return layout;
+}
+
+/**
+ * Move each paragraph's own space before onto the previous block's
+ * `margin-block-end`. PowerPoint adds a paragraph's `spcAft` and the next
+ * one's `spcBef`; the cell stacks its blocks in normal flow, where two
+ * adjacent margins would collapse to the larger, so the sum goes on one side.
+ */
+function addSpaceBefore(layouts: ParagraphLayout[]): void {
+	for (let index = 1; index < layouts.length; index++) {
+		const before = layouts[index].spaceBeforePx;
+		if (before === undefined) {
+			continue;
+		}
+		const previous = layouts[index - 1].css;
+		const after = Number.parseFloat(String(previous.marginBlockEnd ?? '0')) || 0;
+		previous.marginBlockEnd = `${after + before}px`;
+	}
 }
 
 /** A paragraph's alignment, with PowerPoint's default. */
@@ -191,6 +216,7 @@ export function cellParagraphBlocks(cell: PptxTableCell): CellParagraphBlock[] |
 	const layouts = groups.map((_, index) =>
 		paragraphLayoutCss(paragraphs[index], follows[index], index === 0, index === groups.length - 1),
 	);
+	addSpaceBefore(layouts);
 	if (!needsBlocks(paragraphs, follows, layouts)) {
 		return undefined;
 	}
