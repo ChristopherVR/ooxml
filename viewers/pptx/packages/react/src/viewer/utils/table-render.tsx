@@ -301,6 +301,7 @@ export function renderTableElement(
 														tableEl.tableData?.rows[rowIndex]?.cells[cellIndex],
 														extractCellText(cell) || '\u00a0',
 														mergedStyle as TableCellCss,
+														tableEl.tableData?.defaultCellFontSize,
 													)
 												)}
 											</td>

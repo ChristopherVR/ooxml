@@ -270,7 +270,9 @@ const rows = computed<RenderableRow[]>(() => {
 				style,
 				patternFill,
 				textRuns,
-				paragraphs: cellParagraphBlocks(cell) ?? null,
+				paragraphs:
+					cellParagraphBlocks(cell, { cellCss: style, defaultFontPt: td.defaultCellFontSize }) ??
+					null,
 				text: cell.text || ' ',
 				diagonals: getCellDiagonalBorders(
 					cell.style,

@@ -191,7 +191,7 @@ function renderCell(
 		td.appendChild(renderDiagonalOverlay(doc, diagonals));
 	}
 
-	appendCellText(doc, td, cell, style);
+	appendCellText(doc, td, cell, style, tableData.defaultCellFontSize);
 	return td;
 }
 
@@ -249,8 +249,9 @@ function appendCellText(
 	td: HTMLTableCellElement,
 	cell: PptxTableCell,
 	cellCss: TableCellCss,
+	defaultFontPt?: number,
 ): void {
-	const blocks = cellParagraphBlocks(cell);
+	const blocks = cellParagraphBlocks(cell, { cellCss, defaultFontPt });
 	if (blocks) {
 		for (const block of blocks) {
 			const div = createEl(doc, 'div', 'pptxv-table-para', { display: 'block', ...block.css });

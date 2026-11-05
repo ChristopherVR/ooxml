@@ -205,6 +205,7 @@ export function renderTableFromTableData(
 													cell,
 													cell.text || '\u00a0',
 													cellCss(cell, rowIndex, cellIndex),
+													tableData.defaultCellFontSize,
 												)
 											)}
 										</td>

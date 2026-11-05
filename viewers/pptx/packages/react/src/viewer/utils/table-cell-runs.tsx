@@ -19,6 +19,8 @@ import React from 'react';
  * @param cell - The cell, or `undefined` for the raw-XML path when no parsed
  *   cell is available at this position.
  * @param fallbackText - Plain text rendered when the cell has no runs.
+ * @param defaultFontPt - The table's default text size (pt), for the baseline of
+ *   a paragraph whose runs set none.
  * @param cellCss - The cell's resolved style, so a run's own weight-variant
  *   family renders at its weight relative to the cell (see `cellRunStyle`).
  */
@@ -26,8 +28,9 @@ export function renderTableCellContent(
 	cell: PptxTableCell | undefined,
 	fallbackText: string,
 	cellCss?: TableCellCss,
+	defaultFontPt?: number,
 ): React.ReactNode {
-	const blocks = cell ? cellParagraphBlocks(cell) : undefined;
+	const blocks = cell ? cellParagraphBlocks(cell, { cellCss, defaultFontPt }) : undefined;
 	if (blocks) {
 		return blocks.map((block, index) => (
 			<div key={`p-${index}`} style={{ display: 'block', ...(block.css as React.CSSProperties) }}>

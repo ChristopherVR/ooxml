@@ -154,7 +154,10 @@ export function buildTableViewModel(
 					...cssObjectToStyleMap(cellCss),
 				};
 
-				const blocks = cellParagraphBlocks(cell);
+				const blocks = cellParagraphBlocks(cell, {
+					cellCss,
+					defaultFontPt: tableData.defaultCellFontSize,
+				});
 				return {
 					cell,
 					rowIndex,

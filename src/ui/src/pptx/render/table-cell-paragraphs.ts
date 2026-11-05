@@ -10,7 +10,10 @@
 import type { PptxTableCell, PptxTableCellParagraph } from 'ooxml-core/pptx';
 
 import { resolveParagraphIndent } from './bullet-list';
+import type { FontBoxMeasure } from './paragraph-baseline';
+import { armBaselineSettle } from './paragraph-baseline-settle';
 import { resolveParagraphSpacing } from './paragraph-spacing';
+import { cellBaselinePlacement } from './table-cell-baseline';
 import type { CellTextRun, TableCellCss } from './table-style';
 import { DEFAULT_LINE_HEIGHT } from './text-line-height';
 import {
@@ -35,6 +38,18 @@ interface ParagraphLayout {
 
 /** An empty paragraph still takes a line, as it does in PowerPoint. */
 const BLANK_LINE: CellTextRun = { text: '', isLineBreak: true };
+
+/** What a caller can tell {@link cellParagraphBlocks} about the cell it paints. */
+export interface CellBlockOptions {
+	cellCss?: TableCellCss | undefined;
+	defaultFontPt?: number | undefined;
+	measure?: FontBoxMeasure | undefined;
+}
+
+/** Whether a paragraph's runs hold any text (an empty paragraph keeps the browser's blank line). */
+function hasContentRuns(runs: readonly CellTextRun[]): boolean {
+	return runs.some((run) => run.text !== '' && !run.isLineBreak);
+}
 
 /** Split runs at their paragraph markers. */
 function groupRuns(runs: readonly CellTextRun[]): CellTextRun[][] {
@@ -183,10 +198,12 @@ function needsBlocks(
 	paragraphs: readonly (PptxTableCellParagraph | undefined)[],
 	follows: readonly boolean[],
 	layouts: readonly ParagraphLayout[],
+	placed: readonly boolean[],
 ): boolean {
 	return follows.some(
 		(followsCell, index) =>
 			!followsCell ||
+			placed[index] === true ||
 			paragraphs[index]?.rtl === true ||
 			layouts[index].css.marginInlineStart !== undefined ||
 			layouts[index].css.textIndent !== undefined ||
@@ -203,11 +220,19 @@ function needsBlocks(
  * one remaining paragraph.
  *
  * @param cell - The cell being painted.
+ * @param options - `cellCss`, the cell's resolved style (its font and line
+ *   height, which a paragraph without its own inherits), and `defaultFontPt`,
+ *   the table's default text size: with them a paragraph is moved onto
+ *   PowerPoint's baselines (see `table-cell-baseline`). `measure` replaces the
+ *   canvas font measurement in tests.
  * @returns One block per paragraph, or `undefined` when the cell has no
  *   paragraph layout or nothing in it needs blocks, in which case the binding
  *   draws its runs as before.
  */
-export function cellParagraphBlocks(cell: PptxTableCell): CellParagraphBlock[] | undefined {
+export function cellParagraphBlocks(
+	cell: PptxTableCell,
+	options: CellBlockOptions = {},
+): CellParagraphBlock[] | undefined {
 	const { paragraphs } = cell;
 	if (!paragraphs || paragraphs.length === 0) {
 		return undefined;
@@ -222,11 +247,37 @@ export function cellParagraphBlocks(cell: PptxTableCell): CellParagraphBlock[] |
 		paragraphLayoutCss(paragraphs[index], follows[index], index === 0, index === groups.length - 1),
 	);
 	addSpaceBefore(layouts);
-	if (!needsBlocks(paragraphs, follows, layouts)) {
+	const placements = groups.map((group, index) =>
+		hasContentRuns(group)
+			? cellBaselinePlacement({
+					runs: group,
+					lineHeight: layouts[index].css.lineHeight,
+					strutPt: strutFontSizePt(group),
+					cellCss: options.cellCss,
+					defaultFontPt: options.defaultFontPt,
+					measure: options.measure,
+				})
+			: undefined,
+	);
+	if (
+		!needsBlocks(
+			paragraphs,
+			follows,
+			layouts,
+			placements.map((placement) => placement !== undefined),
+		)
+	) {
 		return undefined;
 	}
 	return groups.map((group, index) => {
 		const { css, runLineHeight } = layouts[index];
+		const placement = placements[index];
+		if (placement) {
+			Object.assign(css, placement.style);
+			if (placement.provisional) {
+				armBaselineSettle();
+			}
+		}
 		const hasContent = group.some((run) => run.text !== '' || run.isLineBreak);
 		if (!hasContent) {
 			const endPt = paragraphs[index]?.endParaFontSize;

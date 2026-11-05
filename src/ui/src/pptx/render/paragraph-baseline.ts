@@ -33,7 +33,7 @@
  * @module render/paragraph-baseline
  */
 import type { TextStyle } from 'ooxml-core/pptx';
-import { namedFontVerticalMetrics } from 'ooxml-core/text';
+import { namedFontVerticalMetrics, officeFontVerticalMetrics } from 'ooxml-core/text';
 
 import { typoLineGapEm } from './font-line-gap';
 import { firstFontFamily, fontState } from './font-settled';
@@ -274,19 +274,24 @@ export function referenceFont(style: ParagraphRun['style'], family: string): str
 }
 
 /**
- * The box PowerPoint scales to its pitch. A legacy East Asian Office font that
- * is missing here is laid out by PowerPoint on its own named metrics, not on
- * the stand-in the browser measured; a web font still loading keeps its path.
+ * The box PowerPoint scales to its pitch. A Windows or Office font that is
+ * missing here (a legacy East Asian one, an Office cloud font, a styled face
+ * name) is laid out by PowerPoint on its own metrics, not on the stand-in the
+ * browser measured; a web font still loading keeps its path.
  */
 export function referenceBox(
 	measured: FontBox | undefined,
 	family: string | undefined,
 ): FontBox | undefined {
-	const named = measured?.provisional && !measured.loading && namedFontVerticalMetrics(family);
+	const named =
+		measured?.provisional &&
+		!measured.loading &&
+		(namedFontVerticalMetrics(family) ?? officeFontVerticalMetrics(family));
 	return named
 		? {
 				ascent: named.ascent * REFERENCE_SIZE,
 				descent: named.descent * REFERENCE_SIZE,
+				...(named.lineGap ? { lineGap: named.lineGap * REFERENCE_SIZE } : {}),
 				provisional: true,
 			}
 		: measured;
@@ -386,26 +391,50 @@ export function applyParagraphBaselineShift(
 		strutFamily: block.fontFamily,
 		...(measure ? { measure } : {}),
 	};
+	const placement = baselinePlacementStyle(input);
+	if (!placement) {
+		return;
+	}
+	if (placement.shift !== undefined) {
+		paragraph.baselineShiftPx = placement.shift;
+	}
+	if (placement.provisional) {
+		// The font is a stand-in until it loads: say what to place again then.
+		paragraph.baselineProvisional = true;
+	}
+	paragraph.paragraphStyle = { ...paragraph.paragraphStyle, ...placement.style };
+}
+
+/** What {@link baselinePlacementStyle} answers: the inline style and what it was made from. */
+export interface BaselinePlacement {
+	style: Record<string, string | number>;
+	shift: number | undefined;
+	provisional: boolean;
+}
+
+/**
+ * The inline style that puts one paragraph block on PowerPoint's baselines (a
+ * relative `top`, and the pending marker while its font is a stand-in), or
+ * `undefined` when it needs none. Shared by shape text and table cells.
+ */
+export function baselinePlacementStyle(input: BaselineShiftInput): BaselinePlacement | undefined {
 	const resolved = resolveParagraphBaseline(input);
 	if (!resolved) {
-		return;
+		return undefined;
 	}
 	const { shift, provisional } = resolved;
 	if (shift === undefined && !provisional) {
-		return;
+		return undefined;
 	}
-	const style: Record<string, string | number> = { ...paragraph.paragraphStyle };
+	const style: Record<string, string | number> = {};
 	if (shift !== undefined) {
-		paragraph.baselineShiftPx = shift;
 		style.position = 'relative';
 		style.top = `${shift}px`;
 	}
 	if (provisional) {
-		// The font is a stand-in until it loads: say what to place again then.
-		paragraph.baselineProvisional = true;
 		style[BASELINE_PENDING_VAR] = encodePendingBaseline(input);
 	}
-	paragraph.paragraphStyle = style;
+	return { style, shift, provisional };
 }
 
 /** The custom property that marks a paragraph placed from a stand-in font's box. */

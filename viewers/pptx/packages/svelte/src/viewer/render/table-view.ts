@@ -169,7 +169,7 @@ function buildCellView(
 			context,
 		),
 		runs: buildRunViews(cell, style),
-		paragraphBlocks: buildParagraphViews(cell, style),
+		paragraphBlocks: buildParagraphViews(cell, style, tableData.defaultCellFontSize),
 		text: cell.text || ' ',
 	};
 }
@@ -201,8 +201,9 @@ function runView(run: CellTextRun, i: number, cellCss: TableCellCss): TableRunVi
 function buildParagraphViews(
 	cell: PptxTableCell,
 	cellCss: TableCellCss,
+	defaultFontPt?: number,
 ): TableParagraphView[] | null {
-	const blocks = cellParagraphBlocks(cell);
+	const blocks = cellParagraphBlocks(cell, { cellCss, defaultFontPt });
 	if (!blocks) {
 		return null;
 	}
