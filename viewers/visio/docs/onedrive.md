@@ -56,7 +56,9 @@ list (the shared `<office-ui-connected-services>`): one row per provider with th
 and Connect or Disconnect, which call the provider's own `signIn` and `signOut`. A provider without
 `signOut` shows that the host manages its session. The list follows the providers' `subscribe`, so
 signing in from File > Open updates it, and its words come from the Visio dictionaries in every
-language. Without `fileProviders` the Account page shows only the profile and product information.
+language. The page also keeps the local profile and product information. As in Word and Excel, the
+Account page appears only when there are `fileProviders`; without them the profile stays editable
+in **File > Options**.
 
 ## Using a session directly
 

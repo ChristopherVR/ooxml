@@ -142,6 +142,8 @@ export class ViewerBackstage {
 		this.#providers = providers;
 		this.#places?.setProviders(providers);
 		this.#services?.setProviders(providers);
+		// Account lists these providers, as in Word and Excel: it shows only when there are some.
+		if (this.#state) this.render(this.#state);
 	}
 	/** Shows the pages in the current display language again (after the locale changes). */
 	localize(): void {
@@ -157,6 +159,7 @@ export class ViewerBackstage {
 		if (this.#state) this.render(this.#state);
 	}
 	show(page: BackstagePage = 'info'): void {
+		if (page === 'account' && !this.#providers.length) page = 'info';
 		this.#ribbon.setAttribute('file-expanded', 'true');
 		this.#root.show(page);
 		if (page === 'print') this.#preview();
@@ -509,7 +512,9 @@ export class ViewerBackstage {
 				save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
 				close: { disabled: !state.document },
 			})
-				.filter((item) => !hidden.has(item.id))
+				.filter(
+					(item) => !hidden.has(item.id) && (item.id !== 'account' || this.#providers.length > 0),
+				)
 				.map((item) => ({
 					...item,
 					label: this.#t(item.label),

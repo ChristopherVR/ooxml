@@ -3,6 +3,18 @@ import { demoDocument } from 'ooxml-core/visio/ui';
 import { mountViewer } from './binding';
 import type { VisioCustomization } from './index';
 import { resolveVisioCustomization, visioActionBlocked } from './viewer-customization';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
+
+const provider: CloudFileProvider = {
+	id: 'onedrive',
+	label: 'OneDrive',
+	account: () => null,
+	signIn: async () => ({ name: 'Ada' }),
+	list: async () => ({ entries: [] }),
+	open: async () => {
+		throw new Error('not used');
+	},
+};
 
 afterEach(() => document.body.replaceChildren());
 
@@ -52,11 +64,21 @@ describe('<visio-viewer> customization', () => {
 		viewer.destroy();
 	});
 
+	it('shows Account only when there are storage providers, as in Word and Excel', () => {
+		const { viewer, root } = mount();
+		expect(navIds(root)).not.toContain('account');
+		viewer.update({ fileProviders: [provider] });
+		expect(navIds(root)).toContain('account');
+		viewer.update({ fileProviders: [] });
+		expect(navIds(root)).not.toContain('account');
+		viewer.destroy();
+	});
+
 	it('removes the File tab pages of disabled capabilities', () => {
 		const { viewer, root } = mount({
 			capabilities: { open: false, save: false, print: false, share: false, settings: false },
 		});
-		expect(navIds(root)).toEqual(['info', 'export', 'close', 'account', 'feedback']);
+		expect(navIds(root)).toEqual(['info', 'export', 'close', 'feedback']);
 		viewer.update({ customization: null });
 		expect(navIds(root)).toContain('print');
 		viewer.destroy();

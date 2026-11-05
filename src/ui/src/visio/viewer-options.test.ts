@@ -1,11 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountViewer } from './binding';
+import type { CloudFileProvider } from 'ooxml-core/embedding';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 afterEach(() => {
 	document.body.replaceChildren();
 	localStorage.clear();
 });
+
+const provider: CloudFileProvider = {
+	id: 'onedrive',
+	label: 'OneDrive',
+	account: () => null,
+	signIn: async () => ({ name: 'Ada' }),
+	list: async () => ({ entries: [] }),
+	open: async () => {
+		throw new Error('not used');
+	},
+};
 
 type Profile = { displayName: string; avatarColor: string; initial?: string };
 
@@ -16,7 +28,11 @@ function setup() {
 	);
 	const host = document.createElement('div');
 	document.body.append(host);
-	const viewer = mountViewer(host, { document: structuredClone(demoDocument) });
+	// Account shows only with storage providers to list, as in Word and Excel.
+	const viewer = mountViewer(host, {
+		document: structuredClone(demoDocument),
+		fileProviders: [provider],
+	});
 	const root = viewer.element.shadowRoot!;
 	const backstage = root.querySelector<HTMLElement & { open: boolean }>('office-ui-backstage')!;
 	const item = (id: string) =>
