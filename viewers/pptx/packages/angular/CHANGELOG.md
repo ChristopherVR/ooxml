@@ -7,6 +7,51 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.63.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.63.0) - 2026-11-05
+
+### Features
+
+- **ui:** Add file open places for cloud providers to the pptx viewer ([ea51fde](https://github.com/ChristopherVR/ooxml/commit/ea51fde2fd2f60a3ea55b1a4591be501095ce9b8))
+- **pptx:** Open cloud files from file open in the angular viewer ([0f9a18c](https://github.com/ChristopherVR/ooxml/commit/0f9a18c135d5594146b05de07b8bc7d0926c368b))
+- **pptx:** Add shared in-app dialogs for hyperlinks, names and deletes ([2b6419f](https://github.com/ChristopherVR/ooxml/commit/2b6419fb6e83899ad59a71d05a75b2291ee9012b))
+- **site:** Explain onedrive save conflicts in a details section ([43431d4](https://github.com/ChristopherVR/ooxml/commit/43431d41399d849c8e8ac0c40619d44c23e00532))
+- **angular:** Mark the outline overlay for the morph outline carry ([b271e7e](https://github.com/ChristopherVR/ooxml/commit/b271e7e4635dbad003bc34fcd67385e6e0fab4ee))
+- **locales:** Translate connected services labels ([e16ef29](https://github.com/ChristopherVR/ooxml/commit/e16ef29895c80feabc522639f29b253d2007b2f5))
+- **angular:** List connected services on the account page ([51e50fd](https://github.com/ChristopherVR/ooxml/commit/51e50fd6ca350fa40360596a1fdb1717ef2454eb))
+- **angular:** Hand the slide size to the morph plan ([16014b5](https://github.com/ChristopherVR/ooxml/commit/16014b59620a415cb4f93d9ffa5adfa888a9f415))
+
+### Bug Fixes
+
+- **pptx:** Mark a saved deck clean only once storage has stored it ([703ad1f](https://github.com/ChristopherVR/ooxml/commit/703ad1f080f57ee61b959cf131d002efc97116d5))
+- **pptx:** Keep the cloud files strings in a named locale section ([ba9e50f](https://github.com/ChristopherVR/ooxml/commit/ba9e50feb29c70cf8aefb12a7073fb020e553209))
+- **angular:** Replace browser dialogs with the in-app dialogs ([f61edb7](https://github.com/ChristopherVR/ooxml/commit/f61edb7614f6871508a339698de7514300fff46c))
+- **pptx:** Refuse handle edits on a read-only viewer in every binding ([6a4df10](https://github.com/ChristopherVR/ooxml/commit/6a4df10f07abdc8021009b20b6070f33561d4b92))
+- **angular:** Stack morph crossfades in the plan's overlay order ([d16391a](https://github.com/ChristopherVR/ooxml/commit/d16391ae2c2903dd604e83f0dd2c187668456991))
+- **pptx:** Show the read-only badge in the Angular and vanilla ribbon ([58106ec](https://github.com/ChristopherVR/ooxml/commit/58106ec434b911888b481355ab10b8a42b38634d))
+- **pptx:** Stop warning about unchanged images on every save ([6a3efd9](https://github.com/ChristopherVR/ooxml/commit/6a3efd99b1752755f7ccce42e3c85c1105b0436b))
+- **color:** Add straight-alpha resampling for translucent gradient stops ([71dc9cb](https://github.com/ChristopherVR/ooxml/commit/71dc9cbaa163a37c283763ae2a4a78a931845e5b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **pptx:** Measure percentage paragraph spacing against its text size ([08a8f65](https://github.com/ChristopherVR/ooxml/commit/08a8f6509903e784d30753f1e1ac754b8863e3fb))
+- **angular:** Grow abutting rectangles under their cover ([cbf17f0](https://github.com/ChristopherVR/ooxml/commit/cbf17f0e08ce2d3e08169b8e9e853f75c862d067))
+- **geometry:** Place the pentagon preset's side vertices per the spec ([8f127a5](https://github.com/ChristopherVR/ooxml/commit/8f127a5f9710b36e17b038fe83793aa14b940b58))
+- **pptx:** Turn vertically flipped text upside down, never mirror it ([f63671a](https://github.com/ChristopherVR/ooxml/commit/f63671a1217edb2a72f03403ccbc432a494d4a79))
+
+### Refactor
+
+- **pptx:** Use the shared places element in file open ([ea85028](https://github.com/ChristopherVR/ooxml/commit/ea850283ae8a3720ee7bf3ee4ef71981af5f43c8))
+- **angular:** Resolve the entry auto-advance delay in a helper ([7cafe51](https://github.com/ChristopherVR/ooxml/commit/7cafe517eb4fe26b7934d275934ab476521cdf21))
+- **angular:** Arm the entry auto-advance in a helper ([2ea86a5](https://github.com/ChristopherVR/ooxml/commit/2ea86a56b75b532e51a53d35cef9a35ab6fc70fc))
+
+### Testing
+
+- **ui:** Keep the dialog test helpers lint clean ([de583e2](https://github.com/ChristopherVR/ooxml/commit/de583e289dcf98a42b04503ff11818bc0358e9ab))
+- **pptx:** Prove cloud files open read-only in every binding ([b4ee684](https://github.com/ChristopherVR/ooxml/commit/b4ee684d1ba677541ffd2739aa59859b99778807))
+- **pptx:** Give in-app dialog waits room on busy runners ([adb47b8](https://github.com/ChristopherVR/ooxml/commit/adb47b8bcede111a3302a5a1b981f1d853a28113))
+- **angular:** Cover issue 141 morph stacking, rearm and timed advance ([2072c65](https://github.com/ChristopherVR/ooxml/commit/2072c65223a9128800707af266ab40ed2ec9f452))
+- **angular:** Test timed advance and picture img on real code ([2815ad5](https://github.com/ChristopherVR/ooxml/commit/2815ad58b05596e306e14221258960143b3ba612))
+- **angular:** Give the morph overlay mount tests room on busy runners ([f6f6b2c](https://github.com/ChristopherVR/ooxml/commit/f6f6b2ce725bbd195bcdd5bc119beb97bdb9a193))
+- **angular:** Pin flipped text as PowerPoint paints it ([87d9b4f](https://github.com/ChristopherVR/ooxml/commit/87d9b4f9b94e1d6c4c53e5ed3c2f0c66497d0bda))
+
 ## [4.62.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.62.1) - 2026-11-05
 
 ### Bug Fixes

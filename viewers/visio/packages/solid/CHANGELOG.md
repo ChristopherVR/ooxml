@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@1.3.0) - 2026-11-05
+
+### Features
+
+- **visio:** Open drawings from cloud file providers ([f7563e7](https://github.com/ChristopherVR/ooxml/commit/f7563e70c8fbdb2475d7b211b94bf278b590de8c))
+- **ui:** Expose openCloudFile on the word, excel and visio bindings ([b4837c7](https://github.com/ChristopherVR/ooxml/commit/b4837c76398c125755458861ce62679d7c179003))
+
+### Bug Fixes
+
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+
 ## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-solid-viewer@1.2.0) - 2026-11-04
 
 ### Features

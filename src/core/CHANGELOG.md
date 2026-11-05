@@ -7,6 +7,37 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.39.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.39.0) - 2026-11-05
+
+### Features
+
+- **embedding:** Add the cloud file provider contract ([6b6c4f1](https://github.com/ChristopherVR/ooxml/commit/6b6c4f10569d238322060ec16bcb25bd34285530))
+- **embedding:** Browse onedrive files through a cloud file provider ([d0bda88](https://github.com/ChristopherVR/ooxml/commit/d0bda883c339cf5f59c5a8ed2f5ba45289295479))
+- **xlsx:** Open workbooks from cloud places in File > Open ([f1b19e4](https://github.com/ChristopherVR/ooxml/commit/f1b19e495f8ac1fe43ed1a540f76ce5c6cbc2710))
+- **site:** Browse and open onedrive files in the office app ([0408ef9](https://github.com/ChristopherVR/ooxml/commit/0408ef96779bf24d25073df25a9e5d6491a8fb17))
+- **visio:** Open drawings from cloud file providers ([f7563e7](https://github.com/ChristopherVR/ooxml/commit/f7563e70c8fbdb2475d7b211b94bf278b590de8c))
+- **site:** Explain onedrive save conflicts in a details section ([43431d4](https://github.com/ChristopherVR/ooxml/commit/43431d41399d849c8e8ac0c40619d44c23e00532))
+- **collab:** Add the share form, invitation and join logic ([13b53f4](https://github.com/ChristopherVR/ooxml/commit/13b53f4b4e5d0a7dc8616b61c6e77d18d04d5111))
+- **ui:** Share from one dialog in word, excel and visio ([c36da27](https://github.com/ChristopherVR/ooxml/commit/c36da27f78682049403978e2856f7030bdfbb358))
+- **embedding:** Let hosts replace or disable the onedrive provider merge ([d14bf8a](https://github.com/ChristopherVR/ooxml/commit/d14bf8acbb0266034c29e780e3eb738f0751a5eb))
+- **ui:** Show connected services on the Word, Excel and Visio Account pages ([0e66d9c](https://github.com/ChristopherVR/ooxml/commit/0e66d9cf6890ebfbced124191bad17bdba2c66b2))
+
+### Bug Fixes
+
+- **embedding:** Open onedrive files whose metadata omits the download url ([b3e4308](https://github.com/ChristopherVR/ooxml/commit/b3e4308895ed917be5813003062858d1e59f8f27))
+- **ui:** Ask to discard unsaved changes in an in-app dialog ([58fa17f](https://github.com/ChristopherVR/ooxml/commit/58fa17fd4331ef37c524756f88bb97e719faa0f3))
+- **pptx:** Stop warning about unchanged images on every save ([6a3efd9](https://github.com/ChristopherVR/ooxml/commit/6a3efd99b1752755f7ccce42e3c85c1105b0436b))
+- **color:** Add straight-alpha resampling for translucent gradient stops ([71dc9cb](https://github.com/ChristopherVR/ooxml/commit/71dc9cbaa163a37c283763ae2a4a78a931845e5b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **embedding:** Save over existing onedrive files the way graph accepts ([a7c8e24](https://github.com/ChristopherVR/ooxml/commit/a7c8e246128f80784403cfbd3c22d3dfecab33ff))
+- **pptx:** Measure percentage paragraph spacing against its text size ([08a8f65](https://github.com/ChristopherVR/ooxml/commit/08a8f6509903e784d30753f1e1ac754b8863e3fb))
+- **geometry:** Place the pentagon preset's side vertices per the spec ([8f127a5](https://github.com/ChristopherVR/ooxml/commit/8f127a5f9710b36e17b038fe83793aa14b940b58))
+- **pptx:** Turn vertically flipped text upside down, never mirror it ([f63671a](https://github.com/ChristopherVR/ooxml/commit/f63671a1217edb2a72f03403ccbc432a494d4a79))
+
+### Performance
+
+- **embedding:** Open onedrive files with one metadata request ([030c189](https://github.com/ChristopherVR/ooxml/commit/030c1890cf765db35076925ed158264ca9e93b28))
+
 ## [1.38.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.38.1) - 2026-11-05
 
 ### Bug Fixes

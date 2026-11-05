@@ -7,6 +7,48 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.63.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.63.0) - 2026-11-05
+
+### Features
+
+- **ui:** Add file open places for cloud providers to the pptx viewer ([ea51fde](https://github.com/ChristopherVR/ooxml/commit/ea51fde2fd2f60a3ea55b1a4591be501095ce9b8))
+- **pptx:** Open cloud files from file open in the svelte viewer ([25f47f7](https://github.com/ChristopherVR/ooxml/commit/25f47f75a17f4eb2f70a7eddc090b8d623cc001d))
+- **pptx:** Add shared in-app dialogs for hyperlinks, names and deletes ([2b6419f](https://github.com/ChristopherVR/ooxml/commit/2b6419fb6e83899ad59a71d05a75b2291ee9012b))
+- **site:** Explain onedrive save conflicts in a details section ([43431d4](https://github.com/ChristopherVR/ooxml/commit/43431d41399d849c8e8ac0c40619d44c23e00532))
+- **svelte:** Mark the outline overlay for the morph outline carry ([2331e25](https://github.com/ChristopherVR/ooxml/commit/2331e251817ed3c8bde77d42d2a03ae212a8cad1))
+- **locales:** Translate connected services labels ([e16ef29](https://github.com/ChristopherVR/ooxml/commit/e16ef29895c80feabc522639f29b253d2007b2f5))
+- **svelte:** List connected services on the account page ([509c6d2](https://github.com/ChristopherVR/ooxml/commit/509c6d2a665dbfa3114054265414f37ed870bd71))
+- **svelte:** Hand the slide size to the morph plan ([ded6b79](https://github.com/ChristopherVR/ooxml/commit/ded6b79da03b98313b3eeb5bcd092263bc37d6f8))
+
+### Bug Fixes
+
+- **pptx:** Mark a saved deck clean only once storage has stored it ([703ad1f](https://github.com/ChristopherVR/ooxml/commit/703ad1f080f57ee61b959cf131d002efc97116d5))
+- **pptx:** Keep the cloud files strings in a named locale section ([ba9e50f](https://github.com/ChristopherVR/ooxml/commit/ba9e50feb29c70cf8aefb12a7073fb020e553209))
+- **svelte:** Replace browser dialogs with the in-app dialogs ([5473338](https://github.com/ChristopherVR/ooxml/commit/5473338c97713539a876d9ea4decd79be8f97fff))
+- **pptx:** Refuse handle edits on a read-only viewer in every binding ([6a4df10](https://github.com/ChristopherVR/ooxml/commit/6a4df10f07abdc8021009b20b6070f33561d4b92))
+- **svelte:** Play a timed slide's next transition and stack crossfades ([afa6c87](https://github.com/ChristopherVR/ooxml/commit/afa6c871402d5c29b752d3fb522c54bee19c32a7))
+- **pptx:** Show the read-only badge in the Angular and vanilla ribbon ([58106ec](https://github.com/ChristopherVR/ooxml/commit/58106ec434b911888b481355ab10b8a42b38634d))
+- **pptx:** Stop warning about unchanged images on every save ([6a3efd9](https://github.com/ChristopherVR/ooxml/commit/6a3efd99b1752755f7ccce42e3c85c1105b0436b))
+- **color:** Add straight-alpha resampling for translucent gradient stops ([71dc9cb](https://github.com/ChristopherVR/ooxml/commit/71dc9cbaa163a37c283763ae2a4a78a931845e5b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **pptx:** Measure percentage paragraph spacing against its text size ([08a8f65](https://github.com/ChristopherVR/ooxml/commit/08a8f6509903e784d30753f1e1ac754b8863e3fb))
+- **svelte:** Grow abutting rectangles under their cover ([8156c72](https://github.com/ChristopherVR/ooxml/commit/8156c72a69215bebba366fd96297ec020849fb3d))
+- **geometry:** Place the pentagon preset's side vertices per the spec ([8f127a5](https://github.com/ChristopherVR/ooxml/commit/8f127a5f9710b36e17b038fe83793aa14b940b58))
+- **pptx:** Turn vertically flipped text upside down, never mirror it ([f63671a](https://github.com/ChristopherVR/ooxml/commit/f63671a1217edb2a72f03403ccbc432a494d4a79))
+
+### Refactor
+
+- **pptx:** Use the shared places element in file open ([ea85028](https://github.com/ChristopherVR/ooxml/commit/ea850283ae8a3720ee7bf3ee4ef71981af5f43c8))
+
+### Testing
+
+- **ui:** Keep the dialog test helpers lint clean ([de583e2](https://github.com/ChristopherVR/ooxml/commit/de583e289dcf98a42b04503ff11818bc0358e9ab))
+- **pptx:** Prove cloud files open read-only in every binding ([b4ee684](https://github.com/ChristopherVR/ooxml/commit/b4ee684d1ba677541ffd2739aa59859b99778807))
+- **pptx:** Give in-app dialog waits room on busy runners ([adb47b8](https://github.com/ChristopherVR/ooxml/commit/adb47b8bcede111a3302a5a1b981f1d853a28113))
+- **svelte:** Cover issue 141 morph stacking, rearm and timed advance ([12ccd83](https://github.com/ChristopherVR/ooxml/commit/12ccd832e06fdefb4ebbad67516a13675a811e69))
+- **svelte:** Read every overlay style sheet in morph tests ([11818f4](https://github.com/ChristopherVR/ooxml/commit/11818f431f93d01e0a071a186ea8afd45cd3f502))
+- **svelte:** Pin flipped text as PowerPoint paints it ([80595ad](https://github.com/ChristopherVR/ooxml/commit/80595ad9f57f0d9bf9ffe64b410373893d1742ce))
+
 ## [4.62.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.62.1) - 2026-11-05
 
 ### Bug Fixes

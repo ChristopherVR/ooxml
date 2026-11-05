@@ -7,6 +7,89 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.41.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.41.0) - 2026-11-05
+
+### Features
+
+- **ui:** Add a cloud files browser for file open ([3098800](https://github.com/ChristopherVR/ooxml/commit/30988003d8c1f29787ccd3606c174ec43a953cc1))
+- **ui:** Open cloud files from word file open ([990b087](https://github.com/ChristopherVR/ooxml/commit/990b087998c51b155985503ffe461aded8a4284a))
+- **xlsx:** Open workbooks from cloud places in File > Open ([f1b19e4](https://github.com/ChristopherVR/ooxml/commit/f1b19e495f8ac1fe43ed1a540f76ce5c6cbc2710))
+- **visio:** Open drawings from cloud file providers ([f7563e7](https://github.com/ChristopherVR/ooxml/commit/f7563e70c8fbdb2475d7b211b94bf278b590de8c))
+- **ui:** Add file open places for cloud providers to the pptx viewer ([ea51fde](https://github.com/ChristopherVR/ooxml/commit/ea51fde2fd2f60a3ea55b1a4591be501095ce9b8))
+- **ui:** Add in-app alert, confirm and prompt dialogs ([2dd59f1](https://github.com/ChristopherVR/ooxml/commit/2dd59f18961c7e5cf9c7de10396e396bb11123ea))
+- **pptx:** Add shared in-app dialogs for hyperlinks, names and deletes ([2b6419f](https://github.com/ChristopherVR/ooxml/commit/2b6419fb6e83899ad59a71d05a75b2291ee9012b))
+- **ui:** Add a shared places element for file open ([a8b9b8f](https://github.com/ChristopherVR/ooxml/commit/a8b9b8f6a124235de80b55b64f72d54b057e8553))
+- **ui:** Open cloud files from host code in word, excel and visio ([7e7c7ce](https://github.com/ChristopherVR/ooxml/commit/7e7c7cee8da64a4dc7127b5d208a314b5d7a2b77))
+- **ui:** Expose openCloudFile on the word, excel and visio bindings ([b4837c7](https://github.com/ChristopherVR/ooxml/commit/b4837c76398c125755458861ce62679d7c179003))
+- **collab:** Add the share form, invitation and join logic ([13b53f4](https://github.com/ChristopherVR/ooxml/commit/13b53f4b4e5d0a7dc8616b61c6e77d18d04d5111))
+- **ui:** Share from one dialog in word, excel and visio ([c36da27](https://github.com/ChristopherVR/ooxml/commit/c36da27f78682049403978e2856f7030bdfbb358))
+- **ui:** Add a shared connected services list for account pages ([4e16444](https://github.com/ChristopherVR/ooxml/commit/4e16444cafda426ee9f56ccc0f22cac17b74d1d6))
+- **ui:** Show connected services on the Word, Excel and Visio Account pages ([0e66d9c](https://github.com/ChristopherVR/ooxml/commit/0e66d9cf6890ebfbced124191bad17bdba2c66b2))
+- **ui:** Carry a resizing shape's outline, corners and effects in morph ([0d126d5](https://github.com/ChristopherVR/ooxml/commit/0d126d50d7858595bedbb7d67d8317a498e5cd55))
+- **ui:** Add connected services labels and pptx alias for the account page ([afa8c8b](https://github.com/ChristopherVR/ooxml/commit/afa8c8b4ae6e00bbe59d50ecf51fb714ecdc9af0))
+- **ui:** Show the visio account page only with storage providers ([8529f44](https://github.com/ChristopherVR/ooxml/commit/8529f443be10be98e3a6eabacb1c4cf715a2eaaf))
+- **ui:** Dissolve morph shadows and glows the way powerpoint does ([28ef7e2](https://github.com/ChristopherVR/ooxml/commit/28ef7e212ea53b64d3707c841bb7597df19cac03))
+- **ui:** Match powerpoint morph for freeforms, presets and flips ([3d7ecde](https://github.com/ChristopherVR/ooxml/commit/3d7ecdec231893b0b134890a0af1cb5d0bfc8fc0))
+
+### Bug Fixes
+
+- **pptx:** Mark a saved deck clean only once storage has stored it ([703ad1f](https://github.com/ChristopherVR/ooxml/commit/703ad1f080f57ee61b959cf131d002efc97116d5))
+- **ui:** Export cloud file types from the pptx entry ([43a87ee](https://github.com/ChristopherVR/ooxml/commit/43a87eecea19951adc7efb7f3d25bddf7b65d128))
+- **ui:** Ask to discard unsaved changes in an in-app dialog ([58fa17f](https://github.com/ChristopherVR/ooxml/commit/58fa17fd4331ef37c524756f88bb97e719faa0f3))
+- **vue:** Replace browser dialogs with the in-app dialogs ([d88bebd](https://github.com/ChristopherVR/ooxml/commit/d88bebd69824e370f4d05132490a8743dcb73cbf))
+- **teams:** Ask confirmations and names in in-app dialogs ([e49d9ba](https://github.com/ChristopherVR/ooxml/commit/e49d9ba2461186761dcaeb10d9ba3a1f285b5f71))
+- **ui:** Show message dialogs as native modals in the host's tree ([4a025fe](https://github.com/ChristopherVR/ooxml/commit/4a025fe2caaf9ffa008ad63d366b87691d930a86))
+- **teams:** Carry on with the navigation held back by unsaved edits ([aa95138](https://github.com/ChristopherVR/ooxml/commit/aa95138ea4bfd368318d8e94ed94ebfd83048be2))
+- **ui:** Colour cloud file badges by office app ([f0efde2](https://github.com/ChristopherVR/ooxml/commit/f0efde241554ff3e1658c67a417d0f4ec17f4480))
+- **pptx:** Refuse handle edits on a read-only viewer in every binding ([6a4df10](https://github.com/ChristopherVR/ooxml/commit/6a4df10f07abdc8021009b20b6070f33561d4b92))
+- **ui:** Keep file open place tabs legible on every backstage ([087fd74](https://github.com/ChristopherVR/ooxml/commit/087fd74b0246c909e788c253c2827180b2bb91c4))
+- **visio:** Avoid polynomial regexes flagged by code scanning ([07e58bd](https://github.com/ChristopherVR/ooxml/commit/07e58bdb618e7bebdca45989964739cc30ac3db1))
+- **ui:** Stack morph crossfades in the overlay's own order ([51b2179](https://github.com/ChristopherVR/ooxml/commit/51b217928d7441497c7fd1d0313225cf8441c086))
+- **ui:** Carry restyled morph text by its lines, not its box ([d5000f2](https://github.com/ChristopherVR/ooxml/commit/d5000f2f216a151e5f4487034d6949f138d3c888))
+- **ui:** Match PowerPoint 16 morph timing curves ([8df0ae8](https://github.com/ChristopherVR/ooxml/commit/8df0ae8e1d241dbee5805d35446fa0368b2385bf))
+- **ui:** Carry rewrapped morph text in the pieces that share a line ([0d50536](https://github.com/ChristopherVR/ooxml/commit/0d5053625ddfa334a426a1b2836c7c01ac3e11de))
+- **pptx:** Show the read-only badge in the Angular and vanilla ribbon ([58106ec](https://github.com/ChristopherVR/ooxml/commit/58106ec434b911888b481355ab10b8a42b38634d))
+- **ui:** Mark the modify-password field as not an account password ([dc27475](https://github.com/ChristopherVR/ooxml/commit/dc274754937ab97d397cdc52d8276927fd6e0cb3))
+- **ui:** Blend translucent gradient stops straight like PowerPoint ([6cffb08](https://github.com/ChristopherVR/ooxml/commit/6cffb08922307a9fa9fada2716b7f90b94bbb22d))
+- **ui:** Carry anchored, indented and justified rewrapped text in pieces ([ad5171d](https://github.com/ChristopherVR/ooxml/commit/ad5171def20103aba6d01af0eabd193247367bea))
+- **ui:** Carry morph text apart from shape bodies and under covers ([932e615](https://github.com/ChristopherVR/ooxml/commit/932e61552cda02a99ee7ed765e079e52629b4093))
+- **ui:** Restore the frame paragraph indent flag the baseline reads ([947e5d3](https://github.com/ChristopherVR/ooxml/commit/947e5d39e5eb057193b039b597d904907080633b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **ui:** Use tokens in the share dialog and refresh the manifest ([847540b](https://github.com/ChristopherVR/ooxml/commit/847540b8bf16d9f917020a69133a9c2bd394824e))
+- **ui:** Carry morph text through turns, flips and shadowed bodies ([ca0a94a](https://github.com/ChristopherVR/ooxml/commit/ca0a94a1192c6090328033a90d604c8c08029e95))
+- **ui:** Open a paragraph's space before above it, added to the gap ([4ae8432](https://github.com/ChristopherVR/ooxml/commit/4ae843293f58b9784bc405defdd85f40f81b580a))
+- **ui:** Place lines where PowerPoint puts them in non-single spacing ([26912ba](https://github.com/ChristopherVR/ooxml/commit/26912bab73a781a3988b05682dae4ae8c7f113b0))
+- **ui:** Carry justified doubled spaces and anchorCtr text in pieces ([965999d](https://github.com/ChristopherVR/ooxml/commit/965999d17838a297433fdc47998e1e43069dba7b))
+- **ui:** Close the seam between abutting filled rectangles ([cb2c28b](https://github.com/ChristopherVR/ooxml/commit/cb2c28bc2f1ed4add420ae3fa7541a1d40521a27))
+- **ui:** Trace compound line strands along the outline at office widths ([82dc5d5](https://github.com/ChristopherVR/ooxml/commit/82dc5d58139b59793950d50cba969c84d9f52aee))
+- **ui:** Paint flipped text as PowerPoint does in every binding ([612df39](https://github.com/ChristopherVR/ooxml/commit/612df398bb255f03609ec642f420e3be2eda0083))
+- **ui:** Carry morph text through a vertical flip as a half turn ([1319ce3](https://github.com/ChristopherVR/ooxml/commit/1319ce32afcb2f6272ebf90975327be5399683b8))
+- **ui:** Lay carried morph text on its shifted baseline ([7bdad3b](https://github.com/ChristopherVR/ooxml/commit/7bdad3b9af8aff2d1558e0b0a07611aabcf0cf6e))
+
+### Performance
+
+- **ui:** Look up connected documents without reading every document ([badb06f](https://github.com/ChristopherVR/ooxml/commit/badb06f0f35f575bd988bf44815195a231be7e39))
+- **ui:** Keep recoloured pictures cached and encode them once ([cedc1ed](https://github.com/ChristopherVR/ooxml/commit/cedc1ed08023bc1ea3770cd8d19c3956cdd7d106))
+
+### Refactor
+
+- **ui:** Split the cloud files browser templates from its state ([c32f49e](https://github.com/ChristopherVR/ooxml/commit/c32f49e67678cddc75b5adc6cd0025f5d0f3eafd))
+- **ui:** Use the shared places element in word, excel and visio file open ([2890bea](https://github.com/ChristopherVR/ooxml/commit/2890beab8bb4ef120170a15bf4dcececef6f8c2c))
+- **pptx:** Use the shared places element in file open ([ea85028](https://github.com/ChristopherVR/ooxml/commit/ea850283ae8a3720ee7bf3ee4ef71981af5f43c8))
+- **ui:** Pick each transition layer's template in one helper ([1092c0a](https://github.com/ChristopherVR/ooxml/commit/1092c0ae10bedd5339e2207882133129166e3b62))
+
+### Testing
+
+- **ui:** Keep the dialog test helpers lint clean ([de583e2](https://github.com/ChristopherVR/ooxml/commit/de583e289dcf98a42b04503ff11818bc0358e9ab))
+- Fix lint, locale section and visio docs checks on main ([fb5ba8e](https://github.com/ChristopherVR/ooxml/commit/fb5ba8ebb0346ef957e349b95c43fa187c1b08e0))
+- **ui:** Pin the morph text twin pass ahead of the shape id pass ([901dce6](https://github.com/ChristopherVR/ooxml/commit/901dce60ea32c36114ee1443a9d760b54b28aca1))
+- **ui:** Guard issue 141 morph plans on an anonymised deck fixture ([ea02fbe](https://github.com/ChristopherVR/ooxml/commit/ea02fbef1ec225a9ddbd28da53d9afb483ea631a))
+- **ui:** Keep the issue 141 morph fixture out of published types ([6cf28d7](https://github.com/ChristopherVR/ooxml/commit/6cf28d7295e28a652b320ef307d29444e8862e70))
+
+### Styling
+
+- **ui:** Drop unused cloud provider declarations in pptx cloud open ([8c2ce83](https://github.com/ChristopherVR/ooxml/commit/8c2ce836c7ac5c531e77c9e3d153b689f667d945))
+
 ## [1.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.40.0) - 2026-11-04
 
 ### Features

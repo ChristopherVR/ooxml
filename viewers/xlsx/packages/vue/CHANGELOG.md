@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-vue-viewer@1.4.0) - 2026-11-05
+
+### Features
+
+- **xlsx:** Open workbooks from cloud places in File > Open ([f1b19e4](https://github.com/ChristopherVR/ooxml/commit/f1b19e495f8ac1fe43ed1a540f76ce5c6cbc2710))
+- **ui:** Expose openCloudFile on the word, excel and visio bindings ([b4837c7](https://github.com/ChristopherVR/ooxml/commit/b4837c76398c125755458861ce62679d7c179003))
+
 ## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-vue-viewer@1.3.0) - 2026-11-04
 
 ### Features

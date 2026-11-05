@@ -7,6 +7,50 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.64.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.64.0) - 2026-11-05
+
+### Features
+
+- **ui:** Add file open places for cloud providers to the pptx viewer ([ea51fde](https://github.com/ChristopherVR/ooxml/commit/ea51fde2fd2f60a3ea55b1a4591be501095ce9b8))
+- **pptx:** Open cloud files from file open in the react viewer ([6239a4a](https://github.com/ChristopherVR/ooxml/commit/6239a4a13e9f303d2ca24750233ea5906d783b82))
+- **pptx:** Add shared in-app dialogs for hyperlinks, names and deletes ([2b6419f](https://github.com/ChristopherVR/ooxml/commit/2b6419fb6e83899ad59a71d05a75b2291ee9012b))
+- **site:** Explain onedrive save conflicts in a details section ([43431d4](https://github.com/ChristopherVR/ooxml/commit/43431d41399d849c8e8ac0c40619d44c23e00532))
+- **react:** Re-path a resizing shape's outline during morph ([5ba8386](https://github.com/ChristopherVR/ooxml/commit/5ba8386a2827399216a22d7ee93cca4ac06bd12a))
+- **locales:** Translate connected services labels ([e16ef29](https://github.com/ChristopherVR/ooxml/commit/e16ef29895c80feabc522639f29b253d2007b2f5))
+- **react:** List connected services on the account page ([95cbc25](https://github.com/ChristopherVR/ooxml/commit/95cbc256ee2e6574cc77f44d171aed54406c33ad))
+- **react:** Re-path morphing freeforms and size the flip camera ([37c8978](https://github.com/ChristopherVR/ooxml/commit/37c897889d0898221a8f7c6b1c1fda9a7719e69f))
+
+### Bug Fixes
+
+- **pptx:** Mark a saved deck clean only once storage has stored it ([703ad1f](https://github.com/ChristopherVR/ooxml/commit/703ad1f080f57ee61b959cf131d002efc97116d5))
+- **pptx:** Keep the cloud files strings in a named locale section ([ba9e50f](https://github.com/ChristopherVR/ooxml/commit/ba9e50feb29c70cf8aefb12a7073fb020e553209))
+- **react:** Replace browser dialogs with the in-app dialogs ([1e8d491](https://github.com/ChristopherVR/ooxml/commit/1e8d4916fb0be61ae9f48e7c5cca108c0c9056dd))
+- **pptx:** Refuse handle edits on a read-only viewer in every binding ([6a4df10](https://github.com/ChristopherVR/ooxml/commit/6a4df10f07abdc8021009b20b6070f33561d4b92))
+- **react:** Stack morph crossfades in the plan's overlay order ([a3d592d](https://github.com/ChristopherVR/ooxml/commit/a3d592def5963f00a41578afc906521b89c0d58b))
+- **pptx:** Show the read-only badge in the Angular and vanilla ribbon ([58106ec](https://github.com/ChristopherVR/ooxml/commit/58106ec434b911888b481355ab10b8a42b38634d))
+- **pptx:** Stop warning about unchanged images on every save ([6a3efd9](https://github.com/ChristopherVR/ooxml/commit/6a3efd99b1752755f7ccce42e3c85c1105b0436b))
+- **color:** Add straight-alpha resampling for translucent gradient stops ([71dc9cb](https://github.com/ChristopherVR/ooxml/commit/71dc9cbaa163a37c283763ae2a4a78a931845e5b))
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+- **pptx:** Measure percentage paragraph spacing against its text size ([08a8f65](https://github.com/ChristopherVR/ooxml/commit/08a8f6509903e784d30753f1e1ac754b8863e3fb))
+- **react:** Grow abutting rectangles under their cover to close the seam ([ef32c70](https://github.com/ChristopherVR/ooxml/commit/ef32c700bd222231ed67bdafc4bed5e0620f726e))
+- **geometry:** Place the pentagon preset's side vertices per the spec ([8f127a5](https://github.com/ChristopherVR/ooxml/commit/8f127a5f9710b36e17b038fe83793aa14b940b58))
+- **pptx:** Turn vertically flipped text upside down, never mirror it ([f63671a](https://github.com/ChristopherVR/ooxml/commit/f63671a1217edb2a72f03403ccbc432a494d4a79))
+- **react:** Turn flipped text about its text rectangle ([f33228f](https://github.com/ChristopherVR/ooxml/commit/f33228f445802f75f7ae8fda2f76a603ed8bc59b))
+- **react:** Let text overflow its box on the static path ([fe02529](https://github.com/ChristopherVR/ooxml/commit/fe0252912357b7bf38f0e7c4a99ceea9515ecb08))
+
+### Refactor
+
+- **pptx:** Use the shared places element in file open ([ea85028](https://github.com/ChristopherVR/ooxml/commit/ea850283ae8a3720ee7bf3ee4ef71981af5f43c8))
+- **react:** Give the show's transition overlay its own component ([fb0c635](https://github.com/ChristopherVR/ooxml/commit/fb0c63547dc0f99b5e6ef90fb368f58442088f0b))
+
+### Testing
+
+- **ui:** Keep the dialog test helpers lint clean ([de583e2](https://github.com/ChristopherVR/ooxml/commit/de583e289dcf98a42b04503ff11818bc0358e9ab))
+- **pptx:** Prove cloud files open read-only in every binding ([b4ee684](https://github.com/ChristopherVR/ooxml/commit/b4ee684d1ba677541ffd2739aa59859b99778807))
+- **react:** Cover morph shape text carried apart from its body ([386ed56](https://github.com/ChristopherVR/ooxml/commit/386ed563c675f71ab38a8c1046b96349d63ea90f))
+- **pptx:** Give in-app dialog waits room on busy runners ([adb47b8](https://github.com/ChristopherVR/ooxml/commit/adb47b8bcede111a3302a5a1b981f1d853a28113))
+- **react:** Cover issue 141 morph stacking, ghosts and overlay rearm ([7471c29](https://github.com/ChristopherVR/ooxml/commit/7471c2927f26c56b860b5d06e9aa4e4f8b66e74f))
+
 ## [4.63.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.63.1) - 2026-11-05
 
 ### Bug Fixes
