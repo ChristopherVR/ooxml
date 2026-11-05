@@ -1,5 +1,9 @@
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
-import { MORPH_CROSSFADE_GROUP_CSS_TEXT, MORPH_CROSSFADE_HALF_BLEND_MODE } from 'ooxml-ui/pptx';
+import {
+	MORPH_CROSSFADE_GROUP_CSS_TEXT,
+	MORPH_CROSSFADE_HALF_BLEND_MODE,
+	morphOverlayStackSlots,
+} from 'ooxml-ui/pptx';
 
 import { buildLayer } from './transition-layer';
 
@@ -111,6 +115,7 @@ export function buildMorphOverlayLayers(
 	incoming: HTMLElement,
 	morphPlan: MorphTransitionPlan | undefined,
 ): HTMLElement[] {
+	const slots = morphPlan ? morphOverlayStackSlots(morphPlan) : undefined;
 	return (morphPlan?.overlayLayers ?? []).map((run, index) => {
 		const source = run.side === 'outgoing' ? outgoing : incoming;
 		const ids = run.elements.map((element) => element.id);
@@ -121,7 +126,7 @@ export function buildMorphOverlayLayers(
 		const layer = buildLayer(
 			doc,
 			stackInRunOrder(keepOnlyElements(snapshot, ids), ids),
-			MORPH_LAYER_Z_BASE + index,
+			MORPH_LAYER_Z_BASE + (slots?.layers[index] ?? index),
 			'none',
 			run.side === 'outgoing' ? 'outgoing' : 'lifted',
 		);
@@ -155,13 +160,16 @@ export function buildMorphCrossfadeGroups(
 	if (!morphPlan) {
 		return [];
 	}
+	const slots = morphOverlayStackSlots(morphPlan);
 	return morphPlan.crossfadeGroups.map((group, index) => {
 		const wrapper = doc.createElement('div');
 		wrapper.dataset.pptxMorphCrossfade = group.incoming.id;
 		wrapper.style.cssText = MORPH_CROSSFADE_GROUP_CSS_TEXT;
 		// `isolation` makes the wrapper a stacking context, so it needs a z-index
-		// of its own to stay above every overlay layer.
-		wrapper.style.zIndex = String(MORPH_LAYER_Z_BASE + morphPlan.overlayLayers.length + index);
+		// of its own: its slot in the plan's one back-to-front stack.
+		wrapper.style.zIndex = String(
+			MORPH_LAYER_Z_BASE + (slots.groups[index] ?? morphPlan.overlayLayers.length + index),
+		);
 		// The dissolve rides these WRAPPERS, not the elements: a pair dissolving in
 		// place never moves, and an animation on the small element box gives it a
 		// compositing layer whose raster snaps to whole device pixels, painting the
