@@ -6,6 +6,9 @@ import { pageSizeOf } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
 import type { BackstageOptions, BackstageOptionKey } from './backstage-options';
 import type { ResolvedWordCustomization, WordRegionContext } from './customization';
+import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
+import type { EditorLocale } from './localization';
+import { renderOpenPlaces } from './backstage-open';
 
 /** What the File view needs from the editor; every value is read when a page opens. */
 export interface BackstageHandlers {
@@ -30,6 +33,11 @@ export interface BackstageHandlers {
 	customization(): ResolvedWordCustomization;
 	/** The context of a host page's region. */
 	regionContext(region: string): WordRegionContext;
+	/** The cloud places File > Open offers next to this device (`fileProviders`). */
+	fileProviders(): readonly CloudFileProvider[];
+	/** A file chosen in a cloud place: loads it and closes the File view. */
+	openCloudFile(file: CloudOpenedFile): Promise<void>;
+	locale(): EditorLocale;
 }
 
 export interface PageContext {
@@ -199,16 +207,19 @@ export function renderNew({ handlers, t, content }: PageContext): void {
 	content.replaceChildren(heading(t('New')), blank);
 }
 
-export function renderOpen({ handlers, t, content }: PageContext): void {
-	content.replaceChildren(
-		heading(t('Open')),
+export function renderOpen(context: PageContext): void {
+	const { handlers, t, content } = context;
+	const device = () => [
 		paragraph(t('Open a Word document (.docx or .doc) from this device.')),
 		primary(t('Browse…'), () => {
 			handlers.close();
 			handlers.fileCommand('open');
 		}),
 		paragraph(t('Files are processed entirely in the browser.'), 'dve-backstage-muted'),
-	);
+	];
+	const providers = handlers.fileProviders();
+	if (providers.length) return renderOpenPlaces(context, providers, device, heading(t('Open')));
+	content.replaceChildren(heading(t('Open')), ...device());
 }
 
 export function renderSaveAs({ handlers, t, content }: PageContext): void {

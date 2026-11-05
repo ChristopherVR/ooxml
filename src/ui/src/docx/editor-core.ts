@@ -1,4 +1,4 @@
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type { SurfaceHostActions } from './building-blocks-actions';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { FormatDialogs } from './format-dialogs';
@@ -92,7 +92,12 @@ export class EditorCore {
 	 * the host's switch only, so nothing that assigns it can lift the other two.
 	 */
 	get readOnly(): boolean {
-		return this.hostReadOnly || this.roleLocked || !this.viewOptions.customization.canEdit;
+		return (
+			this.hostReadOnly ||
+			this.roleLocked ||
+			!this.viewOptions.customization.canEdit ||
+			this.cloudFile?.canEdit === false
+		);
 	}
 	set readOnly(value: boolean) {
 		this.hostReadOnly = value;
@@ -140,6 +145,19 @@ export class EditorCore {
 	surfaceActions: SurfaceHostActions = {};
 	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
 	storage: DocumentStorage | undefined = undefined;
+	/** Cloud places File > Open offers next to this device (`fileProviders`). */
+	fileProviders: readonly CloudFileProvider[] = [];
+	/**
+	 * The file opened from a cloud place: its storage replaces `storage` for this document and
+	 * `canEdit: false` locks the editor on top of the host's switch. Any other load clears it.
+	 */
+	cloudFile: { storage: DocumentStorage; canEdit: boolean } | undefined = undefined;
+	/** Ends the cloud file (a new document loaded), lifting the lock it held. */
+	endCloudFile(): void {
+		if (!this.cloudFile) return;
+		this.cloudFile = undefined;
+		this.reportReadOnly();
+	}
 	locale: EditorLocale = 'en';
 	reviewAuthor = 'Author';
 	theme: EditorThemeMode = 'auto';

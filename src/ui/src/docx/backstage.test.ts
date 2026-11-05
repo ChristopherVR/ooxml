@@ -32,6 +32,9 @@ function setup(overrides: Partial<BackstageHandlers> = {}) {
 		hiddenActions: () => [],
 		setHiddenActions: () => {},
 		customization: () => EMPTY_WORD_CUSTOMIZATION,
+		fileProviders: () => [],
+		openCloudFile: async () => undefined,
+		locale: () => 'en',
 		regionContext: (region) => ({
 			region,
 			editor: document.body,

@@ -57,7 +57,12 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
-		storage: () => core.storage,
+		storage: () => core.cloudFile?.storage ?? core.storage,
+		fileProviders: () => core.fileProviders,
+		useCloudFile: (file) => {
+			core.cloudFile = { storage: file.storage, canEdit: file.canEdit };
+			core.reportReadOnly();
+		},
 		saveStateChanged: (state) => {
 			if (state !== 'saving') core.dirtyState.set(state === 'dirty');
 		},

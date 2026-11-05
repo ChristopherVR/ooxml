@@ -306,6 +306,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		if (bumpGeneration) core.loading = false;
 		core.loaded = session;
 		core.model = model;
+		core.endCloudFile();
 		core.inserts.reset();
 		core.formatDialogs.closeAll();
 		core.dirtyState.set(false);

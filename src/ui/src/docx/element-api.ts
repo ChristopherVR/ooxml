@@ -1,4 +1,4 @@
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { applyRibbonAddIns } from './editor-shell';
 import type { CollabSession } from 'ooxml-core/collab';
@@ -80,6 +80,23 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	}
 	set storage(value: DocumentStorage | null | undefined) {
 		this.core.storage = value ?? undefined;
+	}
+	/**
+	 * Cloud places for File > Open (OneDrive and the like). When non-empty, Open lists "This
+	 * device" and one place per provider. A file opened from a place loads like any other, locks
+	 * the editor when the provider says it cannot be edited, and saves through the file's own
+	 * storage (not `storage`) until another document loads. Opening from a place does not fire
+	 * `file-command`: the host chose the providers.
+	 */
+	get fileProviders(): readonly CloudFileProvider[] {
+		return this.core.fileProviders;
+	}
+	set fileProviders(value: readonly CloudFileProvider[] | null | undefined) {
+		const next = value ?? [];
+		const current = this.core.fileProviders;
+		if (next.length === current.length && next.every((p, i) => p === current[i])) return;
+		this.core.fileProviders = [...next];
+		this.core.shell.chrome?.backstage.relocalize();
 	}
 	get loading(): boolean {
 		return this.core.loading;

@@ -1,6 +1,8 @@
 import type { RibbonElement } from './ribbon-tab-api';
 import type { DocumentModel } from 'ooxml-core/docx';
 import {
+	type CloudFileProvider,
+	type CloudOpenedFile,
 	documentSaveMeta,
 	saveToStorage,
 	type DocumentSaveReason,
@@ -37,6 +39,10 @@ export interface ChromeHost {
 	save(): Promise<Uint8Array>;
 	/** Host-owned storage for Save and Open, when the host set one. */
 	storage?(): DocumentStorage | undefined;
+	/** Cloud places File > Open offers next to this device. */
+	fileProviders?(): readonly CloudFileProvider[];
+	/** Routes this document's Save to a cloud file's storage; locks it when it cannot be edited. */
+	useCloudFile?(file: CloudOpenedFile): void;
 	print(): void;
 	history(key: 'undo' | 'redo'): void;
 	toggleComments(): void;
@@ -112,6 +118,9 @@ export class EditorChrome {
 			setHiddenActions: (ids) => host.setHiddenActions(ids),
 			customization: () => host.customization(),
 			regionContext: (region) => host.regionContext(region),
+			fileProviders: () => host.fileProviders?.() ?? [],
+			openCloudFile: (file) => this.openCloudFile(file),
+			locale: () => host.locale(),
 		});
 		this.statusBar = createStatusBar({
 			setViewMode: (mode) => host.setViewMode(mode),
@@ -278,6 +287,23 @@ export class EditorChrome {
 		await this.host.load(file.bytes);
 		this.fileName = file.fileName;
 		this.setSaveState('saved');
+	}
+
+	/**
+	 * Loads a file chosen in a cloud place. It does not announce `file-command`: the host chose to
+	 * offer the place. A failed load keeps the File view open and reports the error.
+	 */
+	async openCloudFile(file: CloudOpenedFile): Promise<void> {
+		if (this.host.customization().fileCommands.has('open')) return;
+		try {
+			await this.host.load(file.bytes);
+			this.host.useCloudFile?.(file);
+			this.fileName = file.fileName;
+			this.setSaveState('saved');
+			this.closeBackstage();
+		} catch (cause) {
+			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
+		}
 	}
 
 	private newDocument(): void {
