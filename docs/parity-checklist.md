@@ -402,11 +402,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       dissolve (`src/ui/src/pptx/render/morph-connector-carry.ts`); `curvedConnector3` to `5`
       follow the ECMA-376 definitions PowerPoint draws (a static export differs by under 0.05 %
       of the pixels, the earlier approximations by about 0.5 %).
-- [ ] **P2** Morph of a connector or line whose size changes a lot: PowerPoint grows its box
-      ahead of its centre (size progress minus eased progress is about `c * p * (1 - p)`, with c
-      measured at 0.45 for a 3x and 0.57 for a 4x growth, and about -0.2 for a shrink), where this
-      viewer keeps one progress for both, so the ends sit up to 25 px from PowerPoint's at the
-      middle of a large resize. Rectangles do not show it.
+- [x] **P2** Morph of a connector or line whose size changes a lot: PowerPoint grows each extent
+      of the box ahead of its eased progress while the centre follows it exactly. Per axis,
+      extent(p) = lerp + |delta| * hi / (hi + lo) * g * p * (1 - p), larger than the blend for
+      grows and shrinks alike, with g = x^1.1 (x <= 1) or min(1, 1.14 / x) where x is the centre's
+      travel over half the size change (`src/ui/src/pptx/render/morph-line-reach.ts`, fitted to 28
+      synthetic cases, 2 pt mean error against 40 pt). The elbow resize frame error against
+      PowerPoint falls from 3.80, 4.35, 2.79 to 2.37, 2.13, 2.53 (floor about 2.1). Rotated
+      pairs and axes flipped differently stay linear (not measured).
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
