@@ -11,6 +11,7 @@
 	import {
 		AVATAR_COLOR_SWATCHES,
 		clearAllLocalViewerData,
+		connectedServicesLabels,
 		DEFAULT_VIEWER_PROFILE,
 		formatBackstageSize,
 		getLocalStorageUsageSummary,
@@ -21,11 +22,14 @@
 	import { confirmDeleteDialog } from 'ooxml-ui/pptx';
 	import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
+	import { useViewerCloudFiles } from '../../../state/viewer-cloud-files-context';
 	import { useViewerStorage } from '../../../state/viewer-storage-context';
 
 	const { accountAuth }: { accountAuth?: AccountAuthConfig } = $props();
 	const t = useTranslator();
 	const storage = useViewerStorage();
+	const cloud = useViewerCloudFiles();
+	const connectedLabels = $derived(connectedServicesLabels(t));
 
 	// This global is injected at build time from this package's own
 	// `package.json` version (see `vite.config.ts`); the `typeof` guard keeps
@@ -135,6 +139,12 @@
 					{t('pptx.account.signIn.button')}
 				</button>
 			{/if}
+		</section>
+	{/if}
+
+	{#if cloud().providers.length > 0}
+		<section class="card">
+			<pptx-ui-connected-services providers={cloud().providers} labels={connectedLabels}></pptx-ui-connected-services>
 		</section>
 	{/if}
 </div>
