@@ -5,6 +5,11 @@ import { readFile } from 'node:fs/promises';
 import { interceptOneDrive } from './test-support/onedrive-http.mjs';
 import { checkConcurrentMerges } from './test-support/onedrive-merge-checks.mjs';
 import { checkCustomStorage } from './test-support/custom-storage-checks.mjs';
+import {
+	checkBrowse,
+	checkHostSignIn,
+	checkUnconnected,
+} from './test-support/onedrive-browse-checks.mjs';
 
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
@@ -57,13 +62,13 @@ page.on('requestfailed', (request) =>
 );
 
 async function openCloud(kind) {
-	if (!(await page.locator('#open-onedrive').isVisible()))
-		await page.locator('#rail [data-home]').click();
-	await page.locator('#open-onedrive').click();
-	await page.locator('#onedrive-link').fill(`https://tenant.sharepoint.com/links/${kind}`);
-	await page.locator('#onedrive-open-submit').click();
+	// Open from a pasted link, the secondary path of the OneDrive view.
+	await page.locator('#rail [data-cloud]').click();
+	const link = page.locator('#cloud-files .link input');
+	await link.fill(`https://tenant.sharepoint.com/links/${kind}`);
+	await link.press('Enter');
 	try {
-		await expect(page.locator('#dialog')).toBeHidden();
+		await expect(page.locator('#cloud-view')).toBeHidden();
 	} catch (error) {
 		console.log('Open status:', await page.locator(':light(#status)').textContent(), errors);
 		throw error;
@@ -261,7 +266,10 @@ try {
 			);
 	}
 	console.log('Read-only permissions disable the editor and cloud Save for all four products');
+	await checkBrowse({ page, cloud, edit, nativeSave });
 	assert.deepEqual(errors, []);
+	await checkHostSignIn({ browser, base, fixtures });
+	await checkUnconnected({ browser, base });
 	await checkCustomStorage({ browser, base, bytes: fixtures.docx });
 } finally {
 	await context.close();

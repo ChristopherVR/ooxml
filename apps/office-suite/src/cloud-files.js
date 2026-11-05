@@ -63,22 +63,34 @@ export class SuiteCloudStorage {
 			{ ...this.sessionOptions, merge: this.merge },
 		);
 	}
-	async open(link) {
-		if (!this.client) throw this.error('OneDrive sign-in is not configured by this host.');
-		const opened = await this.client.open(link);
-		const existing = (await this.store.list()).find(
+	/** The library document already connected to this cloud file, without reading every document. */
+	async find(file) {
+		const key = this.keyOf(file);
+		// listCloud() is a bytes-free index; stores without it fall back to loading every document.
+		const records = this.store.listCloud ? await this.store.listCloud() : await this.store.list();
+		const match = records.find(
 			(doc) =>
 				doc.cloud &&
 				(doc.cloud.providerId ?? 'onedrive') === this.id &&
-				this.keyOf(doc.cloud.file) === this.keyOf(opened.file),
+				this.keyOf(doc.cloud.file) === key,
 		);
+		return match ? this.store.get(match.id) : undefined;
+	}
+	async open(link) {
+		if (!this.client) throw this.error('OneDrive sign-in is not configured by this host.');
+		return this.adopt(await this.client.open(link));
+	}
+	/** Adds an opened cloud file ({ file, bytes }) to the library, or reuses its existing document. */
+	async adopt(opened) {
+		const existing = await this.find(opened.file);
 		// A repeated link must never replace an unsynchronized local document.
 		if (existing && (existing.cloud.pending || this.dirty?.(existing.id))) return existing;
 		const cloud = {
 			providerId: this.id,
 			providerLabel: this.label,
 			file: this.serializeFile(opened.file),
-			baseline: opened.bytes.slice(),
+			// The store commits a structured clone, so baseline and bytes may share one download.
+			baseline: opened.bytes,
 			pending: false,
 		};
 		if (!existing) return this.store.create(opened.file.name, opened.bytes, { cloud });
@@ -106,7 +118,7 @@ export class SuiteCloudStorage {
 				providerId: this.id,
 				providerLabel: this.label,
 				file: this.serializeFile(opened.file),
-				baseline: opened.bytes.slice(),
+				baseline: opened.bytes,
 				pending: false,
 			},
 			// Cloud acknowledgement changes metadata, not package content or embedding revisions.
@@ -154,10 +166,7 @@ export class SuiteCloudStorage {
 						'The OneDrive file changed format. Save a separate copy of your edits before reopening it.',
 					);
 				// Keep an independent library copy before replacing the working document.
-				await this.store.create(
-					doc.name.replace(/(\.[^.]+)$/u, ' (local edits)$1'),
-					doc.bytes.slice(),
-				);
+				await this.store.create(doc.name.replace(/(\.[^.]+)$/u, ' (local edits)$1'), doc.bytes);
 				return this.persist(doc, await connection.reload(), true);
 			}
 			// oxlint-disable-next-line eslint/preserve-caught-error -- Conflict details remain in the recovery flow.
@@ -172,9 +181,12 @@ export class SuiteCloudStorage {
 		if (doc.cloud.pending) throw this.error('Save or resolve the OneDrive changes before sharing.');
 		if (!this.client) throw this.error('OneDrive sign-in is not configured.');
 		if (options.type === 'existing') {
-			const opened = await this.client.read(doc.cloud.file);
-			if (!opened.file.webUrl) throw this.error('The existing OneDrive link is unavailable.');
-			return opened.file.webUrl;
+			// Only the link is needed: ask for the item's metadata, not its whole content.
+			const current = this.client.metadata
+				? await this.client.metadata(doc.cloud.file)
+				: (await this.client.read(doc.cloud.file)).file;
+			if (!current.webUrl) throw this.error('The existing OneDrive link is unavailable.');
+			return current.webUrl;
 		}
 		if (!this.client.share)
 			throw this.error(`${this.label} does not support creating share links.`);

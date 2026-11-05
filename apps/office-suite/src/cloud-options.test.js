@@ -51,3 +51,38 @@ test('custom providers take precedence and preserve host policy callbacks', () =
 	assert.equal(options.id, 'custom');
 	assert.throws(() => resolveCloudOptions({ ooxmlCloudOptions: { id: 'custom' } }), TypeError);
 });
+
+test('a OneDrive host gets a browsable provider; without a sign-in hook it is already signed in', async () => {
+	const none = resolveCloudOptions({});
+	assert.equal(none.fileProvider, undefined);
+	const options = resolveCloudOptions({
+		ooxmlOneDriveOptions: { getAccessToken: async () => 'token' },
+	});
+	assert.equal(options.fileProvider.account()?.name, 'Microsoft account');
+	let signIns = 0;
+	const hosted = resolveCloudOptions({
+		ooxmlOneDriveOptions: {
+			getAccessToken: async () => 'token',
+			signIn: async () => {
+				signIns++;
+				return { name: 'Ada' };
+			},
+		},
+	});
+	assert.equal(hosted.fileProvider.account(), null);
+	assert.equal((await hosted.fileProvider.signIn()).name, 'Ada');
+	assert.equal(hosted.fileProvider.account()?.name, 'Ada');
+	assert.equal(signIns, 1);
+	const supplied = { id: 'x' };
+	const custom = resolveCloudOptions({
+		ooxmlCloudOptions: {
+			id: 'company',
+			label: 'Company',
+			client: {},
+			keyOf: (file) => file.key,
+			serializeFile: (file) => file,
+			fileProvider: supplied,
+		},
+	});
+	assert.equal(custom.fileProvider, supplied);
+});

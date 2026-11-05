@@ -52,7 +52,17 @@ const sessions = new SuiteSessions(store, $('editors'), renderTabs, async (comma
 		throw error;
 	}
 });
-const cloud = mountOneDrive({ store, sessions, open, refresh });
+const cloud = mountOneDrive({
+	store,
+	sessions,
+	open,
+	refresh,
+	showView: () => {
+		view = 'cloud';
+		renderTabs();
+		history.replaceState(null, '', '#/onedrive');
+	},
+});
 sessions.remote = cloud;
 function chooseOpen() {
 	const content = document.createElement('div');
@@ -65,7 +75,13 @@ function chooseOpen() {
 				$('file-input').click();
 			},
 		],
-		[`From ${cloud.label}`, () => cloud.showOpen()],
+		[
+			`From ${cloud.label}`,
+			() => {
+				$('dialog').close();
+				void task(cloud.showFiles);
+			},
+		],
 	]) {
 		const button = document.createElement('button');
 		button.textContent = label;
@@ -139,6 +155,7 @@ function renderTabs() {
 	}
 	$('home').hidden = view !== 'home';
 	$('chat').hidden = view !== 'chat';
+	$('cloud-view').hidden = view !== 'cloud';
 	$('teams-host').hidden = view !== 'teams';
 	$('editor-area').hidden = view !== 'editor';
 	$('back-teams').hidden = !origins.has(active);
@@ -352,7 +369,7 @@ async function share(id = active) {
 }
 
 $('rail').innerHTML =
-	`<span class="nav-caption">Workspace</span><button class="ai-only" data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
+	`<span class="nav-caption">Workspace</span><button class="ai-only" data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-cloud data-view="cloud">${icon('folder')}<span>${escape(cloud.label)}</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
 	apps
 		.map(
 			(a) =>
@@ -389,6 +406,7 @@ document.addEventListener('click', (event) => {
 	if (b.hasAttribute('data-chat')) task(() => showChat());
 	if (b.hasAttribute('data-import')) $('file-input').click();
 	if (b.hasAttribute('data-teams')) task(showTeams);
+	if (b.hasAttribute('data-cloud')) task(cloud.showFiles);
 	if (b.dataset.app) {
 		view = 'home';
 		filter = b.dataset.app;

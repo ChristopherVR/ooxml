@@ -1,9 +1,10 @@
 import { SuiteOneDrive } from './cloud-files.js';
+import { mountCloudBrowser } from './cloud-browser.js';
 import { resolveCloudOptions } from './cloud-options.js';
 import { $, choose, download, escape, notify, task } from './ui.js';
 
 /** Shared shell controls for Word, Excel, PowerPoint and Visio, including standalone apps. */
-export function mountOneDrive({ store, sessions, open, refresh }) {
+export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 	const options = resolveCloudOptions();
 	const label = options.label;
 	const message = (text) => text.replaceAll('OneDrive', () => label);
@@ -130,7 +131,17 @@ export function mountOneDrive({ store, sessions, open, refresh }) {
 		};
 		choose(message('Share in OneDrive'), content);
 	};
-	$('open-onedrive').textContent = message('Open from OneDrive');
-	$('open-onedrive').onclick = cloud.showOpen;
+	const browser = options.fileProvider
+		? mountCloudBrowser({ cloud, options, open, refresh })
+		: undefined;
+	/** The browsing view when the host can list files; otherwise the link dialog (or its notice). */
+	cloud.showFiles = async () => {
+		if (!browser) return cloud.showOpen();
+		await showView();
+		await browser.show();
+	};
+	cloud.hasBrowser = Boolean(browser);
+	$('open-onedrive').textContent = message(browser ? 'Browse OneDrive' : 'Open from OneDrive');
+	$('open-onedrive').onclick = () => void task(cloud.showFiles);
 	return cloud;
 }

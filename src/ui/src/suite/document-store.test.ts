@@ -141,3 +141,32 @@ it('removes a parent with cached descendants and restores the same identities', 
 	await store.commit(removed.map((document) => ({ document, expected: 0 })));
 	expect((await store.get(child.id)).parent?.id).toBe(parent.id);
 });
+
+describe('connected document index', () => {
+	const cloud = (itemId: string): SuiteCloudSource => ({
+		file: { driveId: 'drive', itemId, name: 'F.docx', kind: 'docx', eTag: 'v1', access: 'write' },
+		baseline: new Uint8Array([1]),
+		pending: false,
+	});
+	it('lists connected documents without bytes and follows commit and remove', async () => {
+		const store = new SuiteDocumentStore(`index-${crypto.randomUUID()}`);
+		const local = await store.create('local.docx', new Uint8Array([9]));
+		const a = await store.create('F.docx', new Uint8Array([1]), { cloud: cloud('a') });
+		const b = await store.create('F.docx', new Uint8Array([1]), { cloud: cloud('b') });
+		let listed = await store.listCloud();
+		expect(listed.map((d) => d.id).sort()).toEqual([a.id, b.id].sort());
+		expect(JSON.stringify(listed)).not.toContain('baseline');
+		expect(listed.find((d) => d.id === a.id)?.cloud.file.itemId).toBe('a');
+		await store.commit([
+			{ document: { ...a, bytes: new Uint8Array([2]), revision: 2 }, expected: 1 },
+		]);
+		expect((await store.listCloud()).find((d) => d.id === a.id)).toMatchObject({
+			revision: 2,
+			cloud: { pending: true },
+		});
+		await store.remove(b.id, 1);
+		listed = await store.listCloud();
+		expect(listed.map((d) => d.id)).toEqual([a.id]);
+		expect(listed.some((d) => d.id === local.id)).toBe(false);
+	});
+});

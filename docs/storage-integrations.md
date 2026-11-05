@@ -165,6 +165,10 @@ Returning `latest` preserves a local copy before reloading; `copy` requires prov
 copy support. Returning `cancel` retains pending edits. Sharing choices are explicit
 permission grants, so use understandable labels and enforce them on the backend.
 
+A custom provider can also set `fileProvider` (a `CloudFileProvider`) in `ooxmlCloudOptions` to
+get the suite's browsing view; its opened files carry `cloudFile: { file, bytes }` (see
+[OneDrive integration](onedrive-integration.md#integrated-office-suite)).
+
 For another service, set `ooxmlCloudOptions` instead:
 
 ```ts

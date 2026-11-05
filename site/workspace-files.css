@@ -108,3 +108,40 @@
 		flex-wrap: wrap;
 	}
 }
+
+/* OneDrive (cloud) view: the shared browser element inherits the suite's --office-* tokens. */
+.cloud-view {
+	height: 100%;
+	overflow: auto;
+	padding: 24px 28px 32px;
+	background: var(--canvas);
+	box-sizing: border-box;
+}
+.cloud-view[hidden] {
+	display: none;
+}
+.cloud-view-head h1 {
+	margin: 0 0 6px;
+	font-size: 22px;
+}
+.cloud-view-head p {
+	margin: 0 0 18px;
+	color: var(--muted);
+	max-width: 72ch;
+}
+.cloud-view office-ui-cloud-files {
+	max-width: 1040px;
+	min-height: 420px;
+	padding: 12px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+}
+@media (max-width: 640px) {
+	.cloud-view {
+		padding: 16px;
+	}
+	.cloud-view office-ui-cloud-files {
+		padding: 8px;
+	}
+}
