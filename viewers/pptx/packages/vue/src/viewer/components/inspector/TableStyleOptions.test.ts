@@ -5,7 +5,7 @@
    short assertion; merging them into one statement would hurt readability. */
 import { mount } from '@vue/test-utils';
 import type { ParsedTableStyleMap, PptxTableData } from 'pptx-viewer-core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import TableStyleOptions from './TableStyleOptions.vue';
 import { setControlValue } from './test-control-value';

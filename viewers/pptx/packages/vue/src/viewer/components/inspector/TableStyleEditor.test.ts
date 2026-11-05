@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import TableStyleEditor from './TableStyleEditor.vue';
 import { setControlValue } from './test-control-value';
