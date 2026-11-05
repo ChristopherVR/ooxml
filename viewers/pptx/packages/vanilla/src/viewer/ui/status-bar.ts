@@ -1,5 +1,15 @@
-import { dispatchStatusBarIntent, registerPptxWebControls, statusBarState } from 'ooxml-ui/pptx';
-import type { StatusBarAutosave, ToolbarActionId } from 'ooxml-ui/pptx';
+import {
+	dispatchStatusBarIntent,
+	registerPptxWebControls,
+	saveProgressStatus,
+	statusBarState,
+} from 'ooxml-ui/pptx';
+import type {
+	SaveProgressState,
+	SaveProgressStatus,
+	StatusBarAutosave,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { RibbonNavState } from './ribbon/ribbon-types';
@@ -22,6 +32,8 @@ export interface StatusBar {
 	setNotesExpanded(expanded: boolean): void;
 	/** Reflect the autosave engine (undefined when it is off); the dirty flag is the fallback. */
 	setAutosave(autosave: StatusBarAutosave | undefined): void;
+	/** Reflect a save to the host's storage in progress (empty state: back to the idle text). */
+	setSaveProgress(progress: SaveProgressState): void;
 	/** Reflect the unsaved-changes flag in the idle save-state text. */
 	setDirty(dirty: boolean): void;
 	/** Reflect presentation state so the Normal / Slide Show buttons show the
@@ -55,6 +67,7 @@ export function createStatusBar(
 	}
 	let dirty = false;
 	let autosave: StatusBarAutosave | undefined;
+	let saveProgress: SaveProgressStatus | undefined;
 	let nav = { current: 0, total: 0, zoomPercent: 100 };
 	let notesExpanded = false;
 	let presenting = false;
@@ -65,6 +78,7 @@ export function createStatusBar(
 			activeSlideIndex: nav.current,
 			dirty,
 			autosave,
+			saveProgress,
 			zoomPercent: nav.zoomPercent,
 			notesExpanded,
 			// The slide-sorter overlay is modal and self-dismissing, so it is not
@@ -99,6 +113,10 @@ export function createStatusBar(
 		},
 		setAutosave(next) {
 			autosave = next;
+			sync();
+		},
+		setSaveProgress(next) {
+			saveProgress = saveProgressStatus(next, (key) => t(key));
 			sync();
 		},
 		setDirty(isDirty) {

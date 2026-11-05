@@ -11,6 +11,7 @@ import {
 	createBlankSlide,
 	createCloudDocumentController,
 	createEmbeddedFontsSheet,
+	createSaveProgressController,
 	createEmbeddedOutlineFontsSlot,
 	createInitialPresentationSnapshot,
 	createPresentationSessionId,
@@ -210,6 +211,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * right apply until another document is loaded (shared `render/cloud-open`).
 	 */
 	private readonly cloudDocument = createCloudDocumentController();
+	/** The progress of a save to the open document's storage, shown by the status bar. */
+	private readonly saveProgress = createSaveProgressController();
+	private unsubscribeSaveProgress: (() => void) | undefined;
 	lifecycle!: ChromeLifecycle;
 	editor!: EditorController;
 	protected readonly exporter: ExportLifecycle;
@@ -298,6 +302,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			this.availableLocales,
 		);
 		this.t = createTranslator(this.currentLocale, options.messages);
+		this.unsubscribeSaveProgress = this.saveProgress.subscribe(() =>
+			this.lifecycle?.chrome.statusBar?.setSaveProgress(this.saveProgress.getSnapshot()),
+		);
 		this.registry = options.registry ?? createDefaultRegistry();
 		this.store = createStore(createInitialViewerState(options.inspectorInitiallyOpen));
 		this.readOnlyActions = readOnlySessionActions(readOnlySessionStore(this.store), {
@@ -1058,12 +1065,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 
 	/** The storage, edit right, name and recovery key of the open document (host's or cloud file's). */
 	private documentView(): CloudDocumentHostValues {
-		return resolveCloudDocumentView(this.cloudDocument.getSnapshot().file, {
+		const view = resolveCloudDocumentView(this.cloudDocument.getSnapshot().file, {
 			storage: this.options.storage,
 			canEdit: true,
 			fileName: this.options.fileName,
 			filePath: this.options.filePath ?? this.options.autosaveFilePath,
 		});
+		// Saves through it report their steps (upload, merge) to the status bar.
+		return view.storage ? { ...view, storage: this.saveProgress.wrap(view.storage) } : view;
 	}
 
 	/** The open document's name, for the title bar (chrome rebuilds read it again). */
@@ -2342,6 +2351,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			return;
 		}
 		this.destroyed = true;
+		this.unsubscribeSaveProgress?.();
 		this.slidePackageClipboard.dispose();
 		this.customization.destroy();
 		this.dialogRegions?.destroy();
