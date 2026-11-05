@@ -40,6 +40,7 @@ import type { MorphBox } from './morph-overlay-order';
 import { boxesOverlap, travelledBox } from './morph-overlay-order';
 import { tokenizeText } from './morph-text';
 import { coveredStackedCopyIds } from './morph-stacked-copies';
+import { morphCarriedTextRotations, morphShapeTextFlipChanges } from './morph-text-flip';
 import type { MorphTextAlignment, MorphTextMeasure } from './morph-text-frame';
 import {
 	morphTextGhostEnd,
@@ -324,6 +325,7 @@ export function resolveMorphGhostIds(
 		const required =
 			!counterpart ||
 			morphPairNeedsCrossfade(element, counterpart) ||
+			morphShapeTextFlipChanges(element, counterpart) ||
 			paintedBoxes.some((below) => boxesOverlap(below, box));
 		if (required) {
 			painted.add(element.id);
@@ -552,7 +554,13 @@ export function generateMorphAnimations(
 		// and interpolate numerically instead of falling back to matrix
 		// decomposition.
 		const toRot = toElement.rotation ?? 0;
-		const fromRot = inSlot ? toRot : shortestRotationTarget(toRot, fromElement.rotation ?? 0);
+		// Carried text turns from text angle to text angle, a vertical flip
+		// counting as a half turn (see `morph-text-flip`).
+		const fromRot = inSlot
+			? toRot
+			: textFrames
+				? morphCarriedTextRotations(fromElement, toElement).incoming[0]
+				: shortestRotationTarget(toRot, fromElement.rotation ?? 0);
 		// Carried text keeps its own flips: a flipped box paints its text
 		// unmirrored, and PowerPoint never mirrors it through zero.
 		const fromFlips = flipFactors(textFrames ? toElement : fromElement);
@@ -776,7 +784,11 @@ export function generateMorphGhostAnimations(
 		// adjustment goes on the target angle here (mirror of the incoming
 		// half). Flips are per-frame, as in {@link generateMorphAnimations}.
 		const fromRot = fromElement.rotation ?? 0;
-		const toRot = inSlot ? fromRot : shortestRotationTarget(fromRot, toElement.rotation ?? 0);
+		const toRot = inSlot
+			? fromRot
+			: textFrames
+				? morphCarriedTextRotations(fromElement, toElement).ghost[1]
+				: shortestRotationTarget(fromRot, toElement.rotation ?? 0);
 		// Mirror of the incoming half: carried text keeps its own flips, and a
 		// turning pair's frames carry its pivot.
 		const fromFlips = flipFactors(fromElement);

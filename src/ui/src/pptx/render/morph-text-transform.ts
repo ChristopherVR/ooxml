@@ -249,6 +249,9 @@ export function morphTextGhostStart(
 /**
  * The `translate(-tail)` that closes a turning frame's function list, after
  * the element's flips (so the tail is negated along a flipped axis), or `''`.
+ * A vertically flipped element paints its text turned half way round (see
+ * `morph-text-flip`), so its tail, measured on that turned text, is negated
+ * once more.
  */
 export function morphTextTail(
 	transform: MorphTextTransform,
@@ -258,8 +261,9 @@ export function morphTextTail(
 	if (!tail) {
 		return '';
 	}
-	const x = -(element.flipHorizontal ? -tail.x : tail.x);
-	const y = -(element.flipVertical ? -tail.y : tail.y);
+	const sign = element.flipVertical ? 1 : -1;
+	const x = sign * (element.flipHorizontal ? -tail.x : tail.x);
+	const y = sign * (element.flipVertical ? -tail.y : tail.y);
 	return ` translate(${round(x)}px, ${round(y)}px)`;
 }
 

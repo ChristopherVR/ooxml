@@ -161,9 +161,9 @@ describe('a text box whose flip changes', () => {
 		expect(block('pptx-morph-ghost-')).not.toContain('scaleX(-1)');
 	});
 
-	it('still refuses a vertical flip, which PowerPoint turns upside down', () => {
+	it('carries a vertical flip as a half turn of the text (see morph-text-flip)', () => {
 		const upside = { ...to, flipHorizontal: false, flipVertical: true } as PptxElement;
-		expect(resolveMorphTextAlignment(from, upside, measure)).toBeUndefined();
+		expect(resolveMorphTextAlignment(from, upside, measure)?.turn?.to).toBe(180);
 	});
 
 	it('refuses a flip whose insets would move the text', () => {

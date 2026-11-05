@@ -7,6 +7,7 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
+import { morphTextUpright } from './morph-text-flip';
 import type { MorphTextTransform } from './morph-text-transform';
 import { morphTextTail } from './morph-text-transform';
 
@@ -86,32 +87,17 @@ export function morphBodyCopy(element: PptxElement, id: string): PptxElement {
 }
 
 /**
- * `element` with its flips taken out, when its text reads the same without
- * them, else `undefined`. A flipped shape paints its text unmirrored
- * (`getTextCompensationTransform`), which is the text of the unflipped shape
- * as long as its insets mirror onto themselves and the compensation does not
- * swap axes (a box turned past 90 degrees and flipped one way only).
+ * `element` with its flips taken out and a vertical flip turned into a half
+ * turn, when its text paints the same that way, else `undefined` (see
+ * `morph-text-flip`).
  */
 export function morphUprightText(element: PptxElement): PptxElement | undefined {
-	const { flipHorizontal: h, flipVertical: v } = element;
-	if (!h && !v) {
-		return element;
-	}
-	const rotation = (((element.rotation ?? 0) % 360) + 360) % 360;
-	const ts = (element as { textStyle?: Record<string, number | undefined> }).textStyle ?? {};
-	if (
-		(h !== v && rotation > 90 && rotation < 270) ||
-		(h && ts.bodyInsetLeft !== ts.bodyInsetRight) ||
-		(v && ts.bodyInsetTop !== ts.bodyInsetBottom)
-	) {
-		return undefined;
-	}
-	return { ...element, flipHorizontal: false, flipVertical: false } as PptxElement;
+	return morphTextUpright(element);
 }
 
 /**
  * `element` under `id` with its fill, outline and body effects taken out,
- * painted unflipped (see {@link morphUprightText}).
+ * painted unflipped. Pass the upright element ({@link morphUprightText}).
  */
 export function morphTextCopy(element: PptxElement, id: string): PptxElement {
 	const kept = Object.fromEntries(

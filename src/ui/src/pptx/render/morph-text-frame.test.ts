@@ -414,7 +414,12 @@ describe('carried text geometry', () => {
 		);
 		const filled = { ...to, shapeStyle: { fillColor: '#ff0000' } } as PptxElement;
 		expect(resolveMorphTextAlignment(from, filled, measure)).toBeUndefined();
-		const flipped = { ...to, flipVertical: true } as PptxElement;
+		// A vertical flip whose text rectangle is off centre cannot be carried.
+		const flipped = {
+			...to,
+			flipVertical: true,
+			textStyle: { ...(to as { textStyle: object }).textStyle, bodyInsetLeft: 40 },
+		} as PptxElement;
 		expect(resolveMorphTextAlignment(from, flipped, measure)).toBeUndefined();
 	});
 });

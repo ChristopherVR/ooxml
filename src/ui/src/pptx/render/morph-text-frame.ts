@@ -29,6 +29,9 @@
  *   - A box flipped horizontally paints its text unmirrored, and a flip that
  *     changes between the slides leaves the text alone: it travels and
  *     restyles exactly like an unflipped one, never mirroring through zero.
+ *   - A box flipped vertically paints its text upside down, and gaining or
+ *     losing that flip turns the text half way round about its middle
+ *     (see `morph-text-flip`).
  *
  * The overlay can only move a whole element, so this resolves the case where
  * every paragraph is ONE line in both layouts (or the two layouts are the same
@@ -37,8 +40,6 @@
  * anchor, and the result is exact for one paragraph and close for several.
  * Wrapped text whose breaks may differ is split into its pieces instead (see
  * `morph-text-pieces`), or left to the box interpolation when it cannot be.
- * A vertical flip is still refused: PowerPoint turns that text upside down,
- * which the static renderer does not paint.
  *
  * @module render/morph-text-frame
  */
@@ -53,6 +54,7 @@ import {
 } from './morph-text-baseline';
 import type { MorphTextMeasure, ReadFrameOptions, TextFrame } from './morph-text-frame-read';
 import { measureMorphTextWithCanvas, paragraphWidth, readFrame } from './morph-text-frame-read';
+import { morphTextUpright } from './morph-text-flip';
 import type { MorphPoint, MorphTextAlignment } from './morph-text-transform';
 
 export type { MorphTextMeasure } from './morph-text-frame-read';
@@ -136,11 +138,18 @@ function measureWidths(a: TextFrame, b: TextFrame, measure: MorphTextMeasure) {
  *   pair in identical fonts and an equally wide column can be aligned.
  */
 export function resolveMorphTextAlignment(
-	from: PptxElement,
-	to: PptxElement,
+	fromHalf: PptxElement,
+	toHalf: PptxElement,
 	measure: MorphTextMeasure = measureMorphTextWithCanvas,
 	options: Pick<ReadFrameOptions, 'withBody'> & { metrics?: MorphFontMetrics } = {},
 ): MorphTextAlignment | undefined {
+	// A flipped half's text is an unflipped half's, turned 180 degrees per
+	// vertical flip (see `morph-text-flip`).
+	const from = morphTextUpright(fromHalf);
+	const to = morphTextUpright(toHalf);
+	if (!from || !to) {
+		return undefined;
+	}
 	const fromRotation = normalDegrees(from.rotation ?? 0);
 	const toRotation = normalDegrees(to.rotation ?? 0);
 	if (

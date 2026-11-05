@@ -115,19 +115,22 @@ function splittable(pair: MorphPair, ghostIds: ReadonlySet<string>, measure?: Mo
 	) {
 		return undefined;
 	}
-	// A flipped shape paints its text unflipped, so its text copy is read and
-	// painted unflipped (see `morphUprightText`).
+	// A flipped shape's text is an unflipped shape's (turned half way round by
+	// a vertical flip), so its text copy is read and painted that way (see
+	// `morphUprightText`).
 	const a = morphUprightText(from);
 	const b = morphUprightText(to);
 	const alignment = a && b && resolveMorphTextAlignment(a, b, measure, { withBody: true });
 	if (
+		!a ||
+		!b ||
 		!alignment ||
 		(!flipped(from, to) &&
 			sameMorphTransform(morphTextIncomingStart(alignment, to), morphBoxStart(from, to)))
 	) {
 		return undefined;
 	}
-	return alignment;
+	return { alignment, upright: { from: a, to: b } };
 }
 
 /** One copy's two frames. */
@@ -165,7 +168,8 @@ export function buildMorphTextBodyPlan(
 		rising: new Set(),
 	};
 	for (const [pairIndex, pair] of pairs.entries()) {
-		const alignment = splittable(pair, context.ghostIds, measure);
+		const split = splittable(pair, context.ghostIds, measure);
+		const alignment = split?.alignment;
 		const { fromElement: from, toElement: to } = pair;
 		const rising =
 			alignment &&
@@ -175,7 +179,7 @@ export function buildMorphTextBodyPlan(
 				from,
 				to,
 			);
-		if (!alignment || !rising) {
+		if (!split || !alignment || !rising) {
 			continue;
 		}
 		plan.pairs.push(pair);
@@ -187,6 +191,11 @@ export function buildMorphTextBodyPlan(
 		// The copies turn the short way round, as the pair's own halves do.
 		const ghostTurnsTo = shortestRotationTarget(fromRotation, toRotation);
 		const incomingTurnsFrom = shortestRotationTarget(toRotation, fromRotation);
+		// The text copies turn from text angle to text angle: a vertical flip
+		// adds half a turn to its text (see `morph-text-flip`).
+		const upright = split.upright;
+		const fromText = upright.from.rotation ?? 0;
+		const toText = upright.to.rotation ?? 0;
 		const flips = flipped(from, to);
 		const still: MorphTextTransform = { dx: 0, dy: 0, sx: 1, sy: 1 };
 		// The body flips edge-on through zero; the text copies are painted
@@ -215,12 +224,18 @@ export function buildMorphTextBodyPlan(
 			{
 				part: 'text',
 				outgoing: [
-					morphCopyTransform(morphTextGhostStart(alignment, from), fromRotation),
-					morphCopyTransform(morphTextGhostEnd(alignment, from), ghostTurnsTo),
+					morphCopyTransform(morphTextGhostStart(alignment, from), fromText),
+					morphCopyTransform(
+						morphTextGhostEnd(alignment, from),
+						shortestRotationTarget(fromText, toText),
+					),
 				],
 				incoming: [
-					morphCopyTransform(morphTextIncomingStart(alignment, to), incomingTurnsFrom),
-					morphCopyTransform(morphTextIncomingEnd(alignment, to), toRotation),
+					morphCopyTransform(
+						morphTextIncomingStart(alignment, to),
+						shortestRotationTarget(toText, fromText),
+					),
+					morphCopyTransform(morphTextIncomingEnd(alignment, to), toText),
 				],
 			},
 		];
@@ -253,10 +268,11 @@ export function buildMorphTextBodyPlan(
 			plan.sources.set(incomingId, to.id);
 			plan.parts.set(outgoingId, part);
 			plan.parts.set(incomingId, part);
-			const copy = part === 'body' ? morphBodyCopy : morphTextCopy;
+			const body = part === 'body';
+			const copy = body ? morphBodyCopy : morphTextCopy;
 			plan.groups.push({
-				outgoing: copy(from, outgoingId),
-				incoming: copy(to, incomingId),
+				outgoing: copy(body ? from : upright.from, outgoingId),
+				incoming: copy(body ? to : upright.to, incomingId),
 			} satisfies MorphCrossfadeGroup);
 		}
 	}
