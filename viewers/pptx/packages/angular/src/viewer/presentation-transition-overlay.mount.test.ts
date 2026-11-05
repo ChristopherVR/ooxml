@@ -291,77 +291,82 @@ function visibleCopies(text: string, progress: number): HTMLElement[] {
 // the left edge glides onto the slide while its second paragraph changes from
 // 14 pt to the inherited size. Cross-dissolving the two layouts painted the
 // paragraph twice, a visible ghost beside the arriving text.
-describe('presentationTransitionOverlayComponent off-stage size change', () => {
-	const BODY = 'Parked opener\nSecond paragraph\nClosing line';
-	function textBox(id: string, x: number, secondSize?: number): PptxElement {
-		return {
-			id,
-			type: 'text',
-			name: 'TextBox 9',
-			x,
-			y: 120,
-			width: 300,
-			height: 240,
-			text: BODY,
-			textSegments: [
-				{ text: 'Parked opener', style: { fontFamily: 'Arial', fontSize: 18 } },
-				{ text: '\n' },
-				{
-					text: 'Second paragraph',
-					style: { fontFamily: 'Arial', ...(secondSize ? { fontSize: secondSize } : {}) },
-				},
-				{ text: '\n' },
-				{ text: 'Closing line', style: { fontFamily: 'Arial', fontSize: 18 } },
-			],
-		} as unknown as PptxElement;
-	}
-	const panel = (id: string): PptxElement =>
-		({
-			id,
-			type: 'shape',
-			name: 'Panel',
-			x: -600,
-			y: 0,
-			width: 1200,
-			height: 720,
-			shapeStyle: { fillMode: 'solid', fillColor: '#123456' },
-		}) as unknown as PptxElement;
+// Each case mounts the overlay and paints a real morph frame: about 2 s locally, over 5 s on a busy runner.
+describe(
+	'presentationTransitionOverlayComponent off-stage size change',
+	{ timeout: 20_000 },
+	() => {
+		const BODY = 'Parked opener\nSecond paragraph\nClosing line';
+		function textBox(id: string, x: number, secondSize?: number): PptxElement {
+			return {
+				id,
+				type: 'text',
+				name: 'TextBox 9',
+				x,
+				y: 120,
+				width: 300,
+				height: 240,
+				text: BODY,
+				textSegments: [
+					{ text: 'Parked opener', style: { fontFamily: 'Arial', fontSize: 18 } },
+					{ text: '\n' },
+					{
+						text: 'Second paragraph',
+						style: { fontFamily: 'Arial', ...(secondSize ? { fontSize: secondSize } : {}) },
+					},
+					{ text: '\n' },
+					{ text: 'Closing line', style: { fontFamily: 'Arial', fontSize: 18 } },
+				],
+			} as unknown as PptxElement;
+		}
+		const panel = (id: string): PptxElement =>
+			({
+				id,
+				type: 'shape',
+				name: 'Panel',
+				x: -600,
+				y: 0,
+				width: 1200,
+				height: 720,
+				shapeStyle: { fillMode: 'solid', fillColor: '#123456' },
+			}) as unknown as PptxElement;
 
-	/** The live stage, a sibling of the overlay that the unscoped rules reach. */
-	function paintStage(element: PptxElement): void {
-		const stage = document.createElement('div');
-		const node = document.createElement('div');
-		node.dataset.elementId = element.id;
-		node.textContent = (element as { text?: string }).text ?? '';
-		stage.appendChild(node);
-		document.body.appendChild(stage);
-	}
+		/** The live stage, a sibling of the overlay that the unscoped rules reach. */
+		function paintStage(element: PptxElement): void {
+			const stage = document.createElement('div');
+			const node = document.createElement('div');
+			node.dataset.elementId = element.id;
+			node.textContent = (element as { text?: string }).text ?? '';
+			stage.appendChild(node);
+			document.body.appendChild(stage);
+		}
 
-	it.each([
-		{
-			direction: 'forward',
-			from: slide('s17', [panel('p17'), textBox('t17', -400, 14)]),
-			to: slide('s18', [textBox('t18', 875)]),
-		},
-		{
-			direction: 'backward',
-			from: slide('s18', [panel('p18'), textBox('t18', 875)]),
-			to: slide('s17', [textBox('t17', -400, 14)]),
-		},
-	])('paints the text once mid-morph ($direction)', ({ from, to }) => {
-		paintStage(to.elements.at(-1)!);
-		mount({
-			outgoingSlide: from,
-			incomingSlide: to,
-			transition: { type: 'morph', durationMs: 1000 },
+		it.each([
+			{
+				direction: 'forward',
+				from: slide('s17', [panel('p17'), textBox('t17', -400, 14)]),
+				to: slide('s18', [textBox('t18', 875)]),
+			},
+			{
+				direction: 'backward',
+				from: slide('s18', [panel('p18'), textBox('t18', 875)]),
+				to: slide('s17', [textBox('t17', -400, 14)]),
+			},
+		])('paints the text once mid-morph ($direction)', ({ from, to }) => {
+			paintStage(to.elements.at(-1)!);
+			mount({
+				outgoingSlide: from,
+				incomingSlide: to,
+				transition: { type: 'morph', durationMs: 1000 },
+			});
+
+			// Both copies exist (the ghost in the overlay, the arrival on the stage)...
+			const copies = [...document.querySelectorAll<HTMLElement>('[data-element-id]')].filter(
+				(node) => node.textContent?.includes('Second paragraph'),
+			);
+			expect(copies).toHaveLength(2);
+			// ...but exactly one of them is painted halfway through.
+			expect(visibleCopies('Second paragraph', 0.5)).toHaveLength(1);
 		});
-
-		// Both copies exist (the ghost in the overlay, the arrival on the stage)...
-		const copies = [...document.querySelectorAll<HTMLElement>('[data-element-id]')].filter((node) =>
-			node.textContent?.includes('Second paragraph'),
-		);
-		expect(copies).toHaveLength(2);
-		// ...but exactly one of them is painted halfway through.
-		expect(visibleCopies('Second paragraph', 0.5)).toHaveLength(1);
-	});
-});
+	},
+);
