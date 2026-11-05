@@ -1,7 +1,7 @@
 import { createOneDriveClient } from '../client';
 
 /** Test-only HTTP fixture. Excluded from declarations and every published bundle. */
-export function createTestDrive(options: { bytes: Uint8Array; name?: string }) {
+export function createTestDrive(options: { bytes: Uint8Array; name?: string; selectDropsDownloadUrl?: boolean }) {
 	type Item = { id: string; bytes: Uint8Array; name: string; revision: number };
 	const first: Item = { id: 'item', bytes: options.bytes.slice(), name: options.name ?? 'Deck.pptx', revision: 1 };
 	const items = new Map<string, Item>([['item', first]]);
@@ -17,7 +17,14 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string }) {
 	const fetch: typeof globalThis.fetch = async (input, init) => {
 		init?.signal?.throwIfAborted();
 		const url = String(input); requests.push({ url, init });
-		if (url.includes('/shares/')) return json(metadata(first));
+		// Personal OneDrive can leave the download URL out of a response with $select.
+		const shaped = (item: Item) => {
+			const value: Record<string, unknown> = metadata(item);
+			if (options.selectDropsDownloadUrl && url.includes('$select'))
+				delete value['@microsoft.graph.downloadUrl'];
+			return value;
+		};
+		if (url.includes('/shares/')) return json(shaped(first));
 		const downloaded = /\/download\/([^/]+)$/u.exec(url)?.[1];
 		if (downloaded) return new Response(items.get(downloaded)!.bytes.slice());
 		const id = /\/items\/([^/:?]+)(?:\/|\?|$)/u.exec(url)?.[1];
@@ -48,7 +55,7 @@ export function createTestDrive(options: { bytes: Uint8Array; name?: string }) {
 			items.set(upload.item.id, upload.item);
 			return json(metadata(upload.item));
 		}
-		if (found) return json(metadata(found));
+		if (found) return json(shaped(found));
 		return json({}, 404);
 	};
 	return {

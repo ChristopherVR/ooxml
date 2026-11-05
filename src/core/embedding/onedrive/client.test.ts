@@ -84,6 +84,22 @@ describe('OneDrive host adapter', () => {
 		});
 	});
 
+	it('asks for the full item when a selected response has no download URL', async () => {
+		const drive = createTestDrive({
+			bytes: new Uint8Array([1, 2, 3]),
+			selectDropsDownloadUrl: true,
+		});
+		const opened = await drive.client.open(drive.shareUrl);
+		expect([...opened.bytes]).toEqual([1, 2, 3]);
+		const graphCalls = drive.requests.filter((request) =>
+			request.url.includes('graph.microsoft.com'),
+		);
+		expect(graphCalls).toHaveLength(2);
+		expect(graphCalls[1]!.url).not.toContain('$select');
+		const transfer = drive.requests.find((request) => request.url.includes('/download/'));
+		expect(new Headers(transfer?.init?.headers).get('Authorization')).toBeNull();
+	});
+
 	it('does not treat an edit sharing URL as proof of write access', async () => {
 		const connection = client(async (url) =>
 			String(url).includes('/shares/')

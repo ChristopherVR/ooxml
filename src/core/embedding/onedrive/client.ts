@@ -46,7 +46,19 @@ export function createOneDriveClient(options: OneDriveClientOptions): OneDriveCl
 		const file = fileFromMetadata(data);
 		if (typeof data.size === 'number' && data.size > transport.maxBytes)
 			throw new OneDriveError('too-large', 'The file exceeds the configured size limit.');
-		const url = secureTransferUrl(data['@microsoft.graph.downloadUrl']);
+		let transfer = data['@microsoft.graph.downloadUrl'];
+		// Some responses (personal OneDrive sharing links among them) drop the download URL when
+		// fields are selected. Ask for the full item once; the token still never leaves Graph.
+		if (transfer === undefined) {
+			const full = await readJson(await graph(itemPath(file), signal));
+			transfer = full['@microsoft.graph.downloadUrl'];
+			if (transfer === undefined)
+				throw new OneDriveError(
+					'invalid-response',
+					'OneDrive did not offer a download for this file.',
+				);
+		}
+		const url = secureTransferUrl(transfer);
 		// The host's write policy resolves while the bytes stream; neither waits for the other.
 		const [, bytes] = await Promise.all([
 			access(file),

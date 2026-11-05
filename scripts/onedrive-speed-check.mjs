@@ -226,9 +226,24 @@ async function measureTarget(ctx, target) {
 		run.tokenMs = now() - t0;
 		const meta = await rawGraph(ctx, target.meta, { headers: target.headers, what: target.label });
 		run.meta = { headersMs: meta.headersMs, totalMs: meta.totalMs, bytes: meta.bytes };
-		const item = meta.data;
-		const downloadUrl = item['@microsoft.graph.downloadUrl'];
-		if (typeof downloadUrl !== 'string') throw new SafeError('Graph returned no download URL.');
+		let item = meta.data;
+		let downloadUrl = item['@microsoft.graph.downloadUrl'];
+		// Some responses (personal OneDrive links among them) drop the download URL when fields are
+		// selected; ask for the full item, as the library does, and count it in the metadata time.
+		if (typeof downloadUrl !== 'string' && item.id && item.parentReference?.driveId) {
+			const full = await rawGraph(
+				ctx,
+				`/drives/${encodeURIComponent(item.parentReference.driveId)}/items/${encodeURIComponent(item.id)}`,
+				{ what: target.label },
+			);
+			run.meta.totalMs += full.totalMs;
+			run.meta.bytes += full.bytes;
+			run.fullItem = true;
+			item = full.data;
+			downloadUrl = item['@microsoft.graph.downloadUrl'];
+		}
+		if (typeof downloadUrl !== 'string')
+			throw new SafeError('Graph did not offer a download for this file, even for the full item.');
 		run.download = await rawDownload(ctx, downloadUrl);
 		run.rawMs = run.meta.totalMs + run.download.totalMs;
 		ref = { driveId: item.parentReference?.driveId, itemId: item.id };
@@ -294,6 +309,10 @@ async function measureTarget(ctx, target) {
 		}
 		if (!options.warmup || i > 0) runs.push(run);
 	}
+	if (runs.some((run) => run.fullItem))
+		console.error(
+			`Note (${target.label}): Graph left the download URL out of the selected response, so the metadata time includes a second request for the full item. The library does the same.`,
+		);
 	return { label: target.label, runs };
 }
 
