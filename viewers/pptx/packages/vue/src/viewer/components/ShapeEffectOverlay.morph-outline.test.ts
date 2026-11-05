@@ -21,11 +21,22 @@ const card = {
 	shapeStyle: { fillColor: '#C07020', strokeColor: '#FFFFFF', strokeWidth: 8 },
 } as unknown as PptxElement;
 
+const tri = {
+	...card,
+	shapeStyle: { ...card.shapeStyle, strokeWidth: 12, compoundLine: 'tri' },
+} as unknown as PptxElement;
+
 describe('shapeEffectOverlay morph outline marker', () => {
 	it('stamps data-pptx-outline on the outline overlay that holds the path', () => {
 		const wrapper = mount(ShapeEffectOverlay, { props: { element: card } });
 		const outline = wrapper.find('svg[data-pptx-outline]');
 		expect(outline.exists()).toBe(true);
 		expect(outline.find('path').exists()).toBe(true);
+	});
+
+	it('paints each strand of a compound outline as a sibling path, in order', () => {
+		// The compound carry addresses strands as `[data-pptx-outline] path:nth-of-type(n)`.
+		const wrapper = mount(ShapeEffectOverlay, { props: { element: tri } });
+		expect(wrapper.findAll('svg[data-pptx-outline] > path')).toHaveLength(3);
 	});
 });

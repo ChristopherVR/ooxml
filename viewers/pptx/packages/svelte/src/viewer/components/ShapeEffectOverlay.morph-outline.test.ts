@@ -31,6 +31,11 @@ const card = {
 	shapeStyle: { fillColor: '#C07020', strokeColor: '#FFFFFF', strokeWidth: 8 },
 } as unknown as PptxElement;
 
+const tri = {
+	...card,
+	shapeStyle: { ...card.shapeStyle, strokeWidth: 12, compoundLine: 'tri' },
+} as unknown as PptxElement;
+
 describe('shapeEffectOverlay morph outline marker', () => {
 	it('stamps data-pptx-outline on the outline overlay that holds the path', () => {
 		const target = document.createElement('div');
@@ -41,5 +46,17 @@ describe('shapeEffectOverlay morph outline marker', () => {
 		});
 		flushSync();
 		expect(target.querySelector('svg[data-pptx-outline] path')).not.toBeNull();
+	});
+
+	it('paints each strand of a compound outline as a sibling path, in order', () => {
+		// The compound carry addresses strands as `[data-pptx-outline] path:nth-of-type(n)`.
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		mounted = mount(ShapeEffectOverlay, {
+			target,
+			props: { element: tri, mediaDataUrls: new Map<string, string>(), zIndex: 1 },
+		});
+		flushSync();
+		expect(target.querySelectorAll('svg[data-pptx-outline] > path')).toHaveLength(3);
 	});
 });

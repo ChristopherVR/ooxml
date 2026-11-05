@@ -49,4 +49,34 @@ describe('morphTransitionOverlay outline rules', () => {
 		);
 		expect(html).toContain('<svg');
 	});
+
+	it('re-paths each strand of a compound outline on its own path', () => {
+		const compound = (id: string, adj: number) =>
+			({
+				...card(id, adj),
+				shapeStyle: {
+					fillColor: '#C07020',
+					strokeColor: '#FFFFFF',
+					strokeWidth: 12,
+					compoundLine: 'tri',
+				},
+			}) as unknown as PptxElement;
+		const outgoing = slide('a', [compound('a-1', 5000)]);
+		const incoming = slide('b', [compound('b-1', 30000)]);
+		const plan = buildMorphTransitionPlan(outgoing, incoming, 2000)!;
+		const html = renderToStaticMarkup(
+			<MorphTransitionOverlay
+				canvasSize={{ width: 1280, height: 720 }}
+				scale={1}
+				morphPlan={plan}
+				outgoingSlide={outgoing}
+				incomingSlide={incoming}
+				containerRef={{ current: null }}
+			/>,
+		);
+		for (const strand of [1, 2, 3]) {
+			const rule = `[data-pptx-morph-outgoing="a-1"] [data-pptx-outline] path:nth-of-type(${strand}) { animation: pptx-morph-carry-g0-a1-outline${strand - 1} `;
+			expect(html.replaceAll('&quot;', '"')).toContain(rule);
+		}
+	});
 });
