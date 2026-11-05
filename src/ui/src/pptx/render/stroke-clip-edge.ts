@@ -32,8 +32,11 @@ function signedArea(pts: readonly Point[]): number {
 	return area;
 }
 
-/** One ring offset away from the shape's fill by `half`, joined as `join` joins. */
-function offsetRing(
+/**
+ * One ring offset away from the shape's fill by `half`, joined as `join` joins.
+ * `away` 1 offsets to the right of the direction of travel (y down), -1 to the left.
+ */
+export function offsetRing(
 	pts: readonly Point[],
 	half: number,
 	join: StrokeClipJoin,

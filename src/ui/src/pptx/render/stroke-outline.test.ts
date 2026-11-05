@@ -278,9 +278,38 @@ describe('buildStrokeOutline stroke-only ("open") presets', () => {
 		expect(buildStrokeOutline(line())!.strands).toStrictEqual([
 			{ strokeWidth: 2, cssStrokeWidth: 'max(2px, var(--pptx-device-px, 0px))', offset: 0 },
 		]);
-		const compound = buildStrokeOutline(line({}, { strokeWidth: 4, compoundLine: 'dbl' }))!;
+		const compound = buildStrokeOutline(line({}, { strokeWidth: 6, compoundLine: 'dbl' }))!;
 		expect(compound.strands).toHaveLength(2);
-		expect(compound.strands[0].offset).not.toBe(compound.strands[1].offset);
+		// Each strand is traced along the line as its own path, a third of the
+		// width off its centre on either side (see `stroke-compound-strands`).
+		expect(compound.strands.map((strand) => strand.offset)).toStrictEqual([0, 0]);
+		expect(compound.strands[0].d).not.toBe(compound.strands[1].d);
+	});
+
+	it('traces a closed shape compound line along every side, outer strand first', () => {
+		// PowerPoint 16: a rectangle's 12 pt thickThin line paints its thick strand
+		// outside and its thin one inside on all four sides.
+		const box = {
+			id: 'r',
+			type: 'shape',
+			shapeType: 'rect',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 50,
+			shapeStyle: {
+				fillColor: '#C07020',
+				strokeColor: '#FFFFFF',
+				strokeWidth: 10,
+				compoundLine: 'thickThin',
+				lineJoin: 'miter',
+			},
+		} as unknown as PptxElement;
+		const strands = buildStrokeOutline(box)!.strands;
+		expect(strands.map((strand) => [strand.strokeWidth, strand.d])).toStrictEqual([
+			[6, 'M -2 -2 L 102 -2 L 102 52 L -2 52 Z'],
+			[2, 'M 4 4 L 96 4 L 96 46 L 4 46 Z'],
+		]);
 	});
 
 	it('takes the overlay viewBox from the PAINTED (authored) box, matching the wrapper', () => {

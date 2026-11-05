@@ -78,9 +78,16 @@ describe('getCompoundLineOffsets', () => {
 		expect(offsets[1]).toBe(0); // centre line
 	});
 
-	it('uses a minimum gap of 1.5 regardless of thin strokeWidth', () => {
-		const offsets = getCompoundLineOffsets('dbl', 0.1);
-		expect(Math.abs(offsets[0]!)).toBeGreaterThanOrEqual(1.5);
+	it('fills exactly the line width in the measured proportions', () => {
+		// PowerPoint 16, 16 px lines: dbl thirds, thickThin 3:1:1, tri 1:1:2:1:1.
+		expect(getCompoundLineOffsets('dbl', 15)).toStrictEqual([-5, 5]);
+		expect(getCompoundLineWidths('dbl', 15)).toStrictEqual([5, 5]);
+		expect(getCompoundLineOffsets('thickThin', 10)).toStrictEqual([-2, 4]);
+		expect(getCompoundLineWidths('thickThin', 10)).toStrictEqual([6, 2]);
+		expect(getCompoundLineOffsets('thinThick', 10)).toStrictEqual([-4, 2]);
+		const tri = getCompoundLineOffsets('tri', 12);
+		expect(tri.map((o) => Math.round(o * 1000) / 1000)).toStrictEqual([-5, 0, 5]);
+		expect(getCompoundLineWidths('tri', 12).map((w) => Math.round(w))).toStrictEqual([2, 4, 2]);
 	});
 });
 
@@ -92,11 +99,11 @@ describe('getCompoundLineWidths', () => {
 		expect(getCompoundLineWidths('sng', 4)).toStrictEqual([4]);
 	});
 
-	it('returns 2 widths summing to base for dbl', () => {
+	it('returns 2 widths for dbl, each a third of the line (the gap is the other third)', () => {
 		const widths = getCompoundLineWidths('dbl', 4);
 		expect(widths).toHaveLength(2);
 		const sum = widths.reduce((a, b) => a + b, 0);
-		expect(sum).toBeCloseTo(4);
+		expect(sum).toBeCloseTo(8 / 3);
 	});
 
 	it('returns 2 widths for thickThin and thinThick, ordered correctly', () => {

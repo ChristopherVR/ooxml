@@ -49,6 +49,7 @@ import {
 } from './shape-geometry';
 import { outerStrokeEdgePath } from './stroke-clip-edge';
 import type { StrokeClipJoin } from './stroke-clip-outset';
+import { traceCompoundStrands } from './stroke-compound-strands';
 import { strokeOnlyPresetPathData } from './stroke-only-preset';
 import { strokeMiterLimit } from './stroke-style';
 import { hasStrokePaint } from './stroke-paint';
@@ -462,7 +463,11 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 	const stroke = paint
 		? svgGradientFillRef(paint)
 		: colorWithOpacity(style?.strokeColor ?? DEFAULT_STROKE_COLOR, style?.strokeOpacity);
-	const strands = outlineStrands(style?.compoundLine, strokeWidth);
+	const strands = traceCompoundStrands(
+		outlineStrands(style?.compoundLine, strokeWidth),
+		d,
+		outlineStrokeJoin(element),
+	);
 	const bleed = !openPresetD ? clipEdgeBleed(element, d, style) : undefined;
 	return {
 		markers: buildCustomPathMarkers(element, stroke),
