@@ -271,6 +271,31 @@ describe('presentationTransitionOverlay', () => {
 		expect(css).toContain('@keyframes pptx-morph-crop-');
 	});
 
+	it('sees a turning flip from the centre of its own canvas', () => {
+		// Shared `morph-flip-turn`: the eye is (width / 2) / tan(30 deg) away,
+		// 831.384 px for this 960 px canvas (the 16:9 default is 1108.513 px).
+		const tri = (slideId: string, flipHorizontal: boolean) =>
+			makeSlide(slideId, [
+				{
+					id: `${slideId}-tri`,
+					type: 'shape',
+					name: '!!Tri',
+					x: 100,
+					y: 100,
+					width: 300,
+					height: 200,
+					shapeType: 'rtTriangle',
+					flipHorizontal,
+				},
+			]);
+		const target = mountOverlay({ type: 'morph', durationMs: 800 } as PptxSlideTransition, {
+			from: tri('out', false),
+			to: tri('in', true),
+		});
+		const css = [...target.querySelectorAll('style')].map((node) => node.textContent).join('\n');
+		expect(css).toContain('perspective(831.384px)');
+	});
+
 	it('keeps the slide background on a non-morph transition snapshot', () => {
 		const target = mountOverlay({ type: 'fade', durationMs: 300 } as PptxSlideTransition);
 		const stages = [...target.querySelectorAll<HTMLElement>('.pptx-svelte-stage')];

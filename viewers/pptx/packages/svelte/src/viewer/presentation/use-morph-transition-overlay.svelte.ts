@@ -30,7 +30,10 @@ export function useMorphTransitionOverlay(options: {
 	outgoingSlide: () => PptxSlide | undefined;
 	incomingSlide: () => PptxSlide | undefined;
 	durationMs: () => number;
+	/** The slide's size: a turning flip is seen from its centre (shared `morph-flip-turn`). */
+	slideSize?: () => { width: number; height: number } | undefined;
 }) {
+	const slideSize = $derived(options.slideSize?.());
 	const morphPlan = $derived(
 		options.transition()?.type === 'morph'
 			? buildMorphTransitionPlan(
@@ -38,6 +41,7 @@ export function useMorphTransitionOverlay(options: {
 					options.incomingSlide(),
 					options.durationMs(),
 					morphOptionToMode((options.transition() as PptxSlideTransition).morphOption),
+					slideSize ? { slideSize } : {},
 				)
 			: undefined,
 	);

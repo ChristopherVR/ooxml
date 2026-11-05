@@ -91,6 +91,7 @@
 		outgoingSlide: () => outgoingSlide,
 		incomingSlide: () => incomingSlide,
 		durationMs: () => durationMs,
+		slideSize: () => canvasSize,
 	});
 	const morphPlan = $derived(morph.morphPlan);
 	const morphOverlayLayers = $derived(morph.morphOverlayLayers);
