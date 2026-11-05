@@ -1,4 +1,4 @@
-import type { DocumentStorage } from 'ooxml-core/embedding';
+import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 /**
  * The editor's state and the `EditorContext` every UI module receives: the workbook and its edit
  * session, the active sheet and selection, the command and dialog registries, and the public
@@ -63,6 +63,7 @@ export class EditorCore {
 	readOnly = false;
 	#hostReadOnly = false;
 	#roleReadOnly = false;
+	#fileReadOnly = false;
 	#reportedHost = false;
 	/** The host's `customization` object, as given, and its resolution. */
 	customizationInput: ExcelCustomization | null = null;
@@ -84,6 +85,13 @@ export class EditorCore {
 	surfaceActions: SurfaceHostActions = {};
 	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
 	storage: DocumentStorage | undefined = undefined;
+	/**
+	 * The storage of the workbook opened from a cloud place (File > Open > OneDrive): Save and
+	 * Save As go there instead of `storage`, until another workbook is shown.
+	 */
+	fileStorage: DocumentStorage | undefined = undefined;
+	/** Cloud places File > Open offers next to "This device" (`fileProviders`). */
+	fileProviders: readonly CloudFileProvider[] = [];
 	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
 	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();
@@ -246,6 +254,8 @@ export class EditorCore {
 		if (this.collab.suspend() && !this.collab.wanted)
 			this.shell?.toast(this.ctx.t('Sharing stopped because another workbook was opened.'));
 		this.savePassword = undefined;
+		this.fileStorage = undefined;
+		this.setFileReadOnly(false);
 		this.stopSession?.();
 		this.stopSession = undefined;
 		this.workbook = workbook;
@@ -415,6 +425,12 @@ export class EditorCore {
 		return this.#applyReadOnly();
 	}
 
+	/** Set while the open file is read-only (a cloud file the user cannot edit); the stricter wins. */
+	setFileReadOnly(locked: boolean): boolean {
+		this.#fileReadOnly = locked;
+		return this.#applyReadOnly();
+	}
+
 	/** Set by sharing while the role is `viewer`; independent of the host's switch. */
 	setRoleReadOnly(locked: boolean): boolean {
 		this.#roleReadOnly = locked;
@@ -422,7 +438,8 @@ export class EditorCore {
 	}
 
 	#applyReadOnly(): boolean {
-		const readOnly = this.#hostReadOnly || this.#roleReadOnly || !this.customization.canEdit;
+		const readOnly =
+			this.#hostReadOnly || this.#roleReadOnly || this.#fileReadOnly || !this.customization.canEdit;
 		const changed = readOnly !== this.readOnly;
 		// A host change under a role lock leaves the effective value alone but is still reported,
 		// so a controlled parent only ever mirrors `hostReadOnly`.

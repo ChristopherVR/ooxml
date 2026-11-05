@@ -10,7 +10,13 @@ import {
 	type IterationSettings,
 } from './backstage';
 import type { EditorCore } from './editor-core';
-import { runFileCommand, templateInto, type FileChrome } from './editor-files';
+import {
+	openCloudFile,
+	reportError,
+	runFileCommand,
+	templateInto,
+	type FileChrome,
+} from './editor-files';
 import { emit, type FileCommand } from './events';
 import { installKeyboard, type ShellAction } from './keyboard';
 import {
@@ -94,6 +100,12 @@ export function buildShell(core: EditorCore): Shell {
 		saveState: () => saveState,
 		fileCommand: (command, fileName) => void fileCommand(command, fileName),
 		newFromTemplate: (id) => templateInto(core, id, chrome),
+		fileProviders: () => core.fileProviders,
+		openCloudFile(file) {
+			void openCloudFile(core, file, chrome, closeBackstage).catch((cause) =>
+				reportError(core, cause),
+			);
+		},
 		close: closeBackstage,
 		options: () => ({
 			locale: core.locale,

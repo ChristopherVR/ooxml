@@ -1,6 +1,7 @@
 // Every string file of this folder merged into one table; see ../merge.ts. Listed explicitly
 // (not globbed) so the package build, which does not use Vite, resolves them.
 import { mergeStringModules } from '../merge';
+import * as cloud from './cloud';
 import * as collab from './collab';
 import * as commands from './commands';
 import * as grid from './grid';
@@ -9,6 +10,7 @@ import * as shell from './shell';
 import * as smartart from './smartart';
 
 export const es: Readonly<Record<string, string>> = mergeStringModules({
+	'./cloud.ts': cloud,
 	'./collab.ts': collab,
 	'./commands.ts': commands,
 	'./grid.ts': grid,

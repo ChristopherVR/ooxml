@@ -56,19 +56,6 @@ export function renderNew(page: PageContext): void {
 	page.content.replaceChildren(heading(page, t('New')), tiles);
 }
 
-export function renderOpen(page: PageContext): void {
-	const { t } = page;
-	page.content.replaceChildren(
-		heading(page, t('Open')),
-		paragraph(
-			page,
-			t('Open an Excel workbook (.xlsx, .xlsm, .xls) or a CSV file from this device.'),
-		),
-		primary(page, t('Browse...'), runFile(page, 'open')),
-		paragraph(page, t('Files are processed entirely in the browser.'), 'xve-backstage-muted'),
-	);
-}
-
 export function renderSaveAs(page: PageContext): void {
 	const { t, host, doc } = page;
 	const name = doc.createElement('input');

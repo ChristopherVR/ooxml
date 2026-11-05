@@ -1,6 +1,7 @@
 /** Shared building blocks and the host interface of the File backstage pages. */
 import type { WorkbookProperties } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
 import type { FileCommand } from '../events';
 import { ribbonIcon } from '../ribbon/icons';
 import type { SaveState } from '../title-bar';
@@ -27,6 +28,10 @@ export interface BackstageHost {
 	saveState(): SaveState;
 	fileCommand(command: FileCommand, fileName?: string): void;
 	newFromTemplate(id: TemplateId): void;
+	/** Cloud places File > Open offers besides this device. */
+	fileProviders?(): readonly CloudFileProvider[];
+	/** Opens a file the user picked in a cloud place (the host closes the backstage). */
+	openCloudFile?(file: CloudOpenedFile): void;
 	close(): void;
 	options(): EditorOptions;
 	setOption<K extends keyof EditorOptions>(key: K, value: EditorOptions[K]): void;

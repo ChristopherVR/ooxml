@@ -140,6 +140,39 @@ editor.storage = {
 };
 ```
 
+## Cloud places in File > Open
+
+`fileProviders` (a property of the element and a prop of every binding) takes an array of
+`CloudFileProvider` (`ooxml-core/embedding`), for example `createOneDriveFileProvider` from
+`ooxml-core/embedding/onedrive`. Empty or omitted, File > Open is unchanged. With providers, File >
+Open lists "This device" (Browse) and one place per provider, which shows the shared
+`<office-ui-cloud-files>` browser limited to `.xlsx`. Its strings follow the editor `locale`.
+
+- Opening a file asks to discard unsaved changes, as Open does, then loads the bytes through the
+  normal load path, takes the file's name and closes the File view.
+- The workbook then saves through the file's own `storage`, not the host `storage`: Save and Ctrl+S
+  write to the same item, Save As writes a copy, and the workbook is marked clean only after the
+  provider resolved. A rejected save is reported as `workbook-error` and the workbook stays dirty.
+  Opening, creating or loading another workbook returns Save to the host `storage`.
+- A file the provider reports as `canEdit: false` opens read-only (`readOnly` is true, a
+  `readonly-change` event fires). The stricter of the host's `readOnly` and the file wins, and the
+  host's own value is not changed.
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken,
+		signIn,
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
+```
+
 ## Shadow parts
 
 The element exposes its regions as CSS shadow parts, for styling with `xlsx-editor::part(grid)` and for tests: `ribbon`, `name-box`, `formula-bar`, `grid`, `sheet-tabs` and `status-bar`.

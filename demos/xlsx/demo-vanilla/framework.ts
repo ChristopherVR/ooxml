@@ -120,6 +120,7 @@ export async function mountFramework(
 					...(options.workbook && { workbook: options.workbook }),
 					...(options.readOnly !== undefined && { readOnly: options.readOnly }),
 					...(options.locale !== undefined && { locale: options.locale }),
+					...(options.fileProviders && { fileProviders: options.fileProviders }),
 					...(options.onWorkbookChange && { 'onWorkbook-change': options.onWorkbookChange }),
 					...(options.onWorkbookError && { 'onWorkbook-error': options.onWorkbookError }),
 					...(options.onSelectionChange && { 'onSelection-change': options.onSelectionChange }),
@@ -138,6 +139,7 @@ export async function mountFramework(
 				workbook: options.workbook,
 				readOnly: options.readOnly,
 				locale: options.locale,
+				fileProviders: options.fileProviders,
 				onworkbookchange: options.onWorkbookChange,
 				onworkbookerror: options.onWorkbookError,
 				onselectionchange: options.onSelectionChange,
@@ -164,6 +166,7 @@ export async function mountFramework(
 		component.setInput('workbook', options.workbook);
 		component.setInput('readOnly', options.readOnly ?? false);
 		component.setInput('locale', options.locale ?? 'en');
+		component.setInput('fileProviders', options.fileProviders ?? null);
 		component.instance.workbookChange.subscribe(options.onWorkbookChange);
 		component.instance.workbookError.subscribe(options.onWorkbookError);
 		if (options.onSelectionChange)

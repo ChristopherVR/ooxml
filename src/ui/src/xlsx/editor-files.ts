@@ -2,7 +2,12 @@
  * Workbook I/O for the element: load (xlsx, xlsm, xls, csv through the core's `loadWorkbook`),
  * new, save, download, and the default handlers of the File commands.
  */
-import { documentSaveMeta, saveToStorage, type DocumentSaveReason } from 'ooxml-core/embedding';
+import {
+	documentSaveMeta,
+	saveToStorage,
+	type CloudOpenedFile,
+	type DocumentSaveReason,
+} from 'ooxml-core/embedding';
 import { createWorkbook, type Workbook } from 'ooxml-core/xlsx';
 import { createTemplateWorkbook, formatNotes, type TemplateId } from './backstage';
 import type { EditorCore } from './editor-core';
@@ -55,6 +60,7 @@ export async function loadInto(
 	bytes: Uint8Array | ArrayBuffer,
 	fileName: string | undefined,
 	chrome?: FileChrome,
+	cloud?: CloudOpenedFile,
 ): Promise<void> {
 	const generation = ++core.loadGeneration;
 	core.loading = true;
@@ -82,6 +88,17 @@ export async function loadInto(
 		}
 		if (generation !== core.loadGeneration) return;
 		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome);
+		if (cloud) {
+			// Set after showing: showing a workbook drops the previous file's storage and lock.
+			core.fileStorage = cloud.storage;
+			if (!cloud.canEdit) {
+				core.setFileReadOnly(true);
+				core.shell?.toast(
+					core.ctx.t('This workbook is read-only because the file cannot be edited.'),
+					'info',
+				);
+			}
+		}
 		if (workbook.warnings.length)
 			emit(core.host, 'workbook-warning', { warnings: [...workbook.warnings] });
 		const notes = formatNotes(workbook, core.ctx.t);
@@ -94,6 +111,29 @@ export async function loadInto(
 			core.requestRender();
 		}
 	}
+}
+
+/**
+ * Opens a file the user picked in a cloud place: the usual discard confirmation, then the normal
+ * load path. The workbook keeps `file.storage` for Save and Save As until another one is shown,
+ * and is read-only when the file is (the host's own read-only switch still applies on top).
+ */
+export async function openCloudFile(
+	core: EditorCore,
+	file: CloudOpenedFile,
+	chrome?: FileChrome,
+	confirmed?: () => void,
+): Promise<boolean> {
+	const t = core.ctx.t;
+	if (
+		core.dirty.dirty &&
+		typeof confirm === 'function' &&
+		!confirm(t('Discard unsaved changes and open another workbook?'))
+	)
+		return false;
+	confirmed?.();
+	await loadInto(core, file.bytes, file.fileName, chrome, file);
+	return core.fileStorage === file.storage;
 }
 
 export function newInto(core: EditorCore, chrome?: FileChrome): void {
@@ -159,7 +199,9 @@ async function saveDownload(
 	const source = core.workbook?.format;
 	let name = withExtension(core.fileName, saveExtension(core.fileName));
 	// A host that removed Save (`save: false`) never gets `storage.save`: Save As then downloads.
-	const storage = core.customization.commands.has('file.save') ? undefined : core.storage;
+	const storage = core.customization.commands.has('file.save')
+		? undefined
+		: (core.fileStorage ?? core.storage);
 	let edited = false;
 	const changed = () => (edited = true);
 	saving.add(core);
