@@ -90,41 +90,71 @@ read-only under it.
 
 ## 4. Let the user choose a file
 
-The user copies a sharing link from OneDrive (select the file, **Share**, **Copy link**) and pastes
-it into your application, which passes it to `drive.open(link)`. Supported files are `.docx`,
-`.xlsx`, `.pptx` and `.vsdx`.
+Users browse their OneDrive: recent files, their folders and search, with a sharing link as a
+secondary path. Supported files are `.docx`, `.xlsx`, `.pptx` and `.vsdx`. Create a provider from
+the client of step 3 and your sign-in, then hand it to the editors:
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeDocxSnapshots } from 'ooxml-core/docx';
+
+const oneDrive = createOneDriveFileProvider({
+	getAccessToken,
+	canWrite: (file) => file.driveId === ownDrive.id,
+	signIn: async () => ({ name: (await msal.loginPopup({ scopes })).account!.username }),
+	mergers: {
+		docx: ({ base, local, remote }) => mergeDocxSnapshots(base.bytes, local, remote.bytes),
+	},
+});
+```
+
+### In File > Open
+
+Pass the provider as `fileProviders` to Word (`<docx-editor>`), Excel (`<xlsx-editor>`), Visio
+(`<visio-viewer>`) or any PowerPoint binding, and **File > Open** gains a **OneDrive** place next to
+**This device**. Every product renders the same shared places element and file browser. Choosing a
+file opens it in the editor; **Save** writes back to that file, and a file the `canWrite` policy
+does not allow opens read-only.
+
+![File > Open > OneDrive in the PowerPoint demo, listing a folder](images/onedrive/demo-file-open-onedrive.png)
+
+To open a file from your own UI instead (a start page, your own picker), call the editor's
+`openCloudFile(file)` with what `provider.open(entry)` returned.
 
 ### In the integrated Office app
 
-The Office app has this built in. Configure the token provider before its entry script loads, and
-**Open from OneDrive** appears on the home page:
+Configure the token provider (and optionally `signIn`, `signOut` and `account`) before its entry
+script loads:
 
 ```ts
 globalThis.ooxmlOneDriveOptions = { getAccessToken, canWrite };
 ```
 
-![The Office app home page with the Open from OneDrive button](images/onedrive/suite-home.png)
+**OneDrive** then appears in the left rail, and **Browse OneDrive** on the home page:
 
-It asks for the sharing link:
+![The Office app home page with the Browse OneDrive button](images/onedrive/suite-home.png)
 
-![The Open from OneDrive dialog with a sharing link entered](images/onedrive/suite-open-dialog.png)
+It shows the same file browser:
 
-The file opens in the matching editor, and **Save** updates the same OneDrive file:
+![The OneDrive view of the Office app listing folders and files](images/onedrive/suite-onedrive-browser.png)
+
+The file opens in the matching editor, and **Save** updates the same OneDrive file. **Share in
+OneDrive** gives you a link without saving first; when your latest edits are only on this device,
+the share dialog says so.
 
 ![PowerPoint in the Office app, with Saved to OneDrive in the status bar](images/onedrive/suite-powerpoint-saved.png)
 
-Without `ooxmlOneDriveOptions`, the dialog explains that sign-in has not been connected:
+Without `ooxmlOneDriveOptions`, the app explains that sign-in has not been connected:
 
-![The Open from OneDrive dialog when no sign-in is configured](images/onedrive/suite-not-configured.png)
+![The OneDrive notice when no sign-in is configured](images/onedrive/suite-not-configured.png)
 
-### In your own application
+### From a sharing link
 
-You add the link box yourself. The React example below includes one:
+`drive.open(link)` opens a file from a link the user pasted (in OneDrive: select the file,
+**Share**, **Copy link**); the file browser offers the same as its **Paste a sharing link** field.
+The React example below shows a link box on its own:
 
 ![A link box asking for a OneDrive sharing link](images/onedrive/react-open.png)
-
-Microsoft's OneDrive file picker is not integrated or tested with this library; a link box is the
-supported path today.
 
 ## 5. React PowerPoint example
 
@@ -357,18 +387,24 @@ Open a deck, choose **File > Open**, then **OneDrive** and **Sign in**. The demo
 to sign in, which a real application does itself:
 
 - **Your app registration**: set `VITE_ONEDRIVE_CLIENT_ID` (and optionally
-  `VITE_ONEDRIVE_AUTHORITY=common`) in an untracked `.env.local` next to the demo, or enter the
-  Application (client) ID from step 1 in the demo's sign-in dialog (it is remembered in that
-  browser). Register each demo origin you use as a single-page application redirect URI
-  (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash).
+  `VITE_ONEDRIVE_AUTHORITY=common`) in an untracked `.env.local` next to the demo to sign in
+  without a dialog, or enter the Application (client) ID from step 1 in the demo's sign-in dialog.
+  The dialog then asks every time, pre-filled with the last client ID that signed in successfully;
+  a failed sign-in forgets it. Register each demo origin you use as a single-page application
+  redirect URI (`http://localhost:4173/` through `http://localhost:4177/`, with the trailing slash).
 - **A Graph Explorer token**: the same dialog accepts a token as described in the next section.
   Nothing is registered, and the token is kept only in memory.
+
+The Word, Excel and Visio demos offer the same under **File > Open**, and their start pages have
+an **Open from OneDrive** button.
 
 After signing in the place lists your recent files, your files and a search box. Choose a `.pptx`
 to open it, edit, then save with the viewer's own Save (or Ctrl+S): the file in OneDrive is
 updated and the status bar reads **All saved**. A failed upload keeps **Unsaved changes**. Files on
 someone else's drive open read-only, because the demo uses the own-drive `canWrite` policy from
-step 3.
+step 3; the ribbon then shows **Read-only**.
+
+![The PowerPoint demo after saving a deck opened from OneDrive: the status bar reads All saved](images/onedrive/demo-onedrive-saved.png)
 
 In your own application the wiring is one prop:
 

@@ -17,7 +17,8 @@ import { interceptOneDrive } from './test-support/onedrive-http.mjs';
 
 const require = createRequire(new URL('../e2e/docx/package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
-const { createDocx } = await import('../src/core/dist/automation/index.mjs');
+const { createDocx, createXlsx } = await import('../src/core/dist/automation/index.mjs');
+const { readFile } = await import('node:fs/promises');
 const { createPresentationFromOutline } = await import('../src/core/dist/pptx/index.mjs');
 
 const SUITE = process.env.SUITE_URL ?? 'http://127.0.0.1:8151';
@@ -38,12 +39,24 @@ const deck = () =>
 		],
 		{ title: 'Quarterly review' },
 	);
+// The Graph double lists Word and Excel files in the root and PowerPoint and Visio in Projects.
 async function fixtures() {
-	return { pptx: await deck(), docx: await createDocx(['Project plan.']) };
+	return {
+		pptx: await deck(),
+		docx: await createDocx(['Project plan.']),
+		xlsx: await createXlsx(['Budget']),
+		vsdx: await readFile(
+			fileURLToPath(
+				new URL('../e2e/visio/fixtures/infinite-line-masters-native.vsdx', import.meta.url),
+			),
+		),
+	};
 }
 function rename(cloud) {
 	cloud.files.get('pptx').name = 'Quarterly review.pptx';
 	cloud.files.get('docx').name = 'Project plan.docx';
+	cloud.files.get('xlsx').name = 'Budget.xlsx';
+	cloud.files.get('vsdx').name = 'Process map.vsdx';
 }
 
 const browser = await chromium.launch();
@@ -75,12 +88,19 @@ try {
 		await page.locator('#open-onedrive').scrollIntoViewIfNeeded();
 		await page.waitForTimeout(2500);
 		await page.screenshot({ path: out('suite-home.png') });
+		// The OneDrive view: the shared file browser, signed in through the host's options.
+		const files = page.locator('#cloud-files');
+		const row = (name) => files.locator('li[data-entry]').filter({ hasText: name }).first();
 		await page.locator('#open-onedrive').click();
-		await page.locator('#onedrive-link').fill(link('pptx'));
-		await page.locator('#dialog').screenshot({ path: out('suite-open-dialog.png') });
-		await page.locator('#onedrive-open-submit').click();
-		await expect(page.locator('#dialog')).toBeHidden();
-		await expect(page.locator('#save-state')).toContainText('OneDrive');
+		await files.locator('[data-view="files"]').click();
+		await expect(row('Project plan.docx')).toBeVisible();
+		await page.mouse.move(5, 5);
+		await page.waitForTimeout(800);
+		await page.screenshot({ path: out('suite-onedrive-browser.png') });
+		await row('Projects').click();
+		await expect(row('Quarterly review.pptx')).toBeVisible();
+		await row('Quarterly review.pptx').click();
+		await expect(page.locator('#save-state')).toContainText('OneDrive', { timeout: 30000 });
 		const host = page.locator('.document-host:not([hidden])');
 		await host.getByRole('button', { name: 'New Slide', exact: true }).click();
 		await host.getByRole('button', { name: 'Save', exact: true }).first().click();
@@ -89,11 +109,18 @@ try {
 		await page.waitForTimeout(1500);
 		await page.screenshot({ path: out('suite-powerpoint-saved.png') });
 
-		await page.locator('#rail [data-home]').click();
-		await page.locator('#open-onedrive').click();
-		await page.locator('#onedrive-link').fill(link('docx'));
-		await page.locator('#onedrive-open-submit').click();
-		await expect(page.locator('#dialog')).toBeHidden();
+		await page
+			.locator('#open-onedrive')
+			.click()
+			.catch(async () => {
+				await page.locator('#rail [data-home]').click();
+				await page.locator('#open-onedrive').click();
+			});
+		await files.locator('[data-view="files"]').click();
+		// The browser keeps the folder it was in (Projects); go back to the root.
+		await files.locator('[data-crumb="0"]').click();
+		await row('Project plan.docx').click();
+		await expect(page.locator('#save-state')).toContainText('OneDrive', { timeout: 30000 });
 		await page
 			.locator('.document-host:not([hidden]) docx-editor [contenteditable=true]')
 			.first()
@@ -111,7 +138,11 @@ try {
 		const plain = await newPage({ configured: false });
 		await plain.page.goto(`${SUITE}/#/`);
 		await plain.page.locator('#open-onedrive').click();
-		await plain.page.locator('#dialog').screenshot({ path: out('suite-not-configured.png') });
+		const notice = plain.page.locator('#dialog');
+		await plain.page.waitForTimeout(800);
+		await ((await notice.isVisible()) ? notice : plain.page.locator('#cloud-view')).screenshot({
+			path: out('suite-not-configured.png'),
+		});
 		await plain.context.close();
 		console.log('suite screenshots written');
 	}
@@ -154,6 +185,13 @@ try {
 		const signIn = page.getByRole('dialog', { name: 'Connect OneDrive (demo)' });
 		await signIn.getByLabel('Access token').fill('test-only-token');
 		await signIn.getByRole('button', { name: 'Continue', exact: true }).click();
+		// The Graph double keeps PowerPoint files in the Projects folder.
+		await backstage.getByRole('button', { name: 'My files', exact: true }).click();
+		await backstage.getByRole('option', { name: /Projects/u }).click();
+		await expect(backstage.getByRole('option', { name: /Quarterly review/iu })).toBeVisible();
+		await page.mouse.move(5, 5);
+		await page.waitForTimeout(800);
+		await page.screenshot({ path: out('demo-file-open-onedrive.png') });
 		await backstage.getByRole('option', { name: /Quarterly review/iu }).click();
 		await expect(
 			page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first(),

@@ -14,8 +14,8 @@
 
 	<rect x="40" y="70" width="250" height="92" rx="8" fill="#ffffff" stroke="#0f6cbd" stroke-width="2"/>
 	<text x="56" y="96" font-weight="600" fill="#0f6cbd">2. Pick a file (you add this)</text>
-	<text x="56" y="120" fill="#201f1e">A link box, your own picker,</text>
-	<text x="56" y="140" fill="#201f1e">or the Office app's dialog</text>
+	<text x="56" y="120" fill="#201f1e">File &gt; Open &gt; OneDrive, the</text>
+	<text x="56" y="140" fill="#201f1e">Office app, or a sharing link</text>
 
 	<rect x="330" y="70" width="270" height="92" rx="8" fill="#ffffff" stroke="#0f6cbd" stroke-width="2"/>
 	<text x="346" y="96" font-weight="600" fill="#0f6cbd">1. Sign-in (you add this)</text>
@@ -33,7 +33,7 @@
 	<text x="56" y="414" fill="#201f1e">storage = session.storage  (File &gt; Save uploads)</text>
 
 	<path d="M165 162V198" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
-	<text x="174" y="186" font-size="12" fill="#3b3a39">sharing link</text>
+	<text x="174" y="186" font-size="12" fill="#3b3a39">chosen file</text>
 	<path d="M465 162V198" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
 	<text x="474" y="186" font-size="12" fill="#3b3a39">getAccessToken()</text>
 	<path d="M240 300V338" stroke="#3b3a39" stroke-width="2" fill="none" marker-end="url(#a)"/>
