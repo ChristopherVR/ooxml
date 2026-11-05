@@ -92,6 +92,10 @@
 	gap: 12px;
 	font-size: 12.5px;
 }
+.account-services {
+	padding: 12px 14px;
+	border-bottom: 1px solid var(--line);
+}
 .profile-switcher {
 	padding: 12px 6px 6px;
 }

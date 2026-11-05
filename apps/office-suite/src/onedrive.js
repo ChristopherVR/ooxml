@@ -181,7 +181,33 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 	$('open-onedrive').textContent = message(browser ? 'Browse OneDrive' : 'Open from OneDrive');
 	$('open-onedrive').onclick = () => void task(cloud.showFiles);
 	openLaunchLink(options, cloud, message);
+	mountConnectedServices(options.fileProvider);
 	return cloud;
+}
+
+/**
+ * Account > Connected services: the shared `<office-ui-connected-services>` list in the account
+ * menu, so the user links (signs in to) or unlinks the host's storage there as well as from the
+ * OneDrive view. It uses the provider's own signIn and signOut. The menu is re-rendered with the
+ * profile, so the element is put back each time the menu opens.
+ */
+function mountConnectedServices(provider) {
+	const menu = $('account-menu');
+	if (!provider || !menu) return;
+	let element;
+	menu.addEventListener('beforetoggle', (event) => {
+		if (event.newState !== 'open') return;
+		void import('ooxml-ui/controls').then(({ defineConnectedServices }) => {
+			defineConnectedServices();
+			if (!element) {
+				element = document.createElement('office-ui-connected-services');
+				element.className = 'account-services';
+				element.setAttribute('heading-level', '3');
+				element.providers = [provider];
+			}
+			if (!menu.contains(element)) menu.querySelector('.account-actions')?.after(element);
+		});
+	});
 }
 
 /**

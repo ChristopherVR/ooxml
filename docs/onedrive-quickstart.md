@@ -134,6 +134,11 @@ globalThis.ooxmlOneDriveOptions = { getAccessToken, canWrite };
 
 ![The Office app home page with the Browse OneDrive button](images/onedrive/suite-home.png)
 
+Users link or unlink OneDrive from **Account > Connected services** (the account menu in the Office
+app, the Account page in File of every product): it shows the signed-in account and calls your
+`signIn` and `signOut`, so it is the same sign-in as File > Open. A host without `signOut` shows the
+session as managed by the organization.
+
 It shows the same file browser:
 
 ![The OneDrive view of the Office app listing folders and files](images/onedrive/suite-onedrive-browser.png)
