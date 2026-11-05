@@ -9,6 +9,7 @@
  * @module sdk/chart-operations
  */
 
+import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
 import type {
 	PptxChartAxisFormatting,
 	PptxChartDataLabel,
@@ -233,6 +234,9 @@ export function setChartLegend(
  * @param edit - `show` toggles all data labels; the `show*` flags pick which
  *   content appears; `position` sets placement. Setting any content flag or a
  *   position turns labels on when not already set.
+ * @throws {RangeError} A `position` the chart type does not offer (a line
+ *   chart's `outEnd`, any position on an area chart): PowerPoint repairs a
+ *   file whose labels sit where its Format pane offers no such place.
  *
  * @example
  * ```ts
@@ -253,6 +257,7 @@ export function setChartDataLabels(
 	},
 ): void {
 	ensureChartData(element);
+	assertChartModelLabelPosition(element.chartData, edit.position);
 	const style = (element.chartData.style ??= {});
 	if (edit.show !== undefined) {
 		style.hasDataLabels = edit.show;
@@ -1011,7 +1016,8 @@ function applyLabelEdit(label: PptxChartDataLabel, edit: ChartDataPointLabelEdit
  * @param seriesIndex - Zero-based index of the series.
  * @param pointIndex - Zero-based index of the data point (category).
  * @param edit - The label fields to set, or `null` to remove the override.
- * @throws {RangeError} If `seriesIndex` is out of bounds.
+ * @throws {RangeError} If `seriesIndex` is out of bounds, or `position` is one
+ *   the series' chart type does not offer.
  *
  * @example
  * ```ts
@@ -1027,6 +1033,7 @@ export function setChartDataPointLabel(
 	edit: ChartDataPointLabelEdit | null,
 ): void {
 	validateSeriesIndex(element, seriesIndex);
+	assertChartModelLabelPosition(element.chartData!, edit?.position, seriesIndex);
 	const series = element.chartData!.series[seriesIndex];
 	if (edit === null) {
 		if (!series.dataLabels) {

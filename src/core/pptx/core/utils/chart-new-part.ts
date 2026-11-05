@@ -15,7 +15,9 @@
  *   hold;
  * - non-empty `titleRuns` are the title; `title` is then ignored;
  * - `clustered` grouping of a line or area chart is written as `standard`, the
- *   only lower grouping their schema type has.
+ *   only lower grouping their schema type has;
+ * - a data label position the chart type does not offer is left out and
+ *   reported (`chart-label-positions.ts`).
  *
  * Anything the shared core cannot write leaves `xml` undefined with the fields
  * that need the legacy generator, which then writes the part as before.
@@ -49,6 +51,11 @@ export interface NewChartPart {
 	 * generator, which may drop them (without `xml`).
 	 */
 	unwritten: string[];
+	/**
+	 * Without `xml`: the model the legacy generator writes, the chart with the label positions its
+	 * type does not offer left out.
+	 */
+	legacyModel?: PptxChartData;
 }
 
 /** Model fields a new part leaves out: drawings and workbooks it would need parts for. */
@@ -110,14 +117,18 @@ function startingPart(chart: PptxChartData, axes: ReturnType<typeof newChartAxes
 }
 
 function writeThroughCore(chart: PptxChartData): NewChartPart {
-	if (!targetOf(chart)) return { unwritten: [`chartType.${chart.chartType}`] };
-	if (chart.pivotSource) return { unwritten: ['pivotSource'] };
-	const after = normalizedNewChart(chart);
+	const legacy = (reason: string[]): NewChartPart => {
+		const { after, unwritten } = normalizedNewChart(chart, { labelPositionsOnly: true });
+		return { unwritten: [...unwritten, ...reason], legacyModel: after };
+	};
+	if (!targetOf(chart)) return legacy([`chartType.${chart.chartType}`]);
+	if (chart.pivotSource) return legacy(['pivotSource']);
+	const { after, unwritten } = normalizedNewChart(chart);
 	const axes = newChartAxes(after);
 	if (after.axes !== undefined || axes.after.length > 0) after.axes = axes.after;
 	if (axes.elementFormats) after.elementFormats = axes.elementFormats;
 	const { plan, unclaimed } = planWithLeftovers(newChartBaseline(after, axes), after);
-	if (!plan) return { unwritten: unclaimed };
+	if (!plan) return legacy(unclaimed);
 	let space = startingPart(after, axes);
 	for (const edit of plan.edits) space = edit(space);
 	const xml = writeChartSpace(space);
@@ -126,7 +137,11 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 		return { unwritten: lost.map((issue) => `part.${issue.element ?? issue.code}`) };
 	return {
 		xml,
-		unwritten: [...axes.unwritten, ...OUTSIDE_PART.filter((key) => chart[key] !== undefined)],
+		unwritten: [
+			...unwritten,
+			...axes.unwritten,
+			...OUTSIDE_PART.filter((key) => chart[key] !== undefined),
+		],
 	};
 }
 
@@ -137,6 +152,13 @@ export function writeNewChartPart(chart: PptxChartData): NewChartPart {
 	} catch (error) {
 		// A value a shared operation refuses (a combination its families cannot hold, a setting
 		// outside its schema range) keeps the legacy generator, which writes the part as before.
-		return { unwritten: [`refused: ${error instanceof Error ? error.message : String(error)}`] };
+		const { after, unwritten } = normalizedNewChart(chart, { labelPositionsOnly: true });
+		return {
+			unwritten: [
+				...unwritten,
+				`refused: ${error instanceof Error ? error.message : String(error)}`,
+			],
+			legacyModel: after,
+		};
 	}
 }

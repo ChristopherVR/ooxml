@@ -9,6 +9,7 @@
  * @module utils/chart-new-part-model
  */
 import type { PptxChartData, PptxChartSeries, PptxChartStyle } from '../types';
+import { chartModelLabelPositions } from './chart-label-positions';
 import type { NewChartAxes } from './chart-new-part-axes';
 import { same } from './chart-neutral-save-common';
 
@@ -91,9 +92,41 @@ function pick<T extends object>(source: T, keys: readonly (keyof T)[]): Partial<
 
 const HEX = /^#?[\da-f]{6}$/iu;
 
-/** `chart` as the new part must show it. */
-export function normalizedNewChart(chart: PptxChartData): PptxChartData {
+/**
+ * Label positions the chart type does not offer are left out (and reported): PowerPoint repairs a
+ * part with one, as it did for the legacy generator's chart-wide labels.
+ */
+function dropRefusedLabelPositions(after: PptxChartData, unwritten: string[]): void {
+	const refuse = (allowed: readonly string[] | undefined, position: string | undefined) =>
+		position !== undefined && allowed !== undefined && !allowed.includes(position);
+	const chartWide = after.style?.dataLabels;
+	if (refuse(chartModelLabelPositions(after), chartWide?.position)) {
+		delete chartWide!.position;
+		unwritten.push('style.dataLabels.position');
+	}
+	after.series.forEach((series, index) => {
+		const allowed = chartModelLabelPositions(after, index);
+		if (refuse(allowed, series.dataLabelOptions?.position)) {
+			delete series.dataLabelOptions!.position;
+			unwritten.push(`series.${index}.dataLabelOptions.position`);
+		}
+		series.dataLabels?.forEach((label, point) => {
+			if (!refuse(allowed, label.position)) return;
+			delete label.position;
+			unwritten.push(`series.${index}.dataLabels.${point}.position`);
+		});
+	});
+}
+
+/** `chart` as the new part must show it, with the fields left out of it as paths. */
+export function normalizedNewChart(
+	chart: PptxChartData,
+	options: { labelPositionsOnly?: boolean } = {},
+): { after: PptxChartData; unwritten: string[] } {
 	const after = structuredClone(chart);
+	const unwritten: string[] = [];
+	dropRefusedLabelPositions(after, unwritten);
+	if (options.labelPositionsOnly) return { after, unwritten };
 	// The generator wrote hex colours upper-case (`a:srgbClr/@val`).
 	for (const series of after.series)
 		if (series.color && HEX.test(series.color)) series.color = series.color.toUpperCase();
@@ -118,7 +151,7 @@ export function normalizedNewChart(chart: PptxChartData): PptxChartData {
 		// An empty title is no title, as the generator always treated it.
 		delete after.title;
 	}
-	return after;
+	return { after, unwritten };
 }
 
 /** What the starting part of `after` holds, in the model's terms. */

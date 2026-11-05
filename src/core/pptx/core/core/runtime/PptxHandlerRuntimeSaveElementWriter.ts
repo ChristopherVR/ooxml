@@ -133,7 +133,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			? buildChartExSpaceXml(el.chartData!)
 			: part?.xml !== undefined
 				? orderedXmlObject(part.xml)
-				: buildChartSpaceXml(el.chartData!);
+				: buildChartSpaceXml(part?.legacyModel ?? el.chartData!);
 		if (part && part.unwritten.length > 0) {
 			this.compatibilityService.reportWarning({
 				code:
