@@ -12,11 +12,13 @@ import type { PresentationLoader } from './presentation-loader.svelte';
  * all fall back this way.
  *
  * `getOverride` is read lazily so a host that supplies the callback later (or
- * conditionally) still wins.
+ * conditionally) still wins. `onPicked` runs once a deck was picked, before it
+ * loads (the viewer drops a File > Open cloud file there).
  */
 export function createOpenFile(
 	loader: PresentationLoader,
 	getOverride: () => (() => void) | undefined,
+	onPicked?: () => void,
 ): () => void {
 	return () => {
 		const override = getOverride();
@@ -27,6 +29,7 @@ export function createOpenFile(
 		void (async () => {
 			const picked = await openPptxFile();
 			if (picked) {
+				onPicked?.();
 				await loader.load(picked.buffer);
 			}
 		})();

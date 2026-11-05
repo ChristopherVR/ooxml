@@ -241,7 +241,10 @@
 		onopenrecent={(key) => {
 			void (async () => {
 				const bytes = await readBackstageRecentFile(key, viewerStorage());
-				if (bytes) await loader.load(bytes);
+				if (bytes) {
+					vm.cloudDocument.clear();
+					await loader.load(bytes);
+				}
 			})();
 		}}
 		onthemechange={(next) => { loader.presentationTheme = next; loader.colorScheme = next.colorScheme; }}
@@ -363,7 +366,10 @@
 			onopenrecent={(key) => {
 				void (async () => {
 					const bytes = await readBackstageRecentFile(key, viewerStorage());
-					if (bytes) await loader.load(bytes);
+					if (bytes) {
+						vm.cloudDocument.clear();
+						await loader.load(bytes);
+					}
 				})();
 			}}
 			onthemechange={(next) => { loader.presentationTheme = next; loader.colorScheme = next.colorScheme; }}

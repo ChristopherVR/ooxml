@@ -2,6 +2,8 @@ import type {
 	AutosaveDisabledReason,
 	AutosaveRecord,
 	CanvasSize,
+	CloudDocumentController,
+	CloudFileProvider,
 	CollaborationConfig,
 	CollaborationShellState,
 	CollaborationState,
@@ -69,8 +71,24 @@ export interface CreateViewerStateOptions {
 	getAutosave: () => boolean | undefined;
 	autosaveIntervalMs?: number;
 	getFilePath: () => string | undefined;
-	/** Host `storage` prop: Save goes to `storage.save()`; recovery copies to its recovery methods. */
+	/**
+	 * The document's storage: Save goes to `storage.save()`; recovery copies to its recovery
+	 * methods. The host `storage` prop, or the open cloud file's own (see `cloudDocument`).
+	 */
 	getStorage?: () => DocumentStorage | undefined;
+	/**
+	 * The host `storage` prop itself, which File > Open > Recent and the recovery-cache
+	 * maintenance keep using while a cloud file is open. Defaults to {@link getStorage}.
+	 */
+	getHostStorage?: () => DocumentStorage | undefined;
+	/** Host `fileProviders` prop: the cloud places of File > Open. */
+	getFileProviders?: () => readonly CloudFileProvider[] | undefined;
+	/**
+	 * The File > Open cloud file now open (shared `render/cloud-open`). `getStorage`,
+	 * `getFilePath`, `getFileName` and `getEditable` already resolve through it; the factory opens
+	 * and clears it. Omitted, the factory makes its own.
+	 */
+	cloudDocument?: CloudDocumentController;
 	/** Host `authorName` prop: comment/reply author and the broadcast presenter name. */
 	getAuthorName?: () => string | undefined;
 	getInitialSlide: () => number;
@@ -248,6 +266,8 @@ export interface ViewerStateBag {
 	closeSignatureWarning(): void;
 	/** File > Open > "Browse this device" (host override, else the native picker). */
 	openFile(): void;
+	/** The File > Open cloud file now open; cleared when another document is loaded. */
+	cloudDocument: CloudDocumentController;
 	/** Run a Quick Access Toolbar command by catalog id (unknown ids no-op). */
 	runQuickAccessCommand(id: string): void;
 	/**
