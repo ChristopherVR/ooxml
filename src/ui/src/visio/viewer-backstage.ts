@@ -2,6 +2,7 @@ import type { ViewerState } from './controller';
 import type {
 	CloudFileProvider,
 	CloudOpenedFile,
+	DocumentSaveProgress,
 	DocumentStorage,
 	VisioFileCommand,
 } from 'ooxml-core/embedding';
@@ -9,6 +10,7 @@ import { CloudPlaces } from './viewer-cloud-places';
 import { ConnectedServices } from './viewer-connected-services';
 import { isVisioTemplateId, type VisioTemplateId, type VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
+import { saveProgressLabel, saveProgressStepChanged } from '../files/save-progress-label';
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { fillTemplateThumbnails } from './template-thumbnails';
 import { localizeWording } from './ribbon-localize';
@@ -61,6 +63,8 @@ export interface BackstageHost {
 	revision?(): unknown;
 	/** The drawing (as it was at `revision`) was saved to host storage under `fileName`. */
 	savedToStorage?(fileName: string, revision: unknown): void;
+	/** The progress of a host save as status text (undefined when it ends); `announce` for a live region. */
+	saveProgress?(label: string | undefined, announce: boolean): void;
 	/** A host save failed (reported as `document-error`). */
 	saveFailed?(error: Error): void;
 	/** A copy was downloaded: the AutoRecover copy has done its job. */
@@ -358,7 +362,15 @@ export class ViewerBackstage {
 			const revision = this.host.revision?.();
 			const { bytes } = this.host.exportVsdx();
 			this.hide();
-			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName());
+			let last: DocumentSaveProgress | undefined;
+			const name = await saveDrawingToStorage(storage, bytes, this.host.fileName(), (progress) => {
+				const announce = saveProgressStepChanged(last, progress);
+				last = progress;
+				this.host.saveProgress?.(
+					saveProgressLabel(progress, (text) => this.#t(text)),
+					announce,
+				);
+			});
 			this.host.savedToStorage?.(name, revision);
 			this.#say('Saved the drawing.');
 		} catch (cause) {
@@ -367,6 +379,7 @@ export class ViewerBackstage {
 			this.host.announce(error.message);
 		} finally {
 			this.#saving = false;
+			this.host.saveProgress?.(undefined, false);
 		}
 	}
 	#exportSvg(): void {

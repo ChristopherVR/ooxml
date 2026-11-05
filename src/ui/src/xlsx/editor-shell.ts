@@ -82,9 +82,9 @@ export function buildShell(core: EditorCore): Shell {
 	let saveState: SaveState = 'saved';
 	const isHidden = (id: string) => core.isHidden(id);
 	const chrome: FileChrome = {
-		setSaveState(state) {
+		setSaveState(state, detail) {
 			saveState = state;
-			titleBar.setSaveState(state);
+			titleBar.setSaveState(state, detail);
 		},
 		fileNameChanged: () => titleBar.setFileName(core.fileName),
 	};

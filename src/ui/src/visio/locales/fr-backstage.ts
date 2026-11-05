@@ -98,6 +98,12 @@ export const frBackstage: Readonly<Record<string, string>> = {
 		'Ouvrez un fichier .vsdx pour modifier la mise en page.',
 	'Downloaded a copy of the drawing.': 'Une copie du dessin a été téléchargée.',
 	'Saved the drawing.': 'Le dessin a été enregistré.',
+	'Saving…': 'Enregistrement…',
+	'Saving… {percent}%': 'Enregistrement… {percent} %',
+	'Checking for changes…': 'Recherche de modifications…',
+	'Getting the latest version… {percent}%': 'Récupération de la dernière version… {percent} %',
+	'Getting the latest version…': 'Récupération de la dernière version…',
+	'Combining edits…': 'Fusion des modifications…',
 	'SVG export requested. This is an approximate snapshot.':
 		'Export SVG demandé. Il s’agit d’un instantané approximatif.',
 	'Preparing the PDF...': 'Préparation du PDF...',

@@ -96,6 +96,12 @@ export const enBackstage: Readonly<Record<string, string>> = {
 	'Open a .vsdx file to change the page setup.': 'Open a .vsdx file to change the page setup.',
 	'Downloaded a copy of the drawing.': 'Downloaded a copy of the drawing.',
 	'Saved the drawing.': 'Saved the drawing.',
+	'Saving…': 'Saving…',
+	'Saving… {percent}%': 'Saving… {percent}%',
+	'Checking for changes…': 'Checking for changes…',
+	'Getting the latest version… {percent}%': 'Getting the latest version… {percent}%',
+	'Getting the latest version…': 'Getting the latest version…',
+	'Combining edits…': 'Combining edits…',
 	'SVG export requested. This is an approximate snapshot.':
 		'SVG export requested. This is an approximate snapshot.',
 	'Preparing the PDF...': 'Preparing the PDF...',

@@ -48,9 +48,31 @@ describe('<docx-editor> host-owned storage', () => {
 			fileName: 'Report.docx',
 			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 			reason: 'save',
+			onProgress: expect.any(Function),
 		});
 		expect(download).not.toHaveBeenCalled();
 		expect(editor.dirty).toBe(false);
+	});
+
+	it('shows the storage progress in the title bar and returns to Saved', async () => {
+		const editor = mount();
+		const status = () =>
+			(chrome(editor).titleBar.element as unknown as { state: { status: string } }).state.status;
+		const seen: string[] = [];
+		editor.storage = {
+			save: async (_bytes, meta) => {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				seen.push(status());
+				meta.onProgress?.({ phase: 'checking' });
+				seen.push(status());
+				meta.onProgress?.({ phase: 'merging' });
+				seen.push(status());
+				return undefined;
+			},
+		};
+		await chrome(editor).run('save');
+		expect(seen).toEqual(['Saving… 45%', 'Checking for changes…', 'Combining edits…']);
+		expect(status()).toBe('Saved');
 	});
 
 	it('reports Save As with the chosen name, and takes the name the host reports back', async () => {

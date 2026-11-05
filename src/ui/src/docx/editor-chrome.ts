@@ -19,7 +19,7 @@ import {
 	type FileCommand,
 } from './file-commands';
 import { documentStats, plainText } from 'ooxml-core/docx';
-import { localizeElement, translate, type EditorLocale } from './localization';
+import { localizeElement, translate, translateUiText, type EditorLocale } from './localization';
 import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
 import type { ResolvedWordCustomization, WordRegionContext } from './customization';
@@ -29,6 +29,7 @@ import {
 	type ShareDialogController,
 	type ShareDialogHost,
 } from '../dialog/share-controller';
+import { saveProgressLabel } from '../files/save-progress-label';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -289,11 +290,14 @@ export class EditorChrome {
 			const bytes = await this.host.save();
 			const storage = useStorage ? this.host.storage?.() : undefined;
 			if (storage)
-				this.fileName = await saveToStorage(
-					storage,
-					bytes,
-					documentSaveMeta(this._fileName, reason),
-				);
+				this.fileName = await saveToStorage(storage, bytes, {
+					...documentSaveMeta(this._fileName, reason),
+					onProgress: (progress) =>
+						this.titleBar.setSaveState(
+							'saving',
+							saveProgressLabel(progress, (text) => translateUiText(this.titleBar.element, text)),
+						),
+				});
 			else downloadBytes(bytes, this._fileName);
 			this.setSaveState(edited ? 'dirty' : storage ? 'saved' : 'saved-local');
 		} finally {

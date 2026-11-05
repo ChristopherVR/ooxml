@@ -121,9 +121,12 @@ export class VisioViewerElement extends BaseElement {
 			this.#fileName,
 			this.#profile.profile,
 			quickAccessShown(this.#behaviour, this.#custom.resolved),
+			this.#saveLabel,
 		);
 	}
 	readonly #custom = new ViewerCustomizationState();
+	/** The progress text of a save to host storage, shown in the title bar while it runs. */
+	#saveLabel: string | undefined;
 	/**
 	 * The inverse of `canEdit`: true makes the drawing read-only and wins over `canEdit`. A
 	 * collaboration `viewer` role also reads as read-only, and turning this off never lifts it.
@@ -385,6 +388,7 @@ export class VisioViewerElement extends BaseElement {
 				this.#fileName,
 				this.#profile.profile,
 				quickAccessShown(this.#behaviour, this.#custom.resolved),
+				this.#saveLabel,
 			);
 		this.#profile = new ViewerProfile(
 			this.#root,
@@ -470,6 +474,15 @@ export class VisioViewerElement extends BaseElement {
 				if (state.document === revision && !state.edit.busy && !state.loading) {
 					this.controller.markClean();
 					this.#recover.saved();
+				}
+				this.#render(this.controller.state);
+			},
+			saveProgress: (label, announce) => {
+				if (this.#disposed) return;
+				this.#saveLabel = label;
+				if (label !== undefined && announce) {
+					this.#announcement = label;
+					this.#status.textContent = label;
 				}
 				this.#render(this.controller.state);
 			},
@@ -848,6 +861,7 @@ export class VisioViewerElement extends BaseElement {
 				this.#fileName,
 				this.#profile.profile,
 				quickAccessShown(behaviour, this.#custom.resolved),
+				this.#saveLabel,
 			);
 	}
 	/**
@@ -1050,6 +1064,7 @@ export class VisioViewerElement extends BaseElement {
 			this.#fileName,
 			this.#profile.profile,
 			quickAccessShown(this.#behaviour, this.#custom.resolved),
+			this.#saveLabel,
 		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;

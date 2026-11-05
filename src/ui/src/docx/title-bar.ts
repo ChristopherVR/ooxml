@@ -15,7 +15,8 @@ export interface TitleBarHandlers {
 export interface TitleBar {
 	element: HTMLElement;
 	setFileName(name: string): void;
-	setSaveState(state: SaveState): void;
+	/** `detail` replaces the state's text while saving (the progress of an upload). */
+	setSaveState(state: SaveState, detail?: string): void;
 	setReadOnly(readOnly: boolean): void;
 	/** Quick Access commands (`save`) a host capability removed. */
 	setHiddenCommands(ids: Iterable<string>): void;
@@ -77,6 +78,7 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 	const model = {
 		fileName: '',
 		saveState: 'saved' as SaveState,
+		saveDetail: undefined as string | undefined,
 		readOnly: false,
 		hidden: new Set<string>() as ReadonlySet<string>,
 	};
@@ -96,7 +98,7 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 		element.state = {
 			appMark: 'W',
 			fileName: model.fileName,
-			status: t(SAVE_STATE_TEXT[model.saveState]),
+			status: model.saveDetail ?? t(SAVE_STATE_TEXT[model.saveState]),
 			tone: model.saveState === 'saving' ? 'saving' : 'idle',
 			quickAccess: {
 				label: t('Quick access'),
@@ -149,8 +151,9 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 			model.fileName = value;
 			render();
 		},
-		setSaveState(value) {
+		setSaveState(value, detail) {
 			model.saveState = value;
+			model.saveDetail = value === 'saving' ? detail : undefined;
 			render();
 		},
 		setReadOnly(readOnly) {

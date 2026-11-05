@@ -3,6 +3,7 @@ import {
 	documentSaveMeta,
 	fileCommandDetail,
 	saveToStorage,
+	type DocumentSaveMeta,
 	type DocumentStorage,
 	type VisioFileCommand,
 } from 'ooxml-core/embedding';
@@ -41,8 +42,10 @@ export function saveDrawingToStorage(
 	storage: DocumentStorage,
 	bytes: Uint8Array,
 	fileName: string,
+	onProgress?: DocumentSaveMeta['onProgress'],
 ): Promise<string> {
-	return saveToStorage(storage, bytes, documentSaveMeta(storageFileName(fileName)));
+	const meta = documentSaveMeta(storageFileName(fileName));
+	return saveToStorage(storage, bytes, onProgress ? { ...meta, onProgress } : meta);
 }
 
 /** File > Open through the host's storage: the chosen drawing as a named File, or undefined. */

@@ -24,7 +24,8 @@ export interface TitleBarHandlers extends TellMeHandlers {
 export interface TitleBar {
 	readonly element: HTMLElement;
 	setFileName(name: string): void;
-	setSaveState(state: SaveState): void;
+	/** `detail` replaces the state's text while saving (the progress of an upload). */
+	setSaveState(state: SaveState, detail?: string): void;
 	/** Re-reads undo/redo and the people in a shared session. */
 	refresh(): void;
 	relocalize(): void;
@@ -62,6 +63,7 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 
 	let fileName = '';
 	let saveState: SaveState = 'saved';
+	let saveDetail: string | undefined;
 
 	const render = () => {
 		const undoLabel = historyOf(ctx)?.undoLabel();
@@ -85,7 +87,7 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 		element.state = {
 			appMark: 'X',
 			fileName,
-			status: ctx.t(SAVE_STATE_TEXT[saveState]),
+			status: saveDetail ?? ctx.t(SAVE_STATE_TEXT[saveState]),
 			tone: saveState === 'saving' ? 'saving' : 'idle',
 			quickAccess: { label: ctx.t('Quick access'), items: entries },
 			search: {
@@ -137,8 +139,9 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 			fileName = value;
 			render();
 		},
-		setSaveState(value) {
+		setSaveState(value, detail) {
 			saveState = value;
+			saveDetail = value === 'saving' ? detail : undefined;
 			render();
 		},
 		refresh,

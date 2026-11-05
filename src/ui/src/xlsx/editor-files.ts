@@ -26,10 +26,11 @@ import { confirmDialog } from '../dialog/message-dialogs';
 import { printWorkbook } from './print';
 import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';
+import { saveProgressLabel } from '../files/save-progress-label';
 
 /** Chrome callbacks the file actions report to (title bar save state, backstage). */
 export interface FileChrome {
-	setSaveState(state: SaveState): void;
+	setSaveState(state: SaveState, detail?: string): void;
 	fileNameChanged(): void;
 }
 
@@ -221,7 +222,15 @@ async function saveDownload(
 	try {
 		const bytes = await saveBytes(core, 'xlsx');
 		core.host.addEventListener('workbook-change', changed);
-		if (storage) name = await saveToStorage(storage, bytes, documentSaveMeta(name, reason));
+		if (storage)
+			name = await saveToStorage(storage, bytes, {
+				...documentSaveMeta(name, reason),
+				onProgress: (progress) =>
+					chrome?.setSaveState(
+						'saving',
+						saveProgressLabel(progress, (text) => core.ctx.t(text)),
+					),
+			});
 		else downloadBytes(core.host.ownerDocument, bytes, name);
 	} catch (error) {
 		chrome?.setSaveState('dirty');

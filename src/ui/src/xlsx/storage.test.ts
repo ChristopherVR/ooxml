@@ -52,9 +52,31 @@ describe('<xlsx-editor> host-owned storage', () => {
 			fileName: 'Book1.xlsx',
 			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			reason: 'save',
+			onProgress: expect.any(Function),
 		});
 		expect(core.dirty.dirty).toBe(false);
 		expect(ui.setSaveState.mock.calls.map(([state]) => state)).toEqual(['saving', 'saved']);
+	});
+
+	it('reports the storage progress to the title bar and then the saved state', async () => {
+		const { core } = shellFixture();
+		core.storage = {
+			save: async (_bytes, meta) => {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				meta.onProgress?.({ phase: 'downloading', loaded: 3, total: 10 });
+				meta.onProgress?.({ phase: 'merging' });
+				return undefined;
+			},
+		};
+		const ui = chrome();
+		await runFileCommand(core, 'save', undefined, { chrome: ui });
+		expect(ui.setSaveState.mock.calls).toEqual([
+			['saving'],
+			['saving', 'Saving… 45%'],
+			['saving', 'Getting the latest version… 30%'],
+			['saving', 'Combining edits…'],
+			['saved'],
+		]);
 	});
 
 	it('reports Save As and takes the name the host reports back', async () => {

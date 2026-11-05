@@ -54,13 +54,15 @@ export function renderTitleBar(
 	profile: OfficeProfile,
 	/** Which Quick Access Toolbar commands to show; all of them when omitted. */
 	shown: Readonly<Partial<Record<`qat-${QuickAccessCommand}`, boolean>>> = {},
+	/** The progress of a save to host storage; replaces the status while it runs. */
+	saveLabel?: string,
 ): void {
 	const busy = state.loading || state.edit.busy;
 	(bar as TitleBarElement).state = {
 		appMark: 'V',
 		fileName: fileName || (state.document ? 'Drawing1' : 'Visio'),
-		status: status(state),
-		tone: state.loading ? 'saving' : 'idle',
+		status: saveLabel ?? status(state),
+		tone: state.loading || saveLabel ? 'saving' : 'idle',
 		quickAccess: {
 			label: 'Quick Access Toolbar',
 			items: [

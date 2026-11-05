@@ -61,8 +61,34 @@ describe('<visio-viewer> file-command and host-owned storage', () => {
 			fileName: 'New drawing.vsdx',
 			mimeType: 'application/vnd.ms-visio.drawing',
 			reason: 'save',
+			onProgress: expect.any(Function),
 		});
 		viewer.destroy();
+	});
+
+	it('shows the storage progress in the title bar and then clears it', async () => {
+		const statusOf = (root: ShadowRoot) =>
+			(root.querySelector('office-ui-title-bar') as unknown as { state: { status: string } }).state
+				.status;
+		let root!: ShadowRoot;
+		const seen: string[] = [];
+		const storage: DocumentStorage = {
+			save: async (_bytes, meta) => {
+				meta.onProgress?.({ phase: 'uploading', loaded: 45, total: 100 });
+				seen.push(statusOf(root));
+				meta.onProgress?.({ phase: 'checking' });
+				seen.push(statusOf(root));
+				return undefined;
+			},
+		};
+		const ctx = await setup({ storage });
+		root = ctx.root;
+		ctx.viewer.element.openBackstage('save-as');
+		clickSave(root);
+		await vi.waitFor(() => expect(seen).toHaveLength(2));
+		expect(seen).toEqual(['Saving… 45%', 'Checking for changes…']);
+		await vi.waitFor(() => expect(statusOf(root)).not.toMatch(/…/));
+		ctx.viewer.destroy();
 	});
 
 	it('takes the name the host reports back', async () => {
