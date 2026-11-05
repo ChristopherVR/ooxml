@@ -29,7 +29,8 @@
  * text in the same fonts in an equally wide column, which breaks identically):
  * then each half maps onto the other by one scale about the text's alignment
  * anchor, and the result is exact for one paragraph and close for several.
- * Wrapped text whose breaks may differ is left to the box interpolation.
+ * Wrapped text whose breaks may differ is split into its pieces instead (see
+ * `morph-text-pieces`), or left to the box interpolation when it cannot be.
  *
  * @module render/morph-text-frame
  */

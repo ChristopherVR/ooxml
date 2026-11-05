@@ -69,6 +69,8 @@ type Entry =
  * @param outgoing - The outgoing slide's elements, flattened, in document order.
  * @param incoming - The incoming slide's elements, flattened, in document order.
  * @param pairs - The matched pairs.
+ * @param aliases - Painted copies (id -> the element they copy) that rank as
+ *   the element they copy (see `morph-text-piece-plan`).
  * @returns The runs and the stack, back to front.
  */
 export function resolveMorphOverlayStack(
@@ -78,9 +80,10 @@ export function resolveMorphOverlayStack(
 	outgoing: readonly PptxElement[],
 	incoming: readonly PptxElement[],
 	pairs: readonly MorphPair[],
+	aliases?: ReadonlyMap<string, string>,
 ): MorphOverlayStack {
 	const rank = buildMorphIncomingAnchoredOrder(outgoing, incoming, pairs);
-	const rankOf = (id: string): number => rank.get(id) ?? 0;
+	const rankOf = (id: string): number => rank.get(aliases?.get(id) ?? id) ?? 0;
 	const entries: Entry[] = [
 		...ghosts.map((element, index) => ({
 			kind: 'outgoing' as const,

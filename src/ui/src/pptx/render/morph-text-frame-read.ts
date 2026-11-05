@@ -15,6 +15,7 @@ import {
 } from '../constants';
 import type { RenderParagraph } from './paragraph-types';
 import { buildParagraphs } from './text-paragraphs';
+import { resolveLineHeight } from './text-line-height';
 import { resolveCssTextAlign } from './text-paragraph-style';
 import { resolveAutoFitFontScale } from './text-style-helpers';
 
@@ -50,7 +51,27 @@ export interface TextFrame {
 	/** Column width the paragraphs lay out in. */
 	available: number;
 	wraps: boolean;
-	paragraphs: { text: string; fonts: string[]; size: number; runs: RenderParagraph['runs'] }[];
+	/** Left and top body insets, in px from the element's own box. */
+	insetLeft: number;
+	insetTop: number;
+	paragraphs: FrameParagraph[];
+}
+
+/** One paragraph of a {@link TextFrame}. */
+export interface FrameParagraph {
+	text: string;
+	fonts: string[];
+	/** Largest run font size (px), the paragraph's line extent for alignment. */
+	size: number;
+	runs: RenderParagraph['runs'];
+	/** Font size (px) of the paragraph's own strut: its line boxes are at least this tall. */
+	strut: number;
+	/** The CSS `line-height` the paragraph lays out with. */
+	lineHeight: number | string;
+	/** `margin-bottom` (px) after the paragraph. */
+	spaceAfterPx: number;
+	/** Whether a margin, indent or space before moves its lines off the plain column. */
+	indented: boolean;
 }
 
 function paintsBody(element: PptxElement): boolean {
@@ -126,6 +147,7 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 	const top = ts?.bodyInsetTop ?? DEFAULT_BODY_INSET_TB_PX;
 	const bottom = ts?.bodyInsetBottom ?? DEFAULT_BODY_INSET_TB_PX;
 	const bodyAlign = resolveCssTextAlign(ts?.align, false);
+	const bodyLineHeight = resolveLineHeight(ts, false);
 	let align: string | undefined;
 	const paragraphs: TextFrame['paragraphs'] = [];
 	for (const paragraph of buildParagraphs(element)) {
@@ -141,7 +163,18 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 		const fonts = paragraph.runs.map((run) => runFont(run.style, block));
 		const sizes = paragraph.runs.map((run) => pxOf(run.style.fontSize) ?? block.size);
 		const size = Math.max(paragraph.strutFontSizePx ?? 0, ...sizes, 0) || block.size;
-		paragraphs.push({ text, fonts, size, runs: paragraph.runs });
+		paragraphs.push({
+			text,
+			fonts,
+			size,
+			runs: paragraph.runs,
+			strut: Math.max(paragraph.strutFontSizePx ?? block.size, ...sizes, 0),
+			lineHeight: paragraph.lineHeight ?? bodyLineHeight,
+			spaceAfterPx: paragraph.spaceAfterPx ?? 0,
+			indented: Boolean(
+				paragraph.marginLeftPx || paragraph.textIndentPx || paragraph.spaceBeforePx,
+			),
+		});
 		if (text.trim() === '') {
 			continue;
 		}
@@ -177,12 +210,14 @@ export function readFrame(element: PptxElement): TextFrame | undefined {
 		vAlign,
 		available,
 		wraps: ts?.textWrap !== 'none',
+		insetLeft: left,
+		insetTop: top,
 		paragraphs,
 	};
 }
 
 export function paragraphWidth(
-	paragraph: TextFrame['paragraphs'][number],
+	paragraph: FrameParagraph,
 	measure: MorphTextMeasure,
 ): number | undefined {
 	let width = 0;

@@ -55,6 +55,7 @@ import type { MorphOverlayStackEntry } from './morph-overlay-stack';
 import { resolveMorphOverlayStack } from './morph-overlay-stack';
 import { resolveMorphOverlayArrivals } from './morph-overlay-order';
 import { resolveMorphTextBlendLifts } from './morph-text-blend';
+import { buildMorphTextPiecePlan } from './morph-text-piece-plan';
 import type { MorphTextMeasure } from './morph-text-frame';
 import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
 import type { MorphMode } from './morph-types';
@@ -198,6 +199,14 @@ export interface MorphTransitionPlan {
 	 * (issue #141, slides 6 to 7).
 	 */
 	overlayStack: MorphOverlayStackEntry[];
+	/**
+	 * Id -> source id for the copies the overlay paints of a text pair that is
+	 * carried piece by piece (see `morph-text-piece-plan`). Each copy is in
+	 * {@link MorphTransitionPlan.crossfadeGroups} as an element of its own; a
+	 * binding that builds its overlay from a clone of the rendered slide instead
+	 * clones the source's node under the copy's id.
+	 */
+	textPieceSources?: ReadonlyMap<string, string>;
 	/** Animation duration in ms, echoed for convenience. */
 	durationMs: number;
 }
@@ -350,8 +359,21 @@ export function buildMorphTransitionPlan(
 			.filter(({ fromElement, toElement }) => morphOffstageTextAdoptsTarget(fromElement, toElement))
 			.map(({ fromElement, toElement }) => [fromElement.id, toElement] as const),
 	);
+	// A text pair whose line breaks change is carried piece by piece; its own
+	// ghost and stage copy give way to the pieces' copies (see
+	// `morph-text-piece-plan`).
+	const pieces = buildMorphTextPiecePlan(
+		mode === 'object' ? match.pairs : [],
+		ghostIds,
+		durationMs,
+		options.measureText,
+	);
+	const piecePairs = new Set(pieces.pairs);
+	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
+	const pieceToIds = new Set(pieces.pairs.map((pair) => pair.toElement.id));
+	const wholePairs = match.pairs.filter((pair) => !piecePairs.has(pair));
 	const ghostElements = flattenedOutgoing
-		.filter((element) => ghostIds.has(element.id))
+		.filter((element) => ghostIds.has(element.id) && !pieceFromIds.has(element.id))
 		.map((element) => {
 			const target = offstageRestyles.get(element.id);
 			if (!target || element.type !== 'text' || target.type !== 'text') return element;
@@ -376,7 +398,7 @@ export function buildMorphTransitionPlan(
 	// the way inside the first quarter, long before an arrival begins to appear,
 	// so it hides nothing worth moving an animation for.
 	const holdingGhostIds = new Set(
-		match.pairs
+		wholePairs
 			.filter(
 				(candidate) =>
 					ghostIds.has(candidate.fromElement.id) &&
@@ -390,7 +412,7 @@ export function buildMorphTransitionPlan(
 	// IN may be lifted over its own ghost. One pinned at full strength has to
 	// stay underneath it, or the crossfade becomes a cut.
 	const dissolvingInIds = new Set(
-		match.pairs
+		wholePairs
 			.filter((candidate) =>
 				morphPairIncomingFadesIn(
 					candidate.fromElement,
@@ -421,6 +443,9 @@ export function buildMorphTransitionPlan(
 			lifted.add(id);
 		}
 	}
+	for (const id of pieceToIds) {
+		lifted.delete(id);
+	}
 	const overlayIncomingAnimations = new Map<string, string>();
 	for (const id of lifted) {
 		const animation = incomingAnimations.get(id);
@@ -430,22 +455,36 @@ export function buildMorphTransitionPlan(
 		overlayIncomingAnimations.set(id, animation);
 		incomingAnimations.set(id, `${LIFTED_HIDDEN_NAME} ${durationMs}ms linear forwards`);
 	}
-	if (overlayIncomingAnimations.size > 0) {
+	for (const id of pieceToIds) {
+		incomingAnimations.set(id, `${LIFTED_HIDDEN_NAME} ${durationMs}ms linear forwards`);
+	}
+	for (const id of pieceFromIds) {
+		outgoingAnimations.delete(id);
+	}
+	if (overlayIncomingAnimations.size > 0 || pieceToIds.size > 0) {
 		keyframes.push(LIFTED_HIDDEN_KEYFRAMES);
 	}
+	keyframes.push(...pieces.keyframes);
 	// A lifted half whose ghost is painted too is one end of a cross-dissolve
 	// with both ends in this overlay, so the two are handed over as a pair and
 	// taken out of the flat layers. Stacking them there composites them
 	// source-over, which dips their shared ink toward the backdrop instead of
 	// summing it the way PowerPoint's own blend does (issue #161).
 	const crossfadeGroups = resolveMorphCrossfadeGroups(
-		match.pairs,
+		wholePairs,
 		ghostIds,
 		new Set(overlayIncomingAnimations.keys()),
 		flattenedIncoming,
 	).map((group) =>
 		liftCrossfadeToWrapper(group, animations, outgoingAnimations, overlayIncomingAnimations),
 	);
+	crossfadeGroups.push(...pieces.groups);
+	for (const [id, animation] of pieces.outgoingAnimations) {
+		outgoingAnimations.set(id, animation);
+	}
+	for (const [id, animation] of pieces.incomingAnimations) {
+		overlayIncomingAnimations.set(id, animation);
+	}
 	const groupedOutgoingIds = new Set(crossfadeGroups.map((group) => group.outgoing.id));
 	const groupedIncomingIds = new Set(crossfadeGroups.map((group) => group.incoming.id));
 	const outgoingElements = ghostElements.filter((element) => !groupedOutgoingIds.has(element.id));
@@ -459,6 +498,7 @@ export function buildMorphTransitionPlan(
 		flattenedOutgoing,
 		flattenedIncoming,
 		match.pairs,
+		pieces.sources,
 	);
 
 	return {
@@ -478,6 +518,7 @@ export function buildMorphTransitionPlan(
 		overlayLayers,
 		overlayStack,
 		crossfadeGroups,
+		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
 		durationMs,
 	};
 }
