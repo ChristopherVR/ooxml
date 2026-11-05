@@ -195,14 +195,14 @@ exports[`stroke Style Snapshots > compound line box-shadow for thickThin 1`] = `
 
 exports[`stroke Style Snapshots > compound line box-shadow returns undefined for single 1`] = `undefined`;
 
-exports[`stroke Style Snapshots > sVG dasharray for dash 1`] = `"8 4"`;
+exports[`stroke Style Snapshots > sVG dasharray for dash 1`] = `"8 6"`;
 
-exports[`stroke Style Snapshots > sVG dasharray for dashDot 1`] = `"8 4 2 4"`;
+exports[`stroke Style Snapshots > sVG dasharray for dashDot 1`] = `"8 6 2 6"`;
 
-exports[`stroke Style Snapshots > sVG dasharray for dot 1`] = `"2 4"`;
+exports[`stroke Style Snapshots > sVG dasharray for dot 1`] = `"2 6"`;
 
-exports[`stroke Style Snapshots > sVG dasharray for lgDash 1`] = `"21 7.5"`;
+exports[`stroke Style Snapshots > sVG dasharray for lgDash 1`] = `"24 9"`;
 
 exports[`stroke Style Snapshots > sVG dasharray for solid 1`] = `undefined`;
 
-exports[`stroke Style Snapshots > sVG dasharray for sysDot 1`] = `"1 2"`;
+exports[`stroke Style Snapshots > sVG dasharray for sysDot 1`] = `"1 1"`;
