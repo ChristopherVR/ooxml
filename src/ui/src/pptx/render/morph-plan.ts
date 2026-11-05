@@ -39,219 +39,22 @@
  */
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
-import { splitCssList } from './css-top-level-split';
-import {
-	generateFullMorphTransition,
-	morphPairIncomingFadesIn,
-	morphPairNeedsCrossfade,
-	resolveMorphGhostIds,
-} from './morph-animation';
-import { resolveMorphCrossfadeGroups } from './morph-crossfade-group';
-import type { MorphCrossfadeGroup } from './morph-crossfade-group';
-import type { MorphViewSize } from './morph-flip-turn';
+import { generateFullMorphTransition, resolveMorphGhostIds } from './morph-animation';
 import { flattenMorphElements } from './morph-flatten';
 import { matchMorphElementsFull } from './morph-matching';
-import type { MorphOverlayLayer } from './morph-overlay-layers';
-import type { MorphOverlayStackEntry } from './morph-overlay-stack';
-import { resolveMorphOverlayStack } from './morph-overlay-stack';
-import { resolveMorphOverlayArrivals } from './morph-overlay-order';
-import { resolveMorphSoftEdgeLifts } from './morph-soft-edge-blend';
-import { resolveMorphTextBlendLifts } from './morph-text-blend';
-import type { MorphCopyPart } from './morph-text-body';
-import { addMorphBodyCopyCarry } from './morph-body-carry';
-import { buildMorphTextBodyPlan, mergeMorphTextBodyPlan } from './morph-text-body';
-import { buildMorphTextGlyphPlan } from './morph-text-glyph-plan';
-import { buildMorphTextPiecePlan } from './morph-text-piece-plan';
-import type { MorphTextMeasure } from './morph-text-frame';
-import { morphOffstageTextAdoptsTarget } from './morph-text-slot';
+import { partitionMorphAnimations } from './morph-plan-channels';
+import { planMorphTextCarry } from './morph-plan-carry';
+import { resolveMorphLiftedIds } from './morph-plan-lift';
+import { assembleMorphOverlay, settleMorphLifts } from './morph-plan-overlay';
+import type { MorphPlanOptions, MorphTransitionPlan } from './morph-plan-types';
 import type { MorphMode } from './morph-types';
 
-/**
- * Keyframes for an incoming shape whose dissolve has been lifted into the
- * overlay: the copy left on the live stage holds at nothing for the whole
- * morph, so the two copies never composite with each other.
- */
-const LIFTED_HIDDEN_NAME = 'pptx-morph-lifted-hidden';
-const LIFTED_HIDDEN_KEYFRAMES = `
-@keyframes ${LIFTED_HIDDEN_NAME} {
-\tfrom {
-\t\topacity: 0;
-\t}
-\tto {
-\t\topacity: 0;
-\t}
-}`;
-
-/** Everything needed to play one morph transition. */
-export interface MorphTransitionPlan {
-	/** All `@keyframes` blocks, to inject as a single stylesheet. */
-	keyframesCss: string;
-	/** Incoming-slide element id -> CSS `animation` shorthand. */
-	incomingAnimations: Map<string, string>;
-	/** Outgoing-slide element id -> CSS `animation` shorthand. */
-	outgoingAnimations: Map<string, string>;
-	/**
-	 * Incoming-slide element id -> CSS `animation` shorthand for the `<img>`
-	 * INSIDE that element, never for the element's own container.
-	 *
-	 * A picture's source crop (`a:srcRect`, which is what PowerPoint's "Scale
-	 * Height"/"Scale Width" writes) is painted by transforming the img within
-	 * its frame, and the frame itself is usually identical on both slides - so
-	 * this is a separate channel rather than another entry in
-	 * {@link MorphTransitionPlan.incomingAnimations}, which would collide on the
-	 * same element id. {@link buildMorphScopedCss} emits it as a descendant
-	 * rule; a binding that applies animations as inline props instead must
-	 * target the img itself (issue #148).
-	 */
-	incomingImageAnimations: Map<string, string>;
-	/** Outgoing (ghost) counterpart of {@link MorphTransitionPlan.incomingImageAnimations}. */
-	outgoingImageAnimations: Map<string, string>;
-	/**
-	 * Element id -> CSS `animation` shorthand for the PATH of the element's
-	 * outline overlay (the `<svg data-pptx-outline>` every binding paints a
-	 * centred or gradient outline with), present only when a shape's outline is
-	 * re-pathed per frame (see `morph-shape-carry`). Like the image channel it is
-	 * a descendant rule, emitted by {@link buildMorphScopedCss}; the ids may be
-	 * incoming, outgoing or copy ids, so each half's rules carry all of them.
-	 */
-	outlineAnimations?: Map<string, string>;
-	/**
-	 * Element id -> the `animation` shorthand of each strand path of a compound
-	 * outline, in paint order (each strand is re-pathed on its own); emitted
-	 * next to {@link MorphTransitionPlan.outlineAnimations}.
-	 */
-	outlineStrandAnimations?: Map<string, string[]>;
-	/**
-	 * Element id -> CSS `animation` shorthand for the paths of a freeform's
-	 * custom-geometry `<svg data-pptx-custom-geometry>`, which a binding that
-	 * paints custom geometry as a vector (rather than a clipped box) stamps;
-	 * emitted next to {@link MorphTransitionPlan.outlineAnimations}.
-	 */
-	customGeometryAnimations?: Map<string, string>;
-	/**
-	 * Element id -> CSS `animation` shorthand for the painted strand
-	 * (`[data-pptx-line]`) of a straight connector, which keeps its width while
-	 * the wrapper's journey scales (see `morph-line-carry`); emitted next to
-	 * {@link MorphTransitionPlan.outlineAnimations}.
-	 */
-	lineAnimations?: Map<string, string>;
-	/**
-	 * Incoming-slide element id -> CSS `animation` shorthand for the copy the
-	 * overlay paints, above every ghost.
-	 *
-	 * These are the arriving shapes a ghost would otherwise hide for the whole
-	 * transition (see {@link MorphTransitionPlan.overlayIncomingElements}). Their
-	 * entry in {@link MorphTransitionPlan.incomingAnimations} has been replaced
-	 * by one that holds them invisible, so the stage copy stays out of the way
-	 * and only this one is seen.
-	 */
-	overlayIncomingAnimations: Map<string, string>;
-	/**
-	 * The incoming-slide elements to paint in the overlay ON TOP of
-	 * {@link MorphTransitionPlan.outgoingElements}, in document order.
-	 *
-	 * The overlay is one flat layer above the live stage, which is only faithful
-	 * while every ghost really does belong on top of everything the stage draws.
-	 * A shape arriving INSIDE a persisting one does not: the wheel deck's centre
-	 * disc is unchanged between slides, so its ghost is opaque for the whole
-	 * morph, and the title and body dissolving in within it were invisible until
-	 * the overlay came down (issue #146). Painting those here restores the order
-	 * PowerPoint composites in.
-	 *
-	 * Usually empty. A binding renders these with the INCOMING slide as their
-	 * context, applying {@link MorphTransitionPlan.overlayIncomingAnimations}.
-	 *
-	 * A lifted half that is one end of a cross-dissolve is NOT here: it moves
-	 * into {@link MorphTransitionPlan.crossfadeGroups} so it can be composited
-	 * with its own ghost.
-	 */
-	overlayIncomingElements: PptxElement[];
-	/**
-	 * Pairs the overlay paints BOTH halves of, to be rendered as one isolated
-	 * group blending additively (see `morph-crossfade-group`).
-	 *
-	 * Their elements are deliberately absent from
-	 * {@link MorphTransitionPlan.outgoingElements} and
-	 * {@link MorphTransitionPlan.overlayIncomingElements}: a binding that renders
-	 * the groups paints each half exactly once, and one that ignored them would
-	 * drop the pair rather than paint it twice.
-	 *
-	 * A pair that dissolves where it stands also has its dissolve moved OFF the
-	 * two elements and onto {@link MorphCrossfadeGroup.outgoingAnimation} /
-	 * {@link MorphCrossfadeGroup.incomingAnimation}, for the binding to put on
-	 * the wrapper it paints each half in; the elements are then absent from
-	 * `outgoingAnimations` / `overlayIncomingAnimations` too, so no scoped rule
-	 * animates them. One that MOVES keeps its animations where they were.
-	 *
-	 * Painted above {@link MorphTransitionPlan.overlayIncomingElements}, in the
-	 * incoming slide's document order.
-	 */
-	crossfadeGroups: MorphCrossfadeGroup[];
-	/**
-	 * The outgoing slide's elements, in document order, for the binding to
-	 * render in its transition overlay for the duration of the morph. Most carry
-	 * an entry in {@link MorphTransitionPlan.outgoingAnimations}: they either
-	 * fade out in place (no counterpart) or glide onto a counterpart, dissolving
-	 * into it when the appearance changed.
-	 *
-	 * A ghost standing in for an INERT pair deliberately has no entry there and
-	 * is painted statically. Its keyframes would run from itself to itself, and
-	 * a running animation would put it on its own compositing layer, whose
-	 * raster the browser snaps to whole device pixels - visibly shifting a shape
-	 * that is not supposed to move at all (issue #161).
-	 *
-	 * This is a SUBSET of the outgoing slide: a shape the live stage already
-	 * draws identically is left out, because the overlay is opaque above it and
-	 * would hide the incoming slide's own arrivals. See `resolveMorphGhostIds`.
-	 */
-	outgoingElements: PptxElement[];
-	/** Outgoing ghost id to the incoming text layout it paints while travelling. */
-	outgoingTextReplacements?: ReadonlyMap<string, string>;
-	/**
-	 * {@link MorphTransitionPlan.outgoingElements} and
-	 * {@link MorphTransitionPlan.overlayIncomingElements} together, in the ONE
-	 * back-to-front order the overlay must paint them in, as runs of
-	 * consecutive same-slide shapes (see `morph-overlay-layers`).
-	 *
-	 * A binding renders each run as its own stacked layer, in this order: an
-	 * `'outgoing'` run against the outgoing slide inside a
-	 * `data-pptx-morph-outgoing` scope, an `'incoming'` run against the incoming
-	 * slide inside a `data-pptx-morph-lifted` scope. Painting every ghost below
-	 * every lifted arrival instead let a full-slide picture fading in veil the
-	 * title travelling above it (issue #141).
-	 *
-	 * A run is split wherever a crossfade group belongs inside it, and
-	 * {@link MorphTransitionPlan.overlayStack} says where each group goes.
-	 */
-	overlayLayers: MorphOverlayLayer[];
-	/**
-	 * Every run of {@link MorphTransitionPlan.overlayLayers} and every
-	 * {@link MorphTransitionPlan.crossfadeGroups} group, back to front. Read it
-	 * through `morphOverlayStackSlots` or `morphOverlayElementSlots` (see
-	 * `morph-overlay-stack`). Painting every group above every run let three
-	 * dissolving text columns show through the picture bands the incoming slide
-	 * stacks above them, then vanish from them when the overlay came down
-	 * (issue #141, slides 6 to 7).
-	 */
-	overlayStack: MorphOverlayStackEntry[];
-	/**
-	 * Id -> source id for the copies the overlay paints of a text pair that is
-	 * carried piece by piece (see `morph-text-piece-plan`). Each copy is in
-	 * {@link MorphTransitionPlan.crossfadeGroups} as an element of its own; a
-	 * binding that builds its overlay from a clone of the rendered slide instead
-	 * clones the source's node under the copy's id.
-	 */
-	textPieceSources?: ReadonlyMap<string, string>;
-	/**
-	 * Copy id -> the part of its source a copy paints, for a shape whose text is
-	 * carried apart from its body (see `morph-text-body`): `'body'` without the
-	 * text, `'text'` without the fill and outline. The copy's element already
-	 * says so; a binding that clones the source's node strips the other part.
-	 */
-	morphCopyParts?: ReadonlyMap<string, MorphCopyPart>;
-	/** Animation duration in ms, echoed for convenience. */
-	durationMs: number;
-}
+export {
+	buildMorphAnimationRules,
+	buildMorphOutlineRules,
+	buildMorphScopedCss,
+} from './morph-plan-css';
+export type { MorphPlanOptions, MorphTransitionPlan } from './morph-plan-types';
 
 /** Map a parsed `<p159:morph @option>` onto the engine's granularity mode. */
 export function morphOptionToMode(option: string | undefined): MorphMode {
@@ -262,29 +65,6 @@ export function morphOptionToMode(option: string | undefined): MorphMode {
 		return 'character';
 	}
 	return 'object';
-}
-
-/** Per-binding knobs for {@link buildMorphTransitionPlan}. */
-export interface MorphPlanOptions {
-	/**
-	 * The z-index the live stage gives the incoming slide's FIRST top-level
-	 * element. Stacking-order swaps ride z-index journeys written in the
-	 * stage's real z space, so a binding that paints master/layout shapes
-	 * beneath the slide (React's presentation stage) passes their count;
-	 * a stage that starts the slide at 0 leaves it out.
-	 */
-	readonly zIndexBase?: number;
-	/**
-	 * How text is measured when a pair's unchanged text is carried line for
-	 * line (see `morph-text-frame`). Defaults to a canvas; tests pass their own.
-	 */
-	readonly measureText?: MorphTextMeasure;
-	/**
-	 * The slide's size in element pixels: the camera a turning flip is seen
-	 * through sits over its centre (see `morph-flip-turn`). Defaults to the
-	 * 16:9 slide, 1280 x 720.
-	 */
-	readonly slideSize?: MorphViewSize;
 }
 
 /**
@@ -352,66 +132,15 @@ export function buildMorphTransitionPlan(
 	const flattenedIncoming = flattenMorphElements(toSlide.elements, fromSlide.elements);
 	const ghostIds = resolveMorphGhostIds(flattenedOutgoing, match.pairs, flattenedIncoming);
 
-	const incomingAnimations = new Map<string, string>();
-	const outgoingAnimations = new Map<string, string>();
-	const incomingImageAnimations = new Map<string, string>();
-	const outgoingImageAnimations = new Map<string, string>();
-	const outlineAnimations = new Map<string, string>();
-	const outlineStrandAnimations = new Map<string, string[]>();
-	const customGeometryAnimations = new Map<string, string>();
-	const lineAnimations = new Map<string, string>();
-	const keyframes: string[] = [];
-
-	for (const animation of animations) {
-		keyframes.push(animation.keyframes);
-		const isOutgoing = outgoingIds.has(animation.elementId);
-		// An `image`-targeted animation rides the `<img>` inside the element, so
-		// it goes in its own map: it shares an element id with the container
-		// animation and would otherwise overwrite it.
-		if (animation.target === 'outline' && animation.strand !== undefined) {
-			const strands = outlineStrandAnimations.get(animation.elementId) ?? [];
-			strands[animation.strand] = animation.animation;
-			outlineStrandAnimations.set(animation.elementId, strands);
-			continue;
-		}
-		if (animation.target === 'outline' || animation.target === 'custom') {
-			(animation.target === 'outline' ? outlineAnimations : customGeometryAnimations).set(
-				animation.elementId,
-				animation.animation,
-			);
-			continue;
-		}
-		if (animation.target === 'line') {
-			lineAnimations.set(animation.elementId, animation.animation);
-			continue;
-		}
-		const target =
-			animation.target === 'image'
-				? isOutgoing
-					? outgoingImageAnimations
-					: incomingImageAnimations
-				: isOutgoing
-					? outgoingAnimations
-					: incomingAnimations;
-		// One element can be driven by SEVERAL animations at once, so they are
-		// composed into the shorthand's comma-separated list rather than
-		// overwriting each other. A pair whose shape type or adjustment values
-		// changed gets both its journey (`transform`, from
-		// `generateMorphAnimations`) and its outline tween (`clip-path`, from
-		// `generateGeometryMorphAnimation`), keyed on the same incoming id; a
-		// plain `set` dropped whichever was generated first, so a rect gliding
-		// into a distant ellipse stopped travelling altogether and sat at its
-		// destination re-cutting its own outline while its ghost flew over.
-		//
-		// Composing is only correct because the animations here touch DISJOINT
-		// properties. Anything that would fight over one property has to keep
-		// using its own channel, the way the `a:srcRect` crop does above.
-		const existing = target.get(animation.elementId);
-		target.set(
-			animation.elementId,
-			existing === undefined ? animation.animation : `${existing}, ${animation.animation}`,
-		);
-	}
+	const channels = partitionMorphAnimations(animations, outgoingIds);
+	const {
+		keyframes,
+		incomingAnimations,
+		outgoingAnimations,
+		outlineAnimations,
+		outlineStrandAnimations,
+		customGeometryAnimations,
+	} = channels;
 
 	// Which outgoing shapes the overlay paints is `resolveMorphGhostIds`' call
 	// and nothing else's: a shape whose ghost it drops draws the same thing on
@@ -424,53 +153,19 @@ export function buildMorphTransitionPlan(
 	// put it on its own compositing layer and shift its raster by up to a pixel
 	// for the duration (issue #161); it still has to be painted, so this asks
 	// the ghost set directly rather than reading it off the animation map.
-	const offstageRestyles = new Map(
-		match.pairs
-			.filter(({ fromElement, toElement }) => morphOffstageTextAdoptsTarget(fromElement, toElement))
-			.map(({ fromElement, toElement }) => [fromElement.id, toElement] as const),
-	);
-	// A text pair whose line breaks change is carried piece by piece; its own
-	// ghost and stage copy give way to the pieces' copies (see
-	// `morph-text-piece-plan`).
-	const pieces = buildMorphTextPiecePlan(
-		mode === 'object' ? match.pairs : [],
+	const { offstageRestyles, pieces, bodies } = planMorphTextCarry({
+		mode,
+		durationMs,
+		measureText: options.measureText,
+		pairs: match.pairs,
 		ghostIds,
-		durationMs,
-		options.measureText,
-	);
-	// A text box that turns while its type changes is carried glyph by glyph
-	// (see `morph-text-glyph-plan`), through the same copies.
-	const glyphs = buildMorphTextGlyphPlan(
-		mode === 'object' ? match.pairs.filter((pair) => !pieces.pairs.includes(pair)) : [],
-		ghostIds,
-		durationMs,
-		options.measureText,
-	);
-	mergeMorphTextBodyPlan(pieces, glyphs);
-	// A shape whose text changes face or size while its box moves carries the
-	// text apart from its body (see `morph-text-body`), through the same copies.
-	const bodies = buildMorphTextBodyPlan(
-		mode === 'object' ? match.pairs.filter((pair) => !pieces.pairs.includes(pair)) : [],
-		{
-			outgoing: flattenedOutgoing,
-			incoming: flattenedIncoming,
-			pairs: match.pairs,
-			ghostIds,
-			overlaid: new Set(pieces.pairs.map((pair) => pair.toElement.id)),
-			animated: (id) => incomingAnimations.has(id),
-		},
-		durationMs,
-		options.measureText,
-	);
-	mergeMorphTextBodyPlan(pieces, bodies);
-	addMorphBodyCopyCarry(
-		bodies.pairs,
-		durationMs,
-		pieces,
+		flattenedOutgoing,
+		flattenedIncoming,
+		animated: (id) => incomingAnimations.has(id),
 		outlineAnimations,
 		customGeometryAnimations,
 		outlineStrandAnimations,
-	);
+	});
 	const piecePairs = new Set(pieces.pairs);
 	const pieceFromIds = new Set(pieces.pairs.map((pair) => pair.fromElement.id));
 	const pieceToIds = new Set(pieces.pairs.map((pair) => pair.toElement.id));
@@ -489,452 +184,67 @@ export function buildMorphTransitionPlan(
 			} as PptxElement;
 		});
 
-	// Everything the overlay paints hides whatever the live stage is doing
-	// underneath, which is wrong for a shape that ARRIVES on top of a ghost:
-	// it dissolves in where nobody can see it and appears in one frame when the
-	// overlay is torn down (issue #146 - the wheel's centre disc is unchanged,
-	// so its opaque ghost sat over the new title, body and button for the whole
-	// morph). Those few move up into the overlay, above the ghosts, and the
-	// copy on the stage is held invisible so the two never composite.
-	//
-	// Only a ghost that KEEPS its opacity counts. One that dissolves is out of
-	// the way inside the first quarter, long before an arrival begins to appear,
-	// so it hides nothing worth moving an animation for.
-	const holdingGhostIds = new Set(
-		wholePairs
-			.filter(
-				(candidate) =>
-					ghostIds.has(candidate.fromElement.id) &&
-					!morphPairNeedsCrossfade(candidate.fromElement, candidate.toElement),
-			)
-			.map((candidate) => candidate.fromElement.id),
-	);
-	// A matched pair's incoming half can be hidden by a holding ghost just as
-	// easily as an arrival can - the wheel deck dissolves its centre wording
-	// inside an unchanged opaque disc (issue #160) - but only one that DISSOLVES
-	// IN may be lifted over its own ghost. One pinned at full strength has to
-	// stay underneath it, or the crossfade becomes a cut.
-	const dissolvingInIds = new Set(
-		wholePairs
-			.filter((candidate) =>
-				morphPairIncomingFadesIn(
-					candidate.fromElement,
-					candidate.toElement,
-					ghostIds.has(candidate.fromElement.id),
-				),
-			)
-			.map((candidate) => candidate.toElement.id),
-	);
-	const lifted = resolveMorphOverlayArrivals(
-		flattenedOutgoing,
-		flattenedIncoming,
-		match.pairs,
-		holdingGhostIds,
-		dissolvingInIds,
-	);
-	// Restyled text whose two halves are carried glyph over glyph dissolves
-	// additively, as PowerPoint's does, with whatever the incoming slide stacks
-	// above it raised along with it (see `morph-text-blend`).
-	if (mode === 'object') {
-		for (const id of resolveMorphTextBlendLifts(
-			{
-				outgoing: flattenedOutgoing,
-				incoming: flattenedIncoming,
-				pairs: match.pairs,
-				ghostIds,
-				overlaid: new Set([...lifted, ...pieceToIds]),
-				animated: (id) => incomingAnimations.has(id),
-			},
-			dissolvingInIds,
-			options.measureText,
-		)) {
-			lifted.add(id);
-		}
-	}
-	// A soft-edged pair dissolves its two feathers additively as well.
-	for (const id of resolveMorphSoftEdgeLifts(
-		{
-			outgoing: flattenedOutgoing,
-			incoming: flattenedIncoming,
-			pairs: wholePairs,
-			ghostIds,
-			overlaid: new Set([...lifted, ...pieceToIds]),
-			animated: (id) => incomingAnimations.has(id),
-		},
-		dissolvingInIds,
-	)) {
-		lifted.add(id);
-	}
-	for (const id of bodies.rising) {
-		lifted.add(id);
-	}
-	for (const id of pieceToIds) {
-		lifted.delete(id);
-	}
-	const overlayIncomingAnimations = new Map<string, string>();
-	for (const id of lifted) {
-		const animation = incomingAnimations.get(id);
-		if (animation === undefined) {
-			continue;
-		}
-		overlayIncomingAnimations.set(id, animation);
-		incomingAnimations.set(id, `${LIFTED_HIDDEN_NAME} ${durationMs}ms linear forwards`);
-	}
-	for (const id of pieceToIds) {
-		incomingAnimations.set(id, `${LIFTED_HIDDEN_NAME} ${durationMs}ms linear forwards`);
-	}
-	for (const id of pieceFromIds) {
-		outgoingAnimations.delete(id);
-		outlineAnimations.delete(id);
-		outlineStrandAnimations.delete(id);
-		customGeometryAnimations.delete(id);
-	}
-	for (const id of pieceToIds) {
-		outlineAnimations.delete(id);
-		outlineStrandAnimations.delete(id);
-		customGeometryAnimations.delete(id);
-	}
-	if (overlayIncomingAnimations.size > 0 || pieceToIds.size > 0) {
-		keyframes.push(LIFTED_HIDDEN_KEYFRAMES);
-	}
-	keyframes.push(...pieces.keyframes);
-	// A lifted half whose ghost is painted too is one end of a cross-dissolve
-	// with both ends in this overlay, so the two are handed over as a pair and
-	// taken out of the flat layers. Stacking them there composites them
-	// source-over, which dips their shared ink toward the backdrop instead of
-	// summing it the way PowerPoint's own blend does (issue #161).
-	const crossfadeGroups = resolveMorphCrossfadeGroups(
+	const lifted = resolveMorphLiftedIds({
+		mode,
+		measureText: options.measureText,
+		pairs: match.pairs,
 		wholePairs,
 		ghostIds,
-		new Set(overlayIncomingAnimations.keys()),
-		flattenedIncoming,
-	).map((group) =>
-		liftCrossfadeToWrapper(group, animations, outgoingAnimations, overlayIncomingAnimations),
-	);
-	crossfadeGroups.push(...pieces.groups);
-	for (const [id, animation] of pieces.outgoingAnimations) {
-		outgoingAnimations.set(id, animation);
-	}
-	for (const [id, animation] of pieces.incomingAnimations) {
-		overlayIncomingAnimations.set(id, animation);
-	}
-	const groupedOutgoingIds = new Set(crossfadeGroups.map((group) => group.outgoing.id));
-	const groupedIncomingIds = new Set(crossfadeGroups.map((group) => group.incoming.id));
-	const outgoingElements = ghostElements.filter((element) => !groupedOutgoingIds.has(element.id));
-	const overlayIncomingElements = flattenedIncoming.filter(
-		(element) => overlayIncomingAnimations.has(element.id) && !groupedIncomingIds.has(element.id),
-	);
-	const { layers: overlayLayers, stack: overlayStack } = resolveMorphOverlayStack(
-		outgoingElements,
-		overlayIncomingElements,
-		crossfadeGroups,
 		flattenedOutgoing,
 		flattenedIncoming,
-		match.pairs,
-		pieces.sources,
-	);
+		pieceToIds,
+		risingIds: bodies.rising,
+		animated: (id) => incomingAnimations.has(id),
+	});
+	const overlayIncomingAnimations = settleMorphLifts({
+		durationMs,
+		lifted,
+		pieces,
+		pieceFromIds,
+		pieceToIds,
+		incomingAnimations,
+		outgoingAnimations,
+		outlineAnimations,
+		outlineStrandAnimations,
+		customGeometryAnimations,
+		keyframes,
+	});
+	const overlay = assembleMorphOverlay({
+		animations,
+		pairs: match.pairs,
+		wholePairs,
+		ghostIds,
+		ghostElements,
+		flattenedOutgoing,
+		flattenedIncoming,
+		pieces,
+		outgoingAnimations,
+		overlayIncomingAnimations,
+	});
 
 	return {
 		keyframesCss: keyframes.join('\n'),
 		incomingAnimations,
 		outgoingAnimations,
-		incomingImageAnimations,
-		outgoingImageAnimations,
+		incomingImageAnimations: channels.incomingImageAnimations,
+		outgoingImageAnimations: channels.outgoingImageAnimations,
 		overlayIncomingAnimations,
-		outgoingElements,
+		outgoingElements: overlay.outgoingElements,
 		outgoingTextReplacements: new Map(
 			[...offstageRestyles]
 				.filter(([id]) => ghostIds.has(id))
 				.map(([id, target]) => [id, target.id]),
 		),
-		overlayIncomingElements,
-		overlayLayers,
-		overlayStack,
-		crossfadeGroups,
+		overlayIncomingElements: overlay.overlayIncomingElements,
+		overlayLayers: overlay.overlayLayers,
+		overlayStack: overlay.overlayStack,
+		crossfadeGroups: overlay.crossfadeGroups,
 		...(pieces.sources.size > 0 ? { textPieceSources: pieces.sources } : {}),
 		...(bodies.parts.size > 0 ? { morphCopyParts: bodies.parts } : {}),
 		...(outlineAnimations.size > 0 ? { outlineAnimations } : {}),
 		...(outlineStrandAnimations.size > 0 ? { outlineStrandAnimations } : {}),
 		...(customGeometryAnimations.size > 0 ? { customGeometryAnimations } : {}),
-		...(lineAnimations.size > 0 ? { lineAnimations } : {}),
+		...(channels.lineAnimations.size > 0 ? { lineAnimations: channels.lineAnimations } : {}),
 		durationMs,
 	};
-}
-
-/**
- * Move a grouped pair's dissolve off the two elements and onto their wrappers.
- *
- * A pair that dissolves where it stands does not move, so the journey keyframes
- * it was given are `translate(0, 0) scale(1, 1) rotate(0deg)` at both ends. They
- * animate nothing and cost a compositing layer, whose raster the browser snaps
- * to whole device pixels - the wording is then painted a fraction of a pixel
- * from where the live stage paints it and twitches as the overlay comes and
- * goes. Dropping them and running only the fade, on the slide-sized wrapper the
- * binding puts each half in, measured pixel-identical to the settled slide
- * (issue #161; the same reasoning already governs an inert pair's ghost).
- *
- * A pair that MOVES keeps everything on the element: it needs the journey, and
- * a travelling shape cannot be seen to snap.
- */
-function liftCrossfadeToWrapper(
-	group: MorphCrossfadeGroup,
-	animations: readonly {
-		elementId: string;
-		animation: string;
-		keyframes: string;
-		target?: string;
-	}[],
-	outgoingAnimations: Map<string, string>,
-	overlayIncomingAnimations: Map<string, string>,
-): MorphCrossfadeGroup {
-	// One entry can carry several tracks in its shorthand (a journey and its
-	// fade), so they are separated and classified against their own keyframes.
-	// A track that only touches opacity is the dissolve. One that touches
-	// transform is the journey, and it only comes off the element when it says
-	// the SAME thing at both ends - which is what an in-slot dissolve emits, and
-	// what an inert pair's ghost already has dropped for the same reason. The
-	// pair's boxes are no help here: a paragraph re-fitted around new wording
-	// sits at a different height on the two slides and still does not move,
-	// because `morphTextReplacedInSlot` refuses to interpolate it. Anything else
-	// (an `<img>` crop) means the pair is doing more than dissolving.
-	const tracksOf = (elementId: string): { fade: string[]; travels: boolean; other: number } => {
-		const fade: string[] = [];
-		let travels = false;
-		let other = 0;
-		for (const animation of animations) {
-			if (animation.elementId !== elementId) {
-				continue;
-			}
-			if (animation.target !== undefined) {
-				other += 1;
-				continue;
-			}
-			for (const track of splitCssList(animation.animation)) {
-				const block = keyframesBlockOf(track.split(/\s+/u)[0], animation.keyframes);
-				if (block === undefined) {
-					other += 1;
-				} else if (block.includes('transform')) {
-					travels ||= !isStationaryKeyframes(block);
-				} else if (block.includes('opacity')) {
-					fade.push(track);
-				} else {
-					other += 1;
-				}
-			}
-		}
-		return { fade, travels, other };
-	};
-	const outgoing = tracksOf(group.outgoing.id);
-	const incoming = tracksOf(group.incoming.id);
-	if (
-		outgoing.fade.length === 0 ||
-		incoming.fade.length === 0 ||
-		outgoing.travels ||
-		incoming.travels ||
-		outgoing.other + incoming.other > 0
-	) {
-		return group;
-	}
-	// Neutralised rather than dropped. A binding whose live stage is a SIBLING of
-	// the overlay (Angular) has to emit its `incoming` rules unscoped, and the
-	// one holding the stage copy invisible then matches the overlay's copy of the
-	// same element too. Without a scoped rule to outrank it the arriving half
-	// never painted at all, which is issue #160's defect exactly. `none` is that
-	// rule, and it leaves the dissolve to the wrapper.
-	outgoingAnimations.set(group.outgoing.id, 'none');
-	overlayIncomingAnimations.set(group.incoming.id, 'none');
-	return {
-		...group,
-		outgoingAnimation: outgoing.fade.join(', '),
-		incomingAnimation: incoming.fade.join(', '),
-	};
-}
-
-/**
- * Whether a keyframes block moves nothing: every frame states the same
- * transform, so running it is pure cost - a compositing layer whose raster the
- * browser snaps to whole device pixels (issue #161).
- */
-function isStationaryKeyframes(block: string): boolean {
-	// Compared on VALUE, not text: the generator writes the same standstill as
-	// `translate(0px, 0px)` at one end and `translate(0, 0)` at the other, and a
-	// string compare would call that a journey.
-	const normalise = (value: string): string =>
-		value
-			.replace(/\s+/gu, '')
-			.replace(/(-?\d*\.?\d+)(px|deg|%)?/gu, (_match, number: string, unit = '') =>
-				Number(number) === 0 ? '0' : `${Number(number)}${unit}`,
-			);
-	const values = new Set(
-		[...block.matchAll(/(?<![\w-])transform:\s*([^;}]+)/gu)].map((match) => normalise(match[1])),
-	);
-	return values.size <= 1;
-}
-
-/** The body of one `@keyframes` block inside a generated stylesheet. */
-function keyframesBlockOf(name: string, keyframes: string): string | undefined {
-	const start = keyframes.indexOf(`@keyframes ${name}`);
-	if (start < 0) {
-		return undefined;
-	}
-	let depth = 0;
-	for (let index = keyframes.indexOf('{', start); index < keyframes.length; index += 1) {
-		if (keyframes[index] === '{') {
-			depth += 1;
-		} else if (keyframes[index] === '}') {
-			depth -= 1;
-			if (depth === 0) {
-				return keyframes.slice(start, index + 1);
-			}
-		}
-	}
-	return undefined;
-}
-
-/**
- * Characters that must never appear raw in a CSS string: the quote and
- * backslash that end or escape it, the angle brackets that would let a value
- * close the enclosing `<style>` element when the stylesheet is injected as
- * markup, `&`, the apostrophe, and control characters (a newline is invalid
- * inside a CSS string).
- */
-const CSS_UNSAFE_CHAR = /["\\<>&'\u0000-\u001f\u007f]/u;
-
-/**
- * Escape a value for use inside a double-quoted CSS attribute selector.
- * Unsafe characters become CSS hex escapes (`\3c `), which the stylesheet
- * parser reads back as the same character while keeping the text free of
- * markup. Element ids come from slide part paths, so they are not trusted.
- */
-function cssAttributeValue(value: string): string {
-	let out = '';
-	for (const ch of value) {
-		out += CSS_UNSAFE_CHAR.test(ch) ? `\\${(ch.codePointAt(0) ?? 0).toString(16)} ` : ch;
-	}
-	return out;
-}
-
-/**
- * Render a plan as a self-contained stylesheet that drives the morph purely
- * through CSS, with no per-element prop plumbing.
- *
- * Every binding already stamps `data-element-id` on each rendered element, so
- * scoping rules to an ancestor carrying `scopeAttribute` is enough to animate
- * a whole slide. This is what lets Vue / Angular / Svelte / Vanilla play a
- * morph without threading an animation map through their slide-stage
- * components.
- *
- * @param plan - The plan to render.
- * @param scopeAttribute - Attribute (already present on the ancestor) that
- *   scopes these rules, e.g. `data-pptx-morph-incoming`. Pass an empty string
- *   to emit document-level rules: element ids embed their slide path, so they
- *   are unique to the slide being animated and need no ancestor to disambiguate.
- *   That is what lets a binding whose incoming slide is rendered OUTSIDE the
- *   overlay (Angular, React) still drive it from here.
- * @param which - Which half to emit: the live stage's `incoming` elements, the
- *   overlay's `outgoing` ghosts, or the `lifted` copies the overlay paints over
- *   those ghosts (see {@link MorphTransitionPlan.overlayIncomingElements}).
- * @returns Keyframes plus the scoped `animation` rules, ready to inject.
- */
-export function buildMorphScopedCss(
-	plan: MorphTransitionPlan,
-	scopeAttribute: string,
-	which: 'incoming' | 'outgoing' | 'lifted' = 'incoming',
-): string {
-	return `${plan.keyframesCss}\n${buildMorphAnimationRules(plan, scopeAttribute, which)}`;
-}
-
-/**
- * Just the `animation` rules of a plan, with no `@keyframes` block.
- *
- * For a binding that already injects {@link MorphTransitionPlan.keyframesCss}
- * itself and applies the element-level animations some other way (React merges
- * them into its per-element animation state), but still needs the descendant
- * rules that {@link MorphTransitionPlan.incomingImageAnimations} cannot be
- * expressed as an inline style for.
- *
- * @param plan - The plan to render.
- * @param scopeAttribute - As {@link buildMorphScopedCss}.
- * @param which - Which half of the transition to emit.
- * @param only - `'image'` emits only the `<img>` descendant rules; omit for all.
- * @returns The newline-joined rules (no trailing newline); `''` when there are none.
- */
-export function buildMorphAnimationRules(
-	plan: MorphTransitionPlan,
-	scopeAttribute: string,
-	which: 'incoming' | 'outgoing' | 'lifted' = 'incoming',
-	only?: 'image',
-): string {
-	const prefix = scopeAttribute ? `[${scopeAttribute}] ` : '';
-	const rules: string[] = [];
-	const emit = (animations: Map<string, string>, suffix: string): void => {
-		for (const [elementId, animation] of animations) {
-			rules.push(
-				`${prefix}[data-element-id="${cssAttributeValue(elementId)}"]${suffix} { animation: ${animation}; }`,
-			);
-		}
-	};
-	// `lifted` is the incoming half painted in the overlay rather than on the
-	// stage, so it shares the incoming img channel and differs only in which
-	// container animation it carries.
-	if (only !== 'image') {
-		emit(
-			which === 'outgoing'
-				? plan.outgoingAnimations
-				: which === 'lifted'
-					? plan.overlayIncomingAnimations
-					: plan.incomingAnimations,
-			'',
-		);
-	}
-	// The picture-crop channel targets the `<img>` the element renders, which
-	// every binding draws inside the `data-element-id` container.
-	emit(which === 'outgoing' ? plan.outgoingImageAnimations : plan.incomingImageAnimations, ' img');
-	const outline = buildMorphOutlineRules(plan, 'data-element-id', prefix);
-	if (outline) {
-		rules.push(outline);
-	}
-	return rules.join('\n');
-}
-
-/**
- * The outline-path rules of a plan (see
- * {@link MorphTransitionPlan.outlineAnimations}), keyed on `keyAttribute`.
- *
- * {@link buildMorphAnimationRules} keys them on `data-element-id`; a binding
- * whose overlay paints its halves without that attribute (React's overlay
- * wraps each one in a `data-pptx-morph-outgoing` / `data-pptx-morph-lifted`
- * element named after its id instead) passes that attribute. A re-pathed
- * outline animates the CSS `d` property, so the rules sit behind a support
- * check; without it the static path stays, scaled with its box as before.
- *
- * @returns The rules, or `''` when the plan re-paths no outline.
- */
-export function buildMorphOutlineRules(
-	plan: MorphTransitionPlan,
-	keyAttribute: string,
-	prefix = '',
-): string {
-	const rules = [
-		...[...(plan.outlineAnimations ?? [])].map(
-			([elementId, animation]) =>
-				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
-		),
-		...[...(plan.outlineStrandAnimations ?? [])].flatMap(([elementId, animations]) =>
-			animations.map(
-				(animation, strand) =>
-					`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path:nth-of-type(${strand + 1}) { animation: ${animation}; }`,
-			),
-		),
-		...[...(plan.customGeometryAnimations ?? [])].map(
-			([elementId, animation]) =>
-				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-custom-geometry] path { animation: ${animation}; }`,
-		),
-	];
-	const lines = [...(plan.lineAnimations ?? [])].map(
-		([elementId, animation]) =>
-			`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-line] { animation: ${animation}; }`,
-	);
-	const supported = rules.length > 0 ? `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}` : '';
-	return [supported, ...lines].filter(Boolean).join('\n');
 }
