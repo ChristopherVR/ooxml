@@ -44,9 +44,24 @@ describe('suppressesCssFill / buildSubpathFillOverlay - preset geometry (bug 2)'
 		expect(buildSubpathFillOverlay(el)).toBeUndefined();
 	});
 
-	it("declines a stroke-only preset (arc): that is `stroke-only-preset`'s job, not this overlay's", () => {
-		const el = shape({ shapeType: 'arc', shapeAdjustments: { adj1: 0, adj2: 10_800_000 } });
-		expect(suppressesCssFill(el)).toBeFalsy();
+	// PowerPoint (COM export) fills an arc's wedge when the shape has a fill and strokes only the
+	// curve: the ECMA-376 `arc` is an unstroked wedge fill path plus a fill="none" stroke path, so
+	// it is a per-sub-path fill like smileyFace, not an open preset.
+	it('paints the wedge of a filled arc and nothing for its fill="none" curve', () => {
+		const el = shape({ shapeType: 'arc', shapeAdjustments: { adj1: 16_200_000, adj2: 0 } });
+		expect(suppressesCssFill(el)).toBeTruthy();
+		const overlay = buildSubpathFillOverlay(el)!;
+		expect(overlay.paints[0].fill).not.toBe('none');
+		expect(overlay.paints[1].fill).toBe('none');
+	});
+
+	it('paints no fill for an unfilled arc', () => {
+		const el = shape({
+			shapeType: 'arc',
+			shapeStyle: { fillMode: 'none' },
+			shapeAdjustments: { adj1: 16_200_000, adj2: 0 },
+		} as Partial<PptxElement>);
+		expect(buildSubpathFillOverlay(el)!.paints.every((p) => p.fill === 'none')).toBeTruthy();
 	});
 
 	it('declines when the fill is a gradient: no paint server exists for a sub-path', () => {

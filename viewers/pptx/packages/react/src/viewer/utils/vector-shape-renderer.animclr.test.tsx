@@ -2,6 +2,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 
+import { ShapeEffectOverlay } from '../components/elements/ShapeEffectOverlay';
 import { renderVectorShape } from './vector-shape-renderer';
 
 /**
@@ -83,15 +84,36 @@ describe('renderVectorShape p:animClr fill/stroke recolor (custom geometry)', ()
 	});
 });
 
-describe('renderVectorShape p:animClr fill/stroke recolor (cylinder preset)', () => {
+// A cylinder is a split-layout preset: it is no longer hand-drawn here but painted by the shared
+// sub-path fill overlay and stroke outline, which carry the same `inherit` contract.
+describe('p:animClr fill/stroke recolor (cylinder preset, shape effect overlay)', () => {
+	const overlay = (animatesFill?: boolean, animatesStroke?: boolean) =>
+		renderToStaticMarkup(
+			<ShapeEffectOverlay
+				element={
+					{
+						...cylinderShape(),
+						shapeType: 'can',
+						shapeStyle: { fillColor: '#ff0000', strokeWidth: 2, strokeColor: '#0000ff' },
+					} as unknown as PptxElement
+				}
+				animatesFill={animatesFill ?? false}
+				animatesStroke={animatesStroke ?? false}
+			/>,
+		);
+
+	it('is not drawn by renderVectorShape any more', () => {
+		expect(renderVectorShape(cylinderShape(), true, '#ff0000', 2, '#0000ff')).toBeNull();
+	});
+
 	it('keeps static fill/stroke without animation flags', () => {
-		const html = markup(cylinderShape());
+		const html = overlay();
 		expect(html).not.toContain('fill="inherit"');
 		expect(html).not.toContain('stroke="inherit"');
 	});
 
 	it('paints fill and stroke with inherit when both are animated', () => {
-		const html = markup(cylinderShape(), true, true);
+		const html = overlay(true, true);
 		expect(html).toContain('fill="inherit"');
 		expect(html).toContain('stroke="inherit"');
 	});

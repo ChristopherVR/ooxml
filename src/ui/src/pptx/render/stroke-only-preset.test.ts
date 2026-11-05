@@ -2,8 +2,10 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {
+	getSplitStrokePresetPaths,
 	getStrokeOnlyPresetPaths,
 	isStrokeOnlyPresetElement,
+	splitStrokePresetPathData,
 	strokeOnlyPresetPathData,
 } from './stroke-only-preset';
 
@@ -23,7 +25,10 @@ function shape(overrides: Partial<PptxElement> = {}): PptxElement {
 describe('getStrokeOnlyPresetPaths', () => {
 	// The open family: nothing here has a region to fill, so a CSS border on the
 	// element box outlines a rectangle the shape does not have.
-	const OPEN = ['line', 'arc', 'straightConnector1', 'bentConnector3', 'curvedConnector3'];
+	// `arc` is not here any more: the ECMA-376 definition is a split layout (an unstroked
+	// wedge FILL path plus a fill="none" stroke path) and PowerPoint fills the wedge when
+	// the shape has a fill, so it is a split-stroke preset (see below), not an open one.
+	const OPEN = ['line', 'straightConnector1', 'bentConnector3', 'curvedConnector3'];
 	// The closed family: a border on the box (or on its clip-path) is correct.
 	const CLOSED = ['rect', 'ellipse', 'roundRect', 'triangle', 'pie', 'chord', 'donut'];
 
@@ -81,5 +86,31 @@ describe('strokeOnlyPresetPathData', () => {
 
 	it('is undefined for a closed preset', () => {
 		expect(strokeOnlyPresetPathData(shape())).toBeUndefined();
+	});
+});
+
+describe('splitStrokePresetPathData', () => {
+	// PowerPoint (COM export) strokes these only along their stroked sub-paths: an arc is
+	// the curve alone (no radial edges), a smiley has no line across the mouth.
+	const SPLIT = ['arc', 'smileyFace', 'can', 'cube', 'bevel', 'leftBracket', 'rightBrace'];
+
+	it.each(SPLIT)('reports %s as a split-layout preset', (shapeType) => {
+		expect(getSplitStrokePresetPaths(shape({ shapeType }))).toBeDefined();
+		expect(getStrokeOnlyPresetPaths(shape({ shapeType }))).toBeUndefined();
+		expect(splitStrokePresetPathData(shape({ shapeType }))).toBeTruthy();
+	});
+
+	it('strokes an arc as its curve alone, without the wedge radii', () => {
+		const d = splitStrokePresetPathData(
+			shape({ shapeType: 'arc', shapeAdjustments: { adj1: 16200000, adj2: 0 } }),
+		)!;
+		expect(d).toContain('A ');
+		expect(d).not.toContain('L ');
+		expect(d).not.toContain('Z');
+	});
+
+	it('leaves ordinary and open presets alone', () => {
+		expect(splitStrokePresetPathData(shape({ shapeType: 'rect' }))).toBeUndefined();
+		expect(splitStrokePresetPathData(shape({ shapeType: 'line' }))).toBeUndefined();
 	});
 });

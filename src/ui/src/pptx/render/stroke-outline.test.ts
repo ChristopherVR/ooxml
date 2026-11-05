@@ -228,6 +228,28 @@ describe('buildStrokeOutline stroke-only ("open") presets', () => {
 		expect(outline!.paint).toBeUndefined();
 	});
 
+	// PowerPoint (COM export) draws an arc's curve only: the ECMA-376 definition adds an unstroked
+	// wedge FILL path, whose radial edges are part of the merged clip outline but never stroked.
+	it('strokes an arc along its curve only, never the wedge radii', () => {
+		const outline = buildStrokeOutline(
+			line({
+				shapeType: 'arc',
+				width: 200,
+				height: 120,
+				shapeAdjustments: { adj1: 16200000, adj2: 0 },
+			} as Partial<PptxElement>),
+		);
+		expect(outline!.d).toContain('A ');
+		expect(outline!.d).not.toContain('L ');
+	});
+
+	it('strokes a bracket as its curve only, not the closed chord of its fill path', () => {
+		const outline = buildStrokeOutline(
+			line({ shapeType: 'leftBracket', width: 40, height: 200 } as Partial<PptxElement>),
+		);
+		expect(outline!.d).not.toContain('Z');
+	});
+
 	it('strokes the whole elbow of an open connector preset', () => {
 		const outline = buildStrokeOutline(
 			line({ shapeType: 'bentConnector3', width: 200, height: 120 }),

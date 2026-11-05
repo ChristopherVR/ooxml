@@ -82,3 +82,50 @@ export function strokeOnlyPresetPathData(element: PptxElement): string | undefin
 	const stroked = paths.filter((path) => path.stroke !== false).map((path) => path.d);
 	return stroked.length > 0 ? stroked.join(' ') : undefined;
 }
+
+/**
+ * Evaluate a preset's sub-paths when it uses the split layout: at least one
+ * sub-path opts out of the stroke (`a:path/@stroke="0"`), the way the ECMA-376
+ * definitions separate an unstroked FILL path from a separate STROKE path
+ * (`arc` is a wedge plus an open arc, `smileyFace` a face plus eyes and mouth,
+ * `can`, `cube`, `bevel`, brackets, braces, callouts, fold-over corners and
+ * action buttons likewise).
+ *
+ * PowerPoint fills only along the fill paths and strokes only along the stroked
+ * ones. The merged clip outline a binding would otherwise stroke includes the
+ * edges of the unstroked fill paths (an arc's radial edges, a bracket's chord),
+ * which PowerPoint never draws. Fully open presets are not part of this set:
+ * {@link getStrokeOnlyPresetPaths} owns them.
+ */
+export function getSplitStrokePresetPaths(element: PptxElement): PresetSubpathResult[] | undefined {
+	if (element.type !== 'shape' || !hasShapeProperties(element) || element.pathData) {
+		return undefined;
+	}
+	const shapeType = element.shapeType;
+	if (!shapeType || shapeType === 'custom') {
+		return undefined;
+	}
+	const result = evaluatePresetShape(
+		shapeType,
+		Math.max(element.width, 0),
+		Math.max(element.height, 0),
+		element.shapeAdjustments,
+	);
+	if (!result || result.fillNone || !result.paths.some((path) => path.stroke === false)) {
+		return undefined;
+	}
+	return result.paths;
+}
+
+/**
+ * SVG path data of only the stroked sub-paths of a split-layout preset (see
+ * {@link getSplitStrokePresetPaths}), or `undefined` when the preset is not one
+ * or has no stroked geometry. Every outline of such a preset (flat, gradient or
+ * pattern line) is drawn along this path.
+ */
+export function splitStrokePresetPathData(element: PptxElement): string | undefined {
+	const stroked = getSplitStrokePresetPaths(element)?.filter(
+		(path) => path.stroke !== false && path.d !== '',
+	);
+	return stroked && stroked.length > 0 ? stroked.map((path) => path.d).join(' ') : undefined;
+}

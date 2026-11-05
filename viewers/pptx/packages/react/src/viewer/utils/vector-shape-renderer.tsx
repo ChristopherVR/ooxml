@@ -64,59 +64,11 @@ export function renderVectorShape(
 		element.shapeStyle?.customDashSegments,
 		element.shapeStyle?.lineCap,
 	);
-	if (normalizedType === 'can' || normalizedType === 'cylinder') {
-		const width = Math.max(element.width, 1);
-		const height = Math.max(element.height, 1);
-		const rim = Math.max(Math.min(height * 0.16, 28), 6);
-		const stroke = Math.max(strokeWidth, 1);
-		// Never under one device pixel on screen (shared `device-pixel-stroke`).
-		const screenStroke = { strokeWidth: screenStrokeWidth(stroke) };
-		return (
-			<svg
-				viewBox={`0 0 ${width} ${height}`}
-				className='w-full h-full pointer-events-none'
-				preserveAspectRatio='none'
-			>
-				<ellipse
-					cx={width / 2}
-					cy={rim / 2}
-					rx={width / 2}
-					ry={rim / 2}
-					fill={hasFill ? fillPaint : 'none'}
-					stroke={strokeWidth > 0 ? strokePaint : 'none'}
-					strokeWidth={stroke}
-					strokeDasharray={dashArray}
-					vectorEffect='non-scaling-stroke'
-					style={screenStroke}
-				/>
-				<rect
-					x={0}
-					y={rim / 2}
-					width={width}
-					height={Math.max(height - rim, 1)}
-					fill={hasFill ? fillPaint : 'none'}
-					stroke={strokeWidth > 0 ? strokePaint : 'none'}
-					strokeWidth={stroke}
-					strokeDasharray={dashArray}
-					vectorEffect='non-scaling-stroke'
-					style={screenStroke}
-				/>
-				<ellipse
-					cx={width / 2}
-					cy={height - rim / 2}
-					rx={width / 2}
-					ry={rim / 2}
-					fill={hasFill ? fillPaint : 'none'}
-					stroke={strokeWidth > 0 ? strokePaint : 'none'}
-					strokeWidth={stroke}
-					strokeDasharray={dashArray}
-					vectorEffect='non-scaling-stroke'
-					style={screenStroke}
-				/>
-			</svg>
-		);
-	}
 
+	// `can` is deliberately NOT drawn here: it is a split-layout preset (see
+	// `getSplitStrokePresetPaths`) painted by the shared per-sub-path fill overlay and the
+	// stroke outline like in every other binding. A hand-drawn ellipse/rect stand-in used to
+	// live here (React only), which flattened the lid shading and doubled its outline.
 	if (
 		(element.type === 'shape' || element.type === 'image' || element.type === 'picture') &&
 		element.pathData &&

@@ -57,7 +57,7 @@ import {
 import { outerStrokeEdgePath } from './stroke-clip-edge';
 import type { StrokeClipJoin } from './stroke-clip-outset';
 import { traceCompoundStrands } from './stroke-compound-strands';
-import { strokeOnlyPresetPathData } from './stroke-only-preset';
+import { splitStrokePresetPathData, strokeOnlyPresetPathData } from './stroke-only-preset';
 import { strokeMiterLimit } from './stroke-style';
 import { hasStrokePaint } from './stroke-paint';
 import {
@@ -497,17 +497,20 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 			? (buildSvgStrokeGradientDef(style, element.id) ??
 				buildSvgStrokePatternDef(style, element.id))
 			: undefined;
-	const insetOnClip = !openPresetD && insetLineOnClippedShape(element, style, declaredWidth);
+	// A split-layout preset (unstroked fill path + stroked path) is outlined along
+	// its stroked sub-paths only, never along the merged clip outline.
+	const splitD = !openPresetD && declaredWidth > 0 ? splitStrokePresetPathData(element) : undefined;
+	const ownPathD = openPresetD ?? splitD;
+	const insetOnClip = !ownPathD && insetLineOnClippedShape(element, style, declaredWidth);
 	const centeredFlatStroke =
 		!paint &&
-		!openPresetD &&
+		!ownPathD &&
 		(isArrowedCustomPath(element) || needsCenteredStrokeOverlay(element, style, declaredWidth));
-	if (!paint && !openPresetD && !centeredFlatStroke && !insetOnClip) {
+	if (!paint && !ownPathD && !centeredFlatStroke && !insetOnClip) {
 		return undefined;
 	}
 	const d =
-		openPresetD ??
-		outlinePathData(getResolvedShapeClipPath(element), element.width, element.height);
+		ownPathD ?? outlinePathData(getResolvedShapeClipPath(element), element.width, element.height);
 	if (!d) {
 		return undefined;
 	}
@@ -523,7 +526,7 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 		d,
 		outlineStrokeJoin(element),
 	);
-	const bleed = !openPresetD ? clipEdgeBleed(element, d, style) : undefined;
+	const bleed = !ownPathD ? clipEdgeBleed(element, d, style) : undefined;
 	const snap =
 		paint || strands.length !== 1 ? undefined : snapTransform(element, !!openPresetD, strokeWidth);
 	const snapped = snap ? strands.map((strand) => ({ ...strand, cssTransform: snap })) : strands;
