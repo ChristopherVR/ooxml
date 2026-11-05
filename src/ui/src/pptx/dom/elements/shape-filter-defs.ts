@@ -8,7 +8,7 @@ import {
 	getComputedEffectStyle,
 	getDuotoneSvgFilter,
 	getEffectStyleSource,
-	getSoftEdgeSvgFilter,
+	getShapeEffectFilterDefs,
 	isPatternPaint,
 	strokeOutlineViewBox,
 	svgGradientMarkup,
@@ -44,9 +44,11 @@ export function renderShapeFilterDefs(doc: Document, element: PptxElement): SVGS
 	if (duotone) {
 		markups.push(duotone.filterMarkup);
 	}
-	const softEdge = getSoftEdgeSvgFilter(style, element.id);
-	if (softEdge) {
-		markups.push(softEdge.filterMarkup);
+	// The soft-edge feather and the silhouette shadow / glow of a shape whose
+	// clip-path would cut its box-shadow off, as one definition.
+	const effectDefs = getShapeEffectFilterDefs(element);
+	if (effectDefs) {
+		markups.push(effectDefs.filterMarkup);
 	}
 	// `getBevelLightingSvgFilter` derives `shape3d`/`scene3d` from the element's
 	// own `shapeStyle` internally (a group never carries a bevel, same as

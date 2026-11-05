@@ -443,6 +443,7 @@ describe('getComputedEffectStyle', () => {
 	it('aggregates box-shadow, filter, reflection, opacity and blend', () => {
 		const result = getComputedEffectStyle(
 			shape({
+				fillColor: '#336699',
 				shadowColor: '#000000',
 				glowColor: '#00ff00',
 				glowRadius: 10,
@@ -501,6 +502,7 @@ describe('getComputedEffectStyle', () => {
 		const rotated = getComputedEffectStyle(
 			shape(
 				{
+					fillColor: '#336699',
 					shadowColor: '#000000',
 					shadowAngle: 0,
 					shadowDistance: 10,
@@ -519,6 +521,7 @@ describe('getComputedEffectStyle', () => {
 		const notRotated = getComputedEffectStyle(
 			shape(
 				{
+					fillColor: '#336699',
 					shadowColor: '#000000',
 					shadowAngle: 0,
 					shadowDistance: 10,

@@ -62,7 +62,7 @@ describe('getShapeVisualStyle soft-edge / fill-overlay effects', () => {
 
 	it('composes the soft-edge filter after glow in the filter chain', () => {
 		const style = getShapeVisualStyle(
-			makeShape({ glowColor: '#00ff00', glowRadius: 8, softEdgeRadius: 4 }),
+			makeShape({ fillColor: '#336699', glowColor: '#00ff00', glowRadius: 8, softEdgeRadius: 4 }),
 			true,
 			'#fff',
 			0,

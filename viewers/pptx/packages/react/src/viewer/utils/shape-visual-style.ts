@@ -42,7 +42,7 @@ import { apply3dEffects } from './shape-visual-3d';
  * (Presets keep their container fill because a `clipPath` constrains it to the
  * shape outline.)
  */
-function rendersCustomVectorPath(element: PptxElement): boolean {
+export function rendersCustomVectorPath(element: PptxElement): boolean {
 	return (
 		(element.type === 'shape' || element.type === 'image' || element.type === 'picture') &&
 		Boolean(element.pathData) &&
@@ -53,7 +53,7 @@ function rendersCustomVectorPath(element: PptxElement): boolean {
 	);
 }
 
-function rendersWedgeCalloutVector(element: PptxElement): boolean {
+export function rendersWedgeCalloutVector(element: PptxElement): boolean {
 	return element.type === 'shape' && isWedgeCalloutPresetShape(element.shapeType);
 }
 

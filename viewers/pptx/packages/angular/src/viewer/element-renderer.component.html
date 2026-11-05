@@ -186,6 +186,17 @@
 	></svg>
 }
 
+<!-- Silhouette shadow / glow <filter> def (non-rectangular shapes), filter: url(#shape-fx-<id>). -->
+@if (silhouetteFilter(); as sf) {
+	<svg
+		width="0"
+		height="0"
+		aria-hidden="true"
+		style="position: absolute; width: 0; height: 0; overflow: hidden"
+		[innerHTML]="sf.markup"
+	></svg>
+}
+
 <!-- Duotone image-effect <filter> def, referenced via filter: url(#id). -->
 @if (duotoneFilter(); as df) {
 	<svg

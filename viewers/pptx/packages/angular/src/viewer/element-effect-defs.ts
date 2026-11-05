@@ -4,6 +4,7 @@ import {
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
 	getEffectStyleSource,
+	getSilhouetteEffects,
 	getSoftEdgeSvgFilter,
 } from 'ooxml-ui/pptx';
 import type {
@@ -77,6 +78,18 @@ export function getSoftEdgeFilterDef(el: PptxElement): SoftEdgeFilterDef | undef
  */
 export function getBevelLightingFilterDef(el: PptxElement): SvgFilterDefinition | undefined {
 	return getBevelLightingSvgFilter(el);
+}
+
+/**
+ * The silhouette shadow / glow `<filter>` of a shape whose clip-path would cut
+ * its box-shadow off (shared `getSilhouetteEffects`), or `undefined`. The
+ * renderer injects `filterMarkup` verbatim, like the bevel lighting filter.
+ */
+export function getSilhouetteFilterDef(el: PptxElement): SvgFilterDefinition | undefined {
+	const def = getSilhouetteEffects(el);
+	return def
+		? { id: def.filterId, cssReference: def.cssReference, filterMarkup: def.filterMarkup }
+		: undefined;
 }
 
 /**
@@ -167,13 +180,16 @@ export function resolveShapeFilterCss(
 	fxFilter: string | undefined,
 	duotone: DuotoneFilterDef | undefined,
 	softEdge: SoftEdgeFilterDef | undefined,
+	/** Ids of other injected filters (the silhouette shadow / glow filter). */
+	extraKeepIds: readonly string[] = [],
 ): string | undefined {
 	if (fxFilter) {
 		let filter: string;
+		const keep = [...(softEdge ? [softEdge.id] : []), ...extraKeepIds];
 		if (duotone) {
 			filter = fxFilter;
-		} else if (softEdge) {
-			filter = stripUnresolvedFilterRefs(fxFilter, [softEdge.id]);
+		} else if (keep.length > 0) {
+			filter = stripUnresolvedFilterRefs(fxFilter, keep);
 		} else {
 			filter = fxFilter.replace(/\s*url\(#[^)]*\)/gu, '').trim();
 		}

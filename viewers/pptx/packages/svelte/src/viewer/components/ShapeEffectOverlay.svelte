@@ -48,8 +48,7 @@
 		buildSubpathFillOverlay,
 		getBevelLightingSvgFilter,
 		getComputedEffectStyle,
-		getEffectStyleSource,
-		getSoftEdgeSvgFilter,
+		getShapeEffectFilterDefs,
 		buildHollowHitOutline,
 		strokeOutlineViewBox,
 	} from 'ooxml-ui/pptx';
@@ -94,7 +93,7 @@
 	);
 
 	/** Soft-edge `<filter>` definition for this element, when a soft edge applies. */
-	const softEdge = $derived(getSoftEdgeSvgFilter(getEffectStyleSource(element), element.id));
+	const softEdge = $derived(getShapeEffectFilterDefs(element));
 
 	/**
 	 * `a:sp3d` bevel lighting `<filter>` definition for this element, when it

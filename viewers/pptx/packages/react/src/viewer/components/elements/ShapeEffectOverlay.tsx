@@ -4,8 +4,7 @@ import {
 	buildSubpathFillOverlay,
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
-	getEffectStyleSource,
-	getSoftEdgeSvgFilter,
+	getShapeEffectFilterDefs,
 	strokeOutlineViewBox,
 } from 'ooxml-ui/pptx';
 import type { StrokeOutlinePaint } from 'ooxml-ui/pptx';
@@ -15,6 +14,7 @@ import React from 'react';
 import type { CSSProperties } from 'react';
 
 import { getImageSurfaceMaskStyle } from '../../utils';
+import { rendersCustomVectorPath, rendersWedgeCalloutVector } from '../../utils/shape-visual-style';
 import { StaticElementRenderer } from '../StaticElementRenderer';
 
 /**
@@ -132,7 +132,7 @@ export function ShapeEffectOverlay({
 	const fx = getComputedEffectStyle(element);
 	const overlay = fx.fillOverlay;
 	const reflection = suppressReflection ? undefined : fx.reflection;
-	const softEdge = getSoftEdgeSvgFilter(getEffectStyleSource(element), element.id);
+	const softEdge = getShapeEffectFilterDefs(element);
 	// The real SVG lighting filter for a `a:sp3d` bevel (see shared
 	// `apply3dEffects`'s doc comment): the container's own `filter` already
 	// carries the matching `url(#bevel-light-<id>)` reference (set by
@@ -145,7 +145,14 @@ export function ShapeEffectOverlay({
 	// so clicks fall through to what it is drawn over, and this transparent band
 	// opts its OUTLINE back into hit testing (same trick as connector-hit-target).
 	const hollowHit = buildHollowHitOutline(element);
-	const subpathFill = buildSubpathFillOverlay(element);
+	// A silhouette shape's fill is painted here, except where React already paints
+	// the whole fill as an inline vector path (custom geometry, wedge callouts).
+	const overlayFill = buildSubpathFillOverlay(element);
+	const subpathFill =
+		overlayFill?.silhouette &&
+		(rendersCustomVectorPath(element) || rendersWedgeCalloutVector(element))
+			? undefined
+			: overlayFill;
 	if (
 		!overlay &&
 		!softEdge &&

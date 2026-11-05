@@ -22,109 +22,31 @@
  * @module render/shape-geometry-cascade
  */
 import type { PptxElement } from 'ooxml-core/pptx';
-import { getRoundRectRadiusPx, getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
-import { getResolvedShapeClipPath, isIdentityRectClip } from './shape-geometry';
-import { outsetClipPathForStroke } from './stroke-clip-outset';
-import { outlineStrokeJoin, straddlingStrokeWidth } from './stroke-outline';
-import { isStrokeOnlyPresetElement } from './stroke-only-preset';
-import { isArrowedCustomPath } from './custom-path-markers';
+import type { ShapeGeometryDecision } from './shape-geometry-base';
+import { resolveBaseShapeGeometry } from './shape-geometry-base';
+import { usesSilhouetteEffects } from './silhouette-effects';
 
-/**
- * What the geometry cascade decided to do with a shape's box.
- *
- * `bare` and `strokeOnly` both mean "paint no box"; they differ only in that a
- * stroke-only preset must also drop any background IMAGE, because its fill was
- * resolved before the cascade ran.
- */
-export type ShapeGeometryDecision =
-	/** Connector: the SVG renderer paints it; the box itself is empty. */
-	| { readonly kind: 'bare' }
-	/** Open preset (line, arc, connector family): outline is stroked as SVG. */
-	| { readonly kind: 'strokeOnly' }
-	/** roundRect / ellipse / cylinder: a CSS `border-radius` approximation. */
-	| { readonly kind: 'borderRadius'; readonly radius: string }
-	/** Any other preset with real geometry: a CSS `clip-path`. */
-	| { readonly kind: 'clipPath'; readonly clipPath: string }
-	/** A `line` preset the evaluator could not open: draw its top edge only. */
-	| { readonly kind: 'lineEdge'; readonly strokeWidth: number }
-	/** Plain rectangle (or nothing to do): leave the box alone. */
-	| { readonly kind: 'none' };
-
-/** Cylinder's CSS radius approximation (per-axis, so it survives non-square). */
-const CYLINDER_RADIUS = '48% / 12%';
-
-/** Below this, a roundRect's radius is not worth emitting. */
-const MIN_ROUND_RECT_RADIUS_PX = 0.01;
+export type { ShapeGeometryDecision } from './shape-geometry-base';
 
 /**
  * Resolve a shape element's geometry to a neutral painting decision.
  *
- * Order is load-bearing and matches PowerPoint's own precedence: connectors and
+ * The base cascade (`resolveBaseShapeGeometry`) is unchanged: connectors and
  * open presets never get a box, the two cheap radius approximations win over a
  * clip-path, and `line`/`cylinder` are consulted only once the evaluator has
- * declined to produce geometry.
+ * declined to produce geometry. One thing overrides it: a shape whose outer
+ * shadow or glow is painted as a silhouette (`silhouette-effects`) must not be
+ * clipped, since a clip-path would cut those effects off; its fill is painted by
+ * the SVG overlay instead (`subpath-fill-overlay`).
  *
  * @param element The shape-like element to resolve.
  * @returns The decision a binding should apply to its style object.
  */
 export function resolveShapeGeometry(element: PptxElement): ShapeGeometryDecision {
-	const shapeType = getShapeType((element as { shapeType?: string }).shapeType);
-
-	if (element.type === 'connector' || shapeType === 'connector') {
-		return { kind: 'bare' };
+	const decision = resolveBaseShapeGeometry(element);
+	if (decision.kind === 'clipPath' && usesSilhouetteEffects(element)) {
+		return { kind: 'none' };
 	}
-
-	// Open presets have no region to fill and no box to outline; the clip in
-	// particular encloses zero area and would clip the stroked overlay away.
-	if (isStrokeOnlyPresetElement(element) || isArrowedCustomPath(element)) {
-		return { kind: 'strokeOnly' };
-	}
-
-	if (shapeType === 'roundRect' && hasShapeProperties(element)) {
-		const radiusPx = getRoundRectRadiusPx(element);
-		return radiusPx > MIN_ROUND_RECT_RADIUS_PX
-			? { kind: 'borderRadius', radius: `${radiusPx}px` }
-			: { kind: 'none' };
-	}
-
-	// `50%`, never a large px value: CSS clamps over-large radii by scaling them
-	// all down uniformly, so a px radius collapses to half the SHORT side on
-	// every corner and paints a pill with flat long edges.
-	if (shapeType === 'ellipse') {
-		return { kind: 'borderRadius', radius: '50%' };
-	}
-
-	// A rect preset's clip is its own bounding box: skip it so overflowing text
-	// spills visibly (as PowerPoint does) instead of being sliced.
-	const clipPath = isIdentityRectClip(element) ? undefined : getResolvedShapeClipPath(element);
-	if (clipPath) {
-		// The outline is a child of the clipped box and is centred on the edge,
-		// so an exact clip would remove its outer half.
-		const stroke = straddlingStrokeWidth(element);
-		return {
-			kind: 'clipPath',
-			clipPath:
-				stroke > 0
-					? outsetClipPathForStroke(
-							clipPath,
-							stroke,
-							element.width,
-							element.height,
-							outlineStrokeJoin(element),
-						)
-					: clipPath,
-		};
-	}
-
-	if (shapeType === 'line') {
-		const authored = (element as { shapeStyle?: { strokeWidth?: number } }).shapeStyle?.strokeWidth;
-		return { kind: 'lineEdge', strokeWidth: Math.max(Math.max(0, authored ?? 0), 2) };
-	}
-
-	if (shapeType === 'cylinder') {
-		return { kind: 'borderRadius', radius: CYLINDER_RADIUS };
-	}
-
-	return { kind: 'none' };
+	return decision;
 }

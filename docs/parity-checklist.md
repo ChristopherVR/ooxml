@@ -397,6 +397,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
       Controls are disabled.
+- [ ] **P2** A non-rectangular shape with a gradient, pattern or picture fill, an inner shadow, a
+      line effect or a 3-D bevel still loses its outer shadow and glow (a clip-path cuts them off);
+      solid and unfilled shapes paint them as a shape-following filter
+      (`src/ui/src/pptx/render/silhouette-effects.ts`). A morphing non-rectangular shape also
+      keeps the clipped effects.
 
 ### Ribbon
 

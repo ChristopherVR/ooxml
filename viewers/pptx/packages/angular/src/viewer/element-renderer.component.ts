@@ -38,6 +38,8 @@ import type { StyleMap } from './element-style';
 import { ImageRendererComponent } from './image-renderer.component';
 import { ReflectionMirrorContentComponent } from './reflection-mirror-content.component';
 import { Rendering3DService } from './rendering-3d.service';
+import { resolveSilhouetteFilter } from './silhouette-filter';
+import type { SilhouetteFilterDef } from './silhouette-filter';
 import type { TableCellCommit } from './table-renderer.component';
 
 export { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
@@ -218,6 +220,11 @@ export class ElementRendererComponent {
 	/** `a:sp3d` bevel lighting `<filter>` descriptor; see `bevel-lighting-filter.ts`. */
 	readonly bevelLightingFilter = computed<BevelLightingFilterDef | undefined>(() =>
 		resolveBevelLightingFilter(this.element(), this.sanitizer),
+	);
+
+	/** Silhouette shadow / glow `<filter>` of a non-rectangular shape. */
+	readonly silhouetteFilter = computed<SilhouetteFilterDef | undefined>(() =>
+		resolveSilhouetteFilter(this.element(), this.sanitizer),
 	);
 
 	/**

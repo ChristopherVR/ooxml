@@ -4,8 +4,7 @@ import {
 	buildSubpathFillOverlay,
 	getBevelLightingSvgFilter,
 	getComputedEffectStyle,
-	getEffectStyleSource,
-	getSoftEdgeSvgFilter,
+	getShapeEffectFilterDefs,
 	buildHollowHitOutline,
 	strokeOutlineViewBox,
 } from 'ooxml-ui/pptx';
@@ -115,7 +114,7 @@ const fillOverlayStyle = computed<CSSProperties | undefined>(() => {
  * `<filter id="soft-edge-<id>">…</filter>` element injected via `v-html`.
  */
 const softEdge = computed(() => {
-	return getSoftEdgeSvgFilter(getEffectStyleSource(props.element), props.element.id);
+	return getShapeEffectFilterDefs(props.element);
 });
 
 /**

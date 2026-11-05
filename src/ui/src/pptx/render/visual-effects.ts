@@ -35,6 +35,7 @@ import { hexToRgbUnit } from './color-units';
 import { glowCssLengths, glowFilterLengths, shadowBlurToCss } from './effect-profile';
 import type { ReflectionWrapperStyle } from './reflection';
 import { getReflectionWrapperStyle } from './reflection';
+import { getSilhouetteEffects } from './silhouette-effects';
 
 // ── Low-level colour helpers (ported from React color-core.ts) ─────────────
 
@@ -406,7 +407,7 @@ export function getGlowBoxShadowCss(
  */
 export function getBoxShadowCss(
 	style: ShapeStyle | undefined,
-	options: { includeGlow?: boolean } = {},
+	options: { includeGlow?: boolean; includeOuter?: boolean } = {},
 	context?: ShadowRenderContext,
 ): string | undefined {
 	if (!style) {
@@ -414,10 +415,10 @@ export function getBoxShadowCss(
 	}
 	const parts: string[] = [];
 
-	const multiLayer = getMultiLayerShadowCss(style);
+	const multiLayer = options.includeOuter === false ? undefined : getMultiLayerShadowCss(style);
 	if (multiLayer) {
 		parts.push(multiLayer);
-	} else {
+	} else if (options.includeOuter !== false) {
 		const outer = getOuterShadowCss(style, context);
 		if (outer) {
 			parts.push(outer);
@@ -907,6 +908,29 @@ export function getSoftEdgeSvgFilter(
 }
 
 /**
+ * The `<filter>` markup a shape's effect filters need, as one definition: the
+ * soft-edge feather and the silhouette shadow / glow filter. A binding injects
+ * `filterMarkup` once next to the element (a hidden `<svg><defs>`); the
+ * `filter` that references them is already on the container.
+ */
+export function getShapeEffectFilterDefs(element: PptxElement): SvgFilterDefinition | undefined {
+	const softEdge = getSoftEdgeSvgFilter(getEffectStyleSource(element), element.id);
+	const silhouette = getSilhouetteEffects(element);
+	if (!softEdge && !silhouette) {
+		return undefined;
+	}
+	const base: SvgFilterDefinition = softEdge ?? {
+		id: silhouette?.filterId ?? '',
+		cssReference: silhouette?.cssReference ?? '',
+		filterMarkup: '',
+	};
+	return {
+		...base,
+		filterMarkup: `${softEdge?.filterMarkup ?? ''}${silhouette?.filterMarkup ?? ''}`,
+	};
+}
+
+/**
  * Build a self-contained, hidden `<svg>` wrapper containing a duotone
  * `<filter>` (BT.709 grayscale → linear two-colour ramp), suitable for direct
  * injection into the DOM in non-React contexts (tests, SSR, string templates).
@@ -1071,11 +1095,17 @@ export function getComputedEffectStyle(
 	const compositeShadow = shadowsCompositePixels
 		? getCompositeOuterShadowFilterCss(style, { rotation: element.rotation })
 		: undefined;
+	// A shape whose clip-path would cut its box-shadow off paints its outer
+	// shadow and glow as one silhouette filter instead (`silhouette-effects`).
+	const silhouette = shadowsCompositePixels ? undefined : getSilhouetteEffects(element);
 	const boxShadow = shadowsCompositePixels
 		? undefined
 		: getBoxShadowCss(
 				style,
-				{ includeGlow: options.includeGlowBoxShadow },
+				{
+					includeGlow: silhouette ? false : options.includeGlowBoxShadow,
+					includeOuter: !silhouette,
+				},
 				{ rotation: element.rotation },
 			);
 	// The line-level shadow (`a:ln/a:effectLst/a:outerShdw`) is part of the same
@@ -1090,11 +1120,12 @@ export function getComputedEffectStyle(
 	}
 
 	// A shape's glow is in its box-shadow; the filter chain is for the rest.
-	const glowInBoxShadow = !shadowsCompositePixels && options.includeGlowBoxShadow !== false;
+	const glowInBoxShadow =
+		!shadowsCompositePixels && (options.includeGlowBoxShadow !== false || silhouette !== undefined);
 	const filter = getEffectFilterCss(style, element.id, { glow: !glowInBoxShadow });
 	// As above for `a:ln/a:effectLst/a:glow`, which is a `drop-shadow` filter.
 	const lineGlow = paintsLineEffectsItself ? undefined : getLineGlowFilterCss(style);
-	const filterParts = [compositeShadow, filter, lineGlow].filter(
+	const filterParts = [silhouette?.cssReference, compositeShadow, filter, lineGlow].filter(
 		(part): part is string => part !== undefined && part !== '',
 	);
 	if (filterParts.length > 0) {
