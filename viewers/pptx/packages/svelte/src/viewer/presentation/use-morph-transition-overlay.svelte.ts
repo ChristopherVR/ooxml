@@ -4,6 +4,7 @@ import {
 	MORPH_CROSSFADE_GROUP_CSS_TEXT,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	morphOptionToMode,
+	morphOverlayStackSlots,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
@@ -59,6 +60,7 @@ export function useMorphTransitionOverlay(options: {
 		if (!morphPlan || !outgoing) {
 			return [];
 		}
+		const slots = morphOverlayStackSlots(morphPlan);
 		return morphPlan.overlayLayers.flatMap((layer, index) => {
 			const slide = layer.side === 'outgoing' ? outgoing : incoming;
 			if (!slide) {
@@ -68,7 +70,7 @@ export function useMorphTransitionOverlay(options: {
 				{
 					key: `${layer.side}-${layer.elements[0]?.id ?? index}`,
 					side: layer.side,
-					style: `z-index: ${MORPH_LAYER_Z_BASE + index};`,
+					style: `z-index: ${MORPH_LAYER_Z_BASE + (slots.layers[index] ?? index)};`,
 					slide: { ...slide, elements: [...layer.elements] } as PptxSlide,
 				},
 			];
@@ -95,12 +97,13 @@ export function useMorphTransitionOverlay(options: {
 		if (!morphPlan || !outgoingSlide || !incomingSlide) {
 			return [];
 		}
+		const slots = morphOverlayStackSlots(morphPlan);
 		return morphPlan.crossfadeGroups.map((group, index) => ({
 			key: group.incoming.id,
 			// `isolation` makes the group a stacking context, so it carries its
-			// own z-index to stay above every overlay layer.
+			// own z-index: its slot in the plan's one back-to-front stack.
 			style: `${MORPH_CROSSFADE_GROUP_CSS_TEXT} z-index: ${
-				MORPH_LAYER_Z_BASE + morphPlan.overlayLayers.length + index
+				MORPH_LAYER_Z_BASE + (slots.groups[index] ?? morphPlan.overlayLayers.length + index)
 			};`,
 			// The dissolve rides these WRAPPERS, not the elements: a pair
 			// dissolving in place never moves, and an animation on the small
