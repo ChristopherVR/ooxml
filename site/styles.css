@@ -993,3 +993,16 @@ dialog h2 {
 	gap: 10px;
 	margin-top: 18px;
 }
+#onedrive-conflict-details summary {
+	cursor: pointer;
+	font-size: 13px;
+}
+.cloud-conflict-details {
+	max-height: 220px;
+	overflow: auto;
+	font-size: 13px;
+}
+.cloud-conflict-details ul {
+	margin: 4px 0 8px;
+	padding-left: 18px;
+}

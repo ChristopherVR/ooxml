@@ -52,8 +52,10 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 					content.id = 'onedrive-conflict';
 					content.innerHTML = `<p>Some edits in <strong>${escape(doc.name)}</strong> could not be combined automatically. Independent changes are merged during Save; the remaining changes overlap or cannot be matched safely. Your edits are saved on this device.</p>
 				<p>The OneDrive version is ${escape(conflict.remote.file.name)}. Saving a copy keeps the original unchanged. Opening the latest first keeps your edits as a separate file in your library.</p>
+				<details id="onedrive-conflict-details"><summary>Details</summary><div class="cloud-conflict-details">Loading...</div></details>
 				<div class="cloud-recovery-actions"><button data-cloud-recovery="copy" class="primary">Save my edits as a OneDrive copy</button><button data-cloud-recovery="latest">Keep local copy and open latest</button><button data-cloud-recovery="download">Download my edits</button><button data-cloud-recovery="download-latest">Download latest OneDrive version</button><button data-cloud-recovery="cancel">Keep editing</button></div>`;
 					content.innerHTML = html(content.innerHTML);
+					showConflictDetails(content.querySelector('#onedrive-conflict-details'), conflict);
 					content.querySelector('[data-cloud-recovery="copy"]').disabled =
 						!options.client?.saveCopy;
 					if (conflict.remote.file.kind !== doc.kind) {
@@ -176,4 +178,52 @@ export function mountOneDrive({ store, sessions, open, refresh, showView }) {
 	$('open-onedrive').textContent = message(browser ? 'Browse OneDrive' : 'Open from OneDrive');
 	$('open-onedrive').onclick = () => void task(cloud.showFiles);
 	return cloud;
+}
+
+/**
+ * The conflict dialog's Details: why combining stopped and which parts of the package changed in
+ * OneDrive and on this device since the file was opened. Computed when first expanded.
+ */
+function showConflictDetails(details, conflict) {
+	if (!details) return;
+	const body = details.querySelector('.cloud-conflict-details');
+	const list = (title, names) =>
+		names.length
+			? `<p>${escape(title)}</p><ul>${names.map((name) => `<li><code>${escape(name)}</code></li>`).join('')}</ul>`
+			: '';
+	const describe = (diff) => [
+		...diff.changed.map((n) => `${n} (changed)`),
+		...diff.added.map((n) => `${n} (added)`),
+		...diff.removed.map((n) => `${n} (removed)`),
+	];
+	details.addEventListener(
+		'toggle',
+		() => {
+			void (async () => {
+				try {
+					const { diffOpcPackages } = await import('ooxml-core/opc');
+					const [remote, local] = await Promise.all([
+						diffOpcPackages(conflict.base.bytes, conflict.remote.bytes),
+						diffOpcPackages(conflict.base.bytes, conflict.local),
+					]);
+					const remoteParts = describe(remote);
+					const localParts = describe(local);
+					const both = remoteParts.filter((name) => localParts.includes(name));
+					body.innerHTML = [
+						conflict.issues?.length
+							? list('Why the edits were not combined:', conflict.issues)
+							: '',
+						remoteParts.length
+							? list('Changed in OneDrive since you opened the file:', remoteParts)
+							: '<p>OneDrive reported a newer version, but its content matches what you opened.</p>',
+						list('Changed on this device:', localParts),
+						list('Changed in both:', both),
+					].join('');
+				} catch (error) {
+					body.textContent = `Details are unavailable: ${error instanceof Error ? error.message : String(error)}`;
+				}
+			})();
+		},
+		{ once: true },
+	);
 }
