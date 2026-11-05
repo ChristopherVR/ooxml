@@ -105,6 +105,7 @@ const { morphPlan, morphOverlayLayers, morphCrossfadeGroups, morphCss } = useMor
 		outgoingSlide: () => props.outgoingSlide,
 		incomingSlide: () => props.incomingSlide,
 		durationMs: () => durationMs.value,
+		slideSize: () => props.canvasSize,
 	},
 );
 

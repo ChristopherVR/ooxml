@@ -31,15 +31,19 @@ export function useMorphTransitionOverlay(options: {
 	outgoingSlide: () => PptxSlide | undefined;
 	incomingSlide: () => PptxSlide | undefined;
 	durationMs: () => number;
+	/** The slide's size: a turning flip is seen from its centre (shared `morph-flip-turn`). */
+	slideSize?: () => { width: number; height: number } | undefined;
 }) {
 	const morphPlan = computed(() => {
 		const transition = options.transition();
+		const slideSize = options.slideSize?.();
 		return transition?.type === 'morph'
 			? buildMorphTransitionPlan(
 					options.outgoingSlide(),
 					options.incomingSlide(),
 					options.durationMs(),
 					morphOptionToMode(transition.morphOption),
+					slideSize ? { slideSize } : {},
 				)
 			: undefined;
 	});

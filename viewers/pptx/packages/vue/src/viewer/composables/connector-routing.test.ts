@@ -266,9 +266,11 @@ describe('getCompoundLineOffsets', () => {
 		expect(offsets[1]).toBe(0); // centre line
 	});
 
-	it('uses a minimum gap of 1.5 regardless of thin strokeWidth', () => {
-		const offsets = getCompoundLineOffsets('dbl', 0.1);
-		expect(Math.abs(offsets[0]!)).toBeGreaterThanOrEqual(1.5);
+	it('keeps the strands inside the line width, a third off centre for dbl', () => {
+		// PowerPoint 16 cuts a dbl line into thirds (shared `connector-style`).
+		const offsets = getCompoundLineOffsets('dbl', 6);
+		expect(offsets[0]).toBeCloseTo(-2);
+		expect(offsets[1]).toBeCloseTo(2);
 	});
 });
 
@@ -280,8 +282,8 @@ describe('getCompoundLineWidths', () => {
 		expect(getCompoundLineWidths('sng', 4)).toStrictEqual([4]);
 	});
 
-	it('returns 2 widths summing to base for dbl', () => {
-		const widths = getCompoundLineWidths('dbl', 4);
+	it('returns 2 widths for dbl, each a third of the line (the gap is the other third)', () => {
+		const widths = getCompoundLineWidths('dbl', 6);
 		expect(widths).toHaveLength(2);
 		const sum = widths.reduce((a, b) => a + b, 0);
 		expect(sum).toBeCloseTo(4);
