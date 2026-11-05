@@ -270,6 +270,7 @@ export type {
 	ElementFlipInput,
 	TextBodyInput,
 	LinkInput,
+	CustomPathInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';

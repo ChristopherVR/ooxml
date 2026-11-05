@@ -37,11 +37,28 @@ export function sampleQuadratic(
 	}
 }
 
+/** An SVG elliptical arc in centre parameterization (SVG 1.1 appendix F.6.5). */
+export interface SvgArcCenter {
+	cx: number;
+	cy: number;
+	/** Radii, scaled up when too small to reach the end point (F.6.6). */
+	rx: number;
+	ry: number;
+	/** The x-axis rotation in radians, with its cosine and sine. */
+	phi: number;
+	cosPhi: number;
+	sinPhi: number;
+	/** Start angle and signed sweep, in radians. */
+	theta1: number;
+	deltaTheta: number;
+}
+
 /**
- * Sample an SVG elliptical arc (endpoint parameterization, SVG spec F.6) into
- * points, appended to `out`. Excludes the start point.
+ * The centre parameterization of an SVG arc from `start` to `end`, or
+ * `undefined` when the arc is not drawn as one: a zero radius (a straight
+ * line, as SVG draws it) or coincident end points (nothing).
  */
-export function sampleArc(
+export function svgArcCenter(
 	start: Point2,
 	rxIn: number,
 	ryIn: number,
@@ -49,12 +66,9 @@ export function sampleArc(
 	largeArcFlag: boolean,
 	sweepFlag: boolean,
 	end: Point2,
-	segments: number,
-	out: Point2[],
-): void {
+): SvgArcCenter | undefined {
 	if (rxIn === 0 || ryIn === 0 || (start.x === end.x && start.y === end.y)) {
-		out.push(end);
-		return;
+		return undefined;
 	}
 	const phi = (xAxisRotationDeg * Math.PI) / 180;
 	const cosPhi = Math.cos(phi);
@@ -100,12 +114,41 @@ export function sampleArc(
 	} else if (sweepFlag && deltaTheta < 0) {
 		deltaTheta += 2 * Math.PI;
 	}
+	return { cx, cy, rx, ry, phi, cosPhi, sinPhi, theta1, deltaTheta };
+}
 
-	const steps = Math.max(2, Math.round(segments * (Math.abs(deltaTheta) / (Math.PI / 2))));
+/** The point at angle `theta` of an arc's ellipse. */
+export function svgArcPoint(arc: SvgArcCenter, theta: number): Point2 {
+	const x = arc.rx * Math.cos(theta);
+	const y = arc.ry * Math.sin(theta);
+	return {
+		x: arc.cx + x * arc.cosPhi - y * arc.sinPhi,
+		y: arc.cy + x * arc.sinPhi + y * arc.cosPhi,
+	};
+}
+
+/**
+ * Sample an SVG elliptical arc (endpoint parameterization, SVG spec F.6) into
+ * points, appended to `out`. Excludes the start point.
+ */
+export function sampleArc(
+	start: Point2,
+	rxIn: number,
+	ryIn: number,
+	xAxisRotationDeg: number,
+	largeArcFlag: boolean,
+	sweepFlag: boolean,
+	end: Point2,
+	segments: number,
+	out: Point2[],
+): void {
+	const arc = svgArcCenter(start, rxIn, ryIn, xAxisRotationDeg, largeArcFlag, sweepFlag, end);
+	if (!arc) {
+		out.push(end);
+		return;
+	}
+	const steps = Math.max(2, Math.round(segments * (Math.abs(arc.deltaTheta) / (Math.PI / 2))));
 	for (let i = 1; i <= steps; i++) {
-		const theta = theta1 + (deltaTheta * i) / steps;
-		const x = cx + rx * Math.cos(theta) * cosPhi - ry * Math.sin(theta) * sinPhi;
-		const y = cy + rx * Math.cos(theta) * sinPhi + ry * Math.sin(theta) * cosPhi;
-		out.push({ x, y });
+		out.push(svgArcPoint(arc, arc.theta1 + (arc.deltaTheta * i) / steps));
 	}
 }

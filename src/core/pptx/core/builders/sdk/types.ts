@@ -20,6 +20,7 @@ import type {
 } from '../../types/chart';
 import type { PptxThemeColorRef } from '../../types/color-ref';
 import type { StrokeDashType, ConnectorArrowType } from '../../types/common';
+import type { CustomGeometrySegment } from '../../types/geometry';
 import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
 import type { ChartAreaFormatInput } from './chart-layout-input';
@@ -298,6 +299,25 @@ export interface TextOptions extends Partial<ElementPosition>, ElementFlipInput,
 // Shape input
 // ---------------------------------------------------------------------------
 
+/**
+ * One `a:path` of a custom geometry. Its `width` x `height` box is stretched
+ * over the shape (`a:path/@w`, `@h`). Give `d` (SVG path data: any command,
+ * absolute or relative, arcs written as cubic Beziers) or `segments`, not
+ * both. Path data that cannot be read throws a `SyntaxError`; an empty path,
+ * a box that is not positive, or a coordinate that is not finite throws a
+ * `RangeError`.
+ */
+export interface CustomPathInput {
+	d?: string;
+	segments?: CustomGeometrySegment[];
+	width: number;
+	height: number;
+	/** How the path is filled (`a:path/@fill`); `'none'` for an outline-only path. Default: filled. */
+	fill?: 'norm' | 'lighten' | 'lightenLess' | 'darken' | 'darkenLess' | 'none';
+	/** Whether the path is stroked (`a:path/@stroke`). Default: stroked. */
+	stroke?: boolean;
+}
+
 export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput, TextBodyInput {
 	fill?: FillInput;
 	stroke?: StrokeInput;
@@ -317,6 +337,12 @@ export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput
 	opacity?: number;
 	/** What clicking the shape does (`p:cNvPr/a:hlinkClick`). */
 	link?: LinkInput;
+	/**
+	 * A custom geometry (`a:custGeom`) instead of the preset: one `a:path` per
+	 * entry. The shape type argument is then not used. An empty list is no
+	 * custom geometry.
+	 */
+	paths?: CustomPathInput[];
 }
 
 // ---------------------------------------------------------------------------

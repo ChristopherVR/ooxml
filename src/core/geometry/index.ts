@@ -81,6 +81,8 @@ export * from './shape-definitions-primary';
 export * from './shape-gallery-catalog';
 export { at } from './indexed';
 export * from './svg-path-flatten';
+export * from './svg-path-segments';
+export * from './svg-path-tokens';
 export * from './snap-guides';
 export * from './align-distribute';
 

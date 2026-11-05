@@ -42,6 +42,7 @@ import { columnFractions, placeTableCells } from './table-merge-input';
 import { characterSpacingToSpc, mapTextBodyInput } from './text-body-input';
 import { tableCellRunsFromSegments } from './table-cell-runs-input';
 import { elementStyleForSegments } from './text-segment-style';
+import { customGeometryFromInput } from './custom-path-input';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -342,6 +343,9 @@ export function createShapeElement(
 		),
 		...withAction(options?.link),
 	};
+	if (options?.paths && options.paths.length > 0) {
+		Object.assign(el, customGeometryFromInput(options.paths, p.width, p.height));
+	}
 	applyShapeText(el, options);
 	return el;
 }
