@@ -220,10 +220,10 @@ describe('flowchart preset shape definitions', () => {
 		expect(hasCubic).toBeTruthy();
 	});
 
-	it('flowChartMultidocument has three sub-paths (three stacked documents)', () => {
+	it('flowChartMultidocument has the three documents plus one stroke path', () => {
 		const def =
 			FLOWCHART_PRESET_DEFINITIONS.flowChartMultidocument as PresetShapeGeometryDefinition;
-		expect(def.pathLst).toHaveLength(3);
+		expect(def.pathLst).toHaveLength(4);
 	});
 
 	it('flowChartConnector is a circle (uses 4 arcTo commands)', () => {

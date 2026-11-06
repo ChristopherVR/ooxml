@@ -176,9 +176,10 @@ const flowChartDocument: PresetShapeGeometryDefinition = {
 	],
 };
 
-// flowChartMultidocument — three stacked documents offset diagonally.
-// ECMA reference x/y guides taken from presetShapeDefinitions.xml (21600
-// canvas, three offset copies of the document path).
+// flowChartMultidocument: three stacked documents offset diagonally. Only the
+// front one has the wavy bottom edge. Measured on PowerPoint 16: the front
+// document ends at x = 18595 / 21600, the middle one at 20000 / 21600, and the
+// edges that are hidden behind a nearer document are not stroked.
 const flowChartMultidocument: PresetShapeGeometryDefinition = {
 	name: 'flowChartMultidocument',
 	gdLst: [
@@ -192,60 +193,67 @@ const flowChartMultidocument: PresetShapeGeometryDefinition = {
 		gd('y8', '*/ h 20782 21600'),
 		gd('y9', '*/ h 14467 21600'),
 		gd('x1', '*/ w 1532 21600'),
-		gd('x2', '*/ w 20465 21600'),
-		gd('x3', '*/ w 9722 21600'),
-		gd('x4', '*/ w 11612 21600'),
-		gd('x5', '*/ w 2452 21600'),
-		gd('x6', '*/ w 3027 21600'),
-		gd('x7', '*/ w 3192 21600'),
-		gd('x8', '*/ w 20342 21600'),
-		gd('x9', '*/ w 18512 21600'),
+		gd('x2', '*/ w 20000 21600'),
+		gd('x3', '*/ w 9298 21600'),
+		gd('x4', '*/ w 19298 21600'),
+		gd('x5', '*/ w 18595 21600'),
+		gd('x6', '*/ w 2972 21600'),
 	],
-	rect: { l: 'l', t: 'y2', r: 'x2', b: 'y6' },
+	rect: { l: 'l', t: 'y2', r: 'x5', b: 'y8' },
 	pathLst: [
 		{
-			// Front (bottom-left) document
+			// Back document (fill only)
+			stroke: false,
+			commands: [
+				{ kind: 'moveTo', x: 'x6', y: 'y4' },
+				{ kind: 'lnTo', x: 'x6', y: 't' },
+				{ kind: 'lnTo', x: 'r', y: 't' },
+				{ kind: 'lnTo', x: 'r', y: 'y7' },
+				{ kind: 'lnTo', x: 'x2', y: 'y9' },
+				{ kind: 'lnTo', x: 'x2', y: 'y4' },
+				{ kind: 'close' },
+			],
+		},
+		{
+			// Middle document (fill only)
+			stroke: false,
+			commands: [
+				{ kind: 'moveTo', x: 'x1', y: 'y2' },
+				{ kind: 'lnTo', x: 'x1', y: 'y4' },
+				{ kind: 'lnTo', x: 'x2', y: 'y4' },
+				{ kind: 'lnTo', x: 'x2', y: 'y5' },
+				{ kind: 'lnTo', x: 'x4', y: 'y6' },
+				{ kind: 'lnTo', x: 'x5', y: 'y6' },
+				{ kind: 'lnTo', x: 'x5', y: 'y2' },
+				{ kind: 'close' },
+			],
+		},
+		{
+			// Front document with the wavy bottom
 			commands: [
 				{ kind: 'moveTo', x: 'l', y: 'y2' },
-				{ kind: 'lnTo', x: 'x2', y: 'y2' },
-				{ kind: 'lnTo', x: 'x2', y: 'y1' },
-				{
-					kind: 'cubicBezTo',
-					x1: 'x4',
-					y1: 'y3',
-					x2: 'x3',
-					y2: 'y8',
-					x3: 'l',
-					y3: 'y1',
-				},
+				{ kind: 'lnTo', x: 'x5', y: 'y2' },
+				{ kind: 'lnTo', x: 'x5', y: 'y1' },
+				{ kind: 'cubicBezTo', x1: 'x3', y1: 'y1', x2: 'x3', y2: 'y3', x3: 'l', y3: 'y8' },
 				{ kind: 'close' },
 			],
 		},
 		{
-			// Middle document
+			// The visible edges of the two documents behind
+			fill: 'none',
 			commands: [
-				{ kind: 'moveTo', x: 'x5', y: 'y2' },
-				{ kind: 'lnTo', x: 'x5', y: 'y4' },
-				{ kind: 'lnTo', x: 'x8', y: 'y4' },
-				{ kind: 'lnTo', x: 'x8', y: 'y7' },
-				{ kind: 'lnTo', x: 'x2', y: 'y7' },
-				{ kind: 'lnTo', x: 'x2', y: 'y2' },
-				{ kind: 'close' },
-			],
-			fill: 'darken',
-		},
-		{
-			// Back document
-			commands: [
-				{ kind: 'moveTo', x: 'x7', y: 'y4' },
-				{ kind: 'lnTo', x: 'x7', y: 't' },
+				{ kind: 'moveTo', x: 'x1', y: 'y2' },
+				{ kind: 'lnTo', x: 'x1', y: 'y4' },
+				{ kind: 'lnTo', x: 'x2', y: 'y4' },
+				{ kind: 'lnTo', x: 'x2', y: 'y5' },
+				{ kind: 'lnTo', x: 'x4', y: 'y6' },
+				{ kind: 'lnTo', x: 'x5', y: 'y6' },
+				{ kind: 'moveTo', x: 'x6', y: 'y4' },
+				{ kind: 'lnTo', x: 'x6', y: 't' },
 				{ kind: 'lnTo', x: 'r', y: 't' },
-				{ kind: 'lnTo', x: 'r', y: 'y9' },
-				{ kind: 'lnTo', x: 'x9', y: 'y9' },
-				{ kind: 'lnTo', x: 'x9', y: 'y4' },
-				{ kind: 'close' },
+				{ kind: 'lnTo', x: 'r', y: 'y7' },
+				{ kind: 'lnTo', x: 'x2', y: 'y9' },
 			],
-			fill: 'darken',
 		},
 	],
 };
@@ -640,23 +648,28 @@ const flowChartOnlineStorage: PresetShapeGeometryDefinition = {
 	],
 };
 
-// flowChartMagneticDisk — vertical cylinder. Top + bottom are ellipses, body
-// is two vertical lines. Cylinder height ≈ 1/8 of total.
+// flowChartMagneticDisk — vertical cylinder. Measured on PowerPoint 16: the
+// top and bottom ellipses are `h / 3` tall (vertical radius h / 6), the sides
+// run between their centres, and the front arc of the top ellipse is stroked.
 const flowChartMagneticDisk: PresetShapeGeometryDefinition = {
 	name: 'flowChartMagneticDisk',
-	gdLst: [gd('y3', '*/ h 1 8'), gd('y4', '*/ h 7 8')],
-	rect: { l: 'l', t: 'y3', r: 'r', b: 'y4' },
+	gdLst: [gd('y1', '*/ h 1 6'), gd('y2', '*/ h 1 3'), gd('y3', '*/ h 5 6'), gd('y4', '*/ h 2 3')],
+	rect: { l: 'l', t: 'y2', r: 'r', b: 'y4' },
 	pathLst: [
 		{
 			commands: [
-				{ kind: 'moveTo', x: 'l', y: 'y3' },
-				{ kind: 'arcTo', wR: 'wd2', hR: 'hd8', stAng: 'cd2', swAng: '-10800000' },
-				{ kind: 'lnTo', x: 'r', y: 'y4' },
-				{ kind: 'arcTo', wR: 'wd2', hR: 'hd8', stAng: '0', swAng: 'cd2' },
+				{ kind: 'moveTo', x: 'l', y: 'y1' },
+				{ kind: 'arcTo', wR: 'wd2', hR: 'y1', stAng: 'cd2', swAng: 'cd2' },
+				{ kind: 'lnTo', x: 'r', y: 'y3' },
+				{ kind: 'arcTo', wR: 'wd2', hR: 'y1', stAng: '0', swAng: 'cd2' },
 				{ kind: 'close' },
-				// Front-arc indicating the visible portion of the top disk
-				{ kind: 'moveTo', x: 'l', y: 'y3' },
-				{ kind: 'arcTo', wR: 'wd2', hR: 'hd8', stAng: 'cd2', swAng: 'cd2' },
+			],
+		},
+		{
+			fill: 'none',
+			commands: [
+				{ kind: 'moveTo', x: 'l', y: 'y1' },
+				{ kind: 'arcTo', wR: 'wd2', hR: 'y1', stAng: 'cd2', swAng: '-10800000' },
 			],
 		},
 	],
