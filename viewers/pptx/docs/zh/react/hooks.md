@@ -125,7 +125,7 @@ function MyStrip({ blocks }: { blocks: ReturnType<typeof useViewerBuildingBlocks
 }
 ```
 
-未设置 `previewWidth` 时，缩略图采用缩略图栏的宽度和边框。
+未设置 `previewWidth` 时，缩略图采用缩略图栏的宽度和边框。它在收到不同的 `slide` 对象时重绘，通过查看器进行的每次编辑都会产生新的对象；自行编辑幻灯片的宿主应替换幻灯片对象，而不是原地修改它。
 
 ### 打开指定幻灯片 {#opening-on-a-slide}
 

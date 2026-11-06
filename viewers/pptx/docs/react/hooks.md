@@ -163,7 +163,9 @@ function MyStrip({ blocks }: { blocks: ReturnType<typeof useViewerBuildingBlocks
 }
 ```
 
-Without `previewWidth`, the thumbnail is the rail's width and gets the rail's border.
+Without `previewWidth`, the thumbnail is the rail's width and gets the rail's border. It redraws
+when it receives a different `slide` object, as every edit made through the viewer produces; a host
+that edits slides itself should replace the slide object rather than mutate it.
 
 ### Opening on a slide
 

@@ -46,6 +46,22 @@ describe('scaledSlidePreviewPropsEqual', () => {
 		expect(scaledSlidePreviewPropsEqual(prev, next)).toBeFalsy();
 	});
 
+	it('is unequal when only slide metadata changes, with the same element references', () => {
+		// The preview hands the slide to every element as `activeSlide`, so the
+		// slide number field follows a renumbering that keeps `elements`.
+		const base = makeProps();
+		const next = { ...base, slide: { ...base.slide, slideNumber: 2 } };
+		expect(next.slide.elements).toBe(base.slide.elements);
+		expect(scaledSlidePreviewPropsEqual(base, next)).toBeFalsy();
+	});
+
+	it('skips a parent re-render that passes the same slide object', () => {
+		const base = makeProps();
+		expect(
+			scaledSlidePreviewPropsEqual(base, { ...base, canvasSize: { width: 960, height: 540 } }),
+		).toBeTruthy();
+	});
+
 	it('is unequal when the slide id, dirty flag, hidden flag or className changes', () => {
 		const base = makeProps();
 		expect(

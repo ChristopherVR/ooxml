@@ -102,4 +102,37 @@ describe('slideThumbnail', () => {
 		render([shape('a'), shape('b')]);
 		expect(drawn()).toHaveLength(2);
 	});
+
+	it('follows slide metadata edits that keep the same elements', () => {
+		const number = {
+			...shape('number'),
+			type: 'text',
+			textSegments: [{ text: '#', style: {}, fieldType: 'slidenum' }],
+		} as unknown as PptxElement;
+		const base = slide([number]);
+		// Stable context and template references, as a host keeps them: only the
+		// slide object changes below.
+		const fieldContext = {};
+		const templateElements: PptxElement[] = [];
+		const render = (next: PptxSlide) =>
+			act(() =>
+				root.render(
+					<SlideThumbnail
+						slide={next}
+						templateElements={templateElements}
+						canvasSize={canvasSize}
+						previewWidth={120}
+						fieldContext={fieldContext}
+					/>,
+				),
+			);
+		render(base);
+		expect(container.textContent).toBe('1');
+		// Adding a fade keeps the element and template references: the badge must still show.
+		render({ ...base, transition: { type: 'fade' } } as PptxSlide);
+		expect(container.querySelector('[title]')?.textContent).toBeTruthy();
+		// Renumbering (a slide moved earlier) keeps them too: the number field must follow.
+		render({ ...base, slideNumber: 7 });
+		expect(container.textContent).toBe('7');
+	});
 });
