@@ -960,6 +960,7 @@ export * from './slide-transition-fragments';
 // Inspector-side option catalogues for the transition section: the type list,
 // the orientation-vs-direction rule, and the arrow-grid tables.
 export * from './slide-transition-options';
+export * from './slide-thumbnail-badge';
 export * from './slide-transition-edits';
 // What the Transitions ribbon's Sound picker shows and what picking a file
 // (or clearing one) writes; packages/core embeds the picked file on save.

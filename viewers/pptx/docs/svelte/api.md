@@ -307,7 +307,9 @@ conditionally to hide it. `SlidesPane` is also exported from the package root, a
 `SlideThumbnail` (exported, with its `SlideThumbnailProps` type, from the package root and
 `pptx-svelte-viewer/viewer`) draws one slide the way `SlidesPane` draws it, for a host that keeps
 its own thumbnail strip. It renders from the slide model, so it follows unsaved edits, and it is
-static: no selection, editing, pointer handlers, focus stops or element ids. Its props are
+static: no selection, editing, pointer handlers, focus stops or element ids. A slide with a
+transition other than Cut shows the transition's name in a small badge in its top-right corner, as
+the thumbnail does in every binding (Svelte's slides pane draws no badge). Its props are
 `slide`, `templateElements` (layout and master elements drawn beneath the slide's own; default
 none), `canvasSize` and `previewWidth` (pixels; default the rail thumbnail width; the height
 follows the deck's aspect ratio), plus the `SlidesPane` props it shares: `mediaDataUrls`,

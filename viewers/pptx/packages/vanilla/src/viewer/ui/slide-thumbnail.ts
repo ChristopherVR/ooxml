@@ -10,6 +10,8 @@ import {
 	deriveSlideFieldContext,
 	EDITOR_THUMBNAIL_WIDTH,
 	slideThumbnailLayout,
+	slideThumbnailTransitionBadge,
+	slideThumbnailTransitionBadgeStyle,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
@@ -66,7 +68,9 @@ export interface SlideThumbnailOptions extends Pick<
  * exactly as the slides pane draws its thumbnails. The stage is static: it is
  * `inert` (no focus stops or pointer interaction), carries no editing contract,
  * and its elements carry no `data-element-id`, so element ids stay unique to
- * the editing canvas.
+ * the editing canvas. A slide with a transition (other than Cut) shows its name
+ * in a corner badge, from the shared `slideThumbnailTransitionBadge`, as every
+ * binding's thumbnail does; the slides pane draws none.
  *
  * It draws from the slide model, so call it again when the slide changes
  * (any field: elements, background, transition, number, hidden,
@@ -113,6 +117,7 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 		firstSlideNumber: options.firstSlideNumber,
 		locale: options.locale,
 	});
+	const t = options.t ?? createTranslator();
 	const currentSlideIndex = options.slides?.indexOf(slide) ?? -1;
 	const stage = renderSlideStage({
 		document: doc,
@@ -125,7 +130,7 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 		tableStyleMap: options.tableStyleMap,
 		fieldContext: deriveSlideFieldContext(deckFieldContext, slide),
 		registry: options.registry ?? createDefaultRegistry(),
-		t: options.t ?? createTranslator(),
+		t,
 		scale: layout.scale,
 		slides: options.slides,
 		currentSlideIndex: currentSlideIndex >= 0 ? currentSlideIndex : undefined,
@@ -139,5 +144,13 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 		overflow: 'hidden',
 	});
 	box.appendChild(stage);
+	const badge = slideThumbnailTransitionBadge(slide, t);
+	if (badge) {
+		const badgeEl = createEl(doc, 'div', undefined, slideThumbnailTransitionBadgeStyle(layout));
+		badgeEl.dataset.pptxThumbnailTransition = '';
+		badgeEl.title = badge.title;
+		badgeEl.textContent = badge.label;
+		box.appendChild(badgeEl);
+	}
 	return box;
 }

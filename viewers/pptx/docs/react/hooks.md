@@ -134,9 +134,11 @@ gallery. `SlidesPane` needs the full `styles.css`, not `canvas.css`.
 `SlideThumbnail` (exported, with its `SlideThumbnailProps` type, from the package root) draws one
 slide the way `SlidesPane` draws it, for a host that keeps its own thumbnail strip. It renders from
 the slide model, so it follows unsaved edits, and it is static: no selection, editing, pointer
-handlers or element ids. Its props are `slide`, `templateElements` (the slide's layout and master
-elements, drawn beneath its own), `canvasSize`, `previewWidth` (pixels; the height follows the
-deck's aspect ratio), `fieldContext` and `tableStyleContext`. Feed them from `slidesPaneProps`:
+handlers or element ids. A slide with a transition other than Cut shows the transition's name in a
+small badge in its top-right corner, as the thumbnail does in every binding. Its props are `slide`,
+`templateElements` (the slide's layout and master elements, drawn beneath its own), `canvasSize`,
+`previewWidth` (pixels; the height follows the deck's aspect ratio), `fieldContext` and
+`tableStyleContext`. Feed them from `slidesPaneProps`:
 
 ```tsx
 import { SlideThumbnail, useViewerBuildingBlocks } from 'pptx-react-viewer';

@@ -6,7 +6,7 @@ import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // Import through the package entry so the test also covers the public export.
-import { SlideThumbnail } from '../../index';
+import { PptxI18nProvider, SlideThumbnail } from '../../index';
 
 let container: HTMLDivElement;
 let root: Root;
@@ -134,5 +134,39 @@ describe('slideThumbnail', () => {
 		// Renumbering (a slide moved earlier) keeps them too: the number field must follow.
 		render({ ...base, slideNumber: 7 });
 		expect(container.textContent).toBe('7');
+	});
+
+	// The same badge, from the same shared descriptor, in every binding.
+	it('draws the transition badge in the corner, at the slide scale', () => {
+		const translate = (key: string, params?: Record<string, unknown>) =>
+			({
+				'pptx.ribbon.transition.fade': 'Fade',
+				'pptx.slideThumbnail.transitionTooltip': `Transition: ${String(params?.name)}`,
+			})[key] ?? key;
+		const render = (transition: PptxSlide['transition']) =>
+			act(() =>
+				root.render(
+					<PptxI18nProvider translate={translate} locale='en'>
+						<SlideThumbnail
+							slide={{ ...slide([shape('a')]), transition } as PptxSlide}
+							templateElements={[]}
+							canvasSize={canvasSize}
+							previewWidth={120}
+						/>
+					</PptxI18nProvider>,
+				),
+			);
+		const badge = () =>
+			container.querySelector<HTMLElement>(':scope > div > [data-pptx-thumbnail-transition]');
+		render({ type: 'fade' });
+		expect(badge()?.textContent).toBe('Fade');
+		expect(badge()?.title).toBe('Transition: Fade');
+		expect(badge()?.style.transform).toBe('scale(0.125)');
+		// The drawn slide's corner, 120px from the box's left edge.
+		expect(badge()?.style.right).toBe('calc(100% - 119.75px)');
+		render({ type: 'cut' });
+		expect(badge()).toBeNull();
+		render(undefined);
+		expect(badge()).toBeNull();
 	});
 });

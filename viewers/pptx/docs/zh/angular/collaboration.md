@@ -283,7 +283,7 @@ export class CustomSlidesComponent {
 
 ### 单张幻灯片缩略图 {#single-slide-thumbnail}
 
-`SlideThumbnailComponent`（`<pptx-slide-thumbnail>`，由包根入口导出）按 `<pptx-slides-panel>` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用。它根据幻灯片模型渲染，因此会反映未保存的编辑；它是静态的：没有选择、编辑、指针处理程序、焦点停靠点或元素 id，因此不会与编辑画布冲突。它的输入为 `[slide]`、`[templateElements]`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）、`[canvasSize]` 和 `[previewWidth]`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与缩略图栏含义相同、同样回退到外层 `LoadContentService` 的输入：`[mediaDataUrls]`、`[headerFooter]`、`[customProperties]`、`[firstSlideNumber]`、`[locale]`、`[theme]` 和 `[tableStyleMap]`。用你绑定到缩略图栏的同一组值为它提供数据：
+`SlideThumbnailComponent`（`<pptx-slide-thumbnail>`，由包根入口导出）按 `<pptx-slides-panel>` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用。它根据幻灯片模型渲染，因此会反映未保存的编辑；它是静态的：没有选择、编辑、指针处理程序、焦点停靠点或元素 id，因此不会与编辑画布冲突。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致（`<pptx-slides-panel>` 不绘制该标记）。它的输入为 `[slide]`、`[templateElements]`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）、`[canvasSize]` 和 `[previewWidth]`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与缩略图栏含义相同、同样回退到外层 `LoadContentService` 的输入：`[mediaDataUrls]`、`[headerFooter]`、`[customProperties]`、`[firstSlideNumber]`、`[locale]`、`[theme]` 和 `[tableStyleMap]`。用你绑定到缩略图栏的同一组值为它提供数据：
 
 ```ts
 import { SlideThumbnailComponent, ViewerCollaborationShellService } from 'pptx-angular-viewer';

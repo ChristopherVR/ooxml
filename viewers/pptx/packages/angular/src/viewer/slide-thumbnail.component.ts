@@ -6,8 +6,15 @@
  *
  * @module angular-viewer/slide-thumbnail
  */
+import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { buildPreviewElements, EDITOR_THUMBNAIL_WIDTH, slideThumbnailLayout } from 'ooxml-ui/pptx';
+import {
+	buildPreviewElements,
+	EDITOR_THUMBNAIL_WIDTH,
+	slideThumbnailLayout,
+	slideThumbnailTransitionBadge,
+	slideThumbnailTransitionBadgeStyle,
+} from 'ooxml-ui/pptx';
 import type { CanvasSize } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -18,6 +25,7 @@ import type {
 	PptxTheme,
 } from 'pptx-viewer-core';
 
+import { injectMenuTranslate } from './context-menu-translate';
 import { FieldContextService } from './field-context.service';
 import { LoadContentService } from './load-content.service';
 import { SlideCanvasComponent } from './slide-canvas.component';
@@ -39,7 +47,9 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
  * deck's aspect ratio; the stage inside is drawn at the full canvas size and
  * scaled from the top-left. Nothing in it is selectable, editable or focusable,
  * and its elements carry no `data-element-id`, so it never competes with the
- * editing canvas.
+ * editing canvas. A slide with a transition (other than Cut) shows its name in
+ * a corner badge, from the shared `slideThumbnailTransitionBadge`, as every
+ * binding's thumbnail does; the slides pane draws none.
  *
  * Feed it from the values a host already binds on `<pptx-slides-panel>`:
  * `templateElementsBySlideId[slide.id]`, `canvasSize`, `mediaDataUrls`,
@@ -62,7 +72,7 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
 	selector: 'pptx-slide-thumbnail',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [SlideCanvasComponent],
+	imports: [NgStyle, SlideCanvasComponent],
 	// The stage resolves fields and table styles from these inputs (else the
 	// deck loader), exactly as the rail's thumbnails do.
 	viewProviders: [
@@ -87,6 +97,15 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
 				[autoFit]="false"
 				[interactive]="false"
 			/>
+			@if (transitionBadge(); as badge) {
+				<div
+					data-pptx-thumbnail-transition
+					[attr.title]="badge.title"
+					[ngStyle]="transitionBadgeStyle()"
+				>
+					{{ badge.label }}
+				</div>
+			}
 		</div>
 	`,
 	styles: `
@@ -147,6 +166,8 @@ export class SlideThumbnailComponent {
 
 	protected readonly noTemplateElements = NO_TEMPLATE_ELEMENTS;
 
+	private readonly translate = injectMenuTranslate();
+
 	readonly stageSize = computed<CanvasSize>(() => ({
 		width: Math.max(1, this.canvasSize().width),
 		height: Math.max(1, this.canvasSize().height),
@@ -162,4 +183,11 @@ export class SlideThumbnailComponent {
 		const slide = this.slide();
 		return { ...slide, elements: buildPreviewElements(slide, this.templateElements()) };
 	});
+	/** The corner transition badge (none for no transition, `none` or `cut`). */
+	readonly transitionBadge = computed(() =>
+		slideThumbnailTransitionBadge(this.slide(), this.translate),
+	);
+	protected readonly transitionBadgeStyle = computed(() =>
+		slideThumbnailTransitionBadgeStyle(this.layout()),
+	);
 }

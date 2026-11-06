@@ -80,6 +80,25 @@ describe('renderSlideThumbnail', () => {
 		expect(drawn(render([shape('a')]))).toHaveLength(1);
 		expect(drawn(render([shape('a'), shape('b', 300)]))).toHaveLength(2);
 	});
+
+	// The same badge, from the same shared descriptor, in every binding.
+	it('draws the transition badge in the corner, at the slide scale', () => {
+		const draw = (transition: PptxSlide['transition']) =>
+			renderSlideThumbnail({
+				document,
+				slide: { ...slide([shape('a')]), transition },
+				canvasSize,
+				previewWidth: 120,
+			}).querySelector<HTMLElement>(':scope > [data-pptx-thumbnail-transition]');
+		const badge = draw({ type: 'fade' });
+		expect(badge?.textContent).toBe('Fade');
+		expect(badge?.title).toBe('Transition: Fade');
+		expect(badge?.style.transform).toBe('scale(0.125)');
+		// The drawn slide's corner, 120px from the box's left edge.
+		expect(badge?.style.right).toBe('calc(100% - 119.75px)');
+		expect(draw({ type: 'cut' })).toBeNull();
+		expect(draw(undefined)).toBeNull();
+	});
 });
 
 describe('renderSlideThumbnail cleanup contract', () => {

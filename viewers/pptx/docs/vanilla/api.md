@@ -130,7 +130,9 @@ package root) draws one slide the way `createSlidesPane` draws it, for a host th
 thumbnail strip, and returns the thumbnail's root element. It draws from the slide model, so it
 shows unsaved edits, and it is static: the stage is `inert` (no focus stops or pointer
 interaction), carries no editing contract and no `data-element-id`, so ids stay unique to your
-editing canvas. Its options are `document`, `slide`, `templateElements` (the slide's layout and
+editing canvas. A slide with a transition other than Cut shows the transition's name in a small
+badge in its top-right corner, as the thumbnail does in every binding (`createSlidesPane` draws no
+badge). Its options are `document`, `slide`, `templateElements` (the slide's layout and
 master elements, drawn beneath its own; default none) and `previewWidth` (pixels; default the rail
 thumbnail width; the height follows the deck's aspect ratio), plus these `createSlidesPane`
 options with the same meaning: `canvasSize`, `mediaDataUrls`, `headerFooter`, `customProperties`,

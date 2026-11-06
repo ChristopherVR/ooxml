@@ -133,4 +133,23 @@ describe('slideThumbnailComponent', () => {
 		fixture.detectChanges();
 		expect(stage(fixture)?.textContent?.trim()).toBe('7');
 	});
+
+	// The same badge, from the same shared descriptor, in every binding.
+	it('draws the transition badge in the corner, at the slide scale', () => {
+		const fixture = mount([shape('a')]);
+		const badge = () =>
+			box(fixture)?.querySelector<HTMLElement>(':scope > [data-pptx-thumbnail-transition]');
+		const base = fixture.componentInstance.slide();
+		expect(badge()).toBeNull();
+		fixture.componentInstance.slide.set({ ...base, transition: { type: 'fade' } });
+		fixture.detectChanges();
+		expect(badge()?.textContent?.trim()).toBe('Fade');
+		expect(badge()?.title).toBe('Transition: Fade');
+		expect(badge()?.style.transform).toBe('scale(0.125)');
+		// The drawn slide's corner, 120px from the box's left edge.
+		expect(badge()?.style.right).toBe('calc(100% - 119.75px)');
+		fixture.componentInstance.slide.set({ ...base, transition: { type: 'cut' } });
+		fixture.detectChanges();
+		expect(badge()).toBeNull();
+	});
 });

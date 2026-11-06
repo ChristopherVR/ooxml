@@ -8,10 +8,20 @@
  * The stage is static: no selection, editing, pointer handlers, focus stops or element ids, so
  * it never competes with the editing canvas. Fields and table styles resolve from the same deck
  * props `SlidesPane` takes, so a host feeds both from one place.
+ *
+ * A slide with a transition (other than Cut) shows its name in a corner badge, from the shared
+ * `slideThumbnailTransitionBadge`, as every binding's thumbnail does; `SlidesPane` draws none.
  */
-import { buildPreviewElements, EDITOR_THUMBNAIL_WIDTH, slideThumbnailLayout } from 'ooxml-ui/pptx';
+import {
+	buildPreviewElements,
+	EDITOR_THUMBNAIL_WIDTH,
+	slideThumbnailLayout,
+	slideThumbnailTransitionBadge,
+	slideThumbnailTransitionBadgeStyle,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { provideSlidesPaneContexts } from '../composables/slides-pane-contexts';
 import type { SlideThumbnailProps } from './slide-thumbnail-types';
@@ -31,6 +41,8 @@ const props = withDefaults(defineProps<SlideThumbnailProps>(), {
 
 provideSlidesPaneContexts(() => props);
 
+const { t } = useI18n();
+
 const stageSize = computed(() => ({
 	width: Math.max(1, props.canvasSize.width),
 	height: Math.max(1, props.canvasSize.height),
@@ -44,6 +56,9 @@ const previewSlide = computed<PptxSlide>(() => ({
 	...props.slide,
 	elements: buildPreviewElements(props.slide, props.templateElements),
 }));
+const transitionBadge = computed(() =>
+	slideThumbnailTransitionBadge(props.slide, (key, params) => t(key, params ?? {})),
+);
 </script>
 
 <template>
@@ -57,5 +72,13 @@ const previewSlide = computed<PptxSlide>(() => ({
 			:media-data-urls="mediaDataUrls"
 			:scale="layout.scale"
 		/>
+		<div
+			v-if="transitionBadge"
+			data-pptx-thumbnail-transition
+			:title="transitionBadge.title"
+			:style="slideThumbnailTransitionBadgeStyle(layout)"
+		>
+			{{ transitionBadge.label }}
+		</div>
 	</div>
 </template>

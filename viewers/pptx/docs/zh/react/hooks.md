@@ -98,7 +98,7 @@ function Editor({ content }) {
 
 ### 单张幻灯片缩略图 {#single-slide-thumbnail}
 
-`SlideThumbnail`（及其 `SlideThumbnailProps` 类型）从包根入口导出，按 `SlidesPane` 的方式绘制单张幻灯片，适用于保留自有缩略图条的宿主。它基于幻灯片模型渲染，因此会反映尚未保存的编辑；它是静态的：没有选择、编辑、指针处理或元素 id。属性包括 `slide`、`templateElements`（该幻灯片的版式和母版元素，绘制在其自身元素下方）、`canvasSize`、`previewWidth`（像素；高度随演示文稿的宽高比变化）、`fieldContext` 和 `tableStyleContext`。从 `slidesPaneProps` 取值：
+`SlideThumbnail`（及其 `SlideThumbnailProps` 类型）从包根入口导出，按 `SlidesPane` 的方式绘制单张幻灯片，适用于保留自有缩略图条的宿主。它基于幻灯片模型渲染，因此会反映尚未保存的编辑；它是静态的：没有选择、编辑、指针处理或元素 id。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致。属性包括 `slide`、`templateElements`（该幻灯片的版式和母版元素，绘制在其自身元素下方）、`canvasSize`、`previewWidth`（像素；高度随演示文稿的宽高比变化）、`fieldContext` 和 `tableStyleContext`。从 `slidesPaneProps` 取值：
 
 ```tsx
 import { SlideThumbnail, useViewerBuildingBlocks } from 'pptx-react-viewer';

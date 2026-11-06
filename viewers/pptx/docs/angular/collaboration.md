@@ -350,7 +350,9 @@ scoped reset its thumbnails use.
 slide the way `<pptx-slides-panel>` draws it, for a host that keeps its own thumbnail strip. It
 renders from the slide model, so it follows unsaved edits, and it is static: no selection,
 editing, pointer handlers, focus stops or element ids, so it never competes with the editing
-canvas. Its inputs are `[slide]`, `[templateElements]` (the slide's layout and master elements,
+canvas. A slide with a transition other than Cut shows the transition's name in a small badge in
+its top-right corner, as the thumbnail does in every binding (`<pptx-slides-panel>` draws no
+badge). Its inputs are `[slide]`, `[templateElements]` (the slide's layout and master elements,
 drawn beneath its own; default none), `[canvasSize]` and `[previewWidth]` (pixels; default the
 rail thumbnail width; the height follows the deck's aspect ratio), plus these rail inputs with the
 same meaning and the same fallback to the enclosing `LoadContentService`: `[mediaDataUrls]`,

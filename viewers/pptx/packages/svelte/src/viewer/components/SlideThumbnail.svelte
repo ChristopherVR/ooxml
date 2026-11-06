@@ -10,10 +10,22 @@
 	 * `SlideStage` drops them, as the rail's do), so it never competes with the
 	 * editing canvas. Fields and table styles resolve from the
 	 * same props `SlidesPane` takes, so a host feeds both from one place.
+	 *
+	 * A slide with a transition (other than Cut) shows its name in a corner
+	 * badge, from the shared `slideThumbnailTransitionBadge`, as every
+	 * binding's thumbnail does; `SlidesPane` draws none.
 	 */
-	import { buildPreviewElements, EDITOR_THUMBNAIL_WIDTH, slideThumbnailLayout } from 'ooxml-ui/pptx';
+	import {
+		buildPreviewElements,
+		EDITOR_THUMBNAIL_WIDTH,
+		slideThumbnailLayout,
+		slideThumbnailTransitionBadge,
+		slideThumbnailTransitionBadgeStyle,
+	} from 'ooxml-ui/pptx';
 	import type { PptxSlide } from 'pptx-viewer-core';
 
+	import { useTranslator } from '../../i18n/context';
+	import { styleToString } from '../style/css';
 	import { provideSlidesPaneContexts } from './slides-pane-contexts';
 	import type { SlideThumbnailProps } from './slide-thumbnail-props';
 	import SlideStage from './SlideStage.svelte';
@@ -21,6 +33,8 @@
 	const props: SlideThumbnailProps = $props();
 
 	provideSlidesPaneContexts(() => props);
+
+	const t = useTranslator();
 
 	const EMPTY_MEDIA = new Map<string, string>();
 
@@ -41,6 +55,7 @@
 		...props.slide,
 		elements: buildPreviewElements(props.slide, props.templateElements ?? []),
 	});
+	const transitionBadge = $derived(slideThumbnailTransitionBadge(props.slide, t));
 </script>
 
 <div
@@ -53,4 +68,13 @@
 		mediaDataUrls={props.mediaDataUrls ?? EMPTY_MEDIA}
 		scale={layout.scale}
 	/>
+	{#if transitionBadge}
+		<div
+			data-pptx-thumbnail-transition
+			title={transitionBadge.title}
+			style={styleToString(slideThumbnailTransitionBadgeStyle(layout))}
+		>
+			{transitionBadge.label}
+		</div>
+	{/if}
 </div>

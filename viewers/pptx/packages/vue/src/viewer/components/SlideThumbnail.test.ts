@@ -92,6 +92,29 @@ describe('slideThumbnail', () => {
 		wrapper.unmount();
 	});
 
+	// The same badge, from the same shared descriptor, in every binding.
+	it('draws the transition badge in the corner, at the slide scale', async () => {
+		const wrapper = mount(SlideThumbnail, {
+			props: {
+				slide: { ...slide([shape('a')]), transition: { type: 'fade' } } as PptxSlide,
+				canvasSize,
+				previewWidth: 120,
+			},
+		});
+		const badge = () =>
+			wrapper.element.querySelector<HTMLElement>(':scope > [data-pptx-thumbnail-transition]');
+		expect(badge()?.textContent?.trim()).toBe('Fade');
+		expect(badge()?.title).toBe('Transition: Fade');
+		expect(badge()?.style.transform).toBe('scale(0.125)');
+		// The drawn slide's corner, 120px from the box's left edge.
+		expect(badge()?.style.right).toBe('calc(100% - 119.75px)');
+		await wrapper.setProps({ slide: { ...slide([shape('a')]), transition: { type: 'cut' } } });
+		expect(badge()).toBeNull();
+		await wrapper.setProps({ slide: slide([shape('a')]) });
+		expect(badge()).toBeNull();
+		wrapper.unmount();
+	});
+
 	it('drops the template layer when the slide hides background graphics', async () => {
 		const wrapper = mountThumbnail([shape('own', 200)], [shape('layout', 10)]);
 		expect(drawn(wrapper)).toHaveLength(2);

@@ -83,7 +83,7 @@ pane.destroy();
 
 ### 单张幻灯片缩略图 {#slide-thumbnail}
 
-`renderSlideThumbnail(options)`（与其 `SlideThumbnailOptions` 类型一起由包根入口导出）按 `createSlidesPane` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用，并返回缩略图的根元素。它根据幻灯片模型绘制，因此会显示未保存的编辑；它是静态的：舞台为 `inert`（没有焦点停靠点或指针交互），不带编辑契约，也没有 `data-element-id`，因此 id 只在你的编辑画布中唯一。它的选项为 `document`、`slide`、`templateElements`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与 `createSlidesPane` 含义相同的选项：`canvasSize`、`mediaDataUrls`、`headerFooter`、`customProperties`、`firstSlideNumber`、`locale`、`colorScheme`、`fontScheme`、`formatScheme`、`tableStyleMap`、`t`、`registry` 和 `slides`。因此可以直接展开传给缩略图栏的选项：
+`renderSlideThumbnail(options)`（与其 `SlideThumbnailOptions` 类型一起由包根入口导出）按 `createSlidesPane` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用，并返回缩略图的根元素。它根据幻灯片模型绘制，因此会显示未保存的编辑；它是静态的：舞台为 `inert`（没有焦点停靠点或指针交互），不带编辑契约，也没有 `data-element-id`，因此 id 只在你的编辑画布中唯一。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致（`createSlidesPane` 不绘制该标记）。它的选项为 `document`、`slide`、`templateElements`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与 `createSlidesPane` 含义相同的选项：`canvasSize`、`mediaDataUrls`、`headerFooter`、`customProperties`、`firstSlideNumber`、`locale`、`colorScheme`、`fontScheme`、`formatScheme`、`tableStyleMap`、`t`、`registry` 和 `slides`。因此可以直接展开传给缩略图栏的选项：
 
 ```ts
 import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';

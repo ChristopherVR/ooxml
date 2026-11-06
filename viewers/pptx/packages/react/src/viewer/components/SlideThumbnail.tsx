@@ -1,8 +1,14 @@
-import { buildPreviewElements, deviceStrokeStageStyle, slideThumbnailLayout } from 'ooxml-ui/pptx';
+import {
+	buildPreviewElements,
+	deviceStrokeStageStyle,
+	slideThumbnailLayout,
+	slideThumbnailTransitionBadge,
+	slideThumbnailTransitionBadgeStyle,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
-import { SLIDE_NAV_THUMBNAIL_WIDTH, SLIDE_TRANSITION_OPTIONS } from '../constants';
+import { SLIDE_NAV_THUMBNAIL_WIDTH } from '../constants';
 import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { getReactSlideBackgroundStyle } from '../utils/slide-background-style';
@@ -44,20 +50,16 @@ function SlideThumbnailImpl({
 }: SlideThumbnailProps): React.ReactElement {
 	const safeCanvasWidth = Math.max(canvasSize.width, 1);
 	const safeCanvasHeight = Math.max(canvasSize.height, 1);
-	const { height: previewHeight, scale } = slideThumbnailLayout(
+	const layout = slideThumbnailLayout(
 		safeCanvasWidth,
 		safeCanvasHeight,
 		previewWidth ?? SLIDE_NAV_THUMBNAIL_WIDTH,
 	);
+	const { height: previewHeight, scale } = layout;
 	const previewElements = buildPreviewElements(slide, templateElements);
 	const slideFieldContext = deriveSlideFieldContext(fieldContext, slide);
 	const { t } = useTranslation();
-	const transitionLabel = slide.transition
-		? (() => {
-				const opt = SLIDE_TRANSITION_OPTIONS.find((o) => o.value === slide.transition?.type);
-				return opt ? t(opt.i18nKey) : slide.transition.type;
-			})()
-		: undefined;
+	const transitionBadge = slideThumbnailTransitionBadge(slide, t);
 
 	return (
 		<div
@@ -85,17 +87,6 @@ function SlideThumbnailImpl({
 				}}
 			>
 				<SlideBackgroundImageLayer slide={slide} />
-				{/* Transition indicator badge */}
-				{slide.transition &&
-					slide.transition.type !== 'none' &&
-					slide.transition.type !== 'cut' && (
-						<div
-							className='absolute top-0.5 right-0.5 z-10 px-1 py-px rounded bg-primary/80 text-[7px] text-white leading-tight pointer-events-none'
-							title={t('pptx.slideThumbnail.transitionTooltip', { name: transitionLabel })}
-						>
-							{transitionLabel}
-						</div>
-					)}
 				{previewElements.map((element, index) => (
 					<StaticElementRenderer
 						key={element.id}
@@ -108,6 +99,15 @@ function SlideThumbnailImpl({
 					/>
 				))}
 			</div>
+			{transitionBadge && (
+				<div
+					data-pptx-thumbnail-transition=''
+					title={transitionBadge.title}
+					style={slideThumbnailTransitionBadgeStyle(layout)}
+				>
+					{transitionBadge.label}
+				</div>
+			)}
 		</div>
 	);
 }
