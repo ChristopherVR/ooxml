@@ -8,6 +8,7 @@
 import type { PptxTableData } from 'ooxml-core/pptx';
 
 import type { TableCellCss } from './table-style';
+import { armTableBackgroundSettle, TABLE_BG_SPAN_VAR } from './table-style-bg-settle';
 
 /** Fractions of the table's width and height covered by the cell, and its offset. */
 export interface TableCellSlice {
@@ -83,4 +84,8 @@ export function spanTableBackground(
 	css.backgroundSize = upper ? `auto, ${size}` : size;
 	css.backgroundPosition = upper ? `0% 0%, ${position}` : position;
 	css.backgroundRepeat = 'no-repeat';
+	// The slice above assumes the rows' declared heights; once the table is laid out
+	// the settle pass places it from the real ones (see `table-style-bg-settle`).
+	css[TABLE_BG_SPAN_VAR] = upper ? 2 : 1;
+	armTableBackgroundSettle();
 }
