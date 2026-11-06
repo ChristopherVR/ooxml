@@ -343,6 +343,15 @@ const placeholderStyle = computed<CSSProperties>(() => ({
 	font-size: 11px;
 	/* Re-enable pointing on the action bar; the preview/icon above stay inert. */
 	pointer-events: auto;
+	/* Hidden until the object is hovered or a control inside is focused: PowerPoint
+	   paints the object alone, and React, Angular and vanilla reveal it the same way. */
+	opacity: 0;
+	transition: opacity 0.12s ease-in-out;
+}
+
+.pptx-vue-ole:hover .pptx-vue-ole-actions,
+.pptx-vue-ole-actions:focus-within {
+	opacity: 1;
 }
 
 .pptx-vue-ole-meta {
