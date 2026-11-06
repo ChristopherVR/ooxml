@@ -1,4 +1,10 @@
-import type { PptxCustomShow, PptxData, PptxSlide, PptxElement } from '../index';
+import type {
+	PptxCustomShow,
+	PptxData,
+	PptxSlide,
+	PptxElement,
+	PptxHandlerSaveOptions,
+} from '../index';
 import type { Doc as YDoc } from 'yjs';
 
 /**
@@ -14,15 +20,7 @@ export interface ToolContext {
 	resolveMedia?: (path: string) => Promise<Uint8Array>;
 }
 
-/**
- * Save-time instructions that don't live on `pptxData` itself and so cannot
- * be expressed as a model mutation: today, only `ppt/tableStyles.xml`'s
- * archive-level "repoint the default style" / "delete a style" operations
- * (`set_default_table_style`, `delete_table_style`). Mirrors the same-named
- * fields on `pptx-viewer-core`'s save options structurally (not imported, so
- * a tool result stays independent of the core package's internal type
- * export surface).
- */
+/** Save options used by the table-style and custom-show tools. */
 export interface TableStyleSaveOptions {
 	/** GUID to set as `ppt/tableStyles.xml`'s `<a:tblStyleLst @def>`. */
 	tableStylesDefaultId?: string;
@@ -31,6 +29,8 @@ export interface TableStyleSaveOptions {
 	/** Replacement `p:custShowLst` (set by `manage_custom_shows`); omitted keeps the deck's list. */
 	customShows?: PptxCustomShow[];
 }
+
+type ToolSaveOptions = TableStyleSaveOptions & Pick<PptxHandlerSaveOptions, 'slideSize'>;
 
 /**
  * Every tool function returns this.
@@ -46,9 +46,9 @@ export interface ToolResult<T = unknown> {
 	/**
 	 * Extra `handler.save()` instructions this result requires beyond the
 	 * ordinary `pptxData` mutation, merged in by `savePresentation` /
-	 * `executeToolWithContext`. See {@link TableStyleSaveOptions}.
+	 * `executeToolWithContext`.
 	 */
-	saveOptions?: TableStyleSaveOptions;
+	saveOptions?: ToolSaveOptions;
 }
 
 export type { PptxData, PptxSlide, PptxElement };

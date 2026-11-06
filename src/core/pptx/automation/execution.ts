@@ -1,7 +1,7 @@
 import { PptxHandler } from '../index';
 import type { PptxData } from '../index';
 
-import type { ExecutionContext, TableStyleSaveOptions, ToolContext, ToolResult } from './types';
+import type { ExecutionContext, ToolContext, ToolResult } from './types';
 
 const PPTX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
@@ -75,12 +75,9 @@ export async function savePresentation(
 	pptxData: PptxData,
 	rawBytes: Uint8Array,
 	execCtx: ExecutionContext,
-	tableStyleSaveOptions?: TableStyleSaveOptions,
+	saveOptions?: ToolResult['saveOptions'],
 ): Promise<{ savedToDisk: boolean; routedThroughCollaboration: boolean }> {
-	const outputBytes = await saveDeckBytes(
-		{ pptxData, ...(tableStyleSaveOptions && { saveOptions: tableStyleSaveOptions }) },
-		rawBytes,
-	);
+	const outputBytes = await saveDeckBytes({ pptxData, saveOptions }, rawBytes);
 
 	// Collaboration mode: hydrate Y.Doc so peers receive the change
 	if (execCtx.collaboration) {
