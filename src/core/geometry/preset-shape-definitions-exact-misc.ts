@@ -138,9 +138,8 @@ const cube = exactDef(
 	'l y1 x4 b',
 	[
 		p('M l y1 L y1 t L r t L r y4 L x4 b L l b Z', { stroke: false }),
-		p('M l y1 L x4 y1 L x4 b L l b Z', { fill: 'darkenLess', stroke: false }),
-		p('M x4 y1 L r t L r y4 L x4 b Z', { fill: 'darken', stroke: false }),
-		p('M l y1 L y1 t L r t L x4 y1 Z', { fill: 'lighten', stroke: false }),
+		p('M x4 y1 L r t L r y4 L x4 b Z', { fill: 'darkenLess', stroke: false }),
+		p('M l y1 L y1 t L r t L x4 y1 Z', { fill: 'lightenLess', stroke: false }),
 		p('M l y1 L y1 t L r t L r y4 L x4 b L l b Z M l y1 L x4 y1 M x4 y1 L r t M x4 y1 L x4 b', {
 			fill: 'none',
 		}),
@@ -162,11 +161,10 @@ const bevel = exactDef(
 	'il il ir ib',
 	[
 		p('M l t L r t L r b L l b Z', { stroke: false }),
-		p('M x1 x1 L x2 x1 L x2 y2 L x1 y2 Z', { fill: 'darken', stroke: false }),
-		p('M l t L x1 x1 L x1 y2 L l b Z', { fill: 'lightenLess', stroke: false }),
-		p('M r t L r b L x2 y2 L x2 x1 Z', { fill: 'darkenLess', stroke: false }),
-		p('M l t L r t L x2 x1 L x1 x1 Z', { fill: 'lighten', stroke: false }),
-		p('M l b L x1 y2 L x2 y2 L r b Z', { fill: 'darken', stroke: false }),
+		p('M l t L x1 x1 L x1 y2 L l b Z', { fill: 'lighten', stroke: false }),
+		p('M r t L r b L x2 y2 L x2 x1 Z', { fill: 'darken', stroke: false }),
+		p('M l t L r t L x2 x1 L x1 x1 Z', { fill: 'lightenLess', stroke: false }),
+		p('M l b L x1 y2 L x2 y2 L r b Z', { fill: 'darkenLess', stroke: false }),
 		p(
 			'M l t L r t L r b L l b Z M x1 x1 L x1 y2 L x2 y2 L x2 x1 Z M l t L x1 x1 M r t L x2 x1 M r b L x2 y2 M l b L x1 y2',
 			{ fill: 'none' },
