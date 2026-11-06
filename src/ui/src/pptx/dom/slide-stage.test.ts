@@ -161,6 +161,27 @@ describe('renderSlideStage', () => {
 		expect(child?.textContent).toContain('inside group');
 	});
 
+	it('keeps element ids by default and draws a static stage without them', () => {
+		const marked = renderStage();
+		const ids = [...marked.querySelectorAll('[data-element-id]')];
+		expect(ids.length).toBeGreaterThan(0);
+		const bare = renderSlideStage({
+			document,
+			slide: buildSlide(),
+			canvasSize: { width: 1280, height: 720 },
+			mediaDataUrls: new Map<string, string>(),
+			registry: createDefaultRegistry(),
+			t: createTranslator(),
+			exposeElementIds: false,
+		});
+		expect(bare.querySelector('[data-element-id]')).toBeNull();
+		// Same drawing, group children included: only the markers are gone.
+		expect(bare.querySelectorAll('.pptxv-element')).toHaveLength(
+			marked.querySelectorAll('.pptxv-element').length,
+		);
+		expect(bare.textContent).toBe(marked.textContent);
+	});
+
 	it('renders connectors as SVG lines with arrow markers', () => {
 		const stage = renderStage();
 		const connector = stage.querySelector<HTMLElement>('[data-element-id="el-connector"]');

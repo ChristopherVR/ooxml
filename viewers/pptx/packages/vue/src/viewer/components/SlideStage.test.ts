@@ -1,10 +1,12 @@
 import { mount } from '@vue/test-utils';
-import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import type { FieldSubstitutionContext, Rendering3DFlags } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
-import { nextTick } from 'vue';
+import { computed, nextTick, ref } from 'vue';
+import { createI18n } from 'vue-i18n';
 
 import { FieldContextKey } from '../composables/field-context';
+import { DEFAULT_RENDERING_3D_FLAGS, Rendering3DFlagsKey } from '../composables/rendering-3d-flags';
 import type { CanvasSize } from '../types';
 import SlideStage from './SlideStage.vue';
 
@@ -138,6 +140,43 @@ describe('slideStage element-id markers', () => {
 		await nextTick();
 		expect(wrapper.find('[data-element-id]').exists()).toBeFalsy();
 		expect(wrapper.text()).toContain('shape-2');
+	});
+
+	it('re-strips markers when a 3D option swaps an element renderer', async () => {
+		// Turning SmartArt 3D on mounts a new renderer node for the same element
+		// list, so only a dependency on the options re-runs the strip.
+		const flags = ref<Rendering3DFlags>({ ...DEFAULT_RENDERING_3D_FLAGS, smartArt3D: false });
+		const smartArt = {
+			id: 'sa-1',
+			type: 'smartArt',
+			x: 0,
+			y: 0,
+			width: 400,
+			height: 300,
+			smartArtData: {
+				layoutType: 'list',
+				nodes: [{ id: 'n1', text: 'One' }],
+				drawingShapes: [
+					{ id: 'a', shapeType: 'roundRect', x: 0, y: 0, width: 400, height: 140, text: 'One' },
+				],
+			},
+		} as unknown as PptxElement;
+		const wrapper = mount(SlideStage, {
+			props: { slide: slideWith([smartArt]), canvasSize, mediaDataUrls: new Map() },
+			global: {
+				plugins: [createI18n({ legacy: false, locale: 'en', messages: { en: {} } })],
+				provide: { [Rendering3DFlagsKey as symbol]: computed(() => flags.value) },
+			},
+		});
+		await nextTick();
+		expect(wrapper.find('pptx-three-view').exists()).toBeFalsy();
+		expect(wrapper.find('[data-element-id]').exists()).toBeFalsy();
+		flags.value = { ...flags.value, smartArt3D: true };
+		await nextTick();
+		await nextTick();
+		expect(wrapper.find('pptx-three-view').exists()).toBeTruthy();
+		expect(wrapper.find('[data-element-id]').exists()).toBeFalsy();
+		wrapper.unmount();
 	});
 });
 

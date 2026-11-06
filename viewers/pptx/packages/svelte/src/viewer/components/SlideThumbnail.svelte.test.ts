@@ -39,7 +39,11 @@ afterEach(() => {
 	document.body.replaceChildren();
 });
 
-function mountThumbnail(elements: PptxElement[], templateElements: PptxElement[] = []) {
+function mountThumbnail(
+	elements: PptxElement[],
+	templateElements: PptxElement[] = [],
+	extra: Partial<SlideThumbnailProps> = {},
+) {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
 	const props = $state<SlideThumbnailProps>({
@@ -47,6 +51,7 @@ function mountThumbnail(elements: PptxElement[], templateElements: PptxElement[]
 		templateElements,
 		canvasSize,
 		previewWidth: 120,
+		...extra,
 	});
 	const component = mount(SlideThumbnail, { target, props });
 	flushSync();
@@ -76,11 +81,33 @@ describe('slideThumbnail', () => {
 		expect(drawn().map((node) => node.style.left)).toStrictEqual(['10px', '200px']);
 	});
 
-	it('stays static: no element ids and no interaction hooks', () => {
-		const { box, stage } = mountThumbnail([shape('a')], [shape('layout')]);
+	it('stays static: no element ids and no interaction hooks', async () => {
+		const { box, stage, props, drawn } = mountThumbnail([shape('a')], [shape('layout')]);
+		// The static stage drops the markers after its post-render pass.
+		await Promise.resolve();
 		expect(box.querySelector('[data-element-id]')).toBeNull();
 		expect(box.querySelector('[data-pptx-element]')).toBeNull();
 		expect(stage().getAttribute('role')).toBeNull();
+		// Still none once an edit mounts a new element node.
+		props.slide = slide([shape('a'), shape('b')]);
+		flushSync();
+		await Promise.resolve();
+		expect(drawn()).toHaveLength(3);
+		expect(box.querySelector('[data-element-id]')).toBeNull();
+	});
+
+	it('follows slide metadata edits that keep the same elements', () => {
+		const field = {
+			...shape('number'),
+			type: 'text',
+			textSegments: [{ text: '#', style: {}, fieldType: 'slidenum' }],
+		} as unknown as PptxElement;
+		const { props, box } = mountThumbnail([field], [], { fieldContext: {} });
+		expect(box.textContent).toContain('1');
+		props.slide = { ...props.slide, slideNumber: 7 };
+		flushSync();
+		expect(box.textContent).toContain('7');
+		expect(box.textContent).not.toContain('1');
 	});
 
 	it('follows edits to the slide model without a save', () => {

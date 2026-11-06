@@ -1,4 +1,4 @@
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -30,6 +30,37 @@ function manySlides(count: number): PptxSlide[] {
 }
 
 describe('thumbnailRail', () => {
+	it('draws static thumbnails: element ids stay unique to the canvas', async () => {
+		const shape = (id: string): PptxElement =>
+			({ id, type: 'shape', shapeType: 'rect', x: 0, y: 0, width: 100, height: 50 }) as PptxElement;
+		const target = document.createElement('div');
+		document.body.appendChild(target);
+		const props = $state({
+			slides: slides().map((slide) => ({ ...slide, elements: [shape(`${slide.id}-a`)] })),
+			canvasSize: { width: 960, height: 540 },
+			mediaDataUrls: new Map<string, string>(),
+			current: 0,
+			onselect: vi.fn(),
+		});
+		const instance = mount(ThumbnailRail, { target, props });
+		flushSync();
+		cleanup = () => {
+			unmount(instance);
+			target.remove();
+		};
+		await Promise.resolve();
+		expect(target.querySelectorAll('.pptx-svelte-element')).toHaveLength(3);
+		expect(target.querySelector('[data-element-id]')).toBeNull();
+		// An element added by an edit mounts a new node; it is drawn without its id too.
+		props.slides = props.slides.map((slide, index) =>
+			index === 0 ? { ...slide, elements: [...slide.elements, shape('one-b')] } : slide,
+		);
+		flushSync();
+		await Promise.resolve();
+		expect(target.querySelectorAll('.pptx-svelte-element')).toHaveLength(4);
+		expect(target.querySelector('[data-element-id]')).toBeNull();
+	});
+
 	it('exposes the canonical Slides navigation name', () => {
 		const target = document.createElement('div');
 		document.body.appendChild(target);

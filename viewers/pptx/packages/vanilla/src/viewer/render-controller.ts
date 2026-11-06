@@ -10,6 +10,7 @@ import {
 	DEFAULT_MASTER_PAGE_SIZE,
 	masterViewCrudActions,
 	masterViewPseudoSlide,
+	stageKeepsElementIds,
 	visibleTemplateElements,
 } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
@@ -242,6 +243,9 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			// chart's id), so thumbnails and export rasters never see it either way.
 			selectedElementIds: interactive ? new Set(state.selectedElementIds) : undefined,
 			interactive,
+			// Thumbnails, sorter tiles, presenter previews and the reading view are
+			// static: element ids stay unique to the canvas and the show stage.
+			exposeElementIds: stageKeepsElementIds({ interactive, presenting }),
 			templateEditing: state.editTemplateMode || state.masterViewTarget !== null,
 			// Native-animation state + context capture only for the live presentation
 			// stage; the editor canvas and thumbnails render statically.

@@ -121,6 +121,7 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 				mediaDataUrls: new Map<string, string>(),
 				registry: createDefaultRegistry(),
 				t,
+				exposeElementIds: false,
 			}),
 	});
 	const font: FontGroup = createFontGroup(doc, t, {

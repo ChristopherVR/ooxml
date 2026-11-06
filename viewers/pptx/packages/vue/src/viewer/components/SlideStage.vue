@@ -6,6 +6,8 @@ import {
 	deviceStrokeStageStyle,
 	getSlideBackgroundStyle,
 	resolveStageEdgeBleeds,
+	stageKeepsElementIds,
+	stripElementIdMarkers,
 	visibleTemplateElements,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
@@ -14,8 +16,8 @@ import { computed, ref, watchPostEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { provideSlideFieldContext } from '../composables/field-context';
+import { useRendering3DFlags } from '../composables/rendering-3d-flags';
 import { provideSlideElements } from '../composables/slide-elements';
-import { stripElementIdMarkers } from '../composables/stage-element-markers';
 import type { CanvasSize } from '../types';
 import ElementRenderer from './ElementRenderer.vue';
 
@@ -38,8 +40,11 @@ import ElementRenderer from './ElementRenderer.vue';
  * `SlideCanvas.tsx`, so the interactive stage itself stays unlabelled. Only the
  * standalone live presentation stage (`presenting`, no wrapper) self-labels.
  * Static stages (thumbnails, sorter, previews, export) are `aria-hidden` and
- * additionally have their `data-element-id` markers stripped post-render (see
- * `stripElementIdMarkers`) so element queries always hit the real canvas copy.
+ * additionally have their `data-element-id` markers stripped post-render (the
+ * shared `stageKeepsElementIds` / `stripElementIdMarkers`, as in Svelte and
+ * vanilla) so element queries always hit the real canvas copy. Safe against
+ * re-renders: Vue's patcher only rewrites an attribute whose bound value
+ * changes, and a structural change re-runs the effect below.
  */
 const props = withDefaults(
 	defineProps<{
@@ -155,15 +160,30 @@ const templateLayerInteractive = computed(
 	() => (props.interactive ?? false) && (props.editTemplateMode ?? false),
 );
 
+const rendering3DFlags = useRendering3DFlags();
+
 watchPostEffect(() => {
 	const stage = stageRef.value;
 	// Read the element list in both branches so structural changes re-trigger
 	// this effect for static stages too (the strip must re-run after them).
 	const elements = accessibleElements.value;
+	// A 3D rendering option swaps an element's renderer (SmartArt, charts) and
+	// mounts a new, marked node without changing the element list.
+	void rendering3DFlags.value;
 	if (!stage) {
 		return;
 	}
-	if (props.interactive || props.presenting) {
+	const keepElementIds = stageKeepsElementIds({
+		interactive: props.interactive,
+		presenting: props.presenting,
+		preserveElementIds: props.preserveElementIds,
+	});
+	if (!keepElementIds) {
+		// Static surface (thumbnail, sorter, preview, export stage): remove the
+		// `data-element-id` markers so only the real canvas / presentation stage
+		// exposes them, matching React's marker-free static renderer.
+		stripElementIdMarkers(stage);
+	} else if (props.interactive || props.presenting) {
 		applyRenderedElementAccessibility(stage, elements, { presenting: props.presenting === true });
 		// The on-canvas action affordances (amber badge + hover link tooltip) are
 		// painted at the stage boundary rather than inside `ElementRenderer`,
@@ -183,17 +203,10 @@ watchPostEffect(() => {
 				labels: actionAffordanceLabels((key) => t(key)),
 			},
 		);
-	} else if (props.preserveElementIds) {
-		// Morph drives per-element CSS keyed on `data-element-id`, so the two
-		// transition layers must keep their markers. Safe because the host hides
-		// its own stage while the overlay is mounted, so there is still exactly
-		// one marked copy of each element on the page.
-	} else {
-		// Static surface (thumbnail, sorter, preview, export stage): remove the
-		// `data-element-id` markers so only the real canvas / presentation stage
-		// exposes them, matching React's marker-free static renderer.
-		stripElementIdMarkers(stage);
 	}
+	// Otherwise a Morph layer (`preserveElementIds`): its per-element CSS is keyed
+	// on `data-element-id`. Safe because the host hides its own stage while the
+	// overlay is mounted, so there is still exactly one marked copy per element.
 });
 
 const stageStyle = computed<CSSProperties>(() => ({

@@ -1333,6 +1333,9 @@ export * from './context-menu-commands';
 // per-element menu above, offered when the right-click hits no element.
 export * from './canvas-context-menu-commands';
 export * from './canvas-element-node';
+// Which stages keep `data-element-id` (canvas, show, Morph layers) and the pass
+// that strips it from every static stage, so element ids stay unique.
+export * from './stage-element-ids';
 // Which inspector section a "format object" command (Edit Alt Text, Size and
 // Position, Format Shape) should scroll into view once the properties tab is open.
 export * from './context-menu-inspector-anchor';

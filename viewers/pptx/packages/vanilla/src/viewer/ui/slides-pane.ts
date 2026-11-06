@@ -222,6 +222,8 @@ export function createSlidesPane(container: HTMLElement, initial: SlidesPaneOpti
 			scale,
 			slides: options.slides,
 			currentSlideIndex: options.activeSlideIndex,
+			// Static thumbnails: element ids stay unique to the host's canvas.
+			exposeElementIds: false,
 		});
 	};
 

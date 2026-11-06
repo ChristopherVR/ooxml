@@ -196,6 +196,8 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 			areaChart3D: deps.getAreaChart3D(),
 			pieChart3D: deps.getPieChart3D(),
 			presenting: false,
+			// A capture copy, briefly in the document: it must not shadow the canvas.
+			exposeElementIds: false,
 		});
 		host.appendChild(stage);
 		await waitForFrame();

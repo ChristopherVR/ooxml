@@ -169,10 +169,22 @@ describe('createSlidesPane', () => {
 			templateElementsBySlideId: { s0: [textBox('layout', 'Layout text')] },
 		});
 		const frame = rows(container)[0].querySelector('[data-pptx-chrome="slide-frame"]');
-		const ids = Array.from(frame?.querySelectorAll<HTMLElement>('[data-element-id]') ?? []).map(
-			(node) => node.dataset.elementId,
+		const drawn = Array.from(frame?.querySelectorAll<HTMLElement>('.pptxv-stage > *') ?? []).map(
+			(node) => node.textContent,
 		);
-		expect(ids).toStrictEqual(['layout', 'own']);
+		expect(drawn).toStrictEqual(['Layout text', 'Own text']);
+	});
+
+	it('draws static thumbnails: element ids stay unique to the canvas', () => {
+		const slides = makeSlides(2);
+		slides[0] = { ...slides[0], elements: [textBox('own', 'Own text')] };
+		const { container } = mount({
+			slides,
+			templateElementsBySlideId: { s0: [textBox('layout', 'Layout text')] },
+		});
+		const frame = rows(container)[0].querySelector('[data-pptx-chrome="slide-frame"]');
+		expect(frame?.textContent).toContain('Own text');
+		expect(container.querySelector('[data-element-id]')).toBeNull();
 	});
 
 	it('selecting moves the active slide without editing the deck', () => {

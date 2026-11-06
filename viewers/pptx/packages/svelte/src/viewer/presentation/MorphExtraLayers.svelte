@@ -12,6 +12,9 @@
 	 *  - the **crossfade groups**: pairs the overlay paints BOTH halves of, each
 	 *    as one isolated group so the halves are SUMMED rather than stacked
 	 *    (issue #161).
+	 *
+	 * Every layer keeps its `data-element-id` markers (`preserveElementIds`):
+	 * the plan's keyframe CSS selects each element by them.
 	 */
 	import type { CanvasSize } from 'ooxml-ui/pptx';
 
@@ -44,7 +47,7 @@
 		data-pptx-morph-lifted={layer.side === 'incoming' ? 'true' : undefined}
 		style={layer.style}
 	>
-		<SlideStage slide={layer.slide} {canvasSize} {mediaDataUrls} {scale} transparentBackground />
+		<SlideStage slide={layer.slide} {canvasSize} {mediaDataUrls} {scale} transparentBackground preserveElementIds />
 	</div>
 {/each}
 {#each crossfadeGroups as group (group.key)}
@@ -55,7 +58,7 @@
 			data-pptx-morph-outgoing="true"
 			style={group.outgoingStyle}
 		>
-			<SlideStage slide={group.outgoing} {canvasSize} {mediaDataUrls} {scale} transparentBackground />
+			<SlideStage slide={group.outgoing} {canvasSize} {mediaDataUrls} {scale} transparentBackground preserveElementIds />
 		</div>
 		<div
 			class="pptx-svelte-transition-layer"
@@ -63,7 +66,7 @@
 			data-pptx-morph-lifted="true"
 			style={group.incomingStyle}
 		>
-			<SlideStage slide={group.incoming} {canvasSize} {mediaDataUrls} {scale} transparentBackground />
+			<SlideStage slide={group.incoming} {canvasSize} {mediaDataUrls} {scale} transparentBackground preserveElementIds />
 		</div>
 	</div>
 {/each}
