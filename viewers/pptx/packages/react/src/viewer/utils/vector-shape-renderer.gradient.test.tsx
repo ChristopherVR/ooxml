@@ -92,9 +92,11 @@ describe('renderVectorShape freeform gradient fill', () => {
 				fillGradientFillToRect: { l: 0, t: 0, r: 1, b: 1 },
 			}),
 		);
-		expect(html).toContain('<radialGradient');
-		expect(html).toContain('cx="0"');
-		expect(html).toContain('cy="0"');
+		// A freeform's circle path is a true circle in the box's own pixels, drawn
+		// as an image whose focal point is the fillToRect corner.
+		const svg = decodeURIComponent(html);
+		expect(svg).toContain('radialGradient');
+		expect(svg).toContain('fx="0" fy="0"');
 	});
 
 	it('leaves a solid freeform fill exactly as it was', () => {

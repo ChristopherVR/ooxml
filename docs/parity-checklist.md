@@ -449,14 +449,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       at a 20 pt or larger blur read about 12 % too dark under the bottom edge only. In-place text
       editing in a text-bearing silhouette shape works in all five demos (click places the caret,
       typing edits); Angular's textarea editor ignores the click position, for plain shapes too.
+- [ ] **P2** `a:path path="shape"` gradients: presets scale their outline about the focus and
+      block arrows, other listed presets and every freeform paint the circle to the farthest corner
+      (measured on 132 presets, 14.1 to 2.9 mean abs diff; the freeform SVG paint also draws true
+      circles and `scaled="0"` angles). Still approximate: the ring presets (donut, frame, blockArc,
+      noSmoking, chord, funnel, circular arrows, math divide and not-equal, tabs) and the
+      multi-face presets (cube, can, bevel, magnetic disk, drum and tape), whose faces
+      PowerPoint shades with their own fields.
 - [ ] **P2** Preset geometry that still differs from PowerPoint 16 (measured with
       `Slide.Export` of every preset at a non-square aspect, default and adjusted, against
-      `evaluatePresetShape`): `swooshArrow` (the head is a sheared polygon whose barb positions
-      depend on both adjustments; the curves and head are still the old approximation), the
-      question mark of `actionButtonHelp` (a measured polyline, not the specification's Bezier
-      chain), the leader line of the line callouts whose COM default adjustments differ from
-      the saved XML, and the exact swirl shading inside the scroll curls (a disc approximates
-      it). `leftCircularArrow` with a positive `adj2` (PowerPoint writes it modulo a turn) is
+      `evaluatePresetShape`): the leader line of the line callouts whose COM default adjustments
+      differ from the saved XML. `swooshArrow` (guide chain), the `actionButtonHelp` question
+      mark (elliptical arcs) and the scroll curl swirl are closed in `fix(geometry)`. `leftCircularArrow` with a positive `adj2` (PowerPoint writes it modulo a turn) is
       pinned to the head angle 0 as the specification does. Closed in `fix(geometry)`:
       star4-star10, pentagon, heptagon, decagon, dodecagon, the math operators, the three tab
       shapes, braces and brackets, moon, heart, cloud, lightningBolt, wave, doubleWave, the arc
