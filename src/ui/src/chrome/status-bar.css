@@ -69,9 +69,9 @@
 .item.sr,
 .item.sr::before {
 	position: absolute;
-	width: 1px;
-	height: 1px;
-	margin: -1px;
+	width: var(--office-space-px);
+	height: var(--office-space-px);
+	margin: calc(-1 * var(--office-space-px));
 	padding: 0;
 	overflow: hidden;
 	clip-path: inset(50%);
