@@ -6,7 +6,7 @@ import { translationsEn } from 'ooxml-ui/pptx/i18n';
  * selectable/editable (double-click to edit) regardless of the lock, gated
  * only on `options.editable`.
  */
-import type { TablePptxElement, XmlObject } from 'pptx-viewer-core';
+import type { TablePptxElement } from 'pptx-viewer-core';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -20,27 +20,6 @@ vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translatio
 	}),
 }));
 
-function tableRawXml(grid: string[][]): XmlObject {
-	const cols = grid[0].length;
-	return {
-		'a:graphic': {
-			'a:graphicData': {
-				'a:tbl': {
-					'a:tblGrid': {
-						'a:gridCol': Array.from({ length: cols }, () => ({ '@_w': 1000 })),
-					},
-					'a:tr': grid.map((cells) => ({
-						'@_h': 370,
-						'a:tc': cells.map((text) => ({
-							'a:txBody': { 'a:p': { 'a:r': { 'a:t': text } } },
-						})),
-					})),
-				},
-			},
-		},
-	} as unknown as XmlObject;
-}
-
 function table(overrides: Partial<TablePptxElement> = {}): TablePptxElement {
 	return {
 		id: 'tbl1',
@@ -49,10 +28,10 @@ function table(overrides: Partial<TablePptxElement> = {}): TablePptxElement {
 		y: 0,
 		width: 200,
 		height: 100,
-		rawXml: tableRawXml([
-			['A', 'B'],
-			['C', 'D'],
-		]),
+		tableData: {
+			columnWidths: [0.5, 0.5],
+			rows: [{ cells: [{ text: 'A' }, { text: 'B' }] }, { cells: [{ text: 'C' }, { text: 'D' }] }],
+		},
 		...overrides,
 	} as TablePptxElement;
 }

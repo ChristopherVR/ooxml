@@ -1,18 +1,12 @@
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
- * A raw-XML table (loaded from a real .pptx) must let the table style's own
- * header/band text colour show through when a cell declares no explicit run
- * colour - the normal case, since table styles exist precisely so authors
- * don't have to hand-colour every header cell.
- *
- * `extractTableCellStyle` used to unconditionally seed its result with the
- * element's plain fallback colour, so the merge `{...bandStyle, ...xmlCellStyle}`
- * always let that fallback clobber the band's own colour. The structured-model
- * path (`table-render-data.tsx`, covered by `table-render-data-banding.test.tsx`)
- * never had this bug; this is the raw-XML path every table loaded from an
- * actual .pptx file goes through.
+ * A table loaded from a real .pptx renders from its structured `tableData` through
+ * the shared `tableCellCss`, so the table style's own header/band text colour shows
+ * through when a cell declares no explicit run colour (the normal case: table styles
+ * exist so authors need not hand-colour every header cell). The element's plain
+ * default text colour must not clobber it.
  */
-import type { TablePptxElement, XmlObject } from 'pptx-viewer-core';
+import type { TablePptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,24 +18,8 @@ vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translatio
 	}),
 }));
 
-function cellXml(text: string): XmlObject {
-	return {
-		'a:txBody': {
-			'a:p': { 'a:r': { 'a:t': text } },
-		},
-	} as XmlObject;
-}
-
-function rowXml(cells: string[]): XmlObject {
-	return { 'a:tc': cells.map(cellXml) } as XmlObject;
-}
-
-/** A raw-XML table with a header row, no explicit per-cell colour anywhere. */
+/** A table with a header row, no explicit per-cell colour anywhere. */
 function rawXmlTable(): TablePptxElement {
-	const tblXml: XmlObject = {
-		'a:tblGrid': { 'a:gridCol': [{ '@_w': '1828800' }, { '@_w': '1828800' }] },
-		'a:tr': [rowXml(['H1', 'H2']), rowXml(['A1', 'A2'])],
-	};
 	return {
 		id: 'tbl-1',
 		type: 'table',
@@ -58,9 +36,6 @@ function rawXmlTable(): TablePptxElement {
 				{ cells: [{ text: 'A1' }, { text: 'A2' }] },
 			],
 		},
-		rawXml: {
-			'a:graphic': { 'a:graphicData': { 'a:tbl': tblXml } },
-		} as XmlObject,
 	} as TablePptxElement;
 }
 
@@ -69,7 +44,7 @@ function cellStyles(markup: string): string[] {
 	return Array.from(markup.matchAll(/<td[^>]*style="([^"]*)"/gu)).map((match) => match[1]);
 }
 
-describe('raw-XML table band colour', () => {
+describe('table band colour', () => {
 	it("lets the header band's own text colour survive an un-styled cell", () => {
 		// A non-trivial element default colour: proves the band colour is not
 		// merely surviving because there was nothing to clobber it with.

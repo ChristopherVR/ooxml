@@ -1,21 +1,8 @@
-// Barrel re-export: all table parsing helpers.
-// Split into domain-focused modules for maintainability (max 300 lines each).
-
-export { parseGradientFillCss, parsePatternFillCss, parseCellBorders } from './table-cell-fill';
-
-export {
-	extractCellText,
-	parseParagraphAlignment,
-	extractTableCellStyle,
-} from './table-cell-style';
+// Barrel re-export: table style context and the raw-XML edit operations.
+// Rendering reads the structured `tableData` (see `table-render.tsx`); the raw XML
+// is only written back to, by the edit handlers.
 
 export { type TableStyleContext, getTableCellBandStyle } from './table-band-style';
-
-export {
-	getGraphicDataFromElement,
-	getTableXmlFromElement,
-	parseTableElementData,
-} from './table-data-parse';
 
 export {
 	updateCellTextInRawXml,

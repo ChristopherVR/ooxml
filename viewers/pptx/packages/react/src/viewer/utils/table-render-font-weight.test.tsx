@@ -1,11 +1,10 @@
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
- * A raw-XML table whose runs name a weight variant as their own family ("DM
- * Sans Light") must render those runs at the family's weight, as the
- * structured-model path does: the XML layer resolves the cell weight from the
- * first run's raw `b` attribute, so a `b="0"` run used to pin the cell to 400.
+ * A table whose cell and runs name a weight variant as their own family ("DM Sans
+ * Light") renders them at the family's weight, as shape text does: the shared
+ * `tableCellCss` resolves the cell weight once family and boldness are both known.
  */
-import type { TablePptxElement, XmlObject } from 'pptx-viewer-core';
+import type { TablePptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -19,23 +18,12 @@ vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translatio
 
 const FAMILIES = ['DM Sans Light', 'DM Sans Medium', 'DM Sans Black'];
 
-/** A cell whose run names `typeface`; `b="0"` turns bold off even in a header row. */
-function cellXml(text: string, typeface: string, notBold: boolean): XmlObject {
-	const rPr = { ...(notBold ? { '@_b': '0' } : {}), 'a:latin': { '@_typeface': typeface } };
-	return { 'a:txBody': { 'a:p': { 'a:r': { 'a:rPr': rPr, 'a:t': text } } } } as XmlObject;
-}
-
 /** A header row and one body row; every cell mixes the three families. */
-function rawXmlTable(families: readonly string[] = FAMILIES): TablePptxElement {
-	const rowXml = (prefix: string, notBold: boolean): XmlObject =>
-		({
-			'a:tc': [
-				cellXml(`${prefix}1`, families[0], notBold),
-				cellXml(`${prefix}2`, families[0], notBold),
-			],
-		}) as XmlObject;
-	const cell = (prefix: string) => ({
+function weightTable(families: readonly string[] = FAMILIES): TablePptxElement {
+	const cell = (prefix: string, notBold: boolean) => ({
 		text: prefix,
+		// An explicit `b="0"` turns bold off even in a header row.
+		style: { fontFamily: families[0], ...(notBold ? { bold: false } : {}) },
 		textRuns: families.map((fontFamily, i) => ({ text: `${prefix}${i}`, fontFamily, bold: false })),
 	});
 	return {
@@ -48,19 +36,11 @@ function rawXmlTable(families: readonly string[] = FAMILIES): TablePptxElement {
 		tableData: {
 			columnWidths: [0.5, 0.5],
 			firstRowHeader: true,
-			rows: [{ cells: [cell('H'), cell('H')] }, { cells: [cell('A'), cell('A')] }],
+			rows: [
+				{ cells: [cell('H', false), cell('H', false)] },
+				{ cells: [cell('A', true), cell('A', true)] },
+			],
 		},
-		rawXml: {
-			'a:graphic': {
-				'a:graphicData': {
-					'a:tbl': {
-						'a:tblGrid': { 'a:gridCol': [{ '@_w': '1828800' }, { '@_w': '1828800' }] },
-						// The header row leaves bold to the table style.
-						'a:tr': [rowXml('H', false), rowXml('A', true)],
-					},
-				},
-			},
-		} as XmlObject,
 	} as TablePptxElement;
 }
 
@@ -74,9 +54,9 @@ function weights(markup: string): Array<{ cell: string; runs: string[] }> {
 	}));
 }
 
-describe('raw-XML table weight variants', () => {
+describe('table weight variants', () => {
 	it('renders each regular run at its family weight, and keeps the header bold', () => {
-		const markup = renderToStaticMarkup(renderTableElement(rawXmlTable(), { color: '#000000' }));
+		const markup = renderToStaticMarkup(renderTableElement(weightTable(), { color: '#000000' }));
 		const [header, , body] = weights(markup);
 		expect(body).toStrictEqual({ cell: '300', runs: ['inherit', '500', '900'] });
 		expect(header.cell).toMatch(/^(bold|700)$/u);
@@ -86,7 +66,7 @@ describe('raw-XML table weight variants', () => {
 	it('does not read a Black first run as a bold cell', () => {
 		const families = ['DM Sans Black', 'DM Sans Light', 'DM Sans Medium'];
 		const markup = renderToStaticMarkup(
-			renderTableElement(rawXmlTable(families), { color: '#000000' }),
+			renderTableElement(weightTable(families), { color: '#000000' }),
 		);
 		const [, , body] = weights(markup);
 		expect(body).toStrictEqual({ cell: '900', runs: ['inherit', '300', '500'] });

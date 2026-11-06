@@ -5,7 +5,7 @@ import { translationsEn } from 'ooxml-ui/pptx/i18n';
  * line-height (1.5 under Tailwind), so every wrapped line sat too far below the
  * one above it, and a fixed 4px inset fitted more text on a line than PowerPoint does.
  */
-import type { TablePptxElement, XmlObject } from 'pptx-viewer-core';
+import type { TablePptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -17,7 +17,7 @@ vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translatio
 	}),
 }));
 
-function table(withXml: boolean, cellProperties: Record<string, string> = {}): TablePptxElement {
+function table(style?: Record<string, number>): TablePptxElement {
 	return {
 		id: 'tbl-1',
 		type: 'table',
@@ -25,44 +25,25 @@ function table(withXml: boolean, cellProperties: Record<string, string> = {}): T
 		y: 0,
 		width: 400,
 		height: 120,
-		tableData: { columnWidths: [1], rows: [{ cells: [{ text: 'A1' }] }] },
-		...(withXml
-			? {
-					rawXml: {
-						'a:graphic': {
-							'a:graphicData': {
-								'a:tbl': {
-									'a:tblGrid': { 'a:gridCol': { '@_w': '3657600' } },
-									'a:tr': {
-										'a:tc': {
-											'a:txBody': { 'a:p': { 'a:r': { 'a:t': 'A1' } } },
-											'a:tcPr': cellProperties,
-										},
-									},
-								},
-							},
-						},
-					} as XmlObject,
-				}
-			: {}),
-	} as TablePptxElement;
+		tableData: {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: 'A1', ...(style ? { style } : {}) }] }],
+		},
+	} as unknown as TablePptxElement;
 }
 
 describe('table cell text layout', () => {
-	it.each([
-		['a table loaded from a file', true],
-		['a table built in the editor', false],
-	])('uses single line spacing and default margins on the cells of %s', (_name, withXml) => {
-		const markup = renderToStaticMarkup(renderTableElement(table(withXml), {}));
+	it('uses single line spacing and default margins on the cells', () => {
+		const markup = renderToStaticMarkup(renderTableElement(table(), {}));
 		const cell = markup.match(/<td[^>]*style="([^"]*)"/u)?.[1];
 		expect(cell).toContain('line-height:1.2');
 		expect(cell).toContain('padding-left:9.6px');
 		expect(cell).toContain('padding-top:4.8px');
 	});
 
-	it("keeps a file cell's own margins, an explicit zero included", () => {
+	it("keeps a cell's own margins, an explicit zero included", () => {
 		const markup = renderToStaticMarkup(
-			renderTableElement(table(true, { '@_marL': '0', '@_marT': '91440' }), {}),
+			renderTableElement(table({ marginLeft: 0, marginTop: 9.6 }), {}),
 		);
 		const cell = markup.match(/<td[^>]*style="([^"]*)"/u)?.[1];
 		expect(cell).toContain('padding-left:0');
