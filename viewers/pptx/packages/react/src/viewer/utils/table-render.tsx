@@ -13,6 +13,7 @@ import {
 	applyTableCellFontWeight,
 	canDrillDown,
 	DEFAULT_FONT_FAMILY,
+	insetPaddingForBorders,
 	TABLE_CELL_TEXT_DEFAULTS,
 	tableContainerCss,
 } from 'ooxml-ui/pptx';
@@ -215,6 +216,9 @@ export function renderTableElement(
 										// The weight once family and boldness are both known, as
 										// `tableCellCss` does on the structured-model path: the XML
 										// layer above resolves both from the raw run properties.
+										// Half of each painted border comes out of the margins, as in
+										// `tableCellCss`: a row is content + margins tall in PowerPoint.
+										insetPaddingForBorders(mergedStyle as TableCellCss, tdCellOverride);
 										applyTableCellFontWeight(mergedStyle as TableCellCss);
 
 										return (

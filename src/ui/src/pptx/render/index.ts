@@ -539,6 +539,9 @@ export * from './table-style-builtins';
 // bindings; React had lost the band layer on programmatic tables and Angular the
 // colour floor, so both are decided here now.
 export * from './table-cell-css';
+// Half of each painted border taken out of a cell's padding (PowerPoint measures a
+// margin from the grid line); the React raw-XML table path composes cells itself.
+export * from './table-cell-border-inset';
 // A cell's paragraphs as blocks, each with its own alignment, indent and line
 // spacing, for cells whose paragraphs set them.
 export * from './table-cell-paragraphs';
