@@ -140,6 +140,20 @@ describe('resolveParagraphBaselineShift', () => {
 		expect(shiftOf('30pt', runs)).toBeCloseTo(-3, 2);
 	});
 
+	it('places mixed sizes at an exact pitch above their single spacing on 75% of it', () => {
+		// 30pt is 40 px; the runs sit at `line-height: 0`, so the 40 px strut
+		// alone puts CSS at 38 + floor((40 - 49) / 2) = 33, PowerPoint at 30.
+		const runs = [
+			run('•', { fontSize: '30px', lineHeight: 0 }),
+			run('Hxlb', { fontSize: '20px', lineHeight: 0 }),
+		];
+		expect(shiftOf('30pt', runs)).toBeCloseTo(-3, 2);
+		// A run whose single spacing reaches the pitch keeps its own descent: not modelled.
+		expect(shiftOf('30pt', [run('a', { fontSize: '40px' }), run('b', { fontSize: '20px' })])).toBe(
+			undefined,
+		);
+	});
+
 	it('leaves alone what it cannot model', () => {
 		expect(shiftOf(2.4, [run('a', { fontSize: '40px' }), run('b', { fontSize: '20px' })])).toBe(
 			undefined,
