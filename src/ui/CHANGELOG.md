@@ -7,6 +7,27 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.43.0) - 2026-11-06
+
+### Features
+
+- **ui:** Add a shared save progress label ([c280299](https://github.com/ChristopherVR/ooxml/commit/c280299cfc3ec991b415433539ebe39a578c4920))
+- **ui:** Show save progress in Word, Excel and Visio ([8d137ef](https://github.com/ChristopherVR/ooxml/commit/8d137ef733febe5b1b3ab21cae4799ec8a86fb88))
+- **ui:** Show save progress in the pptx status bar ([f4b4f4c](https://github.com/ChristopherVR/ooxml/commit/f4b4f4c9d39d9ac0f094604f2c921ec35932ff5e))
+
+### Bug Fixes
+
+- **ui:** Say Saving without a percentage until upload progress is known ([603ba38](https://github.com/ChristopherVR/ooxml/commit/603ba389aef65ef722d9c08a243a7f231501db4b))
+- **pptx:** Render format-encoded datetime fields, share one date engine ([8734d72](https://github.com/ChristopherVR/ooxml/commit/8734d727d79b29cebba70866fc6837a73387a023))
+- **ui:** Add the typo line gap to pptx single-line baselines ([1ce3f91](https://github.com/ChristopherVR/ooxml/commit/1ce3f91a2adbb5692399eaad05072cf6b6fd6b89))
+- **vanilla:** Register deck-embedded fonts as @font-face in vanilla and svelte ([3b2640c](https://github.com/ChristopherVR/ooxml/commit/3b2640c7ac165edaf31e2fea3a40003471f66016))
+- **ui:** Open message dialogs when another module copy owns the tag ([87a4165](https://github.com/ChristopherVR/ooxml/commit/87a4165e8c72dce4efaded442a3b1ee10302915b))
+- **ui:** Replace three polynomial regular expressions flagged by code scanning ([3c850a8](https://github.com/ChristopherVR/ooxml/commit/3c850a8a1558264bdb27932435a48c794b531ed6))
+
+### Refactor
+
+- **ui:** Split morph-plan into cohesive modules ([5cfdf71](https://github.com/ChristopherVR/ooxml/commit/5cfdf71069955dec7f14e155596fd0441fa7042b))
+
 ## [1.42.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.42.0) - 2026-11-05
 
 ### Features

@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.40.0) - 2026-11-06
+
+### Features
+
+- **embedding:** Report save progress and skip downloads on metadata-only changes ([96a18ba](https://github.com/ChristopherVR/ooxml/commit/96a18ba5327ead51bb281dd1516273190049b17d))
+- **ui:** Show save progress in Word, Excel and Visio ([8d137ef](https://github.com/ChristopherVR/ooxml/commit/8d137ef733febe5b1b3ab21cae4799ec8a86fb88))
+
+### Bug Fixes
+
+- **pptx:** Render format-encoded datetime fields, share one date engine ([8734d72](https://github.com/ChristopherVR/ooxml/commit/8734d727d79b29cebba70866fc6837a73387a023))
+- **pptx:** Keep trailing line breaks after grouped runs ([369af79](https://github.com/ChristopherVR/ooxml/commit/369af7900b301fdefcff1a8e5f2962e4f198eb29))
+
+### Performance
+
+- **embedding:** Upload onedrive files in one request by default ([eff9e93](https://github.com/ChristopherVR/ooxml/commit/eff9e93cc99cd36bf2682070c12984ffb8d5c358))
+
 ## [1.39.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.39.1) - 2026-11-05
 
 ### Bug Fixes

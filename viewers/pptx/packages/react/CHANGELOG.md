@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.65.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.65.0) - 2026-11-06
+
+### Features
+
+- **locales:** Translate the pptx save progress texts ([1b665f3](https://github.com/ChristopherVR/ooxml/commit/1b665f3003ecf065d5efdba9c7625adef2d3f5d8))
+- **react:** Show save progress in the status bar ([2c8db63](https://github.com/ChristopherVR/ooxml/commit/2c8db637320c82eb0182e46e072d1b3615d4f8c4))
+
+### Bug Fixes
+
+- **pptx:** Render format-encoded datetime fields, share one date engine ([8734d72](https://github.com/ChristopherVR/ooxml/commit/8734d727d79b29cebba70866fc6837a73387a023))
+- **pptx:** Keep trailing line breaks after grouped runs ([369af79](https://github.com/ChristopherVR/ooxml/commit/369af7900b301fdefcff1a8e5f2962e4f198eb29))
+
 ## [4.64.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.64.1) - 2026-11-05
 
 ### Bug Fixes

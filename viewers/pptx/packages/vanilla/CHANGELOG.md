@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.64.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.64.0) - 2026-11-06
+
+### Features
+
+- **locales:** Translate the pptx save progress texts ([1b665f3](https://github.com/ChristopherVR/ooxml/commit/1b665f3003ecf065d5efdba9c7625adef2d3f5d8))
+- **vanilla:** Show save progress in the status bar ([034d1a6](https://github.com/ChristopherVR/ooxml/commit/034d1a6bf93177dcfbcd33bdee8b3bc84f91f384))
+
+### Bug Fixes
+
+- **pptx:** Render format-encoded datetime fields, share one date engine ([8734d72](https://github.com/ChristopherVR/ooxml/commit/8734d727d79b29cebba70866fc6837a73387a023))
+- **vanilla:** Register deck-embedded fonts as @font-face in vanilla and svelte ([3b2640c](https://github.com/ChristopherVR/ooxml/commit/3b2640c7ac165edaf31e2fea3a40003471f66016))
+- **pptx:** Keep trailing line breaks after grouped runs ([369af79](https://github.com/ChristopherVR/ooxml/commit/369af7900b301fdefcff1a8e5f2962e4f198eb29))
+
 ## [3.63.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.63.1) - 2026-11-05
 
 ### Bug Fixes
