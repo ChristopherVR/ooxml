@@ -104,7 +104,7 @@ function lerpStops(
 }
 
 /** Colour + opacity at a given position (0-100) along a sorted, non-empty stop list. */
-function colorAt(
+export function gradientColorAt(
 	stops: RectPathGradientStop[],
 	position: number,
 ): { color: string; opacity: number } {
@@ -222,7 +222,7 @@ export function buildRectPathGradientSvg(
 	if (!Number.isInteger(bands) || bands < 1) throw new RangeError('Invalid gradient band count');
 	for (let i = bands; i >= 0; i -= 1) {
 		const t = i / bands;
-		const { color, opacity } = colorAt(sorted, t * 100);
+		const { color, opacity } = gradientColorAt(sorted, t * 100);
 		const left = lerpEdge(inner.left, 0, t);
 		const top = lerpEdge(inner.top, 0, t);
 		const right = lerpEdge(inner.right, 100, t);

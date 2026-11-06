@@ -28,6 +28,7 @@ export * from './write-theme';
 export * from './gradient-presets';
 export * from './gradient-geometry';
 export * from './rect-path-gradient';
+export * from './shape-path-gradient';
 export * from './theme-model';
 export * from './theme';
 export * from './format-scheme';

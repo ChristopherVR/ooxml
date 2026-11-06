@@ -40,3 +40,4 @@ export * from '../drawingml/drawing-shadow';
 export * from '../drawingml/gradient-presets';
 export * from '../drawingml/gradient-geometry';
 export * from '../drawingml/rect-path-gradient';
+export * from '../drawingml/shape-path-gradient';
