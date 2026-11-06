@@ -28,6 +28,7 @@ import type {
 	GlowInput,
 	InnerShadowInput,
 	LineEndInput,
+	PictureTileInput,
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
@@ -37,6 +38,7 @@ export type {
 	GlowInput,
 	InnerShadowInput,
 	LineEndInput,
+	PictureTileInput,
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
@@ -129,7 +131,24 @@ export type FillInput =
 			/** Colour behind the pattern (`a:bgClr`). */
 			background?: string;
 	  }
-	| { type: 'image'; url: string; mode?: 'stretch' | 'tile' }
+	| {
+			type: 'image';
+			/** The picture as a data URL (`data:image/png;base64,...`). */
+			url: string;
+			/**
+			 * Stretch the picture over the shape (the default) or tile it.
+			 * `tile` alone implies `'tile'`.
+			 */
+			mode?: 'stretch' | 'tile';
+			/** How the tiles repeat (`a:tile`); only with `mode: 'tile'`. */
+			tile?: PictureTileInput;
+			/**
+			 * Where the stretched picture lands, as insets from each edge of the
+			 * shape (`a:stretch/a:fillRect`, -10 to 10); a negative inset pushes the
+			 * picture past that edge. Only with `mode: 'stretch'`.
+			 */
+			fillRect?: RelativeRectInput;
+	  }
 	| { type: 'none' };
 
 export interface StrokeInput {
@@ -248,6 +267,13 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	cropRight?: number;
 	cropBottom?: number;
 	opacity?: number;
+	/** Tile the picture inside its frame (`a:tile`) instead of stretching it. */
+	tile?: PictureTileInput;
+	/**
+	 * Where the stretched picture lands inside its frame, as insets from each
+	 * edge (`a:stretch/a:fillRect`, -10 to 10). Not together with `tile`.
+	 */
+	fillRect?: RelativeRectInput;
 }
 
 // ---------------------------------------------------------------------------

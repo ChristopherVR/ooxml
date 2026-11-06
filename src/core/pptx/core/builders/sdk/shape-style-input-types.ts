@@ -61,3 +61,22 @@ export interface LineEndInput {
 	width?: 'sm' | 'med' | 'lg';
 	length?: 'sm' | 'med' | 'lg';
 }
+
+/**
+ * How a tiled picture repeats (`a:tile`). Every field is written, with
+ * PowerPoint's defaults for the omitted ones.
+ */
+export interface PictureTileInput {
+	/** Offset of the tiles from where they start, in px (`@tx`, default 0). */
+	offsetX?: number;
+	/** Offset of the tiles from where they start, in px (`@ty`, default 0). */
+	offsetY?: number;
+	/** Tile width as a fraction of the picture's own width, above 0 (`@sx`, default 1). */
+	scaleX?: number;
+	/** Tile height as a fraction of the picture's own height, above 0 (`@sy`, default 1). */
+	scaleY?: number;
+	/** Mirror every other tile (`@flip`, default `'none'`). */
+	flip?: 'none' | 'x' | 'y' | 'xy';
+	/** The corner, edge or centre the tiles start from (`@algn`, default `'tl'`). */
+	alignment?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
+}

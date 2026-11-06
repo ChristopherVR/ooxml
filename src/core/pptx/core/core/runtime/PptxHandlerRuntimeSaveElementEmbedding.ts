@@ -28,6 +28,7 @@ import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders'
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
+import { applyNewPictureLayout, type PictureFillSaveContext } from './save-picture-fill';
 
 /** Context passed to per-element save processing. */
 export interface SaveSlideContext {
@@ -207,14 +208,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			let targetImagePath = el.imagePath;
 			if (!targetImagePath) {
 				targetImagePath = ctx.saveSession.nextMediaPath(parsedImage.extension);
-				const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
-				const relativeMediaPath = targetImagePath.replace(/^ppt\//u, '../');
-				ctx.slideRelationships.push({
-					'@_Id': relationshipId,
-					'@_Type': ctx.slideImageRelationshipType,
-					'@_Target': relativeMediaPath,
-				});
+				const relationshipId = this.addSlideImageRelationship(targetImagePath, ctx);
 				shape = this.createPictureXml(el, relationshipId);
+				const blipFill = shape['p:blipFill'] as XmlObject | undefined;
+				if (blipFill) {
+					applyNewPictureLayout(blipFill, el, this.pictureFillSaveContext(el, ctx));
+				}
 			}
 			if (targetImagePath) {
 				// Never write bytes of one format into a file with a different
@@ -252,6 +251,42 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			});
 		}
 		return shape;
+	}
+
+	/** Add an image relationship from the slide to `mediaPath`; its id. */
+	private addSlideImageRelationship(mediaPath: string, ctx: SaveSlideContext): string {
+		const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
+		ctx.slideRelationships.push({
+			'@_Id': relationshipId,
+			'@_Type': ctx.slideImageRelationshipType,
+			'@_Target': mediaPath.replace(/^ppt\//u, '../'),
+		});
+		return relationshipId;
+	}
+
+	/** What the picture-fill writers need, bound to `el` on the slide being saved. */
+	protected pictureFillSaveContext(el: PptxElement, ctx: SaveSlideContext): PictureFillSaveContext {
+		return {
+			emuPerPx: PptxHandlerRuntime.EMU_PER_PX,
+			parse: (xml) => this.parser.parse(xml) as XmlObject,
+			embed: (dataUrl) => {
+				const parsed = this.parseDataUrlToBytes(dataUrl);
+				if (!parsed) {
+					return undefined;
+				}
+				const mediaPath = ctx.saveSession.nextMediaPath(parsed.extension);
+				this.zip.file(mediaPath, parsed.bytes);
+				return this.addSlideImageRelationship(mediaPath, ctx);
+			},
+			warn: (code, message) =>
+				this.compatibilityService.reportWarning({
+					code,
+					message,
+					scope: 'element',
+					slideId: ctx.slide.id,
+					elementId: el.id,
+				}),
+		};
 	}
 
 	/** Embed media data and manage relationships for media elements. */

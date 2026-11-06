@@ -237,6 +237,7 @@ export type {
 	GlowInput,
 	ReflectionInput,
 	LineEndInput,
+	PictureTileInput,
 	RelativeRectInput,
 	TextStyleInput,
 	TextSegmentInput,

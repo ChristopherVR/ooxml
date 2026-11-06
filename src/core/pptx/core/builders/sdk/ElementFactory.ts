@@ -27,6 +27,7 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { mapPictureLayoutInput } from './picture-layout-input';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -348,6 +349,10 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 		cropTop: options?.cropTop,
 		cropRight: options?.cropRight,
 		cropBottom: options?.cropBottom,
+		...mapPictureLayoutInput('ImageOptions', {
+			tile: options?.tile,
+			fillRect: options?.fillRect,
+		}),
 	};
 }
 
