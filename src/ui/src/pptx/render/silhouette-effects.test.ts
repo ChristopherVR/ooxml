@@ -162,6 +162,15 @@ describe('gradient, pattern and picture fills', () => {
 		expect(getSilhouetteFillLayer(rect)).toBeUndefined();
 	});
 
+	it('scales a layer by an attribute, never a CSS property, so a hidden copy of the filter agrees', () => {
+		// Copies of one shape's filter share an id and `url(#id)` takes the first; one
+		// in a display:none subtree (the editor canvas under a show) resolves no CSS,
+		// which painted every shadow at opacity 1 in the Vue and vanilla shows.
+		const markup = getSilhouetteEffects(shape('triangle'))?.filterMarkup ?? '';
+		expect(markup).not.toContain('flood-opacity');
+		expect(markup).toContain('<feFuncA type="linear" slope="0.5"/>');
+	});
+
 	it('an inner shadow blurs by 0.327 of its blurRad, like the outer one', () => {
 		const el = shape('triangle', {
 			shadowColor: undefined,

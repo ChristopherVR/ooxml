@@ -284,6 +284,20 @@ function px(value: number): string {
 	return String(Math.round(value * 100) / 100);
 }
 
+/**
+ * A layer's opacity as an alpha scale on its mask, rather than `flood-opacity`.
+ * Several copies of a shape's `<filter>` share one id (the editor canvas, a
+ * thumbnail, the stage), and `url(#id)` resolves to the FIRST in the document.
+ * When that one sits in a `display:none` subtree (the editable canvas under a
+ * running show), CSS properties such as `flood-opacity` are never resolved, so
+ * the layer painted at the default opacity 1: a presentation of the Vue and
+ * vanilla bindings drew every shadow 1.4x too dark, unlike the other three.
+ * `feFuncA@slope` is a plain attribute and reads the same everywhere.
+ */
+function scaledAlpha(input: string, result: string, opacity: number): string {
+	return `<feComponentTransfer in="${input}" result="${result}"><feFuncA type="linear" slope="${px(opacity)}"/></feComponentTransfer>`;
+}
+
 function glowMarkup(glow: SilhouetteGlow): string {
 	const parts: string[] = [];
 	const names: string[] = [];
@@ -310,8 +324,9 @@ function glowMarkup(glow: SilhouetteGlow): string {
 		`<feGaussianBlur in="glowGrown" stdDeviation="${px(glow.blur / 2)}" result="glowBlur"/>`,
 	);
 	parts.push(
-		`<feFlood flood-color="${glow.color}" flood-opacity="${px(glow.opacity)}" result="glowColor"/>`,
-		`<feComposite in="glowColor" in2="glowBlur" operator="in" result="glowLayer"/>`,
+		scaledAlpha('glowBlur', 'glowMask', glow.opacity),
+		`<feFlood flood-color="${glow.color}" result="glowColor"/>`,
+		`<feComposite in="glowColor" in2="glowMask" operator="in" result="glowLayer"/>`,
 	);
 	return parts.join('');
 }
@@ -350,8 +365,9 @@ export function buildSilhouetteFilterMarkup(
 		parts.push(
 			`<feGaussianBlur in="SourceAlpha" stdDeviation="${px(s.blur / 2)}" result="${name}Blur"/>`,
 			`<feOffset in="${name}Blur" dx="${px(s.offsetX)}" dy="${px(s.offsetY)}" result="${name}Off"/>`,
-			`<feFlood flood-color="${s.color}" flood-opacity="${px(s.opacity)}" result="${name}Color"/>`,
-			`<feComposite in="${name}Color" in2="${name}Off" operator="in" result="${name}"/>`,
+			scaledAlpha(`${name}Off`, `${name}Mask`, s.opacity),
+			`<feFlood flood-color="${s.color}" result="${name}Color"/>`,
+			`<feComposite in="${name}Color" in2="${name}Mask" operator="in" result="${name}"/>`,
 		);
 		layers.push(name);
 	});
@@ -368,8 +384,9 @@ export function buildSilhouetteFilterMarkup(
 			'<feComponentTransfer in="SourceAlpha" result="innerInv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>',
 			`<feOffset in="innerInv" dx="${px(-i.offsetX)}" dy="${px(-i.offsetY)}" result="innerOff"/>`,
 			`<feGaussianBlur in="innerOff" stdDeviation="${px(i.blur / 2)}" result="innerBlur"/>`,
-			`<feFlood flood-color="${i.color}" flood-opacity="${px(i.opacity)}" result="innerFlood"/>`,
-			'<feComposite in="innerFlood" in2="innerBlur" operator="in" result="innerColor"/>',
+			scaledAlpha('innerBlur', 'innerMask', i.opacity),
+			`<feFlood flood-color="${i.color}" result="innerFlood"/>`,
+			'<feComposite in="innerFlood" in2="innerMask" operator="in" result="innerColor"/>',
 			'<feComposite in="innerColor" in2="SourceAlpha" operator="in" result="innerLayer"/>',
 		);
 		top.push('innerLayer');
