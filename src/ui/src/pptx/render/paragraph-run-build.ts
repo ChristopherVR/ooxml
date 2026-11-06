@@ -18,6 +18,7 @@ import {
 } from './paragraph-run-enrich';
 import { resolveFollowingSegmentTexts, resolveSegmentRunText } from './paragraph-run-text';
 import { resolveParagraphStrutFontSize } from './paragraph-strut';
+import { appendTrailingBreakLine } from './paragraph-trailing-break';
 import type { ReflectionWrapperStyle } from './reflection';
 import { splitWordsForUnderline, splitsUnderlineIntoWords } from './text-decoration';
 import { eastAsianBreaksForRun, splitEastAsianRunPieces } from './text-east-asian-breaks';
@@ -344,6 +345,7 @@ export function buildParagraphRuns(input: ParagraphRunBuildInput): BuiltRun[] {
 	// (`p(r('GRADIENT ', grad) + r('SPANS RUNS', grad))`) paint as ONE
 	// continuous fill in PowerPoint, not two independent 0%-100% fills.
 	stitchContinuousGradientFill(runs);
+	appendTrailingBreakLine(runs);
 	return runs;
 }
 
