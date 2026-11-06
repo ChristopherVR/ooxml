@@ -638,7 +638,7 @@ const noopClose = (): void => undefined;
 					<main class="pptx-ng-main" #mainEl (pointermove)="collabCursor.onPointerMove($event)">
 						<pptx-slide-canvas
 							#editorCanvas
-							[slide]="activeSlide()"
+							[slide]="editingCanvasSlide()"
 							[canvasSize]="loader.canvasSize()"
 							[mediaDataUrls]="loader.mediaDataUrls()"
 							[zoom]="zoomSvc.zoom()"
@@ -659,7 +659,7 @@ const noopClose = (): void => undefined;
 							[drawColor]="activeDrawColor()"
 							[drawWidth]="activeDrawWidth()"
 							[editTemplateMode]="editor.editTemplateMode()"
-							[templateElements]="activeTemplateElements()"
+							[templateElements]="editingCanvasTemplateElements()"
 							[aiHighlights]="aiPanelStore.canvasHighlights()"
 							[aiActive]="aiPanelStore.canvasAnimating()"
 							[aiActiveSlideIndex]="activeSlideIndex()"
@@ -2210,6 +2210,29 @@ export class PowerPointViewerComponent
 		}
 		return this.editor.templateElementsBySlideId()[slide.id] ?? [];
 	});
+	/**
+	 * Whether the editing canvas is covered by a show surface: the full-screen
+	 * show overlay or the presenter console (desktop or mobile), however either
+	 * was opened. The presenter toggle swaps `presenting` for
+	 * `presentingPresenter`, so both count.
+	 */
+	private readonly editingCanvasCovered = computed(
+		() => this.presentationMode.presenting() || this.presentationMode.presentingPresenter(),
+	);
+	/**
+	 * The editing canvas's slide: none while a show or the presenter console
+	 * covers it. The canvas stays mounted underneath, and the show surface is the
+	 * one the user acts on and the one that keeps the `data-element-id` markers;
+	 * a drawn copy underneath answered for every element a second time. The
+	 * canvas redraws the active slide when the show ends.
+	 */
+	protected readonly editingCanvasSlide = computed(() =>
+		this.editingCanvasCovered() ? undefined : this.activeSlide(),
+	);
+	/** The editing canvas's template elements: none while it is covered (see above). */
+	protected readonly editingCanvasTemplateElements = computed<readonly PptxElement[]>(() =>
+		this.editingCanvasCovered() ? [] : this.activeTemplateElements(),
+	);
 	/**
 	 * Selected `THEME_CATALOG` (or `availableThemes`) key, driving File >
 	 * Options > Appearance. Seeded once from {@link defaultThemeKey} or the

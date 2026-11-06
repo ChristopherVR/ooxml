@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 
 import { resetTabSession, slideStage } from './support/deck';
 import { opacitySetDeck } from './support/opacity-set-deck';
+import { presentingStageText } from './support/slide-text';
 
 for (const hold of [true, false]) {
 	test(`a native fixed whole opacity ${hold ? 'holds through seek and backward navigation' : 'restores after its active duration'}`, async ({
@@ -39,7 +40,10 @@ for (const hold of [true, false]) {
 		if (hold) {
 			await page.keyboard.press('PageDown');
 			await page.keyboard.press('PageDown');
-			await expect(slideStage(page)).toContainText('Next slide');
+			// Read off the running show's stage, the surface the audience sees. The
+			// editing canvas stays mounted under the show in some bindings but draws
+			// no slide there, so `slideStage` is no proxy for the shown slide.
+			await expect.poll(() => presentingStageText(page)).toContain('Next slide');
 			await page.keyboard.press('PageUp');
 			await expect
 				.poll(() => shape().evaluate((node) => getComputedStyle(node).opacity))
