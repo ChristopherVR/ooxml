@@ -7,6 +7,37 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.66.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.66.0) - 2026-11-06
+
+### Features
+
+- **drawingml:** Share powerpoint's measured dash patterns ([9c36464](https://github.com/ChristopherVR/ooxml/commit/9c364649697f675ecea811c807188cb083c91078))
+- **ui:** Match dashed square-cap ends and dash phase on straight lines ([7ea4139](https://github.com/ChristopherVR/ooxml/commit/7ea4139a8a759e8dbdec1650b6d6c7f792084d43))
+- **drawingml:** Model PowerPoint's path="shape" gradient field ([afc2c2e](https://github.com/ChristopherVR/ooxml/commit/afc2c2e5243c859b71516e7aa921eac5f287ae0c))
+- **ui:** Fit arch and circle text to its arc and space lines one pitch apart ([816e254](https://github.com/ChristopherVR/ooxml/commit/816e2541fc6af4dce45b8b3c2fa7896f650d5cb4))
+- **ui:** Add a trust center option for downloading webfonts ([e260f16](https://github.com/ChristopherVR/ooxml/commit/e260f16f564e115657f8c60a4c8513ff9c4ddaf2))
+- **pptx:** Honour the font download option in every binding ([6a153eb](https://github.com/ChristopherVR/ooxml/commit/6a153eb83186830490f8a0968d8ba29876562ca6))
+
+### Bug Fixes
+
+- **svelte:** Snap dashed square-cap connector paths to the device grid ([043a716](https://github.com/ChristopherVR/ooxml/commit/043a716d78655724ad7b6b7bc100822d9d85664f))
+- **geometry:** Reconstruct swooshArrow's guide chain from PowerPoint ([f427d84](https://github.com/ChristopherVR/ooxml/commit/f427d84088235985b4fbf1a681cc3bcaab84fdf0))
+- **geometry:** Draw actionButtonHelp's question mark with elliptical arcs ([01275f1](https://github.com/ChristopherVR/ooxml/commit/01275f191ab8a1e0a19c52e9322b477084718bd2))
+- **geometry:** Shade the scroll curl with the measured swirl, not discs ([1e3d8f9](https://github.com/ChristopherVR/ooxml/commit/1e3d8f93f777031900f8de7fdcd79c7e7a479dd4))
+- **pptx:** Read adj1 of the wave and pour text warps and write it back ([90f407a](https://github.com/ChristopherVR/ooxml/commit/90f407afc7726fde72f52fc93a9b6e0adf57df36))
+- **pptx:** Persist canvas size changes from automation ([#252](https://github.com/ChristopherVR/ooxml/issues/252)) ([e9b76d4](https://github.com/ChristopherVR/ooxml/commit/e9b76d47fcb2b3432cefda7f061fc302370320bf))
+- **pptx:** Preserve merged cells during table structure edits ([#253](https://github.com/ChristopherVR/ooxml/issues/253)) ([0158dda](https://github.com/ChristopherVR/ooxml/commit/0158dda7f0ad7ba5148dda05f9d7ecc23e468555))
+- **pptx:** Wait for a deck's webfonts before showing it ([995b977](https://github.com/ChristopherVR/ooxml/commit/995b977e12041a798744eb9704d4d5735cd52a1a))
+- **ui:** Break lines where powerpoint does when the deck font is missing ([40765e7](https://github.com/ChristopherVR/ooxml/commit/40765e7ac295ca1c6ee4346cd95109fd7be7d951))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
+### Testing
+
+- **pptx:** Pin transparent outlines and text-box effects from the SDK ([#254](https://github.com/ChristopherVR/ooxml/issues/254)) ([6de0da1](https://github.com/ChristopherVR/ooxml/commit/6de0da1799532dbe4c6f093d93c75a44471f4375))
+
 ## [4.65.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.65.0) - 2026-11-06
 
 ### Features
