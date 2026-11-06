@@ -313,6 +313,7 @@ export const COMPLEX_SLIDE_FIELDS: Readonly<Record<string, string>> = {
 	activeXControls: '_ax',
 	legacyVmlElements: '_lvml',
 	backgroundPattern: '_bp',
+	backgroundGradientFill: '_bgf',
 	backgroundImageProperties: '_bip',
 	backgroundStyleRef: '_bsr',
 	modernCommentPart: '_mc',
