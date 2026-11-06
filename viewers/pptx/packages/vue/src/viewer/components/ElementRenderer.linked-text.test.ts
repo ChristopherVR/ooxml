@@ -61,16 +61,16 @@ function boxText(wrapper: ReturnType<typeof mountChain>, id: string): string {
 }
 
 describe('elementRenderer - linked text box overflow', () => {
-	it('renders only the head box slice in the head box', () => {
+	it('keeps the whole text in the head box (PowerPoint ignores a:linkedTxbx)', () => {
 		const wrapper = mountChain();
-		expect(boxText(wrapper, 'head')).toBe('ABC');
+		expect(boxText(wrapper, 'head')).toBe('ABCDEFGHIJ');
 	});
 
-	it('flows the overflow into the successor box', () => {
+	it('leaves the successor box empty (no flow, as PowerPoint)', () => {
 		const wrapper = mountChain();
 		// The tail authors no text of its own; everything it shows comes from the
 		// chain. Before this wiring the tail rendered nothing at all.
-		expect(boxText(wrapper, 'tail')).toBe('DEFGHIJ');
+		expect(boxText(wrapper, 'tail')).toBe('');
 	});
 
 	it('never paints the same run in two boxes of the chain', () => {
@@ -78,10 +78,10 @@ describe('elementRenderer - linked text box overflow', () => {
 		expect(boxText(wrapper, 'head') + boxText(wrapper, 'tail')).toBe('ABCDEFGHIJ');
 	});
 
-	it('clips a chain member so its overflow cannot spill on top of the next box', () => {
+	it('does not clip a chain member (PowerPoint lets the text overflow)', () => {
 		const wrapper = mountChain();
 		const body = wrapper.find('[data-element-id="head"] .pptx-vue-text');
-		expect(body.attributes('style')).toContain('overflow: hidden');
+		expect(body.attributes('style') ?? '').not.toContain('overflow: hidden');
 	});
 
 	it('leaves an ordinary text box unclipped and untouched', () => {

@@ -55,6 +55,11 @@ export type TextBlockStyle = Record<string, string | number>;
 /** Knobs the five bindings differ on; everything else is identical for all. */
 export interface TextBlockStyleOptions {
 	/**
+	 * Opt in to the `a:linkedTxbx` flow (clip chain members). Off by default:
+	 * PowerPoint ignores the link and does not clip.
+	 */
+	linkedFlow?: boolean;
+	/**
 	 * Colour used when the element authors none. React threads its
 	 * theme-resolved default here; the other bindings pass their own constant.
 	 */
@@ -298,7 +303,7 @@ export function buildTextBlockStyle(
 	// paints the same run twice (once escaping this box, once inside the next).
 	// Applied after the `wrap="none"` branch above so it wins for a no-wrap
 	// linked box, matching React, which appends the same `overflow: hidden` last.
-	if (isLinkedTextBox(element)) {
+	if (isLinkedTextBox(element, { flow: options.linkedFlow === true })) {
 		style.overflow = 'hidden';
 	}
 

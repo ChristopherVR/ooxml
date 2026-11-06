@@ -58,8 +58,12 @@ function chainElements(): PptxElement[] {
 describe('the shared rule the renderer delegates to', () => {
 	it('splits the chain text so each box renders only its own slice', () => {
 		const [head, tail] = chainElements();
-		expect(getOverflowSegments(head, [head, tail])?.map((s) => s.text)).toStrictEqual(['ABC']);
-		expect(getOverflowSegments(tail, [head, tail])?.map((s) => s.text)).toStrictEqual(['DEFGHIJ']);
+		expect(
+			getOverflowSegments(head, [head, tail], { flow: true })?.map((s) => s.text),
+		).toStrictEqual(['ABC']);
+		expect(
+			getOverflowSegments(tail, [head, tail], { flow: true })?.map((s) => s.text),
+		).toStrictEqual(['DEFGHIJ']);
 	});
 
 	it('leaves an element outside a chain on its own segments', () => {
@@ -72,12 +76,20 @@ describe('the shared rule the renderer delegates to', () => {
 			height: 200,
 			textSegments: [{ text: 'Hello world', style: {} }],
 		} as PptxElementWithText as PptxElement;
-		expect(getOverflowSegments(plain, [plain])).toBeUndefined();
+		expect(getOverflowSegments(plain, [plain], { flow: true })).toBeUndefined();
 	});
 
 	it('clips a chain member, so its overflow is not painted twice', () => {
 		const [head] = chainElements();
-		expect(buildTextBlockStyle(head).overflow).toBe('hidden');
+		expect(buildTextBlockStyle(head, { linkedFlow: true }).overflow).toBe('hidden');
+	});
+});
+
+describe('the renderer default matches PowerPoint (no flow)', () => {
+	it('does not distribute or clip a chain unless asked', () => {
+		const [head, tail] = chainElements();
+		expect(getOverflowSegments(head, [head, tail])).toBeUndefined();
+		expect(buildTextBlockStyle(head).overflow).not.toBe('hidden');
 	});
 });
 

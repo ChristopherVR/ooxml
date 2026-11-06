@@ -20,10 +20,26 @@ import { hasTextProperties, getLinkedTextBoxSegments } from 'ooxml-core/pptx';
 const MAX_GROUP_DEPTH = 64;
 
 /**
- * Determine whether an element participates in a linked text box chain.
+ * Options for the linked text box helpers.
+ *
+ * PowerPoint does NOT flow `a:linkedTxbx`: it is the DrawingML twin of Word's
+ * `wps:linkedTxbx` and is not part of PresentationML's `a:bodyPr`. Measured with
+ * COM `Slide.Export` on the linked-textbox fixture, PowerPoint keeps the whole
+ * text in the head box (overflowing its border, unclipped) and leaves every
+ * successor empty. The link is still parsed and round-trips, but the helpers
+ * report "no chain" unless the caller passes `flow: true`.
  */
-export function isLinkedTextBox(element: PptxElement): boolean {
-	return hasTextProperties(element) && element.linkedTxbxId !== undefined;
+export interface LinkedTextBoxOptions {
+	/** Opt in to flowing text along the chain. Default false (PowerPoint). */
+	flow?: boolean;
+}
+
+/**
+ * Determine whether an element participates in a linked text box chain that
+ * the caller asked to flow (see {@link LinkedTextBoxOptions}).
+ */
+export function isLinkedTextBox(element: PptxElement, options: LinkedTextBoxOptions = {}): boolean {
+	return options.flow === true && hasTextProperties(element) && element.linkedTxbxId !== undefined;
 }
 
 /**
@@ -82,8 +98,12 @@ function flattenForChainResolution(elements: readonly PptxElement[]): readonly P
 /**
  * Determine whether an element is the head (seq 0) of a linked text box chain.
  */
-export function isLinkedTextBoxHead(element: PptxElement): boolean {
+export function isLinkedTextBoxHead(
+	element: PptxElement,
+	options: LinkedTextBoxOptions = {},
+): boolean {
 	return (
+		options.flow === true &&
 		hasTextProperties(element) &&
 		element.linkedTxbxId !== undefined &&
 		(element.linkedTxbxSeq ?? 0) === 0
@@ -111,11 +131,12 @@ export function isLinkedTextBoxHead(element: PptxElement): boolean {
 export function getOverflowSegments(
 	element: PptxElement,
 	slideElements: readonly PptxElement[] | undefined,
+	options: LinkedTextBoxOptions = {},
 ): TextSegment[] | undefined {
 	if (!slideElements || slideElements.length === 0) {
 		return undefined;
 	}
-	if (!isLinkedTextBox(element)) {
+	if (!isLinkedTextBox(element, options)) {
 		return undefined;
 	}
 	return getLinkedTextBoxSegments(element, flattenForChainResolution(slideElements));
@@ -132,16 +153,20 @@ export function getOverflowSegments(
  */
 export function buildSlideOverflowMap(
 	slideElements: readonly PptxElement[],
+	options: LinkedTextBoxOptions = {},
 ): Map<string, TextSegment[]> {
 	const result = new Map<string, TextSegment[]>();
+	if (options.flow !== true) {
+		return result;
+	}
 	const flat = flattenForChainResolution(slideElements);
 
-	if (!flat.some((el) => isLinkedTextBox(el))) {
+	if (!flat.some((el) => isLinkedTextBox(el, options))) {
 		return result;
 	}
 
 	for (const el of flat) {
-		if (!isLinkedTextBox(el)) {
+		if (!isLinkedTextBox(el, options)) {
 			continue;
 		}
 		const segments = getLinkedTextBoxSegments(el, flat);

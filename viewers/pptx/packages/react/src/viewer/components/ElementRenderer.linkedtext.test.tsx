@@ -74,14 +74,14 @@ function renderBox(element: PptxElement, elements: PptxElement[] | undefined): H
 }
 
 describe('elementRenderer - linked text box overflow', () => {
-	it('renders only the head box slice in the head box', () => {
+	it('keeps the whole text in the head box (PowerPoint ignores a:linkedTxbx)', () => {
 		const [head] = chainElements();
-		expect(renderBox(head, chainElements()).textContent).toBe('ABC');
+		expect(renderBox(head, chainElements()).textContent).toBe('ABCDEFGHIJ');
 	});
 
-	it('flows the overflow into the successor box', () => {
+	it('leaves the successor box empty (no flow, as PowerPoint)', () => {
 		const [, tail] = chainElements();
-		expect(renderBox(tail, chainElements()).textContent).toBe('DEFGHIJ');
+		expect(renderBox(tail, chainElements()).textContent).toBe('');
 	});
 
 	it('never paints the same run in two boxes of the chain', () => {
@@ -92,12 +92,12 @@ describe('elementRenderer - linked text box overflow', () => {
 		expect(headText + tailText).toBe('ABCDEFGHIJ');
 	});
 
-	it('clips a chain member so its overflow cannot spill on top of the next box', () => {
+	it('does not clip a chain member (PowerPoint lets the text overflow)', () => {
 		const [head] = chainElements();
 		const body = renderBox(head, chainElements()).querySelector<HTMLElement>(
 			'[data-element-id="head"] div',
 		);
-		expect(body?.style.overflow).toBe('hidden');
+		expect(body?.style.overflow).not.toBe('hidden');
 	});
 
 	it('falls back to the authored text when no slide is supplied', () => {

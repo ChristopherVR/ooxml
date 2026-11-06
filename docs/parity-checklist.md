@@ -356,6 +356,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       elements on every part type, and ratchet the counts in CI.
 - [ ] **P1** Chart and ChartEx save is not native-certified for fresh templates (a six-slide deck
       failed to open in PowerPoint).
+- [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
+      with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
+      renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and
+      round-trips (`linkedTxbxId` / `linkedTxbxSeq`).
 - [ ] **P1** `.ppt` export turns video and non-WAV audio into pictures.
 - [ ] **P1** Clipboard is a suite slide-package format with no desktop Office interop.
 - [ ] **P2** 3-D models: `am3d:preTrans` is parsed, not applied; `rot` handedness and

@@ -40,12 +40,12 @@ function makeParaBreak(): TextSegment {
 describe('isLinkedTextBox', () => {
 	it('returns true for elements with linkedTxbxId', () => {
 		const el = makeTextElement({ id: 't1', linkedTxbxId: 1, linkedTxbxSeq: 0 });
-		expect(isLinkedTextBox(el)).toBeTruthy();
+		expect(isLinkedTextBox(el, { flow: true })).toBeTruthy();
 	});
 
 	it('returns false for elements without linkedTxbxId', () => {
 		const el = makeTextElement({ id: 't1' });
-		expect(isLinkedTextBox(el)).toBeFalsy();
+		expect(isLinkedTextBox(el, { flow: true })).toBeFalsy();
 	});
 
 	it('returns false for non-text elements', () => {
@@ -57,7 +57,7 @@ describe('isLinkedTextBox', () => {
 			width: 100,
 			height: 100,
 		} as PptxElement;
-		expect(isLinkedTextBox(el)).toBeFalsy();
+		expect(isLinkedTextBox(el, { flow: true })).toBeFalsy();
 	});
 });
 
@@ -68,22 +68,22 @@ describe('isLinkedTextBox', () => {
 describe('isLinkedTextBoxHead', () => {
 	it('returns true for seq=0 elements', () => {
 		const el = makeTextElement({ id: 't1', linkedTxbxId: 1, linkedTxbxSeq: 0 });
-		expect(isLinkedTextBoxHead(el)).toBeTruthy();
+		expect(isLinkedTextBoxHead(el, { flow: true })).toBeTruthy();
 	});
 
 	it('returns true when linkedTxbxSeq is undefined (defaults to 0)', () => {
 		const el = makeTextElement({ id: 't1', linkedTxbxId: 1 });
-		expect(isLinkedTextBoxHead(el)).toBeTruthy();
+		expect(isLinkedTextBoxHead(el, { flow: true })).toBeTruthy();
 	});
 
 	it('returns false for seq > 0', () => {
 		const el = makeTextElement({ id: 't1', linkedTxbxId: 1, linkedTxbxSeq: 1 });
-		expect(isLinkedTextBoxHead(el)).toBeFalsy();
+		expect(isLinkedTextBoxHead(el, { flow: true })).toBeFalsy();
 	});
 
 	it('returns false for elements without linkedTxbxId', () => {
 		const el = makeTextElement({ id: 't1' });
-		expect(isLinkedTextBoxHead(el)).toBeFalsy();
+		expect(isLinkedTextBoxHead(el, { flow: true })).toBeFalsy();
 	});
 });
 
@@ -94,7 +94,7 @@ describe('isLinkedTextBoxHead', () => {
 describe('getOverflowSegments', () => {
 	it('returns undefined for non-linked elements', () => {
 		const el = makeTextElement({ id: 't1', textSegments: [makeSeg('Hello')] });
-		expect(getOverflowSegments(el, [el])).toBeUndefined();
+		expect(getOverflowSegments(el, [el], { flow: true })).toBeUndefined();
 	});
 
 	it('returns undefined for a single-member chain', () => {
@@ -104,7 +104,7 @@ describe('getOverflowSegments', () => {
 			linkedTxbxSeq: 0,
 			textSegments: [makeSeg('Hello')],
 		});
-		expect(getOverflowSegments(el, [el])).toBeUndefined();
+		expect(getOverflowSegments(el, [el], { flow: true })).toBeUndefined();
 	});
 
 	it('returns segments for head of a two-member chain', () => {
@@ -126,7 +126,7 @@ describe('getOverflowSegments', () => {
 			linkedTxbxSeq: 1,
 		});
 
-		const result = getOverflowSegments(head, [head, tail]);
+		const result = getOverflowSegments(head, [head, tail], { flow: true });
 		expect(result).toBeDefined();
 		expect(result!.length).toBeGreaterThan(0);
 	});
@@ -164,7 +164,7 @@ describe('getOverflowSegments', () => {
 			},
 		});
 
-		const tailResult = getOverflowSegments(tail, [head, tail]);
+		const tailResult = getOverflowSegments(tail, [head, tail], { flow: true });
 		expect(tailResult).toBeDefined();
 		const tailText = tailResult!.map((s) => s.text).join('');
 		expect(tailText.length).toBeGreaterThan(0);
@@ -204,8 +204,8 @@ describe('getOverflowSegments', () => {
 		});
 
 		const allElements = [head, tail] as PptxElement[];
-		const headSegs = getOverflowSegments(head, allElements)!;
-		const tailSegs = getOverflowSegments(tail, allElements)!;
+		const headSegs = getOverflowSegments(head, allElements, { flow: true })!;
+		const tailSegs = getOverflowSegments(tail, allElements, { flow: true })!;
 		const combined = headSegs.map((s) => s.text).join('') + tailSegs.map((s) => s.text).join('');
 		expect(combined).toBe(originalText);
 	});
@@ -229,7 +229,7 @@ describe('getOverflowSegments', () => {
 			linkedTxbxSeq: 1,
 		});
 
-		const headSegs = getOverflowSegments(head, [head, tail]);
+		const headSegs = getOverflowSegments(head, [head, tail], { flow: true });
 		expect(headSegs).toBeDefined();
 		// Large head box: all text should fit in the head
 		expect(headSegs!).toHaveLength(3);
@@ -254,7 +254,7 @@ describe('getOverflowSegments', () => {
 			linkedTxbxSeq: 1,
 		});
 
-		const tailResult = getOverflowSegments(tail, [head, tail]);
+		const tailResult = getOverflowSegments(tail, [head, tail], { flow: true });
 		expect(tailResult).toBeDefined();
 		expect(tailResult).toHaveLength(0);
 	});
@@ -270,7 +270,7 @@ describe('buildSlideOverflowMap', () => {
 			makeTextElement({ id: 't1' }),
 			makeTextElement({ id: 't2' }),
 		] as PptxElement[];
-		const map = buildSlideOverflowMap(elements);
+		const map = buildSlideOverflowMap(elements, { flow: true });
 		expect(map.size).toBe(0);
 	});
 
@@ -283,7 +283,7 @@ describe('buildSlideOverflowMap', () => {
 				textSegments: [makeSeg('Hello')],
 			}),
 		] as PptxElement[];
-		const map = buildSlideOverflowMap(elements);
+		const map = buildSlideOverflowMap(elements, { flow: true });
 		// Single-member chains return undefined from getLinkedTextBoxSegments
 		expect(map.size).toBe(0);
 	});
@@ -321,7 +321,7 @@ describe('buildSlideOverflowMap', () => {
 		});
 
 		const elements = [head, tail] as PptxElement[];
-		const map = buildSlideOverflowMap(elements);
+		const map = buildSlideOverflowMap(elements, { flow: true });
 		expect(map.size).toBe(2);
 		expect(map.has('head')).toBeTruthy();
 		expect(map.has('tail')).toBeTruthy();
@@ -399,7 +399,7 @@ describe('buildSlideOverflowMap', () => {
 		});
 
 		const elements = [head1, tail1, head2, tail2] as PptxElement[];
-		const map = buildSlideOverflowMap(elements);
+		const map = buildSlideOverflowMap(elements, { flow: true });
 		expect(map.size).toBe(4);
 
 		// Chain 1 text preserved
@@ -450,7 +450,7 @@ describe('buildSlideOverflowMap', () => {
 		});
 
 		const elements = [img, head, tail] as PptxElement[];
-		const map = buildSlideOverflowMap(elements);
+		const map = buildSlideOverflowMap(elements, { flow: true });
 		// The chain has 2 members so we get distributions
 		expect(map.has('head')).toBeTruthy();
 		expect(map.has('tail')).toBeTruthy();
@@ -487,7 +487,7 @@ describe('renderTextSegments with segmentOverrides', () => {
 			linkedTxbxSeq: 1,
 		});
 
-		const overrides = getOverflowSegments(head, [head, tail]);
+		const overrides = getOverflowSegments(head, [head, tail], { flow: true });
 		expect(overrides).toBeDefined();
 		expect(Array.isArray(overrides)).toBeTruthy();
 		for (const seg of overrides!) {
@@ -518,7 +518,7 @@ describe('renderTextSegments with segmentOverrides', () => {
 			linkedTxbxSeq: 1,
 		});
 
-		const headOverrides = getOverflowSegments(head, [head, tail]);
+		const headOverrides = getOverflowSegments(head, [head, tail], { flow: true });
 		expect(headOverrides).toBeDefined();
 		// The head is large enough to fit all text, so it should have both segments
 		const allText = headOverrides!.map((s) => s.text).join('');

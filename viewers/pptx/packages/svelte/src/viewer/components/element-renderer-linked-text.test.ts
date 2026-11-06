@@ -78,14 +78,14 @@ function bodyStyle(target: HTMLElement, id: string): string {
 }
 
 describe('elementRenderer - linked text box overflow', () => {
-	it('renders only the head box slice in the head box', () => {
-		expect(boxText(mountStage(chainElements()), 'head')).toBe('ABC');
+	it('keeps the whole text in the head box (PowerPoint ignores a:linkedTxbx)', () => {
+		expect(boxText(mountStage(chainElements()), 'head')).toBe('ABCDEFGHIJ');
 	});
 
-	it('flows the overflow into the successor box', () => {
+	it('leaves the successor box empty (no flow, as PowerPoint)', () => {
 		// The tail authors no text of its own; everything it shows comes from the
 		// chain. Before this wiring the tail rendered nothing at all.
-		expect(boxText(mountStage(chainElements()), 'tail')).toBe('DEFGHIJ');
+		expect(boxText(mountStage(chainElements()), 'tail')).toBe('');
 	});
 
 	it('never paints the same run in two boxes of the chain', () => {
@@ -93,8 +93,8 @@ describe('elementRenderer - linked text box overflow', () => {
 		expect(boxText(target, 'head') + boxText(target, 'tail')).toBe('ABCDEFGHIJ');
 	});
 
-	it('clips a chain member so its overflow cannot spill on top of the next box', () => {
-		expect(bodyStyle(mountStage(chainElements()), 'head')).toContain('overflow: hidden');
+	it('does not clip a chain member (PowerPoint lets the text overflow)', () => {
+		expect(bodyStyle(mountStage(chainElements()), 'head')).not.toContain('overflow: hidden');
 	});
 
 	it('leaves an ordinary text box unclipped and untouched', () => {
