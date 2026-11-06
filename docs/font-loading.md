@@ -100,9 +100,10 @@ once and applies to every later load. The choice is saved with the other viewer 
 a host `googleFonts` value overrides it and shows the toggle read-only. The rule lives once in
 `src/ui/src/pptx/render/options/font-download-policy.ts`, which every binding uses.
 
-### OOXML Office suite: Settings > Fonts and privacy
+### OOXML Office suite: Settings > Fonts
 
-The suite's Settings dialog chooses for every editor it opens:
+The suite's Settings dialog (the shared `office-ui-options-dialog`, as PowerPoint's File >
+Options) chooses for every editor it opens:
 
 - **Download from Google Fonts** (default): passes no `googleFonts`, so each editor's own Trust
   Center choice still applies;
@@ -110,7 +111,9 @@ The suite's Settings dialog chooses for every editor it opens:
 - **Do not download fonts**: passes `false`.
 
 The choice is kept in `localStorage` (`ooxml-suite-fonts`) and applies to documents opened after
-it changes. The site's Content Security Policy (`site/index.html`, `site/404.html`) allows
+it changes. A custom address that is not an absolute http(s) URL without credentials, query or
+fragment is refused in place, and the previous choice holds until it is valid. Settings >
+Privacy lists what the current choice contacts. The site's Content Security Policy (`site/index.html`, `site/404.html`) allows
 `https://fonts.googleapis.com` in `style-src` and `https://fonts.gstatic.com` in `font-src`; a
 deployment that uses its own font server adds it to both (and to the desktop policy in
 `desktop/src-tauri/tauri.conf.json`).

@@ -18,6 +18,7 @@
         "ooxml-core": "workspace:*",
         "ooxml-ui": "workspace:*",
         "pptx-vanilla-viewer": "workspace:*",
+        "pptx-viewer-locales": "workspace:*",
       },
       "devDependencies": {
         "vite": "^8.3.5",
@@ -1142,8 +1143,8 @@
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
         "lucide": "^1.64.0",
-        "ooxml-core": "^1.38.1",
-        "ooxml-ui": "^1.40.0",
+        "ooxml-core": "^1.42.0",
+        "ooxml-ui": "^1.45.0",
         "opentype.js": "^2.0.0",
       },
       "devDependencies": {

@@ -5,6 +5,49 @@ import { setEditorReadOnly } from './editor-read-only.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { download } from './ui.js';
 import { googleFontsOption } from './font-downloads.js';
+import {
+	authorName,
+	editorLocale,
+	editorRadius,
+	externalContentOption,
+	onSettings,
+	settings,
+} from './settings.js';
+import { currentProfile } from './profile-state.js';
+
+/** PowerPoint's dictionary for `locale` (English is built in). */
+async function pptxMessages(locale) {
+	if (!locale || locale === 'en') return undefined;
+	const loaders = {
+		fr: () => import('pptx-viewer-locales/fr'),
+		es: () => import('pptx-viewer-locales/es'),
+		de: () => import('pptx-viewer-locales/de'),
+		'zh-CN': () => import('pptx-viewer-locales/zh-CN'),
+	};
+	const module = await loaders[locale]?.();
+	return module && Object.values(module).find((value) => value && typeof value === 'object');
+}
+
+const author = (prefs) => authorName(currentProfile().name, prefs);
+
+/** Settings > View, Language and General for Word, Excel and Visio (all live). */
+function applyEditorSettings(element, kind, prefs, keys) {
+	const has = (key) => !keys || keys.includes(key);
+	const locale = editorLocale(prefs);
+	if (has('locale') && (locale || keys)) {
+		// Back to "each app's own choice": English, as the editors start.
+		if (kind === 'vsdx') element.setAttribute('locale', locale ?? 'en');
+		else element.locale = locale ?? 'en';
+	}
+	if (has('showRibbon')) element.showToolbar = prefs.showRibbon;
+	if (has('authorName')) {
+		const name = author(prefs);
+		if (kind === 'docx' && (name || keys)) element.reviewAuthor = name ?? '';
+		if (kind === 'xlsx' && (name || keys)) element.authorName = name ?? '';
+	}
+	if (kind === 'docx' && has('showThumbnails')) element.showThumbnails = prefs.showThumbnails;
+	if (kind === 'xlsx' && has('showFormulaBar')) element.showFormulaBar = prefs.showFormulaBar;
+}
 export function preloadEditor(kind) {
 	const loaders = {
 		pptx: () => import('pptx-vanilla-viewer'),
@@ -24,9 +67,24 @@ export async function mountEditor(host, doc, changed, command) {
 		let loading = true;
 		let loadFailed = false;
 		const googleFonts = googleFontsOption();
+		const prefs = settings();
+		const locale = editorLocale(prefs);
+		// Held by reference by the viewer, so a later language adds its dictionary here.
+		const messages = {};
+		const dictionary = await pptxMessages(locale);
+		if (dictionary) messages[locale] = dictionary;
+		const externalContent = externalContentOption(prefs);
+		const authorFor = author(prefs);
 		const viewer = createPptxViewer(host, {
-			// Settings > Fonts and privacy; unset keeps the viewer's own Trust Center choice.
+			// Settings > Fonts; unset keeps the viewer's own Trust Center choice.
 			...(googleFonts === undefined ? {} : { googleFonts }),
+			...(externalContent === undefined ? {} : { allowExternalContent: externalContent }),
+			...(locale ? { locale, defaultLocale: locale } : {}),
+			messages,
+			...(authorFor ? { authorName: authorFor } : {}),
+			showToolbar: prefs.showRibbon,
+			showThumbnails: prefs.showThumbnails,
+			rulerUnit: prefs.measurementUnit,
 			fileName: doc.name,
 			editable: !accessReadOnly,
 			// The suite owns cloud/Teams sharing; the viewer's separate collaboration invite is not cloud sync.
@@ -50,12 +108,22 @@ export async function mountEditor(host, doc, changed, command) {
 		});
 		const stopTheme = onTheme((theme) => {
 			applyOfficeTheme(host, theme);
-			viewer.setTheme({ colors: editorColors(theme), radius: '0.25rem' });
+			viewer.setTheme({ colors: editorColors(theme), radius: editorRadius() });
+		});
+		// The display language changes live; the other options apply to decks opened next.
+		const stopSettings = onSettings((next, keys) => {
+			if (!keys.includes('locale')) return;
+			const code = editorLocale(next) ?? 'en';
+			void pptxMessages(code).then((found) => {
+				if (found) messages[code] = found;
+				viewer.setLocale(code);
+			});
 		});
 		await viewer.loadFile(doc.bytes);
 		loading = false;
 		if (loadFailed) {
 			stopTheme();
+			stopSettings();
 			viewer.destroy();
 			throw new Error('The presentation could not be opened.');
 		}
@@ -83,6 +151,7 @@ export async function mountEditor(host, doc, changed, command) {
 			},
 			dispose: () => {
 				stopTheme();
+				stopSettings();
 				viewer.destroy();
 			},
 		};
@@ -108,7 +177,7 @@ export async function mountEditor(host, doc, changed, command) {
 				...(doc.kind === 'xlsx'
 					? { selectionBorder: theme.accent, headerActiveBg: editorColors(theme).accent }
 					: {}),
-				radius: '4px',
+				radius: editorRadius(),
 			};
 		}
 	});
@@ -118,6 +187,10 @@ export async function mountEditor(host, doc, changed, command) {
 	});
 	observer.observe(element, { attributes: true, attributeFilter: ['theme'] });
 	host.append(element);
+	applyEditorSettings(element, doc.kind, settings());
+	const stopSettings = onSettings((next, keys) =>
+		applyEditorSettings(element, doc.kind, next, keys),
+	);
 	setEditorReadOnly(element, doc.kind, accessReadOnly);
 	// Visio opens at 100%; fit the page to the canvas once it has a layout, as the Visio demo does.
 	const fit = () =>
@@ -188,6 +261,7 @@ export async function mountEditor(host, doc, changed, command) {
 		},
 		dispose: () => {
 			stop?.();
+			stopSettings();
 			observer.disconnect();
 			stopTheme();
 			element.remove();

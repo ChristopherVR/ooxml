@@ -66,28 +66,6 @@ export function googleFontsOption(choice = preferences) {
 	return undefined;
 }
 
-const escapeAttr = (value) => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
-/** The Settings dialog fieldset for this choice (read back by {@link readFontDownloadsForm}). */
-export function fontDownloadsFieldset(choice = preferences) {
-	const option = (mode, label) =>
-		`<label><input type="radio" name="fonts" value="${mode}" ${choice.mode === mode ? 'checked' : ''} />${label}</label>`;
-	return `<fieldset class="font-downloads"><legend>Fonts and privacy</legend><p class="theme-hint">When a document uses a font that is neither installed nor embedded, a matching font can be downloaded so it looks as intended. Downloading shares your IP address with the font server.</p>${option('google', 'Download from Google Fonts')}${option('custom', 'Download from my own font server')}<input type="url" name="font-server" placeholder="https://fonts.example.com/css2" aria-label="Font server address" value="${escapeAttr(choice.server)}" ${choice.mode === 'custom' ? '' : 'disabled'} />${option('off', 'Do not download fonts')}<p class="theme-hint">Applies to documents you open next. The server must answer the Google Fonts CSS2 format and be allowed by the page's Content Security Policy.</p></fieldset>`;
-}
-
-/** Apply the fieldset's values from `data` (a FormData of the Settings form). */
-export function readFontDownloadsForm(form) {
-	const data = new FormData(form);
-	const mode = data.get('fonts');
-	const server = form.querySelector('[name="font-server"]');
-	if (server) server.disabled = mode !== 'custom';
-	if (mode === 'custom' && !normalizeFontServer(data.get('font-server') ?? '')) {
-		// Wait for a valid address before switching; the previous choice holds meanwhile.
-		return fontDownloads();
-	}
-	return setFontDownloads({ mode, server: data.get('font-server') ?? preferences.server });
-}
-
 export function onFontDownloads(listener) {
 	listeners.add(listener);
 	return () => listeners.delete(listener);

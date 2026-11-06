@@ -20,7 +20,7 @@ network request must update this file in the same commit.
 | What                                             | Goes to                                     | On by default                     | Turn it off or redirect it                                         |
 | ------------------------------------------------ | ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------ |
 | PowerPoint: fonts not installed or embedded      | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                               | `googleFonts` option; File > Options > Trust Center; suite setting |
-| PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | Yes in the viewer, no in the core | `allowExternalContent` option; Trust Center                        |
+| PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | Yes in the viewer, no in the core | `allowExternalContent` option; Trust Center; suite setting         |
 | PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it      | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it      | Do not start a session                                             |
 | PowerPoint (Node): signature inspection          | The OCSP responder named in the certificate | Yes, when inspection is called    | No switch today (see below)                                        |
@@ -59,7 +59,7 @@ viewer does the same from Google Fonts, so the text keeps its intended look and 
     same requests to a self-hosted mirror instead;
   - the reader can turn it off in File > Options > Trust Center (the host option, when set,
     locks that toggle);
-  - in the OOXML Office suite, Settings > Fonts and privacy.
+  - in the OOXML Office suite, Settings > Fonts.
 
 With downloads off, text uses installed, embedded or substitute fonts, so line breaks can differ
 from PowerPoint. [docs/font-loading.md](docs/font-loading.md) describes the whole font pipeline.
@@ -77,7 +77,8 @@ shown in the provider's embed frame.
   parser's own `allowExternalImages` option is off, so `ooxml-core/pptx` used directly fetches
   nothing.
 - **Off:** the host option `allowExternalContent: false`, or the Trust Center option. Teams
-  presentation previews always block it.
+  presentation previews always block it. In the OOXML Office suite, Settings > Privacy >
+  "Block linked pictures and media in presentations" passes `false` to every deck opened next.
 
 ### Collaboration: Share and Broadcast
 
@@ -130,8 +131,8 @@ Hyperlinks and in-product help links open only when the reader follows them.
 
 The suite uses the editors above, so their sections apply. In addition:
 
-- **Fonts:** Settings > Fonts and privacy chooses Google Fonts (the default), your own font
-  server, or no downloads. The site's Content Security Policy allows only Google's two font
+- **Fonts:** Settings > Fonts chooses Google Fonts (the default), your own font server, or no
+  downloads. The site's Content Security Policy allows only Google's two font
   hosts; a deployment that uses its own font server adds that server to the policy.
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the
@@ -162,8 +163,11 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 - **Teams:** chat snapshots, read state, drafts, presence and follows in the storage the host
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per
-  profile; profiles, favourites, theme, font and AI preferences in localStorage; AI keys in
-  session storage, or localStorage when the user chooses to remember them.
+  profile; profiles, favourites, theme (`ooxml-suite-theme`), fonts (`ooxml-suite-fonts`), the
+  other Settings (`ooxml-suite-settings`) and AI preferences in localStorage; AI keys in session
+  storage, or localStorage when the user chooses to remember them. Settings > Privacy shows how
+  much space the app uses and can ask the browser to keep it when space runs low
+  (`navigator.storage.persist`); nothing is sent.
 
 ## Browser features outside our control
 
