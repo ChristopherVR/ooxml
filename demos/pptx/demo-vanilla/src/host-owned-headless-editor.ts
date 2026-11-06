@@ -6,6 +6,7 @@ import {
 	createInitialViewerState,
 	createStore,
 	describeCollaborationShellState,
+	disposePptxRenderStage,
 	getViewerCss,
 	loadPresentation,
 	renderSlideStage,
@@ -15,8 +16,10 @@ import type { LoadedPresentation, PptxElement } from 'pptx-vanilla-viewer';
 
 import type { createHostOwnedDemo } from '../../shared/host-owned-collaboration';
 import type { HostOwnedShellHandle } from '../../shared/host-owned-shell-controls';
+import { hostThumbnailStripRequested } from '../../shared/host-thumbnail-strip';
 import { t } from './demo-i18n';
 import { createHostOwnedInlineEditor } from './host-owned-inline-editor';
+import { mountHostSlideStrip } from './host-owned-slide-strip';
 import { mountHostOwnedSlidesPane } from './host-owned-slides-pane';
 
 /** Custom chrome with native rendering/inline editing and host-owned selection/drag. */
@@ -77,11 +80,11 @@ export function mountHostOwnedHeadlessEditor(
 		getScale: () => scale,
 		onChange: () => render(),
 	});
-	const slidesPane = mountHostOwnedSlidesPane(body, {
-		store,
-		getLoaded: () => loaded,
-		commitInline: () => inline.commit(),
-	});
+	const railOptions = { store, getLoaded: () => loaded, commitInline: () => inline.commit() };
+	// `?hostStrip=1`: the host's own strip of thumbnails instead of the slides pane.
+	const slidesPane = hostThumbnailStripRequested()
+		? mountHostSlideStrip(body, railOptions)
+		: mountHostOwnedSlidesPane(body, railOptions);
 	body.append(canvasArea);
 	const patchElement = (element: PptxElement, patch: Partial<PptxElement>): void => {
 		const state = store.get();
@@ -110,6 +113,8 @@ export function mountHostOwnedHeadlessEditor(
 		}
 		viewport.style.width = `${state.canvasSize.width * scale}px`;
 		viewport.style.height = `${state.canvasSize.height * scale}px`;
+		// Retire the previous stage's chart subscriptions before replacing it.
+		disposePptxRenderStage(stageRoot);
 		stageRoot.replaceChildren(
 			renderSlideStage({
 				document,
@@ -240,6 +245,7 @@ export function mountHostOwnedHeadlessEditor(
 			if (loaded) {
 				revokeBlobUrls(loaded.blobUrls);
 			}
+			disposePptxRenderStage(stageRoot);
 			root.replaceChildren();
 		},
 	};

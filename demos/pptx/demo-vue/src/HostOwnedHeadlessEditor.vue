@@ -22,11 +22,14 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import type { HostOwnedDemo } from '../../shared/host-owned-collaboration';
+import { hostThumbnailStripRequested } from '../../shared/host-thumbnail-strip';
+import HostSlideStrip from './HostSlideStrip.vue';
 
 // The slide rail's chrome classes and tokens come from the full stylesheet.
 import 'pptx-vue-viewer/styles';
 
 const props = defineProps<{ host: HostOwnedDemo }>();
+const hostStrip = hostThumbnailStripRequested();
 const root = ref<HTMLElement>();
 const canvas = ref<InstanceType<typeof SlideCanvas>>();
 const scale = ref(1);
@@ -249,7 +252,22 @@ defineExpose({
 		</nav>
 		<p v-if="content.error.value" role="alert">{{ content.error.value }}</p>
 		<div class="workspace">
+			<HostSlideStrip
+				v-if="hostStrip"
+				:slides="slides"
+				:template-elements-by-slide-id="templateElementsBySlideId"
+				:active-slide-index="current"
+				:canvas-size="canvasSize"
+				:media-data-urls="mediaDataUrls"
+				:header-footer="content.headerFooter.value"
+				:custom-properties="content.customProperties.value"
+				:first-slide-number="content.firstSlideNumber.value"
+				:theme="content.theme.value"
+				:table-style-map="content.tableStyleMap.value"
+				@select="navigate"
+			/>
 			<SlidesPane
+				v-else
 				:slides="slides"
 				:template-elements-by-slide-id="templateElementsBySlideId"
 				:active-slide-index="current"
