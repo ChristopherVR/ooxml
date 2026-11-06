@@ -556,10 +556,10 @@ export class LoadContentService {
 				newHandler.getImageData(path),
 			);
 
-			// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
-			// Shown before its faces load, the text would visibly swap from the
-			// browser's stand-in face. The loading state stays up instead, with
-			// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+			// ── The deck's Google Fonts webfonts ─────
+			// Held back only briefly, so faces already cached show at once; a slower
+			// download goes on in the background, reported through `fontProgress` in
+			// the status bar until it ends (see deck-webfont-readiness.ts).
 			if (token === this.renderToken && typeof document !== 'undefined') {
 				await prepareDeckWebfonts({
 					document,

@@ -1,12 +1,10 @@
 /**
- * Load-time wait for a deck's Google Fonts webfonts, shared by every binding.
+ * Load-time handling of a deck's Google Fonts webfonts, shared by every binding.
  *
  * A family that is neither installed nor embedded is drawn from the Google
- * Fonts fallback (`google-webfonts.ts`). Injected only after the deck
- * renders, its stylesheet arrives a moment later and every slide visibly
- * swaps from the browser's stand-in face to the real one. Instead, a binding
- * calls {@link prepareDeckWebfonts} between parsing a deck and showing it,
- * while its loading state is still up:
+ * Fonts fallback (`google-webfonts.ts`). A binding calls
+ * {@link prepareDeckWebfonts} as soon as the slides are parsed and awaits it
+ * before showing the deck:
  *
  *  1. The deck's fonts are classified without any network request: the
  *     candidates (neither embedded nor installed) that the catalogue serves
@@ -19,10 +17,12 @@
  *     `unicode-range` subset loads) is loaded through `document.fonts`.
  *
  * The wait ends when every face has loaded or failed, when the stylesheet
- * fails (offline, blocked), or after `timeoutMs`; the deck is then shown and
- * a face that arrives later swaps in as before. Progress is reported only
- * once the wait has lasted `progressDelayMs`, so a fast or cached load shows
- * no extra message.
+ * fails (offline, blocked), or after `timeoutMs` (150 ms, enough for cached
+ * faces); the deck is then shown and a face that arrives later swaps in. The
+ * download itself is followed for up to `followMs`: progress is reported from
+ * `progressDelayMs` on, also after the deck is shown, and once more as `null`
+ * when it is over, so the binding can show "Downloading fonts (n of m)" in its
+ * status bar and clear it again. A fast or cached load reports nothing.
  *
  * @module render/deck-webfont-readiness
  */
@@ -42,6 +42,8 @@ import { syncGoogleWebfontStylesheet } from './google-webfonts-link';
 export const DECK_WEBFONT_TIMEOUT_MS = WEBFONT_TIMEOUT_MS;
 /** How long the wait lasts before progress is reported. */
 export const DECK_WEBFONT_PROGRESS_DELAY_MS = WEBFONT_PROGRESS_DELAY_MS;
+/** How long a download still running when the deck is shown keeps being reported. */
+export const DECK_WEBFONT_FOLLOW_MS = 8000;
 
 // Declared here (not aliased to the shared `fonts/webfonts` types) so the bindings' emitted
 // declarations name a type that `ooxml-ui/pptx` exports.
@@ -76,9 +78,14 @@ export interface PrepareDeckWebfontsOptions {
 	embeddedFonts: readonly PptxEmbeddedFont[];
 	/** From `resolveGoogleFontsCss2Base`; `null` disables the fallback and the wait. */
 	googleFontsBase: string | null;
-	onProgress?: (progress: DeckWebfontProgress) => void;
+	/**
+	 * Download progress, reported from `progressDelayMs` on (also after the
+	 * promise has resolved) and once more as `null` when the download is over.
+	 */
+	onProgress?: (progress: DeckWebfontProgress | null) => void;
 	timeoutMs?: number;
 	progressDelayMs?: number;
+	followMs?: number;
 	isLocallyInstalled?: (family: string) => boolean;
 }
 
@@ -162,6 +169,7 @@ export async function prepareDeckWebfonts(
 		onProgress,
 		timeoutMs = DECK_WEBFONT_TIMEOUT_MS,
 		progressDelayMs = DECK_WEBFONT_PROGRESS_DELAY_MS,
+		followMs = DECK_WEBFONT_FOLLOW_MS,
 		isLocallyInstalled = isFontFamilyInstalledLocally,
 	} = options;
 	if (googleFontsBase === null) {
@@ -187,6 +195,12 @@ export async function prepareDeckWebfonts(
 		unavailable,
 		timeoutMs,
 		progressDelayMs,
-		...(onProgress ? { onProgress } : {}),
+		...(onProgress
+			? {
+					onProgress,
+					followMs: Math.max(followMs, timeoutMs),
+					onProgressEnd: () => onProgress(null),
+				}
+			: {}),
 	});
 }

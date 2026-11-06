@@ -134,7 +134,7 @@ describe('prepareDeckWebfonts', () => {
 
 	it('injects the link and waits for the stylesheet, then for every face', async () => {
 		const { doc, elements, loads } = fakeDocument();
-		const progress: DeckWebfontProgress[] = [];
+		const progress: (DeckWebfontProgress | null)[] = [];
 		let settled = false;
 		const pending = prepareDeckWebfonts({
 			document: doc,
@@ -144,7 +144,7 @@ describe('prepareDeckWebfonts', () => {
 			googleFontsBase: base,
 			isLocallyInstalled: notInstalled,
 			progressDelayMs: 5,
-			onProgress: (p) => progress.push({ ...p }),
+			onProgress: (p) => progress.push(p && { ...p }),
 		}).then((result) => {
 			settled = true;
 			return result;
@@ -172,7 +172,7 @@ describe('prepareDeckWebfonts', () => {
 
 	it('reports no progress for a load faster than the delay', async () => {
 		const { doc, elements, loads } = fakeDocument();
-		const progress: DeckWebfontProgress[] = [];
+		const progress: (DeckWebfontProgress | null)[] = [];
 		const pending = prepareDeckWebfonts({
 			document: doc,
 			linkId: 'fonts',
@@ -191,9 +191,9 @@ describe('prepareDeckWebfonts', () => {
 		expect(progress).toEqual([]);
 	});
 
-	it('stops waiting at the timeout and reports nothing afterwards', async () => {
+	it('stops waiting at the timeout and, with no follow, reports nothing afterwards', async () => {
 		const { doc, elements, loads } = fakeDocument();
-		const progress: DeckWebfontProgress[] = [];
+		const progress: (DeckWebfontProgress | null)[] = [];
 		const pending = prepareDeckWebfonts({
 			document: doc,
 			linkId: 'fonts',
@@ -203,6 +203,7 @@ describe('prepareDeckWebfonts', () => {
 			isLocallyInstalled: notInstalled,
 			timeoutMs: 15,
 			progressDelayMs: 5,
+			followMs: 0,
 			onProgress: (p) => progress.push(p),
 		});
 		await flush();
@@ -230,5 +231,59 @@ describe('prepareDeckWebfonts', () => {
 		await flush();
 		elements.get('fonts')?.fire('error');
 		await expect(pending).resolves.toMatchObject({ timedOut: false });
+	});
+
+	it('keeps reporting a download that outlasts the wait, then reports null', async () => {
+		const { doc, elements, loads } = fakeDocument();
+		const progress: (DeckWebfontProgress | null)[] = [];
+		const pending = prepareDeckWebfonts({
+			document: doc,
+			linkId: 'fonts',
+			slides: DECK,
+			embeddedFonts: [],
+			googleFontsBase: base,
+			isLocallyInstalled: notInstalled,
+			timeoutMs: 5,
+			progressDelayMs: 10,
+			onProgress: (p) => progress.push(p && { ...p }),
+		});
+		await flush();
+		elements.get('fonts')?.fire('load');
+		// The deck is released while the faces are still downloading.
+		await expect(pending).resolves.toMatchObject({ timedOut: true });
+		expect(progress).toEqual([]);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(progress).toEqual([{ loaded: 0, total: 2, families: ['Playfair Display', 'Raleway'] }]);
+		loads[0]?.resolve();
+		await flush();
+		expect(progress.at(-1)).toMatchObject({ loaded: 1 });
+		loads[1]?.resolve();
+		await flush();
+		await flush();
+		expect(progress.at(-1)).toBeNull();
+		const reported = progress.length;
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(progress).toHaveLength(reported);
+	});
+
+	it('gives up following at followMs and clears the progress', async () => {
+		const { doc, elements } = fakeDocument();
+		const progress: (DeckWebfontProgress | null)[] = [];
+		await prepareDeckWebfonts({
+			document: doc,
+			linkId: 'fonts',
+			slides: DECK,
+			embeddedFonts: [],
+			googleFontsBase: base,
+			isLocallyInstalled: notInstalled,
+			timeoutMs: 5,
+			progressDelayMs: 10,
+			followMs: 30,
+			onProgress: (p) => progress.push(p && { ...p }),
+		});
+		elements.get('fonts')?.fire('load');
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(progress[0]).toMatchObject({ loaded: 0 });
+		expect(progress.at(-1)).toBeNull();
 	});
 });

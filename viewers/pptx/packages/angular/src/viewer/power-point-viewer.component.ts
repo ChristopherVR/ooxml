@@ -929,6 +929,7 @@ const noopClose = (): void => undefined;
 						[dirty]="editor.dirty()"
 						[autosaveStatus]="autosave.status()"
 						[saveProgress]="saveProgressState()"
+						[fontProgress]="loader.fontProgress()"
 						[notesOpen]="mobileSheetSvc.showNotes()"
 						[zoomPercent]="zoomSvc.zoomPercent()"
 						[sorterActive]="showSorter()"

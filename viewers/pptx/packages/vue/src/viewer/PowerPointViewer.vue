@@ -2457,6 +2457,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				"
 				:last-saved-at="autosave.lastSavedAt.value"
 				:save-progress="saveProgressState"
+				:font-progress="fontProgress"
 				:scale="zoom"
 				:mode="chromeMode"
 				:is-notes-expanded="notesExpanded"

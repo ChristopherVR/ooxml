@@ -23,7 +23,7 @@ These are not gaps to be closed: they follow directly from running inside a brow
 
 A browser has no font catalogue of its own to draw on the way the desktop app does, so `pptx-viewer` resolves each deck font in three steps: use it as-is when the reader's machine has it installed, otherwise fetch its verified metric-compatible clone from Google Fonts before layout (Calibri -> Carlito, Cambria -> Caladea, Arial -> Arimo, Times New Roman -> Tinos, Courier New -> Cousine, Georgia -> Gelasio, so line breaks and text extents still match PowerPoint), and only when neither exists fall back through PANOSE classification to a same-class generic font, which can shift metrics.
 
-While a deck loads, the viewer waits briefly (150 ms) for the Google Fonts faces its slides draw, so cached faces never appear in a stand-in first. A first download on a slow network does not hold the deck back: after 150 ms, or at once when the request fails (offline, blocked), the deck is shown with metric-compatible substitutes and a late face is laid out again when it arrives. Installed and embedded fonts need no wait.
+While a deck loads, the viewer waits briefly (150 ms) for the Google Fonts faces its slides draw, so cached faces never appear in a stand-in first. A first download on a slow network does not hold the deck back: after 150 ms, or at once when the request fails (offline, blocked), the deck is shown with metric-compatible substitutes, the status bar reads "Downloading fonts (1 of 2)" while the download runs, and a late face is laid out again when it arrives. Installed and embedded fonts need no wait.
 
 ### Fonts and privacy {#fonts-and-privacy}
 

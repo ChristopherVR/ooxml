@@ -231,7 +231,7 @@ test.describe('google webfonts fallback', () => {
 		},
 	);
 	test(
-		'shows font progress and holds the slide until its webfont loads, in every binding',
+		'shows the slide at once and reports the webfont download in the status bar, in every binding',
 		{ tag: '@cross-binding' },
 		async ({ browser }, testInfo) => {
 			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
@@ -250,24 +250,31 @@ test.describe('google webfonts fallback', () => {
 				});
 				await page.goto(origin);
 				await page.locator('#file-input').setInputFiles(ADLAM_DECK);
-				const progressShown = await page
-					.getByRole('status')
-					.filter({ hasText: /Downloading fonts \(0 of 1\)/u })
+				// The deck must not wait for the font: it is shown while the request is held.
+				const shownWhileHeld = await page
+					.locator('[data-pptx-viewport] [data-element-id]')
 					.first()
 					.waitFor({ timeout: 15_000 })
 					.then(
 						() => true,
 						() => false,
 					);
-				const elementsWhileHeld = await page
-					.locator('[data-pptx-viewport] [data-element-id]')
-					.count();
+				const statusItem = page.locator('pptx-ui-status-bar [data-item="fonts"]');
+				const progressShown = await statusItem
+					.filter({ hasText: /Downloading fonts \(0 of 1\)/u })
+					.waitFor({ timeout: 15_000 })
+					.then(
+						() => true,
+						() => false,
+					);
 				release();
-				await page
-					.locator('[data-pptx-viewport] [data-element-id]')
-					.first()
-					.waitFor({ timeout: 30_000 });
-				const faceLoadedWhenShown = await page.evaluate(() =>
+				const progressCleared = await statusItem
+					.waitFor({ state: 'detached', timeout: 30_000 })
+					.then(
+						() => true,
+						() => false,
+					);
+				const faceSettled = await page.evaluate(() =>
 					[...document.fonts].some(
 						(face) =>
 							face.family.replace(/"/g, '') === 'ADLaM Display' &&
@@ -275,21 +282,24 @@ test.describe('google webfonts fallback', () => {
 							(face.status === 'loaded' || face.status === 'error'),
 					),
 				);
-				return { progressShown, elementsWhileHeld, faceLoadedWhenShown };
+				return { shownWhileHeld, progressShown, progressCleared, faceSettled };
 			});
 
 			const problems: string[] = [];
 			for (const { framework, value } of results) {
+				if (!value.shownWhileHeld) {
+					problems.push(`${framework.name}: the slide waited for its webfont`);
+				}
 				if (!value.progressShown) {
+					problems.push(`${framework.name}: no "Downloading fonts" in the status bar while held`);
+				}
+				if (!value.progressCleared) {
 					problems.push(
-						`${framework.name}: no "Downloading fonts" progress while the font was held`,
+						`${framework.name}: the status bar kept "Downloading fonts" after the load`,
 					);
 				}
-				if (value.elementsWhileHeld > 0) {
-					problems.push(`${framework.name}: the slide rendered before its webfont loaded`);
-				}
-				if (!value.faceLoadedWhenShown) {
-					problems.push(`${framework.name}: the slide was shown with the stand-in face`);
+				if (!value.faceSettled) {
+					problems.push(`${framework.name}: the webfont never loaded after it was released`);
 				}
 			}
 			expect(problems).toStrictEqual([]);

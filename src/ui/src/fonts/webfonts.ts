@@ -207,7 +207,15 @@ export async function prepareWebfonts(options: PrepareWebfontsOptions): Promise<
 	});
 }
 
-/** The bounded wait shared with PowerPoint's deck loader. */
+/**
+ * The bounded wait shared with PowerPoint's deck loader.
+ *
+ * Without `followMs`, a face still downloading when the wait ends reports nothing more (the
+ * document is shown and swaps the face in silently). With it, the download keeps being reported
+ * after the wait returns, from `progressDelayMs` until every face has loaded or failed, the
+ * stylesheet failed, or `followMs` passed; `onProgressEnd` then runs once, when anything was
+ * reported, so a host can show the download (a status bar item) and clear it again.
+ */
 export async function waitForFaces(
 	link: HTMLLinkElement,
 	fontSet: FontFaceSet,
@@ -219,13 +227,29 @@ export async function waitForFaces(
 		timeoutMs: number;
 		progressDelayMs: number;
 		onProgress?: (progress: WebfontProgress) => void;
+		followMs?: number;
+		onProgressEnd?: () => void;
 	},
 ): Promise<WebfontReadiness> {
-	const { href, unavailable, timeoutMs, progressDelayMs, onProgress } = context;
+	const { href, unavailable, timeoutMs, progressDelayMs, onProgress, followMs, onProgressEnd } =
+		context;
 	let loaded = 0;
 	let reporting = false;
+	let over = false;
+	const timers: ReturnType<typeof setTimeout>[] = [];
 	const report = (): void => {
-		if (reporting) onProgress?.({ loaded, total: families.length, families });
+		if (reporting && !over) onProgress?.({ loaded, total: families.length, families });
+	};
+	// Ends the reporting for good: when the download settles, at `followMs`, or when the wait
+	// returns without `followMs`.
+	const end = (): void => {
+		if (over) return;
+		over = true;
+		for (const timer of timers) clearTimeout(timer);
+		if (reporting) {
+			reporting = false;
+			onProgressEnd?.();
+		}
 	};
 	const download = (async () => {
 		await stylesheetSettled(link);
@@ -237,25 +261,25 @@ export async function waitForFaces(
 			}),
 		);
 	})();
-	let finished = false;
-	const timers: ReturnType<typeof setTimeout>[] = [];
+	timers.push(
+		setTimeout(() => {
+			reporting = true;
+			report();
+		}, progressDelayMs),
+	);
+	if (followMs !== undefined) {
+		timers.push(setTimeout(end, followMs));
+		void download.then(end);
+	}
+	let waitTimer: ReturnType<typeof setTimeout> | undefined;
 	const timedOut = await Promise.race([
 		download.then(() => false),
 		new Promise<boolean>((resolve) => {
-			timers.push(setTimeout(() => resolve(true), timeoutMs));
-			timers.push(
-				setTimeout(() => {
-					if (!finished) {
-						reporting = true;
-						report();
-					}
-				}, progressDelayMs),
-			);
+			waitTimer = setTimeout(() => resolve(true), timeoutMs);
 		}),
 	]);
-	// A face still downloading after a timeout must not report into a document already shown.
-	finished = true;
-	reporting = false;
-	for (const timer of timers) clearTimeout(timer);
+	clearTimeout(waitTimer);
+	// Without `followMs` a face still downloading must not report into a document already shown.
+	if (followMs === undefined || !timedOut) end();
 	return { href, families, unavailable, timedOut };
 }

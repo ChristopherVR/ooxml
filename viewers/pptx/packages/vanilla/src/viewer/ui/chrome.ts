@@ -499,6 +499,8 @@ export function buildViewerChrome(
 				? t('pptx.viewer.loadingFonts', { loaded: fontProgress.loaded, total: fontProgress.total })
 				: t('pptx.common.loading');
 			root.setAttribute('aria-busy', String(loading));
+			// After the deck is shown its webfonts may still be downloading.
+			statusBar?.setFontProgress(fontProgress ?? null);
 		},
 		setError(message) {
 			errorOverlay.hidden = message === null;

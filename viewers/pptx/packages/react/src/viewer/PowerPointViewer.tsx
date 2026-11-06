@@ -1603,6 +1603,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 										isDirty={state.isDirty}
 										autosaveStatus={autosaveStatus}
 										saveProgress={saveProgressState}
+										fontProgress={state.fontProgress}
 										onToggleNotes={() => state.setIsSlideNotesCollapsed((p) => !p)}
 										onUpdateNotes={propertyHandlers.handleUpdateNotes}
 										collaborationSlot={

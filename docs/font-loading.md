@@ -84,6 +84,11 @@ slow network does not hold the document back:
   substitutes, and a face that arrives later is laid out again in place (each product listens
   for `document.fonts` `loadingdone` and keeps the selection, scroll and any edit).
 
+PowerPoint also says what it is waiting for. A download still running when the deck is shown
+keeps being reported (`followMs`, up to 8 seconds): from 400 ms the status bar shows
+"Downloading fonts (n of m)", with the families in its tooltip, and the item goes away when
+every face has loaded or failed, or the download is given up.
+
 Installed and embedded fonts need no wait, and with downloads off there is none.
 
 ### Other uses of downloaded fonts
