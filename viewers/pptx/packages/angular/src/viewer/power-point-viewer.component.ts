@@ -590,7 +590,6 @@ const noopClose = (): void => undefined;
 							/>
 						</aside>
 					} @else if (
-						canEdit() &&
 						!mobile.isMobile() &&
 						!slidesPanelCollapsed() &&
 						thumbnailsVisible() &&
@@ -600,6 +599,7 @@ const noopClose = (): void => undefined;
 							[canvasSize]="loader.canvasSize()"
 							[mediaDataUrls]="loader.mediaDataUrls()"
 							[activeIndex]="activeSlideIndex()"
+							[canEdit]="canEdit()"
 							(select)="goTo($event)"
 							(addSlideAfter)="editor.addSlide($event)"
 							(duplicateSlides)="duplicateSlides($event)"
@@ -610,21 +610,6 @@ const noopClose = (): void => undefined;
 								goTo($event.index); canvasLayoutGalleryPos.set({ x: $event.x, y: $event.y })
 							"
 						/>
-					} @else if (
-						!canEdit() && thumbnailsVisible() && customizationService.panelVisible('slidesPane')
-					) {
-						<nav class="pptx-ng-thumbnails" [attr.aria-label]="'pptx.sections.slides' | translate">
-							@for (slide of displaySlides(); track slide.id; let i = $index) {
-								<button
-									type="button"
-									class="pptx-ng-thumb"
-									[class.is-active]="i === activeSlideIndex()"
-									(click)="goTo(i)"
-								>
-									<span class="pptx-ng-thumb-index">{{ i + 1 }}</span>
-								</button>
-							}
-						</nav>
 					}
 
 					<main class="pptx-ng-main" #mainEl (pointermove)="collabCursor.onPointerMove($event)">
