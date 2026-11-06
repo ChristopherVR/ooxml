@@ -5,11 +5,32 @@ a reader configures that. The network side is summarised in [PRIVACY.md](../PRIV
 
 ## Word, Excel and Visio
 
-These use the fonts the device has. A family the document names is written first in the CSS
-`font-family` list, followed by the substitutes in `ooxml-core/text` (`font-substitution-map.ts`,
-for example Calibri, then Carlito, Liberation Sans, Arial) and a generic family. Nothing is
-downloaded, so a missing font is drawn by the first installed substitute and line breaks can
-differ from Office.
+These use the same webfont fallback as PowerPoint (below), from the same shared code, but it is
+**off unless the host turns it on** with the `googleFonts` option. With it off they use the fonts
+the device has and the file embeds. Either way, a family the document names is written first in
+the CSS `font-family` list, followed by its verified metric-compatible clone and the substitutes
+in `ooxml-core/text` and a generic family, in every place that measures or paints document text:
+
+- **Word** (`<docx-editor>`): `cssFontStack` (`metricFontFamily`) in Print Layout, Draft and Web
+  Layout runs, headers, footers and the watermark. Before the first layout, `load()` waits
+  (bounded) for the faces the document draws; faces that arrive later relay the pages out.
+  Word's loader does not register embedded fonts, so none count as available.
+- **Excel** (`<xlsx-editor>`): `workbookFontFamily` (`cssFontFamily`) for cells and rich runs,
+  autofit, automatic row heights, shapes and text boxes, Page Layout, print, headers and
+  footers. `load()` waits before showing the workbook; faces that arrive later re-measure and
+  repaint the grid without changing stored row heights or marking the workbook dirty.
+- **Visio** (`<visio-viewer>`): `getSubstituteFontFamily` for shape text, bullets, the in-place
+  text editor and the wrap measurement; exported SVG keeps the original family first. PDF export
+  is unchanged. `load()` waits before showing the drawing; later faces re-render the page.
+
+The fonts a file uses are collected by `collectDocxWebfontRuns` (`ooxml-core/docx/layout`),
+`collectWorkbookWebfontRuns` (`ooxml-core/xlsx`) and `collectVisioWebfontRuns`
+(`ooxml-core/visio`). They have no Trust Center toggle yet; a font chosen while editing is only
+requested on the next load.
+
+Why off by default: unlike PowerPoint, which has always downloaded fonts, these products made no
+network request at all, and a new request that names fonts to a third party must be chosen by
+the host or the user (`AGENTS.md`). The OOXML Office suite turns it on from Settings > Fonts.
 
 ## PowerPoint
 
@@ -33,31 +54,35 @@ resolves each family in this order:
 
 ### The webfont fallback
 
-`src/ui/src/pptx/render/google-webfonts.ts` builds one Google Fonts CSS2 stylesheet URL for the
-families a deck needs:
+`ooxml-core/text` (`text/webfonts/`) builds one Google Fonts CSS2 stylesheet URL for the
+families a document needs, and `ooxml-ui`'s `fonts/webfonts.ts` injects it and waits for the
+faces. PowerPoint reaches them through `src/ui/src/pptx/render/google-webfonts.ts`:
 
 - Which families Google serves comes from a bundled catalogue (`google-fonts-catalogue.ts`,
   regenerated with `bun run fonts:catalogue`), never from probing the API. So only known families
   are requested, and the names of private or corporate fonts never leave the device.
 - A family Google does not serve under its own name is requested as its verified
-  metric-compatible clone (`google-webfonts-metric-clones.ts`: Calibri and Aptos as Carlito,
+  metric-compatible clone (`metric-clones.ts`: Calibri and Aptos as Carlito,
   Cambria as Caladea, Arial as Arimo, Times New Roman as Tinos, and so on), so line breaks match.
 - A weight named as its own family ("DM Sans Light") requests the base family with that weight.
 - Fragments are sorted, so the same deck always produces the same URL and the stylesheet is
   fetched once.
 
-### Waiting for fonts before showing a deck
+### A short wait before showing a document
 
-Each binding calls `prepareDeckWebfonts` (`deck-webfont-readiness.ts`) between parsing a deck and
-showing it, so slides do not appear in a stand-in face and then visibly change:
+Each PowerPoint binding calls `prepareDeckWebfonts` (`deck-webfont-readiness.ts`), and Word,
+Excel and Visio call `prepareWebfonts` (`ooxml-ui/fonts/webfonts.ts`), between parsing a file and
+showing it. The wait is deliberately short (`WEBFONT_TIMEOUT_MS`, 150 ms, about the browser's own
+block period for `font-display: swap`): cached faces arrive inside it, and a first download on a
+slow network does not hold the document back:
 
 - the managed `<link>` is injected as soon as the deck is parsed;
 - the loading state stays up until each face the slides draw has loaded through `document.fonts`
   (with the characters they use, so the right `unicode-range` subset loads);
-- after 400 ms the loading message shows "Downloading fonts (n of m)";
-- the wait ends after 8 seconds, or at once when the stylesheet request fails (offline,
-  blocked, refused by a Content Security Policy); the deck is then shown with substitutes and a
-  face that arrives later swaps in.
+- the wait ends after 150 ms, or at once when the stylesheet request fails (offline, blocked,
+  refused by a Content Security Policy); the file is then shown with its metric-compatible
+  substitutes, and a face that arrives later is laid out again in place (each product listens
+  for `document.fonts` `loadingdone` and keeps the selection, scroll and any edit).
 
 Installed and embedded fonts need no wait, and with downloads off there is none.
 
@@ -76,7 +101,8 @@ mirror must send `Access-Control-Allow-Origin`.
 
 ### Host: the `googleFonts` option
 
-Every PowerPoint binding (React, Vue, Svelte, Angular, vanilla) takes `googleFonts`:
+`<docx-editor>`, `<xlsx-editor>` and `<visio-viewer>` take the same values as a property; unset
+means off for them. Every PowerPoint binding (React, Vue, Svelte, Angular, vanilla) takes `googleFonts`:
 
 | Value                                           | Effect                                                                                                        |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -105,8 +131,9 @@ a host `googleFonts` value overrides it and shows the toggle read-only. The rule
 The suite's Settings dialog (the shared `office-ui-options-dialog`, as PowerPoint's File >
 Options) chooses for every editor it opens:
 
-- **Download from Google Fonts** (default): passes no `googleFonts`, so each editor's own Trust
-  Center choice still applies;
+- **Download from Google Fonts** (default): PowerPoint gets no `googleFonts`, so its own Trust
+  Center choice still applies; Word, Excel and Visio get `{ baseUrl: 'https://fonts.googleapis.com/css2' }`,
+  since unset means off for them;
 - **Download from my own font server**: passes `{ baseUrl }`;
 - **Do not download fonts**: passes `false`.
 

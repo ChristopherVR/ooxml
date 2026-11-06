@@ -6,6 +6,7 @@ import type { DrawingTextBody, DrawingTextParagraph } from '../../drawingml/type
 import { evaluatePresetShape, lookupPresetShape } from '../../geometry/preset-shape-evaluator';
 import type { ThemePalette } from '../model';
 import type { ShapeNode } from '../model-shapes';
+import { resolveThemeTypeface, workbookFontFamily } from './font-stack';
 import { EMU_PER_PX, shapeColor, shapeFill, shapeStroke } from './shape-paint';
 
 interface Box {
@@ -58,6 +59,7 @@ function paragraphText(body: DrawingTextBody, paragraph: DrawingTextParagraph) {
 		sizePt: first?.sizePt ?? paragraph.defaultProperties?.sizePt ?? DEFAULT_FONT_PT,
 		bold: first?.bold ?? paragraph.defaultProperties?.bold ?? false,
 		italic: first?.italic ?? paragraph.defaultProperties?.italic ?? false,
+		typeface: first?.typeface ?? paragraph.defaultProperties?.typeface,
 		color: first?.color ?? paragraph.defaultProperties?.color,
 		align: paragraph.align ?? 'l',
 		body,
@@ -79,6 +81,7 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 		bold: boolean;
 		italic: boolean;
 		align: string;
+		family: string;
 	}[] = [];
 	for (const paragraph of body.paragraphs) {
 		const info = paragraphText(body, paragraph);
@@ -87,8 +90,20 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 			shapeColor(info.color, ctx.theme) ??
 			shapeColor(node.style?.font?.color, ctx.theme) ??
 			'#000000';
+		// A shape without a typeface draws in the theme's minor font (Excel's `fontRef` default).
+		const family = workbookFontFamily(
+			resolveThemeTypeface(info.typeface, ctx.theme) ?? ctx.theme?.minorFont,
+		);
 		for (const text of wrapShapeLine(info.text, innerW, fontPx))
-			lines.push({ text, fontPx, color, bold: info.bold, italic: info.italic, align: info.align });
+			lines.push({
+				text,
+				fontPx,
+				color,
+				bold: info.bold,
+				italic: info.italic,
+				align: info.align,
+				family,
+			});
 	}
 	if (!lines.length) return '';
 	const heights = lines.map((line) => line.fontPx * 1.2);
@@ -111,7 +126,7 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 		const anchorAttr = line.align === 'ctr' ? 'middle' : line.align === 'r' ? 'end' : 'start';
 		const baseline = y + (heights[index] ?? 0) * 0.8;
 		y += heights[index] ?? 0;
-		return `<text x="${round(x)}" y="${round(baseline)}" font-family="Calibri,Arial,sans-serif" font-size="${round(line.fontPx)}" fill="${escapeXml(line.color)}" text-anchor="${anchorAttr}"${line.bold ? ' font-weight="bold"' : ''}${line.italic ? ' font-style="italic"' : ''}>${escapeXml(line.text)}</text>`;
+		return `<text x="${round(x)}" y="${round(baseline)}" font-family="${escapeXml(line.family)}" font-size="${round(line.fontPx)}" fill="${escapeXml(line.color)}" text-anchor="${anchorAttr}"${line.bold ? ' font-weight="bold"' : ''}${line.italic ? ' font-style="italic"' : ''}>${escapeXml(line.text)}</text>`;
 	});
 	return `<g clip-path="url(#${escapeXml(clip)})">${spans.join('')}</g>`;
 }

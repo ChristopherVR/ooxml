@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
 	fontDownloads,
+	editorGoogleFonts,
 	googleFontsOption,
 	normalizeFontServer,
 	setFontDownloads,
@@ -54,5 +55,15 @@ test('a custom choice without a valid server turns downloads off instead of usin
 	assert.deepEqual(setFontDownloads({ mode: 'google' }), {
 		mode: 'google',
 		server: 'https://fonts.example.com/css2',
+	});
+});
+
+test('Word, Excel and Visio get the Google choice explicitly, since unset means off for them', () => {
+	assert.deepEqual(editorGoogleFonts({ mode: 'google', server: '' }), {
+		baseUrl: 'https://fonts.googleapis.com/css2',
+	});
+	assert.equal(editorGoogleFonts({ mode: 'off', server: '' }), false);
+	assert.deepEqual(editorGoogleFonts({ mode: 'custom', server: 'https://f.example/css2' }), {
+		baseUrl: 'https://f.example/css2',
 	});
 });

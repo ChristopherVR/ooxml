@@ -18,6 +18,7 @@ import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
 import { spreadsheetToolbarProps, type SpreadsheetToolbarProps } from './building-blocks';
 import type { SurfaceHostActions } from './surface-actions';
+import type { GoogleFontsOption } from 'ooxml-core/text';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (
@@ -53,6 +54,23 @@ export class XlsxEditorApi extends HTMLElementBase {
 	}
 	set storage(value: DocumentStorage | null | undefined) {
 		this.core.storage = value ?? undefined;
+	}
+	/**
+	 * Webfont fallback for workbook fonts the reader has neither installed nor embedded. Unset (the
+	 * default) or `false`: off, no request leaves the page and text uses installed or fallback
+	 * fonts. `{ baseUrl }`: the fonts the workbook uses that the bundled Google Fonts catalogue
+	 * serves (or their metric-compatible clone, such as Carlito for Calibri) are requested from that
+	 * CSS2 endpoint (`https://fonts.googleapis.com/css2` for Google, or a self-hosted mirror) with
+	 * one `<link>` in the document head, and the font files it names are then downloaded. Only
+	 * public catalogue family names are sent, never cell text; an invalid `baseUrl` warns and stays
+	 * off. Read when a workbook is shown; changing it applies to the open workbook.
+	 */
+	get googleFonts(): GoogleFontsOption | undefined {
+		return this.core.webfonts.option;
+	}
+	set googleFonts(value: GoogleFontsOption | null | undefined) {
+		this.core.webfonts.option = value ?? undefined;
+		this.core.webfonts.shown(this.core.workbook);
 	}
 	get loading(): boolean {
 		return this.core.loading;

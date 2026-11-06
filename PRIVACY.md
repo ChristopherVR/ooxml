@@ -20,6 +20,7 @@ network request must update this file in the same commit.
 | What                                             | Goes to                                     | On by default                     | Turn it off or redirect it                                         |
 | ------------------------------------------------ | ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------ |
 | PowerPoint: fonts not installed or embedded      | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                               | `googleFonts` option; File > Options > Trust Center; suite setting |
+| Word, Excel, Visio: fonts not installed          | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)             | `googleFonts` property; suite setting                              |
 | PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | Yes in the viewer, no in the core | `allowExternalContent` option; Trust Center; suite setting         |
 | PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it      | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it      | Do not start a session                                             |
@@ -104,14 +105,22 @@ signature detection in `ooxml-core/opc` instead when no network use is acceptabl
 
 ## Word, Excel and Visio
 
-The Word, Excel and Visio packages make no network request when opening, rendering, editing or
-saving a document:
+By default the Word, Excel and Visio packages make no network request when opening, rendering,
+editing or saving a document:
 
 - linked (external) pictures are not fetched;
 - external workbook links, Visio data record sets and linked chart data are kept but never
   refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
-- fonts come from the device only (no Google Fonts or other font service);
+- fonts come from the device and the file only, unless the host sets `googleFonts` (below);
 - workers are loaded from the page's own origin.
+
+**Fonts, when the host turns them on.** `<docx-editor>`, `<xlsx-editor>` and `<visio-viewer>`
+take the same `googleFonts` value as PowerPoint, but unset means off. With
+`{ baseUrl: 'https://fonts.googleapis.com/css2' }` (or a self-hosted mirror) they send the same
+requests PowerPoint does, from the same shared code (`ooxml-core/text`, `ooxml-ui/fonts`): the
+public catalogue families (or metric-compatible clones such as Carlito for Calibri) the file uses
+and the device lacks, then the font files. The file, its text and the names of fonts outside
+Google's public catalogue are never sent. `false` or an invalid `baseUrl` sends nothing.
 
 Hyperlinks and in-product help links open only when the reader follows them.
 
@@ -132,7 +141,7 @@ Hyperlinks and in-product help links open only when the reader follows them.
 The suite uses the editors above, so their sections apply. In addition:
 
 - **Fonts:** Settings > Fonts chooses Google Fonts (the default), your own font server, or no
-  downloads. The site's Content Security Policy allows only Google's two font
+  downloads, for PowerPoint, Word, Excel and Visio alike. The site's Content Security Policy allows only Google's two font
   hosts; a deployment that uses its own font server adds that server to the policy.
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the

@@ -4,7 +4,7 @@ import { editorColors, applyOfficeTheme } from './theme-tokens.js';
 import { setEditorReadOnly } from './editor-read-only.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { download } from './ui.js';
-import { googleFontsOption } from './font-downloads.js';
+import { editorGoogleFonts, googleFontsOption } from './font-downloads.js';
 import {
 	authorName,
 	editorLocale,
@@ -168,6 +168,8 @@ export async function mountEditor(host, doc, changed, command) {
 		element = document.createElement('visio-viewer');
 	}
 	if (doc.kind !== 'vsdx') element.fileName = doc.name;
+	// Settings > Fonts: missing fonts download for every app, read when a document loads.
+	element.googleFonts = editorGoogleFonts();
 	const stopTheme = onTheme((theme) => {
 		applyOfficeTheme(element, theme);
 		if (doc.kind !== 'vsdx') {

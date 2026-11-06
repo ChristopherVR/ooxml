@@ -6,9 +6,11 @@
  * means the reader's browser contacts fonts.googleapis.com and fonts.gstatic.com. This setting is
  * the suite-wide switch for that: Google Fonts (the default), a self-hosted server that answers the
  * Google Fonts CSS2 API, or no downloads at all. It is passed to each editor as its `googleFonts`
- * option, so it applies to documents opened after it changes. See docs/font-loading.md.
+ * option (Word, Excel and Visio take it explicitly, see `editorGoogleFonts`), so it applies to
+ * documents opened after it changes. See docs/font-loading.md.
  */
 const key = 'ooxml-suite-fonts';
+const GOOGLE_FONTS_CSS2 = 'https://fonts.googleapis.com/css2';
 const modes = ['google', 'custom', 'off'];
 const listeners = new Set();
 
@@ -64,6 +66,16 @@ export function googleFontsOption(choice = preferences) {
 	if (choice.mode === 'off') return false;
 	if (choice.mode === 'custom') return { baseUrl: choice.server };
 	return undefined;
+}
+
+/**
+ * The `googleFonts` value for Word, Excel and Visio, which download nothing unless the host asks:
+ * the Google choice is passed explicitly, unlike PowerPoint's (whose unset value means Google).
+ */
+export function editorGoogleFonts(choice = preferences) {
+	if (choice.mode === 'off') return false;
+	if (choice.mode === 'custom') return { baseUrl: choice.server };
+	return { baseUrl: GOOGLE_FONTS_CSS2 };
 }
 
 export function onFontDownloads(listener) {

@@ -198,6 +198,7 @@ export class ViewerController {
 	#visible = documentVisibility(null);
 	#clipboard: ViewerClipboardCapture;
 	#clipboardQueued = false;
+	#beforeShow: ((document: VisioDocument) => Promise<unknown> | undefined) | undefined;
 	constructor(
 		private readonly parser: Parser = loadVisio,
 		private readonly listenerError: (error: unknown) => void = (error) => {
@@ -300,6 +301,16 @@ export class ViewerController {
 		this.#assertAlive();
 		this.#events.add(listener);
 		return () => this.#events.delete(listener);
+	}
+	/**
+	 * Run `hook` between parsing a drawing and showing it, while `loading` is still true (the
+	 * viewer waits there, bounded, for the webfonts the drawing draws). A hook that returns
+	 * nothing adds no wait; one that rejects is ignored. A newer load or `cancelLoad` wins.
+	 */
+	setBeforeShow(
+		hook: ((document: VisioDocument) => Promise<unknown> | undefined) | undefined,
+	): void {
+		this.#beforeShow = hook;
 	}
 	setDocument(document: VisioDocument | null): void {
 		this.#assertAlive();
@@ -548,6 +559,11 @@ export class ViewerController {
 			this.#change({ loading: false, error });
 			if (!this.#destroyed && id === this.#loadId) this.#emit('document-error', error);
 			throw error;
+		}
+		const ready = this.#beforeShow?.(document);
+		if (ready) {
+			await ready.catch(() => undefined);
+			if (this.#destroyed || id !== this.#loadId) return;
 		}
 		this.#history = history;
 		this.#selectionHistory = new WeakMap();

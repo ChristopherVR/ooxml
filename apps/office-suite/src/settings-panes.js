@@ -71,10 +71,10 @@ export function fontsPane(slot) {
 		`<div class="settings-choice"><label>${radio('fonts', value, choice.mode === value)}<span><strong>${title}</strong><small>${text}</small></span></label>${extra}</div>`;
 	return pane(
 		slot,
-		`<section><h3>Fonts that are missing</h3><p class="settings-desc">A presentation often names fonts that are neither installed on this device nor embedded in the file, such as Microsoft 365 cloud fonts. OOXML Office can download a matching font so the text looks and wraps as intended.</p><div class="settings-choices" role="radiogroup" aria-label="Fonts that are missing">${option(
+		`<section><h3>Fonts that are missing</h3><p class="settings-desc">Documents often name fonts that are neither installed on this device nor embedded in the file, such as Aptos and other Microsoft 365 cloud fonts. OOXML Office can download the same font, or one with identical letter widths (Carlito for Calibri), so text, line breaks and pages come out as they do in Office.</p><div class="settings-choices" role="radiogroup" aria-label="Fonts that are missing">${option(
 			'google',
 			'Download from Google Fonts',
-			"Recommended. Your browser asks Google for the families the presentation needs, which shares your IP address with Google. The file is never sent, and fonts outside Google's public catalogue are never named.",
+			"Recommended. Your browser asks Google for the families the document needs, which shares your IP address with Google. The file is never sent, and fonts outside Google's public catalogue are never named.",
 			'<p class="settings-hosts"><code>fonts.googleapis.com</code><code>fonts.gstatic.com</code></p>',
 		)}${option(
 			'custom',
@@ -84,8 +84,8 @@ export function fontsPane(slot) {
 		)}${option(
 			'off',
 			'Do not download fonts',
-			'No font requests leave this device. Text uses installed, embedded or similar fonts, so line breaks can differ from PowerPoint.',
-		)}</div><p class="settings-note">Applies to presentations you open next.</p></section><section><h3>Where this applies</h3><dl class="settings-apps"><div><dt>PowerPoint</dt><dd>Follows this setting. With Google Fonts chosen, its own File &gt; Options &gt; Trust Center switch still applies.</dd></div><div><dt>Word, Excel and Visio</dt><dd>Use the fonts on this device and in the file only; they never download fonts.</dd></div></dl></section><section><h3>Self-hosting</h3><p class="settings-desc">This site's Content Security Policy allows only Google's two font hosts, so a deployment that uses its own server adds that server to the policy. <a href="${REPO}/docs/font-loading.md" target="_blank" rel="noopener">How font loading works</a></p></section>`,
+			'No font requests leave this device. Text uses installed, embedded or similar fonts, so line and page breaks can differ from Office.',
+		)}</div><p class="settings-note">Applies to documents you open next, in Word, Excel, PowerPoint and Visio.</p></section><section><h3>Where this applies</h3><dl class="settings-apps"><div><dt>Word, Excel and Visio</dt><dd>Follow this setting.</dd></div><div><dt>PowerPoint</dt><dd>Follows this setting. With Google Fonts chosen, its own File &gt; Options &gt; Trust Center switch can still turn downloads off.</dd></div><div><dt>Fonts in the file</dt><dd>Fonts embedded in a presentation are used first and never downloaded.</dd></div></dl></section><section><h3>Self-hosting</h3><p class="settings-desc">This site's Content Security Policy allows only Google's two font hosts, so a deployment that uses its own server adds that server to the policy. <a href="${REPO}/docs/font-loading.md" target="_blank" rel="noopener">How font loading works</a></p></section>`,
 	);
 }
 

@@ -1,6 +1,7 @@
 import type { PdfVectorPage } from '../export/pdf-vector';
 import type { PdfEmbeddedFont, PdfFontSet } from '../export/pdf-embedded-font';
 import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from '../export/pdf-fonts';
+import { primaryFontFamily, visioFontStack } from './font-stack';
 import { inherited, number, parseColor, PdfFallback } from './pdf-svg-style';
 
 interface Run {
@@ -18,6 +19,16 @@ interface Run {
 }
 
 const MAX_RUNS = 100_000;
+
+/**
+ * The renderer paints a drawing family as its substitute list (`font-stack.ts`); the PDF keeps
+ * choosing its standard or supplied font by the drawing's own family, as before that list
+ * existed. Any other list (a converted metafile's) is read as written.
+ */
+function drawingFontFamily(value: string): string {
+	const primary = primaryFontFamily(value);
+	return visioFontStack(primary) === value ? primary : value;
+}
 
 /**
  * Draw one SVG `<text>` as real PDF text, row by row (the renderer's `tspan` rows carry x, y
@@ -64,7 +75,7 @@ function drawRow(
 		if (!color) continue;
 		const size = number(inherited(span, 'font-size'), 12);
 		const weight = inherited(span, 'font-weight') ?? '';
-		const family = inherited(span, 'font-family') ?? '';
+		const family = drawingFontFamily(inherited(span, 'font-family') ?? '');
 		const bold = weight === 'bold' || number(weight) >= 600;
 		const italic = (inherited(span, 'font-style') ?? '') === 'italic';
 		const font = pdfBaseFont(family, bold, italic);

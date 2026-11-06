@@ -89,6 +89,10 @@ export async function loadInto(
 			}
 		}
 		if (generation !== core.loadGeneration) return;
+		// The webfont fallback (`googleFonts`, off by default) waits here, bounded, so the workbook
+		// is first shown with its faces; `loading` stays true meanwhile.
+		await core.webfonts.prepare(workbook);
+		if (generation !== core.loadGeneration) return;
 		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome);
 		if (cloud) {
 			// Set after showing: showing a workbook drops the previous file's storage and lock.

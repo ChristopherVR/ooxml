@@ -41,6 +41,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Snapshot merging cannot resolve every structural or same-content overlap, nor provide
       a live Microsoft Office operation stream. Ambiguous edits require retained-version recovery;
       see `docs/onedrive-integration.md#automatically-combine-concurrent-edits-during-save`.
+- [x] **P1** Fonts that are neither installed nor embedded were downloaded only in PowerPoint:
+      Word, Excel and Visio now share its webfont fallback (`ooxml-core/text` `webfonts/`,
+      `ooxml-ui/fonts/webfonts.ts`), with metric-compatible stacks wherever they measure and paint
+      text and a bounded wait before showing a file. Off unless the host sets `googleFonts`; the
+      suite turns it on from Settings > Fonts. Evidence: `docs/font-loading.md`, each product's
+      `webfont-runs.test.ts` and `webfonts.test.ts`.
+- [ ] **P2** Word, Excel and Visio have no Trust Center toggle for font downloads (only the host
+      option), and a font picked while editing is requested only on the next load.
 
 | Capability    | Word         | Excel        | PowerPoint                 | Visio                 |
 | ------------- | ------------ | ------------ | -------------------------- | --------------------- |

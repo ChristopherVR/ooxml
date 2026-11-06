@@ -28,23 +28,23 @@
  */
 import { hasTextProperties } from 'ooxml-core/pptx';
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'ooxml-core/pptx';
+import { collectWebfontFaces, type WebfontFace, type WebfontRun } from 'ooxml-core/text';
 
-import { resolveFontItalic, resolveFontWeight, resolveGoogleFontsFace } from './font-weight-names';
+import { WEBFONT_PROGRESS_DELAY_MS, WEBFONT_TIMEOUT_MS, waitForFaces } from '../../fonts/webfonts';
 import {
 	isFontFamilyInstalledLocally,
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontCandidates,
 } from './google-webfonts';
 import { syncGoogleWebfontStylesheet } from './google-webfonts-link';
-import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
 
 /** How long the wait may last before the deck is shown with stand-in faces. */
-export const DECK_WEBFONT_TIMEOUT_MS = 8000;
+export const DECK_WEBFONT_TIMEOUT_MS = WEBFONT_TIMEOUT_MS;
 /** How long the wait lasts before progress is reported. */
-export const DECK_WEBFONT_PROGRESS_DELAY_MS = 400;
+export const DECK_WEBFONT_PROGRESS_DELAY_MS = WEBFONT_PROGRESS_DELAY_MS;
 
-/** Characters collected per face for its `unicode-range` subset (enough for any script mix). */
-const MAX_SAMPLE_CHARS = 256;
+// Declared here (not aliased to the shared `fonts/webfonts` types) so the bindings' emitted
+// declarations name a type that `ooxml-ui/pptx` exports.
 
 /** Progress of the wait, by webfont family (the names the stylesheet serves). */
 export interface DeckWebfontProgress {
@@ -82,21 +82,7 @@ export interface PrepareDeckWebfontsOptions {
 	isLocallyInstalled?: (family: string) => boolean;
 }
 
-/** One face the slides draw: CSS `font` shorthand plus the characters drawn in it. */
-interface FaceUse {
-	family: string;
-	font: string;
-	chars: Set<string>;
-}
-
-interface RunUse {
-	family: string | undefined;
-	bold: boolean | undefined;
-	italic: boolean | undefined;
-	text: string;
-}
-
-function collectRuns(element: PptxElement, runs: RunUse[]): void {
+function collectRuns(element: PptxElement, runs: WebfontRun[]): void {
 	if (hasTextProperties(element)) {
 		const base = element.textStyle;
 		const segments = element.textSegments ?? [];
@@ -138,15 +124,6 @@ function collectRuns(element: PptxElement, runs: RunUse[]): void {
 	}
 }
 
-/** The family the stylesheet serves for `family`, or `null` when the catalogue has none. */
-function servedFamily(family: string): string | null {
-	return resolveGoogleFontsFace(family)?.family ?? findMetricCompatibleGoogleFontsFamily(family);
-}
-
-function quoteFamily(family: string): string {
-	return `"${family.replace(/[\\"]/gu, '\\$&')}"`;
-}
-
 /**
  * The faces the slides draw in `candidates`, by served family, and the
  * candidates the catalogue does not serve.
@@ -154,68 +131,19 @@ function quoteFamily(family: string): string {
 export function collectDeckWebfontFaces(
 	slides: readonly PptxSlide[],
 	candidates: readonly string[],
-): { faces: Map<string, FaceUse[]>; unavailable: string[] } {
-	const wanted = new Set(candidates);
-	const unavailable = candidates.filter((family) => servedFamily(family) === null);
-	const runs: RunUse[] = [];
+): { faces: Map<string, WebfontFace[]>; unavailable: string[] } {
+	return collectWebfontFaces(collectDeckWebfontRuns(slides), candidates);
+}
+
+/** Every text run the slides draw, for the shared webfont loader. */
+export function collectDeckWebfontRuns(slides: readonly PptxSlide[]): WebfontRun[] {
+	const runs: WebfontRun[] = [];
 	for (const slide of slides) {
 		for (const element of slide.elements ?? []) {
 			collectRuns(element, runs);
 		}
 	}
-	const faces = new Map<string, FaceUse[]>();
-	const byFont = new Map<string, FaceUse>();
-	for (const run of runs) {
-		if (!run.family || !wanted.has(run.family)) {
-			continue;
-		}
-		const served = servedFamily(run.family);
-		if (served === null) {
-			continue;
-		}
-		const weight = resolveFontWeight(run.family, run.bold);
-		const style = resolveFontItalic(run.family, run.italic) ? 'italic ' : '';
-		const font = `${style}${weight} 16px ${quoteFamily(served)}`;
-		let face = byFont.get(font);
-		if (!face) {
-			face = { family: served, font, chars: new Set() };
-			byFont.set(font, face);
-			const list = faces.get(served);
-			if (list) {
-				list.push(face);
-			} else {
-				faces.set(served, [face]);
-			}
-		}
-		for (const char of run.text) {
-			if (face.chars.size >= MAX_SAMPLE_CHARS) {
-				break;
-			}
-			if (char.trim() !== '') {
-				face.chars.add(char);
-			}
-		}
-	}
-	return { faces, unavailable };
-}
-
-/** Resolves once `link`'s stylesheet has loaded or failed. */
-function stylesheetSettled(link: HTMLLinkElement): Promise<void> {
-	if (link.sheet) {
-		return Promise.resolve();
-	}
-	return new Promise((resolve) => {
-		link.addEventListener('load', () => resolve(), { once: true });
-		link.addEventListener('error', () => resolve(), { once: true });
-	});
-}
-
-async function loadFace(fonts: FontFaceSet, face: FaceUse): Promise<void> {
-	try {
-		await fonts.load(face.font, face.chars.size > 0 ? [...face.chars].join('') : 'x');
-	} catch {
-		// A face that fails is drawn by the stand-in, as without the wait.
-	}
+	return runs;
 }
 
 /**
@@ -254,45 +182,11 @@ export async function prepareDeckWebfonts(
 		return { href, families, unavailable, timedOut: false };
 	}
 
-	let loaded = 0;
-	let reporting = false;
-	const report = (): void => {
-		if (reporting) {
-			onProgress?.({ loaded, total: families.length, families });
-		}
-	};
-	const download = (async () => {
-		await stylesheetSettled(link);
-		await Promise.all(
-			[...faces.values()].map(async (familyFaces) => {
-				await Promise.all(familyFaces.map((face) => loadFace(fontSet, face)));
-				loaded += 1;
-				report();
-			}),
-		);
-	})();
-
-	let finished = false;
-	const timers: ReturnType<typeof setTimeout>[] = [];
-	const timedOut = await Promise.race([
-		download.then(() => false),
-		new Promise<boolean>((resolve) => {
-			timers.push(setTimeout(() => resolve(true), timeoutMs));
-			timers.push(
-				setTimeout(() => {
-					if (!finished) {
-						reporting = true;
-						report();
-					}
-				}, progressDelayMs),
-			);
-		}),
-	]);
-	// A face still downloading after a timeout must not report into a deck already shown.
-	finished = true;
-	reporting = false;
-	for (const timer of timers) {
-		clearTimeout(timer);
-	}
-	return { href, families, unavailable, timedOut };
+	return waitForFaces(link, fontSet, faces, families, {
+		href,
+		unavailable,
+		timeoutMs,
+		progressDelayMs,
+		...(onProgress ? { onProgress } : {}),
+	});
 }

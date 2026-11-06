@@ -9,7 +9,8 @@ it('prints rich header runs safely with scaled font sizes and preserved field fo
 	edit.setPageSetup(0, { scale: 75, header: '&C&"Arial,Bold Italic"&18&KFF0000Page &P&U <title>' });
 	const html = buildPrintHtml(wb, 0, 'Book.xlsx');
 	expect(html).toContain(
-		'font-family:Arial;font-size:18px;color:#FF0000;font-weight:700;font-style:italic',
+		// The header font is the workbook stack (its metric clone next), escaped for the attribute.
+		'font-family:Arial, &#34;Arimo&#34;, &#34;Liberation Sans&#34;, Helvetica, sans-serif;font-size:18px;color:#FF0000;font-weight:700;font-style:italic',
 	);
 	expect(html).toContain('text-decoration:underline');
 	expect(html).toContain('&#60;title&#62;');
