@@ -73,6 +73,7 @@ export * from './image-native-size';
 export * from './group-fill';
 // Stroke/dash normalisation, compound-line box-shadow + dasharray, element
 // transform strings (flip/rotation/skew), and OOXML drawing-percent parsing.
+export * from './dash-path-start';
 export * from './dash-pattern';
 export * from './element-style-transform';
 export * from './text-flip-compensation';

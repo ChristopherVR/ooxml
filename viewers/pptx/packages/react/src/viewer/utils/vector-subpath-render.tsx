@@ -1,5 +1,6 @@
 import {
 	buildSubpathPaints,
+	dashStartPathData,
 	screenBorderWidth,
 	svgGradientFillRef,
 	svgLineCap,
@@ -86,10 +87,12 @@ function strokeContext(
 
 /** Emit the compound (single or parallel) stroke `<path>` strands for one `d`. */
 function strokeStrands(d: string, keyBase: string, ctx: StrokeStyleContext): React.ReactNode[] {
+	// A dashed closed outline starts its pattern where PowerPoint does.
+	const strokeD = ctx.dashArray === undefined ? d : dashStartPathData(d);
 	return ctx.offsets.map((offset, idx) => (
 		<path
 			key={`${keyBase}-s${idx}`}
-			d={d}
+			d={strokeD}
 			fill='none'
 			stroke={ctx.strokePaint}
 			strokeWidth={Math.max(ctx.widths[idx] ?? ctx.strokeWidth, 1)}

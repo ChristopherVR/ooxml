@@ -46,6 +46,7 @@ import {
 } from './device-pixel-stroke';
 import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-markers';
 import type { CustomPathMarkers } from './custom-path-markers';
+import { dashStartPathData } from './dash-path-start';
 import { isDashedStroke } from './dash-pattern';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
@@ -530,9 +531,14 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 	const snap =
 		paint || strands.length !== 1 ? undefined : snapTransform(element, !!openPresetD, strokeWidth);
 	const snapped = snap ? strands.map((strand) => ({ ...strand, cssTransform: snap })) : strands;
+	// A dashed closed outline starts its pattern where PowerPoint does (see `dash-path-start`).
+	const dashStartD =
+		!ownPathD && isDashedStroke(style?.strokeDash)
+			? dashStartPathData(d, (element as { shapeType?: string }).shapeType)
+			: d;
 	return {
 		markers: buildCustomPathMarkers(element, stroke),
-		d,
+		d: dashStartD,
 		paint,
 		stroke,
 		strokeWidth,
