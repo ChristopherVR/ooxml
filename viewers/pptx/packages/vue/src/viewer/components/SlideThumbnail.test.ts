@@ -76,6 +76,22 @@ describe('slideThumbnail', () => {
 		wrapper.unmount();
 	});
 
+	it('follows slide metadata edits that keep the same elements', async () => {
+		const number = {
+			...shape('number'),
+			type: 'text',
+			textSegments: [{ text: '#', style: {}, fieldType: 'slidenum' }],
+		} as unknown as PptxElement;
+		const base = slide([number]);
+		const wrapper = mount(SlideThumbnail, {
+			props: { slide: base, canvasSize, previewWidth: 120 },
+		});
+		expect(wrapper.text()).toBe('1');
+		await wrapper.setProps({ slide: { ...base, slideNumber: 7 } });
+		expect(wrapper.text()).toBe('7');
+		wrapper.unmount();
+	});
+
 	it('drops the template layer when the slide hides background graphics', async () => {
 		const wrapper = mountThumbnail([shape('own', 200)], [shape('layout', 10)]);
 		expect(drawn(wrapper)).toHaveLength(2);

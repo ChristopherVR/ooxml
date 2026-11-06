@@ -119,4 +119,18 @@ describe('slideThumbnailComponent', () => {
 		fixture.detectChanges();
 		expect(drawn(fixture)).toHaveLength(2);
 	});
+
+	it('follows slide metadata edits that keep the same elements', () => {
+		const number = {
+			...shape('number'),
+			type: 'text',
+			textSegments: [{ text: '#', style: {}, fieldType: 'slidenum' }],
+		} as unknown as PptxElement;
+		const fixture = mount([number]);
+		const base = fixture.componentInstance.slide();
+		expect(stage(fixture)?.textContent?.trim()).toBe('1');
+		fixture.componentInstance.slide.set({ ...base, slideNumber: 7 });
+		fixture.detectChanges();
+		expect(stage(fixture)?.textContent?.trim()).toBe('7');
+	});
 });
