@@ -262,7 +262,10 @@ describe('buildInnerShadowCssFromShapeStyle', () => {
 		expect(result!.startsWith('inset ')).toBeTruthy();
 		expect(result).toContain('2px');
 		expect(result).toContain('3px');
-		expect(result).toContain('5px');
+		// PowerPoint blurs an inner shadow by 0.327 of blurRad, like an outer one
+		// (CSS blur = 2 sigma, so 5px -> 3px), and darkens the edge the offset
+		// points to, so the inset offset is negated.
+		expect(result).toContain('-2px -3px 3px');
 		expect(result).toContain('rgba(0, 0, 255, 0.6)');
 	});
 
@@ -272,8 +275,8 @@ describe('buildInnerShadowCssFromShapeStyle', () => {
 		});
 		expect(result).toBeDefined();
 		expect(result!.startsWith('inset ')).toBeTruthy();
-		// Defaults: offset 0, 0, blur 6, opacity 0.5
-		expect(result).toContain('0px 0px 6px');
+		// Defaults: offset 0, 0, blur 6 (painted at PowerPoint's 0.327 scale: 4px), opacity 0.5
+		expect(result).toContain('0px 0px 4px');
 	});
 });
 
