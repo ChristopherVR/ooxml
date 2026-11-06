@@ -86,10 +86,12 @@ pane.destroy();
 `renderSlideThumbnail(options)`（与其 `SlideThumbnailOptions` 类型一起由包根入口导出）按 `createSlidesPane` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用，并返回缩略图的根元素。它根据幻灯片模型绘制，因此会显示未保存的编辑；它是静态的：舞台为 `inert`（没有焦点停靠点或指针交互），不带编辑契约，也没有 `data-element-id`，因此 id 只在你的编辑画布中唯一。它的选项为 `document`、`slide`、`templateElements`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与 `createSlidesPane` 含义相同的选项：`canvasSize`、`mediaDataUrls`、`headerFooter`、`customProperties`、`firstSlideNumber`、`locale`、`colorScheme`、`fontScheme`、`formatScheme`、`tableStyleMap`、`t`、`registry` 和 `slides`。因此可以直接展开传给缩略图栏的选项：
 
 ```ts
-import { renderSlideThumbnail } from 'pptx-vanilla-viewer';
+import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';
 import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
 
 function drawStrip(paneOptions: SlidesPaneOptions): void {
+	// 替换之前，先释放旧缩略图的渲染订阅。
+	disposePptxRenderStage(strip);
 	strip.replaceChildren(
 		...paneOptions.slides.map((slide) => {
 			const item = document.createElement('li');
@@ -109,7 +111,9 @@ function drawStrip(paneOptions: SlidesPaneOptions): void {
 }
 ```
 
-缩略图填满其容器的宽度，高度为 `previewWidth` 按演示文稿宽高比换算的值，因此请为容器设置该宽度。`loadPresentation` 返回的幻灯片已包含其版式和母版元素，因此对它们不要设置 `templateElements`。它是一份快照：幻灯片更改时（元素、背景、隐藏、“隐藏背景图形”），在你调用 `pane.update` 的同一处再次调用它，并替换旧元素。它需要与缩略图栏相同的样式表和 `.pptxv` 祖先元素。
+缩略图填满其容器的宽度，高度为 `previewWidth` 按演示文稿宽高比换算的值，因此请为容器设置该宽度。`loadPresentation` 返回的幻灯片已包含其版式和母版元素，因此对它们不要设置 `templateElements`。它是一份快照：幻灯片的任何字段更改时（元素、背景、切换效果、编号、隐藏、“隐藏背景图形”），在你调用 `pane.update` 的同一处再次调用它，并替换旧元素。它需要与缩略图栏相同的样式表和 `.pptxv` 祖先元素。
+
+返回的元素持有渲染订阅：其中的图表会在图片取色结果返回时重绘，所用的监听器由整个文档共享。在替换或移除该元素之前，请将它（或它的任一祖先元素）传给 `disposePptxRenderStage`（由包根入口导出），如上面的 `drawStrip` 所示；否则旧图表会一直保持订阅，直到下一次取色。该调用是幂等的，不会移除任何 DOM。你用 `renderSlideStage` 自行绘制的舞台同样如此。
 
 ## 加载 {#loading}
 

@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
+import { ensureBarFacePicturePixelSampled, releasePptxRenderCaches } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 // Import through the package entry so the test also covers the public export.
-import { renderSlideThumbnail } from '../../index';
+import { disposePptxRenderStage, renderSlideThumbnail } from '../../index';
 
 function shape(id: string, x = 0): PptxElement {
 	return {
@@ -78,5 +79,72 @@ describe('renderSlideThumbnail', () => {
 	it('follows edits to the slide model without a save', () => {
 		expect(drawn(render([shape('a')]))).toHaveLength(1);
 		expect(drawn(render([shape('a'), shape('b', 300)]))).toHaveLength(2);
+	});
+});
+
+describe('renderSlideThumbnail cleanup contract', () => {
+	const chart = {
+		type: 'chart',
+		id: 'chart',
+		x: 0,
+		y: 0,
+		width: 400,
+		height: 300,
+		chartData: { chartType: 'bar', categories: ['A'], series: [{ name: 'One', values: [1] }] },
+	} as unknown as PptxElement;
+	const rows: HTMLElement[] = [];
+	let sampleIndex = 0;
+	/** Resolve one picture colour sample: every subscribed chart repaints its svg. */
+	async function sample(): Promise<void> {
+		ensureBarFacePicturePixelSampled(`blob:thumbnail-${sampleIndex++}`, async () => '#123456');
+		for (let i = 0; i < 6; i++) {
+			await Promise.resolve();
+		}
+	}
+	function row(): HTMLElement {
+		const el = document.createElement('div');
+		document.body.appendChild(el);
+		rows.push(el);
+		return el;
+	}
+	afterEach(() => {
+		for (const el of rows.splice(0)) {
+			disposePptxRenderStage(el);
+			el.remove();
+		}
+		releasePptxRenderCaches();
+	});
+
+	it('owns a chart repaint subscription until disposePptxRenderStage retires it', async () => {
+		const kept = row();
+		const retired = row();
+		kept.append(render([chart]));
+		retired.append(render([chart]));
+		const keptSvg = kept.querySelector('svg');
+		const retiredSvg = retired.querySelector('svg');
+		expect(retiredSvg).not.toBeNull();
+		// The documented replacement step, while the old box is still in the document, so
+		// only the dispose call (not the chart's own disconnected check) can drop it.
+		disposePptxRenderStage(retired);
+		disposePptxRenderStage(retired);
+		await sample();
+		expect(kept.querySelector('svg')).not.toBe(keptSvg);
+		expect(retired.querySelector('svg')).toBe(retiredSvg);
+	});
+
+	it('replaces a thumbnail the documented way without leaving the old chart subscribed', async () => {
+		const strip = row();
+		strip.append(render([chart]));
+		const old = strip.firstElementChild as HTMLElement;
+		const oldSvg = old.querySelector('svg');
+		disposePptxRenderStage(strip);
+		strip.replaceChildren(render([chart]));
+		// Park the replaced box in the document: a leaked subscription would repaint it.
+		const parked = row();
+		parked.append(old);
+		const freshSvg = strip.querySelector('svg');
+		await sample();
+		expect(old.querySelector('svg')).toBe(oldSvg);
+		expect(strip.querySelector('svg')).not.toBe(freshSvg);
 	});
 });

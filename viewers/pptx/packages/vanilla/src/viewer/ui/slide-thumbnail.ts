@@ -69,17 +69,29 @@ export interface SlideThumbnailOptions extends Pick<
  * the editing canvas.
  *
  * It draws from the slide model, so call it again when the slide changes
- * (elements, background, hidden, `showMasterShapes`) and replace the old box:
+ * (any field: elements, background, transition, number, hidden,
+ * `showMasterShapes`) and replace the old box.
+ *
+ * Cleanup contract: the box owns render subscriptions (a chart repaints when
+ * a picture colour sample lands, through a document-wide listener). Pass it to
+ * `disposePptxRenderStage` before you replace or remove it, as the slides pane
+ * does with its own thumbnails; the call is idempotent and removes no DOM.
  *
  * ```ts
- * const thumb = renderSlideThumbnail({
- * 	...paneOptions,
- * 	document,
- * 	slide,
- * 	templateElements: paneOptions.templateElementsBySlideId?.[slide.id],
- * 	previewWidth: 160,
- * });
- * row.replaceChildren(thumb);
+ * import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';
+ *
+ * function drawThumbnail(row: HTMLElement, slide: PptxSlide): void {
+ * 	disposePptxRenderStage(row); // retire the previous thumbnail's subscriptions
+ * 	row.replaceChildren(
+ * 		renderSlideThumbnail({
+ * 			...paneOptions,
+ * 			document,
+ * 			slide,
+ * 			templateElements: paneOptions.templateElementsBySlideId?.[slide.id],
+ * 			previewWidth: 160,
+ * 		}),
+ * 	);
+ * }
  * ```
  *
  * Style it with the viewer stylesheet under a `.pptxv` ancestor, as the pane.
@@ -117,11 +129,9 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 		scale: layout.scale,
 		slides: options.slides,
 		currentSlideIndex: currentSlideIndex >= 0 ? currentSlideIndex : undefined,
+		exposeElementIds: false,
 	});
 	stage.inert = true;
-	for (const node of [stage, ...stage.querySelectorAll('[data-element-id]')]) {
-		node.removeAttribute('data-element-id');
-	}
 	const box = createEl(doc, 'div', 'pptxv-slide-thumbnail', {
 		position: 'relative',
 		width: '100%',

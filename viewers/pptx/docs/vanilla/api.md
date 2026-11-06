@@ -138,10 +138,12 @@ options with the same meaning: `canvasSize`, `mediaDataUrls`, `headerFooter`, `c
 `registry` and `slides`. So you can spread the options you give the pane:
 
 ```ts
-import { renderSlideThumbnail } from 'pptx-vanilla-viewer';
+import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';
 import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
 
 function drawStrip(paneOptions: SlidesPaneOptions): void {
+	// Retire the previous thumbnails' render subscriptions before replacing them.
+	disposePptxRenderStage(strip);
 	strip.replaceChildren(
 		...paneOptions.slides.map((slide) => {
 			const item = document.createElement('li');
@@ -164,9 +166,16 @@ function drawStrip(paneOptions: SlidesPaneOptions): void {
 The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
 ratio, so give the container that width. Slides from `loadPresentation` already carry their
 layout and master elements, so leave `templateElements` unset for them. It is a snapshot: call it
-again when the slide changes (elements, background, hidden, "Hide Background Graphics"), where you
-also call `pane.update`, and replace the old element. It needs the same stylesheet and `.pptxv`
-ancestor as the rail.
+again when the slide changes (any of its fields: elements, background, transition, number,
+hidden, "Hide Background Graphics"), where you also call `pane.update`, and replace the old
+element. It needs the same stylesheet and `.pptxv` ancestor as the rail.
+
+The returned element owns render subscriptions: a chart in it repaints when a picture colour
+sample resolves, through a listener shared by the whole document. Pass the element, or any
+ancestor, to `disposePptxRenderStage` (exported from the package root) before you replace or
+remove it, as `drawStrip` above does; otherwise the old chart stays subscribed until the next
+sample. The call is idempotent and removes no DOM. The same applies to a stage you draw yourself
+with `renderSlideStage`.
 
 ## Loading {#loading}
 

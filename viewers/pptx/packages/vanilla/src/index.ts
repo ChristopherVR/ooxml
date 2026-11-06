@@ -105,6 +105,7 @@ export {
 	createEl,
 	createElementRendererRegistry,
 	createSvgEl,
+	disposePptxRenderStage,
 	renderSlideStage,
 } from './viewer';
 
