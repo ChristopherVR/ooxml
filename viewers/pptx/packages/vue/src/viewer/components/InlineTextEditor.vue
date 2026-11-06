@@ -11,6 +11,7 @@ import {
 	readEditableText,
 	readListActivationSelection,
 	restoreInlineListBodySelection,
+	seedPlainInlineText,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
 import type {
@@ -108,7 +109,7 @@ function seedText(): string {
 
 /** Read the live text out of the contentEditable node. */
 function extractText(): string {
-	return editorRef.value?.innerText ?? '';
+	return editorRef.value ? readEditableText(editorRef.value) : '';
 }
 
 const editorStyle = computed(() =>
@@ -150,7 +151,13 @@ function initializeEditor(selection?: { start: number; end: number }): void {
 		});
 		emit('listSession', { controller: listController, active: true });
 	} else {
-		node.innerText = seedText();
+		const element = toRaw(props.element);
+		seedPlainInlineText(
+			node,
+			'textSegments' in element ? element.textSegments : undefined,
+			seedText(),
+			'textStyle' in element ? element.textStyle : undefined,
+		);
 	}
 	node.focus();
 	// The caret goes where the click that opened the editor landed (PowerPoint),

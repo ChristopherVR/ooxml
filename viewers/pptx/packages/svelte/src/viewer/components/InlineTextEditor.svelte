@@ -21,6 +21,7 @@
 		readListActivationSelection,
 		restoreInlineListBodySelection,
 		placeCaretAt,
+		seedPlainInlineText,
 		takePendingCaretPoint,
 	} from 'ooxml-ui/pptx';
 	// oxlint-disable-next-line import/no-duplicates -- type-only imports stay top-level (consistent-type-specifier-style).
@@ -51,7 +52,6 @@
 		onfindreplace,
 	}: InlineTextEditorProps = $props();
 
-	const surface = $derived(resolveInlineSurface(element));
 	// The surface is remounted per edit session (keyed on the element id), so the
 	// element is stable for its lifetime: capture the seed text once.
 	const initialText = untrack(() => resolveInlineSurface(element).text);
@@ -104,9 +104,26 @@
 		});
 	});
 
+	// Every session paints with the block style view mode uses (alignment,
+	// insets, colour, the substituted and autofit-scaled font), in slide space
+	// shrunk onto the overlay. The plain path used to set only the RAW font
+	// family and size, so a deck font that was not painted fell back to the
+	// browser's default serif instead of view mode's stand-in, and the text lost
+	// its alignment and colour, the moment editing began.
 	const style = $derived(
-		listSeed || connected ? styleToString({ ...getTextBlockStyle(element), textDecoration: 'none', textDecorationLine: 'none', left: `${box.x * scale}px`, top: `${box.y * scale}px`, width: `${box.width}px`, minHeight: `${box.height}px`, transform: `scale(${scale})`, transformOrigin: 'top left' })
-		: `left:${box.x * scale}px;top:${box.y * scale}px;width:${box.width * scale}px;min-height:${box.height * scale}px;${typeof surface.fontSize === 'number' ? `font-size:${surface.fontSize * scale}px;` : ''}${surface.fontFamily !== undefined ? `font-family:${surface.fontFamily};` : ''}`,
+		styleToString({
+			...getTextBlockStyle(element),
+			...(listSeed || connected ? { textDecoration: 'none', textDecorationLine: 'none' } : {}),
+			left: `${box.x * scale}px`,
+			top: `${box.y * scale}px`,
+			width: `${box.width}px`,
+			// A fixed height, as in vanilla: the block style says `height: 100%`, which
+			// would stretch the surface over the overlay and push bottom-anchored
+			// text off the shape.
+			height: `${box.height}px`,
+			transform: `scale(${scale})`,
+			transformOrigin: 'top left',
+		}),
 	);
 
 	function close(commitText: string | null): void {
@@ -228,7 +245,13 @@
 			} else if (listSeed) {
 				mountList();
 			} else {
-				el.textContent = initialText;
+				const snapshot = $state.snapshot(element);
+				seedPlainInlineText(
+					el,
+					'textSegments' in snapshot ? snapshot.textSegments : undefined,
+					initialText,
+					'textStyle' in snapshot ? snapshot.textStyle : undefined,
+				);
 			}
 			el.focus();
 			// The caret goes where the click that opened the editor landed
@@ -270,12 +293,13 @@
 	.pptx-svelte-inline-editor {
 		position: absolute;
 		box-sizing: border-box;
-		padding: 2px;
 		margin: 0;
-		border: 1px solid var(--pptx-ring, var(--office-ring, #2563eb));
-		background: var(--pptx-background, var(--office-background, #ffffff));
-		color: var(--pptx-foreground, var(--office-foreground, #1f2937));
+		/* Transparent, like the vanilla surface: the element's own text is hidden
+		   while it is edited (ElementRenderer's isBeingInlineEdited), and the
+		   block style supplies the insets and the text colour. */
+		background: transparent;
 		outline: none;
+		cursor: text;
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 		pointer-events: auto;

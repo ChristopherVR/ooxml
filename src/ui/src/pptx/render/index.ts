@@ -1840,6 +1840,7 @@ export { createInlineListModelObserver } from './inline-list-model';
 export type { InlineListModelChange } from './inline-list-model';
 export { transformInlineListCase } from './inline-list-case';
 export { initializeInlineListDom } from './inline-list-dom';
+export { applyInlineRunStyle, seedPlainInlineText } from './inline-text-seed';
 export type { InlineListController, InlineListControllerOptions } from './inline-list-controller';
 export { readInlineListSelection, restoreInlineListBodySelection } from './inline-list-selection';
 export type { InlineListSelectionResult } from './inline-list-selection';
