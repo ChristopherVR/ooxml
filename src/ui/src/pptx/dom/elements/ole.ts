@@ -68,10 +68,36 @@ export const renderOleElement: ElementRenderer = (element, zIndex, context) => {
 		}),
 	);
 	if (element.oleEmbeddedData && showActions) {
-		el.appendChild(buildActionBar(doc, element, typeLabel, context));
+		const bar = buildActionBar(doc, element, typeLabel, context);
+		el.appendChild(bar);
+		revealOnHover(el, bar);
 	}
 	return el;
 };
+
+/**
+ * Keep the Download / Open bar hidden until the object is hovered or a control
+ * inside it has keyboard focus, like React and Angular. PowerPoint paints the
+ * object alone (its preview picture), so a permanent bar across the bottom of
+ * every embedded object is chrome PowerPoint never shows; hiding it by default
+ * keeps the still identical to PowerPoint's while the actions stay reachable.
+ */
+function revealOnHover(host: HTMLElement, bar: HTMLElement): void {
+	bar.style.opacity = '0';
+	bar.style.transition = 'opacity 0.12s ease-in-out';
+	const show = (): void => {
+		bar.style.opacity = '1';
+	};
+	const hide = (): void => {
+		if (!host.matches(':hover') && !bar.matches(':focus-within')) {
+			bar.style.opacity = '0';
+		}
+	};
+	host.addEventListener('pointerenter', show);
+	host.addEventListener('pointerleave', hide);
+	bar.addEventListener('focusin', show);
+	bar.addEventListener('focusout', hide);
+}
 
 /** Info caption lines: type, name, size, producing application. */
 function infoLines(el: OlePptxElement, typeLabel: string): string[] {

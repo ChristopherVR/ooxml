@@ -144,6 +144,27 @@ describe('renderOleElement', () => {
 		expect(open?.getAttribute('aria-label')).toBe('Open report.pdf');
 	});
 
+	it('keeps the action bar hidden until the object is hovered or focused', () => {
+		const node = renderOleElement(
+			oleElement({
+				oleObjectType: 'pdf',
+				oleEmbeddedData: PDF_DATA_URL,
+				oleEmbeddedMimeType: 'application/pdf',
+				oleEmbeddedFileName: 'report.pdf',
+			}),
+			0,
+			makeContext(),
+		) as HTMLElement;
+		const bar = node.querySelector<HTMLElement>('.pptxv-ole-actions');
+		expect(bar?.style.opacity).toBe('0');
+		node.dispatchEvent(new Event('pointerenter'));
+		expect(bar?.style.opacity).toBe('1');
+		node.dispatchEvent(new Event('pointerleave'));
+		expect(bar?.style.opacity).toBe('0');
+		bar?.dispatchEvent(new Event('focusin'));
+		expect(bar?.style.opacity).toBe('1');
+	});
+
 	it('offers download only (no open) for non-browser-openable payloads', () => {
 		const node = renderOleElement(
 			oleElement({
