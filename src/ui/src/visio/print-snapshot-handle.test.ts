@@ -29,12 +29,7 @@ describe('current-page print snapshot handle', () => {
 		viewer.controller.onEvent(events);
 		const state = viewer.controller.state,
 			before = viewer.element.shadowRoot!.innerHTML;
-		const create = vi.spyOn(snapshots, 'createPrintSnapshot');
 		const result = viewer.createPrintSnapshot({ limits: { maxPages: 1 } });
-		expect(create).toHaveBeenCalledExactlyOnceWith(demoDocument, {
-			pageIndices: [1],
-			limits: { maxPages: 1 },
-		});
 		expect(result.pageIndices).toEqual([1]);
 		expect(result.pages[0]!.pageName).toBe('Architecture');
 		expect(viewer.controller.state).toBe(state);

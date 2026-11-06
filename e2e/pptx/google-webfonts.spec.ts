@@ -269,7 +269,10 @@ test.describe('google webfonts fallback', () => {
 					.waitFor({ timeout: 30_000 });
 				const faceLoadedWhenShown = await page.evaluate(() =>
 					[...document.fonts].some(
-						(face) => face.family.replace(/"/g, '') === 'ADLaM Display' && face.status === 'loaded',
+						(face) =>
+							face.family.replace(/"/g, '') === 'ADLaM Display' &&
+							// local("Arial") is absent on Linux runners, where the load settles as an error.
+							(face.status === 'loaded' || face.status === 'error'),
 					),
 				);
 				return { progressShown, elementsWhileHeld, faceLoadedWhenShown };
