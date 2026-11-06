@@ -320,13 +320,17 @@ describe('adjustment values (adj/adj2)', () => {
 		expect(baseline).not.toBe(adjusted);
 	});
 
-	it.each(['textArchUp', 'textArchUpPour', 'textCirclePour', 'textCircle'] as const)(
-		'%s: arc-style adj changes the generated path',
-		(preset) => {
-			const gen = WARP_PATH_GENERATORS[preset];
-			expect(gen(200, 100, 0.3)).not.toBe(gen(200, 100, 0.3, 5400000));
-		},
-	);
+	// Arch Up and Circle only pick a half or a tip from the start angle (the
+	// default sits on the 90..269 / 180..359 side), so they change on the other.
+	it.each([
+		['textArchUp', 16200000],
+		['textArchUpPour', 5400000],
+		['textCirclePour', 5400000],
+		['textCircle', 5400000],
+	] as const)('%s: arc-style adj changes the generated path', (preset, angle) => {
+		const gen = WARP_PATH_GENERATORS[preset];
+		expect(gen(200, 100, 0.3)).not.toBe(gen(200, 100, 0.3, angle));
+	});
 
 	it.each(['textWave1', 'textWave2'] as const)('%s: adj2 controls horizontal shift', (preset) => {
 		const gen = WARP_PATH_GENERATORS[preset];

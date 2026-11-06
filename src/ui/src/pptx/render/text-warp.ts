@@ -285,35 +285,15 @@ const clamp4 = (n: number): number => Math.max(0, Math.min(n, 4));
 
 /** Concentric upward arcs. t=0 is the tallest arch. */
 function archUpPath(w: number, h: number, t: number, adj?: number): string {
-	const arch = archEllipsePath(w, h, t, adj, 'up');
-	if (arch) {
-		return arch;
-	}
-	const adjNorm = adj !== undefined ? Math.max(0, Math.min(adj / 21600000, 1)) : 0.5;
-	const maxArch = (0.85 * adjNorm) / 0.5;
-	const archH = h * Math.max(0, maxArch - t * 0.7);
-	if (archH < 1) {
-		return `M 0,${h} L ${w},${h}`;
-	}
-	return `M 0,${h} A ${w / 2},${archH} 0 0,1 ${w},${h}`;
+	return archEllipsePath(w, h, t, adj, 'up');
 }
 
 /** Concentric downward arcs. t=1 is the deepest. */
 function archDownPath(w: number, h: number, t: number, adj?: number): string {
-	const arch = archEllipsePath(w, h, t, adj, 'down');
-	if (arch) {
-		return arch;
-	}
-	const adjNorm = adj !== undefined ? Math.max(0, Math.min(adj / 21600000, 1)) : 0.5;
-	const baseDepth = (0.15 * adjNorm) / 0.5;
-	const archH = h * (baseDepth + t * 0.7);
-	if (archH < 1) {
-		return `M 0,0 L ${w},0`;
-	}
-	return `M 0,0 A ${w / 2},${archH} 0 0,0 ${w},0`;
+	return archEllipsePath(w, h, t, adj, 'down');
 }
 
-/** Full ellipse from the start angle, once around clockwise (see `circleEllipsePath`). */
+/** Full ellipse once around clockwise, from the tip the start angle picks (see `circleEllipsePath`). */
 function circlePath(w: number, h: number, t: number, adj?: number): string {
 	return circleEllipsePath(w, h, t, adj);
 }
@@ -440,21 +420,9 @@ function canDownPath(w: number, h: number, t: number, adj?: number): string {
 	return `M 0,0 A ${w / 2},${archH} 0 0,0 ${w},0`;
 }
 
-/**
- * Button: convex top / concave bottom. Base+extra amplitude (see
- * {@link inflatePath}) so a single-line button still bows instead of going
- * flat at `t=0.5`.
- */
+/** Button: a single line lies on the same arc as Arch Up (and turns with the start angle alike). */
 function buttonPath(w: number, h: number, t: number, adj?: number): string {
-	// At the default angle a single line of Button lies on the same arc as Arch Up.
-	const arch = archEllipsePath(w, h, t, adj, 'up');
-	if (arch) {
-		return arch;
-	}
-	const yBase = h * (0.1 + t * 0.8);
-	const intensity = adj !== undefined ? clamp4(adj / 18750) : 1;
-	const bulge = h * 0.11 * intensity + h * 0.08 * intensity * (0.5 - t);
-	return `M 0,${yBase} Q ${w / 2},${yBase - bulge} ${w},${yBase}`;
+	return archEllipsePath(w, h, t, adj, 'up');
 }
 
 /** Ring inside: concentric ellipses scaled inward. */

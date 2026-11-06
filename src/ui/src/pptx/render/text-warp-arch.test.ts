@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { archEllipsePath, circleEllipsePath } from './text-warp-arch';
+import {
+	archEllipsePath,
+	archOnUpperHalf,
+	circleEllipsePath,
+	normalizeWarpAngle,
+} from './text-warp-arch';
 
 describe('archEllipsePath', () => {
 	it('draws the upper half of the box ellipse, below the frame inset, at the default angle', () => {
@@ -25,8 +30,39 @@ describe('archEllipsePath', () => {
 		expect(rx(first)).toBeGreaterThan(rx(last));
 	});
 
-	it('leaves other start angles to the previous approximation', () => {
-		expect(archEllipsePath(200, 100, 0.5, 5400000, 'up')).toBeUndefined();
+	it('picks the half of the ellipse from the start angle, not a rotation of the arc', () => {
+		// Measured on PowerPoint 16: 90..269 degrees upper half, 270..89 lower half.
+		for (const degrees of [90, 120, 180, 240, 269]) {
+			expect(archOnUpperHalf(degrees * 60000, 'up')).toBe(true);
+			expect(archEllipsePath(200, 100, 0.5, degrees * 60000, 'up')).toBe(
+				archEllipsePath(200, 100, 0.5, undefined, 'up'),
+			);
+		}
+		for (const degrees of [270, 300, 0, 30, 89]) {
+			expect(archOnUpperHalf(degrees * 60000, 'up')).toBe(false);
+		}
+		expect(archOnUpperHalf(undefined, 'down')).toBe(false);
+	});
+
+	it('turns arch up half a turn about the box centre for a start angle on the lower half', () => {
+		const up = archEllipsePath(200, 100, 0.5, undefined, 'up');
+		expect(archEllipsePath(200, 100, 0.5, 16200000, 'up')).toBe('M 200,43.7 A 100,50 0 0,1 0,43.7');
+		expect(archEllipsePath(200, 100, 0.5, 0, 'up')).not.toBe(up);
+		expect(archEllipsePath(200, 100, 0.5, 5400000, 'up')).toBe(up);
+	});
+
+	it('turns arch down to the upper half for a start angle from 90 to 269 degrees', () => {
+		expect(archEllipsePath(200, 100, 0.5, 10800000, 'down')).toBe(
+			'M 200,41.5 A 100,50 0 0,0 0,41.5',
+		);
+		expect(archEllipsePath(200, 100, 0.5, 0, 'down')).toBe(
+			archEllipsePath(200, 100, 0.5, undefined, 'down'),
+		);
+	});
+
+	it('normalises an angle into one turn', () => {
+		expect(normalizeWarpAngle(-5400000)).toBe(270);
+		expect(normalizeWarpAngle(21600000 + 5400000)).toBe(90);
 	});
 });
 
@@ -47,9 +83,15 @@ describe('circleEllipsePath', () => {
 		expect(path.split('A')).toHaveLength(3);
 	});
 
-	it('starts elsewhere for another angle', () => {
-		const top = points(circleEllipsePath(200, 100, 0.5, 16200000))[0]!;
+	it('centres the text on the left tip for a start angle from 0 to 179 degrees', () => {
 		const left = points(circleEllipsePath(200, 100, 0.5, undefined))[0]!;
-		expect(top[1]).toBeLessThan(left[1]!);
+		for (const degrees of [0, 45, 90, 179]) {
+			const turned = points(circleEllipsePath(200, 100, 0.5, degrees * 60000))[0]!;
+			expect(turned[0]).toBeGreaterThan(190);
+			expect(left[0]).toBeLessThan(10);
+		}
+		for (const degrees of [180, 270, 359]) {
+			expect(points(circleEllipsePath(200, 100, 0.5, degrees * 60000))[0]).toEqual(left);
+		}
 	});
 });
