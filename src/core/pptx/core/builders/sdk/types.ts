@@ -293,6 +293,12 @@ export interface TableRowInput {
 export interface TableCellInput {
 	text: string;
 	style?: Partial<TextStyleInput>;
+	/**
+	 * The cell's own fill, written in `a:tcPr` over the table style's. Solid
+	 * (no opacity below 1), gradient (no `tile`, `scaled: false` or
+	 * `rotWithShape`), pattern and `none` (an explicit `a:noFill`). A fill a
+	 * cell cannot carry, such as an image, throws a `RangeError`.
+	 */
 	fill?: FillInput;
 	gridSpan?: number;
 	rowSpan?: number;

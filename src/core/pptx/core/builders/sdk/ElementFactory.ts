@@ -27,6 +27,7 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
 import {
 	buildShapeStyle,
@@ -353,21 +354,13 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 	};
 }
 
-/** A table cell from its input: the text with the cell style. */
+/** A table cell from its input: the text with the cell style and fill. */
 function createTableCell(cellInput: TableCellInput): PptxTableCell {
 	return {
 		text: cellInput.text,
 		gridSpan: cellInput.gridSpan,
 		rowSpan: cellInput.rowSpan,
-		style: cellInput.style
-			? {
-					fontSize: cellInput.style.fontSize,
-					bold: cellInput.style.bold,
-					italic: cellInput.style.italic,
-					color: cellInput.style.color,
-					align: cellInput.style.alignment,
-				}
-			: undefined,
+		style: tableCellStyle(cellInput),
 	};
 }
 
