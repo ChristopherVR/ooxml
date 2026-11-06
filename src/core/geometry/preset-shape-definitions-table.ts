@@ -54,6 +54,7 @@ import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-defi
 import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-exact';
 import { EXACT_ARC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-arcs';
 import { EXACT_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-arrows';
+import { EXACT_CIRCULAR_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-circular';
 import { EXACT_BASIC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-basic';
 import { EXACT_MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-misc';
 import { EXACT_MATH_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-math';
@@ -112,12 +113,6 @@ export interface PresetShapeGeometryDefinition {
 	rect?: { l: string; t: string; r: string; b: string };
 	/** `pathLst` — at least one path. */
 	pathLst: PresetPath[];
-	/**
-	 * Treat every `arcTo` angle as parametric rather than visual. Set only on
-	 * approximate hand-written entries that were tuned that way and have no
-	 * spec-exact replacement yet (see `ooxmlArcToSvg`).
-	 */
-	parametricArcs?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -1278,5 +1273,6 @@ export const PRESET_SHAPE_GEOMETRY_TABLE: Record<string, PresetShapeGeometryDefi
 	...EXACT_BASIC_PRESET_DEFINITIONS,
 	...EXACT_ARROW_PRESET_DEFINITIONS,
 	...EXACT_ARC_PRESET_DEFINITIONS,
+	...EXACT_CIRCULAR_ARROW_PRESET_DEFINITIONS,
 	...EXACT_MISC_PRESET_DEFINITIONS,
 };

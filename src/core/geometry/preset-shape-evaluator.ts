@@ -245,17 +245,7 @@ export function evaluatePresetShape(
 					const hR = resolveToken(cmd.hR, vars);
 					const stAng = resolveToken(cmd.stAng, vars);
 					const swAng = resolveToken(cmd.swAng, vars);
-					const result = ooxmlArcToSvg(
-						wR,
-						hR,
-						stAng,
-						swAng,
-						penX,
-						penY,
-						scaleX,
-						scaleY,
-						def.parametricArcs === true,
-					);
+					const result = ooxmlArcToSvg(wR, hR, stAng, swAng, penX, penY, scaleX, scaleY);
 					if (result) {
 						parts.push(result.svg);
 						penX = result.endX;
