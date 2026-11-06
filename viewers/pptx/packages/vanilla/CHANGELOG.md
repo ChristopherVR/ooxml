@@ -7,6 +7,34 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.65.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.65.0) - 2026-11-06
+
+### Features
+
+- **ui:** PowerPoint-style media control bar on the editor canvas ([7c71c7f](https://github.com/ChristopherVR/ooxml/commit/7c71c7fb6f8ea8346afc9281a86bba00eac64a74))
+- **ui:** Draw the table style effectRef shadow on the table frame ([30b9df8](https://github.com/ChristopherVR/ooxml/commit/30b9df883501814c38d715a3795876bc4b7c97e3))
+- **ui:** Dissolve a morphing silhouette shadow between both ends ([18a792a](https://github.com/ChristopherVR/ooxml/commit/18a792aaa4cd5f631d83fc8701e1e37461e0636f))
+
+### Bug Fixes
+
+- **ui:** Lay missing legacy East Asian fonts out on their named metrics ([adec110](https://github.com/ChristopherVR/ooxml/commit/adec11017ea2b59b0bb78248752c7ee2dac74e38))
+- **geometry:** Follow ecma-376 for curvedConnector3, 4 and 5 ([fb6b33f](https://github.com/ChristopherVR/ooxml/commit/fb6b33f867882e8ffd8617694977a45fd120d375))
+- **pptx:** Resolve an absolute layout-to-master relationship target ([03ed692](https://github.com/ChristopherVR/ooxml/commit/03ed692a1367546d7a92bccbf03fce01bdf16f86))
+- **ui:** Match PowerPoint's dash lengths and cap handling ([6ff7e23](https://github.com/ChristopherVR/ooxml/commit/6ff7e23e91513260a7f2c52358d9261ce04667ad))
+- **ui:** Match PowerPoint table style fills, double lines and tblBg span ([a30f8ca](https://github.com/ChristopherVR/ooxml/commit/a30f8ca02ef08ed6e056afec123d89add435c444))
+- **ui:** Snap group child strokes by their absolute position ([061ae7e](https://github.com/ChristopherVR/ooxml/commit/061ae7e5a6d6edbc1c431761e54732c25191d554))
+- **geometry:** Match PowerPoint for about 55 preset shapes ([97f99e1](https://github.com/ChristopherVR/ooxml/commit/97f99e1ea2dc603684870a41905203bf341cf420))
+- **text:** Lay missing Office fonts out on their own metrics ([83c4f02](https://github.com/ChristopherVR/ooxml/commit/83c4f029a0c2975e62ca1ae7a50f5f58f13ad732))
+- **ui:** Stroke split-layout presets along their stroked paths only ([68ad9aa](https://github.com/ChristopherVR/ooxml/commit/68ad9aa2f908a43fe9a0cfd0b24250b704bb1159))
+- **ui:** Stop flowing a:linkedTxbx text, as PowerPoint ignores it ([2eeabbb](https://github.com/ChristopherVR/ooxml/commit/2eeabbbebfdd5e9f9a4d11848f3e655efe906ea8))
+- **geometry:** Rebuild the three circular arrows on the ECMA guide chain ([d3b7a1e](https://github.com/ChristopherVR/ooxml/commit/d3b7a1e9e196ef50b87dbe37289d35181a49e1f6))
+- **geometry:** Rebuild ribbon, ribbon2, ellipse ribbons, left-right ribbon ([5a75fe1](https://github.com/ChristopherVR/ooxml/commit/5a75fe1a5bfef83e63105ce0a52e808e5212cf0c))
+- **geometry:** Rebuild verticalScroll, horizontalScroll and funnel ([b14f7f2](https://github.com/ChristopherVR/ooxml/commit/b14f7f2b1ab9d030c09ba7e36d91172140635c34))
+- **geometry:** Correct irregularSeal2, magnetic disk and multidocument ([60783a8](https://github.com/ChristopherVR/ooxml/commit/60783a8fdd0c99a54c9538d654def571d368bf97))
+- **geometry:** Draw action button glyphs and fix cube and bevel shading ([6b7801f](https://github.com/ChristopherVR/ooxml/commit/6b7801fe2c4777dbf928300991d5dda5fd232562))
+- **ui:** Paint gradients the way PowerPoint does and fix blank rect path ([0f1e8d8](https://github.com/ChristopherVR/ooxml/commit/0f1e8d877e87edeae94bbb59890a078ca581cbc6))
+- **ui:** Give every painted copy of a slide its own svg def ids ([a58124a](https://github.com/ChristopherVR/ooxml/commit/a58124a1b0bbb8a8d0c45d92fdebc0d7001e5188))
+
 ## [3.64.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.64.0) - 2026-11-06
 
 ### Features

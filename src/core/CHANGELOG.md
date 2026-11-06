@@ -7,6 +7,28 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.41.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.41.0) - 2026-11-06
+
+### Features
+
+- **ui:** Draw the table style effectRef shadow on the table frame ([30b9df8](https://github.com/ChristopherVR/ooxml/commit/30b9df883501814c38d715a3795876bc4b7c97e3))
+
+### Bug Fixes
+
+- **ui:** Lay missing legacy East Asian fonts out on their named metrics ([adec110](https://github.com/ChristopherVR/ooxml/commit/adec11017ea2b59b0bb78248752c7ee2dac74e38))
+- **geometry:** Follow ecma-376 for curvedConnector3, 4 and 5 ([fb6b33f](https://github.com/ChristopherVR/ooxml/commit/fb6b33f867882e8ffd8617694977a45fd120d375))
+- **pptx:** Resolve an absolute layout-to-master relationship target ([03ed692](https://github.com/ChristopherVR/ooxml/commit/03ed692a1367546d7a92bccbf03fce01bdf16f86))
+- **ui:** Match PowerPoint table style fills, double lines and tblBg span ([a30f8ca](https://github.com/ChristopherVR/ooxml/commit/a30f8ca02ef08ed6e056afec123d89add435c444))
+- **geometry:** Match PowerPoint for about 55 preset shapes ([97f99e1](https://github.com/ChristopherVR/ooxml/commit/97f99e1ea2dc603684870a41905203bf341cf420))
+- **text:** Lay missing Office fonts out on their own metrics ([83c4f02](https://github.com/ChristopherVR/ooxml/commit/83c4f029a0c2975e62ca1ae7a50f5f58f13ad732))
+- **ui:** Stop flowing a:linkedTxbx text, as PowerPoint ignores it ([2eeabbb](https://github.com/ChristopherVR/ooxml/commit/2eeabbbebfdd5e9f9a4d11848f3e655efe906ea8))
+- **geometry:** Rebuild the three circular arrows on the ECMA guide chain ([d3b7a1e](https://github.com/ChristopherVR/ooxml/commit/d3b7a1e9e196ef50b87dbe37289d35181a49e1f6))
+- **geometry:** Rebuild ribbon, ribbon2, ellipse ribbons, left-right ribbon ([5a75fe1](https://github.com/ChristopherVR/ooxml/commit/5a75fe1a5bfef83e63105ce0a52e808e5212cf0c))
+- **geometry:** Rebuild verticalScroll, horizontalScroll and funnel ([b14f7f2](https://github.com/ChristopherVR/ooxml/commit/b14f7f2b1ab9d030c09ba7e36d91172140635c34))
+- **geometry:** Correct irregularSeal2, magnetic disk and multidocument ([60783a8](https://github.com/ChristopherVR/ooxml/commit/60783a8fdd0c99a54c9538d654def571d368bf97))
+- **geometry:** Draw action button glyphs and fix cube and bevel shading ([6b7801f](https://github.com/ChristopherVR/ooxml/commit/6b7801fe2c4777dbf928300991d5dda5fd232562))
+- **ui:** Paint gradients the way PowerPoint does and fix blank rect path ([0f1e8d8](https://github.com/ChristopherVR/ooxml/commit/0f1e8d877e87edeae94bbb59890a078ca581cbc6))
+
 ## [1.40.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.40.0) - 2026-11-06
 
 ### Features

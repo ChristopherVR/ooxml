@@ -7,6 +7,59 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.66.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.66.0) - 2026-11-06
+
+### Features
+
+- **ui:** Paint shadow and glow along gradient, pattern and picture shapes ([2e81d32](https://github.com/ChristopherVR/ooxml/commit/2e81d325e92948d82a0f5e584e672349fbdf7ca0))
+- **ui:** PowerPoint-style media control bar on the editor canvas ([7c71c7f](https://github.com/ChristopherVR/ooxml/commit/7c71c7fb6f8ea8346afc9281a86bba00eac64a74))
+- **ui:** Draw the table style effectRef shadow on the table frame ([30b9df8](https://github.com/ChristopherVR/ooxml/commit/30b9df883501814c38d715a3795876bc4b7c97e3))
+
+### Bug Fixes
+
+- **ui:** Stop table borders adding a pixel to every row ([dc2fdd7](https://github.com/ChristopherVR/ooxml/commit/dc2fdd7b5754c735a14c1b1a686122abdeea92dc))
+- **ui:** Lay missing legacy East Asian fonts out on their named metrics ([adec110](https://github.com/ChristopherVR/ooxml/commit/adec11017ea2b59b0bb78248752c7ee2dac74e38))
+- **ui:** Paint outer shadow and glow along non-rectangular shapes ([6d4cc12](https://github.com/ChristopherVR/ooxml/commit/6d4cc12f49235b799444706b3c3a0fa0c699be16))
+- **ui:** Snap every rect edge to exact EMU and draw lines with flat caps ([3217686](https://github.com/ChristopherVR/ooxml/commit/32176861683f9e8dd566331bdae36a6e5135f7f1))
+- **geometry:** Follow ecma-376 for curvedConnector3, 4 and 5 ([fb6b33f](https://github.com/ChristopherVR/ooxml/commit/fb6b33f867882e8ffd8617694977a45fd120d375))
+- **ui:** Hit-test silhouette shapes on their geometry, not their box ([638f6bf](https://github.com/ChristopherVR/ooxml/commit/638f6bf73bffaa64d439caa23a45f7ae465cc5f8))
+- **pptx:** Resolve an absolute layout-to-master relationship target ([03ed692](https://github.com/ChristopherVR/ooxml/commit/03ed692a1367546d7a92bccbf03fce01bdf16f86))
+- **ui:** Match PowerPoint's dash lengths and cap handling ([6ff7e23](https://github.com/ChristopherVR/ooxml/commit/6ff7e23e91513260a7f2c52358d9261ce04667ad))
+- **ui:** Match PowerPoint table style fills, double lines and tblBg span ([a30f8ca](https://github.com/ChristopherVR/ooxml/commit/a30f8ca02ef08ed6e056afec123d89add435c444))
+- **react:** Lay out a pure equation box with the shared block style ([2495586](https://github.com/ChristopherVR/ooxml/commit/2495586bd203ce359e870ae08486e940ac83804b))
+- **ui:** Snap group child strokes by their absolute position ([061ae7e](https://github.com/ChristopherVR/ooxml/commit/061ae7e5a6d6edbc1c431761e54732c25191d554))
+- **geometry:** Match PowerPoint for about 55 preset shapes ([97f99e1](https://github.com/ChristopherVR/ooxml/commit/97f99e1ea2dc603684870a41905203bf341cf420))
+- **ui:** Draw nineteen text warps as measured top and bottom paths ([01eb409](https://github.com/ChristopherVR/ooxml/commit/01eb409b2c24f2697d2c094ee2729b9193deb046))
+- **ui:** Put the inner shadow on the edge the offset points to ([1983da4](https://github.com/ChristopherVR/ooxml/commit/1983da4650d9b80bd41eb0d7e222fb744b6136b7))
+- **ui:** Keep the shadow and glow of a morphing shape painted as a silhouette ([0f8f76d](https://github.com/ChristopherVR/ooxml/commit/0f8f76d5fe5842503983c6e7a24a89ca48e19472))
+- **ui:** Place table cell paragraphs on PowerPoint's baselines ([eb41b49](https://github.com/ChristopherVR/ooxml/commit/eb41b49d1ae40af08614dfcfcc2d01f65871a97e))
+- **text:** Lay missing Office fonts out on their own metrics ([83c4f02](https://github.com/ChristopherVR/ooxml/commit/83c4f029a0c2975e62ca1ae7a50f5f58f13ad732))
+- **ui:** Stroke split-layout presets along their stroked paths only ([68ad9aa](https://github.com/ChristopherVR/ooxml/commit/68ad9aa2f908a43fe9a0cfd0b24250b704bb1159))
+- **react:** Inset raw-xml table cell margins by half the border ([7586b55](https://github.com/ChristopherVR/ooxml/commit/7586b558531ba54188968e79cda431907d7269aa))
+- **ui:** Stop flowing a:linkedTxbx text, as PowerPoint ignores it ([2eeabbb](https://github.com/ChristopherVR/ooxml/commit/2eeabbbebfdd5e9f9a4d11848f3e655efe906ea8))
+- **react:** Render a soft line break as a bare br like the other bindings ([f9c7bf1](https://github.com/ChristopherVR/ooxml/commit/f9c7bf1e053d11efe99025e2c9b24dff21fb1d87))
+- **ui:** Start dashed closed outlines where powerpoint does ([7246a37](https://github.com/ChristopherVR/ooxml/commit/7246a37eef1465dfed5031387b948c62d0e71743))
+- **react:** Put the table style shadow on the element frame ([a45cb2f](https://github.com/ChristopherVR/ooxml/commit/a45cb2f5df60957b63e1c69b597accf4a0410f4e))
+- **geometry:** Rebuild the three circular arrows on the ECMA guide chain ([d3b7a1e](https://github.com/ChristopherVR/ooxml/commit/d3b7a1e9e196ef50b87dbe37289d35181a49e1f6))
+- **geometry:** Rebuild ribbon, ribbon2, ellipse ribbons, left-right ribbon ([5a75fe1](https://github.com/ChristopherVR/ooxml/commit/5a75fe1a5bfef83e63105ce0a52e808e5212cf0c))
+- **geometry:** Rebuild verticalScroll, horizontalScroll and funnel ([b14f7f2](https://github.com/ChristopherVR/ooxml/commit/b14f7f2b1ab9d030c09ba7e36d91172140635c34))
+- **geometry:** Correct irregularSeal2, magnetic disk and multidocument ([60783a8](https://github.com/ChristopherVR/ooxml/commit/60783a8fdd0c99a54c9538d654def571d368bf97))
+- **geometry:** Draw action button glyphs and fix cube and bevel shading ([6b7801f](https://github.com/ChristopherVR/ooxml/commit/6b7801fe2c4777dbf928300991d5dda5fd232562))
+- **ui:** Veil lighten and darken sub-paths over gradient and picture fills ([d9d80ab](https://github.com/ChristopherVR/ooxml/commit/d9d80ab90f9d11b64f63b6ec902a9647902b39b6))
+- **ui:** Paint gradients the way PowerPoint does and fix blank rect path ([0f1e8d8](https://github.com/ChristopherVR/ooxml/commit/0f1e8d877e87edeae94bbb59890a078ca581cbc6))
+- **ui:** Give every painted copy of a slide its own svg def ids ([a58124a](https://github.com/ChristopherVR/ooxml/commit/a58124a1b0bbb8a8d0c45d92fdebc0d7001e5188))
+
+### Refactor
+
+- **ui:** Route embedded font injection through the shared sheet ([63263a2](https://github.com/ChristopherVR/ooxml/commit/63263a2f3fe808b7c0353395c407d611a5bf0e35))
+- **ui:** Paint warped text runs with resolveWarpRunPaint everywhere ([c2b5281](https://github.com/ChristopherVR/ooxml/commit/c2b5281840d26bae691f7f9edfc38591c107aed3))
+- **react:** Render every table from the shared table descriptors ([492e26e](https://github.com/ChristopherVR/ooxml/commit/492e26e086f996e7d3916e9589d5764427947b18))
+
+### Testing
+
+- **react:** Pin the measured powerpoint dash lengths in snapshots ([d5ea53f](https://github.com/ChristopherVR/ooxml/commit/d5ea53f9e1a9369e3d56e558f30790941640489d))
+- **react:** Pin powerpoint's inner shadow blur and edge in color-core ([6c75692](https://github.com/ChristopherVR/ooxml/commit/6c75692a60b3060db0eef298fca2915d04d5ab30))
+
 ## [4.65.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.65.0) - 2026-11-06
 
 ### Features
