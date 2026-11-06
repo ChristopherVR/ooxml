@@ -44,7 +44,7 @@ describe('elementRenderer per-sub-path fill overlay', () => {
 		expect(style['background-color']).toBe('transparent');
 	});
 
-	it('shades the actionButtonBlank inset bevel well instead of painting it flat', () => {
+	it('shades the actionButtonForwardNext inset bevel well instead of painting it flat', () => {
 		const element = {
 			id: 'btn-1',
 			type: 'shape',
@@ -52,7 +52,7 @@ describe('elementRenderer per-sub-path fill overlay', () => {
 			y: 0,
 			width: 120,
 			height: 120,
-			shapeType: 'actionButtonBlank',
+			shapeType: 'actionButtonForwardNext',
 			shapeStyle: { fillColor: '#4472C4' },
 		} as unknown as PptxElement;
 		const overlay = getSubpathFillOverlay(element);
@@ -73,5 +73,29 @@ describe('elementRenderer per-sub-path fill overlay', () => {
 			shapeStyle: { fillColor: '#336699' },
 		} as unknown as PptxElement;
 		expect(getSubpathFillOverlay(element)).toBeUndefined();
+	});
+});
+
+describe('elementRenderer shading over a gradient fill', () => {
+	it('veils the can lid white while the CSS box keeps the gradient', () => {
+		const element = {
+			id: 'can-1',
+			type: 'shape',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			shapeType: 'can',
+			shapeStyle: {
+				fillMode: 'gradient',
+				fillGradientStops: [
+					{ color: '#FFFFFF', position: 0 },
+					{ color: '#0000FF', position: 100 },
+				],
+			},
+		} as unknown as PptxElement;
+		const overlay = getSubpathFillOverlay(element);
+		expect(overlay!.paints.some((p) => p.fill === 'rgba(255,255,255,0.4)')).toBeTruthy();
+		expect(getShapeFillStrokeStyle(element)['background-color']).not.toBe('transparent');
 	});
 });

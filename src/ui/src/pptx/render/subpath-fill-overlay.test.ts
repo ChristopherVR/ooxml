@@ -28,8 +28,8 @@ describe('suppressesCssFill / buildSubpathFillOverlay - preset geometry (bug 2)'
 		expect(overlay.paints.some((p) => p.fill === 'none')).toBeTruthy();
 	});
 
-	it('fires for actionButtonBlank: the inset bevel well is darkened, not flat', () => {
-		const el = shape({ shapeType: 'actionButtonBlank' });
+	it('fires for actionButtonForwardNext: the inset bevel well is darkened, not flat', () => {
+		const el = shape({ shapeType: 'actionButtonForwardNext' });
 		expect(suppressesCssFill(el)).toBeTruthy();
 		const overlay = buildSubpathFillOverlay(el)!;
 		const fills = new Set(overlay.paints.map((p) => p.fill));
@@ -64,12 +64,40 @@ describe('suppressesCssFill / buildSubpathFillOverlay - preset geometry (bug 2)'
 		expect(buildSubpathFillOverlay(el)!.paints.every((p) => p.fill === 'none')).toBeTruthy();
 	});
 
-	it('declines when the fill is a gradient: no paint server exists for a sub-path', () => {
+	it('keeps the CSS gradient and veils only the shaded sub-paths (the eyes of a smiley)', () => {
 		const el = shape({
 			shapeType: 'smileyFace',
 			shapeStyle: { fillMode: 'gradient', fillGradientStops: [{ color: '#fff', position: 0 }] },
 		} as Partial<PptxElement>);
 		expect(suppressesCssFill(el)).toBeFalsy();
+		const overlay = buildSubpathFillOverlay(el)!;
+		expect(overlay).toBeDefined();
+		// face plain, eyes a 20% black veil (darkenLess), mouth nothing
+		expect(overlay.paints[0].fill).toBe('none');
+		expect(overlay.paints.some((p) => p.fill === 'rgba(0,0,0,0.2)')).toBeTruthy();
+	});
+
+	it('veils a can lid white and a cube side black over a gradient or a picture', () => {
+		const style = { fillMode: 'image', fillImageUrl: 'x.png' };
+		const can = buildSubpathFillOverlay(
+			shape({ shapeType: 'can', shapeStyle: style } as Partial<PptxElement>),
+		)!;
+		expect(can.paints.some((p) => p.fill === 'rgba(255,255,255,0.4)')).toBeTruthy();
+		const cube = buildSubpathFillOverlay(
+			shape({
+				shapeType: 'cube',
+				shapeStyle: { ...style, fillMode: 'gradient' },
+			} as Partial<PptxElement>),
+		)!;
+		expect(cube.paints.some((p) => p.fill === 'rgba(0,0,0,0.2)')).toBeTruthy();
+		expect(cube.paints.some((p) => p.fill === 'rgba(255,255,255,0.2)')).toBeTruthy();
+	});
+
+	it('declines a gradient shape with no shaded sub-path', () => {
+		const el = shape({
+			shapeType: 'rect',
+			shapeStyle: { fillMode: 'gradient', fillGradientStops: [{ color: '#fff', position: 0 }] },
+		} as Partial<PptxElement>);
 		expect(buildSubpathFillOverlay(el)).toBeUndefined();
 	});
 

@@ -12,7 +12,7 @@ import { ShapeEffectOverlay } from './ShapeEffectOverlay';
  *
  * `smileyFace`'s eyes are authored `fill="none"` open strokes; merging every
  * sub-path into one clip-path + flat `background-color` (the pre-fix
- * behaviour) painted them FILLED and distorted instead. `actionButtonBlank`'s
+ * behaviour) painted them FILLED and distorted instead. `actionButtonForwardNext`'s
  * inset bevel well is authored `fill="darken"`; the merge painted it the same
  * flat colour as the face, so the shading vanished.
  */
@@ -49,7 +49,7 @@ describe('shapeEffectOverlay per-sub-path fill', () => {
 		expect(style.backgroundColor).toBe('transparent');
 	});
 
-	it('shades the actionButtonBlank inset bevel well instead of painting it flat', () => {
+	it('shades the actionButtonForwardNext inset bevel well instead of painting it flat', () => {
 		const element = {
 			id: 'btn-1',
 			type: 'shape',
@@ -57,7 +57,7 @@ describe('shapeEffectOverlay per-sub-path fill', () => {
 			y: 0,
 			width: 120,
 			height: 120,
-			shapeType: 'actionButtonBlank',
+			shapeType: 'actionButtonForwardNext',
 			shapeStyle: { fillColor: '#4472C4' },
 		} as unknown as PptxElement;
 		const html = markup(element);
@@ -77,5 +77,30 @@ describe('shapeEffectOverlay per-sub-path fill', () => {
 			shapeStyle: { fillColor: '#336699' },
 		} as unknown as PptxElement;
 		expect(markup(element)).not.toContain('pptx-react-subpath-fill');
+	});
+});
+
+describe('shapeEffectOverlay shading over a gradient fill', () => {
+	it('veils the can lid white while the CSS box keeps the gradient', () => {
+		const element = {
+			id: 'can-1',
+			type: 'shape',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			shapeType: 'can',
+			shapeStyle: {
+				fillMode: 'gradient',
+				fillGradientStops: [
+					{ color: '#FFFFFF', position: 0 },
+					{ color: '#0000FF', position: 100 },
+				],
+			},
+		} as unknown as PptxElement;
+		const html = markup(element);
+		expect(html).toContain('fill="rgba(255,255,255,0.4)"');
+		const { hf, fc, sw, sc } = shapeParams(element);
+		expect(getShapeVisualStyle(element, hf, fc, sw, sc).backgroundImage).toContain('gradient');
 	});
 });

@@ -28,11 +28,10 @@
  * ({@link suppressesCssFill}) drops the CSS background so the flat colour does
  * not show underneath.
  *
- * Restricted to a solid (or absent) fill: a gradient/pattern/image fill keeps
- * the existing single merged clip-path box, since neither geometry kind's
- * sub-paths can carry an independent paint SERVER (only a solid, mode-shifted
- * colour), and the common case for both bug classes - shading/bevel highlights,
- * `smileyFace`'s eyes - is a solid theme colour.
+ * A solid (or absent) fill is painted entirely by the overlay. A gradient,
+ * pattern or picture fill keeps the single merged clip-path box (a sub-path
+ * cannot carry its own paint server) and gets only the shading veils on top
+ * (`buildShadingOverlay`).
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
@@ -87,13 +86,61 @@ export function suppressesCssFill(element: PptxElement): boolean {
 	);
 }
 
+/** The black or white veil that shifts a fill by a sub-path's `@fill` mode. */
+function shadeVeil(mode: string | undefined, opacity: number): string | undefined {
+	const strength =
+		mode === 'lighten' || mode === 'darken'
+			? 0.4
+			: mode === 'lightenLess' || mode === 'darkenLess'
+				? 0.2
+				: 0;
+	if (strength === 0) {
+		return undefined;
+	}
+	const channel = mode?.startsWith('lighten') ? 255 : 0;
+	return `rgba(${channel},${channel},${channel},${Math.round(strength * opacity * 1000) / 1000})`;
+}
+
+/**
+ * A gradient, pattern or picture fill cannot be painted per sub-path (the CSS
+ * box keeps painting it), but PowerPoint still shades the `lighten`/`darken`
+ * sub-paths of such a shape (a can's lid, a cube's faces, a bevel, the eyes of a
+ * smiley, a folded corner): each pixel moves toward white or black by the same
+ * 40% / 20% as for a solid colour. That is a translucent white or black veil
+ * over just those sub-paths, painted above the unchanged fill. Returns
+ * `undefined` when no sub-path shades.
+ */
+function buildShadingOverlay(element: PptxElement): SubpathFillOverlay | undefined {
+	if (!hasShapeProperties(element)) {
+		return undefined;
+	}
+	const ss = element.shapeStyle;
+	if (ss?.fillMode !== 'gradient' && ss?.fillMode !== 'pattern' && ss?.fillMode !== 'image') {
+		return undefined;
+	}
+	const geometry = getSubpathGeometry(element);
+	if (!geometry) {
+		return undefined;
+	}
+	const opacity = ss.fillOpacity ?? 1;
+	const paints = geometry.subpaths.map((subpath) => ({
+		d: subpath.d,
+		fill: shadeVeil(subpath.fillMode, opacity) ?? 'none',
+		stroked: subpath.stroke !== false,
+	}));
+	if (paints.every((paint) => paint.fill === 'none')) {
+		return undefined;
+	}
+	return { paints, viewBoxWidth: geometry.width, viewBoxHeight: geometry.height };
+}
+
 /**
  * Build the per-sub-path fill overlay for an element, or `undefined` when a
  * single merged fill/clip-path is correct (the ordinary case).
  */
 export function buildSubpathFillOverlay(element: PptxElement): SubpathFillOverlay | undefined {
 	if (!hasReproducibleFillMode(element)) {
-		return undefined;
+		return buildShadingOverlay(element);
 	}
 	const silhouette = silhouetteFillsOverlay(element);
 	const geometry = getSubpathGeometry(element, silhouette);

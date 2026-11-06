@@ -31,7 +31,6 @@ import { injectPresentationElementStates } from '../composables/presentation-ele
 import { useRendering3DFlags } from '../composables/rendering-3d-flags';
 import { injectSlideElements, resolveSlideElements } from '../composables/slide-elements';
 import { build3DExtrusionData } from '../composables/visual-3d';
-import ActionButtonGlyphOverlay from './ActionButtonGlyphOverlay.vue';
 import ChartRenderer from './ChartRenderer.vue';
 import ConnectorRenderer from './ConnectorRenderer.vue';
 import ContentPartRenderer from './ContentPartRenderer.vue';
@@ -589,8 +588,6 @@ const hitTargetStyle = useElementHitTargetStyle(
 		>
 			<ShapeEffectOverlay :element="element" :media-data-urls="mediaDataUrls" />
 			<Extrusion3DOverlay v-if="extrusionData.hasExtrusion" :data="extrusionData" />
-			<!-- Action-button glyph (home/help/sound/arrows/...); self-hides for non-buttons. -->
-			<ActionButtonGlyphOverlay :element="element" />
 		</div>
 		<!-- While this element is open in the inline text editor, its live text is
 		     drawn by that overlay instead (see `isBeingInlineEdited`); rendering it

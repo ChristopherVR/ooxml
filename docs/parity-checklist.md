@@ -450,16 +450,26 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       typing edits); Angular's textarea editor ignores the click position, for plain shapes too.
 - [ ] **P2** Preset geometry that still differs from PowerPoint 16 (measured with
       `Slide.Export` of every preset at a non-square aspect, default and adjusted, against
-      `evaluatePresetShape`): `circularArrow`, `leftCircularArrow` and `leftRightCircularArrow`
-      (the hand-written guides are not the ECMA chain), `ribbon`, `ribbon2`, `ellipseRibbon`,
-      `ellipseRibbon2`, `leftRightRibbon`, `verticalScroll`, `horizontalScroll`, `funnel`,
-      `swooshArrow`, `irregularSeal2`, `flowChartMultidocument` and `flowChartMagneticDisk`
-      (outline paths), the `actionButton*` detail strokes, and the leader line of the line
-      callouts whose COM default adjustments differ from the saved XML. Closed in
-      `fix(geometry)`: star4-star10, pentagon, heptagon, decagon, dodecagon, the math operators,
-      the three tab shapes, braces and brackets, moon, heart, cloud, lightningBolt, wave,
-      doubleWave, the arc family (visual arc angles), five multi-headed block arrows,
-      smileyFace, can, cube, bevel, diagStripe and nonIsoscelesTrapezoid.
+      `evaluatePresetShape`): `swooshArrow` (the head is a sheared polygon whose barb positions
+      depend on both adjustments; the curves and head are still the old approximation), the
+      question mark of `actionButtonHelp` (a measured polyline, not the specification's Bezier
+      chain), the leader line of the line callouts whose COM default adjustments differ from
+      the saved XML, and the exact swirl shading inside the scroll curls (a disc approximates
+      it). `leftCircularArrow` with a positive `adj2` (PowerPoint writes it modulo a turn) is
+      pinned to the head angle 0 as the specification does. Closed in `fix(geometry)`:
+      star4-star10, pentagon, heptagon, decagon, dodecagon, the math operators, the three tab
+      shapes, braces and brackets, moon, heart, cloud, lightningBolt, wave, doubleWave, the arc
+      family (visual arc angles), five multi-headed block arrows, smileyFace, can, cube, bevel,
+      diagStripe, nonIsoscelesTrapezoid, circularArrow, leftCircularArrow,
+      leftRightCircularArrow, ribbon, ribbon2, ellipseRibbon, ellipseRibbon2, leftRightRibbon,
+      verticalScroll, horizontalScroll, funnel, irregularSeal2, flowChartMultidocument,
+      flowChartMagneticDisk and the glyphs of the twelve `actionButton*` (flat face plus
+      darken, darkenLess and lighten sub-paths; the binding-local glyph overlays are gone).
+- [x] **P2** Sub-path shading (`lighten`, `lightenLess`, `darken`, `darkenLess`: can lid, cube,
+      bevel, smiley eyes, ribbon folds, action-button glyphs) also applies under a gradient,
+      pattern or picture fill, as a translucent white or black veil over the shaded sub-paths
+      (`buildSubpathFillOverlay`, all five bindings). A `fill="none"` sub-path (the smiley's
+      mouth) is still filled by the merged clip of a non-solid fill.
 - [x] **P1** WordArt Transform: the closed-loop warps are drawn from PowerPoint's own geometry.
       Ring Inside and Ring Outside are two offset ellipses with the text run once round and the
       ink clipped to the ellipse of its band; Circle Pour is the box ellipse and its `adj2` scale
