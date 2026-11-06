@@ -36,6 +36,12 @@ function dashOf(shapeStyle: Record<string, unknown>): Element | null {
 }
 
 describe('connectorView dash patterns', () => {
+	it('keeps the device-grid snap on the square-cap path', () => {
+		expect(
+			(dashOf({ strokeDash: 'dash', lineCap: 'sq' }) as HTMLElement).style.transform,
+		).toContain('calc(');
+	});
+
 	it("draws a dashed square-cap line with PowerPoint's overshoot at its start", () => {
 		expect(dashOf({ strokeDash: 'dash', lineCap: 'sq' })?.getAttribute('d')).toMatch(/^M-3,/u);
 	});

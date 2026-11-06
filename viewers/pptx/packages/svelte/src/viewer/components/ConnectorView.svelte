@@ -138,6 +138,7 @@
 					stroke-linejoin="round"
 					filter={idx === 0 && lineShadow ? `url(#${shadowFilterId})` : undefined}
 					style={offset !== 0 ? styleToString({ transform: `translate(0, ${offset}px)` }) : undefined}
+					style:transform={geometry.snapTransform}
 					marker-start={idx === 0 ? (geometry.startMarkerRef ?? undefined) : undefined}
 					marker-end={idx === geometry.compoundOffsets.length - 1
 						? (geometry.endMarkerRef ?? undefined)

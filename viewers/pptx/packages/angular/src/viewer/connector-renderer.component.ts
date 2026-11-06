@@ -141,6 +141,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 							[attr.stroke-dasharray]="geo().dashArray ?? null"
 							[attr.stroke-linecap]="geo().strokeLinecap"
 							stroke-linejoin="round"
+							[style.transform]="geo().snapTransform"
 							[attr.transform]="strand.transform"
 							[attr.filter]="strand.shadowFilter"
 							[attr.marker-start]="strand.markerStart"
