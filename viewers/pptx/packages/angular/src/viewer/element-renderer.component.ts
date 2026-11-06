@@ -102,6 +102,8 @@ export class ElementRendererComponent {
 	 * so they don't pollute the contract selectors, mirroring React.
 	 */
 	readonly interactive = input<boolean>(true);
+	/** Whether this element is part of the current selection (media control bar). */
+	readonly selected = input<boolean>(false);
 
 	/**
 	 * Emit the `data-pptx-element` marker even though `interactive` is false:

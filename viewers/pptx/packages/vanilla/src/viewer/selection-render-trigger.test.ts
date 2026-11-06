@@ -6,6 +6,7 @@ import { selectionChangeNeedsStageRender } from './selection-render-trigger';
 const ELEMENTS = [
 	{ id: 'chart1', type: 'chart', x: 0, y: 0, width: 10, height: 10 },
 	{ id: 'table1', type: 'table', x: 0, y: 0, width: 10, height: 10 },
+	{ id: 'media1', type: 'media', x: 0, y: 0, width: 10, height: 10 },
 	{ id: 'shape1', type: 'shape', x: 0, y: 0, width: 10, height: 10 },
 ] as PptxElement[];
 
@@ -16,6 +17,11 @@ describe('selectionChangeNeedsStageRender', () => {
 		expect(
 			selectionChangeNeedsStageRender(['shape1'], ['shape1', 'chart1'], ELEMENTS),
 		).toBeTruthy();
+	});
+
+	it('re-renders when a media shape enters or leaves the selection (its control bar)', () => {
+		expect(selectionChangeNeedsStageRender([], ['media1'], ELEMENTS)).toBeTruthy();
+		expect(selectionChangeNeedsStageRender(['media1'], [], ELEMENTS)).toBeTruthy();
 	});
 
 	it('keeps the stage DOM when only non-chart elements change selection', () => {

@@ -22,10 +22,11 @@ function makeMedia(overrides: Partial<MediaPptxElement> = {}): MediaPptxElement 
 
 function mountMedia(
 	element: MediaPptxElement,
-	surface: { interactive?: boolean; presenting?: boolean } = {},
+	surface: { interactive?: boolean; presenting?: boolean; selected?: boolean } = {},
 ) {
 	return mount(ElementMediaBox, {
 		props: {
+			selected: surface.selected ?? false,
 			element,
 			mediaDataUrls: new Map<string, string>(),
 			zIndex: 1,
@@ -82,8 +83,8 @@ describe('elementMediaBox online video', () => {
 });
 
 describe('elementMediaBox native transport', () => {
-	it('paints one on the authoring canvas', () => {
-		expect(mountMedia(makeMedia()).find('video').attributes('controls')).toBeDefined();
+	it('paints none on the authoring canvas', () => {
+		expect(mountMedia(makeMedia()).find('video').attributes('controls')).toBeUndefined();
 	});
 
 	it('paints none during a show', () => {
@@ -100,6 +101,66 @@ describe('elementMediaBox native transport', () => {
 		// play.
 		const wrapper = mountMedia(makeMedia(), { interactive: false, presenting: false });
 		expect(wrapper.find('video').attributes('controls')).toBeUndefined();
+	});
+});
+
+/** Moves the pointer over (or away from) a 100x100 host box at the origin. */
+function pointerOver(host: HTMLElement, inside: boolean): void {
+	host.getBoundingClientRect = () => ({ left: 0, right: 100, top: 0, bottom: 100 }) as DOMRect;
+	document.dispatchEvent(
+		new MouseEvent('pointermove', { clientX: inside ? 50 : 500, clientY: 50 }),
+	);
+}
+
+describe('elementMediaBox PowerPoint control bar', () => {
+	const bar = (wrapper: ReturnType<typeof mountMedia>) =>
+		wrapper.element.querySelector<HTMLElement>('[data-pptx-media-bar]');
+
+	it('is hidden at rest and never replaces the picture gesture with native controls', async () => {
+		const wrapper = mountMedia(makeMedia());
+		await wrapper.vm.$nextTick();
+		expect(bar(wrapper)?.hidden).toBe(true);
+		expect(wrapper.find('video').attributes('controls')).toBeUndefined();
+		wrapper.unmount();
+	});
+
+	it('shows while hovered and while selected', async () => {
+		const wrapper = mountMedia(makeMedia());
+		await wrapper.vm.$nextTick();
+		pointerOver(wrapper.element as HTMLElement, true);
+		expect(bar(wrapper)?.hidden).toBe(false);
+		pointerOver(wrapper.element as HTMLElement, false);
+		expect(bar(wrapper)?.hidden).toBe(true);
+		await wrapper.setProps({ selected: true });
+		expect(bar(wrapper)?.hidden).toBe(false);
+		wrapper.unmount();
+	});
+
+	it('plays from the bar without the press reaching the shape', async () => {
+		const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+		const wrapper = mountMedia(makeMedia(), { selected: true });
+		await wrapper.vm.$nextTick();
+		const onDown = vi.fn();
+		wrapper.element.addEventListener('pointerdown', onDown);
+		const button = bar(wrapper)!.querySelector('button')!;
+		button.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+		button.click();
+		expect(onDown).not.toHaveBeenCalled();
+		expect(play).toHaveBeenCalled();
+		play.mockRestore();
+		wrapper.unmount();
+	});
+
+	it('is absent during a show and on a still of a slide', async () => {
+		for (const surface of [
+			{ interactive: false, presenting: true },
+			{ interactive: false, presenting: false },
+		]) {
+			const wrapper = mountMedia(makeMedia(), surface);
+			await wrapper.vm.$nextTick();
+			expect(bar(wrapper)).toBeNull();
+			wrapper.unmount();
+		}
 	});
 });
 

@@ -202,9 +202,7 @@ describe('the media transport during a show', () => {
 			expect(binding).toBe('showControls()');
 		}
 		// ...and the computed behind it is the shared predicate, not a local guess.
-		expect(source).toContain(
-			'mediaTransportVisible({ ...this.surface(), canvasTransport: false })',
-		);
+		expect(source).toContain('mediaTransportVisible(this.surface())');
 		expect(source).toContain('mediaSurfaceFor(this.interactive(), this.presenting())');
 	});
 });

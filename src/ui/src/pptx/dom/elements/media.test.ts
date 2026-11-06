@@ -85,7 +85,7 @@ describe('renderMediaElement', () => {
 		const video = node.querySelector<HTMLVideoElement>('video');
 		expect(video).toBeTruthy();
 		expect(video?.getAttribute('src')).toBe(MP4_DATA_URL);
-		expect(video?.controls).toBeTruthy();
+		expect(video?.controls).toBeFalsy();
 		expect(video?.getAttribute('poster')).toBe(PNG_DATA_URL);
 	});
 
@@ -125,7 +125,7 @@ describe('renderMediaElement', () => {
 		const audio = node.querySelector<HTMLAudioElement>('audio');
 		expect(audio).toBeTruthy();
 		expect(audio?.getAttribute('src')).toBe(MP3_DATA_URL);
-		expect(audio?.controls).toBeTruthy();
+		expect(audio?.controls).toBeFalsy();
 		expect(node.querySelector('video')).toBeNull();
 	});
 
@@ -245,7 +245,7 @@ describe('renderMediaElement', () => {
 				0,
 				makeContext(new Map(), false),
 			) as HTMLElement;
-			expect(edited.querySelector<HTMLVideoElement>('video')?.controls).toBeTruthy();
+			expect(edited.querySelector<HTMLVideoElement>('video')?.controls).toBeFalsy();
 		});
 
 		it('paints no transport on a STILL of a slide (a console pane or thumbnail)', () => {

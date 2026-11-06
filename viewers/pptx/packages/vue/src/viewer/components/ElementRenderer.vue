@@ -74,6 +74,8 @@ const props = defineProps<{
 	 * stage and presentation mode render without it.
 	 */
 	interactive?: boolean;
+	/** Whether this element is part of the current selection (media control bar). */
+	selected?: boolean;
 	/**
 	 * When true, emit the `data-pptx-element` marker even though `interactive` is
 	 * off. The main canvas sets this for template (master/layout) elements, which
@@ -427,6 +429,7 @@ const hitTargetStyle = useElementHitTargetStyle(
 		:media-data-urls="mediaDataUrls"
 		:z-index="zIndex"
 		:interactive="interactive"
+		:selected="selected"
 		:marked="marked"
 		:presenting="presenting"
 		:class="templateClass"

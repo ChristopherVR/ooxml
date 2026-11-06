@@ -39,6 +39,11 @@ export interface RenderMediaOptions {
 	preview?: boolean;
 	/** Callback fired when the media play/pause state changes. */
 	onPlayStateChange?: (isPlaying: boolean) => void;
+	/**
+	 * Authoring canvas only: mount PowerPoint's control bar (below the shape while
+	 * selected or hovered, none at rest). Omitted on a show and on every still.
+	 */
+	controlBar?: { selected: boolean };
 }
 
 // ---------------------------------------------------------------------------
@@ -127,6 +132,7 @@ export function renderMediaElement(
 					resolvedDataUrl={dataUrl}
 					isFullScreen={isFullScreen}
 					onPlayStateChange={options?.onPlayStateChange}
+					controlBar={options?.controlBar}
 				>
 					{({ mediaRef, onPlay }) => (
 						<VideoWithMetadata
@@ -161,6 +167,7 @@ export function renderMediaElement(
 					resolvedDataUrl={dataUrl}
 					isFullScreen={false}
 					onPlayStateChange={options?.onPlayStateChange}
+					controlBar={options?.controlBar}
 				>
 					{({ mediaRef, onPlay }) => (
 						<AudioWithMetadata

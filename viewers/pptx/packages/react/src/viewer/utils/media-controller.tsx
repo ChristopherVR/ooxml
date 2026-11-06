@@ -8,6 +8,7 @@ import type { MediaPptxElement } from 'pptx-viewer-core';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 
 import { useTranslation } from '../i18n/use-translation';
+import { useMediaControlBar } from './use-media-control-bar';
 
 // ---------------------------------------------------------------------------
 // PresentationMediaController: manages trim, fade, volume at runtime
@@ -36,6 +37,8 @@ interface PresentationMediaControllerProps {
 	isFullScreen: boolean;
 	/** Callback fired when media play/pause state changes. */
 	onPlayStateChange?: (isPlaying: boolean) => void;
+	/** Authoring canvas: the PowerPoint-style control bar, shown while selected or hovered. */
+	controlBar?: { selected: boolean };
 	children: (props: {
 		mediaRef: React.RefObject<HTMLVideoElement | HTMLAudioElement | null>;
 		onPlay: () => void;
@@ -50,11 +53,13 @@ export function PresentationMediaController({
 	resolvedDataUrl,
 	isFullScreen,
 	onPlayStateChange,
+	controlBar,
 	children,
 }: PresentationMediaControllerProps): React.ReactElement {
 	const { t } = useTranslation();
 	const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
 	const [isMediaPlaying, setIsMediaPlaying] = useState(false);
+	useMediaControlBar(mediaRef, controlBar !== undefined, controlBar?.selected === true);
 
 	const trimStartSec = element.trimStartMs !== undefined ? element.trimStartMs / 1000 : 0;
 	const hideWhenNotPlaying = isPresentationMode && element.hideWhenNotPlaying === true;

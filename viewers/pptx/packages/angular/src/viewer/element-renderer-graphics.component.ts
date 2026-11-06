@@ -55,6 +55,7 @@ export class ElementRendererGraphicsComponent {
 	readonly zIndex = input<number>(0);
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
 	readonly interactive = input<boolean>(true);
+	readonly selected = input<boolean>(false);
 	readonly editable = input<boolean>(false);
 	readonly presenting = input<boolean>(false);
 	readonly exposeElementId = input<boolean>(true);

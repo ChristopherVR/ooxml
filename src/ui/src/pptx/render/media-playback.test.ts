@@ -139,13 +139,11 @@ describe('mediaTransportVisible', () => {
 		).toBeFalsy();
 	});
 
-	it('leaves the authoring canvas to the binding', () => {
+	it('paints no transport on the authoring canvas unless asked', () => {
+		expect(mediaTransportVisible({ presenting: false, preview: false })).toBeFalsy();
 		expect(
 			mediaTransportVisible({ presenting: false, preview: false, canvasTransport: true }),
 		).toBeTruthy();
-		expect(
-			mediaTransportVisible({ presenting: false, preview: false, canvasTransport: false }),
-		).toBeFalsy();
 	});
 });
 

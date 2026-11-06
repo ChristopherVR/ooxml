@@ -1,4 +1,9 @@
-import { getGroupChildParentFill, mediaTransportVisible, oleActionsVisible } from 'ooxml-ui/pptx';
+import {
+	getGroupChildParentFill,
+	mediaControlBarEnabled,
+	mediaTransportVisible,
+	oleActionsVisible,
+} from 'ooxml-ui/pptx';
 import type {
 	ChartPptxElement,
 	ContentPartPptxElement,
@@ -173,12 +178,18 @@ export function renderBody(options: RenderBodyOptions): React.ReactNode {
 			showTransport: mediaTransportVisible({
 				presenting: isPresentationPassive === true,
 				preview: isStaticSurface === true,
-				canvasTransport: true,
 			}),
 			// ...and never the play badge / placeholder box either: a still is
 			// slide content, and the transition overlay paints one (issue #147).
 			preview: isStaticSurface === true,
 			onPlayStateChange: handleMediaPlayStateChange,
+			// PowerPoint's Normal view: a control bar while selected or hovered.
+			...(mediaControlBarEnabled({
+				presenting: isPresentationPassive === true,
+				preview: isStaticSurface === true,
+			})
+				? { controlBar: { selected: isSel === true } }
+				: {}),
 		});
 	}
 	if (doInk && isInkElement(el)) {

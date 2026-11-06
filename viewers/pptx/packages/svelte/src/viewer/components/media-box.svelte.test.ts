@@ -45,6 +45,8 @@ interface MountResult {
 	target: HTMLElement;
 	/** Reactively updates the mounted instance's `presenting` prop. */
 	setPresenting: (value: boolean) => void;
+	/** Reactively marks the element selected (the stage's `selectedElementIds`). */
+	setSelected: (value: boolean) => void;
 }
 
 function mountEl(
@@ -58,7 +60,14 @@ function mountEl(
 ): MountResult {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
-	const props = $state({ element, mediaDataUrls, zIndex: 2, presenting, interactive });
+	const props = $state({
+		element,
+		mediaDataUrls,
+		zIndex: 2,
+		presenting,
+		interactive,
+		selectedElementIds: [] as string[],
+	});
 	const instance = mount(ElementRenderer, { target, props });
 	flushSync();
 	cleanup = () => {
@@ -69,6 +78,10 @@ function mountEl(
 		target,
 		setPresenting: (value: boolean) => {
 			props.presenting = value;
+			flushSync();
+		},
+		setSelected: (value: boolean) => {
+			props.selectedElementIds = value ? [element.id] : [];
 			flushSync();
 		},
 	};
@@ -96,8 +109,16 @@ function mediaElement(overrides: Record<string, unknown>): PptxElement {
 	} as PptxElement;
 }
 
+/** Moves the pointer over (or away from) a 100x100 host box at the origin. */
+function pointerOver(host: HTMLElement, inside: boolean): void {
+	host.getBoundingClientRect = () => ({ left: 0, right: 100, top: 0, bottom: 100 }) as DOMRect;
+	document.dispatchEvent(
+		new MouseEvent('pointermove', { clientX: inside ? 50 : 500, clientY: 50 }),
+	);
+}
+
 describe('mediaBox', () => {
-	it('renders a native <video> with controls and poster from embedded data', () => {
+	it('renders a native <video> without controls, with poster from embedded data', () => {
 		const { target } = mountEl(
 			mediaElement({ mediaType: 'video', mediaData: MP4_DATA_URL, posterFrameData: PNG_DATA_URL }),
 		);
@@ -109,7 +130,7 @@ describe('mediaBox', () => {
 		const video = container?.querySelector<HTMLVideoElement>('video');
 		expect(video).toBeTruthy();
 		expect(video?.getAttribute('src')).toBe(MP4_DATA_URL);
-		expect(video?.hasAttribute('controls')).toBeTruthy();
+		expect(video?.hasAttribute('controls')).toBeFalsy();
 		expect(video?.getAttribute('poster')).toBe(PNG_DATA_URL);
 	});
 
@@ -122,12 +143,12 @@ describe('mediaBox', () => {
 		expect(target.querySelector('video')?.getAttribute('src')).toBe('blob:movie');
 	});
 
-	it('renders a native <audio controls> for audio media', () => {
+	it('renders a native <audio> for audio media', () => {
 		const { target } = mountEl(mediaElement({ mediaType: 'audio', mediaData: MP3_DATA_URL }));
 		const audio = target.querySelector<HTMLAudioElement>('audio');
 		expect(audio).toBeTruthy();
 		expect(audio?.getAttribute('src')).toBe(MP3_DATA_URL);
-		expect(audio?.hasAttribute('controls')).toBeTruthy();
+		expect(audio?.hasAttribute('controls')).toBeFalsy();
 		expect(target.querySelector('video')).toBeNull();
 	});
 
@@ -225,6 +246,43 @@ describe('mediaBox', () => {
 	 * "the video never started". Volume and playbackRate are IDL properties with
 	 * no attribute form, so they can only be asserted on the live node.
 	 */
+	describe('PowerPoint control bar', () => {
+		const bar = (target: HTMLElement) => target.querySelector<HTMLElement>('[data-pptx-media-bar]');
+		const video = () => mediaElement({ mediaType: 'video', mediaData: MP4_DATA_URL });
+
+		it('is hidden at rest, shows on hover and on selection, native controls stay off', () => {
+			const { target, setSelected } = mountEl(video());
+			expect(bar(target)?.hidden).toBe(true);
+			expect(target.querySelector('video')?.hasAttribute('controls')).toBeFalsy();
+			const host = target.querySelector('video')!.parentElement!;
+			pointerOver(host, true);
+			expect(bar(target)?.hidden).toBe(false);
+			pointerOver(host, false);
+			expect(bar(target)?.hidden).toBe(true);
+			setSelected(true);
+			expect(bar(target)?.hidden).toBe(false);
+		});
+
+		it('plays from the bar without the press reaching the shape', () => {
+			const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+			const { target, setSelected } = mountEl(video());
+			setSelected(true);
+			const onDown = vi.fn();
+			target.querySelector('video')!.parentElement!.addEventListener('pointerdown', onDown);
+			const button = bar(target)!.querySelector('button')!;
+			button.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+			button.click();
+			expect(onDown).not.toHaveBeenCalled();
+			expect(play).toHaveBeenCalled();
+		});
+
+		it('is absent during a show and on a still of a slide', () => {
+			expect(bar(mountEl(video(), new Map(), true, false).target)).toBeNull();
+			cleanup?.();
+			expect(bar(mountEl(video(), new Map(), false, false).target)).toBeNull();
+		});
+	});
+
 	describe('authored playback settings', () => {
 		it('loops a video the deck marked loop, and only that one', () => {
 			expect(

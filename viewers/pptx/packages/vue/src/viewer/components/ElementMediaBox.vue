@@ -18,10 +18,12 @@ import {
 	mediaPlaybackAttributes,
 	mediaSurfaceOf,
 	mediaTransportVisible,
+	mediaControlBarEnabled,
+	attachMediaControlBar,
 	scheduleMediaTrimAndFade,
 	startMediaAutoplay,
 } from 'ooxml-ui/pptx';
-import type { MediaPlaybackSource, MediaTrimFadeSource } from 'ooxml-ui/pptx';
+import type { MediaControlBar, MediaPlaybackSource, MediaTrimFadeSource } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
@@ -37,6 +39,8 @@ const props = defineProps<{
 	mediaDataUrls: Map<string, string>;
 	zIndex: number;
 	interactive?: boolean;
+	/** Whether the element is selected: PowerPoint's media control bar shows then. */
+	selected?: boolean;
 	/** Emit the data-pptx-element marker even when not interactive (template layer). */
 	marked?: boolean;
 	/**
@@ -213,9 +217,35 @@ const surface = computed(() =>
 	}),
 );
 
-const showControls = computed(() =>
-	mediaTransportVisible({ ...surface.value, canvasTransport: true }),
+const showControls = computed(() => mediaTransportVisible(surface.value));
+
+/**
+ * PowerPoint's Normal view: no transport at rest, a control bar below the shape
+ * while it is selected or hovered. The bar is the shared `attachMediaControlBar`
+ * mounted on the element box; native controls stay off so a click on the
+ * picture still selects or moves it.
+ */
+let controlBar: MediaControlBar | null = null;
+watch(
+	() => [mediaEl.value, mediaControlBarEnabled(surface.value)] as const,
+	([media, enabled]) => {
+		controlBar?.dispose();
+		controlBar = null;
+		const host = media?.parentElement;
+		if (media && enabled && host) {
+			controlBar = attachMediaControlBar(host, media, {
+				t,
+				selected: props.selected === true,
+			});
+		}
+	},
+	{ flush: 'post' },
 );
+watch(
+	() => props.selected,
+	(selected) => controlBar?.setSelected(selected === true),
+);
+onBeforeUnmount(() => controlBar?.dispose());
 
 /**
  * What to paint when no `<video>`/`<audio>` can be mounted.

@@ -39,11 +39,15 @@
 		mediaPlaybackAttributes,
 		mediaSurfaceOf,
 		mediaTransportVisible,
+		mediaControlBarEnabled,
+		attachMediaControlBar,
 		scheduleMediaTrimAndFade,
 		shouldRenderHitTarget,
 		shouldShowMediaFullscreenStopButton,
 		startMediaAutoplay,
 	} from 'ooxml-ui/pptx';
+	import type { MediaControlBar } from 'ooxml-ui/pptx';
+	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';
 	import { registerCrossSlideAudio, resolveMediaView } from '../render';
@@ -58,6 +62,7 @@
 		interactive = false,
 		marked = false,
 		editable = false,
+		selectedElementIds,
 	}: ElementRendererProps = $props();
 	const t = useTranslator();
 
@@ -99,7 +104,7 @@
 	// alone painted Chrome's scrubber across those too: the console drew a
 	// control bar over a slide the speaker cannot play. The rule is shared.
 	const surface = $derived(mediaSurfaceOf({ interactive, presenting }));
-	const showControls = $derived(mediaTransportVisible({ ...surface, canvasTransport: true }));
+	const showControls = $derived(mediaTransportVisible(surface));
 
 	/**
 	 * What to paint when no `<video>`/`<audio>` can be mounted.
@@ -129,6 +134,29 @@
 	// branches (same pattern as Model3dView's `sceneHost`).
 	// eslint-disable-next-line prefer-const, no-unassigned-vars
 	let mediaEl: HTMLVideoElement | HTMLAudioElement | undefined = $state();
+
+	// PowerPoint's Normal view: no transport at rest, a control bar below the
+	// shape while it is selected or hovered. The bar is the shared
+	// `attachMediaControlBar` mounted on the element box, so a click on the
+	// picture still selects or moves it.
+	const selected = $derived(selectedElementIds?.includes(element.id) ?? false);
+	let controlBar: MediaControlBar | undefined;
+	$effect(() => {
+		const el = mediaEl;
+		const host = el?.parentElement;
+		if (!el || !host || !mediaControlBarEnabled(surface)) {
+			return;
+		}
+		const bar = attachMediaControlBar(host, el, { t, selected: untrack(() => selected) });
+		controlBar = bar;
+		return () => {
+			bar.dispose();
+			controlBar = undefined;
+		};
+	});
+	$effect(() => {
+		controlBar?.setSelected(selected);
+	});
 
 	$effect(() => {
 		const el = mediaEl;

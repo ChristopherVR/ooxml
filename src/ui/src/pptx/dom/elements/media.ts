@@ -12,6 +12,8 @@ import {
 	mediaPlaybackAttributes,
 	mediaSurfaceOf,
 	mediaTransportVisible,
+	mediaControlBarEnabled,
+	attachMediaControlBar,
 	registerCrossSlideAudio,
 	scheduleMediaTrimAndFade,
 	startMediaAutoplay,
@@ -92,7 +94,20 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 		interactive: context.interactive === true || context.reading === true,
 		presenting: context.presenting,
 	});
-	const showTransport = mediaTransportVisible({ ...surface, canvasTransport: true });
+	const showTransport = mediaTransportVisible({
+		...surface,
+		canvasTransport: context.reading === true,
+	});
+	// PowerPoint's Normal view: no transport at rest, a control bar below the
+	// shape while it is selected or hovered (shared with the other bindings).
+	const attachAuthoringBar = (host: HTMLElement, media: HTMLMediaElement): void => {
+		if (mediaControlBarEnabled({ ...surface, reading: context.reading === true })) {
+			attachMediaControlBar(host, media, {
+				t: context.t,
+				selected: context.selectedElementIds?.has(element.id) === true,
+			});
+		}
+	};
 	const doc = context.document;
 	const baseStyle = getContainerStyle(element, zIndex);
 	const el = createEl(doc, 'div', 'pptxv-element pptxv-media', baseStyle);
@@ -143,6 +158,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 		}
 		el.appendChild(video);
 		applyMediaPresentingState(video, context.presenting, element);
+		attachAuthoringBar(el, video);
 		wireMediaFullscreenOverlay(doc, el, video, element, context, baseStyle);
 		return el;
 	}
@@ -162,6 +178,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 			return el;
 		}
 		applyMediaPresentingState(audio, context.presenting, element);
+		attachAuthoringBar(el, audio);
 		wireMediaFullscreenOverlay(doc, el, audio, element, context, baseStyle);
 		return el;
 	}

@@ -1495,6 +1495,7 @@ export * from './smartart-reflow-element';
 // + swallowed autoplay-blocked rejection) each binding calls when present mode
 // makes a media element's slide the live surface.
 export * from './media-playback';
+export * from './media-control-bar';
 // `fullScrn` full-slide playback overlay trigger + style descriptor (issue
 // wave item 10): split out of media-playback.ts (file-size cap) so all five
 // bindings' `<video>`/`<audio>` play/pause listeners share one decision.

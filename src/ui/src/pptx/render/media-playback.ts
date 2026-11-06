@@ -112,13 +112,13 @@ export function mediaSurfaceOf(input: { interactive: boolean; presenting: boolea
 /** {@link MediaSurface} plus the one answer each binding owns for itself. */
 export interface MediaTransportSurface extends MediaSurface {
 	/**
-	 * What the binding would do on its own AUTHORING canvas, which the five
-	 * deliberately differ on: React paints a transport there, Angular suppresses
-	 * it so a click selects the shape instead, Vue paints one but makes it inert.
-	 * That difference is not this function's business; it only overrides the
-	 * answer on the two surfaces where PowerPoint never paints a transport.
+	 * Whether the AUTHORING canvas paints a transport. Defaults to false, the
+	 * same as PowerPoint's editor (a click there selects or moves the picture, a
+	 * scrubber would only steal the gesture; the hover and selection bar is the shared
+	 * `media-control-bar`). The five bindings used to differ
+	 * here and the editor surfaces disagreed; only the reading view passes `true`.
 	 */
-	canvasTransport: boolean;
+	canvasTransport?: boolean;
 }
 
 /**
@@ -137,7 +137,7 @@ export function mediaTransportVisible(surface: MediaTransportSurface): boolean {
 	if (surface.presenting || surface.preview) {
 		return false;
 	}
-	return surface.canvasTransport;
+	return surface.canvasTransport === true;
 }
 
 /** What a media element has to fall back on when it cannot mount a player. */

@@ -8,6 +8,7 @@ import {
 	inject,
 	input,
 	signal,
+	untracked,
 	viewChild,
 } from '@angular/core';
 import type { SafeResourceUrl } from '@angular/platform-browser';
@@ -24,11 +25,13 @@ import {
 	mediaFallbackIcon,
 	mediaFallbackLabelKey,
 	mediaTransportVisible,
+	mediaControlBarEnabled,
+	attachMediaControlBar,
 	scheduleMediaTrimAndFade,
 	shouldRenderHitTarget,
 	startMediaAutoplay,
 } from 'ooxml-ui/pptx';
-import type { MediaFallbackVisual, MediaSurface } from 'ooxml-ui/pptx';
+import type { MediaControlBar, MediaFallbackVisual, MediaSurface } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxMediaType } from 'pptx-viewer-core';
 
 import { getClrChangeParams } from './color-changed-image-helpers';
@@ -298,6 +301,8 @@ export class MediaRendererComponent {
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
 	readonly zIndex = input<number>(0);
 	readonly interactive = input<boolean>(true);
+	/** Whether the element is selected: PowerPoint's media control bar shows then. */
+	readonly selected = input<boolean>(false);
 	/** Keep the data-pptx-element marker on interaction-locked template elements. */
 	readonly marked = input<boolean>(false);
 	/**
@@ -343,6 +348,32 @@ export class MediaRendererComponent {
 	private readonly mediaElRef = viewChild<ElementRef<HTMLMediaElement>>('mediaEl');
 
 	constructor() {
+		// PowerPoint's Normal view: no transport at rest, a control bar below the
+		// shape while it is selected or hovered. The bar is the shared
+		// `attachMediaControlBar`, mounted on the element box (the media's parent)
+		// so a click on the picture still selects or moves it.
+		let controlBar: MediaControlBar | undefined;
+		effect((onCleanup) => {
+			const el = this.mediaElRef()?.nativeElement;
+			const host = el?.parentElement;
+			if (!el || !host || !mediaControlBarEnabled(this.surface())) {
+				return;
+			}
+			const bar = attachMediaControlBar(host, el, {
+				t: (key) => this.translate.instant(key) as string,
+				selected: untracked(() => this.selected()),
+			});
+			controlBar = bar;
+			onCleanup(() => {
+				bar.dispose();
+				controlBar = undefined;
+			});
+		});
+		effect(() => {
+			const selected = this.selected();
+			controlBar?.setSelected(selected);
+		});
+
 		// Presentation autoplay: once the media node is in the DOM and this is the
 		// live stage, start playback; pause again if it leaves present mode. Reads
 		// mediaSrc so a source swap re-evaluates. The shared helper owns the
@@ -445,15 +476,10 @@ export class MediaRendererComponent {
 	/**
 	 * Whether to paint the browser's native transport.
 	 *
-	 * `canvasTransport: false` is this binding's own long-standing answer for its
-	 * authoring canvas: a click there selects or moves the picture, so a scrubber
-	 * would only steal the gesture (the element also carries `pptx-ng-media-inert`
-	 * for the same reason). React paints one on its canvas; that difference is
-	 * deliberate and is the only thing the shared rule leaves to the binding.
+	 * No transport on the authoring canvas (shared rule, same as every binding
+	 * and PowerPoint's editor): a click there selects or moves the picture.
 	 */
-	readonly showControls = computed<boolean>(() =>
-		mediaTransportVisible({ ...this.surface(), canvasTransport: false }),
-	);
+	readonly showControls = computed<boolean>(() => mediaTransportVisible(this.surface()));
 
 	/**
 	 * Which surface this renderer is painting on: the live show stage, a STILL of

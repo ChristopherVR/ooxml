@@ -259,6 +259,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 			:edge-bleed="edgeBleeds.get(element.id)"
 			:interactive="interactive ?? false"
 			:presenting="presenting ?? false"
+			:selected="selectedElementIds?.includes(element.id) ?? false"
 			:inline-editing-element-id="inlineEditingElementId"
 		/>
 		<!-- Optional editing overlay (selection handles, etc.) shares this scaled space -->
