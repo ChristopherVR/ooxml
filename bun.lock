@@ -610,6 +610,8 @@
     "viewers/docx/docs": {
       "name": "docx-viewer-docs",
       "devDependencies": {
+        "@fontsource-variable/bricolage-grotesque": "5.3.0",
+        "@fontsource/ibm-plex-mono": "5.3.0",
         "vitepress": "^2.0.0-alpha.21",
       },
     },
@@ -803,6 +805,8 @@
       "name": "pptx-viewer-docs",
       "version": "1.0.0",
       "devDependencies": {
+        "@fontsource-variable/bricolage-grotesque": "5.3.0",
+        "@fontsource/ibm-plex-mono": "5.3.0",
         "vitepress": "^2.0.0-alpha.21",
       },
     },
@@ -1400,6 +1404,8 @@
         "@christophervr/visio-viewer": "workspace:*",
       },
       "devDependencies": {
+        "@fontsource-variable/bricolage-grotesque": "5.3.0",
+        "@fontsource/ibm-plex-mono": "5.3.0",
         "vitepress": "^2.0.0-alpha.21",
       },
     },
@@ -1570,6 +1576,8 @@
     "viewers/xlsx/docs": {
       "name": "xlsx-viewer-docs",
       "devDependencies": {
+        "@fontsource-variable/bricolage-grotesque": "5.3.0",
+        "@fontsource/ibm-plex-mono": "5.3.0",
         "vitepress": "^2.0.0-alpha.21",
       },
     },
@@ -1893,6 +1901,10 @@
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
 
     "@exodus/bytes": ["@exodus/bytes@1.16.0", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA=="],
+
+    "@fontsource-variable/bricolage-grotesque": ["@fontsource-variable/bricolage-grotesque@5.3.0", "", {}, "sha512-TLi9Q4hJjS2UvoTMRSS2nHu6c4R56lAw60NR9QYtVRCHn0XtsFpiEhNffZ8Glsoxu6wEEwLKBP8lb94J52PNBA=="],
+
+    "@fontsource/ibm-plex-mono": ["@fontsource/ibm-plex-mono@5.3.0", "", {}, "sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q=="],
 
     "@harperfast/extended-iterable": ["@harperfast/extended-iterable@1.0.3", "", {}, "sha512-sSAYhQca3rDWtQUHSAPeO7axFIUJOI6hn1gjRC5APVE1a90tuyT8f5WIgRsFhhWA7htNkju2veB9eWL6YHi/Lw=="],
 

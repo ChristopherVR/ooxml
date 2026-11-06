@@ -11,6 +11,8 @@
 		"@christophervr/visio-viewer": "workspace:*"
 	},
 	"devDependencies": {
+		"@fontsource-variable/bricolage-grotesque": "5.3.0",
+		"@fontsource/ibm-plex-mono": "5.3.0",
 		"vitepress": "^2.0.0-alpha.21"
 	}
 }
