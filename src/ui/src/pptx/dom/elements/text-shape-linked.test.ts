@@ -6,8 +6,10 @@ import type { ElementRenderContext } from '../types';
 import { renderTextShapeElement } from './text-shape';
 
 /**
- * `a:linkedTxbx` overflow: a text box in a linked chain paints only the slice of
- * the chain's text that the boxes before it could not hold.
+ * `a:linkedTxbx` in a slide: PowerPoint ignores it (it is Word's `wps:linkedTxbx`
+ * construct). Measured with COM `Slide.Export`: the head box keeps its whole text,
+ * overflowing unclipped, and every successor box stays empty. The vanilla renderer
+ * follows the shared default (`linked-text-box-overflow.ts`, flow off).
  *
  * Vanilla needs no plumbing for this: the slide being painted is already on the
  * render context, so these tests drive the real renderer with the real context
@@ -57,16 +59,14 @@ function body(node: HTMLElement): HTMLElement | null {
 }
 
 describe('renderTextShapeElement linked text box overflow', () => {
-	it('renders only the head box slice in the head box', () => {
+	it('keeps the whole chain text in the head box, as PowerPoint does', () => {
 		const [head] = chainElements();
-		expect(render(head, chainElements()).textContent).toBe('ABC');
+		expect(render(head, chainElements()).textContent).toBe('ABCDEFGHIJ');
 	});
 
-	it('flows the overflow into the successor box', () => {
+	it('leaves the successor box empty, as PowerPoint does', () => {
 		const [, tail] = chainElements();
-		// The tail authors no text of its own; everything it shows comes from the
-		// chain. Before this wiring the tail rendered nothing at all.
-		expect(render(tail, chainElements()).textContent).toBe('DEFGHIJ');
+		expect(render(tail, chainElements()).textContent).toBe('');
 	});
 
 	it('never paints the same run in two boxes of the chain', () => {
@@ -77,9 +77,9 @@ describe('renderTextShapeElement linked text box overflow', () => {
 		expect(painted).toBe('ABCDEFGHIJ');
 	});
 
-	it('clips a chain member so its overflow cannot spill on top of the next box', () => {
+	it('does not clip the head box: PowerPoint lets its overflow spill', () => {
 		const [head] = chainElements();
-		expect(body(render(head, chainElements()))?.style.overflow).toBe('hidden');
+		expect(body(render(head, chainElements()))?.style.overflow).toBe('visible');
 	});
 
 	it('leaves an ordinary text box unclipped and untouched', () => {
