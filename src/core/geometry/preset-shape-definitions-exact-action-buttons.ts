@@ -11,8 +11,8 @@
  * Every glyph is placed relative to the centre `(hc, vc)` and scaled by `ss`;
  * the numbers below are points on a 90 pt `ss`, written once and turned into
  * guides here. The ECMA glyphs are polygons built on `dx2 = ss * 3 / 8`
- * (33.75); curved ones (the question mark) are a polyline through the measured
- * outline, not the specification's Bezier chain.
+ * (33.75); the question mark is a chain of elliptical arcs fitted to PowerPoint's
+ * raster of a large button.
  */
 
 import type { PresetPath, PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
@@ -102,85 +102,26 @@ const triangle = (g: Glyph, dir: 1 | -1): string =>
 		[-D * dir, D],
 	]);
 
-// the question mark outline, measured (points of a 90 pt ss)
-const QUESTION: Pt[] = [
-	[-4.8, -33.7],
-	[-6.3, -31.5],
-	[-7.8, -31.5],
-	[-12.3, -28.5],
-	[-14.5, -28.5],
-	[-15.3, -27.7],
-	[-15.3, -25.5],
-	[-18.3, -21],
-	[-19, -17.2],
-	[-20.5, -16.5],
-	[-20.5, -12.7],
-	[-19, -12.7],
-	[-18.3, -14.2],
-	[-10.8, -14.2],
-	[-10, -13.5],
-	[-8.5, -13.5],
-	[-9.3, -17.2],
-	[-7.8, -19.5],
-	[-4, -22.5],
-	[-3.3, -21.7],
-	[-1.8, -21.7],
-	[-1, -23.2],
-	[0.5, -23.2],
-	[1.2, -21.7],
-	[2.7, -21.7],
-	[3.5, -22.5],
-	[8, -18.7],
-	[8.7, -17.2],
-	[8, -16.5],
-	[8, -15],
-	[9.5, -14.2],
-	[9.5, -13.5],
-	[8, -12.7],
-	[8.7, -9.7],
-	[5, -6],
-	[2, -6],
-	[-2.5, -2.2],
-	[-3.3, 0.8],
-	[-5.5, 2.3],
-	[-4.8, 6.8],
-	[-6.3, 7.5],
-	[-6.3, 18],
-	[-4.8, 18],
-	[-4, 17.3],
-	[4.2, 17.3],
-	[4.2, 6.8],
-	[6.5, 5.3],
-	[6.5, 3.8],
-	[8, 3],
-	[8, 1.5],
-	[8.7, 0.8],
-	[13.2, 0],
-	[17, -4.5],
-	[18.5, -4.5],
-	[18.5, -6],
-	[17.7, -6.7],
-	[18.5, -8.2],
-	[18.5, -15],
-	[20, -15.7],
-	[20, -18],
-	[17.7, -19.5],
-	[17.7, -21],
-	[15.5, -24.7],
-	[15.5, -27],
-	[14, -27],
-	[13.2, -27.7],
-	[13.2, -29.2],
-	[9.5, -30],
-	[8.7, -30.7],
-	[8.7, -32.2],
-	[5.7, -31.5],
-	[4.2, -33.7],
-	[2.7, -33.7],
-	[2, -32.2],
-	[-2.5, -32.2],
-	[-3.3, -33.7],
-];
+// The question mark is built from elliptical arcs, measured on a 500 pt button
+// (fractions of ss, centred on the button): the hook is a half circle of outer
+// radius .214 and inner radius .107 round (0, -.162), continued by quarter
+// ellipses that bring the stroke down to the stem (width .106, bottom at .187).
+const U = 90;
+const question = (g: Glyph): string => {
+	const x = (v: number) => g.x(v * U);
+	const y = (v: number) => g.y(v * U);
+	const r = (v: number) => g.len(v * U);
+	return [
+		`M ${x(-0.214)} ${y(-0.162)} A ${r(0.214)} ${r(0.2125)} 10800000 10800000`,
+		`A ${r(0.108)} ${r(0.162)} 0 5400000`,
+		`A ${r(0.053)} ${r(0.085)} 16200000 -5400000`,
+		`L ${x(0.053)} ${y(0.187)} L ${x(-0.053)} ${y(0.187)} L ${x(-0.053)} ${y(0.08)}`,
+		`A ${r(0.108)} ${r(0.16)} 10800000 5400000`,
+		`A ${r(0.052)} ${r(0.082)} 5400000 -5400000`,
+		`A ${r(0.107)} ${r(0.1065)} 0 -10800000`,
+		`L ${x(-0.214)} ${y(-0.162)} Z`,
+	].join(' ');
+};
 
 const MOVIE: Pt[] = [
 	[-33.75, -16.5],
@@ -293,8 +234,8 @@ const buttons: Record<string, PresetShapeGeometryDefinition> = {
 		),
 	]),
 	actionButtonHelp: build('actionButtonHelp', (g) => [
-		darken(g.poly(QUESTION)),
-		darken(g.circle(-0.2, 27.4, 7)),
+		darken(question(g)),
+		darken(g.circle(0, 0.295 * U, 0.08 * U)),
 	]),
 	actionButtonInformation: build('actionButtonInformation', (g) => [
 		darken(g.circle(0, 0.4, 34)),
