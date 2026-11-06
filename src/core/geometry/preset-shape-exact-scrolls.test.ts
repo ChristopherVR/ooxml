@@ -78,3 +78,26 @@ describe('funnel', () => {
 		expect((x1 - x0) / (y1 - y0)).toBeLessThan(1.0);
 	});
 });
+
+describe('scroll swirl shading', () => {
+	// 1000 x 1000 box at adj 25000: ch = 250. Measured on PowerPoint 16: the curl
+	// is the roll disc without its upper right quadrant plus the inner half
+	// circle, and the top roll a quarter disc joined to the inner half circle.
+	const faces = (name: string, adj: number) =>
+		evaluatePresetShape(name, 1000, 1000, { adj })!
+			.paths.filter((f) => f.fill === 'darkenLess')
+			.map((f) => f.d);
+
+	it('shades verticalScroll with the spec swirl, not a full disc', () => {
+		expect(faces('verticalScroll', 25000)).toEqual([
+			'M 250 875 A 125 125 0 0 1 125 1000 A 125 125 0 0 1 125 750 A 62.5 62.5 0 0 1 125 875 Z ' +
+				'M 500 125 A 125 125 0 0 1 375 250 A 62.5 62.5 0 0 1 375 125 Z',
+		]);
+	});
+
+	it('turns the swirl about the diagonal for horizontalScroll', () => {
+		const [d] = faces('horizontalScroll', 25000);
+		expect(d).toContain('M 875 250 A 125 125 0 0 0 1000 125');
+		expect(d).toContain('M 125 500 A 125 125 0 0 0 250 375');
+	});
+});

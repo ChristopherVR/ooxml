@@ -33,10 +33,14 @@ const verticalScroll = exactDef(
 			'M ch ch2 A ch2 ch2 10800000 5400000 L x6 t A ch2 ch2 16200000 10800000 L x4 ch ' +
 				'L x4 y4 A ch2 ch2 0 5400000 L ch2 b A ch2 ch2 5400000 10800000 L ch y3 Z',
 		),
-		p('M l y4 A ch2 ch2 10800000 21600000 Z M xsw cy3 A ch4 ch4 0 21600000 Z', {
-			fill: 'darkenLess',
-			stroke: false,
-		}),
+		p(
+			'M ch y4 A ch2 ch2 0 5400000 A ch2 ch2 5400000 10800000 A ch4 ch4 16200000 10800000 Z ' +
+				'M x3b ch2 A ch2 ch2 0 5400000 A ch4 ch4 5400000 10800000 Z',
+			{
+				fill: 'darkenLess',
+				stroke: false,
+			},
+		),
 		p(
 			'M x3 t A ch2 ch2 16200000 10800000 L x4 ch M ch2 y4 L ch y4 ' +
 				'M x3b ch2 L x3 ch2 A ch4 ch4 16200000 -10800000',
@@ -55,10 +59,14 @@ const horizontalScroll = exactDef(
 			'M ch2 ch A ch2 ch2 16200000 -5400000 L l x6 A ch2 ch2 10800000 -10800000 L ch x4 ' +
 				'L y4 x4 A ch2 ch2 5400000 -5400000 L r ch2 A ch2 ch2 0 -10800000 L y3 ch Z',
 		),
-		p('M y4 t A ch2 ch2 16200000 21600000 Z M ch cyw A ch4 ch4 0 21600000 Z', {
-			fill: 'darkenLess',
-			stroke: false,
-		}),
+		p(
+			'M y4 ch A ch2 ch2 5400000 -5400000 A ch2 ch2 0 -10800000 A ch4 ch4 10800000 -10800000 Z ' +
+				'M ch2 x3b A ch2 ch2 5400000 -5400000 A ch4 ch4 0 -10800000 Z',
+			{
+				fill: 'darkenLess',
+				stroke: false,
+			},
+		),
 		p(
 			'M l x3 A ch2 ch2 10800000 -10800000 L ch x4 M y4 ch2 L y4 ch ' +
 				'M ch2 x3b L ch2 x3 A ch4 ch4 10800000 10800000',
