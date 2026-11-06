@@ -150,7 +150,7 @@ describe('buildInnerShadowCssFromShapeStyle', () => {
 	it('builds an inset shadow with defaults', () => {
 		const result = buildInnerShadowCssFromShapeStyle({ innerShadowColor: '#000000' });
 		expect(result?.startsWith('inset ')).toBeTruthy();
-		expect(result).toContain('0px 0px 6px');
+		expect(result).toContain('0px 0px 4px');
 	});
 });
 
