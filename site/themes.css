@@ -153,3 +153,15 @@ legend:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 #theme-picker {
 	padding: 7px;
 }
+.font-downloads label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 8px;
+	font-weight: 400;
+}
+.font-downloads input[type='url'] {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0 0 10px;
+}

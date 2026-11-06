@@ -4,6 +4,7 @@ import { editorColors, applyOfficeTheme } from './theme-tokens.js';
 import { setEditorReadOnly } from './editor-read-only.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { download } from './ui.js';
+import { googleFontsOption } from './font-downloads.js';
 export function preloadEditor(kind) {
 	const loaders = {
 		pptx: () => import('pptx-vanilla-viewer'),
@@ -22,7 +23,10 @@ export async function mountEditor(host, doc, changed, command) {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
 		let loading = true;
 		let loadFailed = false;
+		const googleFonts = googleFontsOption();
 		const viewer = createPptxViewer(host, {
+			// Settings > Fonts and privacy; unset keeps the viewer's own Trust Center choice.
+			...(googleFonts === undefined ? {} : { googleFonts }),
 			fileName: doc.name,
 			editable: !accessReadOnly,
 			// The suite owns cloud/Teams sharing; the viewer's separate collaboration invite is not cloud sync.

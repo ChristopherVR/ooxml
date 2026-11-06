@@ -1,5 +1,6 @@
 import { $, choose } from './ui.js';
 import { applyOfficeTheme, applyPowerPointTheme } from './theme-tokens.js';
+import { fontDownloadsFieldset, readFontDownloadsForm } from './font-downloads.js';
 
 /** Each accent: its name, the light-mode value and the dark-mode value. */
 const accents = {
@@ -89,8 +90,12 @@ export function mountThemes() {
 			)
 			.join(
 				'',
-			)}</div></fieldset><p class="theme-hint">Documents keep their own colours. The appearance changes the workspace around them.</p><button class="primary">Done</button>`;
-		form.onchange = () => {
+			)}</div></fieldset><p class="theme-hint">Documents keep their own colours. The appearance changes the workspace around them.</p>${fontDownloadsFieldset()}<button class="primary">Done</button>`;
+		form.onchange = (event) => {
+			if (event.target?.closest?.('.font-downloads')) {
+				readFontDownloadsForm(form);
+				return;
+			}
 			const data = new FormData(form);
 			preferences = { mode: data.get('mode'), accent: data.get('accent') };
 			try {
@@ -102,6 +107,6 @@ export function mountThemes() {
 			event.preventDefault();
 			$('dialog').close();
 		};
-		choose('Appearance', form);
+		choose('Settings', form);
 	};
 }
