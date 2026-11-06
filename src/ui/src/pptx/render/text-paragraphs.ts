@@ -23,6 +23,7 @@ import { getSubstituteFontFamily, hasTextProperties, parsePanoseString } from 'o
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
 import { resolveParagraphBullet, resolveParagraphIndent } from './bullet-list';
 import { applyParagraphBaselineShift } from './paragraph-baseline';
+import { bodyTopOf } from './text-body-top-snap';
 import { armBaselineSettle } from './paragraph-baseline-settle';
 import { getKinsokuLineBreakStyles } from './kinsoku-styles';
 import { resolveParagraphGeometryOverrides } from './paragraph-geometry-overrides';
@@ -134,6 +135,7 @@ export function buildParagraphs(
 	// Only used to measure the run for its PowerPoint metric compensation, so it
 	// mirrors what `buildTextBlockStyle` declares on the block itself.
 	const blockFont = resolveBlockFont(element.textStyle, fontScale);
+	const bodyTop = bodyTopOf(element);
 	// The body's own `a:ea`/`a:cs`/`a:sym` faces and `a:tabLst`, for a run that
 	// declares none of its own (see `paragraph-run-enrich`).
 	const blockScriptStyle = element.textStyle;
@@ -297,7 +299,7 @@ export function buildParagraphs(
 			if (Object.keys(paragraphStyle).length > 0) {
 				para.paragraphStyle = paragraphStyle;
 			}
-			applyParagraphBaselineShift(para, bodyStyle, blockFont);
+			applyParagraphBaselineShift(para, bodyStyle, blockFont, undefined, bodyTop);
 			if (para.baselineProvisional) {
 				armBaselineSettle();
 			}

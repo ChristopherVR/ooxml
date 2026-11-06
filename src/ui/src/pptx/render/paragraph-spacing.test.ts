@@ -30,7 +30,8 @@ describe('resolveParagraphSpacing', () => {
 				paraProps: { lineSpacingExactPt: 12.86, paragraphSpacingAfter: 4 },
 				bodyStyle,
 			}),
-		).toEqual({ lineHeight: `${(12.86 * 96) / 72}px`, runLineHeight: 0, spaceAfterPx: 4 });
+			// 12.86pt lays out at 13pt in PowerPoint (whole points, half up).
+		).toEqual({ lineHeight: `${(13 * 96) / 72}px`, runLineHeight: 0, spaceAfterPx: 4 });
 	});
 
 	it('continues applying body-wide line spacing edits after loading (#74)', () => {

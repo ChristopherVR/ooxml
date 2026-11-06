@@ -7,7 +7,7 @@
  */
 import type { TextStyle } from 'ooxml-core/pptx';
 
-import { proportionalLineHeight } from './text-line-height';
+import { proportionalLineHeight, exactPitchPoints } from './text-line-height';
 
 /** Points to CSS px. */
 const PT_TO_PX = 96 / 72;
@@ -172,7 +172,7 @@ export function resolveParagraphSpacing(input: ParagraphSpacingInput): Paragraph
 	const exactPt = lineSource?.lineSpacingExactPt;
 	const multiplier = lineSource?.lineSpacing;
 	if (typeof exactPt === 'number' && exactPt > 0) {
-		out.lineHeight = `${exactPt * PT_TO_PX}px`;
+		out.lineHeight = `${exactPitchPoints(exactPt) * PT_TO_PX}px`;
 		out.runLineHeight = FIXED_SPACING_RUN_LINE_HEIGHT;
 	} else if (typeof multiplier === 'number' && multiplier > 0) {
 		// `a:spcPct` stacks on PowerPoint's 1.2 single-spacing pitch; see

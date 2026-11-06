@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './text-line-height';
+import {
+	exactPitchPoints,
+	lineHeightToPx,
+	proportionalLineHeight,
+	resolveLineHeight,
+} from './text-line-height';
 
 describe('resolveLineHeight', () => {
 	it('returns an exact pt string when lineSpacingExactPt is set', () => {
@@ -72,5 +77,27 @@ describe('lineHeightToPx', () => {
 	it('falls back to the single-spacing pitch for an unrecognised/absent value', () => {
 		expect(lineHeightToPx(20, undefined)).toBeCloseTo(24, 5);
 		expect(lineHeightToPx(20, 'normal')).toBeCloseTo(24, 5);
+	});
+});
+
+describe('exact line pitch', () => {
+	// PowerPoint 16, 8-line paragraphs, spcPts 10.2 to 15.5 in 0.1 and 0.5pt
+	// steps: the fitted pitch was 13.32, 14.68, 16.0, 17.32, 18.68, 20.0, 21.32px.
+	it('lays a fractional pitch out in whole points, half up', () => {
+		expect(exactPitchPoints(10.2)).toBe(10);
+		expect(exactPitchPoints(10.4)).toBe(10);
+		expect(exactPitchPoints(10.5)).toBe(11);
+		expect(exactPitchPoints(13.4)).toBe(13);
+		expect(exactPitchPoints(13.5)).toBe(14);
+		expect(exactPitchPoints(14.3)).toBe(14);
+		expect(exactPitchPoints(14.5)).toBe(15);
+	});
+
+	it('leaves a pitch under half a point alone rather than collapsing it to zero', () => {
+		expect(exactPitchPoints(0.3)).toBe(0.3);
+	});
+
+	it('resolves a 14.3pt pitch as 14pt', () => {
+		expect(resolveLineHeight({ lineSpacingExactPt: 14.3 }, false)).toBe('14pt');
 	});
 });

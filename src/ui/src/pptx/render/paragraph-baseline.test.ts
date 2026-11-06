@@ -259,3 +259,35 @@ describe('a missing legacy East Asian Office font', () => {
 		expect(shiftFor('Foo Sans', times(true))).toBe(shiftFor('Times New Roman', times(true)));
 	});
 });
+
+describe('the pixel snap of the text body top', () => {
+	const withTop = (bodyTop?: { painted: number; exact: number }) =>
+		resolveParagraphBaselineShift({
+			runs: [run('Hxlb')],
+			lineHeight: 2.4,
+			strutSizePx: 40,
+			strutFamily: 'Calibri',
+			measure: calibri,
+			...(bodyTop ? { bodyTop } : {}),
+		});
+
+	it('adds the move onto the pixel PowerPoint snaps the body top to', () => {
+		// 40px text: the body top is moved by round(exact + 0.3) - painted.
+		expect(withTop()).toBeCloseTo(11, 2);
+		expect(withTop({ painted: 13, exact: 13.67 })).toBeCloseTo(12, 2);
+		expect(withTop({ painted: 14, exact: 13.33 })).toBeCloseTo(11, 2);
+		expect(withTop({ painted: 13, exact: 13.1 })).toBeCloseTo(11, 2);
+	});
+
+	it('moves a paragraph that is otherwise already on its baseline', () => {
+		const shift = resolveParagraphBaselineShift({
+			runs: [run('Hxlb')],
+			lineHeight: 1.2,
+			strutSizePx: 20,
+			strutFamily: 'Calibri',
+			measure: calibri,
+			bodyTop: { painted: 13, exact: 13.67 },
+		});
+		expect(shift).toBeCloseTo(1, 0);
+	});
+});

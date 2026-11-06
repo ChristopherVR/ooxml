@@ -31,6 +31,18 @@ export interface LineHeightSource {
 export const DEFAULT_LINE_HEIGHT = 1.2;
 
 /**
+ * An exact line pitch (`a:spcPts`) as PowerPoint lays it out: whole points,
+ * half up. A 14.3pt authored pitch lays out at 14pt (18.67px), 14.5pt at 15pt
+ * and 10.5pt at 11pt, measured on 8-line paragraphs of PowerPoint 16 exports
+ * (10.2 to 15.5pt in 0.1 and 0.5pt steps; the pitch stays unrounded in pixels,
+ * so 14pt is 18.67px and the baselines round one by one).
+ */
+export function exactPitchPoints(points: number): number {
+	const whole = Math.round(points);
+	return whole > 0 ? whole : points;
+}
+
+/**
  * Resolve a CSS `line-height` value from a TextStyle's spacing fields.
  *
  * - If `lineSpacingExactPt` is set (exact point mode from `a:lnSpc > a:spcPts`),
@@ -54,7 +66,7 @@ export function resolveLineHeight(
 	hasItalicRuns: boolean,
 ): string | number {
 	if (typeof textStyle?.lineSpacingExactPt === 'number' && textStyle.lineSpacingExactPt > 0) {
-		return `${textStyle.lineSpacingExactPt}pt`;
+		return `${exactPitchPoints(textStyle.lineSpacingExactPt)}pt`;
 	}
 	void hasItalicRuns;
 	// `a:spcPct` multiplies PowerPoint's single-spacing pitch, it does not

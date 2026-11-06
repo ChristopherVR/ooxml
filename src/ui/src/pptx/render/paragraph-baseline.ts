@@ -38,6 +38,7 @@ import { namedFontVerticalMetrics, officeFontVerticalMetrics } from 'ooxml-core/
 import { typoLineGapEm } from './font-line-gap';
 import { firstFontFamily, fontState } from './font-settled';
 import type { ParagraphRun, RenderParagraph } from './paragraph-types';
+import { type BodyTop, bodyTopSnapShift } from './text-body-top-snap';
 import { lineHeightToPx, proportionalLineHeight, resolveLineHeight } from './text-line-height';
 
 /** A font's ascent and descent in px, as CSS lays a line box out with them. */
@@ -186,6 +187,8 @@ export interface BaselineShiftInput {
 	strutSizePx: number;
 	strutFamily: string;
 	measure?: FontBoxMeasure;
+	/** Where the paragraph's text body starts, for the pixel snap of its top (see `text-body-top-snap`). */
+	bodyTop?: BodyTop;
 }
 
 /** The canvas font of a run at `size` in `family`. */
@@ -344,8 +347,11 @@ export function resolveParagraphBaseline(
 	const provisional = Boolean(strut.provisional || text.provisional || reference.provisional);
 	const loading = Boolean(strut.loading || text.loading || reference.loading);
 	const extentDelta = loading ? undefined : lastLineExtentDelta(size, pitch, reference);
+	const baseShift = baselineShiftOf({ size, pitch, boxes, reference, strutSizePx, loading });
+	const snap = input.bodyTop ? bodyTopSnapShift(input.bodyTop, size) : 0;
+	const total = Math.round(((baseShift ?? 0) + snap) * 100) / 100;
 	return {
-		shift: baselineShiftOf({ size, pitch, boxes, reference, strutSizePx, loading }),
+		shift: Math.abs(total) < MIN_SHIFT_PX ? undefined : total,
 		provisional,
 		...(extentDelta === undefined ? {} : { extentDelta }),
 	};
@@ -398,6 +404,7 @@ export function applyParagraphBaselineShift(
 	body: TextStyle | undefined,
 	block: { fontFamily: string; fontSizePx: number },
 	measure?: FontBoxMeasure,
+	bodyTop?: BodyTop,
 ): void {
 	if (
 		(body?.textDirection && body.textDirection !== 'horizontal') ||
@@ -412,6 +419,7 @@ export function applyParagraphBaselineShift(
 		strutSizePx: paragraph.strutFontSizePx ?? block.fontSizePx,
 		strutFamily: block.fontFamily,
 		...(measure ? { measure } : {}),
+		...(bodyTop ? { bodyTop } : {}),
 	};
 	const placement = baselinePlacementStyle(input);
 	if (!placement) {
@@ -484,6 +492,7 @@ export function encodePendingBaseline(input: BaselineShiftInput): string {
 			lineHeight: input.lineHeight,
 			strutSizePx: input.strutSizePx,
 			strutFamily: input.strutFamily,
+			...(input.bodyTop ? { bodyTop: input.bodyTop } : {}),
 		}),
 	);
 }
@@ -496,12 +505,14 @@ export function decodePendingBaseline(value: string): BaselineShiftInput | undef
 			lineHeight: number | string;
 			strutSizePx: number;
 			strutFamily: string;
+			bodyTop?: BodyTop;
 		};
 		return {
 			runs: [{ text: 'x', style: data.style }],
 			lineHeight: data.lineHeight,
 			strutSizePx: data.strutSizePx,
 			strutFamily: data.strutFamily,
+			...(data.bodyTop ? { bodyTop: data.bodyTop } : {}),
 		};
 	} catch {
 		return undefined;
