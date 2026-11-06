@@ -47,7 +47,7 @@ import {
 	resolveAuthoredSlideRange,
 	resolveAutosaveFileKey,
 	resolveCloudDocumentView,
-	resolveGoogleFontsCss2Base,
+	resolveFontDownloadBase,
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
@@ -244,6 +244,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private detachOutlineFonts: (() => void) | null = null;
 	/** Tags in-flight webfont resolutions; only the newest deck may apply its result. */
 	private webfontsToken = 0;
+	private detachFontDownloads: (() => void) | null = null;
 	/** The current deck's fonts in the module-wide glyph-outline cache; released on destroy. */
 	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
@@ -343,6 +344,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 					this.options.allowExternalContent,
 					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
 				),
+			getGoogleFontsBase: () => this.googleFontsBase(),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
 			setEditableForLoad: (editable) => this.setEditable(editable),
 		});
@@ -747,20 +749,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			this.outlineFonts.set(state.embeddedFonts);
 			this.embeddedFontsSheet ??= createEmbeddedFontsSheet(this.doc, 'pptx-vanilla-embedded-fonts');
 			this.embeddedFontsSheet.set(state.embeddedFonts);
-			const token = ++this.webfontsToken;
-			void resolveGoogleWebfontHref(
-				state.slides,
-				state.embeddedFonts,
-				undefined,
-				resolveGoogleFontsCss2Base(this.options.googleFonts),
-			).then((href) => {
-				if (token !== this.webfontsToken) {
-					return null;
-				}
-				syncGoogleWebfontsLink(this.doc, href);
-				return href;
-			});
-			this.syncGlyphOutlineWebfonts(state.slides, state.embeddedFonts, token);
+			this.syncWebfonts(state.slides, state.embeddedFonts);
 		});
 		this.sessions = createSessionControllers({
 			doc: this.doc,
@@ -836,6 +825,15 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// persisted File > Options values (undo depth, ribbon visibility, root
 		// classes, ScreenTips, etc.) for the first time.
 		this.optionsController.applyAll();
+		// Trust Center > "Download fonts" applies to the open deck at once: off
+		// removes the managed webfont `<link>`, on adds it back.
+		this.detachFontDownloads = this.optionsController.optionsStore.subscribeSelector(
+			(o) => o.trust.allowFontDownloads,
+			() => {
+				const state = this.store.get();
+				this.syncWebfonts(state.slides, state.embeddedFonts);
+			},
+		);
 		// File > Options > Save > "Automatically delete files older than N days":
 		// a one-time sweep on mount is enough since new snapshots only ever land
 		// with a fresh timestamp; no periodic timer is needed to keep it honest.
@@ -858,6 +856,41 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * remount. No-op (and never touches the `ai` SDK) when `ai` is absent.
 	 */
 	/**
+	 * The CSS2 base the webfont fallback requests, or `null` when font
+	 * downloads are off: the host `googleFonts` option when set, otherwise
+	 * Trust Center > "Download fonts" (read live, so a load and a later
+	 * toggle both see the current value).
+	 */
+	private googleFontsBase(): string | null {
+		return resolveFontDownloadBase(
+			this.options.googleFonts,
+			this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+		);
+	}
+
+	/**
+	 * Resolve the managed webfont `<link>` (removed when downloads are off)
+	 * and the glyph outlines for a deck. Each run is tagged, so a superseded
+	 * run's late result never applies.
+	 */
+	private syncWebfonts(
+		slides: readonly PptxSlide[],
+		embeddedFonts: readonly PptxEmbeddedFont[],
+	): void {
+		const token = ++this.webfontsToken;
+		void resolveGoogleWebfontHref(slides, embeddedFonts, undefined, this.googleFontsBase()).then(
+			(href) => {
+				if (token !== this.webfontsToken) {
+					return null;
+				}
+				syncGoogleWebfontsLink(this.doc, href);
+				return href;
+			},
+		);
+		this.syncGlyphOutlineWebfonts(slides, embeddedFonts, token);
+	}
+
+	/**
 	 * Best-effort glyph-outline bytes for catalogue webfonts. A WordArt
 	 * envelope glyph (inflate/deflate/can) in a referenced (not embedded)
 	 * family only gets true outline warping once the ACTUAL font file's bytes
@@ -879,7 +912,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		void loadDeckWebfontOutlines({
 			slides,
 			embeddedFonts,
-			googleFontsBase: resolveGoogleFontsCss2Base(this.options.googleFonts),
+			googleFontsBase: this.googleFontsBase(),
 			cache: glyphOutlineFontCache,
 			isCancelled: () => token !== this.webfontsToken,
 		}).then((registered) => {
@@ -2347,6 +2380,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.optionsController.dispose();
 		this.detachSignatureWarning?.();
 		this.detachOutlineFonts?.();
+		this.detachFontDownloads?.();
 		this.loading.invalidate();
 		this.editor.destroy();
 		this.annotations.dispose();

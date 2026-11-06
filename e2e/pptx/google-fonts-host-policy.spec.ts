@@ -4,17 +4,22 @@
  * `?googleFonts=0` / `?googleFontsBaseUrl=<url>` query options (see
  * `demos/pptx/shared/demo-root-options.ts`). The deck references "ADLaM
  * Display", a family that is neither installed nor embedded, so by default
- * the viewer requests it from Google Fonts.
+ * the viewer requests it from Google Fonts. File > Options > Trust Center >
+ * "Download fonts" decides while the host leaves `googleFonts` unset; a host
+ * value locks that toggle.
  */
 import { expect, test } from '@playwright/test';
-import type { Page, Request } from '@playwright/test';
+import type { Locator, Page, Request } from '@playwright/test';
 
 import { fixture, loadDeck } from './support/deck';
+import { openOptionsDialog, optionsAction, optionsCategory } from './support/settings-dialog';
 
 const DECK = fixture('adlam-webfont.pptx');
 const MIRROR_ORIGIN = 'https://fonts.mirror.test';
 const MIRROR = `${MIRROR_ORIGIN}/css2`;
 const MIRROR_FONT_FILE = `${MIRROR_ORIGIN}/files/adlam-display.ttf`;
+const FONT_TOGGLE_NAME = /^Download fonts that are not installed or embedded/u;
+const LOCK_HINT = 'This setting is managed by your organization';
 const FONT_CSS = '@font-face { font-family: "ADLaM Display"; src: local("Arial"); }';
 
 function isGoogleFontsRequest(request: Request): boolean {
@@ -46,6 +51,16 @@ async function settleFontResolution(page: Page): Promise<void> {
 	await page.waitForTimeout(500);
 }
 
+/** Open File > Options > Trust Center and return the dialog and its "Download fonts" toggle. */
+async function fontDownloadToggle(page: Page): Promise<{ dialog: Locator; toggle: Locator }> {
+	const dialog = await openOptionsDialog(page, ['Options']);
+	await optionsCategory(dialog, 'Trust Center').click();
+	const toggle = page
+		.locator('pptx-ui-options-dialog')
+		.getByRole('checkbox', { name: FONT_TOGGLE_NAME });
+	return { dialog, toggle };
+}
+
 test.describe('googleFonts host option', () => {
 	test('requests a missing family from Google Fonts by default', async ({ page }) => {
 		const google = await recordGoogleRequests(page);
@@ -62,6 +77,36 @@ test.describe('googleFonts host option', () => {
 		await expect(page.locator('[data-pptx-element="true"]').first()).toBeVisible();
 		await settleFontResolution(page);
 		await expect(page.locator('head link[href*="fonts.googleapis.com"]')).toHaveCount(0);
+		expect(google).toEqual([]);
+		const { toggle } = await fontDownloadToggle(page);
+		await expect(toggle).not.toBeChecked();
+		await expect(toggle).toBeDisabled();
+		await expect(
+			page.locator('pptx-ui-options-dialog label[data-key$="allowFontDownloads"]'),
+		).toHaveAttribute('title', LOCK_HINT);
+	});
+
+	test('the Trust Center option turns font downloads off for the open deck and later loads', async ({
+		page,
+	}) => {
+		const google = await recordGoogleRequests(page);
+		await loadDeck(page, DECK);
+		const link = page.locator('head link[href*="fonts.googleapis.com"]');
+		await expect(link).toHaveCount(1);
+		const { dialog, toggle } = await fontDownloadToggle(page);
+		await expect(toggle).toBeChecked();
+		await expect(toggle).toBeEnabled();
+		await toggle.uncheck();
+		await optionsAction(dialog, 'OK').click();
+		// The open deck drops its managed webfont stylesheet at once.
+		await expect(link).toHaveCount(0);
+
+		// The choice is saved, so the next load sends nothing to Google.
+		google.length = 0;
+		await loadDeck(page, DECK);
+		await expect(page.locator('[data-pptx-element="true"]').first()).toBeVisible();
+		await settleFontResolution(page);
+		await expect(link).toHaveCount(0);
 		expect(google).toEqual([]);
 	});
 
@@ -91,5 +136,9 @@ test.describe('googleFonts host option', () => {
 		await expect.poll(() => mirrored.includes(MIRROR_FONT_FILE)).toBe(true);
 		await settleFontResolution(page);
 		expect(google).toEqual([]);
+		// A working mirror locks Trust Center > "Download fonts" on.
+		const { toggle } = await fontDownloadToggle(page);
+		await expect(toggle).toBeChecked();
+		await expect(toggle).toBeDisabled();
 	});
 });

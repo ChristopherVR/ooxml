@@ -42,6 +42,7 @@ import {
 	recoverySnapshotIntent,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveAuthoredSlideRange,
@@ -1751,7 +1752,10 @@ export class PowerPointViewerComponent
 	readonly initialSlide = input<number | undefined>(undefined);
 	/**
 	 * Google Fonts fallback for deck fonts that are neither installed nor
-	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * embedded. Unset: File > Options > Trust Center > "Download fonts that
+	 * are not installed or embedded" decides (on by default: the viewer
+	 * loads them from `fonts.googleapis.com`). Any other value locks that
+	 * option: off for `false` or an invalid `baseUrl`, on for a mirror.
 	 * `false`: no request goes to Google (`fonts.googleapis.com` or
 	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
 	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts
@@ -1820,6 +1824,15 @@ export class PowerPointViewerComponent
 	private readonly customizationInputSync = this.customizationService.bindInput(this.customization);
 	private readonly allowExternalContentSync = this.customizationService.bindAllowExternalContent(
 		this.allowExternalContent,
+	);
+	private readonly googleFontsSync = this.customizationService.bindGoogleFonts(this.googleFonts);
+	/**
+	 * Host `googleFonts` first, else Trust Center > "Download fonts": what the
+	 * webfont effect and the load-time wait use. A computed, so the effect
+	 * re-runs only when the policy itself changes.
+	 */
+	private readonly effectiveGoogleFonts = computed(() =>
+		resolveEffectiveGoogleFonts(this.googleFonts(), this.viewerOpts.options()),
 	);
 	/** Host region renderers and the context they receive (see {@link ViewerRegionService}). */
 	protected readonly regions = inject(ViewerRegionService);
@@ -2879,7 +2892,7 @@ export class PowerPointViewerComponent
 			this.googleWebfonts.sync(
 				this.mergedSlides(),
 				this.loader.embeddedFonts(),
-				this.googleFonts(),
+				this.effectiveGoogleFonts(),
 			);
 		});
 
@@ -3162,7 +3175,7 @@ export class PowerPointViewerComponent
 		});
 		this.loader.bindHostAllowExternalContent(() => this.allowExternalContent());
 		this.loader.bindHostLimits(() => this.limits());
-		this.loader.bindHostGoogleFonts(() => this.googleFonts());
+		this.loader.bindHostGoogleFonts(() => this.effectiveGoogleFonts());
 		this.loader.bindPendingInlineEdit(() => {
 			if (!this.canEdit()) {
 				return undefined;

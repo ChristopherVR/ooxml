@@ -56,6 +56,7 @@ import {
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveHistoryDepth,
@@ -437,6 +438,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			legacyHiddenActions,
 			optionsStore,
 			allowExternalContent,
+			googleFonts,
 		);
 		const { resolved: customizationResolved, hiddenActions } = custom;
 		const aiEnabled = Boolean(ai) && isFeatureEnabled(customizationResolved, 'ai');
@@ -1077,7 +1079,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// http(s) image sources actually load.
 			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 			initialSlide,
-			googleFonts,
+			// Host `googleFonts` first, else Trust Center > "Download fonts"; read per render, so the
+			// managed webfont link follows the option and the next load never sees a stale value.
+			googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 			limits,
 			setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 			setModifyVerifier: readOnlyRec.setModifyVerifier,

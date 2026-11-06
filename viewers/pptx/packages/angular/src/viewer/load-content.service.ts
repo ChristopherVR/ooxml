@@ -99,7 +99,10 @@ export class LoadContentService {
 		this.hostLimitsReader = reader;
 	}
 	private hostGoogleFontsReader?: () => GoogleFontsOption | undefined;
-	/** The host `googleFonts` input, read (untracked) when a load waits for its webfonts. */
+	/**
+	 * The effective `googleFonts` policy (host input, else Trust Center >
+	 * "Download fonts"), read (untracked) when a load waits for its webfonts.
+	 */
 	bindHostGoogleFonts(reader: () => GoogleFontsOption | undefined): void {
 		this.hostGoogleFontsReader = reader;
 	}

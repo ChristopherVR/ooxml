@@ -46,6 +46,12 @@ export interface LoadingControllerDeps {
 	 * core's own safe-by-default `allowExternalImages: false`.
 	 */
 	getAllowExternalContent?: () => boolean;
+	/**
+	 * The CSS2 base the load waits on for its webfonts (host `googleFonts`,
+	 * else Trust Center > "Download fonts"), `null` when downloads are off.
+	 * Read per load; omitted resolves the host `googleFonts` option alone.
+	 */
+	getGoogleFontsBase?: () => string | null;
 	/** Trust Center > "Open documents in Protected View" (same lazy-read reason). */
 	shouldOpenProtectedView?: () => boolean;
 	/**
@@ -142,7 +148,10 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 					linkId: VANILLA_GOOGLE_FONTS_LINK_ID,
 					slides: partition.slides,
 					embeddedFonts: loaded.embeddedFonts,
-					googleFontsBase: resolveGoogleFontsCss2Base(options.googleFonts),
+					// `null` means off, so no `??` fallback here.
+					googleFontsBase: deps.getGoogleFontsBase
+						? deps.getGoogleFontsBase()
+						: resolveGoogleFontsCss2Base(options.googleFonts),
 					onProgress: (progress) => {
 						if (token === loadToken) {
 							store.set({ fontProgress: progress });
