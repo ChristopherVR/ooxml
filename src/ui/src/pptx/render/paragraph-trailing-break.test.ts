@@ -29,6 +29,8 @@ describe('issue 249: a paragraph ending in a:br keeps its empty line', () => {
 		expect(last.text).toBe('​');
 		expect(last.style.fontSize).toBe(runs[runs.length - 2]!.style.fontSize);
 		expect(last.style.fontSize).toBeDefined();
+		expect(last.segmentIndex).toBe(runs[runs.length - 2]!.segmentIndex);
+		expect(last.segmentIndex).toBe(1);
 	});
 
 	it('leaves a break between two runs alone', () => {

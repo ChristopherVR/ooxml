@@ -26,5 +26,11 @@ export function appendTrailingBreakLine(runs: BuiltRun[]): void {
 			Object.assign(style, { [key]: value });
 		}
 	}
-	runs.push({ text: ZERO_WIDTH_SPACE, style });
+	// Same segment as the break, so a binding that resolves a run's font from its segment
+	// (React does) paints the empty line at the break's size, not the body default.
+	runs.push({
+		text: ZERO_WIDTH_SPACE,
+		style,
+		...(last.segmentIndex !== undefined ? { segmentIndex: last.segmentIndex } : {}),
+	});
 }
