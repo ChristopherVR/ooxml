@@ -35,6 +35,8 @@ Fetching a clone from Google Fonts means the reader's browser contacts `fonts.go
 
 The option also governs the WordArt glyph-outline fetch and the webfonts inlined into slide image exports, since both reuse the stylesheet URL the viewer resolved. Both read the CSS and font files with `fetch()`, so a mirror must send CORS headers (`Access-Control-Allow-Origin`) for them to work, as Google's own servers do.
 
+How the viewer picks a face for each run, and how it waits for downloads, is described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). Every request the packages can make is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ### External content and privacy {#external-content-and-privacy}
 
 A deck can link pictures (including picture fills and picture bullets), videos, audio and poster frames to other servers (`TargetMode="External"` relationships) instead of embedding them. Opening such a deck makes the reader's browser fetch them, which tells whoever runs that server the reader's IP address and that the deck was opened. By default the Trust Center option "Allow external content" decides, and it is on. A host can decide instead with the `allowExternalContent` option, available on every binding:
