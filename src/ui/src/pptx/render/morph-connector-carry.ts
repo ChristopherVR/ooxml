@@ -42,7 +42,7 @@ import {
 	STOPS,
 	wrapperAt,
 } from './morph-line-carry';
-import { reachFactors } from './morph-line-reach';
+import { reachOffsets } from './morph-line-reach';
 import { shortestRotationTarget } from './morph-rotation';
 import { parseSvgPath } from './morph-svg-path';
 import { bakeStops, lerp, round, sameStructure } from './morph-shape-carry-path';
@@ -93,11 +93,11 @@ function routeAt(
 	const [tcx, tcy] = centre(to);
 	const cx = lerp(fcx, tcx, p);
 	const cy = lerp(fcy, tcy, p);
-	const [reachX, reachY] = reachFactors(from, to, p);
+	const [reachX, reachY] = reachOffsets(from, to, p, false);
 	const sw =
-		lerp(sign(from.flipHorizontal) * from.width, sign(to.flipHorizontal) * to.width, p) * reachX;
+		lerp(sign(from.flipHorizontal) * from.width, sign(to.flipHorizontal) * to.width, p) + reachX;
 	const sh =
-		lerp(sign(from.flipVertical) * from.height, sign(to.flipVertical) * to.height, p) * reachY;
+		lerp(sign(from.flipVertical) * from.height, sign(to.flipVertical) * to.height, p) + reachY;
 	const fromRot = from.rotation ?? 0;
 	const turn = lerp(fromRot, shortestRotationTarget(fromRot, to.rotation ?? 0), p);
 	const [cos, sin] = [Math.cos((turn * Math.PI) / 180), Math.sin((turn * Math.PI) / 180)];

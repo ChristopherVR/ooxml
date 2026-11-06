@@ -24,7 +24,7 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
 import { connectorNeedsPath, getCompoundLineOffsets } from './connector-style';
-import { reachFactors } from './morph-line-reach';
+import { reachOffsets } from './morph-line-reach';
 import { shortestRotationTarget } from './morph-rotation';
 import { bakeStops, lerp, round } from './morph-shape-carry-path';
 import type { MorphAnimationStyle, MorphPair } from './morph-types';
@@ -223,11 +223,11 @@ export function buildMorphLineCarry(
 		const linearStart: Vec = [lerp(fa[0], ta[0], p), lerp(fa[1], ta[1], p)];
 		const linearEnd: Vec = [lerp(fb[0], tb[0], p), lerp(fb[1], tb[1], p)];
 		// PowerPoint grows the box about its (linearly moving) centre ahead of `p`.
-		const [reachX, reachY] = reachFactors(from, to, p);
+		const [reachX, reachY] = reachOffsets(from, to, p);
 		const mid: Vec = [(linearStart[0] + linearEnd[0]) / 2, (linearStart[1] + linearEnd[1]) / 2];
 		const half: Vec = [
-			((linearEnd[0] - linearStart[0]) / 2) * reachX,
-			((linearEnd[1] - linearStart[1]) / 2) * reachY,
+			(linearEnd[0] - linearStart[0] + reachX) / 2,
+			(linearEnd[1] - linearStart[1] + reachY) / 2,
 		];
 		const start: Vec = [mid[0] - half[0], mid[1] - half[1]];
 		const end: Vec = [mid[0] + half[0], mid[1] + half[1]];

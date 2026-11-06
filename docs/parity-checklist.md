@@ -415,11 +415,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Morph of a connector or line whose size changes a lot: PowerPoint grows each extent
       of the box ahead of its eased progress while the centre follows it exactly. Per axis,
       extent(p) = lerp + |delta| * hi / (hi + lo) * g * p * (1 - p), larger than the blend for
-      grows and shrinks alike, with g = x^1.1 (x <= 1) or min(1, 1.14 / x) where x is the centre's
-      travel over half the size change (`src/ui/src/pptx/render/morph-line-reach.ts`, fitted to 28
-      synthetic cases, 2 pt mean error against 40 pt). The elbow resize frame error against
-      PowerPoint falls from 3.80, 4.35, 2.79 to 2.37, 2.13, 2.53 (floor about 2.1). Rotated
-      pairs and axes flipped differently stay linear (not measured).
+      grows and shrinks alike, with g = (1 - exp(-3.2 (r - 1))) * coupling(x), r = hi / lo (a 1.1x
+      resize has none, 1.4x 70%, 2x 95%) and coupling = x^1.14 (x <= 1) or min(1, 1.1 / x^0.94)
+      where x is the centre's travel over half the size change
+      (`src/ui/src/pptx/render/morph-line-reach.ts`, fitted to 43 synthetic cases, 1.5 pt mean
+      error against 40 pt; the earlier law was 4 pt off at 1.4x). Straight lines also follow it
+      when rotated (PowerPoint blends the end points, so a pure turn shortens the chord and a
+      turn while the centre moves is made up again; 2 to 3.5 pt on seven cases, one turn plus
+      resize plus move case still 12 pt off), when their ends flip differently (the extent
+      passes through zero and overshoots by hi * (r - 1) / (r - 1 + 0.56) * coupling, 1 to 5 pt
+      on seven cases) and when two ends share a rotation. Freeform open paths and arcs do not
+      overshoot in PowerPoint (measured linear). Elbow and curved connectors that turn or flip
+      differently stay linear (not measured).
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
 - [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
