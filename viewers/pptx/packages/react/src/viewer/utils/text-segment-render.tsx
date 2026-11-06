@@ -110,6 +110,16 @@ export function renderParagraphRun(
 		);
 	}
 
+	// A soft line break (`a:br`) is a bare `<br>`, exactly as the other four
+	// bindings render it. Wrapped in its own span, the break sits in a new inline
+	// box after the previous run's trailing space; when that space hangs past the
+	// box edge the span cannot follow it and drops to the next line, so the
+	// `<br>` ends an EMPTY line (a title of "A SPECIAL <br>DAY IN" gained a blank
+	// line in React only).
+	if (run.text === '\n' && !run.hyperlink && !run.ruby && !findHighlights?.get(segmentIndex)) {
+		return <br key={key} data-seg-idx={segmentIndex} />;
+	}
+
 	const segmentStyle = segment?.style ?? {};
 	const textValue = run.text;
 	const lines = textValue.split('\n');
