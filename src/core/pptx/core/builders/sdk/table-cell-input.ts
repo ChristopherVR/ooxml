@@ -1,12 +1,13 @@
 /**
- * The cell style of a table cell made in code: its text style and its own
- * fill, mapped onto the {@link PptxTableCellStyle} fields the save path
- * writes into `a:tcPr`.
+ * The cell style of a table cell made in code: its text style, its own fill
+ * and its edge lines, mapped onto the {@link PptxTableCellStyle} fields the
+ * save path writes into `a:tcPr`.
  *
  * @module sdk/table-cell-input
  */
 
 import type { PptxTableCellStyle } from '../../types/table';
+import { tableCellBorderStyle } from './table-border-input';
 import type { FillInput, TableCellInput } from './types';
 
 /** The parts of a gradient a cell's `a:gradFill` has no place for. */
@@ -100,6 +101,7 @@ export function tableCellStyle(cell: TableCellInput): PptxTableCellStyle | undef
 	const style: PptxTableCellStyle = {
 		...tableCellTextStyle(cell.style),
 		...tableCellFillStyle(cell.fill),
+		...tableCellBorderStyle(cell.borders),
 	};
 	return cell.style || Object.keys(style).length > 0 ? style : undefined;
 }

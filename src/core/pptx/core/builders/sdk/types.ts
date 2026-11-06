@@ -300,8 +300,37 @@ export interface TableCellInput {
 	 * cell cannot carry, such as an image, throws a `RangeError`.
 	 */
 	fill?: FillInput;
+	/** The cell's own edge lines, written over the table style's. */
+	borders?: TableCellBordersInput;
 	gridSpan?: number;
 	rowSpan?: number;
+}
+
+/**
+ * A table cell's edge lines: `all` for the four edges, and each edge on its
+ * own (`a:lnT` / `a:lnR` / `a:lnB` / `a:lnL`), which overrides `all`.
+ */
+export interface TableCellBordersInput {
+	all?: TableCellBorderInput;
+	top?: TableCellBorderInput;
+	right?: TableCellBorderInput;
+	bottom?: TableCellBorderInput;
+	left?: TableCellBorderInput;
+}
+
+/** One edge line of a table cell. */
+export interface TableCellBorderInput {
+	color?: string;
+	/** Line width in px. */
+	width?: number;
+	/**
+	 * A preset dash, or an exact pattern of dash and gap lengths in px
+	 * (`[dash, gap, dash, gap, ...]`, repeated once when odd, as in SVG's
+	 * `stroke-dasharray`), written as `a:custDash` relative to `width` (1 px
+	 * when `width` is omitted or 0). An empty pattern, or a length that is
+	 * not a finite number above 0, throws a `RangeError`.
+	 */
+	dash?: Exclude<StrokeDashType, 'custom'> | number[];
 }
 
 export interface TableOptions extends Partial<ElementPosition> {}
