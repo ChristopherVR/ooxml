@@ -13,6 +13,7 @@ import {
 	LINK_TOOLTIP_HOST_CLASS,
 	resolveElementInteractivity,
 	shouldRenderHitTarget,
+	tableFrameCss,
 } from 'ooxml-ui/pptx';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import React, { useState, useCallback, useMemo } from 'react';
@@ -332,6 +333,15 @@ export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ R
 					actionAffordance.showLinkTooltip && LINK_TOOLTIP_HOST_CLASS,
 				)}
 				style={{
+					// The table style's drop shadow (Themed Style 1/2) sits on the clipping frame.
+					...(el.type === 'table'
+						? (tableFrameCss(el.tableData, {
+								tableStyleMap: tableStyleContext?.tableStyleMap,
+								colorScheme: tableStyleContext?.theme?.colorScheme,
+								fontScheme: tableStyleContext?.theme?.fontScheme,
+								formatScheme: tableStyleContext?.theme?.formatScheme,
+							}) as CSSProperties)
+						: {}),
 					...containerStyle,
 					...(isSelected ? selectionOutlineStyle(selClr) : {}),
 				}}
