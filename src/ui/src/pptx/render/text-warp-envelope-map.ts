@@ -34,6 +34,10 @@
  * middle `adj` values is PowerPoint ending a row short of its path end, a
  * non-monotonic flattening artifact this mapping does not model.
  */
+import { closedWarpPaths } from './text-warp-closed-paths';
+import { ellipsePolygon } from './text-warp-polygon-clip';
+import type { ClipPoint } from './text-warp-polygon-clip';
+import type { ClosedPathPoint } from './text-warp-closed-paths';
 import { envelopeCurveAt, envelopeCurveXExtent } from './text-warp-envelope-curves';
 
 /** The unwarped text block's bounding box, in layout coordinates. */
@@ -44,9 +48,21 @@ export interface EnvelopeBlockBox {
 	bottom: number;
 }
 
+/**
+ * Limits the ink of a warp to regions of the shape box: the glyph outlines are
+ * cut at the layout `x` positions `splitsX` into consecutive parts, and part
+ * `i` is clipped, once mapped, to the convex polygon `regions[i]` (not at all
+ * when that is `undefined`).
+ */
+export interface EnvelopeClip {
+	splitsX: number[];
+	regions: (ClipPoint[] | undefined)[];
+}
+
 /** Maps an unwarped layout point onto the warped shape box. */
 export interface EnvelopeWarp {
 	map(x: number, y: number): { x: number; y: number };
+	clip?: EnvelopeClip;
 }
 
 /** Samples per curve; the arc-length inverse is linear between them. */
@@ -64,10 +80,17 @@ interface ArcTable {
 /** `startX..endX` is the curve's horizontal span, in box units. */
 function buildArcTable(ys: Float64Array, startX: number, endX: number): ArcTable {
 	const xs = new Float64Array(ys.length);
+	for (let i = 0; i < ys.length; i++) {
+		xs[i] = startX + (i / (ys.length - 1)) * (endX - startX);
+	}
+	return buildArcTableXY(xs, ys);
+}
+
+/** The arc-length table of a polyline given by its sample coordinates. */
+function buildArcTableXY(xs: Float64Array, ys: Float64Array): ArcTable {
 	const s = new Float64Array(ys.length);
 	let total = 0;
 	for (let i = 0; i < ys.length; i++) {
-		xs[i] = startX + (i / (ys.length - 1)) * (endX - startX);
 		if (i > 0) {
 			total += Math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1]);
 		}
@@ -104,6 +127,21 @@ function pointAtArcFraction(table: ArcTable, t: number): { x: number; y: number 
 	return { x: xs[lo] + (xs[hi] - xs[lo]) * f, y: ys[lo] + (ys[hi] - ys[lo]) * f };
 }
 
+function tableOfPoints(points: ClosedPathPoint[]): ArcTable {
+	return buildArcTableXY(
+		Float64Array.from(points, (p) => p.x),
+		Float64Array.from(points, (p) => p.y),
+	);
+}
+
+/** The point at share `s` of a path made of equally weighted pieces. */
+function pointAtPieces(pieces: ArcTable[], s: number): { x: number; y: number } {
+	const clamped = Math.max(0, Math.min(1, s));
+	const index = Math.min(pieces.length - 1, Math.floor(clamped * pieces.length));
+	const piece = pieces[index];
+	return piece ? pointAtArcFraction(piece, clamped * pieces.length - index) : { x: 0, y: 0 };
+}
+
 /**
  * Build the envelope mapping for `preset` in a `width` x `height` shape box,
  * normalising layout points by `block`. Returns `undefined` for a preset
@@ -121,6 +159,32 @@ export function createEnvelopeWarp(
 	const blockH = block.bottom - block.top;
 	if (!(width > 0) || !(height > 0) || !(blockW > 0) || !(blockH > 0)) {
 		return undefined;
+	}
+	const closed = closedWarpPaths(preset, width, height, adj, adj2);
+	if (closed) {
+		const top = closed.top.map(tableOfPoints);
+		const bottom = closed.bottom.map(tableOfPoints);
+		const pieces = top.length;
+		const clips = closed.clips;
+		const clip: EnvelopeClip | undefined = clips
+			? {
+					splitsX: Array.from(
+						{ length: pieces - 1 },
+						(_, i) => block.left + (blockW * (i + 1)) / pieces,
+					),
+					regions: clips.map((e) => e && ellipsePolygon(e.cx, e.cy, e.rx, e.ry)),
+				}
+			: undefined;
+		return {
+			...(clip ? { clip } : {}),
+			map(x: number, y: number) {
+				const s = (x - block.left) / blockW;
+				const v = (y - block.top) / blockH;
+				const t = pointAtPieces(top, s);
+				const b = pointAtPieces(bottom, s);
+				return { x: t.x + (b.x - t.x) * v, y: t.y + (b.y - t.y) * v };
+			},
+		};
 	}
 	const topYs = new Float64Array(CURVE_SAMPLES + 1);
 	const bottomYs = new Float64Array(CURVE_SAMPLES + 1);

@@ -453,6 +453,25 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       the three tab shapes, braces and brackets, moon, heart, cloud, lightningBolt, wave,
       doubleWave, the arc family (visual arc angles), five multi-headed block arrows,
       smileyFace, can, cube, bevel, diagStripe and nonIsoscelesTrapezoid.
+- [x] **P1** WordArt Transform: the closed-loop warps are drawn from PowerPoint's own geometry.
+      Ring Inside and Ring Outside are two offset ellipses with the text run once round and the
+      ink clipped to the ellipse of its band; Circle Pour is the box ellipse and its `adj2` scale
+      (`text-warp-closed-paths.ts`); Circle starts at the left tip and runs clockwise, so a
+      centred line sits on the right (`text-warp-arch.ts`). Mean absolute diff vs PowerPoint on
+      the synthetic deck fell from 25.7 and 30.8 (rings), 24.3 (Circle Pour) and 16.9 (Circle)
+      to about 6, 6.5, 10 and 4.6.
+- [ ] **P2** WordArt Transform, remaining gaps measured against PowerPoint 16: Arch Up, Arch
+      Down, Button and Circle with a non-default angle adjust keep the previous approximation
+      (PowerPoint pins the start angle in a way not yet modelled: Arch Up at 90 degrees draws like
+      the default, at 270 degrees it moves to the bottom reading upside down); the Circle radii
+      and start angle are a fit to three captures (`text-warp-arch.ts`) and Circle Pour reads its
+      text length slightly short of the loop; the arch frame offsets (`ARCH_FRAME_INSET`) were
+      measured on Arial 32 pt only and drift by a few pixels for other fonts and sizes; the
+      concentric scale of the second and later lines of an arch or circle is a guess; Double Wave 1
+      and Wave 4 end their ink a little short of the box edge (PowerPoint flattens each path and
+      drops its last partial piece, the shortfall changes with the adjust), and Inflate, Deflate
+      and Can Up keep a residual of 6 to 8 grey levels that is glyph placement within a word, not
+      the path geometry.
 
 ### Ribbon
 

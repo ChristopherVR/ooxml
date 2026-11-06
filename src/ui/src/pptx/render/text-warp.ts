@@ -15,7 +15,7 @@ import type { PptxElement, PptxTextWarpPreset, TextSegment } from 'ooxml-core/pp
 import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
-import { archEllipsePath } from './text-warp-arch';
+import { archEllipsePath, circleEllipsePath } from './text-warp-arch';
 
 // ── Classifier ──────────────────────────────────────────────────────────
 
@@ -313,20 +313,9 @@ function archDownPath(w: number, h: number, t: number, adj?: number): string {
 	return `M 0,0 A ${w / 2},${archH} 0 0,0 ${w},0`;
 }
 
-/** Full ellipse: concentric ellipses shrink towards centre. */
+/** Full ellipse from the start angle, once around clockwise (see `circleEllipsePath`). */
 function circlePath(w: number, h: number, t: number, adj?: number): string {
-	const cx = w / 2;
-	const cy = h / 2;
-	const adjNorm = adj !== undefined ? Math.max(0, Math.min(adj / 21600000, 1)) : 0.5;
-	const baseScale = 0.45 + adjNorm * 1.1;
-	const scale = Math.min(1, baseScale) - t * 0.55;
-	const rx = Math.max(1, (w / 2) * scale);
-	const ry = Math.max(1, (h / 2) * scale);
-	return (
-		`M ${cx},${cy - ry} ` +
-		`A ${rx},${ry} 0 1,1 ${cx},${cy + ry} ` +
-		`A ${rx},${ry} 0 1,1 ${cx},${cy - ry}`
-	);
+	return circleEllipsePath(w, h, t, adj);
 }
 
 /** Single sine-wave via cubic Bézier. */

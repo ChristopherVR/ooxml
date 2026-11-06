@@ -12,6 +12,8 @@
  * points would keep it straight where PowerPoint curves it.
  */
 import type { EnvelopeWarp } from './text-warp-envelope-map';
+import { clipPolygonByX, clipPolygonConvex } from './text-warp-polygon-clip';
+import type { ClipPoint } from './text-warp-polygon-clip';
 
 /**
  * One drawing command of a glyph outline, in the unwarped layout coordinate
@@ -166,12 +168,48 @@ export function buildWarpedGlyphOutlinePathD(
 	maxSegment: number,
 ): string | undefined {
 	const parts: string[] = [];
-	for (const contour of flattenOutline(commands, maxSegment)) {
-		contour.forEach((p, i) => {
-			const q = warp.map(p.x, p.y);
+	const emit = (points: readonly ClipPoint[]): void => {
+		points.forEach((q, i) => {
 			parts.push(`${i === 0 ? 'M' : 'L'}${formatCoord(q.x)} ${formatCoord(q.y)}`);
 		});
 		parts.push('Z');
+	};
+	for (const contour of flattenOutline(commands, maxSegment)) {
+		if (warp.clip) {
+			for (const part of warpClippedContour(contour, warp, warp.clip)) {
+				emit(part);
+			}
+			continue;
+		}
+		emit(contour.map((p) => warp.map(p.x, p.y)));
 	}
 	return parts.length > 0 ? parts.join('') : undefined;
+}
+
+/** A contour cut at the clip's split positions, each part mapped and clipped to its region. */
+function warpClippedContour(
+	contour: OutlinePoint[],
+	warp: EnvelopeWarp,
+	clip: NonNullable<EnvelopeWarp['clip']>,
+): ClipPoint[][] {
+	const bounds = [-Infinity, ...clip.splitsX, Infinity];
+	const result: ClipPoint[][] = [];
+	clip.regions.forEach((region, i) => {
+		let part: ClipPoint[] = contour;
+		if (Number.isFinite(bounds[i]!)) {
+			part = clipPolygonByX(part, bounds[i]!, 1);
+		}
+		if (Number.isFinite(bounds[i + 1]!)) {
+			part = clipPolygonByX(part, bounds[i + 1]!, -1);
+		}
+		if (part.length < 3) {
+			return;
+		}
+		const mapped = part.map((p) => warp.map(p.x, p.y));
+		const clipped = region ? clipPolygonConvex(mapped, region) : mapped;
+		if (clipped.length >= 3) {
+			result.push(clipped);
+		}
+	});
+	return result;
 }

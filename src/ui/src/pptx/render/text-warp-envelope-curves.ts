@@ -76,6 +76,10 @@ export const GLYPH_ENVELOPE_PRESETS: ReadonlySet<string> = new Set([
 	'textWave2',
 	'textWave4',
 	'textDoubleWave1',
+	// Closed-loop presets, mapped by `text-warp-closed-paths.ts`.
+	'textRingInside',
+	'textRingOutside',
+	'textCirclePour',
 ]);
 
 /** True when `preset` should be rendered with a per-glyph two-curve envelope. */

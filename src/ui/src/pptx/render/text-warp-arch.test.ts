@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { archEllipsePath } from './text-warp-arch';
+import { archEllipsePath, circleEllipsePath } from './text-warp-arch';
 
 describe('archEllipsePath', () => {
 	it('draws the upper half of the box ellipse, below the frame inset, at the default angle', () => {
@@ -27,5 +27,29 @@ describe('archEllipsePath', () => {
 
 	it('leaves other start angles to the previous approximation', () => {
 		expect(archEllipsePath(200, 100, 0.5, 5400000, 'up')).toBeUndefined();
+	});
+});
+
+describe('circleEllipsePath', () => {
+	const points = (path: string): number[][] =>
+		[...path.matchAll(/(?:M|A [\d.]+,[\d.]+ 0 0,1) ([-\d.]+),([-\d.]+)/gu)].map((m) => [
+			Number(m[1]),
+			Number(m[2]),
+		]);
+
+	it('starts at the left tip and runs once round clockwise, so the centred text sits on the right', () => {
+		const path = circleEllipsePath(200, 100, 0.5, undefined);
+		const [start, opposite] = points(path) as [number[], number[]];
+		expect(start[0]).toBeLessThan(10);
+		expect(opposite[0]).toBeGreaterThan(190);
+		expect(path).toContain('0 0,1');
+		// The text is centred at half the path length: the second point of the loop.
+		expect(path.split('A')).toHaveLength(3);
+	});
+
+	it('starts elsewhere for another angle', () => {
+		const top = points(circleEllipsePath(200, 100, 0.5, 16200000))[0]!;
+		const left = points(circleEllipsePath(200, 100, 0.5, undefined))[0]!;
+		expect(top[1]).toBeLessThan(left[1]!);
 	});
 });
