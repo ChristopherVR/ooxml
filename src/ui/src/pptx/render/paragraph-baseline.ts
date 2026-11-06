@@ -123,6 +123,31 @@ export function cssBaseline(boxes: readonly CssLineBox[]): number {
 	);
 }
 
+const isDigit = (text: string, index: number): boolean => {
+	const code = text.charCodeAt(index);
+	return code >= 48 && code <= 57;
+};
+
+/**
+ * The first `<n>px` size in a CSS `font` shorthand (`NaN` when there is none),
+ * the leftmost match of `\d+(\.\d+)?px`. It scans back from each `px` rather
+ * than running that pattern, which backtracks quadratically on long digit runs
+ * that never reach a `px`.
+ */
+export function fontSizePx(font: string): number {
+	for (let at = font.indexOf('px'); at >= 0; at = font.indexOf('px', at + 2)) {
+		let start = at;
+		while (start > 0 && isDigit(font, start - 1)) start--;
+		if (start === at) continue;
+		if (start > 1 && font[start - 1] === '.' && isDigit(font, start - 2)) {
+			start--;
+			while (start > 0 && isDigit(font, start - 1)) start--;
+		}
+		return Number.parseFloat(font.slice(start, at));
+	}
+	return Number.NaN;
+}
+
 let context: CanvasRenderingContext2D | null | undefined;
 const cache = new Map<string, FontBox>();
 
@@ -160,7 +185,7 @@ export const measureFontBoxWithCanvas: FontBoxMeasure = (font) => {
 	if (state !== 'settled') {
 		return { ...box, provisional: true, ...(state === 'loading' ? { loading: true } : {}) };
 	}
-	const size = Number.parseFloat(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1] ?? '');
+	const size = fontSizePx(font);
 	const gap = typoLineGapEm(firstFontFamily(font)) * size;
 	if (gap > 0) {
 		box.lineGap = gap;

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	applyParagraphBaselineShift,
 	cssBaseline,
+	fontSizePx,
 	type FontBoxMeasure,
 	powerPointBaseline,
 	powerPointDescent,
@@ -289,5 +290,22 @@ describe('the pixel snap of the text body top', () => {
 			bodyTop: { painted: 13, exact: 13.67 },
 		});
 		expect(shift).toBeCloseTo(1, 0);
+	});
+});
+
+describe('fontSizePx', () => {
+	it('reads the first px size of a font shorthand', () => {
+		expect(fontSizePx('italic 700 16px Arial')).toBe(16);
+		expect(fontSizePx('bold 13.5px/20px "Segoe UI"')).toBe(13.5);
+		expect(fontSizePx('1.5.2px x')).toBe(5.2);
+		expect(fontSizePx('px 12px')).toBe(12);
+		expect(fontSizePx('12pt Arial')).toBeNaN();
+	});
+
+	it('stays linear on long digit runs without px (code scanning: polynomial patterns)', () => {
+		const started = performance.now();
+		expect(fontSizePx('0'.repeat(50000))).toBeNaN();
+		expect(fontSizePx(`${'0'.repeat(50000)}px`)).toBe(0);
+		expect(performance.now() - started).toBeLessThan(200);
 	});
 });
