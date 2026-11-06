@@ -19,7 +19,7 @@
  * (ST_PresetPatternVal).
  */
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'ooxml-core/pptx';
-import { getShapeType, hasShapeProperties, ooxmlGradientAngleToCssDegrees } from 'ooxml-core/pptx';
+import { hasShapeProperties, ooxmlGradientAngleToCssDegrees } from 'ooxml-core/pptx';
 import {
 	clampUnitInterval,
 	colorWithOpacity,
