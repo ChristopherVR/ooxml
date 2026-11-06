@@ -1,5 +1,7 @@
 import type {
 	CompatibilityWarningToast,
+	DeckWebfontProgress,
+	GoogleFontsOption,
 	PptxLoadLimits,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
@@ -9,8 +11,10 @@ import {
 	compatibilityWarningToasts,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prepareDeckWebfonts,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
+	resolveGoogleFontsCss2Base,
 	resolveInitialSlideIndex,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -61,6 +65,7 @@ import {
 	resolveMediaElementSource,
 } from './load-content-helpers';
 import type { EditorHistoryResult } from './useEditorHistory';
+import { GOOGLE_FONTS_LINK_ID } from './useFontInjection';
 
 /* ------------------------------------------------------------------ */
 /*  Input / Output types                                              */
@@ -124,6 +129,10 @@ export interface UseLoadContentInput {
 	/** Deck + slide compatibility-warning toast stack for this load. */
 	setCompatToasts: React.Dispatch<React.SetStateAction<CompatibilityWarningToast[]>>;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	/** Webfont download progress while the load waits for the deck's fonts, `null` when not shown. */
+	setFontProgress?: React.Dispatch<React.SetStateAction<DeckWebfontProgress | null>>;
+	/** Host `googleFonts` prop: the load waits for the faces it serves. Read through a ref. */
+	googleFonts?: GoogleFontsOption;
 	setError: React.Dispatch<React.SetStateAction<string | null>>;
 	setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
 	setIsEncrypted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -204,6 +213,8 @@ export function useLoadContent({
 	setModifyVerifier,
 	setCompatToasts,
 	setLoading,
+	setFontProgress,
+	googleFonts,
 	setError,
 	setIsDirty,
 	setIsEncrypted,
@@ -217,6 +228,8 @@ export function useLoadContent({
 	initialSlideRef.current = initialSlide;
 	const limitsRef = useRef(limits);
 	limitsRef.current = limits;
+	const googleFontsRef = useRef(googleFonts);
+	googleFontsRef.current = googleFonts;
 	// The load-error text for a deck over a load limit is localized.
 	const { t } = useTranslation();
 	const translateRef = useRef(t);
@@ -242,6 +255,7 @@ export function useLoadContent({
 		(async () => {
 			try {
 				setLoading(true);
+				setFontProgress?.(null);
 				setError(null);
 				const buffer =
 					content instanceof Uint8Array
@@ -352,7 +366,32 @@ export function useLoadContent({
 					handler.getImageData(path),
 				);
 
-				// Content can change while media, pictures or table fills are resolving.
+				// Separate the inherited master/layout (template) elements that the
+				// core loader merged into `slide.elements` into their own per-slide
+				// store. They get a dedicated, gated render layer and are merged back
+				// at save time (buildSaveSlides) so edits to them persist.
+				const partition = partitionTemplateElements(nextSlides);
+
+				// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
+				// Shown before its faces load, the text would visibly swap from the
+				// browser's stand-in face. The loading state stays up instead, with
+				// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+				if (typeof document !== 'undefined') {
+					await prepareDeckWebfonts({
+						document,
+						linkId: GOOGLE_FONTS_LINK_ID,
+						slides: partition.slides,
+						embeddedFonts: parsed.embeddedFonts ?? [],
+						googleFontsBase: resolveGoogleFontsCss2Base(googleFontsRef.current),
+						onProgress: (progress) => {
+							if (!cancelled && token === renderTokenRef.current) {
+								setFontProgress?.(progress);
+							}
+						},
+					});
+				}
+
+				// Content can change while media, pictures, table fills or fonts are resolving.
 				if (cancelled || token !== renderTokenRef.current) {
 					return;
 				}
@@ -368,11 +407,6 @@ export function useLoadContent({
 				}
 				resources.commit();
 				handlerRef.current = handler;
-				// Separate the inherited master/layout (template) elements that the
-				// core loader merged into `slide.elements` into their own per-slide
-				// store. They get a dedicated, gated render layer and are merged back
-				// at save time (buildSaveSlides) so edits to them persist.
-				const partition = partitionTemplateElements(nextSlides);
 				setSlides(partition.slides);
 				setTemplateElementsBySlideId(partition.templateElementsBySlideId);
 				setCanvasSize({
@@ -484,6 +518,7 @@ export function useLoadContent({
 			} finally {
 				resources.releaseIfUncommitted();
 				if (!cancelled && token === renderTokenRef.current) {
+					setFontProgress?.(null);
 					setLoading(false);
 				}
 			}

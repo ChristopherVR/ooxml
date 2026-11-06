@@ -5,10 +5,17 @@
  * `google-webfonts.ts` already resolves which catalogue family to load and
  * injects a `<link rel=stylesheet>` for on-screen text, but a CSS stylesheet
  * carries no glyph geometry: only a `src: url(...)` pointing at the actual
- * `.woff2` file does. This module re-parses that same stylesheet text (a
- * second, cheap `fetch` of a small text response; browsers already cache the
- * first one from the `<link>`) to find the `@font-face` block matching the
- * requested family/weight/style, then fetches ITS `url()` for the binary.
+ * `.woff2` file does. This module re-parses that same stylesheet text to find
+ * the `@font-face` block matching the requested family/weight/style, then
+ * fetches ITS `url()` for the binary.
+ *
+ * The `<link>`'s copy of the stylesheet cannot answer this `fetch`: Google
+ * sends it with `Vary: Sec-Fetch-Dest, Sec-Fetch-Mode`, and a stylesheet
+ * load (`style`, `no-cors`) and a script fetch (`empty`, `cors`) differ in
+ * both. So each stylesheet and each font file is fetched once per fetch
+ * implementation and the promise is shared (see {@link fetchOnce}): every
+ * family and variant of one deck reads the same stylesheet, and concurrent
+ * requests would otherwise all miss the HTTP cache together.
  *
  * Best-effort throughout: Google's CSS2 API can return several `@font-face`
  * blocks per family (subset by `unicode-range`, e.g. separate blocks for
@@ -85,6 +92,56 @@ export type FetchLike = (
 	url: string,
 ) => Promise<{ ok: boolean; text: () => Promise<string>; arrayBuffer: () => Promise<ArrayBuffer> }>;
 
+type CachedResponse = string | Uint8Array | undefined;
+
+/** In-flight and settled fetches per fetch implementation, keyed by `kind:url`. */
+const fetchCaches = new WeakMap<FetchLike, Map<string, Promise<CachedResponse>>>();
+
+/**
+ * Fetch `url` once per `fetchImpl` and share the promise. A failure is not
+ * kept, so a later call can retry (after going offline, for example).
+ */
+function fetchOnce(fetchImpl: FetchLike, url: string, kind: 'text'): Promise<string | undefined>;
+function fetchOnce(
+	fetchImpl: FetchLike,
+	url: string,
+	kind: 'bytes',
+): Promise<Uint8Array | undefined>;
+function fetchOnce(
+	fetchImpl: FetchLike,
+	url: string,
+	kind: 'text' | 'bytes',
+): Promise<CachedResponse> {
+	let cache = fetchCaches.get(fetchImpl);
+	if (!cache) {
+		cache = new Map();
+		fetchCaches.set(fetchImpl, cache);
+	}
+	const key = `${kind}:${url}`;
+	const cached = cache.get(key);
+	if (cached) {
+		return cached;
+	}
+	const pending = (async (): Promise<CachedResponse> => {
+		try {
+			const response = await fetchImpl(url);
+			if (!response.ok) {
+				return undefined;
+			}
+			return kind === 'text' ? await response.text() : new Uint8Array(await response.arrayBuffer());
+		} catch {
+			return undefined;
+		}
+	})();
+	cache.set(key, pending);
+	void pending.then((value) => {
+		if (value === undefined) {
+			cache.delete(key);
+		}
+	});
+	return pending;
+}
+
 /**
  * Fetch the outline-ready bytes for `referencedFamily` (the family as
  * referenced in the deck, e.g. "Calibri") at `cssHref` (the same href
@@ -108,11 +165,10 @@ export async function fetchGoogleWebfontOutlineBytes(
 		return undefined;
 	}
 	try {
-		const cssResponse = await fetchImpl(cssHref);
-		if (!cssResponse.ok) {
+		const css = await fetchOnce(fetchImpl, cssHref, 'text');
+		if (css === undefined) {
 			return undefined;
 		}
-		const css = await cssResponse.text();
 		// A weight variant ("DM Sans Light") is the base family's face at the
 		// weight its name implies, exactly as the text itself renders.
 		const weight = resolveFontWeight(referencedFamily, bold);
@@ -125,11 +181,7 @@ export async function fetchGoogleWebfontOutlineBytes(
 		if (!block) {
 			return undefined;
 		}
-		const fontResponse = await fetchImpl(block.url);
-		if (!fontResponse.ok) {
-			return undefined;
-		}
-		return new Uint8Array(await fontResponse.arrayBuffer());
+		return await fetchOnce(fetchImpl, block.url, 'bytes');
 	} catch {
 		return undefined;
 	}

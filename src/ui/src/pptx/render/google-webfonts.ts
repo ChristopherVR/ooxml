@@ -290,7 +290,7 @@ export function resetGoogleWebfontSessionCache(): void {
  * any network request.
  */
 export function matchGoogleWebfontFragments(families: readonly string[]): string[] {
-	// Insertion order is the order fragments are emitted in.
+	// Collected per family; emitted sorted below.
 	const weightsByFamily = new Map<string, Set<number>>();
 	for (const family of families) {
 		const face = resolveGoogleFontsFace(family);
@@ -310,7 +310,13 @@ export function matchGoogleWebfontFragments(families: readonly string[]): string
 			weights.add(Math.max(700, face.weight));
 		}
 	}
-	return [...weightsByFamily].map(([family, weights]) => buildGoogleFontsFragment(family, weights));
+	// Sorted, so the href depends only on which families a deck uses, never on
+	// the order its slides reference them: the loader's wait and each
+	// binding's effect walk differently ordered decks (Angular reads the
+	// merged deck), and a different href would reload the stylesheet.
+	return [...weightsByFamily]
+		.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+		.map(([family, weights]) => buildGoogleFontsFragment(family, weights));
 }
 
 /**
@@ -339,11 +345,24 @@ export async function resolveGoogleWebfontHref(
 	if (googleFontsBaseUrl === null) {
 		return null;
 	}
-	const referenced = collectReferencedFontFamilies(slides);
-	const candidates = selectGoogleWebfontFamilies(
-		referenced,
+	const candidates = selectGoogleWebfontCandidates(slides, embeddedFonts, isLocallyInstalled);
+	return buildGoogleFontsHref(matchGoogleWebfontFragments(candidates), googleFontsBaseUrl);
+}
+
+/**
+ * The referenced families {@link resolveGoogleWebfontHref} looks up in the
+ * catalogue: neither embedded (with matching files) nor installed. Shared so
+ * the load-time wait (`deck-webfont-readiness.ts`) waits for exactly the
+ * families the stylesheet serves.
+ */
+export function selectGoogleWebfontCandidates(
+	slides: readonly PptxSlide[],
+	embeddedFonts: readonly PptxEmbeddedFont[],
+	isLocallyInstalled: (family: string) => boolean = isFontFamilyInstalledLocally,
+): string[] {
+	return selectGoogleWebfontFamilies(
+		collectReferencedFontFamilies(slides),
 		selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
 		(family) => !resolvedFamilies.has(family) && isLocallyInstalled(family),
 	);
-	return buildGoogleFontsHref(matchGoogleWebfontFragments(candidates), googleFontsBaseUrl);
 }

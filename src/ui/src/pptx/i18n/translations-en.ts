@@ -2030,6 +2030,7 @@ export const translationsEn: Record<string, string> = {
 
 	// Viewer root (loading/error states, notes/properties panel)
 	'pptx.viewer.loading': 'Loading presentation…',
+	'pptx.viewer.loadingFonts': 'Downloading fonts ({{loaded}} of {{total}})…',
 	'pptx.viewer.encrypted': 'This presentation is password-protected and cannot be opened.',
 	'pptx.viewer.loadError': 'Failed to load presentation.',
 	'pptx.viewer.loadLimit.maxInputBytes':

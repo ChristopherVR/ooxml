@@ -1,10 +1,19 @@
-import type { CanvasSize, CollabLoadOrigin, LoadLimitTranslate, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type {
+	CanvasSize,
+	CollabLoadOrigin,
+	DeckWebfontProgress,
+	GoogleFontsOption,
+	LoadLimitTranslate,
+	SlideSizeEmu,
+} from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	createEmbeddedOutlineFontsSlot,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prepareDeckWebfonts,
+	resolveGoogleFontsCss2Base,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -35,6 +44,7 @@ import type {
 import { EncryptedFileError, PptxHandler } from 'pptx-viewer-core';
 
 import { glyphOutlineFontCache } from './glyph-outline-cache.svelte';
+import { SVELTE_GOOGLE_FONTS_LINK_ID } from './google-webfonts';
 import {
 	resolveLazyImages,
 	resolveLazyTableCellImages,
@@ -133,6 +143,8 @@ export class PresentationLoader {
 	tableStylesToDelete = $state.raw<string[]>([]);
 	/** True while a load is in flight. */
 	loading = $state(false);
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	fontProgress = $state.raw<DeckWebfontProgress | null>(null);
 	/** Error message from the last failed load, or null. */
 	error = $state<string | null>(null);
 	/** True when the file is password-protected and could not be opened. */
@@ -173,6 +185,12 @@ export class PresentationLoader {
 	 */
 	translate: LoadLimitTranslate | undefined = undefined;
 
+	/**
+	 * The host `googleFonts` prop, read when a load waits for the deck's
+	 * webfonts. Set by the composition root; unset loads from Google Fonts.
+	 */
+	getGoogleFonts: () => GoogleFontsOption | undefined = () => undefined;
+
 	/** Parse a `.pptx` buffer into reactive viewer state. */
 	async load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
 		this.loadOrigin = origin;
@@ -183,6 +201,7 @@ export class PresentationLoader {
 
 		try {
 			this.loading = true;
+			this.fontProgress = null;
 			this.error = null;
 			this.isEncrypted = false;
 
@@ -210,6 +229,25 @@ export class PresentationLoader {
 			);
 			const nextTableStyleMap = await resolveLazyTableStyleImages(newHandler, parsed.tableStyleMap);
 			const nextSlides = await resolveLazyTextFillBlips(newHandler, tableCellResolvedSlides);
+
+			// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
+			// Shown before its faces load, the text would visibly swap from the
+			// browser's stand-in face. The loading state stays up instead, with
+			// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+			if (token === this.#renderToken && typeof document !== 'undefined') {
+				await prepareDeckWebfonts({
+					document,
+					linkId: SVELTE_GOOGLE_FONTS_LINK_ID,
+					slides: nextSlides,
+					embeddedFonts: parsed.embeddedFonts ?? [],
+					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
+					onProgress: (progress) => {
+						if (token === this.#renderToken) {
+							this.fontProgress = progress;
+						}
+					},
+				});
+			}
 
 			// Commit reactive state.
 			if (token !== this.#renderToken) {
@@ -298,6 +336,7 @@ export class PresentationLoader {
 		} finally {
 			resources.releaseIfUncommitted();
 			if (token === this.#renderToken) {
+				this.fontProgress = null;
 				this.loading = false;
 			}
 		}

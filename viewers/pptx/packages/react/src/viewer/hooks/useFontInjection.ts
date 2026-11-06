@@ -1,11 +1,9 @@
 import {
 	collectReferencedFontFamilies,
 	createEmbeddedFontsSheet,
-	fetchGoogleWebfontOutlineBytes,
+	loadDeckWebfontOutlines,
 	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
-	selectGoogleWebfontFamilies,
-	selectTrustedEmbeddedFonts,
 	syncGoogleWebfontStylesheet,
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption } from 'ooxml-ui/pptx';
@@ -23,7 +21,8 @@ import { glyphOutlineFontCache } from '../utils/glyph-outline-cache';
 /* ------------------------------------------------------------------ */
 
 const EMBEDDED_FONTS_STYLE_ID = 'pptx-embedded-fonts';
-const GOOGLE_FONTS_LINK_ID = 'pptx-google-fonts';
+/** The managed Google Fonts `<link>`; the loader injects it first, while it waits for the fonts. */
+export const GOOGLE_FONTS_LINK_ID = 'pptx-google-fonts';
 const SYMBOL_FONTS_STYLE_ID = 'pptx-symbol-font-fallback';
 
 /**
@@ -120,50 +119,18 @@ export function useFontInjection({
 	const [, setOutlineFontsTick] = useState(0);
 	useEffect(() => {
 		let cancelled = false;
-		const referenced = collectReferencedFontFamilies(slides);
-		const candidates = selectGoogleWebfontFamilies(
-			referenced,
-			selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
-		);
-		if (candidates.length === 0) {
-			return;
-		}
-		void resolveGoogleWebfontHref(slides, embeddedFonts, undefined, googleFontsBase).then(
-			async (href) => {
-				if (cancelled || !href) {
-					return;
-				}
-				const boldItalicVariants: Array<{ bold: boolean; italic: boolean }> = [
-					{ bold: false, italic: false },
-					{ bold: true, italic: false },
-				];
-				let registeredAny = false;
-				for (const family of candidates) {
-					for (const variant of boldItalicVariants) {
-						if (cancelled) {
-							return;
-						}
-						const bytes = await fetchGoogleWebfontOutlineBytes(
-							href,
-							family,
-							variant.bold,
-							variant.italic,
-							fetch,
-						);
-						if (
-							bytes &&
-							glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
-						) {
-							registeredAny = true;
-						}
-					}
-				}
-				if (registeredAny && !cancelled) {
-					setOutlineFontsTick((tick) => tick + 1);
-				}
-				return undefined;
-			},
-		);
+		void loadDeckWebfontOutlines({
+			slides,
+			embeddedFonts,
+			googleFontsBase,
+			cache: glyphOutlineFontCache,
+			isCancelled: () => cancelled,
+		}).then((registered) => {
+			if (registered && !cancelled) {
+				setOutlineFontsTick((tick) => tick + 1);
+			}
+			return undefined;
+		});
 		return () => {
 			cancelled = true;
 		};

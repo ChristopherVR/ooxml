@@ -23,6 +23,8 @@ description: 了解 pptx-viewer 在浏览器、Node.js 和 Web Worker 中的支�
 
 浏览器无法像桌面应用一样直接使用完整的系统字体目录，因此 `pptx-viewer` 按三个步骤解析演示文稿中的字体：优先使用阅读者设备上已安装的原字体；否则在排版前从 Google Fonts 加载经过验证、字形度量兼容的替代字体（Calibri -> Carlito、Cambria -> Caladea、Arial -> Arimo、Times New Roman -> Tinos、Courier New -> Cousine、Georgia -> Gelasio），使换行和文本尺寸尽量保持与 PowerPoint 一致；两者均不可用时，才通过 PANOSE 分类回退到同类通用字体，此时字形度量可能发生变化。
 
+加载演示文稿时，查看器会等待幻灯片所用的 Google Fonts 字体，避免文字先以替代字体显示、随后明显变化。等待稍长时，加载提示会显示“正在下载字体（1/2）”；超过 8 秒，或请求失败（离线、被拦截）时立即显示演示文稿，迟到的字体在到达后替换。已安装和嵌入的字体无需等待。
+
 ### 字体与隐私 {#fonts-and-privacy}
 
 从 Google Fonts 获取替代字体时，读者的浏览器会访问 `fonts.googleapis.com` 和 `fonts.gstatic.com`，从而向 Google 暴露读者的 IP 地址。不允许这样做的宿主可以设置 `googleFonts` 选项，所有绑定均支持：

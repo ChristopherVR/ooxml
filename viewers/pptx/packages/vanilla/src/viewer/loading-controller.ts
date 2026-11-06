@@ -3,9 +3,11 @@ import {
 	describeFontEmbedding,
 	partitionTemplateElements,
 	pptxLoadErrorMessage,
+	prepareDeckWebfonts,
 	readOnlyRecommendation,
 	reduceReadOnlySession,
 	resolveAuthoredCustomShowId,
+	resolveGoogleFontsCss2Base,
 	resolveInitialSlideIndex,
 } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
@@ -20,6 +22,7 @@ import { loadPresentation, resolveSourceToBuffer, revokeBlobUrls } from './load'
 import type { Store, ViewerState } from './state';
 import { readOnlySessionFields, readOnlySessionOf } from './state/read-only-session';
 import type { PptxViewerOptions } from './types';
+import { VANILLA_GOOGLE_FONTS_LINK_ID } from './webfonts';
 
 export interface LoadingControllerDeps {
 	options: PptxViewerOptions;
@@ -52,6 +55,8 @@ export interface LoadingControllerDeps {
 	 * own mirrored one.
 	 */
 	setEditableForLoad?: (editable: boolean) => void;
+	/** The document the viewer renders into, where the loader injects the webfont `<link>`. */
+	doc?: Document;
 }
 
 export interface LoadOptions {
@@ -118,13 +123,33 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 	): Promise<void> {
 		const token = ++loadToken;
 		deps.getEditor()?.reset();
-		store.set({ loading: true, error: null });
+		store.set({ loading: true, fontProgress: null, error: null });
 		try {
 			const buffer = await resolveSourceToBuffer(source);
 			const loaded = await loadPresentation(buffer, {
 				allowExternalImages: deps.getAllowExternalContent?.(),
 				limits: options.limits,
 			});
+			const partition = partitionTemplateElements(loaded.slides);
+			// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
+			// Shown before its faces load, the text would visibly swap from the
+			// browser's stand-in face. The loading state stays up instead, with
+			// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+			const doc = deps.doc ?? (typeof document === 'undefined' ? undefined : document);
+			if (token === loadToken && doc) {
+				await prepareDeckWebfonts({
+					document: doc,
+					linkId: VANILLA_GOOGLE_FONTS_LINK_ID,
+					slides: partition.slides,
+					embeddedFonts: loaded.embeddedFonts,
+					googleFontsBase: resolveGoogleFontsCss2Base(options.googleFonts),
+					onProgress: (progress) => {
+						if (token === loadToken) {
+							store.set({ fontProgress: progress });
+						}
+					},
+				});
+			}
 			if (token !== loadToken) {
 				revokeBlobUrls(loaded.blobUrls);
 				loaded.handler.dispose();
@@ -133,7 +158,6 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			releaseLoaded();
 			handler = loaded.handler;
 			blobUrls = loaded.blobUrls;
-			const partition = partitionTemplateElements(loaded.slides);
 			deps.onContentApplying?.(origin);
 			// Trust Center > "Open documents in Protected View": a freshly-opened
 			// deck (not the host's own bootstrap content, and not a same-document
@@ -226,6 +250,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				tableStylesToDelete: [],
 				currentSlide: resolveInitialSlideIndex(options.initialSlide, partition.slides.length),
 				loading: false,
+				fontProgress: null,
 			});
 			// Goes through the central editable gate (store flag + the editor
 			// controller's own mirrored flag), not a bare store patch, so
@@ -242,7 +267,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				error instanceof EncryptedFileError
 					? t('pptx.security.currentlyProtected')
 					: pptxLoadErrorMessage(error, t);
-			store.set({ loading: false, error: message });
+			store.set({ loading: false, fontProgress: null, error: message });
 			options.onError?.(message, error);
 		}
 	}

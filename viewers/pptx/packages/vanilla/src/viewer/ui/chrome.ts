@@ -1,4 +1,5 @@
 import type {
+	DeckWebfontProgress,
 	AccountAuthConfig,
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
@@ -163,7 +164,8 @@ export interface ViewerChrome {
 	presentationToolbar: PresentationToolbar;
 	/** Release what the chrome observes (call once, when it is torn down). */
 	dispose(): void;
-	setLoading(loading: boolean): void;
+	/** Show or hide the loading overlay; `fontProgress` switches its text to the font download. */
+	setLoading(loading: boolean, fontProgress?: DeckWebfontProgress | null): void;
 	setError(message: string | null): void;
 	setEmpty(empty: boolean): void;
 	setPresenting(presenting: boolean): void;
@@ -491,8 +493,11 @@ export function buildViewerChrome(
 		dispose() {
 			stopNotesHeight();
 		},
-		setLoading(loading) {
+		setLoading(loading, fontProgress) {
 			loadingOverlay.hidden = !loading;
+			loadingOverlay.textContent = fontProgress
+				? t('pptx.viewer.loadingFonts', { loaded: fontProgress.loaded, total: fontProgress.total })
+				: t('pptx.common.loading');
 			root.setAttribute('aria-busy', String(loading));
 		},
 		setError(message) {

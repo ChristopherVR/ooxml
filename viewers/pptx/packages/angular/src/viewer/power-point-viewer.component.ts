@@ -359,7 +359,16 @@ const noopClose = (): void => undefined;
 			@if (loader.loading()) {
 				<div class="pptx-ng-state pptx-ng-loading" role="status" aria-live="polite">
 					<div class="pptx-ng-spinner" aria-hidden="true"></div>
-					<p>{{ 'pptx.viewer.loading' | translate }}</p>
+					@if (loader.fontProgress(); as fontProgress) {
+						<p>
+							{{
+								'pptx.viewer.loadingFonts'
+									| translate: { loaded: fontProgress.loaded, total: fontProgress.total }
+							}}
+						</p>
+					} @else {
+						<p>{{ 'pptx.viewer.loading' | translate }}</p>
+					}
 				</div>
 			} @else if (loader.isEncrypted()) {
 				<div class="pptx-ng-state pptx-ng-error" role="alert">
@@ -3153,6 +3162,7 @@ export class PowerPointViewerComponent
 		});
 		this.loader.bindHostAllowExternalContent(() => this.allowExternalContent());
 		this.loader.bindHostLimits(() => this.limits());
+		this.loader.bindHostGoogleFonts(() => this.googleFonts());
 		this.loader.bindPendingInlineEdit(() => {
 			if (!this.canEdit()) {
 				return undefined;

@@ -3,6 +3,8 @@ import JSZip from 'jszip';
 import type {
 	DeckSaveIntent,
 	DeckSavePurpose,
+	DeckWebfontProgress,
+	GoogleFontsOption,
 	InlineTextDraft,
 	LoadLimitTranslate,
 	PendingInlineTextEdit,
@@ -17,6 +19,8 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	pptxLoadErrorMessage,
+	prepareDeckWebfonts,
+	resolveGoogleFontsCss2Base,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -71,6 +75,7 @@ import {
 } from './load-content-helpers';
 import type { TemplateElementMap } from './template-editing';
 import { buildSaveSlides, partitionTemplateElements } from './template-editing';
+import { VUE_GOOGLE_FONTS_LINK_ID } from './useGoogleWebfonts';
 
 /**
  * Parse digital signatures from a `.pptx` ZIP buffer (best-effort; returns an
@@ -178,6 +183,8 @@ export interface UseLoadContentResult {
 	mediaDataUrls: ShallowRef<Map<string, string>>;
 	/** True while a load is in flight. */
 	loading: Ref<boolean>;
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	fontProgress: ShallowRef<DeckWebfontProgress | null>;
 	/** Error message from the last failed load, or null. */
 	error: Ref<string | null>;
 	/** True when the file is password-protected and could not be opened. */
@@ -318,6 +325,11 @@ export interface UseLoadContentOptions {
 	 */
 	getLimits?: () => PptxLoadLimits | undefined;
 	/**
+	 * The host `googleFonts` prop, read at load time: the load waits (bounded)
+	 * for the Google Fonts faces the deck draws before showing it.
+	 */
+	getGoogleFonts?: () => GoogleFontsOption | undefined;
+	/**
 	 * Translates the load-error text for a deck over a load limit (the
 	 * viewer's `t`). Omitted, the error keeps the core's English message.
 	 */
@@ -341,6 +353,7 @@ export function useLoadContent(
 	const layoutOptions = shallowRef<PptxLayoutOption[]>([]);
 	const mediaDataUrls = shallowRef<Map<string, string>>(new Map());
 	const loading = ref(false);
+	const fontProgress = shallowRef<DeckWebfontProgress | null>(null);
 	const error = ref<string | null>(null);
 	const isEncrypted = ref(false);
 	const handler = shallowRef<PptxHandler | null>(null);
@@ -394,6 +407,7 @@ export function useLoadContent(
 
 		try {
 			loading.value = true;
+			fontProgress.value = null;
 			error.value = null;
 			isEncrypted.value = false;
 
@@ -522,6 +536,28 @@ export function useLoadContent(
 			// store so the editor can gate / route / merge them back independently.
 			const partitioned = partitionTemplateElements(nextSlides);
 
+			// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
+			// Shown before its faces load, the text would visibly swap from the
+			// browser's stand-in face. The loading state stays up instead, with
+			// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+			if (typeof document !== 'undefined') {
+				await prepareDeckWebfonts({
+					document,
+					linkId: VUE_GOOGLE_FONTS_LINK_ID,
+					slides: partitioned.slides,
+					embeddedFonts: parsed.embeddedFonts ?? [],
+					googleFontsBase: resolveGoogleFontsCss2Base(options?.getGoogleFonts?.()),
+					onProgress: (progress) => {
+						if (token === renderToken) {
+							fontProgress.value = progress;
+						}
+					},
+				});
+				if (token !== renderToken) {
+					return;
+				}
+			}
+
 			// Commit reactive state.
 			previousHandler?.dispose();
 			revokeBlobUrls(Array.from(mediaDataUrls.value.values()));
@@ -603,6 +639,7 @@ export function useLoadContent(
 		} finally {
 			resources.releaseIfUncommitted();
 			if (token === renderToken) {
+				fontProgress.value = null;
 				loading.value = false;
 			}
 		}
@@ -737,6 +774,7 @@ export function useLoadContent(
 		slideMasters,
 		mediaDataUrls,
 		loading,
+		fontProgress,
 		error,
 		isEncrypted,
 		handler,

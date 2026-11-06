@@ -15,7 +15,9 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	pptxLoadErrorMessage,
+	prepareDeckWebfonts,
 	resolveAllowExternalContent,
+	resolveGoogleFontsCss2Base,
 	resolveMediaElementSource,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
@@ -28,6 +30,8 @@ import type {
 	CanvasSize,
 	DeckSaveIntent,
 	DeckSaveState,
+	DeckWebfontProgress,
+	GoogleFontsOption,
 	PendingInlineTextEdit,
 	PptxLoadLimits,
 	SlideSizeEmu,
@@ -65,6 +69,7 @@ import {
 	PptxHandler,
 } from 'pptx-viewer-core';
 
+import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
 
 /**
@@ -92,6 +97,11 @@ export class LoadContentService {
 	/** The host `limits` input, read (untracked) at the start of each load. */
 	bindHostLimits(reader: () => PptxLoadLimits | undefined): void {
 		this.hostLimitsReader = reader;
+	}
+	private hostGoogleFontsReader?: () => GoogleFontsOption | undefined;
+	/** The host `googleFonts` input, read (untracked) when a load waits for its webfonts. */
+	bindHostGoogleFonts(reader: () => GoogleFontsOption | undefined): void {
+		this.hostGoogleFontsReader = reader;
 	}
 	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
@@ -245,6 +255,8 @@ export class LoadContentService {
 	readonly digitalSignatureCount = signal(0);
 	/** True while a load is in flight. */
 	readonly loading = signal(false);
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	readonly fontProgress = signal<DeckWebfontProgress | null>(null);
 	/** Error message from the last failed load, or null. */
 	readonly error = signal<string | null>(null);
 	/** True when the file is password-protected and could not be opened. */
@@ -414,6 +426,7 @@ export class LoadContentService {
 
 		try {
 			this.loading.set(true);
+			this.fontProgress.set(null);
 			this.error.set(null);
 			this.isEncrypted.set(false);
 
@@ -540,6 +553,27 @@ export class LoadContentService {
 				newHandler.getImageData(path),
 			);
 
+			// ── Wait (bounded) for the deck's Google Fonts webfonts ─────
+			// Shown before its faces load, the text would visibly swap from the
+			// browser's stand-in face. The loading state stays up instead, with
+			// progress once the wait is noticeable (see deck-webfont-readiness.ts).
+			if (token === this.renderToken && typeof document !== 'undefined') {
+				await prepareDeckWebfonts({
+					document,
+					linkId: GOOGLE_WEBFONTS_LINK_ID,
+					slides: nextSlides,
+					embeddedFonts: parsed.embeddedFonts ?? [],
+					googleFontsBase: resolveGoogleFontsCss2Base(
+						untracked(() => this.hostGoogleFontsReader?.()),
+					),
+					onProgress: (progress) => {
+						if (token === this.renderToken) {
+							this.fontProgress.set(progress);
+						}
+					},
+				});
+			}
+
 			// Commit reactive state.
 			if (token !== this.renderToken) {
 				return;
@@ -647,6 +681,7 @@ export class LoadContentService {
 		} finally {
 			resources.releaseIfUncommitted();
 			if (token === this.renderToken) {
+				this.fontProgress.set(null);
 				this.loading.set(false);
 			}
 		}

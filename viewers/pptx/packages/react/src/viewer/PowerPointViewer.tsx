@@ -73,9 +73,9 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
+import { installSvgIdScope } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { installSvgIdScope } from 'ooxml-ui/pptx';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -1450,7 +1450,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					    mobile/desktop breakpoint (same class of bug as the
 					    CollaborationProvider case documented below). */}
 					{loading ? (
-						<LoadingState />
+						<LoadingState fontProgress={state.fontProgress} />
 					) : error ? (
 						<ErrorState error={error} />
 					) : (

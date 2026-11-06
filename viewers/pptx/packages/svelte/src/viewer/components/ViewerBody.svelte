@@ -41,6 +41,7 @@
 		current,
 		onselect,
 		loading,
+		fontProgress = null,
 		isEncrypted,
 		error,
 		activeSlide,
@@ -223,6 +224,7 @@
 				{mediaDataUrls}
 				{current}
 				{loading}
+				{fontProgress}
 				{isEncrypted}
 				{error}
 				{activeSlide}

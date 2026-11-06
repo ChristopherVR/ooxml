@@ -395,6 +395,7 @@ const deck = useLoadContent(() => activeContent.value, {
 		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
 	// Host load limits: read per load, so changing the prop never reloads the deck.
 	getLimits: () => props.limits,
+	getGoogleFonts: () => props.googleFonts,
 	translate: (key, params) => t(key, params),
 	// File > Fonts. `fontEmbedding` is declared further down (it needs the
 	// loaded deck's embedded fonts), so this getter reads it lazily at save
@@ -407,6 +408,7 @@ const {
 	canvasSize,
 	mediaDataUrls,
 	loading,
+	fontProgress,
 	error,
 	isEncrypted,
 	coreProperties,
@@ -2076,7 +2078,16 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 		<!-- Loading -->
 		<div v-if="loading" class="pptx-vue-state pptx-vue-loading" role="status" aria-live="polite">
 			<div class="pptx-vue-spinner" aria-hidden="true" />
-			<p>{{ t('pptx.viewer.loading') }}</p>
+			<p>
+				{{
+					fontProgress
+						? t('pptx.viewer.loadingFonts', {
+								loaded: fontProgress.loaded,
+								total: fontProgress.total,
+							})
+						: t('pptx.viewer.loading')
+				}}
+			</p>
 		</div>
 
 		<!-- Encrypted -->

@@ -5,7 +5,6 @@ import {
 	buildUserFontFaceStyles,
 	clearPresentationDeck,
 	collectAccessibilityIssues,
-	collectReferencedFontFamilies,
 	commitElementUpdateBatch,
 	createBackstagePresentation,
 	createBlankSlide,
@@ -22,11 +21,11 @@ import {
 	deleteAutosaveSnapshot,
 	describeFontEmbedding,
 	endAudienceDisplay,
-	fetchGoogleWebfontOutlineBytes,
 	insertSlidePaste,
 	isEditingAllowed,
 	isPanelVisible,
 	isPresentationSessionMessage,
+	loadDeckWebfontOutlines,
 	loadPresentationDeck,
 	makeSlideId,
 	mayLeaveSlideShow,
@@ -52,8 +51,6 @@ import {
 	resolveGoogleWebfontHref,
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
-	selectGoogleWebfontFamilies,
-	selectTrustedEmbeddedFonts,
 	saveFailureMessage,
 	shouldClearAutosaveCacheOnClose,
 	shouldCommitSmartArtNodeText,
@@ -318,6 +315,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.loading = createLoadingController({
 			options,
 			store: this.store,
+			doc: this.doc,
 			getTranslator: () => this.t,
 			getEditor: () => this.editor,
 			// Late-joiner bootstrap protection: bracket the load commit so an
@@ -878,49 +876,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		embeddedFonts: readonly PptxEmbeddedFont[],
 		token: number,
 	): void {
-		const referenced = collectReferencedFontFamilies(slides);
-		const candidates = selectGoogleWebfontFamilies(
-			referenced,
-			selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
-		);
-		if (candidates.length === 0) {
-			return;
-		}
-		void resolveGoogleWebfontHref(
+		void loadDeckWebfontOutlines({
 			slides,
 			embeddedFonts,
-			undefined,
-			resolveGoogleFontsCss2Base(this.options.googleFonts),
-		).then(async (href) => {
-			if (token !== this.webfontsToken || !href) {
-				return;
-			}
-			const variants: Array<{ bold: boolean; italic: boolean }> = [
-				{ bold: false, italic: false },
-				{ bold: true, italic: false },
-			];
-			let registeredAny = false;
-			for (const family of candidates) {
-				for (const variant of variants) {
-					if (token !== this.webfontsToken) {
-						return;
-					}
-					const bytes = await fetchGoogleWebfontOutlineBytes(
-						href,
-						family,
-						variant.bold,
-						variant.italic,
-						fetch,
-					);
-					if (
-						bytes &&
-						glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
-					) {
-						registeredAny = true;
-					}
-				}
-			}
-			if (registeredAny && token === this.webfontsToken) {
+			googleFontsBase: resolveGoogleFontsCss2Base(this.options.googleFonts),
+			cache: glyphOutlineFontCache,
+			isCancelled: () => token !== this.webfontsToken,
+		}).then((registered) => {
+			if (registered && token === this.webfontsToken) {
 				this.store.set({ outlineFontsTick: this.store.get().outlineFontsTick + 1 });
 			}
 			return undefined;
