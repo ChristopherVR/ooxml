@@ -65,6 +65,7 @@ import {
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
+	installSvgIdScope,
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'ooxml-ui/pptx';
 import type {
@@ -3202,6 +3203,8 @@ export class PowerPointViewerComponent
 		// File > Options > Save > "clear cache on close": also cover the viewer
 		// being destroyed without a page unload (the `beforeunload` listener
 		// above covers the tab actually closing/navigating away).
+		// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
+		this.destroyRef.onDestroy(installSvgIdScope());
 		this.destroyRef.onDestroy(() => {
 			this.slidePackageClipboard.dispose();
 			if (this.viewerOpts.shouldClearCacheOnClose()) {

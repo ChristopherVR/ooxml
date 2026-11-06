@@ -68,6 +68,7 @@ import {
 	withSaveFailureToast,
 	writeStoredViewerPrefs,
 	confirmExternalHyperlinkDialog,
+	installSvgIdScope,
 } from 'ooxml-ui/pptx';
 import type {
 	CloudDocumentHostValues,
@@ -223,6 +224,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private readonly sessions: SessionControllers;
 	private readonly controls: ViewerControls;
 	private destroyed = false;
+	private releaseSvgIdScope: (() => void) | undefined;
 	private presenterChannel: BroadcastChannel | null = null;
 	private audienceWindow: Window | null = null;
 	private presenterSessionId = '';
@@ -280,6 +282,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		super();
 		this.container = container;
 		this.doc = container.ownerDocument;
+		// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
+		this.releaseSvgIdScope = installSvgIdScope(this.doc);
 		this.options = options;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
@@ -2347,6 +2351,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	destroy(): void {
+		this.releaseSvgIdScope?.();
 		if (this.destroyed) {
 			return;
 		}

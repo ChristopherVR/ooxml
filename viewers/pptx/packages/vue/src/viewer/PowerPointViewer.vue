@@ -72,6 +72,7 @@ import {
 	shouldShowAutosaveRecoveryPrompt,
 } from 'ooxml-ui/pptx';
 import type { CloudFileProvider, CloudOpenedFile, ViewerAddinStatus } from 'ooxml-ui/pptx';
+import { installSvgIdScope } from 'ooxml-ui/pptx';
 import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
 import type {
 	PptxElement,
@@ -1706,6 +1707,13 @@ function onOptionsClearCache(): void {
 		// Browser lifecycle cleanup cannot report a storage failure.
 	});
 }
+
+// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
+let releaseSvgIdScope: (() => void) | undefined;
+onMounted(() => {
+	releaseSvgIdScope = installSvgIdScope();
+});
+onBeforeUnmount(() => releaseSvgIdScope?.());
 
 // File > Options > Save > "cache retention": a one-time sweep per mount is
 // enough, since a fresh snapshot only ever lands with a fresh timestamp.

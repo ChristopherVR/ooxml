@@ -75,6 +75,7 @@ import {
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
+import { installSvgIdScope } from 'ooxml-ui/pptx';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -300,6 +301,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// shared with every binding.
 		const rootOptions = resolveViewerRootOptions(props);
 
+		// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
+		useEffect(() => installSvgIdScope(), []);
 		useEffect(() => {
 			const css = buildUserFontFaceStyles(fonts);
 			if (!css) {

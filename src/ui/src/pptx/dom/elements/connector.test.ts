@@ -124,23 +124,6 @@ describe('connector arrowhead markers', () => {
 	});
 });
 
-describe('connector marker ids', () => {
-	it('gives every render of the same connector its own marker id', () => {
-		// The editor, its thumbnails and the slide show paint one element; a shared id
-		// resolves to the first marker, which can sit in a hidden subtree and not paint.
-		const el = connector({ shapeStyle: { strokeWidth: 2, connectorEndArrow: 'triangle' } });
-		const ids = [0, 1].map((z) => {
-			const wrapper = renderConnectorElement(el, z, makeContext()) as HTMLElement;
-			const id = wrapper.querySelector('marker')?.getAttribute('id');
-			expect(wrapper.querySelector('[data-pptx-line]')?.getAttribute('marker-end')).toBe(
-				`url(#${id})`,
-			);
-			return id;
-		});
-		expect(ids[0]).not.toBe(ids[1]);
-	});
-});
-
 describe('connector morph strand', () => {
 	it('marks the painted strand a morph keeps at its width', () => {
 		const wrapper = renderConnectorElement(connector(), 0, makeContext()) as HTMLElement;

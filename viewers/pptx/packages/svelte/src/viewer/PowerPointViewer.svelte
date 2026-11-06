@@ -23,6 +23,7 @@
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
 	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
+	import { installSvgIdScope } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { aiAssistants } from './ai-assistant-registry';
@@ -128,6 +129,8 @@
 		}, cloudDocument, saveProgress),
 	);
 	onDestroy(() => vm.destroy());
+	// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
+	$effect(() => installSvgIdScope());
 	$effect(() => {
 		const editable = vm.editingActive;
 		if (!rootEl) {
