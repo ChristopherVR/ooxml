@@ -345,7 +345,7 @@ export function getInnerShadowCss(style: ShapeStyle | undefined): string | undef
 	// PowerPoint draws an inner shadow against the edge the offset points to (a
 	// positive x offset darkens the RIGHT inner edge); a CSS inset shadow moves
 	// the other way, so the offset is negated.
-	return `inset ${Math.round(-offsetX) + 0}px ${Math.round(-offsetY) + 0}px ${Math.round(blur)}px ${colorWithOpacity(
+	return `inset ${Math.round(-offsetX) + 0}px ${Math.round(-offsetY) + 0}px ${Math.round(shadowBlurToCss(blur))}px ${colorWithOpacity(
 		normalizeHexColor(style.innerShadowColor, DEFAULT_SHADOW_COLOR),
 		opacity,
 	)}`;

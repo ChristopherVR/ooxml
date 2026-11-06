@@ -159,7 +159,14 @@ describe('getInnerShadowCss', () => {
 			innerShadowOpacity: 0.5,
 		});
 		// PowerPoint hugs the edge the offset points to: the CSS inset offset is negated.
-		expect(css).toBe('inset -2px -3px 5px rgba(0, 0, 0, 0.5)');
+		// The blur is PowerPoint's `blurRad`: a Gaussian of deviation 0.327 of it, so a
+		// CSS blur length of 0.654 of it (5 px of blurRad is 3.27 px of blur).
+		expect(css).toBe('inset -2px -3px 3px rgba(0, 0, 0, 0.5)');
+	});
+
+	it('maps the inner shadow blur like the outer one (a 16 px blurRad is a 10 px CSS blur)', () => {
+		const css = getInnerShadowCss({ innerShadowColor: '#000000', innerShadowBlur: 16 });
+		expect(css).toContain(' 10px ');
 	});
 });
 

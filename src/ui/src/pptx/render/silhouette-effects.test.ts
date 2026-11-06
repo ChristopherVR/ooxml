@@ -161,4 +161,16 @@ describe('gradient, pattern and picture fills', () => {
 		expect(usesSilhouetteEffects(rect)).toBe(false);
 		expect(getSilhouetteFillLayer(rect)).toBeUndefined();
 	});
+
+	it('an inner shadow blurs by 0.327 of its blurRad, like the outer one', () => {
+		const el = shape('triangle', {
+			shadowColor: undefined,
+			innerShadowColor: '#000000',
+			innerShadowBlur: 16,
+			innerShadowOpacity: 0.7,
+		});
+		const markup = getSilhouetteEffects(el)?.filterMarkup ?? '';
+		// 16 px of blurRad: CSS blur 10.46, deviation 5.23.
+		expect(markup).toContain('stdDeviation="5.23"');
+	});
 });

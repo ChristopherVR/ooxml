@@ -191,7 +191,7 @@ export function resolveInnerShadow(style: ShapeStyle): SilhouetteInnerShadow | u
 	return {
 		offsetX: finite(style.innerShadowOffsetX) ? style.innerShadowOffsetX : 0,
 		offsetY: finite(style.innerShadowOffsetY) ? style.innerShadowOffsetY : 0,
-		blur: finite(style.innerShadowBlur) ? Math.max(0, style.innerShadowBlur) : 6,
+		blur: shadowBlurToCss(finite(style.innerShadowBlur) ? Math.max(0, style.innerShadowBlur) : 6),
 		color: hex(style.innerShadowColor, DEFAULT_SHADOW),
 		opacity: finite(style.innerShadowOpacity) ? unit(style.innerShadowOpacity) : 0.5,
 	};
