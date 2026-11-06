@@ -10,14 +10,19 @@
  *
  * - the interactive editing canvas;
  * - the live presentation stage (playback, triggers and builds select by it);
- * - a Morph transition layer, whose per-element keyframe CSS is keyed on it
- *   (the host hides its own stage while the overlay is mounted, so there is
- *   still one marked copy of each element).
+ * - a transition layer that the show addresses by id (`preserveElementIds`).
+ *   Every binding keeps it on Morph layers, whose per-element keyframe CSS is
+ *   keyed on it. Angular also keeps it on its other transition layers, because
+ *   they sit inside the show stage and the show applies build states to every
+ *   `[data-element-id]` there; vanilla's layers are copies of the presenting
+ *   stages and keep it too. Vue and Svelte strip their other transition layers.
  *
  * Every other stage (slides pane and host thumbnails, slide sorter, master and
- * layout previews, presenter previews, reading view, non-Morph transition
- * layers, export rasters) is static and carries none, as React's static
- * renderer and Angular's `exposeElementIds` already do.
+ * layout previews, presenter previews, reading view, export rasters) is static
+ * and carries none in all five bindings: React draws it with its static
+ * renderer, vanilla passes `exposeElementIds: false` to `renderSlideStage`, and
+ * Vue's and Svelte's `SlideStage` and Angular's `SlideCanvasComponent` decide
+ * it with {@link stageKeepsElementIds}.
  *
  * @module render/stage-element-ids
  */
@@ -28,7 +33,7 @@ export interface StageElementIdFlags {
 	readonly interactive?: boolean;
 	/** The live presentation stage. */
 	readonly presenting?: boolean;
-	/** A Morph transition layer, whose keyframe CSS selects elements by id. */
+	/** A transition layer the show addresses by element id (Morph keyframe CSS, build states). */
 	readonly preserveElementIds?: boolean;
 }
 

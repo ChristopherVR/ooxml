@@ -102,6 +102,7 @@ export function buildFragmentViews(layer: FragmentedLayer): FragmentView[] {
 							[zoom]="zoom()"
 							[autoFit]="false"
 							[interactive]="false"
+							[preserveElementIds]="true"
 						/>
 					</div>
 				</div>

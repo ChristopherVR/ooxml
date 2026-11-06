@@ -86,7 +86,6 @@ const NO_TEMPLATE_ELEMENTS: readonly PptxElement[] = [];
 				[editable]="false"
 				[autoFit]="false"
 				[interactive]="false"
-				[exposeElementIds]="false"
 			/>
 		</div>
 	`,

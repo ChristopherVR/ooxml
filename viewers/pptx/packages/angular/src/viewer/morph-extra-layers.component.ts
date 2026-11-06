@@ -21,6 +21,9 @@ import { SlideCanvasComponent } from './slide-canvas.component';
  *    as one isolated group so the halves are SUMMED rather than stacked
  *    (issue #161).
  *
+ * Every layer keeps its element ids (`preserveElementIds`): the morph's
+ * per-element keyframe CSS selects by them.
+ *
  * Selector: `pptx-morph-extra-layers`.
  */
 @Component({
@@ -57,6 +60,7 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 						[zoom]="zoom()"
 						[autoFit]="false"
 						[interactive]="false"
+						[preserveElementIds]="true"
 						[transparentBackground]="true"
 					/>
 				</div>
@@ -81,6 +85,7 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 							[zoom]="zoom()"
 							[autoFit]="false"
 							[interactive]="false"
+							[preserveElementIds]="true"
 							[transparentBackground]="true"
 						/>
 					</div>
@@ -99,6 +104,7 @@ import { SlideCanvasComponent } from './slide-canvas.component';
 							[zoom]="zoom()"
 							[autoFit]="false"
 							[interactive]="false"
+							[preserveElementIds]="true"
 							[transparentBackground]="true"
 						/>
 					</div>

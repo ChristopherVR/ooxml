@@ -10,13 +10,15 @@
  *    one `SlideThumbnail` per slide fed from the slides pane's props) gets one
  *    thumbnail per slide at the deck's aspect ratio, without element ids, and
  *    each one follows an edit on the canvas before anything is saved.
+ * 3. The reading view draws the active slide over an editing canvas that stays
+ *    mounted, so it is static too: one element id still answers from one node.
  *
  * Run: bunx playwright test slide-thumbnail-strip
  */
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { loadDeck, SAMPLE_DECK, slideElements, thumbnail } from './support/deck';
+import { loadDeck, ribbonTab, SAMPLE_DECK, slideElements, thumbnail } from './support/deck';
 import { hostOwnedSessionUrl } from './support/host-owned-session';
 
 test.use({ viewport: { width: 1440, height: 1000 } });
@@ -28,6 +30,19 @@ function idsOffCanvas(page: Page): Promise<string[]> {
 			.filter((node) => !node.closest('[data-pptx-viewport]'))
 			.map((node) => node.getAttribute('data-element-id') ?? ''),
 	);
+}
+
+/** Every `data-element-id` value that more than one node on the page carries. */
+function duplicateIds(page: Page): Promise<string[]> {
+	return page.evaluate(() => {
+		const seen = new Set<string>();
+		const duplicates = new Set<string>();
+		for (const node of document.querySelectorAll('[data-element-id]')) {
+			const id = node.getAttribute('data-element-id') ?? '';
+			(seen.has(id) ? duplicates : seen).add(id);
+		}
+		return [...duplicates];
+	});
 }
 
 const strip = (page: Page): Locator =>
@@ -108,5 +123,19 @@ test.describe('slide thumbnails', () => {
 		await expect(stripItem(page, 1)).toContainText('Strip follows edits');
 		await expect(stripItem(page, 1)).not.toContainText('Product Overview');
 		await expect.poll(() => idsOffCanvas(page)).toStrictEqual([]);
+	});
+
+	test('the reading view keeps one marked node per element id', async ({ page }) => {
+		await loadDeck(page, SAMPLE_DECK);
+		await expect(slideElements(page).first()).toBeVisible();
+
+		await ribbonTab(page, 'View').click();
+		await page.getByRole('button', { name: 'Reading View', exact: true }).first().click();
+		const reading = page.getByRole('region', { name: 'Reading View', exact: true });
+		await expect(reading).toBeVisible();
+		await expect(reading).toContainText('Product Overview');
+		await expect.poll(() => duplicateIds(page)).toStrictEqual([]);
+		await page.keyboard.press('Escape');
+		await expect(reading).toHaveCount(0);
 	});
 });
