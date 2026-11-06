@@ -176,7 +176,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					if (!Number.isFinite(val)) {
 						continue;
 					}
-					if (name === 'adj') {
+					// The wave and pour presets name their first guide `adj1`, the others `adj`.
+					if (name === 'adj' || name === 'adj1') {
 						textStyle.textWarpAdj = val;
 					} else if (name === 'adj2') {
 						textStyle.textWarpAdj2 = val;

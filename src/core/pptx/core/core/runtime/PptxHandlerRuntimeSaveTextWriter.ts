@@ -18,6 +18,22 @@ import { preserveParagraphScopedState } from './paragraph-scoped-segment-state';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveEffectsWriter';
 import { buildParagraphPropertiesXml } from './PptxHandlerRuntimeSaveParagraphHelpers';
 
+/** The presets whose first guide is `adj1` (the two-guide waves and pours); every other preset names it `adj`. */
+const ADJ1_WARP_PRESETS: ReadonlySet<string> = new Set([
+	'textWave1',
+	'textWave2',
+	'textWave4',
+	'textDoubleWave1',
+	'textArchUpPour',
+	'textArchDownPour',
+	'textCirclePour',
+	'textButtonPour',
+]);
+
+function firstWarpGuideName(preset: string | undefined): 'adj' | 'adj1' {
+	return preset !== undefined && ADJ1_WARP_PRESETS.has(preset) ? 'adj1' : 'adj';
+}
+
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
 	 * Build and write the text body (`p:txBody`) for shapes, text boxes,
@@ -163,7 +179,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const adjGds: XmlObject[] = [];
 			if (el.textStyle.textWarpAdj !== undefined && Number.isFinite(el.textStyle.textWarpAdj)) {
 				adjGds.push({
-					'@_name': 'adj',
+					'@_name': firstWarpGuideName(el.textStyle.textWarpPreset),
 					'@_fmla': `val ${el.textStyle.textWarpAdj}`,
 				});
 			}
