@@ -1,5 +1,6 @@
 import {
 	buildMorphScopedCss,
+	refreshSilhouetteMorphFilters,
 	buildMorphTransitionPlan,
 	getFragmentedTransitionDescriptor,
 	morphOptionToMode,
@@ -152,6 +153,11 @@ export function playTransitionOverlay(params: TransitionOverlayParams): () => vo
 		overlay.appendChild(group);
 	}
 	stageWrap.appendChild(overlay);
+	// The stages were painted before the plan registered the morph: bring the
+	// arriving shapes' silhouette filters up to date (see `silhouette-morph-refresh`).
+	if (morphPlan) {
+		refreshSilhouetteMorphFilters(doc);
+	}
 
 	let done = false;
 	const finish = (): void => {

@@ -87,7 +87,12 @@ export function buildMorphCarryAnimations(
 		animations.push({
 			elementId: target.id,
 			animation: `${base}-fx ${durationMs}ms linear forwards`,
-			keyframes: `
+			keyframes: `${
+				effects.prelude
+					? `
+${effects.prelude}`
+					: ''
+			}
 @keyframes ${base}-fx {
 ${effects.keyframes}
 }`,

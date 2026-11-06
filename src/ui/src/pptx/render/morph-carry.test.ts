@@ -139,4 +139,27 @@ describe('morph geometry and effect carry in the plan', () => {
 		expect(plan?.outlineAnimations).toBeUndefined();
 		expect(plan?.keyframesCss).not.toContain('pptx-morph-carry');
 	});
+
+	it('drives a silhouette filter beside the container too, which cannot inherit the progress', () => {
+		const shadow = {
+			shadowColor: '#000000',
+			shadowOpacity: 0.5,
+			shadowBlur: 10,
+			shadowAngle: 45,
+			shadowDistance: 8,
+			outerShadowXml: {},
+			strokeWidth: 0,
+			fillMode: 'solid',
+		};
+		const star = (id: string, box: { x: number; y: number; width: number; height: number }) =>
+			card(id, box, shadow, { shapeType: 'star5', name: '!!Star' });
+		const plan = buildMorphTransitionPlan(
+			slide('a', [star('sil-a', { x: 100, y: 100, width: 200, height: 120 })]),
+			slide('b', [star('sil-b', { x: 300, y: 200, width: 440, height: 240 })]),
+			2000,
+		);
+		const css = buildMorphScopedCss(plan!, '', 'incoming');
+		expect(css).toMatch(/\[data-element-id="sil-b"\] \{ animation: [^;]*-fx 2000ms linear/u);
+		expect(css).toMatch(/\[data-pptx-morph-fx="sil-b"\] \{ animation: [^;]*-fx 2000ms linear/u);
+	});
 });

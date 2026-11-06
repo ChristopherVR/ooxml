@@ -35,6 +35,7 @@ import { hasShapeProperties } from 'ooxml-core/pptx';
 
 import { glowCssLengths, shadowBlurToCss } from './effect-profile';
 import { resolveBaseShapeGeometry } from './shape-geometry-base';
+import { silhouetteMorphFor } from './silhouette-morph-registry';
 import { getSubpathGeometry } from './subpath-geometry';
 
 /** One outer shadow layer, in the units of the box-shadow it replaces. */
@@ -298,13 +299,48 @@ function scaledAlpha(input: string, result: string, opacity: number): string {
 	return `<feComponentTransfer in="${input}" result="${result}"><feFuncA type="linear" slope="${px(opacity)}"/></feComponentTransfer>`;
 }
 
-function glowMarkup(glow: SilhouetteGlow): string {
+/** Which end of a morph a layer belongs to; its opacity follows `--pptx-morph-p`. */
+export type SilhouetteMorphSide = 'out' | 'in';
+
+/** The custom property carrying a morph's eased progress (see `silhouette-morph`). */
+export const MORPH_PROGRESS_VAR = '--pptx-morph-p';
+
+/**
+ * The flood of one layer. A static layer scales its mask by an attribute (see
+ * `scaledAlpha`); a morph layer takes `flood-opacity` from the morph's progress
+ * custom property, which the container's keyframes animate: `1 - p` for the
+ * outgoing end, `p` for the incoming one (PowerPoint dissolves both ends'
+ * effects). Every copy of the filter has an id of its own (`svg-id-scope`), so
+ * the CSS-driven value resolves in the copy that paints it.
+ */
+function flood(color: string, result: string, opacity: number, side?: SilhouetteMorphSide): string {
+	if (!side) {
+		return `<feFlood flood-color="${color}" result="${result}"/>`;
+	}
+	const k =
+		side === 'out' ? `(1 - var(${MORPH_PROGRESS_VAR}, 1))` : `var(${MORPH_PROGRESS_VAR}, 1)`;
+	return `<feFlood flood-color="${color}" flood-opacity="${side === 'out' ? 0 : px(opacity)}" style="flood-opacity:calc(${px(opacity)} * ${k})" result="${result}"/>`;
+}
+
+/** The layer opacity step: a static alpha scale, or none for a morph layer. */
+function alpha(
+	input: string,
+	result: string,
+	opacity: number,
+	side?: SilhouetteMorphSide,
+): { markup: string; mask: string } {
+	return side
+		? { markup: '', mask: input }
+		: { markup: scaledAlpha(input, result, opacity), mask: result };
+}
+
+function glowMarkup(glow: SilhouetteGlow, tag: string, side?: SilhouetteMorphSide): string {
 	const parts: string[] = [];
 	const names: string[] = [];
-	const ring = (radius: number, steps: number, tag: string): void => {
+	const ring = (radius: number, steps: number, ringTag: string): void => {
 		for (let i = 0; i < steps; i++) {
 			const angle = (2 * Math.PI * i) / steps;
-			const name = `${tag}${i}`;
+			const name = `${tag}${ringTag}${i}`;
 			names.push(name);
 			parts.push(
 				`<feOffset in="SourceAlpha" dx="${px(Math.cos(angle) * radius)}" dy="${px(Math.sin(angle) * radius)}" result="${name}"/>`,
@@ -319,25 +355,21 @@ function glowMarkup(glow: SilhouetteGlow): string {
 		...names.map((n) => `<feMergeNode in="${n}"/>`),
 		'<feMergeNode in="SourceAlpha"/>',
 	];
-	parts.push(`<feMerge result="glowGrown">${merge.join('')}</feMerge>`);
+	parts.push(`<feMerge result="${tag}glowGrown">${merge.join('')}</feMerge>`);
 	parts.push(
-		`<feGaussianBlur in="glowGrown" stdDeviation="${px(glow.blur / 2)}" result="glowBlur"/>`,
+		`<feGaussianBlur in="${tag}glowGrown" stdDeviation="${px(glow.blur / 2)}" result="${tag}glowBlur"/>`,
 	);
+	const scaled = alpha(`${tag}glowBlur`, `${tag}glowMask`, glow.opacity, side);
 	parts.push(
-		scaledAlpha('glowBlur', 'glowMask', glow.opacity),
-		`<feFlood flood-color="${glow.color}" result="glowColor"/>`,
-		`<feComposite in="glowColor" in2="glowMask" operator="in" result="glowLayer"/>`,
+		scaled.markup,
+		flood(glow.color, `${tag}glowColor`, glow.opacity, side),
+		`<feComposite in="${tag}glowColor" in2="${scaled.mask}" operator="in" result="${tag}glowLayer"/>`,
 	);
 	return parts.join('');
 }
 
-/** The `<filter>` markup that paints `params` around an element of `width` x `height`. */
-export function buildSilhouetteFilterMarkup(
-	filterId: string,
-	width: number,
-	height: number,
-	params: SilhouetteEffectParams,
-): string {
+/** How far the layers of `params` reach past the box. */
+function effectReach(params: SilhouetteEffectParams): number {
 	let reach = 0;
 	for (const s of params.shadows) {
 		reach = Math.max(reach, Math.hypot(s.offsetX, s.offsetY) + 1.5 * s.blur);
@@ -351,48 +383,106 @@ export function buildSilhouetteFilterMarkup(
 			Math.hypot(params.inner.offsetX, params.inner.offsetY) + 1.5 * params.inner.blur,
 		);
 	}
-	const pad = Math.ceil(reach) + 4;
+	return reach;
+}
+
+/** The painted layers of one end's effects, and the names to stack. */
+interface EffectLayers {
+	readonly parts: string[];
+	readonly glow: string[];
+	readonly shadows: string[];
+	readonly inner: string[];
+}
+
+function effectLayers(
+	params: SilhouetteEffectParams,
+	tag: string,
+	side?: SilhouetteMorphSide,
+): EffectLayers {
+	const out: EffectLayers = { parts: [], glow: [], shadows: [], inner: [] };
+	if (params.glow) {
+		out.parts.push(glowMarkup(params.glow, tag, side));
+		out.glow.push(`${tag}glowLayer`);
+	}
+	params.shadows.forEach((s, i) => {
+		const name = `${tag}shadow${i}`;
+		const scaled = alpha(`${name}Off`, `${name}Mask`, s.opacity, side);
+		out.parts.push(
+			`<feGaussianBlur in="SourceAlpha" stdDeviation="${px(s.blur / 2)}" result="${name}Blur"/>`,
+			`<feOffset in="${name}Blur" dx="${px(s.offsetX)}" dy="${px(s.offsetY)}" result="${name}Off"/>`,
+			scaled.markup,
+			flood(s.color, `${name}Color`, s.opacity, side),
+			`<feComposite in="${name}Color" in2="${scaled.mask}" operator="in" result="${name}"/>`,
+		);
+		out.shadows.push(name);
+	});
+	if (params.inner) {
+		const i = params.inner;
+		const name = `${tag}inner`;
+		const scaled = alpha(`${name}Blur`, `${name}Mask`, i.opacity, side);
+		out.parts.push(
+			`<feComponentTransfer in="SourceAlpha" result="${name}Inv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>`,
+			`<feOffset in="${name}Inv" dx="${px(-i.offsetX)}" dy="${px(-i.offsetY)}" result="${name}Off"/>`,
+			`<feGaussianBlur in="${name}Off" stdDeviation="${px(i.blur / 2)}" result="${name}Blur"/>`,
+			scaled.markup,
+			flood(i.color, `${name}Flood`, i.opacity, side),
+			`<feComposite in="${name}Flood" in2="${scaled.mask}" operator="in" result="${name}Color"/>`,
+			`<feComposite in="${name}Color" in2="SourceAlpha" operator="in" result="${name}Layer"/>`,
+		);
+		out.inner.push(`${name}Layer`);
+	}
+	return out;
+}
+
+/** Pairs the layers of the two ends by position, summed: a dissolve never dips. */
+function pairLayers(a: string[], b: string[], tag: string, parts: string[]): string[] {
+	const names: string[] = [];
+	for (let i = 0; i < Math.max(a.length, b.length); i++) {
+		const x = a[i];
+		const y = b[i];
+		if (x && y) {
+			parts.push(
+				`<feComposite in="${x}" in2="${y}" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="${tag}${i}"/>`,
+			);
+			names.push(`${tag}${i}`);
+		} else {
+			names.push((x ?? y) as string);
+		}
+	}
+	return names;
+}
+
+/**
+ * The `<filter>` markup that paints `params` around an element of `width` x
+ * `height`. With `outgoing`, the effects of the other end of a morph are
+ * painted too, dissolving out as `params` dissolve in (see `silhouette-morph`).
+ */
+export function buildSilhouetteFilterMarkup(
+	filterId: string,
+	width: number,
+	height: number,
+	params: SilhouetteEffectParams,
+	outgoing?: SilhouetteEffectParams,
+): string {
+	const pad = Math.ceil(Math.max(effectReach(params), outgoing ? effectReach(outgoing) : 0)) + 4;
 	const parts: string[] = [
 		`<filter id="${filterId}" filterUnits="userSpaceOnUse" x="${-pad}" y="${-pad}" width="${px(Math.max(width, 1) + 2 * pad)}" height="${px(Math.max(height, 1) + 2 * pad)}" color-interpolation-filters="sRGB">`,
 	];
-	const layers: string[] = [];
-	if (params.glow) {
-		parts.push(glowMarkup(params.glow));
-		layers.push('glowLayer');
+	const into = effectLayers(params, '', outgoing ? 'in' : undefined);
+	parts.push(...into.parts);
+	let { glow, shadows, inner } = into;
+	if (outgoing) {
+		const out = effectLayers(outgoing, 'o', 'out');
+		parts.push(...out.parts);
+		glow = pairLayers(out.glow, into.glow, 'sumglow', parts);
+		shadows = pairLayers(out.shadows, into.shadows, 'sumshadow', parts);
+		inner = pairLayers(out.inner, into.inner, 'suminner', parts);
 	}
-	params.shadows.forEach((s, i) => {
-		const name = `shadow${i}`;
-		parts.push(
-			`<feGaussianBlur in="SourceAlpha" stdDeviation="${px(s.blur / 2)}" result="${name}Blur"/>`,
-			`<feOffset in="${name}Blur" dx="${px(s.offsetX)}" dy="${px(s.offsetY)}" result="${name}Off"/>`,
-			scaledAlpha(`${name}Off`, `${name}Mask`, s.opacity),
-			`<feFlood flood-color="${s.color}" result="${name}Color"/>`,
-			`<feComposite in="${name}Color" in2="${name}Mask" operator="in" result="${name}"/>`,
-		);
-		layers.push(name);
-	});
 	// Bottom to top: the glow, the shadows (the last one lowest, like a box-shadow
-	// list), then the shape itself.
-	const stack = [
-		...layers.slice(0, params.glow ? 1 : 0),
-		...layers.slice(params.glow ? 1 : 0).reverse(),
-	];
-	const top: string[] = [];
-	if (params.inner) {
-		const i = params.inner;
-		parts.push(
-			'<feComponentTransfer in="SourceAlpha" result="innerInv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>',
-			`<feOffset in="innerInv" dx="${px(-i.offsetX)}" dy="${px(-i.offsetY)}" result="innerOff"/>`,
-			`<feGaussianBlur in="innerOff" stdDeviation="${px(i.blur / 2)}" result="innerBlur"/>`,
-			scaledAlpha('innerBlur', 'innerMask', i.opacity),
-			`<feFlood flood-color="${i.color}" result="innerFlood"/>`,
-			'<feComposite in="innerFlood" in2="innerMask" operator="in" result="innerColor"/>',
-			'<feComposite in="innerColor" in2="SourceAlpha" operator="in" result="innerLayer"/>',
-		);
-		top.push('innerLayer');
-	}
+	// list), then the shape itself and the inner shadow.
+	const stack = [...glow, ...[...shadows].reverse()];
 	parts.push(
-		`<feMerge>${[...stack, 'SourceGraphic', ...top].map((n) => `<feMergeNode in="${n}"/>`).join('')}</feMerge>`,
+		`<feMerge>${[...stack, 'SourceGraphic', ...inner].map((n) => `<feMergeNode in="${n}"/>`).join('')}</feMerge>`,
 		'</filter>',
 	);
 	return parts.join('');
@@ -411,7 +501,13 @@ export function getSilhouetteEffects(element: PptxElement): SilhouetteEffects | 
 	return {
 		filterId,
 		cssReference: `url(#${filterId})`,
-		filterMarkup: buildSilhouetteFilterMarkup(filterId, element.width, element.height, params),
+		filterMarkup: buildSilhouetteFilterMarkup(
+			filterId,
+			element.width,
+			element.height,
+			params,
+			silhouetteMorphFor(element.id, params),
+		),
 		paintsInnerShadow: params.inner !== undefined,
 	};
 }

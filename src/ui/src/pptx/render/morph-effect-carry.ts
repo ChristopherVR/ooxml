@@ -46,6 +46,8 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import { MORPH_PROGRESS_PROPERTY, registerSilhouetteDissolve } from './morph-effect-silhouette';
+import { MORPH_PROGRESS_VAR } from './silhouette-effects';
 import { fitGlowChain, fitGlowUnderGhost } from './morph-effect-glow';
 import { parseDropShadows, parseShadows, scaleLayer, withAlpha } from './morph-effect-parse';
 import type { ShadowLayer, ShadowOverlap } from './morph-effect-shadow';
@@ -58,6 +60,10 @@ import {
 import type { MorphCarryHalf } from './morph-shape-carry';
 import { bakeStops } from './morph-shape-carry-path';
 import { getComputedEffectStyle } from './visual-effects';
+
+function round(value: number): number {
+	return Math.round(value * 1000) / 1000;
+}
 
 /** Stops the effect keyframes are baked at (eased progress). */
 const EFFECT_STOPS = 10;
@@ -80,6 +86,8 @@ export function morphEffectsDiffer(from: PptxElement, to: PptxElement): boolean 
 export interface MorphEffectCarry {
 	/** A keyframes body (stops on the morph's eased progress), run with `linear` timing. */
 	readonly keyframes: string;
+	/** CSS to emit before the keyframes (the `@property` the keyframes animate). */
+	readonly prelude?: string;
 }
 
 /**
@@ -217,6 +225,15 @@ export function buildMorphEffectCarry(
 	];
 	const toK: [number, number] = [width / Math.max(to.width, 1), height / Math.max(to.height, 1)];
 	const tracks: Array<(p: number) => string> = [];
+
+	// A silhouette shape paints both ends' effects as layers of its own filter,
+	// which read the eased progress from a custom property (`morph-effect-silhouette`).
+	if (half === 'to' && registerSilhouetteDissolve(from, to, painter)) {
+		return {
+			keyframes: bakeStops(progressStops(), (p) => [`${MORPH_PROGRESS_VAR}: ${round(p)}`]),
+			prelude: MORPH_PROGRESS_PROPERTY,
+		};
+	}
 
 	const shadowsA = parseShadows(a.boxShadow);
 	const shadowsB = parseShadows(b.boxShadow);

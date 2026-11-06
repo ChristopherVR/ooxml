@@ -38,7 +38,7 @@ describe('scopeSvgIds', () => {
 		const first = copy(document.body, true);
 		const second = copy(document.body, false);
 		scopeSvgIds(document.body);
-		const ids = [...document.querySelectorAll('[id]')].map((n) => n.id);
+		const ids = [...document.body.querySelectorAll('[id]')].map((n) => n.id);
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(ids).toHaveLength(6);
 		expect(resolves(first)).toBe(true);
@@ -62,7 +62,7 @@ describe('scopeSvgIds', () => {
 			const clone = first.cloneNode(true) as HTMLElement;
 			document.body.append(clone);
 			await Promise.resolve();
-			const ids = [...document.querySelectorAll('[id]')].map((n) => n.id);
+			const ids = [...document.body.querySelectorAll('[id]')].map((n) => n.id);
 			expect(new Set(ids).size).toBe(ids.length);
 			expect(resolves(first)).toBe(true);
 			expect(resolves(clone)).toBe(true);

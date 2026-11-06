@@ -5,6 +5,7 @@
  *
  * @module render/morph-plan-css
  */
+import { splitCssList } from './css-top-level-split';
 import type { MorphTransitionPlan } from './morph-plan-types';
 
 /**
@@ -88,6 +89,15 @@ export function buildMorphAnimationRules(
 			rules.push(
 				`${prefix}[data-element-id="${cssAttributeValue(elementId)}"]${suffix} { animation: ${animation}; }`,
 			);
+			// A silhouette filter that is not inside the element's container (Angular
+			// paints its defs as a sibling) cannot inherit the progress property the
+			// container animates, so it carries the effect animation itself.
+			const fx = splitCssList(animation).filter((part) => /-fx\s/u.test(part));
+			if (suffix === '' && fx.length > 0) {
+				rules.push(
+					`${prefix}[data-pptx-morph-fx="${cssAttributeValue(elementId)}"] { animation: ${fx.join(', ')}; }`,
+				);
+			}
 		}
 	};
 	// `lifted` is the incoming half painted in the overlay rather than on the

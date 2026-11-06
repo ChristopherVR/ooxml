@@ -436,14 +436,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (and their inner shadow) paint them as a shape-following filter
       (`src/ui/src/pptx/render/silhouette-effects.ts`; the fill of a gradient, pattern or picture
       is a clipped child layer, `silhouette-fill-layer.ts`). A morphing shape of that kind keeps
-      its shadow and glow (its fill path morphs, `morph-shape-carry`), but they are not yet carried
-      the way PowerPoint carries them (scaled offsets, `1 - p` / `p` dissolve of the two ends'
-      effects, `morph-effect-carry`): they stay at full strength. Measured (triangle to star,
-      PowerPoint 16 video): the carry needs both ends' effects as two filter layers fading
-      `1 - p` / `p`, which a static `<filter>` cannot hold (its markup knows one element), and
-      driving the opacity from CSS fails because copies of one shape's filter share an id and
-      `url(#id)` takes the first, so the stage-animated bindings (React, Svelte, Angular) and the
-      lifted-copy ones (Vue, vanilla) still differ by 0.65 mean abs diff at 50 %. Static silhouette
+      its shadow and glow (its fill path morphs, `morph-shape-carry`) and now dissolves them the
+      way PowerPoint does (`morph-effect-silhouette`): the arriving filter carries both ends'
+      layers, scaled into its frame and summed, at `1 - p` and `p` of the morph's eased progress
+      (a registered `--pptx-morph-p` property the carry keyframes animate; every painted copy of a
+      slide has its own filter ids, `svg-id-scope`, so the CSS-driven opacity resolves in the copy
+      that paints it). All five bindings agree exactly on a triangle to star shadow morph (1.79
+      mean abs diff against PowerPoint at 50 %, from 2.31). Under a ghost only the incoming end
+      fades in (the ghost carries the outgoing one); a pair that is not carried keeps full
+      strength. Static silhouette
       shadows match PowerPoint within 0.4 to 0.9 mean abs diff (hollow ones included); hollow shadows
       at a 20 pt or larger blur read about 12 % too dark under the bottom edge only. In-place text
       editing in a text-bearing silhouette shape works in all five demos (click places the caret,

@@ -9,7 +9,11 @@ import {
 	output,
 } from '@angular/core';
 import type { CanvasSize } from 'ooxml-ui/pptx';
-import { applySlideTransitionSound, buildMorphScopedCss } from 'ooxml-ui/pptx';
+import {
+	applySlideTransitionSound,
+	buildMorphScopedCss,
+	refreshSilhouetteMorphFilters,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
 import { playAnimationSound, stopAnimationSound } from './animation-sound';
@@ -145,6 +149,11 @@ export class PresentationTransitionOverlayComponent {
 						].join('\n')
 					: null,
 			);
+			// The live stage was painted before the plan registered the morph: bring the
+			// arriving shapes' silhouette filters up to date (`silhouette-morph-refresh`).
+			if (plan && typeof document !== 'undefined') {
+				refreshSilhouetteMorphFilters(document);
+			}
 		});
 
 		this.destroyRef.onDestroy(() => {
