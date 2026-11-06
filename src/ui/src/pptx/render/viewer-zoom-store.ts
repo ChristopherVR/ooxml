@@ -37,6 +37,8 @@ export interface ViewerZoomState {
 	fitScale: number;
 	/** True once the user has zoomed explicitly, false while following the viewport. */
 	manual: boolean;
+	/** Id of the slide the zoom applies to; unset until a binding reports the slide it shows. */
+	slideId?: string;
 }
 
 export type ViewerZoomCommand =
@@ -46,6 +48,12 @@ export type ViewerZoomCommand =
 	| { type: 'set-zoom'; zoom: number }
 	/** Back to 1x the fit scale, and no longer manual. */
 	| { type: 'zoom-to-fit' }
+	/**
+	 * The binding shows the slide with this id (undefined while no deck is shown).
+	 * Another slide opens at fit; bindings report it as often as convenient and
+	 * this reducer owns the policy (see {@link showSlide}).
+	 */
+	| { type: 'slide-shown'; slideId: string | undefined }
 	/** Report a newly measured viewport fit factor. Never marks the zoom manual. */
 	| { type: 'set-fit-scale'; fitScale: number };
 
@@ -55,14 +63,43 @@ export const DEFAULT_VIEWER_ZOOM_STATE: ViewerZoomState = {
 	manual: false,
 };
 
+/** Back at fit and following the viewport again; the same state when already there. */
+function atFit(state: ViewerZoomState): ViewerZoomState {
+	return state.zoom === 1 && !state.manual ? state : { ...state, zoom: 1, manual: false };
+}
+
 function withZoom(state: ViewerZoomState, zoom: number): ViewerZoomState {
 	const clamped = clampZoomScale(zoom);
+	// A factor of 1 IS fit, and fit is also the floor, so zooming out at fit or
+	// stepping back down to 1 returns to fit rather than pinning a "manual 100%"
+	// that a binding with an absolute or nullable encoding would stop resizing.
+	if (clamped === 1) {
+		return atFit(state);
+	}
 	// Returning the SAME state when nothing moved keeps the store silent, so
 	// holding zoom-out at the minimum does not re-render anything (issue #145).
 	if (clamped === state.zoom && state.manual) {
 		return state;
 	}
 	return { ...state, zoom: clamped, manual: true };
+}
+
+/**
+ * A zoom and scroll position chosen for one slide's content say nothing about
+ * another slide's, so another slide opens at fit, whole and centred. Keyed on
+ * the slide's id rather than its index: deleting an earlier slide puts another
+ * slide at the same index, and moving a slide keeps it on screen. Reporting the
+ * same slide again changes nothing, and the first slide shown keeps the zoom it
+ * opened with.
+ */
+function showSlide(state: ViewerZoomState, slideId: string | undefined): ViewerZoomState {
+	if (slideId === undefined || slideId === state.slideId) {
+		return state;
+	}
+	if (state.slideId === undefined) {
+		return { ...state, slideId };
+	}
+	return { ...atFit(state), slideId };
 }
 
 export function reduceViewerZoom(
@@ -77,7 +114,9 @@ export function reduceViewerZoom(
 		case 'set-zoom':
 			return withZoom(state, command.zoom);
 		case 'zoom-to-fit':
-			return state.zoom === 1 && !state.manual ? state : { ...state, zoom: 1, manual: false };
+			return atFit(state);
+		case 'slide-shown':
+			return showSlide(state, command.slideId);
 		case 'set-fit-scale': {
 			// A viewport measurement is not a user action: it must never flip
 			// `manual`, or a window resize would silently look like a zoom.

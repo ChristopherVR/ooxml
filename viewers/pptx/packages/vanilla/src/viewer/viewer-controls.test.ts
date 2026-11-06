@@ -328,3 +328,64 @@ describe('viewerControls zoom navigation (delegation to presentationPlayback)', 
 		expect(store.get().currentSlide).toBe(2);
 	});
 });
+
+describe('viewerControls zoom on a slide change', () => {
+	it('opens another slide at fit, however the slide index changed', () => {
+		const { store, controls } = harness({ deck: slides(false, false, false), presenting: false });
+		controls.setZoom(1.9);
+		expect(store.get().zoom).toBe(1.9);
+
+		controls.next();
+		expect(store.get().currentSlide).toBe(1);
+		expect(store.get().zoom).toBe('fit');
+
+		// Find, slide insertion and collaboration write the index directly.
+		controls.setZoom(1.5);
+		store.set({ currentSlide: 2 });
+		expect(store.get().zoom).toBe('fit');
+	});
+
+	it('keeps the zoom while the slide stays the same', () => {
+		const { store, controls } = harness({ deck: slides(false, false), presenting: false });
+		controls.setZoom(1.9);
+		store.set({ endOfShow: false, enteringBackward: true });
+		controls.goToSlide(0);
+		expect(store.get().zoom).toBe(1.9);
+	});
+
+	it('keys the change on the slide: another slide at the same index opens at fit', () => {
+		const deck = slides(false, false, false);
+		const { store, controls } = harness({ deck, presenting: false, startIndex: 1 });
+		controls.setZoom(1.9);
+		// Deleting the first slide leaves index 1 showing what was the third slide.
+		store.set({ slides: [deck[1], deck[2]] });
+		expect(store.get().zoom).toBe('fit');
+
+		// Moving the slide on screen to another index keeps its zoom.
+		controls.setZoom(1.9);
+		store.set({ slides: [deck[2], deck[1]], currentSlide: 0 });
+		expect(store.get().zoom).toBe(1.9);
+	});
+
+	it('a later subscriber (state-sync) sees the slide change and its zoom as one change', () => {
+		const { store, controls } = harness({ deck: slides(false, false), presenting: false });
+		controls.setZoom(1.9);
+		const seen: string[] = [];
+		store.subscribe((state, previous) =>
+			seen.push(
+				`slide ${previous.currentSlide}->${state.currentSlide}, zoom ${previous.zoom}->${state.zoom}`,
+			),
+		);
+
+		controls.next();
+		expect(seen).toStrictEqual(['slide 0->1, zoom 1.9->fit']);
+	});
+
+	it('never zooms out past fit', () => {
+		const { store, controls } = harness({ deck: slides(false), presenting: false });
+		controls.zoomOut();
+		expect(store.get().zoom).toBe('fit');
+		controls.setZoom(0.4);
+		expect(store.get().zoom).toBe('fit');
+	});
+});

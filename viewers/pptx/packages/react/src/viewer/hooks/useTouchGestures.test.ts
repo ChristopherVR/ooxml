@@ -53,10 +53,10 @@ describe('clampScale', () => {
 		expect(clampScale(2.5)).toBe(2.5);
 	});
 
-	it('clamps below minimum to MIN_ZOOM_SCALE (0.2)', () => {
-		expect(clampScale(0.1)).toBe(0.2);
-		expect(clampScale(-1)).toBe(0.2);
-		expect(clampScale(0)).toBe(0.2);
+	it('clamps below minimum to MIN_ZOOM_SCALE (fit)', () => {
+		expect(clampScale(0.5)).toBe(1);
+		expect(clampScale(-1)).toBe(1);
+		expect(clampScale(0)).toBe(1);
 	});
 
 	it('clamps above maximum to MAX_ZOOM_SCALE (5)', () => {
@@ -65,7 +65,7 @@ describe('clampScale', () => {
 	});
 
 	it('returns boundary values exactly', () => {
-		expect(clampScale(0.2)).toBe(0.2);
+		expect(clampScale(1)).toBe(1);
 		expect(clampScale(5)).toBe(5);
 	});
 });
@@ -173,7 +173,7 @@ describe('pinch zoom ratio logic', () => {
 	});
 
 	it('halves scale when distance halves', () => {
-		expect(computePinchScale(100, 50, 1)).toBe(0.5);
+		expect(computePinchScale(100, 50, 3)).toBe(1.5);
 	});
 
 	it('respects base scale', () => {
@@ -181,7 +181,7 @@ describe('pinch zoom ratio logic', () => {
 	});
 
 	it('clamps to minimum', () => {
-		expect(computePinchScale(100, 10, 1)).toBe(0.2); // 1 * 0.1 = 0.1 → clamped to 0.2
+		expect(computePinchScale(100, 10, 2)).toBe(1); // 2 * 0.1 = 0.2 → clamped to fit (1)
 	});
 
 	it('clamps to maximum', () => {

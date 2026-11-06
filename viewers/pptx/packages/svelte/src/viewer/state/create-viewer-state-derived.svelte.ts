@@ -1,5 +1,6 @@
 import type { ViewerMode } from 'ooxml-ui/pptx';
 import { visibleTemplateElements } from 'ooxml-ui/pptx';
+import { untrack } from 'svelte';
 
 import type { CollaborationController } from '../collab';
 import type { EditorState } from '../editor/editor-state.svelte';
@@ -102,6 +103,13 @@ export function useViewerDerived(deps: ViewerDerivedDeps): ViewerDerived {
 	$effect(() => options.onzoomchange?.(effectivePercent / 100));
 	$effect(() => options.onselectionchange?.([...editor.selection.ids]));
 	$effect(() => options.onslidecountchange?.(displaySlides.length));
+	// Going to another slide returns the zoom to fit (the shared zoom store's policy). This
+	// reports the slide on the canvas whichever path changed it; `goTo` reports at once too.
+	viewer.slideIdAt = (index) => displaySlides[index]?.id;
+	$effect(() => {
+		const slideId = activeSlide?.id;
+		untrack(() => viewer.showSlide(slideId));
+	});
 
 	return {
 		get scale() {

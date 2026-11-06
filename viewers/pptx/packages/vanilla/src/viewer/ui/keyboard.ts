@@ -91,6 +91,12 @@ export function attachKeyboardNavigation(
 			return;
 		}
 
+		// A zoomed slide that took Space to pan (`attachViewportNavigation` prevents
+		// its default) keeps it: paging away would also drop the zoom.
+		if (event.key === ' ' && event.defaultPrevented) {
+			return;
+		}
+
 		switch (event.key) {
 			case 'ArrowRight':
 			case 'ArrowDown':

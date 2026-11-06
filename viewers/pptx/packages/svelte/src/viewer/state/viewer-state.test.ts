@@ -70,13 +70,45 @@ describe('viewerState', () => {
 	it('zooms from the effective percent and returns to fit', () => {
 		const state = new ViewerState();
 		expect(state.zoomPercent).toBeNull();
-		state.zoomIn(80);
-		expect(state.zoomPercent).toBe(90);
 		state.zoomIn(100);
-		expect(state.zoomPercent).toBe(100);
+		expect(state.zoomPercent).toBe(110);
+		state.zoomIn(999);
+		expect(state.zoomPercent).toBe(120);
 		state.zoomOut(999);
-		expect(state.zoomPercent).toBe(90);
+		expect(state.zoomPercent).toBe(110);
 		state.zoomToFit();
 		expect(state.zoomPercent).toBeNull();
+	});
+
+	it('never zooms out past fit, and stepping back down to 100% is fit', () => {
+		const state = new ViewerState();
+		state.zoomOut(100);
+		expect(state.zoomPercent).toBeNull();
+		state.zoomIn(100);
+		state.zoomOut(110);
+		expect(state.zoomPercent).toBeNull();
+	});
+
+	it('opens another slide at fit', () => {
+		const state = new ViewerState();
+		state.slideIdAt = (index) => `s${index}`;
+		state.reset(5);
+		// The viewer's effect reports the slide a load shows.
+		state.showSlide('s0');
+		state.zoomIn(100);
+		state.zoomIn(110);
+		expect(state.zoomPercent).toBe(120);
+		state.goTo(3);
+		expect(state.zoomPercent).toBeNull();
+
+		state.zoomIn(100);
+		state.goTo(3);
+		expect(state.zoomPercent).toBe(110);
+
+		// The host's goTo then setZoom, before the effect reports the slide.
+		state.goTo(4);
+		state.zoomPercent = 150;
+		state.showSlide('s4');
+		expect(state.zoomPercent).toBe(150);
 	});
 });

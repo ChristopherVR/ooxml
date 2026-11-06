@@ -250,6 +250,7 @@ import { ViewerRegionHostComponent } from './viewer-region-host.component';
 import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
+import { ViewerViewportNavigationService } from './viewer-viewport-navigation.service';
 import { ViewerZoomService } from './viewer-zoom.service';
 import { ZoomTargetService } from './zoom-target.service';
 
@@ -1999,6 +2000,7 @@ export class PowerPointViewerComponent
 	private readonly keyboard = inject(ViewerKeyboardService);
 	protected readonly zoomSvc = inject(ViewerZoomService);
 	private readonly touchGestures = inject(ViewerTouchGesturesService);
+	private readonly viewportNavigation = inject(ViewerViewportNavigationService);
 	protected readonly presentationMode = inject(ViewerPresentationModeService);
 	protected readonly mobileSheetSvc = inject(ViewerMobileSheetService);
 	protected readonly inspectorPanel = inject(ViewerInspectorPanelService);
@@ -2580,6 +2582,12 @@ export class PowerPointViewerComponent
 		// Review > Comments Previous / Next / Delete read the active slide from this service.
 		this.reviewNav.attach((index) => this.activeSlideIndex.set(index));
 		effect(() => this.reviewNav.currentSlide.set(this.activeSlideIndex()));
+		// Going to another slide returns the zoom to fit (the shared zoom store's
+		// policy); this reports the slide on the canvas, whichever path changed it.
+		effect(() => {
+			const slideId = this.activeSlide()?.id;
+			untracked(() => this.zoomSvc.showSlide(slideId));
+		});
 		// Wire the AI panel store to the live canvas selection so its
 		// follow-selection focus (and the bridge's getFocusedTargets) stay current.
 		this.aiPanelStore.bind({
@@ -3067,6 +3075,14 @@ export class PowerPointViewerComponent
 			goPrev: () => this.goPrev(),
 			goNext: () => this.goNext(),
 			setContextMenuPos: (pos) => this.canvasEditing.contextMenuPos.set(pos),
+		});
+
+		// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
+		// other bindings. `<main>` is the element that scrolls the slide here. A
+		// plain drag pans only in a read-only view, where it has nothing to select.
+		this.viewportNavigation.setup(() => this.mainEl()?.nativeElement, {
+			dragPans: () => this.getMode() === 'preview',
+			presenting: () => this.presentationMode.presenting(),
 		});
 
 		// Hand the presentation-mode controller the few accessors it alone needs
@@ -3600,6 +3616,9 @@ export class PowerPointViewerComponent
 		if (index < 0 || index >= this.slideCount()) {
 			return;
 		}
+		// Reported at once, not only by the effect, so a `setZoom` the host calls
+		// right after applies to the new slide instead of being reset to fit.
+		this.zoomSvc.showSlide(this.displaySlides()[index]?.id);
 		this.activeSlideIndex.set(index);
 	}
 	/**

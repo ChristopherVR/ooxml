@@ -216,4 +216,23 @@ describe('keys typed into a text field', () => {
 			root.remove();
 		}
 	});
+
+	it('leaves a Space the zoomed slide took to pan, and still pages on the other keys', () => {
+		const { root, handlers, detach } = harness({ isPresenting: () => false });
+		const pane = document.createElement('div');
+		root.append(pane);
+		// `attachViewportNavigation` claims Space at a document capture listener.
+		const claim = (event: KeyboardEvent) => event.key === ' ' && event.preventDefault();
+		document.addEventListener('keydown', claim, true);
+		try {
+			pressOn(pane, ' ');
+			expect(handlers.next).not.toHaveBeenCalled();
+			expect(pressOn(pane, 'ArrowDown')).toBeTruthy();
+			expect(handlers.next).toHaveBeenCalledOnce();
+		} finally {
+			document.removeEventListener('keydown', claim, true);
+			detach();
+			root.remove();
+		}
+	});
 });

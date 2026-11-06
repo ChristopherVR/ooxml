@@ -19,7 +19,7 @@
 import { createViewerZoomStore } from 'ooxml-ui/pptx';
 import type { ViewerZoomStore } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 import { useViewerStore } from './useViewerStore';
 
@@ -33,12 +33,27 @@ export interface UseViewerZoomResult {
 	zoomIn: () => void;
 	zoomOut: () => void;
 	zoomReset: () => void;
+	/**
+	 * Report the slide about to be shown, before the watcher sees it, so a zoom
+	 * set right after (the handle's `goTo` then `setZoom`) is not undone.
+	 */
+	showSlide: (slideId: string | undefined) => void;
 	/** The underlying store, for callers that want a narrower subscription. */
 	store: ViewerZoomStore;
 }
 
-export function useViewerZoom(): UseViewerZoomResult {
+/**
+ * @param activeSlideId Id of the slide on the canvas. Going to another slide
+ *   returns the zoom to fit; the shared store owns that policy, and this only
+ *   reports the slide shown.
+ */
+export function useViewerZoom(activeSlideId?: () => string | undefined): UseViewerZoomResult {
 	const store = createViewerZoomStore();
+	const showSlide = (slideId: string | undefined): void =>
+		store.dispatch({ type: 'slide-shown', slideId });
+	if (activeSlideId) {
+		watch(activeSlideId, showSlide, { immediate: true });
+	}
 	// Two separate selector subscriptions rather than one on the whole state: a
 	// viewport re-measure then wakes only what reads `fitScale`.
 	const zoomValue = useViewerStore(store, (state) => state.zoom);
@@ -60,6 +75,7 @@ export function useViewerZoom(): UseViewerZoomResult {
 		zoomIn: () => store.dispatch({ type: 'zoom-in' }),
 		zoomOut: () => store.dispatch({ type: 'zoom-out' }),
 		zoomReset: () => store.dispatch({ type: 'zoom-to-fit' }),
+		showSlide,
 		store,
 	};
 }

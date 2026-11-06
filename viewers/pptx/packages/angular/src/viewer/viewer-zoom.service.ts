@@ -45,4 +45,12 @@ export class ViewerZoomService {
 	zoomReset(): void {
 		this.store.dispatch({ type: 'zoom-to-fit' });
 	}
+
+	/**
+	 * Report the slide on the canvas (its id). The shared store returns the zoom
+	 * to fit for another slide; the same slide again changes nothing.
+	 */
+	showSlide(slideId: string | undefined): void {
+		this.store.dispatch({ type: 'slide-shown', slideId });
+	}
 }

@@ -52,6 +52,8 @@ function Harness(props: {
 async function mount(
 	initialSlide?: number,
 	handle?: React.RefObject<PowerPointViewerHandle | null>,
+	/** Runs after the first render, while the deck is still loading. */
+	beforeLoad?: () => void,
 ) {
 	rendered = [];
 	container = document.createElement('div');
@@ -60,6 +62,10 @@ async function mount(
 	await act(async () =>
 		root.render(<Harness content={deck} initialSlide={initialSlide} handle={handle} />),
 	);
+	if (beforeLoad) {
+		expect(latest.loading).toBeTruthy();
+		act(beforeLoad);
+	}
 	const deadline = Date.now() + 10000;
 	while ((latest.loading || !latest.canvasProps.activeSlide) && Date.now() < deadline) {
 		await act(async () => {
@@ -110,5 +116,31 @@ describe('useViewerBuildingBlocks initialSlide', () => {
 		expect(latest.canvasProps.activeSlideIndex).toBe(1);
 		await act(async () => handle.current?.goTo(2));
 		expect(latest.canvasProps.activeSlideIndex).toBe(2);
+	});
+
+	it('opens another slide at fit, and keeps a zoom the host sets right after goTo', async () => {
+		const handle = createRef<PowerPointViewerHandle>();
+		await mount(0, handle);
+		await act(async () => handle.current?.setZoom(2));
+		expect(handle.current?.getZoom()).toBe(2);
+
+		await act(async () => handle.current?.goNext());
+		expect(latest.canvasProps.activeSlideIndex).toBe(1);
+		expect(handle.current?.getZoom()).toBe(1);
+
+		// Both calls in one task, before the render that shows slide 3.
+		await act(async () => {
+			handle.current?.goTo(2);
+			handle.current?.setZoom(1.5);
+		});
+		expect(latest.canvasProps.activeSlideIndex).toBe(2);
+		expect(handle.current?.getZoom()).toBe(1.5);
+	});
+
+	it('keeps a zoom the host set before load when the deck opens on a later slide', async () => {
+		const handle = createRef<PowerPointViewerHandle>();
+		await mount(2, handle, () => handle.current?.setZoom(2));
+		expect(latest.canvasProps.activeSlideIndex).toBe(2);
+		expect(handle.current?.getZoom()).toBe(2);
 	});
 });

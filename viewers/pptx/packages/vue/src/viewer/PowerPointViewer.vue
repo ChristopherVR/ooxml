@@ -222,6 +222,7 @@ import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
+import { useViewportNavigation } from './composables/useViewportNavigation';
 import { ViewerCloudFilesKey } from './composables/viewer-cloud-files';
 import { ViewerStorageKey } from './composables/viewer-storage';
 import { provideZoomTargetLookup, toZoomTargetInfo } from './composables/zoom-target';
@@ -560,7 +561,23 @@ watchEffect((onCleanup) => {
 // -- Navigation + zoom -------------------------------------------------
 const { activeSlideIndex, slideCount, activeSlide, goTo, goPrev, goNext } =
 	useSlideNavigation(slides);
-const { zoom, fitScale, effectiveZoom, zoomIn, zoomOut, zoomReset } = useViewerZoom();
+const {
+	zoom,
+	fitScale,
+	effectiveZoom,
+	zoomIn,
+	zoomOut,
+	zoomReset,
+	showSlide,
+	store: zoomStore,
+} = useViewerZoom(() => activeSlide.value?.id);
+// The handle reports the slide to the zoom at once, so a `setZoom` the host
+// calls right after applies to the new slide instead of being reset to fit
+// when the watcher sees it.
+const hostGoTo = (index: number): void => {
+	showSlide(slides.value[index]?.id);
+	goTo(index);
+};
 
 // Reset view state only when a NEW document is loaded, keyed off the `content`
 // input, not `slides`. Editing reassigns `slides.value` (so watching it here
@@ -1530,6 +1547,15 @@ const { ribbonMode, ribbonUpdateTextStyle, ribbonMoveToEdge } = ribbonActions;
 const chromeMode = computed(() =>
 	ribbonMode.value === 'preview' && editingRequested.value ? 'edit' : ribbonMode.value,
 );
+// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
+// other bindings. `<main>` is the element that scrolls the slide here. A plain
+// drag pans only in a read-only view, where it has nothing to select.
+useViewportNavigation({
+	viewport: mainRef,
+	store: zoomStore,
+	dragPans: computed(() => ribbonMode.value === 'preview'),
+	active: computed(() => !presentation.presenting.value),
+});
 
 watch(ribbonMode, (mode) => {
 	emit('mode-change', mode);
@@ -2007,9 +2033,9 @@ const exposedHandle: PowerPointViewerExpose = {
 			Boolean(canvasOverlaysRef.value?.hasActivePointerInteraction()),
 		commitPendingText: inlineEdit.commitInlineEdit,
 		getContent,
-		goTo,
-		goPrev,
-		goNext,
+		goTo: hostGoTo,
+		goPrev: () => hostGoTo(activeSlideIndex.value - 1),
+		goNext: () => hostGoTo(activeSlideIndex.value + 1),
 		zoomIn,
 		zoomOut,
 		zoomReset,

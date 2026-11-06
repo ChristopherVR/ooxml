@@ -150,14 +150,14 @@ shared `PowerPointViewerAPI` and behave identically to the vanilla-native names.
 
 ## Zoom
 
-| Method      | Signature                | Description                                            |
-| ----------- | ------------------------ | ------------------------------------------------------ |
-| `getZoom`   | `() => number`           | Effective zoom scale (1 = 100%), after fit resolution. |
-| `setZoom`   | `(zoom: number) => void` | Set an explicit zoom scale.                            |
-| `zoomIn`    | `() => void`             | Zoom in by one step.                                   |
-| `zoomOut`   | `() => void`             | Zoom out by one step.                                  |
-| `zoomToFit` | `() => void`             | Fit the slide to the viewport.                         |
-| `zoomReset` | `() => void`             | Reset zoom to 100%.                                    |
+| Method      | Signature                | Description                                                                      |
+| ----------- | ------------------------ | -------------------------------------------------------------------------------- |
+| `getZoom`   | `() => number`           | Effective zoom scale (1 = 100%), after fit resolution.                           |
+| `setZoom`   | `(zoom: number) => void` | Set an explicit zoom scale (1 = 100%). A scale below fit shows the slide at fit. |
+| `zoomIn`    | `() => void`             | Zoom in by one step.                                                             |
+| `zoomOut`   | `() => void`             | Zoom out by one step.                                                            |
+| `zoomToFit` | `() => void`             | Fit the slide to the viewport.                                                   |
+| `zoomReset` | `() => void`             | Reset zoom to 100%.                                                              |
 
 ## Viewer mode
 

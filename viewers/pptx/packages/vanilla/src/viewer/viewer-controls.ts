@@ -125,6 +125,20 @@ export function createViewerControls(
 		store.set({ zoom: manual ? fitScale * zoom : 'fit' });
 	};
 	zoomStore.subscribe(publishZoom);
+	// Going to another slide returns the zoom to fit (the shared store's policy).
+	// The slides and the index are written from many places (paging, Find,
+	// inserting or deleting a slide, collaboration), so watch the store rather
+	// than each writer. It notifies synchronously, so a `setZoom` right after a
+	// slide change applies to the new slide. Subscribed before `state-sync`, which
+	// therefore sees the slide and its zoom as one change.
+	const showSlide = (state: ViewerState): void =>
+		zoomStore.dispatch({ type: 'slide-shown', slideId: state.slides[state.currentSlide]?.id });
+	showSlide(store.get());
+	store.subscribe((state, previous) => {
+		if (state.slides !== previous.slides || state.currentSlide !== previous.currentSlide) {
+			showSlide(state);
+		}
+	});
 
 	/**
 	 * Feed the current viewport measurement in before any user-initiated zoom.
