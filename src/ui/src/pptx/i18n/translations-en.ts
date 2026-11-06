@@ -3582,6 +3582,10 @@ export const translationsEn: Record<string, string> = {
 	'pptx.options.trust.allowExternalContent': 'Allow external content (remote images and media)',
 	'pptx.options.trust.allowExternalContentInfo':
 		'When off, only content embedded in the file is displayed.',
+	'pptx.options.trust.allowFontDownloads':
+		'Download fonts that are not installed or embedded (Google Fonts)',
+	'pptx.options.trust.allowFontDownloadsInfo':
+		'When on, your browser contacts fonts.googleapis.com and fonts.gstatic.com (or the font server your organisation set up) to get missing fonts. When off, text uses installed, embedded or substitute fonts, so line breaks can differ from PowerPoint.',
 	'pptx.options.trust.confirmHyperlinks': 'Confirm before opening external hyperlinks',
 
 	// Animations tab: Advanced Animation and Timing groups

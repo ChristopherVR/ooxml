@@ -60,7 +60,10 @@ export const GOOGLE_FONTS_CSS2_BASE = 'https://fonts.googleapis.com/css2';
  * Host policy for the Google Fonts webfont fallback, the `googleFonts`
  * prop / input / option of every binding.
  *
- * - unset: the fallback requests `fonts.googleapis.com` (the default).
+ * - unset: the fallback requests `fonts.googleapis.com` (the default),
+ *   unless the user turned File > Options > Trust Center > "Download fonts"
+ *   off (see `options/font-download-policy.ts`, which also locks that
+ *   option for the two values below).
  * - `false`: the fallback is off. No stylesheet is injected and no outline
  *   bytes are fetched, so no request reaches `fonts.googleapis.com` or
  *   `fonts.gstatic.com`; text uses installed, embedded or fallback fonts.
