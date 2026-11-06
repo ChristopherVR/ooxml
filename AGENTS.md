@@ -195,7 +195,9 @@ Unit tests in the folder you changed are not what CI runs. Every one of these sl
 
 A maintainer can run it automatically with a local, uncommitted hook in
 `$(git rev-parse --git-common-dir)/hooks/pre-push` that calls `node scripts/verify.mjs`;
-`git push --no-verify` skips it once.
+`git push --no-verify` skips it once. A local `commit-msg` hook in the same folder that calls
+`node scripts/scrub-share-links.mjs "$1"` removes AI chat share links (such as a
+`Claude-Session:` trailer) from each commit message before it is recorded.
 
 ## Branching and git workflow
 
