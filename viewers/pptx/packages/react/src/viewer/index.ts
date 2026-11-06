@@ -1,3 +1,6 @@
+// Outside a `PptxI18nProvider` the viewer translates through react-i18next, as from the main entry.
+import './i18n/react-i18next-source';
+
 export { PowerPointViewer, getAnimationInitialStyle } from './PowerPointViewer';
 export type { PowerPointViewerProps, PowerPointViewerHandle } from './PowerPointViewer';
 // Host translations: the same provider as the main entry, so either import shares one context.

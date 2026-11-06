@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 Switch languages with `i18nInstance.changeLanguage('fr')`.
 
+Configure react-i18next (`initReactI18next` with `init`, or an `I18nextProvider`) before the first render. No event fires when react-i18next first gets an instance, so a viewer that rendered without an instance switches only when its parent re-renders it: it shows its built-in English text until then, and then uses the instance and applies the stored or `defaultLocale` choice.
+
 #### Use your own i18n library
 
 To translate the viewer with Lingui, FormatJS or any other library instead of react-i18next, wrap it in `PptxI18nProvider` and pass a `translate(key, params)` function plus the active `locale`. It covers `PowerPointViewer` and the standalone building blocks (`Toolbar`, `SlideCanvas`, `SlideTemplateGalleryDialog`, ...):
@@ -113,7 +115,43 @@ function TranslatedViewer({ content }: { content: Uint8Array }) {
 
 `translate` receives the viewer's params unchanged: `defaultValue`, `count` and the values of the `{{name}}` placeholders. Use the same names in your catalog (`{name}` in ICU syntax); `count` is a plain value, so pluralise in your catalog. `{{name}}` placeholders left in the text you return are filled too, so the shipped dictionaries work as they are: `const translate: PptxTranslate = (key) => translationsFr[key];`. When `translate` returns the key itself, an empty string or nothing, or throws, the viewer shows its built-in English text, then the call's default text, then a label derived from the key, so a partial catalog never shows a raw `pptx.*` key. Keep `translate` stable (a module-level function or `useCallback`): the viewer re-translates whenever `translate` or `locale` changes.
 
-Inside a provider the host owns the language: the viewer never calls `changeLanguage`, ignores `defaultLocale` and never restores a stored language choice. File > Options > Language appears only when you pass `onLocaleChange` and two or more `availableLocales`; a pick calls `onLocaleChange`, and the selection follows `locale` (a regional `locale` such as `fr-CA` selects an offered `fr`). `locale` does not set the text direction. A `PowerPointViewer` reads the provider nearest above it; a provider rendered inside the viewer is ignored, so the whole viewer shares one language. `i18next` and `react-i18next` stay required peer dependencies in 4.x: install them, but inside a provider the viewer does not use them. `PptxI18nProvider` is React-only; the other bindings translate as described below.
+Inside a provider the host owns the language: the viewer never calls `changeLanguage`, ignores `defaultLocale` and never restores a stored language choice. File > Options > Language appears only when you pass `onLocaleChange` and two or more `availableLocales`; a pick calls `onLocaleChange`, and the selection follows `locale` (a regional `locale` such as `fr-CA` selects an offered `fr`). `locale` does not set the text direction. A `PowerPointViewer` reads the provider nearest above it; a provider rendered inside the viewer is ignored, so the whole viewer shares one language. `i18next` and `react-i18next` stay required peer dependencies in 4.x: install them, but inside a provider the viewer does not use them. To build without them, import from `pptx-react-viewer/no-i18next` ([below](#without-react-i18next)). `PptxI18nProvider` is React-only; the other bindings translate as described below.
+
+#### Without react-i18next
+
+The main entry imports `react-i18next` even when every viewer sits inside a `PptxI18nProvider`, so a bundler fails with "Can't resolve 'react-i18next'" when it is not installed. A host that translates only through `PptxI18nProvider` can import from `pptx-react-viewer/no-i18next` instead. It has exactly the exports and types of `pptx-react-viewer`, and nothing it loads imports `i18next` or `react-i18next`:
+
+```bash
+npm install pptx-react-viewer react react-dom
+```
+
+```tsx
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+```
+
+The entry never uses or bundles `i18next` and `react-i18next`, so you do not need them. They are still declared as required peers in 4.x, so most package managers (npm 7 and later, pnpm 8 and later, Bun) install them anyway, unused. An opt-out such as npm's `--legacy-peer-deps` keeps them out, but it skips every peer: then also install the other required peers yourself (`framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip` and `fast-xml-parser`), or the build fails.
+
+- Inside a `PptxI18nProvider` the entry behaves exactly like the main entry. A provider and a viewer may come from either entry: they share one context.
+- Outside a provider, `PowerPointViewer` and the standalone building blocks show the built-in English text and report the locale `en`. File > Options > Language is left out, `defaultLocale`, `availableLocales` and `onLocaleChange` have no effect, and no stored language choice is read or written.
+- The fallback is decided for the whole app, not per import: if any module of the app also imports `pptx-react-viewer`, `pptx-react-viewer/viewer` or `pptx-react-viewer/internals`, react-i18next is bundled and viewers mounted outside a provider, from either entry, read it. They translate through react-i18next when it is configured (`initReactI18next` or an `I18nextProvider`), and otherwise keep the built-in English text (react-i18next logs that it has no instance).
+- `pptx-react-viewer/viewer` (the opt-in hooks and collaboration components) and `pptx-react-viewer/internals` have no counterpart without react-i18next yet: importing either one needs `i18next` and `react-i18next` installed, as the main entry does.
+
+The built-in text outside a provider is English only. For another language without i18next, pass a shipped dictionary through `PptxI18nProvider`:
+
+```tsx
+import { translationsFr } from 'pptx-react-viewer/i18n/fr';
+import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
+
+const translate = (key: string) => translationsFr[key];
+
+function FrenchViewer({ content }: { content: Uint8Array }) {
+	return (
+		<PptxI18nProvider translate={translate} locale='fr'>
+			<PowerPointViewer content={content} />
+		</PptxI18nProvider>
+	);
+}
+```
 
 ### Vue 3
 

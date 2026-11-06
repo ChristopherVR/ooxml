@@ -106,13 +106,13 @@ import type { PowerPointViewerProps } from 'pptx-react-viewer';
 
 ## 语言 {#language}
 
-| 属性               | 类型                     | 默认值                           | 说明                                                                                                                                                                                    |
-| ------------------ | ------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `defaultLocale`    | `string`                 | 已保存的选择，否则为 `'en'`      | “文件 > 选项 > 语言”的初始语言代码。依次回退到 `localStorage` 中保存的选择和 `'en'`。在 `PptxI18nProvider` 内忽略此项，语言由其 `locale` 决定。                                         |
-| `availableLocales` | `LocaleCatalogEntry[]`   | `react-i18next` 中注册的语言代码 | “文件 > 选项 > 语言”提供的语言。默认使用宿主 `react-i18next` 实例中注册的语言代码。在 `PptxI18nProvider` 内没有默认值：需要同时传入至少两个语言和 `onLocaleChange` 才会显示“语言”类别。 |
-| `onLocaleChange`   | `(code: string) => void` | -                                | 用户在“文件 > 选项 > 语言”中选择语言时调用。提供后由宿主负责应用和持久化；否则由组件自行应用和持久化。在 `PptxI18nProvider` 内语言始终由宿主掌控：未提供此回调时不显示“语言”类别。      |
+| 属性               | 类型                     | 默认值                           | 说明                                                                                                                                                                                                                                                                                    |
+| ------------------ | ------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `defaultLocale`    | `string`                 | 已保存的选择，否则为 `'en'`      | “文件 > 选项 > 语言”的初始语言代码。依次回退到 `localStorage` 中保存的选择和 `'en'`。在 `PptxI18nProvider` 内忽略此项，语言由其 `locale` 决定；在 Provider 外且未配置 react-i18next 实例时（单独使用 `pptx-react-viewer/no-i18next` 时始终如此）也会忽略，组件显示内置英文文本。        |
+| `availableLocales` | `LocaleCatalogEntry[]`   | `react-i18next` 中注册的语言代码 | “文件 > 选项 > 语言”提供的语言。默认使用宿主 `react-i18next` 实例中注册的语言代码。在 `PptxI18nProvider` 内没有默认值：需要同时传入至少两个语言和 `onLocaleChange` 才会显示“语言”类别。在 Provider 外且未配置 react-i18next 实例时不起作用（见 `defaultLocale`）。                      |
+| `onLocaleChange`   | `(code: string) => void` | -                                | 用户在“文件 > 选项 > 语言”中选择语言时调用。提供后由宿主负责应用和持久化；否则由组件自行应用和持久化。在 `PptxI18nProvider` 内语言始终由宿主掌控：未提供此回调时不显示“语言”类别。在 Provider 外且未配置 react-i18next 实例时（见 `defaultLocale`）不显示“语言”类别，也不会调用此回调。 |
 
-如果要用自己的 i18n 库代替 react-i18next 翻译组件，请用 `PptxI18nProvider` 包裹它（仅限 React），详见[使用自己的 i18n 库](/zh/guide/localization#use-your-own-i18n-library)。
+如果要用自己的 i18n 库代替 react-i18next 翻译组件，请用 `PptxI18nProvider` 包裹它（仅限 React），详见[使用自己的 i18n 库](/zh/guide/localization#use-your-own-i18n-library)。不安装 react-i18next 时，请从 `pptx-react-viewer/no-i18next` 导入，详见[不使用 react-i18next](/zh/guide/localization#without-react-i18next)。
 
 ## 界面自定义 {#ui-customization}
 

@@ -64,6 +64,7 @@ import { PowerPointViewer } from 'pptx-react-viewer/viewer';
 | 入口                                                               | 导出内容                                                                                                                                              |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pptx-react-viewer`                                                | `PowerPointViewer`、主题工具、`renderToCanvas` 和公开类型。                                                                                           |
+| `pptx-react-viewer/no-i18next`                                     | 与根入口导出相同，但不导入 i18next 或 react-i18next（参见[不使用 react-i18next](/zh/guide/localization#without-react-i18next)）。                     |
 | `pptx-react-viewer/viewer`                                         | 同一个组件，以及可选用的 hooks 和协作组件（参见 [Hooks](/zh/react/hooks)）。                                                                          |
 | `pptx-react-viewer/ai`                                             | `createAiAssistant`、句柄类型 `PptxAiAssistant` 和 `PptxAi*` 配置类型，是传入 `ai` 的推荐方式（参见 [`/ai` 入口](/zh/guide/ai-assistant#ai-entry)）。 |
 | `pptx-react-viewer/i18n`                                           | 英文字典、`keyToLabel` 和语言目录（参见[本地化](/zh/guide/localization)）。                                                                           |

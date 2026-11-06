@@ -4,10 +4,10 @@
  * (only with a clipboard), Duplicate, one Hide/Show toggle, Delete.
  */
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { SorterContextMenu } from './SorterContextMenu';
 
 let container: HTMLDivElement;
@@ -16,7 +16,7 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 afterEach(() => {
 	act(() => root.unmount());
@@ -59,27 +59,31 @@ describe('react sorter context menu', () => {
 	it('offers Copy, Duplicate, Hide and Delete, and Paste only with a clipboard', () => {
 		mount();
 		expect(container.querySelector('[role="menu"]')).not.toBeNull();
-		expect(labels()).toStrictEqual([
-			'pptx.slideSorter.contextMenu.copy',
-			'pptx.slideSorter.contextMenu.duplicate',
-			'pptx.slideSorter.contextMenu.hideSlides',
-			'pptx.slideSorter.contextMenu.delete',
-		]);
+		expect(labels()).toStrictEqual(
+			[
+				'pptx.slideSorter.contextMenu.copy',
+				'pptx.slideSorter.contextMenu.duplicate',
+				'pptx.slideSorter.contextMenu.hideSlides',
+				'pptx.slideSorter.contextMenu.delete',
+			].map(marked),
+		);
 		mount({ hasClipboard: true });
-		expect(labels()).toContain('pptx.slideSorter.contextMenu.paste');
+		expect(labels()).toContain(marked('pptx.slideSorter.contextMenu.paste'));
 	});
 
 	it('shows one Show entry when every selected slide is hidden', () => {
 		mount({ hasHiddenInSelection: true, hasVisibleInSelection: false });
-		expect(labels()).toContain('pptx.slideSorter.contextMenu.showSlides');
-		expect(labels()).not.toContain('pptx.slideSorter.contextMenu.hideSlides');
+		expect(labels()).toContain(marked('pptx.slideSorter.contextMenu.showSlides'));
+		expect(labels()).not.toContain(marked('pptx.slideSorter.contextMenu.hideSlides'));
 	});
 
 	it('appends the count on a multi-selection and refuses to delete every slide', () => {
 		mount({ selectedCount: 2 });
-		expect(labels()[0]).toBe('pptx.slideSorter.contextMenu.copy (2)');
+		expect(labels()[0]).toBe(`${marked('pptx.slideSorter.contextMenu.copy')} (2)`);
 		mount({ selectedCount: 4, totalSlides: 4 });
-		const remove = items().find((candidate) => candidate.textContent?.includes('delete'));
+		const remove = items().find((candidate) =>
+			candidate.textContent?.startsWith(marked('pptx.slideSorter.contextMenu.delete')),
+		);
 		expect(remove?.disabled).toBeTruthy();
 	});
 
