@@ -59,6 +59,7 @@ import { outerStrokeEdgePath } from './stroke-clip-edge';
 import type { StrokeClipJoin } from './stroke-clip-outset';
 import { traceCompoundStrands } from './stroke-compound-strands';
 import { splitStrokePresetPathData, strokeOnlyPresetPathData } from './stroke-only-preset';
+import { usesSilhouetteEffects } from './silhouette-effects';
 import { strokeMiterLimit } from './stroke-style';
 import { hasStrokePaint } from './stroke-paint';
 import {
@@ -337,7 +338,12 @@ function clipEdgeBleed(
 		(style?.strokeOpacity ?? 1) < 1 ||
 		element.type === 'picture' ||
 		element.type === 'image' ||
-		isArrowedCustomPath(element)
+		isArrowedCustomPath(element) ||
+		// A silhouette shape keeps no clip on its container (its fill is the SVG
+		// overlay's), so there is no cut to cover; and the filter shadows the painted
+		// alpha, which the hairline would thicken (a hollow triangle's shadow read
+		// 25 % darker than PowerPoint's).
+		usesSilhouetteEffects(element)
 	) {
 		return undefined;
 	}

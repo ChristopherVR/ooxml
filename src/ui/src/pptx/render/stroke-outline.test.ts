@@ -448,3 +448,27 @@ describe('buildStrokeOutline device-grid snap', () => {
 		expect(buildStrokeOutline(shape(gradientStroke))!.strands[0]!.cssTransform).toBeUndefined();
 	});
 });
+
+describe('buildStrokeOutline edge bleed', () => {
+	const line: ShapeStyle = { strokeColor: '#102030', strokeWidth: 4 };
+	const triangle = (style: ShapeStyle) => shape(style, { shapeType: 'triangle' });
+
+	it('adds a hairline on the outer edge of a clipped preset (the clip would cut it)', () => {
+		expect(buildStrokeOutline(triangle(line))!.strands).toHaveLength(2);
+	});
+
+	it('adds none to a silhouette shape, whose filter would shadow the thicker line', () => {
+		// The container keeps no clip there, so there is nothing to cover, and the
+		// hairline made a hollow triangle's shadow 25 % darker than PowerPoint's.
+		const silhouette = triangle({
+			...line,
+			shadowColor: '#000000',
+			shadowOpacity: 0.7,
+			shadowBlur: 14,
+			shadowDistance: 12,
+			shadowAngle: 45,
+			outerShadowXml: {},
+		});
+		expect(buildStrokeOutline(silhouette)!.strands).toHaveLength(1);
+	});
+});
