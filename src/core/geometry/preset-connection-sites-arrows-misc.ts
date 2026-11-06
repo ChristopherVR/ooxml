@@ -120,7 +120,7 @@ export const MISC_ARROW_CONNECTION_SITES: Record<string, PresetConnectionSiteDef
 			gd('dy2', '+- yE 0 t'),
 			gd('dy22', '*/ dy2 1 2'),
 			gd('dy3', '*/ h 1 20'),
-			gd('yD', '+- t dy22 dy3'),
+			gd('yD', '+- dy22 0 dy3'),
 		],
 		sites: [
 			cxn('cd4', 'l', 'b'),

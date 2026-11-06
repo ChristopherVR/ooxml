@@ -145,10 +145,50 @@ const leftRightUpArrow = exactDef(
 	],
 );
 
+// swooshArrow: the head barbs sit at fixed distances from the box (ssd8) and
+// shear by tan(90deg / 14) per unit of drop, so both adjustments move them.
+// Measured on PowerPoint 16 at five adjustments and four aspects (the bezier
+// controls: upper (wd6, hd3), lower (wd4, yF + hd12); head tip yD is one
+// twentieth of the height above the half way point of the head).
+const swooshArrow = exactDef(
+	'swooshArrow',
+	{ adj1: 25000, adj2: 16667 },
+	[
+		'a1 pin 1 adj1 75000',
+		'maxAdj2 */ 70000 w ss',
+		'a2 pin 0 adj2 maxAdj2',
+		'ad1 */ h a1 100000',
+		'ad2 */ ss a2 100000',
+		'xB +- r 0 ad2',
+		'yB +- t ssd8 0',
+		'alfa */ cd4 1 14',
+		'dx0 tan ssd8 alfa',
+		'xC +- xB 0 dx0',
+		'dx1 tan ad1 alfa',
+		'yF +- yB ad1 0',
+		'xF +- xB dx1 0',
+		'xE +- xF dx0 0',
+		'yE +- yF ssd8 0',
+		'dy2 +- yE 0 t',
+		'dy22 */ dy2 1 2',
+		'dy3 */ h 1 20',
+		'yD +- dy22 0 dy3',
+		'dy4 */ hd6 1 1',
+		'yP1 +- hd6 dy4 0',
+		'xP1 val wd6',
+		'dy5 */ hd6 1 2',
+		'yP2 +- yF dy5 0',
+		'xP2 val wd4',
+	],
+	'l t r b',
+	[p('M l b Q xP1 yP1 xB yB L xC t L r yD L xE yE L xF yF Q xP2 yP2 l b Z')],
+);
+
 export const EXACT_ARROW_PRESET_DEFINITIONS: Record<string, PresetShapeGeometryDefinition> = {
 	leftRightArrow,
 	upDownArrow,
 	quadArrow,
 	leftUpArrow,
 	leftRightUpArrow,
+	swooshArrow,
 };
