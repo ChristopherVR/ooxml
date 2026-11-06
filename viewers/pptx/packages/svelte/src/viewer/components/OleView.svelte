@@ -197,6 +197,15 @@
 		border-top: 1px solid rgba(0, 0, 0, 0.08);
 		font-size: 11px;
 		pointer-events: auto;
+		/* Hidden until the object is hovered or a control inside is focused: PowerPoint
+		   paints the object alone, and React, Angular and vanilla reveal it the same way. */
+		opacity: 0;
+		transition: opacity 0.12s ease-in-out;
+	}
+
+	.pptx-svelte-ole:hover .pptx-svelte-ole-actions,
+	.pptx-svelte-ole-actions:focus-within {
+		opacity: 1;
 	}
 
 	.pptx-svelte-ole-meta {
