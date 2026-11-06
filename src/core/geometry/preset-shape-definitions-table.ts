@@ -57,6 +57,9 @@ import { EXACT_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-exact
 import { EXACT_CIRCULAR_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-circular';
 import { EXACT_BASIC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-basic';
 import { EXACT_MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-misc';
+import { EXACT_LEFT_RIGHT_RIBBON_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-left-right-ribbon';
+import { EXACT_ELLIPSE_RIBBON_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-ellipse-ribbons';
+import { EXACT_RIBBON_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-ribbons';
 import { EXACT_MATH_PRESET_DEFINITIONS } from './preset-shape-definitions-exact-math';
 import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart';
 import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc';
@@ -1274,5 +1277,8 @@ export const PRESET_SHAPE_GEOMETRY_TABLE: Record<string, PresetShapeGeometryDefi
 	...EXACT_ARROW_PRESET_DEFINITIONS,
 	...EXACT_ARC_PRESET_DEFINITIONS,
 	...EXACT_CIRCULAR_ARROW_PRESET_DEFINITIONS,
+	...EXACT_RIBBON_PRESET_DEFINITIONS,
+	...EXACT_LEFT_RIGHT_RIBBON_PRESET_DEFINITIONS,
+	...EXACT_ELLIPSE_RIBBON_PRESET_DEFINITIONS,
 	...EXACT_MISC_PRESET_DEFINITIONS,
 };
