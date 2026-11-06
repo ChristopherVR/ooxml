@@ -308,3 +308,29 @@ describe('renderWarpedText: envelope/former-simple presets render as true SVG te
 		}
 	});
 });
+
+describe('renderWarpedText: arch lines lie one line pitch apart', () => {
+	it('puts the two lines of an Arch Up block on ellipses 1.2 em apart, the last on the base ellipse', () => {
+		const element = {
+			type: 'text',
+			id: 'wa-arch-lines',
+			x: 0,
+			y: 0,
+			width: 300,
+			height: 150,
+			textStyle: { textWarpPreset: 'textArchUp', fontSize: 20 },
+			textSegments: [
+				{ text: 'Top', style: {} },
+				{ text: '', style: {}, isParagraphBreak: true },
+				{ text: 'Bottom', style: {} },
+			],
+		} as PptxElement;
+		const node = renderWarpedText(element, buildContext()) as SVGSVGElement | null;
+		const radii = [...(node?.querySelectorAll('defs path') ?? [])].map((path) =>
+			Number(/A ([\d.]+),/u.exec(path.getAttribute('d') ?? '')?.[1]),
+		);
+		expect(radii).toHaveLength(2);
+		expect(radii[1]).toBe(150);
+		expect(radii[0]).toBeCloseTo(174, 5);
+	});
+});

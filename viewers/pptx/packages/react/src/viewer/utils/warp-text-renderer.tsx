@@ -6,6 +6,7 @@ import {
 	resolveFontItalic,
 	resolveWarpRunPaint,
 	resolveFontWeight,
+	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxElementWithText, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties, getSubstituteFontFamily } from 'pptx-viewer-core';
@@ -27,7 +28,7 @@ import { getGlyphOutline, glyphOutlineFontCache } from './glyph-outline-cache';
 import type { FieldSubstitutionContext } from './text-field-substitution';
 import { substituteFieldText } from './text-field-substitution';
 import type { ElementFindHighlights } from './text-segment-helpers';
-import { shouldUseSvgWarp, getWarpPath } from './warp-path-generators';
+import { shouldUseSvgWarp } from './warp-path-generators';
 
 // Paragraph grouping helper. The pure splitter now lives in pptx-viewer-shared
 // (render/text-warp `groupIntoParagraphs`); React keeps its field-substitution
@@ -86,6 +87,7 @@ function getSegmentTspanProps(
 	segment: TextSegment,
 	element: PptxElementWithText,
 	fallbackColor: string,
+	fitScale = 1,
 ): React.SVGProps<SVGTSpanElement> {
 	// The run paint is the shared descriptor every binding maps onto its template.
 	const paint = resolveWarpRunPaint(
@@ -96,7 +98,7 @@ function getSegmentTspanProps(
 	);
 	return {
 		fill: paint.fill,
-		fontSize: paint.fontSizePx,
+		fontSize: paint.fontSizePx * fitScale,
 		fontWeight: paint.fontWeight ?? 'normal',
 		fontStyle: paint.fontStyle ?? 'normal',
 		fontFamily: paint.fontFamily,
@@ -259,7 +261,6 @@ export function WarpedText({
 		return null;
 	}
 
-	const lineCount = paragraphs.length;
 	const pathIdPrefix = `warp-${element.id}`;
 
 	// Warp adjustment values
@@ -326,6 +327,15 @@ export function WarpedText({
 		);
 	}
 
+	const layouts = warpParagraphLayouts(
+		preset,
+		width,
+		height,
+		paragraphs,
+		warpAdj,
+		warpAdj2,
+		textEl.textStyle,
+	);
 	return (
 		<svg
 			width={width}
@@ -345,7 +355,7 @@ export function WarpedText({
 					<path
 						key={`${pathIdPrefix}-def-${i}`}
 						id={`${pathIdPrefix}-${i}`}
-						d={getWarpPath(preset, width, height, i, lineCount, warpAdj, warpAdj2)}
+						d={layouts[i]?.d}
 						fill='none'
 					/>
 				))}
@@ -371,7 +381,12 @@ export function WarpedText({
 						{para.segments.map((seg, segIdx) => (
 							<tspan
 								key={`${pathIdPrefix}-ts-${paraIdx}-${segIdx}`}
-								{...getSegmentTspanProps(seg, textEl, fallbackColor)}
+								{...getSegmentTspanProps(
+									seg,
+									textEl,
+									fallbackColor,
+									layouts[paraIdx]?.fitScale ?? 1,
+								)}
 							>
 								{seg.text}
 							</tspan>

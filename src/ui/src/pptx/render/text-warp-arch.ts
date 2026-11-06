@@ -7,9 +7,9 @@
  * and is shifted down by the default text frame inset, so the baseline of a
  * single line passes that inset below the top edge (arch up) or the bottom
  * edge (arch down) and the arc ends at mid height. The glyph tops point away
- * from the centre for Arch Up and Button and toward it for Arch Down. A
- * following line lies on a concentric ellipse: `t` 0 is the outermost, 1 the
- * innermost.
+ * from the centre for Arch Up and Button and toward it for Arch Down. Further
+ * lines lie on concentric ellipses one line pitch apart (see
+ * {@link warpLineOutward}).
  *
  * The start angle does not turn the arc: it only picks which half carries the
  * text (see {@link archOnUpperHalf}).
@@ -43,6 +43,36 @@ export function archOnUpperHalf(adj: number | undefined, half: 'up' | 'down'): b
 	return degrees >= 90 && degrees < 270;
 }
 
+/** Radii of the arch ellipse of a line: the box's own, `outward` px larger for each line further from the base line. */
+export function archEllipseRadii(
+	width: number,
+	height: number,
+	outward: number,
+): { rx: number; ry: number } {
+	return { rx: Math.max(1, width / 2 + outward), ry: Math.max(1, height / 2 + outward) };
+}
+
+/** A line's pitch on the arch and loop warps, in ems of the font size (1.2 em measured in Arial, Times New Roman, Calibri and Verdana, 52 px for 24 pt text). */
+export const WARP_ARC_LINE_PITCH_EM = 1.2;
+
+/**
+ * How far (px) the ellipse of a line lies outside the base ellipse. The text
+ * block stacks away from the centre of the box: the base ellipse carries the
+ * line nearest the centre (the last line of Arch Up, Button and Circle, the
+ * first line of Arch Down) and every other line lies one `gap` further out.
+ * Measured on PowerPoint 16 with two and three lines: the lines are one pitch
+ * apart, not scaled copies of each other.
+ */
+export function warpLineOutward(
+	preset: string,
+	lineIndex: number,
+	lineCount: number,
+	gap: number,
+): number {
+	const steps = preset === 'textArchDown' ? lineIndex : lineCount - 1 - lineIndex;
+	return Math.max(0, steps) * gap;
+}
+
 /**
  * SVG path for the arch half-ellipse. `half` is the preset's own half (`up`:
  * glyph tops away from the centre, `down`: toward it); a start angle in the
@@ -52,13 +82,11 @@ export function archOnUpperHalf(adj: number | undefined, half: 'up' | 'down'): b
 export function archEllipsePath(
 	width: number,
 	height: number,
-	t: number,
+	outward: number,
 	adj: number | undefined,
 	half: 'up' | 'down',
 ): string {
-	const scale = Math.max(0.1, 1 + (0.5 - t) * 0.7);
-	const rx = (width / 2) * scale;
-	const ry = (height / 2) * scale;
+	const { rx, ry } = archEllipseRadii(width, height, outward);
 	const turned = archOnUpperHalf(adj, half) !== (half === 'up');
 	const inset = ARCH_FRAME_INSET[half];
 	const x0 = width / 2 - rx;
@@ -84,24 +112,34 @@ const CIRCLE_DEFAULT_ADJ = 10800000;
  */
 const CIRCLE_FIT = { dx: 2.25, dy: 1, drx: 3, dry: -12.75, degrees: -9.5 } as const;
 
+/** Radii of the Circle loop of a line, `outward` px larger for each line further from the base loop. */
+export function circleLoopRadii(
+	width: number,
+	height: number,
+	outward: number,
+): { rx: number; ry: number } {
+	return {
+		rx: Math.max(1, width / 2 + CIRCLE_FIT.drx + outward),
+		ry: Math.max(1, height / 2 + CIRCLE_FIT.dry + outward),
+	};
+}
+
 /**
  * The closed loop PowerPoint draws for Circle: an ellipse near the box
  * ellipse run once around clockwise, with the text centred on the path. The
  * start angle only picks the tip: from 180 round to 360 degrees (the default)
  * the loop starts at the left tip, so a centred line sits on the right tip and
  * runs down the right side; from 0 to 180 it starts at the right tip and the
- * text sits on the left. A following line lies on a concentric ellipse: `t` 0
- * is the outermost, 1 the innermost.
+ * text sits on the left. A line further out lies on an ellipse `outward` px
+ * larger (see {@link warpLineOutward}).
  */
 export function circleEllipsePath(
 	width: number,
 	height: number,
-	t: number,
+	outward: number,
 	adj: number | undefined,
 ): string {
-	const scale = Math.max(0.1, 1 + (0.5 - t) * 0.7);
-	const rx = (width / 2) * scale + CIRCLE_FIT.drx;
-	const ry = (height / 2) * scale + CIRCLE_FIT.dry;
+	const { rx, ry } = circleLoopRadii(width, height, outward);
 	const cx = width / 2 + CIRCLE_FIT.dx;
 	const cy = height / 2 + CIRCLE_FIT.dy;
 	const startsLeft = normalizeWarpAngle(adj ?? CIRCLE_DEFAULT_ADJ) >= 180;

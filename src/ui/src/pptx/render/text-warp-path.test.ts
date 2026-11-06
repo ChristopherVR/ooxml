@@ -124,7 +124,7 @@ describe('the WARP_PATH_GENERATORS table', () => {
 	});
 
 	it('should produce different paths for different t values', () => {
-		const gen = WARP_PATH_GENERATORS['textArchUp'];
+		const gen = WARP_PATH_GENERATORS['textWave1'];
 		const pathTop = gen(200, 100, 0);
 		const pathBottom = gen(200, 100, 1);
 		expect(pathTop).not.toBe(pathBottom);

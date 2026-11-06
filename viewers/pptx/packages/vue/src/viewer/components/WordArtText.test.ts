@@ -412,4 +412,26 @@ describe('wordArtText', () => {
 			expect(p.attributes('fill')).toBe('#123456');
 		}
 	});
+
+	it('puts the lines of an Arch Up block on ellipses 1.2 em apart, the last on the base ellipse', () => {
+		const wrapper = mount(WordArtText, {
+			props: {
+				element: warpedText({
+					textStyle: { textWarpPreset: 'textArchUp', fontSize: 20 },
+					textSegments: [
+						{ text: 'Top', style: {} },
+						{ text: '', style: {}, isParagraphBreak: true },
+						{ text: 'Bottom', style: {} },
+					],
+				}),
+				zIndex: 0,
+			},
+		});
+		const radii = wrapper
+			.findAll('defs path')
+			.map((path) => Number(/A ([\d.]+),/u.exec(path.attributes('d') ?? '')?.[1]));
+		expect(radii).toHaveLength(2);
+		expect(radii[1]).toBe(100);
+		expect(radii[0]).toBeCloseTo(124, 5);
+	});
 });

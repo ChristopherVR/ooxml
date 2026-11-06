@@ -15,7 +15,7 @@ import type { PptxElement, PptxTextWarpPreset, TextSegment } from 'ooxml-core/pp
 import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { isParagraphSeparatorSegment } from './text-segment-paragraph-break';
-import { archEllipsePath, circleEllipsePath } from './text-warp-arch';
+import { archEllipsePath, circleEllipsePath, warpLineOutward } from './text-warp-arch';
 
 // ── Classifier ──────────────────────────────────────────────────────────
 
@@ -284,18 +284,18 @@ const clamp4 = (n: number): number => Math.max(0, Math.min(n, 4));
 // ── Priority 1 ──────────────────────────────────────────────────────────
 
 /** Concentric upward arcs. t=0 is the tallest arch. */
-function archUpPath(w: number, h: number, t: number, adj?: number): string {
-	return archEllipsePath(w, h, t, adj, 'up');
+function archUpPath(w: number, h: number, _t: number, adj?: number): string {
+	return archEllipsePath(w, h, 0, adj, 'up');
 }
 
 /** Concentric downward arcs. t=1 is the deepest. */
-function archDownPath(w: number, h: number, t: number, adj?: number): string {
-	return archEllipsePath(w, h, t, adj, 'down');
+function archDownPath(w: number, h: number, _t: number, adj?: number): string {
+	return archEllipsePath(w, h, 0, adj, 'down');
 }
 
 /** Full ellipse once around clockwise, from the tip the start angle picks (see `circleEllipsePath`). */
-function circlePath(w: number, h: number, t: number, adj?: number): string {
-	return circleEllipsePath(w, h, t, adj);
+function circlePath(w: number, h: number, _t: number, adj?: number): string {
+	return circleEllipsePath(w, h, 0, adj);
 }
 
 /** Single sine-wave via cubic Bézier. */
@@ -421,8 +421,8 @@ function canDownPath(w: number, h: number, t: number, adj?: number): string {
 }
 
 /** Button: a single line lies on the same arc as Arch Up (and turns with the start angle alike). */
-function buttonPath(w: number, h: number, t: number, adj?: number): string {
-	return archEllipsePath(w, h, t, adj, 'up');
+function buttonPath(w: number, h: number, _t: number, adj?: number): string {
+	return archEllipsePath(w, h, 0, adj, 'up');
 }
 
 /** Ring inside: concentric ellipses scaled inward. */
@@ -788,6 +788,8 @@ export function hasTextWarp(element: PptxElement): boolean {
  * @param lineCount Total number of lines/paragraphs.
  * @param adj       Optional primary adjustment (raw OOXML 1/60000th units).
  * @param adj2      Optional secondary adjustment (raw OOXML 1/60000th units).
+ * @param lineGap   Arch Up, Arch Down, Button and Circle: px between the paths of two lines
+ *                  (see `warpLineOutward`); 0 puts every line on the base path.
  */
 export function buildWarpPath(
 	preset: PptxTextWarpPreset,
@@ -797,8 +799,19 @@ export function buildWarpPath(
 	lineCount: number,
 	adj?: number,
 	adj2?: number,
+	lineGap = 0,
 ): string {
 	const t = lineCount <= 1 ? 0.5 : lineIndex / (lineCount - 1);
+	const outward = warpLineOutward(preset, lineIndex, lineCount, lineGap);
+	if (preset === 'textArchUp' || preset === 'textButton') {
+		return archEllipsePath(width, height, outward, adj, 'up');
+	}
+	if (preset === 'textArchDown') {
+		return archEllipsePath(width, height, outward, adj, 'down');
+	}
+	if (preset === 'textCircle') {
+		return circleEllipsePath(width, height, outward, adj);
+	}
 	const generator = WARP_PATH_GENERATORS[preset];
 	if (generator) {
 		return generator(width, height, t, adj, adj2);

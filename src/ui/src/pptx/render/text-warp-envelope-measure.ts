@@ -78,6 +78,20 @@ export function measureGlyphAdvances(text: string, font: EnvelopeFontSpec): numb
 	return advances;
 }
 
+/**
+ * The advance width of `text` in `font` (kerned, like the per-glyph advances
+ * above), or `undefined` when there is no canvas to measure with.
+ */
+export function measureTextAdvance(text: string, font: EnvelopeFontSpec): number | undefined {
+	const ctx = getMeasureCtx();
+	if (!ctx) {
+		return undefined;
+	}
+	ctx.font = toCanvasFont(font);
+	enableKerning(ctx);
+	return ctx.measureText(text).width;
+}
+
 /** A glyph's ink extent relative to its own origin (baseline, left advance edge). */
 export interface GlyphInkExtent {
 	left: number;

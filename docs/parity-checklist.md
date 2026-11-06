@@ -482,18 +482,28 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       centred line sits on the right (`text-warp-arch.ts`). Mean absolute diff vs PowerPoint on
       the synthetic deck fell from 25.7 and 30.8 (rings), 24.3 (Circle Pour) and 16.9 (Circle)
       to about 6, 6.5, 10 and 4.6.
-- [ ] **P2** WordArt Transform, remaining gaps measured against PowerPoint 16: Arch Up, Arch
-      Down, Button and Circle with a non-default angle adjust keep the previous approximation
-      (PowerPoint pins the start angle in a way not yet modelled: Arch Up at 90 degrees draws like
-      the default, at 270 degrees it moves to the bottom reading upside down); the Circle radii
-      and start angle are a fit to three captures (`text-warp-arch.ts`) and Circle Pour reads its
-      text length slightly short of the loop; the arch frame offsets (`ARCH_FRAME_INSET`) were
-      measured on Arial 32 pt only and drift by a few pixels for other fonts and sizes; the
-      concentric scale of the second and later lines of an arch or circle is a guess; Double Wave 1
-      and Wave 4 end their ink a little short of the box edge (PowerPoint flattens each path and
-      drops its last partial piece, the shortfall changes with the adjust), and Inflate, Deflate
-      and Can Up keep a residual of 6 to 8 grey levels that is glyph placement within a word, not
-      the path geometry.
+- [x] **P1** WordArt Transform, start angle and fit: the start angle of Arch Up, Arch Down,
+      Button and Circle only picks the half of the ellipse (90 to 269 degrees the upper half,
+      otherwise the lower, turned half a turn so Arch Up reads upside down; Circle centres on the
+      left tip from 0 to 179 degrees) and text longer than the arc (a long line, or a start angle
+      near the flip, which leaves a short sweep) is scaled to fill it exactly
+      (`text-warp-arch.ts`, `text-warp-arch-fit.ts`, `warpParagraphLayouts` in all five
+      bindings). Further lines lie one line pitch (1.2 em) apart on concentric ellipses, the line
+      nearest the box centre on the base path, not 0.7 scaled copies. The wave and pour presets
+      name their first guide `adj1`: it was dropped on load, so Wave 4 and Double Wave ignored
+      their amplitude (mean abs diff of the Double Wave and Wave 4 deck 8.27 to 2.81).
+- [ ] **P2** WordArt Transform, remaining gaps measured against PowerPoint 16: the arch frame
+      offsets (`ARCH_FRAME_INSET`) fit Arial 32 pt and drift by up to 4 px for other sizes and
+      fonts (the drift is not explained by ascent, cap height or text width: Times New Roman
+      needs none at 24 and 48 pt, Arial 6 px at 48 pt); Circle with several lines sits about
+      10 px further out than PowerPoint's; Button with two or three lines is a top arc, a flat
+      middle line and a bottom arc in PowerPoint, drawn here as a stack; Double Wave 1 and Wave 4
+      end the top and bottom ink independently either at the box edge or one ~9 px piece short
+      (chaotic in the adjust: 6000 and 6500 full, 6250 short at both ends, not a function of the
+      path's x range or length), Inflate, Deflate and Can Up keep a residual of 6 to 8 grey levels
+      from heavier glyph weight in PowerPoint's warped text rather than placement (edges fit a
+      linear ink-normalised map within 2.5 px), and Circle Pour reads its text length slightly
+      short of the loop.
 
 ### Ribbon
 

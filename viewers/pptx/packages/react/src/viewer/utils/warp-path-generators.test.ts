@@ -113,7 +113,7 @@ describe('wARP_PATH_GENERATORS', () => {
 	});
 
 	it('should produce different paths for different t values', () => {
-		const gen = WARP_PATH_GENERATORS['textArchUp'];
+		const gen = WARP_PATH_GENERATORS['textWave1'];
 		const pathTop = gen(200, 100, 0);
 		const pathBottom = gen(200, 100, 1);
 		expect(pathTop).not.toBe(pathBottom);
@@ -337,8 +337,9 @@ describe('adjustment values (adj/adj2)', () => {
 
 	it('textArchUp: adj controls arch height', () => {
 		const gen = WARP_PATH_GENERATORS['textArchUp'];
+		// The angle only picks the half of the ellipse (see text-warp-arch.ts).
 		const pathDefault = gen(200, 100, 0);
-		const pathSmall = gen(200, 100, 0, 5400000);
+		const pathSmall = gen(200, 100, 0, 16200000);
 		expect(pathDefault).not.toBe(pathSmall);
 	});
 
@@ -372,11 +373,12 @@ describe('adjustment values (adj/adj2)', () => {
 		expect(pathDefault).not.toBe(pathLarge);
 	});
 
-	it('textButton: adj=0 flattens the curve', () => {
+	it('textButton: adj=0 puts the text on the lower half of the ellipse', () => {
 		const gen = WARP_PATH_GENERATORS['textButton'];
 		const path = gen(200, 100, 0.3, 0);
 		expect(path).toMatch(/^M/);
-		expect(path).toContain('Q');
+		expect(path).toContain('A');
+		expect(path).not.toBe(gen(200, 100, 0.3));
 	});
 
 	it('textChevron: adj controls point height', () => {

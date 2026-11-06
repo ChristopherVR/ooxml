@@ -275,4 +275,23 @@ describe('wordArtText (Svelte)', () => {
 			expect(p.getAttribute('fill')).toBe('#123456');
 		}
 	});
+
+	it('puts the lines of an Arch Up block on ellipses 1.2 em apart, the last on the base ellipse', () => {
+		const svg = mountWarped(
+			warpedText({
+				textStyle: { textWarpPreset: 'textArchUp', fontSize: 20 },
+				textSegments: [
+					{ text: 'Top', style: {} },
+					{ text: '', style: {}, isParagraphBreak: true },
+					{ text: 'Bottom', style: {} },
+				],
+			}),
+		);
+		const radii = [...svg!.querySelectorAll('defs path')].map((path) =>
+			Number(/A ([\d.]+),/u.exec(path.getAttribute('d') ?? '')?.[1]),
+		);
+		expect(radii).toHaveLength(2);
+		expect(radii[1]).toBe(150);
+		expect(radii[0]).toBeCloseTo(174, 5);
+	});
 });

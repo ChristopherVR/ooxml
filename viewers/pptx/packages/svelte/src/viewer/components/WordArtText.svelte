@@ -4,13 +4,13 @@
 	import type { EnvelopeGlyphPlacement, EnvelopeSegmentInput } from 'ooxml-ui/pptx';
 	import {
 		buildGlyphEnvelopeBlock,
-		buildWarpPath,
 		DEFAULT_FONT_FAMILY,
 		groupIntoParagraphs,
 		hasGlyphEnvelope,
 		resolveWarpRunPaint,
 		shouldUseSvgWarp,
 		substituteFieldText,
+		warpParagraphLayouts,
 	} from 'ooxml-ui/pptx';
 
 	import { getFieldContextGetter } from '../state/field-context';
@@ -62,13 +62,13 @@
 		}
 	});
 
-	function runStyle(segment: TextSegment): Record<string, string | number> {
+	function runStyle(segment: TextSegment, fitScale = 1): Record<string, string | number> {
 		// An SVG `<text>` is painted by `fill`; a CSS `color` is ignored (the
 		// glyphs rendered black). The shared descriptor keeps all bindings equal.
 		const paint = resolveWarpRunPaint(segment, textElement?.textStyle);
 		const result: Record<string, string | number> = {
 			fill: paint.fill,
-			fontSize: `${paint.fontSizePx}px`,
+			fontSize: `${paint.fontSizePx * fitScale}px`,
 			fontFamily: paint.fontFamily,
 			fontStyle: paint.fontStyle ?? 'normal',
 			fontWeight: paint.fontWeight ?? 'normal',
@@ -79,8 +79,23 @@
 		return result;
 	}
 
+	// Path and font fit scale of every paragraph (shared with the other bindings).
+	const layouts = $derived(
+		preset
+			? warpParagraphLayouts(
+					preset,
+					width,
+					height,
+					paragraphs,
+					textElement?.textStyle?.textWarpAdj,
+					textElement?.textStyle?.textWarpAdj2,
+					textElement?.textStyle,
+				)
+			: [],
+	);
+
 	function pathFor(index: number): string {
-		return buildWarpPath(preset!, width, height, index, paragraphs.length, textElement?.textStyle?.textWarpAdj, textElement?.textStyle?.textWarpAdj2);
+		return layouts[index]?.d ?? '';
 	}
 
 	// Envelope presets (inflate/deflate/can) are laid out as ONE block and
@@ -172,7 +187,7 @@
 		<defs>{#each paragraphs as _, i (i)}<path id={`${pathPrefix}-${i}`} d={pathFor(i)} fill="none" />{/each}</defs>
 		{#each paragraphs as paragraph, pi (pi)}
 			<text><textPath href={`#${pathPrefix}-${pi}`} startOffset={alignment.offset} text-anchor={alignment.anchor}>
-				{#each paragraph.segments as segment, si (si)}<tspan style={styleToString(runStyle(segment))}>{segment.text}</tspan>{/each}
+				{#each paragraph.segments as segment, si (si)}<tspan style={styleToString(runStyle(segment, layouts[pi]?.fitScale ?? 1))}>{segment.text}</tspan>{/each}
 			</textPath></text>
 		{/each}
 	</svg>

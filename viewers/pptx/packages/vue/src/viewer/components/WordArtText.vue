@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-	buildWarpPath,
 	DEFAULT_FONT_FAMILY,
 	groupIntoParagraphs,
 	normalizeHexColor,
@@ -9,6 +8,7 @@ import {
 	resolveWarpRunPaint,
 	shouldUseSvgWarp,
 	substituteFieldText,
+	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type { EnvelopeGlyphPlacement, WarpParagraph } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxElementWithText, TextSegment } from 'pptx-viewer-core';
@@ -143,7 +143,7 @@ interface TspanProps {
 }
 
 /** Resolve per-segment `<tspan>` attributes from the shared warped-run paint. */
-function tspanProps(segment: TextSegment): TspanProps {
+function tspanProps(segment: TextSegment, fitScale = 1): TspanProps {
 	const paint = resolveWarpRunPaint(
 		segment,
 		textEl.value?.textStyle,
@@ -152,7 +152,7 @@ function tspanProps(segment: TextSegment): TspanProps {
 	);
 	return {
 		fill: paint.fill,
-		fontSize: paint.fontSizePx,
+		fontSize: paint.fontSizePx * fitScale,
 		fontWeight: paint.fontWeight ?? 'normal',
 		fontStyle: paint.fontStyle ?? 'normal',
 		fontFamily: paint.fontFamily,
@@ -160,17 +160,28 @@ function tspanProps(segment: TextSegment): TspanProps {
 	};
 }
 
+/** Path `d` and font fit scale of every paragraph (shared with the other bindings). */
+const layouts = computed(() =>
+	preset.value
+		? warpParagraphLayouts(
+				preset.value,
+				width.value,
+				height.value,
+				paragraphs.value,
+				warpAdj.value,
+				warpAdj2.value,
+				textEl.value?.textStyle,
+			)
+		: [],
+);
+
 /** Path `d` for the baseline of paragraph `i`. */
 function pathFor(i: number): string {
-	return buildWarpPath(
-		preset.value as NonNullable<typeof preset.value>,
-		width.value,
-		height.value,
-		i,
-		paragraphs.value.length,
-		warpAdj.value,
-		warpAdj2.value,
-	);
+	return layouts.value[i]?.d ?? '';
+}
+
+function fitOf(i: number): number {
+	return layouts.value[i]?.fitScale ?? 1;
 }
 
 const { useGlyphEnvelope, glyphLines } = useTextWarpEnvelope({
@@ -258,8 +269,8 @@ function glyphClipIdPrefix(lineIndex: number, glyphIndex: number): string {
 				<tspan
 					v-for="(seg, si) in para.segments"
 					:key="`ts-${pi}-${si}`"
-					:fill="tspanProps(seg).fill"
-					:font-size="tspanProps(seg).fontSize"
+					:fill="tspanProps(seg, fitOf(pi)).fill"
+					:font-size="tspanProps(seg, fitOf(pi)).fontSize"
 					:font-weight="tspanProps(seg).fontWeight"
 					:font-style="tspanProps(seg).fontStyle"
 					:font-family="tspanProps(seg).fontFamily"

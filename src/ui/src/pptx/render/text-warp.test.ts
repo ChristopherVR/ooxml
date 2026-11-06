@@ -152,8 +152,8 @@ describe('wARP_PATH_GENERATORS', () => {
 		}
 	});
 
-	it('produces different paths for different t values', () => {
-		const gen = WARP_PATH_GENERATORS['textArchUp'];
+	it('produces different paths for different t values (the arch and loop presets lay lines out in buildWarpPath)', () => {
+		const gen = WARP_PATH_GENERATORS['textWave1'];
 		expect(gen(200, 100, 0)).not.toBe(gen(200, 100, 1));
 	});
 

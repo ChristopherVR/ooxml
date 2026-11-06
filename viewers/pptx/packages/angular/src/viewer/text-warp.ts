@@ -6,6 +6,7 @@ import {
 	hasGlyphEnvelope,
 	resolveWarpRunPaint,
 	substituteFieldText,
+	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type {
 	FieldSubstitutionContext,
@@ -48,7 +49,7 @@ import { hasTextProperties } from 'pptx-viewer-core';
 
 import { buildGlyphWarpDef } from './text-warp-glyph';
 import type { TextWarpGlyphDef } from './text-warp-glyph';
-import { getWarpPath, shouldUseSvgWarp } from './warp-path-generators';
+import { shouldUseSvgWarp } from './warp-path-generators';
 
 // ── Warp category classifier ───────────────────────────────────────────
 // Re-exported from shared `render/text-warp.ts` (classifyTextWarp /
@@ -238,7 +239,6 @@ export function getTextWarp(
 		return undefined;
 	}
 
-	const lineCount = paragraphs.length;
 	const width = element.width;
 	const height = element.height;
 	const pathIdPrefix = `ng-warp-${element.id}`;
@@ -254,14 +254,19 @@ export function getTextWarp(
 
 	const { startOffset, textAnchor } = resolveAlignment(ts?.align);
 
+	// Path and font fit scale of every paragraph (shared with the other bindings).
+	const layouts = warpParagraphLayouts(preset, width, height, paragraphs, adj1, adj2, ts);
 	const pathLines: WarpPathLine[] = paragraphs.map((para, i) => ({
 		pathId: `${pathIdPrefix}-${i}`,
-		d: getWarpPath(preset, width, height, i, lineCount, adj1, adj2),
+		d: layouts[i]?.d ?? '',
 		segments: para.segments,
-		runs: para.segments.map((seg) => ({
-			text: seg.text,
-			paint: resolveWarpRunPaint(seg, ts, DEFAULT_COLOR, DEFAULT_FONT_SIZE),
-		})),
+		runs: para.segments.map((seg) => {
+			const paint = resolveWarpRunPaint(seg, ts, DEFAULT_COLOR, DEFAULT_FONT_SIZE);
+			return {
+				text: seg.text,
+				paint: { ...paint, fontSizePx: paint.fontSizePx * (layouts[i]?.fitScale ?? 1) },
+			};
+		}),
 	}));
 
 	return {

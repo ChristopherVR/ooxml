@@ -332,3 +332,20 @@ describe('warpedText: envelope/former-simple presets render as true SVG textPath
 		expect(Math.max(...topYs)).toBeLessThan(Math.min(...bottomYs));
 	});
 });
+
+describe('warpedText: arch lines lie one line pitch apart', () => {
+	it('puts the two lines of an Arch Up block on ellipses 1.2 em apart, the last on the base ellipse', () => {
+		const el: PptxElement = {
+			...multiParagraphWarpedElement('textArchUp'),
+			textStyle: { textWarpPreset: 'textArchUp', fontSize: 20 },
+		} as PptxElement;
+		const view = renderWarpedElement(el, 150);
+		const radii = [...view.querySelectorAll('defs path')].map((p) =>
+			Number(/A ([\d.]+),/u.exec(p.getAttribute('d') ?? '')?.[1]),
+		);
+		expect(radii).toHaveLength(2);
+		// The box is 300 wide: the base ellipse carries the last line, the first lies 24 px further out.
+		expect(radii[1]).toBe(150);
+		expect(radii[0]).toBeCloseTo(174, 5);
+	});
+});

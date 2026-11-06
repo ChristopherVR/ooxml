@@ -515,3 +515,24 @@ describe('getTextWarp - all SVG path presets produce valid path defs', () => {
 		expect(def.pathLines[0].d.length).toBeGreaterThan(0);
 	});
 });
+
+describe('arch lines lie one line pitch apart', () => {
+	it('puts the lines of an Arch Up block on ellipses 1.2 em apart, the last on the base ellipse', () => {
+		const def = getTextWarp(
+			makeTextElement('textArchUp', {
+				fontSize: 20,
+				textSegments: [
+					{ text: 'Top', style: {} },
+					{ text: '', style: {}, isParagraphBreak: true },
+					{ text: 'Bottom', style: {} },
+				],
+			}),
+		);
+		expect(def?.strategy).toBe('path');
+		const lines = (def as { pathLines: { d: string }[] }).pathLines;
+		const radii = lines.map((line) => Number(/A ([\d.]+),/u.exec(line.d)?.[1]));
+		expect(radii).toHaveLength(2);
+		expect(radii[1]).toBe(150);
+		expect(radii[0]).toBeCloseTo(174, 5);
+	});
+});
