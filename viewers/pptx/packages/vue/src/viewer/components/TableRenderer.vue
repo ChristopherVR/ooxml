@@ -17,6 +17,7 @@ import {
 	tableCellCss,
 	tableCellPointerIntent,
 	tableContainerCss,
+	tableFrameCss,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -94,9 +95,19 @@ const props = withDefaults(
 	{ interactive: true },
 );
 
-const containerStyle = computed<CSSProperties>(() =>
-	getContainerStyle(props.element, props.zIndex),
-);
+const containerStyle = computed<CSSProperties>(() => {
+	// The table style's drop shadow (Themed Style 1/2) sits on the clipping frame.
+	const injected = resolveTableTheme(injectedTableTheme);
+	return {
+		...(tableFrameCss(tableData.value, {
+			colorScheme: props.colorScheme ?? injected?.colorScheme,
+			tableStyleMap: props.tableStyleMap ?? injected?.tableStyleMap,
+			fontScheme: injected?.fontScheme,
+			formatScheme: injected?.formatScheme,
+		}) as CSSProperties),
+		...getContainerStyle(props.element, props.zIndex),
+	};
+});
 
 /**
  * `pointer-events: none` on the root while not interactive, mirroring

@@ -111,6 +111,7 @@ export function parseTableBackground(
 	const schemeColor = schemeClr ? String(schemeClr['@_val'] || '').trim() || undefined : undefined;
 	const fill = schemeColor ? { schemeColor } : undefined;
 	const hasEffectLst = Boolean(tblBg['a:effectLst']);
+	const effectRef = parseTableBackgroundFillRef(tblBg['a:effectRef'] as XmlObject | undefined);
 	// `a:fillRef` is `a:fill`'s choice sibling in CT_TableBackgroundStyle: a
 	// style-matrix index (`@idx`) plus an optional colour-transform child,
 	// rather than an inline fill choice. Only present when `a:fill` is not.
@@ -118,12 +119,13 @@ export function parseTableBackground(
 	const fillRef = parseTableBackgroundFillRef(fillRefNode);
 	const resolvedFill =
 		fill ?? (fillRef ? resolveTableBackgroundFillRef(fillRef, formatScheme, colorMap) : undefined);
-	if (!resolvedFill && !hasEffectLst && !fillRef) {
+	if (!resolvedFill && !hasEffectLst && !fillRef && !effectRef) {
 		return undefined;
 	}
 	return {
 		...(resolvedFill ? { fill: resolvedFill } : {}),
 		...(fillRef ? { fillRef } : {}),
+		...(effectRef ? { effectRef } : {}),
 		...(hasEffectLst ? { hasEffectLst } : {}),
 	};
 }

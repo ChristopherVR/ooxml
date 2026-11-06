@@ -17,7 +17,11 @@
  *
  * @module render/table-style-theme-refs
  */
-import { resolveTableBackgroundFillRef, resolveTableStyleLineRef } from 'ooxml-core/pptx';
+import {
+	resolveTableBackgroundEffectRef,
+	resolveTableBackgroundFillRef,
+	resolveTableStyleLineRef,
+} from 'ooxml-core/pptx';
 import type {
 	ParsedTableStyleBorder,
 	ParsedTableStyleBorders,
@@ -105,6 +109,9 @@ function hasThemeRefs(entry: ParsedTableStyleEntry): boolean {
 	if (background?.fillRef && !background.fill) {
 		return true;
 	}
+	if (background?.effectRef && !background.shadow) {
+		return true;
+	}
 	return BORDER_KEYS.some((key) => Object.values(entry[key] ?? {}).some(isLineRefOnly));
 }
 
@@ -134,6 +141,12 @@ export function resolveTableStyleThemeRefs(
 		const fill = resolveTableBackgroundFillRef(background.fillRef, formatScheme, colorMap);
 		if (fill) {
 			next.tableBackground = { ...background, fill };
+		}
+	}
+	if (background?.effectRef && !background.shadow) {
+		const shadow = resolveTableBackgroundEffectRef(background.effectRef, formatScheme, colorMap);
+		if (shadow) {
+			next.tableBackground = { ...(next.tableBackground ?? background), shadow };
 		}
 	}
 	for (const key of BORDER_KEYS) {

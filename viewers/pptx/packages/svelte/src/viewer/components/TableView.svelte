@@ -8,7 +8,12 @@
 	 * pattern fills, diagonal borders (SVG overlay), and rich per-run text.
 	 * All style resolution lives in `render/table-view.ts` + shared helpers.
 	 */
-	import { canDrillDown, screenStrokeWidth, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import {
+		canDrillDown,
+		screenStrokeWidth,
+		shouldRenderHitTarget,
+		tableFrameCss,
+	} from 'ooxml-ui/pptx';
 
 	import { buildTableRows, columnWidthStyles, tableRootStyle } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
@@ -42,7 +47,12 @@
 	const colWidths = $derived(tableData ? columnWidthStyles(tableData) : []);
 	const tableStyle = $derived(tableRootStyle(tableData));
 	const containerStyle = $derived(
-		styleToString({ ...getContainerStyle(element, zIndex), overflow: 'hidden' }),
+		styleToString({
+			// The table style's drop shadow (Themed Style 1/2) sits on the clipping frame.
+			...tableFrameCss(tableData, tableStyleContext),
+			...getContainerStyle(element, zIndex),
+			overflow: 'hidden',
+		}),
 	);
 
 	// Column/row drag-resize handles: pure math in `pptx-viewer-shared`, DOM

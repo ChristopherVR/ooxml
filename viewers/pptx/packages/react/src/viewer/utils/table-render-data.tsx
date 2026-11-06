@@ -1,5 +1,11 @@
 import type { TableCellCss } from 'ooxml-ui/pptx';
-import { canDrillDown, DEFAULT_FONT_FAMILY, tableCellCss, tableContainerCss } from 'ooxml-ui/pptx';
+import {
+	canDrillDown,
+	DEFAULT_FONT_FAMILY,
+	tableCellCss,
+	tableContainerCss,
+	tableFrameCss,
+} from 'ooxml-ui/pptx';
 import type { TablePptxElement, PptxTableCell } from 'pptx-viewer-core';
 import React from 'react';
 
@@ -81,6 +87,8 @@ export function renderTableFromTableData(
 					'w-full h-full overflow-hidden',
 					isEditable && hasCellSelectionHandler ? 'pointer-events-auto' : 'pointer-events-none',
 				)}
+				// The table style's drop shadow (Themed Style 1/2) sits on the clipping frame.
+				style={tableFrameCss(tableData, sharedCtx) as React.CSSProperties}
 			>
 				{/* The explicit family is load-bearing: an unstyled cell otherwise
 				    inherits the HOST chrome's font, so the same table measured a

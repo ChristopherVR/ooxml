@@ -76,6 +76,7 @@ export {
 	TABLE_STYLE_PART_SEQUENCE,
 	type TableStylePartName,
 } from './runtime/table-style-entry-parse';
+export { resolveTableBackgroundEffectRef } from './runtime/table-style-effect-ref';
 export {
 	resolveTableStyleLineRef,
 	resolveTableStyleLineRefColor,

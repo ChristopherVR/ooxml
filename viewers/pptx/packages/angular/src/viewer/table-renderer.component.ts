@@ -20,6 +20,7 @@ import {
 	screenStrokeWidth,
 	tableCellPointerIntent,
 	tableContainerCss,
+	tableFrameCss,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTableData, PptxTableRow, TablePptxElement } from 'pptx-viewer-core';
 
@@ -184,6 +185,11 @@ export class TableRendererComponent {
 			? tableStyleContextFor(this.loader.tableStyleMap(), this.loader.theme())
 			: undefined;
 	});
+
+	/** The table style's drop shadow (Themed Style 1/2), drawn on the table's frame. */
+	readonly tableFrameStyle = computed<StyleMap>(
+		() => tableFrameCss(this.tableData(), this.styleCtx()) as StyleMap,
+	);
 
 	/** Projected view-model rows with merged-cell resolution + banding applied. */
 	readonly rows = computed<TableRowViewModel[]>(() =>

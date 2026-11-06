@@ -77,4 +77,15 @@ describe('parseTableBackground - a:tblBg/a:fillRef (W3-E)', () => {
 			hasEffectLst: true,
 		});
 	});
+
+	it('keeps the style-matrix effect reference (Themed Style 2) with its colour', () => {
+		const tblBg: XmlObject = {
+			'a:fillRef': { '@_idx': '3', 'a:schemeClr': { '@_val': 'accent1' } },
+			'a:effectRef': { '@_idx': '3', 'a:schemeClr': { '@_val': 'accent1' } },
+		};
+		expect(parseTableBackground(tblBg)?.effectRef).toStrictEqual({
+			idx: 3,
+			color: { schemeColor: 'accent1' },
+		});
+	});
 });

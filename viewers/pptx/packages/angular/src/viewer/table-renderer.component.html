@@ -5,7 +5,7 @@
 	(resizeColumns)="onResizeColumns($event)"
 	(resizeRow)="onResizeRow($event)"
 >
-	<div class="pptx-ng-table-wrapper">
+	<div class="pptx-ng-table-wrapper" [ngStyle]="tableFrameStyle()">
 		<!-- Load-bearing family: an unstyled cell otherwise inherits the HOST
 		     chrome's font; all five bindings declare the same shared default. -->
 		<table

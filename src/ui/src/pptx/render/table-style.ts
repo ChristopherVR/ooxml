@@ -48,6 +48,7 @@ import {
 } from './table-style-fill';
 import { cellImageFillCss } from './table-style-image';
 import { styleDeclaresFills } from './table-style-scheme';
+import { tableStyleShadowCss } from './table-style-shadow';
 import { resolveTableStyleThemeRefs } from './table-style-theme-refs';
 import { isKoreanLanguage } from './text-east-asian-breaks';
 import { authoredLetterSpacingPx } from './text-run-spacing';
@@ -325,6 +326,22 @@ export function tableContainerCss(tableData: PptxTableData | undefined): TableCe
 		...(tableData?.rtl ? { direction: 'rtl' } : {}),
 		...(tableData?.defaultCellFontSize ? { fontSize: `${tableData.defaultCellFontSize}pt` } : {}),
 	};
+}
+
+/**
+ * The style a table's frame (the element that clips the `<table>`) takes from
+ * its table style: the drop shadow "Themed Style 1/2" reference through
+ * `a:tblBg/a:effectRef`, drawn on the table's outline. It belongs on the
+ * frame, not the `<table>`, because the frame clips its content and would cut
+ * the shadow off. Empty for a style without an effect, so a binding can
+ * spread it unconditionally.
+ */
+export function tableFrameCss(
+	tableData: PptxTableData | undefined,
+	styleCtx?: TableStyleContext,
+): TableCellCss {
+	const boxShadow = tableData ? tableStyleShadowCss(styleEntryFor(tableData, styleCtx)) : undefined;
+	return boxShadow ? { boxShadow } : {};
 }
 
 /**

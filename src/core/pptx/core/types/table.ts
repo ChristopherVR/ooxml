@@ -702,8 +702,26 @@ export interface ParsedTableBackground {
 	 * `a:fillRef` in `CT_TableBackgroundStyle`).
 	 */
 	fillRef?: import('./table-style-edit').ParsedTableFillRef;
+	/**
+	 * Style-matrix effect reference (`<a:effectRef idx="N">...</a:effectRef>`,
+	 * "Themed Style 1/2"): the theme's effect style (usually an outer shadow)
+	 * drawn under the whole table.
+	 */
+	effectRef?: import('./table-style-edit').ParsedTableFillRef;
+	/** The outer shadow {@link effectRef} resolves to against a theme (set at render time). */
+	shadow?: ParsedTableBackgroundShadow;
 	/** Has an `a:effectLst` child that should be round-tripped. */
 	hasEffectLst?: boolean;
+}
+
+/** The outer shadow a table style's `a:tblBg/a:effectRef` resolves to (px, colour as `#RRGGBB`). */
+export interface ParsedTableBackgroundShadow {
+	color: string;
+	/** 0..1. */
+	opacity: number;
+	blur: number;
+	offsetX: number;
+	offsetY: number;
 }
 
 export interface ParsedTableStyleEntry {

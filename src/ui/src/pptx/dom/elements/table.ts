@@ -16,6 +16,7 @@ import {
 	screenStrokeWidth,
 	tableCellCss,
 	tableContainerCss,
+	tableFrameCss,
 } from '../../index';
 
 import { applyStyleMap, createEl, createSvgEl } from '../dom';
@@ -48,7 +49,15 @@ export const renderTableElement: ElementRenderer = (element, zIndex, context) =>
 	}
 	const doc = context.document;
 
+	const styleContext: TableStyleContext = {
+		colorScheme: context.colorScheme,
+		tableStyleMap: context.tableStyleMap,
+		fontScheme: context.fontScheme,
+		formatScheme: context.formatScheme,
+	};
 	const container = createEl(doc, 'div', 'pptxv-element pptxv-table', {
+		// The table style's drop shadow (Themed Style 1/2) sits on the clipping frame.
+		...tableFrameCss(tableData, styleContext),
 		...getContainerStyle(element, zIndex),
 		overflow: 'hidden',
 	});
