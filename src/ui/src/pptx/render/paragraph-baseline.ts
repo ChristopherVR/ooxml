@@ -300,7 +300,7 @@ export function referenceBox(
 /** {@link resolveParagraphBaselineShift} that also says whether a stand-in font was measured. */
 export function resolveParagraphBaseline(
 	input: BaselineShiftInput,
-): { shift: number | undefined; provisional: boolean } | undefined {
+): { shift: number | undefined; provisional: boolean; extentDelta?: number } | undefined {
 	const { lineHeight, strutSizePx, strutFamily, measure = measureFontBoxWithCanvas } = input;
 	const runs = input.runs.filter((run) => run.text.length > 0);
 	const first = runs[0];
@@ -343,10 +343,32 @@ export function resolveParagraphBaseline(
 	}
 	const provisional = Boolean(strut.provisional || text.provisional || reference.provisional);
 	const loading = Boolean(strut.loading || text.loading || reference.loading);
+	const extentDelta = loading ? undefined : lastLineExtentDelta(size, pitch, reference);
 	return {
 		shift: baselineShiftOf({ size, pitch, boxes, reference, strutSizePx, loading }),
 		provisional,
+		...(extentDelta === undefined ? {} : { extentDelta }),
 	};
+}
+
+/**
+ * How much taller (px) PowerPoint's last line is than its pitch, or `undefined`
+ * when it is as tall. PowerPoint ends a text body at the last line's baseline
+ * plus the descent, not at the bottom of the line pitch (measured on table
+ * rows of one and two paragraphs, Calibri and Arial at 12 to 40pt: a cell
+ * grows to `(lines - 1) p + baseline + D + margins`): a pitch above single
+ * spacing is shorter than `p` by the quarter of it under the descent, and one
+ * below single spacing is taller, since the 75% baseline floor leaves the
+ * descent hanging below the line.
+ */
+export function lastLineExtentDelta(
+	size: number,
+	pitch: number,
+	reference: FontBox,
+): number | undefined {
+	const descent = powerPointDescent(size, reference);
+	const delta = powerPointBaseline(pitch, size, descent) + descent - pitch;
+	return Math.abs(delta) < MIN_SHIFT_PX ? undefined : Math.round(delta * 100) / 100;
 }
 
 /** A run's own `font-family`, when it sets one. */
@@ -410,6 +432,8 @@ export interface BaselinePlacement {
 	style: Record<string, string | number>;
 	shift: number | undefined;
 	provisional: boolean;
+	/** See {@link lastLineExtentDelta}: how much taller the last line is than its pitch (px). */
+	extentDelta?: number;
 }
 
 /**
@@ -422,8 +446,8 @@ export function baselinePlacementStyle(input: BaselineShiftInput): BaselinePlace
 	if (!resolved) {
 		return undefined;
 	}
-	const { shift, provisional } = resolved;
-	if (shift === undefined && !provisional) {
+	const { shift, provisional, extentDelta } = resolved;
+	if (shift === undefined && !provisional && extentDelta === undefined) {
 		return undefined;
 	}
 	const style: Record<string, string | number> = {};
@@ -434,7 +458,7 @@ export function baselinePlacementStyle(input: BaselineShiftInput): BaselinePlace
 	if (provisional) {
 		style[BASELINE_PENDING_VAR] = encodePendingBaseline(input);
 	}
-	return { style, shift, provisional };
+	return { style, shift, provisional, ...(extentDelta === undefined ? {} : { extentDelta }) };
 }
 
 /** The custom property that marks a paragraph placed from a stand-in font's box. */

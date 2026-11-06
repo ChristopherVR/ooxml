@@ -274,6 +274,11 @@ export function cellParagraphBlocks(
 		const placement = placements[index];
 		if (placement) {
 			Object.assign(css, placement.style);
+			if (placement.extentDelta !== undefined && index === groups.length - 1) {
+				// The cell ends at the last line's baseline plus descent, not at its pitch.
+				const after = Number.parseFloat(String(css.marginBlockEnd ?? '0')) || 0;
+				css.marginBlockEnd = `${Math.round((after + placement.extentDelta) * 100) / 100}px`;
+			}
 			if (placement.provisional) {
 				armBaselineSettle();
 			}

@@ -274,6 +274,33 @@ describe('cellParagraphBlocks', () => {
 			});
 		});
 
+		it('ends the cell at the last line baseline plus descent, as PowerPoint grows its rows', () => {
+			// Row content heights measured on PowerPoint 16 (Calibri 24pt, one line):
+			// 150% 38.735pt (pitch 43.2pt), exact 24pt 24.335pt, 50% 17.135pt (pitch 14.4pt).
+			const margin = (paragraph: PptxTableCellParagraph) =>
+				Number.parseFloat(String(cssOf(cellAt(24, paragraph))?.marginBlockEnd));
+			expect(margin({ lineSpacing: 1.5 })).toBeCloseTo((38.735 - 43.2) * (96 / 72), 1);
+			expect(margin({ lineSpacingExactPt: 24 })).toBeCloseTo((24.335 - 24) * (96 / 72), 1);
+			expect(margin({ lineSpacing: 0.5 })).toBeCloseTo((17.135 - 14.4) * (96 / 72), 1);
+			// Single spacing already ends where the line pitch does.
+			expect(cssOf(cellAt(24, {}))?.marginBlockEnd).toBeUndefined();
+		});
+
+		it('adds the extent only to the last paragraph of the cell', () => {
+			const cell: PptxTableCell = {
+				text: 'H\nH',
+				textRuns: [
+					{ text: 'H', fontSize: 24, fontFamily: 'Calibri' },
+					{ text: '', isParagraphBreak: true },
+					{ text: 'H', fontSize: 24, fontFamily: 'Calibri' },
+				],
+				paragraphs: [{ lineSpacing: 1.5 }, { lineSpacing: 1.5 }],
+			};
+			const blocks = cellParagraphBlocks(cell, { cellCss, measure: calibri }) ?? [];
+			expect(blocks[0]?.css.marginBlockEnd).toBeUndefined();
+			expect(Number.parseFloat(String(blocks[1]?.css.marginBlockEnd))).toBeLessThan(-5);
+		});
+
 		it('places a paragraph of a cell that spaces nothing, as shape text does', () => {
 			expect(cssOf(cellAt(40, {}))?.position).toBe('relative');
 		});
