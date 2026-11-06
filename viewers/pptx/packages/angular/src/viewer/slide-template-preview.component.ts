@@ -47,6 +47,7 @@ interface TemplatePreviewContent {
 						[element]="element"
 						[zIndex]="i"
 						[interactive]="false"
+						[exposeElementId]="false"
 						[canvasWidth]="canvasWidth"
 						[canvasHeight]="canvasHeight"
 						[slideElements]="content().elements"

@@ -6,7 +6,7 @@
 	<div
 		class="pptx-ng-element pptx-ng-smartart"
 		[ngStyle]="containerStyle()"
-		[attr.data-element-id]="element().id"
+		[attr.data-element-id]="elementIdAttr()"
 		[attr.data-pptx-element]="markElement() ? 'true' : null"
 	>
 		<!-- Interaction-only hit target for a degenerate SmartArt; see `hitTargetStyle`. -->
@@ -20,7 +20,7 @@
 		#container3d
 		class="pptx-ng-element pptx-ng-smartart-3d"
 		[ngStyle]="containerStyle()"
-		[attr.data-element-id]="element().id"
+		[attr.data-element-id]="elementIdAttr()"
 		[attr.data-pptx-element]="markElement() ? 'true' : null"
 	>
 		<!-- Interaction-only hit target for a degenerate SmartArt; see `hitTargetStyle`. -->

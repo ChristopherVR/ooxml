@@ -18,11 +18,13 @@
  *   stages and keep it too. Vue and Svelte strip their other transition layers.
  *
  * Every other stage (slides pane and host thumbnails, slide sorter, master and
- * layout previews, presenter previews, reading view, export rasters) is static
- * and carries none in all five bindings: React draws it with its static
- * renderer, vanilla passes `exposeElementIds: false` to `renderSlideStage`, and
- * Vue's and Svelte's `SlideStage` and Angular's `SlideCanvasComponent` decide
- * it with {@link stageKeepsElementIds}.
+ * layout previews, slide template previews, presenter previews, reading view,
+ * export rasters) is static and carries none in all five bindings: React draws
+ * it with its static renderer, vanilla passes `exposeElementIds: false` to
+ * `renderSlideStage`, Vue's and Svelte's `SlideStage` decide it with
+ * {@link stageKeepsElementIds} and strip the assembled stage, and Angular's
+ * `SlideCanvasComponent` decides it with the same rule and hands it to every
+ * element renderer (`exposeElementId`), each per-type renderer included.
  *
  * @module render/stage-element-ids
  */

@@ -21,8 +21,11 @@ import { MobilePresenterViewComponent } from './mobile-presenter-view.component'
 import { MorphExtraLayersComponent } from './morph-extra-layers.component';
 import { PresenterViewComponent } from './presenter-view.component';
 import { ReadingViewOverlayComponent } from './reading-view-overlay.component';
+import { Rendering3DService } from './rendering-3d.service';
 import { declareSignalFields } from './signal-inputs.test-support';
 import { SlideCanvasComponent } from './slide-canvas.component';
+import { SlideTemplatePreviewComponent } from './slide-template-preview.component';
+import { SlideThumbnailComponent } from './slide-thumbnail.component';
 
 const shape = (id: string): PptxElement =>
 	({
@@ -42,6 +45,31 @@ const slides: PptxSlide[] = [
 ];
 const canvasSize = { width: 960, height: 540 };
 
+/**
+ * Element types whose renderer positions (and marks) its own root instead of
+ * being wrapped by the dispatcher. SmartArt goes through its 3D renderer when
+ * the host turns `smartArt3D` on; with no diagram data it draws the SVG
+ * fallback branch, which binds the id the same way as the scene branch.
+ */
+const selfPositioned: PptxSlide = {
+	id: 's3',
+	rId: 'r3',
+	slideNumber: 3,
+	elements: [
+		{
+			id: 'zm1',
+			type: 'zoom',
+			x: 10,
+			y: 20,
+			width: 200,
+			height: 120,
+			zoomType: 'slide',
+			targetSlideIndex: 1,
+		},
+		{ id: 'sa1', type: 'smartArt', x: 0, y: 200, width: 300, height: 200 },
+	] as unknown as PptxElement[],
+} as unknown as PptxSlide;
+
 /** One canvas with the flags a call site may set. */
 @Component({
 	selector: 'test-canvas-host',
@@ -59,7 +87,7 @@ const canvasSize = { width: 960, height: 540 };
 	`,
 })
 class CanvasHostComponent {
-	readonly slide = slides[0]!;
+	slide = slides[0]!;
 	readonly size = canvasSize;
 	readonly interactive = signal(true);
 	readonly presenting = signal(false);
@@ -71,6 +99,8 @@ type CanvasFlags = Partial<Record<'interactive' | 'presenting' | 'preserveElemen
 beforeAll(async () => {
 	for (const component of [
 		CanvasHostComponent,
+		SlideThumbnailComponent,
+		SlideTemplatePreviewComponent,
 		PresenterViewComponent,
 		MobilePresenterViewComponent,
 		ReadingViewOverlayComponent,
@@ -108,9 +138,25 @@ function mount<T>(
 	return fixture;
 }
 
-function mountCanvas(flags: CanvasFlags): ComponentFixture<CanvasHostComponent> {
-	TestBed.configureTestingModule({ providers: [provideTranslateService()] });
+/** The host's 3D SmartArt opt-in, as the viewer provides it. */
+function smartArt3DOn(): Rendering3DService {
+	const service = new Rendering3DService();
+	service.flags.set({ ...service.flags(), smartArt3D: true });
+	return service;
+}
+
+function mountCanvas(
+	flags: CanvasFlags,
+	slide: PptxSlide = slides[0]!,
+): ComponentFixture<CanvasHostComponent> {
+	TestBed.configureTestingModule({
+		providers: [
+			provideTranslateService(),
+			{ provide: Rendering3DService, useValue: smartArt3DOn() },
+		],
+	});
 	const fixture = TestBed.createComponent(CanvasHostComponent);
+	fixture.componentInstance.slide = slide;
 	for (const [name, value] of Object.entries(flags)) {
 		fixture.componentInstance[name as keyof CanvasFlags].set(value);
 	}
@@ -161,11 +207,42 @@ describe('angular static stages draw without element ids', () => {
 		expect(drawnElements(fixture)).toBe(1);
 		expect(ids(fixture)).toStrictEqual([]);
 	});
+
+	it('a static canvas with a zoom and a 3D SmartArt element', () => {
+		const fixture = mountCanvas({ interactive: false }, selfPositioned);
+		expect(drawnElements(fixture)).toBeGreaterThanOrEqual(2);
+		expect(ids(fixture)).toStrictEqual([]);
+	});
+
+	it('the public thumbnail with a zoom and a 3D SmartArt element', () => {
+		TestBed.configureTestingModule({
+			providers: [
+				provideTranslateService(),
+				{ provide: Rendering3DService, useValue: smartArt3DOn() },
+			],
+		});
+		const fixture = TestBed.createComponent(SlideThumbnailComponent);
+		fixture.componentRef.setInput('slide', selfPositioned);
+		fixture.componentRef.setInput('canvasSize', canvasSize);
+		fixture.detectChanges();
+		expect(drawnElements(fixture)).toBeGreaterThanOrEqual(2);
+		expect(ids(fixture)).toStrictEqual([]);
+	});
+
+	it('the slide template gallery preview', () => {
+		const fixture = mount(SlideTemplatePreviewComponent, { templateId: 'title' });
+		expect(drawnElements(fixture)).toBeGreaterThan(0);
+		expect(ids(fixture)).toStrictEqual([]);
+	});
 });
 
 describe('angular stages that keep element ids', () => {
 	it('the editing canvas', () => {
 		expect(ids(mountCanvas({}))).toStrictEqual(['a']);
+	});
+
+	it('the editing canvas, for zoom and 3D SmartArt elements too', () => {
+		expect(ids(mountCanvas({}, selfPositioned))).toStrictEqual(['zm1', 'sa1']);
 	});
 
 	it('the live show stage', () => {

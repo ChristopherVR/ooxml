@@ -73,4 +73,77 @@ describe('slide canvases take their element ids from the shared rule', () => {
 			'readonly exposeElementId = input<boolean>(true);',
 		);
 	});
+
+	it('every element renderer mounted outside a slide canvas turns the gate off', () => {
+		const offenders: string[] = [];
+		for (const file of viewerSources(VIEWER_DIR)) {
+			const relative = path.relative(VIEWER_DIR, file);
+			if (
+				relative.startsWith('slide-canvas.component') ||
+				relative.startsWith('element-renderer')
+			) {
+				continue;
+			}
+			for (const [mount] of readFileSync(file, 'utf8').matchAll(
+				/<pptx-element-renderer\b[^>]*>/gu,
+			)) {
+				if (!mount.includes('[exposeElementId]="false"')) {
+					offenders.push(relative);
+				}
+			}
+		}
+		expect(offenders).toStrictEqual([]);
+	});
+});
+
+/**
+ * The canvas hands its decision to `ElementRendererComponent.exposeElementId`,
+ * which threads it into every per-type renderer. A renderer that binds
+ * `data-element-id` straight from the element (zoom and 3D SmartArt once did)
+ * ignores it, so every element id binding has to go through `elementIdAttr()`.
+ */
+describe('every element renderer honours the per-element gate', () => {
+	/** Remote collaborators' selection boxes: an editing-canvas overlay, keyed per box. */
+	const NOT_ELEMENTS = new Set(['remote-selection-overlay.component.ts']);
+
+	it('binds data-element-id only through elementIdAttr()', () => {
+		const offenders: string[] = [];
+		for (const file of viewerSources(VIEWER_DIR)) {
+			const relative = path.relative(VIEWER_DIR, file);
+			if (NOT_ELEMENTS.has(relative)) {
+				continue;
+			}
+			for (const [binding] of readFileSync(file, 'utf8').matchAll(
+				/\[attr\.data-element-id\]="[^"]*"/gu,
+			)) {
+				if (binding !== '[attr.data-element-id]="elementIdAttr()"') {
+					offenders.push(`${relative}: ${binding}`);
+				}
+			}
+		}
+		expect(offenders).toStrictEqual([]);
+	});
+
+	it('passes the gate to every per-type renderer the graphics dispatcher mounts', () => {
+		const source = readFileSync(
+			path.join(VIEWER_DIR, 'element-renderer-graphics.component.html'),
+			'utf8',
+		);
+		const gated: string[] = [];
+		const wrapped: string[] = [];
+		for (const [mount, name] of source.matchAll(/<pptx-([a-z0-9-]+-renderer)\b[^>]*>/gu)) {
+			(mount.includes('[exposeElementId]="exposeElementId()"') ? gated : wrapped).push(name!);
+		}
+		// These position (and mark) their own root, so they take the gate.
+		expect(gated.sort()).toStrictEqual([
+			'content-part-renderer',
+			'ink-renderer',
+			'media-renderer',
+			'model3d-renderer',
+			'smart-art-3d-renderer',
+			'zoom-renderer',
+		]);
+		// These draw inside a box the dispatcher marks itself, with `elementIdAttr()`.
+		expect(wrapped.sort()).toStrictEqual(['ole-renderer', 'smart-art-renderer', 'table-renderer']);
+	});
 });
