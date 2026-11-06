@@ -32,7 +32,9 @@ import {
 	buildFocalCircleGradientImage,
 	buildScaledLinearGradientImage,
 } from './gradient-svg-image';
+import { shapePathGradientField } from 'ooxml-core/diagram';
 import { buildRectPathGradientImage } from './path-gradient-rect';
+import { buildOutlineShapePathGradient } from './shape-path-gradient-fill';
 import { silhouetteFillsLayer } from './silhouette-effects';
 import { suppressesCssFill } from './subpath-fill-overlay';
 
@@ -419,6 +421,12 @@ export interface GradientRenderContext {
 	 * gradient then follows the box, which is the `path="rect"` field.
 	 */
 	rectangular?: boolean;
+	/** The element's preset geometry name, for the `path="shape"` field. */
+	shapeType?: string;
+	/** The element's preset adjustments. */
+	shapeAdjustments?: Record<string, number> | undefined;
+	/** The element is a freeform (`a:custGeom`): `path="shape"` paints the circle. */
+	freeform?: boolean;
 }
 
 /** Normalise a degree value into the [0, 360) range. */
@@ -526,6 +534,28 @@ export function buildGradientCss(
 			return buildRectPathGradient(stops, fp, ftr);
 		}
 		if (pathType === 'shape') {
+			const field = context?.freeform
+				? 'circle'
+				: context?.shapeType
+					? shapePathGradientField(context.shapeType)
+					: 'legacy';
+			if (field === 'circle') {
+				return buildCirclePathGradient(stops, fp, ftr, context);
+			}
+			if (field === 'outline' && context?.shapeType) {
+				const { cx, cy } = computeGradientCenter(ftr, fp);
+				const scaled = buildOutlineShapePathGradient(
+					stops,
+					{
+						shapeType: context.shapeType,
+						width: context.width ?? 0,
+						height: context.height ?? 0,
+						adjustments: context.shapeAdjustments,
+					},
+					{ x: cx / 100, y: cy / 100 },
+				);
+				if (scaled) return scaled;
+			}
 			return buildShapePathGradient(stops, fp, ftr);
 		}
 		return buildCirclePathGradient(stops, fp, ftr, context);
@@ -1246,11 +1276,26 @@ export function resolveComputedFill(ss: ShapeStyle, element: PptxElement): Compu
 	}
 
 	// 2. Gradient (structured, with prebuilt-string fallback).
+	const freeform =
+		element.type === 'shape' &&
+		(Boolean(element.pathData) || (element.customGeometryPaths?.length ?? 0) > 0);
 	const geometry: GradientRenderContext = {
 		rotation: element.rotation,
 		width: element.width,
 		height: element.height,
-		rectangular: element.type === 'shape' && getShapeType(element.shapeType) === 'rect',
+		// `getShapeType` folds every preset it does not model onto `rect`, so the
+		// raw name decides: only a real rectangle follows the box.
+		rectangular:
+			element.type === 'shape' &&
+			!freeform &&
+			(!element.shapeType || element.shapeType.toLowerCase() === 'rect'),
+		...(element.type === 'shape'
+			? {
+					freeform,
+					...(element.shapeType ? { shapeType: element.shapeType } : {}),
+					shapeAdjustments: element.shapeAdjustments,
+				}
+			: {}),
 	};
 	const gradient =
 		buildGradientCss(ss, geometry) ?? (ss.fillMode === 'gradient' ? ss.fillGradient : undefined);

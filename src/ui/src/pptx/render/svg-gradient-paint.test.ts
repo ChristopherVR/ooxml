@@ -177,3 +177,66 @@ describe('svgGradientFillRef / svgGradientMarkup', () => {
 		expect(markup).not.toContain('<radialGradient');
 	});
 });
+
+describe('buildSvgGradientDef with the shape size (freeform)', () => {
+	const bounds = { width: 400, height: 200 };
+
+	it('paints path="shape" and path="circle" as a true circle to the farthest corner', () => {
+		for (const path of ['shape', 'circle'] as const) {
+			const def = buildSvgGradientDef(
+				style({ fillGradientType: 'radial', fillGradientPathType: path }),
+				'e1',
+				bounds,
+			);
+			expect(def?.kind).toBe('rectPath');
+			const svg = decodeURIComponent((def as { href: string }).href);
+			// radius is half the diagonal in the box's own pixels, not the 0.707 of a stretched box
+			expect(svg).toContain('r="223.6068"');
+			expect(svg).toContain('viewBox="0 0 400 200"');
+		}
+	});
+
+	it('keeps an off-centre focus on the circumscribed circle', () => {
+		const def = buildSvgGradientDef(
+			style({
+				fillGradientType: 'radial',
+				fillGradientPathType: 'shape',
+				fillGradientFillToRect: { l: 0, t: 0, r: 1, b: 1 },
+			}),
+			'e1',
+			bounds,
+		);
+		const svg = decodeURIComponent((def as { href: string }).href);
+		expect(svg).toContain('fx="0" fy="0"');
+		expect(svg).toContain('cx="200" cy="100"');
+	});
+
+	it('keeps the bounding-box ellipse when the size is unknown', () => {
+		const def = buildSvgGradientDef(
+			style({ fillGradientType: 'radial', fillGradientPathType: 'shape' }),
+			'e1',
+		);
+		expect(def?.kind).toBe('radial');
+	});
+
+	it('honours scaled="0": a true angle on a wide box', () => {
+		const def = buildSvgGradientDef(
+			style({ fillGradientType: 'linear', fillGradientAngle: 45, fillGradientScaled: false }),
+			'e1',
+			bounds,
+		);
+		expect(def?.kind).toBe('rectPath');
+		const svg = decodeURIComponent((def as { href: string }).href);
+		// 45 degrees through the centre, spanning the box's projection (|cos| w + |sin| h) / 2
+		expect(svg).toContain('x1="50"');
+		expect(svg).toContain('y1="-50"');
+		// the default scaled gradient stays a bounding-box linear gradient
+		expect(
+			buildSvgGradientDef(
+				style({ fillGradientType: 'linear', fillGradientAngle: 45 }),
+				'e1',
+				bounds,
+			)?.kind,
+		).toBe('linear');
+	});
+});

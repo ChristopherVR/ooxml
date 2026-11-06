@@ -1036,9 +1036,85 @@ describe('PowerPoint gradient colour interpolation', () => {
 		};
 		const rect = getComputedFillStyle(shape(style, { shapeType: 'rect' } as Partial<PptxElement>));
 		expect(rect?.backgroundImage).toMatch(/^url\("data:image\/svg\+xml,/u);
+		// An ellipse is no rectangle: its field is the outline, not the rect field.
 		const ellipse = getComputedFillStyle(
 			shape(style, { shapeType: 'ellipse' } as Partial<PptxElement>),
 		);
-		expect(ellipse?.backgroundImage).toContain('radial-gradient(');
+		expect(decodeURIComponent(ellipse?.backgroundImage ?? '')).toContain('A 50 50 0 0 1');
+	});
+
+	describe('path="shape" follows the outline PowerPoint scales about the focus', () => {
+		const style: ShapeStyle = {
+			fillMode: 'gradient',
+			fillGradientType: 'radial',
+			fillGradientPathType: 'shape',
+			fillGradientStops: [
+				{ color: '#ffffff', position: 0 },
+				{ color: '#000000', position: 100 },
+			],
+		};
+		const svgOf = (el: PptxElement) =>
+			decodeURIComponent(getComputedFillStyle(el)?.backgroundImage ?? '');
+
+		it('draws nested copies of a star, not the rectangular field', () => {
+			const svg = svgOf(shape(style, { shapeType: 'star5' } as Partial<PptxElement>));
+			expect(svg).toContain('<use href="#p"');
+			// scaled about the centre of the 100 x 100 box
+			expect(svg).toContain('matrix(0.5 0 0 0.5 25 25)');
+			// not the trapezoid / plateau markup of path="rect"
+			expect(svg).not.toContain('<polygon');
+		});
+
+		it('scales about an off-centre focus', () => {
+			const svg = svgOf(
+				shape(
+					{
+						...style,
+						fillGradientFillToRect: { l: 0, t: 0, r: 1, b: 1 },
+					},
+					{ shapeType: 'triangle' } as Partial<PptxElement>,
+				),
+			);
+			// focus (0, 0): the copy at s = 0.5 has no offset
+			expect(svg).toContain('matrix(0.5 0 0 0.5 0 0)');
+		});
+
+		it('paints a block arrow and any freeform as the circle to the farthest corner', () => {
+			const arrow = getComputedFillStyle(
+				shape(style, { shapeType: 'rightArrow' } as Partial<PptxElement>),
+			);
+			expect(arrow?.backgroundImage).toContain('circle farthest-corner');
+			const freeform = getComputedFillStyle(
+				shape(style, {
+					shapeType: 'custom',
+					pathData: 'M0 0 L10 0 L10 10 Z',
+				} as Partial<PptxElement>),
+			);
+			expect(freeform?.backgroundImage).toContain('circle farthest-corner');
+		});
+
+		it('keeps the approximation for a ring', () => {
+			const donut = getComputedFillStyle(
+				shape(style, { shapeType: 'donut' } as Partial<PptxElement>),
+			);
+			expect(donut?.backgroundImage).toContain('radial-gradient(');
+		});
+
+		it('rings an alpha ramp so the layers do not stack', () => {
+			const svg = svgOf(
+				shape(
+					{
+						...style,
+						fillGradientStops: [
+							{ color: '#ff0000', position: 0, opacity: 1 },
+							{ color: '#ff0000', position: 100, opacity: 0 },
+						],
+					},
+					{ shapeType: 'ellipse' } as Partial<PptxElement>,
+				),
+			);
+			expect(svg).toContain('fill-rule="evenodd"');
+			expect(svg).not.toContain('<use');
+		});
 	});
 });

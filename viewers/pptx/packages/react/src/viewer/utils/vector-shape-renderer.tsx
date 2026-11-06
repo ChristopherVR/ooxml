@@ -99,7 +99,10 @@ export function renderVectorShape(
 			// container's `background-image` is suppressed for custom geometry, so
 			// without this the shape fell back to the parser's representative solid
 			// and lost every fade (issue #132).
-			buildSvgGradientDef(element.shapeStyle, element.id),
+			buildSvgGradientDef(element.shapeStyle, element.id, {
+				width: element.width,
+				height: element.height,
+			}),
 		);
 	}
 

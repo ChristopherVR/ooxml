@@ -84,12 +84,48 @@ export function buildFocalCircleGradientImage(
 	width: number,
 	height: number,
 ): string {
+	return toCssUrl(buildFocalCircleGradientSvg(stops, fx, fy, width, height));
+}
+
+/** The markup behind {@link buildFocalCircleGradientImage}, without the CSS `url()` wrapper. */
+export function buildFocalCircleGradientSvg(
+	stops: readonly SvgImageGradientStop[],
+	fx: number,
+	fy: number,
+	width: number,
+	height: number,
+): string {
 	const radius = Math.hypot(width, height) / 2;
-	const svg =
+	return (
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(width)} ${num(height)}" preserveAspectRatio="none">` +
 		`<defs><radialGradient id="g" gradientUnits="userSpaceOnUse" cx="${num(width / 2)}" cy="${num(
 			height / 2,
 		)}" r="${num(radius)}" fx="${num(fx * width)}" fy="${num(fy * height)}">${stopMarkup(stops)}</radialGradient></defs>` +
-		`<rect width="${num(width)}" height="${num(height)}" fill="url(#g)"/></svg>`;
-	return toCssUrl(svg);
+		`<rect width="${num(width)}" height="${num(height)}" fill="url(#g)"/></svg>`
+	);
+}
+
+/**
+ * A linear gradient whose angle is a true angle on the box (`scaled="0"`):
+ * the line runs through the centre at `ooxmlAngleDegrees` in the box's own
+ * pixels and spans the box's projection onto it, so its iso-lines stay
+ * perpendicular to the angle however wide the box is.
+ */
+export function buildTrueAngleLinearGradientSvg(
+	stops: readonly SvgImageGradientStop[],
+	ooxmlAngleDegrees: number,
+	width: number,
+	height: number,
+): string {
+	const radians = (ooxmlAngleDegrees * Math.PI) / 180;
+	const dx = Math.cos(radians);
+	const dy = Math.sin(radians);
+	const half = (Math.abs(dx) * width + Math.abs(dy) * height) / 2;
+	return (
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(width)} ${num(height)}" preserveAspectRatio="none">` +
+		`<defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="${num(width / 2 - dx * half)}" y1="${num(
+			height / 2 - dy * half,
+		)}" x2="${num(width / 2 + dx * half)}" y2="${num(height / 2 + dy * half)}">${stopMarkup(stops)}</linearGradient></defs>` +
+		`<rect width="${num(width)}" height="${num(height)}" fill="url(#g)"/></svg>`
+	);
 }
