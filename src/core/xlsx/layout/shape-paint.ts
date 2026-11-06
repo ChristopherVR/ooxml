@@ -2,25 +2,13 @@
 // (solid, gradient, or the colour an `xdr:style` reference names) and the outline.
 import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import { drawingColorCss } from '../../drawingml/drawing-color-css';
+import { capCompensatedDashArray, dashPatternUnits } from '../../drawingml/dash-pattern';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { drawingSchemeColors } from '../drawing-theme';
 import type { ThemePalette } from '../model';
 import type { ShapeNode } from '../model-shapes';
 
 export const EMU_PER_PX = 9525;
-
-const DASHES: Record<string, number[]> = {
-	dash: [4, 3],
-	sysDash: [3, 1],
-	dot: [1, 2],
-	sysDot: [1, 1],
-	dashDot: [4, 3, 1, 3],
-	lgDash: [8, 3],
-	lgDashDot: [8, 3, 1, 3],
-	lgDashDotDot: [8, 3, 1, 3, 1, 3],
-	sysDashDot: [3, 1, 1, 1],
-	sysDashDotDot: [3, 1, 1, 1, 1, 1],
-};
 
 /** Width in EMU of the outline a style `lnRef` index names (the Office default format scheme). */
 const STYLE_LINE_EMU = [0, 9525, 12700, 19050];
@@ -100,10 +88,10 @@ export function shapeStroke(node: ShapeNode, scale: number, theme?: ThemePalette
 	const styleWidth = STYLE_LINE_EMU[ref?.idx ?? 0] ?? STYLE_LINE_EMU[1]!;
 	const emu = line?.widthEmu ?? (styleWidth || STYLE_LINE_EMU[1]!);
 	const width = Math.max(0.5, (emu / EMU_PER_PX) * scale);
-	const dash = line?.dash ? DASHES[line.dash] : undefined;
+	const dash = dashPatternUnits(line?.dash);
 	return {
 		stroke,
 		width,
-		...(dash ? { dash: dash.map((part) => Math.round(part * width * 100) / 100).join(' ') } : {}),
+		...(dash ? { dash: capCompensatedDashArray(dash, width) } : {}),
 	};
 }

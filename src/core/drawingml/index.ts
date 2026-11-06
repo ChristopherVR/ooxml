@@ -61,3 +61,11 @@ export * from './picture-artistic';
 export { inspectRasterImage, RasterImageError, RASTER_IMAGE_LIMITS } from './raster-image';
 export type { RasterImageInfo, RasterImageOptions, RasterImageErrorCode } from './raster-image';
 export * from './picture-hsl-pixels';
+
+export {
+	capCompensatedDashArray,
+	dashPatternUnits,
+	dashPenWidth,
+	isDashedStroke,
+} from './dash-pattern';
+export type { DashSegmentInput } from './dash-pattern';

@@ -113,66 +113,40 @@ describe('getCssBorderDashStyle', () => {
 // ---------------------------------------------------------------------------
 
 describe('getSvgStrokeDasharray', () => {
-	it('returns undefined for undefined dashType', () => {
+	it('returns undefined for undefined and solid', () => {
 		expect(getSvgStrokeDasharray(undefined, 2)).toBeUndefined();
-	});
-
-	it('returns undefined for solid dashType', () => {
 		expect(getSvgStrokeDasharray('solid', 2)).toBeUndefined();
 	});
 
-	it('returns correct dasharray for dot with stroke width 1', () => {
-		const result = getSvgStrokeDasharray('dot', 1);
-		expect(result).toBe('1 2');
+	// Lengths measured from PowerPoint exports, in pen widths.
+	it.each([
+		['dot', 1, '1 3'],
+		['dash', 2, '8 6'],
+		['lgDash', 1, '8 3'],
+		['dashDot', 1, '4 3 1 3'],
+		['lgDashDot', 1, '8 3 1 3'],
+		['lgDashDotDot', 1, '8 3 1 3 1 3'],
+		['sysDot', 6, '6 6'],
+		['sysDash', 6, '18 6'],
+		['sysDashDot', 6, '18 6 6 6'],
+	] as const)('%s at %d px', (type, width, expected) => {
+		expect(getSvgStrokeDasharray(type, width)).toBe(expected);
 	});
 
-	it('returns correct dasharray for dash with stroke width 2', () => {
-		const result = getSvgStrokeDasharray('dash', 2);
-		expect(result).toBe('8 4');
+	it('rounds the pen to whole pixels, at least one', () => {
+		expect(getSvgStrokeDasharray('dot', 0)).toBe('1 3');
+		expect(getSvgStrokeDasharray('dot', 2.67)).toBe('3 9');
 	});
 
-	it('returns correct dasharray for lgDash', () => {
-		const result = getSvgStrokeDasharray('lgDash', 1);
-		expect(result).toBe('7 2.5');
-	});
-
-	it('returns correct dasharray for dashDot', () => {
-		const result = getSvgStrokeDasharray('dashDot', 1);
-		expect(result).toBe('4 2 1 2');
-	});
-
-	it('returns correct dasharray for lgDashDot', () => {
-		const result = getSvgStrokeDasharray('lgDashDot', 1);
-		expect(result).toBe('7 2.5 1 2.5');
-	});
-
-	it('returns correct dasharray for lgDashDotDot', () => {
-		const result = getSvgStrokeDasharray('lgDashDotDot', 1);
-		expect(result).toBe('7 2.5 1 2 1 2');
-	});
-
-	it('clamps strokeWidth to at least 1', () => {
-		const result = getSvgStrokeDasharray('dot', 0);
-		expect(result).toBe('1 2'); // stroke=max(0,1)=1
-	});
-
-	it('returns correct dasharray for custom without segments', () => {
-		const result = getSvgStrokeDasharray('custom', 2);
-		expect(result).toBe('6 4'); // stroke*3 stroke*2
-	});
-
-	it('builds dasharray from custom segments when provided', () => {
+	it('builds custom dashes from a:ds units (100000 = one pen)', () => {
 		const segments = [
-			{ dash: 4000, space: 2000 },
-			{ dash: 1000, space: 1000 },
+			{ dash: 400000, space: 200000 },
+			{ dash: 100000, space: 100000 },
 		];
-		const result = getSvgStrokeDasharray('custom', 2, segments);
-		// (4000/1000)*2=8, (2000/1000)*2=4, (1000/1000)*2=2, (1000/1000)*2=2
-		expect(result).toBe('8 4 2 2');
+		expect(getSvgStrokeDasharray('custom', 2, segments)).toBe('8 4 2 2');
 	});
 
-	it('scales dasharray values with stroke width', () => {
-		const result = getSvgStrokeDasharray('dot', 3);
-		expect(result).toBe('3 6'); // stroke=3: 3, 3*2=6
+	it('shortens round dashes by the pen width', () => {
+		expect(getSvgStrokeDasharray('dot', 6, undefined, 'rnd')).toBe('0 24');
 	});
 });

@@ -18,19 +18,10 @@ import {
 	type ShapeSpec,
 } from './shape-model';
 import type { ThemeCatalog } from './theme-model';
+import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
 import { parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
-const DASHES: Record<string, string> = {
-	dash: '4 3',
-	sysDash: '3 1',
-	dot: '1 2',
-	sysDot: '1 1',
-	dashDot: '4 3 1 3',
-	lgDash: '8 3',
-	lgDashDot: '8 3 1 3',
-	sysDashDot: '3 1 1 1',
-};
 const escapeXml = (text: string) =>
 	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -67,11 +58,13 @@ export interface ShapeAppearance {
 /** The paint a shape ends up with, with Word's default style behind whatever the shape sets. */
 export function shapeAppearance(spec: ShapeSpec, theme?: ThemeCatalog): ShapeAppearance {
 	const line = spec.line;
+	const strokeWidthPx = round((line?.widthEmu ?? DEFAULT_SHAPE_LINE_EMU) / EMU_PER_PIXEL);
+	const dashUnits = dashPatternUnits(line?.dash);
 	return {
 		fill: isLinePreset(spec.preset) ? 'none' : fillPaint(spec.fill, theme),
 		stroke: linePaint(line?.fill, theme),
-		strokeWidthPx: round((line?.widthEmu ?? DEFAULT_SHAPE_LINE_EMU) / EMU_PER_PIXEL),
-		...(line?.dash && DASHES[line.dash] ? { dash: DASHES[line.dash]! } : {}),
+		strokeWidthPx,
+		...(dashUnits ? { dash: capCompensatedDashArray(dashUnits, strokeWidthPx) } : {}),
 	};
 }
 
