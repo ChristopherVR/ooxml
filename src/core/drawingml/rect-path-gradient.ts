@@ -246,6 +246,75 @@ export function buildRectPathGradientSvg(
 }
 
 /**
+ * The exact rectangular field, without banding: four trapezoids (top, bottom,
+ * left, right) split along the diagonals joining the inner target rectangle to
+ * the box corners, each filled with a plain `linearGradient` across its band,
+ * plus the flat inner rectangle. That is precisely the Chebyshev distance field
+ * PowerPoint paints, so it is smooth at any size where
+ * {@link buildRectPathGradientSvg}'s bands step by a few levels. SVG blends
+ * stops straight (not premultiplied), which is also how Office blends alpha.
+ * Edges are not anti-aliased: both sides of a diagonal carry the same colour,
+ * and anti-aliasing there would let the backdrop leak through the seam.
+ */
+export function buildRectPathGradientExactSvg(
+	stops: RectPathGradientStop[],
+	focalPoint?: RectPathGradientFocalPoint,
+	fillToRect?: RectPathGradientFillToRect,
+): string {
+	if (stops.length === 0) {
+		return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"/>';
+	}
+	const sorted = [...stops].sort((a, b) => a.position - b.position);
+	const { left, top, right, bottom } = resolveInnerRect(fillToRect, focalPoint);
+	const n = (value: number) => String(Math.round(value * 1000) / 1000);
+	const alpha = (opacity: number | undefined, attr: string) =>
+		(opacity ?? 1) < 1 ? ` ${attr}="${n(Math.max(0, opacity ?? 1))}"` : '';
+	const stopMarkup = sorted
+		.map(
+			(stop) =>
+				`<stop offset="${n(Math.min(Math.max(stop.position, 0), 100) / 100)}" stop-color="${stop.color}"${alpha(stop.opacity, 'stop-opacity')}/>`,
+		)
+		.join('');
+	// Each side: its polygon, then the gradient vector from the inner edge
+	// (stop offset 0) out to the matching box edge (offset 1).
+	const sides = [
+		{ id: 't', pts: [0, 0, 100, 0, right, top, left, top], v: [0, top, 0, 0], size: top },
+		{
+			id: 'b',
+			pts: [0, 100, 100, 100, right, bottom, left, bottom],
+			v: [0, bottom, 0, 100],
+			size: 100 - bottom,
+		},
+		{ id: 'l', pts: [0, 0, left, top, left, bottom, 0, 100], v: [left, 0, 0, 0], size: left },
+		{
+			id: 'r',
+			pts: [100, 0, right, top, right, bottom, 100, 100],
+			v: [right, 0, 100, 0],
+			size: 100 - right,
+		},
+	].filter((side) => side.size > 0.001);
+	const defs = sides
+		.map(
+			(side) =>
+				`<linearGradient id="${side.id}" gradientUnits="userSpaceOnUse" x1="${n(side.v[0]!)}" y1="${n(side.v[1]!)}" x2="${n(side.v[2]!)}" y2="${n(side.v[3]!)}">${stopMarkup}</linearGradient>`,
+		)
+		.join('');
+	const polygons = sides
+		.map((side) => {
+			const points = side.pts.map(n);
+			const pairs = [0, 2, 4, 6].map((i) => `${points[i]},${points[i + 1]}`).join(' ');
+			return `<polygon points="${pairs}" fill="url(#${side.id})"/>`;
+		})
+		.join('');
+	const first = sorted[0]!;
+	const plateau =
+		right - left > 0.001 && bottom - top > 0.001
+			? `<rect x="${n(left)}" y="${n(top)}" width="${n(right - left)}" height="${n(bottom - top)}" fill="${first.color}"${alpha(first.opacity, 'fill-opacity')}/>`
+			: '';
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" shape-rendering="crispEdges"><defs>${defs}</defs>${polygons}${plateau}</svg>`;
+}
+
+/**
  * Builds the `background-image: url(...)` CSS value for a `path="rect"`
  * gradient fill. Pair with `background-size: 100% 100%` and
  * `background-repeat: no-repeat` so the normalised markup stretches to the
@@ -256,6 +325,6 @@ export function buildRectPathGradientImage(
 	focalPoint?: RectPathGradientFocalPoint,
 	fillToRect?: RectPathGradientFillToRect,
 ): string {
-	const markup = buildRectPathGradientSvg(stops, focalPoint, fillToRect);
-	return `url("data:image/svg+xml,${encodeURIComponent(markup)}")`;
+	const markup = buildRectPathGradientExactSvg(stops, focalPoint, fillToRect);
+	return `url("data:image/svg+xml,${encodeURIComponent(markup).replace(/[()]/gu, (c) => (c === '(' ? '%28' : '%29'))}")`;
 }

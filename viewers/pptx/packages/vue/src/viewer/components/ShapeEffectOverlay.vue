@@ -240,6 +240,7 @@ const reflection = computed<CSSProperties | undefined>(() =>
 				v-else-if="strokeOutline.paint.kind === 'rectPath'"
 				:id="strokeOutline.paint.id"
 				patternUnits="objectBoundingBox"
+				patternContentUnits="objectBoundingBox"
 				width="1"
 				height="1"
 			>

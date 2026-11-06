@@ -95,12 +95,14 @@ describe('buildCirclePathGradient', () => {
 
 	it('uses "center" positioning when no focal point or fillToRect', () => {
 		const result = buildCirclePathGradient(twoStops);
-		expect(result).toContain('circle at center center');
+		expect(result).toContain('circle farthest-corner at 50% 50%');
 	});
 
 	it('positions gradient at focal point', () => {
 		const result = buildCirclePathGradient(twoStops, { x: 0.3, y: 0.7 });
-		expect(result).toContain('circle at 30% 70%');
+		// Without the box size an off-centre focus falls back to ellipse semi-axes
+		// (see the focal-circle image test in fill-style.test.ts for the sized form).
+		expect(result).toContain('ellipse 70% 70% at 30% 70%');
 	});
 
 	it('computes radius from fillToRect', () => {
@@ -113,7 +115,7 @@ describe('buildCirclePathGradient', () => {
 		// Sized as matching ellipse semi-axes: `circle <percentage>` is invalid
 		// CSS (a circle's radius must be a length) and browsers drop the whole
 		// declaration, leaving the shape unfilled (#132).
-		expect(result).toContain('ellipse 50% 50% at 50% 50%');
+		expect(result).toContain('circle farthest-corner at 50% 50%');
 	});
 
 	it('uses farthest-edge radius for off-center fillToRect', () => {
@@ -154,21 +156,23 @@ function decodeRectGradientSvg(cssValue: string): string {
 }
 
 /**
- * The centre of the innermost (last-drawn, on-top) band, i.e. the gradient's
- * own resolved centre. That band can have real width/height (a `fillToRect`
- * with room left over defines a genuine flat target rectangle, not just a
- * point), so this reads its `x`/`y`/`width`/`height` and returns the centre
- * rather than its top-left corner.
+ * The gradient's own resolved centre. The rect field is four trapezoids whose
+ * gradient vectors start on the inner target rectangle's edges (a side whose
+ * inner edge already sits on the box edge is omitted), so the centre is read
+ * back from those start points.
  */
 function innerBandCenter(svg: string): { x: number; y: number } {
-	const rects = [
-		...svg.matchAll(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/gu),
-	];
-	const last = rects[rects.length - 1];
-	return {
-		x: Number(last[1]) + Number(last[3]) / 2,
-		y: Number(last[2]) + Number(last[4]) / 2,
+	const vector = (id: string): { x1: number; y1: number } | undefined => {
+		const match = new RegExp(`<linearGradient id="${id}"[^>]* x1="([^"]+)" y1="([^"]+)"`, 'u').exec(
+			svg,
+		);
+		return match ? { x1: Number(match[1]), y1: Number(match[2]) } : undefined;
 	};
+	const left = vector('l')?.x1 ?? 0;
+	const right = vector('r')?.x1 ?? 100;
+	const top = vector('t')?.y1 ?? 0;
+	const bottom = vector('b')?.y1 ?? 100;
+	return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }
 
 describe('buildRectPathGradient', () => {
@@ -176,7 +180,7 @@ describe('buildRectPathGradient', () => {
 		const result = buildRectPathGradient(twoStops);
 		expect(result).toMatch(/^url\("data:image\/svg\+xml,/u);
 		const svg = decodeRectGradientSvg(result);
-		expect(svg).toContain('<rect');
+		expect(svg).toContain('<polygon');
 		expect(svg).not.toContain('radial-gradient');
 	});
 
@@ -349,7 +353,9 @@ describe('buildCssGradientFromShapeStyle path integration', () => {
 			fillGradientStops: twoStops,
 		});
 
-		expect(buildCssGradientFromShapeStyle(makeStyle('circle'))).toContain('circle');
+		expect(buildCssGradientFromShapeStyle(makeStyle('circle'))).toMatch(
+			/^radial-gradient\(ellipse/u,
+		);
 		expect(buildCssGradientFromShapeStyle(makeStyle('rect'))).toMatch(
 			/^url\("data:image\/svg\+xml,/u,
 		);

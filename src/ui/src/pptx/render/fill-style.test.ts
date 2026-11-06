@@ -133,6 +133,20 @@ describe('toCssGradientStop', () => {
 	});
 });
 
+/**
+ * A two-stop 0/100 gradient is re-sampled onto Office's sigma curve (see
+ * `officeTwoStopGradientStops`), so tests about angles, flips and tiling look at
+ * the key stops (0, 50 and 100%) only, lower-cased.
+ */
+function keyStops(css: string | undefined): string | undefined {
+	if (!css) return css;
+	const head = css.slice(0, css.indexOf(', ') + 2);
+	const kept = [...css.matchAll(/(#[0-9a-f]{6}|rgba?\([^)]*\)) ([\d.]+)%/gi)]
+		.filter((m) => [0, 50, 100].includes(Number(m[2])))
+		.map((m) => `${m[1]!.toLowerCase()} ${m[2]}%`);
+	return `${head}${kept.join(', ')})`;
+}
+
 // ---------------------------------------------------------------------------
 // buildGradientCss
 // ---------------------------------------------------------------------------
@@ -159,7 +173,7 @@ describe('buildGradientCss', () => {
 				{ color: '#0000ff', position: 100 },
 			],
 		});
-		expect(css).toBe('linear-gradient(225deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(225deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('re-samples a ramp to a transparent stop so its colour still tints the blend', () => {
@@ -211,7 +225,9 @@ describe('buildGradientCss', () => {
 				{ color: '#000000', position: 100 },
 			],
 		});
-		expect(css).toBe('radial-gradient(circle at center center, #ffffff 0%, #000000 100%)');
+		expect(keyStops(css)).toBe(
+			'radial-gradient(circle farthest-corner at 50% 50%, #ffffff 0%, #000000 100%)',
+		);
 	});
 
 	it('builds a rect path gradient as a nested-rectangle SVG image, using fillToRect for centring', () => {
@@ -338,7 +354,7 @@ describe('buildGradientCss tile-flip', () => {
 			fillGradientFlip: 'none',
 			fillGradientStops: stops,
 		});
-		expect(base).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(base)).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
 		expect(explicitNone).toBe(base);
 	});
 
@@ -349,7 +365,9 @@ describe('buildGradientCss tile-flip', () => {
 			fillGradientFlip: 'x',
 			fillGradientStops: stops,
 		});
-		expect(css).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)');
+		expect(keyStops(css)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)',
+		);
 	});
 
 	it('reflects the stops for flip "y"', () => {
@@ -359,7 +377,9 @@ describe('buildGradientCss tile-flip', () => {
 			fillGradientFlip: 'y',
 			fillGradientStops: stops,
 		});
-		expect(css).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)');
+		expect(keyStops(css)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)',
+		);
 	});
 
 	it('reflects the stops for flip "xy"', () => {
@@ -369,7 +389,9 @@ describe('buildGradientCss tile-flip', () => {
 			fillGradientFlip: 'xy',
 			fillGradientStops: stops,
 		});
-		expect(css).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)');
+		expect(keyStops(css)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)',
+		);
 	});
 
 	it('does not reflect radial gradients even when flip is set', () => {
@@ -379,7 +401,9 @@ describe('buildGradientCss tile-flip', () => {
 			fillGradientFlip: 'xy',
 			fillGradientStops: stops,
 		});
-		expect(css).toBe('radial-gradient(circle at center center, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe(
+			'radial-gradient(circle farthest-corner at 50% 50%, #ff0000 0%, #0000ff 100%)',
+		);
 	});
 });
 
@@ -493,7 +517,9 @@ describe('getComputedFillStyle', () => {
 				],
 			}),
 		);
-		expect(result?.backgroundImage).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(result?.backgroundImage)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 100%)',
+		);
 		expect(result?.backgroundColor).toBeUndefined();
 	});
 
@@ -531,7 +557,7 @@ describe('getComputedFillStyle', () => {
 				],
 			}),
 		);
-		expect(result?.backgroundImage).toBe(
+		expect(keyStops(result?.backgroundImage)).toBe(
 			'linear-gradient(180deg, #ff0000 0%, #0000ff 50%, #0000ff 50%, #ff0000 100%)',
 		);
 		expect(result?.backgroundSize).toBe('50% 100%');
@@ -649,7 +675,7 @@ describe('buildGradientCss angle corrections', () => {
 				{ color: '#0000ff', position: 100 },
 			],
 		});
-		expect(css).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('counter-rotates by the element rotation when rotWithShape is false', () => {
@@ -666,7 +692,7 @@ describe('buildGradientCss angle corrections', () => {
 			},
 			{ rotation: 45, width: 100, height: 100 },
 		);
-		expect(css).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('does not counter-rotate when rotWithShape is the default (true)', () => {
@@ -682,10 +708,12 @@ describe('buildGradientCss angle corrections', () => {
 			},
 			{ rotation: 45, width: 100, height: 100 },
 		);
-		expect(css).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
 	});
 
-	it('applies aspect-ratio scaling to the angle when scaled is not false', () => {
+	it('paints a scaled angle on a non-square box as a stretched SVG gradient', () => {
+		// PowerPoint measures the angle in the unit square and stretches the field
+		// to the box, so the iso-lines are not perpendicular to any CSS angle.
 		const css = buildGradientCss(
 			{
 				fillMode: 'gradient',
@@ -697,9 +725,47 @@ describe('buildGradientCss angle corrections', () => {
 			},
 			{ width: 200, height: 100 },
 		);
+		expect(css).toMatch(/^url\("data:image\/svg\+xml,/u);
+		const svg = decodeURIComponent(css!.slice('url("data:image/svg+xml,'.length, -2));
+		// 45 degrees runs corner to corner of the unit square, whatever the box.
+		expect(svg).toContain('x1="0" y1="0" x2="1" y2="1"');
+		expect(svg).toContain('viewBox="0 0 1 1" preserveAspectRatio="none"');
+	});
+
+	it('keeps CSS for axis-aligned, square and unscaled gradients', () => {
+		const stops = [
+			{ color: '#ff0000', position: 0 },
+			{ color: '#0000ff', position: 100 },
+		];
+		const css = (style: Partial<ShapeStyle>, size: { width: number; height: number }) =>
+			buildGradientCss({ fillMode: 'gradient', fillGradientStops: stops, ...style }, size);
+		expect(css({ fillGradientAngle: 90 }, { width: 200, height: 100 })).toMatch(
+			/^linear-gradient\(180deg/u,
+		);
+		expect(css({ fillGradientAngle: 45 }, { width: 100, height: 100 })).toMatch(
+			/^linear-gradient\(/u,
+		);
+		expect(
+			css({ fillGradientAngle: 45, fillGradientScaled: false }, { width: 200, height: 100 }),
+		).toMatch(/^linear-gradient\(/u);
+	});
+
+	it('adjusts the CSS angle for a scaled gradient pinned to the page frame', () => {
+		const css = buildGradientCss(
+			{
+				fillMode: 'gradient',
+				fillGradientAngle: 45,
+				fillGradientRotWithShape: false,
+				fillGradientStops: [
+					{ color: '#ff0000', position: 0 },
+					{ color: '#0000ff', position: 100 },
+				],
+			},
+			{ width: 200, height: 100, rotation: 0 },
+		);
 		// atan2(100*sin45, 200*cos45) = atan(0.5) ~= 26.57 OOXML deg,
 		// +90 into CSS space and rounded -> 117deg
-		expect(css).toBe('linear-gradient(117deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(117deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('skips aspect scaling when scaled is explicitly false', () => {
@@ -715,7 +781,7 @@ describe('buildGradientCss angle corrections', () => {
 			},
 			{ width: 200, height: 100 },
 		);
-		expect(css).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('skips aspect scaling for a square shape', () => {
@@ -730,7 +796,7 @@ describe('buildGradientCss angle corrections', () => {
 			},
 			{ width: 100, height: 100 },
 		);
-		expect(css).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(css)).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
 	});
 });
 
@@ -790,7 +856,9 @@ describe('getComputedFillStyle tileRect', () => {
 				],
 			}),
 		);
-		expect(result?.backgroundImage).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(result?.backgroundImage)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 100%)',
+		);
 		expect(result?.backgroundSize).toBe('50% 50%');
 		expect(result?.backgroundPosition).toBe('50% 50%');
 		expect(result?.backgroundRepeat).toBe('no-repeat');
@@ -816,7 +884,9 @@ describe('getComputedFillStyle grpFill inheritance', () => {
 				{ color: '#0000ff', position: 100 },
 			],
 		});
-		expect(result?.backgroundImage).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(result?.backgroundImage)).toBe(
+			'linear-gradient(180deg, #ff0000 0%, #0000ff 100%)',
+		);
 	});
 
 	it('emits nothing for a group child with no parent fill supplied', () => {
@@ -855,17 +925,120 @@ describe('buildGradientCss circle path gradients', () => {
 		}
 	});
 
-	it('sizes the explicit form as matching ellipse semi-axes', () => {
+	it('sizes the explicit form as matching ellipse semi-axes when the box size is unknown', () => {
 		// fillToRect r=b=100000 collapses to the top-left corner: centre 0% 0%,
 		// radius max(0, 100, 0, 100) = 100.
-		expect(buildGradientCss(circleStyle({ l: 0, t: 0, r: 1, b: 1 }))).toBe(
-			'radial-gradient(ellipse 100% 100% at 0% 0%, #BFBFBF 0%, #FFFFFF 100%)',
+		expect(keyStops(buildGradientCss(circleStyle({ l: 0, t: 0, r: 1, b: 1 })))).toBe(
+			'radial-gradient(ellipse 100% 100% at 0% 0%, #bfbfbf 0%, #ffffff 100%)',
 		);
 	});
 
 	it('keeps the keyword-sized form, which is valid for a circle', () => {
-		expect(buildGradientCss(circleStyle())).toBe(
-			'radial-gradient(circle at center center, #BFBFBF 0%, #FFFFFF 100%)',
+		// PowerPoint reaches the farthest corner with a true circle (measured).
+		expect(keyStops(buildGradientCss(circleStyle()))).toBe(
+			'radial-gradient(circle farthest-corner at 50% 50%, #bfbfbf 0%, #ffffff 100%)',
 		);
+		expect(
+			keyStops(
+				buildGradientCss(circleStyle({ l: 0.5, t: 0.5, r: 0.5, b: 0.5 }), {
+					width: 300,
+					height: 100,
+				}),
+			),
+		).toBe('radial-gradient(circle farthest-corner at 50% 50%, #bfbfbf 0%, #ffffff 100%)');
+	});
+
+	it('paints an off-centre focus as a focal circle circumscribing the box', () => {
+		const css = buildGradientCss(circleStyle({ l: 0, t: 0, r: 1, b: 1 }), {
+			width: 400,
+			height: 300,
+		});
+		expect(css).toMatch(/^url\("data:image\/svg\+xml,/u);
+		const svg = decodeURIComponent(css!.slice('url("data:image/svg+xml,'.length, -2));
+		// Half the 400x300 diagonal is 250; the focus sits on the top-left corner.
+		expect(svg).toContain('cx="200" cy="150" r="250" fx="0" fy="0"');
+		expect(svg).toContain('viewBox="0 0 400 300"');
+	});
+});
+
+describe('PowerPoint gradient colour interpolation', () => {
+	const twoStop = (extra: Partial<ShapeStyle> = {}): ShapeStyle => ({
+		fillMode: 'gradient',
+		fillGradientAngle: 0,
+		fillGradientStops: [
+			{ color: '#ffffff', position: 0 },
+			{ color: '#000000', position: 100 },
+		],
+		...extra,
+	});
+	const redAt = (css: string, position: number): number => {
+		const stops = [...css.matchAll(/#([0-9a-f]{2})[0-9a-f]{4} ([\d.]+)%/gi)].map((m) => ({
+			red: Number.parseInt(m[1]!, 16),
+			at: Number(m[2]),
+		}));
+		const next = stops.findIndex((stop) => stop.at >= position);
+		const a = stops[next - 1]!;
+		const b = stops[next]!;
+		return a.red + ((b.red - a.red) * (position - a.at)) / (b.at - a.at);
+	};
+
+	it('paints a two-stop 0/100 ramp on the measured sigma curve, not a plain sRGB blend', () => {
+		const css = buildGradientCss(twoStop())!;
+		// PowerPoint 16 exports 186, 236 and 108 for white to black at 50%, 26% and 74%.
+		expect(Math.abs(redAt(css, 50) - 186)).toBeLessThan(2);
+		expect(Math.abs(redAt(css, 26) - 236)).toBeLessThan(2.5);
+		expect(Math.abs(redAt(css, 74) - 108)).toBeLessThan(2.5);
+	});
+
+	it('blends a two-stop pair that does not span 0-100 plainly', () => {
+		expect(
+			buildGradientCss(
+				twoStop({
+					fillGradientStops: [
+						{ color: '#ffffff', position: 20 },
+						{ color: '#000000', position: 80 },
+					],
+				}),
+			),
+		).toBe('linear-gradient(90deg, #ffffff 20%, #000000 80%)');
+	});
+
+	it('sizes a gradient that is an SVG image to the whole box', () => {
+		const result = getComputedFillStyle(
+			shape(
+				{
+					fillMode: 'gradient',
+					fillGradientType: 'radial',
+					fillGradientPathType: 'circle',
+					fillGradientFillToRect: { l: 0, t: 0, r: 1, b: 1 },
+					fillGradientStops: [
+						{ color: '#ffffff', position: 0 },
+						{ color: '#000000', position: 100 },
+					],
+				},
+				{ width: 400, height: 300 },
+			),
+		);
+		expect(result?.backgroundImage).toMatch(/^url\("data:image\/svg\+xml,/u);
+		expect(result?.backgroundSize).toBe('100% 100%');
+		expect(result?.backgroundRepeat).toBe('no-repeat');
+	});
+
+	it('follows the box for a path="shape" gradient on a plain rectangle only', () => {
+		const style: ShapeStyle = {
+			fillMode: 'gradient',
+			fillGradientType: 'radial',
+			fillGradientPathType: 'shape',
+			fillGradientStops: [
+				{ color: '#ffffff', position: 0 },
+				{ color: '#000000', position: 100 },
+			],
+		};
+		const rect = getComputedFillStyle(shape(style, { shapeType: 'rect' } as Partial<PptxElement>));
+		expect(rect?.backgroundImage).toMatch(/^url\("data:image\/svg\+xml,/u);
+		const ellipse = getComputedFillStyle(
+			shape(style, { shapeType: 'ellipse' } as Partial<PptxElement>),
+		);
+		expect(ellipse?.backgroundImage).toContain('radial-gradient(');
 	});
 });

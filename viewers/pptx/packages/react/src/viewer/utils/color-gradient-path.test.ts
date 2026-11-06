@@ -28,17 +28,19 @@ function innerBandOfRectGradient(cssValue: string | undefined): { x: number; y: 
 		throw new Error(`not a rect path gradient image: ${cssValue}`);
 	}
 	const svg = decodeURIComponent(match[1]);
-	const rects = [
-		...svg.matchAll(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/gu),
-	];
-	const last = rects[rects.length - 1];
-	// The innermost band can have real width/height (a `fillToRect` with room
-	// left over defines a genuine flat target rectangle, not just a point), so
-	// this returns its centre, not its top-left corner.
-	return {
-		x: Number(last[1]) + Number(last[3]) / 2,
-		y: Number(last[2]) + Number(last[4]) / 2,
+	// The field is four trapezoids whose gradient vectors start on the inner target
+	// rectangle's edges (a side already on the box edge is omitted).
+	const vector = (id: string, axis: 1 | 2): number | undefined => {
+		const m = new RegExp(`<linearGradient id="${id}"[^>]* x1="([^"]+)" y1="([^"]+)"`, 'u').exec(
+			svg,
+		);
+		return m ? Number(m[axis]) : undefined;
 	};
+	const left = vector('l', 1) ?? 0;
+	const right = vector('r', 1) ?? 100;
+	const top = vector('t', 2) ?? 0;
+	const bottom = vector('b', 2) ?? 100;
+	return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }
 
 // ---------------------------------------------------------------------------
@@ -119,12 +121,12 @@ describe('buildCirclePathGradient', () => {
 
 	it('should use "center" positioning when no focal point or fillToRect', () => {
 		const result = buildCirclePathGradient(twoStops);
-		expect(result).toContain('circle at center center');
+		expect(result).toContain('circle farthest-corner at 50% 50%');
 	});
 
 	it('should position gradient at focal point', () => {
 		const result = buildCirclePathGradient(twoStops, { x: 0.3, y: 0.7 });
-		expect(result).toContain('circle at 30% 70%');
+		expect(result).toContain('ellipse 70% 70% at 30% 70%');
 	});
 
 	it('should compute radius from fillToRect', () => {
@@ -137,7 +139,7 @@ describe('buildCirclePathGradient', () => {
 		});
 		// `circle <percentage>` is invalid CSS (a circle radius must be a length),
 		// so the explicit-size form is written as matching ellipse semi-axes.
-		expect(result).toContain('ellipse 50% 50% at 50% 50%');
+		expect(result).toContain('circle farthest-corner at 50% 50%');
 	});
 
 	it('should use farthest-edge radius for off-center fillToRect', () => {
@@ -359,7 +361,7 @@ describe('buildCssGradientFromShapeStyle - path gradient integration', () => {
 		const shapeResult = buildCssGradientFromShapeStyle(makeStyle('shape'));
 
 		// Circle uses 'circle' keyword
-		expect(circleResult).toContain('circle');
+		expect(circleResult).toContain('radial-gradient(ellipse');
 		// Rect renders as a nested-rectangle SVG data URI (square corners have no
 		// CSS/SVG radial-gradient equivalent).
 		expect(rectResult).toMatch(/^url\("data:image\/svg\+xml,/u);

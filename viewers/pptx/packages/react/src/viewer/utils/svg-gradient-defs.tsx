@@ -16,7 +16,13 @@ export function renderSvgGradientDefs(gradient: SvgGradientDef | undefined): Rea
 	if (gradient.kind === 'rectPath') {
 		return (
 			<defs>
-				<pattern id={gradient.id} patternUnits='objectBoundingBox' width={1} height={1}>
+				<pattern
+					id={gradient.id}
+					patternUnits='objectBoundingBox'
+					patternContentUnits='objectBoundingBox'
+					width={1}
+					height={1}
+				>
 					<image href={gradient.href} x={0} y={0} width={1} height={1} preserveAspectRatio='none' />
 				</pattern>
 			</defs>

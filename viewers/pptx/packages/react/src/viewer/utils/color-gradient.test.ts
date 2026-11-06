@@ -31,11 +31,19 @@ function innerBandOfRectGradient(cssValue: string | undefined): {
 		throw new Error(`not a rect path gradient image: ${cssValue}`);
 	}
 	const svg = decodeURIComponent(match[1]);
-	const rects = [
-		...svg.matchAll(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/gu),
-	];
-	const last = rects[rects.length - 1];
-	return { x: Number(last[1]), y: Number(last[2]), w: Number(last[3]), h: Number(last[4]) };
+	// The field is four trapezoids whose gradient vectors start on the inner target
+	// rectangle's edges (a side already on the box edge is omitted).
+	const vector = (id: string, axis: 1 | 2): number | undefined => {
+		const m = new RegExp(`<linearGradient id="${id}"[^>]* x1="([^"]+)" y1="([^"]+)"`, 'u').exec(
+			svg,
+		);
+		return m ? Number(m[axis]) : undefined;
+	};
+	const left = vector('l', 1) ?? 0;
+	const right = vector('r', 1) ?? 100;
+	const top = vector('t', 2) ?? 0;
+	const bottom = vector('b', 2) ?? 100;
+	return { x: left, y: top, w: right - left, h: bottom - top };
 }
 
 /**
@@ -223,7 +231,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 			],
 		};
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toContain('radial-gradient(circle at center center');
+		expect(result).toContain('radial-gradient(circle farthest-corner at 50% 50%');
 	});
 
 	it('should use focal point for radial gradient when specified', () => {
@@ -237,7 +245,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 			],
 		};
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toContain('radial-gradient(circle at 25% 75%');
+		expect(result).toContain('radial-gradient(ellipse 75% 75% at 25% 75%');
 	});
 });
 
@@ -377,7 +385,7 @@ describe('buildCssGradientFromShapeStyle - path gradient types', () => {
 			fillGradientStops: baseStops,
 		};
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toContain('radial-gradient(circle at');
+		expect(result).toContain('radial-gradient(circle farthest-corner at');
 	});
 
 	it('should produce circle radial for explicit circle path type', () => {
@@ -388,7 +396,7 @@ describe('buildCssGradientFromShapeStyle - path gradient types', () => {
 			fillGradientStops: baseStops,
 		};
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toContain('radial-gradient(circle at');
+		expect(result).toContain('radial-gradient(circle farthest-corner at');
 	});
 
 	it('should produce a nested-rectangle image for path="rect", centred by a symmetric fillToRect', () => {
@@ -503,7 +511,7 @@ describe('buildCssGradientFromShapeStyle - path gradient types', () => {
 
 		// Circle sizes both semi-axes equally (`circle <percentage>` is invalid
 		// CSS, so the equal-axes ellipse form carries the same geometry, #132).
-		expect(circleResult).toContain('ellipse 50% 50%');
+		expect(circleResult).toContain('circle farthest-corner at 50% 50%');
 		// Rect derives independent semi-axes from the fillToRect aspect.
 		expect(rectResult).not.toContain('ellipse 50% 50%');
 		// Shape produces bounding-box radii.

@@ -6,7 +6,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { RectPathGradientStop } from './rect-path-gradient';
-import { buildRectPathGradientImage, buildRectPathGradientSvg } from './rect-path-gradient';
+import {
+	buildRectPathGradientExactSvg,
+	buildRectPathGradientImage,
+	buildRectPathGradientSvg,
+} from './rect-path-gradient';
 
 const whiteToBlack: RectPathGradientStop[] = [
 	{ color: '#ffffff', position: 0 },
@@ -182,6 +186,51 @@ describe('buildRectPathGradientImage', () => {
 		const encoded = css.slice('url("data:image/svg+xml,'.length, -2);
 		const decoded = decodeURIComponent(encoded);
 		expect(decoded).toContain('<svg');
-		expect(decoded).toContain('<rect');
+		expect(decoded).toContain('<polygon');
+	});
+});
+
+describe('buildRectPathGradientExactSvg', () => {
+	const redToBlue = [
+		{ position: 0, color: '#ff0000' },
+		{ position: 100, color: '#0000ff' },
+	];
+
+	it('draws one linear gradient per side, no bands, for a point focus', () => {
+		const svg = buildRectPathGradientExactSvg(redToBlue);
+		expect(svg.match(/<linearGradient/g)).toHaveLength(4);
+		expect(svg.match(/<polygon/g)).toHaveLength(4);
+		expect(svg).not.toContain('<rect');
+		// Top side: stop 0 on the centre line, stop 1 on the box edge.
+		expect(svg).toContain('x1="0" y1="50" x2="0" y2="0"');
+	});
+
+	it('paints the fillToRect plateau flat in the first stop and ramps the frame around it', () => {
+		const svg = buildRectPathGradientExactSvg(redToBlue, undefined, {
+			l: 0.3,
+			t: 0.3,
+			r: 0.3,
+			b: 0.3,
+		});
+		expect(svg).toContain('<rect x="30" y="30" width="40" height="40" fill="#ff0000"/>');
+		expect(svg).toContain('x1="0" y1="30" x2="0" y2="0"');
+	});
+
+	it('skips a side whose inner edge is already on the box edge', () => {
+		const svg = buildRectPathGradientExactSvg(redToBlue, undefined, {
+			l: 0,
+			t: 0,
+			r: 1,
+			b: 1,
+		});
+		expect(svg.match(/<polygon/g)).toHaveLength(2);
+	});
+
+	it('keeps per-stop opacity straight on the gradient stops', () => {
+		const svg = buildRectPathGradientExactSvg([
+			{ position: 0, color: '#ff0000', opacity: 1 },
+			{ position: 100, color: '#ff0000', opacity: 0 },
+		]);
+		expect(svg).toContain('stop-opacity="0"');
 	});
 });

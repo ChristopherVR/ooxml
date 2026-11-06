@@ -66,6 +66,7 @@ describe('buildSvgGradientDef', () => {
 			style({
 				fillGradientStops: [
 					{ color: '#000000', position: 0 },
+					{ color: '#808080', position: 50 },
 					{ color: '#FFFFFF', position: 100, opacity: 0 },
 				],
 			}),
@@ -73,8 +74,18 @@ describe('buildSvgGradientDef', () => {
 		);
 		expect(def?.stops).toStrictEqual([
 			{ offset: 0, color: '#000000' },
+			{ offset: 0.5, color: '#808080' },
 			{ offset: 1, color: '#FFFFFF', opacity: 0 },
 		]);
+	});
+
+	it('re-samples a two-stop 0/100 pair onto the Office sigma curve', () => {
+		// PowerPoint paints white to black 186 (not 128) at the midpoint.
+		const def = buildSvgGradientDef(style(), 'e1');
+		const stops = def!.stops;
+		expect(stops.length).toBeGreaterThan(20);
+		const mid = stops.find((stop) => Math.abs(stop.offset - 0.5) < 0.01)!;
+		expect(Number.parseInt(mid.color.slice(1, 3), 16)).toBeGreaterThan(170);
 	});
 
 	it('centres a radial gradient on its fillToRect', () => {
@@ -107,7 +118,7 @@ describe('buildSvgGradientDef', () => {
 		// the CSS `url("...")` wrapper `buildRectPathGradientImage` returns.
 		expect((def as { href: string }).href).toMatch(/^data:image\/svg\+xml,/u);
 		// The nested-rectangle band SVG itself, embedded in the data URI.
-		expect(decodeURIComponent((def as { href: string }).href)).toContain('<rect ');
+		expect(decodeURIComponent((def as { href: string }).href)).toContain('<polygon ');
 	});
 
 	it('keeps path type "shape" elliptical (only "rect" gets the band field)', () => {
@@ -158,6 +169,9 @@ describe('svgGradientFillRef / svgGradientMarkup', () => {
 		);
 		const markup = svgGradientMarkup(def!);
 		expect(markup).toContain('<pattern id="pptx-grad-e1" patternUnits="objectBoundingBox"');
+		// The tile's own content must be in bounding-box units too, else the 1x1 image
+		// is one user unit big and the fill paints nothing (React's blank rect path).
+		expect(markup).toContain('patternContentUnits="objectBoundingBox"');
 		expect(markup).toContain('width="1" height="1"');
 		expect(markup).toContain('preserveAspectRatio="none"');
 		expect(markup).not.toContain('<radialGradient');

@@ -99,7 +99,9 @@ describe('resolveGroupChildFill', () => {
 				{ color: '#0000ff', position: 100 },
 			],
 		});
-		expect(result?.backgroundImage).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(result?.backgroundImage).toMatch(
+			/^linear-gradient\(180deg, #ff0000 0%, .*#0000ff 100%\)$/iu,
+		);
 	});
 
 	it('returns undefined for a child that does not use grpFill', () => {

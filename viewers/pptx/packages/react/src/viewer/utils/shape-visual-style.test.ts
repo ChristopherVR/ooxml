@@ -118,7 +118,9 @@ describe('getShapeVisualStyle gradient tiling (a:tileRect, @flip)', () => {
 			0,
 			'#000',
 		);
-		expect(style.backgroundImage).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(style.backgroundImage).toMatch(
+			/^linear-gradient\(180deg, #ff0000 0%, .*#0000ff 100%\)$/iu,
+		);
 		// No explicit size: a gradient has no intrinsic size, so the initial
 		// `background-size: auto` already resolves to the whole positioning area
 		// (the border box, per `background-origin`). This is what the other four

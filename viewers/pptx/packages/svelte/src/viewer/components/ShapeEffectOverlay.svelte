@@ -216,7 +216,7 @@
 						/>
 					</pattern>
 				{:else if strokeOutline.paint.kind === 'rectPath'}
-					<pattern id={strokeOutline.paint.id} patternUnits="objectBoundingBox" width="1" height="1">
+					<pattern id={strokeOutline.paint.id} patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width="1" height="1">
 						<image href={strokeOutline.paint.href} x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
 					</pattern>
 				{:else if strokeOutline.paint.kind === 'radial'}

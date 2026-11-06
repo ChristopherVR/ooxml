@@ -176,12 +176,14 @@ describe('buildCirclePathGradient', () => {
 
 	it('produces radial-gradient(circle at center center, ...) with no positioning', () => {
 		const result = buildCirclePathGradient(stops);
-		expect(result).toBe('radial-gradient(circle at center center, #ff0000 0%, #0000ff 100%)');
+		expect(result).toBe(
+			'radial-gradient(circle farthest-corner at 50% 50%, #ff0000 0%, #0000ff 100%)',
+		);
 	});
 
 	it('uses explicit percent position when focalPoint is provided', () => {
 		const result = buildCirclePathGradient(stops, { x: 0.3, y: 0.7 });
-		expect(result).toBe('radial-gradient(circle at 30% 70%, #ff0000 0%, #0000ff 100%)');
+		expect(result).toBe('radial-gradient(ellipse 70% 70% at 30% 70%, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('includes radius in percent when fillToRect is provided', () => {
@@ -194,7 +196,9 @@ describe('buildCirclePathGradient', () => {
 		// center=50,50 → radius = max(50,50,50,50) = 50
 		// `circle <percentage>` is invalid CSS; the explicit-size form uses
 		// matching ellipse semi-axes so browsers do not drop the declaration.
-		expect(result).toBe('radial-gradient(ellipse 50% 50% at 50% 50%, #ff0000 0%, #0000ff 100%)');
+		expect(result).toBe(
+			'radial-gradient(circle farthest-corner at 50% 50%, #ff0000 0%, #0000ff 100%)',
+		);
 	});
 });
 
@@ -215,17 +219,19 @@ function innerBandOfRectGradient(cssValue: string | undefined): { x: number; y: 
 		throw new Error(`not a rect path gradient image: ${cssValue}`);
 	}
 	const svg = decodeURIComponent(match[1]);
-	const rects = [
-		...svg.matchAll(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/gu),
-	];
-	const last = rects[rects.length - 1];
-	// The innermost band can have real width/height (a `fillToRect` with room
-	// left over defines a genuine flat target rectangle, not just a point), so
-	// this returns its centre, not its top-left corner.
-	return {
-		x: Number(last[1]) + Number(last[3]) / 2,
-		y: Number(last[2]) + Number(last[4]) / 2,
+	// The field is four trapezoids whose gradient vectors start on the inner target
+	// rectangle's edges (a side already on the box edge is omitted).
+	const vector = (id: string, axis: 1 | 2): number | undefined => {
+		const m = new RegExp(`<linearGradient id="${id}"[^>]* x1="([^"]+)" y1="([^"]+)"`, 'u').exec(
+			svg,
+		);
+		return m ? Number(m[axis]) : undefined;
 	};
+	const left = vector('l', 1) ?? 0;
+	const right = vector('r', 1) ?? 100;
+	const top = vector('t', 2) ?? 0;
+	const bottom = vector('b', 2) ?? 100;
+	return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }
 
 describe('buildRectPathGradient', () => {
@@ -292,6 +298,19 @@ describe('buildShapePathGradient', () => {
 // buildCssGradientFromShapeStyle: top-level integration
 // ---------------------------------------------------------------------------
 
+/**
+ * A two-stop 0/100 gradient is re-sampled onto Office's sigma curve, so these
+ * tests look at the key stops (0, 50 and 100%) only, lower-cased.
+ */
+function keyStops(css: string | undefined): string | undefined {
+	if (!css) return css;
+	const head = css.slice(0, css.indexOf(', ') + 2);
+	const kept = [...css.matchAll(/(#[0-9a-f]{6}|rgba?\([^)]*\)) ([\d.]+)%/gi)]
+		.filter((m) => [0, 50, 100].includes(Number(m[2])))
+		.map((m) => `${m[1]!.toLowerCase()} ${m[2]}%`);
+	return `${head}${kept.join(', ')})`;
+}
+
 describe('buildCssGradientFromShapeStyle', () => {
 	it('returns undefined for undefined style', () => {
 		expect(buildCssGradientFromShapeStyle(undefined)).toBeUndefined();
@@ -321,7 +340,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 			],
 		});
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(result)).toBe('linear-gradient(135deg, #ff0000 0%, #0000ff 100%)');
 	});
 
 	it('defaults the OOXML angle to 90 (CSS 180deg) when angle is missing', () => {
@@ -332,7 +351,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 				{ color: '#0000ff', position: 100 },
 			],
 		});
-		expect(buildCssGradientFromShapeStyle(style)).toBe(
+		expect(keyStops(buildCssGradientFromShapeStyle(style))).toBe(
 			'linear-gradient(180deg, #ff0000 0%, #0000ff 100%)',
 		);
 	});
@@ -358,7 +377,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 			],
 		});
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toMatch(/^radial-gradient\(circle at /u);
+		expect(result).toMatch(/^radial-gradient\(circle farthest-corner at /u);
 	});
 
 	it('builds radial/rect gradient as a nested-rectangle SVG image', () => {
@@ -398,7 +417,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 			],
 		});
 		const result = buildCssGradientFromShapeStyle(style);
-		expect(result).toMatch(/^radial-gradient\(circle at /u);
+		expect(result).toMatch(/^radial-gradient\(circle farthest-corner at /u);
 	});
 
 	it('handles stop with opacity producing rgba()', () => {
@@ -412,7 +431,7 @@ describe('buildCssGradientFromShapeStyle', () => {
 		});
 		const result = buildCssGradientFromShapeStyle(style);
 		expect(result).toContain('rgba(255, 0, 0, 0.5)');
-		expect(result).toContain('#0000ff');
+		expect(result).toMatch(/(#0000ff|rgba\(0, 0, 255, 1\)) 100%/iu);
 	});
 
 	it('sorts unsorted stops before building gradient', () => {
@@ -426,6 +445,6 @@ describe('buildCssGradientFromShapeStyle', () => {
 		});
 		const result = buildCssGradientFromShapeStyle(style);
 		// After sorting, red (0%) should appear before blue (100%)
-		expect(result).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
+		expect(keyStops(result)).toBe('linear-gradient(180deg, #ff0000 0%, #0000ff 100%)');
 	});
 });

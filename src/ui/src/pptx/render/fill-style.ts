@@ -19,15 +19,19 @@
  * (ST_PresetPatternVal).
  */
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'ooxml-core/pptx';
-import { hasShapeProperties, ooxmlGradientAngleToCssDegrees } from 'ooxml-core/pptx';
+import { getShapeType, hasShapeProperties, ooxmlGradientAngleToCssDegrees } from 'ooxml-core/pptx';
 import {
 	clampUnitInterval,
 	colorWithOpacity,
 	normalizeHexColor,
-	straightAlphaGradientStops,
+	officeGradientStops,
 } from 'ooxml-core/color';
 
 import { DEFAULT_FILL_COLOR } from '../constants';
+import {
+	buildFocalCircleGradientImage,
+	buildScaledLinearGradientImage,
+} from './gradient-svg-image';
 import { buildRectPathGradientImage } from './path-gradient-rect';
 import { silhouetteFillsLayer } from './silhouette-effects';
 import { suppressesCssFill } from './subpath-fill-overlay';
@@ -191,20 +195,28 @@ export function buildCirclePathGradient(
 	stops: SanitizedStop[],
 	focalPoint?: ShapeStyle['fillGradientFocalPoint'],
 	fillToRect?: ShapeStyle['fillGradientFillToRect'],
+	bounds?: { width?: number; height?: number },
 ): string {
 	const stopStr = stops.map(toCssGradientStop).join(', ');
 	const { cx, cy } = computeGradientCenter(fillToRect, focalPoint);
 
-	const posX =
-		Math.round(cx) === 50 && !focalPoint && !fillToRect ? 'center' : `${Math.round(cx)}%`;
-	const posY =
-		Math.round(cy) === 50 && !focalPoint && !fillToRect ? 'center' : `${Math.round(cy)}%`;
-
-	if (fillToRect) {
-		const radius = Math.round(Math.max(cx, 100 - cx, cy, 100 - cy));
-		return `radial-gradient(ellipse ${radius}% ${radius}% at ${posX} ${posY}, ${stopStr})`;
+	// PowerPoint 16 draws a centred circle path as a true circle that reaches the
+	// box's farthest corner (measured: equal colour at equal pixel distance, last
+	// stop on the corner), which is CSS `circle farthest-corner`.
+	if (Math.abs(cx - 50) < 0.5 && Math.abs(cy - 50) < 0.5) {
+		return `radial-gradient(circle farthest-corner at 50% 50%, ${stopStr})`;
 	}
-	return `radial-gradient(circle at ${posX} ${posY}, ${stopStr})`;
+	// An off-centre focus runs every ray to the circle circumscribing the box,
+	// which only an SVG focal gradient expresses (and only with the box size).
+	const { width, height } = bounds ?? {};
+	if (typeof width === 'number' && typeof height === 'number' && width > 0 && height > 0) {
+		return buildFocalCircleGradientImage(stops, cx / 100, cy / 100, width, height);
+	}
+
+	const posX = `${Math.round(cx)}%`;
+	const posY = `${Math.round(cy)}%`;
+	const radius = Math.round(Math.max(cx, 100 - cx, cy, 100 - cy));
+	return `radial-gradient(ellipse ${radius}% ${radius}% at ${posX} ${posY}, ${stopStr})`;
 }
 
 /**
@@ -402,6 +414,11 @@ export interface GradientRenderContext {
 	width?: number;
 	/** Element height in px. */
 	height?: number;
+	/**
+	 * The element is a plain rectangle (`prstGeom rect`): a `path="shape"`
+	 * gradient then follows the box, which is the `path="rect"` field.
+	 */
+	rectangular?: boolean;
 }
 
 /** Normalise a degree value into the [0, 360) range. */
@@ -445,6 +462,26 @@ function adjustLinearGradientAngle(
 }
 
 /**
+ * Whether a linear gradient is `scaled="1"` (the default) on a visibly
+ * non-square box at an angle that is not a multiple of 90 degrees: the one case
+ * where the stretch changes the iso-line direction.
+ */
+function isStretchedLinear(
+	gradient: ShapeStyle,
+	angle: number,
+	context: GradientRenderContext | undefined,
+): boolean {
+	const { width, height } = context ?? {};
+	if (gradient.fillGradientScaled === false || !width || !height) {
+		return false;
+	}
+	if (Math.abs(width - height) < 0.5) {
+		return false;
+	}
+	return Math.abs(angle % 90) > 0.01 && Math.abs((angle % 90) - 90) > 0.01;
+}
+
+/**
  * Converts a structured OOXML gradient on a `ShapeStyle` to a CSS
  * `linear-gradient(...)` / `radial-gradient(...)` string.
  *
@@ -474,9 +511,10 @@ export function buildGradientCss(
 	if (sanitized.length === 0) {
 		return gradient.fillGradient;
 	}
-	// CSS gradients interpolate premultiplied; Office blends colour and alpha
-	// straight, so translucent ramps are re-sampled to paint the same colours.
-	const stops: SanitizedStop[] = straightAlphaGradientStops(sanitized);
+	// CSS gradients interpolate premultiplied sRGB; Office blends colour and
+	// alpha straight and paints a two-stop 0/100 pair on its sigma curve in
+	// gamma 2.2 light, so the ramp is re-sampled to paint the same colours.
+	const stops: SanitizedStop[] = officeGradientStops(sanitized);
 
 	const gradientType = gradient.fillGradientType || 'linear';
 	if (gradientType === 'radial') {
@@ -484,19 +522,31 @@ export function buildGradientCss(
 		const fp = gradient.fillGradientFocalPoint;
 		const ftr = gradient.fillGradientFillToRect;
 
-		if (pathType === 'rect') {
+		if (pathType === 'rect' || (pathType === 'shape' && context?.rectangular)) {
 			return buildRectPathGradient(stops, fp, ftr);
 		}
 		if (pathType === 'shape') {
 			return buildShapePathGradient(stops, fp, ftr);
 		}
-		return buildCirclePathGradient(stops, fp, ftr);
+		return buildCirclePathGradient(stops, fp, ftr, context);
 	}
 
 	const normalizedAngle =
 		typeof gradient.fillGradientAngle === 'number' && Number.isFinite(gradient.fillGradientAngle)
 			? gradient.fillGradientAngle
 			: 90;
+	// A `scaled="1"` angle on a non-square box stretches the whole field, so the
+	// iso-lines are no longer perpendicular to the angle and no CSS angle draws
+	// it; only an SVG image does. Axis-aligned angles, square boxes, flipped
+	// tiles and gradients pinned to the page frame keep the CSS path.
+	const flipped = gradient.fillGradientFlip && gradient.fillGradientFlip !== 'none';
+	if (
+		isStretchedLinear(gradient, normalizedAngle, context) &&
+		!flipped &&
+		gradient.fillGradientRotWithShape !== false
+	) {
+		return buildScaledLinearGradientImage(stops, normalizedAngle);
+	}
 	// `@scaled` / `@rotWithShape` are corrections in OOXML angle space, so they
 	// are applied first and the result converted to CSS degrees exactly once.
 	const effectiveAngle = convertOoxmlAngleToCss(
@@ -1200,6 +1250,7 @@ export function resolveComputedFill(ss: ShapeStyle, element: PptxElement): Compu
 		rotation: element.rotation,
 		width: element.width,
 		height: element.height,
+		rectangular: element.type === 'shape' && getShapeType(element.shapeType) === 'rect',
 	};
 	const gradient =
 		buildGradientCss(ss, geometry) ?? (ss.fillMode === 'gradient' ? ss.fillGradient : undefined);
@@ -1236,12 +1287,9 @@ export function resolveComputedFill(ss: ShapeStyle, element: PptxElement): Compu
 		// gradient (which auto-sizes to the background box), an `url(...)` image
 		// defaults to its own intrinsic size and to `repeat`, which would tile the
 		// normalised 0-100 artwork instead of stretching it across the shape.
-		const isRectPathImage =
-			ss.fillMode === 'gradient' &&
-			(ss.fillGradientType || 'linear') === 'radial' &&
-			(ss.fillGradientPathType || 'circle') === 'rect' &&
-			sanitizeGradientStops(ss.fillGradientStops).length > 0;
-		if (isRectPathImage) {
+		// The scaled-linear and off-centre circle gradients are SVG images too.
+		const isSvgImage = gradient.startsWith('url(');
+		if (isSvgImage) {
 			return {
 				backgroundImage: gradient,
 				backgroundSize: '100% 100%',

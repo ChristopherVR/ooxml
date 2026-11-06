@@ -33,7 +33,13 @@ import type { StrokeOutline } from 'ooxml-ui/pptx';
 						/>
 					</svg:pattern>
 				} @else if (paint.kind === 'rectPath') {
-					<svg:pattern [attr.id]="paint.id" patternUnits="objectBoundingBox" width="1" height="1">
+					<svg:pattern
+						[attr.id]="paint.id"
+						patternUnits="objectBoundingBox"
+						patternContentUnits="objectBoundingBox"
+						width="1"
+						height="1"
+					>
 						<svg:image
 							[attr.href]="paint.href"
 							x="0"

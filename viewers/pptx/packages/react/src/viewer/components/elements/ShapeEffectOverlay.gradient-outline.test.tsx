@@ -63,6 +63,16 @@ describe('shapeEffectOverlay gradient outline', () => {
 		expect(markup(shape())).toContain('A ');
 	});
 
+	it('strokes a path="rect" outline with a pattern whose content is in bounding-box units', () => {
+		const html = markup(
+			shape({
+				strokeGradientType: 'radial',
+				strokeGradientPathType: 'rect',
+			}),
+		);
+		expect(html).toMatch(/<pattern[^>]*patternContentUnits="objectBoundingBox"/u);
+	});
+
 	it('keeps a transparent stop transparent', () => {
 		const html = markup(
 			shape({

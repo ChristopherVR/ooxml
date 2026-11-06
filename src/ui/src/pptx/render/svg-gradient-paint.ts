@@ -18,6 +18,7 @@
  * Reference: ECMA-376 Part 1, §20.1.8.35 (gradFill) and §20.1.8.49 (path).
  */
 import type { ShapeStyle } from 'ooxml-core/pptx';
+import { officeTwoStopGradientStops } from 'ooxml-core/color';
 
 import { computeGradientCenter, sanitizeGradientStops } from './fill-style';
 import type { SvgRectPathGradientDef } from './svg-gradient-rect-path';
@@ -85,7 +86,11 @@ export function svgGradientId(elementId: string, suffix = 'grad'): string {
 
 /** Convert sanitized 0-100 gradient stops into SVG 0-1 offsets. */
 function toSvgStops(stops: ShapeStyle['fillGradientStops']): SvgGradientStopDef[] {
-	return sanitizeGradientStops(stops).map((stop) => ({
+	const sanitized = sanitizeGradientStops(stops);
+	// Office paints a two-stop 0/100 pair on its sigma curve in gamma 2.2 light.
+	// SVG interpolates straight (not premultiplied), so only that re-sampling is
+	// needed here, not the straight-alpha one.
+	return (officeTwoStopGradientStops(sanitized) ?? sanitized).map((stop) => ({
 		offset: round4(stop.position / 100),
 		color: stop.color,
 		...(typeof stop.opacity === 'number' ? { opacity: round4(stop.opacity) } : {}),
