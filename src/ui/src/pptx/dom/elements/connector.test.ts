@@ -59,6 +59,19 @@ function hitPath(element: PptxElement): SVGPathElement {
 	return path;
 }
 
+describe('connector dashed square-cap line', () => {
+	it('draws the overshoot at the start of the line', () => {
+		const element = connector({
+			height: 0,
+			shapeStyle: { strokeColor: '#333333', strokeWidth: 6, strokeDash: 'dash', lineCap: 'sq' },
+		} as never);
+		const wrapper = renderConnectorElement(element, 0, makeContext()) as HTMLElement;
+		const line = wrapper.querySelector('[data-pptx-line]');
+		expect(line?.tagName.toLowerCase()).toBe('path');
+		expect(line?.getAttribute('d')).toMatch(/^M-3,/u);
+	});
+});
+
 describe('connector pointer hit target', () => {
 	it('runs a transparent, finger-wide stroke along a hairline connector', () => {
 		const path = hitPath(connector());

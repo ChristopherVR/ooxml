@@ -48,6 +48,7 @@ import { buildCustomPathMarkers, isArrowedCustomPath } from './custom-path-marke
 import type { CustomPathMarkers } from './custom-path-markers';
 import { dashStartPathData } from './dash-path-start';
 import { isDashedStroke } from './dash-pattern';
+import { squareCapDashedPathData } from './dash-square-cap';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
 import {
@@ -460,7 +461,15 @@ function snapTransform(
 		}
 		const axis = element.height === 0 ? 'h' : element.width === 0 ? 'v' : undefined;
 		return axis
-			? snappedStrokeTransform(axis, place.x, place.y, strokeWidth, undefined, place.exact)
+			? snappedStrokeTransform(
+					axis,
+					place.x,
+					place.y,
+					strokeWidth,
+					undefined,
+					place.exact,
+					isDashedStroke(hasShapeProperties(element) ? element.shapeStyle?.strokeDash : undefined),
+				)
 			: undefined;
 	}
 	return shapeType === 'rect'
@@ -542,9 +551,21 @@ export function buildStrokeOutline(element: PptxElement): StrokeOutline | undefi
 		!ownPathD && isDashedStroke(style?.strokeDash)
 			? dashStartPathData(d, (element as { shapeType?: string }).shapeType)
 			: d;
+	const markers = buildCustomPathMarkers(element, stroke);
+	// A dashed square-cap line overshoots at its two ends only (see `dash-square-cap`).
+	const dashedD =
+		ownPathD && !markers && isDashedStroke(style?.strokeDash)
+			? squareCapDashedPathData(
+					dashStartD,
+					Math.max(lineWidth, 1),
+					style?.strokeDash,
+					style?.lineCap,
+					style?.customDashSegments,
+				)
+			: dashStartD;
 	return {
-		markers: buildCustomPathMarkers(element, stroke),
-		d: dashStartD,
+		markers,
+		d: dashedD,
 		paint,
 		stroke,
 		strokeWidth,

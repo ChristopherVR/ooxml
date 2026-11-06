@@ -182,6 +182,11 @@ describe('buildConnectorGeometry dash patterns', () => {
 		expect(round.strokeLinecap).toBe('round');
 		expect(dashed({ strokeDash: 'dash', lineCap: 'sq' }).strokeLinecap).toBe('butt');
 	});
+
+	it("draws a dashed square-cap line with PowerPoint's overshoot at its start", () => {
+		expect(dashed({ strokeDash: 'dash', lineCap: 'sq' }).pathD).toMatch(/^M-3,/u);
+		expect(dashed({ strokeDash: 'dash', lineCap: 'flat' }).pathD).toBeUndefined();
+	});
 });
 
 describe('buildConnectorGeometry', () => {

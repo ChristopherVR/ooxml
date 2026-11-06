@@ -447,12 +447,24 @@ describe('connectorRenderer - dash array', () => {
 					} as never),
 					zIndex: 0,
 				},
-			}).get('line');
+			}).get('[data-pptx-line]');
 		expect(line('dash').attributes('stroke-dasharray')).toBe('24 18');
 		expect(line('sysDash').attributes('stroke-dasharray')).toBe('18 6');
 		// A round cap is part of the dash; a square cap does not extend interior dashes.
 		expect(line('dash', 'rnd').attributes('stroke-dasharray')).toBe('18 24');
 		expect(line('dash', 'sq').attributes('stroke-linecap')).toBe('butt');
+	});
+
+	it("draws a dashed square-cap line with PowerPoint's overshoot at its start", () => {
+		const wrapper = mount(ConnectorRenderer, {
+			props: {
+				element: connector({
+					shapeStyle: { strokeColor: '#000', strokeWidth: 6, strokeDash: 'dash', lineCap: 'sq' },
+				} as never),
+				zIndex: 0,
+			},
+		});
+		expect(wrapper.get('[data-pptx-line]').attributes('d')).toMatch(/^M-3,/u);
 	});
 
 	it('omits stroke-dasharray for solid', () => {

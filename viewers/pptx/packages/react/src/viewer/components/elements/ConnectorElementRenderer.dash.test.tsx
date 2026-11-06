@@ -44,4 +44,9 @@ describe('ConnectorElementRenderer dash patterns', () => {
 		expect(square).toContain('stroke-dasharray="24 18"');
 		expect(square).not.toContain('stroke-linecap="square"');
 	});
+
+	it("draws a dashed square-cap line with PowerPoint's overshoot at its start", () => {
+		expect(render({ strokeDash: 'dash', lineCap: 'sq' })).toContain('d="M-3,0 L0,0 ');
+		expect(render({ strokeDash: 'dash', lineCap: 'flat' })).not.toContain('d="M-3,0');
+	});
 });

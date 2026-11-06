@@ -153,14 +153,18 @@ export function snappedStrokeTransform(
 	width: number | undefined,
 	size?: { width: number; height: number },
 	exact?: DeviceBox,
+	alongDashed = false,
 ): string | undefined {
 	if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
 		return undefined;
 	}
 	const ex = exact?.x ?? x;
 	const ey = exact?.y ?? y;
-	const dx = axis === 'h' ? '0px' : nearEdgeShift(x, ex, width);
-	const dy = axis === 'v' ? '0px' : nearEdgeShift(y, ey, width);
+	// A solid line is anti-aliased along its own axis; a DASHED one starts its
+	// pattern on the snapped device pixel (a pixel centre for an odd pen), so a
+	// hairline `sysDot` comes out as the uniform half-intensity line PowerPoint paints.
+	const dx = axis === 'h' && !alongDashed ? '0px' : nearEdgeShift(x, ex, width);
+	const dy = axis === 'v' && !alongDashed ? '0px' : nearEdgeShift(y, ey, width);
 	const translate = `translate(${dx}, ${dy})`;
 	if (axis !== 'box' || !size) {
 		return translate;

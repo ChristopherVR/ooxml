@@ -15,7 +15,8 @@ import type { PptxElement } from 'ooxml-core/pptx';
 import { getConnectorPathGeometry, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
-import { buildDashArray } from './connector-dash';
+import { buildDashArray, connectorSquareCapPath } from './connector-dash';
+import { isDashedStroke } from './dash-pattern';
 import { curvedElbowPathD, elbowSegmentCount, elbowWaypoints } from './connector-elbow-geometry';
 import { connectorHitStrokeWidth } from './connector-hit-target';
 import { markerPath, normalizeArrow } from './connector-markers';
@@ -38,7 +39,7 @@ import {
 export { CONNECTOR_HIT_MIN_WIDTH, connectorHitStrokeWidth } from './connector-hit-target';
 export { markerPath, normalizeArrow } from './connector-markers';
 export type { ArrowSize, MarkerShape } from './connector-markers';
-export { buildDashArray } from './connector-dash';
+export { buildDashArray, connectorSquareCapPath } from './connector-dash';
 export type { DashSegment } from './connector-dash';
 export { connectorAdjustmentFraction, connectorBendFraction } from './connector-elbow-geometry';
 export type { ElbowSegments } from './connector-elbow-geometry';
@@ -130,8 +131,11 @@ export function connectorSnapTransform(
 	}
 	const axis = element.height <= 0 ? 'h' : element.width <= 0 ? 'v' : undefined;
 	const place = axis ? snapPlacement(element as PptxElement & ExactBoxSource) : undefined;
+	const dashed = isDashedStroke(
+		(element as { shapeStyle?: { strokeDash?: string } }).shapeStyle?.strokeDash,
+	);
 	return axis && place
-		? snappedStrokeTransform(axis, place.x, place.y, strokeWidth, undefined, place.exact)
+		? snappedStrokeTransform(axis, place.x, place.y, strokeWidth, undefined, place.exact, dashed)
 		: undefined;
 }
 
@@ -213,6 +217,20 @@ export function buildConnectorGeometry(
 
 	const wrapperStyle = buildWrapperStyle(element, zIndex);
 
+	// A straight connector has no `pathD` (it renders as a `<line>`); a dashed
+	// square-cap line is drawn as a path with its two overshoots (`dash-square-cap`).
+	const straight = pathD === undefined;
+	const hitPath = pathD ?? `M${x1},${y1} L${x2},${y2}`;
+	const capped = connectorSquareCapPath(
+		hitPath,
+		ss,
+		strokeWidth,
+		compoundOffsets.length > 1 || !!startMarker || !!endMarker,
+	);
+	if (capped !== undefined) {
+		pathD = capped;
+	}
+
 	return {
 		strokeWidth,
 		strokeColor,
@@ -237,15 +255,10 @@ export function buildConnectorGeometry(
 		// A straight connector has no `pathD`, so the hit target falls back to its
 		// endpoints; both forms are a `path`, which keeps the binding templates to
 		// a single node instead of a line/path branch of their own.
-		hitPathD: pathD ?? `M${x1},${y1} L${x2},${y2}`,
+		hitPathD: hitPath,
 		hitStrokeWidth: connectorHitStrokeWidth(strokeWidth),
 		wrapperStyle,
-		snapTransform: connectorSnapTransform(
-			element,
-			pathD === undefined,
-			compoundOffsets.length,
-			strokeWidth,
-		),
+		snapTransform: connectorSnapTransform(element, straight, compoundOffsets.length, strokeWidth),
 	};
 }
 

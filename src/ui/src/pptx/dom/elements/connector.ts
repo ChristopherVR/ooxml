@@ -6,6 +6,7 @@ import {
 	connectorHitStrokeWidth,
 	connectorNeedsPath,
 	connectorSnapTransform,
+	connectorSquareCapPath,
 	connectorStrandScreenWidth,
 	DEFAULT_STROKE_COLOR,
 	getCompoundLineOffsets,
@@ -173,6 +174,15 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 	hit.style.pointerEvents = 'stroke';
 	svg.appendChild(hit);
 
+	// A dashed square-cap line overshoots at its two ends only (`dash-square-cap`).
+	const cappedD = connectorSquareCapPath(
+		pathData ?? `M${x1},${y1} L${x2},${y2}`,
+		ss,
+		strokeWidth,
+		offsets.length > 1 || startMarkerId !== undefined || endMarkerId !== undefined,
+	);
+	const paintD = cappedD ?? pathData;
+
 	offsets.forEach((offset, idx) => {
 		const strandWidth = Math.max(widths[idx] ?? strokeWidth, 1);
 		const stroke: Record<string, string | number | undefined> = {
@@ -187,9 +197,9 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 			filter: shadowId ? `url(#${shadowId})` : undefined,
 		};
 		let node: SVGElement;
-		if (pathData !== undefined) {
+		if (paintD !== undefined) {
 			node = createSvgEl(doc, 'path', {
-				d: pathData,
+				d: paintD,
 				fill: 'none',
 				'stroke-linejoin': 'round',
 				...stroke,

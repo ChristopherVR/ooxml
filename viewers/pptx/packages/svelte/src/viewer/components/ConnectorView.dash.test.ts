@@ -36,6 +36,10 @@ function dashOf(shapeStyle: Record<string, unknown>): Element | null {
 }
 
 describe('connectorView dash patterns', () => {
+	it("draws a dashed square-cap line with PowerPoint's overshoot at its start", () => {
+		expect(dashOf({ strokeDash: 'dash', lineCap: 'sq' })?.getAttribute('d')).toMatch(/^M-3,/u);
+	});
+
 	it('uses the measured dash and gap lengths', () => {
 		expect(dashOf({ strokeDash: 'dash' })?.getAttribute('stroke-dasharray')).toBe('24 18');
 	});

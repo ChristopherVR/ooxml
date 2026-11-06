@@ -2,6 +2,7 @@
 import {
 	buildDashArray,
 	connectorSnapTransform,
+	connectorSquareCapPath,
 	connectorStrandScreenWidth,
 	getLineGlowFilterCss,
 	getLineShadowParams,
@@ -164,6 +165,17 @@ const hitPathData = computed(() =>
 	usePathRouting.value && pathGeometry.value
 		? pathGeometry.value.pathData
 		: `M ${x1.value} ${y1.value} L ${x2.value} ${y2.value}`,
+);
+
+// A dashed square-cap line overshoots at its two ends only (shared `dash-square-cap`).
+const paintPathData = computed(
+	() =>
+		connectorSquareCapPath(
+			hitPathData.value,
+			ss.value,
+			strokeWidth.value,
+			compoundOffsets.value.length > 1 || !!startArrow.value || !!endArrow.value,
+		) ?? (usePathRouting.value ? pathGeometry.value?.pathData : undefined),
 );
 
 // ── Arrowheads ───────────────────────────────────────────────────────────────
@@ -367,12 +379,12 @@ function strandStyle(idx: number, offset: number): CSSProperties {
 			/>
 
 			<!-- ── Bent / curved connector: multi-segment <path> ─────────────────── -->
-			<template v-if="usePathRouting && pathGeometry">
+			<template v-if="paintPathData !== undefined">
 				<path
 					v-for="(offset, idx) in compoundOffsets"
 					:key="idx"
 					data-pptx-line=""
-					:d="pathGeometry.pathData"
+					:d="paintPathData"
 					fill="none"
 					:stroke="strokeColor"
 					:stroke-width="strandWidth(idx)"

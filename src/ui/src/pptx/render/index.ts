@@ -75,6 +75,7 @@ export * from './group-fill';
 // transform strings (flip/rotation/skew), and OOXML drawing-percent parsing.
 export * from './dash-path-start';
 export * from './dash-pattern';
+export * from './dash-square-cap';
 export * from './element-style-transform';
 export * from './text-flip-compensation';
 export * from './image-fill-counter-transform';

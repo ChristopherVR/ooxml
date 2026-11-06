@@ -1,6 +1,7 @@
 import {
 	connectorNeedsPath,
 	connectorSnapTransform,
+	connectorSquareCapPath,
 	connectorStrandScreenWidth,
 	connectorWrapperTransform,
 	getSelectionOutlineColor,
@@ -107,6 +108,16 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 				};
 
 		const hitTargetWidth = Math.max(strokeWidth * 3, 14);
+		// A dashed square-cap line overshoots at its two ends only (shared `dash-square-cap`).
+		const paintPathData =
+			connectorSquareCapPath(
+				pathGeometry.pathData,
+				ss,
+				strokeWidth,
+				compoundOffsets.length > 1 ||
+					(!!startArrow && startArrow !== 'none') ||
+					(!!endArrow && endArrow !== 'none'),
+			) ?? pathGeometry.pathData;
 		// A single horizontal / vertical straight line is snapped to the device grid
 		// the way PowerPoint's export does it (shared `device-pixel-stroke`).
 		const snapTransform = connectorSnapTransform(
@@ -241,7 +252,7 @@ const ConnectorElementRendererMemo: React.FC<ConnectorRendererProps> = /* @__PUR
 						<path
 							key={idx}
 							data-pptx-line=''
-							d={pathGeometry.pathData}
+							d={paintPathData}
 							fill='none'
 							stroke={strokePaint}
 							strokeWidth={Math.max(compoundWidths[idx] ?? strokeWidth, 1)}
