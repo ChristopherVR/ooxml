@@ -141,7 +141,7 @@ options with the same meaning: `canvasSize`, `mediaDataUrls`, `headerFooter`, `c
 import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';
 import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
 
-function drawStrip(paneOptions: SlidesPaneOptions): void {
+function drawStrip(strip: HTMLElement, paneOptions: SlidesPaneOptions): void {
 	// Retire the previous thumbnails' render subscriptions before replacing them.
 	disposePptxRenderStage(strip);
 	strip.replaceChildren(

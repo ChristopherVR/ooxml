@@ -89,7 +89,7 @@ pane.destroy();
 import { disposePptxRenderStage, renderSlideThumbnail } from 'pptx-vanilla-viewer';
 import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
 
-function drawStrip(paneOptions: SlidesPaneOptions): void {
+function drawStrip(strip: HTMLElement, paneOptions: SlidesPaneOptions): void {
 	// 替换之前，先释放旧缩略图的渲染订阅。
 	disposePptxRenderStage(strip);
 	strip.replaceChildren(
