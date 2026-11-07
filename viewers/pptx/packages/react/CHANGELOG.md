@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.68.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.68.0) - 2026-11-07
+
+### Features
+
+- **text:** Share the webfont fallback with word, excel and visio ([296264b](https://github.com/ChristopherVR/ooxml/commit/296264b25560c6cd274bf5df62e94300783ef6bb))
+
 ## [4.67.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.67.0) - 2026-11-06
 
 ### Features
