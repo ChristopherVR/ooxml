@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.44.0) - 2026-11-07
+
+### Features
+
+- **ui:** Start document webfonts while the file parses ([b26b5e4](https://github.com/ChristopherVR/ooxml/commit/b26b5e4a5aa141c4311dad9ccd4f074f0d768515))
+- **ui:** Add a trust center font toggle to word, excel and visio ([911ad27](https://github.com/ChristopherVR/ooxml/commit/911ad27252f8de09c97c66bdfd57a24a995af47a))
+
 ## [1.43.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.43.0) - 2026-11-07
 
 ### Features

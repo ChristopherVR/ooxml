@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.68.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.68.0) - 2026-11-07
+
+### Features
+
+- **ui:** Start document webfonts while the file parses ([b26b5e4](https://github.com/ChristopherVR/ooxml/commit/b26b5e4a5aa141c4311dad9ccd4f074f0d768515))
+
+### Bug Fixes
+
+- **angular:** Edit text in its own font instead of a plain textarea ([24ba701](https://github.com/ChristopherVR/ooxml/commit/24ba701aebd4588870dfb7e976880779de97f74c))
+
 ## [4.67.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.67.0) - 2026-11-07
 
 ### Features
