@@ -85,7 +85,7 @@ test.describe('inline edit font', () => {
 	test('the editor paints the text in the face, size and colour view mode used', async ({
 		page,
 	}) => {
-		await page.route(/fonts\.(googleapis|gstatic)\.com/u, (route) => route.abort());
+		await page.route(/^https?:\/\/fonts\.(googleapis|gstatic)\.com\//u, (route) => route.abort());
 		await loadDeck(page, WEBFONT_DECK);
 		const target = elementWithText(page, PROBE_TEXT);
 		const id = await target.getAttribute('data-element-id');
