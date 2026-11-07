@@ -105,6 +105,8 @@ data.slides.push(slide);
 
 Positions in `add*` options are **pixels** (converted to EMU internally). `addText` options include `fontSize`, `fontFamily`, `bold`, `italic`, `underline`, `color`, `x`, `y`, `width`, `height`, and more.
 
+`setBackground({ type: 'gradient', stops })` saves a DrawingML gradient (`p:bg/p:bgPr/a:gradFill`). Stops take `#RRGGBB` colours, positions and an optional opacity from 0 to 1, and there must be at least two. `angle` is a CSS angle (default `180`, top to bottom). `path: 'circle' | 'rect' | 'shape'` with an optional `focus` makes a path gradient instead (default focus: the slide centre). Invalid input throws a `RangeError`. A picture background wins over a gradient, and a gradient wins over a solid colour; a later solid `setBackground` replaces the gradient.
+
 ### Filling layout placeholders
 
 Use `addPlaceholder` instead of `addText` when content should follow a layout's frame and text styles:

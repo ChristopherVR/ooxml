@@ -33,6 +33,22 @@ describe('secondary axes with stable document-order selections', () => {
 		expect(before.plotArea.groups[0]!.series).toHaveLength(2);
 		expect(source.plotArea.axes).toHaveLength(2);
 	});
+	it('gives a new secondary pair the ids the caller picks, and refuses taken or equal ones', () => {
+		const source = columnChart();
+		const moved = reopen(setChartSeriesSecondaryAxis(source, 1, true, { axisIds: [41, 42] }));
+		expect(moved.plotArea.groups[1]!.axisIds).toStrictEqual([41, 42]);
+		expect(moved.plotArea.axes.slice(2).map((axis) => [axis.id, axis.crossAxisId])).toStrictEqual([
+			[41, 42],
+			[42, 41],
+		]);
+		const taken = source.plotArea.axes[0]!.id!;
+		for (const axisIds of [
+			[taken, 42],
+			[41, 41],
+			[-1, 42],
+		] as [number, number][])
+			expect(() => setChartSeriesSecondaryAxis(source, 1, true, { axisIds })).toThrow(RangeError);
+	});
 	it('restores the original clustered bar geometry on return to the primary axis', () => {
 		const source = columnChart();
 		const restored = setChartSeriesSecondaryAxis(

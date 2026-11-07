@@ -457,13 +457,24 @@ export type BackgroundInput =
 	| {
 			type: 'gradient';
 			/**
-			 * Slide backgrounds are stored as a ready-made CSS gradient string
-			 * (`PptxSlide.backgroundGradient`), so this is a CSS
-			 * `linear-gradient()` angle: degrees clockwise from "to top"
-			 * (`90` = left to right, `180` = top to bottom). Defaults to `180`.
+			 * A CSS `linear-gradient()` angle, as the slide's CSS
+			 * `backgroundGradient` has always used: degrees clockwise from "to
+			 * top" (`90` = left to right, `180` = top to bottom). Defaults to
+			 * `180`. Saved as `a:lin/@ang` (a quarter turn less). Not with `path`.
 			 */
 			angle?: number;
-			stops: Array<{ color: string; position: number }>;
+			/**
+			 * A path gradient (`a:path/@path`) growing from `focus` outwards
+			 * instead of a linear one.
+			 */
+			path?: 'circle' | 'rect' | 'shape';
+			/** Where a path gradient starts (`a:fillToRect`). Default: the slide centre. */
+			focus?: RelativeRectInput;
+			/**
+			 * At least two stops: `color` as `#RRGGBB`, `position` 0-1, `opacity`
+			 * 0-1 (default opaque).
+			 */
+			stops: Array<{ color: string; position: number; opacity?: number }>;
 	  }
 	| { type: 'image'; source: string };
 
