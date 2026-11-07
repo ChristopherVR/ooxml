@@ -11,7 +11,7 @@ import {
 	resolveInitialSlideIndex,
 } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
-import type { PptxHandler } from 'pptx-viewer-core';
+import type { PptxEmbeddedFont, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { EncryptedFileError } from 'pptx-viewer-core';
 
 import type { EditorController } from './editor';
@@ -132,22 +132,26 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		store.set({ loading: true, fontProgress: null, error: null });
 		try {
 			const buffer = await resolveSourceToBuffer(source);
-			const loaded = await loadPresentation(buffer, {
-				allowExternalImages: deps.getAllowExternalContent?.(),
-				limits: options.limits,
-			});
-			const partition = partitionTemplateElements(loaded.slides);
 			// ── The deck's Google Fonts webfonts ─────
-			// Held back only briefly, so faces already cached show at once; a slower
-			// download goes on in the background, reported through `fontProgress` in
-			// the status bar until it ends (see deck-webfont-readiness.ts).
+			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
+			// download runs while the rest of the deck loads and media resolves;
+			// awaited before the deck is shown, which it holds back only briefly (see
+			// deck-webfont-readiness.ts). Nothing after that point changes slide text,
+			// so these slides name the same faces (and stylesheet) as the committed ones.
 			const doc = deps.doc ?? (typeof document === 'undefined' ? undefined : document);
-			if (token === loadToken && doc) {
-				await prepareDeckWebfonts({
+			let webfonts: Promise<unknown> | undefined;
+			const startWebfonts = (
+				slides: readonly PptxSlide[],
+				embeddedFonts: readonly PptxEmbeddedFont[],
+			): void => {
+				if (token !== loadToken || !doc) {
+					return;
+				}
+				webfonts = prepareDeckWebfonts({
 					document: doc,
 					linkId: VANILLA_GOOGLE_FONTS_LINK_ID,
-					slides: partition.slides,
-					embeddedFonts: loaded.embeddedFonts,
+					slides: partitionTemplateElements([...slides]).slides,
+					embeddedFonts,
 					// `null` means off, so no `??` fallback here.
 					googleFontsBase: deps.getGoogleFontsBase
 						? deps.getGoogleFontsBase()
@@ -158,7 +162,18 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 						}
 					},
 				});
+			};
+			const loaded = await loadPresentation(buffer, {
+				allowExternalImages: deps.getAllowExternalContent?.(),
+				limits: options.limits,
+				onSlidesParsed: ({ slides, embeddedFonts }) => startWebfonts(slides, embeddedFonts),
+			});
+			// A JSON document is imported without the slide hook.
+			if (!webfonts) {
+				startWebfonts(loaded.slides, loaded.embeddedFonts);
 			}
+			const partition = partitionTemplateElements(loaded.slides);
+			await webfonts;
 			if (token !== loadToken) {
 				revokeBlobUrls(loaded.blobUrls);
 				loaded.handler.dispose();

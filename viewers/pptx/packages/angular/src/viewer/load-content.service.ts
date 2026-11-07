@@ -466,9 +466,46 @@ export class LoadContentService {
 			const allowExternalImages = this.resolveAllowExternalImages();
 			// The host `limits` input, read untracked for the same reason.
 			const limits = untracked(() => this.hostLimitsReader?.());
-			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages, limits });
+			// ── The deck's Google Fonts webfonts ─────
+			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
+			// download runs while the rest of the deck loads and media resolves;
+			// awaited before the deck is shown, which it holds back only briefly (see
+			// deck-webfont-readiness.ts). Nothing after that point changes slide text,
+			// so these slides name the same faces (and stylesheet) as the committed ones.
+			let webfonts: Promise<unknown> | undefined;
+			const startWebfonts = (
+				deckSlides: PptxSlide[],
+				deckEmbeddedFonts: PptxEmbeddedFont[],
+			): void => {
+				if (typeof document === 'undefined' || token !== this.renderToken) {
+					return;
+				}
+				webfonts = prepareDeckWebfonts({
+					document,
+					linkId: GOOGLE_WEBFONTS_LINK_ID,
+					slides: deckSlides,
+					embeddedFonts: deckEmbeddedFonts,
+					googleFontsBase: resolveGoogleFontsCss2Base(
+						untracked(() => this.hostGoogleFontsReader?.()),
+					),
+					onProgress: (progress) => {
+						if (token === this.renderToken) {
+							this.fontProgress.set(progress);
+						}
+					},
+				});
+			};
+			const parsed = await newHandler.load(buffer as ArrayBuffer, {
+				allowExternalImages,
+				limits,
+				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+			});
 			if (token !== this.renderToken) {
 				return;
+			}
+			// A JSON document is imported without the slide hook.
+			if (!webfonts) {
+				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
 			// ── Resolve media Blob URLs (audio/video + poster frames) ──
@@ -556,26 +593,7 @@ export class LoadContentService {
 				newHandler.getImageData(path),
 			);
 
-			// ── The deck's Google Fonts webfonts ─────
-			// Held back only briefly, so faces already cached show at once; a slower
-			// download goes on in the background, reported through `fontProgress` in
-			// the status bar until it ends (see deck-webfont-readiness.ts).
-			if (token === this.renderToken && typeof document !== 'undefined') {
-				await prepareDeckWebfonts({
-					document,
-					linkId: GOOGLE_WEBFONTS_LINK_ID,
-					slides: nextSlides,
-					embeddedFonts: parsed.embeddedFonts ?? [],
-					googleFontsBase: resolveGoogleFontsCss2Base(
-						untracked(() => this.hostGoogleFontsReader?.()),
-					),
-					onProgress: (progress) => {
-						if (token === this.renderToken) {
-							this.fontProgress.set(progress);
-						}
-					},
-				});
-			}
+			await webfonts;
 
 			// Commit reactive state.
 			if (token !== this.renderToken) {

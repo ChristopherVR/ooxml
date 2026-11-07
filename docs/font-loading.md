@@ -76,7 +76,9 @@ showing it. The wait is deliberately short (`WEBFONT_TIMEOUT_MS`, 150 ms, about 
 block period for `font-display: swap`): cached faces arrive inside it, and a first download on a
 slow network does not hold the document back:
 
-- the managed `<link>` is injected as soon as the deck is parsed;
+- the managed `<link>` is injected as soon as the deck is parsed (for PowerPoint, as soon as core
+  has parsed the slides, `PptxHandlerLoadOptions.onSlidesParsed`, while the rest of the deck still
+  loads and its media resolves);
 - the loading state stays up until each face the slides draw has loaded through `document.fonts`
   (with the characters they use, so the right `unicode-range` subset loads);
 - the wait ends after 150 ms, or at once when the stylesheet request fails (offline, blocked,
