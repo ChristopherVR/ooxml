@@ -21,6 +21,7 @@ import { frBackstage } from './locales/fr-backstage';
 import { zhCNCommands } from './locales/zh-CN-commands';
 import { zhCNText } from './locales/zh-CN-text';
 import { zhCNBackstage } from './locales/zh-CN-backstage';
+import { VISIO_TRUST_STRINGS } from './locales/trust-center';
 
 export const VISIO_LOCALES = ['en', 'de', 'es', 'fr', 'zh-CN'] as const;
 export type VisioLocale = (typeof VISIO_LOCALES)[number];
@@ -28,11 +29,11 @@ export type VisioLocale = (typeof VISIO_LOCALES)[number];
 /** Every dictionary, English first: its keys are the contract the other locales must meet. */
 export const VISIO_RIBBON_STRINGS: Readonly<Record<VisioLocale, Readonly<Record<string, string>>>> =
 	{
-		en: { ...enCommands, ...enText, ...enBackstage },
-		de: { ...deCommands, ...deText, ...deBackstage },
-		es: { ...esCommands, ...esText, ...esBackstage },
-		fr: { ...frCommands, ...frText, ...frBackstage },
-		'zh-CN': { ...zhCNCommands, ...zhCNText, ...zhCNBackstage },
+		en: { ...enCommands, ...enText, ...enBackstage, ...VISIO_TRUST_STRINGS.en },
+		de: { ...deCommands, ...deText, ...deBackstage, ...VISIO_TRUST_STRINGS.de },
+		es: { ...esCommands, ...esText, ...esBackstage, ...VISIO_TRUST_STRINGS.es },
+		fr: { ...frCommands, ...frText, ...frBackstage, ...VISIO_TRUST_STRINGS.fr },
+		'zh-CN': { ...zhCNCommands, ...zhCNText, ...zhCNBackstage, ...VISIO_TRUST_STRINGS['zh-CN'] },
 	};
 
 /** Maps any BCP 47 tag to a supported locale (`de-AT` is German, `zh-Hans` Chinese), else English. */
@@ -81,6 +82,30 @@ function exact(locale: VisioLocale, text: string): string | undefined {
 	return undefined;
 }
 
+const isSpace = (char: string): boolean => /\s/.test(char);
+
+/**
+ * `text` cut into sentences, each starting with a non-space, ending at a full stop and keeping the
+ * spaces after it; `undefined` unless the sentences cover all of `text`. A single forward scan:
+ * the equivalent pattern backtracks quadratically on long text without a full stop.
+ */
+function splitSentences(text: string): string[] | undefined {
+	const sentences: string[] = [];
+	let start = 0;
+	while (start < text.length) {
+		const first = text.charAt(start);
+		if (first === '.' || isSpace(first)) return undefined;
+		const stop = text.indexOf('.', start);
+		if (stop < 0) return undefined;
+		let end = stop + 1;
+		while (end < text.length && isSpace(text.charAt(end))) end++;
+		if (end === stop + 1 && end < text.length) return undefined;
+		sentences.push(text.slice(start, end));
+		start = end;
+	}
+	return sentences;
+}
+
 /**
  * The English ribbon wording `text` in `locale`. Tooltips are `label (shortcut)`, `label: reason`
  * and `label: not available yet. reason`; anything unknown stays English.
@@ -109,9 +134,8 @@ export function translateRibbonText(locale: VisioLocale, text: string): string {
 		const rest = translateRibbonText(locale, text.slice(colon + 2));
 		if (label !== undefined) return `${label}: ${rest}`;
 	}
-	// Each sentence starts with a non-space, so the spaces after a full stop belong to one match.
-	const sentences = text.match(/[^.\s][^.]*\.(?:\s+|$)/g);
-	if (sentences && sentences.length > 1 && sentences.join('') === text) {
+	const sentences = splitSentences(text);
+	if (sentences && sentences.length > 1) {
 		const parts = sentences.map((sentence) => exact(locale, sentence.trim()));
 		if (parts.every((part) => part !== undefined)) return parts.join(' ');
 	}

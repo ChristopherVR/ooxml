@@ -109,6 +109,23 @@ for (const run of runs)
 					else await expect(gradient).not.toHaveAttribute('gradientTransform');
 					await expect(gradient.locator('stop')).toHaveCount(sample.paintStops);
 				} else throw new Error('Unexpected native paint');
+				// Consecutive cases can share geometry and stop count, so the checks above also pass on the
+				// previous chart; wait until the painted stops are this case's before rasterising.
+				if (expected.kind !== 'rectPath')
+					await expect
+						.poll(() =>
+							gradient
+								.locator('stop')
+								.evaluateAll((stops) =>
+									stops.map(
+										(stop) =>
+											`${stop.getAttribute('offset')}|${stop.getAttribute('stop-color')}|${stop.getAttribute('stop-opacity')}`,
+									),
+								),
+						)
+						.toEqual(
+							expected.stops.map((stop) => `${stop.offset}|${stop.color}|${stop.opacity ?? 1}`),
+						);
 				const pixels = await gradient.evaluate(async (element, sample) => {
 					const image = new Image();
 					const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sample.width}" height="${sample.height}"><defs>${element.outerHTML}</defs><rect width="100%" height="100%" fill="url(#${element.id})"/></svg>`;

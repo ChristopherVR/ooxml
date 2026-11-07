@@ -108,6 +108,7 @@
 	const customization = useViewerCustomizationRoot(
 		() => props.customization,
 		() => props.allowExternalContent,
+		() => props.googleFonts,
 	);
 	provideRibbonAddIns(() => props.ribbonAddIns);
 	const ribbonScope = nextRibbonScopeToken();

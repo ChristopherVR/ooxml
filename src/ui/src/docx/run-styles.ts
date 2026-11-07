@@ -13,6 +13,7 @@ import {
 } from 'ooxml-core/docx';
 import { appendInlineNode } from './run-adapter';
 import { ligatureStyle } from 'ooxml-core/docx/ui';
+import { cssFontStack } from 'ooxml-core/docx/layout';
 import { scaledSegments, scaleMeasurer } from './run-scale';
 import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
 import type { ReviewDisplayMode } from './review-display';
@@ -31,7 +32,6 @@ export function themeFontOf(
 	return role && theme ? theme.fonts[role]?.latin : undefined;
 }
 
-const quoteFont = (family: string) => `"${family.replace(/["\\]/g, '')}"`;
 const safeColor = (value: string | undefined) =>
 	value && /^#[0-9a-f]{6}$/i.test(value) ? value : undefined;
 
@@ -66,7 +66,9 @@ export function runFormattingCss(
 			`vertical-align:${formatting.verticalAlign === 'baseline' ? 'baseline' : formatting.verticalAlign === 'superscript' ? 'super' : 'sub'}`,
 		);
 	const family = formatting.fontFamily ?? themeFontOf(formatting, theme);
-	if (family) css.push(`font-family:${quoteFont(family)}`);
+	// The metric-compatible stack Print Layout measures with (Calibri, then Carlito), so a loaded
+	// clone paints here too and Web Layout breaks lines like the pages.
+	if (family) css.push(`font-family:${cssFontStack(family)}`);
 	const color =
 		safeColor(formatting.color) ??
 		(formatting.colorTheme && theme

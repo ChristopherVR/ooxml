@@ -111,6 +111,7 @@ export const translations = {
 	'pptx.toolbar.save': '保存',
 	'pptx.settings.done': '完成',
 	'pptx.viewer.loading': '正在加载演示文稿...',
+	'pptx.viewer.loadingFonts': '正在下载字体（{{loaded}}/{{total}}）...',
 	'pptx.viewer.encrypted': '该演示文稿受密码保护，无法打开。',
 	'pptx.viewer.loadError': '无法加载演示文稿。',
 	'pptx.viewer.loadLimit.maxInputBytes':

@@ -20,12 +20,9 @@
 
 import { DestroyRef, Injectable, inject } from '@angular/core';
 import {
-	collectReferencedFontFamilies,
-	fetchGoogleWebfontOutlineBytes,
+	loadDeckWebfontOutlines,
 	resolveGoogleFontsCss2Base,
 	resolveGoogleWebfontHref,
-	selectGoogleWebfontFamilies,
-	selectTrustedEmbeddedFonts,
 	syncGoogleWebfontStylesheet,
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption } from 'ooxml-ui/pptx';
@@ -105,44 +102,14 @@ export class GoogleWebfontsService {
 		token: number,
 		base: string | null,
 	): void {
-		const referenced = collectReferencedFontFamilies(slides);
-		const candidates = selectGoogleWebfontFamilies(
-			referenced,
-			selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
-		);
-		if (candidates.length === 0) {
-			return;
-		}
-		void resolveGoogleWebfontHref(slides, embeddedFonts, undefined, base).then(async (href) => {
-			if (token !== this.syncToken || !href) {
-				return;
-			}
-			const variants: Array<{ bold: boolean; italic: boolean }> = [
-				{ bold: false, italic: false },
-				{ bold: true, italic: false },
-			];
-			let registeredAny = false;
-			for (const family of candidates) {
-				for (const variant of variants) {
-					if (token !== this.syncToken) {
-						return;
-					}
-					const bytes = await fetchGoogleWebfontOutlineBytes(
-						href,
-						family,
-						variant.bold,
-						variant.italic,
-						fetch,
-					);
-					if (
-						bytes &&
-						glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
-					) {
-						registeredAny = true;
-					}
-				}
-			}
-			if (registeredAny && token === this.syncToken) {
+		void loadDeckWebfontOutlines({
+			slides,
+			embeddedFonts,
+			googleFontsBase: base,
+			cache: glyphOutlineFontCache,
+			isCancelled: () => token !== this.syncToken,
+		}).then((registered) => {
+			if (registered && token === this.syncToken) {
 				glyphOutlineFontsTick.update((tick) => tick + 1);
 			}
 			return undefined;

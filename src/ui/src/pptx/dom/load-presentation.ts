@@ -8,6 +8,7 @@ import type {
 	PptxCustomProperty,
 	PptxCustomShow,
 	PptxEmbeddedFont,
+	PptxHandlerLoadOptions,
 	PptxHandoutMaster,
 	PptxHeaderFooter,
 	PptxLoadLimits,
@@ -140,6 +141,13 @@ export interface LoadPresentationOptions {
 	 * silently drops `http(s)://` image references instead of fetching them.
 	 */
 	allowExternalImages?: boolean;
+	/**
+	 * Called as soon as core has parsed the slides (`PptxHandlerLoadOptions.onSlidesParsed`),
+	 * before the rest of the deck loads and its media and pictures resolve, so a
+	 * host can start work that needs only the slides (the deck's webfont
+	 * download, `prepareDeckWebfonts`) while they do.
+	 */
+	onSlidesParsed?: PptxHandlerLoadOptions['onSlidesParsed'];
 }
 
 export async function loadPresentation(
@@ -153,6 +161,7 @@ export async function loadPresentation(
 			allowExternalImages: options?.allowExternalImages,
 			maxUncompressedBytes: options?.maxUncompressedBytes,
 			limits: options?.limits,
+			onSlidesParsed: options?.onSlidesParsed,
 		});
 
 		const getImageData = (path: string): Promise<string | undefined> => handler.getImageData(path);

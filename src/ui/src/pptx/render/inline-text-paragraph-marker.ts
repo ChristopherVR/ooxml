@@ -1,3 +1,13 @@
+/**
+ * Mark the paragraph boundary Chromium inserts when Enter splits a seeded
+ * rich run, so `readEditableText` reads a new paragraph there (an appended
+ * numbered paragraph continues its list, #211) and native undo that rejoins
+ * the split leaves no stray break. Every DOM-seeded plain editor (vanilla,
+ * Svelte, Vue, Angular) calls it on `insertParagraph` input. Moved from the
+ * vanilla binding.
+ *
+ * @module render/inline-text-paragraph-marker
+ */
 function isCaretPlaceholder(element: HTMLElement): boolean {
 	const content = Array.from(element.childNodes).filter((child) => {
 		if (child.nodeType === 3) {

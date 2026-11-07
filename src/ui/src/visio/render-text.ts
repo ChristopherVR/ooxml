@@ -1,4 +1,5 @@
 import type { VisioText, VisioTextRun } from 'ooxml-core/visio';
+import { visioFontStack } from './font-stack';
 import { matrix, safeColor, svgElement } from './render-svg';
 import type { TextLayoutBudget } from './text-layout';
 import { layoutParagraphs } from './paragraph-layout';
@@ -11,7 +12,7 @@ function appendRuns(row: SVGElement, runs: readonly VisioTextRun[], text: VisioT
 	for (const run of runs) {
 		const span = svgElement('tspan');
 		span.textContent = runDisplayText(run.text, run);
-		span.setAttribute('font-family', run.fontFamily);
+		span.setAttribute('font-family', visioFontStack(run.fontFamily));
 		span.setAttribute('font-size', String(runDisplaySize(run)));
 		if (run.textCase === 'small-caps') span.setAttribute('font-variant', 'small-caps');
 		if (run.letterSpacing) span.setAttribute('letter-spacing', String(run.letterSpacing));
@@ -48,7 +49,7 @@ export function renderText(
 	group.append(backgrounds);
 	const node = svgElement('text');
 	node.style.whiteSpace = 'pre';
-	node.setAttribute('font-family', text.fontFamily);
+	node.setAttribute('font-family', visioFontStack(text.fontFamily));
 	node.setAttribute('font-size', String(text.fontSize));
 	node.setAttribute('fill', safeColor(text.color));
 	let layout: ReturnType<typeof layoutParagraphs>;
@@ -130,7 +131,7 @@ export function renderText(
 			bullet.textContent = line.bullet.text;
 			bullet.setAttribute('x', String(line.bullet.x));
 			bullet.setAttribute('y', String(y + line.y));
-			bullet.setAttribute('font-family', line.bullet.fontFamily);
+			bullet.setAttribute('font-family', visioFontStack(line.bullet.fontFamily));
 			bullet.setAttribute('font-size', String(line.bullet.fontSize));
 			bullet.setAttribute('fill', safeColor(text.color));
 			bullet.setAttribute('fill-opacity', String(text.opacity ?? 1));

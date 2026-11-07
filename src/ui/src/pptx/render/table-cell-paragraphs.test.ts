@@ -301,6 +301,25 @@ describe('cellParagraphBlocks', () => {
 			expect(Number.parseFloat(String(blocks[1]?.css.marginBlockEnd))).toBeLessThan(-5);
 		});
 
+		it('places a larger opening run at an exact pitch level with a line of one size', () => {
+			// Issue #35: a 9pt bullet opens a 7pt line at 11pt exact. The runs sit
+			// at `line-height: 0`, so the strut alone sets the CSS baseline and
+			// PowerPoint's (75% of the pitch) is the same in both cells.
+			const lineOf = (bulletPt: number): PptxTableCell => ({
+				text: '• text',
+				textRuns: [
+					{ text: '•', fontSize: bulletPt, fontFamily: 'Calibri' },
+					{ text: ' text', fontSize: 7, fontFamily: 'Calibri' },
+				],
+				paragraphs: [{ lineSpacingExactPt: 11 }],
+			});
+			const mixed = cellParagraphBlocks(lineOf(9), { cellCss, measure: calibri })?.[0];
+			const single = cellParagraphBlocks(lineOf(7), { cellCss, measure: calibri })?.[0];
+			expect(single?.css.top).toBeDefined();
+			expect(mixed?.css.top).toBe(single?.css.top);
+			expect(mixed?.runs.every((run) => run.lineHeight === 0)).toBe(true);
+		});
+
 		it('places a paragraph of a cell that spaces nothing, as shape text does', () => {
 			expect(cssOf(cellAt(40, {}))?.position).toBe('relative');
 		});

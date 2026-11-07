@@ -12,6 +12,7 @@ import {
 	type FontView,
 	type Workbook,
 	type Worksheet,
+	workbookFontFamily,
 } from 'ooxml-core/xlsx';
 import { createCommandRegistry, editBridge, type CommandRegistry } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, GridController, SelectionModel } from 'ooxml-core/xlsx/ui';
@@ -35,6 +36,7 @@ import {
 import type { CalculationMode } from './backstage';
 import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
+import { XlsxWebfonts } from './webfonts';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 import type { ExcelCustomization } from 'ooxml-core/xlsx/ui';
@@ -103,6 +105,8 @@ export class EditorCore {
 	readonly collab: XlsxCollaboration;
 	/** Builds the formula graph in idle time after a workbook opens. */
 	readonly calcPreparation: CalcPreparation;
+	/** The `googleFonts` webfont fallback (off unless the host sets it). */
+	readonly webfonts: XlsxWebfonts;
 	private gridController: GridController | undefined;
 	private readonly modelListeners = new Set<(change: unknown) => void>();
 	private stopSession: (() => void) | undefined;
@@ -163,6 +167,11 @@ export class EditorCore {
 		});
 		this.collab = collaborationFor(this);
 		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
+		this.webfonts = new XlsxWebfonts({
+			host,
+			workbook: () => this.workbook,
+			remeasure: () => this.gridController?.remeasure?.(),
+		});
 	}
 
 	private createContext(): EditorContext {
@@ -281,6 +290,7 @@ export class EditorCore {
 		this.selection.set(initialSelection(this.activeSheet, workbook));
 		this.dirty.set(false);
 		this.notifyModel({ kind: 'load' });
+		this.webfonts.shown(workbook);
 		this.collab.resume();
 	}
 
@@ -347,7 +357,7 @@ export class EditorCore {
 	private measureText(text: string, font: FontView): number {
 		const grid = this.gridController;
 		if (!grid) return approximateMeasure(text, font);
-		const css = `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${font.sizePx}px "${font.family}"`;
+		const css = `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${font.sizePx}px ${workbookFontFamily(font.family)}`;
 		return grid.measureText(text, css);
 	}
 

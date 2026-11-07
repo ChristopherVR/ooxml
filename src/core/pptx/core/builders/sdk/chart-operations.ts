@@ -22,6 +22,7 @@ import type {
 	PptxChartType,
 } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
+import { clearChartSeriesPointPaint } from './chart-series-point-paint';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -537,7 +538,10 @@ export function removeChartCategory(element: ChartPptxElement, categoryIndex: nu
  * its automatic theme colour.
  *
  * Also clears any series gradient (`setChartSeriesGradient`): solid colour
- * and gradient are one fill choice, so the last call wins.
+ * and gradient are one fill choice, so the last call wins. As in the Format
+ * pane, the points lose their own fill (their own line on a line-drawn
+ * series), which is what the saved part holds: set point colours
+ * (`setChartDataPointFill`) after the series colour.
  *
  * @param element - The chart element to modify.
  * @param seriesIndex - Zero-based index of the series to recolour.
@@ -559,6 +563,7 @@ export function setChartSeriesColor(
 	const series = element.chartData!.series[seriesIndex];
 	// A solid colour and a gradient are one fill choice: the last call wins.
 	Reflect.deleteProperty(series, 'gradientFill');
+	clearChartSeriesPointPaint(element.chartData!, series);
 	if (!color) {
 		series.color = undefined;
 		return;

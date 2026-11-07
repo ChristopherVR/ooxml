@@ -3,6 +3,7 @@ import {
 	createCollaborationLivePatcher,
 	createSnapshotTextPositions,
 	findElementYMap,
+	markInsertedParagraph,
 	reconcileSlidesInYDoc,
 } from 'ooxml-ui/pptx';
 import type { YjsFactories } from 'ooxml-ui/pptx';
@@ -22,7 +23,6 @@ import { createInitialViewerState, createStore } from '../state';
 import { createEditorOps } from './editor-operations';
 import { openInlineEditor, readEditableText } from './inline-text-editor';
 import { pendingInlineTextModel } from './inline-text-model';
-import { markInsertedParagraph } from './inline-text-paragraph-marker';
 
 function textElement(): PptxElement {
 	return {

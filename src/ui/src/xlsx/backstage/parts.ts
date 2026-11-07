@@ -19,6 +19,10 @@ export interface EditorOptions {
 	author: string;
 	calculation: CalculationMode;
 	iteration: IterationSettings;
+	/** Trust Center: download missing fonts (the host's locked value, or the reader's choice). */
+	allowFontDownloads?: boolean;
+	/** The host set `googleFonts`, so the font download toggle is read-only. */
+	fontDownloadsLocked?: boolean;
 }
 
 /** What the File view needs from the editor; every value is read when a page opens. */

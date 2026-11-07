@@ -44,95 +44,33 @@
  */
 
 import type { PptxEmbeddedFont, PptxSlide } from 'ooxml-core/pptx';
+import { GOOGLE_FONTS_CSS2_BASE } from 'ooxml-core/text';
 
+import {
+	isFontFamilyInstalledLocally,
+	matchWebfontFragments,
+	resetWebfontSessionCache,
+	selectWebfontCandidates,
+	webfontHref,
+} from '../../fonts/webfonts';
 import { selectTrustedEmbeddedFonts } from './embedded-font-trust';
-import { resolveGoogleFontsFace } from './font-weight-names';
-import { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
 import { collectFontsFromElement } from './used-fonts';
 
-export { findGoogleFontsFamily } from './google-fonts-lookup';
-export { findMetricCompatibleGoogleFontsFamily } from './google-webfonts-metric-clones';
-
-/** Base URL of the Google Fonts CSS2 API. */
-export const GOOGLE_FONTS_CSS2_BASE = 'https://fonts.googleapis.com/css2';
-
-/**
- * Host policy for the Google Fonts webfont fallback, the `googleFonts`
- * prop / input / option of every binding.
- *
- * - unset: the fallback requests `fonts.googleapis.com` (the default).
- * - `false`: the fallback is off. No stylesheet is injected and no outline
- *   bytes are fetched, so no request reaches `fonts.googleapis.com` or
- *   `fonts.gstatic.com`; text uses installed, embedded or fallback fonts.
- * - `{ baseUrl }`: every CSS2 request goes to `baseUrl` instead, with the
- *   same query format (`?family=...&display=swap`). Font files are whatever
- *   the mirror's CSS references.
- */
-export type GoogleFontsOption = false | { readonly baseUrl: string };
-
-/**
- * Validate a self-hosted CSS2 mirror base URL: it must be an absolute
- * `http:` or `https:` URL without credentials, query or fragment (the
- * viewer appends its own query). Returns the normalised URL, or `null`
- * when it is not acceptable.
- */
-export function normalizeGoogleFontsBaseUrl(baseUrl: unknown): string | null {
-	if (typeof baseUrl !== 'string' || baseUrl.trim() === '') {
-		return null;
-	}
-	let url: URL;
-	try {
-		url = new URL(baseUrl.trim());
-	} catch {
-		return null;
-	}
-	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-		return null;
-	}
-	if (url.username !== '' || url.password !== '' || url.search !== '' || url.hash !== '') {
-		return null;
-	}
-	return url.href;
-}
-
-const warnedInvalidBaseUrls = new Set<string>();
-
-/**
- * Resolve a binding's `googleFonts` value to the CSS2 base URL the fallback
- * requests, or `null` when the fallback is off. An invalid `baseUrl` fails
- * closed: it warns (once per distinct value) and disables the fallback
- * rather than silently falling back to Google.
- */
-export function resolveGoogleFontsCss2Base(option: GoogleFontsOption | undefined): string | null {
-	if (option === undefined) {
-		return GOOGLE_FONTS_CSS2_BASE;
-	}
-	if (option === false) {
-		return null;
-	}
-	const normalized = normalizeGoogleFontsBaseUrl(
-		typeof option === 'object' && option !== null ? option.baseUrl : undefined,
-	);
-	const raw = typeof option === 'object' && option !== null ? String(option.baseUrl) : '';
-	if (normalized === null && !warnedInvalidBaseUrls.has(raw)) {
-		warnedInvalidBaseUrls.add(raw);
-		console.warn(
-			'[pptx-viewer] googleFonts.baseUrl must be an absolute http(s) URL without credentials, query or fragment; the Google Fonts fallback is disabled.',
-		);
-	}
-	return normalized;
-}
-
-/**
- * Axis spec requested for every catalogue family. The API is lenient: it serves
- * only the weights/styles the family actually has (verified for single-style
- * families), so this one fragment is safe to request universally and yields
- * real bold + italic faces where they exist.
- */
-export const GOOGLE_WEBFONT_AXIS = 'ital,wght@0,400;0,700;1,400;1,700';
-
-/** `display=swap` so text paints with the fallback and swaps when ready. */
-const DISPLAY_PARAM = 'display=swap';
+// The format-neutral request and the browser loader moved to `ooxml-core/text` and
+// `ooxml-ui`'s `fonts/webfonts.ts` so Word, Excel and Visio share them; these stay exported here.
+export {
+	GOOGLE_FONTS_CSS2_BASE,
+	GOOGLE_WEBFONT_AXIS,
+	buildGoogleFontsFragment,
+	buildGoogleFontsHref,
+	findGoogleFontsFamily,
+	findMetricCompatibleGoogleFontsFamily,
+	normalizeGoogleFontsBaseUrl,
+	resolveGoogleFontsCss2Base,
+	selectGoogleWebfontFamilies,
+	type GoogleFontsOption,
+} from 'ooxml-core/text';
+export { isFontFamilyInstalledLocally } from '../../fonts/webfonts';
 
 /**
  * Collect all unique font family names referenced across slide elements,
@@ -153,164 +91,19 @@ export function collectReferencedFontFamilies(slides: readonly PptxSlide[]): Set
 	return families;
 }
 
-/**
- * Pick the referenced families this runtime should look up: everything not
- * already satisfied by an embedded font, and (when the caller supplies the
- * check) everything not available locally, so an installed family is used
- * as-is and its name never reaches the API.
- */
-export function selectGoogleWebfontFamilies(
-	referenced: Iterable<string>,
-	embedded?: Iterable<string>,
-	isLocallyInstalled?: (family: string) => boolean,
-): string[] {
-	const embeddedSet = new Set(embedded ?? []);
-	const selected: string[] = [];
-	for (const family of referenced) {
-		if (embeddedSet.has(family)) {
-			continue;
-		}
-		if (isLocallyInstalled?.(family)) {
-			continue;
-		}
-		selected.push(family);
-	}
-	return selected;
-}
-
-/** Text measured for the local-availability check (mixed glyph widths). */
-const INSTALLED_FONT_TEST_STRING = 'mmmmmmmmmmllww';
-
-/**
- * Best-effort "is this family available without any network fetch?" check.
- *
- * `document.fonts.check` cannot be used here: Chromium answers `true` for any
- * quoted family name that matches no face at all (its "all matched faces are
- * loaded" condition holds vacuously), so it reports every missing font as
- * installed. Instead a test string is measured on a canvas with
- * `<family>, <fallback>` and with `<fallback>` alone: a family the OS
- * provides renders with different metrics for at least one common fallback
- * class, while a missing family renders exactly like the fallback and is
- * reported as absent. False negatives (a family metrically identical to
- * every fallback class) are safe: the caller then loads a catalogue face it
- * may not have needed to, which is exactly the pre-check behaviour.
- */
-export function isFontFamilyInstalledLocally(family: string): boolean {
-	if (typeof document === 'undefined') {
-		return false;
-	}
-	try {
-		const context = document.createElement('canvas').getContext('2d');
-		if (!context) {
-			return false;
-		}
-		// Quote the family so multi-word names parse as one identifier, and
-		// escape quotes/backslashes inside it.
-		const quoted = `"${family.replace(/[\\"]/gu, '\\$&')}"`;
-		for (const fallback of ['monospace', 'serif', 'sans-serif']) {
-			context.font = `72px ${fallback}`;
-			const base = context.measureText(INSTALLED_FONT_TEST_STRING).width;
-			context.font = `72px ${quoted}, ${fallback}`;
-			if (context.measureText(INSTALLED_FONT_TEST_STRING).width !== base) {
-				return true;
-			}
-		}
-		return false;
-	} catch {
-		return false;
-	}
-}
-
-/**
- * The css2 query fragment for one family, with the universal axis spec.
- * Word separators MUST be literal spaces, never `+`: the fragment is passed
- * through `encodeURIComponent`, which would turn an intended `+` separator
- * into `%2B`, and after URL decoding Google then sees a literal plus inside
- * the family name and rejects it with 400 ("familyName can only contain
- * alphanumeric/space characters"). A space encodes to `%20`, which is what
- * the API expects.
- */
-export function buildGoogleFontsFragment(family: string, weights?: Iterable<number>): string {
-	const sorted = [...new Set([400, 700, ...(weights ?? [])])].sort((a, b) => a - b);
-	if (sorted.length === 2) {
-		return `${family}:${GOOGLE_WEBFONT_AXIS}`;
-	}
-	// The API wants the tuples sorted: every upright weight, then every italic.
-	const tuples = [0, 1].flatMap((ital) => sorted.map((weight) => `${ital},${weight}`));
-	return `${family}:ital,wght@${tuples.join(';')}`;
-}
-
-/**
- * Build the Google Fonts CSS2 `<link>` href for the supplied (already
- * verified) fragments, or `null` when there is nothing to load.
- *
- * @param baseUrl - Overrides {@link GOOGLE_FONTS_CSS2_BASE}, for a deployment
- *   that mirrors the CSS2 API on its own origin (offline / air-gapped use).
- *   Nothing is bundled or fetched by default; passing this is the only way
- *   requests stop going to `fonts.googleapis.com`.
- */
-export function buildGoogleFontsHref(
-	fragments: readonly string[],
-	baseUrl: string = GOOGLE_FONTS_CSS2_BASE,
-): string | null {
-	if (fragments.length === 0) {
-		return null;
-	}
-	const query = fragments.map((fragment) => `family=${encodeURIComponent(fragment)}`).join('&');
-	return `${baseUrl}?${query}&${DISPLAY_PARAM}`;
-}
-
-/**
- * Families this session has already resolved against the catalogue (by
- * their referenced spelling). Once the injected stylesheet has loaded, the
- * webfont itself satisfies the canvas measurement, so re-running the local
- * check would report the family as installed, drop it from the href, remove
- * the very `<link>` that made it available, and find it missing again on the
- * next call: an oscillation that re-fetches the stylesheet on every edit.
- */
-const resolvedFamilies = new Set<string>();
-
 /** Reset the session cache (test isolation). */
 export function resetGoogleWebfontSessionCache(): void {
-	resolvedFamilies.clear();
+	resetWebfontSessionCache();
 }
 
 /**
- * The query fragments for the candidate families the catalogue knows,
- * requested under their canonical spelling. A family the catalogue does not
- * serve under its own name falls through to
- * {@link findMetricCompatibleGoogleFontsFamily}: its metric-compatible
- * substitute is requested instead, so the deck still gets a matching-metrics
- * face even though the exact one is unavailable. Families that resolve to
- * the same canonical/substitute family (e.g. "Aptos" and "Calibri" both
- * resolving to "Carlito") only produce one fragment. A weight variant named
- * as its own family ("DM Sans Light") requests its base family ("DM Sans")
- * with the weight it names added to the axis, and runs in it render at that
- * weight (see `font-weight-names.ts`). Unmatched families are dropped without
- * any network request.
+ * The query fragments for the candidate families the catalogue knows (see
+ * `ooxml-core/text`'s `matchGoogleWebfontFragments`), recording each match in
+ * the shared session cache so a loaded webfont is not mistaken for an
+ * installed one on the next call.
  */
 export function matchGoogleWebfontFragments(families: readonly string[]): string[] {
-	// Insertion order is the order fragments are emitted in.
-	const weightsByFamily = new Map<string, Set<number>>();
-	for (const family of families) {
-		const face = resolveGoogleFontsFace(family);
-		const canonical = face?.family ?? findMetricCompatibleGoogleFontsFamily(family);
-		if (canonical === null) {
-			continue;
-		}
-		resolvedFamilies.add(family);
-		let weights = weightsByFamily.get(canonical);
-		if (!weights) {
-			weights = new Set();
-			weightsByFamily.set(canonical, weights);
-		}
-		if (face?.weight !== undefined) {
-			// The regular face, and the face bold runs in this family ask for.
-			weights.add(face.weight);
-			weights.add(Math.max(700, face.weight));
-		}
-	}
-	return [...weightsByFamily].map(([family, weights]) => buildGoogleFontsFragment(family, weights));
+	return matchWebfontFragments(families);
 }
 
 /**
@@ -318,17 +111,12 @@ export function matchGoogleWebfontFragments(families: readonly string[]): string
  * href for a loaded deck's slides + embedded fonts (`null` when no stylesheet
  * is needed). Families available locally are used as-is; the rest are matched
  * against the bundled catalogue. An embedded family only counts as available
- * when its files match it (see {@link selectTrustedEmbeddedFonts}); one whose
- * embedded files are the wrong weight is requested from the catalogue too. The local-install check is skipped for
- * families the session already resolved (see `resolvedFamilies`).
+ * when its files match it (see {@link selectTrustedEmbeddedFonts}). The
+ * local-install check is skipped for families the session already resolved.
  *
- * Async only so the bindings' `.then` wiring is the same whether resolution
- * is a lookup or, one day, something slower.
- *
- * @param googleFontsBaseUrl - Passed through to {@link buildGoogleFontsHref};
- *   overrides `fonts.googleapis.com` for a self-hosted CSS2 API mirror.
- *   `null` (see {@link resolveGoogleFontsCss2Base}) disables the fallback:
- *   the result is always `null` and no family is inspected.
+ * @param googleFontsBaseUrl - Overrides `fonts.googleapis.com` for a
+ *   self-hosted CSS2 API mirror. `null` (see `resolveGoogleFontsCss2Base`)
+ *   disables the fallback: the result is always `null`.
  */
 export async function resolveGoogleWebfontHref(
 	slides: readonly PptxSlide[],
@@ -339,11 +127,24 @@ export async function resolveGoogleWebfontHref(
 	if (googleFontsBaseUrl === null) {
 		return null;
 	}
-	const referenced = collectReferencedFontFamilies(slides);
-	const candidates = selectGoogleWebfontFamilies(
-		referenced,
+	const candidates = selectGoogleWebfontCandidates(slides, embeddedFonts, isLocallyInstalled);
+	return webfontHref(candidates, googleFontsBaseUrl ?? GOOGLE_FONTS_CSS2_BASE);
+}
+
+/**
+ * The referenced families {@link resolveGoogleWebfontHref} looks up in the
+ * catalogue: neither embedded (with matching files) nor installed. Shared so
+ * the load-time wait (`deck-webfont-readiness.ts`) waits for exactly the
+ * families the stylesheet serves.
+ */
+export function selectGoogleWebfontCandidates(
+	slides: readonly PptxSlide[],
+	embeddedFonts: readonly PptxEmbeddedFont[],
+	isLocallyInstalled: (family: string) => boolean = isFontFamilyInstalledLocally,
+): string[] {
+	return selectWebfontCandidates(
+		collectReferencedFontFamilies(slides),
 		selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
-		(family) => !resolvedFamilies.has(family) && isLocallyInstalled(family),
+		isLocallyInstalled,
 	);
-	return buildGoogleFontsHref(matchGoogleWebfontFragments(candidates), googleFontsBaseUrl);
 }

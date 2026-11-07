@@ -23,6 +23,7 @@ export function writeCellFill(
 		delete tcPr['a:solidFill'];
 		delete tcPr['a:pattFill'];
 		delete tcPr['a:blipFill'];
+		delete tcPr['a:noFill'];
 		const stops = style.gradientFillStops.map((stop) => {
 			const posRaw = typeof stop.position === 'number' ? stop.position : 0;
 			const position = Math.round(Math.max(0, Math.min(1, posRaw / 100)) * 100000);
@@ -74,6 +75,7 @@ export function writeCellFill(
 		delete tcPr['a:solidFill'];
 		delete tcPr['a:gradFill'];
 		delete tcPr['a:blipFill'];
+		delete tcPr['a:noFill'];
 		const pattXml: XmlObject = {
 			'@_prst': style.patternFillPreset,
 		};
@@ -97,6 +99,9 @@ export function writeCellFill(
 		delete tcPr['a:gradFill'];
 		delete tcPr['a:pattFill'];
 		delete tcPr['a:blipFill'];
+		// An explicit `a:noFill` (what the parser reads as 'none'): without it
+		// the cell shows its table style's fill instead of none.
+		tcPr['a:noFill'] = tcPr['a:noFill'] ?? {};
 	} else if (style.fillMode !== 'image' && style.backgroundColor) {
 		// Guarded against `fillMode === 'image'`: an image-filled cell may
 		// still carry a fallback `backgroundColor` (e.g. for renderers that
@@ -108,6 +113,7 @@ export function writeCellFill(
 		delete tcPr['a:gradFill'];
 		delete tcPr['a:pattFill'];
 		delete tcPr['a:blipFill'];
+		delete tcPr['a:noFill'];
 		const resolvedOriginal =
 			style.backgroundColorXml && resolveColorXml
 				? resolveColorXml(style.backgroundColorXml)

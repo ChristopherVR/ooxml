@@ -11,13 +11,14 @@
 		"test:profile": "node ../../scripts/suite-profile-check.mjs",
 		"test:regressions": "node ../../scripts/suite-regression-check.mjs",
 		"test:files": "node ../../scripts/suite-files-check.mjs",
-		"test:onedrive": "node --test src/cloud-files.test.js src/cloud-options.test.js src/launch-link.test.js"
+		"test:onedrive": "node --test src/font-downloads.test.js src/settings.test.js src/cloud-files.test.js src/cloud-options.test.js src/launch-link.test.js"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.12.4",
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*",
-		"pptx-vanilla-viewer": "workspace:*"
+		"pptx-vanilla-viewer": "workspace:*",
+		"pptx-viewer-locales": "workspace:*"
 	},
 	"devDependencies": {
 		"vite": "^8.3.5"

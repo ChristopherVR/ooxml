@@ -118,9 +118,16 @@ export function buildShell(core: EditorCore): Shell {
 			author: core.authorName,
 			calculation: core.calculation,
 			iteration: core.iteration,
+			allowFontDownloads: core.webfonts.allowed(),
+			fontDownloadsLocked: core.webfonts.lock() !== undefined,
 		}),
 		setOption(key, raw) {
 			if (key === 'iteration') return core.setIterativeCalculation(raw as IterationSettings);
+			if (key === 'allowFontDownloads') {
+				if (core.webfonts.lock() === undefined) core.webfonts.setReaderAllows(raw === true);
+				return;
+			}
+			if (key === 'fontDownloadsLocked') return;
 			const value = String(raw);
 			if (key === 'locale') element.locale = value;
 			else if (key === 'theme')

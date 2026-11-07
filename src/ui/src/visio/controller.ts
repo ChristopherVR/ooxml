@@ -198,6 +198,8 @@ export class ViewerController {
 	#visible = documentVisibility(null);
 	#clipboard: ViewerClipboardCapture;
 	#clipboardQueued = false;
+	#beforeShow: ((document: VisioDocument) => Promise<unknown> | undefined) | undefined;
+	#beforeParse: ((bytes: Uint8Array) => void) | undefined;
 	constructor(
 		private readonly parser: Parser = loadVisio,
 		private readonly listenerError: (error: unknown) => void = (error) => {
@@ -300,6 +302,24 @@ export class ViewerController {
 		this.#assertAlive();
 		this.#events.add(listener);
 		return () => this.#events.delete(listener);
+	}
+	/**
+	 * Run `hook` between parsing a drawing and showing it, while `loading` is still true (the
+	 * viewer waits there, bounded, for the webfonts the drawing draws). A hook that returns
+	 * nothing adds no wait; one that rejects is ignored. A newer load or `cancelLoad` wins.
+	 */
+	setBeforeShow(
+		hook: ((document: VisioDocument) => Promise<unknown> | undefined) | undefined,
+	): void {
+		this.#beforeShow = hook;
+	}
+	/**
+	 * Run `hook` with a file's bytes just before they are parsed (the viewer starts the drawing's
+	 * webfonts there, so they download during the parse). It must not keep the bytes; one that
+	 * throws is ignored.
+	 */
+	setBeforeParse(hook: ((bytes: Uint8Array) => void) | undefined): void {
+		this.#beforeParse = hook;
 	}
 	setDocument(document: VisioDocument | null): void {
 		this.#assertAlive();
@@ -533,6 +553,12 @@ export class ViewerController {
 				throw new Error('This viewer accepts files up to 32 MiB.');
 			const owned =
 				bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
+			try {
+				// The host starts work that can overlap the parse (the drawing's webfonts).
+				this.#beforeParse?.(owned);
+			} catch {
+				// A failing hook never blocks the load.
+			}
 			document = await this.parser(Uint8Array.from(owned));
 			if (this.#destroyed || id !== this.#loadId) return;
 			assertViewableDocument(document);
@@ -548,6 +574,11 @@ export class ViewerController {
 			this.#change({ loading: false, error });
 			if (!this.#destroyed && id === this.#loadId) this.#emit('document-error', error);
 			throw error;
+		}
+		const ready = this.#beforeShow?.(document);
+		if (ready) {
+			await ready.catch(() => undefined);
+			if (this.#destroyed || id !== this.#loadId) return;
 		}
 		this.#history = history;
 		this.#selectionHistory = new WeakMap();

@@ -14,5 +14,8 @@ export const translations = {
 	'pptx.options.trust.protectedViewInfo': '文件以只读方式打开；使用启用编辑进行更改。',
 	'pptx.options.trust.allowExternalContent': '允许外部内容（远程图像和媒体）',
 	'pptx.options.trust.allowExternalContentInfo': '关闭时，仅显示文件中嵌入的内容。',
+	'pptx.options.trust.allowFontDownloads': '下载未安装或未嵌入的字体（Google Fonts）',
+	'pptx.options.trust.allowFontDownloadsInfo':
+		'开启时，浏览器会连接 fonts.googleapis.com 和 fonts.gstatic.com（或贵组织设置的字体服务器）以获取缺少的字体。关闭时，文本使用已安装、已嵌入或替代字体，因此换行可能与 PowerPoint 不同。',
 	'pptx.options.trust.confirmHyperlinks': '打开外部超链接之前确认',
 } as const;

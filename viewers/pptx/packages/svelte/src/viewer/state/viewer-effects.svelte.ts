@@ -1,9 +1,7 @@
 import {
-	collectReferencedFontFamilies,
 	createEmbeddedFontsSheet,
-	fetchGoogleWebfontOutlineBytes,
-	selectGoogleWebfontFamilies,
-	selectTrustedEmbeddedFonts,
+	loadDeckWebfontOutlines,
+	resolveGoogleFontsCss2Base,
 } from 'ooxml-ui/pptx';
 import type { GoogleFontsOption } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
@@ -219,46 +217,14 @@ export function useViewerEffects(deps: ViewerEffectsDeps): void {
 		// (which reads it) recomputes once bytes land.
 		$effect(() => {
 			let cancelled = false;
-			const slides = deps.loader.slides;
-			const embeddedFonts = deps.loader.embeddedFonts;
-			const referenced = collectReferencedFontFamilies(slides);
-			const candidates = selectGoogleWebfontFamilies(
-				referenced,
-				selectTrustedEmbeddedFonts(embeddedFonts).map((font) => font.name),
-			);
-			if (candidates.length === 0) {
-				return;
-			}
-			void resolveWebfontHref(slides, embeddedFonts, deps.getGoogleFonts?.()).then(async (href) => {
-				if (cancelled || !href) {
-					return;
-				}
-				const variants: Array<{ bold: boolean; italic: boolean }> = [
-					{ bold: false, italic: false },
-					{ bold: true, italic: false },
-				];
-				let registeredAny = false;
-				for (const family of candidates) {
-					for (const variant of variants) {
-						if (cancelled) {
-							return;
-						}
-						const bytes = await fetchGoogleWebfontOutlineBytes(
-							href,
-							family,
-							variant.bold,
-							variant.italic,
-							fetch,
-						);
-						if (
-							bytes &&
-							glyphOutlineFontCache.registerFontBytes(family, variant.bold, variant.italic, bytes)
-						) {
-							registeredAny = true;
-						}
-					}
-				}
-				if (registeredAny && !cancelled) {
+			void loadDeckWebfontOutlines({
+				slides: deps.loader.slides,
+				embeddedFonts: deps.loader.embeddedFonts,
+				googleFontsBase: resolveGoogleFontsCss2Base(deps.getGoogleFonts?.()),
+				cache: glyphOutlineFontCache,
+				isCancelled: () => cancelled,
+			}).then((registered) => {
+				if (registered && !cancelled) {
 					glyphOutlineFontsTick.value += 1;
 				}
 				return undefined;

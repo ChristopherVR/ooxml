@@ -7,10 +7,13 @@ import {
 	inlineListBodyText,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
+	markInsertedParagraph,
 	placeCaretAt,
 	readEditableText,
 	readListActivationSelection,
 	restoreInlineListBodySelection,
+	seedPlainInlineText,
+	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
 import type {
@@ -108,7 +111,7 @@ function seedText(): string {
 
 /** Read the live text out of the contentEditable node. */
 function extractText(): string {
-	return editorRef.value?.innerText ?? '';
+	return editorRef.value ? readEditableText(editorRef.value) : '';
 }
 
 const editorStyle = computed(() =>
@@ -150,7 +153,13 @@ function initializeEditor(selection?: { start: number; end: number }): void {
 		});
 		emit('listSession', { controller: listController, active: true });
 	} else {
-		node.innerText = seedText();
+		const element = toRaw(props.element);
+		seedPlainInlineText(
+			node,
+			'textSegments' in element ? element.textSegments : undefined,
+			seedText(),
+			'textStyle' in element ? element.textStyle : undefined,
+		);
 	}
 	node.focus();
 	// The caret goes where the click that opened the editor landed (PowerPoint),
@@ -169,8 +178,12 @@ onBeforeUnmount(() => {
 	}
 });
 
-function onInput(): void {
+function onInput(event: Event): void {
 	if (!listController) {
+		// Enter split a seeded run: mark the new paragraph (shared with vanilla).
+		if ((event as InputEvent).inputType === 'insertParagraph' && editorRef.value) {
+			markInsertedParagraph(document, editorRef.value);
+		}
 		emit('change', extractText());
 	}
 }
@@ -225,22 +238,10 @@ function currentTextStyle(): TextStyle | undefined {
  * browser performs its native Enter/paragraph-split.
  */
 function trimTrailingSpaceBeforeCaret(): void {
-	const selection = window.getSelection();
-	if (!selection || !selection.isCollapsed || selection.rangeCount === 0) {
+	const trimRange = spaceBeforeCaretRange(document);
+	if (!trimRange) {
 		return;
 	}
-	const range = selection.getRangeAt(0);
-	const { startContainer, startOffset } = range;
-	if (startContainer.nodeType !== Node.TEXT_NODE || startOffset === 0) {
-		return;
-	}
-	const text = startContainer.textContent ?? '';
-	if (text.charAt(startOffset - 1) !== ' ') {
-		return;
-	}
-	const trimRange = document.createRange();
-	trimRange.setStart(startContainer, startOffset - 1);
-	trimRange.setEnd(startContainer, startOffset);
 	if (connected) {
 		connected.mutate(trimRange, () => trimRange.deleteContents());
 	} else {

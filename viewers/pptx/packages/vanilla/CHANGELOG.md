@@ -7,6 +7,61 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.69.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.69.0) - 2026-11-07
+
+### Features
+
+- **pptx:** Build SDK tables with widths, fills and dashed borders ([#258](https://github.com/ChristopherVR/ooxml/issues/258)) ([d19dce5](https://github.com/ChristopherVR/ooxml/commit/d19dce5bb3f457bc01511b6de79fc3d1a3122cc1))
+
+### Bug Fixes
+
+- **pptx:** Keep the shared style of rich text segments on save ([#256](https://github.com/ChristopherVR/ooxml/issues/256)) ([41f12b1](https://github.com/ChristopherVR/ooxml/commit/41f12b180b43be6173999386b96463af5d4ed570))
+- **pptx:** Keep the model and part in step when a series is recoloured ([#257](https://github.com/ChristopherVR/ooxml/issues/257)) ([9a4ee24](https://github.com/ChristopherVR/ooxml/commit/9a4ee24bc23e6c7a029ddf3c7574e87ce88fbc26))
+
+## [3.68.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.68.0) - 2026-11-07
+
+### Features
+
+- **ui:** Start document webfonts while the file parses ([b26b5e4](https://github.com/ChristopherVR/ooxml/commit/b26b5e4a5aa141c4311dad9ccd4f074f0d768515))
+
+### Bug Fixes
+
+- **angular:** Edit text in its own font instead of a plain textarea ([24ba701](https://github.com/ChristopherVR/ooxml/commit/24ba701aebd4588870dfb7e976880779de97f74c))
+
+## [3.67.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.67.0) - 2026-11-07
+
+### Features
+
+- **text:** Share the webfont fallback with word, excel and visio ([296264b](https://github.com/ChristopherVR/ooxml/commit/296264b25560c6cd274bf5df62e94300783ef6bb))
+
+## [3.66.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.66.0) - 2026-11-06
+
+### Features
+
+- **drawingml:** Share powerpoint's measured dash patterns ([9c36464](https://github.com/ChristopherVR/ooxml/commit/9c364649697f675ecea811c807188cb083c91078))
+- **drawingml:** Model PowerPoint's path="shape" gradient field ([afc2c2e](https://github.com/ChristopherVR/ooxml/commit/afc2c2e5243c859b71516e7aa921eac5f287ae0c))
+- **ui:** Add a trust center option for downloading webfonts ([e260f16](https://github.com/ChristopherVR/ooxml/commit/e260f16f564e115657f8c60a4c8513ff9c4ddaf2))
+- **pptx:** Honour the font download option in every binding ([6a153eb](https://github.com/ChristopherVR/ooxml/commit/6a153eb83186830490f8a0968d8ba29876562ca6))
+
+### Bug Fixes
+
+- **geometry:** Reconstruct swooshArrow's guide chain from PowerPoint ([f427d84](https://github.com/ChristopherVR/ooxml/commit/f427d84088235985b4fbf1a681cc3bcaab84fdf0))
+- **geometry:** Draw actionButtonHelp's question mark with elliptical arcs ([01275f1](https://github.com/ChristopherVR/ooxml/commit/01275f191ab8a1e0a19c52e9322b477084718bd2))
+- **geometry:** Shade the scroll curl with the measured swirl, not discs ([1e3d8f9](https://github.com/ChristopherVR/ooxml/commit/1e3d8f93f777031900f8de7fdcd79c7e7a479dd4))
+- **pptx:** Read adj1 of the wave and pour text warps and write it back ([90f407a](https://github.com/ChristopherVR/ooxml/commit/90f407afc7726fde72f52fc93a9b6e0adf57df36))
+- **pptx:** Persist canvas size changes from automation ([#252](https://github.com/ChristopherVR/ooxml/issues/252)) ([e9b76d4](https://github.com/ChristopherVR/ooxml/commit/e9b76d47fcb2b3432cefda7f061fc302370320bf))
+- **pptx:** Preserve merged cells during table structure edits ([#253](https://github.com/ChristopherVR/ooxml/issues/253)) ([0158dda](https://github.com/ChristopherVR/ooxml/commit/0158dda7f0ad7ba5148dda05f9d7ecc23e468555))
+- **pptx:** Wait for a deck's webfonts before showing it ([995b977](https://github.com/ChristopherVR/ooxml/commit/995b977e12041a798744eb9704d4d5735cd52a1a))
+- **ui:** Break lines where powerpoint does when the deck font is missing ([40765e7](https://github.com/ChristopherVR/ooxml/commit/40765e7ac295ca1c6ee4346cd95109fd7be7d951))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
+### Testing
+
+- **pptx:** Pin transparent outlines and text-box effects from the SDK ([#254](https://github.com/ChristopherVR/ooxml/issues/254)) ([6de0da1](https://github.com/ChristopherVR/ooxml/commit/6de0da1799532dbe4c6f093d93c75a44471f4375))
+
 ## [3.65.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.65.0) - 2026-11-06
 
 ### Features
