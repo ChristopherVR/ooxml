@@ -102,7 +102,7 @@ export class ImageBuilder {
 	}
 
 	/**
-	 * Set the element opacity.
+	 * Set the picture's opacity, saved as its transparency (`a:alphaModFix`).
 	 *
 	 * @param value - Opacity from 0 (fully transparent) to 1 (fully opaque).
 	 */

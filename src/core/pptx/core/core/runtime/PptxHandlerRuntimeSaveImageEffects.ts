@@ -3,6 +3,7 @@ import type { PptxImageLikeElement, PptxImageEffects } from '../../types';
 import { syncPictureShapeTypeWithCropShape } from '../../utils/crop-shape-geometry';
 import { applyA14ImageExtension } from './image-a14-effects-writer';
 import { applyImageAlphaEffects } from './image-alpha-effects';
+import { keepExtensionListLast } from './blip-extension-order';
 import { applyImageColorEffects } from './image-color-effects';
 import { buildSrcRectXml, clampCropForSave } from './image-crop-save';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveShapeXml';
@@ -167,6 +168,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// the background-removal layer. Rebuilt from the model so a gallery pick
 		// actually reaches the file, and removed when everything is cleared.
 		applyA14ImageExtension(blip, nextEffects);
+
+		keepExtensionListLast(blip);
 	}
 
 	protected normalizePresetGeometry(shapeType: string | undefined): string {
