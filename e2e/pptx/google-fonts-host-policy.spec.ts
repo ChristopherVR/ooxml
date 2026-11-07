@@ -65,9 +65,9 @@ test.describe('googleFonts host option', () => {
 	test('requests a missing family from Google Fonts by default', async ({ page }) => {
 		const google = await recordGoogleRequests(page);
 		await loadDeck(page, DECK);
-		await expect(page.locator('head link[href^="https://fonts.googleapis.com/css2?"]')).toHaveCount(
-			1,
-		);
+		await expect(
+			page.locator('head link[href^="https://fonts.googleapis.com/css2?"]:not([id$="-prefetch"])'),
+		).toHaveCount(1);
 		await expect.poll(() => google.length).toBeGreaterThan(0);
 	});
 
@@ -91,7 +91,7 @@ test.describe('googleFonts host option', () => {
 	}) => {
 		const google = await recordGoogleRequests(page);
 		await loadDeck(page, DECK);
-		const link = page.locator('head link[href*="fonts.googleapis.com"]');
+		const link = page.locator('head link[href*="fonts.googleapis.com"]:not([id$="-prefetch"])');
 		await expect(link).toHaveCount(1);
 		const { dialog, toggle } = await fontDownloadToggle(page);
 		await expect(toggle).toBeChecked();
@@ -128,7 +128,7 @@ test.describe('googleFonts host option', () => {
 				: route.fulfill({ status: 404, headers: cors, body: '' });
 		});
 		await loadDeck(page, DECK, `/?googleFontsBaseUrl=${encodeURIComponent(MIRROR)}`);
-		const link = page.locator(`head link[href^="${MIRROR}?"]`);
+		const link = page.locator(`head link[href^="${MIRROR}?"]:not([id$="-prefetch"])`);
 		await expect(link).toHaveCount(1);
 		await expect(link).toHaveAttribute('href', /family=ADLaM%20Display/u);
 		await expect.poll(() => mirrored.length).toBeGreaterThan(0);
