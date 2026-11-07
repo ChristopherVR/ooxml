@@ -29,6 +29,7 @@ import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
 import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
+import { elementStyleForSegments } from './text-segment-style';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -223,6 +224,7 @@ export function createTextElement(
 		lineSpacing: options?.lineSpacing,
 	};
 
+	const textSegments = buildTextSegments(text, textStyleBase);
 	return {
 		type: 'text',
 		id: generateId('txt'),
@@ -230,8 +232,8 @@ export function createTextElement(
 		rotation: options?.rotation,
 		opacity: options?.opacity,
 		text: plainText,
-		textStyle: mapTextStyleInput(textStyleBase) as TextStyle,
-		textSegments: buildTextSegments(text, textStyleBase),
+		textStyle: elementStyleForSegments(mapTextStyleInput(textStyleBase), textSegments) as TextStyle,
+		textSegments,
 		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
 	};
 }
