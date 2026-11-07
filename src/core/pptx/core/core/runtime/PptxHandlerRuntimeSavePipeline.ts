@@ -55,6 +55,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		options?: PptxHandlerSaveOptions,
 	): Promise<Uint8Array> {
 		validateSlideGeometry(slides);
+		this.saveFixedDate = validFixedDate(options?.fixedDate);
 		const templates = [
 			...(options?.slideMasters ?? []),
 			...(options?.slideLayouts ?? []),
@@ -330,6 +331,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			coreProperties: options?.coreProperties,
 			appProperties: options?.appProperties,
 			customProperties: options?.customProperties,
+			fixedDate: this.saveFixedDate,
 		});
 
 		await this.applyTagCollectionChanges(options?.tags);
@@ -401,6 +403,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// same size as the one they opened. Level 6 is zlib's default: the knee
 		// of the ratio/time curve, and near-free next to the XML re-serialization
 		// that already dominates a save.
+		// A reproducible save dates every ZIP entry the same, not when each part
+		// was last written.
+		if (this.saveFixedDate) {
+			for (const file of Object.values(this.zip.files)) {
+				file.date = this.saveFixedDate;
+			}
+		}
 		return await this.zip.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',
@@ -494,4 +503,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		root['Relationship'] = filtered;
 		this.zip.file(relsPath, this.builder.build(relsData));
 	}
+}
+
+/** `fixedDate` when it is a valid date; an invalid one throws rather than saving a broken date. */
+function validFixedDate(date: Date | undefined): Date | undefined {
+	if (date === undefined) {
+		return undefined;
+	}
+	if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+		throw new RangeError('PptxHandlerSaveOptions.fixedDate must be a valid Date');
+	}
+	return date;
 }
