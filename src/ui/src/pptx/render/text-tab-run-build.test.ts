@@ -14,11 +14,11 @@ function ctxWith(stops: TabStopSpec[], defaultTabSize = 48): TabRenderContext {
 	return {
 		tabStops: stops,
 		defaultTabSize,
-		font: '400 16px Arial',
+		font: '400 16px Test Sans',
 		// No real canvas in this (non-jsdom) test environment, so the advance-grid
 		// correction resolves to 0 regardless of these values; present only to
 		// satisfy `TabRenderContext`'s shape.
-		runFont: { fontFamily: 'Arial', fontSizePx: 16 },
+		runFont: { fontFamily: 'Test Sans', fontSizePx: 16 },
 	};
 }
 
@@ -179,7 +179,7 @@ describe('powerPoint advance-width tracking inside a tab-containing run', () => 
 		// as `text-metric-tracking.test.ts`, so the numbers are cross-checked there.
 		stubCanvas({ a: 1.6, B: 5 });
 		const stops: TabStopSpec[] = [{ position: 100, align: 'l' }];
-		const ctx = buildTabContext(stops, 48, 16, 'Arial', false, false);
+		const ctx = buildTabContext(stops, 48, 16, 'Test Sans', false, false);
 		expect(ctx).toBeDefined();
 		const [first, second] = buildRunTabLines('aaaa\tB', ctx as TabRenderContext)[0].pieces;
 		expect(first.style.letterSpacing).not.toBe('normal');
@@ -197,7 +197,7 @@ describe('powerPoint advance-width tracking inside a tab-containing run', () => 
 	it('lays the tab stop out against the TRACKED width, not the raw measurement', () => {
 		stubCanvas({ a: 1.6, B: 5 });
 		const stops: TabStopSpec[] = [{ position: 100, align: 'l' }];
-		const ctx = buildTabContext(stops, 48, 16, 'Arial', false, false);
+		const ctx = buildTabContext(stops, 48, 16, 'Test Sans', false, false);
 		const [, second] = buildRunTabLines('aaaa\tB', ctx as TabRenderContext)[0].pieces;
 		// Untracked, "aaaa" measures 6.4px and the gap would be 100 - 6.4 = 93.6.
 		// PowerPoint's snapped width is (10/6)*4 = 6.6667px, so once the first
@@ -216,7 +216,7 @@ describe('powerPoint advance-width tracking inside a tab-containing run', () => 
 		// the explicit no-op rather than a spurious non-zero value.
 		stubCanvas({ n: 8 });
 		const stops: TabStopSpec[] = [{ position: 100, align: 'l' }];
-		const ctx = buildTabContext(stops, 48, 16, 'Arial', false, false);
+		const ctx = buildTabContext(stops, 48, 16, 'Test Sans', false, false);
 		const pieces = buildRunTabLines('nn\tnn', ctx as TabRenderContext)[0].pieces;
 		for (const piece of pieces) {
 			expect(piece.style.letterSpacing).toBe('normal');

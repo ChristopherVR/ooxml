@@ -8,6 +8,7 @@ import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
 import { mountThemes } from './themes.js';
+import { settings } from './settings.js';
 import { mountProfile } from './profile.js';
 import { documentDatabase } from './profile-state.js';
 import { renderLibrary, toggleFavourite } from './home.js';
@@ -510,6 +511,8 @@ $('home-ask').onsubmit = (event) => {
 	});
 };
 window.addEventListener('beforeunload', (event) => {
+	// Settings > General > "Warn me before leaving with unsaved changes".
+	if (!settings().confirmClose) return;
 	if ([...sessions.sessions.keys()].some((id) => sessions.isDirty(id))) {
 		event.preventDefault();
 		event.returnValue = '';

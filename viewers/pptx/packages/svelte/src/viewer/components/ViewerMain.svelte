@@ -108,6 +108,7 @@
 		current={viewer.current}
 		onselect={(index) => viewer.goTo(index)}
 		loading={stageShowsLoading(loader.loading, loader.loadOrigin, Boolean(vm.activeSlide))}
+		fontProgress={loader.fontProgress}
 		isEncrypted={loader.isEncrypted}
 		error={loader.error}
 		activeSlide={vm.activeSlide}

@@ -531,7 +531,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 		renderAll() {
 			const chrome = deps.getChrome();
 			const state = store.get();
-			chrome.setLoading(state.loading);
+			chrome.setLoading(state.loading, state.fontProgress);
 			chrome.setError(state.error);
 			chrome.setPresenting(state.presenting);
 			renderThumbnails();

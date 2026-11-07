@@ -94,6 +94,10 @@ For direct custom-element use, call `registerVisioViewer()` from this package,
 then create a `<visio-viewer>` element and call its `load()` method. Registration
 is explicit; importing the package does not register the element.
 
+## Privacy and network use
+
+The Visio packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only (nothing is downloaded from Google Fonts or any other font service). Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0.

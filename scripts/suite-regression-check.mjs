@@ -96,7 +96,7 @@ try {
 		await page.locator('#theme-picker').click();
 		await page.locator(`input[name=mode][value=${mode}]`).check();
 		await page.locator('input[name=accent][value=green]').check();
-		await page.locator('#dialog').getByRole('button', { name: 'Done' }).click();
+		await page.locator('#settings-dialog').getByRole('button', { name: 'OK', exact: true }).click();
 		for (let i = 0; i < 2; i++) {
 			await page.locator('.pptxv button[title="Settings & Shortcuts"]').click();
 			const dialog = page.locator('.pptxv-options-dialog');

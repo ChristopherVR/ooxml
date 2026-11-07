@@ -113,7 +113,7 @@ test('ribbon edits preserve font properties and save table and page settings', a
 	await editor.getByRole('menuitemradio', { name: 'Blue', exact: true }).click();
 	await expect(surface.locator('span').filter({ hasText: 'Ribbon document' }).last()).toHaveCSS(
 		'font-family',
-		'Georgia',
+		/^Georgia,/,
 	);
 	await expect(surface.locator('span').filter({ hasText: 'Ribbon document' }).last()).toHaveCSS(
 		'font-size',

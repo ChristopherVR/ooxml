@@ -1,5 +1,7 @@
 import type {
 	CompatibilityWarningToast,
+	DeckWebfontProgress,
+	GoogleFontsOption,
 	PptxLoadLimits,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
@@ -9,8 +11,11 @@ import {
 	compatibilityWarningToasts,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
+	prepareDeckWebfonts,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
+	resolveGoogleFontsCss2Base,
 	resolveInitialSlideIndex,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -61,6 +66,7 @@ import {
 	resolveMediaElementSource,
 } from './load-content-helpers';
 import type { EditorHistoryResult } from './useEditorHistory';
+import { GOOGLE_FONTS_LINK_ID } from './useFontInjection';
 
 /* ------------------------------------------------------------------ */
 /*  Input / Output types                                              */
@@ -124,6 +130,10 @@ export interface UseLoadContentInput {
 	/** Deck + slide compatibility-warning toast stack for this load. */
 	setCompatToasts: React.Dispatch<React.SetStateAction<CompatibilityWarningToast[]>>;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	/** Webfont download progress while the load waits for the deck's fonts, `null` when not shown. */
+	setFontProgress?: React.Dispatch<React.SetStateAction<DeckWebfontProgress | null>>;
+	/** Host `googleFonts` prop: the load waits for the faces it serves. Read through a ref. */
+	googleFonts?: GoogleFontsOption;
 	setError: React.Dispatch<React.SetStateAction<string | null>>;
 	setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
 	setIsEncrypted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -204,6 +214,8 @@ export function useLoadContent({
 	setModifyVerifier,
 	setCompatToasts,
 	setLoading,
+	setFontProgress,
+	googleFonts,
 	setError,
 	setIsDirty,
 	setIsEncrypted,
@@ -217,6 +229,8 @@ export function useLoadContent({
 	initialSlideRef.current = initialSlide;
 	const limitsRef = useRef(limits);
 	limitsRef.current = limits;
+	const googleFontsRef = useRef(googleFonts);
+	googleFontsRef.current = googleFonts;
 	// The load-error text for a deck over a load limit is localized.
 	const { t } = useTranslation();
 	const translateRef = useRef(t);
@@ -242,6 +256,7 @@ export function useLoadContent({
 		(async () => {
 			try {
 				setLoading(true);
+				setFontProgress?.(null);
 				setError(null);
 				const buffer =
 					content instanceof Uint8Array
@@ -264,15 +279,57 @@ export function useLoadContent({
 				// of broken images while the new file loads.
 				const previousHandler = handlerRef.current;
 
+				// ── The deck's Google Fonts webfonts ─────
+				// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
+				// download runs while the rest of the deck loads and media resolves;
+				// awaited before the deck is shown, which it holds back only briefly (see
+				// deck-webfont-readiness.ts). Nothing after that point changes slide text,
+				// so these slides name the same faces (and stylesheet) as the committed ones.
+				let webfonts: Promise<unknown> | undefined;
+				const startWebfonts = (
+					deckSlides: PptxSlide[],
+					deckEmbeddedFonts: PptxEmbeddedFont[],
+				): void => {
+					if (typeof document === 'undefined' || cancelled || token !== renderTokenRef.current) {
+						return;
+					}
+					webfonts = prepareDeckWebfonts({
+						document,
+						linkId: GOOGLE_FONTS_LINK_ID,
+						slides: partitionTemplateElements(deckSlides).slides,
+						embeddedFonts: deckEmbeddedFonts,
+						googleFontsBase: resolveGoogleFontsCss2Base(googleFontsRef.current),
+						onProgress: (progress) => {
+							if (!cancelled && token === renderTokenRef.current) {
+								setFontProgress?.(progress);
+							}
+						},
+					});
+				};
+				// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+				// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+				if (typeof document !== 'undefined') {
+					prefetchDeckWebfonts({
+						document,
+						linkId: GOOGLE_FONTS_LINK_ID,
+						bytes: buffer as ArrayBuffer,
+						googleFontsBase: resolveGoogleFontsCss2Base(googleFontsRef.current),
+					});
+				}
 				// Trust Center > "Allow external content" (default off, matching
 				// core's own SSRF/privacy-safe default): only pass `true` through
 				// when the option is explicitly on.
 				const parsed = await handler.load(buffer as ArrayBuffer, {
 					allowExternalImages,
 					limits: limitsRef.current,
+					onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 				});
 				if (cancelled || token !== renderTokenRef.current) {
 					return;
+				}
+				// A JSON document is imported without the slide hook.
+				if (!webfonts) {
+					startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 				}
 
 				// ── Resolve media Blob URLs (audio/video) ───────────────────
@@ -352,7 +409,15 @@ export function useLoadContent({
 					handler.getImageData(path),
 				);
 
-				// Content can change while media, pictures or table fills are resolving.
+				// Separate the inherited master/layout (template) elements that the
+				// core loader merged into `slide.elements` into their own per-slide
+				// store. They get a dedicated, gated render layer and are merged back
+				// at save time (buildSaveSlides) so edits to them persist.
+				const partition = partitionTemplateElements(nextSlides);
+
+				await webfonts;
+
+				// Content can change while media, pictures, table fills or fonts are resolving.
 				if (cancelled || token !== renderTokenRef.current) {
 					return;
 				}
@@ -368,11 +433,6 @@ export function useLoadContent({
 				}
 				resources.commit();
 				handlerRef.current = handler;
-				// Separate the inherited master/layout (template) elements that the
-				// core loader merged into `slide.elements` into their own per-slide
-				// store. They get a dedicated, gated render layer and are merged back
-				// at save time (buildSaveSlides) so edits to them persist.
-				const partition = partitionTemplateElements(nextSlides);
 				setSlides(partition.slides);
 				setTemplateElementsBySlideId(partition.templateElementsBySlideId);
 				setCanvasSize({
@@ -484,6 +544,7 @@ export function useLoadContent({
 			} finally {
 				resources.releaseIfUncommitted();
 				if (!cancelled && token === renderTokenRef.current) {
+					setFontProgress?.(null);
 					setLoading(false);
 				}
 			}

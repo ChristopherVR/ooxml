@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regenerate `src/ui/src/pptx/render/google-fonts-catalogue.ts` from the
+ * Regenerate `src/core/text/webfonts/google-fonts-catalogue.ts` from the
  * Google Fonts metadata feed.
  *
  * The viewer's webfont fallback (`src/ui/src/pptx/render/google-webfonts.ts`)
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 const METADATA_URL = 'https://fonts.google.com/metadata/fonts';
 const OUT_PATH = resolve(
 	dirname(fileURLToPath(import.meta.url)),
-	'../../../src/ui/src/pptx/render/google-fonts-catalogue.ts',
+	'../../../src/core/text/webfonts/google-fonts-catalogue.ts',
 );
 
 const response = await fetch(METADATA_URL);

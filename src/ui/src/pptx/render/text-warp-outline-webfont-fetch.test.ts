@@ -226,4 +226,31 @@ describe('fetchGoogleWebfontOutlineBytes', () => {
 			fetchGoogleWebfontOutlineBytes(CSS_HREF, 'Open Sans', false, false, fetchImpl),
 		).resolves.toBeUndefined();
 	});
+	it('fetches the stylesheet and each font file once for concurrent and later requests', async () => {
+		const fetchImpl = fakeFetch('https://fonts.gstatic.com/s/opensans/latin-400.woff2');
+		const requests = [false, false, true].map((bold) =>
+			fetchGoogleWebfontOutlineBytes(CSS_HREF, 'Open Sans', bold, false, fetchImpl),
+		);
+		await Promise.all(requests);
+		await fetchGoogleWebfontOutlineBytes(CSS_HREF, 'Open Sans', false, false, fetchImpl);
+		const urls = vi.mocked(fetchImpl).mock.calls.map(([url]) => url);
+		expect(urls.filter((url) => url === CSS_HREF)).toHaveLength(1);
+		expect(new Set(urls).size).toBe(urls.length);
+	});
+
+	it('retries a stylesheet whose fetch failed', async () => {
+		let fail = true;
+		const fetchImpl: FetchLike = vi.fn(async (url: string) => ({
+			ok: !(fail && url === CSS_HREF),
+			text: async () => SAMPLE_CSS,
+			arrayBuffer: async () => new Uint8Array([0, 1, 0, 0, 9]).buffer,
+		}));
+		await expect(
+			fetchGoogleWebfontOutlineBytes(CSS_HREF, 'Open Sans', false, false, fetchImpl),
+		).resolves.toBeUndefined();
+		fail = false;
+		await expect(
+			fetchGoogleWebfontOutlineBytes(CSS_HREF, 'Open Sans', false, false, fetchImpl),
+		).resolves.toBeInstanceOf(Uint8Array);
+	});
 });

@@ -55,6 +55,7 @@ import {
 	isEditingAllowed,
 	loadedThemeName,
 	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
 	resolveAutosaveIntervalSeconds,
 	saveFailureMessage,
 	SAVE_FAILED_TOAST,
@@ -333,6 +334,11 @@ const password = usePasswordProtection();
 const { optionsStore, viewerOptions } = useViewerOptionsStore();
 // Host UI customisation (`customization` prop + handle helpers); locks `optionsStore`.
 const customization = useViewerCustomization({ props, optionsStore });
+// Host `googleFonts` first, else Trust Center > "Download fonts". A computed, so the webfont
+// effects re-run only when the policy changes, and a load reads the current value.
+const effectiveGoogleFonts = computed(() =>
+	resolveEffectiveGoogleFonts(props.googleFonts, viewerOptions.value),
+);
 const { panelVisible, dialogAvailable, effectiveHiddenActions, aiEnabled, aiConfig, aiChatPanel } =
 	customization;
 // Ribbon group/control hiding: a scoped stylesheet from the shared rules.
@@ -395,6 +401,7 @@ const deck = useLoadContent(() => activeContent.value, {
 		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
 	// Host load limits: read per load, so changing the prop never reloads the deck.
 	getLimits: () => props.limits,
+	getGoogleFonts: () => effectiveGoogleFonts.value,
 	translate: (key, params) => t(key, params),
 	// File > Fonts. `fontEmbedding` is declared further down (it needs the
 	// loaded deck's embedded fonts), so this getter reads it lazily at save
@@ -407,6 +414,7 @@ const {
 	canvasSize,
 	mediaDataUrls,
 	loading,
+	fontProgress,
 	error,
 	isEncrypted,
 	coreProperties,
@@ -536,7 +544,7 @@ useEmbeddedFonts(deck.embeddedFonts);
 // Fetch Google-hosted webfonts for referenced families that are neither
 // installed nor embedded (Microsoft 365 "cloud fonts" have no browser
 // equivalent); auto-cleaned on unmount.
-useGoogleWebfonts(slides, deck.embeddedFonts, () => props.googleFonts);
+useGoogleWebfonts(slides, deck.embeddedFonts, effectiveGoogleFonts);
 watchEffect((onCleanup) => {
 	const css = buildUserFontFaceStyles(props.fonts ?? []);
 	if (!css || typeof document === 'undefined') {
@@ -2076,7 +2084,16 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 		<!-- Loading -->
 		<div v-if="loading" class="pptx-vue-state pptx-vue-loading" role="status" aria-live="polite">
 			<div class="pptx-vue-spinner" aria-hidden="true" />
-			<p>{{ t('pptx.viewer.loading') }}</p>
+			<p>
+				{{
+					fontProgress
+						? t('pptx.viewer.loadingFonts', {
+								loaded: fontProgress.loaded,
+								total: fontProgress.total,
+							})
+						: t('pptx.viewer.loading')
+				}}
+			</p>
 		</div>
 
 		<!-- Encrypted -->
@@ -2440,6 +2457,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				"
 				:last-saved-at="autosave.lastSavedAt.value"
 				:save-progress="saveProgressState"
+				:font-progress="fontProgress"
 				:scale="zoom"
 				:mode="chromeMode"
 				:is-notes-expanded="notesExpanded"

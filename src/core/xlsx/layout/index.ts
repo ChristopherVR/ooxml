@@ -64,7 +64,15 @@ export type {
 	MergeView,
 	VAlignView,
 } from './types';
-export { BORDER_STYLES, bordersView, edgeView, fillView, fontView, mergeFont } from './style-view';
+export {
+	BORDER_STYLES,
+	bordersView,
+	edgeView,
+	fillView,
+	fontFamilyName,
+	fontView,
+	mergeFont,
+} from './style-view';
 export {
 	sparklineScale,
 	sparklineValues,
@@ -146,6 +154,12 @@ export * from './page-view';
 export * from './page-break-view';
 export * from './header-footer-edit';
 export { shapeSvg, wrapShapeLine } from './shape-view';
+export { resolveThemeTypeface, workbookFontFamily } from './font-stack';
+export {
+	WEBFONT_SAMPLE_CELLS,
+	collectWorkbookWebfontRuns,
+	type WorkbookWebfontRunOptions,
+} from './webfont-runs';
 export { shapeColor } from './shape-paint';
 export { formControlSvg, type FormControlViewOptions } from './form-control-view';
 export {

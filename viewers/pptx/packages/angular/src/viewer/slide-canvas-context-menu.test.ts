@@ -28,7 +28,7 @@ beforeEach(() => {
 	shape = document.createElement('div');
 	shape.dataset['elementId'] = 'shape-1';
 
-	editorOverlay = document.createElement('textarea');
+	editorOverlay = document.createElement('div');
 	editorOverlay.dataset['inlineEditor'] = '';
 	editorCaret = document.createElement('span');
 	editorOverlay.appendChild(editorCaret);

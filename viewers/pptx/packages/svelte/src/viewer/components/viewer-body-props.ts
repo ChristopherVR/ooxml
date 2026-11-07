@@ -1,5 +1,6 @@
 import type {
 	CanvasSize,
+	DeckWebfontProgress,
 	Guide,
 	PresentationBlackout,
 	RemoteCursor,
@@ -53,6 +54,8 @@ export interface ViewerBodyProps {
 	current: number;
 	onselect: (index: number) => void;
 	loading: boolean;
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	fontProgress?: DeckWebfontProgress | null;
 	isEncrypted: boolean;
 	error: string | null;
 	activeSlide: PptxSlide | undefined;
@@ -157,6 +160,7 @@ export type ViewerStageProps = Pick<
 	| 'mediaDataUrls'
 	| 'current'
 	| 'loading'
+	| 'fontProgress'
 	| 'isEncrypted'
 	| 'error'
 	| 'activeSlide'

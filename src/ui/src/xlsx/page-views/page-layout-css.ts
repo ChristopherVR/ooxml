@@ -22,7 +22,7 @@ export const PAGE_LAYOUT_CSS = `
 .xpl-scaled{position:absolute;left:0;top:0;transform-origin:0 0}
 .xpl-page{position:absolute;box-sizing:border-box;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.3)}
 .xpl-content{position:absolute;overflow:hidden}
-.xpl-inner{position:absolute;left:0;top:0;transform-origin:0 0;font-family:Calibri,sans-serif}
+.xpl-inner{position:absolute;left:0;top:0;transform-origin:0 0;font-family:"Calibri","Carlito",sans-serif}
 .xpl-inner table{border-collapse:collapse;table-layout:fixed}
 .xpl-inner td{overflow:hidden;padding:0 3px;box-sizing:border-box;line-height:1.2}
 .xpl-colhdr,.xpl-rowhdr{position:absolute;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
@@ -38,6 +38,6 @@ export const PAGE_LAYOUT_CSS = `
 .xpl-shade{position:absolute;background:var(--xve-selection, color-mix(in srgb, var(--office-accent, #217346) 12%, transparent))}
 .xpl-active{position:absolute;box-sizing:border-box;border:2px solid var(--xve-selection-border, var(--office-accent, #217346))}
 .xpl-edit{position:absolute;box-sizing:border-box;z-index:5;border:2px solid var(--xve-selection-border, var(--office-accent, #217346));
-	background:#fff;font-family:Calibri,sans-serif;padding:0 3px;margin:0;outline:none}
+	background:#fff;font-family:"Calibri","Carlito",sans-serif;padding:0 3px;margin:0;outline:none}
 .xpl-error{padding:24px;color:#a4262c}
 `;

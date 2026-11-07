@@ -38,7 +38,7 @@ it('places native mixed runs contiguously and centers their measured line', () =
 	expect(x(3)).toBe((640 - 97) / 2);
 	expect(measureText.mock.calls).toContainEqual([
 		'Revenue',
-		'normal bold 32px Arial, "Liberation Sans", Helvetica, sans-serif',
+		'normal bold 32px Arial, "Arimo", "Liberation Sans", Helvetica, sans-serif',
 	]);
 	expect(
 		measureText.mock.calls.some(

@@ -5,6 +5,7 @@ import {
 	ViewerCustomizationState,
 	effectiveHiddenActions,
 	followAllowExternalContent,
+	followGoogleFonts,
 	useCustomizationConstraints,
 } from './viewer-customization.svelte';
 import { ViewerOptionsState } from './viewer-options.svelte';
@@ -86,6 +87,35 @@ describe('followAllowExternalContent', () => {
 		allow = undefined;
 		flushSync();
 		expect(options.isLocked('trust', 'allowExternalContent')).toBe(false);
+		cleanupRoot();
+		customization.destroy();
+		options.dispose();
+	});
+});
+
+describe('followGoogleFonts', () => {
+	it('locks Trust Center > Download fonts to what the host value allows and follows changes', () => {
+		const customization = new ViewerCustomizationState();
+		const options = new ViewerOptionsState({ persist: false });
+		let googleFonts = $state<false | { baseUrl: string } | undefined>(false);
+		const cleanupRoot = $effect.root(() => {
+			followGoogleFonts(customization, () => googleFonts);
+			useCustomizationConstraints(customization, options);
+		});
+		// Applied synchronously, before any effect flush, so the first load sees it.
+		expect(options.options.trust.allowFontDownloads).toBe(false);
+		expect(options.isLocked('trust', 'allowFontDownloads')).toBe(true);
+		options.setValue('trust', 'allowFontDownloads', true);
+		expect(options.options.trust.allowFontDownloads).toBe(false);
+
+		googleFonts = { baseUrl: 'https://fonts.example.test/css2' };
+		flushSync();
+		expect(options.options.trust.allowFontDownloads).toBe(true);
+		expect(options.isLocked('trust', 'allowFontDownloads')).toBe(true);
+
+		googleFonts = undefined;
+		flushSync();
+		expect(options.isLocked('trust', 'allowFontDownloads')).toBe(false);
 		cleanupRoot();
 		customization.destroy();
 		options.dispose();

@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import { buildSubpathFillOverlay, suppressesCssFill } from './subpath-fill-overlay';
 import { resolveShapeGeometry } from './shape-geometry-cascade';
-import { getSilhouetteEffects, usesSilhouetteEffects } from './silhouette-effects';
+import {
+	buildSilhouetteFilterMarkup,
+	getSilhouetteEffects,
+	usesSilhouetteEffects,
+} from './silhouette-effects';
 import { getSilhouetteFillLayer } from './silhouette-fill-layer';
 import { getComputedEffectStyle, getShapeEffectFilterDefs } from './visual-effects';
 
@@ -181,5 +185,16 @@ describe('gradient, pattern and picture fills', () => {
 		const markup = getSilhouetteEffects(el)?.filterMarkup ?? '';
 		// 16 px of blurRad: CSS blur 10.46, deviation 5.23.
 		expect(markup).toContain('stdDeviation="5.23"');
+	});
+});
+
+describe('buildSilhouetteFilterMarkup', () => {
+	it('escapes the filter id it writes into the markup', () => {
+		const markup = buildSilhouetteFilterMarkup('shape-fx-a"><img src=x onerror=alert(1)>', 10, 10, {
+			shadows: [],
+			glow: { spread: 1, blur: 2, color: '#ff0000', opacity: 1 },
+		});
+		expect(markup).toContain('id="shape-fx-a&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"');
+		expect(markup).not.toContain('<img');
 	});
 });

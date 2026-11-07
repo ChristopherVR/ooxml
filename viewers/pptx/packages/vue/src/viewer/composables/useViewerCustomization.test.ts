@@ -126,3 +126,31 @@ describe('useViewerCustomization allowExternalContent host switch', () => {
 		wrapper.unmount();
 	});
 });
+
+describe('useViewerCustomization googleFonts host policy', () => {
+	it('locks Trust Center > Download fonts at setup and follows prop changes', async () => {
+		const store = createViewerOptionsStore({ persist: false });
+		const props = reactive<{ googleFonts?: false | { baseUrl: string } }>({ googleFonts: false });
+		const wrapper = mount(
+			defineComponent({
+				setup() {
+					useViewerCustomization({ props, optionsStore: store });
+					return () => h('span');
+				},
+			}),
+		);
+		// Applied synchronously during setup, before the first load can read the option.
+		expect(store.getOptions().trust.allowFontDownloads).toBe(false);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+
+		props.googleFonts = { baseUrl: 'https://fonts.example.test/css2' };
+		await nextTick();
+		expect(store.getOptions().trust.allowFontDownloads).toBe(true);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+
+		props.googleFonts = undefined;
+		await nextTick();
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(false);
+		wrapper.unmount();
+	});
+});

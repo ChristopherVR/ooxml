@@ -37,12 +37,14 @@ function Probe(props: {
 	hiddenActions?: ToolbarActionId[];
 	store: ViewerOptionsStore;
 	allowExternalContent?: boolean;
+	googleFonts?: false | { baseUrl: string };
 }): null {
 	latest = useViewerCustomization(
 		props.customization,
 		props.hiddenActions,
 		props.store,
 		props.allowExternalContent,
+		props.googleFonts,
 	);
 	return null;
 }
@@ -161,5 +163,33 @@ describe('useViewerCustomization allowExternalContent host switch', () => {
 		});
 		expect(store.isLocked('trust', 'allowExternalContent')).toBe(true);
 		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+	});
+});
+
+describe('useViewerCustomization googleFonts host policy', () => {
+	it('locks Trust Center > Download fonts off on the first render for false', () => {
+		const store = createViewerOptionsStore({ persist: false });
+		act(() => {
+			root.render(<Probe store={store} googleFonts={false} />);
+		});
+		expect(store.getOptions().trust.allowFontDownloads).toBe(false);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+		store.setValue('trust', 'allowFontDownloads', true);
+		expect(store.getOptions().trust.allowFontDownloads).toBe(false);
+	});
+
+	it('locks it on for a valid mirror, and lifts the lock when the prop is unset', () => {
+		const store = createViewerOptionsStore({ persist: false });
+		act(() => {
+			root.render(
+				<Probe store={store} googleFonts={{ baseUrl: 'https://fonts.example.test/css2' }} />,
+			);
+		});
+		expect(store.getOptions().trust.allowFontDownloads).toBe(true);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+		act(() => {
+			root.render(<Probe store={store} />);
+		});
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(false);
 	});
 });

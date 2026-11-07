@@ -12,7 +12,7 @@ import { hasTextProperties } from 'pptx-viewer-core';
  * whether the just-committed element should also resize its shape
  * (`a:spAutoFit`, "Resize shape to fit text"): find the element being edited,
  * and - only when it actually carries text properties - hand its text style
- * and current height, plus the live (still-mounted) editor `<textarea>`, to
+ * and current height, plus the live (still-mounted) inline editor element, to
  * the shared decision.
  *
  * Split out of the component so it is directly unit-testable without
@@ -37,7 +37,7 @@ export function resolveCommitTextAutoFitHeight(
  * The `a:normAutofit` ("Shrink text on overflow") counterpart of
  * {@link resolveCommitTextAutoFitHeight}: find the element being edited and,
  * when it carries text properties, hand its text style, current height and
- * the live editor `<textarea>` to the shared decision so the font
+ * the live inline editor element to the shared decision so the font
  * scale/line-spacing reduction is recomputed on commit.
  */
 export function resolveCommitTextNormAutofitShrink(
