@@ -5,6 +5,7 @@ import type { MediaPptxElement, PptxElementAnimation } from '../../types';
 import type { AlternateContentBlock } from '../../utils';
 import { applyActiveXControlsToSlide, SHAPE_TREE_ELEMENT_TAGS } from '../../utils';
 import { saveModernSlideComments } from '../../utils/modern-comment-package';
+import { slideBackgroundGradientToWrite } from '../../utils/slide-background-gradient';
 import { saveSlideSynchronization } from '../../utils/slide-synchronization';
 import { buildClrMapOverrideXml } from '../../utils/theme-override-utils';
 import { PptxSlideRelationshipRegistry, PptxShapeIdValidator } from '../builders';
@@ -350,6 +351,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				this.compatibilityService.reportWarning({
 					code: 'SAVE_BACKGROUND_IMAGE_UNSUPPORTED',
 					message: `Slide background image could not be embedded and was preserved as-is or omitted: ${imageUrl.slice(0, 120)}`,
+					scope: 'save',
+					slideId: slide.id,
+				}),
+			buildBackgroundGradientFill: () => {
+				const gradient = slideBackgroundGradientToWrite(slide);
+				return gradient
+					? this.buildGradientFillXml({ fillMode: 'gradient', ...gradient })
+					: undefined;
+			},
+			reportUnsupportedGradient: () =>
+				this.compatibilityService.reportWarning({
+					code: 'SAVE_BACKGROUND_GRADIENT_UNSUPPORTED',
+					message:
+						'Slide background gradient has no structured form (backgroundGradientFill) matching its CSS gradient and could not be written; the slide was saved without a background of its own.',
 					scope: 'save',
 					slideId: slide.id,
 				}),
