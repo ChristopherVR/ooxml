@@ -65,6 +65,24 @@ describe('SVG pictures', () => {
 		expect(blip).toMatch(/<a:extLst>[\s\S]*<\/a:extLst><\/a:blip>$/u);
 	});
 
+	it('writes the effects of an SVG picture before its extension list', async () => {
+		const { xml, pictures } = await save([[SVG, { opacity: 0.5, brightness: 20, contrast: -10 }]]);
+		const [blip = ''] = blips(xml);
+		const extLst = blip.indexOf('<a:extLst>');
+		expect(blip).toMatch(/<a:extLst>[\s\S]*<\/a:extLst><\/a:blip>$/u);
+		for (const effect of [
+			'<a:alphaModFix amt="50000"',
+			'<a:lum bright="20000" contrast="-10000"',
+		]) {
+			expect(blip.indexOf(effect)).toBeGreaterThan(0);
+			expect(blip.indexOf(effect)).toBeLessThan(extLst);
+		}
+		expect(svgEmbed(blip)).not.toBe('');
+		expect(pictures[0]?.svgPath).toMatch(/\.svg$/u);
+		expect(pictures[0]?.imageEffects?.alphaModFix).toBe(50);
+		expect(pictures[0]?.imageEffects?.lum).toEqual({ bright: 20, contrast: -10 });
+	});
+
 	it('uses the given raster fallback', async () => {
 		const { zip } = await save([[SVG, { svgFallback: PNG }]]);
 		const png = Object.keys(zip.files).find((name) => name.endsWith('.png')) ?? '';
