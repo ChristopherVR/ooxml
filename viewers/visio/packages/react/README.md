@@ -94,6 +94,10 @@ Files stay in the browser unless your application sends them elsewhere.
 [Demo](https://christophervr.github.io/ooxml/visio/demo/) |
 [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
 
+## Privacy and network use
+
+The Visio packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only (nothing is downloaded from Google Fonts or any other font service). Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0.

@@ -305,10 +305,10 @@ describe('patchTextStyle list commands', () => {
 		expect(elementBulletKind(svc.slides()[0].elements[0])).toBe('none');
 	});
 
-	it('keeps pending textarea content when creating a list', () => {
-		const editor = document.createElement('textarea');
+	it('keeps pending inline editor content when creating a list', () => {
+		const editor = document.createElement('div');
 		editor.dataset.inlineEditor = '';
-		editor.value = 'hello world, typed more';
+		editor.textContent = 'hello world, typed more';
 		document.body.appendChild(editor);
 		try {
 			const svc = service(textElement());
@@ -317,13 +317,13 @@ describe('patchTextStyle list commands', () => {
 			if (!hasTextProperties(result)) {
 				throw new Error('expected text');
 			}
-			expect(result.text).toBe(editor.value);
+			expect(result.text).toBe('hello world, typed more');
 			expect(
 				result.textSegments
 					?.slice(1)
 					.map((segment) => segment.text)
 					.join(''),
-			).toBe(editor.value);
+			).toBe('hello world, typed more');
 		} finally {
 			editor.remove();
 		}
@@ -415,14 +415,14 @@ describe('transformSelectedTextCase', () => {
 	});
 
 	it('reconciles against a live open inline editor before transforming case', () => {
-		// The inline-edit `<textarea data-inline-editor>` is uncontrolled: text
+		// The inline editor (`[data-inline-editor]`) is uncontrolled: text
 		// typed since the edit session began is not yet on the model's
 		// `textSegments`/`text`. Regression: previously the case transform ran
 		// against that stale snapshot, leaving anything typed since
 		// untransformed once the edit session committed.
-		const editor = document.createElement('textarea');
+		const editor = document.createElement('div');
 		editor.dataset.inlineEditor = '';
-		editor.value = 'hello world, typed more';
+		editor.textContent = 'hello world, typed more';
 		document.body.appendChild(editor);
 		try {
 			const svc = service(textElement()); // model still says "hello world"

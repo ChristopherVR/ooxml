@@ -4,6 +4,7 @@ import { parseAlignmentAttr } from '../../utils/paragraph-properties-parser';
 import { ensureXmlChildOrCreate, ensureXmlChildren } from '../../utils/xml-access';
 import { TC_PR_BORDERS_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLayoutSwitching';
+import { writeCellEdgeBorders } from './table-cell-border-save';
 import {
 	writeCellFill,
 	writeDiagonalBorders,
@@ -173,54 +174,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 		}
 
-		// Per-edge borders (width, color, dash style)
-		const borderEdges = [
-			{
-				xmlKey: 'a:lnT',
-				width: style.borderTopWidth,
-				color: style.borderTopColor,
-				dash: style.borderTopDash,
-			},
-			{
-				xmlKey: 'a:lnB',
-				width: style.borderBottomWidth,
-				color: style.borderBottomColor,
-				dash: style.borderBottomDash,
-			},
-			{
-				xmlKey: 'a:lnL',
-				width: style.borderLeftWidth,
-				color: style.borderLeftColor,
-				dash: style.borderLeftDash,
-			},
-			{
-				xmlKey: 'a:lnR',
-				width: style.borderRightWidth,
-				color: style.borderRightColor,
-				dash: style.borderRightDash,
-			},
-		] as const;
-		for (const edge of borderEdges) {
-			if (edge.width !== undefined || edge.color !== undefined || edge.dash !== undefined) {
-				if (!tcPr[edge.xmlKey]) {
-					tcPr[edge.xmlKey] = {};
-				}
-				const ln = tcPr[edge.xmlKey] as XmlObject;
-				if (edge.width !== undefined) {
-					ln['@_w'] = String(Math.round(edge.width * PptxHandlerRuntime.EMU_PER_PX));
-				}
-				if (edge.color) {
-					ln['a:solidFill'] = {
-						'a:srgbClr': { '@_val': edge.color.replace('#', '') },
-					};
-				}
-				if (edge.dash && edge.dash !== 'solid') {
-					ln['a:prstDash'] = { '@_val': edge.dash };
-				} else if (edge.dash === 'solid') {
-					delete ln['a:prstDash'];
-				}
-			}
-		}
+		// Per-edge borders (width, color, preset or custom dash)
+		writeCellEdgeBorders(tcPr, style, PptxHandlerRuntime.EMU_PER_PX);
 
 		// Cell margins — direct attributes on a:tcPr (CT_TableCellProperties §21.1.4.2)
 		const emuPerPx = PptxHandlerRuntime.EMU_PER_PX;

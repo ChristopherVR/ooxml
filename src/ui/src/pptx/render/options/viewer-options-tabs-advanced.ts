@@ -220,6 +220,9 @@ export const TRUST_TAB: ViewerOptionsTabDefinition = {
 				toggle('trust', 'allowExternalContent', 'pptx.options.trust.allowExternalContent', {
 					infoKey: 'pptx.options.trust.allowExternalContentInfo',
 				}),
+				toggle('trust', 'allowFontDownloads', 'pptx.options.trust.allowFontDownloads', {
+					infoKey: 'pptx.options.trust.allowFontDownloadsInfo',
+				}),
 				toggle('trust', 'confirmExternalHyperlinks', 'pptx.options.trust.confirmHyperlinks'),
 			],
 		},

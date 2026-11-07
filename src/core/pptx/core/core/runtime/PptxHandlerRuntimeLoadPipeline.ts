@@ -3,6 +3,7 @@ import type JSZip from 'jszip';
 import { PptxXmlBuilder } from '../../builders/fluent';
 import {
 	PptxData,
+	PptxEmbeddedFont,
 	PptxSlide,
 	PptxSlideMaster,
 	PptxCompatibilityWarning,
@@ -41,6 +42,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		},
 		slidesWithWarnings: PptxSlide[],
 		slideMasters: PptxSlideMaster[],
+		embedded: {
+			list: ReturnType<typeof parseEmbeddedFontList>;
+			fonts: PptxEmbeddedFont[];
+		},
 	): Promise<PptxData> {
 		const headerFooter = this.extractHeaderFooter();
 		const presentationProperties = await this.parsePresentationProperties();
@@ -50,8 +55,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const customShows = this.parseCustomShows();
 		const tableStyleMap = await this.parseTableStyles();
 		const tableStylesDefaultId = this.loadedTableStylesDefaultId;
-		const embeddedFontList = parseEmbeddedFontList(this.presentationData);
-		const embeddedFonts = await this.getEmbeddedFonts(embeddedFontList);
+		const { list: embeddedFontList, fonts: embeddedFonts } = embedded;
 		// Preserve for automatic re-embedding during save
 		this.loadedEmbeddedFonts = embeddedFonts;
 		this.loadedEmbeddedFontList = embeddedFontList;
@@ -313,7 +317,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			await this.initializeLoadSession(data, options);
 			reader = this.beginPartReads();
 			try {
-				return await this.loadInitializedSession();
+				return await this.loadInitializedSession(options.onSlidesParsed);
 			} catch (error) {
 				// A slide or shape limit stops the load after the session replaced the
 				// archive: release what was parsed so far (Blob URLs, caches, the
@@ -328,7 +332,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
-	private async loadInitializedSession(): Promise<PptxData> {
+	private async loadInitializedSession(
+		onSlidesParsed?: PptxHandlerLoadOptions['onSlidesParsed'],
+	): Promise<PptxData> {
 		await this.detectAndPreserveVbaProject();
 		this.detectDigitalSignatureParts();
 		await this.parseCustomXmlParts();
@@ -343,7 +349,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// the pre-warning ones, so handing them straight back to `save()`
 		// fingerprints identically.
 		recordSlideFingerprints(this.savedSlideFingerprints, slidesWithWarnings);
-		return this.buildLoadData(presentationState, slidesWithWarnings, slideMasters);
+		// Read here rather than with the rest of the deck so a host's
+		// `onSlidesParsed` sees which families the deck embeds.
+		const embeddedFontList = parseEmbeddedFontList(this.presentationData);
+		const embeddedFonts = await this.getEmbeddedFonts(embeddedFontList);
+		onSlidesParsed?.({ slides: slidesWithWarnings, embeddedFonts });
+		return this.buildLoadData(presentationState, slidesWithWarnings, slideMasters, {
+			list: embeddedFontList,
+			fonts: embeddedFonts,
+		});
 	}
 
 	/**

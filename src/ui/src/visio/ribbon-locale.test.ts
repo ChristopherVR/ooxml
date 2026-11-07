@@ -60,6 +60,12 @@ describe('Visio ribbon locales', () => {
 		expect(
 			translateRibbonText('de', 'Pointer Tool: not available yet. Ink strokes are not supported.'),
 		).toBe('Zeigerwerkzeug: noch nicht verfügbar. Freihandstriche werden nicht unterstützt.');
+		const first = 'Comment on the current page or selected shape.';
+		const second = 'An approximate picture with compatibility notes.';
+		expect(translateRibbonText('de', `${first}  ${second}`)).toBe(
+			`${VISIO_RIBBON_STRINGS.de[first]} ${VISIO_RIBBON_STRINGS.de[second]}`,
+		);
+		expect(translateRibbonText('de', `${first}${second}`)).toBe(`${first}${second}`);
 		expect(translateRibbonText('zh-CN', 'A custom shape')).toBe('A custom shape');
 		expect(translateRibbonText('en', 'Bold')).toBe('Bold');
 	});
@@ -102,6 +108,7 @@ describe('localizeRibbon', () => {
 		translateRibbonText('de', `${'-'.repeat(20000)}: x`);
 		translateRibbonText('de', `a${'		'.repeat(20000)}`);
 		translateRibbonText('de', `${'a. '.repeat(5000)}b`);
+		translateRibbonText('de', `${'!'.repeat(20000)}`);
 		expect(performance.now() - started).toBeLessThan(500);
 		expect(translateRibbonText('de', 'Bold: Bold')).toBe('Fett: Fett');
 	});

@@ -42,7 +42,7 @@
 	--vp-code-copy-code-hover-border-color: rgba(240, 240, 240, 0.28);
 	--vp-code-copy-code-active-text: rgba(240, 240, 240, 0.85);
 
-	--pvd-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--pvd-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pvd-mono: var(--vp-font-family-mono);
 }
 

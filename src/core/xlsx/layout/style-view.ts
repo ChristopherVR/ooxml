@@ -31,16 +31,22 @@ export function cellFont(font: Font, defaultFont: Font): Font {
 	return out;
 }
 
+/** The family a font paints in: theme fonts (`scheme`) resolve through the workbook theme. */
+export function fontFamilyName(
+	font: Font,
+	theme: Pick<ThemePalette, 'majorFont' | 'minorFont'>,
+): string {
+	return font.scheme === 'major'
+		? theme.majorFont || font.name || 'Calibri Light'
+		: font.scheme === 'minor'
+			? theme.minorFont || font.name || 'Calibri'
+			: font.name || theme.minorFont || 'Calibri';
+}
+
 /** A font ready to paint. Theme fonts (`scheme`) resolve through the workbook theme. */
 export function fontView(font: Font, theme: ThemePalette): FontView {
-	const family =
-		font.scheme === 'major'
-			? theme.majorFont || font.name || 'Calibri Light'
-			: font.scheme === 'minor'
-				? theme.minorFont || font.name || 'Calibri'
-				: font.name || theme.minorFont || 'Calibri';
 	const view: FontView = {
-		family,
+		family: fontFamilyName(font, theme),
 		sizePx: (font.size && font.size > 0 ? font.size : 11) * PX_PER_PT,
 		bold: font.bold === true,
 		italic: font.italic === true,

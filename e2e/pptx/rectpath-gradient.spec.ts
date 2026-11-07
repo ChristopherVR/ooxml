@@ -4,10 +4,11 @@
  * path="rect"` - PowerPoint's "shade toward the shape's own rectangle"
  * gradient. Its isolines are concentric SQUARED rectangles (a Chebyshev
  * field), which SVG/CSS cannot express as a native `<radialGradient>` /
- * `radial-gradient()` without visibly rounding every corner, so
- * `packages/shared/src/render/path-gradient-rect.ts`'s `buildRectPathGradientSvg`
- * renders the true field directly as ~40 nested `<rect>` bands inside a small
- * self-contained SVG, embedded as a `data:image/svg+xml,...` URI.
+ * `radial-gradient()` without visibly rounding every corner, so the shared
+ * `buildRectPathGradientImage` (`src/core/drawingml/rect-path-gradient.ts`)
+ * paints the exact field as four trapezoids (one per box edge, each filled
+ * with a `linearGradient` across its band) inside a small self-contained SVG,
+ * embedded as a `data:image/svg+xml,...` URI.
  *
  * The two structural forms this fixture has to accept are BOTH correct, not a
  * parity gap: React paints structured custom geometry as an inline SVG rather
@@ -36,8 +37,8 @@ interface RectPathProbe {
 	kind: 'pattern' | 'background' | 'none';
 	/** The decoded `data:image/svg+xml,...` markup, or `''` when `kind` is `'none'`. */
 	markup: string;
-	/** Number of `<rect` bands in the decoded markup (a plain radial/linear gradient would have 0). */
-	rectBandCount: number;
+	/** Number of `<polygon` trapezoids in the decoded markup (a plain radial/linear gradient would have 0). */
+	trapezoidCount: number;
 	/** Whether ANY `<radialGradient` or `<linearGradient` paint server is used for this shape's fill. */
 	usesNativeGradientElement: boolean;
 }
@@ -74,7 +75,7 @@ async function readRectPathProbe(page: Page, origin: string): Promise<RectPathPr
 				return {
 					kind: 'pattern' as const,
 					markup,
-					rectBandCount: [...markup.matchAll(/<rect\b/gu)].length,
+					trapezoidCount: [...markup.matchAll(/<polygon\b/gu)].length,
 					usesNativeGradientElement:
 						document.querySelector('radialGradient, linearGradient') !== null,
 				};
@@ -91,7 +92,7 @@ async function readRectPathProbe(page: Page, origin: string): Promise<RectPathPr
 				return {
 					kind: 'background' as const,
 					markup,
-					rectBandCount: [...markup.matchAll(/<rect\b/gu)].length,
+					trapezoidCount: [...markup.matchAll(/<polygon\b/gu)].length,
 					usesNativeGradientElement:
 						document.querySelector('radialGradient, linearGradient') !== null,
 				};
@@ -101,7 +102,7 @@ async function readRectPathProbe(page: Page, origin: string): Promise<RectPathPr
 		return {
 			kind: 'none' as const,
 			markup: '',
-			rectBandCount: 0,
+			trapezoidCount: 0,
 			usesNativeGradientElement: false,
 		};
 	});
@@ -109,7 +110,7 @@ async function readRectPathProbe(page: Page, origin: string): Promise<RectPathPr
 
 test.describe('freeform path="rect" gradient', () => {
 	test(
-		'every binding paints the true nested-rect field, byte-identically',
+		'every binding paints the exact rect field, byte-identically',
 		{ tag: '@cross-binding' },
 		async ({ browser }, testInfo) => {
 			test.slow();
@@ -123,9 +124,9 @@ test.describe('freeform path="rect" gradient', () => {
 					);
 					continue;
 				}
-				if (value.rectBandCount < 10) {
+				if (value.trapezoidCount < 1 || !value.markup.includes('<linearGradient')) {
 					failures.push(
-						`${framework.name}: decoded markup has only ${value.rectBandCount} <rect> band(s) - expected the nested-rect field (~40 bands), not a flattened approximation`,
+						`${framework.name}: decoded markup has ${value.trapezoidCount} <polygon> trapezoid(s) - expected the exact rect field (a linearGradient trapezoid per edge), not a flattened approximation`,
 					);
 				}
 			}

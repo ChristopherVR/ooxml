@@ -39,6 +39,11 @@ export async function bundleSuite(outfile) {
 					replacement: join(ROOT, 'viewers/pptx/packages/vanilla/src/viewer/PptxViewer.ts'),
 				},
 				{
+					// PowerPoint's display languages (Settings > Language), from the locale workspace.
+					find: /^pptx-viewer-locales\/(fr|es|de|zh-CN)$/,
+					replacement: join(ROOT, 'viewers/pptx/packages/locales/src/$1/index.ts'),
+				},
+				{
 					find: /^pptx-viewer-core$/,
 					replacement: join(ROOT, 'viewers/pptx/packages/core/src/index.ts'),
 				},

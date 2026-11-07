@@ -11,7 +11,13 @@ import type { GoogleFontsOption, ListConversionScope, PptxLoadLimits } from 'oox
  * effect, `useEditorOperations`, and `useViewerIntegration` (export/print/
  * property handlers, mode switching, and the imperative handle).
  */
-import { lockExternalContentSetting, resolveAllowExternalContent } from 'ooxml-ui/pptx';
+import {
+	FONT_DOWNLOAD_SETTING_ID,
+	hostFontDownloadLock,
+	lockExternalContentSetting,
+	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
+} from 'ooxml-ui/pptx';
 import { useLayoutEffect, useRef } from 'react';
 
 import type { PowerPointViewerHandle } from '../types';
@@ -95,21 +101,28 @@ export function useViewerBuildingBlocksState(
 	const { core, content, canEdit, filePath, autosaveEnabled, userName, handle, setContent } = input;
 	const { initialSlide, googleFonts, listConversionScope, allowExternalContent, limits } = input;
 
-	// The headless API has no customization controller, so the host switch
-	// locks the options store directly, as `useViewerCustomization` does for
-	// `PowerPointViewer`. Skipped until the host first sets it, so an unset
-	// switch never touches the store.
-	const externalContentLockedRef = useRef(false);
+	// The headless API has no customization controller, so the host switches
+	// (`allowExternalContent`, `googleFonts`) lock the options store directly,
+	// as `useViewerCustomization` does for `PowerPointViewer`. Skipped until the
+	// host first sets one, so unset switches never touch the store. Keyed by
+	// the lock `googleFonts` implies, so an inline `{ baseUrl }` is a no-op.
+	const hostLockedRef = useRef(false);
 	const { optionsStore } = core;
+	const fontDownloadLock = hostFontDownloadLock(googleFonts);
 	useLayoutEffect(() => {
-		if (allowExternalContent === undefined && !externalContentLockedRef.current) {
+		const anyLock = allowExternalContent !== undefined || fontDownloadLock !== undefined;
+		if (!anyLock && !hostLockedRef.current) {
 			return;
 		}
-		externalContentLockedRef.current = allowExternalContent !== undefined;
+		hostLockedRef.current = anyLock;
+		const locked = lockExternalContentSetting({}, allowExternalContent);
 		optionsStore.setConstraints({
-			locked: lockExternalContentSetting({}, allowExternalContent),
+			locked:
+				fontDownloadLock === undefined
+					? locked
+					: { ...locked, [FONT_DOWNLOAD_SETTING_ID]: fontDownloadLock },
 		});
-	}, [optionsStore, allowExternalContent]);
+	}, [optionsStore, allowExternalContent, fontDownloadLock]);
 	const {
 		onContentChange,
 		onDirtyChange,
@@ -231,7 +244,8 @@ export function useViewerBuildingBlocksState(
 		filePath,
 		autosaveEnabled,
 		initialSlide,
-		googleFonts,
+		// Host `googleFonts` first, else Trust Center > "Download fonts", as in `PowerPointViewer`.
+		googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 		limits,
 		// Trust Center > "Allow external content": same gate `PowerPointViewer`
 		// applies, so the headless building-blocks API loads http(s) images

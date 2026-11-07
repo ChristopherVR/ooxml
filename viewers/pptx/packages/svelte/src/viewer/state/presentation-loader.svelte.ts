@@ -1,10 +1,20 @@
-import type { CanvasSize, CollabLoadOrigin, LoadLimitTranslate, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type {
+	CanvasSize,
+	CollabLoadOrigin,
+	DeckWebfontProgress,
+	GoogleFontsOption,
+	LoadLimitTranslate,
+	SlideSizeEmu,
+} from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	createEmbeddedOutlineFontsSlot,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
+	prepareDeckWebfonts,
+	resolveGoogleFontsCss2Base,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -35,6 +45,7 @@ import type {
 import { EncryptedFileError, PptxHandler } from 'pptx-viewer-core';
 
 import { glyphOutlineFontCache } from './glyph-outline-cache.svelte';
+import { SVELTE_GOOGLE_FONTS_LINK_ID } from './google-webfonts';
 import {
 	resolveLazyImages,
 	resolveLazyTableCellImages,
@@ -133,6 +144,8 @@ export class PresentationLoader {
 	tableStylesToDelete = $state.raw<string[]>([]);
 	/** True while a load is in flight. */
 	loading = $state(false);
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	fontProgress = $state.raw<DeckWebfontProgress | null>(null);
 	/** Error message from the last failed load, or null. */
 	error = $state<string | null>(null);
 	/** True when the file is password-protected and could not be opened. */
@@ -173,6 +186,12 @@ export class PresentationLoader {
 	 */
 	translate: LoadLimitTranslate | undefined = undefined;
 
+	/**
+	 * The host `googleFonts` prop, read when a load waits for the deck's
+	 * webfonts. Set by the composition root; unset loads from Google Fonts.
+	 */
+	getGoogleFonts: () => GoogleFontsOption | undefined = () => undefined;
+
 	/** Parse a `.pptx` buffer into reactive viewer state. */
 	async load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
 		this.loadOrigin = origin;
@@ -183,6 +202,7 @@ export class PresentationLoader {
 
 		try {
 			this.loading = true;
+			this.fontProgress = null;
 			this.error = null;
 			this.isEncrypted = false;
 
@@ -195,9 +215,53 @@ export class PresentationLoader {
 			// in-flight Blob URLs are not yanked mid-paint.
 			const previousHandler = this.handler;
 
-			const parsed = await newHandler.load(buffer as ArrayBuffer, this.getLoadOptions());
+			// ── The deck's Google Fonts webfonts ─────
+			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
+			// download runs while the rest of the deck loads and media resolves;
+			// awaited before the deck is shown, which it holds back only briefly (see
+			// deck-webfont-readiness.ts). Nothing after that point changes slide text,
+			// so these slides name the same faces (and stylesheet) as the committed ones.
+			let webfonts: Promise<unknown> | undefined;
+			const startWebfonts = (
+				deckSlides: PptxSlide[],
+				deckEmbeddedFonts: PptxEmbeddedFont[],
+			): void => {
+				if (typeof document === 'undefined' || token !== this.#renderToken) {
+					return;
+				}
+				webfonts = prepareDeckWebfonts({
+					document,
+					linkId: SVELTE_GOOGLE_FONTS_LINK_ID,
+					slides: deckSlides,
+					embeddedFonts: deckEmbeddedFonts,
+					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
+					onProgress: (progress) => {
+						if (token === this.#renderToken) {
+							this.fontProgress = progress;
+						}
+					},
+				});
+			};
+			// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+			// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+			if (typeof document !== 'undefined') {
+				prefetchDeckWebfonts({
+					document,
+					linkId: SVELTE_GOOGLE_FONTS_LINK_ID,
+					bytes: buffer as ArrayBuffer,
+					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
+				});
+			}
+			const parsed = await newHandler.load(buffer as ArrayBuffer, {
+				...this.getLoadOptions(),
+				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+			});
 			if (token !== this.#renderToken) {
 				return;
+			}
+			// A JSON document is imported without the slide hook.
+			if (!webfonts) {
+				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
 			// Audio/video Blob URLs + poster frames, then lazy picture URLs.
@@ -210,6 +274,8 @@ export class PresentationLoader {
 			);
 			const nextTableStyleMap = await resolveLazyTableStyleImages(newHandler, parsed.tableStyleMap);
 			const nextSlides = await resolveLazyTextFillBlips(newHandler, tableCellResolvedSlides);
+
+			await webfonts;
 
 			// Commit reactive state.
 			if (token !== this.#renderToken) {
@@ -298,6 +364,7 @@ export class PresentationLoader {
 		} finally {
 			resources.releaseIfUncommitted();
 			if (token === this.#renderToken) {
+				this.fontProgress = null;
 				this.loading = false;
 			}
 		}

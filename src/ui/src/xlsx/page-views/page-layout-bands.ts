@@ -12,6 +12,7 @@ import {
 	type HeaderFooterSection,
 	type PageViewLayout,
 	type PageViewPage,
+	workbookFontFamily,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { headerFooterImageSize, headerFooterImageUrl } from '../header-image';
@@ -89,7 +90,7 @@ export function renderBand(
 			const span = o.doc.createElement('span');
 			span.textContent = run.text;
 			const { style } = run;
-			if (style.font) span.style.fontFamily = style.font;
+			if (style.font) span.style.fontFamily = workbookFontFamily(style.font);
 			if (style.size) span.style.fontSize = `${(style.size / 11) * size}px`;
 			if (style.color) span.style.color = style.color;
 			if (style.bold) span.style.fontWeight = '700';

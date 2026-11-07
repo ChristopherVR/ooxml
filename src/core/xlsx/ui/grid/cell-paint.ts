@@ -3,12 +3,13 @@
 import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index';
 
 import { cssFontFamily } from '../../../text/css-font-family';
-export { cssFontFamily };
+import { workbookFontFamily } from '../../layout/font-stack';
+export { cssFontFamily, workbookFontFamily };
 
-/** CSS `font` shorthand for a font at a zoom (percent). */
+/** CSS `font` shorthand for a font at a zoom (percent), with the metric-compatible stack. */
 export function cssFont(font: FontView, zoom = 100): string {
 	const size = Math.max(1, Math.round(font.sizePx * (zoom / 100) * 100) / 100);
-	return `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${size}px ${cssFontFamily(font.family)}`;
+	return `${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${size}px ${workbookFontFamily(font.family)}`;
 }
 
 export function textDecoration(font: FontView): string {

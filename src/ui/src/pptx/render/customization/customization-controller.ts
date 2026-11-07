@@ -16,7 +16,9 @@ import type { BackstageCardId } from '../backstage-cards';
 import type { CanvasContextMenuCommandId } from '../canvas-context-menu-commands';
 import type { ContextMenuCommandId } from '../context-menu-commands';
 import type { EditorKeyActionName } from '../editor-keymap';
+import type { GoogleFontsOption } from '../google-webfonts';
 import { lockExternalContentSetting } from '../options/external-content-policy';
+import { FONT_DOWNLOAD_SETTING_ID, hostFontDownloadLock } from '../options/font-download-policy';
 import type { ViewerOptionPrimitive } from '../options/viewer-options';
 import type { RibbonContextualTabId, ToolbarButtonId, ToolbarTabId } from '../toolbar-actions';
 import { createViewerStore } from '../viewer-store';
@@ -116,32 +118,44 @@ export interface ViewerCustomizationController {
 	 * drop it.
 	 */
 	setAllowExternalContent(allow: boolean | undefined): void;
+	/**
+	 * Apply the host `googleFonts` value: `false` (or an invalid mirror URL)
+	 * locks the Trust Center setting `trust.allowFontDownloads` off, a valid
+	 * `{ baseUrl }` locks it on, `undefined` leaves it to the user. Kept
+	 * beside the customisation like {@link setAllowExternalContent}.
+	 */
+	setGoogleFonts(host: GoogleFontsOption | undefined): void;
 }
 
-interface State {
-	customization: ViewerCustomization;
+/** The host switches folded into the resolved locks. */
+interface HostLocks {
 	allowExternalContent: boolean | undefined;
+	/** From `hostFontDownloadLock`: the value the host `googleFonts` forces. */
+	allowFontDownloads: boolean | undefined;
+}
+
+interface State extends HostLocks {
+	customization: ViewerCustomization;
 	resolved: ResolvedCustomization;
 }
 
-function stateOf(
-	customization: ViewerCustomization,
-	allowExternalContent: boolean | undefined,
-): State {
+function stateOf(customization: ViewerCustomization, host: HostLocks): State {
 	const resolved = resolveCustomization(customization);
+	const { allowExternalContent, allowFontDownloads } = host;
+	if (allowExternalContent === undefined && allowFontDownloads === undefined) {
+		return { customization, ...host, resolved };
+	}
+	let lockedSettings = lockExternalContentSetting(resolved.lockedSettings, allowExternalContent);
+	if (allowFontDownloads !== undefined) {
+		lockedSettings = { ...lockedSettings, [FONT_DOWNLOAD_SETTING_ID]: allowFontDownloads };
+	}
+	return { customization, ...host, resolved: { ...resolved, lockedSettings } };
+}
+
+function hostLocksOf(state: State): HostLocks {
 	return {
-		customization,
-		allowExternalContent,
-		resolved:
-			allowExternalContent === undefined
-				? resolved
-				: {
-						...resolved,
-						lockedSettings: lockExternalContentSetting(
-							resolved.lockedSettings,
-							allowExternalContent,
-						),
-					},
+		allowExternalContent: state.allowExternalContent,
+		allowFontDownloads: state.allowFontDownloads,
 	};
 }
 
@@ -149,10 +163,12 @@ function stateOf(
 export function createCustomizationController(
 	initial?: ViewerCustomization,
 ): ViewerCustomizationController {
-	const store = createViewerStore<State>(stateOf({ ...initial }, undefined));
+	const store = createViewerStore<State>(
+		stateOf({ ...initial }, { allowExternalContent: undefined, allowFontDownloads: undefined }),
+	);
 	const current = (): ViewerCustomization => store.getState().customization;
 	const set = (next: ViewerCustomization): void =>
-		store.setState(stateOf(next, store.getState().allowExternalContent));
+		store.setState(stateOf(next, hostLocksOf(store.getState())));
 	const update = (patch: ViewerCustomization): void => set(mergeCustomization(current(), patch));
 
 	const ribbon = (edit: (r: NonNullable<ViewerCustomization['ribbon']>) => void): void => {
@@ -270,7 +286,19 @@ export function createCustomizationController(
 		setAllowExternalContent: (allow) => {
 			const next = typeof allow === 'boolean' ? allow : undefined;
 			if (next !== store.getState().allowExternalContent) {
-				store.setState(stateOf(current(), next));
+				store.setState(
+					stateOf(current(), { ...hostLocksOf(store.getState()), allowExternalContent: next }),
+				);
+			}
+		},
+		setGoogleFonts: (host) => {
+			// Compared by the lock it implies, so a new inline `{ baseUrl }`
+			// object with the same validity does not notify.
+			const next = hostFontDownloadLock(host);
+			if (next !== store.getState().allowFontDownloads) {
+				store.setState(
+					stateOf(current(), { ...hostLocksOf(store.getState()), allowFontDownloads: next }),
+				);
 			}
 		},
 	};

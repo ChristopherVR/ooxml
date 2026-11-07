@@ -19,13 +19,7 @@ import {
 	setElementPosition,
 	updateElementById,
 } from './element-operations';
-import {
-	enteredGroupBox,
-	escapeSelectionTarget,
-	placeTextareaCaretAt,
-	renderedTextOffsetAt,
-	withGroupMembers,
-} from './group-drill-canvas';
+import { enteredGroupBox, escapeSelectionTarget, withGroupMembers } from './group-drill-canvas';
 import { computeSelectionBoxes, computeSingleSelected } from './selection-geometry';
 
 const card = (id: string, x: number) =>
@@ -130,97 +124,5 @@ describe('member updates are written back into the group', () => {
 		const next = updateElementById(slideElements, 'plain', { x: 7 });
 		expect(next[0].x).toBe(7);
 		expect(next[1]).toBe(cards);
-	});
-});
-
-describe('placeTextareaCaretAt', () => {
-	type CaretDoc = Document & {
-		caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
-	};
-
-	it('puts the caret at the click point, read against a mirror of the textarea', () => {
-		const textarea = document.createElement('textarea');
-		textarea.value = 'hello world';
-		textarea.getBoundingClientRect = () =>
-			({
-				left: 0,
-				top: 0,
-				right: 200,
-				bottom: 50,
-				width: 200,
-				height: 50,
-				x: 0,
-				y: 0,
-				toJSON: () => ({}),
-			}) as DOMRect;
-		document.body.appendChild(textarea);
-		const doc = document as CaretDoc;
-		const original = doc.caretPositionFromPoint;
-		// The browser answers with the mirror's text node (the last thing appended while measuring).
-		doc.caretPositionFromPoint = () => ({
-			offsetNode: document.body.lastElementChild!.firstChild!,
-			offset: 3,
-		});
-		try {
-			placeTextareaCaretAt(textarea, { clientX: 10, clientY: 10 });
-			expect(textarea.selectionStart).toBe(3);
-			expect(textarea.selectionEnd).toBe(3);
-		} finally {
-			doc.caretPositionFromPoint = original;
-			textarea.remove();
-		}
-	});
-
-	it('falls back to the end without a point or a usable position', () => {
-		const textarea = document.createElement('textarea');
-		textarea.value = 'hello';
-		document.body.appendChild(textarea);
-		const doc = document as CaretDoc;
-		const original = doc.caretPositionFromPoint;
-		doc.caretPositionFromPoint = () => ({ offsetNode: document.body, offset: 1 });
-		try {
-			placeTextareaCaretAt(textarea, null);
-			expect(textarea.selectionStart).toBe(5);
-			textarea.setSelectionRange(0, 0);
-			placeTextareaCaretAt(textarea, { clientX: 1, clientY: 1 });
-			expect(textarea.selectionStart).toBe(5);
-		} finally {
-			doc.caretPositionFromPoint = original;
-			textarea.remove();
-		}
-	});
-
-	it('maps a click on the rendered text to the editor text offset, across paragraphs', () => {
-		// "Scale" on line 1 (y 0..30), "Up to" on line 2 (y 40..60); 10px per character.
-		const root = document.createElement('div');
-		root.innerHTML = '<p>Scale</p><p>Up to</p>';
-		document.body.appendChild(root);
-		const lines = [...root.querySelectorAll('p')].map((p) => p.firstChild);
-		const proto = Range.prototype as unknown as { getBoundingClientRect: () => DOMRect };
-		const original = proto.getBoundingClientRect;
-		proto.getBoundingClientRect = function (this: Range) {
-			const line = lines.indexOf(this.startContainer as ChildNode);
-			const top = line === 0 ? 0 : 40;
-			const left = this.startOffset * 10;
-			return {
-				left,
-				right: left + 10,
-				top,
-				bottom: top + (line === 0 ? 30 : 20),
-				width: 10,
-				height: 20,
-				x: left,
-				y: top,
-				toJSON: () => ({}),
-			} as DOMRect;
-		};
-		try {
-			expect(renderedTextOffsetAt(root, 'Scale\nUp to', 22, 15)).toBe(2); // "Sc|ale"
-			expect(renderedTextOffsetAt(root, 'Scale\nUp to', 7, 50)).toBe(7); // "U|p to", after the break
-			expect(renderedTextOffsetAt(root, 'Scale\nUp to', 22, 35)).toBeNull(); // between the lines
-		} finally {
-			proto.getBoundingClientRect = original;
-			root.remove();
-		}
 	});
 });

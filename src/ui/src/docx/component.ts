@@ -21,6 +21,7 @@ import { buildShell, type ShellApi } from './editor-shell';
 import { renderDocument } from './editor-render';
 import { registerSmartArt } from './smartart-node-view';
 import { DocxEditorApi } from './element-api';
+import { refreshDocxWebfonts } from './docx-webfonts';
 import { emit, type DocxEditorEventMap } from './events';
 import {
 	DEFAULT_FILE_NAME,
@@ -169,6 +170,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.replaceDocument(value || createDocument());
 		this.core.shell.chrome?.setSaveState('saved');
 		if (this.isConnected) renderDocument(this.core);
+		void refreshDocxWebfonts(this.core);
 		this.core.room.resume();
 	}
 
@@ -231,7 +233,13 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.loading = true;
 		core.refreshControls();
 		try {
+			// The file's fonts start downloading while it parses.
+			core.webfonts.prefetch(this.ownerDocument, input);
 			const session = await loadDocument(input);
+			if (generation !== core.loadGeneration) return;
+			// As PowerPoint does: wait (bounded) for missing fonts' webfonts while loading shows, so
+			// the first layout already breaks lines and pages with their metrics.
+			await core.webfonts.prepare(this.ownerDocument, session.model);
 			if (generation !== core.loadGeneration) return;
 			core.imageMedia.release();
 			this.replaceDocument(session.model, session, false);
@@ -254,6 +262,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.assertDocumentReplaceable();
 		this.replaceDocument(session.model, session);
 		if (this.isConnected) renderDocument(this.core);
+		void refreshDocxWebfonts(this.core);
 		this.core.room.resume();
 	}
 

@@ -67,7 +67,7 @@ export function mapFillToShapeStyle(fill?: FillInput): Partial<ShapeStyle> {
  * Turn px dash and gap lengths into `a:ds` segments relative to the line
  * width. An odd-length list repeats once, as SVG's `stroke-dasharray` does.
  */
-function customDashSegments(lengths: number[], width: number): PptxCustomDashSegment[] {
+export function customDashSegments(lengths: number[], width: number): PptxCustomDashSegment[] {
 	const values = lengths.length % 2 === 1 ? [...lengths, ...lengths] : lengths;
 	const segments: PptxCustomDashSegment[] = [];
 	for (let i = 0; i + 1 < values.length; i += 2) {
