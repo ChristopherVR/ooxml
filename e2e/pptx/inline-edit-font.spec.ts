@@ -9,7 +9,8 @@
  * webfont still downloading or blocked, offline, or the download option off)
  * view mode fell back to the chain's stand-in and the editor to the browser's
  * default serif, so the text visibly changed font on double-click. Svelte's
- * plain editor also dropped the alignment and colour.
+ * plain editor also dropped the alignment and colour, and Angular edited in an
+ * unstyled <textarea> on white paper.
  *
  * The Google Fonts endpoints are blocked so the deck font is never downloaded
  * and the result does not depend on the network. The check compares computed
@@ -83,11 +84,7 @@ async function paintedText(page: Page, rootSelector: string, needle: string): Pr
 test.describe('inline edit font', () => {
 	test('the editor paints the text in the face, size and colour view mode used', async ({
 		page,
-	}, testInfo) => {
-		test.skip(
-			testInfo.project.name === 'angular',
-			'Angular edits plain text in an unstyled <textarea>; it needs a rich editor first',
-		);
+	}) => {
 		await page.route(/fonts\.(googleapis|gstatic)\.com/u, (route) => route.abort());
 		await loadDeck(page, WEBFONT_DECK);
 		const target = elementWithText(page, PROBE_TEXT);

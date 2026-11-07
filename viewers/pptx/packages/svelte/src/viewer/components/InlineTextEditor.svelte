@@ -18,6 +18,7 @@
 		initializeInlineListDom,
 		inlineListBodyText,
 		mapInlineEditorChord,
+		markInsertedParagraph,
 		readListActivationSelection,
 		restoreInlineListBodySelection,
 		placeCaretAt,
@@ -149,11 +150,15 @@
 
 	// Every keystroke is mirrored out for the collaboration live preview; the
 	// editor itself stays uncontrolled and only commits on blur/Escape.
-	function onInput(): void {
+	function onInput(event: Event): void {
 		if (listController) {
 			return;
 		}
 		if (el) {
+			// Enter split a seeded run: mark the new paragraph (shared with vanilla).
+			if ((event as InputEvent).inputType === 'insertParagraph') {
+				markInsertedParagraph(document, el);
+			}
 			oninput?.(readEditableText(el));
 		}
 	}

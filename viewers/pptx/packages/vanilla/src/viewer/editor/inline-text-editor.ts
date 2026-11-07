@@ -7,6 +7,7 @@ import {
 	initializeInlineListDom,
 	getInlineEditorSelection,
 	mapInlineEditorChord,
+	markInsertedParagraph,
 	placeCaretAt,
 	readEditableText,
 	restoreEditorKeyboardFocus,
@@ -24,7 +25,6 @@ import { hasTextProperties } from 'pptx-viewer-core';
 import { createEl, getTextBlockStyle } from '../render';
 import type { InlineEditorSession, OpenInlineEditorOptions } from './inline-text-editor-types';
 import { activateInlineTextList } from './inline-text-list-activation';
-import { markInsertedParagraph } from './inline-text-paragraph-marker';
 
 export type { InlineEditorSession, OpenInlineEditorOptions } from './inline-text-editor-types';
 
