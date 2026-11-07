@@ -56,11 +56,20 @@ function isolateSeries(space: ChartSpace, index: number): ChartPlotGroup {
 	return chartSeriesEntryAt(space, index).group;
 }
 
+export interface ChartSecondaryAxisOptions {
+	/**
+	 * The ids of a new secondary category and value axis, which must be unused; free ids from
+	 * `500000003` by default. Ignored when the series joins axes that exist.
+	 */
+	axisIds?: readonly [number, number];
+}
+
 /** Moves one series, preserving document-order targets and every source data reference. */
 export function setChartSeriesSecondaryAxis(
 	space: ChartSpace,
 	seriesIndex: number,
 	secondary: boolean,
+	options: ChartSecondaryAxisOptions = {},
 ): ChartSpace {
 	if (!chartSeriesSecondaryAxisSupported(space, seriesIndex))
 		throw new RangeError(
@@ -91,7 +100,13 @@ export function setChartSeriesSecondaryAxis(
 			used.add(id);
 			return id;
 		};
-		const ids: [number, number] = [allocate(), allocate()];
+		const ids: [number, number] = options.axisIds ? [...options.axisIds] : [allocate(), allocate()];
+		if (
+			options.axisIds &&
+			(ids[0] === ids[1] ||
+				ids.some((id) => used.has(id) || !Number.isSafeInteger(id) || id < 0 || id > 4294967295))
+		)
+			throw new RangeError('Secondary axis ids must be two unused whole numbers');
 		const horizontal = primary.barDirection === 'bar';
 		const axes = defaultChartAxes(horizontal, false, ids);
 		axes[0] = { ...structuredClone(axisPair(draft, primary)![0]), id: ids[0], crossAxisId: ids[1] };
