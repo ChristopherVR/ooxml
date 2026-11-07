@@ -49,13 +49,19 @@ import {
 	isTemplateElement,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
+	markInsertedParagraph,
+	placeCaretAt,
+	readEditableText,
+	readListActivationSelection,
 	resolveConnectorEndpointUpdate,
 	resolveGroupDoubleClickTarget,
 	resolveGroupPressTarget,
 	resolveStageEdgeBleeds,
 	RULER_FONT_SIZE,
 	RULER_THICKNESS,
+	seedPlainInlineText,
 	setPendingCaretPoint,
+	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 	visibleTemplateElements as filterVisibleTemplateElements,
 	withConnectorEndpointUpdate,
@@ -85,17 +91,13 @@ import type { Box, ResizeHandle } from './drag-resize';
 import { ElementRendererComponent } from './element-renderer.component';
 import type { StyleMap } from './element-style';
 import { FieldContextService } from './field-context.service';
-import {
-	enteredGroupBox,
-	placeTextareaCaretAt,
-	renderedTextOffsetAt,
-	withGroupMembers,
-} from './group-drill-canvas';
+import { enteredGroupBox, withGroupMembers } from './group-drill-canvas';
 import { InkDrawingService } from './ink-drawing.service';
 import {
 	resolveCommitTextAutoFitHeight,
 	resolveCommitTextNormAutofitShrink,
 } from './inline-edit-autofit-commit';
+import { inlineEditorStyle } from './inline-editor-style';
 import { InlineListEditorComponent } from './inline-list-editor.component';
 import { PictureCropService } from './picture-crop.service';
 import { RotateHandlePlacementDirective } from './rotate-handle-placement.directive';
@@ -488,7 +490,7 @@ export class SlideCanvasComponent implements SlideContext {
 	/** Per-instance user-created ruler-guide controller. */
 	protected readonly rulerGuidesSvc = inject(RulerGuidesService);
 
-	private readonly textEditor = viewChild<ElementRef<HTMLTextAreaElement>>('textEditor');
+	private readonly textEditor = viewChild<ElementRef<HTMLDivElement>>('textEditor');
 	protected readonly collaboration = inject(CollaborationService, { optional: true });
 	protected readonly inlineCollaborationPatcher = computed(() =>
 		this.slide()?.elements.some((element) => element.id === this.editingId())
@@ -516,7 +518,7 @@ export class SlideCanvasComponent implements SlideContext {
 	 */
 	private readonly effectiveScale = computed(() => this.canvasFit.fitScale() * this.zoom());
 
-	/** The editing id we've already initialised the textarea for, to avoid re-seeding its value mid-edit. */
+	/** The editing id the inline editor was seeded for, so its runs are not re-seeded mid-edit. */
 	private seededEditId: string | null = null;
 	/** Last-tap timestamp + element id, for synthetic double-tap detection on touch. */
 	private lastTap: { id: string; time: number } | null = null;
@@ -525,8 +527,6 @@ export class SlideCanvasComponent implements SlideContext {
 	 * unless the press turns into a drag (shared `group-drill`).
 	 */
 	private pendingClickTextEdit: { id: string; clientX: number; clientY: number } | null = null;
-	/** Where a click-to-edit landed in the element's text, read from its rendered node (see `renderedTextOffsetAt`). */
-	private pendingEditOffset: { id: string; offset: number } | null = null;
 	private lastGuideCommandId = 0;
 
 	constructor() {
@@ -543,26 +543,24 @@ export class SlideCanvasComponent implements SlideContext {
 						includePlain: Boolean(this.inlineCollaborationPatcher()?.isActive()),
 					})
 				: undefined;
-			const textarea = this.textEditor()?.nativeElement;
+			const editor = this.textEditor()?.nativeElement;
 			const body =
 				element && hasTextProperties(element) ? inlineListBodyText(element.textSegments) : '';
-			if (previousId === id && seed && textarea && textarea.value !== body) {
+			if (previousId === id && seed && editor && readEditableText(editor) !== body) {
 				this.textCancel.emit();
 				return;
 			}
 			this.listActivationSelection.set(
-				previousId === id && seed && textarea?.value === body
-					? { start: textarea.selectionStart, end: textarea.selectionEnd }
-					: undefined,
+				previousId === id && seed && editor ? readListActivationSelection(editor, body) : undefined,
 			);
 			this.inlineListSeed.set(seed);
 		});
 		// Seed + focus the inline editor exactly once when it first appears for a
-		// given element. The textarea is UNCONTROLLED (no `[value]` binding): if
-		// Angular rewrote `value` on every change-detection pass the caret would
-		// jump to position 0 and typed text would reverse. We therefore set the
-		// initial text and select it only on first appearance, and never touch
-		// `value` again while the user types.
+		// given element. The editor is UNCONTROLLED (no content binding): if
+		// Angular rewrote its content on every change-detection pass the caret
+		// would jump to the start and typed text would reverse. We therefore seed
+		// the runs only on first appearance and never touch them while the user
+		// types.
 		effect(() => {
 			const editor = this.textEditor();
 			const box = this.editingBox();
@@ -576,20 +574,21 @@ export class SlideCanvasComponent implements SlideContext {
 				return;
 			}
 			this.seededEditId = box.id;
-			editor.nativeElement.value = box.text;
-			editor.nativeElement.focus();
+			const root = editor.nativeElement;
+			root.replaceChildren();
+			// The same styled runs the other DOM bindings seed, in the block style
+			// view mode paints with (`plainEditorStyle`), so the text keeps its face.
+			seedPlainInlineText(
+				root,
+				hasTextProperties(box.element) ? box.element.textSegments : undefined,
+				box.text,
+				hasTextProperties(box.element) ? box.element.textStyle : undefined,
+			);
+			root.focus();
 			// Never select-all. The caret goes where the click that opened the
 			// editor landed (PowerPoint; the shared one-shot pending caret point),
-			// else at the end so typing appends, matching React/Vue inline editors
-			// (and the shared inline-edit e2e spec).
-			const pending = this.pendingEditOffset;
-			this.pendingEditOffset = null;
-			const point = takePendingCaretPoint();
-			if (pending && pending.id === box.id && pending.offset <= box.text.length) {
-				editor.nativeElement.setSelectionRange(pending.offset, pending.offset);
-			} else {
-				placeTextareaCaretAt(editor.nativeElement, point);
-			}
+			// else at the end so typing appends, as in every other binding.
+			placeCaretAt(root, takePendingCaretPoint());
 		});
 
 		// Wire the fit-scale measurement accessors (viewport element, autoFit,
@@ -927,7 +926,7 @@ export class SlideCanvasComponent implements SlideContext {
 			return;
 		}
 		// A press that reaches the stage started OUTSIDE the inline text editor
-		// (the textarea stops its own pointerdown). Flush the edit synchronously by
+		// (the editor stops its own pointerdown). Flush the edit synchronously by
 		// blurring it: this routes through commitText → textCommit now, instead of
 		// relying on the native blur firing before pointerup clears selection, which
 		// is unreliable on touch.
@@ -1055,6 +1054,12 @@ export class SlideCanvasComponent implements SlideContext {
 	}
 
 	/** Box + current plain text for the element under inline edit, or null. */
+	/** The plain inline editor's style: painted like view mode (see `inlineEditorStyle`). */
+	readonly plainEditorStyle = computed<StyleMap>(() => {
+		const box = this.editingBox();
+		return box ? inlineEditorStyle(box.element) : {};
+	});
+
 	readonly editingBox = computed(() => {
 		const id = this.editingId();
 		if (!id || !this.editable()) {
@@ -1078,7 +1083,7 @@ export class SlideCanvasComponent implements SlideContext {
 	/**
 	 * May inline text editing begin on this element? Honours the authored
 	 * `a:spLocks/@noTextEdit`, which Angular ignored entirely while the other four
-	 * bindings enforced it: a locked caption opened an editable textarea here.
+	 * bindings enforced it: a locked caption opened an editable text box here.
 	 */
 	private canTextEdit(id: string): boolean {
 		const element = this.elementById(id);
@@ -1130,7 +1135,7 @@ export class SlideCanvasComponent implements SlideContext {
 		if (event.isComposing) {
 			return;
 		}
-		const editor = event.target as HTMLTextAreaElement;
+		const editor = event.target as HTMLElement;
 		// Inline formatting shortcuts (Ctrl/Cmd + B/I/U), matching React/Vue.
 		const property = mapInlineTextFormatKey(event);
 		if (property) {
@@ -1150,35 +1155,11 @@ export class SlideCanvasComponent implements SlideContext {
 			if (chord === 'commit') {
 				editor.blur();
 			}
-		} else if (event.key === 'Enter' && !event.shiftKey) {
-			event.preventDefault();
-			editor.blur();
-		} else if (event.key === 'Enter' && event.shiftKey) {
-			this.trimTrailingSpaceBeforeCaret(editor);
+		} else if (event.key === 'Enter') {
+			// Enter starts a new paragraph (Shift+Enter a line break), as in
+			// PowerPoint and every other binding; Escape or Ctrl/Cmd+Enter ends the edit.
+			spaceBeforeCaretRange(editor.ownerDocument)?.deleteContents();
 		}
-	}
-
-	/**
-	 * When the caret sits at a soft word-wrap boundary (no explicit line break,
-	 * just CSS wrapping), the space separating the two words is still part of
-	 * the text and lands right before the caret. Inserting a line break there
-	 * leaves the new line preceded by a stray space: e.g. "fox jumps" wrapped as
-	 * "fox " / "jumps" becomes lines "fox " and "jumps" instead of "fox" and
-	 * "jumps". That extra, invisible trailing character then counts toward the
-	 * line's measured width, occasionally forcing an unwanted extra wrapped
-	 * line. Since a space immediately before a line break is never visually
-	 * meaningful, drop it before the browser inserts the native line break.
-	 */
-	private trimTrailingSpaceBeforeCaret(editor: HTMLTextAreaElement): void {
-		const { selectionStart, selectionEnd, value } = editor;
-		if (selectionStart === null || selectionStart !== selectionEnd || selectionStart === 0) {
-			return;
-		}
-		if (value.charAt(selectionStart - 1) !== ' ') {
-			return;
-		}
-		editor.value = value.slice(0, selectionStart - 1) + value.slice(selectionStart);
-		editor.setSelectionRange(selectionStart - 1, selectionStart - 1);
 	}
 
 	/** Toggle bold/italic/underline for the element under inline edit. */
@@ -1195,28 +1176,32 @@ export class SlideCanvasComponent implements SlideContext {
 
 	/** Mirror each keystroke out for the collaboration live preview. */
 	onTextInput(event: Event, id: string): void {
-		this.textInput.emit({ id, text: (event.target as HTMLTextAreaElement).value });
+		const editor = event.target as HTMLElement;
+		// Enter split a seeded run: mark the new paragraph (shared with the DOM bindings).
+		if ((event as InputEvent).inputType === 'insertParagraph') {
+			markInsertedParagraph(editor.ownerDocument, editor);
+		}
+		this.textInput.emit({ id, text: readEditableText(editor) });
 	}
 
 	commitText(event: Event, id: string): void {
 		if (this.inlineListSeed()) {
 			return;
-		} // The explicit list activation replaces this textarea.
+		} // The explicit list activation replaces this editor.
 		if (this.editCancelled) {
 			this.editCancelled = false;
 			this.textCancel.emit();
 			return;
 		}
-		const editor = event.target as HTMLTextAreaElement;
+		const editor = event.target as HTMLElement;
 		const previous = (
 			this.lookupElements().find((e) => e.id === id) as { text?: string } | undefined
 		)?.text;
-		const text = this.viewerOpts
-			? this.viewerOpts.autoCorrect(editor.value, previous)
-			: editor.value;
+		const typed = readEditableText(editor);
+		const text = this.viewerOpts ? this.viewerOpts.autoCorrect(typed, previous) : typed;
 		// `a:spAutoFit` ("Resize shape to fit text"): grow/shrink the shape to
 		// the text's natural content height after a real edit. `editor` is the
-		// live, still-mounted textarea (this handler runs off its own `blur`), so
+		// live, still-mounted editor (this handler runs off its own `blur`), so
 		// no separate DOM lookup is needed here.
 		const height = resolveCommitTextAutoFitHeight(this.lookupElements(), id, text, editor);
 		// `a:normAutofit` ("Shrink text on overflow"): recompute the font
@@ -1529,16 +1514,8 @@ export class SlideCanvasComponent implements SlideContext {
 		const clickEdit = this.pendingClickTextEdit;
 		this.pendingClickTextEdit = null;
 		if (clickEdit && !this.gestures.moved() && this.editingId() !== clickEdit.id) {
-			// Read the caret's place from the rendered text now, while the member is
-			// still drawn (the plain textarea's own layout can't place it).
-			const node = this.stageRef()?.nativeElement.querySelector(
-				`[data-element-id="${CSS.escape(clickEdit.id)}"]`,
-			);
-			const text = (this.elementById(clickEdit.id) as { text?: string } | undefined)?.text ?? '';
-			const offset = node
-				? renderedTextOffsetAt(node, text, clickEdit.clientX, clickEdit.clientY)
-				: null;
-			this.pendingEditOffset = offset === null ? null : { id: clickEdit.id, offset };
+			// The editor is laid out like the rendered text, so the click point
+			// places the caret directly (shared pending caret point).
 			setPendingCaretPoint(clickEdit);
 			this.textEditStart.emit({ id: clickEdit.id });
 		}

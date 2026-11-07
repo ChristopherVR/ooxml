@@ -20,7 +20,7 @@
 	--pv-ease: cubic-bezier(0.22, 1, 0.36, 1);
 	--pv-ease-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-	--pv-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--pv-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pv-ui: var(--vp-font-family-base);
 	--pv-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
 

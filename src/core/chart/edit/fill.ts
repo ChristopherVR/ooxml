@@ -127,8 +127,23 @@ export function repaintSeriesForFamily(series: ChartSpaceSeries, toLine: boolean
 		shape.fill = structuredClone(shape.line!.fill!);
 }
 
+/**
+ * Removes the points' own `key` paint. A `c:spPr` left empty is removed too, and so is a point with
+ * nothing else of its own: PowerPoint and LibreOffice draw a point with an empty `c:spPr` in the
+ * automatic colour, not the series colour.
+ */
 function clearPointPaint(series: ChartSpaceSeries, key: 'fill' | 'line'): void {
-	for (const point of series.dataPoints) if (point.spPr) delete point.spPr[key];
+	// What a shape part keeps of its source is no paint of its own.
+	const emptied = (part: object) => Object.keys(part).every((name) => name === 'sourceXml');
+	for (const point of series.dataPoints) {
+		if (!point.spPr) continue;
+		delete point.spPr[key];
+		if (point.spPr.line && emptied(point.spPr.line)) delete point.spPr.line;
+		if (emptied(point.spPr)) delete point.spPr;
+	}
+	series.dataPoints = series.dataPoints.filter((point) =>
+		Object.keys(point).some((name) => name !== 'index'),
+	);
 }
 
 /** Sets a series' fill (`undefined` returns it to the automatic colour); points lose their own. */
@@ -163,12 +178,15 @@ export function setChartSeriesLine(
 /**
  * Sets the colour of a series as the Format pane's colour picker does: the fill, or the line of a
  * series drawn as a line, keeping the previous colour's transparency. `null` removes the paint so
- * the series takes its automatic colour again.
+ * the series takes its automatic colour again. Points lose their own paint of that kind, as in the
+ * Format pane, unless `keepPointColors` is set: a caller that states every point override itself
+ * (the save planner) keeps them.
  */
 export function setChartSeriesColor(
 	space: ChartSpace,
 	index: number,
 	color: DrawingColor | null,
+	options: { keepPointColors?: boolean } = {},
 ): ChartSpace {
 	return editChartSpace(space, (draft) => {
 		const { series } = chartSeriesEntryAt(draft, index);
@@ -181,7 +199,7 @@ export function setChartSeriesColor(
 			: undefined;
 		if (line) assignOrDelete((shape.line ??= {}), 'fill', fill);
 		else assignOrDelete(shape, 'fill', fill);
-		clearPointPaint(series, line ? 'line' : 'fill');
+		if (!options.keepPointColors) clearPointPaint(series, line ? 'line' : 'fill');
 	});
 }
 

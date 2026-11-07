@@ -23,6 +23,8 @@ export interface PrintLayoutController {
 	scheduleRelayout(model: DocumentModel): void;
 	/** Lays out now, dropping a pending debounced layout (a document swap must not show stale pages). */
 	relayoutNow(model: DocumentModel): void;
+	/** Measures again from scratch, as when a web font arrives (also after its stylesheet left). */
+	remeasure(): void;
 	/** Recomputes which page is most visible; call on the scroll container's `scroll` event. */
 	refreshCurrentPage(): void;
 	pageStatus(): { current: number; total: number } | null;
@@ -194,6 +196,7 @@ export function createPrintLayoutController(
 				pendingModel = null;
 			}
 		},
+		remeasure: onFontsLoaded,
 		relayoutNow(model) {
 			if (timer) clearTimeout(timer);
 			timer = undefined;

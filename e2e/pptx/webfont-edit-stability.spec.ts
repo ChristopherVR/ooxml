@@ -21,7 +21,9 @@ test('drag/drop and text blur retain the loaded font stylesheet', async ({ page 
 		}),
 	);
 	await loadDeck(page, fixture('adlam-webfont.pptx'));
-	const fontLink = page.locator('head link[href*="fonts.googleapis.com/css2"]');
+	const fontLink = page.locator(
+		'head link[href*="fonts.googleapis.com/css2"]:not([id$="-prefetch"])',
+	);
 	await expect(fontLink).toHaveCount(1);
 	await expect
 		.poll(() =>

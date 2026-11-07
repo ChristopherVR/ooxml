@@ -1,9 +1,7 @@
 import { withInlineListDecorationDefaults } from './inline-list-decoration';
 import { bindInlineListParagraph, bindInlineListRun, inlineListSession } from './inline-list-seed';
 import type { InlineListSeed } from './inline-list-types';
-import { applyUnderlineVariant } from './text-run-decoration';
-import { segmentStyleToCss } from './text-run-style';
-import { resolveAutoFitFontScale } from './text-style-helpers';
+import { applyInlineRunStyle } from './inline-text-seed';
 
 const initialized = new WeakSet<HTMLElement>();
 
@@ -23,7 +21,6 @@ export function initializeInlineListDom(root: HTMLElement, seed: InlineListSeed)
 		return false;
 	}
 	const textStyle = 'textStyle' in session.element ? session.element.textStyle : undefined;
-	const fontScale = resolveAutoFitFontScale(textStyle);
 	for (const paragraph of seed.paragraphs) {
 		const block = root.ownerDocument.createElement('div');
 		block.dataset.pptxListParagraph = paragraph.token;
@@ -35,14 +32,7 @@ export function initializeInlineListDom(root: HTMLElement, seed: InlineListSeed)
 				...source,
 				style: withInlineListDecorationDefaults(source.style, textStyle),
 			};
-			const style = segmentStyleToCss(projected, fontScale);
-			applyUnderlineVariant(style, projected);
-			for (const [key, value] of Object.entries(style)) {
-				span.style.setProperty(
-					key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`),
-					String(value),
-				);
-			}
+			applyInlineRunStyle(span, projected, textStyle);
 			if (run.text === '' || run.isLineBreak) {
 				span.append(root.ownerDocument.createElement('br'));
 			} else {

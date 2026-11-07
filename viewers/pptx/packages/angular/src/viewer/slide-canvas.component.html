@@ -279,21 +279,21 @@
 						/>
 					}
 				} @else {
-					<textarea
+					<div
 						#textEditor
 						data-inline-editor
 						class="pptx-ng-text-editor"
+						contenteditable="true"
+						role="textbox"
+						aria-multiline="true"
 						aria-label="Edit slide text"
 						[spellcheck]="spellCheck()"
-						[style.left.px]="eb.x"
-						[style.top.px]="eb.y"
-						[style.width.px]="eb.width"
-						[style.height.px]="eb.height"
+						[ngStyle]="plainEditorStyle()"
 						(pointerdown)="$event.stopPropagation()"
 						(input)="onTextInput($event, eb.id)"
 						(blur)="commitText($event, eb.id)"
 						(keydown)="onEditorKeydown($event)"
-					></textarea>
+					></div>
 				}
 			}
 

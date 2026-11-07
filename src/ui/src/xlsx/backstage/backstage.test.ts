@@ -5,7 +5,7 @@ import { createBackstage, type BackstageHost, type EditorOptions } from './index
 import { registerRibbonTabs, resetRibbonTabs } from 'ooxml-core/xlsx/ui';
 import { shellFixture, spyCommand } from '../test-support/shell';
 
-function setup(workbook = createWorkbook()) {
+function setup(workbook = createWorkbook(), extra: Partial<EditorOptions> = {}) {
 	const { core } = shellFixture(workbook);
 	const calls: unknown[][] = [];
 	let hidden: string[] = [];
@@ -15,6 +15,7 @@ function setup(workbook = createWorkbook()) {
 		author: 'Ada',
 		calculation: 'automatic',
 		iteration: undefined,
+		...extra,
 	};
 	const host: BackstageHost = {
 		ctx: core.ctx,
@@ -215,6 +216,40 @@ describe('File backstage', () => {
 		dialogField<HTMLInputElement>(dialog, 'iterate').click();
 		dialogAction(dialog, 'ok').click();
 		expect(calls.at(-1)).toEqual(['option', 'iteration', { count: 100, delta: 0.001 }]);
+	});
+
+	it('offers the Trust Center font download toggle, off by default', async () => {
+		const { backstage, calls } = setup();
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog & { updateComplete: Promise<unknown> };
+		dialog.category = 'trust';
+		await dialog.updateComplete;
+		const toggle = dialogField<HTMLInputElement>(dialog, 'allowFontDownloads');
+		expect(toggle.checked).toBe(false);
+		expect(toggle.disabled).toBe(false);
+		expect(dialog.shadowRoot!.textContent).toContain('Security settings');
+		toggle.click();
+		dialogAction(dialog, 'ok').click();
+		expect(calls).toContainEqual(['option', 'allowFontDownloads', true]);
+	});
+
+	it('shows a host-set font download value read-only with the reason', async () => {
+		const { backstage, calls } = setup(createWorkbook(), {
+			allowFontDownloads: true,
+			fontDownloadsLocked: true,
+		});
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog & { updateComplete: Promise<unknown> };
+		dialog.category = 'trust';
+		await dialog.updateComplete;
+		const toggle = dialogField<HTMLInputElement>(dialog, 'allowFontDownloads');
+		expect([toggle.checked, toggle.disabled]).toEqual([true, true]);
+		expect(toggle.closest('[data-key]')!.getAttribute('title')).toBe(
+			'This setting is managed by your organization',
+		);
+		dialogAction(dialog, 'reset').click();
+		dialogAction(dialog, 'ok').click();
+		expect(calls.filter((call) => call[1] === 'allowFontDownloads')).toEqual([]);
 	});
 
 	it('follows the display language', () => {

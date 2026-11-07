@@ -15,6 +15,8 @@ import {
 import { ERROR_RULES, type ErrorRule } from 'ooxml-core/xlsx';
 import { auditState, setErrorRules } from 'ooxml-core/xlsx/ui';
 import { renderCustomizeRibbon } from './options-customize';
+import { FONT_DOWNLOADS_OPTION, trustCategory } from './options-trust';
+import { FONT_DOWNLOADS_DEFAULT } from '../../fonts/font-download-policy';
 import type { BackstageHost, IterationSettings } from './parts';
 
 const LANGUAGES: ReadonlyArray<readonly [string, string]> = [
@@ -56,7 +58,7 @@ export interface ExcelOptions {
 	relocalize(): void;
 }
 
-function excelCategories(context: OptionsContext): OfficeOptionCategory[] {
+function excelCategories(context: OptionsContext, host: BackstageHost): OfficeOptionCategory[] {
 	const { t } = context;
 	return [
 		{
@@ -196,7 +198,7 @@ function excelCategories(context: OptionsContext): OfficeOptionCategory[] {
 		},
 		unavailableCategory(context, 'qat'),
 		unavailableCategory(context, 'addins'),
-		unavailableCategory(context, 'trust'),
+		trustCategory(context, host.options().fontDownloadsLocked === true),
 	];
 }
 
@@ -210,6 +212,7 @@ function dialogValues(host: BackstageHost): OfficeOptionValues {
 		iterate: Boolean(current.iteration),
 		iterationCount: current.iteration?.count ?? DEFAULT_ITERATIONS,
 		iterationDelta: current.iteration?.delta ?? DEFAULT_MAX_CHANGE,
+		[FONT_DOWNLOADS_OPTION]: current.allowFontDownloads ?? FONT_DOWNLOADS_DEFAULT,
 		...Object.fromEntries(
 			ERROR_RULES.map((rule) => [ruleKey(rule), auditState(host.ctx).rules.includes(rule)]),
 		),
@@ -243,7 +246,7 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 	const build = () => {
 		element.setAttribute('heading', ctx.t('Options'));
 		element.labels = optionsLabels(context);
-		element.categories = excelCategories(context);
+		element.categories = excelCategories(context, host);
 		element.values = dialogValues(host);
 		// Reset all options: the automatic theme, automatic calculation and no iteration.
 		element.defaults = {
@@ -252,6 +255,11 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 			iterate: false,
 			iterationCount: DEFAULT_ITERATIONS,
 			iterationDelta: DEFAULT_MAX_CHANGE,
+			// A host-locked toggle keeps the host's value.
+			[FONT_DOWNLOADS_OPTION]:
+				host.options().fontDownloadsLocked === true
+					? host.options().allowFontDownloads === true
+					: FONT_DOWNLOADS_DEFAULT,
 			...Object.fromEntries(
 				ERROR_RULES.map((rule) => [ruleKey(rule), rule !== 'empty-cell-reference']),
 			),
@@ -270,6 +278,8 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 			);
 		if (changed.some((key) => ITERATION_KEYS.includes(key)))
 			host.setOption('iteration', iterationOf(values));
+		if (changed.includes(FONT_DOWNLOADS_OPTION) && host.options().fontDownloadsLocked !== true)
+			host.setOption('allowFontDownloads', values[FONT_DOWNLOADS_OPTION] === true);
 		build();
 	});
 	element.addEventListener('office-options-cancel', () => {

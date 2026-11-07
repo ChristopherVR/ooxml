@@ -11,6 +11,8 @@ export interface TextMeasurer {
 	measureFont(text: string, font: FontView): number;
 	/** Natural canvas font box for mixed-run baseline alignment. */
 	fontMetrics(font: string): { ascent: number; descent: number } | undefined;
+	/** Forgets every cached width and font box (after webfont faces arrived). */
+	clear(): void;
 }
 
 const sizeOf = (font: string): number => Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 14.67);
@@ -82,6 +84,10 @@ export function createTextMeasurer(doc: Document | undefined): TextMeasurer {
 			if (metricsCache.size > 10_000) metricsCache.clear();
 			metricsCache.set(font, metrics);
 			return metrics;
+		},
+		clear: () => {
+			cache.clear();
+			metricsCache.clear();
 		},
 	};
 }

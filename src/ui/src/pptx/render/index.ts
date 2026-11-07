@@ -1159,6 +1159,8 @@ export * from './embedded-fonts-sheet';
 // injection stay per-binding).
 export * from './google-webfonts';
 export * from './google-webfonts-link';
+export * from './deck-webfont-readiness';
+export * from './deck-webfont-outlines';
 // The host `limits` option: the localized load-error text for a deck over a load limit.
 export * from './load-limits';
 // Weight variants named as their own family ("DM Sans Light"): the Google
@@ -1838,6 +1840,9 @@ export { createInlineListModelObserver } from './inline-list-model';
 export type { InlineListModelChange } from './inline-list-model';
 export { transformInlineListCase } from './inline-list-case';
 export { initializeInlineListDom } from './inline-list-dom';
+export { applyInlineRunStyle, seedPlainInlineText } from './inline-text-seed';
+export { markInsertedParagraph } from './inline-text-paragraph-marker';
+export { spaceBeforeCaretRange } from './inline-trailing-space';
 export type { InlineListController, InlineListControllerOptions } from './inline-list-controller';
 export { readInlineListSelection, restoreInlineListBodySelection } from './inline-list-selection';
 export type { InlineListSelectionResult } from './inline-list-selection';

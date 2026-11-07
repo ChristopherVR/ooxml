@@ -247,10 +247,18 @@ export function cellParagraphBlocks(
 		paragraphLayoutCss(paragraphs[index], follows[index], index === 0, index === groups.length - 1),
 	);
 	addSpaceBefore(layouts);
+	// Exact line spacing: the runs must not grow the line, as in shape text.
+	const laidOut = groups.map((group, index) => {
+		const { runLineHeight } = layouts[index];
+		return runLineHeight === undefined
+			? group
+			: group.map((run) => ({ ...run, lineHeight: runLineHeight }));
+	});
+	// Placed from the runs as they are laid out, line heights included.
 	const placements = groups.map((group, index) =>
 		hasContentRuns(group)
 			? cellBaselinePlacement({
-					runs: group,
+					runs: laidOut[index],
 					lineHeight: layouts[index].css.lineHeight,
 					strutPt: strutFontSizePt(group),
 					cellCss: options.cellCss,
@@ -270,7 +278,7 @@ export function cellParagraphBlocks(
 		return undefined;
 	}
 	return groups.map((group, index) => {
-		const { css, runLineHeight } = layouts[index];
+		const { css } = layouts[index];
 		const placement = placements[index];
 		if (placement) {
 			Object.assign(css, placement.style);
@@ -295,11 +303,6 @@ export function cellParagraphBlocks(
 		if (strutPt !== undefined) {
 			css.fontSize = `${strutPt}pt`;
 		}
-		// Exact line spacing: the runs must not grow the line, as in shape text.
-		const runs =
-			runLineHeight === undefined
-				? group
-				: group.map((run) => ({ ...run, lineHeight: runLineHeight }));
-		return { css, runs };
+		return { css, runs: laidOut[index] };
 	});
 }

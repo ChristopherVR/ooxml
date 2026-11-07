@@ -27,6 +27,9 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { tableCellStyle } from './table-cell-input';
+import { columnFractions, placeTableCells } from './table-merge-input';
+import { elementStyleForSegments } from './text-segment-style';
 import {
 	buildShapeStyle,
 	connectorLineEndOverride,
@@ -46,6 +49,7 @@ import type {
 	MediaOptions,
 	GroupOptions,
 	TextStyleInput,
+	TableCellInput,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -220,6 +224,7 @@ export function createTextElement(
 		lineSpacing: options?.lineSpacing,
 	};
 
+	const textSegments = buildTextSegments(text, textStyleBase);
 	return {
 		type: 'text',
 		id: generateId('txt'),
@@ -227,8 +232,8 @@ export function createTextElement(
 		rotation: options?.rotation,
 		opacity: options?.opacity,
 		text: plainText,
-		textStyle: mapTextStyleInput(textStyleBase) as TextStyle,
-		textSegments: buildTextSegments(text, textStyleBase),
+		textStyle: elementStyleForSegments(mapTextStyleInput(textStyleBase), textSegments) as TextStyle,
+		textSegments,
 		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
 	};
 }
@@ -351,6 +356,16 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 	};
 }
 
+/** A table cell from its input: the text with the cell style and fill. */
+function createTableCell(cellInput: TableCellInput): PptxTableCell {
+	return {
+		text: cellInput.text,
+		gridSpan: cellInput.gridSpan,
+		rowSpan: cellInput.rowSpan,
+		style: tableCellStyle(cellInput),
+	};
+}
+
 /**
  * Create a table element.
  *
@@ -371,36 +386,28 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
  * ```
  */
 export function createTableElement(input: TableInput, options?: TableOptions): TablePptxElement {
-	const numCols = Math.max(...input.rows.map((r) => r.cells.length), 1);
+	const grid = input.fillMergedCells ? placeTableCells(input) : undefined;
+	const numCols = grid?.columnCount ?? Math.max(...input.rows.map((r) => r.cells.length), 1);
 	const rowHeight = input.rows.length > 0 ? Math.max(30, Math.floor(200 / input.rows.length)) : 30;
 	const totalHeight = options?.height ?? Math.max(100, input.rows.length * rowHeight);
 	const p = pos('table', { ...options, height: totalHeight });
 
-	// Normalize column widths to proportions summing to 1
-	let colWidths: number[];
-	if (input.columnWidths && input.columnWidths.length === numCols) {
-		const sum = input.columnWidths.reduce((a, b) => a + b, 0);
-		colWidths = input.columnWidths.map((w) => w / sum);
-	} else {
-		colWidths = Array(numCols).fill(1 / numCols);
-	}
+	// Column widths as proportions summing to 1.
+	const colWidths = columnFractions(input.columnWidths, numCols);
 
-	const rows: PptxTableRow[] = input.rows.map((rowInput) => ({
+	const rows: PptxTableRow[] = input.rows.map((rowInput, ri) => ({
 		height: rowInput.height ?? rowHeight,
-		cells: rowInput.cells.map((cellInput): PptxTableCell => ({
-			text: cellInput.text,
-			gridSpan: cellInput.gridSpan,
-			rowSpan: cellInput.rowSpan,
-			style: cellInput.style
-				? {
-						fontSize: cellInput.style.fontSize,
-						bold: cellInput.style.bold,
-						italic: cellInput.style.italic,
-						color: cellInput.style.color,
-						align: cellInput.style.alignment,
-					}
-				: undefined,
-		})),
+		cells: grid
+			? (grid.rows[ri] ?? []).map((slot) =>
+					slot.cell
+						? createTableCell(slot.cell)
+						: {
+								text: '',
+								...(slot.hMerge ? { hMerge: true } : {}),
+								...(slot.vMerge ? { vMerge: true } : {}),
+							},
+				)
+			: rowInput.cells.map(createTableCell),
 	}));
 
 	const tableData: PptxTableData = {
@@ -416,7 +423,10 @@ export function createTableElement(input: TableInput, options?: TableOptions): T
 		// Accent 1 unless the caller picked a style. This is decided at
 		// creation time so the save pipeline never has to invent a style for
 		// loaded tables that legitimately have none.
-		tableStyleId: input.style ?? DEFAULT_POWERPOINT_TABLE_STYLE_ID,
+		// `style: 'none'` (or '') opts out, so the cells' own formatting is not
+		// painted over by the theme banding.
+		tableStyleId:
+			input.style === 'none' ? undefined : (input.style ?? DEFAULT_POWERPOINT_TABLE_STYLE_ID),
 	};
 
 	return {

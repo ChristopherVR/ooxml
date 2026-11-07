@@ -8,7 +8,15 @@ import type {
 	Workbook,
 	Worksheet,
 } from '../../index';
-import { MAX_COL, MAX_ROW, currentRegion, getCell, normalizeRange, styleAt } from '../../index';
+import {
+	MAX_COL,
+	MAX_ROW,
+	currentRegion,
+	getCell,
+	normalizeRange,
+	styleAt,
+	workbookFontFamily,
+} from '../../index';
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
 
@@ -162,7 +170,7 @@ export function refresh(ctx: EditorContext): void {
 /** Picks the cell CSS font shorthand of a style for text measurement. */
 export function styleCssFont(style: CellStyle): string {
 	const size = Math.round(((style.font.size ?? 11) * 96) / 72);
-	return `${style.font.italic ? 'italic ' : ''}${style.font.bold ? 'bold ' : ''}${size}px "${style.font.name ?? 'Calibri'}"`;
+	return `${style.font.italic ? 'italic ' : ''}${style.font.bold ? 'bold ' : ''}${size}px ${workbookFontFamily(style.font.name)}`;
 }
 
 /** A text measure for `setColumnWidth('auto')`, backed by the grid when it is mounted. */

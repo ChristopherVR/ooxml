@@ -33,6 +33,17 @@ describe('statusBarState', () => {
 		});
 	});
 
+	it('shows the webfont download while it runs, and nothing once it is over', () => {
+		const downloading = statusBarState(
+			host({ fontProgress: { loaded: 1, total: 2, families: ['Playfair Display', 'Raleway'] } }),
+		);
+		expect(downloading.fontText).toBe('pptx.viewer.loadingFonts {"loaded":1,"total":2}');
+		expect(downloading.fontTitle).toBe('Playfair Display, Raleway');
+		const done = statusBarState(host({ fontProgress: null }));
+		expect(done).not.toHaveProperty('fontText');
+		expect(done).not.toHaveProperty('fontTitle');
+	});
+
 	it('reads the autosave time, then the dirty flag', () => {
 		const now = Date.UTC(2026, 0, 1, 12, 5);
 		const saved = { state: 'saved' as const, timestamp: now - 3 * 60_000 };

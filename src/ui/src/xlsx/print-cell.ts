@@ -1,4 +1,4 @@
-import type { CellView, EdgeView } from 'ooxml-core/xlsx';
+import { workbookFontFamily, type CellView, type EdgeView } from 'ooxml-core/xlsx';
 export const escapeHtml = (text: string) =>
 	text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
@@ -9,7 +9,7 @@ const edge = (view: EdgeView | undefined) =>
 export function cellCss(view: CellView): string {
 	const { font } = view;
 	const parts = [
-		`font-family:"${font.family.replace(/["\\]/g, '')}",Calibri,sans-serif`,
+		`font-family:${workbookFontFamily(font.family.replace(/[;<>{}]/g, ''))}`,
 		`font-size:${font.sizePx}px`,
 		`color:${font.color}`,
 		`text-align:${view.hAlign === 'centerContinuous' ? 'center' : view.hAlign === 'distributed' || view.hAlign === 'fill' ? 'justify' : view.hAlign}`,

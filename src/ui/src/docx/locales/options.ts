@@ -1,8 +1,10 @@
 import { optionStrings } from 'ooxml-core/i18n';
+import { deTrust, enTrust, esTrust, frTrust, zhTrust } from './trust';
 
 /** File > Options: the shared Office option strings plus the Display and Proofing panes of Word. */
 export const enOptions = {
 	...optionStrings.en,
+	...enTrust,
 	'Change how document content is displayed on the screen.':
 		'Change how document content is displayed on the screen.',
 	'Page display options': 'Page display options',
@@ -12,6 +14,7 @@ export const enOptions = {
 
 export const frOptions: typeof enOptions = {
 	...optionStrings.fr,
+	...frTrust,
 	'Change how document content is displayed on the screen.':
 		'Modifiez l’affichage du contenu du document à l’écran.',
 	'Page display options': 'Options d’affichage des pages',
@@ -21,6 +24,7 @@ export const frOptions: typeof enOptions = {
 
 export const deOptions: typeof enOptions = {
 	...optionStrings.de,
+	...deTrust,
 	'Change how document content is displayed on the screen.':
 		'Ändern Sie, wie der Dokumentinhalt auf dem Bildschirm angezeigt wird.',
 	'Page display options': 'Seitenanzeigeoptionen',
@@ -30,6 +34,7 @@ export const deOptions: typeof enOptions = {
 
 export const esOptions: typeof enOptions = {
 	...optionStrings.es,
+	...esTrust,
 	'Change how document content is displayed on the screen.':
 		'Cambie la forma en que se muestra el contenido del documento en pantalla.',
 	'Page display options': 'Opciones de presentación de página',
@@ -39,6 +44,7 @@ export const esOptions: typeof enOptions = {
 
 export const zhOptions: typeof enOptions = {
 	...optionStrings['zh-CN'],
+	...zhTrust,
 	'Change how document content is displayed on the screen.': '更改文档内容在屏幕上的显示方式。',
 	'Page display options': '页面显示选项',
 	'Formatting marks': '格式标记',
