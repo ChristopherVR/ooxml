@@ -19,12 +19,23 @@ export interface ChartGroupOptionsEdit {
 	holeSize?: number | null;
 }
 
-const RANGES: Record<keyof ChartGroupOptionsEdit, readonly [number, number]> = {
+const RANGES: Readonly<Record<keyof ChartGroupOptionsEdit, readonly [number, number]>> = {
 	gapWidth: [0, 500],
 	overlap: [-100, 100],
 	firstSliceAngle: [0, 360],
 	holeSize: [1, 90],
 };
+
+/** Whether `key` is one of the ranged group options. */
+export const isChartGroupOption = (key: string): key is keyof ChartGroupOptionsEdit =>
+	Object.hasOwn(RANGES, key);
+
+/** Throws unless `value` is a whole number in the schema range of group option `key`. */
+export function assertChartGroupOption(key: keyof ChartGroupOptionsEdit, value: number): void {
+	const [min, max] = RANGES[key];
+	if (!Number.isInteger(value) || value < min || value > max)
+		throw new RangeError(`Chart ${key} must be a whole number from ${min} to ${max}`);
+}
 
 /** Edits the options of the group holding series `seriesIndex`. */
 export function setChartGroupOptions(
@@ -43,9 +54,7 @@ export function setChartGroupOptions(
 				delete group[key];
 				continue;
 			}
-			const [min, max] = RANGES[key];
-			if (!Number.isInteger(value) || value < min || value > max)
-				throw new RangeError(`Chart ${key} must be a whole number from ${min} to ${max}`);
+			assertChartGroupOption(key, value);
 			group[key] = value;
 		}
 	});
