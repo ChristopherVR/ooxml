@@ -9,6 +9,25 @@ const CHART_NS_C = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const CHART_NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /**
+ * The grid of a new table: its column fractions of the frame's width, the
+ * rounding left over given to the last column so the grid adds up to the
+ * frame. The table rebuild that follows sizes the columns from this grid's
+ * total; with an empty grid it fell back to a fixed 9144000 EMU (10 in)
+ * whatever the frame's width was.
+ */
+function tableGridXml(el: TablePptxElement, widthEmu: number): XmlObject {
+	const fractions = el.tableData?.columnWidths ?? [];
+	if (fractions.length === 0 || !(widthEmu > 0)) {
+		return {};
+	}
+	const widths = fractions.map((fraction) => Math.max(0, Math.round(fraction * widthEmu)));
+	const last = widths.length - 1;
+	widths[last] = Math.max(0, (widths[last] ?? 0) + widthEmu - widths.reduce((a, b) => a + b, 0));
+	const cols = widths.map((w) => ({ '@_w': String(w) }));
+	return { 'a:gridCol': cols.length === 1 ? cols[0] : cols };
+}
+
+/**
  * Build a `p:graphicFrame` XML skeleton for an SDK-created table.
  *
  * Tables round-trip as `<p:graphicFrame>/<a:graphic>/<a:graphicData
@@ -59,7 +78,7 @@ export function buildTableGraphicFrameXml(el: TablePptxElement, emuPerPx: number
 				'@_uri': 'http://schemas.openxmlformats.org/drawingml/2006/table',
 				'a:tbl': {
 					'a:tblPr': tblPr,
-					'a:tblGrid': {},
+					'a:tblGrid': tableGridXml(el, Number(extCx)),
 				},
 			},
 		},

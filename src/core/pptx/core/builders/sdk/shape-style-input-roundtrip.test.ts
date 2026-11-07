@@ -3,7 +3,8 @@
  * not just appear in the mapped model: the documented defaults the SDK fills
  * in itself, and inputs whose saved form depends on what the writers emit
  * (a fractional width the custom dash is relative to, a reflection
- * that is visible only at its end).
+ * that is visible only at its end), and the no-outline stroke and text-box
+ * effects that callers build on.
  */
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
@@ -66,6 +67,41 @@ function dashPx(style: ShapeStyle): number[] {
 		(s.space / 100000) * width,
 	]);
 }
+
+describe('text box effects', () => {
+	it('keeps the soft edge and reflection given in TextOptions', async () => {
+		const { xml, style } = await roundTrip(
+			createTextElement('Glow', {
+				...box,
+				softEdge: 2,
+				reflection: { distance: 1, endPosition: 1 },
+			}),
+		);
+		const effects = /<a:effectLst>([\s\S]*?)<\/a:effectLst>/u.exec(xml)?.[1] ?? '';
+		expect(effects).toContain('<a:softEdge rad="19050"/>');
+		const reflection = /<a:reflection\b[^>]*\/>/u.exec(effects)?.[0] ?? '';
+		expect(reflection).toContain('endPos="100000"');
+		expect(reflection).toContain('dist="9525"');
+		expect(style.softEdgeRadius).toBe(2);
+		expect(style.reflectionEndPosition).toBe(1);
+		expect(style.reflectionDistance).toBe(1);
+	});
+});
+
+describe('no outline', () => {
+	it('saves a transparent stroke as an explicit empty outline', async () => {
+		const { xml, style } = await roundTrip(
+			createShapeElement('rect', {
+				...box,
+				fill: { type: 'solid', color: '#4472C4' },
+				stroke: { color: 'transparent' },
+			}),
+		);
+		expect(xml).toContain('<a:ln><a:noFill/></a:ln>');
+		expect(style.strokeColor).toBe('transparent');
+		expect(style.strokeWidth).toBe(0);
+	});
+});
 
 describe('custom dash on a fractional width', () => {
 	it('keeps the width and dash lengths of a connector with no colour', async () => {

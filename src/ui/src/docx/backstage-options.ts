@@ -10,6 +10,7 @@ import {
 	type OptionsContext,
 } from '../controls';
 import { renderCustomizeRibbon } from './backstage-customize';
+import { trustCategory } from './backstage-trust';
 import type { BackstageHandlers } from './backstage-pages';
 
 export interface BackstageOptions {
@@ -20,6 +21,10 @@ export interface BackstageOptions {
 	showRuler?: boolean;
 	showMarks?: boolean;
 	showThumbnails?: boolean;
+	/** Trust Center: download missing fonts (the host's value when it set one). */
+	allowFontDownloads?: boolean;
+	/** The host's `googleFonts` decides the toggle, which is then read-only. */
+	fontDownloadsLocked?: boolean;
 }
 export type BackstageOptionKey = keyof BackstageOptions;
 
@@ -35,6 +40,7 @@ const BOOLEAN_KEYS: readonly BackstageOptionKey[] = [
 	'showRuler',
 	'showMarks',
 	'showThumbnails',
+	'allowFontDownloads',
 ];
 const KEYS: readonly BackstageOptionKey[] = ['locale', 'theme', 'author', ...BOOLEAN_KEYS];
 
@@ -151,7 +157,12 @@ function wordCategories(
 		},
 		unavailableCategory(context, 'qat'),
 		unavailableCategory(context, 'addins'),
-		unavailableCategory(context, 'trust'),
+		current.allowFontDownloads === undefined
+			? unavailableCategory(context, 'trust')
+			: trustCategory(
+					context,
+					current.fontDownloadsLocked ? current.allowFontDownloads : undefined,
+				),
 	];
 }
 
@@ -191,14 +202,16 @@ export function createWordOptions(
 		element.labels = optionsLabels(context);
 		element.categories = wordCategories(context, current);
 		element.values = dialogValues(current);
-		// Reset all options: the automatic theme, spelling on, rulers, marks and thumbnails off.
+		// Reset all options: the automatic theme, spelling on, rulers, marks, thumbnails and font
+		// downloads off (a download setting the host decides is not the reader's to reset).
 		element.defaults = {
 			theme: 'auto',
 			...Object.fromEntries(
-				BOOLEAN_KEYS.filter((key) => current[key] !== undefined).map((key) => [
-					key,
-					key === 'spellCheck',
-				]),
+				BOOLEAN_KEYS.filter(
+					(key) =>
+						current[key] !== undefined &&
+						!(key === 'allowFontDownloads' && current.fontDownloadsLocked),
+				).map((key) => [key, key === 'spellCheck']),
 			),
 		};
 	};

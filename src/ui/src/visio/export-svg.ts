@@ -5,6 +5,7 @@ import {
 	type VisioShape,
 } from 'ooxml-core/visio';
 import { compatibilityNotes, compatibilityText, type CompatibilityNote } from 'ooxml-core/visio/ui';
+import { visioFontStack } from './font-stack';
 import { renderPage, svgElement } from './render-svg';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { inspectForeignVectorResource } from 'ooxml-core/visio/ui';
@@ -167,7 +168,10 @@ export function estimatePageSvgBytes(
 		let characters = 0;
 		for (const run of runs) {
 			characters += run.text.length;
-			reserve(run.text.length * (512 + run.fontFamily.length * 6 + run.color.length * 6));
+			// The painted font-family is the substitute list, not the bare family.
+			reserve(
+				run.text.length * (512 + visioFontStack(run.fontFamily).length * 6 + run.color.length * 6),
+			);
 		}
 		const lineCount = Math.min(5000, characters + (text.paragraphs?.length ?? 1));
 		reserve(lineCount * (640 + (text.backgroundColor ? 512 + text.backgroundColor.length * 6 : 0)));
@@ -176,7 +180,7 @@ export function estimatePageSvgBytes(
 				reserve(
 					512 +
 						(paragraph.bullet.text.length +
-							paragraph.bullet.fontFamily.length +
+							visioFontStack(paragraph.bullet.fontFamily).length +
 							text.color.length) *
 							6,
 				);

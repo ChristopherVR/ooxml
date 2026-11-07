@@ -37,6 +37,7 @@ import { glowCssLengths, shadowBlurToCss } from './effect-profile';
 import { resolveBaseShapeGeometry } from './shape-geometry-base';
 import { silhouetteMorphFor } from './silhouette-morph-registry';
 import { getSubpathGeometry } from './subpath-geometry';
+import { escapeSvgAttr } from './svg-attr-escape';
 
 /** One outer shadow layer, in the units of the box-shadow it replaces. */
 export interface SilhouetteShadowLayer {
@@ -466,7 +467,7 @@ export function buildSilhouetteFilterMarkup(
 ): string {
 	const pad = Math.ceil(Math.max(effectReach(params), outgoing ? effectReach(outgoing) : 0)) + 4;
 	const parts: string[] = [
-		`<filter id="${filterId}" filterUnits="userSpaceOnUse" x="${-pad}" y="${-pad}" width="${px(Math.max(width, 1) + 2 * pad)}" height="${px(Math.max(height, 1) + 2 * pad)}" color-interpolation-filters="sRGB">`,
+		`<filter id="${escapeSvgAttr(filterId)}" filterUnits="userSpaceOnUse" x="${-pad}" y="${-pad}" width="${px(Math.max(width, 1) + 2 * pad)}" height="${px(Math.max(height, 1) + 2 * pad)}" color-interpolation-filters="sRGB">`,
 	];
 	const into = effectLayers(params, '', outgoing ? 'in' : undefined);
 	parts.push(...into.parts);

@@ -197,7 +197,10 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	initialSlide?: number;
 	/**
 	 * Google Fonts fallback for deck fonts that are neither installed nor
-	 * embedded. Unset: the viewer loads them from `fonts.googleapis.com`.
+	 * embedded. Unset: File > Options > Trust Center > "Download fonts that
+	 * are not installed or embedded" decides (on by default: the viewer
+	 * loads them from `fonts.googleapis.com`). Any other value locks that
+	 * option: off for `false` or an invalid `baseUrl`, on for a mirror.
 	 * `false`: no request goes to Google (`fonts.googleapis.com` or
 	 * `fonts.gstatic.com`); text uses installed, embedded or fallback fonts.
 	 * `{ baseUrl }`: requests go to a self-hosted mirror of the Google Fonts

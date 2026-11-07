@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.10.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.10.1) - 2026-11-06
+
+### Bug Fixes
+
+- **pptx:** Persist canvas size changes from automation ([#252](https://github.com/ChristopherVR/ooxml/issues/252)) ([e9b76d4](https://github.com/ChristopherVR/ooxml/commit/e9b76d47fcb2b3432cefda7f061fc302370320bf))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
 ## [2.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.10.0) - 2026-11-04
 
 ### Features

@@ -5,6 +5,7 @@ import {
 	statusBarState,
 } from 'ooxml-ui/pptx';
 import type {
+	DeckWebfontProgress,
 	SaveProgressState,
 	SaveProgressStatus,
 	StatusBarAutosave,
@@ -36,6 +37,8 @@ export interface StatusBar {
 	setSaveProgress(progress: SaveProgressState): void;
 	/** Reflect the unsaved-changes flag in the idle save-state text. */
 	setDirty(dirty: boolean): void;
+	/** Reflect the deck's webfont download, shown while it runs after the deck is on screen. */
+	setFontProgress(progress: DeckWebfontProgress | null): void;
 	/** Reflect presentation state so the Normal / Slide Show buttons show the
 	    active view (derived, not hardcoded). */
 	setPresenting(presenting: boolean): void;
@@ -68,6 +71,7 @@ export function createStatusBar(
 	let dirty = false;
 	let autosave: StatusBarAutosave | undefined;
 	let saveProgress: SaveProgressStatus | undefined;
+	let fontProgress: DeckWebfontProgress | null = null;
 	let nav = { current: 0, total: 0, zoomPercent: 100 };
 	let notesExpanded = false;
 	let presenting = false;
@@ -79,6 +83,7 @@ export function createStatusBar(
 			dirty,
 			autosave,
 			saveProgress,
+			fontProgress,
 			zoomPercent: nav.zoomPercent,
 			notesExpanded,
 			// The slide-sorter overlay is modal and self-dismissing, so it is not
@@ -121,6 +126,10 @@ export function createStatusBar(
 		},
 		setDirty(isDirty) {
 			dirty = isDirty;
+			sync();
+		},
+		setFontProgress(next) {
+			fontProgress = next;
 			sync();
 		},
 		setPresenting(next) {

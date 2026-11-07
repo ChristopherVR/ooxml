@@ -47,6 +47,18 @@ export function officeStatusBarState(state: StatusBarViewState): OfficeStatusBar
 			},
 			{ id: 'language', text: t('pptx.statusBar.language'), narrowHide: true },
 			{ id: 'save', text: state.saveText, tone: state.saveKind, narrowHide: true },
+			// The deck is already shown; its webfonts are still on their way.
+			...(state.fontText
+				? [
+						{
+							id: 'fonts',
+							text: state.fontText,
+							title: state.fontTitle,
+							tone: 'saving' as const,
+							narrowHide: true,
+						},
+					]
+				: []),
 			// Announced politely and only on steps worth hearing; the visible text above is not live.
 			{ id: 'save-live', text: state.saveAnnouncement ?? '', live: true, srOnly: true },
 		],

@@ -240,5 +240,9 @@ export const translations = {
 		'Autoriser le contenu externe (images et médias distants)',
 	'pptx.options.trust.allowExternalContentInfo':
 		'Lorsque cette option est désactivée, seul le contenu incorporé dans le fichier est affiché.',
+	'pptx.options.trust.allowFontDownloads':
+		'Télécharger les polices non installées ni incorporées (Google Fonts)',
+	'pptx.options.trust.allowFontDownloadsInfo':
+		"Lorsque cette option est activée, votre navigateur contacte fonts.googleapis.com et fonts.gstatic.com (ou le serveur de polices de votre organisation) pour obtenir les polices manquantes. Lorsqu'elle est désactivée, le texte utilise des polices installées, incorporées ou de substitution, et les sauts de ligne peuvent donc différer de PowerPoint.",
 	'pptx.options.trust.confirmHyperlinks': "Confirmer avant d'ouvrir des liens hypertexte externes",
 };

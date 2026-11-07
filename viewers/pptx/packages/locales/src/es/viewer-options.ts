@@ -235,5 +235,9 @@ export const translations = {
 		'Permitir contenido externo (imágenes y medios remotos)',
 	'pptx.options.trust.allowExternalContentInfo':
 		'Cuando está desactivado, solo se muestra el contenido incrustado en el archivo.',
+	'pptx.options.trust.allowFontDownloads':
+		'Descargar fuentes que no están instaladas ni incrustadas (Google Fonts)',
+	'pptx.options.trust.allowFontDownloadsInfo':
+		'Cuando está activado, el navegador se conecta a fonts.googleapis.com y fonts.gstatic.com (o al servidor de fuentes de su organización) para obtener las fuentes que faltan. Cuando está desactivado, el texto usa fuentes instaladas, incrustadas o sustitutas, por lo que los saltos de línea pueden diferir de PowerPoint.',
 	'pptx.options.trust.confirmHyperlinks': 'Confirmar antes de abrir hipervínculos externos',
 };

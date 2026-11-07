@@ -2949,3 +2949,20 @@ formulas follow the ECMA-376 `presetShapeDefinitions` layout as published in ISO
 and were checked against PowerPoint's own `Slide.Export` raster at a non-square aspect with
 default and adjusted values. `ooxml-arc.ts` now treats `arcTo` angles as visual angles
 (ECMA-376 section 20.1.9.3) and converts them in the path's own space.
+
+## Shared webfont fallback (2026-11-07)
+
+Source: this repository, no external code. PowerPoint's Google Fonts fallback moved out of
+`src/ui/src/pptx/render/` so Word, Excel and Visio use the same code:
+
+| From                                                                                   | To                                                 | What changed                                                                              |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/ui/src/pptx/render/google-fonts-catalogue.ts`                                     | `src/core/text/webfonts/google-fonts-catalogue.ts` | Moved unchanged; `viewers/pptx/scripts/update-google-fonts-catalogue.mjs` writes it there |
+| `src/ui/src/pptx/render/google-fonts-lookup.ts`                                        | `src/core/text/webfonts/google-fonts-lookup.ts`    | Moved unchanged                                                                           |
+| `src/ui/src/pptx/render/google-webfonts-metric-clones.ts`                              | `src/core/text/webfonts/metric-clones.ts`          | Moved unchanged                                                                           |
+| `src/ui/src/pptx/render/font-weight-names.ts` (and test)                               | `src/core/text/webfonts/font-weight-names.ts`      | Strict-mode guards for possibly missing tokens                                            |
+| `src/ui/src/pptx/render/google-webfonts.ts` (pure part)                                | `src/core/text/webfonts/google-fonts-request.ts`   | The product chooses what an unset option means and the warning's label                    |
+| `src/ui/src/pptx/render/deck-webfont-readiness.ts` (faces)                             | `src/core/text/webfonts/webfont-faces.ts`          | Faces from format-neutral runs instead of slides                                          |
+| `src/ui/src/pptx/render/google-webfonts.ts`, `google-webfonts-link.ts`, readiness wait | `src/ui/src/fonts/webfonts.ts`                     | Installed check, managed `<link>` and bounded wait, format-neutral                        |
+
+The PowerPoint files keep their exports as re-exports. No font binaries were copied or added.

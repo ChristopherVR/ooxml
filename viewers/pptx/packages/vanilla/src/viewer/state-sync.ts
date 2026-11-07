@@ -34,8 +34,8 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 	const { renderer, callbacks } = deps;
 	return (state, previous) => {
 		const chrome = deps.getChrome();
-		if (state.loading !== previous.loading) {
-			chrome.setLoading(state.loading);
+		if (state.loading !== previous.loading || state.fontProgress !== previous.fontProgress) {
+			chrome.setLoading(state.loading, state.fontProgress);
 		}
 		if (state.error !== previous.error) {
 			chrome.setError(state.error);

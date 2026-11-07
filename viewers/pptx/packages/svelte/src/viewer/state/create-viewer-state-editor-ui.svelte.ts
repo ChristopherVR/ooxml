@@ -1,7 +1,8 @@
-import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
+import type { GoogleFontsOption, InlineTextDraftSink } from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
 	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
 	resolveAuthoredCustomShowId,
 	seedRecentColors,
 	viewerPreferencesFromViewProperties,
@@ -71,6 +72,8 @@ export interface EditorUiCluster {
 	compatToasts: CompatToastsState;
 	chromeUi: ChromeUiState;
 	optionsState: ViewerOptionsState;
+	/** Host `googleFonts` first, else Trust Center > "Download fonts"; reactive. */
+	getGoogleFonts(): GoogleFontsOption | undefined;
 	controller: EditorController;
 	findReplace: FindReplaceState;
 	stageContextMenu: StageContextMenu | null;
@@ -95,6 +98,11 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 
 	const optionsState = new ViewerOptionsState();
 	provideViewerOptions(optionsState);
+	// Derived, so the webfont effects re-run only when the policy itself changes.
+	const effectiveGoogleFonts = $derived(
+		resolveEffectiveGoogleFonts(options.getGoogleFonts?.(), optionsState.options),
+	);
+	const getGoogleFonts = (): GoogleFontsOption | undefined => effectiveGoogleFonts;
 	const parityUi = new ViewerParityUiState(editor, () =>
 		resolveAllowExternalContent(options.getAllowExternalContent?.(), optionsState.options),
 	);
@@ -238,7 +246,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		commitPendingText: () =>
 			options.getRootEl()?.querySelector<HTMLElement>('[data-inline-editor]')?.blur(),
 		getInitialSlide: options.getInitialSlide,
-		getGoogleFonts: () => options.getGoogleFonts?.(),
+		getGoogleFonts,
 		getTranslator: () => options.t,
 		loader,
 		viewer,
@@ -320,6 +328,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 		compatToasts,
 		chromeUi,
 		optionsState,
+		getGoogleFonts,
 		controller,
 		findReplace,
 		get stageContextMenu() {

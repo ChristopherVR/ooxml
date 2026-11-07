@@ -206,6 +206,11 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		cancelEdit: () => editor.cancel(),
 		isEditing: () => editor.editing,
 		measureText: (text, font) => view.measurer.measure(text, font),
+		remeasure: () => {
+			view.measurer.clear();
+			drawings.redraw();
+			view.invalidate();
+		},
 		zoom: () => view.zoom(),
 		setZoom: (percent) => view.setZoom(percent),
 		splitAt: (active) => view.splitAt(active),
