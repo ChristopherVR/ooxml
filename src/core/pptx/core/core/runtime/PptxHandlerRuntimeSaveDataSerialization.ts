@@ -139,6 +139,7 @@ import {
 } from './table-style-change-cell-clear';
 import { recordTableParagraphOrder } from './table-paragraph-save-order';
 import { rebuildTableXmlFromData } from './table-structural-ops';
+import { deterministicColumnId } from './table-xml-rebuild';
 import { writeTablePropertiesOwnFillAndEffects } from './table-tblpr-save';
 
 /**
@@ -203,6 +204,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					tableData,
 					PptxHandlerRuntime.EMU_PER_PX,
 					this.ensureArray.bind(this),
+					this.saveFixedDate ? deterministicColumnId : undefined,
 				);
 
 				// After rebuilding, apply text and style to all cells

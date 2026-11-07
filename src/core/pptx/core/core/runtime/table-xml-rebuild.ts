@@ -181,6 +181,19 @@ function randomColumnId(): string {
 	return String(Math.floor(Math.random() * 0xffffffff));
 }
 
+/**
+ * A reproducible `a16:colId` for the column at `index`: an FNV-1a hash, so
+ * the ids look like PowerPoint's 32-bit ones and differ per column.
+ */
+export function deterministicColumnId(index: number): string {
+	let hash = 0x811c9dc5;
+	for (const ch of `a16:colId:${index}`) {
+		hash ^= ch.charCodeAt(0);
+		hash = Math.imul(hash, 0x01000193) >>> 0;
+	}
+	return String(hash);
+}
+
 // ---------------------------------------------------------------------------
 // Rebuild table XML
 // ---------------------------------------------------------------------------
@@ -196,12 +209,16 @@ function randomColumnId(): string {
  * @param tableData - The current logical table model to match.
  * @param emuPerPx - EMU-to-pixel conversion factor.
  * @param ensureArrayFn - A function that normalises a value into an array.
+ * @param newColumnId - The `a16:colId` of a new column (random by default,
+ *   as PowerPoint mints them; {@link deterministicColumnId} for a
+ *   reproducible save).
  */
 export function rebuildTableXmlFromData(
 	tbl: XmlObject,
 	tableData: PptxTableData,
 	emuPerPx: number,
 	ensureArrayFn: (value: unknown) => unknown[],
+	newColumnId: (index: number) => string = randomColumnId,
 ): void {
 	const existingXmlRows = ensureArrayFn(tbl['a:tr']) as XmlObject[];
 	const existingGridCols = ensureArrayFn(
@@ -246,7 +263,7 @@ export function rebuildTableXmlFromData(
 				// `ensureA16NamespaceOnSlideRoot`; emitting it here too is
 				// schema-redundant and PowerPoint flags it.
 				'a16:colId': {
-					'@_val': existingColIds[i] || randomColumnId(),
+					'@_val': existingColIds[i] || newColumnId(i),
 				},
 			},
 		},

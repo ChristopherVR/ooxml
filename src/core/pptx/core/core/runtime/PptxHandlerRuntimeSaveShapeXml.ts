@@ -119,6 +119,23 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 *   default) is correct at depth 0. See `group-xfrm-preservation.ts`'s
 	 *   module doc for why a nested group must not re-derive this itself.
 	 */
+	/**
+	 * `PptxHandlerSaveOptions.fixedDate` of the save in progress: set, the save
+	 * mints reproducible ids and names (new table columns' `a16:colId`, the
+	 * fallback name of a new group) instead of random or time-based ones.
+	 */
+	protected saveFixedDate: Date | undefined;
+
+	/**
+	 * The `p:cNvPr/@name` of a group with neither a name nor one from its
+	 * file: its element id, or for a reproducible save (`fixedDate`), which
+	 * must not depend on the time-based ids of elements made in code,
+	 * `Group <shape id>` as PowerPoint names groups.
+	 */
+	private groupFallbackName(group: GroupPptxElement): string {
+		return this.saveFixedDate ? `Group ${group.shapeId ?? ''}`.trim() : group.id;
+	}
+
 	protected buildGroupShapeXml(
 		group: GroupPptxElement,
 		ctx?: GroupChildSaveContext,
@@ -128,7 +145,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (group.rawXml && group.children.length === 0) {
 			return {
 				...group.rawXml,
-				'p:nvGrpSpPr': buildGroupNonVisualXml(group.rawXml, group.name, group.id, group.shapeId),
+				'p:nvGrpSpPr': buildGroupNonVisualXml(
+					group.rawXml,
+					group.name,
+					this.groupFallbackName(group),
+					group.shapeId,
+				),
 			};
 		}
 
@@ -148,7 +170,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const childSpace: GroupChildSpaceOwner = group;
 
 		const grpXml: XmlObject = {
-			'p:nvGrpSpPr': buildGroupNonVisualXml(rawGroupXml, group.name, group.id, group.shapeId),
+			'p:nvGrpSpPr': buildGroupNonVisualXml(
+				rawGroupXml,
+				group.name,
+				this.groupFallbackName(group),
+				group.shapeId,
+			),
 			'p:grpSpPr': buildGroupPropertiesXml(rawGroupXml, xfrm),
 		};
 		const rawExtLst = rawGroupXml?.['p:extLst'];
