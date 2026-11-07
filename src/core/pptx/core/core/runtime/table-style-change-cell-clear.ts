@@ -36,10 +36,13 @@ const FILL_KEYS = [
 
 /** Each `a:tcPr` line child and the model fields that describe it. */
 const LINE_KEYS: ReadonlyArray<readonly [string, ReadonlyArray<keyof PptxTableCellStyle>]> = [
-	['a:lnL', ['borderLeftWidth', 'borderLeftColor', 'borderLeftDash']],
-	['a:lnR', ['borderRightWidth', 'borderRightColor', 'borderRightDash']],
-	['a:lnT', ['borderTopWidth', 'borderTopColor', 'borderTopDash']],
-	['a:lnB', ['borderBottomWidth', 'borderBottomColor', 'borderBottomDash']],
+	['a:lnL', ['borderLeftWidth', 'borderLeftColor', 'borderLeftDash', 'borderLeftDashSegments']],
+	['a:lnR', ['borderRightWidth', 'borderRightColor', 'borderRightDash', 'borderRightDashSegments']],
+	['a:lnT', ['borderTopWidth', 'borderTopColor', 'borderTopDash', 'borderTopDashSegments']],
+	[
+		'a:lnB',
+		['borderBottomWidth', 'borderBottomColor', 'borderBottomDash', 'borderBottomDashSegments'],
+	],
 	['a:lnTlToBr', ['borderDiagDownWidth', 'borderDiagDownColor']],
 	['a:lnBlToTr', ['borderDiagUpWidth', 'borderDiagUpColor']],
 ];
