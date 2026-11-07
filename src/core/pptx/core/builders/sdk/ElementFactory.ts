@@ -27,6 +27,7 @@ import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/tab
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { pictureEffectsFromInput } from './picture-effects-input';
 import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
 import { elementStyleForSegments } from './text-segment-style';
@@ -340,12 +341,15 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
 export function createImageElement(source: string, options?: ImageOptions): ImagePptxElement {
 	const p = pos('image', options);
 	const isDataUrl = source.startsWith('data:');
+	// Opacity is the picture's `a:alphaModFix`, which the renderers apply and
+	// the save writes; an element `opacity` beside it would apply twice.
+	const imageEffects = pictureEffectsFromInput(options);
 	return {
 		type: 'image',
 		id: generateId('img'),
 		...p,
 		rotation: options?.rotation,
-		opacity: options?.opacity,
+		...(imageEffects ? { imageEffects } : {}),
 		imagePath: isDataUrl ? undefined : source,
 		imageData: isDataUrl ? source : undefined,
 		altText: options?.altText,
