@@ -6,6 +6,7 @@ import type {
 	XmlObject,
 } from '../../types';
 import { xmlText } from '../../utils';
+import { xmlAttrBool } from '../../utils/xml-access';
 import { parseTableEffectChain } from '../runtime/table-style-effect-parse';
 import { parseTablePropertiesFill } from '../runtime/table-style-fill-parse';
 import { applyCell3DStyle } from './table-cell-3d-helpers';
@@ -113,8 +114,8 @@ export class PptxTableDataParser implements IPptxTableDataParser {
 							rowSpan: cellNode['@_rowSpan']
 								? parseInt(String(cellNode['@_rowSpan']), 10)
 								: undefined,
-							vMerge: cellNode['@_vMerge'] === '1',
-							hMerge: cellNode['@_hMerge'] === '1',
+							vMerge: xmlAttrBool(cellNode, 'vMerge') ?? false,
+							hMerge: xmlAttrBool(cellNode, 'hMerge') ?? false,
 							...(extraAttributes ? { extraAttributes } : {}),
 						};
 					}),

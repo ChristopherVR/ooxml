@@ -34,6 +34,11 @@
  */
 
 import { DEFAULT_FONT_FAMILY, DEFAULT_TEXT_FONT_SIZE } from '../constants';
+import {
+	deckFamilyOf,
+	resetDesignTrackingCache,
+	resolveDesignTrackingPx,
+} from './text-design-tracking';
 import { fontStyleShorthand, fontWeightShorthand } from './font-weight-names';
 
 /** The font a run actually renders with, after substitution and autofit. */
@@ -175,6 +180,24 @@ export function resolveMetricTrackingPx(text: string, font: RunFontSpec): number
 		return 0;
 	}
 	const chars = [...text];
+	// A deck font the browser cannot paint: take the width the deck font has in PowerPoint.
+	ctx.font = canvasFont;
+	ctx.fontKerning = 'auto';
+	const substituted = resolveDesignTrackingPx(
+		ctx,
+		text,
+		deckFamilyOf(font.fontFamily),
+		font.fontSizePx && font.fontSizePx > 0 ? font.fontSizePx : DEFAULT_TEXT_FONT_SIZE,
+		font.bold === true,
+		ctx.measureText(text).width,
+	);
+	if (substituted !== undefined) {
+		if (trackingCache.size >= MAX_CACHE_ENTRIES) {
+			trackingCache = new Map();
+		}
+		trackingCache.set(key, substituted);
+		return substituted;
+	}
 	let powerPoint = 0;
 	for (const advance of advancesOf(ctx, canvasFont, chars)) {
 		powerPoint += Math.round(advance * ADVANCE_STEPS_PER_PX);
@@ -296,6 +319,7 @@ export function resolveTrackedTextWidth(
 
 /** Test hook: forget every measurement (also used by the font-load listener). */
 export function resetMetricTrackingCache(): void {
+	resetDesignTrackingCache();
 	trackingCache = new Map();
 	measureContext = undefined;
 }

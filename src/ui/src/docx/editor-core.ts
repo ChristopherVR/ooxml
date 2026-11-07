@@ -38,6 +38,7 @@ import type { DocxChartFormatPane } from './chart-format-pane';
 import { HEADER_FOOTER_INPUT, locksStories } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
+import { DocxWebfonts } from './docx-webfonts';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
 import { syncSmartArtDesign } from './smartart-design-ribbon';
@@ -177,6 +178,8 @@ export class EditorCore {
 	readonly parts: PartsController;
 	readonly pages: PageController;
 	readonly viewOptions = new ViewOptions();
+	/** The `googleFonts` option and this editor's webfont `<link>`. */
+	readonly webfonts = new DocxWebfonts();
 	readonly dirtyState: DirtyState;
 	readonly pageTracker: PageTracker;
 	private wordText = '';

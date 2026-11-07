@@ -53,23 +53,10 @@ interface WebfontProbe {
 }
 
 /**
- * Load `deckPath` with the Google Fonts CSS2 endpoint stubbed to register
- * `registerFaceFamily`, then report what the binding asked for and what it
- * registered.
- *
- * @param deckFontFamily - The family the deck's runs reference (`ADLaM
- *   Display`, `Calibri`, ...). Passed to the canvas-measurement override
- *   below so it neutralizes exactly this family, regardless of whether the
- *   browser echoes `context.font` back quoted.
+ * Make `family` look not installed to the shared resolver, whatever this
+ * machine has (see the comment inside).
  */
-async function probeWebfonts(
-	page: Page,
-	origin: string,
-	deckPath: string,
-	deckFontFamily: string,
-	registerFaceFamily: string,
-): Promise<WebfontProbe> {
-	let css2Url: string | null = null;
+async function forceFamilyMissing(page: Page, family: string): Promise<void> {
 	// The shared resolver skips the network for families its canvas metric
 	// probe reports as locally installed. This spec is about the probe +
 	// injected link, so force "not installed" to stay deterministic on
@@ -103,7 +90,28 @@ async function probeWebfonts(
 			}
 			return original.call(this, text);
 		};
-	}, deckFontFamily);
+	}, family);
+}
+
+/**
+ * Load `deckPath` with the Google Fonts CSS2 endpoint stubbed to register
+ * `registerFaceFamily`, then report what the binding asked for and what it
+ * registered.
+ *
+ * @param deckFontFamily - The family the deck's runs reference (`ADLaM
+ *   Display`, `Calibri`, ...). Passed to the canvas-measurement override
+ *   ({@link forceFamilyMissing}) so it neutralizes exactly this family, regardless of whether the
+ *   browser echoes `context.font` back quoted.
+ */
+async function probeWebfonts(
+	page: Page,
+	origin: string,
+	deckPath: string,
+	deckFontFamily: string,
+	registerFaceFamily: string,
+): Promise<WebfontProbe> {
+	let css2Url: string | null = null;
+	await forceFamilyMissing(page, deckFontFamily);
 	await page.route('**/fonts.googleapis.com/css2**', async (route) => {
 		css2Url = route.request().url();
 		await route.fulfill({
@@ -217,6 +225,81 @@ test.describe('google webfonts fallback', () => {
 					problems.push(
 						`${framework.name}: rendered font-family is missing the "Carlito" fallback: ${value.shapeFontFamily}`,
 					);
+				}
+			}
+			expect(problems).toStrictEqual([]);
+		},
+	);
+	test(
+		'shows the slide at once and reports the webfont download in the status bar, in every binding',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
+				await forceFamilyMissing(page, 'ADLaM Display');
+				let release = (): void => undefined;
+				const held = new Promise<void>((resolve) => {
+					release = resolve;
+				});
+				await page.route('**/fonts.googleapis.com/css2**', async (route) => {
+					await held;
+					await route.fulfill({
+						status: 200,
+						contentType: 'text/css',
+						body: '@font-face { font-family: "ADLaM Display"; src: local("Arial"); font-display: swap; }',
+					});
+				});
+				await page.goto(origin);
+				await page.locator('#file-input').setInputFiles(ADLAM_DECK);
+				// The deck must not wait for the font: it is shown while the request is held.
+				const shownWhileHeld = await page
+					.locator('[data-pptx-viewport] [data-element-id]')
+					.first()
+					.waitFor({ timeout: 15_000 })
+					.then(
+						() => true,
+						() => false,
+					);
+				const statusItem = page.locator('pptx-ui-status-bar [data-item="fonts"]');
+				const progressShown = await statusItem
+					.filter({ hasText: /Downloading fonts \(0 of 1\)/u })
+					.waitFor({ timeout: 15_000 })
+					.then(
+						() => true,
+						() => false,
+					);
+				release();
+				const progressCleared = await statusItem
+					.waitFor({ state: 'detached', timeout: 30_000 })
+					.then(
+						() => true,
+						() => false,
+					);
+				const faceSettled = await page.evaluate(() =>
+					[...document.fonts].some(
+						(face) =>
+							face.family.replace(/"/g, '') === 'ADLaM Display' &&
+							// local("Arial") is absent on Linux runners, where the load settles as an error.
+							(face.status === 'loaded' || face.status === 'error'),
+					),
+				);
+				return { shownWhileHeld, progressShown, progressCleared, faceSettled };
+			});
+
+			const problems: string[] = [];
+			for (const { framework, value } of results) {
+				if (!value.shownWhileHeld) {
+					problems.push(`${framework.name}: the slide waited for its webfont`);
+				}
+				if (!value.progressShown) {
+					problems.push(`${framework.name}: no "Downloading fonts" in the status bar while held`);
+				}
+				if (!value.progressCleared) {
+					problems.push(
+						`${framework.name}: the status bar kept "Downloading fonts" after the load`,
+					);
+				}
+				if (!value.faceSettled) {
+					problems.push(`${framework.name}: the webfont never loaded after it was released`);
 				}
 			}
 			expect(problems).toStrictEqual([]);

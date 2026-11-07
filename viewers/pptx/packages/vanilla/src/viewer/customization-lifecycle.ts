@@ -92,6 +92,8 @@ export function createViewerCustomizationLifecycle(
 	const controller = createCustomizationController(options.customization);
 	// The host `allowExternalContent` option locks the Trust Center setting.
 	controller.setAllowExternalContent(options.allowExternalContent);
+	// The host `googleFonts` option locks Trust Center > "Download fonts".
+	controller.setGoogleFonts(options.googleFonts);
 	let cachedFor: ResolvedCustomization | null = null;
 	let cachedOptions: PptxViewerOptions = options;
 	let unsubscribe: (() => void) | null = null;

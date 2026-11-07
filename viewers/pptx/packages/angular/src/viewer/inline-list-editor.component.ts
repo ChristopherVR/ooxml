@@ -1,4 +1,5 @@
-import { Component, ElementRef, inject, input, output, viewChild } from '@angular/core';
+import { NgStyle } from '@angular/common';
+import { Component, ElementRef, computed, inject, input, output, viewChild } from '@angular/core';
 import type { AfterViewInit, OnChanges, OnDestroy } from '@angular/core';
 import {
 	attachCollaborationInlineEditor,
@@ -25,12 +26,14 @@ import {
 	resolveCommitTextAutoFitHeight,
 	resolveCommitTextNormAutofitShrink,
 } from './inline-edit-autofit-commit';
+import { inlineEditorStyle } from './inline-editor-style';
 import { ViewerOptionsService } from './viewer-options.service';
 
-/** Native rich surface for lists and connected text; local plain edits keep the textarea. */
+/** Native rich surface for lists and connected text; local plain edits use the canvas's own editor. */
 @Component({
 	selector: 'pptx-inline-list-editor',
 	standalone: true,
+	imports: [NgStyle],
 	styles: [':host { display: contents; }'],
 	template: `
 		<div
@@ -41,11 +44,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 			role="textbox"
 			aria-label="Edit slide text"
 			[spellcheck]="spellCheck()"
-			[style.left.px]="element().x"
-			[style.top.px]="element().y"
-			[style.width.px]="element().width"
-			[style.height.px]="element().height"
-			style="text-decoration: none; text-decoration-line: none"
+			[ngStyle]="surfaceStyle()"
 			(pointerdown)="$event.stopPropagation()"
 			(blur)="commit()"
 			(keydown)="onKeyDown($event)"
@@ -71,6 +70,8 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 	readonly textCancel = output<void>();
 	readonly textFormat = output<{ id: string; updates: Partial<TextStyle> }>();
 	readonly listSession = output<{ controller: InlineListController; active: boolean }>();
+	/** Painted like view mode (see `inlineEditorStyle`). */
+	protected readonly surfaceStyle = computed(() => inlineEditorStyle(this.element(), true));
 	private readonly editor = viewChild.required<ElementRef<HTMLDivElement>>('editor');
 	private readonly options = inject(ViewerOptionsService, { optional: true });
 	private controller?: InlineListController;

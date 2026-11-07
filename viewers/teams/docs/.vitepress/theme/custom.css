@@ -38,7 +38,7 @@
 	--vp-code-copy-code-bg: rgba(240, 239, 236, 0.1);
 	--vp-code-copy-code-hover-bg: rgba(240, 239, 236, 0.2);
 
-	--pvd-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--pvd-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pvd-mono: var(--vp-font-family-mono);
 }
 

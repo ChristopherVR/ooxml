@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	applyParagraphBaselineShift,
 	cssBaseline,
+	fontSizePx,
 	type FontBoxMeasure,
 	powerPointBaseline,
 	powerPointDescent,
@@ -137,6 +138,20 @@ describe('resolveParagraphBaselineShift', () => {
 		// 40 px pitch: the strut puts CSS at 38 + floor((40 - 49) / 2) = 33;
 		// PowerPoint max(30, 40 - 10.57) = 30.
 		expect(shiftOf('30pt', runs)).toBeCloseTo(-3, 2);
+	});
+
+	it('places mixed sizes at an exact pitch above their single spacing on 75% of it', () => {
+		// 30pt is 40 px; the runs sit at `line-height: 0`, so the 40 px strut
+		// alone puts CSS at 38 + floor((40 - 49) / 2) = 33, PowerPoint at 30.
+		const runs = [
+			run('•', { fontSize: '30px', lineHeight: 0 }),
+			run('Hxlb', { fontSize: '20px', lineHeight: 0 }),
+		];
+		expect(shiftOf('30pt', runs)).toBeCloseTo(-3, 2);
+		// A run whose single spacing reaches the pitch keeps its own descent: not modelled.
+		expect(shiftOf('30pt', [run('a', { fontSize: '40px' }), run('b', { fontSize: '20px' })])).toBe(
+			undefined,
+		);
 	});
 
 	it('leaves alone what it cannot model', () => {
@@ -289,5 +304,22 @@ describe('the pixel snap of the text body top', () => {
 			bodyTop: { painted: 13, exact: 13.67 },
 		});
 		expect(shift).toBeCloseTo(1, 0);
+	});
+});
+
+describe('fontSizePx', () => {
+	it('reads the first px size of a font shorthand', () => {
+		expect(fontSizePx('italic 700 16px Arial')).toBe(16);
+		expect(fontSizePx('bold 13.5px/20px "Segoe UI"')).toBe(13.5);
+		expect(fontSizePx('1.5.2px x')).toBe(5.2);
+		expect(fontSizePx('px 12px')).toBe(12);
+		expect(fontSizePx('12pt Arial')).toBeNaN();
+	});
+
+	it('stays linear on long digit runs without px (code scanning: polynomial patterns)', () => {
+		const started = performance.now();
+		expect(fontSizePx('0'.repeat(50000))).toBeNaN();
+		expect(fontSizePx(`${'0'.repeat(50000)}px`)).toBe(0);
+		expect(performance.now() - started).toBeLessThan(200);
 	});
 });

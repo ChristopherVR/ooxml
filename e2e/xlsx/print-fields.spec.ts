@@ -66,7 +66,7 @@ test('authors repeated titles and native header fields with numbering and saved 
 	await expect(pages).toHaveCount(4);
 	await expect(pages.first().locator('.xve-print-header')).toContainText('First 5 of 4');
 	const rich = pages.first().locator('.xve-print-header span span').first();
-	await expect(rich).toHaveCSS('font-family', 'Arial');
+	await expect(rich).toHaveCSS('font-family', /^Arial,/);
 	await expect(rich).toHaveCSS('font-weight', '700');
 	await expect(rich).toHaveCSS('font-style', 'italic');
 	await expect(rich).toHaveCSS('color', 'rgb(255, 0, 0)');

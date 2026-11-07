@@ -122,7 +122,11 @@ test.describe('gradient and pattern outlines', () => {
 		await loadDeck(page);
 		const outline = await outlineOf(page, SHAPE.gradientRect);
 
-		expect(outline?.gradientStops).toStrictEqual(['#FF0000', '#0000FF']);
+		// The authored ends bound the ramp; the stops between them re-sample
+		// PowerPoint's sigma curve, so only the ends are pinned here.
+		const stops = outline?.gradientStops ?? [];
+		expect(stops.at(0)).toBe('#FF0000');
+		expect(stops.at(-1)).toBe('#0000FF');
 		expect(outline?.strokeRef).toContain('url(#');
 		expect(outline?.borderWidth).toBe(0);
 	});

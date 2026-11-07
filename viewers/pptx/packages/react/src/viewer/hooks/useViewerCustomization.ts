@@ -10,6 +10,7 @@
  * this hook is only the React wiring around it.
  */
 import type {
+	GoogleFontsOption,
 	ResolvedCustomization,
 	ToolbarActionId,
 	ViewerCustomization,
@@ -34,6 +35,7 @@ export function useViewerCustomization(
 	legacyHiddenActions: ToolbarActionId[] | undefined,
 	optionsStore: ViewerOptionsStore,
 	allowExternalContent?: boolean,
+	googleFonts?: GoogleFontsOption,
 ): ViewerCustomizationResult {
 	const controllerRef = useRef<ViewerCustomizationController | null>(null);
 	if (!controllerRef.current) {
@@ -41,6 +43,7 @@ export function useViewerCustomization(
 		// Seeded before the first render reads the resolved view, so the very
 		// first load already sees the host switch.
 		controllerRef.current.setAllowExternalContent(allowExternalContent);
+		controllerRef.current.setGoogleFonts(googleFonts);
 	}
 	const controller = controllerRef.current;
 
@@ -49,6 +52,11 @@ export function useViewerCustomization(
 	useLayoutEffect(() => {
 		controller.setAllowExternalContent(allowExternalContent);
 	}, [controller, allowExternalContent]);
+	// The host `googleFonts` value locks Trust Center > "Download fonts"; compared by the lock it
+	// implies, so an inline `{ baseUrl }` object is a no-op.
+	useLayoutEffect(() => {
+		controller.setGoogleFonts(googleFonts);
+	}, [controller, googleFonts]);
 
 	// A new `customization` object replaces the whole customisation. Compared
 	// by identity so the seed passed to the controller above is not re-applied

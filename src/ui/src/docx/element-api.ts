@@ -29,6 +29,8 @@ import {
 	type WordStatusProps,
 } from './building-blocks-status';
 import type { SurfaceHostActions } from './building-blocks-actions';
+import type { GoogleFontsOption } from 'ooxml-core/text';
+import { refreshDocxWebfonts } from './docx-webfonts';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -97,6 +99,24 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		if (next.length === current.length && next.every((p, i) => p === current[i])) return;
 		this.core.fileProviders = [...next];
 		this.core.shell.chrome?.backstage.relocalize();
+	}
+	/**
+	 * Webfonts for the document fonts the reader has neither installed nor embedded. Unset (the
+	 * default): the reader decides in File > Options > Trust Center (off until turned on; when on,
+	 * Google Fonts). `false`: off, nothing is requested. A set value locks that toggle, which then
+	 * shows it read-only. `{ baseUrl }`: such a family that the Google
+	 * Fonts catalogue serves, or its metric-compatible clone (Calibri as Carlito), is requested from
+	 * that CSS2 endpoint (`https://fonts.googleapis.com/css2`, or a self-hosted mirror) with only
+	 * the family names, and `load` waits briefly (150 ms) for the faces before showing the document. An
+	 * invalid `baseUrl` warns and stays off. Read when a document loads; changing it re-requests
+	 * for the document on screen.
+	 */
+	get googleFonts(): GoogleFontsOption | undefined {
+		return this.core.webfonts.option;
+	}
+	set googleFonts(value: GoogleFontsOption | undefined) {
+		this.core.webfonts.option = value;
+		if (this.core.view) void refreshDocxWebfonts(this.core);
 	}
 	get loading(): boolean {
 		return this.core.loading;

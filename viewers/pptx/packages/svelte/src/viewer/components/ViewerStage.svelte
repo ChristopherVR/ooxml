@@ -41,6 +41,7 @@
 		mediaDataUrls,
 		current,
 		loading,
+		fontProgress = null,
 		isEncrypted,
 		error,
 		activeSlide,
@@ -203,7 +204,11 @@
 </script>
 
 {#if loading}
-	<div class="pptx-svelte-message" role="status">{t('pptx.common.loading')}</div>
+	<div class="pptx-svelte-message" role="status">
+		{fontProgress
+			? t('pptx.viewer.loadingFonts', { loaded: fontProgress.loaded, total: fontProgress.total })
+			: t('pptx.common.loading')}
+	</div>
 {:else if isEncrypted}
 	<div class="pptx-svelte-message" role="alert">{t('pptx.encryptedFile.message')}</div>
 {:else if error}

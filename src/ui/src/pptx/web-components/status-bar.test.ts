@@ -107,6 +107,19 @@ describe('pptx-ui-status-bar', () => {
 		);
 	});
 
+	it('shows the font download item only while fonts download', () => {
+		const host = mount();
+		expect(host.shadowRoot!.querySelector('[data-item="fonts"]')).toBeNull();
+		host.state = { ...host.state, fontText: 'Downloading fonts (0 of 2)', fontTitle: 'A, B' };
+		const item = host.shadowRoot!.querySelector('[data-item="fonts"]')!;
+		expect(item.textContent).toBe('Downloading fonts (0 of 2)');
+		expect(item.getAttribute('title')).toBe('A, B');
+		expect(item.classList.contains('saving')).toBeTruthy();
+		const { fontText: _text, fontTitle: _title, ...rest } = host.state;
+		host.state = rest;
+		expect(host.shadowRoot!.querySelector('[data-item="fonts"]')).toBeNull();
+	});
+
 	it('marks saving and error kinds', () => {
 		const host = mount({ saveKind: 'error', saveText: 'x' });
 		expect(

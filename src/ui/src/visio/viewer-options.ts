@@ -16,7 +16,9 @@ import {
 	writeBehaviour,
 	type VisioBehaviour,
 } from './viewer-behaviour';
-import { VISIO_OPTION_CATEGORIES } from './viewer-options-categories';
+import { VISIO_OPTION_CATEGORIES, visioOptionCategories } from './viewer-options-categories';
+import { FONT_DOWNLOADS_KEY } from './viewer-options-trust';
+import type { VisioLocale } from './ribbon-locale';
 
 export { VISIO_OPTION_CATEGORIES };
 export { DEFAULT_BEHAVIOUR, readBehaviour, type VisioBehaviour };
@@ -61,9 +63,12 @@ function profileValues(
 	profile: OfficeProfile,
 	officeTheme: OfficeThemeChoice,
 	behaviour: VisioBehaviour,
+	fontDownloadsLocked: boolean | undefined,
 ): OfficeOptionValues {
 	return {
 		...behaviour,
+		// A host decision shows read-only in place of the reader's own choice.
+		...(fontDownloadsLocked === undefined ? {} : { [FONT_DOWNLOADS_KEY]: fontDownloadsLocked }),
 		officeTheme,
 		userName: profile.displayName,
 		userInitials: profile.initial ?? '',
@@ -92,6 +97,8 @@ export function createOptionsDialog(doc: Document): HTMLElement {
 export class ViewerProfile {
 	#profile: OfficeProfile = readOfficeProfile();
 	#behaviour: VisioBehaviour = readBehaviour();
+	#locale: VisioLocale = 'en';
+	#fontDownloadsLocked: boolean | undefined;
 	readonly #dialog: OptionsDialog;
 	readonly #account: Account | null;
 	constructor(
@@ -113,9 +120,20 @@ export class ViewerProfile {
 	get profile(): OfficeProfile {
 		return { ...this.#profile };
 	}
+	/**
+	 * The Trust Center's language and the host's font download decision (`fontDownloadLock`):
+	 * `undefined` leaves the toggle to the reader, a boolean shows it read-only with that value.
+	 */
+	setTrust(locale: VisioLocale, fontDownloadsLocked: boolean | undefined): void {
+		if (locale === this.#locale && fontDownloadsLocked === this.#fontDownloadsLocked) return;
+		this.#locale = locale;
+		this.#fontDownloadsLocked = fontDownloadsLocked;
+		this.#dialog.categories = visioOptionCategories(locale, fontDownloadsLocked);
+		this.#sync();
+	}
 	/** Open Visio Options, on General as Visio does. */
 	showOptions(category = 'general'): void {
-		this.#dialog.values = profileValues(this.#profile, this.theme.get(), this.#behaviour);
+		this.#dialog.values = this.#values();
 		this.#dialog.category = category;
 		this.#dialog.show();
 	}
@@ -132,7 +150,13 @@ export class ViewerProfile {
 					// The light looks are remembered here; light or dark is the host's preference.
 					if (values.officeTheme !== 'dark') writeStatusBarTheme(values.officeTheme);
 				}
-				const next = mergeBehaviour(this.#behaviour, values);
+				// A locked toggle shows the host's value; the reader's own choice stays as it was.
+				const next = mergeBehaviour(
+					this.#behaviour,
+					this.#fontDownloadsLocked === undefined
+						? values
+						: { ...values, [FONT_DOWNLOADS_KEY]: this.#behaviour.allowFontDownloads },
+				);
 				if (behaviourChanged(next, this.#behaviour)) {
 					this.#behaviour = next;
 					writeBehaviour(next);
@@ -163,6 +187,14 @@ export class ViewerProfile {
 	}
 	#sync(): void {
 		if (this.#account) this.#account.profile = this.#profile;
-		this.#dialog.values = profileValues(this.#profile, this.theme.get(), this.#behaviour);
+		this.#dialog.values = this.#values();
+	}
+	#values(): OfficeOptionValues {
+		return profileValues(
+			this.#profile,
+			this.theme.get(),
+			this.#behaviour,
+			this.#fontDownloadsLocked,
+		);
 	}
 }
