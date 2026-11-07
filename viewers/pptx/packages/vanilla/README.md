@@ -392,6 +392,16 @@ A host that has closed all viewers sharing the renderer module may call
 memoisation. This is global, so wait until other live viewers no longer need
 pending picture samples. Stage disposal itself only affects its own subtree.
 
+## Privacy and network use
+
+The viewer renders and saves decks in the browser and never uploads them. It contacts other servers only in these cases:
+
+- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as in PowerPoint, which downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to a self-hosted mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can also turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts and line breaks can differ from PowerPoint. If the download is slow, the deck waits up to 8 seconds, and it opens at once when the font server cannot be reached (offline use works). See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
+- **Linked pictures and media** in a deck are fetched from their URLs while the Trust Center option "Allow external content" is on (the default). `allowExternalContent: false` blocks them.
+- **Share and Broadcast**, only when started: updates go to the server you configure; with no server, peers meet through y-webrtc's public signaling server and public STUN servers.
+
+Nothing collects analytics or telemetry. The full list, including what is kept in local storage, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0. See `LICENSE` and `NOTICE`.

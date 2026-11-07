@@ -47,7 +47,7 @@ function stubCanvas(
 	return { measured };
 }
 
-const FONT = { fontFamily: 'Arial', fontSizePx: 16 };
+const FONT = { fontFamily: 'Test Sans', fontSizePx: 16 };
 
 beforeEach(() => {
 	resetMetricTrackingCache();

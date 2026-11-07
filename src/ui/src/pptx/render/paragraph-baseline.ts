@@ -123,6 +123,31 @@ export function cssBaseline(boxes: readonly CssLineBox[]): number {
 	);
 }
 
+const isDigit = (text: string, index: number): boolean => {
+	const code = text.charCodeAt(index);
+	return code >= 48 && code <= 57;
+};
+
+/**
+ * The first `<n>px` size in a CSS `font` shorthand (`NaN` when there is none),
+ * the leftmost match of `\d+(\.\d+)?px`. It scans back from each `px` rather
+ * than running that pattern, which backtracks quadratically on long digit runs
+ * that never reach a `px`.
+ */
+export function fontSizePx(font: string): number {
+	for (let at = font.indexOf('px'); at >= 0; at = font.indexOf('px', at + 2)) {
+		let start = at;
+		while (start > 0 && isDigit(font, start - 1)) start--;
+		if (start === at) continue;
+		if (start > 1 && font[start - 1] === '.' && isDigit(font, start - 2)) {
+			start--;
+			while (start > 0 && isDigit(font, start - 1)) start--;
+		}
+		return Number.parseFloat(font.slice(start, at));
+	}
+	return Number.NaN;
+}
+
 let context: CanvasRenderingContext2D | null | undefined;
 const cache = new Map<string, FontBox>();
 
@@ -160,7 +185,7 @@ export const measureFontBoxWithCanvas: FontBoxMeasure = (font) => {
 	if (state !== 'settled') {
 		return { ...box, provisional: true, ...(state === 'loading' ? { loading: true } : {}) };
 	}
-	const size = Number.parseFloat(/(\d+(?:\.\d+)?)px/u.exec(font)?.[1] ?? '');
+	const size = fontSizePx(font);
 	const gap = typoLineGapEm(firstFontFamily(font)) * size;
 	if (gap > 0) {
 		box.lineGap = gap;
@@ -211,7 +236,8 @@ function plainRun(run: ParagraphRun): boolean {
 /**
  * How far (px) to move a paragraph down so its baselines sit where PowerPoint
  * puts them (see the module comment), or `undefined` when it needs no move or
- * its lines cannot be modelled: no text, runs in more than one size or face,
+ * its lines cannot be modelled: no text, runs in more than one face or (except
+ * at an exact pitch above every run's single spacing) more than one size,
  * shifted (superscript, subscript) runs, equations, tabs, ruby or script
  * fallback pieces. Every line of such a paragraph has the same pitch and the
  * same baseline offset, so one move fixes them all and leaves the flow alone.
@@ -314,8 +340,15 @@ export function resolveParagraphBaseline(
 	const familyOf = (run: ParagraphRun) => ownFamily(run.style.fontFamily) ?? strutFamily;
 	const size = sizeOf(first);
 	const family = familyOf(first);
-	if (!(size > 0) || runs.some((run) => sizeOf(run) !== size || familyOf(run) !== family)) {
+	if (runs.some((run) => !(sizeOf(run) > 0) || familyOf(run) !== family)) {
 		return undefined;
+	}
+	if (runs.some((run) => sizeOf(run) !== size)) {
+		return mixedSizeBaseline(
+			input,
+			runs.map((run) => ({ run, size: sizeOf(run) })),
+			family,
+		);
 	}
 	const strut = measure(`normal ${strutSizePx}px ${strutFamily}`);
 	const text = measure(runFont(first, size, family));
@@ -353,6 +386,57 @@ export function resolveParagraphBaseline(
 	return {
 		shift: Math.abs(total) < MIN_SHIFT_PX ? undefined : total,
 		provisional,
+		...(extentDelta === undefined ? {} : { extentDelta }),
+	};
+}
+
+/**
+ * A line whose runs differ in size, at an exact pitch above every run's single
+ * spacing. PowerPoint then puts the baseline at {@link BASELINE_SHARE} of the
+ * pitch whatever the sizes (a 9pt bullet opening a 7pt line at 11pt exact sits
+ * level with an all-7pt line), so only the CSS baseline of the strut and every
+ * run's box is needed, and the font's own proportions are not. Any other mix is
+ * left where the browser puts it.
+ */
+function mixedSizeBaseline(
+	input: BaselineShiftInput,
+	sized: readonly { run: ParagraphRun; size: number }[],
+	family: string,
+): ReturnType<typeof resolveParagraphBaseline> {
+	const { lineHeight, strutSizePx, strutFamily, measure = measureFontBoxWithCanvas } = input;
+	if (typeof lineHeight !== 'string' || !/^[\d.]+(?:pt|px)$/u.test(lineHeight.trim())) {
+		return undefined;
+	}
+	const pitch = lineHeightToPx(strutSizePx, lineHeight.trim());
+	if (!sized.every(({ size }) => pitch > size * SINGLE_PITCH * (1 + SINGLE_EPSILON))) {
+		return undefined;
+	}
+	const strut = measure(`normal ${strutSizePx}px ${strutFamily}`);
+	if (!strut || strut.loading) {
+		return undefined;
+	}
+	const boxes: CssLineBox[] = [{ lineHeight: pitch, font: strut }];
+	for (const { run, size } of sized) {
+		const font = measure(runFont(run, size, family));
+		if (!font || font.loading) {
+			return undefined;
+		}
+		boxes.push({ lineHeight: pxOf(run.style.lineHeight) ?? pitch, font });
+	}
+	const largest = sized.reduce((a, b) => (b.size > a.size ? b : a));
+	const reference = referenceBox(
+		measure(referenceFont(largest.run.style, family)),
+		firstFontFamily(`1px ${family}`),
+	);
+	const extentDelta =
+		reference && !reference.loading
+			? lastLineExtentDelta(largest.size, pitch, reference)
+			: undefined;
+	const snap = input.bodyTop ? bodyTopSnapShift(input.bodyTop, largest.size) : 0;
+	const total = Math.round((BASELINE_SHARE * pitch - cssBaseline(boxes) + snap) * 100) / 100;
+	return {
+		shift: Math.abs(total) < MIN_SHIFT_PX ? undefined : total,
+		provisional: false,
 		...(extentDelta === undefined ? {} : { extentDelta }),
 	};
 }

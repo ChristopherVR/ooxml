@@ -119,6 +119,10 @@ If you're building for Vue, Angular, Svelte, or vanilla JS instead, use the matc
 
 See the [project README](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) for the full monorepo overview, architecture, and a per-package documentation index.
 
+## Privacy and network use
+
+Parsing, editing and saving happen locally and never upload the file. Linked (external) pictures and media are not fetched unless you pass `allowExternalImages: true`. Node signature inspection checks certificate revocation with the OCSP responder named in each certificate. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 [Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE). Please keep the [`NOTICE`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/NOTICE) file with redistributions.

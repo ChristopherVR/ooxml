@@ -7,9 +7,11 @@ import {
 	initializeInlineListDom,
 	getInlineEditorSelection,
 	mapInlineEditorChord,
+	markInsertedParagraph,
 	placeCaretAt,
 	readEditableText,
 	restoreEditorKeyboardFocus,
+	seedPlainInlineText,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
 import type {
@@ -23,8 +25,6 @@ import { hasTextProperties } from 'pptx-viewer-core';
 import { createEl, getTextBlockStyle } from '../render';
 import type { InlineEditorSession, OpenInlineEditorOptions } from './inline-text-editor-types';
 import { activateInlineTextList } from './inline-text-list-activation';
-import { markInsertedParagraph } from './inline-text-paragraph-marker';
-import { seedPlainInlineText } from './inline-text-seed';
 
 export type { InlineEditorSession, OpenInlineEditorOptions } from './inline-text-editor-types';
 
@@ -88,9 +88,6 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 	const { doc, overlayRoot, box, scale, element } = options;
 	const withText = hasTextProperties(element) ? element : undefined;
 	const initialText = withText?.text ?? '';
-	const fontSize = withText?.textStyle?.fontSize;
-
-	const fontFamily = withText?.textStyle?.fontFamily;
 	/**
 	 * The surface is placed in the overlay's own (scaled) space, then given the
 	 * element's SLIDE-space typography and shrunk back onto it with a scale
@@ -104,14 +101,16 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 	 * it looked like a stray box rather than a missing one). And it carried only
 	 * the font size and family, so a centred or right-aligned paragraph jumped to
 	 * the left edge the moment editing began, in a different weight and colour.
-	 * `getTextBlockStyle` is what the renderer itself paints with.
+	 * `getTextBlockStyle` is what the renderer itself paints with, so nothing
+	 * may override its font: the body's raw `fontFamily` has no substitution
+	 * chain (a missing deck font then fell back to the browser's default serif
+	 * instead of view mode's stand-in) and its raw `fontSize` skips the autofit
+	 * scale. The runs carry their own view-mode style (`seedPlainInlineText`).
 	 */
 	const surface = createEl(doc, 'div', 'pptxv-inline-editor pptxv-inline-text-editor', {
 		// The block style first: it carries the element's own box sizing, which
 		// the editor's geometry then has to win over.
 		...getTextBlockStyle(element),
-		...(typeof fontSize === 'number' ? { fontSize: `${fontSize}px` } : {}),
-		...(fontFamily !== undefined ? { fontFamily } : {}),
 		left: `${box.x * scale}px`,
 		top: `${box.y * scale}px`,
 		width: `${box.width}px`,
@@ -135,7 +134,12 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 		initializeInlineListDom(textContainer, listSeed);
 		surface.append(textContainer);
 	} else if (!collaborative) {
-		textContainer = seedPlainInlineText(surface, withText?.textSegments, initialText);
+		textContainer = seedPlainInlineText(
+			surface,
+			withText?.textSegments,
+			initialText,
+			withText?.textStyle,
+		);
 	}
 	// Compare commits against the same authored-text projection used on close.
 	// `element.text` can include core-generated bullet markers, while the editor

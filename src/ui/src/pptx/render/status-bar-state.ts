@@ -11,6 +11,7 @@
 import { isActionHidden } from './toolbar-actions';
 import type { ToolbarActionId } from './toolbar-actions';
 import type { SaveProgressStatus } from './controller/save-progress-controller';
+import type { DeckWebfontProgress } from './deck-webfont-readiness';
 
 export type StatusBarTranslate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -48,6 +49,10 @@ export interface StatusBarViewState {
 	showSlideShow?: boolean;
 	/** The pressed view button; omit when none is active. */
 	viewMode?: StatusBarViewMode;
+	/** Already-translated "Downloading fonts" text while the deck's webfonts download. */
+	fontText?: string;
+	/** The families being downloaded, for the item's tooltip. */
+	fontTitle?: string;
 	translate?: StatusBarTranslate;
 }
 
@@ -136,6 +141,11 @@ export interface StatusBarHostState {
 	translate: StatusBarTranslate;
 	/** A save to the host's storage in progress, see `saveProgressStatus`. */
 	saveProgress?: SaveProgressStatus | undefined;
+	/**
+	 * The deck's webfont download (the host's `prepareDeckWebfonts` progress);
+	 * shown while it runs after the deck is already on screen.
+	 */
+	fontProgress?: DeckWebfontProgress | null | undefined;
 	/** Clock for the "Saved n minutes ago" text; defaults to now. */
 	now?: number;
 }
@@ -166,6 +176,15 @@ export function statusBarState(host: StatusBarHostState): StatusBarViewState {
 		showSorter: handles('sorter'),
 		showSlideShow: handles('slideShow') && !hidden('fullscreen'),
 		...(host.viewMode ? { viewMode: host.viewMode } : {}),
+		...(host.fontProgress
+			? {
+					fontText: host.translate('pptx.viewer.loadingFonts', {
+						loaded: host.fontProgress.loaded,
+						total: host.fontProgress.total,
+					}),
+					fontTitle: host.fontProgress.families.join(', '),
+				}
+			: {}),
 		translate: host.translate,
 	};
 }

@@ -1,6 +1,7 @@
 import { themeColorRefFromColorChoice } from '../../color/theme-color-ref';
-import type { PptxTableCellStyle, XmlObject } from '../../types';
+import type { PptxTableCellStyle, StrokeDashType, XmlObject } from '../../types';
 import { extractColorChoiceXml } from '../../utils/color-xml-preservation';
+import { parseDrawingLineDash } from '../../utils/drawing-line-dash';
 
 export interface TableCellFillBorderContext {
 	emuPerPx: number;
@@ -136,6 +137,12 @@ export function applyCellFillStyle(
 	return hasStyle;
 }
 
+/** An `a:prstDash/@val` as written, or `undefined` when it is empty. */
+function presetDashValue(value: unknown): StrokeDashType | undefined {
+	const text = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+	return text ? (text as StrokeDashType) : undefined;
+}
+
 /** Apply border styles (4 sides + diagonals) to a table cell style. */
 export function applyCellBorderStyle(
 	cellProperties: XmlObject | undefined,
@@ -184,13 +191,15 @@ export function applyCellBorderStyle(
 			hasStyle = true;
 		}
 
-		const prstDash = node['a:prstDash'] as XmlObject | undefined;
-		if (prstDash) {
-			const dashVal = String(prstDash['@_val'] || '');
-			if (dashVal) {
-				(style as Record<string, unknown>)[`${prefix}Dash`] = dashVal;
-				hasStyle = true;
+		// A preset (`a:prstDash`, any value kept as written) or a custom
+		// pattern (`a:custDash`, read as `'custom'` with its segments).
+		const dash = parseDrawingLineDash(node, presetDashValue);
+		if (dash.strokeDash) {
+			(style as Record<string, unknown>)[`${prefix}Dash`] = dash.strokeDash;
+			if (dash.strokeDash === 'custom') {
+				(style as Record<string, unknown>)[`${prefix}DashSegments`] = dash.customDashSegments;
 			}
+			hasStyle = true;
 		}
 	}
 

@@ -192,6 +192,10 @@ const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);
 
 `ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow and releases, and the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next; the working agreements are in [AGENTS.md](../../AGENTS.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md), and [PROVENANCE.md](../../PROVENANCE.md) records where each module came from.
 
+## Privacy and network use
+
+`ooxml-core` parses, edits and writes documents locally and never uploads them. It contacts a server only when you ask it to: a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and, in Node signature inspection, the OCSP responder named in a signing certificate. Linked pictures are not fetched by default. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 [Apache-2.0](LICENSE). Third-party notices are in [NOTICE](NOTICE) and [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES).

@@ -10,6 +10,7 @@ import {
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import {
+	cssFontStack,
 	floatPosition,
 	paragraphFloats,
 	pageNumbers,
@@ -62,7 +63,7 @@ function runElement(run: TextRun, values: PageFieldValues): HTMLElement {
 	if (run.italic) span.style.fontStyle = 'italic';
 	if (run.underline) span.style.textDecoration = 'underline';
 	if (run.fontSize) span.style.fontSize = `${run.fontSize}pt`;
-	if (run.fontFamily) span.style.fontFamily = `"${run.fontFamily.replace(/["\\]/g, '')}"`;
+	if (run.fontFamily) span.style.fontFamily = cssFontStack(run.fontFamily);
 	if (run.color && /^#[0-9a-f]{6}$/i.test(run.color)) span.style.color = run.color;
 	return span;
 }
@@ -192,9 +193,7 @@ export function watermarkElement(
 		opacity: spec.semitransparent ? '0.5' : '1',
 		transform: spec.layout === 'diagonal' ? 'rotate(-45deg)' : 'none',
 		zIndex: '0',
-		...(spec.fontFamily
-			? { fontFamily: `"${spec.fontFamily.replace(/["\\]/g, '')}", sans-serif` }
-			: {}),
+		...(spec.fontFamily ? { fontFamily: cssFontStack(spec.fontFamily) } : {}),
 	});
 	return layer;
 }

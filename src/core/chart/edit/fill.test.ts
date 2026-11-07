@@ -11,6 +11,7 @@ import {
 	setChartSeriesColor,
 	setChartSeriesTransparency,
 } from './fill';
+import { setChartPointOptions } from './series-options';
 import { applyChartColorPalette, setChartStyle } from './style';
 import { setChartType } from './type';
 import { columnChart } from './test-support/column-chart';
@@ -38,6 +39,25 @@ describe('fill edits', () => {
 		const shape = chartSpaceSeries(next)[1]!.spPr!;
 		expect(shape.line?.fill).toEqual({ kind: 'solid', color: red });
 		expect(shape.fill).toEqual(chartSpaceSeries(line)[1]!.spPr!.fill);
+	});
+
+	it('clears point paint like the Format pane unless asked to keep it', () => {
+		const pointed = setChartDataPointFill(columnChart(), 0, 2, { kind: 'solid', color: red });
+		const blue = { kind: 'srgb' as const, value: '3B5BDB', transforms: [] };
+		// A point with nothing else of its own is removed: an empty c:spPr draws the automatic colour.
+		expect(chartSpaceSeries(setChartSeriesColor(pointed, 0, blue))[0]!.dataPoints).toEqual([]);
+		const inverted = setChartPointOptions(pointed, 0, 2, { invertIfNegative: true });
+		expect(chartSpaceSeries(setChartSeriesColor(inverted, 0, blue))[0]!.dataPoints).toEqual([
+			{ index: 2, invertIfNegative: true },
+		]);
+		expect(writeChartSpace(setChartSeriesColor(inverted, 0, blue))).not.toMatch(
+			/<c:dPt>((?!<\/c:dPt>).)*<c:spPr\/>/su,
+		);
+		const kept = setChartSeriesColor(pointed, 0, blue, { keepPointColors: true });
+		expect(chartSpaceSeries(kept)[0]!.spPr?.fill).toEqual({ kind: 'solid', color: blue });
+		expect(chartSpaceSeries(kept)[0]!.dataPoints).toEqual([
+			{ index: 2, spPr: { fill: { kind: 'solid', color: red } } },
+		]);
 	});
 
 	it('adds and removes a data point override', () => {

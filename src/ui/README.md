@@ -481,6 +481,10 @@ content and native media controls without editing overlays.
 [Core and UI source](https://github.com/ChristopherVR/ooxml) |
 [Shared UI decisions](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)
 
+## Privacy and network use
+
+The elements render and edit locally. The PowerPoint elements (`ooxml-ui/pptx`) download fonts that are neither installed nor embedded from Google Fonts by default, fetch linked pictures and media while "Allow external content" is on, and use public signaling and STUN servers for serverless Share; each has an option to turn it off (`googleFonts`, `allowExternalContent`, `signaling`), described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). The Word, Excel and Visio elements make no network request unless the host sets their `googleFonts` property or the reader turns on File > Options > Trust Center > "Download fonts that are not installed or embedded" (off by default; the same font requests as PowerPoint), and Teams talks only to the servers you configure (plus Google's public STUN server for calls unless `iceServers` is set). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0. Several controls are derived from `pptx-viewer`; see

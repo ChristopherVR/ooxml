@@ -156,6 +156,8 @@ export interface ViewerQuickAccessOptions {
 export interface ViewerTrustOptions {
 	openInProtectedView: boolean;
 	allowExternalContent: boolean;
+	/** Download fonts that are neither installed nor embedded (the Google Fonts fallback). */
+	allowFontDownloads: boolean;
 	confirmExternalHyperlinks: boolean;
 }
 
@@ -257,6 +259,7 @@ export const DEFAULT_VIEWER_OPTIONS: ViewerOptions = {
 	trust: {
 		openInProtectedView: false,
 		allowExternalContent: true,
+		allowFontDownloads: true,
 		confirmExternalHyperlinks: true,
 	},
 };

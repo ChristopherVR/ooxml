@@ -11,7 +11,7 @@
  */
 import { createCollaborationLivePatcher, reportInlineTextDraft } from 'ooxml-ui/pptx';
 import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
-import type { SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { DeckWebfontProgress, SlideSizeEmu } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -102,6 +102,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	// ── Core State ────────────────────────────────────────────────────
 	const [mode, setMode] = useState<ViewerMode>('edit');
 	const [loading, setLoading] = useState(true);
+	const [fontProgress, setFontProgress] = useState<DeckWebfontProgress | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const { slides, setSlides, slidesRef } = useSlideState();
 	const [templateElementsBySlideId, setTemplateElementsBySlideId] = useState<
@@ -220,6 +221,8 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		setMode,
 		loading,
 		setLoading,
+		fontProgress,
+		setFontProgress,
 		error,
 		setError,
 		slides,

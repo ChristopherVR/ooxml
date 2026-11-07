@@ -1,22 +1,32 @@
-import { $, choose } from './ui.js';
+import { $, notify } from './ui.js';
 import { applyOfficeTheme, applyPowerPointTheme } from './theme-tokens.js';
+import { applyWorkspaceSettings, onSettings, settings } from './settings.js';
 
 /** Each accent: its name, the light-mode value and the dark-mode value. */
-const accents = {
+export const accents = {
 	blue: ['Office blue', '#0f6cbd', '#479ef5'],
 	purple: ['Violet', '#5b5fc7', '#a3a5f0'],
+	teal: ['Teal', '#03787c', '#4cc2c7'],
 	green: ['Forest', '#107c41', '#54b054'],
+	orange: ['Amber', '#a84b00', '#f7924a'],
+	rose: ['Rose', '#b4126e', '#f27ac2'],
+	cranberry: ['Cranberry', '#a4262c', '#f1707b'],
 	graphite: ['Graphite', '#525252', '#a8a8a8'],
 };
 /** The accent as text on the canvas: the same in light mode, lifted for contrast in dark mode. */
 const accentInk = {
 	blue: ['#0f6cbd', '#7ab8ff'],
 	purple: ['#5b5fc7', '#bdbef8'],
+	teal: ['#03787c', '#7ad8dc'],
 	green: ['#107c41', '#7ccf8a'],
+	orange: ['#a84b00', '#ffae73'],
+	rose: ['#b4126e', '#f7a3d6'],
+	cranberry: ['#a4262c', '#f7a1a8'],
 	graphite: ['#525252', '#c4c4c4'],
 };
+export const DEFAULT_THEME = Object.freeze({ mode: 'dark', accent: 'blue' });
 /** A first visit opens in dark mode; the appearance settings remember any other choice. */
-let preferences = { mode: 'dark', accent: 'blue' };
+let preferences = { ...DEFAULT_THEME };
 try {
 	const saved = JSON.parse(localStorage.getItem('ooxml-suite-theme'));
 	if (saved && ['light', 'dark', 'system'].includes(saved.mode) && accents[saved.accent])
@@ -56,13 +66,20 @@ function apply() {
 	for (const listener of listeners) listener(theme);
 }
 media.addEventListener('change', apply);
-export function setThemeMode(mode) {
-	if (!['system', 'light', 'dark'].includes(mode)) return;
-	preferences = { ...preferences, mode };
+/** The saved choice: `mode` ('light', 'dark' or 'system') and `accent` (a key of `accents`). */
+export const themePreferences = () => ({ ...preferences });
+export function setThemePreferences(next) {
+	const mode = ['system', 'light', 'dark'].includes(next?.mode) ? next.mode : preferences.mode;
+	const accent = accents[next?.accent] ? next.accent : preferences.accent;
+	if (mode === preferences.mode && accent === preferences.accent) return;
+	preferences = { mode, accent };
 	try {
 		localStorage.setItem('ooxml-suite-theme', JSON.stringify(preferences));
 	} catch {}
 	apply();
+}
+export function setThemeMode(mode) {
+	setThemePreferences({ mode });
 }
 window.addEventListener('storage', (event) => {
 	if (event.key !== 'ooxml-suite-theme') return;
@@ -76,32 +93,19 @@ window.addEventListener('storage', (event) => {
 });
 export function mountThemes() {
 	apply();
+	applyWorkspaceSettings();
+	onSettings((next, changed) => {
+		if (changed.some((key) => key === 'corners' || key === 'reduceMotion')) {
+			applyWorkspaceSettings(document.documentElement, next);
+			if (!next.reduceMotion) document.documentElement.classList.add('theme-anim');
+			// Editors take their corner radius with the palette.
+			for (const listener of listeners) listener(currentTheme());
+		}
+	});
 	// Palette changes after the first paint cross-fade (styles.css); the first paint is instant.
-	requestAnimationFrame(() => document.documentElement.classList.add('theme-anim'));
-	$('theme-picker').onclick = () => {
-		const form = document.createElement('form');
-		form.innerHTML = `<p>Choose the appearance of your workspace and all open apps.</p><fieldset><legend>Appearance</legend><div class="theme-modes">${['light', 'dark', 'system'].map((mode) => `<label><input type="radio" name="mode" value="${mode}" ${preferences.mode === mode ? 'checked' : ''} /><span class="theme-preview ${mode}"></span>${mode[0].toUpperCase() + mode.slice(1)}</label>`).join('')}</div></fieldset><fieldset><legend>Accent theme</legend><div class="theme-accents">${Object.entries(
-			accents,
-		)
-			.map(
-				([id, [name, color]]) =>
-					`<label><input type="radio" name="accent" value="${id}" ${preferences.accent === id ? 'checked' : ''} /><span style="background:${color}"></span>${name}</label>`,
-			)
-			.join(
-				'',
-			)}</div></fieldset><p class="theme-hint">Documents keep their own colours. The appearance changes the workspace around them.</p><button class="primary">Done</button>`;
-		form.onchange = () => {
-			const data = new FormData(form);
-			preferences = { mode: data.get('mode'), accent: data.get('accent') };
-			try {
-				localStorage.setItem('ooxml-suite-theme', JSON.stringify(preferences));
-			} catch {}
-			apply();
-		};
-		form.onsubmit = (event) => {
-			event.preventDefault();
-			$('dialog').close();
-		};
-		choose('Appearance', form);
-	};
+	requestAnimationFrame(() => {
+		if (!settings().reduceMotion) document.documentElement.classList.add('theme-anim');
+	});
+	$('theme-picker').onclick = () =>
+		void import('./settings-dialog.js').then(({ openSettings }) => openSettings()).catch(notify);
 }

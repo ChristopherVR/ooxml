@@ -152,11 +152,11 @@ describe('setSlideTransition', () => {
 });
 
 describe('setCanvasSize', () => {
-	it('updates canvas dimensions', () => {
+	it('converts point inputs to pixel canvas dimensions', () => {
 		const result = setCanvasSize(ctx(), { width: 1920, height: 1080 });
 		expect(result.dirty).toBeTruthy();
-		expect(result.pptxData.width).toBe(1920);
-		expect(result.pptxData.height).toBe(1080);
+		expect(result.pptxData.width).toBe(2560);
+		expect(result.pptxData.height).toBe(1440);
 	});
 
 	it('updates EMU dimensions when present', () => {

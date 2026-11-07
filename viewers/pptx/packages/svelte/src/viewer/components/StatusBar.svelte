@@ -6,7 +6,7 @@
 	 * read-only viewers retain PowerPoint's navigation and zoom chrome.
 	 */
 	import { dispatchStatusBarIntent, saveProgressStatus, statusBarState } from 'ooxml-ui/pptx';
-	import type { SaveProgressState } from 'ooxml-ui/pptx';
+	import type { DeckWebfontProgress, SaveProgressState } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
 	import type { AutosaveStatus } from '../state/autosave.svelte';
@@ -19,6 +19,7 @@
 		autosaveStatus,
 		lastSavedAt,
 		saveProgress,
+		fontProgress = null,
 		showNotes = false,
 		notesExpanded = false,
 		isFullscreen = false,
@@ -43,6 +44,8 @@
 		lastSavedAt?: number | null;
 		/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
 		saveProgress?: SaveProgressState;
+		/** The deck's webfont download; shown while it runs after the deck is on screen. */
+		fontProgress?: DeckWebfontProgress | null;
 		showNotes?: boolean;
 		notesExpanded?: boolean;
 		isFullscreen?: boolean;
@@ -71,6 +74,7 @@
 				? { state: autosaveStatus, timestamp: lastSavedAt ?? undefined }
 				: undefined,
 			saveProgress: saveProgress ? saveProgressStatus(saveProgress, t) : undefined,
+			fontProgress,
 			zoomPercent: hideZoom ? undefined : zoomPercent,
 			notesExpanded,
 			// "Normal" is active whenever neither the slide sorter nor the slideshow is up.

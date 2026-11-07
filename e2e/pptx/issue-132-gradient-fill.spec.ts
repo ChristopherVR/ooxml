@@ -232,10 +232,11 @@ test.describe('issue #132 - gradient fill / preset adjustment fidelity', () => {
 		});
 
 		expect(outline, 'found the gradient-outlined ellipse').not.toBeNull();
-		expect(outline?.stopColors, 'both authored stops reach the paint server').toStrictEqual([
-			'#F0FDFE',
-			'#BFBFBF',
-		]);
+		// Both authored stops bound the ramp (the stops between them re-sample
+		// PowerPoint's sigma curve).
+		const stops = outline?.stopColors ?? [];
+		expect(stops.at(0), 'the first authored stop reaches the paint server').toBe('#F0FDFE');
+		expect(stops.at(-1), 'the last authored stop reaches the paint server').toBe('#BFBFBF');
 		// The outline follows the ellipse (arc commands), not a rectangle.
 		expect(outline?.strokedPath).toContain('A ');
 		// And the averaged solid border is gone, so it cannot show underneath.
@@ -255,8 +256,11 @@ test.describe('issue #132 - gradient fill / preset adjustment fidelity', () => {
 		// A `circle` sized with a PERCENTAGE is invalid CSS (only a length is
 		// legal), so the browser discarded the whole declaration and the shape
 		// rendered with no fill at all. `getComputedStyle` reporting anything
-		// other than `none` is the regression guard.
-		expect(paint?.backgroundImage, 'the gradient is parseable CSS').toContain('radial-gradient');
+		// other than `none` is the regression guard. The off-centre focus is an
+		// SVG focal radial gradient image, as PowerPoint draws it.
+		expect(paint?.backgroundImage, 'the gradient is parseable CSS').toMatch(
+			/radial-gradient|radialGradient/u,
+		);
 		expect(paint?.backgroundImage).not.toMatch(/circle\s+[\d.]+%/u);
 
 		// The tile is twice the shape and hangs off its top-left, so the tile's

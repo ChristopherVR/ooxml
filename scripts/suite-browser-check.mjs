@@ -194,7 +194,7 @@ try {
 	await page.locator('#theme-picker').click();
 	await page.locator('input[name=mode][value=dark]').check({ force: true });
 	await page.locator('input[name=accent][value=purple]').check({ force: true });
-	await page.getByRole('button', { name: 'Done', exact: true }).click();
+	await page.locator('#settings-dialog').getByRole('button', { name: 'OK', exact: true }).click();
 	assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
 	assert.equal(
 		await page

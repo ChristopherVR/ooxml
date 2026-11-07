@@ -64,6 +64,11 @@ export class DrawingLayer {
 		this.#generation++;
 	}
 
+	/** Redraws every drawing on the next paint (text measured again) without ending a drag. */
+	redraw(): void {
+		this.#generation++;
+	}
+
 	#url(partName: string, contentType: string): string | undefined {
 		const cached = this.#urls.get(partName);
 		if (cached) return cached;

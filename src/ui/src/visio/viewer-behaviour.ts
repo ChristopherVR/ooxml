@@ -1,5 +1,6 @@
 import { VISIO_LOCALES, type VisioLocale } from './ribbon-locale';
 import { isScreenTipStyle, type ScreenTipStyle } from './viewer-screen-tips';
+import { FONT_DOWNLOADS_DEFAULT } from '../fonts/font-download-policy';
 
 /** Undo depth is bounded by the retained drawing snapshots (see EDIT_HISTORY_LIMITS). */
 export const MAX_UNDO_LEVELS = 19;
@@ -60,6 +61,11 @@ export interface VisioBehaviour extends TabSettings, QuickAccessSettings {
 	autoRecover: boolean;
 	/** Minutes between AutoRecover copies. */
 	autoRecoverMinutes: number;
+	/**
+	 * Trust Center: download missing fonts (Google Fonts) when the host left `googleFonts` unset.
+	 * Off unless the reader turns it on; a host value overrides it (`fonts/font-download-policy`).
+	 */
+	allowFontDownloads: boolean;
 }
 
 const tabDefaults = Object.fromEntries(
@@ -79,6 +85,7 @@ export const DEFAULT_BEHAVIOUR: Readonly<VisioBehaviour> = {
 	checkSpelling: true,
 	autoRecover: false,
 	autoRecoverMinutes: 10,
+	allowFontDownloads: FONT_DOWNLOADS_DEFAULT,
 	...tabDefaults,
 	...qatDefaults,
 };
