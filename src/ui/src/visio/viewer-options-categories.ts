@@ -14,6 +14,8 @@ import {
 	MAX_UNDO_LEVELS,
 	QUICK_ACCESS_COMMANDS,
 } from './viewer-behaviour';
+import { visioTrustCategory } from './viewer-options-trust';
+import type { VisioLocale } from './ribbon-locale';
 
 export { MAX_UNDO_LEVELS };
 
@@ -253,5 +255,18 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 		],
 	},
 	unavailableCategory(visio, 'addins'),
-	unavailableCategory(visio, 'trust'),
+	visioTrustCategory(),
 ];
+
+/**
+ * The categories for a display language and the host's font download decision: the Trust
+ * Center is rebuilt in that language and locked when the host set `googleFonts`.
+ */
+export function visioOptionCategories(
+	locale: VisioLocale,
+	fontDownloadsLocked?: boolean,
+): readonly OfficeOptionCategory[] {
+	return VISIO_OPTION_CATEGORIES.map((category) =>
+		category.id === 'trust' ? visioTrustCategory(locale, fontDownloadsLocked) : category,
+	);
+}

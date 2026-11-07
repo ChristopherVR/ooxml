@@ -8,6 +8,7 @@ import {
 	resolveEffectiveHiddenActions,
 } from 'ooxml-ui/pptx';
 import type {
+	GoogleFontsOption,
 	ResolvedCustomization,
 	ToolbarActionId,
 	ViewerCustomization,
@@ -153,10 +154,12 @@ export function customizationContext(reader: ViewerCustomizationReader): Map<sym
 export function useViewerCustomizationRoot(
 	getCustomization: () => ViewerCustomization | undefined,
 	getAllowExternalContent: () => boolean | undefined = () => undefined,
+	getGoogleFonts: () => GoogleFontsOption | undefined = () => undefined,
 ): ViewerCustomizationState {
 	const initial = untrack(getCustomization);
 	const state = new ViewerCustomizationState(initial);
 	followAllowExternalContent(state, getAllowExternalContent);
+	followGoogleFonts(state, getGoogleFonts);
 	provideViewerCustomization(state);
 	let last = initial;
 	$effect.pre(() => {
@@ -186,6 +189,22 @@ export function followAllowExternalContent(
 	$effect.pre(() => {
 		const allow = getAllowExternalContent();
 		untrack(() => state.controller.setAllowExternalContent(allow));
+	});
+}
+
+/**
+ * Follow the host `googleFonts` policy, which locks the Trust Center
+ * "Download fonts" setting (off for `false` or an invalid mirror, on for a
+ * valid `{ baseUrl }`), the same way as {@link followAllowExternalContent}.
+ */
+export function followGoogleFonts(
+	state: ViewerCustomizationState,
+	getGoogleFonts: () => GoogleFontsOption | undefined,
+): void {
+	state.controller.setGoogleFonts(untrack(getGoogleFonts));
+	$effect.pre(() => {
+		const host = getGoogleFonts();
+		untrack(() => state.controller.setGoogleFonts(host));
 	});
 }
 

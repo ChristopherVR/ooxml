@@ -3,6 +3,12 @@ export const METRIC_FONT_SUBSTITUTES: Record<string, { fallbacks: string[]; gene
 	calibri: { fallbacks: ['Carlito'], generic: 'sans-serif' },
 	'calibri light': { fallbacks: ['Carlito'], generic: 'sans-serif' },
 	cambria: { fallbacks: ['Caladea'], generic: 'serif' },
+	// Aptos, the Microsoft 365 default, has Calibri-close metrics; Carlito is the closest measured
+	// clone (see `webfonts/metric-clones.ts`, which requests the same family).
+	aptos: { fallbacks: ['Carlito'], generic: 'sans-serif' },
+	'aptos display': { fallbacks: ['Carlito'], generic: 'sans-serif' },
+	'aptos narrow': { fallbacks: ['Carlito'], generic: 'sans-serif' },
+	'aptos serif': { fallbacks: ['Caladea'], generic: 'serif' },
 	arial: { fallbacks: ['Arimo', 'Liberation Sans'], generic: 'sans-serif' },
 	helvetica: { fallbacks: ['Arimo', 'Liberation Sans'], generic: 'sans-serif' },
 	'times new roman': { fallbacks: ['Tinos', 'Liberation Serif'], generic: 'serif' },

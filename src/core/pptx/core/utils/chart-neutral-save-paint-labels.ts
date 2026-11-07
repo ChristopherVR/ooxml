@@ -95,8 +95,12 @@ export function planNeutralChartSeriesColors(
 		if (series.gradientFill !== undefined) return;
 		const value = series.color?.replace(/^#/, '');
 		if (value !== undefined && !/^[\da-f]{6}$/i.test(value)) return;
+		// The model states point overrides on their own (`dataPoints`), so the series colour keeps
+		// them, as the PowerPoint writer did.
 		edits.push((space) =>
-			setChartSeriesColor(space, index, value ? { kind: 'srgb', value, transforms: [] } : null),
+			setChartSeriesColor(space, index, value ? { kind: 'srgb', value, transforms: [] } : null, {
+				keepPointColors: true,
+			}),
 		);
 		if (previous.color === undefined) delete series.color;
 		else series.color = previous.color;

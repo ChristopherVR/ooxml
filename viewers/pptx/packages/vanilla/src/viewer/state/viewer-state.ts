@@ -1,5 +1,6 @@
 import { initialInspectorOpen } from 'ooxml-ui/pptx';
 import type {
+	DeckWebfontProgress,
 	CanvasSize,
 	CompatibilityWarningToast,
 	CropSession,
@@ -201,6 +202,8 @@ export interface ViewerState {
 	zoom: ZoomLevel;
 	/** True while a load is in flight. */
 	loading: boolean;
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	fontProgress?: DeckWebfontProgress | null;
 	/** Error message from the last failed load, or null. */
 	error: string | null;
 	/** True while presentation (fullscreen) mode is active. */

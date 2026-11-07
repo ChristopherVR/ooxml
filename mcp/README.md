@@ -60,6 +60,10 @@ This package ships JavaScript source and needs no separate build.
 [Source and tools](https://github.com/ChristopherVR/ooxml/tree/main/mcp) |
 [Core automation](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md)
 
+## Privacy and network use
+
+The MCP server talks to its client over stdio only and makes no network request of its own. It reads and writes files under its root directory, and linked pictures in a deck are not fetched. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0.

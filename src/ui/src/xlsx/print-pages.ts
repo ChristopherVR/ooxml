@@ -83,7 +83,7 @@ export function buildPrintHtml(
 		.join('');
 	return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
 @page{size:${layout.paperWidth / 96}in ${layout.paperHeight / 96}in;margin:0}
-body{margin:0;background:#e8eaed;font-family:Calibri,sans-serif}.xve-print-page{box-sizing:border-box;background:white;margin:16px auto;box-shadow:0 1px 5px #0003;overflow:hidden;break-after:page}.xve-print-content{position:relative;overflow:hidden}
+body{margin:0;background:#e8eaed;font-family:"Calibri","Carlito",sans-serif}.xve-print-page{box-sizing:border-box;background:white;margin:16px auto;box-shadow:0 1px 5px #0003;overflow:hidden;break-after:page}.xve-print-content{position:relative;overflow:hidden}
 table{border-collapse:collapse;table-layout:fixed}td{overflow:hidden;padding:0 3px;box-sizing:border-box;line-height:1.2}th{box-sizing:border-box;font-size:12px;font-weight:400;color:#444;border:1px solid #ccc;overflow:hidden}
 @media print{body{background:white}.xve-print-page{margin:0;box-shadow:none}.xve-print-page:last-child{break-after:auto}}
 </style></head><body>${pages}</body></html>`;

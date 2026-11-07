@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.14.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.14.1) - 2026-11-06
+
+### Bug Fixes
+
+- **deps:** Update emf-converter to 4.25.3 ([e51a619](https://github.com/ChristopherVR/ooxml/commit/e51a6192b3a531022b3677753e79b6a015233b9d))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
 ## [4.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.14.0) - 2026-11-04
 
 ### Features

@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-react-viewer@1.1.1) - 2026-11-06
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-react-viewer@1.1.0) - 2026-11-04
 
 ### Features

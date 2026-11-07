@@ -56,6 +56,7 @@ import {
 	readStoredViewerPrefs,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
+	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveHistoryDepth,
@@ -73,9 +74,9 @@ import {
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
+import { installSvgIdScope } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { installSvgIdScope } from 'ooxml-ui/pptx';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -437,6 +438,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			legacyHiddenActions,
 			optionsStore,
 			allowExternalContent,
+			googleFonts,
 		);
 		const { resolved: customizationResolved, hiddenActions } = custom;
 		const aiEnabled = Boolean(ai) && isFeatureEnabled(customizationResolved, 'ai');
@@ -1077,7 +1079,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			// http(s) image sources actually load.
 			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 			initialSlide,
-			googleFonts,
+			// Host `googleFonts` first, else Trust Center > "Download fonts"; read per render, so the
+			// managed webfont link follows the option and the next load never sees a stale value.
+			googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 			limits,
 			setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 			setModifyVerifier: readOnlyRec.setModifyVerifier,
@@ -1450,7 +1454,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					    mobile/desktop breakpoint (same class of bug as the
 					    CollaborationProvider case documented below). */}
 					{loading ? (
-						<LoadingState />
+						<LoadingState fontProgress={state.fontProgress} />
 					) : error ? (
 						<ErrorState error={error} />
 					) : (
@@ -1599,6 +1603,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 										isDirty={state.isDirty}
 										autosaveStatus={autosaveStatus}
 										saveProgress={saveProgressState}
+										fontProgress={state.fontProgress}
 										onToggleNotes={() => state.setIsSlideNotesCollapsed((p) => !p)}
 										onUpdateNotes={propertyHandlers.handleUpdateNotes}
 										collaborationSlot={

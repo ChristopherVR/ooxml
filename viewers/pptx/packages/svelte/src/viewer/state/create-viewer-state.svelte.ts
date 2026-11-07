@@ -235,6 +235,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		limits: options.getLimits?.(),
 	});
 	loader.translate = (key, params) => options.t(key, params);
+	loader.getGoogleFonts = () => editorUi.getGoogleFonts();
 
 	// Each 3D opt-in flag ANDs the host's own prop with Options > Advanced >
 	// "Disable 3D rendering" (see `resolve3DRenderingFlags`), so a viewer user

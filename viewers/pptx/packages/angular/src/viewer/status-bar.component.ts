@@ -22,6 +22,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 import { dispatchStatusBarIntent, saveProgressStatus, statusBarState } from 'ooxml-ui/pptx';
 import type {
+	DeckWebfontProgress,
 	SaveProgressState,
 	StatusBarIntentHandlers,
 	StatusBarViewState,
@@ -52,6 +53,8 @@ export class StatusBarComponent {
 	readonly autosaveStatus = input<AutosaveStatus | undefined>(undefined);
 	/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
 	readonly saveProgress = input<SaveProgressState | undefined>(undefined);
+	/** The deck's webfont download; shown while it runs after the deck is on screen. */
+	readonly fontProgress = input<DeckWebfontProgress | null>(null);
 	readonly notesOpen = input<boolean>(false);
 	readonly zoomPercent = input<number>(100);
 	/** True when the slide-sorter overlay is open (active-state styling). */
@@ -102,6 +105,7 @@ export class StatusBarComponent {
 			dirty: this.dirty(),
 			autosave: this.autosaveStatus(),
 			saveProgress: this.saveProgressView(),
+			fontProgress: this.fontProgress(),
 			zoomPercent: this.zoomPercent(),
 			notesExpanded: this.notesOpen(),
 			viewMode: this.presenting() ? 'slideShow' : this.sorterActive() ? 'sorter' : 'normal',

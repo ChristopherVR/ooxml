@@ -30,6 +30,7 @@ import { wordRegionContext } from './customization-apply';
 import { attachEditorInteractions } from './editor-interactions';
 import { attachCanvasClick } from './canvas-click';
 import { createChartFormatPane } from './chart-format-pane';
+import { fontDownloadOptions, setFontDownloads } from './docx-webfonts';
 
 /** Element-level operations the chrome needs; they stay on the element because they are public API. */
 export interface ShellApi {
@@ -97,9 +98,11 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 			showRuler: Boolean(shell.canvas?.querySelector('.dve-ruler')),
 			showMarks: shell.paper?.hasAttribute('data-show-marks') ?? false,
 			showThumbnails: core.viewOptions.showThumbnails,
+			...fontDownloadOptions(core.webfonts),
 		}),
 		setOption: (key, value) => {
-			if (key === 'spellCheck') {
+			if (key === 'allowFontDownloads') setFontDownloads(core, value === 'true');
+			else if (key === 'spellCheck') {
 				if (core.view) core.view.dom.spellcheck = value === 'true';
 				core.refreshControls();
 			} else if (key === 'showThumbnails')
