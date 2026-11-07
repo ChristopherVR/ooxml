@@ -46,7 +46,8 @@ const SWITCHABLE: Readonly<Partial<Record<ChartGroupKind, boolean>>> = {
 	surface: true,
 };
 
-function elementFor(kind: ChartGroupKind, is3D: boolean): string {
+/** The group element of a `kind` chart (`barChart`, `bar3DChart`...); throws when there is none. */
+export function chartGroupElement(kind: ChartGroupKind, is3D: boolean): string {
 	const match = Object.entries(CHART_GROUP_ELEMENTS).find(
 		([, value]) => value.kind === kind && value.is3D === is3D,
 	);
@@ -67,7 +68,7 @@ const horizontalBars = (group: Pick<ChartPlotGroup, 'kind' | 'barDirection'>) =>
 
 function newGroup(base: ChartPlotGroup, target: ChartTypeTarget, series: ChartSpaceSeries[]) {
 	const is3D = target.is3D ?? (base.is3D && SWITCHABLE[target.kind] === true);
-	const element = elementFor(target.kind, is3D);
+	const element = chartGroupElement(target.kind, is3D);
 	const group: ChartPlotGroup = { kind: target.kind, element, is3D, series, axisIds: [] };
 	const allowed = GROUP_FIELDS[element] ?? [];
 	for (const key of allowed)

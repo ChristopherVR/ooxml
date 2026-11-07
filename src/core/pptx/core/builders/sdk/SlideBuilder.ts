@@ -11,6 +11,7 @@ import type { PptxHandlerCore } from '../../PptxHandlerCore';
 import type { PptxChartType } from '../../types/chart';
 import type { PptxElement } from '../../types/elements';
 import type { PptxSlide } from '../../types/presentation';
+import { mapBackgroundGradientInput } from './background-gradient-input';
 import {
 	createTextElement,
 	createShapeElement,
@@ -181,13 +182,15 @@ export class SlideBuilder {
 	setBackground(bg: BackgroundInput): this {
 		switch (bg.type) {
 			case 'solid':
+				// A solid colour replaces a gradient set before, which would
+				// otherwise paint (and save) over it.
 				this.slide.backgroundColor = bg.color;
+				delete this.slide.backgroundGradient;
+				delete this.slide.backgroundGradientFill;
 				break;
-			case 'gradient': {
-				const stops = bg.stops.map((s) => `${s.color} ${Math.round(s.position * 100)}%`).join(', ');
-				this.slide.backgroundGradient = `linear-gradient(${bg.angle ?? 180}deg, ${stops})`;
+			case 'gradient':
+				Object.assign(this.slide, mapBackgroundGradientInput(bg));
 				break;
-			}
 			case 'image':
 				this.slide.backgroundImage = bg.source;
 				break;

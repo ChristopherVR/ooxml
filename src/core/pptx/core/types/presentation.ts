@@ -18,6 +18,7 @@ import type { XmlObject, PptxDrawingGuide } from './common';
 import type { PptxElement } from './elements';
 import type { PptxEmbeddedFontList } from './embedded-font';
 import type { PptxImageProperties } from './image';
+import type { ShapeStyle } from './shape-style';
 import type {
 	PptxThemeOption,
 	PptxNotesMaster,
@@ -142,6 +143,21 @@ export interface PptxSlideBackgroundPattern {
 }
 
 /**
+ * A slide background gradient in the shape-fill model (the gradient fields
+ * of {@link ShapeStyle}), so the save path writes it with the same
+ * `a:gradFill` writer as a shape's gradient. Stop positions are 0-100 and the
+ * angle follows `a:lin/@ang` (degrees clockwise from the positive x-axis).
+ */
+export type PptxSlideBackgroundGradient = Pick<
+	ShapeStyle,
+	| 'fillGradientStops'
+	| 'fillGradientType'
+	| 'fillGradientAngle'
+	| 'fillGradientPathType'
+	| 'fillGradientFillToRect'
+>;
+
+/**
  * A single slide in a parsed PPTX presentation.
  *
  * Contains the element tree, background settings, notes, comments,
@@ -194,6 +210,14 @@ export interface PptxSlide {
 	/** Crop, tiling and image effects authored on the background blip fill. */
 	backgroundImageProperties?: PptxImageProperties;
 	backgroundGradient?: string; // CSS gradient string for background
+	/**
+	 * The structured form of {@link backgroundGradient}, set by
+	 * `SlideBuilder.setBackground`. Saved as `p:bg/p:bgPr/a:gradFill` while
+	 * `backgroundGradient` is still the CSS built from it
+	 * (`slideBackgroundGradientCss`); an edit that replaces or clears the CSS
+	 * gradient wins over a stale structured one.
+	 */
+	backgroundGradientFill?: PptxSlideBackgroundGradient;
 	/**
 	 * The theme background style (Design > Background Styles) this slide uses: a
 	 * `<p:bgRef idx="1001..1003">` on `bg1`/`bg2`, or `kind: 'inherit'` for "follow master".
