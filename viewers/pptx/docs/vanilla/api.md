@@ -123,6 +123,51 @@ them. The "Layout" entry of a slide's context menu makes that slide active and c
 The rail has no collapse control; hide or remove `pane.el` yourself. It needs the full viewer
 stylesheet (`pptx-vanilla-viewer/styles.css` or `getViewerCss()`) and a `.pptxv` ancestor.
 
+### Single slide thumbnail {#slide-thumbnail}
+
+`renderSlideThumbnail(options)` (exported, with its `SlideThumbnailOptions` type, from the
+package root) draws one slide the way `createSlidesPane` draws it, for a host that keeps its own
+thumbnail strip, and returns the thumbnail's root element. It draws from the slide model, so it
+shows unsaved edits, and it is static: the stage is `inert` (no focus stops or pointer
+interaction), carries no editing contract and no `data-element-id`, so ids stay unique to your
+editing canvas. Its options are `document`, `slide`, `templateElements` (the slide's layout and
+master elements, drawn beneath its own; default none) and `previewWidth` (pixels; default the rail
+thumbnail width; the height follows the deck's aspect ratio), plus these `createSlidesPane`
+options with the same meaning: `canvasSize`, `mediaDataUrls`, `headerFooter`, `customProperties`,
+`firstSlideNumber`, `locale`, `colorScheme`, `fontScheme`, `formatScheme`, `tableStyleMap`, `t`,
+`registry` and `slides`. So you can spread the options you give the pane:
+
+```ts
+import { renderSlideThumbnail } from 'pptx-vanilla-viewer';
+import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
+
+function drawStrip(paneOptions: SlidesPaneOptions): void {
+	strip.replaceChildren(
+		...paneOptions.slides.map((slide) => {
+			const item = document.createElement('li');
+			item.style.width = '120px';
+			item.append(
+				renderSlideThumbnail({
+					...paneOptions,
+					document,
+					slide,
+					templateElements: paneOptions.templateElementsBySlideId?.[slide.id],
+					previewWidth: 120,
+				}),
+			);
+			return item;
+		}),
+	);
+}
+```
+
+The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
+ratio, so give the container that width. Slides from `loadPresentation` already carry their
+layout and master elements, so leave `templateElements` unset for them. It is a snapshot: call it
+again when the slide changes (elements, background, hidden, "Hide Background Graphics"), where you
+also call `pane.update`, and replace the old element. It needs the same stylesheet and `.pptxv`
+ancestor as the rail.
+
 ## Loading {#loading}
 
 | Method                   | Signature                                                    | Description                                                                                              |

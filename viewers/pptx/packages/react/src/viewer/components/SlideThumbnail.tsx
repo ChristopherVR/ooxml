@@ -1,4 +1,4 @@
-import { buildPreviewElements, deviceStrokeStageStyle, editorThumbnailHeight } from 'ooxml-ui/pptx';
+import { buildPreviewElements, deviceStrokeStageStyle, slideThumbnailLayout } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
@@ -12,10 +12,20 @@ import { deriveSlideFieldContext } from './slide-field-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
+/**
+ * A static, scaled-down drawing of one slide, as the slides pane shows it. It renders from the
+ * slide model, so it follows unsaved edits. Feed it from `slidesPaneProps`:
+ * `templateElementsBySlideId[slide.id]`, `canvasSize`, `fieldContext` and `tableStyleContext`.
+ */
 export interface SlideThumbnailProps {
 	slide: PptxSlide;
+	/** The slide's inherited layout and master elements, drawn beneath its own. */
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
+	/**
+	 * Thumbnail width in pixels; the height follows the deck's aspect ratio. Set it to fill a host
+	 * strip without the pane's frame. Omitted, the thumbnail is the pane width with a border.
+	 */
 	previewWidth?: number;
 	/** Presentation-wide field context (date/header/footer/custom props). */
 	fieldContext?: FieldSubstitutionContext;
@@ -33,9 +43,11 @@ function SlideThumbnailImpl({
 }: SlideThumbnailProps): React.ReactElement {
 	const safeCanvasWidth = Math.max(canvasSize.width, 1);
 	const safeCanvasHeight = Math.max(canvasSize.height, 1);
-	const width = previewWidth ?? SLIDE_NAV_THUMBNAIL_WIDTH;
-	const scale = width / safeCanvasWidth;
-	const previewHeight = editorThumbnailHeight(safeCanvasWidth, safeCanvasHeight, width);
+	const { height: previewHeight, scale } = slideThumbnailLayout(
+		safeCanvasWidth,
+		safeCanvasHeight,
+		previewWidth ?? SLIDE_NAV_THUMBNAIL_WIDTH,
+	);
 	const previewElements = buildPreviewElements(slide, templateElements);
 	const slideFieldContext = deriveSlideFieldContext(fieldContext, slide);
 	const { t } = useTranslation();

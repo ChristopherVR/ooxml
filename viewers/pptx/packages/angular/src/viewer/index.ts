@@ -103,6 +103,8 @@ export type { SlidesPanelMoveSlide, SlidesPanelRenameSection } from './slides-pa
 export { createSlidesPanelEditorCommands } from './slides-panel-commands';
 export type { SlidesPanelEditorCommands } from './slides-panel-commands';
 export type { SlidesPaneLayoutGalleryRequest } from 'ooxml-ui/pptx';
+// One slide drawn the way the rail draws it, for a host that keeps its own thumbnail strip.
+export { SlideThumbnailComponent } from './slide-thumbnail.component';
 export { EditorToolbarComponent } from './editor-toolbar.component';
 export { StatusBarComponent } from './status-bar.component';
 export { EditorContextMenuComponent } from './editor-context-menu.component';

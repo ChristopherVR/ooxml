@@ -81,6 +81,36 @@ pane.destroy();
 
 缩略图使用与画布相同的输入绘制：请传入与 `renderSlideStage` 调用相同的主题方案、表格样式和注册表；如果你把版式元素与各幻灯片自身的元素分开保存，还要传入 `templateElementsBySlideId`。日期、页脚、文档属性和幻灯片编号字段根据 `headerFooter`、`customProperties` 和 `firstSlideNumber`（`p:presentation/@firstSlideNum`）解析，因此编号从 45 开始的演示文稿会在第一张缩略图上显示“Slide 45”。多选命令（`onDuplicateSlides`、`onDeleteSlides`、`onHideSlides`）会收到所有选中的索引；`createSlidesPaneBulkSlideOps` 可将单张幻灯片操作提升为多选命令。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onOpenLayoutGallery({ slideIndex, x, y })`，因为自定义外壳会渲染自己的版式选择器。缩略图栏没有折叠控件，请自行隐藏或移除 `pane.el`。它需要完整的查看器样式表（`pptx-vanilla-viewer/styles.css` 或 `getViewerCss()`）以及一个 `.pptxv` 祖先元素。
 
+### 单张幻灯片缩略图 {#slide-thumbnail}
+
+`renderSlideThumbnail(options)`（与其 `SlideThumbnailOptions` 类型一起由包根入口导出）按 `createSlidesPane` 的方式绘制一张幻灯片，供自行维护缩略图条的宿主使用，并返回缩略图的根元素。它根据幻灯片模型绘制，因此会显示未保存的编辑；它是静态的：舞台为 `inert`（没有焦点停靠点或指针交互），不带编辑契约，也没有 `data-element-id`，因此 id 只在你的编辑画布中唯一。它的选项为 `document`、`slide`、`templateElements`（幻灯片的版式和母版元素，绘制在其自身元素下方；默认为空）和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及以下与 `createSlidesPane` 含义相同的选项：`canvasSize`、`mediaDataUrls`、`headerFooter`、`customProperties`、`firstSlideNumber`、`locale`、`colorScheme`、`fontScheme`、`formatScheme`、`tableStyleMap`、`t`、`registry` 和 `slides`。因此可以直接展开传给缩略图栏的选项：
+
+```ts
+import { renderSlideThumbnail } from 'pptx-vanilla-viewer';
+import type { SlidesPaneOptions } from 'pptx-vanilla-viewer';
+
+function drawStrip(paneOptions: SlidesPaneOptions): void {
+	strip.replaceChildren(
+		...paneOptions.slides.map((slide) => {
+			const item = document.createElement('li');
+			item.style.width = '120px';
+			item.append(
+				renderSlideThumbnail({
+					...paneOptions,
+					document,
+					slide,
+					templateElements: paneOptions.templateElementsBySlideId?.[slide.id],
+					previewWidth: 120,
+				}),
+			);
+			return item;
+		}),
+	);
+}
+```
+
+缩略图填满其容器的宽度，高度为 `previewWidth` 按演示文稿宽高比换算的值，因此请为容器设置该宽度。`loadPresentation` 返回的幻灯片已包含其版式和母版元素，因此对它们不要设置 `templateElements`。它是一份快照：幻灯片更改时（元素、背景、隐藏、“隐藏背景图形”），在你调用 `pane.update` 的同一处再次调用它，并替换旧元素。它需要与缩略图栏相同的样式表和 `.pptxv` 祖先元素。
+
 ## 加载 {#loading}
 
 | 方法                     | 签名                                                         | 说明                                                               |

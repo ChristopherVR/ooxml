@@ -96,6 +96,37 @@ function Editor({ content }) {
 
 缩略图栏的展开状态就是工具栏的侧边栏开关：折叠任一处都会隐藏缩略图栏。幻灯片右键菜单中的“版式”项会将该幻灯片设为当前幻灯片，并调用可选的 `onOpenLayoutGallery({ slideIndex, x, y })`，因为这些构建块不渲染版式库。`SlidesPane` 需要完整的 `styles.css`，而不是 `canvas.css`。
 
+### 单张幻灯片缩略图 {#single-slide-thumbnail}
+
+`SlideThumbnail`（及其 `SlideThumbnailProps` 类型）从包根入口导出，按 `SlidesPane` 的方式绘制单张幻灯片，适用于保留自有缩略图条的宿主。它基于幻灯片模型渲染，因此会反映尚未保存的编辑；它是静态的：没有选择、编辑、指针处理或元素 id。属性包括 `slide`、`templateElements`（该幻灯片的版式和母版元素，绘制在其自身元素下方）、`canvasSize`、`previewWidth`（像素；高度随演示文稿的宽高比变化）、`fieldContext` 和 `tableStyleContext`。从 `slidesPaneProps` 取值：
+
+```tsx
+import { SlideThumbnail, useViewerBuildingBlocks } from 'pptx-react-viewer';
+
+function MyStrip({ blocks }: { blocks: ReturnType<typeof useViewerBuildingBlocks> }) {
+	const { slides, templateElementsBySlideId, canvasSize, fieldContext, tableStyleContext } =
+		blocks.slidesPaneProps;
+	return (
+		<ul className='my-strip'>
+			{slides.map((slide) => (
+				<li key={slide.id} style={{ width: 120 }}>
+					<SlideThumbnail
+						slide={slide}
+						templateElements={templateElementsBySlideId[slide.id] ?? []}
+						canvasSize={canvasSize}
+						previewWidth={120}
+						fieldContext={fieldContext}
+						tableStyleContext={tableStyleContext}
+					/>
+				</li>
+			))}
+		</ul>
+	);
+}
+```
+
+未设置 `previewWidth` 时，缩略图采用缩略图栏的宽度和边框。
+
 ### 打开指定幻灯片 {#opening-on-a-slide}
 
 `useViewerBuildingBlocks` 接受与 `PowerPointViewer` 相同的 `initialSlide` 选项：每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。它在首次显示已加载演示文稿的那次渲染中生效，因此自定义界面不会先显示第 1 张幻灯片，也无需在加载后调用 `goTo()` 或在跳转完成前隐藏画布。

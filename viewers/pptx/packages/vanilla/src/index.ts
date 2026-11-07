@@ -111,6 +111,9 @@ export {
 // ── Slide thumbnail rail (place it beside your own `renderSlideStage` canvas) ─
 export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './viewer';
 export { createSlidesPane } from './viewer';
+// One slide drawn the way the rail draws it, for a host that keeps its own thumbnail strip.
+export type { SlideThumbnailOptions } from './viewer';
+export { renderSlideThumbnail } from './viewer';
 // Lifts single-slide operations to the rail's multi-selection commands
 // (`onDuplicateSlides` / `onDeleteSlides` / `onHideSlides`).
 export { createSlidesPaneBulkSlideOps } from 'ooxml-ui/pptx';
