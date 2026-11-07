@@ -7,6 +7,14 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.70.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.70.0) - 2026-11-07
+
+### Features
+
+- **pptx:** Write structured slide gradient backgrounds ([#262](https://github.com/ChristopherVR/ooxml/issues/262)) ([5b861d9](https://github.com/ChristopherVR/ooxml/commit/5b861d9265b8c4d8020f8550212185b0b9244a77))
+- **chart:** Add literal data and a minimal profile to new chart parts ([#261](https://github.com/ChristopherVR/ooxml/issues/261)) ([243281f](https://github.com/ChristopherVR/ooxml/commit/243281f7b1590644243a05cac93f403eafa8118a))
+- **pptx:** Add a fixedDate save option for reproducible output ([#260](https://github.com/ChristopherVR/ooxml/issues/260)) ([7d112d4](https://github.com/ChristopherVR/ooxml/commit/7d112d4bc7a2759f0850c246e9183261ef3c02a4))
+
 ## [4.69.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.69.1) - 2026-11-07
 
 ## [4.69.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.69.0) - 2026-11-07
