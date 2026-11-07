@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.45.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.45.0) - 2026-11-07
+
+### Features
+
+- **pptx:** Build SDK tables with widths, fills and dashed borders ([#258](https://github.com/ChristopherVR/ooxml/issues/258)) ([d19dce5](https://github.com/ChristopherVR/ooxml/commit/d19dce5bb3f457bc01511b6de79fc3d1a3122cc1))
+
+### Bug Fixes
+
+- **pptx:** Keep the shared style of rich text segments on save ([#256](https://github.com/ChristopherVR/ooxml/issues/256)) ([41f12b1](https://github.com/ChristopherVR/ooxml/commit/41f12b180b43be6173999386b96463af5d4ed570))
+- **pptx:** Keep the model and part in step when a series is recoloured ([#257](https://github.com/ChristopherVR/ooxml/issues/257)) ([9a4ee24](https://github.com/ChristopherVR/ooxml/commit/9a4ee24bc23e6c7a029ddf3c7574e87ce88fbc26))
+
 ## [1.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.44.0) - 2026-11-07
 
 ### Features
