@@ -2,7 +2,9 @@
  * The webfont fallback of `<xlsx-editor>` (the `googleFonts` property): for workbook fonts the
  * reader has neither installed nor embedded, one managed `<link>` loads the face the bundled
  * Google Fonts catalogue serves (or its verified metric-compatible clone, which every workbook
- * font stack lists right after the font, see `workbookFontFamily`). Off unless the host sets it.
+ * font stack lists right after the font, see `workbookFontFamily`). Who decides is the shared
+ * rule (`fonts/font-download-policy`): the host's value when it set one, otherwise the reader's
+ * Trust Center choice (`font-downloads.ts`), which is off until the reader turns it on.
  *
  * A file opened with `load()` waits (bounded, see `prepareWebfonts`) before it is shown, while
  * `loading` is true; a workbook assigned directly is shown at once. Either way, once faces arrive
@@ -20,6 +22,8 @@ import {
 	syncGoogleWebfontStylesheet,
 	type WebfontReadiness,
 } from '../fonts/webfonts';
+import { effectiveFontDownloads, fontDownloadLock } from '../fonts/font-download-policy';
+import { readerAllowsFontDownloads, setReaderAllowsFontDownloads } from './font-downloads';
 
 /** Id of the first editor's managed stylesheet link; later editors add `-2`, `-3`... */
 export const XLSX_WEBFONT_LINK_ID = 'xlsx-editor-webfonts';
@@ -48,7 +52,7 @@ export class XlsxWebfonts {
 	/** This editor's managed `<link>` id (one per editor, so two editors never fight over it). */
 	readonly linkId: string;
 	readonly #owner: XlsxWebfontsHost;
-	readonly #prepared = new WeakMap<Workbook, Prepared>();
+	#prepared = new WeakMap<Workbook, Prepared>();
 	#fonts: FontFaceSet | undefined;
 	#queued = false;
 	readonly #onFonts = () => this.schedule();
@@ -59,9 +63,49 @@ export class XlsxWebfonts {
 		this.linkId = instances === 1 ? XLSX_WEBFONT_LINK_ID : `${XLSX_WEBFONT_LINK_ID}-${instances}`;
 	}
 
+	/** The option the loader uses: the host's value when set, else the reader's choice. */
+	effective(): GoogleFontsOption {
+		return effectiveFontDownloads(this.option, readerAllowsFontDownloads());
+	}
+
+	/** The value the Trust Center toggle shows read-only, or `undefined` when the reader decides. */
+	lock(): boolean | undefined {
+		return fontDownloadLock(this.option);
+	}
+
+	/** Whether the Trust Center toggle is on: the host's locked value, else the reader's choice. */
+	allowed(): boolean {
+		return this.lock() ?? readerAllowsFontDownloads();
+	}
+
+	/** The reader's Trust Center choice: stored, and applied to the open workbook at once. */
+	setReaderAllows(allow: boolean): void {
+		setReaderAllowsFontDownloads(allow);
+		this.apply();
+	}
+
 	/** The CSS2 base the option requests, or `null` when the fallback is off (the default). */
 	base(): string | null {
-		return resolveGoogleFontsCss2Base(this.option, null, 'xlsx-editor');
+		return resolveGoogleFontsCss2Base(this.effective(), null, 'xlsx-editor');
+	}
+
+	/**
+	 * After the host value or the reader's choice changed: on, prepare the open workbook's faces
+	 * and measure again; off, remove the stylesheets and repaint with installed or substitute fonts.
+	 */
+	apply(): void {
+		if (this.base() !== null) {
+			this.shown(this.#owner.workbook());
+			return;
+		}
+		this.#off(this.#owner.host.ownerDocument);
+		this.schedule();
+	}
+
+	/** Removes this editor's links and forgets the waits they served. */
+	#off(doc: Document): void {
+		syncGoogleWebfontStylesheet(doc, this.linkId, null);
+		this.#prepared = new WeakMap();
 	}
 
 	/**
@@ -82,7 +126,7 @@ export class XlsxWebfonts {
 		const doc = this.#owner.host.ownerDocument;
 		const base = this.base();
 		if (base === null) {
-			syncGoogleWebfontStylesheet(doc, this.linkId, null);
+			this.#off(doc);
 			return Promise.resolve(OFF);
 		}
 		const cached = this.#prepared.get(workbook);
@@ -109,8 +153,7 @@ export class XlsxWebfonts {
 	 */
 	shown(workbook: Workbook | undefined): void {
 		if (!workbook) {
-			if (this.base() === null)
-				syncGoogleWebfontStylesheet(this.#owner.host.ownerDocument, this.linkId, null);
+			if (this.base() === null) this.#off(this.#owner.host.ownerDocument);
 			return;
 		}
 		const waited = this.#prepared.get(workbook);

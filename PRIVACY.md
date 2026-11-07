@@ -20,7 +20,7 @@ network request must update this file in the same commit.
 | What                                             | Goes to                                     | On by default                     | Turn it off or redirect it                                         |
 | ------------------------------------------------ | ------------------------------------------- | --------------------------------- | ------------------------------------------------------------------ |
 | PowerPoint: fonts not installed or embedded      | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                               | `googleFonts` option; File > Options > Trust Center; suite setting |
-| Word, Excel, Visio: fonts not installed          | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)             | `googleFonts` property; suite setting                              |
+| Word, Excel, Visio: fonts not installed          | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)             | `googleFonts` property; Trust Center (off by default); suite       |
 | PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | Yes in the viewer, no in the core | `allowExternalContent` option; Trust Center; suite setting         |
 | PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it      | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it      | Do not start a session                                             |
@@ -117,8 +117,10 @@ editing or saving a document:
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
 - workers are loaded from the page's own origin.
 
-**Fonts, when the host turns them on.** `<docx-editor>`, `<xlsx-editor>` and `<visio-viewer>`
-take the same `googleFonts` value as PowerPoint, but unset means off. With
+**Fonts, when the host or the reader turns them on.** `<docx-editor>`, `<xlsx-editor>` and
+`<visio-viewer>` take the same `googleFonts` value as PowerPoint, but unset leaves it to the
+reader's File > Options > Trust Center toggle "Download fonts that are not installed or embedded",
+which is off by default (a host value locks the toggle). With
 `{ baseUrl: 'https://fonts.googleapis.com/css2' }` (or a self-hosted mirror) they send the same
 requests PowerPoint does, from the same shared code (`ooxml-core/text`, `ooxml-ui/fonts`): the
 public catalogue families (or metric-compatible clones such as Carlito for Calibri) the file
@@ -172,7 +174,8 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   (`pptx-viewer-prefs`). File > Account > Storage & Privacy shows and clears them. Fonts the
   user adds under File > Options > Custom fonts are kept for the session only.
 - **Word, Excel, Visio:** small preferences in localStorage (view options, custom lists, saved
-  shapes).
+  shapes), including the Trust Center font-download choice (`ooxml.docx.allowFontDownloads`,
+  `ooxml.xlsx.allowFontDownloads`, and `allowFontDownloads` in Visio's `ooxml-visio-options`).
 - **Teams:** chat snapshots, read state, drafts, presence and follows in the storage the host
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per

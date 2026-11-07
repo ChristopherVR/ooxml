@@ -30,6 +30,7 @@ import { createBackstage, type BackstagePage } from './backstage';
 import type { CreateVsdxOptions } from 'ooxml-core/visio';
 import type { GoogleFontsOption } from 'ooxml-core/text';
 import { ViewerWebfonts } from './viewer-webfonts';
+import { fontDownloadLock } from '../fonts/font-download-policy';
 import type { VisioTemplateId } from 'ooxml-core/visio/ui';
 import { ViewerBackstage } from './viewer-backstage';
 import type { ViewerPointerGestures } from './viewer-pointer-gestures';
@@ -187,9 +188,11 @@ export class VisioViewerElement extends BaseElement {
 	 * Webfont fallback for fonts the drawing uses that the reader has not installed (Calibri,
 	 * Cambria, Aptos and other Office fonts load as their metric-compatible clones Carlito,
 	 * Caladea and so on; other catalogue families load as themselves), so text wraps as saved.
-	 * Unset or `false`: off, no request is made. `{ baseUrl }`: CSS2 requests go to that mirror
-	 * (an absolute http(s) URL without credentials, query or fragment; anything else warns and
-	 * stays off), for example `{ baseUrl: 'https://fonts.googleapis.com/css2' }` for Google
+	 * This is the host's decision: unset leaves it to the reader's File > Options > Trust Center
+	 * toggle (off until the reader turns it on, then Google Fonts); a value set here shows that
+	 * toggle read-only. `false`: off, no request is made. `{ baseUrl }`: CSS2 requests go to that
+	 * mirror (an absolute http(s) URL without credentials, query or fragment; anything else warns
+	 * and stays off), for example `{ baseUrl: 'https://fonts.googleapis.com/css2' }` for Google
 	 * itself. Only public catalogue family names are sent, never text. Read when a drawing loads:
 	 * the first show waits briefly (150 ms, with the loading state up) for the faces, and a face that
 	 * arrives later redraws the page. Setting it applies to the open drawing at once.
@@ -199,6 +202,7 @@ export class VisioViewerElement extends BaseElement {
 	}
 	set googleFonts(value: GoogleFontsOption | undefined) {
 		this.#webfonts.option = value;
+		this.#syncTrust();
 		void this.#refreshWebfonts();
 	}
 	/** What `collaboration-change` last reported. */
@@ -869,9 +873,21 @@ export class VisioViewerElement extends BaseElement {
 	attributeChangedCallback(): void {
 		this.#localizeRibbon();
 	}
+	/** The Trust Center in the display language, locked while the host set `googleFonts`. */
+	#syncTrust(): void {
+		this.#profile?.setTrust(
+			normalizeVisioLocale(this.#locale()),
+			fontDownloadLock(this.#webfonts.option),
+		);
+	}
 	/** Put the File > Options behaviour settings to work on the pieces they govern. */
 	#applyBehaviour(): void {
 		const behaviour = this.#behaviour;
+		// Trust Center: turning downloads on loads the open drawing's fonts, off removes them.
+		if (this.#webfonts.readerAllows !== behaviour.allowFontDownloads) {
+			this.#webfonts.readerAllows = behaviour.allowFontDownloads;
+			void this.#refreshWebfonts();
+		}
 		this.controller.undoLevels = behaviour.undoLevels;
 		this.#edit.spellcheck = behaviour.checkSpelling;
 		this.#edit.autoSize = behaviour.autoSizeText;
@@ -919,6 +935,7 @@ export class VisioViewerElement extends BaseElement {
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
 		this.#backstage?.localize();
+		this.#syncTrust();
 		this.#shareUi.relocalize();
 		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
 		this.#overflow.refit();

@@ -25,8 +25,7 @@ in `ooxml-core/text` and a generic family, in every place that measures or paint
 
 The fonts a file uses are collected by `collectDocxWebfontRuns` (`ooxml-core/docx/layout`),
 `collectWorkbookWebfontRuns` (`ooxml-core/xlsx`) and `collectVisioWebfontRuns`
-(`ooxml-core/visio`). They have no Trust Center toggle yet; a font chosen while editing is only
-requested on the next load.
+(`ooxml-core/visio`). A font chosen while editing is only requested on the next load.
 
 Why off by default: unlike PowerPoint, which has always downloaded fonts, these products made no
 network request at all, and a new request that names fonts to a third party must be chosen by
@@ -143,6 +142,13 @@ once and applies to every later load. The choice is saved with the other viewer 
 a host `googleFonts` value overrides it and shows the toggle read-only. The rule lives once in
 `src/ui/src/pptx/render/options/font-download-policy.ts`, which every binding uses.
 
+Word, Excel and Visio have the same toggle in their own File > Options > Trust Center, **off by
+default**: the reader turning it on is what allows the request when the host set nothing. A host
+`googleFonts` value overrides it and shows it read-only, with the "managed by your organization"
+reason. Turning it on loads the open file's webfonts and lays it out again; turning it off
+removes both of the product's stylesheets at once. The rule is `effectiveFontDownloads` and
+`fontDownloadLock` in `ooxml-ui`'s `fonts/font-download-policy.ts`.
+
 ### OOXML Office suite: Settings > Fonts
 
 The suite's Settings dialog (the shared `office-ui-options-dialog`, as PowerPoint's File >
@@ -150,7 +156,8 @@ Options) chooses for every editor it opens:
 
 - **Download from Google Fonts** (default): PowerPoint gets no `googleFonts`, so its own Trust
   Center choice still applies; Word, Excel and Visio get `{ baseUrl: 'https://fonts.googleapis.com/css2' }`,
-  since unset means off for them;
+  since unset leaves it to their Trust Center toggle, which is off by default (the suite's value
+  locks that toggle);
 - **Download from my own font server**: passes `{ baseUrl }`;
 - **Do not download fonts**: passes `false`.
 

@@ -47,8 +47,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text and a bounded wait before showing a file. Off unless the host sets `googleFonts`; the
       suite turns it on from Settings > Fonts. Evidence: `docs/font-loading.md`, each product's
       `webfont-runs.test.ts` and `webfonts.test.ts`.
-- [ ] **P2** Word, Excel and Visio have no Trust Center toggle for font downloads (only the host
-      option), and a font picked while editing is requested only on the next load.
+- [x] **P2** Word, Excel and Visio had no Trust Center toggle for font downloads: each now has
+      PowerPoint's "Download fonts that are not installed or embedded" in File > Options > Trust
+      Center (off by default; a host `googleFonts` value locks it). Evidence:
+      `src/ui/src/fonts/font-download-policy.test.ts` and each product's Trust Center tests.
+- [ ] **P2** In Word, Excel and Visio a font picked while editing is requested only on the next
+      load.
 
 | Capability    | Word         | Excel        | PowerPoint                 | Visio                 |
 | ------------- | ------------ | ------------ | -------------------------- | --------------------- |

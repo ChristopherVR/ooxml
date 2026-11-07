@@ -1,6 +1,7 @@
 /**
- * Word's webfont fallback: the `googleFonts` option of `<docx-editor>`. Off unless the host sets
- * it. When on, the families a document draws that the reader has neither installed nor embedded
+ * Word's webfont fallback: the `googleFonts` option of `<docx-editor>` when the host sets it,
+ * otherwise the reader's Trust Center choice (`font-downloads.ts`, off until turned on), joined by
+ * the shared `effectiveFontDownloads` rule. When on, the families a document draws that the reader has neither installed nor embedded
  * (Word does not load a document's embedded fonts yet, so none count as embedded) are requested
  * from the Google Fonts CSS2 API, or the host's mirror, through one managed `<link>` per editor;
  * a family the catalogue does not serve under its own name ("Calibri") is requested as its
@@ -20,12 +21,15 @@ import {
 	type WebfontRun,
 } from 'ooxml-core/text';
 import {
+	prefetchLinkId,
 	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
 	type PrepareWebfontsOptions,
 	type WebfontReadiness,
 } from '../fonts/webfonts';
+import { effectiveFontDownloads, fontDownloadLock } from '../fonts/font-download-policy';
+import { readerAllowsFontDownloads, setReaderAllowsFontDownloads } from './font-downloads';
 
 /** Prefix of each editor's managed `<link>` id (`docx-editor-webfonts-1`, ...). */
 export const DOCX_WEBFONT_LINK_PREFIX = 'docx-editor-webfonts';
@@ -58,8 +62,14 @@ let instances = 0;
  * (the suite's tabs) never replace each other's stylesheet.
  */
 export class DocxWebfonts {
+	/** The host's `googleFonts` value; unset leaves the choice to the reader. */
 	option: GoogleFontsOption | undefined;
 	readonly linkId = `${DOCX_WEBFONT_LINK_PREFIX}-${++instances}`;
+
+	/** The CSS2 base the loader uses: the host's value, else the reader's Trust Center choice. */
+	base(): string | null {
+		return docxGoogleFontsBase(effectiveFontDownloads(this.option, readerAllowsFontDownloads()));
+	}
 
 	/**
 	 * Point this editor's `<link>` at the faces `model` needs and wait (bounded) for them; with
@@ -71,7 +81,7 @@ export class DocxWebfonts {
 		wait: DocxWebfontWaitOptions = {},
 	): Promise<WebfontReadiness> {
 		if (!doc?.head) return OFF;
-		const base = docxGoogleFontsBase(this.option);
+		const base = this.base();
 		if (base === null) {
 			syncGoogleWebfontStylesheet(doc, this.linkId, null);
 			return OFF;
@@ -100,13 +110,15 @@ export class DocxWebfonts {
 			document: doc,
 			linkId: this.linkId,
 			bytes,
-			base: docxGoogleFontsBase(this.option),
+			base: this.base(),
 		});
 	}
 
-	/** Whether this editor's `<link>` is in `doc`. */
+	/** Whether this editor's `<link>` (or its early `-prefetch` one) is in `doc`. */
 	linked(doc: Document | undefined): boolean {
-		return Boolean(doc?.getElementById(this.linkId));
+		return Boolean(
+			doc?.getElementById(this.linkId) ?? doc?.getElementById(prefetchLinkId(this.linkId)),
+		);
 	}
 }
 
@@ -129,4 +141,27 @@ export async function refreshDocxWebfonts(host: DocxWebfontHost): Promise<void> 
 	const had = host.webfonts.linked(doc);
 	await host.webfonts.prepare(doc, host.model);
 	if (had && !host.webfonts.linked(doc)) host.shell.printLayout?.remeasure();
+}
+
+/** The Trust Center toggle as File > Options shows it: the host's value, locked, or the reader's. */
+export function fontDownloadOptions(webfonts: DocxWebfonts): {
+	allowFontDownloads: boolean;
+	fontDownloadsLocked: boolean;
+} {
+	const locked = fontDownloadLock(webfonts.option);
+	return {
+		allowFontDownloads: locked ?? readerAllowsFontDownloads(),
+		fontDownloadsLocked: locked !== undefined,
+	};
+}
+
+/**
+ * Records the reader's choice and applies it to the open document at once: on requests its
+ * fonts, off removes the stylesheets and measures again. A host's value wins, so nothing changes
+ * then.
+ */
+export function setFontDownloads(host: DocxWebfontHost, allow: boolean): void {
+	if (fontDownloadLock(host.webfonts.option) !== undefined) return;
+	setReaderAllowsFontDownloads(allow);
+	void refreshDocxWebfonts(host);
 }

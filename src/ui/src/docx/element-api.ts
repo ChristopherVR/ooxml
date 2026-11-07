@@ -102,7 +102,9 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	}
 	/**
 	 * Webfonts for the document fonts the reader has neither installed nor embedded. Unset (the
-	 * default) or `false`: off, nothing is requested. `{ baseUrl }`: such a family that the Google
+	 * default): the reader decides in File > Options > Trust Center (off until turned on; when on,
+	 * Google Fonts). `false`: off, nothing is requested. A set value locks that toggle, which then
+	 * shows it read-only. `{ baseUrl }`: such a family that the Google
 	 * Fonts catalogue serves, or its metric-compatible clone (Calibri as Carlito), is requested from
 	 * that CSS2 endpoint (`https://fonts.googleapis.com/css2`, or a self-hosted mirror) with only
 	 * the family names, and `load` waits briefly (150 ms) for the faces before showing the document. An
