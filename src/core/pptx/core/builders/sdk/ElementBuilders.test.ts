@@ -402,7 +402,9 @@ describe('imageBuilder', () => {
 
 	it('sets opacity', () => {
 		const el = ImageBuilder.create(DATA_URL).opacity(0.9).build();
-		expect(el.opacity).toBe(0.9);
+		// A picture's opacity is its `a:alphaModFix`, not an element opacity.
+		expect(el.imageEffects?.alphaModFix).toBe(90);
+		expect(el.opacity).toBeUndefined();
 	});
 });
 

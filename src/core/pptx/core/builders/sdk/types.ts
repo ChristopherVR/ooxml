@@ -24,6 +24,7 @@ import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
 import type { ChartAreaFormatInput } from './chart-layout-input';
 import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
+import type { PresentationAppPropertiesInput } from './presentation-app-properties';
 import type {
 	GlowInput,
 	InnerShadowInput,
@@ -33,6 +34,7 @@ import type {
 } from './shape-style-input-types';
 
 export type { ChartGradientInput, ChartGradientStopInput } from './chart-gradient-input';
+export type { PresentationAppPropertiesInput } from './presentation-app-properties';
 export type {
 	GlowInput,
 	InnerShadowInput,
@@ -267,9 +269,17 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	cropTop?: number;
 	cropRight?: number;
 	cropBottom?: number;
+	/**
+	 * Opacity from 0 (transparent) to 1 (opaque, the default), saved as the
+	 * picture's transparency (`a:blip/a:alphaModFix`).
+	 */
 	opacity?: number;
 	/** What clicking the picture does (`p:cNvPr/a:hlinkClick`). */
 	link?: LinkInput;
+	/** Brightness change in percent, -100 to 100 (`a:blip/a:lum/@bright`). */
+	brightness?: number;
+	/** Contrast change in percent, -100 to 100 (`a:blip/a:lum/@contrast`). */
+	contrast?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -513,6 +523,17 @@ export interface PresentationOptions {
 	 * the spec default (`1`) applies.
 	 */
 	firstSlideNumber?: number;
+	/**
+	 * Application properties written to `docProps/app.xml` when the package
+	 * is created. Without them the part names `pptx-viewer-sdk`, version
+	 * `1.0000`. `appVersion` takes Office's form (`16.0000`); an empty string
+	 * leaves the element out.
+	 *
+	 * Precedence: `save(slides, { appProperties })` still applies on top,
+	 * field by field. A field the save option sets wins; a field it omits
+	 * keeps the value given here.
+	 */
+	appProperties?: PresentationAppPropertiesInput;
 }
 
 export interface PresentationThemeInput {
