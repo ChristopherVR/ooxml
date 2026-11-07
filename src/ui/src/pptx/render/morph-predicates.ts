@@ -82,7 +82,11 @@ export function conflictingMorphNames(a: PptxElement, b: PptxElement): boolean {
 	return Boolean(toName) && toName !== fromName;
 }
 
-/** The media part an image/picture element paints (path, else data URL). */
+/**
+ * The media part an image/picture element paints (path, else data URL). An SVG
+ * picture is named by its SVG part: its raster is only a fallback, and new SVG
+ * pictures can share one placeholder raster.
+ */
 export function mediaIdentity(el: PptxElement): string | undefined {
 	const props = el as {
 		imagePath?: string;
@@ -90,7 +94,7 @@ export function mediaIdentity(el: PptxElement): string | undefined {
 		svgPath?: string;
 		svgData?: string;
 	};
-	return props.imagePath ?? props.imageData ?? props.svgPath ?? props.svgData ?? undefined;
+	return props.svgPath ?? props.svgData ?? props.imagePath ?? props.imageData ?? undefined;
 }
 
 /** Euclidean distance between two elements' top-left corners (slide space). */
