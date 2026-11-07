@@ -17,6 +17,7 @@ import { PptxHandler } from '../../PptxHandler';
 import type { PptxData } from '../../types/presentation';
 import { SlideBuilder } from './SlideBuilder';
 import { generateLayoutXml } from './layout-operations';
+import { newPresentationAppXml } from './presentation-app-properties';
 import { standardLayoutPlaceholders } from './standard-layout-placeholders';
 import type { PresentationOptions } from './types';
 
@@ -420,20 +421,6 @@ function corePropsXml(title?: string, creator?: string): string {
 </cp:coreProperties>`;
 }
 
-function appPropsXml(slideCount: number): string {
-	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
-  xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <Application>pptx-viewer-sdk</Application>
-  <Slides>${slideCount}</Slides>
-  <ScaleCrop>false</ScaleCrop>
-  <LinksUpToDate>false</LinksUpToDate>
-  <SharedDoc>false</SharedDoc>
-  <HyperlinksChanged>false</HyperlinksChanged>
-  <AppVersion>1.0000</AppVersion>
-</Properties>`;
-}
-
 // ---------------------------------------------------------------------------
 // Blank package generation
 // ---------------------------------------------------------------------------
@@ -499,7 +486,7 @@ export async function buildBlankPresentationArchive(
 	zip.file('ppt/viewProps.xml', viewPropsXml());
 	zip.file('ppt/tableStyles.xml', tableStylesXml());
 	zip.file('docProps/core.xml', corePropsXml(options?.title, options?.creator));
-	zip.file('docProps/app.xml', appPropsXml(initialSlideCount));
+	zip.file('docProps/app.xml', newPresentationAppXml(initialSlideCount, options?.appProperties));
 
 	return zip.generateAsync({ type: 'arraybuffer' });
 }
