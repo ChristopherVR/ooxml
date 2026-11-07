@@ -16,6 +16,10 @@ import { assertNoNodeOnlyModules } from '../../../scripts/browser-bundle-guard.m
 import { walkModuleGraph } from '../../../scripts/module-graph.mjs';
 import { declarationSyntaxErrors } from './declaration-syntax.mjs';
 import { toPublishManifest, readWorkspacePackages } from './publish-manifest.mjs';
+import {
+	assertNoI18nextInBuiltGraph,
+	checkConsumerWithoutI18next,
+} from './react-no-i18next-check.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temporary = mkdtempSync(join(tmpdir(), 'pptx-binding-consumer-'));
@@ -65,24 +69,29 @@ function npm(args, cwd, capture = false) {
 	return run('npm', args, cwd, capture);
 }
 
-// `PptxI18nProvider` is exported from both React entries. Each entry is its own bundle, so a
-// provider from one and a viewer from the other only work if they share the context module.
+// `PptxI18nProvider` is exported from three React entries. Each entry is its own bundle, so a
+// provider from one and a viewer from another only work if they share the context module.
 function sharedContextCheck(load) {
 	return `const translate = (key) => (key === 'pptx.viewer.loading' ? 'Loading (host)' : undefined);
-const pairs = [
-  ['pptx-react-viewer', main.PptxI18nProvider, 'pptx-react-viewer/viewer', viewer.PowerPointViewer],
-  ['pptx-react-viewer/viewer', viewer.PptxI18nProvider, 'pptx-react-viewer', main.PowerPointViewer],
+const entries = [
+  ['pptx-react-viewer', main],
+  ['pptx-react-viewer/viewer', viewer],
+  ['pptx-react-viewer/no-i18next', noI18next],
 ];
-for (const [providerFrom, Provider, viewerFrom, Viewer] of pairs) {
-  const html = renderToString(createElement(Provider, { locale: 'de', translate }, createElement(Viewer, { content: null })));
-  assert.ok(html.includes('Loading (host)'), 'a provider from ' + providerFrom + ' translates a viewer from ' + viewerFrom + ' (${load})');
+for (const [providerFrom, { PptxI18nProvider: Provider }] of entries) {
+  for (const [viewerFrom, { PowerPointViewer: Viewer }] of entries) {
+    if (providerFrom === viewerFrom) continue;
+    const html = renderToString(createElement(Provider, { locale: 'de', translate }, createElement(Viewer, { content: null })));
+    assert.ok(html.includes('Loading (host)'), 'a provider from ' + providerFrom + ' translates a viewer from ' + viewerFrom + ' (${load})');
+  }
 }
-console.log('pptx-react-viewer: provider and viewer from either entry share one i18n context (${load})');
+console.log('pptx-react-viewer: provider and viewer from any two entries share one i18n context (${load})');
 `;
 }
 
 try {
 	const tarballs = [];
+	const tarballOf = {};
 	const cjsBindings = [];
 	const rootEntries = [];
 	// The bindings consume the core and UI built by this checkout. Registry
@@ -167,6 +176,7 @@ try {
 			),
 		)[0];
 		tarballs.push(join(temporary, normalized.filename));
+		tarballOf[target.key] = join(temporary, normalized.filename);
 		console.log(`[binding-pack] ${target.name}: packed ${packed.files.length} files`);
 	}
 
@@ -237,6 +247,7 @@ import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import * as main from 'pptx-react-viewer';
 import * as viewer from 'pptx-react-viewer/viewer';
+import * as noI18next from 'pptx-react-viewer/no-i18next';
 ${sharedContextCheck('ESM')}`,
 	);
 	run(process.execPath, ['react-i18n-context.mjs'], consumer);
@@ -247,9 +258,18 @@ const { createElement } = require('react');
 const { renderToString } = require('react-dom/server');
 const main = require('pptx-react-viewer');
 const viewer = require('pptx-react-viewer/viewer');
+const noI18next = require('pptx-react-viewer/no-i18next');
 ${sharedContextCheck('CommonJS')}`,
 	);
 	run(process.execPath, ['react-i18n-context.cjs'], consumer);
+
+	await assertNoI18nextInBuiltGraph(join(consumer, 'node_modules', 'pptx-react-viewer'));
+	await checkConsumerWithoutI18next({
+		directory: join(temporary, 'consumer-no-i18next'),
+		tarballs: [tarballOf['ooxml-core'], tarballOf['ooxml-ui'], tarballOf.react],
+		npm,
+		run,
+	});
 
 	for (const { name, file } of rootEntries) {
 		const { files, bare } = await walkModuleGraph(join(consumer, 'node_modules', name, file), {
@@ -277,7 +297,7 @@ ${sharedContextCheck('CommonJS')}`,
 	// must share that one module in every format the binding ships: a copy per entry would not
 	// read the other's handles.
 	const viewerEntries = {
-		react: ['.', './viewer'],
+		react: ['.', './no-i18next', './viewer'],
 		vue: ['.', './viewer'],
 		svelte: ['.', './viewer'],
 		vanilla: ['.'],
@@ -430,8 +450,8 @@ ${aiEntriesCheck('cjs', aiChecks.cjs)}`,
 	// in every list (docs/guide/ai-assistant.md, "What the next major release changes").
 	const aiRuntimeReach = {
 		react: {
-			'@ai-sdk/react': ['.', './ai', './viewer'],
-			'ooxml-ui/pptx/ai': ['.', './ai', './viewer'],
+			'@ai-sdk/react': ['.', './ai', './no-i18next', './viewer'],
+			'ooxml-ui/pptx/ai': ['.', './ai', './no-i18next', './viewer'],
 		},
 		vue: {
 			'@ai-sdk/vue': ['.', './ai', './viewer'],

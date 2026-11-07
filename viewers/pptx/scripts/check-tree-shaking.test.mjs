@@ -7,6 +7,7 @@ import { after, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
+	IMPORT_TIME_EFFECTS,
 	droppedImportTimeEffects,
 	findNamespaceCopies,
 	isCliEntry,
@@ -103,8 +104,10 @@ test('the CLI entry check sees through symlinked invocation paths', () => {
 });
 
 test('the check runs and fails when invoked through a symlinked path', () => {
+	const entry = `${canvas}\nexport function SlideCanvas() {}\nexport function useViewerBuildingBlocks() {}\nexport function PowerPointViewer() {}\n`;
 	const dir = dist({
-		'index.mjs': `${canvas}\nexport function SlideCanvas() {}\nexport function useViewerBuildingBlocks() {}\n`,
+		'index.mjs': entry,
+		'no-i18next.mjs': entry,
 		'chunk-a.mjs': "import * as star from 'pkg';\nvar ns = {};\n__reExport(ns, star);\n",
 	});
 	const result = spawnSync(
@@ -155,11 +158,15 @@ test('the sideEffects field is read the way host bundlers read it', () => {
 	);
 });
 
+const threeView = IMPORT_TIME_EFFECTS.filter(({ source }) => source === 'ooxml-ui/pptx');
+const hostI18next = IMPORT_TIME_EFFECTS.filter(({ source }) => source === 'react-i18next');
+
 test('a bare import keeps the three-view registration when sideEffects allows it', async () => {
-	assert.deepEqual(await droppedImportTimeEffects(packageDist({}, registeringDist)), []);
+	assert.deepEqual(await droppedImportTimeEffects(packageDist({}, registeringDist), threeView), []);
 	assert.deepEqual(
 		await droppedImportTimeEffects(
 			packageDist({ sideEffects: ['*.css', '*.mjs'] }, registeringDist),
+			threeView,
 		),
 		[],
 	);
@@ -167,8 +174,50 @@ test('a bare import keeps the three-view registration when sideEffects allows it
 
 test('a sideEffects list that leaves out the registering module drops the registration', async () => {
 	assert.deepEqual(
-		await droppedImportTimeEffects(packageDist({ sideEffects: ['*.css'] }, registeringDist)),
+		await droppedImportTimeEffects(
+			packageDist({ sideEffects: ['*.css'] }, registeringDist),
+			threeView,
+		),
 		['the <pptx-three-view> registration'],
+	);
+});
+
+/** The main entry registers react-i18next in a slot that the shared viewer chunk reads. */
+const hostI18nextDist = {
+	'index.mjs':
+		"import './chunk-source.mjs';\nexport { PowerPointViewer } from './chunk-viewer.mjs';\n",
+	'no-i18next.mjs': "export { PowerPointViewer } from './chunk-viewer.mjs';\n",
+	'chunk-slot.mjs': [
+		'let registered = null;',
+		'export function registerHostI18next(hook) { registered ??= hook; }',
+		'export function registeredHostI18next() { return registered; }',
+	].join('\n'),
+	'chunk-source.mjs': [
+		"import { useTranslation } from 'react-i18next';",
+		"import { registerHostI18next } from './chunk-slot.mjs';",
+		'function useHostI18next() { return useTranslation(); }',
+		'registerHostI18next(useHostI18next);',
+	].join('\n'),
+	'chunk-viewer.mjs': [
+		"import { registeredHostI18next } from './chunk-slot.mjs';",
+		'export function PowerPointViewer() { return registeredHostI18next(); }',
+	].join('\n'),
+};
+
+test('a bare main-entry import next to a no-i18next viewer keeps the react-i18next registration', async () => {
+	assert.deepEqual(
+		await droppedImportTimeEffects(packageDist({}, hostI18nextDist), hostI18next),
+		[],
+	);
+});
+
+test('a sideEffects list that leaves out the source module drops the react-i18next registration', async () => {
+	assert.deepEqual(
+		await droppedImportTimeEffects(
+			packageDist({ sideEffects: ['*.css'] }, hostI18nextDist),
+			hostI18next,
+		),
+		['the react-i18next registration'],
 	);
 });
 
@@ -183,7 +232,7 @@ test('a pure-annotated registration call is reported as dropped', async () => {
 			),
 		},
 	);
-	assert.deepEqual(await droppedImportTimeEffects(annotated), [
+	assert.deepEqual(await droppedImportTimeEffects(annotated, threeView), [
 		'the <pptx-three-view> registration',
 	]);
 });

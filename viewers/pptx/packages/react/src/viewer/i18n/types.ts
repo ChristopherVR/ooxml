@@ -30,3 +30,27 @@ export interface ViewerI18nState {
 	/** Active language of the translations `t` returns. */
 	readonly locale: string;
 }
+
+/**
+ * The parts of an i18next instance the viewer reads (the File > Options > Language tab). All
+ * optional: react-i18next also accepts a hand-built instance or a test double.
+ */
+export interface HostI18nextInstance {
+	readonly language?: string;
+	readonly resolvedLanguage?: string;
+	readonly languages?: readonly string[];
+	readonly options?: { readonly resources?: Readonly<Record<string, unknown>> };
+	readonly changeLanguage?: (code: string) => unknown;
+}
+
+/** The host's react-i18next translation, as `useTranslation()` returns it. */
+export interface HostI18next {
+	readonly t: ViewerT;
+	readonly i18n: HostI18nextInstance;
+}
+
+/**
+ * A hook reading the host's react-i18next instance; see `./host-i18next`. `null` when
+ * react-i18next has no configured instance, which the viewer treats as no source.
+ */
+export type HostI18nextHook = () => HostI18next | null;

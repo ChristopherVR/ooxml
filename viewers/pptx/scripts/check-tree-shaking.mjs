@@ -17,6 +17,10 @@
  * Rspack, esbuild, rollup) may skip a whole module that the package's `sideEffects` field calls
  * side-effect-free, so a bare `import 'pptx-react-viewer'` is bundled once more with that field
  * honoured, as a host would, and every call in `IMPORT_TIME_EFFECTS` has to survive it.
+ *
+ * `dist/no-i18next.mjs` has the main entry's exports without the react-i18next registration, so
+ * it gets the same cases, and the registration the main entry runs on import is one of the
+ * effects that must survive.
  */
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
@@ -39,21 +43,48 @@ export const TREE_SHAKING_CASES = [
 		code: `export { SlideCanvas, useViewerBuildingBlocks } from ${JSON.stringify('<dist>/index.mjs')};`,
 		budget: 900_000,
 	},
+	{
+		name: 'side-effect import of /no-i18next',
+		code: `import ${JSON.stringify('<dist>/no-i18next.mjs')};`,
+		budget: 8_000,
+	},
+	{
+		name: 'read-only canvas from /no-i18next',
+		code: `export { SlideCanvas, useViewerBuildingBlocks } from ${JSON.stringify('<dist>/no-i18next.mjs')};`,
+		budget: 900_000,
+	},
 ];
 
 /** A bare side-effect import of the binding, as a host writes it. */
 const BARE_IMPORT = `import ${JSON.stringify('<dist>/index.mjs')};`;
 
 /**
- * What a bare import of the binding must still do, as the external binding each effect calls.
+ * The react-i18next registration a viewer reads: only a mounted viewer reads the slot it fills,
+ * so a bare import on its own may drop it, but a bare main-entry import next to a viewer must not.
+ */
+const MAIN_IMPORT_WITH_VIEWER =
+	`import ${JSON.stringify('<dist>/index.mjs')};\n` +
+	`export { PowerPointViewer } from ${JSON.stringify('<dist>/no-i18next.mjs')};`;
+
+/**
+ * What importing the binding must still do, as the external binding each effect calls, for a
+ * bare import (`BARE_IMPORT`) unless an effect names its own `code`.
  * `defineThreeViewElement()` registers `<pptx-three-view>` (`ThreeView.tsx`); importing
  * `ooxml-ui/pptx` for it also runs that package's own import-time registrations.
+ * `registerHostI18next(useHostI18next)` (`react-i18next-source.ts`) makes react-i18next the
+ * fallback translation source; it survives exactly when react-i18next's `useTranslation` does.
  */
 export const IMPORT_TIME_EFFECTS = [
 	{
 		source: 'ooxml-ui/pptx',
 		name: 'defineThreeViewElement',
 		effect: 'the <pptx-three-view> registration',
+	},
+	{
+		code: MAIN_IMPORT_WITH_VIEWER,
+		source: 'react-i18next',
+		name: 'useTranslation',
+		effect: 'the react-i18next registration',
 	},
 ];
 
@@ -165,14 +196,24 @@ export async function retainedBytes(distDir, code) {
 }
 
 /**
- * The `IMPORT_TIME_EFFECTS` (by `effect`) that a bare import of the binding in `distDir` loses
- * when its package's `sideEffects` field is honoured. The package is the parent of `distDir`.
+ * The `IMPORT_TIME_EFFECTS` (by `effect`) that importing the binding in `distDir` (a bare import,
+ * or an effect's own `code`) loses when its package's `sideEffects` field is honoured. The
+ * package is the parent of `distDir`.
  */
 export async function droppedImportTimeEffects(distDir, effects = IMPORT_TIME_EFFECTS) {
-	const chunks = await loadedChunks(distDir, BARE_IMPORT, packageSideEffects(dirname(distDir)));
-	const kept = (source, name) =>
-		chunks.some((chunk) => chunk.importedBindings[source]?.includes(name));
-	return effects.filter(({ source, name }) => !kept(source, name)).map(({ effect }) => effect);
+	const hasSideEffects = packageSideEffects(dirname(distDir));
+	const bundles = new Map();
+	const dropped = [];
+	for (const { code = BARE_IMPORT, source, name, effect } of effects) {
+		if (!bundles.has(code)) {
+			bundles.set(code, await loadedChunks(distDir, code, hasSideEffects));
+		}
+		const kept = bundles.get(code).some((chunk) => chunk.importedBindings[source]?.includes(name));
+		if (!kept) {
+			dropped.push(effect);
+		}
+	}
+	return dropped;
 }
 
 /** Every failed expectation for the built binding in `distDir` (empty when all hold). */
@@ -199,7 +240,7 @@ export async function checkTreeShaking(distDir = join(viewerRoot, 'packages/reac
 	const dropped = await droppedImportTimeEffects(distDir);
 	for (const effect of dropped) {
 		problems.push(
-			`side-effect import: ${effect} no longer runs on a bare import of pptx-react-viewer. ` +
+			`side-effect import: ${effect} no longer runs when pptx-react-viewer is imported. ` +
 				"Keep the call at module level, unannotated, in a module the package's " +
 				'`sideEffects` field does not mark side-effect-free.',
 		);

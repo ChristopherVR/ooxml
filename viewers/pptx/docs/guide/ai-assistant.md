@@ -313,9 +313,9 @@ In all five bindings:
   or the ESM and CommonJS builds mixed), is read the same way. In development the viewer
   warns about it once (`process.env.NODE_ENV !== 'production'`; Angular uses
   `isDevMode()`).
-- The main entries still reach the lazy panel loader. `pptx-react-viewer`,
-  `pptx-vue-viewer` and `pptx-svelte-viewer` with their `/viewer` entries,
-  `pptx-angular-viewer` (and `/internals`, the same file) and `pptx-vanilla-viewer` reach
+- The main entries still reach the lazy panel loader. `pptx-react-viewer` (and
+  `/no-i18next`, the same exports), `pptx-vue-viewer` and `pptx-svelte-viewer` with their
+  `/viewer` entries, `pptx-angular-viewer` (and `/internals`, the same file) and `pptx-vanilla-viewer` reach
   the binding's SDK package and `ooxml-ui/pptx/ai` through the same dynamic import as
   `/ai`. None of them has the `ai` SDK, `@ai-sdk/*`, `zod` or the automation catalogue in
   its initial chunks. The handle therefore does not change what loads, or when.
@@ -334,8 +334,8 @@ In all five bindings:
 The main entries become free of the assistant runtime when all of these hold, in every
 binding:
 
-- The source and built module graphs of the main entries (`pptx-react-viewer`,
-  `pptx-vue-viewer` and `pptx-svelte-viewer` with their `/viewer` entries,
+- The source and built module graphs of the main entries (`pptx-react-viewer` and its
+  `/no-i18next`, `pptx-vue-viewer` and `pptx-svelte-viewer` with their `/viewer` entries,
   `pptx-angular-viewer` and its `/internals`, `pptx-vanilla-viewer`) reach no `ai`,
   `@ai-sdk/*`, `zod`, `ooxml-ui/pptx/ai` or `ooxml-core/pptx/automation` module,
   statically or through a dynamic import.

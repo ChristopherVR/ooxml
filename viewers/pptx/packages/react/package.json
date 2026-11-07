@@ -46,6 +46,11 @@
 			"import": "./dist/index.mjs",
 			"require": "./dist/index.js"
 		},
+		"./no-i18next": {
+			"types": "./dist/no-i18next.d.ts",
+			"import": "./dist/no-i18next.mjs",
+			"require": "./dist/no-i18next.js"
+		},
 		"./viewer": {
 			"types": "./dist/viewer/index.d.ts",
 			"import": "./dist/viewer/index.mjs",
@@ -112,7 +117,7 @@
 		}
 	},
 	"scripts": {
-		"build": "tsup && tsdown && node ../../scripts/merge-declarations.mjs && node ../../scripts/bundle-declarations.mjs index viewer/index i18n internals ai && node ../../scripts/merge-declarations.mjs .types-bundle && node ../../scripts/prune-stray-declarations.mjs dist index.d.ts viewer/index.d.ts i18n.d.ts internals.d.ts ai.d.ts && npx @tailwindcss/cli -i src/styles/pptx-viewer.css -o dist/pptx-viewer.css --minify && node scripts/build-canvas-css.mjs && node ../locales/scripts/copy-subpaths.mjs && node ../../scripts/compress-dist.mjs dist",
+		"build": "tsup && tsdown && node ../../scripts/merge-declarations.mjs && node ../../scripts/bundle-declarations.mjs index no-i18next viewer/index i18n internals ai && node ../../scripts/merge-declarations.mjs .types-bundle && node ../../scripts/prune-stray-declarations.mjs dist index.d.ts no-i18next.d.ts viewer/index.d.ts i18n.d.ts internals.d.ts ai.d.ts && npx @tailwindcss/cli -i src/styles/pptx-viewer.css -o dist/pptx-viewer.css --minify && node scripts/build-canvas-css.mjs && node ../locales/scripts/copy-subpaths.mjs && node ../../scripts/compress-dist.mjs dist",
 		"build:css": "npx @tailwindcss/cli -i src/styles/pptx-viewer.css -o dist/pptx-viewer.css --minify && node scripts/build-canvas-css.mjs",
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit --pretty",

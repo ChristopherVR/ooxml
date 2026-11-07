@@ -25,6 +25,13 @@ const HASHED_FILE = /-[A-Z0-9]{8}$/;
 
 const builtins = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]));
 
+/** Styles, fonts and images load as empty modules: the host's bundler owns them. */
+const ASSET_LOADERS = Object.fromEntries(
+	['.css', '.less', '.scss', '.woff', '.woff2', '.ttf', '.otf', '.eot', '.png', '.jpg']
+		.concat(['.jpeg', '.gif', '.svg', '.webp'])
+		.map((extension) => [extension, 'empty']),
+);
+
 /** Whether an import specifier names a Node built-in or a Node-only package. */
 export function isNodeOnlySpecifier(specifier) {
 	if (specifier.startsWith('node:') || builtins.has(specifier)) {
@@ -158,11 +165,7 @@ export async function findNodeOnlyModules({ root: rootDir, packages }) {
 		// specifier back into a literal that the host's bundler then fails to resolve). esbuild
 		// reports each one, also inside node_modules, once its log level is raised.
 		logOverride: { 'unsupported-dynamic-import': 'warning' },
-		loader: Object.fromEntries(
-			['.css', '.less', '.scss', '.woff', '.woff2', '.ttf', '.otf', '.eot', '.png', '.jpg']
-				.concat(['.jpeg', '.gif', '.svg', '.webp'])
-				.map((extension) => [extension, 'empty']),
-		),
+		loader: ASSET_LOADERS,
 		plugins: [plugin],
 	});
 
@@ -219,6 +222,36 @@ export async function assertNoNodeOnlyModules(options) {
 		throw new Error(`Browser entries reach Node-only modules:\n${lines.join('\n')}`);
 	}
 	return entries.length;
+}
+
+/**
+ * Bundle one app module for the browser the way a web host's production build does: every import
+ * must resolve, except the packages listed in `external` (optional peers the host left out).
+ *
+ * @param {{ entry: string, external?: string[] }} options
+ * @returns {Promise<string[]>} The bundler's error messages; empty when the app builds.
+ */
+export async function bundleBrowserApp({ entry, external = [] }) {
+	try {
+		await esbuild.build({
+			entryPoints: [entry],
+			outdir: join(entry, '..', '.browser-app'),
+			bundle: true,
+			splitting: true,
+			format: 'esm',
+			platform: 'browser',
+			write: false,
+			logLevel: 'silent',
+			external: external.flatMap((name) => [name, `${name}/*`]),
+			loader: ASSET_LOADERS,
+		});
+		return [];
+	} catch (error) {
+		if (!Array.isArray(error?.errors)) {
+			throw error;
+		}
+		return error.errors.map(({ text }) => text);
+	}
 }
 
 function dedupe(findings) {

@@ -1,14 +1,13 @@
-// @vitest-fresh-modules: expects untranslated keys, so i18n must not be initialized by an earlier file.
 // @vitest-environment happy-dom
 /**
  * #397: the section-header menu renders the shared command list (Rename,
  * Delete, Move Up, Move Down, Add Section After) with end-of-list gating.
  */
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import type { SlideSectionGroup } from '../../types';
 import { SectionContextMenu } from './SectionContextMenu';
 
@@ -18,7 +17,7 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 afterEach(() => {
 	act(() => root.unmount());
@@ -54,20 +53,22 @@ function mount(sectionIndex: number) {
 
 const items = (): HTMLButtonElement[] =>
 	Array.from(container.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
-const item = (label: string): HTMLButtonElement =>
-	items().find((candidate) => candidate.textContent === label)!;
+const item = (key: string): HTMLButtonElement =>
+	items().find((candidate) => candidate.textContent === marked(key))!;
 
 describe('react section context menu', () => {
 	it('renders the shared command list as a role="menu"', () => {
 		mount(0);
 		expect(container.querySelector('[role="menu"]')).not.toBeNull();
-		expect(items().map((candidate) => candidate.textContent)).toStrictEqual([
-			'pptx.sections.rename',
-			'pptx.sections.delete',
-			'pptx.sections.moveUp',
-			'pptx.sections.moveDown',
-			'pptx.sections.addAfter',
-		]);
+		expect(items().map((candidate) => candidate.textContent)).toStrictEqual(
+			[
+				'pptx.sections.rename',
+				'pptx.sections.delete',
+				'pptx.sections.moveUp',
+				'pptx.sections.moveDown',
+				'pptx.sections.addAfter',
+			].map(marked),
+		);
 	});
 
 	it('disables Move Up on the first section and Move Down on the last', () => {
@@ -88,7 +89,7 @@ describe('react section context menu', () => {
 		act(() => item('pptx.sections.moveDown').click());
 		expect(handlers.onMoveSectionDown).toHaveBeenCalledWith('a');
 		act(() => item('pptx.sections.addAfter').click());
-		expect(handlers.onAddSection).toHaveBeenCalledWith('pptx.sections.defaultName', 2);
+		expect(handlers.onAddSection).toHaveBeenCalledWith(marked('pptx.sections.defaultName'), 2);
 	});
 
 	// An inline <span> around a separator and a flex button makes Chrome's elementsFromPoint
