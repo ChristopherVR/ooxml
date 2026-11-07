@@ -29,6 +29,14 @@ export interface PptxSlideBackgroundBuilderInput {
 	/** Optional sink for a "could not embed background" compatibility warning. */
 	reportUnsupportedBackground?: (imageUrl: string) => void;
 	/**
+	 * The slide's gradient as an `a:gradFill` node, built by the shape
+	 * gradient writer from `PptxSlide.backgroundGradientFill`, or `undefined`
+	 * when the slide has no structured gradient matching its CSS one.
+	 */
+	buildBackgroundGradientFill?: () => XmlObject | undefined;
+	/** Optional sink for a "gradient-only background could not be written" warning. */
+	reportUnsupportedGradient?: () => void;
+	/**
 	 * What the loader recorded about this slide's `<p:bg>`: whether the slide
 	 * authored one at all, and what the inheritance chain resolved to. Omitted
 	 * for slides this handler never parsed (SDK-built decks), where the flat
@@ -236,9 +244,22 @@ export class PptxSlideBackgroundBuilder implements IPptxSlideBackgroundBuilder {
 				init.reportUnsupportedBackground?.(rawBackgroundImage);
 			}
 		}
-		// Fall back to a solid colour only when no image fill was embedded.
+		// A gradient comes next, the precedence the renderers paint with
+		// (picture over gradient over colour). Only a structured gradient can
+		// be written; the CSS string alone is not a DrawingML gradient.
+		if (backgroundProperties['a:blipFill'] === undefined && hasBackgroundGradient) {
+			const gradFill = init.buildBackgroundGradientFill?.();
+			if (gradFill) {
+				backgroundProperties['a:gradFill'] = gradFill;
+			} else if (!hasBackgroundColor && !hasBackgroundImage) {
+				// A gradient-only background would otherwise vanish without a word.
+				init.reportUnsupportedGradient?.();
+			}
+		}
+		// Fall back to a solid colour only when no image or gradient was written.
 		if (
 			backgroundProperties['a:blipFill'] === undefined &&
+			backgroundProperties['a:gradFill'] === undefined &&
 			hasBackgroundColor &&
 			init.slide.backgroundColor
 		) {

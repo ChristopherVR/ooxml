@@ -178,6 +178,14 @@ export type PptxSvgRasterizer = (
 ) => Promise<Uint8Array | undefined>;
 
 export interface PptxHandlerSaveOptions {
+	/**
+	 * A reproducible save: `dcterms:created` / `dcterms:modified` are this date
+	 * (unless `coreProperties` gives them), `cp:revision` is
+	 * `coreProperties.revision` or 1 instead of the next count, new table
+	 * columns get reproducible `a16:colId`s and every ZIP entry is dated this
+	 * date. Two saves of the same input then produce the same bytes.
+	 */
+	fixedDate?: Date;
 	headerFooter?: PptxHeaderFooter;
 	presentationProperties?: PptxPresentationProperties;
 	customShows?: PptxCustomShow[];
