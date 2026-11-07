@@ -67,12 +67,16 @@ const markFill = (page: Page, series: number) =>
 		{ svg: SVG, series },
 	);
 
-/** Whether a `<pattern>` def with an id ending in `suffix` exists in the chart. */
+/**
+ * Whether a `<pattern>` def with an id ending in `suffix` exists in the chart.
+ * The viewer scopes def ids per painted copy (`<id>~<n>`), so the authored id
+ * is read from `data-pptx-sid` when present.
+ */
 const hasDef = (page: Page, suffix: string) =>
 	page.evaluate(
 		({ svg, suffix }) =>
 			[...(document.querySelector(svg)?.querySelectorAll('pattern') ?? [])].some((p) =>
-				p.id.endsWith(suffix),
+				(p.getAttribute('data-pptx-sid') ?? p.id).endsWith(suffix),
 			),
 		{ svg: SVG, suffix },
 	);
@@ -89,7 +93,7 @@ test('pattern fill, bevel and secondary axis on a series persist', async ({ page
 	await openSeries(page, 1);
 
 	await pick(page, 'fill.kind', 'pattern');
-	await expect.poll(() => markFill(page, 1)).toMatch(/^url\(#.*-fmt-pt1\)$/u);
+	await expect.poll(() => markFill(page, 1)).toMatch(/^url\(#.*-fmt-pt1(?:~\d+)?\)$/u);
 
 	await pane(page).locator('[data-chart-format-tab="effects"]').click();
 	await field(page, 'threeD.bevelTop')
@@ -107,7 +111,7 @@ test('pattern fill, bevel and secondary axis on a series persist', async ({ page
 	).toHaveJSProperty('checked', true);
 
 	await saveAndReopen(page, testInfo.outputPath('chart-format-more-series.pptx'));
-	await expect.poll(() => markFill(page, 1)).toMatch(/^url\(#.*-fmt-pt1\)$/u);
+	await expect.poll(() => markFill(page, 1)).toMatch(/^url\(#.*-fmt-pt1(?:~\d+)?\)$/u);
 	await expect.poll(() => hasDef(page, '-fmt-b1')).toBe(true);
 	await selectChart(page);
 	await openSeries(page, 1);

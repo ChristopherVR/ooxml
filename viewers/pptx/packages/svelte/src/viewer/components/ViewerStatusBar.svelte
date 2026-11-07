@@ -53,6 +53,7 @@
 	autosaveStatus={vm.autosaveActive ? autosaveCtl.status : undefined}
 	lastSavedAt={autosaveCtl.lastSavedAt}
 	saveProgress={saveProgress.current}
+	fontProgress={loader.fontProgress}
 	showNotes={showNotes && loader.slides.length > 0 && !isActionHidden('notes', hiddenActions)}
 	hideZoom={isActionHidden('zoom', hiddenActions)}
 	hideFullscreen={isActionHidden('fullscreen', hiddenActions)}

@@ -254,8 +254,10 @@ describe('inline text editor caret placement', () => {
 		});
 		flushSync();
 		const root = host.querySelector<HTMLElement>('[data-inline-editor]')!;
+		// The plain editor seeds styled runs, so the text sits inside them.
+		const text = document.createTreeWalker(root, NodeFilter.SHOW_TEXT).nextNode()!;
 		const range = document.createRange();
-		range.setStart(root.firstChild!, 3);
+		range.setStart(text, 3);
 		range.collapse(true);
 		window.getSelection()!.removeAllRanges();
 		window.getSelection()!.addRange(range);

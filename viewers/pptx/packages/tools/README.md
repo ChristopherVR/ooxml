@@ -176,6 +176,10 @@ the stdio CLI. Compatibility exports retain the existing library API.
 The `/mcp` import exports `createServer({ rootDir })` and `registerTools(server,
 { rootDir })` without starting a transport; the CLI starts stdio separately.
 
+## Privacy and network use
+
+The MCP server talks to its client over stdio only and makes no network request of its own. It reads and writes files under its root directory, and linked pictures in a deck are not fetched. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 Apache-2.0

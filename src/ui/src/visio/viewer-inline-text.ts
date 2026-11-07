@@ -1,4 +1,5 @@
 import { canEditDiagram } from './controller';
+import { visioFontStack } from './font-stack';
 import type { VisioShape } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
@@ -215,6 +216,12 @@ export class ViewerInlineText {
 			);
 			session.group?.setAttribute('data-editing-text', '');
 			this.#style(shape, state.zoom || 1);
+		} else if (!session.group?.isConnected) {
+			// The same drawing redrawn (webfonts arrived): hide the shape's own text again.
+			session.group = this.viewport.querySelector<SVGGElement>(
+				`svg.paper [data-shape-id="${CSS.escape(shape.id)}"]`,
+			);
+			session.group?.setAttribute('data-editing-text', '');
 		}
 		// Redrawing the page replaces the canvas content, the editor with it: put it back as it was.
 		if (!this.input.isConnected) {
@@ -238,7 +245,7 @@ export class ViewerInlineText {
 	#style(shape: VisioShape, zoom: number): void {
 		const text = shape.text;
 		const style = this.input.style;
-		style.fontFamily = text?.fontFamily ? `"${text.fontFamily}", var(--office-font)` : '';
+		style.fontFamily = text?.fontFamily ? visioFontStack(text.fontFamily) : '';
 		style.fontSize = `${Math.max(8, (text?.fontSize ?? 12 / 72) * 96 * zoom)}px`;
 		style.color = text?.color ?? '';
 		style.textAlign =

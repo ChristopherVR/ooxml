@@ -1,4 +1,5 @@
 import type { VisioTextRun } from 'ooxml-core/visio';
+import { visioFontStack } from './font-stack';
 import { runDisplaySize, runDisplayText, sameRunExtras } from './text-run-style';
 export interface TextLine {
 	runs: VisioTextRun[];
@@ -161,7 +162,7 @@ export const measureBrowserText: MeasureText = (text, run) => {
 	const spacing = (run.letterSpacing ?? 0) * count;
 	const size = runDisplaySize(run);
 	if (!canvas) return Math.max(0, count * size * 0.55 + spacing);
-	canvas.font = `${run.italic ? 'italic ' : ''}${run.textCase === 'small-caps' ? 'small-caps ' : ''}${run.bold ? 'bold ' : ''}${size * 96}px ${JSON.stringify(run.fontFamily)}`;
+	canvas.font = `${run.italic ? 'italic ' : ''}${run.textCase === 'small-caps' ? 'small-caps ' : ''}${run.bold ? 'bold ' : ''}${size * 96}px ${visioFontStack(run.fontFamily)}`;
 	return Math.max(0, canvas.measureText(runDisplayText(text, run)).width / 96 + spacing);
 };
 

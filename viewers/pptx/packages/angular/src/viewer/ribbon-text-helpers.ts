@@ -27,23 +27,19 @@ import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import type { EditorStateService } from './editor-state.service';
 
 /**
- * The live (uncommitted) plain text of the open inline-edit `<textarea
- * data-inline-editor>`, or `undefined` when none is open. The textarea is
- * UNCONTROLLED (see `slide-canvas.component.ts`): typing updates its own
- * `.value` and only publishes to collaboration broadcast on input, never the
- * model, so `element.textSegments`/`.text` can be stale relative to what is
- * on screen for the whole edit session, not just mid-keystroke.
+ * The live (uncommitted) plain text of the open inline editor
+ * (`[data-inline-editor]`), or `undefined` when none is open. The editor is
+ * UNCONTROLLED (see `slide-canvas.component.ts`): typing changes its own DOM
+ * and only publishes to collaboration broadcast on input, never the model, so
+ * `element.textSegments`/`.text` can be stale relative to what is on screen
+ * for the whole edit session, not just mid-keystroke.
  */
 function currentInlineEditorText(): string | undefined {
 	if (typeof document === 'undefined') {
 		return undefined;
 	}
 	const editor = document.querySelector<HTMLElement>(INLINE_EDITOR_SELECTOR);
-	return editor instanceof HTMLTextAreaElement
-		? editor.value
-		: editor
-			? readEditableText(editor)
-			: undefined;
+	return editor ? readEditableText(editor) : undefined;
 }
 
 /** The selection's text style, or null when the element carries no text props. */

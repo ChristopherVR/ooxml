@@ -227,3 +227,28 @@ describe('allowExternalContent host option', () => {
 		expect(optionsStoreOf(viewer).isLocked('trust', 'allowExternalContent')).toBe(false);
 	});
 });
+
+describe('googleFonts host option', () => {
+	afterEach(() => localStorage.clear());
+
+	it('locks Trust Center > Download fonts off for false', () => {
+		const { viewer } = mount({ googleFonts: false });
+		const store = optionsStoreOf(viewer);
+		expect(store.getOptions().trust.allowFontDownloads).toBe(false);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+		store.setValue('trust', 'allowFontDownloads', true);
+		expect(store.getOptions().trust.allowFontDownloads).toBe(false);
+	});
+
+	it('locks it on for a valid mirror', () => {
+		const { viewer } = mount({ googleFonts: { baseUrl: 'https://fonts.example.test/css2' } });
+		const store = optionsStoreOf(viewer);
+		expect(store.getOptions().trust.allowFontDownloads).toBe(true);
+		expect(store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+	});
+
+	it('leaves the setting to the user when the option is omitted', () => {
+		const { viewer } = mount();
+		expect(optionsStoreOf(viewer).isLocked('trust', 'allowFontDownloads')).toBe(false);
+	});
+});

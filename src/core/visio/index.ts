@@ -430,6 +430,7 @@ export {
 	type VisioTextMeasurer,
 } from './text-extent';
 export { visioFontAssumed } from './style';
+export { collectVisioWebfontRuns, type VisioWebfontRunOptions } from './webfont-runs';
 export { checkVisioAlternativeText, type VisioAccessibilityIssue } from './accessibility';
 export type {
 	VisioAction,

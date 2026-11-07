@@ -425,25 +425,19 @@ pptx-slide-canvas {
 	position: absolute;
 	box-sizing: border-box;
 	margin: 0;
-	padding: 2px;
-	border: 2px solid #4f86ff;
-	/* Fully opaque (not the previous 0.96 alpha): this textarea always renders
-	   plain black text regardless of the element's own colour, so - unlike
-	   React/Vue's richer inline editors - it cannot safely go transparent over
-	   an arbitrary (e.g. dark-filled or white-on-colour) shape without risking
-	   invisible text. A near-opaque backdrop used to double as a (leaky) mask
-	   for the element's real text rendering underneath; with
-	   pptx-element-renderer now suppressing that render for the element being
-	   edited (issue #182), full opacity here is just a plain, always-legible
-	   editing surface. */
-	background: #fff;
-	color: #000;
-	font: inherit;
-	line-height: 1.2;
-	resize: none;
-	overflow: auto;
+	/* Transparent and unpadded: the editor is painted with the element's own
+	   block style (insets, colour, font; see inline-editor-style.ts) over the
+	   element, whose static text is hidden while it is edited (issue #182).
+	   It used to be opaque white paper with plain black text, because the
+	   editor was an unstyled textarea. */
+	background: transparent;
+	outline: 2px solid #4f86ff;
+	outline-offset: 0;
+	overflow: visible;
+	cursor: text;
 	z-index: 10002;
 	white-space: pre-wrap;
+	overflow-wrap: break-word;
 }
 
 .pptx-ng-marquee {

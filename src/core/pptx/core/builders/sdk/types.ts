@@ -133,6 +133,7 @@ export type FillInput =
 	| { type: 'none' };
 
 export interface StrokeInput {
+	/** Outline colour; `'transparent'` writes an explicit empty outline (`<a:ln><a:noFill/></a:ln>`). */
 	color?: string;
 	width?: number;
 	/**
@@ -277,8 +278,27 @@ export interface ImageOptions extends Partial<ElementPosition> {
 
 export interface TableInput {
 	rows: TableRowInput[];
+	/**
+	 * Column widths, relative to each other (fractions, or px that add up to
+	 * the table's width), one per column. Omitted: equal columns. Widths that
+	 * are not one finite value of 0 or more per column, or that add up to 0,
+	 * throw a `RangeError`.
+	 */
 	columnWidths?: number[];
+	/**
+	 * Table style id (`a:tableStyleId`). Omitted: PowerPoint's default
+	 * (Medium Style 2 - Accent 1). `'none'` (or `''`): no table style, so only
+	 * the cells' own formatting shows.
+	 */
 	style?: string;
+	/**
+	 * Opt-in: `rows[].cells` list only the real cells, and the slots that a
+	 * `gridSpan` / `rowSpan` covers are added as empty `hMerge` / `vMerge`
+	 * cells. Without it the cells are taken as given, one per grid slot. A
+	 * span that is not a whole number from 1, reaches past the last row or
+	 * overlaps another merge throws a `RangeError`.
+	 */
+	fillMergedCells?: boolean;
 	bandRows?: boolean;
 	bandColumns?: boolean;
 	firstRow?: boolean;
@@ -295,9 +315,44 @@ export interface TableRowInput {
 export interface TableCellInput {
 	text: string;
 	style?: Partial<TextStyleInput>;
+	/**
+	 * The cell's own fill, written in `a:tcPr` over the table style's. Solid
+	 * (no opacity below 1), gradient (no `tile`, `scaled: false` or
+	 * `rotWithShape`), pattern and `none` (an explicit `a:noFill`). A fill a
+	 * cell cannot carry, such as an image, throws a `RangeError`.
+	 */
 	fill?: FillInput;
+	/** The cell's own edge lines, written over the table style's. */
+	borders?: TableCellBordersInput;
 	gridSpan?: number;
 	rowSpan?: number;
+}
+
+/**
+ * A table cell's edge lines: `all` for the four edges, and each edge on its
+ * own (`a:lnT` / `a:lnR` / `a:lnB` / `a:lnL`), which overrides `all`.
+ */
+export interface TableCellBordersInput {
+	all?: TableCellBorderInput;
+	top?: TableCellBorderInput;
+	right?: TableCellBorderInput;
+	bottom?: TableCellBorderInput;
+	left?: TableCellBorderInput;
+}
+
+/** One edge line of a table cell. */
+export interface TableCellBorderInput {
+	color?: string;
+	/** Line width in px. */
+	width?: number;
+	/**
+	 * A preset dash, or an exact pattern of dash and gap lengths in px
+	 * (`[dash, gap, dash, gap, ...]`, repeated once when odd, as in SVG's
+	 * `stroke-dasharray`), written as `a:custDash` relative to `width` (1 px
+	 * when `width` is omitted or 0). An empty pattern, or a length that is
+	 * not a finite number above 0, throws a `RangeError`.
+	 */
+	dash?: Exclude<StrokeDashType, 'custom'> | number[];
 }
 
 export interface TableOptions extends Partial<ElementPosition> {}

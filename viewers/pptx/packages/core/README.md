@@ -206,6 +206,10 @@ Under the hood the engine is split into many small, focused modules. If you want
 
 See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the details behind each of these.
 
+## Privacy and network use
+
+Parsing, editing and saving happen locally and never upload the file. Linked (external) pictures and media are not fetched unless you pass `allowExternalImages: true`. Node signature inspection checks certificate revocation with the OCSP responder named in each certificate. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
 ## License
 
 [Apache-2.0](LICENSE). Please keep the [`NOTICE`](NOTICE) file with redistributions.

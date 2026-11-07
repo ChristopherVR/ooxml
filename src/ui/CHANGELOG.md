@@ -7,6 +7,54 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.47.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.47.0) - 2026-11-07
+
+### Features
+
+- **ui:** Start document webfonts while the file parses ([b26b5e4](https://github.com/ChristopherVR/ooxml/commit/b26b5e4a5aa141c4311dad9ccd4f074f0d768515))
+- **ui:** Add a trust center font toggle to word, excel and visio ([911ad27](https://github.com/ChristopherVR/ooxml/commit/911ad27252f8de09c97c66bdfd57a24a995af47a))
+
+### Bug Fixes
+
+- **angular:** Edit text in its own font instead of a plain textarea ([24ba701](https://github.com/ChristopherVR/ooxml/commit/24ba701aebd4588870dfb7e976880779de97f74c))
+
+## [1.46.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.46.0) - 2026-11-07
+
+### Features
+
+- **text:** Share the webfont fallback with word, excel and visio ([296264b](https://github.com/ChristopherVR/ooxml/commit/296264b25560c6cd274bf5df62e94300783ef6bb))
+
+## [1.45.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.45.0) - 2026-11-06
+
+### Features
+
+- **drawingml:** Share powerpoint's measured dash patterns ([9c36464](https://github.com/ChristopherVR/ooxml/commit/9c364649697f675ecea811c807188cb083c91078))
+- **ui:** Match dashed square-cap ends and dash phase on straight lines ([7ea4139](https://github.com/ChristopherVR/ooxml/commit/7ea4139a8a759e8dbdec1650b6d6c7f792084d43))
+- **ui:** Fit arch and circle text to its arc and space lines one pitch apart ([816e254](https://github.com/ChristopherVR/ooxml/commit/816e2541fc6af4dce45b8b3c2fa7896f650d5cb4))
+- **ui:** Add a trust center option for downloading webfonts ([e260f16](https://github.com/ChristopherVR/ooxml/commit/e260f16f564e115657f8c60a4c8513ff9c4ddaf2))
+
+### Bug Fixes
+
+- **ui:** Paint path="shape" gradients as PowerPoint does in every binding ([9fd7ea8](https://github.com/ChristopherVR/ooxml/commit/9fd7ea856540a27e4f0d33eb853b66fa5bdef842))
+- **ui:** Pick the half or tip of arch, button and circle warps by angle ([375745d](https://github.com/ChristopherVR/ooxml/commit/375745dea16581529709f749ea1f2545c45ca368))
+- **ui:** Snap the text body top and round exact pitches like powerpoint ([0107cac](https://github.com/ChristopherVR/ooxml/commit/0107cac0576a4e0d8f0a391d7e84ccf79a46a18e))
+- **ui:** Drop the unused getShapeType import from fill-style ([72cd226](https://github.com/ChristopherVR/ooxml/commit/72cd2267c28a141452b6af302079080a9a4af6f7))
+- **ui:** Clear the open code scanning alerts ([078f8a4](https://github.com/ChristopherVR/ooxml/commit/078f8a4c3311169fc9e87575470d3bc86719a3ff))
+- **ui:** Size the status bar's hidden text from tokens ([8607ec4](https://github.com/ChristopherVR/ooxml/commit/8607ec451b67613569850cf6588564854ad6ad76))
+- **ui:** Place mixed-size exact-spaced lines on powerpoint's baseline ([72685f2](https://github.com/ChristopherVR/ooxml/commit/72685f21457b5709a7e478642365c4341b185a49))
+- **pptx:** Wait for a deck's webfonts before showing it ([995b977](https://github.com/ChristopherVR/ooxml/commit/995b977e12041a798744eb9704d4d5735cd52a1a))
+- **ui:** Keep the empty line after a paragraph's trailing line break ([32e238d](https://github.com/ChristopherVR/ooxml/commit/32e238d58c85b9515c3a58f30aa221a79e5c2e82))
+- **ui:** Size a trailing break's empty line from the break, like powerpoint ([b3bc5b4](https://github.com/ChristopherVR/ooxml/commit/b3bc5b474ab772157876fdaf17b9e2fbe12771a5))
+- **ui:** Break lines where powerpoint does when the deck font is missing ([40765e7](https://github.com/ChristopherVR/ooxml/commit/40765e7ac295ca1c6ee4346cd95109fd7be7d951))
+
+### Documentation
+
+- Disclose every outbound request in PRIVACY.md ([eb1810b](https://github.com/ChristopherVR/ooxml/commit/eb1810bd3dd1ede67a8c4872f3fe5daa64472fe1))
+
+### Testing
+
+- Settle webfont face check on linux and drop flaky namespace spy ([714f09a](https://github.com/ChristopherVR/ooxml/commit/714f09ab0d5e8fe0de033b000b07f83753f21e6c))
+
 ## [1.44.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.44.0) - 2026-11-06
 
 ### Features

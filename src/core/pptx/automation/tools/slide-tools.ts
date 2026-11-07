@@ -1,5 +1,7 @@
+import { EMU_PER_POINT } from '../../../units/constants';
 import type { PptxSlideTransition, PptxTransitionType } from '../../index';
 import { duplicateSlide as duplicateSdkSlide } from '../../core/builders/sdk/slide-operations';
+import { emuToPixels } from '../../core/builders/sdk/units';
 
 import type { ToolContext, ToolResult } from '../types';
 import { generateSlideId, describeElement, validateSlideIndex } from './helpers';
@@ -283,18 +285,27 @@ export function setCanvasSize(
 	ctx: ToolContext,
 	params: SetCanvasSizeParams,
 ): ToolResult<{ canvasWidth: number; canvasHeight: number }> {
-	ctx.pptxData.width = params.width;
-	ctx.pptxData.height = params.height;
-	if (ctx.pptxData.widthEmu !== undefined) {
-		ctx.pptxData.widthEmu = Math.round(params.width * 12700);
-	}
-	if (ctx.pptxData.heightEmu !== undefined) {
-		ctx.pptxData.heightEmu = Math.round(params.height * 12700);
+	const { width, height } = params;
+	// ST_SlideSizeCoordinate permits 1 to 56 inches on each axis.
+	if (![width, height].every((points) => points >= 72 && points <= 4032)) {
+		throw new RangeError('Canvas width and height must be between 72 and 4032 points.');
 	}
 
+	const { pptxData } = ctx;
+	const widthEmu = Math.round(width * EMU_PER_POINT);
+	const heightEmu = Math.round(height * EMU_PER_POINT);
+	if (pptxData.widthEmu !== widthEmu || pptxData.heightEmu !== heightEmu) {
+		delete pptxData.slideSizeType;
+	}
+	pptxData.widthEmu = widthEmu;
+	pptxData.heightEmu = heightEmu;
+	pptxData.width = emuToPixels(widthEmu);
+	pptxData.height = emuToPixels(heightEmu);
+
 	return {
-		pptxData: ctx.pptxData,
+		pptxData,
 		dirty: true,
-		result: { canvasWidth: params.width, canvasHeight: params.height },
+		result: { canvasWidth: width, canvasHeight: height },
+		saveOptions: { slideSize: { widthEmu, heightEmu, type: pptxData.slideSizeType ?? '' } },
 	};
 }

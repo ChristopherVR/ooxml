@@ -104,7 +104,7 @@ try {
 	await page.locator('#theme-picker').click();
 	await page.locator('[name=mode][value=dark]').check();
 	await page.locator('[name=accent][value=purple]').check();
-	await page.getByRole('button', { name: 'Done', exact: true }).click();
+	await page.locator('#settings-dialog').getByRole('button', { name: 'OK', exact: true }).click();
 	await shot('dark');
 	await page.setViewportSize({ width: 390, height: 844 });
 	await shot('mobile');

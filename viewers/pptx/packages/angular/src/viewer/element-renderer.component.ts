@@ -194,7 +194,7 @@ export class ElementRendererComponent {
 
 	/**
 	 * The element currently open in the element-level inline text editor
-	 * (the `<textarea data-inline-editor>` overlay in `slide-canvas.component`),
+	 * (the `[data-inline-editor]` overlay in `slide-canvas.component`),
 	 * or `null`. Mirrors React's `ElementBody.renderBody`, which swaps its
 	 * static text render out for the inline editor rather than layering the
 	 * two: without this the element's normal text painted UNDERNEATH the

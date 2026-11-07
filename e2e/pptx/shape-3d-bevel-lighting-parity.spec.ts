@@ -77,7 +77,9 @@ interface BevelFilterState {
  * element's own full `data-element-id` (not nested under the host node): the
  * five bindings place the hidden `<svg><defs>` differently relative to the
  * element's own box (sibling vs. nested), so asserting on the deterministic
- * id is the only binding-neutral way to find it.
+ * id is the only binding-neutral way to find it. The viewer re-ids every def per
+ * painted copy (`<id>~<n>`, the authored id kept in `data-pptx-sid`), so the def
+ * is the one the element's own CSS filter points at.
  */
 async function bevelFilterStateOf(page: Page, idSuffix: string): Promise<BevelFilterState | null> {
 	return page.evaluate((suffix) => {
@@ -98,7 +100,16 @@ async function bevelFilterStateOf(page: Page, idSuffix: string): Promise<BevelFi
 		}
 		const fullId = best.dataset.elementId ?? '';
 		const filterCss = getComputedStyle(best).filter;
-		const def = document.getElementById(`bevel-light-${fullId}`);
+		const authored = `bevel-light-${fullId}`;
+		// Computed `url()`s may carry the page URL before the fragment.
+		const def =
+			[...filterCss.matchAll(/url\([^)]*#([^"')\s]+)/gu)]
+				.map(([, id]) => document.getElementById(id ?? ''))
+				.find(
+					(node) =>
+						node !== null &&
+						(node.id === authored || node.getAttribute('data-pptx-sid') === authored),
+				) ?? null;
 		const markup = def?.outerHTML ?? '';
 		return {
 			filterCss,

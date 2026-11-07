@@ -10,6 +10,7 @@
 // ==========================================================================
 
 import type { PptxThemeColorRef } from './color-ref';
+import type { PptxCustomDashSegment } from './shape-style';
 import type { ParsedTableStyleEffect } from './table-style-edit';
 import type { TextStyle } from './text';
 
@@ -115,11 +116,23 @@ export interface PptxTableCellStyle {
 	borderDiagUpWidth?: number;
 	/** Table cell border dash style (legacy single value). */
 	borderDash?: string;
-	/** Per-edge border dash styles. */
+	/**
+	 * Per-edge border dash styles: an `a:prstDash` value, or `'custom'` for an
+	 * `a:custDash`, whose pattern is in the edge's `...DashSegments`.
+	 */
 	borderTopDash?: string;
 	borderBottomDash?: string;
 	borderLeftDash?: string;
 	borderRightDash?: string;
+	/**
+	 * Per-edge custom dash patterns (`a:custDash/a:ds`), read and written when
+	 * the edge's dash is `'custom'`: lengths relative to the line width, in
+	 * thousandths of one percent (100000 is one line width).
+	 */
+	borderTopDashSegments?: PptxCustomDashSegment[];
+	borderBottomDashSegments?: PptxCustomDashSegment[];
+	borderLeftDashSegments?: PptxCustomDashSegment[];
+	borderRightDashSegments?: PptxCustomDashSegment[];
 	/** Cell text shadow colour. */
 	textShadowColor?: string;
 	/** Cell text shadow blur radius in px. */

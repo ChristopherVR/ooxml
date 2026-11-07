@@ -55,7 +55,8 @@ export interface CellBaselineInput {
 /**
  * The inline style that moves a cell paragraph onto PowerPoint's baselines,
  * or `undefined` when it needs none or cannot be modelled (no known font
- * size, several sizes or faces, super- and subscripts).
+ * size, several faces, several sizes other than at a roomy exact pitch,
+ * super- and subscripts).
  */
 export function cellBaselinePlacement(input: CellBaselineInput): BaselinePlacement | undefined {
 	const { cellCss } = input;

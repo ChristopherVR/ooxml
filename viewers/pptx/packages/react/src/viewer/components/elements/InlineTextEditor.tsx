@@ -5,6 +5,7 @@ import {
 	mapInlineTextFormatKey,
 	placeCaretAt,
 	readEditableText,
+	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
 import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
@@ -119,22 +120,10 @@ export function InlineTextEditor({
 	// immediately before a paragraph break is never visually meaningful, drop it
 	// before the browser performs its native Enter/paragraph-split.
 	const trimTrailingSpaceBeforeCaret = useCallback(() => {
-		const selection = window.getSelection();
-		if (!selection || !selection.isCollapsed || selection.rangeCount === 0) {
+		const trimRange = spaceBeforeCaretRange(document);
+		if (!trimRange) {
 			return;
 		}
-		const range = selection.getRangeAt(0);
-		const { startContainer, startOffset } = range;
-		if (startContainer.nodeType !== Node.TEXT_NODE || startOffset === 0) {
-			return;
-		}
-		const text = startContainer.textContent ?? '';
-		if (text.charAt(startOffset - 1) !== ' ') {
-			return;
-		}
-		const trimRange = document.createRange();
-		trimRange.setStart(startContainer, startOffset - 1);
-		trimRange.setEnd(startContainer, startOffset);
 		if (list.connected) {
 			list.mutate(trimRange, () => trimRange.deleteContents());
 		} else {

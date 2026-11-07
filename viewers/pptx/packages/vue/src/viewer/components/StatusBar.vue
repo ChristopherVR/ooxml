@@ -12,7 +12,7 @@ import {
 	statusBarState,
 	statusBarViewMode,
 } from 'ooxml-ui/pptx';
-import type { SaveProgressState, ToolbarActionId } from 'ooxml-ui/pptx';
+import type { DeckWebfontProgress, SaveProgressState, ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -31,6 +31,8 @@ const props = defineProps<{
 	lastSavedAt?: number | null;
 	/** The progress of a save to the host's storage; replaces the save indicator while it runs. */
 	saveProgress?: SaveProgressState;
+	/** The deck's webfont download, shown while it runs after the deck is on screen. */
+	fontProgress?: DeckWebfontProgress | null;
 	/** Current zoom scale (1 = 100%). */
 	scale?: number;
 	/** Whether the notes panel is expanded. */
@@ -69,6 +71,7 @@ const state = computed(() =>
 		saveProgress: props.saveProgress
 			? saveProgressStatus(props.saveProgress, (key) => t(key, { percent: '{percent}' }))
 			: undefined,
+		fontProgress: props.fontProgress,
 		zoomPercent: props.scale === undefined ? undefined : props.scale * 100,
 		notesExpanded: props.isNotesExpanded,
 		viewMode: statusBarViewMode(props.mode),

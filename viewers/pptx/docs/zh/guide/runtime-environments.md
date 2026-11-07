@@ -23,13 +23,15 @@ description: 了解 pptx-viewer 在浏览器、Node.js 和 Web Worker 中的支�
 
 浏览器无法像桌面应用一样直接使用完整的系统字体目录，因此 `pptx-viewer` 按三个步骤解析演示文稿中的字体：优先使用阅读者设备上已安装的原字体；否则在排版前从 Google Fonts 加载经过验证、字形度量兼容的替代字体（Calibri -> Carlito、Cambria -> Caladea、Arial -> Arimo、Times New Roman -> Tinos、Courier New -> Cousine、Georgia -> Gelasio），使换行和文本尺寸尽量保持与 PowerPoint 一致；两者均不可用时，才通过 PANOSE 分类回退到同类通用字体，此时字形度量可能发生变化。
 
+加载演示文稿时，查看器会短暂等待（150 毫秒）幻灯片所用的 Google Fonts 字体，使已缓存的字体不会先以替代字体显示。首次下载在慢速网络上不会拖延演示文稿：超过 150 毫秒，或请求失败（离线、被拦截）时立即以度量兼容的替代字体显示演示文稿，下载期间状态栏显示“正在下载字体（1/2）”，迟到的字体在到达后重新排版。已安装和嵌入的字体无需等待。
+
 ### 字体与隐私 {#fonts-and-privacy}
 
-从 Google Fonts 获取替代字体时，读者的浏览器会访问 `fonts.googleapis.com` 和 `fonts.gstatic.com`，从而向 Google 暴露读者的 IP 地址。不允许这样做的宿主可以设置 `googleFonts` 选项，所有绑定均支持：
+从 Google Fonts 获取替代字体时，读者的浏览器会访问 `fonts.googleapis.com` 和 `fonts.gstatic.com`，从而向 Google 暴露读者的 IP 地址。默认情况下由读者通过 文件 > 选项 > 信任中心 选项“下载未安装或未嵌入的字体（Google Fonts）”决定，该选项默认开启。关闭后立即作用于当前打开的演示文稿（查看器会移除其网络字体样式表）以及之后的每次加载，并与其他选项一起保存。宿主可以改用 `googleFonts` 选项来决定，所有绑定均支持：
 
-- 未设置（默认）：按上文所述从 Google Fonts 加载替代字体；
-- `googleFonts: false`：不向 Google 发送任何请求；文字使用已安装字体、演示文稿中嵌入的字体或 PANOSE 回退字体，因此换行可能与 PowerPoint 不同；
-- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`：改为向自托管镜像发送相同的 CSS2 请求。镜像必须按 Google Fonts CSS2 查询格式（`?family=...&display=swap`）返回兼容的 `@font-face` CSS，字体文件也应自托管，才能确保没有请求到达 Google。若 `baseUrl` 不是绝对的 `http(s)` URL，则关闭回退并输出警告。
+- 未设置（默认）：由信任中心选项决定；开启时按上文所述从 Google Fonts 加载替代字体；
+- `googleFonts: false`：不向 Google 发送任何请求；文字使用已安装字体、演示文稿中嵌入的字体或 PANOSE 回退字体，因此换行可能与 PowerPoint 不同。信任中心选项显示为关闭且只读；
+- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`：改为向自托管镜像发送相同的 CSS2 请求，信任中心选项显示为开启且只读。镜像必须按 Google Fonts CSS2 查询格式（`?family=...&display=swap`）返回兼容的 `@font-face` CSS，字体文件也应自托管，才能确保没有请求到达 Google。若 `baseUrl` 不是绝对的 `http(s)` URL，则关闭回退（该选项随之显示为关闭且只读）并输出警告。
 
 WordArt 字形轮廓的获取以及幻灯片图片导出时内联的网络字体也遵循该选项，因为两者都复用查看器解析出的样式表 URL。两者都通过 `fetch()` 读取 CSS 和字体文件，因此镜像必须像 Google 自己的服务器一样发送 CORS 响应头（`Access-Control-Allow-Origin`）。
 
@@ -41,7 +43,7 @@ WordArt 字形轮廓的获取以及幻灯片图片导出时内联的网络字体
 - `allowExternalContent: false`：不获取任何链接内容，幻灯片只显示嵌入的内容，信任中心选项显示为关闭且只读；
 - `allowExternalContent: true`：获取链接内容，该选项显示为开启且只读。
 
-该值适用于查看器打开的每个演示文稿，包括为“比较”打开的演示文稿以及从其他文件重用的幻灯片；更改从下一次加载起生效。超链接不受影响：只有读者点击时才会打开。字体单独控制：既未安装也未嵌入的演示文稿字体会从 Google Fonts 加载，除非通过 `googleFonts` 选项关闭（参见[字体与隐私](#fonts-and-privacy)）。
+该值适用于查看器打开的每个演示文稿，包括为“比较”打开的演示文稿以及从其他文件重用的幻灯片；更改从下一次加载起生效。超链接不受影响：只有读者点击时才会打开。字体单独控制：既未安装也未嵌入的演示文稿字体会从 Google Fonts 加载，除非通过信任中心选项“下载未安装或未嵌入的字体”或 `googleFonts` 选项关闭（参见[字体与隐私](#fonts-and-privacy)）。
 
 在协作会话中，来自其他参与者的幻灯片已经解析完毕，不会再次应用此开关：如果某位参与者的查看器允许外部内容，他共享的幻灯片可能引用链接的 URL。如果这一点很重要，请为所有参与者使用相同的 `allowExternalContent` 值。
 

@@ -79,6 +79,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 
 	connectedCallback(): void {
 		installOfficeUiThemeFor(this);
+		this.core.webfonts.connect();
 		if (this.surfaceOnly) {
 			this.disposeSurface ??= buildSurface(this.core);
 			this.core.requestRender();
@@ -97,6 +98,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, value);
 	}
 	disconnectedCallback(): void {
+		this.core.webfonts.disconnect();
 		// Host File tab pages unmount with the editor; showing one again remounts it.
 		this.shell?.backstage.destroy();
 		if (this.disposeSurface) {
