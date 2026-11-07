@@ -49,7 +49,10 @@ viewer does the same from Google Fonts, so the text keeps its intended look and 
 - **Trigger:** opening a deck that uses such a font, when the bundled Google Fonts catalogue
   serves that family or a metric-compatible clone of it (for example Carlito for Calibri).
 - **Sent:** a request to `https://fonts.googleapis.com/css2` whose query names the families
-  (and weights) the deck needs, then requests to `fonts.gstatic.com` for the font files.
+  (and weights) the deck needs, then requests to `fonts.gstatic.com` for the font files. To save
+  time, a first request is made while the deck is still opening, naming the catalogue families
+  its theme, masters and first slides declare, so it can include a family the deck declares but
+  does not draw; font files are only downloaded for faces actually drawn.
   Families that are installed on the device, or embedded in the deck, are never named. The
   viewer never probes Google for families its catalogue does not list, so the names of private
   or corporate fonts are not sent.
@@ -118,8 +121,9 @@ editing or saving a document:
 take the same `googleFonts` value as PowerPoint, but unset means off. With
 `{ baseUrl: 'https://fonts.googleapis.com/css2' }` (or a self-hosted mirror) they send the same
 requests PowerPoint does, from the same shared code (`ooxml-core/text`, `ooxml-ui/fonts`): the
-public catalogue families (or metric-compatible clones such as Carlito for Calibri) the file uses
-and the device lacks, then the font files. The file, its text and the names of fonts outside
+public catalogue families (or metric-compatible clones such as Carlito for Calibri) the file
+declares (theme, styles, font table) and the device lacks, then the font files for the faces it
+draws. The file, its text and the names of fonts outside
 Google's public catalogue are never sent. `false` or an invalid `baseUrl` sends nothing.
 
 Hyperlinks and in-product help links open only when the reader follows them.

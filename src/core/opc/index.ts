@@ -11,3 +11,4 @@ export * from './properties/index';
 export * as signature from './signature/index';
 export * from './zip-limits';
 export { zlibCompress } from './zlib';
+export { readDeclaredFonts, type DeclaredFonts } from './declared-fonts';

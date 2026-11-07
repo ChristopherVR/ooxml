@@ -3,6 +3,7 @@ import {
 	describeFontEmbedding,
 	partitionTemplateElements,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
 	readOnlyRecommendation,
 	reduceReadOnlySession,
@@ -163,6 +164,18 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 					},
 				});
 			};
+			// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+			// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+			if (doc) {
+				prefetchDeckWebfonts({
+					document: doc,
+					linkId: VANILLA_GOOGLE_FONTS_LINK_ID,
+					bytes: buffer,
+					googleFontsBase: deps.getGoogleFontsBase
+						? deps.getGoogleFontsBase()
+						: resolveGoogleFontsCss2Base(options.googleFonts),
+				});
+			}
 			const loaded = await loadPresentation(buffer, {
 				allowExternalImages: deps.getAllowExternalContent?.(),
 				limits: options.limits,

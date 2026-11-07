@@ -30,7 +30,13 @@ import { hasTextProperties } from 'ooxml-core/pptx';
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'ooxml-core/pptx';
 import { collectWebfontFaces, type WebfontFace, type WebfontRun } from 'ooxml-core/text';
 
-import { WEBFONT_PROGRESS_DELAY_MS, WEBFONT_TIMEOUT_MS, waitForFaces } from '../../fonts/webfonts';
+import {
+	WEBFONT_PROGRESS_DELAY_MS,
+	WEBFONT_TIMEOUT_MS,
+	prefetchWebfonts,
+	settlePrefetchedWebfonts,
+	waitForFaces,
+} from '../../fonts/webfonts';
 import {
 	isFontFamilyInstalledLocally,
 	resolveGoogleWebfontHref,
@@ -154,6 +160,25 @@ export function collectDeckWebfontRuns(slides: readonly PptxSlide[]): WebfontRun
 }
 
 /**
+ * Start the deck's webfont download from its bytes, before parsing (see `ooxml-ui`'s
+ * `prefetchWebfonts`). Each binding calls this with the same `linkId` and base it later passes to
+ * {@link prepareDeckWebfonts}. Returns the early href, or `null`; never throws.
+ */
+export function prefetchDeckWebfonts(options: {
+	document: Document;
+	linkId: string;
+	bytes: Uint8Array | ArrayBuffer;
+	googleFontsBase: string | null;
+}): string | null {
+	return prefetchWebfonts({
+		document: options.document,
+		linkId: options.linkId,
+		bytes: options.bytes,
+		base: options.googleFontsBase,
+	});
+}
+
+/**
  * Inject the deck's webfont stylesheet and wait (bounded) for the faces its
  * slides draw, as described in the module comment. Never rejects.
  */
@@ -172,6 +197,7 @@ export async function prepareDeckWebfonts(
 		followMs = DECK_WEBFONT_FOLLOW_MS,
 		isLocallyInstalled = isFontFamilyInstalledLocally,
 	} = options;
+	settlePrefetchedWebfonts(doc, linkId, googleFontsBase);
 	if (googleFontsBase === null) {
 		return { href: null, families: [], unavailable: [], timedOut: false };
 	}

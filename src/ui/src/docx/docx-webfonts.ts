@@ -20,6 +20,7 @@ import {
 	type WebfontRun,
 } from 'ooxml-core/text';
 import {
+	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
 	type PrepareWebfontsOptions,
@@ -87,6 +88,20 @@ export class DocxWebfonts {
 		} catch {
 			return OFF;
 		}
+	}
+
+	/**
+	 * Start downloading the faces `bytes` declares before it is parsed (see `prefetchWebfonts`),
+	 * so they are usually ready when {@link prepare} waits. Never throws.
+	 */
+	prefetch(doc: Document | undefined, bytes: Uint8Array | ArrayBuffer): void {
+		if (!doc?.head) return;
+		prefetchWebfonts({
+			document: doc,
+			linkId: this.linkId,
+			bytes,
+			base: docxGoogleFontsBase(this.option),
+		});
 	}
 
 	/** Whether this editor's `<link>` is in `doc`. */

@@ -19,6 +19,7 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
 	resolveGoogleFontsCss2Base,
 	resolveSlideSizeSelection,
@@ -458,6 +459,16 @@ export function useLoadContent(
 					},
 				});
 			};
+			// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+			// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+			if (typeof document !== 'undefined') {
+				prefetchDeckWebfonts({
+					document,
+					linkId: VUE_GOOGLE_FONTS_LINK_ID,
+					bytes: buffer as ArrayBuffer,
+					googleFontsBase: resolveGoogleFontsCss2Base(options?.getGoogleFonts?.()),
+				});
+			}
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
 				allowExternalImages: options?.getAllowExternalImages?.(),
 				limits: options?.getLimits?.(),

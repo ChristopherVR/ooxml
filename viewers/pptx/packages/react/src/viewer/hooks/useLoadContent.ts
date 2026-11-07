@@ -11,6 +11,7 @@ import {
 	compatibilityWarningToasts,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
@@ -305,6 +306,16 @@ export function useLoadContent({
 						},
 					});
 				};
+				// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+				// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+				if (typeof document !== 'undefined') {
+					prefetchDeckWebfonts({
+						document,
+						linkId: GOOGLE_FONTS_LINK_ID,
+						bytes: buffer as ArrayBuffer,
+						googleFontsBase: resolveGoogleFontsCss2Base(googleFontsRef.current),
+					});
+				}
 				// Trust Center > "Allow external content" (default off, matching
 				// core's own SSRF/privacy-safe default): only pass `true` through
 				// when the option is explicitly on.

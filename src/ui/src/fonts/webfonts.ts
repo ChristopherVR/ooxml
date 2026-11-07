@@ -10,6 +10,7 @@
  *
  * @module fonts/webfonts
  */
+import { readDeclaredFonts } from 'ooxml-core/opc';
 import {
 	buildGoogleFontsHref,
 	collectRunFamilies,
@@ -58,7 +59,14 @@ export function isFontFamilyInstalledLocally(family: string): boolean {
 	}
 }
 
-/** Point the managed `<link id>` at `href`, untouched when it already does; `null` removes it. */
+/** The id of the early stylesheet {@link prefetchWebfonts} adds beside a product's link. */
+export const prefetchLinkId = (linkId: string) => `${linkId}-prefetch`;
+
+/**
+ * Point the managed `<link id>` at `href`, untouched when it already does; `null` removes it, and
+ * with it the early stylesheet {@link prefetchWebfonts} added for the same product, so turning
+ * downloads off leaves nothing behind.
+ */
 export function syncGoogleWebfontStylesheet(
 	doc: Document,
 	id: string,
@@ -67,6 +75,9 @@ export function syncGoogleWebfontStylesheet(
 	const existing = doc.getElementById(id) as HTMLLinkElement | null;
 	if (!href) {
 		existing?.remove();
+		// A load still parsing keeps its early stylesheet (see `settlePrefetchedWebfonts`).
+		const early = id.endsWith('-prefetch') ? null : doc.getElementById(prefetchLinkId(id));
+		if (early && !(early as HTMLElement).dataset['pending']) early.remove();
 		return null;
 	}
 	// Even assigning the same href can make the browser reload a stylesheet.
@@ -113,6 +124,62 @@ export function matchWebfontFragments(candidates: readonly string[]): string[] {
 export function webfontHref(candidates: readonly string[], base: string | null): string | null {
 	if (base === null) return null;
 	return buildGoogleFontsHref(matchWebfontFragments(candidates), base);
+}
+
+export interface PrefetchWebfontsOptions {
+	document: Document;
+	/** The product's managed `<link>` id; the early stylesheet takes `<id>-prefetch`. */
+	linkId: string;
+	/** The file as it arrived, before parsing. */
+	bytes: Uint8Array | ArrayBuffer;
+	/** From `resolveGoogleFontsCss2Base`; `null` (off) removes any early stylesheet. */
+	base: string | null;
+	isLocallyInstalled?: (family: string) => boolean;
+}
+
+/**
+ * Start downloading a file's webfonts before it is parsed. The families its package declares
+ * (themes, styles, font table; `ooxml-core/opc` `readDeclaredFonts`) that are neither embedded nor
+ * installed, and that the catalogue serves, go into an early stylesheet under its own link id, so
+ * the browser fetches the CSS while the parse runs and the faces are usually ready by the time
+ * {@link prepareWebfonts} waits for them. The exact stylesheet the product builds afterwards from
+ * the runs it draws is a separate link, so neither replaces the other's `@font-face` rules
+ * mid-load. Font files are only downloaded for faces the page actually uses. Returns the early
+ * href, or `null`. Never throws.
+ */
+export function prefetchWebfonts(options: PrefetchWebfontsOptions): string | null {
+	const { document: doc, linkId, bytes, base } = options;
+	const id = prefetchLinkId(linkId);
+	try {
+		if (base === null) {
+			doc.getElementById(id)?.remove();
+			return null;
+		}
+		const declared = readDeclaredFonts(bytes);
+		const candidates = selectWebfontCandidates(
+			declared.families,
+			declared.embedded,
+			options.isLocallyInstalled ?? isFontFamilyInstalledLocally,
+		);
+		const href = webfontHref(candidates, base);
+		const link = syncGoogleWebfontStylesheet(doc, id, href);
+		if (link) link.dataset['pending'] = '1';
+		return href;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Called once a load has parsed (both {@link prepareWebfonts} and PowerPoint's
+ * `prepareDeckWebfonts` do): the early stylesheet stops being pending, so a later
+ * `syncGoogleWebfontStylesheet(id, null)` removes it, and with downloads off it goes at once.
+ */
+export function settlePrefetchedWebfonts(doc: Document, linkId: string, base: string | null): void {
+	const early = doc.getElementById(prefetchLinkId(linkId)) as HTMLElement | null;
+	if (!early) return;
+	if (base === null) early.remove();
+	else delete early.dataset['pending'];
 }
 
 /** Progress of the wait, by webfont family (the names the stylesheet serves). */
@@ -184,6 +251,7 @@ export async function prepareWebfonts(options: PrepareWebfontsOptions): Promise<
 		progressDelayMs = WEBFONT_PROGRESS_DELAY_MS,
 		isLocallyInstalled = isFontFamilyInstalledLocally,
 	} = options;
+	settlePrefetchedWebfonts(doc, linkId, base);
 	if (base === null) return { href: null, families: [], unavailable: [], timedOut: false };
 	const candidates = selectWebfontCandidates(
 		collectRunFamilies(runs),

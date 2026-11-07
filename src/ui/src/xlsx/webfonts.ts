@@ -15,6 +15,7 @@ import type { Workbook } from 'ooxml-core/xlsx';
 import { collectWorkbookWebfontRuns } from 'ooxml-core/xlsx';
 import { resolveGoogleFontsCss2Base, type GoogleFontsOption } from 'ooxml-core/text';
 import {
+	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
 	type WebfontReadiness,
@@ -61,6 +62,16 @@ export class XlsxWebfonts {
 	/** The CSS2 base the option requests, or `null` when the fallback is off (the default). */
 	base(): string | null {
 		return resolveGoogleFontsCss2Base(this.option, null, 'xlsx-editor');
+	}
+
+	/**
+	 * Start downloading the faces the file declares before it is parsed (see `prefetchWebfonts`),
+	 * so they are usually ready when {@link prepare} waits. Never throws.
+	 */
+	prefetch(bytes: Uint8Array | ArrayBuffer): void {
+		const doc = this.#owner.host.ownerDocument;
+		if (!doc?.head) return;
+		prefetchWebfonts({ document: doc, linkId: this.linkId, bytes, base: this.base() });
 	}
 
 	/**

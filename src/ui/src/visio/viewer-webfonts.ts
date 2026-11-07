@@ -1,6 +1,7 @@
 import { collectVisioWebfontRuns, type VisioDocument } from 'ooxml-core/visio';
 import { resolveGoogleFontsCss2Base, type GoogleFontsOption } from 'ooxml-core/text';
 import {
+	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
 	type WebfontReadiness,
@@ -63,6 +64,17 @@ export class ViewerWebfonts {
 		}
 		if (generation !== this.#generation || readiness.families.length === 0) return undefined;
 		return readiness;
+	}
+	/**
+	 * Start downloading the faces the file declares before it is parsed (see `prefetchWebfonts`),
+	 * so they are usually ready when {@link load} waits. Never throws.
+	 */
+	prefetch(bytes: Uint8Array | ArrayBuffer): void {
+		try {
+			prefetchWebfonts({ document: this.host(), linkId: this.linkId, bytes, base: this.base() });
+		} catch {
+			// A detached or closed document has no head to add to.
+		}
 	}
 	/** Remove this viewer's stylesheet (option off, viewer destroyed). */
 	remove(): void {

@@ -68,6 +68,8 @@ export async function loadInto(
 	core.loading = true;
 	core.requestRender();
 	try {
+		// The file's fonts start downloading while it parses.
+		core.webfonts.prefetch(bytes);
 		const { loadWorkbook, isOoxmlCryptoError } = await import('ooxml-core/xlsx/load');
 		let password: string | undefined;
 		let workbook: Workbook;

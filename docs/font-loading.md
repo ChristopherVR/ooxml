@@ -70,6 +70,16 @@ faces. PowerPoint reaches them through `src/ui/src/pptx/render/google-webfonts.t
 
 ### A short wait before showing a document
 
+**Starting early.** As soon as a file's bytes arrive, before it is parsed, every product reads
+the font families its package declares from a few small parts (themes, Word's font table and
+styles, Excel's style sheet, PowerPoint's presentation part, masters and first slides, Visio's face
+names; `readDeclaredFonts` in `ooxml-core/opc`, inflating only those parts) and injects an early
+stylesheet for the ones neither embedded nor installed (`prefetchWebfonts` in
+`ooxml-ui/fonts/webfonts.ts`, PowerPoint's `prefetchDeckWebfonts`, link id `<id>-prefetch`). The
+CSS downloads while the parse runs, so the faces are usually ready by the time the short wait
+below begins. The browser only downloads font files for faces the page draws. The early link is
+kept for the open file and removed with the product's own link when downloads are turned off.
+
 Each PowerPoint binding calls `prepareDeckWebfonts` (`deck-webfont-readiness.ts`), and Word,
 Excel and Visio call `prepareWebfonts` (`ooxml-ui/fonts/webfonts.ts`), between parsing a file and
 showing it. The wait is deliberately short (`WEBFONT_TIMEOUT_MS`, 150 ms, about the browser's own

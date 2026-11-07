@@ -525,6 +525,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#disposeInputs = this.#wireInputs();
 		// The first show of a loaded drawing waits (bounded) for its webfonts, so text is laid out
 		// once with the real metrics instead of swapping from a stand-in face.
+		this.controller.setBeforeParse((bytes) => this.#webfonts.prefetch(bytes));
 		this.controller.setBeforeShow((document) =>
 			this.#webfonts.base() === null ? undefined : this.#webfonts.load(document),
 		);

@@ -12,6 +12,7 @@ import {
 	createEmbeddedOutlineFontsSlot,
 	createPresentationLoadResources,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
 	resolveGoogleFontsCss2Base,
 } from 'ooxml-ui/pptx';
@@ -241,6 +242,16 @@ export class PresentationLoader {
 					},
 				});
 			};
+			// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+			// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+			if (typeof document !== 'undefined') {
+				prefetchDeckWebfonts({
+					document,
+					linkId: SVELTE_GOOGLE_FONTS_LINK_ID,
+					bytes: buffer as ArrayBuffer,
+					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
+				});
+			}
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
 				...this.getLoadOptions(),
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
