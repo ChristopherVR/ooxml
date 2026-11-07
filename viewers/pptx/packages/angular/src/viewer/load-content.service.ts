@@ -15,7 +15,10 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	pptxLoadErrorMessage,
+	prefetchDeckWebfonts,
+	prepareDeckWebfonts,
 	resolveAllowExternalContent,
+	resolveGoogleFontsCss2Base,
 	resolveMediaElementSource,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
@@ -28,6 +31,8 @@ import type {
 	CanvasSize,
 	DeckSaveIntent,
 	DeckSaveState,
+	DeckWebfontProgress,
+	GoogleFontsOption,
 	PendingInlineTextEdit,
 	PptxLoadLimits,
 	SlideSizeEmu,
@@ -65,6 +70,7 @@ import {
 	PptxHandler,
 } from 'pptx-viewer-core';
 
+import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
 
 /**
@@ -92,6 +98,14 @@ export class LoadContentService {
 	/** The host `limits` input, read (untracked) at the start of each load. */
 	bindHostLimits(reader: () => PptxLoadLimits | undefined): void {
 		this.hostLimitsReader = reader;
+	}
+	private hostGoogleFontsReader?: () => GoogleFontsOption | undefined;
+	/**
+	 * The effective `googleFonts` policy (host input, else Trust Center >
+	 * "Download fonts"), read (untracked) when a load waits for its webfonts.
+	 */
+	bindHostGoogleFonts(reader: () => GoogleFontsOption | undefined): void {
+		this.hostGoogleFontsReader = reader;
 	}
 	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
@@ -245,6 +259,8 @@ export class LoadContentService {
 	readonly digitalSignatureCount = signal(0);
 	/** True while a load is in flight. */
 	readonly loading = signal(false);
+	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
+	readonly fontProgress = signal<DeckWebfontProgress | null>(null);
 	/** Error message from the last failed load, or null. */
 	readonly error = signal<string | null>(null);
 	/** True when the file is password-protected and could not be opened. */
@@ -414,6 +430,7 @@ export class LoadContentService {
 
 		try {
 			this.loading.set(true);
+			this.fontProgress.set(null);
 			this.error.set(null);
 			this.isEncrypted.set(false);
 
@@ -450,9 +467,58 @@ export class LoadContentService {
 			const allowExternalImages = this.resolveAllowExternalImages();
 			// The host `limits` input, read untracked for the same reason.
 			const limits = untracked(() => this.hostLimitsReader?.());
-			const parsed = await newHandler.load(buffer as ArrayBuffer, { allowExternalImages, limits });
+			// ── The deck's Google Fonts webfonts ─────
+			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
+			// download runs while the rest of the deck loads and media resolves;
+			// awaited before the deck is shown, which it holds back only briefly (see
+			// deck-webfont-readiness.ts). Nothing after that point changes slide text,
+			// so these slides name the same faces (and stylesheet) as the committed ones.
+			let webfonts: Promise<unknown> | undefined;
+			const startWebfonts = (
+				deckSlides: PptxSlide[],
+				deckEmbeddedFonts: PptxEmbeddedFont[],
+			): void => {
+				if (typeof document === 'undefined' || token !== this.renderToken) {
+					return;
+				}
+				webfonts = prepareDeckWebfonts({
+					document,
+					linkId: GOOGLE_WEBFONTS_LINK_ID,
+					slides: deckSlides,
+					embeddedFonts: deckEmbeddedFonts,
+					googleFontsBase: resolveGoogleFontsCss2Base(
+						untracked(() => this.hostGoogleFontsReader?.()),
+					),
+					onProgress: (progress) => {
+						if (token === this.renderToken) {
+							this.fontProgress.set(progress);
+						}
+					},
+				});
+			};
+			// Start the stylesheet for the fonts the deck declares from its bytes, before parsing even
+			// reaches the slides (`prefetchDeckWebfonts`); `startWebfonts` then adds the exact one.
+			if (typeof document !== 'undefined') {
+				prefetchDeckWebfonts({
+					document,
+					linkId: GOOGLE_WEBFONTS_LINK_ID,
+					bytes: buffer as ArrayBuffer,
+					googleFontsBase: resolveGoogleFontsCss2Base(
+						untracked(() => this.hostGoogleFontsReader?.()),
+					),
+				});
+			}
+			const parsed = await newHandler.load(buffer as ArrayBuffer, {
+				allowExternalImages,
+				limits,
+				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+			});
 			if (token !== this.renderToken) {
 				return;
+			}
+			// A JSON document is imported without the slide hook.
+			if (!webfonts) {
+				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
 			// ── Resolve media Blob URLs (audio/video + poster frames) ──
@@ -539,6 +605,8 @@ export class LoadContentService {
 			nextSlides = await resolveTextFillBlipUrls(nextSlides, (path) =>
 				newHandler.getImageData(path),
 			);
+
+			await webfonts;
 
 			// Commit reactive state.
 			if (token !== this.renderToken) {
@@ -647,6 +715,7 @@ export class LoadContentService {
 		} finally {
 			resources.releaseIfUncommitted();
 			if (token === this.renderToken) {
+				this.fontProgress.set(null);
 				this.loading.set(false);
 			}
 		}

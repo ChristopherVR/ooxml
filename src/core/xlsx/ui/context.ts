@@ -47,6 +47,11 @@ export interface GridController {
 	setZoom(percent: number): void;
 	/** The split View > Split makes with `active` selected, and the first cell of its scrolling pane. */
 	splitAt?(active: CellAddress): { split: SplitPane; topLeft: CellAddress } | undefined;
+	/**
+	 * Measures text again (overflow, shrink to fit, mixed-run baselines) and repaints, keeping the
+	 * selection, scroll and an edit in progress: called when font faces arrive.
+	 */
+	remeasure?(): void;
 }
 
 export interface EditorContext {

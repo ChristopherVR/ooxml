@@ -117,6 +117,7 @@ export const translations = {
 	'pptx.toolbar.save': 'Speichern',
 	'pptx.settings.done': 'Erledigt',
 	'pptx.viewer.loading': 'Präsentation wird geladen…',
+	'pptx.viewer.loadingFonts': 'Schriftarten werden heruntergeladen ({{loaded}} von {{total}})…',
 	'pptx.viewer.encrypted':
 		'Diese Präsentation ist passwortgeschützt und kann nicht geöffnet werden.',
 	'pptx.viewer.loadError': 'Präsentation konnte nicht geladen werden.',

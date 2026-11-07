@@ -85,7 +85,7 @@ test('File > Options and Account edit one local profile', async ({ page }) => {
 	await dialog.getByLabel('Enable Live Preview').uncheck();
 	await dialog.getByLabel('User name').fill('Grace Hopper');
 	await dialog.getByRole('tab', { name: 'Trust Center' }).click();
-	await expect(dialog).toContainText('active content is never run');
+	await expect(dialog).toContainText('Download fonts that are not installed or embedded');
 	await dialog.getByRole('button', { name: 'OK' }).click();
 	await expect(viewer.getByRole('dialog', { name: 'Visio Options' })).toBeHidden();
 

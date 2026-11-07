@@ -21,15 +21,16 @@ function promoteTextBody(
 	axis: TableStructureEdit['axis'],
 ): void {
 	const span = axis === 'row' ? 'rowSpan' : 'gridSpan';
-	const continuation = axis === 'row' ? 'vMerge' : 'hMerge';
 	if (
 		!source?.text ||
 		!next ||
 		!removed ||
 		!survivor ||
-		source[continuation] ||
+		source.hMerge ||
+		source.vMerge ||
 		(source[span] ?? 1) <= 1 ||
-		next[continuation] ||
+		next.hMerge ||
+		next.vMerge ||
 		(next[span] ?? 1) !== (source[span] ?? 1) - 1
 	) {
 		return;

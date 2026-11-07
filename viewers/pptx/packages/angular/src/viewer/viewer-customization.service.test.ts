@@ -349,3 +349,30 @@ describe('viewerCustomizationService allowExternalContent host input', () => {
 		expect(options.store.isLocked('trust', 'allowExternalContent')).toBe(false);
 	});
 });
+
+describe('viewerCustomizationService googleFonts host input', () => {
+	it('locks Trust Center > Download fonts to what the host value allows, and follows it', () => {
+		const injector = makeInjector();
+		const service = injector.get(ViewerCustomizationService);
+		const options = injector.get(ViewerOptionsService);
+		const googleFonts = signal<false | { baseUrl: string } | undefined>(undefined);
+		construct(injector, () => service.bindGoogleFonts(googleFonts));
+		TestBed.tick();
+		expect(options.store.isLocked('trust', 'allowFontDownloads')).toBe(false);
+
+		googleFonts.set(false);
+		TestBed.tick();
+		expect(options.options().trust.allowFontDownloads).toBe(false);
+		expect(options.store.isLocked('trust', 'allowFontDownloads')).toBe(true);
+		options.setValue('trust', 'allowFontDownloads', true);
+		expect(options.options().trust.allowFontDownloads).toBe(false);
+
+		googleFonts.set({ baseUrl: 'https://fonts.example.test/css2' });
+		TestBed.tick();
+		expect(options.options().trust.allowFontDownloads).toBe(true);
+
+		googleFonts.set(undefined);
+		TestBed.tick();
+		expect(options.store.isLocked('trust', 'allowFontDownloads')).toBe(false);
+	});
+});

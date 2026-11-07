@@ -170,6 +170,8 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		setModifyVerifier,
 		setCompatToasts,
 		setLoading: state.setLoading,
+		setFontProgress: state.setFontProgress,
+		googleFonts,
 		setError: state.setError,
 		setIsDirty: state.setIsDirty,
 		setIsEncrypted: setIsEncryptedDialogOpen,

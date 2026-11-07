@@ -23,6 +23,7 @@ import {
 	resolveEffectiveHiddenActions,
 } from 'ooxml-ui/pptx';
 import type {
+	GoogleFontsOption,
 	ResolvedCustomization,
 	ToolbarActionId,
 	ViewerCustomization,
@@ -56,6 +57,8 @@ export interface UseViewerCustomizationInput {
 		readonly ai?: PptxAiConfig | PptxAiAssistant;
 		/** Host switch that locks the Trust Center "Allow external content" setting. */
 		readonly allowExternalContent?: boolean;
+		/** Host policy that locks the Trust Center "Download fonts" setting. */
+		readonly googleFonts?: GoogleFontsOption;
 	};
 	/** The viewer's File > Options store; receives the locks and host defaults. */
 	optionsStore: ViewerOptionsStore;
@@ -94,6 +97,7 @@ export function useViewerCustomization(
 	const controller = createCustomizationController(props.customization);
 	// Seeded before the first constraints are applied, so the first load already sees the lock.
 	controller.setAllowExternalContent(props.allowExternalContent);
+	controller.setGoogleFonts(props.googleFonts);
 	const resolved = shallowRef(controller.getResolved());
 	applyConstraints(input.optionsStore, resolved.value);
 
@@ -115,6 +119,10 @@ export function useViewerCustomization(
 	watch(
 		() => props.allowExternalContent,
 		(next) => controller.setAllowExternalContent(next),
+	);
+	watch(
+		() => props.googleFonts,
+		(next) => controller.setGoogleFonts(next),
 	);
 
 	provide(ViewerCustomizationKey, resolved);

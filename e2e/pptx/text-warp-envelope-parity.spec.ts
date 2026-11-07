@@ -29,8 +29,10 @@
  *     `pptx-viewer-shared`) now renders one `<text>` per glyph instead, each
  *     with its own `translate/scale` mapping the preset's top/bottom curves,
  *     so glyph height genuinely varies across the line. `slant`/`fade`/
- *     `cascade` stay on the shared-baseline `<textPath>` renderer (a uniform
- *     tilt has no per-glyph height component to get wrong).
+ *     `cascade` joined that envelope once their top and bottom paths were
+ *     fitted to PowerPoint 16 exports (PowerPoint maps the text block between
+ *     the two paths for them too), so `arch-control` is the one fixture
+ *     shape left on the shared-baseline `<textPath>` renderer.
  *
  * Fixture: `text-warp-fidelity.pptx` (in authoring order: inflate, deflate,
  * can-up, slant-up, fade-right, cascade-down, an arch-control, a no-warp
@@ -75,6 +77,9 @@ const GLYPH_ENVELOPE_SHAPES = new Set([
 	'inflate',
 	'deflate',
 	'can-up',
+	'slant-up',
+	'fade-right',
+	'cascade-down',
 	'inflate-multi',
 	'plain',
 	'plain-paragraph',

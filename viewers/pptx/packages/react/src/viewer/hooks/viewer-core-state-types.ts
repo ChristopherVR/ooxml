@@ -1,4 +1,4 @@
-import type { CollaborationLivePatcher, SlideSizeEmu } from 'ooxml-ui/pptx';
+import type { CollaborationLivePatcher, DeckWebfontProgress, SlideSizeEmu } from 'ooxml-ui/pptx';
 import type { InlineTextDraftSink } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
@@ -129,6 +129,9 @@ export interface ViewerCoreState
 	/** Whether the presentation content is currently being loaded/parsed. */
 	loading: boolean;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	/** Webfont download progress while a load waits for its fonts (after a short delay), else `null`. */
+	fontProgress: DeckWebfontProgress | null;
+	setFontProgress: React.Dispatch<React.SetStateAction<DeckWebfontProgress | null>>;
 	/** Non-null when an error occurred during loading or processing. */
 	error: string | null;
 	setError: React.Dispatch<React.SetStateAction<string | null>>;

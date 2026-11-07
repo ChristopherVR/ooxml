@@ -1,0 +1,351 @@
+/*
+ * Settings (apps/office-suite/src/settings-dialog.js): the panes the suite slots into the shared
+ * office-ui-options-dialog. The rail, headline, section titles and rows are the shared element's
+ * own; these rules give the slotted panes the same arrangement, in the suite palette.
+ */
+.settings-pane {
+	font-size: 12px;
+	line-height: 1.5;
+}
+.settings-pane p {
+	max-width: none;
+}
+.settings-pane section {
+	margin: 0 0 18px;
+}
+.settings-pane h3 {
+	margin: 0 0 6px;
+	padding-bottom: 2px;
+	border-bottom: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.settings-desc {
+	margin: 0 0 10px;
+	color: var(--muted);
+}
+.settings-note {
+	margin: 8px 0 0;
+	color: var(--faint);
+}
+.settings-pane a {
+	color: var(--accent-ink);
+}
+.settings-pane button[type='button'] {
+	min-height: 28px;
+	padding: 0 12px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	background: var(--surface);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.settings-pane button[type='button']:hover {
+	background: var(--hover);
+}
+.settings-pane button[type='button']:focus-visible,
+.settings-pane input:focus-visible + .theme-preview,
+.settings-pane input:focus-visible + .settings-swatch {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
+}
+
+/* General > Appearance: theme cards and accent swatches. */
+.settings-pane fieldset {
+	margin: 4px 0 14px;
+}
+.settings-pane legend {
+	margin: 0 0 8px;
+	font-size: 12px;
+	font-weight: 600;
+}
+.settings-modes {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+}
+.settings-modes label,
+.settings-accents label {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+	font-weight: 400;
+	text-align: center;
+	cursor: pointer;
+}
+/* The radio covers its card invisibly, so the card is the hit target. */
+.settings-modes input,
+.settings-accents input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 1;
+}
+.settings-modes input:checked ~ span:last-child,
+.settings-accents input:checked ~ span:last-child {
+	font-weight: 600;
+}
+.theme-preview {
+	--p-canvas: #f7f8fa;
+	--p-bar: #fff;
+	--p-rail: #f0f2f5;
+	--p-line: #e3e6eb;
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 72px;
+	overflow: hidden;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-panel);
+	background: var(--p-canvas);
+}
+.theme-preview.dark {
+	--p-canvas: #181a1e;
+	--p-bar: #202228;
+	--p-rail: #1c1e23;
+	--p-line: #34383f;
+}
+.theme-preview i {
+	position: absolute;
+}
+.theme-preview i:nth-child(1) {
+	inset: 0 0 auto;
+	height: 12px;
+	border-bottom: 1px solid var(--p-line);
+	background: var(--p-bar);
+}
+.theme-preview i:nth-child(2) {
+	top: 13px;
+	bottom: 0;
+	left: 0;
+	width: 22%;
+	border-right: 1px solid var(--p-line);
+	background: var(--p-rail);
+}
+.theme-preview i:nth-child(3) {
+	top: 24px;
+	left: 32%;
+	width: 44%;
+	height: 7px;
+	border-radius: 2px;
+	background: var(--blue);
+	box-shadow:
+		0 13px 0 var(--p-line),
+		0 26px 0 var(--p-line);
+}
+/* System: the light card's left half beside the dark card's right half. */
+.theme-preview.system {
+	background: linear-gradient(90deg, #f7f8fa 50%, #181a1e 50%);
+}
+.theme-preview.system i:nth-child(1) {
+	border-bottom-color: #8d8d8d;
+	background: linear-gradient(90deg, #fff 50%, #202228 50%);
+}
+.theme-preview.system i:nth-child(2) {
+	--p-line: #e3e6eb;
+}
+.theme-preview.system i:nth-child(3) {
+	box-shadow:
+		0 13px 0 #8d8d8d,
+		0 26px 0 #8d8d8d;
+}
+.settings-modes input:checked + .theme-preview {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 1px var(--blue);
+}
+.settings-accents {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 2px;
+}
+.settings-accents label {
+	width: 60px;
+	font-size: 11px;
+}
+.settings-swatch {
+	display: block;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: var(--swatch);
+}
+:root[data-theme='dark'] .settings-swatch {
+	background: var(--swatch-dark);
+}
+.settings-accents input:checked + .settings-swatch {
+	box-shadow:
+		0 0 0 2px var(--surface),
+		0 0 0 4px var(--text);
+}
+
+/* Fonts: one card per choice. */
+.settings-choices {
+	display: grid;
+	gap: 8px;
+}
+.settings-choice {
+	padding: 10px 12px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+}
+.settings-choice:has(input[type='radio']:checked) {
+	border-color: var(--blue);
+	background: color-mix(in srgb, var(--blue) 7%, var(--surface));
+}
+.settings-choice label {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 0;
+	font-weight: 400;
+	cursor: pointer;
+}
+.settings-choice input[type='radio'] {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin: 2px 0 0;
+	accent-color: var(--blue);
+}
+.settings-choice strong {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+}
+.settings-choice small {
+	display: block;
+	color: var(--muted);
+	font-size: 12px;
+}
+.settings-hosts,
+.settings-field {
+	margin: 8px 0 0 26px;
+}
+.settings-hosts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.settings-hosts code {
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--sunken);
+	color: var(--muted);
+	font: 11px/1.6 var(--font-mono);
+}
+.settings-choice:not(:has(input[value='custom']:checked)) .settings-field {
+	display: none;
+}
+.settings-field input {
+	width: 100%;
+	min-height: 30px;
+	padding: 4px 8px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	background: var(--surface);
+	color: inherit;
+	font: 12px var(--font-mono);
+}
+.settings-field input:focus-visible {
+	border-color: var(--blue);
+	outline: 1px solid var(--blue);
+}
+.settings-error {
+	margin: 4px 0 0;
+	color: var(--danger);
+}
+.settings-error:empty {
+	display: none;
+}
+.settings-apps {
+	display: grid;
+	gap: 6px;
+	margin: 0;
+}
+.settings-apps div {
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr);
+	gap: 12px;
+}
+.settings-apps dt {
+	font-weight: 600;
+}
+.settings-apps dd {
+	margin: 0;
+	color: var(--muted);
+}
+
+/* Privacy: what the app connects to. */
+.settings-connections {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.settings-connections li {
+	display: grid;
+	grid-template-columns: 10px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 10px;
+	padding: 7px 0;
+	border-bottom: 1px solid var(--line);
+}
+.settings-connections strong {
+	display: block;
+	font-weight: 600;
+}
+.settings-connections small {
+	display: block;
+	color: var(--muted);
+	font-size: 12px;
+}
+.settings-dot {
+	width: 8px;
+	height: 8px;
+	border: 1px solid var(--faint);
+	border-radius: 50%;
+}
+.settings-connections [data-state='on'] .settings-dot {
+	border-color: var(--blue);
+	background: var(--blue);
+}
+.settings-storage {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+}
+.settings-links {
+	margin: 0;
+}
+
+@media (max-width: 600px) {
+	.settings-apps div {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0;
+	}
+	.settings-modes {
+		gap: 8px;
+	}
+}
+
+/* Settings > General > Reduce motion: the workspace's own transitions stop. */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+	animation-duration: 0.01ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.01ms !important;
+	scroll-behavior: auto !important;
+}

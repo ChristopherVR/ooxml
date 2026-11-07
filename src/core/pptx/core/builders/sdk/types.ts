@@ -133,6 +133,7 @@ export type FillInput =
 	| { type: 'none' };
 
 export interface StrokeInput {
+	/** Outline colour; `'transparent'` writes an explicit empty outline (`<a:ln><a:noFill/></a:ln>`). */
 	color?: string;
 	width?: number;
 	/**

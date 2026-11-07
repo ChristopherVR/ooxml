@@ -23,15 +23,19 @@ These are not gaps to be closed: they follow directly from running inside a brow
 
 A browser has no font catalogue of its own to draw on the way the desktop app does, so `pptx-viewer` resolves each deck font in three steps: use it as-is when the reader's machine has it installed, otherwise fetch its verified metric-compatible clone from Google Fonts before layout (Calibri -> Carlito, Cambria -> Caladea, Arial -> Arimo, Times New Roman -> Tinos, Courier New -> Cousine, Georgia -> Gelasio, so line breaks and text extents still match PowerPoint), and only when neither exists fall back through PANOSE classification to a same-class generic font, which can shift metrics.
 
+While a deck loads, the viewer waits briefly (150 ms) for the Google Fonts faces its slides draw, so cached faces never appear in a stand-in first. A first download on a slow network does not hold the deck back: after 150 ms, or at once when the request fails (offline, blocked), the deck is shown with metric-compatible substitutes, the status bar reads "Downloading fonts (1 of 2)" while the download runs, and a late face is laid out again when it arrives. Installed and embedded fonts need no wait.
+
 ### Fonts and privacy {#fonts-and-privacy}
 
-Fetching a clone from Google Fonts means the reader's browser contacts `fonts.googleapis.com` and `fonts.gstatic.com`, which reveals the reader's IP address to Google. Hosts that must not do that set the `googleFonts` option, available on every binding:
+Fetching a clone from Google Fonts means the reader's browser contacts `fonts.googleapis.com` and `fonts.gstatic.com`, which reveals the reader's IP address to Google. By default the reader decides with the File > Options > Trust Center option "Download fonts that are not installed or embedded (Google Fonts)", which is on. Turning it off applies at once to the open deck (the viewer removes its webfont stylesheet) and to every later load, and the choice is saved with the other options. A host can decide instead with the `googleFonts` option, available on every binding:
 
-- unset (the default): clones are loaded from Google Fonts as described above;
-- `googleFonts: false`: no request goes to Google; text uses installed fonts, fonts embedded in the deck, or the PANOSE fallback, so line breaks can differ from PowerPoint;
-- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`: the same CSS2 request goes to a self-hosted mirror instead. The mirror must answer the Google Fonts CSS2 query format (`?family=...&display=swap`) with compatible `@font-face` CSS, and its font files should be self-hosted too so no request reaches Google. A `baseUrl` that is not an absolute `http(s)` URL turns the fallback off and logs a warning.
+- unset (the default): the Trust Center option decides; when it is on, clones are loaded from Google Fonts as described above;
+- `googleFonts: false`: no request goes to Google; text uses installed fonts, fonts embedded in the deck, or the PANOSE fallback, so line breaks can differ from PowerPoint. The Trust Center option is shown off and read-only;
+- `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`: the same CSS2 request goes to a self-hosted mirror instead, and the Trust Center option is shown on and read-only. The mirror must answer the Google Fonts CSS2 query format (`?family=...&display=swap`) with compatible `@font-face` CSS, and its font files should be self-hosted too so no request reaches Google. A `baseUrl` that is not an absolute `http(s)` URL turns the fallback off (the option is then shown off and read-only) and logs a warning.
 
 The option also governs the WordArt glyph-outline fetch and the webfonts inlined into slide image exports, since both reuse the stylesheet URL the viewer resolved. Both read the CSS and font files with `fetch()`, so a mirror must send CORS headers (`Access-Control-Allow-Origin`) for them to work, as Google's own servers do.
+
+How the viewer picks a face for each run, and how it waits for downloads, is described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). Every request the packages can make is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ### External content and privacy {#external-content-and-privacy}
 
@@ -41,7 +45,7 @@ A deck can link pictures (including picture fills and picture bullets), videos, 
 - `allowExternalContent: false`: no linked content is fetched, so slides show embedded content only, and the Trust Center option is shown off and read-only;
 - `allowExternalContent: true`: linked content is fetched, and the option is shown on and read-only.
 
-The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies from the next load. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
+The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies from the next load. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the Trust Center option "Download fonts that are not installed or embedded" or the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
 
 In a collaboration session, slides arrive from peers already parsed, and the switch is not applied to them again: a peer whose viewer allows external content can share a slide that references a linked URL. Use the same `allowExternalContent` value for every participant when this matters.
 

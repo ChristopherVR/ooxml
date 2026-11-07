@@ -222,5 +222,9 @@ export const translations = {
 	'pptx.options.trust.allowExternalContent': 'Externe Inhalte zulassen (Remotebilder und -medien)',
 	'pptx.options.trust.allowExternalContentInfo':
 		'Wenn deaktiviert, wird nur in der Datei eingebetteter Inhalt angezeigt.',
+	'pptx.options.trust.allowFontDownloads':
+		'Nicht installierte oder eingebettete Schriftarten herunterladen (Google Fonts)',
+	'pptx.options.trust.allowFontDownloadsInfo':
+		'Wenn aktiviert, ruft Ihr Browser fehlende Schriftarten von fonts.googleapis.com und fonts.gstatic.com (oder vom Schriftartserver Ihrer Organisation) ab. Wenn deaktiviert, verwendet Text installierte, eingebettete oder Ersatzschriftarten, sodass Zeilenumbrüche von PowerPoint abweichen können.',
 	'pptx.options.trust.confirmHyperlinks': 'Vor dem Öffnen externer Hyperlinks bestätigen',
 };

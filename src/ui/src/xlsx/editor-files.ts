@@ -68,6 +68,8 @@ export async function loadInto(
 	core.loading = true;
 	core.requestRender();
 	try {
+		// The file's fonts start downloading while it parses.
+		core.webfonts.prefetch(bytes);
 		const { loadWorkbook, isOoxmlCryptoError } = await import('ooxml-core/xlsx/load');
 		let password: string | undefined;
 		let workbook: Workbook;
@@ -88,6 +90,10 @@ export async function loadInto(
 				if (password === undefined || generation !== core.loadGeneration) return;
 			}
 		}
+		if (generation !== core.loadGeneration) return;
+		// The webfont fallback (`googleFonts`, off by default) waits here, bounded, so the workbook
+		// is first shown with its faces; `loading` stays true meanwhile.
+		await core.webfonts.prepare(workbook);
 		if (generation !== core.loadGeneration) return;
 		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome);
 		if (cloud) {

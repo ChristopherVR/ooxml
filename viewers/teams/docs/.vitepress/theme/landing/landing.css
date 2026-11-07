@@ -16,7 +16,7 @@
 	--ot-accent-tile: rgba(98, 100, 167, 0.14);
 	--ot-accent-edge: rgba(98, 100, 167, 0.42);
 
-	--ot-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--ot-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', var(--vp-font-family-base);
 	--ot-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
 
 	background: var(--ot-canvas);

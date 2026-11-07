@@ -25,6 +25,23 @@ describe('loadPresentation (real .pptx happy path)', () => {
 	it('applies the embedded viewer archive budget to a real deck', async () => {
 		await expect(loadPresentation(readFixture(), { maxUncompressedBytes: 1 })).rejects.toThrow();
 	});
+	it('reports the parsed slides before the load finishes, once', async () => {
+		const onSlidesParsed = vi.fn();
+		const loaded = await loadPresentation(readFixture(), { onSlidesParsed });
+		try {
+			expect(onSlidesParsed).toHaveBeenCalledTimes(1);
+			const parsed = onSlidesParsed.mock.calls[0]?.[0] as {
+				slides: PptxSlide[];
+				embeddedFonts: unknown[];
+			};
+			expect(parsed.slides.map((slide) => slide.id)).toEqual(
+				loaded.slides.map((slide) => slide.id),
+			);
+			expect(Array.isArray(parsed.embeddedFonts)).toBeTruthy();
+		} finally {
+			loaded.handler.dispose();
+		}
+	});
 	it('parses a real deck and renders its first slide through the registry', async () => {
 		const loaded = await loadPresentation(readFixture());
 		try {

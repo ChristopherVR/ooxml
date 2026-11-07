@@ -5,6 +5,7 @@ import {
 	type HeaderFooterContext,
 	type PrintLayout,
 	type Workbook,
+	workbookFontFamily,
 } from 'ooxml-core/xlsx';
 import { headerFooterImageSize, headerFooterImageUrl } from './header-image';
 import { escapeHtml } from './print-cell';
@@ -56,7 +57,9 @@ export function printPageHeaders(
 						return `<img src="${escapeHtml(url)}" alt="" style="width:${width}px;height:${height}px;vertical-align:top">`;
 					}
 					const css = [
-						style.font ? `font-family:${style.font.replace(/["\\;<>]/g, '')}` : '',
+						style.font
+							? `font-family:${workbookFontFamily(style.font.replace(/[;<>{}]/g, ''))}`
+							: '',
 						style.size ? `font-size:${(style.size / 11) * size}px` : '',
 						style.color ? `color:${style.color}` : '',
 						`font-weight:${style.bold ? 700 : 400}`,

@@ -98,19 +98,17 @@ export function resolveInlineTextNormAutofitShrink(
 	return resolveInlineEditNormAutofitShrink(element.textStyle, element.height, editorEl);
 }
 
-/** Initial plain text + optional font style for the inline surface. */
+/**
+ * Initial plain text for the inline surface. The font is deliberately not here:
+ * the surface takes it from the block style and the seeded runs, never from the
+ * body's raw `fontFamily`, which has no substitution chain.
+ */
 export interface InlineTextSurface {
 	text: string;
-	fontSize: number | undefined;
-	fontFamily: string | undefined;
 }
 
-/** Resolve the seed text and font hints for an element's inline editor. */
+/** Resolve the seed text for an element's inline editor. */
 export function resolveInlineSurface(element: PptxElement): InlineTextSurface {
 	const withText = hasTextProperties(element) ? element : undefined;
-	return {
-		text: withText?.text ?? '',
-		fontSize: withText?.textStyle?.fontSize,
-		fontFamily: withText?.textStyle?.fontFamily,
-	};
+	return { text: withText?.text ?? '' };
 }

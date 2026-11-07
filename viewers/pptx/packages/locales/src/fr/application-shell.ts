@@ -117,6 +117,7 @@ export const translations = {
 	'pptx.toolbar.save': 'Sauvegarder',
 	'pptx.settings.done': 'Fait',
 	'pptx.viewer.loading': 'Chargement de la présentation…',
+	'pptx.viewer.loadingFonts': 'Téléchargement des polices ({{loaded}} sur {{total}})…',
 	'pptx.viewer.encrypted':
 		'Cette présentation est protégée par mot de passe et ne peut pas être ouverte.',
 	'pptx.viewer.loadError': 'Échec du chargement de la présentation.',
