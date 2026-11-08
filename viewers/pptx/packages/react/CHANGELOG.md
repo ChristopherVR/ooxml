@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.72.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.72.0) - 2026-11-08
+
+### Features
+
+- **pptx:** Save effects of new pictures and keep a:extLst last ([#259](https://github.com/ChristopherVR/ooxml/issues/259)) ([9bf2a22](https://github.com/ChristopherVR/ooxml/commit/9bf2a2249d9276ad7ad6ae8d8bc201bd7f48c349))
+- **pptx:** Accept app properties when creating a presentation ([#263](https://github.com/ChristopherVR/ooxml/issues/263)) ([78b3c1b](https://github.com/ChristopherVR/ooxml/commit/78b3c1b9a4be4e18f2e8bef06e3764f214f62872))
+
 ## [4.71.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.71.0) - 2026-11-07
 
 ### Features
