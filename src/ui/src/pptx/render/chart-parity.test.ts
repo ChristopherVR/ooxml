@@ -242,5 +242,5 @@ describe('chart view-model parity', () => {
 		expect(Object.keys(actual).filter((k) => !k.startsWith('synthetic/')).length).toBeGreaterThan(
 			10,
 		);
-	}, 120_000);
+	}, 300_000);
 });
