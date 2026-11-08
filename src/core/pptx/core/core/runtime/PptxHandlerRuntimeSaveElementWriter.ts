@@ -21,6 +21,7 @@ import { findOleObjNode } from '../../utils/ole-alternate-content';
 import { ensureXmlChild } from '../../utils/xml-access';
 import { BLIP_FILL_ORDER, SP_PR_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveContentPartInk';
+import { writeNewShapePictureFill } from './save-picture-fill';
 import type { SaveSlideContext } from './PptxHandlerRuntimeSaveElementEmbedding';
 import { CHART_CONTENT_TYPE, CHART_RELATIONSHIP_TYPE } from './PptxHandlerRuntimeSaveShapeXml';
 import { collapseOrderedXmlChildren, replaceXmlNodeContents } from './template-group-node';
@@ -539,6 +540,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Create new XML if missing
 		if (!shape && (el.type === 'text' || el.type === 'shape')) {
 			shape = this.createElementXml(el);
+			// A new shape filled with a picture: embed it and write its
+			// `a:blipFill`, which the fill writer below keeps as it is.
+			const spPr = ensureXmlChild(shape, 'p:spPr');
+			if (spPr && el.shapeStyle?.fillMode === 'image') {
+				writeNewShapePictureFill(spPr, el.shapeStyle, this.pictureFillSaveContext(el, ctx));
+			}
 		}
 		if (!shape && el.type === 'connector') {
 			shape = this.createConnectorXml(el);
@@ -717,6 +724,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				el,
 				ctx.resolveHyperlinkRelationshipId,
 				ctx.getSlideRelationshipMap,
+				ctx.slideTargetAt,
 			);
 		}
 

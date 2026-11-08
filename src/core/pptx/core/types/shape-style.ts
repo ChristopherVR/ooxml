@@ -28,6 +28,7 @@ import type {
 	XmlObject,
 } from './common';
 import type { EffectDagContainer } from './effect-dag';
+import type { PptxImageLayout } from './image';
 import type { Pptx3DScene, Pptx3DShape } from './three-d';
 
 export interface PptxCustomDashSegment {
@@ -121,6 +122,13 @@ export interface ShapeStyle {
 	fillImageUrl?: string;
 	/** How the image is sized within the shape: stretch to fill, or tile/repeat. */
 	fillImageMode?: 'stretch' | 'tile';
+	/**
+	 * Tile placement or stretch insets of a NEW picture fill, written as
+	 * `a:tile` / `a:stretch/a:fillRect`. A loaded picture fill keeps its
+	 * authored `a:blipFill` instead (it loads as a picture element, which
+	 * carries these fields itself).
+	 */
+	fillImageLayout?: PptxImageLayout;
 	/** Whether the image fill rotates/flips with the shape (`a:blipFill/@rotWithShape`).
 	 *  Defaults to true per the schema; preserved for round-trip when the source
 	 *  authored the attribute explicitly. When false, the shape's own geometry

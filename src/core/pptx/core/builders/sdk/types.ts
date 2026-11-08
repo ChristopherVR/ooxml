@@ -29,6 +29,7 @@ import type {
 	GlowInput,
 	InnerShadowInput,
 	LineEndInput,
+	PictureTileInput,
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
@@ -39,6 +40,7 @@ export type {
 	GlowInput,
 	InnerShadowInput,
 	LineEndInput,
+	PictureTileInput,
 	ReflectionInput,
 	RelativeRectInput,
 } from './shape-style-input-types';
@@ -131,7 +133,24 @@ export type FillInput =
 			/** Colour behind the pattern (`a:bgClr`). */
 			background?: string;
 	  }
-	| { type: 'image'; url: string; mode?: 'stretch' | 'tile' }
+	| {
+			type: 'image';
+			/** The picture as a data URL (`data:image/png;base64,...`). */
+			url: string;
+			/**
+			 * Stretch the picture over the shape (the default) or tile it.
+			 * `tile` alone implies `'tile'`.
+			 */
+			mode?: 'stretch' | 'tile';
+			/** How the tiles repeat (`a:tile`); only with `mode: 'tile'`. */
+			tile?: PictureTileInput;
+			/**
+			 * Where the stretched picture lands, as insets from each edge of the
+			 * shape (`a:stretch/a:fillRect`, -10 to 10); a negative inset pushes the
+			 * picture past that edge. Only with `mode: 'stretch'`.
+			 */
+			fillRect?: RelativeRectInput;
+	  }
 	| { type: 'none' };
 
 export interface StrokeInput {
@@ -173,6 +192,19 @@ export interface ShadowInput {
 	opacity?: number;
 }
 
+/**
+ * Where a click goes: an address (`a:hlinkClick` with an external
+ * relationship) or a slide of this deck by 0-based position (`action=
+ * "ppaction://hlinksldjump"` with a `…/relationships/slide` relationship,
+ * added on save). An empty `url` or a `slideIndex` that is not a whole
+ * number from 0 throws a `RangeError`; an index past the last saved slide is
+ * written without a target and reported as `SAVE_SLIDE_JUMP_TARGET_MISSING`
+ * in `getCompatibilityWarnings()`.
+ */
+export type LinkInput =
+	| { url: string; tooltip?: string }
+	| { slideIndex: number; tooltip?: string };
+
 // ---------------------------------------------------------------------------
 // Text input
 // ---------------------------------------------------------------------------
@@ -197,11 +229,24 @@ export interface TextStyleInput {
 	 * hundredths of a point); negative condenses, `0` is the default spacing.
 	 */
 	characterSpacing?: number;
+	/** A hyperlink on the run (`a:rPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 export interface TextSegmentInput {
 	text: string;
 	style?: Partial<TextStyleInput>;
+}
+
+/**
+ * Mirroring of an element (`a:xfrm/@flipH`, `@flipV`), applied before its
+ * rotation. Omitted or `false`: not mirrored.
+ */
+export interface ElementFlipInput {
+	/** Mirror left to right (`a:xfrm/@flipH`). */
+	flipHorizontal?: boolean;
+	/** Mirror top to bottom (`a:xfrm/@flipV`); not the same as a 180 degree rotation. */
+	flipVertical?: boolean;
 }
 
 /**
@@ -225,7 +270,7 @@ export interface TextBodyInput {
 	wrap?: boolean;
 }
 
-export interface TextOptions extends Partial<ElementPosition>, TextBodyInput {
+export interface TextOptions extends Partial<ElementPosition>, ElementFlipInput, TextBodyInput {
 	fontSize?: number;
 	fontFamily?: string;
 	bold?: boolean;
@@ -245,13 +290,15 @@ export interface TextOptions extends Partial<ElementPosition>, TextBodyInput {
 	softEdge?: number;
 	reflection?: ReflectionInput;
 	opacity?: number;
+	/** What clicking the text box does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 // ---------------------------------------------------------------------------
 // Shape input
 // ---------------------------------------------------------------------------
 
-export interface ShapeOptions extends Partial<ElementPosition>, TextBodyInput {
+export interface ShapeOptions extends Partial<ElementPosition>, ElementFlipInput, TextBodyInput {
 	fill?: FillInput;
 	stroke?: StrokeInput;
 	/**
@@ -268,13 +315,15 @@ export interface ShapeOptions extends Partial<ElementPosition>, TextBodyInput {
 	softEdge?: number;
 	reflection?: ReflectionInput;
 	opacity?: number;
+	/** What clicking the shape does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
 }
 
 // ---------------------------------------------------------------------------
 // Image input
 // ---------------------------------------------------------------------------
 
-export interface ImageOptions extends Partial<ElementPosition> {
+export interface ImageOptions extends Partial<ElementPosition>, ElementFlipInput {
 	altText?: string;
 	cropLeft?: number;
 	cropTop?: number;
@@ -285,6 +334,21 @@ export interface ImageOptions extends Partial<ElementPosition> {
 	 * picture's transparency (`a:blip/a:alphaModFix`).
 	 */
 	opacity?: number;
+	/** Tile the picture inside its frame (`a:tile`) instead of stretching it. */
+	tile?: PictureTileInput;
+	/**
+	 * Where the stretched picture lands inside its frame, as insets from each
+	 * edge (`a:stretch/a:fillRect`, -10 to 10). Not together with `tile`.
+	 */
+	fillRect?: RelativeRectInput;
+	/** What clicking the picture does (`p:cNvPr/a:hlinkClick`). */
+	link?: LinkInput;
+	/**
+	 * For an SVG source: the raster (data URL) that readers without SVG
+	 * support show. The SVG is saved as the blip's `asvg:svgBlip` extension;
+	 * without a fallback the raster is a 1x1 transparent PNG.
+	 */
+	svgFallback?: string;
 	/** Brightness change in percent, -100 to 100 (`a:blip/a:lum/@bright`). */
 	brightness?: number;
 	/** Contrast change in percent, -100 to 100 (`a:blip/a:lum/@contrast`). */
@@ -431,7 +495,7 @@ export interface ChartOptions extends Partial<ElementPosition> {}
 // Connector input
 // ---------------------------------------------------------------------------
 
-export interface ConnectorOptions extends Partial<ElementPosition> {
+export interface ConnectorOptions extends Partial<ElementPosition>, ElementFlipInput {
 	type?: 'straight' | 'bent' | 'curved';
 	/** The outline; an omitted `color` is black and an omitted `width` 1 px. */
 	stroke?: StrokeInput;
@@ -447,7 +511,7 @@ export interface ConnectorOptions extends Partial<ElementPosition> {
 // Media input
 // ---------------------------------------------------------------------------
 
-export interface MediaOptions extends Partial<ElementPosition> {
+export interface MediaOptions extends Partial<ElementPosition>, ElementFlipInput {
 	autoPlay?: boolean;
 	loop?: boolean;
 	volume?: number;
@@ -460,7 +524,7 @@ export interface MediaOptions extends Partial<ElementPosition> {
 // Group input
 // ---------------------------------------------------------------------------
 
-export interface GroupOptions extends Partial<ElementPosition> {}
+export interface GroupOptions extends Partial<ElementPosition>, ElementFlipInput {}
 
 // ---------------------------------------------------------------------------
 // Slide-level inputs
@@ -533,6 +597,13 @@ export interface PresentationOptions {
 	 */
 	firstSlideNumber?: number;
 	/**
+	 * Defaults for the shapes that `createSlide(...).addShape` adds. Opt-in:
+	 * without it a shape with no `fill` keeps the solid `#4472C4` fill the SDK
+	 * has always given it. Pass `{ fill: { type: 'none' } }` so that an omitted
+	 * `fill` means no fill (`a:noFill`).
+	 */
+	shapeDefaults?: ShapeDefaultsInput;
+	/**
 	 * Application properties written to `docProps/app.xml` when the package
 	 * is created. Without them the part names `pptx-viewer-sdk`, version
 	 * `1.0000`. `appVersion` takes Office's form (`16.0000`); an empty string
@@ -543,6 +614,12 @@ export interface PresentationOptions {
 	 * keeps the value given here.
 	 */
 	appProperties?: PresentationAppPropertiesInput;
+}
+
+/** What an omitted shape option falls back to; see {@link PresentationOptions.shapeDefaults}. */
+export interface ShapeDefaultsInput {
+	/** The fill of a shape whose options give none. Default: solid `#4472C4`. */
+	fill?: FillInput;
 }
 
 export interface PresentationThemeInput {

@@ -26,8 +26,10 @@ import {
 import { ensureXmlChild } from '../../utils/xml-access';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
+import { addSvgBlipExtension } from './picture-svg-blip';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
+import { applyNewPictureLayout, type PictureFillSaveContext } from './save-picture-fill';
 
 /** Context passed to per-element save processing. */
 export interface SaveSlideContext {
@@ -206,15 +208,38 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (parsedImage) {
 			let targetImagePath = el.imagePath;
 			if (!targetImagePath) {
-				targetImagePath = ctx.saveSession.nextMediaPath(parsedImage.extension);
-				const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
+				// A new picture: identical bytes share one media part (and, on one
+				// slide, one relationship) instead of a copy per picture.
+				const media = ctx.saveSession.mediaPathForContent(parsedImage.bytes, parsedImage.extension);
+				targetImagePath = media.path;
 				const relativeMediaPath = targetImagePath.replace(/^ppt\//u, '../');
-				ctx.slideRelationships.push({
-					'@_Id': relationshipId,
-					'@_Type': ctx.slideImageRelationshipType,
-					'@_Target': relativeMediaPath,
-				});
+				const existingRelationshipId = media.reused
+					? ctx.slideRelationships.find(
+							(rel) =>
+								rel['@_Type'] === ctx.slideImageRelationshipType &&
+								rel['@_Target'] === relativeMediaPath,
+						)?.['@_Id']
+					: undefined;
+				const relationshipId =
+					typeof existingRelationshipId === 'string'
+						? existingRelationshipId
+						: ctx.slideRelationshipRegistry.nextRelationshipId();
+				if (relationshipId !== existingRelationshipId) {
+					ctx.slideRelationships.push({
+						'@_Id': relationshipId,
+						'@_Type': ctx.slideImageRelationshipType,
+						'@_Target': relativeMediaPath,
+					});
+				}
 				shape = this.createPictureXml(el, relationshipId);
+				this.embedNewSvgVariant(el, shape, ctx);
+				const blipFill = shape['p:blipFill'] as XmlObject | undefined;
+				if (blipFill) {
+					applyNewPictureLayout(blipFill, el, this.pictureFillSaveContext(el, ctx));
+				}
+				if (media.reused) {
+					return shape;
+				}
 			}
 			if (targetImagePath) {
 				// Never write bytes of one format into a file with a different
@@ -252,6 +277,82 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			});
 		}
 		return shape;
+	}
+
+	/** Add an image relationship from the slide to `mediaPath`; its id. */
+	private addSlideImageRelationship(mediaPath: string, ctx: SaveSlideContext): string {
+		const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
+		ctx.slideRelationships.push({
+			'@_Id': relationshipId,
+			'@_Type': ctx.slideImageRelationshipType,
+			'@_Target': mediaPath.replace(/^ppt\//u, '../'),
+		});
+		return relationshipId;
+	}
+
+	/** What the picture-fill writers need, bound to `el` on the slide being saved. */
+	protected pictureFillSaveContext(el: PptxElement, ctx: SaveSlideContext): PictureFillSaveContext {
+		return {
+			emuPerPx: PptxHandlerRuntime.EMU_PER_PX,
+			parse: (xml) => this.parser.parse(xml) as XmlObject,
+			embed: (dataUrl) => {
+				const parsed = this.parseDataUrlToBytes(dataUrl);
+				if (!parsed) {
+					return undefined;
+				}
+				const mediaPath = ctx.saveSession.nextMediaPath(parsed.extension);
+				this.zip.file(mediaPath, parsed.bytes);
+				return this.addSlideImageRelationship(mediaPath, ctx);
+			},
+			warn: (code, message) =>
+				this.compatibilityService.reportWarning({
+					code,
+					message,
+					scope: 'element',
+					slideId: ctx.slide.id,
+					elementId: el.id,
+				}),
+		};
+	}
+
+	/**
+	 * For a new SVG picture (`svgData` without a part yet), write the SVG part
+	 * and point the blip's `asvg:svgBlip` extension at it; the blip itself
+	 * embeds the raster (`imageData`).
+	 */
+	private embedNewSvgVariant(
+		el: PptxImageLikeElement,
+		picture: XmlObject,
+		ctx: SaveSlideContext,
+	): void {
+		const svgData = (el as { svgData?: string; svgPath?: string }).svgData;
+		if (!svgData || (el as { svgPath?: string }).svgPath) {
+			return;
+		}
+		const parsed = this.parseDataUrlToBytes(svgData);
+		if (!parsed || parsed.extension.toLowerCase() !== 'svg') {
+			return;
+		}
+		const media = ctx.saveSession.mediaPathForContent(parsed.bytes, 'svg');
+		const target = media.path.replace(/^ppt\//u, '../');
+		const existing = media.reused
+			? ctx.slideRelationships.find(
+					(rel) => rel['@_Type'] === ctx.slideImageRelationshipType && rel['@_Target'] === target,
+				)?.['@_Id']
+			: undefined;
+		const relationshipId =
+			typeof existing === 'string' ? existing : ctx.slideRelationshipRegistry.nextRelationshipId();
+		if (relationshipId !== existing) {
+			ctx.slideRelationships.push({
+				'@_Id': relationshipId,
+				'@_Type': ctx.slideImageRelationshipType,
+				'@_Target': target,
+			});
+		}
+		if (!media.reused) {
+			this.zip.file(media.path, parsed.bytes);
+		}
+		addSvgBlipExtension(picture, relationshipId);
 	}
 
 	/** Embed media data and manage relationships for media elements. */

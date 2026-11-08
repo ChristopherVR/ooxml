@@ -7,6 +7,7 @@
 
 import type { ConnectorArrowType } from '../../types/common';
 import type { PptxCustomDashSegment, ShapeStyle } from '../../types/shape-style';
+import { mapPictureLayoutInput } from './picture-layout-input';
 import type { GlowInput, InnerShadowInput, ReflectionInput } from './shape-style-input-types';
 import type { FillInput, ShadowInput, StrokeInput } from './types';
 
@@ -50,12 +51,18 @@ export function mapFillToShapeStyle(fill?: FillInput): Partial<ShapeStyle> {
 				...(fill.foreground !== undefined ? { fillColor: fill.foreground } : {}),
 				fillPatternBackgroundColor: fill.background,
 			};
-		case 'image':
+		case 'image': {
+			if (typeof fill.url !== 'string' || !fill.url.startsWith('data:')) {
+				throw new RangeError('FillInput.url of an image fill must be a data: URL');
+			}
+			const layout = mapPictureLayoutInput('FillInput', fill);
 			return {
 				fillMode: 'image',
 				fillImageUrl: fill.url,
-				fillImageMode: fill.mode ?? 'stretch',
+				fillImageMode: layout?.tileScaleX !== undefined ? 'tile' : 'stretch',
+				...(layout ? { fillImageLayout: layout } : {}),
 			};
+		}
 		case 'none':
 			return { fillMode: 'none' };
 		default:

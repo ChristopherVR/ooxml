@@ -397,9 +397,9 @@ export interface PptxImageProperties {
 	tileOffsetX?: number;
 	/** Image tiling offset Y in px. */
 	tileOffsetY?: number;
-	/** Image tiling scale X as percentage (100 = 100%). */
+	/** Image tiling scale X as a fraction of the image's own width (1 = 100%, `a:tile/@sx`). */
 	tileScaleX?: number;
-	/** Image tiling scale Y as percentage (100 = 100%). */
+	/** Image tiling scale Y as a fraction of the image's own height (1 = 100%, `a:tile/@sy`). */
 	tileScaleY?: number;
 	/** Image tiling flip mode. */
 	tileFlip?: 'none' | 'x' | 'y' | 'xy';
@@ -435,3 +435,23 @@ export interface PptxImageProperties {
 // bundling (the emitted `declare module` points at a path that no longer
 // exists in the flattened output), which silently dropped the fields from
 // every published binding's types.
+
+/**
+ * How a picture fills its frame: the `a:tile` or `a:stretch/a:fillRect`
+ * fields of {@link PptxImageProperties}, which a shape's picture fill
+ * carries as `ShapeStyle.fillImageLayout`. Tile fields win over the
+ * fill rectangle.
+ */
+export type PptxImageLayout = Pick<
+	PptxImageProperties,
+	| 'tileOffsetX'
+	| 'tileOffsetY'
+	| 'tileScaleX'
+	| 'tileScaleY'
+	| 'tileFlip'
+	| 'tileAlignment'
+	| 'fillRectLeft'
+	| 'fillRectTop'
+	| 'fillRectRight'
+	| 'fillRectBottom'
+>;

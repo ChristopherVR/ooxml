@@ -237,6 +237,7 @@ export type {
 	GlowInput,
 	ReflectionInput,
 	LineEndInput,
+	PictureTileInput,
 	RelativeRectInput,
 	TextStyleInput,
 	TextSegmentInput,
@@ -265,7 +266,10 @@ export type {
 	PresentationOptions,
 	PresentationAppPropertiesInput,
 	PresentationThemeInput,
+	ShapeDefaultsInput,
+	ElementFlipInput,
 	TextBodyInput,
+	LinkInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';

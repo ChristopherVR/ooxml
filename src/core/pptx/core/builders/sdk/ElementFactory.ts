@@ -22,11 +22,15 @@ import type {
 	GroupPptxElement,
 	PptxElement,
 } from '../../types/elements';
+import type { PptxAction } from '../../types/actions';
 import type { ShapeStyle } from '../../types/shape-style';
 import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import { applyChartInputLayout } from './chart-layout-operations';
+import { mapPictureLayoutInput } from './picture-layout-input';
+import { mapLinkToAction, mapLinkToRunStyle } from './link-input';
+import { svgPictureSource } from './svg-picture-input';
 import { pictureEffectsFromInput } from './picture-effects-input';
 import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
@@ -51,6 +55,10 @@ import type {
 	MediaOptions,
 	GroupOptions,
 	TextStyleInput,
+	ShapeDefaultsInput,
+	FillInput,
+	ElementFlipInput,
+	LinkInput,
 	TableCellInput,
 } from './types';
 
@@ -136,6 +144,9 @@ function mapTextStyleInput(opts?: Partial<TextStyleInput>): Partial<TextStyle> {
 	}
 	if (opts.characterSpacing !== undefined) {
 		ts.characterSpacing = characterSpacingToSpc(opts.characterSpacing);
+}
+	if (opts.link !== undefined) {
+		Object.assign(ts, mapLinkToRunStyle(opts.link));
 	}
 	return ts;
 }
@@ -166,6 +177,16 @@ function buildTextSegments(
 	}));
 }
 
+/** The element's flips (`a:xfrm/@flipH`, `@flipV`), only when set. */
+function flipsOf(
+	options: ElementFlipInput | undefined,
+): Pick<PptxElement, 'flipHorizontal' | 'flipVertical'> {
+	return {
+		...(options?.flipHorizontal ? { flipHorizontal: true } : {}),
+		...(options?.flipVertical ? { flipVertical: true } : {}),
+	};
+}
+
 /** The text of a shape's options: plain or rich, with the text body options. */
 function applyShapeText(el: ShapePptxElement, options: ShapeOptions | undefined): void {
 	const text = options?.text;
@@ -185,6 +206,12 @@ function applyShapeText(el: ShapePptxElement, options: ShapeOptions | undefined)
 		...mapTextBodyInput(options),
 	} as TextStyle;
 	el.textSegments = textSegments;
+}
+
+/** `{ actionClick }` for an element link, or nothing. */
+function withAction(link: LinkInput | undefined): { actionClick?: PptxAction } {
+	const actionClick = mapLinkToAction(link);
+	return actionClick ? { actionClick } : {};
 }
 
 // ---------------------------------------------------------------------------
@@ -256,6 +283,7 @@ export function createTextElement(
 		id: generateId('txt'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		text: plainText,
 		textStyle: {
@@ -264,14 +292,20 @@ export function createTextElement(
 		} as TextStyle,
 		textSegments,
 		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
+		...withAction(options?.link),
 	};
 }
+
+/** The fill a new shape gets when neither its options nor the defaults give one. */
+export const DEFAULT_SHAPE_FILL: FillInput = { type: 'solid', color: '#4472C4' };
 
 /**
  * Create a shape element with optional text overlay.
  *
  * @param shapeType - Preset geometry name (e.g. "rect", "ellipse", "roundRect").
  * @param options - Position, styling, and optional text.
+ * @param defaults - What an omitted option falls back to (an omitted `fill`
+ *   is {@link DEFAULT_SHAPE_FILL} unless `defaults.fill` says otherwise).
  * @returns A valid {@link ShapePptxElement}.
  *
  * @example
@@ -282,19 +316,25 @@ export function createTextElement(
  * });
  * ```
  */
-export function createShapeElement(shapeType: string, options?: ShapeOptions): ShapePptxElement {
+export function createShapeElement(
+	shapeType: string,
+	options?: ShapeOptions,
+	defaults?: ShapeDefaultsInput,
+): ShapePptxElement {
 	const p = pos('shape', options);
 	const el: ShapePptxElement = {
 		type: 'shape',
 		id: generateId('shp'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		shapeType,
 		shapeAdjustments: options?.adjustments,
 		shapeStyle: buildShapeStyle(
-			effectInputs(options, options?.fill ?? { type: 'solid', color: '#4472C4' }),
+			effectInputs(options, options?.fill ?? defaults?.fill ?? DEFAULT_SHAPE_FILL),
 		),
+		...withAction(options?.link),
 	};
 	applyShapeText(el, options);
 	return el;
@@ -350,6 +390,7 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
 		id: generateId('cxn'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		shapeType: connType,
 		shapeStyle: style,
 	};
@@ -364,6 +405,15 @@ export function createConnectorElement(options?: ConnectorOptions): ConnectorPpt
  */
 export function createImageElement(source: string, options?: ImageOptions): ImagePptxElement {
 	const p = pos('image', options);
+	const svg = svgPictureSource(source, options?.svgFallback);
+	if (svg) {
+		// The Office form of an SVG picture: a raster in the blip, the SVG in its
+		// `asvg:svgBlip` extension (written on save). Renderers prefer `svgData`.
+		const { svgFallback: _raster, ...rest } = options ?? {};
+		const svgPicture = createImageElement(svg.raster, rest);
+		svgPicture.svgData = svg.svgData;
+		return svgPicture;
+	}
 	const isDataUrl = source.startsWith('data:');
 	// Opacity is the picture's `a:alphaModFix`, which the renderers apply and
 	// the save writes; an element `opacity` beside it would apply twice.
@@ -373,6 +423,7 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 		id: generateId('img'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		...(imageEffects ? { imageEffects } : {}),
 		imagePath: isDataUrl ? undefined : source,
 		imageData: isDataUrl ? source : undefined,
@@ -381,6 +432,11 @@ export function createImageElement(source: string, options?: ImageOptions): Imag
 		cropTop: options?.cropTop,
 		cropRight: options?.cropRight,
 		cropBottom: options?.cropBottom,
+		...mapPictureLayoutInput('ImageOptions', {
+			tile: options?.tile,
+			fillRect: options?.fillRect,
+		}),
+		...withAction(options?.link),
 	};
 }
 
@@ -563,6 +619,7 @@ export function createMediaElement(
 		id: generateId('med'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		mediaType,
 		mediaPath: isDataUrl ? undefined : source,
 		mediaData: isDataUrl ? source : undefined,
@@ -592,6 +649,7 @@ export function createGroupElement(
 		id: generateId('grp'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		children,
 	};
 }
@@ -625,6 +683,7 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 		id: generateId('frm'),
 		...p,
 		rotation: options?.rotation,
+		...flipsOf(options),
 		opacity: options?.opacity,
 		shapeType: 'custom',
 		pathData,
@@ -635,6 +694,7 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 			...effectInputs(options, options?.fill ?? { type: 'none' }),
 			stroke: options?.stroke ?? { color: '#000000', width: 2 },
 		}),
+		...withAction(options?.link),
 	};
 	applyShapeText(el, options);
 	return el;

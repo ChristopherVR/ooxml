@@ -41,6 +41,24 @@ describe('unrelated artwork in the solution explorer morph (#105)', () => {
 		);
 		expect(result.pairs).toEqual([]);
 	});
+	it('tells SVG pictures apart when they share one fallback raster', () => {
+		const wheel = picture('wheel', {
+			svgPath: 'image1.svg',
+			imagePath: 'image1.png',
+			rotation: 45,
+		});
+		const radar = picture('radar', {
+			svgPath: 'image2.svg',
+			imagePath: 'image1.png',
+			x: 349,
+			y: 67,
+			width: 706,
+			height: 407,
+		});
+		const result = matchMorphElementsFull(slide([wheel]), slide([radar]));
+		expect(result.pairs).toEqual([]);
+		expect(result.unmatchedTo).toEqual([radar]);
+	});
 	it('still morphs replacement artwork with the same explicit identity', () => {
 		const result = matchMorphElementsFull(
 			slide([picture('before', { name: '!!scene', imagePath: 'before.png', rotation: 45 })]),
