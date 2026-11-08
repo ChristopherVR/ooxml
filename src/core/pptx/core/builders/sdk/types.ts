@@ -192,6 +192,11 @@ export interface TextStyleInput {
 	lineSpacing?: number;
 	spaceBefore?: number;
 	spaceAfter?: number;
+	/**
+	 * Extra space between characters in px (`a:rPr/@spc`, written in
+	 * hundredths of a point); negative condenses, `0` is the default spacing.
+	 */
+	characterSpacing?: number;
 }
 
 export interface TextSegmentInput {
@@ -199,7 +204,28 @@ export interface TextSegmentInput {
 	style?: Partial<TextStyleInput>;
 }
 
-export interface TextOptions extends Partial<ElementPosition> {
+/**
+ * Text body options of a new text box or shape (`a:bodyPr`). Each one is
+ * written only when given; the deck's defaults apply otherwise.
+ */
+export interface TextBodyInput {
+	/**
+	 * Space between the frame and the text, in px (`lIns` / `tIns` / `rIns` /
+	 * `bIns`). A side that is omitted keeps the default (0.1 in left and right,
+	 * 0.05 in top and bottom). A value that is not finite throws a `RangeError`.
+	 */
+	insets?: { left?: number; top?: number; right?: number; bottom?: number };
+	/**
+	 * What happens when the text overflows: `'shrinkText'` lets PowerPoint
+	 * shrink the text (`a:normAutofit`), `'resizeShape'` grows the shape to fit
+	 * (`a:spAutoFit`), `'none'` does neither (`a:noAutofit`).
+	 */
+	autoFit?: 'none' | 'shrinkText' | 'resizeShape';
+	/** Whether lines wrap at the frame's width (`wrap="square"`) or never (`wrap="none"`). */
+	wrap?: boolean;
+}
+
+export interface TextOptions extends Partial<ElementPosition>, TextBodyInput {
 	fontSize?: number;
 	fontFamily?: string;
 	bold?: boolean;
@@ -225,10 +251,14 @@ export interface TextOptions extends Partial<ElementPosition> {
 // Shape input
 // ---------------------------------------------------------------------------
 
-export interface ShapeOptions extends Partial<ElementPosition> {
+export interface ShapeOptions extends Partial<ElementPosition>, TextBodyInput {
 	fill?: FillInput;
 	stroke?: StrokeInput;
-	text?: string;
+	/**
+	 * Text inside the shape: a plain string, or rich segments that are written
+	 * as given, each run with its own style on top of {@link textStyle}.
+	 */
+	text?: string | TextSegmentInput[];
 	textStyle?: Partial<TextStyleInput>;
 	adjustments?: Record<string, number>;
 	shadow?: ShadowInput;

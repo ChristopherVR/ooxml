@@ -265,6 +265,7 @@ export type {
 	PresentationOptions,
 	PresentationAppPropertiesInput,
 	PresentationThemeInput,
+	TextBodyInput,
 } from './types';
 
 export { importSlidePackage } from './import-slide-package';

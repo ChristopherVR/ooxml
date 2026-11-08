@@ -30,6 +30,7 @@ import { applyChartInputLayout } from './chart-layout-operations';
 import { pictureEffectsFromInput } from './picture-effects-input';
 import { tableCellStyle } from './table-cell-input';
 import { columnFractions, placeTableCells } from './table-merge-input';
+import { characterSpacingToSpc, mapTextBodyInput } from './text-body-input';
 import { elementStyleForSegments } from './text-segment-style';
 import {
 	buildShapeStyle,
@@ -133,6 +134,9 @@ function mapTextStyleInput(opts?: Partial<TextStyleInput>): Partial<TextStyle> {
 	if (opts.spaceAfter !== undefined) {
 		ts.paragraphSpacingAfter = opts.spaceAfter;
 	}
+	if (opts.characterSpacing !== undefined) {
+		ts.characterSpacing = characterSpacingToSpc(opts.characterSpacing);
+	}
 	return ts;
 }
 
@@ -160,6 +164,27 @@ function buildTextSegments(
 		text: seg.text,
 		style: { ...base, ...mapTextStyleInput(seg.style) } as TextStyle,
 	}));
+}
+
+/** The text of a shape's options: plain or rich, with the text body options. */
+function applyShapeText(el: ShapePptxElement, options: ShapeOptions | undefined): void {
+	const text = options?.text;
+	if (!text || text.length === 0) {
+		// Body options still apply to the empty text body a shape is saved with.
+		const body = mapTextBodyInput(options);
+		if (Object.keys(body).length > 0) {
+			el.text = '';
+			el.textStyle = body as TextStyle;
+		}
+		return;
+	}
+	const textSegments = buildTextSegments(text, options.textStyle);
+	el.text = typeof text === 'string' ? text : text.map((s) => s.text).join('');
+	el.textStyle = {
+		...elementStyleForSegments(mapTextStyleInput(options.textStyle), textSegments),
+		...mapTextBodyInput(options),
+	} as TextStyle;
+	el.textSegments = textSegments;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +258,10 @@ export function createTextElement(
 		rotation: options?.rotation,
 		opacity: options?.opacity,
 		text: plainText,
-		textStyle: elementStyleForSegments(mapTextStyleInput(textStyleBase), textSegments) as TextStyle,
+		textStyle: {
+			...elementStyleForSegments(mapTextStyleInput(textStyleBase), textSegments),
+			...mapTextBodyInput(options),
+		} as TextStyle,
 		textSegments,
 		shapeStyle: buildShapeStyle(effectInputs(options, options?.fill)),
 	};
@@ -268,11 +296,7 @@ export function createShapeElement(shapeType: string, options?: ShapeOptions): S
 			effectInputs(options, options?.fill ?? { type: 'solid', color: '#4472C4' }),
 		),
 	};
-	if (options?.text) {
-		el.text = options.text;
-		el.textStyle = mapTextStyleInput(options.textStyle) as TextStyle;
-		el.textSegments = buildTextSegments(options.text, options.textStyle);
-	}
+	applyShapeText(el, options);
 	return el;
 }
 
@@ -612,10 +636,6 @@ export function createFreeformElement(pathData: string, options?: ShapeOptions):
 			stroke: options?.stroke ?? { color: '#000000', width: 2 },
 		}),
 	};
-	if (options?.text) {
-		el.text = options.text;
-		el.textStyle = mapTextStyleInput(options.textStyle) as TextStyle;
-		el.textSegments = buildTextSegments(options.text, options.textStyle);
-	}
+	applyShapeText(el, options);
 	return el;
 }
