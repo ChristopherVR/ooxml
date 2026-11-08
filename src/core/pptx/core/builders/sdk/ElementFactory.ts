@@ -144,7 +144,7 @@ function mapTextStyleInput(opts?: Partial<TextStyleInput>): Partial<TextStyle> {
 	}
 	if (opts.characterSpacing !== undefined) {
 		ts.characterSpacing = characterSpacingToSpc(opts.characterSpacing);
-}
+	}
 	if (opts.link !== undefined) {
 		Object.assign(ts, mapLinkToRunStyle(opts.link));
 	}
