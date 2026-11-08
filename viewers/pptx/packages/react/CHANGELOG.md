@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.73.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.73.0) - 2026-11-08
+
+### Features
+
+- **pptx:** Accept text body options and rich text on new shapes ([#264](https://github.com/ChristopherVR/ooxml/issues/264)) ([c7d0111](https://github.com/ChristopherVR/ooxml/commit/c7d011174aa101665eb48d8783bdb38cb0969fe6))
+- **pptx:** Add picture fills, links, shared media and SVG pictures to new elements ([05ceae1](https://github.com/ChristopherVR/ooxml/commit/05ceae1f210c431fab83f2a5abda90170da0a285))
+
+### Styling
+
+- **pptx:** Format the merged picture and link changes ([6952819](https://github.com/ChristopherVR/ooxml/commit/69528198578f5541380c168f2ee145808abf21f2))
+
 ## [4.72.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.72.0) - 2026-11-08
 
 ### Features

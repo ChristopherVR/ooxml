@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.48.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.48.0) - 2026-11-08
+
+### Features
+
+- **pptx:** Add picture fills, links, shared media and SVG pictures to new elements ([05ceae1](https://github.com/ChristopherVR/ooxml/commit/05ceae1f210c431fab83f2a5abda90170da0a285))
+
+### Testing
+
+- **ui:** Give the chart parity test a 300s budget on loaded runners ([88cdfd2](https://github.com/ChristopherVR/ooxml/commit/88cdfd299efce6df2434957b0bb4847fb5915d23))
+
 ## [1.47.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.47.0) - 2026-11-07
 
 ### Features
