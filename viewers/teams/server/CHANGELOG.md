@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@1.1.1) - 2026-11-09
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 25 updates ([4046ca3](https://github.com/ChristopherVR/ooxml/commit/4046ca399665d485da35696889c0212cc6526f63))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-server@1.1.0) - 2026-11-04
 
 ### Features

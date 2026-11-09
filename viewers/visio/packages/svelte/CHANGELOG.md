@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.3.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-svelte-viewer@1.3.2) - 2026-11-09
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 25 updates ([4046ca3](https://github.com/ChristopherVR/ooxml/commit/4046ca399665d485da35696889c0212cc6526f63))
+
 ## [1.3.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-svelte-viewer@1.3.1) - 2026-11-06
 
 ### Documentation

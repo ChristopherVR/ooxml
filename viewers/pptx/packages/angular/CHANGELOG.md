@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.72.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.72.1) - 2026-11-09
+
+### Dependencies
+
+- **deps:** Merge dependabot development group and jsdom 31 ([eb65de6](https://github.com/ChristopherVR/ooxml/commit/eb65de67a495cbd4d775c995d5ac25f08322fbf9))
+- **deps:** Bump the production-minor-and-patch group with 25 updates ([4046ca3](https://github.com/ChristopherVR/ooxml/commit/4046ca399665d485da35696889c0212cc6526f63))
+- **deps:** Hold jsdom at 30 and refresh viewer preflight for tailwind ([33351a8](https://github.com/ChristopherVR/ooxml/commit/33351a8a874315b0355ca699fed1a4548a23375e))
+
+### Chores
+
+- **deps-dev:** Bump jsdom from 30.1.3 to 31.0.0 ([a0dcba1](https://github.com/ChristopherVR/ooxml/commit/a0dcba1ff6d84e4a025f0cb183f831c9da5c3938))
+- **deps-dev:** Bump the development-minor-and-patch group with 15 updates ([f9d1598](https://github.com/ChristopherVR/ooxml/commit/f9d15981d99b0dee22754c9711ed1755ae5d666a))
+- **deps-dev:** Bump the angular group with 2 updates ([a196992](https://github.com/ChristopherVR/ooxml/commit/a1969923af19f6f95769c837359e552fbb5f4868))
+
 ## [4.72.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.72.0) - 2026-11-08
 
 ### Features
