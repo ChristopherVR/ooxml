@@ -40,7 +40,7 @@
 	},
 	"devDependencies": {
 		"@angular/core": "^22.2.4",
-		"@playwright/test": "^1.64.1",
+		"@playwright/test": "^1.65.0",
 		"@types/node": "^26.6.6",
 		"@typescript/typescript6": "^6.0.2",
 		"esbuild": "^0.28.2",
