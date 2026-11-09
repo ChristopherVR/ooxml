@@ -16,7 +16,9 @@ import type {
 	ShapePptxElement,
 	ImagePptxElement,
 	PicturePptxElement,
+	PptxTableCell,
 	ShapeStyle,
+	TextStyle,
 } from '../../types';
 import { applyDiagramRelationshipIds } from '../../utils/diagram-relationship-ids';
 import {
@@ -27,9 +29,11 @@ import { ensureXmlChild } from '../../utils/xml-access';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
 import { addSvgBlipExtension } from './picture-svg-blip';
+import { withSegmentSlideJumpTargets } from './run-slide-jump-targets';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
 import { applyNewPictureLayout, type PictureFillSaveContext } from './save-picture-fill';
+import { buildCellTextBody, tableCellSegmentsForSave } from './table-cell-segments-xml';
 
 /** Context passed to per-element save processing. */
 export interface SaveSlideContext {
@@ -92,9 +96,16 @@ function getMediaReferenceContainer(shape: XmlObject | undefined): XmlObject | u
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Serialize table, chart, and SmartArt data when applicable. */
-	protected applyDataSerialization(shape: XmlObject, el: PptxElement, slideId: string): void {
+	protected applyDataSerialization(
+		shape: XmlObject,
+		el: PptxElement,
+		slideId: string,
+		links?: Pick<SaveSlideContext, 'resolveHyperlinkRelationshipId' | 'slideTargetAt'>,
+	): void {
 		if (el.type === 'table' && 'tableData' in el && (el as TablePptxElement).tableData) {
-			this.serializeTableDataToXml(shape, (el as TablePptxElement).tableData!);
+			this.serializeTableDataToXml(shape, (el as TablePptxElement).tableData!, (xmlCell, cell) =>
+				this.writeTableCellSegments(xmlCell, cell, links, el.id),
+			);
 		}
 		if (el.type === 'chart' && 'chartData' in el && el.chartData) {
 			this.serializeChartDataToXml(el.chartData, slideId);
@@ -106,6 +117,36 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				this.serializeSmartArtDataToXml(saEl, slideId);
 			}
 		}
+	}
+
+	/**
+	 * Write a cell's `a:txBody` from its rich segments, through the same
+	 * paragraph and run writer as shape text. `false` when the cell has none
+	 * to write (every loaded cell), so the caller writes its flat text.
+	 */
+	private writeTableCellSegments(
+		xmlCell: XmlObject,
+		cell: PptxTableCell,
+		links: Pick<SaveSlideContext, 'resolveHyperlinkRelationshipId' | 'slideTargetAt'> | undefined,
+		elementId?: string,
+	): boolean {
+		const segments = tableCellSegmentsForSave(cell);
+		if (!segments) {
+			return false;
+		}
+		const paragraphs = this.createParagraphsFromTextContent(
+			cell.text,
+			cell.style?.align ? ({ align: cell.style.align } as TextStyle) : undefined,
+			withSegmentSlideJumpTargets(segments, links?.slideTargetAt, (index) =>
+				this.reportMissingSlideJumpTarget(elementId, index),
+			),
+			links?.resolveHyperlinkRelationshipId,
+		);
+		xmlCell['a:txBody'] = buildCellTextBody(
+			xmlCell['a:txBody'] as XmlObject | undefined,
+			paragraphs,
+		);
+		return true;
 	}
 
 	/** Apply image crop, effects, and alt text for picture/image elements. */

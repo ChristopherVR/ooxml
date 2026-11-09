@@ -396,8 +396,22 @@ export interface TableRowInput {
 }
 
 export interface TableCellInput {
-	text: string;
+	/** Plain text of the cell; may be left out when {@link runs} gives the text. */
+	text?: string;
+	/**
+	 * Cell text style. Its `fontSize` is in POINTS (cells always took points),
+	 * unlike every other SDK text input, which takes px; inside {@link runs}
+	 * `fontSize` is px as in `addText`.
+	 */
 	style?: Partial<TextStyleInput>;
+	/**
+	 * Rich text written as given: one `a:r` per segment, each with its own
+	 * style on top of {@link style} (font, size in px, strike, link or slide
+	 * jump); a `\n` in a segment's text starts a new paragraph. An empty list
+	 * is no runs. Giving both `text` and `runs` whose text differs throws a
+	 * `RangeError`.
+	 */
+	runs?: TextSegmentInput[];
 	/**
 	 * The cell's own fill, written in `a:tcPr` over the table style's. Solid
 	 * (no opacity below 1), gradient (no `tile`, `scaled: false` or
