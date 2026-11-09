@@ -360,6 +360,18 @@ export function removeUnsupportedFeatures(root: HTMLElement): void {
 				htmlEl.style.setProperty('-webkit-text-stroke', '0');
 			}
 		}
+
+		// html2canvas-pro 2.6 parses `contain` and `will-change` and rejects a multi-value
+		// computed value ("multiple values found when expecting only one"), which aborts the
+		// whole capture. Both are rendering hints; keep one value so the clone still parses.
+		const contain = computed.getPropertyValue('contain').trim();
+		if (contain && contain !== 'none' && /\s/.test(contain)) {
+			const keywords = contain.split(/\s+/);
+			htmlEl.style.setProperty('contain', keywords.includes('paint') ? 'paint' : keywords[0]!);
+		}
+		if (computed.getPropertyValue('will-change').includes(',')) {
+			htmlEl.style.setProperty('will-change', 'auto');
+		}
 	};
 
 	clean(root);
