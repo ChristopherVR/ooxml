@@ -17,7 +17,7 @@
 		"rxjs": "^7.8.2",
 		"solid-js": "^1.9.18",
 		"svelte": "^5.57.3",
-		"vue": "^3.5.44"
+		"vue": "^3.5.45"
 	},
 	"devDependencies": {
 		"@types/react": "^19.3.0",

@@ -8,11 +8,11 @@
 		".": "./index.ts"
 	},
 	"dependencies": {
-		"@azure/msal-browser": "5.25.1",
+		"@azure/msal-browser": "5.28.0",
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*"
 	},
 	"devDependencies": {
-		"vite": "^8.3.5"
+		"vite": "^8.3.6"
 	}
 }
