@@ -114,7 +114,7 @@
 		"ai": "^7.0.157",
 		"happy-dom": "^21.0.4",
 		"jsdom": "^30.1.3",
-		"ng-packagr": "^22.2.5",
+		"ng-packagr": "^22.2.6",
 		"pptx-viewer-core": "workspace:*",
 		"pptx-viewer-locales": "workspace:*",
 		"rxjs": "^7.8.2",
