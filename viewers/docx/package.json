@@ -38,21 +38,21 @@
 	"devDependencies": {
 		"@playwright/test": "^1.64.1",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"@tailwindcss/vite": "^4.3.3",
+		"@tailwindcss/vite": "^4.3.4",
 		"@types/node": "^26.6.6",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
 		"jsdom": "^31.0.0",
-		"oxfmt": "^0.75.0",
-		"oxlint": "^1.90.0",
+		"oxfmt": "^0.76.0",
+		"oxlint": "^1.91.0",
 		"prosemirror-view": "^1.42.8",
-		"rollup": "^4.66.0",
+		"rollup": "^4.67.5",
 		"rollup-plugin-dts": "^6.5.1",
 		"solid-js": "^1.9.18",
-		"svelte-check": "^4.7.7",
+		"svelte-check": "^4.7.8",
 		"tailwindcss": "^4.3.3",
 		"typescript": "~6.0.3",
 		"vite": "^8.3.5",
-		"vitest": "^5.0.5"
+		"vitest": "^5.1.0"
 	}
 }
