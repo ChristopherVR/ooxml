@@ -99,6 +99,8 @@ export interface ViewerBodyProps {
 	getzoomscale: () => number;
 	/** Two-finger pinch on the viewport: commit the new manual zoom scale. */
 	onpinchzoom: (scale: number) => void;
+	/** True when a plain drag on the slide has nothing to select and should pan (read-only view). */
+	dragpans?: boolean;
 	notesExpanded: boolean;
 	onNotesCommit?: (notes: string, segments?: TextSegment[]) => void;
 	onNotesToggle: () => void;

@@ -67,6 +67,7 @@ import { ViewerPresentationModeService } from './viewer-presentation-mode.servic
 import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
+import { ViewerViewportNavigationService } from './viewer-viewport-navigation.service';
 import { ViewerZoomService } from './viewer-zoom.service';
 import { ZoomTargetService } from './zoom-target.service';
 
@@ -122,6 +123,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ViewerThemeGalleryService,
 	ViewerDeckStyleService,
 	ViewerTouchGesturesService,
+	ViewerViewportNavigationService,
 	ViewerZoomService,
 	OutlineAuthoringService,
 	PictureCropService,

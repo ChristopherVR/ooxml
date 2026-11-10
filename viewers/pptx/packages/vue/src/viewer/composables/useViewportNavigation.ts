@@ -1,0 +1,47 @@
+/**
+ * useViewportNavigation: Ctrl+wheel and pinch zoom at the pointer, and drag to
+ * pan, in the slide viewport.
+ *
+ * The behaviour is the shared `attachViewportNavigation` (one definition for
+ * all five bindings); this composable only follows the scrolling element and
+ * detaches with the component. The slide inside it is looked up on each use,
+ * so a remounted canvas needs no re-attach.
+ */
+import { attachViewportNavigation } from 'ooxml-ui/pptx';
+import type { ViewerZoomStore } from 'ooxml-ui/pptx';
+import type { Ref } from 'vue';
+import { onBeforeUnmount, watch } from 'vue';
+
+export interface UseViewportNavigationOptions {
+	/** The element that scrolls the slide (and contains it), or null while unmounted. */
+	viewport: Ref<HTMLElement | null>;
+	/** The viewer's zoom store: read for the current factor, written for a zoom. */
+	store: ViewerZoomStore;
+	/** True when a plain drag has nothing to select and should pan (read-only view). */
+	dragPans: Ref<boolean>;
+	/** False while the viewport must leave the wheel and pointer alone (a running show). */
+	active: Ref<boolean>;
+}
+
+export function useViewportNavigation(options: UseViewportNavigationOptions): void {
+	let detach: (() => void) | null = null;
+	watch(
+		options.viewport,
+		(viewport) => {
+			detach?.();
+			detach = viewport
+				? attachViewportNavigation(viewport, {
+						getZoom: () => options.store.getState().zoom,
+						setZoom: (zoom) => options.store.dispatch({ type: 'set-zoom', zoom }),
+						dragPans: () => options.dragPans.value,
+						isActive: () => options.active.value,
+					})
+				: null;
+		},
+		{ immediate: true, flush: 'post' },
+	);
+	onBeforeUnmount(() => {
+		detach?.();
+		detach = null;
+	});
+}

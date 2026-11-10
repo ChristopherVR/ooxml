@@ -126,6 +126,8 @@ export function useViewerBuildingBlocksCore(
 		selectedElements: state.selectedElements,
 		fitPadding: input.fitPadding,
 		maxFitScale: input.maxFitScale,
+		// Nothing to select in a read-only view, so a plain drag pans instead.
+		dragPans: mode === 'preview',
 	});
 
 	// Read here (not only inside `PowerPointViewer`) so the headless

@@ -91,6 +91,13 @@ export function attachKeyboardNavigation(
 			return;
 		}
 
+		// A zoomed slide that took Space to pan (`attachViewportNavigation` prevents
+		// its default) keeps it: that Space is the start of a pan, not a request for
+		// the next slide.
+		if (event.key === ' ' && event.defaultPrevented) {
+			return;
+		}
+
 		switch (event.key) {
 			case 'ArrowRight':
 			case 'ArrowDown':

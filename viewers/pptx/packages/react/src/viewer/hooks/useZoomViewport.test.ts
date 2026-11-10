@@ -45,6 +45,7 @@ describe('useZoomViewport measured fit', () => {
 		maxFitScale?: number | null;
 		notifyNode?: boolean;
 		nodeKey?: string;
+		dragPans?: boolean;
 	}) {
 		zoom = useZoomViewport({ canvasSize, selectedElements: [], ...props });
 		const objectRef = zoom.canvasViewportRef;
@@ -165,6 +166,58 @@ describe('useZoomViewport measured fit', () => {
 		expect(observed.size).toBe(0);
 		expect(frames.size).toBe(0);
 		expect(wheel(second).defaultPrevented).toBeFalsy();
+	});
+
+	it('pans a zoomed slide with a plain drag only while dragPans is set', () => {
+		const render = (dragPans: boolean) =>
+			act(() =>
+				root.render(
+					createElement(Harness, { notifyNode: true, dragPans, fitPadding: 0, maxFitScale: null }),
+				),
+			);
+		render(true);
+		const node = zoom.canvasViewportRef.current!;
+		let scroll = 0;
+		Object.defineProperties(node, {
+			scrollWidth: { configurable: true, get: () => width * 2 },
+			scrollHeight: { configurable: true, get: () => height * 2 },
+			scrollLeft: {
+				configurable: true,
+				get: () => scroll,
+				set: (value: number) => {
+					scroll = Math.max(0, value);
+				},
+			},
+			scrollTop: { configurable: true, get: () => 0, set: () => {} },
+		});
+		vi.spyOn(node, 'setPointerCapture').mockImplementation(() => {});
+		vi.spyOn(node, 'releasePointerCapture').mockImplementation(() => {});
+		const drag = () => {
+			scroll = 100;
+			const pointer = (type: string, clientX: number) => {
+				const event = new MouseEvent(type, {
+					bubbles: true,
+					cancelable: true,
+					button: 0,
+					clientX,
+					clientY: 10,
+				});
+				Object.defineProperties(event, {
+					pointerId: { value: 1 },
+					pointerType: { value: 'mouse' },
+				});
+				node.dispatchEvent(event);
+			};
+			pointer('pointerdown', 200);
+			pointer('pointermove', 150);
+			pointer('pointerup', 150);
+			return scroll;
+		};
+		expect(drag()).toBe(150);
+		// Leaving the read-only view switches it off without re-attaching.
+		render(false);
+		expect(zoom.canvasViewportRef.current).toBe(node);
+		expect(drag()).toBe(100);
 	});
 
 	it('still retries an initially null object ref assigned after the owner commits', () => {
