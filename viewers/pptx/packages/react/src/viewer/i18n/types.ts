@@ -48,3 +48,9 @@ export interface HostI18next {
 	readonly t: ViewerT;
 	readonly i18n: HostI18nextInstance;
 }
+
+/**
+ * A hook reading the host's react-i18next instance; see `./host-i18next`. `null` when
+ * react-i18next has no configured instance, which the viewer treats as no source.
+ */
+export type HostI18nextHook = () => HostI18next | null;

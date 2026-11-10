@@ -1,8 +1,12 @@
 import { useContext, useMemo, useState } from 'react';
 
 import { PptxI18nContext, ViewerI18nContext } from './context';
+import {
+	hostInstanceLanguage,
+	registeredHostI18next,
+	useRegisteredHostI18next,
+} from './host-i18next';
 import { BUILT_IN_ENGLISH } from './provider';
-import { hostInstanceLanguage, useHostI18next } from './react-i18next-source';
 import type { ViewerI18nState } from './types';
 
 /**
@@ -10,7 +14,7 @@ import type { ViewerI18nState } from './types';
  * has no configured instance. The memo runs either way, so the hook calls never change.
  */
 function useHostTranslation(): ViewerI18nState | null {
-	const host = useHostI18next();
+	const host = useRegisteredHostI18next();
 	const t = host?.t;
 	const language = (host && hostInstanceLanguage(host.i18n)) ?? 'en';
 	return useMemo<ViewerI18nState | null>(() => (t ? { t, locale: language } : null), [t, language]);
@@ -22,9 +26,9 @@ function useHostTranslation(): ViewerI18nState | null {
  *
  * Inside a viewer root the state comes from that root, so a `PptxI18nProvider` rendered inside
  * the viewer is ignored. Outside one (a standalone `Toolbar`, `SlideCanvas`, ...) it is the
- * nearest `PptxI18nProvider`, else the host's react-i18next instance when react-i18next has one,
- * else the built-in English text. Only a component with neither context calls react-i18next, so
- * one viewer subscribes to i18next once, in its root.
+ * nearest `PptxI18nProvider`, else the host's react-i18next instance when an entry registered it
+ * (`./host-i18next`) and react-i18next has one, else the built-in English text. Only a component with neither context calls
+ * react-i18next, so one viewer subscribes to i18next once, in its root.
  *
  * A leaf module on purpose: specs mock exactly this file, never a barrel the root also uses.
  */
@@ -33,9 +37,10 @@ export function useTranslation(): ViewerI18nState {
 	const provided = useContext(PptxI18nContext);
 	const resolved = fromRoot ?? provided;
 	// Decided once per mounted component, so its hook calls never change. Both contexts are
-	// provided unconditionally, so a mounted component never gains or loses one anyway.
+	// provided unconditionally, so a mounted component never gains or loses one anyway, and a
+	// registered source is never removed.
 	// oxlint-disable-next-line react/hook-use-state -- read once on mount and never set
-	const [readsHost] = useState(resolved === null);
+	const [readsHost] = useState(() => resolved === null && registeredHostI18next() !== null);
 	// oxlint-disable-next-line react-hooks/rules-of-hooks -- `readsHost` is fixed for the component's lifetime
 	const host = readsHost ? useHostTranslation() : null;
 	return resolved ?? host ?? BUILT_IN_ENGLISH;

@@ -50,7 +50,7 @@ bun add pptx-react-viewer react react-dom
 :::
 
 ::: tip Other peer dependencies
-The viewer also expects `framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip`, `fast-xml-parser`, and `i18next`/`react-i18next` - install the ones your usage needs.
+The viewer also expects `framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip`, `fast-xml-parser`, and `i18next`/`react-i18next` - install the ones your usage needs. If you translate through `PptxI18nProvider`, import from `pptx-react-viewer/no-i18next`: it never uses or bundles `i18next` and `react-i18next`, although most package managers still install them because they are declared peers; see [Without react-i18next](/guide/localization#without-react-i18next).
 :::
 
 ### Vue 3 viewer

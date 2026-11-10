@@ -443,7 +443,8 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Initial locale code for File > Options > Language. Falls back to a persisted `localStorage`
 	 * choice, then `'en'`. Ignored inside a `PptxI18nProvider`, whose `locale` is the language.
 	 * Without a provider it applies only while the viewer reads a configured react-i18next
-	 * instance; with neither the viewer shows its built-in English text and ignores it.
+	 * instance; with neither (for example `pptx-react-viewer/no-i18next` on its own) the viewer
+	 * shows its built-in English text and ignores it.
 	 */
 	defaultLocale?: string;
 

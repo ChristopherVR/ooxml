@@ -50,7 +50,7 @@ bun add pptx-react-viewer react react-dom
 :::
 
 ::: tip 其他同级依赖
-组件还使用 `framer-motion`、`lucide-react`、`react-icons`、`jspdf`、`jszip`、`fast-xml-parser` 和 `i18next`/`react-i18next`，请安装所用功能需要的依赖。
+组件还使用 `framer-motion`、`lucide-react`、`react-icons`、`jspdf`、`jszip`、`fast-xml-parser` 和 `i18next`/`react-i18next`，请安装所用功能需要的依赖。如果通过 `PptxI18nProvider` 翻译，请从 `pptx-react-viewer/no-i18next` 导入：它从不使用也不打包 `i18next` 和 `react-i18next`，但由于它们是声明的 peer 依赖，大多数包管理器仍会安装它们，详见[不使用 react-i18next](/zh/guide/localization#without-react-i18next)。
 :::
 
 ### Vue 3 组件 {#vue-3-viewer}
