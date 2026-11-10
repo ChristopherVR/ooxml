@@ -22,6 +22,9 @@ export { PowerPointViewer } from './viewer/component';
 // `SlideCanvas` (also exported, with the other building blocks, from
 // `pptx-svelte-viewer/viewer`).
 export { SlidesPane } from './viewer/components/typed-exports';
+// One slide drawn as `SlidesPane` draws it, for a host that keeps its own thumbnail strip.
+export { SlideThumbnail } from './viewer/components/typed-exports';
+export type { SlideThumbnailProps } from './viewer/components/slide-thumbnail-props';
 export { createSlidesPaneProps } from './viewer/components/slides-pane-props';
 export type {
 	CreateSlidesPanePropsOptions,

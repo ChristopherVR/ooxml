@@ -163,11 +163,10 @@ export function slideStage(page: Page): Locator {
 /**
  * Every rendered element on the current slide.
  *
- * Scoped to the canvas viewport on purpose. Thumbnails carry the same
- * `data-pptx-element` marker, and React and Vue strip `data-element-id` from
- * their thumbnail stages while Angular, Vanilla and Svelte leave it on, so an
- * unscoped count is a different number in each binding for reasons that have
- * nothing to do with the slide.
+ * Scoped to the canvas viewport on purpose. Thumbnails, previews and transition
+ * layers render the same elements; every binding now draws its static stages
+ * without `data-element-id` (`slide-thumbnail-strip.spec.ts` pins it), but a
+ * page-wide count would still pick up any other surface that marks elements.
  */
 export function slideElements(page: Page): Locator {
 	return page.locator('[data-pptx-viewport] [data-pptx-element="true"]');

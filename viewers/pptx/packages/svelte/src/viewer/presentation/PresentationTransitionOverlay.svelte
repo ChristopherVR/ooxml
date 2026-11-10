@@ -193,7 +193,8 @@
 			data-pptx-morph-incoming={morphPlan ? 'true' : undefined}
 			style={incomingStyle}
 		>
-			<SlideStage slide={incomingSlide} {canvasSize} {mediaDataUrls} {scale} />
+			<!-- A morph's keyframe CSS selects the incoming elements by their ids. -->
+			<SlideStage slide={incomingSlide} {canvasSize} {mediaDataUrls} {scale} preserveElementIds={Boolean(morphPlan)} />
 		</div>
 	{/if}
 	<!-- The morph's own layers (ghosts and lifted arrivals in one stacking

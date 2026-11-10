@@ -344,6 +344,52 @@ through your global styles (as for any building block, see
 [Getting Started](/angular/getting-started#styling-required-css)) for the theme tokens and the
 scoped reset its thumbnails use.
 
+### Single slide thumbnail
+
+`SlideThumbnailComponent` (`<pptx-slide-thumbnail>`, exported from the package root) draws one
+slide the way `<pptx-slides-panel>` draws it, for a host that keeps its own thumbnail strip. It
+renders from the slide model, so it follows unsaved edits, and it is static: no selection,
+editing, pointer handlers, focus stops or element ids, so it never competes with the editing
+canvas. A slide with a transition other than Cut shows the transition's name in a small badge in
+its top-right corner, as the thumbnail does in every binding (`<pptx-slides-panel>` draws no
+badge). Its inputs are `[slide]`, `[templateElements]` (the slide's layout and master elements,
+drawn beneath its own; default none), `[canvasSize]` and `[previewWidth]` (pixels; default the
+rail thumbnail width; the height follows the deck's aspect ratio), plus these rail inputs with the
+same meaning and the same fallback to the enclosing `LoadContentService`: `[mediaDataUrls]`,
+`[headerFooter]`, `[customProperties]`, `[firstSlideNumber]`, `[locale]`, `[theme]` and
+`[tableStyleMap]`. Feed it from the values you bind on the rail:
+
+```ts
+import { SlideThumbnailComponent, ViewerCollaborationShellService } from 'pptx-angular-viewer';
+
+@Component({
+	// ...providers as in the example above
+	imports: [SlideThumbnailComponent],
+	template: `
+		<ul class="my-strip">
+			@for (slide of shell.editor.slides(); track slide.id) {
+				<li style="width: 120px">
+					<pptx-slide-thumbnail
+						[slide]="slide"
+						[templateElements]="shell.editor.templateElementsBySlideId()[slide.id] ?? []"
+						[canvasSize]="shell.loader.canvasSize()"
+						[mediaDataUrls]="shell.loader.mediaDataUrls()"
+						[firstSlideNumber]="shell.loader.firstSlideNumber()"
+						[previewWidth]="120"
+					/>
+				</li>
+			}
+		</ul>
+	`,
+})
+export class CustomStripComponent {
+	readonly shell = inject(ViewerCollaborationShellService);
+}
+```
+
+The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
+ratio, so give the container that width. It needs the same `pptx-angular-viewer/styles.css`.
+
 The collaboration service and components are exported from the package root (there is no separate
 subpath the way `pptx-react-viewer/viewer` has one) if you want to drive sync or render your own
 presence UI:

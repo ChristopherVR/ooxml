@@ -153,11 +153,12 @@ const viewer = createPptxViewer(host, { source, registry });
 | `createDefaultRegistry()`                | 包含全部内置渲染器和占位符回退的注册表。                                    |
 | `createElementRendererRegistry()`        | 空注册表，回退时不渲染任何内容。                                            |
 | `renderSlideStage(options)`              | 将单张幻灯片渲染到分离的舞台元素（`SlideStageOptions`），是无界面渲染入口。 |
+| `disposePptxRenderStage(root)`           | 在替换或移除之前，释放 `root` 下所有舞台的渲染订阅。                        |
 | `applyStyleMap(el, style)`               | 将共享 `CssStyleMap` 应用到元素，键可使用 camelCase 或 kebab-case。         |
 | `createEl(doc, tag, className?, style?)` | 通过显式 `Document` 创建元素，可选传入类名和样式映射。                      |
 | `createSvgEl(doc, tag, attrs?)`          | 创建带命名空间的 SVG 元素，可选传入属性。                                   |
 
-`renderSlideStage` 返回的节点按未缩放画布尺寸布局，并通过 CSS transform 在屏幕上缩放，因此应将其包在尺寸为 `canvasSize * scale` 的容器中。查看器的舞台宿主和缩略图都采用这种方式。
+`renderSlideStage` 返回的节点按未缩放画布尺寸布局，并通过 CSS transform 在屏幕上缩放，因此应将其包在尺寸为 `canvasSize * scale` 的容器中。查看器的舞台宿主和缩略图都采用这种方式。其中的元素带有 `data-element-id`；绘制静态副本（缩略图或预览）时请传入 `exposeElementIds: false`，使 `[data-element-id]` 查询只命中你的画布。舞台上的图表会保留一个文档级的重绘监听器，因此在替换或移除舞台之前，请将它（或其祖先元素）传给 `disposePptxRenderStage`。
 
 ## 注意事项 {#notes}
 

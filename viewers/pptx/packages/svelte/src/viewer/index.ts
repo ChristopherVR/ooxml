@@ -6,6 +6,7 @@ export {
 	Ribbon,
 	SlideCanvas,
 	SlidesPane,
+	SlideThumbnail,
 	ViewerToolbar,
 	CollaborationCursors,
 	RemoteSelectionOverlay,
@@ -24,6 +25,7 @@ export type {
 	SlidesPaneProps,
 	SlidesPaneTableStyleContext,
 } from './components/slides-pane-props';
+export type { SlideThumbnailProps } from './components/slide-thumbnail-props';
 export type { EditorController } from './editor/editor-controller.svelte';
 export type {
 	ExportGifOptions,

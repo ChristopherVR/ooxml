@@ -129,6 +129,46 @@ The rail's open state is the toolbar's sidebar toggle: collapsing either hides t
 `onOpenLayoutGallery({ slideIndex, x, y })`, since these building blocks do not render the Layout
 gallery. `SlidesPane` needs the full `styles.css`, not `canvas.css`.
 
+### Single slide thumbnail
+
+`SlideThumbnail` (exported, with its `SlideThumbnailProps` type, from the package root) draws one
+slide the way `SlidesPane` draws it, for a host that keeps its own thumbnail strip. It renders from
+the slide model, so it follows unsaved edits, and it is static: no selection, editing, pointer
+handlers or element ids. A slide with a transition other than Cut shows the transition's name in a
+small badge in its top-right corner, as the thumbnail does in every binding. Its props are `slide`,
+`templateElements` (the slide's layout and master elements, drawn beneath its own), `canvasSize`,
+`previewWidth` (pixels; the height follows the deck's aspect ratio), `fieldContext` and
+`tableStyleContext`. Feed them from `slidesPaneProps`:
+
+```tsx
+import { SlideThumbnail, useViewerBuildingBlocks } from 'pptx-react-viewer';
+
+function MyStrip({ blocks }: { blocks: ReturnType<typeof useViewerBuildingBlocks> }) {
+	const { slides, templateElementsBySlideId, canvasSize, fieldContext, tableStyleContext } =
+		blocks.slidesPaneProps;
+	return (
+		<ul className='my-strip'>
+			{slides.map((slide) => (
+				<li key={slide.id} style={{ width: 120 }}>
+					<SlideThumbnail
+						slide={slide}
+						templateElements={templateElementsBySlideId[slide.id] ?? []}
+						canvasSize={canvasSize}
+						previewWidth={120}
+						fieldContext={fieldContext}
+						tableStyleContext={tableStyleContext}
+					/>
+				</li>
+			))}
+		</ul>
+	);
+}
+```
+
+Without `previewWidth`, the thumbnail is the rail's width and gets the rail's border. It redraws
+when it receives a different `slide` object, as every edit made through the viewer produces; a host
+that edits slides itself should replace the slide object rather than mutate it.
+
 ### Opening on a slide
 
 `useViewerBuildingBlocks` takes the same `initialSlide` option as `PowerPointViewer`: the

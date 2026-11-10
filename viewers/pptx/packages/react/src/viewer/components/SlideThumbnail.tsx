@@ -1,8 +1,14 @@
-import { buildPreviewElements, deviceStrokeStageStyle, editorThumbnailHeight } from 'ooxml-ui/pptx';
+import {
+	buildPreviewElements,
+	deviceStrokeStageStyle,
+	slideThumbnailLayout,
+	slideThumbnailTransitionBadge,
+	slideThumbnailTransitionBadgeStyle,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
-import { SLIDE_NAV_THUMBNAIL_WIDTH, SLIDE_TRANSITION_OPTIONS } from '../constants';
+import { SLIDE_NAV_THUMBNAIL_WIDTH } from '../constants';
 import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { getReactSlideBackgroundStyle } from '../utils/slide-background-style';
@@ -12,10 +18,21 @@ import { deriveSlideFieldContext } from './slide-field-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
+/**
+ * A static, scaled-down drawing of one slide, as the slides pane shows it. It renders from the
+ * slide model, so it follows unsaved edits. Feed it from `slidesPaneProps`:
+ * `templateElementsBySlideId[slide.id]`, `canvasSize`, `fieldContext` and `tableStyleContext`.
+ */
 export interface SlideThumbnailProps {
+	/** The slide to draw. A different slide object (every edit makes one) redraws it. */
 	slide: PptxSlide;
+	/** The slide's inherited layout and master elements, drawn beneath its own. */
 	templateElements: PptxElement[];
 	canvasSize: CanvasSize;
+	/**
+	 * Thumbnail width in pixels; the height follows the deck's aspect ratio. Set it to fill a host
+	 * strip without the pane's frame. Omitted, the thumbnail is the pane width with a border.
+	 */
 	previewWidth?: number;
 	/** Presentation-wide field context (date/header/footer/custom props). */
 	fieldContext?: FieldSubstitutionContext;
@@ -33,18 +50,16 @@ function SlideThumbnailImpl({
 }: SlideThumbnailProps): React.ReactElement {
 	const safeCanvasWidth = Math.max(canvasSize.width, 1);
 	const safeCanvasHeight = Math.max(canvasSize.height, 1);
-	const width = previewWidth ?? SLIDE_NAV_THUMBNAIL_WIDTH;
-	const scale = width / safeCanvasWidth;
-	const previewHeight = editorThumbnailHeight(safeCanvasWidth, safeCanvasHeight, width);
+	const layout = slideThumbnailLayout(
+		safeCanvasWidth,
+		safeCanvasHeight,
+		previewWidth ?? SLIDE_NAV_THUMBNAIL_WIDTH,
+	);
+	const { height: previewHeight, scale } = layout;
 	const previewElements = buildPreviewElements(slide, templateElements);
 	const slideFieldContext = deriveSlideFieldContext(fieldContext, slide);
 	const { t } = useTranslation();
-	const transitionLabel = slide.transition
-		? (() => {
-				const opt = SLIDE_TRANSITION_OPTIONS.find((o) => o.value === slide.transition?.type);
-				return opt ? t(opt.i18nKey) : slide.transition.type;
-			})()
-		: undefined;
+	const transitionBadge = slideThumbnailTransitionBadge(slide, t);
 
 	return (
 		<div
@@ -72,17 +87,6 @@ function SlideThumbnailImpl({
 				}}
 			>
 				<SlideBackgroundImageLayer slide={slide} />
-				{/* Transition indicator badge */}
-				{slide.transition &&
-					slide.transition.type !== 'none' &&
-					slide.transition.type !== 'cut' && (
-						<div
-							className='absolute top-0.5 right-0.5 z-10 px-1 py-px rounded bg-primary/80 text-[7px] text-white leading-tight pointer-events-none'
-							title={t('pptx.slideThumbnail.transitionTooltip', { name: transitionLabel })}
-						>
-							{transitionLabel}
-						</div>
-					)}
 				{previewElements.map((element, index) => (
 					<StaticElementRenderer
 						key={element.id}
@@ -95,14 +99,26 @@ function SlideThumbnailImpl({
 					/>
 				))}
 			</div>
+			{transitionBadge && (
+				<div
+					data-pptx-thumbnail-transition=''
+					title={transitionBadge.title}
+					style={slideThumbnailTransitionBadgeStyle(layout)}
+				>
+					{transitionBadge.label}
+				</div>
+			)}
 		</div>
 	);
 }
 
 /**
- * Memo comparator: re-render only when the slide identity, dirty/hidden flags,
- * underlying elements reference, template elements reference, or canvas size
- * changes. Avoids burning frames on parent re-renders that don't change props.
+ * Memo comparator: re-render only when a prop changes. The slide is compared by
+ * reference: every edit replaces the slide object (the editor state is
+ * immutable), and the thumbnail draws from many of its fields (elements,
+ * background, transition badge, slide number and title fields, "Hide Background
+ * Graphics"), so a field list would go stale the next time one is added.
+ * Avoids burning frames on parent re-renders that don't change props.
  */
 export function slideThumbnailPropsEqual(
 	prev: SlideThumbnailProps,
@@ -111,35 +127,7 @@ export function slideThumbnailPropsEqual(
 	if (prev.previewWidth !== next.previewWidth) {
 		return false;
 	}
-	if (prev.slide.id !== next.slide.id) {
-		return false;
-	}
-	if (prev.slide.isDirty !== next.slide.isDirty) {
-		return false;
-	}
-	if (prev.slide.hidden !== next.slide.hidden) {
-		return false;
-	}
-	if (prev.slide.elements !== next.slide.elements) {
-		return false;
-	}
-	// `buildPreviewElements` -> `visibleTemplateElements` drops the inherited
-	// layout/master artwork entirely when this is `false`, so toggling "Hide
-	// Background Graphics" must invalidate the memo even though `elements`
-	// and `templateElements` themselves haven't changed.
-	if (prev.slide.showMasterShapes !== next.slide.showMasterShapes) {
-		return false;
-	}
-	if (prev.slide.backgroundColor !== next.slide.backgroundColor) {
-		return false;
-	}
-	if (prev.slide.backgroundImage !== next.slide.backgroundImage) {
-		return false;
-	}
-	if (prev.slide.backgroundGradient !== next.slide.backgroundGradient) {
-		return false;
-	}
-	if (prev.slide.backgroundPattern !== next.slide.backgroundPattern) {
+	if (prev.slide !== next.slide) {
 		return false;
 	}
 	if (prev.templateElements !== next.templateElements) {

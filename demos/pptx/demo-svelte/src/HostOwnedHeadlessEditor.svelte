@@ -6,6 +6,8 @@
 
 	import { t } from './demo-i18n.svelte';
 	import type { HostOwnedDemo } from '../../shared/host-owned-collaboration';
+	import { hostThumbnailStripRequested } from '../../shared/host-thumbnail-strip';
+	import HostSlideStrip from './HostSlideStrip.svelte';
 
 	const { host }: { host: HostOwnedDemo } = $props();
 	let root = $state<HTMLDivElement>();
@@ -38,6 +40,7 @@
 	// The thumbnail rail runs the same slide and section operations as the
 	// canvas, so a slide added from its footer reaches every peer.
 	const slidesPaneProps = createSlidesPaneProps(viewerState);
+	const hostStrip = hostThumbnailStripRequested();
 	onDestroy(() => viewerState.destroy());
 	export function getContent(): Promise<Uint8Array> { return viewerState.editingApi.save(); }
 	export function setScale(next: number): void {
@@ -56,7 +59,7 @@
 		<output aria-label={t('pptx.collaboration.shellStatusLabel')}>{describeCollaborationShellState(shellState, t)}</output>
 	</nav>
 	<div class="body">
-	<SlidesPane {...slidesPaneProps} />
+	{#if hostStrip}<HostSlideStrip pane={slidesPaneProps} />{:else}<SlidesPane {...slidesPaneProps} />{/if}
 	<div data-pptx-viewport class="viewport">
 		{#if viewerState.loader.error}<p role="alert">{viewerState.loader.error}</p>{/if}
 		<SlideCanvas

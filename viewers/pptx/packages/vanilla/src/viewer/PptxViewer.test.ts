@@ -101,6 +101,33 @@ describe('createPptxViewer', () => {
 		expect(container.querySelector('[data-inline-editor]')).toBeNull();
 	});
 
+	it('keeps element ids on the canvas only, not on its thumbnail rail', () => {
+		const { viewer, container } = mount({ editable: true });
+		const shape = (id: string): PptxElement => ({
+			id,
+			type: 'shape',
+			x: 10,
+			y: 20,
+			width: 200,
+			height: 100,
+			shapeType: 'rect',
+		});
+		(viewer as PptxViewer).store.set({
+			slides: ['s1', 's2'].map((id, index) => ({
+				id,
+				rId: id,
+				slideNumber: index + 1,
+				elements: [shape(`${id}-shape`)],
+			})),
+		});
+		const rail = container.querySelector('.pptxv-thumbs');
+		expect(rail?.querySelectorAll('.pptxv-stage')).toHaveLength(2);
+		expect(rail?.querySelector('[data-element-id]')).toBeNull();
+		const marked = [...container.querySelectorAll('[data-element-id]')];
+		expect(marked.map((node) => node.getAttribute('data-element-id'))).toStrictEqual(['s1-shape']);
+		expect(marked[0]?.closest('[data-pptx-viewport]')).not.toBeNull();
+	});
+
 	it('exposes element insertion on the public viewer instance', () => {
 		expect(mount().viewer.addElement).toBeTypeOf('function');
 	});

@@ -28,6 +28,7 @@ import {
 	isTemplateElementId,
 	resolveStageEdgeBleeds,
 	shouldRenderHitTarget,
+	stripElementIdMarkers,
 } from '../index';
 
 import type { Translator } from '../i18n/translator';
@@ -118,6 +119,14 @@ export interface SlideStageOptions {
 	 * test hooks the React/Vue/Angular bindings also emit. Defaults to `false`.
 	 */
 	interactive?: boolean;
+	/**
+	 * Keep the `data-element-id` marker on every rendered element. Defaults to
+	 * `true`. Pass `false` for a static stage (thumbnails, previews, sorter
+	 * tiles), whose copies would otherwise shadow the editing canvas in
+	 * `[data-element-id]` queries; `stageKeepsElementIds` decides it from the
+	 * stage's role. The markers are removed once the stage is assembled.
+	 */
+	exposeElementIds?: boolean;
 	/** Whether inherited layout/master nodes participate in editing. */
 	templateEditing?: boolean;
 	/** Per-element native-animation playback state (presentation mode only). */
@@ -307,6 +316,11 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		// nothing).
 		if (slide.activeXControls && slide.activeXControls.length > 0) {
 			stage.appendChild(buildActiveXControlsOverlay(doc, slide.activeXControls, canvasSize));
+		}
+
+		// After assembly: the group renderer indexes its own subtree by these ids.
+		if (options.exposeElementIds === false) {
+			stripElementIdMarkers(stage);
 		}
 
 		return stage;

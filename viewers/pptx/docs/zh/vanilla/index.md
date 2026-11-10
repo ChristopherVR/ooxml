@@ -89,6 +89,7 @@ import { createAiAssistant } from 'pptx-vanilla-viewer/ai';
 | `ElementRenderer`, `ElementRendererRegistry`                     | 类型 | 渲染器扩展接口。参见[元素渲染器](/zh/vanilla/renderers)。                            |
 | `createDefaultRegistry`                                          | 函数 | 默认渲染器注册表，预先注册全部内置渲染器。                                           |
 | `createSlidesPane`                                               | 函数 | 供自定义外壳使用的幻灯片缩略图栏，详见 [API](/zh/vanilla/api#slide-thumbnail-rail)。 |
+| `renderSlideThumbnail`                                           | 函数 | 按缩略图栏的方式绘制单张幻灯片，详见 [API](/zh/vanilla/api#slide-thumbnail)。        |
 | `getViewerCss`                                                   | 函数 | 以字符串形式提供完整样式表，适用于严格 CSP 宿主。                                    |
 | `ViewerTheme`, `ViewerThemeColors`                               | 类型 | 主题配置类型。参见[主题](/zh/vanilla/theming)。                                      |
 | `vermilionLightTheme`, `vermilionDarkTheme`                      | 常量 | 内置的朱红色亮色和深色预设。                                                         |

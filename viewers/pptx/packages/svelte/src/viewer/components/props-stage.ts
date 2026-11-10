@@ -40,6 +40,16 @@ export interface SlideStageProps {
 	 * so its background would hide the whole morph behind a flat slab.
 	 */
 	transparentBackground?: boolean;
+	/**
+	 * Keep the `data-element-id` markers on an otherwise static stage.
+	 *
+	 * A static stage (neither `interactive` nor `presenting`: the rail, host
+	 * thumbnails, sorter, previews, non-Morph transition layers) drops them so
+	 * element ids stay unique to the canvas (shared `stageKeepsElementIds`). Only
+	 * the Morph transition layers set this: their keyframe CSS selects by id, and
+	 * the host hides its own stage while the overlay is mounted.
+	 */
+	preserveElementIds?: boolean;
 	ontablecellcommit?: (
 		elementId: string,
 		rowIndex: number,

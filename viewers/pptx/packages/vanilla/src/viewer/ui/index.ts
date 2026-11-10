@@ -56,6 +56,8 @@ export type { ThumbnailRail } from './thumbnails';
 export { createThumbnailRail } from './thumbnails';
 export type { SlidesPane, SlidesPaneLayoutGalleryRequest, SlidesPaneOptions } from './slides-pane';
 export { createSlidesPane } from './slides-pane';
+export type { SlideThumbnailOptions } from './slide-thumbnail';
+export { renderSlideThumbnail } from './slide-thumbnail';
 export type { RulerSelection, RulerStrips, RulerStripsState } from './ruler-strips';
 export { createRulerStrips } from './ruler-strips';
 export type { ProtectedViewBanner } from './protected-view-banner';

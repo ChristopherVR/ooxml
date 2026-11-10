@@ -1,3 +1,6 @@
+<!-- Every layer here keeps its element ids ('preserveElementIds'): the show
+     applies build states to every '[data-element-id]' under its stage, these
+     layers included, and a morph's keyframe CSS selects by them. -->
 <!-- The seven multi-fragment cinematic transitions (vortex, honeycomb,
      glitter, shred, fracture, curtains, airplane) replace whichever
      layer(s) 'getFragmentedTransitionDescriptor' names with N clipped
@@ -27,6 +30,7 @@
 				[zoom]="zoom()"
 				[autoFit]="false"
 				[interactive]="false"
+				[preserveElementIds]="true"
 			/>
 		</div>
 	</div>
@@ -58,6 +62,7 @@
 				[zoom]="zoom()"
 				[autoFit]="false"
 				[interactive]="false"
+				[preserveElementIds]="true"
 			/>
 		</div>
 	</div>

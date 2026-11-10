@@ -97,6 +97,9 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			state.headerFooter !== previous.headerFooter ||
 			state.customProperties !== previous.customProperties ||
 			state.tableStyleMap !== previous.tableStyleMap ||
+			// Glyph outlines landed: the canvas's WordArt envelope glyphs warp too,
+			// not only the thumbnails'. Not mid-gesture, as for the thumbnails.
+			(state.outlineFontsTick !== previous.outlineFontsTick && !state.interactionActive) ||
 			// A chart arms its on-canvas mark hit-testing only while selected (B3),
 			// so a chart entering/leaving the selection re-renders the stage to
 			// re-arm it. Only a chart: rebuilding on every selection change would

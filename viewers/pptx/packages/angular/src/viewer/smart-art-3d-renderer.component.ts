@@ -73,6 +73,17 @@ export class SmartArt3DRendererComponent {
 	 * SVG fallback branch is drawn into. Set only by the main interactive canvas.
 	 */
 	readonly markElement = input<boolean>(false);
+	/**
+	 * When true (default), the rendered node carries `data-element-id`. The
+	 * miniature surfaces that paint every slide at once turn it off so one
+	 * element id resolves to exactly one node in the document; see
+	 * `ElementRendererComponent.exposeElementId`.
+	 */
+	readonly exposeElementId = input<boolean>(true);
+	/** `data-element-id` for this element, or null on a miniature surface. */
+	readonly elementIdAttr = computed<string | null>(() =>
+		this.exposeElementId() ? this.element().id : null,
+	);
 	/** Whether inline editing (drag/resize) is enabled on this surface. */
 	readonly editable = input<boolean>(false);
 	/** True only on the live presentation stage; see `ElementRendererComponent.presenting`. */

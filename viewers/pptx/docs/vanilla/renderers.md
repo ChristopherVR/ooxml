@@ -177,13 +177,17 @@ These package-root exports support custom renderers and headless rendering:
 | `createDefaultRegistry()`                | Registry with every built-in renderer plus the placeholder fallback.                           |
 | `createElementRendererRegistry()`        | Empty registry (fallback renders nothing).                                                     |
 | `renderSlideStage(options)`              | Render one slide to a detached stage element (`SlideStageOptions`): the headless render entry. |
+| `disposePptxRenderStage(root)`           | Retire the render subscriptions of every stage under `root` before you replace or remove it.   |
 | `applyStyleMap(el, style)`               | Apply a shared `CssStyleMap` (camelCase or kebab-case keys) to an element.                     |
 | `createEl(doc, tag, className?, style?)` | Create an element with optional class + style map through an explicit `Document`.              |
 | `createSvgEl(doc, tag, attrs?)`          | Create a namespaced SVG element with optional attributes.                                      |
 
 `renderSlideStage` returns a node laid out at the unscaled canvas size and scaled on screen via
 CSS transform, so wrap it in a box sized to `canvasSize * scale` (the viewer's stage host and
-thumbnails both do).
+thumbnails both do). Its elements carry `data-element-id`; pass `exposeElementIds: false` for a
+static copy (a thumbnail or preview) so `[data-element-id]` queries only find your canvas. A chart
+on the stage keeps a document-wide repaint listener, so pass the stage (or an ancestor) to
+`disposePptxRenderStage` before you replace or remove it.
 
 ## Notes
 

@@ -50,7 +50,9 @@ test('repaints mounted envelope glyphs when outlines become ready, until destroy
 				},
 			],
 		});
-		const outline = () => container.querySelector('[data-element-id="outline"]')?.outerHTML ?? '';
+		// The editing canvas's copy: the thumbnail rail must not be the only one repainted.
+		const outline = () =>
+			container.querySelector('[data-pptx-viewport] [data-element-id="outline"]')?.outerHTML ?? '';
 		await vi.waitFor(() => expect(outline()).toContain('<svg'));
 		expect(outline()).not.toContain('<path');
 		const tick = viewer.store.get().outlineFontsTick;

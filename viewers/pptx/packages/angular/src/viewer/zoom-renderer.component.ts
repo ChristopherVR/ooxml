@@ -66,7 +66,7 @@ import { ZoomTargetService } from './zoom-target.service';
 			class="pptx-ng-element pptx-ng-zoom"
 			[class.pptx-ng-zoom-interactive]="interactive()"
 			[ngStyle]="containerStyle()"
-			[attr.data-element-id]="element().id"
+			[attr.data-element-id]="elementIdAttr()"
 			[attr.data-pptx-element]="markElement() ? 'true' : null"
 			[attr.data-zoom-type]="vm().zoomType"
 			[attr.data-zoom-target]="vm().targetSlideIndex"
@@ -159,10 +159,22 @@ export class ZoomRendererComponent {
 	 * click-to-jump, which only happens inside a running presentation).
 	 */
 	readonly markElement = input<boolean>(false);
+	/**
+	 * When true (default), the rendered node carries `data-element-id`. The
+	 * miniature surfaces that paint every slide at once turn it off so one
+	 * element id resolves to exactly one node in the document; see
+	 * `ElementRendererComponent.exposeElementId`.
+	 */
+	readonly exposeElementId = input<boolean>(true);
 	/** Whether inline editing (drag/resize) is enabled on this surface. */
 	readonly editable = input<boolean>(false);
 	/** True only on the live presentation stage; see `ElementRendererComponent.presenting`. */
 	readonly presenting = input<boolean>(false);
+
+	/** `data-element-id` for this element, or null on a miniature surface. */
+	readonly elementIdAttr = computed<string | null>(() =>
+		this.exposeElementId() ? this.element().id : null,
+	);
 
 	readonly containerStyle = computed<StyleMap>(() =>
 		buildZoomContainerStyle(this.element(), this.zIndex()),

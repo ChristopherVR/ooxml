@@ -12,7 +12,7 @@ import { SlideThumbnail } from '../SlideThumbnail';
 // Props
 // ---------------------------------------------------------------------------
 
-interface SlideCardProps {
+export interface SlideCardProps {
 	slide: PptxSlide;
 	index: number;
 	isActive: boolean;
@@ -121,22 +121,15 @@ function SlideCardImpl({
 }
 
 /**
- * Memo comparator: skips re-renders when neither the slide identity, its
- * mutability flags, nor any of the selection/active/drag state changed.
- * Handlers are intentionally compared by reference; callers should pass
- * stable callbacks (useCallback) to keep this effective.
+ * Memo comparator: skips re-renders when neither the slide nor any of the
+ * selection/active/drag state changed. The slide is compared by reference, as
+ * `SlideThumbnail` does: every edit replaces it, and the card's thumbnail draws
+ * from many of its fields (background, transition, numbers), not only its
+ * elements. Handlers are intentionally compared by reference; callers should
+ * pass stable callbacks (useCallback) to keep this effective.
  */
-function arePropsEqual(prev: SlideCardProps, next: SlideCardProps): boolean {
-	if (prev.slide.id !== next.slide.id) {
-		return false;
-	}
-	if (prev.slide.isDirty !== next.slide.isDirty) {
-		return false;
-	}
-	if (prev.slide.hidden !== next.slide.hidden) {
-		return false;
-	}
-	if (prev.slide.elements !== next.slide.elements) {
+export function slideCardPropsEqual(prev: SlideCardProps, next: SlideCardProps): boolean {
+	if (prev.slide !== next.slide) {
 		return false;
 	}
 	if (prev.index !== next.index) {
@@ -180,4 +173,4 @@ function arePropsEqual(prev: SlideCardProps, next: SlideCardProps): boolean {
 	return true;
 }
 
-export const SlideCard = /* @__PURE__ */ React.memo(SlideCardImpl, arePropsEqual);
+export const SlideCard = /* @__PURE__ */ React.memo(SlideCardImpl, slideCardPropsEqual);

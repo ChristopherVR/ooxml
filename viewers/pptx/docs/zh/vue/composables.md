@@ -207,6 +207,33 @@ const sectionOps = useSectionOperations({
 
 多张幻灯片的命令会为每张选中的幻灯片各发出一个 `duplicate-slide`、`delete-slide` 或 `toggle-slide-hidden` 事件，按索引从高到低的顺序，因此每个副本都会紧跟在其源幻灯片之后。幻灯片右键菜单中的“版式”项会先为该幻灯片发出 `select`，再携带 `{ slideIndex, x, y }`（点击位置）发出 `open-layout-gallery`，供你渲染自己的版式库。未启用 `canEdit` 时，缩略图栏只用于导航，不显示“添加幻灯片”页脚。`SlidesPane` 需要完整的 `pptx-vue-viewer/styles` 样式表。
 
+### 单张幻灯片缩略图 {#single-slide-thumbnail}
+
+`SlideThumbnail`（与其 `SlideThumbnailProps` 类型一起，从包根入口和 `pptx-vue-viewer/viewer` 导出）按 `SlidesPane` 的方式绘制一张幻灯片，供维护自己缩略图条的宿主使用。它根据幻灯片模型渲染，因此会跟随未保存的编辑；它是静态的：没有选择、编辑、指针处理、焦点停靠或元素 id。设置了切换效果（“剪切”除外）的幻灯片会在右上角以小标记显示切换名称，各绑定的缩略图一致（Vue 的 `SlidesPane` 不绘制该标记）。其属性为 `slide`、`templateElements`（该幻灯片的版式和母版元素，绘制在其自身元素之下；默认为空）、`canvasSize` 和 `previewWidth`（像素；默认为缩略图栏的缩略图宽度；高度按演示文稿的宽高比计算），以及 `SlidesPane` 已接收的演示文稿属性：`mediaDataUrls`、`headerFooter`、`customProperties`、`firstSlideNumber`、`locale`、`theme` 和 `tableStyleMap`。请用相同的 `useLoadContent` 值同时驱动两者：
+
+```vue
+<template>
+	<ul class="my-strip">
+		<li v-for="slide in slides" :key="slide.id" style="width: 120px">
+			<SlideThumbnail
+				:slide="slide"
+				:template-elements="templateElementsBySlideId[slide.id]"
+				:canvas-size="deck.canvasSize.value"
+				:preview-width="120"
+				:media-data-urls="deck.mediaDataUrls.value"
+				:header-footer="deck.headerFooter.value"
+				:custom-properties="deck.customProperties.value"
+				:first-slide-number="deck.firstSlideNumber.value"
+				:theme="deck.theme.value"
+				:table-style-map="deck.tableStyleMap.value"
+			/>
+		</li>
+	</ul>
+</template>
+```
+
+缩略图填满其容器的宽度，高度为 `previewWidth` 按演示文稿宽高比计算的值，因此请为容器设置该宽度。它同样需要 `pptx-vue-viewer/styles` 样式表。
+
 ### `useCollaboration` {#usecollaboration}
 
 `useCollaboration` 可以在不使用查看器组件的情况下管理 Yjs 会话、在线状态、光标和选定写入者同步。完整说明请参见[实时协作](/zh/vue/collaboration)。

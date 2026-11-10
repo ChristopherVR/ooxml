@@ -245,6 +245,44 @@ event per selected slide, highest index first, so each copy lands right after it
 own. Without `canEdit` the rail only navigates and shows no "Add Slide" footer. `SlidesPane`
 needs the full `pptx-vue-viewer/styles` stylesheet.
 
+### Single slide thumbnail
+
+`SlideThumbnail` (exported, with its `SlideThumbnailProps` type, from the package root and
+`pptx-vue-viewer/viewer`) draws one slide the way `SlidesPane` draws it, for a host that keeps its
+own thumbnail strip. It renders from the slide model, so it follows unsaved edits, and it is static:
+no selection, editing, pointer handlers, focus stops or element ids. A slide with a transition
+other than Cut shows the transition's name in a small badge in its top-right corner, as the
+thumbnail does in every binding (Vue's slides pane draws no badge). Its props are `slide`,
+`templateElements` (the slide's layout and master elements, drawn beneath its own; default none),
+`canvasSize` and `previewWidth` (pixels; default the rail thumbnail width; the height follows the
+deck's aspect ratio), plus the deck props `SlidesPane` already takes: `mediaDataUrls`,
+`headerFooter`, `customProperties`, `firstSlideNumber`, `locale`, `theme` and `tableStyleMap`.
+Feed both from the same `useLoadContent` values:
+
+```vue
+<template>
+	<ul class="my-strip">
+		<li v-for="slide in slides" :key="slide.id" style="width: 120px">
+			<SlideThumbnail
+				:slide="slide"
+				:template-elements="templateElementsBySlideId[slide.id]"
+				:canvas-size="deck.canvasSize.value"
+				:preview-width="120"
+				:media-data-urls="deck.mediaDataUrls.value"
+				:header-footer="deck.headerFooter.value"
+				:custom-properties="deck.customProperties.value"
+				:first-slide-number="deck.firstSlideNumber.value"
+				:theme="deck.theme.value"
+				:table-style-map="deck.tableStyleMap.value"
+			/>
+		</li>
+	</ul>
+</template>
+```
+
+The thumbnail fills its container's width and is as tall as `previewWidth` at the deck's aspect
+ratio, so give the container that width. It needs the same `pptx-vue-viewer/styles` stylesheet.
+
 ### `useCollaboration`
 
 `useCollaboration` manages a Yjs session, presence, cursors, and elected-writer synchronization

@@ -71,6 +71,7 @@ export function renderSlideTemplatePreview(
 			registry: previewRegistry,
 			t,
 			scale: PREVIEW_SCALE,
+			exposeElementIds: false,
 		}),
 	);
 	return frame;

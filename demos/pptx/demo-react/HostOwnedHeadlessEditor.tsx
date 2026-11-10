@@ -10,6 +10,8 @@ import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { HostOwnedShellHandle } from '../shared/host-owned-shell-controls';
+import { hostThumbnailStripRequested } from '../shared/host-thumbnail-strip';
+import { HostSlideStrip } from './HostSlideStrip';
 
 /** A custom host shell uses the same collaboration session as the full editor. */
 export const HostOwnedHeadlessEditor = forwardRef<
@@ -53,7 +55,11 @@ export const HostOwnedHeadlessEditor = forwardRef<
 				<Toolbar {...blocks.toolbarProps} />
 				{blocks.error && <p role='alert'>{blocks.error}</p>}
 				<div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-					<SlidesPane {...blocks.slidesPaneProps} />
+					{hostThumbnailStripRequested() ? (
+						<HostSlideStrip {...blocks.slidesPaneProps} />
+					) : (
+						<SlidesPane {...blocks.slidesPaneProps} />
+					)}
 					<div
 						style={{
 							flex: 1,

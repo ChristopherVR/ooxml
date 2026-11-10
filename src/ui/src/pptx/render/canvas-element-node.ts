@@ -1,14 +1,15 @@
 /**
  * Find the editing canvas's DOM node for a slide element.
  *
- * Every binding marks a rendered element with `data-element-id`, but Angular,
- * Svelte and Vanilla leave that marker on the slides-pane thumbnails too, and
- * the thumbnail rail sits AHEAD of the main canvas in their DOM. A bare
- * `document.querySelector('[data-element-id="..."]')` therefore returned the
+ * Every binding marks a rendered element with `data-element-id`. Angular,
+ * Svelte and Vanilla used to leave that marker on the slides-pane thumbnails
+ * too, and the thumbnail rail sits AHEAD of the main canvas in their DOM, so a
+ * bare `document.querySelector('[data-element-id="..."]')` returned the
  * thumbnail's copy: the ribbon's animation Preview played on a 150px
- * thumbnail, and the Paste Options toolbar anchored itself to one. The main
- * canvas is the `[data-pptx-viewport]` subtree in all five bindings, so that
- * copy wins; anywhere else is only a fallback for hosts without one.
+ * thumbnail, and the Paste Options toolbar anchored itself to one. Static
+ * stages now drop the marker (`stage-element-ids`), but a host stage may still
+ * carry it, so the main canvas (the `[data-pptx-viewport]` subtree in all five
+ * bindings) still wins; anywhere else is only a fallback for hosts without one.
  *
  * @module render/canvas-element-node
  */

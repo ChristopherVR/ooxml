@@ -59,6 +59,30 @@ describe('slideThumbnailPropsEqual', () => {
 		).toBeFalsy();
 	});
 
+	it('is unequal when only slide metadata changes, with the same element references', () => {
+		// The thumbnail draws the transition badge, the slide number and title
+		// fields and the background from the slide object itself, so an edit that
+		// keeps `elements` and `templateElements` must still repaint it.
+		const base = makeProps();
+		const edits: Partial<PptxSlide>[] = [
+			{ transition: { type: 'fade' } } as Partial<PptxSlide>,
+			{ slideNumber: 2 },
+			{ backgroundPattern: { preset: 'pct5' } } as Partial<PptxSlide>,
+		];
+		for (const edit of edits) {
+			const next = { ...base, slide: { ...base.slide, ...edit } };
+			expect(next.slide.elements).toBe(base.slide.elements);
+			expect(slideThumbnailPropsEqual(base, next)).toBeFalsy();
+		}
+	});
+
+	it('skips a parent re-render that passes the same slide object', () => {
+		const base = makeProps();
+		expect(
+			slideThumbnailPropsEqual(base, { ...base, canvasSize: { width: 960, height: 540 } }),
+		).toBeTruthy();
+	});
+
 	it('is unequal when canvasSize changes', () => {
 		const base = makeProps();
 		expect(

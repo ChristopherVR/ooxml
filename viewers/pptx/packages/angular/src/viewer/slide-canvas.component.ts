@@ -62,6 +62,7 @@ import {
 	seedPlainInlineText,
 	setPendingCaretPoint,
 	spaceBeforeCaretRange,
+	stageKeepsElementIds,
 	takePendingCaretPoint,
 	visibleTemplateElements as filterVisibleTemplateElements,
 	withConnectorEndpointUpdate,
@@ -292,17 +293,33 @@ export class SlideCanvasComponent implements SlideContext {
 	 */
 	readonly interactive = input<boolean>(true);
 	/**
-	 * When true (default), this canvas's elements carry `data-element-id`.
-	 *
-	 * The miniature surfaces that paint EVERY slide at once (thumbnail rail,
-	 * mobile slide sheet, slide sorter, presenter navigator, layout gallery, diff
-	 * strip) pass `false`: they otherwise put one node per element PER SLIDE into
-	 * the document, so a `[data-element-id]` query resolved a slide that is not
-	 * on screen. It is deliberately separate from {@link interactive}, because
-	 * the presentation stage is not interactive and still needs its ids (the
-	 * morph engine generates keyframe CSS that selects on them).
+	 * Overrides whether this canvas's elements carry `data-element-id`. Leave it
+	 * unset: the shared `stageKeepsElementIds` rule decides from
+	 * {@link interactive}, {@link presenting} and {@link preserveElementIds}, so
+	 * only the editing canvas, the live show stage and the show's transition
+	 * layers keep the markers. Every static copy (rail, sorter, presenter
+	 * previews, reading view, thumbnails) drops them without a flag of its own,
+	 * so a `[data-element-id]` query resolves the canvas the user acts on.
 	 */
-	readonly exposeElementIds = input<boolean>(true);
+	readonly exposeElementIds = input<boolean | undefined>(undefined);
+	/**
+	 * True for a transition layer the show addresses by element id: Morph's
+	 * keyframe CSS selects by it, and the show applies build states to every
+	 * `[data-element-id]` under its stage, the transition layers included. Such a
+	 * layer is neither interactive nor the presenting stage, so without this it
+	 * would drop its markers.
+	 */
+	readonly preserveElementIds = input<boolean>(false);
+	/** Whether this canvas's elements carry `data-element-id` (see {@link exposeElementIds}). */
+	readonly keepsElementIds = computed(
+		() =>
+			this.exposeElementIds() ??
+			stageKeepsElementIds({
+				interactive: this.interactive(),
+				presenting: this.presenting(),
+				preserveElementIds: this.preserveElementIds(),
+			}),
+	);
 	/**
 	 * True only for the live presentation stage: slide-content media autoplays.
 	 * Left false for thumbnails, the sorter and the editor canvas so their media

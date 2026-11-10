@@ -110,39 +110,16 @@ function ScaledSlidePreviewImpl({
 }
 
 /**
- * Memo comparator: re-render only when slide identity, dirty/hidden state,
- * elements, template elements, canvas size, or className change.
+ * Memo comparator: re-render only when a prop changes. The slide is compared by
+ * reference, as `SlideThumbnail` does: every edit replaces the slide object, and
+ * the preview draws from more than its elements (background, "Hide Background
+ * Graphics", and the slide number and title fields through `activeSlide`).
  */
 export function scaledSlidePreviewPropsEqual(
 	prev: ScaledSlidePreviewProps,
 	next: ScaledSlidePreviewProps,
 ): boolean {
-	if (prev.slide.id !== next.slide.id) {
-		return false;
-	}
-	if (prev.slide.isDirty !== next.slide.isDirty) {
-		return false;
-	}
-	if (prev.slide.hidden !== next.slide.hidden) {
-		return false;
-	}
-	if (prev.slide.elements !== next.slide.elements) {
-		return false;
-	}
-	// `visibleTemplateElements` drops the inherited layout/master artwork
-	// entirely when this is `false`, so toggling "Hide Background Graphics"
-	// must invalidate the memo even though `elements`/`templateElements`
-	// themselves haven't changed.
-	if (prev.slide.showMasterShapes !== next.slide.showMasterShapes) {
-		return false;
-	}
-	if (prev.slide.backgroundColor !== next.slide.backgroundColor) {
-		return false;
-	}
-	if (prev.slide.backgroundImage !== next.slide.backgroundImage) {
-		return false;
-	}
-	if (prev.slide.backgroundGradient !== next.slide.backgroundGradient) {
+	if (prev.slide !== next.slide) {
 		return false;
 	}
 	if (prev.templateElements !== next.templateElements) {

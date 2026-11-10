@@ -80,7 +80,6 @@ interface NavigatorTile {
 								[zoom]="tileZoom()"
 								[autoFit]="false"
 								[interactive]="false"
-								[exposeElementIds]="false"
 							/>
 						</div>
 						<span class="mt-2 block text-xs tabular-nums text-muted-foreground">
