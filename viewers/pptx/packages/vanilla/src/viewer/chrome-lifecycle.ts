@@ -7,6 +7,7 @@ import {
 	isFeatureEnabled,
 	measureViewportClientSize,
 	readRibbonTransitionDraft,
+	resetViewportScroll,
 	resolveViewerRootOptions,
 	safeOpenUrl,
 	toggleBlackboard,
@@ -59,7 +60,10 @@ export interface ChromeLifecycle {
 	presentation: PresentationController;
 	detachKeyboard: () => void;
 	detachTouchGestures: () => void;
-	/** Remove Ctrl+wheel / pinch zoom at the pointer and drag-to-pan from the viewport. */
+	/**
+	 * Remove Ctrl+wheel / pinch zoom at the pointer and drag-to-pan from the
+	 * viewport, and stop scrolling it to the top-left when another slide shows.
+	 */
 	detachViewportNavigation: () => void;
 	/** Remove the presenting click-to-advance listener. */
 	detachPresentationClick: () => void;
@@ -349,7 +353,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		}
 		return fit > Number.EPSILON ? zoom / fit : zoom;
 	};
-	const detachViewportNavigation = attachViewportNavigation(chrome.viewport, {
+	const detachNavigationController = attachViewportNavigation(chrome.viewport, {
 		getZoom: fitRelativeZoom,
 		setZoom: (zoom) => deps.setZoom(zoom * renderer.fitScale()),
 		dragPans: () => {
@@ -358,13 +362,27 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		},
 		isActive: () => !store.get().presenting,
 	});
+	// The zoom is kept across slides; the scroll position belongs to the slide it
+	// was chosen on (shared policy). Keyed on the slide shown, not the index, which
+	// many places write (paging, Find, inserting or deleting a slide, collaboration).
+	const detachSlideScroll = store.subscribe((state, previous) => {
+		if (state.slides[state.currentSlide]?.id !== previous.slides[previous.currentSlide]?.id) {
+			resetViewportScroll(chrome.viewport);
+		}
+	});
+	const detachViewportNavigation = (): void => {
+		detachNavigationController();
+		detachSlideScroll();
+	};
 	const detachTouchGestures = attachTouchGestures(chrome.root, {
-		getScale: () => renderer.effectiveScale(),
+		// Fit-relative, like the controller above, so the pinch clamps to the
+		// shared bounds the buttons and `setZoom` use.
+		getScale: fitRelativeZoom,
 		// Routed through the controls, not written to the store directly: the
 		// zoom model (and its bounds) lives in the shared zoom store now, and a
 		// raw store write would bypass it - which is how the pinch gesture ended
 		// up as the one zoom entry point with no clamping at all.
-		onPinchZoom: (zoom) => deps.setZoom(zoom),
+		onPinchZoom: (zoom) => deps.setZoom(zoom * renderer.fitScale()),
 		isSwipeEnabled: () => {
 			const state = store.get();
 			return state.presenting || !state.editable;

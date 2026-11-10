@@ -360,7 +360,7 @@ describe('createPptxViewer', () => {
 	});
 
 	it('clamps setZoom and reports the effective scale', () => {
-		// Zoom is clamped by the SHARED fit-relative bounds (0.2x - 5x of the fit
+		// Zoom is clamped by the SHARED fit-relative bounds (0.1x - 5x of the fit
 		// scale), the same ones React, Vue, Angular and Svelte use. This binding
 		// used to apply its own wider absolute bounds (0.1 - 8), which is why the
 		// same API call produced a different result here than in the other four.

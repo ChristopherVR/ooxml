@@ -18,8 +18,15 @@
 /** Scale added or removed by one press of zoom in / zoom out. */
 export const ZOOM_STEP = 0.1;
 
-/** Smallest user zoom the controls will step down to (20%). */
-export const MIN_ZOOM_SCALE = 0.2;
+/**
+ * Smallest user zoom: 10% of fit (PowerPoint's Normal view also stops at 10%).
+ *
+ * Every zoom entry point clamps here: the buttons, Ctrl+wheel, pinch and
+ * `setZoom`. Zooming below fit leaves room around the slide. (PowerPoint's
+ * percentage is of the slide's actual size; this one is of fit, so on most
+ * screens it goes a little lower than PowerPoint's.)
+ */
+export const MIN_ZOOM_SCALE = 0.1;
 
 /** Largest user zoom the controls will step up to (500%). */
 export const MAX_ZOOM_SCALE = 5;

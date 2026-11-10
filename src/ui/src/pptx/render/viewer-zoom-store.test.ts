@@ -40,6 +40,38 @@ describe('viewer zoom commands', () => {
 		expect(store.getState().manual).toBeTruthy();
 	});
 
+	it('zooms below fit, down to 10%', () => {
+		const store = createViewerZoomStore();
+		store.dispatch({ type: 'set-zoom', zoom: 0.5 });
+		expect(store.getState()).toMatchObject({ zoom: 0.5, manual: true });
+
+		store.dispatch({ type: 'zoom-to-fit' }, { type: 'zoom-out' });
+		expect(store.getState()).toMatchObject({ zoom: 0.9, manual: true });
+
+		store.dispatch({ type: 'set-zoom', zoom: 0.01 });
+		expect(store.getState().zoom).toBe(0.1);
+	});
+
+	it('a zoom that lands on 1 is fit, not a manual 100%', () => {
+		const store = createViewerZoomStore();
+		const listener = vi.fn();
+		store.subscribe(listener);
+
+		// Stepping back to 1, from either side, or asking for it gives control back
+		// to the viewport.
+		store.dispatch({ type: 'zoom-in' }, { type: 'zoom-out' });
+		expect(store.getState()).toMatchObject({ zoom: 1, manual: false });
+		store.dispatch({ type: 'zoom-out' }, { type: 'zoom-in' });
+		expect(store.getState()).toMatchObject({ zoom: 1, manual: false });
+		store.dispatch({ type: 'set-zoom', zoom: 2 }, { type: 'set-zoom', zoom: 1 });
+		expect(store.getState()).toMatchObject({ zoom: 1, manual: false });
+
+		// Asking for fit at fit changes nothing, so nothing re-renders (issue #145).
+		listener.mockClear();
+		store.dispatch({ type: 'set-zoom', zoom: 1 });
+		expect(listener).not.toHaveBeenCalled();
+	});
+
 	it('zoom-to-fit returns to 1x and gives up manual control', () => {
 		const store = createViewerZoomStore();
 		store.dispatch({ type: 'set-zoom', zoom: 2 });

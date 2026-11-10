@@ -71,7 +71,7 @@ import type { ViewerMode, PowerPointViewerAPI } from 'pptx-react-viewer';
 | 方法        | 签名                      | 说明                                   |
 | ----------- | ------------------------- | -------------------------------------- |
 | `getZoom`   | `() => number`            | 获取当前缩放比例，1 表示 100%。        |
-| `setZoom`   | `(level: number) => void` | 设置缩放比例，限制在 0.2 到 5.0 之间。 |
+| `setZoom`   | `(level: number) => void` | 设置缩放比例，限制在 0.1 到 5.0 之间。 |
 | `zoomIn`    | `() => void`              | 放大一步，步长为 10%。                 |
 | `zoomOut`   | `() => void`              | 缩小一步，步长为 10%。                 |
 | `zoomReset` | `() => void`              | 重置为 100%。                          |

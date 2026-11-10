@@ -140,14 +140,14 @@ function drawStrip(strip: HTMLElement, paneOptions: SlidesPaneOptions): void {
 
 ## 缩放 {#zoom}
 
-| 方法        | 签名                     | 说明                                        |
-| ----------- | ------------------------ | ------------------------------------------- |
-| `getZoom`   | `() => number`           | 计算适应比例后的实际缩放比例，1 表示 100%。 |
-| `setZoom`   | `(zoom: number) => void` | 设置明确的缩放比例。                        |
-| `zoomIn`    | `() => void`             | 放大一级。                                  |
-| `zoomOut`   | `() => void`             | 缩小一级。                                  |
-| `zoomToFit` | `() => void`             | 使幻灯片适应视口。                          |
-| `zoomReset` | `() => void`             | 重置为 100%。                               |
+| 方法        | 签名                     | 说明                                                   |
+| ----------- | ------------------------ | ------------------------------------------------------ |
+| `getZoom`   | `() => number`           | 计算适应比例后的实际缩放比例，1 表示 100%。            |
+| `setZoom`   | `(zoom: number) => void` | 设置明确的缩放比例，限制在适应比例的 0.1 至 5 倍之间。 |
+| `zoomIn`    | `() => void`             | 放大一级。                                             |
+| `zoomOut`   | `() => void`             | 缩小一级。                                             |
+| `zoomToFit` | `() => void`             | 使幻灯片适应视口。                                     |
+| `zoomReset` | `() => void`             | 重置为 100%。                                          |
 
 ## 查看器模式 {#viewer-mode}
 

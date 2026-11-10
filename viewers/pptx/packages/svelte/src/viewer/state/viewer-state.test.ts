@@ -72,10 +72,15 @@ describe('viewerState', () => {
 		expect(state.zoomPercent).toBeNull();
 		state.zoomIn(80);
 		expect(state.zoomPercent).toBe(90);
+		// Stepping back to 100% is fit, which keeps following the viewport.
 		state.zoomIn(100);
-		expect(state.zoomPercent).toBe(100);
-		state.zoomOut(999);
+		expect(state.zoomPercent).toBeNull();
+		// Zooming out from fit goes below it.
+		state.zoomOut(100);
 		expect(state.zoomPercent).toBe(90);
+		state.zoomPercent = 10;
+		state.zoomOut(999);
+		expect(state.zoomPercent).toBe(10);
 		state.zoomToFit();
 		expect(state.zoomPercent).toBeNull();
 	});

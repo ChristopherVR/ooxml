@@ -1244,7 +1244,7 @@ export * from './viewer-store';
 // The canvas zoom slice, first vertical slice on that runtime.
 export * from './viewer-zoom-store';
 // Zoom at the pointer and drag to pan in the slide viewport, shared by every binding.
-export { attachViewportNavigation } from './viewport-navigation';
+export { attachViewportNavigation, resetViewportScroll } from './viewport-navigation';
 export type { ViewportNavigationOptions } from './viewport-navigation';
 // No-op-write guards for the hot state paths (presenter snapshot, presence
 // list). Shared so a write that carries no new information is dropped once,

@@ -7,13 +7,15 @@
  * that scrolls the slide in this binding, and detaches it with the component.
  * `<main>` renders only once a deck has loaded, so the service follows the
  * element query rather than looking once after the first render. The accessors
- * are read live, so one attach handles every mode.
+ * are read live, so one attach handles every mode. Showing another slide keeps
+ * the zoom and scrolls `<main>` to the new slide's top-left corner (the shared
+ * `resetViewportScroll` policy).
  *
  * Provide it once on the viewer component (`providers: [ViewerViewportNavigationService]`).
  */
 
 import { DestroyRef, effect, inject, Injectable, Injector, untracked } from '@angular/core';
-import { attachViewportNavigation } from 'ooxml-ui/pptx';
+import { attachViewportNavigation, resetViewportScroll } from 'ooxml-ui/pptx';
 
 import { ViewerZoomService } from './viewer-zoom.service';
 
@@ -23,6 +25,8 @@ interface ViewportNavigationHost {
 	readonly dragPans: () => boolean;
 	/** True while a show is running and owns the wheel and pointer. */
 	readonly presenting: () => boolean;
+	/** Id of the slide on the canvas (a signal read); another slide is shown from its top-left. */
+	readonly slideId: () => string | undefined;
 }
 
 @Injectable()
@@ -59,6 +63,22 @@ export class ViewerViewportNavigationService {
 			() => {
 				const el = mainEl() ?? null;
 				untracked(() => sync(el));
+			},
+			{ injector: this.injector },
+		);
+		let shownSlideId: string | undefined;
+		effect(
+			() => {
+				const slideId = host.slideId();
+				if (slideId === shownSlideId) {
+					return;
+				}
+				shownSlideId = slideId;
+				untracked(() => {
+					if (attached) {
+						resetViewportScroll(attached.el);
+					}
+				});
 			},
 			{ injector: this.injector },
 		);

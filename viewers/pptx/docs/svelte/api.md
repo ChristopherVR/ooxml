@@ -48,13 +48,13 @@ snapshots; they are not reactive stores. To react to changes, use the callback p
 
 ## Zoom
 
-| Method      | Signature                 | Description                           |
-| ----------- | ------------------------- | ------------------------------------- |
-| `getZoom`   | `() => number`            | Effective zoom scale (1 = 100%).      |
-| `setZoom`   | `(level: number) => void` | Set an explicit zoom scale (clamped). |
-| `zoomIn`    | `() => void`              | Zoom in by one step.                  |
-| `zoomOut`   | `() => void`              | Zoom out by one step.                 |
-| `zoomReset` | `() => void`              | Reset zoom to 100%.                   |
+| Method      | Signature                 | Description                                        |
+| ----------- | ------------------------- | -------------------------------------------------- |
+| `getZoom`   | `() => number`            | Effective zoom scale (1 = 100%).                   |
+| `setZoom`   | `(level: number) => void` | Set an explicit zoom scale (clamped to 0.1 - 5.0). |
+| `zoomIn`    | `() => void`              | Zoom in by one step.                               |
+| `zoomOut`   | `() => void`              | Zoom out by one step.                              |
+| `zoomReset` | `() => void`              | Reset zoom to 100%.                                |
 
 ## Mode and presentation
 

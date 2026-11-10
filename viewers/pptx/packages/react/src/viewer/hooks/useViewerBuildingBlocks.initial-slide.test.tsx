@@ -111,4 +111,18 @@ describe('useViewerBuildingBlocks initialSlide', () => {
 		await act(async () => handle.current?.goTo(2));
 		expect(latest.canvasProps.activeSlideIndex).toBe(2);
 	});
+
+	it('keeps the zoom, above or below fit, when the host goes to another slide', async () => {
+		const handle = createRef<PowerPointViewerHandle>();
+		await mount(0, handle);
+		await act(async () => handle.current?.setZoom(1.5));
+		await act(async () => handle.current?.goNext());
+		expect(latest.canvasProps.activeSlideIndex).toBe(1);
+		expect(handle.current?.getZoom()).toBe(1.5);
+
+		await act(async () => handle.current?.setZoom(0.5));
+		await act(async () => handle.current?.goTo(2));
+		expect(latest.canvasProps.activeSlideIndex).toBe(2);
+		expect(handle.current?.getZoom()).toBe(0.5);
+	});
 });

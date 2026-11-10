@@ -55,8 +55,19 @@ export const DEFAULT_VIEWER_ZOOM_STATE: ViewerZoomState = {
 	manual: false,
 };
 
+/** Back at fit and following the viewport again; the same state when already there. */
+function atFit(state: ViewerZoomState): ViewerZoomState {
+	return state.zoom === 1 && !state.manual ? state : { ...state, zoom: 1, manual: false };
+}
+
 function withZoom(state: ViewerZoomState, zoom: number): ViewerZoomState {
 	const clamped = clampZoomScale(zoom);
+	// A factor of 1 IS fit, so stepping back to 1 (or asking for it) returns to
+	// fit rather than pinning a "manual 100%" that a binding with an absolute
+	// (vanilla) or nullable (Svelte) encoding would stop resizing with the window.
+	if (clamped === 1) {
+		return atFit(state);
+	}
 	// Returning the SAME state when nothing moved keeps the store silent, so
 	// holding zoom-out at the minimum does not re-render anything (issue #145).
 	if (clamped === state.zoom && state.manual) {
@@ -77,7 +88,7 @@ export function reduceViewerZoom(
 		case 'set-zoom':
 			return withZoom(state, command.zoom);
 		case 'zoom-to-fit':
-			return state.zoom === 1 && !state.manual ? state : { ...state, zoom: 1, manual: false };
+			return atFit(state);
 		case 'set-fit-scale': {
 			// A viewport measurement is not a user action: it must never flip
 			// `manual`, or a window resize would silently look like a zoom.

@@ -287,7 +287,7 @@ describe('powerPointViewer editing wiring', () => {
 		}
 	});
 
-	it('matches the React 20% to 500% imperative zoom range', async () => {
+	it('matches the React 10% to 500% imperative zoom range', async () => {
 		const wrapper = mount(PowerPointViewer);
 		await flushPromises();
 		const viewer = wrapper.vm as unknown as {
@@ -298,6 +298,9 @@ describe('powerPointViewer editing wiring', () => {
 		viewer.setZoom(10);
 		expect(viewer.getZoom()).toBe(5);
 		viewer.setZoom(0);
-		expect(viewer.getZoom()).toBe(0.2);
+		expect(viewer.getZoom()).toBe(0.1);
+		// Below fit is a zoom like any other.
+		viewer.setZoom(0.5);
+		expect(viewer.getZoom()).toBe(0.5);
 	});
 });

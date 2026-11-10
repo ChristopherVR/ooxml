@@ -37,6 +37,7 @@ function scrollingMain(): { node: HTMLElement; drag: () => number } {
 	const node = document.createElement('main');
 	node.innerHTML = '<div aria-roledescription="slide"></div>';
 	let scroll = 0;
+	let top = 0;
 	Object.defineProperties(node, {
 		clientWidth: { configurable: true, get: () => 100 },
 		clientHeight: { configurable: true, get: () => 100 },
@@ -49,7 +50,13 @@ function scrollingMain(): { node: HTMLElement; drag: () => number } {
 				scroll = Math.max(0, value);
 			},
 		},
-		scrollTop: { configurable: true, get: () => 0, set: () => {} },
+		scrollTop: {
+			configurable: true,
+			get: () => top,
+			set: (value: number) => {
+				top = Math.max(0, value);
+			},
+		},
 	});
 	vi.spyOn(node, 'setPointerCapture').mockImplementation(() => {});
 	vi.spyOn(node, 'releasePointerCapture').mockImplementation(() => {});
@@ -82,12 +89,14 @@ function setup() {
 	const main = signal<HTMLElement | undefined>(undefined);
 	const dragPans = signal(true);
 	const presenting = signal(false);
+	const slideId = signal<string | undefined>('s1');
 	TestBed.inject(ViewerViewportNavigationService).setup(() => main(), {
 		dragPans: () => dragPans(),
 		presenting: () => presenting(),
+		slideId: () => slideId(),
 	});
 	TestBed.tick();
-	return { zoom, main, dragPans, presenting };
+	return { zoom, main, dragPans, presenting, slideId };
 }
 
 describe('viewer viewport navigation service', () => {
@@ -116,6 +125,26 @@ describe('viewer viewport navigation service', () => {
 		expect(drag()).toBe(100);
 		env.presenting.set(true);
 		expect(ctrlWheel(node)).toBeFalsy();
+	});
+
+	it('keeps the zoom on another slide and shows it from its top-left corner', () => {
+		const env = setup();
+		const { node } = scrollingMain();
+		env.main.set(node);
+		TestBed.tick();
+		env.zoom.setZoom(0.5);
+		node.scrollLeft = 120;
+		node.scrollTop = 80;
+
+		// Another accessor changing (a mode switch) leaves the scroll alone.
+		env.dragPans.set(false);
+		TestBed.tick();
+		expect([node.scrollLeft, node.scrollTop]).toStrictEqual([120, 80]);
+
+		env.slideId.set('s2');
+		TestBed.tick();
+		expect(env.zoom.zoom()).toBe(0.5);
+		expect([node.scrollLeft, node.scrollTop]).toStrictEqual([0, 0]);
 	});
 
 	it('detaches when its injector is destroyed', () => {

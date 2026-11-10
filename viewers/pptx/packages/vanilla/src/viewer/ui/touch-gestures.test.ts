@@ -1,3 +1,4 @@
+import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { attachTouchGestures } from './touch-gestures';
@@ -45,6 +46,35 @@ describe('attachTouchGestures', () => {
 
 		expect(move.defaultPrevented).toBeTruthy();
 		expect(onPinchZoom).toHaveBeenCalledWith(1.5);
+		detach();
+	});
+
+	it('clamps a pinch to the shared zoom bounds', () => {
+		const target = document.createElement('div');
+		const onPinchZoom = vi.fn();
+		const detach = attachTouchGestures(target, {
+			getScale: () => 1,
+			onPinchZoom,
+			isSwipeEnabled: () => true,
+			onNext: vi.fn(),
+			onPrevious: vi.fn(),
+		});
+		const pinch = (to: number) => {
+			dispatchTouch(target, 'touchstart', [
+				{ clientX: 0, clientY: 0 },
+				{ clientX: 100, clientY: 0 },
+			]);
+			dispatchTouch(target, 'touchmove', [
+				{ clientX: 0, clientY: 0 },
+				{ clientX: to, clientY: 0 },
+			]);
+			dispatchTouch(target, 'touchend', [], [{ clientX: to, clientY: 0 }]);
+		};
+
+		pinch(5);
+		expect(onPinchZoom).toHaveBeenLastCalledWith(MIN_ZOOM_SCALE);
+		pinch(2000);
+		expect(onPinchZoom).toHaveBeenLastCalledWith(MAX_ZOOM_SCALE);
 		detach();
 	});
 

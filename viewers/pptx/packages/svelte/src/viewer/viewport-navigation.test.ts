@@ -21,6 +21,7 @@ function setup(overrides: Partial<ViewportNavigationParams> = {}) {
 	node.innerHTML = '<div aria-roledescription="slide"></div>';
 	document.body.appendChild(node);
 	let scroll = 0;
+	let top = 0;
 	Object.defineProperties(node, {
 		clientWidth: { configurable: true, get: () => 100 },
 		clientHeight: { configurable: true, get: () => 100 },
@@ -33,7 +34,13 @@ function setup(overrides: Partial<ViewportNavigationParams> = {}) {
 				scroll = Math.max(0, value);
 			},
 		},
-		scrollTop: { configurable: true, get: () => 0, set: () => {} },
+		scrollTop: {
+			configurable: true,
+			get: () => top,
+			set: (value: number) => {
+				top = Math.max(0, value);
+			},
+		},
 	});
 	vi.spyOn(node, 'setPointerCapture').mockImplementation(() => {});
 	vi.spyOn(node, 'releasePointerCapture').mockImplementation(() => {});
@@ -43,6 +50,7 @@ function setup(overrides: Partial<ViewportNavigationParams> = {}) {
 		setScale: (next) => (zoom = next),
 		dragPans: true,
 		active: true,
+		slideId: 's1',
 		...overrides,
 	};
 	const action = viewportNavigation(node, params);
@@ -96,6 +104,21 @@ describe('viewportNavigation action', () => {
 		env.node.dispatchEvent(event);
 		expect(event.defaultPrevented).toBeFalsy();
 		expect(env.zoom()).toBe(1);
+	});
+
+	it('keeps the zoom on another slide and shows it from its top-left corner', () => {
+		env = setup();
+		env.params.setScale(0.5);
+		env.node.scrollLeft = 120;
+		env.node.scrollTop = 80;
+
+		// Any other parameter update (a mode change) leaves the scroll alone.
+		env.action.update({ ...env.params, dragPans: false });
+		expect([env.node.scrollLeft, env.node.scrollTop]).toStrictEqual([120, 80]);
+
+		env.action.update({ ...env.params, slideId: 's2' });
+		expect(env.zoom()).toBe(0.5);
+		expect([env.node.scrollLeft, env.node.scrollTop]).toStrictEqual([0, 0]);
 	});
 
 	it('detaches on destroy', () => {

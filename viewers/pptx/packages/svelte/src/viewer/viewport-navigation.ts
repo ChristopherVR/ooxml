@@ -1,4 +1,4 @@
-import { attachViewportNavigation } from 'ooxml-ui/pptx';
+import { attachViewportNavigation, resetViewportScroll } from 'ooxml-ui/pptx';
 
 export interface ViewportNavigationParams {
 	/** Current manual zoom factor (1 = fit). */
@@ -9,13 +9,17 @@ export interface ViewportNavigationParams {
 	dragPans: boolean;
 	/** False while the viewport must leave the wheel and pointer alone (a running show). */
 	active: boolean;
+	/** Id of the slide on the canvas; another slide is shown from its top-left corner. */
+	slideId?: string | undefined;
 }
 
 /**
  * Svelte action: Ctrl+wheel and pinch zoom at the pointer, and drag to pan, in
  * the slide viewport. The behaviour is the shared `attachViewportNavigation`
  * (one definition for all five bindings); parameters are read live, so an
- * update needs no re-attach.
+ * update needs no re-attach. Showing another slide keeps the zoom and scrolls
+ * the viewport to the new slide's top-left corner (the shared
+ * `resetViewportScroll` policy).
  */
 export function viewportNavigation(node: HTMLElement, initial: ViewportNavigationParams) {
 	let params = initial;
@@ -27,6 +31,9 @@ export function viewportNavigation(node: HTMLElement, initial: ViewportNavigatio
 	});
 	return {
 		update(next: ViewportNavigationParams) {
+			if (next.slideId !== params.slideId) {
+				resetViewportScroll(node);
+			}
 			params = next;
 		},
 		destroy: detach,

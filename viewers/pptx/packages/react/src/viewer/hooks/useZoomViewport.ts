@@ -1,4 +1,9 @@
-import { attachViewportNavigation, clampZoomScale, createViewerZoomStore } from 'ooxml-ui/pptx';
+import {
+	attachViewportNavigation,
+	clampZoomScale,
+	createViewerZoomStore,
+	resetViewportScroll,
+} from 'ooxml-ui/pptx';
 import type { ViewerZoomState, ViewerZoomStore, ViewportFitOptions } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { useRef, useCallback, useEffect } from 'react';
@@ -25,6 +30,8 @@ interface UseZoomViewportInput extends ViewportFitOptions {
 	selectedElements: PptxElement[];
 	/** True when a plain drag on the slide has nothing to select and should pan (read-only view). */
 	dragPans?: boolean;
+	/** Id of the slide on the canvas. Showing another slide keeps the zoom and scrolls to its top-left. */
+	activeSlideId?: string;
 }
 
 export interface UseZoomViewportResult {
@@ -59,6 +66,7 @@ export function useZoomViewport({
 	fitPadding,
 	maxFitScale,
 	dragPans = false,
+	activeSlideId,
 }: UseZoomViewportInput): UseZoomViewportResult {
 	// ── Refs ──────────────────────────────────────────────────────────────
 	const editWrapperRef = useRef<HTMLDivElement>(null);
@@ -236,6 +244,17 @@ export function useZoomViewport({
 			detach?.();
 		};
 	}, [canvasViewportRef, viewportNode, store]);
+
+	// The zoom belongs to the window and is kept across slides; the scroll
+	// position belongs to the slide it was chosen on (shared policy).
+	useEffect(() => {
+		const viewport = viewportNode ?? canvasViewportRef.current;
+		if (viewport) {
+			resetViewportScroll(viewport);
+		}
+		// Only a slide change resets the scroll, not a remounted viewport.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activeSlideId]);
 
 	const getCanvasPointFromClient = useCallback(
 		(clientX: number, clientY: number): { x: number; y: number } | null => {

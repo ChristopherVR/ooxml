@@ -5,6 +5,7 @@ import {
 	DRAG_PAN_THRESHOLD_PX,
 	anchoredScrollPosition,
 	attachViewportNavigation,
+	resetViewportScroll,
 	targetOwnsSpaceKey,
 	viewportCanPan,
 	zoomAnchorAt,
@@ -40,6 +41,12 @@ describe('zoom anchoring maths', () => {
 		expect(
 			viewportCanPan({ scrollWidth: 800, scrollHeight: 900, clientWidth: 800, clientHeight: 450 }),
 		).toBe(true);
+	});
+
+	it('shows a new slide from its top-left corner', () => {
+		const viewport = { scrollLeft: 320, scrollTop: 180 };
+		resetViewportScroll(viewport);
+		expect(viewport).toStrictEqual({ scrollLeft: 0, scrollTop: 0 });
 	});
 
 	it('leaves Space to text entry, buttons, links, disclosures, media controls and toggles', () => {
