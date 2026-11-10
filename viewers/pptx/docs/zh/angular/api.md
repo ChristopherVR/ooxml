@@ -74,7 +74,7 @@ import type { PowerPointViewerAPI, ViewerMode } from 'pptx-angular-viewer';
 | 方法        | 签名                      | 说明                                   |
 | ----------- | ------------------------- | -------------------------------------- |
 | `getZoom`   | `() => number`            | 获取当前缩放比例，1 表示 100%。        |
-| `setZoom`   | `(level: number) => void` | 设置缩放级别，限制在 0.2 至 3.0 之间。 |
+| `setZoom`   | `(level: number) => void` | 设置缩放级别，限制在 0.1 至 5.0 之间。 |
 | `zoomIn`    | `() => void`              | 放大一级。                             |
 | `zoomOut`   | `() => void`              | 缩小一级。                             |
 | `zoomReset` | `() => void`              | 重置为 100%。                          |

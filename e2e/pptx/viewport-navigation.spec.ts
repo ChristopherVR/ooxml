@@ -15,7 +15,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { PowerPointViewerAPI } from 'pptx-viewer-shared';
 
-import { loadDeck, slideStage } from './support/deck';
+import { loadDeck, slideStage, zoomFitButton } from './support/deck';
 
 declare global {
 	interface Window {
@@ -55,6 +55,11 @@ async function scrollTo(page: Page, scroll: Scroll): Promise<void> {
 			}
 		}
 	}, scroll);
+}
+
+/** The main slide's laid-out width. */
+async function slideWidth(page: Page): Promise<number> {
+	return (await slideStage(page).boundingBox())!.width;
 }
 
 /** The client point at a fraction of the main slide. */
@@ -219,5 +224,51 @@ test.describe('viewport navigation', () => {
 		await drag();
 		await page.waitForTimeout(200);
 		expect(await scrollOf(page)).toEqual(editStart);
+	});
+
+	test('zooming out goes below fit, down to 10%', async ({ page }) => {
+		const fitted = await slideWidth(page);
+		const zoomOut = page.getByRole('button', { name: /^zoom out$/iu }).first();
+		for (let i = 0; i < 5; i++) {
+			await zoomOut.click();
+		}
+		await expect.poll(async () => (await slideWidth(page)) / fitted).toBeCloseTo(0.5, 2);
+
+		const centre = await slidePoint(page, 0.5, 0.5);
+		await ctrlWheel(page, centre.x, centre.y, 100, 10);
+		await expect.poll(async () => (await slideWidth(page)) / fitted).toBeCloseTo(0.1, 2);
+
+		// The host's setZoom goes below fit too. Vanilla's takes an absolute scale,
+		// which for this deck and window is also below fit.
+		await page.evaluate(() => window.__pptxViewer.setZoom(0.5));
+		await expect.poll(() => page.evaluate(() => window.__pptxViewer.getZoom())).toBeCloseTo(0.5);
+		expect(await slideWidth(page)).toBeLessThan(fitted - 50);
+	});
+
+	test('another slide keeps the zoom and is shown from its top-left corner', async ({ page }) => {
+		const fitted = await slideWidth(page);
+		await zoomIn(page);
+		const zoomed = await slideWidth(page);
+		await scrollTo(page, { left: 300, top: 200 });
+		expect(await scrollOf(page)).toEqual({ left: 300, top: 200 });
+
+		const second = page.locator('[aria-label="Go to slide 2"]').first();
+		await second.click();
+		await expect(second).toHaveAttribute('aria-current', /^(true|page)$/);
+		await expect.poll(() => scrollOf(page)).toEqual({ left: 0, top: 0 });
+		expect(Math.abs((await slideWidth(page)) - zoomed)).toBeLessThan(1);
+
+		// Below fit, from the host, the zoom stays too.
+		await page.evaluate(() => window.__pptxViewer.setZoom(0.5));
+		await expect.poll(() => slideWidth(page)).toBeLessThan(fitted - 50);
+		const small = await slideWidth(page);
+		await page.evaluate(() => window.__pptxViewer.goTo(0));
+		await expect.poll(() => page.evaluate(() => window.__pptxViewer.getActiveSlideIndex())).toBe(0);
+		await page.waitForTimeout(300);
+		expect(Math.abs((await slideWidth(page)) - small)).toBeLessThan(1);
+
+		// Zoom to fit still lands on the same fit.
+		await zoomFitButton(page).click();
+		await expect.poll(async () => Math.abs((await slideWidth(page)) - fitted)).toBeLessThan(1);
 	});
 });

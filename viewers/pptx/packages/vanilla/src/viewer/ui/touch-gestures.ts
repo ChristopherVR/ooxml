@@ -1,13 +1,12 @@
-import { createTouchGestureRecognizer } from 'ooxml-ui/pptx';
-
-/** Vanilla's zoom bounds, shared with the regular zoom controls. */
-const MIN_ZOOM_SCALE = 0.1;
-const MAX_ZOOM_SCALE = 8;
+import { createTouchGestureRecognizer, MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
 
 export interface TouchGestureHandlers {
-	/** Read the current effective scale, including fit-to-viewport resolution. */
+	/** Read the current zoom factor relative to fit (1 = fit), as the zoom buttons do. */
 	getScale(): number;
-	/** Persist a concrete scale after a two-finger pinch. */
+	/**
+	 * Persist a fit-relative zoom after a two-finger pinch, already clamped to the
+	 * shared bounds the buttons, Ctrl+wheel and `setZoom` use.
+	 */
 	onPinchZoom(scale: number): void;
 	/** Whether a one-finger swipe may change slides at this moment. */
 	isSwipeEnabled(): boolean;

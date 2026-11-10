@@ -46,6 +46,7 @@ describe('useZoomViewport measured fit', () => {
 		notifyNode?: boolean;
 		nodeKey?: string;
 		dragPans?: boolean;
+		activeSlideId?: string;
 	}) {
 		zoom = useZoomViewport({ canvasSize, selectedElements: [], ...props });
 		const objectRef = zoom.canvasViewportRef;
@@ -218,6 +219,38 @@ describe('useZoomViewport measured fit', () => {
 		render(false);
 		expect(zoom.canvasViewportRef.current).toBe(node);
 		expect(drag()).toBe(100);
+	});
+
+	it('keeps the zoom on another slide and shows it from its top-left corner', () => {
+		const render = (activeSlideId: string) =>
+			act(() =>
+				root.render(
+					createElement(Harness, {
+						notifyNode: true,
+						activeSlideId,
+						fitPadding: 0,
+						maxFitScale: null,
+					}),
+				),
+			);
+		render('s1');
+		const node = zoom.canvasViewportRef.current!;
+		act(() => zoom.setScale(1.5));
+		node.scrollLeft = 120;
+		node.scrollTop = 80;
+
+		// The same slide again (an edit re-renders it) leaves the scroll alone.
+		render('s1');
+		expect([node.scrollLeft, node.scrollTop]).toStrictEqual([120, 80]);
+
+		render('s2');
+		expect(zoom.scale).toBe(1.5);
+		expect([node.scrollLeft, node.scrollTop]).toStrictEqual([0, 0]);
+
+		// Below fit is a zoom like any other (PowerPoint goes down to 10%).
+		act(() => zoom.setScale(0.5));
+		render('s3');
+		expect(zoom.scale).toBe(0.5);
 	});
 
 	it('still retries an initially null object ref assigned after the owner commits', () => {

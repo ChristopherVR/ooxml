@@ -22,6 +22,16 @@ describe('zoom stepping', () => {
 		expect(zoomOutScale(1)).toBe(0.9);
 	});
 
+	it('zooms out below fit down to 10% of fit', () => {
+		expect(MIN_ZOOM_SCALE).toBe(0.1);
+		expect(ZOOM_MIN_PERCENT).toBe(10);
+		expect(clampZoomScale(0.5)).toBe(0.5);
+		expect(clampZoomScale(0.05)).toBe(0.1);
+		expect(zoomOutScale(0.2)).toBe(0.1);
+		expect(zoomOutScale(0.1)).toBe(0.1);
+		expect(zoomOutPercent(20)).toBe(10);
+	});
+
 	it('does not accumulate float dust across presses', () => {
 		expect(zoomInScale(zoomInScale(1))).toBe(1.2);
 		expect(zoomOutScale(zoomInScale(1))).toBe(1);

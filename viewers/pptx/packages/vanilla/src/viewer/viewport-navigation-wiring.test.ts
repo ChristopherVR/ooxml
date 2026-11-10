@@ -113,6 +113,36 @@ describe('vanilla viewport navigation', () => {
 		expect(env.drag()).toBe(100);
 	});
 
+	it('keeps the zoom on another slide and shows it from its top-left corner', () => {
+		const env = mount(true);
+		env.viewer.store.set({ slides: [slide, { ...slide, id: 'second', rId: 'rId2' }] });
+		let top = 0;
+		Object.defineProperty(env.viewport, 'scrollTop', {
+			configurable: true,
+			get: () => top,
+			set: (value: number) => {
+				top = value;
+			},
+		});
+		env.viewer.setZoom(2);
+		env.viewport.scrollLeft = 120;
+		env.viewport.scrollTop = 80;
+
+		// The same slide again (an edit replaces the slides array) keeps the scroll.
+		env.viewer.store.set({ slides: [...env.viewer.store.get().slides] });
+		expect([env.viewport.scrollLeft, top]).toStrictEqual([120, 80]);
+
+		env.viewer.next();
+		expect(env.viewer.store.get().currentSlide).toBe(1);
+		expect(env.viewer.getZoom()).toBeCloseTo(2);
+		expect([env.viewport.scrollLeft, top]).toStrictEqual([0, 0]);
+
+		// Below fit is a zoom like any other: setZoom(0.5) shows 50%.
+		env.viewer.setZoom(0.5);
+		env.viewer.goTo(0);
+		expect(env.viewer.getZoom()).toBeCloseTo(0.5);
+	});
+
 	it('detaches on destroy', () => {
 		const env = mount(true);
 		env.viewer.destroy();

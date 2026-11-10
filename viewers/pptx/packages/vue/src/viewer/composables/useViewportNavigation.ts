@@ -5,9 +5,11 @@
  * The behaviour is the shared `attachViewportNavigation` (one definition for
  * all five bindings); this composable only follows the scrolling element and
  * detaches with the component. The slide inside it is looked up on each use,
- * so a remounted canvas needs no re-attach.
+ * so a remounted canvas needs no re-attach. Showing another slide keeps the
+ * zoom and scrolls the viewport to the new slide's top-left corner (the shared
+ * `resetViewportScroll` policy).
  */
-import { attachViewportNavigation } from 'ooxml-ui/pptx';
+import { attachViewportNavigation, resetViewportScroll } from 'ooxml-ui/pptx';
 import type { ViewerZoomStore } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 import { onBeforeUnmount, watch } from 'vue';
@@ -21,6 +23,8 @@ export interface UseViewportNavigationOptions {
 	dragPans: Ref<boolean>;
 	/** False while the viewport must leave the wheel and pointer alone (a running show). */
 	active: Ref<boolean>;
+	/** Id of the slide on the canvas; another slide is shown from its top-left corner. */
+	slideId: Ref<string | undefined>;
 }
 
 export function useViewportNavigation(options: UseViewportNavigationOptions): void {
@@ -39,6 +43,15 @@ export function useViewportNavigation(options: UseViewportNavigationOptions): vo
 				: null;
 		},
 		{ immediate: true, flush: 'post' },
+	);
+	watch(
+		options.slideId,
+		() => {
+			if (options.viewport.value) {
+				resetViewportScroll(options.viewport.value);
+			}
+		},
+		{ flush: 'post' },
 	);
 	onBeforeUnmount(() => {
 		detach?.();

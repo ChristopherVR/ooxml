@@ -120,6 +120,24 @@ export function viewportCanPan(
 }
 
 /**
+ * Scroll a viewport to where a newly shown slide starts: its top-left corner.
+ *
+ * Every binding calls this when it shows another slide, and only then. The
+ * zoom belongs to the window, as in PowerPoint's Normal view, so it is kept;
+ * the scroll position was chosen for the previous slide's content and says
+ * nothing about the next one's. Top-left rather than centred because that is
+ * where a slide's content starts in reading order (its title, in most
+ * layouts), and because it needs no layout: a centred position depends on the
+ * scroll range at the new slide's size, which may not be laid out yet when the
+ * binding reacts. When nothing overflows the viewport there is nothing to
+ * scroll and this changes nothing.
+ */
+export function resetViewportScroll(viewport: Pick<HTMLElement, 'scrollLeft' | 'scrollTop'>): void {
+	viewport.scrollLeft = 0;
+	viewport.scrollTop = 0;
+}
+
+/**
  * Elements whose own Space handling (typing, pressing) must win over pan. Not
  * `isEditorControlTarget` from `editor-key-target`: that treats everything
  * inside the slide viewport as the canvas, and a focused button there (a chart

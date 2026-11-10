@@ -95,7 +95,7 @@ export interface ViewerBodyProps {
 	controller: EditorController;
 	onstageresize: (width: number, height: number) => void;
 	onstageholder: (el: HTMLDivElement | null) => void;
-	/** Current manual zoom scale (0.2-5); the baseline a pinch gesture scales from. */
+	/** Current manual zoom scale (0.1-5); the baseline a pinch gesture scales from. */
 	getzoomscale: () => number;
 	/** Two-finger pinch on the viewport: commit the new manual zoom scale. */
 	onpinchzoom: (scale: number) => void;

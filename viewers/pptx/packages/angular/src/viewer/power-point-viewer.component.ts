@@ -3128,6 +3128,8 @@ export class PowerPointViewerComponent
 		this.viewportNavigation.setup(() => this.mainEl()?.nativeElement, {
 			dragPans: () => this.getMode() === 'preview',
 			presenting: () => this.presentationMode.presenting(),
+			// The zoom is kept across slides; another slide is shown from its top-left.
+			slideId: () => this.activeSlide()?.id,
 		});
 
 		// Hand the presentation-mode controller the few accessors it alone needs

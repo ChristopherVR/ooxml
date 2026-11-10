@@ -222,6 +222,7 @@
 				setScale: onpinchzoom,
 				dragPans: dragpans,
 				active: !presenting,
+				slideId: activeSlide?.id,
 			}}
 		>
 			<ViewerStage

@@ -74,13 +74,14 @@ import type { PowerPointViewerExpose } from 'pptx-vue-viewer';
 | Method      | Signature                 | Description                                |
 | ----------- | ------------------------- | ------------------------------------------ |
 | `getZoom`   | `() => number`            | Get the current zoom level (1 = 100%).     |
-| `setZoom`   | `(level: number) => void` | Set the zoom level (clamped to 0.2 - 5.0). |
+| `setZoom`   | `(level: number) => void` | Set the zoom level (clamped to 0.1 - 5.0). |
 | `zoomIn`    | `() => void`              | Zoom in by one step (10%).                 |
 | `zoomOut`   | `() => void`              | Zoom out by one step (10%).                |
 | `zoomReset` | `() => void`              | Reset zoom to 100%.                        |
 
-::: info Zoom range differs slightly from React
-The Vue and React viewers both clamp zoom to `0.2` - `5.0` (500%).
+::: info Zoom range
+The Vue and React viewers both clamp zoom to `0.1` (10%) - `5.0` (500%), where `1` fits the slide
+to the viewport. Going to another slide keeps the zoom.
 :::
 
 ### Mode

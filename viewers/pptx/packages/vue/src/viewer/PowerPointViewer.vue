@@ -1570,6 +1570,8 @@ useViewportNavigation({
 	store: zoomStore,
 	dragPans: computed(() => ribbonMode.value === 'preview'),
 	active: computed(() => !presentation.presenting.value),
+	// The zoom is kept across slides; another slide is shown from its top-left.
+	slideId: computed(() => activeSlide.value?.id),
 });
 
 watch(ribbonMode, (mode) => {

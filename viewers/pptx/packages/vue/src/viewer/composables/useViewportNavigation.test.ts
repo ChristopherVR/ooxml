@@ -26,10 +26,11 @@ async function setup() {
 	const viewport = ref<HTMLElement | null>(null);
 	const dragPans = ref(true);
 	const active = ref(true);
+	const slideId = ref<string | undefined>('s1');
 	const wrapper = mount(
 		defineComponent({
 			setup() {
-				runViewportNavigation({ viewport, store, dragPans, active });
+				runViewportNavigation({ viewport, store, dragPans, active, slideId });
 				return () => h('main', { ref: viewport }, [h('div', { 'aria-roledescription': 'slide' })]);
 			},
 		}),
@@ -39,6 +40,7 @@ async function setup() {
 	await nextTick();
 	const node = viewport.value!;
 	let scroll = 0;
+	let top = 0;
 	Object.defineProperties(node, {
 		clientWidth: { configurable: true, get: () => 100 },
 		clientHeight: { configurable: true, get: () => 100 },
@@ -51,7 +53,13 @@ async function setup() {
 				scroll = Math.max(0, value);
 			},
 		},
-		scrollTop: { configurable: true, get: () => 0, set: () => {} },
+		scrollTop: {
+			configurable: true,
+			get: () => top,
+			set: (value: number) => {
+				top = Math.max(0, value);
+			},
+		},
 	});
 	vi.spyOn(node, 'setPointerCapture').mockImplementation(() => {});
 	vi.spyOn(node, 'releasePointerCapture').mockImplementation(() => {});
@@ -73,7 +81,7 @@ async function setup() {
 		pointer('pointerup', 150);
 		return scroll;
 	};
-	return { store, node, dragPans, active, wrapper, drag };
+	return { store, node, dragPans, active, slideId, wrapper, drag };
 }
 
 describe('useViewportNavigation', () => {
@@ -106,6 +114,19 @@ describe('useViewportNavigation', () => {
 		env.node.dispatchEvent(event);
 		expect(event.defaultPrevented).toBeFalsy();
 		expect(env.store.getState().zoom).toBe(1);
+	});
+
+	it('keeps the zoom on another slide and shows it from its top-left corner', async () => {
+		env = await setup();
+		env.store.dispatch({ type: 'set-zoom', zoom: 0.5 });
+		env.node.scrollLeft = 120;
+		env.node.scrollTop = 80;
+
+		env.slideId.value = 's2';
+		await nextTick();
+
+		expect(env.store.getState().zoom).toBe(0.5);
+		expect([env.node.scrollLeft, env.node.scrollTop]).toStrictEqual([0, 0]);
 	});
 
 	it('detaches when the component unmounts', async () => {
