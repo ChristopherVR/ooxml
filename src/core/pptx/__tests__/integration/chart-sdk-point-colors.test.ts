@@ -34,7 +34,7 @@ describe('point colours of new charts', () => {
 					{ name: 'A', values: [1, 2, 3], color: '#3B5BDB', ...(pointColors && { pointColors }) },
 				],
 			});
-			expect(xml).not.toContain('<c:dPt>');
+			expect(xml).not.toMatch(/<c:dPt\s*\/?>/u);
 			expect(chart.series[0]!.dataPoints ?? []).toStrictEqual([]);
 		}
 	});
@@ -46,11 +46,11 @@ describe('point colours of new charts', () => {
 			],
 		});
 		const series = seriesXml(xml)[0]!;
-		expect(firstElement(series, 'c:spPr')).toContain('<a:srgbClr val="3B5BDB">');
+		expect(firstElement(series, 'c:spPr')).toMatch(/<a:srgbClr val="3B5BDB"\s*\/?>/u);
 		const points = pointsXml(series);
 		expect(points).toHaveLength(1);
 		expect(points[0]).toMatch(
-			/^<c:dPt><c:idx val="2"><\/c:idx>(<c:invertIfNegative[^>]*><\/c:invertIfNegative>)?<c:spPr><a:solidFill><a:srgbClr val="DBE4FF">/u,
+			/^<c:dPt><c:idx val="2"\/>(<c:invertIfNegative[^>]*\/>)?<c:spPr><a:solidFill><a:srgbClr val="DBE4FF"\/>/u,
 		);
 		expect(chart.series[0]!.color).toBe('#3B5BDB');
 		expect(chart.series[0]!.dataPoints).toStrictEqual([
@@ -63,8 +63,8 @@ describe('point colours of new charts', () => {
 			palette: ['#112233'],
 			series: [{ name: 'A', values: [1, 2, 3], pointColors: ['#DBE4FF'] }],
 		});
-		expect(firstElement(seriesXml(xml)[0]!, 'c:spPr')).toContain('<a:srgbClr val="112233">');
-		expect(pointsXml(xml)[0]).toContain('<a:srgbClr val="DBE4FF">');
+		expect(firstElement(seriesXml(xml)[0]!, 'c:spPr')).toMatch(/<a:srgbClr val="112233"\s*\/?>/u);
+		expect(pointsXml(xml)[0]).toMatch(/<a:srgbClr val="DBE4FF"\s*\/?>/u);
 		expect(chart.series[0]!.dataPoints).toStrictEqual([
 			expect.objectContaining({ idx: 0, spPr: { fillColor: '#DBE4FF' } }),
 		]);
@@ -85,9 +85,9 @@ describe('point colours of new charts', () => {
 		const points = pointsXml(seriesXml(xml)[0]!);
 		expect(points).toHaveLength(1);
 		const point = points[0]!;
-		expect(point).toContain('<c:idx val="0">');
+		expect(point).toMatch(/<c:idx val="0"\s*\/?>/u);
 		expect(firstElement(point, 'c:marker')).toMatch(
-			/<c:symbol val="circle"><\/c:symbol><c:size val="7"><\/c:size><c:spPr><a:solidFill><a:srgbClr val="E03131"><\/a:srgbClr><\/a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="3B5BDB">/u,
+			/<c:symbol val="circle"\/><c:size val="7"\/><c:spPr><a:solidFill><a:srgbClr val="E03131"\/><\/a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="3B5BDB"\/>/u,
 		);
 		// PowerPoint draws no fill of a line point's own c:spPr, so none is written.
 		expect(point.replace(firstElement(point, 'c:marker'), '')).not.toContain('E03131');
@@ -107,7 +107,7 @@ describe('point colours of new charts', () => {
 		const { xml, chart } = await saved('line', {
 			series: [{ name: 'L', values: [1, 2, 3], pointColors: [null, '#E03131'] }],
 		});
-		expect(firstElement(pointsXml(xml)[0]!, 'c:marker')).toContain('<c:symbol val="auto">');
+		expect(firstElement(pointsXml(xml)[0]!, 'c:marker')).toMatch(/<c:symbol val="auto"\s*\/?>/u);
 		expect(chart.series[0]!.dataPoints).toStrictEqual([
 			{ idx: 1, marker: { symbol: 'auto', spPr: { fillColor: '#E03131' } } },
 		]);
@@ -127,11 +127,13 @@ describe('point colours of new charts', () => {
 				},
 			],
 		});
-		expect(xml).toContain('<c:barChart>');
-		expect(xml).toContain('<c:lineChart>');
+		expect(xml).toMatch(/<c:barChart\s*\/?>/u);
+		expect(xml).toMatch(/<c:lineChart\s*\/?>/u);
 		const [bar, line] = seriesXml(xml);
-		expect(pointsXml(bar!)[0]).toContain('<c:spPr><a:solidFill><a:srgbClr val="DBE4FF">');
-		expect(firstElement(pointsXml(line!)[0]!, 'c:marker')).toContain('<a:srgbClr val="E03131">');
+		expect(pointsXml(bar!)[0]).toMatch(/<c:spPr><a:solidFill><a:srgbClr val="DBE4FF"\s*\/?>/u);
+		expect(firstElement(pointsXml(line!)[0]!, 'c:marker')).toMatch(
+			/<a:srgbClr val="E03131"\s*\/?>/u,
+		);
 		const [barModel, lineModel] = chart.series;
 		expect(barModel!.dataPoints).toStrictEqual([
 			expect.objectContaining({ idx: 2, spPr: { fillColor: '#DBE4FF' } }),
@@ -197,8 +199,8 @@ describe("'none' point colours of new charts", () => {
 			});
 			const points = pointsXml(xml);
 			expect(points).toHaveLength(2);
-			expect(firstElement(points[0]!, 'c:spPr')).toBe('<c:spPr><a:noFill></a:noFill></c:spPr>');
-			expect(points[1]).toContain('<a:srgbClr val="DBE4FF">');
+			expect(firstElement(points[0]!, 'c:spPr')).toBe('<c:spPr><a:noFill/></c:spPr>');
+			expect(points[1]).toMatch(/<a:srgbClr val="DBE4FF"\s*\/?>/u);
 			expect(chart.series[0]!.dataPoints!.map((point) => point.spPr)).toStrictEqual([
 				{ fillColor: 'none' },
 				{ fillColor: '#DBE4FF' },
@@ -218,7 +220,7 @@ describe("'none' point colours of new charts", () => {
 			],
 		});
 		expect(firstElement(pointsXml(xml)[0]!, 'c:marker')).toContain(
-			'<c:spPr><a:noFill></a:noFill><a:ln><a:solidFill><a:srgbClr val="3B5BDB">',
+			'<c:spPr><a:noFill/><a:ln><a:solidFill><a:srgbClr val="3B5BDB"/>',
 		);
 		expect(chart.series[0]!.dataPoints).toStrictEqual([
 			{

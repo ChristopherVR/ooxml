@@ -35,13 +35,13 @@ describe('Insert Chart: saved through the shared chart core', () => {
 			expect(warnings).toStrictEqual([]);
 			expect(xml).not.toContain('<c:f>');
 			expect(xml).not.toContain('roundedCorners');
-			expect(xml).toContain('<c:legendPos val="r"></c:legendPos>');
+			expect(xml).toContain('<c:legendPos val="r"/>');
 			expect(chart.title).toBe('Chart Title');
 			expect(chart.series.map((series) => [series.name, series.values])).toStrictEqual([
 				['Series 1', [4, 3, 5]],
 			]);
 			if (kind === 'column' || kind === 'bar') {
-				expect(xml).toContain('<c:gapWidth val="150"></c:gapWidth>');
+				expect(xml).toContain('<c:gapWidth val="150"/>');
 				expect(xml).not.toContain('<c:overlap');
 				expect(chart.barDirection).toBe(kind === 'bar' ? 'bar' : 'col');
 			}
@@ -51,7 +51,7 @@ describe('Insert Chart: saved through the shared chart core', () => {
 
 	it('writes a line chart the dialog asked to cluster as standard', async () => {
 		const { xml, chart } = await saveInserted('line', { grouping: 'clustered' });
-		expect(xml).toContain('<c:grouping val="standard"></c:grouping>');
+		expect(xml).toContain('<c:grouping val="standard"/>');
 		expect(chart.groupingStandard).toBe(true);
 	});
 

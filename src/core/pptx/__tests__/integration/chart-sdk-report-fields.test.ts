@@ -96,12 +96,10 @@ describe('report fields of ChartInput', () => {
 		});
 		const value = firstElement(xml, 'c:valAx');
 		expect(firstElement(value, 'c:minorGridlines')).toBe(
-			'<c:minorGridlines><c:spPr><a:ln w="6350"><a:solidFill><a:srgbClr val="DEE2E6"></a:srgbClr></a:solidFill><a:prstDash val="dash"></a:prstDash></a:ln></c:spPr></c:minorGridlines>',
+			'<c:minorGridlines><c:spPr><a:ln w="6350"><a:solidFill><a:srgbClr val="DEE2E6"/></a:solidFill><a:prstDash val="dash"/></a:ln></c:spPr></c:minorGridlines>',
 		);
-		expect(value).toContain(
-			'<c:spPr><a:ln><a:prstDash val="sysDash"></a:prstDash></a:ln></c:spPr>',
-		);
-		expect(value).toContain('<c:crossesAt val="0.5">');
+		expect(value).toContain('<c:spPr><a:ln><a:prstDash val="sysDash"/></a:ln></c:spPr>');
+		expect(value).toMatch(/<c:crossesAt val="0\.5"\s*\/?>/u);
 		expect(axisOf(chart.axes, 'valAx')).toMatchObject({
 			min: 0,
 			max: 1,
@@ -129,7 +127,7 @@ describe('report fields of ChartInput', () => {
 		});
 		expect(firstElement(xml, 'c:catAx')).not.toContain('Gridlines');
 		expect(firstElement(firstElement(xml, 'c:valAx'), 'c:majorGridlines')).toContain(
-			'<a:ln><a:noFill>',
+			'<a:ln><a:noFill/>',
 		);
 		expect(axisOf(chart.axes, 'catAx')?.majorGridlines).toBeFalsy();
 		expect(axisOf(chart.axes, 'valAx')).toMatchObject({
@@ -146,8 +144,8 @@ describe('report fields of ChartInput', () => {
 				valAx: { crosses: 'max', crossBetween: 'between' },
 			},
 		});
-		expect(firstElement(xml, 'c:catAx')).toContain('<c:orientation val="maxMin">');
-		expect(firstElement(xml, 'c:valAx')).toContain('<c:crosses val="max">');
+		expect(firstElement(xml, 'c:catAx')).toMatch(/<c:orientation val="maxMin"\s*\/?>/u);
+		expect(firstElement(xml, 'c:valAx')).toMatch(/<c:crosses val="max"\s*\/?>/u);
 		expect(axisOf(chart.axes, 'catAx')?.orientation).toBe('maxMin');
 		expect(axisOf(chart.axes, 'valAx')).toMatchObject({ crosses: 'max', crossBetween: 'between' });
 	});

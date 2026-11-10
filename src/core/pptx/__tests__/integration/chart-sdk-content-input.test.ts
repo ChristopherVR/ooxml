@@ -49,10 +49,10 @@ describe('declarative chart inputs', () => {
 			dispBlanksAs: 'span',
 			series: [{ name: 'A', values: [1, null, 3] }],
 		});
-		expect(xml).toContain('<c:dispBlanksAs val="span">');
+		expect(xml).toMatch(/<c:dispBlanksAs val="span"\s*\/?>/u);
 		const values = element(xml, 'val');
-		expect(values).toContain('<c:ptCount val="3">');
-		expect(values).not.toContain('<c:pt idx="1">');
+		expect(values).toMatch(/<c:ptCount val="3"\s*\/?>/u);
+		expect(values).not.toMatch(/<c:pt idx="1"\s*\/?>/u);
 		expect(chart.series[0]!.blanks).toStrictEqual([false, true, false]);
 	});
 
@@ -71,11 +71,11 @@ describe('declarative chart inputs', () => {
 		expect(line).toContain('<c:v>Margin</c:v>');
 		const valueAxes = elements(xml, 'valAx');
 		expect(valueAxes).toHaveLength(2);
-		const secondary = valueAxes.find((axis) => axis.includes('<c:axPos val="r">'))!;
-		expect(secondary).toContain('<c:crosses val="max">');
-		const secondaryId = /<c:axId val="(\d+)">/u.exec(secondary)![1];
-		expect(line).toContain(`<c:axId val="${secondaryId}">`);
-		expect(bar).toContain('<c:axId val="222222222">');
+		const secondary = valueAxes.find((axis) => axis.includes('<c:axPos val="r"/>'))!;
+		expect(secondary).toMatch(/<c:crosses val="max"\s*\/?>/u);
+		const secondaryId = /<c:axId val="(\d+)"\/>/u.exec(secondary)![1];
+		expect(line).toContain(`<c:axId val="${secondaryId}"/>`);
+		expect(bar).toMatch(/<c:axId val="222222222"\s*\/?>/u);
 		expect(chart.chartType).toBe('combo');
 		expect(chart.series.map((series) => series.seriesChartType)).toStrictEqual(['bar', 'line']);
 	});
@@ -95,13 +95,13 @@ describe('declarative chart inputs', () => {
 			],
 		});
 		const series = element(xml, 'ser');
-		expect(series).toContain('<a:ln w="31750">');
-		expect(series).toContain('<a:prstDash val="dash">');
-		expect(series).toContain('<c:smooth val="1">');
+		expect(series).toMatch(/<a:ln w="31750"\s*\/?>/u);
+		expect(series).toMatch(/<a:prstDash val="dash"\s*\/?>/u);
+		expect(series).toMatch(/<c:smooth val="1"\s*\/?>/u);
 		const marker = element(series, 'marker');
-		expect(marker).toContain('<c:symbol val="diamond">');
-		expect(marker).toContain('<c:size val="8">');
-		expect(marker).toContain('<a:srgbClr val="00B050">');
+		expect(marker).toMatch(/<c:symbol val="diamond"\s*\/?>/u);
+		expect(marker).toMatch(/<c:size val="8"\s*\/?>/u);
+		expect(marker).toMatch(/<a:srgbClr val="00B050"\s*\/?>/u);
 		expect(marker).toMatch(/<a:ln>\s*<a:noFill/u);
 	});
 
@@ -126,14 +126,14 @@ describe('declarative chart inputs', () => {
 			],
 		});
 		const [first, second] = elements(xml, 'ser').map((series) => element(series, 'dLbls'));
-		expect(first).toContain('<c:numFmt formatCode="0%" sourceLinked="0">');
-		expect(first).toContain('<c:dLblPos val="outEnd">');
-		expect(first).toContain('<c:showVal val="1">');
+		expect(first).toMatch(/<c:numFmt formatCode="0%" sourceLinked="0"\s*\/?>/u);
+		expect(first).toMatch(/<c:dLblPos val="outEnd"\s*\/?>/u);
+		expect(first).toMatch(/<c:showVal val="1"\s*\/?>/u);
 		expect(first).toMatch(/<a:bodyPr[^>]* rot="-2700000"/u);
 		expect(first).toMatch(/<a:bodyPr[^>]* wrap="none"/u);
 		expect(first).toMatch(/<a:defRPr[^>]* sz="900"[^>]* b="1"|<a:defRPr[^>]* b="1"[^>]* sz="900"/u);
-		expect(first).toContain('<a:srgbClr val="FFFF00">');
-		expect(second).toContain('<c:showVal val="1">');
+		expect(first).toMatch(/<a:srgbClr val="FFFF00"\s*\/?>/u);
+		expect(second).toMatch(/<c:showVal val="1"\s*\/?>/u);
 		expect(second).toContain('sz="900"');
 		expect(second).not.toContain('dLblPos');
 		expect(chart.series[0]!.dataLabelOptions).toMatchObject({
@@ -159,7 +159,7 @@ describe('declarative chart inputs', () => {
 			scatterStyle: 'marker',
 			series: [{ name: 'S', values: [5, 6, 7], xValues: [1.5, 2.5, 4] }],
 		});
-		expect(scatter.xml).toContain('<c:scatterStyle val="marker">');
+		expect(scatter.xml).toMatch(/<c:scatterStyle val="marker"\s*\/?>/u);
 		expect(element(scatter.xml, 'xVal')).toMatch(
 			/<c:pt idx="0"><c:v>1.5<\/c:v>.*<c:pt idx="2"><c:v>4<\/c:v>/u,
 		);
@@ -182,9 +182,9 @@ describe('declarative chart inputs', () => {
 		});
 		const points = elements(doughnut.xml, 'dPt');
 		expect(points).toHaveLength(3);
-		expect(points[0]).toContain('<a:srgbClr val="112233">');
-		expect(points[1]).toContain('<a:srgbClr val="ABCDEF">');
-		expect(points[2]).toContain('<a:srgbClr val="112233">');
+		expect(points[0]).toMatch(/<a:srgbClr val="112233"\s*\/?>/u);
+		expect(points[1]).toMatch(/<a:srgbClr val="ABCDEF"\s*\/?>/u);
+		expect(points[2]).toMatch(/<a:srgbClr val="112233"\s*\/?>/u);
 		const bar = await save('bar', {
 			categories: CATEGORIES,
 			palette: ['#112233', '#445566'],
@@ -198,7 +198,7 @@ describe('declarative chart inputs', () => {
 			(series) => /<c:spPr><a:solidFill><a:srgbClr val="(\w+)"/u.exec(series)?.[1],
 		);
 		expect(colors).toStrictEqual(['112233', '445566', '000000']);
-		expect(bar.xml).not.toContain('<c:dPt>');
+		expect(bar.xml).not.toMatch(/<c:dPt\s*\/?>/u);
 	});
 
 	it('writes a series with no fill', async () => {
@@ -220,9 +220,9 @@ describe('declarative chart inputs', () => {
 		});
 		const value = element(xml, 'valAx');
 		expect(value).toContain('<a:t>Revenue</a:t>');
-		expect(value).toContain('<c:numFmt formatCode="#,##0" sourceLinked="0">');
+		expect(value).toMatch(/<c:numFmt formatCode="#,##0" sourceLinked="0"\s*\/?>/u);
 		expect(value).toContain('sz="800"');
-		expect(value).toContain('<a:srgbClr val="595959">');
+		expect(value).toMatch(/<a:srgbClr val="595959"\s*\/?>/u);
 		const category = element(xml, 'catAx');
 		expect(category).toMatch(/<c:txPr><a:bodyPr[^>]* rot="-2700000"/u);
 		expect(category).toMatch(/<c:spPr><a:ln><a:noFill/u);
@@ -236,7 +236,7 @@ describe('declarative chart inputs', () => {
 			axes: { valAx: { line: { width: 1.5 } } },
 		});
 		const value = element(xml, 'valAx');
-		expect(value).toContain('<c:spPr><a:ln w="19050"></a:ln></c:spPr>');
+		expect(value).toMatch(/<c:spPr><a:ln w="19050"\s*(?:\/>|><\/a:ln>)<\/c:spPr>/u);
 		expect(chart.axes?.find((axis) => axis.axisType === 'valAx')?.spPr).toStrictEqual({
 			strokeWidth: 1.5,
 		});
@@ -254,7 +254,7 @@ describe('declarative chart inputs', () => {
 		expect(title).toMatch(/sz="2000"/u);
 		expect(title).toMatch(/ b="1"/u);
 		expect(title).toMatch(/ i="1"/u);
-		expect(title).toContain('<a:srgbClr val="1F4E79">');
+		expect(title).toMatch(/<a:srgbClr val="1F4E79"\s*\/?>/u);
 		expect(title).toContain('typeface="Georgia"');
 		const legend = element(xml, 'legend');
 		expect(legend).toMatch(/<a:defRPr[^>]* sz="900"/u);
@@ -277,7 +277,7 @@ describe('declarative chart inputs for generated report charts', () => {
 			],
 		});
 		const labels = element(element(xml, 'ser'), 'dLbls');
-		expect(labels).not.toContain('<c:dLbl>');
+		expect(labels).not.toMatch(/<c:dLbl\s*\/?>/u);
 		for (const flag of [
 			'showLegendKey',
 			'showCatName',
@@ -285,8 +285,8 @@ describe('declarative chart inputs for generated report charts', () => {
 			'showPercent',
 			'showBubbleSize',
 		])
-			expect(labels).toContain(`<c:${flag} val="0">`);
-		expect(labels).toContain('<c:showVal val="1">');
+			expect(labels).toContain(`<c:${flag} val="0"/>`);
+		expect(labels).toMatch(/<c:showVal val="1"\s*\/?>/u);
 		const bodyPr = /<a:bodyPr[^>]*>/u.exec(labels)?.[0] ?? '';
 		expect(bodyPr).toContain('wrap="none"');
 		expect(bodyPr).toContain('anchor="ctr"');
@@ -300,7 +300,7 @@ describe('declarative chart inputs for generated report charts', () => {
 		});
 		const points = elements(xml, 'dPt');
 		expect(points).toHaveLength(2);
-		expect(points[0]).toContain('<a:srgbClr val="112233">');
+		expect(points[0]).toMatch(/<a:srgbClr val="112233"\s*\/?>/u);
 		expect(element(points[1]!, 'spPr')).toMatch(/^<c:spPr><a:noFill/u);
 	});
 
@@ -324,19 +324,19 @@ describe('declarative chart inputs for generated report charts', () => {
 		const axisLine = /<c:spPr>((?!<\/c:spPr>).)*<\/c:spPr>/su.exec(
 			value.replace(/<c:majorGridlines>.*?<\/c:majorGridlines>/su, ''),
 		)![0];
-		expect(axisLine).toContain('<a:ln w="9525">');
-		expect(axisLine).toContain('<a:srgbClr val="808080">');
-		expect(axisLine).toContain('<a:prstDash val="sysDash">');
+		expect(axisLine).toMatch(/<a:ln w="9525"\s*\/?>/u);
+		expect(axisLine).toMatch(/<a:srgbClr val="808080"\s*\/?>/u);
+		expect(axisLine).toMatch(/<a:prstDash val="sysDash"\s*\/?>/u);
 		const grid = element(value, 'majorGridlines');
-		expect(grid).toContain('<a:ln w="6350">');
-		expect(grid).toContain('<a:srgbClr val="D9D9D9">');
-		expect(grid).toContain('<a:prstDash val="dash">');
-		expect(value).toContain('<c:majorTickMark val="none">');
-		expect(value).toContain('<c:minorTickMark val="none">');
-		expect(value).toContain('<c:crosses val="max">');
-		expect(value).toContain('<c:crossBetween val="midCat">');
+		expect(grid).toMatch(/<a:ln w="6350"\s*\/?>/u);
+		expect(grid).toMatch(/<a:srgbClr val="D9D9D9"\s*\/?>/u);
+		expect(grid).toMatch(/<a:prstDash val="dash"\s*\/?>/u);
+		expect(value).toMatch(/<c:majorTickMark val="none"\s*\/?>/u);
+		expect(value).toMatch(/<c:minorTickMark val="none"\s*\/?>/u);
+		expect(value).toMatch(/<c:crosses val="max"\s*\/?>/u);
+		expect(value).toMatch(/<c:crossBetween val="midCat"\s*\/?>/u);
 		const category = element(xml, 'catAx');
-		expect(category).toContain('<c:majorTickMark val="out">');
+		expect(category).toMatch(/<c:majorTickMark val="out"\s*\/?>/u);
 		expect(category).toMatch(/<c:spPr><a:ln><a:noFill/u);
 		const reloaded = chart.axes?.find((axis) => axis.axisType === 'valAx');
 		expect(reloaded).toMatchObject({
@@ -364,7 +364,7 @@ describe('declarative chart inputs for generated report charts', () => {
 		expect(runs[0]).toContain('<a:t>Sales </a:t>');
 		expect(runs[1]).toMatch(/sz="1000"/u);
 		expect(runs[1]).toMatch(/ i="1"/u);
-		expect(runs[1]).toContain('<a:srgbClr val="C00000">');
+		expect(runs[1]).toMatch(/<a:srgbClr val="C00000"\s*\/?>/u);
 		expect(title).toContain('typeface="Georgia"');
 		expect(chart.titleRuns?.map((run) => run.text)).toStrictEqual(['Sales ', '2026']);
 	});

@@ -68,7 +68,7 @@ describe('new chart label positions: save and reload', () => {
 		);
 		const { xml, chart, warnings } = await save();
 		const second = firstElement(xml, 'c:ser', xml.indexOf('<c:ser>') + 1);
-		expect(second).toContain('<c:dLblPos val="outEnd"></c:dLblPos>');
+		expect(second).toMatch(/<c:dLblPos val="outEnd"\s*(?:\/>|><\/c:dLblPos>)/u);
 		expect(firstElement(xml, 'c:ser')).not.toContain('dLblPos');
 		expect(chart.series[1]!.dataLabelOptions).toMatchObject({
 			showValue: true,
@@ -82,7 +82,7 @@ describe('new chart label positions: save and reload', () => {
 		const { element, save } = await newChartDeck('line');
 		setChartDataLabels(element, { showValue: true });
 		const { xml, chart } = await save();
-		expect(xml).toContain('<c:showVal val="1"></c:showVal>');
+		expect(xml).toMatch(/<c:showVal val="1"\s*(?:\/>|><\/c:showVal>)/u);
 		expect(xml).not.toContain('dLblPos');
 		expect(chart.style?.hasDataLabels).toBe(true);
 		expect(chart.style?.dataLabels?.position).toBeUndefined();

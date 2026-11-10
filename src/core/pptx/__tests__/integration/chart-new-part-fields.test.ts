@@ -23,6 +23,16 @@ interface FieldCase {
 	want: unknown;
 }
 
+/** `fragment` as a pattern that also accepts its empty elements written as `<x/>`. */
+const fragmentPattern = (fragment: string) =>
+	new RegExp(
+		fragment
+			.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+			.replace(/<([\w:]+)([^<>]*)><\/\1>/gu, '<$1$2\\s*(?:/>|></$1>)')
+			.replace(/<([\w:]+)([^<>/]*)>$/u, '<$1$2\\s*/?>'),
+		'u',
+	);
+
 const valueAxis = (chart: PptxChartData) => chart.axes?.find((axis) => axis.axisType === 'valAx');
 
 const CASES: FieldCase[] = [
@@ -547,8 +557,8 @@ describe('new chart fields written through the shared chart core', () => {
 		item.edit(element, element.chartData!);
 		const { xml, chart, warnings } = await save();
 		expect(warnings).toStrictEqual([]);
-		for (const fragment of item.xml ?? []) expect(xml).toContain(fragment);
-		for (const fragment of item.absent ?? []) expect(xml).not.toContain(fragment);
+		for (const fragment of item.xml ?? []) expect(xml).toMatch(fragmentPattern(fragment));
+		for (const fragment of item.absent ?? []) expect(xml).not.toMatch(fragmentPattern(fragment));
 		expect(item.read(chart, xml)).toStrictEqual(item.want);
 	});
 });

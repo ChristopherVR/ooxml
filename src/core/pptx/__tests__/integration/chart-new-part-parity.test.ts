@@ -151,9 +151,9 @@ function comparable(chart: PptxChartData, horizontal: boolean) {
 describe('new classic charts: shared core against the legacy generator', () => {
 	it.each(CASES)('$name reloads as the legacy part did', async (item) => {
 		const { core, legacy, xml } = await decks(item);
-		expect(xml).not.toContain('<c:f>');
+		expect(xml).not.toMatch(/<c:f\s*\/?>/u);
 		expect(xml).not.toContain('roundedCorners');
-		expect(xml).toContain('<c:legendPos val="r"></c:legendPos>');
+		expect(xml).toMatch(/<c:legendPos val="r"\s*(?:\/>|><\/c:legendPos>)/u);
 		const horizontal = item.input?.barDirection === 'bar';
 		const [fromCore, fromLegacy] = [await reload(core), await reload(legacy)];
 		expect(comparable(fromCore, horizontal)).toStrictEqual(comparable(fromLegacy, horizontal));

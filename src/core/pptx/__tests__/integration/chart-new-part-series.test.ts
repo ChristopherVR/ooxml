@@ -35,8 +35,10 @@ describe.each(['addChart', 'builder'] as NewChartPath[])(
 				['Cost', 'bar'],
 				['Margin', 'line'],
 			]);
-			expect(firstElement(xml, 'c:lineChart')).toContain('<c:order val="1"></c:order>');
-			expect(firstElement(xml, 'c:lineChart')).toContain('<c:smooth val="0"></c:smooth>');
+			expect(firstElement(xml, 'c:lineChart')).toMatch(/<c:order val="1"\s*(?:\/>|><\/c:order>)/u);
+			expect(firstElement(xml, 'c:lineChart')).toMatch(
+				/<c:smooth val="0"\s*(?:\/>|><\/c:smooth>)/u,
+			);
 			expect(warnings).toStrictEqual([]);
 		});
 
@@ -109,7 +111,9 @@ describe('secondary value axes', () => {
 		setChartSeriesChartType(element, 2, 'line');
 		element.chartData = withChartSeriesOnSecondaryAxis(element.chartData!, 2, true);
 		const { xml, chart } = await save();
-		expect(firstElement(xml, 'c:lineChart')).toContain('<c:axId val="222222223"></c:axId>');
+		expect(firstElement(xml, 'c:lineChart')).toMatch(
+			/<c:axId val="222222223"\s*(?:\/>|><\/c:axId>)/u,
+		);
 		expect(chart.series[2]).toMatchObject({ seriesChartType: 'line', axisId: 222222223 });
 	});
 
@@ -185,7 +189,7 @@ describe('series data labels', () => {
 		expect(warnings).toStrictEqual([]);
 		const third = xml.slice(xml.lastIndexOf('<c:ser>'));
 		expect(third).toContain('<c:separator>; </c:separator>');
-		expect(third).toContain('<c:numFmt formatCode="0.0" sourceLinked="0"></c:numFmt>');
+		expect(third).toMatch(/<c:numFmt formatCode="0\.0" sourceLinked="0"\s*(?:\/>|><\/c:numFmt>)/u);
 		expect(chart.series[2]!.dataLabelOptions).toMatchObject({
 			showValue: true,
 			showCategory: true,

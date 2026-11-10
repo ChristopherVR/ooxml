@@ -17,7 +17,7 @@ describe.each(PATHS)('new chart defaults through %s', (path) => {
 		expect(element.chartData!.barGapWidth).toBe(150);
 		expect(element.chartData!.barOverlap).toBeUndefined();
 		const { xml, chart } = await save();
-		expect(xml).toContain('<c:gapWidth val="150"></c:gapWidth>');
+		expect(xml).toMatch(/<c:gapWidth val="150"\s*(?:\/>|><\/c:gapWidth>)/u);
 		expect(xml).not.toContain('<c:overlap');
 		expect(chart.barGapWidth).toBe(150);
 	});
@@ -26,7 +26,7 @@ describe.each(PATHS)('new chart defaults through %s', (path) => {
 		const doughnut = await newChartDeck('doughnut', {}, path);
 		expect(doughnut.element.chartData!.doughnutHoleSize).toBe(50);
 		const saved = await doughnut.save();
-		expect(saved.xml).toContain('<c:holeSize val="50"></c:holeSize>');
+		expect(saved.xml).toMatch(/<c:holeSize val="50"\s*(?:\/>|><\/c:holeSize>)/u);
 		expect(saved.chart.doughnutHoleSize).toBe(50);
 		const pie = await newChartDeck('pie', {}, path);
 		expect(pie.element.chartData!.barGapWidth).toBeUndefined();
@@ -39,7 +39,7 @@ describe.each(PATHS)('new chart defaults through %s', (path) => {
 			const { element, save } = await newChartDeck('bar', { grouping }, path);
 			expect(element.chartData!.barOverlap).toBeUndefined();
 			const { xml, chart } = await save();
-			expect(xml).toContain('<c:overlap val="100"></c:overlap>');
+			expect(xml).toMatch(/<c:overlap val="100"\s*(?:\/>|><\/c:overlap>)/u);
 			expect(chart.barOverlap).toBe(100);
 		}
 	});
@@ -48,7 +48,7 @@ describe.each(PATHS)('new chart defaults through %s', (path) => {
 		const { element, save } = await newChartDeck('line', {}, path);
 		element.chartData!.series[1]!.smooth = true;
 		const { xml, chart } = await save();
-		expect(xml.match(/<c:smooth val="0"><\/c:smooth>/gu)).toHaveLength(2);
+		expect(xml.match(/<c:smooth val="0"\/>/gu)).toHaveLength(2);
 		expect(chart.series.map((series) => series.smooth)).toStrictEqual([false, true, false]);
 	});
 
@@ -70,7 +70,7 @@ describe.each(PATHS)('new chart defaults through %s', (path) => {
 		for (const type of ['line', 'area'] as const) {
 			const { save } = await newChartDeck(type, { grouping: 'clustered' }, path);
 			const { xml, chart } = await save();
-			expect(xml).toContain('<c:grouping val="standard"></c:grouping>');
+			expect(xml).toMatch(/<c:grouping val="standard"\s*(?:\/>|><\/c:grouping>)/u);
 			// The model names the lowest grouping of every family `clustered`.
 			expect([chart.grouping, chart.groupingStandard]).toStrictEqual(['clustered', true]);
 		}
@@ -82,16 +82,14 @@ describe('new chart group option boundaries', () => {
 		const { xml, chart } = await (
 			await newChartDeck('bar', { grouping: 'stacked', overlap: 0 })
 		).save();
-		expect(xml).toContain('<c:overlap val="0"></c:overlap>');
+		expect(xml).toMatch(/<c:overlap val="0"\s*(?:\/>|><\/c:overlap>)/u);
 		expect(chart.barOverlap).toBe(0);
 	});
 
 	it('writes and reloads the bounds of each range', async () => {
 		const bar = await newChartDeck('bar', { gapWidth: 0, overlap: -100 });
 		const low = await bar.save();
-		expect(low.xml).toContain(
-			'<c:gapWidth val="0"></c:gapWidth><c:overlap val="-100"></c:overlap>',
-		);
+		expect(low.xml).toContain('<c:gapWidth val="0"/><c:overlap val="-100"/>');
 		expect([low.chart.barGapWidth, low.chart.barOverlap]).toStrictEqual([0, -100]);
 		const high = await (await newChartDeck('bar', { gapWidth: 500, overlap: 100 })).save();
 		expect([high.chart.barGapWidth, high.chart.barOverlap]).toStrictEqual([500, 100]);
@@ -102,7 +100,7 @@ describe('new chart group option boundaries', () => {
 			1, 360,
 		]);
 		const pie = await (await newChartDeck('pie', { firstSliceAngle: 0 })).save();
-		expect(pie.xml).toContain('<c:firstSliceAng val="0"></c:firstSliceAng>');
+		expect(pie.xml).toMatch(/<c:firstSliceAng val="0"\s*(?:\/>|><\/c:firstSliceAng>)/u);
 		expect(pie.chart.firstSliceAngle).toBe(0);
 	});
 
@@ -126,6 +124,6 @@ describe('new chart group option boundaries', () => {
 		const xml = new PptxRuntimeDependencyFactory()
 			.createBuilder()
 			.build(buildChartSpaceXml(element.chartData!)) as string;
-		expect(xml).toContain('<c:grouping val="standard"></c:grouping>');
+		expect(xml).toMatch(/<c:grouping val="standard"\s*(?:\/>|><\/c:grouping>)/u);
 	});
 });

@@ -21,7 +21,6 @@ import { buildChartColorStyleXml } from '../../utils/chart-color-style-writer';
 import { requireEmbeddedWorkbookChart } from '../../utils/chart-new-part-workbook';
 import { buildChartExSpaceXml, canGenerateChartEx } from '../../utils/chart-cx-generator';
 import { writeNewChartPart } from '../../utils/chart-new-part';
-import { orderedXmlObject } from '../../utils/xml-ordered-object';
 import { buildChartSpaceXml } from '../../utils/chart-xml-generator';
 import { findOleObjNode } from '../../utils/ole-alternate-content';
 import { ensureXmlChild } from '../../utils/xml-access';
@@ -160,12 +159,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				elementId: el.id,
 			});
 		}
-		if (!embedded) {
+		if (part?.xml !== undefined) {
+			// The shared core's part is already serialized, as on the loaded-chart save path.
+			this.zip.file(partPath, part.xml);
+		} else if (!embedded) {
 			const chartXml = extended
 				? buildChartExSpaceXml(chartData)
-				: part?.xml !== undefined
-					? orderedXmlObject(part.xml)
-					: buildChartSpaceXml(part?.legacyModel ?? chartData);
+				: buildChartSpaceXml(part?.legacyModel ?? chartData);
 			this.zip.file(partPath, this.builder.build(chartXml));
 		}
 		if (extended) {
