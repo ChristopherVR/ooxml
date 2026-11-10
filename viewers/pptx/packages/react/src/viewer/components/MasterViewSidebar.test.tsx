@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import type { MasterViewCrudAction } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../i18n/marking-translator.test-support';
 import { MasterViewSidebar } from './MasterViewSidebar';
 
 let container: HTMLDivElement;
@@ -13,7 +13,7 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 
 afterEach(() => {
@@ -68,10 +68,8 @@ describe('masterViewSidebar CRUD buttons', () => {
 		expect(addButton).not.toBeNull();
 		expect(addButton.disabled).toBeFalsy();
 		expect(deleteButton.disabled).toBeTruthy();
-		// No i18next instance is configured in this test environment, so `t()`
-		// returns the raw key; the point here is that the disabled reason key
-		// reaches the title attribute at all, not the translated English text.
-		expect(deleteButton.title).toBe('pptx.masterView.layoutInUse');
+		// The marking translator shows which key reached the title attribute.
+		expect(deleteButton.title).toBe(marked('pptx.masterView.layoutInUse'));
 	});
 
 	it('clicking an enabled button calls onCrudAction with its id', () => {
