@@ -257,6 +257,7 @@ import { ViewerRegionHostComponent } from './viewer-region-host.component';
 import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
+import { ViewerViewportNavigationService } from './viewer-viewport-navigation.service';
 import { ViewerZoomService } from './viewer-zoom.service';
 import { ZoomTargetService } from './zoom-target.service';
 
@@ -2034,6 +2035,7 @@ export class PowerPointViewerComponent
 	private readonly keyboard = inject(ViewerKeyboardService);
 	protected readonly zoomSvc = inject(ViewerZoomService);
 	private readonly touchGestures = inject(ViewerTouchGesturesService);
+	private readonly viewportNavigation = inject(ViewerViewportNavigationService);
 	protected readonly presentationMode = inject(ViewerPresentationModeService);
 	protected readonly mobileSheetSvc = inject(ViewerMobileSheetService);
 	protected readonly inspectorPanel = inject(ViewerInspectorPanelService);
@@ -3118,6 +3120,14 @@ export class PowerPointViewerComponent
 			goPrev: () => this.goPrev(),
 			goNext: () => this.goNext(),
 			setContextMenuPos: (pos) => this.canvasEditing.contextMenuPos.set(pos),
+		});
+
+		// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
+		// other bindings. `<main>` is the element that scrolls the slide here. A
+		// plain drag pans only in a read-only view, where it has nothing to select.
+		this.viewportNavigation.setup(() => this.mainEl()?.nativeElement, {
+			dragPans: () => this.getMode() === 'preview',
+			presenting: () => this.presentationMode.presenting(),
 		});
 
 		// Hand the presentation-mode controller the few accessors it alone needs

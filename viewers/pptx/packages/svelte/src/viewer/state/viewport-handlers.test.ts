@@ -295,6 +295,24 @@ describe('keys typed into a text field', () => {
 		}
 	});
 
+	it('leaves a Space the zoomed slide took to pan, and still pages on the other keys', () => {
+		// Not editing: the editing branch already stops at a prevented key.
+		const { root, handleNavigationKey } = fieldHarness(false);
+		const pane = document.createElement('div');
+		root.append(pane);
+		// `attachViewportNavigation` claims Space at a document capture listener.
+		const claim = (event: KeyboardEvent) => event.key === ' ' && event.preventDefault();
+		document.addEventListener('keydown', claim, true);
+		try {
+			pressOn(pane, ' ');
+			expect(pressOn(pane, 'ArrowDown')).toBeTruthy();
+			expect(handleNavigationKey.mock.calls).toStrictEqual([['ArrowDown']]);
+		} finally {
+			document.removeEventListener('keydown', claim, true);
+			root.remove();
+		}
+	});
+
 	it("still offers the field's keys to the editor keymap, which leaves typing alone itself", () => {
 		const { root, onKeyDown } = fieldHarness(true);
 		const field = document.createElement('textarea');

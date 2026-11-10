@@ -15,6 +15,7 @@
 	import { EDITOR_SLIDE_RAIL_WIDTH, MAX_ZOOM_SCALE, MIN_ZOOM_SCALE, observeElementHeight } from 'ooxml-ui/pptx';
 
 	import { canvasPinchZoom } from '../canvas-pinch-zoom';
+	import { viewportNavigation } from '../viewport-navigation';
 	import { viewportClientSize } from '../viewport-client-size';
 	import InspectorPanel from './inspector/InspectorPanel.svelte';
 	import NotesPanel from './NotesPanel.svelte';
@@ -59,6 +60,7 @@
 		onstageholder,
 		getzoomscale,
 		onpinchzoom,
+		dragpans = false,
 		notesExpanded,
 		onNotesCommit,
 		onNotesToggle,
@@ -214,6 +216,12 @@
 				minScale: MIN_ZOOM_SCALE,
 				maxScale: MAX_ZOOM_SCALE,
 				onPinchZoom: onpinchzoom,
+			}}
+			use:viewportNavigation={{
+				getScale: getzoomscale,
+				setScale: onpinchzoom,
+				dragPans: dragpans,
+				active: !presenting,
 			}}
 		>
 			<ViewerStage

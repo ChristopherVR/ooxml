@@ -1,9 +1,4 @@
-import {
-	clampZoomScale,
-	createViewerZoomStore,
-	createWheelStepBuffer,
-	mapEditingWheel,
-} from 'ooxml-ui/pptx';
+import { attachViewportNavigation, clampZoomScale, createViewerZoomStore } from 'ooxml-ui/pptx';
 import type { ViewerZoomState, ViewerZoomStore, ViewportFitOptions } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { useRef, useCallback, useEffect } from 'react';
@@ -28,6 +23,8 @@ interface SelectionBounds {
 interface UseZoomViewportInput extends ViewportFitOptions {
 	canvasSize: CanvasSize;
 	selectedElements: PptxElement[];
+	/** True when a plain drag on the slide has nothing to select and should pan (read-only view). */
+	dragPans?: boolean;
 }
 
 export interface UseZoomViewportResult {
@@ -52,7 +49,6 @@ export interface UseZoomViewportResult {
 	handleResetZoom: () => void;
 	handleZoomToFit: () => void;
 	handleZoomToSelection: () => void;
-	handleWheel: (e: WheelEvent) => void;
 	centerBoundsInViewport: (bounds: SelectionBounds, nextScale: number) => void;
 	getCanvasPointFromClient: (clientX: number, clientY: number) => { x: number; y: number } | null;
 }
@@ -62,14 +58,13 @@ export function useZoomViewport({
 	selectedElements,
 	fitPadding,
 	maxFitScale,
+	dragPans = false,
 }: UseZoomViewportInput): UseZoomViewportResult {
 	// ── Refs ──────────────────────────────────────────────────────────────
 	const editWrapperRef = useRef<HTMLDivElement>(null);
 	const canvasStageRef = useRef<HTMLDivElement>(null);
 	const { viewportRef: canvasViewportRef, viewportNode, setCanvasViewportNode } = useViewportNode();
 	const renderScaleRef = useRef(1);
-	// Partial wheel charge, shared with the editing-wheel mapper.
-	const wheelBufferRef = useRef(createWheelStepBuffer());
 
 	// ── State ─────────────────────────────────────────────────────────────
 	// The user's zoom factor lives in the shared zoom store, so the zoom MODEL
@@ -207,29 +202,14 @@ export function useZoomViewport({
 		setScale,
 	]);
 
-	const handleWheel = useCallback(
-		(event: WheelEvent) => {
-			// `canScrollFurther: true` keeps a plain wheel scrolling the viewport
-			// natively; only Ctrl+wheel is claimed here. Slide-stepping at the scroll
-			// extent needs navigation this hook does not own - see wheel-intent.
-			const mapped = mapEditingWheel(event, wheelBufferRef.current, true);
-			if (mapped.intent !== 'zoom') {
-				return;
-			}
-			event.preventDefault();
-			// Read the live value from the store rather than closing over `scale`:
-			// wheel events arrive faster than React commits, so a captured value
-			// would quantise the gesture to the last rendered scale.
-			store.dispatch({
-				type: 'set-zoom',
-				zoom: clampZoomScale(store.getState().zoom + mapped.deltaScale),
-			});
-		},
-		[store],
-	);
+	// Read live by the viewport controller, so a mode change does not re-attach it.
+	const dragPansRef = useRef(dragPans);
+	useEffect(() => {
+		dragPansRef.current = dragPans;
+	}, [dragPans]);
 
-	// Attach the wheel listener natively with { passive: false } so that
-	// preventDefault() works. React's onWheel is passive since React 17+.
+	// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, in the
+	// viewport. Shared with the other bindings so the gestures match.
 	//
 	// Follow remounted canvases; retain initial frame retries for object-ref users.
 	useEffect(() => {
@@ -237,22 +217,25 @@ export function useZoomViewport({
 			return;
 		}
 		let raf = 0;
-		let attached: HTMLDivElement | null = null;
+		let detach: (() => void) | null = null;
 		const attach = (): void => {
 			const viewport = viewportNode ?? canvasViewportRef.current;
 			if (!viewport) {
 				raf = requestAnimationFrame(attach);
 				return;
 			}
-			attached = viewport;
-			viewport.addEventListener('wheel', handleWheel, { passive: false });
+			detach = attachViewportNavigation(viewport, {
+				getZoom: () => store.getState().zoom,
+				setZoom: (zoom) => store.dispatch({ type: 'set-zoom', zoom }),
+				dragPans: () => dragPansRef.current,
+			});
 		};
 		attach();
 		return () => {
 			cancelAnimationFrame(raf);
-			attached?.removeEventListener('wheel', handleWheel);
+			detach?.();
 		};
-	}, [canvasViewportRef, viewportNode, handleWheel]);
+	}, [canvasViewportRef, viewportNode, store]);
 
 	const getCanvasPointFromClient = useCallback(
 		(clientX: number, clientY: number): { x: number; y: number } | null => {
@@ -293,7 +276,6 @@ export function useZoomViewport({
 		handleResetZoom,
 		handleZoomToFit,
 		handleZoomToSelection,
-		handleWheel,
 		centerBoundsInViewport,
 		getCanvasPointFromClient,
 	};
