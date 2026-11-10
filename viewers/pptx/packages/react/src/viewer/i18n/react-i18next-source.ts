@@ -1,11 +1,14 @@
 /**
  * The host's react-i18next instance as a translation source. This is the only module of the
  * package that imports `react-i18next`; every component translates through
- * `./use-translation` instead. Only a viewer root and a standalone building block outside any
- * `PptxI18nProvider` call it.
+ * `./use-translation` instead. Evaluating it registers the source in `./host-i18next`, so only the
+ * entries that import it for that side effect (`src/index.ts`, `src/viewer/index.ts`,
+ * `src/internals.ts`) ever reach react-i18next. Only a viewer root and a standalone building
+ * block outside any `PptxI18nProvider` call it.
  */
 import { useTranslation as useReactI18nextTranslation } from 'react-i18next';
 
+import { registerHostI18next } from './host-i18next';
 import type { HostI18next, HostI18nextInstance, ViewerT } from './types';
 
 /** An object with no own enumerable keys whose prototype is `Object.prototype` (any realm) or `null`. */
@@ -40,18 +43,6 @@ function isMissingInstance(result: { readonly ready?: unknown; readonly i18n?: u
 const NO_FIELDS: HostI18nextInstance = {};
 
 /**
- * The active language of a host instance: `resolvedLanguage`, else `language`. `undefined` when
- * neither is a string, as with a test double or a Proxy auto-mock.
- */
-export function hostInstanceLanguage(i18n: HostI18nextInstance): string | undefined {
-	const { resolvedLanguage, language } = i18n;
-	if (typeof resolvedLanguage === 'string') {
-		return resolvedLanguage;
-	}
-	return typeof language === 'string' ? language : undefined;
-}
-
-/**
  * react-i18next's own `useTranslation`, called unconditionally, so Suspense, `ready` and the
  * `languageChanged` re-render behave exactly as react-i18next defines them. `null` when
  * react-i18next has no instance (neither an `I18nextProvider` nor `initReactI18next`): it then
@@ -72,3 +63,5 @@ export function useHostI18next(): HostI18next | null {
 		i18n: typeof i18n === 'object' && i18n !== null ? (i18n as HostI18nextInstance) : NO_FIELDS,
 	};
 }
+
+registerHostI18next(useHostI18next);

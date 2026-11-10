@@ -58,8 +58,8 @@ function withEnglishFallback(translate: PptxTranslate): ViewerT {
 
 /**
  * The viewer's own English text, for a component with neither a `PptxI18nProvider` nor a
- * configured react-i18next instance: the provider's fallback chain over a host that translates
- * nothing.
+ * registered react-i18next source (`./host-i18next`): the provider's fallback chain over a host
+ * that translates nothing.
  */
 export const BUILT_IN_ENGLISH: ViewerI18nState = {
 	t: withEnglishFallback(() => undefined),

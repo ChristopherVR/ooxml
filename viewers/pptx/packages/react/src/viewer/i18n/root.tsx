@@ -7,8 +7,12 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { PptxI18nContext, ViewerI18nContext, ViewerLocaleControlsContext } from './context';
 import type { ViewerLocaleControls } from './context';
+import {
+	hostInstanceLanguage,
+	registeredHostI18next,
+	useRegisteredHostI18next,
+} from './host-i18next';
 import { BUILT_IN_ENGLISH } from './provider';
-import { hostInstanceLanguage, useHostI18next } from './react-i18next-source';
 import type { ViewerI18nState } from './types';
 
 /** The `PowerPointViewer` props that decide its language. */
@@ -51,7 +55,7 @@ function useHostLanguage({
 	availableLocales,
 	onLocaleChange,
 }: ViewerI18nProps): ViewerLanguage {
-	const host = useHostI18next();
+	const host = useRegisteredHostI18next();
 	const t = host?.t;
 	const i18n = host?.i18n;
 	const readsInstance = i18n !== undefined;
@@ -164,6 +168,10 @@ function HostLanguageRoot({ children, ...props }: ViewerI18nRootProps): ReactEle
 	return provideLanguage(useHostLanguage(props), children);
 }
 
+function BuiltInLanguageRoot({ children }: ViewerI18nRootProps): ReactElement {
+	return provideLanguage({ state: BUILT_IN_ENGLISH, controls: BUILT_IN_CONTROLS }, children);
+}
+
 function ProvidedLanguageRoot({ children, ...props }: ViewerI18nRootProps): ReactElement {
 	return provideLanguage(useProvidedLanguage(props), children);
 }
@@ -171,11 +179,15 @@ function ProvidedLanguageRoot({ children, ...props }: ViewerI18nRootProps): Reac
 /**
  * Resolves the viewer's language once, above every hook that translates, and provides it to
  * the components below: from the nearest `PptxI18nProvider` when there is one, else from the
- * host's react-i18next instance when it has a configured one, else the built-in English text.
- * Adding or removing a provider remounts the viewer.
+ * host's react-i18next instance when an entry registered it (`./host-i18next`) and react-i18next
+ * has a configured instance, else the built-in English text. Adding or removing a provider remounts the viewer.
  */
 export function ViewerI18nRoot(props: ViewerI18nRootProps): ReactElement {
-	const Root = useContext(PptxI18nContext) ? ProvidedLanguageRoot : HostLanguageRoot;
+	// Read once per mounted root, so a source registered later never swaps its body.
+	// oxlint-disable-next-line react/hook-use-state -- read once on mount and never set
+	const [readsHost] = useState(() => registeredHostI18next() !== null);
+	const FromHost = readsHost ? HostLanguageRoot : BuiltInLanguageRoot;
+	const Root = useContext(PptxI18nContext) ? ProvidedLanguageRoot : FromHost;
 	return <Root {...props} />;
 }
 

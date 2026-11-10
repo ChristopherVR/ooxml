@@ -3,10 +3,19 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { walkModuleGraph } from '../../../../../../../scripts/module-graph.mjs';
+
 const SRC = path.resolve(import.meta.dirname, '../..');
 
 /** The only source modules allowed to import react-i18next. */
 const HOST_SOURCE_MODULES = ['viewer/i18n/react-i18next-source.ts'];
+
+/**
+ * Package entries by whether they register react-i18next as the fallback translation source.
+ * `ai.ts` does not: its chat panel only renders inside a viewer root, which translates it.
+ */
+const REGISTERING_ENTRIES = ['index.ts', 'viewer/index.ts', 'internals.ts'];
+const NON_REGISTERING_ENTRIES = ['no-i18next.ts', 'ai.ts', 'i18n.ts'];
 
 /** `... from 'x'`, `import('x')` and a bare `import 'x'`. */
 const IMPORT_FROM =
@@ -66,6 +75,36 @@ describe('react-i18next boundary', () => {
 			.map((file) => file.name);
 		expect(importers.toSorted()).toStrictEqual(HOST_SOURCE_MODULES);
 	});
+
+	it('loads react-i18next only from the entries that register it', async () => {
+		const reach = async (entry: string) => {
+			const graph = await walkModuleGraph(path.join(SRC, entry));
+			const { bare } = graph;
+			const names = graph.files.map((file) => path.relative(SRC, file).split(path.sep).join('/'));
+			return {
+				entry,
+				source: names.filter((name) => HOST_SOURCE_MODULES.includes(name)),
+				peers: [
+					...new Set(
+						bare
+							.map(({ specifier }) => specifier)
+							.filter((spec) => /^(?:react-)?i18next(?:\/|$)/.test(spec)),
+					),
+				],
+			};
+		};
+		const graphs = await Promise.all(
+			[...REGISTERING_ENTRIES, ...NON_REGISTERING_ENTRIES].map(reach),
+		);
+		expect(graphs).toStrictEqual([
+			...REGISTERING_ENTRIES.map((entry) => ({
+				entry,
+				source: HOST_SOURCE_MODULES,
+				peers: ['react-i18next'],
+			})),
+			...NON_REGISTERING_ENTRIES.map((entry) => ({ entry, source: [], peers: [] })),
+		]);
+	}, 60_000);
 
 	it('routes every useTranslation import through the internal leaf hook', () => {
 		const offenders = files

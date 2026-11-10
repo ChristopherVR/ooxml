@@ -4,6 +4,9 @@
 // advanced integrations that need finer-grained control than the component or the curated
 // `pptx-react-viewer/viewer` entry provide.
 
+// Outside a `PptxI18nProvider` these hooks translate through react-i18next, as from the main entry.
+import './viewer/i18n/react-i18next-source';
+
 export * from './viewer/hooks';
 
 // Hooks that exist in the source tree but aren't part of the main composition barrel.

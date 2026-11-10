@@ -158,6 +158,7 @@ describe('the main entries load AI helpers from ooxml-ui/pptx/ai/host only', () 
 	const relativeName = (file: string) => relative(packageRoot, file).split(sep).join('/');
 	const ENTRIES = [
 		'src/index.ts',
+		'src/no-i18next.ts',
 		'src/viewer/index.ts',
 		'src/i18n.ts',
 		'src/internals.ts',
