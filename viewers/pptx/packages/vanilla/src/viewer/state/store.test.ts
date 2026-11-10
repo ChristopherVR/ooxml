@@ -42,6 +42,93 @@ describe('createStore', () => {
 		expect(listener).not.toHaveBeenCalled();
 	});
 
+	it('delivers a set made by a listener once, in order, to every listener', () => {
+		const store = createStore({ slide: 0, zoom: 2 });
+		const first: string[] = [];
+		const later: string[] = [];
+		const change = (state: { slide: number; zoom: number }, previous: typeof state) =>
+			`slide ${previous.slide}->${state.slide}, zoom ${previous.zoom}->${state.zoom}`;
+		store.subscribe((state, previous) => {
+			first.push(change(state, previous));
+			if (state.slide !== previous.slide) {
+				store.set({ zoom: 1 });
+			}
+		});
+		store.subscribe((state, previous) => later.push(change(state, previous)));
+
+		store.set({ slide: 1 });
+
+		// The listener after the one that set sees both changes as one; the one
+		// that set sees its own change after it returns. Nobody sees one twice.
+		expect(later).toStrictEqual(['slide 0->1, zoom 2->1']);
+		expect(first).toStrictEqual(['slide 0->1, zoom 2->2', 'slide 1->1, zoom 2->1']);
+		expect(store.get()).toStrictEqual({ slide: 1, zoom: 1 });
+	});
+
+	it('does not call a listener that an earlier listener unsubscribed during the same change', () => {
+		const store = createStore({ n: 0 });
+		const seen: string[] = [];
+		let offB = (): void => {};
+		store.subscribe((state) => {
+			seen.push(`A:${state.n}`);
+			offB();
+		});
+		offB = store.subscribe((state) => seen.push(`B:${state.n}`));
+
+		store.set({ n: 1 });
+
+		// The old store still called B, from the copy of the list it took before A ran.
+		expect(seen).toStrictEqual(['A:1']);
+	});
+
+	it('lets a listener that writes read only its own write until it returns', () => {
+		const store = createStore({ slide: 0, rendered: -1 });
+		const seen: number[] = [];
+		store.subscribe((state, previous) => {
+			if (state.slide === 1 && previous.slide === 0) {
+				store.set({ slide: 2 });
+				seen.push(store.get().rendered);
+			}
+		});
+		// A later listener that derives `rendered` from `slide`.
+		store.subscribe((state) => {
+			if (state.rendered !== state.slide) {
+				store.set({ rendered: state.slide });
+			}
+		});
+
+		store.set({ slide: 1 });
+
+		// The old store ran the deriving listener inside the write, so the writer read
+		// 2. That listener now runs after the writer returns.
+		expect(seen).toStrictEqual([-1]);
+		expect(store.get()).toStrictEqual({ slide: 2, rendered: 2 });
+	});
+
+	it('gives a listener the state it last saw as previous after another listener threw', () => {
+		const store = createStore({ n: 0 });
+		const seen: string[] = [];
+		store.subscribe((state) => {
+			if (state.n === 1) {
+				throw new Error('boom');
+			}
+		});
+		store.subscribe((state, previous) => seen.push(`${previous.n}->${state.n}`));
+
+		expect(() => store.set({ n: 1 })).toThrow('boom');
+		store.set({ n: 2 });
+
+		// The throw kept the second listener from hearing about 1, so it hears 0 -> 2.
+		// The old store passed 1 as previous, a state this listener never saw.
+		expect(seen).toStrictEqual(['0->2']);
+	});
+
+	it('throws, rather than spinning, when a listener never stops changing the state', () => {
+		const store = createStore({ n: 0 });
+		store.subscribe((state) => store.set({ n: state.n + 1 }));
+		expect(() => store.set({ n: 1 })).toThrow(/never settles/u);
+	});
+
 	it('supports multiple subscribers', () => {
 		const store = createStore({ a: 1 });
 		const first = vi.fn();

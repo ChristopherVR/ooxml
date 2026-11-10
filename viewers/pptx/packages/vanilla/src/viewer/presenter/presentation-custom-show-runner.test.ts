@@ -68,6 +68,24 @@ describe('vanilla custom-show action runner (B7)', () => {
 		expect(store.get().currentSlide).toBe(3);
 	});
 
+	it('a later subscriber sees the return to the origin slide once', () => {
+		const { store, runner } = harness({ currentSlide: 3, activeCustomShowId: null });
+		runner.customShow('sh1', true);
+		expect(store.get().currentSlide).toBe(1);
+		// Subscribed after the runner, as the renderer's state sync is.
+		const slideChanges: string[] = [];
+		store.subscribe((state, previous) => {
+			if (state.currentSlide !== previous.currentSlide) {
+				slideChanges.push(`${String(previous.currentSlide)}->${String(state.currentSlide)}`);
+			}
+		});
+
+		store.set({ endOfShow: true });
+
+		expect(store.get().currentSlide).toBe(3);
+		expect(slideChanges).toStrictEqual(['1->3']);
+	});
+
 	it('does not intercept endOfShow when returnAfter was not requested', () => {
 		const { store, runner } = harness();
 		runner.customShow('sh1', false);
