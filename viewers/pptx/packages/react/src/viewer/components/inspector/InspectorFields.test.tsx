@@ -13,10 +13,10 @@ import {
 } from 'ooxml-ui/pptx';
 import type { ShapeStyle, TextStyle } from 'pptx-viewer-core';
 import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMarkedRoot, marked } from '../../i18n/marking-translator.test-support';
 import { InspectorFields } from './InspectorFields';
 
 let container: HTMLDivElement;
@@ -25,7 +25,7 @@ let root: Root;
 beforeEach(() => {
 	container = document.createElement('div');
 	document.body.appendChild(container);
-	root = createRoot(container);
+	root = createMarkedRoot(container);
 });
 
 afterEach(() => {
@@ -136,7 +136,7 @@ describe('inspectorFields (size and position)', () => {
 		});
 		const x = byTestId('geometry-x')!;
 		expect(x.value).toBe('53');
-		expect(x.getAttribute('aria-label')).toBe('pptx.inspector.x');
+		expect(x.getAttribute('aria-label')).toBe(marked('pptx.inspector.x'));
 		act(() => {
 			const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
 			setter.call(byTestId('geometry-width')!, '0');

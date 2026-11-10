@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 调用 `i18nInstance.changeLanguage('fr')` 切换语言。
 
+请在首次渲染之前配置好 react-i18next（`initReactI18next` 加 `init`，或 `I18nextProvider`）。react-i18next 首次获得实例时不会触发任何事件，因此在没有实例时已渲染的查看器只有在其父组件重新渲染它时才会切换：在此之前它显示内置英文文本，之后才使用该实例，并应用已保存的语言选择或 `defaultLocale`。
+
 #### 使用自己的 i18n 库 {#use-your-own-i18n-library}
 
 如果要用 Lingui、FormatJS 或其他任意库代替 react-i18next 翻译查看器，请用 `PptxI18nProvider` 包裹它，并传入 `translate(key, params)` 函数和当前的 `locale`。它覆盖 `PowerPointViewer` 以及独立的构建块（`Toolbar`、`SlideCanvas`、`SlideTemplateGalleryDialog` 等）：

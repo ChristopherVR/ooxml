@@ -2,11 +2,12 @@
 import { createInstance } from 'i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { VIEWER_PREFS_STORAGE_KEY, readStoredViewerPrefs } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { act } from 'react';
 import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { I18nextProvider } from 'react-i18next';
+import { I18nextProvider, getI18n, setI18n } from 'react-i18next';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ViewerI18nRoot, useViewerLocaleControls } from './root';
@@ -144,5 +145,97 @@ describe('viewer translation root (react-i18next source)', () => {
 			viewer({ availableLocales: [{ code: 'es', label: 'Spanish', nativeLabel: 'Espanol' }] }),
 		);
 		expect(codes()).toBe('es');
+	});
+});
+
+/**
+ * How the source finds the instance: as react-i18next does (an `I18nextProvider`, else the one
+ * `initReactI18next` set), not by the shape of what `useTranslation` returns.
+ */
+describe('viewer translation root (react-i18next instance resolution)', () => {
+	let host: HTMLDivElement;
+	let root: Root;
+	let previousInstance: I18nInstance | undefined;
+	let actEnvironment: boolean | undefined;
+
+	beforeEach(() => {
+		actEnvironment = globalThis.IS_REACT_ACT_ENVIRONMENT;
+		globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+		localStorage.removeItem(VIEWER_PREFS_STORAGE_KEY);
+		previousInstance = getI18n() as I18nInstance | undefined;
+		host = document.createElement('div');
+		document.body.append(host);
+		root = createRoot(host);
+	});
+
+	afterEach(() => {
+		act(() => root.unmount());
+		host.remove();
+		localStorage.removeItem(VIEWER_PREFS_STORAGE_KEY);
+		setI18n(previousInstance as I18nInstance);
+		vi.restoreAllMocks();
+		globalThis.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+	});
+
+	const text = () => host.querySelector('output')?.textContent;
+	const codes = () => host.querySelector('span')?.textContent;
+	const selected = () => host.querySelector('span')?.dataset.locale;
+	const pick = () => act(() => host.querySelector('button')?.click());
+	const viewer = () => (
+		<ViewerI18nRoot>
+			<Probe />
+		</ViewerI18nRoot>
+	);
+
+	it('translates through a hand-built instance that has no changeLanguage or options', () => {
+		localStorage.setItem(VIEWER_PREFS_STORAGE_KEY, JSON.stringify({ localeCode: 'fr' }));
+		// Enough of an instance for react-i18next to translate with it.
+		const handBuilt = {
+			language: 'fr',
+			languages: ['fr'],
+			isInitialized: true,
+			getFixedT: () => (key: string) => `P:${key}`,
+			hasLoadedNamespace: () => true,
+			on: () => {},
+			off: () => {},
+		} as unknown as I18nInstance;
+		const marked = `P:${SAVED}|P:pptx.probe.missing`;
+		act(() =>
+			root.render(
+				<I18nextProvider i18n={handBuilt}>
+					<Probe />
+				</I18nextProvider>,
+			),
+		);
+		expect(text()).toBe(marked);
+		act(() => root.render(<I18nextProvider i18n={handBuilt}>{viewer()}</I18nextProvider>));
+		expect(text()).toBe(marked);
+		expect(codes()).toBe('fr');
+		expect(selected()).toBe('fr');
+		expect(() => pick()).not.toThrow();
+	});
+
+	it('applies a stored choice when react-i18next gets an instance after the viewer mounted', async () => {
+		localStorage.setItem(VIEWER_PREFS_STORAGE_KEY, JSON.stringify({ localeCode: 'de' }));
+		setI18n(undefined as unknown as I18nInstance);
+		// react-i18next reports the missing instance once; keep the run quiet.
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const errors = vi.spyOn(console, 'error');
+		act(() => root.render(viewer()));
+		expect(text()).toBe(`${translationsEn[SAVED]}|Fallback text`);
+		expect(selected()).toBe('en');
+		const i18n = await hostInstance();
+		const changeLanguage = vi.spyOn(i18n, 'changeLanguage');
+		// What `initReactI18next` does when `init` runs after the first render.
+		setI18n(i18n);
+		await act(async () => root.render(viewer()));
+		expect(changeLanguage).toHaveBeenCalledExactlyOnceWith('de');
+		expect(text()).toBe('Alles gespeichert|Fallback text');
+		expect(selected()).toBe('de');
+		await act(async () => root.render(viewer()));
+		expect(changeLanguage).toHaveBeenCalledOnce();
+		expect(errors.mock.calls.filter(([message]) => /hook/i.test(String(message)))).toStrictEqual(
+			[],
+		);
 	});
 });

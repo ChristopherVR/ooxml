@@ -81,6 +81,8 @@ import i18nInstance from './i18n';
 
 Switch languages with `i18nInstance.changeLanguage('fr')`.
 
+Configure react-i18next (`initReactI18next` with `init`, or an `I18nextProvider`) before the first render. No event fires when react-i18next first gets an instance, so a viewer that rendered without an instance switches only when its parent re-renders it: it shows its built-in English text until then, and then uses the instance and applies the stored or `defaultLocale` choice.
+
 #### Use your own i18n library
 
 To translate the viewer with Lingui, FormatJS or any other library instead of react-i18next, wrap it in `PptxI18nProvider` and pass a `translate(key, params)` function plus the active `locale`. It covers `PowerPointViewer` and the standalone building blocks (`Toolbar`, `SlideCanvas`, `SlideTemplateGalleryDialog`, ...):
