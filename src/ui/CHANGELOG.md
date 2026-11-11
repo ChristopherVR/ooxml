@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.49.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.49.0) - 2026-11-11
+
+### Features
+
+- **pptx:** Export a slide thumbnail building block in every binding ([#242](https://github.com/ChristopherVR/ooxml/issues/242)) ([f717202](https://github.com/ChristopherVR/ooxml/commit/f717202d7af2cbb01b65cf2d02f598bff1dbb492))
+
 ## [1.48.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.48.1) - 2026-11-09
 
 ### Bug Fixes
