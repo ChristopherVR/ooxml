@@ -4,7 +4,7 @@ Mehrere Personen können gleichzeitig dieselbe Arbeitsmappe bearbeiten. Der Edit
 
 ## Freigabe starten
 
-Im Editor: **Datei > Freigeben** (oder die Schaltfläche „Freigeben“ am rechten Ende der Registerkartenzeile des Menübands), einen Sitzungsnamen eingeben und **Freigabe starten** wählen. Ein weiteres Fenster oder ein weiterer Tab desselben Browsers, in dem eine Arbeitsmappe geöffnet ist und das die Freigabe mit demselben Sitzungsnamen startet, tritt ihr bei. Ohne einen von der Seite festgelegten Server verlässt nichts den Browser: Die Sitzung läuft über einen `BroadcastChannel`.
+Im Editor: Die Schaltfläche „Freigeben“ am rechten Ende der Registerkartenzeile des Menübands (oder **Datei > Freigeben > Für Personen freigeben**) öffnet das Dialogfeld „Freigeben“, das jeder Office-Editor verwendet: eine Sitzung starten (Sitzungsname, Ihr Name und ein optionaler Server) oder einer Sitzung über einen Einladungslink oder Sitzungsnamen beitreten, dann den Einladungslink kopieren, sehen, wer in der Sitzung ist, und die Freigabe beenden. Ein weiteres Fenster oder ein weiterer Tab, in dem eine Arbeitsmappe geöffnet ist und das dieselbe Sitzung startet oder ihr beitritt, tritt ihr bei. Ohne Server verlässt nichts den Browser: Die Sitzung läuft über einen `BroadcastChannel`. Die Schaltfläche „Freigeben“ wird zuerst als `share`-`file-command` gemeldet, sodass ein Host mit eigener Freigabe sie abbrechen kann.
 
 Im Code setzen Sie die Eigenschaft `collaboration` (in jedem Binding als Prop):
 
@@ -26,7 +26,7 @@ editor.addEventListener('collaboration-change', (event) => console.log(event.det
 | `session`   | Eine vorhandene `CollabSession`, erstellt mit `sanitizePayload: sanitizeXlsxPresence`. Der Editor zerstört nie eine Sitzung, die ihm übergeben wurde. |
 | `user`      | `name` (Standard: `authorName`), `color` (Standard: eine Farbe aus der Palette), `role` (`viewer` macht den Editor schreibgeschützt).                 |
 
-Solange `collaboration` gesetzt ist, tritt eine später geöffnete Arbeitsmappe demselben Raum bei; enthält der Raum bereits eine Arbeitsmappe, ersetzt deren Inhalt die geöffnete. Wird die Eigenschaft auf `null` gesetzt, verlässt der Editor den Raum. Die imperativen Formen sind `startCollaboration(options)` (wird aufgelöst, sobald der Raum beigetreten ist), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` und `share()` (öffnet Datei > Freigeben). Jedes Binding leitet `collaboration` weiter, meldet `collaboration-change` (`onCollaborationChange`, Vue `collaboration-change`, Angular `collaborationChange`, Svelte `oncollaborationchange`) und stellt `share()` an seinem Handle bereit; das Entfernen des Editors verlässt den Raum.
+Solange `collaboration` gesetzt ist, tritt eine später geöffnete Arbeitsmappe demselben Raum bei; enthält der Raum bereits eine Arbeitsmappe, ersetzt deren Inhalt die geöffnete. Wird die Eigenschaft auf `null` gesetzt, verlässt der Editor den Raum. Die imperativen Formen sind `startCollaboration(options)` (wird aufgelöst, sobald der Raum beigetreten ist), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` und `share()` (öffnet das Dialogfeld „Freigeben“). Jedes Binding leitet `collaboration` weiter, meldet `collaboration-change` (`onCollaborationChange`, Vue `collaboration-change`, Angular `collaborationChange`, Svelte `oncollaborationchange`) und stellt `share()` an seinem Handle bereit; das Entfernen des Editors verlässt den Raum.
 
 ## Was geteilt wird
 

@@ -34,7 +34,7 @@ Chaque binding accepte les mêmes propriétés et signale les mêmes événement
 
 | Surface    | Contrat                                                                                                                                                                                |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Propriétés | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `customization`                                                     |
+| Propriétés | `document`, `pageIndex`, `zoom`, `showToolbar`, `canEdit`, `readOnly`, `ribbonAddIns`, `collaboration`, `storage`, `fileProviders`, `customization`                                    |
 | Événements | `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, `selection-change`, `office-ribbon-add-in`, `collaboration-change`, `file-command` |
 
 - `canEdit` (booléen) est l'autorisation de modification. Le visualiseur complet est modifiable par défaut et `canEdit: false` le met en lecture seule ; les [blocs de construction](/building-blocks) sont en lecture seule tant que l'hôte ne passe pas `true`. Un dessin sans octets de paquet (un modèle passé comme `document`, un ancien `.vsd`) est en lecture seule quelle que soit la valeur de `canEdit`.

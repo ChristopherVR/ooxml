@@ -4,7 +4,7 @@
 
 ## 开始共享
 
-在编辑器中：**文件 > 共享**（或功能区选项卡行右端的“共享”按钮），输入会话名称并选择**开始共享**。同一浏览器中另一个已打开工作簿、并使用相同会话名称开始共享的窗口或标签页会加入该会话。如果页面没有设置服务器，任何内容都不会离开浏览器：会话通过 `BroadcastChannel` 运行。
+在编辑器中：功能区选项卡行右端的“共享”按钮（或**文件 > 共享 > 与人共享**）会打开每个 Office 编辑器都使用的“共享”对话框：开始一个会话（会话名称、你的名称和可选的服务器），或通过邀请链接或会话名称加入会话，然后复制邀请链接、查看会话中有哪些人并停止共享。另一个已打开工作簿、并开始或加入同一会话的窗口或标签页会加入该会话。没有服务器时，任何内容都不会离开浏览器：会话通过 `BroadcastChannel` 运行。“共享”按钮会先作为 `share` `file-command` 发出，因此拥有自己共享方式的宿主可以取消它。
 
 在代码中，设置 `collaboration` 属性（在每种绑定中也可作为 prop）：
 
@@ -26,7 +26,7 @@ editor.addEventListener('collaboration-change', (event) => console.log(event.det
 | `session`   | 使用 `sanitizePayload: sanitizeXlsxPresence` 创建的现有 `CollabSession`。编辑器绝不会销毁传入的会话。    |
 | `user`      | `name`（默认为 `authorName`）、`color`（默认为调色板中的颜色）、`role`（`viewer` 会使编辑器变为只读）。  |
 
-设置了 `collaboration` 期间，之后打开的工作簿会加入同一房间；如果房间中已有工作簿，则房间的内容会替换刚打开的工作簿。将其设置为 `null` 即离开房间。对应的命令式方法有 `startCollaboration(options)`（加入后才 resolve）、`stopCollaboration()`、`reconnectCollaboration()`、`collaborationState` 和 `share()`（打开“文件 > 共享”）。每种绑定都会转发 `collaboration`，报告 `collaboration-change`（`onCollaborationChange`，Vue 中为 `collaboration-change`，Angular 中为 `collaborationChange`，Svelte 中为 `oncollaborationchange`），并在其句柄上公开 `share()`；卸载编辑器会离开房间。
+设置了 `collaboration` 期间，之后打开的工作簿会加入同一房间；如果房间中已有工作簿，则房间的内容会替换刚打开的工作簿。将其设置为 `null` 即离开房间。对应的命令式方法有 `startCollaboration(options)`（加入后才 resolve）、`stopCollaboration()`、`reconnectCollaboration()`、`collaborationState` 和 `share()`（打开“共享”对话框）。每种绑定都会转发 `collaboration`，报告 `collaboration-change`（`onCollaborationChange`，Vue 中为 `collaboration-change`，Angular 中为 `collaborationChange`，Svelte 中为 `oncollaborationchange`），并在其句柄上公开 `share()`；卸载编辑器会离开房间。
 
 ## 共享的内容
 

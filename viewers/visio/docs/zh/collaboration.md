@@ -1,9 +1,9 @@
 # 协作 {#collaboration}
 
-“文件 > 共享”会在同一浏览器的多个窗口之间启动实时会话。宿主应用也可以通过 `collaboration` 属性跨设备共享，该属性与其他所有 Office 编辑器接受相同的选项。
+“共享”按钮（或“文件 > 共享 > 与人共享”）会打开每个 Office 编辑器都使用的“共享”对话框：开始一个会话（会话名称、你的名称和可选的服务器），或通过邀请链接或会话名称加入会话，然后复制邀请链接、查看会话中有哪些人并停止共享。没有服务器时，会话在同一浏览器的多个窗口之间运行；有服务器 URL（在对话框中输入或由宿主设置）时，会话跨设备运行。宿主也可以设置 `collaboration` 属性（它与其他所有 Office 编辑器接受相同的选项），或取消 `share` `file-command`，以自己的方式共享。
 
 ::: warning 部分支持
-此版本没有托管服务。使用“文件 > 共享”时，任何内容都不会离开你的浏览器。跨设备时需要自备服务器（兼容 y-websocket 的 URL）、提供程序或 Yjs 会话；页面和形状按条目合并，其余内容整体共享（见下文）。
+此版本没有托管服务。没有服务器时，任何内容都不会离开你的浏览器。跨设备时需要自备服务器（兼容 y-websocket 的 URL）、提供程序或 Yjs 会话；页面和形状按条目合并，其余内容整体共享（见下文）。
 :::
 
 ## 嵌入：`collaboration` 属性 {#embedding-the-collaboration-property}
@@ -27,7 +27,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **声明式**：只要设置了 `collaboration`，已打开的图纸就会被共享，之后加载的图纸同样会被共享。设为 `null` 即离开房间。查看器自己打开的会话在离开时会被销毁，宿主的 `session` 则不会。
 - **意图（`intent`）**：使用 `join` 时，空房间不会用本地图纸初始化，以免迟到的加入者覆盖尚未加载完成的房间。之后加载或编辑的图纸仍会发布。默认值为 `create`。
 - **角色**：`role: 'viewer'` 会让查看器在房间内保持只读（离开时恢复 `canEdit`）。角色仅作提示，必须由服务器强制执行。
-- **事件**：共享开始或结束，以及连接状态、首次同步或参与者发生变化时，`collaboration-change` 会携带一个 `CollaborationState`。加入失败会作为 `document-error` 报告。“文件 > 共享”使用同一个控制器，因此同样会触发该事件。
+- **事件**：共享开始或结束，以及连接状态、首次同步或参与者发生变化时，`collaboration-change` 会携带一个 `CollaborationState`。加入失败会作为 `document-error` 报告。“共享”对话框使用同一个控制器，因此从它开始共享同样会报告状态并触发该事件。
 - **绑定**：每个绑定都转发 `collaboration` 属性（React、Vue、Solid、Svelte、vanilla 的 `mountViewer`/`update`、Angular 的 `[collaboration]`），并转发 `collaboration-change`（`events['collaboration-change']`、Vue 的 `@collaboration-change`、Angular 的 `(collaborationChange)`）。卸载时会离开房间。
 - **类型**：`VisioCollaborationOptions`（共享选项加上 `onWriteBack`、`writeBackDebounceMs` 和 `writeBackRetry`）与 `VisioCollaborationState` 从 `ooxml-ui/visio` 导出。
 
@@ -109,11 +109,11 @@ viewer.collaboration = {
 
 ### 任意搭配两个框架 {#pair-any-two-frameworks}
 
-每个演示环境都接受 `?share=<session>`，它会填入“文件 > 共享”并启动共享。只有会话名称起作用，因此可以任意搭配：主页的[实时演示](/zh/#live-demo)为每个窗口提供了框架选择器；在两个标签页中，你也可以打开例如 `/demo-vue/?sample=1&share=my-room` 和 `/demo-angular/?share=my-room`。你还可以在任意两个窗口中手动操作：文件，然后共享，再输入相同的会话名称。
+每个演示环境都接受 `?share=<session>`，它会在加载时加入该会话。只有会话名称起作用，因此可以任意搭配：主页的[实时演示](/zh/#live-demo)为每个窗口提供了框架选择器；在两个标签页中，你也可以打开例如 `/demo-vue/?sample=1&share=my-room` 和 `/demo-angular/?share=my-room`。你还可以在任意两个窗口中手动操作：在一个窗口中共享，然后在另一个窗口中通过邀请链接或会话名称“加入会话”。
 
-### 为什么“文件 > 共享”仅限同一浏览器 {#why-it-is-same-browser-only}
+### 为什么没有服务器时共享仅限同一浏览器 {#why-sharing-without-a-server-is-same-browser-only}
 
-该面板使用 `BroadcastChannel`，它只连接同一来源、同一浏览器配置文件中的窗口、标签页和框架，与所用框架无关，除此之外别无其他。两台不同的机器无法以这种方式相遇；为此，宿主需要用 `serverUrl`、`provider` 或 `session` 设置 `collaboration`，而此版本不附带任何服务器。
+没有服务器时，会话使用 `BroadcastChannel`，它只连接同一来源、同一浏览器配置文件中的窗口、标签页和框架，与所用框架无关，除此之外别无其他。两台不同的机器无法以这种方式相遇；为此，请在“共享”对话框中输入服务器 URL，或由宿主用 `serverUrl`、`provider` 或 `session` 设置 `collaboration`；此版本不附带任何服务器。
 
 ## 支持与不支持的功能 {#what-is-and-is-not-supported}
 

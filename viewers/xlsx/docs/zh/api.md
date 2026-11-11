@@ -75,7 +75,7 @@ editor.customization = {
 | `startCollaboration(options)` | `Promise<void>`       | 加入房间；如果已在共享或没有打开的工作簿，则 reject。                                                |
 | `stopCollaboration()`         | `void`                | 离开房间并清除 `collaboration`；工作簿保持原样。                                                     |
 | `reconnectCollaboration()`    | `void`                | 重新启动连接，并保留离线时所做的更改。                                                               |
-| `share()`                     | `void`                | 打开“文件 > 共享”。                                                                                  |
+| `share()`                     | `void`                | 打开“共享”对话框。                                                                                   |
 | `focusGrid()`                 | `void`                | 将键盘焦点移到网格，使输入编辑当前单元格。                                                           |
 
 ## 事件
@@ -107,6 +107,47 @@ editor.addEventListener('file-command', (event) => {
 			.then(() => editor.markClean());
 	}
 });
+```
+
+## 宿主自有存储 {#host-owned-storage}
+
+`storage`（元素的属性，也是每个绑定的 prop）接受来自 `ooxml-core/embedding` 的 `DocumentStorage`。设置后：
+
+- “文件 > 保存”“另存为”和 Ctrl+S 会把保存的工作簿交给 `storage.save(bytes, meta)`，而不是下载它。`meta` 为 `{ fileName, mimeType, reason }`，其中 `reason` 为 `'save'` 或 `'saveAs'`；与下载一样，`.xls` 和 `.csv` 源文件会保存为 `.xlsx`。Promise 解决后，工作簿被标记为未修改；如果以 `{ fileName }` 解决，标题栏会采用该名称。拒绝会以 `workbook-error` 报告，工作簿保持已修改状态。
+- 当存储提供 `open` 时，“文件 > 打开”会调用 `storage.open()`，并打开其解决得到的 `{ bytes, fileName }`（`undefined` 表示用户已取消）。没有 `open` 时使用文件选择器。
+- 同一时间只运行一次保存：保存进行中时再次保存会被忽略，而不是排队。在宿主保存运行期间所做的编辑会使工作簿保持已修改状态，因为已保存的字节不包含该编辑。
+- `file-command` 仍会先触发；调用 `preventDefault()` 的宿主自行处理该命令，此时不会调用 `storage`。
+
+“导出”“另存为 CSV”和“打印”仍在浏览器中下载或打印。Excel 没有自动恢复，因此不会使用 `DocumentStorage` 的恢复方法。
+
+```ts
+editor.storage = {
+	save: (bytes, { fileName }) => myDrive.put(fileName, bytes),
+	open: () => myDrive.pick(), // resolves { bytes, fileName } or undefined
+};
+```
+
+## “文件 > 打开”中的云位置 {#cloud-places-in-file-open}
+
+`fileProviders`（元素的属性，也是每个绑定的 prop）接受一个 `CloudFileProvider`（`ooxml-core/embedding`）数组，例如来自 `ooxml-core/embedding/onedrive` 的 `createOneDriveFileProvider`。为空或省略时，“文件 > 打开”保持不变。有提供程序时，“文件 > 打开”会列出“此设备”（浏览）以及每个提供程序对应的一个位置，该位置显示共享的 `<office-ui-cloud-files>` 浏览器，仅限 `.xlsx`。其文本跟随编辑器的 `locale`。
+
+- 打开文件时会像“打开”一样询问是否放弃未保存的更改，然后通过常规加载路径加载字节，采用该文件的名称并关闭“文件”视图。
+- 之后工作簿通过该文件自己的 `storage` 保存，而不是宿主的 `storage`：保存和 Ctrl+S 写入同一项，“另存为”写入副本，只有在提供程序解决后工作簿才被标记为未修改。被拒绝的保存会以 `workbook-error` 报告，工作簿保持已修改状态。打开、新建或加载另一个工作簿会让保存重新使用宿主的 `storage`。
+- 提供程序报告为 `canEdit: false` 的文件以只读方式打开（`readOnly` 为 true，并触发 `readonly-change` 事件）。宿主的 `readOnly` 与文件两者中更严格的一方生效，宿主自身的值不会被更改。
+
+```ts
+import { createOneDriveFileProvider } from 'ooxml-core/embedding/onedrive';
+import { mergeWorkbookSnapshots } from 'ooxml-core/xlsx/collab';
+
+editor.fileProviders = [
+	createOneDriveFileProvider({
+		getAccessToken,
+		signIn,
+		mergers: {
+			xlsx: ({ base, local, remote }) => mergeWorkbookSnapshots(base.bytes, local, remote.bytes),
+		},
+	}),
+];
 ```
 
 ## Shadow part

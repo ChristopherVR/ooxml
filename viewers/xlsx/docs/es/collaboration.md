@@ -4,7 +4,7 @@ Varias personas pueden editar un mismo libro al mismo tiempo. El editor asigna e
 
 ## Empezar a compartir
 
-Desde el editor: **Archivo > Compartir** (o el botón Compartir en el extremo derecho de la fila de pestañas de la cinta), escriba un nombre de sesión y elija **Iniciar uso compartido**. Otra ventana o pestaña del mismo navegador que tenga un libro abierto e inicie el uso compartido con el mismo nombre de sesión se une a ella. Sin un servidor definido por la página, nada sale del navegador: la sesión se ejecuta sobre un `BroadcastChannel`.
+Desde el editor: el botón Compartir en el extremo derecho de la fila de pestañas de la cinta (o **Archivo > Compartir > Compartir con otras personas**) abre el cuadro de diálogo Compartir que usan todos los editores de Office: inicie una sesión (nombre de sesión, su nombre y un servidor opcional) o únase a una con un vínculo de invitación o un nombre de sesión; después copie el vínculo de invitación, vea quién está en la sesión y deje de compartir. Otra ventana o pestaña que tenga un libro abierto e inicie la misma sesión o se una a ella se une a la sesión. Sin un servidor, nada sale del navegador: la sesión se ejecuta sobre un `BroadcastChannel`. El botón Compartir se anuncia primero como el `file-command` `share`, de modo que un host con su propio uso compartido puede cancelarlo.
 
 Desde el código, defina la propiedad `collaboration` (o prop, en cada enlace):
 
@@ -26,7 +26,7 @@ editor.addEventListener('collaboration-change', (event) => console.log(event.det
 | `session`   | Una `CollabSession` existente creada con `sanitizePayload: sanitizeXlsxPresence`. El editor nunca destruye una sesión que se le ha entregado.   |
 | `user`      | `name` (por defecto `authorName`), `color` (por defecto un color de la paleta), `role` (`viewer` pone el editor en modo de solo lectura).       |
 
-Mientras `collaboration` está definida, un libro que se abra después se une a la misma sala; cuando la sala ya tiene un libro, el contenido de la sala sustituye al abierto. Si se establece en `null`, se abandona la sala. Las formas imperativas son `startCollaboration(options)` (se resuelve una vez unido), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` y `share()` (abre Archivo > Compartir). Todos los enlaces reenvían `collaboration`, notifican `collaboration-change` (`onCollaborationChange`, en Vue `collaboration-change`, en Angular `collaborationChange`, en Svelte `oncollaborationchange`) y exponen `share()` en su manejador; al desmontar el editor se abandona la sala.
+Mientras `collaboration` está definida, un libro que se abra después se une a la misma sala; cuando la sala ya tiene un libro, el contenido de la sala sustituye al abierto. Si se establece en `null`, se abandona la sala. Las formas imperativas son `startCollaboration(options)` (se resuelve una vez unido), `stopCollaboration()`, `reconnectCollaboration()`, `collaborationState` y `share()` (abre el cuadro de diálogo Compartir). Todos los enlaces reenvían `collaboration`, notifican `collaboration-change` (`onCollaborationChange`, en Vue `collaboration-change`, en Angular `collaborationChange`, en Svelte `oncollaborationchange`) y exponen `share()` en su manejador; al desmontar el editor se abandona la sala.
 
 ## Qué se comparte
 

@@ -1,9 +1,9 @@
 # Collaboration {#collaboration}
 
-Fichier > Partager démarre une session en direct entre des fenêtres d'un même navigateur. Une application hôte peut aussi partager entre appareils via la propriété `collaboration`, qui accepte les mêmes options que tout autre éditeur Office.
+Le bouton Partager (ou Fichier > Partager > Partager avec des personnes) ouvre la boîte de dialogue Partager qu'utilisent tous les éditeurs Office : démarrez une session (nom de session, votre nom et un serveur facultatif) ou rejoignez-en une à partir d'un lien d'invitation ou d'un nom de session, puis copiez le lien d'invitation, voyez qui participe à la session et arrêtez le partage. Sans serveur, la session fonctionne entre des fenêtres d'un même navigateur ; avec une URL de serveur (saisie dans la boîte de dialogue ou définie par l'hôte), elle fonctionne entre appareils. Un hôte peut aussi définir la propriété `collaboration`, qui accepte les mêmes options que tout autre éditeur Office, ou annuler le `file-command` `share` pour partager à sa façon.
 
 ::: warning Partiel
-Cette version n'inclut aucun service hébergé. Avec Fichier > Partager, rien ne quitte votre navigateur. Entre appareils, vous apportez votre propre serveur (une URL compatible y-websocket), fournisseur ou session Yjs ; les pages et les formes sont fusionnées élément par élément, tout le reste est partagé en bloc (voir ci-dessous).
+Cette version n'inclut aucun service hébergé. Sans serveur, rien ne quitte votre navigateur. Entre appareils, vous apportez votre propre serveur (une URL compatible y-websocket), fournisseur ou session Yjs ; les pages et les formes sont fusionnées élément par élément, tout le reste est partagé en bloc (voir ci-dessous).
 :::
 
 ## Intégration : la propriété `collaboration` {#embedding-the-collaboration-property}
@@ -27,7 +27,7 @@ viewer.stopCollaboration(); // or: viewer.collaboration = null
 - **Déclaratif** : tant que `collaboration` est définie, le dessin ouvert est partagé, ainsi que celui chargé ensuite. La valeur `null` quitte la salle. Une session ouverte par le visualiseur lui-même est détruite en quittant ; une `session` de l'hôte ne l'est pas.
 - **Intention (`intent`)** : avec `join`, une salle vide n'est pas initialisée avec le dessin local, de sorte qu'un arrivant tardif ne puisse pas écraser une salle pas encore chargée. Un dessin chargé ou modifié ensuite est tout de même publié. Par défaut : `create`.
 - **Rôles** : `role: 'viewer'` met le visualiseur en lecture seule tant qu'il est dans la salle (`canEdit` est rétabli en sortant). Le rôle n'est qu'indicatif ; un serveur doit le faire respecter.
-- **Événements** : `collaboration-change` fournit un `CollaborationState` quand le partage démarre ou s'arrête et quand l'état de la connexion, la première synchronisation ou les personnes changent. Un échec de connexion est signalé par `document-error`. Fichier > Partager utilise le même contrôleur et émet donc aussi l'événement.
+- **Événements** : `collaboration-change` fournit un `CollaborationState` quand le partage démarre ou s'arrête et quand l'état de la connexion, la première synchronisation ou les personnes changent. Un échec de connexion est signalé par `document-error`. La boîte de dialogue Partager utilise le même contrôleur, donc un démarrage depuis celle-ci signale aussi l'état et l'événement.
 - **Bindings** : chaque binding transmet une propriété `collaboration` (React, Vue, Solid, Svelte, `mountViewer`/`update` en vanilla, `[collaboration]` en Angular) et relaie `collaboration-change` (`events['collaboration-change']`, `@collaboration-change` en Vue, `(collaborationChange)` en Angular). Le démontage quitte la salle.
 - **Types** : `VisioCollaborationOptions` (les options partagées plus `onWriteBack`, `writeBackDebounceMs` et `writeBackRetry`) et `VisioCollaborationState` sont exportés par `ooxml-ui/visio`.
 
@@ -109,11 +109,11 @@ Une session de partage n'est qu'un nom. Les deux volets ci-dessous sont des terr
 
 ### Associer deux frameworks au choix {#pair-any-two-frameworks}
 
-Chaque terrain de jeu accepte `?share=<session>`, qui renseigne Fichier > Partager et démarre la session. Seul le nom de la session compte, donc n'importe quelle association fonctionne : la [démo en direct](/fr/#live-demo) de la page d'accueil propose un sélecteur de framework pour chaque fenêtre, et dans deux onglets vous pouvez ouvrir, par exemple, `/demo-vue/?sample=1&share=my-room` et `/demo-angular/?share=my-room`. Vous pouvez aussi le faire à la main dans deux fenêtres quelconques : Fichier, puis Partager, puis le même nom de session.
+Chaque terrain de jeu accepte `?share=<session>`, qui rejoint cette session au chargement. Seul le nom de la session compte, donc n'importe quelle association fonctionne : la [démo en direct](/fr/#live-demo) de la page d'accueil propose un sélecteur de framework pour chaque fenêtre, et dans deux onglets vous pouvez ouvrir, par exemple, `/demo-vue/?sample=1&share=my-room` et `/demo-angular/?share=my-room`. Vous pouvez aussi le faire à la main dans deux fenêtres quelconques : Partager dans l'une, puis Rejoindre une session avec son lien d'invitation ou son nom de session dans l'autre.
 
-### Pourquoi Fichier > Partager reste limité à un même navigateur {#why-it-is-same-browser-only}
+### Pourquoi le partage sans serveur reste limité à un même navigateur {#why-sharing-without-a-server-is-same-browser-only}
 
-Le panneau utilise un `BroadcastChannel`, qui relie les fenêtres, onglets et cadres d'un profil de navigateur sur une même origine, quel que soit le framework, et rien d'autre. Deux machines différentes ne peuvent pas se rejoindre ainsi ; pour cela un hôte définit `collaboration` avec `serverUrl`, `provider` ou `session`, et cette version n'inclut aucun serveur.
+Sans serveur, la session utilise un `BroadcastChannel`, qui relie les fenêtres, onglets et cadres d'un profil de navigateur sur une même origine, quel que soit le framework, et rien d'autre. Deux machines différentes ne peuvent pas se rejoindre ainsi ; pour cela, saisissez une URL de serveur dans la boîte de dialogue Partager ou laissez l'hôte définir `collaboration` avec `serverUrl`, `provider` ou `session` ; cette version n'inclut aucun serveur.
 
 ## Ce qui est pris en charge et ce qui ne l'est pas {#what-is-and-is-not-supported}
 
