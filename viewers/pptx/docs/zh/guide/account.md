@@ -5,6 +5,8 @@ description: 了解“文件 > 账号”的默认内容，以及如何通过默�
 
 # 账号与登录 {#account-sign-in}
 
+打开和保存托管在 Microsoft 上的演示文稿是一项可选的宿主集成。存储适配器和身份验证职责请参见 [OneDrive 集成](/guide/onedrive)，另见[测试夹具与真实账号验收](/guide/onedrive-testing)。
+
 “文件 > 账号”包含本地个人资料编辑、显示本地存储实时用量的“存储与隐私”面板、“关于”区域，以及可选的登录区域。只有宿主应用主动接入后，登录区域才会显示。
 
 ## 默认提供的功能 {#what-ships-by-default}

@@ -64,20 +64,51 @@ editor.customization = {
 
 所有事件都会冒泡且为 composed，因此可以穿过 Shadow 边界。
 
-| 事件                   | Detail                   | 含义                                                                       |
-| ---------------------- | ------------------------ | -------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`          | 文档因编辑或审阅操作而发生变化。                                           |
-| `document-error`       | `Error`                  | 加载、保存、打印或某次编辑失败。                                           |
-| `document-warning`     | `string`                 | 非致命的提示。                                                             |
-| `readonly-change`      | `boolean`                | 用户在界面中切换了编辑/查看模式。                                          |
-| `file-command`         | `{ command }`            | 可取消。`command` 为 `new`、`open`、`save`、`export`、`print` 或 `share`。 |
-| `dirty-change`         | `boolean`                | 未保存更改的状态发生了翻转。                                               |
-| `page-change`          | `{ page, pageCount }`    | 打印布局的页码或页数发生变化（分页为近似结果）。                           |
-| `ribbon-action`        | `RibbonAction`           | 某个功能区控件被激活。                                                     |
-| `ribbon-customize`     | `readonly string[]`      | 用户更改了显示的功能区命令；如有需要，请持久化这些 ID。                    |
-| `office-ribbon-add-in` | `{ tab, command }`       | 选择了宿主选项卡（`ribbonAddIns`）中的某个命令。                           |
-| `presence-send`        | `PresenceMessage`        | 本地在线状态发生变化；请将其传输给其他客户端。                             |
-| `collaboration-send`   | `StepBatch`              | 本地步骤待发送；请将其传输给权威端。                                       |
-| `collaboration-change` | `DocxCollaborationState` | 协作状态已变化：`{ active, roomId, status, synced, people }`。             |
+| 事件                   | Detail                               | 含义                                                                                               |
+| ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | 文档因编辑或审阅操作而发生变化。                                                                   |
+| `document-error`       | `Error`                              | 加载、保存、打印或某次编辑失败。                                                                   |
+| `document-warning`     | `string`                             | 非致命的提示。                                                                                     |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | 用户在界面中切换了编辑/查看模式。                                                                  |
+| `file-command`         | `{ command, fileName? }`             | 可取消。`command` 为 `new`、`open`、`save`、`saveAs`、`export`、`exportText`、`print` 或 `share`。 |
+| `dirty-change`         | `boolean`                            | 未保存更改的状态发生了翻转。                                                                       |
+| `page-change`          | `{ page, pageCount }`                | 打印布局的页码或页数发生变化（分页为近似结果）。                                                   |
+| `ribbon-action`        | `RibbonAction`                       | 某个功能区控件被激活。                                                                             |
+| `ribbon-customize`     | `readonly string[]`                  | 用户更改了显示的功能区命令；如有需要，请持久化这些 ID。                                            |
+| `office-ribbon-add-in` | `{ tab, command }`                   | 选择了宿主选项卡（`ribbonAddIns`）中的某个命令。                                                   |
+| `presence-send`        | `PresenceMessage`                    | 本地在线状态发生变化；请将其传输给其他客户端。                                                     |
+| `collaboration-send`   | `StepBatch`                          | 本地步骤待发送；请将其传输给权威端。                                                               |
+| `collaboration-change` | `DocxCollaborationState`             | 协作状态已变化：`{ active, roomId, status, synced, people }`。                                     |
 
 该包导出了类型化的事件映射（`DocxEditorEventMap`）和运行时列表 `DOCX_EDITOR_EVENTS`。
+
+各框架绑定以其框架的命名方式（例如 `onFileCommand`、`fileCommand` 和 `onfilecommand`）转发 props `fileName`、`reviewAuthor` 和 `themeColors`，以及事件 `file-command`、`document-warning`、`readonly-change`、`ribbon-action` 和 `ribbon-customize`。对照表见[框架绑定](/bindings#binding-props-and-events)。
+
+## “文件 > 打开”中的云位置
+
+`fileProviders`（元素的属性，也是每个绑定的 prop）接受来自 `ooxml-core/embedding` 的
+`CloudFileProvider`，例如 `createOneDriveFileProvider`。此时“文件 > 打开”会列出“此设备”以及每个提供方对应的一个位置。从某个位置打开的文件通过该位置自己的存储保存；当提供方表示文件不可编辑时，文件为只读。参见[OneDrive 集成](/onedrive#open-from-onedrive-in-file-open)。
+
+## 由宿主管理的存储
+
+`storage`（元素的属性，也是每个绑定的 prop）接受来自 `ooxml-core/embedding` 的 `DocumentStorage`。设置后：
+
+- “文件 > 保存”、“另存为”和 Ctrl+S 会把保存的字节交给 `storage.save(bytes, meta)`，而不是下载。`meta` 为 `{ fileName, mimeType, reason }`，其中 `reason` 为 `'save'` 或 `'saveAs'`。Promise 完成后文档被标记为已保存；如果它以 `{ fileName }` 完成，标题栏会采用该名称。拒绝会以 `document-error` 报告，文档保持未保存状态。
+- 当存储提供 `open` 时，“文件 > 打开”会调用 `storage.open()`，并打开其返回的 `{ bytes, fileName }`（`undefined` 表示用户已取消）。没有 `open` 时使用文件选择器。
+- 同一时间只运行一次保存：保存进行中时再次保存会被忽略，而不是排队。宿主保存期间所做的编辑会让文档保持未保存状态，因为已保存的字节不包含它。
+- `file-command` 仍然先触发。调用 `preventDefault()` 的宿主自行处理该命令，此时不会调用 `storage`。“另存为”会先发出 `saveAs`，再发出 `save`。
+- 移除了保存功能（`customization.capabilities.save: false`）的宿主既不会收到 `save` 事件，也不会调用 `storage.save`；此时“另存为”（`export` 能力）只会下载。
+
+导出、导出为文本和打印仍使用浏览器。Word 没有自动恢复功能，因此不会使用 `DocumentStorage` 的恢复方法。
+
+```ts
+editor.storage = {
+	async save(bytes, { fileName, mimeType }) {
+		await fetch(`/files/${encodeURIComponent(fileName)}`, {
+			method: 'PUT',
+			headers: { 'content-type': mimeType },
+			body: bytes,
+		});
+	},
+};
+```

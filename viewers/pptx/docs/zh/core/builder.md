@@ -37,7 +37,17 @@ interface PresentationOptions {
 	title?: string; // docProps/core.xml
 	creator?: string; // author
 	initialSlideCount?: number; // blank "Blank"-layout slides, default 0
+	firstSlideNumber?: number; // p:presentation/@firstSlideNum
+	appProperties?: PresentationAppPropertiesInput; // docProps/app.xml
 }
+```
+
+`appProperties` 接受 `docProps/app.xml` 的文本字段 `application`、`appVersion`、`company`、`presentationFormat`、`manager` 和 `template`。不提供时，该部件记录的应用为 `pptx-viewer-sdk`，版本为 `1.0000`。`appVersion` 必须采用 Office 的格式（`16.0000`），因为 PowerPoint 会把其他任何格式报告为文件损坏；格式不符的 `appVersion` 以及该选项不接受的任何其他字段都会抛出 `RangeError`。空字符串会省略对应元素。保存选项 `appProperties` 仍会逐字段叠加生效：`save(slides, { appProperties })` 设置的字段优先，未设置的字段保留创建时给出的值。
+
+```ts
+const { handler, createSlide } = await PptxHandler.create({
+	appProperties: { application: 'ReportOne', appVersion: '2.0000', company: 'Acme' },
+});
 ```
 
 使用 `SlideSizes`、`ThemePresets` 常量和单位辅助函数，可以更方便地指定数值：
@@ -104,6 +114,8 @@ data.slides.push(slide);
 | **查询与完成** | `getElements()`、`getLastElement()`、`elementCount`、`removeElement(id)`、`build()`                                                                                                                                                                                                                                                                                 |
 
 `add*` 选项中的位置以**像素**为单位（内部转换为 EMU）。`addText` 选项包括 `fontSize`、`fontFamily`、`bold`、`italic`、`underline`、`color`、`x`、`y`、`width`、`height` 等。
+
+`setBackground({ type: 'gradient', stops })` 会保存 DrawingML 渐变（`p:bg/p:bgPr/a:gradFill`）。色标接受 `#RRGGBB` 颜色、位置以及 0 到 1 之间的可选不透明度，且至少需要两个色标。`angle` 是 CSS 角度（默认 `180`，从上到下）。`path: 'circle' | 'rect' | 'shape'` 加上可选的 `focus` 会生成路径渐变（默认焦点为幻灯片中心）。无效输入会抛出 `RangeError`。图片背景优先于渐变，渐变优先于纯色；之后再调用纯色 `setBackground` 会替换渐变。
 
 ### 填充版式占位符 {#filling-layout-placeholders}
 
