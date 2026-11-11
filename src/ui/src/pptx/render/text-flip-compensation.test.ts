@@ -70,9 +70,9 @@ describe('buildTextBlockStyle body layout', () => {
 	it('composes it after the body rotation', () => {
 		const rotated = shape({
 			flipHorizontal: true,
-			textStyle: { fontSize: 24, bodyRotation: 90 },
+			textStyle: { fontSize: 24, textBodyRotation: 90 },
 		} as Partial<PptxElement>);
 		const style = buildTextBlockStyle(rotated, { bodyLayout: true });
-		expect(String(style.transform)).toMatch(/scaleX\(-1\)$/u);
+		expect(style.transform).toBe('rotate(90deg) scaleX(-1)');
 	});
 });

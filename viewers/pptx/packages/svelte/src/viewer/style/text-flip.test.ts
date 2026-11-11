@@ -46,4 +46,16 @@ describe('svelte flipped text', () => {
 		);
 		expect(style.transformOrigin).toBe('120px 50%');
 	});
+
+	it('composes body rotation, then the compensation, then the 3D scene, as React does', () => {
+		const style = getTextBlockStyle(
+			textShape({
+				flipHorizontal: true,
+				textStyle: { textBodyRotation: 90, textBodyScene3d: { cameraRotY: 600000 } },
+			} as Partial<PptxElement>),
+		);
+		const transform = String(style.transform);
+		expect(transform).toMatch(/^rotate\(90deg\) scaleX\(-1\) matrix3d\(/u);
+		expect(transform.match(/scaleX\(-1\)/gu)).toHaveLength(1);
+	});
 });
