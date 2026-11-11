@@ -131,7 +131,7 @@ npm 7 and later, pnpm 8 and later and Bun still install `i18next` and `react-i18
 import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
 ```
 
-The entry never uses or bundles `i18next` and `react-i18next`, so you do not need them. They are still declared as required peers in 4.x, so most package managers (npm 7 and later, pnpm 8 and later, Bun) install them anyway, unused. An opt-out such as npm's `--legacy-peer-deps` keeps them out, but it skips every peer: then also install the other required peers yourself (`framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip` and `fast-xml-parser`), or the build fails.
+An opt-out such as npm's `--legacy-peer-deps` keeps them out, but it skips every peer: then also install the other required peers yourself (`framer-motion`, `lucide-react`, `react-icons`, `jspdf`, `jszip` and `fast-xml-parser`), or the build fails.
 
 - Inside a `PptxI18nProvider` the entry behaves exactly like the main entry. A provider and a viewer may come from either entry: they share one context.
 - Outside a provider, `PowerPointViewer` and the standalone building blocks show the built-in English text and report the locale `en`. File > Options > Language is left out, `defaultLocale`, `availableLocales` and `onLocaleChange` have no effect, and no stored language choice is read or written.

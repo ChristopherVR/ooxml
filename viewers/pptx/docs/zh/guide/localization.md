@@ -131,7 +131,7 @@ npm install pptx-react-viewer react react-dom
 import { PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer/no-i18next';
 ```
 
-该入口从不使用也不打包 `i18next` 和 `react-i18next`，因此无需它们。它们在 4.x 中仍声明为必需的 peer 依赖，所以大多数包管理器（npm 7 及以上、pnpm 8 及以上、Bun）仍会自动安装它们，但不会被使用。npm 的 `--legacy-peer-deps` 等选项可以不安装它们，但会跳过所有 peer 依赖：此时还需自行安装其他必需的 peer 依赖（`framer-motion`、`lucide-react`、`react-icons`、`jspdf`、`jszip` 和 `fast-xml-parser`），否则构建会失败。
+npm 的 `--legacy-peer-deps` 等选项可以不安装它们，但会跳过所有 peer 依赖：此时还需自行安装其他必需的 peer 依赖（`framer-motion`、`lucide-react`、`react-icons`、`jspdf`、`jszip` 和 `fast-xml-parser`），否则构建会失败。
 
 - 在 `PptxI18nProvider` 内，该入口的行为与主入口完全相同。Provider 和组件可以分别来自任一入口：它们共享同一个上下文。
 - 在 Provider 外，`PowerPointViewer` 和独立的构建块显示内置英文文本，报告的语言为 `en`。“文件 > 选项 > 语言”不会出现，`defaultLocale`、`availableLocales` 和 `onLocaleChange` 不起作用，也不会读取或保存语言选择。

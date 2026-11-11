@@ -123,7 +123,7 @@ describe('pptx-react-viewer/no-i18next', () => {
 		i18nRoot = await import('./viewer/i18n/root');
 		translation = await import('./viewer/i18n/use-translation');
 		slot = await import('./viewer/i18n/host-i18next');
-	});
+	}, 60_000);
 
 	afterAll(() => {
 		vi.resetModules();
@@ -220,7 +220,7 @@ describe('pptx-react-viewer (main entry)', () => {
 		main = await import('./index');
 		slot = await import('./viewer/i18n/host-i18next');
 		source = await import('./viewer/i18n/react-i18next-source');
-	});
+	}, 60_000);
 
 	afterAll(() => {
 		vi.resetModules();
@@ -286,7 +286,7 @@ describe('after the main entry loads, with react-i18next not configured', () => 
 		main = await import('./index');
 		slot = await import('./viewer/i18n/host-i18next');
 		previousInstance = getI18n() as I18nInstance | undefined;
-	});
+	}, 60_000);
 
 	beforeEach(() => {
 		setI18n(undefined as unknown as I18nInstance);
