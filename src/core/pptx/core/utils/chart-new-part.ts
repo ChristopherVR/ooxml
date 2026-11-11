@@ -19,6 +19,9 @@
  * - a data label position the chart type does not offer is left out and
  *   reported (`chart-label-positions.ts`).
  *
+ * A bar series with no `invertIfNegative` of its own is written as not inverted, so its negative
+ * bars keep the series colour.
+ *
  * Anything the shared core cannot write leaves `xml` undefined with the fields
  * that need the legacy generator, which then writes the part as before.
  *
@@ -26,6 +29,7 @@
  */
 import {
 	chartIssuesLostOnWrite,
+	editChartSpace,
 	joinChartGroups,
 	newChartSpace,
 	parseChartSpace,
@@ -119,6 +123,19 @@ function startingPart(chart: PptxChartData, axes: ReturnType<typeof newChartAxes
 	return space;
 }
 
+/**
+ * Bar series that say nothing about negative values are written as not inverted
+ * (`c:invertIfNegative val="0"`, as PowerPoint writes them): PowerPoint draws the negative bars
+ * of a series without the element in white, whatever the series colour.
+ */
+function withBarsNotInverted(space: ChartSpace): ChartSpace {
+	return editChartSpace(space, (draft) => {
+		for (const group of draft.plotArea.groups)
+			if (group.kind === 'bar')
+				for (const series of group.series) series.invertIfNegative ??= false;
+	});
+}
+
 function writeThroughCore(chart: PptxChartData): NewChartPart {
 	const legacy = (reason: string[]): NewChartPart => {
 		const { after, unwritten } = normalizedNewChart(chart, { labelPositionsOnly: true });
@@ -135,7 +152,7 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 	let space = startingPart(after, axes);
 	for (const edit of plan.edits) space = edit(space);
 	// One group per type and axis pair, once no edit addresses series by position any more.
-	space = joinChartGroups(space);
+	space = withBarsNotInverted(joinChartGroups(space));
 	const xml = writeChartSpace(space);
 	const lost = chartIssuesLostOnWrite(parseChartSpace(xml).issues);
 	if (lost.length > 0)

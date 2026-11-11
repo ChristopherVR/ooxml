@@ -788,7 +788,9 @@ export interface PptxChartSeries {
 	 * Series-level `c:invertIfNegative`: when true, bar/column data points with a
 	 * negative value are drawn with an inverted (lightened) fill. A per-point
 	 * `c:dPt/c:invertIfNegative` overrides this for that point. Absent when the
-	 * source XML omits the flag.
+	 * source XML omits the flag. A NEW bar series without it is written as not
+	 * inverted: PowerPoint draws the negative bars of a series with no such
+	 * element in white.
 	 */
 	invertIfNegative?: boolean;
 	/**

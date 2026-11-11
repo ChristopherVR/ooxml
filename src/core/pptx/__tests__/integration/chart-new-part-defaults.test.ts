@@ -119,6 +119,35 @@ describe('new chart group option boundaries', () => {
 		);
 	});
 
+	it('writes bar series as not inverted, so PowerPoint keeps the colour of negative bars', async () => {
+		const series = (xml: string): string[] => xml.match(/<c:ser>.*?<\/c:ser>/gsu) ?? [];
+		const bar = await (await newChartDeck('bar')).save();
+		expect(series(bar.xml)).toHaveLength(3);
+		for (const item of series(bar.xml)) expect(item).toContain('<c:invertIfNegative val="0"/>');
+		expect(bar.chart.series.map((item) => item.invertIfNegative)).toStrictEqual([
+			false,
+			false,
+			false,
+		]);
+
+		// A series' own setting is kept, and a line series has no such element.
+		const combo = await newChartDeck('line', {
+			series: [
+				{ name: 'L', values: [1, -2, 3] },
+				{ name: 'B', values: [-1, 2, -3], chartType: 'bar' },
+				{ name: 'I', values: [-1, 2, -3], chartType: 'bar' },
+			],
+		});
+		combo.element.chartData!.series[2]!.invertIfNegative = true;
+		const saved = await combo.save();
+		expect(saved.warnings).toStrictEqual([]);
+		const byName = (name: string) =>
+			series(saved.xml).find((item) => item.includes(`<c:v>${name}</c:v>`))!;
+		expect(byName('L')).not.toContain('invertIfNegative');
+		expect(byName('B')).toContain('<c:invertIfNegative val="0"/>');
+		expect(byName('I')).toContain('<c:invertIfNegative val="1"/>');
+	});
+
 	it('keeps the legacy generator from writing clustered into a line chart', () => {
 		const element = createChartElement('line', { ...NEW_CHART_INPUT, grouping: 'clustered' });
 		const xml = new PptxRuntimeDependencyFactory()
