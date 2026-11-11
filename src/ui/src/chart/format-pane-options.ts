@@ -205,7 +205,10 @@ function labelOptions(labels: ChartFormatLabelsView): ChartFormatSection[] {
 		fields.push(check('labels.showPercent', 'labelPercentage', 'Percentage', labels.showPercent));
 	}
 	fields.push(check('labels.showLegendKey', 'labelLegendKey', 'Legend key', labels.showLegendKey));
-	const positions = labelPositions(type);
+	const accepted = labels.positions;
+	const positions = labelPositions(type).filter(
+		([value]) => accepted === undefined || accepted.includes(value),
+	);
 	if (positions.length > 0) {
 		fields.push({
 			id: 'labels.position',

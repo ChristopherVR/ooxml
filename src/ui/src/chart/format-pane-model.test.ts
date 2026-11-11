@@ -125,6 +125,22 @@ describe('chartFormatFieldIntent', () => {
 		expect(space.plotArea.groups[0]!.gapWidth).toBe(75);
 	});
 
+	it('offers only the label positions the group accepts', () => {
+		const positions = (space: ChartSpace) => {
+			const source = chartSpaceFormatSource(space);
+			const model = buildChartFormatModel(source, 'dataLabels:0', 'options');
+			const field = model.sections
+				.flatMap((section) => section.fields)
+				.find((item) => item.id === 'labels.position');
+			return field?.kind === 'radio' ? field.choices.map((choice) => choice.value) : [];
+		};
+		expect(positions(columnSpace())).toEqual(['ctr', 'inEnd', 'inBase', 'outEnd']);
+		const stacked = structuredClone(columnSpace());
+		stacked.plotArea.groups[0]!.grouping = 'stacked';
+		// Office has no Outside End for stacked bars, and the core refuses it.
+		expect(positions(stacked)).toEqual(['ctr', 'inEnd', 'inBase']);
+	});
+
 	it('refuses unusable values and fields without a neutral operation', () => {
 		const space = columnSpace();
 		const source = chartSpaceFormatSource(space);

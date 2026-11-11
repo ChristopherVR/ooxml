@@ -162,8 +162,9 @@ function writeThroughCore(chart: PptxChartData): NewChartPart {
 	space = withAbsentDefaults(joinChartGroups(space));
 	const xml = writeChartSpace(space);
 	const lost = chartIssuesLostOnWrite(parseChartSpace(xml).issues);
-	if (lost.length > 0)
-		return { unwritten: lost.map((issue) => `part.${issue.element ?? issue.code}`) };
+	// The legacy generator then writes the part, from the same label-filtered model as every
+	// other fallback here.
+	if (lost.length > 0) return legacy(lost.map((issue) => `part.${issue.element ?? issue.code}`));
 	return {
 		xml,
 		space,
