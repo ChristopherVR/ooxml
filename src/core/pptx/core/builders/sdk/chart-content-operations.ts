@@ -174,18 +174,25 @@ function setPointMarkerFill(series: PptxChartSeries, point: number, color: strin
 function applySeriesPaint(element: ChartPptxElement, input: ChartInput): void {
 	const palette = input.palette?.map((color) => chartColorInput(color, 'Palette colour'));
 	input.series.forEach((seriesInput, index) => {
-		const data = element.chartData!;
-		const series = data.series[index]!;
 		if (seriesInput.fill === 'none') {
 			if (seriesInput.color !== undefined || seriesInput.gradientFill !== undefined) {
 				throw new Error("A series fill of 'none' cannot be combined with color or gradientFill.");
 			}
+			const before = element.chartData!;
+			if (paintsMarkers(before, before.series[index]!)) {
+				throw new Error(
+					`A series fill of 'none' applies to filled series, not "${drawnSeriesType(before, before.series[index]!)}"; use line: 'none' to hide its line.`,
+				);
+			}
 			element.chartData = withChartElementFormat(
-				data,
+				before,
 				{ kind: 'series', seriesIndex: index },
 				{ fill: { kind: 'none' } },
 			);
 		}
+		// Read after the format edit, which replaces the chart data and its series.
+		const data = element.chartData!;
+		const series = data.series[index]!;
 		const pointColors = seriesInput.pointColors;
 		if (pointColors && pointColors.length > series.values.length) {
 			throw new RangeError(

@@ -7,6 +7,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { withChartElementFormat } from '../../core/builders/sdk/chart-element-format-operations';
 import { createChartElement } from '../../core/builders/sdk/ElementFactory';
 import type { ChartInput } from '../../core/builders/sdk/types';
 import { PptxHandler } from '../../core/PptxHandler';
@@ -247,6 +248,57 @@ describe("'none' point colours of new charts", () => {
 			expect.stringMatching(/<c:idx val="0"\/>.*<c:spPr><a:noFill\/><\/c:spPr>/su),
 		]);
 		expect(xml).not.toContain('val="none"');
+	});
+
+	it('keeps the point colours of a series with no fill', async () => {
+		for (const type of ['bar', 'area'] as const) {
+			const { xml, chart } = await saved(type, {
+				series: [{ name: 'A', values: [1, 2, 3], fill: 'none', pointColors: [null, '#E03131'] }],
+			});
+			const [series] = seriesXml(xml);
+			// The series' own shape follows its points in the element, so read it after them.
+			expect(series!.replace(/<c:dPt>.*<\/c:dPt>/su, '')).toMatch(/<c:spPr><a:noFill\/>/u);
+			expect(pointsXml(xml)).toStrictEqual([
+				expect.stringMatching(/<c:idx val="1"\/>.*<a:srgbClr val="E03131"\/>/su),
+			]);
+			expect(chart.series[0]!.dataPoints).toStrictEqual([
+				{ idx: 1, spPr: { fillColor: '#E03131' } },
+			]);
+		}
+	});
+
+	it('keeps the points of a loaded chart when its series gets a fill format', async () => {
+		const { bytes } = await saved('bar', {
+			series: [{ name: 'A', values: [1, 2, 3], pointColors: [null, '#E03131'] }],
+		});
+		const handler = new PptxHandler();
+		const loaded = await handler.load(bytes.buffer as ArrayBuffer);
+		const element = loaded.slides[0]!.elements.find(
+			(item) => item.type === 'chart',
+		) as ChartPptxElement;
+		element.chartData = withChartElementFormat(
+			element.chartData!,
+			{ kind: 'series', seriesIndex: 0 },
+			{ fill: { kind: 'none' } },
+		);
+		const again = await handler.save(loaded.slides);
+		const xml = await (await JSZip.loadAsync(again)).file('ppt/charts/chart1.xml')!.async('string');
+		expect(seriesXml(xml)[0]!.replace(/<c:dPt>.*<\/c:dPt>/su, '')).toMatch(/<c:spPr><a:noFill\/>/u);
+		expect(pointsXml(xml)).toStrictEqual([
+			expect.stringMatching(/<c:idx val="1"\/>.*<a:srgbClr val="E03131"\/>/su),
+		]);
+	});
+
+	it('refuses a series with no fill where the series is drawn with markers', () => {
+		const one = (type: PptxChartType) => () =>
+			createChartElement(type, {
+				categories: CATEGORIES,
+				series: [{ name: 'L', values: [1, 2, 3], fill: 'none' }],
+			});
+		for (const type of ['line', 'scatter', 'stock', 'radar'] as const)
+			expect(one(type)).toThrow(/filled series/u);
+		expect(one('bar')).not.toThrow();
+		expect(one('area')).not.toThrow();
 	});
 
 	it('writes a none point fill through the object-tree writer as a:noFill', () => {
