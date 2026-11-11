@@ -116,7 +116,10 @@ export interface ChartContentInput {
 	scatterStyle?: PptxChartScatterStyle;
 	/** Data labels for every series; a series' own `dataLabels` overrides them field by field. */
 	dataLabels?: ChartDataLabelsInput;
-	/** Chart title font (`c:title`). */
+	/**
+	 * Chart title font (`c:title`). With `titleRuns`, a run's own `size`, `bold`, `italic` and
+	 * `color` win and this font fills in what a run leaves out; `family` is the whole title's.
+	 */
 	titleFont?: ChartFontInput;
 	/**
 	 * The title as runs, each with its own font (`c:title/c:tx/c:rich`). Replaces `title`
@@ -142,7 +145,10 @@ export interface ChartSeriesContentInput {
 	/**
 	 * Plots the series against a secondary value axis on the far side, crossing
 	 * at the maximum, with a hidden secondary category axis (bar, line, area,
-	 * scatter and bubble charts).
+	 * scatter and bubble charts). A new chart's part holds it for a later series
+	 * of a vertical 2-D column, line or area chart; on the first series, horizontal
+	 * bars or a 3-D chart the save leaves it out and reports
+	 * `CHART_WRITTEN_BY_LEGACY_GENERATOR`.
 	 */
 	secondaryAxis?: boolean;
 	/** Series line width and dash, or `'none'` for no line (no border on a bar). */
@@ -156,14 +162,18 @@ export interface ChartSeriesContentInput {
 	xValues?: number[];
 	/** Bubble sizes, one per value (`c:bubbleSize`). Bubble only; default 1. */
 	bubbleSizes?: number[];
-	/** `'none'` leaves the series unfilled (`a:noFill`). Area-filled chart types only. */
+	/**
+	 * `'none'` leaves the series unfilled (`a:noFill`); its `pointColors` still fill their points.
+	 * Filled series only: a series drawn with markers (line, scatter, stock, unfilled radar) throws.
+	 */
 	fill?: 'none';
 	/**
 	 * One fill per point (`c:dPt`), in category order, at most one per value: a hex colour,
 	 * `'none'` for no fill (`a:noFill`), or `null` to keep the point's colour. On a series drawn
 	 * with markers (line, scatter, stock, unfilled radar) it fills the point's marker
 	 * (`c:dPt/c:marker`), which keeps the series marker's symbol, size and outline; such a series
-	 * whose marker symbol is `'none'` refuses it.
+	 * whose marker symbol is `'none'` refuses it. On a chart with one series, PowerPoint's legend
+	 * then lists the points (their categories) instead of the series name.
 	 */
 	pointColors?: (string | null)[];
 }

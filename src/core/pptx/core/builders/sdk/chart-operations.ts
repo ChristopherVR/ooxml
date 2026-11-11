@@ -411,8 +411,9 @@ export interface ChartAxisEdit {
 	/** Minor tick marks (`c:minorTickMark`). */
 	minorTickMark?: PptxChartTickMark;
 	/**
-	 * Where the crossing axis meets this one (`c:crosses`), or the value it crosses at
-	 * (`c:crossesAt`).
+	 * Where this axis sits on the axis it crosses (`c:crosses`, or `c:crossesAt` for a number):
+	 * the position is read on the OTHER axis. `catAx: { crosses: 15 }` draws the category axis at
+	 * value 15; `valAx: { crosses: 2 }` draws the value axis at the second category.
 	 */
 	crosses?: 'autoZero' | 'min' | 'max' | number;
 	/** Whether a value axis crosses between categories or on them (`c:crossBetween`). */
