@@ -142,4 +142,13 @@ describe('custom geometry input', () => {
 		).toThrow(RangeError);
 		expect(make([{ d: 'M0 0 L1', width: 1, height: 1 }])).toThrow(SyntaxError);
 	});
+
+	it('rejects a path that does not start with a moveto, which PowerPoint does not draw', () => {
+		const make = (paths: ShapeOptions['paths']) => () => createShapeElement('rect', { paths });
+		expect(make([{ d: 'L1 1 L0 1', width: 1, height: 1 }])).toThrow(SyntaxError);
+		expect(
+			make([{ segments: [{ type: 'lineTo', pt: { x: 1, y: 1 } }], width: 1, height: 1 }]),
+		).toThrow(RangeError);
+		expect(make([{ d: 'm0 0 l1 1', width: 1, height: 1 }])).not.toThrow();
+	});
 });

@@ -47,6 +47,10 @@ export function customGeometryFromInput(
 		if (segments.length === 0) {
 			throw new RangeError('CustomPathInput needs a non-empty d or segments');
 		}
+		if (segments[0]?.type !== 'moveTo') {
+			// PowerPoint draws nothing of a path that does not start at a point.
+			throw new RangeError('CustomPathInput segments must start with a moveTo');
+		}
 		if (!segments.every(isFiniteSegment)) {
 			throw new RangeError('CustomPathInput segments must have finite coordinates');
 		}

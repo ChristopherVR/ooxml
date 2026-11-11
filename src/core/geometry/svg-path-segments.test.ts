@@ -78,6 +78,13 @@ describe('svgPathToSegments', () => {
 		expect(() => svgPathToSegments('10 10')).toThrow(SyntaxError);
 	});
 
+	it('rejects a path that starts with another command than a moveto', () => {
+		expect(() => svgPathToSegments('L1 1 L0 1')).toThrow(SyntaxError);
+		expect(() => svgPathToSegments('z')).toThrow(SyntaxError);
+		expect(svgPathToSegments('m1 1')).toEqual([{ type: 'moveTo', pt: { x: 1, y: 1 } }]);
+		expect(svgPathToSegments('')).toEqual([]);
+	});
+
 	it('rejects a command with too few numbers, or an unknown character', () => {
 		expect(() => svgPathToSegments('M0 0 L5')).toThrow(SyntaxError);
 		expect(() => svgPathToSegments('M0 0 C1 1 2 2')).toThrow(SyntaxError);

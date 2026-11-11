@@ -50,7 +50,8 @@ function reflect(control: Point2, about: Point2): Point2 {
  * Parse an SVG path into DrawingML path segments in the path's own
  * coordinates.
  *
- * @throws SyntaxError for path data that does not start with a command,
+ * @throws SyntaxError for path data that does not start with a moveto
+ *   (`M` or `m`, as SVG requires; Office draws nothing of a path without one),
  *   holds a character that is neither a command nor a number, gives a
  *   command too few numbers, or holds a number that is not finite.
  */
@@ -62,7 +63,12 @@ export function svgPathToSegments(d: string): SvgPathSegment[] {
 	let lastCubic: Point2 | undefined;
 	let lastQuad: Point2 | undefined;
 
-	for (const { type, values } of tokenizeSvgPath(d, { strict: true })) {
+	const tokens = tokenizeSvgPath(d, { strict: true });
+	const first = tokens[0];
+	if (first && first.type.toUpperCase() !== 'M') {
+		throw new SyntaxError(`SVG path data must start with a moveto, not ${first.type}`);
+	}
+	for (const { type, values } of tokens) {
 		const upper = type.toUpperCase();
 		const relative = type !== upper;
 		const count = ARG_COUNT[upper] ?? 0;

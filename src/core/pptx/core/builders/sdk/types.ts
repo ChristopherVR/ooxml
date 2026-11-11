@@ -313,9 +313,10 @@ export interface TextOptions extends Partial<ElementPosition>, ElementFlipInput,
  * One `a:path` of a custom geometry. Its `width` x `height` box is stretched
  * over the shape (`a:path/@w`, `@h`). Give `d` (SVG path data: any command,
  * absolute or relative, arcs written as cubic Beziers) or `segments`, not
- * both. Path data that cannot be read throws a `SyntaxError`; an empty path,
- * a box that is not positive, or a coordinate that is not finite throws a
- * `RangeError`.
+ * both. A path starts with a moveto (`M`, or a `moveTo` segment). Path data
+ * that cannot be read throws a `SyntaxError`; an empty path, segments that do
+ * not start with a `moveTo`, a box that is not positive, or a coordinate that
+ * is not finite throws a `RangeError`.
  */
 export interface CustomPathInput {
 	d?: string;
